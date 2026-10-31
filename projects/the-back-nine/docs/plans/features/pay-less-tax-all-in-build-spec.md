@@ -84,7 +84,7 @@ The MEASURED probe substituted its vector before `adoptObservedOutcome`. The gra
 - `selectionTieTolerance` (`heldOutSeed.ts:139`), which is vector-generic;
 - `gradeAxisFor`: the axis label is keyed by goal, and `GradeStatistic 'pay-less-tax'` keeps its name;
 - `demotionAxisCalibrated` (`gradeCalibration.ts:163`) is unchanged.
-- ⚑ SKEPTIC (missing readers; each follows through sites 1-2, named so nothing is assumed): the hero delta itself (`recommendationView.ts:634-646` `winnerDisplaysAhead` / `deltaReal`, and the zero-collapse guard at `:653`, which decide dollar vs no-dollar); `runnerUpVizFor` (`recommendationView.ts:880-881`, leave-more gated today); `namedDriverProbe` / `namedDriverProbeSteps` (`gradeCalibration.ts:399-436`), which re-rank under `rankCandidates` and drive F2's `aca-enhanced-subsidies` driver and the coin-flip hinge `recGradeNoteHingeAca` (`copy.ts:2253-2254`). That sentence will now fire on PREMIUM-driven flips, so it joins the §8 Caddie read.
+- ⚑ SKEPTIC (missing readers; each follows through sites 1-2, named so nothing is assumed): the hero delta itself (`recommendationView.ts:634-646` `winnerDisplaysAhead` / `deltaReal`, and the zero-collapse guard at `:653`, which decide dollar vs no-dollar); `runnerUpVizFor` (`recommendationView.ts:880-881`, leave-more gated today); `namedDriverProbe` / `namedDriverProbeSteps` (`gradeCalibration.ts:399-436`), which re-rank under `rankCandidates` and drive F2's `aca-enhanced-subsidies` driver and the coin-flip hinge `recGradeNoteHingeAca` (`copy.ts:2271-2272`). That sentence will now fire on PREMIUM-driven flips, so it joins the §8 Caddie read.
 
 **D5 Byte-identity when healthcare is off.**
 - The premium and Medicare yearly values start at 0 (`taxOverlay.ts:2376-2382`, map).
@@ -109,8 +109,8 @@ Result: the all-in vector equals the tax vector element by element, and its mean
   - the stamp is global, so leave-more records re-stale too. That over-re-run is accepted under the file's when-in-doubt rule.
 - Re-pin `pricingVersion.test.ts:150-174` to `{ solverCodeVersion: 10, newestRepriceRow: 7 }`, and retitle it "v8, v9 and v10 were ranking logic only". (Then; the 2026-10-09 survivor-medical lean, a scored pricing change, re-pinned it to `{ solverCodeVersion: 11, newestRepriceRow: 11 }`, and since the 2026-10-27 RIB-LIM order — scored, no ledger row — it reads `{ solverCodeVersion: 12, newestRepriceRow: 11 }`.)
 - **No ledger row** (`pricingVersion.ts:46-53`): no figure from a saved household's spine recompute moves. `FIRST_UNAMBIGUOUS_SAVE_DAY` stays put.
-- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:2024`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:2027`, mapped from the cause at `Result.tsx:86`). That sentence is true. Records persist no dollar figure (`model.ts:2187-2249`).
-- **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:272` RECOMMENDATION_GOALS, the codec needVocab gate (`:2095`) and the fingerprint canon (`solverRunFingerprint.ts:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
+- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:2042`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:2045`, mapped from the cause at `Result.tsx:86`). That sentence is true. Records persist no dollar figure (`model.ts:2191-2253`).
+- **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:272` RECOMMENDATION_GOALS, the codec needVocab gate (`:2099`) and the fingerprint canon (`solverRunFingerprint.ts:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
 - **v10 collision:** `council-log.md`'s 2026-10-04 *Adoption of the roster-recall fix* row and `backlog.md:1144-1153` earmark v10 for the unmerged gap-fill (`b9-v10-gapfill-wip`). Note in the register's recall entry: "v10 = the all-in objective; a revived gap-fill re-measures on all-in and takes a later version." The council rows stay as records.
 
 ## 2. Every site
@@ -130,12 +130,12 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `solve.ts:214-224, :385-390` (deltaSkew wording).
 - `stateTaxDisclosure.ts:151-155`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:100` and `:720`.
-- `copy.ts:2131` comment and `:3587`.
+- `copy.ts:2149` comment and `:3605`.
 - the `recommendationView.test.ts:596` comment.
 
 The viz suppression off leave-more stays correct, because all-in is still lower-is-better.
 
-**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:3496-3497`, read), `goalPayLessTaxGloss` (`:2138`), `recDiscNiit` (`:2309-2310`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3170-3189`) only under a "$X less" hero.
+**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:3514-3515`, read), `goalPayLessTaxGloss` (`:2156`), `recDiscNiit` (`:2327-2328`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3170-3189`) only under a "$X less" hero.
 
 **Calibration:**
 - Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:44, :58, :72` (map).
@@ -330,10 +330,10 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 
 *The packet as sent (the options he chose among):*
 
-**Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:148-309` + `HEDGE_TOKENS` (`copy.ts:2388-2397`); the suite runs on whatever he picks.
+**Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:148-309` + `HEDGE_TOKENS` (`copy.ts:2406-2415`); the suite runs on whatever he picks.
 - A hedge ("about" / "could"); `recDelta*` and `recDisc*` are require-hedge swept (`copyGuard.ts:124-128`).
 - No superlative, no clause-leading directive verb (`:262`), no "pays off" or "better off" (`:251-252`), no em-dash apposition on the figure.
-- The hero stays one line (`recommendationView.ts:172-174`) and keeps "than today’s plan" (the userBaseline seam, `copy.ts:2173-2180`).
+- The hero stays one line (`recommendationView.ts:172-174`) and keeps "than today’s plan" (the userBaseline seam, `copy.ts:2191-2198`).
 - The slot keeps its one-arg signature, so `recommendationView.ts:673` and `copyGuard.test.ts:827` need no wiring change.
 - Rejected: "health costs" and "in your pocket". Out-of-pocket and cost-sharing are not counted, and funded-year accrual makes any wealth claim an overclaim. Also do not reuse the health sheet's "Lifetime health costs" lexeme: one lexeme with two referents is the O14 class.
 
@@ -356,7 +356,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 **Label "Pay less tax": lean KEEP (HIS call).**
 - His ruling covered the objective and the hero, not the D1/R21 vocabulary.
 - A lost PTC is a shadow tax (`pre65-healthcare.md:76`).
-- Five regex selectors pin it: `e2e/csp.spec.ts:338` (CI), `caddie-walk.spec.ts:911/755`, `held/solve-timing.spec.ts:51`, `recommendInvite.test.tsx:127/145/213`.
+- Five regex selectors pin it: `e2e/csp.spec.ts:338` (CI), `caddie-walk.spec.ts:924/755`, `held/solve-timing.spec.ts:51`, `recommendInvite.test.tsx:127/145/213`.
 
 **`recDiscNiit`** renders on BOTH goals. "Your federal income tax" is already wrong on NC/PA/FL.
 - Draft (HIS): "A federal surtax on higher investment income isn’t counted here, and it could apply."
@@ -408,7 +408,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 8. `pnpm verify:fit`: GoalPicker gloss wrap at 390 px and at his 1536×791.
 9. `pnpm verify:fit:rv`: a FULL run. The RV gate drives leave-more, and the rewritten NIIT and state-tax disclosures render there.
 10. **Caddie read of the re-worded hero.** No automated fit or text gate covers the pay-less-tax committed surface.
-    - Walk `pnpm caddie:walk`'s pay-less-tax arms (`solve:nc` / failing, `caddie-walk.spec.ts:911,788`, map) at 1536×791@2.5 and on the phone.
+    - Walk `pnpm caddie:walk`'s pay-less-tax arms (`solve:nc` / failing, `caddie-walk.spec.ts:924,788`, map) at 1536×791@2.5 and on the phone.
     - Plus one planted hl50-shape ACA household where premiums dominate.
     - Focus: does the hero say what it counts? Can "premiums" be read as out-of-pocket or money kept? Do the gloss, hero, scope, NIIT and state lines agree?
     - Run it on his candidate words BEFORE the land. The card travels with the packet: it informs his choice and cannot clear his words. A framing-level hit parks for him.

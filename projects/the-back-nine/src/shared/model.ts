@@ -1490,12 +1490,14 @@ export const WORKING_YEAR_LEDGER_EVENT_CODES = [
   /** A member's spousal benefit starts on its own, after their own filing, when the other spouse files. */
   'spousalStart',
   /** The earnings test holds back a different amount, releases what it held, or a credit for held-back months
-   *  starts — a move no start explains. Named beside a start when the start cannot explain it (a release or a
-   *  credit). */
+   *  starts — a move no start explains. Named beside a start when the start cannot explain it: a release (some
+   *  EARNER's charged excess falls — never read off the household's held-back figure, which a claim held in
+   *  full can raise past it) or a credit. */
   'earningsTestStep',
   /** A member's Medicare starts (paid from savings, never in the bottom line). */
   'medicareStarts',
-  /** A member turns 65: the larger standard deduction (and, inside its window, the senior bonus) lowers the tax on the outside income. */
+  /** A member turns 65: the larger standard deduction (and, inside its window, the senior bonus) lowers the tax
+   *  on the outside income — named where the year before or the year itself carries federal tax on it. */
   'turns65',
   /** A member's savings deposit steps down as a catch-up window closes. */
   'catchUpStepDown',
@@ -1508,9 +1510,11 @@ export const WORKING_YEAR_LEDGER_EVENT_CODES = [
   /** The year after the senior bonus's last year, for a household whose return carried the bonus and whose
    *  federal tax on the outside income that year is above $0 — so losing the bonus raised it. */
   'seniorBonusSunset',
-  /** A short year with no event, the year before not short. */
+  /** A short year no named event can have made short — no event, or only ones that raise the bottom line or sit
+   *  outside it (listed beside it) — the year before not short. */
   'erosion',
-  /** A short year with no event, the year before short too. */
+  /** The same, the year before short too: the year continues the short years before it, beside any event it
+   *  names. */
   'stillShort',
 ] as const
 export type WorkingYearLedgerEventCode = (typeof WORKING_YEAR_LEDGER_EVENT_CODES)[number]

@@ -57,15 +57,15 @@ export interface StepDef {
    *  earlier pass never shows its alert on arrival, only after this step's own Continue (the pay
    *  check's W gate, KTD3: after an upstream edit stales W, the step opens on its calm note, not an
    *  alert). Done here, never in the step body's mount effect: an effect lands a frame after the
-   *  first paint, so the alert would flash. The function form reads the draft the step is arrived
-   *  over: a disarm that only means something beside an answer the draft holds (the W period tap,
-   *  whose unit lives in the step's own state until a figure commits) is dropped where there is none. */
-  readonly freshOnArrival?: readonly FieldPath[] | ((draft: ScenarioDraft) => readonly FieldPath[])
+   *  first paint, so the alert would flash. (A disarm whose meaning lives in the step body's own
+   *  state — the W period tap — is that body's to set and drop, never this list's: Phase B ruling 38.) */
+  readonly freshOnArrival?: readonly FieldPath[]
   /** An answer that must never leave the step half-made. Back is never gated, so a value this step's
    *  own Continue would refuse (the pay check's typed $0, or a figure whose period was never confirmed)
    *  could otherwise leave through it, then reach a route change that drops the step (the codec refuses
-   *  the value at Save) or a later mount whose provenance reads it as confirmed. On Back, if `field`'s
-   *  own rules fire on the current draft (touched as if committed), `discard` clears it first. */
+   *  the value at Save) or a later mount that reads an entered figure as one whose unit was answered.
+   *  On Back, if `field`'s own rules fire on the current draft (touched as if committed), `discard`
+   *  clears it first. */
   readonly discardOnBack?: {
     readonly field: FieldPath
     readonly discard: (draft: ScenarioDraft) => ScenarioDraft
@@ -74,13 +74,8 @@ export interface StepDef {
 }
 
 /** `touched` without a step's arrival-fresh fields (identity when there are none to drop). */
-function withoutFresh(
-  touched: ReadonlySet<FieldPath>,
-  step: StepDef | undefined,
-  draft: ScenarioDraft,
-): ReadonlySet<FieldPath> {
-  const spec = step?.freshOnArrival
-  const fresh = typeof spec === 'function' ? spec(draft) : spec
+function withoutFresh(touched: ReadonlySet<FieldPath>, step: StepDef | undefined): ReadonlySet<FieldPath> {
+  const fresh = step?.freshOnArrival
   if (fresh === undefined || !fresh.some((f) => touched.has(f))) return touched
   const next = new Set(touched)
   for (const f of fresh) next.delete(f)
@@ -117,12 +112,6 @@ export function IntakeFlow({
   const [index, setIndex] = useState(0)
   const [direction, setDirection] = useState<'forward' | 'back'>('forward')
   const [touched, setTouched] = useState<ReadonlySet<FieldPath>>(() => new Set())
-  // The W figure's period provenance (the pay check's KTD17; `SanityProvenance` explains the second
-  // capture pattern): read ONCE, off the draft this flow mounts over — an entered W there already
-  // cleared the period gate before it could be committed. Lazy, so StrictMode's double call is moot.
-  const [workingCostPeriodConfirmed] = useState(
-    () => model.getSnapshot().draft.workingYearCost?.kind === 'entered',
-  )
 
   // Conditional steps derive from the draft (work-status / age gates), so a
   // back-nav edit can SHRINK the sequence while we're standing past the cut —
@@ -137,8 +126,8 @@ export function IntakeFlow({
   const announcer = useLiveAnnouncer()
 
   const violations = useMemo(
-    () => validateDraft(snapshot.draft, touched, { periodConfirmed, workingCostPeriodConfirmed }),
-    [snapshot.draft, touched, periodConfirmed, workingCostPeriodConfirmed],
+    () => validateDraft(snapshot.draft, touched, { periodConfirmed }),
+    [snapshot.draft, touched, periodConfirmed],
   )
 
   const commitField = useCallback((field: FieldPath) => {
@@ -176,12 +165,11 @@ export function IntakeFlow({
     // letting an unconfirmed value slip past its gate.
     const blocking = validateDraft(model.getSnapshot().draft, nextTouched, {
       periodConfirmed,
-      workingCostPeriodConfirmed,
     }).some((v) => step.fields.includes(v.field))
     if (blocking) return
 
     if (safeIndex + 1 < steps.length) {
-      setTouched(withoutFresh(nextTouched, steps[safeIndex + 1], model.getSnapshot().draft))
+      setTouched(withoutFresh(nextTouched, steps[safeIndex + 1]))
       setDirection('forward')
       setIndex(safeIndex + 1)
       announcer.announce(slots.questionPosition(safeIndex + 2))
@@ -193,28 +181,26 @@ export function IntakeFlow({
       // would win over the 16k final and render the uncrowned tier (D1 review).
       onComplete?.()
     }
-  }, [safeIndex, model, onComplete, step.fields, steps, touched, periodConfirmed, workingCostPeriodConfirmed])
+  }, [safeIndex, model, onComplete, step.fields, steps, touched, periodConfirmed])
 
   const back = useCallback(() => {
     if (safeIndex === 0) return
     // Never gated: the draft keeps every downstream answer — except one this step's own Continue
     // would refuse (`discardOnBack`), validated on the model's CURRENT draft like `advance`.
-    let arrived = model.getSnapshot().draft
     const leave = step.discardOnBack
     if (
       leave !== undefined &&
-      validateDraft(arrived, new Set(touched).add(leave.field), { periodConfirmed, workingCostPeriodConfirmed }).some(
+      validateDraft(model.getSnapshot().draft, new Set(touched).add(leave.field), { periodConfirmed }).some(
         (v) => v.field === leave.field,
       )
     ) {
       model.update(leave.discard)
-      arrived = leave.discard(arrived)
     }
-    setTouched((prev) => withoutFresh(prev, steps[safeIndex - 1], arrived))
+    setTouched((prev) => withoutFresh(prev, steps[safeIndex - 1]))
     setDirection('back')
     setIndex(safeIndex - 1)
     announcer.announce(slots.questionPosition(safeIndex))
-  }, [safeIndex, steps, step.discardOnBack, model, touched, periodConfirmed, workingCostPeriodConfirmed])
+  }, [safeIndex, steps, step.discardOnBack, model, touched, periodConfirmed])
 
   const api: StepApi = useMemo(
     () => ({ draft: snapshot.draft, update: model.update, commitField, clearTouched, violationsFor }),

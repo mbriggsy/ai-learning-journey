@@ -7,6 +7,7 @@ import { threeThenMore } from './AnswerStrip'
 import { workingYearCostFigure } from './intakeMap'
 import { WORKING_COST_ANSWER_FIELD, WORKING_COST_FIELD } from './sanity'
 import {
+  heldYesBelowQuote,
   workingCostBelowMedical,
   workingYearCostStaleness,
   workingYearCostStaleText,
@@ -56,9 +57,14 @@ export interface WorkingCostQuestionProps {
   /** Land a W write through the host's seam; `true` when it reached the draft, `false` when the host
    *  refused it (the panel's `commitRefusing`; the walk always lands it). */
   readonly onWrite: (write: (d: ScenarioDraft) => ScenarioDraft, kind: WorkingCostWriteKind) => boolean
-  /** The period control was tapped — the host marks the W period path touched (this session's
-   *  disarm of `working-cost-period-unconfirmed`). */
+  /** The unit on screen is answered — the host marks the W period path touched (the one disarm of
+   *  `working-cost-period-unconfirmed`). Called on a period tap, by the Keep door that names its unit,
+   *  and at mount over an entered W (ruling 38: this face owns when the disarm stands). */
   readonly onPeriodTap: () => void
+  /** The unit on screen is NOT answered any more — the host drops the W period path's touched entry.
+   *  Called at mount over a draft holding no entered W, and when the draft's W stops being `entered`
+   *  with no period tapped on this face (ruling 38). */
+  readonly onPeriodReset: () => void
   /** "A different figure" was picked — an answer to the fork, so the walk forgives the gate's alert
    *  until its next Continue (the re-edit law: an error clears the instant its field is re-edited). */
   readonly onPickFigure?: () => void
@@ -138,6 +144,7 @@ export function WorkingCostQuestion({
   host,
   onWrite,
   onPeriodTap,
+  onPeriodReset,
   onPickFigure,
   onEditFigure,
   answerInvalid = false,
@@ -175,6 +182,33 @@ export function WorkingCostQuestion({
   )
   const period = w?.kind === 'entered' ? w.entryPeriod : pendingPeriod
   const showFigure = !offersYes || figureOpen || w?.kind === 'entered'
+
+  // THE PERIOD'S ANSWERED STATE HAS ONE HOME, THIS FACE (ruling 38). The period rule's disarm is the
+  // host's touched path, and it may only ever vouch for the unit on screen:
+  //  · at mount, an ENTERED W's own unit is answered — that figure cleared the period gate before it
+  //    could be committed (the walk's Continue, `discardOnBack`, the panel's `commitRefusing`) — so the
+  //    face marks it; over no entered W, a disarm left by an earlier mount is dropped (the unit has
+  //    just remounted at month, and a kept disarm would let 84,000 typed there run as a month unasked);
+  //  · when the draft's W stops being `entered` (a cleared figure, a "yes") and no period was tapped on
+  //    this face, the answered unit went with that figure: the disarm drops and the unit falls back to
+  //    the untapped month (KTD17), so the next figure is asked its unit — never run 12× unasked, and
+  //    never shown under an untapped "year" (a monthly figure there would run 12× low, unasked).
+  // A period TAP on this face stands until the face unmounts: the unit it chose is the one on screen.
+  const periodTapped = useRef(false)
+  const entered = w?.kind === 'entered'
+  const wasEntered = useRef(entered)
+  useEffect(() => {
+    // Mount only: the draft the face opens over is the witness.
+    if (wasEntered.current) onPeriodTap()
+    else onPeriodReset()
+  }, [])
+  useEffect(() => {
+    if (wasEntered.current && !entered && !periodTapped.current) {
+      onPeriodReset()
+      setPendingPeriod('month')
+    }
+    wasEntered.current = entered
+  }, [entered])
   const picked: 'yes' | 'figure' | undefined =
     w?.kind === 'entered' || figureOpen
       ? 'figure'
@@ -211,9 +245,9 @@ export function WorkingCostQuestion({
     .join(' ')
   const medical = draft.health.oopMedicalAnnual
   // The stale note's Keep door (rulings 21, 34): an `entered` figure always; a held yes only where its
-  // figure is at or above today's quote, or where no quote is left to answer instead.
-  const keepable =
-    w !== undefined && (w.kind === 'entered' || !offersYes || workingYearCostFigure(w) >= quote.annualReal)
+  // figure is not below today's quote (`heldYesBelowQuote`, the one home the stale sentence's lean
+  // reads too) — which includes where no quote is left to answer instead.
+  const keepable = w !== undefined && !heldYesBelowQuote(draft)
 
   return (
     <div className="working-cost" ref={rootRef}>
@@ -239,6 +273,9 @@ export function WorkingCostQuestion({
               className="btn-quiet working-cost__keep"
               onClick={() => {
                 keepTapped.current = true
+                // A figure the panel refused a moment ago is not the answer that now stands: the input
+                // must show the kept figure, never the refused digits beside a run that uses the keep.
+                setHeldFigure(undefined)
                 if (w.kind === 'confirmed') {
                   // The door names its unit ("a year"), so keeping a yes answers the period too: the
                   // period rule must never ask it back of a figure the tool itself quoted yearly.
@@ -292,8 +329,10 @@ export function WorkingCostQuestion({
                 onWrite(writeConfirmedWorkingYearCost, 'answer')
               } else if (w?.kind === 'entered') {
                 // A re-tap on the held figure is an explicit answer (the segmented control's own
-                // doctrine): keep it as it stands, under the current reading.
+                // doctrine): keep it as it stands, under the current reading — and show it, not any
+                // digits the panel refused a moment ago.
                 keepTapped.current = stale
+                setHeldFigure(undefined)
                 onWrite(writeKeptWorkingYearCost, 'answer')
               } else {
                 setFigureOpen(true)
@@ -347,6 +386,7 @@ export function WorkingCostQuestion({
               { value: 'year', labelKey: 'periodYear' },
             ]}
             onChange={(next) => {
+              periodTapped.current = true
               setPendingPeriod(next)
               onPeriodTap()
               if (heldFigure !== undefined) {

@@ -255,17 +255,25 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     expect(methodologyLines(row(), 'workingCost', 'agi-derived')).toEqual(W_ARM)
   })
 
-  it('K7 (the state tax on pay) reads only where the run taxes working years by the state; where W holds that tax it is dropped, the order kept', () => {
+  it('K7 (the state tax on pay) is ONE sentence per reading: either way under NC, the rosy group under FL, PA and an unpriced state', () => {
+    // FL charges a working year no state tax, the least any work state can: only flattering. PA and an
+    // unpriced state charge none on pay at all — it counts only where the household added it to W.
     const k7 = 'assumptionWorkingYearCheckWorkState'
-    for (const reading of ['agi-derived', 'none'] as const) {
-      expect(methodologyLines(row(), 'workingCost', reading), reading).toEqual(W_ARM)
+    const noTax = 'assumptionWorkingYearCheckWorkStateNoTax'
+    const inW = 'assumptionWorkingYearCheckStateTaxInW'
+    // The rosy two sit after K5, in the "looks better" group; NC's either-way sentence sits after K6.
+    const at = (key: string): readonly string[] => [...W_ARM.slice(0, 8), key, ...W_ARM.slice(8).filter((k) => k !== k7)]
+    expect(methodologyLines(row(), 'workingCost', 'none')).toEqual(at(noTax))
+    expect(methodologyLines(row(), 'workingCost', 'class-based')).toEqual(at(inW))
+    expect(methodologyLines(row(), 'workingCost', 'unpriced')).toEqual(at(inW))
+    for (const reading of ['none', 'class-based', 'unpriced'] as const) {
+      const text = copy[methodologyLines(row(), 'workingCost', reading)[8] as keyof typeof copy]
+      expect(text, reading).toMatch(/the answer looks better than it really is/)
+      expect(text, reading).not.toMatch(/either way/)
     }
-    for (const reading of ['unpriced', 'class-based'] as const) {
-      expect(methodologyLines(row(), 'workingCost', reading), reading).toEqual(W_ARM.filter((k) => k !== k7))
-    }
-    // Today's row never carried it, under any reading.
+    // Today's row never carried any of them, under any reading.
     for (const reading of ['agi-derived', 'none', 'unpriced', 'class-based'] as const) {
-      expect(methodologyLines(row(), 'default', reading)).not.toContain(k7)
+      for (const k of [k7, noTax, inW]) expect(methodologyLines(row(), 'default', reading)).not.toContain(k)
     }
   })
 
@@ -283,8 +291,12 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
   })
 
   it('BANNED and the house voice hold on every W-arm string', () => {
-    const strings = wArmStrings()
-    expect(strings.length, 'the sweep reads the whole W arm (the name and seventeen lines)').toBe(18)
+    const strings = [
+      ...wArmStrings(),
+      copy.assumptionWorkingYearCheckWorkStateNoTax,
+      copy.assumptionWorkingYearCheckStateTaxInW,
+    ]
+    expect(strings.length, 'the sweep reads the whole W arm (the name, seventeen lines, the two other K7 readings)').toBe(20)
     for (const s of strings) {
       for (const b of BANNED) expect(s, `the W arm says "${b.word}": "${s}"`).not.toMatch(b.re)
       expect(s, `a straight apostrophe in "${s}" (the catalog writes ’)`).not.toMatch(/'/)
@@ -300,7 +312,7 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     expect(rewrite.endsWith(carried), 'sentences 3–4 carry over verbatim').toBe(true)
     expect(rewrite).not.toMatch(/doesn’t check that your pay/i)
     expect(rewrite).toMatch(/checks each year’s pay against what you said a working year costs/i)
-    expect(rewrite).toMatch(/payroll tax[^.;]*the income tax on that income[^.;]*what you put into savings[^.;]*your working-year figure/i)
+    expect(rewrite).toMatch(/payroll tax[^.;]*the income tax the tool works out on that income[^.;]*what you put into savings[^.;]*your working-year figure/i)
     expect(rewrite).toMatch(/comes up short[^.]*comes out of savings/i)
   })
 

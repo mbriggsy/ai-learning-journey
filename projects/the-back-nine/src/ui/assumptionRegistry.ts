@@ -180,7 +180,7 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
   },
   dateVintage: {
     kind: 'internal',
-    why: 'The date-surface vintage (contribution-limit year + ticker-blend snapshot as-of), stamped fresh at Save — read by U13 staleness; app-written, never user-set.',
+    why: 'The date-surface vintage (contribution-limit year + ticker-blend snapshot as-of + the pay check’s working-years table, workingYearsVintage), stamped fresh at Save — read by U13 staleness; app-written, never user-set.',
   },
   stateTaxVintage: {
     kind: 'internal',
@@ -214,24 +214,36 @@ export interface MethodologyDisclosure {
 /** Which arm a methodology row renders: `'workingCost'` iff THIS run carries the pay check's W. */
 export type MethodologyArm = 'default' | 'workingCost'
 
-/** The state readings under which the RUN taxes working years by the retirement state itself — the
- *  priced AGI-derived states (NC) and the no-income-tax ones (FL). Under the other two the household
- *  holds that tax inside W (the W step's own state sentence says so), so the pay check's K7 ("taxed by
- *  the state you said you'll live in…") would contradict the W row beside it — the b9-3 walk's "one
- *  sheet, two answers" on a household with no state set. */
-const WORK_STATE_TAXED: ReadonlySet<WorkingYearStateTaxReading> = new Set(['agi-derived', 'none'])
+/** K7 — where a working year's state tax on pay comes from — by the W answer's state reading. ONE key
+ *  per household, exhaustive over the readings, so a reading added later fails to compile here instead
+ *  of silently dropping the line (insight 081):
+ *  · NC (AGI-derived) — the run taxes working years by the retirement state, which may tax pay more or
+ *    less than the state worked in: either way;
+ *  · FL (no income tax) — the run charges the least any state can, so a taxing work state only flatters:
+ *    the rosy group;
+ *  · PA (class-based) and an unpriced state — the run charges no state tax on pay at all; it counts only
+ *    where the household added it to W, as the W step's help asks (the b9-3 walk's "one sheet, two
+ *    answers" ruled out the "taxed by the state you'll live in" words there). */
+const WORK_STATE_KEY: Readonly<Record<WorkingYearStateTaxReading, CopyKey>> = {
+  'agi-derived': 'assumptionWorkingYearCheckWorkState',
+  none: 'assumptionWorkingYearCheckWorkStateNoTax',
+  'class-based': 'assumptionWorkingYearCheckStateTaxInW',
+  unpriced: 'assumptionWorkingYearCheckStateTaxInW',
+}
+const WORK_STATE_FAMILY: ReadonlySet<CopyKey> = new Set(Object.values(WORK_STATE_KEY))
 
 /** A methodology row's lines for an arm — the ONE selector the panel and the disclosure test both
  *  call, so the arm choice cannot drift between them (insight 086). A row without a W arm reads its
  *  `lineKeys` on both arms. `stateReading` is the draft's working-year state-tax reading (the W step's
- *  own, `workingYearStateTaxReading`), REQUIRED so no caller can skip the K7 gate. */
+ *  own, `workingYearStateTaxReading`), REQUIRED so no caller can skip K7's choice: of the K7 family
+ *  in the list, only the reading's own key reads. */
 export function methodologyLines(
   m: MethodologyDisclosure,
   arm: MethodologyArm,
   stateReading: WorkingYearStateTaxReading,
 ): readonly CopyKey[] {
   const keys = arm === 'workingCost' && m.workingCostLineKeys !== undefined ? m.workingCostLineKeys : m.lineKeys
-  return WORK_STATE_TAXED.has(stateReading) ? keys : keys.filter((k) => k !== 'assumptionWorkingYearCheckWorkState')
+  return keys.filter((k) => !WORK_STATE_FAMILY.has(k) || k === WORK_STATE_KEY[stateReading])
 }
 
 /**
@@ -288,8 +300,10 @@ export const METHODOLOGY_DISCLOSURES: readonly MethodologyDisclosure[] = [
     nameKey: 'assumptionWorkingYearTaxName',
     lineKeys: ['assumptionWorkingYearTaxValue', 'assumptionWorkingYearTaxReadings', 'assumptionWorkingYearTaxOmissions'],
     // The pay check's arm (U9): the rewritten paragraph, the two unchanged ones, then one key per open
-    // gap that can move the check, in the pinned order — looks better than it really is (K1–K5), either
-    // way (K6–K8), a little worse (K9–K13, K15). The build that closes a gap deletes its key.
+    // gap that can move the check, in the pinned order — looks better than it really is (K1–K5, and K7
+    // where the reading makes it rosy), either way (K6–K8), a little worse (K9–K13, K15). The K7 family
+    // holds three keys, one per reading (`WORK_STATE_KEY`); each household reads one. The build that
+    // closes a gap deletes its key.
     workingCostLineKeys: [
       'assumptionWorkingYearCheckValue',
       'assumptionWorkingYearTaxReadings',
@@ -299,6 +313,8 @@ export const METHODOLOGY_DISCLOSURES: readonly MethodologyDisclosure[] = [
       'assumptionWorkingYearCheckIraDeduction',
       'assumptionWorkingYearCheckRothCatchUp',
       'assumptionWorkingYearCheckFullYearClaim',
+      'assumptionWorkingYearCheckWorkStateNoTax',
+      'assumptionWorkingYearCheckStateTaxInW',
       'assumptionWorkingYearCheckSteadyPay',
       'assumptionWorkingYearCheckWorkState',
       'assumptionWorkingYearCheckWageFigures',

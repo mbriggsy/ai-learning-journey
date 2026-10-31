@@ -312,7 +312,7 @@ describe('the W step — a figure of their own (KTD4, KTD17, ruling 10)', () => 
     expect(w(m)).toMatchObject({ amountReal: 60_000, entryPeriod: 'month' })
   })
 
-  it('a restored entered answer never re-asks the unit when its amount is edited (the provenance captured at mount)', () => {
+  it('a restored entered answer never re-asks the unit when its amount is edited (the face marks its unit at mount)', () => {
     const m = modelWith({ ...dateNoW(), workingYearCost: { kind: 'entered', amountReal: 96_000, entryPeriod: 'month', stateTaxReading: 'unpriced' } })
     render(<Harness model={m} />)
     expect(screen.getByLabelText(copy.workingCostAmountLabel)).toHaveValue('8,000')
@@ -638,6 +638,86 @@ describe('the W step — what leaves by Back (B1 and B2 of the Phase B review)',
     expect(heading()).toBe(copy.qWorkingCostHeading)
     expect(screen.getByRole('note')).toBeInTheDocument()
     expect(screen.queryByRole('alert')).toBeNull()
+  })
+})
+
+describe('the W step — the period mark follows the unit on screen (ruling 38, the whole-file review)', () => {
+  // `date`'s household said yes to $90,000; its spending is now $84,000, so the yes is stale and above
+  // today's quote — the Keep door shows (ruling 34).
+  const staleYes = (): ScenarioDraft => ({ ...dateNoW(), workingYearCost: confirmed(90_000) })
+  const enteredYearly = (): ScenarioDraft => ({
+    ...dateNoW(),
+    workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: 'unpriced' },
+  })
+  const expectAsked = () => {
+    next()
+    expect(heading()).toBe(copy.qWorkingCostHeading)
+    expect(screen.getByText(copy.periodConfirmPrompt)).toBeInTheDocument()
+  }
+
+  it('Keep a stale yes, clear the kept figure, pick a different figure: 84,000 under the month it shows is asked', () => {
+    const m = modelWith(staleYes())
+    render(<Harness model={m} />)
+    fireEvent.click(screen.getByRole('button', { name: slots.workingCostKeepYearly('90,000') }))
+    expect(w(m)).toMatchObject({ kind: 'entered', amountReal: 90_000, entryPeriod: 'year' })
+    typeFigure('') // the walk strips a cleared figure
+    expect(w(m)).toBeUndefined()
+    pick('workingCostDifferent')
+    expect(screen.getByRole('radio', { name: copy.periodMonth })).toBeChecked()
+    typeFigure('84000')
+    expectAsked()
+  })
+
+  it('Keep a stale yes, then "yes", then a different figure: the same 84,000 is asked', () => {
+    const m = modelWith(staleYes())
+    render(<Harness model={m} />)
+    fireEvent.click(screen.getByRole('button', { name: slots.workingCostKeepYearly('90,000') }))
+    pick('workingCostYes')
+    expect(w(m)).toMatchObject({ kind: 'confirmed', quotedReal: 84_000 })
+    pick('workingCostDifferent')
+    expect(screen.getByRole('radio', { name: copy.periodMonth })).toBeChecked()
+    typeFigure('84000')
+    expectAsked()
+  })
+
+  it('a reviewed yearly figure, cleared, then Back and forward again: the step asks the unit of the next figure', () => {
+    const m = modelWith(enteredYearly())
+    render(<Harness model={m} from="other-income" />)
+    next()
+    expect(screen.getByRole('radio', { name: copy.periodYear })).toBeChecked()
+    typeFigure('')
+    expect(w(m)).toBeUndefined()
+    back()
+    next()
+    pick('workingCostDifferent')
+    expect(screen.getByRole('radio', { name: copy.periodMonth })).toBeChecked()
+    typeFigure('84000')
+    expectAsked()
+  })
+
+  it('a reviewed yearly figure replaced by "yes": a different figure opens at the untapped MONTH, never an untapped year', () => {
+    const m = modelWith(enteredYearly())
+    render(<Harness model={m} />)
+    pick('workingCostYes')
+    pick('workingCostDifferent')
+    expect(screen.getByRole('radio', { name: copy.periodMonth })).toBeChecked()
+    expect(screen.getByRole('radio', { name: copy.periodYear })).not.toBeChecked()
+  })
+
+  it('a unit TAPPED on this face stands after a "yes": year stays checked and 84,000 typed under it is a year, unasked', () => {
+    const m = modelWith(dateNoW())
+    render(<Harness model={m} />)
+    pick('workingCostDifferent')
+    pick('periodYear')
+    typeFigure('84000')
+    expect(w(m)).toMatchObject({ kind: 'entered', amountReal: 84_000, entryPeriod: 'year' })
+    pick('workingCostYes')
+    pick('workingCostDifferent')
+    expect(screen.getByRole('radio', { name: copy.periodYear })).toBeChecked()
+    typeFigure('84000')
+    expect(w(m)).toMatchObject({ kind: 'entered', amountReal: 84_000, entryPeriod: 'year' })
+    next()
+    expect(heading()).toBe(copy.qWorkingLedgerHeading)
   })
 })
 

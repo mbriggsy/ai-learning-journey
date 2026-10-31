@@ -248,7 +248,7 @@ describe('the R7 registry completeness walk (the compile gate’s runtime half)'
     // ⚠️ NON-VACUITY CENSUS — the only assertion in this arm lives INSIDE the loop, so an empty
     // (or silently-shrunken) roster passes GREEN while proving nothing, and the R7 completeness
     // claim evaporates with the gate still reporting OK. `requiredSeats()` derives from TWO
-    // sources (`assumptionRegistry.ts:318-325`: the non-`internal` DRAFT_DISPOSITIONS, plus
+    // sources (`assumptionRegistry.ts:334-341`: the non-`internal` DRAFT_DISPOSITIONS, plus
     // METHODOLOGY_DISCLOSURES), so census BOTH — either half dropping out would otherwise be
     // invisible here.
     const seats = requiredSeats()
@@ -951,18 +951,27 @@ describe('the working-year methodology row renders the run’s own arm (U9)', ()
     expect(screen.queryByText(copy.assumptionWorkingYearCheckValue)).toBeNull()
   })
 
-  it('the state gap shows only where the run taxes working years by the state; where W holds that tax, never', () => {
-    const cases: readonly [ScenarioDraft['retirementState'], boolean][] = [
-      ['NC', true],
-      ['FL', true],
-      ['PA', false],
-      [undefined, false],
+  it('the state gap reads one sentence per household, by where its run takes the state tax on pay from', () => {
+    // NC taxes working years by the retirement state (either way); FL charges none (only flattering);
+    // PA and a household with no state charge none on pay at all — it counts only if it went into W.
+    const k7 = [
+      'assumptionWorkingYearCheckWorkState',
+      'assumptionWorkingYearCheckWorkStateNoTax',
+      'assumptionWorkingYearCheckStateTaxInW',
+    ] as const
+    const cases: readonly [ScenarioDraft['retirementState'], (typeof k7)[number]][] = [
+      ['NC', 'assumptionWorkingYearCheckWorkState'],
+      ['FL', 'assumptionWorkingYearCheckWorkStateNoTax'],
+      ['PA', 'assumptionWorkingYearCheckStateTaxInW'],
+      [undefined, 'assumptionWorkingYearCheckStateTaxInW'],
     ]
-    for (const [state, shows] of cases) {
+    for (const [state, key] of cases) {
       const { retirementState: _s, ...rest } = withoutW(DEV_SEEDS.dateshort)
       renderPanel({ snapshot: snap(withW(state === undefined ? rest : { ...rest, retirementState: state })) })
       expect(screen.getByText(copy.assumptionWorkingYearCheckValue), `${state}: the W arm`).toBeInTheDocument()
-      expect(screen.queryByText(copy.assumptionWorkingYearCheckWorkState) !== null, `${state ?? 'no state'}: K7`).toBe(shows)
+      for (const k of k7) {
+        expect(screen.queryByText(copy[k]) !== null, `${state ?? 'no state'}: ${k}`).toBe(k === key)
+      }
       cleanup()
     }
   })
@@ -1232,6 +1241,59 @@ describe('the W row — four faces, one question (U8)', () => {
   it('without initialSeat the sheet keeps its own landing — the W row never takes focus', () => {
     renderPanel({ snapshot: snap(DEV_SEEDS.datecoststale) })
     expect(document.activeElement).not.toBe(within(row()).getByText(copy.assumptionWorkingCostName))
+  })
+
+  // The whole-file review (2026-10-30, ruling 38): the Keep door names its unit, so it marks the period
+  // answered — but only for the kept figure. Once a "yes" replaces that figure, a new one is asked its unit.
+  const typeRowFigure = (value: string) => {
+    const input = within(row()).getByLabelText(copy.workingCostAmountLabel)
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value } })
+    fireEvent.blur(input)
+  }
+
+  it('Keep $84,000 a year, then "yes", then a different figure: 84,000 under the month it shows is asked, never run as $1,008,000', () => {
+    const m = freshModel()
+    m.update(() => DEV_SEEDS.datecoststale) // yes to $84,000; spending now $78,000
+    render(<WiredPanel model={m} />)
+    fireEvent.click(within(row()).getByRole('button', { name: slots.workingCostKeepYearly('84,000') }))
+    expect(m.getSnapshot().draft.workingYearCost).toMatchObject({ kind: 'entered', amountReal: 84_000, entryPeriod: 'year' })
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostYes }))
+    expect(m.getSnapshot().draft.workingYearCost).toMatchObject({ kind: 'confirmed', quotedReal: 78_000 })
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent }))
+    expect(within(row()).getByRole('radio', { name: copy.periodMonth })).toBeChecked()
+    typeRowFigure('84000')
+    expect(within(row()).getByRole('alert')).toHaveTextContent(copy.periodConfirmPrompt)
+    expect(m.getSnapshot().draft.workingYearCost).toMatchObject({ kind: 'confirmed', quotedReal: 78_000 })
+  })
+
+  it('a refused figure, then the Keep door: the input shows the kept $84,000, never the refused digits beside it', () => {
+    const m = freshModel()
+    m.update(() => DEV_SEEDS.datecoststale)
+    render(<WiredPanel model={m} />)
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent }))
+    typeRowFigure('90000') // under the untapped month: refused, the digits held on screen (B3)
+    expect(within(row()).getByRole('alert')).toHaveTextContent(copy.periodConfirmPrompt)
+    fireEvent.click(within(row()).getByRole('button', { name: slots.workingCostKeepYearly('84,000') }))
+    expect(m.getSnapshot().draft.workingYearCost).toMatchObject({ kind: 'entered', amountReal: 84_000, entryPeriod: 'year' })
+    expect(within(row()).getByLabelText(copy.workingCostAmountLabel)).toHaveValue('84,000')
+    expect(within(row()).getByRole('radio', { name: copy.periodYear })).toBeChecked()
+    expect(within(row()).queryByRole('alert')).toBeNull()
+  })
+
+  it('a refused figure, then a re-tap of the held figure’s own radio: the input shows the kept figure again', () => {
+    const { workingYearCost: _none, ...noW } = DEV_SEEDS.date
+    const m = freshModel()
+    m.update(() => noW)
+    render(<WiredPanel model={m} />)
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent }))
+    typeRowFigure('5000') // under the untapped month, below the $8,000 floor: lands as $60,000 a year
+    expect(m.getSnapshot().draft.workingYearCost).toMatchObject({ kind: 'entered', amountReal: 60_000, entryPeriod: 'month' })
+    typeRowFigure('90000') // at the floor under the untapped month: refused, the digits held
+    expect(within(row()).getByRole('alert')).toHaveTextContent(copy.periodConfirmPrompt)
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent })) // keep what stands
+    expect(m.getSnapshot().draft.workingYearCost).toMatchObject({ kind: 'entered', amountReal: 60_000, entryPeriod: 'month' })
+    expect(within(row()).getByLabelText(copy.workingCostAmountLabel)).toHaveValue('5,000')
   })
 })
 

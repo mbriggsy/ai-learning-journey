@@ -130,6 +130,14 @@ export interface EarningsTestYears {
   readonly heldBackCredit: Uint8Array
   /** Each person's crediting months over the path (each in effect from its own recompute year). */
   readonly creditMonths: readonly CreditMonths[]
+  /** Per EARNER, index-aligned to `people`: the excess earnings their own pay charged in year t (real $,
+   *  ≥ 0) — min(the excess, the benefits it could reach), before the dollar floors of the month it ran
+   *  out in; the rest is forgiven. 0 in a year they are not tested. Never per payee: a spousal start on
+   *  a working earner's record re-splits his charge across the family (404.439), so his own benefit's
+   *  hold falls while his charge stands. A start or a credit only widens what an excess can reach, so a
+   *  fall here is the test's own step (the FRA year's smaller excess and fewer months, the end of the
+   *  test) — the money picture's release. */
+  readonly chargedExcess: readonly Float64Array[]
 }
 
 /** A held-back month that is a crediting month for its benefit: it raises that benefit later. */
@@ -139,20 +147,29 @@ export const HELD_BACK_CREDITED = 1
  *  months a birth month would place: gloomy, until the birth-month ask. */
 export const HELD_BACK_UNTIL_BIRTH_MONTH = 2
 /** A held-back month from a payee certainly past FRA all year, whom the law credits nothing (§402(q)(7)
- *  removes only months inside the reduction period): a spousal excess a younger worker's pay charges. */
+ *  removes only months inside the reduction period): a spousal excess a younger worker's pay charges — in
+ *  his FRA year's stopgap too, whose charge marks no deduction month — or, on the 1955–56 cohorts (whose
+ *  survivor-FRA year falls before the retirement one), a widow(er) benefit her own pay charges. */
 export const HELD_BACK_PAST_FRA = 4
 
 /** One held-back month of one benefit, classified. `deducted`: the month is a deduction month on that
  *  benefit (a charge in a year certainly before the EARNER's FRA); the frame pair is the PAYEE's for that
- *  benefit (survivor FRA for a widow(er) benefit). The crediting branch is the settle's own test. */
+ *  benefit (survivor FRA for a widow(er) benefit). The crediting branch is the settle's own test.
+ *  The PAYEE's age is read first: a payee past FRA all year is credited nothing whatever the earner's
+ *  birth month would place, so a month the earner's stopgap (or 1959's may-hold-FRA year) leaves
+ *  undeducted is PAST_FRA there, never UNTIL_BIRTH_MONTH (the b9-9 review's E-C1: the first build read
+ *  those months as waiting on the birth-month ask). Only two charges reach such a payee — a worker past
+ *  FRA is never tested — and both credit nothing by law: the earner's charge on a spousal excess on
+ *  their record, and a 1955–56 widow(er)'s own test in her retirement-FRA year, past her survivor FRA.
+ *  As `creditBeforeAge ≤ fraYearAge`, a credited month is never past FRA: the order moves no other month. */
 const heldBackReason = (deducted: boolean, age: number, creditBeforeAge: number, fraYearAge: number): number =>
-  !deducted
-    ? HELD_BACK_UNTIL_BIRTH_MONTH
-    : age < creditBeforeAge
-      ? HELD_BACK_CREDITED
-      : age <= fraYearAge
-        ? HELD_BACK_UNTIL_BIRTH_MONTH
-        : HELD_BACK_PAST_FRA
+  age > fraYearAge
+    ? HELD_BACK_PAST_FRA
+    : !deducted
+      ? HELD_BACK_UNTIL_BIRTH_MONTH
+      : age < creditBeforeAge
+        ? HELD_BACK_CREDITED
+        : HELD_BACK_UNTIL_BIRTH_MONTH
 
 export type EarningsTestSchedule = NoEarningsTest | EarningsTestYears
 
@@ -429,6 +446,7 @@ export function earningsTestSchedule(path: EarningsTestPath): EarningsTestSchedu
   const withheld = new Float64Array(horizonYears)
   const fraYearAtMost = new Uint8Array(horizonYears)
   const heldBackCredit = new Uint8Array(horizonYears)
+  const chargedExcess = people.map(() => new Float64Array(horizonYears))
   const rate = spousalRate.value
   const remOwn = [new Float64Array(MONTHS), new Float64Array(MONTHS)]
   const remAux = [new Float64Array(MONTHS), new Float64Array(MONTHS)]
@@ -465,7 +483,8 @@ export function earningsTestSchedule(path: EarningsTestPath): EarningsTestSchedu
         const familyCharged = ownQualifies && q >= 0 && recordHolderOf(q) === e
         if (selfCap === 0 && !familyCharged) continue
         const preFraMonths = frames[e]!.fraYearMonthsAtMost
-        let excessCents = excessDollars(offsets[e]!.earnedIncomeReal, kind, preFraMonths) * 100
+        const excessFullCents = excessDollars(offsets[e]!.earnedIncomeReal, kind, preFraMonths) * 100
+        let excessCents = excessFullCents
         if (excessCents === 0) continue
         // Only a charge in a year certainly before the earner's FRA credits anything (KTD11).
         const credits = people[e]!.currentAge + t < frames[e]!.creditBeforeAge
@@ -506,6 +525,8 @@ export function earningsTestSchedule(path: EarningsTestPath): EarningsTestSchedu
             else remAux[q]![m] = remAux[q]![m]! - cut
           }
         }
+        // What this earner's excess took, in exact cents; whatever it could not reach is forgiven.
+        chargedExcess[e]![t] = (excessFullCents - excessCents) / 100
       }
       // Settle the year: what was held back, the crediting months it earned each benefit, and why each
       // held-back month does or does not raise a benefit later (on the same crediting rule, below).
@@ -547,5 +568,6 @@ export function earningsTestSchedule(path: EarningsTestPath): EarningsTestSchedu
     fraYearAtMost,
     heldBackCredit,
     creditMonths: people.map((_, i) => ({ own: ownCredits[i]!, spousal: spousalCredits[i]!, widow: widowCredits[i]! })),
+    chargedExcess,
   }
 }

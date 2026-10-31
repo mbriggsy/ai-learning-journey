@@ -154,7 +154,7 @@ export function composeReentry(
   if (report.date.contributionMoved) noteLines.push(copy.stalenessDate)
   // The pay check's U13 clock — the working-years table (payroll tax, the earnings test) — the last
   // NAMED rules line, beside its date-surface sibling. Exposure-gated upstream: the run carries W,
-  // the table's one reader, so "behind your working years" is true of every household that hears it.
+  // the table's one reader, so "the rules for your working years" is true of every household that hears it.
   if (report.workingYear.vintageMoved) noteLines.push(copy.stalenessWorkingYears)
   // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:84` keys each note <p> by its own TEXT,
   // so a second push of the same sentence would collide on the React key. One `if` over the

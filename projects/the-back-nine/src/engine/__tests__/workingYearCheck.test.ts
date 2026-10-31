@@ -161,6 +161,26 @@ describe('the pay check, one earner who runs short (R5–R8, KTD6–KTD8): the h
     for (const lifetimeTax of d.taxAware!.lifetimeTaxPaidReal) expect(lifetimeTax).toBeCloseTo(3 * 0.12 * (5_960 / 0.88), 6)
   })
 
+  it('a shortfall under a dollar is drawn too: W = $29,040.50 runs each year 50¢ short, and the year draws 50¢ ÷ 0.88 (W = $29,040 runs exactly even and draws nothing)', () => {
+    // The fixture's money out before W is 3,060 + 1,900 + 6,000 = 10,960, so W = 40,000 − 10,960 = $29,040 leaves
+    // cash at exactly $0 and W = $29,040.50 at −$0.50: the shortfall max(0, −cash) is 50¢, every cent of it a
+    // cost the year must fund (R5) — never dropped as dust. Its draw is grossed up in the 12 % bracket like the
+    // $5,960 above: 0.50 / 0.88.
+    const rec = recordingProbe()
+    const d = dist(simulate(earnerParams({ W: 29_040.5 }), 7, { _workingYearProbe: rec.probe }))
+    expect(rec.drawn).toHaveLength(6)
+    for (const year of rec.drawn) {
+      expect(cents(year.shortfall)).toBe(50)
+      expect(cents(year.fundingNet), 'the need IS the shortfall').toBe(50)
+      expect(year.grossWithdrawal).toBeCloseTo(0.5 / 0.88, 6)
+    }
+    for (const lifetimeTax of d.taxAware!.lifetimeTaxPaidReal) expect(lifetimeTax).toBeCloseTo(3 * 0.12 * (0.5 / 0.88), 6)
+    const even = recordingProbe()
+    dist(simulate(earnerParams({ W: 29_040 }), 7, { _workingYearProbe: even.probe }))
+    for (const { lines } of even.composed) expect(cents(lines.cash)).toBe(0)
+    for (const year of even.drawn) expect(year.grossWithdrawal).toBe(0)
+  })
+
   it('both tracks of a budget run charge the SAME shortfall in every working year (R10)', () => {
     const budget: CompiledBudget = { sticky: [20_000], scalableEssentials: [5_000], discretionary: [5_000] }
     const rec = recordingProbe()
@@ -935,6 +955,54 @@ describe('the A6 review’s confirmed gaps', () => {
     expect(joint).toHaveLength(2)
     expect(cents(joint[0]!.lines.payroll.total)).toBe(2_340_000)
     expect(joint[1]!.lines.payroll.total).toBeCloseTo(18_600 + 4_350 + 0.009 * (300_000 - 250_000 / priceIndex(2027)), 6)
+  })
+
+  it('a working SURVIVOR’s payroll reads her single line through the loop: after his death, $230,000 of pay owes 0.9 % above a deflated $200,000', () => {
+    // A couple filing jointly: he is 80 and retired; she is 50 and works to 53 for $230,000. A one-path sampled
+    // run whose draw has him die at the end of 2026 (death offset 1) and her live on — found by scanning seeds,
+    // deterministically (the CRN draws are a pure function of the seed and the dimensions). Her years 2027 and
+    // 2028 are survivor years: the check's wage vector still has two places ([0, 230,000] — `cashTermsForYear`
+    // pins the shape above), and the return is single, so the Additional Medicare Tax is 0.9 % × (230,000 −
+    // 200,000 ÷ the price index) — the frozen nominal line, deflated (2027: ≈ $325.81). In 2026, both alive and
+    // joint, the $250,000 line is above her pay: nothing. (Reading the joint line off the two-place vector
+    // would charge her nothing in either survivor year.)
+    const him: PersonInputs = { sex: 'male', currentAge: 80, birthYear: 1946, retirementAge: 80, earnedIncomeReal: 0, pia: 0, socialSecurityClaimAge: 67 }
+    const her: PersonInputs = { ...EARNER, earnedIncomeReal: 230_000 }
+    const H = 3
+    const base = earnerParams({ W: 1_000 })
+    const p: SimulationParams = {
+      ...base,
+      people: [him, her],
+      paths: 1,
+      maxHorizonYears: H,
+      longevityMode: 'sampled',
+      overlay: {
+        ...base.overlay!,
+        filing: 'mfj',
+        irmaaMagiSeed: [40_000, 40_000],
+        irmaaMagiOverride: flat(H, 230_000),
+        accumulation: { contributionsByPerson: [{}, {}], workingYearCostReal: 1_000 },
+      },
+    }
+    const longevityPeople = p.people.map((x) => ({ sex: x.sex, currentAge: x.currentAge }))
+    let seed = -1
+    for (let s = 1; s < 2_000 && seed < 0; s++) {
+      const path = sampleCouplePath(longevityPeople, buildDraws(s, 1, H, 2).longevityU[0]!)
+      if (path.deathYearOffsets[0] === 1 && path.deathYearOffsets[1]! >= H) seed = s
+    }
+    expect(seed, 'a seed with that path exists').toBeGreaterThan(0)
+    const rec = recordingProbe()
+    dist(simulate(p, seed, { _workingYearProbe: rec.probe }))
+    expect(rec.composed.map((c) => [c.t, c.floor.filing])).toEqual([
+      [0, 'mfj'],
+      [1, 'single'],
+      [2, 'single'],
+    ])
+    for (const { t, lines } of rec.composed) expect(lines.pay, `t=${t}`).toBe(230_000)
+    expect(rec.composed[0]!.lines.payroll.additionalMedicare, '2026, joint: under the $250,000 line').toBe(0)
+    for (const { t, lines } of rec.composed.slice(1)) {
+      expect(lines.payroll.additionalMedicare, `t=${t}`).toBeCloseTo(0.009 * (230_000 - 200_000 / priceIndex(2026 + t)), 6)
+    }
   })
 
   it('own deposits read the run’s Medicare onset: a 65-year-old working to 68 with onset at 68 keeps depositing $5,400 to the HSA', () => {

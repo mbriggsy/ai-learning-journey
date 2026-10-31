@@ -88,6 +88,14 @@ const PIA_CEILING_ANNUAL = 100_000
  *  unambiguously monthly (an annual figure under $8k is implausibly low). */
 const SPEND_AMBIGUOUS_MIN = 8_000
 
+/** A money figure its own field would SHOW as $0: `formatMoney` prints whole dollars, so anything
+ *  under 50¢ in the unit it was typed in reads "$0". The zero rules (`spend-zero`, `working-cost-zero`)
+ *  refuse exactly what the field shows as $0, so a typo of cents can never run as a nearly free year
+ *  behind a "$0" on screen (the whole-file review, 2026-10-30). One home, read by both rules. */
+function showsAsZero(typedInItsPeriod: number): boolean {
+  return typedInItsPeriod < 0.5
+}
+
 /** Field paths — the violation↔field association targets (aria-describedby ids
  *  derive from these). */
 export type FieldPath = string
@@ -99,9 +107,9 @@ export const incomeField = (index: number, field: string): FieldPath =>
   `incomeStreams.${index}.${field}`
 /** The pay check's W paths (KTD3, KTD17), kept apart on purpose: the gate lands on `.answer`
  *  (the W step's fields only — never the panel's); the zero and period rules land on the figure's
- *  own path, where both the step and the panel commit it; a tap on the W period control marks
- *  `.entryPeriod`, this session's disarm of the period rule (so the step never clears it on
- *  arrival, and never clears `.answer`'s neighbour by accident). */
+ *  own path, where both the step and the panel commit it; `.entryPeriod` is the period rule's one
+ *  disarm, set and dropped by the W question's face as the unit on screen is answered or not
+ *  (ruling 38 — so the step's arrival never touches it, and never clears `.answer`'s neighbour). */
 export const WORKING_COST_ANSWER_FIELD: FieldPath = 'workingYearCost.answer'
 export const WORKING_COST_FIELD: FieldPath = 'workingYearCost'
 export const WORKING_COST_PERIOD_FIELD: FieldPath = 'workingYearCost.entryPeriod'
@@ -219,17 +227,16 @@ export type SanityViolation = {
  *  A fresh draft leaves this false/absent, so the first-session honesty affordance
  *  (a silent 'month' default misread as 'year' is a 12× error) is unchanged.
  *
- *  `workingCostPeriodConfirmed` — the same confirmation for the W figure's period (the pay
- *  check's KTD17), and NEVER the spend flag above: answering one period says nothing about the
- *  other. True iff the draft held an ENTERED W when the surface opened — that figure cleared this
- *  same gate before it could be committed. It is a SECOND capture pattern, on purpose: the spend
- *  flag is an `IntakeApp` prop built from three app-lifetime signals, while this one is read off
- *  the draft itself, once, where the surface mounts (`IntakeFlow`'s lazy initial state; the
- *  assumption panel's open edge) — a Review or re-walk remounts the flow over a draft that already
- *  holds the entered W, so the draft is the one witness every route shares. */
+ *  The W figure's period (the pay check's KTD17) has NO provenance flag: its one disarm is the
+ *  touched path `WORKING_COST_PERIOD_FIELD`, set and dropped by the W question's face alone
+ *  (`WorkingCostQuestion`, Phase B ruling 38). An entered W the face mounts over cleared this gate
+ *  before it could be committed, so the face marks its unit answered at mount — and drops the mark
+ *  the moment that figure is gone. A flag captured once where the surface opened could not: it
+ *  outlived the figure it vouched for (the whole-file review, 2026-10-30), and a later figure typed
+ *  under the untapped month then ran 12× unasked. Never the spend flag above: answering one period
+ *  says nothing about the other. */
 export interface SanityProvenance {
   readonly periodConfirmed?: boolean
-  readonly workingCostPeriodConfirmed?: boolean
 }
 
 interface SanityRule {
@@ -329,13 +336,14 @@ const RULES: readonly SanityRule[] = [
     // entry error, never a simulable household — the engine ACCEPTS 0 (a legitimate
     // degenerate for draw-schedule isolation, simulate.test.ts), so this intake rule +
     // missingRequiredFacts' not-validly-present clause are the product-level defense.
-    // `<= 0` on a finite value only: absence stays the missing-fact channel's job.
+    // On a finite value only: absence stays the missing-fact channel's job. "$0" is what the field
+    // SHOWS (`showsAsZero`, in the unit it was typed in), so 40¢ a month refuses like a typed 0.
     id: 'spend-zero',
     target: () => ['annualSpendingReal'],
     check: (d) =>
       d.annualSpendingReal !== undefined &&
       Number.isFinite(d.annualSpendingReal) &&
-      d.annualSpendingReal <= 0
+      showsAsZero(d.spendEntryPeriod === 'month' ? d.annualSpendingReal / 12 : d.annualSpendingReal)
         ? [{ rule: 'spend-zero', field: 'annualSpendingReal', messageKey: 'errSpendZero' }]
         : [],
   },
@@ -594,12 +602,15 @@ const RULES: readonly SanityRule[] = [
     // year (the engine takes W as given, so 0 would run rosy). The walk writes a typed 0 into the
     // draft so this rule can hold Continue on it (ruling 17); `buildDateInput` never carries it, the
     // codec refuses it, and the panel never commits it (`commitRefusing` checks the mutated draft
-    // first). A `confirmed` answer cannot be 0: the step offers "yes" only on a quote above $0.
+    // first). A `confirmed` answer cannot be 0: the step offers "yes" only on a quote above $0. "$0"
+    // is what the field SHOWS (`showsAsZero`): 40¢ a month refuses like a typed 0, never runs as W.
     id: 'working-cost-zero',
     target: () => [WORKING_COST_FIELD],
     check: (d) => {
       const w = d.workingYearCost
-      return w?.kind === 'entered' && Number.isFinite(w.amountReal) && w.amountReal <= 0
+      return w?.kind === 'entered' &&
+        Number.isFinite(w.amountReal) &&
+        showsAsZero(w.entryPeriod === 'month' ? w.amountReal / 12 : w.amountReal)
         ? [{ rule: 'working-cost-zero', field: WORKING_COST_FIELD, messageKey: 'errWorkingCostZero' }]
         : []
     },
@@ -608,16 +619,16 @@ const RULES: readonly SanityRule[] = [
     // KTD17 — `spend-period-unconfirmed`'s W mirror, on the same floor (`SPEND_AMBIGUOUS_MIN`, never
     // re-typed). The W figure's untapped period is MONTH on every household, so a monthly figure
     // read 12× low can never pass silently: a figure at or above the floor in the month view asks
-    // which period was meant. Disarmed by a tap on the W period control THIS session (touched gains
-    // `WORKING_COST_PERIOD_FIELD`) or by `provenance.workingCostPeriodConfirmed` — NEVER by the spend
-    // flag. Mutually exclusive with `working-cost-zero` (≤ 0 vs ≥ the floor), so the two never render
-    // twin FieldErrors under one DOM id.
+    // which period was meant. Disarmed only by touched gaining `WORKING_COST_PERIOD_FIELD` — the W
+    // face's mark that the unit on screen is answered (a period tap, the Keep door's named unit, or an
+    // entered W the face mounted over: ruling 38) — NEVER by the spend flag. Mutually exclusive with
+    // `working-cost-zero` (under 50¢ vs at or above the floor), so the two never render twin FieldErrors under one DOM id.
     id: 'working-cost-period-unconfirmed',
     target: () => [WORKING_COST_FIELD],
-    check: (d, touched, provenance) => {
+    check: (d, touched) => {
       const w = d.workingYearCost
       if (w?.kind !== 'entered' || !Number.isFinite(w.amountReal)) return []
-      if (provenance.workingCostPeriodConfirmed === true || touched.has(WORKING_COST_PERIOD_FIELD)) return []
+      if (touched.has(WORKING_COST_PERIOD_FIELD)) return []
       const entered = w.entryPeriod === 'month' ? w.amountReal / 12 : w.amountReal
       return entered >= SPEND_AMBIGUOUS_MIN
         ? [{ rule: 'working-cost-period-unconfirmed', field: WORKING_COST_FIELD, messageKey: 'periodConfirmPrompt' }]

@@ -1,9 +1,11 @@
 /**
  * The pay check's W, on the intake side (`docs/plans/features/working-year-pay-check-build-spec.md`
  * KTD5, KTD18, KTD21): the quote the W question offers, the state-tax reading the answer is given
- * under, and the ONE stale predicate every surface calls. Pure functions of the draft — no React,
- * no copy — so the W step, the assumption panel's W row, the result's standing line, the unlock
- * gate and the dev seeds all read the same answers by construction (insight 086).
+ * under, the ONE stale predicate every surface calls, and the ONE stale sentence they all print
+ * (`workingYearCostStaleText`, built from the copy slots — the Phase B review's C9). Pure functions
+ * of the draft, with no React state, so the W step, the assumption panel's W row, the result's
+ * standing line, the unlock gate and the dev seeds all read the same answers by construction
+ * (insight 086).
  *
  * THE QUOTE (KTD5). What the household already told us a year costs, minus anything that reads as
  * a retirement-only splurge:
@@ -40,7 +42,7 @@ import { STATE_TAX_PROFILES, isPricedState } from '@engine/constants/stateTax'
 import { budgetGoverns, isActiveAt } from '@budget/budgetModel'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { slots } from '@ui/copy'
-import { formatMoney } from './fields'
+import { formatMoney, formatMoneyPair } from './fields'
 import { workingYearCostFigure } from './intakeMap'
 
 /** A dollar figure snapped to the cent — the grain a `confirmed` answer stores its quote at, so a
@@ -133,7 +135,8 @@ export function confirmedWorkingYearCost(d: ScenarioDraft): WorkingYearCostV3 | 
 }
 
 /** An `entered` answer: the household's own yearly figure (annual real $, > 0), the unit it was
- *  typed in, and the draft's current reading. The caller refuses ≤ 0 first (`working-cost-zero`). */
+ *  typed in, and the draft's current reading. The caller first refuses a figure that shows as $0
+ *  (`working-cost-zero`). */
 export function enteredWorkingYearCost(
   d: ScenarioDraft,
   amountReal: number,
@@ -218,6 +221,17 @@ export function isWorkingYearCostStale(d: ScenarioDraft): boolean {
   return workingYearCostStaleness(d) !== null
 }
 
+/** A held YES whose figure now sits BELOW today's quote: the household's spending rose past what it said
+ *  a working year costs, so keeping that figure is almost always the rosy side. ONE home for the two
+ *  places that read it (insight 081): the stale note's Keep door is withheld here (ruling 34), and the
+ *  quote-moved sentence warns that the answer can look better than it is (b9-7). */
+export function heldYesBelowQuote(d: ScenarioDraft): boolean {
+  const w = d.workingYearCost
+  if (w?.kind !== 'confirmed') return false
+  const quote = workingYearQuote(d).annualReal
+  return quote > 0 && quote > workingYearCostFigure(w)
+}
+
 /** The stale sentence (KTD21): the last figure, the current quote where it moved, and which input
  *  really moved — `null` while W is absent or still matches. ONE home for the three surfaces that say
  *  it: the W step's stale note, the panel row's stale face (both through `WorkingCostQuestion`) and
@@ -227,10 +241,13 @@ export function workingYearCostStaleText(d: ScenarioDraft): string | null {
   const w = d.workingYearCost
   const s = workingYearCostStaleness(d)
   if (w === undefined || s === null) return null
-  const last = formatMoney(workingYearCostFigure(w))
-  if (w.kind === 'entered') return slots.workingCostStaleStateEntered(last)
+  const lastFigure = workingYearCostFigure(w)
+  if (w.kind === 'entered') return slots.workingCostStaleStateEntered(formatMoney(lastFigure))
   const quote = workingYearQuote(d)
-  const now = quote.annualReal > 0 ? formatMoney(quote.annualReal) : null
+  // The stale check compares at the cent, so a move under a dollar prints both figures to the cent
+  // (`formatMoneyPair`) — never "yes to $84,000 … now come to $84,000" (the whole-file review).
+  const [last, quoted] = formatMoneyPair(lastFigure, quote.annualReal)
+  const now = quote.annualReal > 0 ? quoted : null
   if (s.quoteMoved && s.readingMoved) {
     return now === null ? slots.workingCostStaleBothGone(last) : slots.workingCostStaleBoth(last, now)
   }
@@ -241,7 +258,7 @@ export function workingYearCostStaleText(d: ScenarioDraft): string | null {
     // Never the mirror "can look worse": where no year runs short at either figure the answer is
     // identical, and two seats read that sentence as "the real answer is better" (the copy's note).
     const sentence = slots.workingCostStaleQuote(last, now)
-    return quote.annualReal > workingYearCostFigure(w) ? `${sentence} ${slots.workingCostStaleLeansBetter(last)}` : sentence
+    return heldYesBelowQuote(d) ? `${sentence} ${slots.workingCostStaleLeansBetter(last)}` : sentence
   }
   return slots.workingCostStaleStateConfirmed(last)
 }

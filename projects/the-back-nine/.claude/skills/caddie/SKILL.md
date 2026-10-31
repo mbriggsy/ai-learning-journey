@@ -129,9 +129,12 @@ route, so this is its only capturable home:
   `recviz`, the RecommendationViz two-arm chart — increment 6), `cvd-<arm>-survivor.png`
   (2026-10-14, `0581e783`: the survivor card sits below the phone's first frame, so no arm had
   screened it — a card, not a chart; skipped while its fold is closed, and on `budget` the
-  floor-relief card shares the class, so `-1` / `-2`) and `cvd-<arm>-state-picker.png`
+  floor-relief card shares the class, so `-1` / `-2`), `cvd-<arm>-state-picker.png`
   (increment 5: the fork walk's ANSWERED state picker under
-  every arm — a selected-control face, not a chart)
+  every arm — a selected-control face, not a chart) and the pay check's W row in the panel:
+  `crop-w-row-<n>.png` + `cvd-<arm>-w-row-<n>.png` in segments where its answered face (the
+  money picture) is taller than the sheet (b9-7), `crop-w-row.png` + `cvd-<arm>-w-row.png` where
+  a face fits (the stale and unknown faces — the whole-file review, 2026-10-31)
 - `aria.yaml` — the ARIA snapshot (the programmatic-availability channel)
 - `copy.txt` / `dialog.txt` — the VERBATIM rendered text from the DOM (words are always read
   here, never OCR'd off pixels)

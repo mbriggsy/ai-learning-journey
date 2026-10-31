@@ -2586,7 +2586,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2010-2014 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2028-2032 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,
@@ -2945,25 +2945,42 @@ async function sidewaysReport(
   }, scope)
 }
 
-/** Every money-picture figure that does not fit its own box (its text clipped or spilling). */
-async function clippedFigures(page: Page, scope: string): Promise<readonly string[]> {
+/** Every money-picture figure that does not fit its own box (its text clipped or spilling), and how many
+ *  figures the walk read — (c)'s own non-vacuity count (insight 029; the whole-file review, H-D10): an
+ *  offender list alone is empty when the selector matches NOTHING, so a renamed `.wy-row__value` would
+ *  have passed every arm as "every figure whole". */
+async function clippedFigures(
+  page: Page,
+  scope: string,
+): Promise<{ readonly counted: number; readonly offenders: readonly string[] }> {
   return page.evaluate((sel) => {
-    const out: string[] = []
-    for (const el of Array.from(document.querySelectorAll<HTMLElement>(`${sel} .wy-row__value`))) {
-      if (el.scrollWidth > el.clientWidth + 1) out.push(`${el.textContent ?? ''} (${el.scrollWidth} > ${el.clientWidth})`)
+    const offenders: string[] = []
+    const figures = Array.from(document.querySelectorAll<HTMLElement>(`${sel} .wy-row__value`))
+    for (const el of figures) {
+      if (el.scrollWidth > el.clientWidth + 1) offenders.push(`${el.textContent ?? ''} (${el.scrollWidth} > ${el.clientWidth})`)
       const row = el.closest('.wy-rows')
       if (row !== null) {
         const r = el.getBoundingClientRect()
         const box = row.getBoundingClientRect()
-        if (r.right > box.right + 0.5 || r.left < box.left - 0.5) out.push(`${el.textContent ?? ''} outside its group`)
+        if (r.right > box.right + 0.5 || r.left < box.left - 0.5) offenders.push(`${el.textContent ?? ''} outside its group`)
       }
     }
-    return out
+    return { counted: figures.length, offenders }
   }, scope)
 }
 
-/** (a)–(d) on the step the page stands on. `minBoxes` is the arm's own non-vacuity floor. */
-async function assertIntakeStepHolds(page: Page, where: string, minBoxes: number): Promise<void> {
+/** The figures a money picture of `date`'s household must show (`?seed=datecoststale` once re-answered,
+ *  walk and panel alike): year 0's nonzero lines from the U10 hand derivation (`b9-u10-tools/year0check`,
+ *  every rate from its primary) — pay $150,000, payroll tax $11,475, the tax on outside income $17,540,
+ *  deposits $20,000, W — and the bottom line, which every picture carries (`WorkingYearLedger.tsx` draws
+ *  any other line only above $0; no Social Security, no other income, nobody on Medicare yet). Later
+ *  years only add to it. */
+const DATE_PICTURE_FIGURES = 6
+
+/** (a)–(d) on the step the page stands on. `minBoxes` is the arm's own non-vacuity floor; `minFigures`
+ *  is (c)'s — the money-picture figures the frame must read before "none clipped" means anything. `0`
+ *  only on a frame that carries no picture (the W step; the unknown face), where (c) has nothing to read. */
+async function assertIntakeStepHolds(page: Page, where: string, minBoxes: number, minFigures: number): Promise<void> {
   await settleLayout(page)
   const heading = await page.locator('.step-heading').boundingBox()
   expect(heading, `${where}: the step heading must render`).not.toBeNull()
@@ -2973,7 +2990,11 @@ async function assertIntakeStepHolds(page: Page, where: string, minBoxes: number
   expect(sideways.counted, `${where}: the walk counted too few boxes — the step did not render`).toBeGreaterThan(minBoxes)
   expect(sideways.offenders, `${where}: boxes spill past the viewport's sides`).toEqual([])
   expect(sideways.docOverflow, `${where}: the document scrolls sideways`).toBeLessThanOrEqual(0)
-  expect(await clippedFigures(page, '.intake-shell'), `${where}: a money-picture figure is clipped`).toEqual([])
+  const figures = await clippedFigures(page, '.intake-shell')
+  expect(figures.counted, `${where}: the walk read too few money-picture figures — (c) would pass on nothing`).toBeGreaterThanOrEqual(
+    minFigures,
+  )
+  expect(figures.offenders, `${where}: a money-picture figure is clipped`).toEqual([])
   const body = await page.locator('.step-body').boundingBox()
   const nav = await page.locator('.intake-nav').boundingBox()
   expect(body !== null && nav !== null, `${where}: the step body and its nav must render`).toBe(true)
@@ -2994,35 +3015,44 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       // The stale face: the calm note before any tap, no answer checked, no alert.
       await expect(page.getByRole('note')).toContainText(slots.workingCostStaleQuote('84,000', '78,000'))
       await expect(page.getByRole('alert')).toHaveCount(0)
-      await assertIntakeStepHolds(page, 'W step, stale', 25)
+      await assertIntakeStepHolds(page, 'W step, stale', 25, 0)
       // A blocked Continue: the gate's message under the fork, the fork marked invalid.
       await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
       await expect(page.getByRole('alert')).toContainText(copy.errWorkingCostUnanswered)
       await expect(page.locator('fieldset[role="radiogroup"]')).toHaveAttribute('aria-invalid', 'true')
-      await assertIntakeStepHolds(page, 'W step, blocked', 25)
+      await assertIntakeStepHolds(page, 'W step, blocked', 25, 0)
       // The figure option open: the field and its period control in one slot.
       await page.getByRole('radio', { name: copy.workingCostDifferent }).evaluate((el) => (el as HTMLInputElement).click())
       // By role and EXACT name: a bare getByLabel matches by substring, and the fork's legend ("Is that about
       // what a year costs while you’re working?") contains the field's own label.
       await expect(page.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })).toBeVisible()
       await expect(page.getByRole('radio', { name: copy.periodMonth })).toBeChecked()
-      await assertIntakeStepHolds(page, 'W step, figure open', 30)
+      await assertIntakeStepHolds(page, 'W step, figure open', 30, 0)
       // Re-answer "yes" and walk on to the picture of the answered household.
       await page.getByRole('radio', { name: copy.workingCostYes }).evaluate((el) => (el as HTMLInputElement).click())
       await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
       await expect(page.locator('.step-heading')).toHaveText(copy.qWorkingLedgerHeading)
       await expect(page.locator('.wy-row--bottom')).toContainText(copy.workingLedgerLeftOver)
-      await assertIntakeStepHolds(page, 'money picture, datecoststale', 40)
+      await assertIntakeStepHolds(page, 'money picture, datecoststale', 40, DATE_PICTURE_FIGURES)
     })
 
     test('?seed=dateshort: the picture at its fullest — held-back Social Security, Medicare from savings, every later year short', async ({ page }) => {
       await rewalkSeedTo(page, 'dateshort', copy.qWorkingLedgerHeading, { final: true })
       await expect(page.locator('.wy-row--bottom')).toContainText(copy.workingLedgerShort)
-      await expect(page.locator('.wy-ledger')).toContainText('held back this year because of pay')
+      // The held-back words are the shipped slot's, never re-typed (the header's catalog law; the whole-file
+      // review, H-D11). $2,760 is U10's hand derivation (`b9-u10-tools/year0check`, typed from the primary):
+      // Alex's $30,000 of pay less the 2026 lower exempt amount (`earningsTestExemptAmounts`), $1 held back
+      // for every $2 above it. Year 0 is not her full-retirement-age year, so the plain sentence, never the
+      // "at most" one.
+      await expect(page.locator('.wy-ledger')).toContainText(slots.workingLedgerSsHeldBack('2,760'))
       await expect(page.getByRole('heading', { level: 3, name: copy.workingLedgerAlsoFromSavings })).toBeVisible()
       await expect(page.getByRole('heading', { level: 3, name: copy.workingLedgerLaterHeading })).toBeVisible()
       await expect(page.locator('[role="alert"], .wy-ledger [aria-live]')).toHaveCount(0)
-      await assertIntakeStepHolds(page, 'money picture, dateshort', 60)
+      // (c)'s floor, by hand from the same derivation: pay $30,000 and Social Security $27,960 coming in;
+      // payroll tax $2,295, deposits $3,000 and W going out (its tax on outside income is $0, so no line);
+      // the bottom line; and at least one line under each of the two headings just seen (a group draws its
+      // heading only over a line) — 8.
+      await assertIntakeStepHolds(page, 'money picture, dateshort', 60, 8)
     })
 
     test('?seed=datesolo: the refusal witness walks every step, and its picture step reads one calm line', async ({ page }) => {
@@ -3039,7 +3069,7 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
         'the blocker is named once on the screen, in the strip',
       ).toBe(1)
       await expect(page.locator('.intake-shell dl')).toHaveCount(0)
-      await assertIntakeStepHolds(page, 'money picture, unknown', 10)
+      await assertIntakeStepHolds(page, 'money picture, unknown', 10, 0)
     })
   })
 
@@ -3106,7 +3136,11 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       const sideways = await sidewaysReport(page, '[role="dialog"] [data-assumption-seat="working-year-cost"]')
       expect(sideways.counted).toBeGreaterThan(30)
       expect(sideways.offenders, 'the W row spills past the viewport').toEqual([])
-      expect(await clippedFigures(page, '[role="dialog"]'), 'a panel money-picture figure is clipped').toEqual([])
+      const panelFigures = await clippedFigures(page, '[role="dialog"]')
+      expect(panelFigures.counted, 'the panel picture read too few figures — "none clipped" would pass on nothing').toBeGreaterThanOrEqual(
+        DATE_PICTURE_FIGURES,
+      )
+      expect(panelFigures.offenders, 'a panel money-picture figure is clipped').toEqual([])
     })
   })
 }

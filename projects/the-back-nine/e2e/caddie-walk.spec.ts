@@ -174,10 +174,12 @@ const CROP_TARGETS = [
   { name: 'panel', selector: '[role="dialog"]' },
   { name: 'echo', selector: '.ap-echo' },
   // The pay check's W row (U8) — below every row whose edit can stale it, so only an element crop,
-  // which scrolls the sheet, paints it. It is TALLER than the sheet's visible box, so it crops in
-  // segments (`captureTallSheetRegion`, `crop-w-row-<n>.png`), each also under every CVD arm: its
-  // chosen answer, Short / Left over and the fork are a read the color lane owes (b9-7 — no arm had
-  // screened the row, and the plain crop painted the landing over its top third).
+  // which scrolls the sheet, paints it. On its ANSWERED face (the money picture) it is TALLER than the
+  // sheet's visible box, so it crops in segments (`captureTallSheetRegion`, `crop-w-row-<n>.png`), each
+  // also under every CVD arm: its chosen answer, Short / Left over and the fork are a read the color
+  // lane owes (b9-7 — no arm had screened the row, and the plain crop painted the landing over its top
+  // third). A face that fits the box (the stale and unknown faces carry no picture — `seed:datecoststale`'s
+  // doors walk opens the stale one) takes one `crop-w-row.png` and `cvd-<arm>-w-row.png` instead.
   { name: 'w-row', selector: '[role="dialog"] [data-assumption-seat="working-year-cost"]', cvd: true },
   // The LAST methodology row (2026-10-20 — the working-year tax row, the longest of them): far below
   // the sheet's visible box, so only an element crop, which scrolls it into view, paints it.
@@ -404,6 +406,17 @@ async function captureState(page: Page, dir: string): Promise<void> {
       // page-level region, and a sheet row that fits) keeps the plain element crop.
       if (!(await captureTallSheetRegion(page, target, dir, name, cvd))) {
         await target.screenshot({ path: path.join(dir, `crop-${name}.png`), scale: 'device' })
+        // `cvd` rides BOTH branches (the whole-file review, H-D9): a W row face that fits its box (the
+        // stale and unknown faces carry no money picture) reached only this branch, and the flag was
+        // read only by the segmented one — so such a face landed in no color-vision arm at all. The
+        // element crop under each arm, `cvd-<arm>-<name>.png` (the `captureCvdRegion` shape).
+        if (cvd) {
+          for (const [armName, type] of CVD_ARMS) {
+            await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
+            await target.screenshot({ path: path.join(dir, `cvd-${armName}-${name}.png`), scale: 'device' })
+          }
+          await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
+        }
       }
     }
   }
@@ -495,7 +508,7 @@ async function captureCvdRegion(
  * restored afterwards: later crops expect the frame they were written against.
  *
  * Returns false, capturing nothing, when the region has no scrolling ancestor or fits its box —
- * the caller keeps the plain element crop.
+ * the caller keeps the plain element crop (and, with `cvd`, takes that crop under every arm too).
  */
 const SEGMENT_OVERLAP_PX = 24
 

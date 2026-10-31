@@ -268,6 +268,33 @@ describe('IntakeApp — the U13 re-entry gate (council 2026-07-09, constraints (
       h.model = fresh
     }
   })
+
+  // The stale-W line (b9-7's `payCheckStale`): the door sentence promises a choice that leads to where W
+  // can change, so it rides only a tab that can save (`canChange: !readOnly`) — the whole-file review
+  // found no arm reaching IntakeApp's own argument (a planted `canChange: true` stayed green).
+  const staleW = scenarioFromDraft(DEV_SEEDS.datecoststale)
+  if (!staleW.ready) throw new Error('IntakeApp.test: datecoststale must build a persistable scenario')
+  const payCheckLine = (): string | undefined =>
+    Array.from(document.querySelectorAll('.reentry-notes p'))
+      .map((p) => p.textContent ?? '')
+      .find((t) => t.startsWith(copy.stalenessPayCheckGateLead))
+
+  it('a READ-ONLY return over a stale W says the stale line without the door sentence; a writable one says it', async () => {
+    const fresh = h.model
+    try {
+      h.model = staleW.scenario
+      render(<IntakeApp hydrateFromVault readOnly />)
+      await screen.findByRole('button', { name: copy.reentryContinueCta })
+      expect(payCheckLine(), 'the stale-W line renders read-only').toBeDefined()
+      expect(payCheckLine()).not.toContain(copy.stalenessPayCheckGateDoor)
+      cleanup()
+      render(<IntakeApp hydrateFromVault />)
+      await screen.findByRole('button', { name: copy.reentryAffirmCta })
+      expect(payCheckLine()?.endsWith(copy.stalenessPayCheckGateDoor), 'the writable tab names the door').toBe(true)
+    } finally {
+      h.model = fresh
+    }
+  })
 })
 
 describe('IntakeApp — dev-seed provenance flips only on an APPLIED seed (the R19 disarm stays armed)', () => {

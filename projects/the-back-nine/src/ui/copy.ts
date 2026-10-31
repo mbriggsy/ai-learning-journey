@@ -272,7 +272,7 @@ export const copy = {
   // them, the rosy side (the refuter confirmed it in source). The containment contrast stays verbatim.
   // PILOT-DRAFTED, shipped flagged.
   oopHelpWorking:
-    'A rough yearly figure is plenty. The tool adds health premiums on top from the year you’ve both planned to stop working, and Medicare premiums for anyone on Medicare who has already stopped. Premiums paid while either of you still works belong in what a working year costs, which has its own question. Out-of-pocket costs should already be inside your spending figure. If you have an HSA, the tool uses this to size its tax-free draw. And if one of you is on your own later, the tool keeps this amount whole rather than scaling it down — a deliberately cautious choice.',
+    'A rough yearly figure is plenty. The tool adds health premiums on top from the year the last of you stops working, and Medicare premiums for anyone on Medicare who has already stopped. Premiums paid while either of you still works belong in what a working year costs, which has its own question. Out-of-pocket costs should already be inside your spending figure. If you have an HSA, the tool uses this to size its tax-free draw. And if one of you is on your own later, the tool keeps this amount whole rather than scaling it down — a deliberately cautious choice.',
   qWorkIncomeHeading: 'Income Medicare looks at',
   // C3 → Option B, simplified (2026-06-30, Briggsy's call): the working-year IRMAA-MAGI is the
   // already-entered salary (`earnedIncomeReal`, derived at `intakeMap.buildDateInput`) PLUS the
@@ -540,6 +540,11 @@ export const copy = {
     'If your state taxes pay, that tax isn’t in this line: it belongs in your figure for a working year, below.',
   workingLedgerIncomeTaxStatePayInW:
     'Your state’s tax on pay isn’t in this line: it belongs in your figure for a working year, below.',
+  // …and the same two where there IS no tax line to sit under (no federal tax on the outside income that
+  // year): said on the W line itself, so the reminder never vanishes with the tax row (the whole-file
+  // review, 2026-10-30 — ruling 37's "whatever the slice").
+  workingLedgerCostStateInW: 'If your state taxes pay, that tax belongs in this figure: the tool doesn’t work it out.',
+  workingLedgerCostStatePayInW: 'Your state’s tax on pay belongs in this figure: the tool doesn’t work it out.',
   workingLedgerDeposits: 'What you put into savings',
   workingLedgerCost: 'Your figure for a working year',
   workingLedgerLeftOver: 'Left over',
@@ -574,7 +579,10 @@ export const copy = {
   workingLedgerEventEarningsTest:
     'Social Security changes because of pay: what it holds back moves, or the raise for months it held back begins.',
   workingLedgerEventStateRate: 'Your state’s income-tax rate changes.',
-  workingLedgerEventSeniorBonusEnds: 'The extra tax deduction for people 65 and over ends.',
+  // The 2025 law's temporary senior deduction (`seniorBonusFor`) ending — never the standing extra
+  // deduction for 65 and over, which the plain "extra deduction … ends" read as (the whole-file review).
+  workingLedgerEventSeniorBonusEnds:
+    'The temporary tax deduction for people 65 and over ends. The usual extra deduction at 65 stays.',
   workingLedgerWhoYou: 'you',
   workingLedgerWhoSpouse: 'your spouse',
   // The `'unknown'` face: no `<dl>`, no zeros — one calm line, then the strip's own names.
@@ -1559,12 +1567,12 @@ export const copy = {
   //
   // ⚠️ THE TOGGLE SETS THE ENTRY UNIT TOO, AND THE OLD SENTENCE HID IT (fixed 2026-08-03).
   // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
-  // (`spendDisplayed`, AssumptionPanel.tsx:517-522), so the reader watches the number move while
+  // (`spendDisplayed`, AssumptionPanel.tsx:507-512), so the reader watches the number move while
   // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:780-790, the `entered * 12` arm at :787) then multiplies by 12
+  // commit (AssumptionPanel.tsx:770-780, the `entered * 12` arm at :777) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
-  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:423) hard-disarms
-  // `spend-period-unconfirmed` (sanity.ts:381-404, the disarm read at :392) on this surface, and
+  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:416) hard-disarms
+  // `spend-period-unconfirmed` (sanity.ts:389-412, the disarm read at :400) on this surface, and
   // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:89) regardless — so the rule could not have
   // caught it even armed. The replacement must therefore say BOTH halves — the money is
   // unchanged AND the next figure you enter is read in the unit you just picked. A draft that said
@@ -1674,7 +1682,7 @@ export const copy = {
   // 2026-10-29 measurement's (the register's *A retired spouse's share of the plan at work stays in W…*).
   // The Hawk's narrowed ban binds every one; PILOT-DRAFTED, shipped flagged (KTD19).
   assumptionWorkingYearCheckValue:
-    'While either of you is still working, the tool checks each year’s pay against what you said a working year costs. It adds your pay, any Social Security actually paid, and any other income, then takes out payroll tax, the income tax on that income and on your investment income, what you put into savings, and your working-year figure; if a year comes up short, the difference comes out of savings like any other withdrawal. Savings can still create taxable income in those years, like a Roth conversion, a required withdrawal, or money taken out for Medicare costs. That income is taxed on top of your pay and investment income, and the tax is paid from savings.',
+    'While either of you is still working, the tool checks each year’s pay against what you said a working year costs. It adds your pay, any Social Security actually paid, and any other income, then takes out payroll tax, the income tax the tool works out on that income and on your investment income, what you put into savings, and your working-year figure; if a year comes up short, the difference comes out of savings like any other withdrawal. Savings can still create taxable income in those years, like a Roth conversion, a required withdrawal, or money taken out for Medicare costs. That income is taxed on top of your pay and investment income, and the tax is paid from savings.',
   // Leans better than real (K1–K5).
   assumptionWorkingYearCheckEarlyCharge:
     'A short year covered from a retirement account before age 59½ isn’t charged the 10% early-withdrawal penalty here, so that year looks a little better than it really is.',
@@ -1686,6 +1694,16 @@ export const copy = {
     'Catch-up deposits the law now requires higher earners to make as Roth, after tax, are treated here as going in before tax, so the answer can look a little better than it really is.',
   assumptionWorkingYearCheckFullYearClaim:
     'A Social Security benefit that starts at full retirement age is counted for that whole year, though checks begin in the birth month, and the same goes for a widow’s or widower’s benefit that starts that year. Until the tool asks your birth month, that year can look a little better than it really is.',
+  // K7 by the W answer's state reading (the whole-file review, 2026-10-30; `methodologyLines` picks ONE of
+  // the three per household). A state with no income tax charges a working year none, the least any
+  // state can — so working somewhere that taxes pay can only flatter the answer: the rosy group.
+  assumptionWorkingYearCheckWorkStateNoTax:
+    'Your working years are taxed by the state you said you’ll live in once you stop, which has no income tax, not the state you work in now. If the state you work in taxes pay, the answer looks better than it really is.',
+  // PA (its tax on pay isn't priced for working years) and an unpriced state: the run charges no state
+  // tax on pay, so it counts only where the household added it to W (the W step's help asks it to). A
+  // "yes" to the spending quote leaves it out, since spending figures leave state income tax out.
+  assumptionWorkingYearCheckStateTaxInW:
+    'If your state taxes pay, the tool doesn’t work that tax out for your working years: it counts only if you added it to your figure for a working year, and if you didn’t, the answer looks better than it really is.',
   // Could go either way (K6–K8).
   assumptionWorkingYearCheckSteadyPay:
     'Pay is one steady figure, in today’s dollars, all the way to the stop date. If your pay falls before you stop, the answer looks better than it really is; if it rises, a little worse.',

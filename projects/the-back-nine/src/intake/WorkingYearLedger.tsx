@@ -1,10 +1,11 @@
 import { useMemo, type ReactNode } from 'react'
-import { copy, slots } from '@ui/copy'
+import { copy, slots, type CopyKey } from '@ui/copy'
 import type {
   WorkingYearHeldBackRaise,
   WorkingYearLedger,
   WorkingYearLedgerEvent,
   WorkingYearLedgerLaterYear,
+  WorkingYearStateTaxReading,
 } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { formatMoney } from './fields'
@@ -19,9 +20,11 @@ import { workingYearQuote, workingYearStateTaxReading } from './workingYearQuote
  * `h2`) and the assumption panel's W row (legends `h4`, under the panel's section `h3`s — Phase B
  * ruling 13).
  *
- * IT COMPUTES NOTHING. Every figure is the engine producer's (`workingYearLedger`, read through
+ * IT COMPUTES NO MONEY LINE. Every line is the engine producer's (`workingYearLedger`, read through
  * `intakeMap.workingYearLedgerForRun`): whole dollars already rounded so the lines sum to the bottom
- * line exactly. This file only chooses which nonzero lines to show and words them.
+ * line exactly. This file chooses which nonzero lines to show and words them; its two detail figures
+ * read the run's built input — the investment income the tax line names (`buildDateInput`'s own
+ * array) and the W line's monthly echo (the answer's yearly figure ÷ 12).
  *
  * NEVER COLOR ALONE, NEVER AN ALARM: grouped `<dl>`s under legends that each say "a year"; every
  * outflow carries a minus sign as well as its group; the bottom line carries a word AND a sign; no
@@ -92,7 +95,8 @@ function whoFor(d: ScenarioDraft, person: number): string {
   return d.people[person]?.name ?? (person === 0 ? copy.workingLedgerWhoYou : copy.workingLedgerWhoSpouse)
 }
 
-/** One reason, worded — `null` for `stillShort`, which only ever reads inside a run. */
+/** One reason, worded — `null` for `stillShort`, which is never a reason of its own: it reads inside a
+ *  run, or beside other events as where its short streak began (`shortSinceLine`). */
 function eventLine(e: WorkingYearLedgerEvent, d: ScenarioDraft): string | null {
   switch (e.code) {
     case 'claim':
@@ -158,10 +162,33 @@ export function laterLines(laterYears: readonly WorkingYearLedgerLaterYear[]): r
 const STOPGAP_YEAR = (y: WorkingYearLedgerLaterYear): string[] =>
   y.withheldBasis === 'fraYearAtMost' ? [copy.workingLedgerLaterAtMost] : []
 
-function laterRow(line: LaterLine, d: ScenarioDraft, year0: number): RowSpec {
+/** Where a short year that only CONTINUES earlier short years says they began (`stillShort` beside the
+ *  events it names, none of which can have made it short — the whole-file review's L-D1): the first year
+ *  of its unbroken short streak, walked back over the short years the picture names (every short year is
+ *  named, KTD12), into year 0 when that is short too. `null` if no short year comes right before it —
+ *  the producer's contract says one always does, and the picture then adds no line rather than a wrong
+ *  one. */
+function shortSinceLine(ledger: WorkingYearLedger, y: WorkingYearLedgerLaterYear): string | null {
+  if (!y.events.some((e) => e.code === 'stillShort')) return null
+  let first = y
+  for (let i = ledger.laterYears.indexOf(y) - 1; i >= 0; i--) {
+    const prev = ledger.laterYears[i]!
+    if (prev.yearsIn !== first.yearsIn - 1 || prev.bottomLine >= 0) break
+    first = prev
+  }
+  if (first.yearsIn === 1 && ledger.year0.bottomLine < 0) return slots.workingLedgerStillShortSince(ledger.year0.calendarYear)
+  return first === y ? null : slots.workingLedgerStillShortSince(first.calendarYear)
+}
+
+function laterRow(line: LaterLine, d: ScenarioDraft, ledger: WorkingYearLedger): RowSpec {
+  const year0 = ledger.year0.calendarYear
+  const since = (y: WorkingYearLedgerLaterYear): string[] => {
+    const s = shortSinceLine(ledger, y)
+    return s === null ? [] : [s]
+  }
   if (line.kind === 'year') {
     const y = line.year
-    const reasons = y.events.map((e) => eventLine(e, d)).filter((s): s is string => s !== null)
+    const reasons = [...y.events.map((e) => eventLine(e, d)).filter((s): s is string => s !== null), ...since(y)]
     return {
       stack: true,
       label: slots.workingLedgerLaterYear(y.calendarYear),
@@ -180,7 +207,7 @@ function laterRow(line: LaterLine, d: ScenarioDraft, year0: number): RowSpec {
   const reasons =
     line.anchor === null
       ? [slots.workingLedgerStillShortSince(year0)]
-      : line.anchor.events.map((e) => eventLine(e, d)).filter((s): s is string => s !== null)
+      : [...line.anchor.events.map((e) => eventLine(e, d)).filter((s): s is string => s !== null), ...since(line.anchor)]
   const single = line.years.length === 1
   return {
     stack: true,
@@ -206,6 +233,19 @@ function heldBackRaiseLines(r: WorkingYearHeldBackRaise): string[] {
     ...(r.pastFullRetirementAge ? [copy.workingLedgerHeldBackNotePastFra] : []),
     ...(r.credited ? [copy.workingLedgerHeldBackNoteRest] : []),
   ]
+}
+
+/** Where a working year's state tax on PAY went, by the W answer's state reading — `null` where the run
+ *  itself charges it (NC) or there is none to charge (FL); otherwise the household holds it in W, said
+ *  under the tax line, or on the W line when no tax line shows. Exhaustive over the readings, so a
+ *  reading added later fails to compile here instead of silently dropping the line (insight 081). */
+const STATE_TAX_IN_W: Readonly<
+  Record<WorkingYearStateTaxReading, { readonly underTaxLine: CopyKey; readonly onCostLine: CopyKey } | null>
+> = {
+  'agi-derived': null,
+  none: null,
+  'class-based': { underTaxLine: 'workingLedgerIncomeTaxStatePayInW', onCostLine: 'workingLedgerCostStatePayInW' },
+  unpriced: { underTaxLine: 'workingLedgerIncomeTaxStateInW', onCostLine: 'workingLedgerCostStateInW' },
 }
 
 /** The W line's monthly echo. An ENTERED figure echoes its own stored unit, "as you gave it" — the one
@@ -248,16 +288,13 @@ export function WorkingYearLedgerPicture({
   // The tax line says what it holds (the b9-5 re-walk): "federal and state" only where the run charged a
   // state slice (NC on everything; PA on the income other than pay), "federal" elsewhere. Where the W step
   // asked the household to fold its state's tax on PAY into W — an unpriced state, or PA, whose tax on pay
-  // the tool doesn't work out — a line says where that tax went, whatever the slice. The reading is the W
-  // step's own (draft-keyed, KTD18), so the two surfaces say the same thing.
+  // the tool doesn't work out — a line says where that tax went, whatever the slice: under the tax line
+  // where there is one, and on the W line where there is none (a year with no federal tax on the outside
+  // income — the whole-file review). The reading is the W step's own (draft-keyed, KTD18), so the two
+  // surfaces say the same thing.
   const stateTaxCharged = y0.taxOnOutsideIncomeState.dollars > 0
-  const stateReading = workingYearStateTaxReading(draft)
-  const stateTaxInW =
-    stateReading === 'unpriced'
-      ? copy.workingLedgerIncomeTaxStateInW
-      : stateReading === 'class-based'
-        ? copy.workingLedgerIncomeTaxStatePayInW
-        : null
+  const stateTaxInW = STATE_TAX_IN_W[workingYearStateTaxReading(draft)]
+  const taxLineShows = goingOut.taxOnOutsideIncome.dollars > 0
   const amount = (dollars: number) => slots.workingLedgerAmount(formatMoney(dollars))
   const outflow = (dollars: number) => slots.workingLedgerOutflow(formatMoney(dollars))
 
@@ -290,14 +327,14 @@ export function WorkingYearLedgerPicture({
     ...(goingOut.payrollTax.dollars > 0
       ? [{ label: copy.workingLedgerPayrollTax, value: outflow(goingOut.payrollTax.dollars) }]
       : []),
-    ...(goingOut.taxOnOutsideIncome.dollars > 0
+    ...(taxLineShows
       ? [
           {
             label: stateTaxCharged ? copy.workingLedgerIncomeTaxFederalState : copy.workingLedgerIncomeTaxFederal,
             value: outflow(goingOut.taxOnOutsideIncome.dollars),
             details: [
               ...(investment > 0 ? [slots.workingLedgerIncomeTaxInvestment(formatMoney(investment))] : []),
-              ...(stateTaxInW === null ? [] : [stateTaxInW]),
+              ...(stateTaxInW === null ? [] : [copy[stateTaxInW.underTaxLine]]),
             ],
           },
         ]
@@ -310,7 +347,10 @@ export function WorkingYearLedgerPicture({
           {
             label: copy.workingLedgerCost,
             value: outflow(goingOut.workingYearCost.dollars),
-            details: echo === null ? [] : [echo],
+            details: [
+              ...(echo === null ? [] : [echo]),
+              ...(stateTaxInW !== null && !taxLineShows ? [copy[stateTaxInW.onCostLine]] : []),
+            ],
           },
         ]
       : []),
@@ -346,7 +386,7 @@ export function WorkingYearLedgerPicture({
       ? [{ label: copy.workingLedgerMedicareExtras, value: amount(alsoFromSavings.medicareExtras.dollars) }]
       : []),
   ]
-  const later = laterLines(ledger.laterYears).map((line) => laterRow(line, draft, y0.calendarYear))
+  const later = laterLines(ledger.laterYears).map((line) => laterRow(line, draft, ledger))
 
   return (
     <div className="wy-ledger">

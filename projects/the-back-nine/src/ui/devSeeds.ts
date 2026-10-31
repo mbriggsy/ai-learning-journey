@@ -1193,8 +1193,14 @@ const atCeilingSeed: ScenarioDraft = {
  * U10's MEASUREMENT (2026-10-30, `DEV_CRN_SEED`, both tiers, both tracks — every date seed and date
  * plant through the real date search, W-absent at HEAD against W minted by this function, then the
  * edited tree re-run and byte-compared to the minted run): NO crown, NO non-monotone set and NO crowned
- * grade moved on any seed or plant. `date65`, `datenc` and `atceiling` are byte-identical (each crowns
- * at 0, and no working year in their window runs short or meets the earnings test). `date`,
+ * grade moved on any seed or plant. `date65`, `datenc` and `atceiling` are byte-identical: each crowns
+ * at 0, and no working year of theirs runs short at any offset. `date65` and `datenc` meet no earnings
+ * test either (the worker claims at full retirement age, and the earliest death the engine draws starts
+ * any widow(er) benefit past the survivor's full retirement age). `atceiling` DOES: retired Sam's death
+ * at 66, 67 or 68 leaves Alex working with her widow benefit held back ($21,068.40 a year after a death
+ * at 66) at the uncrowned offsets 7–10 — but it is over-funded, so the held-back money flips no path
+ * there, and its crowned band is offset 0's, where nobody works (the whole-file review's probe,
+ * 2026-10-31, every offset). `date`,
  * `dateborder`, `datesplit` and `datestale` move only in band percentiles and a few uncrowned offsets'
  * fourth decimal (a working widow(er)'s benefit is withheld while they work and credited back later).
  * `datemixed`'s offsets 8–10 fall a few hundredths of a point (its working-widow(er) rows turn short).
@@ -1279,8 +1285,10 @@ const dateShortWitness: ScenarioDraft = {
  * panel's W row opens on its stale face. The engine keeps running on the last figure given, $84,000
  * (R4) — exactly what the line says. The spending moves DOWN on purpose: the line must be seen beside a
  * date its working years decide (measured in real Chromium 2026-10-30: crowned about 7 years out,
- * around 2033). `date` itself crowns 9 years out, at the window's edge, and a raise costs it the crown;
- * the over-funded `atceiling` crowns today, where no working year exists for W to touch.
+ * around 2033). `date` itself crowns 9 years out — a confirmed date one year inside the window's edge
+ * (the edge is offset 10, `DATE_OFFSET_WINDOW_TOP`, where the crown reads `window-edge-unconfirmed`) —
+ * and a raise costs it the crown; the over-funded `atceiling` crowns today, where no working year exists
+ * for W to touch.
  *
  * THE ONE EXCEPTION to "mint W last, on the seed's own final draft" (`withConfirmedW`): a stale answer
  * is BY DEFINITION one minted on an earlier draft. So it is minted on `date`'s own draft, and the

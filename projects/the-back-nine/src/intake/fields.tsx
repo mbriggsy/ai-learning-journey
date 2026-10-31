@@ -43,6 +43,16 @@ export function formatMoney(value: number | undefined): string {
   return value === undefined ? '' : usd.format(value)
 }
 
+const usdCents = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+/** Two figures for one sentence, in whole dollars — unless they round to the SAME dollar, where both
+ *  print to the cent so the sentence still shows that they differ (a comparison made at the cent,
+ *  like KTD21's stale check, must never read "$84,000 … now $84,000"). */
+export function formatMoneyPair(a: number, b: number): readonly [string, string] {
+  const whole = [formatMoney(a), formatMoney(b)] as const
+  return whole[0] === whole[1] && a !== b ? [usdCents.format(a), usdCents.format(b)] : whole
+}
+
 interface CommonFieldProps {
   readonly labelKey: CopyKey
   readonly helpKey?: CopyKey

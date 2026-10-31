@@ -21,13 +21,18 @@
  * grain — a sub-cent part names nothing):
  *  - a claim, a spousal start, or an earnings-test step — gated on the year's Social Security PAID or HELD BACK
  *    moving (the run's own figures, constant in real terms between discrete changes); named by who starts, and
- *    as a test step when no start explains the move. A start can only add to what the test holds back, and
- *    never starts a credit (a credit exists only for a benefit paid in an earlier year), so beside a start a
- *    release or a credit taking effect is named as the test's own step too;
+ *    as a test step when no start explains the move. A start can only add to the excess each EARNER's benefits
+ *    absorb, and never starts a credit (a credit exists only for a benefit paid in an earlier year), so beside a
+ *    start a release — some earner's charged excess falling (the schedule's `chargedExcess`) — or a credit
+ *    taking effect is named as the test's own step too. Never read off the household's held-back figure (a
+ *    release beside a claim the test holds in full leaves it rising) nor per payee (a spousal start on a working
+ *    earner's record re-splits his charge across the family, so his own hold falls while nothing is released);
  *  - a member's Medicare onset (the year context's enrolled set grows) — paid from savings, never in the sum;
- *  - a member turning 65 (the context's 65+ count grows) while the year before carried federal tax on the
- *    outside income: the larger standard deduction lowers it (as built A7 — a discrete step the ruled list left
- *    out);
+ *  - a member turning 65 (the context's 65+ count grows) where the year before or the year itself carries
+ *    federal tax on the outside income (as built A7 — a discrete step the ruled list left out). Gaining a
+ *    deduction can only lower a tax, so it moves the year exactly when the year would owe without it: a year
+ *    that owes proves it, and a year before that owed reads a tax the larger deduction takes to $0 (the b9-9
+ *    review: gated on the year before alone, a claim that made the year itself owe hid it);
  *  - a catch-up step-down and an income stream starting or ending — named by the draft, which the compiled run
  *    has lost (a person's streams are pre-summed into one leaf; the 'band' ceiling frame lives in intake); two
  *    of a member's streams stepping in one year name it once;
@@ -35,8 +40,11 @@
  *    is above 0; the senior bonus's sunset where the year before carried the bonus and THIS year's federal tax on
  *    the outside income is above 0 — losing a deduction can only raise a tax, so it moves the year exactly then
  *    (the A7 review, `wf_b97c0055-346`: gated on the year before, a bonus that had zeroed 2028's tax hid 2029's).
- * A short year with no event is `erosion` (the year before not short) or `stillShort`. Drift — the frozen
- * figures the price index deflates, an eroding pension — never names a year unless that year is short.
+ * A short year that no named event can have made short — none, or only events that raise the bottom line or sit
+ * outside it ({@link CAN_LOWER_THE_BOTTOM_LINE}) — is short by drift, so it is `erosion` (the year before not
+ * short) or `stillShort` too, beside any events it names (the b9-9 review: a short year whose one reason was
+ * Medicare's onset, or the larger deduction at 65, handed that reason to every short year after it). Drift —
+ * the frozen figures the price index deflates, an eroding pension — never names a year unless that year is short.
  *
  * ROUNDING (KTD12, as built A7). The money grain is the cent: each line's engine value and the year's cash are
  * snapped to the cent first, so float dust can never move a dollar (a $3,060.0000000000005 payroll line reads
@@ -202,6 +210,32 @@ const byCodeThenPerson = (a: WorkingYearLedgerEvent, b: WorkingYearLedgerEvent):
 const aboveZero = (dollars: number): boolean => toCents(dollars) > 0
 
 /**
+ * Whether a named event can LOWER a year's bottom line — the only events a short year's shortness can be read
+ * from. Every other one, by the law's own direction on this no-death working timeline, raises the bottom line
+ * or sits outside it: a benefit that starts adds to what is paid (an excess can hold back at most the new
+ * benefit, but for the dollar floors of a month 404.439 splits — under $2 — and the tax on it is under the
+ * benefit); a release or a credit pays more; the larger deduction at 65
+ * only lowers a tax; a deposit that steps down leaves more (its tax is under the deposit); an income that starts
+ * is taxed at under 100 %; Medicare is paid from savings, never in the sum. An income's end and the senior
+ * bonus's end can lower it, and so can a state rate step (the law steps say THAT the rate moved, not which way).
+ * Exhaustive over the codes, so a new code must say which it is.
+ */
+const CAN_LOWER_THE_BOTTOM_LINE: Readonly<Record<WorkingYearLedgerEventCode, boolean>> = {
+  claim: false,
+  spousalStart: false,
+  earningsTestStep: false,
+  medicareStarts: false,
+  turns65: false,
+  catchUpStepDown: false,
+  incomeStarts: false,
+  incomeEnds: true,
+  stateRateStep: true,
+  seniorBonusSunset: true,
+  erosion: false,
+  stillShort: false,
+}
+
+/**
  * The working-year money picture of a W-present run (see the module docblock). THROWS on a run it cannot
  * describe and on a malformed draft event.
  */
@@ -361,10 +395,14 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
         else if (spousalStarts) starts.push({ code: 'spousalStart', person: i })
       }
       events.push(...starts)
-      // A start only adds to what the test holds back and never starts a credit, so with no start every move
-      // is the test's, and beside one a release or a credit taking effect still is (the A7 review: a claim in
-      // the year a spouse's credits start hid them).
-      const released = toCents(heldBack(t)) < toCents(heldBack(t - 1))
+      // A start only adds to the excess an earner's benefits absorb and never starts a credit, so with no start
+      // every move is the test's, and beside one a release or a credit taking effect still is (the A7 review: a
+      // claim in the year a spouse's credits start hid them). A release is read per EARNER — some earner's
+      // charged excess falling — never off the household's held-back figure (the b9-9 review: her FRA-year
+      // release beside his claim, held in full, left it rising and went unnamed) and never per payee (a spousal
+      // start on a working earner's record re-splits his charge across the family by 404.439: his own hold
+      // falls, and the month's dollar floors move the household's, while nothing is released).
+      const released = schedule.tested && schedule.chargedExcess.some((c) => toCents(c[t]!) < toCents(c[t - 1]!))
       const credited = toCents(creditLift(t, year.ss)) !== toCents(creditLift(t - 1, prior.ss))
       if (starts.length === 0 || released || credited) events.push({ code: 'earningsTestStep' })
     }
@@ -376,7 +414,12 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
     if (turned65.length !== year.context.count65 - prior.context.count65) {
       throw new Error(`[workingYearLedger] sim year ${t}: ${turned65.length} member(s) turn 65 but the year context's 65+ count moved by ${year.context.count65 - prior.context.count65} — a wiring fault`)
     }
-    if (aboveZero(prior.lines.taxOnOutsideIncomeParts.federal)) for (const i of turned65) events.push({ code: 'turns65', person: i })
+    // Gaining a deduction can only lower a tax: a year that owes proves the larger one lowered it, and a year
+    // before that owed reads a tax it takes to $0 (the b9-9 review: gated on the year before alone, a claim
+    // that made this year owe hid it). The senior bonus's end, a deduction LOST, reads this year alone (below).
+    if (aboveZero(prior.lines.taxOnOutsideIncomeParts.federal) || aboveZero(year.lines.taxOnOutsideIncomeParts.federal)) {
+      for (const i of turned65) events.push({ code: 'turns65', person: i })
+    }
     for (const e of draftEvents) {
       if (e.yearsIn !== t) continue
       if (!events.some((x) => x.code === e.code && personOf(x) === e.person)) events.push({ code: e.code, person: e.person })
@@ -390,7 +433,9 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
     }
     if (steps.seniorBonusSunset && aboveZero(year.lines.taxOnOutsideIncomeParts.federal)) events.push({ code: 'seniorBonusSunset' })
     const bottomLine = workingYearBottomLine(year.lines.cash)
-    if (events.length === 0 && bottomLine < 0) {
+    // A short year no named event can have made short is short by drift: it says so beside what it names, so
+    // a run of short years it anchors never borrows a reason that only helped (the b9-9 review).
+    if (bottomLine < 0 && !events.some((e) => CAN_LOWER_THE_BOTTOM_LINE[e.code])) {
       events.push({ code: workingYearBottomLine(prior.lines.cash) < 0 ? 'stillShort' : 'erosion' })
     }
     if (events.length === 0) continue

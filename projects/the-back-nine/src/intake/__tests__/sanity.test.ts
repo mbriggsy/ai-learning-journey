@@ -169,6 +169,15 @@ describe('sanity — coherent-but-dire flows through (only impossibilities block
     )
     expect(validateDraft(d, touchedSpend)).toEqual([])
   })
+  it('a spend the field SHOWS as $0 fires spend-zero too: 40¢ a month blocks, 50¢ passes (one edge with W’s rule)', () => {
+    const retired = { workStatus: 'retired', retirementAge: 64, currentAge: 65 } as const
+    const shown = (annualSpendingReal: number, spendEntryPeriod: 'month' | 'year') =>
+      validateDraft(draft(retired, retired, { annualSpendingReal, spendEntryPeriod }), touchedSpend).map((v) => v.rule)
+    expect(shown(4.8, 'month')).toEqual(['spend-zero'])
+    expect(shown(6, 'month')).toEqual([])
+    expect(shown(0.49, 'year')).toEqual(['spend-zero'])
+    expect(shown(0.5, 'year')).toEqual([])
+  })
   it('an ABSENT spend stays the missing-fact channel’s job — no spend-zero violation', () => {
     const d = draft(
       { workStatus: 'retired', retirementAge: 64, currentAge: 65 },
@@ -527,6 +536,20 @@ describe('sanity — the pay check’s W rules (KTD3, KTD17)', () => {
     expect(validateDraft(dateDraft({ workingYearCost: confirmed84 }), figureTouched)).toEqual([])
   })
 
+  it('working-cost-zero refuses what the field SHOWS as $0: 40¢ a month blocks, 50¢ passes (the whole-file review)', () => {
+    // 40¢ a month is $4.80 a year; the field prints whole dollars, so it reads "$0" — and would run as W.
+    expect(validateDraft(dateDraft({ workingYearCost: entered(4.8, 'month') }), figureTouched).map((v) => v.rule)).toEqual([
+      'working-cost-zero',
+    ])
+    // 50¢ a month prints "$1": a figure the household can see, so it is theirs.
+    expect(validateDraft(dateDraft({ workingYearCost: entered(6, 'month') }), figureTouched)).toEqual([])
+    // Typed yearly, the edge is the yearly figure itself.
+    expect(validateDraft(dateDraft({ workingYearCost: entered(0.49, 'year') }), figureTouched).map((v) => v.rule)).toEqual([
+      'working-cost-zero',
+    ])
+    expect(validateDraft(dateDraft({ workingYearCost: entered(0.5, 'year') }), figureTouched)).toEqual([])
+  })
+
   it('the W period rule: a month-view figure at the floor asks the unit; below it passes (the spend rule’s 8,000 floor)', () => {
     // $9,000 typed under the untapped month → stored 108,000 a year → asked.
     expect(validateDraft(dateDraft({ workingYearCost: entered(108_000, 'month') }), figureTouched)).toEqual([
@@ -541,10 +564,9 @@ describe('sanity — the pay check’s W rules (KTD3, KTD17)', () => {
     expect(validateDraft(dateDraft({ workingYearCost: entered(40_000, 'year') }), figureTouched)).toHaveLength(1)
   })
 
-  it('the W period rule is disarmed by a tap on ITS period control, or by its own provenance — never by the spend flag', () => {
+  it('the W period rule is disarmed only by ITS period path in touched (the W face’s mark) — never by the spend flag', () => {
     const d = dateDraft({ workingYearCost: entered(108_000, 'month') })
     expect(validateDraft(d, new Set([WORKING_COST_FIELD, WORKING_COST_PERIOD_FIELD]))).toEqual([])
-    expect(validateDraft(d, figureTouched, { workingCostPeriodConfirmed: true })).toEqual([])
     // The spend period's provenance says nothing about W's unit.
     expect(validateDraft(d, figureTouched, { periodConfirmed: true }).map((v) => v.rule)).toEqual([
       'working-cost-period-unconfirmed',

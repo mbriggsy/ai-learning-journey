@@ -190,6 +190,84 @@ describe('the dual-earner spouse and the 404.439 cap (both born 1964, both claim
       { own: 4, spousal: 6, widow: 0 },
     ])
   })
+
+  it('the record holder goes first whatever order the household was typed in: with her entered first, the same $14,830 (§403(f)(1); 404.434(b))', () => {
+    // The two-earner fixture above, the people reversed: she (index 0) holds the $130 spousal excess on HIS
+    // record; he (index 1) is the record holder. The law reads the record, never the list: his $7,980 takes
+    // the family on his record first (January–May, June's $1,200 rest split $800 / $130 capped), then her
+    // $2,000 takes only her own remaining benefits (January–March, April pays $240). Paid 9,200 + 910 + 4,720
+    // = $14,830; held back $10,250; the crediting months the same per person — hers own 4 and spousal 6, his
+    // own 6. (Charging in index order would run her excess first, against her spousal excess too.)
+    const listed = base(40_440, 28_480, 63)
+    const s = tested(pathOf([listed.people[1]!, listed.people[0]!], [50, 50], 1))
+    expect(cents(s.paid[0]!)).toBe(1_483_000)
+    expect(cents(s.withheld[0]!)).toBe(1_025_000)
+    expect(s.creditMonths).toEqual([
+      { own: 4, spousal: 6, widow: 0 },
+      { own: 6, spousal: 0, widow: 0 },
+    ])
+  })
+})
+
+describe('the 404.439 partial month, share by share: each capped at what its payee gets with nothing charged, then floored to the dollar', () => {
+  // He: born 1964, 62, claimed at 62 → 0.70 of his PIA; works to 65. She: born 1959 (FRA 66y10m), 67,
+  // spousal only, claimed at 67 — not early, so her spousal benefit is 50 % of his PIA, unreduced. The
+  // family on his record is large beside his own benefit, so the month the excess runs out can owe him a
+  // share above it.
+  const capped = (hisPia: number, hisPay: number): EarningsTestYears =>
+    tested(
+      pathOf(
+        [
+          person({ currentAge: 62, birthYear: 1964, retirementAge: 65, earnedIncomeReal: hisPay, pia: hisPia, socialSecurityClaimAge: 62 }),
+          person({ sex: 'female', currentAge: 67, birthYear: 1959, socialSecurityClaimAge: 67 }),
+        ],
+        [50, 50],
+        1,
+      ),
+    )
+
+  it('the WORKER’s share is capped too: April’s $2,300 rest pays him his $1,400.00, never $1,533.33, and the trim is not re-paid to her', () => {
+    // PIA $2,000 → $1,400.00; hers $1,000.00; the family $2,400. (39,080 − 24,480) ÷ 2 = 7,300: January–March
+    // take $7,200, April is charged $100, and its $2,300 rest splits 1 : 0.5 → $1,533.33 to him, capped at his
+    // $1,400 (404.439: no share above what that payee gets with no deduction), and $766.67 → $766 to her.
+    // Paid: him 9 × 1,400 = 12,600; her 766 + 8 × 1,000 = 8,766 → $21,366. Owed 12 × 2,400 = 28,800, so
+    // $7,434 is held back: the $7,300 excess, the $133.33 his cap trims and the 67¢ her floor shaves.
+    const s = capped(24_000, 39_080)
+    expect(cents(s.paid[0]!)).toBe(2_136_600)
+    expect(cents(s.withheld[0]!)).toBe(743_400)
+  })
+
+  it('a capped share is floored to the dollar like any other: his $1,400.70 cap pays $1,400 in the partial month', () => {
+    // PIA $2,001 → 0.70 → $1,400.70; hers 50 % → $1,000.50; the family $2,401.20. The same 7,300 excess:
+    // January–March take $7,203.60, April is charged $96.40, and its $2,304.80 rest splits $1,536.53 to him —
+    // capped at $1,400.70, then floored (404.304(f)): $1,400 — and $768.27 → $768 to her. Paid: him 1,400 +
+    // 8 × 1,400.70 = 12,605.60; her 768 + 8 × 1,000.50 = 8,772 → $21,377.60. Owed 12 × 2,401.20 = 28,814.40,
+    // so $7,436.80 is held back. (Flooring before the cap would pay his April $1,400.70.)
+    const s = capped(24_012, 39_080)
+    expect(cents(s.paid[0]!)).toBe(2_137_760)
+    expect(cents(s.withheld[0]!)).toBe(743_680)
+  })
+
+  it('so is the spouse’s: her $667 share, capped at her $650.30, pays $650', () => {
+    // He as above on PIA $2,001 ($1,400.70). She: born 1964, 62, spousal only, claimed at 62: 1,000.50 at 0.65
+    // = $650.325 → $650.30. The family is $2,051.00; (36,886 − 24,480) ÷ 2 = 6,203: January–March take $6,153,
+    // April is charged $50, and its $2,001 rest splits $1,334 to him (under his cap) and $667 to her — capped
+    // at her $650.30, then floored: $650. Paid: him 1,334 + 8 × 1,400.70 = 12,539.60; her 650 + 8 × 650.30 =
+    // 5,852.40 → $18,392. Owed 12 × 2,051 = 24,612, so $6,220 is held back: the excess and April's $17 the cap
+    // and the floor leave unpaid. (Flooring before the cap would pay her April $650.30.)
+    const s = tested(
+      pathOf(
+        [
+          person({ currentAge: 62, birthYear: 1964, retirementAge: 65, earnedIncomeReal: 36_886, pia: 24_012, socialSecurityClaimAge: 62 }),
+          person({ sex: 'female', currentAge: 62, birthYear: 1964, socialSecurityClaimAge: 62 }),
+        ],
+        [50, 50],
+        1,
+      ),
+    )
+    expect(cents(s.paid[0]!)).toBe(1_839_200)
+    expect(cents(s.withheld[0]!)).toBe(622_000)
+  })
 })
 
 describe('the age gap: an older spouse past FRA on a younger worker’s record', () => {
@@ -312,6 +390,62 @@ describe('the FRA calendar year (KTD11)', () => {
     ])
   })
 
+  it('his stopgap withholds an older wife’s spousal months too: his wait on the birth month, hers — past FRA all year — never raise anything (review b9-9, E-C1)', () => {
+    // A 2026-start couple. He: born 1959 (FRA 66y10m), 67 — his FRA year, the stopgap at nine months — PIA
+    // $3,000 claimed at 62: 58 months early → 1 − (36 × 5/9 % + 22 × 5/12 %) = 0.708333 → $2,125.00; works to
+    // 68 for $120,000. She: born 1956 (FRA 66y4m), 70, past FRA all year, her own PIA $600 claimed at 62:
+    // 52 months early → 1 − (20 % + 16 × 5/12 %) = 0.733333 → $440.00, and the spousal excess 50 % × 3,000 −
+    // 600 = $900 at 1 − (25 % + 16 × 5/12 %) = 0.683333 → $615.00, on HIS record. His stopgap: 9/12 × 120,000
+    // = 90,000; (90,000 − 65,160) ÷ 3 = 8,280 against the family's $2,740: January–March full ($8,220), April
+    // charged $60, whose $2,680 rest splits 1 : 0.5 → $1,786.67 → $1,786 to him and $893.33 to her, capped at
+    // her $615. Held back: him 3 × 2,125 + 339 = 6,714; her 3 × 615 = 1,845 → $8,559. Paid 12 × 3,180 − 8,559 =
+    // $29,601. Nothing is credited (the stopgap's charge marks no deduction month), but for two reasons: his
+    // months are pre-FRA months the birth month would place (§402(q)(7) credits them); hers fall outside her
+    // reduction period, which ended at her FRA years before, so no birth month can credit them. Before the
+    // fix the stopgap's undeducted months all read "until the birth month" — hers too, a later raise the law
+    // never pays.
+    const both = tested(
+      pathOf(
+        [
+          person({ currentAge: 67, birthYear: 1959, retirementAge: 68, earnedIncomeReal: 120_000, pia: 36_000, socialSecurityClaimAge: 62 }),
+          person({ sex: 'female', currentAge: 70, birthYear: 1956, pia: 7_200, socialSecurityClaimAge: 62 }),
+        ],
+        [50, 50],
+        2,
+      ),
+    )
+    expect(cents(both.paid[0]!)).toBe(2_960_100)
+    expect(cents(both.withheld[0]!)).toBe(855_900)
+    expect(both.fraYearAtMost[0]).toBe(1)
+    expect(both.heldBackCredit[0], 'his months and hers, each its own reason').toBe(HELD_BACK_UNTIL_BIRTH_MONTH | HELD_BACK_PAST_FRA)
+    // Only hers held back. He: born 1960, 67 (eleven pre-FRA months at most), PIA $2,000 claimed at 62 → 0.70 →
+    // $1,400.00; works to 68 for $71,760. She: born 1957 (FRA 66y6m), 69, spousal only, claimed at 67 — after
+    // FRA, so unreduced: $1,000.00. His stopgap: 11/12 × 71,760 = 65,780; (65,780 − 65,160) ÷ 3 = 206.67 → 206,
+    // all charged to January: the $2,194 rest splits $1,462.67 to him, capped at his $1,400 (a whole-dollar
+    // benefit, so nothing of his is held back), and $731.33 → $731 to her. Held back $269, all of it hers;
+    // paid 12 × 2,400 − 269 = $28,531. The year is still the stopgap's "at most", and its one reason is hers.
+    const hersOnly = tested(
+      pathOf(
+        [
+          person({ currentAge: 67, birthYear: 1960, retirementAge: 68, earnedIncomeReal: 71_760, pia: 24_000, socialSecurityClaimAge: 62 }),
+          person({ sex: 'female', currentAge: 69, birthYear: 1957, socialSecurityClaimAge: 67 }),
+        ],
+        [50, 50],
+        2,
+      ),
+    )
+    expect(cents(hersOnly.paid[0]!)).toBe(2_853_100)
+    expect(cents(hersOnly.withheld[0]!)).toBe(26_900)
+    expect(hersOnly.fraYearAtMost[0]).toBe(1)
+    expect(hersOnly.heldBackCredit[0], 'every month held back is hers, past FRA').toBe(HELD_BACK_PAST_FRA)
+    for (const s of [both, hersOnly]) {
+      expect(s.creditMonths).toEqual([
+        { own: 0, spousal: 0, widow: 0 },
+        { own: 0, spousal: 0, widow: 0 },
+      ])
+    }
+  })
+
   it('the stopgap uses the higher amount on eleven twelfths of the pay: at or under it, nothing is held back', () => {
     // 11/12 × pay ≤ the higher amount ⇔ pay ≤ 12/11 of it; one dollar above that, (11/12 × pay − amount) ÷ 3
     // is under a dollar and floors to 0. The year is tested, and holds back nothing.
@@ -410,6 +544,53 @@ describe('the FRA calendar year (KTD11)', () => {
     expect(ownWins.fraYearAtMost[3]).toBe(1)
   })
 
+  it('her OWN early claim stays tested in her FRA year when she is widowed too: the stopgap holds back $8,835 of it (review b9-9, E-C15)', () => {
+    // The twin of the arm above, the other benefit. She: born 1962 (FRA 67), 64, her own PIA $2,400 claimed at
+    // 62 → 0.70 → $1,680.00; works to 68 for $100,000. He: born 1962, PIA $1,600, never filed, dies at the end
+    // of 2028 (offset 3): her widow(er) benefit starts in her FRA year at survivor FRA, his full $1,600 —
+    // under her own, so her own is what she is paid. Her FRA year (t = 3) runs the stopgap:
+    // floor((11/12 × 100,000 − 65,160) ÷ 3) = 8,835, against her own claim — early, and made years before, so
+    // tested whatever the survivor year around it: five full months ($8,400), June charged $435 and paying
+    // $1,245. Paid 1,245 + 6 × 1,680 = $11,325. (Exempting a widow's own claim there would pay her $20,160.)
+    const s = tested(
+      pathOf(
+        [
+          person({ sex: 'female', currentAge: 64, birthYear: 1962, retirementAge: 68, earnedIncomeReal: 100_000, pia: 28_800, socialSecurityClaimAge: 62 }),
+          person({ currentAge: 64, birthYear: 1962, pia: 19_200, socialSecurityClaimAge: 67 }),
+        ],
+        [50, 3],
+        5,
+      ),
+    )
+    expect(cents(s.paid[3]!)).toBe(1_132_500)
+    expect(cents(s.withheld[3]!)).toBe(883_500)
+    expect(s.fraYearAtMost[3]).toBe(1)
+  })
+
+  it('a widow(er) benefit that STARTS in her FRA year, at survivor FRA, is never tested there — her own early claim beside it still is', () => {
+    // She: born 1962 (FRA 67, survivor FRA 67), 64, her own PIA $1,000 claimed at 62 → $700.00; works to 68
+    // for $150,000. He: born 1962, PIA $2,000, never filed, dies at the end of 2028 (offset 3): from 2029 —
+    // her FRA year, t = 3 — she is paid his full $2,000, unreduced (her own $700 and $1,300 above it). The
+    // engine prices that benefit as begun at FRA, so it is not tested there (KTD11: the disclosed claim-at-FRA
+    // residual); her own claim, early and years old, is. Her stopgap excess, floor((11/12 × 150,000 −
+    // 65,160) ÷ 3) = 24,113, reaches eleven months of her own $700 — $7,700 held back, the rest forgiven.
+    // Paid 12 × 2,000 − 7,700 = $16,300. (Read as early, the widow(er) benefit would lose eleven months:
+    // $22,000. Booked all as the widow(er) benefit, her own claim would vanish from the test: $0 held back.)
+    const s = tested(
+      pathOf(
+        [
+          person({ sex: 'female', currentAge: 64, birthYear: 1962, retirementAge: 68, earnedIncomeReal: 150_000, pia: 12_000, socialSecurityClaimAge: 62 }),
+          person({ currentAge: 64, birthYear: 1962, pia: 24_000, socialSecurityClaimAge: 67 }),
+        ],
+        [50, 3],
+        5,
+      ),
+    )
+    expect(cents(s.paid[3]!)).toBe(1_630_000)
+    expect(cents(s.withheld[3]!)).toBe(770_000)
+    expect(s.fraYearAtMost[3]).toBe(1)
+  })
+
   it('a claim made at 67 is never tested — the engine pays it as entitled at FRA', () => {
     const path = pathOf(
       [person({ currentAge: 67, birthYear: 1960, retirementAge: 69, earnedIncomeReal: 200_000, pia: 24_000, socialSecurityClaimAge: 67 })],
@@ -417,6 +598,36 @@ describe('the FRA calendar year (KTD11)', () => {
       3,
     )
     expect(earningsTestSchedule(path)).toBe(NO_EARNINGS_TEST)
+  })
+
+  it('his claim made in his FRA year shields his wife’s spousal excess from his pay too — her own pay still charges both her benefits', () => {
+    // He: born 1960 (FRA 67), 66, PIA $3,000, claims at 67 — in his FRA year (t = 1), unreduced, paid from
+    // January as entitled at FRA — and works to 69 for $150,000. She: born 1964, 62, her own PIA $800 claimed
+    // at 62 → $560.00; her spousal excess 50 % × 3,000 − 800 = $700 at her claim age → 0.65 → $455.00, from his
+    // filing. She works to 64 for $30,000: (30,000 − 24,480) ÷ 2 = 2,760 a year.
+    // t = 0: against her own $560 — four full months, May charged $520 and paying $40: 40 + 7 × 560 = $3,960.
+    // t = 1: the family on his record is charged only in a month he is entitled before FRA (§403(b)(1)(B)),
+    // and the engine prices him entitled at FRA, so his $24,113 stopgap excess reaches no month of hers. Her
+    // own $2,760 takes her two benefits ($1,015 a month): January and February, March charged $730 and paying
+    // $285. Paid 36,000 + 285 + 9 × 1,015 = $45,420; held back $2,760. Her crediting months: own 5 + 3, spousal 3.
+    const s = tested(
+      pathOf(
+        [
+          person({ currentAge: 66, birthYear: 1960, retirementAge: 69, earnedIncomeReal: 150_000, pia: 36_000, socialSecurityClaimAge: 67 }),
+          person({ sex: 'female', currentAge: 62, birthYear: 1964, retirementAge: 64, earnedIncomeReal: 30_000, pia: 9_600, socialSecurityClaimAge: 62 }),
+        ],
+        [50, 50],
+        3,
+      ),
+    )
+    expect(cents(s.paid[0]!)).toBe(396_000)
+    expect(cents(s.paid[1]!)).toBe(4_542_000)
+    expect(cents(s.withheld[1]!)).toBe(276_000)
+    expect(s.fraYearAtMost[1], 'nothing of his stopgap reaches anyone').toBe(0)
+    expect(s.creditMonths).toEqual([
+      { own: 0, spousal: 0, widow: 0 },
+      { own: 8, spousal: 3, widow: 0 },
+    ])
   })
 })
 
@@ -520,6 +731,82 @@ describe('survivors (§403(f)(9), 404.311(b), RS 00615.320 B.2.c / .598 / .585)'
     expect(s.creditMonths[1]).toEqual({ own: 0, spousal: 0, widow: 0 })
   })
 
+  it('a survivor’s OWN credits are paid from the year after her FRA year, as a living retiree’s are: widowed at 66, $18,417.60 at 66 and 67, $19,200.00 from 68', () => {
+    // She: born 1962 (FRA 67), 64, her own PIA $2,000 claimed at 62 → $1,400.00; works to 66 for $60,000:
+    // (60,000 − 24,480) ÷ 2 = 17,760 > 12 × 1,400, so every month of ages 64 and 65 is held back — 24
+    // crediting months. He: born 1962, PIA $1,600, planned claim at 67, dies at the end of 2027 (offset 2)
+    // never having filed: her widow(er) benefit is his full PIA from 66, 12 of 84 months early → 1 − 28.5 % ×
+    // 12/84 → $1,534.857 → $1,534.80. Ages 66 and 67 (her FRA year included) pay the larger of her uncredited
+    // own $1,400.00 and that: $18,417.60. From 68 her own is recomputed on 60 − 24 = 36 months early →
+    // 144/180 × 2,000 = $1,600.00, now the larger: $19,200.00 (§402(q)(7) at FRA; KTD11's year after, R13).
+    const s = tested(
+      pathOf(
+        [
+          person({ sex: 'female', currentAge: 64, birthYear: 1962, retirementAge: 66, earnedIncomeReal: 60_000, pia: 24_000, socialSecurityClaimAge: 62 }),
+          person({ currentAge: 64, birthYear: 1962, pia: 19_200, socialSecurityClaimAge: 67 }),
+        ],
+        [50, 2],
+        6,
+      ),
+    )
+    expect(s.creditMonths[0]).toEqual({ own: 24, spousal: 0, widow: 0 })
+    for (const t of [2, 3]) expect(cents(s.paid[t]!), `age ${64 + t}: the credit not yet in effect`).toBe(1_841_760)
+    for (const t of [4, 5]) expect(cents(s.paid[t]!), `age ${64 + t}`).toBe(1_920_000)
+  })
+
+  it('a widow’s at-FRA recompute is paid from the year after her survivor-FRA YEAR: born 1961 (66y10m), ten months credited at 65, $22,164.00 through 67, $22,998.00 from 68', () => {
+    // He: born 1961, PIA $2,000, never filed, dead before the plan (offset 0). She: born 1961, 65, no record of
+    // her own, works at 65 for $60,000. Her widow(er) benefit from 65: 22 of 82 months early → 1 − 28.5 % ×
+    // 22/82 → $1,847.07 → $1,847.00. The 17,760 excess takes nine full months ($16,623) and $1,137 of
+    // October (paying $710): ten crediting months, all at 65 — certainly before her survivor FRA. Her
+    // survivor FRA, 66y10m, can fall in her age-66 or her age-67 year, so the recompute, 22 − 10 = 12 months
+    // early → $1,916.59 → $1,916.50, is first paid at 68: $22,164.00 at 66 and 67, $22,998.00 from 68.
+    const s = tested(
+      pathOf(
+        [
+          person({ sex: 'female', currentAge: 65, birthYear: 1961, retirementAge: 66, earnedIncomeReal: 60_000, socialSecurityClaimAge: 70 }),
+          person({ currentAge: 65, birthYear: 1961, pia: 24_000, socialSecurityClaimAge: 67 }),
+        ],
+        [50, 0],
+        5,
+      ),
+    )
+    expect(fraMonthsForBirthYear(1961, 'survivor')).toBe(802)
+    expect(cents(s.paid[0]!)).toBe(440_400) // 710 + 2 × 1,847
+    expect(s.creditMonths[0]).toEqual({ own: 0, spousal: 0, widow: 10 })
+    for (const t of [1, 2]) expect(cents(s.paid[t]!), `age ${65 + t}`).toBe(2_216_400)
+    for (const t of [3, 4]) expect(cents(s.paid[t]!), `age ${65 + t}`).toBe(2_299_800)
+  })
+
+  it('a working widow paid the widow(er) benefit: the partial month comes off her OWN benefit first — a month her own benefit credits', () => {
+    // He: born 1960, 66, PIA $2,000, planned claim at 67, dies at the end of 2026 (offset 1) never having
+    // filed. She: born 1960 (retirement FRA 67, survivor FRA 66y8m), 65, her own PIA $1,000 claimed at 62 →
+    // $700.00; works to 67 for $25,080: (25,080 − 24,480) ÷ 2 = $300 a year. Age 65: $300 of January's $700 →
+    // $8,100. Age 66: her widow(er) benefit, 8 of 80 months early → 1 − 28.5 % × 8/80 → $1,943.00, is the
+    // larger — her own $700 and $1,243 above it. The $300 comes off January's $1,943, her own piece first (the
+    // split between one person's two benefits never reaches cash): $23,016. January is a deduction month on
+    // both benefits (§403(b)(1)); the run credits her own (66 is certainly before her retirement FRA), not the
+    // widow(er) benefit's (her survivor FRA can fall in her age-66 year). So the year's held-back cents read
+    // as credited, and her own benefit carries two crediting months. (The cut taken off the widow(er) part
+    // would read the same money as waiting on the birth month; booking her whole payment as the widow(er)
+    // benefit would lose her own month.)
+    const s = tested(
+      pathOf(
+        [
+          person({ sex: 'female', currentAge: 65, birthYear: 1960, retirementAge: 67, earnedIncomeReal: 25_080, pia: 12_000, socialSecurityClaimAge: 62 }),
+          person({ currentAge: 66, birthYear: 1960, pia: 24_000, socialSecurityClaimAge: 67 }),
+        ],
+        [50, 1],
+        3,
+      ),
+    )
+    expect(cents(s.paid[0]!)).toBe(810_000)
+    expect(cents(s.paid[1]!)).toBe(2_301_600)
+    expect(cents(s.withheld[1]!)).toBe(30_000)
+    expect(s.heldBackCredit[1]).toBe(HELD_BACK_CREDITED)
+    expect(s.creditMonths[0]).toEqual({ own: 2, spousal: 0, widow: 0 })
+  })
+
   it('a dead worker’s earnings never withhold the widow(er) benefit, even with work planned past the death', () => {
     // He planned to work to 70 for $200,000 and claimed at 62; he dies at 66 (offset 2). Her survivor years
     // hold back nothing (404.311(b): his entitlement ended before the month of death; §403(b)(1)(B)).
@@ -563,6 +850,25 @@ describe('the fast path, and nothing withheld', () => {
     const pastFra = pathOf([person({ currentAge: 68, birthYear: 1958, retirementAge: 72, earnedIncomeReal: 90_000, pia: 24_000, socialSecurityClaimAge: 62 })], [50], 10)
     for (const p of [retired, unclaimed, pastFra]) expect(earningsTestSchedule(p)).toBe(NO_EARNINGS_TEST)
     expect(Object.isFrozen(NO_EARNINGS_TEST)).toBe(true)
+  })
+
+  it('a worker dead before the plan is never tested, though work was planned: her would-be FRA year cannot make the path tested', () => {
+    // She: born 1960, 66, PIA $3,000, planned to work to 69 for $200,000 — but dies before the plan's first
+    // year (offset 0). He: born 1957, 69, past FRA all plan, claims at 69 and works to 72: never tested. He is
+    // paid the widow(er) benefit on her record from year 0, and no LIVING worker is owed a benefit in a year
+    // the test applies to, so the path is the shared no-test schedule. (Reading her as an earner in her
+    // would-be FRA year, t = 1, would test the path on his widow(er) benefit: the year-level survivor figure
+    // and her never-set start year qualify it — a tested schedule that holds back nothing, the review's E31.)
+    const path = pathOf(
+      [
+        person({ currentAge: 69, birthYear: 1957, retirementAge: 72, earnedIncomeReal: 100_000, pia: 18_000, socialSecurityClaimAge: 69 }),
+        person({ sex: 'female', currentAge: 66, birthYear: 1960, retirementAge: 69, earnedIncomeReal: 200_000, pia: 36_000, socialSecurityClaimAge: 66 }),
+      ],
+      [50, 0],
+      10,
+    )
+    expect(owedSs(path, 0), 'the companion: his widow(er) benefit is paid').toBeGreaterThan(0)
+    expect(earningsTestSchedule(path)).toBe(NO_EARNINGS_TEST)
   })
 
   it('a tested worker paid at or under the lower amount gets a schedule that withholds nothing, Object.is the run’s Social Security every year', () => {
@@ -645,11 +951,21 @@ describe('the producer over a seeded population (every path, every year)', () =>
           if (path.deathOffsets.some((d) => t >= d)) reach.survivorWithheld++
         }
         if (s.fraYearAtMost[t]) reach.atMostYears++
-        // The held-back reasons (the money picture's words): a reason exactly where something is held back,
-        // the stopgap's year always among them, and "credited" only on a path whose months count.
+        // The held-back reasons (the money picture's words): a reason exactly where something is held back;
+        // "past FRA" only where someone living is past an FRA year (the survivor FRA's year, the earlier of the
+        // two frames, so the widow(er) benefit's own frame is inside it); the stopgap's year reads "until the
+        // birth month" unless someone is — its months on a payee past FRA read that reason instead (E-C1); and
+        // "credited" only on a path whose months count.
         const why = s.heldBackCredit[t]!
         expect(why !== 0, `year ${t}: a reason iff something is held back`).toBe(cents(s.withheld[t]!) > 0)
-        if (s.fraYearAtMost[t]) expect(why & HELD_BACK_UNTIL_BIRTH_MONTH, `year ${t}: the stopgap`).not.toBe(0)
+        const somebodyPastFra = path.people.some(
+          (p, i) => t < path.deathOffsets[i]! && p.currentAge + t > Math.ceil(fraMonthsForBirthYear(p.birthYear, 'survivor') / 12),
+        )
+        if (why & HELD_BACK_PAST_FRA) expect(somebodyPastFra, `year ${t}: "past FRA" with nobody past it`).toBe(true)
+        if (s.fraYearAtMost[t]) {
+          const stopgapReasons = somebodyPastFra ? HELD_BACK_UNTIL_BIRTH_MONTH | HELD_BACK_PAST_FRA : HELD_BACK_UNTIL_BIRTH_MONTH
+          expect(why & stopgapReasons, `year ${t}: the stopgap`).not.toBe(0)
+        }
         if (!credited) expect(why & HELD_BACK_CREDITED, `year ${t}: nothing on this path is credited`).toBe(0)
         if (why & HELD_BACK_CREDITED) reach.reasonCredited++
         if (why & HELD_BACK_UNTIL_BIRTH_MONTH) reach.reasonUntilBirthMonth++
@@ -671,6 +987,29 @@ describe('the producer over a seeded population (every path, every year)', () =>
       })
     }
     for (const [branch, count] of Object.entries(reach)) expect(count, `the population reaches '${branch}'`).toBeGreaterThan(20)
+  })
+
+  it('reads the record, never the list: every couple reversed (people and deaths) pays and holds back the same cents every year, with the credits swapped', () => {
+    // §403(f)(1) / 404.434(b) charge the record holder's excess first whoever was typed first. Equal PIAs are
+    // skipped: there "higher earner" ties to the first person by design (neither holds a spousal excess, so
+    // the tie moves nothing today, but it is a tie-break, not the law this arm pins).
+    let compared = 0
+    for (const path of PATHS) {
+      if (path.people.length !== 2 || path.people[0]!.pia === path.people[1]!.pia) continue
+      const a = earningsTestSchedule(path)
+      const b = earningsTestSchedule(pathOf([path.people[1]!, path.people[0]!], [path.deathOffsets[1]!, path.deathOffsets[0]!], HORIZON))
+      expect(b.tested, `couple ${JSON.stringify(path.people)}`).toBe(a.tested)
+      if (!a.tested || !b.tested) continue
+      compared++
+      for (let t = 0; t < HORIZON; t++) {
+        const at = `year ${t}: ${JSON.stringify(path.people)}`
+        expect(cents(b.paid[t]!), at).toBe(cents(a.paid[t]!))
+        expect(cents(b.withheld[t]!), at).toBe(cents(a.withheld[t]!))
+        expect([b.heldBackCredit[t], b.fraYearAtMost[t]], at).toEqual([a.heldBackCredit[t], a.fraYearAtMost[t]])
+      }
+      expect([b.creditMonths[1], b.creditMonths[0]], JSON.stringify(path.people)).toEqual(a.creditMonths)
+    }
+    expect(compared, 'tested couples compared').toBeGreaterThan(200)
   })
 })
 

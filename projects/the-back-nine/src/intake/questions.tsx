@@ -1287,20 +1287,17 @@ const otherIncomeStep: StepDef = {
  *  here and nowhere else, so W is REQUIRED through this step's Continue alone, never as a missing
  *  fact (that would hold every working household's provisional answer until the last question; the
  *  header's surface-early law). The gate's touched state is dropped on every ARRIVAL, so returning
- *  after an upstream edit stales W opens on the calm stale note, not an alert, until Continue. So is
- *  the period tap's, where the draft holds no figure: the tapped unit lived in the step's own state,
- *  which the arrival remounts at month, so a kept disarm would let a re-typed monthly figure run 12×
- *  unasked. A figure the step's Continue would refuse ($0, or a period never confirmed) never leaves
- *  by Back either (`discardOnBack`): a route change would drop this step with it still in the draft,
- *  and the codec refuses it at Save. */
+ *  after an upstream edit stales W opens on the calm stale note, not an alert, until Continue. The
+ *  period tap's touched entry is the face's own to set and drop (`onPeriodTap` / `onPeriodReset`,
+ *  ruling 38): it may only vouch for the unit on screen, and only the face knows which unit that is.
+ *  A figure the step's Continue would refuse ($0, or a period never confirmed) never leaves by Back
+ *  either (`discardOnBack`): a route change would drop this step with it still in the draft, and the
+ *  codec refuses it at Save. */
 const workingCostStep: StepDef = {
   id: 'working-cost',
   headingKey: 'qWorkingCostHeading',
   fields: [WORKING_COST_FIELD, WORKING_COST_ANSWER_FIELD],
-  freshOnArrival: (d) =>
-    d.workingYearCost?.kind === 'entered'
-      ? [WORKING_COST_ANSWER_FIELD]
-      : [WORKING_COST_ANSWER_FIELD, WORKING_COST_PERIOD_FIELD],
+  freshOnArrival: [WORKING_COST_ANSWER_FIELD],
   discardOnBack: { field: WORKING_COST_FIELD, discard: writeClearedWorkingYearCost },
   render: (api) => (
     <WorkingCostQuestion
@@ -1314,6 +1311,7 @@ const workingCostStep: StepDef = {
         return true
       }}
       onPeriodTap={() => api.commitField(WORKING_COST_PERIOD_FIELD)}
+      onPeriodReset={() => api.clearTouched(WORKING_COST_PERIOD_FIELD)}
       // Re-edit forgiveness for the gate too: picking "a different figure", or typing the figure, is
       // answering — the gate's alert clears until the next Continue re-touches it.
       onPickFigure={() => api.clearTouched(WORKING_COST_ANSWER_FIELD)}

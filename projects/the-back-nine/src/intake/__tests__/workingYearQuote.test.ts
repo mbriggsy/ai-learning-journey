@@ -339,6 +339,20 @@ describe('the stale sentence names the cause that moved (KTD21)', () => {
     )
   })
 
+  it('a move under a dollar prints both figures to the cent — never "$84,000 … now $84,000" (the whole-file review)', () => {
+    // The check stales at the cent (above); in whole dollars both figures would read 84,000.
+    expect(workingYearCostStaleText(nc({ annualSpendingReal: 84_000.4, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
+      `${slots.workingCostStaleQuote('84,000.00', '84,000.40')} ${slots.workingCostStaleLeansBetter('84,000.00')}`,
+    )
+    expect(workingYearCostStaleText(nc({ annualSpendingReal: 83_999.6, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
+      slots.workingCostStaleQuote('84,000.00', '83,999.60'),
+    )
+    // A move of a dollar or more keeps whole dollars.
+    expect(workingYearCostStaleText(nc({ annualSpendingReal: 84_001, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
+      `${slots.workingCostStaleQuote('84,000', '84,001')} ${slots.workingCostStaleLeansBetter('84,000')}`,
+    )
+  })
+
   it('the state moved alone: the state words, by kind', () => {
     const pa = nc({ retirementState: 'PA' })
     expect(workingYearCostStaleText({ ...pa, workingYearCost: confirmedAt(84_000, 'agi-derived') })).toBe(

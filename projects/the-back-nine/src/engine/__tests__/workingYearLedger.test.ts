@@ -21,8 +21,9 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import ts from 'typescript'
-import { simulate, type SimOutput } from '@engine/simulate'
+import { personOffsetsFor, simulate, type SimOutput } from '@engine/simulate'
 import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP } from '@engine/dateSearch'
+import { earningsTestSchedule, type EarningsTestYears } from '@engine/earningsTest'
 import {
   prepareWorkingYearFloor,
   workingYearCashLines,
@@ -224,6 +225,16 @@ const expectFiniteAndSigned = (ledger: WorkingYearLedger): void => {
 
 const eventsOf = (ledger: WorkingYearLedger): { yearsIn: number; events: readonly WorkingYearLedgerEvent[] }[] =>
   ledger.laterYears.map((y) => ({ yearsIn: y.yearsIn, events: y.events }))
+
+/** The producer's own input, the path's earnings-test schedule on the picture's no-death timeline — read here
+ *  only to show an arm's premise (what the household's figures do, what each earner's charge does). */
+const scheduleOf = (params: SimulationParams): EarningsTestYears => {
+  const { offsets, higherClaimOffset } = personOffsetsFor(params.people)
+  const deathOffsets = params.people.map(() => params.maxHorizonYears)
+  const s = earningsTestSchedule({ people: params.people, offsets, deathOffsets, higherClaimOffset, horizonYears: WINDOW })
+  if (!s.tested) throw new Error('the construct never reaches the earnings test')
+  return s
+}
 
 // ===========================================================================
 // THE ONE EARNER — single, 50 in 2026, $40,000 of pay and a $6,000 pre-tax 401(k) deferral, no Social Security,
@@ -765,6 +776,258 @@ describe('the later years (KTD12): drift never names a year; each discrete event
       { yearsIn: 4, events: [{ code: 'earningsTestStep' }] },
       { yearsIn: 5, events: [{ code: 'claim', person: 1 }, { code: 'earningsTestStep' }] },
     ])
+  })
+
+  it('beside a claim the test holds back in full, a spouse’s release is still the test’s own step — though the household’s held-back figure RISES', () => {
+    // He: born 1964, 62, $150,000, PIA $30,000 claimed at 63 (2027): 48 months early, 25 % off ⇒ $1,875 a month,
+    // $22,500 a year; (150,000 − 24,480) ÷ 2 = 62,760 ≥ 22,500, so all of it is held back from 2027. She: born
+    // 1960, 66, $60,000, PIA $24,000 claimed at 62: 60 months early, 30 % off ⇒ $1,400 a month, $16,800 a year;
+    // 2026 (before her FRA year) (60,000 − 24,480) ÷ 2 = 17,760 ≥ 16,800 holds it all back; 2027 is her FRA year,
+    // (11 × 60,000 − 12 × 65,160) ÷ 36 < 0, so nothing is — her $16,800 is RELEASED. Each PIA is over half the
+    // other's: no spousal excess. 2027 pays $16,800 (hers) and holds back $22,500 (his): the held-back figure
+    // rises by $5,700, so read on the household it hid her release, and the year's only reason was his claim,
+    // paid $0. By who charged it: her excess's charge falls 16,800 → 0 while his rises 0 → 22,500.
+    // 2028 pays her benefit recomputed on 2026's twelve credited months (48 months early: $18,000) — a credit.
+    // 2029: he turns 65 (tax owed on $210,000 of pay), and the bonus she carried on the 2028 return (MAGI about
+    // $225,000, under where the $6,000 is gone) ends. 2031 is his FRA year: the stopgap holds back eleven of his
+    // months (24,113 ≥ 20,625) and pays the twelfth; 2032 pays his benefit recomputed on 2027–2030's 48 months
+    // ($30,000), untested — two more steps.
+    const params = candidateOf({
+      people: [
+        worker({ currentAge: 62, birthYear: 1964, earnedIncomeReal: 150_000, pia: 30_000, socialSecurityClaimAge: 63 }),
+        worker({ sex: 'female', currentAge: 66, birthYear: 1960, earnedIncomeReal: 60_000, pia: 24_000, socialSecurityClaimAge: 62 }),
+      ],
+      W: 120_000,
+    })
+    const s = scheduleOf(params)
+    expect([cents(s.withheld[0]!), cents(s.withheld[1]!)], 'the household’s held-back figure rises').toEqual([1_680_000, 2_250_000])
+    expect([cents(s.paid[0]!), cents(s.paid[1]!)]).toEqual([0, 1_680_000])
+    expect([cents(s.chargedExcess[1]![0]!), cents(s.chargedExcess[1]![1]!)], 'her charge falls: the release').toEqual([1_680_000, 0])
+    expect([cents(s.chargedExcess[0]![0]!), cents(s.chargedExcess[0]![1]!)], 'his starts with his claim').toEqual([0, 2_250_000])
+    const ledger = checked(params)
+    expect(eventsOf(ledger)).toEqual([
+      { yearsIn: 1, events: [{ code: 'claim', person: 0 }, { code: 'earningsTestStep' }] },
+      { yearsIn: 2, events: [{ code: 'earningsTestStep' }] },
+      { yearsIn: 3, events: [{ code: 'turns65', person: 0 }, { code: 'seniorBonusSunset' }] },
+      { yearsIn: 5, events: [{ code: 'earningsTestStep' }] },
+      { yearsIn: 6, events: [{ code: 'earningsTestStep' }] },
+    ])
+    expect(ledger.laterYears.map((y) => y.withheldBasis)).toEqual(['law', 'law', 'law', 'fraYearAtMost', 'law'])
+  })
+
+  it('a spousal start on a working earner’s record releases nothing: his own hold falls by 404.439’s split, and only her claim is named', () => {
+    // He: born 1964, 62, works, claimed at 62. She: born 1961, 65, retired, no PIA of her own, on Medicare; she
+    // files at 66 (2027), starting her spousal excess on his record: half his PIA, 12 months early, 11/12 of it
+    // (25/36 % a month), dime-floored monthly. From 2027 his excess is charged against the family — his benefit
+    // and hers — and the month it runs out is split his PIA : her full spousal rate (1 : 0.5), each share floored
+    // to the dollar. His charge stands, so nothing is released; his OWN benefit's hold falls (read per payee, a
+    // release), and the household's held-back figure moves only by the floors — either way.
+    //  · PIA $24,000, $50,000 of pay: his $1,400.00 a month; hers $916.60. Excess (50,000 − 24,480) ÷ 2 = 12,760.
+    //    2026: nine months of $1,400 (12,600) and $160 of the tenth ⇒ $12,760.00 held, $4,040.00 paid. 2027: the
+    //    family's $2,316.60 a month, five months (11,583.00), then 1,177.00 of the sixth — its rest, 1,139.60,
+    //    pays him ⌊759.73⌋ = $759 and her ⌊379.87⌋ = $379 ⇒ $1,178.60 held that month, $12,761.60 in all (UP
+    //    $1.60); his own hold 5 × 1,400 + 641 = $7,641 (DOWN from $12,760).
+    //  · PIA $24,180, $42,000 of pay: his $1,410.50 a month; hers $923.50. Excess (42,000 − 24,480) ÷ 2 = 8,760.
+    //    2026: six months (8,463.00), then 297.00 of the seventh, whose rest 1,113.50 is paid $1,113 ⇒ $297.50
+    //    held that month, $8,760.50 in all. 2027: the family's $2,334.00 a month, three months (7,002.00), then
+    //    1,758.00 of the fourth — its rest, 576.00, pays him $384 and her $192 ⇒ $8,760.00 held (DOWN $0.50:
+    //    read on the household, a release) and $19,248 paid; his own hold 3 × 1,410.50 + 1,026.50 = $5,258.
+    const withHim = (pia: number, pay: number) =>
+      candidateOf({
+        people: [
+          worker({ currentAge: 62, birthYear: 1964, earnedIncomeReal: pay, pia, socialSecurityClaimAge: 62 }),
+          retiree({ currentAge: 65, birthYear: 1961, socialSecurityClaimAge: 66 }),
+        ],
+        W: 30_000,
+        irmaaSeed: [50_000, 50_000],
+      })
+    for (const [pia, pay, held2026, held2027, charge] of [
+      [24_000, 50_000, 1_276_000, 1_276_160, 1_276_000],
+      [24_180, 42_000, 876_050, 876_000, 876_000],
+    ] as const) {
+      const params = withHim(pia, pay)
+      const s = scheduleOf(params)
+      expect([cents(s.withheld[0]!), cents(s.withheld[1]!)], `PIA ${pia}: the household's held-back figure`).toEqual([held2026, held2027])
+      expect([cents(s.chargedExcess[0]![0]!), cents(s.chargedExcess[0]![1]!)], `PIA ${pia}: his charge stands`).toEqual([charge, charge])
+      const ledger = checked(params)
+      expect(ledger.laterYears.find((y) => y.yearsIn === 1)?.events, `PIA ${pia}: 2027`).toEqual([{ code: 'claim', person: 1 }])
+    }
+    expect(cents(scheduleOf(withHim(24_180, 42_000)).paid[1]!)).toBe(1_924_800)
+  })
+
+  it('turning 65 is named where the year itself owes: a claim at 65 makes 2031 owe after five years under the deduction', () => {
+    // Single, born 1966 (60), $16,000 of pay — under the $16,100 deduction, so 2026–2030 owe $0 — and a PIA of
+    // $40,000 filed at 65 in 2031: 24 months early, 156/180 of it, $2,888.80 a month dime-floored, $34,665.60 a
+    // year, nothing held back ($16,000 is under the lower exempt amount). 2031's provisional income is
+    // 16,000 + ½ × 34,665.60 = 33,332.80, over the $25,000 line (in real dollars the line is lower still), so at
+    // least ½ × 8,332.80 = 4,166.40 of the benefit is taxable: 16,000 + 4,166.40 − (16,100 + 2,050) ≥ 2,016.40
+    // is taxed — the year owes, and owes more without the $2,050 at 65. Gated on 2030 alone, it was not named.
+    const params = candidateOf({
+      people: [worker({ currentAge: 60, birthYear: 1966, earnedIncomeReal: 16_000, pia: 40_000, socialSecurityClaimAge: 65 })],
+      W: 12_000,
+    })
+    const { byYear } = recordedYears(params)
+    expect(byYear[4]!.lines.taxOnOutsideIncomeParts.federal, '2030 owes nothing').toBe(0)
+    expect(byYear[5]!.lines.taxOnOutsideIncomeParts.federal, '2031 owes').toBeGreaterThan(201)
+    expect(cents(byYear[5]!.lines.socialSecurity)).toBe(3_466_560)
+    expect(eventsOf(checked(params))).toEqual([{ yearsIn: 5, events: [{ code: 'claim', person: 0 }, { code: 'turns65', person: 0 }] }])
+  })
+
+  it('a short year no named event can have made short is short by drift: Medicare’s onset beside it is never the run’s reason', () => {
+    // He: born 1971 (55), $20,000 of pay and a nominal-flat $10,000 pension (eroding with prices); she: born 1962
+    // (64), retired, Medicare from 65 in 2027, a $0 marketplace quote before it. No federal tax in any year
+    // (B = 30,000 at most, under the joint $32,200), no state, no Social Security, no deposits; payroll 7.65 % ×
+    // 20,000 = 1,530. W = 28,370: cash = 20,000 + 10,000 ÷ 1.025^t − 1,530 − 28,370 = 10,000 ÷ 1.025^t − 9,900 —
+    // +100.00 in 2026, then −143.90, −381.86, −614.01, −840.49, −1,061.46, −1,277.03, −1,487.35, −1,692.53,
+    // −1,892.71. 2027 turns short by the pension's erosion; its one event, her Medicare, is paid from savings and
+    // never in the sum, so it cannot be what made the year short — and the short years after it would read it as
+    // theirs. Her turning 65 names nothing (no federal tax either year).
+    const pension = Array.from({ length: WINDOW }, (_, t) => 10_000 / 1.025 ** t)
+    const ledger = checked(
+      candidateOf({
+        people: [
+          worker({ currentAge: 55, birthYear: 1971, earnedIncomeReal: 20_000 }),
+          retiree({ currentAge: 64, birthYear: 1962 }),
+        ],
+        W: 28_370,
+        acaZeros: true,
+        irmaaSeed: [30_000, 30_000],
+        income: { incomeByPerson: [{ grossFull: pension, taxableFull: pension }, {}] },
+      }),
+    )
+    expect(ledger.year0.bottomLine).toBe(100)
+    expect(ledger.laterYears.map((y) => [y.yearsIn, y.bottomLine, y.events])).toEqual([
+      [1, -144, [{ code: 'medicareStarts', person: 1 }, { code: 'erosion' }]],
+      ...[-382, -615, -841, -1_062, -1_278, -1_488, -1_693, -1_893].map((b, k) => [k + 2, b, [{ code: 'stillShort' }]]),
+    ])
+  })
+
+  it('a short year after a short year, whose only event lowers its tax, is `stillShort` beside it; one an income’s end makes shorter is not', () => {
+    // Single, born 1964 (62), $40,000 of pay and a $5,000 pension through 2030, no deposits, W = $45,000; 65 in
+    // 2029, past the senior bonus's window. By hand (Rev. Proc. 2025-32; 10 % to $12,400, then 12 %): 2026–2028
+    // owe 1,240 + 12 % × (45,000 − 16,100 − 12,400) = 3,220, cash 45,000 − 3,060 − 3,220 − 45,000 = −6,280.
+    // 2029–2030: the deduction is 16,100 + 2,050, 1,240 + 12 % × 14,450 = 2,974, cash −6,034 — still short, and
+    // the larger deduction only helped. 2031: the pension's end, 1,240 + 12 % × 9,450 = 2,374, cash
+    // 40,000 − 3,060 − 2,374 − 45,000 = −10,434 — the end made it shorter, so it is the year's reason.
+    const pension = Array.from({ length: WINDOW }, (_, t) => (t < 5 ? 5_000 : 0))
+    const ledger = checked(
+      candidateOf({
+        people: [worker({ currentAge: 62, birthYear: 1964, earnedIncomeReal: 40_000 })],
+        W: 45_000,
+        income: { incomeByPerson: [{ grossFull: pension, taxableFull: pension }] },
+      }),
+      [{ yearsIn: 5, code: 'incomeEnds', person: 0 }],
+    )
+    expect(ledger.year0.bottomLine).toBe(-6_280)
+    expect(ledger.laterYears.map((y) => [y.yearsIn, y.bottomLine, y.events])).toEqual([
+      [1, -6_280, [{ code: 'stillShort' }]],
+      [2, -6_280, [{ code: 'stillShort' }]],
+      [3, -6_034, [{ code: 'turns65', person: 0 }, { code: 'stillShort' }]],
+      [4, -6_034, [{ code: 'stillShort' }]],
+      [5, -10_434, [{ code: 'incomeEnds', person: 0 }]],
+      ...[6, 7, 8, 9].map((t) => [t, -10_434, [{ code: 'stillShort' }]]),
+    ])
+  })
+
+  it('each event’s direction, on households short in every year: one that cannot lower the bottom line carries `stillShort` beside it, one that can does not', () => {
+    // The calendars of the arms above, each under a W no year's pay covers, so every later year is short and
+    // follows a short year. Cannot lower it: a claim, a test step, turning 65, a deposit stepping down. Can: a
+    // state rate step (the law steps say only THAT the rate moved), the senior bonus's end. Savings deep enough,
+    // in a Roth, that no path runs out inside the window.
+    const deep = { taxable: 0, pretax: 0, roth: 3_000_000 }
+    const shortEvery = (params: SimulationParams, draftEvents: readonly WorkingYearDraftEvent[] = []) => {
+      const ledger = checked(params, draftEvents)
+      expect(ledger.year0.bottomLine).toBeLessThan(0)
+      expect(ledger.laterYears.map((y) => y.yearsIn)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
+      for (const y of ledger.laterYears) expect(y.bottomLine, `year ${y.yearsIn}`).toBeLessThan(0)
+      return ledger.laterYears.map((y) => y.events)
+    }
+    const still = [{ code: 'stillShort' }]
+    // The 1960-born early claimant ($120,000): 2027 his FRA year's stopgap pays $6,054; 2028 his benefit
+    // recomputed on 2026's twelve credited months; the bonus his 2028 return carried (MAGI $120,000, inside the
+    // single phase-out) ends with 2029.
+    expect(
+      shortEvery(
+        candidateOf({
+          people: [worker({ currentAge: 66, birthYear: 1960, earnedIncomeReal: 120_000, pia: 30_000, socialSecurityClaimAge: 62 })],
+          W: 150_000,
+          buckets: deep,
+        }),
+      ),
+    ).toEqual([
+      [{ code: 'earningsTestStep' }, ...still],
+      [{ code: 'earningsTestStep' }, ...still],
+      [{ code: 'seniorBonusSunset' }],
+      ...[4, 5, 6, 7, 8, 9].map(() => still),
+    ])
+    // Turning 65 the year a claim makes the year owe (the 2031 arm above).
+    expect(
+      shortEvery(
+        candidateOf({
+          people: [worker({ currentAge: 60, birthYear: 1966, earnedIncomeReal: 16_000, pia: 40_000, socialSecurityClaimAge: 65 })],
+          W: 60_000,
+          buckets: deep,
+        }),
+      ),
+    ).toEqual([...[1, 2, 3, 4].map(() => still), [{ code: 'claim', person: 0 }, { code: 'turns65', person: 0 }, ...still], ...[6, 7, 8, 9].map(() => still)])
+    // The 63-year-old's catch-up step-down in 2027, 65 in 2028, the bonus's end in 2029.
+    expect(
+      shortEvery(
+        candidateOf({
+          people: [worker({ currentAge: 63, birthYear: 1963, earnedIncomeReal: 100_000 })],
+          W: 100_000,
+          buckets: deep,
+          contributionsByPerson: [{ pretax: Array.from({ length: WINDOW }, (_, t) => (t === 0 ? 35_750 : 32_500)) }],
+        }),
+        [{ yearsIn: 1, code: 'catchUpStepDown', person: 0 }],
+      ),
+    ).toEqual([
+      [{ code: 'catchUpStepDown', person: 0 }, ...still],
+      [{ code: 'turns65', person: 0 }, ...still],
+      [{ code: 'seniorBonusSunset' }],
+      ...[4, 5, 6, 7, 8, 9].map(() => still),
+    ])
+    // A claim and a spousal start (the arm above, his filing moved to 68 in 2030, past the bonus's end): he turns
+    // 65 in 2027; the bonus both carried on the 2028 return ends with 2029; his own filing in 2030 starts her
+    // spousal excess on his record.
+    expect(
+      shortEvery(
+        candidateOf({
+          people: [
+            worker({ currentAge: 64, birthYear: 1962, earnedIncomeReal: 80_000, pia: 36_000, socialSecurityClaimAge: 68 }),
+            retiree({ currentAge: 66, birthYear: 1960, pia: 6_000, socialSecurityClaimAge: 62 }),
+          ],
+          W: 120_000,
+          buckets: deep,
+          irmaaSeed: [70_000, 70_000],
+        }),
+      ),
+    ).toEqual([
+      [{ code: 'turns65', person: 0 }, ...still],
+      still,
+      [{ code: 'seniorBonusSunset' }],
+      [{ code: 'claim', person: 0 }, { code: 'spousalStart', person: 1 }, ...still],
+      ...[5, 6, 7, 8, 9].map(() => still),
+    ])
+    // The one earner (short $5,960 every year) with a $2,000 pension that starts in 2029: 12 % of it is taxed,
+    // so the year is $1,760 less short, and still short.
+    const starting = Array.from({ length: WINDOW }, (_, t) => (t < 3 ? 0 : 2_000))
+    expect(
+      shortEvery(
+        candidateOf({
+          people: [EARNER],
+          W: 35_000,
+          contributionsByPerson: [{ pretax: flat(WINDOW, 6_000) }],
+          income: { incomeByPerson: [{ grossFull: starting, taxableFull: starting }] },
+        }),
+        [{ yearsIn: 3, code: 'incomeStarts', person: 0 }],
+      ),
+    ).toEqual([still, still, [{ code: 'incomeStarts', person: 0 }, ...still], ...[4, 5, 6, 7, 8, 9].map(() => still)])
+    // The lone worker in North Carolina: S.L. 2026-41's steps in 2027, 2030 and 2033.
+    const nc = shortEvery(candidateOf(loneHousehold({ state: 'NC', W: 120_000, buckets: deep })))
+    expect(nc.map((events, k) => [k + 1, events])).toEqual(
+      [1, 2, 3, 4, 5, 6, 7, 8, 9].map((t) => [t, [1, 4, 7].includes(t) ? [{ code: 'stateRateStep' }] : still]),
+    )
   })
 
   it('a draft event names the member it is about, once a year: her pension’s end is hers, and two streams ending together are one reason', () => {

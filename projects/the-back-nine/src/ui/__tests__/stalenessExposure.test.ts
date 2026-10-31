@@ -266,12 +266,28 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
   // The pay check's two W-carrying witnesses (Phase B) read `priced` through the reach walk's W branch
   // (KTD15: a construct carrying W reads `priced` whenever anyone still works — the safe-side over-read),
   // never through a U4 measurement: a W-present run has no pre-floor twin to measure against. Kept
-  // apart so the measured list stays a measurement. Since U10 the eight measured seeds carry W too, so
-  // their `priced` is over-determined (U4's measurement AND the W branch); the lists stay as the record
-  // of HOW each seed first earned it.
+  // apart so the measured list stays a measurement. Since U10 the eight measured seeds carry W too —
+  // and a W-carrying run never reaches the floor's per-year walk: `workingYearTaxReachOfRun` reads W
+  // FIRST (KTD15) and answers `priced` for any run with a worker. So the seed as shipped proves only the
+  // W branch, and this arm went vacuous for what it was written to prove (the whole-file review
+  // 2026-10-31, H-D25: a mutant dropping the walk's Social Security channel survived the file — it reds
+  // the twin of every SS-alone seed now). U4's measurement is read
+  // on its OWN subject instead — each seed with its W stripped (U4 ran before W existed) — and the
+  // shipped seed beside it.
   const W_KEYED = ['dateshort', 'datecoststale'] as const
+  const withoutW = (d: ScenarioDraft): ScenarioDraft => {
+    const { workingYearCost: _w, ...rest } = d
+    return rest
+  }
 
   it('every date seed U4 measured as MOVED reads `priced` — and those eight, with the W-keyed witnesses, ARE the buildable date-route seeds (a new one must be measured before it can join)', () => {
+    for (const k of MEASURED_MOVED) {
+      // The W check would answer before the walk on the shipped seed, so the twin is U4's own subject.
+      expect(DEV_SEEDS[k].workingYearCost, `${k} carries W (U10) — the twin is what strips it`).toBeDefined()
+      const u4Subject = withoutW(DEV_SEEDS[k])
+      expect(missingRequiredFacts(u4Subject), `${k} without W is buildable`).toEqual([])
+      expect(exposureForDraft(u4Subject).workingYearTax, `${k} without W — U4 measured it MOVED`).toBe('priced')
+    }
     for (const k of [...MEASURED_MOVED, ...W_KEYED]) {
       expect(isDateRoute(DEV_SEEDS[k]), `${k} is a date-route seed`).toBe(true)
       expect(exposureForDraft(DEV_SEEDS[k]).workingYearTax, k).toBe('priced')

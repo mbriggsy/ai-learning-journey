@@ -304,6 +304,34 @@ describe('the money picture — later working years (KTD12)', () => {
     expect(screen.getByText(slots.workingLedgerStillShortSince(2026))).toBeInTheDocument()
   })
 
+  it('a short year whose only events cannot have made it short says where its short streak began, beside them (L-D1)', () => {
+    // Year 0 is short; 2027–2028 stay short. 2028's only event raises the bottom line (a release), so the
+    // producer marks it `stillShort` beside that event — the reader must not take the event as the cause.
+    renderPicture({
+      year0: year0({ bottomLine: -1_000, cash: -1_000 }),
+      laterYears: [
+        later(1, -1_200, [{ code: 'claim', person: 0 }]),
+        later(2, -800, [{ code: 'earningsTestStep' }, { code: 'stillShort' }]),
+      ],
+    })
+    const row = screen.getByText(slots.workingLedgerLaterYear(2028)).closest('div')!
+    expect(within(row).getByText(copy.workingLedgerEventEarningsTest)).toBeInTheDocument()
+    expect(within(row).getByText(slots.workingLedgerStillShortSince(2026))).toBeInTheDocument()
+    cleanup()
+    // A streak that began in a later year names that year, and a run anchored on such a year carries it too.
+    renderPicture({
+      year0: year0({ bottomLine: 500, cash: 500 }),
+      laterYears: [
+        later(3, -2_000, [{ code: 'incomeEnds', person: 1 }]),
+        later(4, -1_900, [{ code: 'medicareStarts', person: 1 }, { code: 'stillShort' }]),
+        later(5, -1_900, [{ code: 'stillShort' }]),
+      ],
+    })
+    expect(screen.getByText(slots.workingLedgerLaterRun(2030, 2031))).toBeInTheDocument()
+    expect(screen.getByText(slots.workingLedgerEventMedicareStarts('Sam'))).toBeInTheDocument()
+    expect(screen.getByText(slots.workingLedgerStillShortSince(2029))).toBeInTheDocument()
+  })
+
   it('a short year no event explains, after a year that was not short, reads the erosion line', () => {
     renderPicture({ year0: year0({ bottomLine: 10, cash: 10 }), laterYears: [later(6, -40, [{ code: 'erosion' }])] })
     expect(screen.getByText(copy.workingLedgerErosion)).toBeInTheDocument()
@@ -423,6 +451,57 @@ describe('the money picture — the engine’s own figures (a real seed)', () =>
         if (line === c.inW) expect(within(row).getByText(line), `${String(c.state)}`).toBeInTheDocument()
         else expect(within(row).queryByText(line), `${String(c.state)}`).toBeNull()
       }
+      // Said once: where the tax line shows, the W line carries no second reminder.
+      const costRow = screen.getByText(copy.workingLedgerCost, { selector: 'dt' }).parentElement!
+      for (const line of [copy.workingLedgerCostStatePayInW, copy.workingLedgerCostStateInW]) {
+        expect(within(costRow).queryByText(line), `${String(c.state)}: no second reminder`).toBeNull()
+      }
+      cleanup()
+    }
+  })
+
+  it('a year with NO tax line still says where the state tax on pay went — on the W line (PA, and no state set)', () => {
+    // `date`'s couple with Alex part-time at $28,000, $3,000 into the 401(k) and no investment income:
+    // MFJ, so $25,000 of wages sits under the $32,200 standard deduction — no federal tax on the outside
+    // income, no tax line. The W step asked a PA or unpriced household to put its state's tax on pay in W.
+    const lowPay = (retirementState: ScenarioDraft['retirementState']): ScenarioDraft => {
+      const { workingYearCost: _none, retirementState: _s, ...rest } = DEV_SEEDS.date
+      const base: ScenarioDraft = {
+        ...rest,
+        people: [{ ...rest.people[0]!, earnedIncomeReal: 28_000 }, rest.people[1]!],
+        enteredAccounts: [{ ...rest.enteredAccounts[0]!, annualContribution: 3_000, employerMatchAnnual: 0 }, rest.enteredAccounts[1]!],
+        health: { ...rest.health, workingYearInvestmentByPerson: [0, 0] },
+        ...(retirementState === undefined ? {} : { retirementState }),
+      }
+      const w = confirmedWorkingYearCost(base)
+      if (w === null) throw new Error('[test setup] the quote is $0')
+      return { ...base, workingYearCost: w }
+    }
+    const cases = [
+      { state: 'PA', onCost: copy.workingLedgerCostStatePayInW },
+      { state: undefined, onCost: copy.workingLedgerCostStateInW },
+      { state: 'FL', onCost: null },
+      { state: 'NC', onCost: null },
+    ] as const
+    for (const c of cases) {
+      const d = lowPay(c.state)
+      const ledger = workingYearLedgerForRun(d)
+      if (ledger === 'unknown') throw new Error(`[test setup] ${String(c.state)} must draw a picture`)
+      renderPicture(ledger, d)
+      if (c.state !== 'NC') {
+        // NC's run charges its own tax on pay, so it needs no reminder wherever its line lands; every other
+        // state here has no tax line at all.
+        expect(ledger.year0.goingOut.taxOnOutsideIncome.dollars, `${String(c.state)}: no tax line`).toBe(0)
+        expect(screen.queryByText(copy.workingLedgerIncomeTaxFederal, { selector: 'dt' })).toBeNull()
+      }
+      const costRow = screen.getByText(copy.workingLedgerCost, { selector: 'dt' }).parentElement!
+      for (const line of [copy.workingLedgerCostStatePayInW, copy.workingLedgerCostStateInW]) {
+        if (line === c.onCost) expect(within(costRow).getByText(line), String(c.state)).toBeInTheDocument()
+        else expect(within(costRow).queryByText(line), String(c.state)).toBeNull()
+      }
+      // Never both: the tax line's own reminder is absent with its line.
+      expect(screen.queryByText(copy.workingLedgerIncomeTaxStatePayInW)).toBeNull()
+      expect(screen.queryByText(copy.workingLedgerIncomeTaxStateInW)).toBeNull()
       cleanup()
     }
   })

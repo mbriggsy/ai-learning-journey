@@ -197,6 +197,7 @@ function WorkingCostRow({
   announce,
   onWrite,
   onPeriodTap,
+  onPeriodReset,
   onEditFigure,
   figureInvalid,
   figureErrors,
@@ -207,6 +208,7 @@ function WorkingCostRow({
   readonly announce: (text: string) => void
   readonly onWrite: (write: (d: ScenarioDraft) => ScenarioDraft, kind: WorkingCostWriteKind) => boolean
   readonly onPeriodTap: () => void
+  readonly onPeriodReset: () => void
   readonly onEditFigure: () => void
   readonly figureInvalid: boolean
   readonly figureErrors: ReactNode
@@ -253,6 +255,7 @@ function WorkingCostRow({
         host="panel"
         onWrite={onWrite}
         onPeriodTap={onPeriodTap}
+        onPeriodReset={onPeriodReset}
         onEditFigure={onEditFigure}
         figureInvalid={figureInvalid}
         figureErrors={figureErrors}
@@ -342,24 +345,14 @@ export function AssumptionPanel({
   // state on the open EDGE — render-phase adjustment, so the first open frame can never
   // compare against a stale prior-open baseline. Held for the whole open (an edit is judged
   // against what the user saw when they came in, not against the previous edit).
-  // The same open edge captures the W figure's period provenance (KTD17; `SanityProvenance`): an
-  // ENTERED W on the draft at open already cleared the period gate, so editing its amount here must
-  // not re-ask the unit. Captured from the draft, never assumed — and never the spend flag.
-  const [openState, setOpenState] = useState<{
-    open: boolean
-    baseline: StickyDisplay | null
-    workingCostPeriodConfirmed: boolean
-  }>({
+  // (The W figure's period is not captured here: the W question's face marks an entered W's unit
+  // answered when it mounts, and drops the mark when that figure is gone — Phase B ruling 38.)
+  const [openState, setOpenState] = useState<{ open: boolean; baseline: StickyDisplay | null }>({
     open: false,
     baseline: null,
-    workingCostPeriodConfirmed: false,
   })
   if (open !== openState.open) {
-    setOpenState({
-      open,
-      baseline: open ? displayed : null,
-      workingCostPeriodConfirmed: open && draft.workingYearCost?.kind === 'entered',
-    })
+    setOpenState({ open, baseline: open ? displayed : null })
     if (open) {
       setTouched(new Set())
       setRefused(new Map())
@@ -420,10 +413,7 @@ export function AssumptionPanel({
   // needs `entered >= SPEND_AMBIGUOUS_MIN` (sanity.ts:89, 8,000), and the misentry that matters is
   // a household typing a MONTHLY figure under 'year' — below that floor by construction. The
   // defense here is the copy, not the rule.
-  const PANEL_PROVENANCE = {
-    periodConfirmed: true,
-    workingCostPeriodConfirmed: openState.workingCostPeriodConfirmed,
-  } as const
+  const PANEL_PROVENANCE = { periodConfirmed: true } as const
 
   // THE W ROW'S LANDING (KTD21's door). The sheet's own open effect focuses its h2 first — a child's
   // effects run before its parent's in one commit — so this lands after it, on the W row's name, and
@@ -1006,6 +996,7 @@ export function AssumptionPanel({
                 return commitRefusing(WORKING_COST_FIELD, write, kind === 'tapped-answer' ? [WORKING_COST_PERIOD_FIELD] : [])
               }}
               onPeriodTap={() => touch(WORKING_COST_PERIOD_FIELD)}
+              onPeriodReset={() => forgive(WORKING_COST_PERIOD_FIELD)}
               onEditFigure={() => forgive(WORKING_COST_FIELD)}
               figureInvalid={errorsFor(WORKING_COST_FIELD).length > 0}
               figureErrors={renderErrors(WORKING_COST_FIELD)}

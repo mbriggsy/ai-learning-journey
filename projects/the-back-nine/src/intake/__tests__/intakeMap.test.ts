@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   acaPricedForRun,
+  buildControlPreviewParams,
   buildDateInput,
   buildSpineParams,
   escalateQuote,
@@ -683,6 +684,29 @@ describe('the state-tax unit (S5) — the producer-output state-priced predicate
 // window-gated candidate), never buildDateInput's pre-sweep base overlay and never
 // healthcareEnabled alone (the Medicare-only branch carries the flag with NO stream).
 // ---------------------------------------------------------------------------
+// The control preview (TwoFutures / the Roth preview) runs the CROWNED candidate, so it must run the
+// same W the sweep crowned with — a preview that dropped W would show a short household's survival
+// rosier than its own date (the whole-file review: planting a W strip here reddened no test).
+describe('the control preview carries the pay check’s W (the crowned candidate the sweep ran)', () => {
+  it('every W-carrying date seed’s preview params hold the same W and employer-HSA stream as the sweep’s candidate', () => {
+    const seeds = Object.entries(DEV_SEEDS).filter(([, d]) => isDateRoute(d) && d.workingYearCost !== undefined)
+    expect(seeds.length, 'the date seeds carry W (U10)').toBeGreaterThan(5)
+    let compared = 0
+    for (const [key, d] of seeds) {
+      const input = buildDateInput(d)
+      if (input === null || input.workingYearCostReal === undefined) continue // unbuildable, or W not carried
+      compared += 1
+      for (const offset of [0, 4, DATE_OFFSET_WINDOW_TOP]) {
+        const preview = buildControlPreviewParams(d, offset)
+        const sweep = buildCandidateParams(input, offset, DATE_SEARCH_PATHS.provisional)
+        expect(preview?.overlay?.accumulation?.workingYearCostReal, `${key} @ ${offset}: W`).toBe(input.workingYearCostReal)
+        expect(preview?.overlay?.accumulation, `${key} @ ${offset}: the whole construct`).toEqual(sweep.overlay?.accumulation)
+      }
+    }
+    expect(compared, 'the sweep compared real W runs, not a vacuous loop').toBeGreaterThanOrEqual(8)
+  })
+})
+
 describe('O16 — acaPricedForRun (the preview-producer ACA-priced predicate)', () => {
   it('a pre-65 household with the quote pair reads TRUE on its own route (spine; date via the crowned candidate)', () => {
     expect(acaPricedForRun(completeSpineDraft(), undefined), 'spine ACA household').toBe(true)

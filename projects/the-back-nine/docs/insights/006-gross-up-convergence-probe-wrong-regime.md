@@ -36,6 +36,11 @@ kept `GROSS_UP_MAX_PASSES = 128` (now *proven* necessary for the high-benefit ta
 validated input domain does not bound the SS benefit; 128 covers any tax to ~$10^13), and
 extended the convergence stress sweep to SS $5M so the slow tail is locked in CI.
 
+> **Out of date (corrected 2026-10-31):** the cap is no longer 128. Pricing state tax raised the
+> worst case, and the cap went up with it on 2026-07-15 (`c7e5936c`). The current cap and its
+> derivation live in the comment above `GROSS_UP_MAX_PASSES` in `src/engine/taxOverlay.ts`: read them
+> there. The lesson below stands.
+
 ## Key Insight
 
 **When a measurement contradicts sound algebra, suspect the probe is sampling the wrong regime

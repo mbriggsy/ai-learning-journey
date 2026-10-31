@@ -551,7 +551,7 @@ const AGE_65_THRESHOLD = 65
 // straddle in the 12 % bracket, torpedo uncapped — is (0.12 + 0.15) × 1.85 × 1.12 + 0.04 ≈ 0.60. The
 // band closes at $250k of MAGI; it reaches the 24 % bracket only in its last ~$2.8k (AGI ≈ $247.2k–
 // $250k at 2026 figures), where even an uncapped torpedo gives 0.24 × 1.85 × 1.12 + 0.04 ≈ 0.54.
-// Both under 0.78.) So k_sup ≈ 0.74. IMPORTANT: the contraction is NOT automatic — the UNCONSTRAINED
+// Both under 0.78.) So the federal-only k_sup ≈ 0.74 (≈ 0.78 with the state term, below). IMPORTANT: the contraction is NOT automatic — the UNCONSTRAINED
 // sum of marginal channels (ordinary + torpedo + senior-bonus + cap-gains straddle) exceeds 1, so
 // slope < 1 rests entirely on these regimes being unreachable simultaneously. A future constants
 // change (a breakpoint shift) could open a k ≥ 1 corner and silently break convergence — re-derive

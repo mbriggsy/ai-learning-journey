@@ -42,6 +42,11 @@ to 0.74 and **extended the convergence stress sweep to sample the 0.74 regime** 
 taxable pool straddling the breakpoints × SS to $5M × conversions × small net) so a future trim of
 the cap fails loud in CI rather than throwing for real inputs.
 
+> **Out of date (corrected 2026-10-31):** the cap is no longer 128, and the k ≈ 0.74 here is the
+> federal-only worst case. Pricing state tax added to k, and the cap went up with it on 2026-07-15
+> (`c7e5936c`). The current k, cap and derivation live in the comment above `GROSS_UP_MAX_PASSES` in
+> `src/engine/taxOverlay.ts`: read them there. The lesson stands.
+
 ## Key Insight
 
 **Adding a stacked tax channel can raise the contraction factor even when no single new tax is

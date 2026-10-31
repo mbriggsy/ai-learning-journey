@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-31, written by b9-1, item 1 re-written by b9-2 at 62 % of its window): the pay check's Phase C is closed, h2 and all.** The h2 cure landed at
+▶ **START HERE (2026-10-31, item 1 re-written by b9-3 at 56 % of its window — the schema-v4 bump is BUILT and pushed; its whole-file review is IN FLIGHT, its mutant pass READY). Carried from b9-1: the pay check's Phase C is closed, h2 and all.** The h2 cure landed at
 `68aba728` (CI run 41218240753 green on both jobs, read by id). `src/intake/gestureHold.ts` holds what the W face DREW at a press until that press's click
 (a press inside the face, or anywhere while focus is inside it): the stale note in `WorkingCostQuestion.tsx` (W alone, so another
 row's commit under the same press still re-gates its door), the value line and money picture in `AssumptionPanel.tsx`'s
@@ -38,8 +38,27 @@ matched) and its runner `mutants.cjs` + `mutants.spec.json` (per-test kills with
 smaller; all fixed. U10's Caddie card stays **HARD-FLAG** on its two Tier 1 builds (unchanged). The pay-check review's record:
 `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (`pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS —
 remove each link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\DECISIONS.md`. Next, in order:
-1. **The old-copy version bump — BUILT (b9-3, 2026-10-31): the bump (`c2864eb9`: U1–U3, U5, U6's fixtures) and the version-floor
-   test in its own second commit have landed; NEXT: the mutant pass, the whole-file ultramode review, `/distill`.** The plan:
+1. **The old-copy version bump — BUILT AND PUSHED (b9-3, 2026-10-31): the bump `c2864eb9` (U1–U3, U5, U6's fixtures) and the
+   version-floor test `9b0ef9db` (its own commit). Still owed, in order, each with its exact step:**
+   - **(a) The whole-file review's result — read it, then triage.** `/ultramode-code-review base:c4831850` launched it as Workflow
+     run `wf_edc27bef-48a` (11 lenses on opus: correctness, architecture, testing, idiom, simplicity, api-contract, data-migration,
+     docs-truth, adv-boundary, adv-temporal, adv-invariant; refuters scale 3/2/1). Its return value (coverage, confirmed,
+     handVerify, advisory, rejected) is the last record in
+     `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\8b61db03-6e64-49c9-8f1b-c5b25db26009\subagents\workflows\wf_edc27bef-48a\journal.jsonl`.
+     If it died or a lens crashed, resume it: `Workflow({scriptPath, resumeFromRunId: "wf_edc27bef-48a"})` with scriptPath
+     `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\8b61db03-6e64-49c9-8f1b-c5b25db26009\workflows\scripts\ultramode-code-review-wf_edc27bef-48a.js`
+     (same session only — from a new session, re-launch the skill instead). Then the skill's step 6: trace every hand-verify item to
+     source yourself, fix every NEW × REAL × MATERIAL one (smallest change; full gate), report the false alarms with their votes.
+   - **(b) The mutant pass — AFTER (a)'s fixes, never beside review agents or vitest (it plants into `src`).** From the project dir:
+     `node <proof>\mutants.cjs <proof>\mutants.spec.json unit`, `<proof>` being the `b9-schema-v4-proof` folder named below (its copy
+     of b9-1's per-test runner takes multi-file mutants). `PREDICTIONS.md` there was written BEFORE any run: compare each mutant's
+     red set to it, explain every miss, and re-anchor first any plant a review fix moved. M7 (the literal-3 mint) is runtime-
+     equivalent and already proven typecheck-only (the README). Record the results in the README.
+   - **(c) CI run 41238303597 on `9b0ef9db` — read it by id** (both jobs; it carries `verify:fit`, `verify:fit:rv` and `verify:csp`
+     on Linux). Local `verify:fit` was not run (CI's is the gate); local `verify:csp` 16 of 16, exit 0.
+   - **(d) `/distill`** on the DISTILL CANDIDATES block below (b9-2's version-ladder candidate is now proven by the build), right
+     after (a)'s fixes land. Then item 2.
+   The plan:
    `docs/plans/features/schema-v4-old-copy-refusal-build-spec.md` (`594e4ae9`). U4 and U6 ran against `git archive` copies of the
    two old builds; their runs, cited reads and the mint script are in
    `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\README.md`. The
@@ -112,10 +131,12 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-10-31 (b9-2, the schema-v4 plan):** no `src` change this session (docs and the plan only). By exit code at `1d1a0adc`:
-`pnpm typecheck` 0; `pnpm lint` 0; `pnpm build` 0; `pnpm verify:bundle` 0 (288.5 KiB); `pnpm verify:doc-stats` 0. Not run: the
-full suite, `verify:fit`, `verify:csp` (no code moved since b9-1 ran them at `68aba728`: full suite 4 red of 4770, the four
-load-timeout files 31 of 31 alone; fit 158 of 158; csp 16 of 16). CI on the three docs commits not read.
+**SESSION 2026-10-31 (b9-3, the schema-v4 build; b9-2's plan-session block pruned into it):** `src` changed (`c2864eb9`,
+`9b0ef9db`). By exit code: `pnpm typecheck` 0; `pnpm lint` 0; `pnpm verify:doc-stats` 0 (4793 tests / 221 files, at `9b0ef9db`);
+`pnpm build` 0; `pnpm verify:bundle` 0 (288.5 KiB); `pnpm verify:csp` 16 of 16; the full suite 4791 of 4792 on the bump's tree
+before the re-anchor (the one red was the live-citation arm the re-anchor then fixed; that file 43 of 43 after) — NOT re-run on
+the final tree, so run it once after item 1(a)'s fixes. Engine identity (R6): every dev seed's full output `cmp`-identical, HEAD's
+archive vs the tree. Not run here: `verify:fit`, `verify:fit:rv` (CI's), the mutant pass (item 1(b)).
 **DISTILL CANDIDATES (for the next `/distill`):**
 - (b9-10) a probe that scrolls its target into view tests the geometry the browser already cures. Chromium's scroll anchoring moved
   the scroller by exactly the shift on every run where the anchor node sat below the change and the scroller had room to move
@@ -137,12 +158,28 @@ load-timeout files 31 of 31 alone; fit 158 of 158; csp 16 of 16). CI on the thre
 - (b9-1) a scripted `PointerEvent` (jsdom's, `fireEvent`'s) defaults `isPrimary` to false: an `isPrimary` guard silently
   disabled the first hook in every unit test. And a spy restored after a failing `expect` leaks into the next test: under the
   capture mutant it moved another test's red line — restore in `afterEach` (`vi.restoreAllMocks()`).
-- (b9-2, the schema-v4 plan; distill after the build proves them) a version ladder's relabel step names its LITERAL successor, never
+- (b9-3, the schema-v4 build) the old build as the oracle without a worktree: a `git archive <commit>:projects/the-back-nine` plus
+  a `node_modules` junction runs that build's OWN committed tests and its OWN mint (`tsx`, imports rooted at the CWD's `src`) —
+  U4 ran each old build's version-4 pins (134/134, 173/173), U6 froze each build's real version-3 plaintext. The archive cannot pick
+  up another session's uncommitted edit, and nothing is registered in the shared checkout.
+- (b9-3) a mutant prediction written against a plan's wording must be re-derived against the code as built: the plan predicted a
+  lowered constant would read "newer", but the built ladder judges "newer" on the DISK label before any arm, so the mint's 3
+  relabels to 4 and lands on corrupt (same kill set, different mechanism) — insight 126's family.
+- (b9-3) a schema-surface pin that only compares recorded VALUES misses a NEW vocabulary the codec starts checking; read the
+  codec's own call sites (each `needVocab` third argument, plus the `includes` check) so an unrecorded vocabulary reds too.
+- (b9-2, the schema-v4 plan; PROVEN by the b9-3 build — distill it) a version ladder's relabel step names its LITERAL successor, never
   the current constant: a step that jumps to "current" carries an old plan past whatever step a later bump adds. A revert guard
   must live OUTSIDE the commit it guards (a git revert takes a same-commit guard with it). Once the codec relabels, every test of
   the disk version through the codec is vacuous: read the raw bytes. And a version-N fixture made by relabeling the current
   fixture moves with the shared checks; freeze the old build's real output instead (DND 012).
 **LANDMINES from this session:**
+- **(b9-3) Git Bash's `grep -c $'\r$'` reports an LF file as all-CRLF** — it said `scenarioCodec.test.ts` had 1339 CRLF lines
+  when node counted 0, and an edit script that trusted it wrote CRLF into an LF file (`scenarioFromDraft.ts` went MIXED; fixed
+  before commit). Check EOL with `git ls-files --eol -- <path>` or a node count, never grep in Git Bash.
+- **(b9-3) A heredoc-fed JSON spec ate its backslashes again** (the Windows paths in a TODO edit: "Bad escaped character"); nothing
+  was written. Edit path-bearing text with the Edit tool.
+- **(b9-3) `pnpm doc:reanchor` moved historical citations in insights 041 and 105 and the insights README** (the register Tier 4
+  re-anchor entry's known shape); left as moved.
 - **`pnpm doc:reanchor HEAD --apply` rewrote the FROZEN `e2e/held/fit-24px-measurements.md` again** (the Tier 4 entry's known
   shape): restored with `git show HEAD:projects/the-back-nine/e2e/held/fit-24px-measurements.md > …`. Its one REVIEW line (a
   citation inside a modified hunk) needs a hand fix — read the cited line at HEAD, then point at where that code is now.

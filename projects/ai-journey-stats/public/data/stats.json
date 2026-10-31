@@ -1565,13 +1565,13 @@
         "video": 0
       },
       "editorial": {
-        "description": "PreToolUse + Stop + PostToolUse hooks for Claude Code. Built after losing a session to WebFetch hanging — the rules are the lessons, and it's the source of the elite-engineer manifesto that ships into every session.",
+        "description": "SessionStart + PreToolUse hooks for Claude Code. Built after losing a session to WebFetch hanging — the rules are the lessons, and it's the source of the elite-engineer manifesto that ships into every session.",
         "hookStat": {
           "label": "HOOKS",
-          "value": "5"
+          "value": "2"
         },
         "liveUrl": null,
-        "oneLiner": "Claude Code hooks that gate, guide, and finish work.",
+        "oneLiner": "Claude Code hooks that gate and guide work.",
         "repoUrl": "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/hooks",
         "status": "active"
       },

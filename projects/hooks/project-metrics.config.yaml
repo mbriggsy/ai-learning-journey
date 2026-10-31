@@ -1,10 +1,10 @@
-# project-metrics per-project config — editorial for the ai-journey-stats showcase site (locked 2026-05-25).
+# project-metrics per-project config — editorial for the ai-journey-stats showcase site (locked 2026-05-25; hooks 5 → 2 on 2026-10-31, Briggsy's words).
 editorial:
-  oneLiner: "Claude Code hooks that gate, guide, and finish work."
+  oneLiner: "Claude Code hooks that gate and guide work."
   hookStat:
     label: "HOOKS"
-    value: "5"
+    value: "2"
   liveUrl: null
   repoUrl: "https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/hooks"
   status: "active"
-  description: "PreToolUse + Stop + PostToolUse hooks for Claude Code. Built after losing a session to WebFetch hanging — the rules are the lessons, and it's the source of the elite-engineer manifesto that ships into every session."
+  description: "SessionStart + PreToolUse hooks for Claude Code. Built after losing a session to WebFetch hanging — the rules are the lessons, and it's the source of the elite-engineer manifesto that ships into every session."

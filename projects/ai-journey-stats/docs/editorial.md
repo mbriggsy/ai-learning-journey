@@ -78,14 +78,14 @@ Builder-to-builder. Audience is AI-curious peer developers.
 
 - **hostProjectRoot:** `C:\Users\brigg\ai-learning-journey\projects\hooks`
 - **status:** `active`
-- **oneLiner:** `Claude Code hooks that gate, guide, and finish work.`
-- **hookStat:** `{ label: "HOOKS", value: "5" }` — LOCKED 2026-05-25 (VERIFIED: 5 hook scripts — block-webfetch, elite-engineer-session-start, enforce-brief-before-work, remind-distill-after-work, stop-distill-gate).
+- **oneLiner:** `Claude Code hooks that gate and guide work.`
+- **hookStat:** `{ label: "HOOKS", value: "2" }` — LOCKED 2026-05-25 at 5; set to 2 on 2026-10-31 by Briggsy's words, when the three distill-and-brief hooks (enforce-brief-before-work, remind-distill-after-work, stop-distill-gate) were retired (VERIFIED: 2 hook scripts — block-webfetch, elite-engineer-session-start).
 - **heroImage:** NEEDS CAPTURE — see capture queue
 - **heroImage_mobile_safe:** `tbd`
 - **liveUrl:** `null` (not a web-deployable project)
 - **repoUrl:** `https://github.com/mbriggsy/ai-learning-journey/tree/main/projects/hooks`
 - **description:**
-  1. `PreToolUse + Stop + PostToolUse hooks for Claude Code.`
+  1. `SessionStart + PreToolUse hooks for Claude Code.`
   2. `Built after losing a session to WebFetch hanging — the rules are the lessons, and it's the source of the elite-engineer manifesto that ships into every session.`
 - **gallery:** `[]`
 

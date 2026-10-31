@@ -22,26 +22,23 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-31, written by b9-10 for b9-1): the pay check's Phase C is closed but for one cure.** The whole-file
-review landed at `2c36e6f4` (CI run 41174108996 green on both jobs) and its `/distill` at `0fc79987` (insights 144–148, dated
-extensions on 22 older ones; CI run 41206358779 green on both jobs, read by id). **h2 is measured: REAL, on
-screens taller than his.** In real Chromium every coordinate tap on the W figure's month/year choice lands on his 1536×791
-window, his whole 1536×960 screen and his 448×891 phone (scroll anchoring moves the scroller before the release), but a
-1536×1300 window and a 1024×1366 touch screen miss, and a monthly figure runs 12× low, unasked. The record: the register's new
-Tier 0 entry, the spec's review section's h2 bullet, and `b9-paycheck-whole-review\coordinator\tapProbe2.mts` with its
-`h2-results-run1..4*.jsonl` (FIXES.md's h2 line). The review's record, with every repro, mutant spec and the merged fix list:
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (its
-`README.md` indexes the folder; `pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS — remove each
-link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\DECISIONS.md`. U10's Caddie card stays
-**HARD-FLAG** on its two Tier 1 builds (unchanged). Next, in order:
-1. **Build the h2 cure** — the register's Tier 0 *On a screen taller than his laptop's, a tap on "Each month" right after typing
-   the working-year figure can miss…*; its Prescription IS the build: a gesture hold in a new `src/intake/gestureHold.ts`, set on a
-   `pointerdown` inside the face and cleared on the `click` (never on `pointerup` — touch blurs after the finger lifts), read by
-   `WorkingCostQuestion.tsx`'s stale note and `AssumptionPanel.tsx`'s `WorkingCostRow` picture; four coordinate-tap `verify:fit`
-   arms (1536×1300 mouse, 1024×1366 touch; walk and panel), each with its non-vacuity floor, mutant-proven. Load the four UI
-   design skills first. The witness before and after: `tapProbe2.mts walkStaleLow panelStaleLow tall talltouch` (all four miss
-   today; all must land after), run ALONE against its own `pnpm dev --port 5199 --strictPort`, started harness-tracked.
-2. **Rank the registers against the D7 queue** (his order; never re-ordered without him) — b9-8's list, unchanged, plus the review's:
+▶ **START HERE (2026-10-31, written by b9-1 for b9-2): the pay check's Phase C is closed, h2 and all.** The h2 cure landed at
+`68aba728` (CI run 41218240753 green on both jobs, read by id). `src/intake/gestureHold.ts` holds what the W face DREW at a press until that press's click
+(a press inside the face, or anywhere while focus is inside it): the stale note in `WorkingCostQuestion.tsx` (W alone, so another
+row's commit under the same press still re-gates its door), the value line and money picture in `AssumptionPanel.tsx`'s
+`WorkingCostRow` (the whole draft; no control lives there). The build found the same race losing the stale note's OWN door on EVERY
+screen, his included (type 7000, tap "Keep $84,000 a year": $7,000 a year stood, the note gone as a keep would leave it): closed with
+it — the door keeps the figure it names and answers its unit. Both are CLOSED Tier 0 entries in the register, with their NEGATIVEs
+(the record of what the build changed from the prescription, and why, is on the h2 entry). Measured in real Chromium before and after,
+and on the final code: the four witness taps 4/4 land (were 4/4 lost), the Keep door 4/4 kept on his laptop and phone (were 4/4 lost),
+his window, full screen and phone 15/15 land. The record: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-h2-cure\` — `tapProbe3.mts` (b9-10's probe plus the Keep
+scenarios), `before-*` / `after-*` / `final-*.jsonl`, `PREDICTIONS.md` (every mutant's kill set, predicted then observed — all
+matched) and its runner `mutants.cjs` + `mutants.spec.json` (per-test kills with each failure's own line). Three opus review lenses
+(event order, the two consumers, the tests) found one P1 (the whole-draft note hold let a held door slip past ruling 34) and eleven
+smaller; all fixed. U10's Caddie card stays **HARD-FLAG** on its two Tier 1 builds (unchanged). The pay-check review's record:
+`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (`pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS —
+remove each link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\DECISIONS.md`. Next, in order:
+1. **Rank the registers against the D7 queue** (his order; never re-ordered without him) — b9-8's list, unchanged, plus the review's:
    - **b9-5's four.** Tier 0 *A self-employed worker's Social Security and Medicare tax is charged at an employee's half…*
      (a D7 ask; measure first). Tier 1: *The money picture's later years name a change without its dollars or its
      direction…* (b9-9 added two halves: a year the 65+ deduction zeroes names nothing; a state rate CUT can read as a short year's
@@ -83,11 +80,10 @@ link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\
      - the two-unpriced-states entry.
 
      U11 amended K6's and K7's text and left their tiers alone. K5 rides the Tier 2 birth-month entry. The register also keeps
-     narrow rosy entries in Tier 2 (Philadelphia's School Income Tax, PA's inheritance tax), and b9-10 filed the h2 entry in Tier 0
-     though no device of his reaches it (the rule decides that one too). Rule it by the header's "worst
+     narrow rosy entries in Tier 2 (Philadelphia's School Income Tax, PA's inheritance tax). Rule it by the header's "worst
      consequence, never by size". Either move all four up, or move §219(g) and the catch-up back down. Then write the rule
      into the register header so it stops being re-derived.
-3. **Build 2, the surplus question**, follows. The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
+2. **Build 2, the surplus question**, follows. The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
    year never checks the household's pay against its spending…*.
 **The review's record, durable:** `wf_ea145a86-a5a` (the 15-lens review) and `wf_19d636e2-77c` (the three fix lanes + the overflow
 verifies), journals under
@@ -105,11 +101,14 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-10-31 (b9-10, Phase C's distill and h2):** by exit code at this close, on the committed tree: `pnpm typecheck` 0;
-`pnpm lint` 0; `pnpm verify:doc-stats` 0 (the register header at its new count, all 148 insights indexed, every citation
-resolving); the full suite 6 red of 4748 at the close — every one a test that timed out in a 616 s run (the same tree ran 296 s earlier); the 6 files re-run alone 0 (56 of 56) — the counts live under `verify:doc-stats`. `pnpm build`, `verify:bundle`, `verify:fit`,
-`verify:csp` and `verify:fit:rv` were not run: no `src` change since `2c36e6f4` but two comment-only lines in `0fc79987` (the
-exhaustiveness comments now cite insight 147). The h2 probe's port 5199 server was this session's and is stopped.
+**SESSION 2026-10-31 (b9-1, the h2 cure):** by exit code on the committed tree: `pnpm typecheck` 0; `pnpm lint` 0 (and the
+touched e2e files type-checked through a scratch tsconfig — `tsc` never reads `e2e/`); `pnpm verify:doc-stats` 0; `pnpm build` 0;
+`pnpm verify:bundle` 0 (288.5 KiB); `pnpm verify:fit` 0 (158 of 158, 9.3 min — its first run red ONE arm, `?vault=datearrived`'s
+re-typed 90 s final wait, under the six new arms' added load: the nine vault waits now read `FINAL_TIER_MS`); `pnpm verify:csp` 0
+(16 of 16); the full suite 4 red of 4770 in a
+542 s run (three 120/180 s timeouts — `budgetTwoTrack`, both `solvePayloadIdentity` files — and `SaveFlow`'s heading wait), the
+four files re-run alone 0 (31 of 31), the same files that timed out at b9-10's close. `verify:fit:rv` not run (no RecommendationViz
+change). Port 5199 (the probe's server) stopped and checked free.
 **DISTILL CANDIDATES (for the next `/distill`):**
 - (b9-10) a probe that scrolls its target into view tests the geometry the browser already cures. Chromium's scroll anchoring moved
   the scroller by exactly the shift on every run where the anchor node sat below the change and the scroller had room to move
@@ -117,17 +116,27 @@ exhaustiveness comments now cite insight 147). The h2 probe's port 5199 server w
   something above it, shares the screen with the target, or where the scroll offset is smaller than the shift — a taller screen
   (4 of 5 missed there, mouse and touch). Before "no tap lost", pin the target LOW (the most content above it on screen) and run
   the tallest screen the face can meet; record the scroll offset and what was on screen beside the verdict.
+- (b9-1) …and anchoring cannot keep a control that is INSIDE the change: "no tap lost on his devices" was measured on the period
+  control, while the stale note's own Keep door unmounted under every press on every screen. Ask whether the target can live in the
+  content that moves.
+- (b9-1) hold what a face DRAWS, never the GATE of a control inside it: a whole-draft hold let a held door keep a figure another
+  field's commit (under the same press) had just withheld. Hold only what the press's own blur writes; hold everything only where
+  nothing can be acted on.
+- (b9-1) release a gesture hold in the click's BUBBLE phase on `window`: a capture-phase release re-renders mid-dispatch (a
+  browser-dispatched event runs a microtask checkpoint between listeners) and React drops the click of a held node it just
+  deleted. jsdom's synchronous `dispatchEvent` runs no microtask mid-dispatch, so pin the phase structurally and gate it in a real
+  browser. And Chromium hit-tests a MOUSE release once (pointerup, mouseup, click share a target): a pointerup-release mutant reds
+  only the touch arms and the held-control arms — predict that before running.
+- (b9-1) a scripted `PointerEvent` (jsdom's, `fireEvent`'s) defaults `isPrimary` to false: an `isPrimary` guard silently
+  disabled the first hook in every unit test. And a spy restored after a failing `expect` leaks into the next test: under the
+  capture mutant it moved another test's red line — restore in `afterEach` (`vi.restoreAllMocks()`).
 **LANDMINES from this session:**
-- **tsx (esbuild keepNames) wraps a NAMED function declared inside a Playwright page callback in `__name(…)`**, which the page does
-  not have: "ReferenceError: __name is not defined" killed the first h2 run. Keep `evaluate` callbacks free of named inner
-  functions (inline arrows passed to `map` / `find` are fine).
-- **Every stage of a Monitor pipe must flush per line:** `grep --line-buffered … | cut -c1-600` held every event in `cut`'s
-  buffer, so the first probe monitor never fired. Drop the trailing filter or line-buffer it.
-- **`TaskStop` on a background shell ends the harness's shell, but on Windows the child tree can outlive it.** The probe's
-  pnpm → tsx → node → chrome-headless-shell tree exited within seconds; the `pnpm dev --port 5199` server's `vite.js` (under a
-  `cmd.exe`) kept the port for ~25 minutes until stopped by pid. After every `TaskStop`, check the port
-  (`Get-NetTCPConnection -LocalPort <port> -State Listen`), `Get-Process chrome-headless-shell` and the node command lines, and
-  stop this session's survivors by pid.
+- **`pnpm doc:reanchor HEAD --apply` rewrote the FROZEN `e2e/held/fit-24px-measurements.md` again** (the Tier 4 entry's known
+  shape): restored with `git show HEAD:projects/the-back-nine/e2e/held/fit-24px-measurements.md > …`. Its one REVIEW line (a
+  citation inside a modified hunk) needs a hand fix — read the cited line at HEAD, then point at where that code is now.
+- **The full suite times out the same three heavy files under load** (`budgetTwoTrack`, `solvePayloadIdentity` ×2, plus a
+  `SaveFlow` wait): twice this session, beside nothing heavier than idle review agents. Re-run the red files alone before
+  diagnosing; never call it a regression on the full run's word.
 
 **THE A7 REVIEW (durable, 2026-10-29):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a7-review\`
 — `brief.md` (the review's contract brief, a template for Phase C's), every lens's repros in its own folder, `a7-tools\` (A7's
@@ -775,6 +784,18 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
+
+- **From the b9-10 close (2026-10-31), migrated by b9-1:**
+  - **tsx (esbuild keepNames) wraps a NAMED function declared inside a Playwright page callback in `__name(…)`**, which the page does
+    not have: "ReferenceError: __name is not defined" killed the first h2 run. Keep `evaluate` callbacks free of named inner
+    functions (inline arrows passed to `map` / `find` are fine).
+  - **Every stage of a Monitor pipe must flush per line:** `grep --line-buffered … | cut -c1-600` held every event in `cut`'s
+    buffer, so the first probe monitor never fired. Drop the trailing filter or line-buffer it.
+  - **`TaskStop` on a background shell ends the harness's shell, but on Windows the child tree can outlive it.** The probe's
+    pnpm → tsx → node → chrome-headless-shell tree exited within seconds; the `pnpm dev --port 5199` server's `vite.js` (under a
+    `cmd.exe`) kept the port for ~25 minutes until stopped by pid. After every `TaskStop`, check the port
+    (`Get-NetTCPConnection -LocalPort <port> -State Listen`), `Get-Process chrome-headless-shell` and the node command lines, and
+    stop this session's survivors by pid.
 
 - **From the b9-9 close (2026-10-31), migrated by b9-10:**
   - `gh run list --commit` needs the FULL 40-character sha (the b9-toronto2 bullet below): it bit again, and b9-9's CI wait spun

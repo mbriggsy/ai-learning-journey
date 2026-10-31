@@ -1,0 +1,31 @@
+name: Verify brief and distill
+
+# The tests of the brief and distill skills (projects/skills/distill-and-brief/), which every
+# session on the laptop loads through junctions, so a break here is live everywhere at once.
+# The tests read the Back Nine's, Feud's and the playbook's lesson folders as they stand, and
+# git history at the benchmark's old commits, so the checkout is full (fetch-depth 0) and a
+# push touching any of those lesson folders runs them too. Plain Node, no install step.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'projects/skills/distill-and-brief/**'
+      - 'projects/the-back-nine/docs/insights/**'
+      - 'projects/family-feud/docs/insights/**'
+      - 'playbook/docs/insights/**'
+      - '.github/workflows/verify-brief.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      # Quoted, so Node expands the glob itself; a bare folder argument fails on Node 24.
+      - run: node --test "projects/skills/distill-and-brief/brief/**/*.test.mjs"

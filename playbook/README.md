@@ -35,7 +35,7 @@ What Claude asks `ce-plan` for, every time:
 Only Claude models do the work: the plugin's review pass by another company's model is switched off in the repo's `.compound-engineering/config.yaml`. The plan's commit message says what ran ("planned, deepened and checked", or "planned, confidence check passed, checked" when no section needed deepening), and the build starts only once the plan's history shows it.
 
 - **Start it:** nothing to say; Claude starts it for sizable work. You can also say "plan <the work>".
-- **Lives in:** the `ce-plan` and `ce-doc-review` skills of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`. The plugin updates itself.
+- **Lives in:** the `ce-plan` and `ce-doc-review` skills of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`. The plugin is set to update itself.
 
 ### 3. Build
 
@@ -94,6 +94,6 @@ These fire by themselves, except the window check, which Claude runs itself at c
 
 - **Hooks:** [projects/hooks/](../projects/hooks/) holds the source; its [README](../projects/hooks/README.md) explains each hook. The live copies run from `~/.claude/hooks/` and match the source byte for byte: a change edits both, then compares them.
 - **Skills we built:** [projects/skills/](../projects/skills/) holds brief and distill, squeaky-clean, ultramode-code-review, window and doc-audit. Claude Code loads them from `~/.claude/skills/`.
-- **Plugin skills:** `ce-plan` and `ce-doc-review` come from the compound-engineering plugin, installed under `~/.claude/plugins/`. It updates itself; its settings for this repo are in [.compound-engineering/config.yaml](../.compound-engineering/config.yaml).
+- **Plugin skills:** `ce-plan` and `ce-doc-review` come from the compound-engineering plugin, installed under `~/.claude/plugins/`. It is set to update itself; its settings for this repo are in [.compound-engineering/config.yaml](../.compound-engineering/config.yaml).
 - **Lessons:** each project keeps its own `docs/insights/` folder, with the lessons that project's work discovered. `/distill` writes to it; `/brief` reads from it. For example: [the-back-nine](../projects/the-back-nine/docs/insights/), [burned](../projects/burned/docs/insights/), and [this folder's](docs/insights/), about how we work. Each one names the files it is about.
 - **Claude's private memory:** under `~/.claude`, outside this public repo.

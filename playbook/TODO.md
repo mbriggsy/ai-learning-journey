@@ -6,16 +6,16 @@ The queue for work on how we work. Sessions for it start in this folder.
 
 ## ▶ START HERE
 
-1. **Two checks owed on the 2026-10-31 dev-process changes, each the first time its moment comes:**
-   - **CE's auto-update actually refreshes.** Already proven: the setting is on, and a fresh session copied it into `~/.claude/plugins/known_marketplaces.json` (every-marketplace now carries `"autoUpdate": true`). Still to prove: the refresh runs only in an interactive session, at a random moment up to ten minutes after its first message. So in a session that has been up longer than that, every-marketplace's `lastUpdated` there should be later than `2026-10-31T14:48:26Z`, with no manual update run. If it isn't, the only other switch is `/plugin` > Marketplaces > Enable auto-update, which needs his hands: flag it as a blocker.
-   - **The first real plan on CE 3.34.0** (in any project) is the test of the plan step as README step 2 describes it. Ask for everything step 2 lists, then check:
-     - the plan landed at the path named inside the project's `docs/plans/` (`ls` it);
-     - no scope question or menu reached Briggsy;
-     - every helper ran on Opus, and the reviewers hunting contradictions and breakage got the whole plan;
-     - if the check called in any of its adversarial, product or security reviewers, its result reads "cross-model peer not run: disabled by checkout config"; if it called in none of them, the result says nothing about it, and that is a pass too;
-     - the plan's commit message says what ran ("planned, deepened and checked", or "planned, confidence check passed, checked").
-     A miss is a fix to make then, in README step 2 or the repo's `.compound-engineering/config.yaml`.
-2. **Nothing else is queued.** Ask Briggsy what's next.
+1. **The first real plan on CE 3.34.0 is owed a check.** None has run yet: no plan is committed in any project since the 10:49 update. The first will most likely be The Back Nine's next sizable build, after b9-1's current fix (a tap that can miss on tall screens) and its ranking pass. That session never reads this file, so the check runs from here once its plan lands. Every item is in git or in that session's transcript (`~/.claude/projects/<slug>/<id>.jsonl`). The test is README step 2 as written:
+   - the plan landed at the path named inside the project's `docs/plans/` (`ls` it);
+   - no scope question or menu reached Briggsy;
+   - every helper ran on Opus, and the reviewers hunting contradictions and breakage got the whole plan;
+   - if the check called in any of its adversarial, product or security reviewers, its result reads "cross-model peer not run: disabled by checkout config"; if it called in none of them, the result says nothing about it, and that is a pass too;
+   - the plan's commit message says what ran ("planned, deepened and checked", or "planned, confidence check passed, checked").
+   A miss is a fix to make then, in README step 2 or the repo's `.compound-engineering/config.yaml`.
+2. **Read The Back Nine's START HERE once b9-1's close lands, before its next build starts.** b9-1 started at 09:46 local, before the flow rule landed (10:56), and its job line was written at 10:08, so it built its fix with `/brief` and a review but no plan step. Its close is the first Back Nine close under squeaky step 1: the next sizable job's line must name its steps by their bar (`/brief <topic>`; the plan, deepened and checked as a whole; the build; the whole-file review; `/distill`). If it names the build directly, fix that line in place.
+3. **CE's auto-update: the install half.** The refresh is proven: every-marketplace's `lastUpdated` in `~/.claude/plugins/known_marketplaces.json` moved on its own, to `2026-10-31T16:03:11Z` and again to `16:08:42Z`, with two fresh sessions up (the last manual update ran at 14:48:17Z; no session's transcript shows one after it, by command or by `/plugin`). Nothing new was there to install: the installed CE commit (`3449230`) is upstream's head. The first time Every ships past it, the CE entry's `gitCommitSha` in `~/.claude/plugins/installed_plugins.json` should change within a session, with no manual update. If it doesn't, the only other switch is `/plugin` > Marketplaces > Enable auto-update, which needs his hands: flag it as a blocker.
+4. **Nothing else is queued.** Ask Briggsy what's next.
 
 ## Current state
 

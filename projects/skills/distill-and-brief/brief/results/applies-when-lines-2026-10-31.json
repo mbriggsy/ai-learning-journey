@@ -1,0 +1,1357 @@
+{
+ "written": "2026-10-31",
+ "what": "U5 of docs/plans/brief-recall-fix-plan.md: one applies_when line for every distinct Back Nine lesson blob that a Back Nine brief's commit or HEAD holds, keyed by full blob sha. Each line was written by one blind Opus helper that read only the bar (distill/applies-when.md at the U1 commit) and that one blob's text, saved byte for byte from git to a scratch file; its transcript is audited to hold no other read and no other tool. A KTD5 note: the blob reached the writer as a file it read, not inline in the prompt, with the same effect (that one text and nothing else) and an audit to prove it. Every line passed the machine half of the bar's check before it was kept (a failed line was rewritten with the reason, up to 3 tries); a second blind Opus helper judged each batch of 15 against the whole bar; a batch with more than 2 failures was rewritten and re-checked, and a line failed in a batch that passed was rewritten once with the checker's reason.",
+ "workflow": "wf_29a72c3d-bd8",
+ "barSha256": "f9dca3e83a376073b4cb25649e8f4b5404586ef91e22e2108568e0c8ade02217",
+ "barFrom": "651148be:projects/skills/distill-and-brief/distill/applies-when.md",
+ "blobsFrom": {
+  "head": "651148be39a8e4e305d9f466c4002cdfe4c9923d",
+  "commits": [
+   "8b2e1041c8ddc5a1601facb88c6cf64bd961a7db",
+   "29421b4eacfa2115f555aa49baa69cee99be320a",
+   "4cdfc826e9a4ba230ec2be725ef526f85e2ddee3",
+   "14a4df0bdb541d6bb91ae11fbf2be7c832d48882",
+   "2a0453515e4525e74d6a2702a91102993da22656",
+   "39b82f3147ae435ab453e8c1f8f546630925db6a",
+   "412dbd32e34212613457a46fe63b8f897c26bfd0",
+   "1bece72543cf22bec23f57bb078c06264a50eb4c",
+   "903a9c5e12d95abc4e150d4da67b727052e74a2f",
+   "8ee6d178a0af7bbaee27f442cc4cd7d7492f378d",
+   "651148be39a8e4e305d9f466c4002cdfe4c9923d"
+  ]
+ },
+ "count": 197,
+ "problems": [],
+ "lines": {
+  "8115445a426048682609542f776a8f27426efdbc": "applies_when: [adding a strict CSP to the Vite PWA, adding vite-plugin-pwa or upgrading Vite, adding a strict CSP to a Next.js or SvelteKit PWA]",
+  "aa1ecd4a73fbad663b8c690f426b8122a0b63448": "applies_when: [adding Trusted Types to the CSP, constructing the engine worker, setting innerHTML under Trusted Types, chasing a blank page]",
+  "5b1acc3e5e1cbc0527c6f37083adf03d64f5b9a9": "applies_when: [adding ESLint purity rules for src/engine, banning Date or crypto globals in Web Worker code, enforcing layer boundaries with a lint]",
+  "8508a9dc960202051895ae2131f9ebd3c0100409": "applies_when: [adding a monorepo subdir CI workflow, changing CI's pnpm version, editing a paths-filtered workflow, caching monorepo deps in CI]",
+  "b5ceb077fdab5d6ce8240da1209333d0607dfbab": "applies_when: [running a multi-agent code review, applying review findings, spawning review or verify agents, acting on linter or LLM-judge output]",
+  "05d48b4fe5cbc02a5230d6a66a7eef5294cec9e0": "applies_when: [adding Social Security to the gross-up, sizing a fixed-point iteration cap, adding Roth conversions or capital gains to the gross-up]",
+  "38f38075e07c0ed8696d9cc1a8b3b8830d75a3a1": "applies_when: [adding Social Security to the gross-up fixed point, setting a fixed-point iteration cap, adding ACA or IRMAA cliffs to the healthcare overlay]",
+  "9086fca473197f4c1c29e387ba7fe7de0a20dc0e": "applies_when: [stacking capital gains onto the gross-up, changing tax brackets or adding another tax, adding healthcare overlay ACA or IRMAA cliffs]",
+  "b6cf876301699ab9187bab47d8afe6f208ecc1f5": "applies_when: [adding cap-gains stacking to the tax overlay gross-up, updating tax breakpoints, adding healthcare overlay ACA or IRMAA cliffs]",
+  "7b0dd195a54fcc1257bc03083bc0303a4e9f1826": "applies_when: [adding a per-year input stream to OverlayParams, defaulting a value computed by division or Math ops, chasing a simulate call that throws]",
+  "38e59b62027c43fe26e8c16618eee3c4218749d1": "applies_when: [adding the IRS Joint Life & Last Survivor table, transcribing a federal reference table, adding IRMAA brackets or ACA tables]",
+  "b7bf2e13e15e2b750ad093b779c678f7a4e0cf3c": "applies_when: [adding a per-person input stream, adding a validateParams range or tolerance check, changing the gross-up or IRMAA convergence test]",
+  "88c29b09033e58368db9b9362cda3de1108ed843": "applies_when: [writing a golden fixture for the ACA solve, testing a converged value a fixed-point solver hides, adding IRMAA or HSA fixtures]",
+  "ef781155e9e28a807abb8ce894661238351d9515": "applies_when: [testing the ACA 400%-FPL cliff near its edge, rounding or quantizing MAGI before a threshold compare, changing the IRMAA tier compare]",
+  "acba6047ceb3fc0cd00129f7010ec63ad282105e": "applies_when: [solving the ACA premium and MAGI circularity, changing the ACA applicable-percentage table, adding a solver over IRMAA or tax brackets]",
+  "f7b58bc68946cfffceba51cd292dcd7d2744cdc9": "applies_when: [testing the ACA cliff in the engine, modeling the survivor after a spouse dies, adding IRMAA tiers or the age-65 Medicare gate]",
+  "81c0af79be998648314acd84dbb6779b44274991": "applies_when: [running ultramode-code-review on engine code, changing the review cadence or its lenses, testing a per-year or per-index mapping]",
+  "3b064090a864d92467e0116bf8e8f12021cc0134": "applies_when: [testing that the browser enforces the vercel.json CSP, testing a security header like HSTS or CORS, asserting an allowlist in a test]",
+  "0e500e5507c2fa443e5e39db8b165d439db0cb0e": "applies_when: [folding review findings into a planning doc, running an adversarial review until clean, changing the /ultramode-code-review verify stage]",
+  "3ad2b81e6dbb88e6d47964fe806af853103631ec": "applies_when: [folding review findings into a planning doc, fixing sentences flagged by a Caddie re-walk, running an iterate-until-clean code review]",
+  "c4624b669e0a60a00887ce895e0b0c9c6ebe396e": "applies_when: [adding requirements to the roadmap and plans, reversing a key decision in docs/plans, changing an engine contract or copyGuard entry]",
+  "f9f0bb41710a49a443028d0866a35f1394601d55": "applies_when: [writing a multi-agent review workflow's verify stage, triaging a review run's findings, building an LLM-as-judge quorum pipeline]",
+  "999a08da28ee882ebe55dc5c0090b82437ae7660": "applies_when: [adding HSA owner logic to the tax overlay, adding per-person householdYears lookups, reading a flag-gated cached value in a second feature]",
+  "1bf320c280e113c5e71bc694957cda8072637a58": "applies_when: [testing a transcribed table like the age-rating curve, adding a reference table to engine/constants, replacing a directional table]",
+  "c465b93fb86d0f5a7be70276db1fe901d52190d0": "applies_when: [transcribing or updating contribution limits, adding citations to a constants entry, adding a figure whose formula names a base year]",
+  "05c86b1f50732496273ef1a22ece9b178516db63": "applies_when: [writing an externally-derived RMD golden, pinning a golden on IRMAA tiers or FPL lines, designing an LLM-judge or multi-agent verifier]",
+  "5b383f2787add67b8f33bc3644c37aee14793181": "applies_when: [adding a dead-slot guard to YearContribution, adding a per-person stream to taxOverlay, summing validated ledger or bucket entries]",
+  "3fd2186403a550057bff2820b06060efa80ab4ae": "applies_when: [building a planned engine test fixture or mutant, writing or deepening a plan's tests, closing a plan scenario's coverage gap]",
+  "9c927f5cbbc85cfbccf4b6fefca26089b0bbf801": "applies_when: [triaging code review findings and choosing fixes, changing the /ultramode-code-review verify stage, amending a plan after a doc review]",
+  "6286efce4df803e4266f4aef4b4b43ab61dfcbe4": "applies_when: [adding a guard for the clamped IRMAA-MAGI, adding a consumer of the working-year clamp, building per-person asymmetry]",
+  "3a9a63835b63e793306878185bed987b295263b0": "applies_when: [adding the engine's infeasible sentinel, capping an iterative solver like the gross-up, adding compounding projections to the engine]",
+  "4a4f9ef8c090b488d999ce635a2091cee3ece49f": "applies_when: [testing the per-path taxAware collection, testing which working-year floor gets read, testing a serializer or the engineWire maps]",
+  "ff6dcc77a6f4a20e3056abf8c09aca8b3434d13d": "applies_when: [adding a field to the simulate taxAware collection, testing a serializer or engineWire pack and unpack, migrating ScenarioV2 to V3]",
+  "38b45bf2077ca3face65f959cc3a516b8d563047": "applies_when: [changing lock or passphrase flows in store/session, adding cancel or logout to an async state machine, adding a debounced autosave]",
+  "f1bafd7294d0a8819a649f24020495a5bc74ceed": "applies_when: [adding generation checks to firstSave, making setNewPassphrase or any durable write cancellable, adding a cloud-backup upload token]",
+  "e5e1ab3a0ef0f4e7838b3cf1d06b03088bc01738": "applies_when: [swapping in sourced mortality or Damodaran tables, testing a table generated from a source file, transcribing constants from a PDF]",
+  "9b911cdd99df9dcf15f7c1b21f4fa544f6d5672c": "applies_when: [pinning mortality or Damodaran data to a published figure, writing exit gates naming a URL or dataset, adding a CI gate on a URL]",
+  "1e40c172deeed18c3e84f43de3c2cf42ac9402b2": "applies_when: [applying multi-agent sweep fixes to the tickerBlend table, building a review workflow that transcribes values, bumping a constants vintage]",
+  "3c7e11b3f3b618c313cabcae044e3f245ca745cc": "applies_when: [writing an intake e2e test, changing the intake answer strip, adding a banner that pushes content, chasing a tap that does nothing]",
+  "9f31663f8ba7c614b4fd62c59fecaaa9b9d9bedb": "applies_when: [gating an intake step's Continue, adding a commit-on-blur field, wiring Save or onComplete, chasing a gate that only fails live]",
+  "b7f677505e00864c61d4e7898b7b00d16b8db0ac": "applies_when: [running a holistic review with a review panel, writing prompts for a review fan-out, tracing a data-flow finding from intake to engine]",
+  "c7070e713755952ab9e124e9e8c2e443b8b5db91": "applies_when: [running a holistic code review of the account-level intake, verifying your own review finding, triaging a multi-layer data-flow finding]",
+  "120fa4625c12107cab49ccec6577e1c061e563f9": "applies_when: [building the viz palette or band ramp, adding the ConfidenceBand or a line over a tinted fill, writing a planted-fail fixture for a gate]",
+  "c8844fc139283560f77b6510968d8a1d39c472ae": "applies_when: [changing Social Security claim age math, adding an engine age input, changing a piecewise benefit factor, chasing a NaN or negative benefit]",
+  "4568b842fee9f6996c143e50c52533907f5304bf": "applies_when: [wiring survivor benefits into the simulation, testing the survivor branch, modeling a planned retirement age or Roth conversion]",
+  "81933b103c353d9c4d1ad55d003833f908bc41cf": "applies_when: [running a doc restructure plan's code comment sweep, renaming a term everywhere, following a migration or refactor checklist]",
+  "a314b359cc9444dc1c1325f35702c37264b15404": "applies_when: [running a doc-restructure plan's code-comment sweep, renaming an ID scheme across code and docs, sweeping docs for a superseded decision]",
+  "34ce067b1db6f6473267b76647e8c9bd085ad4fa": "applies_when: [restructuring the docs or root README, adding a test count to the README and roadmap, writing how it works prose for planned features]",
+  "b7fcffceba6411edcfad344d710b56a0fb5dc6e2": "applies_when: [rewriting the README or roadmap, drafting docs from a spec, repeating a stat or count across docs, documenting unbuilt features]",
+  "ef07ac6034ff256629052de9bf1f24d5346288c3": "applies_when: [changing the confidence-band geometry, scaling or normalizing a value by a max or range, adding a NaN or non-finite input guard]",
+  "01bb83f538ca6a094de0efa0bbd5a5ac37142afc": "applies_when: [changing the band's producer seam, supporting a $0-portfolio household, relying on a validator to exclude zero, chasing a band RangeError]",
+  "0ae787e17adb720fafd288dd76a40c1f4e8f429b": "applies_when: [changing resolveBandData for the portfolio band, handling a $0-portfolio household, documenting an invariant upstream validation guarantees]",
+  "201beb9e16a74bcba13bebd6af1875808608fc9f": "applies_when: [changing the band's dollar scale in bandData.ts, supporting the $0-portfolio household, commenting that a validator rules a case out]",
+  "7dbd5e13818cbefe6d7f939e2a394e32eb369556": "applies_when: [changing resolveBandData, wiring a $0-portfolio household, adding a guard for zero or empty input, chasing a RangeError in the band]",
+  "8d5745019b3d530f59deb0705ca7f2f102ae357b": "applies_when: [changing resolveBandData in the band, handling a $0 portfolio, commenting that an input can never happen, chasing a RangeError in yForDollars]",
+  "c339e572b172ae6391978ce9dfc2f31c0412af18": "applies_when: [changing the portfolio band or its dollar scale, wiring a $0-portfolio household, relying on validateParams to rule out an input]",
+  "de53fbe3575b829f19b45b9f9df045812c1c479c": "applies_when: [computing the survivor income step-down, changing Social Security claim timing, measuring a financial transition like RMD onset]",
+  "478f8a2d77520d945deb473a0d0086c926789b63": "applies_when: [building the restore codec for income streams, adding an income stream fraction or multiplier, persisting budget or recommendation scalars]",
+  "a97d370bad7a579164a2f7cc381cb9a732d38929": "applies_when: [adding provisional and final tiers to the date band, reusing the focus announce or band morph, adding a re-solve to the hero surface]",
+  "a68fbf206dcb3e640729da2079e288de8147185f": "applies_when: [adding the band scrub readout, adding a render-time honesty or withhold decision, adding pointer code that calls getScreenCTM]",
+  "c2cb3b51bd4f1b5f2cd114dfbee449914d131229": "applies_when: [changing how the recovery passphrase is chosen, changing firstSave or the restoreVault path, changing one side of an encode and decode pair]",
+  "49c0fb5fa6c5ea77964d1a5d8df1ce9e643add56": "applies_when: [adding a COLA rate to an income stream, changing the restore codec or intake form, adding a spending-growth rate or fee drag]",
+  "2d7eb5e45d60c6dfc09a5860f0b596f092f05bbf": "applies_when: [fixing aria-describedby on income field errors, folding a fix into a council-settled commit, fixing htmlFor or id map or FK wiring]",
+  "add3a6a5c957ae047a3416a0eb6c550220e9cab6": "applies_when: [adding error handling to the restore flow, adding a refresh step after a durable write, changing the SaveFlow save and export]",
+  "9a29502a9c84d0fcf63ce6015811ff0731c425c9": "applies_when: [adding React.lazy to the app entry tree, auditing dynamic imports offline, deploying a PWA update, chasing a blank screen offline]",
+  "8655949f97a636e3fa48c569021dd4f8526ae99a": "applies_when: [building the edit-and-re-save failed state in Result, adding a retry button to an error panel, building the solver's input-failure panels]",
+  "a86b1df2fc33d2d3f9e80d3da6ba2deb373b49b6": "applies_when: [compiling budget lines with survivor scaling, adding a budget category like healthcare, adding per-account tax treatment or per-stream COLA]",
+  "36540266514f705ed6120db0651e8e2944c698c5": "applies_when: [crowning the DateBand off the floor track, moving a band or readout to another track, pairing a verdict word with its band or count]",
+  "0d26adea4c13743ef35f5c5f13a2727940468971": "applies_when: [checking the bundle byte budget after adding components, adding a verify script that reads dist/, running e2e or CSP tests against dist/]",
+  "d9fdfc34b1afb302a88a1590f719a6c071fb2852": "applies_when: [making the spend question read-only under a budget, changing the out-of-pocket medical step, adding an input to a reconciled total]",
+  "cc9a53c6b63776614621adfafe7a690f8a733a91": "applies_when: [changing a budget line's through year, reusing IntegerField for optional fields, adding an optional money or percent field]",
+  "ef28129daf6ff6579228efb36b53748911123cb9": "applies_when: [adding an announce to the budget sheet, testing a modal or portal, wiring an observer or focus trap, chasing a silent announce]",
+  "3048b7cf86a2eb48142ae4d0d43c4669d50d4c4c": "applies_when: [adding rules to the laptop @media block in result.css, editing any nested CSS block, editing nested nginx or HTML by text anchor]",
+  "ddbeb0ac8aa7bc5585ad14a0ca1990146c0f7b0e": "applies_when: [sweeping the stop date to find an ACA-cliff dip, drawing the ladder's doesn't-hold tell, sweeping Roth conversion windows in the optimizer]",
+  "6acd72cac57894dcfbf5c5531ad64b79bb18bed2": "applies_when: [fanning out verifier agents in a workflow script, building a list of async calls with Array.from, merging test shard or CI matrix results]",
+  "f1e85b61fbc037cebf6ecd37ce6ae7a687b2eb35": "applies_when: [labeling a multi-dip curve, testing a viz fed by engine output, sizing an SVG from a viewBox alone, chasing chart labels that overlap]",
+  "1b77ff58a025dd110bbad37fa475dfcc939a663c": "applies_when: [adding a hover or scrub readout, changing the odds-ladder readout, sizing tab panels to the tallest tab, chasing a layout jump on hover]",
+  "b8e3706de25f69ebfafc55535b3372f916b7152d": "applies_when: [mocking a child component in a router test, changing a prop App passes to IntakeApp, mocking the engine client in worker-wire tests]",
+  "95b446c3242f13f919a268588bb99aa641e112ed": "applies_when: [adding a backup door on the result screen, reusing ExportConfirm in a new mount, mounting RestoreFlow or SaveFlow steps from a new screen]",
+  "04519764c54dc30a39097c77f4a998132e8adef6": "applies_when: [adding a shadow-rate or marginal readout, reading a slope from slidingScalePtc, probing applicableContributionFraction for a slope]",
+  "99d99dc112d8c544f59ecb501ab525cd71c2243b": "applies_when: [adding a shadow-rate or marginal readout, reusing slidingScalePtc in a new consumer, costing outside income like a pension in PA]",
+  "eeca2282f708bdcdbd1b03d6bea8615f46f7abe3": "applies_when: [writing Healthcare sheet copy, adding a user-facing surface, editing copy.ts strings, adding dollar figures to on-screen copy]",
+  "bdd160de5aa80e13d277e81e424545b48321f9ed": "applies_when: [adding an e2e wait for the final engine tier, waiting in Playwright for a spinner or skeleton to be removed, polling until a flag clears]",
+  "621b55745c3d26170bc2f6e45f2072e3d1d90baa": "applies_when: [adding sheet-to-sheet routing to the AssumptionPanel, changing focus restore on sheet close, adding modal scroll-lock cleanup]",
+  "bf7d218f9345a27c89ec423c0ce268e6901b6a91": "applies_when: [adding a hysteresis or anti-flicker hold, changing the sticky display in memoryModel.ts, chasing a rosier-than-true hero headline]",
+  "0577ea09537943c5d83a26bef3c28821ae135168": "applies_when: [adding a timestamp to the save payload, changing the unsaved changes check, adding an updatedAt field to a synced document]",
+  "f5939b6f7ab4f7a79ac977ba1696e934cc131aef": "applies_when: [adding a senior-bonus sunset staleness note, writing a disclosure about engine behavior, adding sunset metadata to a tax constant]",
+  "560da56665e7ff6c29cea8fea80c42a131fc7279": "applies_when: [tightening spacing to fit above the fold, adjusting a density tier, changing config for a CI-only failure, chasing a test that fails only on CI]",
+  "84ace5b783a6a18703a452ba1208484cbf9ec766": "applies_when: [adding a fail-loud engine guard under validateParams, adding a store-side refusal behind the codec, adding a throw under engineProtocol.run]",
+  "7acbc3cd697c80866955fbcf5e9698ae057cb8f0": "applies_when: [running an ultramode review, changing a verify stage's vote math, adding a majority-vote gate, changing the council's chair stage]",
+  "5e5ce9c51e7b96f1a7c5e1c393ade8b523f931d3": "applies_when: [re-basing an aged vault, sweeping a defect's siblings, re-basing nominal dollars to real, adding a chart with its own chrome]",
+  "fca9c3a2057217b2d4982dc66cee5294b5acc215": "applies_when: [reading a persist machine field like savedAt, changing how the hydrate path seeds state, round-tripping a model through a codec]",
+  "0ee312eb71d035b6995ecf0e25f574be1768206e": "applies_when: [changing the Medicare costs disclosure, adding a route or seed that sets healthcareEnabled, adding a UI mirror of an engine flag]",
+  "139e75039702126a88207e30e73bcb3e454e42c5": "applies_when: [changing the Medicare unpriced note, adding a route or seed setting healthcareEnabled, adding a UI flag mirroring an engine flag]",
+  "bd5204bac597307f1cf27e1a7cc24705ca66d06b": "applies_when: [adding or changing the Medicare disclosure note, adding a route that sets healthcareEnabled, mirroring an engine flag in the UI]",
+  "040d460fed379b2938bd232427043627d0bb7021": "applies_when: [adding a Medicare disclosure to Result, adding an early return to buildOverlay, adding a UI flag that mirrors an engine decision]",
+  "7ba3cff3ee8e4111febb54be4eba3e125f29c4d8": "applies_when: [adding a Medicare disclosure, adding an early return to buildOverlay, showing an engine decision in the UI, testing a note's absence]",
+  "e1766803d326a5934ff044be5b2edc14f13470e9": "applies_when: [adding a Medicare disclosure to Result.tsx, adding an early return or guard to buildOverlay, showing an engine decision in the UI]",
+  "d4dad84a8ede57ef809ef872158f1c496fdfd58e": "applies_when: [adding copy to the priced-Medicare pair, fitting more text on one laptop frame, chasing a frame that fits on Windows but not ubuntu]",
+  "82810ebc5eb918009cedcdd3c6e656a2f6908665": "applies_when: [running parallel agents in one working tree, adding a scratch test in temp/, rewriting whole files by script, changing devSeeds.ts]",
+  "2dbf21fcad05cfc15e836bde66a35d9aa96f0765": "applies_when: [running a multi-question council, adding a schema to a Workflow agent, adding a review finder or refuter, chasing a schema retry loop]",
+  "65b408014af24ca9f5feab7b7e0cf341aededb95": "applies_when: [adding a dev seed that ages a saved vault, adding a fail-loud guard to the engine, back-dating persisted payloads in fixtures]",
+  "86a7d7d32954c9e74f217aa181f936ba3de68422": "applies_when: [adding an aged dev seed plant, adding an engine fail-loud guard, back-dating fixture payloads, chasing a dev seed with no verdict]",
+  "a6751b6b942b37fd3753f2ea6d5aa9e8fa0609a3": "applies_when: [adding an aged dev plant, adding a fail-loud engine gate, back-dating persisted fixture payloads, chasing a dev plant with no verdict]",
+  "b68734af2cc6a81ba55846065d4b9ac0a5b9e3fa": "applies_when: [adding an aged dev plant or vault doctor, adding a fail-loud engine guard, building a fixture that back-dates persisted payloads]",
+  "cf6d83c67922021b3fb1864c548e7a949949955a": "applies_when: [adding an aged dev plant or vault doctor, adding a fail-loud guard to the engine, back-dating persisted payloads in fixtures]",
+  "e41e57c0802004a8f8f227309b5705af35e03b8e": "applies_when: [adding an aged dev vault plant, adding a fail-loud engine guard, back-dating fixture payloads, chasing a dev plant with no verdict]",
+  "b13c04ded7788f2152f9a9fd6a83239c6c143fe1": "applies_when: [splitting a copy.ts key into gated variants, changing the assumptions panel spend row, widening an enum, renaming a design token]",
+  "0202a4e0767270e496daa48292ef014b7bc18924": "applies_when: [rewording ui copy or a catalog string, changing a component's render structure, changing the parts of a composed copy string]",
+  "1e1f092f5816ad6aed94adb1d2d945adb5989544": "applies_when: [adding a disclosure beside the Roth preview, adding a state reading to the W question or spend step, wording an income tax label]",
+  "4d524cbc5f71d7b3d9c771f5103ef387d0af8cf7": "applies_when: [adding a note beside the Roth preview, copying a sibling predicate for a new field, adding a date route disclosure like Medicare onset]",
+  "c215c7b227ddf226329ffcd2c79ed1ef29344bf6": "applies_when: [writing an odds copy template around slots.xOfTen, wording an adverse frequency like acaCostCliff, changing the xOfTen ceiling clamp]",
+  "07f23582d62b41d7d5bec85263224a3409dc61a7": "applies_when: [inverting a sibling unit's rule in a plan, re-solving a stale saved recommendation, writing a spec relying on an unshipped part]",
+  "54067eaf315643b7bf12ba3413f461ee49395fa3": "applies_when: [planning a unit that inverts a sibling unit's rule, handling a stale saved recommendation, extracting a function for a later unit to reuse]",
+  "9326b6c0731f6133b5a56d317e98be1dd820475e": "applies_when: [authoring a hand-derived oracle fixture, editing fixture tolerances or expectations, chasing engine totals that miss a hand ledger]",
+  "b5eb86a19dd48b3df77655a33a1c124e84d36bba": "applies_when: [adding a confidence threshold to a review's verify fan-out, merging a finished review into a fix list, skipping CI matrix legs]",
+  "c654d6773aad7b6b488e76daa02cc9d41c7b6e98": "applies_when: [adding a confidence threshold to a review's verify stage, folding a review workflow's results, skipping CI matrix legs on a condition]",
+  "6c95b2613254a1b3532afbb9c0cee2ddc7752326": "applies_when: [testing CRN decoupling between ranked candidates, adding a byte-identity guard, writing golden-fixture or cache-invalidation tests]",
+  "9a1b3fe9093e9277258925a457d9e66ce7278a27": "applies_when: [adding a perturbation law to ranking stability, checking the money picture's years, adding golden-fixture or cache-invalidation tests]",
+  "b6122327751f6cfa932ae36fff1fba28b0bb4474": "applies_when: [adding the store's solve lane, adding a blocked solve transition, extending request-epoch to a new lane, chasing advice over a refusal]",
+  "e4c82b3446c316f674f947b24e7a8fdd5540a38a": "applies_when: [adding a selection stage over the solver's ranking, changing the named driver or a sensitivity probe, rendering why a pick won]",
+  "04efe27cd281d91933ad99c6294753a5d409eec7": "applies_when: [building the hawk-veto solver run fingerprint, fingerprinting a computation's inputs, adding a SolveInput field]",
+  "d1c4a0ff0e75a6e377cfe2efc22d2d8a3baaaca3": "applies_when: [editing copy on a fold-law frame like the budget composite, adding a real-browser layout gate, chasing a CI-only fold breach]",
+  "bc5acffde4065c569a5ce312751998d165f0bafd": "applies_when: [sourcing the Part D surcharge, applying a council's derivation, scaling an old table forward, changing IRMAA or bracket formulas]",
+  "feeef9d183731fa3d4ccb5bf346c5a36967bea6d": "applies_when: [changing the recommendation hero or runner-up viz, changing when the hero shows dollars, writing copy around a formatted delta]",
+  "14792406d2bbd28e7dc65b36473b285587c5340b": "applies_when: [adding a state to the recommendation surface, writing copy that says re-open or try again, rewording a hint that points to a fix]",
+  "2d755301cfa1534f5eb86b9c1ce848fa0b7a7abe": "applies_when: [adding a state to the recommendation surface, changing which states show the invite, writing copy that says try again or re-open]",
+  "5639a5117b90fd449dcc72511c52b0efa542ac99": "applies_when: [rewording the no-pretax refusal note, writing copy for a structured refusal reason, adding a guard that returns a refusal reason]",
+  "abda7ea9567d3b422568fbc468fd63cc5bee4015": "applies_when: [writing copy for a refusal arm like no-pretax, changing which households reach a refusal arm, writing help text for the W step]",
+  "298281bf31f1692b0ccf4dfdef056a49291d0f31": "applies_when: [adding the saved-recommendation record, reusing a scenario staleness rule on a new type, adding or copying a money picture event gate]",
+  "b2df700079eff3fc9f2374d6cea323c62ba1d3df": "applies_when: [adding vintage stamps to a saved recommendation, copying a contract between persisted types, making a persisted field optional]",
+  "0ad5d04f6e422d54d7c60cf64f3ca630e746253d": "applies_when: [gating staleness warnings on exposure, adding a staleness clock, suppressing a false alarm, chasing old advice shown as current]",
+  "f5f53ab2a390ce8839ee889d27dc4922715c933a": "applies_when: [suppressing a false staleness warning, adding a staleness clock or vintage stamp, adding a stale note control like the Keep door]",
+  "e46c2ca67b9f4e9b47b67ddf2dfffedf022c7aa3": "applies_when: [testing IntakeApp's record writes, adding a negative sweep's control, asserting absence after a fixed wait, chasing a CI-only red]",
+  "2aec2ea04ef6f067c6b8bac5d0e1bcdb23fb381e": "applies_when: [working a filed fix from the TODO.md queue, measuring the size of a register entry, acting on a filed note or source comment]",
+  "37e1072acaa2c351cf371185678dd527ed2f5376": "applies_when: [executing a filed fix from the TODO.md queue, sizing a register entry, acting on a source comment that tells a builder what to do]",
+  "3c4b9341a23468e4b0460efc79158ca58b4cad2e": "applies_when: [working a filed fix from the TODO.md queue, writing Unfinished Fixes into TODO.md, acting on a source comment that says what to do]",
+  "dacbec1746a24a732ee89432e745ef34ee3107a7": "applies_when: [working the Unfinished Fixes in TODO.md, acting on a source comment that says what to do, splitting or reordering queued work]",
+  "3250af5b720ec22aba8bfdc4fde1681cba4deaee": "applies_when: [raising vitest's testTimeout for a flaky test, raising a findBy timeout in App.test.tsx, raising an HTTP or database timeout]",
+  "98ee5c6edb3fe72f68e6e6d47775b617724b3783": "applies_when: [naming the winning strategy on the recommendation surface, adding a field to a view model with modes, choosing a dollar formatter]",
+  "80f5787af4a1a4bcb75e801c1aabc7b2c17e00d8": "applies_when: [adding a real-solve or browser test, rounding a dollar figure on the winning-plan card, chasing a test timeout only in the full suite]",
+  "3e6aaa29db890cd9dd23358f6c44e75203fc5e54": "applies_when: [adding a refusal reason to missingRequiredFacts, adding a model limitation, changing the Still needed or answer strip copy]",
+  "a51f2c3709fc132df7574e02d253070a8731e46a": "applies_when: [adding a validation message to an intake form, building a holdings or budget line editor, re-ranking the TODO or backlog]",
+  "6efb3134fa7a9b268277380b325552885f302f6e": "applies_when: [changing when the intake escape hatch opens, rendering missing facts in the assumption panel, adding a new MissingFactKind]",
+  "6ef947b1f474103f24b8fc8e6ae49f0068d135dd": "applies_when: [adding an intake beforeunload guard, changing the PWA update reload, adding an intake entry form, adding an unsaved-work signal]",
+  "431e5df211330afc6570710defb39b145285ee0e": "applies_when: [cancelling the recommendation solve on an edit, adding a long synchronous engine method, chasing a headline frozen after an edit]",
+  "0efcc36d4236923c65dcdad6eac31f910f5fd8e9": "applies_when: [adding a dev seed for a failing household, adding or changing a ranking stability check, adding a refusal kind or changing its copy]",
+  "2a1d84ce7fa3720f769e7d4ab888f579c150e35b": "applies_when: [adding a dev seed for a failing household, adding a ranking stability vacuity check, adding a refusal kind to the recommendation view]",
+  "382745cf22f6735ee9462fe9db38f914f07c60ed": "applies_when: [adding a dev seed for a failing household, changing the ranking stability harness, adding a refusal kind to the recommendation]",
+  "3c18a0ab78cad1583b08bc77f74ebcd835f864f2": "applies_when: [cold-reading a failing household's rethink verdict, adding a vacuity check to ranking stability, adding a solver refusal kind]",
+  "e2ab06763ed401afd7d466a865246a8686a5e2c1": "applies_when: [adding a dev seed for a failing household, changing a ranking stability vacuity check, adding a refusal kind to the solve payload]",
+  "c1a24829aca252f34c186ed134eeace859793bb4": "applies_when: [adding or resizing svg text in the result charts, stacking colliding chart labels, testing chart labels, chasing tiny chart text on a phone]",
+  "dffe7c526ab3ebbab186e3312826d819de942cff": "applies_when: [measuring svg chart text, checking a font face is loaded, pinning a CSS rule by regex in a test, clicking a radio in a Playwright test]",
+  "627ce53c3b6dc44f8aebdf6f5af852350eaeacc0": "applies_when: [sizing the band's scrub readout, testing chart text at 320 px reflow, capping nowrap text with max-width, placing HTML text in viewBox units]",
+  "5352613d70b59b01c4f329441f647587f8a1c936": "applies_when: [adding a px floor to the chart-text e2e test, changing the y-tick steps, adding a screenshot-diff gate, chasing an e2e test failing only in CI]",
+  "418f8facfc7e73c0e1ea0de3a9a6b03afb562cf3": "applies_when: [testing the readout sweep with touch taps, sweeping the TwoFutures scrub or ladder readout, chasing a tap that fails only at one DPR]",
+  "be4b4291f691e133f09dad3baa916f5021988799": "applies_when: [holding a fix for a chart-text gate defect, skipping a Playwright test for a known defect, adding a test that reports measurements]",
+  "1f34c838457425b2c5923c227d5e1ba061a996ec": "applies_when: [adding date-seed renders to the chart-text spec, adding CPU-bound engine solves to an e2e suite, chasing local-only Playwright test timeouts]",
+  "c0dae2960d93972cd04224857d25f84a5a5f9759": "applies_when: [auditing the docs and TODO.md, correcting a stale status or count in the roadmap or README, adding a precedence rule between doc surfaces]",
+  "650936ee0ae3d4fb52d6ba4b5f0f64beaffae10a": "applies_when: [placing the scrub readout or other chart text, cold-reading chart text captures, writing a cannot-fit or impossible claim in a doc]",
+  "82d277ad778e51bf4d3bcb6deb552f7f42d018f0": "applies_when: [placing the scrub readout or chart text, judging cold-read captures, writing an impossible claim in a doc, rewording a strip fact]",
+  "bb3851fb234d7333aae073671fcc119b810c284b": "applies_when: [testing the caveat's reach in the vertical-fit spec, testing on-screen text in chart-text or intake-fold specs, adding a sticky header]",
+  "c64d8b938d8564b2d787f7c88de003fab7f98471": "applies_when: [testing the one-frame law at a raised browser font, changing the 68rem laptop breakpoint, counting elements below the fold in a layout gate]",
+  "004845b0d78bbb49b1e5f775dd4fc87cd461f518": "applies_when: [planting a mutant against the vertical-fit spec, labelling a mutant equivalent, recording a red count in a commit, piping a gate through grep]",
+  "574311a9320f1469dce1fe19a499818073e12ab9": "applies_when: [planting a mutant against the vertical-fit e2e spec, recording a mutant's red count in a commit, piping a gate through grep or tail]",
+  "ca213094cb9f918d9daa9454eedf96cc61b49ae6": "applies_when: [planting a mutant against the vertical-fit e2e spec, reporting N tests red in a commit message, chaining gates in a shell script]",
+  "20b251a8b0121ba4364144595603fb056fe271e1": "applies_when: [shooting screenshots at an emulated font size, emulating viewport or media before a fullPage capture, building a Caddie walk bundle]",
+  "fffa0dc0cb35dfdb207fb463ce3166731f2d73bd": "applies_when: [emulating a font size for Playwright screenshots, capturing full-page shots or PDFs under emulation, building Caddie walk screenshots]",
+  "e14ea13972b59714c364972cc294265d81240141": "applies_when: [adding a screenshot spec under e2e/held, adding a dev-server spec or Playwright config, scoping vitest or ESLint with exclude globs]",
+  "391a40889763b6ca353f7e9f6e7dda890ee38f91": "applies_when: [changing the band's screen-reader ruin sentence, quoting a year or age in alt-text, adding a spoken year to the TwoFutures preview]",
+  "25bc8311b37ccb4f32bc5b28b362891f3acd2fbd": "applies_when: [changing the band or TwoFutures axis, adding a dollar axis, fixing a chart label formatter, chasing three-decimal axis labels]",
+  "5da837c10a45be321cc8992aedd69ff2aa31308f": "applies_when: [moving a goal picker button to aria-disabled, styling a blocked btn-primary, testing an aria-disabled control, disabling a radio option]",
+  "01149fb986a62c8d10ce993e7dac96ee80570835": "applies_when: [changing the health sheet's Medicare premium card, adding a UI card that reads the health readout, adding a household median to a readout]",
+  "accf3fd477ce9426db13c157597521ae05f56f26": "applies_when: [changing the health sheet's Medicare cards, changing the FRA-year exemption or held-back reason, reading the health readout in the UI]",
+  "3fe37c97ba8d73ba0a544f3e88635adc0c3bbd48": "applies_when: [writing the assumptions row's lean on converting, disclosing the Part D surcharge hold, disclosing an ACA or medicare-extras hold]",
+  "a84adf40cbe068ef8c124945dc6cad88d6472c55": "applies_when: [writing the assumptions row Roth disclosure, calling a hold optimistic or conservative, changing a Caddie card's stale-face copy]",
+  "4a1b286d36d638318aada7156f15da7b4bea2a40": "applies_when: [writing the Medicare premium card's era lines, speaking a readout row as years out, writing the ACA card's year spans]",
+  "99ed36ecb73b663d1d1c32956f7f57650270d800": "applies_when: [changing how Social Security is taxed, adding or changing an income threshold like NIIT or IRMAA, re-tuning a band-named dev seed]",
+  "01fdfc4f316e78ad4570716e3ca10cd282c61a6b": "applies_when: [running a doc audit of line-numbered citations, citing a file and line in a doc or source comment, changing the doc-stats citation gate]",
+  "62a617a8931d7f8178d9c380deb2ec5b1b1c3828": "applies_when: [auditing doc line citations, editing code the docs cite by line, changing the doc-stats gate, citing a file line in a comment]",
+  "8968e3cbdd69be6dd60724933c81560e39c237a2": "applies_when: [running a doc audit of line-numbered citations, editing code that docs cite by line, changing the verify-doc-stats citation gate]",
+  "bedd9ecc365e2975ce816353ae2ad8a06154908a": "applies_when: [auditing doc citations, editing code that docs cite by line, adding line-numbered doc citations, changing the verify-doc-stats gate]",
+  "6ee19b3a39660585aca22c64a85b4990a9ee7047": "applies_when: [adding a tax rule like the senior bonus, writing hand-derived fixtures or property tests, ordering the RIB-LIM and age reduction]",
+  "a548d0a8d0fdbb974a837dcfde91f6d6029157de": "applies_when: [writing externally derived tax fixtures, changing the senior bonus phase-out, adding a tax constant from a research strand]",
+  "521a1dd43b065183802858668e3aa2b4c480a813": "applies_when: [pricing the IRMAA lines by CPI, computing growth from the price index, re-indexing a statute threshold, recording a mutant as equivalent]",
+  "d71399b114b52e878a8e3586d24372d33bcd224f": "applies_when: [extending the IRMAA anchor to the pre-RMD window, writing witness tests for a cross-year claim, adding cross-year headroom or room sentences]",
+  "32bded4c60e5f52f2c8a865378ad9881b28cc4fd": "applies_when: [rewording or reordering the Medicare line, writing copy that says a cost is already counted, changing the Caddie refuter rules]",
+  "67bf6f946a75ce934eb776184179c5bb686faabd": "applies_when: [writing a MEASURED or Seen bullet in the register, measuring survivor shortfalls, pairing a probability with a dollar figure]",
+  "3deed0beb5cb6345508143f5da00f9f25416c61e": "applies_when: [adding a disclosure row to the assumptions panel, taking a shortcut in the engine, writing a Not counted here list or methodology row]",
+  "698f7fffaa7f12853d6286a7cbe3b09ee68df613": "applies_when: [adding a disclosure to the assumptions panel, writing the re-entry gate copy, editing a Not counted here list or methodology row]",
+  "680808f321aee28a9cabd839f538e613cfdcac21": "applies_when: [measuring a working-year tax change's reach, writing a register or ledger reach claim, building the pay check or yield model or NIIT]",
+  "78b78211cf6f80895f062613c9b5fbf1008752cc": "applies_when: [measuring which seeds a tax change reaches, writing a reach claim in a plan or ledger row, changing a working year's pay or yield model]",
+  "5ff9e0ecbe790177c2851709f043f0d7ad3e05e8": "applies_when: [changing the W question's period rule, changing Back on a gated intake step, adding a confirmed or touched mark beside a value]",
+  "fae42762029b4f084a190b0ce7464a72de0d5cd1": "applies_when: [naming why Social Security moved in the money picture, changing the earnings test, producing an event when an income stream ends]",
+  "d47262194884ab02773bffee7194bec1e8c01c78": "applies_when: [adding a zero or floor rule to a money field, rounding or printing a money figure on screen, changing the earnings test or the RIB-LIM cap]",
+  "ad79840e42c33a7b05b8fd13518943563bd7cb4f": "applies_when: [choosing state-tax copy on the assumptions sheet or money picture, adding a state-tax reading, picking copy by outcome state or route]",
+  "0f18cc86c4139cb5d86596d270064bb756e9c3ce": "applies_when: [measuring a change's effect on the date seeds, running parallel fix lanes, proving a change is byte-identical when off, running a mutant test]"
+ },
+ "spotChecks": [
+  {
+   "batch": 0,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "8115445a4260",
+     "pass": true,
+     "reason": "Opens with the lesson's own work (a strict CSP on the Vite PWA), adds the plugin/Vite-upgrade route into the peer-resolution trap, then the Also Applies To frameworks, all as work, under the cap."
+    },
+    {
+     "blob": "aa1ecd4a73fb",
+     "pass": true,
+     "reason": "Has the story's work (Trusted Types in the CSP), the worker from engineClient.ts, the innerHTML sink from Also Applies To, and a last situation that phrases the blank page as debugging work, so the fix (a policy or report-only rollout) never appears."
+    },
+    {
+     "blob": "5b1acc3e5e1c",
+     "pass": false,
+     "reason": "'changing code that runs in the engine worker' covers almost every engine job, the bar's 'working on the server' case, and it points at ordinary engine edits instead of the lint-writing work where the bypass trap is."
+    },
+    {
+     "blob": "8508a9dc9602",
+     "pass": true,
+     "reason": "Each of the four is separate CI work: the new subdir workflow, the pnpm version setting, the paths filter that skips its own file, and dependency caching from Also Applies To; the area is named and nothing states the fix."
+    },
+    {
+     "blob": "b5ceb077fdab",
+     "pass": true,
+     "reason": "Running the review, folding its findings, spawning review or verify agents (the tool-access trap, widened by Also Applies To) and acting on linter or LLM-judge output are different ways in, and none names the read-only or verify-first fix."
+    },
+    {
+     "blob": "05d48b4fe5cb",
+     "pass": true,
+     "reason": "Has the story's two pieces of work (adding Social Security to the gross-up, sizing the iteration cap) and the Roth and capital-gains extension without its M5 label, and states neither the wrong-regime conclusion nor the re-probe fix."
+    },
+    {
+     "blob": "38f38075e07c",
+     "pass": true,
+     "reason": "Same story work (Social Security in the gross-up fixed point, setting the iteration cap) plus the healthcare-overlay ACA/IRMAA Also Applies To item without its U3 label, 157 characters, no conclusion or fix."
+    },
+    {
+     "blob": "9086fca47319",
+     "pass": true,
+     "reason": "Stacking capital gains onto the gross-up is the story; tax-bracket changes and new taxes are the ways in the lesson itself warns about; the healthcare ACA/IRMAA cliffs come from Also Applies To without a label; none states the disjointness conclusion."
+    },
+    {
+     "blob": "b6cf87630169",
+     "pass": true,
+     "reason": "Names the tax overlay gross-up work from the story, the breakpoint-shift way in, and the healthcare overlay cliffs from Also Applies To, all as work, with no fix, k value or label."
+    },
+    {
+     "blob": "7b0dd195a54f",
+     "pass": true,
+     "reason": "Gives the story's work (a per-year stream on OverlayParams), the arithmetic-default way in from Also Applies To, and last, as debugging work, a simulate call that throws; it never mentions the Number.isFinite fix."
+    },
+    {
+     "blob": "38e59b62027c",
+     "pass": true,
+     "reason": "The specific IRS table, transcribing any federal reference table, and the IRMAA/ACA tables from Also Applies To are different ways in, the area is named, and the cross-source verification method isn't stated."
+    },
+    {
+     "blob": "b7bf2e13e15e",
+     "pass": true,
+     "reason": "Adding a per-person stream (the story), adding a validateParams range or tolerance check, and changing the gross-up or IRMAA convergence test (both from Also Applies To) are different work, with the finiteness-first fix left out."
+    },
+    {
+     "blob": "88c29b09033e",
+     "pass": true,
+     "reason": "Covers the story's golden fixture for the ACA solve, the general case of a value a fixed-point solver hides, and the IRMAA and HSA fixtures (HSA is the extended case), without the Slice or M labels or the zero-returns fix."
+    },
+    {
+     "blob": "ef781155e9e2",
+     "pass": true,
+     "reason": "Testing the 400%-FPL cliff near its edge, quantizing MAGI before a threshold compare (the work that walks into the no-op), and changing the IRMAA tier compare are work, not the conclusion, and they are different ways in."
+    },
+    {
+     "blob": "acba6047ceb3",
+     "pass": true,
+     "reason": "Covers solving the premium-MAGI circularity (the story), changing the applicable-percentage table whose jump is the trap, and solvers over IRMAA or tax brackets from Also Applies To, with no segment-at-the-jump fix."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [
+    {
+     "blob": "5b1acc3e5e1c",
+     "from": "applies_when: [adding ESLint rules that keep src/engine pure, changing code that runs in the engine worker, enforcing monorepo layer boundaries with a lint]",
+     "reason": "'changing code that runs in the engine worker' covers almost every engine job, the bar's 'working on the server' case, and it points at ordinary engine edits instead of the lint-writing work where the bypass trap is.",
+     "to": "applies_when: [adding ESLint purity rules for src/engine, banning Date or crypto globals in Web Worker code, enforcing layer boundaries with a lint]"
+    }
+   ],
+   "machineRewrites": []
+  },
+  {
+   "batch": 1,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "f7b58bc68946",
+     "pass": true,
+     "reason": "Three distinct ways in, each a piece of work: the ACA cliff test, survivor modeling, and IRMAA or the age-65 gate. The areas are named in the lesson's own words, nothing states the failure or the fix, and the line is 142 characters."
+    },
+    {
+     "blob": "81c0af79be99",
+     "pass": true,
+     "reason": "Covers the story's work (running /ultramode-code-review on engine code), changes to the cadence or its lenses, and the Also Applies To per-year or per-index mapping. Each is work, distinct and specific, and the line is 144 characters."
+    },
+    {
+     "blob": "3b064090a864",
+     "pass": true,
+     "reason": "Names the story's work (testing that the browser enforces the vercel.json CSP) plus two Also Applies To ways in (other security headers, allowlist assertions). All are work, not the failure or the fix, and the line is 148 characters."
+    },
+    {
+     "blob": "0e500e5507c2",
+     "pass": true,
+     "reason": "Covers the story's planning-doc fold loop, the wider iterate-until-clean adversarial review, and the /ultramode-code-review verify stage, all in the lesson's words. They are distinct ways in, contain no conclusion, and the line is 152 characters."
+    },
+    {
+     "blob": "3ad2b81e6dbb",
+     "pass": true,
+     "reason": "Keeps the story's planning-doc fold, adds the extension's Caddie re-walk sentence fixes in the lesson's words, and keeps the widest Also Applies To item. All four would not fit the 160-character cap, so this follows the keep order, and the line is 149 characters."
+    },
+    {
+     "blob": "c4624b669e0a",
+     "pass": true,
+     "reason": "Names the story's work (folding requirements into the roadmap and plans), reversing a key decision in docs/plans, and the Also Applies To engine-contract or copyGuard change. All use the lesson's words, none is the premise-phrase grep fix, and the line is 148 characters."
+    },
+    {
+     "blob": "f9f0bb41710a",
+     "pass": true,
+     "reason": "Covers writing a multi-agent verify stage, triaging a review run's findings, and building an LLM-as-judge quorum pipeline. They are distinct, specific ways in drawn from modules and Also Applies To, they avoid the abstain fix, and the line is 144 characters."
+    },
+    {
+     "blob": "999a08da28ee",
+     "pass": true,
+     "reason": "Names the story's HSA owner logic in the tax overlay, a second consumer through per-person householdYears lookups, and the Also Applies To flag-gated cached value read by a second feature. None names the gate-on-the-invariant fix, and the line is 154 characters."
+    },
+    {
+     "blob": "1bf320c280e1",
+     "pass": true,
+     "reason": "Covers testing a transcribed table like the age-rating curve, adding a reference table to engine/constants, and the Also Applies To directional-table replacement, all in the lesson's words. None names the full-vector pin fix, and the line is 146 characters."
+    },
+    {
+     "blob": "c465b93fb86d",
+     "pass": true,
+     "reason": "Names the story's work (transcribing contribution limits), adding citations to a constants entry, and the Also Applies To figure whose formula names a base year. All are work a job would describe and none states the per-figure conclusion. The line is 148 characters."
+    },
+    {
+     "blob": "05c86b1f5073",
+     "pass": true,
+     "reason": "Covers the story's externally-derived RMD golden, goldens on the Also Applies To IRMAA tiers or FPL lines, and LLM-judge or multi-agent verifier design. These are distinct, specific ways in in the lesson's words, with no trust-root conclusion, and the line is 150 characters."
+    },
+    {
+     "blob": "5b383f2787ad",
+     "pass": true,
+     "reason": "The dead-slot guard on YearContribution is work a job would name before knowing the lesson, not the Key Insight's keep-attribution mechanism. Beside it are the Also Applies To per-person overlay stream and summing validated entries, and the line is 146 characters."
+    },
+    {
+     "blob": "3fd2186403a5",
+     "pass": true,
+     "reason": "Covers building a planned engine fixture or mutant, writing or deepening a plan's tests, and closing a plan scenario's coverage gap. These are three distinct ways in from the story and Also Applies To, with no derive-the-mechanism conclusion, and the line is 141 characters."
+    },
+    {
+     "blob": "9c927f5cbbc8",
+     "pass": true,
+     "reason": "Names the story's work (triaging review findings and choosing fixes), the /ultramode-code-review verify stage, and plan amendment after a doc review. All come from the lesson's Also Applies To, none says to feed verifiers the fix, and the line is 151 characters."
+    },
+    {
+     "blob": "6286efce4df8",
+     "pass": true,
+     "reason": "Names guard work on the clamped IRMAA-MAGI, the Also Applies To working-year-clamp consumer, and the per-person-asymmetry feature, all in the lesson's words. None states the predicate-matching fix and no unit labels like U9 appear. The line is 133 characters."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [],
+   "machineRewrites": []
+  },
+  {
+   "batch": 2,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "3a9a63835b63",
+     "pass": true,
+     "reason": "Three distinct pieces of work (the story's infeasible-sentinel work, the gross-up solver's pass cap, compounding projections from Also Applies To), named in the lesson's own words (engine, gross-up, infeasible sentinel), with no fix, conclusion or M6 label, at 148 characters."
+    },
+    {
+     "blob": "4a4f9ef8c090",
+     "pass": true,
+     "reason": "Covers the original story (the per-path taxAware collection), the extension's way in (which working-year floor gets read) and the engineWire/serializer item from Also Applies To, all as testing work, with no A6 or M6 labels, at 145 characters."
+    },
+    {
+     "blob": "ff6dcc77a6f4",
+     "pass": true,
+     "reason": "The story's collection work, the engineWire pack/unpack item and the ScenarioV2 to V3 migration are three different ways in, each in the lesson's words, with no fix or label, at 145 characters."
+    },
+    {
+     "blob": "38b45bf2077c",
+     "pass": true,
+     "reason": "Names the store/session lock and passphrase flows, the general cancel or logout case, and the debounced autosave from Also Applies To, each as work rather than the epoch or generation-token fix, at 146 characters."
+    },
+    {
+     "blob": "f1bafd7294d0",
+     "pass": true,
+     "reason": "The story's work (generation checks in firstSave, with the insight number dropped), the setNewPassphrase durable-write case and the cloud-backup upload token are distinct ways in; the line names neither the point-of-no-return conclusion nor the superseded phrase step, at 147 characters."
+    },
+    {
+     "blob": "e5e1ab3a0ef0",
+     "pass": true,
+     "reason": "The story's sourced mortality or Damodaran table swap, testing a table generated from a source, and transcribing constants from a PDF are distinct jobs, none of which states the source-bind fix, at 146 characters."
+    },
+    {
+     "blob": "9b911cdd99df",
+     "pass": true,
+     "reason": "Pinning mortality or Damodaran data, writing exit gates that name a URL or dataset, and adding a CI gate on a URL are distinct jobs that state the work rather than the verify-the-target conclusion, with no P1 label, at 143 characters."
+    },
+    {
+     "blob": "1e40c172deee",
+     "pass": true,
+     "reason": "The story's tickerBlend sweep fold plus two Also Applies To items (a review workflow that transcribes values, a constants vintage bump) are distinct ways in, named in the lesson's words, with no fix stated, at 154 characters."
+    },
+    {
+     "blob": "3c7e11b3f3b6",
+     "pass": true,
+     "reason": "The story's intake e2e test, the answer strip feature and the content-pushing banner from Also Applies To give three ways in, and one symptom comes last in debugging form; the reserved-box fix and the D2 and U6 labels are left out, at 146 characters."
+    },
+    {
+     "blob": "9f31663f8ba7",
+     "pass": true,
+     "reason": "Gating an intake step's Continue, a commit-on-blur field and wiring Save or onComplete are distinct ways in (U8 dropped), and the one symptom comes last as a chasing job; nothing states the read-the-store-directly fix, at 143 characters."
+    },
+    {
+     "blob": "b7f677505e00",
+     "pass": true,
+     "reason": "Covers the story's holistic review, the extension's way in (writing prompts for a review fan-out) and the multi-layer data-flow item from Also Applies To, with intake and engine as the lesson's own area words and no A7 or D1 labels, at 150 characters."
+    },
+    {
+     "blob": "c7070e713755",
+     "pass": true,
+     "reason": "The story's holistic review of the account-level intake, verifying an orchestrator-found finding, and triaging a multi-layer data-flow finding are distinct review jobs that state work rather than the full-chain conclusion, at 151 characters."
+    },
+    {
+     "blob": "120fa4625c12",
+     "pass": true,
+     "reason": "The viz palette or band ramp build, the ConfidenceBand or a line over a tinted fill, and a planted-fail fixture are distinct ways in, named in the lesson's words with U6 dropped; none states the measured ink-or-vermilion fix, at 152 characters."
+    },
+    {
+     "blob": "c8844fc13928",
+     "pass": true,
+     "reason": "Claim-age math, an engine age input and a piecewise benefit factor are distinct ways in from the story and Also Applies To, and one symptom comes last in debugging form; the assertClaimAge fix is not named, at 155 characters."
+    },
+    {
+     "blob": "4568b842fee9",
+     "pass": true,
+     "reason": "Wiring survivor benefits into the simulation, testing the survivor branch, and modeling a planned retirement age or Roth conversion are distinct jobs that state neither the realized-claim-age fix nor the seam conclusion, at 143 characters."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [],
+   "machineRewrites": []
+  },
+  {
+   "batch": 3,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "81933b103c35",
+     "pass": true,
+     "reason": "Three different ways in, each starting with an -ing verb: the story's sweep in the lesson's own doc-restructure and code-comment words, a rename everywhere, and the migration or refactor checklist from Also Applies To; 140 characters, with no conclusion or label."
+    },
+    {
+     "blob": "a314b359cc94",
+     "pass": true,
+     "reason": "Each situation names work in the lesson's own words: the code-comment sweep, the ID scheme rename across code and docs, and the superseded-decision sweep from Also Applies To; three different ways in, no fix, 152 characters."
+    },
+    {
+     "blob": "34ce067b1db6",
+     "pass": true,
+     "reason": "Names the root README and roadmap from the lesson and covers the restructure story plus two Also Applies To items (the duplicated test count and how-it-works prose for planned features), all as work, not as the drift failure; 149 characters."
+    },
+    {
+     "blob": "b7fcffceba64",
+     "pass": true,
+     "reason": "Four different ways in: the README or roadmap rewrite, the extension's drafting from a spec, and both Also Applies To items; uses the lesson's own area words, leaves out the U11 and b9-8 labels, 143 characters."
+    },
+    {
+     "blob": "ef07ac6034ff",
+     "pass": true,
+     "reason": "Names the confidence-band geometry from the lesson, adds the scale-by-max case from Also Applies To and a NaN guard (work a job would name before knowing this lesson, not the fix of auditing sibling inputs); 143 characters."
+    },
+    {
+     "blob": "01bb83f538ca",
+     "pass": true,
+     "reason": "Uses the lesson's band's producer seam and $0-portfolio household; relying on a validator is a work-shaped way into the comment-guarantee item from Also Applies To, and the one symptom comes last as debugging work; 153 characters."
+    },
+    {
+     "blob": "0ae787e17adb",
+     "pass": true,
+     "reason": "Names resolveBandData and the portfolio band in the lesson's words, the $0-portfolio household case, and the documenting-an-upstream-guarantee work from Also Applies To; three different ways in with no fix stated, 155 characters."
+    },
+    {
+     "blob": "201beb9e16a7",
+     "pass": true,
+     "reason": "Names bandData.ts (an existing module, not one the fix added) and the $0-portfolio household, plus commenting that a validator rules a case out (from Also Applies To); different ways in and work-shaped, 148 characters."
+    },
+    {
+     "blob": "7dbd5e13818c",
+     "pass": true,
+     "reason": "The story's resolveBandData change, wiring the $0-portfolio household, adding a zero or empty guard (work a job names on its own, not the strict-invariant fix the Key Insight recommends), and a final symptom written as debugging work; 147 characters."
+    },
+    {
+     "blob": "8d5745019b3d",
+     "pass": true,
+     "reason": "The story's resolveBandData change, the $0 portfolio case, writing a can-never-happen comment as work, and a last symptom (the RangeError in yForDollars) as a debugging job would see it, not the cause; 157 characters, under the 160 cap."
+    },
+    {
+     "blob": "c339e572b172",
+     "pass": true,
+     "reason": "Names the portfolio band and validateParams from the lesson; wiring the $0-portfolio household and relying on validateParams are different, work-shaped ways in that state neither the conclusion nor the fix; 144 characters."
+    },
+    {
+     "blob": "de53fbe3575b",
+     "pass": true,
+     "reason": "The story's survivor income step-down in the lesson's words, Social Security claim timing as a second way into the main trap, and the RMD-onset transition from Also Applies To; specific, no fix or labels, 143 characters."
+    },
+    {
+     "blob": "478f8a2d7752",
+     "pass": true,
+     "reason": "The story's restore codec for income streams, adding a new fraction or multiplier, and the budget or recommendation scalars from Also Applies To (the Act and R40 labels left out); different ways in, 154 characters."
+    },
+    {
+     "blob": "a97d370bad7a",
+     "pass": true,
+     "reason": "The story's provisional and final tiers on the date band, reusing the focus announce or band morph in a new consumer, and the hero-surface re-solve from Also Applies To; the U9 and D2 labels left out, 148 characters."
+    },
+    {
+     "blob": "a68fbf206dcb",
+     "pass": true,
+     "reason": "The story's band scrub readout, plus the render-time honesty or withhold decision and the getScreenCTM pointer code from Also Applies To, all in the lesson's own words; three different ways in with no fix stated, 141 characters."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [],
+   "machineRewrites": []
+  },
+  {
+   "batch": 4,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "c2cb3b51bd4f",
+     "pass": true,
+     "reason": "All three situations describe work: the recovery rework the story was doing, the firstSave/restoreVault mirror paths, and the encode and decode pair from Also Applies To. Each uses the lesson's own words, none states the fix, and the line is about 155 characters."
+    },
+    {
+     "blob": "49c0fb5fa6c5",
+     "pass": true,
+     "reason": "It names the story's work (a COLA rate on an income stream), then the restore codec and intake form gates it touched, then the spending-growth and fee-drag items from Also Applies To. None of them states the range-gate fix."
+    },
+    {
+     "blob": "2d7eb5e45d60",
+     "pass": true,
+     "reason": "It names the story's rider (aria-describedby on income field errors), the council-settled commit it was folded into, and the cross-reference repairs from Also Applies To. All are work descriptions, not the conclusion."
+    },
+    {
+     "blob": "add3a6a5c957",
+     "pass": true,
+     "reason": "It names error handling in the restore flow (the story's work), plus the write-then-refresh pattern and the SaveFlow save and export from Also Applies To. Each is a different way in and none states the split-the-try fix."
+    },
+    {
+     "blob": "9a29502a9c84",
+     "pass": true,
+     "reason": "It names React.lazy in the app entry tree, the offline dynamic-import audit, and PWA update deploys (version skew) as three different ways in. The single symptom (a blank screen offline) is written as debugging work and comes last."
+    },
+    {
+     "blob": "8655949f97a6",
+     "pass": true,
+     "reason": "It names the edit-and-re-save failed state in Result (the story), retry buttons on error panels, and the solver's input-failure panels from Also Applies To. None states the classify-transient-versus-deterministic conclusion."
+    },
+    {
+     "blob": "a86b1df2fc33",
+     "pass": true,
+     "reason": "It names the budget compile layer with survivor scaling (the story) and the healthcare category, per-account tax and per-stream COLA cases from Also Applies To, all in the lesson's words. None states the compose-by-error-direction fix."
+    },
+    {
+     "blob": "36540266514f",
+     "pass": true,
+     "reason": "It names crowning the DateBand off the floor track (the story), re-keying a band or readout to another track, and pairing a verdict word with its band or count from Also Applies To. All describe work, not the re-key-every-field conclusion."
+    },
+    {
+     "blob": "0d26adea4c13",
+     "pass": true,
+     "reason": "It names the bundle byte-budget check after adding components (the story), adding a verify script that reads dist/, and the e2e and CSP runs against dist/ from Also Applies To. None states the build-first fix."
+    },
+    {
+     "blob": "d9fdfc34b1af",
+     "pass": true,
+     "reason": "It names the read-only spend-question work the story was doing, the out-of-pocket medical step the failure ran through, and adding an input to a reconciled total from Also Applies To. All are work, not the enumerate-every-writer conclusion."
+    },
+    {
+     "blob": "cc9a53c6b637",
+     "pass": true,
+     "reason": "It names the budget line's through year (the story), reusing IntegerField for optional fields, and optional money or percent fields (parseMoney/parsePercent) from Also Applies To. None states the blankAllowed fix."
+    },
+    {
+     "blob": "ef28129daf6f",
+     "pass": true,
+     "reason": "It names an announce on the budget sheet, testing a modal or portal, and observer or focus-trap wiring as three different ways in. The single symptom (a silent announce) is written as debugging work and comes last."
+    },
+    {
+     "blob": "3048b7cf86a2",
+     "pass": true,
+     "reason": "It names the laptop @media block in result.css (the story), nested CSS blocks in general (the scope of the Key Insight), and the nginx and HTML text-anchor edits from Also Applies To. Each is specific enough to rank and none states the fix."
+    },
+    {
+     "blob": "ddbeb0ac8aa7",
+     "pass": true,
+     "reason": "It names the stop-date sweep for an ACA-cliff dip (the story), the ladder's doesn't-hold tell (the feature), and the optimizer's Roth conversion-window sweep from Also Applies To. None states the dual-clock conclusion."
+    },
+    {
+     "blob": "6acd72cac578",
+     "pass": true,
+     "reason": "It names fanning out verifier agents in a workflow script (the story), building async lists with Array.from, and merging test-shard and CI-matrix results from Also Applies To. All are work and none states the return-a-thunk fix."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [],
+   "machineRewrites": []
+  },
+  {
+   "batch": 5,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "f1e85b61fbc0",
+     "pass": true,
+     "reason": "All four situations name work in the lesson's own words: the multi-dip curve, a viz fed by engine output and an SVG sized from a viewBox alone; they are distinct ways in, the overlap symptom comes last, and the line is 149 characters."
+    },
+    {
+     "blob": "1b77ff58a025",
+     "pass": true,
+     "reason": "It names the story's work and its feature (the odds-ladder readout), adds the tab-panel item from Also Applies To and puts the layout-jump symptom last; no fix is stated and the line is 151 characters."
+    },
+    {
+     "blob": "b8e3706de25f",
+     "pass": true,
+     "reason": "It covers three distinct ways in (mocking a child in a router test, changing the App to IntakeApp prop, mocking the engine client in worker-wire tests), all in the lesson's words, and never mentions the props-echo fix."
+    },
+    {
+     "blob": "95b446c3242f",
+     "pass": true,
+     "reason": "It names the story's work (the backup door on the result screen), a second way in (reusing ExportConfirm) and the RestoreFlow/SaveFlow item from Also Applies To; it does not state the onCancel fix."
+    },
+    {
+     "blob": "04519764c54d",
+     "pass": true,
+     "reason": "The shadow-rate readout, slidingScalePtc and applicableContributionFraction are each a different way in named in the lesson's words, and the line states neither the cliff-gating fix nor the conclusion."
+    },
+    {
+     "blob": "99d99dc112d8",
+     "pass": true,
+     "reason": "It keeps the original readout and slidingScalePtc reuse situations and adds the extension's way in (costing outside income like a pension in PA) in the lesson's own words, which is what the extending rule asks for."
+    },
+    {
+     "blob": "eeca2282f708",
+     "pass": true,
+     "reason": "It names the Healthcare sheet and copy.ts, both in the lesson's words, as distinct ways in; adding a user-facing surface is broad but is the lesson's own stated scope and still ranks against non-UI jobs."
+    },
+    {
+     "blob": "bdd160de5aa8",
+     "pass": true,
+     "reason": "It names the story's work (an e2e wait for the final engine tier) and two Also Applies To items (spinner or skeleton removal in Playwright, polling until a flag clears); it never recommends the fix of waiting for a presence stamp."
+    },
+    {
+     "blob": "621b55745c3d",
+     "pass": true,
+     "reason": "It names the story's work (sheet-to-sheet routing on the AssumptionPanel), a second way in (focus restore on sheet close) and the scroll-lock item from Also Applies To, and it does not state the exempt-the-dying-dialog fix."
+    },
+    {
+     "blob": "bf7d218f9345",
+     "pass": true,
+     "reason": "It names the work (adding a hysteresis hold) and the file (the sticky display in memoryModel.ts), then ends on a symptom a debugging job would see (a rosier-than-true hero headline); it does not state the direction-gating or pair-coupling fix."
+    },
+    {
+     "blob": "0577ea095379",
+     "pass": true,
+     "reason": "It names the story's work (a timestamp in the save payload), the unsaved-changes check in the lesson's words, and the updatedAt item from Also Applies To; it does not mention the normalizer fix."
+    },
+    {
+     "blob": "f5939b6f7ab4",
+     "pass": true,
+     "reason": "It names the story's feature (the senior-bonus sunset staleness note), the wider disclosure-about-engine-behavior way in, and adding sunset metadata to a tax constant as a separate way in; it states neither the grep-the-consumer conclusion nor the fix."
+    },
+    {
+     "blob": "560da56665e7",
+     "pass": true,
+     "reason": "It names the work in the lesson's words (fit above the fold, density tier) plus the Also Applies To config item for CI-only failures, and ends on the CI-only symptom as a separate debugging way in; the line is 159 characters, just under the 160 cap."
+    },
+    {
+     "blob": "84ace5b783a6",
+     "pass": true,
+     "reason": "Each situation adds a refusal under a different gate (validateParams, the codec, engineProtocol.run), taken from the story and its Also Applies To in the lesson's words; it does not state the predicate-sweep fix, and the line is 155 characters."
+    },
+    {
+     "blob": "7acbc3cd697c",
+     "pass": true,
+     "reason": "It names the story's work (running an ultramode review) and the verify stage's vote math, plus two Also Applies To items (a majority-vote gate, the council's chair stage); it does not state the separate real/material aggregation fix."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [],
+   "machineRewrites": []
+  },
+  {
+   "batch": 6,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "5e5ce9c51e7b",
+     "pass": true,
+     "reason": "Four distinct -ing ways in (the aged-vault re-base the story was doing, the sibling sweep, and two Also Applies To items: nominal-to-real dollars and a chart with its own chrome), the area named in the lesson's words, about 140 characters, and no fix or label."
+    },
+    {
+     "blob": "fca9c3a20572",
+     "pass": true,
+     "reason": "Three distinct ways in: reading a persist machine field like savedAt (the story's work), changing the hydrate seed (work, not the splice fix) and round-tripping through a codec (from Also Applies To), all in the lesson's own words and about 143 characters."
+    },
+    {
+     "blob": "0ee312eb71d0",
+     "pass": true,
+     "reason": "Names the Medicare costs disclosure, adding a second producer that sets healthcareEnabled, and the UI-mirror class from Also Applies To, three distinct ways in with no fix or conclusion, about 144 characters."
+    },
+    {
+     "blob": "139e75039702",
+     "pass": true,
+     "reason": "Same sound structure: the Medicare unpriced note (the lesson's own words), adding a route or seed that sets healthcareEnabled, and the UI-mirror class, each a different way in, about 144 characters."
+    },
+    {
+     "blob": "bd5204bac597",
+     "pass": true,
+     "reason": "The Medicare disclosure note, adding a route that sets healthcareEnabled, and mirroring an engine flag in the UI are three distinct -ing ways in in the lesson's words, with no fix or label, about 143 characters."
+    },
+    {
+     "blob": "040d460fed37",
+     "pass": true,
+     "reason": "The story's work (a Medicare disclosure in Result), the Key Insight's trigger (an early return in buildOverlay, which is work and not the read-the-output fix) and the Also Applies To UI mirror are three distinct ways in, about 144 characters."
+    },
+    {
+     "blob": "7ba3cff3ee8e",
+     "pass": true,
+     "reason": "Four distinct ways in, in keep order: the Medicare disclosure, an early return in buildOverlay, showing an engine decision in the UI, and testing a note's absence (from Also Applies To), all in the lesson's words, about 148 characters."
+    },
+    {
+     "blob": "e1766803d326",
+     "pass": true,
+     "reason": "The disclosure in Result.tsx, an early return or guard in buildOverlay (straight from the Key Insight's trigger, not its fix) and the Also Applies To UI-mirror item are three distinct ways in, about 145 characters."
+    },
+    {
+     "blob": "d4dad84a8ede",
+     "pass": true,
+     "reason": "The story's work (adding copy to the priced-Medicare pair), a second way in (fitting more text on one laptop frame) and a correctly phrased symptom placed last (Windows passes and ubuntu does not, cause left out), about 147 characters."
+    },
+    {
+     "blob": "82810ebc5eb9",
+     "pass": true,
+     "reason": "Four distinct ways in, all in the lesson's own words: parallel agents in one working tree, a scratch test in temp/, scripted whole-file rewrites, and devSeeds.ts as the file the work touched (not a fix file), with no fix stated, about 146 characters."
+    },
+    {
+     "blob": "2dbf21fcad05",
+     "pass": true,
+     "reason": "The story's multi-question council, two Also Applies To ways in (a schema on a Workflow agent, a review finder or refuter) and a symptom placed last that names the retry loop and not its truncation cause, about 149 characters."
+    },
+    {
+     "blob": "65b408014af2",
+     "pass": true,
+     "reason": "The story's aged-vault dev seed, the Key Insight's trigger (adding an engine fail-loud guard, not the acceptance-pin fix) and the Also Applies To back-dated fixture payloads are three distinct ways in, about 141 characters."
+    },
+    {
+     "blob": "86a7d7d32954",
+     "pass": true,
+     "reason": "Aged dev seed plant, engine fail-loud guard and back-dated fixture payloads are distinct ways in, and the last situation is the symptom as a debugger sees it (a dev seed rendering no verdict), about 145 characters."
+    },
+    {
+     "blob": "a6751b6b942b",
+     "pass": true,
+     "reason": "Uses the lesson's exact phrases (aged dev plant, fail-loud engine gate, back-dated persisted payloads) as three distinct ways in, plus a correctly placed no-verdict symptom, about 149 characters."
+    },
+    {
+     "blob": "b68734af2cc6",
+     "pass": true,
+     "reason": "Aged dev plant or vault doctor, adding a fail-loud engine guard, and building a fixture that back-dates persisted payloads are three distinct ways in in the lesson's words, with no fix or label, about 144 characters."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [],
+   "machineRewrites": []
+  },
+  {
+   "batch": 7,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "cf6d83c67922",
+     "pass": true,
+     "reason": "The three situations each name work in the lesson's own words: the aged dev plant or vault doctor the story added, the engine fail-loud guard the Key Insight names as a way in, and the Also Applies To back-dating fixtures; none states the failure or the engine-acceptance pin fix, and the line is about 140 characters."
+    },
+    {
+     "blob": "e41e57c08020",
+     "pass": true,
+     "reason": "It covers the story's aged dev vault plant, the engine fail-loud guard and Also Applies To's back-dated fixture payloads, then puts one allowed symptom last as debugging work (a plant that renders no verdict), never the cause; it is about 146 characters."
+    },
+    {
+     "blob": "b13c04ded778",
+     "pass": true,
+     "reason": "It names the work, splitting a copy.ts key into gated variants, then the feature it touched (the assumptions panel spend row) and two specific Also Applies To items (enum widening and design-token rename), with no fix or label of past work; about 144 characters."
+    },
+    {
+     "blob": "0202a4e07672",
+     "pass": true,
+     "reason": "The reword of ui copy or a catalog string is the story's work, and the render-structure change and the composed-string parts moving come from Also Applies To; it never mentions the comment-channel failure or the sweep fix; about 140 characters."
+    },
+    {
+     "blob": "1e1f092f5816",
+     "pass": true,
+     "reason": "It keeps the story's disclosure beside the Roth preview and adds the extension's two ways in in its own words (the W question or spend step state reading, the income tax label); adding a fourth would push it past 160 characters, and it holds no ruling labels, dates or fix."
+    },
+    {
+     "blob": "4d524cbc5f71",
+     "pass": true,
+     "reason": "The note beside the Roth preview is the story's work, copying a sibling predicate for a new field is a distinct way in a job would name, and the date route Medicare onset disclosure is from Also Applies To; none states the invariance conclusion; about 150 characters."
+    },
+    {
+     "blob": "c215c7b227dd",
+     "pass": true,
+     "reason": "It names the template work around slots.xOfTen, the adverse-frequency wording way in (acaCostCliff) and the ceiling clamp feature, all in the lesson's own words, without the state-branch or adverse-constant fix; about 148 characters."
+    },
+    {
+     "blob": "07f23582d62b",
+     "pass": true,
+     "reason": "It names the plan design that inverts a sibling unit's rule (unit used as a plain word, no U-number), the stale saved recommendation feature, and the Also Applies To spec written before its dependency ships; no conclusion or date; about 143 characters."
+    },
+    {
+     "blob": "54067eaf3156",
+     "pass": true,
+     "reason": "It keeps the story's inversion planning and the stale saved recommendation feature and adds the extension's way in (extracting a function for a later unit to reuse); at 154 characters a fourth situation would not fit, and it carries no A5 or A7 labels or fix."
+    },
+    {
+     "blob": "9326b6c0731f",
+     "pass": true,
+     "reason": "It names authoring a hand-derived oracle fixture (the story), editing fixture tolerances or expectations (a separate job that walks into the rubber-stamp trap, not the recommended trace), and one debugging symptom placed last; about 146 characters."
+    },
+    {
+     "blob": "b5eb86a19dd4",
+     "pass": true,
+     "reason": "It names adding a confidence threshold to a review's verify fan-out (the story's work), merging a finished review into a fix list (the extension, in its own words) and the Also Applies To CI matrix legs, never the named-bin conclusion; about 142 characters."
+    },
+    {
+     "blob": "c654d6773aad",
+     "pass": true,
+     "reason": "It covers three distinct ways in, building the verify-stage threshold, folding a review workflow's results, and the Also Applies To CI legs skipped on a condition, using the lesson's area words and no phase label; about 149 characters."
+    },
+    {
+     "blob": "6c95b2613254",
+     "pass": true,
+     "reason": "It names testing CRN decoupling between ranked candidates (the story), adding a byte-identity guard (another way into the main trap) and the Also Applies To golden-fixture and cache-invalidation tests, never the enumerate-the-vectors or moved-witness fix; about 146 characters."
+    },
+    {
+     "blob": "9a1b3fe9093e",
+     "pass": true,
+     "reason": "It keeps the story's perturbation law in ranking stability, adds the extension's way in in its own words (the money picture's years) and keeps Also Applies To's golden-fixture and cache-invalidation tests; there are three different ways in and no fix or label, at about 149 characters."
+    },
+    {
+     "blob": "b6122327751f",
+     "pass": true,
+     "reason": "It names the store's solve lane (the story), a blocked solve transition and extending request-epoch to a new lane (Also Applies To), then one symptom last as debugging work (advice shown over a refusal), not the cause; about 150 characters."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [],
+   "machineRewrites": []
+  },
+  {
+   "batch": 8,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "e4c82b3446c3",
+     "pass": true,
+     "reason": "Three different ways in, all named as work: the story's selection stage, the probe or driver, and the Also Applies To render; each uses the lesson's own area words (solver ranking, named driver, sensitivity probe), and none states the re-pointing fix."
+    },
+    {
+     "blob": "04efe27cd281",
+     "pass": true,
+     "reason": "Covers the story's work in the lesson's words (hawk-veto, solver run fingerprint), a wider fingerprinting way in, and the Also Applies To SolveInput field, without stating the fix of deriving inputs from the signature of record."
+    },
+    {
+     "blob": "d1c4a0ff0e75",
+     "pass": true,
+     "reason": "Names the copy-edit work on the fold-law frame and budget composite, the Also Applies To real-browser layout gate, and one allowed symptom written as debugging work and placed last, all within the cap."
+    },
+    {
+     "blob": "bc5acffde406",
+     "pass": true,
+     "reason": "Has the story's Part D sourcing work, the council-derivation way in, and two Also Applies To items (scaling an old table forward, IRMAA or bracket formula changes), all named as work and none stating the check-the-primary conclusion."
+    },
+    {
+     "blob": "feeef9d18373",
+     "pass": true,
+     "reason": "Names the hero and runner-up viz renders, the no-dollar gate (when the hero shows dollars), and the Also Applies To formatted-delta copy, which are distinct ways in, in the lesson's words, without naming the mirrored guard."
+    },
+    {
+     "blob": "14792406d2bb",
+     "pass": true,
+     "reason": "Covers recommendation-surface states, the promise-verb copy from the story, and the extension's hint-rewording way in, ordered by the keep rules and under the cap, with no fix or unit label."
+    },
+    {
+     "blob": "2d755301cfa1",
+     "pass": true,
+     "reason": "Names the recommendation-surface state work, the invite-gating work, and the promise-verb copy as three distinct ways in, in the lesson's own words, without stating the control-test conclusion."
+    },
+    {
+     "blob": "5639a5117b90",
+     "pass": true,
+     "reason": "Covers the story's no-pretax refusal note, the wider case of any structured refusal reason, and adding a guard that routes to the reason (a separate way in), named as work rather than as the enumerate-the-extension insight."
+    },
+    {
+     "blob": "abda7ea9567d",
+     "pass": true,
+     "reason": "Has the refusal-arm copy work, changing which households reach the arm, and the extension's W step help text, which are distinct ways in, in the lesson's own words, with no fix or label."
+    },
+    {
+     "blob": "298281bf31f1",
+     "pass": true,
+     "reason": "Names the story's saved-recommendation record, reuse of the scenario staleness rule on a new type, and the extension's money picture event gate, each as work a job would describe, in the lesson's words."
+    },
+    {
+     "blob": "b2df700079ef",
+     "pass": true,
+     "reason": "Covers adding vintage stamps to the saved recommendation, copying a contract between persisted types, and making a persisted field optional, which are distinct jobs named as work and do not state the require-the-fields fix."
+    },
+    {
+     "blob": "0ad5d04f6e42",
+     "pass": true,
+     "reason": "Has the story's exposure-gating work, adding a staleness clock, suppressing a false alarm as the general way in, and one symptom placed last as debugging work, all within the cap and in the lesson's words."
+    },
+    {
+     "blob": "f5f53ab2a390",
+     "pass": true,
+     "reason": "Covers suppressing a false staleness warning, adding a staleness clock or vintage stamp, and the extension's stale note control (the Keep door), which are distinct ways in, in the lesson's own words."
+    },
+    {
+     "blob": "e46c2ca67b9f",
+     "pass": true,
+     "reason": "Names the story's IntakeApp record-write tests, the negative sweep's control, the Also Applies To fixed-wait absence check, and one symptom placed last, within 160 characters and without the poll-and-certify fix."
+    },
+    {
+     "blob": "2aec2ea04ef6",
+     "pass": true,
+     "reason": "Covers working a filed fix from the TODO.md queue, the extension's sizing of a register entry, and the Also Applies To filed notes and source comments as distinct ways in, without stating the audit-the-prescription conclusion."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [],
+   "machineRewrites": []
+  },
+  {
+   "batch": 9,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "37e1072acaa2",
+     "pass": true,
+     "reason": "All three situations name work in the lesson's own words: the story's TODO.md queue, the extension's register-entry sizing and the Also Applies To source comment, each a separate way in, with no fix or label stated, at about 145 characters."
+    },
+    {
+     "blob": "3c4b9341a234",
+     "pass": true,
+     "reason": "Working a filed fix, writing the Unfinished Fixes the prescriptions are filed in, and acting on a source comment are three different ways into the unverified-prescription trap, all named in the lesson's words with no conclusion, at about 146 characters."
+    },
+    {
+     "blob": "dacbec1746a2",
+     "pass": true,
+     "reason": "The story's Unfinished Fixes in TODO.md plus two Also Applies To items (source comments, splitting or reordering queued work) are separate ways in, specific, and state neither failure nor fix."
+    },
+    {
+     "blob": "3250af5b720e",
+     "pass": true,
+     "reason": "Raising the outer vitest testTimeout, raising the inner findBy budget in App.test.tsx, and raising an HTTP or database timeout are three ways to adjust a bound as a job would put it; none states the conclusion to prove which bound binds."
+    },
+    {
+     "blob": "98ee5c6edb3f",
+     "pass": true,
+     "reason": "The story's work (naming the winning strategy on the recommendation surface) leads, followed by two Also Applies To items (a view model with modes, a dollar formatter choice), with no branch-scoping conclusion stated."
+    },
+    {
+     "blob": "80f5787af4a1",
+     "pass": true,
+     "reason": "It covers both stories (adding a real-solve test, rounding on the winning-plan card) and ends with one symptom phrased as debugging work (a timeout only in the full suite), at about 149 characters."
+    },
+    {
+     "blob": "3e6aaa29db89",
+     "pass": true,
+     "reason": "Adding a refusal reason to missingRequiredFacts, adding a model limitation, and changing the Still needed or answer strip copy are three ways into the one-frame refusal trap, in the lesson's words, with no kind split named."
+    },
+    {
+     "blob": "a51f2c3709fc",
+     "pass": true,
+     "reason": "Adding a validation message to an intake form is work a job would name before knowing the lesson, and the budget or holdings editor and the TODO or backlog re-rank are Also Applies To items, so the line reaches both lessons without stating either fix."
+    },
+    {
+     "blob": "6efb3134fa7a",
+     "pass": true,
+     "reason": "Changing when the escape hatch opens (the story), rendering missing facts in the assumption panel (the consumer it reached), and adding a MissingFactKind (Also Applies To) are three ways in, with no consumer-audit conclusion stated."
+    },
+    {
+     "blob": "6ef947b1f474",
+     "pass": true,
+     "reason": "The four situations (the beforeunload guard, the PWA update reload, a new intake entry form, an unsaved-work signal) match both holes plus Also Applies To, are each a different way in, and fit at about 143 characters."
+    },
+    {
+     "blob": "431e5df21133",
+     "pass": true,
+     "reason": "Cancelling the recommendation solve on an edit (the story) and adding a long synchronous engine method (Also Applies To) are followed by one symptom as debugging work (a headline frozen after an edit), and terminate and epoch are never mentioned."
+    },
+    {
+     "blob": "0efcc36d4236",
+     "pass": true,
+     "reason": "A failing-household dev seed, a ranking stability check, and a refusal kind or its copy are three distinct ways in, using the lesson's words, with no typed-class fix stated."
+    },
+    {
+     "blob": "2a1d84ce7fa3",
+     "pass": true,
+     "reason": "The dev seed for a failing household, the ranking stability vacuity check, and a refusal kind in the recommendation view are distinct ways in, specific and in the lesson's words, at about 149 characters."
+    },
+    {
+     "blob": "382745cf22f6",
+     "pass": true,
+     "reason": "The failing-household dev seed, the ranking stability harness, and a refusal kind on the recommendation are distinct, specific ways in that name the area and leave out the class-typing fix."
+    },
+    {
+     "blob": "3c18a0ab78ca",
+     "pass": true,
+     "reason": "Cold-reading the failing household's rethink verdict is the work that found the bug, and a vacuity check in ranking stability and a solver refusal kind are separate ways in; none states the conclusion."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [],
+   "machineRewrites": []
+  },
+  {
+   "batch": 10,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "e2ab06763ed4",
+     "pass": true,
+     "reason": "Three distinct ways in (the failing-household dev seed, the ranking stability vacuity check, a new solve-payload refusal kind from Also Applies To), all named in the lesson's words, -ing work rather than the typed-class conclusion, 145 chars."
+    },
+    {
+     "blob": "c1a24829aca2",
+     "pass": true,
+     "reason": "Story work (svg text in the result charts), the glyph-constant way in (stacking colliding labels), the presence-only gates (testing chart labels) and a properly phrased last symptom, 155 chars."
+    },
+    {
+     "blob": "dffe7c526ab3",
+     "pass": true,
+     "reason": "Each of the four situations is the work that reaches one of the four instruments (svg text measurement, font-loaded check, regex CSS pin, Playwright radio click), and none states the instrument's flaw, 150 chars."
+    },
+    {
+     "blob": "627ce53c3b6d",
+     "pass": true,
+     "reason": "Covers the band's scrub readout, the 320 px reflow test and both widest Also Applies To items (max-width over nowrap, HTML text in viewBox units) in the lesson's terms, 156 chars."
+    },
+    {
+     "blob": "5352613d70b5",
+     "pass": true,
+     "reason": "Story work (a px floor in the chart-text e2e test), the y-tick lattice refinement, the screenshot-diff Also Applies To item, and a CI-only symptom written as debugging work and placed last, 158 chars."
+    },
+    {
+     "blob": "418f8facfc7e",
+     "pass": true,
+     "reason": "Story work (the readout sweep with touch taps), the TwoFutures and ladder sweeps from Also Applies To, and a single-DPR symptom placed last that names no cause, 148 chars."
+    },
+    {
+     "blob": "be4b4291f691",
+     "pass": true,
+     "reason": "Names the held chart-text gate defect, the skip a job would reach for, and the instrument-test Also Applies To item as work, without stating the test.fail fix, 146 chars."
+    },
+    {
+     "blob": "1f34c8384574",
+     "pass": true,
+     "reason": "Story work (date-seed renders in the chart-text spec), the general CPU-bound e2e suite way in, and a local-only timeout symptom placed last, 156 chars."
+    },
+    {
+     "blob": "c0dae2960d93",
+     "pass": true,
+     "reason": "The doc audit, correcting a stale roadmap or README status, and the precedence-rule Also Applies To item are distinct work in the lesson's words, with no pointer-not-copy conclusion, 153 chars."
+    },
+    {
+     "blob": "650936ee0ae3",
+     "pass": true,
+     "reason": "Covers both halves of the lesson (placing the scrub readout or chart text, cold-reading captures, writing a cannot-fit or impossible doc claim) as work, 146 chars."
+    },
+    {
+     "blob": "82d277ad778e",
+     "pass": false,
+     "reason": "The extended line drops the still-valid way in for the title's second trap (writing a cannot-fit or impossible claim in a doc), though cutting qualifiers fits all four situations under 160 (e.g. placing the scrub readout or chart text, cold-reading chart text captures, writing an impossible claim in a doc, rewording a strip fact = 151)."
+    },
+    {
+     "blob": "bb3851fb234d",
+     "pass": true,
+     "reason": "Story work (the caveat's reach in the vertical-fit spec), the chart-text and intake-fold specs, and the sticky-header Also Applies To item are distinct, specific ways in, 150 chars."
+    },
+    {
+     "blob": "c64d8b938d85",
+     "pass": true,
+     "reason": "The raised-font one-frame test, the 68rem laptop breakpoint as the feature-or-file way in, and the below-the-fold count from Also Applies To are distinct work in the lesson's words, 155 chars."
+    },
+    {
+     "blob": "004845b0d78b",
+     "pass": false,
+     "reason": "The extended line drops the still-valid grep/tail exit-code way in (in the story, Fix, Key Insight and Also Applies To) and lengthens a qualifier instead, though all four fit after cutting qualifiers (planting a mutant against the vertical-fit spec, labelling a mutant equivalent, recording a red count in a commit, piping a gate through grep = 157)."
+    },
+    {
+     "blob": "574311a9320f",
+     "pass": true,
+     "reason": "Story work (a mutant against the vertical-fit e2e spec), the red count recorded in a commit, and the grep/tail gate-piping sibling are three distinct ways in, with no conclusion stated, 147 chars."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [
+    {
+     "blob": "82d277ad778e",
+     "from": "applies_when: [placing the scrub readout or chart labels per width, judging a layout from cold-read captures, rewording a fact or label on a phone]",
+     "reason": "The extended line drops the still-valid way in for the title's second trap (writing a cannot-fit or impossible claim in a doc), though cutting qualifiers fits all four situations under 160 (e.g. placing the scrub readout or chart text, cold-reading chart text captures, writing an impossible claim in a doc, rewording a strip fact = 151).",
+     "to": "applies_when: [placing the scrub readout or chart text, judging cold-read captures, writing an impossible claim in a doc, rewording a strip fact]"
+    },
+    {
+     "blob": "004845b0d78b",
+     "from": "applies_when: [planting a mutant against the vertical-fit spec, labelling a mutant equivalent, recording a tests-red count in a commit message]",
+     "reason": "The extended line drops the still-valid grep/tail exit-code way in (in the story, Fix, Key Insight and Also Applies To) and lengthens a qualifier instead, though all four fit after cutting qualifiers (planting a mutant against the vertical-fit spec, labelling a mutant equivalent, recording a red count in a commit, piping a gate through grep = 157).",
+     "to": "applies_when: [planting a mutant against the vertical-fit spec, labelling a mutant equivalent, recording a red count in a commit, piping a gate through grep]"
+    }
+   ],
+   "machineRewrites": []
+  },
+  {
+   "batch": 11,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "ca213094cb9f",
+     "pass": true,
+     "reason": "Names the story's work in the lesson's own area (the vertical-fit e2e spec mutant), then two distinct ways in from the lesson (an N-red claim in a commit message and the grep-chained gate sibling); 144 characters with no conclusion, fix or label."
+    },
+    {
+     "blob": "20b251a8b012",
+     "pass": true,
+     "reason": "The story's work (screenshots at an emulated font size), the Also Applies To emulation-under-fullPage case and the Caddie walk bundle are three distinct, rankable ways in, all in the lesson's own words, and none states the failure or the fix."
+    },
+    {
+     "blob": "fffa0dc0cb35",
+     "pass": true,
+     "reason": "Covers the story's emulated-font-size screenshots, the full-page or PDF-under-emulation case and the Caddie walk screenshots, which also take in the extension's crop case; the situations are distinct, name the area and stay clear of the fix."
+    },
+    {
+     "blob": "e14ea13972b5",
+     "pass": true,
+     "reason": "The story's work (a screenshot spec under e2e/held), the dev-server spec or Playwright config path into the denylist trap and the vitest or ESLint exclude scoping from Also Applies To are distinct ways in, and none names the partition-test fix."
+    },
+    {
+     "blob": "391a40889763",
+     "pass": true,
+     "reason": "Names the band's screen-reader ruin sentence in the lesson's own words, plus the alt-text year or age case and the TwoFutures preview from Also Applies To, with no fix or conclusion stated."
+    },
+    {
+     "blob": "25bc8311b37c",
+     "pass": true,
+     "reason": "The story's band or TwoFutures axis work, the new dollar axis and chart label formatter fixes from Also Applies To, and one debugging symptom placed last, all in the lesson's words and without the nice-step lattice fix."
+    },
+    {
+     "blob": "5da837c10a45",
+     "pass": true,
+     "reason": "The story's goal picker aria-disabled move plus three distinct ways in from the lesson (styling a blocked btn-primary, testing an aria-disabled control, disabling a radio option), each naming work and never the fix."
+    },
+    {
+     "blob": "01149fb986a6",
+     "pass": true,
+     "reason": "Names the health sheet's Medicare premium card (the story's work), a UI card reading the health readout and a household median added to a readout, which are distinct ways in, in the lesson's words, and none states the decision-on-the-wire fix."
+    },
+    {
+     "blob": "accf3fd477ce",
+     "pass": true,
+     "reason": "Keeps the story's Medicare cards work, adds the extension's FRA-year exemption and held-back reason in the lesson's own words, and keeps the health-readout-in-the-UI way in, all within the cap and in keep order."
+    },
+    {
+     "blob": "3fe37c97ba8d",
+     "pass": true,
+     "reason": "The story's assumptions-row lean on converting, the Part D surcharge hold disclosure and the ACA or medicare-extras holds from Also Applies To are distinct, rankable ways in that use the lesson's area words and leave out the both-arms conclusion."
+    },
+    {
+     "blob": "a84adf40cbe0",
+     "pass": true,
+     "reason": "Keeps the story's assumptions-row Roth disclosure, the direction-word case and the refinement's stale-face copy as distinct ways in under the cap, and drops the U10 unit label, though the stale face belongs to the W step and is only loosely called a Caddie card's."
+    },
+    {
+     "blob": "4a1b286d36d6",
+     "pass": true,
+     "reason": "The story's Medicare premium card era lines, the general case of speaking a readout row's distance and the ACA card's year spans from Also Applies To are distinct ways in, with no stock-versus-flow conclusion or k-1 fix stated."
+    },
+    {
+     "blob": "99ed36ecb73b",
+     "pass": true,
+     "reason": "Names the Social Security taxation work, the frozen-threshold siblings (NIIT or IRMAA) and band-named dev seed re-tuning from Also Applies To; seed re-tuning is work a job names unprompted, not the price-index mechanism the Key Insight recommends."
+    },
+    {
+     "blob": "01fdfc4f316e",
+     "pass": true,
+     "reason": "The story's doc audit of line-numbered citations, a file-and-line citation in a doc or source comment and the doc-stats citation gate are distinct ways in, in the lesson's words, and it rightly skips the re-anchor script that the fix added."
+    },
+    {
+     "blob": "62a617a8931d",
+     "pass": true,
+     "reason": "Four distinct ways in, all in the lesson's words, with no fix or label stated: auditing doc line citations, editing the code those citations point at, the doc-stats gate, and a line citation in a comment."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [],
+   "machineRewrites": []
+  },
+  {
+   "batch": 12,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "8968e3cbdd69",
+     "pass": true,
+     "reason": "Three distinct ways in (the doc audit the story ran, source edits that shift cited lines, the gate itself), all named as work in the lesson's own words (doc audit, line-numbered citations, verify-doc-stats), with no fix or label, at 144 characters."
+    },
+    {
+     "blob": "bedd9ecc365e",
+     "pass": true,
+     "reason": "Four distinct ways in (auditing, editing code that docs cite, writing new line-numbered citations, changing the gate), all named as work in the lesson's words with no fix, conclusion or label, at 147 characters."
+    },
+    {
+     "blob": "6ee19b3a3966",
+     "pass": true,
+     "reason": "It names the story's work (the senior bonus tax rule), the fixture and property-test way in from both cases, and the extension's RIB-LIM and age-reduction feature without saying which order is right, at 144 characters."
+    },
+    {
+     "blob": "a548d0a8d0fd",
+     "pass": true,
+     "reason": "It covers the externally derived fixtures, the senior bonus phase-out feature and the Also Applies To case of a constant taken from a research strand, each a distinct way in named in the lesson's own words, at 138 characters."
+    },
+    {
+     "blob": "521a1dd43b06",
+     "pass": true,
+     "reason": "Four distinct ways in (pricing the IRMAA lines by CPI, any growth ratio of the price index, a re-indexed statute threshold, filing an equivalent mutant), all phrased as work from the story and Also Applies To, with no fix named, at 152 characters."
+    },
+    {
+     "blob": "d71399b114b5",
+     "pass": true,
+     "reason": "It names the story's work (the IRMAA anchor across the pre-RMD window), the witness-world way in and the Also Applies To headroom and room sentences, all in the lesson's words with no fix or label, at 156 characters."
+    },
+    {
+     "blob": "32bded4c60e5",
+     "pass": true,
+     "reason": "It names the story's work (rewording or reordering the Medicare line), the Also Applies To 'already counted' copy and the Caddie refuter rule, three distinct ways in with no fix, at 142 characters."
+    },
+    {
+     "blob": "67bf6f946a75",
+     "pass": true,
+     "reason": "It names the story's work (writing a MEASURED bullet in the register), the survivor measurement and the Also Applies To probability-plus-dollar pairs, distinct and in the lesson's words with no conclusion, at 140 characters."
+    },
+    {
+     "blob": "3deed0beb5cb",
+     "pass": true,
+     "reason": "It names the story's work (a disclosure row on the assumptions panel), the engine shortcut way in that the lesson calls a silent shortcut, and the Also Applies To Not counted here and methodology rows; the shortcut situation is the weakest but still a specific way in, at 149 characters."
+    },
+    {
+     "blob": "698f7fffaa7f",
+     "pass": true,
+     "reason": "It keeps the assumptions-panel disclosure and the Not counted here or methodology row, and adds the extension's re-entry gate copy as its own way in, all in the lesson's words, at 144 characters."
+    },
+    {
+     "blob": "680808f321ae",
+     "pass": true,
+     "reason": "It names the story's reach measurement, writing a register or ledger reach claim, and the Also Applies To pay check, yield model and NIIT builds, each distinct and in the lesson's words, at 148 characters."
+    },
+    {
+     "blob": "78b78211cf6f",
+     "pass": true,
+     "reason": "It names measuring which seeds a change reaches, writing a reach claim in a plan or ledger row (which covers the extension's prediction case) and changing a working year's pay or yield model, distinct and with no fix, at 151 characters."
+    },
+    {
+     "blob": "5ff9e0ecbe79",
+     "pass": true,
+     "reason": "It names the story's W question period rule, the sibling case of Back on a gated intake step, and the Also Applies To confirmed or touched marks, three ways in using the lesson's own terms, at 142 characters."
+    },
+    {
+     "blob": "fae42762029b",
+     "pass": true,
+     "reason": "It names the story's work (saying why Social Security moved in the money picture), the earnings test feature and the A7 event-producer case, distinct ways in with no fix named, at 144 characters."
+    },
+    {
+     "blob": "d47262194884",
+     "pass": true,
+     "reason": "It names the zero or floor rules on a money field, rounding or printing a money figure, and the earnings test and RIB-LIM cap where the other defects lived; all are specific work in the lesson's words with no fix (no toCents or showsAsZero), at 154 characters."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [],
+   "machineRewrites": []
+  },
+  {
+   "batch": 13,
+   "status": "passed",
+   "firstCheck": [
+    {
+     "blob": "ad79840e42c3",
+     "pass": true,
+     "reason": "All three situations start with an -ing verb and name work a job would describe. They follow the keep order: the story's copy choice on the assumptions sheet and money picture, adding a new state-tax reading, then the Also Applies To copy keyed by outcome state or route. The area is named in the lesson's own words, the Record fix appears nowhere, and the line is 149 characters."
+    },
+    {
+     "blob": "0f18cc86c413",
+     "pass": true,
+     "reason": "Each situation names work, not the failure or the frozen-copy and runtime-mint fix: measuring on the date seeds (area in the lesson's words), running parallel fix lanes, proving byte-identical when off, and running a mutant test. Each is a different way in, the order follows story then Also Applies To, the line carries no U10 or b9 labels, and it is 157 characters."
+    }
+   ],
+   "redoCheck": null,
+   "mended": [],
+   "machineRewrites": []
+  }
+ ]
+}

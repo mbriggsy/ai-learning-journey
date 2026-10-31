@@ -30,6 +30,7 @@ The queue for work on how we work. Sessions for it start in this folder.
 - **The our-setup program (2026-10-19 to 10-27) is flushed**, every leftover included (the two numbered hook folders went on 10-31).
 - **Kept from the program:** ultracode on by default, the status bar's live effort level, the `/window` fix after compaction, and squeaky's hand-off to a named successor (found with `ListAgents`; the `<name> [ref]` send for a name clash is untested end to end).
 - **Lessons** live in [docs/insights/](docs/insights/): 002, 003, 005, 008 and 009.
+- **Brief and distill as live today (`8e0f7f04`):** brief corrects a lesson the code has outgrown (one dated pointer note, committed alone; never when the code is the wrong side, the right side is unclear or another session has edits in the lesson); distill extends an existing lesson with a dated `## Extended (YYYY-MM-DD): ...` section instead of a near-copy, with no line cap. The recall fix above changes neither rule.
 
 ## Landmines
 

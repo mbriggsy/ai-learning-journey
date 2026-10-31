@@ -12,7 +12,8 @@ export const meta = {
 // The panel protocol lives in .claude/skills/caddie/SKILL.md — this script is
 // its codification (increment 4; it previously lived in session scratchpads).
 // Landmines baked in, do not undo:
-//  - model 'opus' EXPLICIT on every agent(); NEVER an agentType (none register
+//  - model 'opus' AND effort 'xhigh' EXPLICIT on every agent() (judging seats; an omitted
+//    effort inherits whatever the session runs at); NEVER an agentType (none register
 //    on this machine — a missing agentType crashes every lens at launch).
 //  - Fresh contexts, de-authored: no build context, no authorship in prompts.
 //  - Words from the DOM (copy.txt) — pixels are for tone/layout only; a
@@ -114,17 +115,17 @@ const panels = await parallel(ARGS.targets.map((t) => () => (async () => {
 
   const [firstLook, spouse, copyFinder, calm, cvd, hunter] = await parallel([
     () => agent(`You are a genuinely COLD first-look reader. Read ONLY this image: ${RUN}/${dir}/real/${first}/viewport.png — nothing else, no other files. Lock your first impression BEFORE any second pass: what is this? what is it telling me? tone? do I trust it? how does it make me feel? Then a second pass for confusions. Also read back OFF THE IMAGE the headline dollar figure and the odds line ("N of 10" or similar) exactly as rendered — if none is visible, say "none visible". You get no product context by design.${SIZE_LAW}`,
-      { label: `first-look:${dir}`, phase: 'Read', model: 'opus', schema: FIRSTLOOK_SCHEMA }),
+      { label: `first-look:${dir}`, phase: 'Read', model: 'opus', effort: 'xhigh', schema: FIRSTLOOK_SCHEMA }),
     () => agent(`You are the NAIVE-SPOUSE walker: no finance background, scared, first time on this product, your spouse usually handles money. ${CORPUS_NOTE}\nRead every state's copy.txt and dialog.txt under ${RUN}/${dir} (both viewports; real/ primary) IN USER ORDER (state dir names). ${note}\nAnswer as this persona: what is our situation? are we okay? what would I do next? HUNT confusion — do not glide: every term you would not know, every figure whose origin you cannot name, every sentence you would misread. Each stumble is a finding (lane both if a misread is rosier than truth).${COMMON(dir)}`,
-      { label: `spouse:${dir}`, phase: 'Read', model: 'opus', schema: READER_SCHEMA }),
+      { label: `spouse:${dir}`, phase: 'Read', model: 'opus', effort: 'xhigh', schema: READER_SCHEMA }),
     () => agent(`You are the COPY-LAW finder. ${CORPUS_NOTE}\nRun the seven comprehension-hole shapes (unnamed referent; forced derivation; two figures one referent; mechanism unnamed; era/source missing; general-term-without-a-details-home; omission-reads-as-a-bill) PLUS the corpus copy rules over the VERBATIM copy.txt + dialog.txt of every state under ${RUN}/${dir}. ${note}\nEvery quantity must be quoted in-sentence in the user's frame; every mechanism named with its owner; disclosures mechanism-not-memory (rule 37); general terms need a details home (rule 38); omissions must not read as bills (rule 39). Flag candidates generously — an independent refuter checks each against full rendered context after you.${COMMON(dir)}`,
-      { label: `copy-law:${dir}`, phase: 'Read', model: 'opus', schema: READER_SCHEMA }),
+      { label: `copy-law:${dir}`, phase: 'Read', model: 'opus', effort: 'xhigh', schema: READER_SCHEMA }),
     () => agent(`You are the CALM/HONESTY reader. ${CORPUS_NOTE}\nRead ${RUN}/${dir}/real/*/viewport.png + every copy.txt. ${note}\nRun the false-precision/casino-tell checklist: lone unhedged point estimates, spurious decimals, bare success-percentages, celebration on a money result, reassurance-as-spin, alarm-as-theater. Penalize hype/irreverence/false precision — NEVER warmth. The product should read like a careful friend, not a dashboard.${COMMON(dir)}`,
-      { label: `calm:${dir}`, phase: 'Read', model: 'opus', schema: READER_SCHEMA }),
+      { label: `calm:${dir}`, phase: 'Read', model: 'opus', effort: 'xhigh', schema: READER_SCHEMA }),
     () => agent(`You are the CVD screener — FLAGS ONLY (the color lane never contributes to a clean verdict; a simulator is not the reader's eyes). Read every cvd-*.png (above-fold arms AND the per-chart cvd-<arm>-<chart>.png crops) + aria.yaml under ${RUN}/${dir}. ${note}\nAsk: does every MEANING survive without color (shape/word/magnitude/position)? does hierarchy survive grayscale? is every color-carried signal also reachable as text (aria)? Presence of a cue is NOT disambiguation.${COMMON(dir)}`,
-      { label: `cvd:${dir}`, phase: 'Read', model: 'opus', schema: READER_SCHEMA }),
+      { label: `cvd:${dir}`, phase: 'Read', model: 'opus', effort: 'xhigh', schema: READER_SCHEMA }),
     () => agent(`You are the FALSE-PASS HUNTER — the panel's reason to exist. Read EVERYTHING under ${RUN}/${dir} (all states, both viewports, all channels). ${note}\nCharge: assume this surface IS calm-but-wrong. Find the rosier-than-true reading a scared couple would actually walk away with — the figure they would misattribute, the cost they would believe is included when it is not, the "fine" that is narrower than it sounds. ${CORPUS_NOTE}\nA clean verdict from you must be EARNED: enumerate the rosier readings you attempted and why each dies against the rendered words. If you find one that survives, it is at minimum severity high, lane both.${COMMON(dir)}`,
-      { label: `false-pass:${dir}`, phase: 'Read', model: 'opus', schema: READER_SCHEMA }),
+      { label: `false-pass:${dir}`, phase: 'Read', model: 'opus', effort: 'xhigh', schema: READER_SCHEMA }),
   ])
 
   return { dir, firstLook, lenses: { spouse, copyFinder, calm, cvd, hunter } }
@@ -166,7 +167,7 @@ FINDING (${f.lens}, ${f.severity}, lane ${f.lane}): ${f.statement}
 ANCHOR: ${f.anchor}
 
 Check it against the FULL bundle for this target: ${RUN}/${p.dir} (all states, both viewports — copy.txt, sr-only.txt, dialog.txt, aria.yaml, fold.json, the pngs). Rules: a referent supplied by an ADJACENT RENDERED line kills an unnamed-referent finding; an apparent duplication that appears in sr-only.txt is a channel artifact, not a rendered defect; something below the fold still RENDERS (fold position is a severity input, not a kill). If the finding survives, say what makes it survive. READ-ONLY.${SIZE_LAW}`,
-    { label: `refute:${p.dir}:${f.lens}`, phase: 'Refute', model: 'opus', schema: VERDICT_SCHEMA })))
+    { label: `refute:${p.dir}:${f.lens}`, phase: 'Refute', model: 'opus', effort: 'xhigh', schema: VERDICT_SCHEMA })))
   // Index-aligned with `candidates`: a refuter that died (agent → null) or threw (parallel → null)
   // keeps its finding, LABELLED — an unlabelled `verdict: null` reads as refuted or cleared.
   return { dir: p.dir, refuted: candidates.map((f, i) => (verdicts[i] ? { finding: f, verdict: verdicts[i] } : unrefuted(f))) }

@@ -400,7 +400,7 @@ phase('Dossier')
 const dossier = (await agent(
   CHARTERS.clerk + '\n\n## THE ISSUE\n' + issue + '\n\n## CONTEXT FROM THE CALLER\n' + context +
   '\n\nRead the real artifacts and produce the dossier now.',
-  { label: 'clerk', phase: 'Dossier', schema: DOSSIER_SCHEMA, model: 'opus' },
+  { label: 'clerk', phase: 'Dossier', schema: DOSSIER_SCHEMA, model: 'opus', effort: 'xhigh' },
 )) || { crashed: true, grounding: { grounded: false, note: 'the clerk seat crashed, so no dossier exists' } } // a crashed clerk judged NOTHING: it gets its own refusal below, never a debate over a null dossier
 
 // THE CLERK-CRASH REFUSAL (2026-09-30): a crashed clerk is an ABSTENTION, not an attestation.
@@ -474,7 +474,7 @@ const openingPrompt = (o) =>
   '\n\n## SHARED DOSSIER — cite this, not memory\n' + J(dossier) +
   '\n\nTake your position now. Ground every claim in the dossier.'
 const openingRuns = await parallel(openers.map(o => () =>
-  agent(openingPrompt(o), { label: o.id, phase: 'Opening', schema: POSITION_SCHEMA, model: 'opus' })
+  agent(openingPrompt(o), { label: o.id, phase: 'Opening', schema: POSITION_SCHEMA, model: 'opus', effort: 'xhigh' })
     .then(p => (p ? { ...p, elder: o.id } : null)),
 ))
 const positions = openingRuns.filter(Boolean)
@@ -511,7 +511,7 @@ const hawkRefusal = (phaseName) => ({
 if (!positions.some(p => p.elder === 'honesty-hawk')) {
   log('The honesty-hawk opening seat crashed — retrying once (the veto organ is never silently absent).')
   const hawk = openers.find(o => o.id === 'honesty-hawk')
-  const retried = await agent(openingPrompt(hawk), { label: 'honesty-hawk:retry', phase: 'Opening', schema: POSITION_SCHEMA, model: 'opus' })
+  const retried = await agent(openingPrompt(hawk), { label: 'honesty-hawk:retry', phase: 'Opening', schema: POSITION_SCHEMA, model: 'opus', effort: 'xhigh' })
   if (retried) positions.push({ ...retried, elder: 'honesty-hawk' })
 }
 if (!positions.some(p => p.elder === 'honesty-hawk')) return hawkRefusal('opening')
@@ -523,7 +523,7 @@ const attack = await agent(
   '\n\n## THE ELDERS POSITIONS\n' + J(positions) +
   '\n\n## ABSTENTIONS (crashed seats: their lens is MISSING from the positions above)\n' + J(abstentions) +
   '\n\nRefute the emerging consensus. Attack the most confident claim hardest. Ground every attack in the dossier.',
-  { label: 'red-team', phase: 'Red Team', schema: REDTEAM_SCHEMA, model: 'opus' },
+  { label: 'red-team', phase: 'Red Team', schema: REDTEAM_SCHEMA, model: 'opus', effort: 'xhigh' },
 )
 if (!attack) {
   abstentions.push(...abstain(['red-team'], 'red team'))
@@ -544,7 +544,7 @@ if (weight === 'full') {
       '\n\nSTRUCTURED-OUTPUT SIZE LAW (2026-07-15): an oversized StructuredOutput call is TRUNCATED after its first property and dies schema validation at the retry cap. Keep concede and hold <= 120 words each and sharpenedRecommendation <= 150 words.'
   }
   const rebuttalRuns = await parallel(openers.map(o => () =>
-    agent(rebuttalPrompt(o), { label: 'rebut:' + o.id, phase: 'Rebuttal', schema: REBUTTAL_SCHEMA, model: 'opus' })
+    agent(rebuttalPrompt(o), { label: 'rebut:' + o.id, phase: 'Rebuttal', schema: REBUTTAL_SCHEMA, model: 'opus', effort: 'xhigh' })
       .then(r => (r ? { ...r, elder: o.id } : null)),
   ))
   rebuttals = rebuttalRuns.filter(Boolean)
@@ -560,7 +560,7 @@ if (weight === 'full') {
   if (!rebuttals.some(r => r.elder === 'honesty-hawk')) {
     log('The honesty-hawk rebuttal seat crashed — retrying once (the veto organ is never silently absent).')
     const hawk = openers.find(o => o.id === 'honesty-hawk')
-    const retried = await agent(rebuttalPrompt(hawk), { label: 'rebut:honesty-hawk:retry', phase: 'Rebuttal', schema: REBUTTAL_SCHEMA, model: 'opus' })
+    const retried = await agent(rebuttalPrompt(hawk), { label: 'rebut:honesty-hawk:retry', phase: 'Rebuttal', schema: REBUTTAL_SCHEMA, model: 'opus', effort: 'xhigh' })
     if (retried) rebuttals.push({ ...retried, elder: 'honesty-hawk' })
   }
   if (!rebuttals.some(r => r.elder === 'honesty-hawk')) return hawkRefusal('rebuttal')
@@ -576,7 +576,7 @@ const verdict = await agent(
   '\n\n## REBUTTAL ROUND\n' + J(rebuttals) +
   '\n\n## ABSTENTIONS (crashed seats, not retried)\n' + J(abstentions) +
   '\n\nWeigh the whole debate and produce THE verdict now. Remember: the Honesty Hawk veto outranks any majority; an abstention is not a concurrence; preserve the strongest dissent; grade confidence with a reason; classify the tier (split it if needed); flag hard-stops.',
-  { label: 'chair', phase: 'Synthesis', schema: VERDICT_SCHEMA, model: 'opus' },
+  { label: 'chair', phase: 'Synthesis', schema: VERDICT_SCHEMA, model: 'opus', effort: 'xhigh' },
 )
 
 // ---- Structural clamps on the verdict (insight 084: the CODE, not the prompt, is the enforcement

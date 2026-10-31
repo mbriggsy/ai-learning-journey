@@ -10,7 +10,8 @@ export const meta = {
 
 // ============================================================================
 // caddie.js's protocol with the A/B twist. The base landmines hold, do not undo:
-//  - model EXPLICIT on every agent(); NEVER an agentType (none register here).
+//  - model AND effort EXPLICIT on every agent(); NEVER an agentType (none register here).
+//    Both panels run at effort 'xhigh' so the A/B varies the model alone.
 //  - Fresh contexts, de-authored: no build context, no authorship in prompts.
 //  - Words from the DOM (copy.txt) — pixels are for tone/layout only.
 //  - The color lane FLAGS only; the first-look reader is COLD by design.
@@ -122,7 +123,7 @@ const panels = await parallel(ARGS.targets.map((t) => () => (async () => {
   const prompts = SEAT_PROMPTS(dir, first, note)
 
   const seat = (name, prompt, model, schema) =>
-    agent(prompt, { label: `${name}:${model}:${dir}`, phase: 'Read', model, schema })
+    agent(prompt, { label: `${name}:${model}:${dir}`, phase: 'Read', model, effort: 'xhigh', schema })
 
   const [oFirst, oSpouse, oCopy, oCalm, oCvd, sFirst, sSpouse, sCopy, sCalm, sCvd, hunter] = await parallel([
     () => seat('first-look', prompts.firstLook, 'opus', FIRSTLOOK_SCHEMA),
@@ -138,7 +139,7 @@ const panels = await parallel(ARGS.targets.map((t) => () => (async () => {
     // The FALSE-PASS hunter — ONCE, Opus (the ratification: hunters stay big-model; the safety-
     // critical seat is not the experiment).
     () => agent(`You are the FALSE-PASS HUNTER — the panel's reason to exist. Read EVERYTHING under ${RUN}/${dir} (all states, both viewports, all channels). ${note}\nCharge: assume this surface IS calm-but-wrong. Find the rosier-than-true reading a scared couple would actually walk away with — the figure they would misattribute, the cost they would believe is included when it is not, the "fine" that is narrower than it sounds. ${CORPUS_NOTE}\nA clean verdict from you must be EARNED: enumerate the rosier readings you attempted and why each dies against the rendered words. If you find one that survives, it is at minimum severity high, lane both.${COMMON(dir)}`,
-      { label: `false-pass:${dir}`, phase: 'Read', model: 'opus', schema: READER_SCHEMA }),
+      { label: `false-pass:${dir}`, phase: 'Read', model: 'opus', effort: 'xhigh', schema: READER_SCHEMA }),
   ])
 
   return {
@@ -191,7 +192,7 @@ FINDING (${f.panel}/${f.lens}, ${f.severity}, lane ${f.lane}): ${f.statement}
 ANCHOR: ${f.anchor}
 
 Check it against the FULL bundle for this target: ${RUN}/${p.dir} (all states, both viewports — copy.txt, sr-only.txt, dialog.txt, aria.yaml, fold.json, the pngs). Rules: a referent supplied by an ADJACENT RENDERED line kills an unnamed-referent finding; an apparent duplication that appears in sr-only.txt is a channel artifact, not a rendered defect; something below the fold still RENDERS (fold position is a severity input, not a kill). If the finding survives, say what makes it survive. READ-ONLY.${SIZE_LAW}`,
-    { label: `refute:${p.dir}:${f.panel}:${f.lens}`, phase: 'Refute', model: 'opus', schema: VERDICT_SCHEMA })))
+    { label: `refute:${p.dir}:${f.panel}:${f.lens}`, phase: 'Refute', model: 'opus', effort: 'xhigh', schema: VERDICT_SCHEMA })))
   // Index-aligned with `candidates`: a refuter that died (agent → null) or threw (parallel → null)
   // keeps its finding, LABELLED — an unlabelled `verdict: null` reads as refuted or cleared.
   return { dir: p.dir, refuted: candidates.map((f, i) => (verdicts[i] ? { finding: f, verdict: verdicts[i] } : unrefuted(f))) }

@@ -275,7 +275,7 @@ const classify = (cast, n) => {
 const verifyOne = async (f, lensKey, i) => {
   const n = refuterCount(f.severity)
   const votes = await parallel(REFUTER_ANGLES.slice(0, n).map((angle, k) => () =>
-    agent(VERIFY(f, angle), { label: `verify:${lensKey}:${i + 1}.${k + 1}`, phase: 'Verify', schema: VERDICT_SCHEMA, model: 'opus' })))
+    agent(VERIFY(f, angle), { label: `verify:${lensKey}:${i + 1}.${k + 1}`, phase: 'Verify', schema: VERDICT_SCHEMA, model: 'opus', effort: 'xhigh' })))
   const cast = votes.filter(Boolean) // abstentions are counted below, never voted
   const realVoters = cast.filter((v) => v.real)
   const [status, basis] = classify(cast, n)
@@ -293,7 +293,7 @@ const verifyOne = async (f, lensKey, i) => {
 phase('Review')
 const perLens = await pipeline(
   LENSES,
-  (l) => agent(REVIEW(l), { label: `review:${l.key}`, phase: 'Review', schema: FINDING_SCHEMA, model: 'opus' }),
+  (l) => agent(REVIEW(l), { label: `review:${l.key}`, phase: 'Review', schema: FINDING_SCHEMA, model: 'opus', effort: 'xhigh' }),
   // A CRASHED LENS (agent() → null: a terminal API error, a skip, a size-law retry death) is an
   // ABSTENTION — it certified nothing about its domain. It is carried as a marker and reported in
   // coverage.crashedLenses, never flattened into "no findings" (insight 019's law at the finder layer).
@@ -356,6 +356,7 @@ return result
 - If the platform lacks subagents, run lenses sequentially — same stages, same schema.
 - **Personas are enrichment, not a dependency.** A `persona: null` lens runs on its inline role; a vanished persona file (CE update, rename) degrades to the same. Never let a missing CE artifact block or crash the review.
 - **Model: run reviewers AND verifiers on `model: 'opus'` — explicitly, on every `agent()` call.** Never hardcode a mid-tier (`sonnet`/`haiku`) for the fan-out, and never omit `model` to inherit the session model (a pricier main-loop tier like Fable 5 then bleeds into every fan-out agent: higher rate × ~30% more tokens).
+- **Effort: reviewers AND verifiers run at `effort: 'xhigh'` — explicitly, on every `agent()` call.** They are judging seats; never drop them to `high` to save tokens. Measured 2026-10-31 on the schema-v4 review (rerun on the frozen pre-fix commit, 11 lenses per run, scored blind by two judges): high spent about half the output tokens (288k and 316k vs 627k), but one of the two high runs missed a confirmed bug (the codec header claiming it only rewrites a label) that both xhigh runs found through 3 to 4 lenses each, and the other high run caught it through a single lens. Never omit `effort` either: an omitted level inherits whatever the session happens to run at.
 - **Adversary: ≥1 always.** On a high-risk change escalate to a diverse panel — one adversary per failure-mode angle (boundary · temporal/state · numerical · invariant · direct-caller) via `adv-*` keys + the per-lens `angle` field, which is what makes each prompt DISTINCT (N identical ≈ 1; N angles ≈ N) — and scale the verify vote with it.
 - **The verify vote is never a majority over one boolean.** Refuters scale with severity (3 on P0/P1, 2 on P2, 1 on P3), each on a distinct refuter angle, and their votes aggregate under the SKILL.md step-5 law: a crashed verifier is an abstention, never a "not real" vote; `real` and `material` are tallied SEPARATELY, never as a majority over the conjunction; a finding the refuters affirm but split on impact or on newness — or any tie, or a rejection/deferral resting on fewer cast votes than the severity quorum `min(2, n)` because the rest abstained — is a hand-verification trigger for the coordinator, not a rejection (the exact list is the comment above `classify()`); and a review is never declared clean from the confirmed count alone — read the rejected pile's vote texture first. Sources: `projects/the-back-nine/docs/insights/019-a-crashed-verifier-is-not-a-refutation-missing-votes-must-abstain-not-discard.md` and `projects/the-back-nine/docs/insights/077-a-materiality-tie-on-an-agreed-real-gap-is-a-hand-verification-trigger-not-a-rejection.md`.
 - **A crashed FINDER lens is an abstention too** — reported in `coverage.crashedLenses` (and logged as a coverage hole), never flattened into "no findings".

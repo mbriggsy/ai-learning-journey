@@ -166,8 +166,8 @@ Who opens what:
 
 ### Sources and Research
 
-- Inventory of every producer and consumer of the version (writers, gates, copy keys, types, plants, tests by class, docs): machine-local, best effort, `C:Usersrigg.claudeprojectsC--Users-brigg-ai-learning-journey-projects-the-back-nine9-schema-v4-proof\repo-research.md`. A missing copy is not a blocker; this plan governs.
-- User-flow and edge-case analysis (flows F1–F9, gaps): `C:Usersrigg.claudeprojectsC--Users-brigg-ai-learning-journey-projects-the-back-nine9-schema-v4-proof\spec-flow.md`, same folder and caveat. The resolved review of this plan (every finding and its disposition): `C:Usersrigg.claudeprojectsC--Users-brigg-ai-learning-journey-projects-the-back-nine9-schema-v4-proof\plan-review.md`.
+- Inventory of every producer and consumer of the version (writers, gates, copy keys, types, plants, tests by class, docs): machine-local, best effort, `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\repo-research.md`. A missing copy is not a blocker; this plan governs.
+- User-flow and edge-case analysis (flows F1–F9, gaps): `spec-flow.md`, same folder and caveat. The resolved review of this plan (every finding and its disposition): `plan-review.md`, same folder.
 - The old copy's refusal, read in the old code: `git show c07e5758^:projects/the-back-nine/src/shared/scenarioCodec.ts` (`version > 3` → `newer-version`), its `session.ts` unlock arm, `backup.ts` restore arm and `unlockCopy.ts` mapping to `unlockNewerVersion`. Every copy since U8 (`90d2efe5`, 2026-06-27) behaves this way.
 - Lessons: insight 102 (a tolerance is a claim about a population: name who writes a version-3 plan after the change), 073 (identity consumers go through `scenarioIdentity`), 085 (every vault doctor needs an engine-acceptance pin), 046 and 049 (the codec is the restore trust boundary), 018 and 041 (sweep code comments for a superseded premise), 126 (predict which mutants cannot red).
 

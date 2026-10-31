@@ -1,0 +1,188 @@
+{
+  "written": "2026-10-31",
+  "what": "Header fills for the 19 lessons a frontmatter grep could not fully see (R9 of docs/plans/brief-recall-fix-plan.md): tags for the Back Nine's 10 lessons whose tags were empty, and title, date, modules and tags for Family Feud's 9 lessons with no frontmatter, Feud 025's bare date:, modules: and status: body lines moved into its header. Each lesson's fields were written by one blind Opus helper that read only that lesson's text (R10), audited from its transcript: one Read, of its own lesson, and no other tool. Each fill names the git blob it was written from; every brief's commit in the recall benchmark and HEAD hold that same blob. bench/fills.mjs applies a fill and refuses any other version.",
+  "workflow": "wf_57456c0c-3c8",
+  "head": "bb26cbca96255913399d56229f4fb1e512c5868e",
+  "fills": [
+    {
+      "lesson": "b9-008",
+      "folder": "projects/the-back-nine/docs/insights",
+      "file": "008-nan-survives-nullish-coalescing-in-an-unguarded-input-stream.md",
+      "blob": "7b0dd195a54fcc1257bc03083bc0303a4e9f1826",
+      "tags": "tags: [nan-guard, nullish-coalescing, validateParams, bracketFillCeilings, sibling-stream-validation, input-validation-gate, indeterminate-output, gross-up-fixed-point, Number.isFinite, calm-but-wrong]"
+    },
+    {
+      "lesson": "b9-062",
+      "folder": "projects/the-back-nine/docs/insights",
+      "file": "062-non-monotonicity-needs-a-dual-clock-collision-single-clock-channels-sweep-monotone.md",
+      "blob": "ddbeb0ac8aa7bc5585ad14a0ca1990146c0f7b0e",
+      "tags": "tags: [non-monotonicity, dual-clock-collision, stop-date-sweep, aca-cliff, roth-conversion-window, compileBudget, tent-function, monte-carlo-aggregation, retirement-anchored-windows, magi]"
+    },
+    {
+      "lesson": "b9-063",
+      "folder": "projects/the-back-nine/docs/insights",
+      "file": "063-a-crashed-verify-stage-reads-as-a-clean-result-arrayfrom-mapfn-invokes-thunks.md",
+      "blob": "6acd72cac57894dcfbf5c5531ad64b79bb18bed2",
+      "tags": "tags: [Array.from, mapFn, thunk, parallel, deferred-execution, workflow-script, crashed-verifier, silent-failure, failures-block, resumeFromRunId]"
+    },
+    {
+      "lesson": "b9-064",
+      "folder": "projects/the-back-nine/docs/insights",
+      "file": "064-the-first-real-cardinality-render-is-its-own-test-tier-single-instance-fixtures-cannot-see-collisions.md",
+      "blob": "f1e85b61fbc037cebf6ecd37ce6ae7a687b2eb35",
+      "tags": "tags: [fixture-cardinality, label-collision, jsdom-no-layout, live-browser-walk, viewbox-svg-height-zero, flex-shrink, aspect-ratio, cohortFraction, multi-dip-curve, thin-cohort-tail]"
+    },
+    {
+      "lesson": "b9-065",
+      "folder": "projects/the-back-nine/docs/insights",
+      "file": "065-a-fixed-em-reserve-is-a-guess-reserve-by-stacking-the-real-content-hidden.md",
+      "blob": "1b77ff58a025dd110bbad37fa475dfcc939a663c",
+      "tags": "tags: [layout-shift, em-reserve, min-block-size, grid-stacking, visibility-hidden, hover-readout, odds-ladder, text-wrapping, magic-number, css-grid]"
+    },
+    {
+      "lesson": "b9-069",
+      "folder": "projects/the-back-nine/docs/insights",
+      "file": "069-comprehension-holes-are-a-defect-class-tests-cannot-see.md",
+      "blob": "eeca2282f708bdcdbd1b03d6bea8615f46f7abe3",
+      "tags": "tags: [comprehension-hole, cold-read, microcopy, healthcare-sheet, undefined-referent, unquoted-quantity, copy-audit, render-context-refuter, dont-make-users-think, content-outranks-aesthetics]"
+    },
+    {
+      "lesson": "b9-072",
+      "folder": "projects/the-back-nine/docs/insights",
+      "file": "072-a-hysteresis-hold-over-a-monotone-meaning-display-must-be-direction-gated-and-pair-coupled.md",
+      "blob": "bf7d218f9345a27c89ec423c0ce268e6901b6a91",
+      "tags": "tags: [hysteresis, sticky-display, resolveStickyDisplay, direction-gated-hold, pair-coupling, property-sweep, optimism-ratchet, STATE_OPTIMISM_RANK, impossible-pair, sibling-sweep]"
+    },
+    {
+      "lesson": "b9-091",
+      "folder": "projects/the-back-nine/docs/insights",
+      "file": "091-the-engine-disagreeing-with-a-hand-derivation-is-the-oracle-running-in-reverse.md",
+      "blob": "9326b6c0731f6133b5a56d317e98be1dd820475e",
+      "tags": "tags: [oracle-fixture, hand-derivation, engine-divergence, closed-form, cost-basis, realizedGain, unrealized-gain, taxOverlay, fixture-premise, state-evolution]"
+    },
+    {
+      "lesson": "b9-097",
+      "folder": "projects/the-back-nine/docs/insights",
+      "file": "097-a-copy-swap-on-a-fold-law-frame-is-a-layout-change-the-failing-metrics-run-alone-can-see.md",
+      "blob": "d1c4a0ff0e75a6e377cfe2efc22d2d8a3baaaca3",
+      "tags": "tags: [fold-law, fit-gate, fold-breach, copy-edit, font-metrics, line-wrap, wrap-class, ci-only-failure, disclosure-copy, whitespace-surgery]"
+    },
+    {
+      "lesson": "b9-098",
+      "folder": "projects/the-back-nine/docs/insights",
+      "file": "098-a-ratified-mechanism-is-still-a-premise-the-primarys-own-table-outranks-the-councils-guessed-scaling.md",
+      "blob": "bc5acffde4065c569a5ce312751998d165f0bafd",
+      "tags": "tags: [council-ratified-premise, primary-source-verification, verbatim-table-consumption, part-d-surcharge, irmaa, formula-reset, per-tier-scales, proportionality-assumption, mechanism-correction, constants-sourcing]"
+    },
+    {
+      "lesson": "ff-017",
+      "folder": "projects/family-feud/docs/insights",
+      "file": "017-a-build-stamp-was-printed-under-a-judgment-label.md",
+      "blob": "bdabcb7d06ddaae56777c6efed6e44a790f4dc63",
+      "header": [
+        "title: A build stamp was printed under a judgment label, and the gate certified it",
+        "date: 2026-08-08",
+        "modules: [build_board.py, render_html.py, render_pdf.py, validate_board.py, players_data.json, docs/ranking-methodology.md]",
+        "tags: [derived-timestamp, rankings-provenance, check_rankings_provenance, agrees-by-construction, change-detector, judgment-digest, fixture-fidelity, byte-stability, mutant-testing, untested-call-site]"
+      ]
+    },
+    {
+      "lesson": "ff-025",
+      "folder": "projects/family-feud/docs/insights",
+      "file": "025-the-click-reported-success-and-drafted-nobody.md",
+      "blob": "c057f702ae3c22bdc014b85b65486ce4da23260f",
+      "removeBlock": "date: 2026-08-14 · **RESOLVED 2026-08-15**\nmodules: [scripts/sleeper_draft_console.js, docs/draft-day-runbook.md]\nstatus: **RESOLVED — the cause was NEITHER candidate below. Read this header, then the correction\nat the bottom; the two candidate sections are kept as history and are both WRONG.**\n\n",
+      "header": [
+        "title: The click reported success and drafted nobody",
+        "date: 2026-08-14",
+        "modules: [scripts/sleeper_draft_console.js, docs/draft-day-runbook.md]",
+        "status: RESOLVED 2026-08-15 — the cause was NEITHER candidate below. Read this header, then the correction at the bottom; the two candidate sections are kept as history and are both WRONG.",
+        "tags: [event-bubbling, handlerless-wrapper, synthetic-click, sleeper-draft-room, ffDraft, draftButton, picked_by, browser-not-oracle, no-limit-clock, auto-pick]"
+      ]
+    },
+    {
+      "lesson": "ff-026",
+      "folder": "projects/family-feud/docs/insights",
+      "file": "026-the-loop-fits-and-the-scripts-were-never-the-cost.md",
+      "blob": "4398f0e51114e6f7f49115b26d646a4030c2a798",
+      "header": [
+        "title: The loop fits in 120s, and the scripts were never the cost",
+        "date: 2026-08-15",
+        "modules: [run_engine.py, precompute_ladder.py, merge_picks.py, picks.json, .claude/skills/sleeper-draft-room/SKILL.md, TODO.md]",
+        "tags: [sleeper-draft-room, pick-clock, round-trip-latency, draft-queue, ffQueueList, ffQueue, picked_by, auto-pick, mock-draft, engine-output-grep]"
+      ]
+    },
+    {
+      "lesson": "ff-027",
+      "folder": "projects/family-feud/docs/insights",
+      "file": "027-the-availability-model-works-in-every-room-but-ours.md",
+      "blob": "9a951cc9dd99e21ddaaa6e06f797aabf16a89687",
+      "header": [
+        "title: The availability model works in every room but ours",
+        "date: 2026-08-17",
+        "modules: [scripts/availability.py, precompute_ladder.py, draft-kit/availability_calibration.json, draft-kit/cache/opponents/]",
+        "tags: [availability-indicator, survival-model, base-rate-trap, 8-team-room, adp, data-leakage, held-out-validation, pooled-aggregate, MIN_EDGE, draft-strategy]"
+      ]
+    },
+    {
+      "lesson": "ff-028",
+      "folder": "projects/family-feud/docs/insights",
+      "file": "028-writing-the-output-found-what-the-tests-could-not.md",
+      "blob": "8a910a5594ff2a5847cb3051e536ab1d7323d914",
+      "header": [
+        "title: Writing the product's own output found three defects the tests could not",
+        "date: 2026-08-17",
+        "modules: [docs/draft-day-runbook.md, draft_engine.py, tests/fixtures/lab_feed_120.json, TODO.md]",
+        "tags: [compose-real-output, advisory-format, draft-engine, output-consumer-gap, green-tests-false-confidence, unprinted-field, seat-list, picks_until_me, fact-from-memory, round-trip]"
+      ]
+    },
+    {
+      "lesson": "ff-031",
+      "folder": "projects/family-feud/docs/insights",
+      "file": "031-the-null-was-rented-from-a-model-of-somebody-else.md",
+      "blob": "4112eee55de0c550b230b28e9f7fcf147c477f06",
+      "header": [
+        "title: The null was rented from a model of somebody else",
+        "date: 2026-08-20",
+        "modules: [scripts/chamber.py, docs/torture-chamber-campaign-1.md]",
+        "tags: [torture-chamber, null-result, sensitivity-swap, third-party-model, sleeper-auto-pick, draft-queue, unattended-draft, adversarial-verification, truncated-list, event-counts]"
+      ]
+    },
+    {
+      "lesson": "ff-032",
+      "folder": "projects/family-feud/docs/insights",
+      "file": "032-the-loop-died-of-a-manual-step-six-rooms-in-a-row.md",
+      "blob": "2efc244e7d2c6f8ae36fcf4393a45660c7108bad",
+      "header": [
+        "title: The loop died of a manual step, six rooms in a row",
+        "date: 2026-08-21",
+        "modules: []",
+        "tags: [advisor-loop, one-shot-watcher, re-arm, Monitor, level-triggered, edge-triggered, polling-skips-states, autopick, sleeper-draft, manual-step]"
+      ]
+    },
+    {
+      "lesson": "ff-033",
+      "folder": "projects/family-feud/docs/insights",
+      "file": "033-the-advisory-that-was-posted-but-never-rendered.md",
+      "blob": "3ccd3785d2bdfc1286626db01d8197bfad1e45d9",
+      "header": [
+        "title: The advisory that was posted but never rendered",
+        "date: 2026-08-21",
+        "modules: []",
+        "tags: [turn-shape, mid-turn-text, final-message-renders, on-clock-advisory, mock-draft, pick-clock, Get-Date, timing-instrumentation, message-not-rendered, user-refutation-as-measurement]"
+      ]
+    },
+    {
+      "lesson": "ff-034",
+      "folder": "projects/family-feud/docs/insights",
+      "file": "034-a-deep-link-to-players-hides-waivers.md",
+      "blob": "1d1a167d21b380ff9e84649cfae507e9dc971169",
+      "header": [
+        "title: A deep link to `/players` hides waivers; enter through the league",
+        "date: 2026-10-06",
+        "modules: []",
+        "tags: [sleeper, waiver-claim, deep-link, cold-load, in-app-navigation, route-loaded-data, waiverStatus, pending-claims, user-success-report, shared-variable-measurement]"
+      ]
+    }
+  ]
+}

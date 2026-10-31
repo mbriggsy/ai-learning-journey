@@ -67,8 +67,9 @@ remove each link alone before deleting any folder there). Rulings 38–42 are in
      of b9-1's per-test runner takes multi-file mutants). `PREDICTIONS.md` there was written BEFORE any run: compare each mutant's
      red set to it, explain every miss, and re-anchor first any plant a review fix moved. M7 (the literal-3 mint) is runtime-
      equivalent and already proven typecheck-only (the README). Record the results in the README.
-   - **(c) CI run 41238303597 on `9b0ef9db` — read it by id** (both jobs; it carries `verify:fit`, `verify:fit:rv` and `verify:csp`
-     on Linux). Local `verify:fit` was not run (CI's is the gate); local `verify:csp` 16 of 16, exit 0.
+   - **(c) ✅ CI run 41238303597 on `9b0ef9db` GREEN on both jobs, read by id** (`verify` — lint, typecheck, doc-stats, the full
+     suite, build, bundle, `verify:csp`, `verify:fit` — and `verify-rv-chart-text`). Local `verify:csp` 16 of 16. Re-read CI after
+     item 1(a)'s fixes land.
    - **(d) `/distill`** on the DISTILL CANDIDATES block below (b9-2's version-ladder candidate is now proven by the build), right
      after (a)'s fixes land. Then item 2.
    The plan:

@@ -22,10 +22,17 @@ Before work starts on a topic, Claude finds the few past lessons in the project'
 Today Claude runs the compound-engineering plugin's `ce-plan` skill from start to finish, and that one run does all three parts:
 
 - **Plan:** a structured plan goes into the project's own `docs/plans/` folder. Claude names the path, because otherwise the plugin picks a folder at the top of the whole repo.
-- **Deepen:** it scores every section, picks the two to five weakest, and sends helper agents (other copies of Claude that Claude starts to do part of a job) to research them, folding their findings in without stopping to ask you.
-- **Check:** skeptical reviewers from the plugin's `ce-doc-review` skill read the plan as a whole, looking for parts that contradict each other, sections a later change left out of date, steps that can't be built, and work nobody asked for. Claude checks each finding against the code and puts the fixes into the plan before any code is written.
+- **Deepen:** it scores every section. When some are weak, it picks the two to five weakest and sends helper agents (other copies of Claude that Claude starts to do part of a job) to research them, folding their findings in without stopping to ask you. When none are weak enough, it says the plan passed its confidence check.
+- **Check:** skeptical reviewers from the plugin's `ce-doc-review` skill look for parts that contradict each other, sections a later change left out of date, steps that can't be built, and work nobody asked for. Claude checks each finding against the code and puts the fixes into the plan before any code is written.
 
-Every helper runs on Opus, and only Claude models do the work: the plugin's review pass by another company's model is switched off in the repo's `.compound-engineering/config.yaml`. The plan's commit message says what ran ("planned, deepened and checked"), and the build starts only once the plan's history shows all three. Claude asks `ce-plan` for the plan only, ending after the check (why: step 3).
+What Claude asks `ce-plan` for, every time:
+- the plan's path inside the project's `docs/plans/`;
+- Opus for every helper, because otherwise the plugin sends some of them to cheaper models;
+- the whole plan for the reviewers who hunt contradictions and ways it could break, because by default each reviewer gets only the sections for its angle, and the check has to cover the plan as a whole;
+- no scope question to you before it starts (`confirm:auto`), because you judge the result; a real fork that is yours still comes to you from Claude;
+- a stop after the check, because the plugin's next step hands the plan to its build skill, which moves the work off main onto a new branch.
+
+Only Claude models do the work: the plugin's review pass by another company's model is switched off in the repo's `.compound-engineering/config.yaml`. The plan's commit message says what ran ("planned, deepened and checked", or "planned, confidence check passed, checked" when no section needed deepening), and the build starts only once the plan's history shows it.
 
 - **Start it:** nothing to say; Claude starts it for sizable work. You can also say "plan <the work>".
 - **Lives in:** the `ce-plan` and `ce-doc-review` skills of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`. The plugin updates itself.

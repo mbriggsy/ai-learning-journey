@@ -1,6 +1,6 @@
 # Distill & Brief
 
-**Status: active.** Two skills. The enforcement hooks that used to sit around them were retired on 2026-10-31 (why, below).
+**Status: active.** Two skills, and no hook around them (why, below).
 
 ### How We Stopped Losing What We Learned
 
@@ -79,9 +79,9 @@ What makes them run is the TODO's START HERE line: every session's close writes 
 | Approach | Verdict | Why |
 |----------|---------|-----|
 | **A standing rule** ("check insights before work", in memory or a TODO's standing list) | Rejected | It fades. A B9 TODO line asked for `/brief` before every unit from June on; main sessions ran it 0 times from 09-17 to 10-18. |
-| **Blocking hooks** (hold the build skill until `/brief`; block the stop until `/distill`) | Tried 2026-04 to 2026-10, retired 2026-10-31 | They keyed on skill names. The brief gate held only `ce-work`, unused since 2026-08-08, so it held nothing. The distill gate fired when a review skill *loaded*, not when the review ended: in the 6 review sessions checked from 10-20 to 10-31 it interrupted a review still running every time, and 5 of the 6 were waved off. |
+| **Blocking hooks keyed on skill names** (hold the build skill until `/brief`; block the stop until `/distill`) | Rejected (Briggsy, 2026-10-31) | Builds don't go through a build skill, so the brief gate held nothing. The distill gate armed when a review skill loaded and fired at Claude's next turn end, minutes before a long review was done: 6 times in 6 review sessions checked from 10-20 to 10-31, 5 of them waved off. |
 | **The plugin's lesson tools** (compound-engineering's `ce-compound` and learnings researcher) | Rejected | They write and read their own `solutions/` folder in their own format, so `/brief` would never see those lessons. |
-| **Claude Code's own memory** | Rejected | By design it skips what can be derived from the code and debugging fixes, which is exactly what these lessons hold, and it lives on one laptop, outside git. |
+| **Claude Code's own memory** | Rejected | By design it skips what can be derived from the code and debugging fixes, which is exactly what these lessons hold, and it lives on one laptop, outside this repo. |
 | **Name the next step where the next session starts** | Selected | From 10-20 to 10-31, every step a START HERE line named ran. `/brief`, left unnamed through most of one job's build, ran in about 4 of its 13 build sessions. Plus skills that run their own next step: the deep review ends by running `/distill`. |
 
 ### The skills
@@ -150,7 +150,7 @@ flowchart LR
     style BRIEF fill:#1e3a5f,stroke:#60a5fa,color:#fff
 ```
 
-Brief. Plan. Build. Review. Distill. Commit. Repeat. The knowledge base grows (262 lessons across four projects as of 2026-10-31). Rediscovery drops. The whole flow, step by step: [the playbook](../../../playbook/README.md#the-plays-in-order).
+Brief. Plan. Build. Review. Distill. Commit. Repeat. The knowledge base grows (274 lessons across nine insight folders as of 2026-10-31: the-back-nine 148, burned 72, family-feud 38, ai-journey-stats 8, the playbook 4, three skills 1 each, the repo root 1). Rediscovery drops. The whole flow, step by step: [the playbook](../../../playbook/README.md#the-plays-in-order).
 
 ---
 

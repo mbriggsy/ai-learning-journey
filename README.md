@@ -65,7 +65,7 @@ Two failed projects in a row is what drove the current methodology emphasis on *
 
 These aren't experiments — they're the scaffolding that keeps the methodology repeatable.
 
-- **[`projects/hooks/`](projects/hooks/)** — Claude Code hooks for session discipline. `PreToolUse` gates `/brief` before work begins. `PostToolUse` drops a distill marker silently. `Stop` hook enforces `/distill` when work is complete. Together they turn "remember to capture lessons" from a habit into a rule the harness enforces.
+- **[`projects/hooks/`](projects/hooks/)** — Claude Code hooks for session discipline. A `SessionStart` hook loads the Elite Engineer manifesto (the quality bar) into every session, and a `PreToolUse` hook blocks WebFetch, which has no timeout. No hook enforces `/brief` or `/distill`: the next step named in the TODO's START HERE line at every session close is what runs them ([playbook/principles.md](playbook/principles.md#how-we-work)).
 - **[`projects/skills/`](projects/skills/)** — custom Claude Code skills built on top of the agentic workflow. `doc-audit` (5 specialized agents, 4 iterations, 100% pass rate on BURNED's documentation), `distill-and-brief`, a forthcoming `/product-specification` skill scaffolded from lessons learned during BURNED's spec authoring.
 - **[`playbook/`](playbook/)** — the front door to how I work with Claude: the plays we run for sizable work (brief → deepened plan → build → whole-file review → distill → close → hand off), the principles under them, a cheat sheet, and how-tos.
 

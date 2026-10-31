@@ -1,6 +1,6 @@
 # Hooks
 
-**Status: active.** Two hooks: the session-start manifesto (with its config-liveness check) and the WebFetch blocker.
+**Status: active.** Two hook scripts: the session-start manifesto (with its config-liveness check) and the WebFetch blocker. `~/.claude/settings.json` also carries an inline Notification hook (a Windows message box when Claude needs attention) that has no script here.
 
 ### Claude Code SessionStart & PreToolUse Hooks
 
@@ -8,7 +8,7 @@
 
 Small scripts Claude Code runs by itself at set moments: one loads the Elite Engineer manifesto at the start of every session, the other blocks the WebFetch tool. Deployed at `~/.claude/hooks/`, configured in `~/.claude/settings.json`.
 
-**Retired 2026-10-31 (Briggsy's words):** the three distill-and-brief hooks (`enforce-brief-before-work.sh`, `remind-distill-after-work.sh`, `stop-distill-gate.sh`). The brief gate guarded only the `ce-work` skill, unused since 2026-08-08, so it had held nothing since. The distill Stop gate fired when a review skill *loaded*, not when the review ended: in the 6 review sessions checked from 10-20 to 10-31 it interrupted the review mid-run each time, and 5 of the 6 were waved off. What actually got /brief and /distill run was the TODO's START HERE naming the step, and ultramode's own last step. That is where the flow lives now: [playbook/principles.md](../../playbook/principles.md). Don't rebuild these hooks without a time a named step was skipped.
+**No hook enforces /brief or /distill** (Briggsy's decision, 2026-10-31). The flow runs because every session's close names the next step in the TODO's START HERE line, and because ultramode's last step is /distill ([playbook/principles.md](../../playbook/principles.md#how-we-work)). The skill-name hooks that tried it (`enforce-brief-before-work.sh`, `remind-distill-after-work.sh`, `stop-distill-gate.sh`) held nothing or fired at the wrong moment: the brief gate guarded only the `ce-work` skill, which builds no longer use, and the distill gate armed when a review skill loaded and fired at Claude's next turn end, minutes before a long review was done (6 times in 6 review sessions checked from 10-20 to 10-31, 5 of them waved off). Don't add a flow hook without a time a step START HERE named was skipped.
 
 ---
 
@@ -87,6 +87,9 @@ Scripts deployed at `~/.claude/hooks/`. The Elite Engineer manifesto deploys alo
     ],
     "PreToolUse": [
       { "matcher": "WebFetch", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/block-webfetch.sh", "onFailure": "block" }] }
+    ],
+    "Notification": [
+      { "matcher": "", "hooks": [{ "type": "command", "command": "powershell.exe -Command \"[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Claude Code needs your attention', 'Claude Code')\"" }] }
     ]
   }
 }

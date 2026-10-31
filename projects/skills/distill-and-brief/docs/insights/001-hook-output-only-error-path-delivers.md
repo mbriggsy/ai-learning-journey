@@ -5,6 +5,8 @@ modules: [hooks]
 tags: [hooks, platform-bug, blocking, PostToolUse, PreToolUse, slash-commands]
 ---
 
+> **Partly out of date (checked 2026-10-31).** Finding 1 no longer holds: `additionalContext` now reaches the model on SessionStart, PreToolUse (Claude Code 2.1.9), Stop and SubagentStop (2.1.163), and a probe measured it on PostToolUse ([playbook insight 003](../../../../../playbook/docs/insights/003-a-rule-about-the-platform-is-a-map-until-a-run-measures-it-whoever-wrote-it-a-verdict-holds-only-for-its-bytes.md); [hooks README](../../../../hooks/README.md), Platform Findings 1). Finding 4's timing failed in practice: the Stop hook fires at Claude's next turn end, which during a long review comes minutes before the review is done, so the distill hooks built on it were retired. Findings 2 and 3, and the Key Insight, stand.
+
 ## Problem
 
 Hook behavior is undocumented and inconsistent. Three major findings from exhaustive testing (7 output formats, Pre and Post, user vs Claude invocations).

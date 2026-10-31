@@ -69,11 +69,11 @@ flowchart TB
 
 ## When CE Updates
 
-The persona path embeds the plugin version (`…/compound-engineering/<version>/…`), so it rots on every update. The skill resolves it fresh each run; on a new CE version, the maintenance pass is:
+The persona path embeds the plugin version (`…/compound-engineering/<version>/…`), so it rots on every update, and CE updates itself (auto-update is on for its marketplace). The skill resolves it fresh each run; when a review notices a new CE version, the maintenance pass is:
 
 1. Run the resolution snippet in `references/workflow-template.md` — it prints the new personas dir or `PERSONAS-UNAVAILABLE`.
 2. `ls` the dir — CE renames personas across versions; null out vanished ones (the lens falls back to its inline role automatically).
-3. If the roster shifted meaningfully, refresh the lens table in `SKILL.md` (roster as of 3.14.3 is documented there).
+3. If the roster shifted meaningfully, refresh the lens table in `SKILL.md` and the roster list in `references/workflow-template.md` (neither carries a version stamp; the `ls` decides).
 4. Worst case — CE restructures again entirely — the review still runs: every lens on inline roles. That's the design, not a degradation to apologize for.
 
 ## Flight Record

@@ -46,7 +46,7 @@ The `!` backtick syntax in SKILL.md marks those two shell commands. Current Clau
 
 If nothing non-obvious surfaced, the agent says so and moves on.
 
-A pair of hooks used to remind Claude with a Stop-hook block after a build or review skill. They were retired on 2026-10-31: the reminder fired when the review skill *loaded*, not when the review ended, so in the 6 review sessions checked from 10-20 to 10-31 it interrupted a review still running every time, and 5 of the 6 were waved off.
+No hook enforces it (Briggsy's decision, 2026-10-31). A Stop-hook reminder keyed on the review skill armed when the skill loaded and fired at Claude's next turn end, minutes before a long review was done: 6 times in 6 review sessions checked from 10-20 to 10-31, 5 of them waved off. The review's last step and a step named in START HERE are what run it. Don't add a hook without a time a named /distill was skipped.
 
 ## Installation
 

@@ -29,7 +29,7 @@ The skill's one `!` injection runs `corpus.mjs`, which prints a corpus card capp
 
 For sizable work, /brief runs at the start of the job, before the plan, so the plan carries the lessons; and again at the start of each build unit's session, because one brief for the whole job doesn't catch everything a single unit touches. What makes it run is the TODO's START HERE line naming `/brief <topic>`: the session's close writes that line ([squeaky-clean](../../squeaky-clean/SKILL.md) step 1), and the next session starts there. Anyone can also just ask.
 
-A hook used to hold the `ce-work` build skill until /brief had run. It was retired on 2026-10-31: builds stopped going through `ce-work` in August, so it held nothing, and /brief ran 0 times in main sessions from 09-17 to 10-18 with the hook in place.
+No hook enforces it (Briggsy's decision, 2026-10-31): a gate on the build skill held nothing once builds stopped using that skill, and /brief ran 0 times in main sessions from 09-17 to 10-18 with the gate in place. A step named in START HERE is what runs it. Don't add a hook without a time a named /brief was skipped.
 
 ## Installation
 

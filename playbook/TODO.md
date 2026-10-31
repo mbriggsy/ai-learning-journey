@@ -48,4 +48,5 @@ The queue for work on how we work. Sessions for it start in this folder.
 - **A test session started from a Claude session's shell inherits that session's environment.** Strip a variable (`env -u NAME claude -p ...`) before claiming a fresh session lacks it.
 - **A peer's unpushed commit under yours:** pushing `main` publishes it too. Commit path-scoped (`git commit -- <paths>`) and check `git log origin/main..HEAD` before a push.
 - **Never freeze or pin a version** (memory `feedback-upgrades-always-approved`).
+- **A session can run with no transcript on disk.** playbook-2 (2026-10-31) had no `<session-id>.jsonl` under `~/.claude/projects/<project-folder>/` and no `~/.claude/sessions/` file all session (only its `subagents/` and `tool-results/` folders), so `/window` printed "no transcript for this session" and squeaky's transcript grep had nothing to read; the cause is not traced. Run a sizable step in a session `/window` can read.
 - **This folder is public.** Write paths as `~/...`, a project folder as `<slug>` and ids as `<id>`; screenshots go in the ignored `playbook/temp/`.

@@ -77,6 +77,12 @@ function judgePrompt(b) {
   )
 }
 
+// Every helper runs at xhigh, set here rather than inherited from the session:
+// the benchmark's judges (wf_eb9c6c39-cab), the 10-31 dry run and U5's writers
+// all ran at xhigh, and a bench keeps its baseline's effort (~/.claude/CLAUDE.md,
+// "Effort on every spawn").
+const EFFORT = 'xhigh'
+
 const briefOf = (id) => CONFIG.briefs.find((b) => b.id === id)
 const jobs = []
 if (CONFIG.part === 'judges') {
@@ -93,12 +99,12 @@ log(`${CONFIG.part}: ${jobs.length} helpers`)
 
 const out = await parallel(jobs.map((j) => () => {
   if (j.kind === 'judge') {
-    return agent(judgePrompt(briefOf(j.brief)), { label: `judge:${j.brief}`, phase: 'Judges', schema: JUDGED, model: 'opus' })
+    return agent(judgePrompt(briefOf(j.brief)), { label: `judge:${j.brief}`, phase: 'Judges', schema: JUDGED, model: 'opus', effort: EFFORT })
       .then((result) => ({ brief: j.brief, result }))
   }
   const variant = j.arm === 'A3' ? 'lines' : 'plain'
   const copyDir = CONFIG.copies + '/' + j.brief + '/' + variant + '/docs/insights'
-  return agent(runPrompt(j.arm, briefOf(j.brief), copyDir), { label: `${j.arm}:${j.brief}:r${j.run}`, phase: 'Runs', schema: PICKS, model: 'opus' })
+  return agent(runPrompt(j.arm, briefOf(j.brief), copyDir), { label: `${j.arm}:${j.brief}:r${j.run}`, phase: 'Runs', schema: PICKS, model: 'opus', effort: EFFORT })
     .then((result) => ({ arm: j.arm, brief: j.brief, run: j.run, copy: copyDir, result }))
 }))
 return { part: CONFIG.part, items: out }

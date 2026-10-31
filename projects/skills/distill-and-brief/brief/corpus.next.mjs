@@ -156,7 +156,14 @@ const HEADER_FIELDS = ["title", "date", "phase", "modules", "tags", "applies_whe
 const CUT = "…"; // marks a line cut to its maximum
 
 const cut = (s, max) => ([...s].length <= max ? s : [...s].slice(0, max - 1).join("") + CUT);
-const unquote = (s) => s.trim().replace(/^"(.*)"$/, "$1").replace(/^'(.*)'$/, "$1");
+// A YAML-quoted title as plain text: "a \"b\"" reads a "b", 'it''s' reads it's.
+const unquote = (s) => {
+  const t = s.trim();
+  const dq = t.match(/^"(.*)"$/);
+  if (dq) return dq[1].replace(/\\(["\\])/g, (_, c) => c);
+  const sq = t.match(/^'(.*)'$/);
+  return sq ? sq[1].replace(/''/g, "'") : t;
+};
 
 // The lessons of a folder in numeric order, each with what --list and
 // --headers print. A lesson with no frontmatter shows its first "# " heading,
@@ -244,7 +251,9 @@ function listing(dir, pageNo) {
 
 function headers(dir, ids, pageNo) {
   const all = lessons(dir);
-  const wanted = [...new Set(ids.map(Number))];
+  // Numeric order, whatever order the numbers came in, so a later --page call
+  // that lists them differently still gets the same pages.
+  const wanted = [...new Set(ids.map(Number))].sort((a, b) => a - b);
   const picked = [];
   const missing = [];
   for (const n of wanted) {
@@ -252,9 +261,11 @@ function headers(dir, ids, pageNo) {
     if (hits.length) picked.push(...hits);
     else missing.push(String(n).padStart(3, "0"));
   }
+  const found = wanted.length - missing.length;
   const missingNote = missing.length ? ` Not found: ${missing.join(" ")}.` : "";
+  const dupNote = picked.length > found ? ` ${picked.length - found} number(s) belong to more than one file; each prints.` : "";
   const head = (p, m) =>
-    `Headers from ${dir}/: ${picked.length} of the ${wanted.length} lessons asked for.${missingNote} Page ${p} of ${m}${m > 1 ? `; read every page (--page 1 to --page ${m})` : ""}.`;
+    `Headers from ${dir}/: ${found} of the ${wanted.length} numbers asked for.${missingNote}${dupNote} Page ${p} of ${m}${m > 1 ? `; read every page (--page 1 to --page ${m})` : ""}.`;
   if (picked.length === 0) return head(1, 1);
   const pages = paginate(picked.map(headerBlock), head, "\n\n");
   return printPage(pages, pageNo, head, "\n\n", "header print");
@@ -280,8 +291,10 @@ function corporaBelow(cwd) {
 
 const USE_OTHER = `Brief against the one the topic belongs to: node "$HOME/.claude/skills/brief/corpus.mjs" <that dir>, then search that path.`;
 
-// argv: an optional --list or --headers, an optional folder, for --headers a
-// comma-separated number list, and an optional --page N, in any order.
+// argv: an optional --list or --headers, an optional folder, for --headers the
+// lessons' numbers, and an optional --page N, in any order. Every number
+// argument adds to the list, so "007,019,142", "007, 019, 142" (three
+// arguments once the shell splits it) and "007 019 142" all ask for three.
 function parseArgs(argv) {
   const opts = { mode: "card", dir: null, ids: null, page: 1, error: null };
   for (let i = 0; i < argv.length; i++) {
@@ -292,7 +305,7 @@ function parseArgs(argv) {
       const v = argv[++i];
       opts.page = /^\d+$/.test(v || "") ? Number(v) : NaN;
       if (Number.isNaN(opts.page)) opts.error = `--page needs a page number, got ${v === undefined ? "nothing" : `"${v}"`}.`;
-    } else if (/^\d+(,\d+)*,?$/.test(a)) opts.ids = a.split(",").filter(Boolean);
+    } else if (/^,?\d+(,\d+)*,?$/.test(a)) opts.ids = [...(opts.ids || []), ...a.split(",").filter(Boolean)];
     else if (opts.dir === null) opts.dir = a;
     else opts.error = `Unexpected argument "${a}".`;
   }

@@ -274,6 +274,14 @@ Inferred during planning, not confirmed by Briggsy:
   - The Back Nine's `verify:doc-stats` and its insights tests pass on the landed tree.
 - **Verification:** the Back Nine's CI is green on the landing commit, read by full sha; one real brief in a fresh session shows the listing and reads its candidates' headers through `--headers`.
 
+### Build record (where the build departs from the units above)
+
+- **U1:** the bar was tested cold by 7 fresh readers and 4 skeptic rounds before it was frozen; its examples come from Burned lessons, which no benchmark set judges.
+- **U2:** a pre-measurement review (`wf_acb48710-f3a`) found that `--headers` kept only the last number argument (`007, 019, 142` printed 142 alone) and paged by the order the numbers came in; both are fixed and tested, and YAML-quoted titles list as plain text.
+- **U3:** beyond the plan's edits, step 6's path reads `<dir>`, and the Searched line gains the size label and what stayed unread. The same review's confirmed fixes: a concept list that every "+N per concept" counts against; file stems for `modules:`; the start-of-word guard also accepts a line's start; multi-word keywords, regex escaping and non-letter keywords; the filename Glob made start-of-word and lowercase; a general process lesson matches by meaning only when the job is that process; `modules` +3 once per lesson; a wrong-sense word hit does not count; ties by date, then number; a candidate with no points is not named; an error from `--list` or `--headers` stops the scoring.
+- **U5:** each writer read its blob from a scratch file holding git's exact bytes, not inline in its prompt, because the Workflow script cannot read files; the audit (`bench/audit-transcripts.mjs reads`) shows each writer read only the bar and its own blob.
+- **U6:** the harness runs each arm as its own Workflow part, so the meters are read between arms; `~/.claude/statusline.py` now keeps the last meters in `~/.claude/statusline-meters.json` for that.
+
 ---
 
 ## Verification Contract

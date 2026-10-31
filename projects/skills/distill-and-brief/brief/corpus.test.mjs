@@ -117,11 +117,43 @@ test("--headers prints the named lessons' six header fields, applies_when includ
     "019-b.md": lesson({ title: "Nineteen", date: "2026-06-10", tags: "[verify]" }),
   });
   const out = run(["--headers", dir, "19,007,999"]);
-  assert.match(out, /2 of the 3 lessons asked for\. Not found: 999\. Page 1 of 1\./);
+  assert.match(out, /2 of the 3 numbers asked for\. Not found: 999\. Page 1 of 1\./);
   assert.ok(out.includes("019\ntitle: Nineteen\ndate: 2026-06-10\ntags: [verify]"));
   assert.ok(out.includes("007\ntitle: Seven\ndate: 2026-06-06\nphase: P1\nmodules: [src/engine/taxOverlay.ts]\ntags: [tax]\napplies_when: [changing the tax overlay, adding a tax rule's input]"));
   assert.ok(!out.includes("status:"), "only the six header fields print");
   assert.ok(!out.includes("## Problem"), "never a body");
+});
+
+test("--headers keeps every number however the list is split, and pages the same whatever order it comes in", () => {
+  const files = {};
+  for (let i = 1; i <= 120; i++) {
+    const n = String(i).padStart(3, "0");
+    files[`${n}-l.md`] = lesson({ title: `Lesson ${n} ${"word ".repeat(40).trim()}`, date: "2026-10-31", tags: "[a, b]" });
+  }
+  const dir = folder(files);
+  const ids = (out) => out.split("\n").filter((l) => /^\d{3}$/.test(l));
+  for (const args of [["007,019,042"], ["007,", "019,", "042"], ["007", "019", "042"], ["007,019", "042"]]) {
+    const out = run(["--headers", dir, ...args]);
+    assert.match(out, /3 of the 3 numbers asked for/, args.join(" "));
+    assert.deepEqual(ids(out), ["007", "019", "042"]);
+  }
+  const all = Array.from({ length: 120 }, (_, i) => String(i + 1).padStart(3, "0"));
+  const m = Number(run(["--headers", dir, all.join(",")]).match(/Page 1 of (\d+)/)[1]);
+  assert.ok(m >= 2);
+  const seen = [];
+  for (let p = 1; p <= m; p++) {
+    const order = p % 2 ? all : [...all].reverse(); // a later call that lists them the other way round
+    seen.push(...ids(run(["--headers", dir, order.join(","), "--page", String(p)])));
+  }
+  assert.deepEqual(seen, all);
+});
+
+test("--list shows a YAML-quoted title as plain text", () => {
+  const dir = folder({
+    "001-dq.md": lesson({ title: '"A \\"fixing\\" step: done"', tags: "[x]" }),
+    "002-sq.md": lesson({ title: "'it''s fine'", tags: "[x]" }),
+  });
+  assert.deepEqual(listLines(run(["--list", dir])), ['001 A "fixing" step: done', "002 it's fine"]);
 });
 
 test("--headers with no numbers, and --page with no number, say what they need", () => {

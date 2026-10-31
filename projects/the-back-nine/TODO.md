@@ -22,31 +22,60 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-30, written by b9-7 for the next session): U10's Caddie card is FILED and its fixes are committed —
-HARD-FLAG, held on two filed builds** (`docs/caddie/cold-read-log.md` top card; the commit and its CI run are in `git log`). It
-fixed three holds findings in Phase B's words (the out-of-pocket help in working years, the wyclock line's "Social Security
-figures", a stale W's rosy direction), put the W step's own stale sentence on the gate, and fixed the walk's tall-sheet crop.
-The card waits on *The re-entry gate says "Markets and paychecks move" but shows no pay…* and *The gate's working-year lines
-can't say whether a change touches this household…* (both Tier 1, new). Next, in order:
-1. **U11** (docs and the register): the spec's §U11 close / amend / file lists ARE the prescription
-   (`docs/plans/features/working-year-pay-check-build-spec.md`), plus three U10 left it: the roadmap You-Are-Here row for the
-   pay check (none exists yet — `docs/roadmap.md` holds no pay-check row, so the build status lives only in the spec), the
-   pre-59½ count on the dissent (0 on every seed, offset and tier — the spec's U10 *As built*), and KTD22's reason.
-2. **The whole-file review** of the pay check (`/ultramode-code-review`, the A7 review's `brief.md` the template) and `/distill`
-   (the DISTILL CANDIDATES below — b9-7's, b9-6's, b9-5's, b9-4's and b9-3's first). Its scope now includes b9-7's code:
-   `oopHelpKeyFor`, `composeReentry`'s `payCheckStale`, `workingYearCostStaleText`'s one-sided lean, `captureTallSheetRegion`. The rulings are `b9-phaseb\DECISIONS.md` 1–37; the
-   review tools (every lens's repros, the mutant specs and the runner, the re-anchor classifier) are in
-   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb-review\` (`b9-4-mutants\`,
-   `b9-5-mutants\`), its `FIXES.md` the progress record.
-3. **Rank the registers filed by b9-5's re-walk and b9-7's card** against the D7 queue (his order — never re-ordered without
-   him). b9-5's four: Tier 0 *A self-employed worker's Social Security and Medicare tax is charged at an employee's half…* (a D7
-   ask, measure first); Tier 1 *The money picture's later years name a change without its dollars or its direction…*, *The
-   assumptions sheet says "Everything the answer leans on, in one place" but shows no pay…*, *The working-year methodology row
-   lists about fifteen caveats…*. b9-7's four (Tier 1): the two the card HOLDS on (above — the gate's pay row is a new gate
-   row, so the four design skills load first; the stale lines' measure needs the working-year check run at both figures over
-   the engine's own paths, survivor rows included, never the everyone-alive ledger), *Keeping a stale yes turns it into an
-   entered figure…* (it re-opens ruling 34), *The spending help names only Medicare premiums to leave out…*. The card goes
-   PILOT-CLEARED when its two builds walk clean. Build 2, the surplus question, follows this build.
+▶ **START HERE (2026-10-30, written by b9-8 for b9-9): U11 is LANDED — every pay-check doc says how a working year is
+modeled now, and every gap it leaves is filed once** (`d7930466`; CI run 41162167856 green on both jobs (verify, verify-rv-chart-text), read by id). U10's Caddie
+card stays **HARD-FLAG**, held on two Tier 1 builds: *The re-entry gate says "Markets and paychecks move" but shows no pay…*
+and *The gate's working-year lines can't say whether a change touches this household…*. It goes PILOT-CLEARED when both walk
+clean. Next, in order:
+1. **The whole-file review** of the pay check (`/ultramode-code-review`, the A7 review's `brief.md` the template) and `/distill`
+   (the DISTILL CANDIDATES below, b9-8's and b9-7's first). Its scope is the whole build plus b9-7's code: `oopHelpKeyFor`,
+   `composeReentry`'s `payCheckStale`, `workingYearCostStaleText`'s one-sided lean, `captureTallSheetRegion`. The rulings are
+   `b9-phaseb\DECISIONS.md` 1–37. The review tools (every lens's repros, the mutant specs and the runner, the re-anchor
+   classifier) are in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb-review\`
+   (`b9-4-mutants\`, `b9-5-mutants\`), and its `FIXES.md` is the progress record. U11 found no code defect; the review starts
+   from the code, with the register's 2026-10-30 entries as its map of the known gaps.
+2. **Rank the registers against the D7 queue** (his order; never re-ordered without him):
+   - **b9-5's four.** Tier 0 *A self-employed worker's Social Security and Medicare tax is charged at an employee's half…*
+     (a D7 ask; measure first). Tier 1: *The money picture's later years name a change without its dollars or its
+     direction…*, *The assumptions sheet says "Everything the answer leans on, in one place" but shows no pay…* and *The
+     working-year methodology row lists about fifteen caveats…*.
+   - **b9-7's four (Tier 1).** The two the card HOLDS on (above). The gate's pay row is a new gate row, so the four design
+     skills load first. The stale lines' measure needs the working-year check run at both figures over the engine's own
+     paths, survivor rows included, never the everyone-alive ledger. Then *Keeping a stale yes turns it into an entered
+     figure…* (it re-opens ruling 34) and *The spending help names only Medicare premiums to leave out…*.
+   - **U11's (b9-8).**
+     - ⏰ *A copy of the app built before the pay check opens a plan carrying W without a word…* (Tier 2). Its ruling is DUE
+       BEFORE HIS FIRST REAL SAVE: after that save, its option (a), a `schemaVersion` bump, is a persisted-shape one-way door.
+       Rule it, or put it to him, before that save.
+     - *Until the W step is answered, the walk's provisional date runs without the pay check…* (Tier 1, re-titled from the
+       earnings-test entry). Measure the strip just before and just after the W step on every date seed and `dateshort`,
+       then `/council` the remedy.
+     - Tier 0: *The 3.8% surtax on investment income is never charged…* (split out of the Tier 3 entry; already in D7 bucket
+       3), and the two re-tiers, *The working-year base subtracts every traditional-IRA contribution…* and *The 2026
+       Roth-only catch-up rides the entered account kind…*.
+     - Tier 1: *Health premiums taken from pay before tax are charged payroll tax and income tax as if they were pay…*.
+     - Tier 2: *A job outside Social Security is still charged Social Security tax…*, *The Social Security wage base and the
+       earnings test's exempt amounts are held flat in today's dollars…*, *Social Security checks held back because of pay
+       before the plan's first year are never credited back…* and *Two states outside the priced three look the same to the
+       working-year cost…*.
+   - **The tier rule: settle it once, in this pass.** U11 moved §219(g) and the Roth-only catch-up to Tier 0 because, under W,
+     their rosy half reaches each working year's cash, beside K1 and K2. The same reading would also lift four entries
+     whose rosy halves now reach the check:
+     - K6 *Pay is one steady figure all the way to the stop date…*;
+     - K7 *The tool asks only where you'll live in retirement, and taxes your working years as if you already lived there*;
+     - K8, the wage-base entry;
+     - the two-unpriced-states entry.
+
+     U11 amended K6's and K7's text and left their tiers alone. K5 rides the Tier 2 birth-month entry. The register also keeps
+     narrow rosy entries in Tier 2 (Philadelphia's School Income Tax, PA's inheritance tax). Rule it by the header's "worst
+     consequence, never by size". Either move all four up, or move §219(g) and the catch-up back down. Then write the rule
+     into the register header so it stops being re-derived.
+3. **Build 2, the surplus question**, follows. The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
+   year never checks the household's pay against its spending…*.
+**U11's record, durable:** the four workflow journals, under
+`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\d53f9156-ebb9-488d-afe3-12339f606f74\subagents\workflows\`:
+`wf_eefd24b7-629` (scout + six drafting lanes + the applier), `wf_c01e9698-67f` (the adversarial verify: 70 findings),
+`wf_e1352a25-e01` (the fix pass) and `wf_52bd1d61-b04` (the final verify of the fixes). `d7930466`'s message summarizes them.
 **U10's measurement, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-u10-tools\`
 — its `README.md` indexes the date-search probe (`probe.mts`, `--w` mints W at run time on a frozen HEAD copy), `compare.mjs` /
 `deepdiff.mjs`, the hand-derived year-0 check (`year0check.mts`) and the pre-59½ count (`precount.mts`); `head\` holds a
@@ -58,26 +87,37 @@ spouse-side Part B entry).
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-10-30 (b9-7, U10's Caddie card):** three walks (`temp/caddie/b9-7-u10`, `-fix`, `-final`; 33 fresh Opus seats
-plus six refuters, all through the Agent tool — no Workflow journal: this session carried no ultracode reminder). By exit code
-at this close: `pnpm typecheck` 0, `pnpm lint` 0, the full suite green (the one red was the citation arm, fixed by
-`pnpm doc:reanchor HEAD --apply`, 361 edits), `pnpm verify:doc-stats` 0, `pnpm build` 0, `pnpm verify:bundle` 0 at 287.7 KiB
-(+1.0, the card's strings), `pnpm verify:fit` 0 (152 arms; the `datecoststale` unlock arm now pins the composed sentence and the fallback dark). One planted mutant (the panel's `oopHelpKeyFor` call reverted) red,
-restored byte-identical.
-**LANDMINES from this session:** `e2e/` is outside `tsconfig.json`'s `include`, so `pnpm typecheck` never reads a spec — check
-one with a scratch config that extends the project's, sets `typeRoots` to the project's `node_modules/@types` and
-`node_modules`, and includes the spec by absolute path. `verify:doc-stats`'s citation arm freezes only "not `" and
-"-at-filing`" tokens, while `doc:reanchor` also freezes "(then" — so a historical "`x.ts:N` (then)" is frozen by the tool and
-still CHECKED by the gate, and reds the day an edit lands a blank line under N; write a historical number as prose ("line N
-of `x.ts`"). A sentence that says "can look worse/better" reads as "is": say a direction only where it is measured, or only
-on the side whose over-read errs safe (the card's withdrawn mirror). (b9-6's, kept:) `git status --porcelain` prints REPO-ROOT paths, so a `git commit -- <paths>` built from it
-must run from the repo root — from the project dir every pathspec misses and NOTHING commits (no harm, but read the sha before
-believing a commit happened). A fixture that used a date seed as "the W-free draft" carries W since U10: strip
-`workingYearCost` where an arm measures the W-free case (seven arms needed it — the floor-reach pairs in
-`stalenessExposure.test.ts` and `reentry.test.tsx`, the methodology pair in `assumptionPanel.test.tsx`, `datemixed`'s W-absent
-twin, `dip`'s floor premise — W brings `employerHsaByPerson` with it — and the stale-W witness).
+**SESSION 2026-10-30 (b9-8, the pay check's U11):** docs only, no code touched. By exit code at this close:
+`pnpm verify:doc-stats` 0 (its counts, the register header and every code citation match; the numbers live under that gate).
+`pnpm doc:reanchor HEAD --apply` moved 20 doc-to-doc line citations; two more were moved by hand (the bridge row, `docs/architecture.md` 119 → 120);
+the dated `docs/council-log.md` was restored as it was. CI run 41162167856 on `d7930466`: green on both jobs (verify, verify-rv-chart-text). Typecheck, lint,
+build, bundle and `verify:fit` were not re-run here: no code changed, and CI's full gate covers them.
+**LANDMINES from this session:**
+- `verify:doc-stats`'s citation arm checks only CODE targets: its `CITATION` regex has no `.md`, so a doc-to-doc citation such
+  as `docs/architecture.md:119` is never checked. One inserted line in a cited doc silently shifts every one of them.
+  `pnpm doc:reanchor HEAD` does move them, because its target filter includes `.md`. So:
+  - run it last on any commit that edits a cited doc;
+  - read its REVIEW list, where a citation inside a modified hunk is a hand call;
+  - it also rewrites the dated logs (`docs/council-log.md`), whose citations are frozen as they were. Restore that file
+    afterwards. `git restore --source=HEAD` is safe only while the log has no other edit.
+- A Workflow's task output file wraps the script's return value as `.result`:
+  `JSON.parse(text.slice(text.indexOf('{'))).result`.
 
 **DISTILL CANDIDATES (for the pay check's Phase C `/distill`):**
+- (b9-8) a plan's reachability sentence is a claim about every caller, and a later ruling can move the carriage rule under
+  it. KTD1 and KTD22's "only dev plants and engine tests reach a W-absent run" went false the day Phase B ruling 17 made
+  `buildDateInput` carry W only once it is answered: the walk's provisional strip runs W-absent before the W step. Three
+  drafting lanes found it independently from the code; the spec was never re-read. When a carriage rule changes, grep the
+  plan for "only … reach".
+- (b9-8) drafting from a spec inherits the spec's stale sentences. Six careful lanes copied R1's "Medicare excepted" and
+  KTD22's reachability into four docs. What caught them was an adversarial verify against the CODE: 70 findings, 35 of them
+  "wrong", and 0 rejected on re-check. The fix pass's own new sentences then carried 11 more. Budget draft → verify → fix →
+  verify-the-fix for any docs unit.
+- (b9-8) a plan's "file these new entries" list is a hypothesis about the register. One of seven was already filed (b9-5's
+  self-employment) and a second was half covered. The scout read entry BODIES, not only headings, before any lane filed.
+- (b9-8) a re-tier is a rule, not a pair of moves. Lifting §219(g) and the catch-up to Tier 0 for "a rosy half that now
+  reaches cash" left K6–K8's entries in Tier 2 under the same rule. It also made two "the other rosy keys sit in Tier 0"
+  sentences false, because K5 rides a Tier 2 entry. Apply a tier rule to the whole family, or write down why not.
 - (b9-7) a "can" sentence is read as "is": "this answer can look worse than it really is" was true of the mechanism (a higher
   W never improves the answer) and false of the household — on `datecoststale` neither figure makes a year short, the curves are
   identical, and two seats read it as "the real answer is better". A direction claim is a claim about THIS household: say it
@@ -849,6 +889,18 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
+- **From the b9-7 close (2026-10-30), migrated by b9-8:** `e2e/` is outside `tsconfig.json`'s `include`, so `pnpm typecheck` never reads a spec — check
+  one with a scratch config that extends the project's, sets `typeRoots` to the project's `node_modules/@types` and
+  `node_modules`, and includes the spec by absolute path. `verify:doc-stats`'s citation arm freezes only "not `" and
+  "-at-filing`" tokens, while `doc:reanchor` also freezes "(then" — so a historical "`x.ts:N` (then)" is frozen by the tool and
+  still CHECKED by the gate, and reds the day an edit lands a blank line under N; write a historical number as prose ("line N
+  of `x.ts`"). A sentence that says "can look worse/better" reads as "is": say a direction only where it is measured, or only
+  on the side whose over-read errs safe (the card's withdrawn mirror). (b9-6's, kept:) `git status --porcelain` prints REPO-ROOT paths, so a `git commit -- <paths>` built from it
+  must run from the repo root — from the project dir every pathspec misses and NOTHING commits (no harm, but read the sha before
+  believing a commit happened). A fixture that used a date seed as "the W-free draft" carries W since U10: strip
+  `workingYearCost` where an arm measures the W-free case (seven arms needed it — the floor-reach pairs in
+  `stalenessExposure.test.ts` and `reentry.test.tsx`, the methodology pair in `assumptionPanel.test.tsx`, `datemixed`'s W-absent
+  twin, `dip`'s floor premise — W brings `employerHsaByPerson` with it — and the stale-W witness).
 - **From the b9-4 close (2026-10-30), migrated by b9-5:** a test "retype" that fires `change` with the value focus already put
   in the box (`CurrencyField` fills it with the figure on focus) fires NO React change event — the arm read a real product bug
   that was not there; a retype passes through other text (`'700'` then `'7000'`). A tap on an UNCHECKED segmented control

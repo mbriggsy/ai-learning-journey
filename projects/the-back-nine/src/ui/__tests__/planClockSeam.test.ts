@@ -253,7 +253,7 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     // the `)` of `formatMoney(...)`, which is argument ONE, so arguments 2+ — exactly where a
     // raw offset or a re-typed year sum would be handed in — were unreachable by it. An
     // occurrence count over the same source is both simpler and stronger: the panel reads the
-    // raw offset EXACTLY once, at the producer call (`AssumptionPanel.tsx:334`), so any second
+    // raw offset EXACTLY once, at the producer call (`AssumptionPanel.tsx:358`), so any second
     // read — handed to the echo, or re-summed against the anchor — reds regardless of argument
     // position or nesting depth.
     expect(

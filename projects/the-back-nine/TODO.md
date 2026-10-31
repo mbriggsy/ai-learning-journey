@@ -451,7 +451,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `:742`, footer `:748` (2026-10-16 doc audit: these four are the 2026-08-03 numbering, never
      re-anchored — the live ones are the ⚑ 2026-09-04 re-anchor bullet's below). **It is NOT data-only** —
      `METHODOLOGY_DISCLOSURES` rows render *inside* section
-     a's single `<ul>` (`AssumptionPanel.tsx:696-728`), so an entry there lands in "On your behalf". A third
+     a's single `<ul>` (`AssumptionPanel.tsx:720-752`), so an entry there lands in "On your behalf". A third
      section is **~18 lines of new JSX** mirroring `:570-574`, + 1 heading and 2 line keys in `copy.ts`'s
      `assumption*` block (hedge/verdict-EXEMPT at `copy.ts:1471-1482`; avoid `copyGuard.ts:255`'s
      `/(tap|draw|pull) … hsa/`), + **no CSS change** (`.ap-section*`/`.ap-row*` are generic). **Fit is safe
@@ -474,14 +474,14 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      or make the panel section NIIT's canonical home and prune the other two — the repo's own
      one-honest-home-per-fact law (`healthSheetChrome.ts:677`) forbids a silent third.
      ⚑ **2026-09-04 re-anchor (drifted AGAIN, +62/+101 in a month) + four traps the build must clear.** The
-     panel is `src/intake/AssumptionPanel.tsx` — section a opens `:562` / closes `:730`, section b `:733` /
+     panel is `src/intake/AssumptionPanel.tsx` — section a opens `:586` / closes `:754`, section b `:757` /
      `:851`, footer `:857`, the disclosures map `:533-565`; the `assumption*` prefix law is
      `copy.ts:1471-1482` (keys `:1483-1727`); the panel fit arm is `vertical-fit.spec.ts:1734-1763`;
      `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:911-915` and
      `src/engine/taxOverlay.ts:2677-2680` (there is no `overlays/` dir). NIIT's two homes confirmed
      (`recommendationView.ts:101` unconditional; `copy.ts:1328-1329`) — the scope fork is self-resolving:
      HSA + LTC only. TRAP 1 — `Row` REQUIRES a `seat` from the CLOSED 22-member `AssumptionSeat` union
-     (`AssumptionPanel.tsx:139`, `assumptionRegistry.ts:41-65`): a leaves-out row is a hand-rolled
+     (`AssumptionPanel.tsx:141`, `assumptionRegistry.ts:41-65`): a leaves-out row is a hand-rolled
      `<li className="ap-row">` or a registry extension — "mirror the section" yields only the shell.
      TRAP 2 — a heading literally "What this leaves out" that names two items is ITSELF a completeness claim
      the constants falsify (`health.ts:72/:112/:120/:135/:319` declare four more OUT-but-disclosed facts) —
@@ -861,7 +861,7 @@ These are the mechanical ones that keep costing hours.*
     double-shifts every token it already moved (its dry run proposed `solverCodeVersion.ts:154 → :171` for a citation
     already at the right line). Move the later ones by hand from content, then run `content-check.mjs` (the re-anchor
     tools folder) — every DIFF it prints must be a construct this change edited on purpose. It also rewrote a HISTORICAL
-    example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1941`…" line) as if it were
+    example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1959`…" line) as if it were
     live: reverted by hand; read its WOULD list for examples before `--apply`.
   - **A dev seed carries no `chosenGoal`**, so `buildSolveRequest` returns `spine-unready` for it — a node-side solve
     probe passes `{ ...seed, chosenGoal }` (`b9-seed-probe\solve.mts`'s `seed:goal`). Single-threaded, `healthss` takes
@@ -880,7 +880,7 @@ These are the mechanical ones that keep costing hours.*
     `src/engine/reference/solver-cases/index.ts`), the ambiguous-basename class. Run `git grep -n "index\.ts:[0-9]"` and fix
     by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:441-444`,
     and pair-check's DOCHUNK section caught it. It also never moves a doc's citations INTO ITSELF, and neither tool flagged
-    it: two new register entries shifted `docs/backlog.md:1941`, `:2227`, `:2300` (cited from inside the register) by +36.
+    it: two new register entries shifted `docs/backlog.md:1959`, `:2245`, `:2318` (cited from inside the register) by +36.
     After any edit that adds lines to a doc, run `git grep -n "<doc>:[0-9]"` across the repo, the doc itself included, and
     compare HEAD vs tree content at each shifted number.
   - **The single-source gate in `constants.shape.test.ts` scans EVERY `src` file, tests included**; only `engine/constants/`
@@ -990,7 +990,7 @@ These are the mechanical ones that keep costing hours.*
 - **`pnpm verify:bundle` reads `dist/` WITHOUT rebuilding.** A stale `dist/` is a false green; this has
   bitten twice. Fresh `pnpm build` first, every time.
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:736-746`
-  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:57`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:900-902`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
+  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:59`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:900-902`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
   1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:2483-2485`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's

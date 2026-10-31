@@ -110,7 +110,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   `ScenarioDraft` by deliberate design (`src/ui/assumptionRegistry.ts:91`) — a nested `health.*`
   sub-field would dodge the compile gate (the assumptionRegistry.ts:88 landmine) — and is
   registered `{ kind: 'row-editable', seats: ['medicare-extras'] }` at
-  `src/ui/assumptionRegistry.ts:161`. The panel seat (`src/intake/AssumptionPanel.tsx:1011-1027`)
+  `src/ui/assumptionRegistry.ts:161`. The panel seat (`src/intake/AssumptionPanel.tsx:1035-1051`)
   re-hosts the SAME `MedicareExtrasFork` face over the same write shape, `onWrite` adapting to
   the host's commit seam — and passes `standingNote`, which the intake step does not: when the
   fork is UNANSWERED the panel shows the read-only line naming the typical the plan is funding

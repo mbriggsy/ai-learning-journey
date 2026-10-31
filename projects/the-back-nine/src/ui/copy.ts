@@ -1567,11 +1567,11 @@ export const copy = {
   //
   // ⚠️ THE TOGGLE SETS THE ENTRY UNIT TOO, AND THE OLD SENTENCE HID IT (fixed 2026-08-03).
   // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
-  // (`spendDisplayed`, AssumptionPanel.tsx:507-512), so the reader watches the number move while
+  // (`spendDisplayed`, AssumptionPanel.tsx:531-536), so the reader watches the number move while
   // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:770-780, the `entered * 12` arm at :777) then multiplies by 12
+  // commit (AssumptionPanel.tsx:794-804, the `entered * 12` arm at :801) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
-  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:416) hard-disarms
+  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:440) hard-disarms
   // `spend-period-unconfirmed` (sanity.ts:389-412, the disarm read at :400) on this surface, and
   // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:89) regardless — so the rule could not have
   // caught it even armed. The replacement must therefore say BOTH halves — the money is

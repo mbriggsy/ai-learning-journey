@@ -79,6 +79,7 @@ import {
 } from './intakeMap'
 import { MedicareExtrasFork, OopExceedsSpendNote, StateResidencePicker, writeWorkingYearInvestment } from './questions'
 import { WorkingCostQuestion, type WorkingCostWriteKind } from './WorkingCostQuestion'
+import { useGestureHold } from './gestureHold'
 import { WorkingYearLedgerPicture, WorkingYearLedgerUnknown } from './WorkingYearLedger'
 import { workingYearCostStaleness, workingYearQuote, workingYearStateTaxReading } from './workingYearQuote'
 import './assumptions.css'
@@ -135,10 +136,20 @@ export interface AssumptionPanelProps {
   readonly initialSeat?: 'working-year-cost'
 }
 
-/** One panel row, stamped with its registry seat — the R7 completeness walk reads these. */
-function Row({ seat, children }: { readonly seat: AssumptionSeat; readonly children: ReactNode }) {
+/** One panel row, stamped with its registry seat — the R7 completeness walk reads these. `rowRef` is for
+ *  a row that must see presses inside it (the W row's gesture hold); the row's own box, never a wrapper,
+ *  so the row's column rhythm is untouched. */
+function Row({
+  seat,
+  rowRef,
+  children,
+}: {
+  readonly seat: AssumptionSeat
+  readonly rowRef?: Ref<HTMLLIElement>
+  readonly children: ReactNode
+}) {
   return (
-    <li className="ap-row" data-assumption-seat={seat}>
+    <li className="ap-row" data-assumption-seat={seat} ref={rowRef}>
       {children}
     </li>
   )
@@ -189,7 +200,9 @@ function ArmedMethodologyLines({ m, draft }: { readonly m: MethodologyDisclosure
  *  (KTD21's face); ANSWERED — the money picture (h4 legends, under the panel's h3 sections), then
  *  the question to correct or re-confirm it; UNKNOWN — answered, but no picture can be drawn: the
  *  calm line, then the question. The question is the walk's own face (`WorkingCostQuestion`), so
- *  the two surfaces never disagree; here it never clears and never shows the walk's gate. */
+ *  the two surfaces never disagree; here it never clears and never shows the walk's gate. During a
+ *  gesture (a press in the row, or anywhere while focus is in it, until its click) the face and its
+ *  value line are chosen from the draft the press found, not the stored one (`gestureHold.ts`). */
 function WorkingCostRow({
   draft,
   aged,
@@ -213,20 +226,31 @@ function WorkingCostRow({
   readonly figureInvalid: boolean
   readonly figureErrors: ReactNode
 }) {
-  const w = draft.workingYearCost
-  const stale = useMemo(() => workingYearCostStaleness(draft) !== null, [draft])
   // ANNOUNCED ONCE, on the edge (KTD21): an edit in the open panel that stales W is named through
   // the sheet's own announcer — never `.ap-echo`, which re-speaks on every recompute. The previous
   // value starts at mount's, so opening onto an already-stale row, and the provisional and final
-  // re-renders of one edit, stay silent. Focus and scroll never move.
-  const wasStale = useRef(stale)
+  // re-renders of one edit, stay silent. Focus and scroll never move. Read off the LIVE draft: it
+  // names a change to the answer, which a held face (below) only draws later.
+  const liveStale = useMemo(() => workingYearCostStaleness(draft) !== null, [draft])
+  const wasStale = useRef(liveStale)
   useEffect(() => {
-    if (!wasStale.current && stale) announce(copy.assumptionWorkingCostStaleAnnounce)
-    wasStale.current = stale
-  }, [stale, announce])
+    if (!wasStale.current && liveStale) announce(copy.assumptionWorkingCostStaleAnnounce)
+    wasStale.current = liveStale
+  }, [liveStale, announce])
+  // THE ROW ABOVE THE QUESTION IS DRAWN FROM THE DRAFT THE PRESS SAW (the h2 cure, `gestureHold.ts`):
+  // the value line and the money picture sit above the question, and a press on its period control
+  // blurs a typed figure whose commit mounts or re-sizes the picture — on a tall screen that moved the
+  // control 842 px before the release, and the tap was lost. They stay as the press found them until the
+  // click has landed. The WHOLE draft is held here (any field's commit under the press would re-size the
+  // picture), which is safe only because nothing in it can be acted on: no control lives above the
+  // question. The question itself gets the live draft (its note holds only W, for its door's sake).
+  const rowRef = useRef<HTMLLIElement | null>(null)
+  const shown = useGestureHold(rowRef, draft)
+  const w = shown.workingYearCost
+  const stale = useMemo(() => workingYearCostStaleness(shown) !== null, [shown])
   const ledger = useMemo(
-    () => (w !== undefined && !stale ? workingYearLedgerForRun(draft) : null),
-    [draft, w, stale],
+    () => (w !== undefined && !stale ? workingYearLedgerForRun(shown) : null),
+    [shown, w, stale],
   )
   const figure = w === undefined ? undefined : formatMoney(workingYearCostFigure(w))
   const value =
@@ -236,19 +260,19 @@ function WorkingCostRow({
         ? slots.assumptionWorkingCostStale(figure)
         : w.kind === 'confirmed'
           ? // Fresh, so the current quote IS the one confirmed: its source names where the figure came from.
-            workingYearQuote(draft).source === 'budget'
+            workingYearQuote(shown).source === 'budget'
             ? slots.assumptionWorkingCostConfirmedBudget(figure)
             : slots.assumptionWorkingCostConfirmed(figure)
           : slots.assumptionWorkingCostEntered(figure)
   return (
-    <Row seat="working-year-cost">
+    <Row seat="working-year-cost" rowRef={rowRef}>
       <p className="ap-row__name" tabIndex={-1} ref={nameRef}>
         {copy.assumptionWorkingCostName}
       </p>
       <p className="ap-row__value">{value}</p>
-      {ledger === 'unknown' && <WorkingYearLedgerUnknown draft={draft} echoStrip />}
+      {ledger === 'unknown' && <WorkingYearLedgerUnknown draft={shown} echoStrip />}
       {ledger !== null && ledger !== 'unknown' && (
-        <WorkingYearLedgerPicture ledger={ledger} draft={draft} headingLevel={4} aged={aged} />
+        <WorkingYearLedgerPicture ledger={ledger} draft={shown} headingLevel={4} aged={aged} />
       )}
       <WorkingCostQuestion
         draft={draft}

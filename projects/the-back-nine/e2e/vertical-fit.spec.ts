@@ -1,5 +1,5 @@
 import { test, expect, type Page, type BrowserContext, type CDPSession } from '@playwright/test'
-import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, PHONE_DPR, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
+import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, PHONE_DPR, FINAL_TIER_MS, advanceIntakeTo, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
 // THE SHIPPED CATALOG, never re-typed here (the `e2e/caddie-walk.spec.ts:9` precedent). Every
 // string this spec injects or reads back is the one the app ships: a spec-local literal would pin a
 // reservation, a clause list or a heading against a fiction, and a re-word that overflowed the real
@@ -1842,7 +1842,7 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // other arm, then settle animations before measuring (the gotoSeedFinal discipline).
     await affirm.click()
     await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
-      timeout: 90_000,
+      timeout: FINAL_TIER_MS,
     })
     await page.evaluate(() => document.fonts.ready)
     await page.waitForFunction(() =>
@@ -1985,7 +1985,7 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
     // Affirm → the held recompute pair; wait the FINAL tier, then settle (the gotoSeedFinal discipline).
     await affirm.click()
     await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
-      timeout: 90_000,
+      timeout: FINAL_TIER_MS,
     })
     await page.evaluate(() => document.fonts.ready)
     await page.waitForFunction(() =>
@@ -2091,7 +2091,7 @@ for (const u of PAY_CHECK_UNLOCKS) {
       await expect(page.getByText(copy.stalenessWorkingYearCost), 'never the figure-less fallback').toHaveCount(0)
 
       await affirm.click()
-      await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: 90_000 })
+      await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
       await settleLayout(page)
       await page.evaluate(() => window.scrollTo(0, 0))
       await assertResolvedDate(page)
@@ -2141,7 +2141,7 @@ test.describe(`the aged date return (?vault=datestale) — one clock across hero
     await affirm.click()
 
     await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
-      timeout: 90_000,
+      timeout: FINAL_TIER_MS,
     })
     await page.evaluate(() => document.fonts.ready)
     await page.waitForFunction(() =>
@@ -2247,7 +2247,7 @@ test.describe(`the arrived date return (?vault=datearrived) — the aged x-axis 
     await affirm.click()
 
     await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
-      timeout: 90_000,
+      timeout: FINAL_TIER_MS,
     })
     await page.evaluate(() => document.fonts.ready)
     await page.waitForFunction(() =>
@@ -2388,7 +2388,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     await expect(page.locator('.reentry-notes p'), 'the rec plant ages no stamp — no clock may fire').toHaveCount(0)
     await affirm.click()
 
-    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: 90_000 })
+    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
     await settleLayout(page)
     await assertResolvedSpine(page)
 
@@ -2524,7 +2524,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       const affirm = page.getByRole('button', { name: /Still about right/ })
       await expect(affirm).toBeVisible({ timeout: 30_000 })
       await affirm.click()
-      await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: 90_000 })
+      await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
       await settleLayout(page)
       // NON-VACUITY (insight 029): every claim below is about a frame that carries the card, so a
       // frame that quietly stopped rendering one must fail here, never pass an empty walk.
@@ -2664,7 +2664,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     const affirm = page.getByRole('button', { name: /Still about right/ })
     await expect(affirm).toBeVisible({ timeout: 30_000 })
     await affirm.click()
-    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: 90_000 })
+    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
     await settleLayout(page)
 
     const rows = async () =>
@@ -2761,7 +2761,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     const affirm = page.getByRole('button', { name: /Still about right/ })
     await expect(affirm).toBeVisible({ timeout: 30_000 })
     await affirm.click()
-    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: 90_000 })
+    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
     await settleLayout(page)
     await assertResolvedSpine(page)
 
@@ -3141,6 +3141,238 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
         DATE_PICTURE_FIGURES,
       )
       expect(panelFigures.offenders, 'a panel money-picture figure is clipped').toEqual([])
+    })
+  })
+}
+
+// ── the W period tap under its own blur-commit, on a screen taller than his (the h2 cure) ────────
+// The register's Tier 0 "On a screen taller than his laptop's, a tap on "Each month" right after typing
+// the working-year figure can miss…", cured by `src/intake/gestureHold.ts`. The figure commits on blur,
+// and the press on "Each month" is what blurs it; the commit un-stales W, so the content above the
+// control changes between the press and the release (the walk's stale note unmounts; the panel's money
+// picture mounts above the question). Chromium's scroll anchoring moves the scroller back on every
+// screen of his (1536×791, 1536×960 full screen, 448×891 phone: 19 of 19 coordinate taps landed, b9-10's
+// `tapProbe2.mts`), so these arms run where it cannot: a 1536×1300 window (mouse) and a 1024×1366 touch
+// screen, which missed 4 of 4 before the hold — a monthly 7,000 left as $7,000 a YEAR, unasked.
+// A REAL coordinate tap (a press, 80 ms, the release — or a touch tap), never `.click()` / `check()`: those
+// re-resolve the target between the halves, which is the race itself. Each arm's non-vacuity floor is the
+// geometry the hold must survive, read before the tap — content ABOVE the change on screen, so the node
+// scroll anchoring picks sits above it and the control below it moves: the walk's whole stale note on
+// screen with the page above it; the panel's row value line (the picture mounts right under it) on
+// screen. The panel arms run 100 px taller than the probe's screens: there the question's whole face
+// sits between the value line and the control, and at 1300 / 1366 px the probe had 28 px of slack —
+// one more wrapped help line on another rasterizer (insight 118) would leave no reachable geometry.
+const TALL_MOUSE = { deviceScaleFactor: 1.5 } as const
+const TALL_TOUCH = { deviceScaleFactor: 2, isMobile: true, hasTouch: true } as const
+const TALL_TAP_ARMS = [
+  { host: 'walk', name: '1536×1300 window, mouse', touch: false, use: { viewport: { width: 1536, height: 1300 }, ...TALL_MOUSE } },
+  { host: 'walk', name: '1024×1366 touch screen', touch: true, use: { viewport: { width: 1024, height: 1366 }, ...TALL_TOUCH } },
+  { host: 'panel', name: '1536×1400 window, mouse', touch: false, use: { viewport: { width: 1536, height: 1400 }, ...TALL_MOUSE } },
+  { host: 'panel', name: '1024×1466 touch screen', touch: true, use: { viewport: { width: 1024, height: 1466 }, ...TALL_TOUCH } },
+] as const
+
+/** `datecoststale` with its W kept as an entered $84,000 a year in the panel, then staled on the reading
+ *  by a move to PA (an entered W never stales on the quote) — the probe's set-up, through the panel the
+ *  result's standing line opens. */
+async function staleEnteredWInPanel(page: Page) {
+  await gotoSeedFinal(page, 'datecoststale')
+  await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+  await row.getByRole('button', { name: slots.workingCostKeepYearly('84,000') }).click()
+  await expect(row.getByRole('note'), 'the kept figure is fresh').toHaveCount(0)
+  await dialog
+    .locator('[data-assumption-seat="retirement-state"]')
+    .getByRole('radio', { name: /Pennsylvania/ })
+    .first()
+    .evaluate((el) => (el as HTMLInputElement).click())
+  await expect(row.getByRole('note'), 'the move to PA stales the entered figure').toContainText(
+    slots.workingCostStaleStateEntered('84,000'),
+  )
+  return { dialog, row }
+}
+
+for (const { host, ...vp } of TALL_TAP_ARMS) {
+  test.describe(`the W period tap right after typing (${host}, ${vp.name})`, () => {
+    test.use(vp.use)
+
+    test('"Each month" tapped by coordinate lands: the note above it stands until the click, and 7,000 is a month', async ({ page }) => {
+      const { dialog } = await staleEnteredWInPanel(page)
+      if (host === 'walk') {
+        await dialog.getByRole('button', { name: copy.assumptionRewalkCta }).click()
+        await advanceIntakeTo(page, copy.qWorkingCostHeading, `${host} ${vp.name}`)
+      }
+      const face = host === 'walk' ? page.locator('.intake-shell .working-cost') : dialog.locator('[data-assumption-seat="working-year-cost"] .working-cost')
+      await expect(face.getByRole('note')).toContainText(slots.workingCostStaleStateEntered('84,000'))
+      const month = face.getByRole('radio', { name: copy.periodMonth })
+      await expect(month, 'the held figure’s own unit, a year, is the one checked').not.toBeChecked()
+      const input = face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
+      await input.scrollIntoViewIfNeeded()
+      await input.click()
+      await page.keyboard.press('Control+A')
+      await page.keyboard.type('7000')
+      // The low geometry (the probe's): scroll, keeping the figure's focus, until the label's bottom sits
+      // `margin` px above the scroller's visible bottom — the most content above it on screen — at the
+      // smallest margin whose centre point still hits the label. Then read the floor.
+      const label = face.locator('label.segment').filter({ hasText: copy.periodMonth })
+      let geometry: {
+        readonly hitsLabel: boolean
+        readonly scrollTop: number
+        readonly docScroll: boolean
+        readonly noteHeight: number
+        readonly noteTopPx: number | null
+        readonly noteBottomGapPx: number | null
+        readonly rowValueVisiblePx: number | null
+      } | null = null
+      for (const margin of [16, 72, 128, 184, 240]) {
+        geometry = await label.evaluate((el, m) => {
+          let sc: Element | null = el.parentElement
+          while (sc !== null && !(sc.scrollHeight > sc.clientHeight && /auto|scroll/.test(getComputedStyle(sc).overflowY))) sc = sc.parentElement
+          const scroller = sc ?? document.scrollingElement!
+          const visTop = sc === null ? 0 : sc.getBoundingClientRect().top
+          const visBottom = sc === null ? window.innerHeight : sc.getBoundingClientRect().bottom
+          scroller.scrollTop += el.getBoundingClientRect().bottom - (visBottom - m)
+          const r = el.getBoundingClientRect()
+          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+          const note = el.closest('.working-cost')?.querySelector('[role="note"]') ?? null
+          const rowValue = el.closest('[data-assumption-seat]')?.querySelector('.ap-row__value') ?? null
+          const rv = rowValue === null ? null : rowValue.getBoundingClientRect()
+          const nr = note === null ? null : note.getBoundingClientRect()
+          return {
+            hitsLabel: hit !== null && el.contains(hit),
+            scrollTop: Math.round(scroller.scrollTop),
+            docScroll: sc === null,
+            noteHeight: nr === null ? 0 : Math.round(nr.height),
+            // The note's top below the visible top (content above it on screen), and its bottom above
+            // the visible bottom — negative on either when it is cut off.
+            noteTopPx: nr === null ? null : Math.round(nr.top - visTop),
+            noteBottomGapPx: nr === null ? null : Math.round(visBottom - nr.bottom),
+            rowValueVisiblePx: rv === null ? null : Math.round(Math.min(rv.bottom, visBottom) - Math.max(rv.top, visTop)),
+          }
+        }, margin)
+        if (geometry.hitsLabel) break
+      }
+      expect(geometry?.hitsLabel, `${host}: no margin puts the tap point on "${copy.periodMonth}" (${JSON.stringify(geometry)})`).toBe(true)
+      // THE FLOOR — the geometry scroll anchoring cannot cure, or the arm proves nothing about the hold.
+      if (host === 'walk') {
+        expect(geometry!.docScroll, 'the walk scrolls the document').toBe(true)
+        expect(geometry!.noteHeight, 'the stale note renders above the figure').toBeGreaterThan(0)
+        // The whole note on screen with the page above it: the anchor is picked above the note, so its
+        // unmount moves everything under it (b9-10's misses: the label moved the full note height at a
+        // scroll of 33 px and 0). A note cut off at the top would hand anchoring a node below the change.
+        expect(geometry!.noteTopPx ?? -1, `walk: the note’s top is cut off (${JSON.stringify(geometry)})`).toBeGreaterThan(0)
+        expect(geometry!.noteBottomGapPx ?? -1, `walk: the note’s bottom is off screen (${JSON.stringify(geometry)})`).toBeGreaterThan(0)
+      } else {
+        expect(geometry!.rowValueVisiblePx ?? 0, `panel: the W row’s value line is off screen (${JSON.stringify(geometry)}) — anchoring would hold the question`).toBeGreaterThan(0)
+      }
+      await page.waitForTimeout(300)
+      await expect(input, 'the figure still has focus — the press is what blurs it').toBeFocused()
+      const box = await label.boundingBox()
+      expect(box).not.toBeNull()
+      const x = box!.x + box!.width / 2
+      const y = box!.y + box!.height / 2
+      // The hit-test again, at the point the tap will use (insight 119: what the input path hits).
+      const onLabel = await label.evaluate((el, [px, py]) => {
+        const hit = document.elementFromPoint(px, py)
+        return hit !== null && el.contains(hit)
+      }, [x, y] as const)
+      expect(onLabel, `${host}: the tap point is not on "${copy.periodMonth}"`).toBe(true)
+      if (vp.touch) {
+        await page.touchscreen.tap(x, y)
+      } else {
+        await page.mouse.move(x, y)
+        await page.mouse.down()
+        await page.waitForTimeout(80) // a human press lasts tens of milliseconds
+        await page.mouse.up()
+      }
+      console.log(`[h2 tap] ${host} ${vp.name}: ${JSON.stringify(geometry)}`)
+      await expect(month, `${host}: the tap on "${copy.periodMonth}" was lost`).toBeChecked()
+      await expect(face.getByRole('note'), 'the commit landed and the hold let go').toHaveCount(0)
+      await expect(input).toHaveValue('7,000')
+      if (host === 'panel') {
+        await expect(dialog.locator('[data-assumption-seat="working-year-cost"] .ap-row__value')).toHaveText(
+          slots.assumptionWorkingCostEntered('84,000'),
+        )
+      }
+    })
+  })
+}
+
+// The same gesture on the note's OWN door, on his own two kinds of screen: type a figure, then tap "Keep
+// $84,000 a year". The press blurs the figure and its commit un-stales W, so before the hold the note —
+// and the door with it — unmounted between the press and the release on EVERY screen (scroll anchoring
+// cannot keep a control that is gone): 4 of 4 lost on his 1536×791 window and his 448×891 phone, walk
+// and panel (b9-1, `b9-h2-cure\tapProbe3.mts`, `before-keep.jsonl`), leaving $7,000 a year, the note gone
+// as a keep would leave it, and focus on the page. Held, the door stays under the release, and it keeps
+// the figure it NAMES. These two arms are also the only REAL-BROWSER gate that the hold lets go AFTER the
+// app's own click handlers (a capture-phase release detaches the held door before React dispatches its
+// click, which jsdom's synchronous dispatch cannot show — the unit file pins the phase structurally), and
+// K-panel is the panel row's hold's only gate at his own laptop's size (mutant-measured, b9-1). The mouse
+// tall arms cannot red a release on pointerup (Chromium hit-tests a mouse release once, so pointerup,
+// mouseup and click share a target); the touch arms and these two can, and do.
+const KEEP_TAP_ARMS = [
+  { host: 'panel', name: `${REAL.width}×${REAL.height}, mouse`, touch: false, use: { viewport: REAL, deviceScaleFactor: REAL_DPR } },
+  {
+    host: 'walk',
+    name: `phone ${PHONE.width}×${PHONE.height}, touch`,
+    touch: true,
+    use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true },
+  },
+] as const
+
+for (const arm of KEEP_TAP_ARMS) {
+  test.describe(`the W note’s Keep door tapped right after typing (${arm.host}, ${arm.name})`, () => {
+    test.use(arm.use)
+
+    test('"Keep $84,000 a year" tapped by coordinate keeps $84,000 — the figure it names — and focus lands on the answer', async ({ page }) => {
+      const { dialog } = await staleEnteredWInPanel(page)
+      if (arm.host === 'walk') {
+        await dialog.getByRole('button', { name: copy.assumptionRewalkCta }).click()
+        await advanceIntakeTo(page, copy.qWorkingCostHeading, `keep ${arm.name}`)
+      }
+      const face =
+        arm.host === 'walk' ? page.locator('.intake-shell .working-cost') : dialog.locator('[data-assumption-seat="working-year-cost"] .working-cost')
+      const input = face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
+      await input.scrollIntoViewIfNeeded()
+      await input.click()
+      await page.keyboard.press('Control+A')
+      await page.keyboard.type('7000')
+      const door = face.getByRole('button', { name: slots.workingCostKeepYearly('84,000') })
+      await door.scrollIntoViewIfNeeded()
+      await page.waitForTimeout(300)
+      await expect(input, 'the figure still has focus — the press is what blurs it').toBeFocused()
+      const box = await door.boundingBox()
+      expect(box).not.toBeNull()
+      const x = box!.x + box!.width / 2
+      const y = box!.y + box!.height / 2
+      // The floor: the tap point is ON the door (insight 119: a centre point, never an edge).
+      const onDoor = await door.evaluate((el, [px, py]) => {
+        const hit = document.elementFromPoint(px, py)
+        return hit !== null && el.contains(hit)
+      }, [x, y] as const)
+      expect(onDoor, 'the tap point does not hit the Keep door').toBe(true)
+      if (arm.touch) {
+        await page.touchscreen.tap(x, y)
+      } else {
+        await page.mouse.move(x, y)
+        await page.mouse.down()
+        await page.waitForTimeout(80)
+        await page.mouse.up()
+      }
+      await expect(face.getByRole('note'), 'the keep landed and the hold let go').toHaveCount(0)
+      await expect(input, `${arm.host}: the door kept the typed digits, not the figure it names`).toHaveValue('84,000')
+      await expect(face.getByRole('radio', { name: copy.periodYear })).toBeChecked()
+      const focused = await page.evaluate(() => {
+        const a = document.activeElement
+        return a instanceof HTMLInputElement && a.type === 'radio' && a.checked
+      })
+      expect(focused, 'focus never falls to the page: it lands on the answer that now stands').toBe(true)
+      if (arm.host === 'panel') {
+        await expect(dialog.locator('[data-assumption-seat="working-year-cost"] .ap-row__value')).toHaveText(
+          slots.assumptionWorkingCostEntered('84,000'),
+        )
+      }
     })
   })
 }

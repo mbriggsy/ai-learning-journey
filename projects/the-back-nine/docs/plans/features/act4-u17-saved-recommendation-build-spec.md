@@ -146,7 +146,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
 
 - **READ:** `rothPlanEcho` no longer says *"starting in about N years"*; it names the year, and carries a
   `passed` flag so the sentence's tense matches. Both render sites re-pointed in the SAME commit
-  (`AssumptionPanel.tsx:671`, `RothLever.tsx:313`) — insight 086: splitting a copy key orphans every
+  (`AssumptionPanel.tsx:695`, `RothLever.tsx:313`) — insight 086: splitting a copy key orphans every
   renderer not re-pointed with it.
 - **WRITE:** the `RothLever` input, once labelled *"Starting how many years from now"* — wall-time words
   over a plan-time value — takes the calendar year, and **refuses a past start** aloud. **The refusal IS
@@ -158,7 +158,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
   start seeds the WALL year (build + clock), so an aged vault never pre-fills the exact start the write
   side refuses.
 - **"Suppress when unanchored" was satisfied STRUCTURALLY, not by a dead arm.** `savedAnchor` is REQUIRED
-  on both render sites (`BandPlanClockAnchor`, `AssumptionPanel.tsx:114`) and `startCalendarYear` is a
+  on both render sites (`BandPlanClockAnchor`, `AssumptionPanel.tsx:115`) and `startCalendarYear` is a
   required `ScenarioDraft` field, so the unanchored state is unrepresentable — no suppression code exists
   to rot untested. The how-close-line precedent still governs anywhere a value genuinely can go missing.
 - **The slot parameter `startYearsFromNow` is gone**; it was not years-from-now.

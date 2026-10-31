@@ -152,6 +152,16 @@ export async function rewalkSeedTo(
   })
   await door.click()
   await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
+  await advanceIntakeTo(page, heading, `?seed=${seed}`)
+}
+
+/**
+ * Advance the re-walk the page has just opened (the panel's `assumptionRewalkCta`) to the step headed
+ * `heading`, and settle layout. Advances are IN-PAGE clicks on the step's primary button (no Playwright
+ * auto-scroll), and a step that will not advance fails loud. `who` names the route in the errors. The
+ * second half of `rewalkSeedTo`, for a caller that changed the draft in the panel before re-walking.
+ */
+export async function advanceIntakeTo(page: Page, heading: string, who: string): Promise<void> {
   await expect(page.locator('.intake-shell')).toBeVisible({ timeout: 30_000 })
   for (let taken = 0; taken < 30; taken += 1) {
     const now = await page.locator('.step-heading').textContent()
@@ -162,8 +172,8 @@ export async function rewalkSeedTo(
     await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
     await page.waitForTimeout(350)
     if ((await page.locator('.step-heading').textContent()) === now) {
-      throw new Error(`?seed=${seed}: Continue did not advance past "${now ?? '?'}" on the way to "${heading}"`)
+      throw new Error(`${who}: Continue did not advance past "${now ?? '?'}" on the way to "${heading}"`)
     }
   }
-  throw new Error(`?seed=${seed}: never reached the step headed "${heading}"`)
+  throw new Error(`${who}: never reached the step headed "${heading}"`)
 }

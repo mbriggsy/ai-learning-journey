@@ -1,9 +1,10 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { copy, slots, type CopyKey } from '@ui/copy'
 import type { SpendEntryPeriod, WorkingYearStateTaxReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CurrencyField, SegmentedControl, formatMoney } from './fields'
 import { threeThenMore } from './AnswerStrip'
+import { useGestureHold } from './gestureHold'
 import { workingYearCostFigure } from './intakeMap'
 import { WORKING_COST_ANSWER_FIELD, WORKING_COST_FIELD } from './sanity'
 import {
@@ -35,6 +36,11 @@ import {
  * yes / different-figure fork (no option checked on an absent or stale `confirmed`
  * answer); the figure with its period control, reserved in the same slot from the moment the figure
  * option opens (untapped period: month, on every household); the W-below-M note.
+ *
+ * The stale note is the one part of the face drawn from the W a PRESS found (`gestureHold.ts`, the h2
+ * cure): the press that blurs a typed figure commits it, and that must not unmount the note — moving
+ * every control below it, or taking its own Keep door away — before the release. The door keeps the
+ * figure it names, and answers its unit.
  *
  * What the two hosts do differently is only WHERE a write lands (`host`):
  *  · the walk clears the draft's W when "a different figure" is chosen over a held `confirmed`
@@ -119,6 +125,14 @@ const STATE_HELP: Readonly<Record<WorkingYearStateTaxReading, CopyKey>> = {
 
 /** The figure's own text input — the period radios share its box. */
 const isFigureInput = (t: EventTarget): boolean => t instanceof HTMLInputElement && t.type === 'text'
+
+/** `d` with `w` as its W — `d` itself when it already holds it (so a memo on the result is stable). */
+function withWorkingYearCost(d: ScenarioDraft, w: ScenarioDraft['workingYearCost']): ScenarioDraft {
+  if (d.workingYearCost === w) return d
+  if (w !== undefined) return { ...d, workingYearCost: w }
+  const { workingYearCost: _held, ...rest } = d
+  return rest
+}
 
 function quoteLine(quote: WorkingYearQuote): string {
   const amount = formatMoney(quote.annualReal)
@@ -216,22 +230,37 @@ export function WorkingCostQuestion({
         ? 'yes'
         : undefined
 
+  // THE NOTE IS DRAWN FROM THE W THE PRESS SAW (the h2 cure, `gestureHold.ts`). A press that blurs a typed
+  // figure commits it, and that un-stales W: were the note to unmount then, everything under it would
+  // move up before the release, and the tap would land on something else ("Each month" stays unset, a
+  // monthly figure runs 12× low; the note's own Keep door is simply gone). So the note — its words and
+  // its door — keeps the press's W until the click has landed. ONLY W is held: the quote and the reading
+  // stay live, so a commit from another field under the same press (the panel's spending row, blurred by
+  // a tap on the door) re-gates the door at once — a held door must never keep a figure ruling 34 has
+  // just withheld. Everything else on the face reads the live draft; the commit lands at the blur.
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const heldW = useGestureHold(rootRef, draft.workingYearCost)
+  const noteDraft = useMemo(() => withWorkingYearCost(draft, heldW), [draft, heldW])
+  const noteW = noteDraft.workingYearCost
+  const noteText = workingYearCostStaleText(noteDraft)
+  const noteShown = noteW !== undefined && noteText !== null
+
   // FOCUS NEVER FALLS TO THE PAGE. A "keep" tap clears the stale note and the button inside it
   // unmounts under the focus; land it on the answer that now stands — the checked radio (the fork's,
   // or the period's on a $0 quote). A radio, never the text input: focusing the input would pop the
   // phone keyboard over a question already answered. Keyed to the keep itself: an edit elsewhere that
   // un-stales W (the panel's spending row, retyped back) must never pull focus and scroll down here.
-  const rootRef = useRef<HTMLDivElement | null>(null)
-  const stale = staleness !== null
-  const wasStale = useRef(stale)
+  // Keyed to the note ON SCREEN, never the live staleness: a held note outlives the stale answer, so
+  // its door unmounts at the hold's release — after the keep has landed, never with it.
+  const wasShown = useRef(noteShown)
   useEffect(() => {
     const lostFocus = document.activeElement === null || document.activeElement === document.body
-    if (wasStale.current && !stale && keepTapped.current && lostFocus) {
+    if (wasShown.current && !noteShown && keepTapped.current && lostFocus) {
       rootRef.current?.querySelector<HTMLInputElement>('input[type="radio"]:checked')?.focus()
     }
     keepTapped.current = false
-    wasStale.current = stale
-  }, [stale])
+    wasShown.current = noteShown
+  }, [noteShown])
 
   const left = leftOutLine(quote)
   const typed = w?.kind === 'entered' ? (w.entryPeriod === 'month' ? w.amountReal / 12 : w.amountReal) : undefined
@@ -240,18 +269,19 @@ export function WorkingCostQuestion({
   // "answer it above" under a fork already answered. The figure shows exactly then.
   const gateOnFigure = showFigure
   const figureField = gateOnFigure && answerInvalid && !figureInvalid ? WORKING_COST_ANSWER_FIELD : WORKING_COST_FIELD
-  const forkDescribedBy = [stale ? staleId : null, quoteId, left !== null ? leftId : null]
+  const forkDescribedBy = [noteShown ? staleId : null, quoteId, left !== null ? leftId : null]
     .filter((s): s is string => s !== null)
     .join(' ')
   const medical = draft.health.oopMedicalAnnual
   // The stale note's Keep door (rulings 21, 34): an `entered` figure always; a held yes only where its
   // figure is not below today's quote (`heldYesBelowQuote`, the one home the stale sentence's lean
-  // reads too) — which includes where no quote is left to answer instead.
-  const keepable = w !== undefined && !heldYesBelowQuote(draft)
+  // reads too) — which includes where no quote is left to answer instead. Read off the note's own
+  // draft, like everything the note draws.
+  const keepable = noteW !== undefined && !heldYesBelowQuote(noteDraft)
 
   return (
     <div className="working-cost" ref={rootRef}>
-      {w !== undefined && staleness !== null && (
+      {noteW !== undefined && noteText !== null && (
         <div className="working-cost__stale" role="note">
           <p className="working-cost__stale-text">
             <svg className="not-saved-icon" aria-hidden="true" viewBox="0 0 16 16" width="16" height="16">
@@ -259,7 +289,7 @@ export function WorkingCostQuestion({
               <path d="M8 7v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               <circle cx="8" cy="4.5" r="0.9" fill="currentColor" />
             </svg>
-            <span id={staleId}>{workingYearCostStaleText(draft)}</span>
+            <span id={staleId}>{noteText}</span>
           </p>
           {/* Both kinds (rulings 21 and 34): without the door, keeping a figure that still holds
               means picking "a different figure" — which clears a `confirmed` answer, unmounting this
@@ -276,19 +306,24 @@ export function WorkingCostQuestion({
                 // A figure the panel refused a moment ago is not the answer that now stands: the input
                 // must show the kept figure, never the refused digits beside a run that uses the keep.
                 setHeldFigure(undefined)
-                if (w.kind === 'confirmed') {
-                  // The door names its unit ("a year"), so keeping a yes answers the period too: the
-                  // period rule must never ask it back of a figure the tool itself quoted yearly.
-                  onPeriodTap()
-                  onWrite(writeKeptWorkingYearCost, 'tapped-answer')
-                } else {
-                  onWrite(writeKeptWorkingYearCost, 'answer')
-                }
+                // The door keeps the figure it NAMES — the household's last explicit act. Held from its
+                // own press, it can outlive the answer it was drawn for: a figure typed (or cleared) and
+                // then left by this very press has committed in between, and keeping THAT would turn
+                // "Keep $84,000 a year" into $7,000 (measured lost on his laptop and phone before the
+                // hold, b9-1). It re-stamps under the reading the draft holds now, as every keep does.
+                const named = noteW
+                const keep = (d: ScenarioDraft) => writeKeptWorkingYearCost({ ...d, workingYearCost: named })
+                // The door names its unit ("a year", "a month"), so a keep answers the period too, for
+                // both kinds: the period rule must never ask it back of a figure the door just named —
+                // not even where the press's own blur cleared the figure and dropped the unit's disarm
+                // (ruling 38) a moment before the click.
+                onPeriodTap()
+                onWrite(keep, 'tapped-answer')
               }}
             >
-              {w.kind === 'entered' && w.entryPeriod === 'month'
-                ? slots.workingCostKeepMonthly(formatMoney(w.amountReal / 12))
-                : slots.workingCostKeepYearly(formatMoney(workingYearCostFigure(w)))}
+              {noteW.kind === 'entered' && noteW.entryPeriod === 'month'
+                ? slots.workingCostKeepMonthly(formatMoney(noteW.amountReal / 12))
+                : slots.workingCostKeepYearly(formatMoney(workingYearCostFigure(noteW)))}
             </button>
           )}
         </div>
@@ -331,7 +366,7 @@ export function WorkingCostQuestion({
                 // A re-tap on the held figure is an explicit answer (the segmented control's own
                 // doctrine): keep it as it stands, under the current reading — and show it, not any
                 // digits the panel refused a moment ago.
-                keepTapped.current = stale
+                keepTapped.current = noteShown
                 setHeldFigure(undefined)
                 onWrite(writeKeptWorkingYearCost, 'answer')
               } else {

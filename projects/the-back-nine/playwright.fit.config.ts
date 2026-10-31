@@ -31,12 +31,14 @@ export default defineConfig({
   testMatch: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts', '**/intake-fold.spec.ts'],
   fullyParallel: true,
   // The date seeds are CPU-BOUND: a 16k-path final across two arms takes ~60 s alone, and the two
-  // MEASURING specs render one's final 39 times (re-counted 2026-10-30 against the current specs:
+  // MEASURING specs render one's final 47 times (re-counted 2026-10-31 against the current specs:
   // chart-text 25 — datemixed + datesplit + atceiling on each of its six arms, four standalone date
-  // renders, the two ?vault=datestale arms and the reduced-motion reload — and vertical-fit 14: dip ·
+  // renders, the two ?vault=datestale arms and the reduced-motion reload — and vertical-fit 22: dip ·
   // date65 · datenc, dip on the phone and at both 24 px widths, the ?vault=datestale and
-  // ?vault=datearrived returns, and the pay check's datecoststale ×4 and dateshort ×2; its
-  // computing-frame probe loads dip but never waits for the final). The THIRD spec on this harness adds
+  // ?vault=datearrived returns, the pay check's datecoststale ×4 and dateshort ×2, its two unlock
+  // lines (?vault=wyclock and ?vault=datecoststale, which the 2026-10-30 count missed), and the h2
+  // cure's six datecoststale gesture arms; its computing-frame probe loads dip but never waits for the
+  // final). The THIRD spec on this harness adds
   // NONE: intake-fold drives `?seed=datesolo`, the refusal witness whose `buildDateInput` returns null,
   // so it renders the date ROUTE without ever running a solve — and so does vertical-fit's own
   // datesolo pay-check arm.

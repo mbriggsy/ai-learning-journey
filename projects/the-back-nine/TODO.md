@@ -50,6 +50,10 @@ remove each link alone before deleting any folder there). Rulings 38–42 are in
    edit: they read the old builds; then U1–U3 and U5 in ONE commit, the floor test in a second); the whole-file ultramode review;
    `/distill`. The register entry's RULED bullet still says option (a) "closes this half too": U5 corrects it (shape-keyed).
 2. **Rank the registers against the D7 queue** (his order; never re-ordered without him) — b9-8's list, unchanged, plus the review's:
+   - **b9-2 started this pass, notes durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\ranking-pass-notes.md`. The tier rule needs a register-wide
+     sweep to be true of the body (the body was never tiered by direction): ~26 entries with a recorded rosy or either-way
+     reading sit below Tier 0, two gloomy-only ones sit in it, and the measured step-card room (~$148,200 rosier, "the cardinal
+     direction") is in Tier 1. Line numbers there are as of 24289e8a; re-derive them. Its D7 slotting draft places every named entry.
    - **b9-5's four.** Tier 0 *A self-employed worker's Social Security and Medicare tax is charged at an employee's half…*
      (a D7 ask; measure first). Tier 1: *The money picture's later years name a change without its dollars or its
      direction…* (b9-9 added two halves: a year the 65+ deduction zeroes names nothing; a state rate CUT can read as a short year's
@@ -112,14 +116,10 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-10-31 (b9-1, the h2 cure):** by exit code on the committed tree: `pnpm typecheck` 0; `pnpm lint` 0 (and the
-touched e2e files type-checked through a scratch tsconfig — `tsc` never reads `e2e/`); `pnpm verify:doc-stats` 0; `pnpm build` 0;
-`pnpm verify:bundle` 0 (288.5 KiB); `pnpm verify:fit` 0 (158 of 158, 9.3 min — its first run red ONE arm, `?vault=datearrived`'s
-re-typed 90 s final wait, under the six new arms' added load: the nine vault waits now read `FINAL_TIER_MS`); `pnpm verify:csp` 0
-(16 of 16); the full suite 4 red of 4770 in a
-542 s run (three 120/180 s timeouts — `budgetTwoTrack`, both `solvePayloadIdentity` files — and `SaveFlow`'s heading wait), the
-four files re-run alone 0 (31 of 31), the same files that timed out at b9-10's close. `verify:fit:rv` not run (no RecommendationViz
-change). Port 5199 (the probe's server) stopped and checked free.
+**SESSION 2026-10-31 (b9-2, the schema-v4 plan):** no `src` change this session (docs and the plan only). By exit code at `1d1a0adc`:
+`pnpm typecheck` 0; `pnpm lint` 0; `pnpm build` 0; `pnpm verify:bundle` 0 (288.5 KiB); `pnpm verify:doc-stats` 0. Not run: the
+full suite, `verify:fit`, `verify:csp` (no code moved since b9-1 ran them at `68aba728`: full suite 4 red of 4770, the four
+load-timeout files 31 of 31 alone; fit 158 of 158; csp 16 of 16). CI on the three docs commits not read.
 **DISTILL CANDIDATES (for the next `/distill`):**
 - (b9-10) a probe that scrolls its target into view tests the geometry the browser already cures. Chromium's scroll anchoring moved
   the scroller by exactly the shift on every run where the anchor node sat below the change and the scroller had room to move
@@ -141,6 +141,11 @@ change). Port 5199 (the probe's server) stopped and checked free.
 - (b9-1) a scripted `PointerEvent` (jsdom's, `fireEvent`'s) defaults `isPrimary` to false: an `isPrimary` guard silently
   disabled the first hook in every unit test. And a spy restored after a failing `expect` leaks into the next test: under the
   capture mutant it moved another test's red line — restore in `afterEach` (`vi.restoreAllMocks()`).
+- (b9-2, the schema-v4 plan; distill after the build proves them) a version ladder's relabel step names its LITERAL successor, never
+  the current constant: a step that jumps to "current" carries an old plan past whatever step a later bump adds. A revert guard
+  must live OUTSIDE the commit it guards (a git revert takes a same-commit guard with it). Once the codec relabels, every test of
+  the disk version through the codec is vacuous: read the raw bytes. And a version-N fixture made by relabeling the current
+  fixture moves with the shared checks; freeze the old build's real output instead (DND 012).
 **LANDMINES from this session:**
 - **`pnpm doc:reanchor HEAD --apply` rewrote the FROZEN `e2e/held/fit-24px-measurements.md` again** (the Tier 4 entry's known
   shape): restored with `git show HEAD:projects/the-back-nine/e2e/held/fit-24px-measurements.md > …`. Its one REVIEW line (a
@@ -148,6 +153,9 @@ change). Port 5199 (the probe's server) stopped and checked free.
 - **The full suite times out the same three heavy files under load** (`budgetTwoTrack`, `solvePayloadIdentity` ×2, plus a
   `SaveFlow` wait): twice this session, beside nothing heavier than idle review agents. Re-run the red files alone before
   diagnosing; never call it a regression on the full run's word.
+- **A Windows path written through a shell-inlined script loses its backslashes** (`\b9` became a backspace and `9`; `\U`,
+  `\b` vanished): `594e4ae9` committed a mangled path, fixed by `a64c942f`. Write any path-bearing script with the Write tool
+  and `String.raw`, and never end a `String.raw` with a backslash before its closing backtick (it escapes the backtick).
 
 **THE A7 REVIEW (durable, 2026-10-29):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a7-review\`
 — `brief.md` (the review's contract brief, a template for Phase C's), every lens's repros in its own folder, `a7-tools\` (A7's

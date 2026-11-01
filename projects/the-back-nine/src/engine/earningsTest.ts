@@ -76,7 +76,8 @@ import {
   spousalRate,
 } from '@engine/constants'
 import { adjustOwnBenefitAnnual, householdBenefits, type BenefitCredits } from '@engine/socialSecurityBenefit'
-import { ENGINE_MAX_DOLLAR, bothAliveYearBenefit, survivorYearBenefit, type PersonOffsets, type SurvivorYearCredits } from '@engine/simulate'
+import { bothAliveYearBenefit, survivorYearBenefit, type PersonOffsets, type SurvivorYearCredits } from '@engine/benefitYear'
+import { ENGINE_MAX_DOLLAR } from '@engine/engineDomain'
 import type { PersonInputs } from '@shared/model'
 
 const MONTHS = 12

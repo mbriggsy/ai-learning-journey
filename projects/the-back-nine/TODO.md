@@ -36,12 +36,14 @@ queue below (its order unmoved). Next, in order:
    sweep, the cash stream with R8 applied by hand, and `PREDICTIONS.md`, all in `b9-build2-surplus\` (its `README.md` indexes
    them). Every check is 0 over 17.7M path-years; HEAD depletes no path inside its working years, so the tree must compose
    exactly HEAD's path-years. An Opus verifier briefed to refute re-derived the record and found ten things, all fixed before
-   use (`PREDICTIONS.md` §E; the big one: `datecoststale`'s W is stale, so no figure is ever carried for it). **Next: U2, the
-   import-cycle rider (its `/brief` is done, b9-7: insights 136, 148, 003, 041 and 029, all CURRENT).** At EVERY `src` commit
-   from here: from the project dir run `pnpm exec tsx <b9-build2-surplus>\tools\sweep.mts tree --today=20758`, then
+   use (`PREDICTIONS.md` §E; the big one: `datecoststale`'s W is stale, so no figure is ever carried for it). **U2 DONE (b9-7):**
+   the cycle is closed (`benefitYear.ts`, `engineDomain.ts`, the `importCycles.test.ts` pin), byte-identical by the per-key
+   sweep; it closed the Tier 4 cycle entry itself, so U12 step 8 only files the intake cycle. **Next: U3, the printed grain in
+   one leaf, opened with `/brief <U3's topic: moving workingYearBottomLine, its cent helpers and finite into moneyGrain.ts,
+   byte-identical>`.** At EVERY `src` commit from here: from the project dir run `pnpm exec tsx <b9-build2-surplus>\tools\sweep.mts tree --today=20758`, then
    `node <b9-build2-surplus>\tools\idcheck.mjs tree` (PER KEY: U15 and U9 add seeds, so never a whole-file `cmp`). Then the
    build units in the plan's order, each opened with `/brief <that unit's topic>`:
-   - Phase A: U2 (the import-cycle rider, which closes the Tier 4 *`simulate.ts` and `earningsTest.ts` import each other…*), U3,
+   - Phase A: ~~U2~~ (done), U3,
      U4 and U15, then the Phase A engine review. U4's year-0 golden is `PREDICTIONS.md` B5 ($1,644.00 on `datenc`, whose
      cash is $1,644.95: the printed grain binds); every W seed's taxable bucket is $0, so U4's tests credit into an empty
      taxable bucket too (B7); and R11's backstop must read "no check stream" as ABSENT, since an offset-0 candidate carries
@@ -505,7 +507,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
      put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:2687-2688` sets
-     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2307` `terminalHsaReal = 0` →
+     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2119` `terminalHsaReal = 0` →
      `objectiveHeadline.ts:62` bequest contribution **$0**. On the exact path the sentence names, the HSA
      adds nothing to the leave-more dollar the reader sees. **The sentence must say the balance is DROPPED.**
      ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:912-915` (which says

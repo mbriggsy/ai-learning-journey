@@ -113,7 +113,7 @@
  *
  * WHAT THE WITHDRAWN HEURISTIC WOULD HAVE SHIPPED — a SILENT STALE, built while fixing an
  * over-alarm. It bucketed `irmaa-freeze` to the aggregate because `irmaaTopTierFrozenThrough`
- * has no engine reader. But `irmaa.value` IS engine-read (simulate.ts:1418; solveAnchor.ts:222,231;
+ * has no engine reader. But `irmaa.value` IS engine-read (simulate.ts:1230; solveAnchor.ts:222,231;
  * taxOverlay.ts:1966; healthOverlay.ts:638 — `boundPartBPricingSchedule`, where the tier ladder's Part D
  * add-ons feed `buildPartBPricingSchedule`), and
  * `consumedConstants.ts:116` puts the ENTIRE `health.` family in the consumed set on

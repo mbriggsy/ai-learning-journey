@@ -67,8 +67,9 @@
 > a rank: the ORDER of work lives in `TODO.md`. An entry lifted by this ladder carries "re-tiered 2026-10-31" on its
 > metadata line.
 >
-> **The register-wide sweep (2026-10-31, b9-5)** walked every open Tier 1–4 entry and put each proposed move to its own
-> refuter: 24 entries rose to Tier 0, 10 to Tier 1, one fell to Tier 4 (each stamped "(b9-5)"). Its readings bind the next
+> **The register-wide sweep (2026-10-31, b9-5)** walked all 158 open Tier 1–4 entries and put each of the 42 candidate moves
+> to an xhigh refuter (38 refuters; one judged four gloomy rises, one the two down-moves): 24 entries rose to Tier 0, 10 to
+> Tier 1, one fell to Tier 4 (each stamped "(b9-5)"), and seven held. Its readings bind the next
 > walk: an "Either" lifts when it signs the acted-on answer across households (*The first answer assumes money comes out of
 > every account in proportion…*), but two opposite effects inside one household with the net unsigned hold on step (5)
 > (*The investment mix is frozen at today's blend for life…*). A household fact the repo records for the entry's exact

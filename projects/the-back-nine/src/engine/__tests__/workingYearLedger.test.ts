@@ -1093,7 +1093,7 @@ describe('the tax on the outside income splits by government, and the parts sum 
       { ordinaryBase: 40_000, investmentIncome: 0 },
       { ssBenefit: 0, filing: 'single', count65: 0, calendarYear: START, minLivingAge: 50 },
     )
-    const terms = { wagesByPerson: [40_000], ongoingGross: 0, ownDeposits: 0, workingYearCost: 20_000, ongoingTaxable: 0, investmentIncome: 0 }
+    const terms = { wagesByPerson: [40_000], ongoingGross: 0, ownDeposits: 0, workingYearCost: 20_000, ongoingTaxable: 0, investmentIncome: 0, allAlive: true } // allAlive: build 2 KTD5 (a named edit)
     expect(Number.isFinite(workingYearCashLines(terms, floor).cash)).toBe(true) // the control
     expect(() => workingYearCashLines(terms, { ...floor, readings: [{ ...floor.readings[0]!, baseTax: Number.NaN }] })).toThrow(
       /negative or not a number/,

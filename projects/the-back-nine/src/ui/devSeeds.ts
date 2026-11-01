@@ -839,7 +839,7 @@ const retiredHealth: ScenarioDraft = {
  * the DATE route: the live drive for the disclosure's date-route arm (insight 080). Alex is 66 and
  * still working (deferring Medicare until retirement), Sam is 65 and retired — so no member is
  * pre-65 (the marketplace questions are never asked; `healthcarePriced` reads FALSE, no ACA door),
- * yet `dateSearch.ts:253` forces `healthcareEnabled: true` on every candidate, so Medicare IS priced
+ * yet `dateSearch.ts:261` forces `healthcareEnabled: true` on every candidate, so Medicare IS priced
  * on this route. The RETIRED age-predicate (`medicareUnpriced`) called this household "Medicare not
  * priced" over numbers Medicare had already moved — the exact false statement insight 080 names;
  * `showMedicarePricedNote` fixes it, and this seed proves the fix live. Both ≥ 64 ⇒ the IRMAA seed
@@ -1415,7 +1415,7 @@ export function plantDevVault(key: string): Promise<PlantResult> {
  *
  * NEVER wire a PRICED-STATE base to this doctor (the state-tax unit; F2 supersession 2026-07-16):
  * the −2y `startCalendarYear` aging (→ 2024) precedes NC/PA's earliest rate row (2026), and the
- * engine's priced-state lower bound (`simulate.ts:963-966`, the 2026-07-15 ultramode fold whose
+ * engine's priced-state lower bound (`simulate.ts:966-969`, the 2026-07-15 ultramode fold whose
  * comment names "an aged dev plant" as the exact anticipated caller) REFUSES it — the recompute
  * demotes to the R19 calm indeterminate and no verdict renders. A priced-state stale plant rides
  * {@link doctorStateStaleVault} (savedAt-only, startCalendarYear + all vintages UNTOUCHED, ONLY the
@@ -1428,7 +1428,7 @@ export function doctorStaleVault(s: CurrentScenario, todayEpochDay: number): Cur
     throw new Error(
       `doctorStaleVault must never take a priced-state base (got ${s.retirementState}): its -2y ` +
         `startCalendarYear aging precedes the state's earliest rate row, and the engine's ` +
-        `priced-state lower bound (simulate.ts:963) demotes the recompute to the R19 calm ` +
+        `priced-state lower bound (simulate.ts:966) demotes the recompute to the R19 calm ` +
         `indeterminate — no verdict renders. Use doctorStateStaleVault (the F2 supersession).`,
     )
   }
@@ -1499,7 +1499,7 @@ function agedStateProfile(state: PricedState): string {
  * profile one rate-step back ({@link agedStateProfile}). Everything else stays FRESH.
  *
  * WHY NOT {@link doctorStaleVault} (the whole reason this exists): that doctor ages `startCalendarYear`
- * −2 (→ 2024), and the engine's priced-state lower bound (`simulate.ts:963-966`) REFUSES a priced-NC
+ * −2 (→ 2024), and the engine's priced-state lower bound (`simulate.ts:966-969`) REFUSES a priced-NC
  * household whose year-0 precedes NC's earliest rate row (2026) — the recompute demotes to the R19
  * calm indeterminate and no verdict renders (S2's insight-033 live drive caught exactly this). It was
  * also organically impossible: `retirementState` shipped 2026-07-15, so no genuinely-old save could
@@ -1603,7 +1603,7 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  * the hero's arrived arm needs `yearsSincePlanBuilt` to EXCEED the lifestyle crown, and `datesplit`
  * crowns at 10. `dip` crowns at 5 and HOLDS there under aging — it does not chase its own tail —
  * so depth 6 clears it. The base must also be STATELESS: a priced-state base rejects at any depth
- * ≥1 on the engine's priced-state year bound (`simulate.ts:963-966`), which is the real constraint
+ * ≥1 on the engine's priced-state year bound (`simulate.ts:966-969`), which is the real constraint
  * the spec's `earliestPricedRateYear` probe was reaching for. `dip` carries no `retirementState`.
  *
  * IT AGES `birthYear` ALONGSIDE `startCalendarYear`, AND THAT IS LOAD-BEARING. `PersonInputs`
@@ -1635,7 +1635,7 @@ export function doctorArrivedVault(s: CurrentScenario, todayEpochDay: number): C
     throw new Error(
       `doctorArrivedVault must never take a priced-state base (got ${s.retirementState}): its ` +
         `-${ARRIVED_PLAN_YEARS}y startCalendarYear aging precedes the state's earliest rate row, and ` +
-        `the engine's priced-state lower bound (simulate.ts:963) demotes the recompute to the R19 ` +
+        `the engine's priced-state lower bound (simulate.ts:966) demotes the recompute to the R19 ` +
         `calm indeterminate — no verdict renders, and the arrived hero never draws.`,
     )
   }
@@ -1861,7 +1861,7 @@ export function doctorRecordSuperseded(s: CurrentScenario, todayEpochDay: number
  *  and it lights ONE arrived arm rather than two, because a floor crown of 0 short-circuits past
  *  the three-way split at `FuckOffDate.tsx:236`). The base must be STATELESS: `datenc` rejects at
  *  any depth ≥1 with "startCalendarYear precedes the priced state rate schedule"
- *  (`simulate.ts:963-966`), which is the real bound the S6 spec's `earliestPricedRateYear` probe
+ *  (`simulate.ts:966-969`), which is the real bound the S6 spec's `earliestPricedRateYear` probe
  *  was reaching for — and that probe is VACUOUS on a stateless base (the gate is `isPricedState`-
  *  gated), so the honest constructibility probe is the date search itself, which is what the
  *  `datearrived` engine-acceptance arm runs on every suite.
@@ -1907,7 +1907,7 @@ export const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
   // `controls.stateTaxMoved` clock is route-gated to the household's own priced state, so a stateless
   // base could never fire it; NC not FL because FL's constitutional $0 never stales. The full
   // doctorStaleVault's −2y aging (→ 2024) would trip the engine's priced-state year bound
-  // (simulate.ts:963) → R19 indeterminate, so this plant rides `doctorStateStaleVault` (savedAt-only,
+  // (simulate.ts:966) → R19 indeterminate, so this plant rides `doctorStateStaleVault` (savedAt-only,
   // startCalendarYear + all vintages fresh) → the `stalenessStateTax` gate note fires in ISOLATION.
   statestale: { base: 'nc', doctor: doctorStateStaleVault },
   // U17 §S5 — the two record-bearing plants, over the retired SPINE spine household (a saved

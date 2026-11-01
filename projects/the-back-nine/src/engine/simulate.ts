@@ -596,6 +596,9 @@ export function cashTermsForYear(
         workingYearCost: workingYearCostForYear(params, workingYearCost, allAlive),
         ongoingTaxable: sel.taxable,
         investmentIncome,
+        // Build 2's KTD5: the SAME boolean W_t reads, carried, so the left-over credit's survivor gate can
+        // never disagree with the year's pricing.
+        allAlive,
       }
     }
   }
@@ -1120,6 +1123,16 @@ export function validateParams(params: SimulationParams): string | null {
           return 'overlay accumulation workingYearCostReal invalid (finite, 0 ≤ W ≤ the engine cap)'
         if (!o.taxEnabled || o.healthcareEnabled !== true)
           return 'overlay accumulation workingYearCostReal requires the tax and healthcare overlays'
+      }
+      // Build 2 (R11): the saved left over rides only with W (the check is what composes a year's cash, so
+      // without W there is nothing to credit), and is a whole dollar from 1 to the engine cap — the year-0
+      // figure a "saved" answer was given against (`Number.isInteger` refuses NaN and ±Infinity first).
+      const savedLeftOver = acc.workingYearLeftOverSavedReal
+      if (savedLeftOver !== undefined) {
+        if (workingYearCost === undefined)
+          return 'overlay accumulation workingYearLeftOverSavedReal rides only with workingYearCostReal'
+        if (!Number.isInteger(savedLeftOver) || savedLeftOver < 1 || savedLeftOver > ENGINE_MAX_DOLLAR)
+          return 'overlay accumulation workingYearLeftOverSavedReal invalid (a whole dollar, 1 ≤ x ≤ the engine cap)'
       }
       // The employer's share of each `hsa` stream (R7, KTD6), per person per year: finite ≥ 0 and never
       // above that person's own hsa[t] (a larger share would subtract more than was deposited — own
@@ -1713,6 +1726,9 @@ export function simulate(
   // The pay check's key (KTD1): W present ⇒ every path builds its earnings-test schedule and the
   // overlay composes each clamped year's check. Absent ⇒ none of it runs (the pre-check run, bit for bit).
   const workingYearCost = overlay?.accumulation?.workingYearCostReal
+  // Build 2's saved left over (KTD2): present ⇒ the overlay credits each eligible working year's left over;
+  // absent ⇒ the key never reaches `taxInputs` and no credit code runs.
+  const savedLeftOver = overlay?.accumulation?.workingYearLeftOverSavedReal
   const { people: overlayPeople, config: overlayConfig } = overlayHouseholdFor(params)
 
   const terminalValuesReal: number[] = new Array(paths)
@@ -1990,6 +2006,9 @@ export function simulate(
           // with the construct, tax and healthcare), inside `taxInputs` so the essentials-floor pass
           // draws the SAME shortfall (R10: a tier changes the spend, never the pay or what work costs).
           ...(workingYearCost !== undefined ? { workingYearCheck } : {}),
+          // Build 2 (KTD2): the saved left over, spread ONLY when carried (validateParams admits it only beside
+          // W), inside `taxInputs` so the essentials-floor pass credits the SAME dollars (R9: both tracks).
+          ...(savedLeftOver !== undefined ? { workingYearLeftOverSavedReal: savedLeftOver } : {}),
           ...(options?._workingYearProbe !== undefined ? { _workingYearProbe: options._workingYearProbe } : {}),
           ...(overlay.healthcareEnabled || overlay.accumulation ? { bridgeYearMask: bridgeMask } : {}),
           // U3 · M3 Slice 4 healthcare streams: spread ONLY when the overlay is enabled, so a

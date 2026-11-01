@@ -1115,6 +1115,39 @@ describe('the working-year pay check — W and the employer-HSA stream land on e
     expect(reasonWith((acc) => ({ ...acc, employerHsaByPerson: [[4_000, 4_000, 4_000, 4_000], []] }))).toBeNull()
   })
 
+  // Build 2 (KTD2, R11): the saved left over rides beside W, the same way.
+  const SAVED = 16_985
+  it('build 2: the saved left over lands on EVERY candidate (Y = 0..top) as entered, beside W, and each validates', () => {
+    for (let y = 0; y <= DATE_OFFSET_WINDOW_TOP; y++) {
+      const c = buildCandidateParams({ ...withW, workingYearLeftOverSavedReal: SAVED }, y, 1)
+      expect(c.overlay?.accumulation?.workingYearLeftOverSavedReal, `Y = ${y}`).toBe(SAVED)
+      expect(c.overlay?.accumulation?.workingYearCostReal, `Y = ${y}`).toBe(W)
+      expect(validateParams(c), `Y = ${y}`).toBeNull()
+    }
+    // ABSENT ⇒ absent: the key never appears on a construct the input did not carry it to.
+    const acc = buildCandidateParams(withW, 4, 1).overlay?.accumulation
+    expect(acc !== undefined && 'workingYearLeftOverSavedReal' in acc).toBe(false)
+  })
+
+  it('build 2 (R11): validateParams refuses a saved left over without W, and one that is not a whole dollar from 1 to the engine cap', () => {
+    const { workingYearCostReal: _w, employerHsaByPerson: _e, ...withoutW } = buildCandidateParams(withW, 4, 1).overlay!.accumulation!
+    expect(reasonWith(() => ({ ...withoutW, workingYearLeftOverSavedReal: SAVED }))).toContain(
+      'workingYearLeftOverSavedReal rides only with workingYearCostReal',
+    )
+    for (const [label, x] of [
+      ['0', 0],
+      ['1.5', 1.5],
+      ['NaN', Number.NaN],
+      ['+Infinity', Number.POSITIVE_INFINITY],
+      ['negative', -SAVED],
+      ['above ENGINE_MAX_DOLLAR', ENGINE_MAX_DOLLAR + 1],
+    ] as const) {
+      expect(reasonWith((acc) => ({ ...acc, workingYearLeftOverSavedReal: x })), label).toContain('workingYearLeftOverSavedReal invalid')
+    }
+    // The bounds are inclusive: $1 and the cap itself are whole dollars the engine takes.
+    for (const x of [1, ENGINE_MAX_DOLLAR]) expect(reasonWith((acc) => ({ ...acc, workingYearLeftOverSavedReal: x })), `${x}`).toBeNull()
+  })
+
   it('the Y = 0 candidate WITH W equals its construct-dropped twin (no working year, so W is inert — §1)', { timeout: 60_000 }, () => {
     const candidate = buildCandidateParams(withW, 0, 400)
     expect(candidate.overlay?.accumulation?.workingYearCostReal).toBe(W) // non-vacuity: W really rides it

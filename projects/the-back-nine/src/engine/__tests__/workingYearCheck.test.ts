@@ -55,6 +55,7 @@ const checkTerms = (t: Partial<WorkingYearCheckTerms> & Pick<WorkingYearCheckTer
   workingYearCost: 0,
   ongoingTaxable: 0,
   investmentIncome: 0,
+  allAlive: true, // build 2 KTD5: a required field of the terms (a named edit)
   ...t,
 })
 

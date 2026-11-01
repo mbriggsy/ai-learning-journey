@@ -107,6 +107,11 @@ export interface DateSearchInput {
   /** The employer's share of each person's `hsa` stream, per person per absolute sim-year (KTD6);
    *  truncated to [0, Y) per candidate like the streams it is a share of. Rides only with W. */
   readonly employerHsaByPerson?: readonly (readonly number[])[]
+  /** Build 2 (KTD2): the year-0 Left over a "saved" answer recorded, which intake writes here only while W is
+   *  carried and fresh (R7). Y-INVARIANT; `buildCandidateParams` lands it beside W on every candidate's rebuilt
+   *  construct (`AccumulationParams.workingYearLeftOverSavedReal`). Absent ⇒ every candidate is byte-identical
+   *  to the run without it. */
+  readonly workingYearLeftOverSavedReal?: number
 }
 
 /** Sweep options: the compute tier + the cooperative-cancellation gate (awaited between
@@ -248,6 +253,9 @@ export function buildCandidateParams(
   // misaligned vector rather than this transform silently re-indexing it.
   const workingYearCost = input.workingYearCostReal
   const employerHsa = input.employerHsaByPerson?.map((s) => s.slice(0, offsetYears))
+  // Build 2 (KTD2): the saved left over rides the construct as entered, beside W (Y-invariant; the engine reads
+  // it only in a clamped year, so the candidate's own window decides which years it can credit — none at Y = 0).
+  const savedLeftOver = input.workingYearLeftOverSavedReal
   const candidateOverlay: OverlayParams = {
     ...overlayBase,
     healthcareEnabled: true,
@@ -256,6 +264,7 @@ export function buildCandidateParams(
       ...(investment ? { workingYearInvestmentByPerson: investment } : {}),
       ...(workingYearCost !== undefined ? { workingYearCostReal: workingYearCost } : {}),
       ...(employerHsa ? { employerHsaByPerson: employerHsa } : {}),
+      ...(savedLeftOver !== undefined ? { workingYearLeftOverSavedReal: savedLeftOver } : {}),
     },
     medicareOnsetSimYear: streams.medicareOnsetSimYear,
     ...(streams.enrolledPremium ? { enrolledPremium: streams.enrolledPremium } : {}),

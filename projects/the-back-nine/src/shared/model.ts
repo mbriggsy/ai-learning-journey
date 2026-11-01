@@ -393,6 +393,15 @@ export interface AccumulationParams {
    *  the pay check charges a worker only their OWN deposits, so it subtracts this share. Each entry is
    *  finite ≥ 0 and never above that person's `hsa[t]`; it rides only with `workingYearCostReal`. */
   readonly employerHsaByPerson?: readonly (readonly number[])[]
+  /** Build 2, the working-year left over (`docs/plans/features/working-year-surplus-build-spec.md`, R7–R11): the
+   *  whole-dollar year-0 Left over a "saved" answer was given against — the household said all of a working
+   *  year's left over goes into savings, at this figure. A whole dollar, 1 ≤ x ≤ `ENGINE_MAX_DOLLAR`, and only
+   *  beside `workingYearCostReal` (validated, R11); intake carries it only while W is fresh (R7). Each clamped
+   *  working year in which everyone is alive then credits the smallest of the year's cash, that cash on the
+   *  printed grain, the run's own year-0 Left over on that grain, and this figure, to the taxable account at
+   *  year end (R8, R9). ABSENT ⇒ no credit code runs: every run is byte-identical to the run without it.
+   *  Lands on each candidate through `DateSearchInput`, as W does. */
+  readonly workingYearLeftOverSavedReal?: number
 }
 
 /** One person's COMPILED other-income leaf (R40 · KTD-4) — the per-year real-$ vectors
@@ -889,7 +898,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2724`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2803`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
 }

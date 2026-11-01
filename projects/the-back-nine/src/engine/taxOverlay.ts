@@ -119,6 +119,8 @@ import {
 } from '@engine/magiLandscape'
 import { solveAcaFundedGross, fplForHousehold, medicareAnnualCharge, acaMagi, irmaaMagi, irmaaScheduleAsCompared, boundPartBPricingSchedule, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents, type PartBYearPricing } from '@engine/healthOverlay'
 import { payrollTaxForYear, type PayrollTaxYear } from '@engine/payrollTax'
+import { workingYearBottomLine } from '@engine/moneyGrain'
+import { ENGINE_MAX_DOLLAR } from '@engine/engineDomain'
 import { NEVER_DEPLETED, isRetirementState, type DepletionYear, type DrawdownPolicy, type FilingStatus, type RetirementState } from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
@@ -415,6 +417,20 @@ export interface TaxYearInputs {
    *  floor would have no tax to read, and a floored year with no check silently drops its shortfall (the
    *  rosy direction). */
   readonly workingYearCheck?: readonly (WorkingYearCheckTerms | undefined)[]
+  /** Build 2, the working-year left over (`docs/plans/features/working-year-surplus-build-spec.md`, R8–R11,
+   *  KTD3): the whole-dollar year-0 Left over a "saved" answer was given against. PRESENT ⇒ each checked year
+   *  in which everyone is alive (its terms' `allAlive`) credits
+   *    min(cash, its printed grain, year 0's printed Left over on THIS path, this figure)
+   *  to the taxable account at year end — `stepYear`'s contribution argument, the taxable fold after the growth
+   *  scale, the basis at full value, and both arms of the knife-edge branch, never `contributionTotal` — and a
+   *  credit at or below 0 is skipped. A short year has no left over, so it credits nothing; a depleted year
+   *  forfeits the credit as it forfeits a deposit; a path whose year 0 is not a checked year credits nothing.
+   *  The grain is the money picture's own (`moneyGrain.ts`), so a credit never exceeds the dollar the household
+   *  was shown. ABSENT ⇒ no credit code runs and year 0's figure is never computed (byte-identical by
+   *  construction). THE BACKSTOP (R11): a whole dollar from 1 to `ENGINE_MAX_DOLLAR`; a `workingYearCheck`
+   *  stream must be SUPPLIED (an empty one is an offset-0 candidate: nothing to credit, never a throw); and a
+   *  stream with any entry must carry year 0's. */
+  readonly workingYearLeftOverSavedReal?: number
   /** PROBE-ONLY — the pay check's observation hook ({@link WorkingYearProbe}); never set by product code. */
   readonly _workingYearProbe?: WorkingYearProbe
   // --- U6/U7 band fan: an OPTIONAL output sink (not an input). ABSENT ⇒ no observation, the
@@ -1404,6 +1420,11 @@ export interface WorkingYearCheckTerms {
    *  charges that state's tax on these two itself, since nothing else would. */
   readonly ongoingTaxable: number
   readonly investmentIncome: number
+  /** Everyone in the household is alive this year — `cashTermsForYear`'s own local, the same boolean W_t reads
+   *  (build 2's KTD5). The left-over credit runs only in such a year, so a survivor year credits 0 by the test
+   *  that prices it. REQUIRED, so a direct caller cannot credit a survivor year by omission; the backstop
+   *  refuses anything but a boolean. */
+  readonly allAlive: boolean
 }
 
 /** One clamped year's composed check — every R5 line, the bottom line and the shortfall (real $). */
@@ -1563,7 +1584,7 @@ export function workingYearLawSteps(prior: PreparedWorkingYearFloor, floor: Prep
 /**
  * The pay check's PROBE-ONLY observation hook (KTD7's "prepared exactly once", KTD20's pre-59½ count):
  * optional callbacks the year loop calls as it runs — the first three in §7-clamped years only, the
- * IRMAA one in every year it records. A pure observation — every callback
+ * IRMAA one in every year it records, build 2's two as their own docs say. A pure observation — every callback
  * receives values already computed, and a run with the hook is byte-identical to one without. Supplied
  * only by tests and measurement scripts (through `simulate`'s `_workingYearProbe` option or
  * {@link TaxYearInputs._workingYearProbe}); never by product code.
@@ -1580,6 +1601,12 @@ export interface WorkingYearProbe {
   ) => void
   /** Every year's IRMAA-MAGI as recorded into the lagged history (healthcare on). */
   readonly irmaaMagiRecorded?: (t: number, irmaaMagi: number) => void
+  /** Build 2: a checked year of a run carrying the saved left over — the credit R8 composed (0 when nothing is
+   *  credited), as computed, BEFORE any depletion forfeit (U11's stream). */
+  readonly creditComposed?: (t: number, credit: number) => void
+  /** Build 2: the year's growth scale (the growth-only total over the post-draw ledger), in every year that
+   *  reaches the bucket fold (U11's same-year-draw residual reads it). */
+  readonly growthScaled?: (t: number, scale: number) => void
 }
 
 function solveGrossWithdrawal(net: number, ctx: GrossUpContext): GrossUpSolution {
@@ -1764,6 +1791,7 @@ export function runTaxAwareDecumulation(
     ongoingTaxableIrmaaOnly = [],
     workingYearOutsideIncome = [],
     workingYearCheck = [],
+    workingYearLeftOverSavedReal: savedLeftOver,
     _workingYearProbe: probe,
     balancesOut,
     healthOut,
@@ -1913,6 +1941,26 @@ export function runTaxAwareDecumulation(
     )
   ) {
     throw new Error('[taxOverlay] workingYearCheck entries must be finite and ≥ 0 in every field (insights 008/010; burned/062)')
+  }
+  // Build 2's KTD5: `allAlive` is carried, never re-derived — a present entry carries it as a boolean, so a
+  // direct caller can neither omit it (crediting a survivor year) nor pass a truthy stand-in.
+  if (!workingYearCheck.every((e) => e === undefined || typeof e.allAlive === 'boolean')) {
+    throw new Error('[taxOverlay] workingYearCheck entries carry `allAlive` as a boolean (build 2 KTD5: the left-over credit runs only in a year everyone is alive)')
+  }
+  // Build 2's R11 backstop (validateParams' arm, mirrored): the saved left over is a whole dollar from 1 to the
+  // engine cap, it needs a SUPPLIED check stream (only the check composes a year's cash; an empty stream is an
+  // offset-0 candidate and credits nothing), and a stream with any entry must carry year 0's, whose printed
+  // Left over caps every later year.
+  if (savedLeftOver !== undefined) {
+    if (!Number.isInteger(savedLeftOver) || savedLeftOver < 1 || savedLeftOver > ENGINE_MAX_DOLLAR) {
+      throw new Error(`[taxOverlay] workingYearLeftOverSavedReal must be a whole dollar from 1 to the engine cap (got ${savedLeftOver}) — R11`)
+    }
+    if (taxInputs.workingYearCheck === undefined) {
+      throw new Error('[taxOverlay] workingYearLeftOverSavedReal needs a workingYearCheck stream — only the check composes a year’s cash (R11)')
+    }
+    if (workingYearCheck.some((e) => e !== undefined) && workingYearCheck[0] === undefined) {
+      throw new Error('[taxOverlay] workingYearLeftOverSavedReal: the check stream has entries but none for year 0, whose printed Left over caps every year — a wiring fault (R8)')
+    }
   }
   if (taxInputs.workingYearCheck !== undefined) {
     const checkedSomewhere = workingYearCheck.some((e) => e !== undefined)
@@ -2162,6 +2210,10 @@ export function runTaxAwareDecumulation(
   // the reduction unconditional rather than dependent on a float identity.
   let state: PortfolioState = { stock: stockWeight * total0, bond: (1 - stockWeight) * total0 }
   let depletionYear: DepletionYear = NEVER_DEPLETED
+  // Build 2 (R8, KTD4): year 0's printed Left over on THIS path, fixed when year 0's check composes — the cap
+  // every later year reads. Computed only when the saved left over is carried; undefined while year 0 is not a
+  // checked year, so such a path credits nothing.
+  let leftOverYear0: number | undefined
   const horizon = netWithdrawals.length
 
   for (let t = 0; t < horizon; t++) {
@@ -2387,6 +2439,10 @@ export function runTaxAwareDecumulation(
     // allocation (never by any arithmetic outside the tax block).
     let checkShortfallThisYear: number | undefined
     let fundingNetThisYear = 0
+    // Build 2 (KTD3): the year's left-over credit, composed in the tax block beside the shortfall and folded at
+    // year end at the four sites below. Stays 0 (and every site keeps today's expression) unless the saved
+    // left over is carried and the year credits more than $0.
+    let creditThisYear = 0
     // P3·U11 — the healthcare readout's year-locals (observed, never consumed): the IRMAA
     // surcharge slice of medicareCostThisYear, the two converged MAGIs, and the ACA cliff
     // state (-1 = not priced / 0 = priced under / 1 = priced over). Set at the pricing sites
@@ -2537,6 +2593,20 @@ export function runTaxAwareDecumulation(
         const lines = workingYearCashLines(checkTerms, workingYear.floor)
         probe?.checkComposed?.(t, workingYear.floor, lines)
         checkShortfallThisYear = lines.shortfall
+        // Build 2 (R8): the saved left over credits the smallest of the year's cash, that cash on the printed
+        // grain, year 0's printed Left over on this path and the stored figure — in a year everyone is alive
+        // (KTD5), skipped at or below 0 (a short year credits nothing; its shortfall is drawn above). The raw
+        // cash joins the min because a half-cent tie can print a cent above the float. The grain is the money
+        // picture's own (`moneyGrain.ts`, KTD4). Composed here, folded at year end; nothing in the year's tax,
+        // draw or MAGI reads it.
+        if (savedLeftOver !== undefined) {
+          const printed = workingYearBottomLine(lines.cash)
+          if (t === 0) leftOverYear0 = printed
+          const credit =
+            checkTerms.allAlive && leftOverYear0 !== undefined ? Math.min(lines.cash, printed, leftOverYear0, savedLeftOver) : 0
+          if (credit > 0) creditThisYear = credit
+          probe?.creditComposed?.(t, creditThisYear)
+        }
       }
 
       // The cash this year must fund = base spending + the (known) Medicare cost + the extras
@@ -2697,7 +2767,16 @@ export function runTaxAwareDecumulation(
     // `+ 0` exactly when no hsa is live, so the spine recurrence is untouched). The year's
     // contribution inflow rides the SAME call (C2 — stepYear is the ONE crediting owner, contract
     // #3): credited end-of-year, after the return step, `+ 0` exactly when nothing is contributed.
-    const step = stepYear(state, rs, rb, grossWithdrawal + hsaSpendThisYear, stockWeight, contributionTotal)
+    // Build 2's left-over credit (site 1 of 4, KTD3) rides it too — never `contributionTotal` itself, which
+    // also feeds the ACA empty-overlap throw — and a depleted year forfeits it with the deposits.
+    const step = stepYear(
+      state,
+      rs,
+      rb,
+      grossWithdrawal + hsaSpendThisYear,
+      stockWeight,
+      creditThisYear > 0 ? contributionTotal + creditThisYear : contributionTotal,
+    )
     state = step.state
     // Band fan (U6/U7): observe the post-step total — $0 exactly on the depletion year. Pure
     // observation; never perturbs the result (the reduce-to-spine fan byte-identity guard).
@@ -2756,6 +2835,7 @@ export function runTaxAwareDecumulation(
     const afterWithdrawal = totalBefore - drawn - hsaSpendThisYear
     if (afterWithdrawal > 0) {
       const scale = step.growthOnlyTotal / afterWithdrawal
+      probe?.growthScaled?.(t, scale)
       const taxableValue = drawPool.taxable
 
       // RMD-forced distribution: spending/tax already pulled `alloc.pretax` from pre-tax; the RMD
@@ -2798,13 +2878,17 @@ export function runTaxAwareDecumulation(
       // contribution, UNSCALED), applied AFTER the pro-rata reduction — whose denominator
       // (`taxableValue` = the draw-time balance) correctly excludes the end-of-year arrival.
       basis = (taxableValue > 0 ? basis * (1 - alloc.taxable / taxableValue) : basis) + forcedExcess + cTaxable
+      // Build 2's left-over credit (site 2 of 4): after-tax pay, so it enters at FULL basis, after the
+      // pro-rata reduction, exactly as a taxable deposit does.
+      if (creditThisYear > 0) basis += creditThisYear
 
       buckets = {
         // C2 §2c: each destination bucket takes its contribution AFTER the growth scale, at face
         // value (the end-of-year credit earns no arrival-year growth — the pinned conservative
         // convention; a before-the-scale fold would either grant phantom growth or smear the
         // inflow pro-rata across every bucket). `+ 0` exactly when nothing is contributed.
-        taxable: taxablePost * scale + cTaxable,
+        // Build 2's left-over credit (site 3 of 4) lands here too, after the scale, at face value.
+        taxable: creditThisYear > 0 ? taxablePost * scale + cTaxable + creditThisYear : taxablePost * scale + cTaxable,
         pretax: pretaxPostScaled,
         roth: rothPost * scale + cRoth,
         // The MEDICAL-EARMARKED 4th bucket (U3 · M5): the year's qualified spend leaves it, then it
@@ -2822,7 +2906,9 @@ export function runTaxAwareDecumulation(
       // taxable basis = the taxable inflow), else Σbuckets would diverge from the authoritative
       // total by the whole contribution, not dust. With no contribution this is byte-identical
       // to the pre-C2 zeroing (EMPTY_BUCKETS / 0 / fill(0)).
-      basis = cTaxable
+      // Build 2's left-over credit (site 4 of 4): stepYear credited it into the state too, so the fresh
+      // buckets hold it in taxable at full basis — with or without a deposit this year.
+      basis = creditThisYear > 0 ? cTaxable + creditThisYear : cTaxable
       if (pretaxLedger) {
         pretaxLedger.fill(0)
         // Dead-slot credits were already rejected loud at the rollover block above (C2 §7).
@@ -2834,8 +2920,10 @@ export function runTaxAwareDecumulation(
       }
       buckets =
         yearC === undefined
-          ? EMPTY_BUCKETS
-          : { taxable: cTaxable, pretax: cPretaxTotal, roth: cRoth, hsa: cHsa }
+          ? creditThisYear > 0
+            ? { taxable: creditThisYear, pretax: 0, roth: 0, hsa: 0 }
+            : EMPTY_BUCKETS
+          : { taxable: creditThisYear > 0 ? cTaxable + creditThisYear : cTaxable, pretax: cPretaxTotal, roth: cRoth, hsa: cHsa }
     }
   }
 

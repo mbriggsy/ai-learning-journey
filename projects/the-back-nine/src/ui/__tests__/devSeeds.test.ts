@@ -36,7 +36,7 @@ import {
   workingYearLedgerForRun,
 } from '@intake/intakeMap'
 import { showMedicarePricedNote } from '../healthSheetChrome'
-import { simulate, validateParams } from '@engine/simulate'
+import { simulate, validateParams, ENGINE_MAX_DOLLAR } from '@engine/simulate'
 import { runEngine, engineApi } from '@engine/engineProtocol'
 import { solveFromWire } from '@engine/engineWire'
 import { buildSolveRequest } from '@intake/solveDispatch'
@@ -629,7 +629,7 @@ describe('the state-tax seed faces (the state-carrying seed increment)', () => {
 //
 // WHY THE LIGHT DOCTOR (the bug this shape supersedes): routing `statestale` through the FULL
 // doctorStaleVault aged `startCalendarYear` −2 (→ 2024), and the engine's priced-state lower bound
-// (simulate.ts:963-966) correctly REFUSES a priced-NC household whose year-0 precedes NC's earliest
+// (simulate.ts:966-969) correctly REFUSES a priced-NC household whose year-0 precedes NC's earliest
 // rate row (2026) → the affirm recompute demoted to the R19 calm indeterminate (S2's live drive
 // caught it). The engine-acceptance arm below is the pin that would have caught it up front.
 // ===========================================================================
@@ -1155,7 +1155,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
   // its SPINE sibling, which rides the very doctor that caused that bug, never did. Its only
   // witnesses were a ~90-second Chromium fit arm (`vertical-fit.spec.ts` drives `?vault=stale`
   // through a real unlock and asserts a resolved spine) and a DIFFERENT plant's date-route arm over
-  // a DIFFERENT base — `retired` is all-retired and `dateSearch.ts:572` refuses such a household
+  // a DIFFERENT base — `retired` is all-retired and `dateSearch.ts:581` refuses such a household
   // outright, so no date-route arm can ever cover it. This is the insight-051 tell: the plant
   // shipped its fit pin before it had a unit source. Now a doctored shape the engine would refuse
   // fails HERE, in under a second.
@@ -1471,7 +1471,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
   })
 
   // Arm 5 — THE STATELESS REQUIREMENT IS ENFORCED, not merely documented. A priced-state base
-  // rejects at any depth ≥1 on the engine's priced-state year bound (simulate.ts:963-966), which is
+  // rejects at any depth ≥1 on the engine's priced-state year bound (simulate.ts:966-969), which is
   // insight 085's own origin story — so the doctor fail-louds at the plant instead of shipping a
   // fixture that renders the R19 calm indeterminate and reads as a broken feature.
   it('REFUSES a priced-state base (the insight-085 bound), rather than minting an R19 fixture', () => {
@@ -1764,6 +1764,33 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       swept++
     }
     // Every buildable date seed carries W (the arm above), so this is all ten of them, the short seed included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(10)
+  })
+
+  // Build 2's KTD4 arm (U4): inside the run, year 0's Left over is the money picture's own printed bottom line, on
+  // every W-carrying seed. A figure of ENGINE_MAX_DOLLAR caps nothing, so the year-0 credit is R8's other terms:
+  // the smaller of the raw cash and the printed figure, wherever that figure is at least $1 (`datenc`'s $1,644.95
+  // credits 1,644), and nothing on the short witness, in any year.
+  it('build 2 (KTD4): each W seed’s year-0 credit at ENGINE_MAX_DOLLAR is the smaller of its raw cash and its picture’s printed bottom line', () => {
+    let swept = 0
+    for (const key of keys) {
+      const d = DEV_SEEDS[key]
+      if (d.workingYearCost === undefined || missingRequiredFacts(d).length > 0) continue
+      const ledger = workingYearLedgerForRun(d)
+      if (ledger === 'unknown') throw new Error(`${key}: a buildable W-carrying seed must draw a picture`)
+      const input: DateSearchInput = { ...buildDateInput(d)!, workingYearLeftOverSavedReal: ENGINE_MAX_DOLLAR }
+      const params = { ...buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, 1), longevityMode: 'fixed-horizon' as const }
+      const credits: number[] = []
+      const run = simulate(params, d.seed!, { _workingYearProbe: { creditComposed: (t, c) => (credits[t] = c) } })
+      expect(run.indeterminate === true || run.infeasible === true, `${key}: the run resolves`).toBe(false)
+      expect(credits.length, `${key}: a credit composed in every working year of the window`).toBe(DATE_OFFSET_WINDOW_TOP)
+      const y0 = ledger.year0
+      const expected = y0.bottomLine >= 1 ? Math.min(y0.cash, y0.bottomLine) : 0
+      expect(Object.is(credits[0], expected), `${key}: year 0 credits ${expected}, got ${credits[0]}`).toBe(true)
+      if (key === 'datenc') expect(credits[0], 'datenc: the printed grain binds').toBe(1_644)
+      if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
+      swept++
+    }
     expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(10)
   })
 

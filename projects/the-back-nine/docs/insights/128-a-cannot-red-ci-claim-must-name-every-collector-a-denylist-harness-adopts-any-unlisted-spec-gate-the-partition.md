@@ -3,7 +3,7 @@ title: A "can never red CI" claim must name EVERY collector — a denylist harne
 date: 2026-09-11
 phase: Post-Act-4 (the gap to a friend betting real money) — the morning after the 24 px council build
 modules: [playwright.config.ts, e2e/held/council-24px-shots.spec.ts, e2e/held/shots.config.ts, scripts/__tests__/playwright-harness-partition.test.ts]
-tags: [ci-red, playwright, testIgnore, denylist, harness-partition, held-instrument, claim-vs-tree, local-gate-set, exit-code]
+tags: [ci-red, playwright, testIgnore, denylist, harness-partition, held-instrument, claim-vs-tree, local-gate-set, exit-code, coverage-claim, tripwire, schema-surface-pin, recorded-set, overclaim, rule-from-examples, source-read, schema-version]
 ---
 
 ## Problem
@@ -78,3 +78,27 @@ is a claim, not a proof; the CI run id is the proof, and "in flight" means unpro
   which collectors' globs now reach it before the docblock says "excluded".
 - Hand-off gate lists: write the list FROM the CI workflow file, and mark a commit green only by its
   run id — the same rule as insight 126's "read the exit code, never a grep" one level up.
+
+## Extended (2026-10-31, the schema-v4 review) — "this pin catches rule X" is a claim about a class, and the pin holds only a set
+
+The schema-v4 bump (`c2864eb9`) wrote in `docs/architecture.md` §7.3 that the codec suite's schema-surface pin "catches (b) and (c)" of the rule for when a new field bumps the version. Rule (b): an older copy refuses a value a newer build wrote, and calls a good plan "damaged". Rule (c): an older copy drops or rewrites a new stamp key when it saves. The pin records two things. The first is the 18 named vocabularies the codec checks, plus the one it spells inline, value for value. The second is the four vintage stamps' key sets.
+
+Ten of the whole-file review's 28 findings (`wf_edc27bef-48a`) were overclaims of what a tripwire catches. Eight named the §7.3 sentence: all three hand-verify items and advisories 1, 11, 12, 14 and 18. Two more (advisories 7 and 10) named `SCENARIO_V3_FIELDS`'s docblock, which said "A NEW field must join this list to compile" when that is true only of top-level fields. Each of their cases harms an older copy while every pin stays green:
+
+- a widened COLA cap
+- a required field made optional
+- a dropped literal-`true` check on `enhancedSubsidies`
+- a new key nested in `health`, `people[i]` or an account
+
+The cause sat one level up. Rule (b) was worded around its two filed examples, new values in the `stateTaxReading` and `chosenGoal` vocabularies ("refuse a value it does not know"), and the pin was built to that wording. So the rule, the pin and the sentence agreed with one another, and all three missed the rest of the class: any refusal an older copy makes that a newer build loosens. That is [[137]]'s one-witness trap. A check derived from the same wording as the claim it checks can only agree with it.
+
+The build had already caught the same blind spot one level down, inside the pin. Its value comparison checks the recorded lists against `LIVE_VOCABULARIES`, which is also a hand-typed list, so a vocabulary the codec newly started checking would appear in neither and nothing would go red. So the as-built pin also reads the codec's own source: every `needVocab` third argument and every `(X as readonly string[]).includes`. That is the collector-is-the-oracle move above, applied to a codec.
+
+The fix (`bb26cbca`):
+
+- Rule (b) now covers any refusal a newer build loosens: a widened range, a required field made optional, a relaxed literal or cross-field rule.
+- The §7.3 sentence states only the recorded set, its own limit included: "it reads the codec's source for those two spellings, so a vocabulary checked any other way escapes it."
+- The `SCENARIO_V3_FIELDS` docblock now says a new TOP-LEVEL field.
+- The classes no tripwire sees are named as the author's call, judged by hand: a loosened refusal other than a vocabulary, and a key nested in a sub-object.
+
+**What this adds:** write a tripwire's coverage as the set it records, and check that set against the HARM, not against the rule's wording. A rule written from its examples and a pin built to the same wording agree with each other and miss the same cases, so "catches rule X" survives every consistency read. Say what the pin records, take that list from the code it guards wherever you can, and name the rest as calls made by hand.

@@ -22,63 +22,20 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-31, item 1 re-written by b9-3 at 56 % of its window — the schema-v4 bump is BUILT and pushed; its whole-file review is IN FLIGHT, its mutant pass READY). Carried from b9-1: the pay check's Phase C is closed, h2 and all.** The h2 cure landed at
-`68aba728` (CI run 41218240753 green on both jobs, read by id). `src/intake/gestureHold.ts` holds what the W face DREW at a press until that press's click
-(a press inside the face, or anywhere while focus is inside it): the stale note in `WorkingCostQuestion.tsx` (W alone, so another
-row's commit under the same press still re-gates its door), the value line and money picture in `AssumptionPanel.tsx`'s
-`WorkingCostRow` (the whole draft; no control lives there). The build found the same race losing the stale note's OWN door on EVERY
-screen, his included (type 7000, tap "Keep $84,000 a year": $7,000 a year stood, the note gone as a keep would leave it): closed with
-it — the door keeps the figure it names and answers its unit. Both are CLOSED Tier 0 entries in the register, with their NEGATIVEs
-(the record of what the build changed from the prescription, and why, is on the h2 entry). Measured in real Chromium before and after,
-and on the final code: the four witness taps 4/4 land (were 4/4 lost), the Keep door 4/4 kept on his laptop and phone (were 4/4 lost),
-his window, full screen and phone 15/15 land. The record: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-h2-cure\` — `tapProbe3.mts` (b9-10's probe plus the Keep
-scenarios), `before-*` / `after-*` / `final-*.jsonl`, `PREDICTIONS.md` (every mutant's kill set, predicted then observed — all
-matched) and its runner `mutants.cjs` + `mutants.spec.json` (per-test kills with each failure's own line). Three opus review lenses
-(event order, the two consumers, the tests) found one P1 (the whole-draft note hold let a held door slip past ruling 34) and eleven
-smaller; all fixed. U10's Caddie card stays **HARD-FLAG** on its two Tier 1 builds (unchanged). The pay-check review's record:
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (`pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS —
-remove each link alone before deleting any folder there). Rulings 38–42 are in `b9-phaseb\DECISIONS.md`. Next, in order:
-1. **The old-copy version bump — BUILT AND PUSHED (b9-3, 2026-10-31): the bump `c2864eb9` (U1–U3, U5, U6's fixtures) and the
-   version-floor test `9b0ef9db` (its own commit). Still owed, in order, each with its exact step:**
-   - **(a) The whole-file review FINISHED (53 agents, 11 of 11 lenses, none crashed): 6 confirmed, 3 hand-verify, 18 advisory,
-     1 rejected — the full result is saved durably as `review-wf_edc27bef-48a.result.json` in the `b9-schema-v4-proof` folder
-     (raw: `review-wf_edc27bef-48a.output.txt`).** Not yet triaged; the headlines, all docs/tests, none in the ladder's logic:
-     (1) P2 — live docs still say a pre-pay-check copy runs a CURRENT save without W (`docs/architecture.md` §7.7 twice,
-     `docs/product.md` D6 and R34, `docs/roadmap.md`, `docs/glossary.md` and one register line — the finding lists each); re-scope
-     each to "refuses a current save; still runs a version-3 plan an old copy saved itself". (2) P3 ×3 (one finding) — the codec
-     header's "the one thing it ever rewrites is a LABEL" is false: the tolerated drop deletes a bad `savedRecommendation`. (3) P3 —
-     the glossary's clamp entry and a Tier 1 header still list a pre-W copy as a W-less run. (4) P3 — the hydrate-gate test's v1/v2
-     fixture is ONE person, so `draftFromScenario`'s arity refusal passes it with the version clause deleted: make it two-person.
-     (5) hand-verify ×3, one theme — §7.3 says the schema-surface pin catches rules (b) and (c); it holds only vocabulary values
-     and the four stamps' key sets (not nested fields, not a loosened range gate): narrow the sentence, or widen the pin.
-     Read the 18 advisory items too (several overflow titles repeat (4); the residuals name the v3-with-W disk label that stays 3
-     until a Save, the one-seed frozen fixtures, and the two-tabs-on-two-builds race).
-     How it was launched: `/ultramode-code-review base:c4831850` ran it as Workflow
-     run `wf_edc27bef-48a` (11 lenses on opus: correctness, architecture, testing, idiom, simplicity, api-contract, data-migration,
-     docs-truth, adv-boundary, adv-temporal, adv-invariant; refuters scale 3/2/1). Its return value (coverage, confirmed,
-     handVerify, advisory, rejected) is the last record in
-     `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\8b61db03-6e64-49c9-8f1b-c5b25db26009\subagents\workflows\wf_edc27bef-48a\journal.jsonl`.
-     If it died or a lens crashed, resume it: `Workflow({scriptPath, resumeFromRunId: "wf_edc27bef-48a"})` with scriptPath
-     `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\8b61db03-6e64-49c9-8f1b-c5b25db26009\workflows\scripts\ultramode-code-review-wf_edc27bef-48a.js`
-     (same session only — from a new session, re-launch the skill instead). Then the skill's step 6: trace every hand-verify item to
-     source yourself, fix every NEW × REAL × MATERIAL one (smallest change; full gate), report the false alarms with their votes.
-   - **(b) The mutant pass — AFTER (a)'s fixes, never beside review agents or vitest (it plants into `src`).** From the project dir:
-     `node <proof>\mutants.cjs <proof>\mutants.spec.json unit`, `<proof>` being the `b9-schema-v4-proof` folder named below (its copy
-     of b9-1's per-test runner takes multi-file mutants). `PREDICTIONS.md` there was written BEFORE any run: compare each mutant's
-     red set to it, explain every miss, and re-anchor first any plant a review fix moved. M7 (the literal-3 mint) is runtime-
-     equivalent and already proven typecheck-only (the README). Record the results in the README.
-   - **(c) ✅ CI run 41238303597 on `9b0ef9db` GREEN on both jobs, read by id** (`verify` — lint, typecheck, doc-stats, the full
-     suite, build, bundle, `verify:csp`, `verify:fit` — and `verify-rv-chart-text`). Local `verify:csp` 16 of 16. Re-read CI after
-     item 1(a)'s fixes land.
-   - **(d) `/distill`** on the DISTILL CANDIDATES block below (b9-2's version-ladder candidate is now proven by the build), right
-     after (a)'s fixes land. Then item 2.
-   The plan:
-   `docs/plans/features/schema-v4-old-copy-refusal-build-spec.md` (`594e4ae9`). U4 and U6 ran against `git archive` copies of the
-   two old builds; their runs, cited reads and the mint script are in
-   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\README.md`. The
-   register entry is CLOSED with its NEGATIVEs; the two gaps the bump leaves are filed (Tier 2: *A date-route plan saved before
-   the pay check opens with W unanswered…* and *The "saved by a newer version" face names an update and offers no door to it…*).
-2. **Rank the registers against the D7 queue** (his order; never re-ordered without him) — b9-8's list, unchanged, plus the review's:
+▶ **START HERE (2026-10-31, rewritten by b9-4 — the schema-v4 job is DONE, every step of its flow).** The bump `c2864eb9`, its
+version-floor test `9b0ef9db`, the whole-file review's fixes `bb26cbca` (review `wf_edc27bef-48a`: 6 confirmed, 3 hand-verify,
+18 advisory, all triaged), the mutant pass's fixes plus a peer re-run's two doc defects `1fb8b25e`, and the distill (insights
+149–152; extensions of 018, 035, 036, 126 and 128). CI: run 41249786363 on `bb26cbca` green on both jobs, read by id; read the
+run on `1fb8b25e` by id before building on it. The record: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\` — `README.md` and `PREDICTIONS.md` (every mutant
+section written before its run; 16 mutants; M7 and M8 runtime-equivalent, as predicted). The two gaps the bump leaves are their own
+register entries (Tier 2 *A date-route plan saved before the pay check opens with W unanswered…* and *The "saved by a newer
+version" face names an update and offers no door to it…*); the one-seed frozen fixtures are Tier 4 *The frozen version-3 fixtures
+are one seed…*. **Carried from b9-1 (the pay check's Phase C is closed, h2 and all):** the h2 cure's record is
+`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-h2-cure\` (`tapProbe3.mts`, the before/after/final runs, `PREDICTIONS.md` and its per-test mutant runner); the pay-check
+review's is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (`pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS — remove each
+link alone before deleting any folder there); rulings 38–42 are in `b9-phaseb\DECISIONS.md`. U10's Caddie card stays
+**HARD-FLAG** on its two Tier 1 builds. Next, in order:
+1. **Rank the registers against the D7 queue** (his order; never re-ordered without him) — b9-8's list, unchanged, plus the review's:
    - **b9-2 started this pass, notes durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\ranking-pass-notes.md`. The tier rule needs a register-wide
      sweep to be true of the body (the body was never tiered by direction): ~26 entries with a recorded rosy or either-way
      reading sit below Tier 0, two gloomy-only ones sit in it, and the measured step-card room (~$148,200 rosier, "the cardinal
@@ -125,7 +82,7 @@ remove each link alone before deleting any folder there). Rulings 38–42 are in
      narrow rosy entries in Tier 2 (Philadelphia's School Income Tax, PA's inheritance tax). Rule it by the header's "worst
      consequence, never by size". Either move all four up, or move §219(g) and the catch-up back down. Then write the rule
      into the register header so it stops being re-derived.
-3. **Build 2, the surplus question**, follows. The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
+2. **Build 2, the surplus question**, follows. The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
    year never checks the household's pay against its spending…*. Its steps, all owed: `/brief` on the surplus question; the plan,
    deepened and checked as a whole; the build; the whole-file review; `/distill`. Ride the Tier 4 *`simulate.ts` and
    `earningsTest.ts` import each other…* on it (it touches `simulate.ts`).
@@ -151,41 +108,9 @@ at `9b0ef9db`); `pnpm build` 0; `pnpm verify:bundle` 0 (288.5 KiB); `pnpm verify
 the bump's tree before the re-anchor (the live-citation arm, which the re-anchor then fixed; that file all green after) — not re-run
 locally on the final tree, but CI run 41238303597 ran it there, green, with `verify:fit` and `verify:fit:rv`. Engine identity (R6):
 every dev seed's full output `cmp`-identical, HEAD's archive vs the tree. Not run: the mutant pass (item 1(b)).
-**DISTILL CANDIDATES (for the next `/distill`):**
-- (b9-10) a probe that scrolls its target into view tests the geometry the browser already cures. Chromium's scroll anchoring moved
-  the scroller by exactly the shift on every run where the anchor node sat below the change and the scroller had room to move
-  back (19 of 19 on his devices), so the first measurement read "no tap lost". The miss lives where the changing content, or
-  something above it, shares the screen with the target, or where the scroll offset is smaller than the shift — a taller screen
-  (4 of 5 missed there, mouse and touch). Before "no tap lost", pin the target LOW (the most content above it on screen) and run
-  the tallest screen the face can meet; record the scroll offset and what was on screen beside the verdict.
-- (b9-1) …and anchoring cannot keep a control that is INSIDE the change: "no tap lost on his devices" was measured on the period
-  control, while the stale note's own Keep door unmounted under every press on every screen. Ask whether the target can live in the
-  content that moves.
-- (b9-1) hold what a face DRAWS, never the GATE of a control inside it: a whole-draft hold let a held door keep a figure another
-  field's commit (under the same press) had just withheld. Hold only what the press's own blur writes; hold everything only where
-  nothing can be acted on.
-- (b9-1) release a gesture hold in the click's BUBBLE phase on `window`: a capture-phase release re-renders mid-dispatch (a
-  browser-dispatched event runs a microtask checkpoint between listeners) and React drops the click of a held node it just
-  deleted. jsdom's synchronous `dispatchEvent` runs no microtask mid-dispatch, so pin the phase structurally and gate it in a real
-  browser. And Chromium hit-tests a MOUSE release once (pointerup, mouseup, click share a target): a pointerup-release mutant reds
-  only the touch arms and the held-control arms — predict that before running.
-- (b9-1) a scripted `PointerEvent` (jsdom's, `fireEvent`'s) defaults `isPrimary` to false: an `isPrimary` guard silently
-  disabled the first hook in every unit test. And a spy restored after a failing `expect` leaks into the next test: under the
-  capture mutant it moved another test's red line — restore in `afterEach` (`vi.restoreAllMocks()`).
-- (b9-3, the schema-v4 build) the old build as the oracle without a worktree: a `git archive <commit>:projects/the-back-nine` plus
-  a `node_modules` junction runs that build's OWN committed tests and its OWN mint (`tsx`, imports rooted at the CWD's `src`) —
-  U4 ran each old build's version-4 pins (134/134, 173/173), U6 froze each build's real version-3 plaintext. The archive cannot pick
-  up another session's uncommitted edit, and nothing is registered in the shared checkout.
-- (b9-3) a mutant prediction written against a plan's wording must be re-derived against the code as built: the plan predicted a
-  lowered constant would read "newer", but the built ladder judges "newer" on the DISK label before any arm, so the mint's 3
-  relabels to 4 and lands on corrupt (same kill set, different mechanism) — insight 126's family.
-- (b9-3) a schema-surface pin that only compares recorded VALUES misses a NEW vocabulary the codec starts checking; read the
-  codec's own call sites (each `needVocab` third argument, plus the `includes` check) so an unrecorded vocabulary reds too.
-- (b9-2, the schema-v4 plan; PROVEN by the b9-3 build — distill it) a version ladder's relabel step names its LITERAL successor, never
-  the current constant: a step that jumps to "current" carries an old plan past whatever step a later bump adds. A revert guard
-  must live OUTSIDE the commit it guards (a git revert takes a same-commit guard with it). Once the codec relabels, every test of
-  the disk version through the codec is vacuous: read the raw bytes. And a version-N fixture made by relabeling the current
-  fixture moves with the shared checks; freeze the old build's real output instead (DND 012).
+**DISTILL CANDIDATES:** none open. b9-4 distilled the whole block (b9-10, b9-1, b9-2, b9-3 and its own five) through a
+checked workflow (`wf_1b02479b-d42`: six drafters, six adversarial checkers, every draft corrected) into insights 149–152 and
+extensions of 018, 035, 036, 126 and 128.
 **LANDMINES from this session:**
 - **(b9-3) Git Bash's `grep -c $'\r$'` reports an LF file as all-CRLF** — it said `scenarioCodec.test.ts` had 1339 CRLF lines
   when node counted 0, and an edit script that trusted it wrote CRLF into an LF file (`scenarioFromDraft.ts` went MIXED; fixed

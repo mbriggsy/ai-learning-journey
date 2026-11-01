@@ -3,7 +3,7 @@ title: A mutant proof is only as good as its LABEL — the recorded "tier-keyed 
 date: 2026-09-10
 phase: Post-Act-4 (the gap to a friend betting real money) — the council build's adversarial review
 modules: [e2e/vertical-fit.spec.ts, src/ui/styles/app.css, docs/council-log.md, TODO.md]
-tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz]
+tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz, kill-line, spy-leak, restoreAllMocks, afterEach, input-device, hit-testing, prediction-correction]
 ---
 
 ## Problem
@@ -66,3 +66,12 @@ digested identically. The whole-file review (b9-9) ran the same test on its surv
 by aimed fuzz, and E31's claimed equivalence was REFUTED at the API — no money moved, but an output did, so its
 contract was pinned. Aim the fuzz at the branch the argument says can never decide, and judge equivalence at every
 output, not only the money.
+
+## Extended (2026-10-31, the h2 gesture hold) — read the LINE each kill reds on against what the plant changed, and count the input device in the arm topology
+
+The h2 cure's mutant pass (b9-1: 13 unit mutants, 5 of them also run against the e2e arms; `b9-h2-cure\PREDICTIONS.md`, `mutants-*-results.json`) wrote each kill set down before the run. Its runner keeps each failure's own first line, so a timeout can never pass as a kill. That came from the tests lens's find: a runner that keeps only the failing titles cannot tell a timeout from a kill. Reading those lines paid off twice.
+
+- **A kill for the wrong reason is a finding.** Under M3 (the click release moved to the capture phase), H9 ("unmounting mid-hold leaves nothing listening") went red as predicted. But its line named the `pointerup` listener ("pointerup (capture true) is still listened"), and M3 changes only the `click` listener. A bisect found the cause. H2d, the phase test, goes red first under M3. Its failing `expect` threw before its own `add.mockRestore()`, so its spy was still wrapping `window.addEventListener` when H9 ran. A spy restored at the end of a test body leaks whenever that test fails, which is exactly when a mutant runs. Fix: `vi.restoreAllMocks()` in `afterEach`. On the re-run, H9 goes red on "click (capture true) is still listened". A count-only check (2 red) passes with the leak still in the file. (The results file on disk keeps the first run's `pointerup` line; the re-run is recorded in PREDICTIONS.md's Observed section.)
+- **For an input-event mutant, which arms can go red depends on the device, and on whether the target MOVES or is DELETED.** v1 predicted that M2 (release at pointerup) would turn all six arms red. Before the run, the tests lens flagged the two mouse tall arms (confidence 50). Chromium hit-tests a mouse release once, so pointerup, mouseup and the click share a target. A label that only MOVED after pointerup still gets its click, so those arms likely stay green. Touch taps can go red, because their blur comes after the finger lifts. So can the Keep door on either device: it is DELETED, and React drops a click on a node it has let go of. Observed: exactly the two touch tall arms and both Keep arms. The same pre-run pass added K-panel to M6's predicted set, and that was observed too.
+
+All 13 unit kill sets matched their predictions exactly, every kill on the test's own assertion. Predict the set, then read each kill's line against what the plant changed. A kill in the right test for the wrong reason means the harness, not the code, decided it.

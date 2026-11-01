@@ -17,6 +17,11 @@
   `free_agent` move, `complete`. SEA is now our only DEF.
   The morning brief (lineup re-checks, the McGowan option, the Kittle trade recommendation) is
   `temp/week8-moves-log.md` (gitignored, local). Weeks 6-7: `temp/week7-moves-log.md`.
+- **Sun 11-01 ~10:00 ET, on Briggsy's word, all verified on `/rosters`:** Stevenson → RB, Swift → BN (Henderson
+  OUT made Stevenson NE's lead back: consensus 15.7 vs 14.7) · **Carnell Tate → IR** (Out) · **added Jared Goff, no
+  drop** (week-11 QB for Maye's bye). Roster 17 = 16 active + Tate on IR. 🚨 **When Tate's Out tag clears, Sleeper
+  likely blocks our adds/claims until he leaves IR: drop Harold Fannin Jr. then** (bye wk 11; Strange's bye is done).
+  Brief: `temp/week8-moves-log.md`.
 - **Kaeperni's offer (A.J. Brown + Tucker Kraft for Zay Flowers) was DECLINED 10-22 ~22:20 ET** on
   Briggsy's word. Verified: the panel read REJECTED, Active Trades was empty, `/rosters` unchanged.
 - **`scripts/trade_eval.py` is BUILT, COMMITTED (10-23) and REVIEWED (10-23):** 9 opus lenses, 18
@@ -57,7 +62,7 @@
    - **Kittle trade: ON HOLD (Briggsy, 10-28: "Let's hold on Kaeperni trade").** Don't re-pitch it unprompted.
      Kaeperni rejected Tate + Goff for Kittle on 10-20. The priced package (Swift + Strange for Kittle) is in
      `temp/week8-moves-log.md` if he reopens it. Trade deadline is week 11.
-   - Maye's week-11 bye: we have no backup QB. Stream a free agent, using a bench spot.
+   - Maye's week-11 bye: ✅ covered — Jared Goff added 11-01 (wk 9 Goff 20.2 vs Maye 20.6).
 2. **Optional: make `--search` fast again without moving a number.** It takes 355-373 s for 2,736
    packages on the frozen night (72 s before swaps repeated) and peaks at **2.7 GB** even with the
    memos emptied per give (measured 10-23; a reviewer measured ~1 GB on the one-swap code). Fine on
@@ -72,9 +77,8 @@
    Re-derive after any roster move):
    - **Never trade Hunter a RB or any flex body.** The 10-27 trade search left him out on purpose.
    - **Week 9:** Tate. · **Week 10:** Swift. · **Week 12:** nobody.
-   - **Week 11 is the big one:** Maye, London, Fannin, Stevenson AND the SEA DEF. There's no backup QB
-     on the roster, so stream a QB that week, and a DEF too if SEA is still the starter. Hunter loses
-     Stafford and Myers.
+   - **Week 11 is the big one:** Maye, London, Fannin, Stevenson AND the SEA DEF. Goff (added 11-01) starts
+     at QB; stream a DEF if SEA is still the starter. Hunter loses Stafford and Myers.
    - **Week 13:** Taylor, McGowan, Flowers, Shrader (stream a K). · **Week 14:** M. Wilson.
    - Hunter later: wk 10 D. Smith · wk 13 G. Wilson, B. Allen, BAL DEF · wk 14 McBride, Allgeier.
    - Trade deadline **week 11**. Playoffs 6 of 8, weeks 15-17.
@@ -97,11 +101,15 @@
 Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the worked cases.
 
 **trade_eval (review 2026-10-23: deferred on purpose, each measured)**
-- **When a dropped player clears waivers is unmeasured.** `waiver_clear_days: 1` says one day, but not whether it
-  ends 24 hours after the drop or at the next morning's processing. The two disagree only for a Saturday-night
-  drop. trade_eval assumes the drop clears in time to play that week, and prints "⚠ This one processes late" when
-  the gap could matter. **To measure:** the next time anyone in the league drops a player on a Saturday evening,
-  read his `W` label in the in-app Players tab (league home → Players).
+- **When a dropped player clears waivers: the DAY is measured, the hour is not yet.** Read in-app (league home →
+  Players) Sun 11-01 09:17 ET: four Saturday drops all read **`W Sun`** — Alec Pierce (cut Sat 17:43), JAX DEF
+  (20:44), Roschon Johnson (20:48, CHI plays Monday), Juwan Johnson (20:48, NO on bye, so no game lock muddies it).
+  "Next morning's run after a full day" would read `W Mon`, and a Sunday-03:15 run would already have cleared them,
+  so the rule is about **24 hours after the drop**, which is what trade_eval's `process_at + waiver_clear_days`
+  already models. Controls read `.add`: Mahomes (cut Thu 22:27), Dicker (Fri 00:05), Downs. **To finish:** read
+  Roschon and Juwan Johnson again after ~20:50 ET Sun 11-01 (expect `.add`), and the JAX DEF / Pierce rows after
+  their 1:00 kickoff (expect `W Wed` if a kickoff before the clear time locks them). Then reword trade_eval's
+  "is unmeasured" line (`render()`, the `⚠ This one processes late` warning) and run the suite.
 - **Their number is soft, ours is not.** A choice that is a coin flip for one side moves the OTHER
   side's total: Kaeperni's three-site +35.4 to +39.3 across tie rules on the frozen night, ours
   −32.3 to −32.7. `--search` keeps packages where theirs is ≥ 0, so a package near 0 for them can sit

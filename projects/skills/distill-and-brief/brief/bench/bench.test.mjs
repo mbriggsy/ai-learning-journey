@@ -12,8 +12,20 @@ import { applyFill, blobSha } from "./fills.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const REPO = join(here, "..", "..", "..", "..", "..");
-const CORPUS = join(here, "..", "corpus.next.mjs");
+// The live script: its card is the same in every recipe (KTD2), so this holds
+// before and after U7 whichever way the verdict goes.
+const CORPUS = join(here, "..", "corpus.mjs");
 const FILLS = JSON.parse(readFileSync(join(here, "..", "results", "header-fills-2026-10-31.json"), "utf8"));
+
+// A lesson's text as git holds the blob its fill was written from. Read from
+// git, not the working tree, so the tests still run once the fills land (U7)
+// or a lesson moves on.
+function blobText(f) {
+  const r = spawnSync("git", ["-C", REPO, "cat-file", "blob", f.blob], { encoding: "utf8", maxBuffer: 1 << 26 });
+  assert.equal(r.status, 0, `${f.lesson}: git cat-file blob ${f.blob} failed: ${r.stderr}`);
+  assert.equal(blobSha(r.stdout), f.blob, `${f.lesson}: git returned another blob`);
+  return r.stdout;
+}
 
 const scratch = mkdtempSync(join(tmpdir(), "bench-test-"));
 after(() => rmSync(scratch, { recursive: true, force: true }));
@@ -30,8 +42,7 @@ test("there are 19 fills: tags for the Back Nine's 10 empty-tag lessons, headers
 test("applied to its own blob, every fill leaves a frontmatter corpus.mjs reads, with tags, and no ## heading changed", () => {
   const byFolder = new Map();
   for (const f of FILLS.fills) {
-    const original = readFileSync(join(REPO, f.folder, f.file), "utf8");
-    if (blobSha(original) !== f.blob) continue; // the lesson moved on since; the copy builder refuses it too
+    const original = blobText(f);
     const filled = applyFill(original, f);
     assert.deepEqual(headings(filled), headings(original), `${f.lesson} changed a heading`);
     const dir = join(scratch, f.lesson.slice(0, 2));
@@ -39,7 +50,7 @@ test("applied to its own blob, every fill leaves a frontmatter corpus.mjs reads,
     byFolder.set(dir, (byFolder.get(dir) || 0) + 1);
     writeFileSync(join(dir, f.file), filled);
   }
-  assert.ok(byFolder.size > 0, "no fill matched the working tree");
+  assert.equal([...byFolder.values()].reduce((a, b) => a + b, 0), FILLS.fills.length, "every fill was applied");
   for (const dir of byFolder.keys()) {
     const r = spawnSync(process.execPath, [CORPUS, dir], { encoding: "utf8" });
     assert.match(r.stdout, /Empty tags, so search their title and filename: none\./);
@@ -49,9 +60,7 @@ test("applied to its own blob, every fill leaves a frontmatter corpus.mjs reads,
 
 test("Feud 025's bare date:, modules: and status: body lines move into its header and leave the body", () => {
   const f = FILLS.fills.find((x) => x.lesson === "ff-025");
-  const original = readFileSync(join(REPO, f.folder, f.file), "utf8");
-  if (blobSha(original) !== f.blob) return;
-  const filled = applyFill(original, f);
+  const filled = applyFill(blobText(f), f);
   const [, fm, body] = filled.match(/^---\n([\s\S]*?)\n---\n\n([\s\S]*)$/);
   assert.match(fm, /^date: 2026-08-14$/m);
   assert.match(fm, /^modules: \[scripts\/sleeper_draft_console\.js, docs\/draft-day-runbook\.md\]$/m);

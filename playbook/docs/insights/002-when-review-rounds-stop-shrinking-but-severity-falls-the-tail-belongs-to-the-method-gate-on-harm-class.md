@@ -3,7 +3,7 @@ title: When review rounds stop shrinking but severity keeps falling, the tail be
 date: 2026-10-21
 phase: our-setup U29 (peer-safe squeaky-clean)
 modules: [projects/skills/squeaky-clean/SKILL.md]
-tags: [code-review, ultramode, review-rounds, convergence, seams, landing-criteria, mutation-testing, workflow-audit, read-only-lenses]
+tags: [code-review, ultramode, review-rounds, convergence, seams, landing-criteria, mutation-testing, workflow-audit, read-only-lenses, prose-bar, skeptic-rounds, fix-opens-seam]
 ---
 
 *The squeaky scripts this lesson came from were flushed on 2026-10-29 (their last version is in git history before that day); the lesson stands on its own.*
@@ -40,3 +40,7 @@ Count each round's seams that trace to the previous round's fixes. Once those do
 - Any review-and-fix loop on a safety-critical unit.
 - Any heuristic attributor: blame from logs, ownership from history, "who changed this" from timestamps.
 - Mutation runs against files a reviewer or a live junction is reading.
+
+## Extended (2026-10-31): a round's fix to a written bar opens the next round's P1 too
+
+The brief recall fix's bar for `applies_when` lines (a page of rules for line writers, `distill/applies-when.md`, since deleted with the candidates the re-score did not land) went through four skeptic rounds before it was frozen. Round 2 added a fallback for a lesson that applies only one way in; that fallback contradicted the bar's own no-repeat rule and its check 3. Round 3 caught it, and round 4, looking only for P1s, found nothing. The seam is the same as in code: a round's fix is new text, unreviewed until the next round reads it. A prose rule set gets the same treatment as code: a fresh round after each fix, and the exit by harm class, not by count.

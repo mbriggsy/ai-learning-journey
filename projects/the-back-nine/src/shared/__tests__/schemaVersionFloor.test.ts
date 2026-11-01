@@ -17,19 +17,24 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { CURRENT_SCHEMA_VERSION } from '../model'
+import * as model from '../model'
 
 /** The highest version a real save may already carry. Raise it, in its own commit, after each bump. */
 const FLOOR = 4
 
+/** Read through the module namespace, never a named import: a `git revert` of the bump that introduced the
+ *  constant DELETES it, and a named import would then fail typecheck (TS2305) and red here on a matcher
+ *  TypeError — never on the message below, which is the whole point of this guard. */
+const current: unknown = (model as Record<string, unknown>).CURRENT_SCHEMA_VERSION
+
 describe('the schema version floor (a one-way door once a real save exists)', () => {
   it('CURRENT_SCHEMA_VERSION never falls below the floor — lowering it, or reverting the bump that raised it, strands every real save made at the higher version', () => {
     expect(
-      CURRENT_SCHEMA_VERSION,
-      `CURRENT_SCHEMA_VERSION is ${CURRENT_SCHEMA_VERSION}, below the floor of ${FLOOR}. A real save may already carry ` +
+      typeof current === 'number' && current >= FLOOR,
+      `CURRENT_SCHEMA_VERSION is ${String(current)}, below the floor of ${FLOOR}. A real save may already carry ` +
         `version ${FLOOR}, and this build would show it as "saved by a newer version" with no newer version to ` +
         'update to. Never revert a schema bump or lower the constant once a real save exists — roll forward ' +
         '(docs/architecture.md §7.3).',
-    ).toBeGreaterThanOrEqual(FLOOR)
+    ).toBe(true)
   })
 })

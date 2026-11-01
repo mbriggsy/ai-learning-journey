@@ -12,7 +12,7 @@ import 'fake-indexeddb/auto'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { IDBFactory } from 'fake-indexeddb'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CURRENT_SCHEMA_VERSION, VAULT_STORE_NAME, type AnyScenario, type Scenario } from '@shared/model'
 import { decrypt, unwrapDataKey } from '../../crypto/cipher'
@@ -27,7 +27,20 @@ vi.mock('../db', async (importOriginal) => {
   return { ...actual, markBackupMade: vi.fn(actual.markBackupMade) }
 })
 import { exportVault } from '../backup'
-import { createSession, type VaultSession } from '../session'
+import { createSession as createSessionUnderTest, type VaultSession } from '../session'
+
+// Every session a test opens is locked after it, pass or fail. A FAILED test's unlocked session keeps
+// answering the single-writer probe (the BroadcastChannel outlives the test), so the next test's
+// firstSave read "open-in-another-tab" — a cascade red the schema-v4 mutant pass first read as kills.
+const openSessions: VaultSession[] = []
+const createSession: typeof createSessionUnderTest = (...args) => {
+  const session = createSessionUnderTest(...args)
+  openSessions.push(session)
+  return session
+}
+afterEach(async () => {
+  await Promise.all(openSessions.splice(0).map((s) => s.lock()))
+})
 
 const PASSPHRASE = 'plinth otter vivid casket 92 lampoon'
 const NEW_PASSPHRASE = 'gallant mosaic thunder eel 7 parquet'

@@ -718,6 +718,17 @@ describe('the save gesture — a FAILED write claims nothing (the operand is the
 // (4) THE ZERO-WORK SHORT-CIRCUIT — the record-free frame pays nothing (the fit-frame contract)
 // =================================================================================================
 
+describe('opening a returning household writes NOTHING (D1: nothing is written until a Save)', () => {
+  it('the hydrate, the re-entry gate and the revealed answer put no plan on disk — a save is offered, never made', async () => {
+    await mountReturning(DISK_READY.scenario)
+    await act(async () => {})
+    // Non-vacuity: the hydrate really reached the answer (mountReturning passed the re-entry gate), and
+    // the answer offers the very save a re-save on open would have made behind the household's back.
+    expect(saveCta(), 'the answer is up and offers a save').not.toBeNull()
+    expect(h.saved, 'opening the plan wrote nothing').toHaveLength(0)
+  })
+})
+
 describe('the record-card memo — a record-free mount does ZERO expensive work', () => {
   it('never calls currentDraftFingerprint or exposureForDraft on an unsaved result frame', async () => {
     // Both reads are expensive: the fingerprint runs the solve builder (→ buildSpineParams → the

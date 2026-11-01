@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-01, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1).** The schema-v4 job
+▶ **START HERE (2026-11-01, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -104,15 +104,16 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-01 (b9-7: build 2's U1 and U2; b9-6's block pruned into it):** commits `9580893b` (U1's doc corrections,
-the plan's U4 offset-0 scenario and U11 step-4 wording) and `ef69837b` (U2, the cycle closed), and this close. By exit code at
-`ef69837b`'s tree: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm build` 0, `pnpm verify:bundle` 0 (288.5 KiB), `pnpm verify:doc-stats`
-0 (the test count lives under that gate). `pnpm test`: every file green except `verify-doc-stats.test.ts`'s citation arm, run
-BEFORE the re-anchor; after it, that file ran 43/43 alone (the full suite was not re-run on the final tree, whose only further
-change is comments and docs; CI runs it). R10's identity sweep on that final tree: 35 of 35 keys identical (`idcheck.mjs u2final`).
-CI, read by id: `fc516f8b`'s 41274112455 and `9580893b`'s 41280641462 green on both jobs; `ef69837b`'s 41282103814 had
-`verify-rv-chart-text` green and `verify` still running at this close. The weekly meter read 87% at the close and resets Wed 2026-11-04 09:00 ET;
-U1 cost one verifier (~0.36M helper tokens). Pace U4's mutant pass and the Phase A engine review against that reset.
+**SESSION 2026-11-01 (b9-8: build 2's U3, U4 and U15 — Phase A's build units are all done; b9-7's block pruned into it):**
+commits `ad525b9e` (U3), `a7f4dbad` (insight 146's out-of-date note), `343c0dd3` (U4) and `856ca79d` (U15), and this close.
+By exit code at `856ca79d`'s tree: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm build` 0, `pnpm verify:bundle` 0 (288.5 KiB),
+`pnpm verify:doc-stats` 0 (the test count lives under that gate). `pnpm test`: every file green except
+`verify-doc-stats.test.ts`'s citation arm, run BEFORE each commit's one re-anchor; after it that file ran 43/43 alone. R10's
+identity sweep at each commit: 35 of 35 HEAD keys identical (U3 and U4 byte-equal to `sweep-head-a.json`; U15 adds the one
+tree-only key, so `sweep-u15.json` is the base from here). CI, read by id: `ef69837b`'s 41282103814 and `979a7ea9`'s
+41282985979 green on both jobs (the former's `verify:fit` ran 35+ minutes beside the next run's, then passed);
+`a7f4dbad`'s 41284600072 green on both; `343c0dd3`'s 41286577299 and `856ca79d`'s 41288426908 were running at this close.
+No helper agents ran this session (no fan-out); the weekly meter still gates the Phase A review (START HERE).
 **DISTILL CANDIDATES (b9-6):**
 - **A ruling's words can leave its own mechanism's figure undefined; a trace that asks "what is the referent, on which grain"
   finds it, and a second council rules it — never a pick by the planner.** "Never above the quoted figure" had no referent past
@@ -145,7 +146,21 @@ U1 cost one verifier (~0.36M helper tokens). Pace U4's mutant pass and the Phase
 - **A range quoted beside a window must be read on that window.** The register said `date`'s left over runs "$16,985 →
   $59,986 across 2026–2034"; $59,986 is 2035's, and across 2026–2034 it peaks at $37,223 (insight 141's population rule,
   on the time axis). U1 measured every year and corrected both lines.
-**LANDMINES (b9-7's, then b9-6's, then carried from b9-5, b9-4 and b9-3):**
+**DISTILL CANDIDATES (b9-8):**
+- **A branch no input reaches is reached by planting the float lineage it guards, and a mutant proves the plant landed.**
+  The knife-edge branch (`taxOverlay.ts`, ledger ≤ 0 while `stepYear`'s state is positive) shipped with C2 untested. A
+  Roth-only pool T and a stock weight w where w·T + (1 − w)·T lands one float step above T, with a need of exactly T, reach it
+  deterministically (`workingYearCredit.test.ts`'s knife-edge describe; T = 12,345.67, w = 0.45); the outputs alone cannot
+  tell the branch from its sibling, so the U4 mutants M4a–c (each arm's credit dropped) are what prove it.
+- **A plan's verification sentence can fix a design its Files list never states.** U3's "the ledger tests pass with only
+  the allowlist edit" forced the ledger to RE-EXPORT the bottom line (its test imports it from the ledger), though the
+  Files list said only "imports it". Read every verification clause for the shape it implies before choosing one.
+**LANDMINES (b9-8's, then b9-7's, then b9-6's, then carried from b9-5, b9-4 and b9-3):**
+- **(b9-8) Every `src` commit that shifts lines reds the full suite's citation arm until `pnpm doc:reanchor HEAD --apply`
+  runs** (U4: 326 edits, U15: 21). Run the dry `pnpm doc:reanchor HEAD` before the suite, apply it once, then the suite.
+- **(b9-8) The HSA leaves-out row's TRAP 3 (Tier 0 of the 2026-08 tiered list below) calls its three cited branches "zeroing" ones, but
+  the third (`taxOverlay.ts`'s knife-edge buckets) is not a depletion branch** — since C2 it holds the year's deposits and
+  since U4 the left-over credit. Whoever builds that row re-reads it before writing the HSA sentence.
 - **(b9-7) TaskStop on a backgrounded `pnpm exec tsx` kills only the shell.** The node tree keeps running and keeps
   writing. List with `Get-CimInstance Win32_Process -Filter "Name='node.exe'"` and kill with `taskkill /PID <pnpm pid> /T /F`.
 - **(b9-7) `pnpm exec tsx -e` with a top-level `await` hung with no output** (killed after minutes). Write a script file.

@@ -1384,6 +1384,8 @@ const ALLOWED: Readonly<Record<string, readonly string[] | 'any'>> = {
     'WorkingYearCashLines',
   ],
   '@engine/rmd': ['rmdStartAgeForBirthYear'],
+  // Build 2's U3 (KTD4): the printed grain's one home, which the overlay reads too; the bottom line is re-exported.
+  '@engine/moneyGrain': ['bottomLineFromCents', 'finite', 'toCents', 'workingYearBottomLine'],
 }
 
 /** Every module a source text reaches, read by the TypeScript parser — `import` and `export … from`

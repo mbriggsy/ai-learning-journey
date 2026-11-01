@@ -52,7 +52,8 @@
  * out — a true −$12.005 reads "Short $13" whichever way the float lands). The bottom line is KTD12's rule on
  * that cash — `c < 0 ? −⌈−c⌉ : ⌊c⌋ + 0`: a draw reads at least "Short $1", a surplus rounds down, and −0 never
  * appears. The lines are rounded by largest remainder twice (to the cent against the cash, then to the dollar
- * against the bottom line), so they sum to it exactly.
+ * against the bottom line), so they sum to it exactly. The cent snap, its tie rule and the bottom line live in
+ * `moneyGrain.ts` (build 2 KTD4), the one home the tax overlay reads too; the largest remainder stays here.
  *
  * PURE: no clock, entropy or environment; draw-free. Finite fields only (DND 009). THROWS on a run it cannot
  * describe — one `validateParams` refuses, one without W, one in which nobody works in year 0, or one whose
@@ -95,6 +96,11 @@ import {
   type WorkingYearCashLines,
 } from '@engine/taxOverlay'
 import { rmdStartAgeForBirthYear } from '@engine/rmd'
+import { bottomLineFromCents, finite, toCents, workingYearBottomLine } from '@engine/moneyGrain'
+
+// The printed grain lives in one leaf (build 2 KTD4), so the tax overlay reads it without importing this module;
+// the bottom line is re-exported here, so no importer of it changes.
+export { workingYearBottomLine } from '@engine/moneyGrain'
 
 /** The later-year events only the draft can name (see the module docblock). */
 export const WORKING_YEAR_DRAFT_EVENT_CODES = ['catchUpStepDown', 'incomeStarts', 'incomeEnds'] as const
@@ -129,29 +135,6 @@ interface ComposedYear {
   readonly context: OverlayYearContext
   readonly floor: PreparedWorkingYearFloor
   readonly lines: WorkingYearCashLines
-}
-
-const finite = (x: number, label: string): number => {
-  if (!Number.isFinite(x)) throw new Error(`[workingYearLedger] ${label} is not finite (${x}) — DND 009`)
-  return x
-}
-
-/** How far past a half cent float dust may land and still be read as the tie (a millionth of a cent — far
- *  above the dust of a sum of real-money terms, far below any money). */
-const HALF_CENT_DUST = 1e-6
-/** A figure in whole cents, never −0: the nearest cent, a half-cent tie (within dust) toward −∞ — the gloomy
- *  side of every line and of the cash (`Math.round` would settle the tie by the dust's sign, upward on a
- *  true tie: −$12.005 would read "Short $12"). */
-const toCents = (dollars: number): number => Math.ceil(dollars * 100 - 0.5 - HALF_CENT_DUST) + 0
-
-/** KTD12's bottom line on a cash already in cents. */
-function bottomLineFromCents(cashCents: number): number {
-  return cashCents < 0 ? -Math.ceil(-cashCents / 100) : Math.floor(cashCents / 100) + 0
-}
-
-/** The picture's bottom line for an engine cash: KTD12's rule on the cash snapped to the cent. */
-export function workingYearBottomLine(cash: number): number {
-  return bottomLineFromCents(toCents(finite(cash, 'the cash')))
 }
 
 /**

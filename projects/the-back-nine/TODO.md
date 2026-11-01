@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-31, rewritten by b9-5 — the ranking pass is DONE, and build 2's `/brief` is DONE).** The schema-v4 job
+▶ **START HERE (2026-11-01, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -30,12 +30,19 @@ entries to Tier 0, 10 to Tier 1 and one to Tier 4, holding seven (his yes on the
 Tier 0); each moved entry's metadata line says "re-tiered 2026-10-31
 (b9-5)", the readings that bind the next walk are the register header's sweep paragraph, and every named entry now sits in the D7
 queue below (its order unmoved). Next, in order:
-1. **Build 2, the surplus question.** The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
-   year never checks the household's pay against its spending…*. `/brief` is DONE (b9-5): `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\brief.md`
-   — five landmines, the first being that "saved" moving the engine makes this a schema-v5 bump under `docs/architecture.md`
-   §7.3's rule (a), so the bump is one of the build's units. **Next: the plan, deepened and checked as a whole**; then each build
-   unit, opened with `/brief <that unit's topic>`; the whole-file review, with an adversary and every finding verified;
-   `/distill`. Ride the Tier 4 *`simulate.ts` and `earningsTest.ts` import each other…* on it (it touches `simulate.ts`).
+1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
+   (`ec2c7694`), planned, deepened and checked as a whole. Council `wf_1b5d9962-73c` (8/10) ruled the six calls the 2026-10-21
+   words left open; they are the plan's Key Decisions. **Next: U1, the before-measurement on a frozen `git archive` HEAD copy,
+   opened with `/brief <U1's topic: measuring the working-year cash stream on a frozen HEAD copy>`**. No `src` change in U1;
+   `PREDICTIONS.md` is written before U4 runs. Then the build units in the plan's order, each opened with
+   `/brief <that unit's topic>`:
+   - Phase A: U2 (the import-cycle rider, which closes the Tier 4 *`simulate.ts` and `earningsTest.ts` import each other…*), U3,
+     U4 and U15, then the Phase A engine review.
+   - Phase B: U5 and U13, the version-4 archive, the go-live (U6 + U7 + U8 + U14 + U9), then U10.
+   - Phase C: U11, then U12.
+   After the build: the whole-file review, with an adversary and every finding verified; then `/distill`. The record (brief,
+   seven research dossiers, three deepen artifacts, the doc-review's `RESOLVED.md`) is in
+   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\`.
 - **⚑ RULED by him 2026-10-31 — no tier call is open.** The council's two parked calls ("I yield to your recommendations"): a
   gloomy-only entry stays in Tier 0, and D7's "rosier" means for some household the intake accepts (the register header and the
   council row record both). And the dependents ask ("Yes, ask it"): one optional question, "none" an answer, never a guessed
@@ -76,17 +83,29 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-10-31 (b9-5: the ranking pass, his three rulings, build 2's brief; b9-4's block pruned into it):** commits
-`31e018d5` (the sweep's 35 moves), `a3df5a53` (its refuter count corrected: 42 candidate moves, 38 refuters — the first
-commit's message said 29 and 37), `73e81a3a` (his ruling on the council's two parked calls), `cf0555ac` (his yes on the
-dependents ask, two more moves), `a8e8d228` (insight 102's moved type, noted by the brief), `a5b51426` (START HERE), and this
-close. Docs only: no `src` file has changed since `1fb8b25e`. By exit code at this close: `pnpm typecheck` 0,
-`pnpm verify:doc-stats` 0 (the test count lives under that gate). Carried from b9-4, valid while `src` is unchanged: `pnpm
-lint` 0 and the full suite 0 at `1fb8b25e`; `pnpm build` 0 and `pnpm verify:bundle` 0 (288.5 KiB) at `bb26cbca`. CI, read by
-id: run 41262441067 (`31e018d5`) and run 41262491283 (`a3df5a53`) green on both jobs; runs 41264447045 (`73e81a3a`),
-41265017924 (`cf0555ac`), 41265178365 (`a8e8d228`) and 41265284099 (`a5b51426`) were still running at the close — read them
-by id (`gh run view <id>`).
-**DISTILL CANDIDATES (b9-5):**
+**SESSION 2026-11-01 (b9-6: build 2's plan; b9-5's block pruned into it):** commit `ec2c7694` (the plan, the council's digest
+row, the newer-version door's amended trigger) and this close. Docs only: no `src` file has changed since `1fb8b25e`. By exit
+code at this close: `pnpm typecheck` 0, `pnpm verify:doc-stats` 0 (the test count lives under that gate). Carried, valid while
+`src` is unchanged: `pnpm lint` 0 and the full suite 0 at `1fb8b25e`; `pnpm build` 0 and `pnpm verify:bundle` 0 (288.5 KiB) at
+`bb26cbca`. CI, read by id: b9-5's five open runs (41264447045, 41265017924, 41265178365, 41265284099, 41265479674) all green on
+both jobs; read `ec2c7694`'s and this close's runs by id. The plan's process cost about 6.4M helper tokens (research 2.2M, council
+1.9M, deepen 0.9M, doc review 1.3M); the weekly meter read 83% at 2026-11-01 ~00:30 and resets Wed 2026-11-04 09:00 ET — U1 is
+tools-only and cheap, so pace the fan-outs (the U4 mutant pass, the Phase A review) against that reset.
+**DISTILL CANDIDATES (b9-6):**
+- **A ruling's words can leave its own mechanism's figure undefined; a trace that asks "what is the referent, on which grain"
+  finds it, and a second council rules it — never a pick by the planner.** "Never above the quoted figure" had no referent past
+  year 0. Seven traces found six open calls, and council `wf_1b5d9962-73c` ruled them. Its red team broke two claims the seats
+  all held: "min(live, stored) is rosy-proof" (both figures sit on the same W) and "cap (a) only errs gloomy" (survivor W_t and
+  K5 sit below the cap).
+- **A staleness stamp is undone by every writer that rebuilds the object it rides on.** The Keep fix's first draft left the
+  Keep door itself offering Keep on a stale kept figure, and one tap re-minted the answer without the stamp (deepen
+  `wf_a6429110-d52`, two lenses independently). Audit every writer of the object, plus the door's own visibility rule.
+- **A test of a multi-site write that reads only the authoritative total passes with half the sites missing.** The credit's
+  total moves through `stepYear` alone, so a dropped bucket fold or basis line hides as a smeared asset location. Assert
+  each destination's delta and the zero deltas beside it.
+- **A unit ID in prose collides across plans:** the plan's own U13 and build 1's "U13 working-years clock" sat in one
+  sentence. Cite a foreign unit with its home ("build 1's U13").
+**DISTILL CANDIDATES (b9-5, still open):**
 - **A refuter pair that splits on whether a ruling EXISTS has found a call that is still his: ask, never pick a side.** The
   dependents ask: one refuter read D7 plus the queue's "yep, seems right" as the ruling, the other read a queue approval as
   ORDER only; asked in plain words, he ruled in one answer and both entries moved. (Briefs: the reader and refuter briefs in
@@ -96,7 +115,14 @@ by id (`gh run view <id>`).
 - **An "either way" lifts only when it signs the answer the household acts on** — across households (*The first answer assumes
   money comes out of every account in proportion…* lifted) versus two opposite effects inside one household with the net
   unsigned (*The investment mix is frozen…* held); recorded as a reading in the register header's sweep paragraph.
-**LANDMINES (b9-5's, then carried from b9-4 and b9-3):**
+**LANDMINES (b9-6's, then carried from b9-5, b9-4 and b9-3):**
+- **(b9-6) Windows says a wrong-case path exists.** `[ -f src/intake/__tests__/AssumptionPanel.test.tsx ]` passed, but the
+  file is `assumptionPanel.test.tsx`, and CI is Linux. Check a path's case with `git ls-files --error-unmatch <path>`.
+- **(b9-6) `docs/plans/features/README.md`'s index is stale.** It has no rows for the pay-check, schema-v4 or build-2 specs,
+  and its prose still calls the working-year tax floor "the next build". Fix it in build 2's U12 docs pass: add the three
+  rows, and rewrite the "All of them are shipped except…" sentence from the roadmap.
+- **(b9-6) Build 2's plan names files by path, read at HEAD `a3cd0b16`.** U2's cycle move shifts about 86 doc citations into
+  `simulate.ts`. Re-open every cited line before acting on it (the features README's own rule).
 - **(b9-5) A commit message's counts typed from memory went out wrong** (`31e018d5`: "29 refuters over 37 candidate moves";
   the run had 38 over 42) — fixed by a follow-up commit, since a pushed message never changes. Count from the run's own
   record before writing a number into a commit.

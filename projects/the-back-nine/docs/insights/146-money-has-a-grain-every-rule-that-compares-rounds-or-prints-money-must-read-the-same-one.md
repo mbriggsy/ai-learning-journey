@@ -2,7 +2,7 @@
 title: "Money has a grain, and every rule that compares, rounds or prints a money figure must read the SAME one — six defects across the pay check and the Social Security engine were a rule whose edge, rounding or tie read a different grain from the screen or from its sibling: 40¢ a month ran as W behind \"$0\", float dust floored $3,060 to −$3,061, Math.round read a true −$12.005 as \"Short $12\", and a dime floor in one function left its sibling cap a dime above the law"
 date: 2026-10-31
 phase: the pay check (A7 and its review, Phase B, the whole-file review — rulings 39 and 40); the RIB-LIM reorder (b9-11); the earnings test (b9-12)
-modules: [src/intake/sanity.ts, src/intake/fields.tsx, src/engine/workingYearLedger.ts, src/engine/earningsTest.ts, src/engine/socialSecurityBenefit.ts]
+modules: [src/intake/sanity.ts, src/intake/fields.tsx, src/engine/workingYearLedger.ts, src/engine/moneyGrain.ts, src/engine/earningsTest.ts, src/engine/socialSecurityBenefit.ts]
 tags: [money, grain, rounding, cents, float-dust, tie-rule, gloomy-side, edge, display, mixed-basis, dime]
 ---
 
@@ -35,6 +35,11 @@ largest-remainder rounding, so a true −$12.005 reads "Short $13" whichever way
 a withheld year's remaining months in exact cents (and keeps the composed float where nothing is withheld, for
 bit-identity); `formatMoneyPair` prints both figures to the cent when they differ but round to one dollar; and all
 three RIB-LIM amounts read ONE PIA floored to the dime (`piaDime`).
+
+> **Out of date (corrected 2026-11-01):** build 2's U3 moved the cent snap, its dust tolerance and the bottom line
+> out of the ledger into a leaf, so the tax overlay can read the same grain. The current cent snap lives in
+> `src/engine/moneyGrain.ts` (`toCents`, `workingYearBottomLine`); the largest-remainder rounding stays in
+> `src/engine/workingYearLedger.ts` (`roundLinesToBottomLine`).
 
 ## Key Insight
 

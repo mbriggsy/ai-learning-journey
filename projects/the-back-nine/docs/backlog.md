@@ -71,7 +71,8 @@
 >
 > **The register-wide sweep (2026-10-31, b9-5)** walked all 158 open Tier 1–4 entries and put each of the 42 candidate moves
 > to an xhigh refuter (38 refuters; one judged four gloomy rises, one the two down-moves): 24 entries rose to Tier 0, 10 to
-> Tier 1, one fell to Tier 4 (each stamped "(b9-5)"), and seven held. Its readings bind the next
+> Tier 1, one fell to Tier 4 (each stamped "(b9-5)"), and seven held. Two of the seven rose the same day on his ruling: his
+> yes to asking about dependents released both dependents entries from step (1), and step (3) lifted them to Tier 0. Its readings bind the next
 > walk: an "Either" lifts when it signs the acted-on answer across households (*The first answer assumes money comes out of
 > every account in proportion…*), but two opposite effects inside one household with the net unsigned hold on step (5)
 > (*The investment mix is frozen at today's blend for life…*). A household fact the repo records for the entry's exact
@@ -2016,6 +2017,39 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
   - Never infer a Part A buyer from work history or benefit figures.
   - Never let the "keep it inside your spending" instruction survive beside the priced premium: that charges it twice.
 
+### North Carolina's child deduction is unmodeled — a household with qualifying children pays more NC tax than the law asks in every year, and in a clamped working year the deduction's step-down as AGI rises is missing from the increment
+
+`S` · **pilot** (the deduction) · **briggsy** (whether the intake asks about children — RULED yes 2026-10-31) · filed 2026-10-20 (b9-5) by the working-year tax floor's KTD7 — pre-existing; the floor makes its AGI dependence reachable · **re-tiered 2026-10-31 (b9-5): Tier 2 → Tier 0** by the header's tier ladder, step (3) (council `wf_ed0bbb05-1f1`)
+
+- **The gap.** G.S. 105-153.5(a1) allows a per-child deduction for each child for whom the federal child tax credit is allowed, stepping down as AGI rises. The schedule was not re-read here — read the statute before quoting a figure. The engine's NC base subtracts only the standard deduction (`stateTax.ts`), and the model collects no children or dependents.
+- **Direction — regime-conditional.**
+  - Every year: the omitted deduction OVERSTATES the NC tax level (pessimistic).
+  - A clamped working year: the floor charges state(B + I + P) − state(B + I). The real increment includes any step of the deduction lost as P lifts AGI, and that is omitted, so the increment can read LOW at a step (optimistic).
+  - Unmeasured.
+- **Reach.** An NC household with a child the federal credit allows. No seed.
+- **Prescription.** (1) His call on asking (children's ages is a schema addition; it changes the answer, so `docs/architecture.md` §7.3 rule (a) bumps the schema version for it). (2) The deduction by AGI in `stateIncomeTax`'s NC arm, presence-keyed on the fact; red-first from the statute's table; a ledger row naming `stateTax` for NC.
+- ⚑ NEGATIVE: never default a child count; never grant it without the federal credit's allowance condition.
+- ⚑ **RULED 2026-10-31 (b9-5): ASK IT.** Asked "Should setup ask whether you have kids or other dependents?", Briggsy answered "Yes, ask it" — one optional dependents question (each dependent's age, and whether they are on the health-insurance quote), where "none" is an answer and the tool never guesses a count. Prescription (1) is answered; the ask rides *Children or other dependents are never asked about…*. With the ask ruled, step (1) no longer holds this entry: its Direction names an optimistic regime (the clamped year's increment "can read LOW at a step"), so step (3) lifted it to Tier 0 the same day. (The sweep had held it: its two refuters split on whether D7's "intake asks" and his "yep, seems right" on the D7 queue already made the call, and a queue approval rules ORDER.)
+
+### Children or other dependents are never asked about — the marketplace subsidy and the health quote assume just the two of you
+
+`L` · **briggsy** (the question's words; whether intake asks about dependents RULED yes 2026-10-31) → **pilot** (build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and engine sweeps) · **re-tiered 2026-10-31 (b9-5): Tier 2 → Tier 0** by the header's tier ladder, step (3) (council `wf_ed0bbb05-1f1`)
+
+- **The gap (read).**
+  - The marketplace (ACA) subsidy's poverty-line household size is the number of living spouses (`src/engine/taxOverlay.ts:656-658`, read at `:2349` and `:2595`). Every household uses the 48-states-and-DC table; Alaska's and Hawaii's higher tables are "OUT-but-disclosed" only in a constants note (`src/engine/constants/health.ts:112`, `:120`).
+  - The quote help asks for "a quote for everyone under 65 in the household" (`src/ui/copy.ts:225-226`), but `escalateQuote` splits it across the adults' ages only and ends each share at that adult's 65th year (`src/intake/intakeMap.ts:352-372`), so a child's share ages along a parent's curve and ends with it.
+  - A widowed parent files single: the surviving-spouse rates a dependent child allows are excluded by the constant (`src/engine/constants/tax.ts:337-344`). The engine has no federal child tax credit either.
+  - Existing slices: *North Carolina's child deduction is unmodeled…* (its ask already his call — "children's ages is a schema addition", which bumps the version under `docs/architecture.md` §7.3 rule (a)) and *Pennsylvania's Tax Forgiveness is unmodeled…* ("Dependents are not collected"). One dependents question serves all of them.
+- **Direction.** Mostly gloomier: a bigger household gets more subsidy and a higher cliff at the same income, and that effect runs one way. The quote split leans either way in a given year. Unmeasured.
+- **D7.** Ask for it. The household knows its dependents; the tool must not assume an empty nest.
+- **Prescription.**
+  - (1) ⚑ **RULED 2026-10-31 (b9-5): ASK IT.** Asked "Should setup ask whether you have kids or other dependents?", Briggsy answered "Yes, ask it": one optional answer, "none" allowed, never a guessed count (the full note is on *North Carolina's child deduction is unmodeled…*, which rides this question). With the ask ruled, step (1) no longer holds the entry; its quote split "leans either way", so step (3) lifted it to Tier 0 the same day.
+  - (2) Build one optional dependents answer (it changes the answer, so `docs/architecture.md` §7.3 rule (a) bumps the schema version for it; each dependent's age, and whether they are on the marketplace quote), feeding the poverty-line size, the quote split, the surviving-spouse filing rule, the federal child credit, NC's child deduction and PA's forgiveness table. Each consumer red-first from its own statute; read each age-out rule separately (the ACA's, IRC §2(a)'s, §24's and NC's differ).
+- ⚑ NEGATIVE:
+  - Never default a dependent count (the NC and PA entries' NEGATIVE).
+  - An absent answer reproduces today's two-adult run byte-identically.
+  - Never price Alaska's or Hawaii's table without a state answer that names them; "somewhere else" does not.
+
 ## Tier 1 — the differentiator does not land
 
 ### The working-year methodology row's pay-check paragraph says "what you said a working year costs" without the figure — a quantity it names, unquoted
@@ -3750,20 +3784,6 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
 - ⚑ NEGATIVE: never flip the WHOLE entry to `directionalUntilPinned: true` — the walk is family-level, so every tax-on household would be withheld or disclosed for a point that bites only the 1959 cohort. Never re-cite it to a primary to clear the tripwire while the 1959 row still rests on a proposed rule. Never swap 1959 to 75 on a pilot's reading of the statute — 73 is the IRS's own proposed reading.
 - **Closes when:** the value matches the final reg for every reachable cohort (the unreachable pre-1949-07-01 band built or documented), the 1959 row is either disclosed per household or pinned to a final (b)(2)(v), the citation names the eCFR read, and the tripwire's `EXEMPT` map no longer lists `tax.rmdStartAge`.
 
-### North Carolina's child deduction is unmodeled — a household with qualifying children pays more NC tax than the law asks in every year, and in a clamped working year the deduction's step-down as AGI rises is missing from the increment
-
-`S` · **pilot** (the deduction) · **briggsy** (whether the intake asks about children) · filed 2026-10-20 (b9-5) by the working-year tax floor's KTD7 — pre-existing; the floor makes its AGI dependence reachable
-
-- **The gap.** G.S. 105-153.5(a1) allows a per-child deduction for each child for whom the federal child tax credit is allowed, stepping down as AGI rises. The schedule was not re-read here — read the statute before quoting a figure. The engine's NC base subtracts only the standard deduction (`stateTax.ts`), and the model collects no children or dependents.
-- **Direction — regime-conditional.**
-  - Every year: the omitted deduction OVERSTATES the NC tax level (pessimistic).
-  - A clamped working year: the floor charges state(B + I + P) − state(B + I). The real increment includes any step of the deduction lost as P lifts AGI, and that is omitted, so the increment can read LOW at a step (optimistic).
-  - Unmeasured.
-- **Reach.** An NC household with a child the federal credit allows. No seed.
-- **Prescription.** (1) His call on asking (children's ages is a schema addition; it changes the answer, so `docs/architecture.md` §7.3 rule (a) bumps the schema version for it). (2) The deduction by AGI in `stateIncomeTax`'s NC arm, presence-keyed on the fact; red-first from the statute's table; a ledger row naming `stateTax` for NC.
-- ⚑ NEGATIVE: never default a child count; never grant it without the federal credit's allowance condition.
-- ⚑ **HELD on the tier ladder's step (1), 2026-10-31 (b9-5's sweep).** Its Direction names an optimistic regime (the clamped year's increment "can read LOW at a step"), so the day Briggsy rules "yes, setup asks about children and dependents", step (3) lifts it to Tier 0 — together with *Children or other dependents are never asked about…*, on the same answer. The sweep's two refuters split on whether D7's "intake asks" and his "yep, seems right" on the D7 queue (which lists that entry under new setup questions) already made the call; a queue approval rules ORDER, and no record shows a per-item yes like the heirs' rate's, so it stays his — asked in b9-5's close.
-
 ### The bracket-fill rails read a clamped working year's committed income without the pay — the policy's "fill to the next edge" ceiling is measured from the wrong base in the years the floor now taxes on top of the pay
 
 `S` · **pilot** · filed 2026-10-20 (b9-5) by the working-year tax floor's U6, verified at source (`taxOverlay.ts`'s bracket-fill block, `magiLandscape.ts`)
@@ -4364,25 +4384,6 @@ re-clear it from this list.
 - **D7.** ASK two plain questions: "Is this pension from government or military service?" and, for government service, whether the person had 5 years of it by August 1989 (the test is service by that date, not a start before it).
 - **Prescription.** Re-read G.S. 105-153.5(b)(5)/(5a) and NCDOR's Bailey page first; the facts above are the constant's note, not re-pinned. Then route a qualifying stream to an NC-exempt channel — the same type-aware income channel the PA pension entry filed by this audit builds, so build that split once. Whether a Bailey-qualified government 401(k) or 457 in the pooled pre-tax bucket also qualifies is read at the statute, never assumed; it would need the per-person employer-plan ledger. Red-first against a hand worksheet.
 - ⚑ NEGATIVE: never exempt on "government" or "military" alone; the service-date and 20-year/medical tests are the law.
-
-### Children or other dependents are never asked about — the marketplace subsidy and the health quote assume just the two of you
-
-`L` · **briggsy** (whether intake asks about dependents) → **pilot** (build) · filed 2026-10-21 (b9-7) by the D7 audit (`wf_f54446ec-1a9`, the inputs and engine sweeps)
-
-- **The gap (read).**
-  - The marketplace (ACA) subsidy's poverty-line household size is the number of living spouses (`src/engine/taxOverlay.ts:656-658`, read at `:2349` and `:2595`). Every household uses the 48-states-and-DC table; Alaska's and Hawaii's higher tables are "OUT-but-disclosed" only in a constants note (`src/engine/constants/health.ts:112`, `:120`).
-  - The quote help asks for "a quote for everyone under 65 in the household" (`src/ui/copy.ts:225-226`), but `escalateQuote` splits it across the adults' ages only and ends each share at that adult's 65th year (`src/intake/intakeMap.ts:352-372`), so a child's share ages along a parent's curve and ends with it.
-  - A widowed parent files single: the surviving-spouse rates a dependent child allows are excluded by the constant (`src/engine/constants/tax.ts:337-344`). The engine has no federal child tax credit either.
-  - Existing slices: *North Carolina's child deduction is unmodeled…* (its ask already his call — "children's ages is a schema addition", which bumps the version under `docs/architecture.md` §7.3 rule (a)) and *Pennsylvania's Tax Forgiveness is unmodeled…* ("Dependents are not collected"). One dependents question serves all of them.
-- **Direction.** Mostly gloomier: a bigger household gets more subsidy and a higher cliff at the same income, and that effect runs one way. The quote split leans either way in a given year. Unmeasured.
-- **D7.** Ask for it. The household knows its dependents; the tool must not assume an empty nest.
-- **Prescription.**
-  - (1) His call on asking — the same call the NC entry already left with him. ⚑ HELD on the tier ladder's step (1), 2026-10-31 (b9-5's sweep): this entry's own D7 bullet says "Ask for it" while this line keeps the ask his, and the sweep's refuters split on it (the full note is on *North Carolina's child deduction is unmodeled…*). The quote split "leans either way", so his "yes" lifts both entries to Tier 0 by step (3).
-  - (2) Build one optional dependents answer (it changes the answer, so `docs/architecture.md` §7.3 rule (a) bumps the schema version for it; each dependent's age, and whether they are on the marketplace quote), feeding the poverty-line size, the quote split, the surviving-spouse filing rule, the federal child credit, NC's child deduction and PA's forgiveness table. Each consumer red-first from its own statute; read each age-out rule separately (the ACA's, IRC §2(a)'s, §24's and NC's differ).
-- ⚑ NEGATIVE:
-  - Never default a dependent count (the NC and PA entries' NEGATIVE).
-  - An absent answer reproduces today's two-adult run byte-identically.
-  - Never price Alaska's or Hawaii's table without a state answer that names them; "somewhere else" does not.
 
 ### ✅ CLOSED 2026-10-31 — A copy of the app built before the pay check opens a plan carrying W without a word — it runs the working years unchecked, and its save drops the working-years clock's stamp
 

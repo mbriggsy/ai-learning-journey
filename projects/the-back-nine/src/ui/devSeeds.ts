@@ -1278,6 +1278,22 @@ const dateShortWitness: ScenarioDraft = {
 }
 
 /**
+ * THE LATER-LEFT-OVER WITNESS — `?seed=datelateleftover` (build 2's KTD14, U15; dark): the household the
+ * left-over question is never asked of. `dateshort`'s couple, with Alex's claim moved to 67, her full
+ * retirement age, and a year that costs $48,000. Year 0 runs short (the money picture prints "Short $7,695":
+ * pay and Sam's benefit fall below what the year costs), so R5 never asks what happens to a left over. From
+ * the year she turns 67 (2030, year 4) her own benefit arrives in full, past the earnings test, and every
+ * later working year has money left over (about $13,000 a year, measured on the window-top run). Build 2
+ * credits none of it, because year 0's printed figure caps every year: the filed D7 item this seed is the
+ * witness for. It carries W (minted on its own final draft, `withConfirmedW`) and no left-over answer.
+ */
+const dateLateLeftOverWitness: ScenarioDraft = {
+  ...dateShortWitness,
+  people: [{ ...dateShortWitness.people[0]!, socialSecurityClaimAge: 67 }, dateShortWitness.people[1]!],
+  annualSpendingReal: 48_000,
+}
+
+/**
  * THE STALE-W WITNESS — `?seed=datecoststale` (the pay check's KTD21, R21): `date`'s household after
  * it confirmed W at its $84,000 spending, then lowered that spending to $78,000. Its W no longer
  * matches the quote it confirmed, so the walk's W step opens on the stale note with no answer checked
@@ -1334,6 +1350,8 @@ export const DEV_SEEDS = {
   atceiling: withConfirmedW(atCeilingSeed),
   dateshort: withConfirmedW(dateShortWitness),
   datecoststale: dateCostStaleWitness,
+  // Build 2 (U15, dark): short in year 0, a left over from year 4 — the case the question never asks.
+  datelateleftover: withConfirmedW(dateLateLeftOverWitness),
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

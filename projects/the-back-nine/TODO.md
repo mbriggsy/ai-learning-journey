@@ -45,14 +45,18 @@ queue below (its order unmoved). Next, in order:
    `taxInputs` → `TaxYearInputs`); `allAlive` is a required field of `WorkingYearCheckTerms`; the probe gained
    `creditComposed` (the credit as composed, before any forfeit: U11's stream) and `growthScaled` (U11's residual). Its
    tests are `workingYearCredit.test.ts`, the build-2 arms in `dateSearch.test.ts` and the KTD4 arm in `devSeeds.test.ts`;
-   15 mutants, every kill set exactly as predicted (`b9-build2-surplus\U4-MUTANTS.md`). **Next: U15, opened with
-   `/brief <U15's topic: datelateleftover, a dark dev seed short in year 0 whose later working year has a left over; it
-   carries W and no answer; at ENGINE_MAX_DOLLAR it credits nothing and is Object.is its uncarried run>`.** At EVERY `src`
+   15 mutants, every kill set exactly as predicted (`b9-build2-surplus\U4-MUTANTS.md`). **U15 DONE (b9-8):** `?seed=datelateleftover`
+   (`dateshort`'s couple, Alex's claim at 67, a $48,000 year): year 0 prints "Short $7,695", and from 2030 (year 4) every
+   working year has about $13,000 left over that nothing credits; at `ENGINE_MAX_DOLLAR` it credits $0 and is its uncarried
+   run (a dropped year-0 cap reds that arm). From here the per-commit identity check runs against `sweep-u15.json`
+   (`idcheck.mjs <label> u15`): its 35 HEAD keys are `head-a`'s, byte for byte, and it adds `datelateleftover`'s
+   baseline. **Next: the Phase A engine review** — at a fresh window, and against the
+   weekly meter (87% at b9-7's close, resets Wed 2026-11-04 09:00 ET: read `~/.claude/statusline-meters.json` first). At EVERY `src`
    commit from here: from the project dir run `pnpm exec tsx <b9-build2-surplus>\tools\sweep.mts <label> --today=20758`, then
-   `node <b9-build2-surplus>\tools\idcheck.mjs <label>` (PER KEY: U15 and U9 add seeds, so never a whole-file `cmp`); the
+   `node <b9-build2-surplus>\tools\idcheck.mjs <label> u15` (PER KEY: U9 adds seeds, so never a whole-file `cmp`); the
    per-commit record is the table at the foot of that folder's `README.md`. Then the build units in the plan's order, each
    opened with `/brief <that unit's topic>`:
-   - Phase A: ~~U2~~, ~~U3~~, ~~U4~~ (done), U15, then the Phase A engine review: ultramode's lenses over U2–U4 and U15's
+   - Phase A: ~~U2~~, ~~U3~~, ~~U4~~, ~~U15~~ (done), then the Phase A engine review: ultramode's lenses over U2–U4 and U15's
      whole files (`moneyGrain.ts`, `benefitYear.ts`, `engineDomain.ts`, the four credit sites in `taxOverlay.ts`, the
      carriage in `simulate.ts` / `dateSearch.ts`, and their tests), with an adversary; its fixes land before U5.
    - Phase B: U5 and U13, the version-4 archive, the go-live (U6 + U7 + U8 + U14 + U9), then U10.
@@ -664,7 +668,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     (same bytes, `backup.ts:84-93`). No build ever wrote either. *(Re-scoped 2026-10-31, b9-3: this bullet
     said a future v4 would push today's v3 vaults into that arm. The schema-v4 bump did not: version 3
     relabels to 4 at decode, a label-only step — `docs/architecture.md` §7.3.)* · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
-    caller is the dev seed planter, `devSeeds.ts:1977` — eight test/e2e files also call it).
+    caller is the dev seed planter, `devSeeds.ts:1995` — eight test/e2e files also call it).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 9 — the aged note, the v2→v3 ladder, the leaves-out section) — its 2026-09-04 re-verify clause, still live:** Aged-window disclosure note (S; the ranking fork stays yours, three arms with corrected costs, due
     before 2027-01-01) · migration ladder scaffold (S; the honest legacy state names NO remedy — the
     backup carries the same bytes) · HSA-forfeit + LTC "What this leaves out" section (M; pilot per the
@@ -1330,7 +1334,7 @@ even when one exists; the plain `/` route is the Unlock check.
 ## Driving the app
 
 `pnpm dev`, then a `?seed=` or `?vault=` param. DEV-only, DCE'd from prod. Source of truth:
-`src/ui/devSeeds.ts` — `DEV_SEEDS` at `devSeeds.ts:1305`, `AGED_PLANTS` at `devSeeds.ts:1902`.
+`src/ui/devSeeds.ts` — `DEV_SEEDS` at `devSeeds.ts:1321`, `AGED_PLANTS` at `devSeeds.ts:1920`.
 
 **Scenario seeds** — jump straight to a worded result + band:
 
@@ -1373,7 +1377,7 @@ like prod; re-planting is an explicit re-entry of the URL, never a refresh side 
 
 ⚑ **NO-SOLVE DRIVE RECIPE, so the next walk costs minutes not hours.** `?vault=rec` → Unlock
 (passphrase pre-filled) → *"I forgot my passphrase"* → RecoveryFlow. Recovery word for every plant
-is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:1358`). For RestoreFlow you need a
+is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:1376`). For RestoreFlow you need a
 real backup FILE and no full intake is required: unlock any plant → Result → **"Save a backup
 file"** → *Download backup* (an `<a>` with a blob URL, **not** a button — a `button:has-text()`
 selector misses it) → then delete the DB and reload. **`indexedDB.deleteDatabase` is BLOCKED while

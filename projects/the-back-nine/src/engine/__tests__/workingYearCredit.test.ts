@@ -17,8 +17,8 @@
  * growth is the shared factor w·(1 + r_s) + (1 − w)·(1 + r_b) on every bucket.
  */
 import { describe, it, expect } from 'vitest'
-import { simulate, type SimOutput } from '@engine/simulate'
-import { buildCandidateParams } from '@engine/dateSearch'
+import { simulate, ENGINE_MAX_DOLLAR, type SimOutput } from '@engine/simulate'
+import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP } from '@engine/dateSearch'
 import {
   runTaxAwareDecumulation,
   type TaxOverlayConfig,
@@ -342,7 +342,7 @@ describe('through simulate', () => {
 })
 
 describe('the date route’s own households (KTD12)', () => {
-  const runOn = (key: 'date' | 'datenc', saved: number | undefined, offset: number, paths: number, horizon?: number) => {
+  const runOn = (key: 'date' | 'datenc' | 'datelateleftover', saved: number | undefined, offset: number, paths: number, horizon?: number) => {
     const d = DEV_SEEDS[key]
     const input = buildDateInput(d)
     if (input === null) throw new Error(`${key}: the seed builds a date input`)
@@ -365,6 +365,19 @@ describe('the date route’s own households (KTD12)', () => {
 
   it('OFFSET 0 (U1’s A2): a carried figure on the Y = 0 candidate — its check stream present and empty — is the run without it', { timeout: 60_000 }, () => {
     expect(runOn('date', 16_985, 0, 100)).toEqual(runOn('date', undefined, 0, 100))
+  })
+
+  it('THE LATER LEFT OVER (U15): `datelateleftover` at ENGINE_MAX_DOLLAR credits nothing — its short year 0 caps every year — and is the uncarried run', { timeout: 60_000 }, () => {
+    // Year 0 prints "Short $7,695", so year 0's figure is below $1 and R8's min is at most that on every path;
+    // its later years' left over (from Alex's claim at 67) is the filed D7 gap, never credited here.
+    expect(runOn('datelateleftover', ENGINE_MAX_DOLLAR, DATE_OFFSET_WINDOW_TOP, 100)).toEqual(runOn('datelateleftover', undefined, DATE_OFFSET_WINDOW_TOP, 100))
+    // Non-vacuity: the figure really reached the overlay — every checked year composed a credit, and each is 0.
+    const d = DEV_SEEDS.datelateleftover
+    const credits: number[] = []
+    const carried = buildCandidateParams({ ...buildDateInput(d)!, workingYearLeftOverSavedReal: ENGINE_MAX_DOLLAR }, DATE_OFFSET_WINDOW_TOP, 20)
+    simulate(carried, d.seed!, { _workingYearProbe: { creditComposed: (_t, c) => credits.push(c) } })
+    expect(credits.length).toBeGreaterThan(0)
+    expect(credits.every((c) => c === 0)).toBe(true)
   })
 })
 

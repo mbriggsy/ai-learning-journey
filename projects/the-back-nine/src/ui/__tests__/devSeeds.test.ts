@@ -1663,8 +1663,8 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(carrying).toEqual(keys.filter((k) => isDateRoute(DEV_SEEDS[k])).sort())
     // Named, so a seed that falls off the date route cannot take its W with it unseen.
     expect(carrying).toEqual([
-      'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datemixed', 'datenc', 'dateshort', 'datesolo',
-      'datesplit', 'dip',
+      'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datelateleftover', 'datemixed', 'datenc', 'dateshort',
+      'datesolo', 'datesplit', 'dip',
     ])
   })
 
@@ -1763,8 +1763,9 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       expect(shown, `${key}: the shown lines sum to the bottom line`).toBe(y0.bottomLine)
       swept++
     }
-    // Every buildable date seed carries W (the arm above), so this is all ten of them, the short seed included.
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(10)
+    // Every buildable date seed carries W (the arm above), so this is all eleven of them, the short seed and the
+    // later-left-over witness (U15) included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(11)
   })
 
   // Build 2's KTD4 arm (U4): inside the run, year 0's Left over is the money picture's own printed bottom line, on
@@ -1791,7 +1792,22 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
       swept++
     }
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(10)
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(11)
+  })
+
+  // Build 2's U15 (KTD14): the household R5 never asks, minted dark. Its year 0 prints short, and the run itself
+  // finds a left over in a later working year — the gap the filed D7 item names.
+  it('build 2 (U15): the later-left-over witness prints short in year 0, and its own run finds a left over in a later working year', () => {
+    const d = DEV_SEEDS.datelateleftover
+    const ledger = workingYearLedgerForRun(d)
+    if (ledger === 'unknown') throw new Error('datelateleftover: a buildable W-carrying seed must draw a picture')
+    expect(ledger.year0.bottomLine, 'year 0 prints short or $0, so the question is never asked (R5)').toBeLessThan(1)
+    expect(d.workingYearCost?.kind, 'it carries a confirmed W').toBe('confirmed')
+    const params = { ...buildCandidateParams(buildDateInput(d)!, DATE_OFFSET_WINDOW_TOP, 1), longevityMode: 'fixed-horizon' as const }
+    const printed: number[] = []
+    simulate(params, d.seed!, { _workingYearProbe: { checkComposed: (t, _floor, lines) => (printed[t] = workingYearBottomLine(lines.cash)) } })
+    expect(printed[0], 'the run’s own year 0 is the picture’s').toBe(ledger.year0.bottomLine)
+    expect(printed.slice(1).some((x) => x >= 1), 'a later working year has a left over of at least $1').toBe(true)
   })
 
   it('the short witness’s money picture runs SHORT in year 0 and in every later working year, with Social Security held back', () => {

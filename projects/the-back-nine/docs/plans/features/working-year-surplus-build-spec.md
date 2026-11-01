@@ -35,7 +35,7 @@ On the date route, once W is answered, the money-picture step asks one more ques
 
 The register entry *Money coming in beyond what the household spends is thrown away…* (`docs/backlog.md`) is the origin. Build 1 (the pay check, live since `c07e5758`) checks every working year's pay against what the year costs. It draws a short year from savings, but drops a year's left over: `workingYearCashLines` in `src/engine/taxOverlay.ts` returns only `shortfall: cash < 0 ? -cash : 0`, and `fundingNet` adds only the shortfall. The money picture shows year 0's bottom line as "Left over" with a stopgap note, `copy.workingLedgerLeftOverNote` ("Pay left over isn't added to savings here…"). The working-year methodology row carries the stopgap key K9. Under D7 (`docs/product.md` §4), both are notes written around a gap, and the gap is a build item: the household knows whether it saves that money, so the tool asks.
 
-The size is not small. Recorded at `96c49857` and re-measured by U1, the year-0 left over under each seed's own W is:
+The size is not small. Recorded at `96c49857` and re-measured by U1 at `fc516f8b` (2026-11-01, unchanged; each figure re-derived from the primaries by U10's hand check), the year-0 left over under each seed's own W is:
 
 | Seeds | Year-0 Left over |
 |---|---|
@@ -47,7 +47,7 @@ The size is not small. Recorded at `96c49857` and re-measured by U1, the year-0 
 | `datenc` | $1,644 |
 | `dateshort` | short every year |
 
-On `date`, the left over runs from $16,985 to about $59,986 a year across 2026–2034 (the register's money-picture entry).
+On `date`, with everyone alive, the left over is $16,985 a year in 2026–2030, $17,348 in 2031–2032 and $37,223 in 2033–2034 (about $194,000 across the nine working years of its 2035 date), and $59,986 in 2035 (U1; the register's money-picture entry had said "$16,985 → $59,986 across 2026–2034").
 
 The 2026-10-21 council ruled the shape: saved / spent / not sure, nothing pre-checked, absent kept absent, only "saved" moves the engine, credited to the taxable account at year end and never above the quoted figure, and an unanswered or not-sure reply gets a line in dollars. Planning research found six calls those words leave open. Council `wf_1b5d9962-73c` (8/10, 15 seats, no abstentions; the Honesty Hawk's veto fired and the verdict takes its honest alternative) ruled all six. Its rulings are this plan's Key Decisions.
 
@@ -400,6 +400,7 @@ These are the pilot's bets, made without a confirmation step; each is cheap to c
   - **Both tracks.** The floor and the full track credit the same nonzero dollars on the same path, equal to U1's expected stream.
   - **Every seed's year 0 (KTD4).** In the devSeeds year-0 sweep, each W seed run with a figure of `ENGINE_MAX_DOLLAR` credits a year-0 amount `Object.is` the smaller of that year's raw cash and its picture's printed bottom line, wherever the printed figure is at least $1, and nothing on `dateshort`.
   - **Absent.** A W-present run without the figure is `Object.is` equal to HEAD's; the existing byte-identity describe in `workingYearCheck.test.ts` passes unedited. Its presence companion is the year-0 scenario above (insight 029).
+  - **Offset 0.** A carried figure on an offset-0 candidate, whose check stream is present and empty (`simulate` spreads it whenever W is present), is `Object.is` the run without it. R11's "no working-year check stream" means the stream ABSENT, never a stream with no entry; read the other way, every offset-0 candidate of a carried run throws and the date search fails (U1's `PREDICTIONS.md` A2).
   - **Refusals.** The figure without W, a figure of 0, of 1.5, of NaN and above `ENGINE_MAX_DOLLAR` each return a `validateParams` reason naming the figure. A figure passed to the overlay with no check stream, and check terms with a non-boolean `allAlive`, each throw at the backstop.
   - **Spine.** Spine runs, the pricing witness digests and the solve identity fixtures pass unedited.
 - **Verification:** U1's digests are byte-equal for every seed (none carries the figure). A mutant pass reds the named tests, each prediction written before its run. It plants each of the four sites dropped, the `allAlive` gate inverted, each `min` term dropped, and the fold moved before the scale.
@@ -642,7 +643,7 @@ These are the pilot's bets, made without a confirmation step; each is cheap to c
   2. **The stream.** Run the probe on every W seed with "saved" minted through the shipped producer at its own figure. The probe-only credit stream must equal U1's expected stream, under KTD12's rules.
   3. **The moves.** Record each seed's two dates, their grades and curves, and the date-route preview's two arms, per offset, tier and track, for "saved" against absent (the deepdiff).
   4. **The same-year-draw residual**, on a probe copy of the go-live `src`, never the shipped tree.
-     - **Counterfactual:** in each year with a credit, the year's `fundingNet` items are paid from cash first, and only the part above that year's cash is drawn. The credit becomes R8's minimum over cash less those items. T(0, ss) and conversion tax stay in the gross-up, and their size is reported.
+     - **Counterfactual:** in each year with a credit, the year's `fundingNet` items are paid from cash first, and only the part above that year's cash is drawn. The credit becomes R8's minimum with the year's cash replaced by cash less min(those items, cash): that figure, its printed grain, the run's own year-0 figure (never netted) and the stored figure (the deepen's wording; U1's `PREDICTIONS.md` C4 derives the rosy thresholds from it). T(0, ss) and conversion tax stay in the gross-up, and their size is reported.
      - **Seeds:** every W seed with "saved", at least `date65`, `datenc`, `datesaved` at offsets 6 and up, and `dip`, chosen from U1's record; offsets 0–10, both tiers, both tracks.
      - **Output:** per path-year, the residual = (credit − draw × (1 + r_t)) − (counterfactual credit − counterfactual draw × (1 + r_t)), with r_t the path's blended return. It is split into rosy and gloomy parts, with counts, per-path mean, p10 and p90, the worst path-year, and the cap-binding years marked. Where the cap does not bind, the closed form M(1 − g(1 + r_t)) must match to first order.
   5. **K5's share.** Measure the K5 share of the year-0 figure on each seed whose year 0 is a full-retirement-age claim year.

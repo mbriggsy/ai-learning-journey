@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-01, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`).** The schema-v4 job
+▶ **START HERE (2026-11-01, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -32,12 +32,20 @@ Tier 0); each moved entry's metadata line says "re-tiered 2026-10-31
 queue below (its order unmoved). Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
    (`ec2c7694`), planned, deepened and checked as a whole. Council `wf_1b5d9962-73c` (8/10) ruled the six calls the 2026-10-21
-   words left open; they are the plan's Key Decisions. **Next: U1, the before-measurement on a frozen `git archive` HEAD copy,
-   opened with `/brief <U1's topic: measuring the working-year cash stream on a frozen HEAD copy>`**. No `src` change in U1;
-   `PREDICTIONS.md` is written before U4 runs. Then the build units in the plan's order, each opened with
-   `/brief <that unit's topic>`:
+   words left open; they are the plan's Key Decisions. **U1 DONE (b9-7, 2026-11-01):** the frozen HEAD copy, the R10 digest
+   sweep, the cash stream with R8 applied by hand, and `PREDICTIONS.md`, all in `b9-build2-surplus\` (its `README.md` indexes
+   them). Every check is 0 over 17.7M path-years; HEAD depletes no path inside its working years, so the tree must compose
+   exactly HEAD's path-years. An Opus verifier briefed to refute re-derived the record and found ten things, all fixed before
+   use (`PREDICTIONS.md` §E; the big one: `datecoststale`'s W is stale, so no figure is ever carried for it). **Next: U2, the
+   import-cycle rider (its `/brief` is done, b9-7: insights 136, 148, 003, 041 and 029, all CURRENT).** At EVERY `src` commit
+   from here: from the project dir run `pnpm exec tsx <b9-build2-surplus>\tools\sweep.mts tree --today=20758`, then
+   `node <b9-build2-surplus>\tools\idcheck.mjs tree` (PER KEY: U15 and U9 add seeds, so never a whole-file `cmp`). Then the
+   build units in the plan's order, each opened with `/brief <that unit's topic>`:
    - Phase A: U2 (the import-cycle rider, which closes the Tier 4 *`simulate.ts` and `earningsTest.ts` import each other…*), U3,
-     U4 and U15, then the Phase A engine review.
+     U4 and U15, then the Phase A engine review. U4's year-0 golden is `PREDICTIONS.md` B5 ($1,644.00 on `datenc`, whose
+     cash is $1,644.95: the printed grain binds); every W seed's taxable bucket is $0, so U4's tests credit into an empty
+     taxable bucket too (B7); and R11's backstop must read "no check stream" as ABSENT, since an offset-0 candidate carries
+     a present, empty stream (A2; the plan's U4 now has the "Offset 0" scenario).
    - Phase B: U5 and U13, the version-4 archive, the go-live (U6 + U7 + U8 + U14 + U9), then U10.
    - Phase C: U11, then U12.
    After the build: the whole-file review, with an adversary and every finding verified; then `/distill`. The record (brief,
@@ -115,7 +123,20 @@ tools-only and cheap, so pace the fan-outs (the U4 mutant pass, the Phase A revi
 - **An "either way" lifts only when it signs the answer the household acts on** — across households (*The first answer assumes
   money comes out of every account in proportion…* lifted) versus two opposite effects inside one household with the net
   unsigned (*The investment mix is frozen…* held); recorded as a reading in the register header's sweep paragraph.
-**LANDMINES (b9-6's, then carried from b9-5, b9-4 and b9-3):**
+**DISTILL CANDIDATES (b9-7):**
+- **A seed that satisfies the engine's carry rule can still be one the intake never carries.** U1's first draft gave
+  `datecoststale` a credit stream and a crown prediction from `asked = S ≥ $1`, but its W is stale, and R7 carries
+  nothing on a stale W. A measurement's population must be filtered by EVERY gate between the household and the engine,
+  not the engine's own (insight 141's rule, one layer up). The verifier caught it; `stream.mts` records `carried`.
+- **A range quoted beside a window must be read on that window.** The register said `date`'s left over runs "$16,985 →
+  $59,986 across 2026–2034"; $59,986 is 2035's, and across 2026–2034 it peaks at $37,223 (insight 141's population rule,
+  on the time axis). U1 measured every year and corrected both lines.
+**LANDMINES (b9-7's, then b9-6's, then carried from b9-5, b9-4 and b9-3):**
+- **(b9-7) TaskStop on a backgrounded `pnpm exec tsx` kills only the shell.** The node tree keeps running and keeps
+  writing. List with `Get-CimInstance Win32_Process -Filter "Name='node.exe'"` and kill with `taskkill /PID <pnpm pid> /T /F`.
+- **(b9-7) `pnpm exec tsx -e` with a top-level `await` hung with no output** (killed after minutes). Write a script file.
+- **(b9-7) `git archive HEAD:projects/the-back-nine src …` fails from the project dir** ("pathspec 'src' did not match");
+  run it from the repo root.
 - **(b9-6) Windows says a wrong-case path exists.** `[ -f src/intake/__tests__/AssumptionPanel.test.tsx ]` passed, but the
   file is `assumptionPanel.test.tsx`, and CI is Linux. Check a path's case with `git ls-files --error-unmatch <path>`.
 - **(b9-6) `docs/plans/features/README.md`'s index is stale.** It has no rows for the pay-check, schema-v4 or build-2 specs,

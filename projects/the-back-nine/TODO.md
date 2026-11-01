@@ -22,17 +22,8 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-10-31, rewritten by b9-4 — the schema-v4 job is DONE, every step of its flow).** The bump `c2864eb9`, its
-version-floor test `9b0ef9db`, the whole-file review's fixes `bb26cbca` (review `wf_edc27bef-48a`: 6 confirmed, 3 hand-verify,
-18 advisory, all triaged), the mutant pass's fixes plus a peer re-run's two doc defects `1fb8b25e`, and the distill (insights
-149–152; extensions of 018, 035, 036, 126 and 128). CI, each read by id: run 41249786363 on `bb26cbca` and run 41255632595 on `1fb8b25e`, both green on both jobs. The record: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\` — `README.md` and `PREDICTIONS.md` (every mutant
-section written before its run; 16 mutants; M7 and M8 runtime-equivalent, as predicted). The two gaps the bump leaves are their own
-register entries (Tier 2 *A date-route plan saved before the pay check opens with W unanswered…* and *The "saved by a newer
-version" face names an update and offers no door to it…*); the one-seed frozen fixtures are Tier 4 *The frozen version-3 fixtures
-are one seed…*. **Carried from b9-1 (the pay check's Phase C is closed, h2 and all):** the h2 cure's record is
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-h2-cure\` (`tapProbe3.mts`, the before/after/final runs, `PREDICTIONS.md` and its per-test mutant runner); the pay-check
-review's is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (`pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS — remove each
-link alone before deleting any folder there); rulings 38–42 are in `b9-phaseb\DECISIONS.md`. U10's Caddie card stays
+▶ **START HERE (2026-10-31, rewritten by b9-5 — the ranking pass is DONE, and build 2's `/brief` is DONE).** The schema-v4 job
+closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
 entries to Tier 0, 10 to Tier 1 and one to Tier 4, holding seven (his yes on the dependents ask then lifted two of the seven to
@@ -42,9 +33,9 @@ queue below (its order unmoved). Next, in order:
 1. **Build 2, the surplus question.** The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
    year never checks the household's pay against its spending…*. `/brief` is DONE (b9-5): `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\brief.md`
    — five landmines, the first being that "saved" moving the engine makes this a schema-v5 bump under `docs/architecture.md`
-   §7.3's rule (a), so the bump is one of the build's units. Next, all owed: the plan (`ce-plan`), deepened and checked as a
-   whole; the build; the whole-file review; `/distill`. Ride the Tier 4 *`simulate.ts` and `earningsTest.ts` import each
-   other…* on it (it touches `simulate.ts`).
+   §7.3's rule (a), so the bump is one of the build's units. **Next: the plan, deepened and checked as a whole**; then each build
+   unit, opened with `/brief <that unit's topic>`; the whole-file review, with an adversary and every finding verified;
+   `/distill`. Ride the Tier 4 *`simulate.ts` and `earningsTest.ts` import each other…* on it (it touches `simulate.ts`).
 - **⚑ RULED by him 2026-10-31 — no tier call is open.** The council's two parked calls ("I yield to your recommendations"): a
   gloomy-only entry stays in Tier 0, and D7's "rosier" means for some household the intake accepts (the register header and the
   council row record both). And the dependents ask ("Yes, ask it"): one optional question, "none" an answer, never a guessed
@@ -58,6 +49,17 @@ queue below (its order unmoved). Next, in order:
   covers…* (needs its own refuter pass before it files). Lifted whole, with riders that can split when built: *The 2026-10-06 pre-land
   read's other pre-existing findings…*, *The 2026-10-15 held-flat walk's other pre-existing sheet findings…*, *U17 S7 riders…*, and
   *Knowingly omitted costs…* (D7 answered it: close it and split its open builds when the first is picked up).
+**The tier sweep's tools, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-tier-sweep\` — its `README.md` indexes the slice extractor,
+the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-preservation check) and `tierrefs.mjs` (the stale
+"Tier N *Title*" scan); re-point the briefs' scratchpad paths before reuse.
+**The schema-v4 job's record, durable (b9-4):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\` — `README.md` and `PREDICTIONS.md`
+(16 mutants, every section written before its run; M7 and M8 runtime-equivalent, as predicted). The gaps the bump leaves are their
+own register entries (*A date-route plan saved before the pay check opens with W unanswered…*, *The "saved by a newer version" face
+names an update and offers no door to it…*, and the Tier 4 *The frozen version-3 fixtures are one seed…*).
+**The pay check's Phase C records, durable (b9-1):** the h2 cure's,
+`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-h2-cure\` (`tapProbe3.mts`, the before/after/final runs, `PREDICTIONS.md` and its per-test mutant runner); the pay-check
+review's, `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (`pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS — remove each
+link alone before deleting any folder there); rulings 38–42 are in `b9-phaseb\DECISIONS.md`.
 **The review's record, durable:** `wf_ea145a86-a5a` (the 15-lens review) and `wf_19d636e2-77c` (the three fix lanes + the overflow
 verifies), journals under
 `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\a321e571-5db1-4809-ab03-f84786d30233\subagents\workflows\`.
@@ -74,17 +76,32 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-10-31 (b9-4: the schema-v4 job closed, then the tier ruling; b9-3's build block pruned into it):** commits
-`bb26cbca` (the review fixes), `1fb8b25e` (the mutant pass's fixes, a peer's two doc defects), `1dac549a` (the distill),
-`836dd784` (the tier ladder and its twelve lifts). By exit code, at `836dd784`: `pnpm typecheck` 0, `pnpm verify:doc-stats` 0
-(the test count lives under that gate). At `1fb8b25e` (every later commit is docs only): `pnpm lint` 0, the full suite 0.
-At `bb26cbca` (later `src` changes are tests only): `pnpm build` 0, `pnpm verify:bundle` 0 (288.5 KiB). Not run: `verify:csp`
-(no runtime change since `9b0ef9db`'s 16 of 16). CI: both runs above, green. The mutant pass (16 mutants, every prediction
-written before its run): `PREDICTIONS.md` in the `b9-schema-v4-proof` folder.
-**DISTILL CANDIDATES:** none open. b9-4 distilled the whole block (b9-10, b9-1, b9-2, b9-3 and its own five) through a
-checked workflow (`wf_1b02479b-d42`: six drafters, six adversarial checkers, every draft corrected) into insights 149–152 and
-extensions of 018, 035, 036, 126 and 128.
-**LANDMINES (b9-4's, then carried from b9-3):**
+**SESSION 2026-10-31 (b9-5: the ranking pass, his three rulings, build 2's brief; b9-4's block pruned into it):** commits
+`31e018d5` (the sweep's 35 moves), `a3df5a53` (its refuter count corrected: 42 candidate moves, 38 refuters — the first
+commit's message said 29 and 37), `73e81a3a` (his ruling on the council's two parked calls), `cf0555ac` (his yes on the
+dependents ask, two more moves), `a8e8d228` (insight 102's moved type, noted by the brief), `a5b51426` (START HERE), and this
+close. Docs only: no `src` file has changed since `1fb8b25e`. By exit code at this close: `pnpm typecheck` 0,
+`pnpm verify:doc-stats` 0 (the test count lives under that gate). Carried from b9-4, valid while `src` is unchanged: `pnpm
+lint` 0 and the full suite 0 at `1fb8b25e`; `pnpm build` 0 and `pnpm verify:bundle` 0 (288.5 KiB) at `bb26cbca`. CI, read by
+id: run 41262441067 (`31e018d5`) and run 41262491283 (`a3df5a53`) green on both jobs; runs 41264447045 (`73e81a3a`),
+41265017924 (`cf0555ac`), 41265178365 (`a8e8d228`) and 41265284099 (`a5b51426`) were still running at the close — read them
+by id (`gh run view <id>`).
+**DISTILL CANDIDATES (b9-5):**
+- **A refuter pair that splits on whether a ruling EXISTS has found a call that is still his: ask, never pick a side.** The
+  dependents ask: one refuter read D7 plus the queue's "yep, seems right" as the ruling, the other read a queue approval as
+  ORDER only; asked in plain words, he ruled in one answer and both entries moved. (Briefs: the reader and refuter briefs in
+  `b9-tier-sweep\`.)
+- **Moving an entry stales every prose "Tier N *Title*" reference to it, and no gate sees it** — 11 live ones across the
+  register, `architecture.md` and `roadmap.md` (b9-4's landmine covered line citations only); `tierrefs.mjs` found them.
+- **An "either way" lifts only when it signs the answer the household acts on** — across households (*The first answer assumes
+  money comes out of every account in proportion…* lifted) versus two opposite effects inside one household with the net
+  unsigned (*The investment mix is frozen…* held); recorded as a reading in the register header's sweep paragraph.
+**LANDMINES (b9-5's, then carried from b9-4 and b9-3):**
+- **(b9-5) A commit message's counts typed from memory went out wrong** (`31e018d5`: "29 refuters over 37 candidate moves";
+  the run had 38 over 42) — fixed by a follow-up commit, since a pushed message never changes. Count from the run's own
+  record before writing a number into a commit.
+- **(b9-5) After any register move, run the stale-tier scan** (`b9-tier-sweep\tierrefs.mjs`) and fix the live hits; leave the
+  historical logs (`docs/caddie/cold-read-log.md`, `docs/plans/features/`) as written.
 - **(b9-4) A store test that fails before `lock()` leaves its session claimed, and its BroadcastChannel answers the NEXT test's
   writer probe ("open-in-another-tab")** — a cascade the mutant pass first read as kills. `session.test.ts` and `backup.test.ts`
   now lock every session they open in an `afterEach` (a `createSession` wrapper); a new store suite copies that wrapper.

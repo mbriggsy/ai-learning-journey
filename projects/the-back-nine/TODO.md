@@ -42,11 +42,11 @@ queue below (its order unmoved). Next, in order:
    year never checks the household's pay against its spending…*. Its steps, all owed: `/brief` on the surplus question; the plan,
    deepened and checked as a whole; the build; the whole-file review; `/distill`. Ride the Tier 4 *`simulate.ts` and
    `earningsTest.ts` import each other…* on it (it touches `simulate.ts`).
-- **⚑ HIS (three calls; each holds only the entries it names):** (i) may a gloomy-only entry LEAVE Tier 0 (Tier 0 re-headed
-  rosy-only)? (ii) is D7's "Tier 0 when it makes the answer rosier" his "for some household the intake accepts"? — both on the
-  council row; (iii) NEW (b9-5): should setup ask about children and other dependents? A "yes" lifts *Children or other dependents
-  are never asked about…* and *North Carolina's child deduction is unmodeled…* to Tier 0 (both carry a ⚑ HELD note: the sweep's
-  refuters split on whether D7 and the queue's "yep, seems right" already answered it).
+- **⚑ HIS (one call; it holds only the two entries it names):** should setup ask about children and other dependents? A "yes"
+  lifts *Children or other dependents are never asked about…* and *North Carolina's child deduction is unmodeled…* to Tier 0 (both
+  carry a ⚑ HELD note: the sweep's refuters split on whether D7 and the queue's "yep, seems right" already answered it). The
+  council's two parked calls are RULED (his "I yield to your recommendations", 2026-10-31): a gloomy-only entry stays in Tier 0,
+  and D7's "rosier" means for some household the intake accepts — the register header and the council row record both.
 - **One written bullet from a move** (the ladder holds an entry with no recorded direction, so each waits for the build that writes
   it): *The investment mix is frozen at today's blend for life…* (the gliding household's net sign); *The step card's "a year" reads as
   a standing yearly cost…* (Tier 0 once it names a couple who crosses every year); the seed-B bullet inside the Tier 4 *The gates that

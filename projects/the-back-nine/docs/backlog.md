@@ -58,12 +58,14 @@
 >    the RETIREMENT state. A fact the repo does not record counts as reaching him.
 > 5. No recorded direction, or a bare "regime-conditional" that names no rosy case: the entry keeps its filed tier until a
 >    build writes the bullet.
-> 6. Gloomy in every case: never below Tier 1. Whether a gloomy-only entry may LEAVE Tier 0 is Briggsy's call, parked;
->    until he rules, Tier 0's gloomy entries hold.
+> 6. Gloomy in every case: never below Tier 1. A gloomy-only entry already in Tier 0 STAYS there — Tier 0 keeps meaning
+>    "shipped code answers wrong, in either direction", never re-headed rosy-only (RULED by Briggsy 2026-10-31, accepting
+>    the council's recommendation: "I yield to your recommendations"). Nothing moved on it.
 >
 > Why rosy outranks gloomy: a rosy answer can send a household into retirement early and short, which can't be undone; a
 > gloomy one costs years of work or spending they didn't need (D1, ruin against surplus). "For some household" is the
-> council's reading of D7's "Tier 0 when it makes the answer rosier"; no record shows his words on that clause. A tier is not
+> council's reading of D7's "Tier 0 when it makes the answer rosier" — rosier for any household the intake accepts, not only
+> his — and Briggsy ratified that reading on 2026-10-31 (the same "I yield to your recommendations"). A tier is not
 > a rank: the ORDER of work lives in `TODO.md`. An entry lifted by this ladder carries "re-tiered 2026-10-31" on its
 > metadata line.
 >

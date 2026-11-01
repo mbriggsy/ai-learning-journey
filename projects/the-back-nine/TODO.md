@@ -25,8 +25,7 @@ ranked under that rule.
 ▶ **START HERE (2026-10-31, rewritten by b9-4 — the schema-v4 job is DONE, every step of its flow).** The bump `c2864eb9`, its
 version-floor test `9b0ef9db`, the whole-file review's fixes `bb26cbca` (review `wf_edc27bef-48a`: 6 confirmed, 3 hand-verify,
 18 advisory, all triaged), the mutant pass's fixes plus a peer re-run's two doc defects `1fb8b25e`, and the distill (insights
-149–152; extensions of 018, 035, 036, 126 and 128). CI: run 41249786363 on `bb26cbca` green on both jobs, read by id; read the
-run on `1fb8b25e` by id before building on it. The record: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\` — `README.md` and `PREDICTIONS.md` (every mutant
+149–152; extensions of 018, 035, 036, 126 and 128). CI, each read by id: run 41249786363 on `bb26cbca` and run 41255632595 on `1fb8b25e`, both green on both jobs. The record: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\` — `README.md` and `PREDICTIONS.md` (every mutant
 section written before its run; 16 mutants; M7 and M8 runtime-equivalent, as predicted). The two gaps the bump leaves are their own
 register entries (Tier 2 *A date-route plan saved before the pay check opens with W unanswered…* and *The "saved by a newer
 version" face names an update and offers no door to it…*); the one-seed frozen fixtures are Tier 4 *The frozen version-3 fixtures
@@ -108,16 +107,24 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-10-31 (b9-3, the schema-v4 build; b9-2's plan-session block pruned into it):** `src` changed (`c2864eb9`,
-`9b0ef9db`). By exit code: `pnpm typecheck` 0; `pnpm lint` 0; `pnpm verify:doc-stats` 0 (the test count lives under that gate,
-at `9b0ef9db`); `pnpm build` 0; `pnpm verify:bundle` 0 (288.5 KiB); `pnpm verify:csp` 16 of 16. The full suite locally: one red on
-the bump's tree before the re-anchor (the live-citation arm, which the re-anchor then fixed; that file all green after) — not re-run
-locally on the final tree, but CI run 41238303597 ran it there, green, with `verify:fit` and `verify:fit:rv`. Engine identity (R6):
-every dev seed's full output `cmp`-identical, HEAD's archive vs the tree. Not run: the mutant pass (item 1(b)).
+**SESSION 2026-10-31 (b9-4: the schema-v4 job closed, then the tier ruling; b9-3's build block pruned into it):** commits
+`bb26cbca` (the review fixes), `1fb8b25e` (the mutant pass's fixes, a peer's two doc defects), `1dac549a` (the distill),
+`836dd784` (the tier ladder and its twelve lifts). By exit code, at `836dd784`: `pnpm typecheck` 0, `pnpm verify:doc-stats` 0
+(the test count lives under that gate). At `1fb8b25e` (every later commit is docs only): `pnpm lint` 0, the full suite 0.
+At `bb26cbca` (later `src` changes are tests only): `pnpm build` 0, `pnpm verify:bundle` 0 (288.5 KiB). Not run: `verify:csp`
+(no runtime change since `9b0ef9db`'s 16 of 16). CI: both runs above, green. The mutant pass (16 mutants, every prediction
+written before its run): `PREDICTIONS.md` in the `b9-schema-v4-proof` folder.
 **DISTILL CANDIDATES:** none open. b9-4 distilled the whole block (b9-10, b9-1, b9-2, b9-3 and its own five) through a
 checked workflow (`wf_1b02479b-d42`: six drafters, six adversarial checkers, every draft corrected) into insights 149–152 and
 extensions of 018, 035, 036, 126 and 128.
-**LANDMINES from this session:**
+**LANDMINES (b9-4's, then carried from b9-3):**
+- **(b9-4) A store test that fails before `lock()` leaves its session claimed, and its BroadcastChannel answers the NEXT test's
+  writer probe ("open-in-another-tab")** — a cascade the mutant pass first read as kills. `session.test.ts` and `backup.test.ts`
+  now lock every session they open in an `afterEach` (a `createSession` wrapper); a new store suite copies that wrapper.
+- **(b9-4) Moving register entries shifts every line-numbered citation INTO `docs/backlog.md`, and no gate sees it** (arm 4 of
+  `verify:doc-stats` reads only code-file citations). Cite a register entry by its title, never by a backlog line.
+- **(b9-4) A Workflow's task output file is a JSON object** (`summary`, `agentCount`, `logs`, `result`): parse it and read
+  `.result`; slicing from the first `[` picks up `logs: []`.
 - **(b9-3) Git Bash's `grep -c $'\r$'` reports an LF file as all-CRLF** — it said `scenarioCodec.test.ts` had 1339 CRLF lines
   when node counted 0, and an edit script that trusted it wrote CRLF into an LF file (`scenarioFromDraft.ts` went MIXED; fixed
   before commit). Check EOL with `git ls-files --eol -- <path>` or a node count, never grep in Git Bash.
@@ -133,7 +140,8 @@ extensions of 018, 035, 036, 126 and 128.
   diagnosing; never call it a regression on the full run's word.
 - **A Windows path written through a shell-inlined script loses its backslashes** (`\b9` became a backspace and `9`; `\U`,
   `\b` vanished): `594e4ae9` committed a mangled path, fixed by `a64c942f`. Write any path-bearing script with the Write tool
-  and `String.raw`, and never end a `String.raw` with a backslash before its closing backtick (it escapes the backtick).
+  and `String.raw`, and never end a `String.raw` with a backslash before its closing backtick (it escapes the backtick) —
+  it bit again in b9-4: build a trailing backslash as `String.fromCharCode(92)`.
 
 **THE A7 REVIEW (durable, 2026-10-29):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a7-review\`
 — `brief.md` (the review's contract brief, a template for Phase C's), every lens's repros in its own folder, `a7-tools\` (A7's

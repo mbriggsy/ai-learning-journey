@@ -40,9 +40,11 @@ Tier 0); each moved entry's metadata line says "re-tiered 2026-10-31
 (b9-5)", the readings that bind the next walk are the register header's sweep paragraph, and every named entry now sits in the D7
 queue below (its order unmoved). Next, in order:
 1. **Build 2, the surplus question.** The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
-   year never checks the household's pay against its spending…*. Its steps, all owed: `/brief` on the surplus question; the plan,
-   deepened and checked as a whole; the build; the whole-file review; `/distill`. Ride the Tier 4 *`simulate.ts` and
-   `earningsTest.ts` import each other…* on it (it touches `simulate.ts`).
+   year never checks the household's pay against its spending…*. `/brief` is DONE (b9-5): `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\brief.md`
+   — five landmines, the first being that "saved" moving the engine makes this a schema-v5 bump under `docs/architecture.md`
+   §7.3's rule (a), so the bump is one of the build's units. Next, all owed: the plan (`ce-plan`), deepened and checked as a
+   whole; the build; the whole-file review; `/distill`. Ride the Tier 4 *`simulate.ts` and `earningsTest.ts` import each
+   other…* on it (it touches `simulate.ts`).
 - **⚑ RULED by him 2026-10-31 — no tier call is open.** The council's two parked calls ("I yield to your recommendations"): a
   gloomy-only entry stays in Tier 0, and D7's "rosier" means for some household the intake accepts (the register header and the
   council row record both). And the dependents ask ("Yes, ask it"): one optional question, "none" an answer, never a guessed

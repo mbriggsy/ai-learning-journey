@@ -27,6 +27,14 @@ If no insights exist yet, or nothing matches the topic, the skill says so, lists
 
 The skill's one `!` injection runs `corpus.mjs`, which prints a corpus card capped under 4 KB: counts, frontmatter-field coverage, the ids a frontmatter grep can't see (empty tags, no frontmatter), and the tag vocabulary by use count — never an insight body. (Current Claude Code hands the injection back to the model to run instead of running it at load; the card is the same either way.) The agent then greps the `title:` / `tags:` / `modules:` / `phase:` lines and the filename slugs for the topic (broadening to a body search when fewer than 3 candidates hit), scores the candidates from frontmatter alone, reads the top 5 in full, and checks each against the code. It never injects the corpus itself: at 139 insights the old full dump was ~370 KB, and Claude Code cut it to a 2 KB preview holding insight 001 alone, so every brief silently recalled nothing.
 
+## How Much It Finds (measured 2026-10-31)
+
+On the Back Nine's lessons, this recipe names about 1 in 3 of the lessons that bear on a job, and about 3 in 4 of the lessons it names do bear on it: 32.4% and 33.6% recall, 71.8% and 74.5% precision, in two runs over the same 11 past briefs, scored against lessons that blind judges held relevant. That is arm A1 of the [brief recall fix](../docs/plans/brief-recall-fix-plan.md)'s re-score ([results/recall-rescore-2026-10-31.json](results/recall-rescore-2026-10-31.json)).
+
+The fix's candidate recipe did not land. It named 20 lessons for a big job instead of 10 and found more of the relevant ones (52.0% and 56.6% recall), but its precision fell to 57.7% and 62.7%, more than the 10 points the bar allowed. At an equal 10 names it found no more than this recipe. On a 5-lesson folder it dropped a relevant lesson that this recipe found in both runs. A one-line `applies_when` header in each lesson, read by meaning, added nothing it could measure (54.5% and 55.3%). The numbers are in-sample: the candidate was designed from the misses it was scored on.
+
+`bench/` is the harness that measured it: frozen as-of copies of each brief's lessons from git, one blind Opus helper per brief and run, blind judges, and a scorer that refuses to score while any run or judge is missing. A change to how brief searches is measured the same way before it goes live.
+
 ## When It Runs in the Flow
 
 For sizable work, /brief runs at the start of the job, before the plan, so the plan carries the lessons; and again at the start of each build unit's session, because one brief for the whole job doesn't catch everything a single unit touches. What makes it run is the TODO's START HERE line naming `/brief <topic>`: the session's close writes that line ([squeaky-clean](../../squeaky-clean/SKILL.md) step 1), and the next session starts there. Anyone can also just ask.

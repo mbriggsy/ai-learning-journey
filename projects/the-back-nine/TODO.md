@@ -93,14 +93,15 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-01 (b9-6: build 2's plan; b9-5's block pruned into it):** commit `ec2c7694` (the plan, the council's digest
-row, the newer-version door's amended trigger) and this close. Docs only: no `src` file has changed since `1fb8b25e`. By exit
-code at this close: `pnpm typecheck` 0, `pnpm verify:doc-stats` 0 (the test count lives under that gate). Carried, valid while
-`src` is unchanged: `pnpm lint` 0 and the full suite 0 at `1fb8b25e`; `pnpm build` 0 and `pnpm verify:bundle` 0 (288.5 KiB) at
-`bb26cbca`. CI, read by id: b9-5's five open runs (41264447045, 41265017924, 41265178365, 41265284099, 41265479674) all green on
-both jobs; read `ec2c7694`'s and this close's runs by id. The plan's process cost about 6.4M helper tokens (research 2.2M, council
-1.9M, deepen 0.9M, doc review 1.3M); the weekly meter read 83% at 2026-11-01 ~00:30 and resets Wed 2026-11-04 09:00 ET — U1 is
-tools-only and cheap, so pace the fan-outs (the U4 mutant pass, the Phase A review) against that reset.
+**SESSION 2026-11-01 (b9-7: build 2's U1 and U2; b9-6's block pruned into it):** commits `9580893b` (U1's doc corrections,
+the plan's U4 offset-0 scenario and U11 step-4 wording) and `ef69837b` (U2, the cycle closed), and this close. By exit code at
+`ef69837b`'s tree: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm build` 0, `pnpm verify:bundle` 0 (288.5 KiB), `pnpm verify:doc-stats`
+0 (the test count lives under that gate). `pnpm test`: every file green except `verify-doc-stats.test.ts`'s citation arm, run
+BEFORE the re-anchor; after it, that file ran 43/43 alone (the full suite was not re-run on the final tree, whose only further
+change is comments and docs; CI runs it). R10's identity sweep on that final tree: 35 of 35 keys identical (`idcheck.mjs u2final`).
+CI, read by id: `fc516f8b`'s 41274112455 and `9580893b`'s 41280641462 green on both jobs; `ef69837b`'s 41282103814 had
+`verify-rv-chart-text` green and `verify` still running at this close. The weekly meter read 87% at the close and resets Wed 2026-11-04 09:00 ET;
+U1 cost one verifier (~0.36M helper tokens). Pace U4's mutant pass and the Phase A engine review against that reset.
 **DISTILL CANDIDATES (b9-6):**
 - **A ruling's words can leave its own mechanism's figure undefined; a trace that asks "what is the referent, on which grain"
   finds it, and a second council rules it — never a pick by the planner.** "Never above the quoted figure" had no referent past

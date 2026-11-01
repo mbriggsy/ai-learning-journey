@@ -4,7 +4,7 @@
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, writeFileSync, rmSync, existsSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,14 +12,12 @@ import { applyFill, blobSha } from "./fills.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const REPO = join(here, "..", "..", "..", "..", "..");
-// The live script: its card is the same in every recipe (KTD2), so this holds
-// before and after U7 whichever way the verdict goes.
+// The live script, whose card the fills must satisfy.
 const CORPUS = join(here, "..", "corpus.mjs");
 const FILLS = JSON.parse(readFileSync(join(here, "..", "results", "header-fills-2026-10-31.json"), "utf8"));
 
 // A lesson's text as git holds the blob its fill was written from. Read from
-// git, not the working tree, so the tests still run once the fills land (U7)
-// or a lesson moves on.
+// git, not the working tree, so the tests hold however the lesson moves on.
 function blobText(f) {
   const r = spawnSync("git", ["-C", REPO, "cat-file", "blob", f.blob], { encoding: "utf8", maxBuffer: 1 << 26 });
   assert.equal(r.status, 0, `${f.lesson}: git cat-file blob ${f.blob} failed: ${r.stderr}`);

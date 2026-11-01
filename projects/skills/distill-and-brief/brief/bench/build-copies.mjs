@@ -14,7 +14,7 @@
 // Usage: node build-copies.mjs <out-dir> [--lines <applies-when-lines.json>]
 
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { mkdirSync, readFileSync, realpathSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { applyFill, insertAppliesWhen, blobSha } from "./fills.mjs";
@@ -102,7 +102,17 @@ export function buildCopies(out, linesFile, only = null) {
   return manifest;
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+// True when this file is the script node was asked to run, by its real path, so
+// a run through the ~/.claude/skills/brief junction is not a silent no-op.
+const isMain = () => {
+  try {
+    return realpathSync(process.argv[1]).toLowerCase() === realpathSync(fileURLToPath(import.meta.url)).toLowerCase();
+  } catch {
+    return false;
+  }
+};
+
+if (process.argv[1] && isMain()) {
   const out = process.argv[2];
   if (!out) throw new Error("usage: node build-copies.mjs <out-dir> [--lines <applies-when-lines.json>]");
   if (existsSync(join(out, "manifest.json"))) throw new Error(`${out} already holds copies; build into an empty folder`);

@@ -113,10 +113,12 @@
  },
  "verdict": "LAND NOTHING",
  "comparisons": {
-  "A3_vs_A2": -2.1,
+  "A3_vs_A2": -2,
   "A3_vs_A1": 20.9,
+  "A3_precision_vs_A1": -14.1,
   "A3_precisionOk": false,
   "A2_vs_A1": 18.4,
+  "A2_precision_vs_A1": -16.8,
   "A2_precisionOk": false,
   "guard": false
  },
@@ -2797,17 +2799,17 @@
   "B05": 2,
   "B06": 1,
   "B07": 2,
-  "B13": 1,
-  "B14": 1,
-  "B15": 3,
-  "B17": 3,
-  "B18": 2,
   "B08": 0,
   "B09": 0,
   "B10": 5,
   "B11": 0,
   "B12": 0,
-  "B16": 2
+  "B13": 1,
+  "B14": 1,
+  "B15": 3,
+  "B16": 2,
+  "B17": 3,
+  "B18": 2
  },
  "runs": [
   {

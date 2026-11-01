@@ -1,7 +1,8 @@
 // The 19 header fills (U4 of docs/plans/brief-recall-fix-plan.md): applied to a
-// lesson's text by the copy builder (every arm's as-of copies) and by the
-// landing (U7). A fill is written from one git blob of one lesson, so applying
-// it to any other version of that lesson is refused, never guessed.
+// lesson's text by the copy builder, in every arm's copies. (The 2026-10-31
+// re-score landed nothing, so no live lesson carries them.) A fill is written
+// from one git blob of one lesson, so applying it to any other version of that
+// lesson is refused, never guessed.
 
 import { createHash } from "node:crypto";
 

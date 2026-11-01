@@ -8,9 +8,9 @@ export const meta = {
 }
 
 // Generated per invocation by bench/make-rescore.mjs, which fills CONFIG from
-// the results files and the copies' manifest (no hand-typed topic or path):
+// the results files and <copies>/arms/arms.json (no hand-typed topic or path):
 // { copies, part: 'A1' | 'A2' | 'A3' | 'judges' | 'dry', runs: [1, 2],
-//   arms: { A1: { recipe, corpus, briefs: [...] }, ... },
+//   arms: { A1: { recipe, corpus, hash, briefs: [...] }, ... },
 //   briefs: [{ id, ts, topic, commitsAfter }], judgeRules: [...] }
 const CONFIG = __CONFIG__
 
@@ -107,4 +107,6 @@ const out = await parallel(jobs.map((j) => () => {
   return agent(runPrompt(j.arm, briefOf(j.brief), copyDir), { label: `${j.arm}:${j.brief}:r${j.run}`, phase: 'Runs', schema: PICKS, model: 'opus', effort: EFFORT })
     .then((result) => ({ arm: j.arm, brief: j.brief, run: j.run, copy: copyDir, result }))
 }))
-return { part: CONFIG.part, items: out }
+// A run part names the recipe bytes it ran on, so merge can refuse a part frozen from other bytes.
+const armOfPart = CONFIG.part === 'dry' ? CONFIG.dry.arm : CONFIG.part
+return { part: CONFIG.part, hash: CONFIG.part === 'judges' ? null : CONFIG.arms[armOfPart].hash, items: out }

@@ -35,7 +35,22 @@ are one seed…*. **Carried from b9-1 (the pay check's Phase C is closed, h2 and
 review's is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (`pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS — remove each
 link alone before deleting any folder there); rulings 38–42 are in `b9-phaseb\DECISIONS.md`. U10's Caddie card stays
 **HARD-FLAG** on its two Tier 1 builds. Next, in order:
-1. **Rank the registers against the D7 queue** (his order; never re-ordered without him) — b9-8's list, unchanged, plus the review's:
+1. **Rank the registers against the D7 queue** (his order; never re-ordered without him). **The tier rule is RULED and written into the
+   register header (b9-4, council `wf_ed0bbb05-1f1`, 8/10; the row in `docs/council-log.md`): a six-step tier ladder, and its
+   twelve named lifts are APPLIED (each entry's metadata line says "re-tiered 2026-10-31"); §219(g) and the catch-up stay in
+   Tier 0; Tier 2 is now "…device or household".** Still owed, in order:
+   - **(a) The register-wide sweep the ladder needs** (the council's "any other entry that passes (3)", and "gloomy wrong-answer
+     entries now in Tier 2 rise to Tier 1"): walk the header's ladder over every open Tier 1, 2 and 4 entry, reading only its
+     recorded Direction text (step 3 lifts on the bullet alone; any DOWNWARD move first reads the cited code; a missing bullet
+     holds the filed tier). Run it as a workflow (one reader per tier slice, an xhigh refuter per proposed move), then move the
+     blocks with the same script shape b9-4 used (`retier.mjs` in the b9-4 scratchpad is gone with the session: the move is
+     cut each `### ` block to the next `##`/`###` heading, append it before `## Tier 1`, stamp the metadata line). b9-2's
+     pre-screen (`ranking-pass-notes.md`, below) lists the candidates it saw; re-derive by TITLE.
+   - **(b) Slot the named entries below into the D7 queue** (b9-2's slotting draft places each one; lifted entries join "the other
+     new Tier 0s, ranked after bucket 1 by measured reach"). The D7 queue's own order never moves.
+   - **⚑ HIS, parked by the council (nothing moves meanwhile):** may a gloomy-only entry LEAVE Tier 0 (Tier 0 re-headed rosy-only)?
+     And is "Tier 0 when it makes the answer rosier" in D7 his "for some household the intake accepts"? Both are in the council row.
+   The named entries, from b9-8's list and the review's:
    - **b9-2 started this pass, notes durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\ranking-pass-notes.md`. The tier rule needs a register-wide
      sweep to be true of the body (the body was never tiered by direction): ~26 entries with a recorded rosy or either-way
      reading sit below Tier 0, two gloomy-only ones sit in it, and the measured step-card room (~$148,200 rosier, "the cardinal
@@ -60,28 +75,19 @@ link alone before deleting any folder there); rulings 38–42 are in `b9-phaseb\
        every traditional-IRA contribution…* and *The 2026 Roth-only catch-up rides the entered account kind…*.
      - Tier 1: *Health premiums taken from pay before tax are charged payroll tax and income tax as if they were pay…*.
      - Tier 2: *A job outside Social Security is still charged Social Security tax…*, *The Social Security wage base and the
-       earnings test's exempt amounts are held flat in today's dollars…*, *Social Security checks held back because of pay
+       earnings test's exempt amounts are held flat in today's dollars…* (now Tier 0, b9-4), *Social Security checks held back because of pay
        before the plan's first year are never credited back…* and *Two states outside the priced three look the same to the
-       working-year cost…*.
-   - **The review's (b9-9).** The NC/PA clause entry (Tier 1's *On the date route the North Carolina / Pennsylvania clause says
+       working-year cost…* (now Tier 0, b9-4).
+   - **The review's (b9-9).** The NC/PA clause entry (Tier 0 since b9-4: *On the date route the North Carolina / Pennsylvania clause says
      "your state income tax" with no scope…*) gained a ⚑ UPDATED bullet: its gap was false about NC since the pay check, and a PA
      household that says yes to its quote has its tax on pay charged nowhere ($921 a year on `dateshort` re-stated to PA) — the
      rosy side, and the plan's Deferred *Pricing PA's wage tax in the engine* is the build that ends it. Two Tier 4 entries are new:
      *The money picture's "no picture" face also covers an engine fault…* and *`simulate.ts` and `earningsTest.ts` import each
      other…*. The birth-month entry gained the January-1 birthday rule.
-   - **The tier rule: settle it once, in this pass.** U11 moved §219(g) and the Roth-only catch-up to Tier 0 because, under W,
-     their rosy half reaches each working year's cash, beside K1 and K2. The same reading would also lift four entries
-     whose rosy halves now reach the check:
-     - K6 *Pay is one steady figure all the way to the stop date…*;
-     - K7 *The tool asks only where you'll live in retirement, and taxes your working years as if you already lived there*
-       (b9-9's ruling 41: under FL and PA/unpriced K7 now reads in the ROSY group — weigh that);
-     - K8, the wage-base entry;
-     - the two-unpriced-states entry.
-
-     U11 amended K6's and K7's text and left their tiers alone. K5 rides the Tier 2 birth-month entry. The register also keeps
-     narrow rosy entries in Tier 2 (Philadelphia's School Income Tax, PA's inheritance tax). Rule it by the header's "worst
-     consequence, never by size". Either move all four up, or move §219(g) and the catch-up back down. Then write the rule
-     into the register header so it stops being re-derived.
+   - **The tier rule — RULED 2026-10-31 (b9-4, above).** K6, K7, K8, the two-unpriced-states entry, birth month/K5, Philadelphia,
+     PA inheritance, the tax-free pension share, the step card's room and headroom, the NC/PA clause and the HSA base moved to
+     Tier 0; the cohort entry stays in Tier 2 (his recorded 1969/1972 birth years); disability, spouse-dies-in-claim-year and the
+     "all told" tile hold.
 2. **Build 2, the surplus question**, follows. The council's shape is on the ⚑ RULED bullet of the CLOSED Tier 0 *A working
    year never checks the household's pay against its spending…*. Its steps, all owed: `/brief` on the surplus question; the plan,
    deepened and checked as a whole; the build; the whole-file review; `/distill`. Ride the Tier 4 *`simulate.ts` and

@@ -134,7 +134,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **Recovery word** — the UI's name for the **Recovery passphrase** (see it).
 
-**Register tiers (Tier 0–4)** — the open register's severity scale, by worst consequence: **Tier 0** calm-but-wrong (shipped code can answer wrong) · **Tier 1** the differentiator does not land · **Tier 2** what breaks on someone else's device · **Tier 3** Briggsy's call (taste, scope, one-way doors) · **Tier 4** hygiene (no user-visible wrong answer). → [backlog.md](backlog.md)
+**Register tiers (Tier 0–4)** — the open register's severity scale, by worst consequence: **Tier 0** calm-but-wrong (shipped code can answer wrong) · **Tier 1** the differentiator does not land · **Tier 2** what breaks on someone else's device or household · **Tier 3** Briggsy's call (taste, scope, one-way doors) · **Tier 4** hygiene (no user-visible wrong answer). → [backlog.md](backlog.md)
 
 **reVerifyEveryBuild** — a constants-entry flag for live, possibly-retroactive policy that CI re-verifies at every build: the ACA enhanced-subsidy entries (`pnpm verify:aca`), NC's state-tax record (`pnpm verify:state-tax`), and the Social Security spousal rate (a dated tripwire test). → [architecture.md §8](architecture.md)
 

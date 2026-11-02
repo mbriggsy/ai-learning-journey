@@ -162,6 +162,11 @@ That −4 floor is why streaming a defense into a bad matchup is genuinely expen
   The live league object carries `waiver_clear_days: 1` and `daily_waivers: 0`. Josh Downs, dropped by
   RMonk9 in the 03:15 Wednesday run, read **`W Thu`** in the in-app Players tab: on waivers one day,
   then gettable. So a man cut Wednesday to Friday can start for someone that Sunday.
-  `scripts/trade_eval.py` models exactly that (re-recorded 2026-10-29). **Still unmeasured:** whether
-  the day ends 24 hours after the drop or at the next morning's processing. The two disagree only
-  for a Saturday-night drop, so trade_eval prints a warning when a trade processes that late.
+  `scripts/trade_eval.py` models exactly that (re-recorded 2026-10-29).
+  **When the day ends, measured 2026-11-01:** four players dropped Saturday 10-31 between 17:43 and 20:48
+  all read `W Sun` at 09:17 Sunday (a next-morning run would have read `W Mon`). At 20:55 Sunday the two
+  whose games had not started read **ADD** (Roschon Johnson, CHI plays Monday; Juwan Johnson, NO on bye),
+  so a drop clears **about 24 hours later**. The two whose games kicked off at 1:00 Sunday, before their
+  clear time (JAX DEF, Alec Pierce), read **`W Wed`**: **a kickoff before the clear time strands the player
+  on waivers until the Wednesday run.** trade_eval's numbers don't apply that lock; it prints a warning
+  when a trade processes late enough for it to matter.

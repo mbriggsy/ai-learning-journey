@@ -101,15 +101,13 @@
 Full set in [`CLAUDE.md`](CLAUDE.md); [`docs/insights/`](docs/insights/) has the worked cases.
 
 **trade_eval (review 2026-10-23: deferred on purpose, each measured)**
-- **When a dropped player clears waivers: the DAY is measured, the hour is not yet.** Read in-app (league home →
-  Players) Sun 11-01 09:17 ET: four Saturday drops all read **`W Sun`** — Alec Pierce (cut Sat 17:43), JAX DEF
-  (20:44), Roschon Johnson (20:48, CHI plays Monday), Juwan Johnson (20:48, NO on bye, so no game lock muddies it).
-  "Next morning's run after a full day" would read `W Mon`, and a Sunday-03:15 run would already have cleared them,
-  so the rule is about **24 hours after the drop**, which is what trade_eval's `process_at + waiver_clear_days`
-  already models. Controls read `.add`: Mahomes (cut Thu 22:27), Dicker (Fri 00:05), Downs. **To finish:** read
-  Roschon and Juwan Johnson again after ~20:50 ET Sun 11-01 (expect `.add`), and the JAX DEF / Pierce rows after
-  their 1:00 kickoff (expect `W Wed` if a kickoff before the clear time locks them). Then reword trade_eval's
-  "is unmeasured" line (`render()`, the `⚠ This one processes late` warning) and run the suite.
+- **When a dropped player clears waivers: MEASURED 2026-11-01** (full write-up in `docs/league.md`). A drop clears
+  **about 24 hours later** (four Saturday-evening drops read `W Sun` at 09:17; the two with no game yet read ADD at
+  20:55). **A kickoff before the clear time strands him on waivers until Wednesday** (JAX DEF, Pierce: `W Wed`).
+  trade_eval's numbers still let the other side stream such a man that week; its `⚠ This one processes late`
+  warning names the case. Applying the lock in `Sim.fix` (a cut man is unavailable in week `cur` if his kickoff
+  is ≤ `process_at + waiver_clear_days`) is a possible refinement, not scheduled: it only bites on a trade that
+  processes Saturday evening or later.
 - **Their number is soft, ours is not.** A choice that is a coin flip for one side moves the OTHER
   side's total: Kaeperni's three-site +35.4 to +39.3 across tie rules on the frozen night, ours
   −32.3 to −32.7. `--search` keeps packages where theirs is ≥ 0, so a package near 0 for them can sit

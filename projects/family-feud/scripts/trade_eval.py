@@ -603,8 +603,11 @@ class Sim:
         # if it is under way. Measured 2026-10-28: a dropped player sits on waivers ONE day
         # (waiver_clear_days 1), not until the Wednesday run -- Josh Downs, cut at the 03:15 Wednesday
         # run, read "W Thu" -- so a man cut when a Friday trade processes can start for the other side
-        # that Sunday. Exactly WHEN he clears (a day after the drop, or at the next morning's run) is
-        # unmeasured; render() says so when a trade processes late enough for it to matter.
+        # that Sunday. Measured 2026-11-01 on four Saturday-evening drops: each read "W Sun" at 09:17
+        # Sunday; at 20:55 the two whose games had not kicked off (Roschon Johnson, Mon; Juwan Johnson,
+        # bye) read ADD, and the two whose 1:00 games had (JAX DEF, Pierce) read "W Wed". So he clears
+        # about a day after the drop -- unless his game kicks off first, which strands him on waivers
+        # until Wednesday. This model does not apply that lock; render() warns when it could matter.
         U, w0 = universe, ctx.weeks[0]
 
         def tot(act, u):
@@ -1020,8 +1023,8 @@ def render(data, ctx, info, res, give, get):
                 ca = clears.astimezone(g.EASTERN)
                 w(f"     ⚠ This one processes late: a man it lets go clears about {ca:%a} {g.clock(ca)}, after some of "
                   f"week {ctx.cur}'s games kick off. If his game is one of them, these numbers let the other side "
-                  f"start a man still on waivers. (Whether waivers clear a day after the drop or at the next "
-                  f"morning's run is unmeasured.)")
+                  f"start a man still on waivers. (Measured 2026-11-01: a drop clears about a day later, but a man "
+                  f"whose game kicks off first stays on waivers until the Wednesday run.)")
     w("   - A player who never starts is worth 0 here; injury cover is outside the model.")
     for p in list(give) + list(get):
         if ctx.raw_ros.get(p, 0.0) <= 0.0:

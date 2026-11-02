@@ -22,6 +22,11 @@
   drop** (week-11 QB for Maye's bye). Roster 17 = 16 active + Tate on IR. 🚨 **When Tate's Out tag clears, Sleeper
   likely blocks our adds/claims until he leaves IR: drop Harold Fannin Jr. then** (bye wk 11; Strange's bye is done).
   Brief: `temp/week8-moves-log.md`.
+- **Week 8 is all but lost:** Sun 20:58 board **Hunter 163.38, us 96.36**, with only our SEA DEF and his Myers (SEA K)
+  left Monday. His Allgeier (39.1, projected 7.9) and Higgins (37.5) did it; our Flowers 0.0 (5 targets, 0 catches),
+  London 1.8, Shrader 1.0. 🚨 **Week 9: London is Sleeper Q (Head), his second in-game concussion check in two
+  weeks** (cleared to return both times, per a Rotowire-sourced summary; not primary-confirmed). Read ATL's Wed–Fri
+  reports before setting WR. Collins is back from bye; Tate (IR) is on bye.
 - **Kaeperni's offer (A.J. Brown + Tucker Kraft for Zay Flowers) was DECLINED 10-22 ~22:20 ET** on
   Briggsy's word. Verified: the panel read REJECTED, Active Trades was empty, `/rosters` unchanged.
 - **`scripts/trade_eval.py` is BUILT, COMMITTED (10-23) and REVIEWED (10-23):** 9 opus lenses, 18

@@ -104,6 +104,11 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
+**SESSION 2026-11-03 (b9-9: a pipe test from the cloud channel, no `src` change):** a Claude Duet thread session picked
+the repo up in the cloud, read START HERE, and pushed this one note on branch `claude/b9-9-pipe-test-ddgcok` as a draft PR, to
+prove read, push and PR work from there. Nothing in the queue moved. The Phase A review's identity tools live only in the
+Windows session folder (`b9-build2-surplus\`), so a cloud session can't run the per-commit check until they're in the repo.
+
 **SESSION 2026-11-01 (b9-8: build 2's U3, U4 and U15 — Phase A's build units are all done; b9-7's block pruned into it):**
 commits `ad525b9e` (U3), `a7f4dbad` (insight 146's out-of-date note), `343c0dd3` (U4) and `856ca79d` (U15), and this close.
 By exit code at `856ca79d`'s tree: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm build` 0, `pnpm verify:bundle` 0 (288.5 KiB),

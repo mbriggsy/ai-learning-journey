@@ -27,7 +27,7 @@ Today Claude runs the compound-engineering plugin's `ce-plan` skill from start t
 
 What Claude asks `ce-plan` for, every time:
 - the plan's path inside the project's `docs/plans/`;
-- Opus for every helper, because otherwise the plugin sends some of them to cheaper models;
+- Opus for every helper, because otherwise the plugin sends some of them to cheaper models; and an effort level for each, xhigh for the reviewers and high for the researchers;
 - the whole plan for the reviewers who hunt contradictions and ways it could break, because by default each reviewer gets only the sections for its angle, and the check has to cover the plan as a whole;
 - no scope question to you before it starts (`confirm:auto`), because you judge the result; a real fork that is yours still comes to you from Claude;
 - a stop after the check, because the plugin's next step hands the plan to its build skill, which moves the work off main onto a new branch.

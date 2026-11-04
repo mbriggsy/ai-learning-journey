@@ -40,7 +40,7 @@ Say any of the phrases above, or type `/ultramode-code-review` followed by what 
 
 House rules on every review:
 
-- Every reviewer and skeptic runs on the Opus model. Claude sets that on each one, instead of letting it take whatever model the session itself is using.
+- Every reviewer and skeptic runs on the Opus model, and at the xhigh effort level. Claude sets both on each one, instead of letting it take whatever the session itself is using. Tested 2026-10-31: high cost half as much but missed a real bug in one of two runs (insight 015).
 - A reviewer that crashes counts as "not checked", never as "clean". It is re-run, or its area is named as a gap.
 - Reviewers may not change files. Claude checks afterward that none did.
 

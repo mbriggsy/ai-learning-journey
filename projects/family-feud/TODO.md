@@ -20,8 +20,11 @@
 - **Sun 11-01 ~10:00 ET, on Briggsy's word, all verified on `/rosters`:** Stevenson → RB, Swift → BN (Henderson
   OUT made Stevenson NE's lead back: consensus 15.7 vs 14.7) · **Carnell Tate → IR** (Out) · **added Jared Goff, no
   drop** (week-11 QB for Maye's bye). Roster 17 = 16 active + Tate on IR. 🚨 **When Tate's Out tag clears, Sleeper
-  likely blocks our adds/claims until he leaves IR: drop Harold Fannin Jr. then** (bye wk 11; Strange's bye is done).
-  Brief: `temp/week8-moves-log.md`.
+  likely blocks our adds/claims until he leaves IR. Drop McGowan if Taylor is still a Colt; if Taylor was traded,
+  McGowan vs White is a judgment call. Never Fannin** (revised 11-04: Fannin now out-projects Strange; 12 targets in
+  week 8). Week-9 brief: `temp/week9-moves-log.md` (week 8: `temp/week8-moves-log.md`).
+- **Week 9 vs kblizzy23 (6-2). Locks: Thu 11-05 8:15 PM (Strange, Flowers) and Sun 9:30 AM Madrid (London,
+  Chase Brown), both before any GAMEDAY run except Sun 08:00.** NFL trade deadline Tue 11-10 4 PM ET (Taylor).
 - **Week 8 is all but lost:** Sun 20:58 board **Hunter 163.38, us 96.36**, with only our SEA DEF and his Myers (SEA K)
   left Monday. His Allgeier (39.1, projected 7.9) and Higgins (37.5) did it; our Flowers 0.0 (5 targets, 0 catches),
   London 1.8, Shrader 1.0. 🚨 **Week 9: London is Sleeper Q (Head), his second in-game concussion check in two

@@ -2,9 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(*)",
-      "Read(*)",
-      "Write(*)",
-      "Edit(*)",
+      "Read",
+      "Write",
+      "Edit",
       "WebFetch(*)",
       "WebSearch",
       "mcp__serena__*",

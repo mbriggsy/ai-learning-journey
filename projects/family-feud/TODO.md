@@ -23,6 +23,8 @@
   likely blocks our adds/claims until he leaves IR. Drop McGowan if Taylor is still a Colt; if Taylor was traded,
   McGowan vs White is a judgment call. Never Fannin** (revised 11-04: Fannin now out-projects Strange; 12 targets in
   week 8). Week-9 brief: `temp/week9-moves-log.md` (week 8: `temp/week8-moves-log.md`).
+- **Wed 11-04 ~18:10 ET, on Briggsy's word, verified on `/rosters`:** Swift, Collins, Fannin start over Stevenson,
+  M. Wilson, Strange · **added the JAX DEF, dropped the SEA DEF** (JAX covers SEA's week-11 bye) and slotted it in.
 - **Week 9 vs kblizzy23 (6-2). Locks: Thu 11-05 8:15 PM (Strange, Flowers) and Sun 9:30 AM Madrid (London,
   Chase Brown), both before any GAMEDAY run except Sun 08:00.** NFL trade deadline Tue 11-10 4 PM ET (Taylor).
 - **Week 8 is all but lost:** Sun 20:58 board **Hunter 163.38, us 96.36**, with only our SEA DEF and his Myers (SEA K)

@@ -4,7 +4,9 @@
 // live API keys in their environment (OpenAI and Context7, names checked 2026-11-01), which
 // KTD16's stripping of CLAUDE-prefixed variables leaves in place. A committed file must hold:
 //   - no value of any launching-environment variable whose name contains KEY, TOKEN, SECRET
-//     or PASS, raw or JSON-escaped;
+//     or PASS, raw or JSON-escaped, nor of any such line in the repo-root .env, where the
+//     real keys live and which a session loads before a script that needs one (a child that
+//     did so could put a value into its transcript without it ever being in this environment);
 //   - not the account's email address.
 // A refusal names the variable, never its value. When the account record yields no email
 // address the check refuses rather than skipping it; a caller that has no account (a test)
@@ -35,13 +37,41 @@ export function accountEmail(home = homedir()) {
   }
 }
 
+// The repo-root .env: one gitignored file every project loads first. Not there (CI) means none.
+export const ROOT_ENV = join(import.meta.dirname, "..", "..", "..", "..", ".env");
+
+// A .env file's KEY=VALUE lines, as an object; {} when the file is not there. An "export " prefix
+// is allowed and comment and blank lines are skipped. A quoted value is what lies between its
+// quotes, whatever follows them. An unquoted one ends at its first "#" or space: bash ends it at
+// a space or a " #", the dotenv package at any "#", so the shortest reading is kept, and a text
+// holding either reading still holds it. One that starts with "#" is empty to dotenv but whole
+// to bash (the way our sessions load it), so it keeps bash's reading rather than vanishing from
+// the check. A "$NAME" inside is not expanded (none in ours).
+export function readEnvFile(path) {
+  if (!path || !existsSync(path)) return {};
+  const out = {};
+  for (const line of readFileSync(path, "utf8").split(/\r?\n/)) {
+    const m = line.match(/^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if (!m) continue;
+    const v = m[2];
+    const q = v[0] === '"' || v[0] === "'" ? v[0] : null;
+    const close = q ? v.indexOf(q, 1) : -1;
+    out[m[1]] = q ? (close > 0 ? v.slice(1, close) : v.slice(1).trim()) : v.split(/[#\s]/)[0] || v.trim().split(/\s/)[0];
+  }
+  return out;
+}
+
 // What a text is checked against: each secret-named variable's value in every form it can be
-// written in, and the names whose values are too short to check.
-export function secretsOf(env) {
+// written in, and the names whose values are too short to check. The repo-root .env's lines join
+// the environment's; one whose value differs from the environment's is checked too, named
+// "<NAME> (repo-root .env)". envFile: false leaves the file out (a test with its own fixture).
+export function secretsOf(env, { envFile = ROOT_ENV } = {}) {
   const checked = [];
   const unchecked = [];
-  for (const [name, raw] of Object.entries(env || {})) {
-    if (!SECRET_NAME.test(name) || raw === undefined || raw === null || raw === "") continue;
+  const pairs = Object.entries(env || {}).map(([name, raw]) => ({ name, base: name, raw }));
+  if (envFile !== false) for (const [base, raw] of Object.entries(readEnvFile(envFile))) if (String((env || {})[base] ?? "") !== raw) pairs.push({ name: `${base} (repo-root .env)`, base, raw });
+  for (const { name, base, raw } of pairs) {
+    if (!SECRET_NAME.test(base) || raw === undefined || raw === null || raw === "") continue;
     const value = String(raw);
     if (value.length < MIN_CHECKED) {
       unchecked.push(name);
@@ -53,9 +83,9 @@ export function secretsOf(env) {
 }
 
 // The names whose values the text holds; "the account email" counts as one.
-export function findSecrets(text, { env = process.env, email = accountEmail() } = {}) {
+export function findSecrets(text, { env = process.env, email = accountEmail(), envFile = ROOT_ENV } = {}) {
   if (email !== false && !(typeof email === "string" && email.includes("@"))) throw new Error("the account email was not found, so the email check cannot run; nothing is written (pass email: false only where there is no account)");
-  const { checked, unchecked } = secretsOf(env);
+  const { checked, unchecked } = secretsOf(env, { envFile });
   const hits = checked.filter((s) => s.forms.some((f) => text.includes(f))).map((s) => s.name);
   if (email && text.toLowerCase().includes(String(email).toLowerCase())) hits.push("the account email");
   return { hits, unchecked };

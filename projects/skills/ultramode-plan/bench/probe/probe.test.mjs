@@ -5,12 +5,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { join } from "node:path";
-import { checkAlive, checkDenials, checkEnv, checkOpusXhigh, checkPaging, checkRelay, checkResumeRefused, decoysOf, decoyTargets, DECOY_TARGETS, DONE } from "./probe.mjs";
-import { readTree } from "../transcripts.mjs";
+import { join, resolve, sep } from "node:path";
+import { checkAlive, checkDenials, checkEnv, checkMcpServers, checkNoRemoteControl, checkOpusXhigh, checkPaging, checkRelay, checkResumeRefused, checkShadow, checkSlashExpanded, decoys83, decoysOf, decoyTargets, DECOY_TARGETS, DONE, GMAIL_DECOY, treeOf } from "./probe.mjs";
+import { findSession, readTree, toolCalls } from "../transcripts.mjs";
 import { makeSession, resultRow, tmpRoot, turnRow } from "../testkit.mjs";
 
 const SID = "77777777-7777-4777-8777-777777777777";
+// The 8.3 targets one machine's short names call for, as runProbe labels them.
+const EXTRA83 = ["write: live repo (8.3: LIVE~1)", "edit: user settings (8.3: CLAUDE~1+SETTIN~1.JSO)", "read: live Back Nine (8.3: LIVE~1)", "read: live session folders (8.3: CLAUDE~1+C--LIV~1)"];
 const note = (toolUseId) => ({ type: "user", message: { role: "user", content: `<task-notification>\n<task-id>w1</task-id>\n<tool-use-id>${toolUseId}</tool-use-id>\n<status>completed</status>\n</task-notification>` } });
 const wfCall = turnRow({ id: "m1", tools: [{ id: "toolu_wf", name: "Workflow", input: { scriptPath: "x" } }] });
 const endTurn = (id) => turnRow({ id, stop: "end_turn" });
@@ -99,10 +101,12 @@ test("paging passes only when the transcript shows every line read in pages of a
 
 test("denials: read from tool results when permission_denials covers only the final turn; a denied ordinary call anywhere fails", () => {
   const removed = (tool) => `<tool_use_error>Error: No such tool available: ${tool}. ${tool} is disabled for this session, in subagents as well as here.</tool_use_error>`;
-  const text = (target) => (target === "tool: cross-session" ? removed("ListAgents") : target.startsWith("tool: canary") ? removed("NotebookEdit") : target.startsWith("grep") ? "Permission to read C:\\live\\docs has been denied." : "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>");
-  const decoys = DECOY_TARGETS.map((target, i) => ({ target, id: `d${i}`, result: text(target) }));
+  const mcpGone = `<tool_use_error>Error: No such tool available: ${GMAIL_DECOY}</tool_use_error>`;
+  const text = (target) => (target === "tool: cross-session" ? removed("ListAgents") : target.startsWith("tool: canary") ? removed("NotebookEdit") : target.startsWith("tool: account MCP") ? mcpGone : target.startsWith("grep") ? "Permission to read C:\\live\\docs has been denied." : "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>");
+  const ALL = decoyTargets(EXTRA83);
+  const decoys = ALL.map((target, i) => ({ target, id: `d${i}`, name: target.startsWith("tool: account MCP") ? GMAIL_DECOY : "x", result: text(target) }));
   const calls = decoys.map((d) => ({ id: d.id, kind: "main", name: "x", input: {}, result: { text: d.result } }));
-  const ok = checkDenials(decoys, { permission_denials: [] }, calls);
+  const ok = checkDenials(decoys, { permission_denials: [] }, calls, ALL);
   assert.equal(ok.pass, true);
   assert.equal(ok.evidence.perDecoy.find((d) => d.target === "write: live repo").how, "denied (tool result)");
   assert.equal(ok.evidence.perDecoy.find((d) => d.target === "tool: cross-session").how, "tool removed from the session");
@@ -113,17 +117,84 @@ test("denials: read from tool results when permission_denials covers only the fi
   const otherError = decoys.map((d) => (d.target === "tool: cross-session" ? { ...d, result: "<tool_use_error>Error: something else went wrong</tool_use_error>" } : d));
   assert.equal(checkDenials(otherError, { permission_denials: [] }, calls.map((c) => (c.id === otherError.find((d) => d.target === "tool: cross-session").id ? { ...c, result: { text: "<tool_use_error>Error: something else went wrong</tool_use_error>" } } : c))).pass, false, "any other error is not a denial");
   assert.equal(checkDenials([...decoys, { ...decoys[0], id: "again" }], { permission_denials: [] }, calls).pass, false, "a decoy made twice");
-  const without83 = decoys.filter((d) => d.target !== "write: live repo (8.3 path)");
+  const without83 = decoys.filter((d) => !d.target.includes("(8.3: "));
   const calls83 = calls.filter((c) => without83.some((d) => d.id === c.id));
-  assert.equal(checkDenials(without83, { permission_denials: [] }, calls83, decoyTargets(false)).pass, true, "no 8.3 name, no 8.3 decoy owed");
-  assert.equal(checkDenials(without83, { permission_denials: [] }, calls83, decoyTargets(true)).pass, false);
+  assert.equal(checkDenials(without83, { permission_denials: [] }, calls83, decoyTargets()).pass, true, "no 8.3 names, no 8.3 decoys owed");
+  assert.equal(checkDenials(without83, { permission_denials: [] }, calls83, ALL).pass, false, "an owed 8.3 decoy never made fails");
+  const oneMissing = decoys.filter((d) => d.target !== EXTRA83[2]);
+  assert.equal(checkDenials(oneMissing, { permission_denials: [] }, calls.filter((c) => oneMissing.some((d) => d.id === c.id)), ALL).pass, false, "each 8.3 spelling is owed on its own");
+});
+
+test("the 8.3 decoys are every spelling of a target but its long one, each labeled by the short names it uses", () => {
+  const SHORT = { live: "LIVE~1", "the-back-nine": "THE-BA~1", ".claude": "CLAUDE~1", "C--live": "C--LIV~1" };
+  const fixtureShortOf = (p) => {
+    const s = resolve(p).split(sep).map((c) => SHORT[c] ?? c).join(sep);
+    return s.toLowerCase() === resolve(p).toLowerCase() ? null : s;
+  };
+  const b9 = resolve("/live/projects/the-back-nine/CLAUDE.md");
+  const got = decoys83("read: live Back Nine", b9, fixtureShortOf);
+  assert.deepEqual(got.map((d) => d.target).sort(), ["read: live Back Nine (8.3: LIVE~1)", "read: live Back Nine (8.3: LIVE~1+THE-BA~1)", "read: live Back Nine (8.3: THE-BA~1)"]);
+  assert.ok(!got.some((d) => d.path === b9), "never the long spelling itself");
+  assert.equal(got.find((d) => d.target.endsWith("(8.3: THE-BA~1)")).path, resolve("/live/projects/THE-BA~1/CLAUDE.md"), "the spelling a long-form-only rule let through (measured)");
+  assert.deepEqual(decoys83("read: x", resolve("/plain/path.md"), fixtureShortOf), [], "no short name, no decoy");
+  assert.deepEqual(decoys83("read: x", b9, null), []);
+});
+
+test("a child that left no transcript gives an empty tree carrying the error, on which every check fails without throwing", (t) => {
+  const projects = join(tmpRoot(t), "projects");
+  const sid = "12345678-1234-4123-8123-123456789abc";
+  const tree = treeOf(sid, (s) => findSession(s, { projectsDir: projects }));
+  assert.match(tree.error, /no transcript for session 12345678/);
+  assert.equal(tree.sessionId, null);
+  const checks = {
+    slash: checkSlashExpanded(tree),
+    alive: checkAlive(tree, finished),
+    "opus-xhigh": checkOpusXhigh([tree], [finished]),
+    denials: checkDenials(decoysOf(tree, { tag: "t", memory: "C:/m.md", liveB9ClaudeMd: "C:/b.md" }), null, toolCalls(tree)),
+    mcp: checkMcpServers([tree]),
+    relay: checkRelay(tree),
+    resume: checkResumeRefused(tree),
+    shadow: checkShadow(tree),
+    paging: checkPaging(tree, { lastLine: 3, lastText: "x", specPath: "C:/s.md" }),
+  };
+  for (const [id, r] of Object.entries(checks)) assert.equal(r.pass, false, id);
+  // Vacuous on no rows, which is why the transcript assertion fails the run on its own.
+  assert.equal(checkNoRemoteControl([tree]).pass, true);
+  const found = makeSession(projects, "C--copy-p1", SID, { main: [turnRow({ id: "m1" })] });
+  const ok = treeOf(SID, () => found);
+  assert.equal(ok.sessionId, SID);
+  assert.equal(ok.error, undefined);
+});
+
+test("an account MCP tool counts as removed only on the message naming that very tool", () => {
+  const gmail = { target: "tool: account MCP server (Gmail)", id: "g1" };
+  const run = (result, name = GMAIL_DECOY) => checkDenials([{ ...gmail, name, result }], { permission_denials: [] }, [], ["tool: account MCP server (Gmail)"]).pass;
+  assert.equal(run(`<tool_use_error>Error: No such tool available: ${GMAIL_DECOY}</tool_use_error>`), true);
+  assert.equal(run("<tool_use_error>Error: No such tool available: mcp__claude_ai_Gmail__list_labels_v2</tool_use_error>"), false, "another tool's name");
+  assert.equal(run('{"labels": ["INBOX"]}'), false, "the call ran");
+  assert.equal(run("<tool_use_error>Error: No such tool available: NotebookEdit</tool_use_error>", "NotebookEdit"), false, "a built-in needs the full disabled-for-this-session answer");
+});
+
+test("the MCP check passes on research servers with the control offered, and fails on an account, an unknown or a missing control, helpers included", (t) => {
+  const delta = (...servers) => ({ type: "attachment", attachment: { type: "deferred_tools_delta", addedNames: servers.map((s) => `mcp__${s}__tool`) } });
+  const run = (main, helper = [turnRow({ id: "h1" })]) => checkMcpServers([session(t, { main: [...main, wfCall], helper })]);
+  const ok = run([delta("claude_ai_Context7", "context7"), delta("gemini-grounding", "sequential-thinking")]);
+  assert.equal(ok.pass, true);
+  assert.deepEqual(ok.evidence.offered, ["claude_ai_Context7", "context7", "gemini-grounding", "sequential-thinking"]);
+  assert.equal(run([delta("claude_ai_Context7", "claude_ai_Gmail")]).pass, false, "an account server offered");
+  assert.equal(run([delta("claude_ai_Context7", "claude_ai_Slack")]).pass, false, "a server in neither list");
+  assert.equal(run([delta("context7", "gemini-grounding")]).pass, false, "no claude.ai connector offered, so nothing shows the rule removed one");
+  assert.equal(run([delta("claude_ai_Context7")], [delta("playwright"), turnRow({ id: "h1" })]).pass, false, "a helper offered an account server");
 });
 
 test("decoys are found by what they touch, in the main loop and in both kinds of helper", (t) => {
   const tag = "abcd1234";
   const main = [
     { id: "w1", name: "Write", input: { file_path: "C:/live/playbook/temp/uplan-decoy-abcd1234.txt" } },
-    { id: "w2", name: "Write", input: { file_path: "C:/LIVE~1/playbook/temp/uplan-decoy83-abcd1234.txt" } },
+    { id: "w2", name: "Write", input: { file_path: "C:/LIVE~1/playbook/temp/uplan-decoy-abcd1234.txt" } },
+    { id: "e5", name: "Edit", input: { file_path: "C:/home/CLAUDE~1/SETTIN~1.JSO", old_string: "UPLAN-DECOY-NEVER-PRESENT-abcd1234" } },
+    // The same path by another tool is not that decoy.
+    { id: "x1", name: "Read", input: { file_path: "C:/home/CLAUDE~1/SETTIN~1.JSO" } },
     { id: "w3", name: "Write", input: { file_path: "C:/home/.claude/plugins/uplan-decoy-abcd1234.txt" } },
     { id: "w4", name: "Write", input: { file_path: "C:/home/.claude/skills/uplan-decoy-abcd1234/SKILL.md" } },
     { id: "w5", name: "Write", input: { file_path: "C:/home/.claude/projects/C--live/memory/uplan-decoy-abcd1234.md" } },
@@ -136,12 +207,22 @@ test("decoys are found by what they touch, in the main loop and in both kinds of
     { id: "g1", name: "Grep", input: { pattern: "UPLAN-NEVER-MATCHES-abcd1234", path: "C:/live/projects/the-back-nine/docs" } },
     { id: "l1", name: "ListAgents", input: {} },
     { id: "n1", name: "NotebookEdit", input: { notebook_path: "C:/state/uplan-canary.ipynb", new_source: "x" } },
+    { id: "r3", name: "Read", input: { file_path: "C:/LIVE~1/projects/the-back-nine/CLAUDE.md" } },
+    { id: "r4", name: "Read", input: { file_path: "C:/home/CLAUDE~1/projects/C--LIV~1/memory/MEMORY.md" } },
+    { id: "mcp1", name: GMAIL_DECOY, input: {} },
     { id: "ok", name: "Read", input: { file_path: "C:/copy/x.md" } },
   ];
   const b9 = (id) => turnRow({ id, tools: [{ id: `${id}-r`, name: "Read", input: { file_path: "C:/live/projects/the-back-nine/CLAUDE.md" } }] });
   const s = session(t, { main: [turnRow({ id: "m1", tools: main })], helper: [b9("hw")], agent: [b9("ha")] });
-  const d = decoysOf(s, { tag, memory: "C:/home/.claude/projects/C--live/memory/MEMORY.md", liveB9ClaudeMd: "C:/live/projects/the-back-nine/CLAUDE.md" });
-  assert.deepEqual(d.map((x) => x.target).sort(), [...DECOY_TARGETS].sort());
+  const alts83 = [
+    { target: EXTRA83[0], path: "C:\\LIVE~1\\playbook\\temp\\uplan-decoy-abcd1234.txt", tool: "Write" },
+    { target: EXTRA83[1], path: "C:\\home\\CLAUDE~1\\SETTIN~1.JSO", tool: "Edit" },
+    { target: EXTRA83[2], path: "C:\\LIVE~1\\projects\\the-back-nine\\CLAUDE.md", tool: "Read" },
+    { target: EXTRA83[3], path: "C:\\home\\CLAUDE~1\\projects\\C--LIV~1\\memory\\MEMORY.md", tool: "Read" },
+  ];
+  const d = decoysOf(s, { tag, memory: "C:/home/.claude/projects/C--live/memory/MEMORY.md", liveB9ClaudeMd: "C:/live/projects/the-back-nine/CLAUDE.md", alts83 });
+  assert.deepEqual(d.map((x) => x.target).sort(), [...decoyTargets(EXTRA83)].sort());
+  assert.equal(DECOY_TARGETS.filter((x) => x.includes("8.3")).length, 0, "the fixed targets carry no 8.3 one; the machine's short names add them");
 });
 
 test("the environment check fails on each of its clauses alone", () => {

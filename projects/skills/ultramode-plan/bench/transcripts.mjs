@@ -158,6 +158,21 @@ export function toolCalls(tree) {
   return calls;
 }
 
+// The MCP servers whose tools the tree's sessions were offered, main loop and helpers, read from
+// the tool lists the harness writes into each transcript ("deferred_tools_delta" attachments,
+// whose addedNames hold mcp__<server>__<tool>; measured on CLI 2.1.318). A server offered once
+// counts, even if a later list drops it.
+export function mcpServersOffered(tree) {
+  const seen = new Set();
+  for (const f of tree.files) {
+    for (const o of f.rows || []) {
+      if (o.type !== "attachment" || o.attachment?.type !== "deferred_tools_delta") continue;
+      for (const n of o.attachment.addedNames || []) if (typeof n === "string" && n.startsWith("mcp__")) seen.add(n.split("__")[1]);
+    }
+  }
+  return [...seen].sort();
+}
+
 export function readTree(mainFile) {
   const tree = load(walk(mainFile));
   return { ...tree, ...turns(tree) };

@@ -1,0 +1,671 @@
+{
+ "probe": "U1",
+ "date": "2026-11-04",
+ "cli": [
+  "2.1.318"
+ ],
+ "start": "a3cd0b162b065b469327ff1f56dd78b33cd8c2c0",
+ "spec": "projects/the-back-nine/docs/plans/features/working-year-pay-check-build-spec.md",
+ "launches": [
+  {
+   "session": "cf0642ce-97ec-4afc-9218-0f4cacf63358",
+   "exit": 0,
+   "timedOut": false,
+   "ms": 195612,
+   "terminal": "completed",
+   "turns": 2,
+   "costUsd": 1.8709722,
+   "subagents": {
+    "spawned": 1,
+    "completed": 1,
+    "failed": 0
+   },
+   "args": [
+    "-p",
+    "<the probe's slash command>",
+    "--output-format",
+    "json",
+    "--model",
+    "opus[1m]",
+    "--effort",
+    "xhigh",
+    "--session-id",
+    "cf0642ce-97ec-4afc-9218-0f4cacf63358",
+    "--permission-mode",
+    "auto",
+    "--permission-prompts",
+    "none",
+    "--add-dir",
+    "<root>\\state-p1",
+    "--settings",
+    "{\"permissions\":{\"deny\":[\"Edit(/<repo>/**)\",\"Edit(/<repo, 8.3 name>/**)\",\"Edit(/~/.claude/plugins/**)\",\"Edit(/~/CLAUDE~1/plugins/**)\",\"Edit(/~/.claude/skills/**)\",\"Edit(/~/CLAUDE~1/skills/**)\",\"Edit(/~/.claude/settings.json)\",\"Edit(/~/.claude/SETTIN~1.JSO)\",\"Edit(/~/CLAUDE~1/settings.json)\",\"Edit(/~/CLAUDE~1/SETTIN~1.JSO)\",\"Edit(/~/.claude/settings.local.json)\",\"Edit(/~/CLAUDE~1/settings.local.json)\",\"Edit(/~/.claude/CLAUDE.md)\",\"Edit(/~/CLAUDE~1/CLAUDE.md)\",\"Edit(/~/.claude.json)\",\"Edit(/~/CLAUDE~1.JSO)\",\"Read(/~/.claude/projects/<repo-slug>*/**)\",\"Edit(/~/.claude/projects/<repo-slug>*/**)\",\"Read(/~/.claude/projects/<home-slug>-AI-LEA-1*/**)\",\"Edit(/~/.claude/projects/<home-slug>-AI-LEA-1*/**)\",\"Read(/~/CLAUDE~1/projects/<repo-slug>*/**)\",\"Edit(/~/CLAUDE~1/projects/<repo-slug>*/**)\",\"Read(/~/CLAUDE~1/projects/<home-slug>-AI-LEA-1*/**)\",\"Edit(/~/CLAUDE~1/projects/<home-slug>-AI-LEA-1*/**)\",\"Read(/~/.claude/projects/C--USE~3/**)\",\"Edit(/~/.claude/projects/C--USE~3/**)\",\"Read(/~/CLAUDE~1/projects/C--USE~3/**)\",\"Edit(/~/CLAUDE~1/projects/C--USE~3/**)\",\"Read(/~/.claude/projects/C-65B6~1/**)\",\"Edit(/~/.claude/projects/C-65B6~1/**)\",\"Read(/~/CLAUDE~1/projects/C-65B6~1/**)\",\"Edit(/~/CLAUDE~1/projects/C-65B6~1/**)\",\"Read(/~/.claude/projects/C-5AF0~1/**)\",\"Edit(/~/.claude/projects/C-5AF0~1/**)\",\"Read(/~/CLAUDE~1/projects/C-5AF0~1/**)\",\"Edit(/~/CLAUDE~1/projects/C-5AF0~1/**)\",\"Read(/~/.claude/projects/C-2EA8~1/**)\",\"Edit(/~/.claude/projects/C-2EA8~1/**)\",\"Read(/~/CLAUDE~1/projects/C-2EA8~1/**)\",\"Edit(/~/CLAUDE~1/projects/C-2EA8~1/**)\",\"Read(/~/.claude/projects/C-1862~1/**)\",\"Edit(/~/.claude/projects/C-1862~1/**)\",\"Read(/~/CLAUDE~1/projects/C-1862~1/**)\",\"Edit(/~/CLAUDE~1/projects/C-1862~1/**)\",\"Read(/~/.claude/projects/C-6FE1~1/**)\",\"Edit(/~/.claude/projects/C-6FE1~1/**)\",\"Read(/~/CLAUDE~1/projects/C-6FE1~1/**)\",\"Edit(/~/CLAUDE~1/projects/C-6FE1~1/**)\",\"Read(/~/.claude/projects/C--USE~2/**)\",\"Edit(/~/.claude/projects/C--USE~2/**)\",\"Read(/~/CLAUDE~1/projects/C--USE~2/**)\",\"Edit(/~/CLAUDE~1/projects/C--USE~2/**)\",\"Read(/~/.claude/projects/C--USE~4/**)\",\"Edit(/~/.claude/projects/C--USE~4/**)\",\"Read(/~/CLAUDE~1/projects/C--USE~4/**)\",\"Edit(/~/CLAUDE~1/projects/C--USE~4/**)\",\"Read(/<repo>/projects/the-back-nine/**)\",\"Read(/<repo>/projects/THE-BA~1/**)\",\"Read(/<repo, 8.3 name>/projects/the-back-nine/**)\",\"Read(/<repo, 8.3 name>/projects/THE-BA~1/**)\",\"SendMessage\",\"ListAgents\",\"ReadNotifications\",\"FetchInboxMessage\",\"SendUserFile\",\"PushNotification\",\"RemoteTrigger\",\"CronCreate\",\"CronDelete\",\"ScheduleWakeup\",\"NotebookEdit\",\"mcp__claude_ai_Gmail\",\"mcp__claude_ai_Google_Drive\",\"mcp__claude_ai_Google_Calendar\",\"mcp__claude_ai_Google_Sheets\",\"mcp__claude_ai_Claude_Docs\",\"mcp__claude-in-chrome\",\"mcp__playwright\",\"mcp__claude-artifacts\"]}}"
+   ],
+   "envNamesPassed": [
+    "AI_AGENT",
+    "ALLUSERSPROFILE",
+    "APPDATA",
+    "CLAUDE_CODE_SUBAGENT_MODEL",
+    "COMMONPROGRAMFILES",
+    "COMPUTERNAME",
+    "COMSPEC",
+    "CONTEXT7_API_KEY",
+    "COREPACK_ENABLE_AUTO_PIN",
+    "ChocolateyInstall",
+    "ChocolateyLastPathUpdate",
+    "CommonProgramFiles(x86)",
+    "CommonProgramW6432",
+    "DriverData",
+    "EXEPATH",
+    "GIT_EDITOR",
+    "HOME",
+    "HOMEDRIVE",
+    "HOMEPATH",
+    "IGCCSVC_DB",
+    "LOCALAPPDATA",
+    "LOGONSERVER",
+    "MSYSTEM",
+    "MSYS_NO_PATHCONV",
+    "NUMBER_OF_PROCESSORS",
+    "NoDefaultCurrentDirectoryInExePath",
+    "OLDPWD",
+    "OPENAI_API_KEY",
+    "OS",
+    "OneDrive",
+    "OneDriveConsumer",
+    "PATH",
+    "PATHEXT",
+    "PLINK_PROTOCOL",
+    "POWERSHELL_DISTRIBUTION_CHANNEL",
+    "PROCESSOR_ARCHITECTURE",
+    "PROCESSOR_IDENTIFIER",
+    "PROCESSOR_LEVEL",
+    "PROCESSOR_REVISION",
+    "PROGRAMFILES",
+    "PSModulePath",
+    "PUBLIC",
+    "PWD",
+    "ProgramData",
+    "ProgramFiles(x86)",
+    "ProgramW6432",
+    "SESSIONNAME",
+    "SHELL",
+    "SHLVL",
+    "SYSTEMDRIVE",
+    "SYSTEMROOT",
+    "TEMP",
+    "TERM",
+    "TMP",
+    "USERDOMAIN",
+    "USERDOMAIN_ROAMINGPROFILE",
+    "USERNAME",
+    "USERPROFILE",
+    "WINDIR",
+    "WSLENV",
+    "WT_PROFILE_ID",
+    "WT_SESSION",
+    "ZES_ENABLE_SYSMAN",
+    "_"
+   ],
+   "strippedFromParent": [
+    "CLAUDECODE",
+    "CLAUDE_CODE_BRIDGE_SESSION_ID",
+    "CLAUDE_CODE_CHILD_SESSION",
+    "CLAUDE_CODE_ENTRYPOINT",
+    "CLAUDE_CODE_EXECPATH",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS",
+    "CLAUDE_CODE_MESSAGING_SOCKET",
+    "CLAUDE_CODE_MESSAGING_TOKEN",
+    "CLAUDE_CODE_SESSION_ATTENDED",
+    "CLAUDE_CODE_SESSION_ID",
+    "CLAUDE_CODE_SUBAGENT_MODEL",
+    "CLAUDE_EFFORT",
+    "CLAUDE_PID"
+   ]
+  },
+  {
+   "session": "4c88b11d-2054-45d3-89c7-df381b9b2eb4",
+   "exit": 0,
+   "timedOut": false,
+   "ms": 14570,
+   "terminal": "completed",
+   "turns": 2,
+   "costUsd": 0.2824214,
+   "subagents": {
+    "spawned": 0,
+    "completed": 0,
+    "failed": 0
+   }
+  }
+ ],
+ "assertions": [
+  {
+   "id": "slash",
+   "name": "the typed slash command expands",
+   "pass": true,
+   "evidence": {
+    "bodyRow": 6,
+    "commandTag": true
+   }
+  },
+  {
+   "id": "alive",
+   "name": "the session stays alive until the Workflow's notification and a final turn",
+   "pass": true,
+   "evidence": {
+    "workflowCalled": true,
+    "notificationRow": 245,
+    "delivered": "as a new turn",
+    "turnEndedWhilePending": true,
+    "turnAfter": true,
+    "terminal": "completed",
+    "doneMarker": true
+   }
+  },
+  {
+   "id": "transcript",
+   "name": "a transcript exists at the pinned session id",
+   "pass": true,
+   "evidence": {
+    "found": true,
+    "resultSessionId": true,
+    "error": null,
+    "secondSessionError": null
+   }
+  },
+  {
+   "id": "opus-xhigh",
+   "name": "every main-loop and helper row reads Opus and xhigh, at the daily context window",
+   "pass": true,
+   "evidence": {
+    "turnsByKind": {
+     "main": 37,
+     "agent": 4,
+     "workflow": 8
+    },
+    "synthetic": 0,
+    "failingRows": [],
+    "contextWindows": [
+     {
+      "model": "claude-opus-5-5",
+      "contextWindow": 1000000
+     },
+     {
+      "model": "claude-opus-5-5",
+      "contextWindow": 1000000
+     }
+    ],
+    "helpersSeen": true
+   }
+  },
+  {
+   "id": "env",
+   "name": "no inherited CLAUDE variable survives except those KTD16 sets",
+   "pass": true,
+   "evidence": {
+    "passedToChild": [
+     "CLAUDE_CODE_SUBAGENT_MODEL"
+    ],
+    "childClaudeNames": [
+     "CLAUDECODE",
+     "CLAUDE_CODE_CHILD_SESSION",
+     "CLAUDE_CODE_ENTRYPOINT",
+     "CLAUDE_CODE_EXECPATH",
+     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS",
+     "CLAUDE_CODE_MESSAGING_SOCKET",
+     "CLAUDE_CODE_MESSAGING_TOKEN",
+     "CLAUDE_CODE_SESSION_ATTENDED",
+     "CLAUDE_CODE_SESSION_ID",
+     "CLAUDE_CODE_SUBAGENT_MODEL",
+     "CLAUDE_EFFORT",
+     "CLAUDE_PID"
+    ],
+    "inheritedIdentity": [],
+    "childSessionIdIsItsOwn": true,
+    "msysNoPathconv": true
+   }
+  },
+  {
+   "id": "denials",
+   "name": "only the decoys are denied, and one decoy into each deny-set root is denied, from the main loop and from both kinds of helper, and again through each 8.3 spelling",
+   "pass": true,
+   "evidence": {
+    "perDecoy": [
+     {
+      "target": "write: live repo",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "write: plugin cache",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "write: personal skills",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "write: live session folders",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: user settings",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: user settings.local",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: ~/.claude.json",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: user CLAUDE.md",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live session folders",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live Back Nine",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live Back Nine (workflow helper)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live Back Nine (agent helper)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "grep: live Back Nine",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "Permission to read <repo>\\projects\\the-back-nine\\docs has been denied."
+     },
+     {
+      "target": "tool: cross-session",
+      "made": 1,
+      "denied": true,
+      "how": "tool removed from the session",
+      "result": "<tool_use_error>Error: No such tool available: ListAgents. ListAgents is disabled for this session, in subagents as well as here.</tool_use_error>"
+     },
+     {
+      "target": "tool: canary (bare-name rule)",
+      "made": 1,
+      "denied": true,
+      "how": "tool removed from the session",
+      "result": "<tool_use_error>Error: No such tool available: NotebookEdit. NotebookEdit is disabled for this session, in subagents as well as here.</tool_use_error>"
+     },
+     {
+      "target": "tool: account MCP server (Gmail)",
+      "made": 1,
+      "denied": true,
+      "how": "tool removed from the session",
+      "result": "<tool_use_error>Error: No such tool available: mcp__claude_ai_Gmail__list_labels</tool_use_error>"
+     },
+     {
+      "target": "write: live repo (8.3: AI-LEA~1)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "write: plugin cache (8.3: CLAUDE~1)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "write: personal skills (8.3: CLAUDE~1)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "write: live session folders (8.3: C--USE~3)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "write: live session folders (8.3: CLAUDE~1)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "write: live session folders (8.3: CLAUDE~1+C--USE~3)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: user settings (8.3: SETTIN~1.JSO)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: user settings (8.3: CLAUDE~1)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: user settings (8.3: CLAUDE~1+SETTIN~1.JSO)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: user settings.local (8.3: CLAUDE~1)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: user CLAUDE.md (8.3: CLAUDE~1)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: ~/.claude.json (8.3: CLAUDE~1.JSO)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live Back Nine (8.3: THE-BA~1)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live Back Nine (8.3: AI-LEA~1)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live Back Nine (8.3: AI-LEA~1+THE-BA~1)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live session folders (8.3: C--USE~3)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live session folders (8.3: CLAUDE~1)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live session folders (8.3: CLAUDE~1+C--USE~3)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: a session folder named from the repo's short spelling",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: a session folder named from the repo's short spelling (8.3: CLAUDE~1)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     }
+    ],
+    "legitDenied": [],
+    "permissionDenialsInResult": 0
+   }
+  },
+  {
+   "id": "mcp",
+   "name": "no MCP server outside the research set is offered, from the main loop or a helper, while a claude.ai connector is (the control)",
+   "pass": true,
+   "evidence": {
+    "offered": [
+     "claude_ai_Context7",
+     "context7",
+     "gemini-grounding",
+     "sequential-thinking"
+    ],
+    "outsideTheResearchSet": [],
+    "accountServersOffered": [],
+    "control": "claude_ai_Context7",
+    "controlOffered": true
+   }
+  },
+  {
+   "id": "writes",
+   "name": "a Workflow helper writes into the state folder and an Agent-tool helper into the user's temp folder",
+   "pass": true,
+   "evidence": {
+    "workflowHelperWrite": true,
+    "workflowHelperWriteInTranscript": true,
+    "agentWrite": true,
+    "agentWriteInTranscript": true,
+    "agentSaidItWrote": "~\\AppData\\Local\\Temp/uplan-probe-agent-cf0642ce.txt",
+    "childTmpdir": "~\\AppData\\Local\\Temp",
+    "ceScratchRoot": "~/AppData/Local/Temp/compound-engineering-197609",
+    "tmpWindows": "~\\AppData\\Local\\Temp",
+    "sessionScratchpad": null,
+    "sessionTempRoot": "~\\AppData\\Local\\Temp\\claude\\fdead5950bd91fe9\\cf0642ce-97ec-4afc-9218-0f4cacf63358"
+   }
+  },
+  {
+   "id": "relay",
+   "name": "a Workflow launched from a task-notification turn, and what its helper is handed as the relayed message",
+   "pass": true,
+   "evidence": {
+    "launchedFromNotificationTurn": true,
+    "helperTranscript": true,
+    "headersSeen": [
+     "[Workflow harness — computed task]"
+    ],
+    "relayed": "none"
+   }
+  },
+  {
+   "id": "resume",
+   "name": "resumeFromRunId from a different session fails",
+   "pass": true,
+   "evidence": {
+    "called": true,
+    "isError": true,
+    "response": "<tool_use_error>The journal for workflow run wf_833bffab-6cf is not on disk, and this session cannot fetch a remote copy, so there is nothing to resume. Fallback: Read the agent-<id>.jsonl files in ~\\.claude\\projects\\<root-slug>-p1\\4c88b11d-2054-45d3-89c7-df381b9b2eb4\\subage",
+    "helperTranscripts": 0
+   }
+  },
+  {
+   "id": "shadow",
+   "name": "which skill runs when a personal and a project skill share a name",
+   "pass": true,
+   "evidence": {
+    "skillCalls": 1,
+    "winner": "personal",
+    "ktd16Expects": "personal"
+   }
+  },
+  {
+   "id": "own-scripts",
+   "name": "a project-scope skill copy runs its own scripts",
+   "pass": true,
+   "evidence": {
+    "ranFrom": "<root>\\p1\\.claude\\skills\\uplan-probe\\stamp.mjs"
+   }
+  },
+  {
+   "id": "no-remote-control",
+   "name": "the child starts no Remote Control session",
+   "pass": true,
+   "evidence": {
+    "bridgeSessionRows": 0
+   }
+  },
+  {
+   "id": "paging",
+   "name": "a Workflow helper pages the pay-check spec, every line in pages of at most 160, and reports and quotes its last line with text",
+   "pass": true,
+   "evidence": {
+    "reads": 7,
+    "biggestPage": 160,
+    "missingLines": 0,
+    "otherTools": [],
+    "lastLineInTranscript": true,
+    "lastLineReported": 1059,
+    "reportQuotesIt": true,
+    "expectedLastLine": 1059
+   }
+  }
+ ],
+ "childEnvNames": [
+  "AI_AGENT",
+  "ALLUSERSPROFILE",
+  "APPDATA",
+  "CLAUDECODE",
+  "CLAUDE_CODE_CHILD_SESSION",
+  "CLAUDE_CODE_ENTRYPOINT",
+  "CLAUDE_CODE_EXECPATH",
+  "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS",
+  "CLAUDE_CODE_MESSAGING_SOCKET",
+  "CLAUDE_CODE_MESSAGING_TOKEN",
+  "CLAUDE_CODE_SESSION_ATTENDED",
+  "CLAUDE_CODE_SESSION_ID",
+  "CLAUDE_CODE_SUBAGENT_MODEL",
+  "CLAUDE_EFFORT",
+  "CLAUDE_PID",
+  "COMMONPROGRAMFILES",
+  "COMPUTERNAME",
+  "COMSPEC",
+  "CONTEXT7_API_KEY",
+  "COREPACK_ENABLE_AUTO_PIN",
+  "ChocolateyInstall",
+  "ChocolateyLastPathUpdate",
+  "CommonProgramFiles(x86)",
+  "CommonProgramW6432",
+  "DriverData",
+  "EXEPATH",
+  "GIT_EDITOR",
+  "HOME",
+  "HOMEDRIVE",
+  "HOMEPATH",
+  "IGCCSVC_DB",
+  "LOCALAPPDATA",
+  "LOGONSERVER",
+  "MSYSTEM",
+  "MSYS_NO_PATHCONV",
+  "NUMBER_OF_PROCESSORS",
+  "NoDefaultCurrentDirectoryInExePath",
+  "OLDPWD",
+  "OPENAI_API_KEY",
+  "OS",
+  "OneDrive",
+  "OneDriveConsumer",
+  "PATH",
+  "PATHEXT",
+  "PLINK_PROTOCOL",
+  "POWERSHELL_DISTRIBUTION_CHANNEL",
+  "PROCESSOR_ARCHITECTURE",
+  "PROCESSOR_IDENTIFIER",
+  "PROCESSOR_LEVEL",
+  "PROCESSOR_REVISION",
+  "PROGRAMFILES",
+  "PSModulePath",
+  "PUBLIC",
+  "PWD",
+  "ProgramData",
+  "ProgramFiles(x86)",
+  "ProgramW6432",
+  "SESSIONNAME",
+  "SHELL",
+  "SHLVL",
+  "SYSTEMDRIVE",
+  "SYSTEMROOT",
+  "TEMP",
+  "TERM",
+  "TMP",
+  "USERDOMAIN",
+  "USERDOMAIN_ROAMINGPROFILE",
+  "USERNAME",
+  "USERPROFILE",
+  "WINDIR",
+  "WSLENV",
+  "WT_PROFILE_ID",
+  "WT_SESSION",
+  "ZES_ENABLE_SYSMAN",
+  "_"
+ ],
+ "decoyStrays": [],
+ "passed": 14,
+ "failed": [],
+ "secretsUnchecked": []
+}

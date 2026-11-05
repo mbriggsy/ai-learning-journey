@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { appendFileSync } from "node:fs";
 import { join } from "node:path";
-import { findSession, readTree, toolCalls, walk } from "./transcripts.mjs";
+import { findSession, mcpServersOffered, readTree, toolCalls, walk } from "./transcripts.mjs";
 import { makeSession, resultRow, tmpRoot, turnRow } from "./testkit.mjs";
 
 const SID = "44444444-4444-4444-8444-444444444444";
@@ -53,6 +53,16 @@ test("a session is found by its id from any project folder, and a missing one fa
   assert.equal(findSession(SID, { projectsDir: projects }), main);
   assert.throws(() => findSession("55555555-5555-4555-8555-555555555555", { projectsDir: projects }), /no transcript/);
   assert.throws(() => walk(join(projects, "nowhere", `${SID}.jsonl`)), /no transcript/);
+});
+
+test("the MCP servers offered are read from every transcript's deferred-tool lists, a helper's included", (t) => {
+  const projects = join(tmpRoot(t), "projects");
+  const delta = (addedNames) => ({ type: "attachment", attachment: { type: "deferred_tools_delta", addedNames, removedNames: [] } });
+  const main = makeSession(projects, "C--copy-c2", SID, {
+    main: [delta(["CronCreate", "mcp__claude_ai_Context7__query-docs", "mcp__claude_ai_Context7__resolve-library-id"]), { type: "attachment", attachment: { type: "skill_listing", text: "mcp__claude_ai_Gmail__list_labels", addedNames: ["mcp__playwright__browser_tabs"] } }, turnRow({ id: "m1" })],
+    workflows: { "wf_two-0001": { helpers: [[delta(["mcp__gemini-grounding__search_with_grounding"]), turnRow({ id: "h1" })]] } },
+  });
+  assert.deepEqual(mcpServersOffered(readTree(main)), ["claude_ai_Context7", "gemini-grounding"], "only the tool lists count, not a name some other row mentions");
 });
 
 test("a line that does not parse is counted, never dropped quietly", (t) => {

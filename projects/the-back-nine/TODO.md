@@ -73,7 +73,9 @@ queue below (its order unmoved). Next, in order:
    reads "You kept"); test-only, the kept stamp proven to survive type-then-Keep.
    **Next: FINISH the go-live commit (U6 + U7 + U14 + U8 + U9, writing version 5) — BUILT, TESTED AND REVIEWED IN THE TREE,
    UNCOMMITTED (b9-4 built it; b9-5, 2026-11-05, wrote the arms, ran KTD7's review and applied its fixes).** **FIRST, before any
-   edit: `git status --short` must show the go-live's paths — under `src`, 36 modified and 10 new (b9-4's nine plus
+   edit: `git status --short` must show the go-live's paths — under `src`, 40 modified and 10 new (b9-4's 36 and nine,
+   plus b9-5's `src/store/staleness.ts`, `src/intake/__tests__/workingCostStep.test.tsx`,
+   `src/intake/__tests__/workingYearQuote.test.ts`, `src/engine/__tests__/workingYearCheck.test.ts` and the new
    `src/intake/__tests__/workingYearLeftOver.test.ts`), and `e2e/vertical-fit.spec.ts`, `e2e/caddie-walk.spec.ts`,
    `docs/architecture.md`, `docs/product.md` and the plan. If they are gone, restore them:** `git apply --binary
    <golive>\wip-b9-5.patch` (base `6e135682`), then copy `<golive>\wip-b9-5-untracked\…` back, where `<golive>` is

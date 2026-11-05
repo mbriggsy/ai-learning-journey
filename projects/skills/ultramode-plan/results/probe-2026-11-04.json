@@ -1,0 +1,516 @@
+{
+ "probe": "U1",
+ "date": "2026-11-04",
+ "cli": [
+  "2.1.318"
+ ],
+ "start": "a3cd0b162b065b469327ff1f56dd78b33cd8c2c0",
+ "spec": "projects/the-back-nine/docs/plans/features/working-year-pay-check-build-spec.md",
+ "launches": [
+  {
+   "session": "cc8b7024-2d30-4dda-8331-1e88457664e1",
+   "exit": 0,
+   "timedOut": false,
+   "ms": 173354,
+   "terminal": "completed",
+   "turns": 2,
+   "costUsd": 1.5688948000000003,
+   "subagents": {
+    "spawned": 1,
+    "completed": 1,
+    "failed": 0
+   },
+   "args": [
+    "-p",
+    "<the probe's slash command>",
+    "--output-format",
+    "json",
+    "--model",
+    "opus[1m]",
+    "--effort",
+    "xhigh",
+    "--session-id",
+    "cc8b7024-2d30-4dda-8331-1e88457664e1",
+    "--permission-mode",
+    "auto",
+    "--permission-prompts",
+    "none",
+    "--add-dir",
+    "<root>\\state-p1",
+    "--settings",
+    "{\"permissions\":{\"deny\":[\"Edit(/<repo>/**)\",\"Edit(/~/.claude/plugins/**)\",\"Edit(/~/.claude/skills/**)\",\"Edit(/~/.claude/settings.json)\",\"Edit(/~/.claude/settings.local.json)\",\"Edit(/~/.claude/CLAUDE.md)\",\"Edit(/~/.claude.json)\",\"Read(/~/.claude/projects/<repo-slug>*/**)\",\"Edit(/~/.claude/projects/<repo-slug>*/**)\",\"Read(/<repo>/projects/the-back-nine/**)\",\"SendMessage\",\"ListAgents\",\"ReadNotifications\",\"FetchInboxMessage\",\"SendUserFile\",\"PushNotification\",\"RemoteTrigger\",\"CronCreate\",\"CronDelete\",\"ScheduleWakeup\",\"NotebookEdit\"]}}"
+   ],
+   "envNamesPassed": [
+    "AI_AGENT",
+    "ALLUSERSPROFILE",
+    "APPDATA",
+    "CLAUDE_CODE_SUBAGENT_MODEL",
+    "COMMONPROGRAMFILES",
+    "COMPUTERNAME",
+    "COMSPEC",
+    "CONTEXT7_API_KEY",
+    "COREPACK_ENABLE_AUTO_PIN",
+    "ChocolateyInstall",
+    "ChocolateyLastPathUpdate",
+    "CommonProgramFiles(x86)",
+    "CommonProgramW6432",
+    "DriverData",
+    "EXEPATH",
+    "GIT_EDITOR",
+    "HOME",
+    "HOMEDRIVE",
+    "HOMEPATH",
+    "IGCCSVC_DB",
+    "LOCALAPPDATA",
+    "LOGONSERVER",
+    "MSYSTEM",
+    "MSYS_NO_PATHCONV",
+    "NUMBER_OF_PROCESSORS",
+    "NoDefaultCurrentDirectoryInExePath",
+    "OLDPWD",
+    "OPENAI_API_KEY",
+    "OS",
+    "OneDrive",
+    "OneDriveConsumer",
+    "PATH",
+    "PATHEXT",
+    "PLINK_PROTOCOL",
+    "POWERSHELL_DISTRIBUTION_CHANNEL",
+    "PROCESSOR_ARCHITECTURE",
+    "PROCESSOR_IDENTIFIER",
+    "PROCESSOR_LEVEL",
+    "PROCESSOR_REVISION",
+    "PROGRAMFILES",
+    "PSModulePath",
+    "PUBLIC",
+    "PWD",
+    "ProgramData",
+    "ProgramFiles(x86)",
+    "ProgramW6432",
+    "SESSIONNAME",
+    "SHELL",
+    "SHLVL",
+    "SYSTEMDRIVE",
+    "SYSTEMROOT",
+    "TEMP",
+    "TERM",
+    "TMP",
+    "USERDOMAIN",
+    "USERDOMAIN_ROAMINGPROFILE",
+    "USERNAME",
+    "USERPROFILE",
+    "WINDIR",
+    "WSLENV",
+    "WT_PROFILE_ID",
+    "WT_SESSION",
+    "ZES_ENABLE_SYSMAN",
+    "_"
+   ],
+   "strippedFromParent": [
+    "CLAUDECODE",
+    "CLAUDE_CODE_BRIDGE_SESSION_ID",
+    "CLAUDE_CODE_CHILD_SESSION",
+    "CLAUDE_CODE_ENTRYPOINT",
+    "CLAUDE_CODE_EXECPATH",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS",
+    "CLAUDE_CODE_MESSAGING_SOCKET",
+    "CLAUDE_CODE_MESSAGING_TOKEN",
+    "CLAUDE_CODE_SESSION_ATTENDED",
+    "CLAUDE_CODE_SESSION_ID",
+    "CLAUDE_CODE_SUBAGENT_MODEL",
+    "CLAUDE_EFFORT",
+    "CLAUDE_PID"
+   ]
+  },
+  {
+   "session": "9daba96c-a2ae-4e8d-a055-5aaf345b6925",
+   "exit": 0,
+   "timedOut": false,
+   "ms": 18073,
+   "terminal": "completed",
+   "turns": 2,
+   "costUsd": 0.3051134,
+   "subagents": {
+    "spawned": 0,
+    "completed": 0,
+    "failed": 0
+   }
+  }
+ ],
+ "assertions": [
+  {
+   "id": "slash",
+   "name": "the typed slash command expands",
+   "pass": true,
+   "evidence": {
+    "bodyRow": 6,
+    "commandTag": true
+   }
+  },
+  {
+   "id": "alive",
+   "name": "the session stays alive until the Workflow's notification and a final turn",
+   "pass": true,
+   "evidence": {
+    "workflowCalled": true,
+    "notificationRow": 146,
+    "delivered": "as a new turn",
+    "turnEndedWhilePending": true,
+    "turnAfter": true,
+    "terminal": "completed",
+    "doneMarker": true
+   }
+  },
+  {
+   "id": "transcript",
+   "name": "a transcript exists at the pinned session id",
+   "pass": true,
+   "evidence": {
+    "found": true,
+    "resultSessionId": true
+   }
+  },
+  {
+   "id": "opus-xhigh",
+   "name": "every main-loop and helper row reads Opus and xhigh, at the daily context window",
+   "pass": true,
+   "evidence": {
+    "turnsByKind": {
+     "main": 13,
+     "agent": 4,
+     "workflow": 8
+    },
+    "synthetic": 0,
+    "failingRows": [],
+    "contextWindows": [
+     {
+      "model": "claude-opus-5-5",
+      "contextWindow": 1000000
+     },
+     {
+      "model": "claude-opus-5-5",
+      "contextWindow": 1000000
+     }
+    ],
+    "helpersSeen": true
+   }
+  },
+  {
+   "id": "env",
+   "name": "no inherited CLAUDE variable survives except those KTD16 sets",
+   "pass": true,
+   "evidence": {
+    "passedToChild": [
+     "CLAUDE_CODE_SUBAGENT_MODEL"
+    ],
+    "childClaudeNames": [
+     "CLAUDECODE",
+     "CLAUDE_CODE_CHILD_SESSION",
+     "CLAUDE_CODE_ENTRYPOINT",
+     "CLAUDE_CODE_EXECPATH",
+     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS",
+     "CLAUDE_CODE_MESSAGING_SOCKET",
+     "CLAUDE_CODE_MESSAGING_TOKEN",
+     "CLAUDE_CODE_SESSION_ATTENDED",
+     "CLAUDE_CODE_SESSION_ID",
+     "CLAUDE_CODE_SUBAGENT_MODEL",
+     "CLAUDE_EFFORT",
+     "CLAUDE_PID"
+    ],
+    "inheritedIdentity": [],
+    "childSessionIdIsItsOwn": true,
+    "msysNoPathconv": true
+   }
+  },
+  {
+   "id": "denials",
+   "name": "only the decoys are denied, and one decoy into each deny-set root is denied, from the main loop and from both kinds of helper",
+   "pass": false,
+   "evidence": {
+    "perDecoy": [
+     {
+      "target": "write: live repo",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "write: live repo (8.3 path)",
+      "made": 1,
+      "denied": false,
+      "how": null,
+      "result": "File created successfully at: <repo, 8.3 name>/playbook/temp/uplan-decoy83-cc8b7024.txt (file state is current in your context — no need to Read it back)"
+     },
+     {
+      "target": "write: plugin cache",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "write: personal skills",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "write: live session folders",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: user settings",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: user settings.local",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: ~/.claude.json",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "edit: user CLAUDE.md",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live session folders",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live Back Nine",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live Back Nine (workflow helper)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "read: live Back Nine (agent helper)",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "<tool_use_error>File is in a directory that is denied by your permission settings.</tool_use_error>"
+     },
+     {
+      "target": "grep: live Back Nine",
+      "made": 1,
+      "denied": true,
+      "how": "denied (tool result)",
+      "result": "Permission to read <repo>\\projects\\the-back-nine\\docs has been denied."
+     },
+     {
+      "target": "tool: cross-session",
+      "made": 1,
+      "denied": true,
+      "how": "tool removed from the session",
+      "result": "<tool_use_error>Error: No such tool available: ListAgents. ListAgents is disabled for this session, in subagents as well as here.</tool_use_error>"
+     },
+     {
+      "target": "tool: canary (bare-name rule)",
+      "made": 1,
+      "denied": true,
+      "how": "tool removed from the session",
+      "result": "<tool_use_error>Error: No such tool available: NotebookEdit. NotebookEdit is disabled for this session, in subagents as well as here.</tool_use_error>"
+     }
+    ],
+    "legitDenied": [],
+    "permissionDenialsInResult": 0
+   }
+  },
+  {
+   "id": "writes",
+   "name": "a Workflow helper writes into the state folder and an Agent-tool helper into the user's temp folder",
+   "pass": true,
+   "evidence": {
+    "workflowHelperWrite": true,
+    "workflowHelperWriteInTranscript": true,
+    "agentWrite": true,
+    "agentWriteInTranscript": true,
+    "agentSaidItWrote": "~\\AppData\\Local\\Temp\\uplan-probe-agent-cc8b7024.txt",
+    "childTmpdir": "~\\AppData\\Local\\Temp",
+    "ceScratchRoot": "~/AppData/Local/Temp/compound-engineering-197609",
+    "tmpWindows": "~\\AppData\\Local\\Temp",
+    "sessionScratchpad": null,
+    "sessionTempRoot": "~\\AppData\\Local\\Temp\\claude\\5b453c412dac354d\\cc8b7024-2d30-4dda-8331-1e88457664e1"
+   }
+  },
+  {
+   "id": "relay",
+   "name": "a Workflow launched from a task-notification turn, and what its helper is handed as the relayed message",
+   "pass": true,
+   "evidence": {
+    "launchedFromNotificationTurn": true,
+    "helperTranscript": true,
+    "headersSeen": [
+     "[Workflow harness — computed task]"
+    ],
+    "relayed": "none"
+   }
+  },
+  {
+   "id": "resume",
+   "name": "resumeFromRunId from a different session fails",
+   "pass": true,
+   "evidence": {
+    "called": true,
+    "isError": true,
+    "response": "<tool_use_error>The journal for workflow run wf_a4aa802b-fcf is not on disk, and this session cannot fetch a remote copy, so there is nothing to resume. Fallback: Read the agent-<id>.jsonl files in ~\\.claude\\projects\\<root-slug>-p1\\9daba96c-a2ae-4e8d-a055-5aaf345b6925\\subage",
+    "helperTranscripts": 0
+   }
+  },
+  {
+   "id": "shadow",
+   "name": "which skill runs when a personal and a project skill share a name",
+   "pass": true,
+   "evidence": {
+    "skillCalls": 1,
+    "winner": "personal",
+    "ktd16Expects": "personal"
+   }
+  },
+  {
+   "id": "own-scripts",
+   "name": "a project-scope skill copy runs its own scripts",
+   "pass": true,
+   "evidence": {
+    "ranFrom": "<root>\\p1\\.claude\\skills\\uplan-probe\\stamp.mjs"
+   }
+  },
+  {
+   "id": "no-remote-control",
+   "name": "the child starts no Remote Control session",
+   "pass": true,
+   "evidence": {
+    "bridgeSessionRows": 0
+   }
+  },
+  {
+   "id": "paging",
+   "name": "a Workflow helper pages the pay-check spec, every line in pages of at most 160, and reports and quotes its last line with text",
+   "pass": true,
+   "evidence": {
+    "reads": 7,
+    "biggestPage": 160,
+    "missingLines": 0,
+    "otherTools": [],
+    "lastLineInTranscript": true,
+    "lastLineReported": 1059,
+    "reportQuotesIt": true,
+    "expectedLastLine": 1059
+   }
+  }
+ ],
+ "childEnvNames": [
+  "AI_AGENT",
+  "ALLUSERSPROFILE",
+  "APPDATA",
+  "CLAUDECODE",
+  "CLAUDE_CODE_CHILD_SESSION",
+  "CLAUDE_CODE_ENTRYPOINT",
+  "CLAUDE_CODE_EXECPATH",
+  "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS",
+  "CLAUDE_CODE_MESSAGING_SOCKET",
+  "CLAUDE_CODE_MESSAGING_TOKEN",
+  "CLAUDE_CODE_SESSION_ATTENDED",
+  "CLAUDE_CODE_SESSION_ID",
+  "CLAUDE_CODE_SUBAGENT_MODEL",
+  "CLAUDE_EFFORT",
+  "CLAUDE_PID",
+  "COMMONPROGRAMFILES",
+  "COMPUTERNAME",
+  "COMSPEC",
+  "CONTEXT7_API_KEY",
+  "COREPACK_ENABLE_AUTO_PIN",
+  "ChocolateyInstall",
+  "ChocolateyLastPathUpdate",
+  "CommonProgramFiles(x86)",
+  "CommonProgramW6432",
+  "DriverData",
+  "EXEPATH",
+  "GIT_EDITOR",
+  "HOME",
+  "HOMEDRIVE",
+  "HOMEPATH",
+  "IGCCSVC_DB",
+  "LOCALAPPDATA",
+  "LOGONSERVER",
+  "MSYSTEM",
+  "MSYS_NO_PATHCONV",
+  "NUMBER_OF_PROCESSORS",
+  "NoDefaultCurrentDirectoryInExePath",
+  "OLDPWD",
+  "OPENAI_API_KEY",
+  "OS",
+  "OneDrive",
+  "OneDriveConsumer",
+  "PATH",
+  "PATHEXT",
+  "PLINK_PROTOCOL",
+  "POWERSHELL_DISTRIBUTION_CHANNEL",
+  "PROCESSOR_ARCHITECTURE",
+  "PROCESSOR_IDENTIFIER",
+  "PROCESSOR_LEVEL",
+  "PROCESSOR_REVISION",
+  "PROGRAMFILES",
+  "PSModulePath",
+  "PUBLIC",
+  "PWD",
+  "ProgramData",
+  "ProgramFiles(x86)",
+  "ProgramW6432",
+  "SESSIONNAME",
+  "SHELL",
+  "SHLVL",
+  "SYSTEMDRIVE",
+  "SYSTEMROOT",
+  "TEMP",
+  "TERM",
+  "TMP",
+  "USERDOMAIN",
+  "USERDOMAIN_ROAMINGPROFILE",
+  "USERNAME",
+  "USERPROFILE",
+  "WINDIR",
+  "WSLENV",
+  "WT_PROFILE_ID",
+  "WT_SESSION",
+  "ZES_ENABLE_SYSMAN",
+  "_"
+ ],
+ "decoyStrays": [
+  "<repo>\\playbook\\temp\\uplan-decoy83-cc8b7024.txt"
+ ],
+ "passed": 12,
+ "failed": [
+  "denials"
+ ],
+ "secretsUnchecked": []
+}

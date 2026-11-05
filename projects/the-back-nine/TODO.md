@@ -115,16 +115,17 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-01 (b9-8: build 2's U3, U4 and U15 — Phase A's build units are all done; b9-7's block pruned into it):**
-commits `ad525b9e` (U3), `a7f4dbad` (insight 146's out-of-date note), `343c0dd3` (U4) and `856ca79d` (U15), and this close.
-By exit code at `856ca79d`'s tree: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm build` 0, `pnpm verify:bundle` 0 (288.5 KiB),
-`pnpm verify:doc-stats` 0 (the test count lives under that gate). `pnpm test`: every file green except
-`verify-doc-stats.test.ts`'s citation arm, run BEFORE each commit's one re-anchor; after it that file ran 43/43 alone. R10's
-identity sweep at each commit: 35 of 35 HEAD keys identical (U3 and U4 byte-equal to `sweep-head-a.json`; U15 adds the one
-tree-only key, so `sweep-u15.json` is the base from here). CI, read by id: `ef69837b`'s 41282103814 and `979a7ea9`'s
-41282985979 green on both jobs (the former's `verify:fit` ran 35+ minutes beside the next run's, then passed);
-`a7f4dbad`'s 41284600072 green on both; `343c0dd3`'s 41286577299 and `856ca79d`'s 41288426908 were running at this close.
-No helper agents ran this session (no fan-out); the weekly meter still gates the Phase A review (START HERE).
+**SESSION 2026-11-04 (b9-1: build 2's Phase A engine review and its fixes — Phase A is closed; b9-8's block pruned into it):**
+commits `9c51d2bb` (the review's fixes: tests and comments only) and this close. By exit code at `9c51d2bb`'s tree:
+`pnpm typecheck` 0, `pnpm lint` 0, `pnpm build` 0, `pnpm verify:bundle` 0 (288.5 KiB), `pnpm verify:doc-stats` 0 (the test count
+lives under that gate), `pnpm verify:aca` 0 and `pnpm verify:state-tax` 0 (both read at the session's start). `pnpm test` ran
+beside the R10 sweep: every file green but the citation arm (three stale bare continuations, fixed by hand, then 43/43) and four
+heavy files that timed out under the sweep's load, then 35/35 alone. R10's sweep (label `reviewfix`): 36 of 36 keys identical to
+`sweep-u15.json`, the file byte-equal. CI, read by id: `343c0dd3`'s 41286577299, `856ca79d`'s 41288426908 and `01ba0e98`'s
+41288709859 green; `9c51d2bb`'s 41947247749 was running at this close (read it by id before the first U5 commit). Helper agents:
+the review `wf_0f808964-4a9` (52 agents, about 8.0M subagent tokens); the weekly meter read 1% at the start, 9% at this close.
+**Why it closed at 39% of the window:** U5 (model, codec, the W step's component and copy, the four design skills, a Caddie walk)
+could not finish inside the 50% no-fan-out and 60% wrap lines, so it opens in a fresh window.
 **DISTILL CANDIDATES (b9-1, the Phase A engine review):**
 - **A mutant pass planted only at the consumer of a carried value leaves its producer unpinned.** KTD5 says `allAlive` is
   "carried, never re-derived"; U4's 15 mutants all sat in `taxOverlay.ts` (the gate that reads it), and the plan's "on a
@@ -180,7 +181,17 @@ No helper agents ran this session (no fan-out); the weekly meter still gates the
 - **A plan's verification sentence can fix a design its Files list never states.** U3's "the ledger tests pass with only
   the allowlist edit" forced the ledger to RE-EXPORT the bottom line (its test imports it from the ledger), though the
   Files list said only "imports it". Read every verification clause for the shape it implies before choosing one.
-**LANDMINES (b9-8's, then b9-7's, then b9-6's, then carried from b9-5, b9-4 and b9-3):**
+**LANDMINES (b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
+- **(b9-1) The citation arm reds on rot the re-anchor never sees.** A bare continuation (`:2361` after an earlier
+  `taxOverlay.ts:N` on the same line) that already pointed at the wrong code passes the gate while its line holds text, and
+  reds the day a shift leaves it blank. `pnpm doc:reanchor` moved the line's first citation and left the three bare ones.
+  Re-point such a token by reading the prose around it and finding the code it describes, never by its old number (the
+  accumulation decision record's line 98 had three; `9c51d2bb` fixed them).
+- **(b9-1) A mutant pass on this repo runs in a scratch COPY, never the live tree.** The pattern that worked:
+  `fs.cpSync` the project's `src` plus `tsconfig.json`, `package.json`, `vite.config.ts` and `vite-env.d.ts` into the
+  scratchpad, `fs.symlinkSync(<project>\node_modules, <copy>\node_modules, 'junction')`, plant by exact-string replace
+  (anchor count 1), run `pnpm exec vitest run <files> --reporter=json` from the copy, restore and compare. Delete the junction
+  ALONE (`(Get-Item <copy>\node_modules).Delete()`) before removing the copy.
 - **(b9-8) Every `src` commit that shifts lines reds the full suite's citation arm until `pnpm doc:reanchor HEAD --apply`
   runs** (U4: 326 edits, U15: 21). Run the dry `pnpm doc:reanchor HEAD` before the suite, apply it once, then the suite.
 - **(b9-8) The HSA leaves-out row's TRAP 3 (Tier 0 of the 2026-08 tiered list below) calls its three cited branches "zeroing" ones, but
@@ -220,7 +231,7 @@ No helper agents ran this session (no fan-out); the weekly meter still gates the
 - **`pnpm doc:reanchor HEAD --apply` rewrote the FROZEN `e2e/held/fit-24px-measurements.md` again** (the Tier 4 entry's known
   shape): restored with `git show HEAD:projects/the-back-nine/e2e/held/fit-24px-measurements.md > …`. Its one REVIEW line (a
   citation inside a modified hunk) needs a hand fix — read the cited line at HEAD, then point at where that code is now.
-- **The full suite times out the same three heavy files under load** (`budgetTwoTrack`, `solvePayloadIdentity` ×2, plus a
+- **The full suite times out the same heavy files under load** (`budgetTwoTrack`, `solvePayloadIdentity` ×2, and beside the R10 sweep `healthSheetSeedGate` too, plus a
   `SaveFlow` wait): twice this session, beside nothing heavier than idle review agents. Re-run the red files alone before
   diagnosing; never call it a regression on the full run's word.
 - **A Windows path written through a shell-inlined script loses its backslashes** (`\b9` became a backspace and `9`; `\U`,

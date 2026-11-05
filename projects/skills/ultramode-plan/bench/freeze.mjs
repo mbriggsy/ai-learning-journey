@@ -35,6 +35,11 @@ const SAFE_NAME = /^[A-Za-z0-9-]+$/;
 // The session folder name Claude Code gives a working folder.
 export const slugOf = (path) => resolve(path).replace(/[^A-Za-z0-9]/g, "-");
 
+// Claude Code keeps that name whole only up to 200 characters; a longer one is cut to 200 and
+// given a hash of the path (read in the 2.1.318 binary: `if(n.length<=200)return n;return
+// \`${n.slice(0,200)}-${hash}\``), which slugOf does not model. freeze refuses such a copy path.
+export const MAX_SLUG = 200;
+
 export const defaultProjectsDir = () => join(homedir(), ".claude", "projects");
 
 function git(cwd, args) {
@@ -81,6 +86,7 @@ export function freeze({ repo, commit, root, names, sparse, projectsDir = defaul
   const used = existsSync(projectsDir) ? new Set(readdirSync(projectsDir).map((d) => d.toLowerCase())) : new Set();
   for (const p of paths) {
     const slug = slugOf(p);
+    if (slug.length > MAX_SLUG) throw new Error(`${p} would name a session folder of ${slug.length} characters; Claude Code cuts one over ${MAX_SLUG} and adds a hash, which the bench does not model: use a shorter root`);
     if (used.has(slug.toLowerCase())) throw new Error(`a Claude Code session already ran in ${p} (${join(projectsDir, slug)} exists); use a path never used before`);
   }
 

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { deleteFrozen, freeze, slugOf } from "./freeze.mjs";
+import { MAX_SLUG, deleteFrozen, freeze, slugOf } from "./freeze.mjs";
 import { git, repoRoot, tmpRoot, twoCommitRepo } from "./testkit.mjs";
 
 function setup(t) {
@@ -70,6 +70,18 @@ test("a path whose Claude Code session folder already exists refuses", (t) => {
   mkdirSync(join(projectsDir, slugOf(join(root, "c2")).toLowerCase()));
   assert.throws(() => freeze({ repo, commit: start, root, names: ["c1", "c2"], sparse: ["a"], projectsDir }), /session already ran in .*c2/);
   assert.equal(existsSync(root), false);
+});
+
+test("a copy path whose session-folder name would run past 200 characters refuses; one of exactly 200 does not", (t) => {
+  const { dir, projectsDir, start } = setup(t);
+  // The root's own name pads the copy path's slug to the length wanted.
+  const rootFor = (slugLength) => join(dir, "r".repeat(slugLength - slugOf(join(dir, "", "c1")).length - 1));
+  assert.equal(slugOf(join(rootFor(201), "c1")).length, 201);
+  assert.equal(slugOf(join(rootFor(200), "c1")).length, MAX_SLUG);
+  assert.throws(() => freeze({ repo: join(dir, "repo"), commit: start, root: rootFor(201), names: ["c1"], sparse: ["a"], projectsDir }), /201 characters; Claude Code cuts one over 200/);
+  assert.equal(existsSync(rootFor(201)), false);
+  // At 200 the length check passes and the run goes on to git, here refused for a missing repo.
+  assert.throws(() => freeze({ repo: join(dir, "no-repo"), commit: start, root: rootFor(200), names: ["c1"], sparse: ["a"], projectsDir }), (e) => !/characters; Claude Code cuts/.test(e.message));
 });
 
 test("a root that exists, an unsafe character, a reserved name or a missing sparse path refuses", (t) => {

@@ -338,7 +338,7 @@ describe('post-65 Medicare pricing — the tier-edge < / <= witness on the runti
 // ===========================================================================
 // DELIVERABLE 4 — the HSA qualified cap now that medicareCost is NONZERO for the
 // all-65+ household. Cap = min(hsaBalance, oopMedical + (owner-65+ ? medicareCost : 0),
-// fundingNeed) (healthOverlay.ts:940-941, taxOverlay.ts:2503-2513). Pub 969 exception (4)
+// fundingNeed) (healthOverlay.ts:940-941, taxOverlay.ts:2504-2514). Pub 969 exception (4)
 // — a 65+ HSA owner may pay Medicare premiums (base Part B + the surcharge) tax-free.
 // ===========================================================================
 describe('post-65 Medicare pricing — the HSA qualified cap includes the now-nonzero Medicare cost (Pub 969 exception 4)', () => {
@@ -369,7 +369,7 @@ describe('post-65 Medicare pricing — the HSA qualified cap includes the now-no
   it('the U9a oopMedical containment gate does NOT falsely fire for a budget-carrying all-65+ Medicare household (premiums ride on top, engine-funded)', () => {
     // The gate (simulate.ts:1341-1367) fences oopMedical ONLY — the floor essentials must dominate the
     // out-of-pocket medical the HSA cap is sized off. The Medicare PREMIUM (≈ 2×BASE×12) is funded on
-    // top via fundingNet (taxOverlay.ts:2621), never checked against the budget floor. So a household
+    // top via fundingNet (taxOverlay.ts:2624), never checked against the budget floor. So a household
     // whose floor covers its OOP validates even though the floor is far below spend-plus-premium.
     const H = 12
     const OOP = 6_000

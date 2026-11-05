@@ -149,7 +149,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - The vector is validated like its per-person siblings: `validateParams` rejects a negative
   entry (the insight-046 netted-away optimistic class), a NaN entry, and a length mismatch
   (`src/engine/simulate.ts:1047-1050`), and the overlay's direct callers get their own up-front
-  length backstop (`src/engine/taxOverlay.ts:2166-2170`) so a short vector on a two-person
+  length backstop (`src/engine/taxOverlay.ts:2167-2171`) so a short vector on a two-person
   household throws rather than under-charging.
 - Extras are **real-flat**, and deliberately NOT ridden on the Part B trend: Medigap/Part D plan
   premiums are user-entered market figures with no sourced trend. The 2026-07-19 trend sourcing
@@ -256,7 +256,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   optional-with-average by design, so there is no red-asterisk state to encode.
 - **Insight-076 re-audit of `validateParams`.** The overlay length backstop that was added is
   purely downstream of the existing gate, so it narrows no contract — noted in place at
-  `src/engine/taxOverlay.ts:2164-2165`.
+  `src/engine/taxOverlay.ts:2165-2166`.
 - **Dev-seed drift recorded before any re-tune.** The flagship `retiredOnTrack` seed carries the
   mixed-provenance showcase — one entered dollar, one affirmed MA-$0
   (`src/ui/devSeeds.ts:122-123`) — and the `borderline` / `?seed=dip` seeds were re-probed under

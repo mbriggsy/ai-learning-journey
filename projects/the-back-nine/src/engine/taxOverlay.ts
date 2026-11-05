@@ -1422,8 +1422,8 @@ export interface WorkingYearCheckTerms {
   readonly investmentIncome: number
   /** Everyone in the household is alive this year — `cashTermsForYear`'s own local, the same boolean W_t reads
    *  (build 2's KTD5). The left-over credit runs only in such a year, so a survivor year credits 0 by the test
-   *  that prices it. REQUIRED, so a direct caller cannot credit a survivor year by omission; the backstop
-   *  refuses anything but a boolean. */
+   *  that prices it. REQUIRED, and the backstop refuses anything but a boolean: an omitted field would read as
+   *  falsy and silently drop every credit (gloomy), and a truthy stand-in would credit a survivor year (rosy). */
   readonly allAlive: boolean
 }
 
@@ -1943,7 +1943,8 @@ export function runTaxAwareDecumulation(
     throw new Error('[taxOverlay] workingYearCheck entries must be finite and ≥ 0 in every field (insights 008/010; burned/062)')
   }
   // Build 2's KTD5: `allAlive` is carried, never re-derived — a present entry carries it as a boolean, so a
-  // direct caller can neither omit it (crediting a survivor year) nor pass a truthy stand-in.
+  // direct caller can neither omit it (silently dropping every credit) nor pass a truthy stand-in (crediting a
+  // survivor year).
   if (!workingYearCheck.every((e) => e === undefined || typeof e.allAlive === 'boolean')) {
     throw new Error('[taxOverlay] workingYearCheck entries carry `allAlive` as a boolean (build 2 KTD5: the left-over credit runs only in a year everyone is alive)')
   }
@@ -2595,10 +2596,12 @@ export function runTaxAwareDecumulation(
         checkShortfallThisYear = lines.shortfall
         // Build 2 (R8): the saved left over credits the smallest of the year's cash, that cash on the printed
         // grain, year 0's printed Left over on this path and the stored figure — in a year everyone is alive
-        // (KTD5), skipped at or below 0 (a short year credits nothing; its shortfall is drawn above). The raw
-        // cash joins the min because a half-cent tie can print a cent above the float. The grain is the money
-        // picture's own (`moneyGrain.ts`, KTD4). Composed here, folded at year end; nothing in the year's tax,
-        // draw or MAGI reads it.
+        // (KTD5), skipped at or below 0 (a short year credits nothing; its shortfall, recorded just above, is
+        // drawn through `fundingNet` below). The raw cash joins the min because the cent snap rounds a cash
+        // less than half a cent below a whole dollar up to it ($1,644.996 prints $1,645), so the print can sit
+        // just above the float; a true half-cent tie snaps down. The grain is the money picture's own
+        // (`moneyGrain.ts`, KTD4). Composed here, folded at year end; nothing in the year's tax, draw or MAGI
+        // reads it.
         if (savedLeftOver !== undefined) {
           const printed = workingYearBottomLine(lines.cash)
           if (t === 0) leftOverYear0 = printed

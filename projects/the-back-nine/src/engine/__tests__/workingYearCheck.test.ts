@@ -465,6 +465,10 @@ describe('W_t on a survivor path (R9) — the sticky part held whole, the rest s
     expect(at([3, 3]).workingYearCheck?.workingYearCost).toBe(36_000)
     expect(at([1, 3]).workingYearCheck?.workingYearCost, 'the first died at the end of year 0').toBe(32_000)
     expect(at([1, 3]).workingYearCheck?.wagesByPerson).toEqual([0, 40_000])
+    // Build 2's KTD5: the terms carry the SAME everyone-alive boolean W_t read — false in the survivor's working
+    // year though the survivor still works (the left-over credit's gate; the Phase A review's producer pin).
+    expect(at([3, 3]).workingYearCheck?.allAlive, 'both alive in year 1').toBe(true)
+    expect(at([1, 3]).workingYearCheck?.allAlive, 'the first died at the end of year 0').toBe(false)
   })
 })
 

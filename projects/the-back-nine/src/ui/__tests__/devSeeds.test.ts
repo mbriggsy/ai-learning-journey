@@ -1807,7 +1807,12 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     const printed: number[] = []
     simulate(params, d.seed!, { _workingYearProbe: { checkComposed: (t, _floor, lines) => (printed[t] = workingYearBottomLine(lines.cash)) } })
     expect(printed[0], 'the run’s own year 0 is the picture’s').toBe(ledger.year0.bottomLine)
-    expect(printed.slice(1).some((x) => x >= 1), 'a later working year has a left over of at least $1').toBe(true)
+    // The docblock's mechanism, pinned (the Phase A review): Alex's own benefit arrives in full in the year she
+    // turns 67 (born 1963, so 2030, year 4 of a 2026 start), past the earnings test. Years 1–3 still run short,
+    // and every working year from year 4 has a left over of at least $1.
+    expect(printed.length, 'ten working years at the window top').toBe(DATE_OFFSET_WINDOW_TOP)
+    expect(printed.slice(1, 4).every((x) => x < 1), 'years 1–3 run short').toBe(true)
+    expect(printed.slice(4).every((x) => x >= 1), 'every working year from year 4 has a left over').toBe(true)
   })
 
   it('the short witness’s money picture runs SHORT in year 0 and in every later working year, with Social Security held back', () => {

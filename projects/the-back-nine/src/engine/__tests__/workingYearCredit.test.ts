@@ -27,6 +27,7 @@ import {
   type WorkingYearProbe,
 } from '@engine/taxOverlay'
 import { totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
+import { workingYearBottomLine } from '@engine/moneyGrain'
 import { validationMarket } from '@engine/reference/methodology'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { buildDateInput } from '@intake/intakeMap'
@@ -167,6 +168,49 @@ describe('R8–R9 on a direct overlay call: where the credit lands, and how much
     const credits = creditsOf(THREE, { Ws: WS, saved: 6_000 })
     expect(credits[0]).toBeCloseTo(4_040, 6)
     expect(credits.slice(1)).toEqual([4_040, 1_644])
+  })
+
+  it('YEAR 0’S FIGURE IS ITS PRINT (KTD4): a year-0 cash of $1,644.95 caps every later year at the $1,644 it prints, never the float', () => {
+    // W 27,395.05 / 20,000 / 25,000 ⇒ cash 1,644.95 (prints $1,644) / 9,040 / 4,040; S = 6,000 sits above all of
+    // year 0. By R8 every year credits min(cash, its print, 1,644, 6,000) = 1,644. A cap read off year 0's raw
+    // cash would credit 1,644.95 in years 1 and 2: above the figure the household was shown (the Phase A review).
+    expect(creditsOf(THREE, { Ws: [27_395.05, 20_000, 25_000], saved: 6_000 })).toEqual([1_644, 1_644, 1_644])
+  })
+
+  // A CREDITED year that also draws taxable: nothing in the year's own gross-up reads the credit, and the credit's
+  // basis joins after the year's pro-rata reduction (the Phase A review: no test had a credited year that drew).
+  // Year 0 is checked with W = 25,000 (cash 4,040; S = 10,000 credits 4,040), taxable-first, one year at 1.035.
+  const DRAWS = (net: number): Market => ({ ...ONE_YEAR, net: [net], buckets: { taxable: 100_000, pretax: 400_000, roth: 0 }, policy: 'taxable-first' })
+  const grossOf = (m: Market, p: Plan): number => {
+    const gross: number[] = []
+    run(m, { ...p, probe: { checkDrawn: (_t, d) => gross.push(d.grossWithdrawal) } })
+    return gross[0]!
+  }
+
+  it('SAME-YEAR DRAW, TAXED: a credited year drawing $60,000 of pure gain grosses up exactly as without the figure — $65,020.59', () => {
+    // Basis $0, so every dollar drawn is a long-term gain. By hand (Rev. Proc. 2025-32, single 2026: deduction
+    // $16,100, the 0 % gains rate to $49,450 of taxable income, then 15 %): the ordinary base is 34,000 − 16,100
+    // = 17,900, so the gross G solves G = 60,000 + 0.15 × (17,900 + G − 49,450): 0.85 G = 55,267.50, G =
+    // 65,020.5882…. A gross-up that read the credit's basis would shelter part of the gain and draw less (rosy).
+    const without = grossOf(DRAWS(60_000), { Ws: [25_000], basis: 0 })
+    const got = grossOf(DRAWS(60_000), { Ws: [25_000], basis: 0, saved: 10_000 })
+    expect(got).toBeCloseTo(65_020.5882, 4)
+    expect(Object.is(got, without)).toBe(true)
+  })
+
+  it('SAME-YEAR DRAW, BASIS: a credited year drawing $20,000 from $100,000 at basis $50,000 ends at basis $44,040 and taxable $86,840', () => {
+    // The gain realized is 20,000 × (1 − 50,000 / 100,000) = 10,000, and 17,900 + 10,000 sits under the 0 % line,
+    // so the draw is $20,000 untaxed. Basis: 50,000 × (1 − 20,000 / 100,000) + 4,040 = 44,040 — the reduction's
+    // denominator is the draw-time balance, and the credit joins after it at full value. Taxable: (100,000 −
+    // 20,000) × 1.035 + 4,040 = 86,840. Without the figure: 40,000 and 82,800.
+    const without = run(DRAWS(20_000), { Ws: [25_000], basis: 50_000 })
+    const got = run(DRAWS(20_000), { Ws: [25_000], basis: 50_000, saved: 10_000 })
+    expect(grossOf(DRAWS(20_000), { Ws: [25_000], basis: 50_000, saved: 10_000 })).toBeCloseTo(20_000, 6)
+    expect(got.finalTaxableBasis).toBeCloseTo(44_040, 6)
+    expect(got.finalBuckets.taxable).toBeCloseTo(86_840, 6)
+    expect(without.finalTaxableBasis).toBeCloseTo(40_000, 6)
+    expect(without.finalBuckets.taxable).toBeCloseTo(82_800, 6)
+    expect(got.finalBuckets.pretax - without.finalBuckets.pretax).toBe(0)
   })
 
   it('THE GRAIN: a cash of $1,644.996 credits 1,644.996, never the 1,645 it prints; a cash of 40¢ credits nothing', () => {
@@ -375,9 +419,48 @@ describe('the date route’s own households (KTD12)', () => {
     const d = DEV_SEEDS.datelateleftover
     const credits: number[] = []
     const carried = buildCandidateParams({ ...buildDateInput(d)!, workingYearLeftOverSavedReal: ENGINE_MAX_DOLLAR }, DATE_OFFSET_WINDOW_TOP, 20)
-    simulate(carried, d.seed!, { _workingYearProbe: { creditComposed: (_t, c) => credits.push(c) } })
+    dist(simulate(carried, d.seed!, { _workingYearProbe: { creditComposed: (_t, c) => credits.push(c) } }))
     expect(credits.length).toBeGreaterThan(0)
     expect(credits.every((c) => c === 0)).toBe(true)
+  })
+
+  it('SURVIVOR THROUGH THE RUN (KTD5): on `date` at the window top with sampled deaths, a survivor working year credits 0 and a both-alive one credits R8', { timeout: 120_000 }, () => {
+    // The Phase A review's producer pin: `simulate` must carry `cashTermsForYear`'s own everyone-alive boolean, so
+    // a hard-coded `allAlive: true` (crediting every survivor year — the rosy worst) reds here. The witness is
+    // independent of that boolean: the year's floor files jointly exactly while both spouses live (a couple's
+    // `householdYears`), and R8 is applied by hand to each year's composed cash on the printed grain.
+    const d = DEV_SEEDS.date
+    const S = 16_985
+    const params = buildCandidateParams({ ...buildDateInput(d)!, workingYearLeftOverSavedReal: S }, DATE_OFFSET_WINDOW_TOP, 300)
+    expect(params.longevityMode, 'deaths are drawn').toBe('sampled')
+    expect(params.people.length, 'a couple').toBe(2)
+    const years: { t: number; joint: boolean; cash: number; year0: number; credit?: number }[] = []
+    let year0 = Number.NaN
+    dist(
+      simulate(params, d.seed!, {
+        _workingYearProbe: {
+          checkComposed: (t, floor, lines) => {
+            if (t === 0) year0 = workingYearBottomLine(lines.cash)
+            years.push({ t, joint: floor.filing === 'mfj', cash: lines.cash, year0 })
+          },
+          creditComposed: (t, credit) => {
+            const last = years[years.length - 1]!
+            if (last.t !== t || last.credit !== undefined) throw new Error(`a credit for year ${t} arrived without its own check`)
+            last.credit = credit
+          },
+        },
+      }),
+    )
+    const r8 = (y: (typeof years)[number]) => Math.min(y.cash, workingYearBottomLine(y.cash), y.year0, S)
+    const survivor = years.filter((y) => !y.joint)
+    // Non-vacuity: survivor working years occur, and some would credit money if the gate were open.
+    expect(survivor.length, 'survivor working years occur').toBeGreaterThan(0)
+    expect(survivor.some((y) => r8(y) > 0), 'some survivor year has a left over an open gate would credit').toBe(true)
+    for (const y of survivor) expect(y.credit, `a survivor year ${y.t} credits 0`).toBe(0)
+    for (const y of years.filter((x) => x.joint)) {
+      const expected = r8(y) > 0 ? r8(y) : 0
+      expect(Object.is(y.credit, expected), `a both-alive year ${y.t} credits ${expected}, got ${y.credit}`).toBe(true)
+    }
   })
 })
 

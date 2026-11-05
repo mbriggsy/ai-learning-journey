@@ -416,7 +416,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     ['part-b-trend', { partBTrendVintage: 'part-b-trend-2025x' }],
     // THE F1 CORRECTION, pinned as an equal member of the family. `irmaaTopTierFrozenThrough`
     // has no engine reader of its own; the table it DATES (`irmaa`) is read at simulate.ts:1243,
-    // solveAnchor.ts:221-231 and taxOverlay.ts:2014, and consumedConstants.ts:116 consumes the
+    // solveAnchor.ts:221-231 and taxOverlay.ts:2015, and consumedConstants.ts:116 consumes the
     // whole `health.` family on `healthcareEnabled`. Re-bucketing it to the aggregate reds here.
     ['irmaa-freeze', { irmaaTopTierFrozenThrough: hv.irmaaTopTierFrozenThrough + 1 }],
   ] as const)(
@@ -430,7 +430,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
       expect(named.rulesMoved).toBe(true)
       // The SWEPT part-b-trend comment claimed "no exposure gate: the trend prices every
       // Medicare-bearing year both routes reach". FALSE: `partBPricingByT` is built only under
-      // `healthcareEnabled && taxEnabled` (taxOverlay.ts:2022-2023). Reverting it to ungated
+      // `healthcareEnabled && taxEnabled` (taxOverlay.ts:2023-2024). Reverting it to ungated
       // reds this arm.
       const silent = deriveStaleness(moved, TODAY, NO_OVERLAY, false)
       expect(silent.healthcare.movedClocks).toEqual([])

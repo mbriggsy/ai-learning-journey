@@ -1,7 +1,7 @@
 /**
- * The engine's computable domain: the dollar, moment and horizon caps `validateParams` enforces (R19) and every
- * backstop compares against (build 2 KTD13). A leaf, so any engine module can read a cap without importing
- * `simulate.ts`; `simulate.ts` re-exports all three.
+ * The engine's computable domain: the dollar, moment and horizon caps `validateParams` enforces (R19), which a
+ * few deep backstops also compare against (the earnings test's wages, the saved left over). A leaf (build 2
+ * KTD13), so any engine module can read a cap without importing `simulate.ts`; `simulate.ts` re-exports all three.
  */
 // =========================================================================
 // The engine's computable-domain bounds (M6 boundary review — the float-overflow

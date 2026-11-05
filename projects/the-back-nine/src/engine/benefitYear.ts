@@ -60,7 +60,7 @@ export interface SurvivorYearBenefit {
 
 /**
  * One survivor year's Social Security (plan §6) — the ONE home of the §202 composition. It is read by
- * {@link cashTermsForYear} (the year's `ss` once a spouse has died) and, from the pay check's earnings
+ * `cashTermsForYear` (`simulate.ts`; the year's `ss` once a spouse has died) and, from the pay check's earnings
  * test on (`docs/plans/features/working-year-pay-check-build-spec.md`, KTD10), by the test's schedule,
  * which has to know which benefit a working widow(er) is paid before it can hold it back or credit it.
  *
@@ -145,7 +145,7 @@ export interface BothAliveYearBenefit {
 
 /**
  * One living person's Social Security in a year BOTH spouses are alive — the one home of the both-alive
- * gates. {@link cashTermsForYear} sums these pieces into the year's `ss`, and the pay check's earnings
+ * gates. `cashTermsForYear` (`simulate.ts`) sums these pieces into the year's `ss`, and the pay check's earnings
  * test (`earningsTest.ts`) composes the same pieces at its credited amounts, so the two can never
  * disagree on who is paid what (insight 081).
  *

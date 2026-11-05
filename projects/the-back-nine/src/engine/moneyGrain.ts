@@ -1,8 +1,9 @@
 /**
  * The money picture's printed grain, in one leaf (build 2 KTD4): the cent snap, KTD12's bottom line on it, and the
- * finiteness guard they call. Moved verbatim out of `workingYearLedger.ts` so the tax overlay can read the same
- * grain as the picture it prints: the overlay cannot import the ledger, which imports the overlay. This leaf
- * imports nothing (a source test pins it), and `workingYearLedger.ts` re-exports {@link workingYearBottomLine}.
+ * finiteness guard they call. Moved out of `workingYearLedger.ts`, unchanged but for `finite`'s error label, so
+ * the tax overlay can read the same grain as the picture it prints: the overlay cannot import the ledger, which
+ * imports the overlay. This leaf imports nothing (a source test pins it), and `workingYearLedger.ts` re-exports
+ * {@link workingYearBottomLine}.
  *
  * PURE: no clock, entropy or environment.
  */
@@ -15,7 +16,8 @@ export const finite = (x: number, label: string): number => {
 }
 
 /** How far past a half cent float dust may land and still be read as the tie (a millionth of a cent — far
- *  above the dust of a sum of real-money terms, far below any money). */
+ *  below any money, and far above the float dust of a sum of real-money terms at any household's scale: one
+ *  float step in cents stays under it below about $85 million of cash). */
 const HALF_CENT_DUST = 1e-6
 /** A figure in whole cents, never −0: the nearest cent, a half-cent tie (within dust) toward −∞ — the gloomy
  *  side of every line and of the cash (`Math.round` would settle the tie by the dust's sign, upward on a

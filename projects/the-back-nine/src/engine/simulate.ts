@@ -817,7 +817,7 @@ export function contributionsForYear(
  *  claim), never a wasted sweep. Cheap and draw-free by construction. */
 export function validateParams(params: SimulationParams): string | null {
   // Finite, ≥ 0, AND inside the engine's computable dollar domain (the upper bound is
-  // what keeps every downstream compounding finite — see ENGINE_MAX_DOLLAR above; it
+  // what keeps every downstream compounding finite — see ENGINE_MAX_DOLLAR in engineDomain.ts; it
   // also bounds the ratio fields it guards, harmlessly).
   const finiteNonNeg = (x: number) => Number.isFinite(x) && x >= 0 && x <= ENGINE_MAX_DOLLAR
   if (!finiteNonNeg(params.initialPortfolio)) return 'initialPortfolio invalid'

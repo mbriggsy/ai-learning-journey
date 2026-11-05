@@ -65,9 +65,9 @@
  * no schedule arrays, but the scan that decides it does build its small per-path state. Fails loud on
  * a non-finite or out-of-range wage or benefit — never a silent $0 (burned/062).
  *
- * IMPORT CYCLE: `simulate.ts` imports this module (since A6, the pay check's check) and this module imports `simulate.ts`.
- * That is safe only while neither reads the other's bindings at module top level (both use them inside
- * functions); keep it so.
+ * NO IMPORT CYCLE: `simulate.ts` imports this module (since A6, the pay check's check), and this module never
+ * imports `simulate.ts` — the benefit-year pieces come from the `benefitYear.ts` leaf and the dollar cap from
+ * `engineDomain.ts` (build 2's U2); `importCycles.test.ts` pins the engine cycle-free.
  */
 import {
   earningsTestExemptAmounts,

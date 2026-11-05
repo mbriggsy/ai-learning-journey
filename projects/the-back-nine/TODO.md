@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-04, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13).** The schema-v4 job
+▶ **START HERE (2026-11-04, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, uncommitted — item 1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -71,14 +71,65 @@ queue below (its order unmoved). Next, in order:
    red set as predicted; R10 36/36 against `u15`. Record `b9-u13-review\` (its `README.md`). **U5's CI miss, fixed
    (`63eca3f6`):** `verify:fit` had been red since `d4227774` (6 W gesture arms expected "You entered" where U5's Keep now
    reads "You kept"); test-only, the kept stamp proven to survive type-then-Keep.
-   **Next: the go-live commit** (U6 + U7 + U8 + U14 + U9, writing version 5), opened with `/brief` on the version-5 bump,
-   the left-over question and the stale lines. Before it lands: the version-4 fixtures minted from a `git archive` of its
-   parent (KTD6), the four design skills loaded before any UI file, the Caddie walk on the built tree, and KTD7's review
-   lenses over the codec arm, the `buildDateInput` carriage and the staleness predicates. It is the biggest unit left:
-   expect it to span sessions, so open it with the plan's U6 section and START HERE's obligations (a), (d) and (f). At EVERY `src`
-   commit from here: from the project dir run `pnpm exec tsx <b9-build2-surplus>\tools\sweep.mts <label> --today=20758`, then
-   `node <b9-build2-surplus>\tools\idcheck.mjs <label> u15` (PER KEY: U9 adds seeds, so never a whole-file `cmp`); the
-   per-commit record is the table at the foot of that folder's `README.md`. Then the build units in the plan's order, each
+   **Next: FINISH the go-live commit (U6 + U7 + U14 + U8 + U9, writing version 5) — BUILT IN THE TREE, UNCOMMITTED (b9-4,
+   2026-11-05).** `/brief` DONE (b9-4: insights 147, 149, 150, 151, 152 read, all CURRENT). The code for every unit is in
+   the working tree: 36 modified `src` files and 9 new ones (`src/intake/workingYearLeftOverState.ts`, `workingYearLeftOver.ts`,
+   `WorkingYearLeftOverQuestion.tsx`, `__tests__/workingYearLeftOverState.test.ts`, and under `src/shared/__tests__/fixtures/`
+   `mint-v4.mts` plus the four `scenario-v4-*.json`). **FIRST, before any edit: `git status --short -- src` must show exactly
+   those 45 paths. If they are gone, restore them:** `git apply --binary <golive>\wip-b9-4.patch` (base `4e34fabe`, src
+   identical to `88a5d125`), then copy `<golive>\wip-b9-4-untracked\src\…` back, where `<golive>` is
+   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\golive\`. The
+   seven surface maps the build used are there too (`map-U6-tests.md`, `map-U7-walk.md`, `map-U7-panel.md`, `map-U7-carriage.md`,
+   `map-U14.md`, `map-U8.md`, `map-U9.md`, ~30 KB each: read ONLY the one for the step in hand). As built — each a ruling the
+   plan's go-live amendment must record (step 1 below): the shown state is a pure leaf (`workingYearLeftOverState.ts`), its ONE
+   draft read is `intakeMap.workingYearLeftOverShownState`, and the writes and the moved core live in `workingYearLeftOver.ts` (the
+   plan's single module would have closed an `intakeMap` loop); `buildDateInput` carries the figure only in the two saved states
+   (obligation (a)) and the money picture composes from `buildDateInputBeforeLeftOver` (else it recursed forever); W's clause
+   rides `workingYearCostStaleLine` (Result and gate only), never `workingYearCostStaleText` (a loop, and it would reach the W step
+   and the W row); `useGestureHold` takes a second ref (the W row and the seat share ONE hold, `WorkingYearRows`) and lets go
+   ONE TASK after the click (a held label-wrapped radio's forwarded click must run from the face the press saw — insight 149);
+   a clause hosted on a tax / state-tax / working-years line carries no door sentence; the Result's standing slot is keyed by cause
+   (`StandingNoteCause`). Verified at the WIP tree: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm test` 4970 passed and 1 failed (only
+   `verify-doc-stats`' citation arm: the re-anchor is owed at commit); the old-copy proof in the archive 237/237; the carriage-only
+   tree's sweep `golivecarriage` 36/36 identical to `u15` (before the seeds); `year0check.mts` MATCH on every W seed, the new three
+   included (`datesavedmoved` $27,537). **Never looked at in a browser yet.** What is still owed, in order:
+   1. **Docs that go false at this commit:** `docs/architecture.md` §7.3 (the ladder bullet's "today 4", the 4→5 step and the
+      label-3/4-carrying refusal, the Mermaid ladder, the added-OPTIONAL-field case, `workingYearLeftOver` in the nested-key list,
+      the frozen-fixture sentence), its `:315` ("reads that plan as version 4") and §8's "`false` by proof until the go-live";
+      `docs/product.md` R39 ("every save writes it as version 4"); and the plan's go-live amendment (the rulings above; KTD11's
+      "changes only after the click lands" is false for a W blur — the comment in `AssumptionPanel.tsx`'s `ArmedMethodologyLines`
+      says so; the state-diagram footnote and U7 approach 4 superseded by obligation (a)).
+   2. **U8's premise comments, re-derived per answer:** `copy.ts`'s ONE-SIDED BY DESIGN / "identical (measured)" block above
+      `workingCostStaleLeansBetter`'s neighbourhood, `workingYearQuote.ts`'s `heldYesBelowQuote` docblock and the "identical"
+      comment in `workingYearCostStaleText`, `workingYearQuote.test.ts`'s matching comment, and `workingYearCheck.test.ts`'s
+      byte-identity describe title and banner ("with no left-over figure carried").
+   3. **The unit arms not yet written** (each in `map-U7-*.md` / `map-U8.md`): the walk (`workingCostStep.test.tsx`: shown on
+      `date` with nothing checked, hidden on `dateshort` / `datelateleftover`, the step count unchanged, "All of it" stores 16,985,
+      the text above the group identical across states, absent's line ≠ not-sure's, a re-tap on moved stores the live figure,
+      Continue completes); the panel (`assumptionPanel.test.tsx`: the seat on `date`, no left-over radio in the W row, the waiting
+      face for "saved" and for absent under a stale W, `datesavedmoved`'s moved line below the group, a spend-staling press stores
+      nothing, `initialSeat="working-year-left-over"` lands on the seat, each shown state's methodology line); a panel arm in
+      `gestureHold.test.tsx` (type W, press "All of it": the held figure is stored); and in `session.test.ts`'s unanswered-bytes arm,
+      `workingYearLeftOverMoved(hydrated.draft)` is null.
+   4. **The mutant pass, predictions written first** (`U6-MUTANTS.md` beside `U4-MUTANTS.md`): `?? 'spent'` on hydrate, the 4→5 step
+      removed, the step naming CURRENT (equivalent), the constant reverted, the codec arm deleted, IntakeApp's `leftOverStale: false`,
+      the carriage's freshness test dropped, `LEFT_OVER_CARRIES` opened to "not asked", the release back in the click listener.
+   5. **e2e:** `vertical-fit.spec.ts` arms (`datesaved`'s step: three radios and the figure line; the panel seat; `datesavedmoved`'s
+      Result and its door landing on the seat, both sizes; a coordinate tap on "All of it" right after typing W stores the figure on
+      screen at the press — the only real gate for the label-forwarded click); `caddie-walk.spec.ts` regions (`left-over-question`
+      cvd, `left-over-line`, `left-over-seat` after `w-row`, never in `PANEL_CVD_REGIONS`) and states (the four answers driven,
+      `seed:` and `vault:` `datesavedmoved` / `datesavedstale`). Then `pnpm verify:fit`, `pnpm verify:csp`, `pnpm build`,
+      `pnpm verify:bundle`.
+   6. **The eye pass** (1536×791 @ 2.5× and the phone) on every new face, fixing layout, never words; then **the Caddie walk** on
+      the built tree; then **KTD7's review lenses** over the codec arm, the carriage, the staleness predicates and the hold change,
+      with an adversary and every finding verified; their fixes land in this commit.
+   7. **At the commit:** `git diff --stat 88a5d125 HEAD -- src package.json pnpm-lock.yaml vite.config.ts tsconfig.json` empty (else
+      re-mint the four fixtures from the new parent with `mint-v4.mts`); the sweep `pnpm exec tsx <b9-build2-surplus>\tools\sweep.mts
+      golive --today=20758` and `node <b9-build2-surplus>\tools\idcheck.mjs golive u15` (36 identical, 3 candidate-only keys; it
+      becomes the baseline); `pnpm doc:reanchor HEAD --apply` once; `pnpm verify:doc-stats`; the full suite; the folder README's
+      identity row and a `v4-parent` entry (archived from `88a5d125`, configs equal).
+   At EVERY `src` commit from here: the sweep and the per-key `idcheck` above (PER KEY: never a whole-file `cmp`); the per-commit
+   record is the table at the foot of that folder's `README.md`. Then the build units in the plan's order, each
    opened with `/brief <that unit's topic>`:
    - Phase A: ~~U2~~, ~~U3~~, ~~U4~~, ~~U15~~, ~~the engine review~~ (done).
    - **The review's forward obligations (each a prescription for the unit named):** (a) **U7's carriage** writes the figure
@@ -151,20 +202,30 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-04/05 (b9-3: build 2's U13, the named staleness input, and U5's red `verify:fit` — b9-2's block pruned into it):**
-commits `63eca3f6` (2 files: the W gesture arms' set-up and the roadmap's fit row), `82835ff3` (U13: 28 files, its review's fixes
-inside it), `dc1a6516` (START HERE) and this close. By exit code at `82835ff3`'s tree: `pnpm typecheck` 0, `pnpm lint` 0,
-`pnpm build` 0, `pnpm verify:bundle` 0 (289.1 KiB), `pnpm verify:doc-stats` 0 (the test count lives under that gate),
-`pnpm verify:aca` 0, `pnpm verify:state-tax` 0; `pnpm test` red only on the known heavy files under load in two full runs
-(`budgetTwoTrack`, `solvePayloadIdentity` ×2), all green run alone; `pnpm verify:fit` on the six W gesture arms 6 passed
-locally. `pnpm doc:reanchor HEAD --apply` once (41 edits, 3 hand-fixed). R10's sweep: `u13` (pre-review) and `u13final`
-(committed), each 36 of 36 identical to `sweep-u15.json`, byte-equal. CI, read by id: `d4227774`'s 41958056576 and
-`2c642618`'s 41958375339 were RED (`verify:fit`, 6 failed: fixed by `63eca3f6`); `82835ff3`'s 41968753429 GREEN on both
-jobs. Helper agents: the review `wf_980c5931-2b2` (10 agents, about 1.8M subagent tokens); the weekly meter read 12% before it,
-19% at this close.
-**Why it closed at 49% of the window:** the go-live commit (U6 + U7 + U8 + U14 + U9: the version-5 bump, the question, its seat,
-the stale lines, the seeds; the design skills, the Caddie walk and KTD7's review lenses before it lands) is the biggest unit
-left and cannot finish inside the 50% no-fan-out and 60% wrap lines, so it opens in a fresh window.
+**SESSION 2026-11-05 (b9-4: build 2's go-live, BUILT AND UNCOMMITTED — b9-3's block pruned into it):** no `src` commit
+(the plan lands the go-live as ONE commit, after the Caddie walk and KTD7's review lenses — START HERE item 1). The work is in the
+tree and snapshotted at `b9-build2-surplus\golive\wip-b9-4.patch` + `wip-b9-4-untracked\` (base `4e34fabe`). By exit code at
+the WIP tree: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm test` 4970 passed / 1 failed (`verify-doc-stats`' citation arm: the
+re-anchor is owed at commit). Not run this session: `pnpm build`, `verify:bundle`, `verify:fit`, `verify:csp`,
+`verify:doc-stats`. The archive `b9-build2-surplus\v4-parent\` is `88a5d125`'s project, its four build configs byte-equal to the
+checkout's (`node_modules` is a JUNCTION: remove the link alone before deleting the folder); its own codec, backup, session and
+unlock suites 237/237 (logs `golive\u6-oldcopy-*.log`), and it minted the four frozen version-4 plans (`golive\u6-mint-v4.log`).
+Helper agents: the mapping workflow `wf_147ed024-0eb` (7 mappers, about 1.7M subagent tokens).
+**Why it closed at 80% of the window, not 60%:** the window was not read between the seven ~30 KB maps, the whole plan and the
+build; it passed every line unread. The squeaky call came at the first `/window` after the build (b9-4's own miss).
+**DISTILL CANDIDATES (b9-4, the go-live build):**
+- **Map a multi-unit commit's surfaces with readers BEFORE building, and give each mapper a PLAN-vs-CODE section.** Seven mappers
+  found three defects the deepened, checked plan never named: obligation (a) (added after the plan) made `buildDateInput` call the
+  money picture that calls `buildDateInput` (infinite recursion); the plan's single new module would have closed an `intakeMap`
+  import loop no gate catches (the cycle pin covers `src/engine` only); and a held label-wrapped radio would store a figure the
+  household never saw (insight 149's forwarded click). Every one was invisible to the plan's own checks.
+- **A carriage gate that reads a producer's output must read it from a figure-free twin of the input** — the producer's own
+  input builder is the carriage, so the gate recursed; `buildDateInputBeforeLeftOver` breaks it, and is honest because year 0's cash
+  never reads the year-end credit.
+- **The first held control behind a label moves the release one task later** (insight 149's own prescription, now built): a
+  label's click releases before it forwards its click to its radio, so the radio acted from the LIVE render. jsdom cannot see it;
+  the coordinate-tap arm in START HERE item 1 step 5 is its gate.
+
 **DISTILL CANDIDATES (b9-3, U13):**
 - **A no-transposition rule stops at the seam it was written for unless it is applied one level down.** KTD9 made
   `deriveStaleness`'s input a named object; U13's first cut gave `composeReentry` two adjacent nullable sentence parameters,
@@ -244,7 +305,16 @@ left and cannot finish inside the 50% no-fan-out and 60% wrap lines, so it opens
 - **A plan's verification sentence can fix a design its Files list never states.** U3's "the ledger tests pass with only
   the allowlist edit" forced the ledger to RE-EXPORT the bottom line (its test imports it from the ledger), though the
   Files list said only "imports it". Read every verification clause for the shape it implies before choosing one.
-**LANDMINES (b9-3's of 11-04, b9-2's and b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
+**LANDMINES (b9-4's of 11-05 first, then b9-3's of 11-04, b9-2's and b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
+- **(b9-4, 11-05) The gesture hold now lets go ONE TASK after the click** (`src/intake/gestureHold.ts`). A test that asserts the
+  released face right after `fireEvent.click` must first await a zero-delay task (`letGo()` / the async `release()` in
+  `gestureHold.test.tsx`); with fake timers, `act(() => vi.advanceTimersByTime(0))`. The six W coordinate-tap arms in
+  `verify:fit` have NOT been re-run against it.
+- **(b9-4, 11-05) Never call `buildDateInput` from inside the money picture's path.** On a "saved" draft `buildDateInput` now reads
+  `workingYearLedgerForRun`; the picture composes from `buildDateInputBeforeLeftOver`. Any new reader inside
+  `composeWorkingYearLedger` that calls `buildDateInput` recurses forever on a saved draft.
+- **(b9-4, 11-05) Read the window between big reads.** Seven ~30 KB maps, the whole plan and the build carried b9-4 from 8% to 80%
+  with no read in between. For the go-live's remaining steps, read only the map for the step in hand, and run `/window` after each.
 - **(b9-3, 11-04) A partial suite run hides a source-bind.** `src/ui/__tests__/stalenessExposure.test.ts` pins
   `IntakeApp`'s `deriveStaleness(…)` call by regex; U13's first pass ran only the touched suites and missed it red. Before
   changing any call's shape, grep the tests for a `readFileSync` of the calling file and for the function's name inside a

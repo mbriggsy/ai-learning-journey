@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-04, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review).** The schema-v4 job
+▶ **START HERE (2026-11-04, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -56,7 +56,13 @@ queue below (its order unmoved). Next, in order:
    `cashTermsForYear` credited every survivor working year with the suite green), year 0's cap on its PRINT, the
    same-year draw (taxed gain, and the basis order), and ten false or stale comments, two of them copied from the plan's
    KTD4 / KTD5 (both corrected). Its record: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseA-review\`
-   (`brief.md`, every lens's and verifier's repros). **Next: U5**, opened with `/brief`. At EVERY `src`
+   (`brief.md`, every lens's and verifier's repros). **U5 DONE (b9-2, `d4227774`):** a yes kept through the Keep door is
+   stamped (`keptOverQuoteReal` on `entered`, label 4) and goes stale when today's quote rises above THE FIGURE (R13's
+   referent), naming the spending with the lean, the door withheld, the row "the figure you kept". Its review
+   `wf_e5cbb6be-e97` (5 lenses + 5 refuters) found one P1 in the PLAN: KTD10's "a period change drops the stamp" let "each
+   month" then "each year" launder a stale kept figure into a typed one. A unit tap now CARRIES it; R13, KTD10 and the U5
+   scenario are amended in the plan. R10 36/36 against `u15`; the old-copy decode ok; record `b9-u5-review\README.md`.
+   **Next: U13** (the staleness input becomes a named object, dark), opened with `/brief`. At EVERY `src`
    commit from here: from the project dir run `pnpm exec tsx <b9-build2-surplus>\tools\sweep.mts <label> --today=20758`, then
    `node <b9-build2-surplus>\tools\idcheck.mjs <label> u15` (PER KEY: U9 adds seeds, so never a whole-file `cmp`); the
    per-commit record is the table at the foot of that folder's `README.md`. Then the build units in the plan's order, each
@@ -70,7 +76,16 @@ queue below (its order unmoved). Next, in order:
      `checkComposed` call just before it (`workingYearCredit.test.ts`'s *SURVIVOR THROUGH THE RUN* arm does), or split passes
      on the t reset. (c) **U12's register pass:** add to *The taxable account's yield never reaches a year's tax base…* that
      every credited dollar lands in taxable and widens that gap's reach, unmeasured.
-   - Phase B: U5 and U13, the version-4 archive, the go-live (U6 + U7 + U8 + U14 + U9), then U10.
+   - **U5's forward obligations:** (d) **U11's Caddie walk** reads U5's drafted words — the kept quote, state-only and
+     both-causes sentences (`workingCostStaleKept*`), the row's "the figure you kept", and the month view's "$1,008,000 a
+     year — the figure you kept" after a unit tap on a kept $84,000 — and the review's P3: a kept figure stale on the
+     spending shows "a different figure" checked, the box filled, no door, and the gate's "answer it above"; its exits
+     (Yes at today's figure, or a retype) go unnamed. Candidates: a face-only line naming both exits, or the stale yes's
+     own shape (no option checked, the box closed). Never the door below the quote (the register's ⚑ NEGATIVE). (e) **U12's
+     register pass** closes *Keeping a stale yes turns it into an entered figure…* with `d4227774`, recording the unit-tap
+     carry and the residual: the stamp's VALUE is read by nothing (x8, the door stamping off the render-captured draft,
+     survives every test) — pin it the day anything reads it.
+   - Phase B: ~~U5~~ and U13, the version-4 archive, the go-live (U6 + U7 + U8 + U14 + U9), then U10.
    - Phase C: U11, then U12.
    After the build: the whole-file review, with an adversary and every finding verified; then `/distill`. The record (brief,
    seven research dossiers, three deepen artifacts, the doc-review's `RESOLVED.md`) is in
@@ -115,17 +130,28 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-04 (b9-1: build 2's Phase A engine review and its fixes — Phase A is closed; b9-8's block pruned into it):**
-commits `9c51d2bb` (the review's fixes: tests and comments only) and this close. By exit code at `9c51d2bb`'s tree:
-`pnpm typecheck` 0, `pnpm lint` 0, `pnpm build` 0, `pnpm verify:bundle` 0 (288.5 KiB), `pnpm verify:doc-stats` 0 (the test count
-lives under that gate), `pnpm verify:aca` 0 and `pnpm verify:state-tax` 0 (both read at the session's start). `pnpm test` ran
-beside the R10 sweep: every file green but the citation arm (three stale bare continuations, fixed by hand, then 43/43) and four
-heavy files that timed out under the sweep's load, then 35/35 alone. R10's sweep (label `reviewfix`): 36 of 36 keys identical to
-`sweep-u15.json`, the file byte-equal. CI, read by id: `343c0dd3`'s 41286577299, `856ca79d`'s 41288426908 and `01ba0e98`'s
-41288709859 green; `9c51d2bb`'s 41947247749 was running at this close (read it by id before the first U5 commit). Helper agents:
-the review `wf_0f808964-4a9` (52 agents, about 8.0M subagent tokens); the weekly meter read 1% at the start, 9% at this close.
-**Why it closed at 39% of the window:** U5 (model, codec, the W step's component and copy, the four design skills, a Caddie walk)
-could not finish inside the 50% no-fan-out and 60% wrap lines, so it opens in a fresh window.
+**SESSION 2026-11-04 (b9-2: build 2's U5, the Keep stamp — b9-1's block pruned into it):**
+commits `d4227774` (U5: 33 files, its review's fixes inside it) and this close. By exit code at `d4227774`'s tree: `pnpm typecheck`
+0, `pnpm lint` 0, `pnpm build` 0, `pnpm verify:bundle` 0 (289.1 KiB), `pnpm verify:doc-stats` 0 (the test count lives under that
+gate), `pnpm verify:aca` 0, `pnpm verify:state-tax` 0; `pnpm test` green, run alone (no sweep beside it, so no timeouts);
+`pnpm doc:reanchor HEAD --apply` once (112 edits). R10's sweep: `u5` (pre-review) and `u5final` (committed), each 36 of 36
+identical to `sweep-u15.json`, both files byte-equal. CI, read by id: `9c51d2bb`'s 41947247749 and `7d8e9d9d`'s 41947536282
+green; `d4227774`'s 41958056576 was running at this close (read it by id before the first U13 commit). Real Chromium at
+1536×791 and 390×844 on `?seed=datecoststale` (the dev server): keep, spending raised, the unit round trip, the result's line —
+console clean (`b9-u5-review\shots\`). Helper agents: the review `wf_e5cbb6be-e97` (10 agents, about 1.9M subagent tokens);
+the weekly meter read 9% before it, 11% at this close.
+**Why it closed at 46% of the window:** U13 (a required named object across ~130 `deriveStaleness` calls, `composeReentry`'s new
+input, then its review fan-out) could not finish inside the 50% no-fan-out and 60% wrap lines, so it opens in a fresh window.
+**DISTILL CANDIDATES (b9-2, U5):**
+- **A mark's fate rule must survive the control's round trip, not one tap.** KTD10 dropped the keep stamp on a period change
+  ("taken over a different figure"); every test tapped once. "Each month" then "each year" restored the same $84,000 unstamped,
+  so a stale kept figure came back typed, fresh forever, with no digit typed — four of five review lenses found it. For a
+  reversible control beside a provenance mark, test the round trip: the mark must come back with the figure (insight 144's
+  lifecycle law, one control further; b9-6's "every writer that rebuilds the object" candidate is its sibling).
+- **A plan's open referent can be settled by its own writer fates.** R13 said a kept figure goes stale "when the live quote
+  rises above it" — the figure, or the stamp? Keyed to the stamp, a quote between the two stales an answer whose own door shows
+  and whose keep (which carries the stamp) can never cure it: a stuck state. The fates decided it before any council was
+  needed; the sentence's grammar agreed ("it" is the kept figure).
 **DISTILL CANDIDATES (b9-1, the Phase A engine review):**
 - **A mutant pass planted only at the consumer of a carried value leaves its producer unpinned.** KTD5 says `allAlive` is
   "carried, never re-derived"; U4's 15 mutants all sat in `taxOverlay.ts` (the gate that reads it), and the plan's "on a
@@ -181,7 +207,12 @@ could not finish inside the 50% no-fan-out and 60% wrap lines, so it opens in a 
 - **A plan's verification sentence can fix a design its Files list never states.** U3's "the ledger tests pass with only
   the allowlist edit" forced the ledger to RE-EXPORT the bottom line (its test imports it from the ledger), though the
   Files list said only "imports it". Read every verification clause for the shape it implies before choosing one.
-**LANDMINES (b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
+**LANDMINES (b9-2's and b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
+- **(b9-2) Git Bash's `grep -c $'\r$'` misreads line endings** — it reported every line of LF files as CRLF. Count endings
+  with Python on the bytes (`t.count(b'\r\n')`) before deciding a file's EOL; most of `src` is LF, `copyGuard.test.ts` is CRLF.
+- **(b9-2) The Playwright MCP writes only under the project** (its allowed roots: the project and `.playwright-mcp\`, which is
+  gitignored); save shots there, then copy them to a durable folder and delete this session's files. A reload over unsaved edits
+  opens a `beforeunload` dialog that blocks every tool until `browser_handle_dialog` accepts it.
 - **(b9-1) The citation arm reds on rot the re-anchor never sees.** A bare continuation (`:2361` after an earlier
   `taxOverlay.ts:N` on the same line) that already pointed at the wrong code passes the gate while its line holds text, and
   reds the day a shift leaves it blank. `pnpm doc:reanchor` moved the line's first citation and left the three bare ones.

@@ -263,7 +263,7 @@ export default function IntakeApp({
    *
    * THE DATE-ROUTE CONJUNCT IS THE STRUCTURAL FORM OF Result.tsx's OWN SUPPRESSION.
    * `exposureForDraft` carries a hard prohibition — "DO NOT LIFT THIS FUNCTION TO A CROWNED
-   * SURFACE… the base read WOULD lie there" (stalenessExposure.ts:95-98) — and on a date route it
+   * SURFACE… the base read WOULD lie there" (stalenessExposure.ts:96-99) — and on a date route it
    * takes exactly the arm that reads the PRE-SWEEP base ACA overlay (:179-184), while the result
    * screen it would feed sits beside a CROWNED date. `savedRecommendation.ts:88-94` proves no
    * record can be BORN on a date route, but the frame is reachable the other way round (a
@@ -633,21 +633,25 @@ export default function IntakeApp({
         // The store cannot make this read (layer law), and re-deriving it from ages/geography
         // is the insight-080/081 defect class. The draft is the round-trip inverse of the same
         // `model` the stamps come from, so the exposure and the stamps describe one household.
-        // The pay check's KTD21 rides BESIDE the exposure record, never inside it: whether the
-        // household's own W answer still matches its quote is an intake predicate over the same
-        // hydrated draft (an answer against its inputs, not a built run), passed as its own argument.
-        const report = deriveStaleness(
-          model,
-          currentEpochDay(),
-          exposureForDraft(hydrated.draft),
-          isWorkingYearCostStale(hydrated.draft),
-        )
+        // The household's own working-year answers ride BESIDE the exposure record, never inside it:
+        // whether the W answer still matches its quote (the pay check's KTD21) is an intake predicate
+        // over the same hydrated draft (an answer against its inputs, not a built run), passed in
+        // their own named object. The left-over fact is `false` BY PROOF until the go-live: no draft
+        // can hold the left-over answer before the version-5 model lands (build 2's U13).
+        const report = deriveStaleness(model, currentEpochDay(), exposureForDraft(hydrated.draft), {
+          costStale: isWorkingYearCostStale(hydrated.draft),
+          leftOverStale: false,
+        })
         // The gate's KTD21 sentence from the SAME hydrated draft — the W step's own stale sentence,
         // which the answer's standing line repeats (b9-7); the door hint only where this tab can save,
-        // the same condition as the answer's door (`Result`'s `onOpen`).
+        // the same condition as the answer's door (`Result`'s `onOpen`). No left-over sentence beside
+        // the `false` above.
         const payCheckStaleText = workingYearCostStaleText(hydrated.draft)
         const payCheckStale = payCheckStaleText === null ? null : { text: payCheckStaleText, canChange: !readOnly }
-        setReentry({ view: composeReentry(model, report, payCheckStale), rulesMoved: report.rulesMoved })
+        setReentry({
+          view: composeReentry(model, report, { costStale: payCheckStale, leftOverStale: null }),
+          rulesMoved: report.rulesMoved,
+        })
         setPhase('reentry')
       } catch {
         if (!cancelled) setPhase('restore-failed')

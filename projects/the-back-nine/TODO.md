@@ -659,7 +659,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `?seed=health` + pay-less-tax reads *"You're already on one of the strongest paths we tested"* and
    never learns WHICH path. Deliberately out of scope: the proof above holds only in ACTIVE, so the
    no-change arm needs the `custom` branch (with a THIRD ui bucket map — `SequencingControl`'s is
-   intake-private and `reentryChrome.ts:70`'s points at different strings) and different words, since
+   intake-private and `reentryChrome.ts:72`'s points at different strings) and different words, since
    `mode === 'no-change'` is NOT "the winner is the plan you run" (it also fires on a seed-B display
    inversion and a $0 collapse). **No seed produces a `custom` winner**, so that branch would ship
    unwitnessable — mint the seed first or leave it.
@@ -746,7 +746,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     draft outside the vault is a security-posture ruling, never a build) · the
     `schemaVersion` migration ladder **does not exist as code for versions 1 and 2** — `IntakeApp.tsx:584`
     refuses anything but the current version, so a v1/v2 plan decodes ok, then meets "That didn't work. Try
-    again." over a reload that cannot succeed (`IntakeApp.tsx:689-706`), and its backups fail identically
+    again." over a reload that cannot succeed (`IntakeApp.tsx:693-710`), and its backups fail identically
     (same bytes, `backup.ts:84-93`). No build ever wrote either. *(Re-scoped 2026-10-31, b9-3: this bullet
     said a future v4 would push today's v3 vaults into that arm. The schema-v4 bump did not: version 3
     relabels to 4 at decode, a label-only step — `docs/architecture.md` §7.3.)* · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
@@ -842,7 +842,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:712-715` but still lived verbatim at `model.ts:2669` (swept), and
+    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:2669` (swept), and
     Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
     "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2235-2257`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said

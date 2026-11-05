@@ -415,11 +415,13 @@ describe('the SHIPPED consumer binds to this seam (source-bind, not replication)
     )
     // The exact shipped call, third argument included. A spread-and-override
     // (`{ ...exposureForDraft(…), aca: 'priced' }`) does not match this pattern. The fourth is the
-    // pay check's KTD21 flag (edited in with it — R18 names this call site): the intake's ONE stale
-    // predicate over the SAME hydrated draft, never a literal `false` and never folded into the
-    // exposure record.
+    // named answers object (build 2's KTD9). Its `costStale` is the pay check's KTD21 flag (edited in
+    // with it — R18 names this call site): the intake's ONE stale predicate over the SAME hydrated
+    // draft, never a literal `false` and never folded into the exposure record. Its `leftOverStale`
+    // is `false` BY PROOF until the go-live (no draft can hold the left-over answer before then);
+    // the go-live (build 2's U14) replaces that literal, and this pattern, with the real predicate.
     expect(src, 'the report is derived with the seam’s own record').toMatch(
-      /deriveStaleness\(\s*model,\s*currentEpochDay\(\),\s*exposureForDraft\(hydrated\.draft\),\s*isWorkingYearCostStale\(hydrated\.draft\),?\s*\)/,
+      /deriveStaleness\(\s*model,\s*currentEpochDay\(\),\s*exposureForDraft\(hydrated\.draft\),\s*\{\s*costStale:\s*isWorkingYearCostStale\(hydrated\.draft\),\s*leftOverStale:\s*false,?\s*\},?\s*\)/,
     )
     expect(src, 'the stale predicate is the intake’s own, imported — not re-declared').toMatch(
       /import \{[^}]*isWorkingYearCostStale[^}]*\} from '@intake\/workingYearQuote'/,

@@ -658,7 +658,7 @@ describe('the statestale aged plant (the state-tax gate note; light doctor, F2 s
     )
     // U17 §S4 — the exposure record is the REAL one for this seed (`pricedStateForRun` reads NC
     // off the built overlay), so the clock is proven to fire through the producer's-output gate.
-    const report = deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.nc), false)
+    const report = deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.nc), { costStale: false, leftOverStale: false })
     expect(report.controls.stateTaxMoved, "the NC household's own profile moved ⇒ the state-tax clock fires").toBe(true)
     expect(report.rulesMoved, 'a rulebook moved ⇒ the hero echo may ride').toBe(true)
     // ISOLATION — the fresh vintages leave every OTHER clock dark.
@@ -739,7 +739,7 @@ describe('the statestale aged plant (the state-tax gate note; light doctor, F2 s
       statelessBuilt.scenario.stateTaxVintage,
     )
     expect(
-      deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.datesplit), false).controls.stateTaxMoved,
+      deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.datesplit), { costStale: false, leftOverStale: false }).controls.stateTaxMoved,
       'a stateless household never fires the clock',
     ).toBe(false)
   })
@@ -1099,7 +1099,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     })
 
     // No W on this retired base, so KTD21's stale-answer flag is false (the intake predicate reads null).
-    const report = deriveStaleness(aged, TODAY, exposure, false)
+    const report = deriveStaleness(aged, TODAY, exposure, { costStale: false, leftOverStale: false })
     // What the doctor moved (devSeeds.ts): taxVintageDetail, coverageYear −1,
     // partBStandardMonthly −10, blendSnapshotAsOf −1y; the extras vintage is STRIPPED (a
     // pre-extras-era save ⇒ not-comparable ⇒ quiet).
@@ -1117,7 +1117,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     expect(report.date.blendMoved, 'and the blend stamp DID move — the silence is the gate biting').toBe(true)
     expect(report.rulesMoved, 'the hero echo may ride — tax + the Medicare figures genuinely moved').toBe(true)
 
-    const view = composeReentry(aged, report, null)
+    const view = composeReentry(aged, report, { costStale: null, leftOverStale: null })
     // THE ENGINE-PRICING LINES (the ledger — the engine-domain council, 2026-09-27), from an
     // INDEPENDENT oracle over the ledger rows, never the reader's code: the plant saves ~760 days
     // back, so every `reprice` row shipped after that save and reaching a family this household
@@ -1857,14 +1857,17 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     const { savedAt: _a, dateVintage: _b, ...agedRest } = aged
     const { savedAt: _c, dateVintage: _d, ...builtRest } = built.scenario
     expect(agedRest).toEqual(builtRest)
-    const report = deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.dateshort), isWorkingYearCostStale(DEV_SEEDS.dateshort))
-    expect(report.workingYear).toEqual({ vintageMoved: true, costStale: false })
+    const report = deriveStaleness(aged, TODAY, exposureForDraft(DEV_SEEDS.dateshort), {
+      costStale: isWorkingYearCostStale(DEV_SEEDS.dateshort),
+      leftOverStale: false,
+    })
+    expect(report.workingYear).toEqual({ vintageMoved: true, costStale: false, leftOverStale: false })
     expect(report.rulesMoved).toBe(true)
     expect(report.controls.taxMoved).toBe(false)
     expect(report.controls.stateTaxMoved).toBe(false)
     expect(report.healthcare.moved).toBe(false)
     expect(report.date).toEqual({ contributionMoved: false, blendMoved: false })
-    expect(composeReentry(aged, report, null).noteLines).toEqual([copy.stalenessWorkingYears])
+    expect(composeReentry(aged, report, { costStale: null, leftOverStale: null }).noteLines).toEqual([copy.stalenessWorkingYears])
   })
 
   it('the light doctor is ENGINE-ACCEPTED: the aged vault hydrates, builds and dates like the fresh seed (insight 085)', async () => {
@@ -1893,9 +1896,12 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     const aged = plant!.doctor(built.scenario, TODAY)
     const hydrated = draftFromScenario(aged)
     if (!hydrated.ok) throw new Error(`[test setup] wyclock must hydrate: ${hydrated.detail}`)
-    const report = deriveStaleness(aged, TODAY, exposureForDraft(hydrated.draft), isWorkingYearCostStale(hydrated.draft))
-    expect(report.workingYear).toEqual({ vintageMoved: true, costStale: false })
-    expect(composeReentry(aged, report, null).noteLines).toEqual([copy.stalenessWorkingYears])
+    const report = deriveStaleness(aged, TODAY, exposureForDraft(hydrated.draft), {
+      costStale: isWorkingYearCostStale(hydrated.draft),
+      leftOverStale: false,
+    })
+    expect(report.workingYear).toEqual({ vintageMoved: true, costStale: false, leftOverStale: false })
+    expect(composeReentry(aged, report, { costStale: null, leftOverStale: null }).noteLines).toEqual([copy.stalenessWorkingYears])
     // The doctor moves no engine input (only `savedAt` and the stamp), so the affirm's recompute is
     // `?seed=date`'s own: identical date-search inputs, and the search is deterministic in them.
     expect(buildDateInput(hydrated.draft)).toEqual(buildDateInput(DEV_SEEDS.date))
@@ -1912,12 +1918,15 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     const hydrated = draftFromScenario(built.scenario)
     if (!hydrated.ok) throw new Error(`[test setup] datecoststale must hydrate: ${hydrated.detail}`)
     expect(hydrated.draft.workingYearCost, 'the stale answer survives the save').toEqual(DEV_SEEDS.datecoststale.workingYearCost)
-    const report = deriveStaleness(built.scenario, TODAY, exposureForDraft(hydrated.draft), isWorkingYearCostStale(hydrated.draft))
-    expect(report.workingYear).toEqual({ vintageMoved: false, costStale: true })
+    const report = deriveStaleness(built.scenario, TODAY, exposureForDraft(hydrated.draft), {
+      costStale: isWorkingYearCostStale(hydrated.draft),
+      leftOverStale: false,
+    })
+    expect(report.workingYear).toEqual({ vintageMoved: false, costStale: true, leftOverStale: false })
     expect(report.rulesMoved, 'a stale answer is not a rules change').toBe(false)
     const text = workingYearCostStaleText(hydrated.draft)
     expect(text, '$84,000 held above $78,000 now — the safe side, so no lean is said').toBe(slots.workingCostStaleQuote('84,000', '78,000'))
-    expect(composeReentry(built.scenario, report, { text: text!, canChange: true }).noteLines).toEqual([
+    expect(composeReentry(built.scenario, report, { costStale: { text: text!, canChange: true }, leftOverStale: null }).noteLines).toEqual([
       `${copy.stalenessPayCheckGateLead} ${text} ${copy.stalenessPayCheckGateDoor}`,
     ])
   })

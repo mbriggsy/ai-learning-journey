@@ -40,7 +40,7 @@ The same flaw three times: each result had a second way to happen.
    that refusal shows the same restore-failed screen. With the version clause gone, the people-count check still
    refused both version-1 arms, and null still met its own `model === null` clause. No arm was refused by the version
    clause alone. Null cannot pin its own clause either: delete `model === null ||` and `model.schemaVersion` throws on
-   null, and the effect's catch (`IntakeApp.tsx:652`) shows the same screen.
+   null, and the effect's catch (`IntakeApp.tsx:656`) shows the same screen.
 2. The store tests lock their session near the end, after the assertions. The version-3 unlock arm checks the label at
    `session.test.ts:716` and locks at `:719` (line numbers as of `1fb8b25e`). Under M1 that check failed, so the lock
    never ran. The session had already claimed the writer role. Its BroadcastChannel (opened inside `createSession`,

@@ -759,7 +759,7 @@ describe('the record-card memo — a DATE route refuses the card structurally', 
     /**
      * WHY THE CONJUNCT EXISTS. `exposureForDraft` carries a hard in-source prohibition — "DO NOT
      * LIFT THIS FUNCTION TO A CROWNED SURFACE… the base read WOULD lie there"
-     * (`stalenessExposure.ts:95-98`) — because on a date route it takes the arm that reads the
+     * (`stalenessExposure.ts:96-99`) — because on a date route it takes the arm that reads the
      * PRE-SWEEP base ACA overlay, while the screen it would feed sits beside a CROWNED date. So
      * IntakeApp refuses at the PRODUCER (`isDateRoute(snapshot.draft) ⇒ undefined`): the lying read
      * is never TAKEN, rather than taken and then discarded.

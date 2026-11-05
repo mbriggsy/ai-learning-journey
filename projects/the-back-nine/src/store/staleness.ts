@@ -156,12 +156,14 @@
  * computed at the ui/intake seam off the run's OWN BUILT PARAMS (`src/ui/stalenessExposure.ts`).
  * This function stays PURE and layer-clean: exposure is a parameter, not an import.
  *
- * ONE MORE INJECTED FACT, AND IT IS NOT EXPOSURE (the pay check's KTD21). Whether the household's
- * own W answer has gone stale is an intake predicate over the draft (`isWorkingYearCostStale`), so
- * it too arrives as a parameter — its own, beside the exposure record, never a field on it: it
- * compares an answer with the quote it was given against, which says nothing about what the run
- * priced. It feeds `anyStale` only: the engine keeps using the last figure given (R4), so no
- * recompute moves with it.
+ * TWO MORE INJECTED FACTS, AND NEITHER IS EXPOSURE ({@link WorkingYearAnswerStaleness}). Whether
+ * the household's own W answer has gone stale (the pay check's KTD21, `isWorkingYearCostStale`) and
+ * whether its "saved" left-over answer has moved (build 2's R12) are intake predicates over the
+ * draft, so they arrive as a parameter — their own, beside the exposure record, never fields on it:
+ * each compares an answer with the figure it was given against, which says nothing about what the
+ * run priced. Both feed `anyStale` only. The engine keeps using the last W given (R4), and credits
+ * a moved left over under the smaller of the stored and live figures (R8), so neither is a rule
+ * that moved.
  */
 import type { BudgetCategory, CurrentScenario } from '@shared/model'
 import { appDefaultEraFor, CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
@@ -322,8 +324,9 @@ export interface StalenessExposure {
    *  W never reads it), so this is the U13 clock's exposure read — the same producer the
    *  methodology row's arm reads (insights 080/081). `'unpriced'` is a PROOF: no W was answered, or
    *  the household is on the spine, which never carries W. An unbuildable draft reads `'unknown'`
-   *  like every sibling. NOT the household's stale-answer flag — that is `deriveStaleness`'s own
-   *  argument, because it compares an answer with its quote, never a table with a run. */
+   *  like every sibling. NOT the household's answer facts (the stale W, and build 2's moved left
+   *  over): those ride `deriveStaleness`'s own `answers` argument ({@link WorkingYearAnswerStaleness}),
+   *  because each compares an answer with the figure it was given against, never a table with a run. */
   readonly workingYearCost: ExposureRead
   /** The priced state code THIS run actually priced (`pricedStateForRun`'s built-overlay
    *  read), or `undefined` for a household whose run prices no state tax. Closes the state
@@ -471,9 +474,10 @@ export interface StalenessReport {
      *  aggregate's sentence true of every household that hears it (insight 101, lens (c)). */
     readonly blendMoved: boolean
   }
-  /** The pay check's two staleness facts (`docs/plans/features/working-year-pay-check-build-spec.md`).
-   *  Their own group, never inside `date`: the two are different kinds of fact and feed different
-   *  predicates, and `date`'s shape is the fuck-off-date fixture clocks'. */
+  /** The pay check's two staleness facts (`docs/plans/features/working-year-pay-check-build-spec.md`),
+   *  and build 2's left-over fact (`docs/plans/features/working-year-surplus-build-spec.md`, KTD9).
+   *  Their own group, never inside `date`: the clock and the answers are different kinds of fact and
+   *  feed different predicates, and `date`'s shape is the fuck-off-date fixture clocks'. */
   readonly workingYear: {
     /** U13's clock: the working-years table's stamp (`dateVintage.workingYearsVintage`) moved since
      *  the save AND this run carries W (`exposure.workingYearCost === 'priced'`) — the named line,
@@ -481,15 +485,24 @@ export interface StalenessReport {
      *  without W reads the table nowhere (silent); an undecidable read lands in the aggregate. */
     readonly vintageMoved: boolean
     /** KTD21: the household's own W answer no longer matches the quote or the state-tax reading it
-     *  was given against (the caller's `workingYearCostStale`) AND the run is not PROVEN to leave W
-     *  unread (`exposure.workingYearCost !== 'unpriced'`). The engine keeps using the last figure
-     *  given (R4), so this is "worth a look", counted toward `anyStale` ONLY, never `rulesMoved`.
+     *  was given against (the caller's `costStale`, {@link WorkingYearAnswerStaleness}) AND the run is
+     *  not PROVEN to leave W unread (`exposure.workingYearCost !== 'unpriced'`). The engine keeps
+     *  using the last figure given (R4), so this is "worth a look", counted toward `anyStale` ONLY,
+     *  never `rulesMoved`.
      *  The exposure conjunct silences one case only: a W left on a spine-route draft (a household
      *  that answered it while working, then retired). That run never reads W, no surface there
      *  asks or shows it (the W step and the panel row are date-route), and KTD21 scopes the line to
      *  surfaces that show a date — a line about it would be alarm-when-fine with no door. On the
      *  date route a stored W is always 'priced' (or 'unknown', which keeps the line: fail-safe). */
     readonly costStale: boolean
+    /** Build 2's R12 "moved" (KTD9): the household's "saved" left-over answer stored a year-0 figure
+     *  that today's printed figure no longer matches (the caller's `leftOverStale`), silenced by the
+     *  SAME exposure conjunct as {@link costStale}, and for the same reason: the figure reaches the
+     *  engine only beside a carried W (R7), so a run PROVEN to read no W (a spine-route draft) reads
+     *  no left-over figure either, and a line saying "the run counts the smaller" would be false
+     *  there. 'unknown' keeps the line (fail-safe). Counted toward `anyStale` ONLY: the run credits
+     *  under the smaller figure (R8), no rule moved. */
+    readonly leftOverStale: boolean
   }
   /** Budget lines whose window has passed by pure calendar advance — ALREADY-RETIRED
    *  (spine-route) households only: their year-0 anchor is the save's `startCalendarYear`.
@@ -526,7 +539,8 @@ export interface StalenessReport {
   readonly rulesMoved: boolean
   /** Anything worth a line at the re-entry gate — `rulesMoved` OR an unattributed re-base OR a
    *  budget re-confirm OR an engine-pricing line (`pricing.moved`) OR a stale W answer
-   *  (`workingYear.costStale`, KTD21). */
+   *  (`workingYear.costStale`, KTD21) OR a moved left-over answer (`workingYear.leftOverStale`,
+   *  build 2's KTD9). */
   readonly anyStale: boolean
 }
 
@@ -546,21 +560,42 @@ const bucketFor = (read: ExposureRead): Bucket =>
   read === 'priced' ? 'named' : read === 'unpriced' ? 'silent' : 'aggregate'
 
 /**
- * @param workingYearCostStale KTD21 (the pay check): does the household's own W answer no longer
- *   match the quote or the state-tax reading it was given against? The store cannot import intake,
- *   so the caller passes the intake predicate's answer — `isWorkingYearCostStale` on the hydrated
- *   draft. It is NOT an exposure read and never joins {@link StalenessExposure}: it compares a
- *   stored answer with its quote, not a stamp with a table, so it says nothing about what the run
- *   priced (`stalenessExposure.ts`'s built-reads-only law). It feeds `anyStale` ONLY, and is
- *   silenced only where the exposure record proves the run never reads W (`workingYear.costStale`).
- *   REQUIRED, never optional-with-a-default (the house law at `savedRecommendation.ts:83-86`): a
- *   caller that forgets it must fail to compile, never read a silent `false`.
+ * The household's own working-year ANSWERS, each judged against the figure it was given against —
+ * the two facts {@link deriveStaleness} is handed because the store cannot import intake. ONE
+ * required named object (build 2's KTD9), never two adjacent positional booleans: a swapped pair
+ * would compile clean and speak one answer's staleness as the other's (the `GrossUpContext`
+ * no-transposition precedent in `src/engine/taxOverlay.ts`). Neither field is an exposure read, and
+ * neither joins {@link StalenessExposure}: each compares a stored answer with its own figure, not a
+ * stamp with a table, so it says nothing about what the run priced (`stalenessExposure.ts`'s
+ * built-reads-only law). Both fields REQUIRED, never optional-with-a-default (the house law at
+ * `savedRecommendation.ts:83-86`): a caller that forgets one must fail to compile, never read a
+ * silent `false`.
+ */
+export interface WorkingYearAnswerStaleness {
+  /** KTD21 (the pay check): the W answer no longer matches the quote or the state-tax reading it
+   *  was given against — `isWorkingYearCostStale` on the hydrated draft. */
+  readonly costStale: boolean
+  /** Build 2's R12 "moved": a "saved" left-over answer whose stored year-0 figure differs from
+   *  today's printed one, with W carried and fresh, the picture known and the live figure at least
+   *  $1. `false` BY PROOF at every product caller until the go-live (no draft can hold the answer
+   *  before the version-5 model lands), and at the saved-recommendation call site always. From the
+   *  go-live, the predicate behind it and the re-entry gate's moved sentence read ONE core over the
+   *  draft, so the gate can never be handed this fact without its sentence (`ReentryLeftOverStale`
+   *  in `src/ui/reentryChrome.ts` says what that mismatch costs the household). */
+  readonly leftOverStale: boolean
+}
+
+/**
+ * @param answers The household's own working-year answers' staleness ({@link WorkingYearAnswerStaleness}),
+ *   computed by the caller off the hydrated draft. Each feeds `anyStale` ONLY, and each is silenced
+ *   only where the exposure record proves the run never reads W (`workingYear.costStale`,
+ *   `workingYear.leftOverStale`).
  */
 export function deriveStaleness(
   scenario: CurrentScenario,
   todayEpochDay: number,
   exposure: StalenessExposure,
-  workingYearCostStale: boolean,
+  answers: WorkingYearAnswerStaleness,
 ): StalenessReport {
   const wallYear = epochDayToCalendarYear(todayEpochDay)
 
@@ -771,7 +806,10 @@ export function deriveStaleness(
     savedDate.workingYearsVintage !== currentDate.workingYearsVintage &&
     nameable('workingYears', exposure.workingYearCost)
   // KTD21's stale answer, silent only where the run provably never reads W (see `costStale`'s note).
-  const workingYearCostMoved = workingYearCostStale && exposure.workingYearCost !== 'unpriced'
+  const workingYearCostMoved = answers.costStale && exposure.workingYearCost !== 'unpriced'
+  // Build 2's moved left over, under the same conjunct: its figure rides only beside a carried W
+  // (R7), so a run proven to read no W reads no figure (see `leftOverStale`'s note).
+  const workingYearLeftOverMoved = answers.leftOverStale && exposure.workingYearCost !== 'unpriced'
 
   // ── budget: expired time-boxed windows (spine route only — Q6) ───────────────────────
   const expiredLines: ExpiredBudgetLine[] = []
@@ -853,9 +891,15 @@ export function deriveStaleness(
   // `pricingMoved` joins `anyStale` ONLY (the council's placement): a method change is worth a
   // line at the gate, but it never licenses the "rules changed" register. A stale W answer
   // (KTD21) joins it ONLY too: the household's own answer drifting from its inputs moves no rule
-  // and no recompute (the engine keeps the last figure given, R4).
+  // and no recompute (the engine keeps the last figure given, R4). So does a moved left-over
+  // answer: the run credits under the smaller figure (R8), and no rule moved.
   const anyStale =
-    rulesMoved || unattributedMoved || expiredLines.length > 0 || pricingMoved || workingYearCostMoved
+    rulesMoved ||
+    unattributedMoved ||
+    expiredLines.length > 0 ||
+    pricingMoved ||
+    workingYearCostMoved ||
+    workingYearLeftOverMoved
 
   return {
     elapsed,
@@ -871,7 +915,11 @@ export function deriveStaleness(
     },
     unattributed: { moved: unattributedMoved, clocks: unattributedClocks },
     date: { contributionMoved, blendMoved },
-    workingYear: { vintageMoved: workingYearsVintageMoved, costStale: workingYearCostMoved },
+    workingYear: {
+      vintageMoved: workingYearsVintageMoved,
+      costStale: workingYearCostMoved,
+      leftOverStale: workingYearLeftOverMoved,
+    },
     budget: { expiredLines },
     pricing: {
       namedFamilies: pricingNamedFamilies,

@@ -266,7 +266,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   the Caddie close `cad2529e`. Sequence as ratified: ultramode review → Caddie pre-walk →
   pilot-clear + ship (the 2026-07-11 batched-oracle grant — his eye audits any-time + at the
   gauntlet).
-- **Staleness.** The `extras-typical` clock (`src/store/staleness.ts:686-705`) fires only when the
+- **Staleness.** The `extras-typical` clock (`src/store/staleness.ts:721-740`) fires only when the
   saved stamp carries an extras vintage, that vintage differs from the current one, AND the
   household is actually exposed (an absent or `typical`/`unanswered` fork answer). It is mapped
   to the `medicare` family in the exhaustive `HEALTHCARE_CLOCK_FAMILIES` record, so a clock with

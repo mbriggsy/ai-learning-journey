@@ -1441,7 +1441,7 @@ panel was mid-read on the old one. Second channel lesson: `copy.txt` includes sr
 (the "doubled wordmark" finding was the persistent sr-only h1 + the visible intake wordmark —
 pixels show it once; killed) — increment 3 should annotate channels in the capture.
 
-**routedToOracle:** **O6** (DISCHARGED 2026-07-10 — round-half, floor-GATED, `reentryChrome.ts:186-195`) `reentryChrome.ts:130` at the time — elapsed years used `Math.floor(days/365)`:
+**routedToOracle:** **O6** (DISCHARGED 2026-07-10 — round-half, floor-GATED, `reentryChrome.ts:234-243`) `reentryChrome.ts:164` at the time — elapsed years used `Math.floor(days/365)`:
 a 700-day save reads "about a year ago", systematic rosier-direction rounding on a staleness
 disclosure (round-half or "over a year" phrasing) · **O3-extended** — the band legend text,
 the interquartile band, and the y-ticks have no text-path equivalent (both routes; the SR

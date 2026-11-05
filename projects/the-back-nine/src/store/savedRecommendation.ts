@@ -127,12 +127,16 @@ export function deriveSavedRecommendationStatus(
     dateVintage: record.era.dateVintage,
   }
   const eraScenario: CurrentScenario = { ...scenario, ...overlay }
-  // `workingYearCostStale` is `false` BY PROOF, not by default: a saved recommendation is always a
+  // Both answer facts are `false` BY PROOF, not by default: a saved recommendation is always a
   // spine-route household (`exposure`'s doc above), and the spine never carries W — a W left on its
-  // draft is never read, which `deriveStaleness` itself silences (`exposure.workingYearCost ===
-  // 'unpriced'`). Passing it explicitly keeps the argument required — and it could never reach
-  // conjunct 3 anyway, which reads `rulesMoved`, never `anyStale`.
-  const eraStaleness = deriveStaleness(eraScenario, todayEpochDay, exposure, false)
+  // draft is never read, and neither is a left-over figure, which rides only beside a carried W;
+  // `deriveStaleness` itself silences both (`exposure.workingYearCost === 'unpriced'`). Passing them
+  // explicitly keeps the argument required — and neither could reach conjunct 3 anyway, which reads
+  // `rulesMoved`, never `anyStale`.
+  const eraStaleness = deriveStaleness(eraScenario, todayEpochDay, exposure, {
+    costStale: false,
+    leftOverStale: false,
+  })
 
   const causes: SavedRecommendationSupersededCause[] = []
 

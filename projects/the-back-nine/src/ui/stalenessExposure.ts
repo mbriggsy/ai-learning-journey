@@ -29,9 +29,10 @@
  * date build plus one candidate rebuild, and the SAME producer the methodology row's arm reads, so the
  * clock and the row can never disagree about whether this run carries W: insights 080/081.)
  *
- * THE PAY CHECK'S STALE ANSWER IS NOT A READ HERE (KTD21). `isWorkingYearCostStale` compares the
- * household's stored W with the quote it was given against — an answer against its inputs, not a
- * built run — so it travels as `deriveStaleness`'s own argument beside this record (IntakeApp's unlock).
+ * THE HOUSEHOLD'S ANSWER FACTS ARE NOT READS HERE (the pay check's KTD21, build 2's KTD9).
+ * `isWorkingYearCostStale` compares the household's stored W with the quote it was given against — an
+ * answer against its inputs, not a built run — so it travels in `deriveStaleness`'s answers object
+ * (`WorkingYearAnswerStaleness`) beside this record (IntakeApp's unlock), as build 2's moved left over does.
  *
  * BE PRECISE ABOUT WHY, because the obvious justification is FALSE and was written here once
  * before being caught (two reviewers, 2026-07-25): `overlayBuilt` and `medicare` do NOT currently
@@ -99,7 +100,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  *
  * AND BE HONEST ABOUT WHERE THIS ONE ALREADY TRAVELS (a reviewer's catch, 2026-07-25 — the clause
  * above overstated its own boundary). This read feeds `rulesMoved`, and `rulesMoved` is carried to
- * `IntakeApp.tsx:838` → `Result.tsx:682,710` → `FuckOffDate.tsx:451`, which renders the standing
+ * `IntakeApp.tsx:842` → `Result.tsx:682,710` → `FuckOffDate.tsx:451`, which renders the standing
  * hero echo BESIDE THE CROWNED DATE. So for a 63-working/67-retired household with the required
  * quote pair, a moved `acaStatus` names the ACA line at the gate (honest — the gate is pre-crown)
  * and ALSO lights that echo, even where a crown ≥2 years out puts both members at 65+ and the

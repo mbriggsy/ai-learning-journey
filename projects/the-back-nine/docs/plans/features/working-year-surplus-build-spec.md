@@ -458,7 +458,8 @@ These are the pilot's bets, made without a confirmation step; each is cheap to c
   - `src/store/staleness.ts` (the `{ costStale, leftOverStale }` input; the report field; `anyStale`);
   - `src/ui/reentryChrome.ts` (`composeReentry`'s required left-over text input);
   - `src/store/savedRecommendation.ts`, `src/ui/IntakeApp.tsx` (pass `leftOverStale: false` by proof);
-  - every test call of `deriveStaleness` and `composeReentry`: `src/store/__tests__/staleness.test.ts`, `src/ui/__tests__/reentry.test.tsx`, `src/store/__tests__/savedRecommendation.test.ts`, `src/ui/__tests__/devSeeds.test.ts`.
+  - every test call of `deriveStaleness` and `composeReentry`: `src/store/__tests__/staleness.test.ts`, `src/ui/__tests__/reentry.test.tsx`, `src/store/__tests__/savedRecommendation.test.ts`, `src/ui/__tests__/devSeeds.test.ts`;
+  - `src/ui/__tests__/stalenessExposure.test.ts` (its source-bind pins `IntakeApp`'s `deriveStaleness` call verbatim), `src/ui/stalenessExposure.ts` (a comment) and `docs/architecture.md` §8's working-years bullet (amended at U13: its review, `wf_980c5931-2b2`, found the source-bind red, and the doc describing the old argument). The left-over text input landed as one field of a named object, `ReentryAnswerSentences { costStale, leftOverStale }`, beside the W sentence: KTD9's no-transposition rule one seam down, since a W sentence is assignable to a left-over one.
 - **Approach:** as KTD9. Before U6 no draft can hold the answer, so `false` is provably true at every product caller.
 - **Test scenarios:**
   - `leftOverStale: true` with `costStale: false` reports the left-over fact and sets `anyStale`.
@@ -548,17 +549,20 @@ These are the pilot's bets, made without a confirmation step; each is cheap to c
 - **Requirements:** R12, R16.
 - **Dependencies:** U7, U13.
 - **Files:**
-  - `src/intake/workingYearLeftOver.ts` (the "moved" predicate in R12's arms);
-  - `src/ui/IntakeApp.tsx` (the real `leftOverStale` input and the re-entry gate's sentence);
+  - `src/intake/workingYearLeftOver.ts` (the "moved" predicate in R12's arms, and the gate's moved sentence, both read off ONE core over the draft);
+  - `src/ui/IntakeApp.tsx` (the real `leftOverStale` input and the re-entry gate's sentence; the `reentry` state widens to carry the clause-host fact, decided once in `composeReentry`'s view);
   - `src/ui/FuckOffDate.tsx` (the Result's stale line, sharing the pay-check note slot);
+  - `src/ui/Result.tsx` (the note slot's per-cause choice, the left-over seat opener, and the door withheld on a read-only tab);
   - `src/intake/workingYearQuote.ts` (W's stale sentence gains the dollars clause; `workingYearCostStaleText`);
-  - the rules-clock line that carries the clause when a table change moves the figure (build 1's working-years vintage clock, its U13, in `src/store/staleness.ts`);
-  - `src/ui/copy.ts`;
-  - `src/ui/reentryChrome.ts` (the clause on the first fired clock line);
-  - the federal tax and state-tax clock sentences in `src/store/staleness.ts`, beside the working-years clock;
-  - tests: `src/intake/__tests__/workingYearLeftOver.test.ts`, `src/ui/__tests__/reentry.test.tsx`, `src/ui/__tests__/resultPayCheckLine.test.tsx`, `src/ui/__tests__/devSeeds.test.ts` (a vault arm on the "moved" witness).
+  - `src/ui/copy.ts` (the clause, beside the three clock lines that can carry it: `stalenessTax`, `stalenessStateTax` and build 1's working-years clock line, `stalenessWorkingYears`);
+  - `src/ui/reentryChrome.ts` (the clause on the first fired of those three lines; `ReentryLeftOverStale` widens for the clause);
+  - tests: `src/intake/__tests__/workingYearLeftOver.test.ts`, `src/ui/__tests__/reentry.test.tsx`, `src/ui/__tests__/resultPayCheckLine.test.tsx`, `src/ui/__tests__/devSeeds.test.ts` (a vault arm on the "moved" witness), `src/ui/__tests__/stalenessExposure.test.ts` (the IntakeApp source-bind's `leftOverStale: false` becomes the real predicate), `src/store/__tests__/staleness.test.ts` (the property arm takes the real predicate, and `datesaved` joins its list).
+
+  (Amended at U13, 2026-11-04, from its review `wf_980c5931-2b2`. This list first put the three clock sentences in `src/store/staleness.ts`, which holds no sentence and may not import ui, and it named neither `Result.tsx` nor the two test files above. U13 also left four obligations here. First, the moved predicate and the gate's sentence read ONE core, the way `isWorkingYearCostStale` and `workingYearCostStaleText` both read `workingYearCostStaleness`. `composeReentry` throws on the fact without its sentence, and its one caller turns that into the restore-failed face on every reload, so the pair must agree by construction. Second, whether a tax, state-tax or working-years line carries the clause is decided once, in `composeReentry`, and the Result reads that decision; `rulesMoved` cannot stand in for it, because it also fires on the ACA, Medicare, contribution and app-default clocks. Third, if the gate's moved line carries a door sentence, `ReentryLeftOverStale` gains `canChange`, which `IntakeApp` sets to `!readOnly`: the `ReentryPayCheckStale` door law. Fourth, `composeReentry` already takes both answer sentences as one named object, `ReentryAnswerSentences`, so that widening cannot transpose them.)
 - **Approach:** as KTD9 and R12. The "moved" line's door opens the left-over seat; W's clause rides W's line and door.
 - **Test scenarios:**
+  - An ACA-only (or contribution-only) clock beside a moved left over: the gate pushes the separate moved line, and the Result shows the moved line in its note slot with no clause on the hero note (amended at U13).
+  - A silenced left over (a spine-route draft) beside a fired tax clock rides nothing, neither a line nor a clause on the tax line (U13's `reentry.test.tsx` arm, kept).
   - On `datesavedmoved`, the Result and the re-entry gate name both figures, the live one and the stored $16,985, and the line's door opens the left-over seat. The vault arm reds if `IntakeApp` still passes `false`.
   - On `datesavedstale`, W's line carries a clause naming the $16,985 left over as not added, and only W's line speaks.
   - With W absent, the picture unknown, or a live figure below $1, no left-over line shows.

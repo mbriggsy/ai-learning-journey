@@ -98,7 +98,7 @@ describe('the trichotomy — all three conjuncts hold', () => {
     // Non-vacuity: the era report really ran (it is a full StalenessReport, not a stub), and it
     // agrees with the live comparator on a fresh save.
     expect(status.eraStaleness.rulesMoved).toBe(false)
-    expect(status.eraStaleness.wallYear).toBe(deriveStaleness(s, TODAY, EXPOSURE, false).wallYear)
+    expect(status.eraStaleness.wallYear).toBe(deriveStaleness(s, TODAY, EXPOSURE, { costStale: false, leftOverStale: false }).wallYear)
   })
 })
 
@@ -149,7 +149,7 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
       era: { ...eraOf(s), taxVintageDetail: { taxYear: s.taxVintageDetail!.taxYear - 1, legalBasis: 'TCJA (pre-OBBBA)' } },
     })
     // The scenario-level reader is silent — the exact false-clean this conjunct closes.
-    expect(deriveStaleness(s, TODAY, EXPOSURE, false).rulesMoved).toBe(false)
+    expect(deriveStaleness(s, TODAY, EXPOSURE, { costStale: false, leftOverStale: false }).rulesMoved).toBe(false)
     const status = statusOf(s, record)
     expect(status.current).toBe(false)
     expect(status.causes).toEqual(['rules-changed'])
@@ -191,7 +191,7 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
     let firedCount = 0
     for (const [label, base, drift, exposure] of drifts) {
       const driftedScenario: CurrentScenario = { ...base, ...drift }
-      const viaScenario = deriveStaleness(driftedScenario, TODAY, exposure, false)
+      const viaScenario = deriveStaleness(driftedScenario, TODAY, exposure, { costStale: false, leftOverStale: false })
       const viaRecord = statusOf(base, recordFor(driftedScenario), FINGERPRINT, exposure)
       expect(viaRecord.eraStaleness, `${label}: the era overlay must reproduce the scenario-side report`).toEqual(
         viaScenario,
@@ -250,7 +250,7 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
     // budget windows, people and start year that gate the clocks are TODAY's.
     const s = freshSave()
     const status = statusOf(s, recordFor(s))
-    const live = deriveStaleness(s, TODAY, EXPOSURE, false)
+    const live = deriveStaleness(s, TODAY, EXPOSURE, { costStale: false, leftOverStale: false })
     expect(status.eraStaleness.wallYear).toBe(live.wallYear)
     expect(status.eraStaleness.elapsed).toEqual(live.elapsed)
     expect(status.eraStaleness.budget.expiredLines).toEqual(live.budget.expiredLines)
@@ -266,7 +266,7 @@ describe('the trichotomy — conjunct 3: the rulebooks, judged against the RECOR
       startCalendarYear: s.startCalendarYear - 40,
       budget: (s.budget ?? []).map((line, i) => (i === 0 ? { ...line, endYear: 1 } : line)),
     }
-    const live = deriveStaleness(lapsed, TODAY, exposureForDraft(DEV_SEEDS.budget), false)
+    const live = deriveStaleness(lapsed, TODAY, exposureForDraft(DEV_SEEDS.budget), { costStale: false, leftOverStale: false })
     // The fixture must actually raise anyStale WITHOUT rulesMoved, or this arm proves nothing.
     expect(live.budget.expiredLines.length).toBeGreaterThan(0)
     expect(live.anyStale).toBe(true)

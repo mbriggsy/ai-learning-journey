@@ -59,8 +59,10 @@ export interface ReentryView {
    *  ACA, Medicare), then the engine-pricing ledger (`report.pricing`: the ONE named method line,
    *  its nameless twin, the Medicare-spending re-confirm), then the contribution clock
    *  (`stalenessDate`), the working-years clock (`stalenessWorkingYears`), the ONE nameless
-   *  reference-tables line, the stale-W re-confirm (`stalenessWorkingYearCost`), and one budget
-   *  line per boundary year (empty = nothing to flag). */
+   *  reference-tables line, the stale-W line (the caller's W-step sentence framed by
+   *  `stalenessPayCheckGateLead`, or the `stalenessWorkingYearCost` fallback when none is handed
+   *  over), the moved left-over line (the caller's sentence, build 2's R12), and one budget line per
+   *  boundary year (empty = nothing to flag). */
   readonly noteLines: readonly string[]
   /** The "~N years since your save" line, or null (absent savedAt / under a year —
    *  SUPPRESSED, never fabricated). */
@@ -84,11 +86,43 @@ export interface ReentryPayCheckStale {
   readonly canChange: boolean
 }
 
+/** The gate's moved left-over sentence (build 2's R12 and KTD9), composed by the caller from the
+ *  HYDRATED draft this report describes: `text` names the stored and the live year-0 figure. This
+ *  seam never reads the answer and never re-derives either figure. `null` where the left over has
+ *  not moved.
+ *
+ *  UNLIKE the W line it has NO figure-less fallback: the report calling the left over moved while
+ *  the caller hands no sentence is a wiring fault, and it THROWS. A silent drop would be the silent
+ *  stale the house refuses, and a figure-less line would hide the fault behind words written for no
+ *  household. WHERE THE THROW LANDS: the one product caller is `IntakeApp`'s hydrate effect, whose
+ *  bare catch turns it into the restore-failed face ("That didn’t work. Try again.", the error text
+ *  discarded), and every reload re-derives the same report and throws again: the household cannot
+ *  open its plan. So the throw must be unreachable BY CONSTRUCTION, never by the caller's care: the
+ *  go-live's moved predicate and this sentence both read ONE core over the draft, the way
+ *  `isWorkingYearCostStale` and `workingYearCostStaleText` both read `workingYearCostStaleness`
+ *  (`src/intake/workingYearQuote.ts`). Dark until then: every product caller passes `null` beside
+ *  `leftOverStale: false` (no draft can hold the answer before the version-5 model lands). */
+export interface ReentryLeftOverStale {
+  readonly text: string
+}
+
+/** The gate's two answer sentences, ONE required named object (build 2's KTD9 one seam down): each
+ *  field is read only where the report's fact of the same name is set (`report.workingYear.costStale`,
+ *  `report.workingYear.leftOverStale`). Never two adjacent positional parameters: a
+ *  {@link ReentryPayCheckStale} is assignable to a {@link ReentryLeftOverStale}, so a swapped pair
+ *  would compile clean and drop the W sentence for its fallback. Both fields REQUIRED, never
+ *  optional-with-a-default: a caller that forgets one must fail to compile. */
+export interface ReentryAnswerSentences {
+  readonly costStale: ReentryPayCheckStale | null
+  readonly leftOverStale: ReentryLeftOverStale | null
+}
+
 export function composeReentry(
   scenario: CurrentScenario,
   report: StalenessReport,
-  payCheckStale: ReentryPayCheckStale | null,
+  sentences: ReentryAnswerSentences,
 ): ReentryView {
+  const { costStale: payCheckStale, leftOverStale } = sentences
   // The intro's register (Caddie card #1). It USED to double as the blend note's route-true
   // wording selector; U17 §S4 made the blend clock nameless on both routes, so this predicate
   // now has exactly one consumer (insight 087 — the comment is swept with the code it described).
@@ -156,7 +190,7 @@ export function composeReentry(
   // NAMED rules line, beside its date-surface sibling. Exposure-gated upstream: the run carries W,
   // the table's one reader, so "the rules for your working years" is true of every household that hears it.
   if (report.workingYear.vintageMoved) noteLines.push(copy.stalenessWorkingYears)
-  // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:84` keys each note <p> by its own TEXT,
+  // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:82` keys each note <p> by its own TEXT,
   // so a second push of the same sentence would collide on the React key. One `if` over the
   // whole bucket is the structural guarantee (never a per-clock loop over `.clocks`).
   if (report.unattributed.moved) noteLines.push(copy.stalenessReferenceTables)
@@ -172,6 +206,20 @@ export function composeReentry(
         ? copy.stalenessWorkingYearCost
         : [copy.stalenessPayCheckGateLead, payCheckStale.text, ...(payCheckStale.canChange ? [copy.stalenessPayCheckGateDoor] : [])].join(' '),
     )
+  }
+  // Build 2's moved left over (R12): the household's own "saved" answer no longer matches today's
+  // year-0 figure. An answer fact like the W line above, never a rules line (it rides `anyStale`
+  // only), so it sits beside it. The report decides, never the caller: a sentence handed over with
+  // the fact unset renders nothing (the exposure conjunct may have silenced it), and the fact set
+  // with no sentence is the wiring fault `ReentryLeftOverStale` names. (Where a tax, state-tax or
+  // working-years line fired, the go-live moves this onto the first of them as a clause, KTD9.)
+  if (report.workingYear.leftOverStale) {
+    if (leftOverStale === null) {
+      throw new Error(
+        'composeReentry: the report says the left over moved, but no left-over sentence was passed; the caller reads both off one draft',
+      )
+    }
+    noteLines.push(leftOverStale.text)
   }
   // One line per boundary YEAR: the copy quotes only the calendar year, so two lines
   // sharing an endYear would render byte-identical sentences (and collide on the render

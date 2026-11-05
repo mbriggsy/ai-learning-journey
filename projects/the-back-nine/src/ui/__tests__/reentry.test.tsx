@@ -14,7 +14,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
-import { composeReentry } from '../reentryChrome'
+import { composeReentry, type ReentryAnswerSentences } from '../reentryChrome'
 import { ReEntry } from '../ReEntry'
 import { heroLead, floorLineText } from '../FuckOffDate'
 import { dateOddsText } from '../dateOdds'
@@ -73,7 +73,9 @@ const pricing = (e: StalenessExposure, s: PricedState | undefined): StalenessExp
   pricedState: s,
 })
 const reportFor = (s: CurrentScenario, exposure: StalenessExposure = RETIRED_EXPOSURE) =>
-  deriveStaleness(s, TODAY, exposure, false)
+  deriveStaleness(s, TODAY, exposure, { costStale: false, leftOverStale: false })
+/** No answer sentence handed over — the arms that test a clock line, not an answer's line. */
+const NO_SENTENCES: ReentryAnswerSentences = { costStale: null, leftOverStale: null }
 
 // The pay check's W. `date` without W (whatever W the seed registry later gives it), and the same
 // household with W confirmed — typed by hand from the seed's own facts: no budget ⇒ the quote is its
@@ -103,7 +105,7 @@ describe('composeReentry — the read-back', () => {
   it('sums balances per ENGINE bucket and omits empty buckets (retired: pretax only; date: pretax + roth — never a noise "$0 Roth" row)', () => {
     // The retired seed carries ONE traditional IRA — exactly one row, the pre-tax sum.
     const s = freshSave()
-    const view = composeReentry(s, reportFor(s), null)
+    const view = composeReentry(s, reportFor(s), NO_SENTENCES)
     expect(view.balanceRows.map((r) => r.label)).toEqual([copy.reentryBucketPretax])
     const pretaxTotal = s.enteredAccounts
       .filter((a) => ['401k', '403b', 'traditional-ira'].includes(a.kind))
@@ -112,7 +114,7 @@ describe('composeReentry — the read-back', () => {
     // The date seed carries a 401k + a roth-ira — two rows, grouped by the engine's own map.
     const d = readySave('date')
     if (!d.ready) throw new Error('date seed must be save-ready')
-    const dView = composeReentry(d.scenario, reportFor(d.scenario, DATE_EXPOSURE), null)
+    const dView = composeReentry(d.scenario, reportFor(d.scenario, DATE_EXPOSURE), NO_SENTENCES)
     expect(dView.balanceRows.map((r) => r.label)).toEqual([
       copy.reentryBucketPretax,
       copy.reentryBucketRoth,
@@ -121,7 +123,7 @@ describe('composeReentry — the read-back', () => {
 
   it('reads the SS fold-in back MONTHLY (pia is persisted annual ×12 — the read-back must speak the frame the statement asked in)', () => {
     const s = freshSave()
-    const view = composeReentry(s, reportFor(s), null)
+    const view = composeReentry(s, reportFor(s), NO_SENTENCES)
     expect(view.benefitRows).toHaveLength(2)
     const [p0, p1] = s.people
     expect(view.benefitRows[0]).toEqual({
@@ -133,7 +135,7 @@ describe('composeReentry — the read-back', () => {
 
   it('a fresh save composes NO note lines and NO elapsed line (nothing moved, saved today)', () => {
     const s = freshSave()
-    const view = composeReentry(s, reportFor(s), null)
+    const view = composeReentry(s, reportFor(s), NO_SENTENCES)
     expect(view.noteLines).toEqual([])
     expect(view.elapsedLine).toBeNull()
   })
@@ -153,7 +155,7 @@ describe('composeReentry — the read-back', () => {
       startCalendarYear: s.startCalendarYear - 2,
       savedAt: TODAY - 730,
     } as CurrentScenario
-    const view = composeReentry(doctored, reportFor(doctored), null)
+    const view = composeReentry(doctored, reportFor(doctored), NO_SENTENCES)
     expect(view.noteLines).toContain(copy.stalenessTax)
     // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2643), so for THIS all-65+
     // household it names the Medicare half and only that: they price the IRMAA ladder every
@@ -178,7 +180,7 @@ describe('composeReentry — the read-back', () => {
       healthcareVintage: { ...s.healthcareVintage!, acaStatus: 'enhanced subsidies restored (no cliff)' },
     }
     const report = reportFor(moved)
-    const view = composeReentry(moved, report, null)
+    const view = composeReentry(moved, report, NO_SENTENCES)
     expect(view.noteLines, 'not one line — the gate is total for this household').toEqual([])
     expect(view.noteLines).not.toContain(copy.stalenessAca)
     expect(view.noteLines).not.toContain(copy.stalenessMedicare)
@@ -195,7 +197,7 @@ describe('composeReentry — the read-back', () => {
       healthcareVintage: { ...s.healthcareVintage!, acaStatus: 'enhanced subsidies restored (no cliff)' },
     }
     const report = reportFor(moved, ACA_PRICED_EXPOSURE)
-    const view = composeReentry(moved, report, null)
+    const view = composeReentry(moved, report, NO_SENTENCES)
     expect(view.noteLines).toContain(copy.stalenessAca)
     expect(view.noteLines).not.toContain(copy.stalenessMedicare)
     expect(report.rulesMoved).toBe(true)
@@ -207,7 +209,7 @@ describe('composeReentry — the read-back', () => {
       ...s,
       healthcareVintage: { ...s.healthcareVintage!, partBStandardMonthly: s.healthcareVintage!.partBStandardMonthly + 10 },
     }
-    const view = composeReentry(moved, reportFor(moved), null)
+    const view = composeReentry(moved, reportFor(moved), NO_SENTENCES)
     expect(view.noteLines).toEqual([copy.stalenessMedicare])
     expect(copy.stalenessMedicare).not.toBe(copy.stalenessAca)
   })
@@ -239,7 +241,7 @@ describe('composeReentry — the read-back', () => {
       'contribution',
       'blend',
     ])
-    const view = composeReentry(moved, report, null)
+    const view = composeReentry(moved, report, NO_SENTENCES)
     expect(view.noteLines.filter((l) => l === copy.stalenessReferenceTables)).toHaveLength(1)
     expect(view.noteLines, 'the nameless line is the WHOLE disclosure — no clock is named').toEqual([
       copy.stalenessReferenceTables,
@@ -302,8 +304,8 @@ describe('composeReentry — the read-back', () => {
     ]
     let fired = 0
     for (const [label, scenario, exposure] of cases) {
-      const report = deriveStaleness(scenario, TODAY, exposure, false)
-      const view = composeReentry(scenario, report, null)
+      const report = deriveStaleness(scenario, TODAY, exposure, { costStale: false, leftOverStale: false })
+      const view = composeReentry(scenario, report, NO_SENTENCES)
       if (report.rulesMoved) {
         fired += 1
         expect(view.noteLines.length, `${label}: rulesMoved with NO line — an alarm nothing may explain`).toBeGreaterThan(0)
@@ -321,41 +323,50 @@ describe('composeReentry — the read-back', () => {
   // predicate → report → rendered sentence.
   it('the pay check: the working-years clock renders its own named line, once, and only for a run that carries W', () => {
     const s = withOlderWorkingYearsStamp(savedDraft(DATE_WITH_W))
-    const report = deriveStaleness(s, TODAY, exposureForDraft(DATE_WITH_W), isWorkingYearCostStale(DATE_WITH_W))
+    const report = deriveStaleness(s, TODAY, exposureForDraft(DATE_WITH_W), {
+      costStale: isWorkingYearCostStale(DATE_WITH_W),
+      leftOverStale: false,
+    })
     expect(report.rulesMoved).toBe(true)
-    expect(composeReentry(s, report, null).noteLines).toEqual([copy.stalenessWorkingYears])
+    expect(composeReentry(s, report, NO_SENTENCES).noteLines).toEqual([copy.stalenessWorkingYears])
     // The same stamp on the same household WITHOUT W: its run reads the table nowhere — no line.
     const noW = withOlderWorkingYearsStamp(savedDraft(DATE_NO_W))
-    const silent = deriveStaleness(noW, TODAY, exposureForDraft(DATE_NO_W), isWorkingYearCostStale(DATE_NO_W))
-    expect(composeReentry(noW, silent, null).noteLines).toEqual([])
+    const silent = deriveStaleness(noW, TODAY, exposureForDraft(DATE_NO_W), {
+      costStale: isWorkingYearCostStale(DATE_NO_W),
+      leftOverStale: false,
+    })
+    expect(composeReentry(noW, silent, NO_SENTENCES).noteLines).toEqual([])
     expect(silent.anyStale).toBe(false)
   })
 
   it('the pay check: a plan saved stale on its W answer renders its stale line ONCE, with rulesMoved false (never the rules register)', () => {
     expect(isWorkingYearCostStale(DATE_STALE_W), 'the fixture is stale').toBe(true)
     const s = savedDraft(DATE_STALE_W)
-    const report = deriveStaleness(s, TODAY, exposureForDraft(DATE_STALE_W), isWorkingYearCostStale(DATE_STALE_W))
+    const report = deriveStaleness(s, TODAY, exposureForDraft(DATE_STALE_W), {
+      costStale: isWorkingYearCostStale(DATE_STALE_W),
+      leftOverStale: false,
+    })
     expect(report.rulesMoved, 'the hero echo must stay dark').toBe(false)
     expect(report.anyStale).toBe(true)
     // b9-7: the gate speaks the W step's OWN stale sentence (both figures, the cause, the lean), framed
     // by the gate's lead, and points at the answer's door only where the tab can save.
     const text = workingYearCostStaleText(DATE_STALE_W)!
     expect(text, 'the fixture quotes a figure').toMatch(/\$\d/)
-    expect(composeReentry(s, report, { text, canChange: true }).noteLines).toEqual([
+    expect(composeReentry(s, report, { costStale: { text, canChange: true }, leftOverStale: null }).noteLines).toEqual([
       `${copy.stalenessPayCheckGateLead} ${text} ${copy.stalenessPayCheckGateDoor}`,
     ])
-    expect(composeReentry(s, report, { text, canChange: false }).noteLines, 'a read-only tab gets no door it cannot open').toEqual([
+    expect(composeReentry(s, report, { costStale: { text, canChange: false }, leftOverStale: null }).noteLines, 'a read-only tab gets no door it cannot open').toEqual([
       `${copy.stalenessPayCheckGateLead} ${text}`,
     ])
     // The figure-less fallback only where no sentence is handed over.
-    expect(composeReentry(s, report, null).noteLines).toEqual([copy.stalenessWorkingYearCost])
+    expect(composeReentry(s, report, NO_SENTENCES).noteLines).toEqual([copy.stalenessWorkingYearCost])
     expect(copy.stalenessWorkingYearCost, 'distinct text — ReEntry keys each note by it').not.toBe(copy.stalenessWorkingYears)
   })
 
   it('the pay check: a W that still matches carries no stale line, even handed a sentence (the report decides, never the caller)', () => {
     const fresh = savedDraft(DATE_STALE_W)
-    const report = deriveStaleness(fresh, TODAY, exposureForDraft(DATE_STALE_W), false)
-    expect(composeReentry(fresh, report, { text: 'never rendered', canChange: true }).noteLines).toEqual([])
+    const report = deriveStaleness(fresh, TODAY, exposureForDraft(DATE_STALE_W), { costStale: false, leftOverStale: false })
+    expect(composeReentry(fresh, report, { costStale: { text: 'never rendered', canChange: true }, leftOverStale: null }).noteLines).toEqual([])
   })
 
   it('the pay check: push order — the contribution clock, then the working-years clock, then the stale-answer line', () => {
@@ -364,11 +375,79 @@ describe('composeReentry — the read-back', () => {
       ...base,
       dateVintage: { ...base.dateVintage!, contributionYear: base.dateVintage!.contributionYear - 1 },
     }
-    const report = deriveStaleness(s, TODAY, exposureForDraft(DATE_STALE_W), isWorkingYearCostStale(DATE_STALE_W))
-    expect(composeReentry(s, report, null).noteLines).toEqual([
+    const report = deriveStaleness(s, TODAY, exposureForDraft(DATE_STALE_W), {
+      costStale: isWorkingYearCostStale(DATE_STALE_W),
+      leftOverStale: false,
+    })
+    expect(composeReentry(s, report, NO_SENTENCES).noteLines).toEqual([
       copy.stalenessDate,
       copy.stalenessWorkingYears,
       copy.stalenessWorkingYearCost,
+    ])
+  })
+
+  // Build 2's KTD9 (the dark U13): the moved left over's line. No draft can hold the left-over answer
+  // until the go-live, so the fact is injected here and the sentence is a fixture standing in for the
+  // caller's (its words arrive with the answer, U14). The household is real: `date` with W confirmed,
+  // the run that carries W (and so the only run that could carry a left-over figure, R7).
+  const LEFT_OVER_TEXT = 'A fixture sentence naming the stored and the live left over.'
+  const LEFT_OVER_SENTENCE: ReentryAnswerSentences = { costStale: null, leftOverStale: { text: LEFT_OVER_TEXT } }
+  const leftOverReport = (s: CurrentScenario, d: ScenarioDraft, leftOverStale: boolean) =>
+    deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale })
+
+  it('build 2: a moved left over renders the caller\'s sentence, once, and only that; anyStale, never rulesMoved', () => {
+    const s = savedDraft(DATE_WITH_W)
+    const report = leftOverReport(s, DATE_WITH_W, true)
+    expect(report.rulesMoved, 'the hero echo must stay dark').toBe(false)
+    expect(report.anyStale).toBe(true)
+    expect(composeReentry(s, report, LEFT_OVER_SENTENCE).noteLines).toEqual([LEFT_OVER_TEXT])
+  })
+
+  it('build 2: the report decides, never the caller — a sentence with the fact unset, or silenced, renders nothing', () => {
+    const s = savedDraft(DATE_WITH_W)
+    const fresh = leftOverReport(s, DATE_WITH_W, false)
+    expect(composeReentry(s, fresh, LEFT_OVER_SENTENCE).noteLines).toEqual([])
+    // The spine household: its run reads no W, so it carries no left-over figure (R7) — the exposure
+    // conjunct silences the fact upstream, and the handed sentence never renders.
+    const retired = freshSave()
+    const silenced = deriveStaleness(retired, TODAY, RETIRED_EXPOSURE, { costStale: false, leftOverStale: true })
+    expect(RETIRED_EXPOSURE.workingYearCost, 'the real spine read').toBe('unpriced')
+    expect(composeReentry(retired, silenced, LEFT_OVER_SENTENCE).noteLines).toEqual([])
+    // The same silence beside a line that DOES speak (insight 103's silencing direction): a federal
+    // tax re-key names the tax clock for this household, and the silenced left over must ride
+    // nothing — neither its own line nor, at the go-live, a clause on the tax line (KTD9's host).
+    const taxed: CurrentScenario = { ...retired, taxVintageDetail: { ...retired.taxVintageDetail!, taxYear: 2019 } }
+    const taxedSilenced = deriveStaleness(taxed, TODAY, RETIRED_EXPOSURE, { costStale: false, leftOverStale: true })
+    expect(taxedSilenced.controls.taxMoved, 'the host clock fired').toBe(true)
+    expect(taxedSilenced.workingYear.leftOverStale).toBe(false)
+    expect(composeReentry(taxed, taxedSilenced, LEFT_OVER_SENTENCE).noteLines).toEqual([copy.stalenessTax])
+  })
+
+  it('build 2: the fact set with no sentence is a wiring fault — it throws, never a silent drop', () => {
+    const s = savedDraft(DATE_WITH_W)
+    const report = leftOverReport(s, DATE_WITH_W, true)
+    expect(() => composeReentry(s, report, NO_SENTENCES)).toThrow(/left over moved/)
+  })
+
+  // Neither the contribution clock nor the nameless aggregate is one of the three clocks (tax, state
+  // tax, working years) whose line the go-live (U14) hands the left over's clause to, so both orders
+  // outlive U13. (A stale W beside a moved left over is unreachable: R12's "moved" needs a fresh W.)
+  it('build 2: push order — the rules lines and the nameless aggregate first, the moved left over after them', () => {
+    const base = savedDraft(DATE_WITH_W)
+    const s: CurrentScenario = {
+      ...base,
+      dateVintage: { ...base.dateVintage!, contributionYear: base.dateVintage!.contributionYear - 1 },
+    }
+    const report = leftOverReport(s, DATE_WITH_W, true)
+    expect(report.date.contributionMoved, 'the fixture fires the contribution clock').toBe(true)
+    expect(composeReentry(s, report, LEFT_OVER_SENTENCE).noteLines).toEqual([copy.stalenessDate, LEFT_OVER_TEXT])
+    const blended: CurrentScenario = { ...s, dateVintage: { ...s.dateVintage!, blendSnapshotAsOf: '2019-01-01' } }
+    const withAggregate = leftOverReport(blended, DATE_WITH_W, true)
+    expect(withAggregate.unattributed.clocks, 'the fixture fires the aggregate').toEqual(['blend'])
+    expect(composeReentry(blended, withAggregate, LEFT_OVER_SENTENCE).noteLines).toEqual([
+      copy.stalenessDate,
+      copy.stalenessReferenceTables,
+      LEFT_OVER_TEXT,
     ])
   })
 
@@ -384,7 +463,7 @@ describe('composeReentry — the read-back', () => {
     }
     const report = reportFor(drifted, pricing(RETIRED_EXPOSURE, 'NC'))
     expect(report.controls.stateTaxMoved, 'the state clock fired').toBe(true)
-    const view = composeReentry(drifted, report, null)
+    const view = composeReentry(drifted, report, NO_SENTENCES)
     expect(view.noteLines).toContain(copy.stalenessStateTax)
   })
 
@@ -397,7 +476,7 @@ describe('composeReentry — the read-back', () => {
     }
     // U17 §S4: the gate now reads the RUN's priced state, and an 'elsewhere' household's run
     // prices none — `pricedStateForRun` roster-filters it to undefined.
-    const view = composeReentry(drifted, reportFor(drifted, pricing(RETIRED_EXPOSURE, undefined)), null)
+    const view = composeReentry(drifted, reportFor(drifted, pricing(RETIRED_EXPOSURE, undefined)), NO_SENTENCES)
     expect(view.noteLines).not.toContain(copy.stalenessStateTax)
   })
 
@@ -412,7 +491,7 @@ describe('composeReentry — the read-back', () => {
       ] as CurrentScenario['budget'],
       startCalendarYear: s.startCalendarYear - 3,
     } as CurrentScenario
-    const view = composeReentry(doctored, reportFor(doctored), null)
+    const view = composeReentry(doctored, reportFor(doctored), NO_SENTENCES)
     const budgetLines = view.noteLines.filter((l) => l.includes('budget'))
     expect(budgetLines).toEqual([
       slots.stalenessBudgetLine(doctored.startCalendarYear), // travel + gifts, ONE line
@@ -429,7 +508,7 @@ describe('composeReentry — the read-back', () => {
     // carries a manual blend, so `resolveBlend` never reaches the table. It goes silent.
     const s = freshSave() // all-retired, manual blends only
     const blendMoved = { ...s, dateVintage: { ...s.dateVintage!, blendSnapshotAsOf: '2019-01-01' } }
-    const view = composeReentry(blendMoved, reportFor(blendMoved), null)
+    const view = composeReentry(blendMoved, reportFor(blendMoved), NO_SENTENCES)
     expect(view.noteLines, 'provably inert ⇒ not one line').toEqual([])
     expect(RETIRED_EXPOSURE.blend, 'and the silence is the REAL seed’s own read').toBe('unpriced')
     // The date household holds VTI + VFIFX — its stockWeight DOES read the dated table, so the
@@ -437,7 +516,7 @@ describe('composeReentry — the read-back', () => {
     const d = readySave('date')
     if (!d.ready) throw new Error('date seed must be save-ready')
     const dMoved = { ...d.scenario, dateVintage: { ...d.scenario.dateVintage!, blendSnapshotAsOf: '2019-01-01' } }
-    const dView = composeReentry(dMoved, reportFor(dMoved, DATE_EXPOSURE), null)
+    const dView = composeReentry(dMoved, reportFor(dMoved, DATE_EXPOSURE), NO_SENTENCES)
     expect(DATE_EXPOSURE.blend).toBe('priced')
     expect(dView.noteLines).toEqual([copy.stalenessReferenceTables])
     expect(dView.noteLines).not.toContain(copy.stalenessDate)
@@ -449,7 +528,7 @@ describe('composeReentry — the read-back', () => {
       ...d,
       dateVintage: { ...d.dateVintage!, contributionYear: d.dateVintage!.contributionYear - 1 },
     }
-    const view = composeReentry(bumped, reportFor(bumped, DATE_EXPOSURE), null)
+    const view = composeReentry(bumped, reportFor(bumped, DATE_EXPOSURE), NO_SENTENCES)
     expect(view.noteLines).toEqual([copy.stalenessDate])
     // The all-retired household is quiet on the same move (its answer reads no limit).
     const s = freshSave()
@@ -457,34 +536,34 @@ describe('composeReentry — the read-back', () => {
       ...s,
       dateVintage: { ...s.dateVintage!, contributionYear: s.dateVintage!.contributionYear - 1 },
     }
-    expect(composeReentry(retiredBumped, reportFor(retiredBumped), null).noteLines).toEqual([])
+    expect(composeReentry(retiredBumped, reportFor(retiredBumped), NO_SENTENCES).noteLines).toEqual([])
   })
 
   it('the wall-time line is SUPPRESSED without savedAt and under a year — never fabricated', () => {
     const s = freshSave()
     const anchorless = { ...s } as Record<string, unknown>
     delete anchorless.savedAt
-    expect(composeReentry(anchorless as unknown as CurrentScenario, reportFor(anchorless as unknown as CurrentScenario), null).elapsedLine).toBeNull()
+    expect(composeReentry(anchorless as unknown as CurrentScenario, reportFor(anchorless as unknown as CurrentScenario), NO_SENTENCES).elapsedLine).toBeNull()
     const recent = { ...s, savedAt: TODAY - 120 }
-    expect(composeReentry(recent, reportFor(recent), null).elapsedLine).toBeNull()
+    expect(composeReentry(recent, reportFor(recent), NO_SENTENCES).elapsedLine).toBeNull()
   })
 
   it('the intro speaks ROUTE-TRUE (Caddie card #1): "benefit checks" for an all-retired household, "paychecks" only where paychecks exist', () => {
     // The retired spine household: no paychecks — the spouse walker's primary stumble was
     // the route-blind intro ("does this thing even know we stopped working?").
     const s = freshSave()
-    expect(composeReentry(s, reportFor(s), null).introKey).toBe('reentryIntroRetired')
+    expect(composeReentry(s, reportFor(s), NO_SENTENCES).introKey).toBe('reentryIntroRetired')
     // The still-working date household keeps the original register.
     const d = readySave('date')
     if (!d.ready) throw new Error('date seed must be save-ready')
-    expect(composeReentry(d.scenario, reportFor(d.scenario, DATE_EXPOSURE), null).introKey).toBe('reentryIntro')
+    expect(composeReentry(d.scenario, reportFor(d.scenario, DATE_EXPOSURE), NO_SENTENCES).introKey).toBe('reentryIntro')
   })
 
   it('the wall-time line rounds HALF, never floors (Caddie O6): a 700-day save reads "about 2 years", not the rosier "about a year"', () => {
     const s = freshSave()
     const at = (days: number) => {
       const aged = { ...s, savedAt: TODAY - days }
-      return composeReentry(aged, reportFor(aged), null).elapsedLine
+      return composeReentry(aged, reportFor(aged), NO_SENTENCES).elapsedLine
     }
     // The filed witness: 700 days = 1.92y — the old floor read "about a year ago" (rosier
     // direction on the one line whose job is "your save is older than you think").
@@ -564,8 +643,8 @@ describe('composeReentry — the engine-pricing lines', () => {
     for (const [name, scenario, exposure] of households) {
       for (const day of days) {
         const s = savedOn(scenario, day)
-        const report = deriveStaleness(s, TODAY, exposure, false)
-        const view = composeReentry(s, report, null)
+        const report = deriveStaleness(s, TODAY, exposure, { costStale: false, leftOverStale: false })
+        const view = composeReentry(s, report, NO_SENTENCES)
         const at = `${name} saved ${String(day)}`
         if (report.pricing.moved) {
           moved += 1
@@ -592,7 +671,7 @@ describe('composeReentry — the engine-pricing lines', () => {
   it('ONE family ⇒ the bare phrase; TWO ⇒ "a and b"; THREE ⇒ "a, b and c" — Medicare last', () => {
     const lineFor = (namedFamilies: readonly PricingFamily[]) => {
       const { scenario, report } = withPricing({ namedFamilies, hedged: false, reconfirmMedicareSpending: false })
-      return composeReentry(scenario, report, null).noteLines
+      return composeReentry(scenario, report, NO_SENTENCES).noteLines
     }
     expect(lineFor(['tax'])).toEqual([slots.stalenessPricing(copy.stalenessPricingTax)])
     expect(lineFor(['medicare'])).toEqual([slots.stalenessPricing(copy.stalenessPricingMedicare)])
@@ -614,7 +693,7 @@ describe('composeReentry — the engine-pricing lines', () => {
     for (let mask = 1; mask < 1 << families.length; mask++) {
       const namedFamilies = families.filter((_, i) => (mask & (1 << i)) !== 0)
       const { scenario, report } = withPricing({ namedFamilies, hedged: false, reconfirmMedicareSpending: false })
-      const lines = composeReentry(scenario, report, null).noteLines
+      const lines = composeReentry(scenario, report, NO_SENTENCES).noteLines
       expect(lines, `${namedFamilies.join('+')}: one line`).toHaveLength(1)
       const line = lines[0]!
       for (const f of families) {
@@ -642,7 +721,7 @@ describe('composeReentry — the engine-pricing lines', () => {
             ...(hedged ? [copy.stalenessPricingHedged] : []),
             ...(reconfirmMedicareSpending ? [copy.stalenessReconfirmMedicareSpending] : []),
           ]
-          expect(composeReentry(scenario, report, null).noteLines, `named=${named} hedged=${hedged} reconfirm=${reconfirmMedicareSpending}`).toEqual(expected)
+          expect(composeReentry(scenario, report, NO_SENTENCES).noteLines, `named=${named} hedged=${hedged} reconfirm=${reconfirmMedicareSpending}`).toEqual(expected)
         }
       }
     }
@@ -657,7 +736,7 @@ describe('composeReentry — the engine-pricing lines', () => {
     expect(report.pricing.moved, 'premise: the ledger speaks').toBe(true)
     expect(report.rulesMoved, 'the hero echo stays dark — no law moved').toBe(false)
     expect(report.anyStale, 'the gate still has something to say').toBe(true)
-    const lines = composeReentry(s, report, null).noteLines
+    const lines = composeReentry(s, report, NO_SENTENCES).noteLines
     expect(lines.length).toBeGreaterThan(0)
     for (const rulesLine of [
       copy.stalenessAppDefault,
@@ -677,7 +756,7 @@ describe('composeReentry — the engine-pricing lines', () => {
       const onDay = savedOn(freshSave(), day)
       const onDayReport = reportFor(onDay)
       expect(onDayReport.rulesMoved, `saved ${day}`).toBe(false)
-      expect(composeReentry(onDay, onDayReport, null).noteLines.every((l) => isMethodLine(l) || PRICING_LINES.has(l)), `saved ${day}`).toBe(true)
+      expect(composeReentry(onDay, onDayReport, NO_SENTENCES).noteLines.every((l) => isMethodLine(l) || PRICING_LINES.has(l)), `saved ${day}`).toBe(true)
     }
   })
 })
@@ -695,7 +774,7 @@ describe('composeReentry — the working-year tax floor (ledger v12)', () => {
   const savedOnDay = (s: CurrentScenario, savedAt: number): CurrentScenario => ({ ...s, savedAt })
   const linesFor = (key: keyof typeof DEV_SEEDS | CurrentScenario, exposure: StalenessExposure, savedAt: number) => {
     const s = savedOnDay(typeof key === 'string' ? scenarioFor(key) : key, savedAt)
-    return composeReentry(s, deriveStaleness(s, TODAY, exposure, false), null).noteLines
+    return composeReentry(s, deriveStaleness(s, TODAY, exposure, { costStale: false, leftOverStale: false }), NO_SENTENCES).noteLines
   }
   /** `date` made young and two-earner (45 + 47) — nothing in any clamped year for the floor to price. A
    *  still-working person carries no retirement age (the save gate refuses one), so Sam's is dropped. W is
@@ -773,7 +852,7 @@ describe('composeReentry — the working-year tax floor (ledger v12)', () => {
 describe('ReEntry — the surface', () => {
   const baseView = () => {
     const s = freshSave()
-    return composeReentry(s, reportFor(s), null)
+    return composeReentry(s, reportFor(s), NO_SENTENCES)
   }
 
   it('moves focus to the heading on mount (the intake focus law — the heading IS the announcement)', () => {

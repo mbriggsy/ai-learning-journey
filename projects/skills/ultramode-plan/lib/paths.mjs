@@ -5,7 +5,21 @@
 // it from here.
 
 import { existsSync, realpathSync } from "node:fs";
+import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
+
+// The session folder name Claude Code gives a working folder: every character other than a
+// letter or digit becomes "-". It lives here, not in bench/, because the run record (lib/, runtime
+// per KTD16) builds the default job folder from it (KTD10); bench/freeze.mjs re-exports it.
+export const slugOf = (path) => resolve(path).replace(/[^A-Za-z0-9]/g, "-");
+
+// Claude Code keeps that name whole only up to 200 characters; a longer one is cut to 200 and
+// given a hash of the path (read in the 2.1.318 binary: `if(n.length<=200)return n;return
+// \`${n.slice(0,200)}-${hash}\``), which slugOf does not model, so a caller refuses such a path.
+export const MAX_SLUG = 200;
+
+// Where Claude Code keeps one folder per working folder: its sessions, and their memory folder.
+export const defaultProjectsDir = () => join(homedir(), ".claude", "projects");
 
 // A path typed in Git Bash's drive form ("/c/Users/x", or "/c" alone) as the Windows path it
 // names ("C:/Users/x", "C:/"); any other text, and every path off Windows, comes back as given.

@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "plugins": {
+    "compound-engineering@every-marketplace": [
+      {
+        "scope": "user",
+        "installPath": "<cache>\\every-marketplace\\compound-engineering\\3.35.3",
+        "version": "3.35.3",
+        "installedAt": "2026-03-30T15:25:44.123Z",
+        "lastUpdated": "2026-11-04T23:25:19.989Z",
+        "gitCommitSha": "799ac9aeb97bf1c51238c38122915470413c26c5"
+      }
+    ],
+    "claude-code-setup@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "<cache>\\claude-plugins-official\\claude-code-setup\\1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-05-17T18:59:14.621Z",
+        "lastUpdated": "2026-05-17T18:59:14.621Z"
+      }
+    ],
+    "code-review@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "<cache>\\claude-plugins-official\\code-review\\1.0.1",
+        "version": "1.0.1",
+        "installedAt": "2026-03-15T19:40:43.617Z",
+        "lastUpdated": "2026-10-30T00:19:57.171Z",
+        "gitCommitSha": "f8c5e7a1dcb71b10cb74586224b5401f3de5db28"
+      }
+    ]
+  }
+}

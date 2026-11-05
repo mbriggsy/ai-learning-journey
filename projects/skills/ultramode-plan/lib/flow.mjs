@@ -510,14 +510,18 @@ export function planIndex(planPath) {
   return { index, last, bytes: buf.length };
 }
 
+// The measured stage costs U6's smoke run commits beside this file (KTD10), or none before it:
+// with none, the gate holds every start from the no-new-fan-out line. run-record.mjs's gate
+// reads the same file through this.
+export function loadStageCosts() {
+  const file = join(dirname(fileURLToPath(import.meta.url)), "stage-costs.json");
+  return existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : {};
+}
+
 const COMMANDS = {
   first: (i) => firstStage(i),
   next: (i) => nextStep(i),
-  gate: (i) => {
-    const file = join(dirname(fileURLToPath(import.meta.url)), "stage-costs.json");
-    const costs = i.costs ?? (existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : {});
-    return stageGate({ ...i, costs });
-  },
+  gate: (i) => stageGate({ ...i, costs: i.costs ?? loadStageCosts() }),
   round: (i) => roundSeats(i),
   receipt: (i) => ({ text: receipt(i) }),
   "path-start": (i) => startCheck(pathFacts(i.path), { update: i.update }),

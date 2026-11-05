@@ -21,9 +21,9 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { isMain, usage } from "../lib/entry.mjs";
+import { MAX_SLUG, defaultProjectsDir, slugOf } from "../lib/paths.mjs";
 
 // Letters, digits, hyphens and path separators only. Claude Code names a working folder's
 // session folder by replacing every other character with "-"; the window skill's parser
@@ -32,15 +32,10 @@ import { isMain, usage } from "../lib/entry.mjs";
 const SAFE_PATH = /^[A-Za-z0-9:\\/-]+$/;
 const SAFE_NAME = /^[A-Za-z0-9-]+$/;
 
-// The session folder name Claude Code gives a working folder.
-export const slugOf = (path) => resolve(path).replace(/[^A-Za-z0-9]/g, "-");
-
-// Claude Code keeps that name whole only up to 200 characters; a longer one is cut to 200 and
-// given a hash of the path (read in the 2.1.318 binary: `if(n.length<=200)return n;return
-// \`${n.slice(0,200)}-${hash}\``), which slugOf does not model. freeze refuses such a copy path.
-export const MAX_SLUG = 200;
-
-export const defaultProjectsDir = () => join(homedir(), ".claude", "projects");
+// The session folder name Claude Code gives a working folder, its 200-character limit (which
+// freeze refuses to pass) and the projects folder live in lib/paths.mjs, since the run record
+// (runtime) needs them too; they are re-exported here for the bench's existing importers.
+export { MAX_SLUG, defaultProjectsDir, slugOf };
 
 function git(cwd, args) {
   return execFileSync("git", ["-C", cwd, ...args], {

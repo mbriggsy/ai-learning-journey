@@ -151,18 +151,34 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-04 (b9-2: build 2's U5, the Keep stamp — b9-1's block pruned into it):**
-commits `d4227774` (U5: 33 files, its review's fixes inside it) and this close. By exit code at `d4227774`'s tree: `pnpm typecheck`
-0, `pnpm lint` 0, `pnpm build` 0, `pnpm verify:bundle` 0 (289.1 KiB), `pnpm verify:doc-stats` 0 (the test count lives under that
-gate), `pnpm verify:aca` 0, `pnpm verify:state-tax` 0; `pnpm test` green, run alone (no sweep beside it, so no timeouts);
-`pnpm doc:reanchor HEAD --apply` once (112 edits). R10's sweep: `u5` (pre-review) and `u5final` (committed), each 36 of 36
-identical to `sweep-u15.json`, both files byte-equal. CI, read by id: `9c51d2bb`'s 41947247749 and `7d8e9d9d`'s 41947536282
-green; `d4227774`'s 41958056576 was running at this close (read it by id before the first U13 commit). Real Chromium at
-1536×791 and 390×844 on `?seed=datecoststale` (the dev server): keep, spending raised, the unit round trip, the result's line —
-console clean (`b9-u5-review\shots\`). Helper agents: the review `wf_e5cbb6be-e97` (10 agents, about 1.9M subagent tokens);
-the weekly meter read 9% before it, 11% at this close.
-**Why it closed at 46% of the window:** U13 (a required named object across ~130 `deriveStaleness` calls, `composeReentry`'s new
-input, then its review fan-out) could not finish inside the 50% no-fan-out and 60% wrap lines, so it opens in a fresh window.
+**SESSION 2026-11-04/05 (b9-3: build 2's U13, the named staleness input, and U5's red `verify:fit` — b9-2's block pruned into it):**
+commits `63eca3f6` (2 files: the W gesture arms' set-up and the roadmap's fit row), `82835ff3` (U13: 28 files, its review's fixes
+inside it), `dc1a6516` (START HERE) and this close. By exit code at `82835ff3`'s tree: `pnpm typecheck` 0, `pnpm lint` 0,
+`pnpm build` 0, `pnpm verify:bundle` 0 (289.1 KiB), `pnpm verify:doc-stats` 0 (the test count lives under that gate),
+`pnpm verify:aca` 0, `pnpm verify:state-tax` 0; `pnpm test` red only on the known heavy files under load in two full runs
+(`budgetTwoTrack`, `solvePayloadIdentity` ×2), all green run alone; `pnpm verify:fit` on the six W gesture arms 6 passed
+locally. `pnpm doc:reanchor HEAD --apply` once (41 edits, 3 hand-fixed). R10's sweep: `u13` (pre-review) and `u13final`
+(committed), each 36 of 36 identical to `sweep-u15.json`, byte-equal. CI, read by id: `d4227774`'s 41958056576 and
+`2c642618`'s 41958375339 were RED (`verify:fit`, 6 failed: fixed by `63eca3f6`); `82835ff3`'s 41968753429 GREEN on both
+jobs. Helper agents: the review `wf_980c5931-2b2` (10 agents, about 1.8M subagent tokens); the weekly meter read 12% before it,
+19% at this close.
+**Why it closed at 49% of the window:** the go-live commit (U6 + U7 + U8 + U14 + U9: the version-5 bump, the question, its seat,
+the stale lines, the seeds; the design skills, the Caddie walk and KTD7's review lenses before it lands) is the biggest unit
+left and cannot finish inside the 50% no-fan-out and 60% wrap lines, so it opens in a fresh window.
+**DISTILL CANDIDATES (b9-3, U13):**
+- **A no-transposition rule stops at the seam it was written for unless it is applied one level down.** KTD9 made
+  `deriveStaleness`'s input a named object; U13's first cut gave `composeReentry` two adjacent nullable sentence parameters,
+  one type assignable to the other, so a swap compiled clean. The review's adversary found it. Apply a structural rule at
+  every seam the same pair of values crosses.
+- **A fail-loud throw in a UI seam must say where it lands.** `composeReentry`'s throw lands in `IntakeApp`'s bare catch as
+  the restore-failed face, on every reload: a household locked out of its plan. "The pair cannot disagree while the caller is
+  honest" is discipline, not structure; the fix is one core read by both (U14's obligation (f)).
+- **A gate the unit's Verification Contract names, skipped by the session, ships red, and the next session builds on it.**
+  U5's contract named `pnpm verify:fit`; b9-2's checks omitted it, its CI was still running at the close, and it was red for
+  two commits until b9-3 read it at commit time. Read the predecessor's CI by id before the first edit, and wait for it.
+- **When a behavior change forces a fixture's words to change, predict every downstream word before the run.** The Keep
+  arm's row was predicted "the figure you kept"; "your own figure" would have meant type-then-Keep strips the stamp, a
+  laundering path. A "just update the expected text" edit is where such a defect hides.
 **DISTILL CANDIDATES (b9-2, U5):**
 - **A mark's fate rule must survive the control's round trip, not one tap.** KTD10 dropped the keep stamp on a period change
   ("taken over a different figure"); every test tapped once. "Each month" then "each year" restored the same $84,000 unstamped,
@@ -228,7 +244,18 @@ input, then its review fan-out) could not finish inside the 50% no-fan-out and 6
 - **A plan's verification sentence can fix a design its Files list never states.** U3's "the ledger tests pass with only
   the allowlist edit" forced the ledger to RE-EXPORT the bottom line (its test imports it from the ledger), though the
   Files list said only "imports it". Read every verification clause for the shape it implies before choosing one.
-**LANDMINES (b9-2's and b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
+**LANDMINES (b9-3's of 11-04, b9-2's and b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
+- **(b9-3, 11-04) A partial suite run hides a source-bind.** `src/ui/__tests__/stalenessExposure.test.ts` pins
+  `IntakeApp`'s `deriveStaleness(…)` call by regex; U13's first pass ran only the touched suites and missed it red. Before
+  changing any call's shape, grep the tests for a `readFileSync` of the calling file and for the function's name inside a
+  regex, and run the full suite before any review.
+- **(b9-3, 11-04) An edit after the one `pnpm doc:reanchor HEAD --apply` is not re-anchored.** A second run double-shifts
+  every citation it already moved. Grep `<file>:<N>` citations past the edit's first line by hand (the fit spec had none past
+  3170), or commit the late file on its own and re-anchor against the new HEAD.
+- **(b9-3, 11-04) Two commits pushed at once run CI only on the head.** A prerequisite fix committed first keeps each tree
+  honest, but only the head's run is read; say so in the report.
+- **(b9-3, 11-04) A vite dev server on port 5199 (pid 20284) was running at this close**, though b9-2's handoff said its 5199
+  server was stopped. Not b9-3's; left for its owner.
 - **(b9-2) Git Bash's `grep -c $'\r$'` misreads line endings** — it reported every line of LF files as CRLF. Count endings
   with Python on the bytes (`t.count(b'\r\n')`) before deciding a file's EOL; most of `src` is LF, `copyGuard.test.ts` is CRLF.
 - **(b9-2) The Playwright MCP writes only under the project** (its allowed roots: the project and `.playwright-mcp\`, which is

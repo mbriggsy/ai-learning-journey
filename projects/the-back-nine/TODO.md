@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-04, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, uncommitted — item 1).** The schema-v4 job
+▶ **START HERE (2026-11-04, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, still uncommitted — item 1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -71,63 +71,89 @@ queue below (its order unmoved). Next, in order:
    red set as predicted; R10 36/36 against `u15`. Record `b9-u13-review\` (its `README.md`). **U5's CI miss, fixed
    (`63eca3f6`):** `verify:fit` had been red since `d4227774` (6 W gesture arms expected "You entered" where U5's Keep now
    reads "You kept"); test-only, the kept stamp proven to survive type-then-Keep.
-   **Next: FINISH the go-live commit (U6 + U7 + U14 + U8 + U9, writing version 5) — BUILT IN THE TREE, UNCOMMITTED (b9-4,
-   2026-11-05).** `/brief` DONE (b9-4: insights 147, 149, 150, 151, 152 read, all CURRENT). The code for every unit is in
-   the working tree: 36 modified `src` files and 9 new ones (`src/intake/workingYearLeftOverState.ts`, `workingYearLeftOver.ts`,
-   `WorkingYearLeftOverQuestion.tsx`, `__tests__/workingYearLeftOverState.test.ts`, and under `src/shared/__tests__/fixtures/`
-   `mint-v4.mts` plus the four `scenario-v4-*.json`). **FIRST, before any edit: `git status --short -- src` must show exactly
-   those 45 paths. If they are gone, restore them:** `git apply --binary <golive>\wip-b9-4.patch` (base `4e34fabe`, src
-   identical to `88a5d125`), then copy `<golive>\wip-b9-4-untracked\src\…` back, where `<golive>` is
-   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\golive\`. The
-   seven surface maps the build used are there too (`map-U6-tests.md`, `map-U7-walk.md`, `map-U7-panel.md`, `map-U7-carriage.md`,
-   `map-U14.md`, `map-U8.md`, `map-U9.md`, ~30 KB each: read ONLY the one for the step in hand). As built — each a ruling the
-   plan's go-live amendment must record (step 1 below): the shown state is a pure leaf (`workingYearLeftOverState.ts`), its ONE
-   draft read is `intakeMap.workingYearLeftOverShownState`, and the writes and the moved core live in `workingYearLeftOver.ts` (the
-   plan's single module would have closed an `intakeMap` loop); `buildDateInput` carries the figure only in the two saved states
-   (obligation (a)) and the money picture composes from `buildDateInputBeforeLeftOver` (else it recursed forever); W's clause
-   rides `workingYearCostStaleLine` (Result and gate only), never `workingYearCostStaleText` (a loop, and it would reach the W step
-   and the W row); `useGestureHold` takes a second ref (the W row and the seat share ONE hold, `WorkingYearRows`) and lets go
-   ONE TASK after the click (a held label-wrapped radio's forwarded click must run from the face the press saw — insight 149);
-   a clause hosted on a tax / state-tax / working-years line carries no door sentence; the Result's standing slot is keyed by cause
-   (`StandingNoteCause`). Verified at the WIP tree: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm test` 4970 passed and 1 failed (only
-   `verify-doc-stats`' citation arm: the re-anchor is owed at commit); the old-copy proof in the archive 237/237; the carriage-only
-   tree's sweep `golivecarriage` 36/36 identical to `u15` (before the seeds); `year0check.mts` MATCH on every W seed, the new three
-   included (`datesavedmoved` $27,537). **Never looked at in a browser yet.** What is still owed, in order:
-   1. **Docs that go false at this commit:** `docs/architecture.md` §7.3 (the ladder bullet's "today 4", the 4→5 step and the
-      label-3/4-carrying refusal, the Mermaid ladder, the added-OPTIONAL-field case, `workingYearLeftOver` in the nested-key list,
-      the frozen-fixture sentence), its `:315` ("reads that plan as version 4") and §8's "`false` by proof until the go-live";
-      `docs/product.md` R39 ("every save writes it as version 4"); and the plan's go-live amendment (the rulings above; KTD11's
-      "changes only after the click lands" is false for a W blur — the comment in `AssumptionPanel.tsx`'s `ArmedMethodologyLines`
-      says so; the state-diagram footnote and U7 approach 4 superseded by obligation (a)).
-   2. **U8's premise comments, re-derived per answer:** `copy.ts`'s ONE-SIDED BY DESIGN / "identical (measured)" block above
-      `workingCostStaleLeansBetter`'s neighbourhood, `workingYearQuote.ts`'s `heldYesBelowQuote` docblock and the "identical"
-      comment in `workingYearCostStaleText`, `workingYearQuote.test.ts`'s matching comment, and `workingYearCheck.test.ts`'s
-      byte-identity describe title and banner ("with no left-over figure carried").
-   3. **The unit arms not yet written** (each in `map-U7-*.md` / `map-U8.md`): the walk (`workingCostStep.test.tsx`: shown on
-      `date` with nothing checked, hidden on `dateshort` / `datelateleftover`, the step count unchanged, "All of it" stores 16,985,
-      the text above the group identical across states, absent's line ≠ not-sure's, a re-tap on moved stores the live figure,
-      Continue completes); the panel (`assumptionPanel.test.tsx`: the seat on `date`, no left-over radio in the W row, the waiting
-      face for "saved" and for absent under a stale W, `datesavedmoved`'s moved line below the group, a spend-staling press stores
-      nothing, `initialSeat="working-year-left-over"` lands on the seat, each shown state's methodology line); a panel arm in
-      `gestureHold.test.tsx` (type W, press "All of it": the held figure is stored); and in `session.test.ts`'s unanswered-bytes arm,
-      `workingYearLeftOverMoved(hydrated.draft)` is null.
-   4. **The mutant pass, predictions written first** (`U6-MUTANTS.md` beside `U4-MUTANTS.md`): `?? 'spent'` on hydrate, the 4→5 step
-      removed, the step naming CURRENT (equivalent), the constant reverted, the codec arm deleted, IntakeApp's `leftOverStale: false`,
-      the carriage's freshness test dropped, `LEFT_OVER_CARRIES` opened to "not asked", the release back in the click listener.
-   5. **e2e:** `vertical-fit.spec.ts` arms (`datesaved`'s step: three radios and the figure line; the panel seat; `datesavedmoved`'s
-      Result and its door landing on the seat, both sizes; a coordinate tap on "All of it" right after typing W stores the figure on
-      screen at the press — the only real gate for the label-forwarded click); `caddie-walk.spec.ts` regions (`left-over-question`
-      cvd, `left-over-line`, `left-over-seat` after `w-row`, never in `PANEL_CVD_REGIONS`) and states (the four answers driven,
-      `seed:` and `vault:` `datesavedmoved` / `datesavedstale`). Then `pnpm verify:fit`, `pnpm verify:csp`, `pnpm build`,
-      `pnpm verify:bundle`.
-   6. **The eye pass** (1536×791 @ 2.5× and the phone) on every new face, fixing layout, never words; then **the Caddie walk** on
-      the built tree; then **KTD7's review lenses** over the codec arm, the carriage, the staleness predicates and the hold change,
-      with an adversary and every finding verified; their fixes land in this commit.
-   7. **At the commit:** `git diff --stat 88a5d125 HEAD -- src package.json pnpm-lock.yaml vite.config.ts tsconfig.json` empty (else
-      re-mint the four fixtures from the new parent with `mint-v4.mts`); the sweep `pnpm exec tsx <b9-build2-surplus>\tools\sweep.mts
-      golive --today=20758` and `node <b9-build2-surplus>\tools\idcheck.mjs golive u15` (36 identical, 3 candidate-only keys; it
-      becomes the baseline); `pnpm doc:reanchor HEAD --apply` once; `pnpm verify:doc-stats`; the full suite; the folder README's
-      identity row and a `v4-parent` entry (archived from `88a5d125`, configs equal).
+   **Next: FINISH the go-live commit (U6 + U7 + U14 + U8 + U9, writing version 5) — BUILT, TESTED AND REVIEWED IN THE TREE,
+   UNCOMMITTED (b9-4 built it; b9-5, 2026-11-05, wrote the arms, ran KTD7's review and applied its fixes).** **FIRST, before any
+   edit: `git status --short` must show the go-live's paths — under `src`, 36 modified and 10 new (b9-4's nine plus
+   `src/intake/__tests__/workingYearLeftOver.test.ts`), and `e2e/vertical-fit.spec.ts`, `e2e/caddie-walk.spec.ts`,
+   `docs/architecture.md`, `docs/product.md` and the plan. If they are gone, restore them:** `git apply --binary
+   <golive>\wip-b9-5.patch` (base `6e135682`), then copy `<golive>\wip-b9-5-untracked\…` back, where `<golive>` is
+   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\golive\`. Every as-built ruling (b9-4's and b9-5's) is recorded in the plan as an "(Amended at the go-live, 2026-11-05 …)"
+   note: R4, R5, R6, R7, R12, KTD2, KTD6, KTD9, KTD11, the state-diagram footnote, U7, U11 and U14. By exit code at the tree
+   (b9-5's close): `pnpm typecheck` 0, `pnpm lint` 0, `pnpm test` 1: red on `verify-doc-stats`' citation arm (the re-anchor owed at commit) and on two solve-identity timeouts that pass alone — owed step 0 below. **Done:** steps 1–3 (the docs that went false;
+   U8's premise comments re-derived per answer; the unit arms — walk, panel, hold, session, and the new
+   `workingYearLeftOver.test.ts`); the e2e arms (`vertical-fit.spec.ts`: `datesaved`'s step, the seat, `datesavedmoved`'s Result and
+   door, the coordinate tap on "All of it" right after typing W, the two vault gate lines; `caddie-walk.spec.ts`: regions
+   `left-over-question` / `left-over-line` / `left-over-seat`, the `intake:leftover` walk and the four stale witnesses), each run
+   green per lane at both sizes, the coordinate tap proven to red under a served-module mutant of the release; and **KTD7's
+   review**, `wf_1b3d4a9f-f3f` (11 lenses with a four-angle adversary panel, 34 agents): 18 findings — 10 confirmed, every one P3
+   (five false comments, four test gaps, the shown-state rule split across three `===` sites), 1 hand-verified, 6 advisory, 1
+   rejected; no behavior defect. Its record: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-golive-review\`
+   (`brief.md`, every lens's repros). Its fixes are in the tree: one exhaustive Record per per-state rule in
+   `workingYearLeftOverState.ts` (`LEFT_OVER_FACE`, `LEFT_OVER_MOVED`, `LEFT_OVER_W_CLAUSE`); W's stale clause names the STORED
+   figure, in new words ("none of the $X a year you chose to save is added to your savings", flagged); the comments; the arms.
+   What is still owed, in order:
+   0. **FIRST: settle the suite's two timeouts — a contradiction, so nothing else proceeds until it is resolved.** b9-5's
+      baseline full run (01:21, b9-4's tree, before b9-5's arms) passed every test but the doc-citation arm in 314 s. All
+      three full runs after b9-5's arms and fixes (the last on an idle machine, CPU 9 %) red `solvePayloadIdentity.test.ts` F1
+      (its 120 s timeout) and `solvePayloadIdentity.health.test.ts` F2 (180 s), plus `SaveFlow` and `RestoreFlow` once each;
+      every one passes alone (`solvePayloadIdentity.test.ts` 4/4 in 93 s). The suite now runs about 535 s: cumulative test time
+      2,064 s → 3,283 s. Slowest files in the last run (JSON reporter): `devSeeds.test.ts` 511 s (99 tests), `allInWitnessHl50`
+      260 s, the two solve-identity files 214 s and 200 s, `worker.test.ts` 204 s, `dateSearch.test.ts` 186 s. Root cause NOT
+      established. Diagnose with an A/B on the same machine state, back to back: a COPY of the project at `4e34fabe` with
+      `<golive>\wip-b9-4.patch` + `wip-b9-4-untracked\` applied (b9-4's tree) against the live tree, each run as
+      `pnpm exec vitest run --reporter=json --outputFile=<scratch>\<label>.json`, then rank the per-file duration deltas. A delta on
+      this build's files (`devSeeds.test.ts` reads the three saved seeds; the walk and panel arms render whole flows) is the cause
+      to fix at its source; no delta points at load or the scheduler (vitest orders by its results cache, so a failed run
+      reorders the next). Never raise the solve tests' timeouts until the cause is named. The mutant runner's baseline runs the
+      whole `src` suite and refuses to go on unless it is green, so this comes first.
+   1. **The mutant pass, predictions written first** (`U6-MUTANTS.md` beside `U4-MUTANTS.md`). The runner is written:
+      `node <b9-build2-surplus>\tools\u6-mutants.cjs <copyDir>` — a COPY of the project with a `node_modules` junction, never the
+      live tree; a baseline that must be green, then each plant, the whole `src` suite per plant. Still to write:
+      `tools\u6-mutants-list.cjs` exporting `mutants: [{ id, file, from, to, predict: ['<file suffix>::<title substring>', …] }]`. The
+      plants, re-pointed at the as-built code: `?? 'spent'` on hydrate (`draftFromScenario.ts`: `draft: { ...rest, people: pair }` →
+      `draft: { ...rest, workingYearLeftOver: rest.workingYearLeftOver ?? { kind: 'spent' }, people: pair }`); the 4→5 step removed
+      (`scenarioCodec.ts`'s `if (version === 4) {…}` block); the step naming CURRENT (equivalent: predict nothing red);
+      `CURRENT_SCHEMA_VERSION = 4`; the codec's `workingYearLeftOver` arm in `checkV3Fields` deleted; the label-3/4 refusal's throw
+      removed; IntakeApp's `leftOverStale: leftOverMoved !== null` → `false`; `carriedWorkingYearLeftOver` returning
+      `answer.quotedReal` for any saved answer (the freshness test dropped); `LEFT_OVER_CARRIES['not-asked']` → `true`;
+      `LEFT_OVER_FACE['waiting-on-w']` → `'question'`; `LEFT_OVER_MOVED['saved-moved']` → `false`; `LEFT_OVER_W_CLAUSE['waiting-on-w']`
+      → `false`; `workingYearCostStaleLine` naming the live print instead of `answer.quotedReal`; `releaseAfterTask` releasing at once
+      (jsdom sees it only in `gestureHold.test.tsx`'s one-task-later checks; the label race itself is gated by the e2e tap alone).
+      Read each predicted test before writing its line; a kill counts only on its own failure line (insight 126).
+   2. **The gates, on a QUIET tree** (no session editing `src`: an HMR reload mid-wait reds e2e arms falsely): `pnpm verify:fit`
+      (whole), `pnpm verify:csp`, `pnpm build`, `pnpm verify:bundle`. Then re-count and fix `playwright.fit.config.ts`'s date-final
+      render comment (the fit lane counted vertical-fit at 32 date-final renders and the measuring specs at 57; the comment says
+      22 and 47).
+   3. **Re-capture, then the Caddie walk.** b9-5's lane captures (`temp/caddie/caddie-golive-u9*`) predated its fixes (W's stale
+      clause words; the panel seat's gap) and were deleted at its close. Re-run `pnpm caddie:walk` with `CADDIE_TARGETS` = `intake:leftover`, `seed:datesavedmoved`,
+      `seed:datesavedstale`, `vault:datesavedmoved`, `vault:datesavedstale` (plus `seed:date` and `seed:datecoststale`), then
+      `/caddie` on that run. The words under review: the question's legend, labels, check sentence and figure line; the five
+      per-answer lines; the waiting line; the seven methodology lines; the moved line and its door; W's stale clause. b9-5's eye
+      pass (laptop and phone, every new face) fixed one layout defect (the panel seat's doubled gap under its name, `intake.css`)
+      and leaves one reading-order question to the walk: the check sentence ("Choose 'All of it' only if…") sits ABOVE the
+      legend — the W fork's house pattern, but it names a reply before the question is asked.
+   4. **At the commit:** `git diff --stat 88a5d125 HEAD -- src package.json pnpm-lock.yaml vite.config.ts tsconfig.json` empty (else
+      re-mint the four fixtures with `mint-v4.mts`); the sweep `pnpm exec tsx <b9-build2-surplus>\tools\sweep.mts golive
+      --today=20758` and `node <b9-build2-surplus>\tools\idcheck.mjs golive u15` (36 identical, 3 candidate-only keys: `datesaved`,
+      `datesavedmoved`, `datesavedstale`; it becomes the baseline); `pnpm doc:reanchor HEAD --apply` once (it also shifts every
+      citation into `e2e/vertical-fit.spec.ts` past its old line ~2053); `pnpm verify:doc-stats`; the full suite; the folder
+      README's identity row and a `v4-parent` entry (archived from `88a5d125`, configs equal). ONE commit: `src`, both e2e
+      specs, `docs/architecture.md`, `docs/product.md` and the plan.
+   **Filed by KTD7's review for U12 (each into the register with its prescription):** (g) **a lost tap above the seat:** the W
+   question between the held picture and the seat draws live, so a seat press whose blur commits a W below the out-of-pocket
+   medical figure (its below-medical note) or a refused figure (its error) mounts a line above the seat; the press is lost,
+   never misdirected (the write re-checks R5's gate). Prescription: draw `WorkingCostQuestion`'s below-medical note from
+   `WorkingYearRows`' held `shown` and hold its figure errors until the hold lets go, gated by an e2e coordinate tap (type a W below
+   medical, tap "Spent"); the Medicare-extras fork below the W row had the same exposure before build 2. (h) **the two-build
+   writer race:** a version-4 tab claiming the writer seat in the ~150 ms window could re-save over a version-5 answer and drop
+   it (the register's note covers version 3 only). (i) **R16's ban is narrow:** `hawkBan`'s "later" pattern matches only
+   "comes|moves|lands|pushes … later"; "makes the date later" passes. (j) **the W arm's leans for "saved":** K1–K15 were derived
+   through the short year; once U11 measures the credit's reach, re-derive each for "saved" and qualify any that can run the
+   other way (the plan's Risks row already treats K2–K5 and K7 as rosy through the credit). (k) Out-of-lane sentences U12 now
+   owns too: `docs/architecture.md`'s invariants row "never contributes surplus back", §5's W row (a second presence key,
+   `workingYearLeftOverSavedReal`), §7.4 (the credit's four sites); `docs/product.md` R35 (the question in the money-picture step);
+   `docs/glossary.md`'s W entry and `src/store/db.ts:14-15` (the version-5 bump needed no migration either); `src/engine/simulate.ts`'s
+   "would read own deposits low: the rosy direction" (true through the short year only, R15).
    At EVERY `src` commit from here: the sweep and the per-key `idcheck` above (PER KEY: never a whole-file `cmp`); the per-commit
    record is the table at the foot of that folder's `README.md`. Then the build units in the plan's order, each
    opened with `/brief <that unit's topic>`:
@@ -202,17 +228,27 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-05 (b9-4: build 2's go-live, BUILT AND UNCOMMITTED — b9-3's block pruned into it):** no `src` commit
-(the plan lands the go-live as ONE commit, after the Caddie walk and KTD7's review lenses — START HERE item 1). The work is in the
-tree and snapshotted at `b9-build2-surplus\golive\wip-b9-4.patch` + `wip-b9-4-untracked\` (base `4e34fabe`). By exit code at
-the WIP tree: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm test` 4970 passed / 1 failed (`verify-doc-stats`' citation arm: the
-re-anchor is owed at commit). Not run this session: `pnpm build`, `verify:bundle`, `verify:fit`, `verify:csp`,
-`verify:doc-stats`. The archive `b9-build2-surplus\v4-parent\` is `88a5d125`'s project, its four build configs byte-equal to the
-checkout's (`node_modules` is a JUNCTION: remove the link alone before deleting the folder); its own codec, backup, session and
-unlock suites 237/237 (logs `golive\u6-oldcopy-*.log`), and it minted the four frozen version-4 plans (`golive\u6-mint-v4.log`).
-Helper agents: the mapping workflow `wf_147ed024-0eb` (7 mappers, about 1.7M subagent tokens).
-**Why it closed at 80% of the window, not 60%:** the window was not read between the seven ~30 KB maps, the whole plan and the
-build; it passed every line unread. The squeaky call came at the first `/window` after the build (b9-4's own miss).
+**SESSION 2026-11-05 (b9-5: the go-live's arms, its review and the review's fixes, UNCOMMITTED — b9-4's block pruned into it):** no
+`src` commit (START HERE item 1). The work is snapshotted at `b9-build2-surplus\golive\wip-b9-5.patch` + `wip-b9-5-untracked\` (base
+`6e135682`). By exit code at the tree: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm test` 1: red on `verify-doc-stats`' citation arm (the re-anchor owed at commit) and on two solve-identity timeouts that pass alone — owed step 0 below. Not run: `pnpm build`,
+`verify:bundle`, `verify:fit` (whole), `verify:csp`, `verify:doc-stats`. Helper workflows: `wf_2e3edbdc-bb1` (steps 1–3, five lanes
+each built then verified, 10 agents, about 2.1M tokens), `wf_aeb99c17-7cb` (the e2e arms, 4 agents, about 1.0M), `wf_1b3d4a9f-f3f` (KTD7's
+review, 34 agents, about 5.5M).
+**Why it closed before the commit:** the three workflows' returns and the go-live's whole diffs carried the window from 10% to 54% by
+the time the review came back; the commit's remaining steps need a fresh window.
+**DISTILL CANDIDATES (b9-5, the go-live's review):**
+- **A hold's docblock must name what the hold does NOT cover.** "The seat cannot move under its own press" was false: the W question
+  between the held picture and the seat draws from the live draft. Three lenses found it and jsdom measured the mounts. When a hold
+  covers part of a column, list every live part between the held content and the held control.
+- **A served-module mutant proves an e2e arm discriminates without touching the tree.** The fit verifier swapped
+  `/src/intake/gestureHold.ts` through `page.route` (the release moved back into the click listener): mouse and touch both stored a
+  figure never on screen, so the one arm that gates insight 149's race is proven to red.
+- **A "live" figure read on a stale input can name money no checked path credits.** W's stale clause named the year-0 print read on
+  the stale W; after a raise it read $27,537 while R8 caps every credit at the stored $16,985. Name the figure the household
+  consented to: it is the cap on every later credit.
+- **A builder's "discriminates by" column is a claim; a verifier's planted mutant is the evidence.** Per-lane verifiers, each
+  planting mutants in a scratch copy, found arms the builders called discriminating green under a reordered-replies plant, a
+  required-without-marker plant, and a release-in-listener plant (the label-wrapped radio arm).
 **DISTILL CANDIDATES (b9-4, the go-live build):**
 - **Map a multi-unit commit's surfaces with readers BEFORE building, and give each mapper a PLAN-vs-CODE section.** Seven mappers
   found three defects the deepened, checked plan never named: obligation (a) (added after the plan) made `buildDateInput` call the
@@ -305,11 +341,23 @@ build; it passed every line unread. The squeaky call came at the first `/window`
 - **A plan's verification sentence can fix a design its Files list never states.** U3's "the ledger tests pass with only
   the allowlist edit" forced the ledger to RE-EXPORT the bottom line (its test imports it from the ledger), though the
   Files list said only "imports it". Read every verification clause for the shape it implies before choosing one.
-**LANDMINES (b9-4's of 11-05 first, then b9-3's of 11-04, b9-2's and b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
+**LANDMINES (b9-5's and b9-4's of 11-05 first, then b9-3's of 11-04, b9-2's and b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
+- **(b9-5, 11-05) Never run an e2e harness while anyone edits `src`.** An HMR reload mid-wait reds arms falsely (the fit and caddie
+  lanes saw final-tier timeouts and a vanished `[data-caddie-scroller]`); run the whole gates on a quiet tree, or a no-HMR server
+  (the fit verifier wrapped `vite.config.ts` with its own `cacheDir` in the scratchpad, so the shared `node_modules/.vite` was never
+  rewritten). Every Playwright run under a config cleans the shared `test-results/`.
+- **(b9-5, 11-05) `src/ui/devSeeds.ts` is CRLF**, like `devSeeds.test.ts`: a patch script must convert its anchors (b9-5's first fix
+  batch matched 0 there, and its all-or-nothing guard wrote nothing). Git Bash's `cat -A` showed no `^M`; count `\r\n` with node.
+- **(b9-5, 11-05) Read a workflow's result through a summarizer script into a scratch file**, never printed raw: the `.output` file is
+  JSON (`result` holds the script's return value) and the journal has one `result` line per agent. Printing them, and the go-live's
+  whole diffs, is what spent b9-5's window.
+- **(b9-4, 11-05) The archive `b9-build2-surplus\v4-parent\` is `88a5d125`'s project; its `node_modules` is a JUNCTION:** remove the link
+  alone before deleting the folder. So are `b9-golive-review\verify\f1-seatmove\node_modules` and
+  `b9-golive-review\verify\m4-clausehost\node_modules` (two review verifiers' scratch copies, b9-5).
 - **(b9-4, 11-05) The gesture hold now lets go ONE TASK after the click** (`src/intake/gestureHold.ts`). A test that asserts the
   released face right after `fireEvent.click` must first await a zero-delay task (`letGo()` / the async `release()` in
   `gestureHold.test.tsx`); with fake timers, `act(() => vi.advanceTimersByTime(0))`. The six W coordinate-tap arms in
-  `verify:fit` have NOT been re-run against it.
+  `verify:fit` were re-run against it green at both sizes (b9-5's fit lane, with the whole pay-check block).
 - **(b9-4, 11-05) Never call `buildDateInput` from inside the money picture's path.** On a "saved" draft `buildDateInput` now reads
   `workingYearLedgerForRun`; the picture composes from `buildDateInputBeforeLeftOver`. Any new reader inside
   `composeWorkingYearLedger` that calls `buildDateInput` recurses forever on a saved draft.

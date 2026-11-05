@@ -33,11 +33,20 @@ jobs:
         run: node --test --test-reporter=tap "projects/skills/ultramode-plan/**/*.test.mjs" | tee tap.txt
       # A test skipped for a missing environment counts as a failure (U2 of the plan). The only
       # skip allowed is a platform one, whose reason starts "platform:" (the 8.3 short-name tests,
-      # which run on Windows only).
+      # which run on Windows only). A test marked todo passes whatever it finds, so it fails here
+      # too, and so does a run that found no test at all (a quoted glob matching nothing exits 0).
       - shell: bash
         run: |
           grep -E '# SKIP' tap.txt || true
           if grep -E '# SKIP' tap.txt | grep -vE '# SKIP platform: '; then
             echo "A test skipped for a reason other than its platform: that counts as a failure."
+            exit 1
+          fi
+          if grep -E '# TODO' tap.txt; then
+            echo "A test is marked todo: it passes whatever it finds."
+            exit 1
+          fi
+          if ! grep -qE '^# pass [1-9]' tap.txt; then
+            echo "No test passed: the glob found no test file, or every test was skipped."
             exit 1
           fi

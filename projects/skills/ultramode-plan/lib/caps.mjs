@@ -17,7 +17,9 @@
 // is about 5,300 characters by their own comment, are the ones that ran clean in insight 084's
 // U16 re-run; that run's failing schema allowed about 16,000. The real threshold is unmeasured.
 // A maximal legal call under these caps stays at or under PAYLOAD (tested), and U6's smoke run
-// records each schema's largest real call.
+// records each schema's largest real call. Both figures count a string's characters before JSON
+// escaping, as the port source's 5,300 does: a quote, backslash or newline takes two characters
+// in the call itself, so a call heavy in them can pass the stated ceiling while inside its caps.
 
 // Each entry is a budget: `chars` for a string (its cap is 25% above), `items` for a list (its
 // cap is the same), `max` for a whole number (its cap is the same).
@@ -42,7 +44,7 @@ export const SIZE = {
   betterFix: { chars: 240 },
   // The scorer (KTD5).
   sections: { items: 24 },
-  sectionName: { chars: 40 },
+  sectionName: { chars: 36 },
   triggers: { max: 30 },
   notes: { items: 8 },
   triggersNamed: { chars: 160 },
@@ -136,6 +138,9 @@ export const SCHEMAS = {
     properties: {
       sections: capList("sections", capObject({
         section: capString("sectionName"),
+        // The heading line the section starts at, from the section index in args (KTD7), so
+        // select.mjs can count the scores against the whole plan.
+        line: capWhole("line"),
         kind: { type: "string", enum: SECTION_KINDS },
         triggers: capWhole("triggers"),
         strengthened: { type: "boolean" },
@@ -182,7 +187,7 @@ const CAPS_INVENTORY_LAW = `last_line_text: the first ${budgetOf("lastLineText")
 export const SIZE_LAWS = {
   finder: `${CAPS_LAW} certifies nothing. At most ${budgetOf("findings")} findings (fewer and deeper beats many and shallow; name further concrete ones in overflow: at most ${budgetOf("overflow")} titles of at most ${budgetOf("overflowItem")} characters). Per finding: title at most ${budgetOf("title")} characters, section ${budgetOf("section")}, why_it_matters ${budgetOf("why")}, suggested_fix ${budgetOf("fix")}. At most ${budgetOf("residual")} residual_risks of at most ${budgetOf("residualItem")} characters. ${CAPS_INVENTORY_LAW}. ${CAPS_LAW_END}`,
   verdict: `${CAPS_LAW} turns your vote into an abstention. reasoning at most ${budgetOf("reasoning")} characters, citing file:line or the plan's line; better_fix at most ${budgetOf("betterFix")} characters, or '' when the proposed change is right. ${CAPS_LAW_END}`,
-  scorer: `${CAPS_LAW} stops the deepen as blocked. At most ${budgetOf("sections")} sections, each named in at most ${budgetOf("sectionName")} characters; at most ${budgetOf("notes")} notes, one per section scoring 2 points or more, each naming its triggers in at most ${budgetOf("triggersNamed")} characters. ${CAPS_INVENTORY_LAW}. ${CAPS_LAW_END}`,
+  scorer: `${CAPS_LAW} stops the deepen as blocked. At most ${budgetOf("sections")} sections, each named in at most ${budgetOf("sectionName")} characters, with the line of the index heading it starts at; at most ${budgetOf("notes")} notes, one per section scoring 2 points or more, each naming its triggers in at most ${budgetOf("triggersNamed")} characters. ${CAPS_INVENTORY_LAW}. ${CAPS_LAW_END}`,
   amendment: `${CAPS_LAW} proposes nothing. At most ${budgetOf("amendments")} amendments (name further ones in overflow: at most ${budgetOf("overflow")} titles of at most ${budgetOf("overflowItem")} characters). Per amendment: section at most ${budgetOf("section")} characters, change ${budgetOf("change")}, evidence ${budgetOf("evidence")}, at most ${budgetOf("oldValues")} old_values of at most ${budgetOf("oldValue")} characters each. ${CAPS_LAW_END}`,
   gist: `${CAPS_LAW} returns nothing. gist at most ${budgetOf("gist")} characters; dossier is the dossier's absolute path, at most ${budgetOf("dossier")} characters. ${CAPS_LAW_END}`,
 };

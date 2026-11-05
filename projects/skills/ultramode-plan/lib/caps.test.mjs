@@ -78,3 +78,9 @@ test("maxPayload counts a maximal call's JSON characters, and a cap past the cei
   const big = { type: "object", properties: { a: { type: "string", maxLength: PAYLOAD } }, required: ["a"] };
   assert.ok(maxPayload(big) > PAYLOAD);
 });
+
+test("the finder's and verdict's severities are the vote law's", async () => {
+  const { SEVERITIES } = await import("./vote-law.mjs");
+  assert.deepEqual(SCHEMAS.finder.properties.findings.items.properties.severity.enum, SEVERITIES);
+  assert.deepEqual(SCHEMAS.verdict.properties.corrected_severity.enum, [...SEVERITIES, "drop"]);
+});

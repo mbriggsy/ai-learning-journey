@@ -4,7 +4,9 @@ import { classify, fixVerdict, judge, refuterCount, severityLine, tally } from "
 
 // A vote in the verdict schema's shape. Defaults affirm everything; override what a case needs.
 const v = (o = {}) => ({ real: true, material: true, new: true, corrected_severity: "P1", fix_is_correct: true, reasoning: "r", better_fix: "", ...o });
-const NOT_REAL = { real: false, material: false, new: false };
+// A not-real vote that still answers material and new yes, so a law counting those over every
+// cast vote, instead of over the real-voters only, reads differently from the true one.
+const NOT_REAL = { real: false };
 
 test("refuter counts: P0 and P1 get 3, P2 gets 2, P3 gets 1, and anything else throws", () => {
   assert.equal(refuterCount("P0"), 3);
@@ -126,6 +128,32 @@ test("fix verdict: a majority right applies it; a majority wrong with one better
   assert.deepEqual(two.betterFixes, ["B", "C"]);
   assert.equal(fixVerdict([v({ fix_is_correct: false }), v({ fix_is_correct: false }), v()]).action, "hand-verify");
   assert.equal(fixVerdict([]).action, "hand-verify");
-  // judge carries it, counted over the cast votes only.
+  // judge carries it, counted over the real-voters only.
   assert.equal(judge([v({ fix_is_correct: false, better_fix: "B" }), null, null], "P1").fix.action, "apply-better");
+});
+
+test("a verifier who found the finding not real never settles a split on its fix", () => {
+  const right = v();
+  const wrong = v({ fix_is_correct: false, better_fix: "B" });
+  // The two real-voters split 1-1 on the fix: hand-verify, whichever way the not-real voter answers.
+  assert.equal(judge([right, wrong, v({ real: false, fix_is_correct: false })], "P1").fix.action, "hand-verify");
+  assert.equal(judge([right, wrong, v({ real: false, fix_is_correct: true })], "P1").fix.action, "hand-verify");
+  assert.equal(judge([right, wrong, null], "P1").fix.action, "hand-verify");
+});
+
+test("material and new each split among the real-voters alone, and the not-new advisory needs its quorum", () => {
+  // A not-real vote answering material yes would make material 2 of 3 over every cast vote; among
+  // the two real-voters it is 1 of 2, a tie.
+  assert.equal(judge([v(), v({ material: false }), v(NOT_REAL)], "P1").status, "hand-verify");
+  assert.equal(judge([v(), v({ new: false }), v(NOT_REAL)], "P1").status, "hand-verify");
+  // A tie on new among two real-voters.
+  assert.match(judge([v(), v({ new: false })], "P2").basis, /split on whether the plan already covers it/);
+  // Every affirmer says not new, but on 1 of 2 votes: below the P2's quorum of 2.
+  const lone = judge([v({ new: false }), null], "P2");
+  assert.equal(lone.status, "hand-verify");
+  assert.match(lone.basis, /would be advisory .* on 1 of 2 votes/);
+});
+
+test("judge keeps each cast vote's reasoning beside its verdict", () => {
+  assert.deepEqual(judge([v({ reasoning: "a" }), null, v({ reasoning: "b", real: false })], "P1").reasons, ["a", "b"]);
 });

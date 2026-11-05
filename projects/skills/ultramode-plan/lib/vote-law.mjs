@@ -79,18 +79,21 @@ export function classify(cast, n, { bench = false } = {}) {
   return { status: "confirmed", basis: "NEW x REAL x MATERIAL" };
 }
 
-// What KTD9's fold does with the proposed change: it never applies a fix a majority of the
-// finding's cast votes judged wrong. 'apply' the proposed fix; 'apply-better' the one better fix
-// offered; 'hand-verify' on a split, or when a majority judged it wrong and offered no better
-// fix or more than one (whether two worded fixes agree is a judgment, so the lead makes it).
-export function fixVerdict(cast) {
-  if (!Array.isArray(cast) || cast.length === 0) return { action: "hand-verify", basis: "no votes on the proposed change", betterFixes: [] };
-  const right = cast.filter((v) => v.fix_is_correct === true).length;
-  const t = tally(right, cast.length);
-  const betterFixes = [...new Set(cast.filter((v) => v.fix_is_correct !== true).map((v) => String(v.better_fix ?? "").trim()).filter((s) => s.length > 0))];
-  if (t === "yes") return { action: "apply", basis: `${right} of ${cast.length} cast votes judged the proposed change right`, betterFixes };
-  if (t === "tie") return { action: "hand-verify", basis: `split on the proposed change: ${right} of ${cast.length} judged it right`, betterFixes };
-  if (betterFixes.length === 1) return { action: "apply-better", basis: `${cast.length - right} of ${cast.length} cast votes judged the proposed change wrong, with one better fix`, betterFix: betterFixes[0], betterFixes };
+// What KTD9's fold does with the proposed change, judged by the verifiers who affirmed the
+// finding real (the same voters material and new are counted among): a verifier who found nothing
+// to fix has no say in how to fix it. It never applies a fix a majority of them judged wrong.
+// 'apply' the proposed fix; 'apply-better' the one better fix offered; 'hand-verify' on a split,
+// or when a majority judged it wrong and offered no better fix or more than one (whether two
+// worded fixes agree is a judgment, so the lead makes it).
+export function fixVerdict(realVoters) {
+  if (!Array.isArray(realVoters) || realVoters.length === 0) return { action: "hand-verify", basis: "no verifier affirmed the finding, so none judged its change", betterFixes: [] };
+  const n = realVoters.length;
+  const right = realVoters.filter((v) => v.fix_is_correct === true).length;
+  const t = tally(right, n);
+  const betterFixes = [...new Set(realVoters.filter((v) => v.fix_is_correct !== true).map((v) => String(v.better_fix ?? "").trim()).filter((s) => s.length > 0))];
+  if (t === "yes") return { action: "apply", basis: `${right} of ${n} real-voters judged the proposed change right`, betterFixes };
+  if (t === "tie") return { action: "hand-verify", basis: `split on the proposed change: ${right} of ${n} real-voters judged it right`, betterFixes };
+  if (betterFixes.length === 1) return { action: "apply-better", basis: `${n - right} of ${n} real-voters judged the proposed change wrong, with one better fix`, betterFix: betterFixes[0], betterFixes };
   return {
     action: "hand-verify",
     basis: betterFixes.length
@@ -132,7 +135,9 @@ export function judge(votes, severity, { bench = false } = {}) {
     abstained,
     votes: `real ${realVoters.length}/${cast.length} - material ${M}/${realVoters.length}${bench ? "" : ` - new ${F}/${realVoters.length}`}${abstained ? ` - abstained ${abstained}/${n}` : ""}`,
     votedSeverity: cast.map((v) => v.corrected_severity ?? null),
-    fix: fixVerdict(cast),
+    // Each cast vote's evidence, for the hand-verify pile and KTD24's re-score.
+    reasons: cast.map((v) => v.reasoning ?? ""),
+    fix: fixVerdict(realVoters),
   };
   if (bench) out.line = severityLine(realVoters);
   return out;

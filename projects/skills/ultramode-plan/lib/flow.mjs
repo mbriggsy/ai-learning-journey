@@ -10,8 +10,8 @@
 // Never inlined into a Workflow script (KTD1).
 //
 // Usage: node flow.mjs <command> <json | path to a .json file>
-//   first         { update, brief }                         -> { stage }
-//   next          { stage, outcome, sendBacks, changes, p0p1, open } -> { step, ... }
+//   first         { update, brief }                         -> { stage, gate }
+//   next          { stage, outcome, sendBacks, changes, p0p1, open } -> { step, gate, ... }
 //   gate          { line, action, stage, planBytes, costs? } -> { go, step, ... }
 //   round         { roster, changes }                       -> { seats, touchedBy }
 //   receipt       { update, deepen, adversary, open, park, ce, coverage, holes, inline, strays, moved, record }
@@ -19,35 +19,40 @@
 //   path-start    { path, update }                          -> { ok, state, ... }  (exit 1 when refused)
 //   path-landing  { path, start }                           -> { ok, ... }         (exit 1 when changed)
 // `gate` reads lib/stage-costs.json beside this file when the input names no costs; U6's smoke
-// run commits that file.
+// run commits that file. Exit 0 is an answer, 1 a refused or changed path, 2 an input the command
+// could not read (nothing was decided).
 
-import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isMain, usage } from "./entry.mjs";
+import { longOf } from "./paths.mjs";
 
 // ---------------------------------------------------------------- the stages and their order
 
 // The stages a run passes through, in order. "brief" runs only when no brief was given; "check-2"
 // only when round 1's fold changed the plan; "check-3" only when round 2 confirmed a P0 or P1.
 export const STAGES = ["brief", "research", "write", "deepen", "check-1", "check-2", "check-3"];
-// Where a run ends in this session: landed, blocked (a report, never a question), or stopped at
-// the window line with the next stage handed back.
-export const ENDS = ["land", "blocked", "window-stop"];
 
-// Under `update` the staged plan starts as HEAD's committed file, and research and the write
-// step are skipped (KTD3); otherwise a run with no brief runs /brief on its topic first (KTD4).
-export function firstStage({ update = false, brief = null } = {}) {
-  if (update) return { stage: "deepen", reason: "update: the staged plan starts as HEAD's committed file, and research and the write step are skipped (KTD3)" };
-  if (typeof brief === "string" && brief.trim()) return { stage: "research", reason: "a brief was given (KTD4)" };
-  return { stage: "brief", reason: "no brief was given: run /brief on the topic first (KTD4)" };
-}
-
+const flag = (name, v) => {
+  if (typeof v !== "boolean") throw new Error(`flow: ${name} must be true or false, got ${JSON.stringify(v)}`);
+  return v;
+};
 const count = (name, v) => {
   if (!Number.isInteger(v) || v < 0) throw new Error(`flow: ${name} must be a whole number of at least 0, got ${JSON.stringify(v)}`);
   return v;
 };
+
+// Under `update` the staged plan starts as HEAD's committed file, and research and the write
+// step are skipped (KTD3); otherwise a run with no brief runs /brief on its topic first (KTD4).
+// `update` is a boolean everywhere it is read, so the string "false" can never start a deepen.
+export function firstStage({ update, brief = null } = {}) {
+  if (flag("update", update)) return { stage: "deepen", gate: "start", reason: "update: the staged plan starts as HEAD's committed file, and research and the write step are skipped (KTD3)" };
+  if (brief !== null && typeof brief !== "string") throw new Error(`flow: brief is the brief's text or null, got ${JSON.stringify(brief)}`);
+  if (brief && brief.trim()) return { stage: "research", gate: "start", reason: "a brief was given (KTD4)" };
+  return { stage: "brief", gate: "start", reason: "no brief was given: run /brief on the topic first (KTD4)" };
+}
 
 // The next step after a stage's outcome. A stage's fold, when it has one, has landed in the
 // staged plan before this is asked (KTD9: a returned Workflow's fold always completes).
@@ -60,9 +65,19 @@ const count = (name, v) => {
 //   check-2: "done" with `p0p1`, how many P0 or P1 findings it confirmed (each one folded)
 //   check-3: "done" with `open`, how many P0 or P1 findings still stand after it
 //   brief, research, write: "done"
-export function nextStep({ stage, outcome, sendBacks = 0, changes, p0p1, open } = {}) {
+// `sendBacks` is required on every call, never defaulted: the count of premise send-backs so far,
+// which the run record keeps (KTD10), so a resumed session cannot disarm KTD11's loop guard by
+// leaving it out.
+// Each answer names the gate the main loop runs before the step: "start" for a stage starting
+// (the window gate may hold it), "fold" for the write that turns research's returned dossiers
+// into the staged plan, which is research's fold and always completes (KTD10; U6's smoke step 3
+// writes the plan past the wrap line and stops at the next launch), and null for an end. Under
+// `update` a premise send-back's "write" revises the staged copy of HEAD's file; there are no
+// dossiers to write from.
+export function nextStep({ stage, outcome, sendBacks, changes, p0p1, open } = {}) {
   count("sendBacks", sendBacks);
-  const go = (step, reason, extra = {}) => ({ step, reason, sendBacks, ...extra });
+  const ENDS = ["land", "blocked"];
+  const go = (step, reason, extra = {}) => ({ step, gate: ENDS.includes(step) ? null : "start", reason, sendBacks, ...extra });
   const want = (allowed) => {
     if (!allowed.includes(outcome)) throw new Error(`flow: ${stage} has no outcome ${JSON.stringify(outcome)} (one of: ${allowed.join(", ")})`);
   };
@@ -72,7 +87,7 @@ export function nextStep({ stage, outcome, sendBacks = 0, changes, p0p1, open } 
       return go("research", "the brief is in hand (KTD4)");
     case "research":
       want(["done"]);
-      return go("write", "the dossiers are written; write the staged plan (KTD4)");
+      return go("write", "the dossiers are written; writing the staged plan from them is research's fold, which always completes (KTD4, KTD10)", { gate: "fold" });
     case "write":
       want(["done"]);
       return go("deepen", "the staged plan is written; the premise seat and the scorer run next (KTD5)");
@@ -109,7 +124,9 @@ export function nextStep({ stage, outcome, sendBacks = 0, changes, p0p1, open } 
 
 // ---------------------------------------------------------------- the window gate (KTD10)
 
-const DASH = "—";
+// The window skill's em dash, written as a code so this file stays ASCII: a re-save in another
+// encoding cannot turn it into bytes the gate no longer matches.
+const DASH = String.fromCharCode(0x2014);
 const READING = new RegExp(`^Context( \\(TEST ${DASH} WINDOW_TEST_TOKENS is set, not a live read\\))?: ([\\d.,\\s\\u00a0\\u202f]+) / (\\d+)M = (\\d+(?:\\.\\d+)?)% ${DASH} (.+)$`);
 const TIERS = [
   [/^plenty of room$/, () => ({ tier: "room", wrapPercent: null })],
@@ -170,8 +187,9 @@ export function stageCost(costs, stage, planBytes) {
   return Math.floor((e.cost * planBytes + e.planBytes - 1) / e.planBytes);
 }
 
-// The gate before a stage starts, or after a returned Workflow (action "fold"). A returned
-// Workflow's fold always completes. Below the no-new-fan-out tier a stage starts; at that tier it
+// The gate before a stage starts, or after a returned Workflow (action "fold"; nextStep's `gate`
+// says which). A returned Workflow's fold always completes, and the write from research's
+// dossiers is research's fold. Below the no-new-fan-out tier a stage starts; at that tier it
 // starts only when its measured cost, scaled to the plan, keeps the next reading under the wrap
 // line, and a stage with no measurement does not start; at the wrap tier, or on a held start,
 // the run stops at that boundary, lands nothing and hands back the stage (KTD10, KTD23).
@@ -237,39 +255,59 @@ export const CLASSES = [
 // KTD6: only reach and vacuity are skipped, and only on a plan with no code.
 const SKIPPABLE = ["reach", "test-vacuity"];
 
-function coverageOf(key, label, c) {
-  const forms = c && typeof c === "object" ? ["verified", "nothing", "skipped", "hole"].filter((f) => c[f] !== undefined) : [];
-  if (forms.length !== 1) throw new Error(`flow: the receipt's ${label} coverage needs exactly one of verified, nothing, skipped or hole: never silence (R9)`);
-  const [form] = forms;
+// One class's coverage, in exactly one form: { verified: [ids] }, { nothing: true },
+// { skipped: "<reason>" } (reach and test vacuity only) or { hole: true }. A form is read by its
+// value, never its presence: { nothing: false } is no form at all.
+function coverageOf(key, label, c, holes) {
+  if (!c || typeof c !== "object" || Array.isArray(c)) throw new Error(`flow: the receipt's ${label} coverage is missing: never silence (R9)`);
+  const keys = Object.keys(c);
+  if (keys.length !== 1 || !["verified", "nothing", "skipped", "hole"].includes(keys[0])) throw new Error(`flow: the receipt's ${label} coverage needs exactly one of verified, nothing, skipped or hole, got ${JSON.stringify(c)}`);
+  const [form] = keys;
   if (form === "verified") {
-    if (!Array.isArray(c.verified) || c.verified.length === 0) throw new Error(`flow: ${label}'s verified findings must be a non-empty list of ids; with none, record "nothing found"`);
+    if (!Array.isArray(c.verified) || c.verified.length === 0 || c.verified.some((id) => typeof id !== "string" || !id.trim())) throw new Error(`flow: ${label}'s verified findings must be a non-empty list of ids; with none, record "nothing found"`);
     return `${label}: ${c.verified.length} verified (${c.verified.join(", ")})`;
   }
-  if (form === "nothing") return `${label}: nothing found`;
+  if (form === "nothing") {
+    if (c.nothing !== true) throw new Error(`flow: ${label}'s "nothing found" is written { nothing: true }, got ${JSON.stringify(c)}`);
+    return `${label}: nothing found`;
+  }
   if (form === "skipped") {
     if (!SKIPPABLE.includes(key)) throw new Error(`flow: ${label} is never skipped; only reach and test vacuity skip, on a plan with no code (KTD6)`);
     if (typeof c.skipped !== "string" || !c.skipped.trim()) throw new Error(`flow: a skipped ${label} names its reason`);
     return `${label}: skipped: ${c.skipped.trim()}`;
   }
+  if (c.hole !== true) throw new Error(`flow: ${label}'s coverage hole is written { hole: true }, got ${JSON.stringify(c)}`);
+  if (!holes.some((h) => h.seat === key)) throw new Error(`flow: ${label} is a coverage hole, so the holes list names seat "${key}" with what it missed and its resume count (KTD8)`);
   return `${label}: no result (a coverage hole)`;
 }
 
 const listOr = (items, none, fmt) => (items.length ? items.map(fmt).join("; ") : none);
+const RECEIPT_KEYS = ["update", "deepen", "adversary", "open", "park", "ce", "coverage", "holes", "inline", "strays", "moved", "record"];
+const list = (name, v) => {
+  if (!Array.isArray(v)) throw new Error(`flow: the receipt's ${name} must be a list (empty when there are none), got ${JSON.stringify(v)}`);
+  return v;
+};
 
 // The receipt the plan's commit carries, its one home (R9). The plan body carries none of it.
+// Every field is required and none is defaulted: an omitted open count, holes list or park must
+// never print as a clean "checked". `park` and `moved` may be null, but must be present.
 export function receipt(r = {}) {
+  const missing = RECEIPT_KEYS.filter((k) => !(k in r));
+  if (missing.length) throw new Error(`flow: the receipt needs every field; missing ${missing.join(", ")} (park and moved may be null)`);
+  const extra = Object.keys(r).filter((k) => !RECEIPT_KEYS.includes(k));
+  if (extra.length) throw new Error(`flow: the receipt has no field ${extra.join(", ")}`);
   if (!["deepened", "passed"].includes(r.deepen)) throw new Error(`flow: deepen is "deepened" or "passed", got ${JSON.stringify(r.deepen)}`);
-  if (typeof r.adversary !== "boolean") throw new Error("flow: adversary must say whether an adversary returned (KTD9: an absent one makes the check incomplete)");
-  const open = count("open", r.open ?? 0);
-  const verb = r.update ? "updated" : "planned";
+  flag("adversary", r.adversary);
+  const open = count("open", r.open);
+  const verb = flag("update", r.update) ? "updated" : "planned";
   const deepened = r.deepen === "deepened";
   let ran = r.adversary
     ? deepened ? `${verb}, deepened and checked` : `${verb}, confidence check passed, checked`
     : deepened ? `${verb}, deepened, check incomplete: no adversary` : `${verb}, confidence check passed, check incomplete: no adversary`;
   if (open > 0) ran += `, ${open} P0/P1 open`;
   const lines = [ran];
-  if (r.park !== undefined && r.park !== null) {
-    if (typeof r.park !== "string" || !r.park.trim()) throw new Error("flow: a park is one paste-ready question");
+  if (r.park !== null) {
+    if (typeof r.park !== "string" || !r.park.trim()) throw new Error("flow: a park is one paste-ready question, or null");
     lines.push(`parked: ${r.park.trim()}`);
   }
   if (!Array.isArray(r.ce) || r.ce.length === 0) throw new Error("flow: the receipt names every CE resolution the run used, with the stages each served (KTD2)");
@@ -282,20 +320,29 @@ export function receipt(r = {}) {
       })
       .join("; ")}`,
   );
-  const cov = r.coverage ?? {};
+  const holes = list("holes", r.holes);
+  for (const h of holes) {
+    if (!h || typeof h.seat !== "string" || !h.seat.trim() || typeof h.missed !== "string" || !h.missed.trim()) throw new Error("flow: a coverage hole names its seat and what it missed");
+    count("resumes", h.resumes);
+  }
+  const cov = r.coverage;
+  if (!cov || typeof cov !== "object") throw new Error("flow: the receipt's coverage is an object keyed by class");
   const unknown = Object.keys(cov).filter((k) => !CLASSES.some(([key]) => key === k));
   if (unknown.length) throw new Error(`flow: the receipt's coverage names no class ${unknown.join(", ")}`);
-  lines.push(`coverage: ${CLASSES.map(([key, label]) => coverageOf(key, label, cov[key])).join("; ")}`);
-  const holes = r.holes ?? [];
-  lines.push(`coverage holes: ${listOr(holes, "none", (h) => {
-    if (!h || typeof h.seat !== "string" || typeof h.missed !== "string") throw new Error("flow: a coverage hole names its seat and what it missed");
-    return `${h.seat} (${h.missed}, resumed ${count("resumes", h.resumes)} time${h.resumes === 1 ? "" : "s"})`;
+  lines.push(`coverage: ${CLASSES.map(([key, label]) => coverageOf(key, label, cov[key], holes)).join("; ")}`);
+  lines.push(`coverage holes: ${listOr(holes, "none", (h) => `${h.seat} (${h.missed}, resumed ${h.resumes} time${h.resumes === 1 ? "" : "s"})`)}`);
+  lines.push(`seats without their CE file: ${listOr(list("inline", r.inline), "none", (s) => {
+    if (!s || typeof s.seat !== "string" || typeof s.file !== "string") throw new Error("flow: a seat without its CE file names the seat and the file");
+    return `${s.seat} (${s.file})`;
   })}`);
-  lines.push(`seats without their CE file: ${listOr(r.inline ?? [], "none", (s) => `${s.seat} (${s.file})`)}`);
-  lines.push(`stray files deleted: ${listOr(r.strays ?? [], "none", (p) => p)}`);
-  if (r.moved) {
-    const cited = r.moved.cited ?? [];
+  lines.push(`stray files deleted: ${listOr(list("strays", r.strays), "none", (p) => {
+    if (typeof p !== "string" || !p.trim()) throw new Error("flow: a stray file is a path");
+    return p;
+  })}`);
+  if (r.moved !== null) {
+    if (typeof r.moved !== "object" || !Array.isArray(r.moved.cited)) throw new Error("flow: a project move is { changed, cited: [paths] }, or null");
     const changed = count("moved.changed", r.moved.changed);
+    const cited = r.moved.cited;
     lines.push(`project moved during the run: ${changed} file${changed === 1 ? "" : "s"} changed, ${cited.length} the plan cites${cited.length ? ` (${cited.join(", ")})` : ""}`);
   }
   if (typeof r.record !== "string" || !r.record.trim()) throw new Error("flow: the receipt names the run record's path");
@@ -305,24 +352,34 @@ export function receipt(r = {}) {
 
 // ---------------------------------------------------------------- the named path (KTD3, KTD23)
 
-const gitOut = (cwd, args) => {
-  try {
-    return execFileSync("git", ["-C", cwd, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, MSYS_NO_PATHCONV: "1" } }).trim();
-  } catch {
-    return null;
-  }
-};
+// One git command. `quiet` lists the exit codes that answer the question rather than fail it
+// (ls-files --error-unmatch exits 1 for an untracked path, rev-parse --verify 1 for an absent
+// one), and those give null. Any other failure throws: a git error never reads as an absent,
+// clean path.
+function gitOut(cwd, args, quiet = []) {
+  const r = spawnSync("git", ["-C", cwd, ...args], { encoding: "utf8", env: { ...process.env, MSYS_NO_PATHCONV: "1" } });
+  if (r.error) throw new Error(`flow: git could not run: ${r.error.message}`);
+  if (r.status === 0) return r.stdout.trim();
+  if (quiet.includes(r.status)) return null;
+  throw new Error(`flow: git ${args.join(" ")} failed (exit ${r.status}): ${r.stderr.trim()}`);
+}
+// A pathspec that matches this one file and nothing else: a plan name holding [, ] or ? is not
+// a pattern.
+const literal = (rel) => `:(literal)${rel}`;
 
 // The facts KTD3's checks read about a named plan path: where it sits in its repository and
 // project, and its state in git. Reads the disk and git; the checks below are pure.
 export function pathFacts(planPath, { cwd = process.cwd() } = {}) {
-  const given = resolve(cwd, String(planPath));
-  let dir = dirname(given);
-  while (!existsSync(dir) && dirname(dir) !== dir) dir = dirname(dir);
+  let text = String(planPath);
+  // Git Bash spells C:\x as /c/x; on Windows that is the drive, not a folder named c.
+  if (process.platform === "win32") text = text.replace(/^\/([a-zA-Z])(?=\/|$)/, (_, drive) => `${drive}:`);
+  const given = resolve(cwd, text);
   // The long, real form of the part that exists, so a path given through an 8.3 short name or a
   // junction compares against git's top level, which git reports in its real form.
-  const path = join(realpathSync.native(dir), relative(dir, given));
-  const top = gitOut(dir, ["rev-parse", "--show-toplevel"]);
+  const path = longOf(given);
+  let dir = dirname(path);
+  while (!existsSync(dir) && dirname(dir) !== dir) dir = dirname(dir);
+  const top = gitOut(dir, ["rev-parse", "--show-toplevel"], [128]);
   const facts = { path, gitRoot: null, inside: false, rel: null, projectRel: null, projectRoot: null, projectExists: false, plansFolder: null, exists: false, isFile: false, tracked: false, headBlob: null, worktreeBlob: null, dirty: false };
   if (!top) return facts;
   facts.gitRoot = resolve(top);
@@ -341,10 +398,10 @@ export function pathFacts(planPath, { cwd = process.cwd() } = {}) {
   }
   facts.exists = existsSync(path);
   facts.isFile = facts.exists && statSync(path).isFile();
-  facts.tracked = gitOut(facts.gitRoot, ["ls-files", "--error-unmatch", "--", facts.rel]) !== null;
-  facts.headBlob = gitOut(facts.gitRoot, ["rev-parse", "--verify", "--quiet", `HEAD:${facts.rel}`]);
+  facts.tracked = gitOut(facts.gitRoot, ["ls-files", "--error-unmatch", "--", literal(facts.rel)], [1]) !== null;
+  facts.headBlob = gitOut(facts.gitRoot, ["rev-parse", "--verify", "--quiet", `HEAD:${facts.rel}`], [1]);
   facts.worktreeBlob = facts.isFile ? gitOut(facts.gitRoot, ["hash-object", "--", facts.rel]) : null;
-  facts.dirty = Boolean(gitOut(facts.gitRoot, ["status", "--porcelain", "--untracked-files=all", "--", facts.rel]));
+  facts.dirty = Boolean(gitOut(facts.gitRoot, ["status", "--porcelain", "--untracked-files=all", "--", literal(facts.rel)]));
   return facts;
 }
 
@@ -361,7 +418,8 @@ const describe = (s) => {
 // KTD3 at the run's start. The path must be a .md file inside a project's own docs/plans/ tree,
 // never the monorepo root's; it must be absent, or, under `update`, equal to HEAD's committed
 // file; and a path with uncommitted changes refuses even under `update`.
-export function startCheck(f, { update = false } = {}) {
+export function startCheck(f, { update } = {}) {
+  flag("update", update);
   const no = (reason) => ({ ok: false, reason, state: f.inside ? stateOf(f) : null });
   if (!f.gitRoot) return no(`${f.path} is not inside a git repository`);
   if (!f.inside) return no(`${f.path} is outside the repository at ${f.gitRoot}`);
@@ -376,12 +434,14 @@ export function startCheck(f, { update = false } = {}) {
   return { ok: true, reason: update ? "update: the plan is committed at HEAD and clean" : "the path is absent, inside a project's docs/plans/", state: stateOf(f), projectRoot: f.projectRoot, createPlansFolder: !existsSync(f.plansFolder) };
 }
 
-// KTD3 again at landing (KTD23): the named path must be in the state the run's start recorded. A
-// path that changed between start and landing stops the landing, naming both states.
+// KTD3 again at landing (KTD23): the named path must be the one the run's start recorded, in the
+// state it recorded. A path that changed between start and landing stops the landing, naming both
+// states; a different path (another run's record, a drifted working folder) stops it too.
 export function landingCheck(start, f) {
-  if (!start || typeof start !== "object") throw new Error("flow: the landing check needs the state the run's start recorded");
+  if (!start || typeof start !== "object" || typeof start.path !== "string" || typeof start.rel !== "string") throw new Error("flow: the landing check needs the state the run's start recorded, path and rel included");
   if (!f.inside) return { ok: false, reason: `${f.path} is no longer inside a repository` };
   const now = stateOf(f);
+  if (now.rel !== start.rel || now.path.toLowerCase() !== start.path.toLowerCase()) return { ok: false, reason: `the landing names ${now.path}, but the run started on ${start.path}. The landing stops (KTD3)`, start, state: now };
   const same = ["exists", "tracked", "headBlob", "worktreeBlob", "dirty"].every((k) => (start[k] ?? null) === (now[k] ?? null));
   return same
     ? { ok: true, reason: `the named path is as the run's start recorded it: ${describe(now)}`, state: now }
@@ -406,7 +466,7 @@ const COMMANDS = {
   },
   round: (i) => roundSeats(i),
   receipt: (i) => ({ text: receipt(i) }),
-  "path-start": (i) => startCheck(pathFacts(i.path), { update: i.update === true }),
+  "path-start": (i) => startCheck(pathFacts(i.path), { update: i.update }),
   "path-landing": (i) => landingCheck(i.start, pathFacts(i.path)),
 };
 
@@ -419,7 +479,9 @@ if (isMain(import.meta.url)) {
     else console.log(JSON.stringify(out, null, 1));
     process.exit(out.ok === false ? 1 : 0);
   } catch (e) {
+    // Exit 2, as for a missing argument: the command could not answer. Exit 1 is kept for a
+    // refused or changed path, an answer.
     console.error(`flow: ${e.message.replace(/^flow: /, "")}`);
-    process.exit(1);
+    process.exit(2);
   }
 }

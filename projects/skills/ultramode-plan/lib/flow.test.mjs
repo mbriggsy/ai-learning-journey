@@ -15,16 +15,29 @@ const FLOW = join(here, "flow.mjs");
 test("under update the first stage is the deepen; with no brief it is /brief; with one, research", () => {
   assert.equal(firstStage({ update: true }).stage, "deepen");
   assert.equal(firstStage({ update: true, brief: "b" }).stage, "deepen");
-  assert.equal(firstStage({ brief: "the brief" }).stage, "research");
-  assert.equal(firstStage({ brief: "  " }).stage, "brief");
-  assert.equal(firstStage({}).stage, "brief");
+  assert.equal(firstStage({ update: false, brief: "the brief" }).stage, "research");
+  assert.equal(firstStage({ update: false, brief: "  " }).stage, "brief");
+  assert.equal(firstStage({ update: false }).stage, "brief");
+  assert.equal(firstStage({ update: false }).gate, "start");
 });
 
-test("each stage outcome maps to its next step", () => {
-  const step = (stage, outcome, o = {}) => nextStep({ stage, outcome, ...o });
+test("update is a boolean wherever it is read: the string \"false\" never starts a deepen", () => {
+  assert.throws(() => firstStage({ update: "false" }), /update must be true or false/);
+  assert.throws(() => firstStage({}), /update must be true or false/);
+  assert.throws(() => firstStage({ update: false, brief: 3 }), /brief is the brief's text or null/);
+  assert.throws(() => startCheck({ gitRoot: "x", inside: true }, { update: "true" }), /update must be true or false/);
+});
+
+test("each stage outcome maps to its next step, and names the gate the main loop runs before it", () => {
+  const step = (stage, outcome, o = {}) => nextStep({ stage, outcome, sendBacks: 0, ...o });
   assert.equal(step("brief", "done").step, "research");
-  assert.equal(step("research", "done").step, "write");
-  assert.equal(step("write", "done").step, "deepen");
+  // Writing from research's dossiers is research's fold: it always completes (KTD10, U6 step 3).
+  assert.deepEqual([step("research", "done").step, step("research", "done").gate], ["write", "fold"]);
+  assert.deepEqual([step("write", "done").step, step("write", "done").gate], ["deepen", "start"]);
+  // A send-back rewrite is a stage start, which the window gate may hold.
+  assert.equal(step("deepen", "premise-goal").gate, "start");
+  assert.equal(step("deepen", "blocked").gate, null);
+  assert.equal(step("check-1", "done", { changes: 0 }).gate, null);
   assert.equal(step("deepen", "blocked").step, "blocked");
   const back = step("deepen", "premise-goal");
   assert.equal(back.step, "write");
@@ -52,11 +65,18 @@ test("a second premise send-back blocks, so write and premise cannot loop", () =
 });
 
 test("an unknown stage, an outcome the stage cannot have, and a missing count each throw", () => {
-  assert.throws(() => nextStep({ stage: "review", outcome: "done" }), /no stage "review"/);
-  assert.throws(() => nextStep({ stage: "research", outcome: "passed" }), /research has no outcome "passed"/);
-  assert.throws(() => nextStep({ stage: "check-1", outcome: "done" }), /changes must be a whole number/);
-  assert.throws(() => nextStep({ stage: "check-3", outcome: "done", open: -1 }), /open must be a whole number/);
+  assert.throws(() => nextStep({ stage: "review", outcome: "done", sendBacks: 0 }), /no stage "review"/);
+  assert.throws(() => nextStep({ stage: "research", outcome: "passed", sendBacks: 0 }), /research has no outcome "passed"/);
+  assert.throws(() => nextStep({ stage: "check-1", outcome: "done", sendBacks: 0 }), /changes must be a whole number/);
+  assert.throws(() => nextStep({ stage: "check-3", outcome: "done", open: -1, sendBacks: 0 }), /open must be a whole number/);
   assert.throws(() => nextStep({ stage: "deepen", outcome: "premise-goal", sendBacks: 0.5 }), /sendBacks/);
+});
+
+test("the send-back count is required on every call, so a resumed session cannot disarm the loop guard", () => {
+  assert.throws(() => nextStep({ stage: "deepen", outcome: "premise-goal" }), /sendBacks must be a whole number/);
+  assert.throws(() => nextStep({ stage: "write", outcome: "done" }), /sendBacks must be a whole number/);
+  // Each answer carries the count forward for the next call.
+  assert.equal(nextStep({ stage: "write", outcome: "done", sendBacks: 1 }).sendBacks, 1);
 });
 
 // ------------------------------------------------------------------------- the window gate
@@ -140,6 +160,20 @@ test("at the wrap tier the gate stops whatever the stage's cost", () => {
   assert.deepEqual([g.go, g.step, g.handBack], [false, "window-stop", "research"]);
 });
 
+test("past the wrap line the write from research's saved dossiers still completes, as U6's smoke step 3 needs, and the next launch stops", () => {
+  const write = nextStep({ stage: "research", outcome: "done", sendBacks: 0 });
+  const g = stageGate({ line: windowLine(650_000), action: write.gate, stage: write.step });
+  assert.deepEqual([g.go, g.step], [true, "fold"]);
+  const deepen = nextStep({ stage: "write", outcome: "done", sendBacks: 0 });
+  assert.equal(stageGate({ line: windowLine(650_000), action: deepen.gate, stage: deepen.step, costs: COSTS, planBytes: DEEP }).step, "window-stop");
+});
+
+test("a scaled cost rounds up, never down", () => {
+  // 10,001 tokens measured at 20,000 bytes, on a 150,000-byte plan: 75,007.5, so 75,008.
+  assert.equal(stageCost({ deepen: { cost: 10_001, planBytes: SMOKE } }, "deepen", DEEP), 75_008);
+  assert.equal(stageCost({ deepen: { cost: 1, planBytes: 3 } }, "deepen", 1), 1);
+});
+
 test("the gate never holds a pending fold, whatever the window says", () => {
   for (const line of [windowLine(650_000), "Context: no transcript for this session (x) yet.", ""]) {
     const g = stageGate({ line, action: "fold", stage: "check-1" });
@@ -151,16 +185,16 @@ test("a TEST line counts as a reading and is marked; a GUESS line, a missing one
   const t = stageGate({ line: windowLine(100_000), stage: "research" });
   assert.deepEqual([t.go, t.test], [true, true]);
   assert.equal(stageGate({ line: live(windowLine(100_000)), stage: "research" }).test, false);
-  const guess = live(windowLine(100_000)).replace(/^Context/, "Context (GUESS — no session id; newest log here, maybe another session's)");
-  for (const line of [guess, "Context: no transcript for this session (x) yet.", "", "Context: 100,000 / 1M = 10.0% — roomy"]) {
+  const guess = live(windowLine(100_000)).replace(/^Context/, "Context (GUESS \u2014 no session id; newest log here, maybe another session's)");
+  for (const line of [guess, "Context: no transcript for this session (x) yet.", "", "Context: 100,000 / 1M = 10.0% \u2014 roomy"]) {
     const g = stageGate({ line, stage: "research" });
     assert.deepEqual([g.go, g.step], [false, "window-stop"], line);
   }
-  assert.match(stageGate({ line: "Context: 100,000 / 1M = 10.0% — roomy", stage: "research" }).reason, /window skill changed/);
+  assert.match(stageGate({ line: "Context: 100,000 / 1M = 10.0% \u2014 roomy", stage: "research" }).reason, /window skill changed/);
 });
 
 test("a compacted line asks for a fresh reading instead of starting or stopping", () => {
-  const g = stageGate({ line: "Context: compacted 3 min ago (500,000 → a 40,000-token summary) — no live read since; ask again after one more step.", stage: "deepen" });
+  const g = stageGate({ line: "Context: compacted 3 min ago (500,000 \u2192 a 40,000-token summary) \u2014 no live read since; ask again after one more step.", stage: "deepen" });
   assert.deepEqual([g.go, g.step], [false, "reread"]);
 });
 
@@ -218,6 +252,11 @@ const BASE = {
   open: 0,
   ce: [{ commit: SHA, stages: ["research", "deepen", "check-1", "check-2"] }],
   coverage: { premise: { nothing: true }, reach: { verified: ["C3", "C7"] }, "blast-radius": { nothing: true }, "test-vacuity": { skipped: "the plan has no code" } },
+  holes: [],
+  inline: [],
+  strays: [],
+  park: null,
+  moved: null,
   record: "~/.claude/projects/x/job/2026-11-05T01-00-00Z/ultramode-plan-run.json",
 };
 const firstLine = (o) => receipt({ ...BASE, ...o }).split("\n")[0];
@@ -259,10 +298,9 @@ test("the whole receipt: park, CE commits with their stages, the four classes, h
   );
 });
 
-test("a quiet run's receipt still says none for each list, names CE absent, and has no move line when nothing moved", () => {
-  const text = receipt({ ...BASE, ce: [{ commit: null, stages: ["check-1"] }], coverage: { premise: { hole: true }, reach: { nothing: true }, "blast-radius": { verified: ["B1"] }, "test-vacuity": { nothing: true } } });
+test("a quiet run's receipt says none for each empty list, names CE absent, and has no move or park line when there is none", () => {
+  const text = receipt({ ...BASE, ce: [{ commit: null, stages: ["check-1"] }] });
   assert.match(text, /^CE: CE absent \(check-1\)$/m);
-  assert.match(text, /premise: no result \(a coverage hole\)/);
   assert.match(text, /^coverage holes: none$/m);
   assert.match(text, /^seats without their CE file: none$/m);
   assert.match(text, /^stray files deleted: none$/m);
@@ -270,9 +308,42 @@ test("a quiet run's receipt still says none for each list, names CE absent, and 
   assert.doesNotMatch(text, /parked:/);
 });
 
+test("a class in the hole form needs its seat in the holes list, with what it missed and its resume count", () => {
+  const holeCov = { ...BASE.coverage, premise: { hole: true } };
+  assert.throws(() => receipt({ ...BASE, coverage: holeCov }), /premise is a coverage hole, so the holes list names seat "premise"/);
+  const text = receipt({ ...BASE, coverage: holeCov, holes: [{ seat: "premise", missed: "the whole seat", resumes: 2 }] });
+  assert.match(text, /premise: no result \(a coverage hole\)/);
+  assert.match(text, /^coverage holes: premise \(the whole seat, resumed 2 times\)$/m);
+  assert.throws(() => receipt({ ...BASE, holes: [{ seat: "x", missed: "y" }] }), /resumes must be a whole number/);
+});
+
+test("the receipt needs every field and defaults none: an omitted open count never prints as a clean check", () => {
+  for (const key of ["open", "holes", "inline", "strays", "park", "moved", "update"]) {
+    const { [key]: _, ...rest } = BASE;
+    assert.throws(() => receipt(rest), new RegExp(`missing ${key}`), key);
+  }
+  assert.throws(() => receipt({ ...BASE, opens: 2 }), /no field opens/);
+  assert.throws(() => receipt({ ...BASE, open: null }), /open must be a whole number/);
+  assert.throws(() => receipt({ ...BASE, update: "false" }), /update must be true or false/);
+  assert.throws(() => receipt({ ...BASE, holes: null }), /holes must be a list/);
+  assert.throws(() => receipt({ ...BASE, inline: ["coherence"] }), /names the seat and the file/);
+  assert.throws(() => receipt({ ...BASE, strays: [3] }), /a stray file is a path/);
+  assert.throws(() => receipt({ ...BASE, park: "" }), /paste-ready question, or null/);
+  assert.throws(() => receipt({ ...BASE, moved: { changed: 1 } }), /changed, cited/);
+});
+
+test("a coverage form is read by its value, never its presence", () => {
+  const cov = (o) => receipt({ ...BASE, coverage: { ...BASE.coverage, ...o } });
+  assert.throws(() => cov({ premise: { nothing: false } }), /written \{ nothing: true \}/);
+  assert.throws(() => cov({ premise: { nothing: null } }), /written \{ nothing: true \}/);
+  assert.throws(() => cov({ premise: { hole: false } }), /written \{ hole: true \}/);
+  assert.throws(() => cov({ premise: {} }), /exactly one of/);
+  assert.throws(() => cov({ premise: { nothing: true, note: "x" } }), /exactly one of/);
+});
+
 test("the receipt refuses silence and the wrong skips: a missing class, two forms at once, a skipped premise or blast radius, an empty verified list", () => {
   const cov = (o) => receipt({ ...BASE, coverage: { ...BASE.coverage, ...o } });
-  assert.throws(() => receipt({ ...BASE, coverage: { premise: { nothing: true }, reach: { nothing: true }, "blast-radius": { nothing: true } } }), /test vacuity coverage needs exactly one/);
+  assert.throws(() => receipt({ ...BASE, coverage: { premise: { nothing: true }, reach: { nothing: true }, "blast-radius": { nothing: true } } }), /test vacuity coverage is missing: never silence/);
   assert.throws(() => cov({ premise: { nothing: true, verified: ["P1"] } }), /premise coverage needs exactly one/);
   assert.throws(() => cov({ premise: { skipped: "no code" } }), /premise is never skipped/);
   assert.throws(() => cov({ "blast-radius": { skipped: "no code" } }), /blast radius is never skipped/);
@@ -361,6 +432,34 @@ test("a path given through a linked folder resolves to the repository it points 
   assert.equal(r.state.rel, "projects/p/docs/plans/new.md");
 });
 
+const win = process.platform === "win32";
+
+test("a path in Git Bash's /c/ form or through an 8.3 short name resolves to the same repository", { skip: !win && "platform: Windows only (drive paths and 8.3 short names)" }, async (t) => {
+  const { shortOf } = await import("../bench/shortpath.mjs");
+  const dir = planRepo(t);
+  const long = at(dir, "projects", "p", "docs", "plans", "new.md");
+  const bash = long.replace(/^([A-Za-z]):\\/, (_, d) => `/${d.toLowerCase()}/`).split("\\").join("/");
+  const viaBash = start(bash);
+  assert.equal(viaBash.ok, true, viaBash.reason);
+  assert.equal(viaBash.state.rel, "projects/p/docs/plans/new.md");
+  const shortRepo = shortOf(dir);
+  assert.ok(shortRepo, "the temp folder has an 8.3 short name to test with");
+  const viaShort = start(join(shortRepo, "projects", "p", "docs", "plans", "new.md"));
+  assert.equal(viaShort.ok, true, viaShort.reason);
+  assert.equal(viaShort.state.path.toLowerCase(), long.toLowerCase());
+});
+
+test("a plan name holding pattern characters is matched as itself, never as a pattern", (t) => {
+  const dir = planRepo(t);
+  // "plan[1].md" as a pattern matches the committed plan1.md; as itself it is absent.
+  writeAt(at(dir, "projects", "p", "docs", "plans", "plan1.md"), "# One\n");
+  git(dir, ["add", "-A"]);
+  git(dir, ["commit", "-q", "-m", "plan1"]);
+  const r = start(at(dir, "projects", "p", "docs", "plans", "plan[1].md"));
+  assert.equal(r.ok, true, r.reason);
+  assert.equal(r.state.tracked, false);
+});
+
 test("the landing check passes an unchanged path and stops a changed one, naming both states", (t) => {
   const dir = planRepo(t);
   const path = at(dir, "projects", "p", "docs", "plans", "new.md");
@@ -380,9 +479,18 @@ test("the landing check passes an unchanged path and stops a changed one, naming
   assert.match(moved.reason, /at the start committed at blob [0-9a-f]+, clean; now committed at blob [0-9a-f]+, clean/);
 });
 
+test("the landing check stops on a different path, even one in the same absent state", (t) => {
+  const dir = planRepo(t);
+  const begun = start(at(dir, "projects", "p", "docs", "plans", "new.md"));
+  const other = landingCheck(begun.state, pathFacts(at(dir, "projects", "p", "docs", "plans", "other.md")));
+  assert.equal(other.ok, false);
+  assert.match(other.reason, /but the run started on/);
+  assert.throws(() => landingCheck({ exists: false }, pathFacts(at(dir, "projects", "p", "docs", "plans", "new.md"))), /path and rel included/);
+});
+
 // ------------------------------------------------------------------------- the command
 
-test("the command answers each subcommand in JSON, the receipt as text, and exits 1 on a refused path", (t) => {
+test("the command answers in JSON, the receipt as text; exits 1 on a refused path and 2 on input it cannot read", (t) => {
   const run = (...args) => spawnSync(process.execPath, [FLOW, ...args], { encoding: "utf8" });
   const first = run("first", '{"update":true}');
   assert.equal(first.status, 0, first.stderr);
@@ -393,13 +501,15 @@ test("the command answers each subcommand in JSON, the receipt as text, and exit
   const r = run("receipt", input);
   assert.equal(r.status, 0, r.stderr);
   assert.match(r.stdout, /^planned, deepened and checked\n/);
-  const refused = run("path-start", JSON.stringify({ path: at(dir, "docs", "plans", "x.md") }));
+  const refused = run("path-start", JSON.stringify({ path: at(dir, "docs", "plans", "x.md"), update: false }));
   assert.equal(refused.status, 1);
   assert.equal(JSON.parse(refused.stdout).ok, false);
   const gate = run("gate", JSON.stringify({ line: windowLine(520_000), stage: "research", costs: { research: { cost: 1000, planBytes: null } } }));
   assert.equal(gate.status, 0, gate.stderr);
   assert.equal(JSON.parse(gate.stdout).go, true);
-  const bad = run("next", '{"stage":"nope","outcome":"done"}');
-  assert.equal(bad.status, 1);
+  const bad = run("next", '{"stage":"nope","outcome":"done","sendBacks":0}');
+  assert.equal(bad.status, 2);
   assert.match(bad.stderr, /^flow: no stage "nope"/);
+  assert.equal(run("path-start", JSON.stringify({ path: at(dir, "docs", "plans", "x.md") })).status, 2, "a missing update is unreadable input, not a refusal");
+  assert.equal(run("first", "{not json").status, 2);
 });

@@ -9,32 +9,14 @@
 // Usage: node shortpath.mjs <path>...   prints each path's short spelling, or "none".
 
 import { execFileSync } from "node:child_process";
-import { existsSync, realpathSync, statSync } from "node:fs";
-import { basename, dirname, join, resolve } from "node:path";
+import { realpathSync, statSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { isMain, usage } from "../lib/entry.mjs";
+import { existingBase, longOf } from "../lib/paths.mjs";
 
-// The deepest part of `p` that exists, and the names below it that do not.
-function existingBase(p) {
-  let base = resolve(p);
-  const rest = [];
-  while (!existsSync(base)) {
-    const up = dirname(base);
-    if (up === base) return null;
-    rest.unshift(basename(base));
-    base = up;
-  }
-  return { base, rest };
-}
-
-// A path's long form, the one every deny rule is built from: each 8.3 name expanded, letter case
-// as on disk (fs.realpathSync.native, which also follows a junction or link, so a path through
-// one comes back as its target). A part that does not exist yet is kept as given.
-export function longOf(absPath) {
-  const found = existingBase(absPath);
-  if (!found) return resolve(absPath);
-  const real = realpathSync.native(found.base);
-  return found.rest.length ? join(real, ...found.rest) : real;
-}
+// longOf lives in lib/paths.mjs (flow.mjs needs it too, and lib/ may not import bench/); it is
+// re-exported here for the bench modules that import it from this file.
+export { longOf };
 
 // The short spelling of an absolute path in its long form, or null off Windows or when it is the
 // same as the long one (no component has a short name). A path that does not exist yet (a

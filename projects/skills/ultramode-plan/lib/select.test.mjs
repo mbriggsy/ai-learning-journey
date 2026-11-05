@@ -1,10 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CRITICAL_KINDS, selectSections } from "./select.mjs";
-import { SECTION_KINDS } from "./caps.mjs";
+import { PLAN_DEPTHS, SECTION_KINDS } from "./caps.mjs";
 
 const sec = (section, triggers, kind = "other", strengthened = false) => ({ section, kind, triggers, strengthened });
-const run = (scores, o = {}) => selectSections({ scores, depth: "Standard", riskSignals: [], ...o });
+// Each section starts at its own level-2 heading, lines 10, 20, 30 and so on, under a level-1 title,
+// and the index lists exactly those headings: a full score list, unless a case says otherwise.
+const lined = (scores) => (Array.isArray(scores) ? scores.map((s, i) => (s && typeof s === "object" && s.line === undefined ? { ...s, line: 10 * (i + 1) } : s)) : scores);
+const indexOf = (scores) => [{ line: 1, level: 1, heading: "Plan" }, ...(Array.isArray(scores) ? scores : []).map((s, i) => ({ line: 10 * (i + 1), level: 2, heading: s?.section }))];
+const run = (scores, o = {}) => selectSections({ scores: lined(scores), index: indexOf(scores), depth: "Standard", riskSignals: [], ...o });
 const picked = (r) => r.sections.map((s) => s.section);
 
 test("every critical kind is one the scorer's schema can return", () => {
@@ -79,6 +83,48 @@ test("on a plan with a deepened: date, a section not yet strengthened beats a co
   assert.deepEqual(picked(lw([sec("top", 9), sec("old", 5, "other", true), sec("fresh", 3)])), ["top", "old"]);
   // Without a deepened: date, strengthened flags change nothing.
   assert.deepEqual(picked(run([sec("top", 9), sec("old", 4, "other", true), sec("fresh", 3)], { depth: "Lightweight" })), ["top", "old"]);
+});
+
+test("without a deepened: date a strengthened flag neither lowers a section nor breaks a tie", () => {
+  const lw = (scores) => run(scores, { depth: "Lightweight" });
+  // The flagged section comes later and one point ahead: lowered, it would tie and lose.
+  assert.deepEqual(picked(lw([sec("top", 9), sec("fresh", 3), sec("old", 4, "other", true)])), ["top", "old"]);
+  // Equal points and first in document order: a strengthened tie-break would pass it over.
+  assert.deepEqual(picked(lw([sec("top", 9), sec("old", 3, "other", true), sec("fresh", 3)])), ["top", "old"]);
+});
+
+test("a short score list blocks: a part of the plan left unscored, a row at no heading, a heading scored twice, no index", () => {
+  const index = [
+    { line: 1, level: 1, heading: "Plan" },
+    { line: 3, level: 2, heading: "Goal" },
+    { line: 9, level: 2, heading: "Planning Contract" },
+    { line: 11, level: 3, heading: "Key Technical Decisions" },
+    { line: 30, level: 3, heading: "Risks" },
+    { line: 40, level: 2, heading: "Implementation Units" },
+    { line: 42, level: 3, heading: "U1. Bench" },
+    { line: 50, level: 3, heading: "U2. Core" },
+  ];
+  const full = [
+    { section: "Goal", line: 3, kind: "goal-problem", triggers: 0 },
+    { section: "Key Technical Decisions", line: 11, kind: "key-decisions", triggers: 2 },
+    { section: "Implementation Units", line: 40, kind: "units", triggers: 0 },
+  ];
+  const go = (scores, idx = index) => selectSections({ scores, index: idx, depth: "Standard", riskSignals: [] });
+  // One row covers every unit beneath its heading, and Risks need not have its own row.
+  assert.equal(go(full).result, "deepen");
+  // The scorer dropped the units part: its zero-trigger rows would otherwise read "passed".
+  const short = go(full.slice(0, 2).map((s) => ({ ...s, triggers: 0 })));
+  assert.equal(short.result, "blocked");
+  assert.match(short.reason, /left 1 part of the plan unscored \("Implementation Units"\)/);
+  assert.match(go([...full, { section: "Stray", line: 41, kind: "other", triggers: 0 }]).reason, /line 41, which is no heading/);
+  assert.match(go([...full, { section: "Again", line: 11, kind: "other", triggers: 0 }]).reason, /line 11 is scored twice/);
+  assert.match(go(full, null).reason, /no section index/);
+  assert.match(go(full, [{ line: 0, level: 2 }]).reason, /malformed section index/);
+  assert.match(go(full.map(({ line, ...s }) => s)).reason, /its heading's line/);
+});
+
+test("every plan depth the scorer's schema allows is one select reads", () => {
+  for (const depth of PLAN_DEPTHS) assert.notEqual(run([sec("a", 3)], { depth }).result, "blocked", depth);
 });
 
 test("a null score list gives blocked, never passed, and so does every malformed input", () => {

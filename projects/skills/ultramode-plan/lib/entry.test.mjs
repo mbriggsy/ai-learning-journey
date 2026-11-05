@@ -55,3 +55,12 @@ test("the modules U5 inlines import nothing, read no clock or random number, and
     }
   }
 });
+
+test("every source file in lib/ and bench/ is ASCII, so a re-save in another encoding changes no byte a check matches", () => {
+  for (const f of FOLDERS) {
+    for (const n of readdirSync(join(skill, f)).filter((x) => x.endsWith(".mjs"))) {
+      const bad = [...readFileSync(join(skill, f, n), "utf8")].find((c) => c.codePointAt(0) > 127);
+      assert.equal(bad, undefined, `${join(f, n)} holds ${JSON.stringify(bad)}`);
+    }
+  }
+});

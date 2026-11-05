@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-04, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5).** The schema-v4 job
+▶ **START HERE (2026-11-04, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -62,7 +62,20 @@ queue below (its order unmoved). Next, in order:
    `wf_e5cbb6be-e97` (5 lenses + 5 refuters) found one P1 in the PLAN: KTD10's "a period change drops the stamp" let "each
    month" then "each year" launder a stale kept figure into a typed one. A unit tap now CARRIES it; R13, KTD10 and the U5
    scenario are amended in the plan. R10 36/36 against `u15`; the old-copy decode ok; record `b9-u5-review\README.md`.
-   **Next: U13** (the staleness input becomes a named object, dark), opened with `/brief`. At EVERY `src`
+   **U13 DONE (b9-3, `82835ff3`):** `deriveStaleness`'s 4th argument is one required named object,
+   `WorkingYearAnswerStaleness { costStale, leftOverStale }`; the report's `workingYear.leftOverStale` takes the same exposure
+   conjunct as `costStale` and joins `anyStale` only; `composeReentry` takes both answer sentences as one named object,
+   `ReentryAnswerSentences`, and throws on a set left-over fact with no sentence. Every product caller passes `false` / `null`
+   by proof. Its review `wf_980c5931-2b2` (5 lenses + 5 refuters, 26 findings: 11 real, 9 partly, 6 refuted) found one P1
+   (the `stalenessExposure.test.ts` source-bind on IntakeApp's call was red) and amended U14 in the plan; 8 mutants, every
+   red set as predicted; R10 36/36 against `u15`. Record `b9-u13-review\` (its `README.md`). **U5's CI miss, fixed
+   (`63eca3f6`):** `verify:fit` had been red since `d4227774` (6 W gesture arms expected "You entered" where U5's Keep now
+   reads "You kept"); test-only, the kept stamp proven to survive type-then-Keep.
+   **Next: the go-live commit** (U6 + U7 + U8 + U14 + U9, writing version 5), opened with `/brief` on the version-5 bump,
+   the left-over question and the stale lines. Before it lands: the version-4 fixtures minted from a `git archive` of its
+   parent (KTD6), the four design skills loaded before any UI file, the Caddie walk on the built tree, and KTD7's review
+   lenses over the codec arm, the `buildDateInput` carriage and the staleness predicates. It is the biggest unit left:
+   expect it to span sessions, so open it with the plan's U6 section and START HERE's obligations (a), (d) and (f). At EVERY `src`
    commit from here: from the project dir run `pnpm exec tsx <b9-build2-surplus>\tools\sweep.mts <label> --today=20758`, then
    `node <b9-build2-surplus>\tools\idcheck.mjs <label> u15` (PER KEY: U9 adds seeds, so never a whole-file `cmp`); the
    per-commit record is the table at the foot of that folder's `README.md`. Then the build units in the plan's order, each
@@ -85,7 +98,15 @@ queue below (its order unmoved). Next, in order:
      register pass** closes *Keeping a stale yes turns it into an entered figure…* with `d4227774`, recording the unit-tap
      carry and the residual: the stamp's VALUE is read by nothing (x8, the door stamping off the render-captured draft,
      survives every test) — pin it the day anything reads it.
-   - Phase B: ~~U5~~ and U13, the version-4 archive, the go-live (U6 + U7 + U8 + U14 + U9), then U10.
+   - **U13's forward obligations:** (f) **U14** (in the go-live) owns the four its review recorded in the plan's U14 section
+     (the "Amended at U13" note): the moved predicate and the gate's moved sentence read ONE core over the draft (the way
+     `isWorkingYearCostStale` and `workingYearCostStaleText` both read `workingYearCostStaleness`), because `composeReentry`
+     throws on the fact without its sentence and `IntakeApp`'s catch turns that into the restore-failed face on every
+     reload; the clause-host fact (did a tax, state-tax or working-years line fire) is decided once, in `composeReentry`, and
+     the Result reads it (`rulesMoved` also fires on the ACA, Medicare, contribution and app-default clocks); `canChange` on
+     `ReentryLeftOverStale` if the gate's moved line carries a door sentence; and the two test files U14 must edit
+     (`stalenessExposure.test.ts`'s source-bind and `staleness.test.ts`'s property arm, which gains `datesaved`).
+   - Phase B: ~~U5~~ and ~~U13~~, the version-4 archive, the go-live (U6 + U7 + U8 + U14 + U9), then U10.
    - Phase C: U11, then U12.
    After the build: the whole-file review, with an adversary and every finding verified; then `/distill`. The record (brief,
    seven research dossiers, three deepen artifacts, the doc-review's `RESOLVED.md`) is in

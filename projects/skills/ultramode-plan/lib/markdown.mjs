@@ -19,9 +19,18 @@ const MD_FENCE_CLOSE = /^\s*(`{3,}|~{3,})\s*$/;
 // between them shaped like YAML (a key, an indented or listed value, a comment, a blank). A plan
 // that opens on a thematic break is not front matter, so its lines stay prose.
 const MD_YAML_LINE = /^(?:\s*#.*|\s*[\w.-]+\s*:.*|\s+\S.*|\s*-\s.*|\s*)$/;
-// An ATX heading: up to three spaces, one to six #, then a space or the end of the line. The
-// optional closing run of # is not part of the heading's text.
-const MD_HEADING = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$/;
+// An ATX heading: up to three spaces, one to six #, then a space or the end of the line, and in a
+// blockquote after its ">" markers (the Back Nine's 4-recommendation.md has one, the only heading
+// a CommonMark reader found in the repo's 105 plans that this one missed). The optional closing
+// run of # is not part of the heading's text.
+const MD_HEADING = /^(?: {0,3}> ?)* {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$/;
+
+// A UTF-8 byte-order mark on the first line would hide both the front matter's "---" and a first
+// heading; the line numbers are unchanged by dropping it.
+const withoutBom = (text) => {
+  const s = String(text);
+  return s.charCodeAt(0) === 0xfeff ? s.slice(1) : s;
+};
 
 function frontMatterEnd(lines) {
   if (lines.length === 0 || !/^---\s*$/.test(lines[0])) return 0;
@@ -35,7 +44,7 @@ function frontMatterEnd(lines) {
 // The plan's lines, split on LF or CRLF, with the prose ones (outside the front matter and every
 // fence) numbered from 1, and the line of a fence still open at the end, or null.
 export function readMarkdown(text) {
-  const lines = String(text).split(/\r?\n/);
+  const lines = withoutBom(text).split(/\r?\n/);
   const start = frontMatterEnd(lines);
   const prose = [];
   let fence = null;
@@ -57,23 +66,30 @@ export function readMarkdown(text) {
 }
 
 // KTD7's section index: every ATX heading outside the front matter and the fences, in document
-// order, as { line, level, heading }. Setext headings (a line underlined with === or ---) are not
-// read: CE's plan contract writes ATX headings only.
+// order, as { line, level, heading, own }. `own` says whether the heading has text of its own, a
+// non-blank line (fenced or not) before the next heading, which select.mjs then requires some
+// scored row to cover even when the heading has children. Setext headings (a line underlined
+// with === or ---) are not read: CE's plan contract writes ATX headings only.
 export function sectionIndex(text) {
+  const md = readMarkdown(text);
   const out = [];
-  for (const { n, line } of readMarkdown(text).prose) {
+  for (const { n, line } of md.prose) {
     const m = line.match(MD_HEADING);
     if (!m) continue;
     const heading = (m[2] ?? "").replace(/(?:^|[ \t]+)#+$/, "").trim();
-    out.push({ line: n, level: m[1].length, heading });
+    out.push({ line: n, level: m[1].length, heading, own: false });
   }
+  out.forEach((h, i) => {
+    const end = i + 1 < out.length ? out[i + 1].line - 1 : md.lines.length;
+    h.own = md.lines.slice(h.line, end).some((l) => l.trim() !== "");
+  });
   return out;
 }
 
 // The plan's last line with text and that line's number (KTD7): what a whole-plan reader's
 // inventory must quote. null for a plan with no text at all.
 export function lastTextLine(text) {
-  const lines = String(text).split(/\r?\n/);
+  const lines = withoutBom(text).split(/\r?\n/);
   for (let i = lines.length - 1; i >= 0; i--) if (lines[i].trim()) return { line: i + 1, text: lines[i] };
   return null;
 }

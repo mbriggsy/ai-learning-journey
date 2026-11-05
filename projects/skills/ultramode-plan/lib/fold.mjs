@@ -46,9 +46,18 @@ const KINDS = [
   ["list", new RegExp(`^\\s*(?:[-*+]|\\d+[.)])\\s+(?:\\[[ xX]\\]\\s+)?(?:\\*\\*)?(${IDS})(\\d+)(?=\\*\\*|[.:)](?!\\d)|\\s+\\([^)]*\\)\\*\\*)`)],
   ["row", new RegExp(`^\\s*\\|\\s*(?:\\*\\*)?(${IDS})(\\d+)(?:\\*\\*)?[.:]?(?:\\*\\*)?\\s*\\|`)],
 ];
-// The strongest tier an ID's lines reach: a heading, or a one-line definition (list item or row).
-const TIER = { heading: 2, list: 1, row: 1 };
-const TIER_NAME = { 2: "heading", 1: "list item or index row" };
+// A heading whose ID runs straight into a word ("### R13 splits - two axes", "### R6 vocabulary
+// discipline") is a section about the ID, not its definition: it counts as a one-line definition
+// (a "topic"), so it never outranks the ID's own list item or row and lets that line vanish (Burned's
+// phase-1, -4 and -5 plans have these). A heading that sets its ID off with ".", ":", ")", bold,
+// a dash, a slash, "removed:" or the end of the line stays a heading ("### U5. Bench",
+// "## F1 - intake shape", "### U7 removed: merged").
+const FOLD_DASHES = String.fromCharCode(0x2013, 0x2014);
+const SET_OFF = new RegExp(`^(?:$|\\*\\*|[.:)]|\\s*$|\\s+(?:[-/:${FOLD_DASHES}]|removed:))`, "i");
+// The strongest tier an ID's lines reach: a heading, or a one-line definition (a list item, an
+// index row, or a topical heading).
+const TIER = { heading: 2, topic: 1, list: 1, row: 1 };
+const TIER_NAME = { 2: "heading", 1: "list item, index row or topical heading" };
 // What may sit between an ID and its "removed:" note on a heading or list line: a parenthesis
 // inside bold, the bold's close, one ".", ":" or ")", and spaces.
 const AFTER_ID = /^(?:\s+\([^)]*\))?(?:\*\*)?[.:)]?(?:\*\*)?\s*/;
@@ -73,7 +82,7 @@ function definingLines(prose) {
       if (!m) continue;
       const rest = line.slice(m[0].length);
       const note = kind === "row" ? /^\s*(?:\*\*)?removed:/i.test(rest) : /^removed:/i.test(rest.replace(AFTER_ID, ""));
-      out.push({ id: `${m[1]}${m[2]}`, kind, line: n, removed: note });
+      out.push({ id: `${m[1]}${m[2]}`, kind: kind === "heading" && !SET_OFF.test(rest) ? "topic" : kind, line: n, removed: note });
     }
   }
   return out;
@@ -122,7 +131,7 @@ export function checkIds(before, after) {
   if (mdAfter.openFence !== null) problems.push(`the folded plan opens a fence at line ${mdAfter.openFence} that never closes, so every line after it reads as code: close it`);
   if (ids.length === 0) problems.push("the plan before the fold defines no R, U, KTD, A, F or AE ID, so the ID check has nothing to check");
   if (missing.length) problems.push(`gone after the fold: ${missing.join(", ")} (an ID removed on purpose keeps a line such as "### U7. removed: <reason>"; a renumbered one keeps its old number)`);
-  if (lost.length) problems.push(`lost a defining line: ${lost.map((x) => `${x.id} (${x.before} ${x.tier} line${x.before === 1 ? "" : "s"} before, ${x.after} after)`).join(", ")}; restore it, or write the ID's note as "### U7. removed: <reason>", "- R3. removed: <reason>" or "| U7 | removed: <reason> |"`);
+  if (lost.length) problems.push(`lost a defining line: ${lost.map((x) => `${x.id} (${x.before} ${x.tier} line${x.before === 1 ? "" : "s"} before, ${x.after} after)`).join(", ")}; restore the line (a second line of the same tier counts too, so a reworded twin keeps its ID where it stood), or, only for an ID removed on purpose, write its note as "### U7. removed: <reason>", "- R3. removed: <reason>" or "| U7 | removed: <reason> |"`);
   return { ok: problems.length === 0, before: ids.length, after: now.size, missing, lost, excused: ids.filter((id) => excused.has(id)), added, problems };
 }
 

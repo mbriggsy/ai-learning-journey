@@ -331,6 +331,9 @@ export function receipt(r = {}) {
     `CE: ${r.ce
       .map((e) => {
         if (!Array.isArray(e.stages) || e.stages.length === 0) throw new Error("flow: each CE resolution names the stages it served");
+        const bad = e.stages.filter((s) => !STAGES.includes(s));
+        if (bad.length) throw new Error(`flow: a CE resolution names no stage ${bad.join(", ")} (one of: ${STAGES.join(", ")})`);
+        if (r.update === true && e.stages.includes("research")) throw new Error("flow: an update run skips research (KTD3), so no CE resolution served it");
         if (e.commit !== null && !(typeof e.commit === "string" && /^[0-9a-f]{7,40}$/.test(e.commit))) throw new Error(`flow: a CE commit is a git sha, or null for "CE absent"; got ${JSON.stringify(e.commit)}`);
         return `${e.commit ?? "CE absent"} (${e.stages.join(", ")})`;
       })
@@ -356,6 +359,9 @@ export function receipt(r = {}) {
   lines.push(`seats without their CE file: ${listOr(list("inline", r.inline), "none", (s) => {
     if (!s || typeof s.seat !== "string" || !s.seat.trim() || typeof s.file !== "string" || !s.file.trim() || !("commit" in s)) throw new Error("flow: a seat without its CE file names the seat, the file and the CE commit it looked in (null for CE absent)");
     if (s.commit !== null && !(typeof s.commit === "string" && /^[0-9a-f]{7,40}$/.test(s.commit))) throw new Error(`flow: a seat's CE commit is a git sha, or null for "CE absent"; got ${JSON.stringify(s.commit)}`);
+    // The commit must be one the CE line names: a short and a full sha of one commit match.
+    const known = r.ce.some((e) => (s.commit === null ? e.commit === null : e.commit !== null && (e.commit.startsWith(s.commit) || s.commit.startsWith(e.commit))));
+    if (!known) throw new Error(`flow: ${s.seat} ran without its CE file at ${s.commit === null ? "CE absent" : `CE ${s.commit}`}, which no CE resolution in the receipt names`);
     return `${s.seat} (${s.file}, ${s.commit === null ? "CE absent" : `CE ${s.commit}`})`;
   })}`);
   lines.push(`stray files deleted: ${listOr(list("strays", r.strays), "none", (p) => {
@@ -370,6 +376,7 @@ export function receipt(r = {}) {
     if (changed === 0) throw new Error("flow: a project move changes at least one file; an unmoved project is moved: null");
     const cited = r.moved.cited;
     if (cited.some((p) => typeof p !== "string" || !p.trim())) throw new Error("flow: a cited file is a path");
+    if (new Set(cited).size !== cited.length) throw new Error("flow: the plan's cited files name one path twice");
     if (cited.length > changed) throw new Error(`flow: the plan cites ${cited.length} of the changed files, more than the ${changed} that changed`);
     lines.push(`project moved during the run: ${changed} file${changed === 1 ? "" : "s"} changed, ${cited.length} the plan cites${cited.length ? ` (${cited.join(", ")})` : ""}`);
   }

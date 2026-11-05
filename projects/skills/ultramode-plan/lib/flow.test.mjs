@@ -278,16 +278,30 @@ const BASE = {
   record: "~/.claude/projects/x/job/2026-11-05T01-00-00Z/ultramode-plan-run.json",
 };
 const firstLine = (o) => receipt({ ...BASE, ...o }).split("\n")[0];
+// An update run skips research, so no CE resolution served it.
+const UPDATE_CE = [{ commit: SHA, stages: ["deepen", "check-1", "check-2"] }];
 
 test("each receipt form in R9 comes out word for word, the updated forms included", () => {
   assert.equal(firstLine({}), "planned, deepened and checked");
   assert.equal(firstLine({ deepen: "passed" }), "planned, confidence check passed, checked");
-  assert.equal(firstLine({ update: true }), "updated, deepened and checked");
-  assert.equal(firstLine({ update: true, deepen: "passed" }), "updated, confidence check passed, checked");
+  assert.equal(firstLine({ update: true, ce: UPDATE_CE }), "updated, deepened and checked");
+  assert.equal(firstLine({ update: true, ce: UPDATE_CE, deepen: "passed" }), "updated, confidence check passed, checked");
   assert.equal(firstLine({ open: 2 }), "planned, deepened and checked, 2 P0/P1 open");
   assert.equal(firstLine({ deepen: "passed", open: 1 }), "planned, confidence check passed, checked, 1 P0/P1 open");
   assert.equal(firstLine({ adversary: false }), "planned, deepened, check incomplete: no adversary");
-  assert.equal(firstLine({ adversary: false, deepen: "passed", update: true }), "updated, confidence check passed, check incomplete: no adversary");
+  assert.equal(firstLine({ adversary: false, deepen: "passed", update: true, ce: UPDATE_CE }), "updated, confidence check passed, check incomplete: no adversary");
+});
+
+test("the CE line names real stages, none an update run skipped, and every inline seat's commit is one it names", () => {
+  assert.throws(() => receipt({ ...BASE, ce: [{ commit: SHA, stages: ["research", "review"] }] }), /names no stage review/);
+  assert.throws(() => receipt({ ...BASE, update: true }), /an update run skips research/);
+  // A seat's commit must be one the CE line names; a short sha matches its full form.
+  const seat = (commit) => ({ seat: "coherence", file: "coherence-reviewer.md", commit });
+  assert.throws(() => receipt({ ...BASE, inline: [seat("deadbee")] }), /which no CE resolution in the receipt names/);
+  assert.throws(() => receipt({ ...BASE, inline: [seat(null)] }), /at CE absent, which no CE resolution/);
+  assert.match(receipt({ ...BASE, inline: [seat(SHA.slice(0, 7))] }), /coherence \(coherence-reviewer\.md, CE 799ac9a\)/);
+  assert.match(receipt({ ...BASE, ce: [{ commit: SHA.slice(0, 7), stages: ["check-1"] }], inline: [seat(SHA)] }), /, CE 799ac9a/);
+  assert.throws(() => receipt({ ...BASE, moved: { changed: 3, cited: ["a", "a"] } }), /name one path twice/);
 });
 
 test("the whole receipt: park, CE commits with their stages, the four classes, holes, inline seats, strays, a move and the record", () => {
@@ -296,7 +310,7 @@ test("the whole receipt: park, CE commits with their stages, the four classes, h
     park: "KTD4 says X; the check found Y. Keep X?",
     ce: [{ commit: SHA, stages: ["research", "deepen"] }, { commit: "3449230", stages: ["check-1"] }],
     holes: [{ seat: "security", missed: "U4 to U6", resumes: 2 }],
-    inline: [{ seat: "coherence", file: "coherence-reviewer.md", commit: "3449230" }, { seat: "premise", file: "adversarial-document-reviewer.md", commit: null }],
+    inline: [{ seat: "coherence", file: "coherence-reviewer.md", commit: "3449230" }, { seat: "premise", file: "adversarial-document-reviewer.md", commit: SHA }],
     strays: ["projects/x/probe.txt"],
     moved: { changed: 5, cited: ["projects/x/a.mjs", "projects/x/b.mjs"] },
   });
@@ -308,7 +322,7 @@ test("the whole receipt: park, CE commits with their stages, the four classes, h
       `CE: ${SHA} (research, deepen); 3449230 (check-1)`,
       "coverage: premise: nothing found; reach: 2 verified (C3, C7); blast radius: nothing found; test vacuity: nothing found",
       "coverage holes: security (U4 to U6, resumed 2 times)",
-      "seats without their CE file: coherence (coherence-reviewer.md, CE 3449230); premise (adversarial-document-reviewer.md, CE absent)",
+      `seats without their CE file: coherence (coherence-reviewer.md, CE 3449230); premise (adversarial-document-reviewer.md, CE ${SHA})`,
       "stray files deleted: projects/x/probe.txt",
       "project moved during the run: 5 files changed, 2 the plan cites (projects/x/a.mjs, projects/x/b.mjs)",
       `run record: ${BASE.record}`,
@@ -319,6 +333,8 @@ test("the whole receipt: park, CE commits with their stages, the four classes, h
 test("a quiet run's receipt says none for each empty list, names CE absent, and has no move or park line when there is none", () => {
   const text = receipt({ ...BASE, ce: [{ commit: null, stages: ["check-1"] }] });
   assert.match(text, /^CE: CE absent \(check-1\)$/m);
+  const absent = { seat: "coherence", file: "coherence-reviewer.md", commit: null };
+  assert.match(receipt({ ...BASE, ce: [{ commit: null, stages: ["check-1"] }], inline: [absent] }), /^seats without their CE file: coherence \(coherence-reviewer\.md, CE absent\)$/m);
   assert.match(text, /^coverage holes: none$/m);
   assert.match(text, /^seats without their CE file: none$/m);
   assert.match(text, /^stray files deleted: none$/m);
@@ -393,7 +409,7 @@ test("the receipt refuses silence and the wrong skips: a missing class, two form
   assert.throws(() => receipt({ ...BASE, deepen: "skipped" }), /deepen is/);
   assert.throws(() => receipt({ ...BASE, adversary: undefined }), /adversary/);
   assert.throws(() => receipt({ ...BASE, ce: [] }), /every CE resolution/);
-  assert.throws(() => receipt({ ...BASE, ce: [{ commit: "not-a-sha", stages: ["x"] }] }), /git sha/);
+  assert.throws(() => receipt({ ...BASE, ce: [{ commit: "not-a-sha", stages: ["deepen"] }] }), /git sha/);
   assert.throws(() => receipt({ ...BASE, record: "" }), /run record/);
 });
 
@@ -566,10 +582,10 @@ test("the index command gives the staged plan's section index, its last line and
   assert.equal(r.status, 0, r.stderr);
   const out = JSON.parse(r.stdout);
   assert.deepEqual(out.index, [
-    { line: 4, level: 1, heading: "Plan" },
-    { line: 6, level: 2, heading: "Goal" },
-    { line: 11, level: 2, heading: "Units" },
-    { line: 12, level: 3, heading: "U1. One" },
+    { line: 4, level: 1, heading: "Plan", own: false },
+    { line: 6, level: 2, heading: "Goal", own: true },
+    { line: 11, level: 2, heading: "Units", own: false },
+    { line: 12, level: 3, heading: "U1. One", own: true },
   ]);
   assert.deepEqual(out.last, { line: 13, text: "Last line." });
   assert.equal(out.bytes, Buffer.byteLength(readFileSync(plan)));

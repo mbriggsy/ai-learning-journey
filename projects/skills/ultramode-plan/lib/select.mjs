@@ -33,14 +33,16 @@ const selectBlocked = (reason) => ({ result: "blocked", reason, sections: [], ca
 // A row covers its heading's subtree, the heading and every one after it up to the next heading
 // at its level or shallower, so "Implementation Units" covers every unit beneath it while a row at
 // "Assumptions" covers none of its sibling "Key Technical Decisions". Every leaf heading (one with
-// no deeper heading right after it) must sit in some row's subtree. The title, a first heading
-// every other heading sits deeper than, is no section: a row there covers nothing, or one title row
-// would cover the whole plan. Granularity beyond that is the scorer prompt's to set. Returns a
-// reason to block, or null.
+// no deeper heading right after it), and every heading with text of its own before its first
+// child (the index's `own`), must sit in some row's subtree: a row at a child never stands in for
+// its parent's own text ("Scope Boundaries" above its "Deferred" child). The title, a first
+// heading every other heading sits deeper than, is no section: a row there covers nothing, or one
+// title row would cover the whole plan, and its own text needs no row. Granularity beyond that is
+// the scorer prompt's to set. Returns a reason to block, or null.
 function selectCoverage(scores, index) {
   if (!Array.isArray(index) || index.length === 0) return "no section index: the score list cannot be counted against the plan (KTD7 passes the index in args)";
   for (const h of index) {
-    if (!h || !Number.isInteger(h.line) || h.line < 1 || !Number.isInteger(h.level) || h.level < 1 || h.level > 6) return `a malformed section index entry (${JSON.stringify(h)}): each needs a line and a heading level`;
+    if (!h || !Number.isInteger(h.line) || h.line < 1 || !Number.isInteger(h.level) || h.level < 1 || h.level > 6 || typeof h.own !== "boolean") return `a malformed section index entry (${JSON.stringify(h)}): each needs a line, a heading level and whether it has text of its own`;
   }
   const heads = [...index].sort((a, b) => a.line - b.line);
   for (let i = 1; i < heads.length; i++) if (heads[i].line === heads[i - 1].line) return `the section index lists line ${heads[i].line} twice`;
@@ -57,8 +59,8 @@ function selectCoverage(scores, index) {
     return Infinity;
   };
   const spans = [...seen].filter((l) => !title || l !== title.line).map((l) => [l, spanEnd(at.get(l))]);
-  const leaves = heads.filter((h, i) => h !== title && !(i + 1 < heads.length && heads[i + 1].level > h.level));
-  const bare = leaves.filter((h) => !spans.some(([from, to]) => h.line >= from && h.line < to));
+  const needed = heads.filter((h, i) => h !== title && (h.own || !(i + 1 < heads.length && heads[i + 1].level > h.level)));
+  const bare = needed.filter((h) => !spans.some(([from, to]) => h.line >= from && h.line < to));
   if (bare.length) {
     const named = bare.slice(0, 8).map((h) => (h.heading ? `"${h.heading}"` : `line ${h.line}`));
     if (bare.length > 8) named.push(`and ${bare.length - 8} more`);

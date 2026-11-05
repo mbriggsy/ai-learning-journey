@@ -13,7 +13,7 @@ const sec = (section, triggers, kind = "other", strengthened = false) => ({ sect
 // Each section starts at its own level-2 heading, lines 10, 20, 30 and so on, under a level-1 title,
 // and the index lists exactly those headings: a full score list, unless a case says otherwise.
 const lined = (scores) => (Array.isArray(scores) ? scores.map((s, i) => (s && typeof s === "object" && s.line === undefined ? { ...s, line: 10 * (i + 1) } : s)) : scores);
-const indexOf = (scores) => [{ line: 1, level: 1, heading: "Plan" }, ...(Array.isArray(scores) ? scores : []).map((s, i) => ({ line: 10 * (i + 1), level: 2, heading: s?.section }))];
+const indexOf = (scores) => [{ line: 1, level: 1, heading: "Plan", own: false }, ...(Array.isArray(scores) ? scores : []).map((s, i) => ({ line: 10 * (i + 1), level: 2, heading: s?.section, own: true }))];
 const run = (scores, o = {}) => selectSections({ scores: lined(scores), index: indexOf(scores), depth: "Standard", riskSignals: [], deepened: false, ...o });
 const picked = (r) => r.sections.map((s) => s.section);
 
@@ -61,7 +61,7 @@ test("a tie at the fifth slot goes to CE's critical section, then document order
 
 test("document order is the rows' heading lines, so the same scores listed in another order pick the same sections", () => {
   const rows = [{ ...sec("A", 3), line: 10 }, { ...sec("B", 3), line: 20 }, { ...sec("C", 3), line: 30 }];
-  const index = [{ line: 1, level: 1, heading: "Plan" }, ...rows.map((r) => ({ line: r.line, level: 2, heading: r.section }))];
+  const index = [{ line: 1, level: 1, heading: "Plan", own: false }, ...rows.map((r) => ({ line: r.line, level: 2, heading: r.section, own: true }))];
   const go = (scores) => picked(selectSections({ scores, index, depth: "Lightweight", riskSignals: [], deepened: false }));
   assert.deepEqual(go(rows), ["A", "B"]);
   assert.deepEqual(go([...rows].reverse()), ["A", "B"]);
@@ -119,14 +119,14 @@ test("without a deepened: date a strengthened flag neither lowers a section nor 
 
 test("a short score list blocks: a part of the plan left unscored, a row at no heading, a heading scored twice, no index", () => {
   const index = [
-    { line: 1, level: 1, heading: "Plan" },
-    { line: 3, level: 2, heading: "Goal" },
-    { line: 9, level: 2, heading: "Planning Contract" },
-    { line: 11, level: 3, heading: "Key Technical Decisions" },
-    { line: 30, level: 3, heading: "Risks" },
-    { line: 40, level: 2, heading: "Implementation Units" },
-    { line: 42, level: 3, heading: "U1. Bench" },
-    { line: 50, level: 3, heading: "U2. Core" },
+    { line: 1, level: 1, heading: "Plan", own: true },
+    { line: 3, level: 2, heading: "Goal", own: true },
+    { line: 9, level: 2, heading: "Planning Contract", own: false },
+    { line: 11, level: 3, heading: "Key Technical Decisions", own: true },
+    { line: 30, level: 3, heading: "Risks", own: true },
+    { line: 40, level: 2, heading: "Implementation Units", own: false },
+    { line: 42, level: 3, heading: "U1. Bench", own: true },
+    { line: 50, level: 3, heading: "U2. Core", own: true },
   ];
   const full = [
     { section: "Goal", line: 3, kind: "goal-problem", triggers: 0 },
@@ -152,16 +152,22 @@ test("a short score list blocks: a part of the plan left unscored, a row at no h
   assert.match(go([...full, { section: "Again", line: 11, kind: "other", triggers: 0 }]).reason, /line 11 is scored twice/);
   assert.match(go(full, null).reason, /no section index/);
   assert.match(go(full, [{ line: 0, level: 2 }]).reason, /malformed section index/);
-  assert.match(go(full, [...index, { line: 3, level: 2, heading: "Goal" }]).reason, /lists line 3 twice/);
+  assert.match(go(full, [...index, { line: 3, level: 2, heading: "Goal", own: true }]).reason, /lists line 3 twice/);
+  assert.match(go(full, index.map(({ own, ...h }) => h)).reason, /whether it has text of its own/);
+  // A parent with text of its own before its first child needs a row over that text: rows at its
+  // children alone leave it bare, and the title's own text needs none.
+  const withOwn = index.map((h) => (h.line === 9 ? { ...h, own: true } : h));
+  assert.match(go(full, withOwn).reason, /left 1 section .*\("Planning Contract"\)/);
+  assert.equal(go([full[0], { section: "Planning Contract", line: 9, kind: "other", triggers: 0 }, full[3]], withOwn).result, "passed");
   assert.match(go(full.map(({ line, ...s }) => s)).reason, /its heading's line/);
 });
 
 test("a row at the title covers nothing, and a plan of two top-level parts needs each covered", () => {
   const index = [
-    { line: 1, level: 1, heading: "Plan" },
-    { line: 3, level: 2, heading: "Goal" },
-    { line: 10, level: 2, heading: "Key Technical Decisions" },
-    { line: 20, level: 2, heading: "Implementation Units" },
+    { line: 1, level: 1, heading: "Plan", own: true },
+    { line: 3, level: 2, heading: "Goal", own: true },
+    { line: 10, level: 2, heading: "Key Technical Decisions", own: true },
+    { line: 20, level: 2, heading: "Implementation Units", own: true },
   ];
   const go = (scores, idx = index) => selectSections({ scores, index: idx, depth: "Standard", riskSignals: [], deepened: false });
   const r = (section, line) => ({ section, line, kind: "other", triggers: 0 });
@@ -169,11 +175,12 @@ test("a row at the title covers nothing, and a plan of two top-level parts needs
   assert.equal(titleOnly.result, "blocked");
   assert.match(titleOnly.reason, /left 3 sections/);
   assert.equal(go([r("Plan", 1), r("Goal", 3), r("Key Technical Decisions", 10), r("Implementation Units", 20)]).result, "passed", "a title row is allowed; it just covers nothing");
-  // A second H1 makes no title: each H1 is a part. Rows at Goal and the appendix leave the rest bare.
-  const twoTops = [...index, { line: 200, level: 1, heading: "Appendix" }];
+  // A second H1 makes no title: each H1 is a part, its own text included. Rows at Goal and the
+  // appendix leave the rest bare.
+  const twoTops = [...index, { line: 200, level: 1, heading: "Appendix", own: true }];
   const bare = go([r("Goal", 3), r("Appendix", 200)], twoTops);
   assert.equal(bare.result, "blocked");
-  assert.match(bare.reason, /\("Key Technical Decisions", "Implementation Units"\)/);
+  assert.match(bare.reason, /\("Plan", "Key Technical Decisions", "Implementation Units"\)/);
   // A row at each H1 covers its subtree; granularity beyond that is the scorer prompt's.
   assert.equal(go([r("Plan", 1), r("Appendix", 200)], twoTops).result, "passed");
 });

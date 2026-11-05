@@ -52,7 +52,7 @@ const swap = (text, from, to) => {
 const kindsOf = (text, id) => [...new Set((definitions(text).get(id) ?? []).map((d) => d.kind))].sort();
 const lostOf = (r) => r.lost.map((x) => `${x.id} ${x.tier} ${x.before}->${x.after}`);
 const HEAD = "heading";
-const ONE = "list item or index row";
+const ONE = "list item, index row or topical heading";
 
 test("the hybrid plan's own IDs are all found, each by its kinds of defining line, and an unchanged plan passes", () => {
   const ids = definedIds(REAL);
@@ -195,6 +195,35 @@ test("the ID's own spellings: a bare heading, a box, a bold parenthesis, a dotte
   assert.deepEqual(definedIds("- U3 (lib/x) waits on U2\n"), [], "a parenthesis outside bold is prose");
   assert.deepEqual(kindsOf("| R1. | a requirement |\n", "R1"), ["row"]);
   assert.deepEqual(definedIds("| U1.5 | a sub-unit |\n"), []);
+  assert.deepEqual(kindsOf("- **R1** -- a requirement\n", "R1"), ["list"], "the bold close after the ID");
+  // A grouped trace bullet mentions its IDs; their definitions live elsewhere.
+  assert.deepEqual(definedIds("- **R10, R11, R12** traced to U3\n"), []);
+});
+
+test("a heading whose ID runs into a word is a topic, never outranking the ID's own line", () => {
+  const dash = String.fromCharCode(0x2014);
+  for (const h of ["### U5. Bench", "### U5", "### **U5** Bench", `## U5 ${dash} intake shape`, "## U5 - intake", "## U5 / x", "### U5 removed: merged"]) {
+    assert.deepEqual(kindsOf(h + "\n", "U5"), ["heading"], h);
+  }
+  for (const h of ["### U5 notes", "### U5 (notes)", "### R13 splits - two axes"]) {
+    assert.deepEqual(kindsOf(h + "\n", h.match(/U5|R13/)[0]), ["topic"], h);
+  }
+  // Burned's shape: a discussion heading for R13, and R13's own trace bullet. Dropping the bullet
+  // fails; the heading never stands in for it.
+  const plan = "# P\n### R13 splits - two axes\nDiscussion.\n## Trace\n- **R13** (PRD 6.2) traced to U4\n";
+  assert.deepEqual(lostOf(checkIds(plan, without(plan, "- **R13** (PRD 6.2) traced to U4\n"))), [`R13 ${ONE} 2->1`]);
+  // An as-built heading set off by a dash is still a heading twin of the unit.
+  assert.deepEqual(kindsOf(`### U4. Floor\n### U4 ${dash} the measurement\n`, "U4"), ["heading"]);
+});
+
+test("removed: excuses only right after the ID on a list item too, and a bold parenthesis may sit before it", () => {
+  const plan = "# P\n- R1. A rule.\n| R1 | trace |\n";
+  // The trace row dropped, and the list item mentions a removal mid-text: no excuse.
+  assert.deepEqual(lostOf(checkIds(plan, "# P\n- R1. A rule; the old flag removed: see KTD2.\n")), [`R1 ${ONE} 2->1`]);
+  assert.deepEqual(checkIds("# P\n- **R1 (PRD 6.2)** A rule.\n| R1 | trace |\n", "# P\n- **R1 (PRD 6.2)** removed: merged into R2.\n").excused, ["R1"]);
+  // A note already in the plan before the fold is kept like any defining line.
+  const noted = "# P\n### U7. removed: merged into U1.\n### U1. Bench\nU1 holds U7's work.\n";
+  assert.deepEqual(lostOf(checkIds(noted, without(noted, "### U7. removed: merged into U1.\n"))), [`U7 ${HEAD} 1->0`]);
 });
 
 test("an added unit passes and is listed; a removed: note right after the ID excuses what it lost", () => {

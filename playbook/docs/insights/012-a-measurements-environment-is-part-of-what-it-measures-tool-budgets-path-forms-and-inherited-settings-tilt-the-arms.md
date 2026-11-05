@@ -20,6 +20,7 @@ tags: [measurement, environment, bench-vs-real, tool-output-limit, preview, grep
 ## Fix
 
 - The new recipe's listing and header print go through `corpus.mjs` with no paths, paged under 20,000 characters (the plan's KTD2); every Grep sets `head_limit: 0`; helpers read any saved tool result in full, and the results record each time.
+  > **Out of date (corrected 2026-11-04):** this new recipe never went live. The re-score measured a miss on 2026-11-01, and every candidate was deleted under the plan's KTD7. The live brief is still the old recipe; its corpus card and size cap live in `projects/skills/distill-and-brief/brief/corpus.mjs` (`CAP`), and the miss's numbers live in `projects/skills/distill-and-brief/docs/plans/brief-recall-fix-plan.md`.
 - The filename Glob takes the folder as its path, the form a real brief uses (`7f73faf1`).
 - The copies went to helpers by the scratchpad's 8.3 short path (`dir /x` gives it), 95 characters before a filename. The harness sets each helper's effort to xhigh (`954f8fd8`), the level its baseline ran at, read back from each helper transcript's `"effort"`.
 

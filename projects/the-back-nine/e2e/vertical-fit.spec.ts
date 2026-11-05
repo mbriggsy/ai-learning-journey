@@ -3171,9 +3171,11 @@ const TALL_TAP_ARMS = [
   { host: 'panel', name: '1024×1466 touch screen', touch: true, use: { viewport: { width: 1024, height: 1466 }, ...TALL_TOUCH } },
 ] as const
 
-/** `datecoststale` with its W kept as an entered $84,000 a year in the panel, then staled on the reading
- *  by a move to PA (an entered W never stales on the quote) — the probe's set-up, through the panel the
- *  result's standing line opens. */
+/** `datecoststale` with its W kept through the Keep door as an entered $84,000 a year in the panel, then
+ *  staled on the reading by a move to PA — the probe's set-up, through the panel the result's standing
+ *  line opens. Since build 2's U5 (`d4227774`) the Keep stamps the figure with the quote its note showed
+ *  ($78,000), so the note reads "You kept", never "You entered" (KTD10), and a kept figure above today's
+ *  quote stales on the state alone, exactly as the typed figure this set-up first held. */
 async function staleEnteredWInPanel(page: Page) {
   await gotoSeedFinal(page, 'datecoststale')
   await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
@@ -3187,8 +3189,8 @@ async function staleEnteredWInPanel(page: Page) {
     .getByRole('radio', { name: /Pennsylvania/ })
     .first()
     .evaluate((el) => (el as HTMLInputElement).click())
-  await expect(row.getByRole('note'), 'the move to PA stales the entered figure').toContainText(
-    slots.workingCostStaleStateEntered('84,000'),
+  await expect(row.getByRole('note'), 'the move to PA stales the kept figure').toContainText(
+    slots.workingCostStaleStateKept('84,000'),
   )
   return { dialog, row }
 }
@@ -3204,7 +3206,7 @@ for (const { host, ...vp } of TALL_TAP_ARMS) {
         await advanceIntakeTo(page, copy.qWorkingCostHeading, `${host} ${vp.name}`)
       }
       const face = host === 'walk' ? page.locator('.intake-shell .working-cost') : dialog.locator('[data-assumption-seat="working-year-cost"] .working-cost')
-      await expect(face.getByRole('note')).toContainText(slots.workingCostStaleStateEntered('84,000'))
+      await expect(face.getByRole('note')).toContainText(slots.workingCostStaleStateKept('84,000'))
       const month = face.getByRole('radio', { name: copy.periodMonth })
       await expect(month, 'the held figure’s own unit, a year, is the one checked').not.toBeChecked()
       const input = face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
@@ -3369,8 +3371,10 @@ for (const arm of KEEP_TAP_ARMS) {
       })
       expect(focused, 'focus never falls to the page: it lands on the answer that now stands').toBe(true)
       if (arm.host === 'panel') {
+        // The door keeps the HELD answer, a kept figure, and a Keep carries its stamp (KTD10): typing
+        // digits and then keeping must never launder it into a typed figure that no quote can stale.
         await expect(dialog.locator('[data-assumption-seat="working-year-cost"] .ap-row__value')).toHaveText(
-          slots.assumptionWorkingCostEntered('84,000'),
+          slots.assumptionWorkingCostKept('84,000'),
         )
       }
     })

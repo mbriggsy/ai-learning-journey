@@ -14,10 +14,6 @@ import { join, resolve } from "node:path";
 import { isMain, usage } from "../lib/entry.mjs";
 import { existingBase, longOf } from "../lib/paths.mjs";
 
-// longOf lives in lib/paths.mjs (flow.mjs needs it too, and lib/ may not import bench/); it is
-// re-exported here for the bench modules that import it from this file.
-export { longOf };
-
 // The short spelling of an absolute path in its long form, or null off Windows or when it is the
 // same as the long one (no component has a short name). A path that does not exist yet (a
 // settings file never written) has no short name of its own, but its folders may: the deepest

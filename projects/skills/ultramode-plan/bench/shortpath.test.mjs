@@ -6,7 +6,8 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { mkdirSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { longOf, shortOf } from "./shortpath.mjs";
+import { longOf } from "../lib/paths.mjs";
+import { shortOf } from "./shortpath.mjs";
 import { tmpRoot } from "./testkit.mjs";
 
 const win = process.platform === "win32";

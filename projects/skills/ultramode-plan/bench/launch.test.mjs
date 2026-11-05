@@ -4,7 +4,8 @@ import { mkdirSync } from "node:fs";
 import { join, resolve, sep } from "node:path";
 import { ACCOUNT_MCP_SERVERS, CANARY_TOOL, CROSS_SESSION_TOOLS, RESEARCH_MCP_SERVERS, buildLaunch, denyRules, rulePath, spellings } from "./launch.mjs";
 import { slugOf } from "./freeze.mjs";
-import { longOf, shortOf as realShortOf } from "./shortpath.mjs";
+import { longOf } from "../lib/paths.mjs";
+import { shortOf as realShortOf } from "./shortpath.mjs";
 import { tmpRoot } from "./testkit.mjs";
 
 const root = resolve("/bench-fixture");

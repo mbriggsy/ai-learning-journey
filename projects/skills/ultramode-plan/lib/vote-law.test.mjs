@@ -100,6 +100,11 @@ test("a doubled vote, a malformed vote and an impossible n each throw", () => {
   assert.throws(() => classify([{ real: true, material: true }], 3), /no boolean "new"/);
   assert.doesNotThrow(() => classify([{ real: true, material: true }], 3, { bench: true }));
   assert.throws(() => classify([], 0), /whole number/);
+  // The bench mode is switched by a boolean alone: the string "false" is truthy and would switch it on.
+  for (const bench of ["false", "true", 1, null]) {
+    assert.throws(() => classify([v()], 1, { bench }), /bench is true or false/, JSON.stringify(bench));
+    assert.throws(() => judge([v()], "P3", { bench }), /bench is true or false/, JSON.stringify(bench));
+  }
 });
 
 test("bench mode: 2 of 3 real-voters putting a claimed P1 at P2 drop it below D's line; a 1-1 split on that line is both-ways", () => {

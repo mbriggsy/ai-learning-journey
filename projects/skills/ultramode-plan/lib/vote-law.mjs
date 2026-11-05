@@ -47,6 +47,7 @@ export const tally = (yes, of) => (2 * yes > of ? "yes" : 2 * yes < of ? "no" : 
 // Every other split follows its majority. A confirmed verdict needs no quorum: every vote that
 // came back affirmed it, and the quorum guards only the verdicts that would drop a finding.
 export function classify(cast, n, { bench = false } = {}) {
+  if (typeof bench !== "boolean") throw new Error(`classify: bench is true or false, got ${JSON.stringify(bench)} (a string "false" would switch the bench mode on)`);
   if (!Array.isArray(cast)) throw new Error("classify: cast must be an array of the votes that came back");
   if (!Number.isInteger(n) || n < 1) throw new Error(`classify: ${JSON.stringify(n)} verifiers asked; n must be a whole number of at least 1`);
   if (cast.length > n) throw new Error(`classify: ${cast.length} votes cast for ${n} verifiers asked (a doubled vote)`);

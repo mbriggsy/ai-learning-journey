@@ -21,7 +21,8 @@ import { isMain, usage } from "../../lib/entry.mjs";
 import { deleteFrozen, freeze, slugOf } from "../freeze.mjs";
 import { ACCOUNT_MCP_SERVERS, RESEARCH_MCP_SERVERS, buildLaunch, spellings } from "../launch.mjs";
 import { secretsOf, writeChecked } from "../secrets.mjs";
-import { longOf, shortOf } from "../shortpath.mjs";
+import { longOf } from "../../lib/paths.mjs";
+import { shortOf } from "../shortpath.mjs";
 import { findSession, mcpServersOffered, readTree, toolCalls } from "../transcripts.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));

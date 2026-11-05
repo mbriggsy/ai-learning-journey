@@ -2,41 +2,56 @@
 // THE FOLD CHECK (KTD9 of docs/plans/hybrid-plan-step-plan.md). The main loop folds verified
 // findings into a working copy of the staged plan by whole-section edits, then runs this on the
 // before and after files before the working copy replaces the staged plan:
-//   1. The ID check: every ID the plan defined before the fold still has every kind of defining
-//      line it had (a heading, a list item, an index-table row), and is still mentioned. CE never
-//      renumbers an ID (a deleted unit's number stays a gap), and a whole-section edit can drop
-//      one silently: deleting "### U5." while the index table's "| U5 |" row stays is exactly
-//      that drop, so a row never stands in for a heading. An ID removed on purpose keeps a line
-//      saying "removed: <reason>" beside its ID, which excuses the defining lines it lost.
+//   1. The ID check: every ID the plan defined before the fold keeps as many defining lines of its
+//      strongest tier as it had, and is still mentioned. The tiers: a heading (a unit's "### U5."),
+//      above a one-line definition, a list item or an index-table row ("- R1.", "| U5 |"). CE
+//      never renumbers an ID (a deleted unit's number stays a gap), and a whole-section edit can
+//      drop one silently: deleting "### U5." while the index table's "| U5 |" row stays, or while
+//      an as-built "### U5 - notes" heading stays, is exactly that drop. Counting lines, not kinds,
+//      is what catches the second: a twin line of the same tier never stands in for a dropped one.
+//      Below the strongest tier lines may come and go (an index table dropped under headings that
+//      stay, a requirements list rendered as a table), since CE writes each ID in either form. An
+//      ID removed on purpose keeps a line whose text right after the ID reads "removed: <reason>",
+//      which excuses what it lost.
 //   2. The drift grep: each old value a folded change replaced is searched for in the whole
-//      folded plan, not just at the one instance the change named, so a value changed in one
-//      section and missed in another shows up. A hit is reported, not failed: an old value can
-//      rightly stay (a "Rejected:" sentence quoting it), so the main loop judges each line.
+//      folded plan, line by line, not just at the one instance the change named, so a value
+//      changed in one section and missed in another shows up. A hit is reported, not failed: an
+//      old value can rightly stay (a "Rejected:" sentence quoting it), so the main loop judges each
+//      line. A value split across two lines is not found: the grep is per line.
 // The IDs are CE's families: R, U and KTD, which KTD9 names, plus CE's origin IDs (A, F, AE),
 // which its deepen checklist says a plan must keep wherever it touches them.
 // Run by the main loop as a command; never inlined into a Workflow script (KTD1).
 //
-// Usage: node fold.mjs <before.md> <after.md> [<changes.json>]
+// Usage: node fold.mjs <before.md> <after.md> <changes.json>
 //   changes.json: [{ "id": "<ledger id>", "old_values": ["<value>", ...] }, ...], one entry per
 //   applied id, carrying the values the fold replaced: a deepen amendment proposes its own, and
-//   for a check fix the main loop records what its edit replaced.
+//   for a check fix the main loop records what its edit replaced. A change that only adds gives
+//   an empty list. Every fold applies at least one id, so an empty or missing file is an error.
 // Prints one JSON object. Exits 0 when the ID check passes (any drift is in the output), 1 when
 // it fails, and 2 when the input cannot be read (no check ran).
 
 import { readFileSync } from "node:fs";
 import { isMain, usage } from "./entry.mjs";
+import { readMarkdown } from "./markdown.mjs";
 
 const IDS = "KTD|AE|R|U|A|F"; // every pattern follows this with \d+, so "AE1" can only read as AE
-const FENCE = /^\s*(```|~~~)/;
-// The three kinds of defining line. A heading or list item opens with the ID (after optional
-// bold) and follows it with ".", ":", ")" or bold; a heading may also follow it with a space.
-// An index-table row has the ID alone in its first cell. A prose bullet ("- U1 to U11 are
-// done") or a diagram node ("R1 --> MS") is a mention, never a definition.
+// The three kinds of defining line. A heading or list item opens with the ID (after optional bold,
+// and for a list item an optional "[ ]" box) and follows it with ".", ":", ")" or bold; a heading
+// may also follow it with a space or end the line, and a bold list item may carry a parenthesis
+// inside its bold ("- **R1 (PRD 6.2)** --"). A "." followed by a digit is a sub-ID ("U2.5"), never
+// U2's definition. An index-table row has the ID alone in its first cell. A prose bullet ("- U1
+// to U11 are done") or a diagram node ("R1 --> MS") is a mention, never a definition.
 const KINDS = [
-  ["heading", new RegExp(`^\\s*#{1,6}\\s+(?:\\*\\*)?(${IDS})(\\d+)(?=\\*\\*|[.:)]|\\s)`)],
-  ["list", new RegExp(`^\\s*(?:[-*+]|\\d+[.)])\\s+(?:\\*\\*)?(${IDS})(\\d+)(?=\\*\\*|[.:)])`)],
-  ["row", new RegExp(`^\\s*\\|\\s*(?:\\*\\*)?(${IDS})(\\d+)(?:\\*\\*)?\\s*\\|`)],
+  ["heading", new RegExp(`^\\s*#{1,6}\\s+(?:\\*\\*)?(${IDS})(\\d+)(?=\\*\\*|[.:)](?!\\d)|\\s|$)`)],
+  ["list", new RegExp(`^\\s*(?:[-*+]|\\d+[.)])\\s+(?:\\[[ xX]\\]\\s+)?(?:\\*\\*)?(${IDS})(\\d+)(?=\\*\\*|[.:)](?!\\d)|\\s+\\([^)]*\\)\\*\\*)`)],
+  ["row", new RegExp(`^\\s*\\|\\s*(?:\\*\\*)?(${IDS})(\\d+)(?:\\*\\*)?[.:]?(?:\\*\\*)?\\s*\\|`)],
 ];
+// The strongest tier an ID's lines reach: a heading, or a one-line definition (list item or row).
+const TIER = { heading: 2, list: 1, row: 1 };
+const TIER_NAME = { 2: "heading", 1: "list item or index row" };
+// What may sit between an ID and its "removed:" note on a heading or list line: a parenthesis
+// inside bold, the bold's close, one ".", ":" or ")", and spaces.
+const AFTER_ID = /^(?:\s+\([^)]*\))?(?:\*\*)?[.:)]?(?:\*\*)?\s*/;
 const MENTION = new RegExp(`\\b(${IDS})(\\d+)\\b`, "g");
 const ID_SHAPE = new RegExp(`^(${IDS})(\\d+)$`);
 const FAMILY_ORDER = ["R", "U", "KTD", "A", "F", "AE"];
@@ -48,28 +63,28 @@ const byId = (a, b) => {
   return FAMILY_ORDER.indexOf(pa) - FAMILY_ORDER.indexOf(pb) || Number(na) - Number(nb);
 };
 
-// The lines outside fenced code blocks, with their 1-based numbers.
-function proseLines(text) {
+// Each defining line of the plan's prose (outside the front matter and every fence): its ID, its
+// kind, its line number, and whether it is the ID's "removed: <reason>" note.
+function definingLines(prose) {
   const out = [];
-  let fenced = false;
-  text.split(/\r?\n/).forEach((line, i) => {
-    if (FENCE.test(line)) fenced = !fenced;
-    else if (!fenced) out.push({ n: i + 1, line });
-  });
-  return out;
-}
-
-// id -> the set of kinds of line that define it.
-export function definitions(text) {
-  const defs = new Map();
-  for (const { line } of proseLines(text)) {
+  for (const { n, line } of prose) {
     for (const [kind, re] of KINDS) {
       const m = line.match(re);
       if (!m) continue;
-      const id = `${m[1]}${m[2]}`;
-      if (!defs.has(id)) defs.set(id, new Set());
-      defs.get(id).add(kind);
+      const rest = line.slice(m[0].length);
+      const note = kind === "row" ? /^\s*(?:\*\*)?removed:/i.test(rest) : /^removed:/i.test(rest.replace(AFTER_ID, ""));
+      out.push({ id: `${m[1]}${m[2]}`, kind, line: n, removed: note });
     }
+  }
+  return out;
+}
+
+// id -> its defining lines, each { kind, line, removed }, in document order.
+export function definitions(text) {
+  const defs = new Map();
+  for (const d of definingLines(readMarkdown(text).prose)) {
+    if (!defs.has(d.id)) defs.set(d.id, []);
+    defs.get(d.id).push({ kind: d.kind, line: d.line, removed: d.removed });
   }
   return defs;
 }
@@ -77,34 +92,37 @@ export function definitions(text) {
 export const definedIds = (text) => [...definitions(text).keys()].sort(byId);
 
 // The ID check. `missing`: defined before, mentioned nowhere after. `lost`: defined before, still
-// mentioned, but without a kind of defining line it had, and with no "removed:" line excusing it.
-// A plan with no definitions at all before the fold fails: a check that found nothing to check
-// never reads as a pass.
+// mentioned, but with fewer lines at its strongest tier than it had (a heading tier counts
+// headings; a one-line tier counts list items, rows and any heading it gained), and no "removed:"
+// note excusing it. A plan with no definitions at all before the fold fails, and so does a fence
+// left open in either file: every line after it would read as code, so no ID there is checked.
 export function checkIds(before, after) {
+  const mdBefore = readMarkdown(before);
+  const mdAfter = readMarkdown(after);
   const was = definitions(before);
   const now = definitions(after);
   const mentioned = new Set([...after.matchAll(MENTION)].map((m) => `${m[1]}${m[2]}`));
-  // A "removed:" note excuses only the ID its own line defines ("### U7. removed: ...", "| U7 |
-  // removed: ... |"), never another ID it happens to mention ("merged into U1").
-  const excused = new Set();
-  for (const { line } of proseLines(after)) {
-    if (!/removed:/i.test(line)) continue;
-    for (const [, re] of KINDS) {
-      const m = line.match(re);
-      if (m) excused.add(`${m[1]}${m[2]}`);
-    }
-  }
+  // A "removed:" note excuses only the ID its own line defines, and only when the note opens the
+  // text right after the ID ("### U7. removed: ...", "| U7 | removed: ... |"), never prose that
+  // happens to hold the word ("### U2. Old flags removed: the sweep") or another ID it mentions.
+  const excused = new Set([...now].filter(([, ds]) => ds.some((d) => d.removed)).map(([id]) => id));
   const ids = [...was.keys()].sort(byId);
   const missing = ids.filter((id) => !mentioned.has(id));
-  const lost = ids
-    .filter((id) => mentioned.has(id) && !excused.has(id))
-    .map((id) => ({ id, kinds: [...was.get(id)].filter((k) => !now.get(id)?.has(k)) }))
-    .filter((x) => x.kinds.length > 0);
+  const lost = [];
+  for (const id of ids) {
+    if (!mentioned.has(id) || excused.has(id)) continue;
+    const tier = Math.max(...was.get(id).map((d) => TIER[d.kind]));
+    const had = was.get(id).filter((d) => TIER[d.kind] === tier).length;
+    const has = (now.get(id) ?? []).filter((d) => TIER[d.kind] >= tier).length;
+    if (has < had) lost.push({ id, tier: TIER_NAME[tier], before: had, after: has });
+  }
   const added = [...now.keys()].filter((id) => !was.has(id)).sort(byId);
   const problems = [];
+  if (mdBefore.openFence !== null) problems.push(`the plan before the fold opens a fence at line ${mdBefore.openFence} that never closes, so every line after it reads as code and no ID there is checked`);
+  if (mdAfter.openFence !== null) problems.push(`the folded plan opens a fence at line ${mdAfter.openFence} that never closes, so every line after it reads as code: close it`);
   if (ids.length === 0) problems.push("the plan before the fold defines no R, U, KTD, A, F or AE ID, so the ID check has nothing to check");
-  if (missing.length) problems.push(`gone after the fold: ${missing.join(", ")} (an ID removed on purpose keeps a line saying "removed: <reason>"; a renumbered one keeps its old number)`);
-  if (lost.length) problems.push(`lost a defining line: ${lost.map((x) => `${x.id} (its ${x.kinds.join(" and ")})`).join(", ")}; restore it, or keep a "removed: <reason>" line beside the ID`);
+  if (missing.length) problems.push(`gone after the fold: ${missing.join(", ")} (an ID removed on purpose keeps a line such as "### U7. removed: <reason>"; a renumbered one keeps its old number)`);
+  if (lost.length) problems.push(`lost a defining line: ${lost.map((x) => `${x.id} (${x.before} ${x.tier} line${x.before === 1 ? "" : "s"} before, ${x.after} after)`).join(", ")}; restore it, or write the ID's note as "### U7. removed: <reason>", "- R3. removed: <reason>" or "| U7 | removed: <reason> |"`);
   return { ok: problems.length === 0, before: ids.length, after: now.size, missing, lost, excused: ids.filter((id) => excused.has(id)), added, problems };
 }
 
@@ -125,7 +143,8 @@ export function grepList(changes) {
     if (!Array.isArray(olds)) throw new Error(`fold: change ${id} has no old_values list (a change that only adds gives an empty one)`);
     if (olds.length === 0) addsOnly.push(id);
     for (const raw of olds) {
-      const value = String(raw).replace(/\s+/g, " ").trim();
+      if (typeof raw !== "string") throw new Error(`fold: change ${id} has an old value that is not text (${JSON.stringify(raw)})`);
+      const value = raw.replace(/\s+/g, " ").trim();
       if (value.replace(/\s/g, "").length < MIN_VALUE) {
         refused.push({ value, change: id, reason: `shorter than ${MIN_VALUE} characters: it would match nearly every line` });
         continue;
@@ -155,7 +174,7 @@ export function drift(text, list) {
     .filter((d) => d.hits.length > 0);
 }
 
-export function foldCheck(before, after, changes = []) {
+export function foldCheck(before, after, changes) {
   const ids = checkIds(before, after);
   const list = grepList(changes);
   const found = drift(after, list);
@@ -170,10 +189,11 @@ export function foldCheck(before, after, changes = []) {
 
 if (isMain(import.meta.url)) {
   const [beforePath, afterPath, changesPath] = process.argv.slice(2);
-  if (!beforePath || !afterPath) usage("node fold.mjs <before.md> <after.md> [<changes.json>]");
+  if (!beforePath || !afterPath || !changesPath) usage("node fold.mjs <before.md> <after.md> <changes.json>");
   let r;
   try {
-    const changes = changesPath ? JSON.parse(readFileSync(changesPath, "utf8")) : [];
+    const changes = JSON.parse(readFileSync(changesPath, "utf8"));
+    if (Array.isArray(changes) && changes.length === 0) throw new Error("the changes list is empty: every fold applies at least one id, and a change that only adds is listed with old_values []");
     r = foldCheck(readFileSync(beforePath, "utf8"), readFileSync(afterPath, "utf8"), changes);
   } catch (e) {
     console.error(`fold: no check ran: ${e.message.replace(/^fold: /, "")}`);
@@ -181,7 +201,6 @@ if (isMain(import.meta.url)) {
   }
   console.log(JSON.stringify(r, null, 1));
   for (const p of r.ids.problems) console.error(`fold: ${p}`);
-  if (!changesPath) console.error("fold: no changes file was given, so no old value was searched for");
   if (r.driftLines) console.error(`fold: ${r.drift.length} old value(s) still appear on ${r.driftLines} line(s): judge each one`);
   process.exit(r.ok ? 0 : 1);
 }

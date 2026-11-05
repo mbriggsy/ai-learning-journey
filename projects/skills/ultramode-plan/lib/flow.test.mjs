@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { firstStage, landingCheck, nextStep, parseWindowLine, pathFacts, receipt, roundSeats, stageCost, stageGate, startCheck } from "./flow.mjs";
@@ -155,6 +155,22 @@ test("the wrap edge is the window skill's own rounding: 599,499 reads 59.9% and 
   assert.match(windowLine(599_500), /= 60\.0% .*past the 60% wrap line/);
 });
 
+test("at the no-new-fan-out tier research starts only on a fixed cost: one that grows with the plan it will write has no bound yet", () => {
+  // Research fits alone at 52%: 520,000 + 30,000 reads 55.0%.
+  assert.equal(stageGate({ line: windowLine(520_000), stage: "research", costs: COSTS }).go, true);
+  // Measured launch to landed fold, its cost includes the write, so it grows with the plan; no
+  // staged plan exists yet to scale it by, so it holds, however small the smoke figure.
+  const grows = { research: { cost: 1_000, planBytes: SMOKE } };
+  const held = stageGate({ line: windowLine(520_000), stage: "research", costs: grows });
+  assert.deepEqual([held.go, held.step, held.handBack], [false, "window-stop", "research"]);
+  assert.match(held.reason, /grows with the staged plan, which does not exist yet/);
+  // Below the no-new-fan-out tier it starts as any stage does.
+  assert.equal(stageGate({ line: windowLine(450_000), stage: "research", costs: grows }).go, true);
+  // A plan size for a stage that starts before any plan exists is a wiring mistake.
+  assert.throws(() => stageGate({ line: windowLine(520_000), stage: "research", planBytes: DEEP, costs: COSTS }), /takes no planBytes/);
+  assert.throws(() => stageGate({ line: windowLine(100_000), stage: "brief", planBytes: DEEP, costs: {} }), /takes no planBytes/);
+});
+
 test("at the wrap tier the gate stops whatever the stage's cost", () => {
   const g = stageGate({ line: windowLine(650_000), stage: "research", costs: { research: { cost: 1, planBytes: null } } });
   assert.deepEqual([g.go, g.step, g.handBack], [false, "window-stop", "research"]);
@@ -227,6 +243,8 @@ test("round 2 lists coherence plus exactly the touched seats, in roster order, a
   assert.deepEqual(roundSeats({ roster: ROSTER, changes: [] }).seats, ["coherence"]);
   // A change naming coherence lists it once.
   assert.deepEqual(roundSeats({ roster: ROSTER, changes: [{ id: "C1", kind: "edit", classes: ["coherence"] }] }).seats, ["coherence"]);
+  // A change id is trimmed, as fold.mjs's grep list trims it: one ledger id, one spelling.
+  assert.deepEqual(roundSeats({ roster: ROSTER, changes: [{ id: " C4 ", kind: "edit", classes: ["reach"] }] }).touchedBy.reach, ["C4"]);
 });
 
 test("round 3 lists coherence plus exactly the seats its one fix touched", () => {
@@ -251,7 +269,7 @@ const BASE = {
   adversary: true,
   open: 0,
   ce: [{ commit: SHA, stages: ["research", "deepen", "check-1", "check-2"] }],
-  coverage: { premise: { nothing: true }, reach: { verified: ["C3", "C7"] }, "blast-radius": { nothing: true }, "test-vacuity": { skipped: "the plan has no code" } },
+  coverage: { premise: { nothing: true }, reach: { verified: ["C3", "C7"] }, "blast-radius": { nothing: true }, "test-vacuity": { nothing: true } },
   holes: [],
   inline: [],
   strays: [],
@@ -278,7 +296,7 @@ test("the whole receipt: park, CE commits with their stages, the four classes, h
     park: "KTD4 says X; the check found Y. Keep X?",
     ce: [{ commit: SHA, stages: ["research", "deepen"] }, { commit: "3449230", stages: ["check-1"] }],
     holes: [{ seat: "security", missed: "U4 to U6", resumes: 2 }],
-    inline: [{ seat: "coherence", file: "coherence-reviewer.md" }],
+    inline: [{ seat: "coherence", file: "coherence-reviewer.md", commit: "3449230" }, { seat: "premise", file: "adversarial-document-reviewer.md", commit: null }],
     strays: ["projects/x/probe.txt"],
     moved: { changed: 5, cited: ["projects/x/a.mjs", "projects/x/b.mjs"] },
   });
@@ -288,9 +306,9 @@ test("the whole receipt: park, CE commits with their stages, the four classes, h
       "planned, deepened and checked",
       "parked: KTD4 says X; the check found Y. Keep X?",
       `CE: ${SHA} (research, deepen); 3449230 (check-1)`,
-      "coverage: premise: nothing found; reach: 2 verified (C3, C7); blast radius: nothing found; test vacuity: skipped: the plan has no code",
+      "coverage: premise: nothing found; reach: 2 verified (C3, C7); blast radius: nothing found; test vacuity: nothing found",
       "coverage holes: security (U4 to U6, resumed 2 times)",
-      "seats without their CE file: coherence (coherence-reviewer.md)",
+      "seats without their CE file: coherence (coherence-reviewer.md, CE 3449230); premise (adversarial-document-reviewer.md, CE absent)",
       "stray files deleted: projects/x/probe.txt",
       "project moved during the run: 5 files changed, 2 the plan cites (projects/x/a.mjs, projects/x/b.mjs)",
       `run record: ${BASE.record}`,
@@ -315,6 +333,26 @@ test("a class in the hole form needs its seat in the holes list, with what it mi
   assert.match(text, /premise: no result \(a coverage hole\)/);
   assert.match(text, /^coverage holes: premise \(the whole seat, resumed 2 times\)$/m);
   assert.throws(() => receipt({ ...BASE, holes: [{ seat: "x", missed: "y" }] }), /resumes must be a whole number/);
+  // A holes list that names only another seat does not answer for this class.
+  assert.throws(() => receipt({ ...BASE, coverage: holeCov, holes: [{ seat: "security", missed: "U4", resumes: 1 }] }), /names seat "premise"/);
+  // The entry is keyed by the class's key, never its printed label ("blast radius").
+  const blast = { ...BASE.coverage, "blast-radius": { hole: true } };
+  assert.throws(() => receipt({ ...BASE, coverage: blast, holes: [{ seat: "blast radius", missed: "docs", resumes: 2 }] }), /names seat "blast-radius"/);
+  assert.match(receipt({ ...BASE, coverage: blast, holes: [{ seat: "blast-radius", missed: "docs", resumes: 2 }] }), /blast radius: no result \(a coverage hole\)/);
+});
+
+test("reach and test vacuity skip together, on a plan with no code, and never one without the other", () => {
+  const noCode = { ...BASE.coverage, reach: { skipped: "the plan has no code" }, "test-vacuity": { skipped: "the plan has no code" } };
+  assert.match(receipt({ ...BASE, coverage: noCode }), /reach: skipped: the plan has no code; blast radius: nothing found; test vacuity: skipped: the plan has no code/);
+  assert.throws(() => receipt({ ...BASE, coverage: { ...BASE.coverage, "test-vacuity": { skipped: "no code" } } }), /test-vacuity is skipped but reach is not/);
+  assert.throws(() => receipt({ ...BASE, coverage: { ...BASE.coverage, reach: { skipped: "no code" } } }), /reach is skipped but test-vacuity is not/);
+});
+
+test("a project move changes at least one file, and cites no more than changed", () => {
+  assert.throws(() => receipt({ ...BASE, moved: { changed: 0, cited: [] } }), /an unmoved project is moved: null/);
+  assert.throws(() => receipt({ ...BASE, moved: { changed: 1, cited: ["a", "b"] } }), /more than the 1 that changed/);
+  assert.throws(() => receipt({ ...BASE, moved: { changed: 2, cited: [""] } }), /a cited file is a path/);
+  assert.match(receipt({ ...BASE, moved: { changed: 1, cited: [] } }), /^project moved during the run: 1 file changed, 0 the plan cites$/m);
 });
 
 test("the receipt needs every field and defaults none: an omitted open count never prints as a clean check", () => {
@@ -326,7 +364,9 @@ test("the receipt needs every field and defaults none: an omitted open count nev
   assert.throws(() => receipt({ ...BASE, open: null }), /open must be a whole number/);
   assert.throws(() => receipt({ ...BASE, update: "false" }), /update must be true or false/);
   assert.throws(() => receipt({ ...BASE, holes: null }), /holes must be a list/);
-  assert.throws(() => receipt({ ...BASE, inline: ["coherence"] }), /names the seat and the file/);
+  assert.throws(() => receipt({ ...BASE, inline: ["coherence"] }), /names the seat, the file and the CE commit/);
+  assert.throws(() => receipt({ ...BASE, inline: [{ seat: "coherence", file: "coherence-reviewer.md" }] }), /names the seat, the file and the CE commit/);
+  assert.throws(() => receipt({ ...BASE, inline: [{ seat: "coherence", file: "c.md", commit: "v3.35" }] }), /CE commit is a git sha/);
   assert.throws(() => receipt({ ...BASE, strays: [3] }), /a stray file is a path/);
   assert.throws(() => receipt({ ...BASE, park: "" }), /paste-ready question, or null/);
   assert.throws(() => receipt({ ...BASE, moved: { changed: 1 } }), /changed, cited/);
@@ -348,7 +388,7 @@ test("the receipt refuses silence and the wrong skips: a missing class, two form
   assert.throws(() => cov({ premise: { skipped: "no code" } }), /premise is never skipped/);
   assert.throws(() => cov({ "blast-radius": { skipped: "no code" } }), /blast radius is never skipped/);
   assert.throws(() => cov({ reach: { verified: [] } }), /non-empty list/);
-  assert.throws(() => cov({ reach: { skipped: " " } }), /names its reason/);
+  assert.throws(() => cov({ reach: { skipped: " " }, "test-vacuity": { skipped: "no code" } }), /names its reason/);
   assert.throws(() => receipt({ ...BASE, coverage: { ...BASE.coverage, design: { nothing: true } } }), /no class design/);
   assert.throws(() => receipt({ ...BASE, deepen: "skipped" }), /deepen is/);
   assert.throws(() => receipt({ ...BASE, adversary: undefined }), /adversary/);
@@ -488,6 +528,58 @@ test("the landing check stops on a different path, even one in the same absent s
   assert.throws(() => landingCheck({ exists: false }, pathFacts(at(dir, "projects", "p", "docs", "plans", "new.md"))), /path and rel included/);
 });
 
+test("the landing check compares the path and the rel each on its own: the same rel in another copy stops, and so does the same path under another rel", (t) => {
+  // Two copies of one repository share every rel (KTD16's frozen copies do): the start, recorded
+  // in A and JSON round-tripped as the run record keeps it, lands in B.
+  const a = planRepo(t);
+  const b = join(dirname(a), "copy-b");
+  git(dirname(a), ["clone", "-q", a, b]);
+  const rel = ["projects", "p", "docs", "plans", "new.md"];
+  const begun = JSON.parse(JSON.stringify(start(at(a, ...rel)).state));
+  assert.equal(landingCheck(begun, pathFacts(at(a, ...rel))).ok, true);
+  const elsewhere = landingCheck(begun, pathFacts(at(b, ...rel)));
+  assert.equal(elsewhere.ok, false);
+  assert.match(elsewhere.reason, /but the run started on/);
+  // The same path with a record whose rel was another: the rel half alone stops it.
+  const otherRel = landingCheck({ ...begun, rel: "projects/p/docs/plans/other.md" }, pathFacts(at(a, ...rel)));
+  assert.equal(otherRel.ok, false);
+  assert.match(otherRel.reason, /but the run started on/);
+});
+
+test("a git error is never read as an absent, clean path: a broken index throws, and the command exits 2", (t) => {
+  const dir = planRepo(t);
+  writeFileSync(join(dir, ".git", "index"), "garbage");
+  const path = at(dir, "projects", "p", "docs", "plans", "new.md");
+  assert.throws(() => pathFacts(path), /failed \(exit 128\)/);
+  const r = spawnSync(process.execPath, [FLOW, "path-start", JSON.stringify({ path, update: false })], { encoding: "utf8" });
+  assert.equal(r.status, 2, r.stdout);
+  assert.match(r.stderr, /failed \(exit 128\)/);
+  const landing = spawnSync(process.execPath, [FLOW, "path-landing", JSON.stringify({ path, start: { path, rel: "projects/p/docs/plans/new.md" } })], { encoding: "utf8" });
+  assert.equal(landing.status, 2, landing.stdout);
+});
+
+test("the index command gives the staged plan's section index, its last line and its size, and refuses an open fence", (t) => {
+  const dir = tmpRoot(t);
+  const plan = join(dir, "staged.md");
+  writeFileSync(plan, "---\ntitle: x\n---\n# Plan\n\n## Goal\nText.\n```sh\n# a comment, not a heading\n```\n## Units\n### U1. One\nLast line.\n\n");
+  const r = spawnSync(process.execPath, [FLOW, "index", JSON.stringify({ plan })], { encoding: "utf8" });
+  assert.equal(r.status, 0, r.stderr);
+  const out = JSON.parse(r.stdout);
+  assert.deepEqual(out.index, [
+    { line: 4, level: 1, heading: "Plan" },
+    { line: 6, level: 2, heading: "Goal" },
+    { line: 11, level: 2, heading: "Units" },
+    { line: 12, level: 3, heading: "U1. One" },
+  ]);
+  assert.deepEqual(out.last, { line: 13, text: "Last line." });
+  assert.equal(out.bytes, Buffer.byteLength(readFileSync(plan)));
+  writeFileSync(plan, "# Plan\n## Goal\n```\n## Hidden\n");
+  const open = spawnSync(process.execPath, [FLOW, "index", JSON.stringify({ plan })], { encoding: "utf8" });
+  assert.equal(open.status, 2);
+  assert.match(open.stderr, /opens a fence at line 3 that never closes/);
+  assert.equal(spawnSync(process.execPath, [FLOW, "index", "{}"], { encoding: "utf8" }).status, 2);
+});
+
 // ------------------------------------------------------------------------- the command
 
 test("the command answers in JSON, the receipt as text; exits 1 on a refused path and 2 on input it cannot read", (t) => {
@@ -511,5 +603,17 @@ test("the command answers in JSON, the receipt as text; exits 1 on a refused pat
   assert.equal(bad.status, 2);
   assert.match(bad.stderr, /^flow: no stage "nope"/);
   assert.equal(run("path-start", JSON.stringify({ path: at(dir, "docs", "plans", "x.md") })).status, 2, "a missing update is unreadable input, not a refusal");
+  assert.equal(run("path-start", '{"update":false}').status, 2, "a missing path is unreadable input, not a refusal");
+  assert.equal(run("path-landing", '{"start":{}}').status, 2);
   assert.equal(run("first", "{not json").status, 2);
+  const arrayFile = join(dir, "..", "list.json");
+  writeFileSync(arrayFile, "[]");
+  const list = run("first", arrayFile);
+  assert.equal(list.status, 2);
+  assert.match(list.stderr, /the input is one JSON object/);
+  for (const name of ["constructor", "toString", "__proto__"]) {
+    const r2 = run(name, "{}");
+    assert.equal(r2.status, 2, name);
+    assert.match(r2.stderr, /^usage: /m, name);
+  }
 });

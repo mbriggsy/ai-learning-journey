@@ -31,7 +31,8 @@ import { homedir } from "node:os";
 import { basename, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { isMain, usage } from "../lib/entry.mjs";
 import { slugOf } from "./freeze.mjs";
-import { longOf, shortOf as realShortOf } from "./shortpath.mjs";
+import { longOf } from "../lib/paths.mjs";
+import { shortOf as realShortOf } from "./shortpath.mjs";
 
 export const MODEL = "opus[1m]";
 export const EFFORT = "xhigh";

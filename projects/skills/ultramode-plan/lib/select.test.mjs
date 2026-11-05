@@ -1,14 +1,20 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { CRITICAL_KINDS, selectSections } from "./select.mjs";
 import { PLAN_DEPTHS, SECTION_KINDS } from "./caps.mjs";
+import { sectionIndex } from "./markdown.mjs";
+
+const REAL = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "docs", "plans", "hybrid-plan-step-plan.md"), "utf8");
 
 const sec = (section, triggers, kind = "other", strengthened = false) => ({ section, kind, triggers, strengthened });
 // Each section starts at its own level-2 heading, lines 10, 20, 30 and so on, under a level-1 title,
 // and the index lists exactly those headings: a full score list, unless a case says otherwise.
 const lined = (scores) => (Array.isArray(scores) ? scores.map((s, i) => (s && typeof s === "object" && s.line === undefined ? { ...s, line: 10 * (i + 1) } : s)) : scores);
 const indexOf = (scores) => [{ line: 1, level: 1, heading: "Plan" }, ...(Array.isArray(scores) ? scores : []).map((s, i) => ({ line: 10 * (i + 1), level: 2, heading: s?.section }))];
-const run = (scores, o = {}) => selectSections({ scores: lined(scores), index: indexOf(scores), depth: "Standard", riskSignals: [], ...o });
+const run = (scores, o = {}) => selectSections({ scores: lined(scores), index: indexOf(scores), depth: "Standard", riskSignals: [], deepened: false, ...o });
 const picked = (r) => r.sections.map((s) => s.section);
 
 test("every critical kind is one the scorer's schema can return", () => {
@@ -53,6 +59,15 @@ test("a tie at the fifth slot goes to CE's critical section, then document order
   assert.equal(picked(doc)[4], "t1", "with no critical section in the tie, document order decides");
 });
 
+test("document order is the rows' heading lines, so the same scores listed in another order pick the same sections", () => {
+  const rows = [{ ...sec("A", 3), line: 10 }, { ...sec("B", 3), line: 20 }, { ...sec("C", 3), line: 30 }];
+  const index = [{ line: 1, level: 1, heading: "Plan" }, ...rows.map((r) => ({ line: r.line, level: 2, heading: r.section }))];
+  const go = (scores) => picked(selectSections({ scores, index, depth: "Lightweight", riskSignals: [], deepened: false }));
+  assert.deepEqual(go(rows), ["A", "B"]);
+  assert.deepEqual(go([...rows].reverse()), ["A", "B"]);
+  assert.deepEqual(go([rows[1], rows[2], rows[0]]), ["A", "B"]);
+});
+
 test("a lightweight high-risk plan caps at two, and a lightweight plan with no risk signal does too", () => {
   const scores = [sec("a", 5), sec("b", 4), sec("c", 3)];
   const hi = run(scores, { depth: "Lightweight", riskSignals: ["payments"] });
@@ -85,6 +100,15 @@ test("on a plan with a deepened: date, a section not yet strengthened beats a co
   assert.deepEqual(picked(run([sec("top", 9), sec("old", 4, "other", true), sec("fresh", 3)], { depth: "Lightweight" })), ["top", "old"]);
 });
 
+test("deepened is true or false, never omitted or a string: either would silently pick another tie's winner", () => {
+  const scores = [sec("top", 9), sec("old", 3, "other", true), sec("fresh", 3)];
+  for (const deepened of [undefined, "false", "true", 0, 1, null]) {
+    const r = run(scores, { depth: "Lightweight", deepened });
+    assert.equal(r.result, "blocked", JSON.stringify(deepened));
+    assert.match(r.reason, /deepened must be true or false/);
+  }
+});
+
 test("without a deepened: date a strengthened flag neither lowers a section nor breaks a tie", () => {
   const lw = (scores) => run(scores, { depth: "Lightweight" });
   // The flagged section comes later and one point ahead: lowered, it would tie and lose.
@@ -107,20 +131,69 @@ test("a short score list blocks: a part of the plan left unscored, a row at no h
   const full = [
     { section: "Goal", line: 3, kind: "goal-problem", triggers: 0 },
     { section: "Key Technical Decisions", line: 11, kind: "key-decisions", triggers: 2 },
+    { section: "Risks", line: 30, kind: "risks", triggers: 0 },
     { section: "Implementation Units", line: 40, kind: "units", triggers: 0 },
   ];
-  const go = (scores, idx = index) => selectSections({ scores, index: idx, depth: "Standard", riskSignals: [] });
-  // One row covers every unit beneath its heading, and Risks need not have its own row.
+  const zero = (scores) => scores.map((s) => ({ ...s, triggers: 0 }));
+  const go = (scores, idx = index) => selectSections({ scores, index: idx, depth: "Standard", riskSignals: [], deepened: false });
+  // One row covers every unit beneath its heading.
   assert.equal(go(full).result, "deepen");
-  // The scorer dropped the units part: its zero-trigger rows would otherwise read "passed".
-  const short = go(full.slice(0, 2).map((s) => ({ ...s, triggers: 0 })));
+  // So does one row at "Planning Contract" for both decisions and risks.
+  assert.equal(go([full[0], { section: "Planning Contract", line: 9, kind: "other", triggers: 0 }, full[3]]).result, "passed");
+  // The scorer dropped the units part, the last one: its zero-trigger rows would otherwise read "passed".
+  const short = go(zero(full.slice(0, 3)));
   assert.equal(short.result, "blocked");
-  assert.match(short.reason, /left 1 part of the plan unscored \("Implementation Units"\)/);
+  assert.match(short.reason, /left 2 sections of the plan in no scored row \("U1\. Bench", "U2\. Core"\)/);
+  // The scorer dropped a middle part: a part's span ends at the next part, not the plan's end.
+  assert.match(go(zero([full[0], full[3]])).reason, /left 2 sections .*\("Key Technical Decisions", "Risks"\)/);
+  // A row at one subsection covers none of its siblings.
+  assert.match(go(zero([full[0], full[1], full[3]])).reason, /left 1 section .*\("Risks"\)/);
   assert.match(go([...full, { section: "Stray", line: 41, kind: "other", triggers: 0 }]).reason, /line 41, which is no heading/);
   assert.match(go([...full, { section: "Again", line: 11, kind: "other", triggers: 0 }]).reason, /line 11 is scored twice/);
   assert.match(go(full, null).reason, /no section index/);
   assert.match(go(full, [{ line: 0, level: 2 }]).reason, /malformed section index/);
+  assert.match(go(full, [...index, { line: 3, level: 2, heading: "Goal" }]).reason, /lists line 3 twice/);
   assert.match(go(full.map(({ line, ...s }) => s)).reason, /its heading's line/);
+});
+
+test("a row at the title covers nothing, and a plan of two top-level parts needs each covered", () => {
+  const index = [
+    { line: 1, level: 1, heading: "Plan" },
+    { line: 3, level: 2, heading: "Goal" },
+    { line: 10, level: 2, heading: "Key Technical Decisions" },
+    { line: 20, level: 2, heading: "Implementation Units" },
+  ];
+  const go = (scores, idx = index) => selectSections({ scores, index: idx, depth: "Standard", riskSignals: [], deepened: false });
+  const r = (section, line) => ({ section, line, kind: "other", triggers: 0 });
+  const titleOnly = go([r("Plan", 1)]);
+  assert.equal(titleOnly.result, "blocked");
+  assert.match(titleOnly.reason, /left 3 sections/);
+  assert.equal(go([r("Plan", 1), r("Goal", 3), r("Key Technical Decisions", 10), r("Implementation Units", 20)]).result, "passed", "a title row is allowed; it just covers nothing");
+  // A second H1 makes no title: each H1 is a part. Rows at Goal and the appendix leave the rest bare.
+  const twoTops = [...index, { line: 200, level: 1, heading: "Appendix" }];
+  const bare = go([r("Goal", 3), r("Appendix", 200)], twoTops);
+  assert.equal(bare.result, "blocked");
+  assert.match(bare.reason, /\("Key Technical Decisions", "Implementation Units"\)/);
+  // A row at each H1 covers its subtree; granularity beyond that is the scorer prompt's.
+  assert.equal(go([r("Plan", 1), r("Appendix", 200)], twoTops).result, "passed");
+});
+
+test("on the hybrid plan's own index, one row per part at a subsection leaves the decisions and units unscored", () => {
+  const index = sectionIndex(REAL);
+  const line = (heading) => index.find((h) => h.heading === heading).line;
+  // One row in each top-level part, each at a non-critical subsection, all under 2 points.
+  const picks = ["Goal Capsule", "Summary", "Sources", "U1. Bench foundations and the headless probe", "Verification Contract", "Definition of Done"];
+  const scores = picks.map((h) => ({ section: h.slice(0, 30), line: line(h), kind: "other", triggers: 1 }));
+  const r = selectSections({ scores, index, depth: "Standard", riskSignals: [], deepened: true });
+  assert.equal(r.result, "blocked");
+  assert.match(r.reason, /"Key Technical Decisions"/);
+  assert.match(r.reason, /and \d+ more\)/, "past eight names the reason counts the rest");
+  // Scoring the units too still leaves the decisions bare.
+  const withUnits = [...scores, { section: "Implementation Units", line: line("Implementation Units"), kind: "units", triggers: 0 }];
+  assert.match(selectSections({ scores: withUnits, index, depth: "Standard", riskSignals: [], deepened: true }).reason, /"Key Technical Decisions"/);
+  // One row per top-level part, at the part itself, covers it all.
+  const parts = index.filter((h) => h.level === 2).map((h) => ({ section: h.heading.slice(0, 30), line: h.line, kind: "other", triggers: 0 }));
+  assert.equal(selectSections({ scores: parts, index, depth: "Standard", riskSignals: [], deepened: true }).result, "passed");
 });
 
 test("every plan depth the scorer's schema allows is one select reads", () => {

@@ -6,7 +6,8 @@
 //   - the window gate before a stage starts (KTD10), read from the line the window skill prints;
 //   - the seats a check round 2 or round 3 re-runs (KTD9);
 //   - the receipt the plan's commit carries (R9);
-//   - the named path's checks at the run's start and at its landing (KTD3, KTD23).
+//   - the named path's checks at the run's start and at its landing (KTD3, KTD23);
+//   - the staged plan's section index and last line, which the main loop passes in args (KTD7).
 // Never inlined into a Workflow script (KTD1).
 //
 // Usage: node flow.mjs <command> <json | path to a .json file>
@@ -18,6 +19,7 @@
 //                                                           -> the receipt's text
 //   path-start    { path, update }                          -> { ok, state, ... }  (exit 1 when refused)
 //   path-landing  { path, start }                           -> { ok, ... }         (exit 1 when changed)
+//   index         { plan }                                  -> { index, last, bytes }
 // `gate` reads lib/stage-costs.json beside this file when the input names no costs; U6's smoke
 // run commits that file. Exit 0 is an answer, 1 a refused or changed path, 2 an input the command
 // could not read (nothing was decided).
@@ -27,7 +29,8 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isMain, usage } from "./entry.mjs";
-import { longOf } from "./paths.mjs";
+import { lastTextLine, readMarkdown, sectionIndex } from "./markdown.mjs";
+import { fromGitBash, longOf, samePath } from "./paths.mjs";
 
 // ---------------------------------------------------------------- the stages and their order
 
@@ -165,7 +168,8 @@ const shownTenths = (tokens, windowTokens) => Math.round((tokens / windowTokens)
 // Checks a stage-costs table: { <stage>: { cost, planBytes } }. `cost` is the stage's measured
 // main-loop cost in tokens, launch to landed fold; `planBytes` is the staged plan's size when it
 // was measured, for a stage that reads or edits the staged plan (the write, every fold), or null
-// for one whose cost does not grow with the plan.
+// for one whose cost does not grow with the plan. Research's fold is the write, so its measured
+// cost grows with the plan it writes.
 export function checkCosts(costs) {
   if (!costs || typeof costs !== "object" || Array.isArray(costs)) throw new Error("flow: stage costs must be an object keyed by stage");
   for (const [stage, e] of Object.entries(costs)) {
@@ -187,17 +191,25 @@ export function stageCost(costs, stage, planBytes) {
   return Math.floor((e.cost * planBytes + e.planBytes - 1) / e.planBytes);
 }
 
+// The stages that start before any staged plan exists: a fresh run writes its plan only in
+// research's fold, and under `update` both are skipped (KTD3).
+const PLANLESS = ["brief", "research"];
+
 // The gate before a stage starts, or after a returned Workflow (action "fold"; nextStep's `gate`
 // says which). A returned Workflow's fold always completes, and the write from research's
 // dossiers is research's fold. Below the no-new-fan-out tier a stage starts; at that tier it
 // starts only when its measured cost, scaled to the plan, keeps the next reading under the wrap
-// line, and a stage with no measurement does not start; at the wrap tier, or on a held start,
-// the run stops at that boundary, lands nothing and hands back the stage (KTD10, KTD23).
+// line, and a stage with no measurement does not start. A stage that starts before any staged
+// plan exists cannot be scaled: when its measured cost grows with the plan (research, whose fold
+// writes it), the plan it will write is unknown, so its cost has no bound and it does not start
+// either. At the wrap tier, or on a held start, the run stops at that boundary, lands nothing and
+// hands back the stage (KTD10, KTD23).
 export function stageGate({ line, action = "start", stage, planBytes, costs = {} } = {}) {
   if (action === "fold") return { go: true, step: "fold", reason: "a returned Workflow's fold always completes (KTD10)" };
   if (action !== "start") throw new Error(`flow: the gate's action is "start" or "fold", got ${JSON.stringify(action)}`);
   if (!STAGES.includes(stage)) throw new Error(`flow: no stage ${JSON.stringify(stage)} (one of: ${STAGES.join(", ")})`);
   checkCosts(costs);
+  if (PLANLESS.includes(stage) && planBytes !== undefined && planBytes !== null) throw new Error(`flow: ${stage} starts before any staged plan exists, so the gate takes no planBytes for it`);
   const r = parseWindowLine(line);
   const hold = (reason, extra = {}) => ({ go: false, step: "window-stop", handBack: stage, reason, ...extra });
   if (r.kind === "compacted") return { go: false, step: "reread", reason: "the session compacted since its last measured turn: run /window again after one more tool call (the window skill's own rule)", reading: r };
@@ -205,6 +217,9 @@ export function stageGate({ line, action = "start", stage, planBytes, costs = {}
   const base = { reading: r, test: r.test };
   if (r.tier === "room" || r.tier === "warn") return { go: true, step: stage, reason: `${r.percent}%: below the no-new-fan-out line`, ...base };
   if (r.tier === "wrap") return hold(`${r.percent}%: past the ${r.wrapPercent}% wrap line`, base);
+  if (PLANLESS.includes(stage) && costs[stage] && costs[stage].planBytes !== null) {
+    return hold(`${r.percent}%: past the no-new-fan-out line, and ${stage}'s measured cost grows with the staged plan, which does not exist yet (research's fold writes it), so its cost has no bound and it does not start`, base);
+  }
   const cost = stageCost(costs, stage, planBytes);
   if (cost === null) return hold(`${r.percent}%: past the no-new-fan-out line, and ${stage} has no measured main-loop cost (lib/stage-costs.json), so it does not start`, base);
   const after = r.tokens + cost;
@@ -231,7 +246,8 @@ export function roundSeats({ roster, changes } = {}) {
   if (!Array.isArray(changes)) throw new Error("flow: changes must be a list of { id, kind, classes }");
   const touchedBy = {};
   for (const [i, c] of changes.entries()) {
-    const id = c && typeof c.id === "string" && c.id.trim() ? c.id : null;
+    // Trimmed, as fold.mjs's grep list trims it, so one ledger id has one spelling in both.
+    const id = c && typeof c.id === "string" && c.id.trim() ? c.id.trim() : null;
     if (!id) throw new Error(`flow: change ${i + 1} has no id`);
     if (!CHANGE_KINDS.includes(c.kind)) throw new Error(`flow: change ${id} has kind ${JSON.stringify(c.kind)} (one of: ${CHANGE_KINDS.join(", ")})`);
     if (!Array.isArray(c.classes)) throw new Error(`flow: change ${id} names no classes list`);
@@ -329,11 +345,18 @@ export function receipt(r = {}) {
   if (!cov || typeof cov !== "object") throw new Error("flow: the receipt's coverage is an object keyed by class");
   const unknown = Object.keys(cov).filter((k) => !CLASSES.some(([key]) => key === k));
   if (unknown.length) throw new Error(`flow: the receipt's coverage names no class ${unknown.join(", ")}`);
+  // KTD6 skips reach and test vacuity together, on a plan with no code: one skipped beside the
+  // other run would say the plan both has code and has none.
+  const skipped = SKIPPABLE.filter((k) => cov[k] && typeof cov[k] === "object" && "skipped" in cov[k]);
+  if (skipped.length === 1) throw new Error(`flow: ${skipped[0]} is skipped but ${SKIPPABLE.find((k) => k !== skipped[0])} is not; KTD6 skips both together, on a plan with no code`);
   lines.push(`coverage: ${CLASSES.map(([key, label]) => coverageOf(key, label, cov[key], holes)).join("; ")}`);
   lines.push(`coverage holes: ${listOr(holes, "none", (h) => `${h.seat} (${h.missed}, resumed ${h.resumes} time${h.resumes === 1 ? "" : "s"})`)}`);
+  // R2: a seat that ran without its CE file is named with the CE commit it looked in (null for
+  // "CE absent"), since a run that served two commits must say which one lacked the file.
   lines.push(`seats without their CE file: ${listOr(list("inline", r.inline), "none", (s) => {
-    if (!s || typeof s.seat !== "string" || typeof s.file !== "string") throw new Error("flow: a seat without its CE file names the seat and the file");
-    return `${s.seat} (${s.file})`;
+    if (!s || typeof s.seat !== "string" || !s.seat.trim() || typeof s.file !== "string" || !s.file.trim() || !("commit" in s)) throw new Error("flow: a seat without its CE file names the seat, the file and the CE commit it looked in (null for CE absent)");
+    if (s.commit !== null && !(typeof s.commit === "string" && /^[0-9a-f]{7,40}$/.test(s.commit))) throw new Error(`flow: a seat's CE commit is a git sha, or null for "CE absent"; got ${JSON.stringify(s.commit)}`);
+    return `${s.seat} (${s.file}, ${s.commit === null ? "CE absent" : `CE ${s.commit}`})`;
   })}`);
   lines.push(`stray files deleted: ${listOr(list("strays", r.strays), "none", (p) => {
     if (typeof p !== "string" || !p.trim()) throw new Error("flow: a stray file is a path");
@@ -342,7 +365,12 @@ export function receipt(r = {}) {
   if (r.moved !== null) {
     if (typeof r.moved !== "object" || !Array.isArray(r.moved.cited)) throw new Error("flow: a project move is { changed, cited: [paths] }, or null");
     const changed = count("moved.changed", r.moved.changed);
+    // A move is a subtree hash that differs, which no change of zero files can make: an unmoved
+    // project is null, never a "0 files changed" line.
+    if (changed === 0) throw new Error("flow: a project move changes at least one file; an unmoved project is moved: null");
     const cited = r.moved.cited;
+    if (cited.some((p) => typeof p !== "string" || !p.trim())) throw new Error("flow: a cited file is a path");
+    if (cited.length > changed) throw new Error(`flow: the plan cites ${cited.length} of the changed files, more than the ${changed} that changed`);
     lines.push(`project moved during the run: ${changed} file${changed === 1 ? "" : "s"} changed, ${cited.length} the plan cites${cited.length ? ` (${cited.join(", ")})` : ""}`);
   }
   if (typeof r.record !== "string" || !r.record.trim()) throw new Error("flow: the receipt names the run record's path");
@@ -370,10 +398,9 @@ const literal = (rel) => `:(literal)${rel}`;
 // The facts KTD3's checks read about a named plan path: where it sits in its repository and
 // project, and its state in git. Reads the disk and git; the checks below are pure.
 export function pathFacts(planPath, { cwd = process.cwd() } = {}) {
-  let text = String(planPath);
+  if (typeof planPath !== "string" || !planPath.trim()) throw new Error(`flow: the named path is a path, got ${JSON.stringify(planPath)}`);
   // Git Bash spells C:\x as /c/x; on Windows that is the drive, not a folder named c.
-  if (process.platform === "win32") text = text.replace(/^\/([a-zA-Z])(?=\/|$)/, (_, drive) => `${drive}:`);
-  const given = resolve(cwd, text);
+  const given = resolve(cwd, fromGitBash(planPath));
   // The long, real form of the part that exists, so a path given through an 8.3 short name or a
   // junction compares against git's top level, which git reports in its real form.
   const path = longOf(given);
@@ -441,7 +468,9 @@ export function landingCheck(start, f) {
   if (!start || typeof start !== "object" || typeof start.path !== "string" || typeof start.rel !== "string") throw new Error("flow: the landing check needs the state the run's start recorded, path and rel included");
   if (!f.inside) return { ok: false, reason: `${f.path} is no longer inside a repository` };
   const now = stateOf(f);
-  if (now.rel !== start.rel || now.path.toLowerCase() !== start.path.toLowerCase()) return { ok: false, reason: `the landing names ${now.path}, but the run started on ${start.path}. The landing stops (KTD3)`, start, state: now };
+  // In either letter case on Windows, whose file system does not tell them apart (a resumed
+  // session may type a not-yet-existing name in another case), and exactly elsewhere.
+  if (!samePath(now.rel, start.rel) || !samePath(now.path, start.path)) return { ok: false, reason: `the landing names ${now.path}, but the run started on ${start.path}. The landing stops (KTD3)`, start, state: now };
   const same = ["exists", "tracked", "headBlob", "worktreeBlob", "dirty"].every((k) => (start[k] ?? null) === (now[k] ?? null));
   return same
     ? { ok: true, reason: `the named path is as the run's start recorded it: ${describe(now)}`, state: now }
@@ -453,7 +482,25 @@ export function landingCheck(start, f) {
 function readInput(arg) {
   if (arg === undefined) return undefined;
   const text = arg.trim().startsWith("{") ? arg : readFileSync(arg, "utf8");
-  return JSON.parse(text);
+  const input = JSON.parse(text);
+  if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("flow: the input is one JSON object");
+  return input;
+}
+
+// KTD7's two args from the staged plan: its section index (fences and front matter skipped, as
+// select.mjs counts the scorer against it) and its last line with text, with the plan's size in
+// bytes for the gate's scaling (KTD10). A fence left open would hide every heading after it, so
+// it refuses.
+export function planIndex(planPath) {
+  if (typeof planPath !== "string" || !planPath.trim()) throw new Error(`flow: index needs the staged plan's path, got ${JSON.stringify(planPath)}`);
+  const buf = readFileSync(resolve(fromGitBash(planPath)));
+  const text = buf.toString("utf8");
+  const open = readMarkdown(text).openFence;
+  if (open !== null) throw new Error(`flow: the plan opens a fence at line ${open} that never closes, so every heading after it would be hidden from the index`);
+  const index = sectionIndex(text);
+  if (index.length === 0) throw new Error("flow: the plan has no heading, so it has no section index");
+  const last = lastTextLine(text);
+  return { index, last, bytes: buf.length };
 }
 
 const COMMANDS = {
@@ -468,11 +515,13 @@ const COMMANDS = {
   receipt: (i) => ({ text: receipt(i) }),
   "path-start": (i) => startCheck(pathFacts(i.path), { update: i.update }),
   "path-landing": (i) => landingCheck(i.start, pathFacts(i.path)),
+  index: (i) => planIndex(i.plan),
 };
 
 if (isMain(import.meta.url)) {
   const [command, arg] = process.argv.slice(2);
-  if (!command || !COMMANDS[command] || arg === undefined) usage(`node flow.mjs <${Object.keys(COMMANDS).join(" | ")}> <json | path to a .json file>`);
+  // Object.hasOwn, so "constructor" or "toString" is no command.
+  if (!command || !Object.hasOwn(COMMANDS, command) || arg === undefined) usage(`node flow.mjs <${Object.keys(COMMANDS).join(" | ")}> <json | path to a .json file>`);
   try {
     const out = COMMANDS[command](readInput(arg));
     if (command === "receipt") console.log(out.text);

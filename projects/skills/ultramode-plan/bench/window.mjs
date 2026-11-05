@@ -19,7 +19,7 @@
 // Usage: node window.mjs '<weights json>' <null-launch main.jsonl> <segment main.jsonl>...
 
 import { basename } from "node:path";
-import { isMain, usage } from "./entry.mjs";
+import { isMain, usage } from "../lib/entry.mjs";
 import { readTree, toolCalls } from "./transcripts.mjs";
 
 export const WEIGHT_KEYS = ["input", "cacheWrite5m", "cacheWrite1h", "cacheRead", "output"];

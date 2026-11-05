@@ -20,7 +20,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { isMain, usage } from "./entry.mjs";
+import { isMain, usage } from "../lib/entry.mjs";
 
 export const SECRET_NAME = /KEY|TOKEN|SECRET|PASS/i;
 export const MIN_CHECKED = 8;

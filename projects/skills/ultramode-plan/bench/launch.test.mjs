@@ -182,7 +182,7 @@ test("a state folder inside the copy, a copy inside the live repo, a bad session
   assert.throws(() => buildLaunch({ ...base, cwd: "relative/c" }), /absolute/);
 });
 
-test("a copy or state folder spelled through the live repo's 8.3 name is still inside it, and the launch carries long forms", { skip: process.platform !== "win32" }, (t) => {
+test("a copy or state folder spelled through the live repo's 8.3 name is still inside it, and the launch carries long forms", { skip: process.platform !== "win32" && "platform: Windows only (8.3 short names)" }, (t) => {
   const real = longOf(tmpRoot(t));
   const repo = join(real, "a-long-live-repo-name");
   mkdirSync(repo);

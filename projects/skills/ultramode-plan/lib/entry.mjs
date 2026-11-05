@@ -1,4 +1,7 @@
-// Shared by every command-line module in bench/ (KTD1 of docs/plans/hybrid-plan-step-plan.md).
+// The entry check shared by every command-line module, in lib/ and bench/ alike (KTD1 of
+// docs/plans/hybrid-plan-step-plan.md). It lives in lib/ because lib/ is runtime: KTD16 copies
+// SKILL.md, lib/ and workflows/ into an arm's copy and never bench/, so a lib command may not
+// import from bench/.
 
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";

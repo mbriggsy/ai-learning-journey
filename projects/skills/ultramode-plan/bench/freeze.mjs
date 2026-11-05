@@ -23,7 +23,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { isMain, usage } from "./entry.mjs";
+import { isMain, usage } from "../lib/entry.mjs";
 
 // Letters, digits, hyphens and path separators only. Claude Code names a working folder's
 // session folder by replacing every other character with "-"; the window skill's parser

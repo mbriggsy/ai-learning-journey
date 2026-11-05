@@ -29,7 +29,7 @@
 import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, isAbsolute, join, relative, resolve, sep } from "node:path";
-import { isMain, usage } from "./entry.mjs";
+import { isMain, usage } from "../lib/entry.mjs";
 import { slugOf } from "./freeze.mjs";
 import { longOf, shortOf as realShortOf } from "./shortpath.mjs";
 

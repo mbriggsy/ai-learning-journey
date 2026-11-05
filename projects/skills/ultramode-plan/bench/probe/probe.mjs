@@ -17,7 +17,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { runChild } from "../child.mjs";
-import { isMain, usage } from "../entry.mjs";
+import { isMain, usage } from "../../lib/entry.mjs";
 import { deleteFrozen, freeze, slugOf } from "../freeze.mjs";
 import { ACCOUNT_MCP_SERVERS, RESEARCH_MCP_SERVERS, buildLaunch, spellings } from "../launch.mjs";
 import { secretsOf, writeChecked } from "../secrets.mjs";

@@ -11,7 +11,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, realpathSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { isMain, usage } from "./entry.mjs";
+import { isMain, usage } from "../lib/entry.mjs";
 
 // The deepest part of `p` that exists, and the names below it that do not.
 function existingBase(p) {

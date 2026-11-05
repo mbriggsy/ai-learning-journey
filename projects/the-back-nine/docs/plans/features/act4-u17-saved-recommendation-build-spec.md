@@ -75,7 +75,7 @@ refusal (`RothLever.tsx:54`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:575`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:3455`,
+attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:3470`,
 `FuckOffDate.tsx:150`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
@@ -146,7 +146,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
 
 - **READ:** `rothPlanEcho` no longer says *"starting in about N years"*; it names the year, and carries a
   `passed` flag so the sentence's tense matches. Both render sites re-pointed in the SAME commit
-  (`AssumptionPanel.tsx:695`, `RothLever.tsx:313`) — insight 086: splitting a copy key orphans every
+  (`AssumptionPanel.tsx:699`, `RothLever.tsx:313`) — insight 086: splitting a copy key orphans every
   renderer not re-pointed with it.
 - **WRITE:** the `RothLever` input, once labelled *"Starting how many years from now"* — wall-time words
   over a plan-time value — takes the calendar year, and **refuses a past start** aloud. **The refusal IS
@@ -275,10 +275,10 @@ headline, where it would read as current).
   stays green. The identity consumers were enumerated first: `resultSave.ts`'s two compares and the
   round-trip guard.
 - **The `JSON.stringify` accident was removed, not documented.** `resultSave.ts` justified its compare with
-  *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:1025-1027` is a validated
+  *"decodeScenario builds every object."* It does **not** — `scenarioCodec.ts:1040-1042` is a validated
   pass-through cast, and the behavior was safe only because `JSON.parse` preserves `encodeScenario`'s
   insertion order, so a future field reorder would have broken dirty-detection silently. The fix is
-  `scenarioIdentityKey` (`model.ts:2586`), which rebuilds plain objects with SORTED keys and throws on a
+  `scenarioIdentityKey` (`model.ts:2601`), which rebuilds plain objects with SORTED keys and throws on a
   non-serializable value, so key order and absent-vs-undefined can never read as a change.
 
 **Shipped 2026-07-25, commit `374299c9`, CI green by explicit run id 30163571502**, carrying one ruling
@@ -529,7 +529,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts:745-751`, `copy.ts:3619` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts:745-751`, `copy.ts:3634` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

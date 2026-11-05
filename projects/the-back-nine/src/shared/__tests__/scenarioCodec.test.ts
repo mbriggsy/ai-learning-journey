@@ -1098,6 +1098,46 @@ describe('the current shape — the v3 field set (U8, the first v3 writer), writ
     if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain(field)
   })
 
+  // The keep stamp (build 2's KTD10, R13): a yes kept through the stale note's door is an `entered`
+  // figure carrying the quote it was kept over. Optional on `entered` (absent = typed), refused on
+  // `confirmed`, and run like the figures: finite, then > 0, then ≤ the ceiling (insight 046).
+  const W_KEPT: WorkingYearCostV3 = {
+    kind: 'entered',
+    amountReal: 84_000,
+    entryPeriod: 'year',
+    stateTaxReading: 'unpriced',
+    keptOverQuoteReal: 78_000,
+  }
+
+  it('the keep stamp round-trips on an entered W — a cents stamp, and one AT the inclusive ceiling', () => {
+    for (const w of [W_KEPT, { ...W_KEPT, keptOverQuoteReal: 77_999.99 }, { ...W_KEPT, keptOverQuoteReal: MAX_REAL_DOLLAR }]) {
+      const s: CurrentScenario = { ...CURRENT, workingYearCost: w }
+      expect(decodeScenario(encodeScenario(s)), String(w.kind === 'entered' && w.keptOverQuoteReal)).toEqual({
+        ok: true,
+        scenario: s,
+        droppedAtoms: [],
+      })
+    }
+  })
+
+  const badKeepStampArms: ReadonlyArray<readonly [string, unknown]> = [
+    ['a null stamp (the JSON shadow of NaN)', { ...W_KEPT, keptOverQuoteReal: null }],
+    ['a NaN stamp', { ...W_KEPT, keptOverQuoteReal: Number.NaN }],
+    ['an Infinity stamp', { ...W_KEPT, keptOverQuoteReal: Number.POSITIVE_INFINITY }],
+    ['a string stamp', { ...W_KEPT, keptOverQuoteReal: '78000' }],
+    ['a zero stamp', { ...W_KEPT, keptOverQuoteReal: 0 }],
+    ['a negative stamp', { ...W_KEPT, keptOverQuoteReal: -78_000 }],
+    ['a stamp one dollar over the ceiling', { ...W_KEPT, keptOverQuoteReal: MAX_REAL_DOLLAR + 1 }],
+    ['a stamp on a confirmed answer', { ...W_CONFIRMED, keptOverQuoteReal: 78_000 }],
+  ]
+
+  it.each(badKeepStampArms)('workingYearCost with %s is CORRUPT, naming keptOverQuoteReal', (_label, bad) => {
+    const d = decodeScenario(mutated(CURRENT, (o) => { o.workingYearCost = bad }))
+    expect(d.ok).toBe(false)
+    if (!d.ok) expect(d.reason).toBe('corrupt')
+    if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain('workingYearCost.keptOverQuoteReal')
+  })
+
   it('workingYearCost is a tolerant reader too — an UNKNOWN extra key passes; only the other kind\'s KNOWN fields are refused', () => {
     // The reconciliation of U7's "a stray figure on the wrong kind" with the file's tolerant-reader
     // law: the refused strays are the named sibling fields above, never an arbitrary additive key.
@@ -1313,8 +1353,8 @@ describe('the current shape — the v3 field set (U8, the first v3 writer), writ
 
   it('a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario — a programming defect is never laundered into a calm dropped atom', () => {
     // THE TWO RE-THROWS THIS COVERS, and they CHAIN, so one arm holds both:
-    //   `scenarioCodec.ts:969`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
-    //   `scenarioCodec.ts:1031`  `throw e`                              (decodeScenario's outer catch)
+    //   `scenarioCodec.ts:984`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
+    //   `scenarioCodec.ts:1046`  `throw e`                              (decodeScenario's outer catch)
     // Both were UNEXERCISED. They were filed as "correct-by-inspection but SEAM-LESS" on the
     // reasoning that decodeScenario builds its input from `JSON.parse` — data properties only,
     // no getters — and that no validator here recurses or calls a method on an unchecked value.

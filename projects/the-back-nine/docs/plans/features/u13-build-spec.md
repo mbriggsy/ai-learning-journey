@@ -48,9 +48,9 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
    - Stamped by `scenarioFromDraft` at the **atomic save-commit**, from the ui layer's clock.
    - **THE NORMALIZER (the clerk's determinism catch):** `scenarioFromDraft`'s output is BOTH the disk
      payload AND the dirty/clean compare operand — a fresh `savedAt` per call would make every session
-     permanently dirty. ONE shared normalizer, `scenarioIdentity` (model.ts:2549), strips ONLY `savedAt`;
+     permanently dirty. ONE shared normalizer, `scenarioIdentity` (model.ts:2564), strips ONLY `savedAt`;
      the dirty compare goes through its key-order-insensitive serialization `scenarioIdentityKey`
-     (model.ts:2586) so key order and absent-vs-undefined cannot read as a change. Both consumers — the
+     (model.ts:2601) so key order and absent-vs-undefined cannot read as a change. Both consumers — the
      unsaved-buffer dirty compare and the draft↔scenario round-trip guard — import it; neither
      re-implements it.
    - **Absent `savedAt`** (every vault saved before U13): the "~N years since your save" claim is

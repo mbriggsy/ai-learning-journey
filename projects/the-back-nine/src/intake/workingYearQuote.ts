@@ -30,6 +30,16 @@
  *
  * STALE (KTD21). The engine keeps using the last figure the household gave (R4); this module only
  * says whether that figure still matches what it was given against.
+ *
+ * THE KEEP STAMP (build 2's KTD10, R13 — `docs/plans/features/working-year-surplus-build-spec.md`). A
+ * stale yes kept through the stale note's door becomes an `entered` figure (Phase B ruling 34), and
+ * before the stamp it then never went stale on the spending again: a later rise past it said nothing,
+ * so a figure below what the household spends rode on, calm. The keep now stamps the figure with the
+ * quote the note showed (`keptOverQuoteReal`), and a STAMPED figure reads like the yes it came from
+ * wherever the spending matters: it goes stale when today's quote rises above it, its stale sentence
+ * names the spending, its door is withheld below the quote (`heldYesBelowQuote`), and its row says
+ * "kept". A TYPED figure carries no stamp and is never staled on a quote the household never saw (the
+ * register entry's ⚑ NEGATIVE). Each writer below states the stamp's fate.
  */
 import {
   type BudgetLineItem,
@@ -136,12 +146,13 @@ export function confirmedWorkingYearCost(d: ScenarioDraft): WorkingYearCostV3 | 
 
 /** An `entered` answer: the household's own yearly figure (annual real $, > 0), the unit it was
  *  typed in, and the draft's current reading. The caller first refuses a figure that shows as $0
- *  (`working-cost-zero`). */
+ *  (`working-cost-zero`). Never a keep stamp: a figure built here is a typed one unless the caller
+ *  (`writeKeptWorkingYearCost`) adds the stamp itself. */
 export function enteredWorkingYearCost(
   d: ScenarioDraft,
   amountReal: number,
   entryPeriod: SpendEntryPeriod,
-): WorkingYearCostV3 {
+): Extract<WorkingYearCostV3, { kind: 'entered' }> {
   return { kind: 'entered', amountReal, entryPeriod, stateTaxReading: workingYearStateTaxReading(d) }
 }
 
@@ -157,7 +168,8 @@ export function writeConfirmedWorkingYearCost(d: ScenarioDraft): ScenarioDraft {
   return c === null ? d : { ...d, workingYearCost: c }
 }
 
-/** A figure of the household's own (annual real $), typed in `entryPeriod`. */
+/** A figure of the household's own (annual real $), typed in `entryPeriod`. The keep stamp DROPS: a
+ *  typed figure is the household's own, never staled on a quote (KTD10). */
 export function writeEnteredWorkingYearCost(
   d: ScenarioDraft,
   amountReal: number,
@@ -168,21 +180,49 @@ export function writeEnteredWorkingYearCost(
 
 /** Keep the held answer's figure as it is, under the CURRENT reading — KTD21's "committing it
  *  unchanged re-stamps the reading". An `entered` figure keeps its digits and unit. A `confirmed`
- *  answer becomes the household's own figure at the quote it said yes to, yearly (Phase B ruling 34):
- *  a yes no longer follows a quote that has moved, so keeping the old figure is a figure of their
- *  own, quoted in the unit the stale note names it in (ruling 25). A no-op with no answer. */
+ *  answer becomes an `entered` figure at the quote it said yes to, yearly (Phase B ruling 34): a yes no
+ *  longer follows a quote that has moved, so keeping the old figure is an answer of its own, quoted in
+ *  the unit the stale note names it in (ruling 25). A no-op with no answer.
+ *
+ *  THE KEEP STAMP'S FATES HERE (KTD10). Converting a `confirmed` answer is the ONE writer that mints it:
+ *  the quote the stale note showed — today's, read off the draft this write is handed (the store's
+ *  current draft, insight 036) — or, where no quote is left to show (the "no spending figure to offer
+ *  now" note), the quote it said yes to, the one figure that note still names. Never unstamped there:
+ *  a kept yes with no stamp would read as typed and never go stale on a spending figure entered later.
+ *  Keeping (or re-tapping) an `entered` figure carries whatever stamp it has forward and never mints
+ *  one: a typed figure kept stays typed, and a kept figure kept again stays kept — so a stale kept
+ *  figure cannot be made fresh forever by the keep that guards it (the deepen's F1). The other fates:
+ *  a typed figure drops it (`writeEnteredWorkingYearCost`); a unit tap carries it
+ *  (`writeWorkingYearCostPeriod`); "yes" replaces the answer with a fresh yes. */
 export function writeKeptWorkingYearCost(d: ScenarioDraft): ScenarioDraft {
   const w = d.workingYearCost
   if (w === undefined) return d
-  return w.kind === 'entered'
-    ? writeEnteredWorkingYearCost(d, w.amountReal, w.entryPeriod)
-    : writeEnteredWorkingYearCost(d, w.quotedReal, 'year')
+  if (w.kind === 'entered') {
+    const kept = enteredWorkingYearCost(d, w.amountReal, w.entryPeriod)
+    return {
+      ...d,
+      workingYearCost: w.keptOverQuoteReal === undefined ? kept : { ...kept, keptOverQuoteReal: w.keptOverQuoteReal },
+    }
+  }
+  const quote = workingYearQuote(d).annualReal
+  return {
+    ...d,
+    workingYearCost: { ...enteredWorkingYearCost(d, w.quotedReal, 'year'), keptOverQuoteReal: quote > 0 ? quote : w.quotedReal },
+  }
 }
 
 /** Move a held `entered` figure to another period, keeping the DIGITS the household typed (the spend
  *  step's re-base: the typed figure is the truth, the unit moves — so a 12× misentry is repaired by
  *  one tap, never re-typed). The reading is NOT re-stamped: a unit tap is not a re-answer. A no-op
- *  on any other answer, or on the same period. */
+ *  on any other answer, or on the same period.
+ *
+ *  The keep stamp is CARRIED, for the same reason: a unit tap types no digits and answers no quote, so
+ *  it changes neither who gave the figure nor what it was kept over. (The plan's KTD10 first said a
+ *  period change drops it; U5's whole-file review, `wf_e5cbb6be-e97`, four lenses, showed the drop
+ *  launders a stale kept figure: "each month", then "each year", put the same $84,000 back unstamped,
+ *  so it read as typed and never went stale on the spending again — no digit typed. Carrying it is
+ *  never rosy: the stale test reads the FIGURE, so the month view, twelve times larger, reads fresh,
+ *  and the trip back is the kept figure exactly, stale wherever the spending is above it.) */
 export function writeWorkingYearCostPeriod(d: ScenarioDraft, next: SpendEntryPeriod): ScenarioDraft {
   const w = d.workingYearCost
   if (w?.kind !== 'entered' || w.entryPeriod === next) return d
@@ -200,19 +240,32 @@ export function writeClearedWorkingYearCost(d: ScenarioDraft): ScenarioDraft {
   return rest
 }
 
-/** Why a stored W no longer matches (KTD21): the quote it confirmed moved (a `confirmed` answer
- *  only), and/or the state-tax reading it was given under moved (both kinds). */
+/** Why a stored W no longer matches (KTD21): the quote moved — for a `confirmed` answer, off the
+ *  quote it said yes to; for a KEPT figure (stamped, KTD10), up past the figure itself — and/or the
+ *  state-tax reading it was given under moved (every kind). A typed figure is never `quoteMoved`. */
 export interface WorkingYearCostStaleness {
   readonly quoteMoved: boolean
   readonly readingMoved: boolean
 }
 
 /** THE stale predicate (KTD21) — every surface calls it. `null` when W is absent or still matches.
- *  A period-only change never stales (the quote compares yearly figures). */
+ *  A period-only change never stales (the quote compares yearly figures).
+ *
+ *  A kept figure's quote test is ONE-SIDED, and its referent is the FIGURE, never the stamp (R13: "the
+ *  kept figure goes stale when the live quote rises above it"). The household kept that figure over a
+ *  quote at or below it (the door shows only there, ruling 34), so a quote that has since moved without
+ *  passing it leaves the answer it gave standing — a working year costing at least what it spends. A
+ *  quote above it is the rosy side the stamp exists to name. Keyed to the stamp instead, a quote risen
+ *  past the stamp but not the figure would stale an answer whose own door (shown there, the figure not
+ *  below the quote) can never cure it: a keep carries the stamp forward. */
 export function workingYearCostStaleness(d: ScenarioDraft): WorkingYearCostStaleness | null {
   const w = d.workingYearCost
   if (w === undefined) return null
-  const quoteMoved = w.kind === 'confirmed' && workingYearQuote(d).annualReal !== w.quotedReal
+  const quote = workingYearQuote(d).annualReal
+  const quoteMoved =
+    w.kind === 'confirmed'
+      ? quote !== w.quotedReal
+      : w.keptOverQuoteReal !== undefined && quote > w.amountReal
   const readingMoved = workingYearStateTaxReading(d) !== w.stateTaxReading
   return quoteMoved || readingMoved ? { quoteMoved, readingMoved } : null
 }
@@ -221,13 +274,15 @@ export function isWorkingYearCostStale(d: ScenarioDraft): boolean {
   return workingYearCostStaleness(d) !== null
 }
 
-/** A held YES whose figure now sits BELOW today's quote: the household's spending rose past what it said
- *  a working year costs, so keeping that figure is almost always the rosy side. ONE home for the two
- *  places that read it (insight 081): the stale note's Keep door is withheld here (ruling 34), and the
- *  quote-moved sentence warns that the answer can look better than it is (b9-7). */
+/** A held YES — a `confirmed` answer, or a figure KEPT from one (stamped, KTD10) — whose figure now sits
+ *  BELOW today's quote: the household's spending rose past what it said a working year costs, so keeping
+ *  that figure is almost always the rosy side. ONE home for the two places that read it (insight 081): the
+ *  stale note's Keep door is withheld here (ruling 34), and the quote-moved sentence warns that the answer
+ *  can look better than it is (b9-7). A TYPED figure is never one: it answered no quote, so it is never
+ *  read against one (the register entry's ⚑ NEGATIVE). */
 export function heldYesBelowQuote(d: ScenarioDraft): boolean {
   const w = d.workingYearCost
-  if (w?.kind !== 'confirmed') return false
+  if (w === undefined || (w.kind === 'entered' && w.keptOverQuoteReal === undefined)) return false
   const quote = workingYearQuote(d).annualReal
   return quote > 0 && quote > workingYearCostFigure(w)
 }
@@ -235,15 +290,30 @@ export function heldYesBelowQuote(d: ScenarioDraft): boolean {
 /** The stale sentence (KTD21): the last figure, the current quote where it moved, and which input
  *  really moved — `null` while W is absent or still matches. ONE home for the three surfaces that say
  *  it: the W step's stale note, the panel row's stale face (both through `WorkingCostQuestion`) and
- *  the result's standing line, so the cause a household reads never differs between them. An
- *  `entered` answer stales only on the reading (it never confirmed a quote). */
+ *  the result's standing line, so the cause a household reads never differs between them. A TYPED
+ *  figure stales only on the reading (it never answered a quote). A KEPT one (KTD10) says "kept",
+ *  never "entered" — the household never typed it — and when the spending rose past it, names the
+ *  spending, never the state, with the rosy-side lean (a stale kept figure's quote is always above
+ *  it: `workingYearCostStaleness`). */
 export function workingYearCostStaleText(d: ScenarioDraft): string | null {
   const w = d.workingYearCost
   const s = workingYearCostStaleness(d)
   if (w === undefined || s === null) return null
   const lastFigure = workingYearCostFigure(w)
-  if (w.kind === 'entered') return slots.workingCostStaleStateEntered(formatMoney(lastFigure))
+  if (w.kind === 'entered' && w.keptOverQuoteReal === undefined) {
+    return slots.workingCostStaleStateEntered(formatMoney(lastFigure))
+  }
   const quote = workingYearQuote(d)
+  if (w.kind === 'entered') {
+    // Kept. The state alone names one figure; a quote that moved is above the figure, so there is
+    // always a second figure to name beside it, printed as a pair (to the cent under a dollar apart).
+    // The lean rides the one home the door reads (`heldYesBelowQuote`), as the yes's own arm below.
+    if (!s.quoteMoved) return slots.workingCostStaleStateKept(formatMoney(lastFigure))
+    const [kept, now] = formatMoneyPair(lastFigure, quote.annualReal)
+    if (s.readingMoved) return slots.workingCostStaleKeptBoth(kept, now)
+    const sentence = slots.workingCostStaleKeptQuote(kept, now)
+    return heldYesBelowQuote(d) ? `${sentence} ${slots.workingCostStaleLeansBetter(kept)}` : sentence
+  }
   // The stale check compares at the cent, so a move under a dollar prints both figures to the cent
   // (`formatMoneyPair`) — never "yes to $84,000 … now come to $84,000" (the whole-file review).
   const [last, quoted] = formatMoneyPair(lastFigure, quote.annualReal)

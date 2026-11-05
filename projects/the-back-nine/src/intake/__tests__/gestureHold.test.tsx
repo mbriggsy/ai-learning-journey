@@ -331,7 +331,7 @@ const label = (root: HTMLElement, key: 'periodMonth' | 'periodYear') =>
   within(root).getByRole('radio', { name: copy[key] }).closest('label')!
 
 /** `date`'s household, W entered at $84,000 a YEAR under FL (no income tax), the state answer since moved
- *  to PA — stale on the reading alone (an entered W never stales on the quote). The lens's repro draft. */
+ *  to PA — stale on the reading alone (a typed W never stales on the quote). The lens's repro draft. */
 const { workingYearCost: _none, ...dateNoW } = DEV_SEEDS.date
 const staleEnteredYearly: ScenarioDraft = {
   ...dateNoW,
@@ -492,8 +492,15 @@ describe('the panel: the row’s value line and money picture above the question
     typeThenPress(row(), '5000', keep) // under the untapped month: $60,000 a year commits at the blur
     expect(w(m)).toMatchObject({ kind: 'entered', amountReal: 60_000, entryPeriod: 'month' })
     release(keep)
-    expect(w(m)).toEqual({ kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: seedW.stateTaxReading })
-    expect(valueLine()).toBe(slots.assumptionWorkingCostEntered('84,000'))
+    // Kept, so stamped with the $78,000 quote the note showed (build 2's KTD10), and the row says so.
+    expect(w(m)).toEqual({
+      kind: 'entered',
+      amountReal: 84_000,
+      entryPeriod: 'year',
+      stateTaxReading: seedW.stateTaxReading,
+      keptOverQuoteReal: 78_000,
+    })
+    expect(valueLine()).toBe(slots.assumptionWorkingCostKept('84,000'))
   })
 
   it('a commit from ANOTHER row under the same press re-gates the door at once: spending raised past $84,000, the keep is withheld', () => {

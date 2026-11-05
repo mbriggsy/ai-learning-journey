@@ -858,6 +858,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostStaleStateEntered: slots.workingCostStaleStateEntered('90,000'),
     workingCostStaleBoth: slots.workingCostStaleBoth('84,000', '90,000'),
     workingCostStaleBothGone: slots.workingCostStaleBothGone('84,000'),
+    workingCostStaleKeptQuote: slots.workingCostStaleKeptQuote('84,000', '90,000'),
+    workingCostStaleStateKept: slots.workingCostStaleStateKept('84,000'),
+    workingCostStaleKeptBoth: slots.workingCostStaleKeptBoth('84,000', '90,000'),
     workingCostKeepMonthly: slots.workingCostKeepMonthly('7,500'),
     workingCostKeepYearly: slots.workingCostKeepYearly('90,000'),
     workingCostBelowMedical: slots.workingCostBelowMedical('6,000', '8,000'),
@@ -888,6 +891,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     assumptionWorkingCostConfirmed: slots.assumptionWorkingCostConfirmed('84,000'),
     assumptionWorkingCostConfirmedBudget: slots.assumptionWorkingCostConfirmedBudget('36,000'),
     assumptionWorkingCostEntered: slots.assumptionWorkingCostEntered('90,000'),
+    assumptionWorkingCostKept: slots.assumptionWorkingCostKept('84,000'),
     assumptionWorkingCostStale: slots.assumptionWorkingCostStale('84,000'),
   }
 
@@ -1231,6 +1235,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.workingCostStaleStateEntered(S),
       slots.workingCostStaleBoth(S, S),
       slots.workingCostStaleBothGone(S),
+      slots.workingCostStaleKeptQuote(S, S),
+      slots.workingCostStaleStateKept(S),
+      slots.workingCostStaleKeptBoth(S, S),
       slots.workingCostKeepMonthly(S),
       slots.workingCostKeepYearly(S),
       slots.workingCostBelowMedical(S, S),
@@ -1249,6 +1256,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.assumptionWorkingCostConfirmed(S),
       slots.assumptionWorkingCostConfirmedBudget(S),
       slots.assumptionWorkingCostEntered(S),
+      slots.assumptionWorkingCostKept(S),
       slots.assumptionWorkingCostStale(S),
     ]) {
       expect(lintCopy(rendered, ['free-numeral']), rendered).toEqual([])
@@ -1638,7 +1646,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // --- THE UNIT-INERTNESS BAN (Tier-0, fixed 2026-08-03; until now the string had NO pin at all).
   //     The killed line was "…switching this never changes the amount." The panel toggle really
   //     does leave `annualSpendingReal` alone — but the SHOWN figure jumps exactly 12×
-  //     (`spendDisplayed`, AssumptionPanel.tsx:531-536) while the sentence says nothing moved, and
+  //     (`spendDisplayed`, AssumptionPanel.tsx:535-540) while the sentence says nothing moved, and
   //     the panel's own commit (:607-617) multiplies by 12 under 'month'. So the reader's natural
   //     repair — retype the digits they remember — commits a plan off by 12× in the UNSAFE
   //     direction, and nothing downstream catches it (PANEL_PROVENANCE disarms the force-confirm;

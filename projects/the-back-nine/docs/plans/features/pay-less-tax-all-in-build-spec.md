@@ -130,12 +130,12 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `solve.ts:214-224, :385-390` (deltaSkew wording).
 - `stateTaxDisclosure.ts:151-155`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:100` and `:720`.
-- `copy.ts:2149` comment and `:3605`.
+- `copy.ts:2149` comment and `:3620`.
 - the `recommendationView.test.ts:596` comment.
 
 The viz suppression off leave-more stays correct, because all-in is still lower-is-better.
 
-**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:3514-3515`, read), `goalPayLessTaxGloss` (`:2156`), `recDiscNiit` (`:2327-2328`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3170-3189`) only under a "$X less" hero.
+**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:3529-3530`, read), `goalPayLessTaxGloss` (`:2156`), `recDiscNiit` (`:2327-2328`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3170-3189`) only under a "$X less" hero.
 
 **Calibration:**
 - Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:44, :58, :72` (map).
@@ -205,7 +205,7 @@ The viz suppression off leave-more stays correct, because all-in is still lower-
       - Otherwise append the decomposition to the register's as-built note.
       - *Why over Spec 1's record-only:* Spec 1 records the bias but never checks whether it decides a crown. On this point calm-but-wrong is a live risk.
 15. Land Briggsy's chosen strings (§6). Then:
-    - add a `SLOT_RENDER` sample for any new slot, cohort arm or `recDisc*` key (`copyGuard.test.ts:904-906`, the burned/070 completeness test);
+    - add a `SLOT_RENDER` sample for any new slot, cohort arm or `recDisc*` key (`copyGuard.test.ts:908-910`, the burned/070 completeness test);
     - update the pinned DISCLOSURE_ORDER test (`recommendationView.ts:131-132`, map) if a scope disclosure is added;
     - add the `recommendationView.test` arms (§5.5).
 16. Docs (§7). Then `pnpm doc:reanchor`, grepping the dry run for "(bare, after", the tool's 5th blind class. Then doc-stats.

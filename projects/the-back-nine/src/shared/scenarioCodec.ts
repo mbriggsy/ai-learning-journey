@@ -896,6 +896,11 @@ function checkV3Fields(o: Obj): string[] {
   //    carrying `amountReal` or `entryPeriod`, or an `entered` carrying `quotedReal`, is a mismatched
   //    pair no writer emits. An UNKNOWN extra key still passes (the tolerant reader, header).
   //  · `entered` requires its `entryPeriod`, the unit the figure was typed in (display only, KTD4).
+  //  · The keep stamp `keptOverQuoteReal` (build 2's KTD10, R13) is OPTIONAL on `entered` — absent is a
+  //    typed figure, a real population — and refused on `confirmed`, where no writer mints it. Present,
+  //    it runs finite, then > 0, then ≤ the ceiling, like the figures: it records the quote a stale
+  //    yes was kept over, and a keep never mints one off a $0 quote. Added inside label 4 under a new
+  //    name, so a copy built before it reads the key as unknown (the line above) and opens the plan.
   if (o.workingYearCost !== undefined) {
     const p = 'scenario.workingYearCost'
     const w = o.workingYearCost
@@ -916,11 +921,21 @@ function checkV3Fields(o: Obj): string[] {
       if (w.entryPeriod !== undefined) {
         throw new Corrupt(`${p}.entryPeriod: only meaningful when kind is 'entered' (writer bug)`)
       }
+      if (w.keptOverQuoteReal !== undefined) {
+        throw new Corrupt(`${p}.keptOverQuoteReal: only meaningful when kind is 'entered' (writer bug)`)
+      }
     } else {
       if (w.quotedReal !== undefined) {
         throw new Corrupt(`${p}.quotedReal: only meaningful when kind is 'confirmed' (writer bug)`)
       }
       needVocab(w, 'entryPeriod', SPEND_ENTRY_PERIODS, p)
+      if (w.keptOverQuoteReal !== undefined) {
+        needFinite(w, 'keptOverQuoteReal', p)
+        if ((w.keptOverQuoteReal as number) <= 0) {
+          throw new Corrupt(`${p}.keptOverQuoteReal: must be > 0 (a keep never stamps a $0 quote)`)
+        }
+        needAtMostMaxDollar(w, 'keptOverQuoteReal', p)
+      }
     }
   }
   // ─────────────────────────────────────────────────────────────────────────────────────────

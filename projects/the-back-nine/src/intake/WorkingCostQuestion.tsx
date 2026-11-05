@@ -29,7 +29,8 @@ import {
  * over the same answer can never disagree.
  *
  * The face, top to bottom: the stale note (KTD21 — `role="note"`, present before any tap, with a
- * "keep" door on a stale entered figure, and on a stale yes whose figure is not below today's quote);
+ * "keep" door on a stale typed figure, and on a stale yes — or a figure kept from one (build 2's KTD10)
+ * — whose figure is not below today's quote);
  * the quote in its own slot ABOVE the static legend
  * (KTD17), then the lines it left out (at most three, then "N more"); the help — what to count and
  * what to leave out, two short lists — and its state sentence, by the draft's state-tax reading; the
@@ -273,10 +274,12 @@ export function WorkingCostQuestion({
     .filter((s): s is string => s !== null)
     .join(' ')
   const medical = draft.health.oopMedicalAnnual
-  // The stale note's Keep door (rulings 21, 34): an `entered` figure always; a held yes only where its
-  // figure is not below today's quote (`heldYesBelowQuote`, the one home the stale sentence's lean
-  // reads too) — which includes where no quote is left to answer instead. Read off the note's own
-  // draft, like everything the note draws.
+  // The stale note's Keep door (rulings 21, 34): a typed figure always; a held yes, or a figure kept from
+  // one (stamped, build 2's KTD10), only where its figure is not below today's quote (`heldYesBelowQuote`,
+  // the one home the stale sentence's lean reads too) — which includes where no quote is left to answer
+  // instead. Read off the note's own draft, like everything the note draws. A kept figure that is stale on
+  // the spending is ALWAYS below the quote (its staleness is that), so its door never shows: a keep would
+  // carry the stamp forward and leave it as stale as it was.
   const keepable = noteW !== undefined && !heldYesBelowQuote(noteDraft)
 
   return (
@@ -294,9 +297,11 @@ export function WorkingCostQuestion({
           {/* Both kinds (rulings 21 and 34): without the door, keeping a figure that still holds
               means picking "a different figure" — which clears a `confirmed` answer, unmounting this
               note and the only place the old figure is named — then typing it from memory. A held YES
-              gets it only where keeping cannot land below today's quote: a working year almost never
-              costs less than what the household spends, so a one-tap keep below it is the rosy side,
-              and that answer goes through the fork instead (`keepable`). */}
+              (or a figure kept from one) gets it only where keeping cannot land below today's quote: a
+              working year almost never costs less than what the household spends, so a one-tap keep
+              below it is the rosy side, and that answer goes through the fork instead (`keepable`).
+              A keep of a yes stamps the figure with the quote this note shows (KTD10), so a later rise
+              in the spending past it still says so. */}
           {keepable && (
             <button
               type="button"
@@ -365,8 +370,10 @@ export function WorkingCostQuestion({
               } else if (w?.kind === 'entered') {
                 // A re-tap on the held figure is an explicit answer (the segmented control's own
                 // doctrine): keep it as it stands, under the current reading — and show it, not any
-                // digits the panel refused a moment ago.
-                keepTapped.current = noteShown
+                // digits the panel refused a moment ago. It keeps a kept figure's stamp (KTD10), so on
+                // a kept figure the spending has risen past, the note stays: the keep answers the state
+                // half of it at most, and focus moves only on a keep that takes the note away.
+                keepTapped.current = noteShown && !heldYesBelowQuote(draft)
                 setHeldFigure(undefined)
                 onWrite(writeKeptWorkingYearCost, 'answer')
               } else {

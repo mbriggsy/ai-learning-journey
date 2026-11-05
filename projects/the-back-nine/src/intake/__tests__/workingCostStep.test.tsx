@@ -2,7 +2,7 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { intakeSteps } from '../questions'
 import { IntakeFlow } from '../flow'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
@@ -406,7 +406,7 @@ describe('the W step — a stale answer (KTD21)', () => {
     expect(heading()).toBe(copy.qWorkingLedgerHeading)
   })
 
-  it('a stale YES keeps its old figure through the same door — yearly, as the household’s own, never asked its unit (ruling 34)', () => {
+  it('a stale YES keeps its old figure through the same door — yearly, stamped as kept, never asked its unit (ruling 34; build 2’s KTD10)', () => {
     // Without the door, keeping $84,000 meant "a different figure", which clears a confirmed answer —
     // unmounting the only place $84,000 is named — then typing it from memory; the easy Yes cut it.
     const m = modelWith(DEV_SEEDS.datecoststale)
@@ -415,9 +415,16 @@ describe('the W step — a stale answer (KTD21)', () => {
     expect(screen.getByRole('note')).toContainElement(keep)
     keep.focus()
     fireEvent.click(keep)
-    expect(w(m)).toEqual({ kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: 'unpriced' })
+    // The stamp records the $78,000 quote the note showed, so a later rise past $84,000 still says so.
+    expect(w(m)).toEqual({
+      kind: 'entered',
+      amountReal: 84_000,
+      entryPeriod: 'year',
+      stateTaxReading: 'unpriced',
+      keptOverQuoteReal: 78_000,
+    })
     expect(screen.queryByRole('note')).toBeNull()
-    // It now reads as the household's own figure, in the unit the door named.
+    // It now reads as a figure of the household's own choosing, in the unit the door named.
     expect(screen.getByRole('radio', { name: copy.workingCostDifferent })).toBeChecked()
     expect(screen.getByRole('radio', { name: copy.periodYear })).toBeChecked()
     expect(screen.getByLabelText(copy.workingCostAmountLabel)).toHaveValue('84,000')
@@ -768,6 +775,100 @@ describe('the W step — a stale entered answer: only a keystroke or a keep answ
   it('the keep door quotes the figure in the unit it was given: a yearly answer reads its yearly figure', () => {
     render(<Harness model={modelWith(staleEntered('year'))} />)
     expect(screen.getByRole('button', { name: slots.workingCostKeepYearly('84,000') })).toBeInTheDocument()
+  })
+})
+
+describe('the W step — a kept yes goes stale when the spending rises past it (build 2’s KTD10, R13)', () => {
+  // `date`'s household said yes to $84,000; its spending has since fallen to $80,000 a year, so the yes is
+  // stale and above today's quote — the Keep door shows (ruling 34).
+  const staleYes = (): ScenarioDraft => ({ ...dateNoW(), annualSpendingReal: 80_000, workingYearCost: confirmed(84_000) })
+  const KEPT: WorkingYearCostV3 = {
+    kind: 'entered',
+    amountReal: 84_000,
+    entryPeriod: 'year',
+    stateTaxReading: 'unpriced',
+    keptOverQuoteReal: 80_000,
+  }
+  const keepDoor = () => screen.getByRole('button', { name: slots.workingCostKeepYearly('84,000') })
+
+  it('kept over $80,000, then the spending rises to $85,000: the note names the spending and leans, no door shows, and Continue holds', () => {
+    const m = modelWith(staleYes())
+    render(<Harness model={m} />)
+    fireEvent.click(keepDoor())
+    expect(w(m)).toEqual(KEPT)
+    expect(screen.queryByRole('note')).toBeNull()
+    act(() => m.update((d) => ({ ...d, annualSpendingReal: 85_000 })))
+    expect(screen.getByRole('note')).toHaveTextContent(
+      `${slots.workingCostStaleKeptQuote('84,000', '85,000')} ${slots.workingCostStaleLeansBetter('84,000')}`,
+    )
+    expect(screen.queryByRole('button', { name: /^Keep / })).toBeNull()
+    expect(screen.getByRole('radio', { name: copy.workingCostDifferent })).toBeChecked()
+    next()
+    expect(heading()).toBe(copy.qWorkingCostHeading) // a stale answer cannot complete the walk
+    expect(screen.getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
+    // "Yes" answers it at today's figure.
+    pick('workingCostYes')
+    expect(w(m)).toEqual(confirmed(85_000))
+    expect(screen.queryByRole('note')).toBeNull()
+  })
+
+  it('a re-tap of the held answer on a kept figure the spending has risen past keeps the stamp, so the note stays', () => {
+    const m = modelWith({ ...dateNoW(), annualSpendingReal: 85_000, workingYearCost: KEPT })
+    render(<Harness model={m} />)
+    expect(screen.getByRole('note')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('radio', { name: copy.workingCostDifferent }))
+    expect(w(m)).toEqual(KEPT)
+    expect(screen.getByRole('note')).toHaveTextContent(slots.workingCostStaleKeptQuote('84,000', '85,000'))
+    next()
+    expect(screen.getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
+  })
+
+  it('after a state move, the door and the re-tap each keep the stamp — and a later rise past the figure still stales it', () => {
+    for (const keepBy of ['door', 're-tap'] as const) {
+      const m = modelWith({ ...dateNoW(), annualSpendingReal: 80_000, retirementState: 'FL', workingYearCost: KEPT })
+      render(<Harness model={m} />)
+      expect(screen.getByRole('note'), keepBy).toHaveTextContent(slots.workingCostStaleStateKept('84,000'))
+      if (keepBy === 'door') fireEvent.click(keepDoor())
+      else fireEvent.click(screen.getByRole('radio', { name: copy.workingCostDifferent }))
+      expect(w(m), keepBy).toEqual({ ...KEPT, stateTaxReading: 'none' })
+      expect(screen.queryByRole('note'), keepBy).toBeNull()
+      act(() => m.update((d) => ({ ...d, annualSpendingReal: 85_000 })))
+      expect(screen.getByRole('note'), keepBy).toHaveTextContent(slots.workingCostStaleKeptQuote('84,000', '85,000'))
+      cleanup()
+    }
+  })
+
+  it('a figure retyped over a kept one drops the stamp: it is the household’s own, never staled by a rise', () => {
+    const m = modelWith({ ...dateNoW(), annualSpendingReal: 80_000, workingYearCost: KEPT })
+    render(<Harness model={m} />)
+    expect(screen.getByRole('radio', { name: copy.periodYear })).toBeChecked()
+    // A real retype of the same figure passes through other text on the way (focus fills the box with
+    // "84000", so the identical value alone fires no change event).
+    const input = screen.getByLabelText(copy.workingCostAmountLabel)
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value: '8400' } })
+    fireEvent.change(input, { target: { value: '84000' } })
+    fireEvent.blur(input)
+    expect(w(m)).toEqual({ kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: 'unpriced' })
+    act(() => m.update((d) => ({ ...d, annualSpendingReal: 85_000 })))
+    expect(screen.queryByRole('note')).toBeNull()
+  })
+
+  it('a unit tap carries the stamp: "each month" then "each year" on a kept figure the spending has passed leaves it stale, and Continue holds (U5’s review)', () => {
+    // Before the fix the two taps put the same $84,000 back unstamped — a typed figure, fresh, the walk open.
+    const m = modelWith({ ...dateNoW(), annualSpendingReal: 85_000, workingYearCost: KEPT })
+    render(<Harness model={m} />)
+    expect(screen.getByRole('note')).toHaveTextContent(slots.workingCostStaleKeptQuote('84,000', '85,000'))
+    pick('periodMonth')
+    expect(w(m)).toEqual({ ...KEPT, amountReal: 1_008_000, entryPeriod: 'month' })
+    pick('periodYear')
+    expect(w(m)).toEqual(KEPT)
+    expect(screen.getByRole('note')).toHaveTextContent(
+      `${slots.workingCostStaleKeptQuote('84,000', '85,000')} ${slots.workingCostStaleLeansBetter('84,000')}`,
+    )
+    next()
+    expect(heading()).toBe(copy.qWorkingCostHeading)
+    expect(screen.getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
   })
 })
 

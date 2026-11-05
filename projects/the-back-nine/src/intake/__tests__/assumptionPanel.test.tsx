@@ -1017,7 +1017,7 @@ describe('the W row — four faces, one question (U8)', () => {
     expect(within(row()).queryByRole('heading', { name: copy.workingLedgerComingIn })).toBeNull()
   })
 
-  it('STALE yes: the keep door commits the old quote as the household’s own yearly figure — the period rule never refuses it (ruling 34)', () => {
+  it('STALE yes: the keep door commits the old quote as a kept yearly figure, stamped with the $78,000 quote it was kept over — the period rule never refuses it (ruling 34; build 2’s KTD10)', () => {
     const { props } = renderPanel({ snapshot: snap(DEV_SEEDS.datecoststale) })
     fireEvent.click(within(row()).getByRole('button', { name: slots.workingCostKeepYearly('84,000') }))
     // $84,000 sits above the period rule's floor, and no period was tapped — but the door said "a year".
@@ -1027,6 +1027,7 @@ describe('the W row — four faces, one question (U8)', () => {
       amountReal: 84_000,
       entryPeriod: 'year',
       stateTaxReading: 'unpriced',
+      keptOverQuoteReal: 78_000,
     })
     expect(within(row()).queryByRole('alert')).toBeNull()
   })
@@ -1190,6 +1191,57 @@ describe('the W row — four faces, one question (U8)', () => {
     expect(within(row()).queryByText(slots.assumptionWorkingCostConfirmed('75,000'))).toBeNull()
   })
 
+  // Build 2's KTD10 (R13): a yes kept through the stale note's door is stamped, and its row says "kept" —
+  // never "your own figure", which the household never typed. A typed figure, or a unit re-based by a
+  // period tap, carries no stamp and keeps "your own figure".
+  const keptOn = (draft: ScenarioDraft, amountReal: number, keptOverQuoteReal: number): ScenarioDraft => ({
+    ...draft,
+    workingYearCost: {
+      kind: 'entered',
+      amountReal,
+      entryPeriod: 'year',
+      stateTaxReading: draft.workingYearCost!.stateTaxReading,
+      keptOverQuoteReal,
+    },
+  })
+
+  it('a KEPT figure’s value line says "kept", never "your own figure"', () => {
+    // `dateshort` spends $70,000; $75,000 kept over it is fresh (the figure is not below the quote).
+    renderPanel({ snapshot: snap(keptOn(DEV_SEEDS.dateshort, 75_000, 70_000)) })
+    expect(within(row()).getByText(slots.assumptionWorkingCostKept('75,000'))).toBeInTheDocument()
+    expect(within(row()).queryByText(slots.assumptionWorkingCostEntered('75,000'))).toBeNull()
+  })
+
+  it('a KEPT figure the spending has risen past: the stale line, the kept sentence and its lean, and NO keep door', () => {
+    // `dateshort` spends $70,000; $65,000 was kept over a $60,000 quote, and the spending has since risen.
+    renderPanel({ snapshot: snap(keptOn(DEV_SEEDS.dateshort, 65_000, 60_000)) })
+    expect(within(row()).getByText(slots.assumptionWorkingCostStale('65,000'))).toBeInTheDocument()
+    expect(within(row()).getByRole('note')).toHaveTextContent(
+      `${slots.workingCostStaleKeptQuote('65,000', '70,000')} ${slots.workingCostStaleLeansBetter('65,000')}`,
+    )
+    expect(within(row()).queryByRole('button', { name: /^Keep / })).toBeNull()
+  })
+
+  it('a unit tap on a KEPT figure carries the stamp: "each month" then "each year" is the kept figure again, and a later rise past it says so (U5’s review)', () => {
+    const m = freshModel()
+    const kept = keptOn(DEV_SEEDS.dateshort, 75_000, 70_000)
+    m.update(() => kept)
+    render(<WiredPanel model={m} />)
+    expect(within(row()).getByText(slots.assumptionWorkingCostKept('75,000'))).toBeInTheDocument()
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.periodMonth }))
+    // $75,000 a month is $900,000 a year — still the figure the household kept, in another unit.
+    expect(m.getSnapshot().draft.workingYearCost).toEqual({ ...kept.workingYearCost, amountReal: 900_000, entryPeriod: 'month' })
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.periodYear }))
+    expect(m.getSnapshot().draft.workingYearCost).toEqual(kept.workingYearCost)
+    expect(within(row()).getByText(slots.assumptionWorkingCostKept('75,000'))).toBeInTheDocument()
+    // The spending then rises to $90,000, past the kept figure: stale, named, leaning.
+    act(() => m.update((d) => ({ ...d, annualSpendingReal: 90_000 })))
+    expect(within(row()).getByText(slots.assumptionWorkingCostStale('75,000'))).toBeInTheDocument()
+    expect(within(row()).getByRole('note')).toHaveTextContent(
+      `${slots.workingCostStaleKeptQuote('75,000', '90,000')} ${slots.workingCostStaleLeansBetter('75,000')}`,
+    )
+  })
+
   it('a confirmed BUDGET quote’s value line says it came from the budget, never "your spending figure" (40,000 of lines + 4,000 of medical)', () => {
     const w = confirmedWorkingYearCost(governedDraft)
     if (w === null) throw new Error('[test setup] the governed draft quotes $0')
@@ -1222,6 +1274,24 @@ describe('the W row — four faces, one question (U8)', () => {
     expect(within(row()).queryByRole('note')).toBeNull()
     expect(document.activeElement).not.toBe(within(row()).getByRole('radio', { name: copy.workingCostYes }))
     expect(document.activeElement).toBe(document.body)
+  })
+
+  it('a re-tap that leaves the note up arms no focus move: a later edit elsewhere that clears the note keeps focus on the page (B5; build 2’s KTD10)', () => {
+    // `dateshort` spends $70,000; $65,000 was kept over $60,000, so the note shows and the door is withheld.
+    // A re-tap of the checked radio carries the stamp and leaves the note up — it is no keep that clears it.
+    const m = freshModel()
+    m.update(() => keptOn(DEV_SEEDS.dateshort, 65_000, 60_000))
+    render(<WiredPanel model={m} />)
+    fireEvent.click(within(row()).getByRole('radio', { name: copy.workingCostDifferent }))
+    expect(within(row()).getByRole('note')).toBeInTheDocument()
+    // The spending then falls to $60,000, below the kept figure, and the household taps blank space.
+    const spend = screen.getByLabelText(copy.spendLabel)
+    act(() => spend.focus())
+    fireEvent.change(spend, { target: { value: '60000' } })
+    act(() => spend.blur())
+    expect(m.getSnapshot().draft.annualSpendingReal).toBe(60_000)
+    expect(within(row()).queryByRole('note')).toBeNull()
+    expect(document.activeElement, 'focus stays on the page').toBe(document.body)
   })
 
   it('a W commit followed by a spend edit renders no error on the row (the gate never reaches the panel)', () => {

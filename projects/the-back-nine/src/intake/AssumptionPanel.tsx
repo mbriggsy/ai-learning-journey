@@ -263,7 +263,11 @@ function WorkingCostRow({
             workingYearQuote(shown).source === 'budget'
             ? slots.assumptionWorkingCostConfirmedBudget(figure)
             : slots.assumptionWorkingCostConfirmed(figure)
-          : slots.assumptionWorkingCostEntered(figure)
+          : // A yes kept through the stale note's door carries the keep stamp (KTD10): "kept", never
+            // "your own figure" — the household never typed it.
+            w.keptOverQuoteReal !== undefined
+            ? slots.assumptionWorkingCostKept(figure)
+            : slots.assumptionWorkingCostEntered(figure)
   return (
     <Row seat="working-year-cost" rowRef={rowRef}>
       <p className="ap-row__name" tabIndex={-1} ref={nameRef}>

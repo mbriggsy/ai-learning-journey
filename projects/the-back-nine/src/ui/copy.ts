@@ -1567,11 +1567,11 @@ export const copy = {
   //
   // ⚠️ THE TOGGLE SETS THE ENTRY UNIT TOO, AND THE OLD SENTENCE HID IT (fixed 2026-08-03).
   // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
-  // (`spendDisplayed`, AssumptionPanel.tsx:531-536), so the reader watches the number move while
+  // (`spendDisplayed`, AssumptionPanel.tsx:535-540), so the reader watches the number move while
   // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:794-804, the `entered * 12` arm at :801) then multiplies by 12
+  // commit (AssumptionPanel.tsx:798-808, the `entered * 12` arm at :805) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
-  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:440) hard-disarms
+  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:444) hard-disarms
   // `spend-period-unconfirmed` (sanity.ts:389-412, the disarm read at :400) on this surface, and
   // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:89) regardless — so the rule could not have
   // caught it even armed. The replacement must therefore say BOTH halves — the money is
@@ -2801,6 +2801,18 @@ export const slots = {
     `You said yes to $${lastFormatted} a year, but your spending figures and your state answer have changed since. Your spending now comes to $${nowFormatted} a year, and the state changes which state income tax this figure should hold.`,
   workingCostStaleBothGone: (lastFormatted: string): string =>
     `You said yes to $${lastFormatted} a year, but your spending figures and your state answer have changed since, and there’s no spending figure to offer now.`,
+  /** A KEPT figure's stale note (build 2's KTD10, R13): a yes kept through the "Keep $X a year" door,
+   *  so "You kept", never "You entered" (the household never typed it) and never "You said yes" (the
+   *  yes no longer follows the quote). A kept figure stales on the spending only once the spending
+   *  comes to MORE than it, so the quote arm always has a second figure and never a "gone" twin; the
+   *  quote-only arm is followed by `workingCostStaleLeansBetter`, as the yes's own is. PILOT-DRAFTED,
+   *  shipped flagged for the Caddie walk. */
+  workingCostStaleKeptQuote: (keptFormatted: string, nowFormatted: string): string =>
+    `You kept $${keptFormatted} a year, but your spending figures have changed since — they now come to $${nowFormatted} a year.`,
+  workingCostStaleStateKept: (keptFormatted: string): string =>
+    `You kept $${keptFormatted} a year before your state answer changed, and that changes which state income tax this figure should hold.`,
+  workingCostStaleKeptBoth: (keptFormatted: string, nowFormatted: string): string =>
+    `You kept $${keptFormatted} a year, but your spending figures and your state answer have changed since. Your spending now comes to $${nowFormatted} a year, and the state changes which state income tax this figure should hold.`,
   /** The stale ENTERED answer's re-confirm (KTD21: committing it unchanged re-stamps it). */
   workingCostKeepMonthly: (amountFormatted: string): string => `Keep $${amountFormatted} a month`,
   workingCostKeepYearly: (amountFormatted: string): string => `Keep $${amountFormatted} a year`,
@@ -2863,6 +2875,9 @@ export const slots = {
   assumptionWorkingCostConfirmedBudget: (amountFormatted: string): string =>
     `$${amountFormatted} a year — from your budget, confirmed`,
   assumptionWorkingCostEntered: (amountFormatted: string): string => `$${amountFormatted} a year — your own figure`,
+  // A yes kept through the stale note's door (build 2's KTD10, R13): not "your own figure" — the household
+  // never typed it — and not "confirmed", since it no longer follows the spending. PILOT-DRAFTED, flagged.
+  assumptionWorkingCostKept: (amountFormatted: string): string => `$${amountFormatted} a year — the figure you kept`,
   assumptionWorkingCostStale: (amountFormatted: string): string =>
     `$${amountFormatted} a year — your earlier answer, from before a later change`,
   // --- U9b budget-builder reconciliation slots (all figures pre-formatted by the caller) --------
@@ -3186,7 +3201,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1420` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1428` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

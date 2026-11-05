@@ -2472,6 +2472,21 @@ export type WorkingYearCostV3 =
       /** The unit the figure was typed in — display only; the figure is already annual. */
       readonly entryPeriod: SpendEntryPeriod
       readonly stateTaxReading: WorkingYearStateTaxReading
+      /** THE KEEP STAMP (build 2's KTD10, R13): present iff this figure is a stale YES the household
+       *  KEPT through the stale note's door, rather than one it typed. Its value is the quote the stale
+       *  note showed at that keep (annual real $; the quote it had said yes to where no quote was left
+       *  to show), > 0 and ≤ the engine's dollar ceiling (codec-enforced). A kept figure goes stale when
+       *  today's quote rises ABOVE THE FIGURE: it was a yes to the spending once, so a later rise in the
+       *  spending past it must say so (the "can look better than it is" side), where a typed figure is
+       *  never staled on a quote the household never saw (the register entry's ⚑ NEGATIVE).
+       *
+       *  ABSENT = typed (or kept by a copy built before U5, a group with no saves in it). Every writer
+       *  states the stamp's fate (`src/intake/workingYearQuote.ts`): only a keep that converts a
+       *  `confirmed` answer mints it; a keep or a re-tap of an `entered` figure, and a unit tap, carry it
+       *  forward; a typed figure drops it. The name is bound (KTD10): never `quotedReal`,
+       *  `amountReal` or `entryPeriod`, each of which a version-4 copy built before U5 refuses or reads
+       *  on this kind — under a new name every version-4 codec tolerates it as an unknown key. */
+      readonly keptOverQuoteReal?: number
     }
 
 /** The persisted structured tax vintage (P3·U13 → the controls-surface clock). Keyed on the

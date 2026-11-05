@@ -475,7 +475,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:1150`, `:1155, :1169, :1171, :1179, :1181` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1329`, `:1335`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1321-1323`). Unfiled: `shadowRateHeadroom` (`copy.ts:3253`)
+   (gated on `statePriced` alone — `copy.ts:1321-1323`). Unfiled: `shadowRateHeadroom` (`copy.ts:3268`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -507,7 +507,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `tsc` until written) · `recommendationView.ts:344-348` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:163` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:2705-2707`) covers only `keyof CurrentScenario`;
+   the compile tie.** `_V3FieldsCover` (`model.ts:2720-2722`) covers only `keyof CurrentScenario`;
    `checkStateTaxVintageV3` (`scenarioCodec.ts:576-581`) is hand-written and compels no `needString`. Safe
    because `scenarioCodec.ts:817-818` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
@@ -561,7 +561,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `:742`, footer `:748` (2026-10-16 doc audit: these four are the 2026-08-03 numbering, never
      re-anchored — the live ones are the ⚑ 2026-09-04 re-anchor bullet's below). **It is NOT data-only** —
      `METHODOLOGY_DISCLOSURES` rows render *inside* section
-     a's single `<ul>` (`AssumptionPanel.tsx:720-752`), so an entry there lands in "On your behalf". A third
+     a's single `<ul>` (`AssumptionPanel.tsx:724-756`), so an entry there lands in "On your behalf". A third
      section is **~18 lines of new JSX** mirroring `:570-574`, + 1 heading and 2 line keys in `copy.ts`'s
      `assumption*` block (hedge/verdict-EXEMPT at `copy.ts:1471-1482`; avoid `copyGuard.ts:255`'s
      `/(tap|draw|pull) … hsa/`), + **no CSS change** (`.ap-section*`/`.ap-row*` are generic). **Fit is safe
@@ -584,7 +584,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      or make the panel section NIIT's canonical home and prune the other two — the repo's own
      one-honest-home-per-fact law (`healthSheetChrome.ts:677`) forbids a silent third.
      ⚑ **2026-09-04 re-anchor (drifted AGAIN, +62/+101 in a month) + four traps the build must clear.** The
-     panel is `src/intake/AssumptionPanel.tsx` — section a opens `:586` / closes `:754`, section b `:757` /
+     panel is `src/intake/AssumptionPanel.tsx` — section a opens `:590` / closes `:758`, section b `:761` /
      `:851`, footer `:857`, the disclosures map `:533-565`; the `assumption*` prefix law is
      `copy.ts:1471-1482` (keys `:1483-1727`); the panel fit arm is `vertical-fit.spec.ts:1734-1763`;
      `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:911-915` and
@@ -728,13 +728,13 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:3157-3159` under the NUMBER AGREEMENT post-mortem at `copy.ts:3143`, covered by `copyGuard.test.ts:921`):
+    `copy.ts:3172-3174` under the NUMBER AGREEMENT post-mortem at `copy.ts:3158`, covered by `copyGuard.test.ts:925`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
     PRESCRIBED: `model.ts:1700-1702` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:232 rewriteModel`, pinned `db.test.ts:180`); today's
-    ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1007-1014`, the v1/v2 arms), and a v1 vault survives
+    ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1022-1029`, the v1/v2 arms), and a v1 vault survives
     every store seam on real IndexedDB (`e2e/vaultHarness.ts:21-22`) to die only at `IntakeApp.tsx:584`.
     Two new defects ride with it: `session.ts:464-468` claims the writer and UNLOCKS before the version is
     judged (the recovery path claims unconditionally, `:539`), and `backup.ts:209-213` LANDS a legacy backup
@@ -811,7 +811,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:712-715` but still lived verbatim at `model.ts:2654` (swept), and
+    clause was swept in `staleness.ts:712-715` but still lived verbatim at `model.ts:2669` (swept), and
     Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
     "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2235-2257`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
@@ -829,7 +829,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:3571` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:3586` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -845,7 +845,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:3619`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:3634`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test
@@ -856,7 +856,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
     into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
     FIRST ENGINE RUN, `plans/2-first-answer.md:57`) with no test that would catch it. His ruling, framed as
-    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2654` and
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2669` and
     `plans/4-recommendation.md:283`.
 
 ---

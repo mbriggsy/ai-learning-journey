@@ -441,9 +441,25 @@ test("the learnings researcher gets this repo's lesson roots and the external re
       // page, so curl is named as the fetch tool and a summary-only claim is marked (R4-21).
       assert.ok(p.includes("Search with gemini-grounding's search_with_grounding (load it with ToolSearch): it returns Gemini's cited summary, not the pages. Read a chosen page with curl -sL --max-time 15, which this prompt names as the web-fetch tool your agent file asks for, over its rule that a generic command is not one. Cite a URL as read only when you fetched it, and mark a claim that rests on a grounded summary alone."), `${where}: ${agent} has the wrong web tool line`);
       assert.doesNotMatch(p, /reads the pages/);
-      assert.match(p, /outside research could not run/);
       assert.doesNotMatch(p, /grounded in this repo first/, `${where}: ${agent} is told repo first`);
-      assert.throws(() => build({ agent }), /focus/, `${where}: ${agent} with no focus`);
+      // Each builder says how outside research that could not run comes back, in a field its own
+      // schema has (R4-19): research's gist, the deepen's outside_ran; never the other's, never overflow.
+      if (where === "research") {
+        assert.ok(p.includes("When outside research could not run (no web tool answered), the gist opens with \"outside research could not run:\" and the reason."), `${where}: ${agent}`);
+        assert.doesNotMatch(p, /outside_ran|in overflow/);
+        assert.throws(() => build({ agent }), /focus/, `${where}: ${agent} with no focus`);
+      } else {
+        assert.ok(p.includes("Set outside_ran true only when a web search ran and every page you cite as read was fetched; when outside research cannot run (no web tool answers), set it false and propose only what the repo supports."), `${where}: ${agent}`);
+        assert.doesNotMatch(p, /gist opens|could not run" in overflow/);
+        // An update run records no external note, so the deepen's external helper needs no focus: the
+        // section's problems are its focus, and the job stays outside-first (R4-18).
+        for (const ctx of [CTX, UPD]) {
+          const bare = promptAmendment(ctx, { agent, agentFile: null, line: 60, index: INDEX, triggers: "t", depth: "Standard", risk: [] }).prompt;
+          assert.ok(bare.includes("YOUR JOB: research what would close each problem in outside sources first, on the section's problems above. Use the repo only to read the versions in use or to check how an outside answer fits it."), `${where}: ${agent} with no focus`);
+          assert.match(bare, /Set outside_ran true only when/);
+          assert.doesNotMatch(bare, /grounded in this repo first|on this focus/);
+        }
+      }
     }
     assert.throws(() => build({ agent: "git-history-analyzer", focus: "f" }), /focus is for the external researchers only/, `${where}: a focus for another agent`);
     assert.doesNotMatch(build({ agent: "git-history-analyzer" }).prompt, /outside sources first|WHERE LEARNINGS LIVE/);

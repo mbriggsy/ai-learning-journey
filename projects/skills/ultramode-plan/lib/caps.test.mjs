@@ -67,6 +67,14 @@ test("each scorer note carries its row's line first, so the run joins notes to t
   assert.match(SIZE_LAWS.scorer, new RegExp(`at most ${budgetOf("notes")} notes, one per section scoring 2 points or more \\(past ${budgetOf("notes")}, the ${budgetOf("notes")} that rank highest\\), each with its row's line and naming its triggers in at most ${budgetOf("triggersNamed")} characters`));
 });
 
+test("an amendment call can say outside research ran, in a field of its own after the required amendments; the size law says who sets it", () => {
+  const props = SCHEMAS.amendment.properties;
+  assert.deepEqual(props.outside_ran, { type: "boolean" });
+  assert.deepEqual(Object.keys(props).slice(0, 2), ["amendments", "outside_ran"]);
+  assert.deepEqual(SCHEMAS.amendment.required, ["amendments"]);
+  assert.match(SIZE_LAWS.amendment, /outside_ran: an external researcher's only, true when a web search ran and every page cited as read was fetched\./);
+});
+
 test("each amendment states the gap it closes, capped, so its verifiers judge the gap it names", () => {
   const a = SCHEMAS.amendment.properties.amendments.items;
   assert.deepEqual(a.properties.gap, { type: "string", maxLength: capOf("gap") });

@@ -168,6 +168,9 @@ export const SCHEMAS = {
         evidence: capString("evidence"),
         old_values: capList("oldValues", capString("oldValue")),
       })),
+      // An external researcher's word that outside research ran (U4's R4-19), read fail-closed by U5:
+      // left out or false, its section's outside gap is a coverage hole. Other agents leave it out.
+      outside_ran: { type: "boolean" },
       overflow: capList("overflow", capString("overflowItem")),
     },
     required: ["amendments"],
@@ -194,7 +197,7 @@ export const SIZE_LAWS = {
   finder: `${CAPS_LAW} certifies nothing. At most ${budgetOf("findings")} findings (fewer and deeper beats many and shallow; name further concrete ones in overflow: at most ${budgetOf("overflow")} titles of at most ${budgetOf("overflowItem")} characters). Per finding: title at most ${budgetOf("title")} characters, section ${budgetOf("section")}, why_it_matters ${budgetOf("why")}, suggested_fix ${budgetOf("fix")}. At most ${budgetOf("residual")} residual_risks of at most ${budgetOf("residualItem")} characters. ${CAPS_INVENTORY_LAW}. ${CAPS_LAW_END}`,
   verdict: `${CAPS_LAW} turns your vote into an abstention. reasoning at most ${budgetOf("reasoning")} characters, citing file:line or the plan's line; better_fix at most ${budgetOf("betterFix")} characters, or '' when the proposed change is right. ${CAPS_LAW_END}`,
   scorer: `${CAPS_LAW} stops the deepen as blocked. At most ${budgetOf("sections")} sections, each named in at most ${budgetOf("sectionName")} characters, with the line of the index heading it starts at; at most ${budgetOf("notes")} notes, one per section scoring 2 points or more (past ${budgetOf("notes")}, the ${budgetOf("notes")} that rank highest), each with its row's line and naming its triggers in at most ${budgetOf("triggersNamed")} characters. ${CAPS_INVENTORY_LAW}. ${CAPS_LAW_END}`,
-  amendment: `${CAPS_LAW} proposes nothing. At most ${budgetOf("amendments")} amendments (name further ones in overflow: at most ${budgetOf("overflow")} titles of at most ${budgetOf("overflowItem")} characters). Per amendment: section at most ${budgetOf("section")} characters, gap ${budgetOf("gap")} (the gap it closes, with its plan line), change ${budgetOf("change")}, evidence ${budgetOf("evidence")}, at most ${budgetOf("oldValues")} old_values of at most ${budgetOf("oldValue")} characters each. ${CAPS_LAW_END}`,
+  amendment: `${CAPS_LAW} proposes nothing. At most ${budgetOf("amendments")} amendments (name further ones in overflow: at most ${budgetOf("overflow")} titles of at most ${budgetOf("overflowItem")} characters). Per amendment: section at most ${budgetOf("section")} characters, gap ${budgetOf("gap")} (the gap it closes, with its plan line), change ${budgetOf("change")}, evidence ${budgetOf("evidence")}, at most ${budgetOf("oldValues")} old_values of at most ${budgetOf("oldValue")} characters each. outside_ran: an external researcher's only, true when a web search ran and every page cited as read was fetched. ${CAPS_LAW_END}`,
   gist: `${CAPS_LAW} returns nothing. gist at most ${budgetOf("gist")} characters; dossier is the dossier's absolute path, at most ${budgetOf("dossier")} characters. ${CAPS_LAW_END}`,
 };
 

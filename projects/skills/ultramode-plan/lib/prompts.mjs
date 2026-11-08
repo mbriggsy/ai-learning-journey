@@ -385,8 +385,11 @@ function promptFocus(agent, focus) {
   return null;
 }
 // The opening of an external researcher's job: outside sources first, the repo only for versions
-// and fit, and the web tool named (CE's web-researcher.md stops when it finds none).
-const promptOutsideFirst = (focus) => promptFill("outside sources first, on this focus: {focus}. Use the repo only to read the versions in use or to check how an outside answer fits it. ", { focus: focus.replace(/[.\s]+$/, "") }) + PROMPT_WEB_TOOL;
+// and fit, and the web tool named (CE's web-researcher.md stops when it finds none). A deepen helper
+// may have no focus (an update run records no external note, R4-18): its section's problems are it.
+const promptOutsideFirst = (focus) =>
+  (focus === null ? "outside sources first, on the section's problems above. " : promptFill("outside sources first, on this focus: {focus}. ", { focus: focus.replace(/[.\s]+$/, "") })) +
+  "Use the repo only to read the versions in use or to check how an outside answer fits it. " + PROMPT_WEB_TOOL;
 
 // A research or deepen helper's agent file, with CE's optional scope prefix (deepening-workflow.md's
 // "Scope: architecture, patterns"), or, when the file is missing, its own method.
@@ -606,11 +609,16 @@ export function promptAmendment(ctx, { agent, agentFile, scope = null, line, ind
   const file = promptPathOrNull(agentFile, "agentFile");
   if (!Array.isArray(risk) || risk.some((r) => !Object.hasOwn(PROMPT_RISKS, r))) throw new Error(`prompts: risk is the list of the plan's risk signals (each one of: ${Object.keys(PROMPT_RISKS).join(", ")})`);
   const where = promptLearningsBlock(agent, learnings);
-  const outside = promptFocus(agent, focus);
+  // The outside-first job keys on the agent, never on a focus (R4-18): with none, a naive fallback
+  // would send an external researcher repo-first again. outside_ran is how its failure comes back
+  // (caps.mjs's amendment schema, read fail-closed by U5, R4-19).
+  const external = PROMPT_EXTERNAL.includes(agent);
+  if (!external && focus !== null && focus !== undefined) throw new Error(`prompts: focus is for the external researchers only (${PROMPT_EXTERNAL.join(", ")}), not ${agent}`);
+  const outside = external ? (focus === null || focus === undefined ? null : promptText(focus, "focus (the external note's reason, when its call ran outside research)")) : null;
   const last = promptLastLine(ctx);
   const span = promptSpan(promptIndex(index), line, last.line);
-  const job = outside
-    ? `YOUR JOB: research what would close each problem in ${promptOutsideFirst(outside)} When outside research cannot run (no web tool answers), put "outside research could not run" in overflow and propose only what the repo supports.`
+  const job = external
+    ? `YOUR JOB: research what would close each problem in ${promptOutsideFirst(outside)} Set outside_ran true only when a web search ran and every page you cite as read was fetched; when outside research cannot run (no web tool answers), set it false and propose only what the repo supports.`
     : "YOUR JOB: research what would close each problem, grounded in this repo first (its code, its docs, its CLAUDE.md files and its docs/insights/) and in outside sources only where the repo cannot answer.";
   const prompt = promptJoin([
     promptFill("You strengthen one section of a plan in its deepen: {plan}. The repo it will change: {project}.", { plan: promptPath(ctx?.plan, "ctx.plan"), project: promptPath(ctx?.project, "ctx.project") }),

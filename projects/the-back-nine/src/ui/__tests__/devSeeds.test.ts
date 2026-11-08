@@ -10,7 +10,8 @@ import {
   agedWorkingYearsVintage,
   AGED_PLANTS,
 } from '../devSeeds'
-import { isWorkingYearCostStale, workingYearCostStaleText, workingYearCostStaleness } from '@intake/workingYearQuote'
+import { heldYesBelowQuote, isWorkingYearCostStale, workingYearCostStaleText, workingYearCostStaleness } from '@intake/workingYearQuote'
+import { workingYearCostStaleLine } from '@intake/workingYearLeftOver'
 import { floorLineText, heroLead } from '../FuckOffDate'
 import { planClockAnchor } from '../bandAnnotations'
 import type { ScenarioDraft } from '@store/memoryModel'
@@ -1666,14 +1667,14 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     // Named, so a seed that falls off the date route cannot take its W with it unseen.
     expect(carrying).toEqual([
       'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datelateleftover', 'datemixed', 'datenc', 'datesaved',
-      'datesavedmoved', 'datesavedstale', 'dateshort', 'datesolo', 'datesplit', 'dip',
+      'datesavedmoved', 'datesavedrisen', 'datesavedstale', 'dateshort', 'datesolo', 'datesplit', 'dip',
     ])
   })
 
-  it('every W-carrying seed reads NOT stale through the one predicate — except the two stale-W witnesses', () => {
+  it('every W-carrying seed reads NOT stale through the one predicate — except the three stale-W witnesses', () => {
     for (const [key, d] of Object.entries(DEV_SEEDS)) {
       if (d.workingYearCost === undefined) continue
-      expect(isWorkingYearCostStale(d), key).toBe(key === 'datecoststale' || key === 'datesavedstale')
+      expect(isWorkingYearCostStale(d), key).toBe(key === 'datecoststale' || key === 'datesavedstale' || key === 'datesavedrisen')
     }
   })
 
@@ -1765,9 +1766,9 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       expect(shown, `${key}: the shown lines sum to the bottom line`).toBe(y0.bottomLine)
       swept++
     }
-    // Every buildable date seed carries W (the arm above), so this is all fourteen of them, the short seed, the
-    // later-left-over witness (U15) and build 2's three saved witnesses (U9) included.
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(14)
+    // Every buildable date seed carries W (the arm above), so this is all fifteen of them, the short seed, the
+    // later-left-over witness (U15), build 2's three saved witnesses (U9) and U11's risen twin included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(15)
   })
 
   // Build 2's KTD4 arm (U4): inside the run, year 0's Left over is the money picture's own printed bottom line, on
@@ -1794,7 +1795,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
       swept++
     }
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(14)
+    expect(swept, 'the sweep reached every buildable W-carrying seed (the fifteen above)').toBe(15)
   })
 
   // Build 2's U9 (KTD14): the three saved witnesses, each minted through the shipped write. Every figure typed by
@@ -1843,6 +1844,34 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     const { workingYearLeftOver: _a, ...rest } = d
     expect(rest).toEqual(DEV_SEEDS.datecoststale)
     expect(buildDateInput(d)).toEqual(buildDateInput(DEV_SEEDS.datecoststale))
+  })
+
+  // U11's RISEN twin (the Caddie record's (p)): the stale-W witness with its spending RAISED past W, so the ONE
+  // line the Result and the gate say carries W's sentence, the lean and R12's clause, in that order — the
+  // composition `datesavedstale` can never show (its quote fell, so no lean rides). Every figure is the seed's
+  // own input, never read off the product: the yes to $84,000 on `date`'s draft (its spending then), the
+  // spending raised to $90,000, the stored $16,985 (`datesaved`'s arm above).
+  it('build 2 (U11): `datesavedrisen` is `datesaved` with its spending raised to $90,000 — W below the quote, waiting on W, nothing carried (R7), and its line is W’s sentence, the lean, then the clause', () => {
+    const d = DEV_SEEDS.datesavedrisen
+    expect(d.workingYearLeftOver).toEqual({ kind: 'saved', quotedReal: 16_985 })
+    expect(workingYearCostStaleness(d)).toEqual({ quoteMoved: true, readingMoved: false })
+    expect(heldYesBelowQuote(d), 'the yes sits below today’s quote: the lean rides and the Keep door is withheld').toBe(true)
+    expect(workingYearLeftOverShownState(d)).toBe('waiting-on-w')
+    expect(workingYearLeftOverLive(d), 'a stale W still rides at $84,000: never moved').toBe(16_985)
+    expect(workingYearCostStaleLine(d)).toBe(
+      [
+        slots.workingCostStaleQuote('84,000', '90,000'),
+        slots.workingCostStaleLeansBetter('84,000'),
+        slots.workingCostStaleLeftOverClause('16,985'),
+      ].join(' '),
+    )
+    const { annualSpendingReal, ...rest } = d
+    const { annualSpendingReal: savedSpending, ...savedRest } = DEV_SEEDS.datesaved
+    expect(rest, 'otherwise it is `datesaved`').toEqual(savedRest)
+    expect([savedSpending, annualSpendingReal]).toEqual([84_000, 90_000])
+    // R7: a stale W carries nothing, so the date input is the same household's with no answer at all.
+    const { workingYearLeftOver: _a, ...answerless } = d
+    expect(buildDateInput(d)).toEqual(buildDateInput(answerless))
   })
 
   // Build 2's U15 (KTD14): the household R5 never asks, minted dark. Its year 0 prints short, and the run itself

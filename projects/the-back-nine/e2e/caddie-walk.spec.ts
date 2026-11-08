@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { REAL, REAL_DPR, PHONE, PHONE_DPR, FINAL_TIER_MS, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
+import { REAL, REAL_DPR, PHONE, PHONE_DPR, FINAL_TIER_MS, advanceIntakeTo, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
 /* The no-anchor arm's handle reads the CATALOG, never a re-typed sentence (this import is the
  * precedent the fit specs cite). A hardcoded literal here is a second copy of the product's words: U17 §S6
  * reworded this exact string, and a literal would have re-broken the only walk that reaches the
@@ -144,6 +144,18 @@ import type { WorkingYearLeftOverKind } from '../src/shared/model'
  *    `datecoststale`: their sheets are the seed targets', already walked.
  *  - The seat is a CROP target, never a PANEL_CVD_REGIONS entry: those hard-fail where the region is
  *    absent, and the doors walk runs them on every household, the spine seeds (no seat) included.
+ *
+ * Increment 10 (2026-11-08, build 2's U11 — the Caddie record's (d) and (p)):
+ *  - `intake:kept` — U5's drafted words, each reached the way a household reaches it: `datecoststale`'s
+ *    Result → its standing line's door → the panel's W row → the Keep door (`walkIntakeKept`'s docblock names
+ *    the two branches and their nine states): the row's "the figure you kept", the same row after a tap on
+ *    "Each month" ($1,008,000 a year), the kept figure's state-only, both-causes and spending sentences, the
+ *    face a kept figure the spending rose past is left with ("A different figure" checked, the box filled, no
+ *    door), the Result's standing line over it, and the walk's W step and its gate's message.
+ *  - `seed:datesavedrisen` / `vault:datesavedrisen` — U11's RISEN twin of `datesavedstale` (the spending raised
+ *    to $90,000 past a yes to $84,000), the only household whose stale line carries the lean ("can look better
+ *    than it really is") and then the clause naming the $16,985 not added. It rides LEFT_OVER_WITNESSES like
+ *    its sibling: the Result's line, the gate's line and the seat's waiting face are asserted per surface.
  *
  * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
  * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
@@ -1184,6 +1196,10 @@ const DATE_LEFT_OVER = '16,985'
 const MOVED_LEFT_OVER_LIVE = '27,537'
 const STALE_W_CONFIRMED = '84,000'
 const STALE_W_QUOTE_NOW = '78,000'
+/** Increment 10: `datesavedrisen`'s spending, its seed's own input ($90,000; `devSeeds.ts`'s docblock), and
+ *  the same $90,000 typed by `intake:kept` in `date`'s monthly unit ($7,500 a month). */
+const RISEN_W_QUOTE_NOW = '90,000'
+const RISEN_SPEND_MONTHLY = { digits: '7500', shown: '7,500' } as const
 
 /** One cause's line on a surface: its lead, every fragment that must ride in the SAME line after it, and
  *  the other cause's lead, which must not speak there (the two causes cannot both hold: a moved left over
@@ -1250,6 +1266,32 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
       lead: copy.stalenessPayCheckGateLead,
       says: [
         slots.workingCostStaleQuote(STALE_W_CONFIRMED, STALE_W_QUOTE_NOW),
+        slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER),
+        copy.stalenessPayCheckGateDoor,
+      ],
+      notLead: copy.stalenessLeftOverNote,
+    },
+    seat: { figure: null, line: copy.workingLedgerLeftOverWaiting, radios: 0, checked: null },
+  },
+  // Increment 10, U11's RISEN twin ("All of it" stored at $16,985, then the spending RAISED to $90,000 past the yes
+  // to $84,000): W's line carries its lean, then the clause; the seat waits as on `datesavedstale`. The ORDER of
+  // the three is pinned in `devSeeds.test.ts` (the seed's own arm); here each must ride the one line.
+  datesavedrisen: {
+    note: {
+      lead: copy.stalenessPayCheckNote,
+      says: [
+        slots.workingCostStaleQuote(STALE_W_CONFIRMED, RISEN_W_QUOTE_NOW),
+        slots.workingCostStaleLeansBetter(STALE_W_CONFIRMED),
+        slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER),
+      ],
+      notLead: copy.stalenessLeftOverNote,
+      door: copy.stalenessPayCheckCta,
+    },
+    gate: {
+      lead: copy.stalenessPayCheckGateLead,
+      says: [
+        slots.workingCostStaleQuote(STALE_W_CONFIRMED, RISEN_W_QUOTE_NOW),
+        slots.workingCostStaleLeansBetter(STALE_W_CONFIRMED),
         slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER),
         copy.stalenessPayCheckGateDoor,
       ],
@@ -1346,6 +1388,187 @@ async function walkIntakeLeftOver(page: Page, outDir: string): Promise<void> {
     await expect(radio, 'the picked radio did not commit').toBeChecked()
     await holds(reply.line, reply.label)
     await captureState(page, path.join(outDir, `left-over-${kind}`))
+  }
+}
+
+/** Increment 10's figures: `datecoststale`'s yes to $84,000, kept through the Keep door, and the same typed
+ *  digits read as a MONTH after a tap on "Each month" — `writeWorkingYearCostPeriod` re-reads the typed figure in
+ *  the tapped unit, so 84,000 a month is $1,008,000 a year (84,000 × 12), and the unit tap carries the kept stamp
+ *  (U5, R13's note). */
+const KEPT_W = STALE_W_CONFIRMED
+const KEPT_W_MONTH_AS_YEAR = '1,008,000'
+/** The kept walk's budget: eight final-tier waits (two fresh landings, and per branch the settle before the
+ *  re-run watch is armed, the re-run's first commit and its final frame) at FINAL_TIER_MS each, plus two
+ *  minutes for its nine captures per viewport and the re-walk. */
+const KEPT_TEST_MS = 8 * FINAL_TIER_MS + 120_000
+
+/**
+ * The KEPT walk (increment 10 — `intake:kept`; the header names what it is for). Every branch starts from a
+ * fresh `datecoststale` landing: a yes to $84,000 stale over a FALLEN quote ($78,000), so the panel's W row
+ * opens on the stale face WITH the Keep door (ruling 34: a yes at or above today's quote), and the door is
+ * tapped — the shipped write, never a stamp typed into a draft.
+ *  A. `panel-kept` (the row reads "the figure you kept") → `panel-kept-month` ("Each month" tapped: the row
+ *     reads $1,008,000 a year, the box still 84,000) → "Each year" again (the kept figure exactly, asserted)
+ *     → a move to Pennsylvania: `panel-kept-stale-state` (the state-only sentence; the door shows, the quote
+ *     $78,000 being below the figure) → the spending raised to $90,000: `panel-kept-stale-both` (both causes;
+ *     no door) → the panel closed: `result-kept-stale-both` (the Result's standing line).
+ *  B. the spending raised to $90,000 alone: `panel-kept-stale-quote` (the spending sentence and its lean; the
+ *     face the review's P3 names — "A different figure" checked, the box filled, no door) → the panel closed:
+ *     `result-kept-stale-quote` → the re-walk to the W step: `walk-kept-stale-quote` (the same face on the
+ *     walk) → Continue: `walk-kept-stale-blocked` (the gate's message under that face).
+ * Every sentence asserted is the shipped slot over the seed's own figures. The spending is typed in `date`'s
+ * own unit, a month ($7,500 = $90,000 a year). A panel edit re-runs the answer behind the sheet: before the
+ * panel closes, the walk sees that run start (the Result leaves its settled final frame), and after it, waits
+ * for the final frame again — so a Result capture never shows the answer from before the edit.
+ */
+async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
+  const settled = page.locator('main.result[data-answer-tier="final"][data-inframe-disclaimer]')
+  const pick = async (radio: ReturnType<Page['locator']>): Promise<void> => {
+    await radio.evaluate((el) => (el as HTMLInputElement).click())
+    await expect(radio, 'the picked radio did not commit').toBeChecked()
+  }
+  const openPanelAndKeep = async () => {
+    await gotoSeedFinal(page, 'datecoststale')
+    await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+    const face = row.locator('.working-cost')
+    const value = row.locator('.ap-row__value')
+    await expect(face.getByRole('note')).toContainText(slots.workingCostStaleQuote(STALE_W_CONFIRMED, STALE_W_QUOTE_NOW))
+    await face.getByRole('button', { name: slots.workingCostKeepYearly(KEPT_W) }).click()
+    await expect(face.getByRole('note'), 'the keep landed: the kept figure is fresh').toHaveCount(0)
+    await expect(value).toHaveText(slots.assumptionWorkingCostKept(KEPT_W))
+    return { dialog, row, face, value }
+  }
+  // The row's top in the sheet's frame, so `viewport.png` shows the value line and the face under it (the
+  // `w-row` crop paints the whole row, in segments where it is taller than the sheet).
+  const showRow = (row: ReturnType<Page['locator']>) => row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
+  const raiseSpending = async (dialog: ReturnType<Page['getByRole']>): Promise<void> => {
+    await typeFieldValue(dialog.getByLabel('Household spending, all in', { exact: true }), RISEN_SPEND_MONTHLY.digits, RISEN_SPEND_MONTHLY.shown)
+  }
+  // The review's P3 face: a kept figure the spending rose past keeps "A different figure" checked, its own
+  // figure in the box, a year as its unit, and no Keep door (a keep would carry the stamp and stay stale).
+  const keptStaleFace = async (face: ReturnType<Page['locator']>): Promise<void> => {
+    await expect(face.getByRole('radio', { name: copy.workingCostDifferent, exact: true })).toBeChecked()
+    await expect(face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })).toHaveValue(KEPT_W)
+    await expect(face.getByRole('radio', { name: copy.periodYear })).toBeChecked()
+    await expect(face.getByRole('button', { name: /^Keep \$/ }), 'no Keep door on a kept figure below the quote').toHaveCount(0)
+  }
+  // Armed just before the panel's LAST edit: a watcher that records the Result behind the sheet leaving its
+  // settled final frame (a re-run started). The capture between that edit and the close can outlast the
+  // re-run itself, so "not settled at the close" would be a race; "left settled since the edit" is not. It
+  // reads `main.result` afresh on every mutation, so a Result remounted by the re-run is still seen.
+  // A run shows in the DOM only when it COMMITS (memoryModel holds the last answer while one runs), so the
+  // watch is armed only once every earlier edit's runs have settled — an older run can then never commit
+  // after the edit's own (its epoch is stale). The edit's re-run is seen two ways, because one is not
+  // enough: its provisional tier commits (the tier attribute leaves "final"), or — where two re-runs
+  // dispatched by one edit cancel each other's provisional sweep and only the last final commits, the tier
+  // never leaving "final" (measured in walk 1's branch B: the hero moved from a date to "No fuck-off date"
+  // with every tier read "final") — the verdict's own words change: the hero heading and the line under it,
+  // which only a run writes (the standing line under them reads the draft and moves at the edit itself).
+  const armRerunWatch = async (): Promise<void> => {
+    await expect(settled, 'an earlier edit’s re-run never settled').toBeAttached({ timeout: FINAL_TIER_MS })
+    await page.evaluate(() => {
+      const w = window as unknown as { __caddieRerun?: boolean; __caddieTierLog?: string[] }
+      const verdict = (): string => {
+        const h = document.querySelector('main.result h2')
+        return h === null ? '' : `${h.textContent ?? ''} | ${h.nextElementSibling?.textContent ?? ''}`
+      }
+      const before = verdict()
+      if (before === '') throw new Error('the re-run watch found no verdict heading on the Result')
+      w.__caddieRerun = false
+      w.__caddieTierLog = []
+      new MutationObserver(() => {
+        const m = document.querySelector('main.result')
+        const tier = m === null ? 'no-main' : `${m.getAttribute('data-answer-tier')}/${m.hasAttribute('data-inframe-disclaimer')}`
+        const now = verdict()
+        w.__caddieTierLog!.push(`${Math.round(performance.now())}:${tier}${now === before ? '' : ':moved'}`)
+        if (m === null || m.getAttribute('data-answer-tier') !== 'final' || !m.hasAttribute('data-inframe-disclaimer') || now !== before) {
+          w.__caddieRerun = true
+        }
+      }).observe(document.body, {
+        subtree: true,
+        childList: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ['data-answer-tier', 'data-inframe-disclaimer'],
+      })
+    })
+  }
+  // On a household with no date in the window the re-run's sweep tries every candidate year, so the wait is
+  // a final-tier budget, and a miss prints the history the watcher recorded.
+  const closeToResult = async (dialog: ReturnType<Page['getByRole']>, line: string): Promise<void> => {
+    try {
+      await expect
+        .poll(() => page.evaluate(() => (window as unknown as { __caddieRerun?: boolean }).__caddieRerun), {
+          message: 'the panel edit started no re-run behind the sheet',
+          timeout: FINAL_TIER_MS,
+        })
+        .toBe(true)
+    } catch (e) {
+      const history = await page.evaluate(() => (window as unknown as { __caddieTierLog?: string[] }).__caddieTierLog ?? [])
+      console.log(`[intake:kept] the Result's tier since the watch was armed (ms:tier/settled): ${history.slice(0, 40).join(' ')}`)
+      throw e
+    }
+    await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
+    await expect(dialog).toBeHidden()
+    await expect(settled).toBeAttached({ timeout: FINAL_TIER_MS })
+    const note = page.locator('.cs-paycheck-note')
+    await expect(note, 'the Result must carry exactly one standing line').toHaveCount(1)
+    await expect(note).toContainText(line)
+  }
+
+  // Branch A.
+  {
+    const { dialog, row, face, value } = await openPanelAndKeep()
+    await showRow(row)
+    await captureState(page, path.join(outDir, 'panel-kept'))
+    await pick(face.getByRole('radio', { name: copy.periodMonth }))
+    await expect(value, 'the unit tap re-reads the typed 84,000 as a month').toHaveText(slots.assumptionWorkingCostKept(KEPT_W_MONTH_AS_YEAR))
+    await expect(face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })).toHaveValue(KEPT_W)
+    await showRow(row)
+    await captureState(page, path.join(outDir, 'panel-kept-month'))
+    await pick(face.getByRole('radio', { name: copy.periodYear }))
+    await expect(value, '"Each year" again is the kept figure exactly').toHaveText(slots.assumptionWorkingCostKept(KEPT_W))
+    await pick(dialog.locator('[data-assumption-seat="retirement-state"]').getByRole('radio', { name: /Pennsylvania/ }).first())
+    await expect(face.getByRole('note')).toContainText(slots.workingCostStaleStateKept(KEPT_W))
+    await expect(face.getByRole('button', { name: slots.workingCostKeepYearly(KEPT_W) }), 'the state alone: the door shows').toHaveCount(1)
+    await showRow(row)
+    await captureState(page, path.join(outDir, 'panel-kept-stale-state'))
+    await armRerunWatch()
+    await raiseSpending(dialog)
+    const both = slots.workingCostStaleKeptBoth(KEPT_W, RISEN_W_QUOTE_NOW)
+    await expect(face.getByRole('note')).toContainText(both)
+    await keptStaleFace(face)
+    await showRow(row)
+    await captureState(page, path.join(outDir, 'panel-kept-stale-both'))
+    await closeToResult(dialog, both)
+    await captureState(page, path.join(outDir, 'result-kept-stale-both'))
+  }
+
+  // Branch B.
+  {
+    const { dialog, row, face } = await openPanelAndKeep()
+    await armRerunWatch()
+    await raiseSpending(dialog)
+    const sentence = `${slots.workingCostStaleKeptQuote(KEPT_W, RISEN_W_QUOTE_NOW)} ${slots.workingCostStaleLeansBetter(KEPT_W)}`
+    await expect(face.getByRole('note')).toContainText(sentence)
+    await keptStaleFace(face)
+    await showRow(row)
+    await captureState(page, path.join(outDir, 'panel-kept-stale-quote'))
+    await closeToResult(dialog, sentence)
+    await captureState(page, path.join(outDir, 'result-kept-stale-quote'))
+    await page.locator('[data-door="assumptions"]').click()
+    await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
+    await advanceIntakeTo(page, copy.qWorkingCostHeading, 'intake:kept')
+    const step = page.locator('.intake-shell .working-cost')
+    await expect(step.getByRole('note')).toContainText(sentence)
+    await keptStaleFace(step)
+    await captureState(page, path.join(outDir, 'walk-kept-stale-quote'))
+    await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
+    await expect(page.getByRole('alert')).toContainText(copy.errWorkingCostUnanswered)
+    await captureState(page, path.join(outDir, 'walk-kept-stale-blocked'))
   }
 }
 
@@ -1493,6 +1716,9 @@ for (const target of TARGETS) {
       test.use({ viewport: v.viewport, deviceScaleFactor: v.dpr, hasTouch: v.touch, isMobile: v.touch })
       test('walk', async ({ page }) => {
         if (target.kind === 'solve') test.setTimeout(SOLVE_TEST_MS) // the full-precision pooled solve + the walk around it
+        // `intake:kept` waits on a final-tier budget eight times by design (KEPT_TEST_MS names them), each budgeted
+        // FINAL_TIER_MS, plus its nine captures and a re-walk.
+        if (target.kind === 'intake' && target.key === 'kept') test.setTimeout(KEPT_TEST_MS)
         const consoleLog = hookConsole(page)
         const outDir = path.join(OUT_ROOT, targetSlug, v.name)
         if (target.kind === 'vault') {
@@ -1540,7 +1766,8 @@ for (const target of TARGETS) {
           if (target.key === 'fork') await walkIntakeFork(page, outDir)
           else if (target.key === 'paycheck') await walkIntakePaycheck(page, outDir)
           else if (target.key === 'leftover') await walkIntakeLeftOver(page, outDir)
-          else throw new Error(`unknown intake walk "${target.key}" — intake:fork, intake:paycheck and intake:leftover exist`)
+          else if (target.key === 'kept') await walkIntakeKept(page, outDir)
+          else throw new Error(`unknown intake walk "${target.key}" — intake:fork, intake:paycheck, intake:leftover and intake:kept exist`)
         } else if (target.kind === 'solve') {
           await walkSolve(page, target.key, outDir)
         } else {

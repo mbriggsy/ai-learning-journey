@@ -1311,7 +1311,7 @@ const dateLateLeftOverWitness: ScenarioDraft = {
  * THE FIRST OF THE "MINT, THEN MOVE" WITNESSES — the exceptions to "mint W last, on the seed's own final
  * draft" (`withConfirmedW`): a stale answer is BY DEFINITION one minted on an earlier draft. So it is
  * minted on `date`'s own draft, and the spending moves AFTER the mint — named here, never a W typed into a
- * literal. Build 2's `datesavedmoved` and `datesavedstale` (below) are the other two. `stillWorking` itself
+ * literal. Build 2's `datesavedmoved`, `datesavedstale` and `datesavedrisen` (below) are the others. `stillWorking` itself
  * stays W-free: `date` takes its W at the registry like every date seed (U10) — the same $84,000 this
  * witness confirmed, still fresh there because `date`'s spending never moved.
  */
@@ -1368,6 +1368,24 @@ const dateSavedStaleWitness: ScenarioDraft = {
   annualSpendingReal: 78_000,
 }
 
+/**
+ * THE RISEN TWIN — `?seed=datesavedrisen` (build 2's U11, the Caddie record's (p)): `datesaved`'s household
+ * that then RAISED its spending to $90,000. W (a yes to $84,000) now sits BELOW today's quote, so its stale
+ * line is the one `datesavedstale` can never show: W's sentence, the lean that the answer "can look better
+ * than it really is" (`heldYesBelowQuote`), then R12's clause that none of the $16,985 a year is added until
+ * W is checked — and the Keep door is withheld (ruling 34). Like `datesavedstale`, the shown state is
+ * "waiting on W" and nothing left over is carried (R7): a stale W still rides at $84,000, so the live
+ * figure is still $16,985. U11 measured exactly this household (the build-2 record's `u11drafts.mts`
+ * RISEN pair: `datesaved` with its spending raised by $6,000): the stale arm crowns no date at the final
+ * tier, and its checked twin (W re-answered at $90,000) crowns 9 years out — the credit decides it. It
+ * exists so a walk can render the clause after a RISEN quote, which no seed did. The fourth "mint, then
+ * move" witness: minted once (`dateSavedWitness`), then moved.
+ */
+const dateSavedRisenWitness: ScenarioDraft = {
+  ...dateSavedWitness,
+  annualSpendingReal: 90_000,
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -1404,10 +1422,12 @@ export const DEV_SEEDS = {
   // Build 2 (U15, dark): short in year 0, a left over from year 4 — the case the question never asks.
   datelateleftover: withConfirmedW(dateLateLeftOverWitness),
   // Build 2 (the go-live, KTD14): "All of it" stored at the household's own year-0 figure, through the
-  // shipped write — the presence witness, the moved witness and the stale-W witness.
+  // shipped write — the presence witness, the moved witness and the stale-W witness. U11 adds the stale-W
+  // witness's RISEN twin (the spending raised past W, so the lean and the clause ride together).
   datesaved: dateSavedWitness,
   datesavedmoved: dateSavedMovedWitness,
   datesavedstale: dateSavedStaleWitness,
+  datesavedrisen: dateSavedRisenWitness,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

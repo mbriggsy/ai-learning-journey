@@ -465,18 +465,18 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   `validateParams` probe, **never a decreed aging depth.** This is insight 085's law: a doctored fixture is
   a new producer of persisted state, and the engine's fail-loud gates are part of its consumer chain. Age
   only inside the domain the engine prices. The probe settled the plant as `base: 'dip'`, aging depth 6
-  (`ARRIVED_PLAN_YEARS` at `devSeeds.ts:1657`, registry entry `:1999`, doctor `doctorArrivedVault`
+  (`ARRIVED_PLAN_YEARS` at `devSeeds.ts:1677`, registry entry `:2019`, doctor `doctorArrivedVault`
   at `:1441`).
 - **The engine-acceptance pin ships:** hydrate → `buildSpineParams` → `validateParams` accepts → the run
   resolves to a **real** `outcomeState`, never the R19 indeterminate. It was modelled on the `statestale`
-  arm at `devSeeds.test.ts:675-699`, whose rationale comment is `:626-636`.
+  arm at `devSeeds.test.ts:676-700`, whose rationale comment is `:627-637`.
 - **Two corrections to the probe that specced this plant**, both caught by opening source rather than
   trusting the filing. (1) It lights **ONE** arrived arm, not two: the floor crowns at 0 and `floorLineText`
   short-circuits offset 0 before the three-way split (`FuckOffDate.tsx:253`), so `dateFloorCoveredPast`
   never fires here and keeps `?vault=datestale` as its only live route. (2) Aging `startCalendarYear` alone
   breaks the documented `currentAge === startCalendarYear − birthYear` model invariant (`model.ts:99`) and
   forks the engine's two birth-year reads, so `doctorArrivedVault` ages `birthYear` in step (the
-  pre-aging invariant guard, `devSeeds.ts:1719-1726`) and refuses a priced-state base aloud (`:1710`).
+  pre-aging invariant guard, `devSeeds.ts:1739-1746`) and refuses a priced-state base aloud (`:1730`).
   The crowns measured byte-identical either way, so
   the coherent household was free.
 - **The pre-existing `stale`-plant gap is closed.** Its `−2y startCalendarYear` aging is the exact mutation
@@ -484,15 +484,15 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   insight-051 tell. The flat claim "no engine-acceptance pin" was overstated: two witnesses already existed,
   `e2e/vertical-fit.spec.ts` driving `?vault=stale` through a real unlock and asserting `assertResolvedSpine`
   (which requires `.confidence-reveal[data-twopane]`, emitted only when the run resolves), and
-  `devSeeds.test.ts:316-333` running the SAME doctor's output through `runDateSearch`, which calls
+  `devSeeds.test.ts:317-334` running the SAME doctor's output through `runDateSearch`, which calls
   `validateParams` internally, on the `datestale` base. The real gap was the missing FAST
   `buildSpineParams → validateParams → runEngine → outcomeState` unit arm on the spine path — what
-  `devSeeds.test.ts:1059-1067`'s own header asked for, failing "HERE (fast) instead of only in the 90-second
-  Chromium run." That arm now exists at `devSeeds.test.ts:1163-1203`, and writing it **surfaced a live
+  `devSeeds.test.ts:1060-1068`'s own header asked for, failing "HERE (fast) instead of only in the 90-second
+  Chromium run." That arm now exists at `devSeeds.test.ts:1164-1204`, and writing it **surfaced a live
   defect**: the doctored build year forks the derived birth year across the RMD band edge, forcing the
   household into RMDs two years early. It is pinned as found and filed.
 - **Both seeds were walked** (`datearrived` plus the existing aged plant) in the Caddie walk, and
-  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:1509-1534`) — without that allowlist entry the
+  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:1735-1760`) — without that allowlist entry the
   one plant this stage exists to cold-read would have been chaired on its landing alone.
 - **The walk hard-flagged all six faces and NOTHING shipped from it** (`docs/caddie/cold-read-log.md`,
   2026-07-27) — three carrying **calm-but-wrong BLOCKERS**, the class the batched-oracle grant has never
@@ -507,7 +507,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   Card 1's two-odds collision remains open, as does the OTHER half of Cards 6–7 — naming the strategy on
   the holds face, Briggsy's own ruling, carried in the register as "The saved-record card does not name
   the strategy".
-- **Owed from the walk, and not filed until 2026-09-25 (from the 2026-09-24 doc audit):** the arrived-walk's state-tax blindness. `?vault=datearrived` is stateless by construction (`doctorArrivedVault` refuses a priced-state base, `devSeeds.ts:1708-1715`), so no walk has read the arrived face on a priced state. It is carried in `docs/backlog.md` under "The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed".
+- **Owed from the walk, and not filed until 2026-09-25 (from the 2026-09-24 doc audit):** the arrived-walk's state-tax blindness. `?vault=datearrived` is stateless by construction (`doctorArrivedVault` refuses a priced-state base, `devSeeds.ts:1728-1735`), so no walk has read the arrived face on a priced state. It is carried in `docs/backlog.md` under "The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed".
 - **The aged band's x-axis has its first real-browser arm.** Before S6 no fit arm asserted it — the aged
   axis appeared nowhere in `e2e/`, so §S0's rename had shipped on unit arms alone. `?vault=datearrived` is
   now driven at `e2e/vertical-fit.spec.ts:2255-2359`, asserting that the year-0 endpoint names the BUILD

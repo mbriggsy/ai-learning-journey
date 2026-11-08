@@ -360,7 +360,7 @@ nothing, and the first surviving trigger row is FY2033-34 → TY2035 (OSC **Augu
   cold-read's *"SWITCH to Brokerage first"* names an account that does not exist. **A multi-account
   witness plant must be built before any regression pin here means anything** — which is what pushes this
   from `S` to `M`.
-- ⚑ Anchor drift: `noChange: false` is `devSeeds.ts:1814` (not `:1342`); the winner literal is `:1800`
+- ⚑ Anchor drift: `noChange: false` is `devSeeds.ts:1834` (not `:1342`); the winner literal is `:1820`
   (not `:1308`). `copy.ts:2038-2042` is the card-FAMILY header — the holds sentence's defending comment is
   `copy.ts:2044-2073` (added 2026-08-03), and it already carries the ⚠️ NEVER DEFEND THIS LINE WITH `noChange` warning.
 - ⚑ **The semantic witness ("the advice not taken") — the debt record, moved from the queue 2026-09-06:** ⚠️ **The 2026-08-03 verification debt, CORRECTED 2026-08-14 — it was overstated, and the half that
@@ -734,7 +734,7 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
   test at `:129-137`; `devSeeds.ts:141-195` `stillWorking` = **`DEV_SEEDS.date`**, the flagship
   `?seed=date`, clones it verbatim and its own comment says *"a pre-65 retiree so the ACA quote IS
   required."* So every cold read of the fuck-off date ran on the broken household — it is not
-  "untested", it is asserted **GREEN**. `devSeeds.test.ts:103` pins `missingRequiredFacts → []` for
+  "untested", it is asserted **GREEN**. `devSeeds.test.ts:104` pins `missingRequiredFacts → []` for
   EVERY seed, so the refusal channel reds the coupling battery + devSeeds until both fixtures answer the
   new question.
 - ⚑ **"Refuse through the existing calm input-failure grammar" is NOT executable — that grammar cannot
@@ -2292,7 +2292,7 @@ In the committed frame, taxable income is $0 in every window year at $0–$5k of
     - hl50 PLT and LM
 
     The budget PLT payload sha256 matched across three agents. Both legs agree on all 160 (household, goal, tolerance) cells: crown, runner-up, top-set size, and per-candidate survA/survB/allIn/bequest. That is 0 disagreements.
-  - **Solvable seeds (measured).** 14 of the 24 `DEV_SEEDS` (`src/ui/devSeeds.ts:1372-1411`) are solvable: retired, borderline, failing, budget, order, health, surplus, buckets, nc, pa, fl, elsewhere, healthnc, healthgap. ⚑ **2026-10-16 (doc audit):** the cited range moves with the code and now spans 25 seeds — `healthss` (`src/ui/devSeeds.ts:1395`) joined `DEV_SEEDS` on 2026-10-15 (`ee62a839`), after this run. The 24 and the 14 here are the 2026-10-06 roster; `healthss` is in neither list and was not part of this measurement.
+  - **Solvable seeds (measured).** 14 of the 24 `DEV_SEEDS` (`src/ui/devSeeds.ts:1390-1431`) are solvable: retired, borderline, failing, budget, order, health, surplus, buckets, nc, pa, fl, elsewhere, healthnc, healthgap. ⚑ **2026-10-16 (doc audit):** the cited range moves with the code and now spans 25 seeds — `healthss` (`src/ui/devSeeds.ts:1413`) joined `DEV_SEEDS` on 2026-10-15 (`ee62a839`), after this run. The 24 and the 14 here are the 2026-10-06 roster; `healthss` is in neither list and was not part of this measurement.
     - Refused as spine-unready: date, dateborder, datesplit, datemixed, dip, date65, datenc, datesolo, atceiling. Refused as no-pretax: steer.
     - Off-roster: hl50 / hl40, which are `health` with only `annualSpendingReal` changed (78,000 → 50,000 / 40,000).
     - `failing` is unwitnessable live (perturbation-inert), so it never recommends.
@@ -3086,7 +3086,7 @@ In the committed frame, taxable income is $0 in every window year at $0–$5k of
       - off-track from $6,490.
     - Over ($5,200, $6,500]: room 5, hold 34, borderline 89, off-track 2 of 130 (3.8 / 26.2 / 68.5 / 1.5 %, derived).
     - On the app's $100 grid: 0 / 3 / 9 / 1. The entered spend is the only off-track point.
-  - **The walk's `retired` @ $10,000 frame** (`e2e/caddie-walk.spec.ts:912-937`; not a dev seed):
+  - **The walk's `retired` @ $10,000 frame** (`e2e/caddie-walk.spec.ts:924-949`; not a dev seed):
     - F is $6,400.
     - Edges at $6,410, $6,670 and $7,380.
     - Over ($6,400, $10,000]: hold 26, borderline 71, off-track 263 of 360 (7.2 / 19.7 / 73.1 %, derived).
@@ -4517,7 +4517,7 @@ re-clear it from this list.
   estimates. Whichever arm: gate any note on GRID provenance / winner≠baseline, never on `start.passed`
   alone (`recommendationView.ts:522-531` — under the fallback the crown can be the household's OWN
   baseline with THEIR start, the exact false claim `leverRothAlreadyApplied` exists to prevent).
-- **The arrived face has never been walked on a priced state.** This is the U17 §S6 spec's "the arrived-walk's state-tax blindness": written 2026-07-24 as an instruction to file, relabelled "Filed" 2026-09-06 with no filing behind it, and carried here 2026-09-25 from the 2026-09-24 doc audit. `?vault=datearrived` is stateless by construction. `doctorArrivedVault` throws on any priced-state base (`devSeeds.ts:1708-1715`) because its six-year build-clock aging lands before NC/PA's first rate year (2026), where `validateParams` refuses the run (`simulate.ts:966-969`). `?vault=statestale` ages only `savedAt` and the state-tax stamp, never the build clock. So no walk has read the arrived idiom, the elapsed wedge or the premise line beside a priced-state clause, and every priced household built in 2026 becomes plan-clock-aged on 2027-01-01. ⚑ NEGATIVE: never relax the engine's priced-state year bound to mint a plant. On NC/PA no build-clock-aged plant is constructible before the wall clock reaches 2027.
+- **The arrived face has never been walked on a priced state.** This is the U17 §S6 spec's "the arrived-walk's state-tax blindness": written 2026-07-24 as an instruction to file, relabelled "Filed" 2026-09-06 with no filing behind it, and carried here 2026-09-25 from the 2026-09-24 doc audit. `?vault=datearrived` is stateless by construction. `doctorArrivedVault` throws on any priced-state base (`devSeeds.ts:1728-1735`) because its six-year build-clock aging lands before NC/PA's first rate year (2026), where `validateParams` refuses the run (`simulate.ts:966-969`). `?vault=statestale` ages only `savedAt` and the state-tax stamp, never the build clock. So no walk has read the arrived idiom, the elapsed wedge or the premise line beside a priced-state clause, and every priced household built in 2026 becomes plan-clock-aged on 2027-01-01. ⚑ NEGATIVE: never relax the engine's priced-state year bound to mint a plant. On NC/PA no build-clock-aged plant is constructible before the wall clock reaches 2027.
 
 ### The essentials median line on the band
 
@@ -4684,7 +4684,7 @@ re-clear it from this list.
   so this line's first filing named the wrong keys and the trace refuted it before the sweep). All
   FIVE stale "dormant / no entry is live" comments corrected (`copy.ts`, `recommendationView.ts`,
   `recommendationView.test.ts`, `solve.ts`, `solve.test.ts`). Also noted: the hand-planted
-  `?vault=rec` payload carries `disclosedDirectional: []` (`devSeeds.ts:1823`), so the plants HIDE a
+  `?vault=rec` payload carries `disclosedDirectional: []` (`devSeeds.ts:1843`), so the plants HIDE a
   note every real run shows. **What remains is the WORDING — his words:** "still being finalized"
   promises a later that never comes; types.ts records no dated pin event exists for these entries.
 - **EYE/tone:** the spending step's all-in gloss is ~90 words of carve-outs in one paragraph (the
@@ -4950,8 +4950,8 @@ re-clear it from this list.
 `M` · **pilot** · filed 2026-09-06 (the state-seed brief's rewrite; measured by its skeptic: `devSeeds.test.ts` 66/66, NC on-track beside its twin) · filed in Tier 3 with owner **briggsy**; RE-TRIAGED 2026-09-30 to Tier 4 (a coverage gap, no user-visible wrong answer; the sibling of the `verify:fit` blindness entry above)
 
 - `?seed=nc` and `?vault=statestale` were minted BORDERLINE (NC 0.8425 vs the twin's 0.8585). S.L. 2026-41's 2027+ cut, pinned 2026-08-02, lifted NC onto ON-TRACK — so the vertical-fit matrix and the Caddie walk no longer exercise a borderline two-pane on any priced-state household, while five comments/test names still said they did (swept 2026-09-06).
-- The fix is a NEW purpose-built band-crossing seed with its own state-off twin (`devSeeds.test.ts:500-508` files the shape). It was filed as his, as "a taste + scope call (which household, which state, how close to the bar)". **Why it moved (the 2026-09-30 re-triage):** the coverage sets all three. It needs a priced state whose clause bites, a household the engine lands BORDERLINE with margin from both band edges (proven through `devSeeds.test.ts`'s real-engine pins, never assumed), and a state-off twin. No product promise rides on that choice. So it is a test-fixture mint, the pilot's HOW, and the new seed's rendered face gets read on the next Caddie walk like any other seed.
-- ⚑ NEGATIVE: never re-tune `nc`'s own accounts to force the crossing back — `ncAffirmation` is a one-field spread of `retiredOnTrack` whose twin IS `DEV_SEEDS.retired`, and breaking that same-household-one-difference invariant is the worse trade (`devSeeds.test.ts:502-508`).
+- The fix is a NEW purpose-built band-crossing seed with its own state-off twin (`devSeeds.test.ts:501-509` files the shape). It was filed as his, as "a taste + scope call (which household, which state, how close to the bar)". **Why it moved (the 2026-09-30 re-triage):** the coverage sets all three. It needs a priced state whose clause bites, a household the engine lands BORDERLINE with margin from both band edges (proven through `devSeeds.test.ts`'s real-engine pins, never assumed), and a state-off twin. No product promise rides on that choice. So it is a test-fixture mint, the pilot's HOW, and the new seed's rendered face gets read on the next Caddie walk like any other seed.
+- ⚑ NEGATIVE: never re-tune `nc`'s own accounts to force the crossing back — `ncAffirmation` is a one-field spread of `retiredOnTrack` whose twin IS `DEV_SEEDS.retired`, and breaking that same-household-one-difference invariant is the worse trade (`devSeeds.test.ts:503-509`).
 
 ### Health-constant riders — Medicare-trend fixes and pinning the out-of-pocket figures
 

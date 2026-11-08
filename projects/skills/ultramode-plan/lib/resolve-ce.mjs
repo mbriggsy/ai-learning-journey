@@ -34,7 +34,7 @@ const PLAN = "skills/ce-plan/references/";
 const DOC = "skills/ce-doc-review/references/";
 // The high-risk panel's four adversary angles (KTD6), each reading the adversarial persona, under
 // the keys flow.mjs's tests give them; U4 owns the seat names and widens this list if it renames them.
-const PANEL = ["adv-sequencing", "adv-settled", "adv-hidden-work", "adv-verification"];
+export const PANEL = ["adv-sequencing", "adv-settled", "adv-hidden-work", "adv-verification"];
 // The research and deepen helpers' agent files, each its own seat under its file stem: research's
 // set from research.md (repo research, learnings, spec-flow, the agent-native triage and the three
 // external researchers) and the deepen's from deepening-workflow.md's section-to-agent mapping, read

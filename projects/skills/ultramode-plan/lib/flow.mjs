@@ -368,21 +368,27 @@ export function receipt(r = {}) {
     if (typeof p !== "string" || !p.trim()) throw new Error("flow: a stray file is a path");
     return p;
   })}`);
-  if (r.moved !== null) {
-    if (typeof r.moved !== "object" || !Array.isArray(r.moved.cited)) throw new Error("flow: a project move is { changed, cited: [paths] }, or null");
-    const changed = count("moved.changed", r.moved.changed);
-    // A move is a subtree hash that differs, which no change of zero files can make: an unmoved
-    // project is null, never a "0 files changed" line.
-    if (changed === 0) throw new Error("flow: a project move changes at least one file; an unmoved project is moved: null");
-    const cited = r.moved.cited;
-    if (cited.some((p) => typeof p !== "string" || !p.trim())) throw new Error("flow: a cited file is a path");
-    if (new Set(cited).size !== cited.length) throw new Error("flow: the plan's cited files name one path twice");
-    if (cited.length > changed) throw new Error(`flow: the plan cites ${cited.length} of the changed files, more than the ${changed} that changed`);
-    lines.push(`project moved during the run: ${changed} file${changed === 1 ? "" : "s"} changed, ${cited.length} the plan cites${cited.length ? ` (${cited.join(", ")})` : ""}`);
-  }
+  const moved = moveLine(r.moved);
+  if (moved !== null) lines.push(moved);
   if (typeof r.record !== "string" || !r.record.trim()) throw new Error("flow: the receipt names the run record's path");
   lines.push(`run record: ${r.record.trim()}`);
   return lines.join("\n");
+}
+
+// The receipt's project-move line, or null for an unmoved project (moved: null). Its one home: the
+// run record's land checks a message's move line against it.
+export function moveLine(moved) {
+  if (moved === null) return null;
+  if (!moved || typeof moved !== "object" || !Array.isArray(moved.cited)) throw new Error("flow: a project move is { changed, cited: [paths] }, or null");
+  const changed = count("moved.changed", moved.changed);
+  // A move is a subtree hash that differs, which no change of zero files can make: an unmoved
+  // project is null, never a "0 files changed" line.
+  if (changed === 0) throw new Error("flow: a project move changes at least one file; an unmoved project is moved: null");
+  const cited = moved.cited;
+  if (cited.some((p) => typeof p !== "string" || !p.trim())) throw new Error("flow: a cited file is a path");
+  if (new Set(cited).size !== cited.length) throw new Error("flow: the plan's cited files name one path twice");
+  if (cited.length > changed) throw new Error(`flow: the plan cites ${cited.length} of the changed files, more than the ${changed} that changed`);
+  return `project moved during the run: ${changed} file${changed === 1 ? "" : "s"} changed, ${cited.length} the plan cites${cited.length ? ` (${cited.join(", ")})` : ""}`;
 }
 
 // ---------------------------------------------------------------- the named path (KTD3, KTD23)

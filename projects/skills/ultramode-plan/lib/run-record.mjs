@@ -19,46 +19,55 @@
 //     listed; after it, the new ones a helper of that Workflow wrote are moved out of the tree into
 //     the run folder (strays/<launch>/) and named in the receipt, and every other new file is left
 //     alone. A helper's shell write leaves only a command string, so a file counts as the run's when
-//     a Write or Edit names it or a Bash or PowerShell command names it as a whole path token
-//     (playbook insight 011), and the file was born during that call; the plan's own path never
-//     moves;
+//     a Write names it or a Bash or PowerShell command names it as a whole path token (playbook
+//     insight 011), and the file was born during that call (an Edit counts only for a path a helper
+//     call also created, since an Edit makes a new file); the plan's own path never moves. A stray
+//     a lock kept in the tree is retried at restart, and only while it is the very file the sweep
+//     found;
 //   - restart: a finished Workflow is folded from its saved result and never re-run; one that never
 //     finished re-runs from its start with the recorded args (or starts again when CE moved since
-//     it launched, its args naming the old CE's files); a launch this session made with no saved
-//     result stops the restart, since it may still be running; a leftover working file is deleted
-//     first; a staged plan at its before hash re-runs the fold, at its target hash moves on, at
-//     neither stops, naming both; CE is resolved again; a window gate clears work only in the
-//     session that passed it;
+//     it launched, its args naming the old CE's files); a launch this process made with no saved
+//     result makes the restart wait, since it may still be running, while one another process made
+//     under the same session id (a resumed session) died with that process; a leftover working file
+//     is deleted first; a staged plan at its before hash re-runs the fold, at its target hash moves
+//     on, at neither stops, naming both; CE is resolved again; a window gate clears work only in the
+//     session that passed it, and only while it is the step's last reading;
 //   - CE credit: a resolution is credited with a stage only where work ran on it (a completed
-//     launch, a landed write fold), never where a step merely opened;
+//     launch, a landed write fold, the lens picks), never where a step merely opened;
 //   - landing: KTD3's path checks again, the staged plan checked against the last step's hash, the
-//     project-move line read again, one copy through a recorded sibling temp and one rename, and
-//     one commit of that path alone carrying the receipt, found by its record line (an update run
-//     that changed nothing lands as an empty commit). Nothing is staged in the shared index. A
-//     crash after the copy but before the commit leaves the named path holding the staged plan,
-//     which a re-landing recognizes by its blob and commits.
+//     project-move line read again and matched in the message, one copy through a recorded sibling
+//     temp and one rename, and one commit of that path alone carrying the receipt, found by its
+//     record line as a whole line, touching the plan alone at the staged blob (an update run that
+//     changed nothing lands as an empty commit). Nothing is staged in the shared index. A crash
+//     after the copy but before the commit leaves the named path holding the staged plan, which a
+//     re-landing recognizes by its blob and commits.
 // A closed record (landed or blocked) is never rewritten: a landed receipt cites its path.
 // Run by the main loop as a command; never inlined into a Workflow script (KTD1).
 //
-// Usage: node run-record.mjs <command> <json | path to a .json file>
+// Usage: node run-record.mjs <command> <json | path to a .json file>, in the order a run runs:
 //   locate       { plan, job? }                                -> { jobFolder, resume, open, closed }
 //   start        { plan, update, brief?, job?, session? }       -> { ok, record, stage, ... } (exit 1 when refused)
-//   show         { record }                                    -> the run's state
-//   note         { record, key, value, session? }              -> records one fact (KTD5, KTD6, KTD11, KTD22)
+//   restart      { record } or { plan, job? }, with session?, pid? -> { action, ... } (exit 1 on a stop;
+//                action "wait" while a launch of this process may still be running)
+//   show         { record }                                    -> the run's state, its launches included
+//   note         { record, key, value, session? }              -> records one fact (KTD5, KTD6, KTD11, KTD22);
+//                risk while a deepen step is current, before its outcome
 //   gate         { record, line, action, session? }            -> flow.mjs's window gate, recorded
-//   launch       { record, script, args, relayed, seats?, resumeOf?, session? } -> { launch, args }
+//   launch       { record, script, args, relayed, seats?, resumeOf?, session?, pid? } -> { launch, args }
 //   launched     { record, launch, runId }                     -> the run id, saved-result path, transcript folder
-//   complete     { record, launch }                            -> the saved result's status and the stray sweep (stuck strays named)
+//   complete     { record, launch, notStarted? }               -> the saved result's status and the stray sweep
+//                (stuck strays named); notStarted, the Workflow tool's error, closes a launch with no run id
 //   fold-start   { record, session? }                          -> { working, staged, before, savedResult }
 //   fold-land    { record, ids, session? }                     -> { target }
 //   advance      { record, outcome, changes?, p0p1?, open?, brief?, session? } -> flow.mjs's next step, recorded
 //   block        { record, reason, session? }                  -> closes the run as blocked
-//   restart      { record } or { plan, job? }, with session?   -> { action, ... } (exit 1 on a stop)
 //   land-check   { record }                                    -> { ok, moved, ... } (exit 1 when the path changed)
+//   receipt-fields { record, ran, park }                       -> the receipt fields the record holds; ran maps
+//                each completed launch's id to the seats that ran in it
 //   land         { record, message, session? }                 -> { ok, commit } (exit 1 when refused)
-//   receipt-fields { record, ran, park }                       -> the receipt fields the record holds
 // `session` defaults to this session's CLAUDE_CODE_SESSION_ID; a command that writes refuses when
-// neither names one. `registry` (the plugin registry) and `projectsDir` may be given for a fixture.
+// neither names one. `pid` defaults to this process's CLAUDE_PID. `registry` (the plugin registry)
+// and `projectsDir` may be given for a fixture.
 // Exit 0 is an answer, 1 a refusal or stop (nothing written past it), 2 an input the command could
 // not read or a refused write (nothing was decided).
 
@@ -69,7 +78,7 @@ import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { gunzipSync, gzipSync } from "node:zlib";
 import { isMain, usage } from "./entry.mjs";
-import { STAGES, firstStage, landingCheck, loadStageCosts, nextStep, pathFacts, stageGate, startCheck } from "./flow.mjs";
+import { STAGES, firstStage, landingCheck, loadStageCosts, moveLine, nextStep, pathFacts, stageGate, startCheck } from "./flow.mjs";
 import { MAX_SLUG, defaultProjectsDir, fromGitBash, longOf, samePath, slugOf } from "./paths.mjs";
 import { KNOWN_SEATS, SEATS_WITHOUT_CE, changedInPlace, checkResolution, inlineSeats, resolveCe, sameResolution } from "./resolve-ce.mjs";
 
@@ -181,6 +190,17 @@ function sessionOf(input) {
   return id.toLowerCase();
 }
 
+// The Claude Code process a command runs under (CLAUDE_PID; input "pid" for a fixture), or null
+// where none is named. A background Workflow lives only as long as that process, and
+// `claude --resume` keeps the session id, so the session alone cannot say a launch is dead.
+function procOf(input) {
+  const v = input.pid ?? process.env.CLAUDE_PID;
+  if (v === undefined || v === null || v === "") return null;
+  const n = Number(v);
+  if (!Number.isInteger(n) || n <= 0) fail(`pid is the Claude Code process id, got ${JSON.stringify(v)}`);
+  return n;
+}
+
 // ---------------------------------------------------------------- where a run lives (KTD10)
 
 const nameSlug = (s) => s.replace(/[^A-Za-z0-9]/g, "-");
@@ -276,22 +296,24 @@ const workingPath = (rec) => join(rec.dir, WORKING);
 const stagedHash = (rec) => (existsSync(stagedPath(rec)) ? fileSha(stagedPath(rec)) : null);
 const latestCe = (rec) => rec.ce[rec.ce.length - 1];
 
-// The stages each resolution served, in STAGES order, credited only where work ran on it: a
-// completed launch on the resolution it recorded, and a write whose fold landed on the resolution
-// its fold-land recorded. Opening a step credits nothing (the brief runs /brief and reads no CE).
-function servedStages(rec) {
-  const by = new Map(rec.ce.map((c) => [c.id, new Set()]));
-  for (const l of rec.launches) if (l.status === "completed") by.get(l.ce)?.add(l.stage);
-  for (const s of rec.steps) if (s.stage === "write" && s.target !== null && s.foldCe) by.get(s.foldCe)?.add("write");
-  return new Map([...by].map(([id, set]) => [id, STAGES.filter((s) => set.has(s))]));
+// The work that ran, one row per piece, each with the resolution it ran on and the seats that read
+// a CE file in it: every completed launch (its seats from `ran`, keyed by launch id, plus research's
+// mapping, which the main loop reads to build research's args, KTD4), each landed write fold (the
+// plan's shape, KTD3) and the lens picks the main loop read for the check (KTD6). The receipt's CE
+// line and its inline seats are both read from these rows, so they cannot disagree.
+function workRows(rec, ran = {}) {
+  const rows = rec.launches.filter((l) => l.status === "completed").map((l) => ({ stage: l.stage, ce: l.ce, seats: [...(ran[l.id] ?? []), ...(l.stage === "research" ? ["research"] : [])] }));
+  for (const s of rec.steps) if (s.stage === "write" && s.target !== null && s.foldCe) rows.push({ stage: "write", ce: s.foldCe, seats: ["write"] });
+  if (rec.lenses !== null && rec.lensesCe) rows.push({ stage: "check-1", ce: rec.lensesCe, seats: ["lens-picks"] });
+  return rows;
 }
 
-// The work that ran on each resolution, one row per completed launch and per landed write fold,
-// with the resolution it ran on: the receipt's inline seats are read per row.
-function workRows(rec) {
-  const rows = rec.launches.filter((l) => l.status === "completed").map((l) => ({ stage: l.stage, ce: l.ce }));
-  for (const s of rec.steps) if (s.stage === "write" && s.target !== null && s.foldCe) rows.push({ stage: "write", ce: s.foldCe });
-  return rows;
+// The stages each resolution served, in STAGES order, credited only where work ran on it. Opening a
+// step credits nothing (the brief runs /brief and reads no CE).
+function servedStages(rec) {
+  const by = new Map(rec.ce.map((c) => [c.id, new Set()]));
+  for (const r of workRows(rec)) by.get(r.ce)?.add(r.stage);
+  return new Map([...by].map(([id, set]) => [id, STAGES.filter((s) => set.has(s))]));
 }
 
 // What a park's relaunch must carry wherever its step is handed on (restart, show): without it a
@@ -302,6 +324,12 @@ const premiseOf = (step) => (step?.skipPremise ? { skipPremise: true, parked: st
 // new work, not a returned Workflow's fold that always completes, so it needs a passed start gate
 // in the session that folds it. Every other stage's fold reads a finished Workflow (KTD10).
 const writeBehindStartGate = (step) => step.stage === "write" && step.gate === "start";
+// Whether the step's last gate reading is a passed start gate of this session: a fold gate, a
+// compaction or a hold read after it takes the clearance back, as it does for a launch.
+const passedStart = (step, session) => {
+  const g = step.gates[step.gates.length - 1];
+  return Boolean(g && g.action === "start" && g.go && g.session === session);
+};
 
 function openStep(rec, stage, extra = {}) {
   const step = { n: rec.steps.length + 1, stage, openedAt: stamp(), before: stagedHash(rec), launches: [], gates: [], target: null, ledger: null, foldedAt: null, outcome: null, endedAt: null, ...extra };
@@ -495,25 +523,31 @@ function cdBases(text, cwd, platform) {
   return out;
 }
 
+// The tools that change a file in place. Claude Code's Edit writes a new file over the old one
+// (measured 2026-11-08: a new inode, and a birth at the Edit's moment), so the span of an Edit holds
+// the birth of any file it touched, another session's included.
+const EDIT_TOOLS = ["Edit", "MultiEdit", "NotebookEdit"];
+
 // Which helper call wrote a file, or null: a Write or Edit naming its path, or a shell command
 // naming it as a whole path token. Matching is by spelling, never by name alone, so another
 // session's file of the same name elsewhere is never the run's. With `born` (the file's birth, in
 // epoch ms) a call counts only when the birth falls inside its window, so a call that read a file
 // made before it, or named a path filled in after it, is never its writer; a call with no window
-// counts for nothing. Without `born` this is the spelling match alone.
+// counts for nothing. Without `born` this is the spelling match alone. An Edit counts only when a
+// helper call also created that path (a Write or a shell command naming it, at any time): its own
+// span proves nothing about who made the file.
 export function writerOf(abs, trail, { platform = process.platform, gitRoot, born } = {}) {
   const fold = platform === "win32";
   const during = (call) => born === undefined || (call.window != null && born >= call.window.from && born <= call.window.to);
+  const pathOf = (w) => w.abs ?? longOf(resolve(w.cwd || gitRoot || ".", fromGitBash(w.path, platform)));
+  const names = (c) => [c.cwd, ...cdBases(c.text, c.cwd, platform)].some((base) => spellings(abs, base).some((s) => holdsToken(c.text, s, fold)));
+  const created = () => trail.writes.some((w) => !EDIT_TOOLS.includes(w.tool) && samePath(pathOf(w), abs, platform)) || trail.commands.some(names);
   for (const w of trail.writes) {
-    if (!during(w)) continue;
-    const p = w.abs ?? longOf(resolve(w.cwd || gitRoot || ".", fromGitBash(w.path, platform)));
-    if (samePath(p, abs, platform)) return { tool: w.tool, id: w.id, transcript: w.transcript };
+    if (!during(w) || !samePath(pathOf(w), abs, platform)) continue;
+    if (EDIT_TOOLS.includes(w.tool) && !created()) continue;
+    return { tool: w.tool, id: w.id, transcript: w.transcript };
   }
-  for (const c of trail.commands) {
-    if (!during(c)) continue;
-    const bases = [c.cwd, ...cdBases(c.text, c.cwd, platform)];
-    if (bases.some((base) => spellings(abs, base).some((s) => holdsToken(c.text, s, fold)))) return { tool: c.tool, id: c.id, transcript: c.transcript };
-  }
+  for (const c of trail.commands) if (during(c) && names(c)) return { tool: c.tool, id: c.id, transcript: c.transcript };
   return null;
 }
 
@@ -531,6 +565,15 @@ const noteDeleted = (rec, rel) => {
   if (!rec.strays.deleted.includes(rel)) rec.strays.deleted.push(rel);
 };
 const stuckLine = (stuck) => `${stuck.length} stray file${stuck.length === 1 ? "" : "s"} a helper wrote could not be moved and stay${stuck.length === 1 ? "s" : ""} in the tree: ${stuck.map((s) => `${s.path} (${s.error})`).join(", ")}`;
+// The sweep's note: its standing notes, then the strays still stuck.
+const noteOf = (sw) => [...(sw.notes ?? []), ...(sw.stuck?.length ? [stuckLine(sw.stuck)] : [])].join("; ") || undefined;
+const recoveredLine = (recovered) => `recovered ${recovered.length} move${recovered.length === 1 ? "" : "s"} a dead sweep made: ${recovered.join(", ")}`;
+
+// A file's identity for a later retry: its inode, and its birth where the volume keeps one (0 where
+// it does not). A path can be emptied and filled again by another session; NTFS even gives a file
+// made again within 15 seconds the old one's birth, but never its inode.
+const identity = (st) => ({ ino: String(st.ino), birth: Number(st.birthtimeMs) });
+const sameFile = (st, id) => st.isFile() && String(st.ino) === id.ino && (!id.birth || !Number(st.birthtimeMs) || Number(st.birthtimeMs) === id.birth);
 
 // The files under strays/<launch>/ the record does not name: moves a sweep made before it died
 // short of its record write. They are recorded now, never lost from the receipt.
@@ -550,36 +593,60 @@ function recoverMoves(rec, l) {
   return recovered;
 }
 
-// A move into the run folder, its failure caught: a locked file stays where it is, named.
-function tryMove(rec, l, rel, by) {
+// A move into the run folder, its failure caught: a locked file stays where it is, named with its
+// identity, so a retry moves that file and no other.
+function tryMove(rec, l, rel, by, id) {
   try {
     moveFile(join(rec.plan.gitRoot, ...rel.split("/")), strayOf(rec, l, rel));
     noteDeleted(rec, rel);
     return null;
   } catch (e) {
-    return { path: rel, by, error: e.code ?? e.message };
+    return { path: rel, by, error: e.code ?? e.message, ...id };
   }
 }
 
-// A swept launch's stuck strays, moved again (a restart runs this): one freed since moves now,
-// one gone from the tree drops out, and the rest stay named.
+// A swept launch's stuck strays, moved again (a restart runs this, maybe days later): the very file
+// the sweep found moves now if it is free. A path gone from the tree, a file that is not the one the
+// sweep found, or one committed since stays where it is and drops out, with a note.
 function retryStuck(rec, l) {
   const still = [];
+  const notes = l.sweep.notes ?? [];
   for (const s of l.sweep.stuck) {
-    if (!existsSync(join(rec.plan.gitRoot, ...s.path.split("/")))) continue;
-    const failed = tryMove(rec, l, s.path, s.by);
-    if (failed) still.push(failed);
-    else l.sweep.deleted.push({ path: s.path, by: s.by });
+    let st = null;
+    try {
+      st = lstatSync(join(rec.plan.gitRoot, ...s.path.split("/")), { bigint: true });
+    } catch {
+      // gone from the tree
+    }
+    if (!st) notes.push(`${s.path}, stuck at the sweep, left the tree before a retry moved it`);
+    else if (!s.ino || !sameFile(st, s)) notes.push(`${s.path} is not the file the sweep found (replaced since): it stays where it is`);
+    else if (git(rec.plan.gitRoot, ["ls-files", "--error-unmatch", "--", literal(s.path)], { quiet: [1] }) !== null) notes.push(`${s.path} was committed since the sweep: it stays where it is`);
+    else {
+      const failed = tryMove(rec, l, s.path, s.by, { ino: s.ino, birth: s.birth });
+      if (failed) still.push(failed);
+      else l.sweep.deleted.push({ path: s.path, by: s.by });
+    }
   }
   l.sweep.stuck = still;
-  l.sweep.note = [...(l.sweep.notes ?? []), ...(still.length ? [stuckLine(still)] : [])].join("; ") || undefined;
+  l.sweep.notes = notes;
+  l.sweep.note = noteOf(l.sweep);
   return l.sweep;
 }
 
 function sweep(rec, l) {
-  if (l.sweep.done) return l.sweep.stuck?.length ? retryStuck(rec, l) : l.sweep;
+  // Moves a sweep or a retry made before it died short of its record write, recorded first.
   const recovered = recoverMoves(rec, l);
-  const notes = recovered.length ? [`recovered ${recovered.length} move${recovered.length === 1 ? "" : "s"} a dead sweep made: ${recovered.join(", ")}`] : [];
+  if (l.sweep.done) {
+    if (recovered.length) {
+      l.sweep.deleted.push(...recovered.map((path) => ({ path, by: null, recovered: true })));
+      l.sweep.stuck = (l.sweep.stuck ?? []).filter((s) => !recovered.includes(s.path));
+      l.sweep.notes = [...(l.sweep.notes ?? []), recoveredLine(recovered)];
+    }
+    if (l.sweep.stuck?.length) return retryStuck(rec, l);
+    l.sweep.note = noteOf(l.sweep);
+    return l.sweep;
+  }
+  const notes = recovered.length ? [recoveredLine(recovered)] : [];
   let before;
   try {
     before = new Set(JSON.parse(gunzipSync(readFileSync(join(rec.dir, l.sweep.before))).toString("utf8")));
@@ -601,7 +668,7 @@ function sweep(rec, l) {
     const abs = join(rec.plan.gitRoot, ...rel.split("/"));
     let st = null;
     try {
-      st = lstatSync(abs);
+      st = lstatSync(abs, { bigint: true });
     } catch {
       // gone again since the listing
     }
@@ -612,13 +679,13 @@ function sweep(rec, l) {
       continue;
     }
     // A file's birth (its mtime where the volume keeps no birth time) dates it against each call.
-    const born = st ? st.birthtimeMs || st.mtimeMs : undefined;
+    const born = st ? Number(st.birthtimeMs) || Number(st.mtimeMs) : undefined;
     const by = st && !st.isDirectory() ? writerOf(abs, trail, { gitRoot: rec.plan.gitRoot, born }) : null;
     if (!by) {
       foreign.push(rel);
       continue;
     }
-    const failed = tryMove(rec, l, rel, by);
+    const failed = tryMove(rec, l, rel, by, identity(st));
     if (failed) stuck.push(failed);
     else deleted.push({ path: rel, by });
   }
@@ -626,7 +693,7 @@ function sweep(rec, l) {
   else if (Number.isInteger(l.agentCount) && trail.transcripts !== l.agentCount) notes.push(`read ${trail.transcripts} helper transcripts of the ${l.agentCount} the saved result counts`);
   // `notes` keeps the standing ones, so a retry of stuck strays can rebuild the note.
   l.sweep = { ...l.sweep, done: true, at: stamp(), transcripts: trail.transcripts, helpers: l.agentCount ?? null, fresh: fresh.length, deleted, foreign, stuck, notes, ...(planNote ? { planNote } : {}) };
-  const note = [...notes, ...(stuck.length ? [stuckLine(stuck)] : [])].join("; ");
+  const note = noteOf(l.sweep);
   if (note) l.sweep.note = note;
   return l.sweep;
 }
@@ -680,7 +747,7 @@ export function start(input = {}, { now = new Date(), projectsDir = defaultProje
     plan: { path: facts.path, rel: facts.rel, gitRoot: facts.gitRoot, projectRel: facts.projectRel, projectRoot: facts.projectRoot },
     base,
     start: check.state, createPlansFolder: check.createPlansFolder,
-    brief: null, contractBrief: null, risk: null, lenses: null, external: null, council: [], parks: [], handBack: null,
+    brief: null, contractBrief: null, risk: null, lenses: null, lensesCe: null, external: null, council: [], parks: [], handBack: null,
     sendBacks: 0, sessions: [{ id: session, at: t }], ce: [], steps: [], launches: [],
     state: "running", windowStop: null, end: null, moved: undefined, landing: null, closed: null, strays: { deleted: [] }, warnings: [],
   };
@@ -728,6 +795,8 @@ export function note(rec, input) {
   }
   if (spec.list) rec[input.key].push(input.value);
   else rec[input.key] = input.value;
+  // The lens picks are the main loop's read of persona-selection.md, on the CE it holds now.
+  if (input.key === "lenses") rec.lensesCe = latestCe(rec).id;
   save(rec);
   return { ok: true, key: input.key };
 }
@@ -780,7 +849,7 @@ export function launch(rec, input, { projectsDir = defaultProjectsDir() } = {}) 
   const argsText = `${JSON.stringify(args, null, 1)}\n`;
   writeAtomic(join(rec.dir, argsFile), argsText);
   const entry = {
-    id, step: step.n, stage: step.stage, ce: latestCe(rec).id, session, launchedAt: stamp(), ...cliOf(session, projectsDir),
+    id, step: step.n, stage: step.stage, ce: latestCe(rec).id, session, pid: procOf(input), launchedAt: stamp(), ...cliOf(session, projectsDir),
     script, scriptSha256: fileSha(script), args: argsFile, argsSha256: sha256(Buffer.from(argsText, "utf8")),
     relayed: input.relayed, seats: input.seats ?? null, resumeOf: input.resumeOf ?? null,
     runId: null, savedResult: null, transcriptDir: null, completedAt: null, status: null, agentCount: null,
@@ -809,19 +878,39 @@ export function launched(rec, input, { projectsDir = defaultProjectsDir() } = {}
   return { ok: true, launch: l.id, runId: l.runId, savedResult: l.savedResult, transcriptDir: l.transcriptDir };
 }
 
-// A launch's completion: its saved result's state, then its stray sweep.
+// A launch's saved-result path, found again when its session folder appeared after `launched`
+// (a session can run with no transcript on disk at first).
+function findResult(l, projectsDir) {
+  if (l.savedResult === null && l.runId !== null) {
+    const dir = sessionDir(l.session, projectsDir);
+    if (dir) {
+      l.savedResult = join(dir, "workflows", `${l.runId}.json`);
+      l.transcriptDir = join(dir, "subagents", "workflows", l.runId);
+      delete l.pathsNote;
+    }
+  }
+  return l.savedResult;
+}
+
+const strayAnswer = (sw) => ({ deleted: sw.deleted.map((d) => d.path), foreign: sw.foreign.length, stuck: (sw.stuck ?? []).map((s) => s.path), note: sw.note ?? null });
+
+// A launch's completion: its saved result's state, then its stray sweep. A launch whose Workflow
+// call failed (the tool refused it, so no run id came back) is closed with `notStarted`, the tool's
+// error: its sweep has no transcripts to read, so it moves nothing.
 export function complete(rec, input, { projectsDir = defaultProjectsDir() } = {}) {
   writable(rec, sessionOf(input));
   const l = launchOf(rec, input.launch);
-  if (l.runId === null) fail(`${l.id} has no run id: record it with launched first`);
-  // A session folder that did not exist at launched (no transcript yet) may exist now.
-  if (l.savedResult === null) {
-    const dir = sessionDir(l.session, projectsDir);
-    if (!dir) fail(`the session folder for ${l.session} is missing under ${projectsDir}, so ${l.id}'s saved result cannot be found`);
-    l.savedResult = join(dir, "workflows", `${l.runId}.json`);
-    l.transcriptDir = join(dir, "subagents", "workflows", l.runId);
-    delete l.pathsNote;
+  if ("notStarted" in input) {
+    if (typeof input.notStarted !== "string" || !input.notStarted.trim()) fail("notStarted is the Workflow tool's error for a call that never started");
+    if (l.runId !== null) fail(`${l.id} recorded run ${l.runId}, so its Workflow started: run complete once it finishes`);
+    l.completedAt = stamp();
+    l.status = `never started: ${input.notStarted.trim()}`;
+    const sw = sweep(rec, l);
+    save(rec);
+    return { ok: true, launch: l.id, finished: false, why: l.status, savedResult: null, strays: strayAnswer(sw) };
   }
+  if (l.runId === null) fail(`${l.id} has no run id: record it with launched first, or close it with notStarted when its Workflow call failed`);
+  if (findResult(l, projectsDir) === null) fail(`the session folder for ${l.session} is missing under ${projectsDir}, so ${l.id}'s saved result cannot be found`);
   if (!existsSync(l.savedResult)) fail(`${l.id}'s Workflow has no saved result yet at ${l.savedResult}: it has not finished`);
   const s = savedResultState(l.savedResult);
   l.completedAt = stamp();
@@ -829,7 +918,7 @@ export function complete(rec, input, { projectsDir = defaultProjectsDir() } = {}
   l.agentCount = s.agentCount ?? null;
   const sw = sweep(rec, l);
   save(rec);
-  return { ok: true, launch: l.id, finished: s.finished, why: s.why ?? null, savedResult: l.savedResult, strays: { deleted: sw.deleted.map((d) => d.path), foreign: sw.foreign.length, stuck: (sw.stuck ?? []).map((s) => s.path), note: sw.note ?? null } };
+  return { ok: true, launch: l.id, finished: s.finished, why: s.why ?? null, savedResult: l.savedResult, strays: strayAnswer(sw) };
 }
 
 // The step's newest launch whose Workflow finished, by its saved result.
@@ -870,15 +959,15 @@ export function foldStart(rec, input) {
   if (rec.state !== "running") fail("the run is a window stop: run the gate again before folding");
   const step = currentStep(rec);
   if (step.stage === "brief") fail("the brief stage has no fold");
-  if (writeBehindStartGate(step) && !step.gates.some((g) => g.action === "start" && g.go && g.session === session)) fail(`step ${step.n}'s write rewrites the plan after a send-back, so it starts behind a start gate: run the gate in this session first (KTD10)`);
+  if (writeBehindStartGate(step) && !passedStart(step, session)) fail(`step ${step.n}'s write rewrites the plan after a send-back, so it starts behind a start gate: run the gate in this session first (KTD10)`);
   const removed = existsSync(workingPath(rec));
   if (removed) unlinkSync(workingPath(rec));
   const at = stagedAt(rec, step);
   if (at === "target") fail(`step ${step.n}'s fold has landed (the staged plan is at its target): advance instead`);
   if (at !== "before") fail(`the staged plan matches neither hash: ${hashes(rec, step)}`);
+  const from = foldSource(rec, step);
+  if (!from) fail(`step ${step.n} (${step.stage}) has no finished Workflow to fold from`);
   if (existsSync(stagedPath(rec))) copyFileSync(stagedPath(rec), workingPath(rec));
-  const from = finishedLaunch(rec, step) ?? (step.stage === "write" ? lastFinishedBefore(rec, step) : null);
-  if (WORKFLOW_STAGES.includes(step.stage) && !from) fail(`step ${step.n} (${step.stage}) has no finished Workflow to fold from`);
   save(rec);
   return { ok: true, working: workingPath(rec), staged: stagedPath(rec), before: step.before, savedResult: from?.savedResult ?? null, removedLeftover: removed };
 }
@@ -890,6 +979,11 @@ function lastFinishedBefore(rec, step) {
   }
   return null;
 }
+
+// The launch whose saved result a step's fold reads: a write folds the last finished Workflow
+// before it (research's dossiers, or the deepen whose premise finding sent the plan back), every
+// other stage its own newest finished launch. Null when none is readable.
+const foldSource = (rec, step) => (step.stage === "write" ? lastFinishedBefore(rec, step) : finishedLaunch(rec, step));
 
 // The end of a fold: the working file's hash is recorded as the step's target, with its applied
 // ids as the step's ledger entry, in one record write just before the rename that lands it; a fold
@@ -924,9 +1018,12 @@ export function foldLand(rec, input) {
 // A stage boundary: the step's outcome goes to flow.mjs's nextStep with the recorded send-back
 // count, and the answer is recorded: a new step for the next stage, the landing, or a blocked close.
 export function advance(rec, input, { cwd = process.cwd() } = {}) {
-  writable(rec, sessionOf(input));
+  const session = sessionOf(input);
+  writable(rec, session);
   const step = currentStep(rec);
   if (rec.end) fail("the run has reached its landing; land it");
+  // /brief runs in the main loop, so, like a launch, it runs behind a start gate of this session.
+  if (step.stage === "brief" && !passedStart(step, session)) fail("/brief runs in the main loop, so the brief starts behind a start gate: run the gate in this session, then /brief, then advance (KTD10)");
   const at = stagedAt(rec, step);
   if (step.target !== null && at !== "target") fail(`step ${step.n}'s fold has not landed: ${hashes(rec, step)}`);
   if (step.target === null && at !== "before") fail(`the staged plan moved outside a fold: ${hashes(rec, step)}`);
@@ -935,10 +1032,19 @@ export function advance(rec, input, { cwd = process.cwd() } = {}) {
   const unswept = step.launches.filter((id) => !launchOf(rec, id).sweep.done);
   if (unswept.length) fail(`step ${step.n}'s launch ${unswept.join(", ")} has not been swept: run complete for it first`);
   if (step.stage === "write" && step.target === null) fail("the write has not landed a staged plan (fold-land)");
+  if (step.stage === "deepen") {
+    // A landed fold deepened sections, so an outcome that deepened nothing contradicts it.
+    if (step.target !== null && ["passed", "park", "premise-goal"].includes(input.outcome)) fail(`step ${step.n}'s fold landed, so its outcome cannot be ${input.outcome}`);
+    // The check's lenses are picked from the deepen's risk profile (KTD5, KTD6), so a deepen that
+    // scored the plan has its own before its outcome counts.
+    if (["passed", "park", "deepened"].includes(input.outcome) && !step.risk) fail(`step ${step.n}'s deepen scored the plan: note risk (its risk profile) before its outcome, since the check's lenses are picked from it (KTD5, KTD6)`);
+  }
   if (step.stage === "check-1") {
     const applied = step.ledger?.length ?? 0;
     if (input.changes !== applied) fail(`check round 1's changes must equal the ${applied} id${applied === 1 ? "" : "s"} its fold's ledger applied, got ${JSON.stringify(input.changes)}`);
   }
+  // Round 2 folds each P0 or P1 it confirms: a count with no landed fold would land them unfixed.
+  if (step.stage === "check-2" && Number.isInteger(input.p0p1) && input.p0p1 > 0 && step.target === null) fail(`check round 2 confirmed ${input.p0p1} P0 or P1 finding${input.p0p1 === 1 ? "" : "s"}, each folded, and its fold has not landed (fold-land)`);
   if (step.stage === "brief") {
     if (typeof input.brief !== "string") fail("the brief stage ends with the path of the brief /brief wrote");
     const p = typedPath(input.brief, cwd);
@@ -955,8 +1061,12 @@ export function advance(rec, input, { cwd = process.cwd() } = {}) {
   rec.sendBacks = next.sendBacks;
   if (next.step === "blocked") close(rec, "blocked", next.reason);
   else if (next.step === "land") rec.end = { open: next.open, reason: next.reason, at: stamp() };
-  // A park's relaunch runs without the premise seat on the parked deepen's scores (KTD5, KTD11).
-  else openStep(rec, next.step, { gate: next.gate, ...(next.skipPremise ? { skipPremise: true, scoresFrom: finishedLaunch(rec, step)?.savedResult ?? null } : {}), ...(next.parked ? { parked: true } : {}) });
+  else {
+    // A park's relaunch runs without the premise seat on the parked deepen's scores, its risk
+    // profile included (KTD5, KTD11); any other deepen scores a plan no profile has read yet.
+    if (next.step === "deepen" && !next.skipPremise) rec.risk = null;
+    openStep(rec, next.step, { gate: next.gate, ...(next.skipPremise ? { skipPremise: true, scoresFrom: finishedLaunch(rec, step)?.savedResult ?? null, risk: step.risk ?? null } : {}), ...(next.parked ? { parked: true } : {}) });
+  }
   save(rec);
   return { ...next, stepNumber: currentStep(rec).n, state: rec.state };
 }
@@ -972,6 +1082,7 @@ function close(rec, as, reason, extra = {}) {
 export function block(rec, input) {
   writable(rec, sessionOf(input));
   if (typeof input.reason !== "string" || !input.reason.trim()) fail("a blocked run names its reason");
+  dropTemp(rec);
   close(rec, "blocked", input.reason.trim());
   save(rec);
   return { ok: true, state: rec.state };
@@ -990,22 +1101,32 @@ export function restart(input = {}, { projectsDir = defaultProjectsDir(), cwd = 
   }
   const rec = loadRecord(path);
   writable(rec, session);
-  const ce = addResolution(rec, resolveCe(registryOf(input, cwd)), session);
-  // A launch this session made with no saved result yet may still be running in the background:
-  // sweeping it would move files its helpers are writing, and re-running it would run it twice.
-  const live = rec.launches.filter((l) => !l.sweep.done && l.session === session && !existsSync(l.savedResult ?? ""));
+  for (const l of rec.launches) findResult(l, projectsDir);
+  // A launch this process made with no saved result yet may still be running in the background:
+  // sweeping it would move files its helpers are writing, and re-running it would run it twice. A
+  // launch another process made under this session id (a resumed session) died with that process.
+  // This answers before CE is resolved again: a wait resolves nothing, so the next launch is
+  // credited to the resolution its args were built from.
+  const pid = procOf(input);
+  const live = rec.launches.filter((l) => !l.sweep.done && l.session === session && (l.pid == null || pid === null || l.pid === pid) && !existsSync(l.savedResult ?? ""));
   if (live.length) {
     save(rec);
-    const ids = live.map((l) => l.id).join(", ");
-    return { ok: false, action: "stop", record: rec._path, reason: `${ids} ${live.length === 1 ? "was" : "were"} launched by this session and ${live.length === 1 ? "has" : "have"} no saved result, so ${live.length === 1 ? "it" : "they"} may still be running: wait for the completion notice, then run complete` };
+    const ids = live.map((l) => l.id);
+    const one = ids.length === 1;
+    return { ok: true, action: "wait", record: rec._path, live: ids, ...premiseOf(currentStep(rec)), reason: `${ids.join(", ")} ${one ? "was" : "were"} launched by this process and ${one ? "has" : "have"} no saved result, so ${one ? "it" : "they"} may still be running: wait for the completion notice, then run complete. A launch whose Workflow call failed, with no run id, is closed by complete with notStarted` };
   }
+  const ce = addResolution(rec, resolveCe(registryOf(input, cwd)), session);
   // The session that launched them is gone, so every launch it never swept is swept now, and a
   // stray a sweep could not move is tried again.
   const swept = [];
   for (const l of rec.launches) {
     if (l.sweep.done && !l.sweep.stuck?.length) continue;
     const s = savedResultState(l.savedResult);
-    if (l.status === null) l.status = s.finished ? "completed" : `never completed: ${s.why}`;
+    if (l.status === null) {
+      l.status = s.finished ? "completed" : `never completed: ${s.why}`;
+      // As complete does: the sweep counts the transcripts it read against the helpers that ran.
+      l.agentCount = s.agentCount ?? null;
+    }
     sweep(rec, l);
     swept.push(l.id);
   }
@@ -1023,7 +1144,7 @@ export function restart(input = {}, { projectsDir = defaultProjectsDir(), cwd = 
       save(rec);
       return { ...base, ok: false, action: "stop", reason: `${drift}, so the run stops` };
     }
-    return done({ action: "land", reason: "the run reached its landing: land-check, then land", open: rec.end.open });
+    return done({ action: "land", reason: "the run reached its landing: land-check, receipt-fields, then land", open: rec.end.open });
   }
   const step = currentStep(rec);
   const at = stagedAt(rec, step);
@@ -1032,16 +1153,26 @@ export function restart(input = {}, { projectsDir = defaultProjectsDir(), cwd = 
     return { ...base, ok: false, action: "stop", reason: `the staged plan matches neither recorded hash, so the run stops: ${hashes(rec, step)}`, step: step.n, stage: step.stage };
   }
   // The outcome may live in the saved result the fold read (check round 2's P0/P1 count does).
-  if (at === "target") return done({ action: "advance", step: step.n, stage: step.stage, reason: `step ${step.n}'s fold landed (the staged plan is at its target): record ${step.stage}'s outcome`, savedResult: (finishedLaunch(rec, step) ?? (step.stage === "write" ? lastFinishedBefore(rec, step) : null))?.savedResult ?? null });
-  // From here the staged plan is at the step's before hash, and any fold re-runs from it. A
-  // send-back's write re-runs behind a start gate of this session.
-  if (writeBehindStartGate(step)) return done({ action: "start", step: step.n, stage: step.stage, reason: "a send-back's write rewrites the plan: run the gate in this session, then fold (KTD10)", savedResult: lastFinishedBefore(rec, step)?.savedResult ?? null });
-  if (step.target !== null) return done({ action: "fold", step: step.n, stage: step.stage, reason: `step ${step.n}'s target was recorded but its rename never landed: the fold re-runs from the before hash and rewrites its ledger entry`, savedResult: (finishedLaunch(rec, step) ?? lastFinishedBefore(rec, step))?.savedResult ?? null });
-  if (step.stage === "brief") return done({ action: "start", step: step.n, stage: step.stage, reason: "the brief has not been recorded: run /brief, then advance with its path" });
+  if (at === "target") return done({ action: "advance", step: step.n, stage: step.stage, reason: `step ${step.n}'s fold landed (the staged plan is at its target): record ${step.stage}'s outcome`, savedResult: foldSource(rec, step)?.savedResult ?? null });
+  // From here the staged plan is at the step's before hash, and any fold re-runs from it.
+  const from = step.stage === "brief" ? null : foldSource(rec, step);
+  const unlanded = step.target !== null ? `step ${step.n}'s target was recorded but its rename never landed: ` : "";
   if (step.stage === "write") {
-    const from = lastFinishedBefore(rec, step);
-    return done({ action: "fold", step: step.n, stage: step.stage, reason: "write the staged plan from the saved result; research never relaunches", savedResult: from?.savedResult ?? null });
+    // A write folds the Workflow before it, which never relaunches: with its result gone the run stops.
+    if (!from) {
+      save(rec);
+      return { ...base, ok: false, action: "stop", reason: `${unlanded}step ${step.n}'s write folds the saved result of the Workflow before it, and none is readable, so the run stops`, step: step.n, stage: step.stage };
+    }
+    // A send-back's write re-runs behind a start gate of this session.
+    if (writeBehindStartGate(step)) return done({ action: "start", step: step.n, stage: step.stage, reason: "a send-back's write rewrites the plan: run the gate in this session, then fold (KTD10)", savedResult: from.savedResult });
+    return done({ action: "fold", step: step.n, stage: step.stage, reason: `${unlanded}write the staged plan from the saved result; research never relaunches`, savedResult: from.savedResult });
   }
+  if (step.target !== null) {
+    if (from) return done({ action: "fold", step: step.n, stage: step.stage, reason: `${unlanded}the fold re-runs from the before hash and rewrites its ledger entry`, savedResult: from.savedResult });
+    // The saved result the recorded fold read is gone, so the fold cannot re-run: the stage does.
+    Object.assign(step, { target: null, ledger: null, foldedAt: null });
+  }
+  if (step.stage === "brief") return done({ action: "start", step: step.n, stage: step.stage, reason: "the brief has not been recorded: run the gate in this session, then /brief, then advance with its path" });
   if (step.launches.length === 0) return done({ action: "start", step: step.n, stage: step.stage, reason: `${step.stage} has not launched: run the gate, then launch it` });
   const fin = finishedLaunch(rec, step);
   if (fin) {
@@ -1082,16 +1213,44 @@ function moveOf(rec) {
 const stagedBlob = (rec) => git(rec.plan.gitRoot, ["hash-object", "--stdin", `--path=${rec.plan.rel}`], { input: readFileSync(stagedPath(rec)) });
 const recordLine = (rec) => `run record: ${tildeOf(rec._path)}`;
 
-// The newest commit since the run's base whose message carries this run's record line as a whole
-// line. Found by the line, never by a log of the plan path: a landing that changed nothing is an
-// empty commit, which a path-limited log never shows.
-function landedCommit(rec) {
+// An update run that changed nothing: its staged plan is the blob the run started from.
+const unchangedRun = (rec, blob) => rec.update === true && blob === rec.start.headBlob;
+const touchedBy = (rec, sha) => git(rec.plan.gitRoot, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--root", "-z", sha]).split("\0").filter(Boolean);
+
+// The commits since the run's base whose message carries this run's record line as a whole line,
+// newest first. Found by the line, never by a log of the plan path: a landing that changed nothing
+// is an empty commit, which a path-limited log never shows. A failed log fails loud: a missing base
+// never reads as "not landed", which would commit the receipt twice.
+function lineCommits(rec) {
   const line = recordLine(rec);
-  const out = git(rec.plan.gitRoot, ["log", "-1", "--format=%H%x00%B", "--fixed-strings", `--grep=${line}`, `${rec.base.commit}..HEAD`], { quiet: [128] });
-  if (!out) return null;
-  const [sha, body = ""] = out.split("\0");
-  return body.split(/\r?\n/).includes(line) ? sha : null;
+  const shas = git(rec.plan.gitRoot, ["log", "--format=%H", "--fixed-strings", `--grep=${line}`, `${rec.base.commit}..HEAD`]).split("\n").filter(Boolean);
+  return shas.filter((sha) => git(rec.plan.gitRoot, ["log", "-1", "--format=%B", sha]).split(/\r?\n/).includes(line));
 }
+
+// Whether a commit is this run's landing: the plan alone at the staged blob, or, for an update run
+// that changed nothing, no path at all. A commit that only quotes the record line, or another
+// session's commit of the plan, is not.
+function isLanding(rec, sha, blob) {
+  const touched = touchedBy(rec, sha);
+  if (unchangedRun(rec, blob)) return touched.length === 0;
+  return touched.length === 1 && touched[0] === rec.plan.rel && git(rec.plan.gitRoot, ["rev-parse", "--verify", "--quiet", `${sha}:${rec.plan.rel}`], { quiet: [1, 128] }) === blob;
+}
+
+// This run's landing commit since its base, or null: whatever the plan path holds now (a later
+// commit may have edited it), and past any later commit that quotes the record line.
+const landedCommit = (rec, blob) => lineCommits(rec).find((sha) => isLanding(rec, sha, blob)) ?? null;
+
+// The landing's sibling temp, removed wherever a landing stops short of its rename: a leftover from a
+// landing that died is never left beside the plan, where another session's add could take it.
+function dropTemp(rec) {
+  const tmp = rec.landing?.tmp;
+  if (tmp && existsSync(tmp)) unlinkSync(tmp);
+}
+
+// What a copy left at the named path before a crash: the staged blob in the working tree, the
+// landing recorded as copying it, and HEAD's plan still as the run found it (a commit of the copy by
+// another session is a change the landing check names, never a copy to commit again).
+const copiedBefore = (rec, facts, blob) => rec.landing?.copying === blob && facts.worktreeBlob === blob && (facts.headBlob ?? null) === (rec.start.headBlob ?? null);
 
 // KTD3 again before landing, and the project-move line (KTD23). A crash after landing's copy but
 // before its commit leaves the named path holding the staged plan, which this reads as copied, not
@@ -1103,8 +1262,8 @@ export function landCheck(rec) {
   if (drift) return { ok: false, reason: drift, moved: null, copied: false, committed: null };
   const facts = pathFacts(rec.plan.path);
   const blob = stagedBlob(rec);
-  const committed = facts.headBlob === blob && landedCommit(rec);
-  const copied = !committed && rec.landing?.copying === blob && facts.worktreeBlob === blob;
+  const committed = landedCommit(rec, blob);
+  const copied = !committed && copiedBefore(rec, facts, blob);
   const chk = committed || copied ? { ok: true, reason: committed ? `already committed in ${committed}` : "the staged plan was copied before a crash; the commit is what is left" } : landingCheck(rec.start, facts);
   if (rec.moved === undefined || !committed) rec.moved = moveOf(rec);
   if (isOpen(rec)) save(rec);
@@ -1116,6 +1275,7 @@ export function landCheck(rec) {
 export function land(rec, input, { cwd = process.cwd() } = {}) {
   writable(rec, sessionOf(input));
   if (!rec.end) fail("the run has not reached its landing");
+  dropTemp(rec);
   const drift = landedDrift(rec);
   if (drift) return { ok: false, reason: drift };
   if (rec.moved === undefined) fail("run land-check first: the receipt's project-move line comes from it");
@@ -1132,9 +1292,13 @@ export function land(rec, input, { cwd = process.cwd() } = {}) {
   const parkLine = lines.some((l) => /^parked: \S/.test(l));
   if (rec.parks.length && !parkLine) fail(`the run parked ${rec.parks.length} question${rec.parks.length === 1 ? "" : "s"}, and the message has no "parked:" line`);
   if (!rec.parks.length && parkLine) fail('the message has a "parked:" line, and no park was noted in this run');
+  // And its project-move line is the one the last land-check read.
+  const wantMove = moveLine(rec.moved === null ? null : { changed: rec.moved.changed, cited: rec.moved.cited });
+  const saidMove = lines.filter((l) => l.startsWith("project moved during the run:"));
+  if (saidMove.length !== (wantMove === null ? 0 : 1) || (wantMove !== null && saidMove[0] !== wantMove)) fail(`the message's project-move line is not land-check's: it says ${saidMove.length ? JSON.stringify(saidMove.join(" | ")) : "nothing"}, and land-check read ${wantMove === null ? "no move" : JSON.stringify(wantMove)}; rebuild the receipt`);
   const facts = pathFacts(rec.plan.path);
   const blob = stagedBlob(rec);
-  const already = facts.headBlob === blob && landedCommit(rec);
+  const already = landedCommit(rec, blob);
   if (already) {
     close(rec, "landed", "landed", { commit: already });
     save(rec);
@@ -1143,7 +1307,7 @@ export function land(rec, input, { cwd = process.cwd() } = {}) {
   // The receipt's move line was read at land-check; a project that moved since makes it stale.
   const moved = moveOf(rec);
   if (JSON.stringify(moved) !== JSON.stringify(rec.moved)) return { ok: false, reason: "the project moved since land-check: run land-check and rebuild the receipt" };
-  const copied = rec.landing?.copying === blob && facts.worktreeBlob === blob;
+  const copied = copiedBefore(rec, facts, blob);
   if (!copied) {
     const chk = landingCheck(rec.start, facts);
     if (!chk.ok) {
@@ -1152,52 +1316,74 @@ export function land(rec, input, { cwd = process.cwd() } = {}) {
       return { ok: false, reason: chk.reason, start: chk.start, state: chk.state };
     }
     // R8: the named path never holds half a plan. The copy goes to a sibling temp, recorded before
-    // it is written, then one rename. The temp's name is fixed, so a temp a crash left behind is
-    // overwritten by this copy and renamed away, never left beside the plan.
+    // it is written, then one rename; a copy or rename that fails takes the temp away with it.
     const tmp = join(dirname(rec.plan.path), `.${basename(rec.plan.path)}.landing.tmp`);
     rec.landing = { copying: blob, tmp, at: stamp() };
     save(rec);
     mkdirSync(dirname(rec.plan.path), { recursive: true });
-    copyFileSync(stagedPath(rec), tmp);
-    renameRetry(tmp, rec.plan.path);
+    try {
+      copyFileSync(stagedPath(rec), tmp);
+      renameRetry(tmp, rec.plan.path);
+    } catch (e) {
+      dropTemp(rec);
+      throw e;
+    }
   }
   // The message is kept in the run folder, and given to git on stdin ("-F -").
   writeAtomic(join(rec.dir, "landing-message.txt"), message);
-  // An update run that changed nothing stages HEAD's own blob: its commit carries the receipt and
-  // touches no path, so it is made empty on purpose, and only then may it touch nothing.
-  const unchanged = blob === facts.headBlob;
+  // An update run that changed nothing stages the blob it started from: its commit carries the
+  // receipt and touches no path, so it is made empty on purpose, and only then may it touch nothing.
+  const unchanged = unchangedRun(rec, blob);
   // Nothing is staged in the shared index: a commit naming a path takes its worktree bytes, so a
   // tracked plan needs no add, and an untracked one is only marked as intended (add -N). A failed
-  // commit then leaves no staged plan for another session's commit to sweep up.
+  // commit takes that mark back, so it leaves nothing for another session's add -u or commit -a.
   const tracked = git(rec.plan.gitRoot, ["ls-files", "--error-unmatch", "--", literal(rec.plan.rel)], { quiet: [1] }) !== null;
   if (!tracked) git(rec.plan.gitRoot, ["add", "-N", "--", literal(rec.plan.rel)]);
-  git(rec.plan.gitRoot, ["commit", "-q", ...(unchanged ? ["--allow-empty"] : []), "-F", "-", "--", literal(rec.plan.rel)], { input: message });
+  try {
+    git(rec.plan.gitRoot, ["commit", "-q", ...(unchanged ? ["--allow-empty"] : []), "-F", "-", "--", literal(rec.plan.rel)], { input: message });
+  } catch (e) {
+    if (!tracked) {
+      try {
+        if (!landedCommit(rec, blob)) git(rec.plan.gitRoot, ["rm", "--cached", "-q", "--ignore-unmatch", "--", literal(rec.plan.rel)]);
+      } catch (e2) {
+        e.message += `; the plan's intent-to-add entry may remain in the index: ${e2.message}`;
+      }
+    }
+    throw e;
+  }
   // Found by its record line, never as HEAD: another session can commit in between.
-  const sha = landedCommit(rec) ?? fail(`the commit carrying "${recordLine(rec)}" is not in the history since ${rec.base.commit}`);
-  const touched = git(rec.plan.gitRoot, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--root", "-z", sha]).split("\0").filter(Boolean);
-  const alone = unchanged ? touched.length === 0 : touched.length === 1 && touched[0] === rec.plan.rel;
-  if (!alone) fail(`commit ${sha} touched ${touched.join(", ") || "no path"}, not ${unchanged ? "nothing (the plan was unchanged)" : "the plan alone"}`);
+  const sha = landedCommit(rec, blob);
+  if (!sha) {
+    const newest = lineCommits(rec)[0];
+    fail(newest ? `commit ${newest} carries this run's record line but touched ${touchedBy(rec, newest).join(", ") || "no path"}, not ${unchanged ? "nothing (the plan was unchanged)" : "the plan alone at the staged blob"}` : `the commit carrying "${recordLine(rec)}" is not in the history since ${rec.base.commit}`);
+  }
   close(rec, "landed", "landed", { commit: sha });
   save(rec);
   return { ok: true, commit: sha };
 }
 
 // The receipt fields the record holds, in flow.mjs's receipt shape: update, every CE commit with the
-// stages it served, the seats in `ran` (keyed by stage) that ran without their CE file, the stray
+// stages it served, the seats that ran without their CE file (each launch's seats in `ran`, keyed by
+// its launch id, and the main loop's own reads, each against the resolution it ran on), the stray
 // files deleted, the project move and the record's path. The main loop adds the rest (R9).
 export function receiptFields(rec, input) {
   const ran = input.ran;
-  if (!ran || typeof ran !== "object" || Array.isArray(ran)) fail("ran maps each stage to the seat keys that ran in it");
+  if (!ran || typeof ran !== "object" || Array.isArray(ran)) fail("ran maps each completed launch's id to the seat keys that ran in it");
   const park = input.park;
   if (!("park" in input) || (park !== null && (typeof park !== "string" || !park.trim()))) fail(`park is the parked question, or null when none was parked; got ${JSON.stringify(park)}`);
   if (park === null && rec.parks.length) fail(`the run parked ${rec.parks.length} question${rec.parks.length === 1 ? "" : "s"}, so the receipt names one (park)`);
   if (park !== null && !rec.parks.length) fail("no park was noted in this run, so the receipt names none (park null)");
-  for (const [stage, seats] of Object.entries(ran)) {
-    if (!STAGES.includes(stage)) fail(`ran names no stage ${JSON.stringify(stage)}`);
-    if (!Array.isArray(seats)) fail(`ran.${stage} is a list of seat keys`);
+  const completed = rec.launches.filter((l) => l.status === "completed").map((l) => l.id);
+  for (const [id, seats] of Object.entries(ran)) {
+    if (!completed.includes(id)) fail(`ran names ${JSON.stringify(id)}, which is no completed launch of this run (${completed.join(", ") || "none completed"})`);
+    if (!Array.isArray(seats)) fail(`ran.${id} is a list of seat keys`);
     const unknown = seats.filter((s) => !KNOWN_SEATS.has(s));
-    if (unknown.length) fail(`ran.${stage} names no known seat ${unknown.map((s) => JSON.stringify(s)).join(", ")}: a seat is a CE file's seat or one that reads none (${SEATS_WITHOUT_CE.join(", ")})`);
+    if (unknown.length) fail(`ran.${id} names no known seat ${unknown.map((s) => JSON.stringify(s)).join(", ")}: a seat is a CE file's seat or one that reads none (${SEATS_WITHOUT_CE.join(", ")})`);
   }
+  // A launch left out of ran would read as "every seat ran with its file": each one is named, an
+  // empty list when no seat that reads a CE file ran in it.
+  const omitted = completed.filter((id) => !(id in ran));
+  if (omitted.length) fail(`ran leaves out ${omitted.join(", ")}, which completed: name each completed launch's seats, an empty list when none ran`);
   if (rec.moved === undefined) fail("run land-check first: the project-move line comes from it");
   // "stray files deleted" is read from the sweeps, so every launch must have had one.
   const unswept = rec.launches.filter((l) => !l.sweep.done).map((l) => l.id);
@@ -1206,13 +1392,6 @@ export function receiptFields(rec, input) {
   const stuck = rec.launches.flatMap((l) => l.sweep.stuck ?? []);
   if (stuck.length) fail(`stray files a helper wrote could not be moved: ${stuck.map((s) => `${s.path} (${s.error})`).join(", ")}; free them and restart, which moves them`);
   const served = servedStages(rec);
-  // A stage left out of ran would read as "every seat ran with its file", and seats named for a
-  // stage no work ran in would vanish from the receipt: both refuse.
-  const ranStages = new Set([...served.values()].flat());
-  const omitted = STAGES.filter((s) => ranStages.has(s) && !(s in ran));
-  if (omitted.length) fail(`ran leaves out ${omitted.join(", ")}, which the run served: name each served stage's seats, an empty list when none ran`);
-  const idle = Object.keys(ran).filter((s) => !ranStages.has(s) && ran[s].length);
-  if (idle.length) fail(`ran names seats for ${idle.join(", ")}, which no work in this run served`);
   const byCommit = new Map();
   for (const c of rec.ce) {
     const key = c.commit ?? "absent";
@@ -1225,8 +1404,8 @@ export function receiptFields(rec, input) {
   const resolutions = new Map(rec.ce.map((c) => [c.id, JSON.parse(readFileSync(join(rec.dir, c.file), "utf8"))]));
   const inline = [];
   const seen = new Set();
-  for (const row of workRows(rec)) {
-    for (const s of inlineSeats(resolutions.get(row.ce), ran[row.stage] ?? [])) {
+  for (const row of workRows(rec, ran)) {
+    for (const s of inlineSeats(resolutions.get(row.ce), row.seats)) {
       const k = `${s.seat}\0${s.file}\0${s.commit}`;
       if (!seen.has(k)) {
         seen.add(k);
@@ -1249,6 +1428,8 @@ export function show(rec) {
     step: step ? { n: step.n, stage: step.stage, before: step.before, target: step.target, launches: step.launches, outcome: step.outcome, ...premiseOf(step) } : null,
     // Rounds 2 and 3 re-check what earlier folds applied, so every step's ledger is handed on.
     steps: rec.steps.map((s) => ({ n: s.n, stage: s.stage, outcome: s.outcome, ledger: s.ledger })),
+    // receipt-fields' `ran` is keyed by these launch ids, one per completed launch.
+    launches: rec.launches.map((l) => ({ id: l.id, step: l.step, stage: l.stage, ce: l.ce, status: l.status, runId: l.runId })),
     contractBrief: rec.contractBrief, risk: rec.risk, lenses: rec.lenses, external: rec.external, parks: rec.parks, council: rec.council,
     end: rec.end, closed: rec.closed, sendBacks: rec.sendBacks, staged: stagedPath(rec), stagedHash: stagedHash(rec),
     ce: rec.ce.map((c) => ({ id: c.id, commit: c.commit, stages: served.get(c.id) })), sessions: rec.sessions.map((s) => s.id), windowStop: rec.windowStop, handBack: rec.handBack, warnings: rec.warnings,

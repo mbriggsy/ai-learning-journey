@@ -106,9 +106,12 @@ function fold(rec, text, ids, s = S1) {
   return foldLand(rec, { ids, session: s });
 }
 
+// The deepen's risk profile (KTD5), noted before its outcome.
+const RISK = { level: "low", signals: [] };
+
 // A run taken through research and the write to the deepen step, with the deepen launched and
-// finished but not folded.
-function atDeepen(w, extra = {}) {
+// finished but not folded, and its risk noted unless `risk` is null.
+function atDeepen(w, extra = {}, { risk = RISK } = {}) {
   const r = begin(w, extra);
   assert.equal(r.ok, true, r.reason);
   const rec = load(r.record);
@@ -117,6 +120,7 @@ function atDeepen(w, extra = {}) {
   fold(rec, "# New plan\n\n## Goal\n\nwritten\n", []);
   assert.equal(advance(rec, { outcome: "done", session: S1 }).step, "deepen");
   runStage(w, rec, "wf_deepen-002");
+  if (risk !== null) note(rec, { key: "risk", value: risk, session: S1 });
   return rec;
 }
 
@@ -239,8 +243,16 @@ test("the brief stage ends with the brief's file, recorded by sha256, and no CE 
   const w = world(t);
   const r = start({ plan: w.plan, update: false, session: S1, registry: w.registry }, w.opts);
   const rec = load(r.record);
-  assert.equal(restart({ record: r.record, session: S1, registry: w.registry }, w.opts).action, "start");
-  assert.throws(() => advance(rec, { outcome: "done", session: S1 }), /ends with the path of the brief/);
+  const back = restart({ record: r.record, session: S1, registry: w.registry }, w.opts);
+  assert.equal(back.action, "start");
+  assert.match(back.reason, /gate .*\/brief/);
+  // /brief runs in the main loop, so it starts behind a passed start gate of this session (KTD10).
+  assert.throws(() => advance(rec, { outcome: "done", brief: w.brief, session: S1 }), /start gate/);
+  assert.equal(gate(load(r.record), { line: WRAP, session: S1 }).step, "window-stop");
+  assert.throws(() => advance(load(r.record), { outcome: "done", brief: w.brief, session: S1 }), /start gate/);
+  assert.equal(gate(load(r.record), { line: ROOM, session: S1 }).go, true);
+  assert.throws(() => advance(load(r.record), { outcome: "done", brief: w.brief, session: S2 }), /start gate/);
+  assert.throws(() => advance(load(r.record), { outcome: "done", session: S1 }), /ends with the path of the brief/);
   assert.equal(advance(load(r.record), { outcome: "done", brief: w.brief, session: S1 }).step, "research");
   const saved = load(r.record);
   assert.deepEqual(saved.brief, { file: "brief.md", sha256: sha256(readFileSync(w.brief)) });
@@ -325,6 +337,31 @@ test("restart: a leftover working file is deleted and the fold re-runs from the 
   assert.equal(r.action, "fold");
   const again = load(rec._path);
   assert.equal(fold(again, "# New plan\n\n## Goal\n\nfolded again\n", ["D1"], S2).ledger[0], "D1");
+});
+
+test("restart: a fold whose rename never landed and whose saved result is gone re-runs its stage, never folds another stage's result", (t) => {
+  const w = world(t);
+  const rec = atDeepen(w);
+  writeFileSync(foldStart(rec, { session: S1 }).working, "# New plan\n\nfirst try\n");
+  const unlock = lockRenames(t, "plan.working.md", "EIO");
+  assert.throws(() => foldLand(rec, { ids: ["D1"], session: S1 }), /EIO/);
+  unlock();
+  unlinkSync(join(w.projects, SLUG, S1, "workflows", "wf_deepen-002.json"));
+  const r = restart({ record: rec._path, session: S2, registry: w.registry }, w.opts);
+  assert.equal(r.action, "rerun", r.reason);
+  const step = load(rec._path).steps.at(-1);
+  assert.deepEqual([step.target, step.ledger], [null, null]);
+  // A write folds research's saved result: with it gone, neither restart nor fold-start writes
+  // the plan from nothing.
+  const w2 = world(t);
+  const wr = load(begin(w2).record);
+  runStage(w2, wr, "wf_research-001");
+  advance(wr, { outcome: "done", session: S1 });
+  unlinkSync(join(w2.projects, SLUG, S1, "workflows", "wf_research-001.json"));
+  assert.throws(() => foldStart(load(wr._path), { session: S1 }), /no finished Workflow to fold from/);
+  const stop = restart({ record: wr._path, session: S2, registry: w2.registry }, w2.opts);
+  assert.equal(stop.action, "stop", stop.reason);
+  assert.match(stop.reason, /saved result/);
 });
 
 test("restart: a crash after the target is recorded but before the rename re-runs the fold and rewrites the ledger entry", (t) => {
@@ -412,8 +449,8 @@ test("restart after the registry moves to a new CE uses its install path, and th
 
 test("the receipt credits each CE commit only with the work that ran on it, and names inline seats by each launch's own resolution", (t) => {
   const w = world(t);
-  // The old CE lacks the write's plan-sections file; the new one has it.
-  const oldInstall = ceInstall(w.root, "3.34.0", { missing: ["plan-sections"] });
+  // The old CE lacks the write's plan-sections file and research's mapping; the new one has both.
+  const oldInstall = ceInstall(w.root, "3.34.0", { missing: ["plan-sections", "research"] });
   const registry = registryAt(w.root, [ceEntry(oldInstall, SHA_OLD, "3.34.0")]);
   const rec = load(start({ plan: w.plan, update: false, brief: w.brief, session: S1, registry }, w.opts).record);
   runStage(w, rec, "wf_research-001");
@@ -425,13 +462,51 @@ test("the receipt credits each CE commit only with the work that ran on it, and 
   advance(back, { outcome: "done", session: S2 });
   runStage(w, back, "wf_deepen-002", { s: S2 });
   fold(back, "# New plan\n\n## Goal\n\ndeepened\n", ["D1"], S2);
+  note(back, { key: "risk", value: RISK, session: S2 });
   advance(back, { outcome: "deepened", session: S2 });
   runStage(w, back, "wf_check-003", { s: S2 });
   assert.equal(advance(back, { outcome: "done", changes: 0, session: S2 }).step, "land");
   landCheck(load(rec._path));
-  const f = receiptFields(load(rec._path), { park: null, ran: { research: ["research"], write: ["write"], deepen: ["scorer"], "check-1": ["coherence"] } });
+  const f = receiptFields(load(rec._path), { park: null, ran: ranBy(load(rec._path), { deepen: ["scorer"], "check-1": ["coherence"] }) });
   assert.deepEqual(f.ce, [{ commit: SHA_OLD, stages: ["research"] }, { commit: SHA_NEW, stages: ["write", "deepen", "check-1"] }]);
-  assert.deepEqual(f.inline, []);
+  // Research's mapping was read on the old CE, which lacked it; the write folded on the new one.
+  assert.deepEqual(f.inline, [{ seat: "research", file: "skills/ce-plan/references/research.md", commit: SHA_OLD }]);
+});
+
+// A park's relaunch on a CE that moved, and lens picks read before the move: each piece of work is
+// read against the resolution it ran on, never a stage's whole seat list against every resolution.
+test("inline seats are read per launch and per main-loop read, each against the resolution it ran on", (t) => {
+  const w = world(t);
+  const oldInstall = ceInstall(w.root, "3.34.0", { missing: ["deepening-workflow", "final-review", "persona-selection"] });
+  const newInstall = ceInstall(w.root, "3.36.0", { missing: ["architecture-strategist"] });
+  const registry = registryAt(w.root, [ceEntry(oldInstall, SHA_OLD, "3.34.0")]);
+  const rec = load(start({ plan: w.plan, update: false, brief: w.brief, session: S1, registry }, w.opts).record);
+  runStage(w, rec, "wf_research-001");
+  advance(rec, { outcome: "done", session: S1 });
+  fold(rec, "# New plan\n\n## Goal\n\nwritten\n", []);
+  advance(rec, { outcome: "done", session: S1 });
+  runStage(w, rec, "wf_deepen-002");
+  note(rec, { key: "risk", value: RISK, session: S1 });
+  note(rec, { key: "parks", value: PARK, session: S1 });
+  note(rec, { key: "lenses", value: [{ lens: "security", reason: "auth" }], session: S1 });
+  advance(rec, { outcome: "park", session: S1 });
+  registryAt(w.root, [ceEntry(newInstall, SHA_NEW, "3.36.0")], { at: registry });
+  assert.equal(restart({ record: rec._path, session: S2, registry }, w.opts).action, "start");
+  runStage(w, load(rec._path), "wf_deepen-003", { s: S2 });
+  fold(load(rec._path), "# New plan\n\n## Goal\n\ndeepened\n", ["D1"], S2);
+  advance(load(rec._path), { outcome: "deepened", session: S2 });
+  runStage(w, load(rec._path), "wf_check-004", { s: S2 });
+  advance(load(rec._path), { outcome: "done", changes: 0, session: S2 });
+  landCheck(load(rec._path));
+  assert.deepEqual(show(load(rec._path)).launches.map((l) => [l.id, l.stage, l.ce, l.status]), [["L1", "research", "C1", "completed"], ["L2", "deepen", "C1", "completed"], ["L3", "deepen", "C2", "completed"], ["L4", "check-1", "C2", "completed"]]);
+  const f = receiptFields(load(rec._path), { park: PARK, ran: { L1: [], L2: ["premise", "scorer"], L3: ["architecture-strategist"], L4: ["coherence"] } });
+  assert.deepEqual(f.ce, [{ commit: SHA_OLD, stages: ["research", "write", "deepen", "check-1"] }, { commit: SHA_NEW, stages: ["deepen", "check-1"] }]);
+  assert.deepEqual(f.inline, [
+    { seat: "scorer", file: "skills/ce-plan/references/deepening-workflow.md", commit: SHA_OLD },
+    { seat: "scorer", file: "skills/ce-plan/references/final-review.md", commit: SHA_OLD },
+    { seat: "architecture-strategist", file: "skills/ce-plan/references/agents/architecture-strategist.md", commit: SHA_NEW },
+    { seat: "lens-picks", file: "skills/ce-doc-review/references/persona-selection.md", commit: SHA_OLD },
+  ]);
 });
 
 // ------------------------------------------------------------------------- stage boundaries
@@ -450,11 +525,77 @@ test("a boundary reads its outcome only from a finished Workflow, and round 1's 
   assert.throws(() => fold(rec, "# Plan\n\nv1\n", ["D1"]), /fold changed nothing/);
   assert.throws(() => foldLand(rec, { ids: [], session: S1 }), /applies at least one id/);
   fold(rec, "# Plan\n\nv2\n", ["D1"]);
+  note(rec, { key: "risk", value: RISK, session: S1 });
   advance(rec, { outcome: "deepened", session: S1 });
   runStage(w, rec, "wf_check-003");
   fold(rec, "# Plan\n\nv3\n", ["C1", "C2"]);
   assert.throws(() => advance(rec, { outcome: "done", changes: 1, session: S1 }), /must equal the 2 ids/);
   assert.equal(advance(rec, { outcome: "done", changes: 2, session: S1 }).step, "check-2");
+});
+
+test("a deepen's outcome waits for its risk profile; a send-back's second deepen starts with none, and a park's relaunch carries the parked one", (t) => {
+  const w = world(t);
+  const rec = atDeepen(w, {}, { risk: null });
+  for (const outcome of ["passed", "park", "deepened"]) assert.throws(() => advance(load(rec._path), { outcome, session: S1 }), /note risk/, outcome);
+  note(load(rec._path), { key: "risk", value: { level: "high" }, session: S1 });
+  note(load(rec._path), { key: "parks", value: PARK, session: S1 });
+  assert.equal(advance(load(rec._path), { outcome: "park", session: S1 }).step, "deepen");
+  const relaunch = load(rec._path);
+  assert.deepEqual([relaunch.steps.at(-1).risk, relaunch.risk], [{ level: "high" }, { level: "high" }]);
+  // A send-back rewrites the plan: its second deepen scores the new one, with no risk until noted.
+  const sent = atDeepen(world(t), {}, { risk: { level: "high" } });
+  assert.equal(advance(sent, { outcome: "premise-goal", session: S1 }).step, "write");
+  assert.equal(gate(load(sent._path), { line: ROOM, session: S1 }).go, true);
+  fold(load(sent._path), "# New plan\n\nrewritten\n", []);
+  assert.equal(advance(load(sent._path), { outcome: "done", session: S1 }).step, "deepen");
+  assert.equal(load(sent._path).risk, null);
+  runStage(w, load(sent._path), "wf_deepen-004");
+  assert.throws(() => advance(load(sent._path), { outcome: "passed", session: S1 }), /note risk/);
+  note(load(sent._path), { key: "risk", value: { level: "low" }, session: S1 });
+  assert.equal(advance(load(sent._path), { outcome: "passed", session: S1 }).step, "check-1");
+});
+
+test("an outcome must agree with the step's fold: no landed fold under passed, park or premise-goal, and round 2's P0/P1 count needs one", (t) => {
+  const w = world(t);
+  const rec = atDeepen(w);
+  fold(rec, "# New plan\n\n## Goal\n\ndeepened\n", ["D1"]);
+  for (const outcome of ["passed", "park", "premise-goal"]) assert.throws(() => advance(load(rec._path), { outcome, session: S1 }), /fold landed/, outcome);
+  advance(load(rec._path), { outcome: "deepened", session: S1 });
+  runStage(w, load(rec._path), "wf_check-003");
+  fold(load(rec._path), "# New plan\n\n## Goal\n\nround 1\n", ["C1"]);
+  assert.equal(advance(load(rec._path), { outcome: "done", changes: 1, session: S1 }).step, "check-2");
+  runStage(w, load(rec._path), "wf_check-004");
+  assert.throws(() => advance(load(rec._path), { outcome: "done", p0p1: 1, session: S1 }), /fold/);
+});
+
+test("a landing after a folded round 3 lands checked with its open count, and a byte changed after round 3's fold refuses it", (t) => {
+  const w = world(t);
+  const rec = atDeepen(w);
+  fold(rec, "# New plan\n\n## Goal\n\ndeepened\n", ["D1"]);
+  advance(load(rec._path), { outcome: "deepened", session: S1 });
+  runStage(w, load(rec._path), "wf_check-003");
+  fold(load(rec._path), "# New plan\n\n## Goal\n\nround 1\n", ["C1"]);
+  advance(load(rec._path), { outcome: "done", changes: 1, session: S1 });
+  runStage(w, load(rec._path), "wf_check-004");
+  fold(load(rec._path), "# New plan\n\n## Goal\n\nround 2\n", ["C2"]);
+  assert.equal(advance(load(rec._path), { outcome: "done", p0p1: 1, session: S1 }).step, "check-3");
+  runStage(w, load(rec._path), "wf_check-005");
+  fold(load(rec._path), "# New plan\n\n## Goal\n\nround 3\n", ["C3"]);
+  assert.equal(advance(load(rec._path), { outcome: "done", open: 1, session: S1 }).step, "land");
+  assert.equal(restart({ record: rec._path, session: S2, registry: w.registry }, w.opts).action, "land");
+  const c = landCheck(load(rec._path));
+  assert.equal(c.ok, true, c.reason);
+  const msg = `docs(plans): new-plan\n\n${receipt({ ...FIELDS, open: 1, ...receiptFields(load(rec._path), { park: null, ran: ranBy(load(rec._path)) }) })}\n`;
+  assert.match(msg, /^planned, deepened and checked, 1 P0\/P1 open$/m);
+  // A byte changed after round 3's fold: the staged plan is no longer what the last step left.
+  const staged = join(rec.dir, "plan.md");
+  const kept = readFileSync(staged);
+  writeFileSync(staged, "# New plan\n\n## Goal\n\nround 3, then edited\n");
+  assert.equal(landCheck(load(rec._path)).ok, false);
+  writeFileSync(staged, kept);
+  const out = land(load(rec._path), { message: msg, session: S2 });
+  assert.equal(out.ok, true, out.reason);
+  assert.equal(readFileSync(w.plan, "utf8"), "# New plan\n\n## Goal\n\nround 3\n");
 });
 
 test("a second premise send-back closes the run as blocked and hands its reason back", (t) => {
@@ -488,8 +629,18 @@ test("a window gate passed in a dead session clears nothing for the next one, an
   assert.equal(advance(deep, { outcome: "premise-goal", session: S1 }).step, "write");
   assert.equal(load(deep._path).steps.at(-1).gate, "start");
   assert.throws(() => foldStart(load(deep._path), { session: S1 }), /start gate/);
+  // S1 passes the write's gate and dies: S2 has no gate of its own.
+  assert.equal(gate(load(deep._path), { line: ROOM, session: S1 }).go, true);
+  assert.throws(() => foldStart(load(deep._path), { session: S2 }), /start gate/);
   assert.equal(gate(load(deep._path), { line: WRAP, session: S1 }).step, "window-stop");
   assert.throws(() => foldStart(load(deep._path), { session: S1 }), /window stop/);
+  // A fold gate clears the window stop, but the write still needs a start gate as its last
+  // reading; so does a write whose last reading was a compaction.
+  assert.equal(gate(load(deep._path), { line: ROOM, action: "fold", session: S1 }).go, true);
+  assert.throws(() => foldStart(load(deep._path), { session: S1 }), /start gate/);
+  assert.equal(gate(load(deep._path), { line: ROOM, session: S1 }).go, true);
+  assert.equal(gate(load(deep._path), { line: "Context: compacted since the last measured turn", session: S1 }).step, "reread");
+  assert.throws(() => foldStart(load(deep._path), { session: S1 }), /start gate/);
   const r = restart({ record: deep._path, session: S2, registry: w.registry }, w.opts);
   assert.equal(r.action, "start");
   assert.equal(gate(load(deep._path), { line: ROOM, session: S2 }).go, true);
@@ -645,17 +796,102 @@ test("complete finds a saved result whose session folder appeared after the laun
   assert.equal(c.savedResult, join(w.projects, SLUG, S4, "workflows", "wf_research-001.json"));
 });
 
-test("restart from the session that made a launch with no saved result refuses to sweep or re-run it: it may still be running", (t) => {
+// The Claude Code process ids a launch and a restart run under (CLAUDE_PID, given as `pid` here).
+const P1 = 4101;
+const P2 = 4202;
+
+test("restart from the process that made a launch with no saved result waits for it: it may still be running", (t) => {
   const w = world(t);
   const rec = load(begin(w).record);
   gate(rec, { line: ROOM, session: S1 });
-  const l = launch(rec, { script: w.script, args: {}, relayed: null, session: S1 }, w.opts);
+  const l = launch(rec, { script: w.script, args: {}, relayed: null, session: S1, pid: P1 }, w.opts);
   launched(rec, { launch: l.launch, runId: "wf_research-001", session: S1 }, w.opts);
-  const r = restart({ record: rec._path, session: S1, registry: w.registry }, w.opts);
-  assert.equal(r.ok, false);
-  assert.equal(r.action, "stop");
-  assert.match(r.reason, /L1 .* may still be running/);
+  assert.equal(load(rec._path).launches[0].pid, P1);
+  // The registry moves meanwhile: a wait resolves nothing new, so the next launch's credit is the
+  // resolution its args were built from.
+  const oldInstall = ceInstall(w.root, "3.34.0");
+  registryAt(w.root, [ceEntry(oldInstall, SHA_OLD, "3.34.0")], { at: w.registry });
+  const r = restart({ record: rec._path, session: S1, registry: w.registry, pid: P1 }, w.opts);
+  assert.equal(r.ok, true);
+  assert.equal(r.action, "wait");
+  assert.deepEqual(r.live, ["L1"]);
+  assert.match(r.reason, /L1 .* may still be running.*notStarted/);
   assert.equal(load(rec._path).launches[0].sweep.done, false);
+  assert.equal(load(rec._path).ce.length, 1);
+});
+
+// `claude --resume` keeps the session id (only --fork-session makes a new one), but a background
+// Workflow dies with the process that ran it.
+test("a launch made by a process that is gone, under the same session id, is swept and re-run at restart", (t) => {
+  const w = world(t);
+  const rec = load(begin(w).record);
+  gate(rec, { line: ROOM, session: S1 });
+  const l = launch(rec, { script: w.script, args: { stage: "research" }, relayed: null, session: S1, pid: P1 }, w.opts);
+  launched(rec, { launch: l.launch, runId: "wf_research-001", session: S1 }, w.opts);
+  const r = restart({ record: rec._path, session: S1, registry: w.registry, pid: P2 }, w.opts);
+  assert.equal(r.action, "rerun", r.reason);
+  assert.deepEqual(r.swept, ["L1"]);
+  assert.equal(load(rec._path).launches[0].sweep.done, true);
+});
+
+test("a launch whose Workflow call failed is closed by complete with notStarted, and nothing then waits on it", (t) => {
+  const w = world(t);
+  const rec = load(begin(w).record);
+  gate(rec, { line: ROOM, session: S1 });
+  launch(rec, { script: w.script, args: {}, relayed: null, session: S1, pid: P1 }, w.opts);
+  // The Workflow tool refused the call, so no run id came back.
+  assert.throws(() => complete(load(rec._path), { launch: "L1", session: S1 }), /no run id/);
+  assert.throws(() => complete(load(rec._path), { launch: "L1", notStarted: "  ", session: S1 }), /notStarted/);
+  const c = complete(load(rec._path), { launch: "L1", notStarted: "the Workflow tool refused the call", session: S1 });
+  assert.equal(c.finished, false);
+  const l1 = load(rec._path).launches[0];
+  assert.equal(l1.status, "never started: the Workflow tool refused the call");
+  assert.equal(l1.sweep.done, true);
+  assert.equal(restart({ record: rec._path, session: S1, registry: w.registry, pid: P1 }, w.opts).action, "rerun");
+  // A launch that recorded its run id started: notStarted refuses it.
+  runStage(w, load(rec._path), "wf_research-002");
+  assert.throws(() => complete(load(rec._path), { launch: "L2", notStarted: "x", session: S1 }), /recorded run wf_research-002/);
+  assert.equal(advance(load(rec._path), { outcome: "done", session: S1 }).step, "write");
+});
+
+test("restart finds a saved result whose session folder appeared after the launch, and folds it rather than re-running", (t) => {
+  const w = world(t);
+  const S4 = "44444444-4444-4444-8444-444444444444";
+  const rec = atDeepen(w);
+  note(rec, { key: "parks", value: PARK, session: S1 });
+  advance(rec, { outcome: "park", session: S1 });
+  gate(load(rec._path), { line: ROOM, session: S4 });
+  const l = launch(load(rec._path), { script: w.script, args: {}, relayed: null, session: S4 }, w.opts);
+  assert.equal(launched(load(rec._path), { launch: l.launch, runId: "wf_deepen-003", session: S4 }, w.opts).savedResult, null);
+  finish(w, S4, "wf_deepen-003", { agentCount: 3, helpers: [[toolRow(w.repo, ["Bash", { command: "true" }])]] });
+  const r = restart({ record: rec._path, session: S2, registry: w.registry }, w.opts);
+  assert.equal(r.action, "fold", r.reason);
+  assert.equal(r.savedResult, join(w.projects, SLUG, S4, "workflows", "wf_deepen-003.json"));
+  // A restart's sweep counts the helpers it read against the saved result's count, as complete's does.
+  const swept = load(rec._path).launches.at(-1);
+  assert.equal(swept.agentCount, 3);
+  assert.match(swept.sweep.note, /read 1 helper transcripts of the 3 the saved result counts/);
+});
+
+test("an update run that changed the plan lands one commit of that tracked path, at the staged blob, with nothing added to the index", (t) => {
+  const w = world(t);
+  const old = join(w.repo, "projects", "demo", "docs", "plans", "old-plan.md");
+  const rec = load(start({ plan: old, update: true, session: S1, registry: w.registry }, w.opts).record);
+  runStage(w, rec, "wf_deepen-001");
+  fold(rec, "# Old plan\n\n## One\n\ndeepened\n", ["D1"]);
+  note(rec, { key: "risk", value: RISK, session: S1 });
+  advance(rec, { outcome: "deepened", session: S1 });
+  runStage(w, rec, "wf_check-002");
+  assert.equal(advance(rec, { outcome: "done", changes: 0, session: S1 }).step, "land");
+  assert.equal(landCheck(load(rec._path)).ok, true);
+  writeAt(join(w.repo, "projects", "other", "staged.txt"), "staged by another session\n");
+  git(w.repo, ["add", "projects/other/staged.txt"]);
+  const msg = `docs(plans): old-plan\n\n${receipt({ ...FIELDS, update: true, ...receiptFields(load(rec._path), { park: null, ran: ranBy(load(rec._path)) }) })}\n`;
+  const out = land(load(rec._path), { message: msg, session: S1 });
+  assert.equal(out.ok, true, out.reason);
+  assert.equal(git(w.repo, ["diff-tree", "--no-commit-id", "--name-only", "-r", out.commit]).trim(), "projects/demo/docs/plans/old-plan.md");
+  assert.equal(git(w.repo, ["show", `${out.commit}:projects/demo/docs/plans/old-plan.md`]), "# Old plan\n\n## One\n\ndeepened\n");
+  assert.equal(git(w.repo, ["diff", "--cached", "--name-only"]).trim(), "projects/other/staged.txt");
 });
 
 test("a path cited at a sentence's end is still a whole token, and no command calls process.exit after printing", () => {
@@ -724,15 +960,16 @@ test("of two finished launches of one step, restart and fold-start read the newe
   assert.equal(foldStart(load(rec._path), { session: S2 }).savedResult, newer);
 });
 
-test("writerOf matches Git Bash and case-folded spellings on Windows; the move line counts a file the plan cites by its name alone", (t) => {
-  if (win) {
-    const cwd = join("C:\\", "w", "repo");
-    const abs = join(cwd, "projects", "demo", "temp", "x.mjs");
-    const cmd = (text) => ({ writes: [], commands: [{ text, cwd, tool: "Bash", id: "t1", transcript: "a" }] });
-    assert.ok(writerOf(abs, cmd("echo > /c/w/repo/projects/demo/temp/x.mjs"), { platform: "win32" }));
-    assert.ok(writerOf(abs, cmd("echo > PROJECTS/Demo/TEMP/X.mjs"), { platform: "win32" }));
-    assert.ok(writerOf(abs, { writes: [{ path: "/c/w/repo/projects/demo/temp/x.mjs", cwd, tool: "Write", id: "t2", transcript: "a" }], commands: [] }, { platform: "win32" }));
-  }
+test("writerOf matches Git Bash and case-folded spellings on Windows", { skip: !win && "platform: Windows only (Git Bash and case-folded spellings)" }, () => {
+  const cwd = join("C:\\", "w", "repo");
+  const abs = join(cwd, "projects", "demo", "temp", "x.mjs");
+  const cmd = (text) => ({ writes: [], commands: [{ text, cwd, tool: "Bash", id: "t1", transcript: "a" }] });
+  assert.ok(writerOf(abs, cmd("echo > /c/w/repo/projects/demo/temp/x.mjs"), { platform: "win32" }));
+  assert.ok(writerOf(abs, cmd("echo > PROJECTS/Demo/TEMP/X.mjs"), { platform: "win32" }));
+  assert.ok(writerOf(abs, { writes: [{ path: "/c/w/repo/projects/demo/temp/x.mjs", cwd, tool: "Write", id: "t2", transcript: "a" }], commands: [] }, { platform: "win32" }));
+});
+
+test("the move line counts a file the plan cites by its name alone", (t) => {
   const w = world(t);
   const rec = atLanding(w, "# New plan\n\nTouches b.mjs and `projects/demo/src/c.mjs`, nothing else.\n");
   for (const f of ["b.mjs", "c.mjs", "d.mjs"]) writeAt(join(w.repo, "projects", "demo", "src", f), "x\n");
@@ -780,7 +1017,7 @@ test("a stray that cannot be moved stays, is named as stuck and retried at resta
   const r = load(landed._path);
   r.launches[0].sweep.stuck = [{ path: "projects/demo/temp/locked.mjs", by: null, error: "EBUSY" }];
   writeFileSync(r._path, JSON.stringify(r, null, 1));
-  assert.throws(() => receiptFields(load(landed._path), { park: null, ran: RAN_NONE }), /could not be moved: projects\/demo\/temp\/locked\.mjs \(EBUSY\)/);
+  assert.throws(() => receiptFields(load(landed._path), { park: null, ran: ranBy(load(landed._path)) }), /could not be moved: projects\/demo\/temp\/locked\.mjs \(EBUSY\)/);
   // Freed, it moves at the next restart.
   unlock();
   restart({ record: rec._path, session: S2, registry: w.registry }, w.opts);
@@ -877,6 +1114,89 @@ test("the sweep credits a new file only to a call it was born during: a read, an
   assert.match(l.sweep.planNote, /projects\/demo\/docs\/plans\/new-plan\.md/);
 });
 
+// Claude Code's Edit writes a new file over the old one (measured 2026-11-08: a new inode and a
+// birth at the Edit's moment), so a file's birth inside an Edit's span does not make the Edit its
+// writer: another session's file a helper edited would move.
+test("an Edit counts as a new file's writer only when a helper call also created that path", (t) => {
+  const w = world(t);
+  const rec = load(begin(w).record);
+  const demo = join(w.repo, "projects", "demo");
+  const theirs = join(demo, "src", "theirs.mjs");
+  const probe = join(demo, "temp", "probe.mjs");
+  const now = Date.now();
+  const around = [now - 5_000, now + 120_000];
+  const earlier = [now - 60_000, now - 59_000];
+  const helpers = [[
+    ...timed(w.repo, ...around, ["Edit", { file_path: theirs, old_string: "x", new_string: "y" }]),
+    // The helper's own probe: written, then edited, which gave it the Edit's birth.
+    ...timed(w.repo, ...earlier, ["Write", { file_path: probe, content: "x" }]),
+    ...timed(w.repo, ...around, ["Edit", { file_path: probe, old_string: "x", new_string: "y" }]),
+  ]];
+  const sw = runStage(w, rec, "wf_research-001", { helpers, before: () => { writeAt(theirs, "y\n"); writeAt(probe, "y\n"); } });
+  assert.deepEqual(sw.strays.deleted, ["projects/demo/temp/probe.mjs"]);
+  assert.ok(existsSync(theirs), "another session's file a helper edited stays");
+});
+
+// A stuck stray's retry runs at a later restart, maybe days on: only the very file the sweep
+// found may move, never what another session put at its path since.
+test("a stuck stray's retry moves only the same file: one replaced, re-made or committed since stays where it is", (t) => {
+  for (const since of ["replaced", "committed"]) {
+    const w = world(t);
+    const rec = load(begin(w).record);
+    const held = join(w.repo, "projects", "demo", "src", "held.mjs");
+    const around = [Date.now() - 5_000, Date.now() + 120_000];
+    const unlock = lockRenames(t, "held.mjs");
+    const sw = runStage(w, rec, "wf_research-001", { helpers: [timed(w.repo, ...around, ["Write", { file_path: held, content: "x" }])], before: () => writeAt(held, "x\n") });
+    assert.deepEqual(sw.strays.stuck, ["projects/demo/src/held.mjs"]);
+    unlock();
+    if (since === "replaced") {
+      // Deleted and made again at once: NTFS gives the new file the old one's birth, not its inode.
+      unlinkSync(held);
+      writeAt(held, "another session's file\n");
+    } else {
+      git(w.repo, ["add", "--", "projects/demo/src/held.mjs"]);
+      git(w.repo, ["commit", "-q", "-m", "another session's commit"]);
+    }
+    restart({ record: rec._path, session: S2, registry: w.registry }, w.opts);
+    assert.ok(existsSync(held), `a file ${since} since the sweep stays`);
+    const l = load(rec._path).launches[0];
+    assert.deepEqual(l.sweep.stuck, [], since);
+    assert.deepEqual(load(rec._path).strays.deleted, [], since);
+    assert.match(l.sweep.note, new RegExp(`projects/demo/src/held\\.mjs.*${since === "replaced" ? "not the file the sweep found" : "committed"}`), since);
+  }
+});
+
+test("a stray path two launches each wrote and moved is named once in the receipt", (t) => {
+  const w = world(t);
+  const rec = load(begin(w).record);
+  const probe = join(w.repo, "projects", "demo", "temp", "probe.mjs");
+  const write = () => [timed(w.repo, Date.now() - 5_000, Date.now() + 120_000, ["Write", { file_path: probe, content: "x" }])];
+  runStage(w, rec, "wf_research-001", { helpers: write(), before: () => writeAt(probe, "x\n") });
+  // Research launches again in the same step (a resume, KTD8), and its helper writes the same probe.
+  runStage(w, load(rec._path), "wf_research-002", { helpers: write(), before: () => writeAt(probe, "x\n") });
+  const back = load(rec._path);
+  assert.deepEqual(back.launches.map((l) => l.sweep.deleted.map((d) => d.path)), [["projects/demo/temp/probe.mjs"], ["projects/demo/temp/probe.mjs"]]);
+  assert.deepEqual(back.strays.deleted, ["projects/demo/temp/probe.mjs"]);
+});
+
+test("a stuck stray a retry moved before its record write died is named in the receipt, never lost", (t) => {
+  const w = world(t);
+  const rec = load(begin(w).record);
+  const held = join(w.repo, "projects", "demo", "temp", "held.mjs");
+  const around = [Date.now() - 5_000, Date.now() + 120_000];
+  const unlock = lockRenames(t, "held.mjs");
+  runStage(w, rec, "wf_research-001", { helpers: [timed(w.repo, ...around, ["Write", { file_path: held, content: "x" }])], before: () => writeAt(held, "x\n") });
+  unlock();
+  // A restart's retry moved it, then died before the record write.
+  writeAt(join(rec.dir, "strays", "L1", "projects", "demo", "temp", "held.mjs"), "x\n");
+  unlinkSync(held);
+  restart({ record: rec._path, session: S2, registry: w.registry }, w.opts);
+  const back = load(rec._path);
+  assert.deepEqual(back.strays.deleted, ["projects/demo/temp/held.mjs"]);
+  assert.deepEqual(back.launches[0].sweep.stuck, []);
+  assert.ok(back.launches[0].sweep.deleted.some((d) => d.path === "projects/demo/temp/held.mjs" && d.recovered));
+});
+
 // ------------------------------------------------------------------------- landing
 
 // A run brought to its landing: research, write, deepen (folded), check-1 with no change.
@@ -888,10 +1208,11 @@ function atLanding(w, text = "# New plan\n\n## Goal\n\nlanded\n", extra = {}) {
   assert.equal(advance(rec, { outcome: "done", changes: 0, session: S1 }).step, "land");
   return rec;
 }
-// Every stage a full run serves, each with no seat named: a receipt names each served stage.
-const RAN_NONE = { research: [], write: [], deepen: [], "check-1": [] };
+// The seats each completed launch ran, keyed by its launch id (receipt-fields' `ran`): none, or
+// for each launch the seats `byStage` names for its stage.
+const ranBy = (rec, byStage = {}) => Object.fromEntries(rec.launches.filter((l) => l.status === "completed").map((l) => [l.id, byStage[l.stage] ?? []]));
 const FIELDS = { deepen: "deepened", adversary: true, open: 0, park: null, holes: [], coverage: { premise: { nothing: true }, reach: { nothing: true }, "blast-radius": { nothing: true }, "test-vacuity": { nothing: true } } };
-const message = (rec) => `docs(plans): new-plan\n\n${receipt({ ...FIELDS, ...receiptFields(rec, { park: null, ran: { ...RAN_NONE, write: ["write"], "check-1": ["coherence"] } }) })}\n`;
+const message = (rec) => `docs(plans): new-plan\n\n${receipt({ ...FIELDS, ...receiptFields(rec, { park: null, ran: ranBy(rec, { "check-1": ["coherence"] }) }) })}\n`;
 
 test("landing stops when the named path changed since the start, naming both states", (t) => {
   const w = world(t);
@@ -934,7 +1255,7 @@ test("an unmoved project gives no move line; a moved one gives the count and the
   const w = world(t);
   const rec = atLanding(w, "# New plan\n\nChanges `src/a.mjs` and nothing else.\n");
   assert.equal(landCheck(rec).moved, null);
-  assert.equal(receiptFields(load(rec._path), { park: null, ran: RAN_NONE }).moved, null);
+  assert.equal(receiptFields(load(rec._path), { park: null, ran: ranBy(load(rec._path)) }).moved, null);
   writeAt(join(w.repo, "projects", "demo", "src", "a.mjs"), "export const a = 2;\n");
   writeAt(join(w.repo, "projects", "demo", "src", "b.mjs"), "export const b = 1;\n");
   writeAt(join(w.repo, "projects", "other", "y.txt"), "outside the project\n");
@@ -943,7 +1264,7 @@ test("an unmoved project gives no move line; a moved one gives the count and the
   const c = landCheck(load(rec._path));
   assert.equal(c.ok, true, c.reason);
   assert.deepEqual(c.moved, { changed: 2, cited: ["projects/demo/src/a.mjs"] });
-  const fields = receiptFields(load(rec._path), { park: null, ran: RAN_NONE });
+  const fields = receiptFields(load(rec._path), { park: null, ran: ranBy(load(rec._path)) });
   assert.deepEqual(fields.moved, { changed: 2, cited: ["projects/demo/src/a.mjs"] });
   assert.match(receipt({ ...FIELDS, ...fields }), /^project moved during the run: 2 files changed, 1 the plan cites \(projects\/demo\/src\/a\.mjs\)$/m);
 });
@@ -959,6 +1280,7 @@ test("land copies the staged plan and commits that path alone with the receipt, 
   git(w.repo, ["add", "projects/other/staged.txt"]);
   writeAt(join(w.repo, "projects", "demo", "src", "untracked.mjs"), "x\n");
   const msg = message(load(rec._path));
+  assert.throws(() => land(load(rec._path), { message: msg.replace(/^run record: /m, (m) => `parked: a question nobody parked?\n${m}`), session: S1 }), /no park was noted/);
   const out = land(load(rec._path), { message: msg, session: S1 });
   assert.equal(out.ok, true, out.reason);
   assert.equal(git(w.repo, ["diff-tree", "--no-commit-id", "--name-only", "-r", out.commit]).trim(), "projects/demo/docs/plans/new-plan.md");
@@ -996,9 +1318,10 @@ test("a crash after landing's copy but before its commit is recognized by the bl
   const msg = message(load(rec._path));
   assert.throws(() => land(load(rec._path), { message: msg, session: S1 }), /git commit/);
   assert.deepEqual(readFileSync(w.plan), readFileSync(join(rec.dir, "plan.md")));
-  // The failed commit leaves no staged plan in the shared index: nothing another session's plain
-  // commit would sweep up.
+  // The failed commit leaves no staged plan in the shared index, not even its intent-to-add entry
+  // (diff --cached hides one): nothing another session's commit or add -u would sweep up.
   assert.equal(git(w.repo, ["diff", "--cached", "--name-only"]).trim(), "");
+  assert.equal(git(w.repo, ["ls-files", "--", "projects/demo/docs/plans/new-plan.md"]).trim(), "");
   const r = restart({ record: rec._path, session: S2, registry: w.registry }, w.opts);
   assert.equal(r.action, "land");
   const c = landCheck(load(rec._path));
@@ -1022,6 +1345,9 @@ test("land refuses when the project moved since land-check, and lands once land-
   assert.match(refused.reason, /the project moved since land-check: run land-check and rebuild the receipt/);
   assert.equal(existsSync(w.plan), false);
   assert.deepEqual(landCheck(load(rec._path)).moved, { changed: 1, cited: ["projects/demo/src/a.mjs"] });
+  // The receipt built before the move says nothing of it: land-check ran again, but the receipt
+  // did not, so land refuses it.
+  assert.throws(() => land(load(rec._path), { message: stale, session: S1 }), /project moved during the run/);
   const out = land(load(rec._path), { message: message(load(rec._path)), session: S1 });
   assert.equal(out.ok, true, out.reason);
   assert.match(git(w.repo, ["log", "-1", "--format=%B", out.commit]), /^project moved during the run: 1 file changed/m);
@@ -1067,6 +1393,114 @@ test("a crash after the commit but before the record closed is closed on the nex
   assert.equal(load(rec._path).closed.commit, head);
 });
 
+// The landing commit made by hand, as a crash after land's commit but before its record write leaves it.
+function commitLanding(w, rec, msg) {
+  writeAt(w.plan, readFileSync(join(rec.dir, "plan.md"), "utf8"));
+  git(w.repo, ["add", "--", "projects/demo/docs/plans/new-plan.md"]);
+  writeFileSync(join(w.root, "msg.txt"), msg);
+  git(w.repo, ["commit", "-q", "-F", join(w.root, "msg.txt")]);
+  return git(w.repo, ["rev-parse", "HEAD"]).trim();
+}
+const otherCommit = (w, text, message) => {
+  writeAt(join(w.repo, "projects", "other", "x.txt"), text);
+  git(w.repo, ["add", "--", "projects/other/x.txt"]);
+  writeFileSync(join(w.root, "other.txt"), message);
+  git(w.repo, ["commit", "-q", "-F", join(w.root, "other.txt")]);
+  return git(w.repo, ["rev-parse", "HEAD"]).trim();
+};
+
+test("a landing commit is found by its record line as a whole line, the plan alone and the staged blob, past later commits that edit the plan or quote the line", (t) => {
+  const w = world(t);
+  const rec = atLanding(w);
+  landCheck(rec);
+  const msg = message(load(rec._path));
+  const line = msg.split("\n").find((l) => l.startsWith("run record: "));
+  const landing = commitLanding(w, rec, msg);
+  // Later: a commit quoting the line inside a sentence, then a build commit that edits the plan.
+  otherCommit(w, "quoted\n", `docs: see ${line} for the plan's receipt\n`);
+  writeAt(w.plan, "# New plan, built on\n");
+  git(w.repo, ["commit", "-q", "-am", "build: the plan moved on"]);
+  const head = git(w.repo, ["rev-parse", "HEAD"]).trim();
+  assert.equal(landCheck(load(rec._path)).committed, landing);
+  const out = land(load(rec._path), { message: msg, session: S2 });
+  assert.equal(out.ok, true, out.reason);
+  assert.equal(out.commit, landing);
+  assert.equal(git(w.repo, ["rev-parse", "HEAD"]).trim(), head);
+  // An unchanged update run: a commit carrying the line whole that touches another path is no
+  // landing, so the run makes its own empty commit.
+  const w2 = world(t);
+  const un = atUnchangedLanding(w2);
+  const umsg = unchangedMessage(un);
+  const uline = umsg.split("\n").find((l) => l.startsWith("run record: "));
+  const quoting = otherCommit(w2, "todo\n", `chore(todo): next\n\n${uline}\n`);
+  assert.equal(landCheck(load(un._path)).committed, null);
+  const uout = land(load(un._path), { message: umsg, session: S1 });
+  assert.equal(uout.ok, true, uout.reason);
+  assert.notEqual(uout.commit, quoting);
+  assert.equal(git(w2.repo, ["diff-tree", "--no-commit-id", "--name-only", "-r", uout.commit]).trim(), "");
+});
+
+test("a plan another session committed after landing's copy stops the landing, naming the change, never closing on an empty commit", (t) => {
+  const w = world(t);
+  const rec = atLanding(w);
+  landCheck(rec);
+  const msg = message(load(rec._path));
+  // land's copy landed, then its commit failed and another session's commit took the plan.
+  const r = load(rec._path);
+  const blob = git(w.repo, ["hash-object", join(rec.dir, "plan.md")]).trim();
+  r.landing = { copying: blob, tmp: join(dirname(w.plan), ".new-plan.md.landing.tmp"), at: "2026-11-08T00:00:00.000Z" };
+  writeFileSync(r._path, JSON.stringify(r, null, 1));
+  writeAt(w.plan, readFileSync(join(rec.dir, "plan.md"), "utf8"));
+  git(w.repo, ["add", "--", "projects/demo/docs/plans"]);
+  git(w.repo, ["commit", "-q", "-m", "docs: their plan"]);
+  const theirs = git(w.repo, ["rev-parse", "HEAD"]).trim();
+  const c = landCheck(load(rec._path));
+  assert.equal(c.ok, false);
+  assert.match(c.reason, /named path changed since the run started/);
+  const out = land(load(rec._path), { message: msg, session: S1 });
+  assert.equal(out.ok, false);
+  assert.equal(git(w.repo, ["rev-parse", "HEAD"]).trim(), theirs);
+  assert.equal(load(rec._path).state, "running");
+});
+
+test("landing's temp never stays beside the plan: not after an unchanged run's re-land, a refused re-land, a failed rename or a block", (t) => {
+  // An unchanged update run: the worktree already holds the staged bytes, so a re-land after a
+  // crash between the temp's write and its rename skips the copy.
+  const w = world(t);
+  const un = atUnchangedLanding(w);
+  const old = join(w.repo, "projects", "demo", "docs", "plans", "old-plan.md");
+  const utmp = join(dirname(old), ".old-plan.md.landing.tmp");
+  const ur = load(un._path);
+  ur.landing = { copying: git(w.repo, ["hash-object", old]).trim(), tmp: utmp, at: "2026-11-08T00:00:00.000Z" };
+  writeFileSync(ur._path, JSON.stringify(ur, null, 1));
+  writeAt(utmp, readFileSync(old, "utf8"));
+  assert.equal(land(load(un._path), { message: unchangedMessage(load(un._path)), session: S1 }).ok, true);
+  assert.equal(existsSync(utmp), false);
+  // A re-land refused because the named path changed, then the run blocked.
+  const w2 = world(t);
+  const rec = atLanding(w2);
+  landCheck(rec);
+  const tmp = join(dirname(w2.plan), ".new-plan.md.landing.tmp");
+  const r = load(rec._path);
+  r.landing = { copying: "0".repeat(40), tmp, at: "2026-11-08T00:00:00.000Z" };
+  writeFileSync(r._path, JSON.stringify(r, null, 1));
+  writeAt(tmp, "# half a plan\n");
+  writeAt(w2.plan, "# someone else's plan\n");
+  assert.equal(land(load(rec._path), { message: message(load(rec._path)), session: S1 }).ok, false);
+  assert.equal(existsSync(tmp), false);
+  writeAt(tmp, "# half a plan\n");
+  block(load(rec._path), { reason: "the named path changed", session: S1 });
+  assert.equal(existsSync(tmp), false);
+  // A rename that fails past its retries.
+  const w3 = world(t);
+  const third = atLanding(w3);
+  landCheck(third);
+  lockRenames(t, ".new-plan.md.landing.tmp", "EIO");
+  assert.throws(() => land(load(third._path), { message: message(load(third._path)), session: S1 }), /EIO/);
+  assert.equal(existsSync(join(dirname(w3.plan), ".new-plan.md.landing.tmp")), false);
+  assert.equal(existsSync(w3.plan), false);
+});
+
 // An update run whose deepen passed and whose round 1 changed nothing: the staged plan is HEAD's
 // own blob, so there is no change to commit at the plan path.
 function atUnchangedLanding(w) {
@@ -1075,6 +1509,7 @@ function atUnchangedLanding(w) {
   assert.equal(r.ok, true, r.reason);
   const rec = load(r.record);
   runStage(w, rec, "wf_deepen-001");
+  note(rec, { key: "risk", value: RISK, session: S1 });
   assert.equal(advance(rec, { outcome: "passed", session: S1 }).step, "check-1");
   runStage(w, rec, "wf_check-002");
   assert.equal(advance(rec, { outcome: "done", changes: 0, session: S1 }).step, "land");
@@ -1082,7 +1517,7 @@ function atUnchangedLanding(w) {
   assert.equal(c.ok, true, c.reason);
   return load(rec._path);
 }
-const unchangedMessage = (rec) => `docs(plans): old-plan\n\n${receipt({ ...FIELDS, deepen: "passed", ...receiptFields(rec, { park: null, ran: { deepen: [], "check-1": [] } }) })}\n`;
+const unchangedMessage = (rec) => `docs(plans): old-plan\n\n${receipt({ ...FIELDS, deepen: "passed", ...receiptFields(rec, { park: null, ran: ranBy(rec) }) })}\n`;
 
 test("an update run that changed nothing lands as an empty commit, with exit 0, and another session's staged file stays staged", (t) => {
   const w = world(t);
@@ -1122,7 +1557,7 @@ test("receipt-fields give flow.mjs's receipt every CE commit with its stages, th
   rmSync(join(w.install, "skills", "ce-doc-review", "references", "personas", "coherence-reviewer.md"));
   const rec = atLanding(w);
   landCheck(rec);
-  const f = receiptFields(load(rec._path), { park: null, ran: { research: [], write: ["write"], "check-1": ["coherence", "feasibility"], deepen: ["scorer"] } });
+  const f = receiptFields(load(rec._path), { park: null, ran: ranBy(load(rec._path), { "check-1": ["coherence", "feasibility"], deepen: ["scorer"] }) });
   assert.deepEqual(f.ce, [{ commit: SHA_NEW, stages: ["research", "write", "deepen", "check-1"] }]);
   assert.deepEqual(f.inline, [{ seat: "coherence", file: "skills/ce-doc-review/references/personas/coherence-reviewer.md", commit: SHA_NEW }]);
   assert.deepEqual(f.strays, []);
@@ -1131,7 +1566,7 @@ test("receipt-fields give flow.mjs's receipt every CE commit with its stages, th
   const text = receipt({ ...FIELDS, ...f });
   assert.match(text, /^CE: 799ac9a\S* \(research, write, deepen, check-1\)$/m);
   assert.match(text, /^seats without their CE file: coherence \(skills\/ce-doc-review\/references\/personas\/coherence-reviewer\.md, CE 799ac9a/m);
-  assert.throws(() => receiptFields(load(rec._path), { park: null, ran: { review: [] } }), /names no stage "review"/);
+  assert.throws(() => receiptFields(load(rec._path), { park: null, ran: { ...ranBy(load(rec._path)), review: [] } }), /"review", which is no completed launch/);
 });
 
 test("a step's outcome and the receipt wait for every launch's sweep, so 'stray files deleted: none' is never a default", (t) => {
@@ -1149,7 +1584,7 @@ test("a step's outcome and the receipt wait for every launch's sweep, so 'stray 
   const r = load(landed._path);
   r.launches[1].sweep.done = false;
   writeFileSync(r._path, JSON.stringify(r, null, 1));
-  assert.throws(() => receiptFields(load(landed._path), { park: null, ran: RAN_NONE }), /L2 has not been swept/);
+  assert.throws(() => receiptFields(load(landed._path), { park: null, ran: ranBy(load(landed._path)) }), /L2 has not been swept/);
 });
 
 const PARK = "Keep the 10% margin, or drop it to 5%?";
@@ -1172,19 +1607,19 @@ test("receipt-fields carry the park, the open count and the deepen's outcome fro
   const w = world(t);
   const plain = atLanding(w);
   landCheck(plain);
-  const f = receiptFields(load(plain._path), { park: null, ran: RAN_NONE });
+  const f = receiptFields(load(plain._path), { park: null, ran: ranBy(load(plain._path)) });
   assert.deepEqual([f.park, f.open, f.deepen], [null, 0, "deepened"]);
-  assert.throws(() => receiptFields(load(plain._path), { park: "A question nobody parked?", ran: RAN_NONE }), /no park was noted/);
-  assert.throws(() => receiptFields(load(plain._path), { ran: RAN_NONE }), /park is the parked question, or null/);
+  assert.throws(() => receiptFields(load(plain._path), { park: "A question nobody parked?", ran: ranBy(load(plain._path)) }), /no park was noted/);
+  assert.throws(() => receiptFields(load(plain._path), { ran: ranBy(load(plain._path)) }), /park is the parked question, or null/);
   const parked = atParkedLanding(world(t));
-  assert.throws(() => receiptFields(parked, { park: null, ran: RAN_NONE }), /parked 1 question/);
-  assert.equal(receiptFields(parked, { park: PARK, ran: RAN_NONE }).park, PARK);
+  assert.throws(() => receiptFields(parked, { park: null, ran: ranBy(parked) }), /parked 1 question/);
+  assert.equal(receiptFields(parked, { park: PARK, ran: ranBy(parked) }).park, PARK);
 });
 
 test("land refuses a message with no parked line while a park was noted, or whose head line's open count is not the record's", (t) => {
   const w = world(t);
   const rec = atParkedLanding(w);
-  const msg = `docs(plans): new-plan\n\n${receipt({ ...FIELDS, ...receiptFields(rec, { park: PARK, ran: RAN_NONE }) })}\n`;
+  const msg = `docs(plans): new-plan\n\n${receipt({ ...FIELDS, ...receiptFields(rec, { park: PARK, ran: ranBy(rec) }) })}\n`;
   assert.match(msg, /^parked: Keep the 10% margin/m);
   assert.throws(() => land(load(rec._path), { message: msg.replace(/^parked: .*\n/m, ""), session: S1 }), /no "parked:" line/);
   const wrongOpen = msg.replace(/^(planned, deepened and checked)$/m, "$1, 2 P0/P1 open");
@@ -1234,15 +1669,8 @@ test("show gives a resuming session every recorded fact and each step's ledger, 
   assert.deepEqual(s.parks, [PARK]);
   assert.deepEqual(s.council, []);
   assert.deepEqual(s.steps.map((x) => [x.n, x.stage, x.outcome, x.ledger]), [[1, "research", "done", null], [2, "write", "done", []], [3, "deepen", null, ["D1", "D2"]]]);
-  // A send-back's second deepen scores a rewritten plan: its risk is the one that stands.
-  assert.equal(advance(load(rec._path), { outcome: "premise-goal", session: S2 }).step, "write");
-  assert.equal(gate(load(rec._path), { line: ROOM, session: S2 }).go, true);
-  fold(load(rec._path), "# New plan\n\nrewritten\n", [], S2);
-  advance(load(rec._path), { outcome: "done", session: S2 });
-  note(load(rec._path), { key: "risk", value: { level: "low" }, session: S2 });
-  const again = load(rec._path);
-  assert.deepEqual(again.risk, { level: "low" });
-  assert.deepEqual(again.steps.filter((x) => x.stage === "deepen").map((x) => x.risk), [{ level: "high" }, { level: "low" }]);
+  // The risk is kept on its deepen step too (a send-back's second deepen keeps its own).
+  assert.deepEqual(load(rec._path).steps.find((x) => x.stage === "deepen").risk, { level: "high" });
 });
 
 test("restart's new answer lists the plan's closed runs", (t) => {
@@ -1254,17 +1682,17 @@ test("restart's new answer lists the plan's closed runs", (t) => {
   assert.deepEqual(n.closed.map((c) => [c.record, c.state]), [[r.record, "blocked"]]);
 });
 
-test("receipt-fields refuses a served stage left out of ran, seats for a stage that never ran, and a seat key nothing names", (t) => {
+test("receipt-fields refuses a completed launch left out of ran, a key that is no completed launch, and a seat key nothing names", (t) => {
   const w = world(t);
   const rec = atLanding(w);
   landCheck(rec);
   const fields = (ran) => receiptFields(load(rec._path), { park: null, ran });
-  // Left out is not "ran with its file": every served stage is written out, empty when no seat ran.
-  assert.throws(() => fields({ write: ["write"], "check-1": ["coherence"] }), /research, deepen/);
-  assert.throws(() => fields({ ...RAN_NONE, brief: ["premise"] }), /brief/);
-  assert.throws(() => fields({ ...RAN_NONE, deepen: ["scorer", "no-such-seat"] }), /no-such-seat/);
+  // Left out is not "ran with its file": every completed launch is written out, empty when no seat ran.
+  assert.throws(() => fields({ L3: ["coherence"] }), /leaves out L1, L2/);
+  assert.throws(() => fields({ ...ranBy(load(rec._path)), deepen: ["scorer"] }), /"deepen", which is no completed launch/);
+  assert.throws(() => fields({ ...ranBy(load(rec._path)), L2: ["scorer", "no-such-seat"] }), /no-such-seat/);
   // The seats that read no CE file are known, and never inline.
-  const f = fields({ ...RAN_NONE, deepen: ["premise", "scorer"], "check-1": ["reach", "blast-radius", "test-vacuity", "coherence"] });
+  const f = fields(ranBy(load(rec._path), { deepen: ["premise", "scorer"], "check-1": ["reach", "blast-radius", "test-vacuity", "coherence"] }));
   assert.deepEqual(f.inline, []);
 });
 

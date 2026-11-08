@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-08, rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; next is U10, opened with `/brief`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
+▶ **START HERE (2026-11-08, b9-4 committed U10 and opened U11 — item 1; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -72,7 +72,11 @@ queue below (its order unmoved). Next, in order:
    (`63eca3f6`):** `verify:fit` had been red since `d4227774` (6 W gesture arms expected "You entered" where U5's Keep now
    reads "You kept"); test-only, the kept stamp proven to survive type-then-Keep.
    **The go-live is COMMITTED: `a9cacf22` (b9-1, 2026-11-08), pushed.** U6 + U7 + U8 + U14 + U9, schema version 5. Its CI run
-   `42501619690` was in progress at b9-1's close: **Check at start:** `gh run view 42501619690 --json status,conclusion,jobs` (nothing else is open). Its Caddie card (top of
+   `42501619690` passed (both jobs, read by b9-4). **U10 is COMMITTED (b9-4, 2026-11-08):** the floor test's `FLOOR` is 5, in
+   its own commit after the go-live. Its proof, predictions first (`b9-build2-surplus\U10-MUTANTS.md`, runner
+   `tools\u10-mutants.cjs`): the constant planted to 4 reds b9-6's 325 plus the floor test on its own line; a resolved whole
+   revert of the go-live reds the floor test alone (1 of 4758); the R10 sweep `u10` is byte-equal to `golive` (39 of 39). A real
+   `git revert a9cacf22` now stops on a conflict in `scenarioCodec.test.ts` (U10's corrected note sits in a go-live hunk). Its Caddie card (top of
    `docs/caddie/cold-read-log.md`) is HARD-FLAG, held on (a)–(e) and (q) below; the last round of words is unwalked and named on
    the card. The R10 sweep `golive` is the identity baseline from here (`idcheck.mjs <label> golive`; README row added).
    Walk bundles kept in `temp/caddie/`: `caddie-golive-b9-1-walk3`, `-walk4`, `-walk5`. b9-6's two (`caddie-golive-b9-6`, `caddie-golive-b9-6-fix`) are still there: other b9 sessions were live at b9-1's close, so delete them at the next close with none live.
@@ -152,8 +156,12 @@ queue below (its order unmoved). Next, in order:
      the Result reads it (`rulesMoved` also fires on the ACA, Medicare, contribution and app-default clocks); `canChange` on
      `ReentryLeftOverStale` if the gate's moved line carries a door sentence; and the two test files U14 must edit
      (`stalenessExposure.test.ts`'s source-bind and `staleness.test.ts`'s property arm, which gains `datesaved`).
-   - Phase B: ~~U5~~, ~~U13~~, ~~the version-4 archive~~, ~~the go-live (U6 + U7 + U8 + U14 + U9)~~ (`a9cacf22`), then U10.
-   - Phase C: U11, then U12.
+   - Phase B: ~~U5~~, ~~U13~~, ~~the version-4 archive~~, ~~the go-live (U6 + U7 + U8 + U14 + U9)~~ (`a9cacf22`), ~~U10~~ (b9-4).
+   - Phase C: U11, then U12. **U11 is OPEN (b9-4):** `/brief` done; its shared household builder is
+     `b9-build2-surplus\tools\u11drafts.mts` (every U11 tool mints "saved" through the shipped write, never a typed figure,
+     and runs the two stale-W pairs: lowered = `datesavedstale`, risen = `datesaved` at $90,000, each against its checked
+     twin); its four tools (credit stream, moves, same-year-draw residual, K5's share) are built and verified by
+     `wf_a4f45d66-48e`, then the pilot runs each full measurement serialized and pinned.
    After the build: the whole-file review, with an adversary and every finding verified; then `/distill`. The record (brief,
    seven research dossiers, three deepen artifacts, the doc-review's `RESOLVED.md`) is in
    `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\`.

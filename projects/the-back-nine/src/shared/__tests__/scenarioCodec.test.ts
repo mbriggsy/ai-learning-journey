@@ -359,7 +359,8 @@ describe('versions 3 and 4 relabel to their successors; the ladder stays honest 
 
   // What else sees a reverted constant (the b9-6 mutant pass, `CURRENT_SCHEMA_VERSION = 4` planted): every save
   // then fails its own round trip, so the suites that mint a save at load red whole, IntakeApp's among them (its
-  // labeled-4 hydrate-gate arm never runs). The floor test stays green until U10 raises its floor to 5.
+  // labeled-4 hydrate-gate arm never runs). Since U10 (FLOOR = 5) the floor test reds too, on its own message, and
+  // under a WHOLE revert of the bump (`git revert a9cacf22`, which takes this pin with it) it is the one red left.
   it('THE ABSOLUTE PIN AT 5: a plan labeled with the literal 5 decodes as version 5 (the schema-v5 bump’s one typed literal here — every derived pin moves with the constant, so a reverted constant reds this pin)', () => {
     const decoded = decodeScenario(asVersion(WITH_LEFT_OVER, 5))
     expect(decoded.ok, 'a version-5 save must open in this build and in every later one').toBe(true)

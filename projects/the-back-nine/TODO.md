@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-08, b9-4 committed U10 and ran U11's measurement half, verified; next is U11's Caddie walk, then U12 — item 1, Phase C; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
+▶ **START HERE (2026-11-08, b9-5 walked U11's Caddie record — `c10339b0`, the card HARD-FLAG; next is the walk's fix round (ab)–(af), opened with `/brief kept and stale working-year words`, then walk 2 on the fixes, then U12 carrying U11's figures and the walk's filings (ag)–(ak), then the whole-file review and `/distill` — item 1, Phase C; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -77,8 +77,9 @@ queue below (its order unmoved). Next, in order:
    `tools\u10-mutants.cjs`): the constant planted to 4 reds b9-6's 325 plus the floor test on its own line; a resolved whole
    revert of the go-live reds the floor test alone (1 of 4758); the R10 sweep `u10` is byte-equal to `golive` (39 of 39). A real
    `git revert a9cacf22` now stops on a conflict in `scenarioCodec.test.ts` (U10's corrected note sits in a go-live hunk). Its Caddie card (top of
-   `docs/caddie/cold-read-log.md`) is HARD-FLAG, held on (a)–(e) and (q) below; the last round of words is unwalked and named on
-   the card. The R10 sweep `golive` is the identity baseline from here (`idcheck.mjs <label> golive`; README row added).
+   `docs/caddie/cold-read-log.md`, now second, under b9-5's U11 card) is HARD-FLAG, held on (a)–(d) and (q) below ((e) is closed
+   by U11's measurement, b9-5); the last round of words is unwalked and named on the card. The R10 identity baseline is
+   `risen` since `c10339b0` (`idcheck.mjs <label> risen`; README row added).
    Walk bundles kept in `temp/caddie/`: `caddie-golive-b9-1-walk3`, `-walk4`, `-walk5`. b9-6's two (`caddie-golive-b9-6`, `caddie-golive-b9-6-fix`) are still there: other b9 sessions were live at b9-1's close, so delete them at the next close with none live.
    **Filed by b9-1's walks 3 to 5 for U12 (the card's new hold (q) is a Tier 0 candidate; the rest go in as their seats rated
    them):** (q) **the re-entry gate attests to balances only:** it names paychecks ("Markets and paychecks move") but shows no pay,
@@ -123,7 +124,8 @@ queue below (its order unmoved). Next, in order:
    unpriced state-tax note** ("it belongs in your figure for a working year, below") reads as "already in W", so in a state
    that taxes pay the left over is too high. (p) **the stale clause after a RISEN quote** can read as an offset to "can look
    better than it really is"; no walk renders it (U11 measures the reach, then a walk on `datesavedstale` with spending
-   raised). Not holding: the how-much ask behind "The tool doesn’t ask how much yet" (D7); the moved note's missing cause (pay
+   raised) — WALKED and CLOSED by measurement (b9-5, the other way: the stale answer reads gloomier; its fix is (ae) below).
+   Not holding: the how-much ask behind "The tool doesn’t ask how much yet" (D7); the moved note's missing cause (pay
    rose) and year; the stale clause's "you chose to save" figure a spouse can't place, and the waiting seat hiding the stored
    answer; the check sentence between the legend and the replies (a hint slot in `SegmentedControl`); the waiting
    methodology line's passive "is checked".
@@ -162,16 +164,54 @@ queue below (its order unmoved). Next, in order:
      C3 ×4, C4 ×5, D3 ×4 at the final tier, K5 ×2; the credit stream 0). Tools in `b9-build2-surplus\tools\`
      (`u11drafts.mts`, `stream11`, `moves11`, `residual11`, `k5share`; built and refuted by `wf_a4f45d66-48e`); each full run
      ran twice, byte-equal. An Opus xhigh verifier re-derived every figure (`verify-u11\`) and its 13 corrections are in.
-     **NEXT, U11's Caddie record** (the plan's U11 Files line: `docs/caddie/tape.md`, `docs/caddie/cold-read-log.md`), opened
-     with `/brief caddie walk on build 2's stale and kept words`: walk (d) U5's drafted words — the kept quote, the state-only
-     and both-causes sentences (`workingCostStaleKept*`), the row's "the figure you kept", the month view's "$1,008,000 a
-     year — the figure you kept" after a unit tap on a kept $84,000, and the P3 (a kept figure stale on the spending shows "a
-     different figure" checked, the box filled, no door; its exits unnamed; never a door below the quote, the register's ⚑
-     NEGATIVE) — and (p) the stale clause after a RISEN quote. U11 measured (p)'s reach: on both stale pairs "waiting on W"
-     withholds the credit and reads gloomier than the checked twin (LOWERED crown 7 vs 6; RISEN no date vs 9; W re-checked
-     alone moves nothing), and the other side (a W too low hiding a short year) is unexercised. No dev seed carries the
-     risen household (`u11drafts.mts` builds it as `datesaved` with spending $90,000): a `?seed=` for it is a `src` change
-     (the R10 sweep + per-key `idcheck` against `golive`, and its own commit).
+     **U11's Caddie record: walk 1 DONE (b9-5, 2026-11-08).** `c10339b0` added the risen seed (`?seed=datesavedrisen`,
+     U11's RISEN household; R10 `risen` 39/39 against `golive`, now the baseline: `idcheck.mjs <label> risen`) and the
+     harness's increment 10 (`intake:kept`, nine states; `seed:`/`vault:datesavedrisen`). The card is at the top of
+     `docs/caddie/cold-read-log.md` (HARD-FLAG; the tape row is open); bundle `temp/caddie/caddie-u11-b9-5-walk1`. (d) and (p)
+     are walked; b9-1's hold (e) is CLOSED by U11's measurement, the other way: the risen stale answer is GLOOMIER (no date
+     vs the twin's 9), and a check at $90,000 credits at most $10,985 a year (`out\u11-stream-compare-u11-full.txt`
+     2455–2474). **NEXT, the walk's fix round** (a `src` commit: the R10 sweep + per-key `idcheck` against `risen`, then
+     walk 2 on the fixed words, `CADDIE_TARGETS="intake:kept,seed:datesavedrisen,vault:datesavedrisen"`), opened with
+     `/brief kept and stale working-year words`, each fix test-first and read top to bottom with every line its state shows:
+     - (ab) **The kept row's label after a unit tap** ("$1,008,000 a year — the figure you kept", false; refuter: medium).
+       Lead fix: a unit tap on a KEPT figure (`keptOverQuoteReal` present) converts instead of re-reading —
+       `writeWorkingYearCostPeriod` (`src/intake/workingYearQuote.ts`) keeps `amountReal` and changes `entryPeriod`, so the
+       box shows $7,000 under "Each month" and the label stays true. KTD17's re-read exists to undo a 12× misentry of TYPED
+       digits; a kept figure was never typed. R13's "each month then each year is the kept figure exactly" still holds; the
+       typed path is unchanged. Tests: U5's unit-tap arms in `workingYearQuote.test.ts` / `workingCostStep.test.tsx` (named
+       edits), both directions (a kept monthly figure tapped to a year). If the convert reads as a framing fork, `/council` it.
+     - (ac) **The lean on both causes.** In `workingYearCostStaleText`, the kept arm returns `workingCostStaleKeptBoth` and
+       the yes arm `workingCostStaleBoth` before the lean can ride: append `slots.workingCostStaleLeansBetter(<last>)` to each
+       when `heldYesBelowQuote(d)` (always true for a kept figure stale on the spending). The state-only arms stay lean-free
+       (refuter: a state move can cut the tax as easily). Same pass: "and the state changes which state income tax this figure
+       should hold" → "and your new state answer changes which state's income tax this figure should hold" (both `*Both`
+       slots; refuter: medium on the Result).
+     - (ad) **The P3 gate names its exits.** On the walk, a stale held figure (kept or typed) blocks Continue with
+       `errWorkingCostUnanswered` ("answer it above") under a question that visibly holds an answer, naming neither way out;
+       the moves a reader tries first (No again, either unit) block again (refuter: P2). Give that case its own message with
+       both figures and both exits (e.g. "Your $84,000 a year is below your spending now: choose “Yes” to use $90,000 a year,
+       or type a new figure."), from the same core as the note. Never a door below the quote (the register's ⚑ NEGATIVE).
+     - (ae) **The risen line** (`workingYearCostStaleLine`, "saved" waiting on W with `heldYesBelowQuote`): (1) the lean's
+       direction is wrong for the measured household — the stale answer is gloomier until a working year passes $100,985
+       (the stale W $84,000 + its printed $16,985; year 0's left over falls dollar for dollar with W), where it turns rosy;
+       say both sides with that threshold, never the one-sided lean; (2) the clause's "$16,985" reads as what a check returns,
+       while a check at today's quote returns at most the left over printed AT the quote ($10,985 here): name that figure (the
+       picture read at W = the quote) beside the stored one. Draft both, pin them, walk 2 reads them; R16 (no surface says
+       which way the CREDIT moves the date) is untouched — this states what is withheld, measured.
+     - (af) **The "If" over a known fact** (refuter: medium on the panel, the Result and the landing): for a held yes or kept
+       figure below the quote, "Your spending alone now comes to more than $84,000, so this answer can look better than it
+       really is." (the non-"saved" lean; the "saved" one is (ae)).
+     **Filed by walk 1 for U12** (each into the register with its prescription): (ag) **a panel edit on a date household
+     re-runs behind the sheet with no sign of it** — the panel's reading line never speaks for a date household
+     (`memoryModel.ts`'s `lastDisplayed` is spine-only), nothing says "working it out", and the quick pass's answer shows
+     behind the sheet with no provisional mark (`answerView.ts`'s docblock assumes a final answer; `commitAssumptionEdit`
+     commits a provisional tier first); chair-verified in source, medium, new; (ah) door 1's "Your answer uses about $90,000
+     a year" names no years (low; "once you've both stopped working"); (ai) the waiting seat names neither the stored "All of
+     it" nor its $16,985 and never says the answer comes back (re-found, b9-6's; low); (aj) "you chose to save" → "left over
+     from your pay that you chose to save" (low, gloomy: read as the 401(k) deposits); (ak) append to the Tier 0 *On the date
+     route the North Carolina / Pennsylvania clause says "your state income tax" with no scope…* the walk's re-find (the
+     hunter, refuter at high) and, to the PA-wage-tax entries, the state-move Keep door with no dollar figure (PA's 3.07% on
+     $150,000 is about $4,605 a year; D7's stopgap missing its number).
      **Then U12** (the plan's ten steps), carrying U11's figures (each stated with its seed, tier, offset and track, from the
      README § U11, never re-typed from memory): K5 at Tier 0 — the year-0 share NOT EXERCISED (unmeasured, never $0), its
      nearest shapes 76.9% (date65 2027) to more than the whole figure (datelateleftover 2030, $19,172 of $13,277), and the
@@ -224,12 +264,25 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-08 (b9-4: U10 COMMITTED, `9e017bb9`, CI green, run 42510961776; U11's measurement half done and verified —
-b9-1's block pruned into it):** state at close: typecheck, lint, build, `verify:bundle` (294.3 KiB) and `verify:doc-stats` OK
-at `9e017bb9`; the close commit is TODO.md only. Wrapped at 49% of the window, before U11's Caddie walk (a fan-out that could
-not finish under the 50% line). Helpers: `wf_a4f45d66-48e` (11 agents, about 2.8M tokens) plus a stream fixer and the record's
-verifier. **Check at start:** the CI run on this close's push, `gh run list --commit <the close commit's FULL sha> --json
-databaseId,status,conclusion` then `gh run view <id> --json status,conclusion,jobs` (a TODO-only commit; nothing else is open).
+**SESSION 2026-11-08 (b9-5: U11's Caddie record, walk 1 — `c10339b0` (the risen seed + the kept walk), CI run 42528672151
+started at the push; the card and the tape row in the close commit — b9-4's block pruned into it):** state at close: at
+`c10339b0` typecheck 0, lint 0, build 0, `verify:bundle` 294.3 KiB, the suite (pinned, 301 s) green but the doc-citation arm
+before the re-anchor, the scripts suite 122/122, `verify:doc-stats` OK; the R10 sweep `risen` 39/39 against `golive`. b9-4's
+check-at-start read green (run 42523800976). Wrapped at ~55% of the window, after the panel (11 readers + 15 refuters, de-authored
+Agents, about 3.4M helper tokens), before the fix round (a walk 2 could not finish under the 60% line). **Check at start:**
+the CI runs on `c10339b0` (`gh run view 42528672151 --json status,conclusion,jobs`) and on this close's push (`gh run list
+--commit <its FULL sha> --json databaseId,status,conclusion`).
+**DISTILL CANDIDATES (b9-5):**
+- **The tier only moves when a run COMMITS, and two re-runs from one edit can cancel each other's provisional sweep.**
+  `memoryModel` holds the last answer while a run is in flight; a panel edit fires `recomputeBoth`, and where one edit writes
+  twice the second dispatch cancels the first's provisional, the first's final cancels the second's provisional, and only the
+  last final commits — the tier never leaves "final" (walk 1's branch B: the hero moved to "No fuck-off date" with every tier
+  read "final"). A harness waits on a settled frame BEFORE the edit, then on either a tier change or the run's own words
+  moving (`e2e/caddie-walk.spec.ts`'s `armRerunWatch`).
+- **Measure the oracle's question before the walk, and the walk's verdict can flip the hold.** b9-6's hold (e) feared the
+  clause defusing a rosy lean; U11 had measured the pair (stale no date, twin 9, the twin's $10,985 cap), so the chair could
+  close it the other way in-session: the lean is wrong for that household, and the clause's figure over-promises. Without the
+  measurement the card would have argued it from the copy.
 **DISTILL CANDIDATES (b9-4):**
 - **A version floor is proven by planting the revert itself, not only the constant.** U10's arms: the constant planted (B
   against A, the delta exactly the floor test) AND a resolved whole `git revert` of the bump in a copy (the floor test the one
@@ -371,7 +424,13 @@ databaseId,status,conclusion` then `gh run view <id> --json status,conclusion,jo
 - **A plan's verification sentence can fix a design its Files list never states.** U3's "the ledger tests pass with only
   the allowlist edit" forced the ledger to RE-EXPORT the bottom line (its test imports it from the ledger), though the
   Files list said only "imports it". Read every verification clause for the shape it implies before choosing one.
-**LANDMINES (b9-4's of 11-08 first):**
+**LANDMINES (b9-5's of 11-08 first, then b9-4's):**
+- **(b9-5, 11-08) A Caddie panel capture shows the OLD answer behind the sheet.** Each `intake:kept` panel state is captured
+  ~5 s after its edit, while the Result behind is still re-running (the walk measured a first commit up to ~18 s later), so the
+  dimmed hero still reads the pre-edit date. Four seats read it as "the answer doesn't follow the edits"; the refuter traced it
+  to timing (and found (ag) under it). Tell the seats, or settle the re-run before a panel capture, in walk 2.
+- **(b9-5, 11-08) A new dev seed moves more than its own arm's count:** `datesavedrisen` added 3 tests (parametrized seed arms),
+  and two devSeeds sweeps pin the W-seed count by hand (`toBe(15)`). Read the live count from `verify:doc-stats`.
 - **(b9-4, 11-08) The E-core rule bit again:** typecheck, lint and the build on `/affinity FF000` beside a pinned suite run
   turned 3 heavy tests into timeouts (525 s against 419 s clean); all green alone. Nothing heavy beside a pinned VITEST run.
   Measurement runs (tsx, no timeouts) can run several at once pinned to the P-cores: four did, each byte-equal to its re-run.

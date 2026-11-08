@@ -20,7 +20,7 @@ const COMMANDS = FOLDERS.flatMap((f) =>
     .map((n) => join(f, n)),
 );
 // The modules U5's generator inlines into Workflow scripts.
-const INLINED = ["vote-law.mjs", "select.mjs", "caps.mjs"];
+const INLINED = ["vote-law.mjs", "select.mjs", "caps.mjs", "prompts.mjs"];
 
 // KTD1: the brief bench's commands ran as silent no-ops through the ~/.claude/skills junction
 // until ee67c08a. Every command, run through a linked folder with no arguments, prints its usage

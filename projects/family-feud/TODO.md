@@ -6,12 +6,17 @@
 > handoffs) was pruned 2026-09-27 and lives at commit **`af491a71`** — `git show af491a71:projects/family-feud/TODO.md`.
 > Read it before the 2027 draft, not before.
 
-## ▶ START HERE — as of Fri 2026-10-30 (week 8)
+## ▶ START HERE — as of Sun 2026-11-08 (week 9)
 
 **We are PoppaBriggsy, roster 3, *Saquon Deez Nuts*. `briggsy007` is HUNTER** (CLAUDE.md landmine).
 
-- **Record 4-3 (4th)**, after beating Cltchiefs 147.24–98.22 in week 7. **Week 8 is vs HUNTER, Sun 11-01 / Mon 11-02.**
-  His McCaffrey, Montgomery and Vele are all on bye. The lineup was set and verified on `/rosters` on 10-27.
+- **Record 4-4 (4th)**; week 8 lost to Hunter 164.38–99.36. **Week 9 vs kblizzy23 (6-2) is under way Sun 11-08**
+  (three-site ~150 vs ~149, a coin flip). The 11-08 sim: ~98% to make the playoffs, seed 3-5 likely, top-2 seed 6-8%
+  with a week-9 win. Remaining: wk10 Kaeperni · wk11 RMonk9 (no QB that week) · wk12 MattiICE23 · wk13 BuschLight420
+  (our weakest projected week) · wk14 Cltchiefs.
+- **Sun 11-08 09:15 ET, on Briggsy's word, verified on `/rosters`: added Patrick Mahomes, dropped Rachaad White;
+  Mahomes starts at QB, Maye benched** (week-11 QB for Maye's bye + denies QB-less RMonk9 the best free agent; White
+  projected 0 starts wks 10-17). Goff is now the SPARE QB. Detail + today's scratch plan: `temp/week9-moves-log.md`.
 - **Added Seth McGowan (RB IND, Taylor's backup) as a free agent and dropped the HOU DEF, 10-28 11:04 ET**, on
   Briggsy's word. Verified: `/rosters` shows him added, HOU gone, starters unchanged; `/transactions/8` shows a
   `free_agent` move, `complete`. SEA is now our only DEF.
@@ -20,18 +25,14 @@
 - **Sun 11-01 ~10:00 ET, on Briggsy's word, all verified on `/rosters`:** Stevenson → RB, Swift → BN (Henderson
   OUT made Stevenson NE's lead back: consensus 15.7 vs 14.7) · **Carnell Tate → IR** (Out) · **added Jared Goff, no
   drop** (week-11 QB for Maye's bye). Roster 17 = 16 active + Tate on IR. 🚨 **When Tate's Out tag clears, Sleeper
-  likely blocks our adds/claims until he leaves IR. Drop McGowan if Taylor is still a Colt; if Taylor was traded,
-  McGowan vs White is a judgment call. Never Fannin** (revised 11-04: Fannin now out-projects Strange; 12 targets in
-  week 8). Week-9 brief: `temp/week9-moves-log.md` (week 8: `temp/week8-moves-log.md`).
+  likely blocks our adds/claims until he leaves IR. Drop McGowan if Taylor is still a Colt after the NFL deadline
+  (Tue 11-10 4 PM ET); if Taylor was traded, McGowan becomes IND's lead back and the spare QB (Goff) goes instead —
+  Briggsy names it. Never Fannin** (revised 11-04: Fannin now out-projects Strange; 12 targets in week 8). Week-9
+  brief: `temp/week9-moves-log.md` (week 8: `temp/week8-moves-log.md`).
 - **Wed 11-04 ~18:10 ET, on Briggsy's word, verified on `/rosters`:** Swift, Collins, Fannin start over Stevenson,
   M. Wilson, Strange · **added the JAX DEF, dropped the SEA DEF** (JAX covers SEA's week-11 bye) and slotted it in.
 - **Week 9 vs kblizzy23 (6-2). Locks: Thu 11-05 8:15 PM (Strange, Flowers) and Sun 9:30 AM Madrid (London,
   Chase Brown), both before any GAMEDAY run except Sun 08:00.** NFL trade deadline Tue 11-10 4 PM ET (Taylor).
-- **Week 8 is all but lost:** Sun 20:58 board **Hunter 163.38, us 96.36**, with only our SEA DEF and his Myers (SEA K)
-  left Monday. His Allgeier (39.1, projected 7.9) and Higgins (37.5) did it; our Flowers 0.0 (5 targets, 0 catches),
-  London 1.8, Shrader 1.0. 🚨 **Week 9: London is Sleeper Q (Head), his second in-game concussion check in two
-  weeks** (cleared to return both times, per a Rotowire-sourced summary; not primary-confirmed). Read ATL's Wed–Fri
-  reports before setting WR. Collins is back from bye; Tate (IR) is on bye.
 - **Kaeperni's offer (A.J. Brown + Tucker Kraft for Zay Flowers) was DECLINED 10-22 ~22:20 ET** on
   Briggsy's word. Verified: the panel read REJECTED, Active Trades was empty, `/rosters` unchanged.
 - **`scripts/trade_eval.py` is BUILT, COMMITTED (10-23) and REVIEWED (10-23):** 9 opus lenses, 18
@@ -51,33 +52,37 @@
 
 ## Ranked next
 
-1. **Week 8 vs Hunter: the lineup is SET (10-27) and still right as of Fri 10-30 ~4:55 PM ET. No move needed now;
-   two calls are left.** Friday's re-check ran six lanes, each re-sourced by an independent verifier (workflow
-   `wf_274c3f63-2d9`). Detail is in `temp/week8-moves-log.md`. Three-site consensus (Fri 14:31): us **147.3**, Hunter
-   113.9. His DeVonta Smith is OUT (PHI, Fri 3:51 PM) and was still in his lineup at 16:52; Godwin is his only healthy
-   bench WR. No free agent beats our bench.
-   - **Settled:** London has no designation (absent from all three Falcons reports). Michael Wilson was LP Wed/Thu,
-     and LaFleur said Fri he "will play" (Arizona Sports, 2:32 PM); Arizona posts its Friday designation in the
-     evening, expect Q. Tate is OUT (bench). Taylor plays with a full workload (Steichen, Fri), and Maye is FP.
-   - **Sun ~11:30 AM ET, if Wilson is INACTIVE:** move Flowers FLEX → WR and put **Stevenson** (consensus 12.6) in at
-     FLEX. If Stevenson has already replaced Swift, use White (11.1). Make the move before 1:00 PM. The 11:30 gameday
-     run names this slide, but it reads Sleeper alone and names White (10.9). Go with the consensus.
-   - **Swift vs Stevenson: Chicago's SATURDAY 10-31 report decides.** Monangai was DNP Thu (estimated) and Fri
-     (Fishbain, 3:41 PM). The verifier rates him "likely sits": 26 days since the injury with no on-field work.
-     Out/Doubtful → keep Swift. Questionable after a Saturday practice → swap Stevenson in before NE's Sun 4:25 PM
-     kickoff. NE's TreVeyon Henderson is Q (ankle/illness), which means more work for Stevenson if he sits. Miami has
-     an 85% storm chance at 4:25.
-   - **Keep the laptop on the charger.** It slept on a dead battery Fri 12:58–14:21 (Kernel-Power: "Sleep Reason:
-     Battery"), the same failure that killed week 7's Sunday runs.
-   - **Kittle trade: ON HOLD (Briggsy, 10-28: "Let's hold on Kaeperni trade").** Don't re-pitch it unprompted.
-     Kaeperni rejected Tate + Goff for Kittle on 10-20. The priced package (Swift + Strange for Kittle) is in
-     `temp/week8-moves-log.md` if he reopens it. Trade deadline is week 11.
-   - Maye's week-11 bye: ✅ covered — Jared Goff added 11-01 (wk 9 Goff 20.2 vs Maye 20.6).
+1. **Week 9 Sunday (11-08), then the week-10 trade window.**
+   - **Today's scratch plan** (each fallback before that game's kickoff): 11:30 — Mahomes out → Maye in; Fannin out →
+     add Juwan Johnson (NO TE), drop McGowan, start him; Taylor out → McGowan starts. ~2:35 — Collins out → Wilson.
+     ~2:55 — Stevenson out → Wilson at FLEX. Read `GAMEDAY.md`'s 11:30 and 15:00 entries.
+   - **Kittle from Kaeperni is the league's best trade — the 10-28 HOLD STANDS until Briggsy lifts it** (he was shown
+     the finding 11-08 when he asked for opportunities). Evidence: 18 offline `--search` runs (6 teams × White /
+     Stevenson / Swift, 08:24 snapshot; Hunter excluded), the frontier re-priced live 09:28, then three independent
+     lenses (workflow `wf_6046ef41-db1`: news, model audit, would-they-accept). **Opener: Zay Flowers + Brenton Strange
+     for Kittle** (us +13.4 / +14.8 three-site / Sleeper, Kaeperni +2.6 / +4.4; wk-10 head-to-head about +7 for us;
+     ~+20 for us with the news lens's Flowers markdown — BAL's QB is a stopgap with Lamar out, possibly for the season).
+     Kaeperni asked for Flowers on 10-22; Strange covers Kraft's wk-11 bye for them. **Fallback if they counter:**
+     Stevenson + Flowers (us +13.5 / +14.8). **Floor: never Chase Brown + Flowers for Kittle** (us −7.5 / −3.7).
+     **Avoid Stevenson + Chase Brown** (its +13.7 is the tool's free-agent pickups; with none it is −1.4, RB holes wk 10
+     and wk 13) and **Bijan for C. Brown + Flowers** (fragile; stacks ATL's wk-11 bye). Send only after Kittle's game is
+     final, re-price on a fresh snapshot first (`temp/te_capture.py`), and it must be accepted by about Sat 11-14 to
+     count for week 10. League deadline: week 11. Hunter is commissioner and may be able to veto alone (unconfirmed).
+   - **Tate:** activate the moment TEN clears him (Wed 11-11 report); drop McGowan if Taylor is still a Colt (see START
+     HERE). A 2-for-1 trade would open the spot instead.
+   - **Week 13:** swap the spare QB for a K stream (Fairbairn / Little / Bates on Sleeper; re-pull three sites in wk 12).
+   - **Keep the laptop on the charger** Sat–Mon (dead-battery landmine below).
 2. **Optional: make `--search` fast again without moving a number.** It takes 355-373 s for 2,736
    packages on the frozen night (72 s before swaps repeated) and peaks at **2.7 GB** even with the
    memos emptied per give (measured 10-23; a reviewer measured ~1 GB on the one-swap code). Fine on
    this 32 GB laptop; check it before trusting a smaller one. Profile `Sim.fix`'s swap loop first;
    the suite pins every number, and `TestSearch.test_the_memos_are_emptied...` pins the memo contract.
+   **Workaround that already works (11-08):** freeze ONE live snapshot with `temp/te_capture.py` (wraps `g.fetch`,
+   `x.load`, `g.pull_kickoffs`, `g.now` during one cheap pricing run), then run many searches offline through
+   `tests/trade_eval_net.Net` with `temp/te_replay.py` — replay output proved identical to the live run, no network,
+   every package priced on the same data. 18 searches ran 3 at a time (~2 GB each, 6-12 min each) via
+   `temp/te_run_searches.sh`. Those three files are local only (temp/ is gitignored); promote them to `scripts/` with a
+   test if this becomes routine. Landmine: `xargs` chokes on `D'Andre Swift`'s apostrophe — pass id 6790 and `-d '\n'`.
 3. **Build the Tuesday waiver report** (`docs/in-season-plan.md` §1 — still unbuilt; the gameday
    check is §2 and done). Inputs are all in the inbox (`sleeper_transactions.json`,
    `sleeper_rosters.json`, `sleeper_state.json`, trending add/drop). Waivers clear **Wed ~03:15 ET**,
@@ -86,9 +91,9 @@
    projections: a team whose DEF row has no opponent is on bye, `trade_eval.bye_teams`' rule.
    Re-derive after any roster move):
    - **Never trade Hunter a RB or any flex body.** The 10-27 trade search left him out on purpose.
-   - **Week 9:** Tate. · **Week 10:** Swift. · **Week 12:** nobody.
-   - **Week 11 is the big one:** Maye, London, Fannin, Stevenson AND the SEA DEF. Goff (added 11-01) starts
-     at QB; stream a DEF if SEA is still the starter. Hunter loses Stafford and Myers.
+   - **Week 10:** Swift. · **Week 12:** nobody.
+   - **Week 11 is the big one:** Maye, London, Fannin, Stevenson. Mahomes (added 11-08) starts at QB; Strange covers
+     TE; the JAX DEF (added 11-04 for this week, at NYG) covers DEF. Hunter loses Stafford and Myers.
    - **Week 13:** Taylor, McGowan, Flowers, Shrader (stream a K). · **Week 14:** M. Wilson.
    - Hunter later: wk 10 D. Smith · wk 13 G. Wilson, B. Allen, BAL DEF · wk 14 McBride, Allgeier.
    - Trade deadline **week 11**. Playoffs 6 of 8, weeks 15-17.

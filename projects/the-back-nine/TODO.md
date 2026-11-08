@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-04, rewritten by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
+▶ **START HERE (2026-11-08, rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; next is U10, opened with `/brief`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -71,77 +71,28 @@ queue below (its order unmoved). Next, in order:
    red set as predicted; R10 36/36 against `u15`. Record `b9-u13-review\` (its `README.md`). **U5's CI miss, fixed
    (`63eca3f6`):** `verify:fit` had been red since `d4227774` (6 W gesture arms expected "You entered" where U5's Keep now
    reads "You kept"); test-only, the kept stamp proven to survive type-then-Keep.
-   **Next: FINISH the go-live commit (U6 + U7 + U14 + U8 + U9, writing version 5) — BUILT, TESTED AND REVIEWED IN THE TREE,
-   UNCOMMITTED (b9-4 built it; b9-5, 2026-11-05, wrote the arms, ran KTD7's review and applied its fixes; b9-6 the steps
-   below).** **FIRST, before any edit: `git status --short` must show the go-live's paths — under `src`, 40 modified and 10 new
-   (b9-4's 36 and nine, plus b9-5's `src/store/staleness.ts`, `src/intake/__tests__/workingCostStep.test.tsx`,
-   `src/intake/__tests__/workingYearQuote.test.ts`, `src/engine/__tests__/workingYearCheck.test.ts` and the new
-   `src/intake/__tests__/workingYearLeftOver.test.ts`; b9-6 edited only paths already in that set), and `e2e/vertical-fit.spec.ts`,
-   `e2e/caddie-walk.spec.ts`, `playwright.fit.config.ts`, `docs/architecture.md`, `docs/product.md`, `docs/caddie/cold-read-log.md`
-   and the plan. If they are gone, restore them:** `git apply --binary <golive>\wip-b9-6.patch` (its base in
-   `wip-b9-6.base`), then copy `<golive>\wip-b9-6-untracked\…` back, where `<golive>` is
-   `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\golive\`. Every as-built ruling (b9-4's and b9-5's) is recorded in the plan as an "(Amended at the go-live, 2026-11-05 …)"
-   note: R4, R5, R6, R7, R12, KTD2, KTD6, KTD9, KTD11, the state-diagram footnote, U7, U11 and U14. By exit code at the tree
-   (b9-6's close): `pnpm typecheck` 0, `pnpm lint` 0; the whole suite in a copy of the tree before the walk's copy fixes,
-   pinned to the P-cores, red only on the doc-citation arm (and the copy's three CI-workflow arms, by location); after the
-   fixes, the twelve suites they touch, 491/491. Not re-run after the fixes: the whole suite and `verify:fit`. **Done (b9-5):** steps 1–3 (the docs that went false;
-   U8's premise comments re-derived per answer; the unit arms — walk, panel, hold, session, and the new
-   `workingYearLeftOver.test.ts`); the e2e arms (`vertical-fit.spec.ts`: `datesaved`'s step, the seat, `datesavedmoved`'s Result and
-   door, the coordinate tap on "All of it" right after typing W, the two vault gate lines; `caddie-walk.spec.ts`: regions
-   `left-over-question` / `left-over-line` / `left-over-seat`, the `intake:leftover` walk and the four stale witnesses), each run
-   green per lane at both sizes, the coordinate tap proven to red under a served-module mutant of the release; and **KTD7's
-   review**, `wf_1b3d4a9f-f3f` (11 lenses with a four-angle adversary panel, 34 agents): 18 findings — 10 confirmed, every one P3
-   (five false comments, four test gaps, the shown-state rule split across three `===` sites), 1 hand-verified, 6 advisory, 1
-   rejected; no behavior defect. Its record: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-golive-review\`
-   (`brief.md`, every lens's repros). Its fixes are in the tree: one exhaustive Record per per-state rule in
-   `workingYearLeftOverState.ts` (`LEFT_OVER_FACE`, `LEFT_OVER_MOVED`, `LEFT_OVER_W_CLAUSE`); W's stale clause names the STORED
-   figure, in new words ("none of the $X a year you chose to save is added to your savings", flagged); the comments; the arms.
-   What is still owed, in order:
-   0. ~~Settle the suite's two timeouts~~ **DONE (b9-6, 2026-11-05): the cause is the CPU scheduler, not this build; no
-      code or timeout changes.** The A/B, both copies started from one vitest results cache: b9-4's tree 547 s and the live
-      tree 535 s, summed test time 3,288 s against 3,212 s, and both red F1 and F2 on their timeouts; no file moved by more
-      than 12 s. The laptop's i7-12700H has 6 P-cores (logical 0-11) and 8 E-cores (12-19), and Windows ran the session's
-      node tree on the E-cores with the P-cores idle (a full run sampled E 100 %, P 1-10 %). `solvePayloadIdentity.test.ts`
-      alone: 44 s pinned to the P-cores, 95 s pinned to the E-cores, 91 s unpinned. The live tree's whole suite pinned to the
-      P-cores: **290 s, F1 and F2 green** (only the doc-citation arm red; the copy's three CI-workflow arms red by
-      location). b9-5's 314 s baseline was a P-core run, since `devSeeds.test.ts` alone takes 429 s on the E-cores.
-      **Run every heavy local check pinned** (the suite, the mutant runner, the Playwright gates), from PowerShell:
-      `cmd /c "start `"`" /b /wait /affinity FFF pnpm …"` (every child inherits the mask). Through Git Bash's `cmd //c` the
-      same line hung with no child. Memory `reference-hybrid-cpu-ecore-confinement`.
-   1. ~~The mutant pass~~ **RUN (b9-6), on the tree BEFORE the walk's copy fixes (step 3; the plants' lines are unchanged by
-      them).** Predictions first, by four fresh Opus readers: `<b9-build2-surplus>\U6-MUTANTS.md` (full output in
-      `U6-predictions\`), list `tools\u6-mutants-list.cjs`, 15 plants (b9-5's 14 plus M15, IntakeApp's gate call fed the draft
-      without its answer). Their gaps added two arms first: `scenarioCodec.test.ts`' THE LITERAL-SUCCESSOR PIN (a step relabels
-      to N + 1, never the constant: M3 was otherwise equivalent) and `IntakeApp.test.tsx`'s `datesavedstale` gate-clause arm.
-      Baseline 4907/4907 green, pinned to the P-cores, in a copy of the tree. **RESULT: all 15 kill sets exactly as predicted**
-      (M4's 325 reds and 272 tests vanished at load, as predicted); each narrow kill's first line read for its plant's reason;
-      `out\u6-mutants.json`, the record's "Observed" section.
-   2. ~~The gates~~ **GREEN (b9-6), all pinned to the P-cores, on the tree BEFORE the walk's copy fixes:** `pnpm build` (tsc and
-      vite), `verify:bundle` 292.1 KiB ≤ 300, `verify:csp` 16 passed (1 skipped: the opt-in U8 spike), `verify:fit` 168 passed in
-      8.2 min. `playwright.fit.config.ts`' comment re-counted by hand to 57 (vertical-fit 32: the 22 plus build 2's ten). **Owed:
-      `pnpm verify:fit` again on the final words** (the check sentence grew to two sentences; every moved line grew).
-   3. ~~Re-capture, then the Caddie walk~~ **WALKED (b9-6), card filed at the top of `docs/caddie/cold-read-log.md`:
-      HARD-FLAG.** Walk 1 (`wf_246ff9ec-64e`, 103 agents) found the blocker: the check sentence was passed by market growth
-      alone. Fixed in `src/ui/copy.ts` (pay only; market gains, interest and dividends excluded), with the moved lines naming the
-      smaller figure through a third slot argument (`workingYearLeftOver.ts`, `WorkingYearLeftOverQuestion.tsx`, 25 test/e2e
-      calls), the moved methodology line's too-low caveat, and the saved line's reason. Walk 2 (three seats) read those. **Owed
-      before the commit, in order:** (a) the check sentence states its dollars: make `workingLedgerLeftOverCheck` a slot taking the
-      deposits and the implied total (`date`: "about $16,985 more of your pay … on top of the $20,000 you already put in, about
-      $36,985 in all"), fed from the ledger's year-0 rows in `WorkingYearLeftOverQuestion.tsx`; (b) the moved seat line's door,
-      "Choose “All of it” again to use $X", asks the question instead ("If about $X of your pay now ends up in savings each
-      year, choose “All of it” again"); (c) walk 3 on the final words: `CADDIE_TARGETS=intake:leftover,seed:datesavedmoved,vault:datesavedmoved`
-      pinned, then three fresh seats (hunter, spouse, copy-law), as walk 2 (walks 1 and 2's bundles are kept in `temp/caddie/`
-      for the comparison: delete both after walk 3); (d) `verify:fit` whole, pinned. The card's five
-      HOLDS findings (a)–(e) are filed for U12 below; the card holds on them, which does not block the commit (U10's
-      precedent).
-   4. **At the commit:** `git diff --stat 88a5d125 HEAD -- src package.json pnpm-lock.yaml vite.config.ts tsconfig.json` empty (else
-      re-mint the four fixtures with `mint-v4.mts`); the sweep `pnpm exec tsx <b9-build2-surplus>\tools\sweep.mts golive
-      --today=20758` and `node <b9-build2-surplus>\tools\idcheck.mjs golive u15` (36 identical, 3 candidate-only keys: `datesaved`,
-      `datesavedmoved`, `datesavedstale`; it becomes the baseline); `pnpm doc:reanchor HEAD --apply` once (it also shifts every
-      citation into `e2e/vertical-fit.spec.ts` past its old line ~2053); `pnpm verify:doc-stats`; the full suite; the folder
-      README's identity row and a `v4-parent` entry (archived from `88a5d125`, configs equal). ONE commit: `src`, both e2e
-      specs, `playwright.fit.config.ts` (the re-count), `docs/architecture.md`, `docs/product.md`, `docs/caddie/cold-read-log.md`
-      (b9-6's card) and the plan. The full suite pinned (`cmd /c "start "" /b /wait /affinity FFF pnpm test"`, from PowerShell).
+   **The go-live is COMMITTED: `a9cacf22` (b9-1, 2026-11-08), pushed.** U6 + U7 + U8 + U14 + U9, schema version 5. Its CI run
+   `42501619690` was in progress at b9-1's close: **Check at start:** `gh run view 42501619690 --json status,conclusion,jobs` (nothing else is open). Its Caddie card (top of
+   `docs/caddie/cold-read-log.md`) is HARD-FLAG, held on (a)–(e) and (q) below; the last round of words is unwalked and named on
+   the card. The R10 sweep `golive` is the identity baseline from here (`idcheck.mjs <label> golive`; README row added).
+   Walk bundles kept in `temp/caddie/`: `caddie-golive-b9-1-walk3`, `-walk4`, `-walk5`. b9-6's two (`caddie-golive-b9-6`, `caddie-golive-b9-6-fix`) are still there: other b9 sessions were live at b9-1's close, so delete them at the next close with none live.
+   **Filed by b9-1's walks 3 to 5 for U12 (the card's new hold (q) is a Tier 0 candidate; the rest go in as their seats rated
+   them):** (q) **the re-entry gate attests to balances only:** it names paychecks ("Markets and paychecks move") but shows no pay,
+   no W and no left-over answer, so "Still about right" never puts what the date leans on in front of the couple; measure a pay
+   cut entered after a save against the gate, then show pay and W on it. (r) the moved note on the gate and the Result: no cause
+   (the raise) and no year, its "so" reads backwards, "Look at that answer" means the reply on a page where "answer" is the
+   result, and the gate's "Either choice below leads to where you can change it" has an unclear "it". (s) the provisional strip
+   never moves on a reply tap under "WITH WHAT YOU’VE ENTERED SO FAR" (it shows the uncredited date, so not rosy; a live
+   recompute per tap is the bargaining tick back-nine-design bans: a copy-only fix, e.g. "counts once you continue"). (t) the
+   how-much ask: every walk, every seat (D7's build; the stopgap shipped is the unanswered line's "adds none of it for now").
+   (u) the investment-income line gives no reason it "isn’t counted as coming in", and `date` carries $30,000 of it with no
+   taxable account. (v) "Medicare starts for Sam, paid from savings" carries no dollars beside a rising left over. (w) door 4's
+   "Lifetime health costs … around ~$296,800" leaves out working-year premiums and hedges twice. (x) the landing's "State income
+   tax isn’t priced yet" names no remedy (pick a state) and never meets the working years. (y) the check paragraph sits above
+   the legend, so it names replies before the reader meets them, and in the seat it reads as describing the checked answer
+   (the hint slot in `SegmentedControl`). (z) the moved methodology row names neither figure, and the left-over row sits under
+   the tax heading. (aa) the ROSE line's middle branch states a share of the left over, not the statement total it implies
+   ($36,985 on `datesavedmoved`): pass the deposits to `workingLedgerLeftOverRoseLine` and say it.
    **Filed by KTD7's review for U12 (each into the register with its prescription):** (g) **a lost tap above the seat:** the W
    question between the held picture and the seat draws live, so a seat press whose blur commits a W below the out-of-pocket
    medical figure (its below-medical note) or a refused figure (its error) mounts a line above the seat; the press is lost,
@@ -172,11 +123,11 @@ queue below (its order unmoved). Next, in order:
    rose) and year; the stale clause's "you chose to save" figure a spouse can't place, and the waiting seat hiding the stored
    answer; the check sentence between the legend and the replies (a hint slot in `SegmentedControl`); the waiting
    methodology line's passive "is checked".
-   At EVERY `src` commit from here: the sweep and the per-key `idcheck` above (PER KEY: never a whole-file `cmp`); the per-commit
+   At EVERY `src` commit from here: the sweep and the per-key `idcheck` against `golive` (PER KEY: never a whole-file `cmp`); the per-commit
    record is the table at the foot of that folder's `README.md`. Then the build units in the plan's order, each
    opened with `/brief <that unit's topic>`:
    - Phase A: ~~U2~~, ~~U3~~, ~~U4~~, ~~U15~~, ~~the engine review~~ (done).
-   - **The review's forward obligations (each a prescription for the unit named):** (a) **U7's carriage** writes the figure
+   - **The review's forward obligations (each a prescription for the unit named):** (a) ~~**U7's carriage**~~ (DONE in the go-live, `a9cacf22`) writes the figure
      only when R3's shown state is "saved", which needs a KNOWN picture with a printed year-0 Left over of $1 or more AND a
      fresh W. The engine caps at the run's OWN year-0 print, so a figure carried while `workingYearLedgerForRun` reads
      `'unknown'` would still credit. Pin it with a `buildDateInput` arm on an unknown-picture draft. (b) **U11's tooling:**
@@ -193,7 +144,7 @@ queue below (its order unmoved). Next, in order:
      register pass** closes *Keeping a stale yes turns it into an entered figure…* with `d4227774`, recording the unit-tap
      carry and the residual: the stamp's VALUE is read by nothing (x8, the door stamping off the render-captured draft,
      survives every test) — pin it the day anything reads it.
-   - **U13's forward obligations:** (f) **U14** (in the go-live) owns the four its review recorded in the plan's U14 section
+   - **U13's forward obligations:** (f) ~~**U14**~~ (DONE in the go-live, `a9cacf22`) owned the four its review recorded in the plan's U14 section
      (the "Amended at U13" note): the moved predicate and the gate's moved sentence read ONE core over the draft (the way
      `isWorkingYearCostStale` and `workingYearCostStaleText` both read `workingYearCostStaleness`), because `composeReentry`
      throws on the fact without its sentence and `IntakeApp`'s catch turns that into the restore-failed face on every
@@ -201,7 +152,7 @@ queue below (its order unmoved). Next, in order:
      the Result reads it (`rulesMoved` also fires on the ACA, Medicare, contribution and app-default clocks); `canChange` on
      `ReentryLeftOverStale` if the gate's moved line carries a door sentence; and the two test files U14 must edit
      (`stalenessExposure.test.ts`'s source-bind and `staleness.test.ts`'s property arm, which gains `datesaved`).
-   - Phase B: ~~U5~~ and ~~U13~~, the version-4 archive, the go-live (U6 + U7 + U8 + U14 + U9), then U10.
+   - Phase B: ~~U5~~, ~~U13~~, ~~the version-4 archive~~, ~~the go-live (U6 + U7 + U8 + U14 + U9)~~ (`a9cacf22`), then U10.
    - Phase C: U11, then U12.
    After the build: the whole-file review, with an adversary and every finding verified; then `/distill`. The record (brief,
    seven research dossiers, three deepen artifacts, the doc-review's `RESOLVED.md`) is in
@@ -246,12 +197,25 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-05 (b9-6: step 0 settled, the mutant pass, the gates, the Caddie walk and its fixes, UNCOMMITTED — b9-5's block
-pruned into it):** no `src` commit (START HERE item 1). The work is snapshotted at `b9-build2-surplus\golive\wip-b9-6.patch` +
-`wip-b9-6-untracked\` (base in `wip-b9-6.base`). Exit codes are in START HERE item 1. Helpers: four prediction readers (about
-1.5M tokens), the Caddie panel `wf_246ff9ec-64e` (103 agents, about 10.5M), walk 2's three seats (about 0.4M).
-**Why it closed before the commit:** the walk's blocker and its fixes came at 48 % of the window; walk 3, `verify:fit` and the
-commit steps need a fresh one.
+**SESSION 2026-11-08 (b9-1: the go-live COMMITTED, `a9cacf22`, after Caddie walks 3 to 5 — b9-6's block pruned into it):**
+the four owed steps ran: (a) the check sentence states its dollars (two slots, with and without a deposits row); (b) the moved
+seat line asks the question, split ROSE / FELL with one instruction per case; (c) walks 3, 4 and 5 on the words, each with
+fixes (card at the top of `docs/caddie/cold-read-log.md`, tape rows added for it and b9-6's card); (d) `verify:fit` on the final
+words. Then the sweep (`golive`, 36 of 36 identical against `u15`), the re-anchor (783 edits, 5 hand-reviewed), `verify:doc-stats`
+OK, and one commit, pushed. Helpers: three Caddie panels (`wf_8a122df2-d64`, `wf_3525036f-1fe`, `wf_eb3592b7-f14`, 172 agents,
+about 17M tokens).
+**DISTILL CANDIDATES (b9-1):**
+- **A guard sentence's qualifier is a loophole when the payoff is all or nothing.** "Choose “All of it” only if about $16,985…"
+  let a household saving most of it round up, since "Some of it" counted $0; three walks found it. Under a cliff payoff the
+  condition says "all of this", and the partial answer's zero is stated before the pick.
+- **A threshold stated without its base is met by the money the reader already counts.** "If at least $16,985 still goes in"
+  was satisfied by the $20,000 of deposits every household makes; "of the $27,537" closed it. Name what a threshold is a share of.
+- **Each fix round of copy needs its own cold read.** Walk 4 found a blocker that walk 3's fixes introduced (two instructions
+  for one household across the radios); walk 5 found none. Budget a re-read per round, and say on the card which words are
+  unwalked.
+- **"Same tree, slower machine" needs the timed-out tests rerun alone before any verdict.** b9-6 found the E-core scheduler;
+  b9-1 found sustained-load clocks: 802 s against 290 s, every timed-out test green alone. A wrapper that echoes the real exit
+  code is part of the instrument (`start /wait` returned 0 on a failing run).
 **DISTILL CANDIDATES (b9-6):**
 - **"The same tree was green an hour ago" can be the scheduler.** Windows ran the session's node tree on the i7-12700H's 8
   E-cores with the P-cores idle, so the suite took 535 s and two solve tests timed out; pinned to the P-cores (`start /affinity
@@ -368,7 +332,24 @@ commit steps need a fresh one.
 - **A plan's verification sentence can fix a design its Files list never states.** U3's "the ledger tests pass with only
   the allowlist edit" forced the ledger to RE-EXPORT the bottom line (its test imports it from the ledger), though the
   Files list said only "imports it". Read every verification clause for the shape it implies before choosing one.
-**LANDMINES (b9-6's of 11-05 first, then b9-5's and b9-4's of 11-05, then b9-3's of 11-04, b9-2's and b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
+**LANDMINES (b9-1's of 11-08 first, then b9-6's of 11-05, then b9-5's and b9-4's of 11-05, then b9-3's of 11-04, b9-2's and b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
+- **(b9-1, 11-08) `cmd /c "start "" /b /wait /affinity FFF <cmd>"` reports exit 0 even when the command failed** (a failing vitest
+  run came back 0). Launch through a wrapper `.cmd` that runs `call %*` then `echo PINNED_EXIT=%errorlevel%`, and read that line:
+  the copy is `<b9-build2-surplus>\tools\run-pinned.cmd` (three lines; from PowerShell, `cmd /c "start `"`" /b /wait /affinity FFF <that path> pnpm test"`; proven with `node -e process.exit(3)` → `PINNED_EXIT=3`). The child really is pinned
+  (a node child read its own affinity as 4095 = 0xFFF).
+- **(b9-1, 11-08) Never run a heavy job on the E-cores beside a pinned P-core run.** The identity sweep on `/affinity FF000` slowed
+  the pinned suite from 534 s to 863 s (the cores share one power budget). Serialize: the sweep, then `verify:fit`, then the suite.
+- **(b9-1, 11-08) The laptop ran about 2.5x slower than on 11-05 under sustained load**, with no other process busy: the whole suite
+  pinned took 802 s (b9-6: 290 s), seven heavy engine tests timed out, and `verify:fit` timed out 12 final-tier waits. Every one
+  passed alone (`playwright test --last-failed`, then `--workers=1`; each vitest file on its own). Under load the P-cores read
+  about 100-120 % of base clock against 179 % idle. Before calling a red real, rerun the timed-out tests alone; an assertion is
+  a finding, a timeout on this machine is not yet one.
+- **(b9-1, 11-08) Another session's work shares the CPU:** the Feud session's `te_replay.py` searches each held a core through
+  b9-1's first suite, and an orphaned `python.exe -` from a dead 10-30 session had held one for 9 days (killed with his OK, by
+  `taskkill /PID`). Check `Get-CimInstance Win32_Process` for busy python before a heavy local gate.
+- **(b9-1, 11-08) A copy fix can contradict a line on the other side of the radios.** Walk 4's blocker: the check sentence's
+  partial-saver line ("choose Some of it") and the moved line's way out ("leave this as it is") told the same household two
+  things. Read every line a state shows together, top to bottom, after any copy edit to one of them.
 - **(b9-6) Run every heavy local check pinned to the P-cores, launched from PowerShell:** `cmd /c "start `"`" /b /wait /affinity FFF
   <command>"` (the children inherit the mask; vitest and Playwright size their pools to 12 CPUs). Unpinned, the work lands on
   the E-cores and the solve tests time out. The same `start` line through Git Bash's `cmd //c` hung with no child process.

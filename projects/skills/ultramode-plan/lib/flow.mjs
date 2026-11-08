@@ -233,7 +233,8 @@ export function stageGate({ line, action = "start", stage, planBytes, costs = {}
 
 // ---------------------------------------------------------------- check rounds 2 and 3 (KTD9)
 
-const CHANGE_KINDS = ["edit", "add", "delete"];
+// Exported for run-record.mjs's fold-land, which keeps a check round's changes for the next round.
+export const CHANGE_KINDS = ["edit", "add", "delete"];
 
 // The seats a round re-runs: coherence, plus every running seat whose claim class one of the
 // round's changes touched, in the roster's order. A deletion is a change like any other. Each

@@ -99,11 +99,15 @@ function runStage(w, rec, runId, { s = S1, helpers = [], before } = {}) {
   return complete(rec, { launch: l.launch, session: s });
 }
 
-// A fold of the current step: the working file gets `text`, and the ids land.
-function fold(rec, text, ids, s = S1) {
+// One change a check round's fold made, as the main loop records it for the next round (R4-28).
+const ADD = (id) => ({ id, kind: "add", classes: ["coherence"], text: `${id}'s new sentence.` });
+// A fold of the current step: the working file gets `text`, and the ids land. A check-1 or check-2
+// fold records the changes the next round re-checks: unless `changes` is given, one add per id.
+function fold(rec, text, ids, s = S1, changes) {
   const f = foldStart(rec, { session: s });
   writeFileSync(f.working, text);
-  return foldLand(rec, { ids, session: s });
+  const recorded = changes ?? (["check-1", "check-2"].includes(rec.steps.at(-1).stage) ? ids.map(ADD) : undefined);
+  return foldLand(rec, { ids, session: s, ...(recorded ? { changes: recorded } : {}) });
 }
 
 // The deepen's risk profile (KTD5), noted before its outcome.
@@ -384,6 +388,84 @@ test("restart: a crash after the target is recorded but before the rename re-run
   assert.deepEqual(load(rec._path).steps.at(-1).ledger, ["D3"]);
   assert.equal(landed.target, sha256("# New plan\n\nsecond try\n"));
   assert.equal(advance(load(rec._path), { outcome: "deepened", session: S2 }).step, "check-1");
+});
+
+// A run taken through a folded deepen to check round 1, launched and finished but not folded.
+function atCheck1(w) {
+  const rec = atDeepen(w);
+  fold(rec, "# New plan\n\n## Goal\n\ndeepened\n", ["D1"]);
+  assert.equal(advance(rec, { outcome: "deepened", session: S1 }).step, "check-1");
+  runStage(w, rec, "wf_check-003");
+  return rec;
+}
+
+test("a check round's fold records the changes the next round re-checks, in the record write before the rename, and show hands them to a new session; other folds take none (U4's round 3, R4-28)", (t) => {
+  const w = world(t);
+  const rec = atDeepen(w);
+  // A deepen's fold has no round 2 (check round 1 re-reads every deepened section): it takes no changes.
+  writeFileSync(foldStart(rec, { session: S1 }).working, "# New plan\n\n## Goal\n\ndeepened\n");
+  assert.throws(() => foldLand(rec, { ids: ["D1"], changes: [ADD("D1")], session: S1 }), /changes are recorded for a check-1 or check-2 fold only/);
+  foldLand(rec, { ids: ["D1"], session: S1 });
+  advance(rec, { outcome: "deepened", session: S1 });
+  runStage(w, rec, "wf_check-003");
+  writeFileSync(foldStart(rec, { session: S1 }).working, "# New plan\n\n## Goal\n\nround 1\n");
+  const EDIT = { id: "C1", kind: "edit", classes: ["coherence", "feasibility"], text: "- R7. land refuses a dirty path.", was: "- R7. land refuses a dirty path and a moved HEAD." };
+  const DEL = { id: "C2", kind: "delete", classes: ["reach"], text: "U5. The PDF export." };
+  const land = (changes) => () => foldLand(load(rec._path), { ids: ["C1", "C2"], changes, session: S1 });
+  assert.throws(land(undefined), /a check-1 fold records the changes round 2 re-checks/);
+  assert.throws(land([]), /a check-1 fold records the changes round 2 re-checks/);
+  assert.throws(land([EDIT]), /C2 has no change/);
+  assert.throws(land([EDIT, DEL, { ...DEL, id: "C9" }]), /change 3 names C9, which is not among the ids this fold applied/);
+  assert.throws(land([{ ...EDIT, was: undefined }, DEL]), /an edit carries was, the text it replaced/);
+  assert.throws(land([{ ...EDIT, was: " - R7. land refuses a dirty path.\n" }, DEL]), /an edit whose was is its text changed nothing/);
+  assert.throws(land([EDIT, { ...DEL, was: "x" }]), /was is for an edit only/);
+  assert.throws(land([{ ...EDIT, kind: "move" }, DEL]), /kind "edit", "add" or "delete"/);
+  assert.throws(land([EDIT, { ...DEL, text: " " }]), /text, the text it added, replaced with or removed/);
+  assert.throws(land([EDIT, { ...DEL, classes: "reach" }]), /classes, the seats whose claim classes it touched/);
+  assert.throws(land([EDIT, { ...DEL, classes: ["readability"] }]), /touches "readability", which is no seat/);
+  assert.throws(land([EDIT, { ...DEL, id: " " }]), /change 2 has no id/);
+  // No refusal wrote the record or moved the plan.
+  assert.deepEqual([load(rec._path).steps.at(-1).target, load(rec._path).steps.at(-1).changes], [null, undefined]);
+  // One id may carry several changes; an id is trimmed as the ledger's is.
+  const MORE = { id: "C1", kind: "add", classes: [], text: "R9. The export names its columns.\nEach column has a type." };
+  const landed = foldLand(load(rec._path), { ids: ["C1", "C2"], changes: [{ ...EDIT, id: " C1 " }, MORE, DEL], session: S1 });
+  assert.deepEqual(landed.changes, [EDIT, MORE, DEL]);
+  // A new session reads them back from the record alone: the staged plan's earlier text is gone.
+  const seen = show(load(rec._path));
+  assert.deepEqual(seen.steps.map((s) => [s.stage, s.changes]), [["research", null], ["write", null], ["deepen", null], ["check-1", [EDIT, MORE, DEL]]]);
+  assert.equal(advance(load(rec._path), { outcome: "done", changes: 2, session: S1 }).step, "check-2");
+  runStage(w, load(rec._path), "wf_check-004");
+  assert.throws(() => fold(load(rec._path), "# New plan\n\n## Goal\n\nround 2\n", ["F1"], S1, []), /a check-2 fold records the changes round 3 re-checks/);
+  fold(load(rec._path), "# New plan\n\n## Goal\n\nround 2\n", ["F1"], S1, [ADD("F1")]);
+  assert.deepEqual(show(load(rec._path)).steps.at(-1).changes, [ADD("F1")]);
+});
+
+test("a check fold whose rename never landed re-runs and rewrites its changes; with its saved result gone, restart clears them with the target and ledger (R4-28)", (t) => {
+  const w = world(t);
+  const rec = atCheck1(w);
+  writeFileSync(foldStart(rec, { session: S1 }).working, "# New plan\n\nround 1, first try\n");
+  const unlock = lockRenames(t, "plan.working.md", "EIO");
+  assert.throws(() => foldLand(rec, { ids: ["C1"], changes: [ADD("C1")], session: S1 }), /EIO/);
+  unlock();
+  // The record write before the rename holds the changes with the target and the ledger.
+  assert.deepEqual(load(rec._path).steps.at(-1).changes, [ADD("C1")]);
+  const r = restart({ record: rec._path, session: S2, registry: w.registry }, w.opts);
+  assert.equal(r.action, "fold", r.reason);
+  fold(load(rec._path), "# New plan\n\nround 1, second try\n", ["C2"], S2, [ADD("C2")]);
+  assert.deepEqual(load(rec._path).steps.at(-1).changes, [ADD("C2")]);
+  // The saved result gone: the stage re-runs, and nothing of the unlanded fold survives.
+  const w2 = world(t);
+  const gone = atCheck1(w2);
+  writeFileSync(foldStart(gone, { session: S1 }).working, "# New plan\n\nround 1, first try\n");
+  const unlock2 = lockRenames(t, "plan.working.md", "EIO");
+  assert.throws(() => foldLand(gone, { ids: ["C1"], changes: [ADD("C1")], session: S1 }), /EIO/);
+  unlock2();
+  unlinkSync(join(w2.projects, SLUG, S1, "workflows", "wf_check-003.json"));
+  const rerun = restart({ record: gone._path, session: S2, registry: w2.registry }, w2.opts);
+  assert.equal(rerun.action, "rerun", rerun.reason);
+  const step = load(gone._path).steps.at(-1);
+  assert.deepEqual([step.target, step.ledger, step.changes], [null, null, null]);
+  assert.equal(show(load(gone._path)).steps.at(-1).changes, null);
 });
 
 test("restart: a window stop resumes at the held stage, and the TEST reading is recorded as one", (t) => {

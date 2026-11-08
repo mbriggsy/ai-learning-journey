@@ -10,7 +10,8 @@
 //   - what: ultramode-plan-run.json, with the base commit and project subtree hash, the brief's
 //     sha256, the contract brief, the named path's state at the start, every CE resolution with the
 //     stages it served, the risk profile and lens picks, one step per pass through a stage (its
-//     before and target hashes of the staged plan and its fold ledger), the premise send-backs,
+//     before and target hashes of the staged plan and its fold ledger, and a check round's changes,
+//     which the next round re-checks and the rename leaves no other copy of), the premise send-backs,
 //     every session id, and every Workflow launch (run id, session, script and its sha256, CLI
 //     version, exact args, relayed user text, saved-result path, transcript folder);
 //   - the staged plan: written and folded in the run folder (plan.md), reaching the named path only
@@ -58,7 +59,9 @@
 //   complete     { record, launch, notStarted? }               -> the saved result's status and the stray sweep
 //                (stuck strays named); notStarted, the Workflow tool's error, closes a launch with no run id
 //   fold-start   { record, session? }                          -> { working, staged, before, savedResult }
-//   fold-land    { record, ids, session? }                     -> { target }
+//   fold-land    { record, ids, changes?, session? }           -> { target, ledger, changes? }; changes is
+//                required on a check-1 or check-2 fold and refused on any other: one or more
+//                { id, kind, classes, text, was? } for each id, kept for the next round
 //   advance      { record, outcome, changes?, p0p1?, open?, brief?, session? } -> flow.mjs's next step, recorded
 //   block        { record, reason, session? }                  -> closes the run as blocked
 //   land-check   { record }                                    -> { ok, moved, ... } (exit 1 when the path changed)
@@ -78,7 +81,7 @@ import { homedir } from "node:os";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { gunzipSync, gzipSync } from "node:zlib";
 import { isMain, usage } from "./entry.mjs";
-import { STAGES, firstStage, landingCheck, loadStageCosts, moveLine, nextStep, pathFacts, stageGate, startCheck } from "./flow.mjs";
+import { CHANGE_KINDS, STAGES, firstStage, landingCheck, loadStageCosts, moveLine, nextStep, pathFacts, stageGate, startCheck } from "./flow.mjs";
 import { MAX_SLUG, defaultProjectsDir, fromGitBash, longOf, samePath, slugOf } from "./paths.mjs";
 import { KNOWN_SEATS, SEATS_WITHOUT_CE, changedInPlace, checkResolution, inlineSeats, resolveCe, sameResolution } from "./resolve-ce.mjs";
 
@@ -985,10 +988,43 @@ function lastFinishedBefore(rec, step) {
 // other stage its own newest finished launch. Null when none is readable.
 const foldSource = (rec, step) => (step.stage === "write" ? lastFinishedBefore(rec, step) : finishedLaunch(rec, step));
 
+// A check round's changes, which the next round re-checks: round 2 check-1's fold, round 3 the P0
+// or P1 fixes of check-2's (KTD9). The rename leaves no copy of the plan before the fold, so a
+// restart between the fold and that round reads them from the record alone (U4's round 3, R4-28).
+// Each is { id, kind, classes, text, was? }: flow.mjs roundSeats' { id, kind, classes } and
+// prompts.mjs promptRoundBlock's { kind, text, was }, an edit carrying the text it replaced. Null
+// for every other fold, which takes none.
+const NEXT_ROUND = { "check-1": "round 2", "check-2": "round 3" };
+function foldChanges(stage, changes, ids) {
+  if (!Object.hasOwn(NEXT_ROUND, stage)) {
+    if (changes !== undefined) fail(`changes are recorded for a check-1 or check-2 fold only, which the next check round re-checks; a ${stage} fold takes none`);
+    return null;
+  }
+  if (!Array.isArray(changes) || changes.length === 0) fail(`a ${stage} fold records the changes ${NEXT_ROUND[stage]} re-checks: changes is a list of { id, kind, classes, text, was? }, one or more for each id it applied`);
+  const out = changes.map((c, i) => {
+    const id = c && typeof c.id === "string" && c.id.trim() ? c.id.trim() : null;
+    if (!id) fail(`change ${i + 1} has no id`);
+    if (!ids.includes(id)) fail(`change ${i + 1} names ${id}, which is not among the ids this fold applied (${ids.join(", ")})`);
+    if (!CHANGE_KINDS.includes(c.kind)) fail(`change ${id} has kind ${JSON.stringify(c.kind)}: a change is of kind "edit", "add" or "delete" (flow.mjs's change kinds)`);
+    if (!Array.isArray(c.classes) || c.classes.some((s) => typeof s !== "string")) fail(`change ${id} needs classes, the seats whose claim classes it touched (a list, empty when it touched none)`);
+    for (const s of c.classes) if (!KNOWN_SEATS.has(s)) fail(`change ${id} touches ${JSON.stringify(s)}, which is no seat`);
+    if (typeof c.text !== "string" || !c.text.trim()) fail(`change ${id} needs text, the text it added, replaced with or removed`);
+    if (c.kind !== "edit") {
+      if (c.was !== undefined) fail(`change ${id}: was is for an edit only, not ${c.kind} (an add has no old text, and a deletion's text is its old text)`);
+      return { id, kind: c.kind, classes: [...c.classes], text: c.text };
+    }
+    if (typeof c.was !== "string" || !c.was.trim()) fail(`change ${id}: an edit carries was, the text it replaced (from a diff of the section before and after the fold)`);
+    if (c.was.trim() === c.text.trim()) fail(`change ${id}: an edit whose was is its text changed nothing`);
+    return { id, kind: c.kind, classes: [...c.classes], text: c.text, was: c.was };
+  });
+  for (const id of ids) if (!out.some((c) => c.id === id)) fail(`${id} has no change: the next round re-checks every id this fold applied by its changes`);
+  return out;
+}
+
 // The end of a fold: the working file's hash is recorded as the step's target, with its applied
-// ids as the step's ledger entry, in one record write just before the rename that lands it; a fold
-// that re-runs rewrites both. A crash at any point leaves the staged plan at its before hash or its
-// target (KTD9).
+// ids as the step's ledger entry (and a check round's changes), in one record write just before the
+// rename that lands it; a fold that re-runs rewrites them all. A crash at any point leaves the staged
+// plan at its before hash or its target (KTD9).
 export function foldLand(rec, input) {
   writable(rec, sessionOf(input));
   if (rec.end) fail("the run has reached its landing; it folds nothing more");
@@ -998,6 +1034,7 @@ export function foldLand(rec, input) {
   const clean = ids.map((x) => x.trim());
   if (new Set(clean).size !== clean.length) fail("ids names one ledger id twice");
   if (clean.length === 0 && step.stage !== "write") fail(`a ${step.stage} fold applies at least one id; with none there is no fold to land (advance with zero changes)`);
+  const changes = foldChanges(step.stage, input.changes, clean);
   if (!existsSync(workingPath(rec))) fail(`there is no working file at ${workingPath(rec)}: run fold-start first`);
   if (stagedHash(rec) !== step.before) fail(`the staged plan is not at step ${step.n}'s before hash: ${hashes(rec, step)}`);
   const target = fileSha(workingPath(rec));
@@ -1006,13 +1043,14 @@ export function foldLand(rec, input) {
   if (target === step.before) fail("the working file is identical to the staged plan: the fold changed nothing, so there is nothing to land");
   step.target = target;
   step.ledger = clean;
+  if (changes) step.changes = changes;
   step.foldedAt = stamp();
   // The write's fold is research's work done by the main loop, on the CE it holds now.
   if (step.stage === "write") step.foldCe = latestCe(rec).id;
   save(rec);
   renameRetry(workingPath(rec), stagedPath(rec));
   if (stagedHash(rec) !== step.target) fail(`the staged plan reads ${stagedHash(rec)} after the rename, not the target ${step.target}`);
-  return { ok: true, target: step.target, ledger: step.ledger };
+  return { ok: true, target: step.target, ledger: step.ledger, ...(changes ? { changes } : {}) };
 }
 
 // A stage boundary: the step's outcome goes to flow.mjs's nextStep with the recorded send-back
@@ -1170,7 +1208,7 @@ export function restart(input = {}, { projectsDir = defaultProjectsDir(), cwd = 
   if (step.target !== null) {
     if (from) return done({ action: "fold", step: step.n, stage: step.stage, reason: `${unlanded}the fold re-runs from the before hash and rewrites its ledger entry`, savedResult: from.savedResult });
     // The saved result the recorded fold read is gone, so the fold cannot re-run: the stage does.
-    Object.assign(step, { target: null, ledger: null, foldedAt: null });
+    Object.assign(step, { target: null, ledger: null, changes: null, foldedAt: null });
   }
   if (step.stage === "brief") return done({ action: "start", step: step.n, stage: step.stage, reason: "the brief has not been recorded: run the gate in this session, then /brief, then advance with its path" });
   if (step.launches.length === 0) return done({ action: "start", step: step.n, stage: step.stage, reason: `${step.stage} has not launched: run the gate, then launch it` });
@@ -1426,8 +1464,9 @@ export function show(rec) {
   return {
     record: rec._path, plan: rec.plan.path, state: rec.state, update: rec.update, startedAt: rec.startedAt,
     step: step ? { n: step.n, stage: step.stage, before: step.before, target: step.target, launches: step.launches, outcome: step.outcome, ...premiseOf(step) } : null,
-    // Rounds 2 and 3 re-check what earlier folds applied, so every step's ledger is handed on.
-    steps: rec.steps.map((s) => ({ n: s.n, stage: s.stage, outcome: s.outcome, ledger: s.ledger })),
+    // Rounds 2 and 3 re-check what earlier folds applied, so every step's ledger is handed on, with
+    // a check round's changes, the next round's only source after the rename (R4-28).
+    steps: rec.steps.map((s) => ({ n: s.n, stage: s.stage, outcome: s.outcome, ledger: s.ledger, changes: s.changes ?? null })),
     // receipt-fields' `ran` is keyed by these launch ids, one per completed launch.
     launches: rec.launches.map((l) => ({ id: l.id, step: l.step, stage: l.stage, ce: l.ce, status: l.status, runId: l.runId })),
     contractBrief: rec.contractBrief, risk: rec.risk, lenses: rec.lenses, external: rec.external, parks: rec.parks, council: rec.council,

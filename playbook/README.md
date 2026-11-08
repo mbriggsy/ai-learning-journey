@@ -29,13 +29,14 @@ What Claude asks `ce-plan` for, every time:
 - the plan's path inside the project's `docs/plans/`;
 - Opus for every helper, because otherwise the plugin sends some of them to cheaper models; and an effort level for each, xhigh for the reviewers and high for the researchers;
 - the whole plan for the reviewers who hunt contradictions and ways it could break, because by default each reviewer gets only the sections for its angle, and the check has to cover the plan as a whole;
+- the full team of reviewers, the one who tries to break the plan included, by passing `depth:full` to its `ce-doc-review` call and naming `adversarial-document-reviewer` on the team. Since plugin version 3.36.0 (2026-11-06), a plan that shows no product, design, security or high-stakes sign otherwise gets a "lite" check: one reviewer covering three angles at once, with no one trying to break it. The check's result says which ran: a "lite review" line there means the ask was dropped, and the check runs again;
 - no scope question to you before it starts (`confirm:auto`), because you judge the result; a real fork that is yours still comes to you from Claude;
 - a stop after the check, because the plugin's next step hands the plan to its build skill, which moves the work off main onto a new branch.
 
 Only Claude models do the work: the plugin's review pass by another company's model is switched off in the repo's `.compound-engineering/config.yaml`. The plan's commit message says what ran ("planned, deepened and checked", or "planned, confidence check passed, checked" when no section needed deepening), and the build starts only once the plan's history shows it.
 
 - **Start it:** nothing to say; Claude starts it for sizable work. You can also say "plan <the work>".
-- **Lives in:** the `ce-plan` and `ce-doc-review` skills of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`. The plugin updates itself: version 3.35.3 installed on its own on 2026-11-04.
+- **Lives in:** the `ce-plan` and `ce-doc-review` skills of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`. The plugin updates itself: version 3.37.0 installed on its own on 2026-11-08.
 
 ### 3. Build
 

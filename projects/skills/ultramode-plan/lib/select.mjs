@@ -27,6 +27,10 @@ export const CRITICAL_KINDS = ["key-decisions", "units", "system-impact", "risks
 
 const selectBlocked = (reason) => ({ result: "blocked", reason, sections: [], candidates: 0, cap: null, rules: [] });
 
+// The plan's title, from the index sorted by line: with more than one heading, a first heading every
+// other sits deeper than; null for a plan of two top-level parts (prompts.mjs marks the same one).
+const selectTitle = (heads) => (heads.length > 1 && heads.slice(1).every((h) => h.level > heads[0].level) ? heads[0] : null);
+
 // Does the score list cover the plan? Counted against what was asked (playbook insight 013), the
 // plan's section index from KTD7 (flow.mjs's `index` command builds it, fences and front matter
 // skipped): every row must start at a heading in the index, and no heading may be scored twice.
@@ -53,7 +57,7 @@ function selectCoverage(scores, index) {
     if (seen.has(s.line)) return `line ${s.line} is scored twice`;
     seen.add(s.line);
   }
-  const title = heads.length > 1 && heads.slice(1).every((h) => h.level > heads[0].level) ? heads[0] : null;
+  const title = selectTitle(heads);
   const spanEnd = (i) => {
     for (let j = i + 1; j < heads.length; j++) if (heads[j].level <= heads[i].level) return heads[j].line;
     return Infinity;
@@ -103,7 +107,11 @@ export function selectSections({ scores, index, depth, riskSignals, deepened } =
     ...(deepened ? ["the plan already carries a deepened: date: a strengthened section ranks one point lower and loses an equal rank to one not yet strengthened"] : []),
     "ties: a critical section first, then document order",
   ];
-  const candidates = rows.filter((r) => r.points >= 2);
+  // A row at the title covers nothing (selectCoverage), so it is never a candidate: selected, it would
+  // hand one deepen helper the whole plan and spend a cap slot (U4's R4-23).
+  const title = selectTitle([...index].sort((a, b) => a.line - b.line));
+  if (title) rules.push("a row at the title covers nothing and is never selected");
+  const candidates = rows.filter((r) => r.points >= 2 && (!title || r.line !== title.line));
   const highRisk = riskSignals.length > 0;
   if (candidates.length === 0) return { result: "passed", reason: "no section scored 2 points or more: confidence check passed", sections: [], candidates: 0, cap, highRisk, rules, scored: rows };
   const order = [...candidates].sort(

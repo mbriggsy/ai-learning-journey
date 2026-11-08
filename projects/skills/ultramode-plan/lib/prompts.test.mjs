@@ -109,6 +109,8 @@ test("every builder returns its own schema key; every helper carries the WebFetc
     assert.match(p, /Never ask the user anything/, `${name}: no never-ask line`);
     assert.ok(p.includes("Run only read-only commands (git log, git show, git grep, a node one-liner that reads)"), `${name}: no read-only command rule`);
     assert.ok(p.includes("Use absolute paths, and give every Grep and Glob an absolute path."), `${name}: no Grep and Glob path rule`);
+    // The lens rule makes this block the complete tool list, so Context7 is named in it (R4-22).
+    assert.ok(p.includes("For a library's documentation, use Context7 first (load its tools with ToolSearch \"context7\"), at the version the repo pins, and gemini-grounding or curl when Context7 lacks the library."), `${name}: no Context7 line`);
     if (kinds.includes("dossier")) {
       assert.match(p, /Write exactly one file, your dossier at C:\/runs\/research\/[a-z]+\.md; create, edit or delete no other file\./, `${name}: no dossier rule`);
       assert.doesNotMatch(p, /Create, edit or delete no file anywhere/, `${name}: a dossier writer told to write nothing`);
@@ -435,7 +437,10 @@ test("the learnings researcher gets this repo's lesson roots and the external re
       const p = build({ agent, focus: "CSV dialects spreadsheet tools read" }).prompt;
       assert.ok(p.includes("outside sources first, on this focus: CSV dialects spreadsheet tools read."), `${where}: ${agent} has no focus`);
       assert.match(p, /Use the repo only to read the versions in use or to check how an outside answer fits it\./);
-      assert.match(p, /Your web tool is gemini-grounding's search_with_grounding \(load it with ToolSearch\): it searches, reads the pages and cites them, so it serves as both the web-search and the web-fetch tool your agent file asks for\./);
+      // search_with_grounding takes a query and returns Gemini's cited summary: it reads no chosen
+      // page, so curl is named as the fetch tool and a summary-only claim is marked (R4-21).
+      assert.ok(p.includes("Search with gemini-grounding's search_with_grounding (load it with ToolSearch): it returns Gemini's cited summary, not the pages. Read a chosen page with curl -sL --max-time 15, which this prompt names as the web-fetch tool your agent file asks for, over its rule that a generic command is not one. Cite a URL as read only when you fetched it, and mark a claim that rests on a grounded summary alone."), `${where}: ${agent} has the wrong web tool line`);
+      assert.doesNotMatch(p, /reads the pages/);
       assert.match(p, /outside research could not run/);
       assert.doesNotMatch(p, /grounded in this repo first/, `${where}: ${agent} is told repo first`);
       assert.throws(() => build({ agent }), /focus/, `${where}: ${agent} with no focus`);
@@ -499,6 +504,28 @@ test("the lens picks read only the three conditional lenses, judge them from wha
     assert.match(p, /key lenses/);
   }
   assert.match(promptLensPicks({ plan: CTX.plan, personaSelection: "C:/ce/persona-selection.md" }).prompt, /Use only its activation signals for product-lens, security-lens and design-lens/);
+});
+
+test("a title row never reaches a deepen helper: promptSpan refuses the title line, for the helper and its verifiers alike", () => {
+  assert.throws(() => promptAmendment(CTX, { agent: "architecture-strategist", agentFile: null, line: 1, index: INDEX, triggers: "t", depth: "Standard", risk: [] }), /line 1 is the plan's title/);
+  assert.throws(() => promptVerifier(CTX, { item: { title: "x" }, kind: "amendment", angle: 0, line: 1, index: INDEX, triggers: "t" }), /line 1 is the plan's title/);
+  // With two top-level headings there is no title, and the first is a section like any other.
+  const twoH1 = [{ line: 1, level: 1, heading: "Part A", own: true }, { line: 40, level: 1, heading: "Part B", own: true }];
+  assert.ok(promptAmendment(CTX, { agent: "architecture-strategist", agentFile: null, line: 1, index: twoH1, triggers: "t", depth: "Standard", risk: [] }).prompt.includes("THE SECTION: \"Part A\", lines 1 to 39 of the plan."));
+});
+
+test("the premise seat's own never-a-false-positive line and the settlement rule stand in both modes; the scorer keeps the lens rule with either CE file alone; the refusals hold on each input alone", () => {
+  for (const built of [promptPremise(CTX, { mode: "deepen" }), promptPremise(CTX, { mode: "check", roster: [...ALWAYS, "premise"] })]) {
+    assert.ok(built.prompt.includes(`Your class is ${PROMPT_OWNS.premise}. A finding in it is never a false positive: CE's false-positive catalog entry for "pre-existing issues the document's work does not reach" does not apply to it.`));
+    assert.match(built.prompt, /SETTLED DECISIONS: .*A finding against it stands at full severity when it shows the decision cannot reach its outcome under its own constraints; preferring the alternative it rejected is not a finding\./);
+  }
+  for (const files of [{ deepening: null, finalReview: "C:/ce/fr.md" }, { deepening: "C:/ce/dw.md", finalReview: null }]) {
+    assert.match(promptScorer(CTX, { ...files, index: INDEX, deepened: false }).prompt, /THE LENS RULE: a CE file supplies your lens only/, JSON.stringify(files));
+  }
+  assert.doesNotMatch(promptScorer(CTX, { deepening: null, finalReview: null, index: INDEX, deepened: false }).prompt, /THE LENS RULE/);
+  for (const extra of [{ line: 60 }, { index: INDEX }]) assert.throws(() => promptVerifier(CTX, { item: { title: "x" }, kind: "finding", angle: 0, ...extra }), /only for an amendment/, JSON.stringify(Object.keys(extra)));
+  assert.throws(() => promptPremise(CTX, { mode: "deepen", round: 2 }), /runs beside the scorer/);
+  assert.throws(() => promptPremise(CTX, { mode: "deepen", changes: EDIT }), /runs beside the scorer/);
 });
 
 test("the same inputs build the same prompt, byte for byte (a Workflow resume's cache keys on it)", () => {

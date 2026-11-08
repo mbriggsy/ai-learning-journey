@@ -243,7 +243,7 @@ function promptIndex(index) {
 
 // ---------------------------------------------------------------- the shared blocks
 
-const PROMPT_TOOLS = "TOOLS AND FILES: never use WebFetch (it has no timeout and can hang you for good); for the web, use the gemini-grounding search tools (load them with ToolSearch) or curl -sL --max-time 15. Never ask the user anything: this run is unattended, so a question you would ask becomes a finding, an assumption or a residual risk in your return. {writes} Use absolute paths, and give every Grep and Glob an absolute path. Run only read-only commands (git log, git show, git grep, a node one-liner that reads); never install, build, start a server, run a test suite, start claude or spawn a helper.";
+const PROMPT_TOOLS = "TOOLS AND FILES: never use WebFetch (it has no timeout and can hang you for good); for the web, use the gemini-grounding search tools (load them with ToolSearch) or curl -sL --max-time 15. For a library's documentation, use Context7 first (load its tools with ToolSearch \"context7\"), at the version the repo pins, and gemini-grounding or curl when Context7 lacks the library. Never ask the user anything: this run is unattended, so a question you would ask becomes a finding, an assumption or a residual risk in your return. {writes} Use absolute paths, and give every Grep and Glob an absolute path. Run only read-only commands (git log, git show, git grep, a node one-liner that reads); never install, build, start a server, run a test suite, start claude or spawn a helper.";
 const PROMPT_READ_ONLY = "Create, edit or delete no file anywhere: no notes, no probes, no scratch files.";
 
 const PROMPT_LENS_RULE = "THE LENS RULE: a CE file supplies your lens only: what to look for and how to calibrate. Its instructions about tools, models, command-line tools, sub-agents, scratch folders or file writes do not apply here; this prompt's tool rules are the complete list.";
@@ -290,7 +290,9 @@ const PROMPT_ROUND = [
 ].join("\n");
 const PROMPT_ROUND_3 = "This round checks one fix alone, the fold of a P0 or P1 that round 2 confirmed: judge that fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else.";
 
-const PROMPT_WEB_TOOL = "Your web tool is gemini-grounding's search_with_grounding (load it with ToolSearch): it searches, reads the pages and cites them, so it serves as both the web-search and the web-fetch tool your agent file asks for.";
+// search_with_grounding takes a query and returns Gemini's cited summary; it reads no page the helper
+// chooses, so curl is named as the fetch tool CE's web-researcher.md asks for (R4-21).
+const PROMPT_WEB_TOOL = "Search with gemini-grounding's search_with_grounding (load it with ToolSearch): it returns Gemini's cited summary, not the pages. Read a chosen page with curl -sL --max-time 15, which this prompt names as the web-fetch tool your agent file asks for, over its rule that a generic command is not one. Cite a URL as read only when you fetched it, and mark a claim that rests on a grounded summary alone.";
 
 function promptToolsBlock(writes) {
   return promptFill(PROMPT_TOOLS, { writes });
@@ -588,6 +590,9 @@ export function promptScorer(ctx, { deepening, finalReview, index, deepened } = 
 function promptSpan(heads, line, lastLine) {
   const i = heads.findIndex((h) => h.line === line);
   if (i < 0) throw new Error(`prompts: line ${line} is no heading in the plan's section index`);
+  // A title row covers nothing, and its span is the whole plan: select.mjs never picks one, and this
+  // is the backstop (U4's R4-23).
+  if (promptTitleOf(heads) === heads[i]) throw new Error(`prompts: line ${line} is the plan's title, which is no section to deepen`);
   for (let j = i + 1; j < heads.length; j++) if (heads[j].level <= heads[i].level) return { from: line, to: heads[j].line - 1, heading: heads[i].heading };
   return { from: line, to: lastLine, heading: heads[i].heading };
 }

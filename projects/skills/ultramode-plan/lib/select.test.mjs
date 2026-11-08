@@ -175,6 +175,15 @@ test("a row at the title covers nothing, and a plan of two top-level parts needs
   assert.equal(titleOnly.result, "blocked");
   assert.match(titleOnly.reason, /left 3 sections/);
   assert.equal(go([r("Plan", 1), r("Goal", 3), r("Key Technical Decisions", 10), r("Implementation Units", 20)]).result, "passed", "a title row is allowed; it just covers nothing");
+  // A title row is never a candidate, whatever it scores: it would hand one deepen helper the whole
+  // plan and spend a cap slot (U4's R4-23). The rules say so.
+  const titled = go([{ ...r("Plan", 1), triggers: 4 }, { ...r("Goal", 3), triggers: 2 }, r("Key Technical Decisions", 10), r("Implementation Units", 20)]);
+  assert.equal(titled.result, "deepen");
+  assert.deepEqual(titled.sections.map((s) => s.line), [3]);
+  assert.equal(titled.candidates, 1);
+  assert.ok(titled.rules.includes("a row at the title covers nothing and is never selected"), titled.rules.join(" | "));
+  const titleAlone = go([{ ...r("Plan", 1), triggers: 4 }, r("Goal", 3), r("Key Technical Decisions", 10), r("Implementation Units", 20)]);
+  assert.equal(titleAlone.result, "passed");
   // A second H1 makes no title: each H1 is a part, its own text included. Rows at Goal and the
   // appendix leave the rest bare.
   const twoTops = [...index, { line: 200, level: 1, heading: "Appendix", own: true }];

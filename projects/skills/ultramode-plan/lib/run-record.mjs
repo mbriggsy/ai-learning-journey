@@ -159,9 +159,14 @@ function git(cwd, args, { buffer = false, quiet = [], input } = {}) {
   if (r.error) fail(`git could not run: ${r.error.message}`);
   if (r.status === 0) return buffer ? r.stdout : r.stdout.replace(/\n$/, "");
   if (quiet.includes(r.status)) return null;
-  // Git prints some refusals on stdout (a commit with nothing to commit), so both go in the error.
-  const said = [r.stderr, r.stdout].map((x) => String(x ?? "").trim()).filter(Boolean).join(" | ");
-  fail(`git ${args.join(" ")} failed (exit ${r.status}): ${said}`);
+  fail(gitFailure(args, r));
+}
+
+// A failed git command's error text. Git prints some refusals on stdout (a commit with nothing to
+// commit), so both streams go in it.
+export function gitFailure(args, { status, stderr, stdout }) {
+  const said = [stderr, stdout].map((x) => String(x ?? "").trim()).filter(Boolean).join(" | ");
+  return `git ${args.join(" ")} failed (exit ${status}): ${said}`;
 }
 const literal = (rel) => `:(literal)${rel}`;
 
@@ -1147,9 +1152,9 @@ export function land(rec, input, { cwd = process.cwd() } = {}) {
       return { ok: false, reason: chk.reason, start: chk.start, state: chk.state };
     }
     // R8: the named path never holds half a plan. The copy goes to a sibling temp, recorded before
-    // it is written, then one rename; a re-land first deletes a temp a crash left behind.
+    // it is written, then one rename. The temp's name is fixed, so a temp a crash left behind is
+    // overwritten by this copy and renamed away, never left beside the plan.
     const tmp = join(dirname(rec.plan.path), `.${basename(rec.plan.path)}.landing.tmp`);
-    for (const old of new Set([rec.landing?.tmp, tmp].filter(Boolean))) if (existsSync(old)) unlinkSync(old);
     rec.landing = { copying: blob, tmp, at: stamp() };
     save(rec);
     mkdirSync(dirname(rec.plan.path), { recursive: true });

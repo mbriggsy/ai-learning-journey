@@ -2,14 +2,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { createRequire, syncBuiltinESMExports } from "node:module";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { receipt } from "./flow.mjs";
 import { longOf, slugOf } from "./paths.mjs";
 import {
-  RECORD, advance, block, complete, defaultJobFolder, foldLand, foldStart, gate, helperTrail, land, landCheck, launch, launched,
+  RECORD, advance, block, complete, defaultJobFolder, foldLand, foldStart, gate, gitFailure, helperTrail, land, landCheck, launch, launched,
   loadRecord, locate, note, receiptFields, restart, show, start, typedPath, writerOf,
 } from "./run-record.mjs";
 import { SHA_NEW, SHA_OLD, ceEntry, ceInstall, registryAt } from "./fixtures/ce-fixture.mjs";
@@ -401,6 +401,8 @@ test("restart after the registry moves to a new CE uses its install path, and th
   const l = launch(deep, { script: w.script, args: { stage: "deepen" }, relayed: null, session: S3 }, w.opts);
   launched(deep, { launch: l.launch, runId: "wf_deepen-009", session: S3 }, w.opts);
   assert.equal(load(rec._path).launches.at(-1).ce, "C2");
+  // A launch that never finished did no work a receipt can credit.
+  assert.deepEqual(served(rec._path), [[SHA_OLD, ["research"]], [SHA_NEW, ["write"]]]);
   registryAt(w.root, [ceEntry(oldInstall, SHA_OLD, "3.34.0")], { at: registry });
   // S3 is gone; a later session picks the run up.
   const moved = restart({ record: rec._path, session: S2, registry }, w.opts);
@@ -818,6 +820,33 @@ test("a sweep recovers the moves a dead sweep made, and one with no readable sna
   assert.match(sw.strays.note, /snapshot .* is missing or unreadable/);
   assert.ok(existsSync(stray));
   assert.equal(load(rec2._path).launches[0].sweep.done, true);
+});
+
+test("a call's window takes 2 seconds of slack each side for clock steps, and no more", (t) => {
+  const w = world(t);
+  const rec = load(begin(w).record);
+  const demo = join(w.repo, "projects", "demo");
+  const near = join(demo, "temp", "near.mjs");
+  const far = join(demo, "temp", "far.mjs");
+  const helpers = [];
+  runStage(w, rec, "wf_research-001", {
+    helpers,
+    before: () => {
+      writeAt(near, "x\n");
+      writeAt(far, "x\n");
+      // Each call's tool_use row reads 1 s (inside the slack) or 3 s (outside it) after its file's birth.
+      const born = (p) => { const s = statSync(p); return s.birthtimeMs || s.mtimeMs; };
+      helpers.push([...timed(w.repo, born(near) + 1_000, born(near) + 1_500, ["Write", { file_path: near, content: "x" }]), ...timed(w.repo, born(far) + 3_000, born(far) + 3_500, ["Write", { file_path: far, content: "x" }])]);
+    },
+  });
+  assert.equal(existsSync(near), false, "a file born 1 s before its call's row is the call's");
+  assert.ok(existsSync(far), "a file born 3 s before its call's row is not");
+});
+
+test("a failed git command's error carries both streams: some refusals print on stdout only", () => {
+  const text = gitFailure(["commit", "-q"], { status: 1, stderr: "", stdout: "nothing to commit, working tree clean\n" });
+  assert.equal(text, "git commit -q failed (exit 1): nothing to commit, working tree clean");
+  assert.match(gitFailure(["add"], { status: 128, stderr: "fatal: bad path\n", stdout: "partial\n" }), /fatal: bad path \| partial$/);
 });
 
 test("the sweep credits a new file only to a call it was born during: a read, an edit or an untimed call of it never moves it, nor the plan path", (t) => {

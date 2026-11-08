@@ -104,9 +104,11 @@ export function fixVerdict(realVoters) {
   };
 }
 
-// Bench mode only (KTD8, KTD17): is a confirmed defect P0 or P1 for D? Only when a majority of
-// its real-voters put it there; a tie on that line is counted both ways, like a hand-verify split.
-// 'above' (P0 or P1), 'below', 'both', or null when no verifier affirmed it real.
+// Is a confirmed defect P0 or P1? Only when a majority of its real-voters put it there; a tie on
+// that line is counted both ways, like a hand-verify split. 'above' (P0 or P1), 'below', 'both', or
+// null when no verifier affirmed it real. Two readers: the bench mode, for KTD17's D (KTD8), and the
+// deepen's premise gate (KTD5's As-built note, U4's R4-26), where only 'above' ends the deepen and a
+// finding at 'below' or 'both' goes on to the check.
 export function severityLine(realVoters) {
   if (!Array.isArray(realVoters) || realVoters.length === 0) return null;
   const high = realVoters.filter((v) => v.corrected_severity === "P0" || v.corrected_severity === "P1").length;

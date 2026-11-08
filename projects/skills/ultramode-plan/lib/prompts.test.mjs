@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  PROMPT_AGENTS, PROMPT_ANGLE_LIST, PROMPT_CHECK_SEATS, PROMPT_OWNS, PROMPT_QUOTE, PROMPT_REFUTER_ANGLES, promptAmendment, promptCheckSeat, promptContractBrief, promptFill,
+  PROMPT_AGENTS, PROMPT_ANGLE_LIST, PROMPT_CHECK_SEATS, PROMPT_OWNS, PROMPT_PAGE, PROMPT_QUOTE, PROMPT_REFUTER_ANGLES, promptAmendment, promptCheckSeat, promptContractBrief, promptFill,
   promptLensPicks, promptPremise, promptResearch, promptScorer, promptShortRead, promptVerifier,
 } from "./prompts.mjs";
 import { CRITICAL_KINDS } from "./select.mjs";
@@ -39,22 +39,27 @@ const ALWAYS = ["coherence", "feasibility", "scope-guardian", "adversarial"];
 const FULL_PANEL = ["coherence", "feasibility", "scope-guardian", ...PANEL];
 const personaOf = (seat) => (PROMPT_CHECK_SEATS[seat].ce === null ? null : `C:/ce/personas/${seat}.md`);
 const rosterFor = (seat) => (seat.startsWith("adv-") ? FULL_PANEL : [...new Set(["coherence", seat])]);
-const EDIT = [{ kind: "edit", text: "U2 now writes the ledger in cents." }];
+// An edit carries the text it replaced (R4-25), so a later round sees what the fold dropped.
+const EDIT = [{ kind: "edit", text: "U2 now writes the ledger in cents.", was: "U2 writes the ledger in floats." }];
 
 // Every builder, called once with valid input: [name, built, kinds, schema], where kinds says what
 // the prompt must carry ("after" a helper that runs after the contract brief, "reader" a whole-plan
-// reader, "roster" a seat told the roster, "told" a seat an update run warns about the named path,
-// "dossier" the one helper that writes a file, "main" the main loop's own instruction, which no
-// helper reads, so it carries no helper rules) and schema the caps.mjs key it must return.
+// reader, "roster" a seat told the roster, "told" a helper an update run tells about the committed
+// plan and the named path, "dossier" the one helper that writes a file, "main" the main loop's own
+// instruction, which no helper reads, so it carries no helper rules) and schema the caps.mjs key it
+// must return. Research never runs on an update run (flow.mjs firstStage starts it at the deepen),
+// and refuses one, so an update run's list has no research helper.
 function everyBuilder(ctx = CTX) {
   const out = [
-    ["contract brief", promptContractBrief({ planPath: "C:/repo/projects/x/docs/plans/p.md", project: ctx.project, claudeMd: ctx.claudeMd, insights: "C:/repo/projects/x/docs/insights", request: "add a CSV export" }), [], null],
-    ["research", promptResearch(ctx, { agent: "repo-research-analyst", agentFile: "C:/ce/agents/repo-research-analyst.md", scope: "architecture, patterns", dossier: "C:/runs/research/repo.md" }), ["after", "dossier"], "gist"],
-    ["external research", promptResearch(ctx, { agent: "web-researcher", agentFile: "C:/ce/agents/web-researcher.md", focus: "CSV dialects spreadsheet tools read", dossier: "C:/runs/research/web.md" }), ["after", "dossier"], "gist"],
+    ["contract brief", promptContractBrief({ planPath: "C:/repo/projects/x/docs/plans/p.md", project: ctx.project, claudeMd: ctx.claudeMd, insights: "C:/repo/projects/x/docs/insights", request: "add a CSV export", update: ctx.update }), [], null],
+    ...(ctx.update ? [] : [
+      ["research", promptResearch(ctx, { agent: "repo-research-analyst", agentFile: "C:/ce/agents/repo-research-analyst.md", scope: "architecture, patterns", dossier: "C:/runs/research/repo.md" }), ["after", "dossier"], "gist"],
+      ["external research", promptResearch(ctx, { agent: "web-researcher", agentFile: "C:/ce/agents/web-researcher.md", focus: "CSV dialects spreadsheet tools read", dossier: "C:/runs/research/web.md" }), ["after", "dossier"], "gist"],
+    ]),
     ["premise (deepen)", promptPremise(ctx, { mode: "deepen" }), ["after", "reader", "told"], "finder"],
     ["premise (check)", promptPremise(ctx, { mode: "check", roster: [...ALWAYS, "premise"] }), ["after", "reader", "roster", "told"], "finder"],
-    ["scorer", promptScorer(ctx, { deepening: "C:/ce/dw.md", finalReview: "C:/ce/fr.md", index: INDEX, deepened: false }), ["after", "reader"], "scorer"],
-    ["amendment", promptAmendment(ctx, { agent: "architecture-strategist", agentFile: "C:/ce/agents/architecture-strategist.md", line: 60, index: INDEX, triggers: "dependency order unclear", depth: "Standard", risk: ["rollout"] }), ["after"], "amendment"],
+    ["scorer", promptScorer(ctx, { deepening: "C:/ce/dw.md", finalReview: "C:/ce/fr.md", index: INDEX, deepened: false }), ["after", "reader", "told"], "scorer"],
+    ["amendment", promptAmendment(ctx, { agent: "architecture-strategist", agentFile: "C:/ce/agents/architecture-strategist.md", line: 60, index: INDEX, triggers: "dependency order unclear", depth: "Standard", risk: ["rollout"] }), ["after", "told"], "amendment"],
     ["verifier (finding)", promptVerifier(ctx, { item: { title: "x" }, kind: "finding", angle: 0 }), ["after", "told"], "verdict"],
     ["verifier (amendment)", promptVerifier(ctx, { item: { title: "x" }, kind: "amendment", angle: 0, line: 60, index: INDEX, triggers: "dependency order unclear" }), ["after", "told"], "verdict"],
     ["lens picks", promptLensPicks({ plan: ctx.plan, personaSelection: "C:/ce/persona-selection.md" }), ["main"], null],
@@ -167,35 +172,99 @@ test("every builder after the contract brief requires the request, and a brief u
     assert.throws(() => build({ ...CTX, brief: null }), /only an update run may have none/, `${name} built a new plan with no brief`);
     assert.throws(() => build({ ...CTX, brief: undefined }), /ctx\.brief/, `${name} built with the brief left out`);
     assert.throws(() => build({ ...CTX, brief: "runs/brief.md" }), /absolute path/, `${name} took a relative brief`);
-    // An update run with no brief judges the goal against the request, never the plan's own capsule.
+    assert.doesNotMatch(build(CTX).prompt, /THE GOAL, ON AN UPDATE|goal not judged/, `${name}: the update goal rule on a new plan`);
+    // Research never runs on an update run (flow.mjs firstStage starts it at the deepen).
+    if (name === "research") {
+      for (const ctx of [UPD, { ...UPD, brief: CTX.brief }]) assert.throws(() => build(ctx), /research never runs on an update run/);
+      continue;
+    }
+    // An update run with no brief judges the goal against an origin document and any goal change the
+    // request asks for, never against the plan's own capsule; the request need not state a goal (R4-20).
     const p = build(UPD).prompt;
-    assert.ok(p.includes(`THE REQUEST (what was asked for):\n${CTX.request}\nTHE BRIEF: none.`), `${name}: no brief-less request block`);
-    assert.match(p, /judge the goal against the request and any origin document the plan cites, never against the plan's own Goal Capsule/, `${name}: the update rule`);
+    assert.ok(p.includes(`THE REQUEST (what was asked for):\n${CTX.request}\nTHE BRIEF: none. This run updates a plan already committed and was given no brief.`), `${name}: no brief-less request block`);
+    assert.ok(p.includes("THE GOAL, ON AN UPDATE: judge the plan's goal against any origin document the plan cites and any goal change the request asks for. The plan's own Goal Capsule is never what was asked (under an update the plan is the committed one, so that would be circular):"), `${name}: the update goal rule`);
+    assert.ok(p.includes(`HEAD's version of it at ${UPD.lands} is only the line a moved goal is measured from, and a goal moved from it beyond what the request asks is a finding. Judge too whether the plan makes the change the request asks.`), `${name}: the moved-goal rule`);
+    assert.ok(p.includes("When neither the request nor an origin document the plan cites states a goal, the goal is not judged (\"goal not judged: no brief or origin document states a goal\"): never a finding and never a pass."), `${name}: the unjudged goal`);
     assert.doesNotMatch(p, /THE BRIEF it was planned from/, `${name}: a brief named on a brief-less run`);
+    assert.throws(() => build({ ...UPD, lands: undefined }), /ctx\.lands/, `${name}: an update run with no named path`);
   }
-  // An update run may still have a brief.
-  assert.ok(promptPremise({ ...UPD, brief: CTX.brief }, { mode: "deepen" }).prompt.includes(`THE BRIEF it was planned from: ${CTX.brief}`));
+  // An update run may still have a brief: it is this update's, and the goal is judged against it too.
+  const briefed = promptPremise({ ...UPD, brief: CTX.brief }, { mode: "deepen" }).prompt;
+  assert.ok(briefed.includes(`THE REQUEST (what was asked for):\n${CTX.request}\nTHE BRIEF for this update: ${CTX.brief} (read it).`));
+  assert.ok(briefed.includes("THE GOAL, ON AN UPDATE: judge the plan's goal against the brief, any origin document the plan cites and any goal change the request asks for."));
+  assert.ok(briefed.includes("When none of the request, the brief and any origin document the plan cites states a goal, the goal is not judged"));
+  assert.doesNotMatch(briefed, /THE BRIEF it was planned from|THE BRIEF: none/);
 });
 
-test("the premise seat asks for the goal against the request and the brief, or the request alone on a brief-less update", () => {
+test("a new plan's premise seat asks for the goal asked for in the request and the brief, the plan not yet built", () => {
   const p = promptPremise(CTX, { mode: "deepen" }).prompt;
-  assert.match(p, /3\. THE GOAL: is the plan's goal the one asked for in the request and the brief\?/);
-  const u = promptPremise(UPD, { mode: "deepen" }).prompt;
-  assert.match(u, /3\. THE GOAL: is the plan's goal the one asked for in the request\? /);
-  assert.doesNotMatch(u, /and the brief/);
+  assert.ok(p.includes("3. THE GOAL: is the plan's goal the one asked for in the request and the brief? A goal narrowed, widened or replaced without saying so is a finding."));
+  assert.match(p, /^You are the premise seat in the deepen of a plan: [^\n]*\. The plan has not been built; you judge whether its premise holds, against the repo it will change \(C:\/repo\/projects\/x\) and the request it answers\./);
+  assert.doesNotMatch(p, /THE GOAL, ON AN UPDATE|goal not judged|may be partly built|this update's ask/);
 });
 
-test("on an update run every check seat, the premise seat and every verifier is told the named path holds the plan's own earlier version; a new plan's seats are told nothing", () => {
-  const note = `THIS RUN UPDATES A COMMITTED PLAN: ${CTX.lands} holds HEAD's earlier version of this plan, which the landing replaces. It is never a stale doc, a counterexample or a target for the plan's docs unit.`;
+test("an update run's premise seat, given a request that only asks for a re-check, is told the request need not restate the goal, judges the goal against its sources and never the plan's own capsule, and reports a goal no source states as unjudged, never a finding (R4-20)", () => {
+  const RECHECK = { ...UPD, request: "Re-check docs/plans/ledger-export.md now that the CSV library is upgraded." };
+  for (const built of [promptPremise(RECHECK, { mode: "deepen" }), promptPremise(RECHECK, { mode: "check", roster: [...ALWAYS, "premise"] })]) {
+    const p = built.prompt;
+    assert.ok(p.includes(`THE REQUEST (what was asked for):\n${RECHECK.request}\nTHE BRIEF: none.`));
+    assert.ok(p.includes("3. THE GOAL: judge it by THE GOAL, ON AN UPDATE above: a goal moved from HEAD's version beyond what the request asks, or a plan that does not make the change the request asks, is a finding; a goal the request leaves out is not unasked. When no source states a goal, put \"goal not judged: no brief or origin document states a goal\" in residual_risks: never a finding and never a pass."), "part 3 under update");
+    assert.doesNotMatch(p, /is the plan's goal the one asked for in the request/);
+    assert.ok(p.includes("The request is this update's ask (a change to the plan, or only a re-check) and need not restate the plan's goal, so a goal the request leaves out is not unasked."));
+    assert.ok(p.includes("The plan is committed and may be partly built: its As-built notes and the code they name are the build so far, never a collision with the plan."));
+    assert.match(p, /^You are the premise seat in the (?:deepen|check) of a plan: [^\n]*\. The plan is committed and may be partly built \(the update note below\); you judge whether its premise holds, against the repo it changes \(C:\/repo\/projects\/x\) and the request this update answers\./);
+    assert.doesNotMatch(p, /has not been built|will be written/);
+  }
+});
+
+test("the deepen's premise seat reports only a premise wrong enough to rewrite the plan, a P0 or P1, and puts lesser gaps in residual_risks for the check's premise seat, never told what its finding sets off; the check's premise seat keeps the whole ladder (R4-26)", () => {
+  const line = "IN THE DEEPEN: report only a premise wrong enough that the plan must be rewritten, a P0 or P1. Put a lesser premise gap (a P2 or P3) in residual_risks instead: the check's premise seat judges those.";
+  for (const ctx of [CTX, UPD]) {
+    const d = promptPremise(ctx, { mode: "deepen" }).prompt;
+    assert.ok(d.includes(`${line}\n\n${SIZE_LAWS.finder}`), "the deepen line does not sit just before the size law");
+    // The seat is never told the send-back's stakes: a seat that knows them may hide a true premise.
+    assert.doesNotMatch(d, /sends? (?:it|the plan) back|back to the write|blocks? the run|ends the deepen|stops the run/i);
+    const c = promptPremise(ctx, { mode: "check", roster: [...ALWAYS, "premise"] }).prompt;
+    assert.doesNotMatch(c, /IN THE DEEPEN|the check's premise seat judges those/);
+    assert.match(c, /P2, a real gap on a narrow path, or a section too weak for its job; P3, minor\./);
+  }
+  for (const seat of CHECK_SEATS) assert.doesNotMatch(promptCheckSeat(CTX, { seat, persona: personaOf(seat), roster: rosterFor(seat) }).prompt, /IN THE DEEPEN/, seat);
+});
+
+test("on an update run every helper after the contract brief is told the plan is committed and may be partly built and the named path holds its own earlier version, never evidence; a new plan's helpers are told nothing", () => {
+  const note = `THIS RUN UPDATES A COMMITTED PLAN: ${CTX.lands} holds HEAD's earlier version of this plan, which the landing replaces. It is never a stale doc, a counterexample or a target for the plan's docs unit, and its text is the plan's own words, never evidence for a claim about the code: cite the plan under review by its own lines. The plan is committed and may be partly built: its As-built notes and the code they name are the build so far, never a collision with the plan. The request is this update's ask (a change to the plan, or only a re-check) and need not restate the plan's goal, so a goal the request leaves out is not unasked.`;
   for (const [name, built, kinds] of everyBuilder(UPD)) {
+    if (kinds.includes("after")) assert.ok(kinds.includes("told"), `${name} runs after the contract brief but is not told`);
     if (kinds.includes("told")) assert.ok(built.prompt.includes(note), `${name}: no update note`);
     else assert.doesNotMatch(built.prompt, /THIS RUN UPDATES A COMMITTED PLAN/, `${name} carries the update note`);
   }
-  for (const [name, built] of everyBuilder(CTX)) assert.doesNotMatch(built.prompt, /THIS RUN UPDATES A COMMITTED PLAN|earlier version of this plan/, `${name}: an update note on a new plan`);
+  for (const [name, built] of everyBuilder(CTX)) assert.doesNotMatch(built.prompt, /THIS RUN UPDATES A COMMITTED PLAN|earlier version of this plan|may be partly built/, `${name}: an update note on a new plan`);
   assert.throws(() => promptCheckSeat({ ...UPD, lands: undefined }, { seat: "blast-radius", persona: null, roster: ["coherence", "blast-radius"] }), /ctx\.lands/);
   assert.throws(() => promptVerifier({ ...UPD, lands: "docs/plans/p.md" }, { item: { title: "x" }, kind: "finding", angle: 0 }), /absolute path/);
+  assert.throws(() => promptScorer({ ...UPD, lands: undefined }, { deepening: null, finalReview: null, index: INDEX, deepened: false }), /ctx\.lands/);
+  assert.throws(() => promptAmendment({ ...UPD, lands: undefined }, { agent: "architecture-strategist", agentFile: null, line: 60, index: INDEX, triggers: "t", depth: "Standard", risk: [] }), /ctx\.lands/);
   // A new plan's seats need no named path.
   assert.ok(promptCheckSeat({ ...CTX, lands: undefined }, { seat: "blast-radius", persona: null, roster: ["coherence", "blast-radius"] }).prompt);
+});
+
+test("a check seat says the plan has not been built only on a new plan, the contract brief says the plan will be written or is committed, and the scorer's first goal item follows the update rule on an update (R4-20)", () => {
+  for (const seat of CHECK_SEATS) {
+    const n = promptCheckSeat(CTX, { seat, persona: personaOf(seat), roster: rosterFor(seat) }).prompt;
+    assert.ok(n.startsWith(`You are the ${seat} seat in the check of a plan: ${CTX.plan}. The plan has not been built; you review the plan itself, against the repo it will change (${CTX.project}).`), `${seat}: a new plan's opening`);
+    const u = promptCheckSeat(UPD, { seat, persona: personaOf(seat), roster: rosterFor(seat) }).prompt;
+    assert.ok(u.startsWith(`You are the ${seat} seat in the check of a plan: ${CTX.plan}. The plan is committed and may be partly built (the update note below); you review the plan itself, against the repo it changes (${CTX.project}).`), `${seat}: an update's opening`);
+    assert.doesNotMatch(u, /has not been built/, seat);
+  }
+  const brief = (update) => promptContractBrief({ planPath: CTX.lands, project: CTX.project, claudeMd: CTX.claudeMd, insights: "C:/repo/projects/x/docs/insights", request: CTX.request, update }).prompt;
+  assert.ok(brief(false).startsWith(`You write the contract brief for an unattended planning run. The plan will be written at ${CTX.lands}, in the project at ${CTX.project}.`));
+  assert.ok(brief(true).startsWith(`You write the contract brief for an unattended planning run. The plan is committed at ${CTX.lands}, in the project at ${CTX.project}, and this run updates it.`));
+  assert.doesNotMatch(brief(true), /will be written/);
+  for (const bad of [undefined, "false", null]) assert.throws(() => brief(bad), /update says whether this run updates a committed plan/, JSON.stringify(bad));
+  const sn = promptScorer(CTX, { deepening: null, finalReview: null, index: INDEX, deepened: false }).prompt;
+  assert.ok(sn.includes("Goal Capsule and Problem Frame (kind goal-problem):\n- The goal is not the one the request or brief asked for, or narrows, widens or replaces it without saying so.\n"));
+  const su = promptScorer(UPD, { deepening: null, finalReview: null, index: INDEX, deepened: true }).prompt;
+  assert.ok(su.includes("Goal Capsule and Problem Frame (kind goal-problem):\n- The goal fails THE GOAL, ON AN UPDATE above: it moved from HEAD's version beyond what the request asks, or the plan lacks the change the request asks. A goal no source states is not judged: never a trigger.\n"));
+  assert.doesNotMatch(su, /The goal is not the one the request or brief asked for/);
 });
 
 test("the check has a premise seat: promptPremise in check mode carries the roster and the round, every roster may name it, and promptCheckSeat refuses to build it", () => {
@@ -212,7 +281,7 @@ test("the check has a premise seat: promptPremise in check mode carries the rost
   }
   const r2 = promptPremise(CTX, { mode: "check", roster: ["coherence", "premise"], round: 2, changes: EDIT }).prompt;
   assert.match(r2, /THIS IS CHECK ROUND 2\./);
-  assert.ok(r2.includes("- edited: U2 now writes the ledger in cents."));
+  assert.ok(r2.includes("- edited, was: U2 writes the ledger in floats.\n  now: U2 now writes the ledger in cents."));
   const d = promptPremise(CTX, { mode: "deepen" }).prompt;
   assert.match(d, /^You are the premise seat in the deepen of a plan: /);
   assert.doesNotMatch(d, /THE ROSTER AND OWNERSHIP TABLE|THIS IS CHECK ROUND/);
@@ -348,24 +417,43 @@ test("the roster and round inputs are checked: an unknown or doubled seat, a sea
   assert.throws(seat({ changes: EDIT }), /round 1 has no changes/);
   assert.throws(seat({ round: 2, changes: ["U2 now writes cents."] }), /a change is \{ kind: "edit" \| "add" \| "delete", text \}/);
   assert.throws(seat({ round: 2, changes: [{ kind: "move", text: "x" }] }), /a change is/);
-  assert.throws(seat({ round: 2, changes: [{ kind: "edit", text: " " }] }), /a change is/);
+  assert.throws(seat({ round: 2, changes: [{ kind: "edit", text: " ", was: "U2 writes floats." }] }), /a change is/);
+  // An edit carries the text it replaced, and only an edit does (R4-25).
+  assert.throws(seat({ round: 2, changes: [{ kind: "edit", text: "U2 writes cents." }] }), /an edit carries was, the text it replaced/);
+  assert.throws(seat({ round: 2, changes: [{ kind: "edit", text: "U2 writes cents.", was: "  " }] }), /an edit carries was, the text it replaced/);
+  assert.throws(seat({ round: 2, changes: [{ kind: "edit", text: "U2 writes cents.", was: " U2 writes cents.\n" }] }), /an edit whose was is its text changed nothing/);
+  for (const kind of ["add", "delete"]) assert.throws(seat({ round: 2, changes: [{ kind, text: "U5. The PDF export.", was: "x" }] }), /was is for an edit only/, kind);
   assert.throws(() => promptCheckSeat(CTX, { seat: "reach", persona: "C:/ce/reach.md", roster: ["coherence", "reach"] }), /reads no CE file/);
   assert.doesNotMatch(promptCheckSeat(CTX, { seat: "coherence", persona: null, roster: ["coherence"] }).prompt, /THIS IS CHECK ROUND/);
 });
 
-test("a later round lists each change as the text it added, edited or removed, admits a P0 or P1 anywhere, and in round 3 judges the one fix first", () => {
+test("a later round lists each change as the text it added or removed, an edit as its text before and after, admits a P0 or P1 anywhere, and in round 3 judges the one fix first", () => {
   const changes = [
-    { kind: "edit", text: "U2 now writes the ledger in cents." },
+    { kind: "edit", text: "U2 now writes the ledger in cents.", was: "U2 writes the ledger in floats." },
     { kind: "add", text: "R9. The export names its columns.\nEach column has a type." },
     { kind: "delete", text: "U5. The PDF export." },
   ];
   const r2 = promptCheckSeat(CTX, { seat: "coherence", persona: null, roster: ["coherence"], round: 2, changes }).prompt;
-  assert.ok(r2.includes("THIS IS CHECK ROUND 2. The plan changed since the last round; these are the changes the fold made, each with the text it added, edited or removed:\n- edited: U2 now writes the ledger in cents.\n- added: R9. The export names its columns.\n  Each column has a type.\n- removed: U5. The PDF export.\n"));
+  assert.ok(r2.includes("THIS IS CHECK ROUND 2. The plan changed since the last round; these are the changes the fold made, each with the text it added or removed, and an edit with the text it replaced (was) and its text now:\n- edited, was: U2 writes the ledger in floats.\n  now: U2 now writes the ledger in cents.\n- added: R9. The export names its columns.\n  Each column has a type.\n- removed: U5. The PDF export.\n"));
+  assert.match(r2, /Judge first whether each change is right \(an edit's dropped words included\) and whether it opened a seam with any other section/);
   assert.match(r2, /Report a P0 or P1 wherever you find it in the plan; report a P2 or P3 only where a change causes it or touches it, and put any other in residual_risks\./);
   assert.doesNotMatch(r2, /This round checks one fix alone/);
   const r3 = promptCheckSeat(CTX, { seat: "coherence", persona: null, roster: ["coherence"], round: 3, changes: EDIT }).prompt;
   assert.match(r3, /Report a P0 or P1 wherever you find it in the plan/);
   assert.match(r3, /This round checks one fix alone, the fold of a P0 or P1 that round 2 confirmed: judge that fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else\./);
+});
+
+test("a clause the fold's edit dropped shows in round 2 beside the edit's new text, each indented under its label so neither reads as a bullet (R4-25)", () => {
+  const dropped = { kind: "edit", text: "- R7. land refuses a dirty path.", was: "- R7. land refuses a dirty path and a moved HEAD." };
+  for (const built of [
+    promptCheckSeat(CTX, { seat: "coherence", persona: null, roster: ["coherence", "premise"], round: 2, changes: [dropped] }),
+    promptPremise(UPD, { mode: "check", roster: ["coherence", "premise"], round: 3, changes: [dropped] }),
+  ]) {
+    assert.ok(built.prompt.includes("- edited, was: - R7. land refuses a dirty path and a moved HEAD.\n  now: - R7. land refuses a dirty path.\n"));
+  }
+  const multi = { kind: "edit", text: "U2 writes cents.\nIt rounds half to even.", was: "U2 writes floats.\nIt never rounds." };
+  const p = promptCheckSeat(CTX, { seat: "coherence", persona: null, roster: ["coherence"], round: 2, changes: [multi] }).prompt;
+  assert.ok(p.includes("- edited, was: U2 writes floats.\n    It never rounds.\n  now: U2 writes cents.\n    It rounds half to even.\n"));
 });
 
 test("the scorer lists every index heading by its line, marks the title select.mjs reads as needing no row, says a row covers its subtree and how to fit the section limit, keys each note to its row's line, and reads final-review.md 5.3.1 alone", () => {
@@ -500,15 +588,92 @@ test("a research helper writes one dossier and returns a gist; a check seat writ
   assert.ok(seat.includes("Create, edit or delete no file anywhere"), "a check seat may write");
 });
 
-test("a short reader's re-run names the sections it missed ahead of its own prompt and keeps its schema", () => {
+// The head a short read's re-run puts ahead of the built prompt it re-runs.
+const headOf = (again, built) => {
+  assert.ok(again.prompt.endsWith(`\n\n${built.prompt}`), "the re-run does not end with the prompt it re-runs");
+  return again.prompt.slice(0, again.prompt.length - built.prompt.length);
+};
+
+test("every whole-plan reader's built prompt carries the last line's number it was told, so its re-run can check a stop against it; no other builder's does", () => {
+  for (const [name, built, kinds] of everyBuilder()) assert.equal(built.endsAt, kinds.includes("reader") ? CTX.lastLine.line : undefined, name);
+  assert.equal(PROMPT_PAGE, 160);
+});
+
+test("a short reader's re-run names the sections its stop cut off, the one holding the stop included, ahead of its own prompt, and keeps its schema (R4-17, stopped)", () => {
   const seat = promptCheckSeat(CTX, { seat: "coherence", persona: null, roster: ["coherence"] });
-  const again = promptShortRead(seat, { missed: [{ line: 140, heading: "U2. Writer" }, { line: 300, heading: "Verification Contract" }], stoppedAt: 139 });
+  // A stop at line 139 cuts off Implementation Units (lines 60 to 299), which holds it, and every section after.
+  const missed = [{ line: 60, heading: "Implementation Units" }, { line: 140, heading: "U2. Writer" }, { line: 300, heading: "Verification Contract" }];
+  const again = promptShortRead(seat, { reasons: ["stopped"], stoppedAt: 139, missed });
   assert.equal(again.schema, "finder");
-  assert.ok(again.prompt.startsWith("YOUR LAST READ OF THIS PLAN STOPPED SHORT at line 139, so these sections went unread:\n- line 140: U2. Writer\n- line 300: Verification Contract\n"));
-  assert.ok(again.prompt.endsWith(seat.prompt));
-  assert.notEqual(again.prompt, seat.prompt);
-  assert.throws(() => promptShortRead(seat, { missed: [], stoppedAt: 139 }), /names the sections it missed/);
-  assert.throws(() => promptShortRead(promptVerifier(CTX, { item: {}, kind: "finding", angle: 0 }), { missed: [{ line: 1, heading: "x" }], stoppedAt: 0 }), /whole-plan reader/);
+  assert.equal(again.endsAt, CTX.lastLine.line);
+  assert.equal(headOf(again, seat), "YOUR LAST READ OF THIS PLAN STOPPED SHORT at line 139, so these sections were not read to their end:\n- line 60: Implementation Units\n- line 140: U2. Writer\n- line 300: Verification Contract\nRead the plan to its last line this time, these sections included, before you return.\n\nThis is your one re-run of the prompt below.\n\n");
+  // A stop inside the last section names that section: never an empty list.
+  assert.ok(promptShortRead(seat, { reasons: ["stopped"], stoppedAt: 350, missed: [{ line: 300, heading: "Verification Contract" }] }).prompt.includes("STOPPED SHORT at line 350, so these sections were not read to their end:\n- line 300: Verification Contract\n"));
+  // A reader that quoted no line stopped at 0.
+  assert.ok(promptShortRead(seat, { reasons: ["stopped"], stoppedAt: 0, missed: INDEX.slice(1) }).prompt.startsWith("YOUR LAST READ OF THIS PLAN STOPPED SHORT at line 0,"));
+  const stop = (over) => () => promptShortRead(seat, { reasons: ["stopped"], stoppedAt: 139, missed, ...over });
+  assert.throws(stop({ missed: [] }), /names the sections it missed/);
+  assert.throws(stop({ missed: undefined }), /names the sections it missed/);
+  assert.throws(stop({ stoppedAt: undefined }), /stoppedAt is the last line the short read reached/);
+  assert.throws(stop({ stoppedAt: -1 }), /stoppedAt is the last line the short read reached/);
+  // A reader that reported the last line itself did not stop short: its inventory failed.
+  assert.throws(stop({ stoppedAt: CTX.lastLine.line }), /under the plan's last line \(412\)/);
+  assert.throws(stop({ missed: [{ line: 140, heading: "U2. Writer" }, { line: 140, heading: "U2. Writer" }] }), /names line 140 twice/);
+  assert.throws(stop({ missed: [{ line: 140 }] }), /a missed section is \{ line, heading \}/);
+  assert.throws(stop({ missed: [{ line: 413, heading: "Past the end" }] }), /a missed section is \{ line, heading \}/);
+  assert.throws(() => promptShortRead(promptVerifier(CTX, { item: {}, kind: "finding", angle: 0 }), { reasons: ["stopped"], missed: [{ line: 1, heading: "x" }], stoppedAt: 0 }), /whole-plan reader/);
+  assert.throws(() => promptShortRead({ prompt: seat.prompt, schema: "finder" }, { reasons: ["stopped"], missed, stoppedAt: 139 }), /whole-plan reader/);
+});
+
+test("a reader whose inventory failed the run's check is asked to re-read from line 1 in pages, never handed the last line's text or told to copy it exactly (R4-17, inventory)", () => {
+  for (const built of [promptCheckSeat(CTX, { seat: "coherence", persona: null, roster: ["coherence"] }), promptPremise(UPD, { mode: "deepen" }), promptScorer(CTX, { deepening: null, finalReview: null, index: INDEX, deepened: false })]) {
+    const again = promptShortRead(built, { reasons: ["inventory"] });
+    assert.equal(again.schema, built.schema);
+    const head = headOf(again, built);
+    assert.equal(head, "YOUR LAST READ OF THIS PLAN FAILED THE RUN'S CHECK OF ITS READING INVENTORY (the last line's number and text, and pages_read), so the run cannot confirm you read the whole plan. Read it again from line 1, in pages of at most 160 lines, in order, to the last line the prompt below names, and return the inventory from that read.\n\nThis is your one re-run of the prompt below.\n\n");
+    assert.doesNotMatch(head, /exactly|copy/i);
+    assert.ok(!again.prompt.includes(CTX.lastLine.text.slice(0, 40)), "the re-run hands the reader the last line's text");
+    // The sections the run could not confirm may be named.
+    const named = promptShortRead(built, { reasons: ["inventory"], missed: [{ line: 300, heading: "Verification Contract" }] });
+    assert.ok(headOf(named, built).includes("and return the inventory from that read.\nThe sections the run cannot confirm you read:\n- line 300: Verification Contract\n\n"));
+    assert.equal(promptShortRead(built, { reasons: ["inventory"], missed: [] }).prompt, again.prompt);
+    // A stop line belongs to a stopped read alone.
+    assert.throws(() => promptShortRead(built, { reasons: ["inventory"], stoppedAt: 200 }), /stoppedAt is for a stopped read only/);
+  }
+});
+
+test("a scorer that left selected rows with no note is asked for a note on each that still scores 2 points or more, never forced to give one, alone or beside a short read (R4-17, notes)", () => {
+  const scorer = promptScorer(CTX, { deepening: null, finalReview: null, index: INDEX, deepened: false });
+  const noNote = [{ line: 61, heading: "U1. Parser" }, { line: 300, heading: "Verification Contract" }];
+  const notesHead = "YOUR LAST SCORING GAVE NO NOTE TO THESE SECTIONS, which the run selected to deepen:\n- line 61: U1. Parser\n- line 300: Verification Contract\nScore the plan again as the prompt below asks, and give each of these sections a note naming its problems when it still scores 2 points or more, in the run's own rank order; one that now scores under 2 needs no note.";
+  const again = promptShortRead(scorer, { reasons: ["notes"], noNote });
+  assert.equal(again.schema, "scorer");
+  assert.equal(headOf(again, scorer), `${notesHead}\n\nThis is your one re-run of the prompt below.\n\n`);
+  assert.doesNotMatch(headOf(again, scorer), /STOPPED SHORT|went unread|INVENTORY/);
+  // Mixed with a stop or a failed inventory: the read's head first, then the notes'.
+  const both = headOf(promptShortRead(scorer, { reasons: ["notes", "stopped"], stoppedAt: 139, noNote, missed: [{ line: 140, heading: "U2. Writer" }] }), scorer);
+  assert.ok(both.startsWith("YOUR LAST READ OF THIS PLAN STOPPED SHORT at line 139,") && both.includes(`these sections included, before you return.\n\n${notesHead}\n\nThis is your one re-run`), both);
+  const inv = headOf(promptShortRead(scorer, { reasons: ["inventory", "notes"], noNote }), scorer);
+  assert.ok(inv.startsWith("YOUR LAST READ OF THIS PLAN FAILED THE RUN'S CHECK OF ITS READING INVENTORY") && inv.includes(`return the inventory from that read.\n\n${notesHead}\n\n`), inv);
+  // The refusals: notes are the scorer's alone, and need the rows; a notes-only re-run read the whole plan.
+  const seat = promptCheckSeat(CTX, { seat: "coherence", persona: null, roster: ["coherence"] });
+  assert.throws(() => promptShortRead(seat, { reasons: ["notes"], noNote }), /notes are the scorer's alone/);
+  assert.throws(() => promptShortRead(scorer, { reasons: ["notes"], noNote: [] }), /noNote is the selected rows with no note/);
+  assert.throws(() => promptShortRead(scorer, { reasons: ["notes"] }), /noNote is the selected rows with no note/);
+  assert.throws(() => promptShortRead(scorer, { reasons: ["notes"], noNote: [{ line: 61, heading: "U1. Parser" }, { line: 61, heading: "U1. Parser" }] }), /names line 61 twice/);
+  assert.throws(() => promptShortRead(scorer, { reasons: ["inventory"], noNote }), /noNote goes with the notes kind only/);
+  assert.throws(() => promptShortRead(scorer, { reasons: ["notes"], noNote, missed: [{ line: 140, heading: "U2. Writer" }] }), /a notes-only re-run read the whole plan, so it names no missed section/);
+  assert.throws(() => promptShortRead(scorer, { reasons: ["notes"], noNote, stoppedAt: 139 }), /stoppedAt is for a stopped read only/);
+});
+
+test("a short read's kinds are a non-empty list of distinct known kinds, and a stop and a failed inventory exclude each other (R4-17)", () => {
+  const seat = promptCheckSeat(CTX, { seat: "coherence", persona: null, roster: ["coherence"] });
+  const missed = [{ line: 300, heading: "Verification Contract" }];
+  for (const reasons of [undefined, [], "stopped"]) assert.throws(() => promptShortRead(seat, { reasons, stoppedAt: 299, missed }), /reasons is a non-empty list of the short read's kinds/, JSON.stringify(reasons));
+  assert.throws(() => promptShortRead(seat, { stoppedAt: 299, missed }), /reasons is a non-empty list/);
+  assert.throws(() => promptShortRead(seat, { reasons: ["skimmed"], stoppedAt: 299, missed }), /"skimmed" is no short-read kind \(one of: stopped, inventory, notes\)/);
+  assert.throws(() => promptShortRead(seat, { reasons: ["stopped", "stopped"], stoppedAt: 299, missed }), /names a kind twice/);
+  assert.throws(() => promptShortRead(seat, { reasons: ["stopped", "inventory"], stoppedAt: 299, missed }), /stopped and inventory exclude each other/);
 });
 
 test("the lens picks read only the three conditional lenses, judge them from what the plan's named code paths touch, keep the always-on seats, and never take depth.md's lite or full choice", () => {

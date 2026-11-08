@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-08, b9-4 committed U10 and opened U11 — item 1; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
+▶ **START HERE (2026-11-08, b9-4 committed U10 and ran U11's measurement half, verified; next is U11's Caddie walk, then U12 — item 1, Phase C; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -157,11 +157,30 @@ queue below (its order unmoved). Next, in order:
      `ReentryLeftOverStale` if the gate's moved line carries a door sentence; and the two test files U14 must edit
      (`stalenessExposure.test.ts`'s source-bind and `staleness.test.ts`'s property arm, which gains `datesaved`).
    - Phase B: ~~U5~~, ~~U13~~, ~~the version-4 archive~~, ~~the go-live (U6 + U7 + U8 + U14 + U9)~~ (`a9cacf22`), ~~U10~~ (b9-4).
-   - Phase C: U11, then U12. **U11 is OPEN (b9-4):** `/brief` done; its shared household builder is
-     `b9-build2-surplus\tools\u11drafts.mts` (every U11 tool mints "saved" through the shipped write, never a typed figure,
-     and runs the two stale-W pairs: lowered = `datesavedstale`, risen = `datesaved` at $90,000, each against its checked
-     twin); its four tools (credit stream, moves, same-year-draw residual, K5's share) are built and verified by
-     `wf_a4f45d66-48e`, then the pilot runs each full measurement serialized and pinned.
+   - Phase C: U11, then U12. **U11's measurement half is DONE (b9-4) and independently verified.** The record:
+     `b9-build2-surplus\README.md` § "U11: the after-measurement" and `PREDICTIONS.md` §F (every prediction scored; misses
+     C3 ×4, C4 ×5, D3 ×4 at the final tier, K5 ×2; the credit stream 0). Tools in `b9-build2-surplus\tools\`
+     (`u11drafts.mts`, `stream11`, `moves11`, `residual11`, `k5share`; built and refuted by `wf_a4f45d66-48e`); each full run
+     ran twice, byte-equal. An Opus xhigh verifier re-derived every figure (`verify-u11\`) and its 13 corrections are in.
+     **NEXT, U11's Caddie record** (the plan's U11 Files line: `docs/caddie/tape.md`, `docs/caddie/cold-read-log.md`), opened
+     with `/brief caddie walk on build 2's stale and kept words`: walk (d) U5's drafted words — the kept quote, the state-only
+     and both-causes sentences (`workingCostStaleKept*`), the row's "the figure you kept", the month view's "$1,008,000 a
+     year — the figure you kept" after a unit tap on a kept $84,000, and the P3 (a kept figure stale on the spending shows "a
+     different figure" checked, the box filled, no door; its exits unnamed; never a door below the quote, the register's ⚑
+     NEGATIVE) — and (p) the stale clause after a RISEN quote. U11 measured (p)'s reach: on both stale pairs "waiting on W"
+     withholds the credit and reads gloomier than the checked twin (LOWERED crown 7 vs 6; RISEN no date vs 9; W re-checked
+     alone moves nothing), and the other side (a W too low hiding a short year) is unexercised. No dev seed carries the
+     risen household (`u11drafts.mts` builds it as `datesaved` with spending $90,000): a `?seed=` for it is a `src` change
+     (the R10 sweep + per-key `idcheck` against `golive`, and its own commit).
+     **Then U12** (the plan's ten steps), carrying U11's figures (each stated with its seed, tier, offset and track, from the
+     README § U11, never re-typed from memory): K5 at Tier 0 — the year-0 share NOT EXERCISED (unmeasured, never $0), its
+     nearest shapes 76.9% (date65 2027) to more than the whole figure (datelateleftover 2030, $19,172 of $13,277), and the
+     register's K5 bullet corrected (datelateleftover's 2030 turns short with the claim age reached Sep–Dec; K5 reaches 25
+     more claim years than date65's and datenc's 2027); the claims at 62 paid whole in their first year (dip,
+     plant:datearrived; 20 CFR 404.311(a)(2)) filed as their own residual; the same-year-draw residual at Tier 0 as
+     either-way (rosy 0.10% of gloomy over the 11 HEAD-carried keys, 0.088% over all 13; break-evens date65 −10.06%, datenc
+     −13.46%, the date family −21.54% to −23.16%; worst rosy $1,952.44); K2–K4 and K7 inside the figure with what U11 did
+     and did not measure; the stale-W reach (the two pairs); the crown moves for the docs only (R16: no surface says which way).
    After the build: the whole-file review, with an adversary and every finding verified; then `/distill`. The record (brief,
    seven research dossiers, three deepen artifacts, the doc-review's `RESOLVED.md`) is in
    `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\`.
@@ -205,13 +224,25 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-08 (b9-1: the go-live COMMITTED, `a9cacf22`, after Caddie walks 3 to 5 — b9-6's block pruned into it):**
-the four owed steps ran: (a) the check sentence states its dollars (two slots, with and without a deposits row); (b) the moved
-seat line asks the question, split ROSE / FELL with one instruction per case; (c) walks 3, 4 and 5 on the words, each with
-fixes (card at the top of `docs/caddie/cold-read-log.md`, tape rows added for it and b9-6's card); (d) `verify:fit` on the final
-words. Then the sweep (`golive`, 36 of 36 identical against `u15`), the re-anchor (783 edits, 5 hand-reviewed), `verify:doc-stats`
-OK, and one commit, pushed. Helpers: three Caddie panels (`wf_8a122df2-d64`, `wf_3525036f-1fe`, `wf_eb3592b7-f14`, 172 agents,
-about 17M tokens).
+**SESSION 2026-11-08 (b9-4: U10 COMMITTED, `9e017bb9`, CI green, run 42510961776; U11's measurement half done and verified —
+b9-1's block pruned into it):** state at close: typecheck, lint, build, `verify:bundle` (294.3 KiB) and `verify:doc-stats` OK
+at `9e017bb9`; the close commit is TODO.md only. Wrapped at 49% of the window, before U11's Caddie walk (a fan-out that could
+not finish under the 50% line). Helpers: `wf_a4f45d66-48e` (11 agents, about 2.8M tokens) plus a stream fixer and the record's
+verifier. **Check at start:** the CI run on this close's push, `gh run list --commit <the close commit's FULL sha> --json
+databaseId,status,conclusion` then `gh run view <id> --json status,conclusion,jobs` (a TODO-only commit; nothing else is open).
+**DISTILL CANDIDATES (b9-4):**
+- **A version floor is proven by planting the revert itself, not only the constant.** U10's arms: the constant planted (B
+  against A, the delta exactly the floor test) AND a resolved whole `git revert` of the bump in a copy (the floor test the one
+  red of 4758). Only the second shows the guard survives the revert it exists for; it also showed the revert now conflicts.
+- **Vitest 4.1.8's JSON report writes a timeout as "Error: STACK_TRACE_ERROR" with no "timed out" text.** A mutant runner that
+  reads failure lines must treat that line as a timeout candidate and re-run its file alone under the same plant before any
+  verdict (probed with a 200 ms test sleeping 3 s; `tools\u10-mutants.cjs`).
+- **One shared household builder for every measuring tool.** Four lanes built in parallel all imported `u11drafts.mts` (the
+  W keys as the old tool selects them, "saved" minted through the shipped write, the stale pairs with a fail-loud state check),
+  so no two tools could disagree about which household they ran; the reviewers attacked the tools, not the households.
+- **A record's headline count needs its population named, and a verifier re-deriving it from the raw output.** The pilot's own
+  write-up carried a false count (K5's reach, "13 more households'"; the truth 25 claim years) and three figures with no key
+  set or the wrong unit (360,000 readings of 36,000 path-years) — every tool was green; only the re-derivation caught them.
 **DISTILL CANDIDATES (b9-1):**
 - **A guard sentence's qualifier is a loophole when the payoff is all or nothing.** "Choose “All of it” only if about $16,985…"
   let a household saving most of it round up, since "Some of it" counted $0; three walks found it. Under a cliff payoff the
@@ -340,7 +371,19 @@ about 17M tokens).
 - **A plan's verification sentence can fix a design its Files list never states.** U3's "the ledger tests pass with only
   the allowlist edit" forced the ledger to RE-EXPORT the bottom line (its test imports it from the ledger), though the
   Files list said only "imports it". Read every verification clause for the shape it implies before choosing one.
-**LANDMINES (b9-1's of 11-08 first, then b9-6's of 11-05, then b9-5's and b9-4's of 11-05, then b9-3's of 11-04, b9-2's and b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
+**LANDMINES (b9-4's of 11-08 first):**
+- **(b9-4, 11-08) The E-core rule bit again:** typecheck, lint and the build on `/affinity FF000` beside a pinned suite run
+  turned 3 heavy tests into timeouts (525 s against 419 s clean); all green alone. Nothing heavy beside a pinned VITEST run.
+  Measurement runs (tsx, no timeouts) can run several at once pinned to the P-cores: four did, each byte-equal to its re-run.
+- **(b9-4, 11-08) Other sessions commit to the monorepo during a long run.** A tool that stamps `git HEAD` in its record
+  differs between its two runs; byte-compare with the label and git lines aside (moves11 does), never a raw `cmp`.
+- **(b9-4, 11-08) `node -e` with a Windows path in a string dies on `\u11…`** ("Invalid Unicode escape sequence"): edit
+  record files with the Edit tool, or write a script file.
+- **(b9-4, 11-08) Probe copies with `node_modules` JUNCTIONS now live in `b9-build2-surplus\`:** `stream11-tree\` and
+  `u11-residual\` (and `head\`, `v4-parent\`). Remove each link alone before deleting a folder.
+- **(b9-4, 11-08) A `git revert a9cacf22` now stops on a conflict in `scenarioCodec.test.ts`** (U10's corrected note sits in a
+  go-live hunk); resolving toward the old file reaches the tree U10's proof ran, where the floor test is the one red.
+**LANDMINES (b9-1's of 11-08, then b9-6's of 11-05, then b9-5's and b9-4's of 11-05, then b9-3's of 11-04, b9-2's and b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
 - **(b9-1, 11-08) `cmd /c "start "" /b /wait /affinity FFF <cmd>"` reports exit 0 even when the command failed** (a failing vitest
   run came back 0). Launch through a wrapper `.cmd` that runs `call %*` then `echo PINNED_EXIT=%errorlevel%`, and read that line:
   the copy is `<b9-build2-surplus>\tools\run-pinned.cmd` (three lines; from PowerShell, `cmd /c "start `"`" /b /wait /affinity FFF <that path> pnpm test"`; proven with `node -e process.exit(3)` → `PINNED_EXIT=3`). The child really is pinned

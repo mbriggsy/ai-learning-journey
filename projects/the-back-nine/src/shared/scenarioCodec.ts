@@ -12,7 +12,7 @@
  * SEMANTICS (ranges, sums, age ordering) and remains in the path of every decoded
  * scenario before an answer renders — the codec never re-implements a domain rule,
  * so the two gates cannot disagree. It moves no field, and it changes the parsed object in
- * exactly two ways: it relabels a version-3 plan (the step below), and it deletes a
+ * exactly two ways: it relabels a version-3 or version-4 plan (the steps below), and it deletes a
  * savedRecommendation that fails its checks — the one tolerated atom, reported on
  * `droppedAtoms` (the bottom of `checkV3Fields`). Anything else it returns is the disk's.
  *
@@ -27,8 +27,15 @@
  *     the version of the save it was cut from, and a copy older than the bump can still make a
  *     real first save. Nothing after the relabel can tell which label the disk held, so nothing
  *     may key provenance on the in-memory `schemaVersion` (key it on the plan's shape).
+ *   · 4 is a LABEL-ONLY step too (the schema-v5 bump, build 2's go-live): version 5 adds ONE
+ *     OPTIONAL field, the left-over answer, which no version-3 or version-4 build ever writes, so
+ *     a relabeled older plan lacks a key its type already calls optional — honest without a
+ *     default (`docs/architecture.md` §7.3's added-optional-field case). It refuses first a plan
+ *     whose disk label is 3 or 4 and that carries the answer: no build that writes those labels
+ *     writes it, so it is a writer bug, named. Then it relabels to its LITERAL successor, 5, and
+ *     reads version 4 forever, for the reasons above.
  *   · {@link CURRENT_SCHEMA_VERSION} runs the field checks (`checkV3Fields` — they name the v3
- *     field GENERATION, which version 4 carries unchanged).
+ *     field GENERATION, which versions 4 and 5 carry, plus version 5's one added field).
  * A non-integer version, or one below 1, is corruption, not a branch.
  *
  * TOLERANT READER: unknown extra fields pass through untouched — the additive-within-
@@ -58,6 +65,7 @@ import {
   TICKER_CLASSIFICATION_CHOICES,
   WORK_STATUSES,
   WORKING_YEAR_COST_KINDS,
+  WORKING_YEAR_LEFT_OVER_KINDS,
   WORKING_YEAR_STATE_TAX_READINGS,
   CURRENT_SCHEMA_VERSION,
   type AnyScenario,
@@ -205,7 +213,7 @@ function needUnitFraction(o: Obj, field: string, path: string): void {
 function needColaRate(o: Obj, field: string, path: string): void {
   needFinite(o, field, path)
   const n = o[field] as number
-  // Reuse the ONE shared predicate the two intake gates use (sanity.ts:575, OtherIncomeEntry.tsx:217)
+  // Reuse the ONE shared predicate the two intake gates use (sanity.ts:576, OtherIncomeEntry.tsx:217)
   // so all THREE gates run byte-identical range logic — the band's inclusivity can never silently
   // desync via a hand-copied comparison (insight 020). needFinite ran first (colaRateInRange assumes a
   // finite caller — a NaN passes every relational compare, insights 008/010).
@@ -938,6 +946,35 @@ function checkV3Fields(o: Obj): string[] {
       }
     }
   }
+  // Build 2's left-over answer (`docs/plans/features/working-year-surplus-build-spec.md` R1, R2, KTD1),
+  // the field the schema-v5 bump exists for. One kind-discriminated object over a CLOSED vocabulary,
+  // optional, and ABSENT is the unanswered state: the codec writes nothing for it and reads nothing
+  // into it (never a token, never `?? 'spent'`).
+  //  · `saved` requires `quotedReal`, the whole-dollar year-0 Left over the reply was given against:
+  //    finite FIRST (insight 010), then an INTEGER (the face prints whole dollars and stores what it
+  //    printed), then at least 1 (the question is never asked below a printed $1, R5), then at most the
+  //    ceiling (insight 046 — the engine's own `validateParams` refusal would otherwise fire at run
+  //    time instead of this decode failing calm).
+  //  · `spent` and `not-sure` refuse a `quotedReal` (the biconditional, both directions): no writer
+  //    stores a figure with them.
+  //  · Accepted whether or not W is present (R2): the answer is held through a W clear and stays inert
+  //    until W is fresh again (U7), so a plan without W carrying it is a real shape.
+  //  · An UNKNOWN extra key still passes (the tolerant reader, header).
+  if (o.workingYearLeftOver !== undefined) {
+    const p = 'scenario.workingYearLeftOver'
+    const a = o.workingYearLeftOver
+    needObject(a, p)
+    needVocab(a, 'kind', WORKING_YEAR_LEFT_OVER_KINDS, p)
+    if (a.kind === 'saved') {
+      needInteger(a, 'quotedReal', p)
+      if ((a.quotedReal as number) < 1) {
+        throw new Corrupt(`${p}.quotedReal: must be at least 1 (the question is never asked below a printed $1)`)
+      }
+      needAtMostMaxDollar(a, 'quotedReal', p)
+    } else if (a.quotedReal !== undefined) {
+      throw new Corrupt(`${p}.quotedReal: only meaningful when kind is 'saved' (writer bug)`)
+    }
+  }
   // ─────────────────────────────────────────────────────────────────────────────────────────
   // Act-4 · U17 — the saved-recommendation record: THE FIRST AND ONLY TOLERATED DROP IN THIS
   // CODEC, a DELIBERATE, spec-named divergence from the file's loud-over-silent discipline
@@ -1036,6 +1073,22 @@ export function decodeScenario(bytes: Uint8Array): ScenarioDecode {
     if (version === 3) {
       parsed.schemaVersion = 4
       version = 4
+    }
+    // 4 → 5, LABEL ONLY (the schema-v5 bump, build 2's go-live, KTD6): version 5 adds one OPTIONAL
+    // field, the left-over answer, so a version-4 plan is a version-5 plan with that key absent —
+    // nothing is written into it (no default, no token, never `?? 'spent'`). Before the relabel, a
+    // plan whose DISK label is 3 or 4 and that carries the answer is refused: no build writing those
+    // labels writes it, and a copy at those labels would ignore a "saved" answer (§7.3's rule (a)),
+    // so such a plan is a writer bug, named. The LITERAL successor again, never
+    // `CURRENT_SCHEMA_VERSION` (the 3 → 4 note above). Read forever.
+    if (version === 4) {
+      if (parsed.workingYearLeftOver !== undefined) {
+        throw new Corrupt(
+          `scenario.workingYearLeftOver: a plan saved as version ${onDisk} cannot carry it — no build that writes version ${onDisk} writes it (writer bug)`,
+        )
+      }
+      parsed.schemaVersion = 5
+      version = 5
     }
     if (version === CURRENT_SCHEMA_VERSION) {
       const droppedAtoms = checkV3Fields(parsed)

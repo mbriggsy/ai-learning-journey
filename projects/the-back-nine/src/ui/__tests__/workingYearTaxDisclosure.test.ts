@@ -3,6 +3,7 @@ import { copy } from '@ui/copy'
 import { METHODOLOGY_DISCLOSURES, methodologyLines, requiredSeats } from '@ui/assumptionRegistry'
 import { lintCopy } from '@ui/copyGuard'
 import { HAWK_BAN } from './hawkBan'
+import { LEFT_OVER_SHOWN_STATES, type LeftOverShownState } from '@intake/workingYearLeftOverState'
 import { prepareWorkingYearFloor, workingYearFederalCharge } from '@engine/taxOverlay'
 import { ordinaryPlusCapitalGainsTax } from '@engine/taxCore'
 
@@ -217,7 +218,8 @@ describe('the working-year tax disclosure row (R13 — the working-year tax floo
  */
 describe('the pay check’s arm of the working-year row (U9, R17)', () => {
   // The pinned order, typed by hand: the rewrite, the two unchanged paragraphs, then one key per open
-  // gap — looks better than it really is (K1–K5), either way (K6–K8), a little worse (K9–K13, K15).
+  // gap — looks better than it really is (K1–K5), either way (K6–K8), build 2's left-over line (no lean;
+  // it replaced K9 — here the unanswered household's), then a little worse (K10–K13, K15).
   const W_ARM: readonly string[] = [
     'assumptionWorkingYearCheckValue',
     'assumptionWorkingYearTaxReadings',
@@ -230,7 +232,7 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     'assumptionWorkingYearCheckSteadyPay',
     'assumptionWorkingYearCheckWorkState',
     'assumptionWorkingYearCheckWageFigures',
-    'assumptionWorkingYearCheckLeftOver',
+    'assumptionWorkingYearCheckLeftOverAbsent',
     'assumptionWorkingYearCheckBirthMonth',
     'assumptionWorkingYearCheckPreTaxBenefits',
     'assumptionWorkingYearCheckNoSocialSecurityJob',
@@ -241,18 +243,58 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     if (entry === undefined) throw new Error('[test setup] no working-year-tax row in METHODOLOGY_DISCLOSURES')
     return entry
   }
-  const wArmStrings = (): readonly string[] => [copy[row().nameKey], ...methodologyLines(row(), 'workingCost', 'agi-derived').map((k) => copy[k])]
+  const wArmStrings = (): readonly string[] => [copy[row().nameKey], ...methodologyLines(row(), 'workingCost', 'agi-derived', 'absent').map((k) => copy[k])]
 
-  it('the W-absent arm is today’s row, verbatim (KTD22)', () => {
-    expect(methodologyLines(row(), 'default', 'agi-derived')).toEqual([
-      'assumptionWorkingYearTaxValue',
-      'assumptionWorkingYearTaxReadings',
-      'assumptionWorkingYearTaxOmissions',
-    ])
+  /** Build 2's left-over family, typed by hand: each shown state's own line (KTD11). */
+  const LEFT_OVER_LINE: Readonly<Record<LeftOverShownState, string>> = {
+    'not-asked': 'assumptionWorkingYearCheckLeftOverNotAsked',
+    'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaiting',
+    absent: 'assumptionWorkingYearCheckLeftOverAbsent',
+    saved: 'assumptionWorkingYearCheckLeftOverSaved',
+    'saved-moved': 'assumptionWorkingYearCheckLeftOverSavedMoved',
+    spent: 'assumptionWorkingYearCheckLeftOverSpent',
+    'not-sure': 'assumptionWorkingYearCheckLeftOverNotSure',
+  }
+
+  it('the W-absent arm is today’s row, verbatim (KTD22) — under every reading and every left-over state', () => {
+    for (const s of LEFT_OVER_SHOWN_STATES) {
+      expect(methodologyLines(row(), 'default', 'agi-derived', s), s).toEqual([
+        'assumptionWorkingYearTaxValue',
+        'assumptionWorkingYearTaxReadings',
+        'assumptionWorkingYearTaxOmissions',
+      ])
+    }
   })
 
   it('the W arm renders the rewrite, the two unchanged paragraphs, then every gap key in the pinned order', () => {
-    expect(methodologyLines(row(), 'workingCost', 'agi-derived')).toEqual(W_ARM)
+    expect(methodologyLines(row(), 'workingCost', 'agi-derived', 'absent')).toEqual(W_ARM)
+  })
+
+  it('BUILD 2: the W arm lists no K9; each of the seven shown states reads its OWN static line, in K9’s old slot, and only that one', () => {
+    expect(copy).not.toHaveProperty('assumptionWorkingYearCheckLeftOver')
+    const k9Slot = W_ARM.indexOf('assumptionWorkingYearCheckLeftOverAbsent')
+    expect(k9Slot, 'between the either-way group and the a-little-worse group').toBe(W_ARM.indexOf('assumptionWorkingYearCheckWageFigures') + 1)
+    for (const s of LEFT_OVER_SHOWN_STATES) {
+      const expected = W_ARM.map((k, i) => (i === k9Slot ? LEFT_OVER_LINE[s] : k))
+      expect(methodologyLines(row(), 'workingCost', 'agi-derived', s), s).toEqual(expected)
+    }
+    expect(new Set(Object.values(LEFT_OVER_LINE)).size, 'seven distinct lines').toBe(7)
+    // The selector without the shown state fails to compile (KTD11: REQUIRED, never defaulted).
+    // @ts-expect-error — the fourth argument is required
+    methodologyLines(row(), 'workingCost', 'agi-derived')
+  })
+
+  it('BUILD 2: no left-over line carries a dollar figure or a digit, and none names a lean (R14, R16)', () => {
+    for (const k of Object.values(LEFT_OVER_LINE)) {
+      const s = copy[k as keyof typeof copy]
+      expect(s, k).not.toMatch(/\$|\d/)
+      expect(lintCopy(s, ['free-numeral']), k).toEqual([])
+      expect(s, k).not.toMatch(/better|worse|either way|earlier|conservativ/i)
+    }
+    // KTD11's two fixed frames: "saved" states the at-most-year-0 frame; "not asked" says nothing is added
+    // where the first working year has none.
+    expect(copy.assumptionWorkingYearCheckLeftOverSaved).toMatch(/up to your first working year’s figure/)
+    expect(copy.assumptionWorkingYearCheckLeftOverNotAsked).toMatch(/only when your first working year shows some left over/)
   })
 
   it('K7 (the state tax on pay) is ONE sentence per reading: either way under NC, the rosy group under FL, PA and an unpriced state', () => {
@@ -263,24 +305,24 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     const inW = 'assumptionWorkingYearCheckStateTaxInW'
     // The rosy two sit after K5, in the "looks better" group; NC's either-way sentence sits after K6.
     const at = (key: string): readonly string[] => [...W_ARM.slice(0, 8), key, ...W_ARM.slice(8).filter((k) => k !== k7)]
-    expect(methodologyLines(row(), 'workingCost', 'none')).toEqual(at(noTax))
-    expect(methodologyLines(row(), 'workingCost', 'class-based')).toEqual(at(inW))
-    expect(methodologyLines(row(), 'workingCost', 'unpriced')).toEqual(at(inW))
+    expect(methodologyLines(row(), 'workingCost', 'none', 'absent')).toEqual(at(noTax))
+    expect(methodologyLines(row(), 'workingCost', 'class-based', 'absent')).toEqual(at(inW))
+    expect(methodologyLines(row(), 'workingCost', 'unpriced', 'absent')).toEqual(at(inW))
     for (const reading of ['none', 'class-based', 'unpriced'] as const) {
-      const text = copy[methodologyLines(row(), 'workingCost', reading)[8] as keyof typeof copy]
+      const text = copy[methodologyLines(row(), 'workingCost', reading, 'absent')[8] as keyof typeof copy]
       expect(text, reading).toMatch(/the answer looks better than it really is/)
       expect(text, reading).not.toMatch(/either way/)
     }
     // Today's row never carried any of them, under any reading.
     for (const reading of ['agi-derived', 'none', 'unpriced', 'class-based'] as const) {
-      for (const k of [k7, noTax, inW]) expect(methodologyLines(row(), 'default', reading)).not.toContain(k)
+      for (const k of [k7, noTax, inW]) expect(methodologyLines(row(), 'default', reading, 'absent')).not.toContain(k)
     }
   })
 
   it('a row with no W arm reads its own lines on both arms', () => {
     for (const m of METHODOLOGY_DISCLOSURES.filter((x) => x.id !== 'working-year-tax')) {
       expect(m.workingCostLineKeys, `${m.id} carries no W arm`).toBeUndefined()
-      expect(methodologyLines(m, 'workingCost', 'agi-derived')).toEqual(m.lineKeys)
+      expect(methodologyLines(m, 'workingCost', 'agi-derived', 'saved')).toEqual(m.lineKeys)
     }
   })
 
@@ -295,8 +337,11 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
       ...wArmStrings(),
       copy.assumptionWorkingYearCheckWorkStateNoTax,
       copy.assumptionWorkingYearCheckStateTaxInW,
+      ...Object.values(LEFT_OVER_LINE)
+        .filter((k) => k !== 'assumptionWorkingYearCheckLeftOverAbsent')
+        .map((k) => copy[k as keyof typeof copy]),
     ]
-    expect(strings.length, 'the sweep reads the whole W arm (the name, seventeen lines, the two other K7 readings)').toBe(20)
+    expect(strings.length, 'the sweep reads the whole W arm (the name, seventeen lines, the two other K7 readings, the six other left-over states)').toBe(26)
     for (const s of strings) {
       for (const b of BANNED) expect(s, `the W arm says "${b.word}": "${s}"`).not.toMatch(b.re)
       expect(s, `a straight apostrophe in "${s}" (the catalog writes ’)`).not.toMatch(/'/)
@@ -316,16 +361,38 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     expect(rewrite).toMatch(/comes up short[^.]*comes out of savings/i)
   })
 
-  it('each gap key names its lean: better than real (K1–K5), either way (K6–K8), a little worse (K9–K13, K15)', () => {
-    const keys = methodologyLines(row(), 'workingCost', 'agi-derived').slice(3)
-    const text = (i: number): string => copy[keys[i] as keyof typeof copy]
-    for (let i = 0; i < 5; i++) expect(text(i), keys[i]).toMatch(/better than (it|they) really (is|are)/)
-    expect(text(5), keys[5]).toMatch(/better than it really is[^.]*worse/)
-    expect(text(6), keys[6]).toMatch(/either way/)
-    expect(text(7), keys[7]).toMatch(/taxed a little low[^.]*more of an early benefit is held back/)
-    for (let i = 8; i < keys.length; i++) {
-      expect(text(i), keys[i]).toMatch(/a little worse than (it|they) really (is|are)|read a little low/)
-      expect(text(i), keys[i]).not.toMatch(/better than/)
+  it('each gap key names its lean, read BY KEY: better than real (K1–K5), either way (K6–K8), a little worse (K10–K13, K15)', () => {
+    const better = [
+      'assumptionWorkingYearCheckEarlyCharge',
+      'assumptionWorkingYearCheckSelfEmployed',
+      'assumptionWorkingYearCheckIraDeduction',
+      'assumptionWorkingYearCheckRothCatchUp',
+      'assumptionWorkingYearCheckFullYearClaim',
+    ] as const
+    const worse = [
+      'assumptionWorkingYearCheckBirthMonth',
+      'assumptionWorkingYearCheckPreTaxBenefits',
+      'assumptionWorkingYearCheckNoSocialSecurityJob',
+      'assumptionWorkingYearCheckEarlierHeldBack',
+      'assumptionWorkingYearCheckSpouseMedicare',
+    ] as const
+    for (const k of better) expect(copy[k], k).toMatch(/better than (it|they) really (is|are)/)
+    expect(copy.assumptionWorkingYearCheckSteadyPay).toMatch(/better than it really is[^.]*worse/)
+    expect(copy.assumptionWorkingYearCheckWorkState).toMatch(/either way/)
+    expect(copy.assumptionWorkingYearCheckWageFigures).toMatch(/taxed a little low[^.]*more of an early benefit is held back/)
+    for (const k of worse) {
+      expect(copy[k], k).toMatch(/a little worse than (it|they) really (is|are)|read a little low/)
+      expect(copy[k], k).not.toMatch(/better than/)
     }
+    // Every gap key of the arm is in exactly one group, or the left-over family (which names no lean).
+    const grouped = new Set<string>([
+      ...better,
+      'assumptionWorkingYearCheckSteadyPay',
+      'assumptionWorkingYearCheckWorkState',
+      'assumptionWorkingYearCheckWageFigures',
+      ...worse,
+      'assumptionWorkingYearCheckLeftOverAbsent',
+    ])
+    expect(methodologyLines(row(), 'workingCost', 'agi-derived', 'absent').slice(3).filter((k) => !grouped.has(k))).toEqual([])
   })
 })

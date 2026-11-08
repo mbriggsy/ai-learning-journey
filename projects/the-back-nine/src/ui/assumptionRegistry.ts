@@ -32,6 +32,8 @@
  */
 import type { WorkingYearStateTaxReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
+// A type only (no runtime edge): build 2's shown-state vocabulary lives in its pure intake leaf.
+import type { LeftOverShownState } from '@intake/workingYearLeftOverState'
 import type { CopyKey } from './copy'
 
 /** A rendering seat in the AssumptionPanel — the `data-assumption-seat` vocabulary the
@@ -60,9 +62,15 @@ export type AssumptionSeat =
   | 'health-quote' // the ACA quote pair (pre-65 households)
   | 'work-investment' // working-year investment income (date route, per working member)
   | 'working-year-cost' // W, what a year costs while someone still works (date route; the pay check's question + money picture)
+  | 'working-year-left-over' // build 2's left-over question (date route; its own seat below W, its own hold, a waiting face while W is stale)
   | 'medicare-extras' // the per-person Medicare-extras payment fork (the ask-for-Medicare-extras unit — the refine path + the details home for the funded typical)
   | 'retirement-state' // the household's retirement state (the state-tax unit S3 — a changeable best guess; edit → re-run the SC-vs-GA what-if)
   | 'collections' // accounts + other income — via-intake ("edit in the walk-through")
+
+/** The seats a door outside the panel can open it onto (`AssumptionPanel`'s `initialSeat`): the W row (the
+ *  result's stale-W line, KTD21) and build 2's left-over seat (its moved line). A seat here must have a
+ *  landing in the panel's exhaustive landing record, or the prop would silently do nothing. */
+export type AssumptionLandingSeat = Extract<AssumptionSeat, 'working-year-cost' | 'working-year-left-over'>
 
 /** How one draft field reaches the panel. The four visible kinds name their seat(s); an
  *  `internal` field instead carries the one-line justification for why no user-facing row
@@ -133,6 +141,11 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
   // real editor: the panel row answers, corrects or re-confirms it, and shows the money picture.
   // Gated on the date route (W is a working-household answer; the spine never reads it).
   workingYearCost: { kind: 'row-editable', seats: ['working-year-cost'] },
+  // Build 2's left-over answer. A household fact the run uses (a "saved" answer credits each working
+  // year's left over while W is fresh), so it owes a real editor: its OWN seat below the W row, with
+  // its own gesture hold, never a control inside the W row (the W row's whole-draft hold is safe only
+  // while no control lives above the question in it — KTD8). Gated like W, on the date route.
+  workingYearLeftOver: { kind: 'row-editable', seats: ['working-year-left-over'] },
   drawdownPolicy: { kind: 'via-sheet', seats: ['drawdown'] },
   drawdownOrder: { kind: 'via-sheet', seats: ['drawdown'] },
   filing: {
@@ -219,8 +232,9 @@ export type MethodologyArm = 'default' | 'workingCost'
  *  of silently dropping the line (insight 147):
  *  · NC (AGI-derived) — the run taxes working years by the retirement state, which may tax pay more or
  *    less than the state worked in: either way;
- *  · FL (no income tax) — the run charges the least any state can, so a taxing work state only flatters:
- *    the rosy group;
+ *  · FL (no income tax) — the run charges the least any state can, so a taxing work state only flatters
+ *    through a short year: the rosy group (for a "saved" left-over answer the untaxed pay also reaches the
+ *    credited left over, a reach R16 holds unmeasured until U11);
  *  · PA (class-based) and an unpriced state — the run charges no state tax on pay at all; it counts only
  *    where the household added it to W, as the W step's help asks (the b9-3 walk's "one sheet, two
  *    answers" ruled out the "taxed by the state you'll live in" words there). */
@@ -232,18 +246,39 @@ const WORK_STATE_KEY: Readonly<Record<WorkingYearStateTaxReading, CopyKey>> = {
 }
 const WORK_STATE_FAMILY: ReadonlySet<CopyKey> = new Set(Object.values(WORK_STATE_KEY))
 
+/** Build 2's left-over line (KTD11; it replaced K9) — by R3's shown state, ONE static line per state, exhaustive
+ *  over the seven so a state added later fails to compile here (insight 147). No dollars, no lean (R14, R16):
+ *  the dollars ride the question's own line under its radios. */
+const LEFT_OVER_KEY: Readonly<Record<LeftOverShownState, CopyKey>> = {
+  'not-asked': 'assumptionWorkingYearCheckLeftOverNotAsked',
+  'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaiting',
+  absent: 'assumptionWorkingYearCheckLeftOverAbsent',
+  saved: 'assumptionWorkingYearCheckLeftOverSaved',
+  'saved-moved': 'assumptionWorkingYearCheckLeftOverSavedMoved',
+  spent: 'assumptionWorkingYearCheckLeftOverSpent',
+  'not-sure': 'assumptionWorkingYearCheckLeftOverNotSure',
+}
+const LEFT_OVER_FAMILY: ReadonlySet<CopyKey> = new Set(Object.values(LEFT_OVER_KEY))
+
 /** A methodology row's lines for an arm — the ONE selector the panel and the disclosure test both
  *  call, so the arm choice cannot drift between them (insight 086). A row without a W arm reads its
- *  `lineKeys` on both arms. `stateReading` is the draft's working-year state-tax reading (the W step's
- *  own, `workingYearStateTaxReading`), REQUIRED so no caller can skip K7's choice: of the K7 family
- *  in the list, only the reading's own key reads. */
+ *  `lineKeys` on both arms. Both readings are REQUIRED, so no caller can skip a family's choice: of the K7
+ *  family in the list, only the draft's working-year state-tax reading's key reads (the W step's own,
+ *  `workingYearStateTaxReading`); of build 2's left-over family, only the draft's shown state's key
+ *  (`workingYearLeftOverShownState`, the one read — KTD11). Positional, and safe from a swap only because
+ *  the two vocabularies share no member and are typed apart. */
 export function methodologyLines(
   m: MethodologyDisclosure,
   arm: MethodologyArm,
   stateReading: WorkingYearStateTaxReading,
+  leftOver: LeftOverShownState,
 ): readonly CopyKey[] {
   const keys = arm === 'workingCost' && m.workingCostLineKeys !== undefined ? m.workingCostLineKeys : m.lineKeys
-  return keys.filter((k) => !WORK_STATE_FAMILY.has(k) || k === WORK_STATE_KEY[stateReading])
+  return keys.filter(
+    (k) =>
+      (!WORK_STATE_FAMILY.has(k) || k === WORK_STATE_KEY[stateReading]) &&
+      (!LEFT_OVER_FAMILY.has(k) || k === LEFT_OVER_KEY[leftOver]),
+  )
 }
 
 /**
@@ -301,9 +336,10 @@ export const METHODOLOGY_DISCLOSURES: readonly MethodologyDisclosure[] = [
     lineKeys: ['assumptionWorkingYearTaxValue', 'assumptionWorkingYearTaxReadings', 'assumptionWorkingYearTaxOmissions'],
     // The pay check's arm (U9): the rewritten paragraph, the two unchanged ones, then one key per open
     // gap that can move the check, in the pinned order — looks better than it really is (K1–K5, and K7
-    // where the reading makes it rosy), either way (K6–K8), a little worse (K9–K13, K15). The K7 family
-    // holds three keys, one per reading (`WORK_STATE_KEY`); each household reads one. The build that
-    // closes a gap deletes its key.
+    // where the reading makes it rosy), either way (K6–K8), then build 2's left-over family (no lean; it
+    // replaced K9), then a little worse (K10–K13, K15). The K7 family holds three keys, one per reading
+    // (`WORK_STATE_KEY`), and the left-over family seven, one per shown state (`LEFT_OVER_KEY`); each
+    // household reads one of each. The build that closes a gap deletes its key.
     workingCostLineKeys: [
       'assumptionWorkingYearCheckValue',
       'assumptionWorkingYearTaxReadings',
@@ -318,7 +354,13 @@ export const METHODOLOGY_DISCLOSURES: readonly MethodologyDisclosure[] = [
       'assumptionWorkingYearCheckSteadyPay',
       'assumptionWorkingYearCheckWorkState',
       'assumptionWorkingYearCheckWageFigures',
-      'assumptionWorkingYearCheckLeftOver',
+      'assumptionWorkingYearCheckLeftOverNotAsked',
+      'assumptionWorkingYearCheckLeftOverWaiting',
+      'assumptionWorkingYearCheckLeftOverAbsent',
+      'assumptionWorkingYearCheckLeftOverSaved',
+      'assumptionWorkingYearCheckLeftOverSavedMoved',
+      'assumptionWorkingYearCheckLeftOverSpent',
+      'assumptionWorkingYearCheckLeftOverNotSure',
       'assumptionWorkingYearCheckBirthMonth',
       'assumptionWorkingYearCheckPreTaxBenefits',
       'assumptionWorkingYearCheckNoSocialSecurityJob',

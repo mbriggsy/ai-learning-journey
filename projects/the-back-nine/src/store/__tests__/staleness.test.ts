@@ -51,6 +51,7 @@ import { scenarioFromDraft, currentEpochDay } from '@ui/scenarioFromDraft'
 import { exposureForDraft } from '@ui/stalenessExposure'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { isWorkingYearCostStale } from '@intake/workingYearQuote'
+import { workingYearLeftOverMoved } from '@intake/workingYearLeftOver'
 import type { ScenarioDraft } from '../memoryModel'
 import { CURRENT_APP_DEFAULT_VERSION, appDefaultEraFor } from '@shared/appDefaults'
 import type { PricedState } from '@engine/constants/stateTax'
@@ -183,22 +184,23 @@ function freshDateSave(): CurrentScenario {
 
 describe('deriveStaleness — the property arm (a fresh save is never stale)', () => {
   // `dateshort` is the pay check's non-stale W witness: a W that still matches is no stale fact. (Never
-  // `datecoststale` here — it reads stale by design; the KTD21 arms below pin it.)
-  it.each(['retired', 'date', 'budget', 'borderline', 'datesolo', 'dateshort'] as const)(
+  // `datecoststale` here — it reads stale by design; the KTD21 arms below pin it.) `datesaved` is build 2's:
+  // a fresh "All of it" at its own figure is no moved fact — the new predicate's non-vacuity case. (Never
+  // `datesavedmoved` or `datesavedstale`: moved and W-stale by design.)
+  it.each(['retired', 'date', 'budget', 'borderline', 'datesolo', 'dateshort', 'datesaved'] as const)(
     'a freshly-stamped %s save fires NO clock (every comparator diffs write-time truth against the same build)',
     (key) => {
       const r = scenarioFromDraft(DEV_SEEDS[key])
       if (!r.ready) return // non-save-ready seeds are covered by the registry arms elsewhere
       // The REAL exposure AND the real stale-answer predicate for this REAL seed — the one arm in
       // this file that joins the bucketing law to its actual producers, exactly as IntakeApp's
-      // unlock calls them (insight 095: probe the shipped decision path). The left-over fact is
-      // `false` here exactly as IntakeApp passes it until the go-live, which swaps in the real moved
-      // predicate here too and adds `datesaved` to this list (build 2's U14 and U9).
+      // unlock calls them (insight 095: probe the shipped decision path), the left-over fact included:
+      // the moved core over the same draft, as IntakeApp's unlock passes it (build 2's U14).
       const report = deriveStaleness(
         stampedToday(r.scenario),
         TODAY,
         exposureForDraft(DEV_SEEDS[key]),
-        { costStale: isWorkingYearCostStale(DEV_SEEDS[key]), leftOverStale: false },
+        { costStale: isWorkingYearCostStale(DEV_SEEDS[key]), leftOverStale: workingYearLeftOverMoved(DEV_SEEDS[key]) !== null },
       )
       expect(report.anyStale).toBe(false)
       expect(report.workingYear).toEqual({ vintageMoved: false, costStale: false, leftOverStale: false })
@@ -257,12 +259,12 @@ describe('deriveStaleness — the tax clock', () => {
   it('is EXPOSURE-GATED on the overlay existing, NOT on healthcare — a run with a tax overlay and no healthcare still fires (the clock reads its OWN bit)', () => {
     // THE REPLACED CLAIM (U17 §S4's F-pass): this arm used to assert the federal clock takes NO
     // exposure gate, on the premise "a household without an overlay reaches no verdict to be
-    // stale about". That premise is FALSE — `buildParams` (intakeMap.ts:750-766) returns a full
+    // stale about". That premise is FALSE — `buildParams` (intakeMap.ts:756-772) returns a full
     // params object for the $0-portfolio/no-overlay household and it gets a real verdict. A test
     // that pins a defect is the defect's second copy, so it is rewritten, not relaxed.
     //
     // What survives is the half that WAS true and still matters: `taxEnabled: true` is hardcoded
-    // on every built overlay (intakeMap.ts:703), so the gate must be `overlayBuilt` — a clock
+    // on every built overlay (intakeMap.ts:709), so the gate must be `overlayBuilt` — a clock
     // wired to `medicare` instead would silence a real federal rulebook move for this household.
     const s = freshSave()
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
@@ -273,7 +275,7 @@ describe('deriveStaleness — the tax clock', () => {
 
   it('is SILENT for the DEGENERATE household — no overlay ⇒ `taxEnabled` never set ⇒ consumedConstants skips the whole `tax.` family ⇒ their recompute is byte-identical under any vintage', () => {
     // The population: save-ready, $0 accounts, Social-Security-only income ⇒ `buildOverlay`'s
-    // early return (intakeMap.ts:628-633). Reachable — `stalenessExposure.test.ts` builds exactly
+    // early return (intakeMap.ts:634-639). Reachable — `stalenessExposure.test.ts` builds exactly
     // this draft and proves `missingRequiredFacts` is empty for it.
     const s = freshSave()
     const basisMoved = { ...s, taxVintageDetail: { ...s.taxVintageDetail!, legalBasis: 'TCJA (pre-OBBBA)' } }
@@ -472,7 +474,7 @@ describe('deriveStaleness — the healthcare clocks (U17 §S4: the exposure thre
     })
   })
 
-  it('`coverage-year` dates BOTH tables (model.ts:2643) — it names each family the run PRICED, and only those', () => {
+  it('`coverage-year` dates BOTH tables (model.ts:2685) — it names each family the run PRICED, and only those', () => {
     // It is the ONLY marker for every annually-re-indexed health figure with no stamp of its own
     // (the four interior IRMAA thresholds, the ACA applicable-percentage bands, the age-rating
     // curve), so bucketing it nameless hid the annual re-key from the pre-65 planner it hits
@@ -620,7 +622,7 @@ describe('deriveStaleness — every healthcare clock names exactly the families 
 
   /** WHICH SENTENCE each clock is allowed to speak — the law, restated by hand. */
   const FAMILY: Readonly<Record<HealthcareClock, { readonly aca: boolean; readonly medicare: boolean }>> = {
-    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:2643)
+    'coverage-year': { aca: true, medicare: true }, // "the ACA/IRMAA tables" (model.ts:2685)
     'aca-status': { aca: true, medicare: false },
     'fpl-guideline': { aca: true, medicare: false },
     'irmaa-freeze': { aca: false, medicare: true }, // dates the IRMAA schedule (the F1 ruling)
@@ -710,7 +712,7 @@ describe('deriveStaleness — the date clocks', () => {
     // The population: 66/retired holding everything + 62/working holding nothing. They ARE on
     // the date route, and `dateSearch.ts:262` DOES force `accumulation` onto every candidate —
     // but it fills it from the BASE overlay's streams, and `contributionStreamsFor` returns `{}`
-    // for a non-working owner (intakeMap.ts:501-504). Their candidates sweep with empty streams and
+    // for a non-working owner (intakeMap.ts:507-510). Their candidates sweep with empty streams and
     // read no limit. Same fixture, same moved stamp, ONE differing read (insight 029).
     const s = freshDateSave()
     const bumped = {

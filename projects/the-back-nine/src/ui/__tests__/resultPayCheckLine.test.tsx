@@ -103,3 +103,67 @@ describe('the pay check’s standing line through Result (KTD21)', () => {
     expect(document.activeElement).not.toBe(wRowName())
   })
 })
+
+// Build 2's U14 (R12): the same slot, keyed by cause. A moved left over speaks in the slot with its own lead
+// and door (opening the left-over seat), unless a rules line hosted it at unlock (`leftOverClauseHost`), when
+// the two figures ride the hero's rules note instead; a "saved" answer waiting on W adds its clause to W's line.
+const leftOverDoor = () => screen.queryByRole('button', { name: copy.stalenessLeftOverCta })
+const leftOverSeatName = () =>
+  document.querySelector('[data-assumption-seat="working-year-left-over"] .ap-row__name') as HTMLElement | null
+const MOVED = slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')
+
+describe('build 2’s left-over lines through Result (U14, R12)', () => {
+  it('`datesavedmoved`: the slot names both figures under its OWN lead — never W’s — and its door lands on the left-over seat', () => {
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datesavedmoved)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    expect(line()?.textContent).toContain(`${copy.stalenessLeftOverNote} ${MOVED}`)
+    expect(line()?.textContent).not.toContain(copy.stalenessPayCheckNote)
+    expect(lineDoor(), 'no W door').toBeNull()
+    fireEvent.click(leftOverDoor()!)
+    expect(screen.getByRole('heading', { name: copy.assumptionTitle })).toBeInTheDocument()
+    expect(document.activeElement).toBe(leftOverSeatName())
+  })
+
+  it('a READ-ONLY tab states the moved left over with no door', () => {
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datesavedmoved)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
+    expect(line()?.textContent).toBe(`${copy.stalenessLeftOverNote} ${MOVED}`)
+    expect(leftOverDoor()).toBeNull()
+  })
+
+  it('where a rules line hosted it at unlock, the two figures ride the hero’s rules note, and the slot says nothing (one cause, one line)', () => {
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datesavedmoved)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} stalenessNote leftOverClauseHost />)
+    expect(document.querySelector('.cs-staleness-note')?.textContent).toBe(
+      `${copy.stalenessHeroNote} ${slots.stalenessLeftOverClause('16,985', '27,537', '16,985')}`,
+    )
+    expect(line()).toBeNull()
+  })
+
+  it('`datesavedstale`: W’s one line carries the clause naming the $16,985 not added; no moved line speaks', () => {
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datesavedstale)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
+    expect(line()?.textContent).toBe(
+      `${copy.stalenessPayCheckNote} ${slots.workingCostStaleQuote('84,000', '78,000')} ${slots.workingCostStaleLeftOverClause('16,985')}`,
+    )
+  })
+
+  it('an absent, spent or not-sure answer shows no left-over line or clause — fresh or with W stale', () => {
+    for (const answer of [undefined, { kind: 'spent' }, { kind: 'not-sure' }] as const) {
+      for (const base of [DEV_SEEDS.date, DEV_SEEDS.datecoststale]) {
+        plantDateHero()
+        appModel.update(() => ({ ...base, workingYearLeftOver: answer }))
+        render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} stalenessNote leftOverClauseHost />)
+        const text = document.body.textContent ?? ''
+        expect(text, `${answer?.kind ?? 'absent'}`).not.toContain(copy.stalenessLeftOverNote)
+        expect(text).not.toContain('left over a year is added')
+        expect(document.querySelector('.cs-staleness-note')?.textContent).toBe(copy.stalenessHeroNote)
+        cleanup()
+      }
+    }
+  })
+})

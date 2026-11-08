@@ -191,6 +191,11 @@ export interface ScenarioDraft
       // figure-less `entered` (KTD4: the type-a-figure choice lives in the W step's component
       // state until a valid figure commits), and a panel clear keeps the last committed answer.
       | 'workingYearCost'
+      // Build 2's left-over answer (schema version 5; ABSENT = unanswered, never defaulted to a
+      // reply). A USER FACT carried via `...draft` at Save, never seeded and never re-stamped. It
+      // is HELD through a W clear, a typed $0 and a route change, and stays inert until W is fresh
+      // again (U7): `buildDateInput` decides what reaches the engine, never this draft.
+      | 'workingYearLeftOver'
       // Act-4 · U17 — the saved-recommendation record (additive-optional; ABSENT = never saved
       // one). A USER FACT carried via `...draft` at Save (the chosenGoal/retirementState
       // precedent), MINTED ONCE by the S5 save gesture and NEVER re-stamped: putting it in

@@ -1,4 +1,4 @@
-import { test, expect, type Page, type BrowserContext, type CDPSession } from '@playwright/test'
+import { test, expect, type Page, type Locator, type BrowserContext, type CDPSession } from '@playwright/test'
 import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, PHONE_DPR, FINAL_TIER_MS, advanceIntakeTo, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
 // THE SHIPPED CATALOG, never re-typed here (the `e2e/caddie-walk.spec.ts:9` precedent). Every
 // string this spec injects or reads back is the one the app ships: a spec-local literal would pin a
@@ -2050,18 +2050,54 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
   })
 })
 
-// ── the pay check's two unlock lines (?vault=wyclock · ?vault=datecoststale — U10) ────────────────
+// ── the pay check's unlock lines (?vault=wyclock · ?vault=datecoststale — U10; build 2's two witnesses) ──
 // `wyclock` is `date` saved under the PREVIOUS working-years vintage (the light doctor), so the
 // working-years clock fires; `datecoststale` is the stale-W witness planted as a vault, so KTD21's line
 // fires (an input re-confirm, never a rules line) — since b9-7 the W step's own stale sentence framed by
-// the gate's lead and door hint ($84,000 said yes to, $78,000 now), never the figure-less fallback. Each
-// must be the gate's ONLY note, by name, with the decision pair in the first frame — the `statestale`
-// isolation law. The affirm lands the date route's resolved reading; the date route scrolls by design,
-// so past the gate the arm pins the order contract (the `datestale` precedent), never a full one-frame fit.
-const STALE_W_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${slots.workingCostStaleQuote('84,000', '78,000')} ${copy.stalenessPayCheckGateDoor}`
+// the gate's lead and door hint ($84,000 said yes to, $78,000 now), never the figure-less fallback.
+// Build 2 (R12) adds two answer lines, each on an undoctored seed planted as a vault: `datesavedstale` is
+// `datecoststale` with "All of it" stored at $16,985 before the spending moved, so W's own line carries the
+// clause naming in dollars what is not added while W is stale; `datesavedmoved` stored $16,985 and then got a
+// raise, so W stays fresh and the moved line speaks alone ($16,985 answered at, $27,537 now). Each must be
+// the gate's ONLY note, by name, with the decision pair in the first frame — the `statestale` isolation law
+// — and its sibling negative is aimed at a live key (insight 086). The affirm lands the date route's
+// resolved reading, whose standing slot (`.cs-paycheck-note`) speaks the same cause's line, or nothing; the
+// date route scrolls by design, so past the gate the arm pins the order contract (the `datestale`
+// precedent), never a full one-frame fit.
+//
+// The figures: $84,000 / $78,000 are `datecoststale`'s quotes (its W confirmed at `date`'s spending, then the
+// spending lowered); $16,985 is `date`'s year-0 Left over, hand-derived (`workingYearCredit.test.ts`: pay
+// 150,000 − payroll tax 11,475 − tax on outside income 17,540 − deposits 20,000 − W 84,000), which a stale W
+// still prints (R4: the engine runs on the last W given); $27,537 is `datesavedmoved`'s after its raise to
+// $165,000, hand-derived from the primaries by the build-2 record's `year0check.mts` (pay 165,000 − payroll
+// 12,622.50 − tax 20,840 − deposits 20,000 − W 84,000 = 27,537.50, a surplus rounding down).
+const STALE_W_QUOTE = slots.workingCostStaleQuote('84,000', '78,000')
+const STALE_W_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE} ${copy.stalenessPayCheckGateDoor}`
+const STALE_W_SAVED_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE} ${slots.workingCostStaleLeftOverClause('16,985')} ${copy.stalenessPayCheckGateDoor}`
+const LEFT_OVER_MOVED_SENTENCE = slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')
+const LEFT_OVER_MOVED_GATE_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE} ${copy.stalenessPayCheckGateDoor}`
+/** `standing` — the Result's standing-slot sentence after the affirm (the lead and the sentence, before its
+ *  door), or `null` where the answer carries none (the fresh-vintage `wyclock`). */
 const PAY_CHECK_UNLOCKS = [
-  { key: 'wyclock', note: copy.stalenessWorkingYears, sibling: copy.stalenessPayCheckGateLead },
-  { key: 'datecoststale', note: STALE_W_GATE_LINE, sibling: copy.stalenessWorkingYears },
+  { key: 'wyclock', note: copy.stalenessWorkingYears, sibling: copy.stalenessPayCheckGateLead, standing: null },
+  {
+    key: 'datecoststale',
+    note: STALE_W_GATE_LINE,
+    sibling: copy.stalenessWorkingYears,
+    standing: `${copy.stalenessPayCheckNote} ${STALE_W_QUOTE}`,
+  },
+  {
+    key: 'datesavedstale',
+    note: STALE_W_SAVED_GATE_LINE,
+    sibling: copy.stalenessLeftOverNote,
+    standing: `${copy.stalenessPayCheckNote} ${STALE_W_QUOTE} ${slots.workingCostStaleLeftOverClause('16,985')}`,
+  },
+  {
+    key: 'datesavedmoved',
+    note: LEFT_OVER_MOVED_GATE_LINE,
+    sibling: copy.stalenessPayCheckGateLead,
+    standing: `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE}`,
+  },
 ] as const
 
 for (const u of PAY_CHECK_UNLOCKS) {
@@ -2097,8 +2133,11 @@ for (const u of PAY_CHECK_UNLOCKS) {
       await assertResolvedDate(page)
       await assertOneVisibleDisclaimer(page, 'laptop')
       // The stale answer survives the save: the result keeps its standing line (R4 — the engine still
-      // runs on the last figure given). The fresh-vintage answer on `wyclock` carries none.
-      await expect(page.locator('.cs-paycheck-note')).toHaveCount(u.key === 'datecoststale' ? 1 : 0)
+      // runs on the last figure given), in the gate's own cause; a moved left over keeps its own (R12). The
+      // fresh-vintage answer on `wyclock` carries none.
+      const standing = page.locator('.cs-paycheck-note')
+      await expect(standing).toHaveCount(u.standing === null ? 0 : 1)
+      if (u.standing !== null) await expect(standing, `${u.key}: the standing slot speaks the gate’s cause`).toContainText(u.standing)
       const doors = await page.locator('.result-quiet-row').boundingBox()
       expect(doors, 'the quiet doors render').not.toBeNull()
       const trailing = await doorsLastWalk(page, 'body')
@@ -2586,7 +2625,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2028-2032 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2100-2104 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,
@@ -2970,11 +3009,14 @@ async function clippedFigures(
 }
 
 /** The figures a money picture of `date`'s household must show (`?seed=datecoststale` once re-answered,
- *  walk and panel alike): year 0's nonzero lines from the U10 hand derivation (`b9-u10-tools/year0check`,
- *  every rate from its primary) — pay $150,000, payroll tax $11,475, the tax on outside income $17,540,
- *  deposits $20,000, W — and the bottom line, which every picture carries (`WorkingYearLedger.tsx` draws
- *  any other line only above $0; no Social Security, no other income, nobody on Medicare yet). Later
- *  years only add to it. */
+ *  walk and panel alike; `?seed=datesaved`, walk and panel, whose "All of it" moves no year-0 line — the
+ *  credit lands at the year's end, KTD12): year 0's nonzero lines from the U10 hand derivation
+ *  (`b9-u10-tools/year0check`, every rate from its primary) — pay $150,000, payroll tax $11,475, the tax on
+ *  outside income $17,540, deposits $20,000, W — and the bottom line, which every picture carries
+ *  (`WorkingYearLedger.tsx` draws any other line only above $0; no Social Security, no other income, nobody
+ *  on Medicare yet). Later years only add to it. Build 2's left-over question below the picture adds none:
+ *  its year-0 figure is a sentence (`.left-over__figure`), never a `.wy-row__value`, so its own arms read
+ *  it by text. */
 const DATE_PICTURE_FIGURES = 6
 
 /** (a)–(d) on the step the page stands on. `minBoxes` is the arm's own non-vacuity floor; `minFigures`
@@ -2999,6 +3041,76 @@ async function assertIntakeStepHolds(page: Page, where: string, minBoxes: number
   const nav = await page.locator('.intake-nav').boundingBox()
   expect(body !== null && nav !== null, `${where}: the step body and its nav must render`).toBe(true)
   expect(nav!.y, `${where}: Continue overlaps the step's content`).toBeGreaterThanOrEqual(body!.y + body!.height - 0.5)
+}
+
+/** The Result's standing slot, placed (`p.fod-note.cs-paycheck-note`: the pay check's KTD21 line, and build 2's
+ *  moved left over in the same slot, keyed by cause — R12): the lead's LAST note and before the graphs in DOM
+ *  order (at REAL the graphs sit BESIDE the lead, so "above" is DOM order there); at PHONE above the first
+ *  graph in geometry, with the caveat's order and reach; at REAL one visible disclaimer and the doors last.
+ *  The caller has pinned the line's count and words; this reads only where it sits. */
+async function assertStandingLinePlaced(page: Page, line: Locator, phone: boolean): Promise<void> {
+  const order = await page.evaluate(() => {
+    const lead = document.querySelector('.fod-reveal .reveal__lead')
+    const notes = lead === null ? [] : Array.from(lead.querySelectorAll(':scope > .fod-note'))
+    const pay = document.querySelector('.cs-paycheck-note')
+    const graphs = document.querySelector('.fod-graphs')
+    return {
+      last: notes.length > 0 && notes[notes.length - 1] === pay,
+      beforeGraphs: pay !== null && graphs !== null && (pay.compareDocumentPosition(graphs) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
+    }
+  })
+  expect(order.last, 'the line is the lead’s last note').toBe(true)
+  expect(order.beforeGraphs, 'the line comes before the graphs').toBe(true)
+  if (phone) {
+    // At PHONE `.fod-graphs` is display:contents (no box), so the first graph is the geometry.
+    const lineBox = await line.boundingBox()
+    const band = await page.locator('.fod-band').boundingBox()
+    expect(lineBox !== null && band !== null).toBe(true)
+    expect(lineBox!.y + lineBox!.height, 'the line sits above the first graph').toBeLessThanOrEqual(band!.y + 0.5)
+    await assertOneVisibleDisclaimer(page, 'narrow')
+    await assertCaveatOrderAndReach(page, DATE_VERDICT)
+  } else {
+    await assertOneVisibleDisclaimer(page, 'laptop')
+    const doors = await page.locator('.result-quiet-row').boundingBox()
+    expect(doors, 'the quiet doors render').not.toBeNull()
+    const trailing = await doorsLastWalk(page, 'body')
+    expect(trailing.counted).toBeGreaterThan(DOORS_WALK_FLOOR)
+    expect(trailing.maxOtherBottom, `content renders BELOW the quiet doors (${trailing.desc})`).toBeLessThanOrEqual(
+      doors!.y + doors!.height + 0.5,
+    )
+  }
+}
+
+/** Build 2's left-over seat in the open assumptions panel — its own row BELOW the W row (KTD8). */
+const LEFT_OVER_SEAT = '[role="dialog"] [data-assumption-seat="working-year-left-over"]'
+
+/** The seat's face once its replies show (R5, R6): exactly the three replies under the static legend, `checked`
+ *  the one reply checked (or none), the year-0 figure line, and the one line below the group — every string the
+ *  shipped one, every count exact, so a seat that rendered nothing (or rendered its replies elsewhere) reds.
+ *  Then nothing in the seat spills sideways, over a counted floor. The caller has scrolled the seat in. */
+async function assertLeftOverSeatFace(
+  page: Page,
+  where: string,
+  face: { readonly checked: string | null; readonly figure: string; readonly line: string },
+): Promise<void> {
+  const seat = page.locator(LEFT_OVER_SEAT)
+  await expect(seat, `${where}: the left-over seat renders once`).toHaveCount(1)
+  await expect(seat.locator('.ap-row__name')).toHaveText(copy.assumptionWorkingCostLeftOverName)
+  const group = seat.getByRole('group', { name: copy.workingLedgerLeftOverLegend })
+  await expect(group).toHaveCount(1)
+  await expect(group.getByRole('radio'), `${where}: exactly the three replies, in the group`).toHaveCount(3)
+  await expect(seat.getByRole('radio'), `${where}: no reply outside the group`).toHaveCount(3)
+  await expect(seat.getByRole('radio', { checked: true }), `${where}: the checked reply`).toHaveCount(face.checked === null ? 0 : 1)
+  if (face.checked !== null) await expect(group.getByRole('radio', { name: face.checked, exact: true })).toBeChecked()
+  await expect(seat.locator('.left-over__figure'), `${where}: the year-0 figure line`).toHaveText(face.figure)
+  await expect(seat.locator('.left-over__line'), `${where}: the line below the group`).toHaveText(face.line)
+  const sideways = await sidewaysReport(page, LEFT_OVER_SEAT)
+  // The boxes inside the seat's row (the walk reads its descendants): its name, the question's root, the
+  // figure and check lines, the fieldset, its legend and the legend's text, the track, three replies, and the
+  // line below — 12, measured at both sizes (the radios themselves are `.sr-only`, which the walk skips).
+  expect(sideways.counted, `${where}: the walk counted too few boxes — the seat did not render`).toBeGreaterThanOrEqual(12)
+  expect(sideways.offenders, `${where}: the seat spills past the viewport`).toEqual([])
+  expect(sideways.docOverflow, `${where}: the document scrolls sideways`).toBeLessThanOrEqual(0)
 }
 
 const PAY_CHECK_VIEWPORTS = [
@@ -3034,6 +3146,56 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       await expect(page.locator('.step-heading')).toHaveText(copy.qWorkingLedgerHeading)
       await expect(page.locator('.wy-row--bottom')).toContainText(copy.workingLedgerLeftOver)
       await assertIntakeStepHolds(page, 'money picture, datecoststale', 40, DATE_PICTURE_FIGURES)
+      // Build 2's question now renders below this picture (W fresh again, nothing answered), so (d) above is
+      // the walk's real fit read of the UNANSWERED face — counted, or (d) would pass on the picture alone if
+      // the question vanished. Its figure by hand: `date`'s $16,985 with W re-answered at the $78,000 quote,
+      // $6,000 less going out (W comes off the bottom line dollar for dollar; nothing else in year 0 reads
+      // the spending) — $22,985. Nothing checked (R1), and the unanswered line below the group.
+      const question = page.locator('.intake-shell .step-body .left-over')
+      await expect(question, 'the left-over question renders once, inside the step').toHaveCount(1)
+      const replies = question.getByRole('group', { name: copy.workingLedgerLeftOverLegend }).getByRole('radio')
+      await expect(replies, 'exactly the three replies, in the group').toHaveCount(3)
+      await expect(question.getByRole('radio', { checked: true }), 'an unanswered question checks no reply').toHaveCount(0)
+      await expect(question.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigure('22,985'))
+      await expect(question.locator('.left-over__line')).toHaveText(slots.workingLedgerLeftOverAbsentLine('22,985'))
+    })
+
+    test('?seed=datesaved: the left-over question below the whole picture — three replies, "All of it" checked at its figure', async ({ page }) => {
+      await rewalkSeedTo(page, 'datesaved', copy.qWorkingLedgerHeading, { final: true })
+      await expect(page.locator('.wy-row--bottom')).toContainText(copy.workingLedgerLeftOver)
+      // (a)–(d) with the question in the step: its replies and lines are inside `.step-body`, so (d) reads
+      // Continue below the question, never only below the picture.
+      await assertIntakeStepHolds(page, 'money picture, datesaved', 50, DATE_PICTURE_FIGURES)
+      // THE NON-VACUITY COUNT (U9: "the fit arms count the three radios and the figure line, so an empty pass
+      // reds"), scoped to the question's own root, never the page: a page-wide count would pass on replies
+      // rendered anywhere, and a vanished question would leave (a)–(d) green on the picture alone.
+      const question = page.locator('.intake-shell .step-body .left-over')
+      await expect(question, 'the left-over question renders once, inside the step').toHaveCount(1)
+      const group = question.getByRole('group', { name: copy.workingLedgerLeftOverLegend })
+      await expect(group).toHaveCount(1)
+      // Three in the question's own group, and no other reply anywhere in its root.
+      await expect(group.getByRole('radio'), 'exactly the three replies, in the group').toHaveCount(3)
+      await expect(question.getByRole('radio'), 'no reply outside the group').toHaveCount(3)
+      await expect(question.getByRole('radio', { checked: true }), 'exactly one reply checked').toHaveCount(1)
+      await expect(group.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })).toBeChecked()
+      // The figure line, and the saved line below the group, in `date`'s hand-derived $16,985 (the unlock
+      // block's derivation above): the stored answer and the live figure agree, so the plain "saved" line.
+      await expect(question.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigure('16,985'))
+      await expect(question.locator('.left-over__line')).toHaveText(slots.workingLedgerLeftOverSavedLine('16,985'))
+      // Below the WHOLE picture (KTD8: never inside it), in geometry as well as DOM order.
+      const placed = await page.evaluate(() => {
+        const ledger = document.querySelector('.intake-shell .wy-ledger')
+        const q = document.querySelector('.intake-shell .left-over')
+        if (ledger === null || q === null) return null
+        return {
+          outside: !ledger.contains(q),
+          ledgerBottom: ledger.getBoundingClientRect().bottom,
+          questionTop: q.getBoundingClientRect().top,
+        }
+      })
+      expect(placed, 'the picture and the question both render').not.toBeNull()
+      expect(placed!.outside, 'the question is never inside the picture').toBe(true)
+      expect(placed!.questionTop, 'the question starts below the whole picture').toBeGreaterThanOrEqual(placed!.ledgerBottom - 0.5)
     })
 
     test('?seed=dateshort: the picture at its fullest — held-back Social Security, Medicare from savings, every later year short', async ({ page }) => {
@@ -3082,38 +3244,7 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       const line = page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')
       await expect(line, 'the standing line renders in the lead').toHaveCount(1)
       await expect(line).toContainText(copy.stalenessPayCheckNote)
-      // DOM ORDER in the lead (at REAL the graphs sit BESIDE the lead, so "above" is DOM order there):
-      // the last note of the lead, and before the graphs.
-      const order = await page.evaluate(() => {
-        const lead = document.querySelector('.fod-reveal .reveal__lead')
-        const notes = lead === null ? [] : Array.from(lead.querySelectorAll(':scope > .fod-note'))
-        const pay = document.querySelector('.cs-paycheck-note')
-        const graphs = document.querySelector('.fod-graphs')
-        return {
-          last: notes.length > 0 && notes[notes.length - 1] === pay,
-          beforeGraphs: pay !== null && graphs !== null && (pay.compareDocumentPosition(graphs) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
-        }
-      })
-      expect(order.last, 'the line is the lead’s last note').toBe(true)
-      expect(order.beforeGraphs, 'the line comes before the graphs').toBe(true)
-      if (vp.use.viewport.width === PHONE.width) {
-        // At PHONE `.fod-graphs` is display:contents (no box), so the first graph is the geometry.
-        const lineBox = await line.boundingBox()
-        const band = await page.locator('.fod-band').boundingBox()
-        expect(lineBox !== null && band !== null).toBe(true)
-        expect(lineBox!.y + lineBox!.height, 'the line sits above the first graph').toBeLessThanOrEqual(band!.y + 0.5)
-        await assertOneVisibleDisclaimer(page, 'narrow')
-        await assertCaveatOrderAndReach(page, DATE_VERDICT)
-      } else {
-        await assertOneVisibleDisclaimer(page, 'laptop')
-        const doors = await page.locator('.result-quiet-row').boundingBox()
-        expect(doors, 'the quiet doors render').not.toBeNull()
-        const trailing = await doorsLastWalk(page, 'body')
-        expect(trailing.counted).toBeGreaterThan(DOORS_WALK_FLOOR)
-        expect(trailing.maxOtherBottom, `content renders BELOW the quiet doors (${trailing.desc})`).toBeLessThanOrEqual(
-          doors!.y + doors!.height + 0.5,
-        )
-      }
+      await assertStandingLinePlaced(page, line, vp.use.viewport.width === PHONE.width)
       // The door: the panel opens AT the W row — its name focused, the row inside the dialog, nothing
       // spilling sideways — and a "yes" there draws the picture under h4 legends, every figure whole.
       await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
@@ -3141,6 +3272,166 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
         DATE_PICTURE_FIGURES,
       )
       expect(panelFigures.offenders, 'a panel money-picture figure is clipped').toEqual([])
+    })
+  })
+
+  // ── build 2's left-over question in the panel and on the Result (U7, U14, U9) ───────────────────
+  // The seat is its own row below the W row (KTD8), drawn with the W row from ONE gesture hold
+  // (`WorkingYearRows`, `gestureHold.ts`'s two-element arm). The figures are hand-derived in the unlock block
+  // above: `date`'s $16,985; `datesavedmoved`'s $27,537 after its raise.
+  test.describe(`build 2’s left-over seat and its moved line (${vp.name})`, () => {
+    test.use(vp.use)
+
+    test('?seed=datesaved: the panel seat below the W row — three replies, "All of it" checked at its figure, nothing sideways', async ({ page }) => {
+      await gotoSeedFinal(page, 'datesaved')
+      await assertResolvedDate(page)
+      await page.locator('[data-door="assumptions"]').click()
+      const dialog = page.getByRole('dialog')
+      await expect(dialog).toBeVisible()
+      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+      const seat = page.locator(LEFT_OVER_SEAT)
+      await expect(seat).toHaveCount(1)
+      // Its OWN row, after the W row's, never a control inside it (KTD8) — and the W row holds no reply.
+      const order = await page.evaluate((sel) => {
+        const w = document.querySelector('[role="dialog"] [data-assumption-seat="working-year-cost"]')
+        const s = document.querySelector(sel)
+        return w !== null && s !== null && !w.contains(s) && (w.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+      }, LEFT_OVER_SEAT)
+      expect(order, 'the seat is its own row after the W row').toBe(true)
+      await expect(row.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })).toHaveCount(0)
+      await seat.evaluate((el) => el.scrollIntoView({ block: 'start' }))
+      await settleLayout(page)
+      await assertLeftOverSeatFace(page, 'datesaved’s seat', {
+        checked: copy.workingLedgerLeftOverSaved,
+        figure: slots.workingLedgerLeftOverFigure('16,985'),
+        line: slots.workingLedgerLeftOverSavedLine('16,985'),
+      })
+      // The W row above draws the same household's picture, every figure whole (the shared memo's draft).
+      const panelFigures = await clippedFigures(page, '[role="dialog"]')
+      expect(panelFigures.counted, 'the panel picture read too few figures — "none clipped" would pass on nothing').toBeGreaterThanOrEqual(
+        DATE_PICTURE_FIGURES,
+      )
+      expect(panelFigures.offenders, 'a panel money-picture figure is clipped').toEqual([])
+    })
+
+    test('?seed=datesavedmoved: the moved line takes the standing slot, W’s line absent; its door lands on the seat’s name', async ({ page }) => {
+      await gotoSeedFinal(page, 'datesavedmoved')
+      await assertResolvedDate(page)
+      const line = page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')
+      await expect(line, 'the moved line renders in the lead').toHaveCount(1)
+      await expect(line).toContainText(`${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE}`)
+      // ONE CAUSE, ONE LINE (U14): W is fresh here, so W's lead is nowhere on the page — a negative aimed at
+      // the slot's other live cause (insight 086).
+      await expect(line).not.toContainText(copy.stalenessPayCheckNote)
+      await expect(page.getByText(copy.stalenessPayCheckNote)).toHaveCount(0)
+      await assertStandingLinePlaced(page, line, vp.use.viewport.width === PHONE.width)
+      // The door: the panel opens AT the left-over seat — its name focused and inside the dialog — showing the
+      // moved line below the group, "All of it" still checked.
+      await line.getByRole('button', { name: copy.stalenessLeftOverCta }).click()
+      const dialog = page.getByRole('dialog')
+      await expect(dialog).toBeVisible()
+      // A condition wait, never a fixed sleep: focus lands (the sheet's h2 first, then the seat's name, in one
+      // commit's effects), the sheet's entrance finishes (the box reads below are of the settled sheet), and
+      // focus is STILL on the name once it has — a later steal would red here.
+      const focusedText = () => page.evaluate(() => document.activeElement?.textContent ?? '')
+      await expect.poll(focusedText, { message: 'the door lands on the seat’s name' }).toBe(copy.assumptionWorkingCostLeftOverName)
+      await page.waitForFunction(() =>
+        document.getAnimations().every((a) => a.effect?.getTiming().iterations === Infinity || a.playState !== 'running'),
+      )
+      expect(await focusedText(), 'focus stays on the seat’s name once the sheet settles').toBe(copy.assumptionWorkingCostLeftOverName)
+      const seat = page.locator(LEFT_OVER_SEAT)
+      const dialogBox = await dialog.boundingBox()
+      const nameBox = await seat.locator('.ap-row__name').boundingBox()
+      expect(dialogBox !== null && nameBox !== null).toBe(true)
+      expect(nameBox!.y, 'the seat’s name is scrolled into the dialog').toBeGreaterThanOrEqual(dialogBox!.y - 0.5)
+      expect(nameBox!.y + nameBox!.height).toBeLessThanOrEqual(dialogBox!.y + dialogBox!.height + 0.5)
+      await seat.evaluate((el) => el.scrollIntoView({ block: 'start' }))
+      await settleLayout(page)
+      await assertLeftOverSeatFace(page, 'datesavedmoved’s seat', {
+        checked: copy.workingLedgerLeftOverSaved,
+        figure: slots.workingLedgerLeftOverFigure('27,537'),
+        line: slots.workingLedgerLeftOverRoseLine('16,985', '27,537'),
+      })
+    })
+
+    // THE COORDINATE TAP — the only real-browser gate for the label-forwarded click (insight 149;
+    // `gestureHold.ts`'s header). The press on "All of it" blurs a typed W figure, and that commit changes the
+    // live year-0 Left over while the held seat still shows the old one. A label's own click reaches the
+    // window's bubble listener before the label forwards a second click to its radio, so a release in that
+    // listener would re-render first and the forwarded click would act from the LIVE render — store a figure
+    // the household never saw. jsdom cannot show it (its synchronous dispatch runs the forwarded click inside
+    // the same act). So: `date` unanswered, W confirmed at $84,000 (the seat shows $16,985); "a different
+    // figure", then 6,000 a month typed (under the period rule's 8,000 floor, so no unit prompt), which is
+    // $72,000 a year and a live Left over of $28,985 (W comes off the bottom line dollar for dollar, and
+    // nothing else in year 0 reads W: $16,985 + $12,000); then, focus still in the figure, a REAL tap on "All
+    // of it" at its centre (a press, 80 ms, the release — or a touch tap), never `.click()` / `check()`. The
+    // stored figure must be the one on screen at the press, $16,985: the seat then reads "moved" from $16,985
+    // to $28,985. Stored from the live render, it would read the plain saved line at $28,985; a lost tap
+    // leaves nothing checked and the absent line.
+    test('?seed=date: "All of it" tapped by coordinate right after typing W stores the figure on screen at the press', async ({ page }) => {
+      await gotoSeedFinal(page, 'date')
+      await page.locator('[data-door="assumptions"]').click()
+      const dialog = page.getByRole('dialog')
+      await expect(dialog).toBeVisible()
+      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+      const seat = page.locator(LEFT_OVER_SEAT)
+      const saved = seat.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })
+      await expect(seat.getByRole('radio')).toHaveCount(3)
+      await expect(saved, '`date` is unanswered').not.toBeChecked()
+      await expect(seat.locator('.left-over__line')).toHaveText(slots.workingLedgerLeftOverAbsentLine('16,985'))
+      // "A different figure": the panel never clears a confirmed W (KTD4), so nothing moves yet.
+      await row.getByRole('radio', { name: copy.workingCostDifferent }).evaluate((el) => (el as HTMLInputElement).click())
+      const input = row.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
+      await expect(input).toBeVisible()
+      await expect(row.getByRole('radio', { name: copy.periodMonth }), 'the untapped unit is a month (KTD17)').toBeChecked()
+      await input.scrollIntoViewIfNeeded()
+      await input.click()
+      await page.keyboard.press('Control+A')
+      await page.keyboard.type('6000')
+      const label = seat.locator('label.segment').filter({ hasText: copy.workingLedgerLeftOverSaved })
+      await expect(label).toHaveCount(1)
+      await label.scrollIntoViewIfNeeded()
+      await page.waitForTimeout(300)
+      await expect(input, 'the figure still has focus — the press is what blurs it').toBeFocused()
+      // What the seat SHOWS at the press, read off the screen — and it is `date`'s own $16,985 (the typed
+      // digits have not committed: the figure commits on blur).
+      const shownAtPress = await seat.locator('.left-over__figure').textContent()
+      expect(shownAtPress, 'the seat shows the old figure until the press').toBe(slots.workingLedgerLeftOverFigure('16,985'))
+      const box = await label.boundingBox()
+      expect(box).not.toBeNull()
+      const x = box!.x + box!.width / 2
+      const y = box!.y + box!.height / 2
+      // The hit-test at the point the tap will use (insight 119: what the input path hits).
+      const onLabel = await label.evaluate((el, [px, py]) => {
+        const hit = document.elementFromPoint(px, py)
+        return hit !== null && el.contains(hit)
+      }, [x, y] as const)
+      expect(onLabel, `the tap point is not on "${copy.workingLedgerLeftOverSaved}"`).toBe(true)
+      if (vp.use.viewport.width === PHONE.width) {
+        await page.touchscreen.tap(x, y)
+      } else {
+        await page.mouse.move(x, y)
+        await page.mouse.down()
+        await page.waitForTimeout(80) // a human press lasts tens of milliseconds
+        await page.mouse.up()
+      }
+      await expect(saved, 'the tap on "All of it" was lost').toBeChecked()
+      // The press's blur committed the typed figure, and the hold let go: the W row and the seat's figure now
+      // draw the live draft.
+      await expect(row.locator('.ap-row__value')).toHaveText(slots.assumptionWorkingCostEntered('72,000'))
+      await expect(seat.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigure('28,985'))
+      // THE GATE: what was STORED is the figure on screen at the press. The moved line names the stored figure
+      // as the one chosen against — never the plain saved line at the live figure.
+      await expect(seat.locator('.left-over__line'), 'the stored figure is not the one on screen at the press').toHaveText(
+        slots.workingLedgerLeftOverRoseLine('16,985', '28,985'),
+      )
+      // A second reader of the stored answer, off the panel: the Result's standing slot names the same two.
+      await page.keyboard.press('Escape')
+      await expect(dialog).toHaveCount(0)
+      await expect(page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')).toContainText(
+        `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '28,985', '16,985')}`,
+        { timeout: FINAL_TIER_MS },
+      )
     })
   })
 }

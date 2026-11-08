@@ -312,6 +312,10 @@ describe('the stale predicate (KTD21)', () => {
 // The ONE stale sentence the W step's note, the panel's stale face and the result's line all read: the
 // last figure, the current quote where it moved, and which input really moved — never the quote-only
 // words for a cause that was the state too, and never "now come to $0" when no quote is left to offer.
+// Every draft here carries no left-over answer. Build 2's dollars clause for a "saved" answer waiting on W
+// rides `workingYearCostStaleLine` on the Result and the gate, never this sentence: its presence there is
+// pinned in `resultPayCheckLine.test.tsx` and `reentry.test.tsx`, and its absence from the panel's W row,
+// which this sentence draws, in `assumptionPanel.test.tsx` (on `datesavedstale`).
 describe('the stale sentence names the cause that moved (KTD21)', () => {
   const confirmedAt = (quotedReal: number, stateTaxReading: WorkingYearStateTaxReading): WorkingYearCostV3 => ({
     kind: 'confirmed',
@@ -330,8 +334,11 @@ describe('the stale sentence names the cause that moved (KTD21)', () => {
     expect(workingYearCostStaleText(nc({ annualSpendingReal: 90_000, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
       `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeansBetter('84,000')}`,
     )
-    // Spending FELL under it: no lean at all — where no year runs short at either figure the answer is
-    // identical, and "can look worse" read as "the real answer is better" (b9-7, withdrawn).
+    // Spending FELL under it: no lean at all. For this draft (no left-over answer, so nothing is credited at
+    // either figure) the answer is identical wherever no year runs short at either figure, and "can look
+    // worse" read as "the real answer is better" (b9-7, withdrawn). For a "saved" answer the two runs differ
+    // wherever the run on the checked W carries the stored figure again (derived from build 2's R8, not
+    // measured), and which way that moves the answer is unmeasured, so no lean is said there either (R16).
     expect(workingYearCostStaleText(nc({ annualSpendingReal: 78_000, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
       slots.workingCostStaleQuote('84,000', '78,000'),
     )

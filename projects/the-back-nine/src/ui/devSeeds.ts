@@ -37,6 +37,8 @@ import { FIRST_UNAMBIGUOUS_SAVE_DAY } from '@engine/pricingVersion'
 import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { buildSolveRequest } from '@intake/solveDispatch'
 import { confirmedWorkingYearCost } from '@intake/workingYearQuote'
+import { workingYearLeftOverLive } from '@intake/intakeMap'
+import { writeWorkingYearLeftOver } from '@intake/workingYearLeftOver'
 import { mintSavedRecommendation } from '@store/savedRecommendationMint'
 import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
 import { draftFromScenario } from './draftFromScenario'
@@ -459,7 +461,7 @@ const retiredBudget: ScenarioDraft = {
  * lifestyle at 8", labelled Engine-proven, and both figures were wrong):**
  *   provisional (2,000 paths) — floor **2** `confirmed-date` · lifestyle **10** `window-edge-unconfirmed`
  *   final       (16,000 paths) — floor **2** `confirmed-date` · lifestyle **9** `confirmed-date`
- * The LIVE surface runs `final` (`IntakeApp.tsx:321`, `Result.tsx:298`/`:296`), so the shipped hero is
+ * The LIVE surface runs `final` (`IntakeApp.tsx:329`, `Result.tsx:330`/`:304`), so the shipped hero is
  * the 9 — and it is a CONFIRMED date, i.e. the band owes no edge hedge there. The 10 is real but is a
  * provisional-tier reading, and it is `window-edge-unconfirmed`: during entry the hedge RENDERS and
  * then WITHDRAWS when final lands. That transient has never been cold-read.
@@ -1306,14 +1308,63 @@ const dateLateLeftOverWitness: ScenarioDraft = {
  * and a raise costs it the crown; the over-funded `atceiling` crowns today, where no working year exists
  * for W to touch.
  *
- * THE ONE EXCEPTION to "mint W last, on the seed's own final draft" (`withConfirmedW`): a stale answer
- * is BY DEFINITION one minted on an earlier draft. So it is minted on `date`'s own draft, and the
- * spending moves AFTER the mint — named here, never a W typed into a literal. `stillWorking` itself
+ * THE FIRST OF THE "MINT, THEN MOVE" WITNESSES — the exceptions to "mint W last, on the seed's own final
+ * draft" (`withConfirmedW`): a stale answer is BY DEFINITION one minted on an earlier draft. So it is
+ * minted on `date`'s own draft, and the spending moves AFTER the mint — named here, never a W typed into a
+ * literal. Build 2's `datesavedmoved` and `datesavedstale` (below) are the other two. `stillWorking` itself
  * stays W-free: `date` takes its W at the registry like every date seed (U10) — the same $84,000 this
  * witness confirmed, still fresh there because `date`'s spending never moved.
  */
 const dateCostStaleWitness: ScenarioDraft = {
   ...withConfirmedW(stillWorking),
+  annualSpendingReal: 78_000,
+}
+
+/**
+ * BUILD 2's "ALL OF IT" ON A SEED (`docs/plans/features/working-year-surplus-build-spec.md` KTD14): the
+ * "saved" reply minted through the SHIPPED write (`writeWorkingYearLeftOver`) at the draft's own printed
+ * year-0 Left over, exactly what a tap on "All of it" would store there. It needs a W already on the draft
+ * (no W, no picture, nothing to answer under), so it always wraps `withConfirmedW`. Fail-loud on a seed the
+ * question is never asked of — the write stores nothing there, and an answerless "saved" witness would be a
+ * broken fixture that still LOOKS like one (the `withConfirmedW` law).
+ */
+function withSavedLeftOver(draft: ScenarioDraft): ScenarioDraft {
+  const live = workingYearLeftOverLive(draft)
+  if (live === null || live < 1) {
+    throw new Error('withSavedLeftOver: this seed has no year-0 left over to answer under (R5 never asks it)')
+  }
+  const saved = writeWorkingYearLeftOver(draft, 'saved', live)
+  if (saved.workingYearLeftOver?.kind !== 'saved') throw new Error('withSavedLeftOver: the write stored no "saved" answer')
+  return saved
+}
+
+/**
+ * THE MOVED WITNESS — `?seed=datesavedmoved` (build 2's KTD14, R12): `datesaved`'s household after it said
+ * "All of it" at its $16,985, then got a raise to $165,000. W stays fresh (its quote reads the spending,
+ * never the pay), so the shown state is "saved, moved": the live year-0 figure is $27,537 (pay 165,000 −
+ * payroll 12,622.50 − federal tax 20,840 − deposits 20,000 − W 84,000, hand-derived from the primaries by
+ * the build-2 record's `year0check.mts`: a MATCH), the stored one $16,985, and the engine credits at most
+ * the smaller each year (R8). The panel seat and the Result name both figures. Minted, then moved: never an
+ * answer typed into a literal.
+ */
+/** `date`'s household with "All of it" stored at its own $16,985 — `?seed=datesaved`, and the base both
+ *  "mint, then move" witnesses below start from (minted once). */
+const dateSavedWitness: ScenarioDraft = withSavedLeftOver(withConfirmedW(stillWorking))
+
+const dateSavedMovedWitness: ScenarioDraft = {
+  ...dateSavedWitness,
+  people: [{ ...dateSavedWitness.people[0], earnedIncomeReal: 165_000 }, dateSavedWitness.people[1]],
+}
+
+/**
+ * THE STALE-W WITNESS WITH A SAVED ANSWER — `?seed=datesavedstale` (build 2's KTD14, R7, R12): `datesaved`'s
+ * household that then lowered its spending to $78,000 — `datecoststale` with "All of it" stored at $16,985
+ * before the spending moved. W is stale, so the shown state is "waiting on W" (R3's order puts it before the
+ * stored answer) and NOTHING left over is carried (R7): its date input is `datecoststale`'s, exactly. A
+ * stale W still rides at $84,000, so the live figure is still $16,985 — never "moved".
+ */
+const dateSavedStaleWitness: ScenarioDraft = {
+  ...dateSavedWitness,
   annualSpendingReal: 78_000,
 }
 
@@ -1352,6 +1403,11 @@ export const DEV_SEEDS = {
   datecoststale: dateCostStaleWitness,
   // Build 2 (U15, dark): short in year 0, a left over from year 4 — the case the question never asks.
   datelateleftover: withConfirmedW(dateLateLeftOverWitness),
+  // Build 2 (the go-live, KTD14): "All of it" stored at the household's own year-0 figure, through the
+  // shipped write — the presence witness, the moved witness and the stale-W witness.
+  datesaved: dateSavedWitness,
+  datesavedmoved: dateSavedMovedWitness,
+  datesavedstale: dateSavedStaleWitness,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS
@@ -1639,7 +1695,7 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  * arrived household: born 1963, planned at 57 to stop at offset 5, and that year is now behind them.
  *
  * ⚠️ THIS PLANT LIGHTS **ONE** ARRIVED ARM, NOT TWO. The floor crowns at 0, and `floorLineText`
- * (`FuckOffDate.tsx:236`) SHORT-CIRCUITS offset 0 to the plain `dateFloorCovered` line BEFORE the
+ * (`FuckOffDate.tsx:253`) SHORT-CIRCUITS offset 0 to the plain `dateFloorCovered` line BEFORE the
  * three-way split — mirroring `heroLead`'s free-today precedence, deliberately ("covered from the
  * plan's own start ⇒ still covered now"). So `dateFloorCoveredPast` does NOT fire here; its live
  * route is and remains `?vault=datestale`, whose floor crown sits strictly inside its window. (An
@@ -1877,7 +1933,7 @@ export function doctorRecordSuperseded(s: CurrentScenario, todayEpochDay: number
  *  the two corrections this note's first draft got wrong (it ages `birthYear` alongside
  *  `startCalendarYear` to hold the `currentAge === startCalendarYear − birthYear` model invariant,
  *  and it lights ONE arrived arm rather than two, because a floor crown of 0 short-circuits past
- *  the three-way split at `FuckOffDate.tsx:236`). The base must be STATELESS: `datenc` rejects at
+ *  the three-way split at `FuckOffDate.tsx:253`). The base must be STATELESS: `datenc` rejects at
  *  any depth ≥1 with "startCalendarYear precedes the priced state rate schedule"
  *  (`simulate.ts:966-969`), which is the real bound the S6 spec's `earliestPricedRateYear` probe
  *  was reaching for — and that probe is VACUOUS on a stateless base (the gate is `isPricedState`-

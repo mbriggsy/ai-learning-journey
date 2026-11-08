@@ -5,6 +5,7 @@ import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { AssumptionPanel, methodologyArmFor, type AssumptionPanelProps } from '../AssumptionPanel'
 import { confirmedWorkingYearCost } from '../workingYearQuote'
+import { workingYearCostStaleLine } from '../workingYearLeftOver'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { createMemoryModel, type MemoryModel, type MemoryModelSnapshot, type ScenarioDraft, type StickyDisplay } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
@@ -243,12 +244,17 @@ describe('the R7 registry completeness walk (the compile gate’s runtime half)'
     second.unmount()
     // The goal-gated arm: `heir-bracket` renders ONLY under leave-more, so without this render the
     // walk cannot see it and the R7 claim would be unprovable for that seat.
-    renderPanel({ snapshot: snap(leaveMoreDraft) })
+    const third = renderPanel({ snapshot: snap(leaveMoreDraft) })
+    collect()
+    third.unmount()
+    // Build 2's left-over seat renders only where the question is asked: a fresh W and a printed year-0
+    // Left over of $1 or more (R5). None of the three above carries W, so `date` ($16,985) is its home.
+    renderPanel({ snapshot: snap(DEV_SEEDS.date) })
     collect()
     // ⚠️ NON-VACUITY CENSUS — the only assertion in this arm lives INSIDE the loop, so an empty
     // (or silently-shrunken) roster passes GREEN while proving nothing, and the R7 completeness
     // claim evaporates with the gate still reporting OK. `requiredSeats()` derives from TWO
-    // sources (`assumptionRegistry.ts:334-341`: the non-`internal` DRAFT_DISPOSITIONS, plus
+    // sources (`assumptionRegistry.ts:376-383`: the non-`internal` DRAFT_DISPOSITIONS, plus
     // METHODOLOGY_DISCLOSURES), so census BOTH — either half dropping out would otherwise be
     // invisible here.
     const seats = requiredSeats()
@@ -1399,5 +1405,356 @@ describe('the W row — an edit in the open panel that stales W (KTD21)', () => 
   it('opening onto an already-stale row is silent (the note says it; nothing is announced)', () => {
     renderPanel({ snapshot: snap(DEV_SEEDS.datecoststale) })
     expect(region().textContent).toBe('')
+  })
+})
+
+// ─── build 2's left-over seat (`docs/plans/features/working-year-surplus-build-spec.md` U7, U8) ──────────
+//
+// Every figure below is a seed's documented one, never read back from the producer (DND 012): `date` and
+// `datecoststale` print a year-0 Left over of $16,985 (the plan's table); `datesaved` is `date` with "All of
+// it" stored at its own figure (`withSavedLeftOver`), and `datesavedstale`'s docblock says its live figure
+// is still $16,985; `datesavedmoved` stored $16,985 and prints $27,537 now (its docblock's hand derivation);
+// `dateshort` is short every year (the plan's table) and `datelateleftover` is short in year 0 (its
+// docblock's "Short $7,695"), so R5 asks neither.
+
+describe('the left-over seat — its own row below the W row (U7; R5, R6)', () => {
+  const seatOrNull = () => document.querySelector<HTMLElement>('[data-assumption-seat="working-year-left-over"]')
+  const seat = () => {
+    const s = seatOrNull()
+    if (s === null) throw new Error('no left-over seat rendered')
+    return s
+  }
+  const wRow = () => {
+    const r = document.querySelector<HTMLElement>('[data-assumption-seat="working-year-cost"]')
+    if (r === null) throw new Error('no W row rendered')
+    return r
+  }
+  /** The left-over question's group, named by its static legend. A plain fieldset (no `errorField`): R5
+   *  says the question never shows a field error, so it carries the `group` role, not `radiogroup`. */
+  const groupIn = (scope: HTMLElement) => within(scope).getByRole('group', { name: copy.workingLedgerLeftOverLegend })
+  const radioIn = (scope: HTMLElement, key: 'workingLedgerLeftOverSaved' | 'workingLedgerLeftOverSpent' | 'workingLedgerLeftOverNotSure') =>
+    within(scope).getByRole('radio', { name: copy[key] })
+  /** Every text node inside `scope` that sits BEFORE `group` in document order — what a reader meets above
+   *  the radios (R6: nothing there reads the answer). */
+  const textAbove = (scope: HTMLElement, group: HTMLElement): string => {
+    const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT)
+    let out = ''
+    for (let n = walker.nextNode(); n !== null; n = walker.nextNode()) {
+      if (n.compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING) out += n.textContent ?? ''
+    }
+    return out
+  }
+  /** Every text node inside `scope` that sits AFTER `group` and outside it — what a reader meets below the
+   *  radios: the one per-answer line in dollars (R6), and nothing else. */
+  const textBelow = (scope: HTMLElement, group: HTMLElement): string => {
+    const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT)
+    let out = ''
+    for (let n = walker.nextNode(); n !== null; n = walker.nextNode()) {
+      if ((group.compareDocumentPosition(n) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 && !group.contains(n)) {
+        out += n.textContent ?? ''
+      }
+    }
+    return out
+  }
+  const sheetHeading = () => screen.getByRole('heading', { level: 2, name: copy.assumptionTitle })
+
+  it('on `date` ($16,985 left over, W fresh) the seat renders as the W row’s next row, named, with its figure and nothing checked', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.date) })
+    expect(wRow().nextElementSibling, 'the seat is the row directly below the W row').toBe(seat())
+    expect(within(seat()).getByText(copy.assumptionWorkingCostLeftOverName)).toBeInTheDocument()
+    expect(within(seat()).getByText(slots.workingLedgerLeftOverFigure('16,985'))).toBeInTheDocument()
+    const radios = within(groupIn(seat())).getAllByRole('radio')
+    expect(radios, 'the three replies are offered').toHaveLength(3)
+    expect(radios.filter((r) => (r as HTMLInputElement).checked), 'an unanswered question checks no reply (R1)').toHaveLength(0)
+  })
+
+  it('…and the positive twin: on `datesaved` the stored "All of it" is the one checked reply', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datesaved) })
+    expect(radioIn(seat(), 'workingLedgerLeftOverSaved')).toBeChecked()
+    expect(radioIn(seat(), 'workingLedgerLeftOverSpent')).not.toBeChecked()
+    expect(radioIn(seat(), 'workingLedgerLeftOverNotSure')).not.toBeChecked()
+  })
+
+  it('the W row holds no left-over radio — its own radios only; the seat holds the left-over group', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.date) })
+    // Positive twin first: the W row's own fork is there, so the scoped query really sees the row's radios.
+    expect(within(wRow()).getByRole('radio', { name: copy.workingCostYes })).toBeInTheDocument()
+    expect(within(wRow()).queryByRole('group', { name: copy.workingLedgerLeftOverLegend })).toBeNull()
+    for (const key of ['workingLedgerLeftOverSaved', 'workingLedgerLeftOverSpent', 'workingLedgerLeftOverNotSure'] as const) {
+      expect(within(wRow()).queryByRole('radio', { name: copy[key] }), `no "${copy[key]}" in the W row`).toBeNull()
+      expect(radioIn(seat(), key), `"${copy[key]}" lives in the seat`).toBeInTheDocument()
+    }
+  })
+
+  it.each([
+    ['a stored "saved" answer (`datesavedstale`)', 'datesavedstale', 'saved'],
+    ['an absent answer (`datecoststale`)', 'datecoststale', undefined],
+  ] as const)('under a stale W, %s shows the waiting line and no radios (R5)', (_name, key, storedKind) => {
+    const draft = DEV_SEEDS[key]
+    expect(draft.workingYearLeftOver?.kind, '[fixture] the stored answer is the one this arm names').toBe(storedKind)
+    renderPanel({ snapshot: snap(draft) })
+    // The W row is stale (its note is up), so the seat waits on it.
+    expect(within(wRow()).getByRole('note')).toBeInTheDocument()
+    expect(within(seat()).getByText(copy.assumptionWorkingCostLeftOverName)).toBeInTheDocument()
+    expect(within(seat()).getByText(copy.workingLedgerLeftOverWaiting)).toBeInTheDocument()
+    expect(within(seat()).queryAllByRole('radio'), 'no reply can be stored against a stale W').toHaveLength(0)
+    expect(within(seat()).queryByText(slots.workingLedgerLeftOverFigure('16,985'))).toBeNull()
+  })
+
+  it('…and the positive twin: the same household with W fresh (`date`) shows the radios and no waiting line', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.date) })
+    expect(within(seat()).queryByText(copy.workingLedgerLeftOverWaiting)).toBeNull()
+    expect(within(seat()).getAllByRole('radio')).toHaveLength(3)
+  })
+
+  it('on `datesavedstale` the W row’s stale note is W’s own sentence and carries no left-over clause (R6; the clause rides the Result and the gate only)', () => {
+    // As built, R12's dollars clause rides `workingYearCostStaleLine`, which only the Result and the re-entry
+    // gate read; `workingYearCostStaleText`, which draws this note, stays pure W, so nothing above the seat
+    // reads the answer but the methodology line (R6). Figures (`datesavedstale`'s docblock): the spending
+    // lowered to $78,000 under a W still riding at $84,000, and the $16,985 stored.
+    const clause = slots.workingCostStaleLeftOverClause('16,985')
+    // The positive twin: on this draft the clause is real, and W's one stale line on the Result carries it.
+    expect(workingYearCostStaleLine(DEV_SEEDS.datesavedstale), 'the Result’s line carries the clause').toContain(clause)
+    renderPanel({ snapshot: snap(DEV_SEEDS.datesavedstale) })
+    const note = within(wRow()).getByRole('note')
+    expect(note.textContent, 'the note names the spending that moved').toContain(slots.workingCostStaleQuote('84,000', '78,000'))
+    expect(note.textContent, 'the W row’s note never names the left over').not.toContain(clause)
+  })
+
+  it('no seat renders where the question is not asked (`dateshort`, `datelateleftover`: year 0 is short) — but it does on `date`', () => {
+    for (const key of ['dateshort', 'datelateleftover'] as const) {
+      renderPanel({ snapshot: snap(DEV_SEEDS[key]) })
+      expect(document.querySelector('[data-assumption-seat="working-year-cost"]'), `${key}: the W row renders`).not.toBeNull()
+      expect(seatOrNull(), `${key}: no seat`).toBeNull()
+      cleanup()
+    }
+    renderPanel({ snapshot: snap(DEV_SEEDS.date) })
+    expect(seatOrNull()).not.toBeNull()
+  })
+
+  it('`datesavedmoved` draws the moved line, naming the stored $16,985 and today’s $27,537, BELOW the group, and the text above the group is the answer-free twin’s word for word', () => {
+    const moved = DEV_SEEDS.datesavedmoved
+    renderPanel({ snapshot: snap(moved) })
+    const line = within(seat()).getByText(slots.workingLedgerLeftOverRoseLine('16,985', '27,537'))
+    const group = groupIn(seat())
+    expect(group.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING, 'the moved line sits below the group').toBeTruthy()
+    expect(group.contains(line), 'the moved line is outside the group').toBe(false)
+    // …and it is the ONLY text below the group: no saved line beside it (LINE['saved-moved'] never falls back).
+    expect(textBelow(seat(), group)).toBe(slots.workingLedgerLeftOverRoseLine('16,985', '27,537'))
+    expect(radioIn(seat(), 'workingLedgerLeftOverSaved')).toBeChecked()
+    // R6: nothing above the radios reads the answer. The same household with no answer stored prints the
+    // same $27,537, so the text above its group must match exactly.
+    const above = textAbove(seat(), group)
+    expect(above).toContain(slots.workingLedgerLeftOverFigure('27,537'))
+    cleanup()
+    const { workingYearLeftOver: _answer, ...unanswered } = moved
+    renderPanel({ snapshot: snap(unanswered) })
+    expect(within(seat()).getByText(slots.workingLedgerLeftOverAbsentLine('27,537'))).toBeInTheDocument()
+    expect(textAbove(seat(), groupIn(seat()))).toBe(above)
+  })
+
+  it('…and the positive twin: on `datesaved` (stored = printed $16,985) the saved line draws, and no moved line', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datesaved) })
+    // The whole text below the group is the saved line: no moved line (a compare that fired on equal figures
+    // would draw it instead), and nothing else.
+    expect(textBelow(seat(), groupIn(seat()))).toBe(slots.workingLedgerLeftOverSavedLine('16,985'))
+  })
+
+  it('over one picture ($16,985 on `date`), the five states that draw a group share the text above it word for word, and each draws its own line below (R6)', () => {
+    // R3's seven less the two with no group: "not asked" draws no seat and "waiting on W" no radios (the arms
+    // above). "Saved, moved" is "All of it" stored at a hand-picked $16,000 against the $16,985 printed.
+    const states = [
+      ['absent', undefined, slots.workingLedgerLeftOverAbsentLine('16,985')],
+      ['saved', { kind: 'saved', quotedReal: 16_985 }, slots.workingLedgerLeftOverSavedLine('16,985')],
+      ['saved, moved', { kind: 'saved', quotedReal: 16_000 }, slots.workingLedgerLeftOverRoseLine('16,000', '16,985')],
+      ['spent', { kind: 'spent' }, slots.workingLedgerLeftOverSpentLine('16,985')],
+      ['not sure', { kind: 'not-sure' }, slots.workingLedgerLeftOverNotSureLine('16,985')],
+    ] as const
+    // What a reader meets above the radios in every state: the seat's name, the figure, the check sentence (on
+    // the W row's picture's $20,000 of deposits: $36,985 in all).
+    const above = `${copy.assumptionWorkingCostLeftOverName}${slots.workingLedgerLeftOverFigure('16,985')}${slots.workingLedgerLeftOverCheck('16,985', '20,000', '36,985')}`
+    for (const [label, answer, below] of states) {
+      const draft: ScenarioDraft = answer === undefined ? DEV_SEEDS.date : { ...DEV_SEEDS.date, workingYearLeftOver: answer }
+      renderPanel({ snapshot: snap(draft) })
+      // The static legend names the group and the static labels name its radios, in every state.
+      const group = groupIn(seat())
+      for (const key of ['workingLedgerLeftOverSaved', 'workingLedgerLeftOverSpent', 'workingLedgerLeftOverNotSure'] as const) {
+        expect(radioIn(seat(), key), `${label}: "${copy[key]}"`).toBeInTheDocument()
+      }
+      expect(textAbove(seat(), group), `${label}: the text above the group`).toBe(above)
+      expect(textBelow(seat(), group), `${label}: the line below the group`).toBe(below)
+      cleanup()
+    }
+    // The positive twin of "the same above": the same walker, below the group, reads five different
+    // sentences, so a per-answer line moved above the group would break the diff (absent's line is not
+    // not sure's, U7).
+    expect(new Set(states.map(([, , below]) => below)).size).toBe(states.length)
+  })
+
+  it('on `datesavedmoved`, a tap on the already-checked "All of it" stores today’s $27,537 and the moved line gives way to the saved line (U7)', () => {
+    const m = freshModel()
+    m.update(() => DEV_SEEDS.datesavedmoved)
+    render(<WiredPanel model={m} />)
+    fireEvent.click(radioIn(seat(), 'workingLedgerLeftOverSaved'))
+    expect(m.getSnapshot().draft.workingYearLeftOver).toEqual({ kind: 'saved', quotedReal: 27_537 })
+    // The moved state is cleared: the one line below the group is now the saved line at today's figure.
+    expect(textBelow(seat(), groupIn(seat()))).toBe(slots.workingLedgerLeftOverSavedLine('27,537'))
+  })
+
+  // R5's gate is re-checked inside the write, on the store's CURRENT draft (`writeWorkingYearLeftOver`): the
+  // seat's held face still shows the radios at the click, so only that re-check can refuse the reply. The
+  // gesture is spelled out event by event, in the mouse order `gestureHold.ts`'s header gives (pointerdown,
+  // mousedown and its blur, pointerup, mouseup, click); jsdom does not blur on mousedown, so the blur that
+  // commits the spending is fired by hand. The hold lets go one task after the click (`letGo`).
+  const letGo = async (): Promise<void> => {
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+  }
+  const pressAllOfIt = async (blurFirst: HTMLElement | null) => {
+    const target = radioIn(seat(), 'workingLedgerLeftOverSaved')
+    fireEvent.pointerDown(target)
+    fireEvent.mouseDown(target)
+    if (blurFirst !== null) act(() => blurFirst.blur())
+    // Still drawn from the press: the three radios stand at the click, whatever the blur committed.
+    expect(within(seat()).getAllByRole('radio'), 'the held face still offers the replies').toHaveLength(3)
+    fireEvent.pointerUp(target)
+    fireEvent.mouseUp(target)
+    fireEvent.click(target)
+    await letGo()
+  }
+
+  it('a press on "All of it" right after a spending edit that stales W stores nothing, and the seat then waits (R5)', async () => {
+    const m = freshModel()
+    m.update(() => DEV_SEEDS.date) // W confirmed at the $84,000 spending ($7,000 a month)
+    render(<WiredPanel model={m} />)
+    const spend = screen.getByLabelText(copy.spendLabel)
+    act(() => spend.focus())
+    fireEvent.change(spend, { target: { value: '6500' } }) // $78,000 a year: W no longer matches its quote
+    const writes = vi.spyOn(m, 'update')
+    await pressAllOfIt(spend)
+    expect(m.getSnapshot().draft.annualSpendingReal, 'the blur committed the spending').toBe(78_000)
+    expect(m.getSnapshot().draft.workingYearLeftOver, 'the reply stored nothing').toBeUndefined()
+    // The click DID reach the write (the spend commit, then the reply's): the refusal is the gate's, read
+    // on the store's current draft — the same write on the W-fresh draft the press drew stores the figure.
+    expect(writes.mock.calls.length, 'the spend commit and the reply both went through the seam').toBeGreaterThanOrEqual(2)
+    const reply = writes.mock.calls.at(-1)![0] as (d: ScenarioDraft) => ScenarioDraft
+    expect(reply(DEV_SEEDS.date).workingYearLeftOver).toEqual({ kind: 'saved', quotedReal: 16_985 })
+    writes.mockRestore()
+    expect(within(seat()).getByText(copy.workingLedgerLeftOverWaiting)).toBeInTheDocument()
+    expect(within(seat()).queryAllByRole('radio')).toHaveLength(0)
+  })
+
+  it('…and the positive twin: the same press with no edit before it stores "All of it" at the $16,985 on screen', async () => {
+    const m = freshModel()
+    m.update(() => DEV_SEEDS.date)
+    render(<WiredPanel model={m} />)
+    await pressAllOfIt(null)
+    expect(m.getSnapshot().draft.workingYearLeftOver).toEqual({ kind: 'saved', quotedReal: 16_985 })
+    expect(radioIn(seat(), 'workingLedgerLeftOverSaved')).toBeChecked()
+  })
+
+  it('initialSeat="working-year-left-over" lands focus on the seat’s name (after the sheet’s own heading focus)', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datesavedmoved), initialSeat: 'working-year-left-over' })
+    expect(document.activeElement).toBe(within(seat()).getByText(copy.assumptionWorkingCostLeftOverName))
+  })
+
+  it('…and its twins: the W landing goes to the W row’s name, no landing leaves the seat unfocused, and a landing on a seat that did not render is a quiet no-op', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datesavedmoved), initialSeat: 'working-year-cost' })
+    expect(document.activeElement).toBe(within(wRow()).getByText(copy.assumptionWorkingCostName))
+    cleanup()
+    renderPanel({ snapshot: snap(DEV_SEEDS.datesavedmoved) })
+    expect(document.activeElement, 'with no landing, the sheet’s own heading keeps focus').toBe(sheetHeading())
+    expect(document.activeElement).not.toBe(within(seat()).getByText(copy.assumptionWorkingCostLeftOverName))
+    cleanup()
+    // `dateshort` is short in year 0, so no seat renders: the landing must neither throw nor move focus
+    // onto the W row in its place.
+    renderPanel({ snapshot: snap(DEV_SEEDS.dateshort), initialSeat: 'working-year-left-over' })
+    expect(seatOrNull()).toBeNull()
+    expect(document.activeElement, 'focus stays where the sheet put it').toBe(sheetHeading())
+    expect(document.activeElement).not.toBe(within(wRow()).getByText(copy.assumptionWorkingCostName))
+  })
+})
+
+// The working-year methodology row's left-over line (U8; KTD11): of the seven, one per shown state (R3),
+// the row reads exactly the household's own. The seven keys are typed here by hand from R3's seven states,
+// never imported from the registry's `LEFT_OVER_KEY` (the selector under test reads that table).
+describe('the working-year methodology row reads exactly one left-over line, its shown state’s (U8; KTD11)', () => {
+  const LEFT_OVER_LINES = {
+    'not-asked': 'assumptionWorkingYearCheckLeftOverNotAsked',
+    'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaiting',
+    absent: 'assumptionWorkingYearCheckLeftOverAbsent',
+    saved: 'assumptionWorkingYearCheckLeftOverSaved',
+    'saved-moved': 'assumptionWorkingYearCheckLeftOverSavedMoved',
+    spent: 'assumptionWorkingYearCheckLeftOverSpent',
+    'not-sure': 'assumptionWorkingYearCheckLeftOverNotSure',
+  } as const
+  type State = keyof typeof LEFT_OVER_LINES
+  const methodRow = () => {
+    const r = document.querySelector<HTMLElement>('[data-assumption-seat="working-year-tax"]')
+    if (r === null) throw new Error('no working-year methodology row rendered')
+    return r
+  }
+  /** Each of the seven is present exactly when it is `expected`'s line. The W arm is asserted first, so the
+   *  six absences can never pass on a row that reads today's arm (which carries no left-over line at all). */
+  const expectOnlyLine = (expected: State, label: string) => {
+    expect(within(methodRow()).getByText(copy.assumptionWorkingYearCheckValue), `${label}: the W arm renders`).toBeInTheDocument()
+    for (const [state, key] of Object.entries(LEFT_OVER_LINES) as [State, (typeof LEFT_OVER_LINES)[State]][]) {
+      expect(within(methodRow()).queryByText(copy[key]) !== null, `${label}: the ${state} line`).toBe(state === expected)
+    }
+  }
+
+  it.each([
+    ['dateshort', 'not-asked'],
+    ['datelateleftover', 'not-asked'],
+    ['datesavedstale', 'waiting-on-w'],
+    ['datecoststale', 'waiting-on-w'],
+    ['date', 'absent'],
+    ['datesaved', 'saved'],
+    ['datesavedmoved', 'saved-moved'],
+  ] as const)('`%s` reads the %s line and no other', (key, expected) => {
+    renderPanel({ snapshot: snap(DEV_SEEDS[key]) })
+    expectOnlyLine(expected, key)
+  })
+
+  it('a stored "saved" whose printed figure fell to $0 reads the not-asked line and loses its seat; at $1 it reads the moved line (R5’s printed-$1 floor)', () => {
+    // `datesaved`'s year 0 is pay − payroll − federal tax − deposits − W (the sum `datesavedmoved`'s docblock
+    // derives by hand) = $16,985 (the plan's table). W enters that sum one for one, so an entered W $16,985
+    // above its $84,000 prints $0, and $1 less prints $1.
+    const enteredW = (amountReal: number): ScenarioDraft => ({
+      ...DEV_SEEDS.datesaved,
+      workingYearCost: {
+        kind: 'entered',
+        amountReal,
+        entryPeriod: 'year',
+        stateTaxReading: DEV_SEEDS.datesaved.workingYearCost!.stateTaxReading,
+      },
+    })
+    const seatOrNull = () => document.querySelector('[data-assumption-seat="working-year-left-over"]')
+    renderPanel({ snapshot: snap(enteredW(84_000 + 16_985)) })
+    expectOnlyLine('not-asked', 'printed $0')
+    expect(seatOrNull(), 'printed $0: no seat').toBeNull()
+    cleanup()
+    renderPanel({ snapshot: snap(enteredW(84_000 + 16_984)) })
+    expectOnlyLine('saved-moved', 'printed $1')
+    expect(seatOrNull(), 'printed $1: the seat renders').not.toBeNull()
+    expect(screen.getByText(slots.workingLedgerLeftOverFellLine('16,985', '1'))).toBeInTheDocument()
+  })
+
+  it('a press in the seat swaps the line: absent, then "Spent" reads the spent line, then "Some of it, or not sure" the not-sure line', () => {
+    const m = freshModel()
+    m.update(() => DEV_SEEDS.date)
+    render(<WiredPanel model={m} />)
+    expectOnlyLine('absent', 'before a press')
+    const seat = () => document.querySelector<HTMLElement>('[data-assumption-seat="working-year-left-over"]')!
+    expect(within(seat()).getByText(slots.workingLedgerLeftOverAbsentLine('16,985'))).toBeInTheDocument()
+    fireEvent.click(within(seat()).getByRole('radio', { name: copy.workingLedgerLeftOverSpent }))
+    expect(m.getSnapshot().draft.workingYearLeftOver).toEqual({ kind: 'spent' })
+    expect(within(seat()).getByText(slots.workingLedgerLeftOverSpentLine('16,985'))).toBeInTheDocument()
+    expectOnlyLine('spent', 'after "Spent"')
+    fireEvent.click(within(seat()).getByRole('radio', { name: copy.workingLedgerLeftOverNotSure }))
+    expect(m.getSnapshot().draft.workingYearLeftOver).toEqual({ kind: 'not-sure' })
+    expect(within(seat()).getByText(slots.workingLedgerLeftOverNotSureLine('16,985'))).toBeInTheDocument()
+    expectOnlyLine('not-sure', 'after "not sure"')
   })
 })

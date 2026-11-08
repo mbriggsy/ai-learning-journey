@@ -26,6 +26,7 @@ vi.mock('../Result', () => ({
     backup,
     onReview,
     stalenessNote = false,
+    leftOverClauseHost = false,
     computing,
     readOnly = false,
   }: {
@@ -33,6 +34,7 @@ vi.mock('../Result', () => ({
     backup?: { onSave: () => void }
     onReview: () => void
     stalenessNote?: boolean
+    leftOverClauseHost?: boolean
     computing?: boolean
     readOnly?: boolean
   }) => (
@@ -40,6 +42,7 @@ vi.mock('../Result', () => ({
       data-save-kind={save.kind}
       data-backup={backup ? 'offered' : 'none'}
       data-staleness={String(stalenessNote)}
+      data-left-over-host={String(leftOverClauseHost)}
       data-computing={String(computing)}
       data-read-only={String(readOnly)}
     >
@@ -111,13 +114,14 @@ vi.mock('@intake/flow', () => ({
 
 import IntakeApp from '../IntakeApp'
 import { appModel } from '../appModel'
-import { scenarioFromDraft } from '../scenarioFromDraft'
-import { DEV_SEEDS } from '../devSeeds'
-import { copy } from '../copy'
+import { scenarioFromDraft, currentEpochDay } from '../scenarioFromDraft'
+import { DEV_SEEDS, doctorWorkingYearsStaleVault } from '../devSeeds'
+import { copy, slots } from '../copy'
 import { readyToApplyUpdate } from '../updateGate'
 import { holdUnsavedBuffer } from '@intake/unsavedBuffer'
+import { workingYearCostStaleText } from '@intake/workingYearQuote'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { CURRENT_SCHEMA_VERSION } from '@shared/model'
+import { CURRENT_SCHEMA_VERSION, type CurrentScenario } from '@shared/model'
 
 // A complete, persistable household — the same fixture the seeds prove against the real engine.
 const ready = scenarioFromDraft(DEV_SEEDS.retired)
@@ -140,9 +144,9 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-describe('IntakeApp — the hydrate gate admits exactly the current version (the schema-v4 bump)', () => {
-  // A version-3 plan never reaches the gate as 3 (the codec relabels it at unlock), so what the gate
-  // refuses is null and the version-1/2 ladder members, which the codec decodes as-is. The CURRENT
+describe('IntakeApp — the hydrate gate admits exactly the current version (the schema-v4 and schema-v5 bumps)', () => {
+  // A version-3 or version-4 plan never reaches the gate as 3 or 4 (the codec relabels each at unlock),
+  // so what the gate refuses is null and the version-1/2 ladder members, which the codec decodes as-is. The CURRENT
   // model hydrating is every other hydrate test in this file (the fixture is a fresh mint).
   // Only the RELABELED arms can see the gate's version clause: the current two-person plan carrying
   // an old label passes `draftFromScenario` and re-mints at the current version, so with the clause
@@ -163,6 +167,8 @@ describe('IntakeApp — the hydrate gate admits exactly the current version (the
     ['a version-1 model', v1Model],
     ['the current plan labeled 2', { ...ready.scenario, schemaVersion: 2 }],
     ['the current plan labeled 3', { ...ready.scenario, schemaVersion: 3 }],
+    // The schema-v5 bump's arm: the two-person plan, no answer, labeled 4 — only the version clause refuses it.
+    ['the current plan labeled 4', { ...ready.scenario, schemaVersion: 4 }],
     ['no model at all', null],
   ])('%s is refused to the restore-failed face — never hydrated, never computed', async (_label, model) => {
     const current = h.model
@@ -182,6 +188,95 @@ describe('IntakeApp — the hydrate gate admits exactly the current version (the
     render(<IntakeApp hydrateFromVault />)
     await affirmGate()
     expect(await screen.findByText('result stub')).toBeInTheDocument()
+  })
+})
+
+// Build 2's U14 (R12; obligation (f)): the vault arm that RENDERS IntakeApp's real hydrate effect — the one place
+// a literal `leftOverStale: false` left at the call site would turn red (the devSeeds vault arms rebuild the call
+// with their own literals and never run it).
+describe('IntakeApp — build 2’s moved left over reaches the re-entry gate from the real hydrate path', () => {
+  const plantedVault = (d: ScenarioDraft, doctor?: (s: CurrentScenario) => CurrentScenario) => {
+    const built = scenarioFromDraft(d)
+    if (!built.ready) throw new Error('[test setup] the seed must save')
+    return doctor === undefined ? built.scenario : doctor(built.scenario)
+  }
+
+  it('`datesavedmoved`: the gate names both figures under the left-over lead, with the door sentence; the Result hears no clause host', async () => {
+    const current = h.model
+    h.model = plantedVault(DEV_SEEDS.datesavedmoved)
+    try {
+      render(<IntakeApp hydrateFromVault />)
+      expect(
+        await screen.findByText(
+          `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')} ${copy.stalenessPayCheckGateDoor}`,
+        ),
+      ).toBeInTheDocument()
+      await affirmGate()
+      expect((await screen.findByText('result stub')).closest('[data-left-over-host]')?.getAttribute('data-left-over-host')).toBe('false')
+    } finally {
+      h.model = current
+    }
+  })
+
+  it('`datesavedmoved` saved under an older working-years table: the clause rides that clock’s line, no second line speaks, and the Result hears the host', async () => {
+    const current = h.model
+    h.model = plantedVault(DEV_SEEDS.datesavedmoved, (s) => doctorWorkingYearsStaleVault(s, currentEpochDay()))
+    try {
+      render(<IntakeApp hydrateFromVault />)
+      expect(
+        await screen.findByText(`${copy.stalenessWorkingYears} ${slots.stalenessLeftOverClause('16,985', '27,537', '16,985')}`),
+      ).toBeInTheDocument()
+      expect(screen.queryByText(new RegExp(copy.stalenessLeftOverNote))).toBeNull()
+      await affirmGate()
+      const stub = (await screen.findByText('result stub')).closest('[data-left-over-host]')
+      expect(stub?.getAttribute('data-left-over-host')).toBe('true')
+      expect(stub?.getAttribute('data-staleness')).toBe('true')
+    } finally {
+      h.model = current
+    }
+  })
+
+  // The moved line's door sentence promises a choice that leads to where the answer can change, so, like the
+  // stale-W line's, it rides only a tab that can save (`canChange: !readOnly`, the `ReentryPayCheckStale` door
+  // law). The go-live review found IntakeApp's own argument unpinned: a planted `canChange: true` stayed green.
+  it('`datesavedmoved` on a READ-ONLY tab: the gate names both figures with NO door sentence; the writable twin (first arm) ends with it', async () => {
+    const current = h.model
+    h.model = plantedVault(DEV_SEEDS.datesavedmoved)
+    try {
+      render(<IntakeApp hydrateFromVault readOnly />)
+      await screen.findByRole('button', { name: copy.reentryContinueCta })
+      const lines = Array.from(document.querySelectorAll('.reentry-notes p')).map((p) => p.textContent ?? '')
+      expect(lines, 'the moved line renders read-only, door sentence and all left off').toContain(
+        `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')}`,
+      )
+      expect(lines.some((t) => t.includes(copy.stalenessPayCheckGateDoor)), 'no line offers a door the tab cannot open').toBe(false)
+    } finally {
+      h.model = current
+    }
+  })
+
+  // R12's dollars clause on the GATE, through IntakeApp's own call (`workingYearCostStaleLine` over the hydrated
+  // draft). The b9-6 mutant pass found this call unpinned: the gate's only stale-W arm above plants
+  // `datecoststale`, which stores no answer, so its line is the W step's bare sentence either way, and the
+  // `datesavedstale` arms in `reentry.test.tsx` call the core themselves. A call site reverted to the bare
+  // sentence would drop the clause from the gate alone, every other test green.
+  it('`datesavedstale`: the gate’s stale-W line is the W step’s sentence, then the clause naming the $16,985 a year not added, then the door', async () => {
+    const current = h.model
+    h.model = plantedVault(DEV_SEEDS.datesavedstale)
+    try {
+      render(<IntakeApp hydrateFromVault />)
+      await screen.findByRole('button', { name: copy.reentryAffirmCta })
+      const line = Array.from(document.querySelectorAll('.reentry-notes p'))
+        .map((p) => p.textContent ?? '')
+        .find((t) => t.startsWith(copy.stalenessPayCheckGateLead))
+      const sentence = workingYearCostStaleText(DEV_SEEDS.datesavedstale)
+      expect(sentence, '[test setup] datesavedstale’s W is stale').not.toBeNull()
+      expect(line, 'the clause rides the gate’s W line').toBe(
+        `${copy.stalenessPayCheckGateLead} ${sentence} ${slots.workingCostStaleLeftOverClause('16,985')} ${copy.stalenessPayCheckGateDoor}`,
+      )
+    } finally {
+      h.model = current
+    }
   })
 })
 

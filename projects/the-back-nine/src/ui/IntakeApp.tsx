@@ -5,7 +5,13 @@ import { AnswerStrip } from '@intake/AnswerStrip'
 import { isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
 import { validateDraft, type FieldPath } from '@intake/sanity'
 import { subscribeUnsavedBuffers, unsavedBuffersHeld } from '@intake/unsavedBuffer'
-import { isWorkingYearCostStale, workingYearCostStaleText } from '@intake/workingYearQuote'
+import { isWorkingYearCostStale } from '@intake/workingYearQuote'
+import {
+  workingYearCostStaleLine,
+  workingYearLeftOverMoved,
+  workingYearLeftOverMovedClause,
+  workingYearLeftOverMovedText,
+} from '@intake/workingYearLeftOver'
 import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { draftIdentityKey, type ScenarioDraft } from '@store/memoryModel'
 import { deriveSavedRecommendationStatus, type SavedRecommendationStatus } from '@store/savedRecommendation'
@@ -101,6 +107,8 @@ export default function IntakeApp({
   // it feeds the hero's standing staleness note for the whole session. RULES-moved, never
   // `anyStale` (ultramode 2026-07-09): a lapsed budget window is a calendar prompt on a
   // byte-identical recompute — "Some rules changed" there is a false claim on the hero.
+  // Build 2: the view also carries the left-over clause host (`leftOverClauseHost`), which the Result's hero
+  // rules note reads for the whole session the same way.
   const [reentry, setReentry] = useState<{ view: ReentryView; rulesMoved: boolean } | null>(null)
   // The re-offer backup door's gate (U8-tail): set true only on a decrypt-on-return WHERE the
   // session is writable AND no backup-note is on record — a returning household whose off-device
@@ -397,7 +405,7 @@ export default function IntakeApp({
    * U17 §S5 — THE SAVE GESTURE FOR THE RECOMMENDATION ON SCREEN.
    *
    * THE ORDER IS THE WHOLE DESIGN: the mint is PROBED AND REFUSED BEFORE THE STORE IS TOUCHED, and
-   * the store is touched before anything reaches disk. `scenarioCodec.ts:695-698` names this
+   * the store is touched before anything reaches disk. `scenarioCodec.ts:703-706` names this
    * function as the seam that "MUST validate its own mint HERE, before the record ever touches the
    * draft", and the reason is a DATA-LOSS case, not tidiness: if the disk already holds a VALID
    * record and a new mint is invalid, the codec deletes the bad record from the LIVE operand only,
@@ -576,9 +584,9 @@ export default function IntakeApp({
         const session = await getVaultSession()
         const model = session.currentModel()
         if (cancelled) return
-        // Admits exactly the current version. A version-3 plan never reaches here as 3: the codec
-        // relabels it to its successor at unlock (scenarioCodec.ts), so it hydrates like any current
-        // save. What this refuses is null and the version-1/2 ladder members (decoded as-is, never
+        // Admits exactly the current version. A version-3 or version-4 plan never reaches here as 3
+        // or 4: the codec relabels each to its successor at unlock (scenarioCodec.ts), so it hydrates
+        // like any current save. What this refuses is null and the version-1/2 ladder members (decoded as-is, never
         // up-converted — the register's *The couple's own data…* keeps that dead end) → refuse
         // rather than render a wrong plan. A non-two-person shape is draftFromScenario's refusal below.
         if (model === null || model.schemaVersion !== CURRENT_SCHEMA_VERSION) {
@@ -636,20 +644,33 @@ export default function IntakeApp({
         // The household's own working-year answers ride BESIDE the exposure record, never inside it:
         // whether the W answer still matches its quote (the pay check's KTD21) is an intake predicate
         // over the same hydrated draft (an answer against its inputs, not a built run), passed in
-        // their own named object. The left-over fact is `false` BY PROOF until the go-live: no draft
-        // can hold the left-over answer before the version-5 model lands (build 2's U13).
+        // their own named object. Build 2's left-over fact is the moved core's answer over the same
+        // draft (`workingYearLeftOverMoved`: a "saved" answer, W fresh, a known picture, a printed
+        // year-0 figure that differs from the stored one), computed ONCE into `leftOverMoved` — the fact
+        // below and the gate's sentence both read that one value, so `composeReentry`'s throw (a fact
+        // with no sentence — the restore-failed face on every reload) is unreachable by construction
+        // (obligation (f)). The core is total: the money picture's read catches every producer fault.
+        const leftOverMoved = workingYearLeftOverMoved(hydrated.draft)
         const report = deriveStaleness(model, currentEpochDay(), exposureForDraft(hydrated.draft), {
           costStale: isWorkingYearCostStale(hydrated.draft),
-          leftOverStale: false,
+          leftOverStale: leftOverMoved !== null,
         })
         // The gate's KTD21 sentence from the SAME hydrated draft — the W step's own stale sentence,
-        // which the answer's standing line repeats (b9-7); the door hint only where this tab can save,
-        // the same condition as the answer's door (`Result`'s `onOpen`). No left-over sentence beside
-        // the `false` above.
-        const payCheckStaleText = workingYearCostStaleText(hydrated.draft)
+        // which the answer's standing line repeats (b9-7), with build 2's clause for a "saved" answer
+        // waiting on W (R12); the door hint only where this tab can save, the same condition as the
+        // answer's door (`Result`'s `onOpen`).
+        const payCheckStaleText = workingYearCostStaleLine(hydrated.draft)
         const payCheckStale = payCheckStaleText === null ? null : { text: payCheckStaleText, canChange: !readOnly }
+        const leftOverStale =
+          leftOverMoved === null
+            ? null
+            : {
+                text: workingYearLeftOverMovedText(leftOverMoved),
+                clause: workingYearLeftOverMovedClause(leftOverMoved),
+                canChange: !readOnly,
+              }
         setReentry({
-          view: composeReentry(model, report, { costStale: payCheckStale, leftOverStale: null }),
+          view: composeReentry(model, report, { costStale: payCheckStale, leftOverStale }),
           rulesMoved: report.rulesMoved,
         })
         setPhase('reentry')
@@ -840,6 +861,9 @@ export default function IntakeApp({
         // P3·U13 — the standing hero staleness echo (session-lifetime once the gate derived
         // it). RULES-moved only — the gate's budget re-confirm lines never claim "rules changed".
         stalenessNote={reentry?.rulesMoved === true}
+        // Build 2's clause host, decided once by `composeReentry`: a fired tax, state-tax or working-years
+        // line carries a moved left over on the hero's rules note, so the Result speaks it there, once.
+        leftOverClauseHost={reentry?.view.leftOverClauseHost === true}
         // The aged-balances clause's honest year (review 2026-07-10): from the persist
         // machine's OWN saved scenario — a re-save or an in-session edit suppresses it
         // through the machine's state, never a second bookkeeping (resultSave.ts doc).

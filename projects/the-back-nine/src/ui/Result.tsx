@@ -22,7 +22,13 @@ import { SequencingControl } from '@intake/SequencingControl'
 import { RothLever } from '@intake/RothLever'
 import { HealthcareSheet } from '@intake/HealthcareSheet'
 import { AssumptionPanel } from '@intake/AssumptionPanel'
-import { workingYearCostStaleText } from '@intake/workingYearQuote'
+import type { AssumptionLandingSeat } from './assumptionRegistry'
+import {
+  workingYearCostStaleLine,
+  workingYearLeftOverMoved,
+  workingYearLeftOverMovedClause,
+  workingYearLeftOverMovedText,
+} from '@intake/workingYearLeftOver'
 import { composeMedicareExtrasTypicalNote, showMedicarePricedNote } from './healthSheetChrome'
 import { budgetGoverns } from '@budget/budgetModel'
 import { commitBudgetPatch } from '@budget/budgetToSpending'
@@ -39,7 +45,7 @@ import { savedRecordCardView, type SavedRecordCopy } from './recommendationSaveV
 import { copy, slots } from './copy'
 import { appModel } from './appModel'
 import { Disclaimer } from './Disclaimer'
-import { FuckOffDate } from './FuckOffDate'
+import { FuckOffDate, type StandingNoteCause } from './FuckOffDate'
 import { ConfidenceStatement } from './ConfidenceStatement'
 import { selectElevatedAnswer, resolvedFocusKey } from './answerView'
 import type { ResaveCopyKey } from './unlockCopy'
@@ -99,6 +105,7 @@ export function Result({
   recordCard,
   computing = false,
   stalenessNote = false,
+  leftOverClauseHost = false,
   agedBalancesYear,
   readOnly = false,
 }: {
@@ -118,6 +125,10 @@ export function Result({
    *  under today's rules" line WITH the verdict. Session-lifetime (drift doesn't un-happen
    *  by re-saving mid-session). Default false. */
   readonly stalenessNote?: boolean
+  /** Build 2's clause host (R12), from `composeReentry` at unlock and session-lifetime like `stalenessNote`: a
+   *  tax, state-tax or working-years line fired, so a moved left over rides the hero's rules note as a clause
+   *  and the standing slot says nothing of it (one cause, one line). Default false. */
+  readonly leftOverClauseHost?: boolean
   /** The aged-balances clause's honest year (review 2026-07-10): present ⇔ the rendered
    *  answer still matches an on-disk save whose `savedAt` year is at least one calendar
    *  year old (IntakeApp derives it via `agedBalancesYearFor` — the persist machine's own
@@ -204,11 +215,24 @@ export function Result({
   const [healthOpen, setHealthOpen] = useState(false)
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
   // Where the assumptions panel lands when it opens: the W row when the pay check's stale line
-  // opened it, nowhere special from the plain door. Dropped the moment the panel closes, on EVERY
-  // close and route-away path at once (a render-phase reset), so the ordinary door never re-lands
-  // on W.
-  const [assumptionsSeat, setAssumptionsSeat] = useState<'working-year-cost' | undefined>(undefined)
+  // opened it, the left-over seat when build 2's moved line did, nowhere special from the plain door.
+  // Dropped the moment the panel closes, on EVERY close and route-away path at once (a render-phase
+  // reset), so the ordinary door never re-lands on a seat.
+  const [assumptionsSeat, setAssumptionsSeat] = useState<AssumptionLandingSeat | undefined>(undefined)
   if (!assumptionsOpen && assumptionsSeat !== undefined) setAssumptionsSeat(undefined)
+  // The standing answer line for one cause: its door opens the panel at that cause's seat, and exists only
+  // where the tab can save (a read-only tab reads the fact alone).
+  const standingNote = (cause: StandingNoteCause, text: string, seat: AssumptionLandingSeat) =>
+    readOnly
+      ? { cause, text }
+      : {
+          cause,
+          text,
+          onOpen: () => {
+            setAssumptionsSeat(seat)
+            setAssumptionsOpen(true)
+          },
+        }
   // Act-4 · U16 §S2 — the recommend-second GOAL choice (the picker precedes the solve). The affordance
   // opens it; a confirmed pick writes `chosenGoal` and dispatches the solve.
   const [goalOpen, setGoalOpen] = useState(false)
@@ -251,8 +275,16 @@ export function Result({
   // The pay check's KTD21 standing line: the household's W no longer matches the spending or state
   // it was given against, and the date still runs on that last figure (R4). The ONE stale predicate
   // (`workingYearQuote.ts`), read off the draft — the same answer the walk's gate and the panel's
-  // row read. Its door opens the panel at the W row, and exists only where the tab can save.
-  const payCheckStaleText = useMemo(() => workingYearCostStaleText(snapshot.draft), [snapshot.draft])
+  // row read. Its door opens the panel at the W row, and exists only where the tab can save. W's ONE stale line
+  // (`workingYearCostStaleLine`): build 2 adds the clause for a "saved" answer waiting on W (R12).
+  const payCheckStaleText = useMemo(() => workingYearCostStaleLine(snapshot.draft), [snapshot.draft])
+  // Build 2's moved left over (R12), read LIVE off the draft through the one moved core. Where a tax, state-tax
+  // or working-years line fired at unlock (`leftOverClauseHost`, decided once by `composeReentry` and kept for
+  // the session, whether or not the left over had moved then), the two figures ride the hero's rules note,
+  // with no door of their own (the Assumptions door still reaches the seat); otherwise they take the standing
+  // slot (never both — a moved left over needs a fresh W, so the W line never shares it either), whose door
+  // opens the left-over seat.
+  const leftOverMoved = useMemo(() => workingYearLeftOverMoved(snapshot.draft), [snapshot.draft])
   // The pay-less-tax ALL-IN hero's scope (build spec D7): did the SOLVE's built overlay price
   // healthcare? Deliberately NOT `medicarePriced` above — that one ORs the date route in (structurally
   // priced there), while the solve never runs on the date route (`spine-unready`) and its base is
@@ -680,22 +712,21 @@ export function Result({
             medicareExtrasTypicalNote={medicareExtrasTypicalNote}
             statePricedNote={statePricedNote}
             stalenessNote={stalenessNote}
+            stalenessClause={
+              stalenessNote && leftOverClauseHost && leftOverMoved !== null
+                ? workingYearLeftOverMovedClause(leftOverMoved)
+                : undefined
+            }
             dateAnchor={dateAnchor}
             agedBalancesYear={agedBalancesYear}
             sheetOpen={sheetOpen}
             onReconfirm={onReview}
             payCheckNote={
               payCheckStaleText !== null
-                ? readOnly
-                  ? { text: payCheckStaleText }
-                  : {
-                      text: payCheckStaleText,
-                      onOpen: () => {
-                        setAssumptionsSeat('working-year-cost')
-                        setAssumptionsOpen(true)
-                      },
-                    }
-                : undefined
+                ? standingNote('w-stale', payCheckStaleText, 'working-year-cost')
+                : leftOverMoved !== null && !leftOverClauseHost
+                  ? standingNote('left-over-moved', workingYearLeftOverMovedText(leftOverMoved), 'working-year-left-over')
+                  : undefined
             }
           />
         )}

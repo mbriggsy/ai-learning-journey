@@ -38,6 +38,7 @@ import {
   TICKER_CLASSIFICATION_CHOICES,
   WORK_STATUSES,
   WORKING_YEAR_COST_KINDS,
+  WORKING_YEAR_LEFT_OVER_KINDS,
   WORKING_YEAR_STATE_TAX_READINGS,
   NEVER_DEPLETED,
   SAVED_AT_EPOCH_DAY_MAX,
@@ -48,6 +49,7 @@ import {
   type ScenarioV2,
   type CurrentScenario,
   type WorkingYearCostV3,
+  type WorkingYearLeftOverV5,
 } from '../model'
 import { decodeScenario, encodeScenario, MAX_REAL_DOLLAR } from '../scenarioCodec'
 
@@ -108,7 +110,11 @@ const V2: ScenarioV2 = {
 // fixture was named `V3` before it). It exercises the live pia/birthYear person, entered accounts,
 // BOTH discriminated unions (ticker classification + the income-stream tax treatment), every income
 // `type` arm, the fixed-pct colaPct, and the optional health fields. Hand-authored (not engine-derived).
-// A version-3 twin is this fixture relabeled 3 (`asVersion`), never a typed literal: 3 is in no type.
+// A version-3 or version-4 twin is this fixture relabeled (`asVersion`), never a typed literal: 3 and 4 are
+// in no type. It carries NO left-over answer, on purpose (build 2's KTD6): every relabeled twin, the
+// literal-4 pin and the fixed-point loop would otherwise record a plan labeled 3 or 4 carrying the
+// version-5 answer as green. The answer rides its own fixture, `WITH_LEFT_OVER`, used only at the
+// current label (and at 3 and 4 only to prove the refusal).
 const CURRENT: CurrentScenario = {
   schemaVersion: CURRENT_SCHEMA_VERSION,
   people: [
@@ -149,6 +155,12 @@ const CURRENT: CurrentScenario = {
     { ownerIndex: 1, annualRealToday: 10_000, startAge: 67, colaMode: 'real-flat', survivorPct: 1, type: 'annuity', qualified: true },
   ],
 }
+
+/** Build 2's left-over answer at its "saved" reply — the plan the version-5 bump exists for. Used only at
+ *  the current label, except where a test proves a lower label carrying it is refused. `CURRENT` holds no
+ *  W, so this is also the "accepted on a plan without W" case (R2). */
+const LEFT_OVER_SAVED: WorkingYearLeftOverV5 = { kind: 'saved', quotedReal: 16_985 }
+const WITH_LEFT_OVER: CurrentScenario = { ...CURRENT, workingYearLeftOver: LEFT_OVER_SAVED }
 
 /** Encode, surgically mutate the JSON, return the re-encoded bytes. */
 function mutated(base: Scenario | ScenarioV2 | CurrentScenario, mutate: (obj: Obj) => void): Uint8Array {
@@ -235,7 +247,31 @@ const FROZEN_V3 = [
 const frozenBytes = (file: string): Uint8Array =>
   new Uint8Array(readFileSync(join(process.cwd(), 'src', 'shared', '__tests__', 'fixtures', file)))
 
-describe('version 3 relabels to its successor; the ladder stays honest for the next bump (the schema-v4 bump)', () => {
+/**
+ * Real version-4 plans, frozen from a build that writes version 4 (build 2's KTD6; insight 150): a `git archive`
+ * of `88a5d125`, whose `src` and build configs the go-live commit's parent carries unchanged (checked by content
+ * at the go-live: `git diff --stat 88a5d125 HEAD -- src package.json pnpm-lock.yaml vite.config.ts tsconfig.json`
+ * empty), and whose own save path minted each one — `fixtures/mint-v4.mts`, committed beside them with its
+ * provenance and re-derive steps. No build after the go-live writes version 4, so these are the only witnesses
+ * there will ever be. Read RAW, as above.
+ *  · `w` is what the file's W holds: a fresh confirmed yes, a figure KEPT through the Keep door (U5's
+ *    `keptOverQuoteReal`), or none.
+ *  · `record` is whether it holds a saved recommendation (the codec's one tolerated drop must NOT fire).
+ */
+const FROZEN_V4 = [
+  { file: 'scenario-v4-date.json', household: 'date, W confirmed and fresh', w: 'confirmed', record: false },
+  { file: 'scenario-v4-datecoststale-kept.json', household: 'datecoststale kept through the Keep door', w: 'entered-kept', record: false },
+  { file: 'scenario-v4-rec.json', household: 'the ?vault=rec plant, retired with a saved recommendation', w: null, record: true },
+  { file: 'scenario-v4-maximal.json', household: 'the maximal version-4 plan', w: 'entered-kept', record: true },
+] as const
+
+/** What a raw plan's W holds, in `FROZEN_V4`'s words. */
+const wShape = (plan: Obj): string | null => {
+  const w = plan.workingYearCost as Obj | undefined
+  return w === undefined ? null : 'keptOverQuoteReal' in w ? 'entered-kept' : (w.kind as string)
+}
+
+describe('versions 3 and 4 relabel to their successors; the ladder stays honest for the next bump (the schema-v4 and schema-v5 bumps)', () => {
   it('a version-3 plan decodes as the CURRENT plan: the label moves to its successor, every other field is its current twin’s', () => {
     const fromThree = decodeScenario(asVersion(CURRENT, 3))
     expect(fromThree).toEqual(decodeScenario(encodeScenario(CURRENT)))
@@ -289,10 +325,62 @@ describe('version 3 relabels to its successor; the ladder stays honest for the n
     expect({ ...decoded.scenario, schemaVersion: 3 }).toEqual(onDisk)
   })
 
-  it('THE ABSOLUTE PIN: a plan labeled with the literal 4 decodes as the current version (the one place a test types it — every derived pin stays green under a reverted bump)', () => {
+  it.each(FROZEN_V4)('the real version-4 plan ($household) decodes as the current plan, every field but the label unchanged, no answer written', ({ file, w, record }) => {
+    const bytes = frozenBytes(file)
+    const onDisk = JSON.parse(new TextDecoder().decode(bytes)) as Obj
+    // What the file IS, read raw (never through the codec, which would report the current label).
+    expect(onDisk.schemaVersion, 'the frozen file is a version-4 save').toBe(4)
+    expect('workingYearLeftOver' in onDisk, 'no version-4 build writes the left-over answer').toBe(false)
+    expect(wShape(onDisk), 'what the file’s W holds').toBe(w)
+    expect('savedRecommendation' in onDisk, 'the saved recommendation').toBe(record)
+    const decoded = decodeScenario(bytes)
+    expect(decoded.ok).toBe(true)
+    if (!decoded.ok) return
+    expect(decoded.droppedAtoms, 'nothing dropped: a version-4 record opens whole').toEqual([])
+    expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    // The 4 → 5 step is label-only: it writes no answer (never a default, never `?? 'spent'`).
+    expect('workingYearLeftOver' in decoded.scenario, 'the relabel writes no answer').toBe(false)
+    expect({ ...decoded.scenario, schemaVersion: 4 }).toEqual(onDisk)
+  })
+
+  it('the maximal version-4 plan holds every top-level field this build knows except the version-5 answer — a sample of the surface a version-4 build could write, never the §7.3 rule', () => {
+    const onDisk = JSON.parse(new TextDecoder().decode(frozenBytes('scenario-v4-maximal.json'))) as Obj
+    expect(Object.keys(onDisk).sort()).toEqual(SCENARIO_V3_FIELDS.filter((k) => k !== 'workingYearLeftOver').sort())
+    const arms = (onDisk.incomeStreams as Obj[]).map((x) => `${String(x.type)}${x.type === 'annuity' ? (x.qualified === true ? '-q' : '-nq') : ''}`)
+    expect(arms.sort(), 'every income-stream arm').toEqual(['alimony', 'annuity-nq', 'annuity-q', 'other', 'pension', 'rental'])
+    expect(new Set((onDisk.enteredAccounts as Obj[]).map((a) => a.kind)), 'every account kind').toEqual(new Set(ACCOUNT_KINDS))
+  })
+
+  it('THE ABSOLUTE PIN AT 4: a plan labeled with the literal 4 decodes as the current version — a version-4 save opens in this build and in every later one (the schema-v4 bump’s typed literal; it stays)', () => {
     const decoded = decodeScenario(asVersion(CURRENT, 4))
     expect(decoded.ok, 'a version-4 save must open in this build and in every later one').toBe(true)
     if (decoded.ok) expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+  })
+
+  // What else sees a reverted constant (the b9-6 mutant pass, `CURRENT_SCHEMA_VERSION = 4` planted): every save
+  // then fails its own round trip, so the suites that mint a save at load red whole, IntakeApp's among them (its
+  // labeled-4 hydrate-gate arm never runs). The floor test stays green until U10 raises its floor to 5.
+  it('THE ABSOLUTE PIN AT 5: a plan labeled with the literal 5 decodes as version 5 (the schema-v5 bump’s one typed literal here — every derived pin moves with the constant, so a reverted constant reds this pin)', () => {
+    const decoded = decodeScenario(asVersion(WITH_LEFT_OVER, 5))
+    expect(decoded.ok, 'a version-5 save must open in this build and in every later one').toBe(true)
+    if (!decoded.ok) return
+    expect(decoded.scenario.schemaVersion).toBe(5)
+    expect(decoded.droppedAtoms).toEqual([])
+  })
+
+  it('a plan whose DISK label is 3 or 4 and that carries the left-over answer is refused as a writer bug naming the field — its version-5 twin opens, so the version clause alone refuses it (insight 152)', () => {
+    expect(decodeScenario(encodeScenario(WITH_LEFT_OVER)), 'the current twin opens').toEqual({ ok: true, scenario: WITH_LEFT_OVER, droppedAtoms: [] })
+    for (const label of [3, 4]) {
+      expect(decodeScenario(asVersion(WITH_LEFT_OVER, label)), `labeled ${label}`).toEqual({
+        ok: false,
+        reason: 'corrupt',
+        detail: `scenario.workingYearLeftOver: a plan saved as version ${label} cannot carry it — no build that writes version ${label} writes it (writer bug)`,
+      })
+    }
+    // Every reply, not just "saved": no build writing 3 or 4 writes any of them.
+    for (const answer of [{ kind: 'spent' }, { kind: 'not-sure' }] as const) {
+      expect(decodeScenario(asVersion({ ...CURRENT, workingYearLeftOver: answer }, 4)).ok, answer.kind).toBe(false)
+    }
   })
 
   it('THE LADDER PIN: every version from 1 to the current one reaches its own arm; one past it is newer; 0 and below are corrupt', () => {
@@ -317,6 +405,26 @@ describe('version 3 relabels to its successor; the ladder stays honest for the n
         detail: `scenario.schemaVersion: ${below} is not a valid version`,
       })
     }
+  })
+
+  // Read from the codec's source, because no decode can see it while the constant is the step's own successor:
+  // a step that relabels to `CURRENT_SCHEMA_VERSION` instead of its literal successor opens every plan today,
+  // and at the next bump sends a version-4 plan straight past the new step (the 3 → 4 note in `decodeScenario`).
+  // The b9-6 mutant pass found the rule held by a comment alone.
+  it('THE LITERAL-SUCCESSOR PIN: every label-only step in decodeScenario relabels version N to the literal N + 1, never to the constant (read from its source)', () => {
+    const source = readFileSync(join(process.cwd(), 'src', 'shared', 'scenarioCodec.ts'), 'utf8')
+    const start = source.indexOf('export function decodeScenario(')
+    expect(start, '[test setup] decodeScenario is in the codec').toBeGreaterThan(-1)
+    const body = source.slice(start, source.indexOf('\n}\n', start))
+    const steps = [...body.matchAll(/if \(version === (\d+)\) \{([\s\S]*?)\n {4}\}/g)].filter(([, , block]) => block!.includes('version ='))
+    expect(steps.map(([, n]) => Number(n)), 'the label-only steps, in ladder order').toEqual([3, 4])
+    for (const [, n, block] of steps) {
+      const next = Number(n) + 1
+      expect([...block!.matchAll(/parsed\.schemaVersion = ([^\n]+)/g)].map((m) => m[1]!.trim()), `step ${n}: the label it writes`).toEqual([String(next)])
+      expect([...block!.matchAll(/\bversion = ([^\n]+)/g)].map((m) => m[1]!.trim()), `step ${n}: the version it hands on`).toEqual([String(next)])
+    }
+    // An assignment, never the `===` / `>` comparisons that read the constant.
+    expect(body, 'no step assigns the constant').not.toMatch(/(?<![=!<>])=\s*CURRENT_SCHEMA_VERSION\b/)
   })
 
   it('a relabeled plan is itself current: decode → encode → decode is a fixed point for every version from 3 up, and the re-encoded bytes carry the current label', () => {
@@ -365,6 +473,8 @@ describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), h
     TICKER_CLASSIFICATION_CHOICES: ['stocks', 'bonds', 'cash'],
     WORK_STATUSES: ['working', 'retired'],
     WORKING_YEAR_COST_KINDS: ['confirmed', 'entered'],
+    // Build 2's left-over answer — recorded in the schema-v5 bump's own commit (the bump §7.3 rule (a) owes).
+    WORKING_YEAR_LEFT_OVER_KINDS: ['saved', 'spent', 'not-sure'],
     WORKING_YEAR_STATE_TAX_READINGS: ['agi-derived', 'class-based', 'none', 'unpriced'],
   }
   /** The one vocabulary the codec spells inline (the ticker classification's `kind`), as it spells it. */
@@ -402,6 +512,7 @@ describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), h
     TICKER_CLASSIFICATION_CHOICES,
     WORK_STATUSES,
     WORKING_YEAR_COST_KINDS,
+    WORKING_YEAR_LEFT_OVER_KINDS,
     WORKING_YEAR_STATE_TAX_READINGS,
   }
   const why = (what: string): string =>
@@ -1147,6 +1258,75 @@ describe('the current shape — the v3 field set (U8, the first v3 writer), writ
   })
 
   // ───────────────────────────────────────────────────────────────────────────────────────────
+  // Build 2 — the left-over answer (R1, R2, KTD1), the field the schema-v5 bump exists for.
+  // ───────────────────────────────────────────────────────────────────────────────────────────
+
+  it('a version-5 save with each reply round-trips byte for byte — on a plan without W (R2) and beside a W; ABSENT decodes untouched and is written as absent', () => {
+    const replies: WorkingYearLeftOverV5[] = [
+      LEFT_OVER_SAVED,
+      { kind: 'saved', quotedReal: 1 },
+      { kind: 'saved', quotedReal: MAX_REAL_DOLLAR },
+      { kind: 'spent' },
+      { kind: 'not-sure' },
+    ]
+    for (const answer of replies) {
+      for (const base of [CURRENT, { ...CURRENT, workingYearCost: W_CONFIRMED }]) {
+        const s: CurrentScenario = { ...base, workingYearLeftOver: answer }
+        const bytes = encodeScenario(s)
+        const decoded = decodeScenario(bytes)
+        const label = `${answer.kind} / W ${base.workingYearCost === undefined ? 'absent' : 'present'}`
+        expect(decoded, label).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
+        if (decoded.ok) expect(encodeScenario(decoded.scenario), `${label}: byte for byte`).toEqual(bytes)
+      }
+    }
+    // ABSENT: unanswered — no key on disk, none in memory (never a token, never `?? 'spent'`).
+    const raw = JSON.parse(new TextDecoder().decode(encodeScenario(CURRENT))) as Obj
+    expect('workingYearLeftOver' in raw).toBe(false)
+    const decoded = decodeScenario(encodeScenario(CURRENT))
+    expect(decoded).toEqual({ ok: true, scenario: CURRENT, droppedAtoms: [] })
+    if (decoded.ok) expect('workingYearLeftOver' in decoded.scenario).toBe(false)
+    // The top-level null rides the every-field null sweep below; this pins that the sweep reaches it.
+    expect(SCENARIO_V3_FIELDS).toContain('workingYearLeftOver')
+  })
+
+  /** Each corrupt answer, and the field its refusal must name. NaN and ±Infinity reach the codec as their
+   *  JSON shadow, null (DND 009). */
+  const badLeftOverArms: ReadonlyArray<readonly [string, unknown, string]> = [
+    ['a bare kind string', 'saved', 'workingYearLeftOver:'],
+    ['a bare number', 16_985, 'workingYearLeftOver:'],
+    ['an array', [LEFT_OVER_SAVED], 'workingYearLeftOver:'],
+    ['an unknown kind', { kind: 'some' }, 'workingYearLeftOver.kind'],
+    ['the unanswered state spelled as a token', { kind: 'absent' }, 'workingYearLeftOver.kind'],
+    ['not-sure spelled another way', { kind: 'unsure' }, 'workingYearLeftOver.kind'],
+    ['a missing kind', { quotedReal: 16_985 }, 'workingYearLeftOver.kind'],
+    ['a null kind', { kind: null, quotedReal: 16_985 }, 'workingYearLeftOver.kind'],
+    ['saved without quotedReal', { kind: 'saved' }, 'workingYearLeftOver.quotedReal'],
+    ['a null quotedReal', { kind: 'saved', quotedReal: null }, 'workingYearLeftOver.quotedReal'],
+    ['a NaN quotedReal', { kind: 'saved', quotedReal: Number.NaN }, 'workingYearLeftOver.quotedReal'],
+    ['an Infinity quotedReal', { kind: 'saved', quotedReal: Number.POSITIVE_INFINITY }, 'workingYearLeftOver.quotedReal'],
+    ['a string quotedReal', { kind: 'saved', quotedReal: '16985' }, 'workingYearLeftOver.quotedReal'],
+    ['a non-integer quotedReal', { kind: 'saved', quotedReal: 16_985.5 }, 'workingYearLeftOver.quotedReal'],
+    ['a zero quotedReal', { kind: 'saved', quotedReal: 0 }, 'workingYearLeftOver.quotedReal'],
+    ['a negative quotedReal', { kind: 'saved', quotedReal: -1 }, 'workingYearLeftOver.quotedReal'],
+    ['a quotedReal one dollar over the ceiling', { kind: 'saved', quotedReal: MAX_REAL_DOLLAR + 1 }, 'workingYearLeftOver.quotedReal'],
+    ['spent carrying a figure', { kind: 'spent', quotedReal: 16_985 }, 'workingYearLeftOver.quotedReal'],
+    ['not-sure carrying a figure', { kind: 'not-sure', quotedReal: 16_985 }, 'workingYearLeftOver.quotedReal'],
+  ]
+
+  it.each(badLeftOverArms)('workingYearLeftOver with %s is CORRUPT, naming the field it refused', (_label, bad, field) => {
+    const d = decodeScenario(mutated(CURRENT, (o) => { o.workingYearLeftOver = bad }))
+    expect(d.ok).toBe(false)
+    if (!d.ok) expect(d.reason).toBe('corrupt')
+    if (!d.ok && d.reason === 'corrupt') expect(d.detail).toContain(field)
+  })
+
+  it('workingYearLeftOver is a tolerant reader too — an UNKNOWN extra key passes on every reply', () => {
+    for (const a of [{ ...LEFT_OVER_SAVED, note: 'x' }, { kind: 'spent', futureAdditiveField: 1 }, { kind: 'not-sure', note: true }]) {
+      expect(decodeScenario(mutated(CURRENT, (o) => { o.workingYearLeftOver = a })).ok, a.kind).toBe(true)
+    }
+  })
+
+  // ───────────────────────────────────────────────────────────────────────────────────────────
   // Act-4 · U17 · S3 — the saved-recommendation record (the FIRST tolerated drop in this codec).
   // ───────────────────────────────────────────────────────────────────────────────────────────
 
@@ -1353,8 +1533,8 @@ describe('the current shape — the v3 field set (U8, the first v3 writer), writ
 
   it('a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario — a programming defect is never laundered into a calm dropped atom', () => {
     // THE TWO RE-THROWS THIS COVERS, and they CHAIN, so one arm holds both:
-    //   `scenarioCodec.ts:984`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
-    //   `scenarioCodec.ts:1046`  `throw e`                              (decodeScenario's outer catch)
+    //   `scenarioCodec.ts:1021`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
+    //   `scenarioCodec.ts:1099`  `throw e`                              (decodeScenario's outer catch)
     // Both were UNEXERCISED. They were filed as "correct-by-inspection but SEAM-LESS" on the
     // reasoning that decodeScenario builds its input from `JSON.parse` — data properties only,
     // no getters — and that no validator here recurses or calls a method on an unchecked value.

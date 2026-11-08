@@ -9,7 +9,7 @@ import {
   SURVIVAL_CLAIMS,
   type CopyGate,
 } from '../copyGuard'
-import { HAWK_BAN } from './hawkBan'
+import { HAWK_BAN, LEFT_OVER_LEAN_BAN } from './hawkBan'
 
 /** The survival-claim corpus (council wf_6e72eca9-c20) — every phrasing a card could use to sell the
  *  crown as a survival win or a survival tie. Each SURVIVAL_CLAIMS pattern owns at least one sample
@@ -881,6 +881,18 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingLedgerLaterShortEach: slots.workingLedgerLaterShortEach('3,200'),
     workingLedgerLaterShortRange: slots.workingLedgerLaterShortRange('3,100', '3,400'),
     workingLedgerStillShortSince: slots.workingLedgerStillShortSince(2026),
+    workingLedgerLeftOverFigure: slots.workingLedgerLeftOverFigure('16,985'),
+    workingLedgerLeftOverCheck: slots.workingLedgerLeftOverCheck('16,985', '20,000', '36,985'),
+    workingLedgerLeftOverCheckNoDeposits: slots.workingLedgerLeftOverCheckNoDeposits('16,985'),
+    workingLedgerLeftOverSavedLine: slots.workingLedgerLeftOverSavedLine('16,985'),
+    workingLedgerLeftOverRoseLine: slots.workingLedgerLeftOverRoseLine('16,985', '19,240'),
+    workingLedgerLeftOverFellLine: slots.workingLedgerLeftOverFellLine('16,985', '15,985'),
+    workingLedgerLeftOverAbsentLine: slots.workingLedgerLeftOverAbsentLine('16,985'),
+    workingLedgerLeftOverSpentLine: slots.workingLedgerLeftOverSpentLine('16,985'),
+    workingLedgerLeftOverNotSureLine: slots.workingLedgerLeftOverNotSureLine('16,985'),
+    workingCostStaleLeftOverClause: slots.workingCostStaleLeftOverClause('16,985'),
+    stalenessLeftOverMoved: slots.stalenessLeftOverMoved('16,985', '27,537', '16,985'),
+    stalenessLeftOverClause: slots.stalenessLeftOverClause('16,985', '27,537', '16,985'),
     workingLedgerEventClaim: slots.workingLedgerEventClaim('Sam'),
     workingLedgerEventSpousalStart: slots.workingLedgerEventSpousalStart('your spouse'),
     workingLedgerEventMedicareStarts: slots.workingLedgerEventMedicareStarts('Sam'),
@@ -1175,12 +1187,15 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
         'stalenessPayCheckCta',
         'stalenessPayCheckGateLead',
         'stalenessPayCheckGateDoor',
+        // Build 2's moved left over (R12): the lead and the door label of its standing line.
+        'stalenessLeftOverNote',
+        'stalenessLeftOverCta',
         'employerCoverageHelp',
         'oopHelpWorking',
       ].includes(k),
   )
   const PAY_CHECK_SLOTS = (Object.keys(slots) as (keyof typeof slots)[]).filter((k) =>
-    /^(workingCost|workingLedger|assumptionWorkingCost)/.test(k),
+    /^(workingCost|workingLedger|assumptionWorkingCost|stalenessLeftOver)/.test(k),
   )
   const payCheckStrings = (): readonly (readonly [string, string])[] => [
     ...PAY_CHECK_KEYS.map((k) => [k, copy[k]] as const),
@@ -1198,6 +1213,34 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   it('no pay-check string says "conservative", "worst case" or "only later" (the Hawk’s narrowed ban)', () => {
     for (const [name, text] of payCheckStrings()) {
       for (const b of HAWK_BAN) expect(text, `${name} says "${b.word}": "${text}"`).not.toMatch(b.re)
+    }
+  })
+
+  // --- BUILD 2's LEFT-OVER STRINGS (R16): no string about the left over says which way the credit moves the
+  //     answer — its reach can run either way (insight 143) and is unmeasured until U11. Enumerated by name
+  //     prefix (the question's keys and slots, the seat's name, the methodology family; U14's lines join by
+  //     the same prefixes), so a string added later is swept with no edit. Scoped to these strings ALONE:
+  //     W's stale line legitimately says "can look better" right beside U14's clause. ---
+  const LEFT_OVER_STRINGS = (): readonly (readonly [string, string])[] =>
+    payCheckStrings().filter(([name]) =>
+      /^(workingLedgerLeftOver|assumptionWorkingCostLeftOver|assumptionWorkingYearCheckLeftOver|stalenessLeftOver|workingCostStaleLeftOver)/.test(name),
+    )
+
+  it('no left-over string names a lean — never earlier, better, worse or conservative (R16), and the sweep is non-vacuous', () => {
+    const strings = LEFT_OVER_STRINGS()
+    expect(strings.length, strings.map(([n]) => n).join(', ')).toBeGreaterThanOrEqual(24)
+    for (const [name, text] of strings) {
+      for (const b of LEFT_OVER_LEAN_BAN) expect(text, `${name} says "${b.word}": "${text}"`).not.toMatch(b.re)
+    }
+  })
+
+  it('the left-over lean ban catches its planted samples, and passes R6’s own required words ("later year")', () => {
+    for (const b of LEFT_OVER_LEAN_BAN) {
+      expect(b.mustCatch.length, `${b.word} owns at least one sample`).toBeGreaterThan(0)
+      for (const sample of b.mustCatch) expect(sample, `${b.word} must catch: "${sample}"`).toMatch(b.re)
+    }
+    for (const required of [slots.workingLedgerLeftOverSavedLine('1'), slots.workingLedgerLeftOverSpentLine('1')]) {
+      for (const b of LEFT_OVER_LEAN_BAN) expect(required, `R6's words trip "${b.word}"`).not.toMatch(b.re)
     }
   })
 
@@ -1253,6 +1296,18 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.workingLedgerLaterShort(S),
       slots.workingLedgerLaterShortEach(S),
       slots.workingLedgerLaterShortRange(S, S),
+      slots.workingLedgerLeftOverFigure(S),
+      slots.workingLedgerLeftOverCheck(S, S, S),
+      slots.workingLedgerLeftOverCheckNoDeposits(S),
+      slots.workingLedgerLeftOverSavedLine(S),
+      slots.workingLedgerLeftOverRoseLine(S, S),
+      slots.workingLedgerLeftOverFellLine(S, S),
+      slots.workingLedgerLeftOverAbsentLine(S),
+      slots.workingLedgerLeftOverSpentLine(S),
+      slots.workingLedgerLeftOverNotSureLine(S),
+      slots.workingCostStaleLeftOverClause(S),
+      slots.stalenessLeftOverMoved(S, S, S),
+      slots.stalenessLeftOverClause(S, S, S),
       slots.assumptionWorkingCostConfirmed(S),
       slots.assumptionWorkingCostConfirmedBudget(S),
       slots.assumptionWorkingCostEntered(S),
@@ -1530,7 +1585,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:903-913, 822-839), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:917-927, 822-839), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop
@@ -1646,7 +1701,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // --- THE UNIT-INERTNESS BAN (Tier-0, fixed 2026-08-03; until now the string had NO pin at all).
   //     The killed line was "…switching this never changes the amount." The panel toggle really
   //     does leave `annualSpendingReal` alone — but the SHOWN figure jumps exactly 12×
-  //     (`spendDisplayed`, AssumptionPanel.tsx:535-540) while the sentence says nothing moved, and
+  //     (`spendDisplayed`, AssumptionPanel.tsx:630-635) while the sentence says nothing moved, and
   //     the panel's own commit (:607-617) multiplies by 12 under 'month'. So the reader's natural
   //     repair — retype the digits they remember — commits a plan off by 12× in the UNSAFE
   //     direction, and nothing downstream catches it (PANEL_PROVENANCE disarms the force-confirm;

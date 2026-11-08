@@ -1,8 +1,12 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { describe, it, expect } from 'vitest'
 import { scenarioFromDraft } from '../scenarioFromDraft'
+import { draftFromScenario } from '../draftFromScenario'
 import { DEV_SEEDS } from '../devSeeds'
 import { CURRENT_SCHEMA_VERSION } from '@shared/model'
-import { encodeScenario } from '@shared/scenarioCodec'
+import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
+import { buildDateInput, buildSpineParams } from '@intake/intakeMap'
 import type { ScenarioDraft } from '@store/memoryModel'
 
 // DEV_SEEDS are complete, engine-valid drafts (the `?seed=` fixtures) — the canonical
@@ -21,6 +25,34 @@ describe('scenarioFromDraft — Save completeness + field-fidelity gate', () => 
       expect(r.scenario.schemaVersion, key).toBe(CURRENT_SCHEMA_VERSION)
       const onDisk = JSON.parse(new TextDecoder().decode(encodeScenario(r.scenario))) as { schemaVersion: unknown }
       expect(onDisk.schemaVersion, key).toBe(CURRENT_SCHEMA_VERSION)
+    }
+  })
+
+  it('THE MINT AT 5: the bytes a save writes read the typed literal 5 (the schema-v5 bump’s literal; it guards the constant, never a stale-stamping mint — insight 151)', () => {
+    const r = scenarioFromDraft(DEV_SEEDS.date)
+    if (!r.ready) throw new Error(r.detail)
+    const onDisk = JSON.parse(new TextDecoder().decode(encodeScenario(r.scenario))) as { schemaVersion: unknown }
+    expect(onDisk.schemaVersion).toBe(5)
+  })
+
+  it.each([
+    ['scenario-v4-date.json', 'date'],
+    ['scenario-v4-datecoststale-kept.json', 'datecoststale'],
+    ['scenario-v4-rec.json', 'retired'],
+  ] as const)('the frozen version-4 plan %s hydrates to its seed’s own engine input — the engine runs it byte-identically to HEAD (U6: its output equals U1’s digest for %s)', (file, seed) => {
+    // The engine is a pure function of its input (and the seed rides the input), so equal inputs are
+    // equal outputs. The kept fixture's W is an entered $84,000 where `datecoststale` holds a confirmed
+    // $84,000: the engine carries the figure only (a stale W still rides), so the inputs agree.
+    const decoded = decodeScenario(new Uint8Array(readFileSync(join(process.cwd(), 'src', 'shared', '__tests__', 'fixtures', file))))
+    if (!decoded.ok || decoded.scenario.schemaVersion !== CURRENT_SCHEMA_VERSION) throw new Error(`${file} did not decode as current`)
+    const hydrated = draftFromScenario(decoded.scenario)
+    if (!hydrated.ok) throw new Error(hydrated.detail)
+    const route = buildDateInput(DEV_SEEDS[seed]) === null ? 'spine' : 'date'
+    if (route === 'date') {
+      expect(buildDateInput(hydrated.draft)).toEqual(buildDateInput(DEV_SEEDS[seed]))
+    } else {
+      expect(buildDateInput(hydrated.draft)).toBeNull()
+      expect(buildSpineParams(hydrated.draft)).toEqual(buildSpineParams(DEV_SEEDS[seed]))
     }
   })
 

@@ -52,9 +52,10 @@ import {
 } from '@engine/constants/contributions'
 import { cumulativePriceIndex } from '@engine/priceIndex'
 // An import CYCLE, safe by use: `intakeMap` imports this file's ceiling helpers, and the W gate
-// reads `isDateRoute` and the stale predicate (which reads `intakeMap` too). Neither side reads the
-// other's bindings at module top level — every use is inside a function or a rule's `check` — and
-// it must stay that way (the simulate/earningsTest cycle's rule).
+// reads `isDateRoute` from it. (The stale predicate's module, `workingYearQuote`, no longer reads
+// `intakeMap` — build 2's KTD2 moved the W figure's read there — so this pair is the whole loop.)
+// Neither side reads the other's bindings at module top level — every use is inside a function or a
+// rule's `check` — and it must stay that way (the simulate/earningsTest cycle's rule).
 import { isDateRoute } from './intakeMap'
 import { isWorkingYearCostStale } from './workingYearQuote'
 

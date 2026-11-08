@@ -34,6 +34,8 @@ import {
   pricedStateForRun,
   spineMedicarePriced,
   workingYearLedgerForRun,
+  workingYearLeftOverLive,
+  workingYearLeftOverShownState,
 } from '@intake/intakeMap'
 import { showMedicarePricedNote } from '../healthSheetChrome'
 import { simulate, validateParams, ENGINE_MAX_DOLLAR } from '@engine/simulate'
@@ -1413,7 +1415,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
     ).toBeLessThan(depth)
     // NOT an incidental observation: the floor crowning at 0 is exactly why this plant lights ONE
     // arrived arm and not two. `floorLineText` short-circuits offset 0 BEFORE the three-way split
-    // (FuckOffDate.tsx:236, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
+    // (FuckOffDate.tsx:253, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
     // cannot fire here — its live route is and remains `?vault=datestale`. Arm 3 proves the
     // consequence on the renderer rather than leaving it as a comment.
     expect(out.floor.offsetYears, 'the floor crowns at 0 — the plain covered line, never the Past arm').toBe(0)
@@ -1663,15 +1665,15 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(carrying).toEqual(keys.filter((k) => isDateRoute(DEV_SEEDS[k])).sort())
     // Named, so a seed that falls off the date route cannot take its W with it unseen.
     expect(carrying).toEqual([
-      'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datelateleftover', 'datemixed', 'datenc', 'dateshort',
-      'datesolo', 'datesplit', 'dip',
+      'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datelateleftover', 'datemixed', 'datenc', 'datesaved',
+      'datesavedmoved', 'datesavedstale', 'dateshort', 'datesolo', 'datesplit', 'dip',
     ])
   })
 
-  it('every W-carrying seed reads NOT stale through the one predicate — except the stale-W witness', () => {
+  it('every W-carrying seed reads NOT stale through the one predicate — except the two stale-W witnesses', () => {
     for (const [key, d] of Object.entries(DEV_SEEDS)) {
       if (d.workingYearCost === undefined) continue
-      expect(isWorkingYearCostStale(d), key).toBe(key === 'datecoststale')
+      expect(isWorkingYearCostStale(d), key).toBe(key === 'datecoststale' || key === 'datesavedstale')
     }
   })
 
@@ -1763,9 +1765,9 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       expect(shown, `${key}: the shown lines sum to the bottom line`).toBe(y0.bottomLine)
       swept++
     }
-    // Every buildable date seed carries W (the arm above), so this is all eleven of them, the short seed and the
-    // later-left-over witness (U15) included.
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(11)
+    // Every buildable date seed carries W (the arm above), so this is all fourteen of them, the short seed, the
+    // later-left-over witness (U15) and build 2's three saved witnesses (U9) included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(14)
   })
 
   // Build 2's KTD4 arm (U4): inside the run, year 0's Left over is the money picture's own printed bottom line, on
@@ -1792,7 +1794,55 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
       swept++
     }
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(11)
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(14)
+  })
+
+  // Build 2's U9 (KTD14): the three saved witnesses, each minted through the shipped write. Every figure typed by
+  // hand from the primaries (DND 012): `date`'s $16,985 (`workingYearCredit.test.ts`), and the moved witness's
+  // $27,537 = pay 165,000 − payroll 12,622.50 (7.65 % under the $184,500 base) − federal tax 20,840 (2026 MFJ:
+  // taxable 165,000 + the $30,000 investment income − deposits 20,000 − standard deduction 32,200 = 142,800 →
+  // 2,480 + 9,120 + 22 % × 42,000) − deposits 20,000 − W 84,000 = 27,537.50, printed 27,537 (the build-2
+  // record's `year0check.mts`: MATCH).
+  it('build 2 (U9): `datesaved` carries "All of it" at its own $16,985 into the date input and through the save; otherwise it is `date`', () => {
+    const d = DEV_SEEDS.datesaved
+    expect(d.workingYearLeftOver).toEqual({ kind: 'saved', quotedReal: 16_985 })
+    expect(workingYearLeftOverShownState(d)).toBe('saved')
+    expect(buildDateInput(d)!.workingYearLeftOverSavedReal).toBe(16_985)
+    const ledger = workingYearLedgerForRun(d)
+    if (ledger === 'unknown') throw new Error('[test setup] datesaved draws a picture')
+    expect(ledger.year0.bottomLine, 'its year-0 Left over is its stored figure').toBe(16_985)
+    const { workingYearLeftOver: _a, ...rest } = d
+    expect(rest).toEqual(DEV_SEEDS.date)
+    // The save path keeps the answer: the registry round-trip suites compare two post-save forms and would
+    // stay green if the save dropped it, so this reads the save itself.
+    const saved = scenarioFromDraft(d)
+    if (!saved.ready) throw new Error(saved.detail)
+    expect(saved.scenario.workingYearLeftOver).toEqual({ kind: 'saved', quotedReal: 16_985 })
+  })
+
+  it('build 2 (U9): `datesavedmoved` is `datesaved` after a raise to $165,000 — W still fresh, the live figure $27,537, the stored $16,985 still carried (saved, moved)', () => {
+    const d = DEV_SEEDS.datesavedmoved
+    expect(isWorkingYearCostStale(d), 'the quote reads the spending, never the pay').toBe(false)
+    expect(workingYearLeftOverLive(d)).toBe(27_537)
+    expect(workingYearLeftOverShownState(d)).toBe('saved-moved')
+    expect(buildDateInput(d)!.workingYearLeftOverSavedReal, 'the engine takes the smaller itself (R8)').toBe(16_985)
+    const { people: [p0, p1], ...rest } = d
+    const { people: [s0, s1], ...savedRest } = DEV_SEEDS.datesaved
+    expect(rest).toEqual(savedRest)
+    expect(p1).toEqual(s1)
+    expect({ ...p0, earnedIncomeReal: s0.earnedIncomeReal }).toEqual(s0)
+    expect(p0.earnedIncomeReal).toBe(165_000)
+  })
+
+  it('build 2 (U9): `datesavedstale` is `datecoststale` with "All of it" stored before the spending moved — waiting on W, and its date input is `datecoststale`’s exactly (R7: nothing carried)', () => {
+    const d = DEV_SEEDS.datesavedstale
+    expect(d.workingYearLeftOver).toEqual({ kind: 'saved', quotedReal: 16_985 })
+    expect(workingYearCostStaleness(d)).toEqual({ quoteMoved: true, readingMoved: false })
+    expect(workingYearLeftOverShownState(d)).toBe('waiting-on-w')
+    expect(workingYearLeftOverLive(d), 'a stale W still rides at $84,000: never moved').toBe(16_985)
+    const { workingYearLeftOver: _a, ...rest } = d
+    expect(rest).toEqual(DEV_SEEDS.datecoststale)
+    expect(buildDateInput(d)).toEqual(buildDateInput(DEV_SEEDS.datecoststale))
   })
 
   // Build 2's U15 (KTD14): the household R5 never asks, minted dark. Its year 0 prints short, and the run itself
@@ -1910,8 +1960,10 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
   // `?vault=datecoststale` — the stale-W witness planted UNDOCTORED (KTD21's unlock line, U10): its own
   // answer no longer matches its quote, and nothing else moved, so the gate's ONLY note is its stale
   // line — never a rules line (it rides `anyStale`, never `rulesMoved`). Since b9-7 that line is the W
-  // step's own sentence, composed from the hydrated draft exactly as `IntakeApp` does: both figures and
-  // the cause (no lean: $84,000 held above $78,000 now is the safe side).
+  // step's own sentence, composed from the hydrated draft; `IntakeApp` reads it through
+  // `workingYearCostStaleLine`, which is exactly that sentence on a draft with no "saved" answer (build 2's
+  // clause rides only a saved answer waiting on W): both figures and the cause (no lean: $84,000 held above
+  // $78,000 now is the safe side).
   it("'datecoststale' as a vault speaks KTD21's stale line alone on the unlock gate — never a rules line", () => {
     const built = scenarioFromDraft(DEV_SEEDS.datecoststale)
     if (!built.ready) throw new Error('[test setup] datecoststale must be save-ready')

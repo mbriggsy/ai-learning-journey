@@ -29,7 +29,9 @@
  * same way the built read does), so the departure changes no answer, only the unbuildable case.
  *
  * STALE (KTD21). The engine keeps using the last figure the household gave (R4); this module only
- * says whether that figure still matches what it was given against.
+ * says whether that figure still matches what it was given against. A stale W also stops a "saved"
+ * left-over answer from being carried (build 2's R7: `intakeMap.buildDateInput` carries the figure only
+ * in the two saved shown states), so for that answer W's staleness reaches the credit too.
  *
  * THE KEEP STAMP (build 2's KTD10, R13 — `docs/plans/features/working-year-surplus-build-spec.md`). A
  * stale yes kept through the stale note's door becomes an `entered` figure (Phase B ruling 34), and
@@ -53,7 +55,14 @@ import { budgetGoverns, isActiveAt } from '@budget/budgetModel'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { slots } from '@ui/copy'
 import { formatMoney, formatMoneyPair } from './fields'
-import { workingYearCostFigure } from './intakeMap'
+
+/** A W answer's yearly figure (annual real $), whichever way it was given — the ONE read of it. It lives
+ *  here, not in `intakeMap` (build 2's KTD2): it was this module's only reason to import `intakeMap`, and
+ *  `intakeMap`'s carriage now reads this module's stale predicate, so the old edge would have closed a
+ *  loop. `intakeMap` imports it back and re-exports it for its other callers. */
+export function workingYearCostFigure(w: WorkingYearCostV3): number {
+  return w.kind === 'confirmed' ? w.quotedReal : w.amountReal
+}
 
 /** A dollar figure snapped to the cent — the grain a `confirmed` answer stores its quote at, so a
  *  move of the quote's inputs below a cent never reads as stale (KTD21). */
@@ -255,9 +264,10 @@ export interface WorkingYearCostStaleness {
  *  kept figure goes stale when the live quote rises above it"). The household kept that figure over a
  *  quote at or below it (the door shows only there, ruling 34), so a quote that has since moved without
  *  passing it leaves the answer it gave standing — a working year costing at least what it spends. A
- *  quote above it is the rosy side the stamp exists to name. Keyed to the stamp instead, a quote risen
- *  past the stamp but not the figure would stale an answer whose own door (shown there, the figure not
- *  below the quote) can never cure it: a keep carries the stamp forward. */
+ *  quote above it is the rosy side the stamp exists to name (two-sided for a "saved" left-over answer
+ *  waiting on W: `heldYesBelowQuote`'s docblock). Keyed to the stamp instead, a quote risen past the
+ *  stamp but not the figure would stale an answer whose own door (shown there, the figure not below the
+ *  quote) can never cure it: a keep carries the stamp forward. */
 export function workingYearCostStaleness(d: ScenarioDraft): WorkingYearCostStaleness | null {
   const w = d.workingYearCost
   if (w === undefined) return null
@@ -275,11 +285,32 @@ export function isWorkingYearCostStale(d: ScenarioDraft): boolean {
 }
 
 /** A held YES — a `confirmed` answer, or a figure KEPT from one (stamped, KTD10) — whose figure now sits
- *  BELOW today's quote: the household's spending rose past what it said a working year costs, so keeping
- *  that figure is almost always the rosy side. ONE home for the two places that read it (insight 081): the
- *  stale note's Keep door is withheld here (ruling 34), and the quote-moved sentence warns that the answer
- *  can look better than it is (b9-7). A TYPED figure is never one: it answered no quote, so it is never
- *  read against one (the register entry's ⚑ NEGATIVE). */
+ *  BELOW today's quote: the household's spending rose past what it said a working year costs. ONE home for
+ *  the two places that read it (insight 081): the stale note's Keep door is withheld here (ruling 34), and
+ *  the quote-moved sentence warns that the answer can look better than it is (b9-7). A TYPED figure is never
+ *  one: it answered no quote, so it is never read against one (the register entry's ⚑ NEGATIVE).
+ *
+ *  WHICH WAY KEEPING THAT FIGURE LEANS, re-derived for each left-over answer (build 2's R15, U8). A true
+ *  result here always means W is stale: a yes below the quote has `quote !== quotedReal`, and a kept figure
+ *  below it is exactly the kept quote test in `workingYearCostStaleness`.
+ *   · Absent, spent or not sure: no left over is credited at either figure, so W's level reaches the answer
+ *     only through a short year, and a figure below what the household spends is almost always the rosy
+ *     side — it can hide a short year.
+ *   · "Saved": a stale W carries no left over (R7), while W's level also reaches the left over a checked W
+ *     would credit (R8 caps each year's credit at that year's cash and at year 0's printed Left over).
+ *     Where the picture still shows a left over (the shown state "waiting on W"), the run on that figure
+ *     can differ from the checked run in two ways: a short year it can hide, and a credit it leaves out
+ *     that the checked run carries wherever its own picture still shows a left over. That
+ *     credit's reach can run either way (insight 143) and is unmeasured (R16). So the lean is two-sided
+ *     there: the warning stands only as a possibility claim, beside R12's dollars clause on the Result and
+ *     the re-entry gate (`workingYearCostStaleLine`; the W step's note and the panel's W row print the
+ *     warning without it). Where the picture shows none ("not asked"), the higher checked figure shows none
+ *     either (W comes off year 0's cash dollar for dollar), nothing is carried at either figure, and the
+ *     reason above holds as for an absent answer.
+ *  The door is withheld for every answer alike (this function reads no left-over answer). Its reason,
+ *  ruling 34's amendment, is the figure: a one-tap keep must never land W below what the household now
+ *  spends, since a working year almost never costs less. That holds for every answer. The "rosy side"
+ *  that `WorkingCostQuestion`'s `keepable` comment adds holds only as the two bullets above say. */
 export function heldYesBelowQuote(d: ScenarioDraft): boolean {
   const w = d.workingYearCost
   if (w === undefined || (w.kind === 'entered' && w.keptOverQuoteReal === undefined)) return false
@@ -290,7 +321,9 @@ export function heldYesBelowQuote(d: ScenarioDraft): boolean {
 /** The stale sentence (KTD21): the last figure, the current quote where it moved, and which input
  *  really moved — `null` while W is absent or still matches. ONE home for the three surfaces that say
  *  it: the W step's stale note, the panel row's stale face (both through `WorkingCostQuestion`) and
- *  the result's standing line, so the cause a household reads never differs between them. A TYPED
+ *  the result's standing line, so the cause a household reads never differs between them. (The result
+ *  and the re-entry gate read it through `workingYearCostStaleLine`, which appends build 2's dollars
+ *  clause for a "saved" left-over answer waiting on W, R12; this sentence itself stays pure W.) A TYPED
  *  figure stales only on the reading (it never answered a quote). A KEPT one (KTD10) says "kept",
  *  never "entered" — the household never typed it — and when the spending rose past it, names the
  *  spending, never the state, with the rosy-side lean (a stale kept figure's quote is always above
@@ -324,9 +357,18 @@ export function workingYearCostStaleText(d: ScenarioDraft): string | null {
   if (s.quoteMoved) {
     if (now === null) return slots.workingCostStaleQuoteGone(last)
     // The rosy-side warning (b9-7): only where the spending alone moved, and only where it now comes to
-    // MORE than the figure said yes to — a figure too low can make the answer look better than it is.
-    // Never the mirror "can look worse": where no year runs short at either figure the answer is
-    // identical, and two seats read that sentence as "the real answer is better" (the copy's note).
+    // MORE than the figure said yes to — a figure too low can hide a short year and make the answer look
+    // better than it is. For a "saved" left-over answer whose picture still shows a left over ("waiting on
+    // W"), that is a possibility claim only: a stale W also carries no left over (build 2's R7), so the
+    // stale answer's reach is two-sided, and the Result and the gate follow this sentence with R12's
+    // dollars clause (`workingYearCostStaleLine`; the copy's note and `heldYesBelowQuote`'s docblock carry
+    // the why). Never the mirror "can look worse". For an absent, spent or not-sure answer, where no year
+    // runs short at either figure the answer is identical: nothing is credited at either figure, spent and
+    // not sure build absent's date input exactly (`intakeMap.buildDateInput`), and it was measured on
+    // `datecoststale`, which stores no answer. Two seats read that sentence as "the real answer is better"
+    // (the copy's note). For "saved" the two runs are not identical wherever the checked W's picture shows
+    // a left over (that run carries the stored figure again; derived from R8, not measured), and which way
+    // that moves the answer is unmeasured, so no sentence says it (R16).
     const sentence = slots.workingCostStaleQuote(last, now)
     return heldYesBelowQuote(d) ? `${sentence} ${slots.workingCostStaleLeansBetter(last)}` : sentence
   }

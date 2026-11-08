@@ -570,8 +570,9 @@ describe('Card 4 — exactly ONE state clause on every date verdict ({all-65+, p
 // that last figure (R4). A calm note in the lead's `.fod-note` register — after the staleness echo, never an
 // alert — whose door into the assumptions panel exists only where the tab can save.
 describe('the pay check’s standing line (KTD21)', () => {
-  // The stale sentence the result passes (`workingYearCostStaleText`) — a fixture here: the line
-  // renders whatever it is handed, after its own digit-free lead.
+  // The stale line the result passes (`workingYearCostStaleLine`: the W step's own sentence, plus build 2's
+  // clause for a "saved" answer waiting on W) — a fixture here: the line renders whatever it is handed, after
+  // its cause's own digit-free lead.
   const STALE = slots.workingCostStaleQuote('84,000', '78,000')
   it('absent unless passed — a household whose W still matches reads no line', () => {
     const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} />)
@@ -580,7 +581,7 @@ describe('the pay check’s standing line (KTD21)', () => {
 
   it('with a door: the sentence, then an inline control that opens the panel', () => {
     const onOpen = vi.fn()
-    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ text: STALE, onOpen }} />)
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'w-stale', text: STALE, onOpen }} />)
     const note = container.querySelector('p.fod-note.cs-paycheck-note')
     expect(note).not.toBeNull()
     expect(note?.textContent).toContain(`${copy.stalenessPayCheckNote} ${STALE}`)
@@ -589,14 +590,14 @@ describe('the pay check’s standing line (KTD21)', () => {
   })
 
   it('read-only: the same sentence with NO door (a dead-end control is the lying-remedy shape)', () => {
-    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ text: STALE }} />)
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'w-stale', text: STALE }} />)
     expect(container.querySelector('.cs-paycheck-note')?.textContent).toBe(`${copy.stalenessPayCheckNote} ${STALE}`)
     expect(screen.queryByRole('button', { name: copy.stalenessPayCheckCta })).toBeNull()
   })
 
   it('sits in the lead AFTER the staleness echo and the state note, ABOVE the graphs — and is never an alert', () => {
     const { container } = render(
-      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} stalenessNote payCheckNote={{ text: STALE, onOpen: () => {} }} />,
+      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} stalenessNote payCheckNote={{ cause: 'w-stale', text: STALE, onOpen: () => {} }} />,
     )
     const lead = container.querySelector('.reveal__lead')!
     const notes = Array.from(lead.querySelectorAll('.fod-note'))
@@ -614,5 +615,31 @@ describe('the pay check’s standing line (KTD21)', () => {
 
   it('names no state in the Card 4 matrix’s words — it never doubles the one state clause', () => {
     expect(copy.stalenessPayCheckNote).not.toMatch(/isn’t priced yet|is already counted in this answer|no state income tax/)
+  })
+
+  // Build 2 (U14, R12): the SAME slot, keyed by cause — a moved left over carries its own lead and door label
+  // (an exhaustive Record), never W's.
+  const MOVED = slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')
+  it('build 2: a moved left over reads its OWN lead and door label — never W’s', () => {
+    const onOpen = vi.fn()
+    const { container } = render(
+      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'left-over-moved', text: MOVED, onOpen }} />,
+    )
+    const note = container.querySelector('p.fod-note.cs-paycheck-note')
+    expect(note?.textContent).toContain(`${copy.stalenessLeftOverNote} ${MOVED}`)
+    expect(note?.textContent).not.toContain(copy.stalenessPayCheckNote)
+    expect(screen.queryByRole('button', { name: copy.stalenessPayCheckCta })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: copy.stalenessLeftOverCta }))
+    expect(onOpen).toHaveBeenCalledTimes(1)
+  })
+
+  it('build 2: the hero’s rules note carries the moved left over’s clause where a rules line hosts it — once, in the rules note', () => {
+    const CLAUSE = slots.stalenessLeftOverClause('16,985', '27,537', '16,985')
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} stalenessNote stalenessClause={CLAUSE} />)
+    expect(container.querySelector('.cs-staleness-note')?.textContent).toBe(`${copy.stalenessHeroNote} ${CLAUSE}`)
+    expect(container.querySelector('.cs-paycheck-note')).toBeNull()
+    cleanup()
+    const plain = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} stalenessNote />)
+    expect(plain.container.querySelector('.cs-staleness-note')?.textContent).toBe(copy.stalenessHeroNote)
   })
 })

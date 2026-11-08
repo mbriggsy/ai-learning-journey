@@ -367,7 +367,9 @@ export function WorkingYearLedgerPicture({
       : {
           label: copy.workingLedgerLeftOver,
           value: amount(y0.bottomLine),
-          details: y0.bottomLine > 0 ? [copy.workingLedgerLeftOverNote] : [],
+          // No note (build 2): the left-over question right after the picture says what happens to it, and
+          // nothing inside this shared picture may read the answer (the panel's W row holds it whole, R6).
+          details: [],
           emphasis: true,
         },
   ]

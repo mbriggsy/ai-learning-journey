@@ -286,9 +286,12 @@ describe('the pay check, one earner who runs short (R5–R8, KTD6–KTD8): the h
 })
 
 // ===========================================================================
-// W ABSENT, or W PRESENT with nothing short and nothing withheld ⇒ every path Object.is the run without W (R18).
+// W ABSENT, or W PRESENT with nothing short, nothing withheld and no left-over figure carried ⇒ every path
+// Object.is the run without W (R18). Both arms set W alone (no `workingYearLeftOverSavedReal`). A carried
+// figure credits up to the surplus such a run composes in each year everyone is alive (build 2's R8), so
+// that run is not this one: its arms live in `workingYearCredit.test.ts`.
 // ===========================================================================
-describe('byte-identity: a W-present run with nothing short and nothing withheld is the W-absent run, path for path (R18)', () => {
+describe('byte-identity: a W-present run with nothing short, nothing withheld and no left-over figure carried is the W-absent run, path for path (R18)', () => {
   const objectIsEverywhere = (a: SimOutput, b: SimOutput) => {
     const da = dist(a)
     const db = dist(b)
@@ -329,6 +332,8 @@ describe('byte-identity: a W-present run with nothing short and nothing withheld
     const { offsets, higherClaimOffset } = personOffsetsFor(base().people)
     expect(earningsTestSchedule({ people: base().people, offsets, deathOffsets: [20, 20], higherClaimOffset, horizonYears: 20 })).toBe(NO_EARNINGS_TEST)
     // The presence companion (insight 029): this W does run the check — and composes a surplus, never a shortfall.
+    // No left-over figure rides here, so the surplus is credited nowhere; a carried one would credit up to it in
+    // each year everyone is alive (build 2's R8).
     const rec = recordingProbe()
     dist(simulate(base(10_000), 3, { _workingYearProbe: rec.probe }))
     expect(rec.composed.length).toBe(40 * 3)

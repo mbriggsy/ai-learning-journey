@@ -7,7 +7,7 @@ import { intakeSteps } from '../questions'
 import { IntakeFlow } from '../flow'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
-import type { BudgetLineItem, WorkingYearCostV3 } from '@shared/model'
+import type { BudgetLineItem, WorkingYearCostV3, WorkingYearLeftOverV5 } from '@shared/model'
 import { copy, slots } from '@ui/copy'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { deriveResultSave } from '@ui/resultSave'
@@ -88,6 +88,63 @@ const confirmed = (quotedReal: number, stateTaxReading: WorkingYearCostV3['state
   stateTaxReading,
 })
 
+/**
+ * Build 2's left-over question in the walk (`docs/plans/features/working-year-surplus-build-spec.md` U7;
+ * R5, R6, KTD8). Every figure is the plan's or a seed's documented one, or a hand derivation from them
+ * named where it is used, never read back from the code under test: `date`'s printed year-0 Left over is
+ * $16,985 and `date65`'s $5,216 (the plan's table), and `datesavedmoved` stores $16,985 against a live
+ * $27,537 (its seed docblock, hand-derived by `year0check.mts`).
+ */
+const LEFT_OVER_DATE = 16_985
+const LEFT_OVER_MOVED_LIVE = 27_537
+type LeftOverLabel = 'workingLedgerLeftOverSaved' | 'workingLedgerLeftOverSpent' | 'workingLedgerLeftOverNotSure'
+const LEFT_OVER_LABELS: readonly LeftOverLabel[] = [
+  'workingLedgerLeftOverSaved',
+  'workingLedgerLeftOverSpent',
+  'workingLedgerLeftOverNotSure',
+]
+const leftOverRadio = (labelKey: LeftOverLabel) => screen.getByRole('radio', { name: copy[labelKey] })
+const pickLeftOver = (labelKey: LeftOverLabel) => fireEvent.click(leftOverRadio(labelKey))
+/** The question's group: a plain fieldset (it owns no error), named by its static legend. */
+const leftOverGroup = () => screen.getByRole('group', { name: copy.workingLedgerLeftOverLegend })
+const queryLeftOverGroup = () => screen.queryByRole('group', { name: copy.workingLedgerLeftOverLegend })
+/** Either check sentence (with a deposits row or without one), by its words before the first figure: the
+ *  absence arms query this, so no figure the sentence states can make them blind. Both slots open on it (the
+ *  no-deposits arm pins that, so it can never match nothing). */
+const [CHECK_PREFIX = ''] = slots.workingLedgerLeftOverCheckNoDeposits('§').split('§')
+const CHECK_WORDS = (ownText: string) => CHECK_PREFIX.length > 0 && ownText.startsWith(CHECK_PREFIX)
+const leftOver = (m: MemoryModel) => m.getSnapshot().draft.workingYearLeftOver
+/** `d` with the left-over answer replaced (`undefined`: the key absent, R1's "unanswered"). */
+const withLeftOver = (d: ScenarioDraft, answer: WorkingYearLeftOverV5 | undefined): ScenarioDraft => {
+  const { workingYearLeftOver: _drop, ...rest } = d
+  return answer === undefined ? rest : { ...rest, workingYearLeftOver: answer }
+}
+
+/** The money-picture step alone (the date route's terminal step), with its Continue counted. */
+function LedgerStep({ model, onComplete = () => {} }: { model: MemoryModel; onComplete?: () => void }) {
+  const snap = useSyncExternalStore(model.subscribe, model.getSnapshot)
+  const steps = useMemo(() => intakeSteps(snap.draft).filter((s) => s.id === 'working-ledger'), [snap.draft])
+  return <IntakeFlow steps={steps} model={model} onComplete={onComplete} />
+}
+
+/** Every text node in the page's body on one side of `el` (visually hidden text included), in document
+ *  order. "above" is everything that precedes it; "below" everything that follows it and sits outside it. */
+const textBeside = (el: HTMLElement, side: 'above' | 'below'): string => {
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+  const parts: string[] = []
+  for (let n = walker.nextNode(); n !== null; n = walker.nextNode()) {
+    const pos = el.compareDocumentPosition(n)
+    const keep =
+      side === 'above'
+        ? (pos & Node.DOCUMENT_POSITION_PRECEDING) !== 0
+        : (pos & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 && (pos & Node.DOCUMENT_POSITION_CONTAINED_BY) === 0
+    if (keep) parts.push(n.textContent ?? '')
+  }
+  return parts.join('|')
+}
+const describedTextsOf = (el: HTMLElement) =>
+  (el.getAttribute('aria-describedby') ?? '').split(' ').filter((i) => i !== '').map((i) => document.getElementById(i)?.textContent)
+
 describe('the pay check’s steps in the sequence (KTD17)', () => {
   it('both steps close the DATE route, after the other-income loop, and never appear on the all-retired route', () => {
     const ids = intakeSteps(dateNoW()).map((s) => s.id)
@@ -102,6 +159,34 @@ describe('the pay check’s steps in the sequence (KTD17)', () => {
     const before = intakeSteps(dateNoW()).length
     expect(intakeSteps({ ...dateNoW(), workingYearCost: confirmed(84_000) }).length).toBe(before)
     expect(intakeSteps({ ...dateNoW(), workingYearCost: confirmed(1) }).length).toBe(before)
+  })
+
+  it('the step count is the same with the left-over question shown, under every reply, and hidden (build 2’s U7; R5)', () => {
+    // Hidden on `date`'s own household: its spending and its yes both raised to $200,000 (so W stays fresh,
+    // a yes at today's quote) put year 0 short, because W comes off year 0's bottom line dollar for dollar:
+    // $16,985 − $116,000 is below $1, so R5 never asks.
+    const hidden: ScenarioDraft = { ...DEV_SEEDS.date, annualSpendingReal: 200_000, workingYearCost: confirmed(200_000) }
+    const shown: readonly [string, ScenarioDraft][] = [
+      ['absent', withLeftOver(DEV_SEEDS.date, undefined)],
+      ['saved', withLeftOver(DEV_SEEDS.date, { kind: 'saved', quotedReal: LEFT_OVER_DATE })],
+      ['spent', withLeftOver(DEV_SEEDS.date, { kind: 'spent' })],
+      ['not sure', withLeftOver(DEV_SEEDS.date, { kind: 'not-sure' })],
+      ['saved, moved', DEV_SEEDS.datesavedmoved],
+    ]
+    const before = intakeSteps(hidden).length
+    render(<LedgerStep model={modelWith(hidden)} />)
+    expect(heading(), 'hidden: the step still renders').toBe(copy.qWorkingLedgerHeading)
+    // Hidden because year 0 is short, not because W went stale (that face is the waiting line).
+    expect(screen.getByText(copy.workingLedgerShort)).toBeInTheDocument()
+    expect(screen.queryByText(copy.workingLedgerLeftOverWaiting)).toBeNull()
+    expect(queryLeftOverGroup(), 'hidden').toBeNull()
+    cleanup()
+    for (const [name, d] of shown) {
+      expect(intakeSteps(d).length, name).toBe(before)
+      render(<LedgerStep model={modelWith(d)} />)
+      expect(leftOverGroup(), `${name}: shown`).toBeInTheDocument()
+      cleanup()
+    }
   })
 
   it('flipping every worker to retired removes both steps', () => {
@@ -933,5 +1018,288 @@ describe('the money-picture step (R16, KTD12)', () => {
     expect(container.textContent).not.toMatch(/\$0\b/)
     next()
     expect(completed).toBe(1)
+  })
+})
+
+describe('the money-picture step — build 2’s left-over question (U7; R5, R6, KTD8)', () => {
+  it('on `date` with nothing answered, the question sits below the whole picture, quoting $16,985, with no reply checked', () => {
+    render(<LedgerStep model={modelWith(withLeftOver(DEV_SEEDS.date, undefined))} />)
+    expect(heading()).toBe(copy.qWorkingLedgerHeading)
+    const group = leftOverGroup()
+    for (const labelKey of LEFT_OVER_LABELS) {
+      expect(within(group).getByRole('radio', { name: copy[labelKey] }), labelKey).not.toBeChecked()
+    }
+    // The figure and the check sentence are the group's described-by lines, never its legend (R6).
+    expect(describedTextsOf(group)).toEqual([
+      slots.workingLedgerLeftOverFigure('16,985'),
+      slots.workingLedgerLeftOverCheck('16,985', '20,000', '36,985'),
+    ])
+    // The figure it quotes is the one the picture prints as year 0's Left over (KTD8), and the deposits the
+    // check sentence sits on are the picture's own "What you put into savings" row: Alex's $20,000, never her
+    // $28,000 with the employer's $8,000 match (`ownDepositsForYear` takes the match out, and the sentence
+    // excludes what the employer adds by name).
+    const leftOverRow = screen.getByText(copy.workingLedgerLeftOver, { selector: 'dt' })
+    expect(leftOverRow.nextElementSibling?.textContent).toBe(slots.workingLedgerAmount('16,985'))
+    const depositsRow = screen.getByText(copy.workingLedgerDeposits, { selector: 'dt' })
+    expect(depositsRow.nextElementSibling?.textContent).toBe(slots.workingLedgerOutflow('20,000'))
+    // Below the WHOLE picture: every picture heading and every printed figure precedes the group, the
+    // later-years group (the picture's last) included.
+    const pictureHeadings = screen.getAllByRole('heading', { level: 3 })
+    expect(pictureHeadings.map((h) => h.textContent)).toContain(copy.workingLedgerLaterHeading)
+    for (const el of [...pictureHeadings, ...screen.getAllByRole('definition')]) {
+      expect(el.compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING, el.textContent ?? '').not.toBe(0)
+    }
+    cleanup()
+    // The twin: on `datesaved` ("All of it" stored at the same $16,985, through the shipped write), the
+    // group checks the stored reply, and only it, so the unchecked reading above is not blind.
+    render(<LedgerStep model={modelWith(DEV_SEEDS.datesaved)} />)
+    for (const labelKey of LEFT_OVER_LABELS) {
+      const radio = within(leftOverGroup()).getByRole('radio', { name: copy[labelKey] })
+      if (labelKey === 'workingLedgerLeftOverSaved') expect(radio, labelKey).toBeChecked()
+      else expect(radio, labelKey).not.toBeChecked()
+    }
+  })
+
+  it('is hidden on `dateshort` (short every year) and on `datelateleftover` (short in year 0, a left over from year 4)', () => {
+    // `dateshort`: the picture is drawn, its year 0 short, and no question is asked under it.
+    render(<LedgerStep model={modelWith(DEV_SEEDS.dateshort)} />)
+    expect(screen.getByRole('heading', { level: 3, name: copy.workingLedgerComingIn })).toBeInTheDocument()
+    expect(screen.getByText(copy.workingLedgerShort)).toBeInTheDocument()
+    expect(queryLeftOverGroup()).toBeNull()
+    expect(screen.queryByText(CHECK_WORDS)).toBeNull()
+    cleanup()
+    // `datelateleftover`: year 0 runs $7,695 short (its seed docblock) while later years print a left
+    // over — R5 asks only on year 0's printed figure, so the question still does not show.
+    render(<LedgerStep model={modelWith(DEV_SEEDS.datelateleftover)} />)
+    expect(screen.getByText(copy.workingLedgerShort)).toBeInTheDocument()
+    expect(screen.getByText(slots.workingLedgerOutflow('7,695'))).toBeInTheDocument()
+    const laterLeftOver = slots.workingLedgerLaterLeftOver('') // the later-year slot's words before its figure
+    expect(screen.getAllByText((ownText) => ownText.startsWith(laterLeftOver)).length).toBeGreaterThan(0)
+    expect(queryLeftOverGroup()).toBeNull()
+    expect(screen.queryByText(CHECK_WORDS)).toBeNull()
+    // …and on `date`, the twin, it does.
+    cleanup()
+    render(<LedgerStep model={modelWith(DEV_SEEDS.date)} />)
+    expect(leftOverGroup()).toBeInTheDocument()
+    expect(screen.getByText(slots.workingLedgerLeftOverCheck('16,985', '20,000', '36,985'))).toBeInTheDocument()
+    expect(screen.getByText(CHECK_WORDS)).toBeInTheDocument()
+  })
+
+  it('at a printed $0 Left over the question does not show; at a printed $1 it does, quoting $1 (R5: at least $1)', () => {
+    // `date`'s household with W typed by hand above its $84,000. W comes off year 0's bottom line dollar for
+    // dollar, and the picture prints that line to the cent, then down to the dollar (build 1's KTD12; this
+    // plan's KTD4), so a W $16,985 higher prints year 0's $16,985 Left over (the plan's table) as $0, and one
+    // $16,984 higher prints $1. A typed figure stales only on its state-tax reading, so W stays fresh in both.
+    const typedW = (amountReal: number): ScenarioDraft => ({
+      ...DEV_SEEDS.date,
+      workingYearCost: { kind: 'entered', amountReal, entryPeriod: 'year', stateTaxReading: 'unpriced' },
+    })
+    const printedLeftOver = () =>
+      screen.getByText(copy.workingLedgerLeftOver, { selector: 'dt' }).nextElementSibling?.textContent
+    render(<LedgerStep model={modelWith(typedW(84_000 + 16_985))} />)
+    expect(printedLeftOver(), '$0: the picture prints a Left over, not a Short').toBe(slots.workingLedgerAmount('0'))
+    expect(queryLeftOverGroup(), '$0').toBeNull()
+    expect(screen.queryByText(CHECK_WORDS), '$0').toBeNull()
+    // Not asked, never the waiting face: W is fresh.
+    expect(screen.queryByText(copy.workingLedgerLeftOverWaiting), '$0').toBeNull()
+    cleanup()
+    render(<LedgerStep model={modelWith(typedW(84_000 + 16_984))} />)
+    expect(printedLeftOver(), '$1').toBe(slots.workingLedgerAmount('1'))
+    expect(describedTextsOf(leftOverGroup()), '$1').toEqual([
+      slots.workingLedgerLeftOverFigure('1'),
+      slots.workingLedgerLeftOverCheck('1', '20,000', '20,001'),
+    ])
+    expect(screen.getByText(slots.workingLedgerLeftOverAbsentLine('1'))).toBeInTheDocument()
+  })
+
+  it('with no deposits row, the check sentence states the left over alone, with nothing to sit on top of', () => {
+    // Both check sentences open on the words the absence arms query, so those arms can never match nothing.
+    expect(CHECK_PREFIX.length, 'the shared opening words').toBeGreaterThan(10)
+    expect(slots.workingLedgerLeftOverCheck('1', '2', '3').startsWith(CHECK_PREFIX)).toBe(true)
+    // `date`'s household with Alex's 401k contribution and its match taken out: year 0 puts nothing into savings,
+    // so the picture prints no "What you put into savings" row. The figure is read off the printed Left over
+    // row (KTD8: the question quotes the picture's own print; the pretax deferral's tax is not this arm's to
+    // derive). W is a confirmed quote on the spending, which this edit leaves alone, so it stays fresh.
+    const [alex401k, ...others] = DEV_SEEDS.date.enteredAccounts
+    if (alex401k === undefined) throw new Error('the premise: `date` enters Alex’s 401k first')
+    const { annualContribution: _contribution, employerMatchAnnual: _match, ...noDeposits } = alex401k
+    const d: ScenarioDraft = withLeftOver({ ...DEV_SEEDS.date, enteredAccounts: [noDeposits, ...others] }, undefined)
+    render(<LedgerStep model={modelWith(d)} />)
+    expect(screen.queryByText(copy.workingLedgerDeposits, { selector: 'dt' }), 'no deposits row').toBeNull()
+    const printed = screen.getByText(copy.workingLedgerLeftOver, { selector: 'dt' }).nextElementSibling?.textContent ?? ''
+    const amount = printed.replace(/^\$/, '')
+    expect(slots.workingLedgerAmount(amount), 'the premise: a Left over prints').toBe(printed)
+    expect(Number(amount.replace(/,/g, '')), 'more left over than `date`’s, its $20,000 no longer deposited').toBeGreaterThan(LEFT_OVER_DATE)
+    expect(describedTextsOf(leftOverGroup())).toEqual([
+      slots.workingLedgerLeftOverFigure(amount),
+      slots.workingLedgerLeftOverCheckNoDeposits(amount),
+    ])
+    // The twin: `date` itself, with its $20,000 row, takes the sentence that sits on it.
+    cleanup()
+    render(<LedgerStep model={modelWith(withLeftOver(DEV_SEEDS.date, undefined))} />)
+    expect(screen.queryByText(slots.workingLedgerLeftOverCheckNoDeposits('16,985'))).toBeNull()
+    expect(screen.getByText(slots.workingLedgerLeftOverCheck('16,985', '20,000', '36,985'))).toBeInTheDocument()
+  })
+
+  it('choosing "All of it" on `date` stores { kind: "saved", quotedReal: 16985 } and checks it; "spent" and "not sure" store no figure', () => {
+    const m = modelWith(withLeftOver(DEV_SEEDS.date, undefined))
+    render(<LedgerStep model={m} />)
+    expect(leftOver(m)).toBeUndefined()
+    // A first tap on an unchecked radio commits through both the change and the click path
+    // (`SegmentedControl`, map §4.4), so the one answer below is also the write's idempotence.
+    pickLeftOver('workingLedgerLeftOverSaved')
+    expect(leftOver(m)).toStrictEqual({ kind: 'saved', quotedReal: LEFT_OVER_DATE })
+    expect(leftOverRadio('workingLedgerLeftOverSaved')).toBeChecked()
+    expect(leftOverRadio('workingLedgerLeftOverSpent')).not.toBeChecked()
+    expect(screen.getByText(slots.workingLedgerLeftOverSavedLine('16,985'))).toBeInTheDocument()
+    // "Spent" and "not sure" store no figure (R2): strict, so not even an `undefined` figure key rides.
+    pickLeftOver('workingLedgerLeftOverSpent')
+    expect(leftOver(m)).toStrictEqual({ kind: 'spent' })
+    pickLeftOver('workingLedgerLeftOverNotSure')
+    expect(leftOver(m)).toStrictEqual({ kind: 'not-sure' })
+  })
+
+  it('on `date65` answered "All of it" at its $5,216, the saved line says each working year adds at most $5,216, below later years that print more left over', () => {
+    // `date65`'s year-0 Left over is $5,216 (the plan's table). Its later working years print more: the case
+    // the saved line's second sentence names ("even where a later year above shows more left over").
+    render(<LedgerStep model={modelWith(withLeftOver(DEV_SEEDS.date65, { kind: 'saved', quotedReal: 5_216 }))} />)
+    expect(leftOverRadio('workingLedgerLeftOverSaved')).toBeChecked()
+    const savedLine = screen.getByText(slots.workingLedgerLeftOverSavedLine('5,216'))
+    const laterLeftOver = slots.workingLedgerLaterLeftOver('')
+    const printsMore = screen
+      .getAllByText((ownText) => ownText.startsWith(laterLeftOver))
+      .filter((el) => Number((el.textContent ?? '').slice(laterLeftOver.length).replace(/,/g, '')) > 5_216)
+    expect(printsMore.length, 'the premise: a later year prints more than year 0').toBeGreaterThan(0)
+    // "Above", as the line says: every such later year precedes it.
+    for (const el of printsMore) {
+      expect(el.compareDocumentPosition(savedLine) & Node.DOCUMENT_POSITION_FOLLOWING, el.textContent ?? '').not.toBe(0)
+    }
+  })
+
+  it('the text above the group, and the group’s own legend and labels, are identical under absent, saved, spent, not sure and saved-moved; only the line below changes (a render diff)', () => {
+    // `datesavedmoved`'s household under each shown state the walk can reach: its seed is "saved, moved"
+    // (stored $16,985, live $27,537); "saved" is the same answer at the live figure.
+    const moved = DEV_SEEDS.datesavedmoved
+    const states: readonly [string, ScenarioDraft, string][] = [
+      ['absent', withLeftOver(moved, undefined), slots.workingLedgerLeftOverAbsentLine('27,537')],
+      ['saved', withLeftOver(moved, { kind: 'saved', quotedReal: LEFT_OVER_MOVED_LIVE }), slots.workingLedgerLeftOverSavedLine('27,537')],
+      ['spent', withLeftOver(moved, { kind: 'spent' }), slots.workingLedgerLeftOverSpentLine('27,537')],
+      ['not sure', withLeftOver(moved, { kind: 'not-sure' }), slots.workingLedgerLeftOverNotSureLine('27,537')],
+      ['saved, moved', moved, slots.workingLedgerLeftOverRoseLine('16,985', '27,537')],
+    ]
+    const above: string[] = []
+    const inside: string[] = []
+    const below: string[] = []
+    for (const [name, d, line] of states) {
+      render(<LedgerStep model={modelWith(d)} />)
+      const group = leftOverGroup()
+      above.push(textBeside(group, 'above'))
+      inside.push(group.textContent ?? '')
+      below.push(textBeside(group, 'below'))
+      // Each state's own line, below the group.
+      const shownLine = screen.getByText(line)
+      expect(group.compareDocumentPosition(shownLine) & Node.DOCUMENT_POSITION_FOLLOWING, name).not.toBe(0)
+      cleanup()
+    }
+    // The diff reads the question's own lines above the group, so it would see a figure move there.
+    expect(above[0]).toContain(slots.workingLedgerLeftOverFigure('27,537'))
+    // After the raise the deposits row still reads $20,000 (the seed docblock's hand derivation), so the check
+    // sentence states $27,537 on top of $20,000: $47,537.
+    expect(above[0]).toContain(slots.workingLedgerLeftOverCheck('27,537', '20,000', '47,537'))
+    for (const [i, [name]] of states.entries()) expect(above[i], name).toBe(above[0])
+    // The group's own words, its legend and its three labels, read the same under every state too (R6).
+    for (const key of ['workingLedgerLeftOverLegend', ...LEFT_OVER_LABELS] as const) {
+      expect(inside[0], key).toContain(copy[key])
+    }
+    for (const [i, [name]] of states.entries()) expect(inside[i], name).toBe(inside[0])
+    // The twin: below the group, every state reads differently.
+    expect(new Set(below).size).toBe(states.length)
+    // And the read is not blind to the household: `date`'s picture (its year-0 Left over $16,985) reads otherwise.
+    render(<LedgerStep model={modelWith(withLeftOver(DEV_SEEDS.date, undefined))} />)
+    expect(textBeside(leftOverGroup(), 'above')).not.toBe(above[0])
+  })
+
+  it('absent’s line differs from not sure’s, and both name the $16,985', () => {
+    render(<LedgerStep model={modelWith(withLeftOver(DEV_SEEDS.date, undefined))} />)
+    const absentLine = slots.workingLedgerLeftOverAbsentLine('16,985')
+    const notSureLine = slots.workingLedgerLeftOverNotSureLine('16,985')
+    expect(screen.getByText(absentLine)).toBeInTheDocument()
+    expect(screen.queryByText(notSureLine)).toBeNull()
+    cleanup()
+    render(<LedgerStep model={modelWith(withLeftOver(DEV_SEEDS.date, { kind: 'not-sure' }))} />)
+    expect(screen.getByText(notSureLine)).toBeInTheDocument()
+    expect(screen.queryByText(absentLine)).toBeNull()
+    expect(absentLine).not.toBe(notSureLine)
+    for (const l of [absentLine, notSureLine]) expect(l).toContain('$16,985')
+  })
+
+  it('on `datesavedmoved`, a re-tap on the already-checked "All of it" stores the live $27,537 and the moved line goes', () => {
+    const m = modelWith(DEV_SEEDS.datesavedmoved)
+    render(<LedgerStep model={m} />)
+    expect(leftOver(m)).toEqual({ kind: 'saved', quotedReal: LEFT_OVER_DATE })
+    const saved = leftOverRadio('workingLedgerLeftOverSaved')
+    expect(saved).toBeChecked()
+    const movedLine = slots.workingLedgerLeftOverRoseLine('16,985', '27,537')
+    expect(screen.getByText(movedLine)).toBeInTheDocument()
+    expect(screen.getByText(slots.workingLedgerLeftOverFigure('27,537'))).toBeInTheDocument()
+    // A click on a checked radio fires no change event: this is the click path (map §4.4).
+    fireEvent.click(saved)
+    expect(leftOver(m)).toStrictEqual({ kind: 'saved', quotedReal: LEFT_OVER_MOVED_LIVE })
+    expect(screen.queryByText(movedLine)).toBeNull()
+    expect(screen.getByText(slots.workingLedgerLeftOverSavedLine('27,537'))).toBeInTheDocument()
+    expect(leftOverRadio('workingLedgerLeftOverSaved')).toBeChecked()
+  })
+
+  it('on `datesavedstale`, the W step’s gate stops the walk before the question; after a yes at today’s quote the question shows $22,985 and the stored $16,985 reads as moved', () => {
+    // `datesavedstale` (its seed docblock): "All of it" stored at $16,985, then the spending fell from $84,000
+    // to $78,000, so W is stale. The walk never reaches the question with W stale (R5): the W step holds
+    // Continue. A yes at today's $78,000 takes $6,000 less off year 0 (W comes off it dollar for dollar), so
+    // the question then shows $16,985 + $6,000 = $22,985, and the stored answer is "saved, moved".
+    const m = modelWith(DEV_SEEDS.datesavedstale)
+    render(<Harness model={m} />)
+    next()
+    expect(heading(), 'stale W: the walk holds').toBe(copy.qWorkingCostHeading)
+    expect(screen.getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
+    pick('workingCostYes')
+    next()
+    expect(heading(), 'fresh W: the walk goes on').toBe(copy.qWorkingLedgerHeading)
+    expect(describedTextsOf(leftOverGroup())).toEqual([
+      slots.workingLedgerLeftOverFigure('22,985'),
+      slots.workingLedgerLeftOverCheck('22,985', '20,000', '42,985'),
+    ])
+    expect(leftOverRadio('workingLedgerLeftOverSaved')).toBeChecked()
+    expect(screen.getByText(slots.workingLedgerLeftOverRoseLine('16,985', '22,985'))).toBeInTheDocument()
+    expect(leftOver(m), 'the answer is untouched until a reply is pressed').toStrictEqual({ kind: 'saved', quotedReal: LEFT_OVER_DATE })
+  })
+
+  it('Continue completes the walk with the question unanswered or answered: it never gates and never shows a field error', () => {
+    const cases: readonly [string, ScenarioDraft][] = [
+      ['unanswered', withLeftOver(DEV_SEEDS.date, undefined)],
+      ['saved', withLeftOver(DEV_SEEDS.date, { kind: 'saved', quotedReal: LEFT_OVER_DATE })],
+    ]
+    for (const [name, d] of cases) {
+      let completed = 0
+      render(<LedgerStep model={modelWith(d)} onComplete={() => (completed += 1)} />)
+      const group = leftOverGroup() // the question is on screen, so the silence below is not vacuous
+      // A plain group's requiredness rides on its radios (`SegmentedControl`), so both are read.
+      expect(group, name).not.toHaveAttribute('aria-required')
+      for (const radio of within(group).getAllByRole('radio')) expect(radio, name).not.toHaveAttribute('aria-required')
+      expect(screen.queryByText(copy.fieldRequiredMarker), name).toBeNull()
+      next()
+      expect(completed, name).toBe(1)
+      expect(group, `${name}: still on screen after Continue`).toBeInTheDocument()
+      expect(screen.queryByRole('alert'), name).toBeNull()
+      expect(group, name).not.toHaveAttribute('aria-invalid')
+      cleanup()
+    }
+    // The twin: the walk's one gated choice, the W step's fork, reads as required and, after a blocked
+    // Continue, shows its error on the same instruments, so the silence above is not blind.
+    render(<Harness model={modelWith(dateNoW())} />)
+    expect(screen.getByText(copy.fieldRequiredMarker)).toBeInTheDocument()
+    next()
+    expect(screen.getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
+    const fork = screen.getByRole('radiogroup', { name: copy.workingCostLegend })
+    expect(fork).toHaveAttribute('aria-required', 'true')
+    expect(fork).toHaveAttribute('aria-invalid', 'true')
   })
 })

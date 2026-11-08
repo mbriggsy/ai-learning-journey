@@ -275,8 +275,8 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
   // on its OWN subject instead — each seed with its W stripped (U4 ran before W existed) — and the
   // shipped seed beside it.
   // `datelateleftover` (build 2's U15) joined after W existed, so like the two witnesses before it it is measured
-  // on its W-keyed self: a worker under W reads `priced`.
-  const W_KEYED = ['dateshort', 'datecoststale', 'datelateleftover'] as const
+  // on its W-keyed self: a worker under W reads `priced`. So do build 2's three saved witnesses (U9).
+  const W_KEYED = ['dateshort', 'datecoststale', 'datelateleftover', 'datesaved', 'datesavedmoved', 'datesavedstale'] as const
   const withoutW = (d: ScenarioDraft): ScenarioDraft => {
     const { workingYearCost: _w, ...rest } = d
     return rest
@@ -418,13 +418,25 @@ describe('the SHIPPED consumer binds to this seam (source-bind, not replication)
     // named answers object (build 2's KTD9). Its `costStale` is the pay check's KTD21 flag (edited in
     // with it — R18 names this call site): the intake's ONE stale predicate over the SAME hydrated
     // draft, never a literal `false` and never folded into the exposure record. Its `leftOverStale`
-    // is `false` BY PROOF until the go-live (no draft can hold the left-over answer before then);
-    // the go-live (build 2's U14) replaces that literal, and this pattern, with the real predicate.
+    // (build 2's U14) is the moved core's ONE value over the same draft — computed once into
+    // `leftOverMoved`, which the gate's left-over sentence reads too, so the fact can never arrive
+    // without its sentence (obligation (f)). A literal `false` here would leave every moved answer
+    // silent at unlock: this pattern is the arm that reds on it.
     expect(src, 'the report is derived with the seam’s own record').toMatch(
-      /deriveStaleness\(\s*model,\s*currentEpochDay\(\),\s*exposureForDraft\(hydrated\.draft\),\s*\{\s*costStale:\s*isWorkingYearCostStale\(hydrated\.draft\),\s*leftOverStale:\s*false,?\s*\},?\s*\)/,
+      /deriveStaleness\(\s*model,\s*currentEpochDay\(\),\s*exposureForDraft\(hydrated\.draft\),\s*\{\s*costStale:\s*isWorkingYearCostStale\(hydrated\.draft\),\s*leftOverStale:\s*leftOverMoved\s*!==\s*null,?\s*\},?\s*\)/,
+    )
+    expect(src, 'the moved core runs ONCE over the hydrated draft, into the one local both reads take').toMatch(
+      /const leftOverMoved = workingYearLeftOverMoved\(hydrated\.draft\)/,
+    )
+    expect(src.match(/workingYearLeftOverMoved\(/g), 'never a second call to disagree with the first').toHaveLength(1)
+    expect(src, 'the gate’s sentences read that same local').toMatch(
+      /workingYearLeftOverMovedText\(leftOverMoved\)[\s\S]{0,80}workingYearLeftOverMovedClause\(leftOverMoved\)/,
     )
     expect(src, 'the stale predicate is the intake’s own, imported — not re-declared').toMatch(
       /import \{[^}]*isWorkingYearCostStale[^}]*\} from '@intake\/workingYearQuote'/,
+    )
+    expect(src, 'the moved core is the intake’s own, imported — not re-declared').toMatch(
+      /import \{[^}]*workingYearLeftOverMoved,[^}]*\} from '@intake\/workingYearLeftOver'/,
     )
   })
 

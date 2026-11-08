@@ -35,7 +35,7 @@
  * Close ≠ Cancel: there is NO discard semantics, and we do not fake an un-commit (the
  * BudgetBuilder inline variant's edits-survive precedent).
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type Ref } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react'
 import type { MemoryModelSnapshot, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
 import { copy, slots, type CopyKey } from '@ui/copy'
 import { rothPlanStartFor, type BandPlanClockAnchor } from '@ui/bandAnnotations'
@@ -43,6 +43,7 @@ import { composeVerdictReading, spendClauseFor } from '@ui/verdictSentence'
 import {
   METHODOLOGY_DISCLOSURES,
   methodologyLines,
+  type AssumptionLandingSeat,
   type AssumptionSeat,
   type MethodologyArm,
   type MethodologyDisclosure,
@@ -75,11 +76,14 @@ import {
   workingYearCostFigure,
   workingYearCostForRun,
   workingYearLedgerForRun,
+  workingYearLeftOverShownState,
   type MissingFact,
 } from './intakeMap'
 import { MedicareExtrasFork, OopExceedsSpendNote, StateResidencePicker, writeWorkingYearInvestment } from './questions'
 import { WorkingCostQuestion, type WorkingCostWriteKind } from './WorkingCostQuestion'
 import { useGestureHold } from './gestureHold'
+import { WorkingYearLeftOverQuestion } from './WorkingYearLeftOverQuestion'
+import { LEFT_OVER_FACE } from './workingYearLeftOverState'
 import { WorkingYearLedgerPicture, WorkingYearLedgerUnknown } from './WorkingYearLedger'
 import { workingYearCostStaleness, workingYearQuote, workingYearStateTaxReading } from './workingYearQuote'
 import './assumptions.css'
@@ -130,10 +134,11 @@ export interface AssumptionPanelProps {
    *  is a disconnected element at close; without this, focus strands on <body>. */
   readonly restoreFallback?: () => HTMLElement | null
   /** The row to land on when the panel OPENS (the pay check's KTD21 door: the result's stale-W line
-   *  opens the panel at the W row). After the sheet's own h2 focus, the row's name takes focus —
-   *  which scrolls it into view. Typed to the one seat that has a door into it; a seat with no
-   *  landing would be a prop that silently does nothing. */
-  readonly initialSeat?: 'working-year-cost'
+   *  opens the panel at the W row; build 2's moved line opens it at the left-over seat). After the
+   *  sheet's own h2 focus, the row's name takes focus — which scrolls it into view. Typed to the seats
+   *  that have a door into them (`AssumptionLandingSeat`); a seat with no landing would be a prop that
+   *  silently does nothing. */
+  readonly initialSeat?: AssumptionLandingSeat
 }
 
 /** One panel row, stamped with its registry seat — the R7 completeness walk reads these. `rowRef` is for
@@ -181,12 +186,21 @@ export function methodologyArmFor(d: ScenarioDraft): MethodologyArm {
   return isDateRoute(d) && carriesWorkingYearCost(d) ? 'workingCost' : 'default'
 }
 
-/** A methodology row with a pay-check arm. Its own component so the engine read behind the arm
- *  (a candidate build) runs only while the panel is OPEN and is memoized on the draft — the panel's
- *  own body is evaluated on every store notify, open or closed. */
+/** A methodology row with a pay-check arm. Its own component so the engine reads behind the arm
+ *  (a candidate build; build 2's shown state, the money picture) run only while the panel is OPEN and
+ *  are memoized on the draft — the panel's own body is evaluated on every store notify, open or closed.
+ *
+ *  BUILD 2 (KTD11): the left-over line is chosen by R3's shown state, the one read the question uses.
+ *  It reads the LIVE draft — R6's one sanctioned reader of the answer above the left-over seat. Its
+ *  line changes when a reply lands (the click). It can also change at the press of any gesture whose blur
+ *  commits a figure that moves the shown state — a typed W, or a spending edit that stales W: the same
+ *  exposure this row's arm swap has had since the pay check. It sits far above the seat, and that distance
+ *  is why it is held safe (scroll anchoring keeps the seat under the press); no browser has measured that
+ *  for this line, and `gestureHold.ts`'s header records anchoring failing on a tall screen. */
 function ArmedMethodologyLines({ m, draft }: { readonly m: MethodologyDisclosure; readonly draft: ScenarioDraft }) {
   const arm = useMemo(() => methodologyArmFor(draft), [draft])
-  return <MethodologyLines keys={methodologyLines(m, arm, workingYearStateTaxReading(draft))} />
+  const leftOver = useMemo(() => workingYearLeftOverShownState(draft), [draft])
+  return <MethodologyLines keys={methodologyLines(m, arm, workingYearStateTaxReading(draft), leftOver)} />
 }
 
 /** The pay check's W row (`docs/plans/features/working-year-pay-check-build-spec.md` U8; KTD17,
@@ -201,10 +215,14 @@ function ArmedMethodologyLines({ m, draft }: { readonly m: MethodologyDisclosure
  *  the question to correct or re-confirm it; UNKNOWN — answered, but no picture can be drawn: the
  *  calm line, then the question. The question is the walk's own face (`WorkingCostQuestion`), so
  *  the two surfaces never disagree; here it never clears and never shows the walk's gate. During a
- *  gesture (a press in the row, or anywhere while focus is in it, until its click) the face and its
- *  value line are chosen from the draft the press found, not the stored one (`gestureHold.ts`). */
+ *  gesture (a press in the row or in the left-over seat below it, or anywhere while focus is in either,
+ *  until one task after its click) the value line and the money picture are chosen from the draft the
+ *  press found, not the stored one (`WorkingYearRows`' one hold; `gestureHold.ts`). The question itself
+ *  draws from the live draft. */
 function WorkingCostRow({
   draft,
+  shown,
+  rowRef,
   aged,
   nameRef,
   announce,
@@ -216,6 +234,9 @@ function WorkingCostRow({
   figureErrors,
 }: {
   readonly draft: ScenarioDraft
+  /** The draft the row DRAWS — the live one, or the one a press found (`WorkingYearRows`' hold). */
+  readonly shown: ScenarioDraft
+  readonly rowRef: RefObject<HTMLLIElement | null>
   readonly aged: boolean
   readonly nameRef: Ref<HTMLParagraphElement>
   readonly announce: (text: string) => void
@@ -237,15 +258,8 @@ function WorkingCostRow({
     if (!wasStale.current && liveStale) announce(copy.assumptionWorkingCostStaleAnnounce)
     wasStale.current = liveStale
   }, [liveStale, announce])
-  // THE ROW ABOVE THE QUESTION IS DRAWN FROM THE DRAFT THE PRESS SAW (the h2 cure, `gestureHold.ts`):
-  // the value line and the money picture sit above the question, and a press on its period control
-  // blurs a typed figure whose commit mounts or re-sizes the picture — on a tall screen that moved the
-  // control 842 px before the release, and the tap was lost. They stay as the press found them until the
-  // click has landed. The WHOLE draft is held here (any field's commit under the press would re-size the
-  // picture), which is safe only because nothing in it can be acted on: no control lives above the
-  // question. The question itself gets the live draft (its note holds only W, for its door's sake).
-  const rowRef = useRef<HTMLLIElement | null>(null)
-  const shown = useGestureHold(rowRef, draft)
+  // The value line and the money picture draw from `shown` — the draft the press saw (`WorkingYearRows`).
+  // The question itself gets the live draft (its note holds only W, for its door's sake).
   const w = shown.workingYearCost
   const stale = useMemo(() => workingYearCostStaleness(shown) !== null, [shown])
   const ledger = useMemo(
@@ -289,6 +303,79 @@ function WorkingCostRow({
         figureErrors={figureErrors}
       />
     </Row>
+  )
+}
+
+/** Build 2's left-over seat (`docs/plans/features/working-year-surplus-build-spec.md` R5, R6; KTD8) — its OWN
+ *  row below the W row, never a control inside it. It renders no row at all where the question is not
+ *  asked (R3's "not asked": no picture, or a year 0 below a printed $1). While W is stale it shows the
+ *  question's waiting line and no radios, whatever is stored, so no "saved" lands against a stale W. Its
+ *  name is the only thing above the question: no value line reads the answer there (R6). It never
+ *  announces (only the W row speaks the stale edge). It draws from `shown`, the draft the press found
+ *  (`WorkingYearRows`), so "All of it" stores the figure on screen at the press. */
+function WorkingYearLeftOverRow({
+  shown,
+  seatRef,
+  nameRef,
+  onWrite,
+}: {
+  readonly shown: ScenarioDraft
+  readonly seatRef: RefObject<HTMLLIElement | null>
+  readonly nameRef: Ref<HTMLParagraphElement>
+  readonly onWrite: (write: (d: ScenarioDraft) => ScenarioDraft) => void
+}) {
+  const state = useMemo(() => workingYearLeftOverShownState(shown), [shown])
+  if (LEFT_OVER_FACE[state] === 'none') return null
+  return (
+    <Row seat="working-year-left-over" rowRef={seatRef}>
+      <p className="ap-row__name" tabIndex={-1} ref={nameRef}>
+        {copy.assumptionWorkingCostLeftOverName}
+      </p>
+      <WorkingYearLeftOverQuestion draft={shown} onWrite={onWrite} />
+    </Row>
+  )
+}
+
+/** The W row and the left-over seat below it, under ONE gesture hold (build 2's KTD8; `gestureHold.ts`'s
+ *  two-element arm). THE ROWS ARE DRAWN FROM THE DRAFT THE PRESS SAW (the h2 cure): the W row's value line
+ *  and money picture sit above both questions, and a press on a control below them blurs a typed figure
+ *  whose commit mounts or re-sizes the picture — on a tall screen that moved a control 842 px before the
+ *  release, and the tap was lost. A press in EITHER row (or anywhere while focus is in either) holds the
+ *  whole draft for both until one task after the click, so the held picture cannot move the seat under its
+ *  own press and the seat's figure can never disagree with the picture above it mid-gesture. What the hold
+ *  does NOT cover: the W question between them draws from the live draft, so at a seat press's blur a typed
+ *  W below the out-of-pocket medical figure mounts its below-medical note, and a refused figure its error,
+ *  above the seat. Such a press can be lost (KTD7's review measured the mounts in jsdom; a lost tap needs a
+ *  real browser); it never stores a wrong reply, because the write re-checks R5's gate. Filed in the register
+ *  with its prescription (hold those two lines under this same hold). The WHOLE draft is held (any field's
+ *  commit under the press would re-size the picture). In the W row nothing held can be acted on: no
+ *  control lives above its question, which gets the live draft. The seat's radios ARE held, and act on
+ *  what they show: "All of it" stores the drawn figure, and the write re-checks R5's gate on the store's
+ *  current draft, so a held control never escapes a gate another field's commit just closed. (A spend
+ *  edit that stales W under a seat press still mounts the W question's live stale note above the seat;
+ *  that press stores nothing, because the gate is closed.) */
+function WorkingYearRows({
+  draft,
+  costNameRef,
+  leftOverNameRef,
+  onWriteLeftOver,
+  ...costRow
+}: Omit<Parameters<typeof WorkingCostRow>[0], 'draft' | 'shown' | 'rowRef' | 'nameRef'> & {
+  readonly draft: ScenarioDraft
+  readonly costNameRef: Ref<HTMLParagraphElement>
+  readonly leftOverNameRef: Ref<HTMLParagraphElement>
+  readonly onWriteLeftOver: (write: (d: ScenarioDraft) => ScenarioDraft) => void
+}) {
+  const rowRef = useRef<HTMLLIElement | null>(null)
+  const seatRef = useRef<HTMLLIElement | null>(null)
+  // Two stable refs, never an inline array: the hold's effect re-runs on either changing, and a re-run
+  // lets go of the hold.
+  const shown = useGestureHold(rowRef, draft, seatRef)
+  return (
+    <>
+      <WorkingCostRow draft={draft} shown={shown} rowRef={rowRef} nameRef={costNameRef} {...costRow} />
+      <WorkingYearLeftOverRow shown={shown} seatRef={seatRef} nameRef={leftOverNameRef} onWrite={onWriteLeftOver} />
+    </>
   )
 }
 
@@ -349,8 +436,10 @@ export function AssumptionPanel({
   initialSeat,
 }: AssumptionPanelProps) {
   const announcerRef = useRef<Announcer | null>(null)
-  // The W row's name — the landing for `initialSeat` (reached by ref: the panel is portaled).
+  // The W row's and the left-over seat's names — the landings for `initialSeat` (reached by ref: the
+  // panel is portaled).
   const workingCostNameRef = useRef<HTMLParagraphElement | null>(null)
+  const leftOverNameRef = useRef<HTMLParagraphElement | null>(null)
   // Stable, so the W row's announce effect never re-runs on a mere re-render.
   const announce = useCallback((text: string) => announcerRef.current?.announce(text), [])
   const { draft, answer, displayed, spend } = snapshot
@@ -438,16 +527,22 @@ export function AssumptionPanel({
   //
   // The disarm still HOLDS, but on the first clause alone (completing intake IS the receipt that
   // the period was answered). Re-arming would not have caught the case above anyway: the rule
-  // needs `entered >= SPEND_AMBIGUOUS_MIN` (sanity.ts:89, 8,000), and the misentry that matters is
+  // needs `entered >= SPEND_AMBIGUOUS_MIN` (sanity.ts:90, 8,000), and the misentry that matters is
   // a household typing a MONTHLY figure under 'year' — below that floor by construction. The
   // defense here is the copy, not the rule.
   const PANEL_PROVENANCE = { periodConfirmed: true } as const
 
-  // THE W ROW'S LANDING (KTD21's door). The sheet's own open effect focuses its h2 first — a child's
-  // effects run before its parent's in one commit — so this lands after it, on the W row's name, and
-  // the browser scrolls the name into view (`focusHeading` never prevents the scroll).
+  // THE LANDINGS (KTD21's door; build 2's moved line). The sheet's own open effect focuses its h2 first —
+  // a child's effects run before its parent's in one commit — so this lands after it, on the seat's
+  // name, and the browser scrolls the name into view (`focusHeading` never prevents the scroll). Each
+  // landing seat names its own ref (insight 147); a seat that did not render is a quiet no-op.
   useEffect(() => {
-    if (open && initialSeat === 'working-year-cost') focusHeading(workingCostNameRef.current)
+    if (!open || initialSeat === undefined) return
+    const landing: Readonly<Record<AssumptionLandingSeat, HTMLParagraphElement | null>> = {
+      'working-year-cost': workingCostNameRef.current,
+      'working-year-left-over': leftOverNameRef.current,
+    }
+    focusHeading(landing[initialSeat])
   }, [open, initialSeat])
 
   /** Validate the PATCHED draft for `field`; a firing rule REFUSES the commit (true
@@ -1011,10 +1106,14 @@ export function AssumptionPanel({
               re-base after an explicit tap commits open. Never on `.answer`: the walk's gate never
               reaches the panel (KTD3). */}
           {dateRoute && (
-            <WorkingCostRow
+            <WorkingYearRows
               draft={draft}
               aged={savedAnchor.yearsSincePlanBuilt > 0}
-              nameRef={workingCostNameRef}
+              costNameRef={workingCostNameRef}
+              leftOverNameRef={leftOverNameRef}
+              // Build 2's seat commits open: the question never shows a field error (R5), and its write
+              // re-checks its own gate on the store's current draft.
+              onWriteLeftOver={(write) => commitOpen('workingYearLeftOver', write)}
               announce={announce}
               onWrite={(write, kind) => {
                 if (kind === 'period') {

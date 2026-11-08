@@ -6,7 +6,8 @@ import { REAL, REAL_DPR, PHONE, PHONE_DPR, FINAL_TIER_MS, gotoSeedFinal, rewalkS
  * precedent the fit specs cite). A hardcoded literal here is a second copy of the product's words: U17 §S6
  * reworded this exact string, and a literal would have re-broken the only walk that reaches the
  * face — the same blind spot `c55913b0` had just repaired. */
-import { copy } from '../src/ui/copy'
+import { copy, slots } from '../src/ui/copy'
+import type { WorkingYearLeftOverKind } from '../src/shared/model'
 
 /**
  * The Caddie's WALK (own harness: playwright.caddie.config.ts, `pnpm caddie:walk`) — captures
@@ -119,6 +120,31 @@ import { copy } from '../src/ui/copy'
  * Neither joins the door allowlist — their sheets are `seed:date`'s and `seed:datecoststale`'s, already
  * walked.
  *
+ * Increment 9 (2026-11-05, build 2's go-live — `docs/plans/features/working-year-surplus-build-spec.md` U7,
+ * U14, U9): the left-over question, in its two homes, and the two standing lines it can raise.
+ *  - `intake:leftover` — the money-picture step's question below the whole picture, reached the way
+ *    `intake:paycheck` reaches the picture (`date`'s result → the Assumptions door → the re-walk). Four
+ *    faces, one capture each: the unanswered face (`left-over-absent`: nothing checked, the "until you pick
+ *    one" line), then each reply picked in turn (`left-over-saved` / `-spent` / `-not-sure`). Every face asserts its figure
+ *    line, its three radios, how many are checked, and its one line in dollars, built from the shipped slots
+ *    at `date`'s hand-derived $16,985 — so a step that drew no question, or the wrong line, reds the walk.
+ *    The question and its line crop at device scale; the question also crops under every CVD arm (the
+ *    checked reply must survive without hue).
+ *  - `seed:datesavedmoved` (the moved witness: "All of it" at $16,985, $27,537 after a raise) and
+ *    `seed:datesavedstale` (W stale: the seat's waiting face) ride `walkSeed`: the Result's standing line
+ *    (`paycheck-note` already crops `.cs-paycheck-note`, which carries both causes) and the doors walk, whose
+ *    Assumptions door paints the panel's own left-over seat (`left-over-seat`, below the W row, CVD too).
+ *    The standing line and the seat's face are asserted per witness (LEFT_OVER_WITNESSES): the line's own
+ *    lead, figures and door label (each cause names its own; the other cause's lead must not speak), the
+ *    seat's figure, its one line, its radios and its checked reply (the stale seat: its waiting line, no
+ *    figure, no radios).
+ *  - `vault:datesavedmoved` and `vault:datesavedstale` ride `walkVaultReturn` for the gate (`reentry-notes`
+ *    crops it), each cause asserted as ONE gate line (its lead, figures and door sentence in the same
+ *    paragraph), then the verdict's standing line as on the seed. Neither joins the door allowlist, as with
+ *    `datecoststale`: their sheets are the seed targets', already walked.
+ *  - The seat is a CROP target, never a PANEL_CVD_REGIONS entry: those hard-fail where the region is
+ *    absent, and the doors walk runs them on every household, the spine seeds (no seat) included.
+ *
  * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
  * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
  */
@@ -181,6 +207,11 @@ const CROP_TARGETS = [
   // third). A face that fits the box (the stale and unknown faces carry no picture — `seed:datecoststale`'s
   // doors walk opens the stale one) takes one `crop-w-row.png` and `cvd-<arm>-w-row.png` instead.
   { name: 'w-row', selector: '[role="dialog"] [data-assumption-seat="working-year-cost"]', cvd: true },
+  // Build 2's left-over seat (increment 9) — its own row BELOW the W row, so after `w-row` by the same
+  // element-crops-scroll-the-sheet law, and before the methodology row, which stays last. Its radios (or, while
+  // W is stale, its waiting line) are a read the color lane owes. Presence-guarded like every crop here: the
+  // seat renders only where the question is asked, so it is absent on every spine seed's panel.
+  { name: 'left-over-seat', selector: '[role="dialog"] [data-assumption-seat="working-year-left-over"]', cvd: true },
   // The LAST methodology row (2026-10-20 — the working-year tax row, the longest of them): far below
   // the sheet's visible box, so only an element crop, which scrolls it into view, paints it.
   {
@@ -193,6 +224,12 @@ const CROP_TARGETS = [
   { name: 'paycheck-note', selector: '.cs-paycheck-note' },
   { name: 'w-question', selector: '.intake-shell .working-cost' },
   { name: 'money-picture', selector: '.intake-shell .wy-ledger' },
+  // Build 2's left-over question on the walk's money-picture step (increment 9), below the whole picture.
+  // Scoped to the intake shell: the panel's seat mounts the same component (`.left-over`). The question
+  // crops under every CVD arm (the checked reply must survive without hue: never color alone); the one
+  // line in dollars below its radios also crops alone, the per-answer read.
+  { name: 'left-over-question', selector: '.intake-shell .left-over', cvd: true },
+  { name: 'left-over-line', selector: '.intake-shell .left-over .left-over__line' },
   { name: 'reentry-notes', selector: '.reentry-notes' },
   { name: 'backup-door', selector: '.result-backup-door' },
   { name: 'hero-lead', selector: '.reveal__lead' },
@@ -297,6 +334,9 @@ const FOLD_TARGETS = [
   '.step-heading',
   '.working-cost',
   '.wy-ledger',
+  // Build 2 (increment 9): the left-over question below the picture, and its panel seat below the W row.
+  '.intake-shell .left-over',
+  '[data-assumption-seat="working-year-left-over"]',
   '.intake-nav',
   '.reentry-notes',
   '.save-actions',
@@ -691,7 +731,7 @@ async function driveLeverPreview(
  * family's own: 'Close' (lever sheets + the assumptions panel) or 'Cancel' (the budget sheet).
  * Increment 3: a lever sheet additionally bundles ONE driven preview (`-preview` state).
  */
-async function walkDoors(page: Page, outDir: string): Promise<void> {
+async function walkDoors(page: Page, outDir: string, witness?: LeftOverWitness): Promise<void> {
   const doors = page.locator('.result-quiet-row button')
   const count = await doors.count()
   expect(count, 'no quiet-row doors on a resolved verdict — a vacuous door walk').toBeGreaterThan(0)
@@ -700,8 +740,8 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
   for (let i = 0; i < count; i++) {
     const door = doors.nth(i)
     const name = (await door.innerText()).trim()
-    // The assumptions door by its OWN stable stamp (Result.tsx:644), never by index: the
-    // `.result-recommend-invite` door (Result.tsx:604) is conditional, so door-4 is door-4 only
+    // The assumptions door by its OWN stable stamp (Result.tsx:676), never by index: the
+    // `.result-recommend-invite` door (Result.tsx:636) is conditional, so door-4 is door-4 only
     // on the plants where the solve is un-invitable. Read BEFORE the click — the row survives the
     // open, but nothing here should depend on that.
     const isAssumptions = (await door.getAttribute('data-door')) === 'assumptions'
@@ -711,7 +751,7 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
     // exact class, the same one `SequencingControl`/`HealthcareSheet` use. So on every target where
     // `solveInvitable` holds, the walk opened this door, CHECKED A GOAL RADIO as a side effect, then
     // waited 120s for a TwoFutures `svg.tf` that the GoalPicker never renders — and this door is
-    // FIRST in the doors DOM order (Result.tsx:599-612), so the walk died before reaching any other
+    // FIRST in the doors DOM order (Result.tsx:631-644), so the walk died before reaching any other
     // door, including the assumptions panel the Card 11 crops below live on. Measured RED at both
     // viewports on `seed:retired`, which is the walk's DEFAULT target.
     // This is the `datemixed` shape at a new site, and the header comment above already names it:
@@ -726,6 +766,9 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
     await door.click()
     const dialog = page.getByRole('dialog')
     await expect(dialog, `door "${name}" opened no dialog`).toBeVisible()
+    // Increment 9: a left-over witness's seat face, asserted BEFORE the capture — the `left-over-seat`
+    // crop is presence-guarded, so a seat that never rendered would otherwise bundle silently without it.
+    if (isAssumptions && witness !== undefined) await assertLeftOverSeat(dialog, witness)
     const stateDir = path.join(outDir, `door-${i + 1}-${slugify(name)}`)
     await captureState(page, stateDir)
     const drive = isRecommendInvite ? false : await driveLeverPreview(page, dialog, name)
@@ -767,7 +810,7 @@ async function walkDoors(page: Page, outDir: string): Promise<void> {
     await expect(dialog).toBeHidden()
   }
   // The receipt tests the SAME predicate the crops do, not a weaker one: it fails iff the loop
-  // never entered the branch that writes them. `hatchReachable` (Result.tsx:343-352) is satisfied
+  // never entered the branch that writes them. `hatchReachable` (Result.tsx:375-384) is satisfied
   // by `focusKey`, and every walkDoors caller has already awaited
   // `main.result[data-answer-tier="final"]` — so a missing assumptions door means the door row
   // changed shape under the harness, which is exactly when a silent skip would be worst.
@@ -791,7 +834,7 @@ async function walkVaultReturn(
   page: Page,
   key: string,
   outDir: string,
-  opts: { readonly doors: boolean },
+  opts: { readonly doors: boolean; readonly witness?: LeftOverWitness },
 ): Promise<void> {
   await page.goto(`/?vault=${key}`)
   const open = page.getByRole('button', { name: 'Open my plan' })
@@ -805,12 +848,15 @@ async function walkVaultReturn(
     page.getByRole('heading', { name: 'Are these still your numbers?' }),
     'the re-entry gate did not mount after unlock',
   ).toBeVisible({ timeout: 30_000 })
+  // Increment 9: a left-over witness's gate line (the `reentry-notes` crop is presence-guarded).
+  if (opts.witness !== undefined) await assertGateLine(page, `vault:${key}`, opts.witness)
   await captureState(page, path.join(outDir, 'gate'))
 
   await page.getByRole('button', { name: /Still about right/ }).click()
   await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
     timeout: 120_000,
   })
+  if (opts.witness !== undefined) await assertStandingNote(page, `vault:${key}`, opts.witness)
   await captureState(page, path.join(outDir, 'verdict'))
   if (opts.doors) await walkDoors(page, outDir)
 }
@@ -836,6 +882,8 @@ async function walkUpdateRoute(page: Page, key: string, outDir: string): Promise
  *  rides the proven U12 worsening arc (it is that seed's own cold-read subject). */
 async function walkSeed(page: Page, key: string, outDir: string): Promise<void> {
   await gotoSeedFinal(page, key)
+  const witness = LEFT_OVER_WITNESSES[key]
+  if (witness !== undefined) await assertStandingNote(page, `seed:${key}`, witness)
   await captureState(page, path.join(outDir, 'landing'))
   // A FOLDED survivor card (`budget` — the floor relief holds the inline slot) hides its count, its
   // spending-basis line and its step-down behind the closed fold, so the landing bundle never shows
@@ -852,7 +900,7 @@ async function walkSeed(page: Page, key: string, outDir: string): Promise<void> 
     await fold.click()
     await expect(page.locator('.survivor-fold')).not.toHaveAttribute('open', '')
   }
-  await walkDoors(page, outDir)
+  await walkDoors(page, outDir, witness)
   if (key === 'retired') await walkWorsening(page, outDir)
 }
 
@@ -1122,6 +1170,186 @@ async function walkIntakePaycheck(page: Page, outDir: string): Promise<void> {
 }
 
 /**
+ * Increment 9's figures, never read off the product (DND 012). `date`'s year-0 left over is hand-derived in
+ * `src/engine/__tests__/workingYearCredit.test.ts`: pay 150,000 − payroll 11,475 − the tax on the outside
+ * income 17,540 − deposits 20,000 − W 84,000 = $16,985.00. The moved witness's live figure after its raise to
+ * $165,000 comes from the build-2 record's `year0check.mts` (cited in `src/ui/devSeeds.ts`'s
+ * `dateSavedMovedWitness` docblock): 165,000 − 12,622.50 − 20,840 − 20,000 − 84,000 = $27,537.50, which prints
+ * $27,537 (the printed grain floors to the dollar, as `datenc`'s $1,644.95 prints $1,644 in the same test).
+ * `datesavedstale`'s W figures are the seed's own inputs: the $84,000 confirmed on `date`'s draft, then its
+ * spending lowered to $78,000 (the fit spec's `STALE_W_QUOTE` pair). Every figure is formatted the slots' way,
+ * so every expected line is the shipped slot over them, never a re-typed sentence.
+ */
+const DATE_LEFT_OVER = '16,985'
+const MOVED_LEFT_OVER_LIVE = '27,537'
+const STALE_W_CONFIRMED = '84,000'
+const STALE_W_QUOTE_NOW = '78,000'
+
+/** One cause's line on a surface: its lead, every fragment that must ride in the SAME line after it, and
+ *  the other cause's lead, which must not speak there (the two causes cannot both hold: a moved left over
+ *  needs a fresh W, and a stale W outranks the stored answer). */
+interface CauseLine {
+  readonly lead: string
+  readonly says: readonly string[]
+  readonly notLead: string
+}
+
+/** What a left-over witness must show (increment 9): the Result's standing line, the gate's line and the
+ *  panel seat's face. Each is a presence companion for a crop that is otherwise presence-guarded. */
+interface LeftOverWitness {
+  /** The Result's one standing line (`.cs-paycheck-note`), and the label of the door it carries (each cause
+   *  names its own: `FuckOffDate`'s `STANDING_NOTE_COPY`). Both walked routes can save, so the door rides. */
+  readonly note: CauseLine & { readonly door: string }
+  /** The re-entry gate's ONE line for this cause (a `.reentry-notes` paragraph: one cause, one line). */
+  readonly gate: CauseLine
+  /** The panel seat's face: its year-0 figure line (null where it waits on a stale W and draws none), the
+   *  one line below its group (or its waiting line), how many radios it draws, and the reply shown checked. */
+  readonly seat: {
+    readonly figure: string | null
+    readonly line: string
+    readonly radios: number
+    readonly checked: string | null
+  }
+}
+
+const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>> = {
+  // "All of it" at $16,985, $27,537 after the raise: W fresh, so the standing line is the left over's.
+  datesavedmoved: {
+    note: {
+      lead: copy.stalenessLeftOverNote,
+      says: [slots.stalenessLeftOverMoved(DATE_LEFT_OVER, MOVED_LEFT_OVER_LIVE, DATE_LEFT_OVER)],
+      notLead: copy.stalenessPayCheckNote,
+      door: copy.stalenessLeftOverCta,
+    },
+    gate: {
+      lead: copy.stalenessLeftOverNote,
+      says: [slots.stalenessLeftOverMoved(DATE_LEFT_OVER, MOVED_LEFT_OVER_LIVE, DATE_LEFT_OVER), copy.stalenessPayCheckGateDoor],
+      notLead: copy.stalenessPayCheckGateLead,
+    },
+    seat: {
+      figure: slots.workingLedgerLeftOverFigure(MOVED_LEFT_OVER_LIVE),
+      line: slots.workingLedgerLeftOverRoseLine(DATE_LEFT_OVER, MOVED_LEFT_OVER_LIVE),
+      radios: 3,
+      checked: copy.workingLedgerLeftOverSaved,
+    },
+  },
+  // W stale ("All of it" stored at $16,985 before the spending moved): W's stale line speaks, its own
+  // sentence then the clause that none of the left over is added until W is checked, and the seat waits
+  // with no figure and no radios.
+  datesavedstale: {
+    note: {
+      lead: copy.stalenessPayCheckNote,
+      says: [
+        slots.workingCostStaleQuote(STALE_W_CONFIRMED, STALE_W_QUOTE_NOW),
+        slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER),
+      ],
+      notLead: copy.stalenessLeftOverNote,
+      door: copy.stalenessPayCheckCta,
+    },
+    gate: {
+      lead: copy.stalenessPayCheckGateLead,
+      says: [
+        slots.workingCostStaleQuote(STALE_W_CONFIRMED, STALE_W_QUOTE_NOW),
+        slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER),
+        copy.stalenessPayCheckGateDoor,
+      ],
+      notLead: copy.stalenessLeftOverNote,
+    },
+    seat: { figure: null, line: copy.workingLedgerLeftOverWaiting, radios: 0, checked: null },
+  },
+}
+
+/** The Result's ONE standing line speaks the witness's cause, in one line, behind its own door. */
+async function assertStandingNote(page: Page, who: string, witness: LeftOverWitness): Promise<void> {
+  const note = page.locator('.cs-paycheck-note')
+  await expect(note, `${who}: the Result must carry exactly one standing line`).toHaveCount(1)
+  for (const fragment of [witness.note.lead, ...witness.note.says]) {
+    await expect(note, `${who}: the standing line does not speak its cause`).toContainText(fragment)
+  }
+  await expect(note, `${who}: the standing line speaks the other cause's lead`).not.toContainText(witness.note.notLead)
+  const door = note.getByRole('button')
+  await expect(door, `${who}: the standing line must carry exactly one door`).toHaveCount(1)
+  await expect(door, `${who}: the standing line's door borrows the other cause's label`).toHaveText(witness.note.door)
+}
+
+/** The re-entry gate speaks the witness's cause in ONE line (insight 101: one cause, one line). */
+async function assertGateLine(page: Page, who: string, witness: LeftOverWitness): Promise<void> {
+  const notes = page.locator('.reentry-notes p')
+  const line = notes.filter({ hasText: witness.gate.lead })
+  await expect(line, `${who}: the gate must carry exactly one line led by its cause`).toHaveCount(1)
+  for (const fragment of witness.gate.says) {
+    await expect(line, `${who}: the gate's line does not carry its cause whole`).toContainText(fragment)
+  }
+  await expect(notes.filter({ hasText: witness.gate.notLead }), `${who}: the gate speaks the other cause`).toHaveCount(0)
+}
+
+/** The panel's left-over seat draws the witness's face. */
+async function assertLeftOverSeat(dialog: ReturnType<Page['getByRole']>, witness: LeftOverWitness): Promise<void> {
+  const seat = dialog.locator('[data-assumption-seat="working-year-left-over"]')
+  await expect(seat, 'the assumptions panel drew no left-over seat').toHaveCount(1)
+  // The seat's name is the landing the moved line's door focuses (`AssumptionPanel`'s `initialSeat`).
+  await expect(seat.locator('.ap-row__name')).toHaveText(copy.assumptionWorkingCostLeftOverName)
+  const figure = seat.locator('.left-over__figure')
+  await expect(figure, 'the left-over seat drew the wrong number of figure lines').toHaveCount(witness.seat.figure === null ? 0 : 1)
+  if (witness.seat.figure !== null) await expect(figure).toHaveText(witness.seat.figure)
+  const line = seat.locator('.left-over__line, .left-over__waiting-text')
+  await expect(line, 'the left-over seat must draw exactly one line below its group (or its waiting line)').toHaveCount(1)
+  await expect(line).toHaveText(witness.seat.line)
+  await expect(seat.getByRole('radio'), 'the left-over seat drew the wrong number of replies').toHaveCount(witness.seat.radios)
+  await expect(seat.locator('input[type="radio"]:checked')).toHaveCount(witness.seat.checked === null ? 0 : 1)
+  if (witness.seat.checked !== null) {
+    await expect(seat.getByRole('radio', { name: witness.seat.checked, exact: true })).toBeChecked()
+  }
+}
+
+/** Each reply's label and the one line in dollars it draws on `date`'s money-picture step (R6). Keyed by
+ *  the answer kind, exhaustively (insight 147): a new kind reds the type here, never a silent skip. */
+const LEFT_OVER_REPLIES: Readonly<Record<WorkingYearLeftOverKind, { readonly label: string; readonly line: string }>> = {
+  saved: { label: copy.workingLedgerLeftOverSaved, line: slots.workingLedgerLeftOverSavedLine(DATE_LEFT_OVER) },
+  spent: { label: copy.workingLedgerLeftOverSpent, line: slots.workingLedgerLeftOverSpentLine(DATE_LEFT_OVER) },
+  'not-sure': { label: copy.workingLedgerLeftOverNotSure, line: slots.workingLedgerLeftOverNotSureLine(DATE_LEFT_OVER) },
+}
+
+/**
+ * The LEFT-OVER walk (increment 9 — `intake:leftover`; the header names its four faces). `date` re-walked to
+ * its money-picture step draws the question unanswered; each reply is then picked with the native-click idiom
+ * (`walkIntakePaycheck`'s), asserted checked, and captured. Every face asserts the figure line, the three
+ * radios, the checked count, the active segment (the visible, hue-free selection) and its one line in dollars.
+ */
+async function walkIntakeLeftOver(page: Page, outDir: string): Promise<void> {
+  const question = page.locator('.intake-shell .left-over')
+  const holds = async (line: string, checked: string | null): Promise<void> => {
+    await expect(question, 'the money-picture step drew no left-over question').toHaveCount(1)
+    await expect(question.locator('.left-over__figure')).toHaveCount(1)
+    await expect(question.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigure(DATE_LEFT_OVER))
+    await expect(question.getByRole('radio'), 'the left-over question drew the wrong number of replies').toHaveCount(3)
+    await expect(question.locator('input[type="radio"]:checked')).toHaveCount(checked === null ? 0 : 1)
+    await expect(question.locator('.segment-active')).toHaveCount(checked === null ? 0 : 1)
+    if (checked !== null) await expect(question.locator('.segment-active')).toHaveText(checked)
+    await expect(question.locator('.left-over__line'), 'the left-over question drew no line in dollars').toHaveCount(1)
+    await expect(question.locator('.left-over__line')).toHaveText(line)
+  }
+
+  await rewalkSeedTo(page, 'date', copy.qWorkingLedgerHeading, { final: true })
+  await holds(slots.workingLedgerLeftOverAbsentLine(DATE_LEFT_OVER), null)
+  // Below the WHOLE picture (KTD8), never inside or above it: the picture's root (`.wy-ledger`, later
+  // years included) must precede the question in document order and must not contain it.
+  const belowPicture = await question.evaluate((el) => {
+    const picture = document.querySelector('.intake-shell .wy-ledger')
+    return picture !== null && !picture.contains(el) && (picture.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+  })
+  expect(belowPicture, 'the left-over question must sit below the whole money picture (KTD8)').toBe(true)
+  await captureState(page, path.join(outDir, 'left-over-absent'))
+  for (const [kind, reply] of Object.entries(LEFT_OVER_REPLIES)) {
+    const radio = question.getByRole('radio', { name: reply.label, exact: true })
+    await radio.evaluate((el) => (el as HTMLInputElement).click())
+    await expect(radio, 'the picked radio did not commit').toBeChecked()
+    await holds(reply.line, reply.label)
+    await captureState(page, path.join(outDir, `left-over-${kind}`))
+  }
+}
+
+/**
  * The INTAKE walk (increment 4 — `intake:fork`): the Medicare-extras payment fork is
  * intake-ONLY — every seed/vault target bypasses the guided flow entirely, so the fork's
  * blank-start frame, its half-answer R19 block, and the mixed-provenance state (one entered
@@ -1306,11 +1534,13 @@ for (const target of TARGETS) {
               target.key === 'datearrived' ||
               target.key === 'rec' ||
               target.key === 'recold',
+            witness: LEFT_OVER_WITNESSES[target.key],
           })
         } else if (target.kind === 'intake') {
           if (target.key === 'fork') await walkIntakeFork(page, outDir)
           else if (target.key === 'paycheck') await walkIntakePaycheck(page, outDir)
-          else throw new Error(`unknown intake walk "${target.key}" — intake:fork and intake:paycheck exist`)
+          else if (target.key === 'leftover') await walkIntakeLeftOver(page, outDir)
+          else throw new Error(`unknown intake walk "${target.key}" — intake:fork, intake:paycheck and intake:leftover exist`)
         } else if (target.kind === 'solve') {
           await walkSolve(page, target.key, outDir)
         } else {

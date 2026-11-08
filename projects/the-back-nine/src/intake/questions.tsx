@@ -32,6 +32,7 @@ import {
 } from './sanity'
 import { WorkingCostQuestion } from './WorkingCostQuestion'
 import { WorkingYearLedgerPicture, WorkingYearLedgerUnknown } from './WorkingYearLedger'
+import { WorkingYearLeftOverQuestion } from './WorkingYearLeftOverQuestion'
 import { writeClearedWorkingYearCost } from './workingYearQuote'
 import { AccountEntry, kindLabel } from './AccountEntry'
 import { OtherIncomeEntry, incomeTypeLabel, survivorNoteFor } from './OtherIncomeEntry'
@@ -1331,23 +1332,41 @@ const workingCostStep: StepDef = {
  *  composed on the main thread from the draft (`workingYearLedgerForRun`, memoized on the draft
  *  reference) — or, where none can be drawn, one calm line naming why. The plan clock reads the one
  *  local-calendar chain (`currentEpochDay` → `epochDayToCalendarYear`, Result's own), once per step
- *  arrival: an aged plan (a Review walk over an older save) says it shows its first year as entered. */
-function WorkingLedgerStepBody({ draft }: { readonly draft: ScenarioDraft }) {
+ *  arrival: an aged plan (a Review walk over an older save) says it shows its first year as entered.
+ *
+ *  BUILD 2 (KTD8): after the WHOLE picture, the left-over question — its own component, which draws
+ *  nothing where the question is not asked (no picture, or a year 0 below a printed $1; R5). It writes
+ *  through the step's `update` (the store's current draft); it gates nothing and adds no step. No
+ *  gesture hold: nothing on this screen commits on blur, so nothing can move it under a press. */
+function WorkingLedgerStepBody({
+  draft,
+  onWrite,
+}: {
+  readonly draft: ScenarioDraft
+  readonly onWrite: (write: (d: ScenarioDraft) => ScenarioDraft) => void
+}) {
   const ledger = useMemo(() => workingYearLedgerForRun(draft), [draft])
   const [wallYear] = useState(() => epochDayToCalendarYear(currentEpochDay()))
   if (ledger === 'unknown') return <WorkingYearLedgerUnknown draft={draft} echoStrip={false} />
   const aged = planClockAnchor(draft.startCalendarYear, wallYear).yearsSincePlanBuilt > 0
-  return <WorkingYearLedgerPicture ledger={ledger} draft={draft} headingLevel={3} aged={aged} />
+  return (
+    <>
+      <WorkingYearLedgerPicture ledger={ledger} draft={draft} headingLevel={3} aged={aged} />
+      <WorkingYearLeftOverQuestion draft={draft} onWrite={onWrite} />
+    </>
+  )
 }
 
 /** The money-picture step — the date route's LAST step, so its Continue is the flow's terminal
- *  `onComplete()` (the final-tier recompute). Nothing to answer here (`fields: []`): an
- *  unbuildable draft's calm line still advances. */
+ *  `onComplete()` (the final-tier recompute). Nothing it holds is required (`fields: []`): an
+ *  unbuildable draft's calm line still advances, and the left-over question (build 2) is never
+ *  required, never shows a field error and never gates the walk (R5; build 1's KTD17 forbids a step
+ *  gated on the draft). Both tiers of that recompute read the answer through `buildDateInput`. */
 const workingLedgerStep: StepDef = {
   id: 'working-ledger',
   headingKey: 'qWorkingLedgerHeading',
   fields: [],
-  render: (api) => <WorkingLedgerStepBody draft={api.draft} />,
+  render: (api) => <WorkingLedgerStepBody draft={api.draft} onWrite={(write) => api.update(write)} />,
 }
 
 // ---------------------------------------------------------------------------

@@ -42,7 +42,6 @@ import {
   type PersonContributionStreams,
   type RetirementState,
   type TickerClassification,
-  type WorkingYearCostV3,
   type WorkingYearLedger,
 } from '@shared/model'
 import {
@@ -65,7 +64,14 @@ import type { ExposureRead } from '@store/staleness'
 import { compileBudget } from '@budget/budgetToSpending'
 import { annualAdditionsCeilingFor, contributionCeilingFor, contributionCeilingInYear, isEmployerPlanKind } from './sanity'
 import { compileIncomeStreams } from './otherIncome'
+// One way only (build 2's KTD2): `workingYearQuote` imports nothing from this module, and the shown-state
+// leaf imports no intake module, so neither edge closes a loop.
+import { isWorkingYearCostStale, workingYearCostFigure } from './workingYearQuote'
+import { LEFT_OVER_CARRIES, leftOverShownState, type LeftOverShownState } from './workingYearLeftOverState'
 import { copy, type CopyKey } from '@ui/copy'
+
+// The W figure's one read moved to `workingYearQuote` (KTD2); its other callers keep importing it here.
+export { workingYearCostFigure } from './workingYearQuote'
 
 // ---------------------------------------------------------------------------
 // kind → bucket / family maps
@@ -1231,8 +1237,65 @@ export function buildControlPreviewParams(
 
 /** The date route builder — `ParamsBuilders.buildDateInput`. The engine owns
  *  every Y-dependent transform (`buildCandidateParams`); this supplies the
- *  ORIGINAL entered params + the per-person working-year MAGI figures. */
+ *  ORIGINAL entered params + the per-person working-year MAGI figures, W, and — build 2 — the saved
+ *  left over (`workingYearLeftOverSavedReal`), carried ONLY in the two saved shown states (R7, and the
+ *  Phase A review's obligation (a)): a "saved" answer, W carried and fresh, a KNOWN money picture whose
+ *  printed year-0 Left over is $1 or more. Knowing that needs the money picture, so it reads
+ *  {@link workingYearLeftOverShownState}; the picture composes from {@link buildDateInputBeforeLeftOver},
+ *  never from here, or the two would call each other forever. The answer is checked FIRST, so an
+ *  absent, spent or not-sure draft never composes the picture and builds exactly what it did before
+ *  (R10). The key is presence-keyed: never written as `undefined`. */
 export function buildDateInput(d: ScenarioDraft): DateSearchInput | null {
+  const input = buildDateInputBeforeLeftOver(d)
+  if (input === null) return null
+  const saved = carriedWorkingYearLeftOver(d)
+  return saved === undefined ? input : { ...input, workingYearLeftOverSavedReal: saved }
+}
+
+/** The stored figure `buildDateInput` carries, or `undefined`. The answer's kind is read first (the R10
+ *  short-circuit above); only a "saved" draft reads the shown state, and so the picture. */
+function carriedWorkingYearLeftOver(d: ScenarioDraft): number | undefined {
+  const answer = d.workingYearLeftOver
+  if (answer?.kind !== 'saved') return undefined
+  return LEFT_OVER_CARRIES[workingYearLeftOverShownState(d)] ? answer.quotedReal : undefined
+}
+
+/** Build 2's ONE draft-level read of the left-over question's shown state (R3) — the carriage above,
+ *  the walk's question, the panel seat, the methodology row (KTD11) and the stale lines (U14) all call
+ *  it, so no two of them can decide it differently. The facts: the stored answer, W's staleness
+ *  (`isWorkingYearCostStale`, the one stale predicate), and the money picture's PRINTED year-0 bottom
+ *  line ({@link workingYearLeftOverLive}). The order lives in the pure leaf, `leftOverShownState`. */
+export function workingYearLeftOverShownState(d: ScenarioDraft): LeftOverShownState {
+  return leftOverShownState({
+    answer: d.workingYearLeftOver,
+    wStale: isWorkingYearCostStale(d),
+    liveYear0: workingYearLeftOverLive(d),
+  })
+}
+
+/** The money picture's printed year-0 bottom line for THIS draft (signed whole dollars: a left over is
+ *  ≥ 0, a short year < 0), or `null` when there is no picture (`workingYearLedgerForRun` reads
+ *  `'unknown'`: W absent or $0, a refused or unbuildable run). The figure the question shows and a
+ *  "saved" reply stores (KTD8: the producer's printed figure, never the probe hook, never the raw cash). */
+export function workingYearLeftOverLive(d: ScenarioDraft): number | null {
+  const ledger = workingYearLedgerForRun(d)
+  return ledger === 'unknown' ? null : ledger.year0.bottomLine
+}
+
+/** The money picture's printed year-0 "What you put into savings" row for THIS draft (whole dollars, the
+ *  household's OWN deposits: `ownDepositsForYear` takes the match and the employer's HSA dollar out), or
+ *  `null` exactly where {@link workingYearLeftOverLive} is. The left-over question's check sentence states it
+ *  beside the left over, and their sum: both rows of one ledger read, so that sum is the picture's own
+ *  arithmetic (Σ in − Σ out is the bottom line exactly), never a figure the screen doesn't print. */
+export function workingYearLeftOverDepositsLive(d: ScenarioDraft): number | null {
+  const ledger = workingYearLedgerForRun(d)
+  return ledger === 'unknown' ? null : ledger.year0.goingOut.ownDeposits.dollars
+}
+
+/** `buildDateInput` without build 2's left-over figure — everything the date input carried before it.
+ *  The money picture composes from THIS (the producer never reads the figure; and reading the carriage
+ *  from inside the picture would recurse), and so does `workingYearCostForRun`, which reads only W. */
+function buildDateInputBeforeLeftOver(d: ScenarioDraft): DateSearchInput | null {
   if (!isDateRoute(d)) return null
   const params = buildParams(d)
   if (params === null) return null
@@ -1265,10 +1328,12 @@ export function buildDateInput(d: ScenarioDraft): DateSearchInput | null {
     // — NEVER on `params.overlay.accumulation`, which `buildCandidateParams` drops and rebuilds per
     // candidate. They ride TOGETHER under W alone (`validateParams` refuses the stream without W), so
     // a draft without W builds byte-identically to before (R18). A stale W still rides: the engine
-    // keeps using the last figure the household gave (R4). A W of $0 never rides: the W step writes a
-    // typed 0 into the draft so `working-cost-zero` can hold Continue on it (Phase B ruling 17), and
-    // that transient 0 must never run as a free working year (rosy) — the run reads as it did before
-    // W was answered. The codec refuses a persisted 0, so no saved plan holds one.
+    // keeps using the last figure the household gave (R4) — but build 2's saved left over does NOT
+    // ride under a stale W (R7; `buildDateInput` adds it only in the saved shown states). A W of $0
+    // never rides: the W step writes a typed 0 into the draft so `working-cost-zero` can hold Continue
+    // on it (Phase B ruling 17), and that transient 0 must never run as a free working year (rosy) —
+    // the run reads as it did before W was answered. The codec refuses a persisted 0, so no saved plan
+    // holds one.
     ...(d.workingYearCost !== undefined && carriesWorkingYearCost(d)
       ? {
           workingYearCostReal: workingYearCostFigure(d.workingYearCost),
@@ -1278,11 +1343,6 @@ export function buildDateInput(d: ScenarioDraft): DateSearchInput | null {
         }
       : {}),
   }
-}
-
-/** A W answer's yearly figure (annual real $), whichever way it was given — the ONE read of it. */
-export function workingYearCostFigure(w: WorkingYearCostV3): number {
-  return w.kind === 'confirmed' ? w.quotedReal : w.amountReal
 }
 
 /** Does this draft's W ride into a date run? Present AND above $0 — the ONE carriage rule
@@ -1298,9 +1358,11 @@ export function carriesWorkingYearCost(d: ScenarioDraft): boolean {
  *  `buildDateInput`'s own W and confirms the window-top candidate lands it (the construct the
  *  money picture composes); the spine never carries W (`buildSpineParams` has no accumulation
  *  route for it), so a stored W on an all-retired draft reads `'unpriced'`. `'unknown'` where no
- *  run can be built, or the candidate build throws (the `workingYearTaxForRun` shape). */
+ *  run can be built, or the candidate build throws (the `workingYearTaxForRun` shape). It reads the
+ *  input before build 2's left-over figure: W rides identically there, and a saved draft then pays no
+ *  money-picture compose for a question about W. */
 export function workingYearCostForRun(d: ScenarioDraft): ExposureRead {
-  const input = buildDateInput(d)
+  const input = buildDateInputBeforeLeftOver(d)
   if (input !== null) {
     try {
       return buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, 1).overlay?.accumulation
@@ -1353,8 +1415,10 @@ const workingYearLedgerMemo = new WeakMap<ScenarioDraft, WorkingYearLedger | 'un
 
 /** The working-year money picture of THIS draft (the pay check's U6b; KTD12) — the main-thread read
  *  (Departures item 4): the W step's picture and the assumption panel's W row must render from the
- *  draft before, or without, any sweep, and a W edit must redraw without one. Called only while the
- *  money-picture step or the panel's W row is mounted, and memoized on the draft reference.
+ *  draft before, or without, any sweep, and a W edit must redraw without one. Called by the
+ *  money-picture step, the panel's W row and left-over seat, and — since build 2 — by `buildDateInput`
+ *  on a draft whose left-over answer is "saved" (the carriage must know the picture is known, obligation
+ *  (a)); memoized on the draft reference, so each draft composes it once.
  *
  *  It hands the engine producer the window-top candidate (`buildCandidateParams(input,
  *  DATE_OFFSET_WINDOW_TOP, 1)`: every worker stops at the window top, so its working years 0..top − 1
@@ -1379,7 +1443,9 @@ export function workingYearLedgerForRun(d: ScenarioDraft): WorkingYearLedger | '
 }
 
 function composeWorkingYearLedger(d: ScenarioDraft): WorkingYearLedger | 'unknown' {
-  const input = buildDateInput(d)
+  // The input BEFORE the left-over figure, never `buildDateInput`: the carriage reads this picture, so
+  // composing from the carried input would recurse without end. The producer never reads the figure.
+  const input = buildDateInputBeforeLeftOver(d)
   if (input === null || input.workingYearCostReal === undefined) return 'unknown'
   if (input.params.maxHorizonYears <= DATE_OFFSET_WINDOW_TOP) return 'unknown'
   try {

@@ -330,20 +330,24 @@ describe('the U4 boundary-review folds', () => {
     expect(await loadVault(db)).toEqual({ kind: 'no-vault' }) // nothing landed
   })
 
-  it('a VERSION-3 backup restores as the FILE’S OWN BYTES (the stored model record is byte-identical to the file’s), then unlocks as the current version', async () => {
-    // A REAL version-3 save, frozen from the last build before the schema-v4 bump (the codec suite's
-    // U6 fixture), read from the committed file, never minted: today's mint stamps
-    // CURRENT_SCHEMA_VERSION, so only a save frozen from an older build can carry 3. A backup keeps
-    // the version of the save it was cut from forever, so this is the restore a version-3 backup
-    // file meets in every later build.
-    const v3 = JSON.parse(
-      readFileSync(join(process.cwd(), 'src', 'shared', '__tests__', 'fixtures', 'scenario-v3-date-postw.json'), 'utf8'),
+  it.each([
+    { file: 'scenario-v3-date-postw.json', label: 3 },
+    { file: 'scenario-v4-date.json', label: 4 },
+    { file: 'scenario-v4-maximal.json', label: 4 },
+  ] as const)('a VERSION-$label backup ($file) restores as the FILE’S OWN BYTES (the stored model record is byte-identical to the file’s), then unlocks as the current version', async ({ file: fixture, label }) => {
+    // A REAL older save, frozen from the build that wrote it (the codec suite's fixtures: the schema-v4
+    // plan's U6 for version 3, build 2's KTD6 for version 4), read from the committed file, never
+    // minted: today's mint stamps CURRENT_SCHEMA_VERSION, so only a save frozen from an older build can
+    // carry an older label. A backup keeps the version of the save it was cut from forever, so this is
+    // the restore an older backup file meets in every later build.
+    const older = JSON.parse(
+      readFileSync(join(process.cwd(), 'src', 'shared', '__tests__', 'fixtures', fixture), 'utf8'),
     ) as AnyScenario
     const db = await openVaultDb()
     const session = createSession(db)
-    const saved = await session.firstSave(v3, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))
+    const saved = await session.firstSave(older, await floorPass(PASSPHRASE), await floorPass(RECOVERY_PASSPHRASE))
     if (!saved.ok) throw new Error('firstSave failed')
-    const stored = await loadVault(db) // firstSave encodes the plan as given, so this record holds version 3
+    const stored = await loadVault(db) // firstSave encodes the plan as given, so this record holds the older label
     if (stored.kind !== 'vault') throw new Error(`expected a vault, got ${stored.kind}`)
     const exported = await exportVault(db)
     if (!exported.ok) throw new Error('export failed')
@@ -352,7 +356,7 @@ describe('the U4 boundary-review folds', () => {
 
     const file = JSON.parse(exported.file) as BackupFileV1
     const fromB64 = (s: string): number[] => Array.from(atob(s), (c) => c.charCodeAt(0))
-    // Export copies the STORED ciphertext (D1), so the file carries the version-3 save itself — never a
+    // Export copies the STORED ciphertext (D1), so the file carries the older save itself — never a
     // re-encoding of the relabeled plan.
     expect(fromB64(file.model.ciphertext)).toEqual(Array.from(stored.model.ciphertext))
     expect(await restoreVault(db, exported.file, RECOVERY_PASSPHRASE, await floorPass(NEW_PASSPHRASE))).toEqual({ ok: true })
@@ -366,7 +370,7 @@ describe('the U4 boundary-review folds', () => {
     const reopened = createSession(db)
     expect((await reopened.unlock(NEW_PASSPHRASE)).ok).toBe(true)
     expect(reopened.currentModel()?.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
-    expect({ ...reopened.currentModel(), schemaVersion: 3 }).toEqual(v3)
+    expect({ ...reopened.currentModel(), schemaVersion: label }).toEqual(older)
     await reopened.lock()
   })
 

@@ -33,3 +33,38 @@ export const HAWK_BAN: readonly HawkBanPattern[] = [
     mustCatch: ['It applies only later, once you stop.', 'Only later years count.'],
   },
 ]
+
+/**
+ * BUILD 2's lean ban (`docs/plans/features/working-year-surplus-build-spec.md` R16): no string about the
+ * working-year left over says which way the credit moves the answer — its reach can run either way
+ * (insight 143), and it is unmeasured until U11. Swept over the left-over strings ONLY (`copyGuard.test.ts`),
+ * never over a composed line (W's stale line rightly says "can look better" beside the left-over clause).
+ * "later" alone is NOT banned: R6's own lines must say "a later year above" and "no later year's left over".
+ */
+export const LEFT_OVER_LEAN_BAN: readonly HawkBanPattern[] = [
+  {
+    word: 'earlier',
+    re: /\bearlier\b/i,
+    mustCatch: ['Your date comes earlier.', 'It moves the date earlier by a year.', 'Earlier than before.'],
+  },
+  {
+    word: 'better',
+    re: /\bbetter\b/i,
+    mustCatch: ['The answer looks a little better.', 'Better than it was.'],
+  },
+  {
+    word: 'worse',
+    re: /\bworse\b/i,
+    mustCatch: ['It can look a little worse.', 'Worse than before.'],
+  },
+  {
+    word: 'conservative',
+    re: /\bconservativ/i,
+    mustCatch: ['A conservative choice.', 'Priced conservatively.'],
+  },
+  {
+    word: 'a later date',
+    re: /\b(comes|moves|lands|pushes)\b[^.]*\blater\b/i,
+    mustCatch: ['Your date comes later.', 'It moves your date a year later.', 'It pushes the date later.'],
+  },
+]

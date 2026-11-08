@@ -86,7 +86,7 @@
  * A bare vintage compare answers "did the TABLE move?", never "did THIS household's answer
  * move?". Shipped defect (pilot-verified 2026-07-25): `reentryChrome.ts` pushed one healthcare
  * line off the OR-collapse of all seven healthcare clocks, so an all-65+ household — which
- * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:733-736`), ships NO
+ * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:739-742`), ships NO
  * `enrolledPremium`, and can therefore NEVER open the engine's ACA gate
  * (`taxOverlay.ts:2528-2533`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
  * was told "Health-coverage rules have been updated" on a moved `acaStatus` stamp. They price
@@ -205,7 +205,7 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *     make the "every read is unpriced" silence arm vacuously true and quietly kill a clock.
  *
  * THE SOURCE FOR EACH ROW:
- *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2643` as "the coverage year
+ *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2685` as "the coverage year
  *     the ACA/IRMAA tables are keyed to", so it dates BOTH families and names each one the run
  *     priced. It is the ONLY marker for every annually-re-indexed health figure that carries no
  *     stamp of its own (the four interior IRMAA thresholds, the ACA applicable-percentage bands,
@@ -255,15 +255,15 @@ export type ExposureRead = 'priced' | 'unpriced' | 'unknown'
 export interface StalenessExposure {
   /** Did the run BUILD a tax overlay at all (`overlayBuiltForRun` — the route's own builder's
    *  `params.overlay !== undefined`)? This is the FEDERAL tax family's gate: `taxEnabled: true`
-   *  is hardcoded on every built overlay (`intakeMap.ts:703`) and `consumedConstants.ts:108`
+   *  is hardcoded on every built overlay (`intakeMap.ts:709`) and `consumedConstants.ts:108`
    *  gates the whole `tax.` family on exactly that flag — so a run that took `buildOverlay`'s
-   *  degenerate early return (`intakeMap.ts:628-633`: no accounts, no premium, no income —
+   *  degenerate early return (`intakeMap.ts:634-639`: no accounts, no premium, no income —
    *  reachable today by a save-ready Social-Security-only household) re-prices NO tax constant
    *  and is byte-identical under any tax vintage.
    *
    *  ITS OWN BIT, NEVER INFERRED FROM `medicare` (insight 081's shape). The two are CORRELATED
    *  today — and only by an accident of the intake gate: `missingRequiredFacts` REQUIRES the
-   *  marketplace quote pair for any household with a pre-65 member (`intakeMap.ts:224-230`), and
+   *  marketplace quote pair for any household with a pre-65 member (`intakeMap.ts:230-236`), and
    *  an all-65+ household takes the Medicare-only branch, so EVERY save-ready built overlay
    *  happens to carry `healthcareEnabled`. That is a coincidence of two unrelated rules, not a
    *  law: it breaks the day a third overlay branch ships, or the day the quote pair becomes
@@ -286,14 +286,14 @@ export interface StalenessExposure {
    *  owner actually contribute (`contributionsPricedForRun`)? The date route is NOT sufficient
    *  on its own: `dateSearch.ts:262` forces `accumulation` onto EVERY candidate, but it
    *  truncates the BASE overlay's streams, and `contributionStreamsFor` returns `{}` for a
-   *  non-working owner (`intakeMap.ts:501-504`) — so a date-route household whose accounts all
+   *  non-working owner (`intakeMap.ts:507-510`) — so a date-route household whose accounts all
    *  belong to the retired spouse carries EMPTY streams on every candidate and reads no
    *  contribution limit (`consumedConstants.ts:128` gates the `contributions.` family on the
    *  construct's presence; the limits' only pricing read is `annualAdditionsCeilingFor`'s
    *  §415(c) match trim inside `contributionStreamsFor`, which never runs for them). */
   readonly contributions: ExposureRead
   /** Does the run's stock weight READ the dated ticker-blend table (`blendTableReadForRun`)?
-   *  `resolveBlend` (`intakeMap.ts:303`) consults it ONLY for an account whose ticker hits
+   *  `resolveBlend` (`intakeMap.ts:309`) consults it ONLY for an account whose ticker hits
    *  a row; an all-manual-blend household — or one whose portfolio totals $0, where
    *  `householdStockWeight` returns null and the run takes the inert `?? 0` — is PROVABLY
    *  inert under any `BLEND_SNAPSHOT_AS_OF` bump. `'priced'` still never NAMES itself (see
@@ -577,11 +577,11 @@ export interface WorkingYearAnswerStaleness {
   readonly costStale: boolean
   /** Build 2's R12 "moved": a "saved" left-over answer whose stored year-0 figure differs from
    *  today's printed one, with W carried and fresh, the picture known and the live figure at least
-   *  $1. `false` BY PROOF at every product caller until the go-live (no draft can hold the answer
-   *  before the version-5 model lands), and at the saved-recommendation call site always. From the
-   *  go-live, the predicate behind it and the re-entry gate's moved sentence read ONE core over the
-   *  draft, so the gate can never be handed this fact without its sentence (`ReentryLeftOverStale`
-   *  in `src/ui/reentryChrome.ts` says what that mismatch costs the household). */
+   *  $1. `false` BY PROOF at the saved-recommendation call site always (it never sees the answer).
+   *  `IntakeApp` passes the real predicate (`workingYearLeftOverMoved`), and that predicate and the
+   *  re-entry gate's moved sentence read ONE core over the draft, so the gate can never be handed this fact
+   *  without its sentence (`ReentryLeftOverStale` in `src/ui/reentryChrome.ts` says what that mismatch
+   *  costs the household). */
   readonly leftOverStale: boolean
 }
 
@@ -636,7 +636,7 @@ export function deriveStaleness(
   // `taxEnabled: true` is hardcoded on every built overlay. The first half is true; the
   // conclusion was not — a household that builds NO overlay reaches a verdict all the same
   // (`buildParams` returns params with `initialPortfolio: 0` and the inert `stockWeight ?? 0`,
-  // `intakeMap.ts:757-766`), so "no overlay ⇒ nothing to be stale about" was false.
+  // `intakeMap.ts:763-772`), so "no overlay ⇒ nothing to be stale about" was false.
   const currentTax = taxVintageStamp()
   const savedTax = scenario.taxVintageDetail
   const taxStampMoved =
@@ -775,9 +775,9 @@ export function deriveStaleness(
   // gate keeps the CLAIM honest: "every date candidate carries the accumulation construct
   // (`dateSearch.ts:262`) ⇒ structurally exposed" is necessary but NOT sufficient, because the
   // forced construct is filled from the BASE overlay's streams and `contributionStreamsFor`
-  // returns `{}` for a non-working owner (`intakeMap.ts:501-504`). A 66/retired + 62/working couple
+  // returns `{}` for a non-working owner (`intakeMap.ts:507-510`). A 66/retired + 62/working couple
   // whose accounts all belong to the retired spouse is on the date route with EMPTY streams:
-  // `anyContributions` is false (`intakeMap.ts:670-676`), no `accumulation` reaches the base
+  // `anyContributions` is false (`intakeMap.ts:676-682`), no `accumulation` reaches the base
   // overlay, and the limit tables' only pricing read (the §415(c) match trim) never runs.
   //
   // The blend clock never NAMES itself on either route (see `date.blendMoved`'s own note): the

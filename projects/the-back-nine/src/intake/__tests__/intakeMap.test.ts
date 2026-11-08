@@ -20,6 +20,8 @@ import {
   workingYearCostForRun,
   workingYearDraftEvents,
   workingYearLedgerForRun,
+  workingYearLeftOverLive,
+  workingYearLeftOverShownState,
   workingYearTaxForRun,
 } from '../intakeMap'
 import { contributionCeilingFor, contributionCeilingInYear } from '../sanity'
@@ -27,7 +29,7 @@ import { confirmedWorkingYearCost, isWorkingYearCostStale } from '../workingYear
 import { validateParams } from '@engine/simulate'
 import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS, workingYearTaxReach } from '@engine/dateSearch'
 import { workingYearLedger } from '@engine/workingYearLedger'
-import type { IncomeStream, WorkingYearCostV3 } from '@shared/model'
+import type { IncomeStream, WorkingYearCostV3, WorkingYearLeftOverV5 } from '@shared/model'
 import { acaAgeRatingCurve, medicareCostTrend, medicareExtrasTypicalMonthly } from '@engine/constants/health'
 import { employerPlan2026, catchUpForAge, hsa2026 } from '@engine/constants/contributions'
 import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
@@ -1327,6 +1329,141 @@ describe('the pay check’s W on the date input (U7: KTD2 and KTD6’s intake ha
         expect(acc.workingYearCostReal, `Y=${y}: W lands on the candidate`).toBe(90_000)
         expect(acc.employerHsaByPerson![0], `Y=${y}: the stream is cut to the working years`).toHaveLength(y)
       }
+    }
+  })
+})
+
+// ── BUILD 2 — the saved left over on the date input (`docs/plans/features/working-year-surplus-build-spec.md`
+// R3, R7, R10, KTD2; the Phase A review's obligation (a)). `date`'s year-0 Left over is $16,985, derived
+// by hand from the primaries in `workingYearCredit.test.ts` (pay 150,000 − payroll 11,475 − federal tax
+// 17,540 − deposits 20,000 − W 84,000), never read off the engine (DND 012).
+
+const SAVED_16985: WorkingYearLeftOverV5 = { kind: 'saved', quotedReal: 16_985 }
+const answered = (d: ScenarioDraft, a: WorkingYearLeftOverV5): ScenarioDraft => ({ ...d, workingYearLeftOver: a })
+
+describe('build 2’s saved left over rides the date input only in the two saved shown states (R7, obligation (a))', () => {
+  it('date’s printed year-0 Left over is the hand-derived $16,985, and the picture is the same with and without an answer (the producer never reads the figure)', () => {
+    expect(workingYearLeftOverLive(DEV_SEEDS.date)).toBe(16_985)
+    expect(workingYearLedgerForRun(answered(DEV_SEEDS.date, SAVED_16985))).toEqual(workingYearLedgerForRun(DEV_SEEDS.date))
+  })
+
+  it('"saved" at the live figure is carried, and the input is otherwise byte-for-byte the unanswered one', () => {
+    const d = answered(DEV_SEEDS.date, SAVED_16985)
+    expect(workingYearLeftOverShownState(d)).toBe('saved')
+    const input = buildDateInput(d)!
+    expect(input.workingYearLeftOverSavedReal).toBe(16_985)
+    expect(input).toEqual({ ...buildDateInput(DEV_SEEDS.date)!, workingYearLeftOverSavedReal: 16_985 })
+  })
+
+  it('"saved, moved" carries the STORED figure — below or above the live one; the engine takes the smaller itself (R8)', () => {
+    for (const stored of [15_000, 20_000]) {
+      const d = answered(DEV_SEEDS.date, { kind: 'saved', quotedReal: stored })
+      expect(workingYearLeftOverShownState(d), String(stored)).toBe('saved-moved')
+      expect(buildDateInput(d)!.workingYearLeftOverSavedReal, String(stored)).toBe(stored)
+    }
+  })
+
+  it('absent, spent and not sure carry NOTHING — the input equals the unanswered build exactly (R10), and each reads its own state', () => {
+    const plain = buildDateInput(DEV_SEEDS.date)!
+    expect('workingYearLeftOverSavedReal' in plain).toBe(false)
+    expect(workingYearLeftOverShownState(DEV_SEEDS.date)).toBe('absent')
+    for (const a of [{ kind: 'spent' }, { kind: 'not-sure' }] as const) {
+      const d = answered(DEV_SEEDS.date, a)
+      expect(workingYearLeftOverShownState(d)).toBe(a.kind)
+      const input = buildDateInput(d)!
+      expect('workingYearLeftOverSavedReal' in input, a.kind).toBe(false)
+      expect(input, a.kind).toEqual(plain)
+    }
+  })
+
+  it('OBLIGATION (a): a draft the engine refuses (claim age 55, no missing fact) has an UNKNOWN picture — "saved" there reads not asked and carries nothing', () => {
+    const refused = answered(
+      withMintedW({ ...DEV_SEEDS.date, people: [{ ...DEV_SEEDS.date.people[0]!, socialSecurityClaimAge: 55 }, DEV_SEEDS.date.people[1]!] }),
+      SAVED_16985,
+    )
+    expect(missingRequiredFacts(refused), 'no missing fact').toEqual([])
+    expect(workingYearLedgerForRun(refused)).toBe('unknown')
+    expect(workingYearLeftOverShownState(refused)).toBe('not-asked')
+    const input = buildDateInput(refused)
+    expect(input, 'the input still builds').not.toBeNull()
+    expect('workingYearLeftOverSavedReal' in input!, 'nothing carried under an unknown picture').toBe(false)
+  })
+
+  it('OBLIGATION (a): a horizon at the window top (an unknown picture the producer alone would compose) carries nothing; one year younger it carries', () => {
+    const aged = (age: number): ScenarioDraft =>
+      withMintedW({
+        ...DEV_SEEDS.date,
+        people: [
+          { ...DEV_SEEDS.date.people[0]!, currentAge: age },
+          { ...DEV_SEEDS.date.people[1]!, currentAge: age + 2 },
+        ],
+        health: { ...DEV_SEEDS.date.health, irmaaMagiSeed: [180_000, 40_000] },
+      })
+    const atTop = answered(aged(110), SAVED_16985)
+    expect(workingYearLedgerForRun(atTop)).toBe('unknown')
+    expect('workingYearLeftOverSavedReal' in buildDateInput(atTop)!).toBe(false)
+    const known = aged(109)
+    const live = workingYearLeftOverLive(known)
+    expect(live, 'the picture shows one year younger').not.toBeNull()
+    if (live === null || live < 1) throw new Error('[test setup] aged(109) has no left over to answer under')
+    expect(buildDateInput(answered(known, { kind: 'saved', quotedReal: live }))!.workingYearLeftOverSavedReal).toBe(live)
+  })
+
+  it('a STALE W carries W but never the left over (R7): "saved" reads waiting on W — on a moved quote, and on a kept W the spending rose past', () => {
+    const quoteMoved = answered(DEV_SEEDS.datecoststale, SAVED_16985)
+    expect(isWorkingYearCostStale(quoteMoved)).toBe(true)
+    expect(workingYearLeftOverShownState(quoteMoved)).toBe('waiting-on-w')
+    const input = buildDateInput(quoteMoved)!
+    expect(input.workingYearCostReal, 'W rides (R4)').toBe(84_000)
+    expect('workingYearLeftOverSavedReal' in input).toBe(false)
+    // A kept $84,000 (U5's stamp) is fresh while the spending is at or below it, stale once it rises past.
+    const kept: WorkingYearCostV3 = { kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: 'unpriced', keptOverQuoteReal: 80_000 }
+    const keptFresh = answered({ ...DEV_SEEDS.date, workingYearCost: kept }, SAVED_16985)
+    expect(isWorkingYearCostStale(keptFresh)).toBe(false)
+    expect(buildDateInput(keptFresh)!.workingYearLeftOverSavedReal, 'the kept figure is fresh: carried').toBe(16_985)
+    const keptRisen = answered({ ...DEV_SEEDS.date, workingYearCost: kept, annualSpendingReal: 85_000 }, SAVED_16985)
+    expect(isWorkingYearCostStale(keptRisen)).toBe(true)
+    expect(workingYearLeftOverShownState(keptRisen)).toBe('waiting-on-w')
+    expect('workingYearLeftOverSavedReal' in buildDateInput(keptRisen)!).toBe(false)
+  })
+
+  it('W absent, or a typed $0 W: no picture, so "saved" reads not asked and the input equals the build without it', () => {
+    const noW = answered(withoutW(DEV_SEEDS.date), SAVED_16985)
+    expect(workingYearLeftOverShownState(noW)).toBe('not-asked')
+    expect(buildDateInput(noW)).toEqual(buildDateInput(withoutW(DEV_SEEDS.date)))
+    const zero: WorkingYearCostV3 = { kind: 'entered', amountReal: 0, entryPeriod: 'year', stateTaxReading: 'unpriced' }
+    const typedZero = answered({ ...DEV_SEEDS.date, workingYearCost: zero }, SAVED_16985)
+    expect(workingYearLeftOverShownState(typedZero)).toBe('not-asked')
+    expect(buildDateInput(typedZero)).toEqual(buildDateInput(withoutW(DEV_SEEDS.date)))
+  })
+
+  it('a year 0 that runs short, or a later-only left over, is never asked: "saved" there carries nothing (R5)', () => {
+    for (const key of ['dateshort', 'datelateleftover'] as const) {
+      const live = workingYearLeftOverLive(DEV_SEEDS[key])
+      expect(live !== null && live < 1, `${key}: year 0 prints short or $0`).toBe(true)
+      const d = answered(DEV_SEEDS[key], SAVED_16985)
+      expect(workingYearLeftOverShownState(d), key).toBe('not-asked')
+      expect('workingYearLeftOverSavedReal' in buildDateInput(d)!, key).toBe(false)
+    }
+  })
+
+  it('a route change holds the answer and carries nothing: the all-retired route builds no date input, and its spine params are the unanswered ones', () => {
+    const spine = answered(withMintedW(completeSpineDraft()), SAVED_16985)
+    expect(buildDateInput(spine)).toBeNull()
+    expect(workingYearLeftOverShownState(spine)).toBe('not-asked')
+    expect(buildSpineParams(spine)).toEqual(buildSpineParams(withMintedW(completeSpineDraft())))
+  })
+
+  it('validateParams accepts EVERY candidate Y = 0..top of a carried draft, each candidate holding the figure, and the control preview carries it too', () => {
+    const d = answered(DEV_SEEDS.date, SAVED_16985)
+    const input = buildDateInput(d)!
+    for (let y = 0; y <= DATE_OFFSET_WINDOW_TOP; y++) {
+      const candidate = buildCandidateParams(input, y, DATE_SEARCH_PATHS.provisional)
+      expect(validateParams(candidate), `Y=${y}`).toBeNull()
+      expect(candidate.overlay!.accumulation!.workingYearLeftOverSavedReal, `Y=${y}`).toBe(16_985)
+    }
+    for (const offset of [0, 4, DATE_OFFSET_WINDOW_TOP]) {
+      expect(buildControlPreviewParams(d, offset)?.overlay?.accumulation?.workingYearLeftOverSavedReal, `preview @ ${offset}`).toBe(16_985)
     }
   })
 })

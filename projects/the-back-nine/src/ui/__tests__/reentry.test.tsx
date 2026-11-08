@@ -25,6 +25,12 @@ import { DEV_SEEDS } from '../devSeeds'
 import { deriveStaleness, PRICING_FAMILY_ORDER, type StalenessExposure, type StalenessReport } from '@store/staleness'
 import { exposureForDraft } from '../stalenessExposure'
 import { isWorkingYearCostStale, workingYearCostStaleText } from '@intake/workingYearQuote'
+import {
+  workingYearCostStaleLine,
+  workingYearLeftOverMoved,
+  workingYearLeftOverMovedClause,
+  workingYearLeftOverMovedText,
+} from '@intake/workingYearLeftOver'
 import { copy, slots } from '../copy'
 import type { PricedState } from '@engine/constants/stateTax'
 import type { CurrentScenario } from '@shared/model'
@@ -157,7 +163,7 @@ describe('composeReentry — the read-back', () => {
     } as CurrentScenario
     const view = composeReentry(doctored, reportFor(doctored), NO_SENTENCES)
     expect(view.noteLines).toContain(copy.stalenessTax)
-    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2643), so for THIS all-65+
+    // U17 §S4 — `coverageYear` dates the ACA/IRMAA tables (model.ts:2685), so for THIS all-65+
     // household it names the Medicare half and only that: they price the IRMAA ladder every
     // year and zero marketplace years. Not the old collapsed "Health-coverage rules" line, and
     // not the nameless aggregate the first cut mis-bucketed it to.
@@ -386,12 +392,18 @@ describe('composeReentry — the read-back', () => {
     ])
   })
 
-  // Build 2's KTD9 (the dark U13): the moved left over's line. No draft can hold the left-over answer
-  // until the go-live, so the fact is injected here and the sentence is a fixture standing in for the
-  // caller's (its words arrive with the answer, U14). The household is real: `date` with W confirmed,
-  // the run that carries W (and so the only run that could carry a left-over figure, R7).
+  // Build 2's KTD9 / U14: the moved left over's line. The fact is injected here and the sentences are
+  // fixtures standing in for the caller's (the real ones are pinned on `datesavedmoved` below). The
+  // household is real: `date` with W confirmed, the run that carries W (and so the only run that could
+  // carry a left-over figure, R7). The line is the lead, the caller's sentence, then the door sentence
+  // where the tab can save (the W line's door law).
   const LEFT_OVER_TEXT = 'A fixture sentence naming the stored and the live left over.'
-  const LEFT_OVER_SENTENCE: ReentryAnswerSentences = { costStale: null, leftOverStale: { text: LEFT_OVER_TEXT } }
+  const LEFT_OVER_CLAUSE = 'A fixture clause naming the two figures.'
+  const LEFT_OVER_SENTENCE: ReentryAnswerSentences = {
+    costStale: null,
+    leftOverStale: { text: LEFT_OVER_TEXT, clause: LEFT_OVER_CLAUSE, canChange: true },
+  }
+  const LEFT_OVER_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_TEXT} ${copy.stalenessPayCheckGateDoor}`
   const leftOverReport = (s: CurrentScenario, d: ScenarioDraft, leftOverStale: boolean) =>
     deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale })
 
@@ -400,7 +412,13 @@ describe('composeReentry — the read-back', () => {
     const report = leftOverReport(s, DATE_WITH_W, true)
     expect(report.rulesMoved, 'the hero echo must stay dark').toBe(false)
     expect(report.anyStale).toBe(true)
-    expect(composeReentry(s, report, LEFT_OVER_SENTENCE).noteLines).toEqual([LEFT_OVER_TEXT])
+    expect(composeReentry(s, report, LEFT_OVER_SENTENCE).noteLines).toEqual([LEFT_OVER_LINE])
+    // A read-only tab: the same line with no door sentence (the W line's door law).
+    const readOnlySentence: ReentryAnswerSentences = {
+      costStale: null,
+      leftOverStale: { text: LEFT_OVER_TEXT, clause: LEFT_OVER_CLAUSE, canChange: false },
+    }
+    expect(composeReentry(s, report, readOnlySentence).noteLines).toEqual([`${copy.stalenessLeftOverNote} ${LEFT_OVER_TEXT}`])
   })
 
   it('build 2: the report decides, never the caller — a sentence with the fact unset, or silenced, renders nothing', () => {
@@ -440,15 +458,117 @@ describe('composeReentry — the read-back', () => {
     }
     const report = leftOverReport(s, DATE_WITH_W, true)
     expect(report.date.contributionMoved, 'the fixture fires the contribution clock').toBe(true)
-    expect(composeReentry(s, report, LEFT_OVER_SENTENCE).noteLines).toEqual([copy.stalenessDate, LEFT_OVER_TEXT])
+    expect(composeReentry(s, report, LEFT_OVER_SENTENCE).noteLines).toEqual([copy.stalenessDate, LEFT_OVER_LINE])
     const blended: CurrentScenario = { ...s, dateVintage: { ...s.dateVintage!, blendSnapshotAsOf: '2019-01-01' } }
     const withAggregate = leftOverReport(blended, DATE_WITH_W, true)
     expect(withAggregate.unattributed.clocks, 'the fixture fires the aggregate').toEqual(['blend'])
     expect(composeReentry(blended, withAggregate, LEFT_OVER_SENTENCE).noteLines).toEqual([
       copy.stalenessDate,
       copy.stalenessReferenceTables,
-      LEFT_OVER_TEXT,
+      LEFT_OVER_LINE,
     ])
+    // Neither the contribution clock nor the aggregate hosts the clause.
+    expect(composeReentry(blended, withAggregate, LEFT_OVER_SENTENCE).leftOverClauseHost).toBe(false)
+  })
+
+  // U14 (R12, KTD9): one cause, one line — a fired tax, state-tax or working-years line carries the moved left
+  // over as a CLAUSE (the FIRST of them in push order), and no second line speaks; the host is decided once,
+  // here, and recorded on the view for the Result's hero note.
+  it('build 2 (U14): a fired working-years line carries the clause, no moved line of its own, and the view records the host', () => {
+    const s = withOlderWorkingYearsStamp(savedDraft(DATE_WITH_W))
+    const report = leftOverReport(s, DATE_WITH_W, true)
+    expect(report.workingYear.vintageMoved, 'the fixture fires the working-years clock').toBe(true)
+    const view = composeReentry(s, report, LEFT_OVER_SENTENCE)
+    expect(view.noteLines).toEqual([`${copy.stalenessWorkingYears} ${LEFT_OVER_CLAUSE}`])
+    expect(view.leftOverClauseHost).toBe(true)
+    // The host is the CLOCK's fact, not the left over's: with nothing moved, the host still reads true.
+    expect(composeReentry(s, leftOverReport(s, DATE_WITH_W, false), LEFT_OVER_SENTENCE).leftOverClauseHost).toBe(true)
+    // And the throw still fires when the host fires but no sentence was passed.
+    expect(() => composeReentry(s, report, NO_SENTENCES)).toThrow(/left over moved/)
+  })
+
+  it('build 2 (U14): the clause rides the FIRST fired of tax, state tax and working years — never two of them', () => {
+    const base = withOlderWorkingYearsStamp(savedDraft(DATE_WITH_W))
+    const s: CurrentScenario = { ...base, taxVintageDetail: { ...base.taxVintageDetail!, taxYear: 2019 } }
+    const report = leftOverReport(s, DATE_WITH_W, true)
+    expect(report.controls.taxMoved && report.workingYear.vintageMoved, 'both host clocks fired').toBe(true)
+    const lines = composeReentry(s, report, LEFT_OVER_SENTENCE).noteLines
+    expect(lines).toContain(`${copy.stalenessTax} ${LEFT_OVER_CLAUSE}`)
+    expect(lines).toContain(copy.stalenessWorkingYears)
+    expect(lines.filter((l) => l.includes(LEFT_OVER_CLAUSE))).toHaveLength(1)
+    expect(lines.some((l) => l.startsWith(copy.stalenessLeftOverNote)), 'no moved line of its own').toBe(false)
+  })
+
+  // The go-live review (KTD7) found every host arm above putting the host at noteLines[0]: a state-tax line
+  // pushed plainly (two lines, host false), or a host index that always pointed at line 0, stayed green.
+  it('build 2 (U14): a fired STATE-TAX line hosts the clause too — one line, no moved line of its own, the host recorded', () => {
+    const base = savedDraft(DATE_WITH_W)
+    const s: CurrentScenario = {
+      ...base,
+      retirementState: 'NC',
+      stateTaxVintage: { ...base.stateTaxVintage!, ncProfile: '{"drifted":"nc"}' },
+    }
+    // The run that carries W (so its exposure prices the working years), priced in NC by the producer's read.
+    const report = deriveStaleness(s, TODAY, pricing(exposureForDraft(DATE_WITH_W), 'NC'), { costStale: false, leftOverStale: true })
+    expect(report.controls.stateTaxMoved, 'the state clock fired').toBe(true)
+    expect(report.workingYear.leftOverStale, 'the left over is not silenced on this run').toBe(true)
+    const view = composeReentry(s, report, LEFT_OVER_SENTENCE)
+    expect(view.noteLines).toEqual([`${copy.stalenessStateTax} ${LEFT_OVER_CLAUSE}`])
+    expect(view.leftOverClauseHost).toBe(true)
+  })
+
+  it('build 2 (U14): a NON-host line fired first leaves the clause on the first HOST line, never on line 0 — the contribution line plain, the working-years line carrying it', () => {
+    const base = withOlderWorkingYearsStamp(savedDraft(DATE_WITH_W))
+    const s: CurrentScenario = {
+      ...base,
+      dateVintage: { ...base.dateVintage!, contributionYear: base.dateVintage!.contributionYear - 1 },
+    }
+    const report = leftOverReport(s, DATE_WITH_W, true)
+    expect(report.date.contributionMoved && report.workingYear.vintageMoved, 'both clocks fired').toBe(true)
+    const view = composeReentry(s, report, LEFT_OVER_SENTENCE)
+    expect(view.noteLines).toEqual([copy.stalenessDate, `${copy.stalenessWorkingYears} ${LEFT_OVER_CLAUSE}`])
+    expect(view.leftOverClauseHost).toBe(true)
+  })
+
+  it('build 2 (U14): an ACA-only or contribution-only clock hosts nothing — the separate moved line speaks, and the host reads false', () => {
+    const base = savedDraft(DATE_WITH_W)
+    const s: CurrentScenario = {
+      ...base,
+      dateVintage: { ...base.dateVintage!, contributionYear: base.dateVintage!.contributionYear - 1 },
+    }
+    const view = composeReentry(s, leftOverReport(s, DATE_WITH_W, true), LEFT_OVER_SENTENCE)
+    expect(view.noteLines).toEqual([copy.stalenessDate, LEFT_OVER_LINE])
+    expect(view.leftOverClauseHost).toBe(false)
+  })
+
+  it('build 2 (U14): `datesavedmoved` as a vault — the real core names both figures, $16,985 stored and $27,537 live, the fact and the sentence from one value', () => {
+    const d = DEV_SEEDS.datesavedmoved
+    const s = savedDraft(d)
+    const moved = workingYearLeftOverMoved(d)
+    expect(moved).toEqual({ stored: 16_985, live: 27_537 })
+    if (moved === null) return
+    const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: moved !== null })
+    expect(report.workingYear.leftOverStale).toBe(true)
+    const view = composeReentry(s, report, {
+      costStale: null,
+      leftOverStale: { text: workingYearLeftOverMovedText(moved), clause: workingYearLeftOverMovedClause(moved), canChange: true },
+    })
+    expect(view.noteLines).toEqual([
+      `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')} ${copy.stalenessPayCheckGateDoor}`,
+    ])
+  })
+
+  it('build 2 (U14): `datesavedstale` as a vault — W’s one line carries the clause naming the $16,985 not added, and no moved line speaks', () => {
+    const d = DEV_SEEDS.datesavedstale
+    const s = savedDraft(d)
+    expect(workingYearLeftOverMoved(d), 'waiting on W is never moved').toBeNull()
+    const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: false })
+    const line = workingYearCostStaleLine(d)
+    expect(line).toBe(`${workingYearCostStaleText(d)} ${slots.workingCostStaleLeftOverClause('16,985')}`)
+    const view = composeReentry(s, report, { costStale: line === null ? null : { text: line, canChange: true }, leftOverStale: null })
+    expect(view.noteLines).toEqual([`${copy.stalenessPayCheckGateLead} ${line} ${copy.stalenessPayCheckGateDoor}`])
+    // Under any other answer W's line gains no clause.
+    expect(workingYearCostStaleLine(DEV_SEEDS.datecoststale)).toBe(workingYearCostStaleText(DEV_SEEDS.datecoststale))
   })
 
   // S5.4 — the state-tax staleness clock's own named line: a PRICED household (NC) whose own

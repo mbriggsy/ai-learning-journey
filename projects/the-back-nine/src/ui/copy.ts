@@ -549,10 +549,22 @@ export const copy = {
   workingLedgerCost: 'Your figure for a working year',
   workingLedgerLeftOver: 'Left over',
   workingLedgerShort: 'Short',
-  // The bottom line's own explanation, by sign (D7: show how the answer is reached). The left-over
-  // one is K9's gloomy simplification said where the reader meets it.
+  // The bottom line's own explanation for a short year (D7: show how the answer is reached). A year left over
+  // carries no note here: build 2's left-over question, right after the picture, says what happens to it.
   workingLedgerShortNote: 'A short year is taken from savings, in your withdrawal order, like any other withdrawal.',
-  workingLedgerLeftOverNote: 'Pay left over isn’t added to savings here — only what you said you put in counts.',
+  // Build 2's left-over question (`docs/plans/features/working-year-surplus-build-spec.md` R5, R6; the
+  // council's draft labels, shipped flagged for the Caddie walk). The legend and labels read the same under
+  // every answer (R6); the figure and the check sentence are the group's described-by lines; one line in
+  // dollars, chosen by the shown state, sits below the group (the `…Line` slots). Every key and slot is
+  // named under `workingLedger…` so the copy guard's working-year checks read it (R14).
+  workingLedgerLeftOverLegend: 'What happens to the money left over in a working year?',
+  workingLedgerLeftOverSaved: 'All of it goes into savings or investments',
+  workingLedgerLeftOverSpent: 'Spent, or kept as cash',
+  workingLedgerLeftOverNotSure: 'Some of it, or not sure',
+  // The check sentence is a slot (`slots.workingLedgerLeftOverCheck`, below): it states its own dollars.
+  // The panel seat's face while W is stale (R5): no radios, so no "saved" is stored against a stale W.
+  workingLedgerLeftOverWaiting:
+    'This question waits until your figure for a working year, above, is checked. Until then, no money left over is added to your savings.',
   workingLedgerHeldBackNote:
     'Each month Social Security holds back raises the benefit later, starting after full retirement age.',
   // Where not every held-back month earns that raise in the run (the earnings-test schedule's own
@@ -598,6 +610,8 @@ export const copy = {
   // The panel's W row (U8): its name, the value line for the two faces with no figure, and the one
   // announcement when an edit in the open panel makes the answer stale (KTD21).
   assumptionWorkingCostName: 'What a year costs while you’re working',
+  // Build 2's seat below the W row. Its name only: nothing above its radios reads the answer (R6).
+  assumptionWorkingCostLeftOverName: 'Money left over in a working year',
   assumptionWorkingCostUnanswered: 'Not answered yet — the working years aren’t checked until it is.',
   assumptionWorkingCostStaleAnnounce: 'Your figure for a working year no longer matches your spending or state.',
   // --- the provisional answer strip (D1 — surfaces and sharpens during entry;
@@ -1309,7 +1323,7 @@ export const copy = {
     'That figure doesn’t count what you’d pay for drug and supplement plans — you answered about nothing for them, so the lines below add none.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
-  // `intakeMap.ts:728` builds `slcsp` into the overlay params, `taxOverlay.ts:287` calls it "the
+  // `intakeMap.ts:734` builds `slcsp` into the overlay params, `taxOverlay.ts:287` calls it "the
   // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:222-232) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
@@ -1318,7 +1332,7 @@ export const copy = {
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
   // (`stateTaxDisclosure.ts:144`) — they carry no ACA-priced axis, so the identical sentence also
-  // ships to a Medicare-only household (`intakeMap.ts:733-736`) that has no benchmark at all.
+  // ships to a Medicare-only household (`intakeMap.ts:739-742`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
   //
@@ -1567,13 +1581,13 @@ export const copy = {
   //
   // ⚠️ THE TOGGLE SETS THE ENTRY UNIT TOO, AND THE OLD SENTENCE HID IT (fixed 2026-08-03).
   // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
-  // (`spendDisplayed`, AssumptionPanel.tsx:535-540), so the reader watches the number move while
+  // (`spendDisplayed`, AssumptionPanel.tsx:630-635), so the reader watches the number move while
   // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:798-808, the `entered * 12` arm at :805) then multiplies by 12
+  // commit (AssumptionPanel.tsx:893-903, the `entered * 12` arm at :900) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
-  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:444) hard-disarms
-  // `spend-period-unconfirmed` (sanity.ts:389-412, the disarm read at :400) on this surface, and
-  // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:89) regardless — so the rule could not have
+  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:533) hard-disarms
+  // `spend-period-unconfirmed` (sanity.ts:390-413, the disarm read at :401) on this surface, and
+  // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:90) regardless — so the rule could not have
   // caught it even armed. The replacement must therefore say BOTH halves — the money is
   // unchanged AND the next figure you enter is read in the unit you just picked. A draft that said
   // only "the same money either way" was REJECTED for exactly that omission.
@@ -1677,9 +1691,15 @@ export const copy = {
   // drawn from savings), its last two carry over word for word. The Readings and Omissions paragraphs render
   // unchanged after it (the Omissions sentence already names the investment-income surtax, so it gets no
   // key). Then ONE key per open register gap that can move the check, each naming its lean in plain words —
-  // looks better than it really is, could go either way, looks a little worse — in that pinned order. The
-  // build that closes a gap deletes its key. K14 is retired (the RIB-LIM read settled it); K15 is the
+  // looks better than it really is, could go either way, looks a little worse — in that pinned order; and,
+  // between the either-way and the a-little-worse groups, build 2's left-over family, which names no lean
+  // (one line per shown state, below). The build that closes a gap deletes its key. K14 is retired (the RIB-LIM read settled it); K15 is the
   // 2026-10-29 measurement's (the register's *A retired spouse's share of the plan at work stays in W…*).
+  // Each lean was derived in build 1 through the short year alone, the only way these gaps reach an answer
+  // that carries no left-over figure (absent, spent, not sure). For a "saved" answer, a gap that moves a
+  // working year's cash can also move the left over the run credits (build 2's R8), and nobody has measured
+  // which way that moves the answer (R16; U11 measures the "saved" runs), so for that answer a lean holds
+  // only through the short year. The words are unchanged at the go-live.
   // The Hawk's narrowed ban binds every one; PILOT-DRAFTED, shipped flagged (KTD19).
   assumptionWorkingYearCheckValue:
     'While either of you is still working, the tool checks each year’s pay against what you said a working year costs. It adds your pay, any Social Security actually paid, and any other income, then takes out payroll tax, the income tax the tool works out on that income and on your investment income, what you put into savings, and your working-year figure; if a year comes up short, the difference comes out of savings like any other withdrawal. Savings can still create taxable income in those years, like a Roth conversion, a required withdrawal, or money taken out for Medicare costs. That income is taxed on top of your pay and investment income, and the tax is paid from savings.',
@@ -1696,7 +1716,9 @@ export const copy = {
     'A Social Security benefit that starts at full retirement age is counted for that whole year, though checks begin in the birth month, and the same goes for a widow’s or widower’s benefit that starts that year. Until the tool asks your birth month, that year can look a little better than it really is.',
   // K7 by the W answer's state reading (the whole-file review, 2026-10-30; `methodologyLines` picks ONE of
   // the three per household). A state with no income tax charges a working year none, the least any
-  // state can — so working somewhere that taxes pay can only flatter the answer: the rosy group.
+  // state can — so working somewhere that taxes pay can only flatter the answer through a short year: the
+  // rosy group (for a "saved" answer, the untaxed pay can also move the credited left over, an unmeasured
+  // reach: the arm's block comment above).
   assumptionWorkingYearCheckWorkStateNoTax:
     'Your working years are taxed by the state you said you’ll live in once you stop, which has no income tax, not the state you work in now. If the state you work in taxes pay, the answer looks better than it really is.',
   // PA (its tax on pay isn't priced for working years) and an unpriced state: the run charges no state
@@ -1711,9 +1733,30 @@ export const copy = {
     'Your working years are taxed by the state you said you’ll live in once you stop, not the state you work in now, which could go either way.',
   assumptionWorkingYearCheckWageFigures:
     'Two Social Security figures that rise with wages each year are held at today’s level: the most of your pay that Social Security tax applies to, and the earnings limit that decides how much of an early benefit is held back. So pay above that most is taxed a little low, and a little more of an early benefit is held back than the law would.',
-  // Leans a little worse than real (K9–K13, K15).
-  assumptionWorkingYearCheckLeftOver:
-    'Pay left over in a working year isn’t added to savings — only what you said you put in counts — so the answer can look a little worse than it really is.',
+  // BUILD 2's left-over family (`docs/plans/features/working-year-surplus-build-spec.md` KTD11, R14, R16): it
+  // replaced K9 ("pay left over isn't added… a little worse"), which the left-over question closed. ONE static
+  // line per shown state (R3) — the household reads its own state's line, chosen by the one selector
+  // (`methodologyLines`, `LEFT_OVER_KEY`). No dollars (the question's own line under its radios carries them),
+  // and NO lean: the credit's reach can run either way (insight 143), so no line says which way it moves the
+  // answer. It sits where K9 sat, between the either-way group and the a-little-worse group, belonging to
+  // neither. Under "saved" an entered W set too low credits a left over that isn't real; the saved line says so
+  // in words (U8), and so does the moved line, which credits too (b9-6's walk found it silent). PILOT-DRAFTED,
+  // shipped flagged for the Caddie walk.
+  assumptionWorkingYearCheckLeftOverNotAsked:
+    'A working year’s money left over is added to your savings only when your first working year shows some left over and you say all of it is saved.',
+  assumptionWorkingYearCheckLeftOverWaiting:
+    'Until your figure for a working year is checked, no money left over is added to your savings.',
+  assumptionWorkingYearCheckLeftOverAbsent:
+    'Money left over in a working year isn’t added to your savings until you say what happens to it.',
+  assumptionWorkingYearCheckLeftOverSaved:
+    'You said all of it is saved, so in each working year you’re both alive, what’s left over is added to your savings, up to your first working year’s figure. The left over is only as real as your figure for a working year: if that figure is too low, the plan adds money that isn’t really left over.',
+  assumptionWorkingYearCheckLeftOverSavedMoved:
+    'You said all of it is saved, but your first working year’s left over has changed since, so each working year adds at most the smaller of the two figures. The left over is only as real as your figure for a working year: if that figure is too low, the plan adds money that isn’t really left over.',
+  assumptionWorkingYearCheckLeftOverSpent:
+    'You said it’s spent or kept as cash, so no working year’s left over is added to your savings.',
+  assumptionWorkingYearCheckLeftOverNotSure:
+    'You weren’t sure, or save only some of it. The tool doesn’t ask how much yet, so no working year’s left over is added to your savings.',
+  // Leans a little worse than real (K10–K13, K15).
   assumptionWorkingYearCheckBirthMonth:
     'In the year you reach full retirement age, the tool holds back the most Social Security that year could and counts no later raise for it, because it doesn’t know your birth month, so that year and the benefit after it can look a little worse than they really are.',
   assumptionWorkingYearCheckPreTaxBenefits:
@@ -1813,30 +1856,59 @@ export const copy = {
   // The pay check's KTD21 — the household's own W answer no longer matches what it was given
   // against (the quote's inputs, or the state-tax reading). It is NOT a rules change, so it feeds
   // `anyStale` only, never the hero's "today's rules" echo; the engine keeps using the last figure
-  // the household gave (R4). A static, digit-free line — now the FALLBACK only: since b9-7's U10
-  // Caddie card the gate speaks the W step's own stale sentence (below), and this line renders only
+  // the household gave (R4), and for a "saved" left-over answer it carries no left over until W is
+  // checked (build 2's R7). A static, digit-free line — now the FALLBACK only: since b9-7's U10
+  // Caddie card the gate speaks W's one stale line (below), and this line renders only
   // if `composeReentry` is handed no sentence while the report calls W stale. PILOT-DRAFTED, shipped
   // flagged (KTD19).
   stalenessWorkingYearCost:
     'Your figure for what a year costs while you’re working no longer matches the spending or state you entered. Worth a look.',
   // The gate's KTD21 line (b9-7, `?vault=datecoststale`'s first read): the static line above quoted no
   // figure, hedged "spending or state" where the tool knew which, and its "Worth a look" had nothing on
-  // the gate to look at — six seats. The caller (`IntakeApp`, which holds the hydrated draft) passes the
-  // W step's own stale sentence (`workingYearCostStaleText` — both figures, the cause, which way it
-  // leans), framed by this lead and, where the tab can save, this pointer to where it changes.
+  // the gate to look at — six seats. The caller (`IntakeApp`, which holds the hydrated draft) passes W's
+  // one stale line (`workingYearCostStaleLine`): the W step's own stale sentence (`workingYearCostStaleText`
+  // — both figures, the cause, which way it leans), then, for a "saved" left-over answer waiting on W, build
+  // 2's dollars clause (R12) — framed by this lead and, where the tab can save, this pointer to where it changes.
   stalenessPayCheckGateLead: 'Your answer still uses your last figure for what a year costs while you’re working.',
   // BOTH gate choices reach W (b9-7, three first looks asked which button fixes it): "Still about right"
   // lands on the answer, whose standing line opens the panel at the W row; "Something’s changed" routes
   // into the walk (`IntakeApp` `onUpdate`), whose W step will not complete on a stale answer.
   stalenessPayCheckGateDoor: 'Either choice below leads to where you can change it.',
   // The ROSY-side warning, said after a quote-only stale sentence by `workingYearCostStaleText` when the
-  // household's spending now comes to MORE than the figure it said yes to (b9-7, the U10 Caddie card's
-  // False-PASS hunt, refuted and survived): the run treats a figure above what pay leaves as a short year
-  // drawn from savings, and pay left over is never saved, so a figure set too LOW can make the answer
-  // look better than it is (`taxOverlay.ts`, the working-year check). ONE-SIDED BY DESIGN: the card's
-  // first draft also said "can look worse" where spending fell, and on `datecoststale` — where neither
-  // figure makes a year short, so the answer is identical (measured) — two seats read it as "the real
-  // answer is better than shown", the rosy over-read. A false alarm here errs gloomy; that one did not.
+  // household's spending now comes to MORE than the figure it said yes to, or kept (build 2's KTD10) (b9-7,
+  // the U10 Caddie card's False-PASS hunt, refuted and survived). Its reason, re-derived for each left-over
+  // answer (build 2's R15; `docs/plans/features/working-year-surplus-build-spec.md` U8):
+  //  · ABSENT, SPENT, NOT SURE — b9-7's reason holds: the run treats a figure above what pay leaves as a short
+  //    year drawn from savings and credits no left over (R7), so W's level reaches the answer only through a
+  //    short year, and a figure set too LOW can hide one and make the answer look better than it is
+  //    (`taxOverlay.ts`, the working-year check).
+  //  · "SAVED" — W's level also reaches the left over the run credits (R8 caps each year's credit at that
+  //    year's cash and at year 0's printed Left over), and while W is stale nothing is credited at all (R7: `intakeMap.buildDateInput` carries the
+  //    figure only in the two saved shown states, never "waiting on W" or "not asked"). Where the picture
+  //    still shows a left over ("waiting on W"), the stale run can differ from the checked one in two ways: a
+  //    short year the too-low figure can hide, and a credit it leaves out that the checked run carries
+  //    wherever its own picture still shows a left over. That credit's reach can run either way (insight 143)
+  //    and is unmeasured (R16; U11 measures the "saved" runs after the go-live). So the stale answer's reach
+  //    is two-sided, and this sentence stands only as a possibility claim (a too-low figure can still hide a
+  //    short year) beside R12's dollars clause (`slots.workingCostStaleLeftOverClause`, which
+  //    `workingYearCostStaleLine` appends on the Result and the re-entry gate in that state), which names
+  //    the figure the household answered at as not added, and never which way that moves
+  //    the answer. The W step's note and the panel's W row print this sentence without the clause: that step
+  //    will not complete on a stale W, and the panel's left-over seat shows its waiting line below the row.
+  //    Where the picture shows none ("not asked"), the higher checked figure shows none either (W comes off
+  //    year 0's cash dollar for dollar), nothing is carried at either figure, and the reason above holds as
+  //    for an absent answer.
+  // ONE-SIDED BY DESIGN: the card's first draft also said "can look worse" where spending fell, and on
+  // `datecoststale` — where neither figure makes a year short, so the answer is identical (measured on runs
+  // that carry no left-over figure: that seed stores no answer, and build 1 had none to carry) — two seats
+  // read it as "the real answer is better than shown", the rosy over-read. A false alarm here errs gloomy;
+  // that one did not. Spent and not sure carry no figure either, so their date input is absent's, exactly
+  // (`intakeMap.buildDateInput`), and the measurement covers them. For a "saved" answer the two runs are not
+  // identical wherever the checked W's picture shows a left over: that run carries the stored figure again
+  // and credits up to it in each working year everyone is alive (R8; derived from the code, not measured).
+  // `datesavedstale` is `datecoststale` with "All of it" stored. Nobody has measured which way that moves
+  // the answer, so the mirror stays unsaid there too (R16): the dollars clause names the left over that is
+  // not added.
   // Never said where the state answer moved: the figures alone cannot tell which way a state's tax on
   // pay runs. Saying which way it MOVES the answer, measured, is the register's *The gate's working-year
   // lines can't say whether a change touches this household…*. The sentence itself is a SLOT
@@ -1935,7 +2007,7 @@ export const copy = {
   // the gesture returns before `appModel.update` and before the write, so on BOTH routes nothing
   // reached the device. The obligation as originally filed — "we saved your plan, we could not save
   // the recommendation" — was drafted for a save-proceeds-then-drops-the-atom flow that
-  // scenarioCodec.ts:684-688 instructs S5 to make UNREACHABLE. Shipping that sentence would have
+  // scenarioCodec.ts:692-696 instructs S5 to make UNREACHABLE. Shipping that sentence would have
   // been the cardinal sin pointed the other way: a save reported that never happened.
   recommendSaveCta: 'Keep this strategy read',
   // R1 AND R2, both named BEFORE the tap. The no-vault route escalates a "keep this" tap into vault
@@ -1950,7 +2022,7 @@ export const copy = {
   recommendSaveSavedBadge: 'Saved to this device — your plan and this strategy read',
   // THE REFUSALS. None carries a retry control: the mint is deterministic, so a retry re-fails
   // identically, and an affordance that cannot succeed is the lying-remedy shape
-  // (Result.tsx:491-499). Each says what did NOT happen, in the reader's frame.
+  // (Result.tsx:523-531). Each says what did NOT happen, in the reader's frame.
   recommendSaveRefusalRecordInvalidHeading: 'This strategy read couldn’t be kept',
   recommendSaveRefusalRecordInvalidBody:
     'We couldn’t build a record of it, so nothing reached this device — your plan here is exactly as you left it. The answer above is still current.',
@@ -2066,11 +2138,18 @@ export const copy = {
   // the W row; a read-only tab gets the sentences alone (no dead-end door). This lead is digit-free;
   // the sentence after it is the W step's own stale note (`workingYearCostStaleText` — both figures
   // and the cause that really moved, one home for the three surfaces; the b9-3 walk read "your last
-  // figure … the spending or state you entered" as a figure it could not see and a state never set).
+  // figure … the spending or state you entered" as a figure it could not see and a state never set),
+  // and, for a "saved" left-over answer waiting on W, build 2's dollars clause after it: the Result reads
+  // `workingYearCostStaleLine`, which appends it (R12; nothing left over is carried while W is stale, R7).
   // "This answer", never "this date": the line also stands beside the no-date reading, where there is
   // no date to speak of. PILOT-DRAFTED, shipped flagged (KTD19).
   stalenessPayCheckNote: 'This answer still uses your last figure for what a year costs while you’re working.',
   stalenessPayCheckCta: 'Look at that figure',
+  // Build 2's moved left over (R12): the household's "All of it" was given against a year-0 figure that has since
+  // changed. The lead here; both figures in `slots.stalenessLeftOverMoved`; the door opens the left-over seat.
+  // The gate reads the same lead and sentence, plus the W line's door sentence where the tab can save.
+  stalenessLeftOverNote: 'The money left over in your first working year has changed since you answered.',
+  stalenessLeftOverCta: 'Look at that answer',
   // Act-4 · U16 §S2 — the ENTRY surfaces (the recommend-second's invited affordance, the GoalPicker,
   // the pending tell). All calm, plain-language, hedge-free-where-a-hedge-would-mush (a door label and
   // a status line carry no figure to hedge — the require-hedge scope must stay on the GRADE/figure keys
@@ -2593,7 +2672,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2285-2288` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2324-2327` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -2788,9 +2867,22 @@ export const slots = {
   workingCostStaleQuote: (lastFormatted: string, nowFormatted: string): string =>
     `You said yes to $${lastFormatted} a year, but your spending figures have changed since — they now come to $${nowFormatted} a year.`,
   /** The rosy-side warning after a quote that ROSE past the figure said yes to (b9-7 — the copy's
-   *  `stalenessPayCheckGateDoor` neighbourhood carries the full why); names the figure it compares. */
+   *  `stalenessPayCheckGateDoor` neighbourhood carries the full why, per left-over answer); names the figure it
+   *  compares. For a "saved" answer waiting on W its reach is two-sided, so it stands only as a possibility
+   *  claim, beside the clause below on the Result and the re-entry gate (build 2's U8). */
   workingCostStaleLeansBetter: (lastFormatted: string): string =>
     `If a working year now costs more than $${lastFormatted} a year, this answer can look better than it really is.`,
+  // Build 2 (R12): W's ONE stale line, on the Result and the re-entry gate, gains this clause when the household
+  // said "All of it" and the picture, read on the stale W, still shows a year-0 left over (the shown state
+  // "waiting on W"; under "not asked" no clause rides): nothing left over is credited while W is stale (R7).
+  // Its figure is the one the household answered at (`quotedReal`), never the live print read on the stale W:
+  // after a raise that print can sit above the stored figure, and R8 caps every credit at the stored one
+  // (KTD7's review). On `datesavedstale` both are $16,985 (`workingYearCostStaleLine`).
+  // It follows W's own sentence (and its lean, where that rides). Never on the W step's note: that step will
+  // not complete on a stale W, and the question comes after it (R5). Never on the panel's W row: the
+  // left-over seat below it says it there.
+  workingCostStaleLeftOverClause: (storedFormatted: string): string =>
+    `Until that figure is checked, none of the $${storedFormatted} a year you chose to save is added to your savings.`,
   workingCostStaleQuoteGone: (lastFormatted: string): string =>
     `You said yes to $${lastFormatted} a year, but your spending figures have changed since, and there’s no spending figure to offer now.`,
   workingCostStaleStateConfirmed: (lastFormatted: string): string =>
@@ -2859,6 +2951,65 @@ export const slots = {
   workingLedgerLaterShortRange: (smallerFormatted: string, largerFormatted: string): string =>
     `Short each year: −$${smallerFormatted} to −$${largerFormatted}`,
   workingLedgerStillShortSince: (year: number): string => `Still short, as in ${year}.`,
+  // Build 2's moved left over (R12): the two figures, never a cause (the code observes both, never why). The
+  // line after `copy.stalenessLeftOverNote`, and the clause a fired tax, state-tax or working-years line carries
+  // instead where one fired (insight 101: one cause, one line).
+  // Each names the figure the engine credits at most (`smallerFormatted`, the smaller of the two, R8) and where it
+  // goes: b9-6's walk found "adds at most the smaller of the two" made the reader pick it, with no object, so a
+  // skim stopping at today's figure read that one as added.
+  stalenessLeftOverMoved: (storedFormatted: string, liveFormatted: string, smallerFormatted: string): string =>
+    `You said all of it goes into your savings when it was $${storedFormatted}. It’s $${liveFormatted} now, so each working year adds at most $${smallerFormatted} of its left over to your savings, the smaller of the two.`,
+  stalenessLeftOverClause: (storedFormatted: string, liveFormatted: string, smallerFormatted: string): string =>
+    `The money left over in your first working year is $${liveFormatted} now, not the $${storedFormatted} you answered at, so each working year adds at most $${smallerFormatted} of its left over to your savings, the smaller of the two.`,
+  // Build 2's left-over question: its figure (a described-by line above the group), then the one line in
+  // dollars below it, by shown state (R6). None says which way the answer moves (R16).
+  workingLedgerLeftOverFigure: (amountFormatted: string): string =>
+    `After everything above, your first working year has $${amountFormatted} left over.`,
+  // The check sentence, the figure's second described-by line. Pay only (b9-6's Caddie walk, `wf_246ff9ec-64e`: twelve
+  // seats on all seven targets, every refuter kept it): "your savings grow by about this much" was passed by market
+  // growth alone, so a couple who spends the left over could tap "All of it" and the tool would add money they never
+  // saved. It states its dollars (walk 2's hunter: "on top of what you already put in" let "we stay on budget" stand in
+  // for checking what landed): the left over, the year-0 "What you put into savings" row it sits on, and the total
+  // those imply, all three the picture's own printed figures. Money the household's world adds for free is excluded
+  // by name, the employer's share with it: the deposits row holds the household's own money only (the match and the
+  // employer's HSA dollar are taken out, `ownDepositsForYear`), so a statement total that counts them would pass a
+  // "yes" the pay never earned. A year with no deposits has no row to sit on: its own sentence. Walks 3 and 4
+  // (`wf_8a122df2-d64`, `wf_3525036f-1fe`) shaped the rest: one fact per sentence (corpus rule 5); "all of this", never
+  // "about", since the credit is all or nothing and "about" let a household saving most of it round up; where to check
+  // it, and that only what stays in counts (statements show deposits, and money taken back out was never saved); the
+  // reason market growth is excluded, with a named figure for "it". It reads the picture only, never the answer
+  // (R6: the text above the group is the same under every answer), so the partial saver's reply lives in the lines
+  // below the group: walk 4 found a partial-saver sentence here contradicting the moved line's own way out.
+  workingLedgerLeftOverCheck: (leftOverFormatted: string, depositsFormatted: string, totalFormatted: string): string =>
+    `Choose “All of it” only if all of this $${leftOverFormatted} goes into your savings or investments each year, on top of the $${depositsFormatted} of your pay you already put in. That’s about $${totalFormatted} of your pay a year in all. Check the $${totalFormatted} against your account statements, not your budget: count what went in over a year, less anything you took back out, even for a car or a roof. Market gains, interest and dividends don’t count toward it: the plan already figures those in, in good years and bad. Neither does anything your employer adds.`,
+  workingLedgerLeftOverCheckNoDeposits: (leftOverFormatted: string): string =>
+    `Choose “All of it” only if all of this $${leftOverFormatted} of your pay goes into your savings or investments each year. Check the $${leftOverFormatted} against your account statements, not your budget: count what went in over a year, less anything you took back out, even for a car or a roof. Market gains, interest and dividends don’t count toward it: the plan already figures those in, in good years and bad. Neither does anything your employer adds.`,
+  // The cap's reason is the household's own answer (walk 3: "the figure you chose “All of it” at" read as choosing a
+  // figure, when the reader chose a reply).
+  workingLedgerLeftOverSavedLine: (amountFormatted: string): string =>
+    `You said all of this $${amountFormatted} goes into your savings, so each working year adds at most $${amountFormatted} of its left over to your savings. A later year above that shows more left over still adds only $${amountFormatted}: that’s the amount you said goes in.`,
+  // Its door asks the check's question at today's figure (b9-6's walk 2: "Choose “All of it” again to use $X" read as
+  // a refresh, and never asked whether the raise is saved). Split by direction (walk 3): where the left over ROSE, the
+  // stored figure is the one credited, so the door says what a re-tap on the checked reply counts (the copy-law seat:
+  // a tap on a checked radio said nothing of its effect) and gives the household that still saves the old figure, but
+  // not all of the new one, its own way out, since "Some of it" counts nothing (the spouse and copy-law seats: the
+  // honest partial answer fell off a cliff). Where it FELL, today's figure is already the one credited, so the door
+  // only asks whether it still goes in.
+  // Walk 4 (`wf_3525036f-1fe`): every case gets its own instruction, so the household between the two figures is
+  // never told two things; each threshold is a share OF the left over ("at least $S" alone was met by the deposits
+  // every household already makes); and the re-tap is named as a choice of the reply already checked ("choose", never the phone's "tap": walk 5).
+  workingLedgerLeftOverRoseLine: (storedFormatted: string, liveFormatted: string): string =>
+    `You chose this when the left over was $${storedFormatted}. It’s $${liveFormatted} now, so each working year adds at most $${storedFormatted} of its left over to your savings, the smaller of the two. If all of this $${liveFormatted} now goes into your savings or investments each year, on top of what you already put in, choose “All of it” once more. Each working year then adds at most $${liveFormatted}. If at least $${storedFormatted} of the $${liveFormatted} still goes in, but not all of it, leave this as it is: your answer still counts the $${storedFormatted} you said goes in. If less than $${storedFormatted} of it goes in, choose “Some of it, or not sure”, which adds none of it for now.`,
+  workingLedgerLeftOverFellLine: (storedFormatted: string, liveFormatted: string): string =>
+    `You chose this when the left over was $${storedFormatted}. It’s $${liveFormatted} now, so each working year adds at most $${liveFormatted} of its left over to your savings, the smaller of the two. If all of this $${liveFormatted} still goes into your savings or investments each year, on top of what you already put in, choose “All of it” once more. If less of it goes in, choose “Some of it, or not sure”, which adds none of it for now.`,
+  // The partial saver's reply, and its zero, before the pick (walks 3 and 4: the zero showed only after it, so an
+  // honest partial saver met it too late, and "All of it" was the only way to count anything).
+  workingLedgerLeftOverAbsentLine: (amountFormatted: string): string =>
+    `Until you pick one, none of this $${amountFormatted} is added to your savings, and no later year’s left over is either. If only part of it goes in, “Some of it, or not sure” adds none of it for now: the tool doesn’t ask how much yet.`,
+  workingLedgerLeftOverSpentLine: (amountFormatted: string): string =>
+    `None of this $${amountFormatted} is added to your savings, and no later year’s left over is either.`,
+  workingLedgerLeftOverNotSureLine: (amountFormatted: string): string =>
+    `The tool doesn’t ask how much yet, so none of this $${amountFormatted} is added to your savings, and no later year’s left over is either.`,
   workingLedgerEventClaim: (who: string): string => `Social Security starts for ${who}.`,
   workingLedgerEventSpousalStart: (who: string): string => `A spousal benefit starts for ${who}.`,
   workingLedgerEventMedicareStarts: (who: string): string => `Medicare starts for ${who}, paid from savings.`,
@@ -3201,7 +3352,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1428` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1483` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

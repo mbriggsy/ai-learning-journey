@@ -813,6 +813,53 @@
   gap: var(--space-4);
 }
 
+/* Build 2's left-over question (R5, R6): the year-0 figure and the check sentence (the group's
+ * described-by lines), the radio group, then the one line in dollars below it. In the walk it follows
+ * the whole money picture, so it opens a little apart from the picture's last row. */
+.left-over {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Only the walk opens the question apart from the picture's last row; in the panel seat it sits under the
+ * row's name at the row's own gap, like the waiting face and the W row's question. */
+.step-body .left-over {
+  margin-top: var(--space-4);
+}
+
+.left-over__figure {
+  margin: 0;
+  max-width: var(--measure);
+  font-size: var(--text-base);
+  line-height: var(--leading-snug);
+  color: var(--ink);
+}
+
+.left-over__line {
+  margin: 0;
+}
+
+/* The panel seat's face while W is stale: the stale note's calm well and info glyph, words first —
+ * never a colored badge, never an alert (role="note"). */
+.left-over__waiting {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  background: var(--paper-raised);
+}
+
+.left-over__waiting-text {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  max-width: var(--measure);
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--ink);
+}
+
 /* The money picture (R16, KTD12): grouped definition lists on the read-back's raised-paper grammar
  * (save.css's `.reentry-rows`, re-declared here — the intake layer owns its own classes). The
  * legend is an h3 in the step and an h4 in the panel, styled as one quiet label either way. */

@@ -28,6 +28,13 @@ vi.mock('../db', async (importOriginal) => {
 })
 import { exportVault } from '../backup'
 import { createSession as createSessionUnderTest, type VaultSession } from '../session'
+// The real hydrate path, for the unanswered-bytes arm (tests are exempt from the layer bans).
+import { draftFromScenario } from '@ui/draftFromScenario'
+import { scenarioFromDraft } from '@ui/scenarioFromDraft'
+// U14's moved predicate (plan U6: "The new staleness predicate is false on that draft") and build 2's moved
+// witness, its positive twin.
+import { workingYearLeftOverMoved } from '@intake/workingYearLeftOver'
+import { DEV_SEEDS } from '@ui/devSeeds'
 
 // Every session a test opens is locked after it, pass or fail. A FAILED test's unlocked session keeps
 // answering the single-writer probe (the BroadcastChannel outlives the test), so the next test's
@@ -639,17 +646,26 @@ describe('single-active-writer (BroadcastChannel second-tab detection)', () => {
   })
 })
 
-describe('the schema-v4 bump — a newer plan is refused before anything is installed; a version-3 plan opens as the current one, and the disk keeps what it holds', () => {
+describe('the schema-v4 and schema-v5 bumps — a newer plan is refused before anything is installed; a version-3 or version-4 plan opens as the current one, and the disk keeps what it holds', () => {
   const NEWER = CURRENT_SCHEMA_VERSION + 1
   const newerModel = (): Scenario => ({ ...MODEL, schemaVersion: NEWER }) as unknown as Scenario
-  /** A REAL version-3 save, frozen from the last build before the bump (the codec suite's U6 fixture).
-   *  Read from the committed file, never minted: today's mint stamps CURRENT_SCHEMA_VERSION, so only a
-   *  save frozen from an older build can carry 3. Cast to `AnyScenario` only to reach the store's write
-   *  API — no member of that union is labeled 3; the codec relabels it at decode. */
-  const frozenV3 = (): AnyScenario =>
-    JSON.parse(
-      readFileSync(join(process.cwd(), 'src', 'shared', '__tests__', 'fixtures', 'scenario-v3-date-postw.json'), 'utf8'),
-    ) as AnyScenario
+  /** A REAL older save, frozen from the build that wrote it (the codec suite's fixtures: the schema-v4
+   *  plan's U6 for version 3, build 2's KTD6 for version 4). Read from the committed file, never minted:
+   *  today's mint stamps CURRENT_SCHEMA_VERSION, so only a save frozen from an older build can carry an
+   *  older label. Cast to `AnyScenario` only to reach the store's write API — no member of that union is
+   *  labeled 3 or 4; the codec relabels each at decode. */
+  const frozen = (file: string): AnyScenario =>
+    JSON.parse(readFileSync(join(process.cwd(), 'src', 'shared', '__tests__', 'fixtures', file), 'utf8')) as AnyScenario
+  const frozenV3 = (): AnyScenario => frozen('scenario-v3-date-postw.json')
+  /** Every frozen older save, with the label its file holds: the post-W version-3 plan, and the four
+   *  version-4 plans (a fresh W, a kept W carrying U5's stamp, a saved recommendation, the maximal plan). */
+  const FROZEN_OLDER = [
+    { file: 'scenario-v3-date-postw.json', label: 3 },
+    { file: 'scenario-v4-date.json', label: 4 },
+    { file: 'scenario-v4-datecoststale-kept.json', label: 4 },
+    { file: 'scenario-v4-rec.json', label: 4 },
+    { file: 'scenario-v4-maximal.json', label: 4 },
+  ] as const
 
   /** A vault holding `model` exactly as given (firstSave encodes, it never decodes), left locked. */
   async function vaultHolding(model: AnyScenario): Promise<VaultDb> {
@@ -667,9 +683,10 @@ describe('the schema-v4 bump — a newer plan is refused before anything is inst
     return { iv: Array.from(vault.model.iv), ciphertext: Array.from(vault.model.ciphertext) }
   }
 
-  /** The label the DISK holds, read with the vault's own key and a plain JSON parse — through the codec
-   *  a version-3 plan would read as the current version whatever the disk held. */
-  async function diskLabel(db: VaultDb, passphrase: string): Promise<unknown> {
+  /** The plan the DISK holds, decrypted with the vault's own key and read with a plain JSON parse —
+   *  through the codec an older plan would read as the current version whatever the disk held, and an
+   *  absent key could not be told from one the decode left out. */
+  async function diskPlaintext(db: VaultDb, passphrase: string): Promise<Record<string, unknown>> {
     const vault = await loadVault(db)
     if (vault.kind !== 'vault') throw new Error(`expected a vault, got ${vault.kind}`)
     const key = await derivePassphraseKey(passphrase, vault.passphraseWrap.salt)
@@ -681,7 +698,11 @@ describe('the schema-v4 bump — a newer plan is refused before anything is inst
       iv: vault.model.iv as Uint8Array<ArrayBuffer>,
       ciphertext: vault.model.ciphertext as Uint8Array<ArrayBuffer>,
     })
-    return (JSON.parse(new TextDecoder().decode(plaintext)) as { schemaVersion: unknown }).schemaVersion
+    return JSON.parse(new TextDecoder().decode(plaintext)) as Record<string, unknown>
+  }
+  /** The label the DISK holds (read raw, as above). */
+  async function diskLabel(db: VaultDb, passphrase: string): Promise<unknown> {
+    return (await diskPlaintext(db, passphrase)).schemaVersion
   }
 
   it('UNLOCK of a plan saved by a newer version → newer-version: nothing installed, no writer claimed', async () => {
@@ -707,30 +728,30 @@ describe('the schema-v4 bump — a newer plan is refused before anything is inst
     expect(await tabB.recoveryUnlock(RECOVERY_PASSPHRASE)).toEqual({ ok: false, reason: 'newer-version', got: NEWER })
   })
 
-  it('a VERSION-3 vault unlocks to the current version in memory, and the unlock writes nothing (the stored model record is byte-identical)', async () => {
-    const db = await vaultHolding(frozenV3())
-    expect(await diskLabel(db, PASSPHRASE), 'the vault really holds a version-3 plan').toBe(3)
+  it.each(FROZEN_OLDER)('a VERSION-$label vault ($file) unlocks to the current version in memory, and the unlock writes nothing (the stored model record is byte-identical)', async ({ file, label }) => {
+    const db = await vaultHolding(frozen(file))
+    expect(await diskLabel(db, PASSPHRASE), `the vault really holds a version-${label} plan`).toBe(label)
     const before = await storedModelRecord(db)
     const session = createSession(db)
     expect(await session.unlock(PASSPHRASE)).toEqual({ ok: true, readOnly: false })
     expect(session.currentModel()?.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
-    expect({ ...session.currentModel(), schemaVersion: 3 }).toEqual(frozenV3())
+    expect({ ...session.currentModel(), schemaVersion: label }).toEqual(frozen(file))
     expect(await storedModelRecord(db)).toEqual(before)
     await session.lock()
-    expect(await diskLabel(db, PASSPHRASE)).toBe(3)
+    expect(await diskLabel(db, PASSPHRASE)).toBe(label)
   })
 
-  it('a VERSION-3 vault through RECOVERY: the current version in memory, and the re-key rewrites only the passphrase wrap (the model record is byte-identical)', async () => {
-    const db = await vaultHolding(frozenV3())
+  it.each(FROZEN_OLDER)('a VERSION-$label vault ($file) through RECOVERY: the current version in memory, and the re-key rewrites only the passphrase wrap (the model record is byte-identical)', async ({ file, label }) => {
+    const db = await vaultHolding(frozen(file))
     const before = await storedModelRecord(db)
     const session = createSession(db)
     expect(await session.recoveryUnlock(RECOVERY_PASSPHRASE)).toEqual({ ok: true })
     expect(session.currentModel()?.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
-    expect({ ...session.currentModel(), schemaVersion: 3 }).toEqual(frozenV3())
+    expect({ ...session.currentModel(), schemaVersion: label }).toEqual(frozen(file))
     expect((await session.setNewPassphrase(await floorPass(NEW_PASSPHRASE))).ok).toBe(true)
     expect(await storedModelRecord(db)).toEqual(before)
     await session.lock()
-    expect(await diskLabel(db, NEW_PASSPHRASE)).toBe(3)
+    expect(await diskLabel(db, NEW_PASSPHRASE)).toBe(label)
   })
 
   it('after the NEXT SAVE the disk holds the current version (read raw with the vault’s own key)', async () => {
@@ -741,6 +762,45 @@ describe('the schema-v4 bump — a newer plan is refused before anything is inst
     if (model === null) throw new Error('unlocked without a model')
     expect((await session.save(model)).ok).toBe(true)
     expect(await diskLabel(db, PASSPHRASE)).toBe(CURRENT_SCHEMA_VERSION)
+    await session.lock()
+  })
+
+  it('THE UNANSWERED BYTES: a version-4 date plan through the real hydrate path (unlock → draftFromScenario → scenarioFromDraft → save) writes version 5 with NO left-over key — never a default reply (build 2’s R1, KTD6)', async () => {
+    const db = await vaultHolding(frozen('scenario-v4-date.json'))
+    const session = createSession(db)
+    expect((await session.unlock(PASSPHRASE)).ok).toBe(true)
+    const model = session.currentModel()
+    if (model === null || model.schemaVersion !== CURRENT_SCHEMA_VERSION) throw new Error('unlocked without a current model')
+    const hydrated = draftFromScenario(model)
+    if (!hydrated.ok) throw new Error(hydrated.detail)
+    expect('workingYearLeftOver' in hydrated.draft, 'the hydrated draft holds no answer').toBe(false)
+    // The new staleness predicate is false on that draft (plan U6). The re-entry gate's `leftOverStale` is this
+    // core's non-null, read on the hydrated draft (`IntakeApp.tsx`), so an unanswered plan raises no left-over
+    // line.
+    expect(workingYearLeftOverMoved(hydrated.draft), 'an unanswered plan never reads "moved"').toBeNull()
+    // Its positive twins. The fixture is `date`'s own plan (pay 150,000, a 20,000 deposit, W confirmed at
+    // 84,000), so it prints `date`'s year-0 Left over, hand-derived in `workingYearCredit.test.ts`: 150,000 −
+    // 11,475 − 17,540 − 20,000 − 84,000 = $16,985. The same draft given a "saved" answer at $16,000, a figure
+    // it does not print, reads moved against that $16,985, so the null above comes from the absent answer,
+    // never from a missing picture; given one at the $16,985 it prints, it reads not moved, so the moved fact
+    // reads the figure, never the kind alone. And `datesavedmoved`, saved at $16,985 and since raised to
+    // $165,000 pay, reads moved to its hand-derived $27,537 (`devSeeds.ts`).
+    expect(
+      workingYearLeftOverMoved({ ...hydrated.draft, workingYearLeftOver: { kind: 'saved', quotedReal: 16_000 } }),
+    ).toEqual({ stored: 16_000, live: 16_985 })
+    expect(
+      workingYearLeftOverMoved({ ...hydrated.draft, workingYearLeftOver: { kind: 'saved', quotedReal: 16_985 } }),
+      'saved at the printed figure: not moved',
+    ).toBeNull()
+    expect(workingYearLeftOverMoved(DEV_SEEDS.datesavedmoved)).toEqual({ stored: 16_985, live: 27_537 })
+    const minted = scenarioFromDraft(hydrated.draft)
+    if (!minted.ready) throw new Error(minted.detail)
+    expect((await session.save(minted.scenario)).ok).toBe(true)
+    const raw = await diskPlaintext(db, PASSPHRASE)
+    // The typed literal, read raw (insight 151): the bytes a version-5 build writes.
+    expect(raw.schemaVersion).toBe(5)
+    expect(raw.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    expect('workingYearLeftOver' in raw, 'an unanswered plan is written with no answer key').toBe(false)
     await session.lock()
   })
 })

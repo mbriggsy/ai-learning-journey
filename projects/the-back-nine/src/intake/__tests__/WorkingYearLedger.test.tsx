@@ -92,15 +92,18 @@ describe('the money picture — year 0 (R16)', () => {
     expect(screen.queryByRole('heading', { name: copy.workingLedgerLaterHeading })).toBeNull()
   })
 
-  it('a year left over reads the word and the figure, with the left-over note; at exactly $0 there is no note', () => {
+  it('a year left over reads the word and the figure with NO note under it (build 2: the left-over question after the picture says what happens to it, and nothing in the picture reads the answer); $0 reads the same way', () => {
     renderPicture({ year0: year0({ bottomLine: 2_210, cash: 2_210, savingsTaxLine: false }), laterYears: [] })
     expect(valueOf(copy.workingLedgerLeftOver)).toBe('$2,210')
-    expect(screen.getByText(copy.workingLedgerLeftOverNote)).toBeInTheDocument()
+    const bottomRow = (): Element | null | undefined =>
+      screen.getByText(copy.workingLedgerLeftOver).closest('.wy-row')
+    expect(bottomRow(), '[test setup] the Left over row').toBeTruthy()
+    expect(bottomRow()?.querySelectorAll('.wy-row__detail').length, 'no sentence under the Left over row').toBe(0)
     expect(screen.queryByText(copy.workingLedgerSavingsTax)).toBeNull()
     cleanup()
     renderPicture({ year0: year0({ bottomLine: 0, cash: 0 }), laterYears: [] })
     expect(valueOf(copy.workingLedgerLeftOver)).toBe('$0')
-    expect(screen.queryByText(copy.workingLedgerLeftOverNote)).toBeNull()
+    expect(bottomRow()?.querySelectorAll('.wy-row__detail').length).toBe(0)
   })
 
   it('the Social Security row shows what is PAID and names what the test held back inside the row — never in the sum', () => {

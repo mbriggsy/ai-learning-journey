@@ -11,8 +11,8 @@
  * engine's core contract + a minimal plaintext `Scenario`. U2/U3 extend `Scenario`
  * with per-person account buckets + birth years (the schemaVersion-2 field shape);
  * U4 wraps it in the persisted record types + owns the `schemaVersion` DECODE ladder
- * (branch per version, refuse newer, no field migration — the one step is the schema-v4 bump's
- * label-only relabel of version 3). Those extensions are additive — the fields here are written from v1.
+ * (branch per version, refuse newer, no field migration — the two steps are the schema-v4 and
+ * schema-v5 bumps' label-only relabels, 3 → 4 → 5). Those extensions are additive — the fields here are written from v1.
  */
 
 // ---------------------------------------------------------------------------
@@ -1669,16 +1669,21 @@ export interface ScenarioV2 {
 // captures: per-person identity + work-status, the user's actual account list, the
 // ticker-keyed manual classifications, and the household health-cost entry.
 //
-// ONE FIELD SET, TWO LABELS (the schema-v4 bump, 2026-10-31, Briggsy's OK on the register
-// entry *A copy of the app built before the pay check opens a plan carrying W…*): every
-// save since writes this shape as `schemaVersion` 4 ({@link CURRENT_SCHEMA_VERSION}), so a
-// copy built before the bump refuses it calmly ("saved by a newer version") instead of
-// running a plan carrying W without the pay check. Version 3 carries the identical
-// fields; the codec relabels it to 4 at decode, forever (`scenarioCodec.ts`). The
-// sub-types keep their `V3` names (`PersonInputsV3`, `SavedRecommendationV3`,
-// `WorkingYearCostV3`, the `*VintageV3` stamps, `SCENARIO_V3_FIELDS`, the codec's
-// `checkV3Fields`): they name this field GENERATION, which version 4 carries unchanged.
-// When a future field must bump the version: `docs/architecture.md` §7.3.
+// ONE FIELD GENERATION, THREE LABELS. The schema-v4 bump (2026-10-31, Briggsy's OK on the
+// register entry *A copy of the app built before the pay check opens a plan carrying W…*)
+// relabeled this shape 4, so a copy built before it refuses a plan carrying W calmly ("saved
+// by a newer version") instead of running it without the pay check. The schema-v5 bump
+// (build 2's go-live, `docs/plans/features/working-year-surplus-build-spec.md` KTD6) adds ONE
+// optional field, the left-over answer (`workingYearLeftOver`), and relabels the shape 5
+// ({@link CURRENT_SCHEMA_VERSION}): a version-4 copy ignoring a "saved" answer would drop a
+// left over the version-5 copy credits (§7.3's rule (a)), so it must refuse the plan. Versions
+// 3 and 4 carry every field version 5 requires and never the new one; the codec relabels
+// 3 → 4 → 5 at decode, forever (`scenarioCodec.ts`). The sub-types keep their `V3` names
+// (`PersonInputsV3`, `SavedRecommendationV3`, `WorkingYearCostV3`, the `*VintageV3` stamps,
+// `SCENARIO_V3_FIELDS`, the codec's `checkV3Fields`): they name this field GENERATION, which
+// versions 4 and 5 carry; the one field version 5 added is named for its version
+// ({@link WorkingYearLeftOverV5}). When a future field must bump the version:
+// `docs/architecture.md` §7.3.
 //
 // What follows is the shape's history as first written (dated, kept as written):
 //
@@ -1968,8 +1973,9 @@ export type IncomeStream = {
  * The version every save writes — the ONE home of the current `schemaVersion` (the schema-v4
  * plan's KTD1). The mint (`scenarioFromDraft`), the codec's top arm and its "newer" threshold,
  * and the hydrate gate (`IntakeApp`) all read it; no production file re-types it, except the
- * codec's version-3 step, which names its LITERAL successor (a step that jumps to "current"
- * would carry an old plan past whatever step a later bump adds). Declared here, above the type
+ * codec's label-only steps (3 → 4 and 4 → 5), each of which names its LITERAL successor (a step
+ * that jumps to "current" would carry an old plan past whatever step a later bump adds), and its
+ * refusal of a version-3 or version-4 plan carrying the version-5 answer. Declared here, above the type
  * it discriminates, as {@link BACKUP_FORMAT_VERSION} is: `model.ts` is the only home without an
  * import cycle.
  *
@@ -1978,10 +1984,11 @@ export type IncomeStream = {
  * this constant after a real save — roll forward (`docs/architecture.md` §7.3). Each bump raises
  * the version-floor test in its own follow-up commit.
  */
-export const CURRENT_SCHEMA_VERSION = 4
+export const CURRENT_SCHEMA_VERSION = 5
 
 /** The current plaintext scenario: the account-level intake truth, written as
- *  {@link CURRENT_SCHEMA_VERSION} (version 3 carries the same fields and relabels at decode).
+ *  {@link CURRENT_SCHEMA_VERSION} (versions 3 and 4 carry the same fields less the optional
+ *  left-over answer, and relabel at decode).
  *  See the section comment above for the label history, the define-now/write-at-U8 contract
  *  and the deliberate fidelity-over-duplication shape change vs v2. */
 export interface CurrentScenario {
@@ -2169,8 +2176,8 @@ export interface CurrentScenario {
    *  KTD4). It landed ADDITIVE-OPTIONAL within schemaVersion 3 (the `heirBracket` precedent, never
    *  seeded); a user fact carried through `...draft` at Save. It is also the field the schema-v4
    *  bump exists for (2026-10-31): a copy built before it ignored W and ran the working years
-   *  without the pay check, unflagged, so every save now writes version 4, which such a copy
-   *  refuses (§7.3's rule (a)). Optional still: a version-3 plan saved before W shipped has none,
+   *  without the pay check, unflagged, so every save since writes version 4 or later, which such a
+   *  copy refuses (§7.3's rule (a)). Optional still: a version-3 plan saved before W shipped has none,
    *  and a current copy opens it with W unanswered (the register's shape-keyed W ask). Absent ⇒ no working-year
    *  check, and every run is byte-identical to a build without it (R18). The intake REQUIRES it on
    *  the date route through the W step's gate, never through `missingRequiredFacts` (KTD3: the
@@ -2178,6 +2185,16 @@ export interface CurrentScenario {
    *  display unit only (the `spendEntryPeriod` precedent). TOP-LEVEL so the R7 registry compile
    *  gate reaches it (the `medicareExtrasByPerson` reasoning). */
   readonly workingYearCost?: WorkingYearCostV3
+  /** Build 2's answer: what happens to a working year's left-over pay
+   *  (`docs/plans/features/working-year-surplus-build-spec.md` R1, R2, KTD1) — the field the
+   *  schema-v5 bump exists for. OPTIONAL, and ABSENT means unanswered: nothing defaults it to a
+   *  reply (never `?? 'spent'`), and absent stays distinct from "not sure" everywhere. Only a
+   *  `saved` answer, carried while W is fresh, moves the engine (R7); every other state runs
+   *  today's engine byte for byte (R10). A user fact carried through `...draft` at Save, never
+   *  stamped fresh. TOP-LEVEL so the R7 registry compile gate reaches it (the
+   *  `medicareExtrasByPerson` reasoning; `src/shared/model.ts`'s W comment ruled "build 2's
+   *  surplus answer gets its own top-level key"). */
+  readonly workingYearLeftOver?: WorkingYearLeftOverV5
   /** Act-4 · U17 — the SAVED RECOMMENDATION record (the spec's Q5 payload). ADDITIVE-OPTIONAL
    *  within schemaVersion 3 (the chosenGoal/rothConversion/savedAt tolerant-reader precedent —
    *  a pre-U17 vault lacks the field and decodes unchanged; NO schemaVersion bump). ABSENCE IS
@@ -2258,7 +2275,7 @@ export interface SavedRecommendationV3 {
    *  2026-09-03 edit-time kill the pending arm does too; produced by the private `fingerprintOf` at
    *  `:698`) — the identity of the run this record actually describes — and NEVER from a fresh
    *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
-   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:718`): what the draft WOULD solve
+   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:723`): what the draft WOULD solve
    *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism
    *  — so minting from the fresh side instead would stamp the record with inputs the recommendation
    *  was never computed against, which on a stale draft is a calm-but-wrong memory rather than a
@@ -2489,6 +2506,31 @@ export type WorkingYearCostV3 =
       readonly keptOverQuoteReal?: number
     }
 
+/** The three replies to build 2's left-over question (KTD1): "All of it goes into savings or
+ *  investments" (`saved`), "Spent, or kept as cash" (`spent`), "Some of it, or not sure"
+ *  (`not-sure`). A closed vocabulary whose spellings bind from the first real save (§7.3's newer
+ *  reader's half: a vocabulary never loses a value). The fourth state, unanswered, is the field's
+ *  ABSENCE, never a token here. No name says "surplus": that word already names the spine seed
+ *  `surplus`, `surplusRegime` and the Tier-2 goal. */
+export const WORKING_YEAR_LEFT_OVER_KINDS = ['saved', 'spent', 'not-sure'] as const
+export type WorkingYearLeftOverKind = (typeof WORKING_YEAR_LEFT_OVER_KINDS)[number]
+
+/** The persisted left-over answer (KTD1, R2), discriminated on `kind` — an object union like W's,
+ *  so a field added later is additive. `saved` records the whole-dollar year-0 Left over it was
+ *  given against: an integer from 1 to the codec's `MAX_REAL_DOLLAR` (the engine's
+ *  `ENGINE_MAX_DOLLAR`; `src/shared` may not import the engine), so one answer consents to one
+ *  figure and a bare "saved" can never re-bind silently to a larger left over (Key Decisions).
+ *  `spent` and `not-sure` record no figure (codec-enforced, both directions). Named for the
+ *  version that introduced it: it is the one field version 5 added to the v3 generation. */
+export type WorkingYearLeftOverV5 =
+  | {
+      readonly kind: 'saved'
+      /** The printed year-0 Left over the household chose "All of it" against (whole real $). */
+      readonly quotedReal: number
+    }
+  | { readonly kind: 'spent' }
+  | { readonly kind: 'not-sure' }
+
 /** The persisted structured tax vintage (P3·U13 → the controls-surface clock). Keyed on the
  *  two things a real statutory/table change moves: the table year and the legal-basis
  *  sentence (verbatim from the canonical entry — any wording change is a vintage bump, the
@@ -2676,7 +2718,9 @@ export interface HealthcareVintageV3 {
 /** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the
  *  codec arm iterates THIS list, so a field added to the interface cannot
  *  silently skip validation — it fails the compile-time tie below first).
- *  Version 4 carries exactly this set (the label-only bump). A new TOP-LEVEL field must join this
+ *  Version 5 carries exactly this set; versions 3 and 4 carry it less `workingYearLeftOver`, the one
+ *  optional field the schema-v5 bump added (its step is label-only for that reason: a relabeled
+ *  older plan lacks a key its type already calls optional). A new TOP-LEVEL field must join this
  *  list to compile, and whether it also BUMPS {@link CURRENT_SCHEMA_VERSION} is decided by the rule
  *  in `docs/architecture.md` §7.3 (would an older copy that ignores it answer differently, refuse
  *  one of its values, or drop it on save?). A new VALUE in a vocabulary the codec checks, or a new
@@ -2713,6 +2757,7 @@ export const SCENARIO_V3_FIELDS = [
   'chosenGoal',
   'heirBracket',
   'workingYearCost',
+  'workingYearLeftOver',
   'savedRecommendation',
 ] as const
 
@@ -2723,10 +2768,10 @@ const _v3FieldsExhaustive: _V3FieldsCover & _V3KeysCovered = true
 void _v3FieldsExhaustive
 
 /** The union of the scenario shapes a decode can RETURN. The current shape joined at P2·U8 (its
- *  codec arm + first writer), labeled 3 until the schema-v4 bump; it now carries
- *  {@link CURRENT_SCHEMA_VERSION}, and a version-3 plan never appears here — the codec relabels it
- *  to its successor before returning, so 3 is in no type and every `=== 3` comparison is a
- *  compile error. v1/v2 remain only as legacy decode-ladder members, decoded as-is (no
+ *  codec arm + first writer), labeled 3 until the schema-v4 bump and 4 until the schema-v5 bump; it
+ *  now carries {@link CURRENT_SCHEMA_VERSION}, and a version-3 or version-4 plan never appears here —
+ *  the codec relabels each to its successor before returning, so 3 and 4 are in no type and every
+ *  `=== 3` or `=== 4` comparison is a compile error. v1/v2 remain only as legacy decode-ladder members, decoded as-is (no
  *  up-convert), which the hydrate gate refuses. Anything above the current version surfaces the
  *  calm "saved by a newer version" state, never a mis-parse. */
 export type AnyScenario = Scenario | ScenarioV2 | CurrentScenario

@@ -22,10 +22,13 @@ test("the fixture is the measured registry shape: version 2, each plugin a list 
   assert.ok(Object.values(MEASURED.plugins).flat().some((e) => !("gitCommitSha" in e)));
 });
 
-test("a registry pointing at 3.34.0 reads 3.34.0's files, never the 3.14.3 folder beside it", (t) => {
+test("a registry pointing at 3.34.0 reads 3.34.0's files, never the older 3.14.3 or the newer 3.37.0 folder beside it", (t) => {
   const root = tmpRoot(t);
   ceInstall(root, "3.14.3");
   const install = ceInstall(root, "3.34.0");
+  // A newer folder on disk than the registered one (an update mid-install, or a downgrade): a
+  // newest-folder glob would read it.
+  ceInstall(root, "3.37.0");
   const r = resolveCe({ registry: registryAt(root, [ceEntry(install, SHA_OLD, "3.34.0")]) });
   assert.equal(r.absent, null);
   assert.equal(r.commit, SHA_OLD);

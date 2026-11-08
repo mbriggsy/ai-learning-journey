@@ -211,5 +211,6 @@ if (isMain(import.meta.url)) {
   console.log(JSON.stringify(r, null, 1));
   for (const p of r.ids.problems) console.error(`fold: ${p}`);
   if (r.driftLines) console.error(`fold: ${r.drift.length} old value(s) still appear on ${r.driftLines} line(s): judge each one`);
-  process.exit(r.ok ? 0 : 1);
+  // exitCode, not exit(): an exit right after a print can cut a piped stdout short.
+  process.exitCode = r.ok ? 0 : 1;
 }

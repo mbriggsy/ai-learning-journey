@@ -537,11 +537,12 @@ if (isMain(import.meta.url)) {
     const out = COMMANDS[command](readInput(arg));
     if (command === "receipt") console.log(out.text);
     else console.log(JSON.stringify(out, null, 1));
-    process.exit(out.ok === false ? 1 : 0);
+    // exitCode, not exit(): an exit right after a print can cut a piped stdout short.
+    process.exitCode = out.ok === false ? 1 : 0;
   } catch (e) {
     // Exit 2, as for a missing argument: the command could not answer. Exit 1 is kept for a
     // refused or changed path, an answer.
     console.error(`flow: ${e.message.replace(/^flow: /, "")}`);
-    process.exit(2);
+    process.exitCode = 2;
   }
 }

@@ -68,6 +68,12 @@ export const CE_FILES = [
   ...AGENTS.map((a) => ({ key: a, file: `${PLAN}agents/${a}.md`, seats: [a] })),
 ];
 
+// The seats that read no CE file (the deepen's premise seat and check round 1's three coverage
+// lenses, KTD5 and KTD6), so a receipt can tell a known seat from a mistyped one.
+export const SEATS_WITHOUT_CE = ["premise", "reach", "blast-radius", "test-vacuity"];
+// Every seat key a run can name: each CE file's seats, and those that read none.
+export const KNOWN_SEATS = new Set([...CE_FILES.flatMap((f) => f.seats), ...SEATS_WITHOUT_CE]);
+
 const SHA = /^[0-9a-f]{40}$/;
 const sha256 = (buf) => createHash("sha256").update(buf).digest("hex");
 

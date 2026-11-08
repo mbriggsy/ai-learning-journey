@@ -55,6 +55,25 @@ test("each size-law line states the budgets, not the caps, of the fields its sch
   assert.match(SIZE_LAWS.gist, new RegExp(`gist at most ${budgetOf("gist")} characters`));
 });
 
+test("the inventory asks for the last line holding text as Read returned it, without its line-number prefix", () => {
+  for (const name of ["finder", "scorer"]) assert.ok(SIZE_LAWS[name].includes(`last_line_text: the first ${budgetOf("lastLineText")} characters of the last line holding text you read, as Read returned it, without its line-number prefix`), name);
+});
+
+test("each scorer note carries its row's line first, so the run joins notes to the rows selection picks by line, never by a name two sections can share", () => {
+  const note = SCHEMAS.scorer.properties.notes.items;
+  assert.equal(Object.keys(note.properties)[0], "line");
+  assert.deepEqual(note.properties.line, SCHEMAS.scorer.properties.sections.items.properties.line);
+  assert.deepEqual(note.required, ["line", "section", "triggers_named"]);
+  assert.match(SIZE_LAWS.scorer, new RegExp(`at most ${budgetOf("notes")} notes, one per section scoring 2 points or more \\(past ${budgetOf("notes")}, the ${budgetOf("notes")} that rank highest\\), each with its row's line and naming its triggers in at most ${budgetOf("triggersNamed")} characters`));
+});
+
+test("each amendment states the gap it closes, capped, so its verifiers judge the gap it names", () => {
+  const a = SCHEMAS.amendment.properties.amendments.items;
+  assert.deepEqual(a.properties.gap, { type: "string", maxLength: capOf("gap") });
+  assert.ok(a.required.includes("gap"));
+  assert.match(SIZE_LAWS.amendment, new RegExp(`section at most ${budgetOf("section")} characters, gap ${budgetOf("gap")} \\(the gap it closes, with its plan line\\), change ${budgetOf("change")}`));
+});
+
 test("schemaProblems names each way a schema goes unbounded, and a capped one has none", () => {
   const ok = { type: "object", properties: { a: { type: "string", maxLength: 5 }, b: { type: "array", maxItems: 2, items: { type: "integer", maximum: 9 } } }, required: ["a"] };
   assert.deepEqual(schemaProblems(ok), []);

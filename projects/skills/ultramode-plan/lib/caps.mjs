@@ -51,6 +51,9 @@ export const SIZE = {
   riskSignals: { items: 7 },
   // A deepen research helper's amendments (KTD5); old_values feed fold.mjs's drift grep (KTD9).
   amendments: { items: 4 },
+  // The gap an amendment closes, with its plan line, which its verifiers judge (U4's R4-9). Sized to
+  // keep a maximal amendment call under PAYLOAD (5,918 characters, tested).
+  gap: { chars: 80 },
   change: { chars: 400 },
   evidence: { chars: 320 },
   oldValues: { items: 3 },
@@ -147,7 +150,9 @@ export const SCHEMAS = {
       })),
       depth: { type: "string", enum: PLAN_DEPTHS },
       risk_signals: capList("riskSignals", { type: "string", enum: RISK_SIGNALS }),
-      notes: capList("notes", capObject({ section: capString("sectionName"), triggers_named: capString("triggersNamed") })),
+      // A note carries its row's line first: the run joins it to the row selection picks by line,
+      // since two sections can share a name (U4's R4-6).
+      notes: capList("notes", capObject({ line: capWhole("line"), section: capString("sectionName"), triggers_named: capString("triggersNamed") })),
       ...CAPS_INVENTORY,
     },
     required: ["sections", "depth", "risk_signals"],
@@ -157,6 +162,7 @@ export const SCHEMAS = {
     properties: {
       amendments: capList("amendments", capObject({
         section: capString("section"),
+        gap: capString("gap"),
         severity: { type: "string", enum: ["P1", "P2"] },
         change: capString("change"),
         evidence: capString("evidence"),
@@ -181,14 +187,14 @@ const CAPS_LAW = "STRUCTURED-OUTPUT SIZE LAW: a call bigger than its schema allo
 // 6000 -> "6,000", without toLocaleString, whose output depends on the runtime's locale data.
 const capsGrouped = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 const CAPS_LAW_END = `The whole call stays under ${capsGrouped(PAYLOAD)} characters. Depth belongs in your working text before the call; the call is the summary, not the essay.`;
-const CAPS_INVENTORY_LAW = `last_line_text: the first ${budgetOf("lastLineText")} characters of the last line you read, copied exactly`;
+const CAPS_INVENTORY_LAW = `last_line_text: the first ${budgetOf("lastLineText")} characters of the last line holding text you read, as Read returned it, without its line-number prefix`;
 
 // The size-law line each prompt that emits a schema call carries, built from the same table.
 export const SIZE_LAWS = {
   finder: `${CAPS_LAW} certifies nothing. At most ${budgetOf("findings")} findings (fewer and deeper beats many and shallow; name further concrete ones in overflow: at most ${budgetOf("overflow")} titles of at most ${budgetOf("overflowItem")} characters). Per finding: title at most ${budgetOf("title")} characters, section ${budgetOf("section")}, why_it_matters ${budgetOf("why")}, suggested_fix ${budgetOf("fix")}. At most ${budgetOf("residual")} residual_risks of at most ${budgetOf("residualItem")} characters. ${CAPS_INVENTORY_LAW}. ${CAPS_LAW_END}`,
   verdict: `${CAPS_LAW} turns your vote into an abstention. reasoning at most ${budgetOf("reasoning")} characters, citing file:line or the plan's line; better_fix at most ${budgetOf("betterFix")} characters, or '' when the proposed change is right. ${CAPS_LAW_END}`,
-  scorer: `${CAPS_LAW} stops the deepen as blocked. At most ${budgetOf("sections")} sections, each named in at most ${budgetOf("sectionName")} characters, with the line of the index heading it starts at; at most ${budgetOf("notes")} notes, one per section scoring 2 points or more, each naming its triggers in at most ${budgetOf("triggersNamed")} characters. ${CAPS_INVENTORY_LAW}. ${CAPS_LAW_END}`,
-  amendment: `${CAPS_LAW} proposes nothing. At most ${budgetOf("amendments")} amendments (name further ones in overflow: at most ${budgetOf("overflow")} titles of at most ${budgetOf("overflowItem")} characters). Per amendment: section at most ${budgetOf("section")} characters, change ${budgetOf("change")}, evidence ${budgetOf("evidence")}, at most ${budgetOf("oldValues")} old_values of at most ${budgetOf("oldValue")} characters each. ${CAPS_LAW_END}`,
+  scorer: `${CAPS_LAW} stops the deepen as blocked. At most ${budgetOf("sections")} sections, each named in at most ${budgetOf("sectionName")} characters, with the line of the index heading it starts at; at most ${budgetOf("notes")} notes, one per section scoring 2 points or more (past ${budgetOf("notes")}, the ${budgetOf("notes")} that rank highest), each with its row's line and naming its triggers in at most ${budgetOf("triggersNamed")} characters. ${CAPS_INVENTORY_LAW}. ${CAPS_LAW_END}`,
+  amendment: `${CAPS_LAW} proposes nothing. At most ${budgetOf("amendments")} amendments (name further ones in overflow: at most ${budgetOf("overflow")} titles of at most ${budgetOf("overflowItem")} characters). Per amendment: section at most ${budgetOf("section")} characters, gap ${budgetOf("gap")} (the gap it closes, with its plan line), change ${budgetOf("change")}, evidence ${budgetOf("evidence")}, at most ${budgetOf("oldValues")} old_values of at most ${budgetOf("oldValue")} characters each. ${CAPS_LAW_END}`,
   gist: `${CAPS_LAW} returns nothing. gist at most ${budgetOf("gist")} characters; dossier is the dossier's absolute path, at most ${budgetOf("dossier")} characters. ${CAPS_LAW_END}`,
 };
 

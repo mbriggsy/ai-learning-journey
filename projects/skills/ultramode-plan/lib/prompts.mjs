@@ -9,17 +9,21 @@
 //   - every prompt: never WebFetch; never ask the user; no file written, but a research helper's
 //     one dossier; absolute paths and a path on every Grep and Glob; read-only commands only;
 //   - every prompt after the contract brief exists: the project's CLAUDE.md paths to read first,
-//     and the contract brief verbatim;
+//     the contract brief verbatim, and the request with the brief (ctx.request, ctx.brief: an
+//     update run may have no brief, and then the goal is judged against the request alone);
 //   - every whole-plan reader (each check seat, the premise seat, the scorer): the paging rule and
-//     the reading inventory, with the plan's last line quoted;
+//     the reading inventory, the plan's last line given by its number only (its text is what
+//     KTD7's check compares, so a prompt that quoted it would hand a short reader the answer);
+//   - every check seat, the premise seat and every verifier on an update run: the named path
+//     (ctx.lands) holds the plan's own earlier version, never a stale doc;
 //   - every prompt that names a CE file: KTD22's lens rule (the file supplies the lens only, never
 //     tools, models, sub-agents or file writes);
 //   - every persona seat: ultramode's precedence block, rewritten for plans (our schema wins, the
 //     whole plan rather than CE's section slice, Opus rather than CE's model tier, ownership only
 //     among the seats running, no origin-keyed suppression);
-//   - every check seat: the roster and ownership table of exactly the seats running, the line that
-//     its class is never a false positive (over CE's "pre-existing issues" catalog entry), and the
-//     settlement rule (CE's subagent-template.md).
+//   - every check seat, the check's premise seat included: the roster and ownership table of
+//     exactly the seats running, the line that its class is never a false positive (over CE's
+//     "pre-existing issues" catalog entry), and the settlement rule (CE's subagent-template.md).
 // Model and effort are not prompt text: U5 sets model 'opus' and effort 'xhigh' on every agent()
 // call (R3, KTD13).
 //
@@ -84,9 +88,9 @@ export const PROMPT_CHECK_SEATS = {
   "adv-settled": {
     ce: "adversarial",
     adversary: true,
-    owns: "settled decisions that cannot reach their outcome",
-    angle: "a settled decision that cannot work: a decision marked settled whose own constraints keep it from reaching the outcome it states (preferring the alternative it rejected is not a finding)",
-    role: "break the plan's settled decisions on their own terms.",
+    owns: "decisions, settled or not, that cannot reach their outcome, and assumptions the plan never checks",
+    angle: "a decision, settled or not, that cannot reach its outcome: a decision whose own constraints keep it from the outcome it states (preferring the alternative it rejected is not a finding); and any assumption the plan never checks: a load-bearing belief about the code, a tool or a platform with no source, and no check that would show it failing",
+    role: "break the plan's decisions on their own terms, and its unchecked assumptions.",
   },
   "adv-hidden-work": {
     ce: "adversarial",
@@ -119,6 +123,16 @@ export const PROMPT_CHECK_SEATS = {
   },
 };
 
+// The premise seat is no check seat of the table above (promptPremise builds it, in the deepen and
+// in the check alike), but a check roster names it, so the ownership table every roster reads holds
+// it beside them.
+const PROMPT_PREMISE_OWNS = "the plan's premise: whether the problem is real and the goal is the one asked for";
+export const PROMPT_OWNS = { ...Object.fromEntries(Object.entries(PROMPT_CHECK_SEATS).map(([k, s]) => [k, s.owns])), premise: PROMPT_PREMISE_OWNS };
+
+// The single adversary's angles. The panel's four angles together carry every one (tested), so
+// running the panel in its place drops none.
+export const PROMPT_ANGLE_LIST = ["sequencing and dependencies", "a decision, settled or not, that cannot reach its outcome", "hidden work", "verification gaps", "any assumption the plan never checks"];
+
 // The research and deepen helpers' agent files (KTD4, KTD5 step 3), by their CE file stems: the
 // same thirteen resolve-ce.mjs lists (tested).
 export const PROMPT_AGENTS = [
@@ -127,6 +141,9 @@ export const PROMPT_AGENTS = [
   "architecture-strategist", "pattern-recognition-specialist", "performance-oracle", "security-sentinel",
   "data-integrity-guardian",
 ];
+// The external researchers (research.md's Stage 1-3 rules): they work outside sources first, on the
+// focus the main loop recorded with its external-research call (note key external, KTD4).
+const PROMPT_EXTERNAL = ["best-practices-researcher", "framework-docs-researcher", "web-researcher"];
 
 // The verifiers' refuter angles, diverse rather than repeated (N identical refuters are about 1):
 // a finding or amendment gets the first n, n from vote-law.mjs's refuterCount (KTD8).
@@ -171,8 +188,8 @@ const PROMPT_RISKS = {
 // A whole-plan reader pages through the file (KTD7): one Read of a large plan returns a fraction
 // of it (the 153 KB pay-check spec came back as lines 1 to 269 of 1,059).
 const PROMPT_PAGE = 160;
-// The inventory quotes the first 120 characters of the last line (caps.mjs lastLineText).
-const PROMPT_QUOTE = 120;
+// The inventory quotes the first 120 characters of the last line (caps.mjs lastLineText, tested).
+export const PROMPT_QUOTE = 120;
 
 // ---------------------------------------------------------------- filling and checking
 
@@ -237,11 +254,11 @@ const PROMPT_LAWS = [
   "{contract_brief}",
 ].join("\n");
 
+// The last line goes by its number alone: KTD7's check compares the reader's quote of it with the
+// line, so a prompt that quoted it would let a reader that never reached the end echo it and pass.
 const PROMPT_PAGING = [
   "READ THE WHOLE PLAN: {plan}",
-  "It ends at line {last_line}. That line begins with the text between the two markers below:",
-  ">>>{last_text}<<<",
-  "One Read returns only part of a large file, so read the plan in pages of at most {page} lines (Read with offset and limit), in order, until you have read line {last_line}. Return the reading inventory with your answer: last_line_number (the number of the last line you read), last_line_text (the first {quote} characters of that line, copied exactly, without the markers) and pages_read (how many Read calls the plan took). A reader whose last line falls short of line {last_line} is re-run.",
+  "It ends at line {last_line}. One Read returns only part of a large file, so read the plan in pages of at most {page} lines (Read with offset and limit), in order, until you have read line {last_line}. Return the reading inventory with your answer: last_line_number and last_line_text, the number and the first {quote} characters of the last line holding text that you read, as Read returned it, without Read's line-number prefix; and pages_read, how many Read calls the plan took. A reader whose last line falls short of line {last_line} is re-run.",
 ].join("\n");
 
 const PROMPT_SETTLED = "SETTLED DECISIONS: a decision marked settled (a \"session-settled:\" annotation, or one carrying Briggsy's own words or ratification) stays in view and is protected: never propose removing or rewording its annotation. A finding against it stands at full severity when it shows the decision cannot reach its outcome under its own constraints; preferring the alternative it rejected is not a finding. Report it like any other finding: the run, not you, decides whether it parks.";
@@ -260,13 +277,20 @@ const PROMPT_PERSONA = [
 ].join("\n");
 
 const PROMPT_ADVERSARY = "ADVERSARY MODE: your job is to break this plan, not tick a checklist. Construct concrete scenarios in which building from the plan as written gives a wrong or harmful result: the exact state, input or sequence, and the outcome it produces. {angle_line} A scenario you cannot make concrete is not a finding, and the contract brief's deliberate values are not targets.";
-const PROMPT_ADVERSARY_ANGLES = "Pick the angles that fit: sequencing and dependencies, a settled decision that cannot work, hidden work, verification gaps, and any assumption the plan never checks.";
+const PROMPT_ADVERSARY_ANGLES = `Pick the angles that fit: ${PROMPT_ANGLE_LIST.slice(0, -1).join(", ")}, and ${PROMPT_ANGLE_LIST[PROMPT_ANGLE_LIST.length - 1]}.`;
 
+// A later check round (KTD9): each change the fold made, by flow.mjs's change kinds, with the text it
+// added, edited or removed (a deletion leaves no sentence in the plan, so its old text is shown).
+// Round 2 admits a P0 or P1 found anywhere; round 3 checks one fix alone.
+const PROMPT_CHANGE_LABELS = { edit: "edited", add: "added", delete: "removed" };
 const PROMPT_ROUND = [
-  "THIS IS CHECK ROUND {round}. The plan changed since the last round; these are the changed sentences, each as the fold left it:",
+  "THIS IS CHECK ROUND {round}. The plan changed since the last round; these are the changes the fold made, each with the text it added, edited or removed:",
   "{changes}",
-  "Read the whole plan again. Judge first whether each change is right and whether it opened a seam with any other section; a finding the last round reported and the fold closed is not new.",
+  "Read the whole plan again. Judge first whether each change is right and whether it opened a seam with any other section; a finding the last round reported and the fold closed is not new. Report a P0 or P1 wherever you find it in the plan; report a P2 or P3 only where a change causes it or touches it, and put any other in residual_risks.",
 ].join("\n");
+const PROMPT_ROUND_3 = "This round checks one fix alone, the fold of a P0 or P1 that round 2 confirmed: judge that fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else.";
+
+const PROMPT_WEB_TOOL = "Your web tool is gemini-grounding's search_with_grounding (load it with ToolSearch): it searches, reads the pages and cites them, so it serves as both the web-search and the web-fetch tool your agent file asks for.";
 
 function promptToolsBlock(writes) {
   return promptFill(PROMPT_TOOLS, { writes });
@@ -279,12 +303,88 @@ function promptPagingBlock(ctx) {
   return promptFill(PROMPT_PAGING, {
     plan: promptPath(ctx.plan, "ctx.plan (the plan the helper reads)"),
     last_line: String(last.line),
-    last_text: last.text.slice(0, PROMPT_QUOTE),
     page: String(PROMPT_PAGE),
     quote: String(PROMPT_QUOTE),
   });
 }
 const promptJoin = (parts) => parts.filter((p) => p !== null && p !== undefined && p !== "").join("\n\n");
+
+// The request and the brief, in every prompt after the contract brief: a goal claim (the premise
+// seat's, a verifier's, the scorer's goal checklist) is judged against them. An update run starts at
+// the deepen (flow.mjs firstStage), so it may have no brief (ctx.brief null); a new plan always has
+// one. With none, the goal is judged against the request and any origin document the plan cites,
+// never the plan's own Goal Capsule, which under an update is the committed plan judging itself.
+function promptRequestBlock(ctx) {
+  const request = promptText(ctx?.request, "ctx.request (what was asked for)");
+  if (typeof ctx.update !== "boolean") throw new Error("prompts: ctx.update says whether this run updates a committed plan (true or false)");
+  if (ctx.brief === null) {
+    if (!ctx.update) throw new Error("prompts: ctx.brief is the brief's path; only an update run may have none (null)");
+    return promptFill("THE REQUEST (what was asked for):\n{request}\nTHE BRIEF: none. This run updates a plan already committed and was given no brief, so judge the goal against the request and any origin document the plan cites, never against the plan's own Goal Capsule: under an update, the plan is the committed one, so that would be circular.", { request });
+  }
+  return promptFill("THE REQUEST (what was asked for):\n{request}\nTHE BRIEF it was planned from: {brief} (read it).", { request, brief: promptPath(ctx.brief, "ctx.brief (the brief's path, or null on an update run given none)") });
+}
+
+// On an update run the named path holds HEAD's earlier version of the plan under review, which the
+// landing replaces: a seat that reads the repo must not take it for a stale doc. Nothing on a new plan.
+function promptUpdateBlock(ctx) {
+  if (ctx?.update !== true) return null;
+  return promptFill("THIS RUN UPDATES A COMMITTED PLAN: {lands} holds HEAD's earlier version of this plan, which the landing replaces. It is never a stale doc, a counterexample or a target for the plan's docs unit.", { lands: promptPath(ctx.lands, "ctx.lands (the plan's named path, which an update run's landing replaces)") });
+}
+
+// The roster a seat is told about: exactly the seats running in this run or round, known, none
+// twice, the seat itself among them, and the single adversary or the panel, never both. The premise
+// seat may sit in a check roster beside the check seats.
+function promptRoster(roster, seat) {
+  if (!Array.isArray(roster) || roster.length === 0) throw new Error("prompts: roster is the list of the seats running in this run");
+  for (const s of roster) if (!Object.hasOwn(PROMPT_OWNS, s)) throw new Error(`prompts: the roster names ${JSON.stringify(s)}, which is no check seat (one of: ${Object.keys(PROMPT_OWNS).join(", ")})`);
+  if (new Set(roster).size !== roster.length) throw new Error("prompts: the roster names a seat twice");
+  if (!roster.includes(seat)) throw new Error(`prompts: the roster does not name ${seat}, the seat being built`);
+  if (roster.includes("adversarial") && roster.some((s) => s.startsWith("adv-"))) throw new Error("prompts: a roster runs the single adversary or the high-risk panel, never both (KTD6)");
+  return roster;
+}
+function promptRosterBlock(running) {
+  return promptFill("THE ROSTER AND OWNERSHIP TABLE: the seats running in this check round, each with the class it owns; these are the only owners you may defer to.\n{table}", { table: running.map((k) => `- ${k}: ${PROMPT_OWNS[k]}`).join("\n") });
+}
+
+// A check round's number and, after round 1, the changes the fold made (KTD9), each
+// { kind: "edit" | "add" | "delete", text }: null for round 1, else the round block.
+function promptRoundBlock(round, changes) {
+  if (![1, 2, 3].includes(round)) throw new Error(`prompts: round is 1, 2 or 3; got ${JSON.stringify(round)}`);
+  if (round === 1) {
+    if (Array.isArray(changes) && changes.length) throw new Error("prompts: check round 1 has no changes to name");
+    return null;
+  }
+  if (!Array.isArray(changes) || changes.length === 0) throw new Error(`prompts: check round ${round} needs the changes the fold made (changes)`);
+  for (const c of changes) {
+    if (!c || typeof c !== "object" || !Object.hasOwn(PROMPT_CHANGE_LABELS, c.kind) || typeof c.text !== "string" || !c.text.trim()) throw new Error(`prompts: a change is { kind: "edit" | "add" | "delete", text } (flow.mjs's change kinds); got ${JSON.stringify(c)}`);
+  }
+  // A change's own line breaks are indented, so a multi-line change never reads as a second bullet.
+  const lines = changes.map((c) => `- ${PROMPT_CHANGE_LABELS[c.kind]}: ${c.text.trim().split(/\r?\n/).join("\n  ")}`).join("\n");
+  const block = promptFill(PROMPT_ROUND, { round: String(round), changes: lines });
+  return round === 3 ? `${block}\n${PROMPT_ROUND_3}` : block;
+}
+
+// Where the learnings researcher searches: this repo's lesson folders, never CE's fixed
+// docs/solutions path, which this repo does not have. Required for that agent, refused for others.
+function promptLearningsBlock(agent, learnings) {
+  if (agent === "learnings-researcher") {
+    if (!learnings) throw new Error("prompts: the learnings researcher needs learnings { insights, memory }: this repo keeps its lessons there, not in a fixed docs/solutions path");
+    return promptFill("WHERE LEARNINGS LIVE: this repo keeps its lessons in {insights} and in the memory folder {memory}. Search both; never a fixed docs/solutions path, which this repo does not have.", { insights: promptPath(learnings.insights, "learnings.insights"), memory: promptPath(learnings.memory, "learnings.memory") });
+  }
+  if (learnings !== null && learnings !== undefined) throw new Error(`prompts: learnings is for the learnings researcher only, not ${agent}`);
+  return null;
+}
+
+// An external researcher's focus: the main loop's recorded reason for outside research (note key
+// external). Required for the three, refused for the rest.
+function promptFocus(agent, focus) {
+  if (PROMPT_EXTERNAL.includes(agent)) return promptText(focus, `focus (the main loop's recorded reason for outside research, note key external), which ${agent} needs`);
+  if (focus !== null && focus !== undefined) throw new Error(`prompts: focus is for the external researchers only (${PROMPT_EXTERNAL.join(", ")}), not ${agent}`);
+  return null;
+}
+// The opening of an external researcher's job: outside sources first, the repo only for versions
+// and fit, and the web tool named (CE's web-researcher.md stops when it finds none).
+const promptOutsideFirst = (focus) => promptFill("outside sources first, on this focus: {focus}. Use the repo only to read the versions in use or to check how an outside answer fits it. ", { focus: focus.replace(/[.\s]+$/, "") }) + PROMPT_WEB_TOOL;
 
 // A research or deepen helper's agent file, with CE's optional scope prefix (deepening-workflow.md's
 // "Scope: architecture, patterns"), or, when the file is missing, its own method.
@@ -318,21 +418,24 @@ export function promptContractBrief({ planPath, project, claudeMd, insights, req
 // ---------------------------------------------------------------- research (KTD4)
 
 // One research helper, seeded from its CE agent file (null when the file is missing: it runs on its
-// own method, and the receipt names it). It writes one dossier and returns a gist.
-export function promptResearch(ctx, { agent, agentFile, scope = null, request, brief, dossier, learnings = null } = {}) {
+// own method, and the receipt names it). It writes one dossier and returns a gist. The request and
+// the brief come from ctx; `learnings` is the learnings researcher's, `focus` an external one's.
+export function promptResearch(ctx, { agent, agentFile, scope = null, dossier, learnings = null, focus = null } = {}) {
   if (!PROMPT_AGENTS.includes(agent)) throw new Error(`prompts: ${JSON.stringify(agent)} is not a research agent (one of: ${PROMPT_AGENTS.join(", ")})`);
   const file = promptPathOrNull(agentFile, "agentFile");
-  if (agent === "learnings-researcher") {
-    if (!learnings) throw new Error("prompts: the learnings researcher needs learnings { insights, memory }: this repo keeps its lessons there, not in a fixed docs/solutions path");
-  } else if (learnings !== null) throw new Error(`prompts: learnings is for the learnings researcher only, not ${agent}`);
+  const where = promptLearningsBlock(agent, learnings);
+  const outside = promptFocus(agent, focus);
   const out = promptPath(dossier, "dossier (the one file the helper writes)");
+  const job = outside
+    ? `YOUR JOB: research what the plan's author needs to know before writing it, by your method, in ${promptOutsideFirst(outside)}`
+    : "YOUR JOB: research what the plan's author needs to know before writing it, by your method, grounded in this repo first and in outside sources only where the repo cannot answer.";
   const prompt = promptJoin([
     promptFill("You are the {agent} research helper for a plan that is not written yet. The repo it will change: {project}.", { agent, project: promptPath(ctx?.project, "ctx.project (the project's root)") }),
     promptAgentBlock(agent, file, scope, "your findings go into the one dossier file named below, and your return is this prompt's gist object, not the agent file's format"),
     file ? PROMPT_LENS_RULE : null,
-    promptFill("THE REQUEST:\n{request}\nTHE BRIEF (read it): {brief}", { request: promptText(request, "request"), brief: promptPath(brief, "brief (the brief's path)") }),
-    learnings ? promptFill("WHERE LEARNINGS LIVE: this repo keeps its lessons in {insights} and in the memory folder {memory}. Search both; never a fixed docs/solutions path, which this repo does not have.", { insights: promptPath(learnings.insights, "learnings.insights"), memory: promptPath(learnings.memory, "learnings.memory") }) : null,
-    promptFill("YOUR JOB: research what the plan's author needs to know before writing it, by your method, grounded in this repo first and in outside sources only where the repo cannot answer. Write everything you found into ONE dossier file at {dossier}: each claim with its source (a file:line, a measurement, or a URL with the date you read it) and what it means for the plan. Then return only the gist object: gist, the findings that matter most for the plan; dossier, that file's absolute path; changes_a_decision, true when a finding should change a decision the request or the brief implies (the run reads the dossier only then).", { dossier: out }),
+    promptRequestBlock(ctx),
+    where,
+    job + promptFill(" Write everything you found into ONE dossier file at {dossier}: each claim with its source (a file:line, a measurement, or a URL with the date you read it) and what it means for the plan. Then return only the gist object: gist, the findings that matter most for the plan; dossier, that file's absolute path; changes_a_decision, true when a finding should change a decision the request or the brief implies (the run reads the dossier only then).", { dossier: out }) + (outside ? " When outside research could not run (no web tool answered), the gist opens with \"outside research could not run:\" and the reason." : ""),
     promptLawsBlock(ctx),
     promptToolsBlock(promptFill("Write exactly one file, your dossier at {dossier}; create, edit or delete no other file.", { dossier: out })),
     promptLaw(ctx, "gist"),
@@ -342,27 +445,39 @@ export function promptResearch(ctx, { agent, agentFile, scope = null, request, b
 
 // ---------------------------------------------------------------- the deepen (KTD5)
 
-// The premise seat (KTD6's charter, run in the deepen beside the scorer). Its four parts are the
-// incident, the population, the asked-for goal, and CE's origin-keyed suppression never applying.
-export function promptPremise(ctx, { request, brief } = {}) {
+// The premise seat (KTD6's charter): in the deepen beside the scorer (mode "deepen", no roster), and
+// in the check as one of its seats (mode "check", with the roster and the round, as every check seat
+// has). Its four parts are the incident, the population, the asked-for goal, and CE's origin-keyed
+// suppression never applying. The request and the brief come from ctx.
+export function promptPremise(ctx, { mode, roster, round = 1, changes = [] } = {}) {
+  if (mode !== "deepen" && mode !== "check") throw new Error(`prompts: mode is "deepen" or "check" (the premise seat runs in both); got ${JSON.stringify(mode)}`);
+  const check = mode === "check";
+  if (!check && (roster !== undefined || round !== 1 || (Array.isArray(changes) && changes.length))) throw new Error("prompts: the deepen's premise seat runs beside the scorer, with no roster and no round");
+  const running = check ? promptRoster(roster, "premise") : null;
+  const roundBlock = check ? promptRoundBlock(round, changes) : null;
+  const asked = promptRequestBlock(ctx);
   const prompt = promptJoin([
-    promptFill("You are the premise seat in the deepen of a plan: {plan}. The plan has not been built; you judge whether its premise holds, against the repo it will change ({project}) and the request it answers.", {
+    promptFill("You are the premise seat in the {mode} of a plan: {plan}. The plan has not been built; you judge whether its premise holds, against the repo it will change ({project}) and the request it answers.", {
+      mode,
       plan: promptPath(ctx?.plan, "ctx.plan"),
       project: promptPath(ctx?.project, "ctx.project"),
     }),
-    promptFill("THE GOAL ASKED FOR: the request was:\n{request}\nThe brief it was planned from: {brief} (read it).", { request: promptText(request, "request (what was asked for)"), brief: promptPath(brief, "brief (the brief's path)") }),
+    asked,
+    promptUpdateBlock(ctx),
     [
       "YOUR CHARTER, all four parts:",
       "1. THE INCIDENT: for every guard, gate, check or safety mechanism the plan adds, the incident it answers: a commit, a transcript or a measured case, cited. A guard against something that has never happened to this project is a finding, unless the plan shows why it will.",
       "2. THE POPULATION: for every feature, an instance of the population it serves that exists in today's code (a caller, a file, a flow, a user's case), cited by file:line. A feature with no such instance is a finding.",
-      "3. THE GOAL: is the plan's goal the one asked for in the request and the brief? A goal narrowed, widened or replaced without saying so is a finding.",
+      `3. THE GOAL: is the plan's goal the one asked for in the request${ctx.brief === null ? "" : " and the brief"}? A goal narrowed, widened or replaced without saying so is a finding.`,
       "4. NO SUPPRESSION: CE's rule that switches the premise challenge off when a plan has an origin (a brief, a requirements document, a product contract) never applies here. You challenge the premise whatever the plan's origin.",
-      "Your class is the plan's premise: whether the problem is real and the goal is the one asked for. A finding in it is never a false positive: CE's false-positive catalog entry for \"pre-existing issues the document's work does not reach\" does not apply to it.",
+      `Your class is ${PROMPT_PREMISE_OWNS}. A finding in it is never a false positive: CE's false-positive catalog entry for "pre-existing issues the document's work does not reach" does not apply to it.`,
     ].join("\n"),
+    check ? promptRosterBlock(running) : null,
     promptPagingBlock(ctx),
     promptLawsBlock(ctx),
     PROMPT_SETTLED,
     promptToolsBlock(PROMPT_READ_ONLY),
+    roundBlock,
     PROMPT_FINDER_RETURN,
     promptLaw(ctx, "finder"),
   ]);
@@ -407,18 +522,26 @@ const PROMPT_OUR_CHECKLISTS = [
   "- Done names no evidence a reviewer could check.",
 ].join("\n");
 
+// The section limit and the note limit are the size law's (caps.mjs, ctx.laws): never written here,
+// so a cap changed there cannot leave a stale number in the rules. The notes rank in select.mjs's
+// order (its selectSections sort), so the sections selection picks are the ones that carry a note.
 const PROMPT_SCORING = [
   "HOW TO SCORE:",
-  "- Score every section in the index below by what it says, not by its heading's words: give each row the kind whose checklist its content matches. The kinds: {kinds}.",
+  "- Score the sections in the index below by what they say, not by their headings' words: give each row the kind whose checklist its content matches. The kinds: {kinds}.",
   "- triggers is the number of checklist problems that apply to the section. Do not add CE's critical-section bonus: the run adds it from the kind and the depth.",
-  "- A row covers its heading's subtree: the heading and everything under it, up to the next heading at its level or shallower. Every heading with no deeper heading right after it, and every heading the index marks as having text of its own, must sit inside some row's subtree; a row at a parent covers its children. Rows at children score finer, and are better when the children differ.",
-  "- Never score a heading the index does not list (a checklist section the plan lacks is not a section: its absence is a trigger on the section that should hold it), never score one heading twice, and never put a row at the plan's title (the first heading, which every other sits under): a row there covers nothing.",
+  "- A row covers its heading's subtree: the heading and everything under it, up to the next heading at its level or shallower. Every heading with no deeper heading right after it, and every heading the index marks as having text of its own, except the title, must sit inside some row's subtree; a row at a parent covers its children.",
+  "- Cover every section within the size law's limit on sections: when more headings need a row than that limit allows, roll the most alike children into their parent's row until the list fits, and never leave a heading that needs a row outside every row's subtree.",
+  "- Never score a heading the index does not list (a checklist section the plan lacks is not a section: its absence is a trigger on the section that should hold it), never score one heading twice, and never put a row at the heading the index marks as the plan's title: a row there covers nothing.",
   "- Each row names its section (the heading's words, shortened to fit) and the line of the index heading it starts at.",
   "- strengthened: {strengthened}",
-  "- notes: one for each section with 2 points or more (its triggers, plus 1 when its kind is one of {critical} in a Standard or Deep plan), naming the problems that apply, most serious first. The run hands each note to that section's research helpers as the problems to close.",
-  "- depth: Lightweight, Standard or Deep, by final-review.md 5.3.1.",
+  "- notes: one for each section with 2 points or more (its triggers, plus 1 when its kind is one of {critical} in a Standard or Deep plan), each carrying its row's line and naming the problems that apply, most serious first. When more sections reach 2 points than the size law allows notes, note the ones that rank highest, in the run's own order: points (less 1 for a row marked strengthened on a plan already deepened), then a row not strengthened before one that was, then a critical kind, then the earlier line. The run hands each note to that section's research helpers as the problems to close.",
+  "- depth: Lightweight, Standard or Deep, by the depth rule above.",
   "- risk_signals: every high-risk signal the plan shows, by these keys: {signals}.",
 ].join("\n");
+// select.mjs's title: with more than one heading, a first heading every other sits deeper than. A
+// plan with two top-level headings has none, and a row at each of them is legitimate.
+const PROMPT_TITLE_MARK = " (the plan's title: no row; its own text needs none)";
+const promptTitleOf = (heads) => (heads.length > 1 && heads.slice(1).every((h) => h.level > heads[0].level) ? heads[0] : null);
 
 // The scorer (KTD5 step 1). `deepening` and `finalReview` are CE's files (null when missing: the
 // method then comes inline); `index` is flow.mjs index's section index; `deepened` says whether the
@@ -428,13 +551,17 @@ export function promptScorer(ctx, { deepening, finalReview, index, deepened } = 
   const fr = promptPathOrNull(finalReview, "finalReview (CE's final-review.md)");
   if (typeof deepened !== "boolean") throw new Error("prompts: deepened says whether the plan already carries a deepened: date (true or false)");
   const heads = promptIndex(index);
+  const title = promptTitleOf(heads);
+  // final-review.md 5.3.2 is CE's gate on whether to deepen, which loads plan-handoff.md and runs the
+  // doc review: selection is the run's (select.mjs), so the scorer reads 5.3.1 alone.
   const method = [
     "YOUR METHOD:",
     dw ? promptFill("- Read CE's {dw}, section 5.3.3 (Score Confidence Gaps, with its section checklists), first: it is your scoring method, with the changes below.", { dw }) : promptFill("- CE's deepening-workflow.md is missing in this run (the receipt names the scorer as run without it), so score against these checklists, read in CE 3.37.0's section 5.3.3:\n{lists}", { lists: PROMPT_CE_CHECKLISTS }),
-    fr ? promptFill("- Read CE's {fr}, sections 5.3.1 and 5.3.2 (the plan's depth and its risk profile), for depth and risk_signals.", { fr }) : promptFill("- CE's final-review.md is missing in this run, so take depth and risk from these, read in CE 3.37.0's section 5.3.1: {depth}", { depth: PROMPT_CE_DEPTH }),
+    fr ? promptFill("- Read CE's {fr}, section 5.3.1 alone (the plan's depth and its risk profile), for depth and risk_signals. Never run its section 5.3.2 (CE's gate on whether to deepen) or anything that section loads: choosing the sections to deepen is the run's.", { fr }) : promptFill("- CE's final-review.md is missing in this run, so take depth and risk from these, read in CE 3.37.0's section 5.3.1: {depth}", { depth: PROMPT_CE_DEPTH }),
   ].join("\n");
   const prompt = promptJoin([
     promptFill("You are the scorer in the deepen of a plan: {plan}. You score every section of the plan for confidence gaps, so the run can pick the sections a research pass strengthens (KTD5). You change nothing.", { plan: promptPath(ctx?.plan, "ctx.plan") }),
+    promptRequestBlock(ctx),
     method,
     dw || fr ? PROMPT_LENS_RULE : null,
     PROMPT_OUR_CHECKLISTS,
@@ -446,7 +573,7 @@ export function promptScorer(ctx, { deepening, finalReview, index, deepened } = 
         ? "this plan carries a deepened: date, so set strengthened true on each section an earlier deepen substantially strengthened, and false on the rest."
         : "this plan has never been deepened, so strengthened is false on every row.",
     }),
-    "THE SECTION INDEX (every heading outside fences and front matter, by its line):\n" + heads.map((h) => `- line ${h.line}: ${"#".repeat(h.level)} ${h.heading}${h.own ? " (has text of its own)" : ""}`).join("\n"),
+    "THE SECTION INDEX (every heading outside fences and front matter, by its line):\n" + heads.map((h) => `- line ${h.line}: ${"#".repeat(h.level)} ${h.heading}${h === title ? PROMPT_TITLE_MARK : h.own ? " (has text of its own)" : ""}`).join("\n"),
     promptPagingBlock(ctx),
     promptLawsBlock(ctx),
     promptToolsBlock(PROMPT_READ_ONLY),
@@ -467,17 +594,24 @@ function promptSpan(heads, line, lastLine) {
 
 // One deepen research helper for one selected section (KTD5 step 3), seeded from the CE agent file
 // CE's section-to-agent mapping names (null when missing). `triggers` is the scorer's note for the
-// section; `depth` and `risk` its recorded profile.
-export function promptAmendment(ctx, { agent, agentFile, scope = null, line, index, triggers, depth, risk } = {}) {
+// section; `depth` and `risk` its recorded profile; `learnings` the learnings researcher's lesson
+// roots and `focus` an external researcher's, as in research.
+export function promptAmendment(ctx, { agent, agentFile, scope = null, line, index, triggers, depth, risk, learnings = null, focus = null } = {}) {
   if (!PROMPT_AGENTS.includes(agent)) throw new Error(`prompts: ${JSON.stringify(agent)} is not a deepen agent (one of: ${PROMPT_AGENTS.join(", ")})`);
   const file = promptPathOrNull(agentFile, "agentFile");
   if (!Array.isArray(risk) || risk.some((r) => !Object.hasOwn(PROMPT_RISKS, r))) throw new Error(`prompts: risk is the list of the plan's risk signals (each one of: ${Object.keys(PROMPT_RISKS).join(", ")})`);
+  const where = promptLearningsBlock(agent, learnings);
+  const outside = promptFocus(agent, focus);
   const last = promptLastLine(ctx);
   const span = promptSpan(promptIndex(index), line, last.line);
+  const job = outside
+    ? `YOUR JOB: research what would close each problem in ${promptOutsideFirst(outside)} When outside research cannot run (no web tool answers), put "outside research could not run" in overflow and propose only what the repo supports.`
+    : "YOUR JOB: research what would close each problem, grounded in this repo first (its code, its docs, its CLAUDE.md files and its docs/insights/) and in outside sources only where the repo cannot answer.";
   const prompt = promptJoin([
     promptFill("You strengthen one section of a plan in its deepen: {plan}. The repo it will change: {project}.", { plan: promptPath(ctx?.plan, "ctx.plan"), project: promptPath(ctx?.project, "ctx.project") }),
     promptAgentBlock(agent, file, scope, "your return is this prompt's structured object, not the agent file's format, and you write no file"),
     file ? PROMPT_LENS_RULE : null,
+    promptRequestBlock(ctx),
     promptFill("THE SECTION: \"{heading}\", lines {from} to {to} of the plan. Read those lines first, then as much of the rest of the plan as your work needs (Read with offset and limit: one Read returns only part of a large file).\nWHY IT WAS PICKED: the scorer found these problems in it: {triggers}\nTHE PLAN'S DEPTH AND RISK: {depth}; high-risk signals: {risk}.", {
       heading: span.heading,
       from: String(span.from),
@@ -486,7 +620,8 @@ export function promptAmendment(ctx, { agent, agentFile, scope = null, line, ind
       depth: promptText(depth, "depth (the scorer's plan depth)"),
       risk: risk.length ? risk.join(", ") : "none",
     }),
-    "YOUR JOB: research what would close each problem, grounded in this repo first (its code, its docs, its CLAUDE.md files and its docs/insights/) and in outside sources only where the repo cannot answer. Propose amendments: each names its section, a severity (P1 when it changes a decision or a unit, P2 otherwise), the change (the new or replacement text, or the exact edit in plain words), its evidence (a file:line, a measurement or a dated source), and old_values (up to three exact phrases the change replaces, at least 3 characters each, so the fold can find every other place that still says them; an empty list when the change replaces nothing). No implementation code and no shell commands in a change (CE's rule): a plan states decisions, not code. Every amendment goes to verifiers before it touches the plan.",
+    where,
+    `${job} Propose amendments: each names its section, the gap it closes (the problem above that it answers, with the plan line it rests on), a severity (P1 when it changes a decision or a unit, P2 otherwise), the change (the new or replacement text, or the exact edit in plain words), its evidence (a file:line, a measurement or a dated source), and old_values (up to three exact phrases the change replaces, at least 3 characters each, so the fold can find every other place that still says them; an empty list when the change replaces nothing). No implementation code and no shell commands in a change (CE's rule): a plan states decisions, not code. Every amendment goes to verifiers before it touches the plan.`,
     promptLawsBlock(ctx),
     PROMPT_SETTLED,
     promptToolsBlock(PROMPT_READ_ONLY),
@@ -498,15 +633,25 @@ export function promptAmendment(ctx, { agent, agentFile, scope = null, line, ind
 
 // ---------------------------------------------------------------- the verifiers (KTD8)
 
+// The section an amendment amends, by its span, and why the scorer picked it.
+function promptAmendedSection(ctx, line, index, triggers) {
+  const span = promptSpan(promptIndex(index), line, promptLastLine(ctx).line);
+  return promptFill("THE SECTION IT AMENDS: \"{heading}\", lines {from} to {to} of the plan.\nWHY IT WAS PICKED: the scorer found these problems in it: {triggers}", { heading: span.heading, from: String(span.from), to: String(span.to), triggers: promptText(triggers, "triggers (the scorer's note for the section)") });
+}
+
 // One verifier vote on one finding (a premise or check seat's) or one deepen amendment, on one
 // refuter angle (an index into PROMPT_REFUTER_ANGLES). The three words are KTD8's: real, material
 // and new, tallied separately, and the proposed change is judged as its own question (ultramode
-// insight 001: convergence on a finding says nothing about its fix).
-export function promptVerifier(ctx, { item, kind, angle } = {}) {
+// insight 001: convergence on a finding says nothing about its fix). An amendment's verifier is
+// shown the section it amends (`line` in the section `index`) and why the scorer picked it
+// (`triggers`, its note), so "real" judges the gap the amendment states against the section itself.
+export function promptVerifier(ctx, { item, kind, angle, line, index, triggers } = {}) {
   if (kind !== "finding" && kind !== "amendment") throw new Error(`prompts: kind is "finding" or "amendment"; got ${JSON.stringify(kind)}`);
   if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error(`prompts: the ${kind} to verify is required, as an object`);
   if (!Number.isInteger(angle) || angle < 0 || angle >= PROMPT_REFUTER_ANGLES.length) throw new Error(`prompts: angle is an index into PROMPT_REFUTER_ANGLES (0 to ${PROMPT_REFUTER_ANGLES.length - 1}); got ${JSON.stringify(angle)}`);
   const finding = kind === "finding";
+  if (finding && [line, index, triggers].some((v) => v !== undefined)) throw new Error("prompts: line, index and triggers are only for an amendment's verifier (the section it amends and why it was picked)");
+  const section = finding ? null : promptAmendedSection(ctx, line, index, triggers);
   const prompt = promptJoin([
     promptFill("You are an adversarial VERIFIER in a planning run. The plan: {plan}. The repo it will change: {project}.\nA confident {kind} is a hypothesis, not a verdict: your job is to refute it by reading the plan and the actual source. Default real=false when you cannot confirm it.\nYOUR REFUTER ANGLE: {angle}", {
       plan: promptPath(ctx?.plan, "ctx.plan"),
@@ -514,12 +659,15 @@ export function promptVerifier(ctx, { item, kind, angle } = {}) {
       kind,
       angle: PROMPT_REFUTER_ANGLES[angle],
     }),
+    promptRequestBlock(ctx),
+    promptUpdateBlock(ctx),
     promptFill("THE {label} (JSON): {item}\nRead the plan lines it cites (Read with offset and limit), as much more of the plan as the question needs, and the code or docs its evidence names.", { label: finding ? "FINDING" : "PROPOSED AMENDMENT", item: JSON.stringify(item) }),
+    section,
     [
       "Answer each question on its own: they are tallied separately, so never fold one into another.",
       finding
         ? "- real: the gap exists as stated: the plan says what the finding claims it says, and the source it cites says what the finding claims."
-        : "- real: the section's gap exists, and the amendment's evidence holds in source.",
+        : "- real: the gap the amendment states exists (read the section's lines), and its evidence holds in source.",
       "- material: it changes what gets built or how it is verified. A wording preference, or a change that builds the same thing, is not material.",
       "- new: the plan does not already say or address it. Another section, a unit, a test scenario or an assumption that already covers it means not new.",
       finding
@@ -538,30 +686,33 @@ export function promptVerifier(ctx, { item, kind, angle } = {}) {
 
 // ---------------------------------------------------------------- the check (KTD6)
 
-// The roster a check seat is told about: exactly the seats running in this run or round, known,
-// none twice, the seat itself among them, and the single adversary or the panel, never both.
-function promptRoster(roster, seat) {
-  if (!Array.isArray(roster) || roster.length === 0) throw new Error("prompts: roster is the list of the seats running in this run");
-  for (const s of roster) if (!Object.hasOwn(PROMPT_CHECK_SEATS, s)) throw new Error(`prompts: the roster names ${JSON.stringify(s)}, which is no check seat (one of: ${Object.keys(PROMPT_CHECK_SEATS).join(", ")})`);
-  if (new Set(roster).size !== roster.length) throw new Error("prompts: the roster names a seat twice");
-  if (!roster.includes(seat)) throw new Error(`prompts: the roster does not name ${seat}, the seat being built`);
-  if (roster.includes("adversarial") && roster.some((s) => s.startsWith("adv-"))) throw new Error("prompts: a roster runs the single adversary or the high-risk panel, never both (KTD6)");
-  return roster;
+// A panel seat's angle line (KTD6, KTD9). With every other panelist running it hunts its own seam,
+// and the roster names the other owners. In a later round flow.mjs runs only the touched seats, so
+// a panelist may run without the others: the first panelist in the roster then leads with its own
+// angle and reports the absent panelists' seams too, and any other running panelist names it.
+function promptAngleLine(seat, running) {
+  const s = PROMPT_CHECK_SEATS[seat];
+  if (!s.angle) return PROMPT_ADVERSARY_ANGLES;
+  const panel = Object.keys(PROMPT_CHECK_SEATS).filter((k) => PROMPT_CHECK_SEATS[k].angle);
+  const absent = panel.filter((k) => !running.includes(k));
+  const first = running.find((k) => panel.includes(k));
+  if (absent.length === 0) return `YOUR ASSIGNED ANGLE, hunt only this seam (the roster names the other owners): ${s.angle}.`;
+  if (first !== seat) return `YOUR ASSIGNED ANGLE, hunt only this seam (the roster names the other owners, and ${first} reports the seams of the panelists not running): ${s.angle}.`;
+  return `YOUR ASSIGNED ANGLE, lead with this seam: ${s.angle}. The panelists who own these seams are not running this round, so report them too: ${absent.map((k) => PROMPT_CHECK_SEATS[k].angle).join("; ")}.`;
 }
 
 // One check seat (KTD6). `persona` is the seat's CE persona file (null when missing, and always
-// null for our three seats); `roster` the seats running; `round` 1, 2 or 3, with `changes` (the
-// changed sentences) after round 1 (KTD9).
+// null for our three seats); `roster` the seats running, the premise seat among them when it runs
+// (promptPremise builds it); `round` 1, 2 or 3, with `changes` (the fold's changes, each
+// { kind, text }) after round 1 (KTD9).
 export function promptCheckSeat(ctx, { seat, persona = null, roster, round = 1, changes = [] } = {}) {
+  if (seat === "premise") throw new Error("prompts: the check's premise seat is built by promptPremise in check mode");
   if (!Object.hasOwn(PROMPT_CHECK_SEATS, seat)) throw new Error(`prompts: ${JSON.stringify(seat)} is no check seat (one of: ${Object.keys(PROMPT_CHECK_SEATS).join(", ")})`);
   const s = PROMPT_CHECK_SEATS[seat];
   const file = promptPathOrNull(persona, "persona");
   if (s.ce === null && file !== null) throw new Error(`prompts: ${seat} reads no CE file, so it takes no persona`);
   const running = promptRoster(roster, seat);
-  if (![1, 2, 3].includes(round)) throw new Error(`prompts: round is 1, 2 or 3; got ${JSON.stringify(round)}`);
-  if (round > 1 && (!Array.isArray(changes) || changes.length === 0 || changes.some((c) => typeof c !== "string" || !c.trim()))) throw new Error(`prompts: check round ${round} needs the changed sentences (changes)`);
-  if (round === 1 && Array.isArray(changes) && changes.length) throw new Error("prompts: check round 1 has no changes to name");
-  const table = running.map((k) => `- ${k}: ${PROMPT_CHECK_SEATS[k].owns}`).join("\n");
+  const roundBlock = promptRoundBlock(round, changes);
   const prompt = promptJoin([
     promptFill("You are the {seat} seat in the check of a plan: {plan}. The plan has not been built; you review the plan itself, against the repo it will change ({project}).\nYOUR LENS: {role}", {
       seat,
@@ -569,8 +720,10 @@ export function promptCheckSeat(ctx, { seat, persona = null, roster, round = 1, 
       project: promptPath(ctx?.project, "ctx.project"),
       role: s.role,
     }),
+    promptRequestBlock(ctx),
+    promptUpdateBlock(ctx),
     promptFill("YOUR CLASS: {owns}. A finding in your class is never a false positive here: CE's false-positive catalog entry for \"pre-existing issues the document's work does not reach\" does not apply to it, because the build rests on what the plan states, whether or not the problem predates the plan.", { owns: s.owns }),
-    promptFill("THE ROSTER AND OWNERSHIP TABLE: the seats running in this check round, each with the class it owns; these are the only owners you may defer to.\n{table}", { table }),
+    promptRosterBlock(running),
     s.ce === null
       ? "This seat reads no CE file: the lens above is its whole role."
       : file
@@ -580,8 +733,8 @@ export function promptCheckSeat(ctx, { seat, persona = null, roster, round = 1, 
     promptLawsBlock(ctx),
     PROMPT_SETTLED,
     promptToolsBlock(PROMPT_READ_ONLY),
-    round > 1 ? promptFill(PROMPT_ROUND, { round: String(round), changes: changes.map((c) => `- ${c.trim()}`).join("\n") }) : null,
-    s.adversary ? promptFill(PROMPT_ADVERSARY, { angle_line: s.angle ? `YOUR ASSIGNED ANGLE, hunt only this seam (the other panelists own the rest): ${s.angle}.` : PROMPT_ADVERSARY_ANGLES }) : null,
+    roundBlock,
+    s.adversary ? promptFill(PROMPT_ADVERSARY, { angle_line: promptAngleLine(seat, running) }) : null,
     PROMPT_FINDER_RETURN,
     promptLaw(ctx, "finder"),
   ]);
@@ -609,14 +762,15 @@ export function promptShortRead(built, { missed, stoppedAt } = {}) {
 
 // The main loop's own read of CE's persona-selection.md (null when missing: the signals come inline,
 // read in CE 3.37.0). It picks the conditional lenses only; the four always-on seats always run, and
-// depth.md's lite review never does.
+// depth.md's lite review never does. depth.md's rule for judging activation (from what the plan's
+// named code paths touch) is stated here, in both branches, since its lite-or-full choice is not ours.
 export function promptLensPicks({ plan, personaSelection } = {}) {
   const file = promptPathOrNull(personaSelection, "personaSelection (CE's persona-selection.md)");
   const prompt = promptJoin([
     file
       ? promptFill("THE LENS PICKS (KTD6): read {file} (CE's persona-selection.md). Use only its activation signals for product-lens, security-lens and design-lens.", { file })
       : "THE LENS PICKS (KTD6): CE's persona-selection.md is missing in this run (the receipt names the lens picks as run without it), so use these signals, read in CE 3.37.0: product, the plan stakes a product position no upstream product contract settled, or carries strategic weight beyond the immediate problem; security, authentication or authorization, external endpoints, sensitive data (personal data, payments, tokens, secrets) or a trust boundary; design, user interface, user flows, interaction or accessibility.",
-    promptFill("Judge the signals against the staged plan at {plan}. Coherence, feasibility, scope-guardian and the adversary always run here, whatever the file says, and a lite review never does: never follow the file's pointer to depth.md, and never drop an always-on seat.", { plan: promptPath(plan, "plan (the staged plan)") }),
+    promptFill("Judge the signals against the staged plan at {plan}. Judge each signal from the plan's text and from what the files and code paths it names actually do: open those paths and read enough to see what they touch, never the rest of the repository. Reading or showing ordinary, non-sensitive data, storage churn, or a non-sensitive endpoint is not a signal on its own. Coherence, feasibility, scope-guardian and the adversary always run here, whatever the file says: never use depth.md's choice between a lite and a full review, and never drop an always-on seat.", { plan: promptPath(plan, "plan (the staged plan)") }),
     "Record the picks in one note: key lenses, value a list holding, for each lens picked (product, security or design), an object with its lens and its reason in a few words; an empty list when none is picked.",
     file ? PROMPT_LENS_RULE : null,
   ]);

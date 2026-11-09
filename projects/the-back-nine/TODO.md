@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-09, b9-2):** the bundle fix is committed: the register's *The whole copy catalog ships in the entry JS…* is CLOSED (the entry graph reads `src/ui/entryCopy.ts`, `copy.ts` rides the lazy chunks, `scripts/entryChunkGuard.ts` refuses it in the first-load JS at build; initial JS 301.2 → 202.0 KiB). CI on `ec3514a7` (run `42666885195`) had SKIPPED `verify:csp` and the full `verify:fit` behind the bundle red, so walk 5's round has passed neither until the fix's own CI run is read green (`gh run list --commit <full sha of the fix>`). Read it before walk 6. Then WALK 6 (`/caddie`, item 1, Phase C, "▶ NEXT"); then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the `## Distill candidates` list is far past 10 entries).
+▶ **START HERE (2026-11-09, b9-2's close):** walk 6 is captured and its seven seats have read; read `b9-build2-surplus\u11-walk6\panel\CHAIR-NOTES.md` first (the findings, the five questions — all NOT MET, the note measured only longer — and the first impressions). In order: (1) the `intake:kept` REAL hang (the Result never holds still at 1536×791 after the both-causes edit; CHAIR-NOTES' last section has the prescription); (2) walk 6's refuter round (`REFUTER-BRIEF.md`, one per finding) and the card into `docs/caddie/cold-read-log.md` — R1, the retype that flips `datesavedrisen` to "around 2035" with no trace, is a ⚑ holds finding: measured through the engine and appended to the Tier 0 *A figure typed below today's spending clears W's stale line for good…* before the card clears; (3) the council on the note's form; (4) the fix round; then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the list is far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -93,20 +93,8 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **walk 6** (`/caddie`: the same nine targets, walk 5's briefs in `u11-walk5\panel\briefs\`, its tools in
-     `u11-walk5\tools\`; about 1 weekly point). Its questions:
-     - do the labels now read as parts, calm or clinical;
-     - does the reason end "a bug?";
-     - does anyone still reach for the retype;
-     - does the gate's door sentence send anyone to the green button as "Yes";
-     - is the paragraph, with its reasons added, lighter or only longer (walk 4's distill candidate: if only longer, the
-       council again). The S gate runs about 30 lines on the phone, so this is the open question.
-
-     New this round, for the hunter:
-     - the budget after-work sentence's "to start";
-     - "enter $90,000 a year plus those costs";
-     - the typed-below note. No walk target renders it: a state with W typed below the spending would show it, e.g.
-       `datesavedrisen` with 84,000 typed.
+     ▶ NEXT: **walk 6's refuter round and card** (START HERE; `u11-walk6\panel\CHAIR-NOTES.md` holds the walk's
+     questions with the panel's answers; `intake:typedbelow`, added for it in `aa29f955`, walks the typed-below note).
      **Filed by the walk-5 round's review for U12** (`wf_c037b423-7f0`; the record is `u11-walk5\ROUND.md` § "The
      round review"; each finding goes into the register with its prescription):
      - (bh)'s "Because that $16,985 depends on your $X figure" names the HELD figure, which need not be the one the
@@ -218,25 +206,24 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-09 (b9-1 of the new series: walk 5's fix round reviewed, fixed, proven and COMMITTED; b9-8's block
-pruned into it, its landmines kept below except the one its commit closed, its distill candidates kept below):**
+**SESSION 2026-11-09 (b9-2: the bundle fix built, reviewed and green in CI; walk 6 captured and read; b9-1's block
+pruned into it):**
 
 State at close:
-- walk 5's fix round is committed and pushed (item 1, Phase C);
-- typecheck exit 0, lint exit 0;
-- the suite green and `verify:doc-stats` exit 0 (the count lives under that gate);
-- `verify:fit`'s 37 touched arms green;
-- the push's CI (run `42666885195`) went red at `verify:bundle` and skipped `verify:csp` and `verify:fit`.
+- the bundle fix is committed (`190d5059`): initial JS 202.0 KiB; CI run `42714420890` green on every job, `verify:csp`
+  and `verify:fit` included, so walk 5's round has now passed both;
+- `intake:typedbelow` is committed (`aa29f955`); its CI run reads at start;
+- typecheck exit 0, lint exit 0, the suite and `verify:doc-stats` exit 0 (the count lives under that gate);
+- the R10 sweep `bundlesplit`: 42 of 42 identical against `walk5` (`b9-build2-surplus\README.md`'s table).
 
-Next is the bundle fix in START HERE, then walk 6. Briggsy's ruling this session: no numbered successor; this session
-owned squeaky by the window lines and closed at 47%, past the warn line, before walk 6's fan-out.
+Next is START HERE. No successor was live at this close (b9-3 and b9-4 were closed by Briggsy); this session closed
+past the 50% window line, before walk 6's refuter fan-out.
 
 **Check at start:**
-- the CI run on this close's commit: read in START HERE (run `42666885195`, red on the bundle budget). For the bundle
-  fix's own run: `gh run list --commit <full sha> --json databaseId,status,conclusion` — the full sha, never the short
-  one (`git log -1 --format=%H -- projects/the-back-nine`);
-- the weekly meter before walk 6: `~/.claude/statusline-meters.json` `seven_day` (82% at this close; resets
-  2026-11-11 14:00Z).
+- the CI runs on `aa29f955` and on the-back-nine-b6's `06ad8c9b` (the Act 5 workbench brief): `gh run list --commit
+  <full sha> --json databaseId,status,conclusion` — the full sha, never the short one;
+- the weekly meter before the refuter round: `~/.claude/statusline-meters.json` `seven_day` (93% at this close;
+  resets 2026-11-11 14:00Z).
 
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** — over the council dissent's one
 defined "check", with walk 5's evidence in front of him. Every risen reader took "update" as "raise it", which the
@@ -244,7 +231,13 @@ refuter rates the honest steer (rule 8). "Check" failed twice in this paragraph 
 "verified, done" in walk 4. Never re-propose "check" on the flip condition. Still open, walk 6 answers it: whether the
 labels read calm or clinical. They read clinical as plain words, which (bi)'s form cure answers.
 
-**LANDMINES (b9-7, b9-8, b9-1):**
+**LANDMINES (b9-7, b9-8, b9-1, b9-2):**
+- **`intake:kept` hangs at REAL (b9-2).** At 1536×791 its `result-kept-stale-both` capture never finds a stable
+  element: the new harness fails fast ("not visible" / "not attached"), the pre-refactor one waited the whole 28-minute
+  test budget. Phone passes. So a walk that includes `intake:kept` reports 1 failed until START HERE's (1) is closed;
+  read that walk's later states from `phone\` meanwhile, and never "fix" it with a longer timeout.
+- **A first-load module reads `entryCopy`, never `copy.ts` (b9-2).** `vite build` refuses `src/ui/copy.ts` in the
+  initial JS (`scripts/entryChunkGuard.ts`); a string an entry-graph module renders goes in `src/ui/entryCopy.ts`.
 - **The e2e specs are outside `pnpm typecheck`.** A retired copy key or a changed slot signature they read compiles
   clean and fails only in Playwright. Typecheck them through a scratch tsconfig in the session scratchpad. It must name
   `node_modules` absolutely:
@@ -270,7 +263,8 @@ labels read calm or clinical. They read clinical as plain words, which (bi)'s fo
 - **A seat's arithmetic can borrow the wrong quote.** `stillWorking` answers `employerPlanCoversRetiredMember: true`
   (`src/ui/devSeeds.ts:194`), so the pay-side premium is entered nowhere. Check the seed before a refuter carries a
   figure.
-- **Walk 5 saved every brief and probe** to `b9-build2-surplus\u11-walk5\panel\briefs\`, and walk 4's to
+- **Walk 6 saved every brief, probe and seat report** to `b9-build2-surplus\u11-walk6\panel\` (the probes are in
+  `CHAIR-NOTES.md`'s questions and the seats' `-probe.md` files), walk 5's to `u11-walk5\panel\briefs\`, walk 4's to
   `u11-walk4\panel\briefs\`. The two extractors are in `u11-walk5\tools\` (`extract-prompts.mjs <subagentsDir>
   <outDir>`, `extract-all-user.mjs <transcript.jsonl>`).
 - **`TaskStop` on a background `vite` leaves its two node processes serving** (b9-1: port 5287 still answered 200).
@@ -1022,6 +1016,8 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - Compare at the precision the other side is stored at. A monthly figure written as `entered × 12` unrounded sat a float hair under a quote snapped to the cent, and printed "$84,999.96 is below $84,999.96". A predicate over a rounded figure rounds its other side the same way (`roundCents`), as every sibling here already did. *(Source: b9-1's close, commit `ec3514a7`.)*
 - Review a test-first round before its mutant pass. b9-8's round was test-first and green, and an adversarial review with refuters still found eleven real findings. Among them were a P0, an unscoped lean the project's own guard forbids, and a ramp-law violation, all in sentences the tests pinned exactly as written. Mutants prove the tests bite; only a reader of the arms proves the words are true. *(Source: b9-1's close, commit `ec3514a7`.)*
 - A lean is per arm, never per sentence. The typed-below note's "this answer can look better" was true for every arm its prescription imagined, and false on one it didn't: a "saved" answer waiting on W. Route every new lean through the one predicate the other leans ride (`savedWaitingOnW`). *(Source: b9-1's close, commit `ec3514a7`.)*
+- Freeing a byte budget's headroom silently disarms the exclusions it was guarding by accident. The copy split took the initial JS from 301 to 202 KiB; after it, a re-import of the ~100 KB catalog would have tripped the budget by only about 1 KiB (a margin a leaner react-dom could erase), and only as a bare byte count. A structural "never in the first-load JS" needs its own build-time gate keyed to module ids (`scripts/entryChunkGuard.ts`), with non-vacuity throws (no entry chunk; the forbidden module in no chunk). Also: a sourcemapped build appends a `sourceMappingURL` line per chunk, so its byte counts are not the gate's; attribute bytes on a sourcemapped build, quote the gate's figure from a plain `pnpm build`. *(Source: b9-2, `190d5059`.)*
+- Measure a form cure's height before walking it. Walk 5's round added the reasons and put the labels on their own lines; walk 6 measured the gate's note at +50–90% (`fold.json`, `.reentry-notes`), C's past the laptop's first frame, and every seat still called it a wall. A fold.json diff between the last walk's bundle and the round's tree answers "lighter or only longer" before a fan-out is spent. *(Source: b9-2, walk 6's CHAIR-NOTES.)*
 
 ## Driving the app
 

@@ -10,6 +10,7 @@ import { WORKING_COST_ANSWER_FIELD, WORKING_COST_FIELD } from './sanity'
 import {
   heldYesBelowQuote,
   workingCostBelowMedical,
+  workingYearCostKeepLabel,
   workingYearCostStaleness,
   workingYearCostStaleText,
   workingYearQuote,
@@ -51,8 +52,9 @@ import {
  *    figure before it reaches the draft (`commitRefusing`).
  */
 /** `'answer'` = yes, a figure, keep or clear (the panel validates it first); `'period'` = a unit
- *  re-base after an explicit period tap (the panel commits it open: the tap itself disarms the period
- *  rule, and the figure was already above $0); `'tapped-answer'` = a figure whose unit the household
+ *  re-base after an explicit period tap — a typed figure's digits read in the new unit, a kept figure's
+ *  money converted into it (`writeWorkingYearCostPeriod`) — committed open by the panel (the tap itself
+ *  disarms the period rule, and the figure was already above $0); `'tapped-answer'` = a figure whose unit the household
  *  has just named — one the host REFUSED on blur, committed again in the unit a period tap just
  *  chose, or a held yes kept through the "Keep $X a year" door (ruling 34) — the panel validates it
  *  counting that tap, so the zero rule still guards and nothing lands unasked. */
@@ -266,8 +268,10 @@ export function WorkingCostQuestion({
   const left = leftOutLine(quote)
   const typed = w?.kind === 'entered' ? (w.entryPeriod === 'month' ? w.amountReal / 12 : w.amountReal) : undefined
   // The gate's message sits where the household is answering: at the fork until "a different figure"
-  // is picked, then at the figure (and always there on a $0 quote, which has no fork) — never an
-  // "answer it above" under a fork already answered. The figure shows exactly then.
+  // is picked, then at the figure (and always there on a $0 quote, which has no fork). The figure shows
+  // exactly then. Its WORDS fit the face too: over a stale held figure — the fork answered, the box filled
+  // — the gate names the ways out this face draws, never "answer it above" (the U11 walk's (ad):
+  // `workingYearCostGateMessage`, read off the core the note's door reads).
   const gateOnFigure = showFigure
   const figureField = gateOnFigure && answerInvalid && !figureInvalid ? WORKING_COST_ANSWER_FIELD : WORKING_COST_FIELD
   const forkDescribedBy = [noteShown ? staleId : null, quoteId, left !== null ? leftId : null]
@@ -326,9 +330,8 @@ export function WorkingCostQuestion({
                 onWrite(keep, 'tapped-answer')
               }}
             >
-              {noteW.kind === 'entered' && noteW.entryPeriod === 'month'
-                ? slots.workingCostKeepMonthly(formatMoney(noteW.amountReal / 12))
-                : slots.workingCostKeepYearly(formatMoney(workingYearCostFigure(noteW)))}
+              {/* The door's own words — the one home the gate message that names it reads too. */}
+              {workingYearCostKeepLabel(noteW)}
             </button>
           )}
         </div>

@@ -248,16 +248,21 @@ const STATE_TAX_IN_W: Readonly<
   unpriced: { underTaxLine: 'workingLedgerIncomeTaxStateInW', onCostLine: 'workingLedgerCostStateInW' },
 }
 
-/** The W line's monthly echo. An ENTERED figure echoes its own stored unit, "as you gave it" — the one
- *  unit the draft records the household choosing. A CONFIRMED quote has no stored unit (the spend
- *  period can be relabelled after it), so it echoes only while the quote itself reads monthly, and
- *  never claims "as you gave it" (the b9-3 review: a relabel made that sentence false). `null` for a
- *  yearly answer. */
+/** The W line's monthly echo. A TYPED figure echoes its own stored unit, "as you gave it" — the one
+ *  unit the draft records the household choosing. A KEPT figure (build 2's KTD10 stamp) echoes a month
+ *  plainly: its money is the quote the household kept, yearly, and a unit tap converts it
+ *  (`writeWorkingYearCostPeriod`), so "$7,000 a month, as you gave it" would name a figure it never gave.
+ *  A CONFIRMED quote has no stored unit (the spend period can be relabelled after it), so it echoes only
+ *  while the quote itself reads monthly, and never claims "as you gave it" (the b9-3 review: a relabel
+ *  made that sentence false). `null` for a yearly answer. */
 function monthlyEcho(d: ScenarioDraft): string | null {
   const w = d.workingYearCost
   if (w === undefined) return null
   const monthly = formatMoney(workingYearCostFigure(w) / 12)
-  if (w.kind === 'entered') return w.entryPeriod === 'month' ? slots.workingLedgerMonthlyEcho(monthly) : null
+  if (w.kind === 'entered') {
+    if (w.entryPeriod !== 'month') return null
+    return w.keptOverQuoteReal !== undefined ? slots.workingLedgerMonthlyPlain(monthly) : slots.workingLedgerMonthlyEcho(monthly)
+  }
   const quote = workingYearQuote(d)
   return quote.source === 'spending' && quote.period === 'month' ? slots.workingLedgerMonthlyPlain(monthly) : null
 }

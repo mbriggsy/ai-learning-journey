@@ -863,6 +863,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostStaleKeptBoth: slots.workingCostStaleKeptBoth('84,000', '90,000'),
     workingCostKeepMonthly: slots.workingCostKeepMonthly('7,500'),
     workingCostKeepYearly: slots.workingCostKeepYearly('90,000'),
+    errWorkingCostStaleBelowQuote: slots.errWorkingCostStaleBelowQuote('84,000', '90,000'),
+    errWorkingCostStaleKeep: slots.errWorkingCostStaleKeep(slots.workingCostKeepYearly('84,000')),
     workingCostBelowMedical: slots.workingCostBelowMedical('6,000', '8,000'),
     workingLedgerLead: slots.workingLedgerLead(2026),
     workingLedgerLeadAged: slots.workingLedgerLeadAged(2026),
@@ -1194,8 +1196,12 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
         'oopHelpWorking',
       ].includes(k),
   )
-  const PAY_CHECK_SLOTS = (Object.keys(slots) as (keyof typeof slots)[]).filter((k) =>
-    /^(workingCost|workingLedger|assumptionWorkingCost|stalenessLeftOver)/.test(k),
+  const PAY_CHECK_SLOTS = (Object.keys(slots) as (keyof typeof slots)[]).filter(
+    (k) =>
+      /^(workingCost|workingLedger|assumptionWorkingCost|stalenessLeftOver)/.test(k) ||
+      // The W step gate's two stale-figure messages (the U11 walk's (ad)): named strays, as the gate's own
+      // `errWorkingCostUnanswered` is among the keys.
+      ['errWorkingCostStaleBelowQuote', 'errWorkingCostStaleKeep'].includes(k),
   )
   const payCheckStrings = (): readonly (readonly [string, string])[] => [
     ...PAY_CHECK_KEYS.map((k) => [k, copy[k]] as const),
@@ -1207,6 +1213,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(PAY_CHECK_SLOTS.length, PAY_CHECK_SLOTS.join(', ')).toBeGreaterThanOrEqual(40)
     for (const named of ['qWorkingCostHeading', 'qWorkingLedgerHeading', 'errWorkingCostUnanswered', 'stalenessPayCheckNote'] as const) {
       expect(PAY_CHECK_KEYS).toContain(named)
+    }
+    for (const named of ['errWorkingCostStaleBelowQuote', 'errWorkingCostStaleKeep'] as const) {
+      expect(PAY_CHECK_SLOTS).toContain(named)
     }
   })
 
@@ -1283,6 +1292,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.workingCostStaleKeptBoth(S, S),
       slots.workingCostKeepMonthly(S),
       slots.workingCostKeepYearly(S),
+      slots.errWorkingCostStaleBelowQuote(S, S),
+      slots.errWorkingCostStaleKeep(S),
       slots.workingCostBelowMedical(S, S),
       slots.workingLedgerAmount(S),
       slots.workingLedgerOutflow(S),

@@ -374,10 +374,17 @@ describe('the stale sentence names the cause that moved (KTD21)', () => {
     ).toBe(slots.workingCostStaleStateEntered('96,000'))
   })
 
-  it('both moved: one sentence naming both causes; with no spending left to quote, no second figure', () => {
+  it('both moved: one sentence naming both causes, and the lean where the spending ROSE past the figure; with no spending left to quote, no second figure', () => {
+    // The spending alone now comes to more than the yes, whatever the state did: a state's income tax either
+    // belongs in W (adding to it) or is priced apart (adding nothing), so it never brings W back below the
+    // spending. The lean rides as it does on the spending alone (the U11 walk's (ac)).
     expect(
       workingYearCostStaleText(nc({ retirementState: 'PA', annualSpendingReal: 90_000, workingYearCost: confirmedAt(84_000, 'agi-derived') })),
-    ).toBe(slots.workingCostStaleBoth('84,000', '90,000'))
+    ).toBe(`${slots.workingCostStaleBoth('84,000', '90,000')} ${slots.workingCostStaleLeansBetter('84,000')}`)
+    // The spending FELL under it and the state moved: no lean (as on the spending alone).
+    expect(
+      workingYearCostStaleText(nc({ retirementState: 'PA', annualSpendingReal: 78_000, workingYearCost: confirmedAt(84_000, 'agi-derived') })),
+    ).toBe(slots.workingCostStaleBoth('84,000', '78,000'))
     expect(
       workingYearCostStaleText(nc({ retirementState: 'PA', annualSpendingReal: undefined, workingYearCost: confirmedAt(84_000, 'agi-derived') })),
     ).toBe(slots.workingCostStaleBothGone('84,000'))
@@ -524,6 +531,23 @@ describe('the keep stamp: a kept yes goes stale when the spending rises past it 
     )
   })
 
+  it('the words, typed by hand: the lean states the spending as the fact it is, never an "If" (the U11 walk’s (af)), and a both-causes sentence names the new state answer (its (ac))', () => {
+    expect(workingYearCostStaleText(at(85_000, kept84))).toBe(
+      'You kept $84,000 a year, but your spending figures have changed since — they now come to $85,000 a year. ' +
+        'Your spending alone now comes to more than $84,000, so this answer can look better than it really is.',
+    )
+    expect(workingYearCostStaleText(at(90_000, kept84, { retirementState: 'PA' }))).toBe(
+      'You kept $84,000 a year, but your spending figures and your state answer have changed since. Your spending now comes ' +
+        'to $90,000 a year, and your new state answer changes which state’s income tax this figure should hold. ' +
+        'Your spending alone now comes to more than $84,000, so this answer can look better than it really is.',
+    )
+    expect(workingYearCostStaleText(at(90_000, yes84, { retirementState: 'PA' }))).toBe(
+      'You said yes to $84,000 a year, but your spending figures and your state answer have changed since. Your spending ' +
+        'now comes to $90,000 a year, and your new state answer changes which state’s income tax this figure should hold. ' +
+        'Your spending alone now comes to more than $84,000, so this answer can look better than it really is.',
+    )
+  })
+
   it('THE REFERENT IS THE FIGURE, never the stamp: unmoved, fallen, risen short of the figure, or level with it — fresh; one cent past it — stale', () => {
     // A quote between the stamp ($80,000) and the figure ($84,000) leaves the answer standing: the household
     // kept a figure at least what it spends, and its door would show there, so a stale keyed to the stamp
@@ -546,10 +570,15 @@ describe('the keep stamp: a kept yes goes stale when the spending rises past it 
     expect(workingYearCostStaleText(at(80_000, kept84, { retirementState: 'PA' }))).toBe(slots.workingCostStaleStateKept('84,000'))
     // The state alone prints one figure in whole dollars, even with a quote a few cents under it.
     expect(workingYearCostStaleText(at(83_999.6, kept84, { retirementState: 'PA' }))).toBe(slots.workingCostStaleStateKept('84,000'))
-    // Both: the spending rose to $90,000 AND the state moved — one sentence, both causes, no lean (the
-    // figures alone cannot say which way a state's tax on pay runs, as the yes's own both-arm).
+    // Both: the spending rose to $90,000 AND the state moved — one sentence, both causes, and the lean: a kept
+    // figure is stale on the spending only once the spending passes it, so here the spending alone always
+    // sits above it, and the state's tax can only add to what W should hold (the U11 walk's (ac); the walk
+    // read the lean missing from this sentence alone). The state on its own above carries no lean: a state
+    // move can cut the tax on pay as easily as raise it.
     expect(workingYearCostStaleness(at(90_000, kept84, { retirementState: 'PA' }))).toEqual({ quoteMoved: true, readingMoved: true })
-    expect(workingYearCostStaleText(at(90_000, kept84, { retirementState: 'PA' }))).toBe(slots.workingCostStaleKeptBoth('84,000', '90,000'))
+    expect(workingYearCostStaleText(at(90_000, kept84, { retirementState: 'PA' }))).toBe(
+      `${slots.workingCostStaleKeptBoth('84,000', '90,000')} ${slots.workingCostStaleLeansBetter('84,000')}`,
+    )
     // A TYPED figure keeps its own words: the state alone, whatever the spending did.
     expect(workingYearCostStaleText(at(90_000, typed(84_000), { retirementState: 'PA' }))).toBe(slots.workingCostStaleStateEntered('84,000'))
   })
@@ -592,21 +621,34 @@ describe('the keep stamp: a kept yes goes stale when the spending rises past it 
     expect(workingYearCostStaleness({ ...kept, annualSpendingReal: 90_000 })).toBeNull()
   })
 
-  it('a unit tap CARRIES the stamp: "each month" then "each year" is the kept figure exactly, stale where the spending is above it (U5’s review)', () => {
-    // $84,000 a year kept, then "each month" tapped: the digits move unit ($84,000 a month = $1,008,000 a year).
-    // A unit tap types no digits and answers no quote, so the figure is still the kept one.
-    const rebased = writeWorkingYearCostPeriod(at(80_000, kept84), 'month')
-    expect(rebased.workingYearCost).toEqual({ ...kept84, amountReal: 1_008_000, entryPeriod: 'month' })
-    // The trip back is the kept figure exactly — never a typed one that no later rise could stale.
-    const back = writeWorkingYearCostPeriod(rebased, 'year')
+  it('a unit tap on a KEPT figure CONVERTS it and carries the stamp: "each month" is $7,000 a month, the same $84,000 a year (the U11 walk’s (ab))', () => {
+    // $84,000 a year kept, then "each month" tapped. The household never typed those digits (the keep took the
+    // quote it said yes to), so there is no 12× misentry for a re-read to undo (KTD17's re-read is for TYPED
+    // digits): the unit moves and the money stays — the box shows 7,000 under "Each month", and the row's
+    // "$84,000 a year — the figure you kept" stays true. Walk 1 read "$1,008,000 a year — the figure you kept".
+    const monthly = writeWorkingYearCostPeriod(at(80_000, kept84), 'month')
+    expect(monthly.workingYearCost).toEqual({ ...kept84, entryPeriod: 'month' })
+    // The trip back is the kept figure exactly, in both directions: a kept MONTHLY figure tapped to a year.
+    const back = writeWorkingYearCostPeriod(monthly, 'year')
     expect(back.workingYearCost).toEqual(kept84)
-    // A kept figure the spending had already passed: the round trip leaves it as stale as it was.
+    expect(writeWorkingYearCostPeriod(back, 'month').workingYearCost).toEqual({ ...kept84, entryPeriod: 'month' })
+    // The same unit is a no-op.
+    expect(writeWorkingYearCostPeriod(monthly, 'month')).toBe(monthly)
+    // A kept figure the spending has already passed stays exactly as stale in EITHER unit: the stale test reads
+    // the yearly figure, and a unit tap no longer moves it. (Under the re-read, "each month" made it $1,008,000
+    // a year — fresh — and the walk's Continue let it through at twelve times the figure.)
     const staleKept = at(90_000, kept84)
-    const roundTrip = writeWorkingYearCostPeriod(writeWorkingYearCostPeriod(staleKept, 'month'), 'year')
+    const staleMonthly = writeWorkingYearCostPeriod(staleKept, 'month')
+    expect(staleMonthly.workingYearCost).toEqual({ ...kept84, entryPeriod: 'month' })
+    expect(workingYearCostStaleness(staleMonthly)).toEqual({ quoteMoved: true, readingMoved: false })
+    expect(heldYesBelowQuote(staleMonthly), 'the door stays withheld in the month view').toBe(true)
+    expect(workingYearCostStaleText(staleMonthly)).toBe(workingYearCostStaleText(staleKept))
+    const roundTrip = writeWorkingYearCostPeriod(staleMonthly, 'year')
     expect(roundTrip.workingYearCost).toEqual(kept84)
     expect(workingYearCostStaleness(roundTrip)).toEqual({ quoteMoved: true, readingMoved: false })
-    // The month view in between is twelve times larger, so it reads fresh: carrying is never rosy.
-    expect(workingYearCostStaleness(writeWorkingYearCostPeriod(staleKept, 'month'))).toBeNull()
+    // A TYPED figure still re-reads its digits (the 12× repair), stamp-free, beside it.
+    const typedYearly = at(80_000, typed(84_000))
+    expect(writeWorkingYearCostPeriod(typedYearly, 'month').workingYearCost).toEqual({ ...typed(84_000), amountReal: 1_008_000, entryPeriod: 'month' })
   })
 
   it('a keep where no quote is left to show stamps the quote the yes said yes to — never unstamped, so a later spending figure still counts', () => {

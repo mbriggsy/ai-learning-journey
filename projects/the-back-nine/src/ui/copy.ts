@@ -1909,8 +1909,10 @@ export const copy = {
   // `datesavedstale` is `datecoststale` with "All of it" stored. Nobody has measured which way that moves
   // the answer, so the mirror stays unsaid there too (R16): the dollars clause names the left over that is
   // not added.
-  // Never said where the state answer moved: the figures alone cannot tell which way a state's tax on
-  // pay runs. Saying which way it MOVES the answer, measured, is the register's *The gate's working-year
+  // Never said where the state answer moved ALONE: the figures alone cannot tell which way a state's tax on
+  // pay runs. Where the spending rose past the figure as well, it rides (the U11 walk's (ac)): the sentence
+  // speaks of the spending alone, which a state's tax can only add to in W, never take back below.
+  // Saying which way it MOVES the answer, measured, is the register's *The gate's working-year
   // lines can't say whether a change touches this household…*. The sentence itself is a SLOT
   // (`slots.workingCostStaleLeansBetter`) — the final hunt: "costs more" named no figure to compare.
   // THE AGGREGATE (U17 §S4, bucket 3) — the ONE nameless sentence for every clock that fired
@@ -2456,9 +2458,30 @@ export interface SlottedErrorParams {
    *  clock read), plain digits. */
   readonly limitFormatted: string
 }
+/**
+ * The W step gate's two STALE-FIGURE messages (`working-cost-unanswered`; the U11 Caddie walk's (ad)). The
+ * gate's own message, "answer it above", is true only where the step shows no answer (W absent, or a stale
+ * yes, which checks no option). Over a stale HELD FIGURE — typed, or kept from a yes (build 2's KTD10) — the
+ * step shows "A different figure" checked with the figure in its box, so that line named no way out and the
+ * moves a reader tries first blocked again (insight 109: an answered fact under the "still needed" frame). Each
+ * message names the ways out that are ON SCREEN for its case, from the same core the stale note's door reads
+ * (`workingYearQuote.workingYearCostGateMessage`): below today's quote there is no Keep door (ruling 34), so
+ * "Yes" at today's figure or a retype; otherwise the door, by its own label, or a retype. Their params are
+ * PRE-formatted (the slotted channel's law): the figures by the intake money formatter, the label by
+ * `workingYearCostKeepLabel`, the door's own words.
+ */
+export interface WorkingCostStaleBelowQuoteParams {
+  readonly heldFormatted: string
+  readonly quoteFormatted: string
+}
+export interface WorkingCostStaleKeepParams {
+  readonly keepLabel: string
+}
 export type CatalogMessage =
   | { readonly messageKey: CopyKey; readonly params?: undefined }
   | { readonly messageKey: SlottedErrorKey; readonly params: SlottedErrorParams }
+  | { readonly messageKey: 'errWorkingCostStaleBelowQuote'; readonly params: WorkingCostStaleBelowQuoteParams }
+  | { readonly messageKey: 'errWorkingCostStaleKeep'; readonly params: WorkingCostStaleKeepParams }
 
 /**
  * The hedge vocabulary — the words a probabilistic reading is authored FROM (U10's
@@ -2868,10 +2891,14 @@ export const slots = {
     `You said yes to $${lastFormatted} a year, but your spending figures have changed since — they now come to $${nowFormatted} a year.`,
   /** The rosy-side warning after a quote that ROSE past the figure said yes to (b9-7 — the copy's
    *  `stalenessPayCheckGateDoor` neighbourhood carries the full why, per left-over answer); names the figure it
-   *  compares. For a "saved" answer waiting on W its reach is two-sided, so it stands only as a possibility
-   *  claim, beside the clause below on the Result and the re-entry gate (build 2's U8). */
+   *  compares. It states the spending as the known fact it is: "If a working year now costs more than $84,000"
+   *  hedged a figure printed one sentence earlier, which a working year almost never costs less than
+   *  (`heldYesBelowQuote`'s premise; the U11 walk's (af)). It rides the quote-only AND the both-causes sentences:
+   *  the spending alone sits above the figure whatever the state did (the walk's (ac)). For a "saved" answer
+   *  waiting on W its reach is two-sided, so it stands only as a possibility claim, beside the clause below on
+   *  the Result and the re-entry gate (build 2's U8). */
   workingCostStaleLeansBetter: (lastFormatted: string): string =>
-    `If a working year now costs more than $${lastFormatted} a year, this answer can look better than it really is.`,
+    `Your spending alone now comes to more than $${lastFormatted}, so this answer can look better than it really is.`,
   // Build 2 (R12): W's ONE stale line, on the Result and the re-entry gate, gains this clause when the household
   // said "All of it" and the picture, read on the stale W, still shows a year-0 left over (the shown state
   // "waiting on W"; under "not asked" no clause rides): nothing left over is credited while W is stale (R7).
@@ -2889,25 +2916,35 @@ export const slots = {
     `You said yes to $${lastFormatted} a year before your state answer changed, and that changes which state income tax this figure should hold.`,
   workingCostStaleStateEntered: (lastFormatted: string): string =>
     `You entered $${lastFormatted} a year before your state answer changed, and that changes which state income tax this figure should hold.`,
+  // Both causes: "and the state changes which state income tax…" misparsed on the Result (the U11 walk's (ac),
+  // refuter at medium): the clause names the new state ANSWER as the subject, and the tax as that state's.
   workingCostStaleBoth: (lastFormatted: string, nowFormatted: string): string =>
-    `You said yes to $${lastFormatted} a year, but your spending figures and your state answer have changed since. Your spending now comes to $${nowFormatted} a year, and the state changes which state income tax this figure should hold.`,
+    `You said yes to $${lastFormatted} a year, but your spending figures and your state answer have changed since. Your spending now comes to $${nowFormatted} a year, and your new state answer changes which state’s income tax this figure should hold.`,
   workingCostStaleBothGone: (lastFormatted: string): string =>
     `You said yes to $${lastFormatted} a year, but your spending figures and your state answer have changed since, and there’s no spending figure to offer now.`,
   /** A KEPT figure's stale note (build 2's KTD10, R13): a yes kept through the "Keep $X a year" door,
    *  so "You kept", never "You entered" (the household never typed it) and never "You said yes" (the
    *  yes no longer follows the quote). A kept figure stales on the spending only once the spending
    *  comes to MORE than it, so the quote arm always has a second figure and never a "gone" twin; the
-   *  quote-only arm is followed by `workingCostStaleLeansBetter`, as the yes's own is. PILOT-DRAFTED,
-   *  shipped flagged for the Caddie walk. */
+   *  quote-only and both-causes arms are followed by `workingCostStaleLeansBetter`, as the yes's own are
+   *  where the spending rose past it. PILOT-DRAFTED, walked by the U11 Caddie record (walk 1, b9-5). */
   workingCostStaleKeptQuote: (keptFormatted: string, nowFormatted: string): string =>
     `You kept $${keptFormatted} a year, but your spending figures have changed since — they now come to $${nowFormatted} a year.`,
   workingCostStaleStateKept: (keptFormatted: string): string =>
     `You kept $${keptFormatted} a year before your state answer changed, and that changes which state income tax this figure should hold.`,
   workingCostStaleKeptBoth: (keptFormatted: string, nowFormatted: string): string =>
-    `You kept $${keptFormatted} a year, but your spending figures and your state answer have changed since. Your spending now comes to $${nowFormatted} a year, and the state changes which state income tax this figure should hold.`,
+    `You kept $${keptFormatted} a year, but your spending figures and your state answer have changed since. Your spending now comes to $${nowFormatted} a year, and your new state answer changes which state’s income tax this figure should hold.`,
   /** The stale ENTERED answer's re-confirm (KTD21: committing it unchanged re-stamps it). */
   workingCostKeepMonthly: (amountFormatted: string): string => `Keep $${amountFormatted} a month`,
   workingCostKeepYearly: (amountFormatted: string): string => `Keep $${amountFormatted} a year`,
+  /** The W step gate over a stale HELD FIGURE (the `CatalogMessage` block's why; the U11 walk's (ad)). Below
+   *  today's quote: both yearly figures, and the two ways out on screen — "Yes" at today's figure (the fork's
+   *  own label, quoted) or a retype. PILOT-DRAFTED from the walk's prescription, for walk 2. */
+  errWorkingCostStaleBelowQuote: (heldFormatted: string, quoteFormatted: string): string =>
+    `Your $${heldFormatted} a year is below your spending now: choose “${copy.workingCostYes}” to use $${quoteFormatted} a year, or type a new figure.`,
+  /** …and where the note's Keep door shows (a figure stale on the state alone, or typed): the door by its own
+   *  words, or a retype. */
+  errWorkingCostStaleKeep: (keepLabel: string): string => `To go on, choose “${keepLabel}” above, or type a new figure.`,
   /** KTD17's W-below-M note — calm, non-blocking, both figures in-sentence (the `oopExceedsSpend`
    *  precedent); the engine uses W as given. */
   workingCostBelowMedical: (costFormatted: string, medicalFormatted: string): string =>

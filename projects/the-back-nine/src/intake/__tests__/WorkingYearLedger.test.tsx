@@ -196,6 +196,17 @@ describe('the money picture — year 0 (R16)', () => {
       draft({ annualSpendingReal: 84_000, spendEntryPeriod: 'year', workingYearCost: { kind: 'confirmed', quotedReal: 84_000, stateTaxReading: 'unpriced' } }),
     )
     expect(document.body.textContent).not.toContain('a month')
+    cleanup()
+    // A KEPT figure (build 2's KTD10 stamp) shown monthly after a unit tap echoes its month, never "as you
+    // gave it": the household kept $84,000 a year and never gave $7,000 a month — the tap converts it (the
+    // U11 walk's (ab)). Yearly, no echo.
+    const kept = { kind: 'entered', amountReal: 84_000, stateTaxReading: 'unpriced', keptOverQuoteReal: 80_000 } as const
+    renderPicture({ year0: year0(), laterYears: [] }, draft({ workingYearCost: { ...kept, entryPeriod: 'month' } }))
+    expect(screen.getByText(slots.workingLedgerMonthlyPlain('7,000'))).toBeInTheDocument()
+    expect(document.body.textContent).not.toContain('as you gave it')
+    cleanup()
+    renderPicture({ year0: year0(), laterYears: [] }, draft({ workingYearCost: { ...kept, entryPeriod: 'year' } }))
+    expect(document.body.textContent).not.toContain('a month')
   })
 
   it('a pension in year 0 is its own Coming-in row, so the shown lines still sum to the bottom line (30,000 + 20,000 − 2,295 − 50,000 = −2,295)', () => {

@@ -57,7 +57,7 @@ import { cumulativePriceIndex } from '@engine/priceIndex'
 // Neither side reads the other's bindings at module top level — every use is inside a function or a
 // rule's `check` — and it must stay that way (the simulate/earningsTest cycle's rule).
 import { isDateRoute } from './intakeMap'
-import { isWorkingYearCostStale } from './workingYearQuote'
+import { isWorkingYearCostStale, workingYearCostGateMessage } from './workingYearQuote'
 
 /** Engine longevity-table ceiling (SSA snapshot support, P1-exit pin pass). */
 const MAX_MODEL_AGE = 119
@@ -590,12 +590,14 @@ const RULES: readonly SanityRule[] = [
     // never reaches the panel (KTD3: the panel never touches `.answer`). It fires while W is absent or
     // STALE (R4): the walk cannot complete on an answer that no longer matches the quote or the state
     // reading it was given against. A pure draft read — the stale predicate is draft-keyed and never
-    // builds params (Phase B ruling 18), so the flow can evaluate it on every commit.
+    // builds params (Phase B ruling 18), so the flow can evaluate it on every commit. Its MESSAGE fits what
+    // the step shows (the U11 walk's (ad)): "answer it above" where nothing is answered on screen, and over a
+    // stale held figure the ways out the face draws (`workingYearCostGateMessage`, the note's own core).
     id: 'working-cost-unanswered',
     target: () => [WORKING_COST_ANSWER_FIELD],
     check: (d) =>
       isDateRoute(d) && (d.workingYearCost === undefined || isWorkingYearCostStale(d))
-        ? [{ rule: 'working-cost-unanswered', field: WORKING_COST_ANSWER_FIELD, messageKey: 'errWorkingCostUnanswered' }]
+        ? [{ rule: 'working-cost-unanswered', field: WORKING_COST_ANSWER_FIELD, ...workingYearCostGateMessage(d) }]
         : [],
   },
   {

@@ -148,10 +148,12 @@ import type { WorkingYearLeftOverKind } from '../src/shared/model'
  * Increment 10 (2026-11-08, build 2's U11 — the Caddie record's (d) and (p)):
  *  - `intake:kept` — U5's drafted words, each reached the way a household reaches it: `datecoststale`'s
  *    Result → its standing line's door → the panel's W row → the Keep door (`walkIntakeKept`'s docblock names
- *    the two branches and their nine states): the row's "the figure you kept", the same row after a tap on
- *    "Each month" ($1,008,000 a year), the kept figure's state-only, both-causes and spending sentences, the
- *    face a kept figure the spending rose past is left with ("A different figure" checked, the box filled, no
- *    door), the Result's standing line over it, and the walk's W step and its gate's message.
+ *    the branches and their states): the row's "the figure you kept", the same row after a tap on
+ *    "Each month" (walk 1: $1,008,000 a year; walk 2: the kept money converted, $7,000 a month), the kept
+ *    figure's state-only, both-causes and spending sentences, the face a kept figure the spending rose past is
+ *    left with ("A different figure" checked, the box filled, no door), the Result's standing line over it, and
+ *    the walk's W step and its gate's message — and, since walk 2 (the U11 walk's (ad)), branch C: the gate's
+ *    message over a kept figure stale on the state alone, naming the note's Keep door.
  *  - `seed:datesavedrisen` / `vault:datesavedrisen` — U11's RISEN twin of `datesavedstale` (the spending raised
  *    to $90,000 past a yes to $84,000), the only household whose stale line carries the lean ("can look better
  *    than it really is") and then the clause naming the $16,985 not added. It rides LEFT_OVER_WITNESSES like
@@ -1391,31 +1393,35 @@ async function walkIntakeLeftOver(page: Page, outDir: string): Promise<void> {
   }
 }
 
-/** Increment 10's figures: `datecoststale`'s yes to $84,000, kept through the Keep door, and the same typed
- *  digits read as a MONTH after a tap on "Each month" — `writeWorkingYearCostPeriod` re-reads the typed figure in
- *  the tapped unit, so 84,000 a month is $1,008,000 a year (84,000 × 12), and the unit tap carries the kept stamp
- *  (U5, R13's note). */
+/** Increment 10's figures: `datecoststale`'s yes to $84,000, kept through the Keep door, and the same kept money
+ *  shown by the MONTH after a tap on "Each month" — `writeWorkingYearCostPeriod` CONVERTS a kept figure (the U11
+ *  walk's (ab); walk 1 read the re-read "$1,008,000 a year — the figure you kept"), so the box shows 7,000
+ *  (84,000 ÷ 12) and the row still says the $84,000 a year kept; the tap carries the stamp (U5, R13's notes). */
 const KEPT_W = STALE_W_CONFIRMED
-const KEPT_W_MONTH_AS_YEAR = '1,008,000'
-/** The kept walk's budget: eight final-tier waits (two fresh landings, and per branch the settle before the
- *  re-run watch is armed, the re-run's first commit and its final frame) at FINAL_TIER_MS each, plus two
- *  minutes for its nine captures per viewport and the re-walk. */
-const KEPT_TEST_MS = 8 * FINAL_TIER_MS + 120_000
+const KEPT_W_MONTHLY = '7,000'
+/** The kept walk's budget: twelve final-tier waits (three fresh landings, and per branch the settle before the
+ *  re-run watch is armed, the re-run's first commit and its final frame) at FINAL_TIER_MS each, plus three
+ *  minutes for its ten captures per viewport and the two re-walks. */
+const KEPT_TEST_MS = 12 * FINAL_TIER_MS + 180_000
 
 /**
  * The KEPT walk (increment 10 — `intake:kept`; the header names what it is for). Every branch starts from a
  * fresh `datecoststale` landing: a yes to $84,000 stale over a FALLEN quote ($78,000), so the panel's W row
  * opens on the stale face WITH the Keep door (ruling 34: a yes at or above today's quote), and the door is
  * tapped — the shipped write, never a stamp typed into a draft.
- *  A. `panel-kept` (the row reads "the figure you kept") → `panel-kept-month` ("Each month" tapped: the row
- *     reads $1,008,000 a year, the box still 84,000) → "Each year" again (the kept figure exactly, asserted)
+ *  A. `panel-kept` (the row reads "the figure you kept") → `panel-kept-month` ("Each month" tapped: the kept
+ *     money converts, so the box shows 7,000 and the row still reads $84,000 a year — walk 2; walk 1 read the
+ *     re-read "$1,008,000 a year") → "Each year" again (the kept figure exactly, asserted)
  *     → a move to Pennsylvania: `panel-kept-stale-state` (the state-only sentence; the door shows, the quote
  *     $78,000 being below the figure) → the spending raised to $90,000: `panel-kept-stale-both` (both causes;
  *     no door) → the panel closed: `result-kept-stale-both` (the Result's standing line).
  *  B. the spending raised to $90,000 alone: `panel-kept-stale-quote` (the spending sentence and its lean; the
  *     face the review's P3 names — "A different figure" checked, the box filled, no door) → the panel closed:
  *     `result-kept-stale-quote` → the re-walk to the W step: `walk-kept-stale-quote` (the same face on the
- *     walk) → Continue: `walk-kept-stale-blocked` (the gate's message under that face).
+ *     walk) → Continue: `walk-kept-stale-blocked` (the gate's message under that face: both figures and both
+ *     ways out, since walk 2).
+ *  C. (walk 2) a move to Pennsylvania alone → the panel closed → the re-walk to the W step, where the note's
+ *     Keep door shows → Continue: `walk-kept-stale-state-blocked` (the gate names that door by its own words).
  * Every sentence asserted is the shipped slot over the seed's own figures. The spending is typed in `date`'s
  * own unit, a month ($7,500 = $90,000 a year). A panel edit re-runs the answer behind the sheet: before the
  * panel closes, the walk sees that run start (the Result leaves its settled final frame), and after it, waits
@@ -1525,8 +1531,8 @@ async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
     await showRow(row)
     await captureState(page, path.join(outDir, 'panel-kept'))
     await pick(face.getByRole('radio', { name: copy.periodMonth }))
-    await expect(value, 'the unit tap re-reads the typed 84,000 as a month').toHaveText(slots.assumptionWorkingCostKept(KEPT_W_MONTH_AS_YEAR))
-    await expect(face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })).toHaveValue(KEPT_W)
+    await expect(value, 'the unit tap converts the kept money: the row still says the $84,000 a year kept').toHaveText(slots.assumptionWorkingCostKept(KEPT_W))
+    await expect(face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })).toHaveValue(KEPT_W_MONTHLY)
     await showRow(row)
     await captureState(page, path.join(outDir, 'panel-kept-month'))
     await pick(face.getByRole('radio', { name: copy.periodYear }))
@@ -1538,7 +1544,8 @@ async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
     await captureState(page, path.join(outDir, 'panel-kept-stale-state'))
     await armRerunWatch()
     await raiseSpending(dialog)
-    const both = slots.workingCostStaleKeptBoth(KEPT_W, RISEN_W_QUOTE_NOW)
+    // Both causes, then the lean (the U11 walk's (ac)): the spending alone sits above the kept figure.
+    const both = `${slots.workingCostStaleKeptBoth(KEPT_W, RISEN_W_QUOTE_NOW)} ${slots.workingCostStaleLeansBetter(KEPT_W)}`
     await expect(face.getByRole('note')).toContainText(both)
     await keptStaleFace(face)
     await showRow(row)
@@ -1567,8 +1574,29 @@ async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
     await keptStaleFace(step)
     await captureState(page, path.join(outDir, 'walk-kept-stale-quote'))
     await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
-    await expect(page.getByRole('alert')).toContainText(copy.errWorkingCostUnanswered)
+    // The gate names both ways out with both figures (the U11 walk's (ad)), never "answer it above".
+    await expect(page.getByRole('alert')).toContainText(slots.errWorkingCostStaleBelowQuote(KEPT_W, RISEN_W_QUOTE_NOW))
     await captureState(page, path.join(outDir, 'walk-kept-stale-blocked'))
+  }
+
+  // Branch C (walk 2, the U11 walk's (ad)): the state answer moved alone, so the kept figure is stale on the state
+  // and the note's Keep door shows; on the walk's W step the gate names that door by its own words, or a retype.
+  {
+    const { dialog, face } = await openPanelAndKeep()
+    await armRerunWatch()
+    await pick(dialog.locator('[data-assumption-seat="retirement-state"]').getByRole('radio', { name: /Pennsylvania/ }).first())
+    const stateOnly = slots.workingCostStaleStateKept(KEPT_W)
+    await expect(face.getByRole('note')).toContainText(stateOnly)
+    await closeToResult(dialog, stateOnly)
+    await page.locator('[data-door="assumptions"]').click()
+    await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
+    await advanceIntakeTo(page, copy.qWorkingCostHeading, 'intake:kept')
+    const step = page.locator('.intake-shell .working-cost')
+    await expect(step.getByRole('note')).toContainText(stateOnly)
+    await expect(step.getByRole('button', { name: slots.workingCostKeepYearly(KEPT_W) }), 'the door the gate names is drawn').toHaveCount(1)
+    await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
+    await expect(page.getByRole('alert')).toContainText(slots.errWorkingCostStaleKeep(slots.workingCostKeepYearly(KEPT_W)))
+    await captureState(page, path.join(outDir, 'walk-kept-stale-state-blocked'))
   }
 }
 

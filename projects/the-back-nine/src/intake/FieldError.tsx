@@ -12,7 +12,8 @@ import { copy, slots, type CatalogMessage } from '@ui/copy'
  *    reinforcement. No flash, no shake, no all-caps — advisor voice.
  *
  * MESSAGE ADDRESSING (F10): a violation whose `params` ride renders the SLOTTED
- * template (the limit-quoting ceiling errors); every param-less messageKey renders
+ * template (the limit-quoting ceiling errors, and the W gate's two stale-figure
+ * messages); every param-less messageKey renders
  * the static catalog string byte-identically to before. The fork is
  * {@link fieldErrorText} — a pure exported helper (insight 048), the ONE
  * message-text decision for every consumer (component and test harness alike).
@@ -20,9 +21,19 @@ import { copy, slots, type CatalogMessage } from '@ui/copy'
 export const fieldErrorId = (field: string): string =>
   `err-${field.replace(/[^a-zA-Z0-9-]/g, '-')}`
 
-/** The one message-text decision: params ⇒ the slot template, else the catalog string. */
-export const fieldErrorText = (m: CatalogMessage): string =>
-  m.params !== undefined ? slots[m.messageKey](m.params.limitFormatted) : copy[m.messageKey]
+/** The one message-text decision: params ⇒ the slot template, else the catalog string. The W step gate's
+ *  two stale-figure messages carry their own params (copy's `CatalogMessage` block; the U11 walk's (ad)). */
+export const fieldErrorText = (m: CatalogMessage): string => {
+  if (m.params === undefined) return copy[m.messageKey]
+  switch (m.messageKey) {
+    case 'errWorkingCostStaleBelowQuote':
+      return slots.errWorkingCostStaleBelowQuote(m.params.heldFormatted, m.params.quoteFormatted)
+    case 'errWorkingCostStaleKeep':
+      return slots.errWorkingCostStaleKeep(m.params.keepLabel)
+    default:
+      return slots[m.messageKey](m.params.limitFormatted)
+  }
+}
 
 export type FieldErrorProps = { readonly field: string } & CatalogMessage
 

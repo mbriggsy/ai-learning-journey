@@ -53,7 +53,7 @@ import type { StateBaseSystem } from '@engine/constants'
 import { STATE_TAX_PROFILES, isPricedState } from '@engine/constants/stateTax'
 import { budgetGoverns, isActiveAt } from '@budget/budgetModel'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { slots } from '@ui/copy'
+import { slots, type CatalogMessage } from '@ui/copy'
 import { formatMoney, formatMoneyPair } from './fields'
 
 /** A W answer's yearly figure (annual real $), whichever way it was given — the ONE read of it. It lives
@@ -201,8 +201,9 @@ export function writeEnteredWorkingYearCost(
  *  Keeping (or re-tapping) an `entered` figure carries whatever stamp it has forward and never mints
  *  one: a typed figure kept stays typed, and a kept figure kept again stays kept — so a stale kept
  *  figure cannot be made fresh forever by the keep that guards it (the deepen's F1). The other fates:
- *  a typed figure drops it (`writeEnteredWorkingYearCost`); a unit tap carries it
- *  (`writeWorkingYearCostPeriod`); "yes" replaces the answer with a fresh yes. */
+ *  a typed figure drops it (`writeEnteredWorkingYearCost`); a unit tap carries it, and converts the kept
+ *  figure's money into the tapped unit (`writeWorkingYearCostPeriod`); "yes" replaces the answer with a
+ *  fresh yes. */
 export function writeKeptWorkingYearCost(d: ScenarioDraft): ScenarioDraft {
   const w = d.workingYearCost
   if (w === undefined) return d
@@ -220,21 +221,28 @@ export function writeKeptWorkingYearCost(d: ScenarioDraft): ScenarioDraft {
   }
 }
 
-/** Move a held `entered` figure to another period, keeping the DIGITS the household typed (the spend
- *  step's re-base: the typed figure is the truth, the unit moves — so a 12× misentry is repaired by
- *  one tap, never re-typed). The reading is NOT re-stamped: a unit tap is not a re-answer. A no-op
- *  on any other answer, or on the same period.
+/** Move a held `entered` figure to another period. The reading is NOT re-stamped: a unit tap is not a
+ *  re-answer. A no-op on any other answer, or on the same period. Which part stays depends on who gave
+ *  the digits on screen:
+ *  · a TYPED figure keeps its DIGITS (the spend step's re-base: the typed figure is the truth, the unit
+ *    moves — so a 12× misentry is repaired by one tap, never re-typed; KTD17);
+ *  · a KEPT figure (stamped, KTD10) keeps its MONEY: $84,000 a year becomes $7,000 a month. The household
+ *    never typed those digits (the keep took the quote it said yes to), so there is no misentry to repair,
+ *    and a re-read would put a figure it never gave under "the figure you kept" (the U11 Caddie walk's (ab):
+ *    "$1,008,000 a year — the figure you kept").
  *
- *  The keep stamp is CARRIED, for the same reason: a unit tap types no digits and answers no quote, so
- *  it changes neither who gave the figure nor what it was kept over. (The plan's KTD10 first said a
- *  period change drops it; U5's whole-file review, `wf_e5cbb6be-e97`, four lenses, showed the drop
- *  launders a stale kept figure: "each month", then "each year", put the same $84,000 back unstamped,
- *  so it read as typed and never went stale on the spending again — no digit typed. Carrying it is
- *  never rosy: the stale test reads the FIGURE, so the month view, twelve times larger, reads fresh,
- *  and the trip back is the kept figure exactly, stale wherever the spending is above it.) */
+ *  The keep stamp is CARRIED either way: a unit tap types no digits and answers no quote, so it changes
+ *  neither who gave the figure nor what it was kept over. (The plan's KTD10 first said a period change drops
+ *  it; U5's whole-file review, `wf_e5cbb6be-e97`, four lenses, showed the drop launders a stale kept figure:
+ *  "each month", then "each year", put the same $84,000 back unstamped, so it read as typed and never went
+ *  stale on the spending again — no digit typed.) Because the kept figure's yearly money never moves, its
+ *  stale test reads the same in either unit: a kept figure the spending has passed stays stale in the month
+ *  view, where the re-read once made it twelve times larger and fresh, so the walk's Continue let it through
+ *  at $1,008,000 a year. */
 export function writeWorkingYearCostPeriod(d: ScenarioDraft, next: SpendEntryPeriod): ScenarioDraft {
   const w = d.workingYearCost
   if (w?.kind !== 'entered' || w.entryPeriod === next) return d
+  if (w.keptOverQuoteReal !== undefined) return { ...d, workingYearCost: { ...w, entryPeriod: next } }
   const typed = w.entryPeriod === 'month' ? w.amountReal / 12 : w.amountReal
   return { ...d, workingYearCost: { ...w, amountReal: next === 'month' ? typed * 12 : typed, entryPeriod: next } }
 }
@@ -326,8 +334,8 @@ export function heldYesBelowQuote(d: ScenarioDraft): boolean {
  *  clause for a "saved" left-over answer waiting on W, R12; this sentence itself stays pure W.) A TYPED
  *  figure stales only on the reading (it never answered a quote). A KEPT one (KTD10) says "kept",
  *  never "entered" — the household never typed it — and when the spending rose past it, names the
- *  spending, never the state, with the rosy-side lean (a stale kept figure's quote is always above
- *  it: `workingYearCostStaleness`). */
+ *  spending (with the state too where that moved as well), with the rosy-side lean (a stale kept figure's
+ *  quote is always above it: `workingYearCostStaleness`). */
 export function workingYearCostStaleText(d: ScenarioDraft): string | null {
   const w = d.workingYearCost
   const s = workingYearCostStaleness(d)
@@ -340,11 +348,11 @@ export function workingYearCostStaleText(d: ScenarioDraft): string | null {
   if (w.kind === 'entered') {
     // Kept. The state alone names one figure; a quote that moved is above the figure, so there is
     // always a second figure to name beside it, printed as a pair (to the cent under a dollar apart).
-    // The lean rides the one home the door reads (`heldYesBelowQuote`), as the yes's own arm below.
+    // The lean rides the one home the door reads (`heldYesBelowQuote`), as the yes's own arms below — on
+    // both causes too (the U11 walk's (ac)): the spending alone is above the figure whatever the state did.
     if (!s.quoteMoved) return slots.workingCostStaleStateKept(formatMoney(lastFigure))
     const [kept, now] = formatMoneyPair(lastFigure, quote.annualReal)
-    if (s.readingMoved) return slots.workingCostStaleKeptBoth(kept, now)
-    const sentence = slots.workingCostStaleKeptQuote(kept, now)
+    const sentence = s.readingMoved ? slots.workingCostStaleKeptBoth(kept, now) : slots.workingCostStaleKeptQuote(kept, now)
     return heldYesBelowQuote(d) ? `${sentence} ${slots.workingCostStaleLeansBetter(kept)}` : sentence
   }
   // The stale check compares at the cent, so a move under a dollar prints both figures to the cent
@@ -352,7 +360,12 @@ export function workingYearCostStaleText(d: ScenarioDraft): string | null {
   const [last, quoted] = formatMoneyPair(lastFigure, quote.annualReal)
   const now = quote.annualReal > 0 ? quoted : null
   if (s.quoteMoved && s.readingMoved) {
-    return now === null ? slots.workingCostStaleBothGone(last) : slots.workingCostStaleBoth(last, now)
+    if (now === null) return slots.workingCostStaleBothGone(last)
+    // The lean rides where the spending ROSE past the yes (the U11 walk's (ac)): a state's income tax either
+    // belongs in W (adding to it) or is priced apart (adding nothing), so the state never brings W back
+    // below the spending, and the spending alone already sits above the figure.
+    const sentence = slots.workingCostStaleBoth(last, now)
+    return heldYesBelowQuote(d) ? `${sentence} ${slots.workingCostStaleLeansBetter(last)}` : sentence
   }
   if (s.quoteMoved) {
     if (now === null) return slots.workingCostStaleQuoteGone(last)
@@ -373,6 +386,37 @@ export function workingYearCostStaleText(d: ScenarioDraft): string | null {
     return heldYesBelowQuote(d) ? `${sentence} ${slots.workingCostStaleLeansBetter(last)}` : sentence
   }
   return slots.workingCostStaleStateConfirmed(last)
+}
+
+/** The stale note's Keep door, in its own words: the figure in the unit it was given — a monthly entered
+ *  figure by the month ("Keep $7,000 a month"), every other answer yearly. ONE home for the door
+ *  (`WorkingCostQuestion`) and the gate message that names it (`workingYearCostGateMessage`), so the
+ *  message can never quote a button the face doesn't draw. */
+export function workingYearCostKeepLabel(w: WorkingYearCostV3): string {
+  return w.kind === 'entered' && w.entryPeriod === 'month'
+    ? slots.workingCostKeepMonthly(formatMoney(w.amountReal / 12))
+    : slots.workingCostKeepYearly(formatMoney(workingYearCostFigure(w)))
+}
+
+/** The W step gate's message (`working-cost-unanswered`, sanity.ts; the U11 Caddie walk's (ad)), read off the
+ *  same core the stale note and its door read, so the two can never disagree:
+ *  · W absent, or a stale YES — the step checks no option, so "answer it above" is true:
+ *    `errWorkingCostUnanswered`;
+ *  · a stale HELD FIGURE (typed, or kept from a yes) — "A different figure" stays checked with the figure in
+ *    its box, so "answer it above" named no way out. Where the figure sits below today's quote (a kept figure
+ *    the spending rose past: `heldYesBelowQuote`, the rule that withholds the door), the ways out are "Yes"
+ *    at today's figure or a retype, both figures named yearly (to the cent a cent apart, as the note prints
+ *    them); otherwise the note's Keep door shows (`keepable` in the face is exactly `!heldYesBelowQuote`), so
+ *    the message names that door by its own label, or a retype.
+ *  Never a door below the quote (the register's ⚑ NEGATIVE): this only names what the face already draws. */
+export function workingYearCostGateMessage(d: ScenarioDraft): CatalogMessage {
+  const w = d.workingYearCost
+  if (w?.kind !== 'entered' || workingYearCostStaleness(d) === null) return { messageKey: 'errWorkingCostUnanswered' }
+  if (heldYesBelowQuote(d)) {
+    const [held, now] = formatMoneyPair(workingYearCostFigure(w), workingYearQuote(d).annualReal)
+    return { messageKey: 'errWorkingCostStaleBelowQuote', params: { heldFormatted: held, quoteFormatted: now } }
+  }
+  return { messageKey: 'errWorkingCostStaleKeep', params: { keepLabel: workingYearCostKeepLabel(w) } }
 }
 
 /** KTD17's W-below-M note: the household's W is STRICTLY below its out-of-pocket medical figure.

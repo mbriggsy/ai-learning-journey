@@ -1228,15 +1228,18 @@ describe('the W row — four faces, one question (U8)', () => {
     expect(within(row()).queryByRole('button', { name: /^Keep / })).toBeNull()
   })
 
-  it('a unit tap on a KEPT figure carries the stamp: "each month" then "each year" is the kept figure again, and a later rise past it says so (U5’s review)', () => {
+  it('a unit tap on a KEPT figure converts it and carries the stamp: "each month" shows $6,250 a month under a row that still says the $75,000 a year kept, and a later rise past it says so (U5’s review; the U11 walk’s (ab))', () => {
     const m = freshModel()
     const kept = keptOn(DEV_SEEDS.dateshort, 75_000, 70_000)
     m.update(() => kept)
     render(<WiredPanel model={m} />)
     expect(within(row()).getByText(slots.assumptionWorkingCostKept('75,000'))).toBeInTheDocument()
     fireEvent.click(within(row()).getByRole('radio', { name: copy.periodMonth }))
-    // $75,000 a month is $900,000 a year — still the figure the household kept, in another unit.
-    expect(m.getSnapshot().draft.workingYearCost).toEqual({ ...kept.workingYearCost, amountReal: 900_000, entryPeriod: 'month' })
+    // The kept money stays, in another unit: $6,250 a month. The row's line stays TRUE — walk 1 read
+    // "$1,008,000 a year — the figure you kept" when the tap re-read the kept digits as a month.
+    expect(m.getSnapshot().draft.workingYearCost).toEqual({ ...kept.workingYearCost, entryPeriod: 'month' })
+    expect(within(row()).getByText(slots.assumptionWorkingCostKept('75,000'))).toBeInTheDocument()
+    expect(within(row()).getByLabelText(copy.workingCostAmountLabel)).toHaveValue('6,250')
     fireEvent.click(within(row()).getByRole('radio', { name: copy.periodYear }))
     expect(m.getSnapshot().draft.workingYearCost).toEqual(kept.workingYearCost)
     expect(within(row()).getByText(slots.assumptionWorkingCostKept('75,000'))).toBeInTheDocument()

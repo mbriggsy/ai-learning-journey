@@ -12,6 +12,7 @@ import {
   WORKING_COST_PERIOD_FIELD,
 } from '../sanity'
 import { formatMoney } from '../fields'
+import { fieldErrorText } from '../FieldError'
 import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
 import type { IncomeStream } from '@shared/model'
 
@@ -520,6 +521,62 @@ describe('sanity — the pay check’s W rules (KTD3, KTD17)', () => {
     // The state reading moved: an entered answer stales too.
     const ncMove = dateDraft({ workingYearCost: entered(90_000, 'year'), retirementState: 'NC' })
     expect(validateDraft(ncMove, gateTouched).map((v) => v.rule)).toEqual(['working-cost-unanswered'])
+  })
+
+  it('the gate’s message fits what the step shows (the U11 walk’s (ad)): "answer it above" only where nothing is answered; a stale HELD FIGURE names its own ways out', () => {
+    const message = (d: ScenarioDraft) => {
+      const [v] = validateDraft(d, gateTouched)
+      if (v === undefined) throw new Error('the gate did not fire')
+      const { rule: _rule, field: _field, ...m } = v
+      return m
+    }
+    // Absent, and a stale YES (the step then checks no option): nothing is answered on screen.
+    expect(message(dateDraft())).toEqual({ messageKey: 'errWorkingCostUnanswered' })
+    expect(message(dateDraft({ workingYearCost: confirmed84, annualSpendingReal: 90_000 }))).toEqual({ messageKey: 'errWorkingCostUnanswered' })
+    // A TYPED figure stale on the state: "A different figure" stays checked with the figure in the box, and the
+    // note's Keep door shows — the message names it in the figure's own unit, and the retype.
+    expect(message(dateDraft({ workingYearCost: entered(90_000, 'year'), retirementState: 'NC' }))).toEqual({
+      messageKey: 'errWorkingCostStaleKeep',
+      params: { keepLabel: 'Keep $90,000 a year' },
+    })
+    expect(message(dateDraft({ workingYearCost: entered(84_000, 'month'), retirementState: 'NC' }))).toEqual({
+      messageKey: 'errWorkingCostStaleKeep',
+      params: { keepLabel: 'Keep $7,000 a month' },
+    })
+    // A KEPT figure the spending rose past (build 2's KTD10): no door (ruling 34), so the ways out are "Yes"
+    // at today's figure and a retype — both figures named, yearly. The same with the state moved too.
+    const kept84 = { ...entered(84_000, 'year'), keptOverQuoteReal: 80_000 } as const
+    expect(message(dateDraft({ workingYearCost: kept84, annualSpendingReal: 90_000 }))).toEqual({
+      messageKey: 'errWorkingCostStaleBelowQuote',
+      params: { heldFormatted: '84,000', quoteFormatted: '90,000' },
+    })
+    expect(message(dateDraft({ workingYearCost: kept84, annualSpendingReal: 90_000, retirementState: 'NC' }))).toEqual({
+      messageKey: 'errWorkingCostStaleBelowQuote',
+      params: { heldFormatted: '84,000', quoteFormatted: '90,000' },
+    })
+    // …in the month view too (a unit tap converts a kept figure, the walk's (ab)), and to the cent a cent apart.
+    expect(message(dateDraft({ workingYearCost: { ...kept84, entryPeriod: 'month' }, annualSpendingReal: 90_000 }))).toEqual({
+      messageKey: 'errWorkingCostStaleBelowQuote',
+      params: { heldFormatted: '84,000', quoteFormatted: '90,000' },
+    })
+    expect(message(dateDraft({ workingYearCost: kept84, annualSpendingReal: 84_000.01 }))).toEqual({
+      messageKey: 'errWorkingCostStaleBelowQuote',
+      params: { heldFormatted: '84,000.00', quoteFormatted: '84,000.01' },
+    })
+    // A kept figure stale on the state alone sits at or above the quote, so its door shows: the keep message.
+    expect(message(dateDraft({ workingYearCost: kept84, retirementState: 'NC' }))).toEqual({
+      messageKey: 'errWorkingCostStaleKeep',
+      params: { keepLabel: 'Keep $84,000 a year' },
+    })
+  })
+
+  it('the stale-figure messages, typed by hand as the step renders them', () => {
+    expect(fieldErrorText({ messageKey: 'errWorkingCostStaleBelowQuote', params: { heldFormatted: '84,000', quoteFormatted: '90,000' } })).toBe(
+      'Your $84,000 a year is below your spending now: choose “Yes, that’s about right” to use $90,000 a year, or type a new figure.',
+    )
+    expect(fieldErrorText({ messageKey: 'errWorkingCostStaleKeep', params: { keepLabel: 'Keep $7,000 a month' } })).toBe(
+      'To go on, choose “Keep $7,000 a month” above, or type a new figure.',
+    )
   })
 
   it('the gate never reaches the panel’s field — `validateField` on the figure path holds no gate', () => {

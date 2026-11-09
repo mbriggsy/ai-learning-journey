@@ -832,7 +832,10 @@ describe('the W step — a stale entered answer: only a keystroke or a keep answ
     expect(screen.getByRole('note')).toBeInTheDocument()
     next()
     expect(heading()).toBe(copy.qWorkingCostHeading)
-    expect(screen.getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
+    // The question visibly holds an answer, so the gate names the ways out — the note's door, in its own
+    // words, and a retype — never "answer it above" (the U11 walk's (ad)).
+    expect(screen.getByRole('alert')).toHaveTextContent(slots.errWorkingCostStaleKeep(slots.workingCostKeepMonthly('7,000')))
+    expect(screen.getByRole('button', { name: slots.workingCostKeepMonthly('7,000') }), 'the door it names is on screen').toBeInTheDocument()
     // A real retype of the same figure passes through other text on the way (focus fills the box with
     // "7000", so the identical value alone fires no change event).
     const again = screen.getByLabelText(copy.workingCostAmountLabel)
@@ -890,7 +893,9 @@ describe('the W step — a kept yes goes stale when the spending rises past it (
     expect(screen.getByRole('radio', { name: copy.workingCostDifferent })).toBeChecked()
     next()
     expect(heading()).toBe(copy.qWorkingCostHeading) // a stale answer cannot complete the walk
-    expect(screen.getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
+    // No door here, so the gate names both ways out with both figures (the U11 walk's (ad)).
+    expect(screen.getByRole('alert')).toHaveTextContent(slots.errWorkingCostStaleBelowQuote('84,000', '85,000'))
+    expect(screen.getByRole('alert')).not.toHaveTextContent(copy.errWorkingCostUnanswered)
     // "Yes" answers it at today's figure.
     pick('workingCostYes')
     expect(w(m)).toEqual(confirmed(85_000))
@@ -905,7 +910,7 @@ describe('the W step — a kept yes goes stale when the spending rises past it (
     expect(w(m)).toEqual(KEPT)
     expect(screen.getByRole('note')).toHaveTextContent(slots.workingCostStaleKeptQuote('84,000', '85,000'))
     next()
-    expect(screen.getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
+    expect(screen.getByRole('alert')).toHaveTextContent(slots.errWorkingCostStaleBelowQuote('84,000', '85,000'))
   })
 
   it('after a state move, the door and the re-tap each keep the stamp — and a later rise past the figure still stales it', () => {
@@ -939,13 +944,20 @@ describe('the W step — a kept yes goes stale when the spending rises past it (
     expect(screen.queryByRole('note')).toBeNull()
   })
 
-  it('a unit tap carries the stamp: "each month" then "each year" on a kept figure the spending has passed leaves it stale, and Continue holds (U5’s review)', () => {
-    // Before the fix the two taps put the same $84,000 back unstamped — a typed figure, fresh, the walk open.
+  it('a unit tap on a kept figure the spending has passed converts it and carries the stamp: stale in either unit, and Continue holds in each (U5’s review; the U11 walk’s (ab))', () => {
+    // U5's fix: the two taps once put the same $84,000 back unstamped — a typed figure, fresh, the walk open.
+    // (ab): the month view once re-read the kept digits as $1,008,000 a year, which read FRESH, so Continue
+    // let the walk through at twelve times the figure. A kept figure converts: $7,000 a month, still stale.
     const m = modelWith({ ...dateNoW(), annualSpendingReal: 85_000, workingYearCost: KEPT })
     render(<Harness model={m} />)
     expect(screen.getByRole('note')).toHaveTextContent(slots.workingCostStaleKeptQuote('84,000', '85,000'))
     pick('periodMonth')
-    expect(w(m)).toEqual({ ...KEPT, amountReal: 1_008_000, entryPeriod: 'month' })
+    expect(w(m)).toEqual({ ...KEPT, entryPeriod: 'month' })
+    expect(screen.getByLabelText(copy.workingCostAmountLabel)).toHaveValue('7,000')
+    expect(screen.getByRole('note')).toHaveTextContent(slots.workingCostStaleKeptQuote('84,000', '85,000'))
+    next()
+    expect(heading(), 'the month view holds Continue too').toBe(copy.qWorkingCostHeading)
+    expect(screen.getByRole('alert'), 'its message names the yearly figures').toHaveTextContent(slots.errWorkingCostStaleBelowQuote('84,000', '85,000'))
     pick('periodYear')
     expect(w(m)).toEqual(KEPT)
     expect(screen.getByRole('note')).toHaveTextContent(
@@ -953,7 +965,7 @@ describe('the W step — a kept yes goes stale when the spending rises past it (
     )
     next()
     expect(heading()).toBe(copy.qWorkingCostHeading)
-    expect(screen.getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
+    expect(screen.getByRole('alert')).toHaveTextContent(slots.errWorkingCostStaleBelowQuote('84,000', '85,000'))
   })
 })
 

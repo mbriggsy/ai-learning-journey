@@ -351,7 +351,7 @@ queue below (its order unmoved). Next, in order:
        almost always costs at least what you spend, so this answer can look better than it really is."), pinned on
        `datesavedrisen` with 84,000 typed; and the sheet's question names its figure where a quote exists ("Is $90,000 a
        year about what a year costs while you’re working?", copy-law F8). This completes the council's flip condition;
-       the verb stays "update" unless Briggsy rules "check" (then swap it in `WORKING_COST_ACT_COPY`, its one home).
+       the verb stays "update" — **RULED by Briggsy 2026-11-09 (b9-8): "update it is"**; the dissent's "check" is closed.
      Then: mutants predicted in writing first; R10 `sweep.mts walk5 --today=20758`, `idcheck.mjs walk5 walk4` (copy and
      UI only, so 42/42 predicted); the suite pinned; `verify:fit`'s touched arms; `pnpm doc:reanchor <base> --apply`
      once, last; then **walk 6** (`/caddie`, the same nine targets, walk 5's briefs in `u11-walk5\panel\briefs\`), whose
@@ -495,14 +495,14 @@ R10, `verify:fit`) would not finish before the wrap line. Walk 5 cost about one 
 `docs/caddie/cold-read-log.md`); if a sibling session committed or reverted any of it, stop and reconcile before
 building. CI read by b9-8: run 42601322466 on `3157a6da` success (both jobs); run 42605776210 on `d3f355b9` success
 (both jobs; it holds `42274150`). The weekly meter before walk 6 (81% at 11:00Z; resets 2026-11-11 14:00Z).
-**Briggsy's to close (nothing waits on them; the round builds with the pilot's choice):** the verb, "update" against the
-council dissent's one defined "check" — walk 5's risen readers all took "update" as "raise it", the refuter rates that the
-honest steer (rule 8), and the pilot recommends keeping "update"; and the labels' calm-or-clinical — clinical as plain
-words, which (bi)'s form cure answers.
+**⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** — over the council dissent's one
+defined "check", with walk 5's evidence in front of him (every risen reader took "update" as "raise it"; the refuter rates
+that the honest steer, rule 8; "check" failed twice in this paragraph already: a paycheck in walk 2, "verified, done" in
+walk 4). Never re-propose "check" on the flip condition. Still open, walk 6 answers it: the labels' calm-or-clinical
+(clinical as plain words, which (bi)'s form cure answers).
 **LANDMINES (b9-7):**
-- **The council's verb flip is a conjunction that walk 5's round completes.** Shipping the Tier 0 retype note
-  (prescription (1)) satisfies its first half; walk 5 met the second. The council marked the verb Briggsy's: never flip
-  it on the condition alone.
+- **The council's verb flip is CLOSED by his ruling (2026-11-09: "update").** Its conjunction completes once the Tier 0
+  note ships, but the condition no longer flips anything: never swap the verb in `WORKING_COST_ACT_COPY` on it.
 - **A seat's arithmetic can borrow the wrong quote.** The hunter priced Sam's working-year premium off the $1,100
   reference-plan quote ($13,200 a year), but `stillWorking` answers `employerPlanCoversRetiredMember: true`
   (`src/ui/devSeeds.ts:194`): the pay-side premium is entered nowhere. Check the seed before a refuter carries a figure

@@ -152,6 +152,38 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
     )
   })
 
+  // The U11 walk's (ae): where the spending ROSE past the yes, the Result's line carries the year-level lean, the
+  // clause and the most a check at the quote adds (year 0 at $90,000, hand-derived: 150,000 − 11,475 − 17,540 −
+  // 20,000 − 90,000 = $10,985) — and where year 0 at the quote is short, that a check adds none of it and the
+  // short-year lean (at $105,000: −$4,015).
+  it('`datesavedrisen` and `datesavedrisenshort`: W’s line carries the year-level lean, then what a check at the quote adds — at most $10,985, or none of the $16,985', () => {
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datesavedrisen)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
+    expect(line()?.textContent).toBe(
+      [
+        copy.stalenessPayCheckNote,
+        slots.workingCostStaleQuote('84,000', '90,000'),
+        slots.workingCostStaleLeftOverYearsCheaper('84,000'),
+        slots.workingCostStaleLeftOverClause('16,985'),
+        slots.workingCostStaleLeftOverAtMost('90,000', '10,985'),
+      ].join(' '),
+    )
+    cleanup()
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datesavedrisenshort)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
+    expect(line()?.textContent).toBe(
+      [
+        copy.stalenessPayCheckNote,
+        slots.workingCostStaleQuote('84,000', '105,000'),
+        slots.workingCostStaleLeftOverYearsCheaper('84,000'),
+        slots.workingCostStaleLeftOverFirstShort('105,000', '4,015', '16,985'),
+        copy.workingCostStaleShortUntilChecked,
+      ].join(' '),
+    )
+  })
+
   it('an absent, spent or not-sure answer shows no left-over line or clause — fresh or with W stale', () => {
     for (const answer of [undefined, { kind: 'spent' }, { kind: 'not-sure' }] as const) {
       for (const base of [DEV_SEEDS.date, DEV_SEEDS.datecoststale]) {
@@ -160,7 +192,9 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
         render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} stalenessNote leftOverClauseHost />)
         const text = document.body.textContent ?? ''
         expect(text, `${answer?.kind ?? 'absent'}`).not.toContain(copy.stalenessLeftOverNote)
-        expect(text).not.toContain('left over a year is added')
+        // Aimed at the clause's live lead (insight 086: a negative on a phrase no string says passes vacuously —
+        // this one read 'left over a year is added', which neither the old clause nor the new one says).
+        expect(text).not.toContain('Until that figure is checked')
         expect(document.querySelector('.cs-staleness-note')?.textContent).toBe(copy.stalenessHeroNote)
         cleanup()
       }

@@ -112,6 +112,16 @@ async function assertResolvedDate(page: Page): Promise<void> {
   expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
 }
 
+/** The date route's resolved NO-DATE reading (`data-framing="no-date"`): the worded how-close line rides and no
+ *  ladder is plotted (the Hawk veto, `FuckOffDate.tsx`), and the doors render. The U11 walk's (ae): the risen
+ *  family's stale arms crown no date (U11 measured `datesavedrisen`'s: none at the final tier), so the dated
+ *  helper above would wait for a band and a ladder that reading never draws. */
+async function assertNoDateReading(page: Page): Promise<void> {
+  await expect(page.locator('.fod-reveal[data-framing="no-date"]')).toBeVisible()
+  await expect(page.locator('.fod-ladder'), 'a no-date hero plots no ladder').toHaveCount(0)
+  expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
+}
+
 /** The two routes' hero headings — the elements that must NAME the R13 caveat in
  *  `aria-describedby` (council 2026-09-10 clause 3). Named once so an arm can never be added
  *  with the link half silently switched off. */
@@ -281,6 +291,18 @@ async function assertOneVisibleDisclaimer(page: Page, tier: 'laptop' | 'narrow')
   await expect(trailing, 'the trailing mount must hide behind data-inframe-disclaimer').toBeHidden()
 }
 
+/** …the same two R13 mounts, one visible, on the date route's NO-DATE reading (the U11 walk's (ae)). No band
+ *  resolves there, so the reveal is never stamped `[data-twopane]` and the tier read above has nothing to read;
+ *  the answer's non-vacuity is `assertNoDateReading`'s visible no-date reveal instead (insight 029). */
+async function assertOneVisibleDisclaimerNoDate(page: Page): Promise<void> {
+  const inFrame = page.locator('footer.disclaimer.disclaimer--in-frame')
+  const trailing = page.locator('footer.disclaimer:not(.disclaimer--in-frame)')
+  await expect(inFrame, 'the in-frame R13 mount (Result.tsx) is missing').toHaveCount(1)
+  await expect(trailing, 'the page-trailing R13 mount (App.tsx) is missing').toHaveCount(1)
+  await expect(inFrame, 'the in-frame caveat must be visible on a committed verdict').toBeVisible()
+  await expect(trailing, 'the trailing mount must hide behind data-inframe-disclaimer').toBeHidden()
+}
+
 /** THE ONE "doors last" WALK, shared by every arm that claims it (the date route's two ORDER
  *  blocks and the scrolling tiers' law below). Until 2026-09-10 two walks carrying the same name
  *  applied different filters: the date blocks skipped `display:none` / `visibility:hidden` /
@@ -326,6 +348,10 @@ async function doorsLastWalk(
 /** A scrolling-tier answer renders dozens of boxes outside the doors row; a walk that counted
  *  fewer than this measured a broken page, not the order. */
 const DOORS_WALK_FLOOR = 20
+/** …and the date route's NO-DATE reading (the U11 walk's (ae)), which draws no band and no ladder: measured 14 boxes
+ *  at Briggsy's window and 12 on the phone (the headline, the how-close line, the notes, the save card, the caveat).
+ *  A blank or error page still counts near zero. */
+const NO_DATE_DOORS_WALK_FLOOR = 10
 
 /** THE SCROLLING TIERS' HONESTY LAW — ORDER + REACHABILITY (council 2026-09-10, wf_d2b1d05a-001;
  *  the Hawk's scoped veto). A tier that scrolls by design (the phone; any width the reader's font
@@ -345,7 +371,7 @@ const DOORS_WALK_FLOOR = 20
  *  the review found exactly that hole waiting on the date route). A caller that genuinely has no
  *  hero heading passes `null` and has to justify it at the call site.
  */
-async function assertCaveatOrderAndReach(page: Page, verdictSelector: string | null): Promise<void> {
+async function assertCaveatOrderAndReach(page: Page, verdictSelector: string | null, walkFloor = DOORS_WALK_FLOOR): Promise<void> {
   const caveat = page.locator('footer.disclaimer.disclaimer--in-frame')
   const doors = page.locator('.result-quiet-row')
   await expect(caveat).toBeVisible()
@@ -396,7 +422,7 @@ async function assertCaveatOrderAndReach(page: Page, verdictSelector: string | n
   expect(
     trailing.counted,
     'the doors-last walk counted too few boxes — the page did not render (insight 029)',
-  ).toBeGreaterThan(DOORS_WALK_FLOOR)
+  ).toBeGreaterThan(walkFloor)
   expect(
     trailing.maxOtherBottom + geometry.scrollY,
     `ORDER: the doors must be LAST — ${trailing.desc} ends below the doors row's top`,
@@ -2076,28 +2102,60 @@ const STALE_W_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE} ${
 const STALE_W_SAVED_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE} ${slots.workingCostStaleLeftOverClause('16,985')} ${copy.stalenessPayCheckGateDoor}`
 const LEFT_OVER_MOVED_SENTENCE = slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')
 const LEFT_OVER_MOVED_GATE_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE} ${copy.stalenessPayCheckGateDoor}`
+// The U11 walk's (ae): the risen family's W line — W's sentence, the year-level lean, then the tail by what a check
+// at the quote does. Year 0 at the quote, by hand from `date`'s sum above with W at the quote: $10,985 at $90,000
+// (capped); −$4,015 at $105,000 (first short); $5,985 there with `datesavedrisenlater`'s $10,000 of untaxed
+// alimony, whose end at Sam's 62 makes 2029 the short arm's −$4,015 again (later short). The later-short line is
+// the LONGEST stale line any seed draws (five sentences), so its arm is the gate's wrap-risk arm.
+const risenLine = (quoteNow: string, tail: readonly string[]): string =>
+  [slots.workingCostStaleQuote('84,000', quoteNow), slots.workingCostStaleLeftOverYearsCheaper('84,000'), ...tail].join(' ')
+const RISEN_LINE = risenLine('90,000', [slots.workingCostStaleLeftOverClause('16,985'), slots.workingCostStaleLeftOverAtMost('90,000', '10,985')])
+const RISEN_SHORT_LINE = risenLine('105,000', [
+  slots.workingCostStaleLeftOverFirstShort('105,000', '4,015', '16,985'),
+  copy.workingCostStaleShortUntilChecked,
+])
+const RISEN_LATER_LINE = risenLine('105,000', [
+  slots.workingCostStaleLeftOverClause('16,985'),
+  slots.workingCostStaleLeftOverAtMost('105,000', '5,985'),
+  slots.workingCostStaleShortLaterYear(2029, '4,015', '105,000'),
+])
+const risenUnlock = (key: string, line: string) =>
+  ({
+    key,
+    note: `${copy.stalenessPayCheckGateLead} ${line} ${copy.stalenessPayCheckGateDoor}`,
+    sibling: copy.stalenessLeftOverNote,
+    standing: `${copy.stalenessPayCheckNote} ${line}`,
+    dated: false,
+  }) as const
 /** `standing` — the Result's standing-slot sentence after the affirm (the lead and the sentence, before its
- *  door), or `null` where the answer carries none (the fresh-vintage `wyclock`). */
+ *  door), or `null` where the answer carries none (the fresh-vintage `wyclock`). `dated` — whether the affirm
+ *  lands a crowned date (`assertResolvedDate`) or the no-date reading (`assertNoDateReading`). */
 const PAY_CHECK_UNLOCKS = [
-  { key: 'wyclock', note: copy.stalenessWorkingYears, sibling: copy.stalenessPayCheckGateLead, standing: null },
+  { key: 'wyclock', note: copy.stalenessWorkingYears, sibling: copy.stalenessPayCheckGateLead, standing: null, dated: true },
   {
     key: 'datecoststale',
     note: STALE_W_GATE_LINE,
     sibling: copy.stalenessWorkingYears,
     standing: `${copy.stalenessPayCheckNote} ${STALE_W_QUOTE}`,
+    dated: true,
   },
   {
     key: 'datesavedstale',
     note: STALE_W_SAVED_GATE_LINE,
     sibling: copy.stalenessLeftOverNote,
     standing: `${copy.stalenessPayCheckNote} ${STALE_W_QUOTE} ${slots.workingCostStaleLeftOverClause('16,985')}`,
+    dated: true,
   },
   {
     key: 'datesavedmoved',
     note: LEFT_OVER_MOVED_GATE_LINE,
     sibling: copy.stalenessPayCheckGateLead,
     standing: `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE}`,
+    dated: true,
   },
+  risenUnlock('datesavedrisen', RISEN_LINE),
+  risenUnlock('datesavedrisenshort', RISEN_SHORT_LINE),
+  risenUnlock('datesavedrisenlater', RISEN_LATER_LINE),
 ] as const
 
 for (const u of PAY_CHECK_UNLOCKS) {
@@ -2130,8 +2188,8 @@ for (const u of PAY_CHECK_UNLOCKS) {
       await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
       await settleLayout(page)
       await page.evaluate(() => window.scrollTo(0, 0))
-      await assertResolvedDate(page)
-      await assertOneVisibleDisclaimer(page, 'laptop')
+      await (u.dated ? assertResolvedDate(page) : assertNoDateReading(page))
+      await (u.dated ? assertOneVisibleDisclaimer(page, 'laptop') : assertOneVisibleDisclaimerNoDate(page))
       // The stale answer survives the save: the result keeps its standing line (R4 — the engine still
       // runs on the last figure given), in the gate's own cause; a moved left over keeps its own (R12). The
       // fresh-vintage answer on `wyclock` carries none.
@@ -2141,7 +2199,7 @@ for (const u of PAY_CHECK_UNLOCKS) {
       const doors = await page.locator('.result-quiet-row').boundingBox()
       expect(doors, 'the quiet doors render').not.toBeNull()
       const trailing = await doorsLastWalk(page, 'body')
-      expect(trailing.counted).toBeGreaterThan(DOORS_WALK_FLOOR)
+      expect(trailing.counted).toBeGreaterThan(u.dated ? DOORS_WALK_FLOOR : NO_DATE_DOORS_WALK_FLOOR)
       expect(trailing.maxOtherBottom, `content renders BELOW the quiet doors (${trailing.desc})`).toBeLessThanOrEqual(
         doors!.y + doors!.height + 0.5,
       )
@@ -2625,7 +2683,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2100-2104 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2105-2109 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,
@@ -3047,8 +3105,9 @@ async function assertIntakeStepHolds(page: Page, where: string, minBoxes: number
  *  moved left over in the same slot, keyed by cause — R12): the lead's LAST note and before the graphs in DOM
  *  order (at REAL the graphs sit BESIDE the lead, so "above" is DOM order there); at PHONE above the first
  *  graph in geometry, with the caveat's order and reach; at REAL one visible disclaimer and the doors last.
- *  The caller has pinned the line's count and words; this reads only where it sits. */
-async function assertStandingLinePlaced(page: Page, line: Locator, phone: boolean): Promise<void> {
+ *  The caller has pinned the line's count and words; this reads only where it sits. `dated: false` — the no-date
+ *  reading draws no band, so at PHONE there is no first graph to sit above (DOM order and the caveat still bind). */
+async function assertStandingLinePlaced(page: Page, line: Locator, phone: boolean, dated = true): Promise<void> {
   const order = await page.evaluate(() => {
     const lead = document.querySelector('.fod-reveal .reveal__lead')
     const notes = lead === null ? [] : Array.from(lead.querySelectorAll(':scope > .fod-note'))
@@ -3063,18 +3122,20 @@ async function assertStandingLinePlaced(page: Page, line: Locator, phone: boolea
   expect(order.beforeGraphs, 'the line comes before the graphs').toBe(true)
   if (phone) {
     // At PHONE `.fod-graphs` is display:contents (no box), so the first graph is the geometry.
-    const lineBox = await line.boundingBox()
-    const band = await page.locator('.fod-band').boundingBox()
-    expect(lineBox !== null && band !== null).toBe(true)
-    expect(lineBox!.y + lineBox!.height, 'the line sits above the first graph').toBeLessThanOrEqual(band!.y + 0.5)
-    await assertOneVisibleDisclaimer(page, 'narrow')
-    await assertCaveatOrderAndReach(page, DATE_VERDICT)
+    if (dated) {
+      const lineBox = await line.boundingBox()
+      const band = await page.locator('.fod-band').boundingBox()
+      expect(lineBox !== null && band !== null).toBe(true)
+      expect(lineBox!.y + lineBox!.height, 'the line sits above the first graph').toBeLessThanOrEqual(band!.y + 0.5)
+    }
+    await (dated ? assertOneVisibleDisclaimer(page, 'narrow') : assertOneVisibleDisclaimerNoDate(page))
+    await assertCaveatOrderAndReach(page, DATE_VERDICT, dated ? DOORS_WALK_FLOOR : NO_DATE_DOORS_WALK_FLOOR)
   } else {
-    await assertOneVisibleDisclaimer(page, 'laptop')
+    await (dated ? assertOneVisibleDisclaimer(page, 'laptop') : assertOneVisibleDisclaimerNoDate(page))
     const doors = await page.locator('.result-quiet-row').boundingBox()
     expect(doors, 'the quiet doors render').not.toBeNull()
     const trailing = await doorsLastWalk(page, 'body')
-    expect(trailing.counted).toBeGreaterThan(DOORS_WALK_FLOOR)
+    expect(trailing.counted).toBeGreaterThan(dated ? DOORS_WALK_FLOOR : NO_DATE_DOORS_WALK_FLOOR)
     expect(trailing.maxOtherBottom, `content renders BELOW the quiet doors (${trailing.desc})`).toBeLessThanOrEqual(
       doors!.y + doors!.height + 0.5,
     )
@@ -3272,6 +3333,44 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
         DATE_PICTURE_FIGURES,
       )
       expect(panelFigures.offenders, 'a panel money-picture figure is clipped').toEqual([])
+    })
+  })
+
+  // ── the U11 walk's (ae): the risen family's longest words on the W surfaces and the Result. The W step's note and
+  //    the panel's W row carry the year-level lean and never a figure at the quote (the fork's description: the
+  //    red team's attack 4); the standing line carries the five-sentence later-short line. Fix the layout, never
+  //    cut the content. ──
+  test.describe(`the risen family’s stale words on ?seed=datesavedrisenlater (${vp.name})`, () => {
+    test.use(vp.use)
+
+    test('the W step’s stale face holds with the year-level lean, and no figure at the quote', async ({ page }) => {
+      await rewalkSeedTo(page, 'datesavedrisenlater', copy.qWorkingCostHeading, { final: true })
+      const note = page.getByRole('note')
+      await expect(note).toContainText(
+        `${slots.workingCostStaleQuote('84,000', '105,000')} ${slots.workingCostStaleLeftOverYearsCheaper('84,000')}`,
+      )
+      await expect(note, 'no whole-answer lean on a "saved" note').not.toContainText(slots.workingCostStaleLeansBetter('84,000'))
+      await expect(note, 'no figure at the quote in the fork’s description').not.toContainText('5,985')
+      await assertIntakeStepHolds(page, 'W step, stale, saved', 25, 0)
+    })
+
+    test('the standing line carries the whole later-short line in place; its door opens a W row whose note holds the lean, nothing sideways', async ({ page }) => {
+      await gotoSeedFinal(page, 'datesavedrisenlater')
+      await assertNoDateReading(page)
+      const line = page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')
+      await expect(line, 'the standing line renders in the lead').toHaveCount(1)
+      await expect(line).toContainText(`${copy.stalenessPayCheckNote} ${RISEN_LATER_LINE}`)
+      await assertStandingLinePlaced(page, line, vp.use.viewport.width === PHONE.width, false)
+      await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
+      const dialog = page.getByRole('dialog')
+      await expect(dialog).toBeVisible()
+      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+      await expect(row.getByRole('note')).toContainText(slots.workingCostStaleLeftOverYearsCheaper('84,000'))
+      await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
+      await settleLayout(page)
+      const sideways = await sidewaysReport(page, '[role="dialog"] [data-assumption-seat="working-year-cost"]')
+      expect(sideways.counted, 'the W row rendered').toBeGreaterThan(10)
+      expect(sideways.offenders, 'the W row spills past the viewport').toEqual([])
     })
   })
 

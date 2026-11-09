@@ -179,8 +179,8 @@ export interface FuckOffDateProps {
   /** The standing answer line, ONE slot for two causes that cannot both hold (a moved left over needs a
    *  fresh W): `'w-stale'` — the pay check's KTD21 line, the household's W no longer matches the spending or
    *  state it was given against and the date still uses that last figure (R4); `text` is W's one stale line
-   *  (`workingYearCostStaleLine`: the W step's sentence, plus build 2's clause for a "saved" answer waiting on
-   *  W). `'left-over-moved'` — build 2's R12, the household's "All of it" was given against a year-0 figure
+   *  (`workingYearCostStaleLine`: the W step's note, plus build 2's clause for a "saved" answer waiting on W, and
+   *  what a check at the quote adds where the spending rose). `'left-over-moved'` — build 2's R12, the household's "All of it" was given against a year-0 figure
    *  that has since changed; `text` names both. Each cause picks its own lead and door label
    *  (`STANDING_NOTE_COPY`). `onOpen` present ⇒ the sentence carries a door into the assumptions panel at the
    *  cause's seat (Result passes it only when the tab can save); absent ⇒ the read-only face states the fact

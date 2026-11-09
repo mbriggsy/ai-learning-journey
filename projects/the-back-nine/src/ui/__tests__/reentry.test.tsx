@@ -24,9 +24,10 @@ import { ENGINE_PRICING_LEDGER, FIRST_UNAMBIGUOUS_SAVE_DAY, type PricingFamily }
 import { DEV_SEEDS } from '../devSeeds'
 import { deriveStaleness, PRICING_FAMILY_ORDER, type StalenessExposure, type StalenessReport } from '@store/staleness'
 import { exposureForDraft } from '../stalenessExposure'
-import { isWorkingYearCostStale, workingYearCostStaleText } from '@intake/workingYearQuote'
+import { isWorkingYearCostStale } from '@intake/workingYearQuote'
 import {
   workingYearCostStaleLine,
+  workingYearCostStaleNote,
   workingYearLeftOverMoved,
   workingYearLeftOverMovedClause,
   workingYearLeftOverMovedText,
@@ -356,7 +357,7 @@ describe('composeReentry — the read-back', () => {
     expect(report.anyStale).toBe(true)
     // b9-7: the gate speaks the W step's OWN stale sentence (both figures, the cause, the lean), framed
     // by the gate's lead, and points at the answer's door only where the tab can save.
-    const text = workingYearCostStaleText(DATE_STALE_W)!
+    const text = workingYearCostStaleNote(DATE_STALE_W)!
     expect(text, 'the fixture quotes a figure').toMatch(/\$\d/)
     expect(composeReentry(s, report, { costStale: { text, canChange: true }, leftOverStale: null }).noteLines).toEqual([
       `${copy.stalenessPayCheckGateLead} ${text} ${copy.stalenessPayCheckGateDoor}`,
@@ -564,11 +565,11 @@ describe('composeReentry — the read-back', () => {
     expect(workingYearLeftOverMoved(d), 'waiting on W is never moved').toBeNull()
     const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: false })
     const line = workingYearCostStaleLine(d)
-    expect(line).toBe(`${workingYearCostStaleText(d)} ${slots.workingCostStaleLeftOverClause('16,985')}`)
+    expect(line).toBe(`${workingYearCostStaleNote(d)} ${slots.workingCostStaleLeftOverClause('16,985')}`)
     const view = composeReentry(s, report, { costStale: line === null ? null : { text: line, canChange: true }, leftOverStale: null })
     expect(view.noteLines).toEqual([`${copy.stalenessPayCheckGateLead} ${line} ${copy.stalenessPayCheckGateDoor}`])
     // Under any other answer W's line gains no clause.
-    expect(workingYearCostStaleLine(DEV_SEEDS.datecoststale)).toBe(workingYearCostStaleText(DEV_SEEDS.datecoststale))
+    expect(workingYearCostStaleLine(DEV_SEEDS.datecoststale)).toBe(workingYearCostStaleNote(DEV_SEEDS.datecoststale))
   })
 
   // S5.4 — the state-tax staleness clock's own named line: a PRICED household (NC) whose own

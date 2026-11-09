@@ -461,7 +461,7 @@ const retiredBudget: ScenarioDraft = {
  * lifestyle at 8", labelled Engine-proven, and both figures were wrong):**
  *   provisional (2,000 paths) — floor **2** `confirmed-date` · lifestyle **10** `window-edge-unconfirmed`
  *   final       (16,000 paths) — floor **2** `confirmed-date` · lifestyle **9** `confirmed-date`
- * The LIVE surface runs `final` (`IntakeApp.tsx:329`, `Result.tsx:330`/`:304`), so the shipped hero is
+ * The LIVE surface runs `final` (`IntakeApp.tsx:329`, `Result.tsx:331`/`:304`), so the shipped hero is
  * the 9 — and it is a CONFIRMED date, i.e. the band owes no edge hedge there. The 10 is real but is a
  * provisional-tier reading, and it is `window-edge-unconfirmed`: during entry the hedge RENDERS and
  * then WITHDRAWS when final lands. That transient has never been cold-read.
@@ -1371,9 +1371,12 @@ const dateSavedStaleWitness: ScenarioDraft = {
 /**
  * THE RISEN TWIN — `?seed=datesavedrisen` (build 2's U11, the Caddie record's (p)): `datesaved`'s household
  * that then RAISED its spending to $90,000. W (a yes to $84,000) now sits BELOW today's quote, so its stale
- * line is the one `datesavedstale` can never show: W's sentence, the lean that the answer "can look better
- * than it really is" (`heldYesBelowQuote`), then R12's clause that none of the $16,985 a year is added until
- * W is checked — and the Keep door is withheld (ruling 34). Like `datesavedstale`, the shown state is
+ * line is the one `datesavedstale` can never show: W's sentence, the year-level lean that $84,000 makes any
+ * working year the pay doesn't cover look cheaper (`heldYesBelowQuote`; the U11 walk's (ae) replaced the
+ * whole-answer "can look better", which U11 measured the wrong way here), then R12's clause that none of the
+ * $16,985 a year is added until W is checked, and what a check at $90,000 or more adds at most: year 0's
+ * $10,985 left over at the quote (pay 150,000 − payroll tax 11,475 − tax 17,540 − deposits 20,000 − W
+ * 90,000; `workingYearCheckAtQuote`'s `capped`) — and the Keep door is withheld (ruling 34). Like `datesavedstale`, the shown state is
  * "waiting on W" and nothing left over is carried (R7): a stale W still rides at $84,000, so the live
  * figure is still $16,985. U11 measured exactly this household (the build-2 record's `u11drafts.mts`
  * RISEN pair: `datesaved` with its spending raised by $6,000): the stale arm crowns no date at the final
@@ -1384,6 +1387,49 @@ const dateSavedStaleWitness: ScenarioDraft = {
 const dateSavedRisenWitness: ScenarioDraft = {
   ...dateSavedWitness,
   annualSpendingReal: 90_000,
+}
+
+/**
+ * THE RISEN TWIN'S SHORT ARM — `?seed=datesavedrisenshort` (the U11 Caddie walk's (ae), council
+ * `wf_fc80029e-d93`): `datesaved`'s household that then raised its spending to $105,000, past year 0's whole
+ * left over. A stale W still rides at $84,000, so year 0 still prints $16,985 ("waiting on W") and nothing is
+ * carried (R7). A check at today's quote leaves year 0 short: pay 150,000 − payroll tax 11,475 − tax on outside
+ * income 17,540 − deposits 20,000 − W 105,000 = −4,015 (`date`'s year-0 sum, hand-derived in
+ * `e2e/vertical-fit.spec.ts`'s stale-W block, with W at the quote: W comes off year 0's cash dollar for dollar).
+ * So its checked twin carries nothing either, at a higher cost, and W's line says a check adds none of the
+ * $16,985 and that this answer can look better than it really is (`workingYearCheckAtQuote`'s `firstShort`).
+ * A "mint, then move" witness: minted once (`dateSavedWitness`), then moved.
+ */
+const dateSavedRisenShortWitness: ScenarioDraft = {
+  ...dateSavedWitness,
+  annualSpendingReal: 105_000,
+}
+
+/**
+ * THE RISEN TWIN'S LATER-SHORT ARM — `?seed=datesavedrisenlater` (the U11 Caddie walk's (ae)): the short arm's
+ * household whose retired spouse, Sam (60), also receives $10,000 a year of alimony that ends at 62, under an
+ * agreement signed after 2018, so it is not taxed to Sam (`IncomeTaxTreatment`'s `executedAfter2018`) and the
+ * tax line stays $17,540. A stale W still rides at $84,000 (year 0 prints $26,985: "waiting on W"). At today's
+ * $105,000, year 0 has $5,985 left over (the short arm's −4,015 plus the $10,000), so a check adds at most
+ * $5,985 a year (`capped`, below the stored $16,985); from 2029, Sam 63 and the alimony ended, each working year
+ * comes up $4,015 short at $105,000, the short arm's year again. That first short later year is what W's line
+ * names (`laterShort`): a check credits it nothing and draws more there. A "mint, then move" witness: minted
+ * once (`dateSavedWitness`), then moved.
+ */
+const dateSavedRisenLaterWitness: ScenarioDraft = {
+  ...dateSavedRisenShortWitness,
+  incomeStreams: [
+    {
+      ownerIndex: 1,
+      type: 'alimony',
+      executedAfter2018: true,
+      annualRealToday: 10_000,
+      startAge: 50,
+      endAge: 62,
+      colaMode: 'real-flat',
+      survivorPct: 0,
+    },
+  ],
 }
 
 /** The seed registry — `?seed=<key>` selects one. */
@@ -1423,11 +1469,14 @@ export const DEV_SEEDS = {
   datelateleftover: withConfirmedW(dateLateLeftOverWitness),
   // Build 2 (the go-live, KTD14): "All of it" stored at the household's own year-0 figure, through the
   // shipped write — the presence witness, the moved witness and the stale-W witness. U11 adds the stale-W
-  // witness's RISEN twin (the spending raised past W, so the lean and the clause ride together).
+  // witness's RISEN twin (the spending raised past W, so the lean and the clause ride together); (ae) adds its
+  // short arm (year 0 short at the quote) and its later-short arm (a later working year short at the quote).
   datesaved: dateSavedWitness,
   datesavedmoved: dateSavedMovedWitness,
   datesavedstale: dateSavedStaleWitness,
   datesavedrisen: dateSavedRisenWitness,
+  datesavedrisenshort: dateSavedRisenShortWitness,
+  datesavedrisenlater: dateSavedRisenLaterWitness,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

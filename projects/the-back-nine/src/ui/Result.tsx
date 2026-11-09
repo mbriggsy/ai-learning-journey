@@ -276,7 +276,8 @@ export function Result({
   // it was given against, and the date still runs on that last figure (R4). The ONE stale predicate
   // (`workingYearQuote.ts`), read off the draft — the same answer the walk's gate and the panel's
   // row read. Its door opens the panel at the W row, and exists only where the tab can save. W's ONE stale line
-  // (`workingYearCostStaleLine`): build 2 adds the clause for a "saved" answer waiting on W (R12).
+  // (`workingYearCostStaleLine`): build 2 adds the clause for a "saved" answer waiting on W (R12), and, where the
+  // spending rose, what a check at the quote adds (the U11 walk's (ae); memoized on the draft, as the line is here).
   const payCheckStaleText = useMemo(() => workingYearCostStaleLine(snapshot.draft), [snapshot.draft])
   // Build 2's moved left over (R12), read LIVE off the draft through the one moved core. Where a tax, state-tax
   // or working-years line fired at unlock (`leftOverClauseHost`, decided once by `composeReentry` and kept for

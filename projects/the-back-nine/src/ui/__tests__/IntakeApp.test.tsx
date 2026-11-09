@@ -119,7 +119,6 @@ import { DEV_SEEDS, doctorWorkingYearsStaleVault } from '../devSeeds'
 import { copy, slots } from '../copy'
 import { readyToApplyUpdate } from '../updateGate'
 import { holdUnsavedBuffer } from '@intake/unsavedBuffer'
-import { workingYearCostStaleText } from '@intake/workingYearQuote'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CURRENT_SCHEMA_VERSION, type CurrentScenario } from '@shared/model'
 
@@ -269,10 +268,37 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
       const line = Array.from(document.querySelectorAll('.reentry-notes p'))
         .map((p) => p.textContent ?? '')
         .find((t) => t.startsWith(copy.stalenessPayCheckGateLead))
-      const sentence = workingYearCostStaleText(DEV_SEEDS.datesavedstale)
-      expect(sentence, '[test setup] datesavedstale’s W is stale').not.toBeNull()
+      // The W step's sentence for a yes to $84,000 the spending fell below ($78,000): no lean (the safe side).
+      const sentence = slots.workingCostStaleQuote('84,000', '78,000')
       expect(line, 'the clause rides the gate’s W line').toBe(
         `${copy.stalenessPayCheckGateLead} ${sentence} ${slots.workingCostStaleLeftOverClause('16,985')} ${copy.stalenessPayCheckGateDoor}`,
+      )
+    } finally {
+      h.model = current
+    }
+  })
+
+  // …and the RISEN twin (the U11 walk's (ae)): the gate's W line carries the year-level lean, the clause, and the
+  // most a check at the quote adds — year 0 at $90,000, hand-derived (150,000 − 11,475 − 17,540 − 20,000 −
+  // 90,000 = $10,985). A call site reverted to the W step's note would drop the clause and the check alone.
+  it('`datesavedrisen`: the gate’s stale-W line is the note (the year-level lean), the clause, then what a check at $90,000 or more adds at most, then the door', async () => {
+    const current = h.model
+    h.model = plantedVault(DEV_SEEDS.datesavedrisen)
+    try {
+      render(<IntakeApp hydrateFromVault />)
+      await screen.findByRole('button', { name: copy.reentryAffirmCta })
+      const line = Array.from(document.querySelectorAll('.reentry-notes p'))
+        .map((p) => p.textContent ?? '')
+        .find((t) => t.startsWith(copy.stalenessPayCheckGateLead))
+      expect(line).toBe(
+        [
+          copy.stalenessPayCheckGateLead,
+          slots.workingCostStaleQuote('84,000', '90,000'),
+          slots.workingCostStaleLeftOverYearsCheaper('84,000'),
+          slots.workingCostStaleLeftOverClause('16,985'),
+          slots.workingCostStaleLeftOverAtMost('90,000', '10,985'),
+          copy.stalenessPayCheckGateDoor,
+        ].join(' '),
       )
     } finally {
       h.model = current

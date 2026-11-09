@@ -1512,9 +1512,9 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
 
   it('on `datesavedstale` the W row’s stale note is W’s own sentence and carries no left-over clause (R6; the clause rides the Result and the gate only)', () => {
     // As built, R12's dollars clause rides `workingYearCostStaleLine`, which only the Result and the re-entry
-    // gate read; `workingYearCostStaleText`, which draws this note, stays pure W, so nothing above the seat
-    // reads the answer but the methodology line (R6). Figures (`datesavedstale`'s docblock): the spending
-    // lowered to $78,000 under a W still riding at $84,000, and the $16,985 stored.
+    // gate read; this note is `workingYearCostStaleNote` (W's sentence and, where the spending rose, its lean).
+    // Figures (`datesavedstale`'s docblock): the spending lowered to $78,000 under a W still riding at $84,000,
+    // and the $16,985 stored.
     const clause = slots.workingCostStaleLeftOverClause('16,985')
     // The positive twin: on this draft the clause is real, and W's one stale line on the Result carries it.
     expect(workingYearCostStaleLine(DEV_SEEDS.datesavedstale), 'the Result’s line carries the clause').toContain(clause)
@@ -1522,6 +1522,21 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     const note = within(wRow()).getByRole('note')
     expect(note.textContent, 'the note names the spending that moved').toContain(slots.workingCostStaleQuote('84,000', '78,000'))
     expect(note.textContent, 'the W row’s note never names the left over').not.toContain(clause)
+  })
+
+  it('on `datesavedrisen` the W row’s note gives the year-level lean — never the whole-answer "can look better", never the clause or a figure at the quote — and the seat waits (the U11 walk’s (ae); R6 / KTD11 as amended)', () => {
+    // The spending raised to $90,000 past the yes to $84,000 (the seed's docblock), "All of it" stored at $16,985.
+    // The note reads the answer above the seat — the amendment's one new reader — while the seat draws no radios.
+    renderPanel({ snapshot: snap(DEV_SEEDS.datesavedrisen) })
+    const note = within(wRow()).getByRole('note')
+    expect(note.textContent).toContain(
+      `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeftOverYearsCheaper('84,000')}`,
+    )
+    expect(note.textContent, 'no whole-answer lean for a "saved" answer waiting on W').not.toContain(slots.workingCostStaleLeansBetter('84,000'))
+    expect(note.textContent, 'no clause on the W row').not.toContain(slots.workingCostStaleLeftOverClause('16,985'))
+    expect(note.textContent, 'no figure at the quote in the fork’s description (the red team’s attack 4)').not.toContain('10,985')
+    expect(within(seat()).getByText(copy.workingLedgerLeftOverWaiting)).toBeInTheDocument()
+    expect(within(seat()).queryAllByRole('radio')).toHaveLength(0)
   })
 
   it('no seat renders where the question is not asked (`dateshort`, `datelateleftover`: year 0 is short) — but it does on `date`', () => {

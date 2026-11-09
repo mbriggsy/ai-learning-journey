@@ -6,7 +6,7 @@ import {
   isWorkingYearCostStale,
   workingCostBelowMedical,
   workingYearCostStaleness,
-  workingYearCostStaleText,
+  workingYearCostStaleSentence,
   workingYearQuote,
   workingYearStateTaxReading,
   writeClearedWorkingYearCost,
@@ -15,6 +15,9 @@ import {
   writeKeptWorkingYearCost,
   writeWorkingYearCostPeriod,
 } from '../workingYearQuote'
+// The joined note (W's sentence and its lean) is composed in `workingYearLeftOver` (the U11 walk's (ae)): every
+// draft in this file carries no left-over answer, so its lean is the spending-alone one wherever the spending rose.
+import { workingYearCostStaleNote } from '../workingYearLeftOver'
 import { isDateRoute, missingRequiredFacts, pricedStateForRun } from '../intakeMap'
 import { threeThenMore } from '../AnswerStrip'
 import { STATE_TAX_PROFILES } from '@engine/constants/stateTax'
@@ -312,11 +315,35 @@ describe('the stale predicate (KTD21)', () => {
 // The ONE stale sentence the W step's note, the panel's stale face and the result's line all read: the
 // last figure, the current quote where it moved, and which input really moved — never the quote-only
 // words for a cause that was the state too, and never "now come to $0" when no quote is left to offer.
-// Every draft here carries no left-over answer. Build 2's dollars clause for a "saved" answer waiting on W
-// rides `workingYearCostStaleLine` on the Result and the gate, never this sentence: its presence there is
-// pinned in `resultPayCheckLine.test.tsx` and `reentry.test.tsx`, and its absence from the panel's W row,
-// which this sentence draws, in `assumptionPanel.test.tsx` (on `datesavedstale`).
+// Every draft here carries no left-over answer, so the note (`workingYearCostStaleNote`) is the sentence and,
+// where the spending rose past the held figure, the spending-alone lean. Build 2's words for a "saved" answer
+// waiting on W (the year-level lean on the note; the clause and the check at the quote on the line) are pinned
+// in `workingYearLeftOver.test.ts`, on the Result in `resultPayCheckLine.test.tsx` and on the gate in
+// `reentry.test.tsx`; the panel's W row, which draws the note, in `assumptionPanel.test.tsx`.
 describe('the stale sentence names the cause that moved (KTD21)', () => {
+  it('the sentence comes split from its lean: `rose` exactly where the spending rose past the held figure, with both figures as the sentence prints them (the U11 walk’s (ae))', () => {
+    const nc0 = base({ retirementState: 'NC' })
+    const yes = (quotedReal: number): WorkingYearCostV3 => ({ kind: 'confirmed', quotedReal, stateTaxReading: 'agi-derived' })
+    expect(workingYearCostStaleSentence({ ...nc0, annualSpendingReal: 90_000, workingYearCost: yes(84_000) })).toEqual({
+      rose: true,
+      sentence: slots.workingCostStaleQuote('84,000', '90,000'),
+      held: '84,000',
+      quote: '90,000',
+    })
+    // Under a dollar apart, both print to the cent, and the split carries the cent strings the sentence used.
+    expect(workingYearCostStaleSentence({ ...nc0, annualSpendingReal: 84_000.4, workingYearCost: yes(84_000) })).toEqual({
+      rose: true,
+      sentence: slots.workingCostStaleQuote('84,000.00', '84,000.40'),
+      held: '84,000.00',
+      quote: '84,000.40',
+    })
+    expect(workingYearCostStaleSentence({ ...nc0, annualSpendingReal: 78_000, workingYearCost: yes(84_000) })).toEqual({
+      rose: false,
+      sentence: slots.workingCostStaleQuote('84,000', '78,000'),
+    })
+    expect(workingYearCostStaleSentence({ ...nc0, workingYearCost: yes(84_000) })).toBeNull()
+  })
+
   const confirmedAt = (quotedReal: number, stateTaxReading: WorkingYearStateTaxReading): WorkingYearCostV3 => ({
     kind: 'confirmed',
     quotedReal,
@@ -325,13 +352,13 @@ describe('the stale sentence names the cause that moved (KTD21)', () => {
   const nc = (over: Partial<ScenarioDraft> = {}): ScenarioDraft => base({ retirementState: 'NC', ...over })
 
   it('absent or still matching: no sentence', () => {
-    expect(workingYearCostStaleText(nc())).toBeNull()
-    expect(workingYearCostStaleText(nc({ workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBeNull()
+    expect(workingYearCostStaleNote(nc())).toBeNull()
+    expect(workingYearCostStaleNote(nc({ workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBeNull()
   })
 
   it('the spending moved: both yearly figures and which way the last one leans; with no spending left to quote, no second figure', () => {
     // Spending ROSE past the figure the household said yes to: the answer can look better than it is.
-    expect(workingYearCostStaleText(nc({ annualSpendingReal: 90_000, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
+    expect(workingYearCostStaleNote(nc({ annualSpendingReal: 90_000, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
       `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeansBetter('84,000')}`,
     )
     // Spending FELL under it: no lean at all. For this draft (no left-over answer, so nothing is credited at
@@ -339,35 +366,35 @@ describe('the stale sentence names the cause that moved (KTD21)', () => {
     // worse" read as "the real answer is better" (b9-7, withdrawn). For a "saved" answer the two runs differ
     // wherever the run on the checked W carries the stored figure again (derived from build 2's R8, not
     // measured), and which way that moves the answer is unmeasured, so no lean is said there either (R16).
-    expect(workingYearCostStaleText(nc({ annualSpendingReal: 78_000, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
+    expect(workingYearCostStaleNote(nc({ annualSpendingReal: 78_000, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
       slots.workingCostStaleQuote('84,000', '78,000'),
     )
-    expect(workingYearCostStaleText(nc({ annualSpendingReal: undefined, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
+    expect(workingYearCostStaleNote(nc({ annualSpendingReal: undefined, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
       slots.workingCostStaleQuoteGone('84,000'),
     )
   })
 
   it('a move under a dollar prints both figures to the cent — never "$84,000 … now $84,000" (the whole-file review)', () => {
     // The check stales at the cent (above); in whole dollars both figures would read 84,000.
-    expect(workingYearCostStaleText(nc({ annualSpendingReal: 84_000.4, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
+    expect(workingYearCostStaleNote(nc({ annualSpendingReal: 84_000.4, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
       `${slots.workingCostStaleQuote('84,000.00', '84,000.40')} ${slots.workingCostStaleLeansBetter('84,000.00')}`,
     )
-    expect(workingYearCostStaleText(nc({ annualSpendingReal: 83_999.6, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
+    expect(workingYearCostStaleNote(nc({ annualSpendingReal: 83_999.6, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
       slots.workingCostStaleQuote('84,000.00', '83,999.60'),
     )
     // A move of a dollar or more keeps whole dollars.
-    expect(workingYearCostStaleText(nc({ annualSpendingReal: 84_001, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
+    expect(workingYearCostStaleNote(nc({ annualSpendingReal: 84_001, workingYearCost: confirmedAt(84_000, 'agi-derived') }))).toBe(
       `${slots.workingCostStaleQuote('84,000', '84,001')} ${slots.workingCostStaleLeansBetter('84,000')}`,
     )
   })
 
   it('the state moved alone: the state words, by kind', () => {
     const pa = nc({ retirementState: 'PA' })
-    expect(workingYearCostStaleText({ ...pa, workingYearCost: confirmedAt(84_000, 'agi-derived') })).toBe(
+    expect(workingYearCostStaleNote({ ...pa, workingYearCost: confirmedAt(84_000, 'agi-derived') })).toBe(
       slots.workingCostStaleStateConfirmed('84,000'),
     )
     expect(
-      workingYearCostStaleText({
+      workingYearCostStaleNote({
         ...pa,
         workingYearCost: { kind: 'entered', amountReal: 96_000, entryPeriod: 'month', stateTaxReading: 'agi-derived' },
       }),
@@ -379,14 +406,14 @@ describe('the stale sentence names the cause that moved (KTD21)', () => {
     // belongs in W (adding to it) or is priced apart (adding nothing), so it never brings W back below the
     // spending. The lean rides as it does on the spending alone (the U11 walk's (ac)).
     expect(
-      workingYearCostStaleText(nc({ retirementState: 'PA', annualSpendingReal: 90_000, workingYearCost: confirmedAt(84_000, 'agi-derived') })),
+      workingYearCostStaleNote(nc({ retirementState: 'PA', annualSpendingReal: 90_000, workingYearCost: confirmedAt(84_000, 'agi-derived') })),
     ).toBe(`${slots.workingCostStaleBoth('84,000', '90,000')} ${slots.workingCostStaleLeansBetter('84,000')}`)
     // The spending FELL under it and the state moved: no lean (as on the spending alone).
     expect(
-      workingYearCostStaleText(nc({ retirementState: 'PA', annualSpendingReal: 78_000, workingYearCost: confirmedAt(84_000, 'agi-derived') })),
+      workingYearCostStaleNote(nc({ retirementState: 'PA', annualSpendingReal: 78_000, workingYearCost: confirmedAt(84_000, 'agi-derived') })),
     ).toBe(slots.workingCostStaleBoth('84,000', '78,000'))
     expect(
-      workingYearCostStaleText(nc({ retirementState: 'PA', annualSpendingReal: undefined, workingYearCost: confirmedAt(84_000, 'agi-derived') })),
+      workingYearCostStaleNote(nc({ retirementState: 'PA', annualSpendingReal: undefined, workingYearCost: confirmedAt(84_000, 'agi-derived') })),
     ).toBe(slots.workingCostStaleBothGone('84,000'))
   })
 })
@@ -526,22 +553,22 @@ describe('the keep stamp: a kept yes goes stale when the spending rises past it 
     expect(isWorkingYearCostStale(risen)).toBe(true)
     expect(heldYesBelowQuote(risen), 'the door is withheld below the quote (ruling 34)').toBe(true)
     // It names the spending, never the state, and appends the rosy-side lean.
-    expect(workingYearCostStaleText(risen)).toBe(
+    expect(workingYearCostStaleNote(risen)).toBe(
       `${slots.workingCostStaleKeptQuote('84,000', '85,000')} ${slots.workingCostStaleLeansBetter('84,000')}`,
     )
   })
 
   it('the words, typed by hand: the lean states the spending as the fact it is, never an "If" (the U11 walk’s (af)), and a both-causes sentence names the new state answer (its (ac))', () => {
-    expect(workingYearCostStaleText(at(85_000, kept84))).toBe(
+    expect(workingYearCostStaleNote(at(85_000, kept84))).toBe(
       'You kept $84,000 a year, but your spending figures have changed since — they now come to $85,000 a year. ' +
         'Your spending alone now comes to more than $84,000, so this answer can look better than it really is.',
     )
-    expect(workingYearCostStaleText(at(90_000, kept84, { retirementState: 'PA' }))).toBe(
+    expect(workingYearCostStaleNote(at(90_000, kept84, { retirementState: 'PA' }))).toBe(
       'You kept $84,000 a year, but your spending figures and your state answer have changed since. Your spending now comes ' +
         'to $90,000 a year, and your new state answer changes which state’s income tax this figure should hold. ' +
         'Your spending alone now comes to more than $84,000, so this answer can look better than it really is.',
     )
-    expect(workingYearCostStaleText(at(90_000, yes84, { retirementState: 'PA' }))).toBe(
+    expect(workingYearCostStaleNote(at(90_000, yes84, { retirementState: 'PA' }))).toBe(
       'You said yes to $84,000 a year, but your spending figures and your state answer have changed since. Your spending ' +
         'now comes to $90,000 a year, and your new state answer changes which state’s income tax this figure should hold. ' +
         'Your spending alone now comes to more than $84,000, so this answer can look better than it really is.',
@@ -555,32 +582,32 @@ describe('the keep stamp: a kept yes goes stale when the spending rises past it 
     for (const spend of [80_000, 79_000, 82_000, 84_000, 84_000.004]) {
       expect(workingYearCostStaleness(at(spend, kept84)), `spending ${spend}`).toBeNull()
       expect(heldYesBelowQuote(at(spend, kept84)), `spending ${spend}`).toBe(false)
-      expect(workingYearCostStaleText(at(spend, kept84)), `spending ${spend}`).toBeNull()
+      expect(workingYearCostStaleNote(at(spend, kept84)), `spending ${spend}`).toBeNull()
     }
     // The cent is the grain (KTD21): $84,000.01 is above $84,000, and both print to the cent.
     const cent = at(84_000.01, kept84)
     expect(workingYearCostStaleness(cent)).toEqual({ quoteMoved: true, readingMoved: false })
-    expect(workingYearCostStaleText(cent)).toBe(
+    expect(workingYearCostStaleNote(cent)).toBe(
       `${slots.workingCostStaleKeptQuote('84,000.00', '84,000.01')} ${slots.workingCostStaleLeansBetter('84,000.00')}`,
     )
   })
 
   it('a kept figure says "kept", never "entered": the state alone, and the state with the spending', () => {
     // NC → PA moves the reading; the spending unmoved at $80,000 (below the figure).
-    expect(workingYearCostStaleText(at(80_000, kept84, { retirementState: 'PA' }))).toBe(slots.workingCostStaleStateKept('84,000'))
+    expect(workingYearCostStaleNote(at(80_000, kept84, { retirementState: 'PA' }))).toBe(slots.workingCostStaleStateKept('84,000'))
     // The state alone prints one figure in whole dollars, even with a quote a few cents under it.
-    expect(workingYearCostStaleText(at(83_999.6, kept84, { retirementState: 'PA' }))).toBe(slots.workingCostStaleStateKept('84,000'))
+    expect(workingYearCostStaleNote(at(83_999.6, kept84, { retirementState: 'PA' }))).toBe(slots.workingCostStaleStateKept('84,000'))
     // Both: the spending rose to $90,000 AND the state moved — one sentence, both causes, and the lean: a kept
     // figure is stale on the spending only once the spending passes it, so here the spending alone always
     // sits above it, and the state's tax can only add to what W should hold (the U11 walk's (ac); the walk
     // read the lean missing from this sentence alone). The state on its own above carries no lean: a state
     // move can cut the tax on pay as easily as raise it.
     expect(workingYearCostStaleness(at(90_000, kept84, { retirementState: 'PA' }))).toEqual({ quoteMoved: true, readingMoved: true })
-    expect(workingYearCostStaleText(at(90_000, kept84, { retirementState: 'PA' }))).toBe(
+    expect(workingYearCostStaleNote(at(90_000, kept84, { retirementState: 'PA' }))).toBe(
       `${slots.workingCostStaleKeptBoth('84,000', '90,000')} ${slots.workingCostStaleLeansBetter('84,000')}`,
     )
     // A TYPED figure keeps its own words: the state alone, whatever the spending did.
-    expect(workingYearCostStaleText(at(90_000, typed(84_000), { retirementState: 'PA' }))).toBe(slots.workingCostStaleStateEntered('84,000'))
+    expect(workingYearCostStaleNote(at(90_000, typed(84_000), { retirementState: 'PA' }))).toBe(slots.workingCostStaleStateEntered('84,000'))
   })
 
   it('after a state move, a keep of the kept figure keeps the stamp — and a later rise past it still stales it', () => {
@@ -642,7 +669,7 @@ describe('the keep stamp: a kept yes goes stale when the spending rises past it 
     expect(staleMonthly.workingYearCost).toEqual({ ...kept84, entryPeriod: 'month' })
     expect(workingYearCostStaleness(staleMonthly)).toEqual({ quoteMoved: true, readingMoved: false })
     expect(heldYesBelowQuote(staleMonthly), 'the door stays withheld in the month view').toBe(true)
-    expect(workingYearCostStaleText(staleMonthly)).toBe(workingYearCostStaleText(staleKept))
+    expect(workingYearCostStaleNote(staleMonthly)).toBe(workingYearCostStaleNote(staleKept))
     const roundTrip = writeWorkingYearCostPeriod(staleMonthly, 'year')
     expect(roundTrip.workingYearCost).toEqual(kept84)
     expect(workingYearCostStaleness(roundTrip)).toEqual({ quoteMoved: true, readingMoved: false })
@@ -654,7 +681,7 @@ describe('the keep stamp: a kept yes goes stale when the spending rises past it 
   it('a keep where no quote is left to show stamps the quote the yes said yes to — never unstamped, so a later spending figure still counts', () => {
     // The spending cleared: the note reads "no spending figure to offer now", and the door shows.
     const gone = at(undefined, yes84)
-    expect(workingYearCostStaleText(gone)).toBe(slots.workingCostStaleQuoteGone('84,000'))
+    expect(workingYearCostStaleNote(gone)).toBe(slots.workingCostStaleQuoteGone('84,000'))
     expect(heldYesBelowQuote(gone)).toBe(false)
     const kept = writeKeptWorkingYearCost(gone)
     expect(kept.workingYearCost).toEqual({ ...kept84, keptOverQuoteReal: 84_000 })

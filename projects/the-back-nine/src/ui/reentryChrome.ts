@@ -85,8 +85,9 @@ const BUCKET_LABEL_KEY: Readonly<Record<'pretax' | 'roth' | 'taxable' | 'hsa', C
 }
 
 /** The gate's KTD21 sentence, composed by the caller from the HYDRATED draft this report describes
- *  (`workingYearCostStaleLine`: the W step's own sentence, `workingYearCostStaleText`, plus build 2's R12
- *  dollars clause for a "saved" answer waiting on W — this seam never re-derives the quote): `text` is that line, and
+ *  (`workingYearCostStaleLine`: the W step's own note, `workingYearCostStaleNote`, plus build 2's R12
+ *  dollars clause and, where the spending rose, what a check at the quote adds, for a "saved" answer waiting
+ *  on W — this seam never re-derives the quote): `text` is that line, and
  *  `canChange` is whether the answer will offer the door to change it (a tab that can save). `null`
  *  where W is not stale. REQUIRED, never optional-with-a-default: a caller that forgets it must fail
  *  to compile, never fall back to the figure-less line in silence. */
@@ -112,7 +113,7 @@ export interface ReentryPayCheckStale {
  *  discarded), and every reload re-derives the same report and throws again: the household cannot
  *  open its plan. So the throw must be unreachable BY CONSTRUCTION, never by the caller's care: the
  *  go-live's moved predicate and this sentence both read ONE core over the draft, the way
- *  `isWorkingYearCostStale` and `workingYearCostStaleText` both read `workingYearCostStaleness`
+ *  `isWorkingYearCostStale` and `workingYearCostStaleSentence` both read `workingYearCostStaleness`
  *  (`src/intake/workingYearQuote.ts`); `IntakeApp` computes the core once and builds the fact and these
  *  sentences from that one value. */
 export interface ReentryLeftOverStale {

@@ -12,7 +12,6 @@ import {
   workingCostBelowMedical,
   workingYearCostKeepLabel,
   workingYearCostStaleness,
-  workingYearCostStaleText,
   workingYearQuote,
   workingYearStateTaxReading,
   writeClearedWorkingYearCost,
@@ -22,6 +21,7 @@ import {
   writeWorkingYearCostPeriod,
   type WorkingYearQuote,
 } from './workingYearQuote'
+import { workingYearCostStaleNote } from './workingYearLeftOver'
 
 /**
  * The pay check's W question (`docs/plans/features/working-year-pay-check-build-spec.md` U8; KTD5,
@@ -241,11 +241,17 @@ export function WorkingCostQuestion({
   // stay live, so a commit from another field under the same press (the panel's spending row, blurred by
   // a tap on the door) re-gates the door at once — a held door must never keep a figure ruling 34 has
   // just withheld. Everything else on the face reads the live draft; the commit lands at the blur.
+  // The note's lean also reads the left-over ANSWER (`workingYearCostStaleNote`: a "saved" answer waiting on W
+  // gets the year-level lean, the U11 walk's (ae)) — the one reader above the left-over seat besides the
+  // methodology line (build 2's R6 / KTD11, amended at (ae)). Safe under a press: the note shows only on a stale
+  // W, and in both W-stale shown states the seat draws no radios and the write refuses (`LEFT_OVER_FACE`), so no
+  // press can move the answer; the two leans swap one sentence for one where the year-0 print at the held W
+  // crosses $1 (a pay figure committed by the same press), the exposure this note already had.
   const rootRef = useRef<HTMLDivElement | null>(null)
   const heldW = useGestureHold(rootRef, draft.workingYearCost)
   const noteDraft = useMemo(() => withWorkingYearCost(draft, heldW), [draft, heldW])
   const noteW = noteDraft.workingYearCost
-  const noteText = workingYearCostStaleText(noteDraft)
+  const noteText = workingYearCostStaleNote(noteDraft)
   const noteShown = noteW !== undefined && noteText !== null
 
   // FOCUS NEVER FALLS TO THE PAGE. A "keep" tap clears the stale note and the button inside it

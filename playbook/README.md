@@ -75,12 +75,13 @@ When you have named the session that takes over, in words or by numbering it nex
 
 ## Always on
 
-These fire by themselves, except the window check, which Claude runs itself at checkpoints.
+These fire by themselves.
 
 - **The manifesto at session start.** Every new session opens with the Elite Engineer Protocol loaded in full: the quality bar, the rules, and the test before any "done". A warning block comes with it only when a hook names a skill or script that isn't there, or a skill link is broken. [elite-engineer.md](../projects/hooks/elite-engineer.md) · [elite-engineer-session-start.sh](../projects/hooks/elite-engineer-session-start.sh) · [check-config-liveness.mjs](../projects/hooks/check-config-liveness.mjs)
 - **The WebFetch blocker.** Claude's built-in page fetcher has no time limit and can hang forever, so it is blocked. Claude uses the gemini-grounding search tool (a web search that answers with its sources) or `curl` (a plain command-line page fetcher) with a 15-second limit instead. [block-webfetch.sh](../projects/hooks/block-webfetch.sh)
 - **The status line.** One line Claude Code refreshes after each reply: the model, the folder, the git branch, how full the context window is, how much of the 5-hour and weekly Claude usage limits is used, tokens (the units Claude's usage is counted in) this session and all time, how long the session has run, and the effort level (how hard Claude is set to work, from low to max). It lives in Claude's private config, at `~/.claude/statusline.py`.
 - **The window check.** A one-line answer to "how full is the context window?" Claude runs it at natural checkpoints without being asked; you can type `/window` or ask "how's the window?". It names the line you've reached (40%, 50% or 60%) and what that means; the details are on the [cheat sheet](cheat-sheet.md#during-the-session). It never runs `/context`, whose big table can't be scrolled on a phone. [projects/skills/window/](../projects/skills/window/SKILL.md)
+- **The context watcher.** After each step and each message you send, it checks how full the window will be on the next step. The first time a session passes 40%, 50% or 60% (then 70, 80 and 90), it puts the `/window` line in front of Claude and on your screen, so the lines no longer depend on Claude remembering to check. [How it works](../projects/skills/window/README.md#the-watcher-lines-announce-themselves)
 
 ## In this folder
 

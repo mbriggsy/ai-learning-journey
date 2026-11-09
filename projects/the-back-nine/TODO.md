@@ -452,24 +452,43 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-09 (b9-6: walk 4's fix round BUILT from council `wf_7fa86902-35c`; b9-5's block pruned into it,
-its landmines and distill candidates kept below):** state at close: the round is committed and pushed (the commit after
-`09459571`); typecheck 0, lint 0, the suite 5068/5068, `verify:doc-stats` 0 (README and the roadmap carry 5068 / 226),
-R10 `walk4` 42/42 against `walk3`, 17 mutants all killed, `verify:fit`'s touched arms 26/26 passed (1.9 min, pinned; the unlock, standing-line, risen-family, stale and kept arms). The window passed 50%
-before walk 5 could be seated, so walk 5 is the next session's. **Check at start:** CI on this close's commit
-(`gh run list --commit <its full sha>`, both jobs: `verify:fit` runs the risen and fallen unlock arms in CI too); the
-weekly meter before seating walk 5 (79% at 08:24Z; resets 2026-11-11 14:00Z).
-**LANDMINES (b9-6):**
-- **`src/ui/__tests__/copyGuard.test.ts` is CRLF; most of `src` is LF.** A `sed -i` on it rewrote every line to LF
-  (3,626 lines in the diff); `node` restored it. Edit it with the Edit tool or an EOL-aware script, and run
-  `git diff --stat` before staging. Git Bash's `grep -c $'\r$'` also miscounts CRLF here: count with `node`.
-- **`pnpm doc:reanchor <base> --apply` edits `src` comments too** (370 edits this round, `devSeeds.ts` and
-  `stalenessExposure.ts` among them): run it once, last, after the sweep and the mutants, never while a plant is live.
-- **A bare citation that pointed at the wrong lines can pass `verify:doc-stats` until a shift lands it on a blank one**
-  (`act4-u17-s5-execution-plan.md:96`'s `:787`/`:789`, re-pointed to `IntakeApp.tsx`'s `onSave`/`onRetry`). When the
-  gate names one, read what it was meant to cite before moving the number.
-- **The mutant runner, the suite, the sweep and `verify:fit` must run in sequence**, never side by side: a live plant is
-  imported by any of the others (`chain.ps1` in `u11-walk4\` runs the first three in order, pinned).
+**SESSION 2026-11-09 (b9-7: walk 5 WALKED on council `wf_7fa86902-35c`'s round; b9-6's block pruned into it, its
+landmines moved to the standing list below, its distill candidates kept below):** state at close: walk 5's record is
+committed and pushed (`42274150`: the card, the tape row, the register's retype entry, the council-log row, and item 1's
+fix-round prescription); no code changed this session. Typecheck exit 0; `verify:doc-stats` exit 0 (the gate carries the
+counts); walk 5's harness 18/18 (`3157a6da`'s witnesses held on their first run). CI on `3157a6da` (run 42601322466):
+`verify-rv-chart-text` success, `verify` still running at close (in its `verify:fit` step, ~41 min typical). Stopped at
+41% of the window: walk 5's fix round (a structural change on four hosts, nine copy changes, the Tier 0 note, mutants,
+R10, `verify:fit`) would not finish before the wrap line. Walk 5 cost about one weekly point (80% → 81%).
+**Check at start:** CI run 42601322466 on `3157a6da` (`gh run view 42601322466`, both jobs) and the run on `42274150`
+(docs only; `gh run list --commit <its full sha>`); the weekly meter before walk 6 (81% at 11:00Z; resets 2026-11-11
+14:00Z).
+**Briggsy's to close (nothing waits on them; the round builds with the pilot's choice):** the verb, "update" against the
+council dissent's one defined "check" — walk 5's risen readers all took "update" as "raise it", the refuter rates that the
+honest steer (rule 8), and the pilot recommends keeping "update"; and the labels' calm-or-clinical — clinical as plain
+words, which (bi)'s form cure answers.
+**LANDMINES (b9-7):**
+- **The council's verb flip is a conjunction that walk 5's round completes.** Shipping the Tier 0 retype note
+  (prescription (1)) satisfies its first half; walk 5 met the second. The council marked the verb Briggsy's: never flip
+  it on the condition alone.
+- **A seat's arithmetic can borrow the wrong quote.** The hunter priced Sam's working-year premium off the $1,100
+  reference-plan quote ($13,200 a year), but `stillWorking` answers `employerPlanCoversRetiredMember: true`
+  (`src/ui/devSeeds.ts:194`): the pay-side premium is entered nowhere. Check the seed before a refuter carries a figure
+  (one refuter got a correction mid-run).
+- **Walk 4's seat briefs lived only in b9-5's subagent transcripts** (now copied to `u11-walk4\panel\briefs\`). Walk 5
+  saved every brief and probe to `b9-build2-surplus\u11-walk5\panel\briefs\`; the two extractors are in `u11-walk5\tools\`
+  (`extract-prompts.mjs <subagentsDir> <outDir>`, `extract-all-user.mjs <transcript.jsonl>`).
+- **A heredoc piped into `python -` in Git Bash hung to the 120 s timeout** (a stray line in a write command). Write files
+  with the Write tool.
+**DISTILL CANDIDATES (b9-7, walk 5):**
+- **Labels made of plain words in running text are not structure.** The council ruled run-in labels as copy words (never
+  color or `::before`); rendered mid-line in body weight they vanished for every cold reader, and every one said the split
+  helped once told. A label works only where its form marks it: a line start and a weight (E2).
+- **A bare effect beside the reader's own choice reads as a bug.** "You chose to save all of it. This answer adds none of
+  it" lost every reader; the reason sat one screen away. Where a line reports the tool not acting on the household's
+  choice, the reason goes in the same sentence.
+- **"Or more … at most" invites the reader to run the dial the other way.** Beside the old figure's larger result, it led
+  two seats to a retype the tool would honor. State the floor in the same sentence, and close the path itself.
 **DISTILL CANDIDATES (b9-6):**
 - **Words that tell the reader which buttons to press belong beside the door, not in the line.** The line prints on a
   read-only tab too, where no door is drawn; a definition carried inside it would name buttons that tab cannot reach.
@@ -478,16 +497,6 @@ weekly meter before seating walk 5 (79% at 08:24Z; resets 2026-11-11 14:00Z).
   that withholds the Keep door, so "confirm or change" can never name a door the face does not draw. The mutant pass
   showed the reach: inverting it reddened the households with no "saved" answer too, because every stale W's door
   rides it.
-**LANDMINES (b9-5):**
-- **A refuter's "it's the household's own number (D7)" can hide the rosy path.** N3's refuter rated typing $84,000 by hand
-  as harmless; the council's red team showed that retype clears the line for good and credits the whole $16,985, filed Tier
-  0. Before rating a misread harmless, trace what the reader's literal act DOES in the code.
-- **A full UI council costs about three times the council memory's figure:** `wf_7fa86902-35c` ran 23 agents, 3.2M helper
-  tokens and 33 minutes (the memory says ~1.1M and 20–25 minutes, from the six-core days).
-- **`cd` inside a compound Bash command moved the session's primary working directory** (twice here, into the walk
-  bundle), and later relative commands ran there; use absolute paths, never a leading `cd` into a subfolder.
-- **Seats that write their reports to files never truncate** (walk 4: 16 seats, none lost, against walk 3's nine resends):
-  each brief names its output file, asks for a reply of 80 words or fewer, and the chair reads the files.
 **DISTILL CANDIDATES (b9-5, walk 4):**
 - **When every refuter's fix adds a sentence, the cure is structure, not words.** Three walks of one-fact sentences made
   the paragraph longer, not easier; the threads broke at connectives doing a label's job ("So…", "Until…"). Take the form
@@ -680,7 +689,27 @@ weekly meter before seating walk 5 (79% at 08:24Z; resets 2026-11-11 14:00Z).
 - **A plan's verification sentence can fix a design its Files list never states.** U3's "the ledger tests pass with only
   the allowlist edit" forced the ledger to RE-EXPORT the bottom line (its test imports it from the ledger), though the
   Files list said only "imports it". Read every verification clause for the shape it implies before choosing one.
-**LANDMINES (b9-4's and b9-3's of 11-09 first, then b9-5's and b9-4's of 11-08):**
+**LANDMINES (b9-6's and b9-5's of 11-09 first, then b9-4's and b9-3's of 11-09, then b9-5's and b9-4's of 11-08):**
+- **(b9-6, 11-09) `src/ui/__tests__/copyGuard.test.ts` is CRLF; most of `src` is LF.** A `sed -i` on it rewrote every
+  line to LF (3,626 lines in the diff); `node` restored it. Edit it with the Edit tool or an EOL-aware script, and run
+  `git diff --stat` before staging. Git Bash's `grep -c $'\r$'` also miscounts CRLF here: count with `node`.
+- **(b9-6, 11-09) `pnpm doc:reanchor <base> --apply` edits `src` comments too** (370 edits in walk 4's round,
+  `devSeeds.ts` and `stalenessExposure.ts` among them): run it once, last, after the sweep and the mutants, never while a
+  plant is live.
+- **(b9-6, 11-09) A bare citation that pointed at the wrong lines can pass `verify:doc-stats` until a shift lands it on a
+  blank one** (`act4-u17-s5-execution-plan.md:96`'s `:787`/`:789`, re-pointed to `IntakeApp.tsx`'s `onSave`/`onRetry`).
+  When the gate names one, read what it was meant to cite before moving the number.
+- **(b9-6, 11-09) The mutant runner, the suite, the sweep and `verify:fit` must run in sequence**, never side by side: a
+  live plant is imported by any of the others (`chain.ps1` in `u11-walk4\` runs the first three in order, pinned).
+- **(b9-5, 11-09) A refuter's "it's the household's own number (D7)" can hide the rosy path.** N3's refuter rated typing
+  $84,000 by hand as harmless; the council's red team showed that retype clears the line for good and credits the whole
+  $16,985, filed Tier 0. Before rating a misread harmless, trace what the reader's literal act DOES in the code.
+- **(b9-5, 11-09) A full UI council costs about three times the council memory's figure:** `wf_7fa86902-35c` ran 23
+  agents, 3.2M helper tokens and 33 minutes (the memory says ~1.1M and 20–25 minutes, from the six-core days).
+- **(b9-5, 11-09) `cd` inside a compound Bash command moved the session's primary working directory** (twice, into the
+  walk bundle), and later relative commands ran there; use absolute paths, never a leading `cd` into a subfolder.
+- **(b9-5, 11-09) Seats that write their reports to files never truncate** (walk 4: 16 seats, none lost; walk 5: 17, none
+  lost): each brief names its output file, asks for a reply of 80 words or fewer, and the chair reads the files.
 - **(b9-4, 11-09) A teammate's final report over roughly 2,000 characters arrives truncated** in its idle notification ("[result
   truncated — ask the agent for the rest via SendMessage]"): nine of walk 3's eleven seats needed a resend by message. Put a
   word cap and "send it in parts if longer" in every seat's brief, or have each seat write its report to a file (b9-5).

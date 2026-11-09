@@ -4,12 +4,15 @@
 // parallel and pipeline swallowed (a script bug hidden as a dead helper).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { runWorkflow } from "./workflow-stub.mjs";
 import { SCHEMAS } from "./caps.mjs";
 import { CE_FILES } from "./resolve-ce.mjs";
+import { INLINABLE, topNames } from "./make-scripts.mjs";
+import { tmpRoot } from "../bench/testkit.mjs";
 
 const lib = dirname(fileURLToPath(import.meta.url));
 const skill = dirname(lib);
@@ -49,6 +52,61 @@ function agentCalls(text) {
   }
   return out;
 }
+
+// The text a generated script inlined from lib/<name>.mjs, between the generator's marker lines.
+function inlinedRegion(text, name) {
+  const open = text.indexOf(`inlined from lib/${name}.mjs (`);
+  if (open < 0) return null;
+  const start = text.indexOf("\n", open) + 1;
+  const close = text.indexOf(`// ---------------------------------------------------------------- end of lib/${name}.mjs`, start);
+  assert.ok(close > start, `the inlined lib/${name}.mjs has no end marker`);
+  return text.slice(start, close);
+}
+
+test("each module's own tests pass against every script's inlined copy of it, and a broken copy proves the redirect took", (t) => {
+  const dir = tmpRoot(t);
+  const register = pathToFileURL(join(lib, "fixtures", "redirect-register.mjs")).href;
+  // A child of the test runner carries NODE_TEST_CONTEXT, which sends a nested run's report up the
+  // parent's channel instead of printing it; the nested run here reports on its own.
+  const runTests = (name, map) => {
+    const env = { ...process.env, ULTRAMODE_REDIRECT: JSON.stringify(map) };
+    delete env.NODE_TEST_CONTEXT;
+    return spawnSync(process.execPath, ["--import", register, "--test", "--test-reporter=spec", join(lib, `${name}.test.mjs`)], { encoding: "utf8", env });
+  };
+  let ran = 0;
+  for (const name of SCRIPTS) {
+    const text = script(name);
+    // Each inlined module written as an importable copy: its region, with every top-level name
+    // exported again (the generator dropped each `export `).
+    const copies = {};
+    for (const m of INLINABLE) {
+      const region = inlinedRegion(text, m);
+      if (region === null) continue;
+      const at = join(dir, `${name}-${m}.mjs`);
+      writeFileSync(at, `${region}\nexport { ${topNames(region).join(", ")} };\n`);
+      copies[pathToFileURL(join(lib, `${m}.mjs`)).href] = { m, url: pathToFileURL(at).href };
+    }
+    const map = Object.fromEntries(Object.entries(copies).map(([real, c]) => [real, c.url]));
+    for (const [real, c] of Object.entries(copies)) {
+      const r = runTests(c.m, map);
+      assert.equal(r.status, 0, `${name}'s inlined ${c.m}: its tests fail\n${r.stdout.slice(-2000)}${r.stderr.slice(-1000)}`);
+      // The spec reporter's summary line opens with an information sign (written as its code, since
+      // lib/ stays ASCII).
+      assert.match(r.stdout, new RegExp(`^${String.fromCharCode(0x2139)} pass [1-9]`, "m"), `${name}'s inlined ${c.m}: no test ran`);
+      // The presence check: the same run against a copy that throws on load fails, naming it, so a
+      // redirect that never took cannot pass as a clean run of the real module.
+      // It keeps the copy's exports, so the import links and the throw runs.
+      const probe = join(dir, `${name}-${c.m}-probe.mjs`);
+      writeFileSync(probe, `throw new Error("REDIRECT-PROBE ${name} ${c.m}");\n${readFileSync(fileURLToPath(c.url), "utf8")}`);
+      const p = runTests(c.m, { ...map, [real]: pathToFileURL(probe).href });
+      assert.notEqual(p.status, 0, `${name}'s inlined ${c.m}: the broken copy passed, so the redirect never took`);
+      assert.match(p.stdout + p.stderr, new RegExp(`REDIRECT-PROBE ${name} ${c.m}`));
+      ran++;
+    }
+  }
+  // research inlines caps, prompts and reads; the deepen those and vote-law and select.
+  assert.ok(ran >= 8, `only ${ran} inlined copies were tested`);
+});
 
 test("every agent() call in every script's source names model 'opus' and effort 'xhigh' (R3, KTD13), and the inlined modules call none", () => {
   assert.ok(SCRIPTS.includes("research"), "no research source was found, so this check saw nothing");

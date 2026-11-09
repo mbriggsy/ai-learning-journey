@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-09, b9-4 walked walk 3 on b9-3's round (the card HARD-FLAG, top of `docs/caddie/cold-read-log.md`) and committed its own fix round (as)–(aw)(b) — `98b5ad17`; next is walk 4 on those words (item 1, Phase C, its targets and five questions), then U12 carrying U11's figures and the filings (ag)–(ay), then the whole-file review, with an adversary and every finding verified, and `/distill` — item 1, Phase C; rewritten by b9-3 — walk 2 and its round (am)–(ao), `f028f33f`; rewritten by b9-2 — the walk's fix (ae), `c6b15120`; rewritten by b9-5 — walked U11's Caddie record, `c10339b0`, the card HARD-FLAG; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
+▶ **START HERE (2026-11-09, b9-5 walked walk 4 on b9-4's round (the card HARD-FLAG, top of `docs/caddie/cold-read-log.md`) and took its form question to council `wf_7fa86902-35c` (7/10, execute: one string with run-in labels, a per-arm lead, "update your figure" on the risen arms; the retype hole filed Tier 0); next is THAT FIX ROUND, test-first, from the prescription in item 1, Phase C, then walk 5 on it, then U12 carrying U11's figures and the filings (ag)–(ay) and walk 4's, then the whole-file review, with an adversary and every finding verified, and `/distill` — item 1, Phase C; rewritten by b9-4 — walk 3 and its round (as)–(aw)(b), `98b5ad17`; rewritten by b9-3 — walk 2 and its round (am)–(ao), `f028f33f`; rewritten by b9-2 — the walk's fix (ae), `c6b15120`; rewritten by b9-5 — walked U11's Caddie record, `c10339b0`, the card HARD-FLAG; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -202,20 +202,91 @@ queue below (its order unmoved). Next, in order:
      you chose to save all of it.", closing (aq) and (al)'s rise-arm comprehension half); (au) "Until you confirm or change
      your $84,000 figure" and the door "Confirm or change your figure" (`held` rides every arm of
      `WorkingYearCostStaleSentence`); (av) "…depending on what a working year really costs you"; (aw)(b) "your first
-     working year, 2026,". The build spec's R12 carries the amendment. ▶ NEXT: **walk 4** on those words, the seven targets
-     plus the fallen-spending pair (its clause changed too):
-     `CADDIE_TARGETS="intake:kept,seed:datesavedrisen,vault:datesavedrisen,seed:datesavedrisenshort,vault:datesavedrisenshort,seed:datesavedrisenlater,vault:datesavedrisenlater,seed:datesavedstale,vault:datesavedstale"`
-     (the harness's witnesses already carry the new words). `intake:kept` IS re-read this time: its two Result states carry
-     the kept risen line with the new clause. What walk 4 must judge: (1) the dated figure ends both "left over beside
-     short" (B) and the subtraction (C: $16,985 at $84,000 against $5,985 at $105,000); (2) "taken from your savings, plus
-     any income tax on taking it out" ends "tread water" without reading as alarm; (3) "in each working year that doesn’t
-     come up short" lets the later couple count the gain years against the short ones, or say honestly they can't net it;
-     (4) "Confirm or change" reads as the act (no "we looked, it's checked"); (5) density: the line is now 7–8 sentences of
-     one fact each (C's landing 9 with the lead) — easier or only longer (form, never a cut: rules 5 and 24). The same panel
-     shape as walk 3: a cold first look on each risen gate plus `vault:datesavedstale`'s, an unprimed spouse probed after
-     the first answers lock, a copy-law finder, a hunter, then a refuter per new finding; tell each seat to keep its report
-     under 600 words or send it in parts (walk 3 lost nine reports to truncation). Wording is the pilot's under the
-     batched-oracle law; Frame B (no threshold, no "worse") binds, and a framing fork goes back to a council.
+     working year, 2026,". The build spec's R12 carries the amendment. **Walk 4 DONE (b9-5, 2026-11-09):** the card is at
+     the top of `docs/caddie/cold-read-log.md` (HARD-FLAG, held as walk 3 left it; tape row open), bundle
+     `temp/caddie/caddie-u11-b9-5-walk4` (18/18 in 4.1 m pinned; 7 fresh Opus xhigh seats — a cold first look on each of the
+     four gates, an unprimed spouse on the four couples probed after it locked, a copy-law finder, a hunter — then 9
+     refuters; every seat wrote its report to a file, so nothing truncated; the record is `b9-build2-surplus\u11-walk4\panel\`).
+     Its five questions: (1) the dated figure MET on A and B, NOT on C — four seats could not reconcile a $21,000 rise with
+     $16,985 → $5,985, since Sam's alimony, begun since the answer, appears nowhere ((al)'s rise arm, raised to high); (2)
+     "taken from your savings…" MET, "informed and a little alarmed", no "tread water"; (3) MET on its own terms (three gain
+     years inferred against four short, "can't tell"); (4) PARTLY — no "we looked", but "confirm … your $84,000 figure"
+     sent two readers hunting a door A, B and C don't have; (5) NOT MET — every seat: each sentence easy, the whole only
+     longer, threads lost at the connectives. The form question went to council `wf_7fa86902-35c` (full, 23 agents, no
+     abstentions, 7/10, execute; the top row of `docs/council-log.md`), which ruled the shape, the lead and the act's name,
+     held the Hawk's veto on (ax) (no direction on A or S; appended to the Tier 0 gate entry's prescription (1)), and whose
+     red team found the retype hole, FILED Tier 0 by b9-5 (*A figure typed below today's spending clears W's stale line for
+     good…*). ▶ NEXT: **the fix round from `wf_7fa86902-35c`**, test-first (predictions in
+     `b9-build2-surplus\u11-walk4\PREDICTIONS.md` before any run; mutants with every kill set predicted; R10 per key,
+     `idcheck.mjs <label> walk3`; `verify:fit`'s touched arms), then walk 5 on it. The prescription (words drafted by b9-5
+     under the batched-oracle law; refine where a test or a reader shows better, never against the ruling):
+     1. **The act, one helper.** `workingYearCostAct(d): 'update' | 'confirmOrChange'` in `src/intake/workingYearQuote.ts`,
+        `heldYesBelowQuote(d) ? 'update' : 'confirmOrChange'` (a yes or kept figure below the quote: "update"; the fallen
+        spending, a state-only move, a typed figure: "confirm or change", their Keep door real). Its words an exhaustive
+        Record in `src/ui/copy.ts`: the phrase ("update your figure" / "confirm or change your figure"), the gerund
+        ("Updating your figure" / "Confirming or changing your figure"), the Result's door ("Update your figure for a working
+        year" / today's `stalenessPayCheckCta`), the gate's door ("Either button on this page leads to where you can update
+        your figure." / "…confirm or change your figure."). `stalenessPayCheckGateDoor` becomes the act's; the left-over
+        moved line keeps its own words under a new key ((r) owns them). The Result's door rides `FuckOffDate`'s
+        `STANDING_NOTE_COPY` by cause: split `'w-stale'` by the act, `Result.tsx` picking it with the helper, never a free
+        string prop. The definition, once per surface, before the door: "To update it, choose “Yes, that’s about right” to
+        use $90,000 a year, or “No — I’ll enter a different figure” for one that adds health premiums until Medicare and any
+        tax on pay to your spending." (`copy.workingCostYes` and `copy.workingCostDifferent` interpolated); the fallen arm
+        names its three exits ("To confirm or change it, choose “Keep $84,000 a year”, “Yes, that’s about right” to use
+        $78,000 a year, or “No — I’ll enter a different figure”.", the Keep label from `workingYearCostKeepLabel`). A
+        retired-wordings sweep in `copyGuard.test.ts`: red on "confirm or change your" and "checking your figure" (either case) in any
+        `heldYesBelowQuote` witness's line, and on "So checking", "instead of none", "takes none of those shortfalls" and
+        "doesn't move this answer" anywhere in `copy.ts`.
+     2. **The shape, one string, the note first.** `workingYearCostStaleLine` still returns ONE string; the labels are plain
+        run-in words from `copy.ts` keys the composer puts in (`workingCostStaleLabelNow`: "This answer now:";
+        `workingCostStaleLabelIf(quote)`: "If a working year costs $90,000:"), never a regex split, `::before` or color
+        (whether they need weight is the council's yours-to-close; walk 5 judges it). W's quote sentences lose the em-dash
+        on all four surfaces ("You said yes to $84,000 a year. Your spending figures have changed since then, and now come to
+        $90,000 a year."; `workingCostStaleQuote`, `workingCostStaleKeptQuote`). Then, per arm, an exhaustive Record, the
+        order pinned per arm in `workingYearLeftOver.test.ts`:
+        - **A (`capped` / `whole`, no later short run):** the note with the Hawk's counterweight · "Updating your figure can
+          move this answer either way, depending on what a working year really costs you." · "This answer now: When you
+          answered, $16,985 a year was left over from your pay, and you chose to save all of it. This answer adds none of it
+          to your savings." · "If a working year costs $90,000: Your first working year, 2026, has $10,985 left over.
+          Updating your figure to $90,000 or more adds at most $10,985 a year to your savings." (whole: "at most that
+          $16,985 a year") · the definition · the door.
+        - **C (with `laterShort`):** as A, the at-most sentence keeping ", in each working year that doesn’t come up short",
+          then the gain years read off the ledger rows ("Those are 2026 through 2028, and any working year from 2033 on." —
+          after the run only where the ledger shows no later short year; a second run → the mechanism phrase alone; never
+          "2026 through 2028" alone, false for 2033 on), then "If you’re still working from 2029 through 2032, each of those
+          years comes up $3,652 to $4,015 short. Each year’s shortfall would be taken from your savings, plus any income tax
+          on taking it out. Your $84,000 figure makes those years look cheaper, so this answer can look better than it
+          really is." (C keeps its close.)
+        - **B (`firstShort`, run or one year; `firstNone`):** the note · "Until you update your $84,000 figure, this answer
+          can look better than it really is." (the lead, true by mechanism) · "This answer now: …$16,985… This answer adds
+          none of it to your savings." · "If a working year costs $105,000: Each working year from 2026 through 2032 comes up
+          $3,652 to $4,015 short. Each year’s shortfall would be taken from your savings, plus any income tax on taking it
+          out. Your $84,000 figure makes those years look cheaper. Updating your figure to $105,000 or more still adds none
+          of it to your savings." (one year: "That shortfall would be…", "makes that year look cheaper"; `firstNone`: "Your
+          first working year, 2026, has nothing left over.") · the definition · the door.
+        - **The fallen spending (`datesavedstale`, not rose):** the note · "Confirming or changing your figure can move this
+          answer either way, depending on what a working year really costs you." · "This answer now: Once you’ve both
+          stopped working, it already uses about $78,000 a year." (`draft.annualSpendingReal`, door 1's
+          `budgetAnchorLead` figure, never W's quote re-typed) · "When you answered, …$16,985… This answer adds none of it
+          to your savings." · its definition · the door. No at-quote pair and no "doesn't move this answer" (both struck).
+        - Struck everywhere: "So", "instead of none", "takes none of those shortfalls". THE GUARDS stay (no "worse";
+          "better" only in a short-year sentence), widened to admit B's lead by identity AND position.
+     3. **Tests and witnesses, test-first:** `workingYearLeftOver.test.ts` (typed by hand, every arm, the order pins),
+        `devSeeds.test.ts`, `resultPayCheckLine.test.tsx`, `reentry.test.tsx`, `IntakeApp.test.tsx`, `copyGuard.test.ts`,
+        `e2e/caddie-walk.spec.ts`'s `risenWitness` and `LEFT_OVER_WITNESSES` (and the door it clicks by name,
+        `copy.stalenessPayCheckCta`), `e2e/vertical-fit.spec.ts`'s gate and standing-line arms (the line grows about two
+        sentences: re-measure the fit law at REAL and the phone).
+     4. **Then walk 5** on the round, the nine targets and the same panel shape (reports to files), judging the labels as
+        structure (density), "update" (the council's flip condition: read as "your figure was wrong, raise it", or as
+        overriding their own number), the definition, C's gain years, the fallen arm's premise.
+     **Filed by walk 4 for U12** (the rest of its findings are the fix round's): (bg) "plus any income tax on taking it
+     out" reads as maybe none (low; "plus income tax on what comes out of pre-tax accounts", still true under a Roth-first
+     order); (al)'s rise arm RAISED to high (the dated figure does not explain a change the page never names: name the
+     income begun since the answer, or today's left over at the held figure, $26,985 on `datesavedrisenlater`); (r) gains
+     the N9 refuter's candidate "Balances still about right" and the count (all four cold looks split between the gate's
+     buttons). Re-found, no change: (ax) (now the Tier 0 gate entry's), (q), (aw)(a), (l), the Tier 0 PA scope entry ((ak);
+     `intake:kept`'s "already counted" beside "should hold"), the register's *On a stale W the W row hides its money
+     picture*.
      As built, two refinements of the ruling, each in the code's docblocks and the council-log row: a "saved" answer that
      is NOT asked keeps the spending-alone lean (true there by mechanism; insight 103's silencing check), and
      `laterShort` rides `capped`/`whole` as a field, with year 0 at exactly $0 its own member (`firstNone`).
@@ -333,26 +404,32 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-09 (b9-4: U11's walk 3 and its fix round, `98b5ad17`, pushed; b9-3's block pruned into it):** state at close:
-typecheck 0, lint 0, build 0, `verify:bundle` 297.0 KiB of the 300 KiB budget (296.6 at `f028f33f`), the suite pinned 0 (its
-count lives under `verify:doc-stats`, which is OK), R10 `walk3` 42/42 against `walk2` (the file byte-equal), mutants 9 of 9;
-`verify:fit` 25/25 on the touched arms (`--grep "unlock line|risen family|standing line and panel row|left-over seat|period
-tap right after typing|Keep door tapped right after typing"`), the rest NOT run locally (CI runs it); the edited e2e specs
-typecheck under a scratch tsconfig that adds `e2e/` (bar the eight pre-existing errors below). CI on `f028f33f` and
-`1e908561` green (runs `42567694598`, `42568072516`, both jobs). The session stopped at 47% of the window: walk 4 is a panel
-fan-out that would not finish before the 60% wrap line, and the committed round was the clean milestone. **Check at
-start:** CI on `98b5ad17` (run `42578697153`: `gh run view 42578697153 --json status,conclusion,jobs`) and on this close's
-TODO commit (`gh run list --commit <its full sha>`).
-**LANDMINES (b9-4):**
-- **A teammate's final report over roughly 2,000 characters arrives truncated** in its idle notification ("[result
-  truncated — ask the agent for the rest via SendMessage]"): nine of walk 3's eleven seats needed a resend by message. Put a
-  word cap and "send it in parts if longer" in every seat's brief.
-- **`WorkingYearCostStaleSentence` carries `held` on its unrisen arm too** (`src/intake/workingYearQuote.ts`): any `toEqual`
-  on a `rose: false` value needs it.
-- **A pinned suite piped through `Select-Object -Last 15` hides the failing test's name** (the summary says "1 failed"
-  only); pipe it through `Select-String -Pattern "FAIL|×|Test Files|Tests "` instead.
-- **Two refuters' fixes can contradict each other:** R4 offered "settling on $105,000" for "checking your figure at" while
-  R3 had just ruled "settle on" a bargaining word. Cross-read every refuter's fix before adopting any one.
+**SESSION 2026-11-09 (b9-5: U11's walk 4, its council `wf_7fa86902-35c`, the retype hole filed; docs only; b9-4's block
+pruned into it):** state at close: no `src` change this session, so the tree's gates stand as `98b5ad17` left them;
+typecheck 0 (run at close); `verify:doc-stats` 0 (its open count 210 after the one new Tier 0 entry); CI on `98b5ad17` and
+`1914bea4` green (runs `42578697153`, `42579048990`, both jobs each). The session stopped at 41% of the window, past the
+warn line: the fix round is new composer logic (an act helper, a cause split on the Result, the gain years off the ledger,
+the fallen arm's door-1 figure) across about ten test files, the two e2e harnesses, a sweep and mutants, which would not
+finish cleanly before the 60% wrap line; the walk, the council and the filing were the clean milestone. **Check at
+start:** CI on this close's commit (`gh run list --commit <its full sha>`), docs only. Weekly meter at 79% at 08:24Z
+(resets 2026-11-11 14:00Z): the council alone cost 3.2M helper tokens, about 2 points, so price walk 5 before seating it.
+**LANDMINES (b9-5):**
+- **A refuter's "it's the household's own number (D7)" can hide the rosy path.** N3's refuter rated typing $84,000 by hand
+  as harmless; the council's red team showed that retype clears the line for good and credits the whole $16,985, filed Tier
+  0. Before rating a misread harmless, trace what the reader's literal act DOES in the code.
+- **A full UI council costs about three times the council memory's figure:** `wf_7fa86902-35c` ran 23 agents, 3.2M helper
+  tokens and 33 minutes (the memory says ~1.1M and 20–25 minutes, from the six-core days).
+- **`cd` inside a compound Bash command moved the session's primary working directory** (twice here, into the walk
+  bundle), and later relative commands ran there; use absolute paths, never a leading `cd` into a subfolder.
+- **Seats that write their reports to files never truncate** (walk 4: 16 seats, none lost, against walk 3's nine resends):
+  each brief names its output file, asks for a reply of 80 words or fewer, and the chair reads the files.
+**DISTILL CANDIDATES (b9-5, walk 4):**
+- **When every refuter's fix adds a sentence, the cure is structure, not words.** Three walks of one-fact sentences made
+  the paragraph longer, not easier; the threads broke at connectives doing a label's job ("So…", "Until…"). Take the form
+  question to a council once a walk's fixes all add length.
+- **Name an act by the exits the next screen really offers.** "Confirm or change" cured "checking = looking" but named a
+  Keep door three households lack, and pointed at a retype that clears the warning. A verb that names a door is a promise
+  about the next screen: read that screen's branches for every household the line serves.
 **DISTILL CANDIDATES (b9-4, walk 3):**
 - **A consequence stated as a zero hides a draw.** "Adds none of the $16,985" was the short run's only stated effect and
   read as "we'd just tread water", while each short year draws from savings. Wherever a line names a short year, say where
@@ -538,7 +615,17 @@ TODO commit (`gh run list --commit <its full sha>`).
 - **A plan's verification sentence can fix a design its Files list never states.** U3's "the ledger tests pass with only
   the allowlist edit" forced the ledger to RE-EXPORT the bottom line (its test imports it from the ledger), though the
   Files list said only "imports it". Read every verification clause for the shape it implies before choosing one.
-**LANDMINES (b9-3's of 11-09 first, then b9-5's and b9-4's of 11-08):**
+**LANDMINES (b9-4's and b9-3's of 11-09 first, then b9-5's and b9-4's of 11-08):**
+- **(b9-4, 11-09) A teammate's final report over roughly 2,000 characters arrives truncated** in its idle notification ("[result
+  truncated — ask the agent for the rest via SendMessage]"): nine of walk 3's eleven seats needed a resend by message. Put a
+  word cap and "send it in parts if longer" in every seat's brief, or have each seat write its report to a file (b9-5).
+- **(b9-4, 11-09) `WorkingYearCostStaleSentence` carries `held` on its unrisen arm too** (`src/intake/workingYearQuote.ts`): any `toEqual`
+  on a `rose: false` value needs it.
+- **(b9-4, 11-09) A pinned suite piped through `Select-Object -Last 15` hides the failing test's name** (the summary says "1 failed"
+  only); pipe it through `Select-String -Pattern "FAIL|×|Test Files|Tests "` instead.
+- **(b9-4, 11-09) Two refuters' fixes can contradict each other:** R4 offered "settling on $105,000" for "checking your figure at" while
+  R3 had just ruled "settle on" a bargaining word; walk 4's N3 offered "Check your figure" as the button where walk 3 had
+  burned "check" as "look". Cross-read every refuter's fix, and the ruling it lands under, before adopting any one.
 - **(b9-3, 11-09) The Caddie walk's re-run watch can never fire on an edit whose run leaves the verdict word for word.**
   Branch C (a move to Pennsylvania alone) re-runs the answer, but the run commits the same words at tier "final", so
   `armRerunWatch` saw nothing in 150 s at both viewports, and `start /b /wait` still reported exit 0 (read the "passed /

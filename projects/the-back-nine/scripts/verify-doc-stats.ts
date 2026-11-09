@@ -34,6 +34,12 @@
  *      (`## Problem`, `## Root Cause`, `## Fix`, `## Key Insight`). Arm 3 only proves the
  *      index knows a file EXISTS; that says nothing about whether `/brief` can read a root
  *      cause out of it, and eleven files had to be normalized by hand before this landed.
+ *
+ * Arm 6 landed with the 2026-11-09 TODO cleanup: TODO.MD STAYS A QUEUE a session can read at every
+ * start — one START HERE with no chain of earlier sessions, one close block, one LANDMINES block, no
+ * per-session DISTILL CANDIDATES block (one `## Distill candidates` list instead), and a capped start-of-file
+ * section. The file had grown to 321K characters (324K bytes) at its peak, `b6d6032d`, by habits no rule gated (the
+ * arm's own comment).
  */
 import { execFileSync } from 'node:child_process'
 import { readFileSync, existsSync, readdirSync } from 'node:fs'
@@ -438,6 +444,146 @@ function liveCounts(): SuiteCounts {
   return counts
 }
 
+// ---------------------------------------------------------------------------
+// Arm 6 — TODO.md stays a queue a session can read at every start.
+//
+// Why (measured 2026-11-09 over b9-2..b9-8's transcripts): the file had grown from 143K characters on
+// 2026-10-01 (`d609d271`) to 321K at its peak (`b6d6032d`, 324K bytes), and each session paid 17–29K tokens
+// reading slices of its top ~500 lines before its first edit. The rules already said "no session history" (this file's own header) and "keep only
+// the newest close block" (squeaky's TODO step), and were beaten anyway by three habits nothing gated:
+//   • START HERE was added to, never rewritten: it carried ten "rewritten by b9-N — …" links back
+//     through earlier sessions;
+//   • each close opened its own DISTILL CANDIDATES block (21 had piled up) and its own LANDMINES block,
+//     which the prune then moved into standing piles that never shrank (landmines reached ~40% of the
+//     file, and no session read them at start);
+//   • finished phases stayed in the live item, crossed out.
+// The cleanup moved the landmines to docs/landmines.md (by area) and the candidates to ONE
+// `## Distill candidates` list; this arm keeps it that way. Each message names the habit and its fix.
+// ---------------------------------------------------------------------------
+
+export const TODO_SURFACE = 'TODO.md'
+
+/** START HERE names the next move and the steps owed after it, measured as its whole paragraph: the ▶ line
+ *  and the lines wrapped after it. b9-8's own part (before its chain of earlier sessions) ran 230 characters
+ *  at `b6d6032d`; after the 2026-11-09 cleanup and its review's fix round the paragraph runs 1,221 over three
+ *  lines (its ▶ line 1,031). The cap leaves room for a sizable job's owed list. */
+export const START_HERE_MAX = 1500
+
+/** Everything above the first `## ` heading outside a fence is what a session reads at start: the header,
+ *  START HERE, the live item's prescription, the close block and the ranked queue. 46,637 characters after
+ *  the 2026-11-09 cleanup and its review's fix round (118,471 at `ec3514a7`, just before it); the cap leaves
+ *  room for a larger prescription. The arm requires START HERE, the close block and its LANDMINES above that
+ *  heading; text after them (the ranked D7 queue and the standing pointers) stays capped only while no `## `
+ *  heading is put above it. */
+export const TODO_HEAD_MAX = 60_000
+
+export const DISTILL_HEADING = '## Distill candidates'
+
+const START_HERE_LINE = /^▶ \*\*START HERE\b/
+// The block labels in any letter case: the closes have written "**Landmines the 2026-09-05 session added:**".
+const SESSION_BLOCK = /^\*\*session \d{4}-\d{2}-\d{2}\b/i
+const DISTILL_BLOCK = /^\*\*distill candidates\b/i
+const LANDMINES_BLOCK = /^\*\*landmines\b/i
+/** What ends START HERE's paragraph: a blank line, a list item or a heading. Any other line is a wrapped line of it. */
+const PARAGRAPH_END = /^\s*$|^\s*(?:\d+[.)]|[-*+]) |^#{1,6}\s/
+const FENCE = /^\s*(?:`{3,}|~{3,})/
+
+/** The index of the first `## ` heading outside a fenced block, or -1. A `## ` line inside a fence (a shell
+ *  comment, a markdown sample) is not a heading. A fence closes only on its own marker (``` or ~~~). */
+function firstH2Index(lines: readonly string[]): number {
+  let fence: string | null = null
+  for (const [i, line] of lines.entries()) {
+    if (FENCE.test(line)) {
+      const marker = line.trimStart().charAt(0)
+      if (fence === null) fence = marker
+      else if (marker === fence) fence = null
+      continue
+    }
+    if (fence === null && /^## /.test(line)) return i
+  }
+  return -1
+}
+
+/** Every way the TODO has drifted from a queue (an empty result ⇒ the shape holds). */
+export function checkTodoShape(content: string): string[] {
+  const body = content.replace(/\r\n/g, '\n')
+  const lines = body.split('\n')
+  const problems: string[] = []
+  const count = (re: RegExp): number => lines.filter((l) => re.test(l)).length
+
+  const starts = [...lines.entries()].filter(([, l]) => START_HERE_LINE.test(l))
+  if (starts.length !== 1) problems.push(`expected exactly one "▶ **START HERE" line, found ${starts.length}`)
+  for (const [i, first] of starts) {
+    // START HERE is a paragraph, hard-wrapped like the rest of the file: read the ▶ line and every wrapped line
+    // after it, joined, or a chain or an over-cap START HERE on its continuation lines passes unread.
+    const para = [first]
+    for (const next of lines.slice(i + 1)) {
+      if (PARAGRAPH_END.test(next)) break
+      para.push(next)
+    }
+    const s = para.join(' ')
+    if (/\brewritten (?:before )?by\b/i.test(s)) {
+      problems.push('START HERE chains earlier sessions ("rewritten by …"); git log holds that history, so rewrite the paragraph whole')
+    }
+    if (s.length > START_HERE_MAX) {
+      problems.push(
+        `START HERE runs ${s.length} characters over ${para.length} line(s) (cap ${START_HERE_MAX}): the next move and the steps owed after it, nothing else`,
+      )
+    }
+  }
+
+  const sessions = count(SESSION_BLOCK)
+  if (sessions > 1) problems.push(`${sessions} SESSION close blocks (at most one): keep only the newest; git log holds the rest`)
+  const landmines = count(LANDMINES_BLOCK)
+  if (landmines > 1) {
+    problems.push(
+      `${landmines} LANDMINES blocks (at most one): the newest close names only what bites the next step; file the rest in docs/landmines.md by area`,
+    )
+  }
+  const distill = count(DISTILL_BLOCK)
+  if (distill > 0) {
+    problems.push(`${distill} DISTILL CANDIDATES block(s): add each lesson to the one "${DISTILL_HEADING}" section instead`)
+  }
+  const queues = lines.filter((l) => l.trim() === DISTILL_HEADING).length
+  if (queues !== 1) problems.push(`expected exactly one "${DISTILL_HEADING}" section, found ${queues}`)
+  // The standing pile the cleanup moved out ("## Operational landmines — these bite hands", 509 lines) sat BELOW
+  // the first "## ", where neither the cap nor the block count sees it: a heading naming landmines is the pile.
+  const landmineSection = lines.find((l) => /^#{2,6} .*landmine/i.test(l))
+  if (landmineSection !== undefined) {
+    problems.push(
+      `a landmines section in the TODO ("${landmineSection.trim()}"): standing landmines live in docs/landmines.md by area; only the close's LANDMINES block names what bites the next step`,
+    )
+  }
+
+  const firstH2 = firstH2Index(lines)
+  // The cap measures only what sits above the first "## ", so START HERE, the close block and its LANDMINES must
+  // sit there too: one heading above them (for navigation, or the 2026-08 to 2026-10 layout's "## Dated" above the
+  // queue) would let them grow unmeasured while this arm printed OK.
+  if (firstH2 !== -1) {
+    const anchors: [string, RegExp][] = [
+      ['START HERE', START_HERE_LINE],
+      ['the SESSION close block', SESSION_BLOCK],
+      ['the LANDMINES block', LANDMINES_BLOCK],
+    ]
+    const below = anchors.filter(([, re]) => lines.some((l, i) => i > firstH2 && re.test(l))).map(([name]) => name)
+    if (below.length > 0) {
+      const names = below.length === 1 ? below[0] : `${below.slice(0, -1).join(', ')} and ${below[below.length - 1]}`
+      problems.push(
+        `a "## " heading above ${names} ends the start-of-file section before ${below.length === 1 ? 'it' : 'them'}, so the cap never measures ${below.length === 1 ? 'it' : 'them'}: keep START HERE, the close block and its LANDMINES above the first "## " heading`,
+      )
+    }
+  }
+  // Each line before the heading plus its "\n": the same span as the text before the heading's first character.
+  const headEnd = firstH2 === -1 ? body.length : lines.slice(0, firstH2).reduce((n, l) => n + l.length + 1, 0)
+  const head = body.slice(0, headEnd)
+  if (head.length > TODO_HEAD_MAX) {
+    problems.push(
+      `the start-of-file section (above the first "## " heading) runs ${head.length} characters (cap ${TODO_HEAD_MAX}): move finished phases, records and landmines out; never cut a live prescription to fit`,
+    )
+  }
+  return problems
+}
+
 function main(): number {
   let actual: SuiteCounts
   try {
@@ -527,12 +673,22 @@ function main(): number {
     for (const g of sectionGaps) console.error(`  STALE  ${INSIGHTS_DIR}/${g.file} — missing ${g.missing.join(', ')}`)
   }
 
+  // Arm 6 — TODO.md stays a queue a session can read at every start.
+  const todoPath = join(cwd, TODO_SURFACE)
+  const todoProblems = existsSync(todoPath) ? checkTodoShape(readFileSync(todoPath, 'utf-8')) : [`${TODO_SURFACE} is missing`]
+  if (todoProblems.length === 0) {
+    console.log(`  OK     ${TODO_SURFACE} — one START HERE with no chain, one close block, one distill list, the start-of-file section under its cap`)
+  } else {
+    failed = true
+    for (const p of todoProblems) console.error(`  SHAPE  ${TODO_SURFACE} — ${p}`)
+  }
+
   if (failed) {
-    console.error('[verify:doc-stats] FAILED — see the STALE / STRAY lines above.')
+    console.error('[verify:doc-stats] FAILED — see the STALE / STRAY / SHAPE lines above.')
     return 1
   }
   console.log(
-    `[verify:doc-stats] OK — every tracked surface matches the live suite (${actual.cases} tests / ${actual.files} files); the register header, its single home, the insights index, every line-numbered citation and every insight's four required sections hold.`,
+    `[verify:doc-stats] OK — every tracked surface matches the live suite (${actual.cases} tests / ${actual.files} files); the register header, its single home, the insights index, every line-numbered citation, every insight's four required sections and the TODO's shape hold.`,
   )
   return 0
 }

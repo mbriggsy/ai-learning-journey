@@ -22,6 +22,11 @@ import {
   citationSurfaces,
   buildSourceResolver,
   CITATION_LOG_SURFACES,
+  checkTodoShape,
+  TODO_SURFACE,
+  START_HERE_MAX,
+  TODO_HEAD_MAX,
+  DISTILL_HEADING,
 } from '../verify-doc-stats'
 
 describe('doc test-count drift sentinel', () => {
@@ -367,5 +372,156 @@ describe('the register + insights arms (2026-09-06 — the numbers the doc audit
       expect(r('staleness.ts', 1, 1)).not.toBeNull()
       expect(r('no-such-file-anywhere.ts', 1, 1)).toBeNull()
     })
+  })
+})
+
+describe('checkTodoShape — TODO.md stays a queue a session can read at every start (arm 6, 2026-11-09)', () => {
+  const ok = (over: Partial<Record<'start' | 'session' | 'landmines' | 'queue' | 'head', string>> = {}): string =>
+    [
+      '# The Back Nine — TODO',
+      '',
+      over.start ?? '▶ **START HERE (2026-11-10, b9-2):** walk 6, then U12 — item 1, Phase C, "▶ NEXT".',
+      '',
+      over.head ?? '1. **Build 2.** The live prescription.',
+      '',
+      over.session ?? '**SESSION 2026-11-09 (b9-1: the round committed):**',
+      '',
+      over.landmines ?? '**LANDMINES (b9-1):**',
+      '- one that bites walk 6',
+      '',
+      '## Standing cadences',
+      '',
+      over.queue ?? DISTILL_HEADING,
+      '',
+      '- a lesson',
+      '',
+    ].join('\n')
+
+  it('passes the shape the 2026-11-09 cleanup left', () => {
+    expect(checkTodoShape(ok())).toEqual([])
+  })
+
+  it('reads CRLF the same as LF', () => {
+    expect(checkTodoShape(ok().replace(/\n/g, '\r\n'))).toEqual([])
+    // At a length boundary the line ending matters: a CRLF START HERE of exactly the cap must not read one over it.
+    const atCap = '▶ **START HERE:** '.padEnd(START_HERE_MAX, '—')
+    expect(checkTodoShape(ok({ start: atCap }).replace(/\n/g, '\r\n'))).toEqual([])
+  })
+
+  it('flags a START HERE that chains earlier sessions — the habit that grew b9-8\'s to ten links', () => {
+    // b9-8's real shape: its own move, then "; rewritten by b9-7 — …" back through the series.
+    const start = '▶ **START HERE (2026-11-09, b9-8):** finish the six steps; rewritten by b9-7 — WALKED walk 5; rewritten by b9-6 — BUILT walk 4.'
+    const p = checkTodoShape(ok({ start }))
+    expect(p).toHaveLength(1)
+    expect(p[0]).toMatch(/rewritten by/)
+    expect(checkTodoShape(ok({ start: '▶ **START HERE:** walk 6; rewritten before by b9-6 — the plan.' }))).toHaveLength(1)
+    expect(checkTodoShape(ok({ start: '▶ **START HERE:** walk 6; Rewritten by b9-7 — the round.' }))).toHaveLength(1)
+  })
+
+  it('reads START HERE as its whole paragraph: the file hard-wraps, so a chain on a wrapped line still counts', () => {
+    // The ▶ line alone was all the arm read, so a close that wraps its START HERE (as this file always has) hid the
+    // chain on its second physical line.
+    const wrapped = '▶ **START HERE (2026-11-10, b9-2):** walk 6, then U12, item 1, Phase C;\nrewritten by b9-7 — WALKED walk 5.'
+    const p = checkTodoShape(ok({ start: wrapped }))
+    expect(p).toHaveLength(1)
+    expect(p[0]).toMatch(/rewritten by/)
+  })
+
+  it('flags a START HERE over the cap, and counts characters, not bytes', () => {
+    expect(checkTodoShape(ok({ start: '▶ **START HERE:** '.padEnd(START_HERE_MAX + 1, 'x') }))[0]).toMatch(new RegExp(`cap ${START_HERE_MAX}`))
+    // Exactly at the cap passes, and "—" (three bytes in UTF-8) counts as one character.
+    const atCap = '▶ **START HERE:** '.padEnd(START_HERE_MAX, '—')
+    expect(atCap.length).toBe(START_HERE_MAX)
+    expect(checkTodoShape(ok({ start: atCap }))).toEqual([])
+  })
+
+  it('caps START HERE\'s whole paragraph: a short ▶ line with wrapped lines past the cap is over it', () => {
+    // a5b51426's shape: a 126-character first line over a 17-line, 2,421-character paragraph.
+    const wrapped = ['▶ **START HERE:** walk 6.', ...Array.from({ length: 20 }, () => 'x'.repeat(80))].join('\n')
+    const p = checkTodoShape(ok({ start: wrapped }))
+    expect(p).toHaveLength(1)
+    expect(p[0]).toMatch(new RegExp(`cap ${START_HERE_MAX}`))
+    // The paragraph ends at a list item, a blank line or a heading: the live file's item 1 follows its START HERE
+    // with no blank line between, and is the queue, not START HERE.
+    const item = '1. **Build 2.** ' + 'z'.repeat(START_HERE_MAX)
+    expect(checkTodoShape(ok({ start: `▶ **START HERE:** walk 6.\n${item}` }))).toEqual([])
+    expect(checkTodoShape(ok({ start: `▶ **START HERE:** walk 6.\n### Item 1\n${'z'.repeat(START_HERE_MAX)}` }))).toEqual([])
+  })
+
+  it('needs exactly one START HERE line', () => {
+    expect(checkTodoShape(ok({ start: 'START HERE, unmarked' }))[0]).toMatch(/found 0/)
+    expect(checkTodoShape(ok({ head: '▶ **START HERE (old):** a second one' }))[0]).toMatch(/found 2/)
+  })
+
+  it('flags a second SESSION block, a second LANDMINES block, and ANY DISTILL CANDIDATES block', () => {
+    expect(checkTodoShape(ok({ head: '**SESSION 2026-11-08 (b9-8):**' }))[0]).toMatch(/2 SESSION/)
+    expect(checkTodoShape(ok({ head: '**LANDMINES (b9-8):**' }))[0]).toMatch(/2 LANDMINES/)
+    // One block is already one too many: a new lesson goes on the one list, never a block per session.
+    expect(checkTodoShape(ok({ head: '**DISTILL CANDIDATES (b9-1):**' }))[0]).toMatch(/1 DISTILL CANDIDATES/)
+  })
+
+  it('counts a block in any letter case — the closes have written "**Landmines the 2026-09-05 session added:**"', () => {
+    expect(checkTodoShape(ok({ head: '**Landmines (b9-8):**' }))[0]).toMatch(/2 LANDMINES/)
+    expect(checkTodoShape(ok({ head: '**Distill candidates (b9-1):**' }))[0]).toMatch(/1 DISTILL CANDIDATES/)
+    expect(checkTodoShape(ok({ head: '**Session 2026-11-08 (b9-8):**' }))[0]).toMatch(/2 SESSION/)
+  })
+
+  it('needs exactly one distill candidates heading', () => {
+    expect(checkTodoShape(ok({ queue: '## Distill queue' }))[0]).toMatch(/found 0/)
+    expect(checkTodoShape(ok({ head: DISTILL_HEADING }))[0]).toMatch(/found 2/)
+    // Trailing whitespace on the heading line is tolerated.
+    expect(checkTodoShape(ok({ queue: DISTILL_HEADING + '  ' }))).toEqual([])
+  })
+
+  it('flags a standing landmines section rebuilt in the TODO — the 509-line pile the cleanup moved out', () => {
+    // The old section's own heading, below the first "## " where neither the cap nor the block count sees it.
+    const p = checkTodoShape(ok() + '\n## Operational landmines — these bite hands\n\n- a pile that never shrinks\n')
+    expect(p).toHaveLength(1)
+    expect(p[0]).toMatch(/docs\/landmines\.md/)
+    expect(checkTodoShape(ok() + '\n### Landmines from b9-2\n\n- another\n')).toHaveLength(1)
+    // A heading that does not name landmines passes.
+    expect(checkTodoShape(ok() + '\n## Driving the app\n\n- no landmines heading here\n')).toEqual([])
+  })
+
+  it('flags a start-of-file section over the cap, and counts only the text ABOVE the first "## "', () => {
+    const big = 'y'.repeat(TODO_HEAD_MAX)
+    const p = checkTodoShape(ok({ head: big }))
+    expect(p).toHaveLength(1)
+    expect(p[0]).toMatch(/never cut a live prescription/)
+    // The same text below the first "## " heading is outside the read-at-start section.
+    expect(checkTodoShape(ok() + '\n' + big + '\n')).toEqual([])
+  })
+
+  it('holds the start-of-file cap at exactly TODO_HEAD_MAX characters, and flags one more', () => {
+    const base = ok({ head: '' }).search(/^## /m)
+    const atCap = 'y'.repeat(TODO_HEAD_MAX - base)
+    expect(ok({ head: atCap }).search(/^## /m)).toBe(TODO_HEAD_MAX)
+    expect(checkTodoShape(ok({ head: atCap }))).toEqual([])
+    const over = checkTodoShape(ok({ head: atCap + 'y' }))
+    expect(over).toHaveLength(1)
+    expect(over[0]).toMatch(new RegExp(`runs ${TODO_HEAD_MAX + 1} characters`))
+  })
+
+  it('flags a "## " heading above START HERE, the close block or its LANDMINES: it would take them out of the cap', () => {
+    // A heading added for navigation ends the measured section early, so the item, the close block and the queue
+    // below it grow unmeasured while the arm prints OK. The 2026-08 to 2026-10 layout had exactly that shape.
+    const aboveSession = checkTodoShape(ok({ head: '## Item 1 — Build 2\n\n' + 'y'.repeat(TODO_HEAD_MAX) }))
+    expect(aboveSession).toHaveLength(1)
+    expect(aboveSession[0]).toMatch(/"## " heading above the SESSION close block/)
+    const aboveStart = checkTodoShape(ok().replace('▶ **START HERE', '## Next\n\n▶ **START HERE'))
+    expect(aboveStart).toHaveLength(1)
+    expect(aboveStart[0]).toMatch(/"## " heading above START HERE/)
+    // (Not "## Landmines": a heading naming landmines is the standing pile, its own problem, tested below.)
+    const aboveLandmines = checkTodoShape(ok({ landmines: '## The close\n\n**LANDMINES (b9-1):**' }))
+    expect(aboveLandmines).toHaveLength(1)
+    expect(aboveLandmines[0]).toMatch(/"## " heading above the LANDMINES block/)
+    // A "## " line inside a fenced block is not a heading, so it does not end the section.
+    expect(checkTodoShape(ok({ head: '1. **Build 2.**\n   ```sh\n## a shell comment\n   ```' }))).toEqual([])
+  })
+
+  it('the REAL TODO.md holds the shape', () => {
+    // Live on purpose, like the register and insights arms: a close that rebuilds the old shape is a
+    // defect the moment it lands, and its fix belongs in that same commit.
+    expect(checkTodoShape(readFileSync(join(process.cwd(), TODO_SURFACE), 'utf-8'))).toEqual([])
   })
 })

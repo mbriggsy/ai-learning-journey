@@ -9,7 +9,7 @@
  *     the packed wire must equal the sync run's, at 16,000 paths, with each candidate simulated in a
  *     DIFFERENT V8 isolate (a dedicated Worker) than the coordinator that ranks it.
  *  2. THE WALL CLOCK at each pool size P — the sync run first, in the SAME session (his laptop's state
- *     swings a solve ~2× across days — TODO's LANDMINES: never mix days in one table).
+ *     swings a solve ~2× across days — docs/landmines.md, "Probes and measurement": never mix days in one table).
  *  3. THE HEAP per worker — `Runtime.getHeapUsage` on every worker target (a page CDP session
  *     auto-attached to its dedicated workers), sampled while each solve runs; the max per role.
  *

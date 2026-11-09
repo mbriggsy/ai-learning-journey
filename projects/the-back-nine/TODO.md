@@ -11,6 +11,9 @@
 > filing anything as new.** The split is by KIND: the register carries every NEGATIVE finding (what was
 > refuted, what must not be built or re-derived); this file carries the ranking + the live prescription.
 >
+> **Landmines live in [`docs/landmines.md`](docs/landmines.md)**, by the area they bite: read an area's section before you
+> touch it, and file a new one there under its area. Lessons owed to `/distill` are this file's `## Distill candidates` list.
+>
 > ⚠️ **NEVER cite "TODO item N."** These numbers are re-ranked every session, so a citation written today
 > silently resolves to a *different* live item later — worse than dangling. (The worked example: the logs once
 > cited "TODO item 11" meaning the state-tax unit, shipped 2026-07-15; by 2026-09-24 this file's item 11 was a
@@ -22,65 +25,13 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-09, b9-1 of the new series COMMITTED walk 5's fix round, its six steps finished and the review `wf_c037b423-7f0`'s eleven findings fixed test-first: 28 mutants killed, R10 `walk5` 42/42. Next is WALK 6 (`/caddie`, item 1, Phase C, "▶ NEXT"); then U12, carrying U11's figures and every filing for it (walks 1–5's, KTD7's, the round review's), then the whole-file review, with an adversary and every finding verified, then `/distill` (this close's candidates included); rewritten by b9-8 — BUILT walk 5's fix round in the tree, uncommitted; rewritten by b9-7 — WALKED walk 5 on council `wf_7fa86902-35c`'s round (`3157a6da`; the card HARD-FLAG at the top of `docs/caddie/cold-read-log.md`: the run-in labels vanish as plain words and read clinical, "This answer adds none of it" reads as a bug for want of a reason, the gate names buttons it doesn't draw, and the copy now points at the filed Tier 0 retype) — next is WALK 5's FIX ROUND (bh)–(bq) with the Tier 0 retype entry's note, its exact changes in item 1, Phase C, under "▶ NEXT", then walk 6, then U12 carrying U11's figures and the filings (ag)–(ay) and walks 4–5's, then the whole-file review and `/distill` — item 1, Phase C; rewritten by b9-6 — BUILT walk 4's fix round from council `wf_7fa86902-35c` (`3157a6da`: one string per host, the run-in labels, the act keyed on `heldYesBelowQuote`, the definition beside the door; 17 mutants killed, R10 `walk4` 42/42); rewritten by b9-5 — walked walk 4 on b9-4's round (the card HARD-FLAG, top of `docs/caddie/cold-read-log.md`) and took its form question to council `wf_7fa86902-35c` (7/10, execute: one string with run-in labels, a per-arm lead, "update your figure" on the risen arms; the retype hole filed Tier 0); rewritten by b9-4 — walk 3 and its round (as)–(aw)(b), `98b5ad17`; rewritten by b9-3 — walk 2 and its round (am)–(ao), `f028f33f`; rewritten by b9-2 — the walk's fix (ae), `c6b15120`; rewritten by b9-5 — walked U11's Caddie record, `c10339b0`, the card HARD-FLAG; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
-closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
-**HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
-ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
-entries to Tier 0, 10 to Tier 1 and one to Tier 4, holding seven (his yes on the dependents ask then lifted two of the seven to
-Tier 0); each moved entry's metadata line says "re-tiered 2026-10-31
-(b9-5)", the readings that bind the next walk are the register header's sweep paragraph, and every named entry now sits in the D7
-queue below (its order unmoved). Next, in order:
+▶ **START HERE (2026-11-09, the TODO cleanup after b9-1's close):** CI is RED on `ec3514a7` (run `42666885195`): `verify:bundle` reads the initial JS (the entry chunk plus `jsx-runtime`) at 301.2 KiB against its 300 KiB budget (298.3 KiB at `b6d6032d`; the entry chunk grew 289.9 → 292.8 KiB with walk 5's round), and `verify:csp` and the full `verify:fit` were SKIPPED behind it, so walk 5's round has passed neither. Fix it first, as the register prescribes: *The whole copy catalog ships in the entry JS…* (measure the entry's copy share, split the catalog by surface behind the lazy boundary, re-measure); the 300 KiB gate stays and no string is cut for bytes (his ruling, 2026-10-30); then read the fix's CI run with `verify:csp` and `verify:fit` green before walk 6. Then WALK 6 (`/caddie`, item 1, Phase C, "▶ NEXT"); then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the `## Distill candidates` list is far past 10 entries).
+U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
+register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
    (`ec2c7694`), planned, deepened and checked as a whole. Council `wf_1b5d9962-73c` (8/10) ruled the six calls the 2026-10-21
-   words left open; they are the plan's Key Decisions. **U1 DONE (b9-7, 2026-11-01):** the frozen HEAD copy, the R10 digest
-   sweep, the cash stream with R8 applied by hand, and `PREDICTIONS.md`, all in `b9-build2-surplus\` (its `README.md` indexes
-   them). Every check is 0 over 17.7M path-years; HEAD depletes no path inside its working years, so the tree must compose
-   exactly HEAD's path-years. An Opus verifier briefed to refute re-derived the record and found ten things, all fixed before
-   use (`PREDICTIONS.md` §E; the big one: `datecoststale`'s W is stale, so no figure is ever carried for it). **U2 DONE (b9-7):**
-   the cycle is closed (`benefitYear.ts`, `engineDomain.ts`, the `importCycles.test.ts` pin), byte-identical by the per-key
-   sweep; it closed the Tier 4 cycle entry itself, so U12 step 8 only files the intake cycle. **U3 DONE (b9-8, `ad525b9e`):**
-   the printed grain lives in `src/engine/moneyGrain.ts`; the ledger re-exports `workingYearBottomLine`, so `stream.mts`
-   reads it the same way from `head\` and the tree. **U4 DONE (b9-8):** the credit, dark. The figure is
-   `workingYearLeftOverSavedReal` (`DateSearchInput` → `buildCandidateParams` → `AccumulationParams` → `simulate`'s
-   `taxInputs` → `TaxYearInputs`); `allAlive` is a required field of `WorkingYearCheckTerms`; the probe gained
-   `creditComposed` (the credit as composed, before any forfeit: U11's stream) and `growthScaled` (U11's residual). Its
-   tests are `workingYearCredit.test.ts`, the build-2 arms in `dateSearch.test.ts` and the KTD4 arm in `devSeeds.test.ts`;
-   15 mutants, every kill set exactly as predicted (`b9-build2-surplus\U4-MUTANTS.md`). **U15 DONE (b9-8):** `?seed=datelateleftover`
-   (`dateshort`'s couple, Alex's claim at 67, a $48,000 year): year 0 prints "Short $7,695", and from 2030 (year 4) every
-   working year has about $13,000 left over that nothing credits; at `ENGINE_MAX_DOLLAR` it credits $0 and is its uncarried
-   run (a dropped year-0 cap reds that arm). From here the per-commit identity check runs against `sweep-u15.json`
-   (`idcheck.mjs <label> u15`): its 35 HEAD keys are `head-a`'s, byte for byte, and it adds `datelateleftover`'s
-   baseline. **The Phase A engine review is DONE (b9-1, 2026-11-04):** `wf_0f808964-4a9`, 12 whole-file lenses (a five-angle
-   adversary panel among them), 52 agents, no crash. 28 findings, about ten distinct, every one traced real by its verifiers and none rejected; no engine logic was wrong. The
-   fixes are test pins plus false comments: the `allAlive` producer pin (9 lenses: a hard-coded `allAlive: true` in
-   `cashTermsForYear` credited every survivor working year with the suite green), year 0's cap on its PRINT, the
-   same-year draw (taxed gain, and the basis order), and ten false or stale comments, two of them copied from the plan's
-   KTD4 / KTD5 (both corrected). Its record: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseA-review\`
-   (`brief.md`, every lens's and verifier's repros). **U5 DONE (b9-2, `d4227774`):** a yes kept through the Keep door is
-   stamped (`keptOverQuoteReal` on `entered`, label 4) and goes stale when today's quote rises above THE FIGURE (R13's
-   referent), naming the spending with the lean, the door withheld, the row "the figure you kept". Its review
-   `wf_e5cbb6be-e97` (5 lenses + 5 refuters) found one P1 in the PLAN: KTD10's "a period change drops the stamp" let "each
-   month" then "each year" launder a stale kept figure into a typed one. A unit tap now CARRIES it; R13, KTD10 and the U5
-   scenario are amended in the plan. R10 36/36 against `u15`; the old-copy decode ok; record `b9-u5-review\README.md`.
-   **U13 DONE (b9-3, `82835ff3`):** `deriveStaleness`'s 4th argument is one required named object,
-   `WorkingYearAnswerStaleness { costStale, leftOverStale }`; the report's `workingYear.leftOverStale` takes the same exposure
-   conjunct as `costStale` and joins `anyStale` only; `composeReentry` takes both answer sentences as one named object,
-   `ReentryAnswerSentences`, and throws on a set left-over fact with no sentence. Every product caller passes `false` / `null`
-   by proof. Its review `wf_980c5931-2b2` (5 lenses + 5 refuters, 26 findings: 11 real, 9 partly, 6 refuted) found one P1
-   (the `stalenessExposure.test.ts` source-bind on IntakeApp's call was red) and amended U14 in the plan; 8 mutants, every
-   red set as predicted; R10 36/36 against `u15`. Record `b9-u13-review\` (its `README.md`). **U5's CI miss, fixed
-   (`63eca3f6`):** `verify:fit` had been red since `d4227774` (6 W gesture arms expected "You entered" where U5's Keep now
-   reads "You kept"); test-only, the kept stamp proven to survive type-then-Keep.
-   **The go-live is COMMITTED: `a9cacf22` (b9-1, 2026-11-08), pushed.** U6 + U7 + U8 + U14 + U9, schema version 5. Its CI run
-   `42501619690` passed (both jobs, read by b9-4). **U10 is COMMITTED (b9-4, 2026-11-08):** the floor test's `FLOOR` is 5, in
-   its own commit after the go-live. Its proof, predictions first (`b9-build2-surplus\U10-MUTANTS.md`, runner
-   `tools\u10-mutants.cjs`): the constant planted to 4 reds b9-6's 325 plus the floor test on its own line; a resolved whole
-   revert of the go-live reds the floor test alone (1 of 4758); the R10 sweep `u10` is byte-equal to `golive` (39 of 39). A real
-   `git revert a9cacf22` now stops on a conflict in `scenarioCodec.test.ts` (U10's corrected note sits in a go-live hunk). Its Caddie card (top of
-   `docs/caddie/cold-read-log.md`, now second, under b9-5's U11 card) is HARD-FLAG, held on (a)–(d) and (q) below ((e) is closed
-   by U11's measurement, b9-5); the last round of words is unwalked and named on the card. The R10 identity baseline is
-   `risen` since `c10339b0` (`idcheck.mjs <label> risen`; README row added).
-   Walk bundles kept in `temp/caddie/`: `caddie-golive-b9-1-walk3`, `-walk4`, `-walk5`. b9-6's two (`caddie-golive-b9-6`, `caddie-golive-b9-6-fix`) are still there: other b9 sessions were live at b9-1's close, so delete them at the next close with none live.
+   words left open; they are the plan's Key Decisions. 
+   Walk bundles kept in `temp/caddie/`: `caddie-golive-b9-1-walk3`, `-walk4`, `-walk5`. b9-6's two (`caddie-golive-b9-6`, `caddie-golive-b9-6-fix`) are still there (other b9 sessions were live at b9-1's close): any session may delete `temp/caddie/caddie-golive-b9-6` and `temp/caddie/caddie-golive-b9-6-fix` as its own task, outside squeaky's temp step, by exact path, once ListAgents shows no other live session in this folder.
    **Filed by b9-1's walks 3 to 5 for U12 (the card's new hold (q) is a Tier 0 candidate; the rest go in as their seats rated
    them):** (q) **the re-entry gate attests to balances only:** it names paychecks ("Markets and paychecks move") but shows no pay,
    no W and no left-over answer, so "Still about right" never puts what the date leans on in front of the couple; measure a pay
@@ -127,157 +78,20 @@ queue below (its order unmoved). Next, in order:
    unpriced state-tax note** ("it belongs in your figure for a working year, below") reads as "already in W", so in a state
    that taxes pay the left over is too high. (p) **the stale clause after a RISEN quote** can read as an offset to "can look
    better than it really is"; no walk renders it (U11 measures the reach, then a walk on `datesavedstale` with spending
-   raised) — WALKED and CLOSED by measurement (b9-5, the other way: the stale answer reads gloomier; its fix is (ae) below).
-   Not holding: the how-much ask behind "The tool doesn’t ask how much yet" (D7); the moved note's missing cause (pay
-   rose) and year; the stale clause's "you chose to save" figure a spouse can't place, and the waiting seat hiding the stored
-   answer; the check sentence between the legend and the replies (a hint slot in `SegmentedControl`); the waiting
-   methodology line's passive "is checked".
-   At EVERY `src` commit from here: the sweep and the per-key `idcheck` against `golive` (PER KEY: never a whole-file `cmp`); the per-commit
-   record is the table at the foot of that folder's `README.md`. Then the build units in the plan's order, each
-   opened with `/brief <that unit's topic>`:
-   - Phase A: ~~U2~~, ~~U3~~, ~~U4~~, ~~U15~~, ~~the engine review~~ (done).
-   - **The review's forward obligations (each a prescription for the unit named):** (a) ~~**U7's carriage**~~ (DONE in the go-live, `a9cacf22`) writes the figure
-     only when R3's shown state is "saved", which needs a KNOWN picture with a printed year-0 Left over of $1 or more AND a
-     fresh W. The engine caps at the run's OWN year-0 print, so a figure carried while `workingYearLedgerForRun` reads
-     `'unknown'` would still credit. Pin it with a `buildDateInput` arm on an unknown-picture draft. (b) **U11's tooling:**
-     `creditComposed` / `growthScaled` carry no pass id, and a budget run fires both passes. Pair each credit with the
-     `checkComposed` call just before it (`workingYearCredit.test.ts`'s *SURVIVOR THROUGH THE RUN* arm does), or split passes
-     on the t reset. (c) **U12's register pass:** add to *The taxable account's yield never reaches a year's tax base…* that
+   raised) — WALKED and CLOSED by measurement (b9-5, the other way: the stale answer reads gloomier; its fix is (ae),
+   `c6b15120`: council `wf_fc80029e-d93`'s Frame B, its walk-2 card in `docs/caddie/cold-read-log.md`, 2026-11-09 (b9-3)).
+      At EVERY `src` commit from here: the sweep (`tools\sweep.mts`) and the per-key `idcheck` (`tools\idcheck.mjs <label> walk5`),
+   both in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\`
+   (its README's "How U11 and every `src` commit use it" has the commands; run them pinned to the P-cores), against the latest baseline,
+   `walk5` since walk 5's round (PER KEY: never a whole-file `cmp`); the per-commit record is the table at the foot of
+   `b9-build2-surplus\README.md`. Then the build units in the plan's order, each opened with `/brief <that unit's topic>`:
+   - **The Phase A engine review's forward obligations** (`wf_0f808964-4a9`; each a prescription for the unit named): (c) **U12's register pass:** add to *The taxable account's yield never reaches a year's tax base…* that
      every credited dollar lands in taxable and widens that gap's reach, unmeasured.
-   - **U5's forward obligations:** (d) **U11's Caddie walk** reads U5's drafted words — the kept quote, state-only and
-     both-causes sentences (`workingCostStaleKept*`), the row's "the figure you kept", and the month view's "$1,008,000 a
-     year — the figure you kept" after a unit tap on a kept $84,000 — and the review's P3: a kept figure stale on the
-     spending shows "a different figure" checked, the box filled, no door, and the gate's "answer it above"; its exits
-     (Yes at today's figure, or a retype) go unnamed. Candidates: a face-only line naming both exits, or the stale yes's
-     own shape (no option checked, the box closed). Never the door below the quote (the register's ⚑ NEGATIVE). (e) **U12's
+   - **U5's forward obligations:** (e) **U12's
      register pass** closes *Keeping a stale yes turns it into an entered figure…* with `d4227774`, recording the unit-tap
      carry and the residual: the stamp's VALUE is read by nothing (x8, the door stamping off the render-captured draft,
      survives every test) — pin it the day anything reads it.
-   - **U13's forward obligations:** (f) ~~**U14**~~ (DONE in the go-live, `a9cacf22`) owned the four its review recorded in the plan's U14 section
-     (the "Amended at U13" note): the moved predicate and the gate's moved sentence read ONE core over the draft (the way
-     `isWorkingYearCostStale` and `workingYearCostStaleText` both read `workingYearCostStaleness`), because `composeReentry`
-     throws on the fact without its sentence and `IntakeApp`'s catch turns that into the restore-failed face on every
-     reload; the clause-host fact (did a tax, state-tax or working-years line fire) is decided once, in `composeReentry`, and
-     the Result reads it (`rulesMoved` also fires on the ACA, Medicare, contribution and app-default clocks); `canChange` on
-     `ReentryLeftOverStale` if the gate's moved line carries a door sentence; and the two test files U14 must edit
-     (`stalenessExposure.test.ts`'s source-bind and `staleness.test.ts`'s property arm, which gains `datesaved`).
-   - Phase B: ~~U5~~, ~~U13~~, ~~the version-4 archive~~, ~~the go-live (U6 + U7 + U8 + U14 + U9)~~ (`a9cacf22`), ~~U10~~ (b9-4).
-   - Phase C: U11, then U12. **U11's measurement half is DONE (b9-4) and independently verified.** The record:
-     `b9-build2-surplus\README.md` § "U11: the after-measurement" and `PREDICTIONS.md` §F (every prediction scored; misses
-     C3 ×4, C4 ×5, D3 ×4 at the final tier, K5 ×2; the credit stream 0). Tools in `b9-build2-surplus\tools\`
-     (`u11drafts.mts`, `stream11`, `moves11`, `residual11`, `k5share`; built and refuted by `wf_a4f45d66-48e`); each full run
-     ran twice, byte-equal. An Opus xhigh verifier re-derived every figure (`verify-u11\`) and its 13 corrections are in.
-     **U11's Caddie record: walk 1 DONE (b9-5, 2026-11-08).** `c10339b0` added the risen seed (`?seed=datesavedrisen`,
-     U11's RISEN household; R10 `risen` 39/39 against `golive`, now the baseline: `idcheck.mjs <label> risen`) and the
-     harness's increment 10 (`intake:kept`, nine states; `seed:`/`vault:datesavedrisen`). The card is at the top of
-     `docs/caddie/cold-read-log.md` (HARD-FLAG; the tape row is open); bundle `temp/caddie/caddie-u11-b9-5-walk1`. (d) and (p)
-     are walked; b9-1's hold (e) is CLOSED by U11's measurement, the other way: the risen stale answer is GLOOMIER (no date
-     vs the twin's 9), and a check at $90,000 credits at most $10,985 a year (`out\u11-stream-compare-u11-full.txt`
-     2455–2474). **The fix round is COMMITTED: (ab), (ac), (ad), (af) in `a5d34d69` (b9-1) and (ae) in `c6b15120` (b9-2,
-     2026-11-08, council `wf_fc80029e-d93`'s Frame B as ruled), each test-first; (ae)'s mutants 10 of 10 as predicted and R10
-     `ae` 40/40 against `fixround` (`b9-build2-surplus\u11-ae\`, README row; `sweep-ae.json` is the baseline from here). Walk 2 DONE (b9-3, 2026-11-09).** The card is at the top of `docs/caddie/cold-read-log.md` (HARD-FLAG, held as walk 1
-     left it; its tape row open), bundle `temp/caddie/caddie-u11-b9-3-walk2` (14 fresh Opus readers, then 8 refuters over 16
-     findings). Its four questions: (1) the dissent did NOT flip — no reader took the counterweight to mean this household
-     has short years, so it stays as ruled (and it is not empty: a check at $100,985 or more leaves year 0 itself short);
-     (2) the later-short gate fits the laptop frame and reads heavy (filed (ap)); (3) the at-most sentence does read as
-     "checking improves my answer", true at the quote for `datesavedrisen` (U11: no date against 9) but not across every
-     check, which no line said; (4) `whole` and `firstNone` read plainly bar two lows ((aq)). **Its fix round is COMMITTED:
-     `f028f33f` (b9-3), mutants 7 of 7 as predicted, R10 `walk2` 42/42 against `ae` (`b9-build2-surplus\u11-walk2\`,
-     README row; `sweep-walk2.json` is the baseline from here):** (am) the short-year sentences name the RUN at the quote
-     in the money picture's own words (`shortRunFrom`; `firstShort.run`; `laterShort` a run: "each working year from 2026
-     through 2032 comes up $3,652 to $4,015 short", "If you’re still working from 2029 through 2032, each of those years
-     comes up $3,652 to $4,015 short…"), where one year alone had read as a one-off beside a gain stated "a year"; (an) "a
-     check at" → "checking your figure at" (six readers read a paycheck); (ao) `capped` / `whole` with no later short run
-     end on "Checking your figure can move this answer either way, depending on what you settle on." (no threshold, no
-     "worse": Frame B). **Walk 3 DONE (b9-4, 2026-11-09):** the card is at the top of `docs/caddie/cold-read-log.md`
-     (HARD-FLAG, held as walk 2 left it; tape row open), bundle `temp/caddie/caddie-u11-b9-4-walk3` (6 fresh Opus xhigh
-     seats, the cold looks and the spouse probed only after their first answers locked, then 5 refuters). Its four
-     questions: (1) MET, no seat read a paycheck; (2) no alarm, no promise, but "which way?" answered only "it depends" (at
-     $90,000 checking moves it up, U11: a framing question, (ax)); (3) MET, the runs read as recurring, but the later couple
-     now netted one gain against four short years, the gloomy side ((at)); (4) still dense, every seat lost the thread at a
-     "so"-joined multi-figure sentence. **Its fix round is COMMITTED: `98b5ad17` (b9-4), test-first, mutants 9 of 9 as
-     predicted, R10 `walk3` 42/42 against `walk2`, the file byte-equal (`b9-build2-surplus\u11-walk3\`, README row;
-     `sweep-walk3.json` is the baseline from here: `idcheck.mjs <label> walk3`), verify:fit 25/25 on the touched arms:**
-     (as) every short-year sentence says "Each year’s shortfall is taken from your savings, plus any income tax on taking
-     it out" (B's run had read as "we'd just tread water"); (at) where a later run prints short, the at-most sentence reaches
-     "in each working year that doesn’t come up short" (true by R8's cap, no year's figure asserted); (ap)'s cure, one fact
-     per dollar sentence, with the stored figure dated ("When you answered, $16,985 a year was left over from your pay, and
-     you chose to save all of it.", closing (aq) and (al)'s rise-arm comprehension half); (au) "Until you confirm or change
-     your $84,000 figure" and the door "Confirm or change your figure" (`held` rides every arm of
-     `WorkingYearCostStaleSentence`); (av) "…depending on what a working year really costs you"; (aw)(b) "your first
-     working year, 2026,". The build spec's R12 carries the amendment. **Walk 4 DONE (b9-5, 2026-11-09):** the card is at
-     the top of `docs/caddie/cold-read-log.md` (HARD-FLAG, held as walk 3 left it; tape row open), bundle
-     `temp/caddie/caddie-u11-b9-5-walk4` (18/18 in 4.1 m pinned; 7 fresh Opus xhigh seats — a cold first look on each of the
-     four gates, an unprimed spouse on the four couples probed after it locked, a copy-law finder, a hunter — then 9
-     refuters; every seat wrote its report to a file, so nothing truncated; the record is `b9-build2-surplus\u11-walk4\panel\`).
-     Its five questions: (1) the dated figure MET on A and B, NOT on C — four seats could not reconcile a $21,000 rise with
-     $16,985 → $5,985, since Sam's alimony, begun since the answer, appears nowhere ((al)'s rise arm, raised to high); (2)
-     "taken from your savings…" MET, "informed and a little alarmed", no "tread water"; (3) MET on its own terms (three gain
-     years inferred against four short, "can't tell"); (4) PARTLY — no "we looked", but "confirm … your $84,000 figure"
-     sent two readers hunting a door A, B and C don't have; (5) NOT MET — every seat: each sentence easy, the whole only
-     longer, threads lost at the connectives. The form question went to council `wf_7fa86902-35c` (full, 23 agents, no
-     abstentions, 7/10, execute; the top row of `docs/council-log.md`), which ruled the shape, the lead and the act's name,
-     held the Hawk's veto on (ax) (no direction on A or S; appended to the Tier 0 gate entry's prescription (1)), and whose
-     red team found the retype hole, FILED Tier 0 by b9-5 (*A figure typed below today's spending clears W's stale line for
-     good…*). **The fix round from `wf_7fa86902-35c` is BUILT (b9-6, 2026-11-09; committed in the commit after `09459571`):**
-     one string per host, in the council's order per arm — the note (its em-dash split), the lead (B and first-none:
-     "Until you update your $84,000 figure, this answer can look better…"; A, whole, C and S: the either-way sentence in
-     the act), "This answer now:" (S: "Once you’ve both stopped working, it already uses about $78,000 a year.", only
-     where the spending moved; the stored figure dated; "This answer adds none of it to your savings."), and on the
-     risen arms "If a working year costs $X:" (year 0, "Updating your figure to $X or more adds at most…", C's gain years
-     off the ledger rows via `laterShortOf`'s `resumesFrom`, "would be taken", "makes those years look cheaper", B's
-     "still adds none of that $16,985"). The act: `workingYearCostAct` (`workingYearQuote.ts`, keyed on
-     `heldYesBelowQuote`) and `WORKING_COST_ACT_COPY` (`copy.ts`: the either-way lead, the Result's door "Update your
-     figure for a working year" / "Confirm or change your figure", the gate's "Either button on this page leads to where
-     you can update / confirm or change your figure."); the Result's cause split (`FuckOffDate.W_STALE_CAUSE`); the
-     left-over moved line keeps its door words as `stalenessLeftOverGateDoor`. The definition rides BESIDE THE DOOR only
-     (`workingYearCostStaleDoor`; a read-only tab draws no door). A retired-wordings sweep in `copyGuard.test.ts`. Five
-     refinements of b9-5's drafted words are recorded in the docblocks, the council-log row and
-     `b9-build2-surplus\u11-walk4\PREDICTIONS.md` (the definition beside the door; "a tax on pay the tool doesn’t work
-     out", never "any tax on pay"; "none of that $16,985"; S's after-work sentence only where the spending moved; C's
-     gain years only where the ledger lists the year after the run and nothing after it prints short). Evidence: 17
-     mutants, all killed, 16 exactly as predicted (M1 killed three more: the act also rides `datecoststale`'s door);
-     R10 `walk4` 42/42 against `walk3` (`sweep-walk4.json` is the baseline from here: `idcheck.mjs <label> walk4`); the
-     suite 5068/5068 after the re-anchor; `verify:fit`'s touched arms (see the session block); the build spec's R12
-     carries the amendment. Ordering owned: the composer was written before its typed-by-hand test (the tests were
-     typed from the prescription, never read off the code; the mutants are the proof they bite).
-     **Walk 5 DONE (b9-7, 2026-11-09):** the card is at the top of `docs/caddie/cold-read-log.md` (HARD-FLAG, held as
-     walk 4 left it, with (bm) and (bk) beside the holds; tape row open), bundle `temp/caddie/caddie-u11-b9-7-walk5`
-     (18/18 in 4.1 m pinned; `3157a6da`'s harness witnesses all held on their first run; 7 fresh Opus xhigh seats
-     probed after their first answers locked, then 10 refuters; about 1 weekly point, 80% → 81%). The record, every
-     seat's brief and probe included this time: `b9-build2-surplus\u11-walk5\panel\` (`briefs\`, `FACTS.md`,
-     `REFUTER-BRIEF.md`). Its six answers: (1) the labels as structure NOT MET, and CLINICAL 5 of 5 (mid-line, body
-     weight, a capital after the colon, a wrap splitting "This / answer now:"; once told, all four said the split is
-     useful: E2, a form defect); (2) "update" read as "your figure was wrong, raise it" by every risen reader — the
-     council's flip condition's second half is MET, its first half (the typed-below-spending note) ships in the round
-     below, and the refuter rates the steer honest (rule 8: today's spending already exceeds $84,000), so the verb
-     goes to Briggsy with the pilot's recommendation to keep "update" (the council marked it his); (3) the definition
-     PARTLY (the premium cue lands, but "Yes" comes first, "doesn't work out" reads as "doesn't work", the gate names
-     buttons it doesn't draw, and S's has no condition); (4) C's gain years MET; (5) the fallen premise MET on S, and
-     A, B, C lack it; (6) B's lead first MET (the dissent's direction-last not borne out), but B says it three times.
-     **Walk 5's fix round is COMMITTED (b9-1 of the 2026-11-09 series; the commit after `b6d6032d`, pushed).** b9-8
-     built (bh) to (bq), the Tier 0 retype entry's prescription (1) and F8, test-first. The words now live in the code.
-     The record is `b9-build2-surplus\u11-walk5\ROUND.md`: b9-8's nine refinements, then § "The round review" with five
-     more. Before the mutant pass, a review `wf_c037b423-7f0` ran four whole-file lenses with a refuter each (8 Opus xhigh
-     agents) and found eleven real findings. Each was fixed test-first, its pin red for its stated reason first:
-     - the typed-below note compared at the cent (P0: 12 × 7,083.33 printed "$84,999.96 … below … $84,999.96");
-     - its lean follows the answer (the year-level fact for a "saved" answer waiting on W; `workingYearCostTypedBelowNote`);
-     - after work under a budget, "your budget, about $X a year to start";
-     - the figure to enter in its box's unit ("$X a year", or ÷ 12 "a month" where the held figure was typed by the month);
-     - five pins for mutants the tests let through.
-
-     Evidence:
-     - mutants: 28 of 28 killed (`u11-walk5\PREDICTIONS.md`, written first; 25 of 28 kill sets exactly as predicted,
-       the three misses in the predictions);
-     - R10 `walk5` 42 of 42 identical against `walk4` (`sweep-walk5.json` is the baseline from here: `idcheck.mjs <label>
-       walk5`);
-     - the suite and `verify:doc-stats` green after `pnpm doc:reanchor b6d6032d --apply` (348 edits; the one source
-       hand fix: `reentryChrome.ts`'s `ReEntry.tsx:86-90`);
-     - the e2e strings in `vertical-fit.spec.ts` and `caddie-walk.spec.ts` updated and typechecked through a scratch
-       tsconfig (landmine below);
-     - `verify:fit`'s 37 touched arms green, twice (before and after the review's fixes);
-     - a Playwright eye on the gate and Result at 1536×791 @2.5 and 390×844 @3: the labels draw semibold on their own
-       lines, the door's sentences on theirs, nothing clipped.
+   - Phase C: U11, then U12.
 
      ▶ NEXT: **walk 6** (`/caddie`: the same nine targets, walk 5's briefs in `u11-walk5\panel\briefs\`, its tools in
      `u11-walk5\tools\`; about 1 weekly point). Its questions:
@@ -373,8 +187,8 @@ queue below (its order unmoved). Next, in order:
      the stale W stays open. (ap) — the form cure is applied in `98b5ad17`; walk 4 judges it. Re-found, no change: (ah),
      (ai) (door 5's waiting seat), (l) (the figure pinned to spending while the W help lists premiums), (q) and (r) (the
      gate's buttons attest balances; "Either choice below…" points right of the paragraph at REAL).
-     **Then U12** (the plan's ten steps), carrying U11's figures (each stated with its seed, tier, offset and track, from the
-     README § U11, never re-typed from memory): K5 at Tier 0 — the year-0 share NOT EXERCISED (unmeasured, never $0), its
+     **Then U12** (the plan's ten steps), carrying U11's figures (each stated with its seed, tier, offset and track, from
+     `b9-build2-surplus\README.md` § "U11: the after-measurement", never re-typed from memory): K5 at Tier 0 — the year-0 share NOT EXERCISED (unmeasured, never $0), its
      nearest shapes 76.9% (date65 2027) to more than the whole figure (datelateleftover 2030, $19,172 of $13,277), and the
      register's K5 bullet corrected (datelateleftover's 2030 turns short with the claim age reached Sep–Dec; K5 reaches 25
      more claim years than date65's and datenc's 2027); the claims at 62 paid whole in their first year (dip,
@@ -401,27 +215,6 @@ queue below (its order unmoved). Next, in order:
 **The tier sweep's tools, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-tier-sweep\` — its `README.md` indexes the slice extractor,
 the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-preservation check) and `tierrefs.mjs` (the stale
 "Tier N *Title*" scan); re-point the briefs' scratchpad paths before reuse.
-**The schema-v4 job's record, durable (b9-4):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-schema-v4-proof\` — `README.md` and `PREDICTIONS.md`
-(16 mutants, every section written before its run; M7 and M8 runtime-equivalent, as predicted). The gaps the bump leaves are their
-own register entries (*A date-route plan saved before the pay check opens with W unanswered…*, *The "saved by a newer version" face
-names an update and offers no door to it…*, and the Tier 4 *The frozen version-3 fixtures are one seed…*).
-**The pay check's Phase C records, durable (b9-1):** the h2 cure's,
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-h2-cure\` (`tapProbe3.mts`, the before/after/final runs, `PREDICTIONS.md` and its per-test mutant runner); the pay-check
-review's, `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\FIXES.md` (`pre\`, `pre-a4\`, `head\` and several lens folders hold `node_modules` JUNCTIONS — remove each
-link alone before deleting any folder there); rulings 38–42 are in `b9-phaseb\DECISIONS.md`.
-**The review's record, durable:** `wf_ea145a86-a5a` (the 15-lens review) and `wf_19d636e2-77c` (the three fix lanes + the overflow
-verifies), journals under
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\a321e571-5db1-4809-ab03-f84786d30233\subagents\workflows\`.
-**U11's record, durable:** the four workflow journals, under
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\d53f9156-ebb9-488d-afe3-12339f606f74\subagents\workflows\`:
-`wf_eefd24b7-629`, `wf_c01e9698-67f`, `wf_e1352a25-e01` and `wf_52bd1d61-b04`. `d7930466`'s message summarizes them.
-**U10's measurement, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-u10-tools\`
-— its `README.md` indexes the probe (`probe.mts --w`), `compare.mjs` / `deepdiff.mjs`, `year0check.mts` (the DND-012 year-0 check —
-it lives only here: the constants gate bans re-typing its hand rates in `src`) and `precount.mts`; `head\` holds a `node_modules`
-JUNCTION — remove the link alone before deleting the folder.
-**The research, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-research\`
-(the payroll and earnings-test primaries, verified; RS 00615.482 B.3's NOTE is in `research-earnings-test.json`) and
-`b9-phaseb\sources\` (42 CFR 407.20 and 411.172).
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
@@ -433,14 +226,15 @@ State at close:
 - typecheck exit 0, lint exit 0;
 - the suite green and `verify:doc-stats` exit 0 (the count lives under that gate);
 - `verify:fit`'s 37 touched arms green;
-- the full `verify:fit` and the CSP gate are CI's, on the push.
+- the push's CI (run `42666885195`) went red at `verify:bundle` and skipped `verify:csp` and `verify:fit`.
 
-Next is walk 6. Briggsy's ruling this session: no numbered successor; this session owned squeaky by the window lines
-and closed at 47%, past the warn line, before walk 6's fan-out.
+Next is the bundle fix in START HERE, then walk 6. Briggsy's ruling this session: no numbered successor; this session
+owned squeaky by the window lines and closed at 47%, past the warn line, before walk 6's fan-out.
 
 **Check at start:**
-- the CI run on this close's commit: `gh run list --commit <full sha> --json databaseId,status,conclusion` — the full
-  sha, never the short one (`git log -1 --format=%H -- projects/the-back-nine`);
+- the CI run on this close's commit: read in START HERE (run `42666885195`, red on the bundle budget). For the bundle
+  fix's own run: `gh run list --commit <full sha> --json databaseId,status,conclusion` — the full sha, never the short
+  one (`git log -1 --format=%H -- projects/the-back-nine`);
 - the weekly meter before walk 6: `~/.claude/statusline-meters.json` `seven_day` (82% at this close; resets
   2026-11-11 14:00Z).
 
@@ -479,442 +273,16 @@ labels read calm or clinical. They read clinical as plain words, which (bi)'s fo
 - **Walk 5 saved every brief and probe** to `b9-build2-surplus\u11-walk5\panel\briefs\`, and walk 4's to
   `u11-walk4\panel\briefs\`. The two extractors are in `u11-walk5\tools\` (`extract-prompts.mjs <subagentsDir>
   <outDir>`, `extract-all-user.mjs <transcript.jsonl>`).
-- **A heredoc piped into `python -` in Git Bash hung to the 120 s timeout.** Write files with the Write tool.
 - **`TaskStop` on a background `vite` leaves its two node processes serving** (b9-1: port 5287 still answered 200).
   Stop this session's own by PID, found by the command line (`Get-CimInstance Win32_Process -Filter
   "Name='node.exe'"` matching the port), then confirm the port refuses. Port 5199 was held by another owner at this
   close, so pick a fresh port.
 
-**DISTILL CANDIDATES (b9-1, the round review):**
-- **Compare at the precision the other side is stored at.** A monthly figure written as `entered × 12` unrounded sat a
-  float hair under a quote snapped to the cent, and printed "$84,999.96 is below $84,999.96". A predicate over a
-  rounded figure rounds its other side the same way (`roundCents`), as every sibling here already did.
-- **Review a test-first round before its mutant pass.** b9-8's round was test-first and green, and an adversarial
-  review with refuters still found eleven real findings. Among them were a P0, an unscoped lean the project's own guard
-  forbids, and a ramp-law violation, all in sentences the tests pinned exactly as written. Mutants prove the tests
-  bite; only a reader of the arms proves the words are true.
-- **A lean is per arm, never per sentence.** The typed-below note's "this answer can look better" was true for every
-  arm its prescription imagined, and false on one it didn't: a "saved" answer waiting on W. Route every new lean
-  through the one predicate the other leans ride (`savedWaitingOnW`).
-**DISTILL CANDIDATES (b9-8, walk 5's round):**
-- **A line break inside a paragraph needs a space before it, or its text changes.** `textContent` joins `"…you.<br>This
-  answer now:"` with no space, so the React key, a screen reader and every `toContainText` see a different string from
-  the one the composer joined. `NotePartsBody` draws `' '` then `<br>`; the trailing space is never painted.
-- **Check why a constraint exists before obeying it.** KTD17's "static legend" read as a rule, but the pay check's
-  deepen recorded its reason as mechanical (`SegmentedControl` took only a catalog key). One optional prop removed it,
-  and the W fork's question now names the figure "Yes" sets.
-- **A held figure is not always the figure an answer was given at.** "The $16,985 you had left over at $84,000" is
-  false after a later "Yes" at another figure; "when you answered" is true in every case. Date a stored figure to its
-  answer, never to the figure held today.
-**DISTILL CANDIDATES (b9-7, walk 5):**
-- **Labels made of plain words in running text are not structure.** The council ruled run-in labels as copy words (never
-  color or `::before`); rendered mid-line in body weight they vanished for every cold reader, and every one said the split
-  helped once told. A label works only where its form marks it: a line start and a weight (E2).
-- **A bare effect beside the reader's own choice reads as a bug.** "You chose to save all of it. This answer adds none of
-  it" lost every reader; the reason sat one screen away. Where a line reports the tool not acting on the household's
-  choice, the reason goes in the same sentence.
-- **"Or more … at most" invites the reader to run the dial the other way.** Beside the old figure's larger result, it led
-  two seats to a retype the tool would honor. State the floor in the same sentence, and close the path itself.
-**DISTILL CANDIDATES (b9-6):**
-- **Words that tell the reader which buttons to press belong beside the door, not in the line.** The line prints on a
-  read-only tab too, where no door is drawn; a definition carried inside it would name buttons that tab cannot reach.
-  Compose the door's lead with the door (`workingYearCostStaleDoor`), and let the host print both or neither.
-- **Key an act's name to the predicate that draws its door.** `workingYearCostAct` reads `heldYesBelowQuote`, the rule
-  that withholds the Keep door, so "confirm or change" can never name a door the face does not draw. The mutant pass
-  showed the reach: inverting it reddened the households with no "saved" answer too, because every stale W's door
-  rides it.
-**DISTILL CANDIDATES (b9-5, walk 4):**
-- **When every refuter's fix adds a sentence, the cure is structure, not words.** Three walks of one-fact sentences made
-  the paragraph longer, not easier; the threads broke at connectives doing a label's job ("So…", "Until…"). Take the form
-  question to a council once a walk's fixes all add length.
-- **Name an act by the exits the next screen really offers.** "Confirm or change" cured "checking = looking" but named a
-  Keep door three households lack, and pointed at a retype that clears the warning. A verb that names a door is a promise
-  about the next screen: read that screen's branches for every household the line serves.
-**DISTILL CANDIDATES (b9-4, walk 3):**
-- **A consequence stated as a zero hides a draw.** "Adds none of the $16,985" was the short run's only stated effect and
-  read as "we'd just tread water", while each short year draws from savings. Wherever a line names a short year, say where
-  the shortfall comes from, in the money picture's own words.
-- **Give a gain and a loss side by side the same reach, or name the years the gain skips.** Naming the short run made the
-  gain's single year starker: two readers then netted one gain against four losses. "In each working year that doesn't
-  come up short" is true by R8's cap with no year's figure assumed — reach by mechanism where a per-year figure would need
-  a new measurement. (Pairs with b9-3's "a shortfall stated beside a gain must share its unit".)
-- **Probe cold seats only after their first answers lock.** The walk's questions went to the first looks and the spouse
-  by follow-up message, after each had written an unprimed read: what they noticed alone stayed separate from what the
-  question showed them (no seat read a paycheck in either pass; the "which way?" gap showed in both).
-**DISTILL CANDIDATES (b9-3, walk 2):**
-- **Judge a conditional sentence over the extension it states, never at the one point on screen.** "Any working year your
-  pay doesn't cover" is empty for `datesavedrisen` at $90,000, and the chair first called the counterweight vacuous; the
-  refuter caught that "a check at $90,000 or more" spans the figures where it bites. The same reading kept the non-saved
-  "can look better" honest: across every figure at or above the spending it only adds cost.
-- **A shortfall stated beside a gain must share its unit.** "Adds at most $5,985 a year" beside "that year comes up $4,015
-  short" read as a net gain; the picture held the run (2029–2032) all along. Name the run wherever a gain is stated a year.
-- **A fix that dates a figure must hold for every household the line reaches.** "The $16,985 left over at $84,000" would
-  have been false for the later couple, whose left over at $84,000 is now $26,985; date it by when it was answered.
-**DISTILL CANDIDATES (b9-2, (ae)):**
-- **A copy branch that reads a counterfactual run must read it through the producer's own write, memoized on the source
-  draft.** The check at the quote is the money picture of `writeConfirmedWorkingYearCost(d)`, the "Yes" tap's own write: a
-  re-derived S − (quote − W) would drift from R8's cap, and the re-confirmed draft is a fresh object, so the picture's own
-  memo misses it on every render without a WeakMap keyed on the source.
-- **Read a year figure off a closed vocabulary of SIGNS, not one branch.** Year 0 at $0 exactly is neither "short" nor
-  "left over": folding it into `firstShort` printed "comes up $0 short" (mutant E6). Name every member of the partition.
-**DISTILL CANDIDATES (b9-1, the fix round):**
-- **A unit control on a figure the reader never typed must convert, not re-read.** The re-read that repairs a 12× typo
-  turned a kept $84,000 into $1,008,000, and that read FRESH, so the stale gate let it through. Who gave the digits on screen
-  decides which part a unit tap keeps.
-- **A gate's message is a frame: "answer it above" over an answered face is insight 109 again.** Derive the message from the
-  same core as the face's own door (`workingYearCostGateMessage` / `workingYearCostKeepLabel`), so it can only name what is drawn.
-**DISTILL CANDIDATES (b9-5):**
-- **The tier only moves when a run COMMITS, and two re-runs from one edit can cancel each other's provisional sweep.**
-  `memoryModel` holds the last answer while a run is in flight; a panel edit fires `recomputeBoth`, and where one edit writes
-  twice the second dispatch cancels the first's provisional, the first's final cancels the second's provisional, and only the
-  last final commits — the tier never leaves "final" (walk 1's branch B: the hero moved to "No fuck-off date" with every tier
-  read "final"). A harness waits on a settled frame BEFORE the edit, then on either a tier change or the run's own words
-  moving (`e2e/caddie-walk.spec.ts`'s `armRerunWatch`).
-- **Measure the oracle's question before the walk, and the walk's verdict can flip the hold.** b9-6's hold (e) feared the
-  clause defusing a rosy lean; U11 had measured the pair (stale no date, twin 9, the twin's $10,985 cap), so the chair could
-  close it the other way in-session: the lean is wrong for that household, and the clause's figure over-promises. Without the
-  measurement the card would have argued it from the copy.
-**DISTILL CANDIDATES (b9-4):**
-- **A version floor is proven by planting the revert itself, not only the constant.** U10's arms: the constant planted (B
-  against A, the delta exactly the floor test) AND a resolved whole `git revert` of the bump in a copy (the floor test the one
-  red of 4758). Only the second shows the guard survives the revert it exists for; it also showed the revert now conflicts.
-- **Vitest 4.1.8's JSON report writes a timeout as "Error: STACK_TRACE_ERROR" with no "timed out" text.** A mutant runner that
-  reads failure lines must treat that line as a timeout candidate and re-run its file alone under the same plant before any
-  verdict (probed with a 200 ms test sleeping 3 s; `tools\u10-mutants.cjs`).
-- **One shared household builder for every measuring tool.** Four lanes built in parallel all imported `u11drafts.mts` (the
-  W keys as the old tool selects them, "saved" minted through the shipped write, the stale pairs with a fail-loud state check),
-  so no two tools could disagree about which household they ran; the reviewers attacked the tools, not the households.
-- **A record's headline count needs its population named, and a verifier re-deriving it from the raw output.** The pilot's own
-  write-up carried a false count (K5's reach, "13 more households'"; the truth 25 claim years) and three figures with no key
-  set or the wrong unit (360,000 readings of 36,000 path-years) — every tool was green; only the re-derivation caught them.
-**DISTILL CANDIDATES (b9-1):**
-- **A guard sentence's qualifier is a loophole when the payoff is all or nothing.** "Choose “All of it” only if about $16,985…"
-  let a household saving most of it round up, since "Some of it" counted $0; three walks found it. Under a cliff payoff the
-  condition says "all of this", and the partial answer's zero is stated before the pick.
-- **A threshold stated without its base is met by the money the reader already counts.** "If at least $16,985 still goes in"
-  was satisfied by the $20,000 of deposits every household makes; "of the $27,537" closed it. Name what a threshold is a share of.
-- **Each fix round of copy needs its own cold read.** Walk 4 found a blocker that walk 3's fixes introduced (two instructions
-  for one household across the radios); walk 5 found none. Budget a re-read per round, and say on the card which words are
-  unwalked.
-- **"Same tree, slower machine" needs the timed-out tests rerun alone before any verdict.** b9-6 found the E-core scheduler;
-  b9-1 found sustained-load clocks: 802 s against 290 s, every timed-out test green alone. A wrapper that echoes the real exit
-  code is part of the instrument (`start /wait` returned 0 on a failing run).
-**DISTILL CANDIDATES (b9-6):**
-- **"The same tree was green an hour ago" can be the scheduler.** Windows ran the session's node tree on the i7-12700H's 8
-  E-cores with the P-cores idle, so the suite took 535 s and two solve tests timed out; pinned to the P-cores (`start /affinity
-  FFF`) the same tree took 290 s, green. An A/B from one vitest results cache showed no per-file delta between two trees;
-  per-core counters then showed where the work ran. Measure where the work runs before blaming the code or raising a timeout.
-- **A guard sentence must exclude what the reader's world supplies for free.** "Your savings grow by about this much, on top of
-  what you put in" was passed by market growth on any invested household: twelve seats, every refuter kept it, while every
-  unit and e2e arm was green. A consent check names the source of the money (pay) and the figures it sits on top of.
-- **Predictions by fresh readers find the rules no test holds.** Four read-only Opus readers predicting 15 plants found the
-  codec's literal-successor rule held by a comment alone and IntakeApp's gate call unpinned; both got an arm before the run.
-  Ask the predictors for gaps, not just kill sets.
-**DISTILL CANDIDATES (b9-5, the go-live's review):**
-- **A hold's docblock must name what the hold does NOT cover.** "The seat cannot move under its own press" was false: the W question
-  between the held picture and the seat draws from the live draft. Three lenses found it and jsdom measured the mounts. When a hold
-  covers part of a column, list every live part between the held content and the held control.
-- **A served-module mutant proves an e2e arm discriminates without touching the tree.** The fit verifier swapped
-  `/src/intake/gestureHold.ts` through `page.route` (the release moved back into the click listener): mouse and touch both stored a
-  figure never on screen, so the one arm that gates insight 149's race is proven to red.
-- **A "live" figure read on a stale input can name money no checked path credits.** W's stale clause named the year-0 print read on
-  the stale W; after a raise it read $27,537 while R8 caps every credit at the stored $16,985. Name the figure the household
-  consented to: it is the cap on every later credit.
-- **A builder's "discriminates by" column is a claim; a verifier's planted mutant is the evidence.** Per-lane verifiers, each
-  planting mutants in a scratch copy, found arms the builders called discriminating green under a reordered-replies plant, a
-  required-without-marker plant, and a release-in-listener plant (the label-wrapped radio arm).
-**DISTILL CANDIDATES (b9-4, the go-live build):**
-- **Map a multi-unit commit's surfaces with readers BEFORE building, and give each mapper a PLAN-vs-CODE section.** Seven mappers
-  found three defects the deepened, checked plan never named: obligation (a) (added after the plan) made `buildDateInput` call the
-  money picture that calls `buildDateInput` (infinite recursion); the plan's single new module would have closed an `intakeMap`
-  import loop no gate catches (the cycle pin covers `src/engine` only); and a held label-wrapped radio would store a figure the
-  household never saw (insight 149's forwarded click). Every one was invisible to the plan's own checks.
-- **A carriage gate that reads a producer's output must read it from a figure-free twin of the input** — the producer's own
-  input builder is the carriage, so the gate recursed; `buildDateInputBeforeLeftOver` breaks it, and is honest because year 0's cash
-  never reads the year-end credit.
-- **The first held control behind a label moves the release one task later** (insight 149's own prescription, now built): a
-  label's click releases before it forwards its click to its radio, so the radio acted from the LIVE render. jsdom cannot see it;
-  the coordinate-tap arm in START HERE item 1 step 5 is its gate.
-
-**DISTILL CANDIDATES (b9-3, U13):**
-- **A no-transposition rule stops at the seam it was written for unless it is applied one level down.** KTD9 made
-  `deriveStaleness`'s input a named object; U13's first cut gave `composeReentry` two adjacent nullable sentence parameters,
-  one type assignable to the other, so a swap compiled clean. The review's adversary found it. Apply a structural rule at
-  every seam the same pair of values crosses.
-- **A fail-loud throw in a UI seam must say where it lands.** `composeReentry`'s throw lands in `IntakeApp`'s bare catch as
-  the restore-failed face, on every reload: a household locked out of its plan. "The pair cannot disagree while the caller is
-  honest" is discipline, not structure; the fix is one core read by both (U14's obligation (f)).
-- **A gate the unit's Verification Contract names, skipped by the session, ships red, and the next session builds on it.**
-  U5's contract named `pnpm verify:fit`; b9-2's checks omitted it, its CI was still running at the close, and it was red for
-  two commits until b9-3 read it at commit time. Read the predecessor's CI by id before the first edit, and wait for it.
-- **When a behavior change forces a fixture's words to change, predict every downstream word before the run.** The Keep
-  arm's row was predicted "the figure you kept"; "your own figure" would have meant type-then-Keep strips the stamp, a
-  laundering path. A "just update the expected text" edit is where such a defect hides.
-**DISTILL CANDIDATES (b9-2, U5):**
-- **A mark's fate rule must survive the control's round trip, not one tap.** KTD10 dropped the keep stamp on a period change
-  ("taken over a different figure"); every test tapped once. "Each month" then "each year" restored the same $84,000 unstamped,
-  so a stale kept figure came back typed, fresh forever, with no digit typed — four of five review lenses found it. For a
-  reversible control beside a provenance mark, test the round trip: the mark must come back with the figure (insight 144's
-  lifecycle law, one control further; b9-6's "every writer that rebuilds the object" candidate is its sibling).
-- **A plan's open referent can be settled by its own writer fates.** R13 said a kept figure goes stale "when the live quote
-  rises above it" — the figure, or the stamp? Keyed to the stamp, a quote between the two stales an answer whose own door shows
-  and whose keep (which carries the stamp) can never cure it: a stuck state. The fates decided it before any council was
-  needed; the sentence's grammar agreed ("it" is the kept figure).
-**DISTILL CANDIDATES (b9-1, the Phase A engine review):**
-- **A mutant pass planted only at the consumer of a carried value leaves its producer unpinned.** KTD5 says `allAlive` is
-  "carried, never re-derived"; U4's 15 mutants all sat in `taxOverlay.ts` (the gate that reads it), and the plan's "on a
-  path where a member dies" scenario was built on hand-typed terms. So `allAlive: true` at the producer
-  (`cashTermsForYear`) credited every survivor working year with the suite green; 9 of 12 lenses found it. A carried value
-  gets a plant at BOTH ends, and the producer arm runs the real path against an independent witness (here the floor's
-  joint filing). Sibling of the U17 S0 lesson (bind both halves of a shared computation).
-- **A fixture family of round figures cannot see a grain or an order.** Every multi-year credit arm had a whole-dollar year
-  0, and no credited year drew, so year 0's cap read off the raw cash and a gross-up reading the credit's basis both passed
-  green (rosy by under $1 a year, and by $460 on a taxed $60,000 draw). When a rule names a grain or an ordering, one
-  fixture sits where the alternatives differ: a fractional cent, a credited year drawing at a taxed gain.
-- **A code comment that paraphrases the plan inherits the plan's mechanism, right or wrong.** "A half-cent tie can print a
-  cent above the float" went from KTD4 into `taxOverlay.ts`; the leaf it cites rounds a tie down. Seven lenses caught it in
-  the code, and only the plan fix stops U12 re-seeding it (insight 146's grain, failure mode #6's docstring).
-**DISTILL CANDIDATES (b9-6):**
-- **A ruling's words can leave its own mechanism's figure undefined; a trace that asks "what is the referent, on which grain"
-  finds it, and a second council rules it — never a pick by the planner.** "Never above the quoted figure" had no referent past
-  year 0. Seven traces found six open calls, and council `wf_1b5d9962-73c` ruled them. Its red team broke two claims the seats
-  all held: "min(live, stored) is rosy-proof" (both figures sit on the same W) and "cap (a) only errs gloomy" (survivor W_t and
-  K5 sit below the cap).
-- **A staleness stamp is undone by every writer that rebuilds the object it rides on.** The Keep fix's first draft left the
-  Keep door itself offering Keep on a stale kept figure, and one tap re-minted the answer without the stamp (deepen
-  `wf_a6429110-d52`, two lenses independently). Audit every writer of the object, plus the door's own visibility rule.
-- **A test of a multi-site write that reads only the authoritative total passes with half the sites missing.** The credit's
-  total moves through `stepYear` alone, so a dropped bucket fold or basis line hides as a smeared asset location. Assert
-  each destination's delta and the zero deltas beside it.
-- **A unit ID in prose collides across plans:** the plan's own U13 and build 1's "U13 working-years clock" sat in one
-  sentence. Cite a foreign unit with its home ("build 1's U13").
-**DISTILL CANDIDATES (b9-5, still open):**
-- **A refuter pair that splits on whether a ruling EXISTS has found a call that is still his: ask, never pick a side.** The
-  dependents ask: one refuter read D7 plus the queue's "yep, seems right" as the ruling, the other read a queue approval as
-  ORDER only; asked in plain words, he ruled in one answer and both entries moved. (Briefs: the reader and refuter briefs in
-  `b9-tier-sweep\`.)
-- **Moving an entry stales every prose "Tier N *Title*" reference to it, and no gate sees it** — 11 live ones across the
-  register, `architecture.md` and `roadmap.md` (b9-4's landmine covered line citations only); `tierrefs.mjs` found them.
-- **An "either way" lifts only when it signs the answer the household acts on** — across households (*The first answer assumes
-  money comes out of every account in proportion…* lifted) versus two opposite effects inside one household with the net
-  unsigned (*The investment mix is frozen…* held); recorded as a reading in the register header's sweep paragraph.
-**DISTILL CANDIDATES (b9-7):**
-- **A seed that satisfies the engine's carry rule can still be one the intake never carries.** U1's first draft gave
-  `datecoststale` a credit stream and a crown prediction from `asked = S ≥ $1`, but its W is stale, and R7 carries
-  nothing on a stale W. A measurement's population must be filtered by EVERY gate between the household and the engine,
-  not the engine's own (insight 141's rule, one layer up). The verifier caught it; `stream.mts` records `carried`.
-- **A range quoted beside a window must be read on that window.** The register said `date`'s left over runs "$16,985 →
-  $59,986 across 2026–2034"; $59,986 is 2035's, and across 2026–2034 it peaks at $37,223 (insight 141's population rule,
-  on the time axis). U1 measured every year and corrected both lines.
-**DISTILL CANDIDATES (b9-8):**
-- **A branch no input reaches is reached by planting the float lineage it guards, and a mutant proves the plant landed.**
-  The knife-edge branch (`taxOverlay.ts`, ledger ≤ 0 while `stepYear`'s state is positive) shipped with C2 untested. A
-  Roth-only pool T and a stock weight w where w·T + (1 − w)·T lands one float step above T, with a need of exactly T, reach it
-  deterministically (`workingYearCredit.test.ts`'s knife-edge describe; T = 12,345.67, w = 0.45); the outputs alone cannot
-  tell the branch from its sibling, so the U4 mutants M4a–c (each arm's credit dropped) are what prove it.
-- **A plan's verification sentence can fix a design its Files list never states.** U3's "the ledger tests pass with only
-  the allowlist edit" forced the ledger to RE-EXPORT the bottom line (its test imports it from the ledger), though the
-  Files list said only "imports it". Read every verification clause for the shape it implies before choosing one.
-**LANDMINES (b9-6's and b9-5's of 11-09 first, then b9-4's and b9-3's of 11-09, then b9-5's and b9-4's of 11-08):**
-- **(b9-6, 11-09) `src/ui/__tests__/copyGuard.test.ts` is CRLF; most of `src` is LF.** A `sed -i` on it rewrote every
-  line to LF (3,626 lines in the diff); `node` restored it. Edit it with the Edit tool or an EOL-aware script, and run
-  `git diff --stat` before staging. Git Bash's `grep -c $'\r$'` also miscounts CRLF here: count with `node`.
-- **(b9-6, 11-09) `pnpm doc:reanchor <base> --apply` edits `src` comments too** (370 edits in walk 4's round,
-  `devSeeds.ts` and `stalenessExposure.ts` among them): run it once, last, after the sweep and the mutants, never while a
-  plant is live.
-- **(b9-6, 11-09) A bare citation that pointed at the wrong lines can pass `verify:doc-stats` until a shift lands it on a
-  blank one** (`act4-u17-s5-execution-plan.md:96`'s `:787`/`:789`, re-pointed to `IntakeApp.tsx`'s `onSave`/`onRetry`).
-  When the gate names one, read what it was meant to cite before moving the number.
-- **(b9-6, 11-09) The mutant runner, the suite, the sweep and `verify:fit` must run in sequence**, never side by side: a
-  live plant is imported by any of the others (`chain.ps1` in `u11-walk4\` runs the first three in order, pinned).
-- **(b9-5, 11-09) A refuter's "it's the household's own number (D7)" can hide the rosy path.** N3's refuter rated typing
-  $84,000 by hand as harmless; the council's red team showed that retype clears the line for good and credits the whole
-  $16,985, filed Tier 0. Before rating a misread harmless, trace what the reader's literal act DOES in the code.
-- **(b9-5, 11-09) A full UI council costs about three times the council memory's figure:** `wf_7fa86902-35c` ran 23
-  agents, 3.2M helper tokens and 33 minutes (the memory says ~1.1M and 20–25 minutes, from the six-core days).
-- **(b9-5, 11-09) `cd` inside a compound Bash command moved the session's primary working directory** (twice, into the
-  walk bundle), and later relative commands ran there; use absolute paths, never a leading `cd` into a subfolder.
-- **(b9-5, 11-09) Seats that write their reports to files never truncate** (walk 4: 16 seats, none lost; walk 5: 17, none
-  lost): each brief names its output file, asks for a reply of 80 words or fewer, and the chair reads the files.
-- **(b9-4, 11-09) A teammate's final report over roughly 2,000 characters arrives truncated** in its idle notification ("[result
-  truncated — ask the agent for the rest via SendMessage]"): nine of walk 3's eleven seats needed a resend by message. Put a
-  word cap and "send it in parts if longer" in every seat's brief, or have each seat write its report to a file (b9-5).
-- **(b9-4, 11-09) `WorkingYearCostStaleSentence` carries `held` on its unrisen arm too** (`src/intake/workingYearQuote.ts`): any `toEqual`
-  on a `rose: false` value needs it.
-- **(b9-4, 11-09) A pinned suite piped through `Select-Object -Last 15` hides the failing test's name** (the summary says "1 failed"
-  only); pipe it through `Select-String -Pattern "FAIL|×|Test Files|Tests "` instead.
-- **(b9-4, 11-09) Two refuters' fixes can contradict each other:** R4 offered "settling on $105,000" for "checking your figure at" while
-  R3 had just ruled "settle on" a bargaining word; walk 4's N3 offered "Check your figure" as the button where walk 3 had
-  burned "check" as "look". Cross-read every refuter's fix, and the ruling it lands under, before adopting any one.
-- **(b9-3, 11-09) The Caddie walk's re-run watch can never fire on an edit whose run leaves the verdict word for word.**
-  Branch C (a move to Pennsylvania alone) re-runs the answer, but the run commits the same words at tier "final", so
-  `armRerunWatch` saw nothing in 150 s at both viewports, and `start /b /wait` still reported exit 0 (read the "passed /
-  failed" line). A branch that captures no Result arms no watch (`closePanel`, `e2e/caddie-walk.spec.ts`).
-- **(b9-3, 11-09) `pnpm doc:reanchor HEAD --apply` again left two bare continuations on TODO.md's Card 13 line** (`:2217`
-  and `:2330` after `vertical-fit.spec.ts`, the aged `datestale` / `datearrived` describes, moved +4), with "0 for hand
-  review"; fixed by hand. After any re-anchor that moves `vertical-fit.spec.ts`, grep that line's bare `:N` against the
-  describes.
-- **(b9-3, 11-09) The whole `e2e/` folder does not typecheck under a scratch tsconfig that adds it:** eight pre-existing
-  `Node.remove` errors in `chart-text.spec.ts` and `held/assumptions-row-look.spec.ts` (the DOM lib); filter them before
-  reading an edited spec's result (Playwright compiles with esbuild and never sees them). The scratch tsconfig must name its
-  `types` by absolute path (`<project>/node_modules/@types/node`, `<project>/node_modules/vite/client`) when it lives in the
-  scratchpad (b9-4).
-- **(b9-3, 11-09) The blocked W step's capture is scrolled to the top** (the settle recipe's `scrollTo(0,0)`), so its
-  alert, about 1,300 px down, is never in `viewport.png` and no CVD arm covers it; no capture shows whether a real press
-  scrolls to it.
-- **(b9-5, 11-08) A Caddie panel capture shows the OLD answer behind the sheet.** Each `intake:kept` panel state is captured
-  ~5 s after its edit, while the Result behind is still re-running (the walk measured a first commit up to ~18 s later), so the
-  dimmed hero still reads the pre-edit date. Four seats read it as "the answer doesn't follow the edits"; the refuter traced it
-  to timing (and found (ag) under it). Tell the seats, or settle the re-run before a panel capture, in walk 2.
-- **(b9-5, 11-08) A new dev seed moves more than its own arm's count:** `datesavedrisen` added 3 tests (parametrized seed arms),
-  and two devSeeds sweeps pin the W-seed count by hand (`toBe(15)`). Read the live count from `verify:doc-stats`.
-- **(b9-4, 11-08) The E-core rule bit again:** typecheck, lint and the build on `/affinity FF000` beside a pinned suite run
-  turned 3 heavy tests into timeouts (525 s against 419 s clean); all green alone. Nothing heavy beside a pinned VITEST run.
-  Measurement runs (tsx, no timeouts) can run several at once pinned to the P-cores: four did, each byte-equal to its re-run.
-- **(b9-4, 11-08) Other sessions commit to the monorepo during a long run.** A tool that stamps `git HEAD` in its record
-  differs between its two runs; byte-compare with the label and git lines aside (moves11 does), never a raw `cmp`.
-- **(b9-4, 11-08) `node -e` with a Windows path in a string dies on `\u11…`** ("Invalid Unicode escape sequence"): edit
-  record files with the Edit tool, or write a script file.
-- **(b9-4, 11-08) Probe copies with `node_modules` JUNCTIONS now live in `b9-build2-surplus\`:** `stream11-tree\` and
-  `u11-residual\` (and `head\`, `v4-parent\`). Remove each link alone before deleting a folder.
-- **(b9-4, 11-08) A `git revert a9cacf22` now stops on a conflict in `scenarioCodec.test.ts`** (U10's corrected note sits in a
-  go-live hunk); resolving toward the old file reaches the tree U10's proof ran, where the floor test is the one red.
-**LANDMINES (b9-1's of 11-08, then b9-6's of 11-05, then b9-5's and b9-4's of 11-05, then b9-3's of 11-04, b9-2's and b9-1's, then b9-8's, b9-7's and b9-6's, then carried from b9-5, b9-4 and b9-3):**
-- **(b9-1, 11-08) `cmd /c "start "" /b /wait /affinity FFF <cmd>"` reports exit 0 even when the command failed** (a failing vitest
-  run came back 0). Launch through a wrapper `.cmd` that runs `call %*` then `echo PINNED_EXIT=%errorlevel%`, and read that line:
-  the copy is `<b9-build2-surplus>\tools\run-pinned.cmd` (three lines; from PowerShell, `cmd /c "start `"`" /b /wait /affinity FFF <that path> pnpm test"`; proven with `node -e process.exit(3)` → `PINNED_EXIT=3`). The child really is pinned
-  (a node child read its own affinity as 4095 = 0xFFF).
-- **(b9-1, 11-08) Never run a heavy job on the E-cores beside a pinned P-core run.** The identity sweep on `/affinity FF000` slowed
-  the pinned suite from 534 s to 863 s (the cores share one power budget). Serialize: the sweep, then `verify:fit`, then the suite.
-- **(b9-1, 11-08) The laptop ran about 2.5x slower than on 11-05 under sustained load**, with no other process busy: the whole suite
-  pinned took 802 s (b9-6: 290 s), seven heavy engine tests timed out, and `verify:fit` timed out 12 final-tier waits. Every one
-  passed alone (`playwright test --last-failed`, then `--workers=1`; each vitest file on its own). Under load the P-cores read
-  about 100-120 % of base clock against 179 % idle. Before calling a red real, rerun the timed-out tests alone; an assertion is
-  a finding, a timeout on this machine is not yet one.
-- **(b9-1, 11-08) Another session's work shares the CPU:** the Feud session's `te_replay.py` searches each held a core through
-  b9-1's first suite, and an orphaned `python.exe -` from a dead 10-30 session had held one for 9 days (killed with his OK, by
-  `taskkill /PID`). Check `Get-CimInstance Win32_Process` for busy python before a heavy local gate.
-- **(b9-1, 11-08) A copy fix can contradict a line on the other side of the radios.** Walk 4's blocker: the check sentence's
-  partial-saver line ("choose Some of it") and the moved line's way out ("leave this as it is") told the same household two
-  things. Read every line a state shows together, top to bottom, after any copy edit to one of them.
-- **(b9-6) Run every heavy local check pinned to the P-cores, launched from PowerShell:** `cmd /c "start `"`" /b /wait /affinity FFF
-  <command>"` (the children inherit the mask; vitest and Playwright size their pools to 12 CPUs). Unpinned, the work lands on
-  the E-cores and the solve tests time out. The same `start` line through Git Bash's `cmd //c` hung with no child process.
-  A light suite can run on the E-cores (`/affinity FF000`) beside a pinned long run without slowing it.
-- **(b9-6) In a `.cmd` file, `echo EXIT=%errorlevel%>> log` loses the code:** `0>>` parses as a handle redirect. Write
-  `>> log echo EXIT=%errorlevel%`.
-- **(b9-6) Every copy shares the live tree's vitest results cache through its `node_modules` junction** (keys are
-  `:src/…`-relative, the folder hash is of the empty project name). An A/B restores one snapshot of
-  `node_modules/.vite/vitest/<hash>/results.json` before each run, or the second run inherits the first's order.
-- **(b9-6) A workflow's `.output` file is JSON with `summary`, `logs` and `result` keys:** parse `result` with node and print only
-  the refuter survivors (`scratchpad\caddie-summary.mjs` did); 400 KB for 103 agents.
-- **(b9-5, 11-05) Never run an e2e harness while anyone edits `src`.** An HMR reload mid-wait reds arms falsely (the fit and caddie
-  lanes saw final-tier timeouts and a vanished `[data-caddie-scroller]`); run the whole gates on a quiet tree, or a no-HMR server
-  (the fit verifier wrapped `vite.config.ts` with its own `cacheDir` in the scratchpad, so the shared `node_modules/.vite` was never
-  rewritten). Every Playwright run under a config cleans the shared `test-results/`.
-- **(b9-5, 11-05) `src/ui/devSeeds.ts` is CRLF**, like `devSeeds.test.ts`: a patch script must convert its anchors (b9-5's first fix
-  batch matched 0 there, and its all-or-nothing guard wrote nothing). Git Bash's `cat -A` showed no `^M`; count `\r\n` with node.
-- **(b9-5, 11-05) Read a workflow's result through a summarizer script into a scratch file**, never printed raw: the `.output` file is
-  JSON (`result` holds the script's return value) and the journal has one `result` line per agent. Printing them, and the go-live's
-  whole diffs, is what spent b9-5's window.
-- **(b9-4, 11-05) The archive `b9-build2-surplus\v4-parent\` is `88a5d125`'s project; its `node_modules` is a JUNCTION:** remove the link
-  alone before deleting the folder. So are `b9-golive-review\verify\f1-seatmove\node_modules` and
-  `b9-golive-review\verify\m4-clausehost\node_modules` (two review verifiers' scratch copies, b9-5).
-- **(b9-4, 11-05) The gesture hold now lets go ONE TASK after the click** (`src/intake/gestureHold.ts`). A test that asserts the
-  released face right after `fireEvent.click` must first await a zero-delay task (`letGo()` / the async `release()` in
-  `gestureHold.test.tsx`); with fake timers, `act(() => vi.advanceTimersByTime(0))`. The six W coordinate-tap arms in
-  `verify:fit` were re-run against it green at both sizes (b9-5's fit lane, with the whole pay-check block).
-- **(b9-4, 11-05) Never call `buildDateInput` from inside the money picture's path.** On a "saved" draft `buildDateInput` now reads
-  `workingYearLedgerForRun`; the picture composes from `buildDateInputBeforeLeftOver`. Any new reader inside
-  `composeWorkingYearLedger` that calls `buildDateInput` recurses forever on a saved draft.
-- **(b9-4, 11-05) Read the window between big reads.** Seven ~30 KB maps, the whole plan and the build carried b9-4 from 8% to 80%
-  with no read in between. For the go-live's remaining steps, read only the map for the step in hand, and run `/window` after each.
-- **(b9-3, 11-04) A partial suite run hides a source-bind.** `src/ui/__tests__/stalenessExposure.test.ts` pins
-  `IntakeApp`'s `deriveStaleness(…)` call by regex; U13's first pass ran only the touched suites and missed it red. Before
-  changing any call's shape, grep the tests for a `readFileSync` of the calling file and for the function's name inside a
-  regex, and run the full suite before any review.
-- **(b9-3, 11-04) An edit after the one `pnpm doc:reanchor HEAD --apply` is not re-anchored.** A second run double-shifts
-  every citation it already moved. Grep `<file>:<N>` citations past the edit's first line by hand (the fit spec had none past
-  3170), or commit the late file on its own and re-anchor against the new HEAD.
-- **(b9-3, 11-04) Two commits pushed at once run CI only on the head.** A prerequisite fix committed first keeps each tree
-  honest, but only the head's run is read; say so in the report.
-- **(b9-3, 11-04) A vite dev server on port 5199 (pid 20284) was running at this close**, though b9-2's handoff said its 5199
-  server was stopped. Not b9-3's; left for its owner.
-- **(b9-2) Git Bash's `grep -c $'\r$'` misreads line endings** — it reported every line of LF files as CRLF. Count endings
-  with Python on the bytes (`t.count(b'\r\n')`) before deciding a file's EOL; most of `src` is LF, `copyGuard.test.ts` is CRLF.
-- **(b9-2) The Playwright MCP writes only under the project** (its allowed roots: the project and `.playwright-mcp\`, which is
-  gitignored); save shots there, then copy them to a durable folder and delete this session's files. A reload over unsaved edits
-  opens a `beforeunload` dialog that blocks every tool until `browser_handle_dialog` accepts it.
-- **(b9-1) The citation arm reds on rot the re-anchor never sees.** A bare continuation (`:2361` after an earlier
-  `taxOverlay.ts:N` on the same line) that already pointed at the wrong code passes the gate while its line holds text, and
-  reds the day a shift leaves it blank. `pnpm doc:reanchor` moved the line's first citation and left the three bare ones.
-  Re-point such a token by reading the prose around it and finding the code it describes, never by its old number (the
-  accumulation decision record's line 98 had three; `9c51d2bb` fixed them).
-- **(b9-1) A mutant pass on this repo runs in a scratch COPY, never the live tree.** The pattern that worked:
-  `fs.cpSync` the project's `src` plus `tsconfig.json`, `package.json`, `vite.config.ts` and `vite-env.d.ts` into the
-  scratchpad, `fs.symlinkSync(<project>\node_modules, <copy>\node_modules, 'junction')`, plant by exact-string replace
-  (anchor count 1), run `pnpm exec vitest run <files> --reporter=json` from the copy, restore and compare. Delete the junction
-  ALONE (`(Get-Item <copy>\node_modules).Delete()`) before removing the copy.
-- **(b9-8) Every `src` commit that shifts lines reds the full suite's citation arm until `pnpm doc:reanchor HEAD --apply`
-  runs** (U4: 326 edits, U15: 21). Run the dry `pnpm doc:reanchor HEAD` before the suite, apply it once, then the suite.
-- **(b9-8) The HSA leaves-out row's TRAP 3 (Tier 0 of the 2026-08 tiered list below) calls its three cited branches "zeroing" ones, but
-  the third (`taxOverlay.ts`'s knife-edge buckets) is not a depletion branch** — since C2 it holds the year's deposits and
-  since U4 the left-over credit. Whoever builds that row re-reads it before writing the HSA sentence.
-- **(b9-7) TaskStop on a backgrounded `pnpm exec tsx` kills only the shell.** The node tree keeps running and keeps
-  writing. List with `Get-CimInstance Win32_Process -Filter "Name='node.exe'"` and kill with `taskkill /PID <pnpm pid> /T /F`.
-- **(b9-7) `pnpm exec tsx -e` with a top-level `await` hung with no output** (killed after minutes). Write a script file.
-- **(b9-7) `git archive HEAD:projects/the-back-nine src …` fails from the project dir** ("pathspec 'src' did not match");
-  run it from the repo root.
-- **(b9-6) Windows says a wrong-case path exists.** `[ -f src/intake/__tests__/AssumptionPanel.test.tsx ]` passed, but the
-  file is `assumptionPanel.test.tsx`, and CI is Linux. Check a path's case with `git ls-files --error-unmatch <path>`.
-- **(b9-6) `docs/plans/features/README.md`'s index is stale.** It has no rows for the pay-check, schema-v4 or build-2 specs,
-  and its prose still calls the working-year tax floor "the next build". Fix it in build 2's U12 docs pass: add the three
-  rows, and rewrite the "All of them are shipped except…" sentence from the roadmap.
-- **(b9-6) Build 2's plan names files by path, read at HEAD `a3cd0b16`.** U2's cycle move shifts about 86 doc citations into
-  `simulate.ts`. Re-open every cited line before acting on it (the features README's own rule).
-- **(b9-5) A commit message's counts typed from memory went out wrong** (`31e018d5`: "29 refuters over 37 candidate moves";
-  the run had 38 over 42) — fixed by a follow-up commit, since a pushed message never changes. Count from the run's own
-  record before writing a number into a commit.
-- **(b9-5) After any register move, run the stale-tier scan** (`b9-tier-sweep\tierrefs.mjs`) and fix the live hits; leave the
-  historical logs (`docs/caddie/cold-read-log.md`, `docs/plans/features/`) as written.
-- **(b9-4) A store test that fails before `lock()` leaves its session claimed, and its BroadcastChannel answers the NEXT test's
-  writer probe ("open-in-another-tab")** — a cascade the mutant pass first read as kills. `session.test.ts` and `backup.test.ts`
-  now lock every session they open in an `afterEach` (a `createSession` wrapper); a new store suite copies that wrapper.
-- **(b9-4) Moving register entries shifts every line-numbered citation INTO `docs/backlog.md`, and no gate sees it** (arm 4 of
-  `verify:doc-stats` reads only code-file citations). Cite a register entry by its title, never by a backlog line.
-- **(b9-4) A Workflow's task output file is a JSON object** (`summary`, `agentCount`, `logs`, `result`): parse it and read
-  `.result`; slicing from the first `[` picks up `logs: []`.
-- **(b9-3) Git Bash's `grep -c $'\r$'` reports an LF file as all-CRLF** — it said `scenarioCodec.test.ts` had 1339 CRLF lines
-  when node counted 0, and an edit script that trusted it wrote CRLF into an LF file (`scenarioFromDraft.ts` went MIXED; fixed
-  before commit). Check EOL with `git ls-files --eol -- <path>` or a node count, never grep in Git Bash.
-- **(b9-3) A heredoc-fed JSON spec ate its backslashes again** (the Windows paths in a TODO edit: "Bad escaped character"); nothing
-  was written. Edit path-bearing text with the Edit tool.
-- **(b9-3) `pnpm doc:reanchor` moved historical citations in insights 041 and 105 and the insights README** (the register Tier 4
-  re-anchor entry's known shape); left as moved.
-- **`pnpm doc:reanchor HEAD --apply` rewrote the FROZEN `e2e/held/fit-24px-measurements.md` again** (the Tier 4 entry's known
-  shape): restored with `git show HEAD:projects/the-back-nine/e2e/held/fit-24px-measurements.md > …`. Its one REVIEW line (a
-  citation inside a modified hunk) needs a hand fix — read the cited line at HEAD, then point at where that code is now.
-- **The full suite times out the same heavy files under load** (`budgetTwoTrack`, `solvePayloadIdentity` ×2, and beside the R10 sweep `healthSheetSeedGate` too, plus a
-  `SaveFlow` wait): twice this session, beside nothing heavier than idle review agents. Re-run the red files alone before
-  diagnosing; never call it a regression on the full run's word.
-- **A Windows path written through a shell-inlined script loses its backslashes** (`\b9` became a backspace and `9`; `\U`,
-  `\b` vanished): `594e4ae9` committed a mangled path, fixed by `a64c942f`. Write any path-bearing script with the Write tool
-  and `String.raw`, and never end a `String.raw` with a backslash before its closing backtick (it escapes the backtick) —
-  it bit again in b9-4: build a trailing backslash as `String.fromCharCode(92)`.
-
-**THE A7 REVIEW (durable, 2026-10-29):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a7-review\`
-— `brief.md` (the review's contract brief, a template for Phase C's), every lens's repros in its own folder, `a7-tools\` (A7's
-53-mutant spec and `seeds.mts`, saved from the dead A7 scratchpad), and `fixes\` (the fix's 28-mutant spec + its result,
-`seeds.mts` pointed at `fixes\out`, the before/after outputs; `head\` and `pre-a7\` are `git archive` copies with
-`node_modules` junctions). For U10: `adv-temporal\sweep.mts nocpi` is a drift-free completeness sweep over generated W
-households — it reads `adv-temporal\nocpi\src`, a `src` copy whose `priceIndex.ts` multiplies by `1 + 0 * cpiRateFor(y)` (no
-drift, so every cash move left is discrete), and prints each later year that moved UNNAMED, was named with no move (NOISE), or
-was MISATTRibuted. That copy is the PRE-fix tree: re-copy today's `src` into it and re-apply the one-line pin before re-running.
 **THE A6 TOOLS (durable, b9-14):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a6-tools\`
 — `seeds.mts` (`b9-seed-probe`'s, rooted at the CWD's `src`: run it once from `b9-a6-head\` — a `git archive` of HEAD's
 `src` + tsconfig with a `node_modules` junction; refresh it with `git archive HEAD:projects/the-back-nine src tsconfig.json
 package.json` — and once from the project, then `cmp` the two outputs for a byte-identity proof that never touches the live
-tree), `timing.mts` (final-tier wall time, W-absent vs W-present, alternating), `unreanchor.mjs` (the landmine below) and
+tree), `timing.mts` (final-tier wall time, W-absent vs W-present, alternating), `unreanchor.mjs` (its landmine is in `docs/landmines.md`) and
 the A6 mutant specs. The A6 review's repros: `b9-a6-review\` (`wf_fdc509f6-84c`).
 **THE SEED PROBES (durable, b9-11):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-seed-probe\`
 — `seeds.mts` (every dev seed's FULL engine output through the app's own calls: the spine run with band fan + survivor
@@ -935,9 +303,6 @@ to overrule (b9-12): a widow(er) benefit that STARTS in the survivor's full-reti
 mean a few months the law would test. It joined the disclosed K5 residual (the plan's U9 K5 key), beside "a claim at 67
 is paid for the whole year"; the review's two refuters split on it. Asking the birth month closes both (the register's
 *Ages are whole years from the birth year alone — the birth month isn't asked*).
-**THE PAY-CHECK PROBE (for build 1's re-measure):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-probe\`
-(`paycheck.mts` + `paycheck-years.json` + the skeptic's `survivor.mts` / `survivor-rows.json`). Absolute imports into `src/`;
-re-point each script's output path off the dead session scratchpad before running. Run it from the project dir with tsx.
 **THE D7 QUEUE — his order, ruled 2026-10-21 ("yep, seems right").** Every item is a register entry; cite it by title.
 1. **An honest quit date (the working years).** Most of these make the date read too early:
    - (a) ✅ BUILT 2026-10-30, build 1, the pay check (the CLOSED Tier 0 *A working year never checks the household's pay against its spending…*): with W answered, every working year checks pay against W, payroll tax, the tax on outside income and its own deposits, and a short year draws from savings. Its open residuals are their own register entries, slotted below (b9-5's ranking pass);
@@ -957,7 +322,7 @@ re-point each script's output path off the dead session scratchpad before runnin
 - **States:** the priced roster stays NC, PA and FL "for now" (his ruling 2026-10-21). His generic-state idea (ask the state's rate, and whether it taxes Social Security) is filed on *Unpriced states — a confident winner computed with zero state income tax*; *Two states outside the priced three look the same to the working-year cost…* (Tier 0) rides the same facility.
 - **The pilot's working rule (a HOW call, not his ruling):** no new process or tooling work unless a D7 build needs it. October ran 55 docs/bookkeeping commits to 17 features; that ratio is part of what took us off course.
 **WHERE THE SOLVE STANDS (carried from b9-6; the RIB-LIM clause added 2026-10-27, b9-11):** ONE pricing change since the 2026-10-12 (b9-2) close — ledger v12, the working-year tax floor (`b4bbbd3e`): a reprice of `tax` + NC's `stateTax` gated row-wide on `reach: 'working-years'`, UNSCORED (the solver runs only on the all-retired spine, so it left `SOLVER_CODE_VERSION` at 11; the date-route Roth preview moves, unpersisted); no roster change — THE POOL (`225d8da4`, laws in `docs/architecture.md`'s *The pooled solve*), the all-in objective (v10, `6dab9ec0`), the budgetless survivor-medical lean (v11, `c1ada867`; a scored spend-side pricing change, no roster change), then — no ledger row — the RIB-LIM order (`SOLVER_CODE_VERSION` 12, 2026-10-27, the current one: survivor income where a member claims before FRA, and a dime or two lower on a PIA with odd cents; measured on `healthss`, both goals, crown / runner-up / grade / top five unmoved), the v9 window walk, rosters `retired`-type 93 / `health` 97 / `healthgap` 101; THE APP (production, his laptop, P = 12): `retired` 36.5 s · `nc` 39.8 s · `healthnc` 150.9 s (ANY roster growth re-times `healthnc` first, `e2e/held/solve-timing.spec.ts`). The PHONE half of the pending-line entry is still owed (a ≤ 3-core device gets no pool).
-**UNFINISHED:** the distills are DONE through the pay check's Phase C (2026-10-31, b9-10: insights 144–148 and dated extensions on 22 older ones; that candidate block is retired; b9-10's close starts a new one — the re-tier candidate's rule is START HERE's ranking item, and the cohort-bound candidate was dropped as the constants discipline's own). Still open from the 2026-10-21 pass: move the re-anchor verification scripts (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`, now with `content-check.mjs` — b9-9's cited-line content check) into the repo beside the register Tier 4 re-anchor entry, so they stop living only in a session folder.
+**UNFINISHED:** the distills are DONE through the pay check's Phase C (2026-10-31, b9-10: insights 144–148 and dated extensions on 22 older ones; that candidate block is retired; b9-10's close starts a new one — the cohort-bound candidate was dropped as the constants discipline's own). Still open from the 2026-10-21 pass: move the re-anchor verification scripts (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`, now with `content-check.mjs` — b9-9's cited-line content check) into the repo beside the register Tier 4 re-anchor entry, so they stop living only in a session folder.
 **OWED (carried from b9-6):** to HIM — the "Income Medicare looks at" heading (⚑, `docs/council-log.md` 2026-10-20 — the figure now also sets the income-tax base). The NIIT clause's "here" is no longer a word call: under D7 the surtax gets figured (queue 3), and the clause goes. OWED (both carried from b9-2, still live): (a) the engine measurement of the discount a crossing dollar loses, for the scope entry (Tier 0 *The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…*) — only hand figures exist, from the 2026-10-15 early-claim Caddie walk's hunter in b9-toronto1 (`healthss` $9,479 at the anchor; about $8,374 at the ~$84,600 line, the same on `healthnc`'s line — both seeds carry `slcspMonthlyToday` 1,400); measure through the engine on `healthnc`, `healthgap` (the register's Prescription (1) names it — its cliff is live, "about 2 of 10 futures") and `healthss` (a paired CRN run across the line, the anchor year's readout) before his words; (b) the Caddie tape rows awaiting his read — 2026-10-06 all-in, 2026-10-09 survivor-medical, 2026-10-14 survivor spending-basis, and 2026-10-15's four (held-flat, NC cents, early-claim cents, the same-age Medicare card), 2026-10-16's one (the one-figure card's first-year frame + his trend clause), 2026-10-16 (b9-1)'s one (his three rulings + his two in-session rulings), and 2026-10-19 (b9-2)'s one (his four b9-1 walk rulings + his in-session Medicare re-ruling), and 2026-10-21 (b9-6)'s one (the working-year tax row, three walks — his in-chat reads of its DRAFTS are on it as E20, not a read of the shipped face) — `docs/caddie/tape.md`.
 **Keep out of every commit from here:** the three family-feud working files (`../family-feud/newsletter/…`) are uncommitted on purpose; never stage them from this project.
 
@@ -969,7 +334,7 @@ re-point each script's output path off the dead session scratchpad before runnin
 > entry (cite it by title). Re-sort each under D7 when it is reached: many are wording calls that a D7 build removes, some are
 > real defects that still stand, and the process and tooling ones wait unless a D7 build needs them.
 
-**The b9-6 NEXT list (2026-10-21, pre-D7):** (A) the ACA re-verify — ✅ CLEARED 2026-10-20 (regime unchanged; the ceiling 119-124, every law above 119-118 matched by bill number and swept clean; the record's two self-contradictions corrected — `lawsInEffect` turned out to be one stamp per RELEASE, neither per section nor site-wide); the next FULL pass is due by CI-red ~2026-11-19 00:00 UTC / runtime 2026-11-20 — follow the record's `forwardClock` (its ⚑ 2026-10-20 head: the Senate resumes business 2026-11-09, so the pass lands in the first floor weeks before the December 11, 2026 cliff; the twelve House bills presented 10-14/15 first, by bill number; two new referral-only vehicles to watch — H.R. 10730, retroactive to TY2026 and permanent, and S. 5496, permanent from TY2027) · (B) the NEW Tier 0 *A working year never checks the household's pay against its spending…* (filed 2026-10-21, b9-6, by the working-year row's first Caddie walk and his "why the fuck not? what are we building???") — the first BUILD only if his off-course discussion leaves it there (it is that discussion's example #1; never treat it as ruled): (1) measure — per clamped year, take-home = pay − the worker's own pre-tax deferral − the floor's tax on the base − payroll tax − every other contribution, against the year's spending; name each seed and household shape that goes short, and by how much; payroll tax (FICA) is unmodeled and NOT in the constants — source it first, never a plausible default (burned/062); (2) `/council` the remedy — draw the shortfall, flag it at intake, or both (a draw nets against the contributions, never stacks: §7's double count); (3) build; the `working-year-tax` row's "It doesn’t check that your pay really covers all of that…" sentence comes out the day the check ships (⚑ the entry's NEGATIVEs: never restore the gross-pay subtraction; never key the clamp on a value) · (1) the three filings his 2026-10-16 (b9-1) walk left open (the four rulings themselves are BUILT + WALKED, `1b685648` — git log and the cold-read log's 2026-10-19 (b9-2) card are the record): (1a) Tier 1 *On a plan reopened in a later year the relief line names no assumption…* — words his (the pilot's draft is on the entry), due before 2027-01-01; (1b) Tier 1 *On the date route the North Carolina / Pennsylvania clause says "your state income tax" with no scope…* — MEASURED 2026-10-20 (no priced-state seed reaches at its crown; the mechanism is federal too and is closed by the working-year tax floor, `b4bbbd3e`), so only the words are left, his; (1c) Tier 3 *A household that kept its state bill inside its spending, then picked a priced state in the panel…* — his product call · (2) **HIS WORD CALLS** (what is left after his 2026-10-16 rulings — each needs the pilot's measurement or draft first): (iii) Tier 0 *The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…* — OWED (a) first; the bound is the FIRST POINT THE RATE CHANGES, never the room (on `healthss` 28¢ holds for ~$1,260 converted; the rest of the room costs 32.16¢, filling it $3,528 — the entry's AMENDED bullet); (iv) Tier 0 *The survivor step-down attribution…* — its third misreading, the order of death ("$990" is the floor; ~42 % of `healthss`'s survivor futures drop ~$1,283, the refuter's `sampleCouplePath` run) — measure on the engine, then words his; (v) the 2026-10-14 survivor-basis build's and walk's word-his Tier 1s: *The survivor card's spending-basis line is withheld on a RAMPED budget…*, *On an itemized budget the assumptions sheet says the survivor share is "75" %…*, *The survivor card carries no closeness hedge…* (per each entry's owner line — the hedge: pilot measures + the flag first, then words his; the RAMPED line: words his, then the pilot builds; the "75": words his); (vi) Tier 1 *The conversion tile's "all told" leaves out the tax on the money that pays the tax…* — framing his (~1.5¢ on `health`, ~33¢ derived on `healthss` against the tile's 28¢) · (3) Tier 0 *The ACA solve finds no root at the 100 %-FPL line…* — pilot measure + the build's mechanics → council on what a household AT the line pays · (4) Tier 1 *The conversion tile's federal term treats a realized gain as ordinary income…* — pilot (measure reach → build; the gain split is not on the wire today; for a couple reachable only past the subsidy cliff) · (5) Tier 2 *The 2026-10-15 held-flat walk's other pre-existing sheet findings…* — pilot (layout + measure) → words his · (6) Tier 1 *The relief line has no branch for a floor BELOW the hero…* — NOT a Tier 0 (the 2026-10-14 probe found floor < full unreached on every measured face); next: reachability outside the measured family (the entry's Prescription bullet) · (6b) Tier 1 *The one-figure Medicare card's "start at" reads as a floor when the first billed year carries a look-back surcharge…* — NEW 2026-10-16 (b9-toronto3), from the card's build review (`wf_0f6a7da2-fb1`, reproduced through the engine; PESSIMISTIC — it overstates): pilot measures reach on the MEDIAN path (a big conversion two years before enrollment; a high look-back seed), then words his for a surcharged first year (⚑ never the trend clause there; never a second figure without a ruling) · (7) Tier 1 *The date route's Tier-1 key is unruled…* — ruled in the same council as the working-route solve (`datesplit` / `datemixed` / `dip`, plan-as-executed as a probe; the fiduciary elder's charter is already amended, `.claude/workflows/council.js:119` — the workflow, not the skill directory) · (8) Tier 1 *The TwoFutures even line swallows a lever's harm…* — measure across the roster's previews AND the off-roster HSA construct (the 3.94 pp HSA-class loss was measured on `healthgap` + a $150,000 HSA, wf_d98e02fb-08c — no dev seed carries an HSA, so a roster-only measure cannot reach that class), then `/council` on the grammar · (9) Tier 1 *No sourced NON-medical survivor ratio…* — the research leg (a sourced r_N, or a sourced survivor-OOP fall ≥ (1 − r), FLIPS the survivor-medical ruling to keep-flat-and-disclose — so says `docs/council-log.md`'s 2026-10-08 row; ⚑ the register's Prescription and `docs/decisions/ss-computation.md` §6a disagree, both APPLYING a sourced r_N to both arms (the Prescription flipping only on the OOP fall): resolve which governs BEFORE the leg acts on a finding — found 2026-10-15, b9-toronto3; §6a's side added by the 2026-10-16 doc audit, and the register entry's ⚑ flag names all four homes, the CLOSED survivor-medical entry's Dissent bullet among them) · (10) Tier 1 *The band sentence's low figure reads as a FLOOR…* (words his or a council); its two Tier 2 siblings (the delta hero's mean lead; the 10-06 read's other findings) ride the ranked list as filed · (11) the headroom look-back entry TOGETHER with *The step card's room covers the one-enrollee years…* (Tier 1, pilot + council — open, not blocked; figures re-derive under the growth base) · (12) Tier 2 *The engine-pricing ledger cannot name a date-route or spending-figure change…* (8d4d4e58, 6e4c065d — RE-READ 2026-10-15 b9-toronto3: ledger v11's `spending` family does NOT cover the spending half — its exposure read is `survivorMedicalLeanMoves`, its phrase the survivor-spending one, its witness `cashTermsForYear`, and no row names 6e4c065d; the register's "five families" is six now) · (13) Tier 2 *The spend lane's test + polish debt…* · (14) the Roth sheet's blank amount box (Tier 1 — its rail half's shape RULED 2026-10-04, the entry's ⚑ RULED block; built with the sheet after (11) — and after (18)(c): the entry's COUPLING bullet says the fact lines make the sheet taller, so "the build rides" the tall-sheet decision) · (15) the step card's "a year" read (Tier 2, words his) · (16) the echo-ink entry · (17) the Part D hold-direction research leg · (18) **the three owed councils** (the pilot's since the 2026-09-30 re-triage; ≥ 7/10 executes with its ⚑ line in `docs/council-log.md`, a lower score or a Hawk veto returns to HIS EYE with the rec): (a) the 20 px two-pane overrun (Tier 2 *The app on someone else's device…*, candidates (i)–(iii) in its ⚑ OPEN FORK bullet); (b) the phone strip-reserve fork (the block after HIS EYE); (c) Tier 3 *The lever sheets at his seat…* — the hidden actions row (one shape for the control-sheet family) plus Apply-before-the-comparison (the pilot's lean: block while pending) · (19) Tier 2 *`bandPercentile` INTERPOLATES…* — build its ruled shape (pilot; engine-side, observe-only, reduce-to-spine byte-identical): the path-observed (nearest-rank / lower) median for the integer enrolled count and the both-enrolled path FRACTION on the wire (the `overCliffFraction` shape), the base read CONDITIONED on the count the card names; red-first on a fixture splitting exactly 50/50 on enrollment; re-pin the seed gate from the engine; put any moved health card on the next Caddie walk (⚑ never round at the UI; the era-year RULE untouched) · (20) the statistic half of Tier 2 *The premium card's era arm fires on a both-enrolled median window of ONE year…* — BLOCKED on (19); then measure the fraction at the era year through the real engine across 61/59 · 61/45 · 61/43 · 61/41 · 61/40 · 61/38 and on `healthnc`; a candidate must leave the shipped `healthnc` card's routing unchanged; `/council` before any routing change (⚑ never a K; never re-open the era-year rule on a pilot number) · (21) Tier 2 *`tax.rmdStartAge` vs 26 CFR 1.401(a)(9)-2(b)(2)…* (pilot, `S`): the 1959 row's honest form (consumption keyed to birth year, or a disclosed caveat), the unreachable pre-1949-07-01 70½ band, re-cite to the eCFR read + 89 FR 58644, delete the entry's `EXEMPT` row in `constants.shape.test.ts` (⚑ never flip the whole entry) · (22) the latent staleness gate (Tier 4 — shares `staleness.ts` with the ledger) · (23) Tier 4 *Gate honesty after the 2026-09-30 constants re-cite…* (pilot, `M`): rule the parked ACA-MAGI / PTC pair (against §36B(d)(2)(B) + Form 8962 Worksheet 1-1 and §1395r(i)(4)(A)), classify `medicareExtrasTypical`, widen the tripwire's `RESEARCH_OR_SECONDARY` list, re-cite `health.irmaa` with its CMS read date (⚑ never walk the pair as `certification-pinnable` before the primary read) · (24) Tier 4 `pnpm doc:reanchor` self-citations (including the frozen-file class: it rewrites the FROZEN `e2e/held/fit-24px-measurements.md` on every run, `scripts/reanchor-citations.mjs:65` scanning every tracked `.md` with no frozen-file exclusion — restore it after each run, the landmine below; on the entry's size line since `e17c40e4`, "past six by 2026-10-15" — and its b9-toronto1 bullet (27 missed continuations, the pair-check law) and b9-toronto2 bullet (`:N+`, code-block and `~N` forms; preserved rot) ride this item too) — and the three shapes met 2026-10-12 (the register entry's ⚑ 2026-10-12 bullet: only the first bare token per line moves, a re-run against HEAD after `--apply` double-shifts, historical citations move like live ones) · (25) Tier 4 *No priced-state seed crosses the confidence band any more…* — mint a NEW borderline seed + its state-off twin on NC or PA (the `devSeeds.test.ts:501-509` shape), MEASURED by a real-engine pin, added beside `{ seed: 'nc', … }` in `e2e/vertical-fit.spec.ts` and to the next Caddie walk; reword the routing in `docs/plans/features/state-seed-increment-brief.md` in the mint commit (⚑ never re-tune `nc`'s own accounts) · (26) the two 2026-10-19 (b9-2) Tier 4 `XS` filings from the build's pre-trace (pilot): *A passing `verify:fit` spine arm prints no headroom…* (one `console.log` per spine one-frame arm, mirroring `[U16 pending posture]`; ⚑ never a threshold tuned to it) and *No gate holds the catalog's typographic apostrophe…* (a `copyGuard.test.ts` sweep of string VALUES; survey for legitimate straight quotes first) · then the 2026-09-13 late (b9-9) list below as ranked. **ON THE CLOCK:** the ACA window — (A), next due ~2026-11-19. The roster-recall stays CLOSED; its code waits on `b9-v10-gapfill-wip` (`f7aeaf35`), never for main.
+**The b9-6 NEXT list (2026-10-21, pre-D7):** (A) the ACA re-verify — ✅ CLEARED 2026-10-20 (regime unchanged; the ceiling 119-124, every law above 119-118 matched by bill number and swept clean; the record's two self-contradictions corrected — `lawsInEffect` turned out to be one stamp per RELEASE, neither per section nor site-wide); the next FULL pass is due by CI-red ~2026-11-19 00:00 UTC / runtime 2026-11-20 — follow the record's `forwardClock` (its ⚑ 2026-10-20 head: the Senate resumes business 2026-11-09, so the pass lands in the first floor weeks before the December 11, 2026 cliff; the twelve House bills presented 10-14/15 first, by bill number; two new referral-only vehicles to watch — H.R. 10730, retroactive to TY2026 and permanent, and S. 5496, permanent from TY2027) · (B) the NEW Tier 0 *A working year never checks the household's pay against its spending…* (filed 2026-10-21, b9-6, by the working-year row's first Caddie walk and his "why the fuck not? what are we building???") — the first BUILD only if his off-course discussion leaves it there (it is that discussion's example #1; never treat it as ruled): (1) measure — per clamped year, take-home = pay − the worker's own pre-tax deferral − the floor's tax on the base − payroll tax − every other contribution, against the year's spending; name each seed and household shape that goes short, and by how much; payroll tax (FICA) is unmodeled and NOT in the constants — source it first, never a plausible default (burned/062); (2) `/council` the remedy — draw the shortfall, flag it at intake, or both (a draw nets against the contributions, never stacks: §7's double count); (3) build; the `working-year-tax` row's "It doesn’t check that your pay really covers all of that…" sentence comes out the day the check ships (⚑ the entry's NEGATIVEs: never restore the gross-pay subtraction; never key the clamp on a value) · (1) the three filings his 2026-10-16 (b9-1) walk left open (the four rulings themselves are BUILT + WALKED, `1b685648` — git log and the cold-read log's 2026-10-19 (b9-2) card are the record): (1a) Tier 1 *On a plan reopened in a later year the relief line names no assumption…* — words his (the pilot's draft is on the entry), due before 2027-01-01; (1b) Tier 1 *On the date route the North Carolina / Pennsylvania clause says "your state income tax" with no scope…* — MEASURED 2026-10-20 (no priced-state seed reaches at its crown; the mechanism is federal too and is closed by the working-year tax floor, `b4bbbd3e`), so only the words are left, his; (1c) Tier 3 *A household that kept its state bill inside its spending, then picked a priced state in the panel…* — his product call · (2) **HIS WORD CALLS** (what is left after his 2026-10-16 rulings — each needs the pilot's measurement or draft first): (iii) Tier 0 *The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…* — OWED (a) first; the bound is the FIRST POINT THE RATE CHANGES, never the room (on `healthss` 28¢ holds for ~$1,260 converted; the rest of the room costs 32.16¢, filling it $3,528 — the entry's AMENDED bullet); (iv) Tier 0 *The survivor step-down attribution…* — its third misreading, the order of death ("$990" is the floor; ~42 % of `healthss`'s survivor futures drop ~$1,283, the refuter's `sampleCouplePath` run) — measure on the engine, then words his; (v) the 2026-10-14 survivor-basis build's and walk's word-his Tier 1s: *The survivor card's spending-basis line is withheld on a RAMPED budget…*, *On an itemized budget the assumptions sheet says the survivor share is "75" %…*, *The survivor card carries no closeness hedge…* (per each entry's owner line — the hedge: pilot measures + the flag first, then words his; the RAMPED line: words his, then the pilot builds; the "75": words his); (vi) Tier 1 *The conversion tile's "all told" leaves out the tax on the money that pays the tax…* — framing his (~1.5¢ on `health`, ~33¢ derived on `healthss` against the tile's 28¢) · (3) Tier 0 *The ACA solve finds no root at the 100 %-FPL line…* — pilot measure + the build's mechanics → council on what a household AT the line pays · (4) Tier 1 *The conversion tile's federal term treats a realized gain as ordinary income…* — pilot (measure reach → build; the gain split is not on the wire today; for a couple reachable only past the subsidy cliff) · (5) Tier 2 *The 2026-10-15 held-flat walk's other pre-existing sheet findings…* — pilot (layout + measure) → words his · (6) Tier 1 *The relief line has no branch for a floor BELOW the hero…* — NOT a Tier 0 (the 2026-10-14 probe found floor < full unreached on every measured face); next: reachability outside the measured family (the entry's Prescription bullet) · (6b) Tier 1 *The one-figure Medicare card's "start at" reads as a floor when the first billed year carries a look-back surcharge…* — NEW 2026-10-16 (b9-toronto3), from the card's build review (`wf_0f6a7da2-fb1`, reproduced through the engine; PESSIMISTIC — it overstates): pilot measures reach on the MEDIAN path (a big conversion two years before enrollment; a high look-back seed), then words his for a surcharged first year (⚑ never the trend clause there; never a second figure without a ruling) · (7) Tier 1 *The date route's Tier-1 key is unruled…* — ruled in the same council as the working-route solve (`datesplit` / `datemixed` / `dip`, plan-as-executed as a probe; the fiduciary elder's charter is already amended, `.claude/workflows/council.js:119` — the workflow, not the skill directory) · (8) Tier 1 *The TwoFutures even line swallows a lever's harm…* — measure across the roster's previews AND the off-roster HSA construct (the 3.94 pp HSA-class loss was measured on `healthgap` + a $150,000 HSA, wf_d98e02fb-08c — no dev seed carries an HSA, so a roster-only measure cannot reach that class), then `/council` on the grammar · (9) Tier 1 *No sourced NON-medical survivor ratio…* — the research leg (a sourced r_N, or a sourced survivor-OOP fall ≥ (1 − r), FLIPS the survivor-medical ruling to keep-flat-and-disclose — so says `docs/council-log.md`'s 2026-10-08 row; ⚑ the register's Prescription and `docs/decisions/ss-computation.md` §6a disagree, both APPLYING a sourced r_N to both arms (the Prescription flipping only on the OOP fall): resolve which governs BEFORE the leg acts on a finding — found 2026-10-15, b9-toronto3; §6a's side added by the 2026-10-16 doc audit, and the register entry's ⚑ flag names all four homes, the CLOSED survivor-medical entry's Dissent bullet among them) · (10) Tier 1 *The band sentence's low figure reads as a FLOOR…* (words his or a council); its two Tier 2 siblings (the delta hero's mean lead; the 10-06 read's other findings) ride the ranked list as filed · (11) the headroom look-back entry TOGETHER with *The step card's room covers the one-enrollee years…* (Tier 1, pilot + council — open, not blocked; figures re-derive under the growth base) · (12) Tier 2 *The engine-pricing ledger cannot name a date-route or spending-figure change…* (8d4d4e58, 6e4c065d — RE-READ 2026-10-15 b9-toronto3: ledger v11's `spending` family does NOT cover the spending half — its exposure read is `survivorMedicalLeanMoves`, its phrase the survivor-spending one, its witness `cashTermsForYear`, and no row names 6e4c065d; the register's "five families" is six now) · (13) Tier 2 *The spend lane's test + polish debt…* · (14) the Roth sheet's blank amount box (Tier 1 — its rail half's shape RULED 2026-10-04, the entry's ⚑ RULED block; built with the sheet after (11) — and after (18)(c): the entry's COUPLING bullet says the fact lines make the sheet taller, so "the build rides" the tall-sheet decision) · (15) the step card's "a year" read (Tier 2, words his) · (16) the echo-ink entry · (17) the Part D hold-direction research leg · (18) **the three owed councils** (the pilot's since the 2026-09-30 re-triage; ≥ 7/10 executes with its ⚑ line in `docs/council-log.md`, a lower score or a Hawk veto returns to HIS EYE with the rec): (a) the 20 px two-pane overrun (Tier 2 *The app on someone else's device…*, candidates (i)–(iii) in its ⚑ OPEN FORK bullet); (b) the phone strip-reserve fork (the block after HIS EYE); (c) Tier 3 *The lever sheets at his seat…* — the hidden actions row (one shape for the control-sheet family) plus Apply-before-the-comparison (the pilot's lean: block while pending) · (19) Tier 2 *`bandPercentile` INTERPOLATES…* — build its ruled shape (pilot; engine-side, observe-only, reduce-to-spine byte-identical): the path-observed (nearest-rank / lower) median for the integer enrolled count and the both-enrolled path FRACTION on the wire (the `overCliffFraction` shape), the base read CONDITIONED on the count the card names; red-first on a fixture splitting exactly 50/50 on enrollment; re-pin the seed gate from the engine; put any moved health card on the next Caddie walk (⚑ never round at the UI; the era-year RULE untouched) · (20) the statistic half of Tier 2 *The premium card's era arm fires on a both-enrolled median window of ONE year…* — BLOCKED on (19); then measure the fraction at the era year through the real engine across 61/59 · 61/45 · 61/43 · 61/41 · 61/40 · 61/38 and on `healthnc`; a candidate must leave the shipped `healthnc` card's routing unchanged; `/council` before any routing change (⚑ never a K; never re-open the era-year rule on a pilot number) · (21) Tier 2 *`tax.rmdStartAge` vs 26 CFR 1.401(a)(9)-2(b)(2)…* (pilot, `S`): the 1959 row's honest form (consumption keyed to birth year, or a disclosed caveat), the unreachable pre-1949-07-01 70½ band, re-cite to the eCFR read + 89 FR 58644, delete the entry's `EXEMPT` row in `constants.shape.test.ts` (⚑ never flip the whole entry) · (22) the latent staleness gate (Tier 4 — shares `staleness.ts` with the ledger) · (23) Tier 4 *Gate honesty after the 2026-09-30 constants re-cite…* (pilot, `M`): rule the parked ACA-MAGI / PTC pair (against §36B(d)(2)(B) + Form 8962 Worksheet 1-1 and §1395r(i)(4)(A)), classify `medicareExtrasTypical`, widen the tripwire's `RESEARCH_OR_SECONDARY` list, re-cite `health.irmaa` with its CMS read date (⚑ never walk the pair as `certification-pinnable` before the primary read) · (24) Tier 4 `pnpm doc:reanchor` self-citations (including the frozen-file class: it rewrites the FROZEN `e2e/held/fit-24px-measurements.md` on every run, `scripts/reanchor-citations.mjs:65` scanning every tracked `.md` with no frozen-file exclusion — restore it after each run, its landmine in `docs/landmines.md` (Citations and the doc gates); on the entry's size line since `e17c40e4`, "past six by 2026-10-15" — and its b9-toronto1 bullet (27 missed continuations, the pair-check law) and b9-toronto2 bullet (`:N+`, code-block and `~N` forms; preserved rot) ride this item too) — and the three shapes met 2026-10-12 (the register entry's ⚑ 2026-10-12 bullet: only the first bare token per line moves, a re-run against HEAD after `--apply` double-shifts, historical citations move like live ones) · (25) Tier 4 *No priced-state seed crosses the confidence band any more…* — mint a NEW borderline seed + its state-off twin on NC or PA (the `devSeeds.test.ts:501-509` shape), MEASURED by a real-engine pin, added beside `{ seed: 'nc', … }` in `e2e/vertical-fit.spec.ts` and to the next Caddie walk; reword the routing in `docs/plans/features/state-seed-increment-brief.md` in the mint commit (⚑ never re-tune `nc`'s own accounts) · (26) the two 2026-10-19 (b9-2) Tier 4 `XS` filings from the build's pre-trace (pilot): *A passing `verify:fit` spine arm prints no headroom…* (one `console.log` per spine one-frame arm, mirroring `[U16 pending posture]`; ⚑ never a threshold tuned to it) and *No gate holds the catalog's typographic apostrophe…* (a `copyGuard.test.ts` sweep of string VALUES; survey for legitimate straight quotes first) · then the 2026-09-13 late (b9-9) list below as ranked. **ON THE CLOCK:** the ACA window — (A), next due ~2026-11-19. The roster-recall stays CLOSED; its code waits on `b9-v10-gapfill-wip` (`f7aeaf35`), never for main.
 
 **The 2026-09-13 list (pre-D7) — RE-RANKED 2026-09-13 late (b9-9) by the verify pass (13 seats + 12 refuters over the b9-8 list; all 13 items OPEN at `084f94f0`, none stale, every refuter agreed; what the pass CORRECTED in the prescriptions is inline below, each re-opened at source; every item is `execute` EXCEPT Card 9, which the register and the batched-oracle law keep PARKED as a framing fork — it moves to HIS EYE). Its ✅ items 1–4 — the two Tier 0s that led it (the Medicare-era premium sentence, the step card's per-person figure), Card 3 and the "never oversold" row — are BUILT and were cut from this list 2026-09-25: their records are their register entries (all four are CLOSED, each with its ⚑ NEGATIVEs — the Medicare-era entry on his 2026-09-25 ruling, `b83bb464`) and `git log`. The rest by tier, then by cost:**
 5. **Card 13's (iv)** — the ladder readout shows the CROWN's line at rest (`readoutIdx = scrubIdx ?? crown index`; `data-active` on it; the scrub rule + `scrubbed` stay gated on `scrubIdx`; no CSS; the readout stays `aria-hidden`; amend `OddsLadder.test.tsx`) + fuckOffDate.css's D2d comment — stale on FOUR counts (it describes candidate (i) as shipped AND calls the ladder a `<details>` disclosure; the as-built is `<section className="fod-ladder">` inside `.fod-graphs`, no disclosure element; AND its `auto 1fr` / `grid-row 1/-1` rows AND its "when the ladder opens" — it never opens) + the dead `<details>`-era `.fod-ladder__summary::before` (`fuckOffDate.css:313`) + `OddsLadder.tsx`'s two comments that go stale with the build (`OddsLadder.tsx:27-30` "pointer-only…", `OddsLadder.tsx:292-297` "visibility-hidden except the scrubbed one") + the design skill's "on-demand, not on the first frame" clause (architecture §12 wins) + the `h2.fod-headline` aria-describedby GATE ARM on the three REAL date arms (the attribute already SHIPS, `FuckOffDate.tsx:425` — only the arm is owed; reuse the link-and-resolve block inside `assertCaveatOrderAndReach`, and the aged REAL arms datestale / datearrived lack it too; ⚑ narrowed 2026-10-15 b9-toronto3: the arm already runs on `dip` at PHONE (`vertical-fit.spec.ts:1546`) and at 24 px REAL/TIER (`:1643`), so what is owed is the 16 px REAL describes — `dip` (`:1333`), `date65` (`:1391`), `datenc` (`:1438`) — plus the aged `datestale` (`:2221`) and `datearrived` (`:2334`); `datesplit` has no vertical-fit arm at all); the register's "a newly visible node joins the audit" was false (the readout line carries neither `.ct-text` nor `.ct-block__item`) — corrected; THEN the REAL catalog capture (date65 / datenc / datesplit + one live-Chrome scrollbar look) before the column half files durably, and the Caddie chart walk the change owes (Card 1 rides it as its own commit). The a11y gain is for a SIGHTED keyboard-only reader — AT already reaches the crown via the dot's `role="img"` label; do not overstate it in the commit. The rest line is the SHIPPED `ladderMarkAria` crown sentence (two to three lines, the crown's own odds), never the fixture's "9 of 10, your date".
@@ -1002,7 +367,7 @@ review `be99027e` · 2026-09-25 — the frozen-nominal siblings + the per-person
 > every still-open re-verify clause they carried is
 > folded into the ranked entry it belongs to (the ⚑ "Folded 2026-09-06" blocks) or the register. This file is the
 > ranked queue, not a chronicle — a superseded START HERE is deleted, never kept, and so is a superseded session block:
-> the squeaky that writes the next one first moves its landmines into *Operational landmines* and its live items into the
+> the squeaky that writes the next one first moves its live landmines to `docs/landmines.md` by area and its live items into the
 > ranked lists or the register, then cuts it (the 2026-09-25 pass cut every session record older than the newest).
 
 > **Moved to the register 2026-09-06:** the 2026-08-14 recovery walk's four open findings and the 2026-08-20 desktop
@@ -1045,7 +410,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 > itself drifted ~80 lines in `copy.ts` (two of its four anchors landed on unrelated Medicare strings,
 > one on a comment). Every anchor in entry 7 was re-opened and corrected before that build started.
 >
-> **The measured hit rate on filed prescriptions here is ~25-40%** (the samples live ONCE, in the landmines section at the end of this file; the durable form is insight 105). Every ⚑ block
+> **The measured hit rate on filed prescriptions here is ~25-40%** (the samples live ONCE, in `docs/landmines.md`, under Other; the durable form is insight 105). Every ⚑ block
 > dated 2026-08-03 or later is post-refutation; the prose above it is the original filing, kept so the
 > drift stays visible. **Open every cited line before executing it.**
 >
@@ -1545,514 +910,118 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 
 ---
 
-## Operational landmines — these bite hands
+## Distill candidates
 
-*Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
-These are the mechanical ones that keep costing hours.*
+Lessons sessions paid for, owed to `/distill`. ONE list: add each new lesson here, never in a block of its own, and
+drop an entry once its insight is written. Past 10 entries, START HERE names `/distill` among the steps owed. Each
+line keeps the facts `/distill` needs; its source line is in this file as it stood at commit `89b4fa58`
+(`git show 89b4fa58:projects/the-back-nine/TODO.md`), where the full original stands. A line marked *Correct* or
+*Extend* amends that insight instead of adding a new one.
 
-- **From the b9-2 close (2026-11-08), migrated by b9-3:**
-  - **The fit gate's result helpers assumed a DATED reading.** `assertResolvedDate`, `assertOneVisibleDisclaimer`'s tier read
-    and `DOORS_WALK_FLOOR` all wait on a band, a ladder and `[data-twopane]`, which the no-date reading never draws; the risen
-    family crowns no date, so (ae) added `assertNoDateReading`, `assertOneVisibleDisclaimerNoDate` and
-    `NO_DATE_DOORS_WALK_FLOOR` (10; measured 14 at REAL, 12 on the phone). A new no-date arm uses those, never the dated ones.
-  - **`pnpm doc:reanchor HEAD --apply` left five bare continuations unmoved on TODO.md's Card 13 line** (`:1307`, `:1365`,
-    `:1412`, `:2060`, `:2173` after `vertical-fit.spec.ts`; two were already wrong at HEAD, pointing at non-blank lines the
-    gate passes). Fixed by hand to the describes' lines; after any re-anchor, read each bare `:N` the gate cannot judge.
-  - **`start "" /b /wait /affinity FFF` returns exit 0 on a failing vitest run** (again): read the output's "Tests" line.
-- **From the b9-10 close (2026-10-31), migrated by b9-1:**
-  - **tsx (esbuild keepNames) wraps a NAMED function declared inside a Playwright page callback in `__name(…)`**, which the page does
-    not have: "ReferenceError: __name is not defined" killed the first h2 run. Keep `evaluate` callbacks free of named inner
-    functions (inline arrows passed to `map` / `find` are fine).
-  - **Every stage of a Monitor pipe must flush per line:** `grep --line-buffered … | cut -c1-600` held every event in `cut`'s
-    buffer, so the first probe monitor never fired. Drop the trailing filter or line-buffer it.
-  - **`TaskStop` on a background shell ends the harness's shell, but on Windows the child tree can outlive it.** The probe's
-    pnpm → tsx → node → chrome-headless-shell tree exited within seconds; the `pnpm dev --port 5199` server's `vite.js` (under a
-    `cmd.exe`) kept the port for ~25 minutes until stopped by pid. After every `TaskStop`, check the port
-    (`Get-NetTCPConnection -LocalPort <port> -State Listen`), `Get-Process chrome-headless-shell` and the node command lines, and
-    stop this session's survivors by pid.
-
-- **From the b9-9 close (2026-10-31), migrated by b9-10:**
-  - `gh run list --commit` needs the FULL 40-character sha (the b9-toronto2 bullet below): it bit again, and b9-9's CI wait spun
-    about six hours after green. Pass `git rev-parse <sha>`, and give every wait loop a deadline that fails loud.
-  - A subagent cannot write a file named like a report (`REPORT.md`): the harness's guard refused it in all three fix lanes. Ask
-    for the depth in the return value or a differently named file.
-  - Fix lanes in frozen `git archive` copies, merged with `git merge-file -p <lane A> <frozen HEAD> <lane B>`; an ABSOLUTE spec
-    path for the mutation runner (it runs vitest with the copy as `cwd`); junctions from PowerShell, never Git Bash's
-    `cmd //c mklink /J` ("Invalid switch") — all three now live in insight 148's Key Insight and its landmines.
-
-- **From the b9-8 close (2026-10-30), migrated by b9-9:**
-  - `verify:doc-stats`'s citation arm checks only CODE targets: its `CITATION` regex has no `.md`, so a doc-to-doc citation such
-    as `docs/architecture.md:119` is never checked. One inserted line in a cited doc silently shifts every one of them.
-    `pnpm doc:reanchor HEAD` does move them, because its target filter includes `.md`. So:
-    - run it last on any commit that edits a cited doc;
-    - read its REVIEW list, where a citation inside a modified hunk is a hand call;
-    - it also rewrites the dated logs (`docs/council-log.md`), whose citations are frozen as they were. Restore that file
-      afterwards. `git restore --source=HEAD` is safe only while the log has no other edit.
-  - A Workflow's task output file wraps the script's return value as `.result`:
-    `JSON.parse(text.slice(text.indexOf('{'))).result`.
-- **From the b9-7 close (2026-10-30), migrated by b9-8:** `e2e/` is outside `tsconfig.json`'s `include`, so `pnpm typecheck` never reads a spec — check
-  one with a scratch config that extends the project's, sets `typeRoots` to the project's `node_modules/@types` and
-  `node_modules`, and includes the spec by absolute path. `verify:doc-stats`'s citation arm freezes only "not `" and
-  "-at-filing`" tokens, while `doc:reanchor` also freezes "(then" — so a historical "`x.ts:N` (then)" is frozen by the tool and
-  still CHECKED by the gate, and reds the day an edit lands a blank line under N; write a historical number as prose ("line N
-  of `x.ts`"). A sentence that says "can look worse/better" reads as "is": say a direction only where it is measured, or only
-  on the side whose over-read errs safe (the card's withdrawn mirror). (b9-6's, kept:) `git status --porcelain` prints REPO-ROOT paths, so a `git commit -- <paths>` built from it
-  must run from the repo root — from the project dir every pathspec misses and NOTHING commits (no harm, but read the sha before
-  believing a commit happened). A fixture that used a date seed as "the W-free draft" carries W since U10: strip
-  `workingYearCost` where an arm measures the W-free case (seven arms needed it — the floor-reach pairs in
-  `stalenessExposure.test.ts` and `reentry.test.tsx`, the methodology pair in `assumptionPanel.test.tsx`, `datemixed`'s W-absent
-  twin, `dip`'s floor premise — W brings `employerHsaByPerson` with it — and the stale-W witness).
-- **From the b9-4 close (2026-10-30), migrated by b9-5:** a test "retype" that fires `change` with the value focus already put
-  in the box (`CurrencyField` fills it with the figure on focus) fires NO React change event — the arm read a real product bug
-  that was not there; a retype passes through other text (`'700'` then `'7000'`). A tap on an UNCHECKED segmented control
-  reaches `onChange` twice (its click and its change), so an arm counting commits sees two — pin what each commit lands, never
-  the count (filed Tier 4). A full-suite failure list needs the names: `vitest run --reporter=json --outputFile=<file>` and
-  print `testResults[].assertionResults` with node — `| tail` keeps neither the names nor the exit code. A test written in a fix
-  pass and never run sat red for two sessions: after any fix pass, run the WHOLE suite (and every gate whose surface it
-  touched) before the next step.
-
-- **From the b9 A7-review close (2026-10-29):** `b9-a7-review\fixes\head\` and `b9-a7-review\pre-a7\` (in the session
-  folder `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\`) hold a `node_modules`
-  JUNCTION into the project's own `node_modules` (as `b9-a6-head\` does). Before deleting either folder, remove the link alone
-  (`cmd /c rmdir <folder>\node_modules`), never a recursive delete through it.
-- **From the b9-2 close (2026-10-30), migrated at b9-3:** a Python `open(p).read()` in TEXT mode turns CRLF into LF silently,
-  so an "is it CRLF?" check inside the same script is blind — read and write BYTES (or compare against `git show HEAD:<path>`) on
-  any file you rewrite; `devSeeds.ts` and `devSeeds.test.ts` are CRLF. `sed -i` strips CRLF too. A seed figure equal to a sourced
-  constant's value (`72000` is the §415(c) cap) reds the single-source gate — pick a figure no constant holds. Editing ANY `src`
-  file while a fit run is going hot-reloads its dev server mid-test.
-- **From the b9-1 to b9-5 closes (2026-10-30, Phase B carried uncommitted across four sessions, landed as `c07e5758`):** when
-  a multi-session build must sit UNCOMMITTED in the shared tree, back it up on a side ref cut through a TEMPORARY index —
-  `GIT_INDEX_FILE=<scratch>/x.index`, `git read-tree HEAD`, `git add -A -- projects/the-back-nine`, `git write-tree`,
-  `git commit-tree`, `git update-ref` with the old value — so the real index never moves; recover a lost file with
-  `git show <ref>:projects/the-back-nine/<path>`, never a reset, and never `git checkout`/`restore`/`stash` the held paths.
-  Deleting the spent ref (`git push origin :<ref>`) is refused to the pilot by the permission classifier: it is Briggsy's
-  one command (`refs/wip/b9-phaseb` was his to delete, gone local and on origin since 2026-10-30).
-- **From the b9-5 close (2026-10-30, migrated at b9-6's):** `verify:fit`'s four-worker run can time out final-tier waits on
-  this laptop under load (the `?vault=datestale` / `?vault=datearrived` returns at 90 s, reduced-motion chart text at 180 s;
-  60–90 s alone) — re-run them with `--workers=1 -g` before calling one a regression (b9-6's run, alone on the CPU, went 152/152
-  in 6.4 min). The full suite's parallel run can time out heavy tests the same way (`budgetTwoTrack`'s compute profile,
-  `solvePayloadIdentity` F1 / F4, `.health` F2 — 126–325 s against 120 s limits; pass alone). A background Bash command ending
-  `; echo "EXIT $?" >> log` reports exit 0 in its task notification whatever the gate returned: read the log's own EXIT line
-  (bit b9-6 too). After a fix pass that touches a gated surface, run that surface's gate, not only the unit tests.
-  `pnpm doc:reanchor <BASE>` moves a citation written FRESH in the tree a second time: classify every proposed edit first
-  (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry-run output>` — SAFE / CARRIED / FRESH), hand-check each FRESH one
-  and each REVIEW line (a citation inside a modified hunk is never moved), and move the second number of a comma pair by hand
-  (the tool moves only the first).
-- **From the b9-14 close (2026-10-29, A6):**
-  - **The once-only re-anchor rule below was broken anyway** — `pnpm doc:reanchor HEAD --apply` was invoked twice in one
-    shell line (once piped to a count, once to a tail), so 276 citations moved twice (983 → 1109 → 1235). Capture ONE
-    run's output to a file and read the file. The recovery that touches no other edit is
-    `b9-a6-tools\unreanchor.mjs` (an LCS over lines with citation numbers masked puts HEAD's text back on every line that
-    differs only in them; it snapshots first), then one fresh run, then the three checkers.
-  - **The re-anchor tool still misses bare tokens on a line that names another file first** (four this time, plus four
-    bare `taxOverlay.ts` tokens in `objectiveHeadline.ts`'s docblock that only `crossline-sweep.mjs` sees — the same four
-    as b9-13), and still rewrites the two HISTORICAL lines (`docs/backlog.md`'s quoted re-anchor incident, insight 136's
-    wrong-citation example): after the one `--apply`, run `pair-check.mjs` + `crossline-sweep.mjs` + `content-check.mjs`
-    and put every recorded number back to HEAD.
-  - **`copyFence.test.ts` (30 s default) timed out once in the full suite under load** — ESLint's cold start; alone it ran
-    in 0.9 s, and the next full run passed. Re-run a lint-in-test timeout alone before believing it.
-- **From the b9-11 close (2026-10-27, the RIB-LIM order fix):**
-  - **`pnpm doc:reanchor` runs ONCE, LAST — and docs edited after it ran need hand moves.** A re-run against HEAD
-    double-shifts every token it already moved (its dry run proposed `solverCodeVersion.ts:154 → :171` for a citation
-    already at the right line). Move the later ones by hand from content, then run `content-check.mjs` (the re-anchor
-    tools folder) — every DIFF it prints must be a construct this change edited on purpose. It also rewrote a HISTORICAL
-    example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1964`…" line) as if it were
-    live: reverted by hand; read its WOULD list for examples before `--apply`.
-  - **A dev seed carries no `chosenGoal`**, so `buildSolveRequest` returns `spine-unready` for it — a node-side solve
-    probe passes `{ ...seed, chosenGoal }` (`b9-seed-probe\solve.mts`'s `seed:goal`). Single-threaded, `healthss` takes
-    ~15–18 min per goal.
-  - **`solvePayloadIdentity.health.test.ts` (180 s budget) timed out in the full suite under background-probe load**;
-    alone it ran in ~53 s. Re-run a solve-test timeout alone before believing it; keep heavy probes off the suite.
-  - **Inline `node -e` scripts are shell-interpolated** — a regex with `$&` broke at parse (it failed before writing, so
-    nothing moved). Write the script to a file in the scratchpad (the memory rule, met again).
-- **From the b9-10 close (2026-10-22, A2 and A3 landed overnight):**
-  - **Another Claude session works in the same monorepo** (`projects/hooks/` files showed modified under `git status ..`
-    mid-session, and MEMORY.md changed on disk). Commit by explicit paths only (`git commit -- <paths>`); check that
-    `git diff --cached --name-only` holds nothing outside `projects/the-back-nine/` before every commit.
-  - **Windows has carried RebootRequired + RebootPending since 2026-10-15 01:43** (last boot 2026-10-08 05:14) and did not
-    auto-restart through six 02:00–08:00 windows. Still check both keys before overnight work, but it is not forcing.
-  - **`pnpm doc:reanchor` skips `index.ts` too** (two are tracked: `src/engine/constants/index.ts` and
-    `src/engine/reference/solver-cases/index.ts`), the ambiguous-basename class. Run `git grep -n "index\.ts:[0-9]"` and fix
-    by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:441-444`,
-    and pair-check's DOCHUNK section caught it. It also never moves a doc's citations INTO ITSELF, and neither tool flagged
-    it: two new register entries shifted `docs/backlog.md:1964`, `:2250`, `:2323` (cited from inside the register) by +36.
-    After any edit that adds lines to a doc, run `git grep -n "<doc>:[0-9]"` across the repo, the doc itself included, and
-    compare HEAD vs tree content at each shifted number.
-  - **The single-source gate in `constants.shape.test.ts` scans EVERY `src` file, tests included**; only `engine/constants/`
-    is exempt. A test elsewhere that types a DISTINCTIVE figure (now including `184500`) reds. Read the figure from the
-    constant and type only the derived dollars.
-  - **A pure refactor's proof** (A2's arm): a FROZEN verbatim copy of the replaced code in the test, swept over a seeded
-    population, green on the untouched engine FIRST, then green after the extraction, plus planted mutants on the new code.
-  - **Window cost:** A2 + A3 together, each with a mutant pass, a re-anchor and two full-suite runs, plus the session's
-    reading, brought the window to ~41 % by A3's commit. A4 (the month-by-month earnings test and its credits) is larger:
-    build it fresh, alone.
-- **From the b9-9 close (2026-10-21, the review verified and applied; A1 landed):**
-  - **Nobody uses the product yet, and it is built for Briggsy alone.** His words: "There is no one who has used this
-    product yet, not even me" and "This tool is for me, if one of my friends uses it, it'll be a crazy outside chance."
-    The reviewers, the council and the b9-8 plan all assumed saved plans and friend users; a whole unit (U12) existed for
-    plans that cannot exist. Before designing any migration, legacy-vault or "returning household" path, read the memory
-    `project-back-nine-no-users-yet`. A saved shape is not a one-way door until HIS first real save.
-  - **Never apply a verifier's resolution unchallenged.** The skeptics caught real defects in the verifiers' own fixes:
-    a bottom line that rounds to −0 ("Left over $0" while the engine draws $0.40), a couple's $8,640 expected on a lone
-    worker ($240), a yearly default under a period rule whose 8,000 floor only means something under a month default.
-  - **The verification fan-out cost** ~2.6M subagent tokens and 32 minutes (9 agents); the reviewed plan plus A1 took the
-    window to ~47 %. Build A2 onward fresh.
-  - **The re-anchor after an engine edit.** `pnpm doc:reanchor HEAD` (dry run) then `--apply` made 148 edits, including
-    dated logs and insights (the precedent `b4bbbd3e` accepted the same). Then: hand-fix each REVIEW token by content
-    (a reworded cited line); run `pair-check.mjs` + `crossline-sweep.mjs` + `content-check.mjs` from the tools folder.
-    `pair-check` flags a HISTORICAL token as MISMATCH (TODO's "`model.ts`'s `:668` … had been stale") — a recorded
-    number stays. `crossline-sweep` found two bare `:151-152` docstring tokens the tool cannot see (fixed by hand).
-  - **A plan doc under `docs/` must carry no line-numbered code citation and no count:** `verify:doc-stats` scans every
-    doc there for both.
-- **From the b9-8 close (2026-10-21, the pay-check plan: research → plan → deepen → doc review):**
-  - **A plan cycle ate the window.** `/brief`, the two-primary research fan-out, the plan, a nine-agent deepening and a
-    five-agent doc review reached ~55 % with no code written. That confirms b9-4: build in a fresh session.
-  - **Fan-out outputs that must outlive the session go OUTSIDE the session scratchpad.** Use
-    `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-<name>\`. Have the
-    agents write files there and return only a count, which is how the doc review ran past the 50 % fan-out line.
-  - **The 5-hour session limit kills workflow agents mid-run.** Resume with `resumeFromRunId`: finished agents replay
-    from cache. A "failed" agent may already have written its file (design-lens did); the re-run overwrites it, so read
-    the file's own totals line before trusting it.
-  - **A council-ruled mechanism can be wrong in detail.** The pay-check ruling's survivor W
-    (`budgetlessSurvivorSpending(W, r, M)`) reduces to r·W under a budget, which is the ratio-on-total shape the
-    2026-07-02 council vetoed ($27,000 vs $32,000 on `dip`). The plan records it as a refinement (R9, KTD6). The register
-    amendment is U11's.
-- **From the b9-7 close (2026-10-21, D7 ruled; the audit, the filing, the pay-check measurement and its council):**
-  - **`node -e` mangles Windows paths.** The shell ate the backslashes in a TODO edit (`C:\Users\brigg\.claude…` came out
-    `C:Users\brigg.claude…`). It was caught only by a snapshot + `cmp` at squeaky. Edit docs with the Edit tool, or with a
-    script FILE, never `node -e`.
-  - **`docs/insights/README.md` is CRLF, and the insight files are LF.** A `cat >>` append put LF lines into the CRLF index.
-    The Edit tool keeps a file's own line ending. Count `\r\n` with a node script before trusting Git Bash.
-  - **A shell-made edit is invisible to squeaky's ownership check** (TODO.md went `contested`, the index `foreign`). Make
-    doc edits with the Edit tool, or squeaky cannot commit them.
-  - **A summary's headline is computed on the population its caveat names** (insight 141). The survivor rows carry a
-    `reachable` column: filter on it first, then take the max.
-  - **ssa.gov answers curl with 403.** Read the IRS Topic pages instead (751 payroll, 560 Additional Medicare: primary,
-    and they curl fine), or LII for the statute. A grounded search alone is secondary.
-  - **A council fed a wrong headline reasons from it.** Every opening seat built on the mis-filtered survivor figure until
-    the red team re-read the rows file. Re-count a brief's numbers from the source before convening.
-- **From the b9-6 close (2026-10-21, (B) landed `b4bbbd3e`; the working-year row walked three times):**
-  - **The re-anchor and its misses.** `pnpm doc:reanchor` made 625 edits, then verification found 59 + 9 more it cannot see:
-    - it SKIPS both files of an ambiguous basename outright (`stateTax.ts`, the engine file and the constants file), so resolve each by content;
-    - a bare token on a line that names NO file, continuing the line above (`IntakeApp.tsx:276`'s `(:179-184)`, which is `stalenessExposure.ts`'s), is invisible to the tool AND to any same-line checker;
-    - its earliest-file attribution re-shifted quoted tokens inside the register's own re-anchor-bug entry.
-  - **The method that caught them.** A naive HEAD-side pair-check also goes blind to every line the tool itself rewrote, since that line now sits in the doc's own diff. Pair same-size hunks positionally, then sweep cross-line bare tokens, then send each disagreement to a two-reader content pass applied by unique windowed match. The scripts are in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-reanchor-verification-tools\`.
-  - **A doc edit AFTER the apply that adds a line** shifts every citation INTO that doc below it. Grep `<doc>:N` and its bare continuations before adding (this run's one register line was checked clean).
-  - **The Caddie walk now captures `door-N-<slug>-methodology`** (the assumptions sheet scrolled to the end of its methodology rows) and `crop-method-last-row`. These are the first frames ever to paint those rows; any methodology-row change reads them.
-  - **A copy mutant whose text also sits in another key plants twice.** The row ends exactly like `recDiscNiit`, so anchor the plant on row-only context.
-  - **Workflow args.** A JSON-encoded placeholder crashes at parse, with 0 agents spent. Pass real values, and send big inputs as files the agents read (`batch-N.json`), never inline.
-  - **CI:** `gh run watch <id> --exit-status` in the background notifies on completion, so never poll.
-  - **His taste, E20:** a disclosure that the tool skips something it already has the inputs for reads to him as a product failure, not honesty. It opened the off-course discussion.
-- **From the b9-5 close (2026-10-20, (B) built, uncommitted):** the HEAD engine is measurable without touching the tree:
-  `git worktree add --no-checkout <scratch>/head HEAD` → `git sparse-checkout set --no-cone projects/the-back-nine/src …tsconfig.json
-  …package.json …vite.config.ts` → `git checkout` → a JUNCTION to the real `node_modules` (`New-Item -ItemType Junction`), then run the
-  probe from the worktree's project dir · REMOVE THE JUNCTION FIRST (`cmd /c rmdir <junction>`) and only then `git worktree remove
-  --force` — a recursive delete must never walk into the real `node_modules` · a fan-out of parallel builders on ONE tree leaves a
-  cross-file fallout (an existing arm another builder's change reds) flagged by both and fixed by neither — name an owner for every
-  fallout in the brief · a 3-builder + docs + 3-reviewer workflow ran ~75 min and 2.7M subagent tokens, and the build itself took the
-  pilot to ~50 % before it — plan the walk + the commit for a FRESH session · `node -e` ate a comment's backticks AGAIN (this
-  session) — the rule stands: any script text with backticks goes in a FILE · `C:/wt/b9` (branch `b9-squeaky`) is ANOTHER
-  session's worktree — never remove it.
-- **From the b9-4 close (2026-10-20, (B) planned):** the plan + its deepening + a four-persona doc review + a full council cost ~50 % of the window (10 opus agents + a 21-agent council, `wf_ef6cf7c5-a2b`, 2.27M subagent tokens, ~31 min) — BUILD (B) in a FRESH session, never on the planning session's tail · the build is ONE commit (U1–U7): the `dip` re-tune (the register's same-commit law), the ledger row (a row-less engine push recomputes saved vaults silently — the witness cannot see the gross-up), and the test counts (`verify:doc-stats` arm 1 is a CI step) are all CI- or honesty-coupled · the register's reach measurement for (B) covered only the channels its title names — the year's OTHER portfolio draw (a retired spouse's Medicare/extras, `fundingNet`) was found only by the deepening's flow analysis: a reach measurement enumerates EVERY portfolio-funded dollar in the year, not the named ones · a binding NEGATIVE can be falsified by its own entry's Prescription formula (tax(W+X) − tax(W) charged $0 where Social Security alone is taxable) — check the formula against the NEGATIVE before building it · `bridgeYearMask` is built only under `healthcareEnabled` (`simulate.ts`), so any guard keyed on it is silent on a healthcare-off run (the plan's KTD5 builds it under the construct) · a session can be FORKED into a background job mid-conversation (this one became `b9 (2)`, a new session id, its scratchpad gone) — `/window` takes `$CLAUDE_CODE_SESSION_ID`, never a remembered id · background sessions: `claude agents --json` lists them, `claude stop <id>` stops one and keeps its conversation; an INTERACTIVE terminal session is not a daemon job (`claude stop` answers "No job matching") and killing its `claude.exe` is classifier-blocked ("Interfere With Workloads") — it needs `/exit` in its own window; never `claude daemon stop`, which ends EVERY background session, the caller included · uscode.house.gov answered "Under Maintenance" 2026-10-20 — LII (`law.cornell.edu/uscode/text/26/<section>`) carried §402 / §86; IRS PDFs read clean through `pdftotext -layout`.
-- **From the b9-3 close (2026-10-20, the ACA re-verify + (1b)'s measurement):** every ACA instrument change this pass met lives in the record's `forwardClock` ⚑ 2026-10-20 head — uscode's `versions.json` lists only the newest id and an unknown id answers HTTP 500 with a 75 B body; the GovTrack JSON API is retired (enumerate new measures from govinfo BILLSTATUS bulk listings); the govinfo PLAW not-published shell is now 44,172 B (detect it by content); archives.gov needs a cache-busting query; the Senate vote menu moved to `roll_call_lists/` — read that head before the next pass, never this line · a presented bill past its tenth day can already be law with no list showing it (S. 195 was signed 10-09 and read "unsigned" on 10-12) — read the bill's own BILLSTATUS actions · a GPO HTML bill print can render a table as "TABLE TOOL ERROR" (S. 5496) — read the XML · research agents that browse drive Playwright from the repo and leave `.playwright-mcp/` in it — sweep it after any such agent · a probe script outside the project runs under `pnpm exec tsx` from the project dir (its relative imports reach `src/`, whose `@engine/*` aliases then resolve), but only as `.mts` — a `.ts` with top-level await dies "not supported with the cjs output format" · a commit message's summed counts come from the run outputs (582 + 98 + 29 = 709 across 21 files), never a recalled figure — the ACA commit first said 680 and was corrected before the push.
-- **From the b9-2 close (2026-10-19, his four b9-1 walk rulings + his Medicare re-ruling):** the harness now COMPACTS an idle session (summarizes it; it does not clear it) ~55 min after a turn ends — twice this session (212,652 → 43,451 and 485,045 → 45,821 tokens), and the status bar read ~0 after. Write the squeaky close while the session's detail is live, before he walks away; the full log stays on disk (`~/.claude/projects/<slug>/<session>.jsonl`) for anything the summary dropped. `/window`'s first read after a compaction was the stale pre-compaction 48.3% — fixed in the monorepo (`7faa5c5d`); it now prints "compacted … no live read since" · one walked copy build (pre-trace + build + whole-file review + TWO Caddie walks, 103 panel agents) cost ~48 % of the window — keep ONE walked build per session · `git show <sha>:src/…` resolves from the MONOREPO root and fails; from the project dir use `git show <sha>:./src/…` · a healthcare-sheet fixture account added without `manualBlend` left the draft with no priced run, so the per-person extras block never rendered — fix the fixture, never the assertion · the Caddie panel's output file wraps the verdicts as `{ summary, …, result }` — parse `.result` · a seat arm whose every fixture shared an incidental property (a step card) let a step-keyed seat mutant survive, and a sibling assertion that implied its parent hid a second — vary the incidental property and assert each parent directly (insight 140's *Also Applies To*).
-- **From the b9-1 close (2026-10-16 evening, his three rulings + two in-session):** `pnpm doc:reanchor` LEAVES its REVIEW citations (inside a modified hunk) at their OLD numbers even under `--apply` — hand-fix each by CONTENT (HEAD line vs tree line); it moves only the FIRST number of a comma list (`ConfidenceStatement.test.tsx:691,704` → `:721,704`, fixed by hand), it rewrites citations inside `.ts` comments too (check `git status` for test files you never touched), and it misses a bare continuation more than ~60 characters from its file name (four this session) · the honest post-run check runs from HEAD's side: take each HEAD doc token, map it through the code diff, and confirm the tree doc carries the new number — a tree-side scan ("does tree(N) still equal head(N)?") flags every correctly moved token in a uniformly shifted region (190 false positives this session) · a ruled word change can be FALSE on a route its ruling never saw — trace every render site through a workflow before the first edit (this session's trace found the aged-plan "starting now" and the wide-gap "add none" before a line was written) · `copyGuard`'s `require-hedge` is PREFIX-scoped: a figure-free mechanism pointer belongs in the `medicareExtras*` family with a figure-free pin, never an exemption list · the Healthcare sheet portals to `document.body` — an RTL `container.textContent` reads empty there · `node -e` ate a regex's backslashes again (`\S+` → `S+`) — any script with backslashes or backticks goes in a FILE · a capture-only `devSeeds.ts` plant runs AFTER the walk (the walk's dev server would hot-reload mid-capture), restored by copy + cmp
-- **From the b9-toronto3 close (2026-10-16, the one-figure Medicare card's first-year frame):** a RESUMED Claude Code process carries the git snapshot of its START — this session's process had run since 2026-10-12, so its context reported nine "uncommitted" files that b9-toronto1/2 had long since committed; run `git status` live before reporting the tree · the Caddie walk captures no pixel of a scrolling sheet's below-fold card: `LOOK_OUT=temp/look/<run> LOOK_SEEDS=<seed> pnpm exec playwright test --config e2e/held/shots.config.ts medicare-cards-look`, then copy `2-premium-card.png` / `4-sheet-full.png` / `3-step-card.png` / `dialog.txt` into the bundle as a `door-5-see-your-health-cost-picture-scrolled-premium` state (viewport / fullpage / crop / copy) BEFORE the panel runs — never beside vitest · a pilot lean is a claim too: the no-trend-line build (the no-era precedent) was refuted by the first walk ("start at" alone read as WHEN) — run the walk before calling a frame fixed · `pnpm doc:reanchor` moved insight 136's historical copy citation (then 1186) AGAIN (its second time) — corrected 2026-10-16: 1186 was already a moved value (the insight was written at `f74f6ee6` as copy 1178, `verdictMedicarePriced` that day, and `c1ada867`'s run moved it unnoticed), and five of its line-11 citations have moved since it was written — restore all five by hand to the `f74f6ee6` text (taxOverlay 1796/1853 and its bare 1853, devSeeds 1079, vertical-fit 396-406, copy 1178) after every run until the register's Tier 4 entry excludes historical records; the positional pair-check can be scripted from the dry-run log (HEAD line vs tree line per endpoint — 245 endpoints, 0 mismatches this session) · a full-bodied session (a 66-item verify, two six-lens walks, a 13-agent review) reaches the 50 % context line by the second walk — budget ONE walked build per session plus its records
-- **From the b9-toronto2 close (2026-10-15, the same-age Medicare card):** `gh run list --commit <sha>` matches only the FULL 40-character SHA — a short one returns NOTHING (re-proven at the close: `690bcae0` → empty, the full SHA → run 38806260414), so a poller fed a short SHA reported "no run registered" for ten minutes while the run was live; resolve with `git rev-parse HEAD` first, then poll that run by explicit id · `pnpm doc:reanchor` PRESERVES pre-existing rot — a citation already on the wrong content moves with its line and stays wrong, and arm 4 passes it green; the catch is a PROVENANCE check (open the line each citation named in the commit that wrote it, then find that content in today's tree) — it found all six register citations in `docs/plans/features/pay-less-tax-all-in-build-spec.md` already wrong; the same session met three more blind classes (a `:N+` suffix, citations inside a code block, `~N` tilde forms — the register's Tier 4 entry's ⚑ 2026-10-15 bullet), and the second run again rewrote the frozen `e2e/held/fit-24px-measurements.md` (restore it) · a scratch measurement test's `console.log` never reached the captured run output (cause NOT traced — `vite.config.ts`'s `test` block sets no `silent`) — have it write its figures to a file in system temp, and delete it from the tree after its run (the doc-stats count landmine) · `git show HEAD:<path>` run from the project dir resolves the path from the MONOREPO root — write `HEAD:./<path>` · Git Bash has no `rev` — use `grep -o`.
-- **From the b9-toronto1 close (2026-10-14/15, the survivor basis + trim cut, the ACA itemized probe, three health-sheet Tier 0s):** the OS MEMORY REAPER kills a background full suite on this laptop — vitest's workers die, the log stalls with no summary, and the parent tree lives on as a zombie (kill it with `taskkill /T /F /PID <root>` after reading its command line); results are VOID, so never count a stalled log, never restart it unasked — run the files the change reaches in the foreground and let CI be the full run · `pnpm doc:reanchor` missed 27 bare continuations on PARTLY-moved multi-citation lines in one run (`ee62a839`) and `verify:doc-stats` arm 4 passed them green (it checks only that the line exists and is not blank — insight 136); after every re-anchor run a POSITIONAL pair-check — pair each bare token with the named citation it continues, re-read both lines at HEAD and on the tree, fix by content (754 pairs that day) · a stray `cat > file` with no heredoc blocks forever on stdin and leaves an EMPTY file behind — write scripts with the Write tool · `node -e` given a Git Bash path (`/c/Users/…`) inside a JS string resolves it as `C:\c\Users\…` (ENOENT) — put the script in a `.cjs` file and use `__dirname` or `C:/…` paths · a vite dev server launched in a background shell can survive `TaskStop` and keep its port — find the PID by port, read its command line, then `Stop-Process`.
-- **From the b9-2 close (2026-10-11/12, D1's Tier-1 key; the ACA step-1 link; the survivor + trim measurements):** background Workflows STALL when the laptop sleeps or its battery dies (23:15 → 15:07 the first night, again at the battery death) and resume on wake — never promise overnight work without an awake machine · uscode.house.gov relaunched as a static "temporary format" by 2026-10-10: the old `view.xhtml` / `currency.shtml` forms answer HTTP 200 with a 5,792 B "Page Not Found - US Code" body (and for two days a stale 14.6 KB house.gov maintenance body — the pilot called a dead URL an outage on 10-11; Briggsy called it) — fetch the ROOT and follow its links, check the BODY, never the status or `<title>`; the ACA record's `forwardClock` carries the URL forms · `node -e "…"` in Bash runs backticks as commands — it inserted a holed bullet into `backlog.md` this session (caught in the diff, rewritten from a script file); any script text with backticks goes in a FILE · `pnpm doc:reanchor` met three more shapes (the register entry's ⚑ 2026-10-12 bullet) — run it ONCE per base, read every "(bare, after" line AND every line citing a moved file for a second bare token, restore historical citations (insight 136's copy citation — written here as 1186, and the tool moved this mention too, to 1199 then 1214; corrected 2026-10-16: the as-written value is 1178, see the b9-toronto3 bullet) by hand · Git Bash `grep -c $'\r$'` cannot count CRs (it read 0 on a CRLF file) — count line endings with node · a LOCKED-text amendment needs a text refuter: the council's own D1 draft stated the lower-bound relation backwards and five of six elders first drafted the false floor ≥ full lemma — both caught only by the red team / refuter · a commit landing mid-measurement moves the agents' line citations (the trim chair re-pinned `copy.ts` after `b29a550d`) — re-pin at the chair.
-- **From the b9-1 close (2026-10-08/11, Playwright 1.63 + the `ubuntu-26.04` pin; the essentials-floor measurement; the survivor-medical lean):** NEVER revert a planted mutant with `git checkout -- <file>` on an uncommitted tree — it restores HEAD and wiped a delegated build's whole `copy.ts` (recovered only from a verifier's scratch `.orig` + the agent transcripts' Edit inputs); snapshot with `cp`, revert with `cp`, prove with `cmp` · `playwright install` GARBAGE-COLLECTS every browser revision no linked Playwright still uses (`%LOCALAPPDATA%/ms-playwright/.links`) — a version rollback must re-run the install · `pnpm doc:reanchor` rewrote the FROZEN `e2e/held/fit-24px-measurements.md` (its header: numbers NOT maintained) — `git checkout` that one file after any reanchor (it carries no other uncommitted work) · the doc-stats citation arm checks a workflow-file line EXISTS, not that it says what the doc claims — four `.github/workflows/verify-the-back-nine.yml:<N>` citations were 1–4 lines stale before any edit; re-point by content after any workflow edit · the council's `uiCouncil` regex auto-seats the three UI specialists on words like "band" / "render" in the CONTEXT — name the six core `openers` explicitly for an engine question · ENGINE_PRICING_LEDGER row `shippedOn` must equal the commit's LOCAL date and no test binds it — re-stamp it in the commit if the land slips a day · a 16k measurement workflow over many off-roster variants ran 6.8 h (ship gate 1, `wf_d98e02fb-08c`) — budget the wall clock, keep the session's other CPU work off it · the window script once reported 3.6 % mid-session (it read another transcript) — distrust a sudden drop, re-run it.
-- **From the b9-2 close (2026-10-04/06, the pay-less-tax all-in build):** NEVER `git commit -a` in this monorepo — the root spans every project and it swept six uncommitted family-feud files into `1dd80ecc` (backed out by `7571d1a5`, working copies restored); stage explicit paths or `git add -A .` from the project dir, and read `git show --stat HEAD` before pushing · `pnpm doc:reanchor HEAD` is NOT idempotent on an uncommitted diff — a second run re-shifts citations the first already moved; for a later edit on an already-re-anchored tree, make a temporary LOCAL commit of the tree minus the new edit, re-anchor against it, then `git reset --soft HEAD~1` · in Git Bash `grep -c $'\r'` counts EVERY line (the pattern collapses to empty) — check line endings with node · uscode.house.gov serves a house.gov "Under Maintenance" fallback to EVERY client (curl, real Chromium, an external proxy) — the URL is right, the site is down (⚑ 2026-10-16 doc audit: true through 2026-10-09 only — `f2093b1b`: the site relaunched by 2026-10-10 at new static URLs, and from then the old `view.xhtml` path's maintenance body meant a DEAD URL, not an outage; the b9-2 (2026-10-11/12) bullet above governs); a web-search summary said it was live and was stale crawl data — trust only a fetch · two workflow reviewers each running the full suite in parallel produced an artificial 123 s timeout on a 21 s solve test — never bump a time budget on contention a workflow created; re-run the suite alone · a workflow agent can return a non-report ("Waiting for the full-suite notification") — verify the tree yourself, never trust the chain · a GitHub "runner has received a shutdown signal" red (run 37374864752 on `b3284566`) is infrastructure, not a test failure — confirm by the log, then by the next run · the pay-less-tax Tier-2 statistic is ALL-IN since v10 (`lifetimeAllInCostPerPath`, one home); `lifetimeTaxMeanReal` still means income tax and a source-bind test keeps it out of the five read sites — never re-point one site alone.
-- **From the b9-7/b9-8 close (2026-10-04, the v10 roster-recall + the ACA re-verify):** `EnterWorktree` FAILS on this monorepo — four insight filenames overflow MAX_PATH under `.claude/worktrees/<name>/`, and the failed attempt leaves an orphan `worktree-<name>` branch (delete it): use `git -c core.longpaths=true worktree add -b <branch> C:/wt/<x> HEAD`, then `git -C C:/wt/<x> config core.longpaths true` and `pnpm install --frozen-lockfile` in the project (6 s) · a cost cap and a coverage goal can be STRUCTURALLY incompatible on ~linear cost — count the roster at the candidate spacing BEFORE a ruling (the roster dump: `buildSolveRequest` over `DEV_SEEDS`, distinct grid amounts per seed); the v10 ruling's +33 % cap admitted ~7 amounts beside `retired`'s 22, knowable before the council sat · a solve-cost model fit on two measured roster sizes (F + slope × roster) predicted the third within 1–4 % — validate on the held-out point, then compute any closed form from it · ranking stability scores the WHOLE roster on BOTH seeds and the crown search adopts that pass (`rankingStability.ts`), so a "cheaper seed A" scheme cuts per-candidate cost to 0.625 at best · a council can read shipped copy as unscoped — open `copy.ts` before relaying a disclosure brief (`recComposeAlready` already said "we tested") · uscode.house.gov can serve an HTTP-200 "Under Maintenance" page on EVERY path with no redirect — check `<title>` before trusting a read (⚑ 2026-10-16 doc audit — SUPERSEDED 2026-10-12, `f2093b1b`: `<title>` alone is not enough — after the relaunch (by 2026-10-10) the old paths served that maintenance body for two days, then a "Page Not Found" body, each a DEAD URL on a live site; fetch the ROOT and check the BODY, per the b9-2 (2026-10-11/12) bullet above and the ACA record's `howToClear` step (1)) · ACA retrieval mechanics (control-proven): congress.gov bill pages Cloudflare-403 → govinfo BILLSTATUS bulkdata, parsing the bill's OWN `<actions>` (the first `<latestAction>` can be a related bill's); the Senate calendar package is `CCAL-119scal-YYYY-MM-DD`; the Federal Register API needs `curl -g`; eCFR's versioner needs `--compressed` · two branches touching ADJACENT TODO lines conflict on rebase — take one side (`git checkout --ours`), re-apply the other through its own script, grep both markers · the Playwright MCP writes `.playwright-mcp/` into the project root — delete it after any browser check · a scratch `*.test.ts` anywhere under the project is counted by `verify:doc-stats` (3864 / 203) — rename it `.off` or keep it outside before any gate.
-- **From the b9-4 close (2026-10-03, the solve-time levers + the pool's generator foundation):** his LAPTOP STATE swings a solve's wall clock ~2× on the same code (`retired` 639 s on 10-01, 338.5 s on 10-03, both on AC / High performance, cause not recoverable) — compare timings only WITHIN one session, take a same-session baseline before every re-time, and never mix days in one table · node runs the engine ~2.5× slower than Chrome (the identity gate's 256-path `retired` solve ~11 s in vitest) — vitest runs one FILE's tests serially, so a heavy fixture goes in its own file to run in parallel (`solvePayloadIdentity.health.test.ts`) · `verify:doc-stats` counts any `*.test.ts` under `src/` — a scratch runner (the digest anchor, the call-sequence recorder) lives OUTSIDE the tree and is copied in only for its run, then deleted (the session's two were `zzAnchor.test.ts` = `bitDigest` of `solveWithMint` payload + `packSolveWire` on F1–F4 / F6 via `identityRequest`, and `zzCalls.test.ts` = `vi.mock('@engine/simulate')` recording `bitDigest([params, seed, options])` per call, shipped AND legacy — re-create them from that description; the scratchpad is per-session) · a HEAD-vs-tree differential by `git stash push -- src` leaves UNTRACKED files in place — sound only while HEAD's code imports none of them · `node -e "…"` in Git Bash interpolates backticks (it ate a docblock's identifier) — any edit carrying backticks goes through a script FILE or the Edit tool · an FNV lane with an EVEN multiplier flushes to a constant over a long walk (`bitDigest`'s first cut — a 64-bit digest with 32 live bits); both halves are now pinned to vary · one added import line in `intakeMap.ts` moves ~90 citations — `pnpm doc:reanchor HEAD` handles them, never by hand · a mutant plant must be grep-verified as LANDED and the file `cmp`-restored after (`scratchpad/plant.mjs` refused a missing anchor with exit 2 — re-create it: replace one exact string or exit 2).
-- **From the b9-3 close (2026-10-01/03, the production-build timing instrument):** the production build DCEs `?seed=` / `?vault=` — a dist drive PLANTS the household with the dev `plantDevVault` from a harness injected on the control origin :4181 (CSP blocks injected script on :4180), then unlocks it as a returning user (`e2e/held/solveTimingPlant.ts`) · vite's library mode (the IIFE harness bundles) leaves `process.env.NODE_ENV` for its consumer, so the bundle threw `process is not defined` at load — `define` it "production" — and `page.addScriptTag({ content })` RESOLVES even when the script throws: assert the global (`typeof window.X`) with the `pageerror` text in the message · Playwright's default headless is the chromium HEADLESS SHELL, not Chrome; `channel: 'chrome'` drives the installed Chrome in new headless (Context7-checked) — the instrument's browser · a solve timing needs an idle machine: the batch ran ~58 min serially with nothing beside it (no vitest, no doc-stats, no second solve) · the FIRST full suite after the machine sat idle two days red `copyFence.test.ts`'s cold-ESLint arm at its 30 s timeout (import 226 s vs 142 s, environment 248 s vs 105 s on the warm rerun, which was green 3787 / 190) — read the run's phase times before diagnosing, and never bump that timeout on one cold run · tsx runs a `.ts` outside the project as CJS (top-level await fails — use `.mts`) and cannot resolve `vite` from the scratchpad — import it by its `file:///…/node_modules/vite/dist/node/index.js` URL · a held instrument with its OWN config needs `e2e/held/shots.config.ts`'s `testIgnore` beside it, or the partition gate reds the double claim (mutation-checked: it does) · the dev-era "~90 s nc HOLD" figure was stale in four places — FIXED `3c9411f9` (the walk re-budgeted on the pool).
-- **Claude Code substitutes `$N` / `$ARGUMENTS` ANYWHERE in a SKILL.md body** (not only in `!` commands) — a literal `$0` or `$2,800` in a project skill silently becomes the user's argument text. Write literal dollar-digits as `\$0`; never put `$<digit>` in an awk/shell snippet inside a skill (use `$NF` or a script file). Found and fixed 2026-09-30 in caddie, back-nine-design, web-design-guidelines and /distill.
-- **A filed prescription in this repo is ~25-40% executable as written** — thrice-measured (5-of-11,
-  2-of-5, 1-of-5 clean). Drifted anchors, mechanisms the code does not have, edits that would write NEW
-  false claims. **Open every cited line before executing; budget as if it were unwritten.** A prescription
-  never inherits the trust of the correct diagnosis above it.
-- **Line-ending churn — and "use node instead" is NOT the fix by itself.** `sed -i` in Git Bash rewrites
-  the whole file CRLF → LF; this repo is `core.autocrlf=false`, so the churn lands in the commit (an
-  884-line diff on a 20-line edit). **But a node script that hardcodes `lines.join('\r\n')` does exactly
-  the same thing in reverse** — hit 2026-08-02, turning a 196-line TODO edit into a 648-line diff.
-  Rewriting a file? **Detect the existing ending** (`raw.includes('\r\n') ? '\r\n' : '\n'`) instead of
-  assuming either. The real rule is the last one: **always `git diff --stat` before staging, and if the
-  changed-line count is near the file's line count, it is churn — stop and fix the endings.**
-- **Never read a command's verdict through a pipe.** `cmd 2>&1 | tail` returns *tail's* exit code — this
-  has burned both `gh run watch` and `pnpm caddie:walk`. Redirect to a file and echo `$?`.
-- **CI verdicts by explicit id only:** poll `gh run view <id> --json status,conclusion` to `completed`,
-  then read `conclusion`. A watch exit code lies in **both** directions.
-- **`pnpm verify:bundle` reads `dist/` WITHOUT rebuilding.** A stale `dist/` is a false green; this has
-  bitten twice. Fresh `pnpm build` first, every time.
-- **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:762-772`
-  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:968-970`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
-  under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:2626-2628`), a once-measured
-  prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
-  arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:22-23`) — no date frame has ever been fit-measured either.
-- **A live solve is tens of seconds to minutes — budget for it.** On the PRODUCTION build at the laptop with the worker pool
-  (2026-10-03, `e2e/held/solve-timing.spec.ts`, P = 12, `SOLVER_CODE_VERSION` 9's rosters): `retired` **36.5 s**, `nc`
-  **39.8 s**, `healthnc` **150.9 s** — a healthcare household pays a second full search (the named-driver probe), and the
-  ~2× slow laptop state doubles every figure (`healthnc` ~5 min). `buckets` has not been re-timed on the pool. A device
-  with ≤ 3 logical cores gets no pool (`poolSizeFor` ⇒ 0) and runs the single worker (`healthnc` ~9 min at v8 — `225d8da4`'s
-  554 s single-worker baseline — unmeasured at v9). The single-thread v8 figures (2026-10-01: `buckets` 8.9 min, `retired`
-  10.7, `nc` 12.1, `healthnc` 26.0) predate the share-the-pass + probe-skip levers (`10bcba05` / `55cd7382`), the pool and
-  v9, and do not carry; quote the figure for the household AND the pool size you are actually driving.
-  Prod DCEs the dev seeds — a dist drive that needs a committed recommendation PLANTS the household (`e2e/held/solveTimingPlant.ts`). Before calling one frozen, measure CPU on the Playwright renderer
-  (`Get-CimInstance Win32_Process | ? CommandLine -match 'ms-playwright'`, then sample `.CPU` twice) —
-  a pinned core means it is computing, and Briggsy's own Chrome PIDs will read 0% and mislead you.
-- **`console.log` in a vitest run is SWALLOWED here** — a measurement probe that prints its answer
-  produces a green run and no output, which reads as a silent failure. Write results to a file
-  (`writeFileSync` to the scratchpad) and `cat` it. Cost one full 78-second run to discover.
-- **A directional caveat is a CLAIM — measure it or drop it.** Writing "low path counts under-count
-  this, read it as a floor" on the demotion-frequency probe sounded obviously right and was **backwards**
-  (15% at 400 paths → 11% at 1600). Re-running at 4× cost five minutes and inverted the conclusion. If a
-  caveat is worth writing next to a number, it is worth one more run.
-- **Verify a planted mutant landed, and hit the right occurrence.** A no-op edit goes green and reads as a
-  surviving mutant; a replace on the wrong line produces a real-looking red for the wrong reason. Match on
-  a unique anchor, then `grep` the file back. **And run the baseline before diagnosing your own change** —
-  when the task is "extend the harness to capture X," run the harness *first*.
-- **Never `git checkout -- <file>`** to revert a planted mutant on a dirty tree; it nukes uncommitted work.
-  Revert with Edit.
-- **Never measure the tree while an agent fleet works in it** — their scratch files produce bogus doc-stat
-  reds and bogus test counts. Never run the Caddie walk concurrently with the full suite (CPU contention
-  times out the final-tier waits). **A PARALLEL SESSION on another project is the same hazard from
-  outside the tree:** 2026-08-20, three RecoveryFlow tests (the ~1s KDF waits) red inside a full run
-  whose imports took 260s, then green isolated AND green on a full re-run — re-run the failing file
-  alone before believing any timing-shaped red.
-- **A StructuredOutput schema that asks for too much output fails the whole call** (insight 084). Split the
-  fan-out; never ask one agent for dozens of long fields at once.
-- **`?vault=` / unlock / save need a secure context** (`crypto.subtle`) — localhost or https, never a bare
-  LAN IP over http — serve the phone with `pnpm dev:phone`.
-- **`verify:fit`'s `?seed=dip` arm is LOAD-SENSITIVE and can red the whole gate on a busy machine.**
-  Measured 2026-08-05: it PASSES isolated at 1.1m and FAILED at 1.5m inside the full parallel run, on
-  `gotoSeedFinal`'s final-tier wait (`FINAL_TIER_MS` = 150 s today, `reviewSurface.ts:101`; it was 90 s when this was filed) — the heaviest date seed
-  sweeping 11 offsets at final precision. **Do NOT just raise the 90s** (insight 106: a fix that raises a
-  bound must prove that bound is the one that binds, and three prescriptions in a row adjusting a clock
-  means the wait is the wrong instrument). The wait is on REAL compute, so it is slow rather than
-  impossible — which is the opposite of 106's case and needs its own diagnosis. Re-run the arm alone
-  before believing a red: `pnpm exec playwright test --config=playwright.fit.config.ts -g "seed=dip"`.
-
-
-⚠️ **A REAL-BROWSER LOOK IS NOT OPTIONAL ON A COPY CHANGE, and 2026-08-05 proved it twice in one day.**
-Two defects shipped past a fully green suite and died on the rendered frame: a heading whose *"there"*
-had no referent, and a formatter quoting `~$140,000` for a $148,300 anchor. A third — the card telling an
-aged vault its recommendation had *"started in 2026"* — needed a 20-agent review to surface, and a test
-had been written PINNING it. **Read the frame as a user, not as the author of the assertions.**
-
-⚠️ **`mode: 'no-change'` HAS FOUR DISJUNCTS, NOT ONE — this cost a real diagnosis 2026-08-03 and will
-cost the next one.** `recommendationView.ts:244-249`: `noChange` **OR** the grade's `subTenthCollapse`
-**OR** a seed-B display inversion **OR** a delta that formats to $0. So *"the surface says **You're
-already on one of the strongest paths**"* is **NOT** evidence that `noChange` is true, and a browser
-frame can be byte-identical before and after a change that genuinely flipped the flag. Read the payload,
-never the words, when the question is about a flag.
-
-
-*The dated blocks below, newest first, were moved here 2026-09-25 out of the session records they were written into (the
-records themselves are cut — `git log` is the history).*
-
-**LANDMINES (2026-10-30, b9-3):** `$'\r$'` inside a `$(…)` substitution in a Bash `for` loop matched EVERY line, so a CRLF count
-read "all CRLF" on pure-LF files — count line endings with a byte loop (`node -e` over `readFileSync`), never grep in a
-substitution · the Phase B review left a `node_modules` JUNCTION in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb-review\head\` and `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-phaseb-review\verify-correctness\` — remove each link alone
-(`cmd //c rmdir <folder>\node_modules`, or `cmd /c rmdir` from PowerShell) before deleting either folder · a prop added to a
-component's TYPE but not to its destructure silently resolves to any same-named module binding (`describedBy` in `fields.tsx`);
-a `(s): s is string` filter guard then hides it from tsc — destructure first, and name a new prop so it cannot collide.
-
-**LANDMINES (2026-10-03 late, b9-5):** the worker script exposes `{ ...engineApi, ...poolApi }` and `EngineHandle` is SPINE-only (`Promisified<EngineApi>`) — a new pool method goes on `poolApi`, never forwarded by the resettable handle; a new `EngineApi` method still breaks every hand-rolled fake by design · a fake pool lane must `structuredClone` its REPLY (the wire) or the candidate re-attach is never exercised — and a pooled differential must tally lanes (≥ 2 used) or a silent one-lane fallback passes as a pool · a count-ZERO assertion on a lazily-chunked node passes VACUOUSLY — `svg.rv` toHaveCount(0) passed on PHONE with the chart planted back, the Suspense chunk not yet mounted; pin the synchronously-rendered box (`.rec-viz-box`) · the Caddie walk's solve budgets (300 s lockup / 480 s test, `e2e/caddie-walk.spec.ts` `SOLVE_LOCKUP_MS`) are SHORT of a single-thread solve on purpose — a `solve:` red there is a pool regression until proven otherwise · `pnpm doc:reanchor <BASE>` a SECOND time after `--apply` re-proposes the applied shifts (it diffs against BASE) — never apply twice; and it shifted a bare `:725` following `taxOverlay.ts:673` (then UNCHANGED — both are 2026-10-03's numbering; the register's *`tax.rmdStartAge` vs 26 CFR 1.401(a)(9)-2(b)(2)* entry carries the live pair, and `ee62a839`'s run moved only the named one here, to 677) by `solveAnchor.ts`'s diff ("bare, after solveAnchor.ts") — read every bare continuation's governing file before trusting the shift (a fourth blind class beside the register's Tier 4 two) (filed in the register 2026-10-03) · the roster measurement recipe: a tsx script OUTSIDE `src/` (doc-stats counts `*.test.ts` under it) over `DEV_SEEDS` + `buildSolveRequest`, run on the tree, then `git stash push -q -- src`, run, `git stash pop` — sound while the new code adds no untracked file the script imports · `solve-timing.spec.ts`'s `lockupText` stops before the plan card — the crowned AMOUNT is not in the capture; read the hero delta, or extend the capture before claiming what was crowned · a rewritten engine block can leave a TEST name stale where no citation points — grep the old behavior's words after a refactor (the IRMAA window arms' titles still name `firstCrossingMagiYear`, correctly; the ACA / bracket arms say `firstCrossingYear`).
-
-**LANDMINES (2026-09-28, b9-1):** a "holds across years" check composed from TWO years' frames (year-k lines, year-0 income) describes no real year — and a constant-income witness world makes the mixed and true frames agree, so the suite AND the mutants go green on it: list whose year each term is read from, vary the spanned axis in one witness (insight 139) · an enumerator change moves every real-solve witness's wall time ∝ roster: after one, tabulate per-test CI times across runs (strip ANSI with node; an older run's log labels the step `UNKNOWN STEP`, not `Run pnpm test`) and re-budget any 60 s solve witness past ~50 % — `health` read 21 → 43 → 60 s (v7 / v8 / a slow runner) · the CI runner varied ~1.4× across the board within an hour (`datesplit` 141 → 203 s) — a docs-only commit CAN red; read the table before calling it a flake · the TODO's own prescription can be wrong ("AND a ledger row") — the ledger's discipline and its pin test are the source; a contradiction is resolved at source before building · SSA dime-floors the monthly benefit (POMS RS 00615.101): a $20,000 PIA is $19,999.20 a year — a hand-derived Social Security figure that ignores it disagrees with a correct engine (insight 091's direction) · the constants gate flags a pinned figure typed in a test (`109000`) — READ the pinned figure, type only the algebra · `devSeeds.test.ts` is CRLF: script edits need per-file EOL detection + a match-count guard (the first try matched 0) · a long heredoc AND a `node -e` with backslash escapes both mangled again — write patch scripts with the Write tool, then `node <file>` · a re-anchor is owed after EVERY line-count change, even a comment (the 7-line budget comment moved two `act4-u17` spec citations; doc-stats' structural arm stays green on that rot — insight 136).
-
-**LANDMINES (2026-09-27, b9-11):** a fixture or dev plant saved at the WALL CLOCK's today sits on the ledger's ambiguous ship day whenever a row lands — it reds CI on exactly that day and greens the next; stamp "saved by this build" at `FIRST_UNAMBIGUOUS_SAVE_DAY` (every existing fixture and plant already does); a date-derived pin (`?vault=stale`'s note count) is DERIVED from the ledger in both its unit arm and its fit arm, never hand-typed · the witness digests see the exported PRICERS only — a change to how they compose (the gross-up, the IRMAA lag, RMDs, the draft → params map beyond `escalateQuote`) moves no digest: append the row by the discipline, not by the red · the ONE width seam: a new `@media (min-width: …rem)` fails `breakpoint-mirrors.test.ts` unless it mirrors `--bp-laptop` (68rem) — a new tier is a product decision · the Bash tool truncated a long heredoc AND interpolated backticks inside a double-quoted `node -e` again — write the script with the Write tool · Git Bash's `sed`/`cat -A` hide CR: count `\r\n` with node before trusting a line-ending read.
-
-**LANDMINES (2026-09-27, b9-10):** Git Bash's `grep -q $'\r'` and `sed` HIDE a file's CR — a CRLF file (`healthSheetChrome.test.ts`, `copyGuard.test.ts`) read as LF and a string rewrite silently matched nothing; count EOLs with node before any scripted edit, and give every scripted rewrite a match-COUNT guard (it caught both misses before they wrote) · a stray `cat > file` with no heredoc waits on stdin and hangs the whole Bash call to its timeout — nothing after it runs · a price fix can make a witness VACUOUS: at the bill-year prices both seeds round the two-of-you figure the same whether formatted once or as 2 × the rounded one, so the chrome arm's formatted-once pin went dead on the re-pin — rebuild the witness on a fixture where the two roundings differ (an aged 2024 start), and plant the mutant to prove it · a true price can read as a BUG next to a figure a reader thinks it should resemble — the Part D surcharge ~3× after the 2030 reset read "too big" to two seats; the fix is the LABEL, never the number · a scope clause can trade one misread for a rosier one ("on your drug plan" read as escaping on a $0 plan) — one refinement, then park the words with every draft as the brief; rosy outranks confusing, so revert to the confusing-but-not-rosy wording · compute the closed form before searching for a plant: `room` ⇒ joint survival ≥ 0.90 and the survivor subset ≈ every path, so `survivor-short` is unreachable — 612 engine runs only confirmed what one line of arithmetic said · a Caddie walk of a never-walked seed can hang on a product defect (the no-pretax Roth sheet had no Close) — read the dialog snapshot in `test-results/*/error-context.md`, and fix the product, never the harness.
-
-**LANDMINES (2026-09-27, b9-sotd):** a UI-cost number measured in NODE is not the app's cost — the spend solve read 27 s / 13 s under node, 5.1 s / 2.4 s in laptop Chromium and 4.7 s / 2.8 s on his phone, the same figures to the dollar; the council row nearly ruled its dissent on node's number ("slow: it is") — time a UI claim in a browser · an instrument that writes the DOM its MutationObserver watches re-fires itself forever and freezes the main thread it measures (the first phone-profile cut did) — poll, and prove any instrument on laptop Chromium before his phone · the phone rig: the laptop was 192.168.1.151, Windows labels the home Wi-Fi *Public*, and node already holds inbound Allow on Public + Private — `pnpm dev:phone` reaches his phone with no firewall change · `pnpm doc:reanchor` skips self-citations and ambiguous basenames (the Tier 4 entry) — in a parallel fix pass a number into ANOTHER file is its HEAD number, a self-citation the post-edit one, then the tool ONCE, LAST · `gh run list --commit <short sha>` returns nothing (it wants the full sha) — a watcher on an empty id "completes" having watched nothing; select by `headSha | startswith` · Windows `execSync` runs cmd.exe, which eats the `^` in `X^{commit}` — use `execFileSync('git', [...])` · `git diff --check` flags a CRLF file's `\r` as trailing whitespace — confirm real spaces before touching anything · a code-driven DELTA doc audit found 105 stale claims 21 h after a full audit and hours after a 100-agent review that restored five — after an engine-meaning commit batch, run one (`4c6b3e4f`'s message is the recipe).
-
-**LANDMINES (2026-09-26, b9-8):** a level-clamped index is only honest for LEVEL reads — a ratio `index(a) / index(b)` whose `b` sits at or before the anchor silently deletes the clamped span from the GROWTH (tiers 1–4's August-2025 base; insight 138) — and a hand oracle that uses the same index map re-derives the defect: count the source's own years · an "equivalent" mutant is a QUESTION before it is a record — ask why the branch cannot matter; "the input is flat there" was the defect's fingerprint · the IRMAA tier readers REQUIRE the compared schedule at the RIGHT MAGI year — the four clocks are in architecture §7.2; a new reader picks its clock there, never `irmaa.value` (the brand makes that a compile error) · the citation re-anchor is `pnpm doc:reanchor <BASE>` (the 2026-09-14 landmine) — this session re-invented it in scratchpad scripts (verified byte-identical, but the tool owns bare continuations and freezes); a bare `:NNN` on the line AFTER its governing `file.ts:` is invisible to a line-scoped remap (`model.ts`'s `:658` into `fingerprintOf` had been stale since before this session) [2026-09-26 delta doc audit: two more classes the tool never re-anchors — a file's citations of ITSELF (`base === selfBase`, `scripts/reanchor-citations.mjs:82` / `:102`; `intakeMap.ts`'s four self-citations rotted +26 in `e04823a4`), and, outside a narrow edge of its 60-char window, a bare continuation after a `.tsx` name (`LAST_FILE` tries `ts` before `tsx`, `reanchor-citations.mjs:58` / `:63`, so it resolves a phantom `AssumptionPanel.ts` and skips — `copy.ts`'s `entered * 12` anchor rotted that way in `6e4c065d`; where a same-stem `.ts` exists, `controlPreview`, it can move the token by the WRONG file's diff) — grep both classes by hand after `--apply`] · several test files are CRLF (`ConfidenceStatement.test.tsx`, `magiLandscape.test.ts`, `magiLandscape.pbt.test.ts`, `partBTrend.test.ts`, `healthSheetChrome.test.ts`) — edit through an EOL-preserving script or the Edit tool, and check `git diff --stat` deltas · a review fan-out's result is too big to read whole (270 KB for 100 agents) — parse the `.output` JSON's `result` field with node and print a table; never cat it · a UI number moved by an engine fix (the step card's $218,000 → $224,000) is a visible change inside an unchanged sentence — say so to him the same turn, the words-are-his law covers meaning · the phone profile needs the home LAN (see (1)).
-
-**LANDMINES (2026-09-26):** `pnpm test | tail` REPORTS EXIT 0 ON A RED SUITE — the pipe eats the exit code; capture it (`pnpm -s test > f; echo exit=$? >> f`) and grep `Tests ` for the fail count · `test.use({ reducedMotion: 'reduce' })` does NOT apply under `playwright.fit.config.ts` — `matchMedia('(prefers-reduced-motion: reduce)')` measured FALSE, so the 24 px reduced-motion arm had been passing on an unmet premise; use `page.emulateMedia({ reducedMotion: 'reduce' })` and ASSERT the premise · a new `EngineApi` method breaks ~21 hand-rolled test fakes (the `EngineHandle` mapped type makes each a compile error, by design) and the `memoryModel.test.ts` fake defaults `runningInWorker: true` — a lane gated on the worker DOES dispatch there; stub it inert · the spend lane lands a beat AFTER `data-answer-tier="final"`: a capture must wait out `.cs-magnitude[data-spend="pending"]` (the Caddie walk does since `2f43761f`), while a fit arm measuring right after `final` is measuring the RESERVED pending box — both states are laws · a line-count change in a heavily-cited file reds the full suite's citation arm on the NEXT run; re-anchor at each commit boundary (97 edits after phase B), not only at the close · a proxy that reads as honest to eight machine seats can still be WRONG — probe the engine AT the quoted figure before debating its words (the trim clause's council found the ~2× error in its clerk's first run) · a council's draft copy is a floor, not the words — his read cut its duration phrase; offer the lean form, then take his ruling and record the evidence honestly (the "how long?" was the pilot's question, not his).
-
-**LANDMINES (2026-09-25 late):** a statute-frozen figure deflates by the price index of the year whose income it is COMPARED with, never the year it is published for — the NC deduction, the senior bonus and the HSA catch-up meet same-year income (the sim year's index is right); IRMAA compares MAGI two years older, so its frozen top line was already exact through 2027 and the pilot's bill-year deflation was harsh-wrong (built, refuted by the review, reverted; insight 135's refinement) · a statute check must ask "compared with WHAT?" as well as "does the statute index it?" — the pilot confirmed the freeze and stopped · the biggest find of a statute read can be its SIDE NOTE (the per-person phase-out came back as an aside to an indexing question) — read the primary form yourself before acting (Schedule 1-A Part V) · an "externally derived" fixture is independent only along its source's axis: hand arithmetic over the research strand's rule is one witness, not two (insight 137) · a band fixture guarded by a RANGE keyed to the old ceiling (`< 350_000`) passes after the band narrows — guard the band's PROPERTY (each spouse's bonus still live) instead · ANY change to a scored overlay's pricing bumps `SOLVER_CODE_VERSION` (the rule is in `solverCodeVersion.ts`; the §86 fix missed it) · a Workflow survived a power outage and completed on its own; the per-agent results were readable in `journal.jsonl` before the completion notice — but refuters that ran AFTER a revert judged the NEW tree, so a "refuted: moot on the current tree" verdict confirms the fix, it does not clear the finding · the insights' long filenames exceed the MSYS path limit: `git show HEAD:<path>` fails with "Filename too long" and a shell EOL check silently reads garbage — count with node (`git -c core.longpaths=true show`) · `pnpm doc:reanchor` SKIPS an ambiguous basename (`stateTax.ts` exists in `src/engine/` AND `src/engine/constants/`) — list every `stateTax.ts:N` citation, read the HEAD line it names, locate that content on the tree, and hand-fix AFTER the tool's `--apply` · `vitest` swallows `console.log` AND a temporary instrument under `src/ui/__tests__/` runs inside the full suite — name it `zz*`, pass its output path by env var, and DELETE it before staging (it fails the suite without the var) · 57.9 % context after one build + one 25-agent review: stop at the build boundary, never start the next Tier 0 in the same window.
-
-**LANDMINES (2026-09-25):** a Workflow `resumeFromRunId` after a session-limit death REPLAYS the finders but RE-RUNS every nested verifier — not just the dead ones (journal: 384 started / 299 results for a 206-agent run; two verdicts changed) — budget a resume as a full second pass of everything after the first nondeterministically-ordered call · a finder lane briefed "Location A = the correct version; otherFile = the wrong one" files `file` = the CORRECT side — group fixes by `otherFile` for that lane or the wrong owner gets the finding · the TODO chronicle's root cause was the user-level CLAUDE.md end-of-session line asking for "what we did" while the squeaky skill forbade it — both fixed 2026-09-25; the skill's PRUNE step is what keeps this file short, and a close that appends without pruning has regressed it · `git ls-files --eol` read TODO.md as `-text` (mixed endings) before the audit; it is LF now — the Edit tool cannot match a lone CR, and a whole-file rewrite shows as a thousand-line diff · a link scanner that walks `[text](target)` with a simple regex mis-calls insights 046 / 050 / 095 orphans (nested parentheses in the link TEXT) — they are indexed; check the README before believing an orphan list · two fix judges can disagree on a date (Act 4 "closed" 2026-07-27 at U17·S6 vs the 2026-08-02 declaration); one pass must RULE it and sweep every live copy, or the docs fork · an audit's finder that quotes a hard-wrapped doc line gets refuted for "not verbatim" unless the refuter is told the docs wrap with a 4-space indent — say so in the brief.
-
-**LANDMINES (2026-09-24 evening):** a sentence written into a canonical doc BEFORE the measurement must be hunted down AFTER it — the pilot's refuted "cap binds, seeds didn't move" survived in architecture §7.1 and a test title until the review fleet read them · a sweep's sibling list is the AUTHOR's memory — the review found three more frozen-nominal figures in the same class (grep every constant whose citation says frozen / fixed / not indexed) · the docblock line in a heavily-cited file costs a re-anchor: three lines added to `taxOverlay.ts`'s `GrossUpContext` moved 94 citations (all mechanical, 0 hand review — but run the DRY RUN and read it) · a `min(cap, tier)` binds on whichever arm is SMALLER for the actual inputs — compute BOTH before predicting "no change"; a cap that scales with the benefit is nothing like a threshold that scales with nothing · "frozen" is a NOMINAL statement — in a real-dollar engine it means "divide by the price level every year", and flat-real is INDEXED, the rosy way; the sibling test is "does the statute index it?", never "is it a dollar figure?" · the vitest config swallows `console.log` — an instrument must write to a FILE, or it "passes" in 341 ms having said nothing · a mutant script MUTATES source on disk — never run it while any other vitest or measurement job is reading the engine · the dev seeds are FIXTURES with named states: when the engine's truth moves one out of its band, record the move at the old inputs in the docblock, then re-tune the smallest knob that leaves the other pins' figures alone (the IRA; spending would move the health-sheet MAGI too) · a hand-typed engine number in a test (the trim gate's −7,500) is a pin that moves with the seed — read the new number off the failure and re-pin, never hand-edit toward agreement · `git add -- .` from the project dir, never `-A` from the root (the newsletter file).
-
-**LANDMINES (2026-09-24):** a readout row is the END of a sim-year — a STOCK at row k is "k years out", a FLOW at row k was paid during sim-year k−1 (calendar start + k − 1); print the calendar beside every spoken distance or an off-by-one lives forever (insight 134) · a scout's file:line anchors are CLAIMS — re-open every one before it enters the register (two of the chair's were a different comment) · a `describe`-scoped fixture means a new arm goes INSIDE that describe — the file's last `})` was a different describe's · a helper that loses its last caller reds lint, not typecheck — run both · a background scheduler dirties `../family-feud/newsletter/…` mid-session; `git add -- .` from the project dir, never `-A` from the root. · the `irmaaStep*` copy family lives in `slots` for its templated members — a PLAIN string with that prefix belongs in the `copy` catalog beside `irmaaStepBothBase` (a string dropped into `slots` made `copy.<key>` undefined and the new pins compared undefined to undefined — the render-sample census caught it, typecheck would have) · the citation re-anchor is `scripts/reanchor-citations.mjs` (`pnpm doc:reanchor <BASE>` = the dry run; add `--apply`, or `--only-missed` for the v1-recovery case): per-TOKEN freeze + bare-continuation attribution; run it ALONE from the base — never after the v1 tool for the same base (it would move the named tokens twice; `--only-missed` exists for exactly that recovery).
-
-**LANDMINES (2026-09-23 evening):** a review lens's "these N citations must be hand-fixed" list is a CLAIM — run the re-anchor DRY RUN first (the eleven it named were ordinary `file:N-M` forms the tool rewrites) · a template literal inside the `as const` copy catalog is fine (nothing parses `copy.ts` as source except the new source-level arm; `copyFence.test.ts` reads JSX, not the catalog) · an inline `node -e` whose script string carries backslashes is shell-mangled — a `.mjs` file, every time, even for a one-line patch · a held look spec's style-tag lift must be REMOVED before the next dialog opens (a leaked `max-height:none` made the Roth frame an uncapped sheet no reader sees) · the Roth door's label depends on a committed conversion (`leverRothDoorCta` / `leverRothDoorEditCta`) — a selector on one label silently skipped the other seed; match both and assert the count.
-
-**LANDMINES (2026-09-17):** a fixture family that all carries ONE value (every `READING_FIXTURE` spend is 6,500) BLINDS a mutant to a hard-wired constant and to a held-vs-adopted field — vary the oracle value in at least one arm before trusting a mutant's green (M2 + M5 survived round one on exactly this) · a mutant script's "expected red file" must name a file whose PIN can SEE the plant — the seed gate composes through `resolveStickyDisplay`, never the component, so it can never red a component-only mutant · the reanchor tool maps from `git diff -U0 <BASE>` over EVERY changed file including `.md`, so it runs after ALL doc edits, once; the cites it lists under REVIEW (a cited line INSIDE a modified hunk) are hand-fixed AFTER it, never before · a long `node -e` followed by a heredoc in ONE Bash command truncated silently (the shell reported an unmatched quote at a line the command never had) — scripts go through the Write tool, then `node <file>` · the `caddie-ab` result envelope is JSON with `.result.targets[0].{panels,hunter,refuted}` and only a SUBSET of findings reach refuters (the highs + the hunter's) — read every seat's unrefuted mediums at source before the card says "clean" (the echo-ink entry came from one) · the retired seed's worsened landing is NOT a fit-gated state: measure the base tree (stash → walk → pop, 25 s) before calling a fold overrun a regression.
-
-**LANDMINES (2026-09-14):** the `caddie-ab` seat schema caps observations at 200 chars and a seat that writes 201 dies after five retries — cap the prompt's budget line UNDER the schema (the fix belongs in `caddie.js` + `caddie-ab.js` together; still open — filed 2026-09-25 in the register as *Unscored Caddie tape rows + the increment-4 residuals*' PANEL-SCHEMA RESIDUAL) · a Caddie door crop cuts at a scrolling sheet's fold, so a panel over a tall sheet reads WORDS only and the LOOK is unjudged unless a seat is told to check coverage — make the scroll-and-clip frames BEFORE the panel next time · an inline `node -e` with template literals in a replacement STRING is shell-interpolated (bit again: the digest's refuter lines printed blank) — edit scripts with the Edit tool · the re-anchor tool is `scripts/reanchor-citations.mjs` (`pnpm doc:reanchor <BASE>`); the scratchpad copies are retired · the register's Tier 2 section does NOT open with "the family's other two primaries" — anchor an insert on the `## Tier` header line, never on a remembered first entry · a SECOND config under `e2e/held/` is a second OWNER of every held spec (the shots config collects `**/*.spec.ts` there by design — it is THE held harness); a new instrument is a `.spec.ts` under it, run filtered by file name, never its own config, and never a `.look.ts` (the partition walk only sees `*.spec.ts`).
-
-**LANDMINES (2026-09-13 late):** `String.prototype.replace` with a replacement STRING treats `$$` as one `$` — an edit script that rewrites copy templates (`~$${x}`) MUST use a function replacer or every dollar in the slot silently vanishes (it did: 21 restored, caught by the one-year on-ramp arm) · `grep -q $'\r'` under Git Bash reports LF on a CRLF file — measure EOLs with `git ls-files --eol` or `tr -cd '\r' | wc -c` (the insights README is i/crlf; `devSeeds.ts` and `healthSheetChrome.test.ts` are CRLF, `healthSheetSeedGate.test.ts` LF) · a council's ruled MITIGATION for a red-team hit can be wrong at source (hit #4's "the span bounds the rule") — measure the ruling's own claims before recording them as verified · a dead session's Workflow verdict lives in `~/.claude/projects/<proj>/<session>/tasks/<task>.output` (the `result` field) and its script under `workflows/scripts/` — recover from there, never re-run the council · `retired` has NO health door (post-65-only households render the verdict-level priced note), so its byte-identity is a composer fact, not a walkable surface — the Caddie walks `healthnc` + `healthgap`. [2026-10-16 doc audit: `retired` still has no door (its seed gate says so), but the rest is superseded. Its card is no longer byte-identical: `690bcae0` gave the one-figure arm the singular drug-and-supplement carve-out ("`retired`'s gate gains the line"), and `e17c40e4` made the two-person form dated and "start at" under the both-on-it eyebrow, with Briggsy's trend clause. And the arm IS walkable: `healthss` (62/62) is "the one door-bearing seed on the one-figure arm" (`healthSheetSeedGate.test.ts`; its row in *Scenario seeds* under *Driving the app*), so a Medicare-card change walks all three — `LOOK_SEEDS=healthnc,healthgap,healthss` on the scrolled-card recipe in this section's b9-toronto3 bullet.]
-
-**LANDMINES (2026-09-13 evening):** a Workflow fleet dies WHOLESALE at the session limit, and a script's "≥ 2 votes survive" rule then marks every finding REFUTED with zero votes — read the result's `votes` (or `journal.jsonl`) before trusting a refuted list; `resumeFromRunId` after the reset replays the cached seats and re-runs only the dead ones · the council-log's table header repeats per section — anchor an insert on the FIRST DATA ROW, never the header · a door crop cuts above a tall sheet's actions row — the blocked-Apply look needs the scroll-and-clip harness (this session's scratchpad `look/`; port 4197) · the Edit tool needs a register bullet's exact bytes — Read the lines before Edit, never quote from memory (one bullet lacked the "(two seats, survived)" tail I remembered) · a council's "verified in source" line numbers are the council's — re-open the lines before building (the Card 13 API cites `OddsLadder.tsx:276/:300`) · at 44 % with three fleets in flight the honest call was "finish the open fix, then a freshy" — it held at ~52 %.
-
-**LANDMINES (2026-09-13):** a build brief's "re-point these three citations by hand" and a delta re-anchor tool are MUTUALLY EXCLUSIVE on the same citation — the tool maps from the base commit's numbers, so a hand-fixed citation gets mapped AGAIN (revert hand fixes to the old numbers, then run the tool once, last) · `aria-disabled` is one strand of the `disabled` bundle: jest-dom's `toBeEnabled` goes silently vacuous, a `:not(:disabled)` hover rule starts matching, and Playwright refuses the click (1.60, unchanged in 1.63) (`getAriaDisabled` in coreBundle.js — the installed file lives under `node_modules/.pnpm/playwright-core@<version>/…/lib/coreBundle.js`, not `generated/injectedScriptSource.js`; insight 131) · a CSS rule that reaches a sheet FAMILY re-skins sheets that OPEN blocked (HealthcareSheet: `picked === applied` on arrival; RothLever: an empty plan) — a loud "cannot commit" with no sentence is worse than the mute; make the look conditional on the rendered reason (`[aria-describedby]`) · `--on-brand` and `--paper` are one hex, so a primary whose fill eases from transparent blanks its label for the fade — never transition the fill of a state flip · EOL is per file (the insights index is CRLF, most of the tree LF) — measure with `git ls-files --eol`, never assume · a Caddie door crop cuts above a scrolling sheet's actions row — the look of a blocked Apply needs its own scroll-and-clip capture · the classifier that gates auto-mode Bash can rate-limit mid-session; read-only tools keep working, so route the wait into Read/Grep work · a review fleet of 114 agents is ~11 M subagent tokens and a 460 KB result — digest from the pretty-printed JSON envelope's `.result`, never the raw file · a number that gains a platform label needs every sibling number on its line labelled too — the Linux-ink pass (`a4030a92`) found three Windows-only figures left unlabelled beside the new Linux one, and its own prescription's site list missed five sites that four skeptic passes caught: a filed site list is its author's memory, the sweep is the deliverable.
-
-**LANDMINES (2026-09-12):** the band the app DRAWS is the engine fan CUT at the thin-cohort year (`answerView.ts` → `bandGeometry.truncateFanAtThinCohort`, 24–36 y) — a probe that takes the max over the RAW fan (54–61 y) overstates every growing household's ceiling (health: 15M predicted, 6M rendered; the brief, the review and the `c77bcf24` commit message all carry the raw table — the register is corrected); a seed-level prediction must run the SURFACE's pipeline (`lattice-probe-rendered.mts` in this session's scratchpad: buildSpineParams → runEngine with the app's options → the cut → resolveBandData), and a frame is the only proof · a process COUNT is not a running gate — `ps -W | grep -i chrome` counts his own Chrome windows; ask
-`Get-CimInstance Win32_Process` for the COMMAND LINE (`playwright test --config …`, `vite --port …`) and read the gate's own log / `.last-run.json`
-before saying "running" (his "I don't see anything running" was Earth) · a Playwright run stopped by TaskStop on Windows leaves its worker AND its
-Vite alive as orphans (the `gracefulShutdown` signal is ignored here); a second run on the same port then REUSES that Vite and races the orphan
-for cores — kill by PID (`Stop-Process`) before relaunching, and treat a "timeout while setting up page" artefact in `test-results/` as the orphan's,
-never the passing run's (`.last-run.json` carries the truth) · a `tsx` probe outside the repo: CJS needs bare `C:/…` import paths; an `.mts` (top-level
-await) needs `file:///C:/…` URLs, and `--tsconfig tsconfig.json` from the repo dir for the path aliases inside src · an inline `node -e "…"` with a
-template literal is shell-interpolated — the backtick block became empty command substitutions and wrote a mangled brief; scripts in FILES, always ·
-the citation re-anchor (`reanchor-delta.mjs`, this session's scratchpad: an old→new line map from `git diff -U0 BASE`, arm 4's grammar, EOL-preserving)
-maps from the BASE commit's numbers, so it runs EXACTLY ONCE per base after ALL source edits — a second `--apply` re-maps the already-moved numbers;
-its dry run before the fixer's edits and its apply after them legitimately differ (+1 became +8 on one file), so never spot-check an apply against a
-dry run's numbers · the review fleet's raw result was 657 KB — chair from `digest-review.mjs` (synthesis first, then survivors with votes), never
-the raw file · a "recorded limit" arm that enumerates a set by RUNNING the code is a DND 012 brush — acceptable only when a lens independently
-re-derives the same set and the comment says so (the pbt's `[1,2] ∪ [9,12] ∪ [1001,1250]` arm) · a `;` where `&&` belonged let the close chain
-push past a red doc-stats (`118e9822`, fixed by `40b14952`) — gate every chain with `&&` · arm 4 attributes a bare `:NNN` after a `.md` citation
-to the nearest SOURCE citation on its line — name the file beside every bare continuation.
-
-**LANDMINES (2026-09-11, evening):** `verify:fit` under self-inflicted LOAD reds arms that are green — running `verify:doc-stats` (its
-`vitest list` collects the whole suite) twice DURING the fit run redded the two raised-root chart-text arms ("no figure matches
-figure.band-figure": the band had not mounted when the audit ran); both pass in isolation and the full 139 passed on an idle rerun
-(4.9 m locally). Never run vitest / doc-stats / a build beside a browser gate; a red under your own load is not a finding, and the
-idle rerun is the proof · the resampled band LATTICE is the wrong instrument for a spoken year: 49 columns over a 41-year horizon
-put the first $0 column at 1.7 y over a grid that reads $0 at year 1 — read the integer grid at the producer seam (`medianGoneYear`)
-and measure the instrument before trusting it · no dev seed was pre-65 AND priced until `healthnc` — a register prescription that
-names a seed for a cohort must be checked against the seed's ages (`datenc` = 66/65), never trusted · a test that asserts "no
-subordinates wrapper" as a proxy for "no relief line" breaks the moment the wrapper hosts a second child — pin the element's own class ·
-a re-anchor pass is only as good as its LAST run: every comment edit made AFTER it re-drifts the citations below the edit (three
-files moved again this evening after the pass; the fix was a delta pass from a pass-time copy of each file) — make ALL source edits
-first, re-anchor LAST, run `verify:doc-stats` last · the pass's blind spot was the BARE continuation (a backticked `:NNN` / a comma
-list / a `/NNN` after a named citation) — the 2026-09-10 fleet re-anchored 287 by hand and this pass forgot them; doc-stats arm 4 now
-checks every bare continuation against the nearest named citation on its line (a `(not `:NNN`)` record stays frozen), so the class
-is gated, but a bare token whose named citation sits on the PREVIOUS line is still invisible — name the file on the same line.
-
-**LANDMINES (2026-09-11):** the Bash tool TRUNCATES a long quoted heredoc (≳100 lines: "unexpected EOF while looking for matching
-`''`" mid-file) — write big files with the Write tool, never a heredoc · a glob spelled `**/held/**` inside a `/** … */` block comment
-CLOSES the comment ("held is not defined") — describe it in words · an inline `node -e "…"` is shell-interpolated (a backtick runs a
-command, `\n` collapses) — put scripts in files · `grep -c $'\r'` in this tool counts the letter r, not CR (the tree is mostly LF, a few files CRLF — `git ls-files --eol`; the
-"CRLF" probe was wrong) · the CVD per-chart crops select the bare `svg` — a crown row seated ABOVE the svg is outside them (the plain
-`crop-ladder` / `crop-twofutures` / `crop-recviz` crops select the HOST and include it) · a `display:contents` group reports an all-zero
-rect — `fold.json` now unions the children (harness fixed) · a 182-agent panel costs ~19 M subagent tokens and ~250 KB of digest to
-chair; chair from a digest script, never the raw result, and expect the window to jump ~25 % — start the walk EARLY in a session.
-
-**LANDMINES (2026-09-10, late):** vitest's default include picks up ANY `*.spec.ts` under `temp/` — a throwaway
-Playwright spec there breaks `vitest list` and therefore `verify:doc-stats` ("could not collect the live suite"); park
-instruments in `e2e/held/` — excluded from vitest AND (since 2026-09-11) named in the CSP harness's `testIgnore`; before that
-entry `verify:csp` collected `e2e/**` by default and ran the instrument against `dist/`, CI red on three commits while every local
-gate was green — a change under `e2e/` must run `verify:csp` too, and `playwright-harness-partition.test.ts` now gates
-one-owner-per-spec (insight 128) · a Playwright `fullPage` capture DROPS CDP `Page.setFontSizes` emulation — shoot the
-first frame first and re-assert the root before every capture (insight 127) · `scrollIntoView` reaches through
-`overflow:hidden` — a reach oracle scrolls the DOCUMENT and hit-tests (insight 124) · a mutant's label must be what was
-planted; predict the arms that CANNOT red (insight 126) · `rem` in a media query reads the browser default — assert the
-tier before the law (insight 125) · a `| grep` after a gate returns the grep's exit code — one commit shipped doc-stats red
-that way; gate by exit code · never `git checkout -- <file>` to revert a mutant while the tree carries uncommitted work —
-`cp` a backup and restore it.
-
-**LANDMINES (2026-09-10):** a content-only read of a cited range misses drift whenever today's lines still "read
-plausibly" — six wrong-"correct" verdicts survived that way in one batch; the skeptic that caught them DIFFED the cited
-range against the tree at the last re-anchor commit (`61c57ff5`), and a range that was a clean syntactic unit THEN and a
-ragged one NOW is drift regardless of how it reads · the citation regex captures only the FIRST number of a comma list (a file name, a colon, then
-72,95,120) and nothing of a bare `:232` — both forms are citations and both drift; inventory them separately · a bare token's
-nearest preceding named citation is the WRONG file 70 times in 287 (the sentence names another file in prose) — attribution
-is a guess a verifier must check, never a fact · a machine crash mid-session leaves the commit and loses the hand-off:
-read `git log` before the START HERE, and treat any "OWED" line older than the newest commit as suspect · the Dell's crash
-corrupted the monorepo's `.git/index` (all-zero header): back it up, delete it, `git reset` rebuilds it from HEAD with the
-working tree untouched; `fsck` proves nothing else was hit.
-
-**LANDMINES (2026-09-08):** a `council` Workflow can lose EVERY elder to the 5-hour session limit and returns a "hawk
-seat crashed → re-dispatch" verdict — never execute one; re-dispatch after the reset · jsdom 29 has NO
-`document.scrollingElement` (the TS lib types it non-optional) — the guard must be nullish, a `!== null` check threw in 60
-tests · `settleLayout` ENDS in `scrollTo(0,0)` — a gate whose subject is the scroll position must not call it before
-measuring (the first mutant went green for exactly that) · a Playwright `.click()` scrolls its target into view — use an
-in-page `button.click()` when the offset is the subject · `?seed=datesolo` NEVER stamps `data-answer-tier="final"` (the
-refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result` · Playwright's 390×844 mobile emulation
-reports `innerHeight` 862 (870 on the first step) against a 844 `visualViewport` — pick one deliberately · WebKit has no
-`navigator.storage.persist()` — record, never assert · `git diff` elides binary assets — the icons patch needed
-`--binary`, or the manifest ships pointing at files that do not exist · a `--` inside an SVG XML comment breaks the
-rasterizer SILENTLY · `copyGuard.test.ts` is CRLF (the one CRLF file seen this session) — detect EOL per file, always ·
-a canary that enumerates the LIVE catalog (`Object.keys(slots)`) is not redded by a fixture-only mutant — plant in
-`copy.ts` · the CSP real-intake test ran under Playwright's 30 s DEFAULT with 60 / 90 s waits inside it (dead letters:
-a matcher timeout never clamps to the test deadline, and no custom message prints) — `test.setTimeout` scoped to the one
-heavy test · `<ChartReadoutRow>` renders in BOTH seats and marks `data-active` either way — seat-aware locators, never
-an OR · taps and hovers land in VIEWPORT coordinates — on a 390-tall viewport scroll the target into view first ·
-`gh run list --commit` needs the FULL sha; match `headSha.startsWith` instead · a detached
-`pwsh -Command "cmd *> log; Add-Content …"` never appended its exit line — read Playwright's own summary · the digest's
-anchors were three days stale on EVERY item (chart-text.spec.ts 254 → 1,750 lines) — the builders re-derived all of
-them, and a verifier that trusts a skeptic's line number is as wrong as one that trusts the verifier's.
-
-**LANDMINES (2026-09-07/08):** `e2e/` is outside `tsconfig.json`'s include — nothing typechecks the specs,
-so every new audit field needs a non-vacuity pin (the `data-ct-priority` pin is the pattern). Ink px differ
-by rasterizer — 45.0 Windows / 42.0 Linux for the same glyphs (insight 118): pin structure by TEXT, floor ink
-with a cross-platform margin, never a Windows number. A synthetic tap at an element's EXACT edge dispatches
-nothing on 390@3 (insight 119) — inset 1 px. `test.fail` + a timeout = a real failure (insight 120) —
-instrument tests measure first, assert last, and load ONCE (`setRootFont20` BEFORE `gotoSeedFinal`). Local
-fit workers are capped at 30% (insight 121); `FINAL_TIER_MS` (150 s, `e2e/reviewSurface.ts`) is the one anchor
-wait — `vertical-fit.spec.ts` still re-types `90_000` in eight places (harmless at 6 workers; hoist when
-touched). `atceiling` is a DATE seed (~45 s/arm) and rides EVERY arm in the loop (six since PHONE_LS). The squeaky skill clears
-`temp/` UNCONDITIONALLY (its §4 overrides any KEEP note here), so nothing irreplaceable may live there: the 24 px instrument +
-measurements moved to `e2e/held/` and the icon generator + sheets to `scripts/icons/` on 2026-09-08; screenshots are regenerable.
-
-**LANDMINES (2026-09-06):** an identifier-proximity anchor gate measured 21–42 % false positives on freshly
-verified citations — REJECTED; arm 4 is structural only (file exists · line in range · not blank · range
-well-formed), the semantic half is the anchor fleet · arm 4 never scans `src/**`, README.md, CLAUDE.md, or
-`.md:NN` doc-to-doc citations — ~40 stale SOURCE-comment citations were re-pointed by hand this morning
-(register: *The gates that don't bite*) · a Git-Bash `grep -c` for carriage returns lies about CRLF here —
-node decides EOL per file · `grep -ni "a|b"` without `-E` treats `|` literally and returns NOTHING — that
-false negative produced the u13 spec's "no e2e walks" sentence in `85fb5dc1`; alternation needs `-E` · an
-inline `node -e` given a `/c/...` path fails — write scripts to files · the 2026-09-06 scratchpad's
-`linkcheck.mjs` collapses runs of spaces to one hyphen (GitHub maps EACH space) — its "8 broken anchors" were
-all false positives; the doc set has zero broken links · parallel owners in ONE working tree shift each other's
-line numbers mid-read (insight 083) — a citation written against a file another owner is editing is unverified
-until every owner lands; re-run `verify:doc-stats` last · two "AS BUILT: never created" annotations from the
-truth pass were WRONG (`BudgetBuilder.tsx`, `BudgetLineItem.tsx`, `SequencingControl.tsx`, `HealthcareSheet.tsx`
-live in `src/intake/`) — never assert "never built" from one `ls src/ui` · a rewriter's own defect list is ~1/3
-stale by the time you read it (two skeptics caught rewriters reporting defects already fixed in the tree) —
-verify before chasing · a Bash heredoc holding a long JSON with apostrophes truncated mid-string here, and another ate a
-backslash inside a regex — write big edit payloads and scripts with the Write tool, then run the file · a screenshot proves ONE
-column: a per-width seat is governed by the WIDEST column, so "looks great" at the mid column hid the column-0 overflow on the
-390 phone — measure the whole catalog before reading a frame as proof (insight 123).
-
-**Landmines the 2026-09-05 session added (the chart text layer; the instrument half is insight 116):** a
-`node -e "…"` string carrying `$2.25M` lost its dollar to SHELL interpolation and broke the quote — write
-every script to a file with the Write tool and run it, never inline · the Bash tool persists any output
-over ~30 KB to a file and shows 2 KB — read the file with the Read tool, don't re-run · `document.fonts.check`
-returns true for a face that does not exist · `getBBox()` on svg text is the em box, not the ink · a
-first-match regex over a stylesheet matched the retirement COMMENT and went green (match `selector {`,
-comment-strip first) · a Playwright `:not(:checked)` locator re-resolves after the click — pin by
-`[value=…]` · a `<span>` host for absolute children collapses their percentage positions onto one point —
-`display:block` it · a unitless `0` in a custom property that feeds `calc()` invalidates the WHOLE
-declaration (`transform` fell to `none`) — `0px` · `?seed=datemixed` renders no ladder; `?seed=failing` is a
-RESOLVED band, not the placeholder; `solve:nc` renders no `svg.rv` — only `solve:surplus` does (~40 s a walk per viewport on the worker pool, 2026-10-03; ~5 min single-worker) ·
-the dev server for measurement lives on **4197** (4190 fit · 4195 caddie · 4180/4181 CSP).
-
-**Landmines the 2026-09-04 session added:** a mutant REVERT anchored on a line that also appears elsewhere
-fails the exactly-once check and leaves the mutant PLANTED while the chain reads green (the unwitnessable
-arm's mutant line — `{ kind: 'unavailable', …, detail: payload.detail }` — is the aborted arm's line too);
-verify the revert with the same grep count as the plant, on a UNIQUE anchor · `grep -c` returning 0 exits
-1 and breaks an `&&` chain — the step after it silently never ran (cost one re-run) · `grep -c $'\r'` lied
-about line endings in this Bash tool (2,689 CR lines counted in an LF file) — trust `git diff --stat` and
-node's `raw.includes('\r\n')` · `String.prototype.replace` with a replacement carrying `$$` eats a dollar
-sign (the window sentence lost its `$`; the existing pins caught it) — split/join, never replace · the
-`failing` seed's live solve is sub-second even at full precision (the household dies in year one), so a
-`?seed=failing` browser witness costs seconds, not the 11-minute budget — the goal-pick → held card was ~4 s · the MECHANISM I inferred for the bin ("the pool cannot absorb the perturbation") was refuted by the review fleet on the seed itself (the pool absorbs it with $8,732 to spare; every path depletes in year 0 so the surface is all-zero) — a 5-lens review with 2 refuters per finding confirmed 14 of 31, and the P1s were all this one false mechanism laundered into eight docstrings; probe a mechanism before writing it into the docstring a sentence will be authored from.
-
-**Landmines the 2026-09-03 session added:** the Bash tool mangles heredocs carrying nested quotes — write the
-script to a file with the Write tool and `node` it · `.playwright-mcp/` and `temp/` are BOTH gitignored
-(`.gitignore:24`, `:4`) — the `mv`-before-`git add` half was stale; what matters is DESTINATION: pass a
-relative `filename:` on `browser_take_screenshot` (`scale` is a REQUIRED arg) and copy into `temp/<walk>/` · Playwright `fill` + an immediate Continue click can
-land without a blur and not advance (seen once on the OOP step; a real tap blurs first) — click the
-step heading to blur, then Continue · a power/network blip drops Vite's websocket and full-reloads the
-page to ColdStart mid-walk · `:nth-match(label:has-text("…"), N)` is the selector for the sr-only
-radios (the label intercepts the click) · CLAUDE_CODE_SUBAGENT_MODEL=opus is set in settings.json
-since today — a fresh terminal picks it up; STILL pass `model: 'opus'` on every spawn and check
-`/tasks` shows Opus · **(second session)** a temp script must be `.cjs` — the package is
-`"type": "module"`, so `require` throws in a `.js` · the Playwright MCP's `browser_navigate` STALLS
-the full 60s on a `beforeunload` dialog (the stall IS the witness; `browser_handle_dialog(accept:false)`
-clears it and the page survives) · Playwright `fill` on a formatted currency field APPENDS ("6,500" +
-"6600" → "65,006,600"); click → Ctrl+A → `pressSequentially` replaces · "Edit in the walk-through"
-lands on step 1, never the section's step (no start-at-step API) · a `?seed=` route bypasses the vault
-even when one exists; the plain `/` route is the Unlock check.
-
----
+- e2e/ is outside tsconfig's include (src, scripts/**/*.ts, vite.config.ts). So a retired copy key that a Playwright spec still reads passes `pnpm typecheck` and fails only in Playwright. Any round that removes a copy key must grep e2e/ for it. This is the removal-side twin of insight 086 (key splits); insight 128 records the fact that tsc skips e2e/. *(Source: line 513.)*
+- A `// @ts-expect-error` arm in a vitest file still runs. The directive silences tsc, not execution, so once the methodology selector indexed the act's Record, the three-argument call threw at runtime. Put compile-only arms inside a function that is never called: `const _compileOnly = () => {...}; void _compileOnly` (workingYearTaxDisclosure.test.ts). *(Source: line 515.)*
+- Check a seat's figure against the seed's own fields before a refuter carries it. Walk 5's hunter priced Sam's working-year premium from the $1,100 reference-plan quote ($13,200 a year), but `stillWorking` answers `employerPlanCoversRetiredMember: true` (src/ui/devSeeds.ts), so no pay-side premium is entered anywhere. *(Source: line 520.)*
+- A refuter's 'it's the household's own number (D7)' can hide the rosy path. N3's refuter rated typing $84,000 by hand as harmless, but the council red team showed the retype clears the stale line for good and credits the whole $16,985 (filed Tier 0). Before rating a misread harmless, trace what the reader's literal act does in the code. *(Source: line 760.)*
+- An agent-team teammate's final report over about 2,000 characters arrives truncated in its idle notification ('[result truncated — ask the agent for the rest via SendMessage]'), and 9 of walk 3's 11 seats needed a resend by SendMessage. b9-5's cure held in walk 4 (16 seats) and walk 5 (17 seats) with none lost: each brief names an output file the seat writes its report to and caps the reply at 80 words (at minimum, a word cap plus 'send it in parts if longer' in every brief), and the chair reads the files. This is the teammate-channel sibling of insight 084's StructuredOutput truncation. *(Source: lines 767, 769.)*
+- `pnpm doc:reanchor` attributes a bare `:N` only to a file name that ends within 60 characters before it on the same line (`LAST_FILE` `[^\n]{0,60}$`, scripts/reanchor-citations.mjs). Tokens farther away are skipped silently, with '0 for hand review'. On a long multi-citation line, re-check every far bare token by content after each run. *(Source: line 783.)*
+- A copy fix to one line can contradict another line shown in the same state. Walk 4's blocker was the check sentence's partial-saver line ('choose Some of it') against the moved line's way out ('leave this as it is'): two instructions to one household. After any copy edit, read every line that state renders together, top to bottom. *(Source: line 827.)*
+- A Workflow run's .output file is a JSON object (summary, agentCount, logs, result; `result` holds the script's return value), and the journal has one `result` line per agent. Parse it and read `.result` through a node summarizer that writes a scratch file and prints only the refuter survivors (scratchpad\caddie-summary.mjs did this); slicing the text from the first `[` grabs `logs: []` instead. Printing it raw (400 KB for 103 agents), along with the go-live's whole diffs, is what spent b9-5's window. *(Source: lines 839, 847, 915.)*
+- verify:fit is served by `pnpm dev` (playwright.fit.config.ts webServer, port 4190), so a src edit by any session triggers an HMR reload that falsely fails a waiting arm (final-tier timeouts, a vanished [data-caddie-scroller]). Run e2e gates on a quiet tree, or on a no-HMR server with its own scratch cacheDir. Every Playwright run also cleans the shared test-results/. Both are tree-level coupling channels to add beside insight 083's. *(Source: line 841.)*
+- A partial suite run hides a source-bind. src/ui/__tests__/stalenessExposure.test.ts pins IntakeApp's `deriveStaleness(model, currentEpochDay(), exposureForDraft(...), {costStale, leftOverStale})` call with a regex over the source, so U13's first pass, which ran only the touched suites, missed it failing. Before changing any call's shape, grep the tests for a readFileSync of the calling file and for the function's name inside a regex, and run the full suite before any review. This extends insight 108's 'green-when-filtered is not green' to source-bind tests. *(Source: line 862.)*
+- A commit message's counts typed from memory went out wrong: 31e018d5 said '29 refuters over 37 candidate moves' when the run had 38 over 42. A pushed message never changes, so the fix needed a follow-up commit. Count from the run's own record before writing any number into a commit message. *(Source: line 905.)*
+- Moving register entries shifts every line-numbered citation into docs/backlog.md, and no gate sees it: verify-doc-stats.ts's CITATION regex matches only code extensions (ts|tsx|css|json|yml|html|mjs|cjs), never .md. Cite a register entry by its title, never by a backlog line number. Project CLAUDE.md:24 already says this for 'TODO item N', and insight 136 notes that .md:NN cites are ungated. *(Source: line 913.)*
+- In RTL, a change event that sets the value an input already holds fires no React onChange. CurrencyField fills its figure on focus (fields.tsx), so a test 'retype' must pass through other text ('700' then '7000'). The b9-4 arm read a product bug that was not there. *(Source: line 1635.)*
+- To back up a multi-session uncommitted build without moving the shared index: GIT_INDEX_FILE=<scratch>/x.index, git read-tree HEAD, git add -A -- <project>, write-tree, commit-tree, update-ref. Recover a file with git show <ref>:<path>, never with reset/checkout/restore/stash (Phase B, landed c07e5758). *(Source: line 1653.)*
+- After a fix pass that touches a gated surface (verify:fit, verify:doc-stats, verify:csp, the bundle), run that surface's gate as well as the unit tests. A green unit suite says nothing about the gate (b9-5/b9-6 closes; companion to insight 108). *(Source: line 1666.)*
+- A pure refactor's proof (A2's arm): keep a FROZEN verbatim copy of the replaced code in the test and sweep it against the new code over a seeded population. It must be green on the untouched engine FIRST, then green after the extraction, then planted mutants on the new code must red. *(Source: line 1714.)*
+- Window cost per activity (1M window): a plan cycle (/brief + research fan-out + plan + 9-agent deepen + 5-agent doc review) ~55%, no code; plan + deepen + 4-persona review + 21-agent council ~50% (2.27M tokens); one walked copy build (pre-trace + build + whole-file review + TWO Caddie walks, 103 panel agents) ~48%; a 9-agent verify fan-out 2.6M/32 min to ~47%; A2+A3 with mutants ~41%. A full-bodied session (a 66-item verify, two six-lens walks, a 13-agent review) reaches the 50% context line by its second walk. So plan and build in separate sessions, and budget ONE walked build per session plus its records. *(Source: lines 1738, 1788, 1790.)*
+- Parallel builders on ONE tree leave cross-file fallout (an existing arm that another builder's change reds) which both flag and neither fixes. The brief must name an owner for every fallout ((B)'s 3-builder workflow, b9-5; extends insight 083). *(Source: line 1780.)*
+- Check a register entry's Prescription formula against that entry's own binding NEGATIVE before building. (B)'s tax(W+X) − tax(W) charged $0 where Social Security alone is taxable, which broke its own NEGATIVE; the plan's KTD1 added T(0, ss) (refines insight 105). *(Source: line 1786.)*
+- A sibling assertion that logically implies its parent hides a mutant on the parent, so assert each parent directly (b9-2 seat arm, 10-19). The other half (vary the incidental property every fixture shares) is already in insight 140. *(Source: line 1788.)*
+- A ruled word change can be FALSE on a route its ruling never saw. Trace every render site of the string through a workflow before the first edit (b9-1, 10-16: the trace found the aged-plan 'starting now' and the wide-gap 'add none' before a line was written). *(Source: line 1789.)*
+- A council's draft of LOCKED text needs a seat that refutes the TEXT, not just the decision. The D1 amendment draft (council 2026-10-12, docs/council-log.md row 19) stated the lower-bound relation backwards, and five of six elders first drafted the false 'floor ≥ full' lemma. Only the red team / refuter caught either. *(Source: line 1793.)*
+- A cost cap and a coverage goal can be structurally incompatible when cost is roughly linear in roster size. Count the roster at the candidate spacing BEFORE a council rules (buildSolveRequest over DEV_SEEDS, distinct grid amounts per seed). The v10 ruling's +33% cap admitted only ~7 amounts beside retired's 22, which was knowable before the council sat. *(Source: line 1796.)*
+- Trust a two-point cost model (F + slope × roster) only after it predicts a held-out third point: the solve-cost fit landed within 1–4%. Then compute any closed form from it. *(Source: line 1796.)*
+- A HEAD-vs-tree differential via `git stash push -- src` leaves UNTRACKED files in place. It is sound only while HEAD's code imports none of them, and both the roster-measurement recipe and the solve-time identity anchor relied on it. Prefer insight 148's `git archive` frozen HEAD copy. Candidate for 148's Also Applies To. *(Source: line 1797.)*
+- A Vite library-mode (IIFE) harness bundle leaves `process.env.NODE_ENV` for its consumer, and throws 'process is not defined' in the page unless you `define` it 'production'. Playwright's `page.addScriptTag({ content })` RESOLVES even when the script throws, so assert the global (`typeof window.X`) with the `pageerror` text (e2e/held/solve-phase-profile.spec.ts). *(Source: line 1798.)*
+- Playwright's default headless browser is the chromium headless SHELL, not Chrome. A timing instrument meant to match the user's browser sets `channel: 'chrome'` to drive the installed Chrome in new headless (e2e/held/solve-timing.config.ts). A figure measured on the shell is a different browser's. *(Source: line 1798.)*
+- A directional caveat written beside a measured number is a claim that needs its own run. 'Low path counts under-count this, read it as a floor' on the demotion-frequency probe was backwards: 15% at 400 paths, 11% at 1600. One 4× re-run, five minutes, inverted the conclusion. *(Source: line 1837.)*
+- A prop added to a component's TYPE but not to its destructure silently resolves to any same-named module binding: `describedBy` in src/intake/fields.tsx is a module function at :98. A `(s): s is string` filter guard then hides it from tsc. Destructure first, and name new props so they cannot collide (the prop is now `describedByIds`, fields.tsx/349). *(Source: line 1884.)*
+- A fake transport lane must `structuredClone` its REPLY like the real wire, or the candidate re-attach path is never exercised. A pooled differential must tally lanes (≥ 2 used), or a silent one-lane fallback passes as a pool. *(Source: line 1891.)*
+- A price or constant fix can make an existing witness VACUOUS. At the bill-year prices both seeds rounded the two-of-you figure the same whether formatted once or as 2 × the rounded figure, so the chrome arm's formatted-once pin went dead on the re-pin. After any re-pin, re-prove each rounding-order witness with a planted mutant, and rebuild it on a fixture where the two roundings differ (an aged 2024 start). *(Source: line 1897.)*
+- A TRUE figure can read as a bug beside a figure the reader expects it to resemble: the Part D surcharge at ~3× after the 2030 reset read 'too big' to two seats. The fix is the LABEL that explains the difference, never the number. *(Source: line 1897.)*
+- A scope clause added to cure one misread can mint a rosier one: 'on your drug plan' read as escaping the charge on a $0 plan. Allow one refinement, then park the words with every draft as the brief. Rosy outranks confusing, so revert to the confusing-but-not-rosy wording. Candidate for insight 140 or 103's Also Applies To. *(Source: line 1897.)*
+- Compute the closed form before searching for a plant. `room` implies joint survival ≥ 0.90 with the survivor subset ≈ every path, so `survivor-short` was unreachable; 612 engine runs only confirmed what one line of arithmetic said. The global rule exists only in user memory (feedback-compute-the-closed-form-before-simulating). *(Source: line 1897.)*
+- A UI-cost number measured in NODE is not the app's cost. The spend solve read 27 s / 13 s under node, 5.1 s / 2.4 s in laptop Chromium and 4.7 s / 2.8 s on his phone, with the same figures to the dollar, and a council row nearly ruled on node's number. Time any UI claim in a browser; the engine also runs ~2.5× slower in vitest/node than in Chrome. *(Source: line 1899.)*
+- An instrument that writes into the DOM its own MutationObserver watches re-fires itself forever and freezes the main thread it is measuring; the first phone-profile cut did this. Poll instead, and prove any instrument on laptop Chromium before running it on the phone. *(Source: line 1899.)*
+- A proxy that reads as honest to every machine seat can still be numerically WRONG. Probe the engine AT the quoted figure before debating its words: the trim clause's council found a ~2× error in its clerk's first run. Candidate for insight 098's Also Applies To (the primary's own numbers outrank the council's guessed scaling). *(Source: line 1903.)*
+- A band fixture guarded by a RANGE keyed to the old ceiling (`< 350_000`) keeps passing after the band narrows. Guard the band's PROPERTY instead (each spouse's senior bonus still live), never a hand-typed bound. *(Source: line 1905.)*
+- A refuter that runs AFTER a revert judges the NEW tree, so 'refuted: moot on the current tree' confirms the fix but does not clear the finding. A Workflow survived a power outage and completed on its own, and its per-agent results were readable in journal.jsonl before the completion notice. *(Source: line 1905.)*
+- *Correct insight 019 (its line 32):* Workflow `resumeFromRunId` after a session-limit death replays the finders but RE-RUNS every nested verifier after the first nondeterministically-ordered call (journal: 384 started / 299 results for a 206-agent run; two verdicts changed). This CONTRADICTS insight 019's Fix (line 32: the journal 're-runs only the dead agents'); reconcile 019 at distill. *(Source: line 1907.)*
+- A file:line handed over by another agent is a claim about a tree that keeps moving, whether it comes from a scout, a council's 'verified in source', a skeptic or a digest: re-open each line before it enters the register or a build, and builders must re-derive anchors. Two of a chair's anchors were a different comment (2026-09-24); the Card 13 council cited the Card 13 API's OddsLadder.tsx/:300 (2026-09-13); a three-day-old digest's anchors were stale on EVERY item, with chart-text.spec.ts grown 254 → 1,750 lines (2026-09-08). A verifier that trusts a skeptic's line number is as wrong as one that trusts the verifier's. *(Source: lines 1911, 1921, 2008.)*
+- A style aimed at a component FAMILY reaches members that arrive in that state for a different reason. HealthcareSheet opens with picked === applied and RothLever opens on an empty plan, so a blanket blocked-Apply look gave them a loud 'cannot commit' with no sentence, which is worse than the mute. Key the look on the rendered reason: `.control-sheet__actions .btn-primary[aria-disabled='true'][aria-describedby]` (src/intake/controls.css). *(Source: line 1923.)*
+- When a control's label ink equals the page color (--on-brand = --paper = #faf7f2), a fill that transitions from transparent erases the label for the whole fade. Never transition the fill of a state flip; flip it instantly or animate a property that keeps contrast. *(Source: line 1923.)*
+- A browser gate that goes red under your own concurrent load is not a finding. Running verify:doc-stats (whose `vitest list` collects the whole suite) twice during verify:fit redded two raised-root chart-text arms; all 139 passed on the idle rerun (4.9 min). Never run vitest, doc-stats or a build beside a browser gate; the idle rerun is the proof. *(Source: line 1942.)*
+- Pin the element under test by its own class, never by a container's absence. A test that asserted 'no `.subordinates` wrapper' as a proxy for 'no relief line' false-failed the moment the wrapper hosted a second child (2026-09-11 evening). *(Source: line 1949.)*
+- A content-only read of a cited range passes drift whenever today's lines still read plausibly: six wrong 'correct' verdicts survived one batch that way. The skeptic that caught them diffed the cited range against the tree at the last re-anchor commit (61c57ff5). A range that was a clean syntactic unit then and is ragged now is drift, however it reads. *(Source: line 1980.)*
+- Proximity attribution of a bare `:NNN` token is a guess. In the 2026-09-10 fleet the nearest preceding named citation on the same line was the WRONG file 70 times in 287, because the sentence named another file in prose. Both reanchor-citations.mjs (LAST_FILE) and doc-stats arm 4 attribute that way, so a verifier must check each attribution. *(Source: line 1984.)*
+- An absence claim needs a whole-tree search, never one directory listing. The 2026-09-06 truth pass annotated BudgetBuilder.tsx, BudgetLineItem.tsx, SequencingControl.tsx and HealthcareSheet.tsx 'AS BUILT: never created' after an `ls src/ui`, but all four live in src/intake/. Use `git ls-files | grep <Name>` before writing 'never built'. *(Source: line 2035.)*
+- An inline `<span>` used as the containing block for absolutely positioned children collapses their percentage offsets onto one point, because an inline box has no usable width. Give the host `display:block` (2026-09-05 chart text layer). *(Source: line 2050.)*
+- A unitless `0` in a custom property that feeds `calc()` with lengths makes the whole declaration invalid at computed-value time. On the 2026-09-05 chart text layer, `transform` silently fell to `none`. Write `0px` in any custom property that will meet a length inside calc(). *(Source: line 2051.)*
+- A line break inside a paragraph needs a space before it. textContent joins '…you.<br>This answer now:' with no space, so the React key, a screen reader and every toContainText see a different string from the one the composer joined. NotePartsBody (src/ui/NotePartsBody.tsx) draws ' ' then <br>, the trailing space is never painted, and walk 5's fix-round mutant list plants its removal. *(Source: line 530.)*
+- Check why a constraint exists before obeying it. KTD17's 'static legend' read as a rule, but the pay check's deepen recorded its reason as mechanical (SegmentedControl took only a catalog key). One optional prop removed it (SegmentedControl's `legend` string, slots.workingCostLegendFigure), and the W fork's question now names the figure 'Yes' sets. *(Source: line 533.)*
+- Labels made of plain words in running text are not structure. Council wf_7fa86902-35c ruled run-in labels as copy words (never color or ::before). Rendered mid-line in body weight, they vanished for every walk-5 cold reader, and every one said the split helped once told. A label works only where its form marks it, a line start and a weight (E2): now a <br> plus <strong> per label in NotePartsBody. Land with 557. *(Source: line 540.)*
+- A bare effect beside the reader's own choice reads as a bug. Walk 5's 'You chose to save all of it. This answer adds none of it' lost every reader, because the reason sat one screen away. Where a line reports the tool not acting on the household's choice, the reason goes in the same sentence. Fix (bh): 'Because that $16,985 depends on your $84,000 figure, this answer adds none of it to your savings until you update your figure.' *(Source: line 543.)*
+- 'Or more … at most' invites the reader to run the dial the other way. Beside the old figure's larger result, it led two walk-5 seats to a retype the tool would honor. State the floor in the same sentence, and close the path itself (the register's Tier 0 retype entry). *(Source: line 546.)*
+- When every refuter's fix adds a sentence, the cure is structure, not words. Three walks (U11 walks 2-4) of one-fact sentences made the stale-W paragraph longer, not easier, and the threads broke at connectives doing a label's job ('So…', 'Until…'). Once a walk's fixes all add length, take the form question to a council, as b9-5 did with wf_7fa86902-35c (7/10). Land with 540 (what counts as structure). *(Source: line 557.)*
+- A consequence stated as a zero hides a draw. 'Adds none of the $16,985' was the short run's only stated effect, and it read as 'we'd just tread water' while each short year draws from savings. Wherever a line names a short year, say where the shortfall comes from, in the money picture's own words (walk 3, fixed in 98b5ad17). *(Source: line 564.)*
+- A gain and a loss stated side by side must share unit and reach, or name the years the gain skips, because readers net whatever the sentence pairs. Walk 2 (f028f33f): 'adds at most $5,985 a year' beside 'that year comes up $4,015 short' read as a net gain, though the picture held the run (2029-2032) all along, so name the run wherever a gain is stated per year. Walk 3: naming the short run made the gain's single year starker and two readers netted one gain against four losses; 'in each working year that doesn't come up short' is true by R8's cap with no year's figure assumed, so give reach by mechanism where a per-year figure would need a new measurement (the TODO marked 567 and 579 as one gain-beside-loss insight). *(Source: lines 567, 579.)*
+- Probe cold seats only after their first answers lock. Walk 3 sent its four questions to the first looks and the spouse by follow-up message, after each had written an unprimed read (cold-read-log.md:150). What they noticed alone stayed separate from what the question showed them: no seat read a paycheck in either pass, and the 'which way?' gap showed in both. Candidate for the caddie skill's lens rules too. *(Source: line 571.)*
+- Judge a conditional sentence over the extension it states, never at the one point on screen. 'Any working year your pay doesn't cover' is empty for datesavedrisen at $90,000, and the walk-2 chair first called the counterweight vacuous. The refuter caught that 'a check at $90,000 or more' spans the figures where it bites. The same reading kept the non-saved 'can look better' honest: across every figure at or above the spending, it only adds cost. Extends insight 101 to the judging side. *(Source: line 575.)*
+- A fix that dates a stored figure must hold for every household and every later answer the line reaches: date it to when it was answered, never to the figure held today. 'The $16,985 left over at $84,000' was false for the later couple, whose left over at $84,000 is now $26,985 (walk 2). The same wording recurred in walk 5's round, false after a later 'Yes' at another figure; 'when you answered' is true in every case. Extends insight 101 to the time axis. *(Source: line 581.)*
+- A copy branch that reads a counterfactual run must read it through the producer's own write, memoized on the source draft. The check at the quote is the money picture of writeConfirmedWorkingYearCost(d), the 'Yes' tap's own write, because a re-derived S − (quote − W) would drift from R8's cap. The re-confirmed draft is a fresh object, so the picture's own memo misses on every render without checkAtQuoteMemo, a WeakMap keyed on the source draft (workingYearLeftOver.ts). Extends insight 081. *(Source: line 584.)*
+- Read a year figure off a closed vocabulary of SIGNS (short, exactly zero, left over), not one branch. Year 0 at exactly $0 is neither 'short' nor 'left over', and folding it into firstShort printed 'comes up $0 short' (mutant E6). Name every member of the partition. Extends insight 147 to an implicit numeric partition (and 146's zero grain). *(Source: line 588.)*
+- A unit control on a figure the reader never typed must convert, not re-read. The re-read that repairs a 12× typo turned a kept $84,000 into $1,008,000, and that read FRESH, so the stale gate let it through. Who gave the digits on screen decides which part a unit tap keeps (b9-1 fix round). Sibling of insight 144's disarm path to the same $1,008,000. *(Source: line 591.)*
+- Words that name a door must be built from the door's own render condition, or they promise a door the face doesn't draw. This makes insight 100's per-state conjunction structural; 'answer it above' over an answered face is 109's frame again. Three cures from build 2: derive the gate message from the core that draws the door (workingYearCostGateMessage / workingYearCostKeepLabel); key the act's name to the door's predicate (workingYearCostAct reads heldYesBelowQuote, and inverting it reddened the no-'saved' households too, because every stale W's door rides it); and compose the button-naming lead with the door (workingYearCostStaleDoor), so a read-only tab's host prints both or neither. Walk 5 still found 'the gate names buttons it doesn't draw'. *(Source: line 594.)*
+- The tier only moves when a run COMMITS. memoryModel holds the last answer in flight, and a panel edit that writes twice fires recomputeBoth twice: each dispatch cancels the other's provisional, only the last final commits, and the tier never leaves 'final' (walk 1's branch B: the hero moved to 'No fuck-off date' with every read at 'final'). A harness waits on a settled frame BEFORE the edit, then on a tier change or the run's own words moving (armRerunWatch in e2e/caddie-walk.spec.ts). That watch can never fire on an edit whose run leaves the words unchanged. Extends insight 070. *(Source: line 597.)*
+- Measure the oracle's question before the walk, and the walk's verdict can flip the hold. b9-6's hold (e) feared the clause defusing a rosy lean. U11 had measured the pair (stale no date, twin 9, the twin's $10,985 cap), so the chair closed it the other way in-session: the lean is wrong for that household, and the clause's figure over-promises. Without the measurement, the card would have argued it from the copy. *(Source: line 603.)*
+- A version floor is proven by planting the revert itself, not only the constant. U10 planted the constant (B against A, the delta exactly the floor test) AND a resolved whole `git revert` of the bump in a copy (the floor test the one red of 4758). Only the second shows the guard survives the revert it exists for. It also showed `git revert a9cacf22` now conflicts in scenarioCodec.test.ts. Extends insight 151, whose M16 planted only a revert's shape. *(Source: line 608.)*
+- *Correct insight 126 (its line 72):* Vitest 4.1.8's JSON report writes a timeout as 'Error: STACK_TRACE_ERROR' with no 'timed out' text, probed with a 200 ms test sleeping 3 s (the session folder's tools\u10-mutants.cjs). A mutant runner that reads failure lines must treat that line as a timeout candidate and re-run its file alone under the same plant before any verdict. Correct insight 126's line 72 ('a timeout can never pass as a kill'), and cross-link 120. *(Source: line 611.)*
+- Give every measuring tool one shared household builder. U11's four parallel lanes all imported u11drafts.mts: the W keys as the old tool selects them, 'saved' minted through the shipped write, and the stale pairs with a fail-loud state check (session folder b9-build2-surplus; wf_a4f45d66-48e). No two tools could disagree about which household they ran, so the reviewers attacked the tools, not the households. *(Source: line 614.)*
+- A record's headline count needs its population and unit named, and a verifier re-deriving it from the raw output. The pilot's U11 write-up said K5 reached '13 more households' (the truth: 25 claim years) and gave three figures with no key set or the wrong unit (360,000 readings of 36,000 path-years). Every tool was green; only the re-derivation caught them. Extends insight 141, with 732 and 736 as one dated section. *(Source: line 617.)*
+- A guard sentence's qualifier is a loophole when the payoff is all or nothing. 'Choose "All of it" only if about $16,985…' let a household saving most of it round up, since 'Some of it' counted $0, and three walks found it. Under a cliff payoff the condition says 'all of this', and the partial answer's zero is stated before the pick. Land with 637 (guard sentences). *(Source: line 621.)*
+- 'Same tree, slower machine' is the machine until the timed-out tests pass alone. Windows ran the session's node tree on the i7-12700H's 8 E-cores: suite 535 s and two solve tests timed out, against 290 s green pinned with `start /affinity FFF`. An A/B from one vitest results cache showed no per-file delta; per-core counters showed where the work ran. On 11-08, sustained-load clocks gave 802 s against 290 s, with every timed-out test green alone. The wrapper that echoes the real exit code is part of the instrument: `start /wait` returned 0 on a failing run, hence run-pinned.cmd's PINNED_EXIT. Never raise a timeout for it. *(Source: line 633.)*
+- A guard or consent sentence must name the source and base of the money, or money the household's world supplies for free satisfies it. 'Your savings grow by about this much, on top of what you put in' was passed by market growth on any invested household: twelve seats, every refuter kept it, every unit and e2e arm green. 'If at least $16,985 still goes in' was met by the $20,000 of deposits every household makes, until 'of the $27,537' closed it. Name the source (pay) and what a threshold is a share of. Land with 621. *(Source: line 637.)*
+- Predictions by fresh readers find the rules no test holds. Four read-only Opus readers predicting 15 plants for the go-live's mutant pass found the codec's literal-successor rule held by a comment alone and IntakeApp's gate call unpinned; both got an arm before the run. Ask the predictors for gaps, not just kill sets. Extends insight 126. *(Source: line 640.)*
+- A hold's docblock must name what the hold does NOT cover. 'The seat cannot move under its own press' was false: the W question between the held picture and the seat draws from the live draft. Three lenses found it, and jsdom measured the mounts. When a hold covers part of a column, list every live part between the held content and the held control. Extends insight 036's 2026-10-31 hold section. *(Source: line 644.)*
+- A served-module mutant proves an e2e arm discriminates without touching the tree. The go-live fit verifier swapped /src/intake/gestureHold.ts through Playwright's page.route, with the release moved back into the click listener. Mouse and touch both stored a figure never on screen, so the one arm that gates insight 149's label-forwarded race is proven to red. Add as a dated example on 149 or 126. *(Source: line 647.)*
+- A 'live' figure read on a stale input can name money no checked path credits. W's stale clause named the year-0 print read on the stale W: after a raise it read $27,537, while R8 caps every credit at the stored $16,985. Name the figure the household consented to, since it caps every later credit. *(Source: line 650.)*
+- A builder's 'discriminates by' column is a claim; a verifier's planted mutant is the evidence. The go-live's per-lane verifiers, each planting mutants in a scratch copy, found arms the builders called discriminating green under three plants: reordered replies, required-without-marker, and release-in-listener (the label-wrapped radio arm). Extends insight 126. *(Source: line 653.)*
+- Map a multi-unit commit's surfaces with readers BEFORE building, each mapper with a PLAN-vs-CODE section. Seven mappers on the go-live (a9cacf22) found three defects the deepened, checked plan never named. Obligation (a) made buildDateInput call the money picture that calls buildDateInput (infinite recursion). The plan's single new module would have closed an intakeMap import loop no gate catches (the cycle pin covers src/engine only). And a held label-wrapped radio would store a figure the household never saw. *(Source: line 657.)*
+- A carriage gate that reads a producer's output must read it from a figure-free twin of the input, because the producer's own input builder is the carriage and the gate recursed. buildDateInputBeforeLeftOver (src/intake/intakeMap.ts) breaks the recursion, and it is honest because year 0's cash never reads the year-end credit. Land with 657's recursion finding. *(Source: line 662.)*
+- *Correct insight 149 (its line 21 and its Fix):* The first held control behind a label moves the release one task later — Keep, as an 'extend insight 149' queue item. Insight 149 does NOT say what this candidate says. Line 21 says 'no held region holds a label' and predicts a held label-wrapped control 'would be deleted before its forwarded click'. Its Fix section says the release is the click listener itself. All of that is now false. gestureHold.ts releases 'ONE TASK LATER (a zero-delay timer), never in the click listener itself', and the measured failure was different: the radio 'would then act from the LIVE render — store a figure the household never saw'. A grep of 149 for 'Extended', 'later task' and 'one task' found no update. 647-649 and 657-661 carry the failure fact, but neither names 149 as stale, so cutting this as already distilled would leave 149 stating the opposite of the shipped code. *(Source: line 665.)*
+- A no-transposition rule stops at the seam it was written for unless it is applied one level down. KTD9 made deriveStaleness's input a named object, but U13's first cut gave composeReentry two adjacent nullable sentence parameters, one type assignable to the other, so a swap compiled clean (the review's adversary found it). Apply a structural rule at every seam the same pair of values crosses. *(Source: line 670.)*
+- A fail-loud throw in a UI seam must say where it lands. composeReentry's throw lands in IntakeApp's bare catch as the restore-failed face, on every reload: a household locked out of its plan. 'The pair cannot disagree while the caller is honest' is discipline, not structure. The fix is one core read by both (U14's obligation (f)). *(Source: line 674.)*
+- When a behavior change forces a fixture's words to change, predict every downstream word before the run. U13's Keep arm row was predicted 'the figure you kept'. 'Your own figure' would have meant type-then-Keep strips the stamp, a laundering path. A 'just update the expected text' edit is where such a defect hides. *(Source: line 680.)*
+- A mark's fate rule must survive the control's round trip, not one tap. KTD10 dropped the keep stamp on a period change, and every test tapped once. 'Each month' then 'each year' restored the same $84,000 unstamped, so a stale kept figure came back typed, fresh forever, with no digit typed; four of five U5 review lenses found it. For a reversible control beside a provenance mark, test the round trip: the mark comes back with the figure. Extends insight 144; sibling of 713. *(Source: line 684.)*
+- A plan's open referent can be settled by its own writer fates. R13 said a kept figure goes stale 'when the live quote rises above it': the figure, or the stamp? Keyed to the stamp, a quote between the two stales an answer whose own door shows, and whose keep (which carries the stamp) can never cure it: a stuck state. The fates decided it for the kept figure before any council was needed, and the grammar agreed. Land with 708. *(Source: line 689.)*
+- A mutant pass planted only at the consumer of a carried value leaves its producer unpinned. KTD5's allAlive is 'carried, never re-derived'. U4's 15 mutants all sat in taxOverlay.ts, and the 'member dies' scenario used hand-typed terms, so allAlive: true at the producer (cashTermsForYear) credited every survivor working year with the suite green. 9 of 12 lenses found it (fixed in 9c51d2bb). Plant at BOTH ends, the producer arm running the real path against an independent witness (the floor's joint filing). Sibling of the U17 S0 'bind both halves' lesson. *(Source: line 694.)*
+- A fixture family of round figures cannot see a grain or an order. Every multi-year credit arm had a whole-dollar year 0, and no credited year drew. So year 0's cap read off the raw cash and a gross-up reading the credit's basis both passed green: rosy by under $1 a year, and by $460 on a taxed $60,000 draw. When a rule names a grain or an ordering, put one fixture where the alternatives differ (a fractional cent, a credited year drawing at a taxed gain). Extends insight 146. *(Source: line 700.)*
+- A code comment that paraphrases the plan inherits the plan's mechanism, right or wrong. KTD4's 'a half-cent tie can print a cent above the float' went into taxOverlay.ts, though the leaf it cites rounds a tie down; seven Phase A lenses caught it in the code. Fix the plan too, or the next unit (U12) re-seeds it. Extends insight 042's 2026-10-31 section to the comment channel (087), with 146's grain. *(Source: line 704.)*
+- A ruling's words can leave its own mechanism's figure undefined. 'Never above the quoted figure' had no referent past year 0. Seven traces asking 'what is the referent, on which grain' found six open calls, and a second council (wf_1b5d9962-73c) ruled them; never a pick by the planner. Its red team broke two claims every seat held: 'min(live, stored) is rosy-proof' (both figures sit on the same W) and 'cap (a) only errs gloomy' (survivor W_t and K5 sit below the cap). Land with 689. *(Source: line 708.)*
+- A staleness stamp is undone by every writer that rebuilds the object it rides on. The Keep fix's first draft left the Keep door offering Keep on a stale kept figure, and one tap re-minted the answer without the stamp (deepen wf_a6429110-d52, two lenses independently). Audit every writer of the object, plus the door's own visibility rule. Extends insights 058 and 144; sibling of 684. *(Source: line 713.)*
+- *Extend insight 093 with a dated example:* A test of a multi-site write that reads only the authoritative total passes with half the sites missing. The working-year credit's total moves through stepYear alone, so a dropped bucket fold or basis line hides as a smeared asset location. Assert each destination's delta and the zero deltas beside it. *(Source: line 716.)*
+- A unit ID in prose collides across plans. Build 2's plan's own U13 and build 1's 'U13 working-years clock' sat in one sentence. Cite a foreign unit with its home ('build 1's U13'). Could go in the plan-writing conventions instead of an insight. *(Source: line 719.)*
+- A refuter pair that splits on whether a ruling EXISTS has found a call that is still Briggsy's: ask, never pick a side. In the 2026-10-31 tier sweep, one refuter read D7 plus the queue's 'yep, seems right' as the dependents ruling, and the other read a queue approval as ORDER only. Asked in plain words, he ruled in one answer and both entries moved (briefs in the b9-tier-sweep session folder). *(Source: line 722.)*
+- Moving a register entry stales every prose 'Tier N *Title*' reference to it, and no gate sees it. The 2026-10-31 sweep left 11 live ones across the register, architecture.md and roadmap.md; b9-4's landmine covered line citations only. The session-folder tool b9-tier-sweep\tierrefs.mjs found them. The practice is the stale-tier-scan landmine in `docs/landmines.md`; the insight is owed (sibling of 136's structural-citation gap), plus moving tierrefs.mjs into the repo as a gate. *(Source: line 726.)*
+- An 'either way' lifts a register entry only when it signs the answer the household acts on. Across households it lifts (*The first answer assumes money comes out of every account in proportion…*), but two opposite effects inside one household with the net unsigned hold (*The investment mix is frozen…*). Already binding in docs/backlog.md:75-78; a distill would be a short dated extension of insight 133. *(Source: line 728.)*
+- A seed that satisfies the engine's carry rule can still be one the intake never carries. U1's first draft gave datecoststale a credit stream and a crown prediction from asked = S ≥ $1, but its W is stale, and R7 carries nothing on a stale W. Filter a measurement's population by EVERY gate between the household and the engine, not just the engine's own (the verifier caught it; stream.mts records `carried`). Extends insight 141 one layer up. *(Source: line 732.)*
+- A range quoted beside a window must be read on that window. The register said date's left over runs '$16,985 → $59,986 across 2026–2034', but $59,986 is 2035's, and across 2026–2034 it peaks at $37,223. U1 measured every year and corrected both lines. Extends insight 141 on the time axis. *(Source: line 736.)*
+- A branch no input reaches is reached by planting the float lineage it guards, and a mutant proves the plant landed. taxOverlay.ts's knife-edge branch (ledger ≤ 0 while stepYear's state is positive) shipped with C2 untested. A Roth-only pool T and a stock weight w where w·T + (1 − w)·T lands one float step above T, with a need of exactly T, reach it deterministically (workingYearCredit.test.ts; T = 12,345.67, w = 0.45). The outputs alone cannot tell the branch from its sibling, so U4 mutants M4a–c (each arm's credit dropped) are the proof. *(Source: line 740.)*
+- A plan's verification sentence can fix a design its Files list never states. U3's 'the ledger tests pass with only the allowlist edit' forced the ledger to RE-EXPORT the bottom line, because its test imports it from the ledger, though the Files list said only 'imports it'. Read every verification clause for the shape it implies before choosing one. *(Source: line 745.)*
+- Compare at the precision the other side is stored at. A monthly figure written as `entered × 12` unrounded sat a float hair under a quote snapped to the cent, and printed "$84,999.96 is below $84,999.96". A predicate over a rounded figure rounds its other side the same way (`roundCents`), as every sibling here already did. *(Source: b9-1's close, commit `ec3514a7`.)*
+- Review a test-first round before its mutant pass. b9-8's round was test-first and green, and an adversarial review with refuters still found eleven real findings. Among them were a P0, an unscoped lean the project's own guard forbids, and a ramp-law violation, all in sentences the tests pinned exactly as written. Mutants prove the tests bite; only a reader of the arms proves the words are true. *(Source: b9-1's close, commit `ec3514a7`.)*
+- A lean is per arm, never per sentence. The typed-below note's "this answer can look better" was true for every arm its prescription imagined, and false on one it didn't: a "saved" answer waiting on W. Route every new lean through the one predicate the other leans ride (`savedWaitingOnW`). *(Source: b9-1's close, commit `ec3514a7`.)*
 
 ## Driving the app
 

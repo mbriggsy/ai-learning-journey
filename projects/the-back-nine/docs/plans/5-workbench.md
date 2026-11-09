@@ -83,7 +83,7 @@ The simplicity he likes comes from three mechanics, and the workbench is those t
 
 ## Open questions for Briggsy
 
-1. ANSWERED 2026-11-09, and it settled design call 7. Asked in its place, for design call 9: an inherited IRA's facts (traditional or Roth; left by a spouse or by someone else; the year the owner died; whether the owner had reached the age of required withdrawals).
+1. ANSWERED 2026-11-09 in conversation: the holdings question (it settled design call 7) and an inherited IRA's facts (design call 9). The lesson for intake is on the register entry: ask the owner's birth year, never whether the owner was taking required withdrawals.
 2. If RightCapital access comes back: the year-by-year figures for one plain scenario of his own household, and the order of what he clicks in the first ten minutes of a what-if session.
 
 ## Owed to the canonical docs (NOT made here; another session was live in the tree on 2026-11-09)

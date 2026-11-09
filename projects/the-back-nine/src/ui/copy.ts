@@ -565,23 +565,34 @@ export const copy = {
   // The panel seat's face while W is stale (R5): no radios, so no "saved" is stored against a stale W.
   workingLedgerLeftOverWaiting:
     'This question waits until your figure for a working year, above, is checked. Until then, no money left over is added to your savings.',
-  // W's stale line on the Result and the gate for a "saved" answer whose spending rose past the held figure, where
-  // the money picture at today's quote can't be read (`workingYearCheckAtQuote`'s `unknown`: no figure to name).
-  // Unreachable on every buildable draft (the core's docblock carries why, and a test pins the witnesses off it);
-  // it says only what R7 makes true, with no figure and no lean. The U11 walk's (ae).
-  // "Confirm or change", never "checked" alone (U11 walk 3, b9-4, (au)): "Look at that figure", the gate's "a quick
-  // look" and door 5's "yours to check" all taught that checking means looking, while only a reply to the W row's
-  // question counts. Its preceding sentence is the lean, so "that figure" is the held one.
-  workingCostStaleLeftOverUnknown: 'Until you confirm or change that figure, nothing left over from your pay is added to your savings.',
-  // …and where a check at the quote adds some of the left over and no working year at the quote runs short
-  // (`capped` / `whole` with no `laterShort`): which way the WHOLE answer moves turns on the figure checked — at
-  // the quote it only adds, and a figure high enough to leave a working year short adds cost there — so no
-  // whole-answer lean is true across the extension (the "saved" lean's own docblock). U11 walk 2 (b9-3): five
-  // readers could not net the year-level lean against the at-most figure; this says the net turns on the figure,
-  // naming no threshold and no "worse" (council `wf_fc80029e-d93`'s Frame B). "What a working year really costs
-  // you", never "what you settle on" (U11 walk 3, b9-4, (av)): "settle on" read as a number to bargain over, "as if
-  // I could choose a nicer number to get a nicer answer" — door 5's own question is what it costs.
-  workingCostStaleEitherWay: 'Checking your figure can move this answer either way, depending on what a working year really costs you.',
+  // W's STALE LINE FOR A "SAVED" ANSWER WAITING ON W (R12), its shape from council `wf_7fa86902-35c` (7/10, U11 walk
+  // 4: every one-fact sentence easy, the whole only longer, the threads lost at connectives doing a label's job —
+  // "So checking…", "Until…, none of it is added", C's "…so this answer can look better"). ONE string on each host,
+  // in this order (`workingYearLeftOver.workingYearCostStaleLine` composes it; the order is pinned per arm): the
+  // note; a DIRECTION LEAD per arm; "This answer now:" and what this answer does today; "If a working year costs
+  // $X:" and what updating to it does; then, only beside the door, the act defined in the W row's own button
+  // words (`workingYearCostStaleDoor`). The labels are plain run-in words the composer puts in, never a regex split,
+  // `::before` or color. Struck by the council: "So", "instead of none", "takes none of those shortfalls", the
+  // fallen arm's at-quote pair and "doesn't move this answer" (a sweep in `copyGuard.test.ts` reds on each).
+  //
+  // THE LEAD where a check at the quote adds some of the left over and no working year at the quote runs short
+  // (`capped` / `whole`, and the fallen spending): which way the WHOLE answer moves turns on the figure — at the
+  // quote it only adds, and a figure high enough to leave a working year short adds cost there — so no
+  // whole-answer lean is true across the extension (the "saved" lean's own docblock; U11 walk 2, Frame B: no
+  // threshold, no "worse"). The Hawk's veto at `wf_7fa86902-35c` holds it there: no direction on these arms until
+  // the Tier 0 gate entry's prescription (1) measures one per household. "What a working year really costs you",
+  // never "what you settle on" (U11 walk 3, (av): a number to bargain over). Its act is the draft's
+  // (`WORKING_COST_ACT_COPY`): "Updating" where the W row offers no Keep door, "Confirming or changing" where it does.
+  workingCostStaleEitherWayUpdate: 'Updating your figure can move this answer either way, depending on what a working year really costs you.',
+  workingCostStaleEitherWayConfirm:
+    'Confirming or changing your figure can move this answer either way, depending on what a working year really costs you.',
+  // THE TWO LABELS (the council's run-in words; "If", a condition, never "At today's": the red team's reading of a
+  // present-tense "today" as a promise). The second is a slot: it carries the quote.
+  workingCostStaleLabelNow: 'This answer now:',
+  // What this answer does with the stored figure today, the answer as the actor (U11 walk 4, (bb): "none of it is
+  // added to your savings" read as the household's own saving stopping). It follows the dated figure
+  // (`slots.workingCostStaleLeftOverAnswered`), so "it" is that figure.
+  workingCostStaleLeftOverNone: 'This answer adds none of it to your savings.',
   workingLedgerHeldBackNote:
     'Each month Social Security holds back raises the benefit later, starting after full retirement age.',
   // Where not every held-back month earns that raise in the run (the earnings-test schedule's own
@@ -1890,8 +1901,15 @@ export const copy = {
   stalenessPayCheckGateLead: 'Your answer still uses your last figure for what a year costs while you’re working.',
   // BOTH gate choices reach W (b9-7, three first looks asked which button fixes it): "Still about right"
   // lands on the answer, whose standing line opens the panel at the W row; "Something’s changed" routes
-  // into the walk (`IntakeApp` `onUpdate`), whose W step will not complete on a stale answer.
-  stalenessPayCheckGateDoor: 'Either choice below leads to where you can change it.',
+  // into the walk (`IntakeApp` `onUpdate`), whose W step will not complete on a stale answer. The door names
+  // the draft's act (`WORKING_COST_ACT_COPY`; council `wf_7fa86902-35c`): "update" where the W row offers no
+  // Keep door (a yes or kept figure below today's spending), "confirm or change" where it does. "On this page",
+  // never "below" (U11 walk 4, (r): at the laptop size the buttons sit to the right of the paragraph).
+  stalenessPayCheckGateDoor: 'Either button on this page leads to where you can confirm or change your figure.',
+  stalenessPayCheckGateDoorUpdate: 'Either button on this page leads to where you can update your figure.',
+  // The moved left-over line's own door sentence (build 2's R12), unchanged words under their own key since the W
+  // line's door took the act's: its "it" and "below" are the register's (r), open for U12.
+  stalenessLeftOverGateDoor: 'Either choice below leads to where you can change it.',
   // The ROSY-side warning, said after a risen stale sentence (`workingYearLeftOver.workingYearCostStaleNote`)
   // when the household's spending now comes to MORE than the figure it said yes to, or kept (build 2's KTD10)
   // (b9-7, the U10 Caddie card's False-PASS hunt, refuted and survived). Its reason, re-derived for each
@@ -2037,7 +2055,7 @@ export const copy = {
   recommendSaveSavedBadge: 'Saved to this device — your plan and this strategy read',
   // THE REFUSALS. None carries a retry control: the mint is deterministic, so a retry re-fails
   // identically, and an affordance that cannot succeed is the lying-remedy shape
-  // (Result.tsx:524-532). Each says what did NOT happen, in the reader's frame.
+  // (Result.tsx:530-538). Each says what did NOT happen, in the reader's frame.
   recommendSaveRefusalRecordInvalidHeading: 'This strategy read couldn’t be kept',
   recommendSaveRefusalRecordInvalidBody:
     'We couldn’t build a record of it, so nothing reached this device — your plan here is exactly as you left it. The answer above is still current.',
@@ -2162,7 +2180,12 @@ export const copy = {
   stalenessPayCheckNote: 'This answer still uses your last figure for what a year costs while you’re working.',
   // The door names the act that counts (U11 walk 3, b9-4, (au)): the W row's question takes "Yes, that's about
   // right" or "No — I'll enter a different figure", and "Look at that figure" let a look-and-close read as done.
+  // Which act is the draft's (`WORKING_COST_ACT_COPY`, council `wf_7fa86902-35c`): "Confirm or change" only where
+  // the W row offers the Keep door; where the held figure sits below today's spending it offers none (ruling 34),
+  // and "confirm … your $84,000 figure" sent two walk-4 readers hunting a door that is not there ((ba)), so
+  // there the door says "Update", named for the figure it opens.
   stalenessPayCheckCta: 'Confirm or change your figure',
+  stalenessPayCheckCtaUpdate: 'Update your figure for a working year',
   // Build 2's moved left over (R12): the household's "All of it" was given against a year-0 figure that has since
   // changed. The lead here; both figures in `slots.stalenessLeftOverMoved`; the door opens the left-over seat.
   // The gate reads the same lead and sentence, plus the W line's door sentence where the tab can save.
@@ -2456,6 +2479,35 @@ export const copy = {
 export type CopyKey = keyof typeof copy
 
 /**
+ * THE ACT W's stale line names (council `wf_7fa86902-35c`, U11 walk 4's (az) and (ba)): what the household does to
+ * the held figure, named by the exits the W row REALLY offers this draft (`workingYearQuote.workingYearCostAct`,
+ * keyed on `heldYesBelowQuote`, the rule that withholds the Keep door). `'update'` — a yes, or a figure kept from
+ * one, now below today's spending: no Keep door (ruling 34), only "Yes" at today's figure or a figure of their
+ * own, so "confirm … your $84,000 figure" named a door that is not there. `'confirmOrChange'` — every other stale
+ * W (the spending fell, the state moved, a typed figure): the Keep door is real. Yours-to-close in the digest:
+ * "update" over "check" (the council's dissent flips it if walk 5 or his read takes "update" as "your figure was
+ * wrong, raise it").
+ */
+export type WorkingCostAct = 'update' | 'confirmOrChange'
+
+/** Each act's words, exhaustive (insight 147): the either-way lead's gerund, the Result's door and the gate's door.
+ *  Catalog keys, so every sweep that reads `copy` reads them. */
+export const WORKING_COST_ACT_COPY: Readonly<
+  Record<WorkingCostAct, { readonly eitherWay: CopyKey; readonly resultDoor: CopyKey; readonly gateDoor: CopyKey }>
+> = {
+  update: {
+    eitherWay: 'workingCostStaleEitherWayUpdate',
+    resultDoor: 'stalenessPayCheckCtaUpdate',
+    gateDoor: 'stalenessPayCheckGateDoorUpdate',
+  },
+  confirmOrChange: {
+    eitherWay: 'workingCostStaleEitherWayConfirm',
+    resultDoor: 'stalenessPayCheckCta',
+    gateDoor: 'stalenessPayCheckGateDoor',
+  },
+}
+
+/**
  * The slotted-ERROR message channel (F10). The two ceiling errors are the only R19 messages
  * that carry a figure — the statutory limit the message quotes — so a violation may ride a
  * slot key + PRE-formatted params instead of a static catalog key. ONE typed contract shared
@@ -2583,9 +2635,20 @@ const leftOverAnswered = (storedFormatted: string): string =>
  *  `workingLedgerSavingsTax`). U11 walk 3, b9-4, (as): the paragraph named a short run's only consequence as "adds
  *  none" and B's run read as "we'd just tread water", where each shortfall is drawn from savings; and the tax on
  *  taking it out rides, or a reader who nets gains against shortfalls comes out rosier than the draw (refuter
- *  R1's check 2). */
-const SHORTFALL_EACH = 'Each year’s shortfall is taken from your savings, plus any income tax on taking it out'
-const SHORTFALL_ONE = 'That shortfall is taken from your savings, plus any income tax on taking it out'
+ *  R1's check 2). "Would be" (U11 walk 4, (bc)): every sentence it joins sits under "If a working year costs $X:",
+ *  a condition — the present tense there read as this answer drawing it. */
+const SHORTFALL_EACH = 'Each year’s shortfall would be taken from your savings, plus any income tax on taking it out.'
+const SHORTFALL_ONE = 'That shortfall would be taken from your savings, plus any income tax on taking it out.'
+
+/** A run of calendar years as W's stale line names it: one year alone, or "first through last". */
+const yearSpan = (firstYear: number, lastYear: number): string => (firstYear === lastYear ? `${firstYear}` : `${firstYear} through ${lastYear}`)
+
+/** What updating W to the quote or more still does with the stored figure where year 0 at the quote leaves
+ *  nothing over (`firstShort` / `firstNone`): R7 carries nothing there (the shown state is "not asked"), so it
+ *  adds none of the figure answered. The figure is named, never "none of it" (U11 walk 4: the stored figure
+ *  sits a label and three sentences up). */
+const stillAddsNone = (quoteFormatted: string, storedFormatted: string): string =>
+  `Updating your figure to $${quoteFormatted} or more still adds none of that $${storedFormatted} to your savings.`
 
 /** The at-most sentence's reach where a later run prints short at the quote (U11 walk 3, b9-4, (at)): "adds at
  *  most $5,985 a year" read as every year, and two cold readers netted one year of gain against four short
@@ -2738,7 +2801,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2386-2389` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2407-2410` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -2930,8 +2993,10 @@ export const slots = {
   /** The stale note (KTD21, role="note", present before any tap): the last figure, the current
    *  quote where it moved, and which input moved — the spending figures (spending, budget lines or
    *  medical, one cause) and/or the state answer. Both figures yearly, each with its own words. */
+  // Two sentences, no em-dash (council `wf_7fa86902-35c`: "the note, with its em-dash split into two"; back-nine-design's
+  // one fact per sentence on load-bearing figures, no em-dash appositions). Its kept twin below the same.
   workingCostStaleQuote: (lastFormatted: string, nowFormatted: string): string =>
-    `You said yes to $${lastFormatted} a year, but your spending figures have changed since — they now come to $${nowFormatted} a year.`,
+    `You said yes to $${lastFormatted} a year. Your spending figures have changed since then, and now come to $${nowFormatted} a year.`,
   /** The rosy-side warning after a quote that ROSE past the figure said yes to (b9-7 — the copy's
    *  `stalenessPayCheckGateDoor` neighbourhood carries the full why, per left-over answer); names the figure it
    *  compares. It states the spending as the known fact it is: "If a working year now costs more than $84,000"
@@ -2954,97 +3019,120 @@ export const slots = {
   // "this household has short years".
   workingCostStaleLeftOverYearsCheaper: (lastFormatted: string): string =>
     `Your $${lastFormatted} figure makes any working year your pay doesn’t cover look cheaper than it really is.`,
-  // Build 2 (R12): W's ONE stale line, on the Result and the re-entry gate, gains this clause when the household
-  // said "All of it" and the picture, read on the stale W, still shows a year-0 left over (the shown state
-  // "waiting on W"; under "not asked" no clause rides): nothing left over is credited while W is stale (R7).
-  // Its figure is the one the household answered at (`quotedReal`), never the live print read on the stale W:
-  // after a raise that print can sit above the stored figure, and R8 caps every credit at the stored one
-  // (KTD7's review). On `datesavedstale` both are $16,985 (`workingYearCostStaleLine`).
-  // It follows W's own sentence (and its lean, where that rides). Never on the W step's note: that step will
-  // not complete on a stale W, and the question comes after it (R5). Never on the panel's W row: the
-  // left-over seat below it says it there. "Left over from your pay" (the U11 walk's (aj)): "you chose to save"
-  // alone read as the 401(k) deposits. U11 walk 3 (b9-4): two sentences, one fact each ((ap)'s cure) — the stored
-  // figure dated to the answer (`leftOverAnswered`), then what the stale W withholds, under the act that counts
-  // ("confirm or change", (au)) and the held figure by name (after the dated sentence "that figure" would read as
-  // the $16,985).
-  workingCostStaleLeftOverClause: (storedFormatted: string, heldFormatted: string): string =>
-    `${leftOverAnswered(storedFormatted)} Until you confirm or change your $${heldFormatted} figure, none of it is added to your savings.`,
-  // WHAT A CHECK ADDS AT MOST (the U11 walk's (ae), council `wf_fc80029e-d93`): where the spending rose past the
-  // held figure, the clause alone promised the stored figure, while a check at today's quote credits at most the
-  // smaller of that figure and year 0's left over AT THE QUOTE (R8's cap, `taxOverlay.ts`; W comes off year 0's
-  // cash dollar for dollar, so "or more" keeps it true at any higher figure). Read off the money picture with W
-  // re-confirmed at the quote (`workingYearCheckAtQuote`), never S − (quote − W). "Capped": that left over is below
-  // the stored figure; "whole": it is not, so the stored figure is the cap. No threshold is named: a year-0 figure
-  // read as a line for the whole answer let its converse ("below it, this answer isn't rosy") stand where a later
-  // or a survivor year runs short (the red team's attack 1).
-  // "Checking your figure at", never "a check at" (U11 walk 2, b9-3: six readers, both cold first looks among them,
-  // read "a check at $90,000" as a $90,000 paycheck in a paragraph about pay). U11 walk 3 (b9-4): split at its "so"
-  // ((ap)); year 0 named by its calendar year ((aw): B's run named 2026 while these said "your first working year"
-  // alone); `laterShort` limits the reach to the years that don't come up short ((at), `atMostReach`). "Whole"
-  // names the cap as "that $16,985", the figure the clause just dated ((aq): "the $16,985 a year you chose to save"
-  // named their choice as the cap, though they chose all of it).
-  workingCostStaleLeftOverAtMost: (quoteFormatted: string, leftOverFormatted: string, year: number, laterShort: boolean): string =>
-    `At $${quoteFormatted} a year, your first working year, ${year}, has $${leftOverFormatted} left over. So checking your figure at $${quoteFormatted} or more adds at most $${leftOverFormatted} a year to your savings${atMostReach(laterShort)}.`,
-  workingCostStaleLeftOverAtMostWhole: (
-    quoteFormatted: string,
+  // Build 2 (R12): "THIS ANSWER NOW:" for a "saved" answer waiting on W — the household said "All of it" and the
+  // picture, read on the stale W, still shows a year-0 left over (the shown state "waiting on W"; under "not asked"
+  // none of this rides): nothing left over is credited while W is stale (R7). The figure is the one the household
+  // answered at (`quotedReal`), never the live print read on the stale W: after a raise that print can sit above
+  // the stored figure, and R8 caps every credit at the stored one (KTD7's review). Dated to the answer (U11 walk 3,
+  // (ap)'s cure; `leftOverAnswered`), then `copy.workingCostStaleLeftOverNone` says what this answer does with it.
+  // Never on the W step's note or the panel's W row (the left-over seat below it says it there).
+  workingCostStaleLeftOverAnswered: (storedFormatted: string): string => leftOverAnswered(storedFormatted),
+  // …and, on the fallen-spending arm only, the premise both walk-4 readers built on wrong ((bf): they read the answer
+  // as running on $84,000 of SPENDING): after work the answer uses the spending figure, door 1's own anchor
+  // (`budgetAnchorLead`, the draft's `annualSpendingReal`), never W's quote re-typed. Said where the spending moved:
+  // on a state-only move the two figures are the same.
+  workingCostStaleAfterWork: (spendingFormatted: string): string =>
+    `Once you’ve both stopped working, it already uses about $${spendingFormatted} a year.`,
+  // "IF A WORKING YEAR COSTS $X:" — the second label (a condition: the red team's attack on "At today's"), then what
+  // updating W to the quote or more does, read off the money picture with W re-confirmed at the quote
+  // (`workingYearCheckAtQuote`), never S − (quote − W). The engine credits each both-alive working year at most the
+  // smaller of that year's cash, year 0's print at the quote and the stored figure (R8's cap, `taxOverlay.ts`; W
+  // comes off year 0's cash dollar for dollar, so "or more" keeps every figure true at any higher W). "Capped": year
+  // 0 at the quote prints below the stored figure; "whole": it does not, so the stored figure is the cap ("that
+  // $16,985", the figure "This answer now:" just dated; (aq)). No threshold is named (the red team's attack 1 at
+  // (ae)). "Updating your figure", one name for the act on these arms (`WORKING_COST_ACT_COPY.update`; walk 4's
+  // (az): three names for one act). `laterShort` limits the reach to the years that don't come up short ((at),
+  // `atMostReach`), and year 0 is named by its calendar year ((aw)).
+  workingCostStaleLabelIf: (quoteFormatted: string): string => `If a working year costs $${quoteFormatted}:`,
+  workingCostStaleLeftOverIfCapped: (leftOverFormatted: string, year: number, quoteFormatted: string, laterShort: boolean): string =>
+    `Your first working year, ${year}, has $${leftOverFormatted} left over. Updating your figure to $${quoteFormatted} or more adds at most $${leftOverFormatted} a year to your savings${atMostReach(laterShort)}.`,
+  workingCostStaleLeftOverIfWhole: (
     leftOverFormatted: string,
-    storedFormatted: string,
     year: number,
+    quoteFormatted: string,
+    storedFormatted: string,
     laterShort: boolean,
   ): string =>
-    `At $${quoteFormatted} a year, your first working year, ${year}, has $${leftOverFormatted} left over. So checking your figure at $${quoteFormatted} or more adds at most that $${storedFormatted} a year to your savings${atMostReach(laterShort)}.`,
-  // …and where year 0 at the quote leaves nothing, a check carries nothing (its shown state is "not asked"), so
-  // these replace the clause and the at-most sentence: the shipped clause promised the stored figure where a check
-  // returns $0. The short-year lean that follows them (`workingCostStaleShortUntilChecked`) is a SEPARATE string,
-  // outside this prefix, so R16's sweep still reads every word here. Where year 0 starts a RUN of short years
-  // (U11 walk 2, b9-3: `datesavedrisenshort` is short every year from 2026 through 2032, and "your first working
-  // year" alone read as a one-off $4,015), the run is named in the money picture's own words
-  // (`workingLedgerLaterRun`, `workingLedgerLaterShortRange`): its years and its smallest to largest shortfall.
-  // U11 walk 3 (b9-4), one fact per dollar sentence ((ap)): the stored figure dated first (`leftOverAnswered`), so
-  // "short … instead" can sit beside it without the clash of "short" and an undated "left over"; then how the
-  // shortfall is covered ((as), `SHORTFALL_*`: "adds none" alone, a zero, read as "we'd just tread water"); then
-  // what a check carries.
-  workingCostStaleLeftOverFirstShort: (quoteFormatted: string, year: number, shortFormatted: string, storedFormatted: string): string =>
-    `${leftOverAnswered(storedFormatted)} At $${quoteFormatted} a year, your first working year, ${year}, comes up $${shortFormatted} short instead. ${SHORTFALL_ONE}. So checking your figure at $${quoteFormatted} or more adds none of that $${storedFormatted} to your savings.`,
-  workingCostStaleLeftOverFirstShortRun: (
+    `Your first working year, ${year}, has $${leftOverFormatted} left over. Updating your figure to $${quoteFormatted} or more adds at most that $${storedFormatted} a year to your savings${atMostReach(laterShort)}.`,
+  // …and which years those are, where a later run prints short (U11 walk 4, (be): two readers had to infer them,
+  // and "2026 through 2028" alone is false where a working year after the run has money left over again). Read off
+  // the ledger's rows (`WorkingYearLaterShort.resumesFrom`): the years before the run, and every working year from
+  // the first one the picture lists after it, said only where no year after the run prints short; otherwise the
+  // composer leaves the reach to the mechanism phrase above and says no years.
+  workingCostStaleLeftOverGainYears: (firstYear: number, lastYear: number, resumesFrom: number): string =>
+    `Those are ${yearSpan(firstYear, lastYear)}, and any working year from ${resumesFrom} on.`,
+  // …and where year 0 at the quote leaves nothing over (`firstShort` / `firstNone`): updating carries nothing (its
+  // shown state is "not asked"), so these replace the at-most sentence. A run of short years from year 0 is named
+  // as a run in the money picture's own words (U11 walk 2, (am): one year alone read as a one-off); how each
+  // shortfall is covered ((as), `SHORTFALL_*`, "would be": walk 4's (bc)); the year-level lean on those years, in
+  // the Hawk's own words ("makes those years look cheaper", walk 4's council: B and C carry it), with no "better"
+  // (R16's sweep reads this prefix: the whole-answer lean is B's LEAD, `workingCostStaleShortUntilUpdated`); then
+  // what updating still adds, the stored figure named (`stillAddsNone`; walk 4's (bd): B had never said what this
+  // answer does with it now — "This answer now:" says it).
+  workingCostStaleLeftOverIfFirstShort: (
+    year: number,
+    shortFormatted: string,
     quoteFormatted: string,
+    heldFormatted: string,
+    storedFormatted: string,
+  ): string =>
+    `Your first working year, ${year}, comes up $${shortFormatted} short. ${SHORTFALL_ONE} Your $${heldFormatted} figure makes that year look cheaper. ${stillAddsNone(quoteFormatted, storedFormatted)}`,
+  workingCostStaleLeftOverIfFirstShortRun: (
     firstYear: number,
     lastYear: number,
     leastFormatted: string,
     mostFormatted: string,
+    quoteFormatted: string,
+    heldFormatted: string,
     storedFormatted: string,
   ): string =>
-    `${leftOverAnswered(storedFormatted)} At $${quoteFormatted} a year, each working year from ${firstYear} through ${lastYear} comes up ${shortAmount(leastFormatted, mostFormatted)} short instead. ${SHORTFALL_EACH}. So checking your figure at $${quoteFormatted} or more adds none of that $${storedFormatted} to your savings.`,
-  workingCostStaleLeftOverFirstNone: (quoteFormatted: string, year: number, storedFormatted: string): string =>
-    `${leftOverAnswered(storedFormatted)} At $${quoteFormatted} a year, your first working year, ${year}, has nothing left over. So checking your figure at $${quoteFormatted} or more adds none of that $${storedFormatted} to your savings.`,
-  // …and the short-year lean after the at-quote sentences where year 0 at today's quote leaves nothing over: the
-  // checked run credits nothing and draws more, so the stale answer can look better (true by mechanism, the safe
-  // side: insight 133). Outside the left-over prefix on purpose (R16's sweep bans "better" there). "Confirm or
-  // change your $84,000 figure" (U11 walk 3, b9-4, (au)): the act that counts, and the held figure by name.
-  workingCostStaleShortUntilChecked: (heldFormatted: string): string =>
-    `Until you confirm or change your $${heldFormatted} figure, this answer can look better than it really is.`,
-  // THE SHORT-YEAR LEANS (the U11 walk's (ae)): "can look better" said only where a short year makes it true by
-  // mechanism — at the quote that year credits nothing in the checked run and draws more than in the stale one, so
-  // the over-read errs safe (insight 133). Named OUTSIDE the left-over prefix on purpose: R16's sweep bans "better"
-  // there, and these are the one place it is sanctioned beside the at-most figure (copyGuard pins where "better"
-  // may appear in a composed line). The later year is the FIRST one the money picture at the quote prints short
-  // (everyone alive, the window-top candidate: its own "If you're still working in" frame); naming it is the D7
-  // reply to the red team's attack 2 (a short later year the tool can compute, which silence would hide).
-  // U11 walk 3 (b9-4): split in two ((ap)), the second saying how the shortfall is covered ((as), `SHORTFALL_*`),
-  // so the lean follows the draw it rests on.
-  workingCostStaleShortLaterYear: (year: number, shortFormatted: string, quoteFormatted: string): string =>
-    `If you’re still working in ${year}, that year comes up $${shortFormatted} short at $${quoteFormatted} a year. ${SHORTFALL_ONE}, so this answer can look better than it really is.`,
-  // …and where that year starts a RUN of short years (U11 walk 2, b9-3: `datesavedrisenlater` is short every year
-  // from 2029 through 2032, and "that year" alone set a one-off loss beside a gain stated "a year"): the run in
-  // the money picture's own words, its years and its smallest to largest shortfall.
+    `Each working year from ${firstYear} through ${lastYear} comes up ${shortAmount(leastFormatted, mostFormatted)} short. ${SHORTFALL_EACH} Your $${heldFormatted} figure makes those years look cheaper. ${stillAddsNone(quoteFormatted, storedFormatted)}`,
+  workingCostStaleLeftOverIfFirstNone: (year: number, quoteFormatted: string, storedFormatted: string): string =>
+    `Your first working year, ${year}, has nothing left over. ${stillAddsNone(quoteFormatted, storedFormatted)}`,
+  // B'S LEAD (council `wf_7fa86902-35c`: "B and the short-year-0 arms: 'can look better'"), right after the note:
+  // where year 0 at the quote leaves nothing over, the checked run credits nothing and draws more, so the stale
+  // answer can look better — true by mechanism across the arm, the safe side (insight 133), so it may lead (two
+  // walk-4 readers asked for the direction first). Outside the left-over prefix on purpose (R16's sweep bans
+  // "better" there); the guard in `workingYearLeftOver.test.ts` admits it by identity AND position. "Update your
+  // $84,000 figure": the act these arms offer (no Keep door below the quote, ruling 34), the held figure by name.
+  workingCostStaleShortUntilUpdated: (heldFormatted: string): string =>
+    `Until you update your $${heldFormatted} figure, this answer can look better than it really is.`,
+  // THE SHORT-YEAR CLOSE (C, the U11 walk's (ae)): where a LATER run prints short at the quote, after the at-most
+  // sentence — "can look better" only where a short year makes it true by mechanism (at the quote that year
+  // credits nothing in the checked run and draws more than in the stale one, so the over-read errs safe: insight
+  // 133). C keeps its close (council `wf_7fa86902-35c`); its lead stays the either-way sentence, because a
+  // short-year "better" in the lead slot reads as a whole-answer verdict (red-team attack 3, conceded by every
+  // seat). Named OUTSIDE the left-over prefix on purpose (R16). The run in the money picture's own words, its years
+  // and its smallest to largest shortfall ((am)); "If you're still working" (the picture's own frame; (aw)(a) is
+  // U12's); how it is covered ((as), "would be": (bc)); then the Hawk's year-level lean joined to the whole-answer
+  // one by the cause it rests on — this answer, still at the held figure, takes none of those shortfalls ((bc)'s
+  // missing middle, in the council's words). No quote here: the label above carries it.
+  workingCostStaleShortLaterYear: (year: number, shortFormatted: string, heldFormatted: string): string =>
+    `If you’re still working in ${year}, that year comes up $${shortFormatted} short. ${SHORTFALL_ONE} Your $${heldFormatted} figure makes that year look cheaper, so this answer can look better than it really is.`,
   workingCostStaleShortLaterYears: (
     firstYear: number,
     lastYear: number,
     leastFormatted: string,
     mostFormatted: string,
-    quoteFormatted: string,
+    heldFormatted: string,
   ): string =>
-    `If you’re still working from ${firstYear} through ${lastYear}, each of those years comes up ${shortAmount(leastFormatted, mostFormatted)} short at $${quoteFormatted} a year. ${SHORTFALL_EACH}, so this answer can look better than it really is.`,
+    `If you’re still working from ${firstYear} through ${lastYear}, each of those years comes up ${shortAmount(leastFormatted, mostFormatted)} short. ${SHORTFALL_EACH} Your $${heldFormatted} figure makes those years look cheaper, so this answer can look better than it really is.`,
+  // THE ACT, DEFINED (council `wf_7fa86902-35c`: "define the act once per surface by what the figure holds, naming
+  // the sheet's two buttons"), said only beside the door (`workingYearCostStaleDoor`; a read-only tab draws no
+  // door, so it is told no buttons to press). Each names the buttons the W row really draws for this draft: below
+  // today's spending, "Yes" at today's quote and "No" (no Keep door, ruling 34); otherwise the Keep door by its own
+  // label (`workingYearCostKeepLabel`), "Yes" where there is a quote to offer, and "No". The labels are the
+  // catalog's own (`copy.workingCostYes`, `copy.workingCostDifferent`), so the line can never quote a button the face
+  // doesn't draw. "Update" says what the figure holds beyond the spending "Yes" uses: hunter-2's F8 at walk 4 — a
+  // "Yes" at $90,000 untouched leaves out what door 5 lists (premiums, a local wage tax); "a tax on pay the tool
+  // doesn't work out", never "any tax on pay", which would ask for the federal taxes the W help says to leave out.
+  workingCostStaleDefineUpdate: (quoteFormatted: string): string =>
+    `To update it, choose “${copy.workingCostYes}” to use $${quoteFormatted} a year, or “${copy.workingCostDifferent}” if a working year also costs you health premiums or a tax on pay the tool doesn’t work out.`,
+  workingCostStaleDefineConfirm: (keepLabel: string, quoteFormatted: string): string =>
+    `To confirm or change it, choose “${keepLabel}”, “${copy.workingCostYes}” to use $${quoteFormatted} a year, or “${copy.workingCostDifferent}”.`,
+  // …and where no spending figure is left to quote: the face draws the Keep door and the figure box, no fork.
+  workingCostStaleDefineConfirmNoQuote: (keepLabel: string): string =>
+    `To confirm or change it, choose “${keepLabel}” or type a different figure.`,
   workingCostStaleQuoteGone: (lastFormatted: string): string =>
     `You said yes to $${lastFormatted} a year, but your spending figures have changed since, and there’s no spending figure to offer now.`,
   workingCostStaleStateConfirmed: (lastFormatted: string): string =>
@@ -3064,7 +3152,7 @@ export const slots = {
    *  quote-only and both-causes arms are followed by `workingCostStaleLeansBetter`, as the yes's own are
    *  where the spending rose past it. PILOT-DRAFTED, walked by the U11 Caddie record (walk 1, b9-5). */
   workingCostStaleKeptQuote: (keptFormatted: string, nowFormatted: string): string =>
-    `You kept $${keptFormatted} a year, but your spending figures have changed since — they now come to $${nowFormatted} a year.`,
+    `You kept $${keptFormatted} a year. Your spending figures have changed since then, and now come to $${nowFormatted} a year.`,
   workingCostStaleStateKept: (keptFormatted: string): string =>
     `You kept $${keptFormatted} a year before your state answer changed, and that changes which state income tax this figure should hold.`,
   workingCostStaleKeptBoth: (keptFormatted: string, nowFormatted: string): string =>
@@ -3524,7 +3612,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1503` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1587` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

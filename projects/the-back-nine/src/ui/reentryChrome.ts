@@ -17,7 +17,7 @@ import type { CurrentScenario } from '@shared/model'
 import { KIND_TO_BUCKET } from '@intake/intakeMap'
 import type { StalenessReport } from '@store/staleness'
 import type { PricingFamily } from '@engine/pricingVersion'
-import { copy, slots, type CopyKey } from './copy'
+import { WORKING_COST_ACT_COPY, copy, slots, type CopyKey, type WorkingCostAct } from './copy'
 
 /** Each engine-pricing family's phrase in the ONE method line — exhaustive by type, so a family the
  *  ledger can declare can never be named with no words. */
@@ -87,12 +87,17 @@ const BUCKET_LABEL_KEY: Readonly<Record<'pretax' | 'roth' | 'taxable' | 'hsa', C
 /** The gate's KTD21 sentence, composed by the caller from the HYDRATED draft this report describes
  *  (`workingYearCostStaleLine`: the W step's own note, `workingYearCostStaleNote`, plus build 2's R12
  *  dollars clause and, where the spending rose, what a check at the quote adds, for a "saved" answer waiting
- *  on W — this seam never re-derives the quote): `text` is that line, and
- *  `canChange` is whether the answer will offer the door to change it (a tab that can save). `null`
- *  where W is not stale. REQUIRED, never optional-with-a-default: a caller that forgets it must fail
- *  to compile, never fall back to the figure-less line in silence. */
+ *  on W — this seam never re-derives the quote): `text` is that line; `act` and `definition` are its door's
+ *  (`workingYearCostStaleDoor`, council `wf_7fa86902-35c`: the act picks the door sentence,
+ *  `WORKING_COST_ACT_COPY`, and the definition is said just before it, or `null` where the line leans on the act
+ *  nowhere but the door); and `canChange` is whether the answer will offer the door to change it (a tab that can
+ *  save) — the definition and the door sentence ride only then. `null` where W is not stale. REQUIRED, never
+ *  optional-with-a-default: a caller that forgets it must fail to compile, never fall back to the figure-less line
+ *  in silence. */
 export interface ReentryPayCheckStale {
   readonly text: string
+  readonly act: WorkingCostAct
+  readonly definition: string | null
   readonly canChange: boolean
 }
 
@@ -224,11 +229,22 @@ export function composeReentry(
   // it leans — b9-7's U10 Caddie card; plus build 2's dollars clause for a "saved" answer waiting on W,
   // `workingYearCostStaleLine`), and the static figure-less line is only the fallback for a report that
   // calls W stale with no sentence beside it.
+  // Where the tab can save, the act's definition (if the line leans on the act) and then the door sentence in the
+  // act's own words (`WORKING_COST_ACT_COPY`): one string, one <p>, the door last (council `wf_7fa86902-35c`).
   if (report.workingYear.costStale) {
     noteLines.push(
       payCheckStale === null
         ? copy.stalenessWorkingYearCost
-        : [copy.stalenessPayCheckGateLead, payCheckStale.text, ...(payCheckStale.canChange ? [copy.stalenessPayCheckGateDoor] : [])].join(' '),
+        : [
+            copy.stalenessPayCheckGateLead,
+            payCheckStale.text,
+            ...(payCheckStale.canChange
+              ? [
+                  ...(payCheckStale.definition === null ? [] : [payCheckStale.definition]),
+                  copy[WORKING_COST_ACT_COPY[payCheckStale.act].gateDoor],
+                ]
+              : []),
+          ].join(' '),
     )
   }
   // Build 2's moved left over (R12): the household's own "saved" answer no longer matches today's
@@ -249,7 +265,7 @@ export function composeReentry(
       noteLines[clauseHost] = `${noteLines[clauseHost]} ${leftOverStale.clause}`
     } else {
       noteLines.push(
-        [copy.stalenessLeftOverNote, leftOverStale.text, ...(leftOverStale.canChange ? [copy.stalenessPayCheckGateDoor] : [])].join(' '),
+        [copy.stalenessLeftOverNote, leftOverStale.text, ...(leftOverStale.canChange ? [copy.stalenessLeftOverGateDoor] : [])].join(' '),
       )
     }
   }

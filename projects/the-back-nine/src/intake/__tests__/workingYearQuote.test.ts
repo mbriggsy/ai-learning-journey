@@ -337,12 +337,13 @@ describe('the stale sentence names the cause that moved (KTD21)', () => {
       held: '84,000.00',
       quote: '84,000.40',
     })
-    // The unrisen arm carries the held figure too (U11 walk 3, b9-4): the clause after it names it ("Until you
-    // confirm or change your $84,000 figure").
+    // The unrisen arm carries the held figure too (U11 walk 3, b9-4), and today's quote as the pair prints it
+    // (council `wf_7fa86902-35c`: the act's definition names "Yes" by the figure it uses, "to use $78,000 a year").
     expect(workingYearCostStaleSentence({ ...nc0, annualSpendingReal: 78_000, workingYearCost: yes(84_000) })).toEqual({
       rose: false,
       sentence: slots.workingCostStaleQuote('84,000', '78,000'),
       held: '84,000',
+      quote: '78,000',
     })
     expect(workingYearCostStaleSentence({ ...nc0, workingYearCost: yes(84_000) })).toBeNull()
   })
@@ -563,7 +564,7 @@ describe('the keep stamp: a kept yes goes stale when the spending rises past it 
 
   it('the words, typed by hand: the lean states the spending as the fact it is, never an "If" (the U11 walk’s (af)), and a both-causes sentence names the new state answer (its (ac))', () => {
     expect(workingYearCostStaleNote(at(85_000, kept84))).toBe(
-      'You kept $84,000 a year, but your spending figures have changed since — they now come to $85,000 a year. ' +
+      'You kept $84,000 a year. Your spending figures have changed since then, and now come to $85,000 a year. ' +
         'Your spending alone now comes to more than $84,000, so this answer can look better than it really is.',
     )
     expect(workingYearCostStaleNote(at(90_000, kept84, { retirementState: 'PA' }))).toBe(

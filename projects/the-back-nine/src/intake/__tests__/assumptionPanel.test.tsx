@@ -1515,7 +1515,8 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     // gate read; this note is `workingYearCostStaleNote` (W's sentence and, where the spending rose, its lean).
     // Figures (`datesavedstale`'s docblock): the spending lowered to $78,000 under a W still riding at $84,000,
     // and the $16,985 stored.
-    const clause = slots.workingCostStaleLeftOverClause('16,985', '84,000')
+    // The stored figure, dated, as "This answer now:" names it (council `wf_7fa86902-35c`).
+    const clause = slots.workingCostStaleLeftOverAnswered('16,985')
     // The positive twin: on this draft the clause is real, and W's one stale line on the Result carries it.
     expect(workingYearCostStaleLine(DEV_SEEDS.datesavedstale), 'the Result’s line carries the clause').toContain(clause)
     renderPanel({ snapshot: snap(DEV_SEEDS.datesavedstale) })
@@ -1533,7 +1534,7 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
       `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeftOverYearsCheaper('84,000')}`,
     )
     expect(note.textContent, 'no whole-answer lean for a "saved" answer waiting on W').not.toContain(slots.workingCostStaleLeansBetter('84,000'))
-    expect(note.textContent, 'no clause on the W row').not.toContain(slots.workingCostStaleLeftOverClause('16,985', '84,000'))
+    expect(note.textContent, 'no clause on the W row').not.toContain(slots.workingCostStaleLeftOverAnswered('16,985'))
     expect(note.textContent, 'no figure at the quote in the fork’s description (the red team’s attack 4)').not.toContain('10,985')
     expect(within(seat()).getByText(copy.workingLedgerLeftOverWaiting)).toBeInTheDocument()
     expect(within(seat()).queryAllByRole('radio')).toHaveLength(0)

@@ -762,8 +762,8 @@ async function walkDoors(page: Page, outDir: string, witness?: LeftOverWitness):
   for (let i = 0; i < count; i++) {
     const door = doors.nth(i)
     const name = (await door.innerText()).trim()
-    // The assumptions door by its OWN stable stamp (Result.tsx:677), never by index: the
-    // `.result-recommend-invite` door (Result.tsx:637) is conditional, so door-4 is door-4 only
+    // The assumptions door by its OWN stable stamp (Result.tsx:683), never by index: the
+    // `.result-recommend-invite` door (Result.tsx:643) is conditional, so door-4 is door-4 only
     // on the plants where the solve is un-invitable. Read BEFORE the click — the row survives the
     // open, but nothing here should depend on that.
     const isAssumptions = (await door.getAttribute('data-door')) === 'assumptions'
@@ -773,7 +773,7 @@ async function walkDoors(page: Page, outDir: string, witness?: LeftOverWitness):
     // exact class, the same one `SequencingControl`/`HealthcareSheet` use. So on every target where
     // `solveInvitable` holds, the walk opened this door, CHECKED A GOAL RADIO as a side effect, then
     // waited 120s for a TwoFutures `svg.tf` that the GoalPicker never renders — and this door is
-    // FIRST in the doors DOM order (Result.tsx:632-645), so the walk died before reaching any other
+    // FIRST in the doors DOM order (Result.tsx:638-651), so the walk died before reaching any other
     // door, including the assumptions panel the Card 11 crops below live on. Measured RED at both
     // viewports on `seed:retired`, which is the walk's DEFAULT target.
     // This is the `datemixed` shape at a new site, and the header comment above already names it:
@@ -832,7 +832,7 @@ async function walkDoors(page: Page, outDir: string, witness?: LeftOverWitness):
     await expect(dialog).toBeHidden()
   }
   // The receipt tests the SAME predicate the crops do, not a weaker one: it fails iff the loop
-  // never entered the branch that writes them. `hatchReachable` (Result.tsx:376-385) is satisfied
+  // never entered the branch that writes them. `hatchReachable` (Result.tsx:382-391) is satisfied
   // by `focusKey`, and every walkDoors caller has already awaited
   // `main.result[data-answer-tier="final"]` — so a missing assumptions door means the door row
   // changed shape under the harness, which is exactly when a silent skip would be worst.
@@ -1224,17 +1224,40 @@ const RISEN_LATER_SHORT_YEAR = 2029
  *  read off the money picture at the quote (b9-2's probe, `u11-ae\probe-ledger.out.txt`). */
 const RISEN_SHORT_LAST_YEAR = 2032
 const RISEN_SHORT_LEAST = '3,652'
+/** U11 walk 4 (council `wf_7fa86902-35c`): after `datesavedrisenlater`'s run, 2033 (a claim) prints left over at
+ *  $105,000 and no later row is short (b9-2's probe), so the years that don't come up short resume there. */
+const RISEN_LATER_RESUMES = 2033
+
+/** "This answer now:" on every "saved" witness waiting on W (council `wf_7fa86902-35c`): the label, the stored
+ *  figure dated, and what this answer does with it. */
+const SAVED_NOW = [
+  copy.workingCostStaleLabelNow,
+  slots.workingCostStaleLeftOverAnswered(DATE_LEFT_OVER),
+  copy.workingCostStaleLeftOverNone,
+] as const
 
 /** A risen-family witness: W's sentence at `quoteNow` and the year-level lean on both surfaces, then the tail
- *  for its arm; the seat waits (no figure, no radios) as on every stale-W witness. */
+ *  for its arm, then — both walked routes can save, so the door rides — the act defined in the W row's button
+ *  words and the door in the act's own words ("update": below the quote the W row offers no Keep door); the seat
+ *  waits (no figure, no radios) as on every stale-W witness. */
 function risenWitness(quoteNow: string, tail: readonly string[]): LeftOverWitness {
   const head = [
     slots.workingCostStaleQuote(STALE_W_CONFIRMED, quoteNow),
     slots.workingCostStaleLeftOverYearsCheaper(STALE_W_CONFIRMED),
   ]
+  const definition = slots.workingCostStaleDefineUpdate(quoteNow)
   return {
-    note: { lead: copy.stalenessPayCheckNote, says: [...head, ...tail], notLead: copy.stalenessLeftOverNote, door: copy.stalenessPayCheckCta },
-    gate: { lead: copy.stalenessPayCheckGateLead, says: [...head, ...tail, copy.stalenessPayCheckGateDoor], notLead: copy.stalenessLeftOverNote },
+    note: {
+      lead: copy.stalenessPayCheckNote,
+      says: [...head, ...tail, definition],
+      notLead: copy.stalenessLeftOverNote,
+      door: copy.stalenessPayCheckCtaUpdate,
+    },
+    gate: {
+      lead: copy.stalenessPayCheckGateLead,
+      says: [...head, ...tail, definition, copy.stalenessPayCheckGateDoorUpdate],
+      notLead: copy.stalenessLeftOverNote,
+    },
     seat: { figure: null, line: copy.workingLedgerLeftOverWaiting, radios: 0, checked: null },
   }
 }
@@ -1277,7 +1300,7 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
     },
     gate: {
       lead: copy.stalenessLeftOverNote,
-      says: [slots.stalenessLeftOverMoved(DATE_LEFT_OVER, MOVED_LEFT_OVER_LIVE, DATE_LEFT_OVER), copy.stalenessPayCheckGateDoor],
+      says: [slots.stalenessLeftOverMoved(DATE_LEFT_OVER, MOVED_LEFT_OVER_LIVE, DATE_LEFT_OVER), copy.stalenessLeftOverGateDoor],
       notLead: copy.stalenessPayCheckGateLead,
     },
     seat: {
@@ -1295,7 +1318,11 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
       lead: copy.stalenessPayCheckNote,
       says: [
         slots.workingCostStaleQuote(STALE_W_CONFIRMED, STALE_W_QUOTE_NOW),
-        slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER, STALE_W_CONFIRMED),
+        copy.workingCostStaleEitherWayConfirm,
+        copy.workingCostStaleLabelNow,
+        slots.workingCostStaleAfterWork(STALE_W_QUOTE_NOW),
+        ...SAVED_NOW.slice(1),
+        slots.workingCostStaleDefineConfirm(slots.workingCostKeepYearly(STALE_W_CONFIRMED), STALE_W_QUOTE_NOW),
       ],
       notLead: copy.stalenessLeftOverNote,
       door: copy.stalenessPayCheckCta,
@@ -1304,7 +1331,11 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
       lead: copy.stalenessPayCheckGateLead,
       says: [
         slots.workingCostStaleQuote(STALE_W_CONFIRMED, STALE_W_QUOTE_NOW),
-        slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER, STALE_W_CONFIRMED),
+        copy.workingCostStaleEitherWayConfirm,
+        copy.workingCostStaleLabelNow,
+        slots.workingCostStaleAfterWork(STALE_W_QUOTE_NOW),
+        ...SAVED_NOW.slice(1),
+        slots.workingCostStaleDefineConfirm(slots.workingCostKeepYearly(STALE_W_CONFIRMED), STALE_W_QUOTE_NOW),
         copy.stalenessPayCheckGateDoor,
       ],
       notLead: copy.stalenessLeftOverNote,
@@ -1316,22 +1347,28 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
   // check at $90,000 or more adds at most ($10,985, year 0 at the quote); the seat waits as on `datesavedstale`. The
   // ORDER is pinned in `devSeeds.test.ts` (the seed's own arm); here each must ride the one line.
   datesavedrisen: risenWitness(RISEN_W_QUOTE_NOW, [
-    slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER, STALE_W_CONFIRMED),
-    slots.workingCostStaleLeftOverAtMost(RISEN_W_QUOTE_NOW, RISEN_AT_QUOTE, 2026, false),
-    copy.workingCostStaleEitherWay,
+    copy.workingCostStaleEitherWayUpdate,
+    ...SAVED_NOW,
+    slots.workingCostStaleLabelIf(RISEN_W_QUOTE_NOW),
+    slots.workingCostStaleLeftOverIfCapped(RISEN_AT_QUOTE, 2026, RISEN_W_QUOTE_NOW, false),
   ]),
   // Increment 11, the risen twin's two other arms (`devSeeds.ts`'s docblocks carry the hand sums): at $105,000 year
   // 0 comes up $4,015 short, so a check adds none of the $16,985 and the short-year lean rides…
   datesavedrisenshort: risenWitness(RISEN_SHORT_QUOTE, [
-    slots.workingCostStaleLeftOverFirstShortRun(RISEN_SHORT_QUOTE, 2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, DATE_LEFT_OVER),
-    slots.workingCostStaleShortUntilChecked(STALE_W_CONFIRMED),
+    slots.workingCostStaleShortUntilUpdated(STALE_W_CONFIRMED),
+    ...SAVED_NOW,
+    slots.workingCostStaleLabelIf(RISEN_SHORT_QUOTE),
+    slots.workingCostStaleLeftOverIfFirstShortRun(2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, RISEN_SHORT_QUOTE, STALE_W_CONFIRMED, DATE_LEFT_OVER),
   ]),
   // …and with Sam's alimony to 62, year 0 at $105,000 has $5,985 left over (the most a check adds) while 2029, the
   // alimony ended, comes up $4,015 short — named, with the short-year lean.
   datesavedrisenlater: risenWitness(RISEN_SHORT_QUOTE, [
-    slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER, STALE_W_CONFIRMED),
-    slots.workingCostStaleLeftOverAtMost(RISEN_SHORT_QUOTE, RISEN_LATER_AT_QUOTE, 2026, true),
-    slots.workingCostStaleShortLaterYears(RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, RISEN_SHORT_QUOTE),
+    copy.workingCostStaleEitherWayUpdate,
+    ...SAVED_NOW,
+    slots.workingCostStaleLabelIf(RISEN_SHORT_QUOTE),
+    slots.workingCostStaleLeftOverIfCapped(RISEN_LATER_AT_QUOTE, 2026, RISEN_SHORT_QUOTE, true),
+    slots.workingCostStaleLeftOverGainYears(2026, RISEN_LATER_SHORT_YEAR - 1, RISEN_LATER_RESUMES),
+    slots.workingCostStaleShortLaterYears(RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, STALE_W_CONFIRMED),
   ]),
 }
 

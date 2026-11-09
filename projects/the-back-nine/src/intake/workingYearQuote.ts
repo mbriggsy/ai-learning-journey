@@ -54,7 +54,7 @@ import type { StateBaseSystem } from '@engine/constants'
 import { STATE_TAX_PROFILES, isPricedState } from '@engine/constants/stateTax'
 import { budgetGoverns, isActiveAt } from '@budget/budgetModel'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { slots, type CatalogMessage } from '@ui/copy'
+import { slots, type CatalogMessage, type WorkingCostAct } from '@ui/copy'
 import { formatMoney, formatMoneyPair } from './fields'
 
 /** A W answer's yearly figure (annual real $), whichever way it was given — the ONE read of it. It lives
@@ -328,15 +328,24 @@ export function heldYesBelowQuote(d: ScenarioDraft): boolean {
   return quote > 0 && quote > workingYearCostFigure(w)
 }
 
+/** The act W's stale line names (`WorkingCostAct`, council `wf_7fa86902-35c`), keyed on the ONE rule that withholds
+ *  the Keep door, so the words can never name a door the W row doesn't draw: below today's quote, "update" (the row
+ *  offers "Yes" at today's figure or a figure of their own); everywhere else, "confirm or change" (the Keep door is
+ *  real). Read only while W is stale (every caller holds a stale line). */
+export function workingYearCostAct(d: ScenarioDraft): WorkingCostAct {
+  return heldYesBelowQuote(d) ? 'update' : 'confirmOrChange'
+}
+
 /** W's stale sentence, split from its lean (KTD21; the U11 walk's (ae), council `wf_fc80029e-d93`). `rose`: the
  *  household's spending now comes to MORE than the held yes or kept figure (`heldYesBelowQuote`), so a lean rides
  *  the sentence; `held` and `quote` are the two figures exactly as `sentence` prints them (to the cent where they
  *  sit under a dollar apart), so every sentence after it names the same strings. `held` rides the unrisen arms too:
- *  the clause after them names the held figure (U11 walk 3, b9-4, (au): "Until you confirm or change your $84,000
- *  figure"). */
+ *  the lines after them name the held figure (U11 walk 3, b9-4, (au)). `quote` rides the unrisen arms too, as the
+ *  pair would print it beside the held figure, or `null` where no quote is left to offer: the act's definition
+ *  names the "Yes" button by the figure it uses (council `wf_7fa86902-35c`; `workingYearCostStaleDoor`). */
 export type WorkingYearCostStaleSentence =
   | { readonly rose: true; readonly sentence: string; readonly held: string; readonly quote: string }
-  | { readonly rose: false; readonly sentence: string; readonly held: string }
+  | { readonly rose: false; readonly sentence: string; readonly held: string; readonly quote: string | null }
 
 /** The stale sentence (KTD21): the last figure, the current quote where it moved, and which input
  *  really moved — `null` while W is absent or still matches. ONE home for every surface that says it,
@@ -358,10 +367,15 @@ export function workingYearCostStaleSentence(d: ScenarioDraft): WorkingYearCostS
   const s = workingYearCostStaleness(d)
   if (w === undefined || s === null) return null
   const lastFigure = workingYearCostFigure(w)
-  if (w.kind === 'entered' && w.keptOverQuoteReal === undefined) {
-    return { rose: false, sentence: slots.workingCostStaleStateEntered(formatMoney(lastFigure)), held: formatMoney(lastFigure) }
-  }
   const quote = workingYearQuote(d)
+  // The stale check compares at the cent, so a move under a dollar prints both figures to the cent
+  // (`formatMoneyPair`) — never "yes to $84,000 … now come to $84,000" (the whole-file review). Every arm reads its
+  // two figures off this one pair, so the definition's "to use $X a year" names the quote exactly as the note does.
+  const [held, quoted] = formatMoneyPair(lastFigure, quote.annualReal)
+  const now = quote.annualReal > 0 ? quoted : null
+  if (w.kind === 'entered' && w.keptOverQuoteReal === undefined) {
+    return { rose: false, sentence: slots.workingCostStaleStateEntered(formatMoney(lastFigure)), held: formatMoney(lastFigure), quote: now }
+  }
   // The lean rides the one home the door reads (`heldYesBelowQuote`), on every arm whose spending ROSE past
   // the held figure — both causes too (the U11 walk's (ac)): a state's income tax either belongs in W (adding
   // to it) or is priced apart (adding nothing), so the state never brings W back below the spending.
@@ -369,28 +383,23 @@ export function workingYearCostStaleSentence(d: ScenarioDraft): WorkingYearCostS
   if (w.kind === 'entered') {
     // Kept. The state alone names one figure; a quote that moved is above the figure, so there is
     // always a second figure to name beside it, printed as a pair (to the cent under a dollar apart).
-    if (!s.quoteMoved) return { rose: false, sentence: slots.workingCostStaleStateKept(formatMoney(lastFigure)), held: formatMoney(lastFigure) }
-    const [kept, now] = formatMoneyPair(lastFigure, quote.annualReal)
-    const sentence = s.readingMoved ? slots.workingCostStaleKeptBoth(kept, now) : slots.workingCostStaleKeptQuote(kept, now)
-    return rose ? { rose: true, sentence, held: kept, quote: now } : { rose: false, sentence, held: kept }
+    if (!s.quoteMoved) return { rose: false, sentence: slots.workingCostStaleStateKept(formatMoney(lastFigure)), held: formatMoney(lastFigure), quote: now }
+    const sentence = s.readingMoved ? slots.workingCostStaleKeptBoth(held, quoted) : slots.workingCostStaleKeptQuote(held, quoted)
+    return rose ? { rose: true, sentence, held, quote: quoted } : { rose: false, sentence, held, quote: now }
   }
-  // The stale check compares at the cent, so a move under a dollar prints both figures to the cent
-  // (`formatMoneyPair`) — never "yes to $84,000 … now come to $84,000" (the whole-file review).
-  const [last, quoted] = formatMoneyPair(lastFigure, quote.annualReal)
-  const now = quote.annualReal > 0 ? quoted : null
   if (s.quoteMoved && s.readingMoved) {
-    if (now === null) return { rose: false, sentence: slots.workingCostStaleBothGone(last), held: last }
-    const sentence = slots.workingCostStaleBoth(last, now)
-    return rose ? { rose: true, sentence, held: last, quote: now } : { rose: false, sentence, held: last }
+    if (now === null) return { rose: false, sentence: slots.workingCostStaleBothGone(held), held, quote: null }
+    const sentence = slots.workingCostStaleBoth(held, now)
+    return rose ? { rose: true, sentence, held, quote: now } : { rose: false, sentence, held, quote: now }
   }
   if (s.quoteMoved) {
-    if (now === null) return { rose: false, sentence: slots.workingCostStaleQuoteGone(last), held: last }
+    if (now === null) return { rose: false, sentence: slots.workingCostStaleQuoteGone(held), held, quote: null }
     // A lean only where the spending alone moved and now comes to MORE than the figure said yes to (b9-7);
     // never the mirror "can look worse" where it fell (the copy's ONE-SIDED BY DESIGN note).
-    const sentence = slots.workingCostStaleQuote(last, now)
-    return rose ? { rose: true, sentence, held: last, quote: now } : { rose: false, sentence, held: last }
+    const sentence = slots.workingCostStaleQuote(held, now)
+    return rose ? { rose: true, sentence, held, quote: now } : { rose: false, sentence, held, quote: now }
   }
-  return { rose: false, sentence: slots.workingCostStaleStateConfirmed(last), held: last }
+  return { rose: false, sentence: slots.workingCostStaleStateConfirmed(held), held, quote: now }
 }
 
 /** The stale note's Keep door, in its own words: the figure in the unit it was given — a monthly entered

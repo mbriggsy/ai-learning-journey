@@ -7,6 +7,7 @@ import { validateDraft, type FieldPath } from '@intake/sanity'
 import { subscribeUnsavedBuffers, unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import { isWorkingYearCostStale } from '@intake/workingYearQuote'
 import {
+  workingYearCostStaleDoor,
   workingYearCostStaleLine,
   workingYearLeftOverMoved,
   workingYearLeftOverMovedClause,
@@ -658,9 +659,14 @@ export default function IntakeApp({
         // The gate's KTD21 sentence from the SAME hydrated draft — the W step's own stale sentence,
         // which the answer's standing line repeats (b9-7), with build 2's clause for a "saved" answer
         // waiting on W (R12); the door hint only where this tab can save, the same condition as the
-        // answer's door (`Result`'s `onOpen`).
+        // answer's door (`Result`'s `onOpen`). The door's act and the act's definition from the same draft
+        // (`workingYearCostStaleDoor`, council `wf_7fa86902-35c`); `composeReentry` says them only with the door.
         const payCheckStaleText = workingYearCostStaleLine(hydrated.draft)
-        const payCheckStale = payCheckStaleText === null ? null : { text: payCheckStaleText, canChange: !readOnly }
+        const payCheckStaleDoor = workingYearCostStaleDoor(hydrated.draft)
+        const payCheckStale =
+          payCheckStaleText === null || payCheckStaleDoor === null
+            ? null
+            : { text: payCheckStaleText, act: payCheckStaleDoor.act, definition: payCheckStaleDoor.definition, canChange: !readOnly }
         const leftOverStale =
           leftOverMoved === null
             ? null

@@ -7,6 +7,7 @@ import { appModel } from '../appModel'
 import { resolvedFocusKey, selectElevatedAnswer } from '../answerView'
 import { copy, slots } from '@ui/copy'
 import { DEV_SEEDS } from '../devSeeds'
+import { workingYearCostStaleLine } from '@intake/workingYearLeftOver'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
 
 /*
@@ -143,20 +144,29 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
     expect(line()).toBeNull()
   })
 
-  it('`datesavedstale`: W’s one line carries the clause naming the $16,985 not added; no moved line speaks', () => {
+  it('`datesavedstale`: W’s one line leads with the either-way sentence in "confirm or change", then "This answer now:" — after work it already uses $78,000, the $16,985 dated, none of it added; no moved line speaks', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedstale)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
     expect(line()?.textContent).toBe(
-      `${copy.stalenessPayCheckNote} ${slots.workingCostStaleQuote('84,000', '78,000')} ${slots.workingCostStaleLeftOverClause('16,985', '84,000')}`,
+      [
+        copy.stalenessPayCheckNote,
+        slots.workingCostStaleQuote('84,000', '78,000'),
+        copy.workingCostStaleEitherWayConfirm,
+        copy.workingCostStaleLabelNow,
+        slots.workingCostStaleAfterWork('78,000'),
+        slots.workingCostStaleLeftOverAnswered('16,985'),
+        copy.workingCostStaleLeftOverNone,
+      ].join(' '),
     )
   })
 
-  // The U11 walk's (ae): where the spending ROSE past the yes, the Result's line carries the year-level lean, the
-  // clause and the most a check at the quote adds (year 0 at $90,000, hand-derived: 150,000 − 11,475 − 17,540 −
-  // 20,000 − 90,000 = $10,985) — and where year 0 at the quote is short, that a check adds none of it and the
-  // short-year lean (at $105,000: −$4,015).
-  it('`datesavedrisen` and `datesavedrisenshort`: W’s line carries the year-level lean, then what a check at the quote adds — at most $10,985, or none of the $16,985', () => {
+  // The U11 walk's (ae), in council `wf_7fa86902-35c`'s shape: where the spending ROSE past the yes, the Result's line
+  // carries the year-level lean, the lead, "This answer now:", then "If a working year costs $X:" and what updating
+  // does there (year 0 at $90,000, hand-derived: 150,000 − 11,475 − 17,540 − 20,000 − 90,000 = $10,985) — and where
+  // year 0 at the quote is short (at $105,000: −$4,015), the short-year lead and that updating still adds none of it.
+  it('`datesavedrisen` and `datesavedrisenshort`: W’s line carries the year-level lean, the arm’s lead, "This answer now:", then what updating to the quote does — at most $10,985, or none of the $16,985', () => {
+    const NOW = [copy.workingCostStaleLabelNow, slots.workingCostStaleLeftOverAnswered('16,985'), copy.workingCostStaleLeftOverNone]
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedrisen)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
@@ -165,9 +175,10 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
         copy.stalenessPayCheckNote,
         slots.workingCostStaleQuote('84,000', '90,000'),
         slots.workingCostStaleLeftOverYearsCheaper('84,000'),
-        slots.workingCostStaleLeftOverClause('16,985', '84,000'),
-        slots.workingCostStaleLeftOverAtMost('90,000', '10,985', 2026, false),
-        copy.workingCostStaleEitherWay,
+        copy.workingCostStaleEitherWayUpdate,
+        ...NOW,
+        slots.workingCostStaleLabelIf('90,000'),
+        slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
       ].join(' '),
     )
     cleanup()
@@ -179,10 +190,35 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
         copy.stalenessPayCheckNote,
         slots.workingCostStaleQuote('84,000', '105,000'),
         slots.workingCostStaleLeftOverYearsCheaper('84,000'),
-        slots.workingCostStaleLeftOverFirstShortRun('105,000', 2026, 2032, '3,652', '4,015', '16,985'),
-        slots.workingCostStaleShortUntilChecked('84,000'),
+        slots.workingCostStaleShortUntilUpdated('84,000'),
+        ...NOW,
+        slots.workingCostStaleLabelIf('105,000'),
+        slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985'),
       ].join(' '),
     )
+  })
+
+  // THE DOOR (council `wf_7fa86902-35c`): the act picks the door's words, and the act's definition rides just before
+  // it — only where the door does (a read-only tab, above, is told no buttons to press).
+  it('a writable tab: the risen line ends with the act defined in the W row’s button words, then "Update your figure for a working year", which lands on the W row; the fallen line names its Keep door and keeps "Confirm or change your figure"', () => {
+    const updateDoor = () => screen.queryByRole('button', { name: copy.stalenessPayCheckCtaUpdate })
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datesavedrisen)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    const definition = slots.workingCostStaleDefineUpdate('90,000')
+    expect(line()?.querySelector('span')?.textContent).toBe(`${copy.stalenessPayCheckNote} ${workingYearCostStaleLine(DEV_SEEDS.datesavedrisen)} ${definition}`)
+    expect(lineDoor(), 'no "confirm or change" below the quote: the W row offers no Keep door').toBeNull()
+    fireEvent.click(updateDoor()!)
+    expect(document.activeElement).toBe(wRowName())
+    cleanup()
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datesavedstale)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    expect(line()?.querySelector('span')?.textContent).toBe(
+      `${copy.stalenessPayCheckNote} ${workingYearCostStaleLine(DEV_SEEDS.datesavedstale)} ${slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '78,000')}`,
+    )
+    expect(updateDoor()).toBeNull()
+    expect(lineDoor()).not.toBeNull()
   })
 
   it('an absent, spent or not-sure answer shows no left-over line or clause — fresh or with W stale', () => {

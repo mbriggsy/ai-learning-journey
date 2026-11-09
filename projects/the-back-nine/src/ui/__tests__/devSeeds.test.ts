@@ -11,7 +11,7 @@ import {
   AGED_PLANTS,
 } from '../devSeeds'
 import { heldYesBelowQuote, isWorkingYearCostStale, workingYearCostStaleness } from '@intake/workingYearQuote'
-import { workingYearCheckAtQuote, workingYearCostStaleLine, workingYearCostStaleNote } from '@intake/workingYearLeftOver'
+import { workingYearCheckAtQuote, workingYearCostStaleDoor, workingYearCostStaleLine, workingYearCostStaleNote } from '@intake/workingYearLeftOver'
 import { floorLineText, heroLead } from '../FuckOffDate'
 import { planClockAnchor } from '../bandAnnotations'
 import type { ScenarioDraft } from '@store/memoryModel'
@@ -1416,7 +1416,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
     ).toBeLessThan(depth)
     // NOT an incidental observation: the floor crowning at 0 is exactly why this plant lights ONE
     // arrived arm and not two. `floorLineText` short-circuits offset 0 BEFORE the three-way split
-    // (FuckOffDate.tsx:253, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
+    // (FuckOffDate.tsx:264, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
     // cannot fire here — its live route is and remains `?vault=datestale`. Arm 3 proves the
     // consequence on the renderer rather than leaving it as a comment.
     expect(out.floor.offsetYears, 'the floor crowns at 0 — the plain covered line, never the Past arm').toBe(0)
@@ -1866,13 +1866,18 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(workingYearCostStaleNote(d)).toBe(
       `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeftOverYearsCheaper('84,000')}`,
     )
+    // Council `wf_7fa86902-35c`'s order: the note, the either-way lead ("update": no Keep door below the quote),
+    // "This answer now:" with the stored figure dated, then "If a working year costs $90,000:" and year 0 there.
     expect(workingYearCostStaleLine(d)).toBe(
       [
         slots.workingCostStaleQuote('84,000', '90,000'),
         slots.workingCostStaleLeftOverYearsCheaper('84,000'),
-        slots.workingCostStaleLeftOverClause('16,985', '84,000'),
-        slots.workingCostStaleLeftOverAtMost('90,000', '10,985', 2026, false),
-        copy.workingCostStaleEitherWay,
+        copy.workingCostStaleEitherWayUpdate,
+        copy.workingCostStaleLabelNow,
+        slots.workingCostStaleLeftOverAnswered('16,985'),
+        copy.workingCostStaleLeftOverNone,
+        slots.workingCostStaleLabelIf('90,000'),
+        slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
       ].join(' '),
     )
     const { annualSpendingReal, ...rest } = d
@@ -1888,7 +1893,8 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
   // firstShort"). Figures hand-derived from `date`'s year-0 sum above: at $105,000, 150,000 − 11,475 − 17,540 −
   // 20,000 − 105,000 = −4,015; with Sam's $10,000 of alimony (signed after 2018, so not taxed to Sam: the tax line
   // stays $17,540), year 0 at $105,000 is −4,015 + 10,000 = $5,985 and at the stale $84,000 it is $26,985; the
-  // alimony ends at 62, so 2029 (Sam 63) is the short arm's −4,015 again.
+  // alimony ends at 62, so 2029 (Sam 63) is the short arm's −4,015 again. After the run, 2033 (a claim) prints left
+  // over and no later row is short (b9-2's probe, `u11-ae\probe-latershort.out.txt`): the gain years resume there.
   it('(ae): `datesavedrisenshort` is `datesaved` with its spending raised to $105,000 — waiting on W, nothing carried, and a check at the quote leaves year 0 $4,015 short, so the line says a check adds none of the $16,985', () => {
     const d = DEV_SEEDS.datesavedrisenshort
     expect(d.workingYearLeftOver).toEqual({ kind: 'saved', quotedReal: 16_985 })
@@ -1908,7 +1914,12 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     const d = DEV_SEEDS.datesavedrisenlater
     expect(workingYearLeftOverShownState(d)).toBe('waiting-on-w')
     expect(workingYearLeftOverLive(d), 'the alimony lifts year 0 at the stale $84,000').toBe(26_985)
-    expect(workingYearCheckAtQuote(d)).toEqual({ kind: 'capped', year: 2026, leftOver: 5_985, laterShort: { firstYear: 2029, lastYear: 2032, least: 3_652, most: 4_015 } })
+    expect(workingYearCheckAtQuote(d)).toEqual({
+      kind: 'capped',
+      year: 2026,
+      leftOver: 5_985,
+      laterShort: { firstYear: 2029, lastYear: 2032, least: 3_652, most: 4_015, resumesFrom: 2033 },
+    })
     const { incomeStreams, ...rest } = d
     const { incomeStreams: none, ...shortRest } = DEV_SEEDS.datesavedrisenshort
     expect(none).toEqual([])
@@ -2059,9 +2070,13 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(report.rulesMoved, 'a stale answer is not a rules change').toBe(false)
     const text = workingYearCostStaleLine(hydrated.draft)
     expect(text, '$84,000 held above $78,000 now — the safe side, so no lean is said').toBe(slots.workingCostStaleQuote('84,000', '78,000'))
-    expect(composeReentry(built.scenario, report, { costStale: { text: text!, canChange: true }, leftOverStale: null }).noteLines).toEqual([
-      `${copy.stalenessPayCheckGateLead} ${text} ${copy.stalenessPayCheckGateDoor}`,
-    ])
+    // Its door names "confirm or change" (the spending fell: the W row's Keep door is real) and defines nothing (no
+    // "saved" answer, so the line leans on the act nowhere but the door).
+    expect(workingYearCostStaleDoor(hydrated.draft)).toEqual({ act: 'confirmOrChange', definition: null })
+    expect(
+      composeReentry(built.scenario, report, { costStale: { text: text!, act: 'confirmOrChange', definition: null, canChange: true }, leftOverStale: null })
+        .noteLines,
+    ).toEqual([`${copy.stalenessPayCheckGateLead} ${text} ${copy.stalenessPayCheckGateDoor}`])
   })
 
   it('the light doctor fails LOUD on a plan that never reads the table, and on a stamp it cannot age', () => {

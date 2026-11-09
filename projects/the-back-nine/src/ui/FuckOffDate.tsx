@@ -54,7 +54,7 @@
  * copy.ts (copyGuard-gated); every numeral through a typed slot. CSP-clean: class-driven.
  */
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
-import { copy, slots, type CopyKey } from './copy'
+import { WORKING_COST_ACT_COPY, copy, slots, type CopyKey, type WorkingCostAct } from './copy'
 import { dateOddsText } from './dateOdds'
 import { dateTradeoffPoint } from './dateTradeoff'
 import { composeDateSplit, type DateSplitView } from './dateSplit'
@@ -177,13 +177,15 @@ export interface FuckOffDateProps {
    *  structural). Fresh sessions (plan clock 0) ignore it. */
   readonly onReconfirm?: () => void
   /** The standing answer line, ONE slot for two causes that cannot both hold (a moved left over needs a
-   *  fresh W): `'w-stale'` — the pay check's KTD21 line, the household's W no longer matches the spending or
+   *  fresh W): W stale — the pay check's KTD21 line, the household's W no longer matches the spending or
    *  state it was given against and the date still uses that last figure (R4); `text` is W's one stale line
-   *  (`workingYearCostStaleLine`: the W step's note, plus build 2's clause for a "saved" answer waiting on W, and
-   *  what a check at the quote adds where the spending rose). `'left-over-moved'` — build 2's R12, the household's "All of it" was given against a year-0 figure
-   *  that has since changed; `text` names both. Each cause picks its own lead and door label
-   *  (`STANDING_NOTE_COPY`). `onOpen` present ⇒ the sentence carries a door into the assumptions panel at the
-   *  cause's seat (Result passes it only when the tab can save); absent ⇒ the read-only face states the fact
+   *  (`workingYearCostStaleLine`: the W step's note, plus, for a "saved" answer waiting on W, what this answer
+   *  does with it now and what updating to today's quote does), followed, where the door rides, by the act's
+   *  definition (`workingYearCostStaleDoor`). Its cause is split by the act (`W_STALE_CAUSE`), so the door names
+   *  the act the W row really offers. `'left-over-moved'` — build 2's R12, the household's "All of it" was given
+   *  against a year-0 figure that has since changed; `text` names both. Each cause picks its own lead and door
+   *  label (`STANDING_NOTE_COPY`). `onOpen` present ⇒ the sentence carries a door into the assumptions panel at
+   *  the cause's seat (Result passes it only when the tab can save); absent ⇒ the read-only face states the fact
    *  with no door (ReEntry's dead-end-CTA doctrine). */
   readonly payCheckNote?: { readonly cause: StandingNoteCause; readonly text: string; readonly onOpen?: () => void }
   /** Build 2's clause on the hero's rules note (R12): present ⇔ a tax, state-tax or working-years line fired
@@ -192,13 +194,22 @@ export interface FuckOffDateProps {
   readonly stalenessClause?: string
 }
 
-/** The standing answer line's two causes (`payCheckNote`). */
-export type StandingNoteCause = 'w-stale' | 'left-over-moved'
+/** The standing answer line's causes (`payCheckNote`): W stale, split by the act its door names, and the moved
+ *  left over. */
+export type StandingNoteCause = 'w-stale-update' | 'w-stale-confirm-or-change' | 'left-over-moved'
+
+/** W stale's cause for each act (`workingYearQuote.workingYearCostAct`, council `wf_7fa86902-35c`), exhaustive: the
+ *  Result picks the cause with the helper, never a free door label. */
+export const W_STALE_CAUSE: Readonly<Record<WorkingCostAct, StandingNoteCause>> = {
+  update: 'w-stale-update',
+  confirmOrChange: 'w-stale-confirm-or-change',
+}
 
 /** Each cause's lead and door label, exhaustive (insight 147): W's line never borrows the left over's words,
- *  nor the reverse. */
+ *  nor the reverse, and its door is the act's own (`WORKING_COST_ACT_COPY`, the one home of the act's words). */
 const STANDING_NOTE_COPY: Readonly<Record<StandingNoteCause, { readonly lead: CopyKey; readonly cta: CopyKey }>> = {
-  'w-stale': { lead: 'stalenessPayCheckNote', cta: 'stalenessPayCheckCta' },
+  'w-stale-update': { lead: 'stalenessPayCheckNote', cta: WORKING_COST_ACT_COPY.update.resultDoor },
+  'w-stale-confirm-or-change': { lead: 'stalenessPayCheckNote', cta: WORKING_COST_ACT_COPY.confirmOrChange.resultDoor },
   'left-over-moved': { lead: 'stalenessLeftOverNote', cta: 'stalenessLeftOverCta' },
 }
 

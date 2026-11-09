@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { FuckOffDate } from '../FuckOffDate'
+import { FuckOffDate, W_STALE_CAUSE } from '../FuckOffDate'
 import { copy, slots } from '../copy'
 import { dateOddsText } from '../dateOdds'
 import { deriveDateBandAnnotations } from '../bandAnnotations'
@@ -581,7 +581,7 @@ describe('the pay check’s standing line (KTD21)', () => {
 
   it('with a door: the sentence, then an inline control that opens the panel', () => {
     const onOpen = vi.fn()
-    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'w-stale', text: STALE, onOpen }} />)
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'w-stale-confirm-or-change', text: STALE, onOpen }} />)
     const note = container.querySelector('p.fod-note.cs-paycheck-note')
     expect(note).not.toBeNull()
     expect(note?.textContent).toContain(`${copy.stalenessPayCheckNote} ${STALE}`)
@@ -589,15 +589,24 @@ describe('the pay check’s standing line (KTD21)', () => {
     expect(onOpen).toHaveBeenCalledTimes(1)
   })
 
+  it('the cause is split by the act (council wf_7fa86902-35c): "update" names its own door — never "confirm or change", which names a Keep door the W row withholds below the quote', () => {
+    const onOpen = vi.fn()
+    render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: W_STALE_CAUSE.update, text: STALE, onOpen }} />)
+    expect(screen.queryByRole('button', { name: copy.stalenessPayCheckCta })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Update your figure for a working year' }))
+    expect(onOpen).toHaveBeenCalledTimes(1)
+    expect(W_STALE_CAUSE.confirmOrChange).toBe('w-stale-confirm-or-change')
+  })
+
   it('read-only: the same sentence with NO door (a dead-end control is the lying-remedy shape)', () => {
-    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'w-stale', text: STALE }} />)
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'w-stale-confirm-or-change', text: STALE }} />)
     expect(container.querySelector('.cs-paycheck-note')?.textContent).toBe(`${copy.stalenessPayCheckNote} ${STALE}`)
     expect(screen.queryByRole('button', { name: copy.stalenessPayCheckCta })).toBeNull()
   })
 
   it('sits in the lead AFTER the staleness echo and the state note, ABOVE the graphs — and is never an alert', () => {
     const { container } = render(
-      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} stalenessNote payCheckNote={{ cause: 'w-stale', text: STALE, onOpen: () => {} }} />,
+      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} stalenessNote payCheckNote={{ cause: 'w-stale-confirm-or-change', text: STALE, onOpen: () => {} }} />,
     )
     const lead = container.querySelector('.reveal__lead')!
     const notes = Array.from(lead.querySelectorAll('.fod-note'))

@@ -2099,36 +2099,57 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
 // 12,622.50 − tax 20,840 − deposits 20,000 − W 84,000 = 27,537.50, a surplus rounding down).
 const STALE_W_QUOTE = slots.workingCostStaleQuote('84,000', '78,000')
 const STALE_W_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE} ${copy.stalenessPayCheckGateDoor}`
-const STALE_W_SAVED_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE} ${slots.workingCostStaleLeftOverClause('16,985', '84,000')} ${copy.stalenessPayCheckGateDoor}`
+// Council `wf_7fa86902-35c` (U11 walk 4): a "saved" answer waiting on W reads, after its note, a lead, "This answer
+// now:" (the stored $16,985 dated), and on the risen arms "If a working year costs $X:"; beside the door (both
+// walked tabs can save) the act defined in the W row's button words, then the door in the act's words — "confirm or
+// change" where the spending fell (the Keep door is real), "update" where it rose past the yes (no Keep door).
+const SAVED_NOW = [copy.workingCostStaleLabelNow, slots.workingCostStaleLeftOverAnswered('16,985'), copy.workingCostStaleLeftOverNone]
+const STALE_W_SAVED_LINE = [
+  STALE_W_QUOTE,
+  copy.workingCostStaleEitherWayConfirm,
+  copy.workingCostStaleLabelNow,
+  slots.workingCostStaleAfterWork('78,000'),
+  slots.workingCostStaleLeftOverAnswered('16,985'),
+  copy.workingCostStaleLeftOverNone,
+].join(' ')
+const STALE_W_SAVED_DEFINITION = slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '78,000')
+const STALE_W_SAVED_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_SAVED_LINE} ${STALE_W_SAVED_DEFINITION} ${copy.stalenessPayCheckGateDoor}`
 const LEFT_OVER_MOVED_SENTENCE = slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')
-const LEFT_OVER_MOVED_GATE_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE} ${copy.stalenessPayCheckGateDoor}`
+const LEFT_OVER_MOVED_GATE_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE} ${copy.stalenessLeftOverGateDoor}`
 // The U11 walk's (ae): the risen family's W line — W's sentence, the year-level lean, then the tail by what a check
 // at the quote does. Year 0 at the quote, by hand from `date`'s sum above with W at the quote: $10,985 at $90,000
 // (capped); −$4,015 at $105,000 (first short); $5,985 there with `datesavedrisenlater`'s $10,000 of untaxed
 // alimony, whose end at Sam's 62 makes 2029 the short arm's −$4,015 again (later short). The later-short line is
-// the LONGEST stale line any seed draws (five sentences), so its arm is the gate's wrap-risk arm.
+// the LONGEST stale line any seed draws (with its gain years and its short run), so its arm is the gate's wrap-risk
+// arm. Each risen line names its own quote in the definition ("to use $90,000 a year").
 const risenLine = (quoteNow: string, tail: readonly string[]): string =>
   [slots.workingCostStaleQuote('84,000', quoteNow), slots.workingCostStaleLeftOverYearsCheaper('84,000'), ...tail].join(' ')
 const RISEN_LINE = risenLine('90,000', [
-  slots.workingCostStaleLeftOverClause('16,985', '84,000'),
-  slots.workingCostStaleLeftOverAtMost('90,000', '10,985', 2026, false),
-  copy.workingCostStaleEitherWay,
+  copy.workingCostStaleEitherWayUpdate,
+  ...SAVED_NOW,
+  slots.workingCostStaleLabelIf('90,000'),
+  slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
 ])
 const RISEN_SHORT_LINE = risenLine('105,000', [
-  slots.workingCostStaleLeftOverFirstShortRun('105,000', 2026, 2032, '3,652', '4,015', '16,985'),
-  slots.workingCostStaleShortUntilChecked('84,000'),
+  slots.workingCostStaleShortUntilUpdated('84,000'),
+  ...SAVED_NOW,
+  slots.workingCostStaleLabelIf('105,000'),
+  slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985'),
 ])
 const RISEN_LATER_LINE = risenLine('105,000', [
-  slots.workingCostStaleLeftOverClause('16,985', '84,000'),
-  slots.workingCostStaleLeftOverAtMost('105,000', '5,985', 2026, true),
-  slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '105,000'),
+  copy.workingCostStaleEitherWayUpdate,
+  ...SAVED_NOW,
+  slots.workingCostStaleLabelIf('105,000'),
+  slots.workingCostStaleLeftOverIfCapped('5,985', 2026, '105,000', true),
+  slots.workingCostStaleLeftOverGainYears(2026, 2028, 2033),
+  slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000'),
 ])
-const risenUnlock = (key: string, line: string) =>
+const risenUnlock = (key: string, line: string, quoteNow: string) =>
   ({
     key,
-    note: `${copy.stalenessPayCheckGateLead} ${line} ${copy.stalenessPayCheckGateDoor}`,
+    note: `${copy.stalenessPayCheckGateLead} ${line} ${slots.workingCostStaleDefineUpdate(quoteNow)} ${copy.stalenessPayCheckGateDoorUpdate}`,
     sibling: copy.stalenessLeftOverNote,
-    standing: `${copy.stalenessPayCheckNote} ${line}`,
+    standing: `${copy.stalenessPayCheckNote} ${line} ${slots.workingCostStaleDefineUpdate(quoteNow)}`,
     dated: false,
   }) as const
 /** `standing` — the Result's standing-slot sentence after the affirm (the lead and the sentence, before its
@@ -2147,7 +2168,7 @@ const PAY_CHECK_UNLOCKS = [
     key: 'datesavedstale',
     note: STALE_W_SAVED_GATE_LINE,
     sibling: copy.stalenessLeftOverNote,
-    standing: `${copy.stalenessPayCheckNote} ${STALE_W_QUOTE} ${slots.workingCostStaleLeftOverClause('16,985', '84,000')}`,
+    standing: `${copy.stalenessPayCheckNote} ${STALE_W_SAVED_LINE} ${STALE_W_SAVED_DEFINITION}`,
     dated: true,
   },
   {
@@ -2157,9 +2178,9 @@ const PAY_CHECK_UNLOCKS = [
     standing: `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE}`,
     dated: true,
   },
-  risenUnlock('datesavedrisen', RISEN_LINE),
-  risenUnlock('datesavedrisenshort', RISEN_SHORT_LINE),
-  risenUnlock('datesavedrisenlater', RISEN_LATER_LINE),
+  risenUnlock('datesavedrisen', RISEN_LINE, '90,000'),
+  risenUnlock('datesavedrisenshort', RISEN_SHORT_LINE, '105,000'),
+  risenUnlock('datesavedrisenlater', RISEN_LATER_LINE, '105,000'),
 ] as const
 
 for (const u of PAY_CHECK_UNLOCKS) {
@@ -2687,7 +2708,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2113-2117 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2131-2135 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,
@@ -3363,9 +3384,10 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       await assertNoDateReading(page)
       const line = page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')
       await expect(line, 'the standing line renders in the lead').toHaveCount(1)
-      await expect(line).toContainText(`${copy.stalenessPayCheckNote} ${RISEN_LATER_LINE}`)
+      await expect(line).toContainText(`${copy.stalenessPayCheckNote} ${RISEN_LATER_LINE} ${slots.workingCostStaleDefineUpdate('105,000')}`)
       await assertStandingLinePlaced(page, line, vp.use.viewport.width === PHONE.width, false)
-      await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
+      // Below the quote the door says "update" (council `wf_7fa86902-35c`): the W row offers no Keep door there.
+      await page.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate }).click()
       const dialog = page.getByRole('dialog')
       await expect(dialog).toBeVisible()
       const row = dialog.locator('[data-assumption-seat="working-year-cost"]')

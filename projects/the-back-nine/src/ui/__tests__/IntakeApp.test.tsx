@@ -207,7 +207,7 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
       render(<IntakeApp hydrateFromVault />)
       expect(
         await screen.findByText(
-          `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')} ${copy.stalenessPayCheckGateDoor}`,
+          `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')} ${copy.stalenessLeftOverGateDoor}`,
         ),
       ).toBeInTheDocument()
       await affirmGate()
@@ -248,7 +248,7 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
       expect(lines, 'the moved line renders read-only, door sentence and all left off').toContain(
         `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')}`,
       )
-      expect(lines.some((t) => t.includes(copy.stalenessPayCheckGateDoor)), 'no line offers a door the tab cannot open').toBe(false)
+      expect(lines.some((t) => t.includes(copy.stalenessLeftOverGateDoor)), 'no line offers a door the tab cannot open').toBe(false)
     } finally {
       h.model = current
     }
@@ -259,7 +259,7 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
   // `datecoststale`, which stores no answer, so its line is the W step's bare sentence either way, and the
   // `datesavedstale` arms in `reentry.test.tsx` call the core themselves. A call site reverted to the bare
   // sentence would drop the clause from the gate alone, every other test green.
-  it('`datesavedstale`: the gate’s stale-W line is the W step’s sentence, then the clause naming the $16,985 a year not added, then the door', async () => {
+  it('`datesavedstale`: the gate’s stale-W line is the W step’s sentence, the either-way lead in “confirm or change”, “This answer now:” with the $16,985 a year not added, the act’s three exits, then the door', async () => {
     const current = h.model
     h.model = plantedVault(DEV_SEEDS.datesavedstale)
     try {
@@ -271,7 +271,17 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
       // The W step's sentence for a yes to $84,000 the spending fell below ($78,000): no lean (the safe side).
       const sentence = slots.workingCostStaleQuote('84,000', '78,000')
       expect(line, 'the clause rides the gate’s W line').toBe(
-        `${copy.stalenessPayCheckGateLead} ${sentence} ${slots.workingCostStaleLeftOverClause('16,985', '84,000')} ${copy.stalenessPayCheckGateDoor}`,
+        [
+          copy.stalenessPayCheckGateLead,
+          sentence,
+          copy.workingCostStaleEitherWayConfirm,
+          copy.workingCostStaleLabelNow,
+          slots.workingCostStaleAfterWork('78,000'),
+          slots.workingCostStaleLeftOverAnswered('16,985'),
+          copy.workingCostStaleLeftOverNone,
+          slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '78,000'),
+          copy.stalenessPayCheckGateDoor,
+        ].join(' '),
       )
     } finally {
       h.model = current
@@ -281,7 +291,7 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
   // …and the RISEN twin (the U11 walk's (ae)): the gate's W line carries the year-level lean, the clause, and the
   // most a check at the quote adds — year 0 at $90,000, hand-derived (150,000 − 11,475 − 17,540 − 20,000 −
   // 90,000 = $10,985). A call site reverted to the W step's note would drop the clause and the check alone.
-  it('`datesavedrisen`: the gate’s stale-W line is the note (the year-level lean), the clause, then what a check at $90,000 or more adds at most, then the door', async () => {
+  it('`datesavedrisen`: the gate’s stale-W line is the note (the year-level lean), the either-way lead in “update”, “This answer now:”, “If a working year costs $90,000:” with the most updating adds, the act defined, then the update door', async () => {
     const current = h.model
     h.model = plantedVault(DEV_SEEDS.datesavedrisen)
     try {
@@ -295,10 +305,14 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
           copy.stalenessPayCheckGateLead,
           slots.workingCostStaleQuote('84,000', '90,000'),
           slots.workingCostStaleLeftOverYearsCheaper('84,000'),
-          slots.workingCostStaleLeftOverClause('16,985', '84,000'),
-          slots.workingCostStaleLeftOverAtMost('90,000', '10,985', 2026, false),
-          copy.workingCostStaleEitherWay,
-          copy.stalenessPayCheckGateDoor,
+          copy.workingCostStaleEitherWayUpdate,
+          copy.workingCostStaleLabelNow,
+          slots.workingCostStaleLeftOverAnswered('16,985'),
+          copy.workingCostStaleLeftOverNone,
+          slots.workingCostStaleLabelIf('90,000'),
+          slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
+          slots.workingCostStaleDefineUpdate('90,000'),
+          copy.stalenessPayCheckGateDoorUpdate,
         ].join(' '),
       )
     } finally {

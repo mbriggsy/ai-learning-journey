@@ -26,6 +26,7 @@ import { deriveStaleness, PRICING_FAMILY_ORDER, type StalenessExposure, type Sta
 import { exposureForDraft } from '../stalenessExposure'
 import { isWorkingYearCostStale } from '@intake/workingYearQuote'
 import {
+  workingYearCostStaleDoor,
   workingYearCostStaleLine,
   workingYearCostStaleNote,
   workingYearLeftOverMoved,
@@ -359,12 +360,23 @@ describe('composeReentry — the read-back', () => {
     // by the gate's lead, and points at the answer's door only where the tab can save.
     const text = workingYearCostStaleNote(DATE_STALE_W)!
     expect(text, 'the fixture quotes a figure').toMatch(/\$\d/)
-    expect(composeReentry(s, report, { costStale: { text, canChange: true }, leftOverStale: null }).noteLines).toEqual([
+    // The door sentence is the act's own (council `wf_7fa86902-35c`; the act is the caller's, read off the draft):
+    // this fixture's spending rose past its yes, so "update"; the definition, where one is handed over, rides just
+    // before the door, and both only where the tab can save.
+    const DEFINITION = 'A fixture definition naming the W row’s buttons.'
+    expect(composeReentry(s, report, { costStale: { text, act: 'update', definition: null, canChange: true }, leftOverStale: null }).noteLines).toEqual([
+      `${copy.stalenessPayCheckGateLead} ${text} ${copy.stalenessPayCheckGateDoorUpdate}`,
+    ])
+    expect(composeReentry(s, report, { costStale: { text, act: 'update', definition: DEFINITION, canChange: true }, leftOverStale: null }).noteLines).toEqual([
+      `${copy.stalenessPayCheckGateLead} ${text} ${DEFINITION} ${copy.stalenessPayCheckGateDoorUpdate}`,
+    ])
+    expect(composeReentry(s, report, { costStale: { text, act: 'confirmOrChange', definition: null, canChange: true }, leftOverStale: null }).noteLines).toEqual([
       `${copy.stalenessPayCheckGateLead} ${text} ${copy.stalenessPayCheckGateDoor}`,
     ])
-    expect(composeReentry(s, report, { costStale: { text, canChange: false }, leftOverStale: null }).noteLines, 'a read-only tab gets no door it cannot open').toEqual([
-      `${copy.stalenessPayCheckGateLead} ${text}`,
-    ])
+    expect(
+      composeReentry(s, report, { costStale: { text, act: 'update', definition: DEFINITION, canChange: false }, leftOverStale: null }).noteLines,
+      'a read-only tab gets no door it cannot open, and no buttons named to press',
+    ).toEqual([`${copy.stalenessPayCheckGateLead} ${text}`])
     // The figure-less fallback only where no sentence is handed over.
     expect(composeReentry(s, report, NO_SENTENCES).noteLines).toEqual([copy.stalenessWorkingYearCost])
     expect(copy.stalenessWorkingYearCost, 'distinct text — ReEntry keys each note by it').not.toBe(copy.stalenessWorkingYears)
@@ -373,7 +385,7 @@ describe('composeReentry — the read-back', () => {
   it('the pay check: a W that still matches carries no stale line, even handed a sentence (the report decides, never the caller)', () => {
     const fresh = savedDraft(DATE_STALE_W)
     const report = deriveStaleness(fresh, TODAY, exposureForDraft(DATE_STALE_W), { costStale: false, leftOverStale: false })
-    expect(composeReentry(fresh, report, { costStale: { text: 'never rendered', canChange: true }, leftOverStale: null }).noteLines).toEqual([])
+    expect(composeReentry(fresh, report, { costStale: { text: 'never rendered', act: 'update', definition: null, canChange: true }, leftOverStale: null }).noteLines).toEqual([])
   })
 
   it('the pay check: push order — the contribution clock, then the working-years clock, then the stale-answer line', () => {
@@ -404,7 +416,7 @@ describe('composeReentry — the read-back', () => {
     costStale: null,
     leftOverStale: { text: LEFT_OVER_TEXT, clause: LEFT_OVER_CLAUSE, canChange: true },
   }
-  const LEFT_OVER_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_TEXT} ${copy.stalenessPayCheckGateDoor}`
+  const LEFT_OVER_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_TEXT} ${copy.stalenessLeftOverGateDoor}`
   const leftOverReport = (s: CurrentScenario, d: ScenarioDraft, leftOverStale: boolean) =>
     deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale })
 
@@ -555,7 +567,7 @@ describe('composeReentry — the read-back', () => {
       leftOverStale: { text: workingYearLeftOverMovedText(moved), clause: workingYearLeftOverMovedClause(moved), canChange: true },
     })
     expect(view.noteLines).toEqual([
-      `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')} ${copy.stalenessPayCheckGateDoor}`,
+      `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')} ${copy.stalenessLeftOverGateDoor}`,
     ])
   })
 
@@ -565,9 +577,16 @@ describe('composeReentry — the read-back', () => {
     expect(workingYearLeftOverMoved(d), 'waiting on W is never moved').toBeNull()
     const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: false })
     const line = workingYearCostStaleLine(d)
-    expect(line).toBe(`${workingYearCostStaleNote(d)} ${slots.workingCostStaleLeftOverClause('16,985', '84,000')}`)
-    const view = composeReentry(s, report, { costStale: line === null ? null : { text: line, canChange: true }, leftOverStale: null })
-    expect(view.noteLines).toEqual([`${copy.stalenessPayCheckGateLead} ${line} ${copy.stalenessPayCheckGateDoor}`])
+    expect(line).toContain(`${workingYearCostStaleNote(d)} ${copy.workingCostStaleEitherWayConfirm} ${copy.workingCostStaleLabelNow}`)
+    expect(line).toContain(slots.workingCostStaleLeftOverAnswered('16,985'))
+    // The door: "confirm or change" (the spending fell, so the Keep door is real), defined by its three exits.
+    const door = workingYearCostStaleDoor(d)
+    expect(door).toEqual({ act: 'confirmOrChange', definition: slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '78,000') })
+    const view = composeReentry(s, report, {
+      costStale: line === null || door === null ? null : { text: line, act: door.act, definition: door.definition, canChange: true },
+      leftOverStale: null,
+    })
+    expect(view.noteLines).toEqual([`${copy.stalenessPayCheckGateLead} ${line} ${door!.definition} ${copy.stalenessPayCheckGateDoor}`])
     // Under any other answer W's line gains no clause.
     expect(workingYearCostStaleLine(DEV_SEEDS.datecoststale)).toBe(workingYearCostStaleNote(DEV_SEEDS.datecoststale))
   })

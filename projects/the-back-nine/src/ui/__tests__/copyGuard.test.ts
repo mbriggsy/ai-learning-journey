@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { copy, slots, staticDisclosures, HEDGE_TOKENS, type CopyKey } from '../copy'
+import { WORKING_COST_ACT_COPY, copy, slots, staticDisclosures, HEDGE_TOKENS, type CopyKey } from '../copy'
 import {
   lintCopy,
   isVerdictKey,
@@ -10,6 +10,10 @@ import {
   type CopyGate,
 } from '../copyGuard'
 import { HAWK_BAN, LEFT_OVER_LEAN_BAN } from './hawkBan'
+import { DEV_SEEDS } from '../devSeeds'
+import type { ScenarioDraft } from '@store/memoryModel'
+import { workingYearCostStaleDoor, workingYearCostStaleLine } from '@intake/workingYearLeftOver'
+import { heldYesBelowQuote } from '@intake/workingYearQuote'
 
 /** The survival-claim corpus (council wf_6e72eca9-c20) — every phrasing a card could use to sell the
  *  crown as a survival win or a survival tie. Each SURVIVAL_CLAIMS pattern owns at least one sample
@@ -892,16 +896,22 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingLedgerLeftOverAbsentLine: slots.workingLedgerLeftOverAbsentLine('16,985'),
     workingLedgerLeftOverSpentLine: slots.workingLedgerLeftOverSpentLine('16,985'),
     workingLedgerLeftOverNotSureLine: slots.workingLedgerLeftOverNotSureLine('16,985'),
-    workingCostStaleLeftOverClause: slots.workingCostStaleLeftOverClause('16,985', '84,000'),
     workingCostStaleLeftOverYearsCheaper: slots.workingCostStaleLeftOverYearsCheaper('84,000'),
-    workingCostStaleLeftOverAtMost: slots.workingCostStaleLeftOverAtMost('105,000', '5,985', 2026, true),
-    workingCostStaleLeftOverAtMostWhole: slots.workingCostStaleLeftOverAtMostWhole('90,000', '21,537', '16,985', 2026, true),
-    workingCostStaleLeftOverFirstShort: slots.workingCostStaleLeftOverFirstShort('105,000', 2026, '4,015', '16,985'),
-    workingCostStaleLeftOverFirstNone: slots.workingCostStaleLeftOverFirstNone('100,985', 2026, '16,985'),
-    workingCostStaleShortUntilChecked: slots.workingCostStaleShortUntilChecked('84,000'),
-    workingCostStaleShortLaterYear: slots.workingCostStaleShortLaterYear(2029, '4,015', '105,000'),
-    workingCostStaleShortLaterYears: slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '105,000'),
-    workingCostStaleLeftOverFirstShortRun: slots.workingCostStaleLeftOverFirstShortRun('105,000', 2026, 2032, '3,652', '4,015', '16,985'),
+    workingCostStaleLeftOverAnswered: slots.workingCostStaleLeftOverAnswered('16,985'),
+    workingCostStaleAfterWork: slots.workingCostStaleAfterWork('78,000'),
+    workingCostStaleLabelIf: slots.workingCostStaleLabelIf('90,000'),
+    workingCostStaleLeftOverIfCapped: slots.workingCostStaleLeftOverIfCapped('5,985', 2026, '105,000', true),
+    workingCostStaleLeftOverIfWhole: slots.workingCostStaleLeftOverIfWhole('21,537', 2026, '90,000', '16,985', true),
+    workingCostStaleLeftOverGainYears: slots.workingCostStaleLeftOverGainYears(2026, 2028, 2033),
+    workingCostStaleLeftOverIfFirstShort: slots.workingCostStaleLeftOverIfFirstShort(2026, '4,015', '105,000', '84,000', '16,985'),
+    workingCostStaleLeftOverIfFirstShortRun: slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985'),
+    workingCostStaleLeftOverIfFirstNone: slots.workingCostStaleLeftOverIfFirstNone(2026, '100,985', '16,985'),
+    workingCostStaleShortUntilUpdated: slots.workingCostStaleShortUntilUpdated('84,000'),
+    workingCostStaleShortLaterYear: slots.workingCostStaleShortLaterYear(2029, '4,015', '84,000'),
+    workingCostStaleShortLaterYears: slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000'),
+    workingCostStaleDefineUpdate: slots.workingCostStaleDefineUpdate('90,000'),
+    workingCostStaleDefineConfirm: slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '78,000'),
+    workingCostStaleDefineConfirmNoQuote: slots.workingCostStaleDefineConfirmNoQuote('Keep $84,000 a year'),
     stalenessLeftOverMoved: slots.stalenessLeftOverMoved('16,985', '27,537', '16,985'),
     stalenessLeftOverClause: slots.stalenessLeftOverClause('16,985', '27,537', '16,985'),
     workingLedgerEventClaim: slots.workingLedgerEventClaim('Sam'),
@@ -1198,9 +1208,13 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
         'stalenessPayCheckCta',
         'stalenessPayCheckGateLead',
         'stalenessPayCheckGateDoor',
-        // Build 2's moved left over (R12): the lead and the door label of its standing line.
+        // The act's other door words (council `wf_7fa86902-35c`, `WORKING_COST_ACT_COPY`).
+        'stalenessPayCheckCtaUpdate',
+        'stalenessPayCheckGateDoorUpdate',
+        // Build 2's moved left over (R12): the lead and the door label of its standing line, and its gate door.
         'stalenessLeftOverNote',
         'stalenessLeftOverCta',
+        'stalenessLeftOverGateDoor',
         'employerCoverageHelp',
         'oopHelpWorking',
       ].includes(k),
@@ -1260,6 +1274,70 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     for (const required of [slots.workingLedgerLeftOverSavedLine('1'), slots.workingLedgerLeftOverSpentLine('1')]) {
       for (const b of LEFT_OVER_LEAN_BAN) expect(required, `R6's words trip "${b.word}"`).not.toMatch(b.re)
     }
+  })
+
+  // --- THE RETIRED WORDINGS (council `wf_7fa86902-35c`, U11 walk 4). Below today's spending the W row offers no Keep
+  //     door (ruling 34), so no line there may name the act "confirm or change" or "checking" (walk 4's (ba), (az):
+  //     three names for one act, and a door that is not there); and the connectives the council struck must never
+  //     come back anywhere in the catalog's words. Swept over what a reader can see: every catalog string, every
+  //     slot rendered, and every composed line, gate line and door over the stale-W witnesses — never copy.ts's
+  //     comments, which record why the words were retired. ---
+  const RETIRED_EVERYWHERE: readonly RegExp[] = [/\bSo checking\b/, /\binstead of none\b/, /\btakes none of those shortfalls\b/, /\bdoesn[’']t move this answer\b/]
+  const RETIRED_BELOW_QUOTE: readonly RegExp[] = [/\bconfirm or change your\b/i, /\bchecking your figure\b/i]
+  const RISEN = DEV_SEEDS.datesavedrisen
+  const { workingYearLeftOver: _risenAnswer, ...risenNoAnswer } = RISEN
+  const yesOf = RISEN.workingYearCost
+  const STALE_W_WITNESSES: ReadonlyArray<readonly [string, ScenarioDraft]> = [
+    ['datecoststale', DEV_SEEDS.datecoststale],
+    ['datesavedstale', DEV_SEEDS.datesavedstale],
+    ['datesavedrisen', RISEN],
+    ['datesavedrisenshort', DEV_SEEDS.datesavedrisenshort],
+    ['datesavedrisenlater', DEV_SEEDS.datesavedrisenlater],
+    ['risen, whole', { ...RISEN, people: [{ ...RISEN.people[0]!, earnedIncomeReal: 165_000 }, RISEN.people[1]!] }],
+    ['risen, first none', { ...RISEN, annualSpendingReal: 100_985 }],
+    ['risen, no answer', risenNoAnswer],
+    [
+      'risen, kept',
+      yesOf?.kind === 'confirmed'
+        ? { ...RISEN, workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: yesOf.stateTaxReading, keptOverQuoteReal: 84_000 } }
+        : RISEN,
+    ],
+  ]
+  /** What each witness puts in front of a reader: the line, the gate's whole line on a tab that can save (the act's
+   *  definition and door included), and the Result's door label. */
+  const seen = (d: ScenarioDraft): readonly string[] => {
+    const line = workingYearCostStaleLine(d)
+    const door = workingYearCostStaleDoor(d)
+    if (line === null || door === null) throw new Error('[test setup] every witness holds a stale W')
+    const a = WORKING_COST_ACT_COPY[door.act]
+    return [line, [line, ...(door.definition === null ? [] : [door.definition]), copy[a.gateDoor]].join(' '), copy[a.resultDoor]]
+  }
+
+  it('the retired wordings never return: "So checking", "instead of none", "takes none of those shortfalls" and "doesn’t move this answer" in no catalog string, rendered slot or composed line', () => {
+    const strings: (readonly [string, string])[] = [
+      ...(Object.keys(copy) as CopyKey[]).map((k) => [k, copy[k]] as const),
+      ...(Object.keys(SLOT_RENDER) as (keyof typeof slots)[]).map((k) => [k, SLOT_RENDER[k]] as const),
+      ...STALE_W_WITNESSES.flatMap(([label, d]) => seen(d).map((t) => [label, t] as const)),
+    ]
+    expect(strings.length, "the sweep is non-vacuous").toBeGreaterThan(900)
+    for (const [name, text] of strings) for (const re of RETIRED_EVERYWHERE) expect(text, `${name}: ${re}`).not.toMatch(re)
+    // Non-vacuous: each pattern catches the wording it retires.
+    const planted = ['So checking your figure at $90,000 or more adds…', '…adds $10,985 instead of none today.', 'This answer takes none of those shortfalls from your savings.', 'That change alone doesn’t move this answer.']
+    planted.forEach((p, i) => expect(p).toMatch(RETIRED_EVERYWHERE[i]!))
+  })
+
+  it('below today’s spending (no Keep door, ruling 34) no line, gate line or door says “confirm or change your” or “checking your figure”; where the Keep door is real, “confirm or change” is the act', () => {
+    let below = 0
+    for (const [label, d] of STALE_W_WITNESSES) {
+      const texts = seen(d)
+      if (heldYesBelowQuote(d)) {
+        below += 1
+        for (const t of texts) for (const re of RETIRED_BELOW_QUOTE) expect(t, `${label}: ${re}`).not.toMatch(re)
+      } else {
+        expect(texts.join(' '), `${label}: the Keep door is real, so its act is named`).toMatch(/confirm or change your figure/i)
+      }
+    }
+    expect(below, 'the below-quote arm is non-vacuous').toBeGreaterThanOrEqual(7)
   })
 
   it('the Hawk’s ban is non-vacuous here too — every pattern catches its planted corpus', () => {
@@ -1325,18 +1403,24 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.workingLedgerLeftOverAbsentLine(S),
       slots.workingLedgerLeftOverSpentLine(S),
       slots.workingLedgerLeftOverNotSureLine(S),
-      slots.workingCostStaleLeftOverClause(S, S),
+      slots.workingCostStaleLeftOverAnswered(S),
+      slots.workingCostStaleAfterWork(S),
+      slots.workingCostStaleLabelIf(S),
       slots.workingCostStaleLeansBetter(S),
       slots.workingCostStaleLeftOverYearsCheaper(S),
       // A year arg renders through `${}` like the figures: NaN prints no digit, so any digit left is the template's.
-      slots.workingCostStaleLeftOverAtMost(S, S, Number.NaN, true),
-      slots.workingCostStaleLeftOverAtMostWhole(S, S, S, Number.NaN, true),
-      slots.workingCostStaleLeftOverFirstShort(S, Number.NaN, S, S),
-      slots.workingCostStaleLeftOverFirstShortRun(S, Number.NaN, Number.NaN, S, S, S),
-      slots.workingCostStaleLeftOverFirstNone(S, Number.NaN, S),
-      slots.workingCostStaleShortUntilChecked(S),
+      slots.workingCostStaleLeftOverIfCapped(S, Number.NaN, S, true),
+      slots.workingCostStaleLeftOverIfWhole(S, Number.NaN, S, S, true),
+      slots.workingCostStaleLeftOverGainYears(Number.NaN, Number.NaN, Number.NaN),
+      slots.workingCostStaleLeftOverIfFirstShort(Number.NaN, S, S, S, S),
+      slots.workingCostStaleLeftOverIfFirstShortRun(Number.NaN, Number.NaN, S, S, S, S, S),
+      slots.workingCostStaleLeftOverIfFirstNone(Number.NaN, S, S),
+      slots.workingCostStaleShortUntilUpdated(S),
       slots.workingCostStaleShortLaterYear(Number.NaN, S, S),
       slots.workingCostStaleShortLaterYears(Number.NaN, Number.NaN, S, S, S),
+      slots.workingCostStaleDefineUpdate(S),
+      slots.workingCostStaleDefineConfirm(S, S),
+      slots.workingCostStaleDefineConfirmNoQuote(S),
       slots.stalenessLeftOverMoved(S, S, S),
       slots.stalenessLeftOverClause(S, S, S),
       slots.assumptionWorkingCostConfirmed(S),
@@ -1616,7 +1700,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:934-944, 822-839), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:945-955, 822-839), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

@@ -5,6 +5,7 @@ import { readdirSync, readFileSync, symlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpRoot } from "../bench/testkit.mjs";
+import { INLINABLE } from "./make-scripts.mjs";
 
 const lib = dirname(fileURLToPath(import.meta.url));
 const skill = dirname(lib);
@@ -19,14 +20,14 @@ const COMMANDS = FOLDERS.flatMap((f) =>
     .filter((n) => readFileSync(join(skill, f, n), "utf8").includes("isMain(import.meta.url)"))
     .map((n) => join(f, n)),
 );
-// The modules U5's generator inlines into Workflow scripts.
-const INLINED = ["vote-law.mjs", "select.mjs", "caps.mjs", "prompts.mjs"];
+// The modules U5's generator inlines into Workflow scripts, read from the generator itself.
+const INLINED = INLINABLE.map((n) => `${n}.mjs`);
 
 // KTD1: the brief bench's commands ran as silent no-ops through the ~/.claude/skills junction
 // until ee67c08a. Every command, run through a linked folder with no arguments, prints its usage
 // and exits non-zero.
 test("each command run through a linked folder with no arguments prints its usage and exits non-zero", (t) => {
-  for (const known of ["lib/fold.mjs", "lib/flow.mjs", "bench/freeze.mjs", "bench/launch.mjs", "bench/shortpath.mjs", "bench/transcripts.mjs", "bench/window.mjs", "bench/secrets.mjs", "bench/probe/probe.mjs"]) {
+  for (const known of ["lib/fold.mjs", "lib/flow.mjs", "lib/make-scripts.mjs", "bench/freeze.mjs", "bench/launch.mjs", "bench/shortpath.mjs", "bench/transcripts.mjs", "bench/window.mjs", "bench/secrets.mjs", "bench/probe/probe.mjs"]) {
     assert.ok(COMMANDS.includes(join(...known.split("/"))), `${known} was not found as a command`);
   }
   const link = join(tmpRoot(t), "linked-skill");

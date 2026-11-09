@@ -167,6 +167,12 @@ import type { WorkingYearLeftOverKind } from '../src/shared/model'
  *    `seed:`/`vault:datesavedrisenlater` (a later working year short at the quote, named). Each rides
  *    LEFT_OVER_WITNESSES (`risenWitness`).
  *
+ * Increment 12 (2026-11-09, U11 walk 6):
+ *  - `intake:typedbelow` — the Tier 0 retype entry's note (a TYPED W below today's spending), shipped in walk 5's
+ *    round and rendered on no seed or vault route: `datesavedrisen`'s Result → its door → the panel's W row → the
+ *    old $84,000 typed back in (`walkIntakeTypedBelow`'s docblock names its three states). The kept walk's re-run
+ *    watch moved to module scope (`armResultRerunWatch` / `expectResultRerun`) so both walks share it.
+ *
  * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
  * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
  */
@@ -1482,6 +1488,59 @@ const KEPT_W_MONTHLY = '7,000'
  *  re-walks. */
 const KEPT_TEST_MS = 10 * FINAL_TIER_MS + 180_000
 
+/** The settled final Result (the kept and typed-below walks read it). */
+const settledResult = (page: Page) => page.locator('main.result[data-answer-tier="final"][data-inframe-disclaimer]')
+
+/** The re-run watch (`walkIntakeKept`'s comment at its call site says why it watches two signals). Armed just
+ *  before a panel's LAST edit: it records the Result behind the sheet leaving its settled final frame, or the
+ *  verdict's own words changing. */
+async function armResultRerunWatch(page: Page): Promise<void> {
+  await expect(settledResult(page), 'an earlier edit’s re-run never settled').toBeAttached({ timeout: FINAL_TIER_MS })
+  await page.evaluate(() => {
+    const w = window as unknown as { __caddieRerun?: boolean; __caddieTierLog?: string[] }
+    const verdict = (): string => {
+      const h = document.querySelector('main.result h2')
+      return h === null ? '' : `${h.textContent ?? ''} | ${h.nextElementSibling?.textContent ?? ''}`
+    }
+    const before = verdict()
+    if (before === '') throw new Error('the re-run watch found no verdict heading on the Result')
+    w.__caddieRerun = false
+    w.__caddieTierLog = []
+    new MutationObserver(() => {
+      const m = document.querySelector('main.result')
+      const tier = m === null ? 'no-main' : `${m.getAttribute('data-answer-tier')}/${m.hasAttribute('data-inframe-disclaimer')}`
+      const now = verdict()
+      w.__caddieTierLog!.push(`${Math.round(performance.now())}:${tier}${now === before ? '' : ':moved'}`)
+      if (m === null || m.getAttribute('data-answer-tier') !== 'final' || !m.hasAttribute('data-inframe-disclaimer') || now !== before) {
+        w.__caddieRerun = true
+      }
+    }).observe(document.body, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['data-answer-tier', 'data-inframe-disclaimer'],
+    })
+  })
+}
+
+/** Passes once the watch armed by `armResultRerunWatch` has seen the edit's re-run start; on a miss it prints the
+ *  history the watcher recorded, labelled with the walk. */
+async function expectResultRerun(page: Page, walk: string): Promise<void> {
+  try {
+    await expect
+      .poll(() => page.evaluate(() => (window as unknown as { __caddieRerun?: boolean }).__caddieRerun), {
+        message: 'the panel edit started no re-run behind the sheet',
+        timeout: FINAL_TIER_MS,
+      })
+      .toBe(true)
+  } catch (e) {
+    const history = await page.evaluate(() => (window as unknown as { __caddieTierLog?: string[] }).__caddieTierLog ?? [])
+    console.log(`[${walk}] the Result's tier since the watch was armed (ms:tier/settled): ${history.slice(0, 40).join(' ')}`)
+    throw e
+  }
+}
+
 /**
  * The KEPT walk (increment 10 — `intake:kept`; the header names what it is for). Every branch starts from a
  * fresh `datecoststale` landing: a yes to $84,000 stale over a FALLEN quote ($78,000), so the panel's W row
@@ -1552,35 +1611,7 @@ async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
   // never leaving "final" (measured in walk 1's branch B: the hero moved from a date to "No fuck-off date"
   // with every tier read "final") — the verdict's own words change: the hero heading and the line under it,
   // which only a run writes (the standing line under them reads the draft and moves at the edit itself).
-  const armRerunWatch = async (): Promise<void> => {
-    await expect(settled, 'an earlier edit’s re-run never settled').toBeAttached({ timeout: FINAL_TIER_MS })
-    await page.evaluate(() => {
-      const w = window as unknown as { __caddieRerun?: boolean; __caddieTierLog?: string[] }
-      const verdict = (): string => {
-        const h = document.querySelector('main.result h2')
-        return h === null ? '' : `${h.textContent ?? ''} | ${h.nextElementSibling?.textContent ?? ''}`
-      }
-      const before = verdict()
-      if (before === '') throw new Error('the re-run watch found no verdict heading on the Result')
-      w.__caddieRerun = false
-      w.__caddieTierLog = []
-      new MutationObserver(() => {
-        const m = document.querySelector('main.result')
-        const tier = m === null ? 'no-main' : `${m.getAttribute('data-answer-tier')}/${m.hasAttribute('data-inframe-disclaimer')}`
-        const now = verdict()
-        w.__caddieTierLog!.push(`${Math.round(performance.now())}:${tier}${now === before ? '' : ':moved'}`)
-        if (m === null || m.getAttribute('data-answer-tier') !== 'final' || !m.hasAttribute('data-inframe-disclaimer') || now !== before) {
-          w.__caddieRerun = true
-        }
-      }).observe(document.body, {
-        subtree: true,
-        childList: true,
-        characterData: true,
-        attributes: true,
-        attributeFilter: ['data-answer-tier', 'data-inframe-disclaimer'],
-      })
-    })
-  }
+  const armRerunWatch = (): Promise<void> => armResultRerunWatch(page)
   // Closes the panel onto the Result and reads its one standing line, which reads the draft and so moves at the
   // edit itself, with no run needed for it.
   const closePanel = async (dialog: ReturnType<Page['getByRole']>, line: string): Promise<void> => {
@@ -1594,18 +1625,7 @@ async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
   // On a household with no date in the window the re-run's sweep tries every candidate year, so the wait is
   // a final-tier budget, and a miss prints the history the watcher recorded.
   const closeToResult = async (dialog: ReturnType<Page['getByRole']>, line: string): Promise<void> => {
-    try {
-      await expect
-        .poll(() => page.evaluate(() => (window as unknown as { __caddieRerun?: boolean }).__caddieRerun), {
-          message: 'the panel edit started no re-run behind the sheet',
-          timeout: FINAL_TIER_MS,
-        })
-        .toBe(true)
-    } catch (e) {
-      const history = await page.evaluate(() => (window as unknown as { __caddieTierLog?: string[] }).__caddieTierLog ?? [])
-      console.log(`[intake:kept] the Result's tier since the watch was armed (ms:tier/settled): ${history.slice(0, 40).join(' ')}`)
-      throw e
-    }
+    await expectResultRerun(page, 'intake:kept')
     await closePanel(dialog, line)
   }
 
@@ -1685,6 +1705,56 @@ async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
     await expect(page.getByRole('alert')).toContainText(slots.errWorkingCostStaleKeep(slots.workingCostKeepYearly(KEPT_W)))
     await captureState(page, path.join(outDir, 'walk-kept-stale-state-blocked'))
   }
+}
+
+/** The typed-below walk's budget: two fresh landings' settles, the edit's re-run and its final frame, at
+ *  FINAL_TIER_MS each, plus two minutes for its three captures per viewport and the re-walk. */
+const TYPED_BELOW_TEST_MS = 4 * FINAL_TIER_MS + 120_000
+
+/**
+ * The TYPED-BELOW walk (increment 12 — `intake:typedbelow`, U11 walk 6): the note the Tier 0 retype entry's
+ * prescription (1) shipped in walk 5's round (`workingYearCostTypedBelowNote`: a TYPED figure below today's
+ * spending, both figures and the lean) renders on no seed or vault route, so no walk had read it. Reached the way a
+ * household reaches it: `datesavedrisen`'s Result (a yes to $84,000, stale under a $90,000 spending figure, "All of
+ * it" saved) → its standing line's door → the panel's W row → "No — I'll enter a different figure", "Each year"
+ * tapped first (the untapped unit is a month, KTD17), and the old $84,000 typed back in.
+ *  - `panel-typed-below`: the row, the note under it;
+ *  - `result-typed-below`: the Result after that edit's re-run (the re-run watch the kept walk uses) — the standing
+ *    line gone, since a typed figure carries no stamp;
+ *  - `walk-typed-below`: the re-walk's W step, the same note on the walk's host.
+ * Every sentence asserted is the shipped slot over the seed's own figures.
+ */
+async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
+  const note = slots.workingCostBelowSpending(STALE_W_CONFIRMED, RISEN_W_QUOTE_NOW, true)
+  await gotoSeedFinal(page, 'datesavedrisen')
+  await page.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+  const face = row.locator('.working-cost')
+  const different = face.getByRole('radio', { name: copy.workingCostDifferent, exact: true })
+  await different.evaluate((el) => (el as HTMLInputElement).click())
+  await expect(different, 'the different-figure radio did not commit').toBeChecked()
+  const year = face.getByRole('radio', { name: copy.periodYear })
+  await year.evaluate((el) => (el as HTMLInputElement).click())
+  await expect(year, 'the year tap did not commit').toBeChecked()
+  await armResultRerunWatch(page)
+  await typeFieldValue(face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true }), '84000', STALE_W_CONFIRMED)
+  await expect(face.getByText(note, { exact: true }), 'the typed-below note under the row').toBeVisible()
+  await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
+  await captureState(page, path.join(outDir, 'panel-typed-below'))
+  await expectResultRerun(page, 'intake:typedbelow')
+  await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
+  await expect(dialog).toBeHidden()
+  await expect(settledResult(page)).toBeAttached({ timeout: FINAL_TIER_MS })
+  await expect(page.locator('.cs-paycheck-note'), 'a typed figure carries no stamp: no standing line').toHaveCount(0)
+  await captureState(page, path.join(outDir, 'result-typed-below'))
+  await page.locator('[data-door="assumptions"]').click()
+  await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
+  await advanceIntakeTo(page, copy.qWorkingCostHeading, 'intake:typedbelow')
+  const step = page.locator('.intake-shell .working-cost')
+  await expect(step.getByText(note, { exact: true }), 'the same note on the walk’s W step').toBeVisible()
+  await captureState(page, path.join(outDir, 'walk-typed-below'))
 }
 
 /**
@@ -1834,6 +1904,7 @@ for (const target of TARGETS) {
         // `intake:kept` waits on a final-tier budget eight times by design (KEPT_TEST_MS names them), each budgeted
         // FINAL_TIER_MS, plus its nine captures and a re-walk.
         if (target.kind === 'intake' && target.key === 'kept') test.setTimeout(KEPT_TEST_MS)
+        if (target.kind === 'intake' && target.key === 'typedbelow') test.setTimeout(TYPED_BELOW_TEST_MS)
         const consoleLog = hookConsole(page)
         const outDir = path.join(OUT_ROOT, targetSlug, v.name)
         if (target.kind === 'vault') {
@@ -1882,7 +1953,8 @@ for (const target of TARGETS) {
           else if (target.key === 'paycheck') await walkIntakePaycheck(page, outDir)
           else if (target.key === 'leftover') await walkIntakeLeftOver(page, outDir)
           else if (target.key === 'kept') await walkIntakeKept(page, outDir)
-          else throw new Error(`unknown intake walk "${target.key}" — intake:fork, intake:paycheck, intake:leftover and intake:kept exist`)
+          else if (target.key === 'typedbelow') await walkIntakeTypedBelow(page, outDir)
+          else throw new Error(`unknown intake walk "${target.key}" — intake:fork, intake:paycheck, intake:leftover, intake:kept and intake:typedbelow exist`)
         } else if (target.kind === 'solve') {
           await walkSolve(page, target.key, outDir)
         } else {

@@ -26,6 +26,7 @@ import { useEffect, useRef } from 'react'
 import { focusHeading } from '@intake/a11y'
 import { copy } from './copy'
 import type { ReentryView } from './reentryChrome'
+import { NotePartsBody } from './NotePartsBody'
 
 export interface ReEntryProps {
   readonly view: ReentryView
@@ -78,11 +79,19 @@ export function ReEntry({ view, readOnly, onAffirm, onUpdate }: ReEntryProps) {
           {view.elapsedLine !== null && <p className="save-step__note">{view.elapsedLine}</p>}
           {view.noteLines.length > 0 && (
             <div className="reentry-notes">
-              {view.noteLines.map((line) => (
-                <p key={line} className="save-step__note save-field__note--block">
-                  {line}
-                </p>
-              ))}
+              {/* Keyed by each note's text (composeReentry pushes each at most once); W's stale line is
+                  drawn from its parts, its labels as structure (U11 walk 5's (bi)). */}
+              {view.noteLines.map((line) =>
+                typeof line === 'string' ? (
+                  <p key={line} className="save-step__note save-field__note--block">
+                    {line}
+                  </p>
+                ) : (
+                  <p key={line.text} className="save-step__note save-field__note--block">
+                    <NotePartsBody parts={line.parts} />
+                  </p>
+                ),
+              )}
             </div>
           )}
         </div>

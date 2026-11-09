@@ -254,7 +254,7 @@ describe('the R7 registry completeness walk (the compile gate’s runtime half)'
     // ⚠️ NON-VACUITY CENSUS — the only assertion in this arm lives INSIDE the loop, so an empty
     // (or silently-shrunken) roster passes GREEN while proving nothing, and the R7 completeness
     // claim evaporates with the gate still reporting OK. `requiredSeats()` derives from TWO
-    // sources (`assumptionRegistry.ts:376-383`: the non-`internal` DRAFT_DISPOSITIONS, plus
+    // sources (`assumptionRegistry.ts:385-392`: the non-`internal` DRAFT_DISPOSITIONS, plus
     // METHODOLOGY_DISCLOSURES), so census BOTH — either half dropping out would otherwise be
     // invisible here.
     const seats = requiredSeats()
@@ -1002,7 +1002,7 @@ describe('the W row — four faces, one question (U8)', () => {
     renderPanel({ snapshot: snap(mixedDraft) })
     expect(within(row()).getByText(copy.assumptionWorkingCostUnanswered)).toBeInTheDocument()
     expect(within(row()).getByText(slots.workingCostQuoteMonthly('8,000', '96,000'))).toBeInTheDocument()
-    expect(within(row()).getByRole('radiogroup', { name: copy.workingCostLegend })).toBeInTheDocument()
+    expect(within(row()).getByRole('radiogroup', { name: /^Is \$[\d,.]+ a year about what a year costs while you’re working\?$/ })).toBeInTheDocument()
     expect(within(row()).queryByRole('heading', { name: copy.workingLedgerComingIn })).toBeNull()
     expect(document.body.textContent).not.toContain(copy.errWorkingCostUnanswered)
   })
@@ -1045,7 +1045,7 @@ describe('the W row — four faces, one question (U8)', () => {
     expect(within(row()).getByText(`${copy.answerCannotPrice} ${copy.employerCoverageUnpriced}`)).toBeInTheDocument()
     expect(within(row()).queryByText(copy.workingLedgerUnknownSeeStrip)).toBeNull()
     expect(within(row()).queryByRole('heading', { name: copy.workingLedgerComingIn })).toBeNull()
-    expect(within(row()).getByRole('radiogroup', { name: copy.workingCostLegend })).toBeInTheDocument()
+    expect(within(row()).getByRole('radiogroup', { name: /^Is \$[\d,.]+ a year about what a year costs while you’re working\?$/ })).toBeInTheDocument()
   })
 
   it('the row is the date route’s alone — an all-retired household has no W row', () => {
@@ -1499,14 +1499,16 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     // The W row is stale (its note is up), so the seat waits on it.
     expect(within(wRow()).getByRole('note')).toBeInTheDocument()
     expect(within(seat()).getByText(copy.assumptionWorkingCostLeftOverName)).toBeInTheDocument()
-    expect(within(seat()).getByText(copy.workingLedgerLeftOverWaiting)).toBeInTheDocument()
+    // The spending fell below the yes, so the Keep door is real: "confirm or change" (U11 walk 5's (bn)).
+    expect(within(seat()).getByText(copy.workingLedgerLeftOverWaitingConfirm)).toBeInTheDocument()
+    expect(within(seat()).queryByText(copy.workingLedgerLeftOverWaitingUpdate)).toBeNull()
     expect(within(seat()).queryAllByRole('radio'), 'no reply can be stored against a stale W').toHaveLength(0)
     expect(within(seat()).queryByText(slots.workingLedgerLeftOverFigure('16,985'))).toBeNull()
   })
 
   it('…and the positive twin: the same household with W fresh (`date`) shows the radios and no waiting line', () => {
     renderPanel({ snapshot: snap(DEV_SEEDS.date) })
-    expect(within(seat()).queryByText(copy.workingLedgerLeftOverWaiting)).toBeNull()
+    expect(within(seat()).queryByText(/This question waits until you/)).toBeNull()
     expect(within(seat()).getAllByRole('radio')).toHaveLength(3)
   })
 
@@ -1518,7 +1520,7 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     // The stored figure, dated, as "This answer now:" names it (council `wf_7fa86902-35c`).
     const clause = slots.workingCostStaleLeftOverAnswered('16,985')
     // The positive twin: on this draft the clause is real, and W's one stale line on the Result carries it.
-    expect(workingYearCostStaleLine(DEV_SEEDS.datesavedstale), 'the Result’s line carries the clause').toContain(clause)
+    expect(workingYearCostStaleLine(DEV_SEEDS.datesavedstale)?.segments[0]?.sentences, 'the Result’s line carries the clause').toContain(clause)
     renderPanel({ snapshot: snap(DEV_SEEDS.datesavedstale) })
     const note = within(wRow()).getByRole('note')
     expect(note.textContent, 'the note names the spending that moved').toContain(slots.workingCostStaleQuote('84,000', '78,000'))
@@ -1536,7 +1538,8 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     expect(note.textContent, 'no whole-answer lean for a "saved" answer waiting on W').not.toContain(slots.workingCostStaleLeansBetter('84,000'))
     expect(note.textContent, 'no clause on the W row').not.toContain(slots.workingCostStaleLeftOverAnswered('16,985'))
     expect(note.textContent, 'no figure at the quote in the fork’s description (the red team’s attack 4)').not.toContain('10,985')
-    expect(within(seat()).getByText(copy.workingLedgerLeftOverWaiting)).toBeInTheDocument()
+    // Below today's spending there is no Keep door: "update" (U11 walk 5's (bn)).
+    expect(within(seat()).getByText(copy.workingLedgerLeftOverWaitingUpdate)).toBeInTheDocument()
     expect(within(seat()).queryAllByRole('radio')).toHaveLength(0)
   })
 
@@ -1660,7 +1663,7 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     const reply = writes.mock.calls.at(-1)![0] as (d: ScenarioDraft) => ScenarioDraft
     expect(reply(DEV_SEEDS.date).workingYearLeftOver).toEqual({ kind: 'saved', quotedReal: 16_985 })
     writes.mockRestore()
-    expect(within(seat()).getByText(copy.workingLedgerLeftOverWaiting)).toBeInTheDocument()
+    expect(within(seat()).getByText(copy.workingLedgerLeftOverWaitingConfirm)).toBeInTheDocument()
     expect(within(seat()).queryAllByRole('radio')).toHaveLength(0)
   })
 
@@ -1701,7 +1704,7 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
 describe('the working-year methodology row reads exactly one left-over line, its shown state’s (U8; KTD11)', () => {
   const LEFT_OVER_LINES = {
     'not-asked': 'assumptionWorkingYearCheckLeftOverNotAsked',
-    'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaiting',
+    'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaitingConfirm',
     absent: 'assumptionWorkingYearCheckLeftOverAbsent',
     saved: 'assumptionWorkingYearCheckLeftOverSaved',
     'saved-moved': 'assumptionWorkingYearCheckLeftOverSavedMoved',
@@ -1734,6 +1737,13 @@ describe('the working-year methodology row reads exactly one left-over line, its
   ] as const)('`%s` reads the %s line and no other', (key, expected) => {
     renderPanel({ snapshot: snap(DEV_SEEDS[key]) })
     expectOnlyLine(expected, key)
+  })
+
+  it('`datesavedrisen` (the spending ROSE past the yes, so the act is "update": no Keep door below the quote) reads the waiting line in "update", and none of the seven above (U11 walk 5’s (bn); the round review: both waiting witnesses above are "confirm or change")', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datesavedrisen) })
+    expect(within(methodRow()).getByText(copy.assumptionWorkingYearCheckValue), 'the W arm renders').toBeInTheDocument()
+    expect(within(methodRow()).getByText('Until you update your figure for a working year, no money left over is added to your savings.')).toBeInTheDocument()
+    for (const [state, key] of Object.entries(LEFT_OVER_LINES)) expect(within(methodRow()).queryByText(copy[key]), state).toBeNull()
   })
 
   it('a stored "saved" whose printed figure fell to $0 reads the not-asked line and loses its seat; at $1 it reads the moved line (R5’s printed-$1 floor)', () => {

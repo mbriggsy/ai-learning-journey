@@ -243,22 +243,27 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     if (entry === undefined) throw new Error('[test setup] no working-year-tax row in METHODOLOGY_DISCLOSURES')
     return entry
   }
-  const wArmStrings = (): readonly string[] => [copy[row().nameKey], ...methodologyLines(row(), 'workingCost', 'agi-derived', 'absent').map((k) => copy[k])]
+  const wArmStrings = (): readonly string[] => [copy[row().nameKey], ...methodologyLines(row(), 'workingCost', 'agi-derived', 'absent', 'update').map((k) => copy[k])]
 
-  /** Build 2's left-over family, typed by hand: each shown state's own line (KTD11). */
+  /** Build 2's left-over family, typed by hand: each shown state's own line (KTD11) — "waiting on W" in the act's
+   *  verb since U11 walk 5's (bn), one line per act (the update act's here; `LEFT_OVER_LINE_CONFIRM` below). */
   const LEFT_OVER_LINE: Readonly<Record<LeftOverShownState, string>> = {
     'not-asked': 'assumptionWorkingYearCheckLeftOverNotAsked',
-    'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaiting',
+    'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaitingUpdate',
     absent: 'assumptionWorkingYearCheckLeftOverAbsent',
     saved: 'assumptionWorkingYearCheckLeftOverSaved',
     'saved-moved': 'assumptionWorkingYearCheckLeftOverSavedMoved',
     spent: 'assumptionWorkingYearCheckLeftOverSpent',
     'not-sure': 'assumptionWorkingYearCheckLeftOverNotSure',
   }
+  const LEFT_OVER_LINE_CONFIRM: Readonly<Record<LeftOverShownState, string>> = {
+    ...LEFT_OVER_LINE,
+    'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaitingConfirm',
+  }
 
   it('the W-absent arm is today’s row, verbatim (KTD22) — under every reading and every left-over state', () => {
     for (const s of LEFT_OVER_SHOWN_STATES) {
-      expect(methodologyLines(row(), 'default', 'agi-derived', s), s).toEqual([
+      expect(methodologyLines(row(), 'default', 'agi-derived', s, 'update'), s).toEqual([
         'assumptionWorkingYearTaxValue',
         'assumptionWorkingYearTaxReadings',
         'assumptionWorkingYearTaxOmissions',
@@ -267,25 +272,34 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
   })
 
   it('the W arm renders the rewrite, the two unchanged paragraphs, then every gap key in the pinned order', () => {
-    expect(methodologyLines(row(), 'workingCost', 'agi-derived', 'absent')).toEqual(W_ARM)
+    expect(methodologyLines(row(), 'workingCost', 'agi-derived', 'absent', 'update')).toEqual(W_ARM)
   })
 
   it('BUILD 2: the W arm lists no K9; each of the seven shown states reads its OWN static line, in K9’s old slot, and only that one', () => {
     expect(copy).not.toHaveProperty('assumptionWorkingYearCheckLeftOver')
     const k9Slot = W_ARM.indexOf('assumptionWorkingYearCheckLeftOverAbsent')
     expect(k9Slot, 'between the either-way group and the a-little-worse group').toBe(W_ARM.indexOf('assumptionWorkingYearCheckWageFigures') + 1)
-    for (const s of LEFT_OVER_SHOWN_STATES) {
-      const expected = W_ARM.map((k, i) => (i === k9Slot ? LEFT_OVER_LINE[s] : k))
-      expect(methodologyLines(row(), 'workingCost', 'agi-derived', s), s).toEqual(expected)
+    for (const [act, lines] of [['update', LEFT_OVER_LINE], ['confirmOrChange', LEFT_OVER_LINE_CONFIRM]] as const) {
+      for (const s of LEFT_OVER_SHOWN_STATES) {
+        const expected = W_ARM.map((k, i) => (i === k9Slot ? lines[s] : k))
+        expect(methodologyLines(row(), 'workingCost', 'agi-derived', s, act), `${s} (${act})`).toEqual(expected)
+      }
     }
     expect(new Set(Object.values(LEFT_OVER_LINE)).size, 'seven distinct lines').toBe(7)
+    expect(LEFT_OVER_LINE_CONFIRM['waiting-on-w'], 'the act changes only the waiting line').not.toBe(LEFT_OVER_LINE['waiting-on-w'])
     // The selector without the shown state fails to compile (KTD11: REQUIRED, never defaulted).
-    // @ts-expect-error — the fourth argument is required
-    methodologyLines(row(), 'workingCost', 'agi-derived')
+    // Compile-time arms only, never called (the selector reads the act's Record, which an absent argument cannot index).
+    const _compileOnly = (): void => {
+      // @ts-expect-error — the fourth and fifth arguments are required
+      methodologyLines(row(), 'workingCost', 'agi-derived')
+      // @ts-expect-error — the act is required too
+      methodologyLines(row(), 'workingCost', 'agi-derived', 'absent')
+    }
+    void _compileOnly
   })
 
   it('BUILD 2: no left-over line carries a dollar figure or a digit, and none names a lean (R14, R16)', () => {
-    for (const k of Object.values(LEFT_OVER_LINE)) {
+    for (const k of new Set([...Object.values(LEFT_OVER_LINE), ...Object.values(LEFT_OVER_LINE_CONFIRM)])) {
       const s = copy[k as keyof typeof copy]
       expect(s, k).not.toMatch(/\$|\d/)
       expect(lintCopy(s, ['free-numeral']), k).toEqual([])
@@ -305,24 +319,24 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     const inW = 'assumptionWorkingYearCheckStateTaxInW'
     // The rosy two sit after K5, in the "looks better" group; NC's either-way sentence sits after K6.
     const at = (key: string): readonly string[] => [...W_ARM.slice(0, 8), key, ...W_ARM.slice(8).filter((k) => k !== k7)]
-    expect(methodologyLines(row(), 'workingCost', 'none', 'absent')).toEqual(at(noTax))
-    expect(methodologyLines(row(), 'workingCost', 'class-based', 'absent')).toEqual(at(inW))
-    expect(methodologyLines(row(), 'workingCost', 'unpriced', 'absent')).toEqual(at(inW))
+    expect(methodologyLines(row(), 'workingCost', 'none', 'absent', 'update')).toEqual(at(noTax))
+    expect(methodologyLines(row(), 'workingCost', 'class-based', 'absent', 'update')).toEqual(at(inW))
+    expect(methodologyLines(row(), 'workingCost', 'unpriced', 'absent', 'update')).toEqual(at(inW))
     for (const reading of ['none', 'class-based', 'unpriced'] as const) {
-      const text = copy[methodologyLines(row(), 'workingCost', reading, 'absent')[8] as keyof typeof copy]
+      const text = copy[methodologyLines(row(), 'workingCost', reading, 'absent', 'update')[8] as keyof typeof copy]
       expect(text, reading).toMatch(/the answer looks better than it really is/)
       expect(text, reading).not.toMatch(/either way/)
     }
     // Today's row never carried any of them, under any reading.
     for (const reading of ['agi-derived', 'none', 'unpriced', 'class-based'] as const) {
-      for (const k of [k7, noTax, inW]) expect(methodologyLines(row(), 'default', reading, 'absent')).not.toContain(k)
+      for (const k of [k7, noTax, inW]) expect(methodologyLines(row(), 'default', reading, 'absent', 'update')).not.toContain(k)
     }
   })
 
   it('a row with no W arm reads its own lines on both arms', () => {
     for (const m of METHODOLOGY_DISCLOSURES.filter((x) => x.id !== 'working-year-tax')) {
       expect(m.workingCostLineKeys, `${m.id} carries no W arm`).toBeUndefined()
-      expect(methodologyLines(m, 'workingCost', 'agi-derived', 'saved')).toEqual(m.lineKeys)
+      expect(methodologyLines(m, 'workingCost', 'agi-derived', 'saved', 'update')).toEqual(m.lineKeys)
     }
   })
 
@@ -393,6 +407,6 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
       ...worse,
       'assumptionWorkingYearCheckLeftOverAbsent',
     ])
-    expect(methodologyLines(row(), 'workingCost', 'agi-derived', 'absent').slice(3).filter((k) => !grouped.has(k))).toEqual([])
+    expect(methodologyLines(row(), 'workingCost', 'agi-derived', 'absent', 'update').slice(3).filter((k) => !grouped.has(k))).toEqual([])
   })
 })

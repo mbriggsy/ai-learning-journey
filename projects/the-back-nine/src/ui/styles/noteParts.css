@@ -1,0 +1,6 @@
+/* A standing note's run-in labels (U11 walk 5's (bi), `NotePartsBody`): the body's semibold, in the note's own size
+   and ink — weight is the one signal, never color (the reader is color-blind) and never a size step (the labels are
+   structure inside one calm paragraph, not headings). `strong`'s default `bolder` would land on 700. */
+.note-parts__label {
+  font-weight: var(--weight-semibold);
+}

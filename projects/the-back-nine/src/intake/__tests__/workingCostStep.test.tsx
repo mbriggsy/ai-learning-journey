@@ -178,7 +178,7 @@ describe('the pay check’s steps in the sequence (KTD17)', () => {
     expect(heading(), 'hidden: the step still renders').toBe(copy.qWorkingLedgerHeading)
     // Hidden because year 0 is short, not because W went stale (that face is the waiting line).
     expect(screen.getByText(copy.workingLedgerShort)).toBeInTheDocument()
-    expect(screen.queryByText(copy.workingLedgerLeftOverWaiting)).toBeNull()
+    expect(screen.queryByText(/This question waits until you/)).toBeNull()
     expect(queryLeftOverGroup(), 'hidden').toBeNull()
     cleanup()
     for (const [name, d] of shown) {
@@ -204,11 +204,11 @@ describe('the W step — the quote, the gate and "yes" (KTD3, KTD5)', () => {
     render(<Harness model={modelWith(dateNoW())} />)
     expect(heading()).toBe(copy.qWorkingCostHeading)
     expect(screen.getByText(slots.workingCostQuoteMonthly('7,000', '84,000'))).toBeInTheDocument()
-    const group = screen.getByRole('radiogroup', { name: copy.workingCostLegend })
+    const group = screen.getByRole('radiogroup', { name: /^Is \$[\d,.]+ a year about what a year costs while you’re working\?$/ })
     expect(within(group).getByRole('radio', { name: copy.workingCostYes })).not.toBeChecked()
     expect(within(group).getByRole('radio', { name: copy.workingCostDifferent })).not.toBeChecked()
-    // The legend never carries the figure (KTD17).
-    expect(copy.workingCostLegend).not.toMatch(/\d/)
+    // The legend names the figure "Yes" sets, the yearly quote (copy-law F8 at U11 walk 5).
+    expect(group).toHaveAccessibleName(slots.workingCostLegendFigure('84,000'))
   })
 
   it('no alert before the first Continue; a blocked Continue shows the gate on the fork, with aria-invalid', () => {
@@ -218,7 +218,7 @@ describe('the W step — the quote, the gate and "yes" (KTD3, KTD5)', () => {
     next()
     expect(heading()).toBe(copy.qWorkingCostHeading) // blocked
     expect(screen.getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
-    const group = screen.getByRole('radiogroup', { name: copy.workingCostLegend })
+    const group = screen.getByRole('radiogroup', { name: /^Is \$[\d,.]+ a year about what a year costs while you’re working\?$/ })
     expect(group).toHaveAttribute('aria-invalid', 'true')
     expect(group).toHaveAttribute('aria-required', 'true')
     const described = (group.getAttribute('aria-describedby') ?? '').split(' ')
@@ -234,7 +234,7 @@ describe('the W step — the quote, the gate and "yes" (KTD3, KTD5)', () => {
     pick('workingCostYes')
     expect(w(m)).toEqual(confirmed(84_000))
     expect(screen.queryByRole('alert')).toBeNull()
-    expect(screen.getByRole('radiogroup', { name: copy.workingCostLegend })).not.toHaveAttribute('aria-invalid')
+    expect(screen.getByRole('radiogroup', { name: /^Is \$[\d,.]+ a year about what a year costs while you’re working\?$/ })).not.toHaveAttribute('aria-invalid')
     next()
     expect(heading()).toBe(copy.qWorkingLedgerHeading)
   })
@@ -564,7 +564,7 @@ describe('the W step — the fork’s own words, read before any Continue (forms
 
   it('the fork names the figure it offers and says it is required, with no alert yet', () => {
     render(<Harness model={modelWith(dateNoW())} />)
-    const group = screen.getByRole('radiogroup', { name: copy.workingCostLegend })
+    const group = screen.getByRole('radiogroup', { name: /^Is \$[\d,.]+ a year about what a year costs while you’re working\?$/ })
     expect(group).toHaveAttribute('aria-required', 'true')
     expect(within(group).getByText(copy.fieldRequiredMarker)).toBeInTheDocument()
     expect(describedTexts(group)).toEqual([slots.workingCostQuoteMonthly('7,000', '84,000')])
@@ -572,7 +572,7 @@ describe('the W step — the fork’s own words, read before any Continue (forms
 
   it('on a stale answer the fork is described by the stale note first, then the quote', () => {
     render(<Harness model={modelWith(DEV_SEEDS.datecoststale)} />)
-    const group = screen.getByRole('radiogroup', { name: copy.workingCostLegend })
+    const group = screen.getByRole('radiogroup', { name: /^Is \$[\d,.]+ a year about what a year costs while you’re working\?$/ })
     expect(describedTexts(group)).toEqual([
       slots.workingCostStaleQuote('84,000', '78,000'),
       slots.workingCostQuoteMonthly('6,500', '78,000'),
@@ -587,7 +587,7 @@ describe('the W step — answering forgives the gate (B4 of the Phase B review)'
     next() // blocked at the fork
     expect(screen.getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
     pick('workingCostDifferent')
-    const group = screen.getByRole('radiogroup', { name: copy.workingCostLegend })
+    const group = screen.getByRole('radiogroup', { name: /^Is \$[\d,.]+ a year about what a year costs while you’re working\?$/ })
     expect(screen.queryByRole('alert')).toBeNull()
     expect(group).not.toHaveAttribute('aria-invalid')
     next() // still no figure: blocked again, and the message sits where the household is answering
@@ -616,7 +616,7 @@ describe('the W step — a $0 quote (no spending to offer: the figure is the who
   it('no fork and no quote; a blocked Continue says why AT the figure, which carries the gate', () => {
     const m = modelWith(noSpend())
     render(<Harness model={m} />)
-    expect(screen.queryByRole('radiogroup', { name: copy.workingCostLegend })).toBeNull()
+    expect(screen.queryByRole('radiogroup', { name: /^Is \$[\d,.]+ a year about what a year costs while you’re working\?$/ })).toBeNull()
     expect(screen.queryByText(/Your spending figure is/)).toBeNull()
     next()
     expect(heading()).toBe(copy.qWorkingCostHeading)
@@ -1113,7 +1113,7 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
     expect(queryLeftOverGroup(), '$0').toBeNull()
     expect(screen.queryByText(CHECK_WORDS), '$0').toBeNull()
     // Not asked, never the waiting face: W is fresh.
-    expect(screen.queryByText(copy.workingLedgerLeftOverWaiting), '$0').toBeNull()
+    expect(screen.queryByText(/This question waits until you/), '$0').toBeNull()
     cleanup()
     render(<LedgerStep model={modelWith(typedW(84_000 + 16_984))} />)
     expect(printedLeftOver(), '$1').toBe(slots.workingLedgerAmount('1'))
@@ -1310,8 +1310,32 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
     expect(screen.getByText(copy.fieldRequiredMarker)).toBeInTheDocument()
     next()
     expect(screen.getByRole('alert')).toHaveTextContent(copy.errWorkingCostUnanswered)
-    const fork = screen.getByRole('radiogroup', { name: copy.workingCostLegend })
+    const fork = screen.getByRole('radiogroup', { name: /^Is \$[\d,.]+ a year about what a year costs while you’re working\?$/ })
     expect(fork).toHaveAttribute('aria-required', 'true')
     expect(fork).toHaveAttribute('aria-invalid', 'true')
+  })
+})
+
+// The Tier 0 retype entry's prescription (1) on the W step (U11 walk 5's round): $84,000 typed on `datesavedrisen`,
+// whose spending now comes to $90,000 — the calm note under the figure, both figures and the lean, never a block; and
+// the fork's question names the figure "Yes" sets (copy-law F8). Typed by hand.
+describe('the W step — a typed figure below today’s spending says so (the Tier 0 retype entry, prescription (1)); the question names its figure (F8)', () => {
+  const NOTE =
+    'Your $84,000 a year is below your spending figure of $90,000 a year. A working year almost always costs at least what you spend, so this answer can look better than it really is.'
+  it('the note shows under a typed $84,000 and nowhere for a figure at the spending; the fork asks about $90,000', () => {
+    const yes = DEV_SEEDS.datesavedrisen.workingYearCost
+    if (yes?.kind !== 'confirmed') throw new Error('[test setup] datesavedrisen holds a yes')
+    const typed = (amountReal: number): ScenarioDraft => ({
+      ...DEV_SEEDS.datesavedrisen,
+      workingYearCost: { kind: 'entered', amountReal, entryPeriod: 'year', stateTaxReading: yes.stateTaxReading },
+    })
+    render(<Harness model={modelWith(typed(84_000))} />)
+    expect(screen.getByText(NOTE)).toBeInTheDocument()
+    expect(screen.queryByRole('alert'), 'calm: never an alert').toBeNull()
+    expect(screen.getByRole('radiogroup', { name: 'Is $90,000 a year about what a year costs while you’re working?' })).toBeInTheDocument()
+    cleanup()
+    render(<Harness model={modelWith(typed(90_000))} />)
+    expect(screen.queryByText(NOTE)).toBeNull()
+    expect(screen.queryByText(/is below your spending figure/)).toBeNull()
   })
 })

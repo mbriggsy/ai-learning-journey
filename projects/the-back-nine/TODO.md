@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-09, b9-8 BUILT walk 5's fix round IN THE TREE, UNCOMMITTED — item 1, Phase C, the "⚠ b9-8" block above "▶ NEXT": finish its six steps (e2e strings, `verify:fit`, mutants, R10, reanchor, commit), then walk 6; rewritten by b9-7 — WALKED walk 5 on council `wf_7fa86902-35c`'s round (`3157a6da`; the card HARD-FLAG at the top of `docs/caddie/cold-read-log.md`: the run-in labels vanish as plain words and read clinical, "This answer adds none of it" reads as a bug for want of a reason, the gate names buttons it doesn't draw, and the copy now points at the filed Tier 0 retype) — next is WALK 5's FIX ROUND (bh)–(bq) with the Tier 0 retype entry's note, its exact changes in item 1, Phase C, under "▶ NEXT", then walk 6, then U12 carrying U11's figures and the filings (ag)–(ay) and walks 4–5's, then the whole-file review and `/distill` — item 1, Phase C; rewritten by b9-6 — BUILT walk 4's fix round from council `wf_7fa86902-35c` (`3157a6da`: one string per host, the run-in labels, the act keyed on `heldYesBelowQuote`, the definition beside the door; 17 mutants killed, R10 `walk4` 42/42); rewritten by b9-5 — walked walk 4 on b9-4's round (the card HARD-FLAG, top of `docs/caddie/cold-read-log.md`) and took its form question to council `wf_7fa86902-35c` (7/10, execute: one string with run-in labels, a per-arm lead, "update your figure" on the risen arms; the retype hole filed Tier 0); rewritten by b9-4 — walk 3 and its round (as)–(aw)(b), `98b5ad17`; rewritten by b9-3 — walk 2 and its round (am)–(ao), `f028f33f`; rewritten by b9-2 — the walk's fix (ae), `c6b15120`; rewritten by b9-5 — walked U11's Caddie record, `c10339b0`, the card HARD-FLAG; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
+▶ **START HERE (2026-11-09, b9-1 of the new series COMMITTED walk 5's fix round, its six steps finished and the review `wf_c037b423-7f0`'s eleven findings fixed test-first: 28 mutants killed, R10 `walk5` 42/42. Next is WALK 6 (`/caddie`, item 1, Phase C, "▶ NEXT"); then U12, carrying U11's figures and every filing for it (walks 1–5's, KTD7's, the round review's), then the whole-file review, with an adversary and every finding verified, then `/distill` (this close's candidates included); rewritten by b9-8 — BUILT walk 5's fix round in the tree, uncommitted; rewritten by b9-7 — WALKED walk 5 on council `wf_7fa86902-35c`'s round (`3157a6da`; the card HARD-FLAG at the top of `docs/caddie/cold-read-log.md`: the run-in labels vanish as plain words and read clinical, "This answer adds none of it" reads as a bug for want of a reason, the gate names buttons it doesn't draw, and the copy now points at the filed Tier 0 retype) — next is WALK 5's FIX ROUND (bh)–(bq) with the Tier 0 retype entry's note, its exact changes in item 1, Phase C, under "▶ NEXT", then walk 6, then U12 carrying U11's figures and the filings (ag)–(ay) and walks 4–5's, then the whole-file review and `/distill` — item 1, Phase C; rewritten by b9-6 — BUILT walk 4's fix round from council `wf_7fa86902-35c` (`3157a6da`: one string per host, the run-in labels, the act keyed on `heldYesBelowQuote`, the definition beside the door; 17 mutants killed, R10 `walk4` 42/42); rewritten by b9-5 — walked walk 4 on b9-4's round (the card HARD-FLAG, top of `docs/caddie/cold-read-log.md`) and took its form question to council `wf_7fa86902-35c` (7/10, execute: one string with run-in labels, a per-arm lead, "update your figure" on the risen arms; the retype hole filed Tier 0); rewritten by b9-4 — walk 3 and its round (as)–(aw)(b), `98b5ad17`; rewritten by b9-3 — walk 2 and its round (am)–(ao), `f028f33f`; rewritten by b9-2 — the walk's fix (ae), `c6b15120`; rewritten by b9-5 — walked U11's Caddie record, `c10339b0`, the card HARD-FLAG; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -103,7 +103,10 @@ queue below (its order unmoved). Next, in order:
    medical figure (its below-medical note) or a refused figure (its error) mounts a line above the seat; the press is lost,
    never misdirected (the write re-checks R5's gate). Prescription: draw `WorkingCostQuestion`'s below-medical note from
    `WorkingYearRows`' held `shown` and hold its figure errors until the hold lets go, gated by an e2e coordinate tap (type a W below
-   medical, tap "Spent"); the Medicare-extras fork below the W row had the same exposure before build 2. (h) **the two-build
+   medical, tap "Spent"); the Medicare-extras fork below the W row had the same exposure before build 2. Walk 5's
+   typed-below note (`workingYearCostTypedBelowNote`) joins it. It reads the LIVE quote, so a seat press that blurs the
+   panel's spending field can mount it above the seat (found by review `wf_c037b423-7f0`'s hosts lens, P2). Draw it off
+   the held face too. (h) **the two-build
    writer race:** a version-4 tab claiming the writer seat in the ~150 ms window could re-save over a version-5 answer and drop
    it (the register's note covers version 3 only). (i) **R16's ban is narrow:** `hawkBan`'s "later" pattern matches only
    "comes|moves|lands|pushes … later"; "makes the date later" passes. (j) **the W arm's leans for "saved":** K1–K15 were derived
@@ -252,113 +255,51 @@ queue below (its order unmoved). Next, in order:
      PARTLY (the premium cue lands, but "Yes" comes first, "doesn't work out" reads as "doesn't work", the gate names
      buttons it doesn't draw, and S's has no condition); (4) C's gain years MET; (5) the fallen premise MET on S, and
      A, B, C lack it; (6) B's lead first MET (the dissent's direction-last not borne out), but B says it three times.
-     **⚠ b9-8 BUILT THE ROUND IN THE TREE, UNCOMMITTED (2026-11-09; stopped at 52% of the window).** Every change below
-     is in the working tree, test-first, typecheck 0, lint 0, the suite 5077/5078 — the one red is
-     `verify:doc-stats`' arm 4 (line citations moved), which step 5 fixes by design. What it built and where it departs
-     from the words below (nine refinements, each with its reason, in
-     `b9-build2-surplus\u11-walk5\ROUND.md` — read it first): the composer returns `{ opening, segments }`
-     (`workingYearCostStaleLine`, `workingYearCostStaleLineText`), the door `{ act, result, gate }`; one body draws
-     both hosts (`src/ui/NotePartsBody.tsx`, `src/ui/noteParts.ts`, `src/ui/styles/noteParts.css`); every act-worded
-     string sits in `WORKING_COST_ACT_COPY`; the Tier 0 note is `workingYearCostTypedBelowQuote` +
-     `slots.workingCostBelowSpending`/`…Budget`; F8 is `slots.workingCostLegendFigure` through `SegmentedControl`'s
-     new `legend` string; the methodology selector takes the act (`methodologyLines(…, act)`). **Left, in order:**
-     (1) the e2e specs still read retired or reshaped copy (e2e is outside `pnpm typecheck`): `e2e/vertical-fit.spec.ts`
-     2101, 2106, 2111, 2113, 2115, 2116, 2150, 2152, 3387 and `e2e/caddie-walk.spec.ts` 1236, 1248, 1258, 1261,
-     1323, 1325, 1336, 1338, 1339, 1343 — the drawn `textContent` is the parts joined one space apart, so each expected
-     string is the new slots in order: "This answer now:" gains `slots.workingCostStaleAfterWork(spending, true)`
-     first and `slots.workingCostStaleLeftOverNoneUpdate|Confirm('16,985', '84,000')` last; the gate's door is
-     `slots.workingCostStaleGateDoorUpdate|Confirm('84,000', copy.stalenessPayCheckCtaUpdate|Cta)` then
-     `slots.workingCostStaleDefineUpdate(quote, true)` (confirm arm: `slots.workingCostStaleDefineHold(true)`, the
-     gate door, `slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '84,000', false, '78,000')`); the
-     Result's door is `slots.workingCostStaleResultDoorUpdate|Confirm(<button label>)` in the gate door's place;
-     `copy.workingCostLegend` is the frame `/^Is \$[\d,.]+ a year about what a year costs while you’re working\?$/`;
-     (2) `verify:fit` on the gate and Result arms (the `<br>`s add up to three lines; B's laptop Result had about 90 px
-     under the paragraph) and the W-step/row arms (the Tier 0 note and the legend), plus a Playwright eye on the
-     labels at laptop and phone; (3) mutants predicted in writing first (copy walk 4's `mutants.cjs` runner into
-     `u11-walk5\`), at least: the act's leftOverNone key swapped, after-work dropped on the risen arms, `exact`
-     inverted, the floor sentence dropped, `stateTaxBelongsInW`'s class-based entry flipped, the gate door before
-     the hold on S, `NotePartsBody`'s space before `<br>` removed, the typed-below `<` made `<=`, the legend back to
-     static; (4) R10 `sweep.mts walk5 --today=20758`, `idcheck.mjs walk5 walk4` (42/42 predicted: copy and UI only);
-     (5) `pnpm doc:reanchor <base> --apply` once, last, then the suite and `verify:doc-stats` (it also flags the README
-     and roadmap test counts: set them from the live suite, never from this line); (6) commit (the walk-5
-     card's (bk) severity correction rides it: "High" → "Medium", from b9-7's note after the handoff), push, CI; then
-     walk 6 as written below. Never run `node -e` with backticks through the Bash tool (b9-8 mangled a test file
-     that way and repaired it): scripts go through Write.
-     ▶ NEXT: **walk 5's fix round, (bh)–(bq) with the Tier 0 retype entry's prescription (1), test-first, then walk
-     6.** Load `back-nine-design` (and `web-design-guidelines` for the review) before touching the hosts. Words are
-     the refuters' (each report in `u11-walk5\panel\`); every one keeps the council's order, adds no threshold and no
-     direction on A or S. Exact changes:
-     - **(bi) the labels as structure** (form only, one `<p>`, no word changed): `workingYearCostStaleLine`
-       (`src/intake/workingYearLeftOver.ts:337`) returns its parts instead of one joined string — the opening (note +
-       lead), the "This answer now:" sentences, the "If a working year costs $X:" sentences (risen arms), with the
-       door's sentences from `workingYearCostStaleDoor` — and every host draws one `<p>`: the opening; a `<br>`, then
-       the label in a `<strong>` (the body's semibold, same size and ink, never color) and its sentences; the same for
-       the second label; a `<br>`, then the door's sentences unlabelled in normal weight (on the Result, then the
-       button). Hosts: `src/ui/FuckOffDate.tsx:488-495` (`payCheckNote.text`), `src/ui/Result.tsx:284-287` and
-       `:732-733`, `src/ui/reentryChrome.ts:234-249` with `src/ui/ReEntry.tsx:79-82` (the gate's `noteLines` is a
-       `string[]` keyed by its text: give the W line a structured entry, its key the joined text), `src/ui/IntakeApp.tsx:664-669`.
-       Pins: the part order per arm (`workingYearLeftOver.test.ts`), each label in a `<strong>` after a `<br>` per
-       host (`resultPayCheckLine.test.tsx`, `reentry.test.tsx`, `IntakeApp.test.tsx`); `verify:fit` on the gate and
-       Result arms (B's laptop Result has about 90 px under the paragraph).
-     - **(bl)** `slots.workingCostStaleAfterWork` (`src/ui/copy.ts:3034`) → "Once you’ve both stopped working, it already
-       uses your spending of $X a year." ("about" dropped), and it rides the risen arms too, first under "This answer
-       now:" (today `workingYearLeftOver.ts:345` builds it only where `!s.rose`; keep the `quoteMoved` guard, so a
-       state-only move stays without it).
-     - **(bh)** `copy.workingCostStaleLeftOverNone` (`copy.ts:595`) becomes a slot in the act's verb
-       (`WORKING_COST_ACT_COPY`): "Because that $16,985 depends on your $84,000 figure, this answer adds none of it to
-       your savings until you update your figure." (S: "…until you confirm or change your figure.").
-     - **(bm), the wording half:** `slots.workingCostStaleLeftOverIfCapped` / `IfWhole` (`copy.ts:3047-3056`), second
-       sentence → "Since a working year almost always costs at least what you spend, updating your figure to $90,000 or
-       more adds at most $10,985 a year to your savings." (the reach clause as now). Not on B (its sentence below says
-       "adds none"; the note closes B's retype).
-     - **(bp)** `stillAddsNone` (B, first-short and first-none) → "Updating your figure to $105,000 or more adds none of
-       the $16,985 you had left over at $84,000, because your first working year, 2026, comes up short at that cost."
-       (first-none: "…has nothing left over at that cost."). "Can look better" stays in B's lead.
-     - **(bo)** B: `workingCostStaleLeftOverIfFirstShortRun` / `IfFirstShort` fold "Your $84,000 figure makes those years
-       look cheaper." into the run sentence ("Each working year from 2026 through 2032 comes up $3,652 to $4,015 short,
-       and your $84,000 figure makes those years look cheaper."), then the shortfall sentence. The note's counterweight
-       stays as it is (the line must begin with the W surfaces' own note: THE GUARDS test). C's close
-       (`workingCostStaleShortLaterYear(s)`, `copy.ts:3110-3119`) → "Your $84,000 figure makes those years look cheaper,
-       so in those years this answer can look better than it really is."
-     - **(bq)** the same two slots: "If you’re still working from 2029 through 2032, each of those years comes up…" →
-       "Each working year from 2029 through 2032 comes up $3,652 to $4,015 short." (one year: "The working year 2029
-       comes up $4,015 short."). It closes (aw)(a) on C.
-     - **(bj)** the gate's door moves BEFORE the definition: `stalenessPayCheckGateDoorUpdate` (`copy.ts:1909`) → "Neither
-       button on this page updates your $84,000 figure; both lead to where you can. After “Still about right — show my
-       answer”, press “Update your figure for a working year” on your answer; “Something’s changed — update them” asks
-       it among its questions." (S, `stalenessPayCheckGateDoor`: "confirms or changes", "Confirm or change your figure"),
-       then the definition opens "There, …" (`reentryChrome.ts:240-246`'s order flips; verify the update route really
-       asks W before writing "asks it among its questions"). The Result's definition opens "To update it, press “Update
-       your figure for a working year” below. There, …" (S: "Confirm or change your figure").
-     - **(bk)** `workingCostStaleDefineUpdate` (`copy.ts:3129`) → "If a working year also costs you health premiums, even
-       ones taken out of a paycheck, or a local or state tax or a state disability or family-leave deduction taken from
-       pay, choose “No — I’ll enter a different figure” and enter $90,000 plus those costs, since the tool counts them in
-       a working year only if you add them. If not, choose “Yes, that’s about right” to use $90,000 a year." ("or state"
-       only where the W help shows its unpriced-state line). `workingCostStaleDefineConfirm` (S) → "Your figure for a
-       working year should also hold any health premiums you pay, even ones taken out of a paycheck, and any local or
-       state tax or state disability or family-leave deduction taken from pay, since the tool counts them in a working
-       year only if you add them. To confirm or change it, choose “Keep $84,000 a year” only if $84,000 covers your
-       spending plus those costs, “Yes, that’s about right” to use $78,000 a year only if you have none of them, or “No —
-       I’ll enter a different figure” to enter $78,000 plus them." Labels from the catalog as today.
-     - **(bn)** the sheet's two "checked" lines, `copy.assumptionWorkingYearCheckLeftOverWaiting` (`copy.ts:1775`) and
-       `copy.workingLedgerLeftOverWaiting` (`copy.ts:566`), in the act's verb with the reader acting: "Until you update
-       your figure for a working year, no money left over is added to your savings." / "This question waits until you
-       update your figure for a working year, above. Until then, no money left over is added to your savings." (S and
-       the kept state-only arm: "confirm or change"). Read their call sites first: where W was never answered (not
-       stale), they need a third form ("until you answer the question about a working year, above").
-     - **(bm), the closing half — the Tier 0 entry *A figure typed below today's spending clears W's stale line for
-       good…*, prescription (1):** the calm, non-blocking note under the W row and on the W step wherever a TYPED W sits
-       below today's spending ("Your $84,000 a year is below your spending figure of $90,000 a year. A working year
-       almost always costs at least what you spend, so this answer can look better than it really is."), pinned on
-       `datesavedrisen` with 84,000 typed; and the sheet's question names its figure where a quote exists ("Is $90,000 a
-       year about what a year costs while you’re working?", copy-law F8). This completes the council's flip condition;
-       the verb stays "update" — **RULED by Briggsy 2026-11-09 (b9-8): "update it is"**; the dissent's "check" is closed.
-     Then: mutants predicted in writing first; R10 `sweep.mts walk5 --today=20758`, `idcheck.mjs walk5 walk4` (copy and
-     UI only, so 42/42 predicted); the suite pinned; `verify:fit`'s touched arms; `pnpm doc:reanchor <base> --apply`
-     once, last; then **walk 6** (`/caddie`, the same nine targets, walk 5's briefs in `u11-walk5\panel\briefs\`), whose
-     questions are: do the labels now read as parts, calm or clinical; does the reason end "a bug?"; does anyone still
-     reach for the retype; does the gate's door sentence send anyone to the green button as "Yes"; and is the paragraph,
-     with its reasons added, lighter or only longer (walk 4's distill candidate: if only longer, the council again).
+     **Walk 5's fix round is COMMITTED (b9-1 of the 2026-11-09 series; the commit after `b6d6032d`, pushed).** b9-8
+     built (bh) to (bq), the Tier 0 retype entry's prescription (1) and F8, test-first. The words now live in the code.
+     The record is `b9-build2-surplus\u11-walk5\ROUND.md`: b9-8's nine refinements, then § "The round review" with five
+     more. Before the mutant pass, a review `wf_c037b423-7f0` ran four whole-file lenses with a refuter each (8 Opus xhigh
+     agents) and found eleven real findings. Each was fixed test-first, its pin red for its stated reason first:
+     - the typed-below note compared at the cent (P0: 12 × 7,083.33 printed "$84,999.96 … below … $84,999.96");
+     - its lean follows the answer (the year-level fact for a "saved" answer waiting on W; `workingYearCostTypedBelowNote`);
+     - after work under a budget, "your budget, about $X a year to start";
+     - the figure to enter in its box's unit ("$X a year", or ÷ 12 "a month" where the held figure was typed by the month);
+     - five pins for mutants the tests let through.
+
+     Evidence:
+     - mutants: 28 of 28 killed (`u11-walk5\PREDICTIONS.md`, written first; 25 of 28 kill sets exactly as predicted,
+       the three misses in the predictions);
+     - R10 `walk5` 42 of 42 identical against `walk4` (`sweep-walk5.json` is the baseline from here: `idcheck.mjs <label>
+       walk5`);
+     - the suite and `verify:doc-stats` green after `pnpm doc:reanchor b6d6032d --apply` (348 edits; the one source
+       hand fix: `reentryChrome.ts`'s `ReEntry.tsx:86-90`);
+     - the e2e strings in `vertical-fit.spec.ts` and `caddie-walk.spec.ts` updated and typechecked through a scratch
+       tsconfig (landmine below);
+     - `verify:fit`'s 37 touched arms green, twice (before and after the review's fixes);
+     - a Playwright eye on the gate and Result at 1536×791 @2.5 and 390×844 @3: the labels draw semibold on their own
+       lines, the door's sentences on theirs, nothing clipped.
+
+     ▶ NEXT: **walk 6** (`/caddie`: the same nine targets, walk 5's briefs in `u11-walk5\panel\briefs\`, its tools in
+     `u11-walk5\tools\`; about 1 weekly point). Its questions:
+     - do the labels now read as parts, calm or clinical;
+     - does the reason end "a bug?";
+     - does anyone still reach for the retype;
+     - does the gate's door sentence send anyone to the green button as "Yes";
+     - is the paragraph, with its reasons added, lighter or only longer (walk 4's distill candidate: if only longer, the
+       council again). The S gate runs about 30 lines on the phone, so this is the open question.
+
+     New this round, for the hunter:
+     - the budget after-work sentence's "to start";
+     - "enter $90,000 a year plus those costs";
+     - the typed-below note. No walk target renders it: a state with W typed below the spending would show it, e.g.
+       `datesavedrisen` with 84,000 typed.
+     **Filed by the walk-5 round's review for U12** (`wf_c037b423-7f0`; the record is `u11-walk5\ROUND.md` § "The
+     round review"; each finding goes into the register with its prescription):
+     - (bh)'s "Because that $16,985 depends on your $X figure" names the HELD figure, which need not be the one the
+       answer was given at (a "Yes" at $80,000 after a fall, then a rise) (low). It is true in substance — a fresh W
+       credits min(stored, year 0 at the held W) — and never rosy. Decide it with (al).
+     - The composer's one-year branches (`laterShortWords`, `firstShortWords` in `src/intake/workingYearLeftOver.ts`)
+       reach no witness; only their slots are pinned (low, pre-existing). Pin each with a draft whose run is one year.
      **Filed by walk 4 for U12** (the rest of its findings are the fix round's): (bg) "plus any income tax on taking it
      out" reads as maybe none (low; "plus income tax on what comes out of pre-tax accounts", still true under a Roth-first
      order); (al)'s rise arm RAISED to high (the dated figure does not explain a change the page never names: name the
@@ -484,58 +425,87 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-09 (b9-8: walk 5's fix round BUILT IN THE TREE, UNCOMMITTED; b9-7's block pruned into it, its
-landmines kept in the list below, its distill candidates kept below):** state at close: the round's code and tests are
-uncommitted in the working tree on purpose (its e2e strings, `verify:fit`, mutants, R10 and reanchor are still owed —
-item 1's "⚠ b9-8" block, its six steps in order); only docs were committed (`8bd916aa`, `b5773c24`, and the close).
-In the tree: typecheck exit 0, lint exit 0, the suite 5077 of 5078 (the red is `verify:doc-stats`' citation arm);
-`verify:doc-stats` exit 1 in the tree only (the round's new tests and moved lines: the README/roadmap test count and two
-line citations, `TODO.md:1300` and `act4-u17-s5-execution-plan.md:88`; the committed tree is unaffected). Briggsy ruled
-the verb (below). Stopped at 54% of the window, past the no-fan-out line. He starts a new series of sessions next, so no
-numbered successor: this START HERE is the handoff.
-**Check at start:** `git status` — b9-8's round must still be in the tree (about 25 files under `src/`, plus
-`docs/caddie/cold-read-log.md`); if a sibling session committed or reverted any of it, stop and reconcile before
-building. CI read by b9-8: run 42601322466 on `3157a6da` success (both jobs); run 42605776210 on `d3f355b9` success
-(both jobs; it holds `42274150`). The weekly meter before walk 6 (81% at 11:00Z; resets 2026-11-11 14:00Z).
+**SESSION 2026-11-09 (b9-1 of the new series: walk 5's fix round reviewed, fixed, proven and COMMITTED; b9-8's block
+pruned into it, its landmines kept below except the one its commit closed, its distill candidates kept below):**
+
+State at close:
+- walk 5's fix round is committed and pushed (item 1, Phase C);
+- typecheck exit 0, lint exit 0;
+- the suite green and `verify:doc-stats` exit 0 (the count lives under that gate);
+- `verify:fit`'s 37 touched arms green;
+- the full `verify:fit` and the CSP gate are CI's, on the push.
+
+Next is walk 6. Briggsy's ruling this session: no numbered successor; this session owned squeaky by the window lines
+and closed at 47%, past the warn line, before walk 6's fan-out.
+
+**Check at start:**
+- the CI run on this close's commit: `gh run list --commit <full sha> --json databaseId,status,conclusion` — the full
+  sha, never the short one (`git log -1 --format=%H -- projects/the-back-nine`);
+- the weekly meter before walk 6: `~/.claude/statusline-meters.json` `seven_day` (82% at this close; resets
+  2026-11-11 14:00Z).
+
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** — over the council dissent's one
-defined "check", with walk 5's evidence in front of him (every risen reader took "update" as "raise it"; the refuter rates
-that the honest steer, rule 8; "check" failed twice in this paragraph already: a paycheck in walk 2, "verified, done" in
-walk 4). Never re-propose "check" on the flip condition. Still open, walk 6 answers it: the labels' calm-or-clinical
-(clinical as plain words, which (bi)'s form cure answers).
-**LANDMINES (b9-7, b9-8):**
-- **The round's work sits uncommitted in a tree other sessions share** (b9-1 to b9-7 and playbook-7 to -9 were live at
-  b9-8's close, all on `main`). Before building, `git status` must show it whole (the "Check at start" line); commit it
-  by path only (`git commit -- <paths>`), never `-a`.
-- **`src/ui/__tests__/copyGuard.test.ts` is committed CRLF** (`git ls-files --eol`: `i/crlf w/crlf`); every other file
-  b9-8 touched is LF. A literal search-and-replace script must match its line endings (the Edit tool handles it).
-- **`node -e "…"` through the Bash tool expands backticks and `${…}`** inside the double-quoted script: b9-8 mangled two
+defined "check", with walk 5's evidence in front of him. Every risen reader took "update" as "raise it", which the
+refuter rates the honest steer (rule 8). "Check" failed twice in this paragraph already: a paycheck in walk 2, and
+"verified, done" in walk 4. Never re-propose "check" on the flip condition. Still open, walk 6 answers it: whether the
+labels read calm or clinical. They read clinical as plain words, which (bi)'s form cure answers.
+
+**LANDMINES (b9-7, b9-8, b9-1):**
+- **The e2e specs are outside `pnpm typecheck`.** A retired copy key or a changed slot signature they read compiles
+  clean and fails only in Playwright. Typecheck them through a scratch tsconfig in the session scratchpad. It must name
+  `node_modules` absolutely:
+  ```json
+  { "extends": "<project>/tsconfig.json",
+    "compilerOptions": { "noEmit": true, "typeRoots": ["<project>/node_modules/@types"], "types": ["node"] },
+    "include": ["<project>/src", "<project>/vite-env.d.ts", "<project>/node_modules/vite/client.d.ts", "<project>/e2e/*.ts"],
+    "exclude": ["<project>/node_modules/.pnpm", "<project>/dist", "<project>/e2e/held"] }
+  ```
+  Then run `npx tsc -p <it>`. Its only errors at this close are `chart-text.spec.ts`'s pre-existing `Node.remove`, seven
+  of them.
+- **A copy plant inside a slot is killed only by a test with the words typed by hand.** Every test that compares
+  against `slots.*` changes its expected value with the plant. `workingYearLeftOver.test.ts`'s "the words, typed by
+  hand" is the round's net for M4, M12, M13 and M21. Keep a by-hand pin for every new sentence.
+- **`src/ui/__tests__/copyGuard.test.ts` is committed CRLF** (`git ls-files --eol`: `i/crlf w/crlf`). Every other file
+  the round touched is LF. A literal search-and-replace script must match its line endings (the Edit tool handles it).
+- **`node -e "…"` through the Bash tool expands backticks and `${…}`** inside the double-quoted script. b9-8 mangled two
   lines of a test file that way (repaired). Scripts go through Write, then `node <file>`.
-- **The e2e specs are outside `pnpm typecheck`**: a retired copy key they read compiles clean and fails only in
-  Playwright. Grep `e2e/` for every key a round removes.
-- **A `// @ts-expect-error` arm in a test still RUNS**: the methodology selector now indexes the act's Record, so the
-  three-argument call threw at runtime. Such arms sit inside a function that is never called
+- **A `// @ts-expect-error` arm in a test still RUNS.** Such arms sit inside a function that is never called
   (`workingYearTaxDisclosure.test.ts`, `_compileOnly`).
-- **The council's verb flip is CLOSED by his ruling (2026-11-09: "update").** Its conjunction completes once the Tier 0
-  note ships, but the condition no longer flips anything: never swap the verb in `WORKING_COST_ACT_COPY` on it.
-- **A seat's arithmetic can borrow the wrong quote.** The hunter priced Sam's working-year premium off the $1,100
-  reference-plan quote ($13,200 a year), but `stillWorking` answers `employerPlanCoversRetiredMember: true`
-  (`src/ui/devSeeds.ts:194`): the pay-side premium is entered nowhere. Check the seed before a refuter carries a figure
-  (one refuter got a correction mid-run).
-- **Walk 4's seat briefs lived only in b9-5's subagent transcripts** (now copied to `u11-walk4\panel\briefs\`). Walk 5
-  saved every brief and probe to `b9-build2-surplus\u11-walk5\panel\briefs\`; the two extractors are in `u11-walk5\tools\`
-  (`extract-prompts.mjs <subagentsDir> <outDir>`, `extract-all-user.mjs <transcript.jsonl>`).
-- **A heredoc piped into `python -` in Git Bash hung to the 120 s timeout** (a stray line in a write command). Write files
-  with the Write tool.
+- **The council's verb flip is CLOSED by his ruling (2026-11-09: "update").** The Tier 0 note has shipped, so its
+  condition is met, but it flips nothing: never swap the verb in `WORKING_COST_ACT_COPY` on it.
+- **A seat's arithmetic can borrow the wrong quote.** `stillWorking` answers `employerPlanCoversRetiredMember: true`
+  (`src/ui/devSeeds.ts:194`), so the pay-side premium is entered nowhere. Check the seed before a refuter carries a
+  figure.
+- **Walk 5 saved every brief and probe** to `b9-build2-surplus\u11-walk5\panel\briefs\`, and walk 4's to
+  `u11-walk4\panel\briefs\`. The two extractors are in `u11-walk5\tools\` (`extract-prompts.mjs <subagentsDir>
+  <outDir>`, `extract-all-user.mjs <transcript.jsonl>`).
+- **A heredoc piped into `python -` in Git Bash hung to the 120 s timeout.** Write files with the Write tool.
+- **`TaskStop` on a background `vite` leaves its two node processes serving** (b9-1: port 5287 still answered 200).
+  Stop this session's own by PID, found by the command line (`Get-CimInstance Win32_Process -Filter
+  "Name='node.exe'"` matching the port), then confirm the port refuses. Port 5199 was held by another owner at this
+  close, so pick a fresh port.
+
+**DISTILL CANDIDATES (b9-1, the round review):**
+- **Compare at the precision the other side is stored at.** A monthly figure written as `entered × 12` unrounded sat a
+  float hair under a quote snapped to the cent, and printed "$84,999.96 is below $84,999.96". A predicate over a
+  rounded figure rounds its other side the same way (`roundCents`), as every sibling here already did.
+- **Review a test-first round before its mutant pass.** b9-8's round was test-first and green, and an adversarial
+  review with refuters still found eleven real findings. Among them were a P0, an unscoped lean the project's own guard
+  forbids, and a ramp-law violation, all in sentences the tests pinned exactly as written. Mutants prove the tests
+  bite; only a reader of the arms proves the words are true.
+- **A lean is per arm, never per sentence.** The typed-below note's "this answer can look better" was true for every
+  arm its prescription imagined, and false on one it didn't: a "saved" answer waiting on W. Route every new lean
+  through the one predicate the other leans ride (`savedWaitingOnW`).
 **DISTILL CANDIDATES (b9-8, walk 5's round):**
 - **A line break inside a paragraph needs a space before it, or its text changes.** `textContent` joins `"…you.<br>This
-  answer now:"` with no space, so the React key, a screen reader and every `toContainText` see a different string from the
-  one the composer joined. `NotePartsBody` draws `' '` then `<br>`; the trailing space is never painted.
-- **Check why a constraint exists before obeying it.** KTD17's "static legend" read as a rule, but the pay check's deepen
-  recorded its reason as mechanical (`SegmentedControl` took only a catalog key). One optional prop removed it, and the
-  W fork's question now names the figure "Yes" sets.
-- **A held figure is not always the figure an answer was given at.** "The $16,985 you had left over at $84,000" is false
-  after a later "Yes" at another figure; "when you answered" is true in every case. Date a stored figure to its answer,
-  never to the figure held today.
+  answer now:"` with no space, so the React key, a screen reader and every `toContainText` see a different string from
+  the one the composer joined. `NotePartsBody` draws `' '` then `<br>`; the trailing space is never painted.
+- **Check why a constraint exists before obeying it.** KTD17's "static legend" read as a rule, but the pay check's
+  deepen recorded its reason as mechanical (`SegmentedControl` took only a catalog key). One optional prop removed it,
+  and the W fork's question now names the figure "Yes" sets.
+- **A held figure is not always the figure an answer was given at.** "The $16,985 you had left over at $84,000" is
+  false after a later "Yes" at another figure; "when you answered" is true in every case. Date a stored figure to its
+  answer, never to the figure held today.
 **DISTILL CANDIDATES (b9-7, walk 5):**
 - **Labels made of plain words in running text are not structure.** The council ruled run-in labels as copy words (never
   color or `::before`); rendered mid-line in body weight they vanished for every cold reader, and every one said the split
@@ -1002,7 +972,7 @@ re-point each script's output path off the dead session scratchpad before runnin
 **The b9-6 NEXT list (2026-10-21, pre-D7):** (A) the ACA re-verify — ✅ CLEARED 2026-10-20 (regime unchanged; the ceiling 119-124, every law above 119-118 matched by bill number and swept clean; the record's two self-contradictions corrected — `lawsInEffect` turned out to be one stamp per RELEASE, neither per section nor site-wide); the next FULL pass is due by CI-red ~2026-11-19 00:00 UTC / runtime 2026-11-20 — follow the record's `forwardClock` (its ⚑ 2026-10-20 head: the Senate resumes business 2026-11-09, so the pass lands in the first floor weeks before the December 11, 2026 cliff; the twelve House bills presented 10-14/15 first, by bill number; two new referral-only vehicles to watch — H.R. 10730, retroactive to TY2026 and permanent, and S. 5496, permanent from TY2027) · (B) the NEW Tier 0 *A working year never checks the household's pay against its spending…* (filed 2026-10-21, b9-6, by the working-year row's first Caddie walk and his "why the fuck not? what are we building???") — the first BUILD only if his off-course discussion leaves it there (it is that discussion's example #1; never treat it as ruled): (1) measure — per clamped year, take-home = pay − the worker's own pre-tax deferral − the floor's tax on the base − payroll tax − every other contribution, against the year's spending; name each seed and household shape that goes short, and by how much; payroll tax (FICA) is unmodeled and NOT in the constants — source it first, never a plausible default (burned/062); (2) `/council` the remedy — draw the shortfall, flag it at intake, or both (a draw nets against the contributions, never stacks: §7's double count); (3) build; the `working-year-tax` row's "It doesn’t check that your pay really covers all of that…" sentence comes out the day the check ships (⚑ the entry's NEGATIVEs: never restore the gross-pay subtraction; never key the clamp on a value) · (1) the three filings his 2026-10-16 (b9-1) walk left open (the four rulings themselves are BUILT + WALKED, `1b685648` — git log and the cold-read log's 2026-10-19 (b9-2) card are the record): (1a) Tier 1 *On a plan reopened in a later year the relief line names no assumption…* — words his (the pilot's draft is on the entry), due before 2027-01-01; (1b) Tier 1 *On the date route the North Carolina / Pennsylvania clause says "your state income tax" with no scope…* — MEASURED 2026-10-20 (no priced-state seed reaches at its crown; the mechanism is federal too and is closed by the working-year tax floor, `b4bbbd3e`), so only the words are left, his; (1c) Tier 3 *A household that kept its state bill inside its spending, then picked a priced state in the panel…* — his product call · (2) **HIS WORD CALLS** (what is left after his 2026-10-16 rulings — each needs the pilot's measurement or draft first): (iii) Tier 0 *The health sheet's "26¢ on each dollar converted" holds only inside the ~$18,600 of room…* — OWED (a) first; the bound is the FIRST POINT THE RATE CHANGES, never the room (on `healthss` 28¢ holds for ~$1,260 converted; the rest of the room costs 32.16¢, filling it $3,528 — the entry's AMENDED bullet); (iv) Tier 0 *The survivor step-down attribution…* — its third misreading, the order of death ("$990" is the floor; ~42 % of `healthss`'s survivor futures drop ~$1,283, the refuter's `sampleCouplePath` run) — measure on the engine, then words his; (v) the 2026-10-14 survivor-basis build's and walk's word-his Tier 1s: *The survivor card's spending-basis line is withheld on a RAMPED budget…*, *On an itemized budget the assumptions sheet says the survivor share is "75" %…*, *The survivor card carries no closeness hedge…* (per each entry's owner line — the hedge: pilot measures + the flag first, then words his; the RAMPED line: words his, then the pilot builds; the "75": words his); (vi) Tier 1 *The conversion tile's "all told" leaves out the tax on the money that pays the tax…* — framing his (~1.5¢ on `health`, ~33¢ derived on `healthss` against the tile's 28¢) · (3) Tier 0 *The ACA solve finds no root at the 100 %-FPL line…* — pilot measure + the build's mechanics → council on what a household AT the line pays · (4) Tier 1 *The conversion tile's federal term treats a realized gain as ordinary income…* — pilot (measure reach → build; the gain split is not on the wire today; for a couple reachable only past the subsidy cliff) · (5) Tier 2 *The 2026-10-15 held-flat walk's other pre-existing sheet findings…* — pilot (layout + measure) → words his · (6) Tier 1 *The relief line has no branch for a floor BELOW the hero…* — NOT a Tier 0 (the 2026-10-14 probe found floor < full unreached on every measured face); next: reachability outside the measured family (the entry's Prescription bullet) · (6b) Tier 1 *The one-figure Medicare card's "start at" reads as a floor when the first billed year carries a look-back surcharge…* — NEW 2026-10-16 (b9-toronto3), from the card's build review (`wf_0f6a7da2-fb1`, reproduced through the engine; PESSIMISTIC — it overstates): pilot measures reach on the MEDIAN path (a big conversion two years before enrollment; a high look-back seed), then words his for a surcharged first year (⚑ never the trend clause there; never a second figure without a ruling) · (7) Tier 1 *The date route's Tier-1 key is unruled…* — ruled in the same council as the working-route solve (`datesplit` / `datemixed` / `dip`, plan-as-executed as a probe; the fiduciary elder's charter is already amended, `.claude/workflows/council.js:119` — the workflow, not the skill directory) · (8) Tier 1 *The TwoFutures even line swallows a lever's harm…* — measure across the roster's previews AND the off-roster HSA construct (the 3.94 pp HSA-class loss was measured on `healthgap` + a $150,000 HSA, wf_d98e02fb-08c — no dev seed carries an HSA, so a roster-only measure cannot reach that class), then `/council` on the grammar · (9) Tier 1 *No sourced NON-medical survivor ratio…* — the research leg (a sourced r_N, or a sourced survivor-OOP fall ≥ (1 − r), FLIPS the survivor-medical ruling to keep-flat-and-disclose — so says `docs/council-log.md`'s 2026-10-08 row; ⚑ the register's Prescription and `docs/decisions/ss-computation.md` §6a disagree, both APPLYING a sourced r_N to both arms (the Prescription flipping only on the OOP fall): resolve which governs BEFORE the leg acts on a finding — found 2026-10-15, b9-toronto3; §6a's side added by the 2026-10-16 doc audit, and the register entry's ⚑ flag names all four homes, the CLOSED survivor-medical entry's Dissent bullet among them) · (10) Tier 1 *The band sentence's low figure reads as a FLOOR…* (words his or a council); its two Tier 2 siblings (the delta hero's mean lead; the 10-06 read's other findings) ride the ranked list as filed · (11) the headroom look-back entry TOGETHER with *The step card's room covers the one-enrollee years…* (Tier 1, pilot + council — open, not blocked; figures re-derive under the growth base) · (12) Tier 2 *The engine-pricing ledger cannot name a date-route or spending-figure change…* (8d4d4e58, 6e4c065d — RE-READ 2026-10-15 b9-toronto3: ledger v11's `spending` family does NOT cover the spending half — its exposure read is `survivorMedicalLeanMoves`, its phrase the survivor-spending one, its witness `cashTermsForYear`, and no row names 6e4c065d; the register's "five families" is six now) · (13) Tier 2 *The spend lane's test + polish debt…* · (14) the Roth sheet's blank amount box (Tier 1 — its rail half's shape RULED 2026-10-04, the entry's ⚑ RULED block; built with the sheet after (11) — and after (18)(c): the entry's COUPLING bullet says the fact lines make the sheet taller, so "the build rides" the tall-sheet decision) · (15) the step card's "a year" read (Tier 2, words his) · (16) the echo-ink entry · (17) the Part D hold-direction research leg · (18) **the three owed councils** (the pilot's since the 2026-09-30 re-triage; ≥ 7/10 executes with its ⚑ line in `docs/council-log.md`, a lower score or a Hawk veto returns to HIS EYE with the rec): (a) the 20 px two-pane overrun (Tier 2 *The app on someone else's device…*, candidates (i)–(iii) in its ⚑ OPEN FORK bullet); (b) the phone strip-reserve fork (the block after HIS EYE); (c) Tier 3 *The lever sheets at his seat…* — the hidden actions row (one shape for the control-sheet family) plus Apply-before-the-comparison (the pilot's lean: block while pending) · (19) Tier 2 *`bandPercentile` INTERPOLATES…* — build its ruled shape (pilot; engine-side, observe-only, reduce-to-spine byte-identical): the path-observed (nearest-rank / lower) median for the integer enrolled count and the both-enrolled path FRACTION on the wire (the `overCliffFraction` shape), the base read CONDITIONED on the count the card names; red-first on a fixture splitting exactly 50/50 on enrollment; re-pin the seed gate from the engine; put any moved health card on the next Caddie walk (⚑ never round at the UI; the era-year RULE untouched) · (20) the statistic half of Tier 2 *The premium card's era arm fires on a both-enrolled median window of ONE year…* — BLOCKED on (19); then measure the fraction at the era year through the real engine across 61/59 · 61/45 · 61/43 · 61/41 · 61/40 · 61/38 and on `healthnc`; a candidate must leave the shipped `healthnc` card's routing unchanged; `/council` before any routing change (⚑ never a K; never re-open the era-year rule on a pilot number) · (21) Tier 2 *`tax.rmdStartAge` vs 26 CFR 1.401(a)(9)-2(b)(2)…* (pilot, `S`): the 1959 row's honest form (consumption keyed to birth year, or a disclosed caveat), the unreachable pre-1949-07-01 70½ band, re-cite to the eCFR read + 89 FR 58644, delete the entry's `EXEMPT` row in `constants.shape.test.ts` (⚑ never flip the whole entry) · (22) the latent staleness gate (Tier 4 — shares `staleness.ts` with the ledger) · (23) Tier 4 *Gate honesty after the 2026-09-30 constants re-cite…* (pilot, `M`): rule the parked ACA-MAGI / PTC pair (against §36B(d)(2)(B) + Form 8962 Worksheet 1-1 and §1395r(i)(4)(A)), classify `medicareExtrasTypical`, widen the tripwire's `RESEARCH_OR_SECONDARY` list, re-cite `health.irmaa` with its CMS read date (⚑ never walk the pair as `certification-pinnable` before the primary read) · (24) Tier 4 `pnpm doc:reanchor` self-citations (including the frozen-file class: it rewrites the FROZEN `e2e/held/fit-24px-measurements.md` on every run, `scripts/reanchor-citations.mjs:65` scanning every tracked `.md` with no frozen-file exclusion — restore it after each run, the landmine below; on the entry's size line since `e17c40e4`, "past six by 2026-10-15" — and its b9-toronto1 bullet (27 missed continuations, the pair-check law) and b9-toronto2 bullet (`:N+`, code-block and `~N` forms; preserved rot) ride this item too) — and the three shapes met 2026-10-12 (the register entry's ⚑ 2026-10-12 bullet: only the first bare token per line moves, a re-run against HEAD after `--apply` double-shifts, historical citations move like live ones) · (25) Tier 4 *No priced-state seed crosses the confidence band any more…* — mint a NEW borderline seed + its state-off twin on NC or PA (the `devSeeds.test.ts:501-509` shape), MEASURED by a real-engine pin, added beside `{ seed: 'nc', … }` in `e2e/vertical-fit.spec.ts` and to the next Caddie walk; reword the routing in `docs/plans/features/state-seed-increment-brief.md` in the mint commit (⚑ never re-tune `nc`'s own accounts) · (26) the two 2026-10-19 (b9-2) Tier 4 `XS` filings from the build's pre-trace (pilot): *A passing `verify:fit` spine arm prints no headroom…* (one `console.log` per spine one-frame arm, mirroring `[U16 pending posture]`; ⚑ never a threshold tuned to it) and *No gate holds the catalog's typographic apostrophe…* (a `copyGuard.test.ts` sweep of string VALUES; survey for legitimate straight quotes first) · then the 2026-09-13 late (b9-9) list below as ranked. **ON THE CLOCK:** the ACA window — (A), next due ~2026-11-19. The roster-recall stays CLOSED; its code waits on `b9-v10-gapfill-wip` (`f7aeaf35`), never for main.
 
 **The 2026-09-13 list (pre-D7) — RE-RANKED 2026-09-13 late (b9-9) by the verify pass (13 seats + 12 refuters over the b9-8 list; all 13 items OPEN at `084f94f0`, none stale, every refuter agreed; what the pass CORRECTED in the prescriptions is inline below, each re-opened at source; every item is `execute` EXCEPT Card 9, which the register and the batched-oracle law keep PARKED as a framing fork — it moves to HIS EYE). Its ✅ items 1–4 — the two Tier 0s that led it (the Medicare-era premium sentence, the step card's per-person figure), Card 3 and the "never oversold" row — are BUILT and were cut from this list 2026-09-25: their records are their register entries (all four are CLOSED, each with its ⚑ NEGATIVEs — the Medicare-era entry on his 2026-09-25 ruling, `b83bb464`) and `git log`. The rest by tier, then by cost:**
-5. **Card 13's (iv)** — the ladder readout shows the CROWN's line at rest (`readoutIdx = scrubIdx ?? crown index`; `data-active` on it; the scrub rule + `scrubbed` stay gated on `scrubIdx`; no CSS; the readout stays `aria-hidden`; amend `OddsLadder.test.tsx`) + fuckOffDate.css's D2d comment — stale on FOUR counts (it describes candidate (i) as shipped AND calls the ladder a `<details>` disclosure; the as-built is `<section className="fod-ladder">` inside `.fod-graphs`, no disclosure element; AND its `auto 1fr` / `grid-row 1/-1` rows AND its "when the ladder opens" — it never opens) + the dead `<details>`-era `.fod-ladder__summary::before` (`fuckOffDate.css:313`) + `OddsLadder.tsx`'s two comments that go stale with the build (`OddsLadder.tsx:27-30` "pointer-only…", `OddsLadder.tsx:292-297` "visibility-hidden except the scrubbed one") + the design skill's "on-demand, not on the first frame" clause (architecture §12 wins) + the `h2.fod-headline` aria-describedby GATE ARM on the three REAL date arms (the attribute already SHIPS, `FuckOffDate.tsx:423` — only the arm is owed; reuse the link-and-resolve block inside `assertCaveatOrderAndReach`, and the aged REAL arms datestale / datearrived lack it too; ⚑ narrowed 2026-10-15 b9-toronto3: the arm already runs on `dip` at PHONE (`vertical-fit.spec.ts:1546`) and at 24 px REAL/TIER (`:1643`), so what is owed is the 16 px REAL describes — `dip` (`:1333`), `date65` (`:1391`), `datenc` (`:1438`) — plus the aged `datestale` (`:2221`) and `datearrived` (`:2334`); `datesplit` has no vertical-fit arm at all); the register's "a newly visible node joins the audit" was false (the readout line carries neither `.ct-text` nor `.ct-block__item`) — corrected; THEN the REAL catalog capture (date65 / datenc / datesplit + one live-Chrome scrollbar look) before the column half files durably, and the Caddie chart walk the change owes (Card 1 rides it as its own commit). The a11y gain is for a SIGHTED keyboard-only reader — AT already reaches the crown via the dot's `role="img"` label; do not overstate it in the commit. The rest line is the SHIPPED `ladderMarkAria` crown sentence (two to three lines, the crown's own odds), never the fixture's "9 of 10, your date".
+5. **Card 13's (iv)** — the ladder readout shows the CROWN's line at rest (`readoutIdx = scrubIdx ?? crown index`; `data-active` on it; the scrub rule + `scrubbed` stay gated on `scrubIdx`; no CSS; the readout stays `aria-hidden`; amend `OddsLadder.test.tsx`) + fuckOffDate.css's D2d comment — stale on FOUR counts (it describes candidate (i) as shipped AND calls the ladder a `<details>` disclosure; the as-built is `<section className="fod-ladder">` inside `.fod-graphs`, no disclosure element; AND its `auto 1fr` / `grid-row 1/-1` rows AND its "when the ladder opens" — it never opens) + the dead `<details>`-era `.fod-ladder__summary::before` (`fuckOffDate.css:313`) + `OddsLadder.tsx`'s two comments that go stale with the build (`OddsLadder.tsx:27-30` "pointer-only…", `OddsLadder.tsx:292-297` "visibility-hidden except the scrubbed one") + the design skill's "on-demand, not on the first frame" clause (architecture §12 wins) + the `h2.fod-headline` aria-describedby GATE ARM on the three REAL date arms (the attribute already SHIPS, `FuckOffDate.tsx:425` — only the arm is owed; reuse the link-and-resolve block inside `assertCaveatOrderAndReach`, and the aged REAL arms datestale / datearrived lack it too; ⚑ narrowed 2026-10-15 b9-toronto3: the arm already runs on `dip` at PHONE (`vertical-fit.spec.ts:1546`) and at 24 px REAL/TIER (`:1643`), so what is owed is the 16 px REAL describes — `dip` (`:1333`), `date65` (`:1391`), `datenc` (`:1438`) — plus the aged `datestale` (`:2221`) and `datearrived` (`:2334`); `datesplit` has no vertical-fit arm at all); the register's "a newly visible node joins the audit" was false (the readout line carries neither `.ct-text` nor `.ct-block__item`) — corrected; THEN the REAL catalog capture (date65 / datenc / datesplit + one live-Chrome scrollbar look) before the column half files durably, and the Caddie chart walk the change owes (Card 1 rides it as its own commit). The a11y gain is for a SIGHTED keyboard-only reader — AT already reaches the crown via the dot's `role="img"` label; do not overstate it in the commit. The rest line is the SHIPPED `ladderMarkAria` crown sentence (two to three lines, the crown's own odds), never the fixture's "9 of 10, your date".
 6. **Card 6's three chart-text arms** — the 2026-09-13 evening b9-8 close's mechanism (`084f94f0`, re-verified by the 2026-09-13 late b9-9 pass, `7ee82569`; it builds on the register's ⚑ CORRECTED 2026-09-13 diagnosis — the stagger already seats named moments first — and REPLACES the register's hide / LAST-row rule for (b), which stays the fallback): a crossing-aware stagger — exhaustive assignment over the named items (≤ 5): min rows → min tail crossings (an item's x inside a HIGHER row's box) → min Σ rank×row → the greedy order as tiebreak; unnamed ticks unchanged (row 0 if clear, else hidden); `.ct-block__name` min-height one line so an unnamed item's ages sit on the AGE baseline. BIGGER THAN IT READS: `data-ct-rank` (work-stops — the crown, relabelled on a split — 3, today 2, built + horizon 1) does NOT exist — `ConfidenceBand.tsx` mints `data-ct-item`, `data-ct-optional` and `data-ct-tail`, no rank — mint it from the annotation's IDENTITY in the same red-first commit as arm 2, before the stagger change (NEW unit arms for rank + crossings; `chartText.test.tsx`'s five greedy pins hold under a greedy tiebreak); two arms need measurement `chartTextAudit.ts` does not expose (no tail rect, no `.ct-block__sub` rect — spec-local `page.evaluate`, each new field with its own non-vacuity pin); the "~2 px thin on PHONE" worry was WRONG (corrected 2026-09-27: 82.9 was Today's box MIDPOINT — Today is start-anchored, its tail at 65.1 px, ~19.9 px clear of Work stops' 85; the tightest margin is Plan built's tail at 50.6 vs Today's left edge, ~14.5 px PHONE / ~16.9 FLOOR, derived not measured) — MEASURE before decreeing rows 0 / 1 / 2; arm 3's witness is NOT the 70 / 71 tick (it sits inside Work stops' row-0 box on both arms, hidden by construction once arm 2 passes — pinning it reds whenever arm 2 is green): pin "80 / 81" on FLOOR, accept an empty unnamed set on PHONE, never move the witness to the ungated REAL arm; min-rows stays FIRST in the lexicographic order (AGED_DATE_ROWS / AGED_SPINE_ROWS / `architecture.md`'s recorded counts are downstream). Arms (chart-text.spec.ts, datestale PHONE + FLOOR): tail-vs-box zero crossings · the top-ranked named moment on row 0 · unnamed sub baseline == a named sub baseline on its row; ~55–72 s per datestale arm on the fit harness.
 7. **The family's other two primaries** (Tier 2) — the BUDGET half is a three-line delta on the EMPTY face: render the shipped `budgetApplyEmpty` string above `.budget-sheet__actions`, point `aria-describedby` at it (conditional on `nothingToCommit` — a one-line budget with a blank amount is a SECOND reason-less blocked face, `hasErrors`: rule it in or out), guard `.btn-quiet:hover` on `[aria-disabled]` (`intake.css:253-257`, the only such rule); the same `formBody` renders in the intake spend step's inline builder, so the reason shows at rest there too and the door walk never reaches it (the register's "aria: `[disabled]`" is the snapshot spelling — source is `aria-disabled`, `BudgetBuilder.tsx:424`; the blocked press ALREADY announces, `:273`, pinned; the channel is `opacity: 0.55`, not tint — corrected in the entry). The SEQUENCING half is an UNDECIDED fork (block on the applied pick, or the live no-op as the intended calm) — `/council` it before building (a block keys on (policy, order), never the policy alone). Caddie door walk on both — scroll-and-clip frames first (the register's below-fold harness gap) — plus the intake step.
 8. **Card 1** — delete the two legend outlines (`band.css` `.band-legend__sw--inner/--outer`) + rewrite THREE comments, not two (band.css's narrative, `BandLegend.tsx`'s header comment AND the `LegendSwatch` JSDoc that claims "the outline-style differences reinforce the three tiers") + the a11y gate (assert, do not re-plumb: the fills are ALREADY source-bound to `BAND_FILL_*` — only "band.css has no outline on the swatches" becomes true after the edit); strike the register's NESTED-CHIP alternative with reason on close (the entry labels no option (a) — corrected 2026-09-27). One visual change, Caddie-read, its own commit — pull it onto whichever chart walk Card 13's (iv) or Card 6's arms owes.
@@ -1010,7 +980,7 @@ re-point each script's output path off the dead session scratchpad before runnin
 10. **Card 2's lever (ii)** — MEASURE FIRST (ten minutes — now to CONFIRM, the arithmetic rules it), then decide: `readoutSeat`'s SECOND clause (`chartText.tsx:446` — `min(widest + chrome, cap) + gap ≤ plot / 2`) needs, on the pass's arithmetic (cap ≈ 38 % of the host, plot ≈ 80 %), a host ≥ ~500 px for a CAPPED box, and the PHONE arm's host is 308 px; its "widest" is the widest COLUMN, set by the wrapping range LABEL (~138 px at 13 px on every arm), not the figure — so clause 2 already fails on PHONE and FLOOR today and collapsing the degenerate range cannot flip either (corrected 2026-09-27 from "likely stays FLOW"): lever (ii) would NOT fill the hole Card 2 filed; lever (iii) — his framing, the four-rungs EXPIRY watches it — is the one that reaches the row. If it is built anyway (`composeReadoutLines`, `src/viz/bandData.ts`: `row.low === row.high` composes ages / a "land at" label ← new `bandReadoutRangeSameLabel` / ONE figure): compare `row.median` too (never assume the formatter is monotone — a calm-but-wrong shape if it changes), the new label needs a `BandLabels` field + its wiring + all FOUR test LABELS fixtures, and the red-first arm must assert the degenerate COLUMN's lines (the gate's `maxLines >= 5` guard is a max over columns and proves nothing here); `BAND_SEAT.PHONE` MEASURED, never decreed.
 11. **Card 11's (c)** — first DEFINE "the widest delta string": the hero is runtime-formatted by `formatDeltaDollar` (`money.ts`), not a catalog entry (glyph count under the $10,000 step — e.g. eleven glyphs at `$12,340,000`); measure PHONE AND FLOOR (fluid `--text-lg` puts FLOOR ~5 % under PHONE in units per font-px, so the narrowest host is not proven worst); nothing survives in `temp/` (`verify-rv.json` cleared) — the hero's ink has never been RECORDED (the RV audit containment-checks `.rv__delta` on every arm, never at the widest string — corrected 2026-09-27); the only renderer is the RV gate (budget ~3 min an arm on CI on the worker pool: the three arms' Playwright total ran 4.9–9.1 min across the green runs 2026-10-04 → 10-16, runs 38693180201 / 37221659495 — the committed-lockup wait ALONE ran 131–175 s per arm across the four green CI runs `12e40395` re-budgeted from) — plant the widest string on the hero inside the existing arm (the `--ct-ty` plant-and-restore shape) and emit its width, no new pass; then name + pin `HERO_HALF_RESERVE` (`RV_PLOT.left + plotW + reserve ≤ RV_VIEW.w`) with a docblock that says the invariant reduces to `reserve ≤ RV_PLOT.right` (192 u) and is trivially green today — it bounds the "shorten the label column" lever, nothing live; "~151u" is the council's estimate of the WHOLE hero (the half ~75u). ⚑ The LEFT edge is the tighter, unguarded bound (a $0 shorter bar puts gapMid near 153u) — pin it too or name it out of scope; `RV_VIEW` / `RV_PLOT` are module-private (export, or bind by regex as `viewBoxMirrors.test.ts:42` does).
 12. Pilot-movable while he is out of the chair: **the forced-colors audit of `src/viz`** (Tier 4 — zero `forced-colors` occurrences in code, never attempted; NOT fully prescribed, corrected 2026-09-27: its premise is backwards in Chromium — the SVG's author paint survives and the HTML backdrop is forced, so the risk is the dark `--ink` marks on a forced-DARK Canvas and the fix is `CanvasText`, not `forced-color-adjust: none` — and it names no instrument; read the register entry's ⚑ VERIFIED block first).
-**HIS EYE (a HIM batch — ride one sitting, not a trailing item; it holds only words, framing forks, one-way doors and rendered-surface reads — the 2026-09-30 re-triage moved "the three councils still owed" to the b9-1 NEXT list (2026-10-16 doc audit: that block is pruned — they ride the newest session block's NEXT list, under *the three owed councils*), and two register entries out of Tier 3 to the pilot):** **the step card's surcharge scope** (register *The step card never says what its surcharge covers…* — PARKED 2026-09-27 after three drafts: the shipped unscoped line reads as a data bug at the true price; "drug-plan surcharges" collided with "drug and supplement plans" not counted; "on your drug plan" read as escaping on a $0 plan — the entry carries all three as the brief) · **Card 9** (moved here: the register files it as a PARKED framing fork, owner briggsy, "either way the words are his" — the 2026-09-13 b9-8 list's "every ruling is execute" was wrong on this one; both halves are his words — the refusal's sentence `recHoldUnwitnessable` + its heading, and the one-line reason; NOTE for the build when he rules: the picker has FOUR routes in (the invite, the record card's `onReopen`, the committed + stale re-picks — `Result.tsx`), so the gate rides the PROP, never the invite door alone) · the copy forks in his words (the Roth sheet's three added 2026-09-13) · Card 2 (iii) · the Tier 3 omitted-costs discussion · the NIIT gloss (named in NINE copy strings, not two — `copy.ts` :1192–:1377 + `recDiscNiit` — glossed in none) · Card 1's rendered result / the two ⚑ composition sign-offs (the RV label gutter at 52.3 % of plot run; the date route's bare left column) / the four-rungs taste sign-off (four stays) / the 24 px + 20 px frames / the icon / the hidden actions row at his seat · the 320 build's crown fork (moved here 2026-09-25 from the discharged 2026-09-05 plan — the register's 320 ruling says both its forks are "ranked in `TODO.md`"; the other is Card 2's lever (ii), ranked above): a rung-9 crown seated ABOVE dips its "your date" tell 5–7 px into the plot's top (7.1 / 5.8 / 5.1 px at REAL / FLOOR / PHONE), so a scrub rule at its own column passes behind it — pre-existing, bounded by the marks oracle (4.4 / 3.6 / 3.2 px of ring clearance); clamping the anchor to `PLOT.top` would cost the phone its above seat (40.9 → 35.8 px of headroom against a 36.6 px callout); pilot's lean: leave it, watch it — plus the watch item: at 1536 the ceiling crown misses its above seat by 0.5 px of headroom (~7 px of figure width), so a wider result column would silently seat it above, the shape his eye ruled crowded in another form (`CROWN_SEAT_MARGIN_PX` in `e2e/chart-text.spec.ts` keeps CI stable across it). **The FADING-seed walk is RE-FILED, not walked:** its premise is structural — both routes cut the fan at cohort ≥ 0.5 BEFORE the resolver (`answerView.ts:81` / `:120` → `truncateFanAtThinCohort`) and `cohortFadeOpacity` is exactly 1 at ≥ 0.5, so no RENDERED sample ever fades and the legend's reopen trigger has no referent on ANY seed by construction — the residual needs a new framing (what the mask is for on the drawn fan) before any walk. Frames: CLEARED with `temp/` (emptied at every squeaky). Re-make them on the CURRENT tree before the sitting, and never beside vitest / doc-stats (the load landmine). The fork and sign-off frames (Cards 1 / 2 / 9 / 13, the RV label gutter, the date route's left column, the four-rungs pair on `seed-healthnc`): `CADDIE_TARGETS="seed:retired,seed:date,vault:datestale,solve:surplus,solve:failing,seed:healthnc" CADDIE_RUN=<name> pnpm caddie:walk` (~19 m, into `temp/caddie/<name>/`). The 24 px / 20 px frames: `pnpm exec playwright test --config e2e/held/shots.config.ts council-24px-shots` (~2 m, into `temp/council-24px/`). The icon is tracked (`scripts/icons/preview.png`). The two sibling sheets' blocked / pointed / cleared look has NO tracked instrument (the register's *The Caddie door walk captures no pixel of a scrolling sheet's below-fold cards* is the harness gap). Its only copy is the 2026-09-13 ad-hoc scratchpad harness `%TEMP%/claude/C--Users-brigg-ai-learning-journey-projects-the-back-nine/8269e9f0-120a-4772-a4d3-546bfdc40056/scratchpad/look/look.spec.ts` (port 4197). Hold it first as `e2e/held/sibling-sheets-look.spec.ts`: import from `../reviewSurface`, write to `process.env.LOOK_OUT ?? 'temp/look/adhoc'`, and drop its own config, since `shots.config.ts` collects every held spec. Then run `LOOK_OUT=temp/look/<name> pnpm exec playwright test --config e2e/held/shots.config.ts sibling-sheets-look`.
+**HIS EYE (a HIM batch — ride one sitting, not a trailing item; it holds only words, framing forks, one-way doors and rendered-surface reads — the 2026-09-30 re-triage moved "the three councils still owed" to the b9-1 NEXT list (2026-10-16 doc audit: that block is pruned — they ride the newest session block's NEXT list, under *the three owed councils*), and two register entries out of Tier 3 to the pilot):** **the step card's surcharge scope** (register *The step card never says what its surcharge covers…* — PARKED 2026-09-27 after three drafts: the shipped unscoped line reads as a data bug at the true price; "drug-plan surcharges" collided with "drug and supplement plans" not counted; "on your drug plan" read as escaping on a $0 plan — the entry carries all three as the brief) · **Card 9** (moved here: the register files it as a PARKED framing fork, owner briggsy, "either way the words are his" — the 2026-09-13 b9-8 list's "every ruling is execute" was wrong on this one; both halves are his words — the refusal's sentence `recHoldUnwitnessable` + its heading, and the one-line reason; NOTE for the build when he rules: the picker has FOUR routes in (the invite, the record card's `onReopen`, the committed + stale re-picks — `Result.tsx`), so the gate rides the PROP, never the invite door alone) · the copy forks in his words (the Roth sheet's three added 2026-09-13) · Card 2 (iii) · the Tier 3 omitted-costs discussion · the NIIT gloss (named in NINE copy strings, not two — `copy.ts` :1194–:1379 + `recDiscNiit` — glossed in none) · Card 1's rendered result / the two ⚑ composition sign-offs (the RV label gutter at 52.3 % of plot run; the date route's bare left column) / the four-rungs taste sign-off (four stays) / the 24 px + 20 px frames / the icon / the hidden actions row at his seat · the 320 build's crown fork (moved here 2026-09-25 from the discharged 2026-09-05 plan — the register's 320 ruling says both its forks are "ranked in `TODO.md`"; the other is Card 2's lever (ii), ranked above): a rung-9 crown seated ABOVE dips its "your date" tell 5–7 px into the plot's top (7.1 / 5.8 / 5.1 px at REAL / FLOOR / PHONE), so a scrub rule at its own column passes behind it — pre-existing, bounded by the marks oracle (4.4 / 3.6 / 3.2 px of ring clearance); clamping the anchor to `PLOT.top` would cost the phone its above seat (40.9 → 35.8 px of headroom against a 36.6 px callout); pilot's lean: leave it, watch it — plus the watch item: at 1536 the ceiling crown misses its above seat by 0.5 px of headroom (~7 px of figure width), so a wider result column would silently seat it above, the shape his eye ruled crowded in another form (`CROWN_SEAT_MARGIN_PX` in `e2e/chart-text.spec.ts` keeps CI stable across it). **The FADING-seed walk is RE-FILED, not walked:** its premise is structural — both routes cut the fan at cohort ≥ 0.5 BEFORE the resolver (`answerView.ts:81` / `:120` → `truncateFanAtThinCohort`) and `cohortFadeOpacity` is exactly 1 at ≥ 0.5, so no RENDERED sample ever fades and the legend's reopen trigger has no referent on ANY seed by construction — the residual needs a new framing (what the mask is for on the drawn fan) before any walk. Frames: CLEARED with `temp/` (emptied at every squeaky). Re-make them on the CURRENT tree before the sitting, and never beside vitest / doc-stats (the load landmine). The fork and sign-off frames (Cards 1 / 2 / 9 / 13, the RV label gutter, the date route's left column, the four-rungs pair on `seed-healthnc`): `CADDIE_TARGETS="seed:retired,seed:date,vault:datestale,solve:surplus,solve:failing,seed:healthnc" CADDIE_RUN=<name> pnpm caddie:walk` (~19 m, into `temp/caddie/<name>/`). The 24 px / 20 px frames: `pnpm exec playwright test --config e2e/held/shots.config.ts council-24px-shots` (~2 m, into `temp/council-24px/`). The icon is tracked (`scripts/icons/preview.png`). The two sibling sheets' blocked / pointed / cleared look has NO tracked instrument (the register's *The Caddie door walk captures no pixel of a scrolling sheet's below-fold cards* is the harness gap). Its only copy is the 2026-09-13 ad-hoc scratchpad harness `%TEMP%/claude/C--Users-brigg-ai-learning-journey-projects-the-back-nine/8269e9f0-120a-4772-a4d3-546bfdc40056/scratchpad/look/look.spec.ts` (port 4197). Hold it first as `e2e/held/sibling-sheets-look.spec.ts`: import from `../reviewSurface`, write to `process.env.LOOK_OUT ?? 'temp/look/adhoc'`, and drop its own config, since `shots.config.ts` collects every held spec. Then run `LOOK_OUT=temp/look/<name> pnpm exec playwright test --config e2e/held/shots.config.ts sibling-sheets-look`.
 
 **The phone strip-reserve fork** (register *The phone intake walk* item 3 — one of the three owed councils, the pilot's since the 2026-09-30 re-triage; ranked in the newest session block's NEXT list, under *the three owed councils*, (b)): the two-block strip measured 278 px =
 17.4 rem, Continue lands at y 1,378 on the Social Security step at scroll 0 — a reserve sized for a rare state taxes
@@ -1104,8 +1074,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    clause**.
    ⚑ **Audit corrections 2026-08-02 — three anchors were wrong and the fix shape is NOT Part B's:**
    (a) `healthOverlay.ts:305` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:2520` plus `taxOverlay.ts:2664-2671`
-   → `healthOverlay.ts:279`. (b) `copy.ts:1259` (`healthFactMedicare`) is a Medicare eyebrow; the strings that claim
-   the coupling is priced are **`copy.ts:1220-1223`**. (c) the excess-APTC field moved to
+   → `healthOverlay.ts:279`. (b) `copy.ts:1261` (`healthFactMedicare`) is a Medicare eyebrow; the strings that claim
+   the coupling is priced are **`copy.ts:1222-1225`**. (c) the excess-APTC field moved to
    `aca-last-verified.json:43` (was `:21`) and `scripts/verify-aca-status.ts:40-103` declares and REQUIRES the key
    (`adjacentButSharp` at `:90`, `needProse` at `:169`, since 2026-08-03) — **the gate is presence-only**: nothing checks that the prose models the uncapped clawback.
    ⚑ **STRUCTURAL — this is why it isn't a Part B copy-paste:** Part B's schedule is built INSIDE the
@@ -1120,17 +1090,17 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    priced.** A conversion enters `nonSSordinary` → `acaMagi` (`healthOverlay.ts:104-106`) → `slidingScalePtc`
    → net premium, in both preview arms. The fault is the **closed "Not counted here:" list** omitting the
    held-price modeling choice, while the sibling health-sheet list ONCE named the benchmark — struck 2026-08-03 as FALSE in
-   both lists (`copy.ts:1352-1365`); what is genuinely unmodelled about it is the COST TREND (`copy.ts:1367-1369`). (b) *"priced real-flat"* **understates what IS modelled** — `escalateQuote` climbs with the
+   both lists (`copy.ts:1354-1367`); what is genuinely unmodelled about it is the COST TREND (`copy.ts:1369-1371`). (b) *"priced real-flat"* **understates what IS modelled** — `escalateQuote` climbs with the
    age-rating curve (0.765 → 3.000 at 64). Only the **cost trend** is missing; the schedule is not flat, so
    **do NOT borrow `verdictResidualTail`'s "held flat in today's dollars"** — verbatim it is a NEW false
-   claim on this surface. (c) the editable strings are **`copy.ts:1221` and `:1223`** (the key names sit one line
+   claim on this surface. (c) the editable strings are **`copy.ts:1223` and `:1225`** (the key names sit one line
    above), and both must move together.
    ⚑ **The direction claim must be CLIFF-SCOPED, never blanket.** `healthOverlay.ts:231`+`:303` give
    under-cliff net = `enrolled − slcsp + contribution`, and `intakeMap.ts:733-734` scale **both** streams by
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
    (`devSeeds.ts:660-661` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:231` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:308-312`, full enrolled premium).
-   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2459-2460`) hedges bidirectionally on this exact fact and
+   The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2460-2461`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
    *"One modeling choice: these prices step up with your ages, not with the way plan prices themselves climb
    — so a conversion that crosses the income line could cost more than shown."*
@@ -1138,7 +1108,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`bd851f24`). The gate turned out to be **seven** undeclared fields, not one (`discriminatingProof`,
    `nothingEnactedChain`, `pendingExtension`, `retroactivity`, `adjacentButSharp`, `forwardClock`,
    `strickenCitations`) — all now declared + required, with array arms that reject `[]` (truthy) and
-   blank links; mutation-proven against the shipped record. And `copy.ts:1371` / `:1377` no longer list the
+   blank links; mutation-proven against the shipped record. And `copy.ts:1373` / `:1379` no longer list the
    benchmark premium as uncounted — it is the §36B PTC basis. **What REMAINS open here: the
    cliff-scoped disclosure sentence, and the withhold-vs-disclose fork below.**
    <details><summary>the two shipped XS entries</summary>
@@ -1152,7 +1122,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      clause this line used to carry was FALSE — corrected 2026-08-14.** CI exists and runs the FULL
      gate; the scoping error was looking inside `projects/the-back-nine/` when the git root is
      `ai-learning-journey`. See the CI note under "Standing cadences".
-   - **A false negation on the health sheet (XS).** `copy.ts:1209/960` list *"the benchmark premium itself"*
+   - **A false negation on the health sheet (XS).** `copy.ts:1211/960` list *"the benchmark premium itself"*
      under "Not counted here" while the entered benchmark **is** priced (`intakeMap.ts:734` →
      `healthOverlay.ts:222-232`) — the same false-negation shape O16 fixed on the Roth strings.
    </details>
@@ -1164,11 +1134,11 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    does the token gain an **ACA pricing-mode clause** that withholds the ranking — as Medicare's did — until
    a sourced trend lands?
    ⚑ **2026-09-04 anchors + two unfiled facts:** `escalateQuote` is `intakeMap.ts:358-378` (not `:271-291`);
-   the "Not counted here" pair is `copy.ts:1192` / `:1197` (not `:895/:897`) and the surface is SIX strings
-   (`copy.ts:1192`, `:1197, :1211, :1213, :1221, :1223` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
+   the "Not counted here" pair is `copy.ts:1194` / `:1199` (not `:895/:897`) and the surface is SIX strings
+   (`copy.ts:1194`, `:1199, :1213, :1215, :1223, :1225` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
-   affirmation, not append to it) + the two health-control siblings (`copy.ts:1371`, `:1377`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1363-1365`). Unfiled: `shadowRateHeadroom` (`copy.ts:3642`)
+   affirmation, not append to it) + the two health-control siblings (`copy.ts:1373`, `:1379`), which CANNOT take it
+   (gated on `statePriced` alone — `copy.ts:1365-1367`). Unfiled: `shadowRateHeadroom` (`copy.ts:3782`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -1215,8 +1185,8 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    every household that skipped it.
    ⚑ **2026-09-04:** "no token on the headline/date" is TRUE; "no honesty gate at all" would be FALSE — a
    state-tax disclosure already renders on both first-answer surfaces (`composeVerdictMedicareResidual`,
-   `stateTaxDisclosure.ts:45` → `ConfidenceStatement.tsx:501` + `FuckOffDate.tsx:456`; off-roster arm
-   `copy.ts:1440` "State income tax isn't priced yet…"). ✅ **The GATE gap this block named is CLOSED
+   `stateTaxDisclosure.ts:45` → `ConfidenceStatement.tsx:501` + `FuckOffDate.tsx:458`; off-roster arm
+   `copy.ts:1442` "State income tax isn't priced yet…"). ✅ **The GATE gap this block named is CLOSED
    2026-09-11 (Card 4):** the residual still rides `medicarePricedNote` (`healthSheetChrome.ts:681-686` —
    Medicare-priced AND no health door), but the clause no longer depends on it — `composeVerdictStateNote`
    (`stateTaxDisclosure.ts:86`, home #6) renders it STANDALONE (`.cs-state-note`) on both routes wherever the
@@ -1238,7 +1208,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `sanity.ts:67-90`). ⚑ **Size is M, not S, and a ceiling is the wrong instrument:** a 10× slip on
      $500k is $5M — a perfectly coherent household, so no threshold catches it. The shape that works is
      **one confirm on the household TOTAL** at the accounts step (the figure the engine actually consumes),
-     reusing the running total already rendered at `copy.ts:2672` / `questions.tsx:1107-1109`.
+     reusing the running total already rendered at `copy.ts:2742` / `questions.tsx:1107-1109`.
      ⚑ **"Briggsy sets the number" is the WRONG ask — there IS no honest number** (every total is
      coherent, so any threshold is the guessed plausibility band burned/062 bans). The only rule that
      invents nothing is an **unconditional** one-tap confirm for any household with ≥1 account. That is a
@@ -1256,7 +1226,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `METHODOLOGY_DISCLOSURES` rows render *inside* section
      a's single `<ul>` (`AssumptionPanel.tsx:819-851`), so an entry there lands in "On your behalf". A third
      section is **~18 lines of new JSX** mirroring `:570-574`, + 1 heading and 2 line keys in `copy.ts`'s
-     `assumption*` block (hedge/verdict-EXEMPT at `copy.ts:1513-1524`; avoid `copyGuard.ts:255`'s
+     `assumption*` block (hedge/verdict-EXEMPT at `copy.ts:1515-1526`; avoid `copyGuard.ts:255`'s
      `/(tap|draw|pull) … hsa/`), + **no CSS change** (`.ap-section*`/`.ap-row*` are generic). **Fit is safe
      and gets safer:** the panel scrolls (`sheetShell.css` `.control-sheet` 88dvh/94dvh, `overflow-y:auto`)
      and the fit gate's panel arm (`vertical-fit.spec.ts:1760-1789`) asserts only that the dialog box fits
@@ -1279,10 +1249,10 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      ⚑ **2026-09-04 re-anchor (drifted AGAIN, +62/+101 in a month) + four traps the build must clear.** The
      panel is `src/intake/AssumptionPanel.tsx` — section a opens `:685` / closes `:853`, section b `:856` /
      `:851`, footer `:857`, the disclosures map `:533-565`; the `assumption*` prefix law is
-     `copy.ts:1513-1524` (keys `:1525-1798`); the panel fit arm is `vertical-fit.spec.ts:1760-1789`;
+     `copy.ts:1515-1526` (keys `:1527-1803`); the panel fit arm is `vertical-fit.spec.ts:1760-1789`;
      `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:911-915` and
      `src/engine/taxOverlay.ts:2750-2753` (there is no `overlays/` dir). NIIT's two homes confirmed
-     (`recommendationView.ts:101` unconditional; `copy.ts:1370-1371`) — the scope fork is self-resolving:
+     (`recommendationView.ts:101` unconditional; `copy.ts:1372-1373`) — the scope fork is self-resolving:
      HSA + LTC only. TRAP 1 — `Row` REQUIRES a `seat` from the CLOSED 22-member `AssumptionSeat` union
      (`AssumptionPanel.tsx:146`, `assumptionRegistry.ts:43-68`): a leaves-out row is a hand-rolled
      `<li className="ap-row">` or a registry extension — "mirror the section" yields only the shell.
@@ -1321,36 +1291,36 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `?seed=health` + pay-less-tax reads *"You're already on one of the strongest paths we tested"* and
    never learns WHICH path. Deliberately out of scope: the proof above holds only in ACTIVE, so the
    no-change arm needs the `custom` branch (with a THIRD ui bucket map — `SequencingControl`'s is
-   intake-private and `reentryChrome.ts:80`'s points at different strings) and different words, since
+   intake-private and `reentryChrome.ts:81`'s points at different strings) and different words, since
    `mode === 'no-change'` is NOT "the winner is the plan you run" (it also fires on a seed-B display
    inversion and a $0 collapse). **No seed produces a `custom` winner**, so that branch would ship
    unwitnessable — mint the seed first or leave it.
 
-8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:571` gates
-   `RecommendationSurface` off for the date route entirely and `Result.tsx:434` gates the invite door. The
+8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:572` gates
+   `RecommendationSurface` off for the date route entirely and `Result.tsx:435` gates the invite door. The
    `blocked{spine-unready}` note that would explain it lives *inside* the gated-off component, so a working
-   couple sees the date answer and **zero words** about strategy. `Result.tsx:407-409`'s comment now records the
+   couple sees the date answer and **zero words** about strategy. `Result.tsx:408-410`'s comment now records the
    opposite (corrected 2026-09-04): the builder's `spine-unready` refusal does NOT cover the date route, so no note is minted there at all.
    ⚑ **THE FILED "CHEAP INTERIM" IS WRONG — do not execute it.** Dropping the `!isDateRoute` gate at
-   `Result.tsx:571` alone renders an **empty `<div>`**, not the refusal: the note is not reachable on that path. And
+   `Result.tsx:572` alone renders an **empty `<div>`**, not the refusal: the note is not reachable on that path. And
    reusing `recommendSpineUnreadyNote` would tell a household with a **complete** answer that its answer is
    incomplete — a new false claim, worse than the silence. The honest interim is a **route-true one-liner**
    admitting the v1 limit in its own words, seated and re-measured under `verify:fit` (~89px headroom).
    **Briggsy blesses the words.** Full parity stays council-sized — the crowned offset lives in the
    committed answer, not the draft, and anchoring candidates at a future retirement year is a real ranking
    question.
-   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:571` (surface) and `:434` (the invite conjunct; door
-   `Result.tsx:643-651`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:296`). Strike
+   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:572` (surface) and `:435` (the invite conjunct; door
+   `Result.tsx:644-652`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:296`). Strike
    "~89px headroom" — that is the SPINE idle frame's figure; the date arms of `verify:fit` assert ORDER + REACHABILITY only — never fit
-   (spec header `vertical-fit.spec.ts:22-23`). `Result.tsx:407-409`'s "covers the date route honestly" comment was FALSE (never
+   (spec header `vertical-fit.spec.ts:22-23`). `Result.tsx:408-410`'s "covers the date route honestly" comment was FALSE (never
    minted there; a route-flip render is dropped) — swept 2026-09-04. A crowned-offset params builder ALREADY
    exists (`buildControlPreviewParams`, `intakeMap.ts:1227-1236`), so parity's base shape is not from zero.
    Build shape: the ⚑ Folded 2026-09-06 block directly below.
    ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 6, the date-route one-liner) — its 2026-09-04 re-verify clause, still live:** Date-route one-liner (S) via a Caddie card — words must be true on all FOUR date-hero framings
    (anchor on WORK STATUS, never "a date ahead of you"); the one token yours: does it promise parity.
    ⚑ **2026-09-04:** the framings are no-date · now (today/arrived) · past · future (`heroLead`,
-   `FuckOffDate.tsx:220-239`; the split household's floor line has its own six arms, `:246-275`). Seat =
-   the else-arm of the `Result.tsx:571` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
+   `FuckOffDate.tsx:222-241`; the split household's floor line has its own six arms, `:248-277`). Seat =
+   the else-arm of the `Result.tsx:572` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
    the non-answer strip on an inputs-incomplete date frame); CSS in `fuckOffDate.css` — NOT
    `confidence.css`, the date grid is its own (`:238-254`) and its first free cell is r3c1 above the
    protected disclaimer; the key lands in verdict scope through the `fuckoff` substring net
@@ -1358,7 +1328,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    only (only `dip` + `datenc` carry the exhaustive doors-last sweep) — add a presence pin to the `?seed=dip`
    describe and measure the vertical cost by hand. The line must also be true on the route-FLIP frame: a
    committed rec whose spouse un-retires lands `stale` (not `blocked`) and the gate drops the stale card's
-   own re-open door with it. `Result.tsx:407-409`'s "covers the date route honestly" comment was FALSE —
+   own re-open door with it. `Result.tsx:408-410`'s "covers the date route honestly" comment was FALSE —
    swept 2026-09-04.
 
 9. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
@@ -1376,7 +1346,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     **Briggsy's words, or ship the engine half first.**
     ⚑ **2026-09-04 anchors:** the described arm is `solveDispatch.ts:102` (`:89` is the separate no-tax-overlay
     arm; `~:79` was mis-pointed at filing — the file is untouched since 2026-08-14); the refusal string is
-    `copy.ts:2223-2224` with its three-rewrite comment `:2200-2222` (`:2052-2056` now holds an unrelated
+    `copy.ts:2224-2225` with its three-rewrite comment `:2201-2223` (`:2053-2057` now holds an unrelated
     save-refusal block).
 
 10. ✅ **SHIPPED 2026-08-14 (`2816d036`) — the heir bracket is the household's now.** Register Tier 1 records the closure and the three swept comments.
@@ -1421,7 +1391,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:3546-3548` under the NUMBER AGREEMENT post-mortem at `copy.ts:3532`, covered by `copyGuard.test.ts:956`):
+    `copy.ts:3686-3688` under the NUMBER AGREEMENT post-mortem at `copy.ts:3672`, covered by `copyGuard.test.ts:966`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
@@ -1522,7 +1492,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:3960` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:4100` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -1538,7 +1508,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:4008`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:4148`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test
@@ -1686,7 +1656,7 @@ These are the mechanical ones that keep costing hours.*
     double-shifts every token it already moved (its dry run proposed `solverCodeVersion.ts:154 → :171` for a citation
     already at the right line). Move the later ones by hand from content, then run `content-check.mjs` (the re-anchor
     tools folder) — every DIFF it prints must be a construct this change edited on purpose. It also rewrote a HISTORICAL
-    example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1959`…" line) as if it were
+    example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1964`…" line) as if it were
     live: reverted by hand; read its WOULD list for examples before `--apply`.
   - **A dev seed carries no `chosenGoal`**, so `buildSolveRequest` returns `spine-unready` for it — a node-side solve
     probe passes `{ ...seed, chosenGoal }` (`b9-seed-probe\solve.mts`'s `seed:goal`). Single-threaded, `healthss` takes
@@ -1705,7 +1675,7 @@ These are the mechanical ones that keep costing hours.*
     `src/engine/reference/solver-cases/index.ts`), the ambiguous-basename class. Run `git grep -n "index\.ts:[0-9]"` and fix
     by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:441-444`,
     and pair-check's DOCHUNK section caught it. It also never moves a doc's citations INTO ITSELF, and neither tool flagged
-    it: two new register entries shifted `docs/backlog.md:1959`, `:2245`, `:2318` (cited from inside the register) by +36.
+    it: two new register entries shifted `docs/backlog.md:1964`, `:2250`, `:2323` (cited from inside the register) by +36.
     After any edit that adds lines to a doc, run `git grep -n "<doc>:[0-9]"` across the repo, the doc itself included, and
     compare HEAD vs tree content at each shifted number.
   - **The single-source gate in `constants.shape.test.ts` scans EVERY `src` file, tests included**; only `engine/constants/`
@@ -1817,7 +1787,7 @@ These are the mechanical ones that keep costing hours.*
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:762-772`
   excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:968-970`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:2605-2607`), a once-measured
+  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:2626-2628`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
   arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:22-23`) — no date frame has ever been fit-measured either.
 - **A live solve is tens of seconds to minutes — budget for it.** On the PRODUCTION build at the laptop with the worker pool

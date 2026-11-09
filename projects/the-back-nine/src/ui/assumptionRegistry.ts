@@ -34,7 +34,7 @@ import type { WorkingYearStateTaxReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 // A type only (no runtime edge): build 2's shown-state vocabulary lives in its pure intake leaf.
 import type { LeftOverShownState } from '@intake/workingYearLeftOverState'
-import type { CopyKey } from './copy'
+import { WORKING_COST_ACT_COPY, type CopyKey, type WorkingCostAct } from './copy'
 
 /** A rendering seat in the AssumptionPanel — the `data-assumption-seat` vocabulary the
  *  completeness test walks. Adding a seat here without stamping it in the panel fails the
@@ -247,37 +247,45 @@ const WORK_STATE_KEY: Readonly<Record<WorkingYearStateTaxReading, CopyKey>> = {
 const WORK_STATE_FAMILY: ReadonlySet<CopyKey> = new Set(Object.values(WORK_STATE_KEY))
 
 /** Build 2's left-over line (KTD11; it replaced K9) — by R3's shown state, ONE static line per state, exhaustive
- *  over the seven so a state added later fails to compile here (insight 147). No dollars, no lean (R14, R16):
- *  the dollars ride the question's own line under its radios. */
-const LEFT_OVER_KEY: Readonly<Record<LeftOverShownState, CopyKey>> = {
-  'not-asked': 'assumptionWorkingYearCheckLeftOverNotAsked',
-  'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaiting',
-  absent: 'assumptionWorkingYearCheckLeftOverAbsent',
-  saved: 'assumptionWorkingYearCheckLeftOverSaved',
-  'saved-moved': 'assumptionWorkingYearCheckLeftOverSavedMoved',
-  spent: 'assumptionWorkingYearCheckLeftOverSpent',
-  'not-sure': 'assumptionWorkingYearCheckLeftOverNotSure',
+ *  over the seven so a state added later fails to compile here (insight 147), and by the act where the state
+ *  names it: "waiting on W" says the act in its own verb, the reader acting (U11 walk 5's (bn);
+ *  `WORKING_COST_ACT_COPY`, the act's one home). No dollars, no lean (R14, R16): the dollars ride the question's own
+ *  line under its radios. */
+const sameForEitherAct = (k: CopyKey): Readonly<Record<WorkingCostAct, CopyKey>> => ({ update: k, confirmOrChange: k })
+const LEFT_OVER_KEY: Readonly<Record<LeftOverShownState, Readonly<Record<WorkingCostAct, CopyKey>>>> = {
+  'not-asked': sameForEitherAct('assumptionWorkingYearCheckLeftOverNotAsked'),
+  'waiting-on-w': {
+    update: WORKING_COST_ACT_COPY.update.waitingMethod,
+    confirmOrChange: WORKING_COST_ACT_COPY.confirmOrChange.waitingMethod,
+  },
+  absent: sameForEitherAct('assumptionWorkingYearCheckLeftOverAbsent'),
+  saved: sameForEitherAct('assumptionWorkingYearCheckLeftOverSaved'),
+  'saved-moved': sameForEitherAct('assumptionWorkingYearCheckLeftOverSavedMoved'),
+  spent: sameForEitherAct('assumptionWorkingYearCheckLeftOverSpent'),
+  'not-sure': sameForEitherAct('assumptionWorkingYearCheckLeftOverNotSure'),
 }
-const LEFT_OVER_FAMILY: ReadonlySet<CopyKey> = new Set(Object.values(LEFT_OVER_KEY))
+const LEFT_OVER_FAMILY: ReadonlySet<CopyKey> = new Set(Object.values(LEFT_OVER_KEY).flatMap((byAct) => Object.values(byAct)))
 
 /** A methodology row's lines for an arm — the ONE selector the panel and the disclosure test both
  *  call, so the arm choice cannot drift between them (insight 086). A row without a W arm reads its
  *  `lineKeys` on both arms. Both readings are REQUIRED, so no caller can skip a family's choice: of the K7
  *  family in the list, only the draft's working-year state-tax reading's key reads (the W step's own,
  *  `workingYearStateTaxReading`); of build 2's left-over family, only the draft's shown state's key
- *  (`workingYearLeftOverShownState`, the one read — KTD11). Positional, and safe from a swap only because
- *  the two vocabularies share no member and are typed apart. */
+ *  (`workingYearLeftOverShownState`, the one read — KTD11) in the draft's act (`workingYearCostAct`, read on every
+ *  draft; it decides only "waiting on W"'s words). Positional, and safe from a swap only because the vocabularies
+ *  share no member and are typed apart. */
 export function methodologyLines(
   m: MethodologyDisclosure,
   arm: MethodologyArm,
   stateReading: WorkingYearStateTaxReading,
   leftOver: LeftOverShownState,
+  act: WorkingCostAct,
 ): readonly CopyKey[] {
   const keys = arm === 'workingCost' && m.workingCostLineKeys !== undefined ? m.workingCostLineKeys : m.lineKeys
   return keys.filter(
     (k) =>
       (!WORK_STATE_FAMILY.has(k) || k === WORK_STATE_KEY[stateReading]) &&
-      (!LEFT_OVER_FAMILY.has(k) || k === LEFT_OVER_KEY[leftOver]),
+      (!LEFT_OVER_FAMILY.has(k) || k === LEFT_OVER_KEY[leftOver][act]),
   )
 }
 
@@ -338,7 +346,7 @@ export const METHODOLOGY_DISCLOSURES: readonly MethodologyDisclosure[] = [
     // gap that can move the check, in the pinned order — looks better than it really is (K1–K5, and K7
     // where the reading makes it rosy), either way (K6–K8), then build 2's left-over family (no lean; it
     // replaced K9), then a little worse (K10–K13, K15). The K7 family holds three keys, one per reading
-    // (`WORK_STATE_KEY`), and the left-over family seven, one per shown state (`LEFT_OVER_KEY`); each
+    // (`WORK_STATE_KEY`), and the left-over family eight, one per shown state and two for "waiting on W", one per act (`LEFT_OVER_KEY`); each
     // household reads one of each. The build that closes a gap deletes its key.
     workingCostLineKeys: [
       'assumptionWorkingYearCheckValue',
@@ -355,7 +363,8 @@ export const METHODOLOGY_DISCLOSURES: readonly MethodologyDisclosure[] = [
       'assumptionWorkingYearCheckWorkState',
       'assumptionWorkingYearCheckWageFigures',
       'assumptionWorkingYearCheckLeftOverNotAsked',
-      'assumptionWorkingYearCheckLeftOverWaiting',
+      'assumptionWorkingYearCheckLeftOverWaitingUpdate',
+      'assumptionWorkingYearCheckLeftOverWaitingConfirm',
       'assumptionWorkingYearCheckLeftOverAbsent',
       'assumptionWorkingYearCheckLeftOverSaved',
       'assumptionWorkingYearCheckLeftOverSavedMoved',

@@ -276,13 +276,21 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
           sentence,
           copy.workingCostStaleEitherWayConfirm,
           copy.workingCostStaleLabelNow,
-          slots.workingCostStaleAfterWork('78,000'),
+          slots.workingCostStaleAfterWork('78,000', true),
           slots.workingCostStaleLeftOverAnswered('16,985'),
-          copy.workingCostStaleLeftOverNone,
-          slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '78,000'),
-          copy.stalenessPayCheckGateDoor,
+          slots.workingCostStaleLeftOverNoneConfirm('16,985', '84,000'),
+          slots.workingCostStaleDefineHold(true),
+          slots.workingCostStaleGateDoorConfirm('84,000', copy.stalenessPayCheckCta),
+          slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '84,000', false, '78,000', '78,000', false),
         ].join(' '),
       )
+      // U11 walk 5's (bi) on IntakeApp's own call: the label is structure (a <strong> after a <br>), and the door's
+      // sentences start a line of their own.
+      const p = Array.from(document.querySelectorAll('.reentry-notes p')).find((el) => el.textContent === line)!
+      const labels = Array.from(p.querySelectorAll('strong.note-parts__label'))
+      expect(labels.map((l) => l.textContent)).toEqual([copy.workingCostStaleLabelNow])
+      expect(labels[0]!.previousElementSibling?.tagName).toBe('BR')
+      expect(p.querySelectorAll('br')).toHaveLength(2)
     } finally {
       h.model = current
     }
@@ -307,14 +315,20 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
           slots.workingCostStaleLeftOverYearsCheaper('84,000'),
           copy.workingCostStaleEitherWayUpdate,
           copy.workingCostStaleLabelNow,
+          slots.workingCostStaleAfterWork('90,000', true),
           slots.workingCostStaleLeftOverAnswered('16,985'),
-          copy.workingCostStaleLeftOverNone,
+          slots.workingCostStaleLeftOverNoneUpdate('16,985', '84,000'),
           slots.workingCostStaleLabelIf('90,000'),
           slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
-          slots.workingCostStaleDefineUpdate('90,000'),
-          copy.stalenessPayCheckGateDoorUpdate,
+          slots.workingCostStaleGateDoorUpdate('84,000', copy.stalenessPayCheckCtaUpdate),
+          slots.workingCostStaleDefineUpdate('90,000', true, '90,000', false),
         ].join(' '),
       )
+      const p = Array.from(document.querySelectorAll('.reentry-notes p')).find((el) => el.textContent === line)!
+      const labels = Array.from(p.querySelectorAll('strong.note-parts__label'))
+      expect(labels.map((l) => l.textContent)).toEqual([copy.workingCostStaleLabelNow, slots.workingCostStaleLabelIf('90,000')])
+      for (const l of labels) expect(l.previousElementSibling?.tagName).toBe('BR')
+      expect(p.querySelectorAll('br')).toHaveLength(3)
     } finally {
       h.model = current
     }
@@ -467,12 +481,13 @@ describe('IntakeApp — the U13 re-entry gate (council 2026-07-09, constraints (
       h.model = staleW.scenario
       render(<IntakeApp hydrateFromVault readOnly />)
       await screen.findByRole('button', { name: copy.reentryContinueCta })
+      const door = slots.workingCostStaleGateDoorConfirm('84,000', copy.stalenessPayCheckCta)
       expect(payCheckLine(), 'the stale-W line renders read-only').toBeDefined()
-      expect(payCheckLine()).not.toContain(copy.stalenessPayCheckGateDoor)
+      expect(payCheckLine()).not.toContain(door)
       cleanup()
       render(<IntakeApp hydrateFromVault />)
       await screen.findByRole('button', { name: copy.reentryAffirmCta })
-      expect(payCheckLine()?.endsWith(copy.stalenessPayCheckGateDoor), 'the writable tab names the door').toBe(true)
+      expect(payCheckLine()?.endsWith(door), 'the writable tab names the door').toBe(true)
     } finally {
       h.model = fresh
     }

@@ -6,7 +6,9 @@ import {
   isWorkingYearCostStale,
   workingCostBelowMedical,
   workingYearCostStaleness,
+  stateTaxBelongsInW,
   workingYearCostStaleSentence,
+  workingYearCostTypedBelowQuote,
   workingYearQuote,
   workingYearStateTaxReading,
   writeClearedWorkingYearCost,
@@ -718,5 +720,57 @@ describe('the keep stamp: a kept yes goes stale when the spending rises past it 
       stateTaxReading: 'agi-derived',
       keptOverQuoteReal: 29_600,
     })
+  })
+})
+
+// The Tier 0 register entry *A figure typed below today's spending clears W's stale line for good…*, prescription (1),
+// shipped with U11 walk 5's round: a TYPED figure below today's quote, named side by side. Typed by hand on
+// `datesavedrisen` (its spending raised to $90,000) with $84,000 typed.
+describe('workingYearCostTypedBelowQuote — a typed figure below today’s quote (the Tier 0 retype entry, prescription (1))', () => {
+  const yes = DEV_SEEDS.datesavedrisen.workingYearCost
+  if (yes?.kind !== 'confirmed') throw new Error('[test setup] datesavedrisen holds a yes')
+  const typed = (amountReal: number, entryPeriod: 'year' | 'month' = 'year'): ScenarioDraft => ({
+    ...DEV_SEEDS.datesavedrisen,
+    workingYearCost: { kind: 'entered', amountReal, entryPeriod, stateTaxReading: yes.stateTaxReading },
+  })
+  it('$84,000 typed under a $90,000 spending figure: both figures, yearly; never stale (a typed figure answers no quote)', () => {
+    expect(workingYearCostTypedBelowQuote(typed(84_000))).toEqual({ typed: '84,000', quote: '90,000', source: 'spending' })
+    expect(workingYearCostTypedBelowQuote(typed(84_000, 'month')), 'a monthly figure is named by its yearly money').toEqual({ typed: '84,000', quote: '90,000', source: 'spending' })
+    expect(isWorkingYearCostStale(typed(84_000)), 'the retype clears the stale line: why the note exists').toBe(false)
+    expect(slots.workingCostBelowSpending('84,000', '90,000', true)).toBe(
+      'Your $84,000 a year is below your spending figure of $90,000 a year. A working year almost always costs at least what you spend, so this answer can look better than it really is.',
+    )
+    // The year-level lean, for a "saved" answer waiting on W (no whole-answer lean holds there: the round review).
+    expect(slots.workingCostBelowSpending('84,000', '90,000', false)).toBe(
+      'Your $84,000 a year is below your spending figure of $90,000 a year. A working year almost always costs at least what you spend, so your $84,000 figure makes any working year your pay doesn’t cover look cheaper than it really is.',
+    )
+    expect(slots.workingCostBelowBudget('84,000', '90,000', false)).toBe(
+      'Your $84,000 a year is below your budget’s first year after work stops, which comes to $90,000 a year. A working year almost always costs at least what you spend, so your $84,000 figure makes any working year your pay doesn’t cover look cheaper than it really is.',
+    )
+  })
+  it('compared at the cent the quote is stored at (the round review’s P0): $7,083.33 a month typed for both the spending and W is not below — 12 × 7,083.33 drifts a hair under the quote’s snapped cents — and a cent a month less is, both figures to the cent', () => {
+    const monthlySpend = (d: ScenarioDraft): ScenarioDraft => ({ ...d, annualSpendingReal: 7_083.33 * 12, spendEntryPeriod: 'month' })
+    expect(7_083.33 * 12, 'the premise: the raw product drifts under its cents').toBeLessThan(84_999.96)
+    expect(workingYearCostTypedBelowQuote(monthlySpend(typed(7_083.33 * 12, 'month')))).toBeNull()
+    expect(workingYearCostTypedBelowQuote(monthlySpend(typed(7_083.32 * 12, 'month')))).toEqual({
+      typed: '84,999.84',
+      quote: '84,999.96',
+      source: 'spending',
+    })
+  })
+  it('null at or above the quote, for a kept or said-yes figure (their own stale line names it), and with no quote', () => {
+    expect(workingYearCostTypedBelowQuote(typed(90_000))).toBeNull()
+    expect(workingYearCostTypedBelowQuote(typed(95_000))).toBeNull()
+    expect(workingYearCostTypedBelowQuote(DEV_SEEDS.datesavedrisen), 'a yes').toBeNull()
+    const kept: ScenarioDraft = { ...typed(84_000), workingYearCost: { ...(typed(84_000).workingYearCost as Extract<NonNullable<ScenarioDraft['workingYearCost']>, { kind: 'entered' }>), keptOverQuoteReal: 84_000 } }
+    expect(workingYearCostTypedBelowQuote(kept), 'a kept figure').toBeNull()
+    const { annualSpendingReal: _s, ...noSpending } = typed(84_000)
+    expect(workingYearCostTypedBelowQuote(noSpending), 'no quote').toBeNull()
+  })
+  it('stateTaxBelongsInW: the W help asks to ADD state tax under an unpriced or class-based reading only', () => {
+    expect(stateTaxBelongsInW(DEV_SEEDS.datesavedrisen), 'unpriced').toBe(true)
+    expect(stateTaxBelongsInW({ ...DEV_SEEDS.datesavedrisen, retirementState: 'PA' }), 'class-based').toBe(true)
+    expect(stateTaxBelongsInW({ ...DEV_SEEDS.datesavedrisen, retirementState: 'NC' }), 'AGI-derived').toBe(false)
+    expect(stateTaxBelongsInW({ ...DEV_SEEDS.datesavedrisen, retirementState: 'FL' }), 'no income tax').toBe(false)
   })
 })

@@ -161,7 +161,7 @@ status: shipped
   state. Two route-true faces share one body (the Caddie chair fix, 2026-07-15): a working
   household reads "Where WILL you live…", an already-retired one the present-tense heading
   (`stateStepRetired`, picked by `anyWorking`).
-- **Picker: the existing vertical SegmentedControl, REUSED** (fields.tsx:306-398 — native
+- **Picker: the existing vertical SegmentedControl, REUSED** (fields.tsx:306-403 — native
   radios in fieldset/legend, active state by weight+fill+text never hue, a visible ring via
   `.segment:has(input:focus-visible)`, ≥24px rows): **4 arms — NC · PA · FL · "somewhere
   else"**, and NOTHING is active until the household answers (the honest not-set face). NO
@@ -215,8 +215,8 @@ status: shipped
    own affirmation ships, rather than silently dressing a future SC household in Florida's
    "no state income tax" words.
 3. **FIVE disclosure homes, not the four this plan first named** (SIX since 2026-09-11 — the standalone verdict note, see the S5 note below) — `verdictMedicareResidual`
-   (copy.ts:1439), `rothOmissionsNote` (copy.ts:1191), `controlHealthOmissionsNote`
-   (copy.ts:1370), the spendHelp branch (`spendHelpKeyFor`, intakeMap.ts:1123), and the
+   (copy.ts:1441), `rothOmissionsNote` (copy.ts:1193), `controlHealthOmissionsNote`
+   (copy.ts:1372), the spendHelp branch (`spendHelpKeyFor`, intakeMap.ts:1123), and the
    RECOMMENDATION surface's disclosure rail (`recDiscStateTax`). The fifth was born unguarded:
    it shipped as the only household-DEPENDENT builder with no condition, so an NC household
    would read "this compares federal tax only" three inches under a spine that had just named

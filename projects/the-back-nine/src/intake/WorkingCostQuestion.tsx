@@ -21,7 +21,7 @@ import {
   writeWorkingYearCostPeriod,
   type WorkingYearQuote,
 } from './workingYearQuote'
-import { workingYearCostStaleNote } from './workingYearLeftOver'
+import { workingYearCostStaleNote, workingYearCostTypedBelowNote } from './workingYearLeftOver'
 
 /**
  * The pay check's W question (`docs/plans/features/working-year-pay-check-build-spec.md` U8; KTD5,
@@ -291,6 +291,7 @@ export function WorkingCostQuestion({
   // the spending is ALWAYS below the quote (its staleness is that), so its door never shows: a keep would
   // carry the stamp forward and leave it as stale as it was.
   const keepable = noteW !== undefined && !heldYesBelowQuote(noteDraft)
+  const typedBelowNote = workingYearCostTypedBelowNote(noteDraft)
 
   return (
     <div className="working-cost" ref={rootRef}>
@@ -358,7 +359,9 @@ export function WorkingCostQuestion({
       {offersYes && (
         <>
           <SegmentedControl<'yes' | 'figure'>
-            legendKey="workingCostLegend"
+            // The question names the figure "Yes" sets (copy-law F8 at U11 walk 5: "Is that about…" sat two help
+            // lists below the quote it meant), the yearly quote as the stale note names it.
+            legend={slots.workingCostLegendFigure(formatMoney(quote.annualReal))}
             name="working-cost"
             vertical
             value={picked}
@@ -463,6 +466,11 @@ export function WorkingCostQuestion({
           {slots.workingCostBelowMedical(formatMoney(workingYearCostFigure(w)), formatMoney(medical))}
         </p>
       )}
+      {/* A TYPED figure below today's quote (the Tier 0 register entry's prescription (1)): calm, never a block, both
+          figures and the lean for this answer (`workingYearCostTypedBelowNote`). Drawn from the W the PRESS saw, like
+          the stale note (the h2 cure): a Continue press whose blur commits a typed figure must not mount a line above
+          its own target before the release. */}
+      {typedBelowNote !== null && <p className="field-help">{typedBelowNote}</p>}
     </div>
   )
 }

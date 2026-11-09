@@ -47,6 +47,7 @@ import { copy, slots } from './copy'
 import { appModel } from './appModel'
 import { Disclaimer } from './Disclaimer'
 import { FuckOffDate, W_STALE_CAUSE, type StandingNoteCause } from './FuckOffDate'
+import { plainNote, type NoteParts } from './noteParts'
 import { ConfidenceStatement } from './ConfidenceStatement'
 import { selectElevatedAnswer, resolvedFocusKey } from './answerView'
 import type { ResaveCopyKey } from './unlockCopy'
@@ -222,15 +223,15 @@ export function Result({
   const [assumptionsSeat, setAssumptionsSeat] = useState<AssumptionLandingSeat | undefined>(undefined)
   if (!assumptionsOpen && assumptionsSeat !== undefined) setAssumptionsSeat(undefined)
   // The standing answer line for one cause: its door opens the panel at that cause's seat, and exists only
-  // where the tab can save (a read-only tab reads the fact alone). `doorLead` — what is said just before the door
-  // (W's act defined in the W row's own button words, `workingYearCostStaleDoor`) — rides only with the door, so a
-  // read-only tab is never told buttons to press.
-  const standingNote = (cause: StandingNoteCause, text: string, seat: AssumptionLandingSeat, doorLead: string | null = null) =>
+  // where the tab can save (a read-only tab reads the fact alone). `door` — what is said beside the door (for W, the
+  // Result's own sentences from `workingYearCostStaleDoor`: "press … below", then "There, …") — rides only with the
+  // door, so a read-only tab is never told buttons to press.
+  const standingNote = (cause: StandingNoteCause, line: Omit<NoteParts, 'door'>, seat: AssumptionLandingSeat, door: readonly string[] = []) =>
     readOnly
-      ? { cause, text }
+      ? { cause, parts: { ...line, door: [] } }
       : {
           cause,
-          text: doorLead === null ? text : `${text} ${doorLead}`,
+          parts: { ...line, door },
           onOpen: () => {
             setAssumptionsSeat(seat)
             setAssumptionsOpen(true)
@@ -283,7 +284,7 @@ export function Result({
   // spending rose, what a check at the quote adds (the U11 walk's (ae); memoized on the draft, as the line is here).
   const payCheckStaleText = useMemo(() => workingYearCostStaleLine(snapshot.draft), [snapshot.draft])
   // …and its door (council `wf_7fa86902-35c`): the act, which picks the cause and so the door's words
-  // (`W_STALE_CAUSE`), and the act's definition said just before it.
+  // (`W_STALE_CAUSE`), and what the Result says beside it (U11 walk 5's (bj), (bk)).
   const payCheckStaleDoor = useMemo(() => workingYearCostStaleDoor(snapshot.draft), [snapshot.draft])
   // Build 2's moved left over (R12), read LIVE off the draft through the one moved core. Where a tax, state-tax
   // or working-years line fired at unlock (`leftOverClauseHost`, decided once by `composeReentry` and kept for
@@ -730,9 +731,9 @@ export function Result({
             onReconfirm={onReview}
             payCheckNote={
               payCheckStaleText !== null && payCheckStaleDoor !== null
-                ? standingNote(W_STALE_CAUSE[payCheckStaleDoor.act], payCheckStaleText, 'working-year-cost', payCheckStaleDoor.definition)
+                ? standingNote(W_STALE_CAUSE[payCheckStaleDoor.act], payCheckStaleText, 'working-year-cost', payCheckStaleDoor.result)
                 : leftOverMoved !== null && !leftOverClauseHost
-                  ? standingNote('left-over-moved', workingYearLeftOverMovedText(leftOverMoved), 'working-year-left-over')
+                  ? standingNote('left-over-moved', plainNote(workingYearLeftOverMovedText(leftOverMoved)), 'working-year-left-over')
                   : undefined
             }
           />

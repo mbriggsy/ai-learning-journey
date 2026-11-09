@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { FuckOffDate, W_STALE_CAUSE } from '../FuckOffDate'
+import { notePartsText, plainNote } from '../noteParts'
 import { copy, slots } from '../copy'
 import { dateOddsText } from '../dateOdds'
 import { deriveDateBandAnnotations } from '../bandAnnotations'
@@ -581,7 +582,7 @@ describe('the pay check’s standing line (KTD21)', () => {
 
   it('with a door: the sentence, then an inline control that opens the panel', () => {
     const onOpen = vi.fn()
-    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'w-stale-confirm-or-change', text: STALE, onOpen }} />)
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'w-stale-confirm-or-change', parts: plainNote(STALE), onOpen }} />)
     const note = container.querySelector('p.fod-note.cs-paycheck-note')
     expect(note).not.toBeNull()
     expect(note?.textContent).toContain(`${copy.stalenessPayCheckNote} ${STALE}`)
@@ -591,7 +592,7 @@ describe('the pay check’s standing line (KTD21)', () => {
 
   it('the cause is split by the act (council wf_7fa86902-35c): "update" names its own door — never "confirm or change", which names a Keep door the W row withholds below the quote', () => {
     const onOpen = vi.fn()
-    render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: W_STALE_CAUSE.update, text: STALE, onOpen }} />)
+    render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: W_STALE_CAUSE.update, parts: plainNote(STALE), onOpen }} />)
     expect(screen.queryByRole('button', { name: copy.stalenessPayCheckCta })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Update your figure for a working year' }))
     expect(onOpen).toHaveBeenCalledTimes(1)
@@ -599,14 +600,14 @@ describe('the pay check’s standing line (KTD21)', () => {
   })
 
   it('read-only: the same sentence with NO door (a dead-end control is the lying-remedy shape)', () => {
-    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'w-stale-confirm-or-change', text: STALE }} />)
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'w-stale-confirm-or-change', parts: plainNote(STALE) }} />)
     expect(container.querySelector('.cs-paycheck-note')?.textContent).toBe(`${copy.stalenessPayCheckNote} ${STALE}`)
     expect(screen.queryByRole('button', { name: copy.stalenessPayCheckCta })).toBeNull()
   })
 
   it('sits in the lead AFTER the staleness echo and the state note, ABOVE the graphs — and is never an alert', () => {
     const { container } = render(
-      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} stalenessNote payCheckNote={{ cause: 'w-stale-confirm-or-change', text: STALE, onOpen: () => {} }} />,
+      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} stalenessNote payCheckNote={{ cause: 'w-stale-confirm-or-change', parts: plainNote(STALE), onOpen: () => {} }} />,
     )
     const lead = container.querySelector('.reveal__lead')!
     const notes = Array.from(lead.querySelectorAll('.fod-note'))
@@ -622,6 +623,30 @@ describe('the pay check’s standing line (KTD21)', () => {
     expect(notes[payIdx]!.getAttribute('role')).toBeNull()
   })
 
+  // U11 walk 5's (bi): W's line as parts — each label starts its own line in the body's semibold (a <strong> after a
+  // <br>), and the door's sentences start one too, unlabelled, before the button. The text reads the parts joined.
+  it('draws the parts as structure: the opening, then each label in a <strong> after a <br>, then the door’s sentences after a <br>, then the button', () => {
+    const parts = {
+      opening: 'The note. The lead.',
+      segments: [
+        { label: 'This answer now:', sentences: ['One.', 'Two.'] },
+        { label: 'If a working year costs $90,000:', sentences: ['Three.'] },
+      ],
+      door: ['Press below.', 'There, choose.'],
+    }
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: W_STALE_CAUSE.update, parts, onOpen: () => {} }} />)
+    const span = container.querySelector('.cs-paycheck-note > span')!
+    expect(span.textContent).toBe(`${copy.stalenessPayCheckNote} ${notePartsText(parts)}`)
+    const labels = Array.from(span.querySelectorAll('strong.note-parts__label'))
+    expect(labels.map((l) => l.textContent)).toEqual(['This answer now:', 'If a working year costs $90,000:'])
+    for (const l of labels) expect(l.previousElementSibling?.tagName, `${l.textContent} follows a line break`).toBe('BR')
+    expect(span.querySelectorAll('br')).toHaveLength(3)
+    expect(span.lastChild?.textContent, 'the door’s sentences close the paragraph, unlabelled').toBe('Press below. There, choose.')
+    expect(span.lastChild?.previousSibling?.nodeName, '…after a line break of their own').toBe('BR')
+    // The button follows the paragraph's words.
+    expect(container.querySelector('.cs-paycheck-note > span + button')).not.toBeNull()
+  })
+
   it('names no state in the Card 4 matrix’s words — it never doubles the one state clause', () => {
     expect(copy.stalenessPayCheckNote).not.toMatch(/isn’t priced yet|is already counted in this answer|no state income tax/)
   })
@@ -632,7 +657,7 @@ describe('the pay check’s standing line (KTD21)', () => {
   it('build 2: a moved left over reads its OWN lead and door label — never W’s', () => {
     const onOpen = vi.fn()
     const { container } = render(
-      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'left-over-moved', text: MOVED, onOpen }} />,
+      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'left-over-moved', parts: plainNote(MOVED), onOpen }} />,
     )
     const note = container.querySelector('p.fod-note.cs-paycheck-note')
     expect(note?.textContent).toContain(`${copy.stalenessLeftOverNote} ${MOVED}`)

@@ -27,10 +27,11 @@
 import { useId, useMemo } from 'react'
 import type { WorkingYearLeftOverKind } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { copy, slots } from '@ui/copy'
+import { WORKING_COST_ACT_COPY, copy, slots } from '@ui/copy'
 import { SegmentedControl, formatMoney } from './fields'
 import { workingYearLeftOverDepositsLive, workingYearLeftOverLive, workingYearLeftOverShownState } from './intakeMap'
 import { workingYearLeftOverMoved, writeWorkingYearLeftOver } from './workingYearLeftOver'
+import { workingYearCostAct } from './workingYearQuote'
 import { LEFT_OVER_FACE, type LeftOverShownState } from './workingYearLeftOverState'
 
 /** The one line in dollars below the group (R6), by shown state. `live` is today's printed year-0 Left
@@ -94,7 +95,8 @@ export function WorkingYearLeftOverQuestion({
             <path d="M8 7v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             <circle cx="8" cy="4.5" r="0.9" fill="currentColor" />
           </svg>
-          <span>{copy.workingLedgerLeftOverWaiting}</span>
+          {/* In the act's verb, the reader acting (U11 walk 5's (bn); `WORKING_COST_ACT_COPY`): W is stale here. */}
+          <span>{copy[WORKING_COST_ACT_COPY[workingYearCostAct(draft)].waitingSeat]}</span>
         </p>
       </div>
     )

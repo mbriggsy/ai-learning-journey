@@ -85,7 +85,7 @@ import { useGestureHold } from './gestureHold'
 import { WorkingYearLeftOverQuestion } from './WorkingYearLeftOverQuestion'
 import { LEFT_OVER_FACE } from './workingYearLeftOverState'
 import { WorkingYearLedgerPicture, WorkingYearLedgerUnknown } from './WorkingYearLedger'
-import { workingYearCostStaleness, workingYearQuote, workingYearStateTaxReading } from './workingYearQuote'
+import { workingYearCostAct, workingYearCostStaleness, workingYearQuote, workingYearStateTaxReading } from './workingYearQuote'
 import './assumptions.css'
 
 /** The heir-bracket rungs — DERIVED from the shipped federal ordinary-bracket schedule, never
@@ -200,7 +200,7 @@ export function methodologyArmFor(d: ScenarioDraft): MethodologyArm {
 function ArmedMethodologyLines({ m, draft }: { readonly m: MethodologyDisclosure; readonly draft: ScenarioDraft }) {
   const arm = useMemo(() => methodologyArmFor(draft), [draft])
   const leftOver = useMemo(() => workingYearLeftOverShownState(draft), [draft])
-  return <MethodologyLines keys={methodologyLines(m, arm, workingYearStateTaxReading(draft), leftOver)} />
+  return <MethodologyLines keys={methodologyLines(m, arm, workingYearStateTaxReading(draft), leftOver, workingYearCostAct(draft))} />
 }
 
 /** The pay check's W row (`docs/plans/features/working-year-pay-check-build-spec.md` U8; KTD17,

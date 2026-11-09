@@ -2098,22 +2098,33 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
 // $165,000, hand-derived from the primaries by the build-2 record's `year0check.mts` (pay 165,000 − payroll
 // 12,622.50 − tax 20,840 − deposits 20,000 − W 84,000 = 27,537.50, a surplus rounding down).
 const STALE_W_QUOTE = slots.workingCostStaleQuote('84,000', '78,000')
-const STALE_W_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE} ${copy.stalenessPayCheckGateDoor}`
-// Council `wf_7fa86902-35c` (U11 walk 4): a "saved" answer waiting on W reads, after its note, a lead, "This answer
-// now:" (the stored $16,985 dated), and on the risen arms "If a working year costs $X:"; beside the door (both
-// walked tabs can save) the act defined in the W row's button words, then the door in the act's words — "confirm or
-// change" where the spending fell (the Keep door is real), "update" where it rose past the yes (no Keep door).
-const SAVED_NOW = [copy.workingCostStaleLabelNow, slots.workingCostStaleLeftOverAnswered('16,985'), copy.workingCostStaleLeftOverNone]
+// The gate's door sentence, on EVERY stale arm where the tab can save (U11 walk 5's (bj)): neither gate button changes
+// the figure, and where each leads — "confirm or change" where the spending fell (the W row's Keep door is real).
+const STALE_W_GATE_DOOR = slots.workingCostStaleGateDoorConfirm('84,000', copy.stalenessPayCheckCta)
+const STALE_W_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE} ${STALE_W_GATE_DOOR}`
+// Council `wf_7fa86902-35c` (U11 walk 4), drawn as parts since walk 5's (bi): a "saved" answer waiting on W reads,
+// after its note, a lead, "This answer now:" (after work it already uses the spending, the stored $16,985 dated, and
+// why none of it is added, in the act's verb), and on the risen arms "If a working year costs $X:". The drawn
+// `textContent` is the parts one space apart (`NotePartsBody` draws a space before each <br>). Beside the door (both
+// walked tabs can save) each host says its own: the gate its door sentence, the Result "press … below", then
+// "There, …" in the W row's button words — "confirm or change" where the spending fell, "update" where it rose past
+// the yes (no Keep door). No budget on these seeds, so the after-work figure is exact (no "about"), and no state is
+// priced, so "or state" rides the definition.
+const savedNow = (spending: string, none: string): readonly string[] => [
+  copy.workingCostStaleLabelNow,
+  slots.workingCostStaleAfterWork(spending, true),
+  slots.workingCostStaleLeftOverAnswered('16,985'),
+  none,
+]
 const STALE_W_SAVED_LINE = [
   STALE_W_QUOTE,
   copy.workingCostStaleEitherWayConfirm,
-  copy.workingCostStaleLabelNow,
-  slots.workingCostStaleAfterWork('78,000'),
-  slots.workingCostStaleLeftOverAnswered('16,985'),
-  copy.workingCostStaleLeftOverNone,
+  ...savedNow('78,000', slots.workingCostStaleLeftOverNoneConfirm('16,985', '84,000')),
 ].join(' ')
-const STALE_W_SAVED_DEFINITION = slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '78,000')
-const STALE_W_SAVED_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_SAVED_LINE} ${STALE_W_SAVED_DEFINITION} ${copy.stalenessPayCheckGateDoor}`
+const STALE_W_SAVED_HOLD = slots.workingCostStaleDefineHold(true)
+const STALE_W_SAVED_THERE = slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '84,000', false, '78,000', '78,000', false)
+const STALE_W_SAVED_RESULT_DOOR = `${STALE_W_SAVED_HOLD} ${slots.workingCostStaleResultDoorConfirm(copy.stalenessPayCheckCta)} ${STALE_W_SAVED_THERE}`
+const STALE_W_SAVED_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_SAVED_LINE} ${STALE_W_SAVED_HOLD} ${STALE_W_GATE_DOOR} ${STALE_W_SAVED_THERE}`
 const LEFT_OVER_MOVED_SENTENCE = slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')
 const LEFT_OVER_MOVED_GATE_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE} ${copy.stalenessLeftOverGateDoor}`
 // The U11 walk's (ae): the risen family's W line — W's sentence, the year-level lean, then the tail by what a check
@@ -2122,34 +2133,44 @@ const LEFT_OVER_MOVED_GATE_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOV
 // alimony, whose end at Sam's 62 makes 2029 the short arm's −$4,015 again (later short). The later-short line is
 // the LONGEST stale line any seed draws (with its gain years and its short run), so its arm is the gate's wrap-risk
 // arm. Each risen line names its own quote in the definition ("to use $90,000 a year").
+// After work the answer uses the risen spending figure, which on these seeds IS the quote (no budget): (bl) puts it
+// first under "This answer now:" on the risen arms too.
+const risenNow = (quoteNow: string): readonly string[] =>
+  savedNow(quoteNow, slots.workingCostStaleLeftOverNoneUpdate('16,985', '84,000'))
 const risenLine = (quoteNow: string, tail: readonly string[]): string =>
   [slots.workingCostStaleQuote('84,000', quoteNow), slots.workingCostStaleLeftOverYearsCheaper('84,000'), ...tail].join(' ')
 const RISEN_LINE = risenLine('90,000', [
   copy.workingCostStaleEitherWayUpdate,
-  ...SAVED_NOW,
+  ...risenNow('90,000'),
   slots.workingCostStaleLabelIf('90,000'),
   slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
 ])
 const RISEN_SHORT_LINE = risenLine('105,000', [
   slots.workingCostStaleShortUntilUpdated('84,000'),
-  ...SAVED_NOW,
+  ...risenNow('105,000'),
   slots.workingCostStaleLabelIf('105,000'),
   slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985'),
 ])
 const RISEN_LATER_LINE = risenLine('105,000', [
   copy.workingCostStaleEitherWayUpdate,
-  ...SAVED_NOW,
+  ...risenNow('105,000'),
   slots.workingCostStaleLabelIf('105,000'),
   slots.workingCostStaleLeftOverIfCapped('5,985', 2026, '105,000', true),
   slots.workingCostStaleLeftOverGainYears(2026, 2028, 2033),
   slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000'),
 ])
+/** What each host says beside its door on a risen arm ("update": no Keep door below the quote): the gate's door
+ *  sentence, or the Result's "press … below", then "There, …" naming the W row's buttons at today's quote. */
+const risenGateDoor = (quoteNow: string): string =>
+  `${slots.workingCostStaleGateDoorUpdate('84,000', copy.stalenessPayCheckCtaUpdate)} ${slots.workingCostStaleDefineUpdate(quoteNow, true, quoteNow, false)}`
+const risenResultDoor = (quoteNow: string): string =>
+  `${slots.workingCostStaleResultDoorUpdate(copy.stalenessPayCheckCtaUpdate)} ${slots.workingCostStaleDefineUpdate(quoteNow, true, quoteNow, false)}`
 const risenUnlock = (key: string, line: string, quoteNow: string) =>
   ({
     key,
-    note: `${copy.stalenessPayCheckGateLead} ${line} ${slots.workingCostStaleDefineUpdate(quoteNow)} ${copy.stalenessPayCheckGateDoorUpdate}`,
+    note: `${copy.stalenessPayCheckGateLead} ${line} ${risenGateDoor(quoteNow)}`,
     sibling: copy.stalenessLeftOverNote,
-    standing: `${copy.stalenessPayCheckNote} ${line} ${slots.workingCostStaleDefineUpdate(quoteNow)}`,
+    standing: `${copy.stalenessPayCheckNote} ${line} ${risenResultDoor(quoteNow)}`,
     dated: false,
   }) as const
 /** `standing` — the Result's standing-slot sentence after the affirm (the lead and the sentence, before its
@@ -2168,7 +2189,7 @@ const PAY_CHECK_UNLOCKS = [
     key: 'datesavedstale',
     note: STALE_W_SAVED_GATE_LINE,
     sibling: copy.stalenessLeftOverNote,
-    standing: `${copy.stalenessPayCheckNote} ${STALE_W_SAVED_LINE} ${STALE_W_SAVED_DEFINITION}`,
+    standing: `${copy.stalenessPayCheckNote} ${STALE_W_SAVED_LINE} ${STALE_W_SAVED_RESULT_DOOR}`,
     dated: true,
   },
   {
@@ -2708,7 +2729,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2131-2135 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2132-2136 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,
@@ -3384,7 +3405,7 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       await assertNoDateReading(page)
       const line = page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')
       await expect(line, 'the standing line renders in the lead').toHaveCount(1)
-      await expect(line).toContainText(`${copy.stalenessPayCheckNote} ${RISEN_LATER_LINE} ${slots.workingCostStaleDefineUpdate('105,000')}`)
+      await expect(line).toContainText(`${copy.stalenessPayCheckNote} ${RISEN_LATER_LINE} ${risenResultDoor('105,000')}`)
       await assertStandingLinePlaced(page, line, vp.use.viewport.width === PHONE.width, false)
       // Below the quote the door says "update" (council `wf_7fa86902-35c`): the W row offers no Keep door there.
       await page.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate }).click()

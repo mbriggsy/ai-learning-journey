@@ -71,6 +71,8 @@ import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import { LADDER_LABELS } from './oddsLadderChrome'
 import { axisDollarFormatterFor, formatAbsoluteDollar, formatAxisDollar } from './money'
 import type { DateBand, DateTrackOutcome } from '@shared/model'
+import type { NoteParts } from './noteParts'
+import { NotePartsBody } from './NotePartsBody'
 import './styles/fuckOffDate.css'
 
 /** What the surface shows. `dates` carries BOTH independent tracks (U9b — the pure composeDateSplit
@@ -178,16 +180,16 @@ export interface FuckOffDateProps {
   readonly onReconfirm?: () => void
   /** The standing answer line, ONE slot for two causes that cannot both hold (a moved left over needs a
    *  fresh W): W stale — the pay check's KTD21 line, the household's W no longer matches the spending or
-   *  state it was given against and the date still uses that last figure (R4); `text` is W's one stale line
+   *  state it was given against and the date still uses that last figure (R4); `parts` are W's one stale line
    *  (`workingYearCostStaleLine`: the W step's note, plus, for a "saved" answer waiting on W, what this answer
-   *  does with it now and what updating to today's quote does), followed, where the door rides, by the act's
-   *  definition (`workingYearCostStaleDoor`). Its cause is split by the act (`W_STALE_CAUSE`), so the door names
-   *  the act the W row really offers. `'left-over-moved'` — build 2's R12, the household's "All of it" was given
-   *  against a year-0 figure that has since changed; `text` names both. Each cause picks its own lead and door
-   *  label (`STANDING_NOTE_COPY`). `onOpen` present ⇒ the sentence carries a door into the assumptions panel at
-   *  the cause's seat (Result passes it only when the tab can save); absent ⇒ the read-only face states the fact
-   *  with no door (ReEntry's dead-end-CTA doctrine). */
-  readonly payCheckNote?: { readonly cause: StandingNoteCause; readonly text: string; readonly onOpen?: () => void }
+   *  does with it now and what updating to today's quote does, as labelled parts since U11 walk 5's (bi)) and, where
+   *  the door rides, what the Result says beside it (`workingYearCostStaleDoor`'s `result`). Its cause is split by
+   *  the act (`W_STALE_CAUSE`), so the door names the act the W row really offers. `'left-over-moved'` — build 2's
+   *  R12, the household's "All of it" was given against a year-0 figure that has since changed; its parts are one
+   *  plain sentence naming both. Each cause picks its own lead and door label (`STANDING_NOTE_COPY`). `onOpen`
+   *  present ⇒ the sentence carries a door into the assumptions panel at the cause's seat (Result passes it only when
+   *  the tab can save); absent ⇒ the read-only face states the fact with no door (ReEntry's dead-end-CTA doctrine). */
+  readonly payCheckNote?: { readonly cause: StandingNoteCause; readonly parts: NoteParts; readonly onOpen?: () => void }
   /** Build 2's clause on the hero's rules note (R12): present ⇔ a tax, state-tax or working-years line fired
    *  at unlock (`composeReentry`'s `leftOverClauseHost`) AND the left over has moved — the two figures ride the
    *  rules note, and no second line speaks (insight 101). Only beside `stalenessNote`. */
@@ -487,7 +489,11 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
               on it; a read-only tab reads the fact alone. */}
           {payCheckNote !== undefined && (
             <p className="fod-note cs-paycheck-note">
-              <span>{`${copy[STANDING_NOTE_COPY[payCheckNote.cause].lead]} ${payCheckNote.text}`}</span>
+              <span>
+                <NotePartsBody
+                  parts={{ ...payCheckNote.parts, opening: `${copy[STANDING_NOTE_COPY[payCheckNote.cause].lead]} ${payCheckNote.parts.opening}` }}
+                />
+              </span>
               {payCheckNote.onOpen !== undefined && (
                 <>
                   {' '}

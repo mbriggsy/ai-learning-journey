@@ -762,8 +762,8 @@ async function walkDoors(page: Page, outDir: string, witness?: LeftOverWitness):
   for (let i = 0; i < count; i++) {
     const door = doors.nth(i)
     const name = (await door.innerText()).trim()
-    // The assumptions door by its OWN stable stamp (Result.tsx:683), never by index: the
-    // `.result-recommend-invite` door (Result.tsx:643) is conditional, so door-4 is door-4 only
+    // The assumptions door by its OWN stable stamp (Result.tsx:684), never by index: the
+    // `.result-recommend-invite` door (Result.tsx:644) is conditional, so door-4 is door-4 only
     // on the plants where the solve is un-invitable. Read BEFORE the click — the row survives the
     // open, but nothing here should depend on that.
     const isAssumptions = (await door.getAttribute('data-door')) === 'assumptions'
@@ -773,7 +773,7 @@ async function walkDoors(page: Page, outDir: string, witness?: LeftOverWitness):
     // exact class, the same one `SequencingControl`/`HealthcareSheet` use. So on every target where
     // `solveInvitable` holds, the walk opened this door, CHECKED A GOAL RADIO as a side effect, then
     // waited 120s for a TwoFutures `svg.tf` that the GoalPicker never renders — and this door is
-    // FIRST in the doors DOM order (Result.tsx:638-651), so the walk died before reaching any other
+    // FIRST in the doors DOM order (Result.tsx:639-652), so the walk died before reaching any other
     // door, including the assumptions panel the Card 11 crops below live on. Measured RED at both
     // viewports on `seed:retired`, which is the walk's DEFAULT target.
     // This is the `datemixed` shape at a new site, and the header comment above already names it:
@@ -832,7 +832,7 @@ async function walkDoors(page: Page, outDir: string, witness?: LeftOverWitness):
     await expect(dialog).toBeHidden()
   }
   // The receipt tests the SAME predicate the crops do, not a weaker one: it fails iff the loop
-  // never entered the branch that writes them. `hatchReachable` (Result.tsx:382-391) is satisfied
+  // never entered the branch that writes them. `hatchReachable` (Result.tsx:383-392) is satisfied
   // by `focusKey`, and every walkDoors caller has already awaited
   // `main.result[data-answer-tier="final"]` — so a missing assumptions door means the door row
   // changed shape under the harness, which is exactly when a silent skip would be worst.
@@ -1228,37 +1228,44 @@ const RISEN_SHORT_LEAST = '3,652'
  *  $105,000 and no later row is short (b9-2's probe), so the years that don't come up short resume there. */
 const RISEN_LATER_RESUMES = 2033
 
-/** "This answer now:" on every "saved" witness waiting on W (council `wf_7fa86902-35c`): the label, the stored
- *  figure dated, and what this answer does with it. */
-const SAVED_NOW = [
+/** "This answer now:" on every "saved" witness waiting on W (council `wf_7fa86902-35c`; U11 walk 5's (bl), (bh)): the
+ *  label, after work the answer already uses the spending figure (it moved on every witness here; no budget, so
+ *  exact), the stored figure dated, and why this answer adds none of it, in the act's verb (`none`). */
+const savedNow = (spending: string, none: string): readonly string[] => [
   copy.workingCostStaleLabelNow,
+  slots.workingCostStaleAfterWork(spending, true),
   slots.workingCostStaleLeftOverAnswered(DATE_LEFT_OVER),
-  copy.workingCostStaleLeftOverNone,
-] as const
+  none,
+]
+/** The risen arms' "This answer now:" — the spending there IS the quote (no budget), and the act is "update". */
+const risenNow = (quoteNow: string): readonly string[] =>
+  savedNow(quoteNow, slots.workingCostStaleLeftOverNoneUpdate(DATE_LEFT_OVER, STALE_W_CONFIRMED))
 
 /** A risen-family witness: W's sentence at `quoteNow` and the year-level lean on both surfaces, then the tail
- *  for its arm, then — both walked routes can save, so the door rides — the act defined in the W row's button
- *  words and the door in the act's own words ("update": below the quote the W row offers no Keep door); the seat
- *  waits (no figure, no radios) as on every stale-W witness. */
+ *  for its arm, then — both walked routes can save, so the door rides — what each host says beside its door
+ *  (U11 walk 5's (bj)): the gate's door sentence (neither gate button changes the figure; where each leads) or the
+ *  Result's "press … below", then "There, …" in the W row's button words ("update": below the quote the W row
+ *  offers no Keep door; no state priced, so "or state" rides); the seat waits (no figure, no radios) in the act's
+ *  verb ((bn)) as on every stale-W witness. */
 function risenWitness(quoteNow: string, tail: readonly string[]): LeftOverWitness {
   const head = [
     slots.workingCostStaleQuote(STALE_W_CONFIRMED, quoteNow),
     slots.workingCostStaleLeftOverYearsCheaper(STALE_W_CONFIRMED),
   ]
-  const definition = slots.workingCostStaleDefineUpdate(quoteNow)
+  const there = slots.workingCostStaleDefineUpdate(quoteNow, true, quoteNow, false)
   return {
     note: {
       lead: copy.stalenessPayCheckNote,
-      says: [...head, ...tail, definition],
+      says: [...head, ...tail, slots.workingCostStaleResultDoorUpdate(copy.stalenessPayCheckCtaUpdate), there],
       notLead: copy.stalenessLeftOverNote,
       door: copy.stalenessPayCheckCtaUpdate,
     },
     gate: {
       lead: copy.stalenessPayCheckGateLead,
-      says: [...head, ...tail, definition, copy.stalenessPayCheckGateDoorUpdate],
+      says: [...head, ...tail, slots.workingCostStaleGateDoorUpdate(STALE_W_CONFIRMED, copy.stalenessPayCheckCtaUpdate), there],
       notLead: copy.stalenessLeftOverNote,
     },
-    seat: { figure: null, line: copy.workingLedgerLeftOverWaiting, radios: 0, checked: null },
+    seat: { figure: null, line: copy.workingLedgerLeftOverWaitingUpdate, radios: 0, checked: null },
   }
 }
 
@@ -1311,18 +1318,20 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
     },
   },
   // W stale ("All of it" stored at $16,985 before the spending moved): W's stale line speaks, its own
-  // sentence then the clause that none of the left over is added until W is checked, and the seat waits
+  // sentence then the clause that none of the left over is added until W is confirmed or changed, and the seat waits
   // with no figure and no radios.
+  // U11 walk 5: both hosts say the figure's contents first (it names no button), then their own door — the gate's
+  // door sentence, the Result's "press … below" — then "There, …" with each exit's condition ((bj), (bk)).
   datesavedstale: {
     note: {
       lead: copy.stalenessPayCheckNote,
       says: [
         slots.workingCostStaleQuote(STALE_W_CONFIRMED, STALE_W_QUOTE_NOW),
         copy.workingCostStaleEitherWayConfirm,
-        copy.workingCostStaleLabelNow,
-        slots.workingCostStaleAfterWork(STALE_W_QUOTE_NOW),
-        ...SAVED_NOW.slice(1),
-        slots.workingCostStaleDefineConfirm(slots.workingCostKeepYearly(STALE_W_CONFIRMED), STALE_W_QUOTE_NOW),
+        ...savedNow(STALE_W_QUOTE_NOW, slots.workingCostStaleLeftOverNoneConfirm(DATE_LEFT_OVER, STALE_W_CONFIRMED)),
+        slots.workingCostStaleDefineHold(true),
+        slots.workingCostStaleResultDoorConfirm(copy.stalenessPayCheckCta),
+        slots.workingCostStaleDefineConfirm(slots.workingCostKeepYearly(STALE_W_CONFIRMED), STALE_W_CONFIRMED, false, STALE_W_QUOTE_NOW, STALE_W_QUOTE_NOW, false),
       ],
       notLead: copy.stalenessLeftOverNote,
       door: copy.stalenessPayCheckCta,
@@ -1332,15 +1341,14 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
       says: [
         slots.workingCostStaleQuote(STALE_W_CONFIRMED, STALE_W_QUOTE_NOW),
         copy.workingCostStaleEitherWayConfirm,
-        copy.workingCostStaleLabelNow,
-        slots.workingCostStaleAfterWork(STALE_W_QUOTE_NOW),
-        ...SAVED_NOW.slice(1),
-        slots.workingCostStaleDefineConfirm(slots.workingCostKeepYearly(STALE_W_CONFIRMED), STALE_W_QUOTE_NOW),
-        copy.stalenessPayCheckGateDoor,
+        ...savedNow(STALE_W_QUOTE_NOW, slots.workingCostStaleLeftOverNoneConfirm(DATE_LEFT_OVER, STALE_W_CONFIRMED)),
+        slots.workingCostStaleDefineHold(true),
+        slots.workingCostStaleGateDoorConfirm(STALE_W_CONFIRMED, copy.stalenessPayCheckCta),
+        slots.workingCostStaleDefineConfirm(slots.workingCostKeepYearly(STALE_W_CONFIRMED), STALE_W_CONFIRMED, false, STALE_W_QUOTE_NOW, STALE_W_QUOTE_NOW, false),
       ],
       notLead: copy.stalenessLeftOverNote,
     },
-    seat: { figure: null, line: copy.workingLedgerLeftOverWaiting, radios: 0, checked: null },
+    seat: { figure: null, line: copy.workingLedgerLeftOverWaitingConfirm, radios: 0, checked: null },
   },
   // Increment 10, U11's RISEN twin ("All of it" stored at $16,985, then the spending RAISED to $90,000 past the yes
   // to $84,000); increment 11 (the U11 walk's (ae)): W's line carries the year-level lean, the clause, then what a
@@ -1348,7 +1356,7 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
   // ORDER is pinned in `devSeeds.test.ts` (the seed's own arm); here each must ride the one line.
   datesavedrisen: risenWitness(RISEN_W_QUOTE_NOW, [
     copy.workingCostStaleEitherWayUpdate,
-    ...SAVED_NOW,
+    ...risenNow(RISEN_W_QUOTE_NOW),
     slots.workingCostStaleLabelIf(RISEN_W_QUOTE_NOW),
     slots.workingCostStaleLeftOverIfCapped(RISEN_AT_QUOTE, 2026, RISEN_W_QUOTE_NOW, false),
   ]),
@@ -1356,7 +1364,7 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
   // 0 comes up $4,015 short, so a check adds none of the $16,985 and the short-year lean rides…
   datesavedrisenshort: risenWitness(RISEN_SHORT_QUOTE, [
     slots.workingCostStaleShortUntilUpdated(STALE_W_CONFIRMED),
-    ...SAVED_NOW,
+    ...risenNow(RISEN_SHORT_QUOTE),
     slots.workingCostStaleLabelIf(RISEN_SHORT_QUOTE),
     slots.workingCostStaleLeftOverIfFirstShortRun(2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, RISEN_SHORT_QUOTE, STALE_W_CONFIRMED, DATE_LEFT_OVER),
   ]),
@@ -1364,7 +1372,7 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
   // alimony ended, comes up $4,015 short — named, with the short-year lean.
   datesavedrisenlater: risenWitness(RISEN_SHORT_QUOTE, [
     copy.workingCostStaleEitherWayUpdate,
-    ...SAVED_NOW,
+    ...risenNow(RISEN_SHORT_QUOTE),
     slots.workingCostStaleLabelIf(RISEN_SHORT_QUOTE),
     slots.workingCostStaleLeftOverIfCapped(RISEN_LATER_AT_QUOTE, 2026, RISEN_SHORT_QUOTE, true),
     slots.workingCostStaleLeftOverGainYears(2026, RISEN_LATER_SHORT_YEAR - 1, RISEN_LATER_RESUMES),

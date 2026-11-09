@@ -407,9 +407,50 @@ export function workingYearCostStaleSentence(d: ScenarioDraft): WorkingYearCostS
  *  (`WorkingCostQuestion`) and the gate message that names it (`workingYearCostGateMessage`), so the
  *  message can never quote a button the face doesn't draw. */
 export function workingYearCostKeepLabel(w: WorkingYearCostV3): string {
+  const k = workingYearCostKeepFigure(w)
+  return k.monthly ? slots.workingCostKeepMonthly(k.formatted) : slots.workingCostKeepYearly(k.formatted)
+}
+
+/** The Keep door's figure in the unit its label names (`workingYearCostKeepLabel` reads it, so the stale line's
+ *  condition on the door — "only if $7,000 a month covers…", U11 walk 5's (bk) — can never name another figure). */
+export function workingYearCostKeepFigure(w: WorkingYearCostV3): { readonly formatted: string; readonly monthly: boolean } {
   return w.kind === 'entered' && w.entryPeriod === 'month'
-    ? slots.workingCostKeepMonthly(formatMoney(w.amountReal / 12))
-    : slots.workingCostKeepYearly(formatMoney(workingYearCostFigure(w)))
+    ? { formatted: formatMoney(w.amountReal / 12), monthly: true }
+    : { formatted: formatMoney(workingYearCostFigure(w)), monthly: false }
+}
+
+/** Does the W help ask this household to ADD its state's income tax on pay to W? Exhaustive over the reading
+ *  (insight 147): an unpriced state ("If your state taxes pay, add that tax") and a class-based one ("Add your
+ *  state’s income tax on pay") do; an AGI-derived state (the tool works it out) and one with no income tax don't.
+ *  The methodology's K7 family splits the same way (`WORK_STATE_KEY`). The stale line's definition names "a local or
+ *  state tax" exactly where this holds (U11 walk 5's (bk)). */
+const STATE_TAX_IN_W: Readonly<Record<WorkingYearStateTaxReading, boolean>> = {
+  'agi-derived': false,
+  'class-based': true,
+  none: false,
+  unpriced: true,
+}
+export function stateTaxBelongsInW(d: ScenarioDraft): boolean {
+  return STATE_TAX_IN_W[workingYearStateTaxReading(d)]
+}
+
+/** A TYPED figure below today's quote (the Tier 0 register entry *A figure typed below today's spending clears W's
+ *  stale line for good…*, prescription (1)): both figures yearly, printed as a pair (to the cent under a dollar
+ *  apart), and where the quote comes from — or `null`. A typed figure is never staled on the quote (KTD10, the
+ *  entry's ⚑ NEGATIVE), so nothing else names the two side by side; a kept or said-yes figure below the quote is
+ *  stale and its note says so (`heldYesBelowQuote`). Never a block (D7): the face prints a calm note. */
+export function workingYearCostTypedBelowQuote(
+  d: ScenarioDraft,
+): { readonly typed: string; readonly quote: string; readonly source: WorkingYearQuote['source'] } | null {
+  const w = d.workingYearCost
+  if (w?.kind !== 'entered' || w.keptOverQuoteReal !== undefined) return null
+  const quote = workingYearQuote(d)
+  // At the cent the quote is stored at (`roundCents`, as every sibling compares): a monthly figure is written as
+  // `entered * 12` unrounded, and 12 × 7,083.33 drifts a hair under the quote's 84,999.96 — "below" by float alone,
+  // two identical figures printed as one under the other (the round review's P0).
+  if (!(quote.annualReal > 0 && roundCents(w.amountReal) < quote.annualReal)) return null
+  const [typed, quoted] = formatMoneyPair(w.amountReal, quote.annualReal)
+  return { typed, quote: quoted, source: quote.source }
 }
 
 /** The W step gate's message (`working-cost-unanswered`, sanity.ts; the U11 Caddie walk's (ad)), read off the

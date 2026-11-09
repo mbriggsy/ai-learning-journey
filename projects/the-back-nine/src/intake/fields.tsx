@@ -305,6 +305,7 @@ export type SegmentOption<V extends string> = { readonly value: V } & (
  */
 export function SegmentedControl<V extends string>({
   legendKey,
+  legend,
   options,
   value,
   onChange,
@@ -314,8 +315,12 @@ export function SegmentedControl<V extends string>({
   errorField,
   invalid = false,
   describedByIds,
-}: {
-  readonly legendKey: CopyKey
+}: (
+  | { readonly legendKey: CopyKey; readonly legend?: never }
+  /** A legend with genuinely dynamic content — the W fork's question names the figure "Yes" sets (copy-law F8 at U11
+   *  walk 5) — composed by a copy slot, as `SegmentOption`'s `label` is. */
+  | { readonly legend: string; readonly legendKey?: never }
+) & {
   readonly options: ReadonlyArray<SegmentOption<V>>
   readonly value: V | undefined
   readonly onChange: (value: V) => void
@@ -362,7 +367,7 @@ export function SegmentedControl<V extends string>({
       aria-describedby={describedIds === '' ? undefined : describedIds}
     >
       <legend className="field-label">
-        <span id={legendId}>{copy[legendKey]}</span>
+        <span id={legendId}>{legend ?? copy[legendKey]}</span>
         {required && (
           <>
             {' '}

@@ -630,6 +630,31 @@ describe('the panel: the row’s value line and money picture above the question
   })
 })
 
+describe('the typed-below note under the hold (the Tier 0 retype entry’s prescription (1); the round review): a press while W’s figure has focus draws the face the press saw, so the note mounts only after the click', () => {
+  const costRow = () => document.querySelector<HTMLElement>('[data-assumption-seat="working-year-cost"]')!
+  const yes = DEV_SEEDS.datesavedrisen.workingYearCost
+  if (yes?.kind !== 'confirmed') throw new Error('[test setup] datesavedrisen holds a yes')
+  // `datesavedrisen` (spending raised to $90,000) with W TYPED at the $90,000 quote: no note. Retyped to $84,000.
+  const typedAtQuote: ScenarioDraft = {
+    ...DEV_SEEDS.datesavedrisen,
+    workingYearCost: { kind: 'entered', amountReal: 90_000, entryPeriod: 'year', stateTaxReading: yes.stateTaxReading },
+  }
+  const NOTE =
+    'Your $84,000 a year is below your spending figure of $90,000 a year. A working year almost always costs at least what you spend, so this answer can look better than it really is.'
+
+  it('$84,000 typed, then a press elsewhere in the panel (the spending field): the blur commits it, but no note mounts above the press’s target until the click lands; then it shows', async () => {
+    const m = modelWith(typedAtQuote)
+    render(<WiredPanel model={m} />)
+    expect(within(costRow()).queryByText(NOTE), 'no note at the quote').toBeNull()
+    const spend = screen.getByLabelText(copy.spendLabel)
+    typeThenPress(costRow(), '84000', spend)
+    expect(w(m), 'the press’s blur committed the typed figure').toMatchObject({ kind: 'entered', amountReal: 84_000 })
+    expect(within(costRow()).queryByText(NOTE), 'held: the note waits for the click').toBeNull()
+    await release(spend)
+    expect(within(costRow()).getByText(NOTE)).toBeInTheDocument()
+  })
+})
+
 describe('the panel’s left-over seat, under one hold with the W row (build 2’s KTD8): a press while W’s figure has focus leaves the seat as drawn until the click, and "All of it" stores the figure the seat showed', () => {
   const costRow = () => document.querySelector<HTMLElement>('[data-assumption-seat="working-year-cost"]')!
   const seat = () => document.querySelector<HTMLElement>('[data-assumption-seat="working-year-left-over"]')!

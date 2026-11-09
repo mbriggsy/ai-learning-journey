@@ -1416,7 +1416,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
     ).toBeLessThan(depth)
     // NOT an incidental observation: the floor crowning at 0 is exactly why this plant lights ONE
     // arrived arm and not two. `floorLineText` short-circuits offset 0 BEFORE the three-way split
-    // (FuckOffDate.tsx:264, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
+    // (FuckOffDate.tsx:266, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
     // cannot fire here — its live route is and remains `?vault=datestale`. Arm 3 proves the
     // consequence on the renderer rather than leaving it as a comment.
     expect(out.floor.offsetYears, 'the floor crowns at 0 — the plain covered line, never the Past arm').toBe(0)
@@ -1868,18 +1868,22 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     )
     // Council `wf_7fa86902-35c`'s order: the note, the either-way lead ("update": no Keep door below the quote),
     // "This answer now:" with the stored figure dated, then "If a working year costs $90,000:" and year 0 there.
-    expect(workingYearCostStaleLine(d)).toBe(
-      [
-        slots.workingCostStaleQuote('84,000', '90,000'),
-        slots.workingCostStaleLeftOverYearsCheaper('84,000'),
-        copy.workingCostStaleEitherWayUpdate,
-        copy.workingCostStaleLabelNow,
-        slots.workingCostStaleLeftOverAnswered('16,985'),
-        copy.workingCostStaleLeftOverNone,
-        slots.workingCostStaleLabelIf('90,000'),
-        slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
-      ].join(' '),
-    )
+    // As parts since U11 walk 5's (bi), with after work's $90,000 first under "This answer now:" ((bl)) and why none of
+    // the $16,985 is added until they update ((bh)).
+    expect(workingYearCostStaleLine(d)).toEqual({
+      opening: [slots.workingCostStaleQuote('84,000', '90,000'), slots.workingCostStaleLeftOverYearsCheaper('84,000'), copy.workingCostStaleEitherWayUpdate].join(' '),
+      segments: [
+        {
+          label: copy.workingCostStaleLabelNow,
+          sentences: [
+            slots.workingCostStaleAfterWork('90,000', true),
+            slots.workingCostStaleLeftOverAnswered('16,985'),
+            slots.workingCostStaleLeftOverNoneUpdate('16,985', '84,000'),
+          ],
+        },
+        { label: slots.workingCostStaleLabelIf('90,000'), sentences: [slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false)] },
+      ],
+    })
     const { annualSpendingReal, ...rest } = d
     const { annualSpendingReal: savedSpending, ...savedRest } = DEV_SEEDS.datesaved
     expect(rest, 'otherwise it is `datesaved`').toEqual(savedRest)
@@ -2068,15 +2072,19 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     })
     expect(report.workingYear).toEqual({ vintageMoved: false, costStale: true, leftOverStale: false })
     expect(report.rulesMoved, 'a stale answer is not a rules change').toBe(false)
-    const text = workingYearCostStaleLine(hydrated.draft)
-    expect(text, '$84,000 held above $78,000 now — the safe side, so no lean is said').toBe(slots.workingCostStaleQuote('84,000', '78,000'))
-    // Its door names "confirm or change" (the spending fell: the W row's Keep door is real) and defines nothing (no
-    // "saved" answer, so the line leans on the act nowhere but the door).
-    expect(workingYearCostStaleDoor(hydrated.draft)).toEqual({ act: 'confirmOrChange', definition: null })
+    const line = workingYearCostStaleLine(hydrated.draft)
+    expect(line, '$84,000 held above $78,000 now — the safe side, so no lean is said').toEqual({
+      opening: slots.workingCostStaleQuote('84,000', '78,000'),
+      segments: [],
+    })
+    // Its door names "confirm or change" (the spending fell: the W row's Keep door is real): on the gate its door
+    // sentence alone, on the Result its button alone (no "saved" answer, so the line leans on the act nowhere else).
+    const gateDoor = slots.workingCostStaleGateDoorConfirm('84,000', copy.stalenessPayCheckCta)
+    expect(workingYearCostStaleDoor(hydrated.draft)).toEqual({ act: 'confirmOrChange', result: [], gate: [gateDoor] })
+    const parts = { opening: `${copy.stalenessPayCheckGateLead} ${slots.workingCostStaleQuote('84,000', '78,000')}`, segments: [], door: [gateDoor] }
     expect(
-      composeReentry(built.scenario, report, { costStale: { text: text!, act: 'confirmOrChange', definition: null, canChange: true }, leftOverStale: null })
-        .noteLines,
-    ).toEqual([`${copy.stalenessPayCheckGateLead} ${text} ${copy.stalenessPayCheckGateDoor}`])
+      composeReentry(built.scenario, report, { costStale: { line: line!, door: [gateDoor], canChange: true }, leftOverStale: null }).noteLines,
+    ).toEqual([{ text: `${parts.opening} ${gateDoor}`, parts }])
   })
 
   it('the light doctor fails LOUD on a plan that never reads the table, and on a stamp it cannot age', () => {

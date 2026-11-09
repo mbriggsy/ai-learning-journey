@@ -17,7 +17,8 @@ import type { CurrentScenario } from '@shared/model'
 import { KIND_TO_BUCKET } from '@intake/intakeMap'
 import type { StalenessReport } from '@store/staleness'
 import type { PricingFamily } from '@engine/pricingVersion'
-import { WORKING_COST_ACT_COPY, copy, slots, type CopyKey, type WorkingCostAct } from './copy'
+import { copy, slots, type CopyKey } from './copy'
+import { notePartsText, type NoteParts } from './noteParts'
 
 /** Each engine-pricing family's phrase in the ONE method line — exhaustive by type, so a family the
  *  ledger can declare can never be named with no words. */
@@ -65,7 +66,7 @@ export interface ReentryView {
    *  sentence — or, where a tax, state-tax or working-years line fired, the caller's clause on the
    *  FIRST of them instead, and no line of its own), and one budget line per boundary year (empty =
    *  nothing to flag). */
-  readonly noteLines: readonly string[]
+  readonly noteLines: readonly ReentryNoteLine[]
   /** Build 2's clause host, decided ONCE, here (obligation (f)): did a tax, state-tax or working-years
    *  line fire — the three lines that carry a moved left over as a clause? The Result reads THIS for its
    *  hero's rules note, never `rulesMoved` (which also fires on the ACA, Medicare, contribution and
@@ -87,19 +88,21 @@ const BUCKET_LABEL_KEY: Readonly<Record<'pretax' | 'roth' | 'taxable' | 'hsa', C
 /** The gate's KTD21 sentence, composed by the caller from the HYDRATED draft this report describes
  *  (`workingYearCostStaleLine`: the W step's own note, `workingYearCostStaleNote`, plus build 2's R12
  *  dollars clause and, where the spending rose, what a check at the quote adds, for a "saved" answer waiting
- *  on W — this seam never re-derives the quote): `text` is that line; `act` and `definition` are its door's
- *  (`workingYearCostStaleDoor`, council `wf_7fa86902-35c`: the act picks the door sentence,
- *  `WORKING_COST_ACT_COPY`, and the definition is said just before it, or `null` where the line leans on the act
- *  nowhere but the door); and `canChange` is whether the answer will offer the door to change it (a tab that can
- *  save) — the definition and the door sentence ride only then. `null` where W is not stale. REQUIRED, never
+ *  on W — this seam never re-derives the quote): `line` is that line's parts (U11 walk 5's (bi)); `door` is what the
+ *  gate says beside its buttons (`workingYearCostStaleDoor`'s `gate`: the door sentence in the act's words, then, for
+ *  a "saved" answer waiting on W, "There, …"); and `canChange` is whether the answer will offer the door to change it
+ *  (a tab that can save) — the door's sentences ride only then. `null` where W is not stale. REQUIRED, never
  *  optional-with-a-default: a caller that forgets it must fail to compile, never fall back to the figure-less line
  *  in silence. */
 export interface ReentryPayCheckStale {
-  readonly text: string
-  readonly act: WorkingCostAct
-  readonly definition: string | null
+  readonly line: Omit<NoteParts, 'door'>
+  readonly door: readonly string[]
   readonly canChange: boolean
 }
+
+/** A gate note line: plain text, or W's stale line as parts (`NotePartsBody` draws its labels as structure). `text` is
+ *  the parts joined — the drawn paragraph's text, and its React key (`ReEntry.tsx` keys each note by its text). */
+export type ReentryNoteLine = string | { readonly text: string; readonly parts: NoteParts }
 
 /** The gate's moved left-over sentences (build 2's R12 and KTD9), composed by the caller from the
  *  HYDRATED draft this report describes, both off ONE value of the moved core
@@ -176,7 +179,7 @@ export function composeReentry(
   // silenced bucket reaches no line at all, and the unattributed bucket speaks exactly once,
   // namelessly, at the end. Nothing here re-derives a gate — a second copy of the decision is
   // precisely the drift the split was written to kill.
-  const noteLines: string[] = []
+  const noteLines: ReentryNoteLine[] = []
   // Build 2's clause host (R12, KTD9): the index of the FIRST fired tax, state-tax or working-years line, in
   // push order — the one line a moved left over rides as a clause. No other rules line may host it.
   let clauseHost: number | undefined
@@ -218,7 +221,7 @@ export function composeReentry(
   // NAMED rules line, beside its date-surface sibling. Exposure-gated upstream: the run carries W,
   // the table's one reader, so "the rules for your working years" is true of every household that hears it.
   if (report.workingYear.vintageMoved) pushHost(copy.stalenessWorkingYears)
-  // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:82` keys each note <p> by its own TEXT,
+  // THE AGGREGATE, pushed AT MOST ONCE — `ReEntry.tsx:86-90` keys each note <p> by its own TEXT,
   // so a second push of the same sentence would collide on the React key. One `if` over the
   // whole bucket is the structural guarantee (never a per-clock loop over `.clocks`).
   if (report.unattributed.moved) noteLines.push(copy.stalenessReferenceTables)
@@ -229,23 +232,19 @@ export function composeReentry(
   // it leans — b9-7's U10 Caddie card; plus build 2's dollars clause for a "saved" answer waiting on W,
   // `workingYearCostStaleLine`), and the static figure-less line is only the fallback for a report that
   // calls W stale with no sentence beside it.
-  // Where the tab can save, the act's definition (if the line leans on the act) and then the door sentence in the
-  // act's own words (`WORKING_COST_ACT_COPY`): one string, one <p>, the door last (council `wf_7fa86902-35c`).
+  // One <p> as parts (U11 walk 5's (bi)): the gate's lead and the line's opening, its labelled segments, and, where the
+  // tab can save, the door's sentences on a line of their own (the door sentence in the act's words, then "There, …").
   if (report.workingYear.costStale) {
-    noteLines.push(
-      payCheckStale === null
-        ? copy.stalenessWorkingYearCost
-        : [
-            copy.stalenessPayCheckGateLead,
-            payCheckStale.text,
-            ...(payCheckStale.canChange
-              ? [
-                  ...(payCheckStale.definition === null ? [] : [payCheckStale.definition]),
-                  copy[WORKING_COST_ACT_COPY[payCheckStale.act].gateDoor],
-                ]
-              : []),
-          ].join(' '),
-    )
+    if (payCheckStale === null) {
+      noteLines.push(copy.stalenessWorkingYearCost)
+    } else {
+      const parts: NoteParts = {
+        opening: `${copy.stalenessPayCheckGateLead} ${payCheckStale.line.opening}`,
+        segments: payCheckStale.line.segments,
+        door: payCheckStale.canChange ? payCheckStale.door : [],
+      }
+      noteLines.push({ text: notePartsText(parts), parts })
+    }
   }
   // Build 2's moved left over (R12): the household's own "saved" answer no longer matches today's
   // year-0 figure. An answer fact like the W line above, never a rules line (it rides `anyStale`
@@ -262,7 +261,10 @@ export function composeReentry(
       )
     }
     if (clauseHost !== undefined) {
-      noteLines[clauseHost] = `${noteLines[clauseHost]} ${leftOverStale.clause}`
+      const host = noteLines[clauseHost]
+      // Unreachable: only `pushHost` sets the index, and it pushes the plain rules lines.
+      if (typeof host !== 'string') throw new Error('composeReentry: the clause host is a plain rules line')
+      noteLines[clauseHost] = `${host} ${leftOverStale.clause}`
     } else {
       noteLines.push(
         [copy.stalenessLeftOverNote, leftOverStale.text, ...(leftOverStale.canChange ? [copy.stalenessLeftOverGateDoor] : [])].join(' '),

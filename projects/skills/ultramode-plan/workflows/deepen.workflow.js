@@ -1865,7 +1865,7 @@ function readsArgs(args, { who, required = {}, optional = {} } = {}) {
 //                        its stakes; an empty list when none) are required, and on a new plan refused
 //   claudeMd, contractBrief, ce, learnings   as research takes them
 //   index, lastLine      flow.mjs index's section index and last line with text (KTD7)
-//   deepened             whether the plan already carries a deepened: date
+//   deepened             whether the plan already carries a deepened: date (flow.mjs index's deepened)
 //   focus                optional: the external researchers' focus, passed only when research's
 //                        external call ran
 //   skipPremise, parked, scores   optional: a park's relaunch

@@ -19,7 +19,7 @@
 //                                                           -> the receipt's text
 //   path-start    { path, update }                          -> { ok, state, ... }  (exit 1 when refused)
 //   path-landing  { path, start }                           -> { ok, ... }         (exit 1 when changed)
-//   index         { plan }                                  -> { index, last, bytes }
+//   index         { plan }                                  -> { index, last, bytes, deepened }
 // `gate` reads lib/stage-costs.json beside this file when the input names no costs; U6's smoke
 // run commits that file. Exit 0 is an answer, 1 a refused or changed path, 2 an input the command
 // could not read (nothing was decided).
@@ -29,7 +29,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { isMain, usage } from "./entry.mjs";
-import { lastTextLine, readMarkdown, sectionIndex } from "./markdown.mjs";
+import { frontMatterDeepened, lastTextLine, readMarkdown, sectionIndex } from "./markdown.mjs";
 import { fromGitBash, longOf, samePath } from "./paths.mjs";
 
 // ---------------------------------------------------------------- the stages and their order
@@ -503,8 +503,9 @@ function readInput(arg) {
 
 // KTD7's two args from the staged plan: its section index (fences and front matter skipped, as
 // select.mjs counts the scorer against it) and its last line with text, with the plan's size in
-// bytes for the gate's scaling (KTD10). A fence left open would hide every heading after it, so
-// it refuses.
+// bytes for the gate's scaling (KTD10) and whether its front matter carries CE's `deepened:`
+// date, the deepen's `deepened` arg (KTD5's tie rule; markdown.mjs's frontMatterDeepened says
+// which values count). A fence left open would hide every heading after it, so it refuses.
 export function planIndex(planPath) {
   if (typeof planPath !== "string" || !planPath.trim()) throw new Error(`flow: index needs the staged plan's path, got ${JSON.stringify(planPath)}`);
   const buf = readFileSync(resolve(fromGitBash(planPath)));
@@ -514,7 +515,7 @@ export function planIndex(planPath) {
   const index = sectionIndex(text);
   if (index.length === 0) throw new Error("flow: the plan has no heading, so it has no section index");
   const last = lastTextLine(text);
-  return { index, last, bytes: buf.length };
+  return { index, last, bytes: buf.length, deepened: frontMatterDeepened(text) };
 }
 
 // The measured stage costs U6's smoke run commits beside this file (KTD10), or none before it:

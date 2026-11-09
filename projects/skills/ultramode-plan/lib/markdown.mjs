@@ -1,7 +1,8 @@
 // THE PLAN AS MARKDOWN (KTD7 and KTD9 of docs/plans/hybrid-plan-step-plan.md): which lines are
 // prose and which sit in a fenced code block or the YAML front matter, the plan's section index,
-// and its last line with text. fold.mjs reads its ID lines through this, and flow.mjs's `index`
-// command builds from it the section index and last line the main loop passes in `args`, so the
+// its last line with text, and whether it carries CE's `deepened:` date. fold.mjs reads its ID
+// lines through this, and flow.mjs's `index` command builds from it the section index, last line
+// and deepened flag the main loop passes in `args`, so the
 // headings select.mjs counts the scorer against and the lines the fold check reads come from one
 // reader. A command module: never inlined into a Workflow script.
 //
@@ -92,4 +93,23 @@ export function lastTextLine(text) {
   const lines = withoutBom(text).split(/\r?\n/);
   for (let i = lines.length - 1; i >= 0; i--) if (lines[i].trim()) return { line: i + 1, text: lines[i] };
   return null;
+}
+
+// Whether the plan's front matter carries CE's `deepened:` field (ce-plan's plan-sections.md: an
+// ISO 8601 date marking the first time the confidence check substantively strengthened the plan),
+// which select.mjs's tie rule and the scorer's `strengthened` column read (KTD5). True for a
+// top-level key whose value opens with a date (YYYY-MM-DD, quoted or not, a time after it allowed)
+// or is YAML's true (three of the repo's older plans write that); false with no front matter, no
+// such key, the key indented under another, a value on the lines below it, or any other value: an
+// empty one, false, null, or "pending" (one Burned plan writes that before its deepen). The last
+// such key wins, as a YAML reader takes a repeated key.
+const MD_DEEPENED = /^deepened[ \t]*:(.*)$/;
+export function frontMatterDeepened(text) {
+  const md = readMarkdown(text);
+  let value = null;
+  for (let i = 1; i < md.frontMatterLines - 1; i++) {
+    const m = md.lines[i].match(MD_DEEPENED);
+    if (m) value = m[1].replace(/\s+#.*$/, "").trim().replace(/^(["'])(.*)\1$/, "$2").trim();
+  }
+  return value !== null && (/^\d{4}-\d{2}-\d{2}(?!\d)/.test(value) || /^true$/i.test(value));
 }

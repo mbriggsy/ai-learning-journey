@@ -584,7 +584,7 @@ test("a git error is never read as an absent, clean path: a broken index throws,
   assert.equal(landing.status, 2, landing.stdout);
 });
 
-test("the index command gives the staged plan's section index, its last line and its size, and refuses an open fence", (t) => {
+test("the index command gives the staged plan's section index, its last line, its size and its deepened flag, and refuses an open fence", (t) => {
   const dir = tmpRoot(t);
   const plan = join(dir, "staged.md");
   writeFileSync(plan, "---\ntitle: x\n---\n# Plan\n\n## Goal\nText.\n```sh\n# a comment, not a heading\n```\n## Units\n### U1. One\nLast line.\n\n");
@@ -599,6 +599,16 @@ test("the index command gives the staged plan's section index, its last line and
   ]);
   assert.deepEqual(out.last, { line: 13, text: "Last line." });
   assert.equal(out.bytes, Buffer.byteLength(readFileSync(plan)));
+  assert.equal(out.deepened, false, "front matter with no deepened: key");
+  const deepenedOf = (text) => {
+    writeFileSync(plan, text);
+    const res = spawnSync(process.execPath, [FLOW, "index", JSON.stringify({ plan })], { encoding: "utf8" });
+    assert.equal(res.status, 0, res.stderr);
+    return JSON.parse(res.stdout).deepened;
+  };
+  assert.equal(deepenedOf("---\ntitle: x\ndeepened: 2026-10-31\n---\n# Plan\nText.\n"), true);
+  assert.equal(deepenedOf("# Plan\nText.\n"), false, "no front matter");
+  assert.equal(deepenedOf("---\ntitle: x\n---\n# Plan\ndeepened: x\n"), false, "a body line is not the front matter's key");
   writeFileSync(plan, "# Plan\n## Goal\n```\n## Hidden\n");
   const open = spawnSync(process.execPath, [FLOW, "index", JSON.stringify({ plan })], { encoding: "utf8" });
   assert.equal(open.status, 2);

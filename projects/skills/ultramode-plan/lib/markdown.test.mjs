@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { lastTextLine, readMarkdown, sectionIndex } from "./markdown.mjs";
+import { frontMatterDeepened, lastTextLine, readMarkdown, sectionIndex } from "./markdown.mjs";
 
 const REAL = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "docs", "plans", "hybrid-plan-step-plan.md"), "utf8");
 const proseOf = (text) => readMarkdown(text).prose.map((p) => p.line);
@@ -90,4 +90,31 @@ test("the last line with text, by its number, and null for a plan with none", ()
   assert.equal(lastTextLine("\n \n"), null);
   const last = lastTextLine(REAL);
   assert.equal(REAL.split(/\r?\n/)[last.line - 1], last.text);
+});
+
+test("deepened: a top-level front matter key holding a date or true; any other value, or none, is false", () => {
+  const fm = (body) => frontMatterDeepened(`---\ntitle: x\n${body}\n---\n# Plan\n`);
+  assert.equal(fm("deepened: 2026-10-31"), true);
+  assert.equal(fm("deepened: 2026-05-24T12:43:38-04:00"), true);
+  assert.equal(fm("deepened: \"2026-10-31\"  # the first pass"), true);
+  assert.equal(fm("deepened: '2026-10-31'"), true);
+  assert.equal(fm("deepened: true"), true);
+  assert.equal(fm("deepened: True"), true, "YAML's true in any case");
+  assert.equal(fm("deepened: true  # a comment after it"), true);
+  const bom = String.fromCharCode(0xfeff);
+  assert.equal(frontMatterDeepened(`${bom}---\r\ndeepened: 2026-10-31\r\n---\r\n# Plan\r\n`), true, "a byte-order mark and CRLF lines");
+  for (const v of ["deepened:", "deepened: ", "deepened: false", "deepened: null", "deepened: ~", "deepened: pending", "deepened: 2026-10", "deepened: 20261031", "deepened: 2026-10-311", "deepened: trueish", "deepened: \"\""])
+    assert.equal(fm(v), false, v);
+  assert.equal(fm("title2: y"), false, "no deepened key");
+  assert.equal(frontMatterDeepened("# Plan\n"), false, "no front matter");
+  // A body line, a key under another key, a value on the next line, and an unclosed front matter
+  // are not the plan's field.
+  assert.equal(frontMatterDeepened("---\ntitle: x\n---\n# Plan\ndeepened: 2026-10-31\n"), false);
+  assert.equal(fm("history:\n  deepened: 2026-10-31"), false);
+  assert.equal(fm("deepened:\n  2026-10-31"), false);
+  assert.equal(frontMatterDeepened("---\ndeepened: 2026-10-31\n# Plan\n"), false);
+  // A repeated key: the last one wins.
+  assert.equal(fm("deepened: 2026-10-31\ndeepened: pending"), false);
+  assert.equal(fm("deepened: pending\ndeepened: 2026-10-31"), true);
+  assert.equal(frontMatterDeepened(REAL), true, "the hybrid plan carries deepened: 2026-11-01");
 });

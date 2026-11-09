@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-08, b9-5 walked U11's Caddie record — `c10339b0`, the card HARD-FLAG; next is the walk's fix round (ab)–(af), opened with `/brief kept and stale working-year words`, then walk 2 on the fixes, then U12 carrying U11's figures and the walk's filings (ag)–(ak), then the whole-file review and `/distill` — item 1, Phase C; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
+▶ **START HERE (2026-11-08, b9-2 committed the walk's fix (ae) — `c6b15120`, so the whole fix round (ab)–(af) is in; next is walk 2 on the fixes (its targets and its four questions are in item 1, Phase C), then U12 carrying U11's figures and the filings (ag)–(al), then the whole-file review, with an adversary and every finding verified, and `/distill` — item 1, Phase C; rewritten by b9-5 — walked U11's Caddie record, `c10339b0`, the card HARD-FLAG; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -170,48 +170,30 @@ queue below (its order unmoved). Next, in order:
      `docs/caddie/cold-read-log.md` (HARD-FLAG; the tape row is open); bundle `temp/caddie/caddie-u11-b9-5-walk1`. (d) and (p)
      are walked; b9-1's hold (e) is CLOSED by U11's measurement, the other way: the risen stale answer is GLOOMIER (no date
      vs the twin's 9), and a check at $90,000 credits at most $10,985 a year (`out\u11-stream-compare-u11-full.txt`
-     2455–2474). **The fix round: (ab), (ac), (ad), (af) COMMITTED `a5d34d69` (b9-1, 2026-11-08), test-first; mutants 11 of
-     11 as predicted and R10 `fixround` 40/40 against `risen` (`b9-build2-surplus\u11-fixround\`, README row). ▶ NEXT:
-     (ae) from council `wf_fc80029e-d93` (7/10, EXECUTE; digest row in `docs/council-log.md`; read the `recommendation` in
-     `u11-fixround\council-ae.output.json` first), which SUPERSEDES the (ae) bullet below.** Frame B: no threshold, no
-     "worse" anywhere. One composer goes in `workingYearLeftOver.ts`. Split `workingYearCostStaleText` into the pure-W
-     sentence plus a lean flag (KTD2 holds). The lean is an exhaustive Record on the answer kind: "saved" waiting on W
-     gets the Hawk's counterweight on the W note, the panel row, the Result and the gate. The Result/gate tail is a Record
-     off the producer's ledger at W re-confirmed at the quote (capped / whole / laterShort / firstShort / unknown, the last
-     pinned unreachable), with the at-most figure min(S, P_q). Then the R6/KTD11 amendment (the answer frozen in "waiting
-     on W"), the guards, hand-derived pins, witnesses for laterShort and firstShort, `verify:fit` arms, the harness's
-     `LEFT_OVER_WITNESSES.datesavedrisen` and `devSeeds.test.ts` risen order, then walk 2:
-     `CADDIE_TARGETS="intake:kept,seed:datesavedrisen,vault:datesavedrisen"` (the harness already reads (ab)–(ad) plus a new
-     branch C, the state-only gate). Dissent (seven seats: drop the counterweight) flips if walk 2 reads it as "this
-     household has short years". The prescriptions as filed, kept for reference:
-     - (ab) **The kept row's label after a unit tap** ("$1,008,000 a year — the figure you kept", false; refuter: medium).
-       Lead fix: a unit tap on a KEPT figure (`keptOverQuoteReal` present) converts instead of re-reading —
-       `writeWorkingYearCostPeriod` (`src/intake/workingYearQuote.ts`) keeps `amountReal` and changes `entryPeriod`, so the
-       box shows $7,000 under "Each month" and the label stays true. KTD17's re-read exists to undo a 12× misentry of TYPED
-       digits; a kept figure was never typed. R13's "each month then each year is the kept figure exactly" still holds; the
-       typed path is unchanged. Tests: U5's unit-tap arms in `workingYearQuote.test.ts` / `workingCostStep.test.tsx` (named
-       edits), both directions (a kept monthly figure tapped to a year). If the convert reads as a framing fork, `/council` it.
-     - (ac) **The lean on both causes.** In `workingYearCostStaleText`, the kept arm returns `workingCostStaleKeptBoth` and
-       the yes arm `workingCostStaleBoth` before the lean can ride: append `slots.workingCostStaleLeansBetter(<last>)` to each
-       when `heldYesBelowQuote(d)` (always true for a kept figure stale on the spending). The state-only arms stay lean-free
-       (refuter: a state move can cut the tax as easily). Same pass: "and the state changes which state income tax this figure
-       should hold" → "and your new state answer changes which state's income tax this figure should hold" (both `*Both`
-       slots; refuter: medium on the Result).
-     - (ad) **The P3 gate names its exits.** On the walk, a stale held figure (kept or typed) blocks Continue with
-       `errWorkingCostUnanswered` ("answer it above") under a question that visibly holds an answer, naming neither way out;
-       the moves a reader tries first (No again, either unit) block again (refuter: P2). Give that case its own message with
-       both figures and both exits (e.g. "Your $84,000 a year is below your spending now: choose “Yes” to use $90,000 a year,
-       or type a new figure."), from the same core as the note. Never a door below the quote (the register's ⚑ NEGATIVE).
-     - (ae) **The risen line** (`workingYearCostStaleLine`, "saved" waiting on W with `heldYesBelowQuote`): (1) the lean's
-       direction is wrong for the measured household — the stale answer is gloomier until a working year passes $100,985
-       (the stale W $84,000 + its printed $16,985; year 0's left over falls dollar for dollar with W), where it turns rosy;
-       say both sides with that threshold, never the one-sided lean; (2) the clause's "$16,985" reads as what a check returns,
-       while a check at today's quote returns at most the left over printed AT the quote ($10,985 here): name that figure (the
-       picture read at W = the quote) beside the stored one. Draft both, pin them, walk 2 reads them; R16 (no surface says
-       which way the CREDIT moves the date) is untouched — this states what is withheld, measured.
-     - (af) **The "If" over a known fact** (refuter: medium on the panel, the Result and the landing): for a held yes or kept
-       figure below the quote, "Your spending alone now comes to more than $84,000, so this answer can look better than it
-       really is." (the non-"saved" lean; the "saved" one is (ae)).
+     2455–2474). **The fix round is COMMITTED: (ab), (ac), (ad), (af) in `a5d34d69` (b9-1) and (ae) in `c6b15120` (b9-2,
+     2026-11-08, council `wf_fc80029e-d93`'s Frame B as ruled), each test-first; (ae)'s mutants 10 of 10 as predicted and R10
+     `ae` 40/40 against `fixround` (`b9-build2-surplus\u11-ae\`, README row; `sweep-ae.json` is the baseline from here). ▶ NEXT:
+     walk 2** on every edited sentence: `CADDIE_TARGETS="intake:kept,seed:datesavedrisen,vault:datesavedrisen,seed:datesavedrisenshort,vault:datesavedrisenshort,seed:datesavedrisenlater,vault:datesavedrisenlater"`
+     (increment 11 in `e2e/caddie-walk.spec.ts`'s header: the risen family's Result line, gate line and waiting seat per
+     target through `risenWitness`; the harness already reads (ab)–(ad) and branch C). What walk 2 must judge, beyond the
+     card's own lenses: (1) the council's dissent — seven seats would drop the counterweight ("Your $84,000 figure makes
+     any working year your pay doesn't cover look cheaper than it really is.") — flips if readers take it to mean THIS
+     household has short years; (2) the gate's density: the later-short line is five sentences (it fits the 791 px frame:
+     the affirm sits in frame, `verify:fit`'s `?vault=datesavedrisenlater` arm); (3) whether the at-most sentence alone
+     reads as "checking improves my date" (the Hawk's veto reason); (4) two arms no target renders, read as text from
+     `workingYearLeftOver.test.ts`: `whole` (a raise lifts year 0 at the quote past the stored figure: "…adds at most the
+     $16,985 a year you chose to save.") and `firstNone` (year 0 exactly $0 at the quote: "…has nothing left over…"). Wording
+     is the pilot's to close under the batched-oracle law; a framing fork or the dissent's flip goes back to a council.
+     As built, two refinements of the ruling, each in the code's docblocks and the council-log row: a "saved" answer that
+     is NOT asked keeps the spending-alone lean (true there by mechanism; insight 103's silencing check), and
+     `laterShort` rides `capped`/`whole` as a field, with year 0 at exactly $0 its own member (`firstNone`).
+     **Filed by (ae) for U12:** (al) **W's stale clause where the spending did NOT rise** (it fell, or only the state
+     moved) still names the stored figure alone (`workingYearCostStaleLine`'s non-rose arm, `src/intake/workingYearLeftOver.ts`):
+     where pay ALSO fell since the answer, a check there can add less (min(stored, year 0 at the checked W)), a moved left
+     over hidden behind the stale W since "waiting on W" outranks "saved, moved". Prescription: decide the check's figure
+     for those arms (the quote for a fallen yes; the held figure for a state-only move) and name min(stored, that year 0)
+     as (ae) does, with its own witness (`datesavedstale` with a pay cut); the over-read is the sin side (a check promises
+     more than it adds).
      **Filed by walk 1 for U12** (each into the register with its prescription): (ag) **a panel edit on a date household
      re-runs behind the sheet with no sign of it** — the panel's reading line never speaks for a date household
      (`memoryModel.ts`'s `lastDisplayed` is spine-only), nothing says "working it out", and the quick pass's answer shows
@@ -275,12 +257,28 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-08 (b9-1: U11's fix round (ab)–(af), `a5d34d69`, pushed; council on (ae) ruled; b9-5's block pruned
-into it):** state at close: typecheck 0, lint 0, build 0, `verify:bundle` 294.6 KiB, the suite pinned 0 (334 s),
-`verify:doc-stats` OK; R10 `fixround` 40/40 against `risen`. `verify:fit` and the e2e harness NOT run locally (CI runs
-`verify:fit`; the edited `caddie-walk.spec.ts` is untypechecked until walk 2 runs it). Also `272705ec`: the window skill's
-handoff mode counts consecutive idle sessions as a chain. **Check at start:** CI on `a5d34d69` (`gh run list --commit
-a5d34d695e989080b09cf4a0a583e0d62926699e --json databaseId,status,conclusion`).
+**SESSION 2026-11-08 (b9-2: U11's fix (ae), `c6b15120`, pushed; b9-1's block pruned into it):** state at close: typecheck 0,
+lint 0, build 0, `verify:bundle` 296.0 KiB of the 300 KiB budget (copy grows each round: 294.6 at `a5d34d69`), the suite
+pinned 0 (its count lives under `verify:doc-stats`, which is OK), R10 `ae` 40/40 against `fixround`; `verify:fit`: the
+eleven arms (ae) added or touched passed locally (`--grep "unlock line|risen family"`), the rest NOT run locally (CI runs it);
+the edited e2e specs typecheck under a scratch tsconfig that adds `e2e/` (`pnpm typecheck` does not include it). **Check at
+start:** CI on `c6b15120` (run `42558789155`: `gh run view 42558789155 --json status,conclusion,jobs`).
+**LANDMINES (b9-2):**
+- **The fit gate's result helpers assumed a DATED reading.** `assertResolvedDate`, `assertOneVisibleDisclaimer`'s tier read
+  and `DOORS_WALK_FLOOR` all wait on a band, a ladder and `[data-twopane]`, which the no-date reading never draws; the risen
+  family crowns no date, so (ae) added `assertNoDateReading`, `assertOneVisibleDisclaimerNoDate` and
+  `NO_DATE_DOORS_WALK_FLOOR` (10; measured 14 at REAL, 12 on the phone). A new no-date arm uses those, never the dated ones.
+- **`pnpm doc:reanchor HEAD --apply` left five bare continuations unmoved on TODO.md's Card 13 line** (`:1307`, `:1365`,
+  `:1412`, `:2060`, `:2173` after `vertical-fit.spec.ts`; two were already wrong at HEAD, pointing at non-blank lines the
+  gate passes). Fixed by hand to the describes' lines; after any re-anchor, read each bare `:N` the gate cannot judge.
+- **`start "" /b /wait /affinity FFF` returns exit 0 on a failing vitest run** (again): read the output's "Tests" line.
+**DISTILL CANDIDATES (b9-2, (ae)):**
+- **A copy branch that reads a counterfactual run must read it through the producer's own write, memoized on the source
+  draft.** The check at the quote is the money picture of `writeConfirmedWorkingYearCost(d)`, the "Yes" tap's own write: a
+  re-derived S − (quote − W) would drift from R8's cap, and the re-confirmed draft is a fresh object, so the picture's own
+  memo misses it on every render without a WeakMap keyed on the source.
+- **Read a year figure off a closed vocabulary of SIGNS, not one branch.** Year 0 at $0 exactly is neither "short" nor
+  "left over": folding it into `firstShort` printed "comes up $0 short" (mutant E6). Name every member of the partition.
 **DISTILL CANDIDATES (b9-1, the fix round):**
 - **A unit control on a figure the reader never typed must convert, not re-read.** The re-read that repairs a 12× typo
   turned a kept $84,000 into $1,008,000, and that read FRESH, so the stale gate let it through. Who gave the digits on screen

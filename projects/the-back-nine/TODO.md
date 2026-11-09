@@ -279,7 +279,8 @@ queue below (its order unmoved). Next, in order:
      inverted, the floor sentence dropped, `stateTaxBelongsInW`'s class-based entry flipped, the gate door before
      the hold on S, `NotePartsBody`'s space before `<br>` removed, the typed-below `<` made `<=`, the legend back to
      static; (4) R10 `sweep.mts walk5 --today=20758`, `idcheck.mjs walk5 walk4` (42/42 predicted: copy and UI only);
-     (5) `pnpm doc:reanchor <base> --apply` once, last, then the suite and `verify:doc-stats`; (6) commit (the walk-5
+     (5) `pnpm doc:reanchor <base> --apply` once, last, then the suite and `verify:doc-stats` (it also flags the README
+     and roadmap test counts: set them from the live suite, never from this line); (6) commit (the walk-5
      card's (bk) severity correction rides it: "High" → "Medium", from b9-7's note after the handoff), push, CI; then
      walk 6 as written below. Never run `node -e` with backticks through the Bash tool (b9-8 mangled a test file
      that way and repaired it): scripts go through Write.
@@ -483,14 +484,15 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-09 (b9-7: walk 5 WALKED on council `wf_7fa86902-35c`'s round; b9-6's block pruned into it, its
-landmines moved to the standing list below, its distill candidates kept below):** state at close: walk 5's record is
-committed and pushed (`42274150`: the card, the tape row, the register's retype entry, the council-log row, and item 1's
-fix-round prescription); no code changed this session. Typecheck exit 0; `verify:doc-stats` exit 0 (the gate carries the
-counts); walk 5's harness 18/18 (`3157a6da`'s witnesses held on their first run). CI on `3157a6da` (run 42601322466):
-`verify-rv-chart-text` success, `verify` still running at close (in its `verify:fit` step, ~41 min typical). Stopped at
-41% of the window: walk 5's fix round (a structural change on four hosts, nine copy changes, the Tier 0 note, mutants,
-R10, `verify:fit`) would not finish before the wrap line. Walk 5 cost about one weekly point (80% → 81%).
+**SESSION 2026-11-09 (b9-8: walk 5's fix round BUILT IN THE TREE, UNCOMMITTED; b9-7's block pruned into it, its
+landmines kept in the list below, its distill candidates kept below):** state at close: the round's code and tests are
+uncommitted in the working tree on purpose (its e2e strings, `verify:fit`, mutants, R10 and reanchor are still owed —
+item 1's "⚠ b9-8" block, its six steps in order); only docs were committed (`8bd916aa`, `b5773c24`, and the close).
+In the tree: typecheck exit 0, lint exit 0, the suite 5077 of 5078 (the red is `verify:doc-stats`' citation arm);
+`verify:doc-stats` exit 1 in the tree only (the round's new tests and moved lines: the README/roadmap test count and two
+line citations, `TODO.md:1300` and `act4-u17-s5-execution-plan.md:88`; the committed tree is unaffected). Briggsy ruled
+the verb (below). Stopped at 54% of the window, past the no-fan-out line. He starts a new series of sessions next, so no
+numbered successor: this START HERE is the handoff.
 **Check at start:** `git status` — b9-8's round must still be in the tree (about 25 files under `src/`, plus
 `docs/caddie/cold-read-log.md`); if a sibling session committed or reverted any of it, stop and reconcile before
 building. CI read by b9-8: run 42601322466 on `3157a6da` success (both jobs); run 42605776210 on `d3f355b9` success
@@ -500,7 +502,19 @@ defined "check", with walk 5's evidence in front of him (every risen reader took
 that the honest steer, rule 8; "check" failed twice in this paragraph already: a paycheck in walk 2, "verified, done" in
 walk 4). Never re-propose "check" on the flip condition. Still open, walk 6 answers it: the labels' calm-or-clinical
 (clinical as plain words, which (bi)'s form cure answers).
-**LANDMINES (b9-7):**
+**LANDMINES (b9-7, b9-8):**
+- **The round's work sits uncommitted in a tree other sessions share** (b9-1 to b9-7 and playbook-7 to -9 were live at
+  b9-8's close, all on `main`). Before building, `git status` must show it whole (the "Check at start" line); commit it
+  by path only (`git commit -- <paths>`), never `-a`.
+- **`src/ui/__tests__/copyGuard.test.ts` is committed CRLF** (`git ls-files --eol`: `i/crlf w/crlf`); every other file
+  b9-8 touched is LF. A literal search-and-replace script must match its line endings (the Edit tool handles it).
+- **`node -e "…"` through the Bash tool expands backticks and `${…}`** inside the double-quoted script: b9-8 mangled two
+  lines of a test file that way (repaired). Scripts go through Write, then `node <file>`.
+- **The e2e specs are outside `pnpm typecheck`**: a retired copy key they read compiles clean and fails only in
+  Playwright. Grep `e2e/` for every key a round removes.
+- **A `// @ts-expect-error` arm in a test still RUNS**: the methodology selector now indexes the act's Record, so the
+  three-argument call threw at runtime. Such arms sit inside a function that is never called
+  (`workingYearTaxDisclosure.test.ts`, `_compileOnly`).
 - **The council's verb flip is CLOSED by his ruling (2026-11-09: "update").** Its conjunction completes once the Tier 0
   note ships, but the condition no longer flips anything: never swap the verb in `WORKING_COST_ACT_COPY` on it.
 - **A seat's arithmetic can borrow the wrong quote.** The hunter priced Sam's working-year premium off the $1,100
@@ -512,6 +526,16 @@ walk 4). Never re-propose "check" on the flip condition. Still open, walk 6 answ
   (`extract-prompts.mjs <subagentsDir> <outDir>`, `extract-all-user.mjs <transcript.jsonl>`).
 - **A heredoc piped into `python -` in Git Bash hung to the 120 s timeout** (a stray line in a write command). Write files
   with the Write tool.
+**DISTILL CANDIDATES (b9-8, walk 5's round):**
+- **A line break inside a paragraph needs a space before it, or its text changes.** `textContent` joins `"…you.<br>This
+  answer now:"` with no space, so the React key, a screen reader and every `toContainText` see a different string from the
+  one the composer joined. `NotePartsBody` draws `' '` then `<br>`; the trailing space is never painted.
+- **Check why a constraint exists before obeying it.** KTD17's "static legend" read as a rule, but the pay check's deepen
+  recorded its reason as mechanical (`SegmentedControl` took only a catalog key). One optional prop removed it, and the
+  W fork's question now names the figure "Yes" sets.
+- **A held figure is not always the figure an answer was given at.** "The $16,985 you had left over at $84,000" is false
+  after a later "Yes" at another figure; "when you answered" is true in every case. Date a stored figure to its answer,
+  never to the figure held today.
 **DISTILL CANDIDATES (b9-7, walk 5):**
 - **Labels made of plain words in running text are not structure.** The council ruled run-in labels as copy words (never
   color or `::before`); rendered mid-line in body weight they vanished for every cold reader, and every one said the split

@@ -88,7 +88,7 @@ Every sentence and every question reads on one pass without a PhD: no internal c
 ## Keeping docs honest
 
 **The TODO looks forward.**
-It holds the current state, unfinished fixes written as exact prescriptions (file, line and change), next steps in priority order, and landmines (known traps for the next session). No "what we did" story: git already keeps it. When a new end-of-session block lands, the older ones are cut, but only after their landmines and open items move into the TODO's standing sections.
+It holds the current state, unfinished fixes written as exact prescriptions (file, line and change), next steps in priority order, and the landmines (known traps) that bite the next step. No "what we did" story: git already keeps it. START HERE is rewritten whole at every close, never added to. When a new end-of-session block lands, the older ones are cut, but only after their open items move to the ranked list or the register, their live landmines move to the project's landmines file under the area they bite (The Back Nine: `docs/landmines.md`), and their lessons move onto the one distill list. A dead landmine is deleted, not moved. (The Back Nine's TODO reached 324K characters on 2026-11-09 by skipping these; its doc gate now checks the shape.)
 
 **Every doc is for the next session.**
 If future work won't need it, don't write it: no dates of past work, no "used to," no "new" or "revised" markers. State the decision and what it means for the work. Lessons in `docs/insights/` are the exception: each one records a dated case, and a correction note or an `Extended` section says when it landed.

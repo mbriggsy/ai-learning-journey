@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **209 open items** (273 entries, 64 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **210 open items** (274 entries, 64 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -2066,6 +2066,23 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
   - Never default a dependent count (the NC and PA entries' NEGATIVE).
   - An absent answer reproduces today's two-adult run byte-identically.
   - Never price Alaska's or Hawaii's table without a state answer that names them; "somewhere else" does not.
+
+### An inherited IRA has no account kind — entered as a traditional IRA it is held too long, offered for conversion, and missing from the income the cliffs read
+
+`M` · **pilot** (build) · **briggsy** (the question's words) · filed 2026-11-09 (the-back-nine-b6) while scoping the workbench's account entry ([plans/5-workbench.md](plans/5-workbench.md))
+
+- **The gap (read).** Intake offers seven account kinds (`ACCOUNT_KINDS` in `src/shared/model.ts`): 401(k), 403(b), traditional IRA, Roth 401(k), Roth IRA, brokerage and HSA. None is an inherited IRA. The forced-withdrawal module (`src/engine/rmd.ts`) knows only an owner's own schedule: the SECURE 2.0 start age, the Uniform Lifetime table and the Joint Life table. A household that holds an inherited IRA must enter it as the nearest kind or leave it out.
+  - A register grep for inherited IRA / beneficiary IRA / 10-year rule found one mention, the carve-out in *A known one-time inflow — an inheritance, a home sale, downsizing — has no place to go* ("follows its own distribution rules, so it is out of this entry"). No entry covered it.
+- **Direction.** Entered as a traditional IRA by an heir who is not the owner's spouse: ROSY, on three counts. (a) The run holds the money until the heir's own start age (72, 73 or 75 by birth year), where the law empties most such accounts within ten years of the death. (b) The Roth lever and the solver's conversion grid treat the balance as convertible, and such an heir cannot convert it. (c) The withdrawals the law forces in those ten years do not exist in the run, so the income the ACA cliff, the IRMAA steps and the brackets read is too low in exactly those years. Left out instead: gloomy (the balance is missing). Unmeasured.
+- **D7.** Ask for it. The account's own facts decide its rules: traditional or Roth; inherited from a spouse or from someone else; the year the owner died; whether the owner had reached the age of required withdrawals.
+- **Prescription.**
+  - (1) SOURCE each rule from the primary before use (burned/062): IRS Publication 590-B and the July 2024 final regulations. As read on 2026-11-09 from a web search SUMMARY, not the primary, and so directional until pinned: most non-spouse heirs of an owner who died in 2020 or later must empty the account by the end of the tenth year after the death; yearly withdrawals are also required in years one to nine when the owner died on or after the required beginning date; an owner who died before 2020 leaves the older life-expectancy schedule; an inherited Roth follows the ten-year rule with no yearly amounts; a non-spouse heir cannot convert; the 10 % early-withdrawal penalty does not apply; a surviving spouse has other choices, one of which makes the account the survivor's own (then a traditional or Roth IRA is the right kind, and this entry does not bite).
+  - (2) Build an inherited-IRA account kind with its own forced-withdrawal producer, ONE producer beside `rmd.ts`'s owner schedule (insight 081). It is out of the convertible pool; a traditional one's withdrawals are ordinary income in their year, so every cliff reads them. Presence-keyed: with no such account the run stays byte-identical.
+  - (3) Where the law leaves the pace inside the ten years to the heir, the pace is the household's choice. The plan rules whether it is asked, a lever, or something the solver searches.
+- ⚑ NEGATIVE:
+  - Never model it as a traditional IRA with a shorter clock bolted on: the conversion rule and the penalty rule differ too.
+  - Never let a conversion draw on it.
+  - Never default the year of death or the owner's age.
 
 ## Tier 1 — the differentiator does not land
 

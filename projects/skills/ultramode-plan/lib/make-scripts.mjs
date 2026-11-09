@@ -32,7 +32,7 @@ import { scriptParts } from "./workflow-stub.mjs";
 
 // The modules a source may inline: pure, import-free, and reading no clock or random number
 // (entry.test.mjs holds them to it).
-export const INLINABLE = ["vote-law", "select", "caps", "prompts"];
+export const INLINABLE = ["vote-law", "select", "caps", "prompts", "reads"];
 // Where each source folder's generated scripts go, relative to the skill folder.
 export const SOURCE_DIRS = [
   { src: "src", out: "workflows" },

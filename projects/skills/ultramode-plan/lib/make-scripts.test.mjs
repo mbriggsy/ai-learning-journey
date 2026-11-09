@@ -10,6 +10,7 @@ import { refuterCount } from "./vote-law.mjs";
 import { capOf, SIZE_LAWS } from "./caps.mjs";
 import { CRITICAL_KINDS } from "./select.mjs";
 import { PROMPT_PAGE, promptLensPicks } from "./prompts.mjs";
+import { readsMissed } from "./reads.mjs";
 import { tmpRoot } from "../bench/testkit.mjs";
 
 const lib = dirname(fileURLToPath(import.meta.url));
@@ -75,7 +76,7 @@ test("line endings come out as \\n whatever the inputs hold, so a CRLF checkout 
   assert.doesNotMatch(lfOut, /\r/);
 });
 
-test("the four real modules inline into one script, and inside the stub their exports answer as the modules do", async () => {
+test("the five real modules inline into one script, and inside the stub their exports answer as the modules do", async () => {
   const body = `const ctxLaws = SIZE_LAWS
 return {
   refuters: [refuterCount('P0'), refuterCount('P2'), refuterCount('P3')],
@@ -84,9 +85,12 @@ return {
   critical: CRITICAL_KINDS,
   lensPicks: promptLensPicks({ plan: 'C:/runs/plan.md', personaSelection: null }).prompt,
   law: ctxLaws.finder,
+  missed: readsMissed(INDEX, 9, 4),
+  args: readsArgs('{"plan": "C:/runs/plan.md"}', { who: 'all', required: { plan: 'path' } }),
 }
 `;
-  const out = generate(src("// @inline vote-law select caps prompts", body), "src/all.src.js", real());
+  const index = [{ line: 1, level: 1, heading: "Plan", own: false }, { line: 2, level: 2, heading: "A", own: true }, { line: 5, level: 2, heading: "B", own: true }];
+  const out = generate(src("// @inline vote-law select caps prompts reads", `const INDEX = ${JSON.stringify(index)}\n${body}`), "src/all.src.js", real());
   const r = await runWorkflow(out, { respond: () => null });
   assert.equal(r.error, null);
   assert.deepEqual(r.result, {
@@ -96,8 +100,11 @@ return {
     critical: CRITICAL_KINDS,
     lensPicks: promptLensPicks({ plan: "C:/runs/plan.md", personaSelection: null }).prompt,
     law: SIZE_LAWS.finder,
+    missed: readsMissed(index, 9, 4),
+    args: { plan: "C:/runs/plan.md" },
   });
-  assert.deepEqual(INLINABLE, ["vote-law", "select", "caps", "prompts"]);
+  assert.deepEqual(r.result.missed, [{ line: 5, heading: "B" }]);
+  assert.deepEqual(INLINABLE, ["vote-law", "select", "caps", "prompts", "reads"]);
 });
 
 // A skill folder in a scratch place: the four modules, the given sources, and no generated script.

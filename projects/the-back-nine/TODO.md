@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-08, b9-2 committed the walk's fix (ae) — `c6b15120`, so the whole fix round (ab)–(af) is in; next is walk 2 on the fixes (its targets and its four questions are in item 1, Phase C), then U12 carrying U11's figures and the filings (ag)–(al), then the whole-file review, with an adversary and every finding verified, and `/distill` — item 1, Phase C; rewritten by b9-5 — walked U11's Caddie record, `c10339b0`, the card HARD-FLAG; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
+▶ **START HERE (2026-11-09, b9-3 walked walk 2 on the fix round (the card HARD-FLAG, top of `docs/caddie/cold-read-log.md`) and committed its own fix round (am)–(ao) — `f028f33f`; next is walk 3 on those words (item 1, Phase C, its targets and four questions), then U12 carrying U11's figures and the filings (ag)–(ar), then the whole-file review, with an adversary and every finding verified, and `/distill` — item 1, Phase C; rewritten by b9-2 — the walk's fix (ae), `c6b15120`; rewritten by b9-5 — walked U11's Caddie record, `c10339b0`, the card HARD-FLAG; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -172,18 +172,29 @@ queue below (its order unmoved). Next, in order:
      vs the twin's 9), and a check at $90,000 credits at most $10,985 a year (`out\u11-stream-compare-u11-full.txt`
      2455–2474). **The fix round is COMMITTED: (ab), (ac), (ad), (af) in `a5d34d69` (b9-1) and (ae) in `c6b15120` (b9-2,
      2026-11-08, council `wf_fc80029e-d93`'s Frame B as ruled), each test-first; (ae)'s mutants 10 of 10 as predicted and R10
-     `ae` 40/40 against `fixround` (`b9-build2-surplus\u11-ae\`, README row; `sweep-ae.json` is the baseline from here). ▶ NEXT:
-     walk 2** on every edited sentence: `CADDIE_TARGETS="intake:kept,seed:datesavedrisen,vault:datesavedrisen,seed:datesavedrisenshort,vault:datesavedrisenshort,seed:datesavedrisenlater,vault:datesavedrisenlater"`
-     (increment 11 in `e2e/caddie-walk.spec.ts`'s header: the risen family's Result line, gate line and waiting seat per
-     target through `risenWitness`; the harness already reads (ab)–(ad) and branch C). What walk 2 must judge, beyond the
-     card's own lenses: (1) the council's dissent — seven seats would drop the counterweight ("Your $84,000 figure makes
-     any working year your pay doesn't cover look cheaper than it really is.") — flips if readers take it to mean THIS
-     household has short years; (2) the gate's density: the later-short line is five sentences (it fits the 791 px frame:
-     the affirm sits in frame, `verify:fit`'s `?vault=datesavedrisenlater` arm); (3) whether the at-most sentence alone
-     reads as "checking improves my date" (the Hawk's veto reason); (4) two arms no target renders, read as text from
-     `workingYearLeftOver.test.ts`: `whole` (a raise lifts year 0 at the quote past the stored figure: "…adds at most the
-     $16,985 a year you chose to save.") and `firstNone` (year 0 exactly $0 at the quote: "…has nothing left over…"). Wording
-     is the pilot's to close under the batched-oracle law; a framing fork or the dissent's flip goes back to a council.
+     `ae` 40/40 against `fixround` (`b9-build2-surplus\u11-ae\`, README row; `sweep-ae.json` is the baseline from here). Walk 2 DONE (b9-3, 2026-11-09).** The card is at the top of `docs/caddie/cold-read-log.md` (HARD-FLAG, held as walk 1
+     left it; its tape row open), bundle `temp/caddie/caddie-u11-b9-3-walk2` (14 fresh Opus readers, then 8 refuters over 16
+     findings). Its four questions: (1) the dissent did NOT flip — no reader took the counterweight to mean this household
+     has short years, so it stays as ruled (and it is not empty: a check at $100,985 or more leaves year 0 itself short);
+     (2) the later-short gate fits the laptop frame and reads heavy (filed (ap)); (3) the at-most sentence does read as
+     "checking improves my answer", true at the quote for `datesavedrisen` (U11: no date against 9) but not across every
+     check, which no line said; (4) `whole` and `firstNone` read plainly bar two lows ((aq)). **Its fix round is COMMITTED:
+     `f028f33f` (b9-3), mutants 7 of 7 as predicted, R10 `walk2` 42/42 against `ae` (`b9-build2-surplus\u11-walk2\`,
+     README row; `sweep-walk2.json` is the baseline from here):** (am) the short-year sentences name the RUN at the quote
+     in the money picture's own words (`shortRunFrom`; `firstShort.run`; `laterShort` a run: "each working year from 2026
+     through 2032 comes up $3,652 to $4,015 short", "If you’re still working from 2029 through 2032, each of those years
+     comes up $3,652 to $4,015 short…"), where one year alone had read as a one-off beside a gain stated "a year"; (an) "a
+     check at" → "checking your figure at" (six readers read a paycheck); (ao) `capped` / `whole` with no later short run
+     end on "Checking your figure can move this answer either way, depending on what you settle on." (no threshold, no
+     "worse": Frame B). ▶ NEXT: **walk 3** on those words, the same seven targets:
+     `CADDIE_TARGETS="intake:kept,seed:datesavedrisen,vault:datesavedrisen,seed:datesavedrisenshort,vault:datesavedrisenshort,seed:datesavedrisenlater,vault:datesavedrisenlater"`
+     (the harness's witnesses already carry the new words; branch C arms no re-run watch since walk 2's run). What walk 3
+     must judge: (1) "checking your figure" no longer reads as a paycheck; (2) the either-way sentence answers "which way?"
+     without reading as alarm or as a promise that checking helps; (3) the run sentences read as recurring, and the later
+     couple no longer nets the check as a gain; (4) density after the round (`datesavedrisen`'s line grew by a sentence).
+     A smaller panel fits: walk 2's shape found the defects; a cold first look on each risen gate, an unprimed spouse on
+     the three couples, a hunter, then a refuter per surviving finding. Wording is the pilot's under the batched-oracle
+     law; Frame B (no threshold, no "worse") binds, and a framing fork goes back to a council.
      As built, two refinements of the ruling, each in the code's docblocks and the council-log row: a "saved" answer that
      is NOT asked keeps the spending-alone lean (true there by mechanism; insight 103's silencing check), and
      `laterShort` rides `capped`/`whole` as a field, with year 0 at exactly $0 its own member (`firstNone`).
@@ -205,6 +216,29 @@ queue below (its order unmoved). Next, in order:
      route the North Carolina / Pennsylvania clause says "your state income tax" with no scope…* the walk's re-find (the
      hunter, refuter at high) and, to the PA-wage-tax entries, the state-move Keep door with no dollar figure (PA's 3.07% on
      $150,000 is about $4,605 a year; D7's stopgap missing its number).
+     **Filed by walk 2 for U12** (each into the register with its prescription): (ap) **the risen line's density** (medium;
+     the refuter: the density claim survives, the order and fold claims die): five to seven sentences, seven to ten dollar
+     mentions, two "so"-chained multi-figure sentences; the cure is form, one fact per dollar sentence (rule 5), never a cut
+     (rule 24, D7) — split "At $90,000 a year, your first working year has $10,985 left over, so checking your figure at…"
+     at its "so", the same in the run sentences, then re-walk. (aq) **`whole`'s "adds at most the $16,985 a year you chose
+     to save"** names the household's choice as the cap, though they chose all of it and the cap is R8's, the figure
+     answered with: "…adds at most $16,985 a year, the figure you answered with" (low); and `firstNone`'s "nothing left over
+     … the $16,985 a year left over from your pay" in one sentence (low). (ar) **the kept state-only sentence**
+     (`slots.workingCostStaleStateKept`, `src/ui/copy.ts`; its said-yes twin `workingCostStaleStateConfirmed` the same) names
+     no state — Pennsylvania appears nowhere on branch C's step — drops the "’s" its both-causes twin carries ("which state
+     income tax"), and gives no direction (medium; refuter-narrowed): name the state from `retirementState` ("You kept
+     $84,000 a year before you picked Pennsylvania, so it may not hold Pennsylvania's income tax on your pay.") and a
+     conditional lean ("If it doesn't, this answer can look better than it really is."), the dollar figure riding (ak)'s
+     build; and the W help's "your spending figure leaves state income tax out" asserts what the couple's own entry holds —
+     give the true reason ("it's taken from pay, so it isn't part of what you spend") (low). Appends: (al) gains its RISE arm
+     (medium: `datesavedrisenlater`'s alimony arrived after the answer, so the stored $16,985 sits below today's $26,985 at
+     the held $84,000 and the page's figures don't add up; a fix that dates the figure says "when you answered", never "at
+     $84,000", false there); (ai) rises to medium (four readers: the landing's "that you chose to save" has no details home
+     while the seat waits); (ag) gains walk 2's sighting (a unit tap that converts, engine input unchanged, still showed the
+     quick pass's band, "$6k and $6.8M" for "$31k and $7.1M", behind the sheet); the Tier 0 *The gate's working-year lines
+     can't say whether a change touches this household…* "two yeses for two figures" bullet gains walk 2's re-find ("Yes" on
+     the state-only block sets the $78,000 spending figure); the Tier 0 *The tool asks only where you'll live in
+     retirement…* gains the kept and said-yes state sentences as sites (low).
      **Then U12** (the plan's ten steps), carrying U11's figures (each stated with its seed, tier, offset and track, from the
      README § U11, never re-typed from memory): K5 at Tier 0 — the year-0 share NOT EXERCISED (unmeasured, never $0), its
      nearest shapes 76.9% (date65 2027) to more than the whole figure (datelateleftover 2030, $19,172 of $13,277), and the
@@ -257,21 +291,35 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-08 (b9-2: U11's fix (ae), `c6b15120`, pushed; b9-1's block pruned into it):** state at close: typecheck 0,
-lint 0, build 0, `verify:bundle` 296.0 KiB of the 300 KiB budget (copy grows each round: 294.6 at `a5d34d69`), the suite
-pinned 0 (its count lives under `verify:doc-stats`, which is OK), R10 `ae` 40/40 against `fixround`; `verify:fit`: the
-eleven arms (ae) added or touched passed locally (`--grep "unlock line|risen family"`), the rest NOT run locally (CI runs it);
-the edited e2e specs typecheck under a scratch tsconfig that adds `e2e/` (`pnpm typecheck` does not include it). **Check at
-start:** CI on `c6b15120` (run `42558789155`: `gh run view 42558789155 --json status,conclusion,jobs`).
-**LANDMINES (b9-2):**
-- **The fit gate's result helpers assumed a DATED reading.** `assertResolvedDate`, `assertOneVisibleDisclaimer`'s tier read
-  and `DOORS_WALK_FLOOR` all wait on a band, a ladder and `[data-twopane]`, which the no-date reading never draws; the risen
-  family crowns no date, so (ae) added `assertNoDateReading`, `assertOneVisibleDisclaimerNoDate` and
-  `NO_DATE_DOORS_WALK_FLOOR` (10; measured 14 at REAL, 12 on the phone). A new no-date arm uses those, never the dated ones.
-- **`pnpm doc:reanchor HEAD --apply` left five bare continuations unmoved on TODO.md's Card 13 line** (`:1307`, `:1365`,
-  `:1412`, `:2060`, `:2173` after `vertical-fit.spec.ts`; two were already wrong at HEAD, pointing at non-blank lines the
-  gate passes). Fixed by hand to the describes' lines; after any re-anchor, read each bare `:N` the gate cannot judge.
-- **`start "" /b /wait /affinity FFF` returns exit 0 on a failing vitest run** (again): read the output's "Tests" line.
+**SESSION 2026-11-09 (b9-3: U11's walk 2 and its fix round, `f028f33f`, pushed; b9-2's block pruned into it):** state at close:
+typecheck 0, lint 0, build 0, `verify:bundle` 296.6 KiB of the 300 KiB budget (296.0 at `c6b15120`), the suite pinned 0 (its
+count lives under `verify:doc-stats`, which is OK), R10 `walk2` 42/42 against `ae`, mutants 7 of 7; `verify:fit`: the risen
+family and unlock-line arms passed locally (11/11, `--grep "unlock line|risen family"`), the rest NOT run locally (CI runs
+it); the edited e2e specs typecheck under a scratch tsconfig that adds `e2e/` (bar the eight pre-existing errors below). CI
+on `c6b15120` was green (run `42558789155`, both jobs). **Check at start:** CI on `f028f33f` (run `42567694598`: `gh run view
+42567694598 --json status,conclusion,jobs`).
+**LANDMINES (b9-3):**
+- **The Caddie walk's re-run watch can never fire on an edit whose run leaves the verdict word for word.** Branch C (a move
+  to Pennsylvania alone) re-runs the answer, but the run commits the same words at tier "final", so `armRerunWatch` saw
+  nothing in 150 s at both viewports, and `start /b /wait` still reported exit 0 (read the "passed / failed" line). A branch
+  that captures no Result arms no watch (`closePanel`, `e2e/caddie-walk.spec.ts`).
+- **`pnpm doc:reanchor HEAD --apply` again left two bare continuations on TODO.md's Card 13 line** (`:2217` and `:2330`
+  after `vertical-fit.spec.ts`, the aged `datestale` / `datearrived` describes, moved +4), with "0 for hand review"; fixed by
+  hand. After any re-anchor that moves `vertical-fit.spec.ts`, grep that line's bare `:N` against the describes.
+- **The whole `e2e/` folder does not typecheck under a scratch tsconfig that adds it:** eight pre-existing `Node.remove`
+  errors in `chart-text.spec.ts` and `held/assumptions-row-look.spec.ts` (the DOM lib); filter them before reading an edited
+  spec's result (Playwright compiles with esbuild and never sees them).
+- **The blocked W step's capture is scrolled to the top** (the settle recipe's `scrollTo(0,0)`), so its alert, about 1,300 px
+  down, is never in `viewport.png` and no CVD arm covers it; no capture shows whether a real press scrolls to it.
+**DISTILL CANDIDATES (b9-3, walk 2):**
+- **Judge a conditional sentence over the extension it states, never at the one point on screen.** "Any working year your
+  pay doesn't cover" is empty for `datesavedrisen` at $90,000, and the chair first called the counterweight vacuous; the
+  refuter caught that "a check at $90,000 or more" spans the figures where it bites. The same reading kept the non-saved
+  "can look better" honest: across every figure at or above the spending it only adds cost.
+- **A shortfall stated beside a gain must share its unit.** "Adds at most $5,985 a year" beside "that year comes up $4,015
+  short" read as a net gain; the picture held the run (2029–2032) all along. Name the run wherever a gain is stated a year.
+- **A fix that dates a figure must hold for every household the line reaches.** "The $16,985 left over at $84,000" would
+  have been false for the later couple, whose left over at $84,000 is now $26,985; date it by when it was answered.
 **DISTILL CANDIDATES (b9-2, (ae)):**
 - **A copy branch that reads a counterfactual run must read it through the producer's own write, memoized on the source
   draft.** The check at the quote is the money picture of `writeConfirmedWorkingYearCost(d)`, the "Yes" tap's own write: a
@@ -1226,6 +1274,15 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 *Engineering lessons live in [`docs/insights/`](docs/insights/) (one file per lesson; cite by full path + slug).
 These are the mechanical ones that keep costing hours.*
 
+- **From the b9-2 close (2026-11-08), migrated by b9-3:**
+  - **The fit gate's result helpers assumed a DATED reading.** `assertResolvedDate`, `assertOneVisibleDisclaimer`'s tier read
+    and `DOORS_WALK_FLOOR` all wait on a band, a ladder and `[data-twopane]`, which the no-date reading never draws; the risen
+    family crowns no date, so (ae) added `assertNoDateReading`, `assertOneVisibleDisclaimerNoDate` and
+    `NO_DATE_DOORS_WALK_FLOOR` (10; measured 14 at REAL, 12 on the phone). A new no-date arm uses those, never the dated ones.
+  - **`pnpm doc:reanchor HEAD --apply` left five bare continuations unmoved on TODO.md's Card 13 line** (`:1307`, `:1365`,
+    `:1412`, `:2060`, `:2173` after `vertical-fit.spec.ts`; two were already wrong at HEAD, pointing at non-blank lines the
+    gate passes). Fixed by hand to the describes' lines; after any re-anchor, read each bare `:N` the gate cannot judge.
+  - **`start "" /b /wait /affinity FFF` returns exit 0 on a failing vitest run** (again): read the output's "Tests" line.
 - **From the b9-10 close (2026-10-31), migrated by b9-1:**
   - **tsx (esbuild keepNames) wraps a NAMED function declared inside a Playwright page callback in `__name(…)`**, which the page does
     not have: "ReferenceError: __name is not defined" killed the first h2 run. Keep `evaluate` callbacks free of named inner

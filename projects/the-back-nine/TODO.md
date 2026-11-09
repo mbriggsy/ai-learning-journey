@@ -170,9 +170,20 @@ queue below (its order unmoved). Next, in order:
      `docs/caddie/cold-read-log.md` (HARD-FLAG; the tape row is open); bundle `temp/caddie/caddie-u11-b9-5-walk1`. (d) and (p)
      are walked; b9-1's hold (e) is CLOSED by U11's measurement, the other way: the risen stale answer is GLOOMIER (no date
      vs the twin's 9), and a check at $90,000 credits at most $10,985 a year (`out\u11-stream-compare-u11-full.txt`
-     2455–2474). **NEXT, the walk's fix round** (a `src` commit: the R10 sweep + per-key `idcheck` against `risen`, then
-     walk 2 on the fixed words, `CADDIE_TARGETS="intake:kept,seed:datesavedrisen,vault:datesavedrisen"`), opened with
-     `/brief kept and stale working-year words`, each fix test-first and read top to bottom with every line its state shows:
+     2455–2474). **The fix round: (ab), (ac), (ad), (af) COMMITTED `a5d34d69` (b9-1, 2026-11-08), test-first; mutants 11 of
+     11 as predicted and R10 `fixround` 40/40 against `risen` (`b9-build2-surplus\u11-fixround\`, README row). ▶ NEXT:
+     (ae) from council `wf_fc80029e-d93` (7/10, EXECUTE; digest row in `docs/council-log.md`; read the `recommendation` in
+     `u11-fixround\council-ae.output.json` first), which SUPERSEDES the (ae) bullet below.** Frame B: no threshold, no
+     "worse" anywhere. One composer goes in `workingYearLeftOver.ts`. Split `workingYearCostStaleText` into the pure-W
+     sentence plus a lean flag (KTD2 holds). The lean is an exhaustive Record on the answer kind: "saved" waiting on W
+     gets the Hawk's counterweight on the W note, the panel row, the Result and the gate. The Result/gate tail is a Record
+     off the producer's ledger at W re-confirmed at the quote (capped / whole / laterShort / firstShort / unknown, the last
+     pinned unreachable), with the at-most figure min(S, P_q). Then the R6/KTD11 amendment (the answer frozen in "waiting
+     on W"), the guards, hand-derived pins, witnesses for laterShort and firstShort, `verify:fit` arms, the harness's
+     `LEFT_OVER_WITNESSES.datesavedrisen` and `devSeeds.test.ts` risen order, then walk 2:
+     `CADDIE_TARGETS="intake:kept,seed:datesavedrisen,vault:datesavedrisen"` (the harness already reads (ab)–(ad) plus a new
+     branch C, the state-only gate). Dissent (seven seats: drop the counterweight) flips if walk 2 reads it as "this
+     household has short years". The prescriptions as filed, kept for reference:
      - (ab) **The kept row's label after a unit tap** ("$1,008,000 a year — the figure you kept", false; refuter: medium).
        Lead fix: a unit tap on a KEPT figure (`keptOverQuoteReal` present) converts instead of re-reading —
        `writeWorkingYearCostPeriod` (`src/intake/workingYearQuote.ts`) keeps `amountReal` and changes `entryPeriod`, so the
@@ -264,14 +275,18 @@ JUNCTION — remove the link alone before deleting the folder.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-08 (b9-5: U11's Caddie record, walk 1 — `c10339b0` (the risen seed + the kept walk), CI run 42528672151
-started at the push; the card and the tape row in the close commit — b9-4's block pruned into it):** state at close: at
-`c10339b0` typecheck 0, lint 0, build 0, `verify:bundle` 294.3 KiB, the suite (pinned, 301 s) green but the doc-citation arm
-before the re-anchor, the scripts suite 122/122, `verify:doc-stats` OK; the R10 sweep `risen` 39/39 against `golive`. b9-4's
-check-at-start read green (run 42523800976). Wrapped at ~55% of the window, after the panel (11 readers + 15 refuters, de-authored
-Agents, about 3.4M helper tokens), before the fix round (a walk 2 could not finish under the 60% line). **Check at start:**
-the CI runs on `c10339b0` (`gh run view 42528672151 --json status,conclusion,jobs`) and on this close's push (`gh run list
---commit <its FULL sha> --json databaseId,status,conclusion`).
+**SESSION 2026-11-08 (b9-1: U11's fix round (ab)–(af), `a5d34d69`, pushed; council on (ae) ruled; b9-5's block pruned
+into it):** state at close: typecheck 0, lint 0, build 0, `verify:bundle` 294.6 KiB, the suite pinned 0 (334 s),
+`verify:doc-stats` OK; R10 `fixround` 40/40 against `risen`. `verify:fit` and the e2e harness NOT run locally (CI runs
+`verify:fit`; the edited `caddie-walk.spec.ts` is untypechecked until walk 2 runs it). Also `272705ec`: the window skill's
+handoff mode counts consecutive idle sessions as a chain. **Check at start:** CI on `a5d34d69` (`gh run list --commit
+a5d34d695e989080b09cf4a0a583e0d62926699e --json databaseId,status,conclusion`).
+**DISTILL CANDIDATES (b9-1, the fix round):**
+- **A unit control on a figure the reader never typed must convert, not re-read.** The re-read that repairs a 12× typo
+  turned a kept $84,000 into $1,008,000, and that read FRESH, so the stale gate let it through. Who gave the digits on screen
+  decides which part a unit tap keeps.
+- **A gate's message is a frame: "answer it above" over an answered face is insight 109 again.** Derive the message from the
+  same core as the face's own door (`workingYearCostGateMessage` / `workingYearCostKeepLabel`), so it can only name what is drawn.
 **DISTILL CANDIDATES (b9-5):**
 - **The tier only moves when a run COMMITS, and two re-runs from one edit can cancel each other's provisional sweep.**
   `memoryModel` holds the last answer while a run is in flight; a panel edit fires `recomputeBoth`, and where one edit writes

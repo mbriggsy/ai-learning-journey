@@ -13,7 +13,8 @@
 //     the contract brief verbatim, and the request with the brief (ctx.request, ctx.brief: an
 //     update run may have no brief, and on an update the goal is judged against the brief, an
 //     origin document the plan cites and any goal change the request asks for, never the plan's
-//     own Goal Capsule);
+//     own Goal Capsule, and a move toward one of them or toward a finding this run confirmed,
+//     ctx.goalMoves, is asked);
 //   - every whole-plan reader (each check seat, the premise seat, the scorer): the paging rule and
 //     the reading inventory, the plan's last line given by its number only (its text is what
 //     KTD7's check compares, so a prompt that quoted it would hand a short reader the answer);
@@ -196,6 +197,11 @@ const PROMPT_RISKS = {
 export const PROMPT_PAGE = 160;
 // The inventory quotes the first 120 characters of the last line (caps.mjs lastLineText, tested).
 export const PROMPT_QUOTE = 120;
+// KTD7's quote check passes a reader's quote that is a prefix of the true last line, both ends
+// trimmed, at least min(length, PROMPT_QUOTE_FLOOR) characters long (a model miscounts exactly 120).
+// Exported for U5's check; a later round masks a change line that opens with that many of the last
+// line's characters, since a reader could quote it and pass (R4-32).
+export const PROMPT_QUOTE_FLOOR = 40;
 
 // ---------------------------------------------------------------- filling and checking
 
@@ -269,7 +275,11 @@ const PROMPT_PAGING = [
 
 const PROMPT_SETTLED = "SETTLED DECISIONS: a decision marked settled (a \"session-settled:\" annotation, or one carrying Briggsy's own words or ratification) stays in view and is protected: never propose removing or rewording its annotation. A finding against it stands at full severity when it shows the decision cannot reach its outcome under its own constraints; preferring the alternative it rejected is not a finding. Report it like any other finding: the run, not you, decides whether it parks.";
 
-const PROMPT_FINDER_RETURN = "RETURN ONLY the structured object. Each finding names the plan section it is about (its heading) and the plan line it rests on, and carries its evidence in why_it_matters: the plan's words, and the file:line in the repo or the doc that contradicts or confirms them. suggested_fix is the change to the plan that closes it. Suppress a finding you cannot honestly anchor at confidence 50; a 50 survives only as P0 or as a residual risk, and an actionable finding needs 75. Severity: P0, building from the plan as written gives the wrong thing on every path, or the plan cannot reach its goal; P1, a wrong decision, a missing or wrong unit, or a verification that passes on wrong code, on a path the build takes; P2, a real gap on a narrow path, or a section too weak for its job; P3, minor. An empty findings list is an honest answer when your class holds nothing.";
+// The finders' severity ladder, which a finding's verifier grades on too: its corrected_severity is
+// what the deepen's premise gate reads (vote-law.mjs severityLine, KTD5's As-built note), so a vote
+// and a claim must mean one severity (R4-34).
+const PROMPT_LADDER = "P0, building from the plan as written gives the wrong thing on every path, or the plan cannot reach its goal; P1, a wrong decision, a missing or wrong unit, or a verification that passes on wrong code, on a path the build takes; P2, a real gap on a narrow path, or a section too weak for its job; P3, minor.";
+const PROMPT_FINDER_RETURN = `RETURN ONLY the structured object. Each finding names the plan section it is about (its heading) and the plan line it rests on, and carries its evidence in why_it_matters: the plan's words, and the file:line in the repo or the doc that contradicts or confirms them. suggested_fix is the change to the plan that closes it. Suppress a finding you cannot honestly anchor at confidence 50; a 50 survives only as P0 or as a residual risk, and an actionable finding needs 75. Severity: ${PROMPT_LADDER} An empty findings list is an honest answer when your class holds nothing.`;
 
 const PROMPT_PERSONA = [
   "YOUR PERSONA FILE: {persona}",
@@ -329,12 +339,29 @@ const promptJoin = (parts) => parts.filter((p) => p !== null && p !== undefined 
 // request asks for; HEAD's version at ctx.lands is only the line a moved goal is measured from; and a
 // goal no source states is unjudged, never a finding and never a pass. Never against the plan's own
 // Goal Capsule, which under an update is the committed plan judging itself.
-const PROMPT_UPDATE_GOAL = "THE GOAL, ON AN UPDATE: judge the plan's goal against {sources}. The plan's own Goal Capsule is never what was asked (under an update the plan is the committed one, so that would be circular): HEAD's version of it at {lands} is only the line a moved goal is measured from, and a goal moved from it beyond what the request asks is a finding. Judge too whether the plan makes the change the request asks. When {none} states a goal, the goal is not judged (\"goal not judged: no brief or origin document states a goal\"): never a finding and never a pass.";
+// A move from HEAD's goal is unasked only beyond what every source asks, the findings this run
+// confirmed among them (R4-29): a send-back's rewrite toward the brief, a cited origin or a confirmed
+// incident or population finding would otherwise read as a moved goal to the second deepen's premise
+// seat and its verifiers, and a second premise finding blocks the run (flow.mjs nextStep).
+// ctx.goalMoves is that list, required on an update (an empty list when none) and recorded by U6:
+// each finding worded without its stakes, since a seat told what its finding sets off may hide a
+// true premise.
+const PROMPT_UPDATE_GOAL = "THE GOAL, ON AN UPDATE: judge the plan's goal against {sources}. The plan's own Goal Capsule is never what was asked (under an update the plan is the committed one, so that would be circular): HEAD's version of it at {lands} is only the line a moved goal is measured from. A goal moved from it is a finding only where it moves beyond what {licences} ask; a move one of them asks for is asked, never a finding. Judge too whether the plan makes the change the request asks. When {none} states a goal, the goal is not judged: never a finding and never a pass.\nFINDINGS THIS RUN CONFIRMED, which the plan now answers:{moves}";
+function promptGoalMoves(ctx) {
+  const moves = ctx.goalMoves;
+  if (!ctx.update) {
+    if (moves !== undefined && !(Array.isArray(moves) && moves.length === 0)) throw new Error("prompts: ctx.goalMoves is for an update run only: a new plan's goal is judged against the request and the brief, and a rewrite that says how it moved the goal answers them");
+    return null;
+  }
+  if (!Array.isArray(moves) || moves.some((m) => typeof m !== "string" || !m.trim())) throw new Error("prompts: ctx.goalMoves is the list of the findings this run confirmed that the plan now answers, each as non-empty text worded without its stakes (an empty list when none); an update needs it, since a goal moved toward one is asked");
+  return moves.length ? `\n${moves.map((m) => `- ${m.trim().split(/\r?\n/).join("\n  ")}`).join("\n")}` : " none.";
+}
 function promptRequestBlock(ctx) {
   const request = promptText(ctx?.request, "ctx.request (what was asked for)");
   if (typeof ctx.update !== "boolean") throw new Error("prompts: ctx.update says whether this run updates a committed plan (true or false)");
   if (ctx.brief === null && !ctx.update) throw new Error("prompts: ctx.brief is the brief's path; only an update run may have none (null)");
   const brief = ctx.brief === null ? null : promptPath(ctx.brief, "ctx.brief (the brief's path, or null on an update run given none)");
+  const moves = promptGoalMoves(ctx);
   if (!ctx.update) return promptFill("THE REQUEST (what was asked for):\n{request}\nTHE BRIEF it was planned from: {brief} (read it).", { request, brief });
   const lands = promptPath(ctx.lands, "ctx.lands (the plan's named path, which an update run's landing replaces)");
   const asked = brief === null
@@ -343,7 +370,9 @@ function promptRequestBlock(ctx) {
   return `${asked}\n${promptFill(PROMPT_UPDATE_GOAL, {
     lands,
     sources: brief === null ? "any origin document the plan cites and any goal change the request asks for" : "the brief, any origin document the plan cites and any goal change the request asks for",
+    licences: brief === null ? "the request, an origin document the plan cites and the findings this run confirmed (below)" : "the request, the brief, an origin document the plan cites and the findings this run confirmed (below)",
     none: brief === null ? "neither the request nor an origin document the plan cites" : "none of the request, the brief and any origin document the plan cites",
+    moves,
   })}`;
 }
 
@@ -384,7 +413,12 @@ function promptRosterBlock(running) {
 // U5 takes it from a diff of the section before and after the fold, never from fold.mjs's
 // old_values, which hold only the phrases the main loop recorded): null for round 1, else the
 // round block.
-function promptRoundBlock(round, changes) {
+// `last` is the plan's last line (ctx.lastLine). A fold that adds or edits the plan's last bullet
+// would print the text KTD7's quote check compares, so in an add's text and an edit's text now,
+// each line that opens with the last line's first min(length, PROMPT_QUOTE_FLOOR) trimmed
+// characters is shown by its number instead (R4-32). A was and a deletion are old text, gone from
+// the plan, and stay whole: masking them would hide the words the fold dropped (R4-25).
+function promptRoundBlock(round, changes, last) {
   if (![1, 2, 3].includes(round)) throw new Error(`prompts: round is 1, 2 or 3; got ${JSON.stringify(round)}`);
   if (round === 1) {
     if (Array.isArray(changes) && changes.length) throw new Error("prompts: check round 1 has no changes to name");
@@ -404,7 +438,10 @@ function promptRoundBlock(round, changes) {
   // an edit's was and now each sit on a labeled line, their own line breaks indented deeper, since an
   // inline arrow would break on multi-line text and on the plan's own arrows.
   const indent = (text, by) => text.trim().split(/\r?\n/).join(`\n${by}`);
-  const lines = changes.map((c) => (c.kind === "edit" ? `- edited, was: ${indent(c.was, "    ")}\n  now: ${indent(c.text, "    ")}` : `- ${PROMPT_CHANGE_LABELS[c.kind]}: ${indent(c.text, "  ")}`)).join("\n");
+  const lastText = last.text.trim();
+  const opening = lastText.slice(0, Math.min(lastText.length, PROMPT_QUOTE_FLOOR));
+  const masked = (text) => text.trim().split(/\r?\n/).map((l) => (l.trim().startsWith(opening) ? `(line ${last.line}, the plan's last line: read it in the plan)` : l)).join("\n");
+  const lines = changes.map((c) => (c.kind === "edit" ? `- edited, was: ${indent(c.was, "    ")}\n  now: ${indent(masked(c.text), "    ")}` : `- ${PROMPT_CHANGE_LABELS[c.kind]}: ${indent(c.kind === "add" ? masked(c.text) : c.text, "  ")}`)).join("\n");
   const block = promptFill(PROMPT_ROUND, { round: String(round), changes: lines });
   return round === 3 ? `${block}\n${PROMPT_ROUND_3}` : block;
 }
@@ -510,14 +547,20 @@ export function promptResearch(ctx, { agent, agentFile, scope = null, dossier, l
 // voted severity too (KTD5's As-built note).
 const PROMPT_DEEPEN_PREMISE = "IN THE DEEPEN: report only a premise wrong enough that the plan must be rewritten, a P0 or P1. Put a lesser premise gap (a P2 or P3) in residual_risks instead: the check's premise seat judges those.";
 // Part 3 on an update: the request is the update's ask, so the goal is judged by THE GOAL, ON AN
-// UPDATE (promptRequestBlock), never asked whether it is "the one asked for in the request" (R4-20).
-const PROMPT_GOAL_UPDATE = "3. THE GOAL: judge it by THE GOAL, ON AN UPDATE above: a goal moved from HEAD's version beyond what the request asks, or a plan that does not make the change the request asks, is a finding; a goal the request leaves out is not unasked. When no source states a goal, put \"goal not judged: no brief or origin document states a goal\" in residual_risks: never a finding and never a pass.";
-export function promptPremise(ctx, { mode, roster, round = 1, changes = [] } = {}) {
+// UPDATE (promptRequestBlock), never asked whether it is "the one asked for in the request" (R4-20);
+// a move toward a source or a finding this run confirmed is asked (R4-29). An unjudged goal is
+// answered in caps.mjs's goal_judged, never in residual_risks, which nothing reads: U5 reads it
+// fail-closed on an update, and U6 turns false into a premise holes entry beside the class's own
+// form, so the receipt never reads "nothing found" over a goal nobody judged (R4-30).
+const PROMPT_GOAL_UPDATE = "3. THE GOAL: judge it by THE GOAL, ON AN UPDATE above: a goal moved from HEAD's version beyond what its sources and this run's confirmed findings ask, or a plan that does not make the change the request asks, is a finding; a move one of them asks for, and a goal the request leaves out, are not. When no source states a goal, set goal_judged false (the goal is not judged: never a finding and never a pass); when you judged it, set goal_judged true.";
+// In the check, `round` is required, never defaulted, so a later round's call that leaves it out
+// cannot build a round-1 seat that drops its changes (R4-33).
+export function promptPremise(ctx, { mode, roster, round, changes = [] } = {}) {
   if (mode !== "deepen" && mode !== "check") throw new Error(`prompts: mode is "deepen" or "check" (the premise seat runs in both); got ${JSON.stringify(mode)}`);
   const check = mode === "check";
-  if (!check && (roster !== undefined || round !== 1 || (Array.isArray(changes) && changes.length))) throw new Error("prompts: the deepen's premise seat runs beside the scorer, with no roster and no round");
+  if (!check && (roster !== undefined || round !== undefined || (Array.isArray(changes) && changes.length))) throw new Error("prompts: the deepen's premise seat runs beside the scorer, with no roster and no round");
   const running = check ? promptRoster(roster, "premise") : null;
-  const roundBlock = check ? promptRoundBlock(round, changes) : null;
+  const roundBlock = check ? promptRoundBlock(round, changes, promptLastLine(ctx)) : null;
   const asked = promptRequestBlock(ctx);
   const prompt = promptJoin([
     promptFill("You are the premise seat in the {mode} of a plan: {plan}. {state} ({project}) and the request {answers}.", {
@@ -567,9 +610,9 @@ const PROMPT_CE_DEPTH = "Plan depth: Lightweight (small, bounded, low ambiguity,
 
 // The goal checklist's first item: on an update the request is the update's ask, so the goal is
 // judged by THE GOAL, ON AN UPDATE (promptRequestBlock), never as "the one the request asked for"
-// (R4-20).
+// (R4-20), and a move toward a source or a finding this run confirmed is asked (R4-29).
 const PROMPT_GOAL_ITEM = "- The goal is not the one the request or brief asked for, or narrows, widens or replaces it without saying so.";
-const PROMPT_GOAL_ITEM_UPDATE = "- The goal fails THE GOAL, ON AN UPDATE above: it moved from HEAD's version beyond what the request asks, or the plan lacks the change the request asks. A goal no source states is not judged: never a trigger.";
+const PROMPT_GOAL_ITEM_UPDATE = "- The goal fails THE GOAL, ON AN UPDATE above: it moved from HEAD's version beyond what its sources and this run's confirmed findings ask, or the plan lacks the change the request asks. A move one of them asks for is asked, never a trigger, and a goal no source states is not judged: never a trigger either.";
 const PROMPT_OUR_CHECKLISTS = [
   "OUR FOUR CHECKLISTS (CE never scores these sections; score them like CE's):",
   "Goal Capsule and Problem Frame (kind goal-problem):",
@@ -756,7 +799,7 @@ export function promptVerifier(ctx, { item, kind, angle, line, index, triggers }
       "- material: it changes what gets built or how it is verified. A wording preference, or a change that builds the same thing, is not material.",
       "- new: the plan does not already say or address it. Another section, a unit, a test scenario or an assumption that already covers it means not new.",
       finding
-        ? "- corrected_severity: P0 to P3, by what the plan and the source show; 'drop' when it should not stand."
+        ? `- corrected_severity: P0 to P3, by what the plan and the source show, on the finders' ladder: ${PROMPT_LADDER} 'drop' when it should not stand.`
         : "- corrected_severity: P1 when the change alters a decision or a unit, P2 otherwise; 'drop' when it should not stand.",
       "- fix_is_correct: is the proposed change right, or could it be directionally wrong, break another section, or contradict a settled decision? When it is wrong or incomplete, give better_fix; else ''.",
       "Return ONLY the structured verdict, with its evidence.",
@@ -786,18 +829,22 @@ function promptAngleLine(seat, running) {
   return `YOUR ASSIGNED ANGLE, lead with this seam: ${s.angle}. The panelists who own these seams are not running this round, so report them too: ${absent.map((k) => PROMPT_CHECK_SEATS[k].angle).join("; ")}.`;
 }
 
-// One check seat (KTD6). `persona` is the seat's CE persona file (null when missing, and always
-// null for our three seats); `roster` the seats running, the premise seat among them when it runs
-// (promptPremise builds it); `round` 1, 2 or 3, with `changes` (the fold's changes, each
-// { kind, text }, an edit with `was` too) after round 1 (KTD9).
-export function promptCheckSeat(ctx, { seat, persona = null, roster, round = 1, changes = [] } = {}) {
+// One check seat (KTD6). `persona` is the seat's CE persona file, or null when resolve-ce.mjs's
+// fileOf answered missing; a seat that reads a CE file must be given it, since an omitted persona
+// would build as "run without its file" while the receipt, read from the resolution, names no such
+// seat (R4-33). Our three seats read none, so theirs is null or left out. `roster` is the seats
+// running, the premise seat among them when it runs (promptPremise builds it); `round` 1, 2 or 3,
+// required, with `changes` (the fold's changes, each { kind, text }, an edit with `was` too) after
+// round 1 (KTD9).
+export function promptCheckSeat(ctx, { seat, persona, roster, round, changes = [] } = {}) {
   if (seat === "premise") throw new Error("prompts: the check's premise seat is built by promptPremise in check mode");
   if (!Object.hasOwn(PROMPT_CHECK_SEATS, seat)) throw new Error(`prompts: ${JSON.stringify(seat)} is no check seat (one of: ${Object.keys(PROMPT_CHECK_SEATS).join(", ")})`);
   const s = PROMPT_CHECK_SEATS[seat];
-  const file = promptPathOrNull(persona, "persona");
+  if (s.ce !== null && persona === undefined) throw new Error(`prompts: ${seat} reads CE's ${s.ce} persona file, so persona is required: its path, or null when fileOf answered missing (an omitted persona would build as run without its file, which the receipt never names)`);
+  const file = persona === undefined ? null : promptPathOrNull(persona, "persona");
   if (s.ce === null && file !== null) throw new Error(`prompts: ${seat} reads no CE file, so it takes no persona`);
   const running = promptRoster(roster, seat);
-  const roundBlock = promptRoundBlock(round, changes);
+  const roundBlock = promptRoundBlock(round, changes, promptLastLine(ctx));
   const asked = promptRequestBlock(ctx);
   const prompt = promptJoin([
     promptFill("You are the {seat} seat in the check of a plan: {plan}. {state} ({project}).\nYOUR LENS: {role}", {

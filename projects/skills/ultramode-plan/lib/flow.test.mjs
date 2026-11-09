@@ -357,6 +357,16 @@ test("a class in the hole form needs its seat in the holes list, with what it mi
   assert.match(receipt({ ...BASE, coverage: blast, holes: [{ seat: "blast-radius", missed: "docs", resumes: 2 }] }), /blast radius: no result \(a coverage hole\)/);
 });
 
+test("an update's unjudged goal is a holes entry beside the premise class's own form, so verified premise findings and an unjudged goal both show (U4's R4-30, the route U6 takes)", () => {
+  const goal = { seat: "premise", missed: "goal: no brief or origin document states one", resumes: 0 };
+  const quiet = receipt({ ...BASE, update: true, ce: UPDATE_CE, holes: [goal] });
+  assert.match(quiet, /^coverage: premise: nothing found; /m);
+  assert.match(quiet, /^coverage holes: premise \(goal: no brief or origin document states one, resumed 0 times\)$/m);
+  const found = receipt({ ...BASE, update: true, ce: UPDATE_CE, coverage: { ...BASE.coverage, premise: { verified: ["P2"] } }, holes: [goal] });
+  assert.match(found, /^coverage: premise: 1 verified \(P2\); /m);
+  assert.match(found, /^coverage holes: premise \(goal: no brief or origin document states one, resumed 0 times\)$/m);
+});
+
 test("reach and test vacuity skip together, on a plan with no code, and never one without the other", () => {
   const noCode = { ...BASE.coverage, reach: { skipped: "the plan has no code" }, "test-vacuity": { skipped: "the plan has no code" } };
   assert.match(receipt({ ...BASE, coverage: noCode }), /reach: skipped: the plan has no code; blast radius: nothing found; test vacuity: skipped: the plan has no code/);

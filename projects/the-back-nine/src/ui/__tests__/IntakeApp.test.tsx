@@ -297,6 +297,7 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
           slots.workingCostStaleLeftOverYearsCheaper('84,000'),
           slots.workingCostStaleLeftOverClause('16,985'),
           slots.workingCostStaleLeftOverAtMost('90,000', '10,985'),
+          copy.workingCostStaleEitherWay,
           copy.stalenessPayCheckGateDoor,
         ].join(' '),
       )

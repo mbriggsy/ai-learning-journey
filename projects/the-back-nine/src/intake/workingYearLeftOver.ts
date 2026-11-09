@@ -22,7 +22,7 @@
  * the gate print are composed here, below, because both read the left-over answer and the money picture, which
  * `workingYearQuote` cannot import (KTD2).
  */
-import type { WorkingYearLeftOverKind, WorkingYearLeftOverV5 } from '@shared/model'
+import type { WorkingYearLedgerLaterYear, WorkingYearLeftOverKind, WorkingYearLeftOverV5 } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { copy, slots } from '@ui/copy'
 import { formatMoney } from './fields'
@@ -129,20 +129,48 @@ export function workingYearCostStaleNote(d: ScenarioDraft): string | null {
  *    and W at the quote is above $0 (the quote is, `heldYesBelowQuote`) and at most the engine's cap (the
  *    quote is the spending figure, or the budget's first-year lines plus medical, which the same run already
  *    validates). Named so the partition is exhaustive; a test pins the witnesses off it.
- *  `laterShort` (capped and whole only): the FIRST later working year the picture at the quote prints short
- *  (everyone alive, the window-top candidate's frame) — it credits nothing in the checked run and draws more
- *  there (the red team's attack 2: a short year the main thread can compute is never left unsaid). */
-export interface WorkingYearLaterShort {
-  readonly calendarYear: number
-  /** Whole dollars, positive: how far that year's printed bottom line sits below $0. */
-  readonly short: number
+ *  `laterShort` (capped and whole only): the run of short years starting at the FIRST later working year the
+ *  picture at the quote prints short (everyone alive, the window-top candidate's frame) — each credits nothing
+ *  in the checked run and draws more there (the red team's attack 2: a short year the main thread can compute
+ *  is never left unsaid). `firstShort` carries the run year 0 starts. A run, never its first year alone (U11
+ *  walk 2, b9-3: "that year comes up $4,015 short" read as a one-off where the picture at $105,000 is short
+ *  every year from 2029 through 2032, the downside understated beside a gain stated "a year"). */
+export interface WorkingYearShortRun {
+  /** The run's first short year. */
+  readonly firstYear: number
+  /** The last year of the unbroken run of short years it starts; `firstYear` itself for a year alone. */
+  readonly lastYear: number
+  /** Whole dollars, positive: the smallest and the largest shortfall in the run. */
+  readonly least: number
+  readonly most: number
 }
 export type WorkingYearCheckAtQuote =
-  | { readonly kind: 'capped'; readonly leftOver: number; readonly laterShort: WorkingYearLaterShort | null }
-  | { readonly kind: 'whole'; readonly leftOver: number; readonly laterShort: WorkingYearLaterShort | null }
-  | { readonly kind: 'firstShort'; readonly short: number }
+  | { readonly kind: 'capped'; readonly leftOver: number; readonly laterShort: WorkingYearShortRun | null }
+  | { readonly kind: 'whole'; readonly leftOver: number; readonly laterShort: WorkingYearShortRun | null }
+  | { readonly kind: 'firstShort'; readonly run: WorkingYearShortRun }
   | { readonly kind: 'firstNone' }
   | { readonly kind: 'unknown' }
+
+/** The run of short years that starts at `first` (short), read on through `after` — the picture's later years
+ *  that follow it, in year order. The run continues while each next entry is the very next calendar year and
+ *  prints short; it ends at a gap or at a year that does not. Every short later year is an entry (the ledger
+ *  names a short year by its cause, or `stillShort` / `erosion` where none: `workingYearLedger.ts`), so a gap
+ *  is a year that is not short. Exported for its tests. */
+export function shortRunFrom(
+  first: { readonly calendarYear: number; readonly bottomLine: number },
+  after: readonly WorkingYearLedgerLaterYear[],
+): WorkingYearShortRun {
+  let lastYear = first.calendarYear
+  let least = -first.bottomLine
+  let most = least
+  for (const y of after) {
+    if (y.calendarYear !== lastYear + 1 || y.bottomLine >= 0) break
+    lastYear = y.calendarYear
+    least = Math.min(least, -y.bottomLine)
+    most = Math.max(most, -y.bottomLine)
+  }
+  return { firstYear: first.calendarYear, lastYear, least, most }
+}
 
 /** Memoized on the SOURCE draft (the re-confirmed draft is a fresh object every call, so the money picture's
  *  own memo would miss it each time — the Result reads this on every render). */
@@ -162,10 +190,10 @@ function composeCheckAtQuote(d: ScenarioDraft, stored: number): WorkingYearCheck
   const ledger = workingYearLedgerForRun(writeConfirmedWorkingYearCost(d))
   if (ledger === 'unknown') return { kind: 'unknown' }
   const year0 = ledger.year0.bottomLine
-  if (year0 < 0) return { kind: 'firstShort', short: -year0 }
+  if (year0 < 0) return { kind: 'firstShort', run: shortRunFrom({ calendarYear: ledger.year0.calendarYear, bottomLine: year0 }, ledger.laterYears) }
   if (year0 < 1) return { kind: 'firstNone' }
-  const first = ledger.laterYears.find((y) => y.bottomLine < 0)
-  const laterShort = first === undefined ? null : { calendarYear: first.calendarYear, short: -first.bottomLine }
+  const at = ledger.laterYears.findIndex((y) => y.bottomLine < 0)
+  const laterShort = at < 0 ? null : shortRunFrom(ledger.laterYears[at]!, ledger.laterYears.slice(at + 1))
   return year0 < stored ? { kind: 'capped', leftOver: year0, laterShort } : { kind: 'whole', leftOver: year0, laterShort }
 }
 
@@ -186,16 +214,26 @@ interface TailFigures {
 type CheckWords = {
   readonly [K in WorkingYearCheckAtQuote['kind']]: (c: Extract<WorkingYearCheckAtQuote, { kind: K }>, f: TailFigures) => string
 }
-const laterShortWords = (s: WorkingYearLaterShort | null, f: TailFigures): string =>
-  s === null ? '' : ` ${slots.workingCostStaleShortLaterYear(s.calendarYear, formatMoney(s.short), f.quote)}`
+/** After the at-most sentence: the short run's lean where a later run prints short at the quote, else that the
+ *  whole answer can move either way by the figure checked (no whole-answer lean is true there: at the quote a
+ *  check only adds, and a figure high enough to leave a working year short adds cost — U11 walk 2, b9-3). */
+const afterAtMostWords = (s: WorkingYearShortRun | null, f: TailFigures): string => {
+  if (s === null) return ` ${copy.workingCostStaleEitherWay}`
+  return s.lastYear === s.firstYear
+    ? ` ${slots.workingCostStaleShortLaterYear(s.firstYear, formatMoney(s.most), f.quote)}`
+    : ` ${slots.workingCostStaleShortLaterYears(s.firstYear, s.lastYear, formatMoney(s.least), formatMoney(s.most), f.quote)}`
+}
+const firstShortWords = (s: WorkingYearShortRun, f: TailFigures): string =>
+  s.lastYear === s.firstYear
+    ? slots.workingCostStaleLeftOverFirstShort(f.quote, formatMoney(s.most), f.stored)
+    : slots.workingCostStaleLeftOverFirstShortRun(f.quote, s.firstYear, s.lastYear, formatMoney(s.least), formatMoney(s.most), f.stored)
 /** The Result's and the gate's tail after the note, by what a check at the quote does (exhaustive, insight 147). */
 const CHECK_WORDS: CheckWords = {
   capped: (c, f) =>
-    `${slots.workingCostStaleLeftOverClause(f.stored)} ${slots.workingCostStaleLeftOverAtMost(f.quote, formatMoney(c.leftOver))}${laterShortWords(c.laterShort, f)}`,
+    `${slots.workingCostStaleLeftOverClause(f.stored)} ${slots.workingCostStaleLeftOverAtMost(f.quote, formatMoney(c.leftOver))}${afterAtMostWords(c.laterShort, f)}`,
   whole: (c, f) =>
-    `${slots.workingCostStaleLeftOverClause(f.stored)} ${slots.workingCostStaleLeftOverAtMostWhole(f.quote, formatMoney(c.leftOver), f.stored)}${laterShortWords(c.laterShort, f)}`,
-  firstShort: (c, f) =>
-    `${slots.workingCostStaleLeftOverFirstShort(f.quote, formatMoney(c.short), f.stored)} ${copy.workingCostStaleShortUntilChecked}`,
+    `${slots.workingCostStaleLeftOverClause(f.stored)} ${slots.workingCostStaleLeftOverAtMostWhole(f.quote, formatMoney(c.leftOver), f.stored)}${afterAtMostWords(c.laterShort, f)}`,
+  firstShort: (c, f) => `${firstShortWords(c.run, f)} ${copy.workingCostStaleShortUntilChecked}`,
   firstNone: (_c, f) => `${slots.workingCostStaleLeftOverFirstNone(f.quote, f.stored)} ${copy.workingCostStaleShortUntilChecked}`,
   unknown: () => copy.workingCostStaleLeftOverUnknown,
 }

@@ -167,6 +167,7 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
         slots.workingCostStaleLeftOverYearsCheaper('84,000'),
         slots.workingCostStaleLeftOverClause('16,985'),
         slots.workingCostStaleLeftOverAtMost('90,000', '10,985'),
+        copy.workingCostStaleEitherWay,
       ].join(' '),
     )
     cleanup()
@@ -178,7 +179,7 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
         copy.stalenessPayCheckNote,
         slots.workingCostStaleQuote('84,000', '105,000'),
         slots.workingCostStaleLeftOverYearsCheaper('84,000'),
-        slots.workingCostStaleLeftOverFirstShort('105,000', '4,015', '16,985'),
+        slots.workingCostStaleLeftOverFirstShortRun('105,000', 2026, 2032, '3,652', '4,015', '16,985'),
         copy.workingCostStaleShortUntilChecked,
       ].join(' '),
     )

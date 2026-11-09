@@ -2109,15 +2109,19 @@ const LEFT_OVER_MOVED_GATE_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOV
 // the LONGEST stale line any seed draws (five sentences), so its arm is the gate's wrap-risk arm.
 const risenLine = (quoteNow: string, tail: readonly string[]): string =>
   [slots.workingCostStaleQuote('84,000', quoteNow), slots.workingCostStaleLeftOverYearsCheaper('84,000'), ...tail].join(' ')
-const RISEN_LINE = risenLine('90,000', [slots.workingCostStaleLeftOverClause('16,985'), slots.workingCostStaleLeftOverAtMost('90,000', '10,985')])
+const RISEN_LINE = risenLine('90,000', [
+  slots.workingCostStaleLeftOverClause('16,985'),
+  slots.workingCostStaleLeftOverAtMost('90,000', '10,985'),
+  copy.workingCostStaleEitherWay,
+])
 const RISEN_SHORT_LINE = risenLine('105,000', [
-  slots.workingCostStaleLeftOverFirstShort('105,000', '4,015', '16,985'),
+  slots.workingCostStaleLeftOverFirstShortRun('105,000', 2026, 2032, '3,652', '4,015', '16,985'),
   copy.workingCostStaleShortUntilChecked,
 ])
 const RISEN_LATER_LINE = risenLine('105,000', [
   slots.workingCostStaleLeftOverClause('16,985'),
   slots.workingCostStaleLeftOverAtMost('105,000', '5,985'),
-  slots.workingCostStaleShortLaterYear(2029, '4,015', '105,000'),
+  slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '105,000'),
 ])
 const risenUnlock = (key: string, line: string) =>
   ({
@@ -2683,7 +2687,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2105-2109 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2112-2116 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,

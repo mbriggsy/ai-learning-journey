@@ -574,6 +574,13 @@ export const copy = {
   // checked run credits nothing and draws more, so the stale answer can look better (true by mechanism, the safe
   // side: insight 133). Outside the left-over prefix on purpose (R16's sweep bans "better" there).
   workingCostStaleShortUntilChecked: 'Until your figure is checked, this answer can look better than it really is.',
+  // …and where a check at the quote adds some of the left over and no working year at the quote runs short
+  // (`capped` / `whole` with no `laterShort`): which way the WHOLE answer moves turns on the figure checked — at
+  // the quote it only adds, and a figure high enough to leave a working year short adds cost there — so no
+  // whole-answer lean is true across the extension (the "saved" lean's own docblock). U11 walk 2 (b9-3): five
+  // readers could not net the year-level lean against the at-most figure; this says the net turns on the figure,
+  // naming no threshold and no "worse" (council `wf_fc80029e-d93`'s Frame B).
+  workingCostStaleEitherWay: 'Checking your figure can move this answer either way, depending on what you settle on.',
   workingLedgerHeldBackNote:
     'Each month Social Security holds back raises the benefit later, starting after full retirement age.',
   // Where not every held-back month earns that raise in the run (the earnings-test schedule's own
@@ -2556,6 +2563,12 @@ const XOFTEN_CEILING_ADVERSE = 'more than 9 in 10'
 const adverseOddsPhrase = (worstOfTen: number): string =>
   worstOfTen >= 10 ? XOFTEN_CEILING_ADVERSE : `about ${slots.xOfTen(worstOfTen)}`
 
+/** A run of short working years' shortfall, as W's stale line says it: one figure where every year in the run
+ *  falls short by the same amount, else smallest to largest — the money picture's own range
+ *  (`workingLedgerLaterShortEach` / `workingLedgerLaterShortRange`). */
+const shortAmount = (leastFormatted: string, mostFormatted: string): string =>
+  leastFormatted === mostFormatted ? `$${leastFormatted}` : `$${leastFormatted} to $${mostFormatted}`
+
 /**
  * Typed quantitative slots — the ONLY way a number enters user-facing copy
  * (the certainty-hygiene slot discipline). Question counts are an allowlisted
@@ -2701,7 +2714,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2382-2385` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2386-2389` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -2937,18 +2950,32 @@ export const slots = {
   // the stored figure; "whole": it is not, so the stored figure is the cap. No threshold is named: a year-0 figure
   // read as a line for the whole answer let its converse ("below it, this answer isn't rosy") stand where a later
   // or a survivor year runs short (the red team's attack 1).
+  // "Checking your figure at", never "a check at" (U11 walk 2, b9-3: six readers, both cold first looks among them,
+  // read "a check at $90,000" as a $90,000 paycheck in a paragraph about pay).
   workingCostStaleLeftOverAtMost: (quoteFormatted: string, leftOverFormatted: string): string =>
-    `At $${quoteFormatted} a year, your first working year has $${leftOverFormatted} left over, so a check at $${quoteFormatted} or more adds at most $${leftOverFormatted} a year to your savings.`,
+    `At $${quoteFormatted} a year, your first working year has $${leftOverFormatted} left over, so checking your figure at $${quoteFormatted} or more adds at most $${leftOverFormatted} a year to your savings.`,
   workingCostStaleLeftOverAtMostWhole: (quoteFormatted: string, leftOverFormatted: string, storedFormatted: string): string =>
-    `At $${quoteFormatted} a year, your first working year has $${leftOverFormatted} left over, so a check at $${quoteFormatted} or more adds at most the $${storedFormatted} a year you chose to save.`,
+    `At $${quoteFormatted} a year, your first working year has $${leftOverFormatted} left over, so checking your figure at $${quoteFormatted} or more adds at most the $${storedFormatted} a year you chose to save.`,
   // …and where year 0 at the quote leaves nothing, a check carries nothing (its shown state is "not asked"), so
   // these replace the clause and the at-most sentence: the shipped clause promised the stored figure where a check
   // returns $0. The short-year lean that follows them (`workingCostStaleShortUntilChecked`) is a SEPARATE string,
-  // outside this prefix, so R16's sweep still reads every word here.
+  // outside this prefix, so R16's sweep still reads every word here. Where year 0 starts a RUN of short years
+  // (U11 walk 2, b9-3: `datesavedrisenshort` is short every year from 2026 through 2032, and "your first working
+  // year" alone read as a one-off $4,015), the run is named in the money picture's own words
+  // (`workingLedgerLaterRun`, `workingLedgerLaterShortRange`): its years and its smallest to largest shortfall.
   workingCostStaleLeftOverFirstShort: (quoteFormatted: string, shortFormatted: string, storedFormatted: string): string =>
-    `At $${quoteFormatted} a year, your first working year comes up $${shortFormatted} short, so a check at $${quoteFormatted} or more adds none of the $${storedFormatted} a year left over from your pay that you chose to save.`,
+    `At $${quoteFormatted} a year, your first working year comes up $${shortFormatted} short, so checking your figure at $${quoteFormatted} or more adds none of the $${storedFormatted} a year left over from your pay that you chose to save.`,
+  workingCostStaleLeftOverFirstShortRun: (
+    quoteFormatted: string,
+    firstYear: number,
+    lastYear: number,
+    leastFormatted: string,
+    mostFormatted: string,
+    storedFormatted: string,
+  ): string =>
+    `At $${quoteFormatted} a year, each working year from ${firstYear} through ${lastYear} comes up ${shortAmount(leastFormatted, mostFormatted)} short, so checking your figure at $${quoteFormatted} or more adds none of the $${storedFormatted} a year left over from your pay that you chose to save.`,
   workingCostStaleLeftOverFirstNone: (quoteFormatted: string, storedFormatted: string): string =>
-    `At $${quoteFormatted} a year, your first working year has nothing left over, so a check at $${quoteFormatted} or more adds none of the $${storedFormatted} a year left over from your pay that you chose to save.`,
+    `At $${quoteFormatted} a year, your first working year has nothing left over, so checking your figure at $${quoteFormatted} or more adds none of the $${storedFormatted} a year left over from your pay that you chose to save.`,
   // THE SHORT-YEAR LEANS (the U11 walk's (ae)): "can look better" said only where a short year makes it true by
   // mechanism — at the quote that year credits nothing in the checked run and draws more than in the stale one, so
   // the over-read errs safe (insight 133). Named OUTSIDE the left-over prefix on purpose: R16's sweep bans "better"
@@ -2958,6 +2985,17 @@ export const slots = {
   // reply to the red team's attack 2 (a short later year the tool can compute, which silence would hide).
   workingCostStaleShortLaterYear: (year: number, shortFormatted: string, quoteFormatted: string): string =>
     `If you’re still working in ${year}, that year comes up $${shortFormatted} short at $${quoteFormatted} a year, so this answer can look better than it really is.`,
+  // …and where that year starts a RUN of short years (U11 walk 2, b9-3: `datesavedrisenlater` is short every year
+  // from 2029 through 2032, and "that year" alone set a one-off loss beside a gain stated "a year"): the run in
+  // the money picture's own words, its years and its smallest to largest shortfall.
+  workingCostStaleShortLaterYears: (
+    firstYear: number,
+    lastYear: number,
+    leastFormatted: string,
+    mostFormatted: string,
+    quoteFormatted: string,
+  ): string =>
+    `If you’re still working from ${firstYear} through ${lastYear}, each of those years comes up ${shortAmount(leastFormatted, mostFormatted)} short at $${quoteFormatted} a year, so this answer can look better than it really is.`,
   workingCostStaleQuoteGone: (lastFormatted: string): string =>
     `You said yes to $${lastFormatted} a year, but your spending figures have changed since, and there’s no spending figure to offer now.`,
   workingCostStaleStateConfirmed: (lastFormatted: string): string =>
@@ -3437,7 +3475,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1495` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1497` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

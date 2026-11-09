@@ -899,6 +899,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostStaleLeftOverFirstShort: slots.workingCostStaleLeftOverFirstShort('105,000', '4,015', '16,985'),
     workingCostStaleLeftOverFirstNone: slots.workingCostStaleLeftOverFirstNone('100,985', '16,985'),
     workingCostStaleShortLaterYear: slots.workingCostStaleShortLaterYear(2029, '4,015', '105,000'),
+    workingCostStaleShortLaterYears: slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '105,000'),
+    workingCostStaleLeftOverFirstShortRun: slots.workingCostStaleLeftOverFirstShortRun('105,000', 2026, 2032, '3,652', '4,015', '16,985'),
     stalenessLeftOverMoved: slots.stalenessLeftOverMoved('16,985', '27,537', '16,985'),
     stalenessLeftOverClause: slots.stalenessLeftOverClause('16,985', '27,537', '16,985'),
     workingLedgerEventClaim: slots.workingLedgerEventClaim('Sam'),
@@ -1608,7 +1610,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:926-936, 822-839), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:933-943, 822-839), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

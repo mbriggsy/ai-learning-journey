@@ -1219,6 +1219,11 @@ const RISEN_SHORT_QUOTE = '105,000'
 const RISEN_SHORT_BY = '4,015'
 const RISEN_LATER_AT_QUOTE = '5,985'
 const RISEN_LATER_SHORT_YEAR = 2029
+/** U11 walk 2 (b9-3): the short years at $105,000 run on — `datesavedrisenshort` every year from 2026 through 2032,
+ *  `datesavedrisenlater` from 2029 through 2032 — at $4,015, then $3,652 once Sam's Medicare starts (2031), each
+ *  read off the money picture at the quote (b9-2's probe, `u11-ae\probe-ledger.out.txt`). */
+const RISEN_SHORT_LAST_YEAR = 2032
+const RISEN_SHORT_LEAST = '3,652'
 
 /** A risen-family witness: W's sentence at `quoteNow` and the year-level lean on both surfaces, then the tail
  *  for its arm; the seat waits (no figure, no radios) as on every stale-W witness. */
@@ -1313,11 +1318,12 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
   datesavedrisen: risenWitness(RISEN_W_QUOTE_NOW, [
     slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER),
     slots.workingCostStaleLeftOverAtMost(RISEN_W_QUOTE_NOW, RISEN_AT_QUOTE),
+    copy.workingCostStaleEitherWay,
   ]),
   // Increment 11, the risen twin's two other arms (`devSeeds.ts`'s docblocks carry the hand sums): at $105,000 year
   // 0 comes up $4,015 short, so a check adds none of the $16,985 and the short-year lean rides…
   datesavedrisenshort: risenWitness(RISEN_SHORT_QUOTE, [
-    slots.workingCostStaleLeftOverFirstShort(RISEN_SHORT_QUOTE, RISEN_SHORT_BY, DATE_LEFT_OVER),
+    slots.workingCostStaleLeftOverFirstShortRun(RISEN_SHORT_QUOTE, 2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, DATE_LEFT_OVER),
     copy.workingCostStaleShortUntilChecked,
   ]),
   // …and with Sam's alimony to 62, year 0 at $105,000 has $5,985 left over (the most a check adds) while 2029, the
@@ -1325,7 +1331,7 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
   datesavedrisenlater: risenWitness(RISEN_SHORT_QUOTE, [
     slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER),
     slots.workingCostStaleLeftOverAtMost(RISEN_SHORT_QUOTE, RISEN_LATER_AT_QUOTE),
-    slots.workingCostStaleShortLaterYear(RISEN_LATER_SHORT_YEAR, RISEN_SHORT_BY, RISEN_SHORT_QUOTE),
+    slots.workingCostStaleShortLaterYears(RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, RISEN_SHORT_QUOTE),
   ]),
 }
 
@@ -1425,10 +1431,11 @@ async function walkIntakeLeftOver(page: Page, outDir: string): Promise<void> {
  *  (84,000 ÷ 12) and the row still says the $84,000 a year kept; the tap carries the stamp (U5, R13's notes). */
 const KEPT_W = STALE_W_CONFIRMED
 const KEPT_W_MONTHLY = '7,000'
-/** The kept walk's budget: twelve final-tier waits (three fresh landings, and per branch the settle before the
- *  re-run watch is armed, the re-run's first commit and its final frame) at FINAL_TIER_MS each, plus three
- *  minutes for its ten captures per viewport and the two re-walks. */
-const KEPT_TEST_MS = 12 * FINAL_TIER_MS + 180_000
+/** The kept walk's budget: ten final-tier waits (three fresh landings; in branches A and B the settle before the
+ *  re-run watch is armed, the re-run's first commit and its final frame; in branch C, which arms no watch, the
+ *  final frame alone) at FINAL_TIER_MS each, plus three minutes for its ten captures per viewport and the two
+ *  re-walks. */
+const KEPT_TEST_MS = 10 * FINAL_TIER_MS + 180_000
 
 /**
  * The KEPT walk (increment 10 — `intake:kept`; the header names what it is for). Every branch starts from a
@@ -1449,9 +1456,10 @@ const KEPT_TEST_MS = 12 * FINAL_TIER_MS + 180_000
  *  C. (walk 2) a move to Pennsylvania alone → the panel closed → the re-walk to the W step, where the note's
  *     Keep door shows → Continue: `walk-kept-stale-state-blocked` (the gate names that door by its own words).
  * Every sentence asserted is the shipped slot over the seed's own figures. The spending is typed in `date`'s
- * own unit, a month ($7,500 = $90,000 a year). A panel edit re-runs the answer behind the sheet: before the
- * panel closes, the walk sees that run start (the Result leaves its settled final frame), and after it, waits
- * for the final frame again — so a Result capture never shows the answer from before the edit.
+ * own unit, a month ($7,500 = $90,000 a year). A panel edit re-runs the answer behind the sheet: in A and B,
+ * the two branches that capture the Result, the walk sees that run start before the panel closes (the Result
+ * leaves its settled final frame), and after it, waits for the final frame again — so a Result capture never
+ * shows the answer from before the edit. C captures no Result and arms no watch (its comment says why).
  */
 async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
   const settled = page.locator('main.result[data-answer-tier="final"][data-inframe-disclaimer]')
@@ -1528,6 +1536,16 @@ async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
       })
     })
   }
+  // Closes the panel onto the Result and reads its one standing line, which reads the draft and so moves at the
+  // edit itself, with no run needed for it.
+  const closePanel = async (dialog: ReturnType<Page['getByRole']>, line: string): Promise<void> => {
+    await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
+    await expect(dialog).toBeHidden()
+    await expect(settled).toBeAttached({ timeout: FINAL_TIER_MS })
+    const note = page.locator('.cs-paycheck-note')
+    await expect(note, 'the Result must carry exactly one standing line').toHaveCount(1)
+    await expect(note).toContainText(line)
+  }
   // On a household with no date in the window the re-run's sweep tries every candidate year, so the wait is
   // a final-tier budget, and a miss prints the history the watcher recorded.
   const closeToResult = async (dialog: ReturnType<Page['getByRole']>, line: string): Promise<void> => {
@@ -1543,12 +1561,7 @@ async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
       console.log(`[intake:kept] the Result's tier since the watch was armed (ms:tier/settled): ${history.slice(0, 40).join(' ')}`)
       throw e
     }
-    await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
-    await expect(dialog).toBeHidden()
-    await expect(settled).toBeAttached({ timeout: FINAL_TIER_MS })
-    const note = page.locator('.cs-paycheck-note')
-    await expect(note, 'the Result must carry exactly one standing line').toHaveCount(1)
-    await expect(note).toContainText(line)
+    await closePanel(dialog, line)
   }
 
   // Branch A.
@@ -1607,13 +1620,16 @@ async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
 
   // Branch C (walk 2, the U11 walk's (ad)): the state answer moved alone, so the kept figure is stale on the state
   // and the note's Keep door shows; on the walk's W step the gate names that door by its own words, or a retype.
+  // No re-run watch: this branch captures no Result, and the watch could never fire here. The move to
+  // Pennsylvania alone re-runs the answer (`commitAssumptionEdit` re-runs every date-route edit), but that run
+  // leaves this household's verdict word for word and its tier at "final" (walk 2's first run, 2026-11-09: the
+  // watch saw no change in 150 s at both viewports), so nothing the watch reads ever moves.
   {
     const { dialog, face } = await openPanelAndKeep()
-    await armRerunWatch()
     await pick(dialog.locator('[data-assumption-seat="retirement-state"]').getByRole('radio', { name: /Pennsylvania/ }).first())
     const stateOnly = slots.workingCostStaleStateKept(KEPT_W)
     await expect(face.getByRole('note')).toContainText(stateOnly)
-    await closeToResult(dialog, stateOnly)
+    await closePanel(dialog, stateOnly)
     await page.locator('[data-door="assumptions"]').click()
     await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
     await advanceIntakeTo(page, copy.qWorkingCostHeading, 'intake:kept')

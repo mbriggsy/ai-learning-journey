@@ -1872,6 +1872,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
         slots.workingCostStaleLeftOverYearsCheaper('84,000'),
         slots.workingCostStaleLeftOverClause('16,985'),
         slots.workingCostStaleLeftOverAtMost('90,000', '10,985'),
+        copy.workingCostStaleEitherWay,
       ].join(' '),
     )
     const { annualSpendingReal, ...rest } = d
@@ -1894,7 +1895,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(heldYesBelowQuote(d)).toBe(true)
     expect(workingYearLeftOverShownState(d)).toBe('waiting-on-w')
     expect(workingYearLeftOverLive(d), 'a stale W still rides at $84,000').toBe(16_985)
-    expect(workingYearCheckAtQuote(d)).toEqual({ kind: 'firstShort', short: 4_015 })
+    expect(workingYearCheckAtQuote(d)).toEqual({ kind: 'firstShort', run: { firstYear: 2026, lastYear: 2032, least: 3_652, most: 4_015 } })
     const { annualSpendingReal, ...rest } = d
     const { annualSpendingReal: _s, ...savedRest } = DEV_SEEDS.datesaved
     expect(rest, 'otherwise it is `datesaved`').toEqual(savedRest)
@@ -1907,7 +1908,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     const d = DEV_SEEDS.datesavedrisenlater
     expect(workingYearLeftOverShownState(d)).toBe('waiting-on-w')
     expect(workingYearLeftOverLive(d), 'the alimony lifts year 0 at the stale $84,000').toBe(26_985)
-    expect(workingYearCheckAtQuote(d)).toEqual({ kind: 'capped', leftOver: 5_985, laterShort: { calendarYear: 2029, short: 4_015 } })
+    expect(workingYearCheckAtQuote(d)).toEqual({ kind: 'capped', leftOver: 5_985, laterShort: { firstYear: 2029, lastYear: 2032, least: 3_652, most: 4_015 } })
     const { incomeStreams, ...rest } = d
     const { incomeStreams: none, ...shortRest } = DEV_SEEDS.datesavedrisenshort
     expect(none).toEqual([])

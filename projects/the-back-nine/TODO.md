@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-09, b9-7 WALKED walk 5 on council `wf_7fa86902-35c`'s round (`3157a6da`; the card HARD-FLAG at the top of `docs/caddie/cold-read-log.md`: the run-in labels vanish as plain words and read clinical, "This answer adds none of it" reads as a bug for want of a reason, the gate names buttons it doesn't draw, and the copy now points at the filed Tier 0 retype) — next is WALK 5's FIX ROUND (bh)–(bq) with the Tier 0 retype entry's note, its exact changes in item 1, Phase C, under "▶ NEXT", then walk 6, then U12 carrying U11's figures and the filings (ag)–(ay) and walks 4–5's, then the whole-file review and `/distill` — item 1, Phase C; rewritten by b9-6 — BUILT walk 4's fix round from council `wf_7fa86902-35c` (`3157a6da`: one string per host, the run-in labels, the act keyed on `heldYesBelowQuote`, the definition beside the door; 17 mutants killed, R10 `walk4` 42/42); rewritten by b9-5 — walked walk 4 on b9-4's round (the card HARD-FLAG, top of `docs/caddie/cold-read-log.md`) and took its form question to council `wf_7fa86902-35c` (7/10, execute: one string with run-in labels, a per-arm lead, "update your figure" on the risen arms; the retype hole filed Tier 0); rewritten by b9-4 — walk 3 and its round (as)–(aw)(b), `98b5ad17`; rewritten by b9-3 — walk 2 and its round (am)–(ao), `f028f33f`; rewritten by b9-2 — the walk's fix (ae), `c6b15120`; rewritten by b9-5 — walked U11's Caddie record, `c10339b0`, the card HARD-FLAG; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
+▶ **START HERE (2026-11-09, b9-8 BUILT walk 5's fix round IN THE TREE, UNCOMMITTED — item 1, Phase C, the "⚠ b9-8" block above "▶ NEXT": finish its six steps (e2e strings, `verify:fit`, mutants, R10, reanchor, commit), then walk 6; rewritten by b9-7 — WALKED walk 5 on council `wf_7fa86902-35c`'s round (`3157a6da`; the card HARD-FLAG at the top of `docs/caddie/cold-read-log.md`: the run-in labels vanish as plain words and read clinical, "This answer adds none of it" reads as a bug for want of a reason, the gate names buttons it doesn't draw, and the copy now points at the filed Tier 0 retype) — next is WALK 5's FIX ROUND (bh)–(bq) with the Tier 0 retype entry's note, its exact changes in item 1, Phase C, under "▶ NEXT", then walk 6, then U12 carrying U11's figures and the filings (ag)–(ay) and walks 4–5's, then the whole-file review and `/distill` — item 1, Phase C; rewritten by b9-6 — BUILT walk 4's fix round from council `wf_7fa86902-35c` (`3157a6da`: one string per host, the run-in labels, the act keyed on `heldYesBelowQuote`, the definition beside the door; 17 mutants killed, R10 `walk4` 42/42); rewritten by b9-5 — walked walk 4 on b9-4's round (the card HARD-FLAG, top of `docs/caddie/cold-read-log.md`) and took its form question to council `wf_7fa86902-35c` (7/10, execute: one string with run-in labels, a per-arm lead, "update your figure" on the risen arms; the retype hole filed Tier 0); rewritten by b9-4 — walk 3 and its round (as)–(aw)(b), `98b5ad17`; rewritten by b9-3 — walk 2 and its round (am)–(ao), `f028f33f`; rewritten by b9-2 — the walk's fix (ae), `c6b15120`; rewritten by b9-5 — walked U11's Caddie record, `c10339b0`, the card HARD-FLAG; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -252,6 +252,37 @@ queue below (its order unmoved). Next, in order:
      PARTLY (the premium cue lands, but "Yes" comes first, "doesn't work out" reads as "doesn't work", the gate names
      buttons it doesn't draw, and S's has no condition); (4) C's gain years MET; (5) the fallen premise MET on S, and
      A, B, C lack it; (6) B's lead first MET (the dissent's direction-last not borne out), but B says it three times.
+     **⚠ b9-8 BUILT THE ROUND IN THE TREE, UNCOMMITTED (2026-11-09; stopped at 52% of the window).** Every change below
+     is in the working tree, test-first, typecheck 0, lint 0, the suite 5077/5078 — the one red is
+     `verify:doc-stats`' arm 4 (line citations moved), which step 5 fixes by design. What it built and where it departs
+     from the words below (nine refinements, each with its reason, in
+     `b9-build2-surplus\u11-walk5\ROUND.md` — read it first): the composer returns `{ opening, segments }`
+     (`workingYearCostStaleLine`, `workingYearCostStaleLineText`), the door `{ act, result, gate }`; one body draws
+     both hosts (`src/ui/NotePartsBody.tsx`, `src/ui/noteParts.ts`, `src/ui/styles/noteParts.css`); every act-worded
+     string sits in `WORKING_COST_ACT_COPY`; the Tier 0 note is `workingYearCostTypedBelowQuote` +
+     `slots.workingCostBelowSpending`/`…Budget`; F8 is `slots.workingCostLegendFigure` through `SegmentedControl`'s
+     new `legend` string; the methodology selector takes the act (`methodologyLines(…, act)`). **Left, in order:**
+     (1) the e2e specs still read retired or reshaped copy (e2e is outside `pnpm typecheck`): `e2e/vertical-fit.spec.ts`
+     2101, 2106, 2111, 2113, 2115, 2116, 2150, 2152, 3387 and `e2e/caddie-walk.spec.ts` 1236, 1248, 1258, 1261,
+     1323, 1325, 1336, 1338, 1339, 1343 — the drawn `textContent` is the parts joined one space apart, so each expected
+     string is the new slots in order: "This answer now:" gains `slots.workingCostStaleAfterWork(spending, true)`
+     first and `slots.workingCostStaleLeftOverNoneUpdate|Confirm('16,985', '84,000')` last; the gate's door is
+     `slots.workingCostStaleGateDoorUpdate|Confirm('84,000', copy.stalenessPayCheckCtaUpdate|Cta)` then
+     `slots.workingCostStaleDefineUpdate(quote, true)` (confirm arm: `slots.workingCostStaleDefineHold(true)`, the
+     gate door, `slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '84,000', false, '78,000')`); the
+     Result's door is `slots.workingCostStaleResultDoorUpdate|Confirm(<button label>)` in the gate door's place;
+     `copy.workingCostLegend` is the frame `/^Is \$[\d,.]+ a year about what a year costs while you’re working\?$/`;
+     (2) `verify:fit` on the gate and Result arms (the `<br>`s add up to three lines; B's laptop Result had about 90 px
+     under the paragraph) and the W-step/row arms (the Tier 0 note and the legend), plus a Playwright eye on the
+     labels at laptop and phone; (3) mutants predicted in writing first (copy walk 4's `mutants.cjs` runner into
+     `u11-walk5\`), at least: the act's leftOverNone key swapped, after-work dropped on the risen arms, `exact`
+     inverted, the floor sentence dropped, `stateTaxBelongsInW`'s class-based entry flipped, the gate door before
+     the hold on S, `NotePartsBody`'s space before `<br>` removed, the typed-below `<` made `<=`, the legend back to
+     static; (4) R10 `sweep.mts walk5 --today=20758`, `idcheck.mjs walk5 walk4` (42/42 predicted: copy and UI only);
+     (5) `pnpm doc:reanchor <base> --apply` once, last, then the suite and `verify:doc-stats`; (6) commit (the walk-5
+     card's (bk) severity correction rides it: "High" → "Medium", from b9-7's note after the handoff), push, CI; then
+     walk 6 as written below. Never run `node -e` with backticks through the Bash tool (b9-8 mangled a test file
+     that way and repaired it): scripts go through Write.
      ▶ NEXT: **walk 5's fix round, (bh)–(bq) with the Tier 0 retype entry's prescription (1), test-first, then walk
      6.** Load `back-nine-design` (and `web-design-guidelines` for the review) before touching the hosts. Words are
      the refuters' (each report in `u11-walk5\panel\`); every one keeps the council's order, adds no threshold and no
@@ -460,9 +491,10 @@ counts); walk 5's harness 18/18 (`3157a6da`'s witnesses held on their first run)
 `verify-rv-chart-text` success, `verify` still running at close (in its `verify:fit` step, ~41 min typical). Stopped at
 41% of the window: walk 5's fix round (a structural change on four hosts, nine copy changes, the Tier 0 note, mutants,
 R10, `verify:fit`) would not finish before the wrap line. Walk 5 cost about one weekly point (80% → 81%).
-**Check at start:** CI run 42601322466 on `3157a6da` (`gh run view 42601322466`, both jobs) and the run on `42274150`
-(docs only; `gh run list --commit <its full sha>`); the weekly meter before walk 6 (81% at 11:00Z; resets 2026-11-11
-14:00Z).
+**Check at start:** `git status` — b9-8's round must still be in the tree (about 25 files under `src/`, plus
+`docs/caddie/cold-read-log.md`); if a sibling session committed or reverted any of it, stop and reconcile before
+building. CI read by b9-8: run 42601322466 on `3157a6da` success (both jobs); run 42605776210 on `d3f355b9` success
+(both jobs; it holds `42274150`). The weekly meter before walk 6 (81% at 11:00Z; resets 2026-11-11 14:00Z).
 **Briggsy's to close (nothing waits on them; the round builds with the pilot's choice):** the verb, "update" against the
 council dissent's one defined "check" — walk 5's risen readers all took "update" as "raise it", the refuter rates that the
 honest steer (rule 8), and the pilot recommends keeping "update"; and the labels' calm-or-clinical — clinical as plain

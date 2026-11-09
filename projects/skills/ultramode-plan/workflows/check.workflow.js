@@ -1864,7 +1864,9 @@ for (const { s, read, checked } of done) {
 const idsOf = (status) => findings.filter((f) => f.verdict.status === status).map((f) => f.id)
 const confirmed = findings.filter((f) => f.verdict.status === 'confirmed')
 const high = (sev) => sev === 'P0' || sev === 'P1'
-const advSeats = roster.filter((s) => s === 'adversarial' || CHECK_PANEL.includes(s))
+// The adversary seats this run dispatched (a dry run dispatches only the first seat, so its roster's
+// adversary is not run here, not absent).
+const advSeats = running.filter((s) => s === 'adversarial' || CHECK_PANEL.includes(s))
 const advDead = advSeats.filter((s) => !perSeat.some((p) => p.seat === s && p.answered))
 // Our four classes in the receipt's forms (flow.mjs coverageOf) for this round: a class whose seat
 // did not run this round is left out.

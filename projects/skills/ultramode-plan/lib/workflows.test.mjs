@@ -850,4 +850,7 @@ test("check: stringified args run like object args, identical args give identica
   clean(dry);
   assert.deepEqual(dry.calls.map((x) => x.opts.label), ["check:coherence", "check:verify coherence-1 angle 1"]);
   assert.equal(dry.result.summary.dry, true);
+  // A dry run never dispatched the adversary, so it reads as not in this run, never as absent (the
+  // real tool's dry run, 2026-11-09, reported it absent before this).
+  assert.equal(dry.result.summary.adversary, null);
 });

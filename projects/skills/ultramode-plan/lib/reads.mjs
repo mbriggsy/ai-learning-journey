@@ -182,13 +182,45 @@ export function readsRerun(read, notes = null) {
   return reasons.length ? { reasons, ...out } : null;
 }
 
+// ---------------------------------------------------------------- the CE files a script names
+
+// An absolute path, in Windows (C:/ or C:\) or POSIX form (prompts.mjs's promptPath rule).
+export const readsIsPath = (v) => typeof v === "string" && /^(?:[A-Za-z]:[\\/]|\/)/.test(v);
+
+// What is wrong with a CE resolution (resolve-ce.mjs's, from the run record's ce/Cn.json), or null:
+// a files list, each file with its key and exactly one of sha256 (with its absolute path) and
+// missing. A script reads its agent and persona files from it, never from a fresh resolve (U3's
+// hand-on), and resolve-ce.mjs's checkResolution has already held it to the resolver's full list.
+export function readsCeProblem(ce) {
+  if (!ce || typeof ce !== "object" || !Array.isArray(ce.files) || ce.files.length === 0) return "the CE resolution is resolve-ce.mjs's object, its files list included (the run record's ce/Cn.json)";
+  const keys = new Set();
+  for (const f of ce.files) {
+    if (!f || typeof f.key !== "string" || !f.key) return `a CE file entry names its key; got ${JSON.stringify(f)}`;
+    if (keys.has(f.key)) return `the CE resolution lists ${f.key} twice`;
+    keys.add(f.key);
+    const has = ["sha256", "missing"].filter((k) => k in f);
+    if (has.length !== 1) return `the CE file ${f.key} needs exactly one of sha256 and missing`;
+    if ("sha256" in f && !readsIsPath(f.path)) return `the CE file ${f.key} has a sha256 but no absolute path`;
+  }
+  return null;
+}
+
+// One CE file's absolute path by its key, or null when the resolution lists it missing: its seat
+// then runs its inline role (KTD2). A key the resolution does not list throws (a script's own bug).
+export function readsCeFile(ce, key) {
+  readsThrow(readsCeProblem(ce));
+  const f = ce.files.find((x) => x.key === key);
+  if (!f) throw new Error(`reads: the CE resolution lists no file keyed ${JSON.stringify(key)}`);
+  return "sha256" in f ? f.path : null;
+}
+
 // ---------------------------------------------------------------- the args check
 
 // The kinds an args field may be: a word (a "?" after it also takes null), or a function that answers
 // what is wrong with the value, null when nothing is.
 const READS_ARG_KINDS = {
   text: (v) => (typeof v === "string" && v.trim() ? null : "non-empty text"),
-  path: (v) => (typeof v === "string" && /^(?:[A-Za-z]:[\\/]|\/)/.test(v) ? null : "an absolute path"),
+  path: (v) => (readsIsPath(v) ? null : "an absolute path"),
   list: (v) => (Array.isArray(v) ? null : "a list"),
   object: (v) => (v && typeof v === "object" && !Array.isArray(v) ? null : "an object"),
   bool: (v) => (typeof v === "boolean" ? null : "true or false"),

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { READS_KINDS, readsArgs, readsIndexProblem, readsInventory, readsLastProblem, readsMissed, readsNotes, readsRerun, readsSections } from "./reads.mjs";
+import { READS_KINDS, readsArgs, readsCeFile, readsCeProblem, readsIndexProblem, readsInventory, readsIsPath, readsLastProblem, readsMissed, readsNotes, readsRerun, readsSections } from "./reads.mjs";
 import { PROMPT_PAGE, PROMPT_QUOTE_FLOOR, promptShortRead } from "./prompts.mjs";
 
 // A plan's section index, as flow.mjs index builds it: a title, two units with a same-named child
@@ -194,6 +194,31 @@ test("the re-run's options: a stop names its line and what it missed, a failed i
   }
   assert.ok(promptShortRead(built("finder"), readsRerun(stopped)).prompt.includes("STOPPED SHORT at line 75"));
   assert.throws(() => promptShortRead(built(), { reasons: ["bogus"] }), new RegExp(`one of: ${READS_KINDS.join(", ")}\\)`));
+});
+
+// ---------------------------------------------------------------- the CE files
+
+test("a CE file's path comes from the resolution by its key, null when it is missing; an unknown key or a malformed resolution throws", () => {
+  const ce = { commit: "a".repeat(40), absent: null, files: [
+    { key: "coherence", file: "x/coherence-reviewer.md", seats: ["coherence"], path: "C:/ce/x/coherence-reviewer.md", sha256: "f".repeat(64) },
+    { key: "design", file: "x/design-lens-reviewer.md", seats: ["design"], path: "C:/ce/x/design-lens-reviewer.md", missing: "not in the install" },
+  ] };
+  assert.equal(readsCeFile(ce, "coherence"), "C:/ce/x/coherence-reviewer.md");
+  assert.equal(readsCeFile(ce, "design"), null);
+  assert.throws(() => readsCeFile(ce, "feasibility"), /lists no file keyed "feasibility"/);
+  // CE absent: every file missing, every path null.
+  assert.equal(readsCeFile({ commit: null, absent: "no registry", files: [{ key: "coherence", path: null, missing: "CE absent" }] }, "coherence"), null);
+  assert.equal(readsCeProblem(ce), null);
+  assert.match(readsCeProblem({ files: [] }), /files list included/);
+  assert.match(readsCeProblem(null), /files list included/);
+  assert.match(readsCeProblem({ files: [ce.files[0], ce.files[0]] }), /lists coherence twice/);
+  assert.match(readsCeProblem({ files: [{ key: "coherence", path: "C:/x", sha256: "f", missing: "both" }] }), /exactly one of sha256 and missing/);
+  assert.match(readsCeProblem({ files: [{ key: "coherence", path: "C:/x" }] }), /exactly one of sha256 and missing/);
+  assert.match(readsCeProblem({ files: [{ key: "coherence", path: "x/rel.md", sha256: "f" }] }), /has a sha256 but no absolute path/);
+  assert.match(readsCeProblem({ files: [{ path: "C:/x", sha256: "f" }] }), /names its key/);
+  assert.throws(() => readsCeFile({ files: [] }, "coherence"), /^Error: reads: the CE resolution/);
+  for (const p of ["C:/x", "C:\\x", "/x", "d:/y"]) assert.equal(readsIsPath(p), true, p);
+  for (const p of ["x", "./x", "C:x", "", null, 3]) assert.equal(readsIsPath(p), false, String(p));
 });
 
 // ---------------------------------------------------------------- the args check

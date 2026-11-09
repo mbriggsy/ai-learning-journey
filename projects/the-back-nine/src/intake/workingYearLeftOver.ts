@@ -144,11 +144,13 @@ export interface WorkingYearShortRun {
   readonly least: number
   readonly most: number
 }
+/** `year` — year 0's calendar year, as the money picture labels it (U11 walk 3, b9-4, (aw): the line names it, as
+ *  the run sentences name theirs). `firstShort` carries it as `run.firstYear`. */
 export type WorkingYearCheckAtQuote =
-  | { readonly kind: 'capped'; readonly leftOver: number; readonly laterShort: WorkingYearShortRun | null }
-  | { readonly kind: 'whole'; readonly leftOver: number; readonly laterShort: WorkingYearShortRun | null }
+  | { readonly kind: 'capped'; readonly year: number; readonly leftOver: number; readonly laterShort: WorkingYearShortRun | null }
+  | { readonly kind: 'whole'; readonly year: number; readonly leftOver: number; readonly laterShort: WorkingYearShortRun | null }
   | { readonly kind: 'firstShort'; readonly run: WorkingYearShortRun }
-  | { readonly kind: 'firstNone' }
+  | { readonly kind: 'firstNone'; readonly year: number }
   | { readonly kind: 'unknown' }
 
 /** The run of short years that starts at `first` (short), read on through `after` — the picture's later years
@@ -190,11 +192,12 @@ function composeCheckAtQuote(d: ScenarioDraft, stored: number): WorkingYearCheck
   const ledger = workingYearLedgerForRun(writeConfirmedWorkingYearCost(d))
   if (ledger === 'unknown') return { kind: 'unknown' }
   const year0 = ledger.year0.bottomLine
-  if (year0 < 0) return { kind: 'firstShort', run: shortRunFrom({ calendarYear: ledger.year0.calendarYear, bottomLine: year0 }, ledger.laterYears) }
-  if (year0 < 1) return { kind: 'firstNone' }
+  const year = ledger.year0.calendarYear
+  if (year0 < 0) return { kind: 'firstShort', run: shortRunFrom({ calendarYear: year, bottomLine: year0 }, ledger.laterYears) }
+  if (year0 < 1) return { kind: 'firstNone', year }
   const at = ledger.laterYears.findIndex((y) => y.bottomLine < 0)
   const laterShort = at < 0 ? null : shortRunFrom(ledger.laterYears[at]!, ledger.laterYears.slice(at + 1))
-  return year0 < stored ? { kind: 'capped', leftOver: year0, laterShort } : { kind: 'whole', leftOver: year0, laterShort }
+  return year0 < stored ? { kind: 'capped', year, leftOver: year0, laterShort } : { kind: 'whole', year, leftOver: year0, laterShort }
 }
 
 /** Exported for the tests and the dev seeds' witnesses: the check at the quote for THIS draft, or `null` where
@@ -205,10 +208,11 @@ export function workingYearCheckAtQuote(d: ScenarioDraft): WorkingYearCheckAtQuo
   return checkAtQuote(d, stored)
 }
 
-/** The tail's figures, as the line prints them: today's quote exactly as W's sentence printed it, and the
- *  stored figure. */
+/** The tail's figures, as the line prints them: today's quote and the held figure exactly as W's sentence printed
+ *  them, and the stored figure. */
 interface TailFigures {
   readonly quote: string
+  readonly held: string
   readonly stored: string
 }
 type CheckWords = {
@@ -225,16 +229,16 @@ const afterAtMostWords = (s: WorkingYearShortRun | null, f: TailFigures): string
 }
 const firstShortWords = (s: WorkingYearShortRun, f: TailFigures): string =>
   s.lastYear === s.firstYear
-    ? slots.workingCostStaleLeftOverFirstShort(f.quote, formatMoney(s.most), f.stored)
+    ? slots.workingCostStaleLeftOverFirstShort(f.quote, s.firstYear, formatMoney(s.most), f.stored)
     : slots.workingCostStaleLeftOverFirstShortRun(f.quote, s.firstYear, s.lastYear, formatMoney(s.least), formatMoney(s.most), f.stored)
 /** The Result's and the gate's tail after the note, by what a check at the quote does (exhaustive, insight 147). */
 const CHECK_WORDS: CheckWords = {
   capped: (c, f) =>
-    `${slots.workingCostStaleLeftOverClause(f.stored)} ${slots.workingCostStaleLeftOverAtMost(f.quote, formatMoney(c.leftOver))}${afterAtMostWords(c.laterShort, f)}`,
+    `${slots.workingCostStaleLeftOverClause(f.stored, f.held)} ${slots.workingCostStaleLeftOverAtMost(f.quote, formatMoney(c.leftOver), c.year, c.laterShort !== null)}${afterAtMostWords(c.laterShort, f)}`,
   whole: (c, f) =>
-    `${slots.workingCostStaleLeftOverClause(f.stored)} ${slots.workingCostStaleLeftOverAtMostWhole(f.quote, formatMoney(c.leftOver), f.stored)}${afterAtMostWords(c.laterShort, f)}`,
-  firstShort: (c, f) => `${firstShortWords(c.run, f)} ${copy.workingCostStaleShortUntilChecked}`,
-  firstNone: (_c, f) => `${slots.workingCostStaleLeftOverFirstNone(f.quote, f.stored)} ${copy.workingCostStaleShortUntilChecked}`,
+    `${slots.workingCostStaleLeftOverClause(f.stored, f.held)} ${slots.workingCostStaleLeftOverAtMostWhole(f.quote, formatMoney(c.leftOver), f.stored, c.year, c.laterShort !== null)}${afterAtMostWords(c.laterShort, f)}`,
+  firstShort: (c, f) => `${firstShortWords(c.run, f)} ${slots.workingCostStaleShortUntilChecked(f.held)}`,
+  firstNone: (c, f) => `${slots.workingCostStaleLeftOverFirstNone(f.quote, c.year, f.stored)} ${slots.workingCostStaleShortUntilChecked(f.held)}`,
   unknown: () => copy.workingCostStaleLeftOverUnknown,
 }
 function checkWords(c: WorkingYearCheckAtQuote, f: TailFigures): string {
@@ -260,7 +264,9 @@ export function workingYearCostStaleLine(d: ScenarioDraft): string | null {
   const stored = savedWaitingOnW(d)
   if (note === null || stored === null) return note
   const s = workingYearCostStaleSentence(d)
+  // Unreachable: the note is W's sentence, so it is null exactly where this is (narrowing for the held figure).
+  if (s === null) return note
   const storedFormatted = formatMoney(stored)
-  if (s === null || !s.rose) return `${note} ${slots.workingCostStaleLeftOverClause(storedFormatted)}`
-  return `${note} ${checkWords(checkAtQuote(d, stored), { quote: s.quote, stored: storedFormatted })}`
+  if (!s.rose) return `${note} ${slots.workingCostStaleLeftOverClause(storedFormatted, s.held)}`
+  return `${note} ${checkWords(checkAtQuote(d, stored), { quote: s.quote, held: s.held, stored: storedFormatted })}`
 }

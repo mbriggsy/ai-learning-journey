@@ -569,18 +569,19 @@ export const copy = {
   // the money picture at today's quote can't be read (`workingYearCheckAtQuote`'s `unknown`: no figure to name).
   // Unreachable on every buildable draft (the core's docblock carries why, and a test pins the witnesses off it);
   // it says only what R7 makes true, with no figure and no lean. The U11 walk's (ae).
-  workingCostStaleLeftOverUnknown: 'Until that figure is checked, nothing left over from your pay is added to your savings.',
-  // …and the short-year lean after the at-quote sentence where year 0 at today's quote leaves nothing over: the
-  // checked run credits nothing and draws more, so the stale answer can look better (true by mechanism, the safe
-  // side: insight 133). Outside the left-over prefix on purpose (R16's sweep bans "better" there).
-  workingCostStaleShortUntilChecked: 'Until your figure is checked, this answer can look better than it really is.',
+  // "Confirm or change", never "checked" alone (U11 walk 3, b9-4, (au)): "Look at that figure", the gate's "a quick
+  // look" and door 5's "yours to check" all taught that checking means looking, while only a reply to the W row's
+  // question counts. Its preceding sentence is the lean, so "that figure" is the held one.
+  workingCostStaleLeftOverUnknown: 'Until you confirm or change that figure, nothing left over from your pay is added to your savings.',
   // …and where a check at the quote adds some of the left over and no working year at the quote runs short
   // (`capped` / `whole` with no `laterShort`): which way the WHOLE answer moves turns on the figure checked — at
   // the quote it only adds, and a figure high enough to leave a working year short adds cost there — so no
   // whole-answer lean is true across the extension (the "saved" lean's own docblock). U11 walk 2 (b9-3): five
   // readers could not net the year-level lean against the at-most figure; this says the net turns on the figure,
-  // naming no threshold and no "worse" (council `wf_fc80029e-d93`'s Frame B).
-  workingCostStaleEitherWay: 'Checking your figure can move this answer either way, depending on what you settle on.',
+  // naming no threshold and no "worse" (council `wf_fc80029e-d93`'s Frame B). "What a working year really costs
+  // you", never "what you settle on" (U11 walk 3, b9-4, (av)): "settle on" read as a number to bargain over, "as if
+  // I could choose a nicer number to get a nicer answer" — door 5's own question is what it costs.
+  workingCostStaleEitherWay: 'Checking your figure can move this answer either way, depending on what a working year really costs you.',
   workingLedgerHeldBackNote:
     'Each month Social Security holds back raises the benefit later, starting after full retirement age.',
   // Where not every held-back month earns that raise in the run (the earnings-test schedule's own
@@ -1907,7 +1908,7 @@ export const copy = {
   //    way (survivor and later years cost more at a higher W while crediting nothing: insight 143). Its seat
   //    goes to `slots.workingCostStaleLeftOverYearsCheaper` (single years only), and "can look better" rides
   //    there only beside a short year at the quote (`slots.workingCostStaleShortLaterYear`,
-  //    `copy.workingCostStaleShortUntilChecked`), where it is true by mechanism.
+  //    `slots.workingCostStaleShortUntilChecked`), where it is true by mechanism.
   //  · "SAVED", NOT ASKED (the picture already shows no left over at the held figure): the higher checked figure
   //    shows none either (W comes off year 0's cash dollar for dollar), nothing is carried at either figure, and
   //    the reason above holds as for an absent answer — so this sentence rides.
@@ -2159,7 +2160,9 @@ export const copy = {
   // "This answer", never "this date": the line also stands beside the no-date reading, where there is
   // no date to speak of. PILOT-DRAFTED, shipped flagged (KTD19).
   stalenessPayCheckNote: 'This answer still uses your last figure for what a year costs while you’re working.',
-  stalenessPayCheckCta: 'Look at that figure',
+  // The door names the act that counts (U11 walk 3, b9-4, (au)): the W row's question takes "Yes, that's about
+  // right" or "No — I'll enter a different figure", and "Look at that figure" let a look-and-close read as done.
+  stalenessPayCheckCta: 'Confirm or change your figure',
   // Build 2's moved left over (R12): the household's "All of it" was given against a year-0 figure that has since
   // changed. The lead here; both figures in `slots.stalenessLeftOverMoved`; the door opens the left-over seat.
   // The gate reads the same lead and sentence, plus the W line's door sentence where the tab can save.
@@ -2569,6 +2572,27 @@ const adverseOddsPhrase = (worstOfTen: number): string =>
 const shortAmount = (leastFormatted: string, mostFormatted: string): string =>
   leastFormatted === mostFormatted ? `$${leastFormatted}` : `$${leastFormatted} to $${mostFormatted}`
 
+/** The stored "All of it" figure, dated to the answer (U11 walk 3, b9-4): undated, its present-tense "left over"
+ *  sat beside "short" on `datesavedrisenshort` (rule 6, three reads), and on `datesavedrisenlater` it read as
+ *  today's figure at $84,000, where an income that began since makes it $26,985 ((al)'s rise arm: "when you
+ *  answered", never "at $84,000"). "All of it" is what they answered ((aq)). */
+const leftOverAnswered = (storedFormatted: string): string =>
+  `When you answered, $${storedFormatted} a year was left over from your pay, and you chose to save all of it.`
+
+/** How a short working year is covered, in the money picture's own words (`workingLedgerShortNote`,
+ *  `workingLedgerSavingsTax`). U11 walk 3, b9-4, (as): the paragraph named a short run's only consequence as "adds
+ *  none" and B's run read as "we'd just tread water", where each shortfall is drawn from savings; and the tax on
+ *  taking it out rides, or a reader who nets gains against shortfalls comes out rosier than the draw (refuter
+ *  R1's check 2). */
+const SHORTFALL_EACH = 'Each year’s shortfall is taken from your savings, plus any income tax on taking it out'
+const SHORTFALL_ONE = 'That shortfall is taken from your savings, plus any income tax on taking it out'
+
+/** The at-most sentence's reach where a later run prints short at the quote (U11 walk 3, b9-4, (at)): "adds at
+ *  most $5,985 a year" read as every year, and two cold readers netted one year of gain against four short
+ *  years. Every working year credits at most year 0's print (R8, `taxOverlay.ts`) and a short year credits
+ *  nothing, so this is true by mechanism, with no year's figure assumed. */
+const atMostReach = (laterShort: boolean): string => (laterShort ? ', in each working year that doesn’t come up short' : '')
+
 /**
  * Typed quantitative slots — the ONLY way a number enters user-facing copy
  * (the certainty-hygiene slot discipline). Question counts are an allowlisted
@@ -2939,9 +2963,12 @@ export const slots = {
   // It follows W's own sentence (and its lean, where that rides). Never on the W step's note: that step will
   // not complete on a stale W, and the question comes after it (R5). Never on the panel's W row: the
   // left-over seat below it says it there. "Left over from your pay" (the U11 walk's (aj)): "you chose to save"
-  // alone read as the 401(k) deposits.
-  workingCostStaleLeftOverClause: (storedFormatted: string): string =>
-    `Until that figure is checked, none of the $${storedFormatted} a year left over from your pay that you chose to save is added to your savings.`,
+  // alone read as the 401(k) deposits. U11 walk 3 (b9-4): two sentences, one fact each ((ap)'s cure) — the stored
+  // figure dated to the answer (`leftOverAnswered`), then what the stale W withholds, under the act that counts
+  // ("confirm or change", (au)) and the held figure by name (after the dated sentence "that figure" would read as
+  // the $16,985).
+  workingCostStaleLeftOverClause: (storedFormatted: string, heldFormatted: string): string =>
+    `${leftOverAnswered(storedFormatted)} Until you confirm or change your $${heldFormatted} figure, none of it is added to your savings.`,
   // WHAT A CHECK ADDS AT MOST (the U11 walk's (ae), council `wf_fc80029e-d93`): where the spending rose past the
   // held figure, the clause alone promised the stored figure, while a check at today's quote credits at most the
   // smaller of that figure and year 0's left over AT THE QUOTE (R8's cap, `taxOverlay.ts`; W comes off year 0's
@@ -2951,11 +2978,21 @@ export const slots = {
   // read as a line for the whole answer let its converse ("below it, this answer isn't rosy") stand where a later
   // or a survivor year runs short (the red team's attack 1).
   // "Checking your figure at", never "a check at" (U11 walk 2, b9-3: six readers, both cold first looks among them,
-  // read "a check at $90,000" as a $90,000 paycheck in a paragraph about pay).
-  workingCostStaleLeftOverAtMost: (quoteFormatted: string, leftOverFormatted: string): string =>
-    `At $${quoteFormatted} a year, your first working year has $${leftOverFormatted} left over, so checking your figure at $${quoteFormatted} or more adds at most $${leftOverFormatted} a year to your savings.`,
-  workingCostStaleLeftOverAtMostWhole: (quoteFormatted: string, leftOverFormatted: string, storedFormatted: string): string =>
-    `At $${quoteFormatted} a year, your first working year has $${leftOverFormatted} left over, so checking your figure at $${quoteFormatted} or more adds at most the $${storedFormatted} a year you chose to save.`,
+  // read "a check at $90,000" as a $90,000 paycheck in a paragraph about pay). U11 walk 3 (b9-4): split at its "so"
+  // ((ap)); year 0 named by its calendar year ((aw): B's run named 2026 while these said "your first working year"
+  // alone); `laterShort` limits the reach to the years that don't come up short ((at), `atMostReach`). "Whole"
+  // names the cap as "that $16,985", the figure the clause just dated ((aq): "the $16,985 a year you chose to save"
+  // named their choice as the cap, though they chose all of it).
+  workingCostStaleLeftOverAtMost: (quoteFormatted: string, leftOverFormatted: string, year: number, laterShort: boolean): string =>
+    `At $${quoteFormatted} a year, your first working year, ${year}, has $${leftOverFormatted} left over. So checking your figure at $${quoteFormatted} or more adds at most $${leftOverFormatted} a year to your savings${atMostReach(laterShort)}.`,
+  workingCostStaleLeftOverAtMostWhole: (
+    quoteFormatted: string,
+    leftOverFormatted: string,
+    storedFormatted: string,
+    year: number,
+    laterShort: boolean,
+  ): string =>
+    `At $${quoteFormatted} a year, your first working year, ${year}, has $${leftOverFormatted} left over. So checking your figure at $${quoteFormatted} or more adds at most that $${storedFormatted} a year to your savings${atMostReach(laterShort)}.`,
   // …and where year 0 at the quote leaves nothing, a check carries nothing (its shown state is "not asked"), so
   // these replace the clause and the at-most sentence: the shipped clause promised the stored figure where a check
   // returns $0. The short-year lean that follows them (`workingCostStaleShortUntilChecked`) is a SEPARATE string,
@@ -2963,8 +3000,12 @@ export const slots = {
   // (U11 walk 2, b9-3: `datesavedrisenshort` is short every year from 2026 through 2032, and "your first working
   // year" alone read as a one-off $4,015), the run is named in the money picture's own words
   // (`workingLedgerLaterRun`, `workingLedgerLaterShortRange`): its years and its smallest to largest shortfall.
-  workingCostStaleLeftOverFirstShort: (quoteFormatted: string, shortFormatted: string, storedFormatted: string): string =>
-    `At $${quoteFormatted} a year, your first working year comes up $${shortFormatted} short, so checking your figure at $${quoteFormatted} or more adds none of the $${storedFormatted} a year left over from your pay that you chose to save.`,
+  // U11 walk 3 (b9-4), one fact per dollar sentence ((ap)): the stored figure dated first (`leftOverAnswered`), so
+  // "short … instead" can sit beside it without the clash of "short" and an undated "left over"; then how the
+  // shortfall is covered ((as), `SHORTFALL_*`: "adds none" alone, a zero, read as "we'd just tread water"); then
+  // what a check carries.
+  workingCostStaleLeftOverFirstShort: (quoteFormatted: string, year: number, shortFormatted: string, storedFormatted: string): string =>
+    `${leftOverAnswered(storedFormatted)} At $${quoteFormatted} a year, your first working year, ${year}, comes up $${shortFormatted} short instead. ${SHORTFALL_ONE}. So checking your figure at $${quoteFormatted} or more adds none of that $${storedFormatted} to your savings.`,
   workingCostStaleLeftOverFirstShortRun: (
     quoteFormatted: string,
     firstYear: number,
@@ -2973,9 +3014,15 @@ export const slots = {
     mostFormatted: string,
     storedFormatted: string,
   ): string =>
-    `At $${quoteFormatted} a year, each working year from ${firstYear} through ${lastYear} comes up ${shortAmount(leastFormatted, mostFormatted)} short, so checking your figure at $${quoteFormatted} or more adds none of the $${storedFormatted} a year left over from your pay that you chose to save.`,
-  workingCostStaleLeftOverFirstNone: (quoteFormatted: string, storedFormatted: string): string =>
-    `At $${quoteFormatted} a year, your first working year has nothing left over, so checking your figure at $${quoteFormatted} or more adds none of the $${storedFormatted} a year left over from your pay that you chose to save.`,
+    `${leftOverAnswered(storedFormatted)} At $${quoteFormatted} a year, each working year from ${firstYear} through ${lastYear} comes up ${shortAmount(leastFormatted, mostFormatted)} short instead. ${SHORTFALL_EACH}. So checking your figure at $${quoteFormatted} or more adds none of that $${storedFormatted} to your savings.`,
+  workingCostStaleLeftOverFirstNone: (quoteFormatted: string, year: number, storedFormatted: string): string =>
+    `${leftOverAnswered(storedFormatted)} At $${quoteFormatted} a year, your first working year, ${year}, has nothing left over. So checking your figure at $${quoteFormatted} or more adds none of that $${storedFormatted} to your savings.`,
+  // …and the short-year lean after the at-quote sentences where year 0 at today's quote leaves nothing over: the
+  // checked run credits nothing and draws more, so the stale answer can look better (true by mechanism, the safe
+  // side: insight 133). Outside the left-over prefix on purpose (R16's sweep bans "better" there). "Confirm or
+  // change your $84,000 figure" (U11 walk 3, b9-4, (au)): the act that counts, and the held figure by name.
+  workingCostStaleShortUntilChecked: (heldFormatted: string): string =>
+    `Until you confirm or change your $${heldFormatted} figure, this answer can look better than it really is.`,
   // THE SHORT-YEAR LEANS (the U11 walk's (ae)): "can look better" said only where a short year makes it true by
   // mechanism — at the quote that year credits nothing in the checked run and draws more than in the stale one, so
   // the over-read errs safe (insight 133). Named OUTSIDE the left-over prefix on purpose: R16's sweep bans "better"
@@ -2983,8 +3030,10 @@ export const slots = {
   // may appear in a composed line). The later year is the FIRST one the money picture at the quote prints short
   // (everyone alive, the window-top candidate: its own "If you're still working in" frame); naming it is the D7
   // reply to the red team's attack 2 (a short later year the tool can compute, which silence would hide).
+  // U11 walk 3 (b9-4): split in two ((ap)), the second saying how the shortfall is covered ((as), `SHORTFALL_*`),
+  // so the lean follows the draw it rests on.
   workingCostStaleShortLaterYear: (year: number, shortFormatted: string, quoteFormatted: string): string =>
-    `If you’re still working in ${year}, that year comes up $${shortFormatted} short at $${quoteFormatted} a year, so this answer can look better than it really is.`,
+    `If you’re still working in ${year}, that year comes up $${shortFormatted} short at $${quoteFormatted} a year. ${SHORTFALL_ONE}, so this answer can look better than it really is.`,
   // …and where that year starts a RUN of short years (U11 walk 2, b9-3: `datesavedrisenlater` is short every year
   // from 2029 through 2032, and "that year" alone set a one-off loss beside a gain stated "a year"): the run in
   // the money picture's own words, its years and its smallest to largest shortfall.
@@ -2995,7 +3044,7 @@ export const slots = {
     mostFormatted: string,
     quoteFormatted: string,
   ): string =>
-    `If you’re still working from ${firstYear} through ${lastYear}, each of those years comes up ${shortAmount(leastFormatted, mostFormatted)} short at $${quoteFormatted} a year, so this answer can look better than it really is.`,
+    `If you’re still working from ${firstYear} through ${lastYear}, each of those years comes up ${shortAmount(leastFormatted, mostFormatted)} short at $${quoteFormatted} a year. ${SHORTFALL_EACH}, so this answer can look better than it really is.`,
   workingCostStaleQuoteGone: (lastFormatted: string): string =>
     `You said yes to $${lastFormatted} a year, but your spending figures have changed since, and there’s no spending figure to offer now.`,
   workingCostStaleStateConfirmed: (lastFormatted: string): string =>
@@ -3475,7 +3524,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1497` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1503` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

@@ -271,7 +271,7 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
       // The W step's sentence for a yes to $84,000 the spending fell below ($78,000): no lean (the safe side).
       const sentence = slots.workingCostStaleQuote('84,000', '78,000')
       expect(line, 'the clause rides the gate’s W line').toBe(
-        `${copy.stalenessPayCheckGateLead} ${sentence} ${slots.workingCostStaleLeftOverClause('16,985')} ${copy.stalenessPayCheckGateDoor}`,
+        `${copy.stalenessPayCheckGateLead} ${sentence} ${slots.workingCostStaleLeftOverClause('16,985', '84,000')} ${copy.stalenessPayCheckGateDoor}`,
       )
     } finally {
       h.model = current
@@ -295,8 +295,8 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
           copy.stalenessPayCheckGateLead,
           slots.workingCostStaleQuote('84,000', '90,000'),
           slots.workingCostStaleLeftOverYearsCheaper('84,000'),
-          slots.workingCostStaleLeftOverClause('16,985'),
-          slots.workingCostStaleLeftOverAtMost('90,000', '10,985'),
+          slots.workingCostStaleLeftOverClause('16,985', '84,000'),
+          slots.workingCostStaleLeftOverAtMost('90,000', '10,985', 2026, false),
           copy.workingCostStaleEitherWay,
           copy.stalenessPayCheckGateDoor,
         ].join(' '),

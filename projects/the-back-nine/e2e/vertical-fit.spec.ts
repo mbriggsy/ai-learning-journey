@@ -2099,7 +2099,7 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
 // 12,622.50 − tax 20,840 − deposits 20,000 − W 84,000 = 27,537.50, a surplus rounding down).
 const STALE_W_QUOTE = slots.workingCostStaleQuote('84,000', '78,000')
 const STALE_W_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE} ${copy.stalenessPayCheckGateDoor}`
-const STALE_W_SAVED_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE} ${slots.workingCostStaleLeftOverClause('16,985')} ${copy.stalenessPayCheckGateDoor}`
+const STALE_W_SAVED_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE} ${slots.workingCostStaleLeftOverClause('16,985', '84,000')} ${copy.stalenessPayCheckGateDoor}`
 const LEFT_OVER_MOVED_SENTENCE = slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')
 const LEFT_OVER_MOVED_GATE_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE} ${copy.stalenessPayCheckGateDoor}`
 // The U11 walk's (ae): the risen family's W line — W's sentence, the year-level lean, then the tail by what a check
@@ -2110,17 +2110,17 @@ const LEFT_OVER_MOVED_GATE_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOV
 const risenLine = (quoteNow: string, tail: readonly string[]): string =>
   [slots.workingCostStaleQuote('84,000', quoteNow), slots.workingCostStaleLeftOverYearsCheaper('84,000'), ...tail].join(' ')
 const RISEN_LINE = risenLine('90,000', [
-  slots.workingCostStaleLeftOverClause('16,985'),
-  slots.workingCostStaleLeftOverAtMost('90,000', '10,985'),
+  slots.workingCostStaleLeftOverClause('16,985', '84,000'),
+  slots.workingCostStaleLeftOverAtMost('90,000', '10,985', 2026, false),
   copy.workingCostStaleEitherWay,
 ])
 const RISEN_SHORT_LINE = risenLine('105,000', [
   slots.workingCostStaleLeftOverFirstShortRun('105,000', 2026, 2032, '3,652', '4,015', '16,985'),
-  copy.workingCostStaleShortUntilChecked,
+  slots.workingCostStaleShortUntilChecked('84,000'),
 ])
 const RISEN_LATER_LINE = risenLine('105,000', [
-  slots.workingCostStaleLeftOverClause('16,985'),
-  slots.workingCostStaleLeftOverAtMost('105,000', '5,985'),
+  slots.workingCostStaleLeftOverClause('16,985', '84,000'),
+  slots.workingCostStaleLeftOverAtMost('105,000', '5,985', 2026, true),
   slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '105,000'),
 ])
 const risenUnlock = (key: string, line: string) =>
@@ -2147,7 +2147,7 @@ const PAY_CHECK_UNLOCKS = [
     key: 'datesavedstale',
     note: STALE_W_SAVED_GATE_LINE,
     sibling: copy.stalenessLeftOverNote,
-    standing: `${copy.stalenessPayCheckNote} ${STALE_W_QUOTE} ${slots.workingCostStaleLeftOverClause('16,985')}`,
+    standing: `${copy.stalenessPayCheckNote} ${STALE_W_QUOTE} ${slots.workingCostStaleLeftOverClause('16,985', '84,000')}`,
     dated: true,
   },
   {
@@ -2687,7 +2687,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2112-2116 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2113-2117 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,

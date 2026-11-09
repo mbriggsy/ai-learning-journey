@@ -1295,7 +1295,7 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
       lead: copy.stalenessPayCheckNote,
       says: [
         slots.workingCostStaleQuote(STALE_W_CONFIRMED, STALE_W_QUOTE_NOW),
-        slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER),
+        slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER, STALE_W_CONFIRMED),
       ],
       notLead: copy.stalenessLeftOverNote,
       door: copy.stalenessPayCheckCta,
@@ -1304,7 +1304,7 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
       lead: copy.stalenessPayCheckGateLead,
       says: [
         slots.workingCostStaleQuote(STALE_W_CONFIRMED, STALE_W_QUOTE_NOW),
-        slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER),
+        slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER, STALE_W_CONFIRMED),
         copy.stalenessPayCheckGateDoor,
       ],
       notLead: copy.stalenessLeftOverNote,
@@ -1316,21 +1316,21 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
   // check at $90,000 or more adds at most ($10,985, year 0 at the quote); the seat waits as on `datesavedstale`. The
   // ORDER is pinned in `devSeeds.test.ts` (the seed's own arm); here each must ride the one line.
   datesavedrisen: risenWitness(RISEN_W_QUOTE_NOW, [
-    slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER),
-    slots.workingCostStaleLeftOverAtMost(RISEN_W_QUOTE_NOW, RISEN_AT_QUOTE),
+    slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER, STALE_W_CONFIRMED),
+    slots.workingCostStaleLeftOverAtMost(RISEN_W_QUOTE_NOW, RISEN_AT_QUOTE, 2026, false),
     copy.workingCostStaleEitherWay,
   ]),
   // Increment 11, the risen twin's two other arms (`devSeeds.ts`'s docblocks carry the hand sums): at $105,000 year
   // 0 comes up $4,015 short, so a check adds none of the $16,985 and the short-year lean rides…
   datesavedrisenshort: risenWitness(RISEN_SHORT_QUOTE, [
     slots.workingCostStaleLeftOverFirstShortRun(RISEN_SHORT_QUOTE, 2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, DATE_LEFT_OVER),
-    copy.workingCostStaleShortUntilChecked,
+    slots.workingCostStaleShortUntilChecked(STALE_W_CONFIRMED),
   ]),
   // …and with Sam's alimony to 62, year 0 at $105,000 has $5,985 left over (the most a check adds) while 2029, the
   // alimony ended, comes up $4,015 short — named, with the short-year lean.
   datesavedrisenlater: risenWitness(RISEN_SHORT_QUOTE, [
-    slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER),
-    slots.workingCostStaleLeftOverAtMost(RISEN_SHORT_QUOTE, RISEN_LATER_AT_QUOTE),
+    slots.workingCostStaleLeftOverClause(DATE_LEFT_OVER, STALE_W_CONFIRMED),
+    slots.workingCostStaleLeftOverAtMost(RISEN_SHORT_QUOTE, RISEN_LATER_AT_QUOTE, 2026, true),
     slots.workingCostStaleShortLaterYears(RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, RISEN_SHORT_QUOTE),
   ]),
 }

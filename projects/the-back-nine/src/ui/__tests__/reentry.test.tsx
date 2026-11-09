@@ -565,7 +565,7 @@ describe('composeReentry — the read-back', () => {
     expect(workingYearLeftOverMoved(d), 'waiting on W is never moved').toBeNull()
     const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: false })
     const line = workingYearCostStaleLine(d)
-    expect(line).toBe(`${workingYearCostStaleNote(d)} ${slots.workingCostStaleLeftOverClause('16,985')}`)
+    expect(line).toBe(`${workingYearCostStaleNote(d)} ${slots.workingCostStaleLeftOverClause('16,985', '84,000')}`)
     const view = composeReentry(s, report, { costStale: line === null ? null : { text: line, canChange: true }, leftOverStale: null })
     expect(view.noteLines).toEqual([`${copy.stalenessPayCheckGateLead} ${line} ${copy.stalenessPayCheckGateDoor}`])
     // Under any other answer W's line gains no clause.

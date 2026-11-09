@@ -337,9 +337,12 @@ describe('the stale sentence names the cause that moved (KTD21)', () => {
       held: '84,000.00',
       quote: '84,000.40',
     })
+    // The unrisen arm carries the held figure too (U11 walk 3, b9-4): the clause after it names it ("Until you
+    // confirm or change your $84,000 figure").
     expect(workingYearCostStaleSentence({ ...nc0, annualSpendingReal: 78_000, workingYearCost: yes(84_000) })).toEqual({
       rose: false,
       sentence: slots.workingCostStaleQuote('84,000', '78,000'),
+      held: '84,000',
     })
     expect(workingYearCostStaleSentence({ ...nc0, workingYearCost: yes(84_000) })).toBeNull()
   })

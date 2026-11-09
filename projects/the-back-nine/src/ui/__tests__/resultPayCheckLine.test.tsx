@@ -148,7 +148,7 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
     appModel.update(() => DEV_SEEDS.datesavedstale)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
     expect(line()?.textContent).toBe(
-      `${copy.stalenessPayCheckNote} ${slots.workingCostStaleQuote('84,000', '78,000')} ${slots.workingCostStaleLeftOverClause('16,985')}`,
+      `${copy.stalenessPayCheckNote} ${slots.workingCostStaleQuote('84,000', '78,000')} ${slots.workingCostStaleLeftOverClause('16,985', '84,000')}`,
     )
   })
 
@@ -165,8 +165,8 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
         copy.stalenessPayCheckNote,
         slots.workingCostStaleQuote('84,000', '90,000'),
         slots.workingCostStaleLeftOverYearsCheaper('84,000'),
-        slots.workingCostStaleLeftOverClause('16,985'),
-        slots.workingCostStaleLeftOverAtMost('90,000', '10,985'),
+        slots.workingCostStaleLeftOverClause('16,985', '84,000'),
+        slots.workingCostStaleLeftOverAtMost('90,000', '10,985', 2026, false),
         copy.workingCostStaleEitherWay,
       ].join(' '),
     )
@@ -180,7 +180,7 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
         slots.workingCostStaleQuote('84,000', '105,000'),
         slots.workingCostStaleLeftOverYearsCheaper('84,000'),
         slots.workingCostStaleLeftOverFirstShortRun('105,000', 2026, 2032, '3,652', '4,015', '16,985'),
-        copy.workingCostStaleShortUntilChecked,
+        slots.workingCostStaleShortUntilChecked('84,000'),
       ].join(' '),
     )
   })
@@ -194,8 +194,10 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
         const text = document.body.textContent ?? ''
         expect(text, `${answer?.kind ?? 'absent'}`).not.toContain(copy.stalenessLeftOverNote)
         // Aimed at the clause's live lead (insight 086: a negative on a phrase no string says passes vacuously —
-        // this one read 'left over a year is added', which neither the old clause nor the new one says).
-        expect(text).not.toContain('Until that figure is checked')
+        // this one read 'left over a year is added', which neither the old clause nor the new one says). U11 walk 3
+        // (b9-4) re-aimed it at the clause's two live sentences: the dated figure and what the stale W withholds.
+        expect(text).not.toContain('When you answered, $')
+        expect(text).not.toContain('none of it is added to your savings')
         expect(document.querySelector('.cs-staleness-note')?.textContent).toBe(copy.stalenessHeroNote)
         cleanup()
       }

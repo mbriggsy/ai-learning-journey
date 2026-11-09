@@ -892,12 +892,13 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingLedgerLeftOverAbsentLine: slots.workingLedgerLeftOverAbsentLine('16,985'),
     workingLedgerLeftOverSpentLine: slots.workingLedgerLeftOverSpentLine('16,985'),
     workingLedgerLeftOverNotSureLine: slots.workingLedgerLeftOverNotSureLine('16,985'),
-    workingCostStaleLeftOverClause: slots.workingCostStaleLeftOverClause('16,985'),
+    workingCostStaleLeftOverClause: slots.workingCostStaleLeftOverClause('16,985', '84,000'),
     workingCostStaleLeftOverYearsCheaper: slots.workingCostStaleLeftOverYearsCheaper('84,000'),
-    workingCostStaleLeftOverAtMost: slots.workingCostStaleLeftOverAtMost('90,000', '10,985'),
-    workingCostStaleLeftOverAtMostWhole: slots.workingCostStaleLeftOverAtMostWhole('90,000', '21,537', '16,985'),
-    workingCostStaleLeftOverFirstShort: slots.workingCostStaleLeftOverFirstShort('105,000', '4,015', '16,985'),
-    workingCostStaleLeftOverFirstNone: slots.workingCostStaleLeftOverFirstNone('100,985', '16,985'),
+    workingCostStaleLeftOverAtMost: slots.workingCostStaleLeftOverAtMost('105,000', '5,985', 2026, true),
+    workingCostStaleLeftOverAtMostWhole: slots.workingCostStaleLeftOverAtMostWhole('90,000', '21,537', '16,985', 2026, true),
+    workingCostStaleLeftOverFirstShort: slots.workingCostStaleLeftOverFirstShort('105,000', 2026, '4,015', '16,985'),
+    workingCostStaleLeftOverFirstNone: slots.workingCostStaleLeftOverFirstNone('100,985', 2026, '16,985'),
+    workingCostStaleShortUntilChecked: slots.workingCostStaleShortUntilChecked('84,000'),
     workingCostStaleShortLaterYear: slots.workingCostStaleShortLaterYear(2029, '4,015', '105,000'),
     workingCostStaleShortLaterYears: slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '105,000'),
     workingCostStaleLeftOverFirstShortRun: slots.workingCostStaleLeftOverFirstShortRun('105,000', 2026, 2032, '3,652', '4,015', '16,985'),
@@ -1324,13 +1325,18 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.workingLedgerLeftOverAbsentLine(S),
       slots.workingLedgerLeftOverSpentLine(S),
       slots.workingLedgerLeftOverNotSureLine(S),
-      slots.workingCostStaleLeftOverClause(S),
+      slots.workingCostStaleLeftOverClause(S, S),
       slots.workingCostStaleLeansBetter(S),
       slots.workingCostStaleLeftOverYearsCheaper(S),
-      slots.workingCostStaleLeftOverAtMost(S, S),
-      slots.workingCostStaleLeftOverAtMostWhole(S, S, S),
-      slots.workingCostStaleLeftOverFirstShort(S, S, S),
-      slots.workingCostStaleLeftOverFirstNone(S, S),
+      // A year arg renders through `${}` like the figures: NaN prints no digit, so any digit left is the template's.
+      slots.workingCostStaleLeftOverAtMost(S, S, Number.NaN, true),
+      slots.workingCostStaleLeftOverAtMostWhole(S, S, S, Number.NaN, true),
+      slots.workingCostStaleLeftOverFirstShort(S, Number.NaN, S, S),
+      slots.workingCostStaleLeftOverFirstShortRun(S, Number.NaN, Number.NaN, S, S, S),
+      slots.workingCostStaleLeftOverFirstNone(S, Number.NaN, S),
+      slots.workingCostStaleShortUntilChecked(S),
+      slots.workingCostStaleShortLaterYear(Number.NaN, S, S),
+      slots.workingCostStaleShortLaterYears(Number.NaN, Number.NaN, S, S, S),
       slots.stalenessLeftOverMoved(S, S, S),
       slots.stalenessLeftOverClause(S, S, S),
       slots.assumptionWorkingCostConfirmed(S),
@@ -1610,7 +1616,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:933-943, 822-839), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:934-944, 822-839), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

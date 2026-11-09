@@ -77,12 +77,12 @@ export default tseslint.config(
   },
 
   // The copy-catalog fence (phase-2 cross-cutting #4, added at D1): every
-  // user-facing string in src/ui + src/intake routes through src/ui/copy.ts so
+  // user-facing string in src/ui + src/intake routes through src/ui/copy.ts (an
+  // entry-graph module's through its slice, entryCopy.ts, composed into `copy`) so
   // the U7 copyGuard's catalog-enumeration covers it BY CONSTRUCTION. Bans
   // inline JSXText AND user-facing attribute literals — the a11y contract
-  // REQUIRES aria-labels, which are user-facing, so they route through the
-  // catalog too (a directive can't leak through an attribute). copy.ts itself
-  // is a plain .ts module of object literals — JSX selectors never fire there.
+  // REQUIRES aria-labels (user-facing, so catalog-routed: no directive leaks via
+  // an attribute). Both catalogs are plain .ts object literals — no JSX fires.
   {
     files: ['src/ui/**/*.tsx', 'src/intake/**/*.tsx'],
     ignores: TEST_IGNORES,
@@ -90,15 +90,15 @@ export default tseslint.config(
       'no-restricted-syntax': ['error',
         {
           selector: 'JSXText[value=/\\S/]',
-          message: 'Inline user-facing copy is banned (cross-cutting #4) — add the string to src/ui/copy.ts and render {copy.yourKey} so the copyGuard gate covers it.',
+          message: 'Inline user-facing copy is banned (cross-cutting #4) — add the string to src/ui/copy.ts and render {copy.yourKey} (in a module the entry graph imports, src/ui/entryCopy.ts and {entryCopy.yourKey} — see that file\'s header) so the copyGuard gate covers it.',
         },
         {
           selector: 'JSXAttribute[name.name=/^(aria-label|aria-description|placeholder|alt|title)$/] > Literal',
-          message: 'User-facing attribute copy is banned inline (cross-cutting #4) — route aria-label/aria-description/placeholder/alt/title through src/ui/copy.ts.',
+          message: 'User-facing attribute copy is banned inline (cross-cutting #4) — route aria-label/aria-description/placeholder/alt/title through src/ui/copy.ts (src/ui/entryCopy.ts in a module the entry graph imports).',
         },
         {
           selector: 'JSXAttribute[name.name=/^(aria-label|aria-description|placeholder|alt|title)$/] JSXExpressionContainer > Literal',
-          message: 'User-facing attribute copy is banned inline (cross-cutting #4) — route aria-label/aria-description/placeholder/alt/title through src/ui/copy.ts.',
+          message: 'User-facing attribute copy is banned inline (cross-cutting #4) — route aria-label/aria-description/placeholder/alt/title through src/ui/copy.ts (src/ui/entryCopy.ts in a module the entry graph imports).',
         },
       ],
     },

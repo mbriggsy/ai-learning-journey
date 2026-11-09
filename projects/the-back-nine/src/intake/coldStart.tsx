@@ -1,4 +1,4 @@
-import { copy } from '@ui/copy'
+import { entryCopy } from '@ui/entryCopy'
 import { ExternalLink } from './ExternalLink'
 import { EXTERNAL_LINKS } from './links'
 import './intake.css'
@@ -16,28 +16,28 @@ import './intake.css'
 export function ColdStart({ onBegin, onRestore }: { onBegin: () => void; onRestore: () => void }) {
   return (
     <div className="cold-start">
-      <span className="intake-wordmark">{copy.appTitle}</span>
-      <h1 className="cold-start-question">{copy.coldStartQuestion}</h1>
-      <p className="cold-start-orientation">{copy.coldStartOrientation}</p>
+      <span className="intake-wordmark">{entryCopy.appTitle}</span>
+      <h1 className="cold-start-question">{entryCopy.coldStartQuestion}</h1>
+      <p className="cold-start-orientation">{entryCopy.coldStartOrientation}</p>
       <aside className="cold-start-preflight">
-        <p>{copy.coldStartPreflight}</p>
+        <p>{entryCopy.coldStartPreflight}</p>
         <p className="resource-links">
-          {copy.linkGetQuote}{' '}
-          <ExternalLink href={EXTERNAL_LINKS.healthcareGov}>{copy.linkHealthcareGov}</ExternalLink>
+          {entryCopy.linkGetQuote}{' '}
+          <ExternalLink href={EXTERNAL_LINKS.healthcareGov}>{entryCopy.linkHealthcareGov}</ExternalLink>
           {' · '}
-          <ExternalLink href={EXTERNAL_LINKS.kffCalculator}>{copy.linkKffCalculator}</ExternalLink>
+          <ExternalLink href={EXTERNAL_LINKS.kffCalculator}>{entryCopy.linkKffCalculator}</ExternalLink>
         </p>
       </aside>
       <button type="button" className="btn-primary" onClick={onBegin}>
-        {copy.coldStartBegin}
+        {entryCopy.coldStartBegin}
       </button>
       {/* The rare returning-but-wiped user's door — a quiet whisper BENEATH the primary Begin, never
           a peer to it (R11 invited-not-nagged; back-nine-design: a subordinate affordance must not
           compete). A new/evicted device probes no-vault → here, and a saved backup is the way back. */}
       <p className="cold-start-restore">
-        {copy.coldStartRestorePrompt}{' '}
+        {entryCopy.coldStartRestorePrompt}{' '}
         <button type="button" className="btn-quiet" onClick={onRestore}>
-          {copy.coldStartRestoreAction}
+          {entryCopy.coldStartRestoreAction}
         </button>
       </p>
     </div>

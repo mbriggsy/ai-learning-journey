@@ -8,6 +8,9 @@
  * browser fetches to render. The engine WORKER chunk (loaded by the Worker, not
  * the page) and the service worker are intentionally excluded.
  *
+ * WHAT may never be initial JS at all (the copy catalog, `src/ui/copy.ts`) is a separate,
+ * build-time refusal: `scripts/entryChunkGuard.ts`, wired into `vite build`.
+ *
  * NOTE: this is a SIZE budget — distinct from burned's verify-prod-bundle, which
  * is a forbidden-strings leak sentinel. A leak sentinel becomes relevant here once
  * P4 ships dev-only solver/oracle internals or seed-injection harnesses that must

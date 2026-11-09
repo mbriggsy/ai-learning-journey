@@ -5,6 +5,12 @@
  * catalog and asserts every entry passes the ban-list + certainty-hygiene +
  * catastrophe-lexicon gates — R12 honesty true BY CONSTRUCTION).
  *
+ * ONE EXCEPTION, STILL ONE CATALOG: the words the first-load (entry) chunk renders
+ * live in `entryCopy.ts` and are composed into `copy` below, so `copy`, `CopyKey`
+ * and every sweep see them whole. A module the entry graph imports reads
+ * `entryCopy`, never this file — this file rides the lazy chunks, and the build
+ * refuses it in the first-load JS (`scripts/entryChunkGuard.ts`).
+ *
  * The companion ESLint `no-restricted-syntax` rule (eslint.config.js) bans
  * inline JSXText AND user-facing attribute literals (aria-label / placeholder /
  * alt / title) in src/ui + src/intake, so a string cannot route around this
@@ -16,6 +22,12 @@
  * (the answer surface). Free numerals in catalog strings are what the copyGuard
  * scans against.
  */
+
+import { entryCopy } from './entryCopy'
+
+/** Re-exported so every importer of the R13 honest-limits strings keeps one import path; the strings live in
+ *  `entryCopy.ts` because the entry chunk's `Disclaimer` renders them. */
+export { staticDisclosures } from './entryCopy'
 
 /**
  * The ONE optimistic lean the conversion channel discloses — spoken by BOTH surfaces that
@@ -37,32 +49,10 @@ export const MEDICARE_PART_D_HOLD_CONSEQUENCE =
 
 /** The product voice catalog — copyGuard's enumeration surface (U7). */
 export const copy = {
-  appTitle: 'The Back Nine',
-  // --- PWA update toast (prompt mode — the user chooses when) ---
-  updateReady: 'A new version is ready — refresh whenever you’re done.',
-  updateReload: 'Refresh now',
-  updateLater: 'Later',
-  // The refused tap's reason (2026-09-03): the apply gate holds while a save is landing, the
-  // ceremony is between commit and backup, or typed work is unsaved (the leave-page guard). One
-  // line true on all three arms — "save first" is the remedy for each.
-  updateHeld: 'Not just yet — save what you’re working on first. The update can wait.',
-  // --- the cold-start frame (R1 as the product's face; one calm entry) ---
-  coldStartQuestion: 'Can we retire — and how do we do it best?',
-  coldStartOrientation:
-    'A quiet co-pilot for a married couple’s next chapter. About five minutes of questions, answered as honestly as the math.',
-  coldStartPreflight:
-    'Handy to have nearby: recent account statements, and a health-insurance quote for everyone under 65 in the household, at your ages and ZIP — the benchmark Silver figure and the premium of a plan you’d pick.',
-  coldStartBegin: 'Begin',
-  // The quiet returning-user door on the brand-new user's first screen: a WIPED/evicted device
-  // probes no-vault → ColdStart, so a saved backup is the only way back. Subordinate to Begin
-  // (R11 — invited, never a nag); the button label matches the restore surface's own heading.
-  coldStartRestorePrompt: 'Set this up before?',
-  coldStartRestoreAction: 'Restore from your backup',
+  // THE ENTRY SLICE — `appTitle`, the update toast, the cold start and its three quote links, the passphrase reveal
+  // toggle and the whole unlock screen — lives in `entryCopy.ts` and is composed in at the foot of this object.
   // --- external resource links (R36: we never fetch these — the user reads the number off the
   //     site and types it in; each opens in a NEW TAB so the unsaved in-progress intake survives) ---
-  linkGetQuote: 'Get a quote:',
-  linkHealthcareGov: 'healthcare.gov',
-  linkKffCalculator: 'KFF calculator',
   linkFindSsStatement: 'Find your statement at ssa.gov',
   // --- flow chrome ---
   flowBack: 'Back',
@@ -932,8 +922,7 @@ export const copy = {
     'This passphrase encrypts your plan on this device — you’ll type it each time you open it here. Next you’ll set a recovery word as your way back in.',
   passphraseLabel: 'Passphrase',
   passphraseConfirmLabel: 'Type it again',
-  passphraseShow: 'Show',
-  passphraseHide: 'Hide',
+  // `passphraseShow` / `passphraseHide` live in `entryCopy.ts`: the unlock screen, in the entry chunk, reads them too.
   // The meter-less floor feedback — names WHICH floor is unmet, as plain text (no red gauge).
   passphraseTooShort: 'A short word is quick to crack — a full phrase of a few words holds up far better.',
   passphraseTooWeak: 'This follows a common pattern — a few less-expected words make it much harder to guess.',
@@ -997,33 +986,7 @@ export const copy = {
   saveErrorBusy: 'Your plan is open in another tab. Close it there, then try again.',
   saveErrorFailed: 'Saving didn’t finish. Try again.',
 
-  // --- decrypt-on-return: the unlock screen ---
-  unlockHeading: 'Welcome back',
-  unlockIntro: 'Your saved plan is encrypted on this device. Enter your passphrase to open it.',
-  unlockLabel: 'Passphrase',
-  unlockButton: 'Open my plan',
-  unlockForgot: 'I forgot my passphrase',
-  restoringStatus: 'Opening your plan…',
-  // The honesty-critical error copy (keys match unlockCopy.ts UnlockCopyKey).
-  unlockWrongCredential:
-    'That didn’t open it. Check for typos and look-alike letters — a one and an l, a zero and an O. If you’re sure it’s right, the saved data may be damaged, and your backup is the way in.',
-  unlockDataDamaged:
-    'The saved plan on this device couldn’t be read — it looks damaged. Your backup file and recovery word are the way to restore it.',
-  unlockNewerVersion: 'This plan was saved by a newer version of the app. Update to the latest version, then open it.',
-  unlockNoVault: 'There’s no saved plan on this device yet.',
-  unlockOpenElsewhere: 'Your plan is already open in another tab. Close it there, then try again.',
-  // Read-only OPEN (the plan DID open; a second tab holds the writer). A calm standing
-  // status, never an alarm — and it steers to RELOAD, not "close the other tab" (this tab
-  // won't re-check until reloaded, so "close it there" would promise an edit it can't grant).
-  // Renders as the ViewOnlyBanner's icon+WORD+text (color-blind law): the lead carries the
-  // state word, so the body no longer repeats "view-only" mid-sentence.
-  unlockReadOnlyLead: 'View-only',
-  unlockReadOnly:
-    'Your plan is open in another tab, so changes here won’t be saved. Reload this page to make changes here.',
-  unlockGeneric: 'That didn’t work. Try again.',
-  // The (unreachable-by-construction) reload affordance if a just-unlocked model can't be re-opened
-  // onto the result — the vault is safe on disk; a reload re-runs the probe → unlock.
-  restoreRetry: 'Reload the page',
+  // --- decrypt-on-return: the unlock screen — the entry chunk renders it, so its words live in `entryCopy.ts` ---
 
   // --- the recovery path (forgot passphrase → recovery word → new passphrase) ---
   recoverHeading: 'Use your recovery word',
@@ -2475,6 +2438,10 @@ export const copy = {
   // The runner-up's one-tap-down toggle label (R23: retained + reachable). NOT control-scoped (a
   // disclosure TOGGLE, never a plan-moving claim — the claim itself is `recRunnerUpWhy`, hedged).
   recSeeRunnerUp: 'How the runner-up compared',
+  // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
+  // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
+  // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
+  ...entryCopy,
 } as const satisfies Record<string, string>
 
 export type CopyKey = keyof typeof copy
@@ -4192,17 +4159,3 @@ export const slots = {
    *  it ever speaks. */
   recommendRecordSavedIn: (year: number): string => `Saved in ${year}.`,
 } as const
-
-/**
- * Static disclosures — OUTSIDE the copyGuard's input by design (phase-2
- * cross-cutting #4 "surface-scoped"): the R13 honest-limits note is a mandatory
- * directive-shaped line ("validate … with a professional") that must stay legal
- * while imperative mood stays banned in verdict/recommendation copy. The U7
- * copyGuard enumerates `copy`, never this object.
- */
-export const staticDisclosures = {
-  honestLimitsScope:
-    'Informational and educational — not legal, tax, or investment advice.',
-  honestLimitsValidate:
-    'Validate big, irreversible moves with a professional.',
-} as const satisfies Record<string, string>

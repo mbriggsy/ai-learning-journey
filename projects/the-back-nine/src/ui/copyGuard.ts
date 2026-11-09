@@ -33,7 +33,7 @@
  * negator ("Nothing can stop this guaranteed income") — too exotic to separate from the honest
  * "No projection is ever guaranteed" by regex without re-flagging real disclaimers.
  *
- * `staticDisclosures` is OUTSIDE this gate's input by design (copy.ts): its R13 line is a mandatory
+ * `staticDisclosures` is OUTSIDE this gate's input by design (entryCopy.ts): its R13 line is a mandatory
  * directive ("Validate … with a professional") that must stay legal while imperative mood stays
  * banned in verdict copy. The test proves the exclusion meaningful ('validate' is in DIRECTIVE_VERBS).
  *

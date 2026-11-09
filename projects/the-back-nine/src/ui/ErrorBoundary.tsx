@@ -8,7 +8,7 @@
  * chunk fetch — is the honest remedy, framed calmly (never "damaged", never a stack trace).
  */
 import { Component, type ReactNode } from 'react'
-import { copy } from './copy'
+import { entryCopy } from './entryCopy'
 import './styles/save.css'
 
 interface State {
@@ -29,13 +29,13 @@ export class AppErrorBoundary extends Component<{ readonly children: ReactNode }
         <section className="save-step">
           {/* h1: the boundary replaces the ENTIRE tree (including the sr-only app-title h1), so
               this fallback is the whole document — it owns the top-level heading. */}
-          <h1 className="save-step__heading">{copy.appTitle}</h1>
+          <h1 className="save-step__heading">{entryCopy.appTitle}</h1>
           <p className="save-step__note" role="alert">
-            {copy.unlockGeneric}
+            {entryCopy.unlockGeneric}
           </p>
           <div className="save-actions">
             <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
-              {copy.restoreRetry}
+              {entryCopy.restoreRetry}
             </button>
           </div>
         </section>

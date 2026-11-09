@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { ColdStart } from '@intake/coldStart'
-import { copy } from './copy'
+import { entryCopy } from './entryCopy'
 import { UpdateToast } from './UpdateToast'
 import { Disclaimer } from './Disclaimer'
 import { UnlockScreen } from './UnlockScreen'
@@ -198,7 +198,7 @@ export function App({ seed, vaultSeed }: { seed?: string | null; vaultSeed?: str
 
   return (
     <AppErrorBoundary>
-      {showAppTitleH1 && <h1 className="sr-only">{copy.appTitle}</h1>}
+      {showAppTitleH1 && <h1 className="sr-only">{entryCopy.appTitle}</h1>}
       {/* The standing read-only notice (Fork C ii) — always mounted so the populate announces
           (burned/045); empty (zero footprint) on every writable path. */}
       <ViewOnlyBanner notice={entry.kind === 'began' ? entry.notice : null} />

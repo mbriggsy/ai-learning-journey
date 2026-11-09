@@ -75,7 +75,7 @@ refusal (`RothLever.tsx:54`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:580`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:3984`,
+attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:3951`,
 `FuckOffDate.tsx:152`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
@@ -103,7 +103,7 @@ attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `
   `bandClockSavedLabel` (`'Your save'`) + `bandClockSavedDesc` (*"When you saved this — ages A and B"*)
   at plan-year 0. On a **re-saver** (built last year, saved five minutes ago) that is **false**, and it
   contradicts the fresh "Saved to this device" badge on the same screen. The key is now
-  `bandClockBuiltLabel` — **`'Plan built'`** (`copy.ts:866`, rendered at `bandAnnotations.ts:169`) — with
+  `bandClockBuiltLabel` — **`'Plan built'`** (`copy.ts:856`, rendered at `bandAnnotations.ts:169`) — with
   `bandClockBuiltDesc` naming the BUILD year and the ages at that year. **Both renderers moved in the same
   change** (insight 086): the annotation arm and `twoFuturesChrome.ts:210-212`'s today-label, which picks
   the built label over `bandClockTodayLabel` exactly when the plan clock is positive.
@@ -154,7 +154,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
   `offsetHasPassed(year − startCalendarYear, yearsSincePlanBuilt)` (`RothLever.tsx:52-54`) — one strict
   compare covers both "before the build year" and "already passed", and no second comparator was
   authored. It renders through the R19 `FieldError` grammar with the earliest startable year QUOTED
-  (`errRothStartPast`, `RothLever.tsx:292`, joined `SlottedErrorKey` at `copy.ts:2542`). The fresh default
+  (`errRothStartPast`, `RothLever.tsx:292`, joined `SlottedErrorKey` at `copy.ts:2509`). The fresh default
   start seeds the WALL year (build + clock), so an aged vault never pre-fills the exact start the write
   side refuses.
 - **"Suppress when unanchored" was satisfied STRUCTURALLY, not by a dead arm.** `savedAnchor` is REQUIRED
@@ -209,7 +209,7 @@ literal tense regexes pin it now. Three mutants red → reverted.
    twin in `FuckOffDate`), so an aged projection with an unstated premise is unrepresentable. `onReconfirm`
    routes to the guided re-walk (`onReview`).
 5. **On a split, the crown names WHICH date** at the marker — `bandClockWorkStopsSplitLabel`,
-   *'Essentials date'* (`copy.ts:847`, selected at `bandAnnotations.ts:350`) — with its own a11y sentence.
+   *'Essentials date'* (`copy.ts:837`, selected at `bandAnnotations.ts:350`) — with its own a11y sentence.
    **§S2.5, ruled by the pilot at build:** the arrived idiom is the STRICT three-way split. Strictly-past
    speaks "come and gone" (`dateInYearsPast`, with `dateFloorCoveredPast` as its floor mirror);
    exactly-this-year speaks "about now" (`dateInYearsNow` / `dateFloorCoveredNow` — the old text kept at
@@ -367,7 +367,7 @@ backstop rather than a gate. The two non-writable states are detected separately
   `deriveResultSave(persist, ready, readOnly)` (`resultSave.ts:101`).
 
 `RecommendationSaveRefusal` is therefore the three-arm enum `'record-invalid' | 'write' | 'recovery-locked'`,
-each with its own heading and body (`copy.ts:2058-2067`). The recovery arm's name is deliberately **not**
+each with its own heading and body (`copy.ts:2021-2030`). The recovery arm's name is deliberately **not**
 `…Survivor…`: `copyGuard.ts`'s `isSurvivorKey` is a `/survivor/i` SUBSTRING net feeding `isMortalityKey`, so
 that spelling would have silently enrolled a plumbing key in the mortality-lexicon gate and made its guard
 arm pass for the wrong reason.
@@ -378,7 +378,7 @@ S3 built the whole substrate and S4 deliberately declined the copy; both created
 original thirteen lines could not name.
 
 **The copy register landed here, not in S4** (see S4 for why). It shipped as two families — the save
-GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:2029-2154` — modelled on
+GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:1992-2117` — modelled on
 `recommendStale{Heading,Body,ReopenCta}` and on `RecommendationSurface.tsx:378-385`'s render shape, the
 `role="status"` card with heading, body and re-open button. `recommendRecordReopenCost` names the re-open's
 cost the way the pending label does: *"This can take a few minutes."* Exactly one key in either family may
@@ -501,9 +501,9 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   fixed 2026-07-30/31 (the Roth door calling an executed conversion a typo, `d8f35d8c`; the lever refusal
   denying a date the same screen plots, `72d638d9`; the premise line contradicting its own axis,
   `d5e7b466`; and the band flip onto the lifestyle crown, `8d4d4e58`). A fifth followed: **Cards 6–7's
-  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:2143`
+  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:2106`
   now reads "It may no longer fit the two of you.", with a standing prohibition on ever restoring it at
-  `copy.ts:2114-2121`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:2106`).
+  `copy.ts:2077-2084`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:2069`).
   Card 1's two-odds collision remains open, as does the OTHER half of Cards 6–7 — naming the strategy on
   the holds face, Briggsy's own ruling, carried in the register as "The saved-record card does not name
   the strategy".
@@ -529,7 +529,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts:745-751`, `copy.ts:4148` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts:745-751`, `copy.ts:4115` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

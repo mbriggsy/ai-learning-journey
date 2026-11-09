@@ -26,7 +26,7 @@
  * the decision — and handed up as the notice key App's standing ViewOnlyBanner renders (Fork C ii).
  */
 import { useEffect, useId, useRef, useState } from 'react'
-import { copy } from './copy'
+import { entryCopy } from './entryCopy'
 import './styles/save.css'
 import { useLiveAnnouncer, focusHeading } from '@intake/a11y'
 import { PendingPanel } from './PendingPanel'
@@ -71,7 +71,7 @@ export function UnlockScreen({
     if (busy || passphrase === '') return
     setBusy(true)
     setErrorKey(null)
-    announcer.announce(copy.restoringStatus)
+    announcer.announce(entryCopy.restoringStatus)
     try {
       const { getVaultSession } = await import('./vaultSession')
       const session = await getVaultSession()
@@ -86,7 +86,7 @@ export function UnlockScreen({
       const message = describeUnlockFailure(result)
       if (message.kind === 'plain') {
         setErrorKey(message.key)
-        announcer.announce(copy[message.key])
+        announcer.announce(entryCopy[message.key])
       }
       setBusy(false)
     } catch {
@@ -94,7 +94,7 @@ export function UnlockScreen({
       // rather than crash the entry surface. Never label an internal bug "data damaged" (the scariest
       // calm-but-wrong direction).
       setErrorKey('unlockGeneric')
-      announcer.announce(copy.unlockGeneric)
+      announcer.announce(entryCopy.unlockGeneric)
       setBusy(false)
     }
   }
@@ -103,17 +103,17 @@ export function UnlockScreen({
     <main className="save">
       <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
       {busy ? (
-        <PendingPanel status={copy.restoringStatus} />
+        <PendingPanel status={entryCopy.restoringStatus} />
       ) : (
         <section className="save-step">
           <h2 className="save-step__heading" tabIndex={-1} ref={headingRef}>
-            {copy.unlockHeading}
+            {entryCopy.unlockHeading}
           </h2>
-          <p className="save-step__intro">{copy.unlockIntro}</p>
+          <p className="save-step__intro">{entryCopy.unlockIntro}</p>
 
           <div className="save-field">
             <label className="save-field__label" htmlFor={passId}>
-              {copy.unlockLabel}
+              {entryCopy.unlockLabel}
             </label>
             <div className="save-field__row">
               <input
@@ -142,12 +142,12 @@ export function UnlockScreen({
                 aria-pressed={reveal}
                 onClick={() => setReveal((r) => !r)}
               >
-                {reveal ? copy.passphraseHide : copy.passphraseShow}
+                {reveal ? entryCopy.passphraseHide : entryCopy.passphraseShow}
               </button>
             </div>
             {errorKey !== null && (
               <p className="save-field__note" id={errId} role="alert">
-                {copy[errorKey]}
+                {entryCopy[errorKey]}
               </p>
             )}
           </div>
@@ -159,11 +159,11 @@ export function UnlockScreen({
               aria-disabled={passphrase === ''}
               onClick={() => void handleUnlock()}
             >
-              {copy.unlockButton}
+              {entryCopy.unlockButton}
             </button>
             {onForgot && (
               <button type="button" className="btn-quiet" onClick={onForgot}>
-                {copy.unlockForgot}
+                {entryCopy.unlockForgot}
               </button>
             )}
           </div>

@@ -13,7 +13,7 @@
  * mark is decorative), and the steer is RELOAD, never "close the other tab" (which would
  * promise an edit this tab can't grant without re-running the writer probe).
  */
-import { copy } from './copy'
+import { entryCopy } from './entryCopy'
 import type { UnlockCopyKey } from './unlockCopy'
 
 export function ViewOnlyBanner({ notice }: { readonly notice: UnlockCopyKey | null }) {
@@ -23,8 +23,8 @@ export function ViewOnlyBanner({ notice }: { readonly notice: UnlockCopyKey | nu
         <p className="view-only-banner__inner">
           <span className="view-only-banner__mark" aria-hidden="true" />
           <span className="view-only-banner__body">
-            <strong className="view-only-banner__lead">{copy.unlockReadOnlyLead}</strong>{' '}
-            {copy[notice]}
+            <strong className="view-only-banner__lead">{entryCopy.unlockReadOnlyLead}</strong>{' '}
+            {entryCopy[notice]}
           </span>
         </p>
       )}

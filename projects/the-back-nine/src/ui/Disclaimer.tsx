@@ -1,4 +1,4 @@
-import { staticDisclosures } from './copy'
+import { staticDisclosures } from './entryCopy'
 
 /** The in-frame mount's element id — the verdict elements name it in `aria-describedby`, so the
  *  screen-reader reads the caveat as the verdict's own description (council 2026-09-10). */
@@ -9,8 +9,9 @@ export const IN_FRAME_DISCLAIMER_ID = 'r13-caveat'
  * input (P2·U7). A mandatory directive-shaped line ("validate ... with a
  * professional") must stay legal even though imperative mood is forbidden in the
  * confidence/recommendation verdicts. Kept on honesty grounds, not as a Terms
- * requirement (R13 reset). The strings live in copy.ts's `staticDisclosures`
- * (the guard-exempt export) so the no-inline-copy lint holds file-wide. The two
+ * requirement (R13 reset). The strings live in `staticDisclosures` (the guard-exempt
+ * export), in `entryCopy.ts` because the App mount ships in the entry chunk (copy.ts
+ * re-exports it), so the no-inline-copy lint holds file-wide. The two
  * sentences render on their own lines (scope, then the validate directive).
  *
  * TWO MOUNTS, ONE VISIBLE (council 2026-07-08, wf_a2d93977-960 — the Hawk's veto):

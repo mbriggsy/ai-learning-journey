@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
-import { copy } from './copy'
+import { entryCopy } from './entryCopy'
 import { readyToApplyUpdate } from './updateGate'
 
 /**
@@ -66,9 +66,9 @@ export function UpdateToast() {
     <div className="update-toast" role="status" aria-live="polite">
       {needRefresh && (
         <>
-          <span className="update-toast__text">{held ? copy.updateHeld : copy.updateReady}</span>
+          <span className="update-toast__text">{held ? entryCopy.updateHeld : entryCopy.updateReady}</span>
           <button type="button" className="update-toast__action" onClick={apply}>
-            {copy.updateReload}
+            {entryCopy.updateReload}
           </button>
           <button
             type="button"
@@ -78,7 +78,7 @@ export function UpdateToast() {
               setNeedRefresh(false)
             }}
           >
-            {copy.updateLater}
+            {entryCopy.updateLater}
           </button>
         </>
       )}

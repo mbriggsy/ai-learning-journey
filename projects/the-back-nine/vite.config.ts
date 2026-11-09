@@ -2,6 +2,7 @@ import { defineConfig, configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import basicSsl from '@vitejs/plugin-basic-ssl'
+import { entryChunkGuard } from './scripts/entryChunkGuard'
 
 // Vite 8 / Rolldown convention (mirrors projects/burned): `rolldownOptions`, not
 // `rollupOptions`; `resolve.tsconfigPaths` (native, no vite-tsconfig-paths plugin);
@@ -20,6 +21,9 @@ export default defineConfig(({ mode }) => ({
     // every other mode byte-identical.
     ...(mode === 'phone' ? [basicSsl()] : []),
     react(),
+    // `vite build` only: refuses a module that must never ship in the first-load JS (the copy catalog — the
+    // entry graph reads `src/ui/entryCopy.ts` instead). Names the module and the fix; scripts/entryChunkGuard.ts.
+    entryChunkGuard(),
     VitePWA({
       // 'prompt', NOT 'autoUpdate': autoUpdate's skipWaiting+clientsClaim can reload
       // a tab mid-encrypt-write and tear an IndexedDB write (U4). The update is

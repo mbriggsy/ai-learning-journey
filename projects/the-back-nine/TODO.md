@@ -22,7 +22,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-09, b9-6 BUILT walk 4's fix round from council `wf_7fa86902-35c` (the commit after `09459571`: one string per host, the run-in labels, the act keyed on `heldYesBelowQuote`, the definition beside the door; 17 mutants killed, R10 `walk4` 42/42) — next is WALK 5 on it, then U12 carrying U11's figures and the filings (ag)–(ay) and walk 4's, then the whole-file review and `/distill` — item 1, Phase C; rewritten by b9-5 — walked walk 4 on b9-4's round (the card HARD-FLAG, top of `docs/caddie/cold-read-log.md`) and took its form question to council `wf_7fa86902-35c` (7/10, execute: one string with run-in labels, a per-arm lead, "update your figure" on the risen arms; the retype hole filed Tier 0); rewritten by b9-4 — walk 3 and its round (as)–(aw)(b), `98b5ad17`; rewritten by b9-3 — walk 2 and its round (am)–(ao), `f028f33f`; rewritten by b9-2 — the walk's fix (ae), `c6b15120`; rewritten by b9-5 — walked U11's Caddie record, `c10339b0`, the card HARD-FLAG; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
+▶ **START HERE (2026-11-09, b9-7 WALKED walk 5 on council `wf_7fa86902-35c`'s round (`3157a6da`; the card HARD-FLAG at the top of `docs/caddie/cold-read-log.md`: the run-in labels vanish as plain words and read clinical, "This answer adds none of it" reads as a bug for want of a reason, the gate names buttons it doesn't draw, and the copy now points at the filed Tier 0 retype) — next is WALK 5's FIX ROUND (bh)–(bq) with the Tier 0 retype entry's note, its exact changes in item 1, Phase C, under "▶ NEXT", then walk 6, then U12 carrying U11's figures and the filings (ag)–(ay) and walks 4–5's, then the whole-file review and `/distill` — item 1, Phase C; rewritten by b9-6 — BUILT walk 4's fix round from council `wf_7fa86902-35c` (`3157a6da`: one string per host, the run-in labels, the act keyed on `heldYesBelowQuote`, the definition beside the door; 17 mutants killed, R10 `walk4` 42/42); rewritten by b9-5 — walked walk 4 on b9-4's round (the card HARD-FLAG, top of `docs/caddie/cold-read-log.md`) and took its form question to council `wf_7fa86902-35c` (7/10, execute: one string with run-in labels, a per-arm lead, "update your figure" on the risen arms; the retype hole filed Tier 0); rewritten by b9-4 — walk 3 and its round (as)–(aw)(b), `98b5ad17`; rewritten by b9-3 — walk 2 and its round (am)–(ao), `f028f33f`; rewritten by b9-2 — the walk's fix (ae), `c6b15120`; rewritten by b9-5 — walked U11's Caddie record, `c10339b0`, the card HARD-FLAG; rewritten by b9-4 — U10 committed and U11's measurement half verified; rewritten by b9-1 — the go-live is COMMITTED, `a9cacf22`; rewritten before by b9-6 — build 2 is PLANNED, deepened and checked, `ec2c7694`; b9-7 ran U1 and U2, b9-8 U3, U4 and U15, b9-1 the Phase A engine review, b9-2 U5, b9-3 U13, b9-4 BUILT the go-live, b9-5 tested and reviewed it, b9-6 (2026-11-05) settled the suite's timeouts, ran the mutant pass and the gates, and walked it (HARD-FLAG, its fixes in the tree), still uncommitted — item 1).** The schema-v4 job
 closed in b9-4 (its record is below, under the durable records). U10's Caddie card stays
 **HARD-FLAG** on its two builds (filed Tier 1, Tier 0 since 2026-10-31). **The ranking pass is DONE (b9-5, 2026-10-31):** the tier
 ladder (council `wf_ed0bbb05-1f1`) walked every open Tier 1–4 entry — six readers, then a refuter on each proposed move — and moved 24
@@ -238,16 +238,95 @@ queue below (its order unmoved). Next, in order:
      suite 5068/5068 after the re-anchor; `verify:fit`'s touched arms (see the session block); the build spec's R12
      carries the amendment. Ordering owned: the composer was written before its typed-by-hand test (the tests were
      typed from the prescription, never read off the code; the mutants are the proof they bite).
-     ▶ NEXT: **walk 5** on the round (`/caddie`; the harness's witnesses are updated in `e2e/caddie-walk.spec.ts`,
-     typechecked, not yet run): the nine targets and walk 4's panel shape, every seat writing its report to a file
-     (walk 4's record, `b9-build2-surplus\u11-walk4\panel\`, holds the briefs to copy). It judges: the labels as
-     STRUCTURE (did density fall? the council's yours-to-close: calm or clinical); "update" (the council's flip
-     condition: read as "your figure was wrong, raise it", or as overriding their own number — D7); the definition
-     beside the door (does "if a working year also costs you health premiums or a tax on pay the tool doesn’t work out"
-     steer the risen couples off a bare "Yes"?); C's gain years ("Those are 2026 through 2028, and any working year
-     from 2033 on"); the fallen arm's premise ("it already uses about $78,000"); B's lead first. Price it before seating
-     it: walk 4 cost about 2 weekly points with its council; the weekly meter was 79% at 08:24Z (resets 2026-11-11
-     14:00Z).
+     **Walk 5 DONE (b9-7, 2026-11-09):** the card is at the top of `docs/caddie/cold-read-log.md` (HARD-FLAG, held as
+     walk 4 left it, with (bm) and (bk) beside the holds; tape row open), bundle `temp/caddie/caddie-u11-b9-7-walk5`
+     (18/18 in 4.1 m pinned; `3157a6da`'s harness witnesses all held on their first run; 7 fresh Opus xhigh seats
+     probed after their first answers locked, then 10 refuters; about 1 weekly point, 80% → 81%). The record, every
+     seat's brief and probe included this time: `b9-build2-surplus\u11-walk5\panel\` (`briefs\`, `FACTS.md`,
+     `REFUTER-BRIEF.md`). Its six answers: (1) the labels as structure NOT MET, and CLINICAL 5 of 5 (mid-line, body
+     weight, a capital after the colon, a wrap splitting "This / answer now:"; once told, all four said the split is
+     useful: E2, a form defect); (2) "update" read as "your figure was wrong, raise it" by every risen reader — the
+     council's flip condition's second half is MET, its first half (the typed-below-spending note) ships in the round
+     below, and the refuter rates the steer honest (rule 8: today's spending already exceeds $84,000), so the verb
+     goes to Briggsy with the pilot's recommendation to keep "update" (the council marked it his); (3) the definition
+     PARTLY (the premium cue lands, but "Yes" comes first, "doesn't work out" reads as "doesn't work", the gate names
+     buttons it doesn't draw, and S's has no condition); (4) C's gain years MET; (5) the fallen premise MET on S, and
+     A, B, C lack it; (6) B's lead first MET (the dissent's direction-last not borne out), but B says it three times.
+     ▶ NEXT: **walk 5's fix round, (bh)–(bq) with the Tier 0 retype entry's prescription (1), test-first, then walk
+     6.** Load `back-nine-design` (and `web-design-guidelines` for the review) before touching the hosts. Words are
+     the refuters' (each report in `u11-walk5\panel\`); every one keeps the council's order, adds no threshold and no
+     direction on A or S. Exact changes:
+     - **(bi) the labels as structure** (form only, one `<p>`, no word changed): `workingYearCostStaleLine`
+       (`src/intake/workingYearLeftOver.ts:337`) returns its parts instead of one joined string — the opening (note +
+       lead), the "This answer now:" sentences, the "If a working year costs $X:" sentences (risen arms), with the
+       door's sentences from `workingYearCostStaleDoor` — and every host draws one `<p>`: the opening; a `<br>`, then
+       the label in a `<strong>` (the body's semibold, same size and ink, never color) and its sentences; the same for
+       the second label; a `<br>`, then the door's sentences unlabelled in normal weight (on the Result, then the
+       button). Hosts: `src/ui/FuckOffDate.tsx:488-495` (`payCheckNote.text`), `src/ui/Result.tsx:284-287` and
+       `:732-733`, `src/ui/reentryChrome.ts:234-249` with `src/ui/ReEntry.tsx:79-82` (the gate's `noteLines` is a
+       `string[]` keyed by its text: give the W line a structured entry, its key the joined text), `src/ui/IntakeApp.tsx:664-669`.
+       Pins: the part order per arm (`workingYearLeftOver.test.ts`), each label in a `<strong>` after a `<br>` per
+       host (`resultPayCheckLine.test.tsx`, `reentry.test.tsx`, `IntakeApp.test.tsx`); `verify:fit` on the gate and
+       Result arms (B's laptop Result has about 90 px under the paragraph).
+     - **(bl)** `slots.workingCostStaleAfterWork` (`src/ui/copy.ts:3034`) → "Once you’ve both stopped working, it already
+       uses your spending of $X a year." ("about" dropped), and it rides the risen arms too, first under "This answer
+       now:" (today `workingYearLeftOver.ts:345` builds it only where `!s.rose`; keep the `quoteMoved` guard, so a
+       state-only move stays without it).
+     - **(bh)** `copy.workingCostStaleLeftOverNone` (`copy.ts:595`) becomes a slot in the act's verb
+       (`WORKING_COST_ACT_COPY`): "Because that $16,985 depends on your $84,000 figure, this answer adds none of it to
+       your savings until you update your figure." (S: "…until you confirm or change your figure.").
+     - **(bm), the wording half:** `slots.workingCostStaleLeftOverIfCapped` / `IfWhole` (`copy.ts:3047-3056`), second
+       sentence → "Since a working year almost always costs at least what you spend, updating your figure to $90,000 or
+       more adds at most $10,985 a year to your savings." (the reach clause as now). Not on B (its sentence below says
+       "adds none"; the note closes B's retype).
+     - **(bp)** `stillAddsNone` (B, first-short and first-none) → "Updating your figure to $105,000 or more adds none of
+       the $16,985 you had left over at $84,000, because your first working year, 2026, comes up short at that cost."
+       (first-none: "…has nothing left over at that cost."). "Can look better" stays in B's lead.
+     - **(bo)** B: `workingCostStaleLeftOverIfFirstShortRun` / `IfFirstShort` fold "Your $84,000 figure makes those years
+       look cheaper." into the run sentence ("Each working year from 2026 through 2032 comes up $3,652 to $4,015 short,
+       and your $84,000 figure makes those years look cheaper."), then the shortfall sentence. The note's counterweight
+       stays as it is (the line must begin with the W surfaces' own note: THE GUARDS test). C's close
+       (`workingCostStaleShortLaterYear(s)`, `copy.ts:3110-3119`) → "Your $84,000 figure makes those years look cheaper,
+       so in those years this answer can look better than it really is."
+     - **(bq)** the same two slots: "If you’re still working from 2029 through 2032, each of those years comes up…" →
+       "Each working year from 2029 through 2032 comes up $3,652 to $4,015 short." (one year: "The working year 2029
+       comes up $4,015 short."). It closes (aw)(a) on C.
+     - **(bj)** the gate's door moves BEFORE the definition: `stalenessPayCheckGateDoorUpdate` (`copy.ts:1909`) → "Neither
+       button on this page updates your $84,000 figure; both lead to where you can. After “Still about right — show my
+       answer”, press “Update your figure for a working year” on your answer; “Something’s changed — update them” asks
+       it among its questions." (S, `stalenessPayCheckGateDoor`: "confirms or changes", "Confirm or change your figure"),
+       then the definition opens "There, …" (`reentryChrome.ts:240-246`'s order flips; verify the update route really
+       asks W before writing "asks it among its questions"). The Result's definition opens "To update it, press “Update
+       your figure for a working year” below. There, …" (S: "Confirm or change your figure").
+     - **(bk)** `workingCostStaleDefineUpdate` (`copy.ts:3129`) → "If a working year also costs you health premiums, even
+       ones taken out of a paycheck, or a local or state tax or a state disability or family-leave deduction taken from
+       pay, choose “No — I’ll enter a different figure” and enter $90,000 plus those costs, since the tool counts them in
+       a working year only if you add them. If not, choose “Yes, that’s about right” to use $90,000 a year." ("or state"
+       only where the W help shows its unpriced-state line). `workingCostStaleDefineConfirm` (S) → "Your figure for a
+       working year should also hold any health premiums you pay, even ones taken out of a paycheck, and any local or
+       state tax or state disability or family-leave deduction taken from pay, since the tool counts them in a working
+       year only if you add them. To confirm or change it, choose “Keep $84,000 a year” only if $84,000 covers your
+       spending plus those costs, “Yes, that’s about right” to use $78,000 a year only if you have none of them, or “No —
+       I’ll enter a different figure” to enter $78,000 plus them." Labels from the catalog as today.
+     - **(bn)** the sheet's two "checked" lines, `copy.assumptionWorkingYearCheckLeftOverWaiting` (`copy.ts:1775`) and
+       `copy.workingLedgerLeftOverWaiting` (`copy.ts:566`), in the act's verb with the reader acting: "Until you update
+       your figure for a working year, no money left over is added to your savings." / "This question waits until you
+       update your figure for a working year, above. Until then, no money left over is added to your savings." (S and
+       the kept state-only arm: "confirm or change"). Read their call sites first: where W was never answered (not
+       stale), they need a third form ("until you answer the question about a working year, above").
+     - **(bm), the closing half — the Tier 0 entry *A figure typed below today's spending clears W's stale line for
+       good…*, prescription (1):** the calm, non-blocking note under the W row and on the W step wherever a TYPED W sits
+       below today's spending ("Your $84,000 a year is below your spending figure of $90,000 a year. A working year
+       almost always costs at least what you spend, so this answer can look better than it really is."), pinned on
+       `datesavedrisen` with 84,000 typed; and the sheet's question names its figure where a quote exists ("Is $90,000 a
+       year about what a year costs while you’re working?", copy-law F8). This completes the council's flip condition;
+       the verb stays "update" unless Briggsy rules "check" (then swap it in `WORKING_COST_ACT_COPY`, its one home).
+     Then: mutants predicted in writing first; R10 `sweep.mts walk5 --today=20758`, `idcheck.mjs walk5 walk4` (copy and
+     UI only, so 42/42 predicted); the suite pinned; `verify:fit`'s touched arms; `pnpm doc:reanchor <base> --apply`
+     once, last; then **walk 6** (`/caddie`, the same nine targets, walk 5's briefs in `u11-walk5\panel\briefs\`), whose
+     questions are: do the labels now read as parts, calm or clinical; does the reason end "a bug?"; does anyone still
+     reach for the retype; does the gate's door sentence send anyone to the green button as "Yes"; and is the paragraph,
+     with its reasons added, lighter or only longer (walk 4's distill candidate: if only longer, the council again).
      **Filed by walk 4 for U12** (the rest of its findings are the fix round's): (bg) "plus any income tax on taking it
      out" reads as maybe none (low; "plus income tax on what comes out of pre-tax accounts", still true under a Roth-first
      order); (al)'s rise arm RAISED to high (the dated figure does not explain a change the page never names: name the

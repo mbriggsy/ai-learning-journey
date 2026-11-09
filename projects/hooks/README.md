@@ -1,6 +1,6 @@
 # Hooks
 
-**Status: active.** Two hook scripts: the session-start manifesto (with its config-liveness check) and the WebFetch blocker. `~/.claude/settings.json` also carries an inline Notification hook (a Windows message box when Claude needs attention) that has no script here.
+**Status: active.** Two hook scripts: the session-start manifesto (with its config-liveness check) and the WebFetch blocker. `~/.claude/settings.json` also carries an inline Notification hook (a Windows message box when Claude needs attention) that has no script here, and PostToolBatch and UserPromptSubmit hooks running the context-window watcher, whose script lives with the window skill it enforces: [`projects/skills/window/context-watch.mjs`](../skills/window/README.md#the-watcher-lines-announce-themselves).
 
 ### Claude Code SessionStart & PreToolUse Hooks
 
@@ -16,7 +16,7 @@ Small scripts Claude Code runs by itself at set moments: one loads the Elite Eng
 
 Discovered through testing. The first was filed as [anthropics/claude-code#42250](https://github.com/anthropics/claude-code/issues/42250).
 
-1. **Hook output reaches the model on more events than #42250 said.** That issue (2026-04) found only error-path output (`{"decision":"block"}`, or stderr with exit 2) delivered. Since then: SessionStart's `additionalContext` delivers (transcripts carry it as a `hook_additional_context` attachment); PreToolUse can return `additionalContext` (Claude Code 2.1.9); Stop and SubagentStop can return it to give Claude feedback and keep the turn going (2.1.163); and a probe measured it reaching the model on PostToolUse and Stop ([playbook insight 003](../../playbook/docs/insights/003-a-rule-about-the-platform-is-a-map-until-a-run-measures-it-whoever-wrote-it-a-verdict-holds-only-for-its-bytes.md)).
+1. **Hook output reaches the model on more events than #42250 said.** That issue (2026-04) found only error-path output (`{"decision":"block"}`, or stderr with exit 2) delivered. Since then: SessionStart's `additionalContext` delivers (transcripts carry it as a `hook_additional_context` attachment); PreToolUse can return `additionalContext` (Claude Code 2.1.9); Stop and SubagentStop can return it to give Claude feedback and keep the turn going (2.1.163); a probe measured it reaching the model on PostToolUse and Stop ([playbook insight 003](../../playbook/docs/insights/003-a-rule-about-the-platform-is-a-map-until-a-run-measures-it-whoever-wrote-it-a-verdict-holds-only-for-its-bytes.md)); and 2026-11-09 headless probes measured `additionalContext` from PostToolBatch (once per batch) and UserPromptSubmit (with the prompt) reaching the model, quoted back word for word, each logged as a `hook_additional_context` attachment row ([window README](../skills/window/README.md#the-watcher-lines-announce-themselves)).
 2. **A PostToolUse block delivers without undoing the tool result.**
 3. **PreToolUse hooks don't fire on user slash commands**, only on Claude's own tool calls. PostToolUse and Stop hooks fire in both cases.
 4. **A `Skill` hook sees the skill name in `.tool_input.skill`**: exactly the string passed to the Skill tool, a plugin skill as `<plugin>:<skill>` (e.g. `compound-engineering:ce-code-review`), a `~/.claude/skills` or project skill bare (e.g. `ultramode-code-review`). A case-arm name that is not in the installed roster never matches and never says so; `check-config-liveness.mjs` exists to say so.
@@ -88,12 +88,20 @@ Scripts deployed at `~/.claude/hooks/`. The Elite Engineer manifesto deploys alo
     "PreToolUse": [
       { "matcher": "WebFetch", "hooks": [{ "type": "command", "command": "bash ~/.claude/hooks/block-webfetch.sh", "onFailure": "block" }] }
     ],
+    "PostToolBatch": [
+      { "hooks": [{ "type": "command", "command": "node ~/.claude/skills/window/context-watch.mjs", "timeout": 10 }] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "node ~/.claude/skills/window/context-watch.mjs", "timeout": 10 }] }
+    ],
     "Notification": [
       { "matcher": "", "hooks": [{ "type": "command", "command": "powershell.exe -Command \"[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms'); [System.Windows.Forms.MessageBox]::Show('Claude Code needs your attention', 'Claude Code')\"" }] }
     ]
   }
 }
 ```
+
+The PostToolBatch and UserPromptSubmit entries run the context-window watcher, whose script lives in `projects/skills/window/` and reaches `~/.claude/skills/window/` through the junction, not `~/.claude/hooks/`.
 
 This project folder is source control. The deployed copies at `~/.claude/hooks/` (and the manifesto at `~/.claude/manifesto/`) are the live versions.
 

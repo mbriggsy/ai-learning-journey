@@ -1,0 +1,36 @@
+name: Verify the window skill
+
+# The tests of the window skill (projects/skills/window/): the window law and its one line
+# (core.mjs), the backward read of a transcript at every chunk size, and the context-watch hook
+# that announces a line crossing on its own. No test reads ~/.claude or starts claude; each
+# builds its own transcripts in a temp folder. The ultramode-plan tests that parse window.mjs's
+# line run in verify-ultramode-plan.yml, whose path filter includes this folder. Plain Node, no
+# install step.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'projects/skills/window/**'
+      - '.github/workflows/verify-window.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      # Quoted, so Node expands the glob itself; a bare folder argument fails on Node 24. The TAP
+      # report is kept for the next step; `shell: bash` runs with pipefail, so a failing test
+      # still fails this step through the pipe.
+      - shell: bash
+        run: node --test --test-reporter=tap "projects/skills/window/**/*.test.mjs" | tee tap.txt
+      # A quoted glob matching nothing exits 0 with no test run, and a skipped or todo test
+      # passes whatever it finds, so each fails here.
+      - shell: bash
+        run: |
+          if grep -E '# (SKIP|TODO)' tap.txt; then echo "A test was skipped or marked todo: that counts as a failure."; exit 1; fi
+          if ! grep -qE '^# pass [1-9]' tap.txt; then echo "No test passed: the glob found no test file."; exit 1; fi

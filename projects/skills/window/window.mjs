@@ -8,47 +8,28 @@
 // size. Matches /context within ~2 points (the drift is a few messages of
 // conversation between the two reads). See reference-context-window-check.
 
-import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
+import { readdirSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { homedir } from "node:os";
-
-// THE STANDING WINDOW LAW (% of the 1M window): Briggsy set the 60% stop on
-// 2026-07-12 and added the 40/50 checkpoints on 2026-09-08 (memory
-// user_context_window_1m.md). THIS FILE IS THE SINGLE SOURCE of the three
-// numbers; every doc that states them cites these constants. A law change
-// edits here first, then greps every method file for the OLD value.
-const WARN = 40; // say so out loud; shape the remaining work toward a clean milestone
-const NO_FANOUT = 50; // no new fan-outs that cannot finish inside the remaining budget
-const WRAP = 60; // wrap to a milestone, write the TODO, start a fresh terminal
+// The window law (the WARN / NO_FANOUT / WRAP numbers and the line's wording)
+// and the backward read of a transcript live in core.mjs, shared with the
+// context-watch hook so the two can never disagree.
+import { contextLine, liveTotal, readLatest, TEST_LABEL } from "./core.mjs";
 
 function line(msg, code = 0) {
   console.log(msg);
   process.exit(code);
 }
 
-// The tail of the one line. `pct` is the DISPLAYED value (rounded to 0.1), so
-// the tier always agrees with the number printed beside it: 39.96% prints as
-// 40.0% and reads as past the warn line, never as "plenty of room".
-function headroomRead(pct) {
-  const toWrap = `${(WRAP - pct).toFixed(1)}% to the ${WRAP}% wrap line`;
-  if (pct >= WRAP) return `past the ${WRAP}% wrap line — wrap up and start a fresh terminal`;
-  if (pct >= NO_FANOUT) return `past ${NO_FANOUT}% — no new fan-outs; ${toWrap}`;
-  if (pct >= WARN) return `past the ${WARN}% warn line — steer toward a clean milestone; ${toWrap}`;
-  return "plenty of room";
-}
-
 function report(total, label = "Context") {
-  const pct = Math.round((total / 1_000_000) * 1000) / 10;
-  line(`${label}: ${total.toLocaleString()} / 1M = ${pct.toFixed(1)}% — ${headroomRead(pct)}`);
+  line(contextLine(total, label));
 }
 
 // Test hook: WINDOW_TEST_TOKENS=<non-negative integer> skips the transcript
 // read and reports that token total through the same formatting path, so every
 // tier can be exercised without a live session at that size. Any other value
 // fails loudly (exit 1) instead of silently reporting the real session. The
-// test line is LABELED as such, so a stray variable (a settings.json env block,
-// a shell profile) can never pass a made-up number off as a live read.
-const TEST_LABEL = "Context (TEST — WINDOW_TEST_TOKENS is set, not a live read)";
+// test line is LABELED as such (core.mjs TEST_LABEL).
 const testTokens = process.env.WINDOW_TEST_TOKENS;
 if (testTokens !== undefined) {
   if (!/^\d+$/.test(testTokens)) {
@@ -122,32 +103,9 @@ function compactedLine(entry) {
   return `Context: compacted${age}${sizes} — no live read since; ask again after one more step.`;
 }
 
-const lines = readFileSync(transcript, "utf8").split("\n");
-let usage = null;
-let compacted = null;
-for (let i = lines.length - 1; i >= 0; i--) {
-  if (!lines[i].trim()) continue;
-  try {
-    const entry = JSON.parse(lines[i]);
-    if (entry.type === "system" && entry.subtype === "compact_boundary") {
-      compacted = entry;
-      break;
-    }
-    const u = (entry.message || {}).usage;
-    if (u && (u.input_tokens || u.cache_read_input_tokens || u.cache_creation_input_tokens)) {
-      usage = u;
-      break;
-    }
-  } catch {
-    /* skip non-JSON / partial lines */
-  }
-}
+// The newest usage or compact_boundary, read backward from the end (core.mjs).
+const { usage, compacted } = readLatest(transcript);
 if (compacted) line(compactedLine(compacted));
 if (!usage) line("Context: no usage data in the active session yet.");
 
-report(
-  (usage.input_tokens || 0) +
-    (usage.cache_read_input_tokens || 0) +
-    (usage.cache_creation_input_tokens || 0),
-  label,
-);
+report(liveTotal(usage), label);

@@ -87,6 +87,9 @@ import { KNOWN_SEATS, SEATS_WITHOUT_CE, changedInPlace, checkResolution, inlineS
 
 export const RECORD = "ultramode-plan-run.json";
 const KIND = "ultramode-plan-run";
+// The id the deepen script gives a premise finding (src/deepen.src.js: premise-1, premise-2, ...):
+// a deepen whose landed fold holds only these may still advance "passed" (R4-31's carried findings).
+export const PREMISE_ID = /^premise-[1-9][0-9]*$/;
 const VERSION = 1;
 const STAGED = "plan.md";
 const WORKING = "plan.working.md";
@@ -1071,8 +1074,13 @@ export function advance(rec, input, { cwd = process.cwd() } = {}) {
   if (unswept.length) fail(`step ${step.n}'s launch ${unswept.join(", ")} has not been swept: run complete for it first`);
   if (step.stage === "write" && step.target === null) fail("the write has not landed a staged plan (fold-land)");
   if (step.stage === "deepen") {
-    // A landed fold deepened sections, so an outcome that deepened nothing contradicts it.
-    if (step.target !== null && ["passed", "park", "premise-goal"].includes(input.outcome)) fail(`step ${step.n}'s fold landed, so its outcome cannot be ${input.outcome}`);
+    // A landed fold deepened sections, so an outcome that deepened nothing contradicts it; the one
+    // exception is a passed deepen's fold of its carried premise findings alone (R4-31: the deepen
+    // returns the ones its voters put below or across the P1 line, and the main loop folds them in
+    // the deepen's fold even when no section was selected). A park passes its carried findings to
+    // the relaunch instead, and a premise send-back's write folds them, so neither folds here.
+    const carriedOnly = step.target !== null && Array.isArray(step.ledger) && step.ledger.length > 0 && step.ledger.every((id) => PREMISE_ID.test(id));
+    if (step.target !== null && ["passed", "park", "premise-goal"].includes(input.outcome) && !(input.outcome === "passed" && carriedOnly)) fail(`step ${step.n}'s fold landed, so its outcome cannot be ${input.outcome}${input.outcome === "passed" ? " (a passed deepen folds its carried premise findings alone, ids premise-N)" : ""}`);
     // The check's lenses are picked from the deepen's risk profile (KTD5, KTD6), so a deepen that
     // scored the plan has its own before its outcome counts.
     if (["passed", "park", "deepened"].includes(input.outcome) && !step.risk) fail(`step ${step.n}'s deepen scored the plan: note risk (its risk profile) before its outcome, since the check's lenses are picked from it (KTD5, KTD6)`);

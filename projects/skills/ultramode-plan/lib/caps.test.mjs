@@ -75,6 +75,14 @@ test("an amendment call can say outside research ran, in a field of its own afte
   assert.match(SIZE_LAWS.amendment, /outside_ran: an external researcher's only, true when a web search ran and every page cited as read was fetched\./);
 });
 
+test("a research gist can say outside research ran, after its required fields, and the size law says who sets it (U5's review: a gist prefix alone read fail-open)", () => {
+  const props = SCHEMAS.gist.properties;
+  assert.deepEqual(props.outside_ran, { type: "boolean" });
+  assert.deepEqual(Object.keys(props), ["gist", "dossier", "changes_a_decision", "outside_ran"]);
+  assert.deepEqual(SCHEMAS.gist.required, ["gist", "dossier", "changes_a_decision"]);
+  assert.match(SIZE_LAWS.gist, /outside_ran: an external researcher's only, true when a web search ran and every page cited as read was fetched\./);
+});
+
 test("each amendment states the gap it closes, capped, so its verifiers judge the gap it names", () => {
   const a = SCHEMAS.amendment.properties.amendments.items;
   assert.deepEqual(a.properties.gap, { type: "string", maxLength: capOf("gap") });

@@ -186,6 +186,10 @@ export const SCHEMAS = {
       gist: capString("gist"),
       dossier: capString("dossier"),
       changes_a_decision: { type: "boolean" },
+      // An external researcher's word that outside research ran, read fail-closed by research.src.js
+      // as the deepen reads the amendment's (U5's review: a gist prefix alone read fail-open when a
+      // helper worded its failure another way). Other agents leave it out.
+      outside_ran: { type: "boolean" },
     },
     required: ["gist", "dossier", "changes_a_decision"],
   },
@@ -203,7 +207,7 @@ export const SIZE_LAWS = {
   verdict: `${CAPS_LAW} turns your vote into an abstention. reasoning at most ${budgetOf("reasoning")} characters, citing file:line or the plan's line; better_fix at most ${budgetOf("betterFix")} characters, or '' when the proposed change is right. ${CAPS_LAW_END}`,
   scorer: `${CAPS_LAW} stops the deepen as blocked. At most ${budgetOf("sections")} sections, each named in at most ${budgetOf("sectionName")} characters, with the line of the index heading it starts at; at most ${budgetOf("notes")} notes, one per section scoring 2 points or more (past ${budgetOf("notes")}, the ${budgetOf("notes")} that rank highest), each with its row's line and naming its triggers in at most ${budgetOf("triggersNamed")} characters. ${CAPS_INVENTORY_LAW}. ${CAPS_LAW_END}`,
   amendment: `${CAPS_LAW} proposes nothing. At most ${budgetOf("amendments")} amendments (name further ones in overflow: at most ${budgetOf("overflow")} titles of at most ${budgetOf("overflowItem")} characters). Per amendment: section at most ${budgetOf("section")} characters, gap ${budgetOf("gap")} (the gap it closes, with its plan line), change ${budgetOf("change")}, evidence ${budgetOf("evidence")}, at most ${budgetOf("oldValues")} old_values of at most ${budgetOf("oldValue")} characters each. outside_ran: an external researcher's only, true when a web search ran and every page cited as read was fetched. ${CAPS_LAW_END}`,
-  gist: `${CAPS_LAW} returns nothing. gist at most ${budgetOf("gist")} characters; dossier is the dossier's absolute path, at most ${budgetOf("dossier")} characters. ${CAPS_LAW_END}`,
+  gist: `${CAPS_LAW} returns nothing. gist at most ${budgetOf("gist")} characters; dossier is the dossier's absolute path, at most ${budgetOf("dossier")} characters. outside_ran: an external researcher's only, true when a web search ran and every page cited as read was fetched. ${CAPS_LAW_END}`,
 };
 
 // Every problem that would let a schema carry an unbounded call, or put a required field after

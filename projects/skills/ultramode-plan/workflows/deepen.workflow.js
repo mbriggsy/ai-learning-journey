@@ -490,6 +490,10 @@ const SCHEMAS = {
       gist: capString("gist"),
       dossier: capString("dossier"),
       changes_a_decision: { type: "boolean" },
+      // An external researcher's word that outside research ran, read fail-closed by research.src.js
+      // as the deepen reads the amendment's (U5's review: a gist prefix alone read fail-open when a
+      // helper worded its failure another way). Other agents leave it out.
+      outside_ran: { type: "boolean" },
     },
     required: ["gist", "dossier", "changes_a_decision"],
   },
@@ -507,7 +511,7 @@ const SIZE_LAWS = {
   verdict: `${CAPS_LAW} turns your vote into an abstention. reasoning at most ${budgetOf("reasoning")} characters, citing file:line or the plan's line; better_fix at most ${budgetOf("betterFix")} characters, or '' when the proposed change is right. ${CAPS_LAW_END}`,
   scorer: `${CAPS_LAW} stops the deepen as blocked. At most ${budgetOf("sections")} sections, each named in at most ${budgetOf("sectionName")} characters, with the line of the index heading it starts at; at most ${budgetOf("notes")} notes, one per section scoring 2 points or more (past ${budgetOf("notes")}, the ${budgetOf("notes")} that rank highest), each with its row's line and naming its triggers in at most ${budgetOf("triggersNamed")} characters. ${CAPS_INVENTORY_LAW}. ${CAPS_LAW_END}`,
   amendment: `${CAPS_LAW} proposes nothing. At most ${budgetOf("amendments")} amendments (name further ones in overflow: at most ${budgetOf("overflow")} titles of at most ${budgetOf("overflowItem")} characters). Per amendment: section at most ${budgetOf("section")} characters, gap ${budgetOf("gap")} (the gap it closes, with its plan line), change ${budgetOf("change")}, evidence ${budgetOf("evidence")}, at most ${budgetOf("oldValues")} old_values of at most ${budgetOf("oldValue")} characters each. outside_ran: an external researcher's only, true when a web search ran and every page cited as read was fetched. ${CAPS_LAW_END}`,
-  gist: `${CAPS_LAW} returns nothing. gist at most ${budgetOf("gist")} characters; dossier is the dossier's absolute path, at most ${budgetOf("dossier")} characters. ${CAPS_LAW_END}`,
+  gist: `${CAPS_LAW} returns nothing. gist at most ${budgetOf("gist")} characters; dossier is the dossier's absolute path, at most ${budgetOf("dossier")} characters. outside_ran: an external researcher's only, true when a web search ran and every page cited as read was fetched. ${CAPS_LAW_END}`,
 };
 
 // Every problem that would let a schema carry an unbounded call, or put a required field after
@@ -881,14 +885,16 @@ const PROMPT_ADVERSARY_ANGLES = `Pick the angles that fit: ${PROMPT_ANGLE_LIST.s
 // added or removed (a deletion leaves no sentence in the plan, so its old text is shown), and an edit
 // with the text it replaced as well as its new text (R4-25: a clause the edit dropped is in neither
 // the plan nor its new text, and fold.mjs's ID check passes while the ID stays).
-// Round 2 admits a P0 or P1 found anywhere; round 3 checks one fix alone.
+// Round 2 admits a P0 or P1 found anywhere; round 3 checks the fixes of round 2's P0 and P1 findings,
+// all of them in one launch (U5's review: run-record.mjs reads one launch a step, so a launch per fix
+// would leave a dead one never re-checked).
 const PROMPT_CHANGE_LABELS = { edit: "edited", add: "added", delete: "removed" };
 const PROMPT_ROUND = [
   "THIS IS CHECK ROUND {round}. The plan changed since the last round; these are the changes the fold made, each with the text it added or removed, and an edit with the text it replaced (was) and its text now:",
   "{changes}",
   "Read the whole plan again. Judge first whether each change is right (an edit's dropped words included) and whether it opened a seam with any other section; a finding the last round reported and the fold closed is not new. Report a P0 or P1 wherever you find it in the plan; report a P2 or P3 only where a change causes it or touches it, and put any other in residual_risks.",
 ].join("\n");
-const PROMPT_ROUND_3 = "This round checks one fix alone, the fold of a P0 or P1 that round 2 confirmed: judge that fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else.";
+const PROMPT_ROUND_3 = "This round checks the fixes for the P0 and P1 findings round 2 confirmed, the changes above: judge each fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else.";
 
 // search_with_grounding takes a query and returns Gemini's cited summary; it reads no page the helper
 // chooses, so curl is named as the fetch tool CE's web-researcher.md asks for (R4-21).
@@ -1033,7 +1039,7 @@ function promptRoundBlock(round, changes, last) {
 function promptLearningsBlock(agent, learnings) {
   if (agent === "learnings-researcher") {
     if (!learnings) throw new Error("prompts: the learnings researcher needs learnings { insights, memory }: this repo keeps its lessons there, not in a fixed docs/solutions path");
-    return promptFill("WHERE LEARNINGS LIVE: this repo keeps its lessons in {insights} and in the memory folder {memory}. Search both; never a fixed docs/solutions path, which this repo does not have.", { insights: promptPath(learnings.insights, "learnings.insights"), memory: promptPath(learnings.memory, "learnings.memory") });
+    return promptFill("WHERE LEARNINGS LIVE: this repo keeps its lessons in {insights} and in the memory folder {memory}. Search both; never a fixed docs/solutions path, which this repo does not have. The memory folder's files carry name: and description: in their front matter, not title: or tags:, and its MEMORY.md indexes them: search their description: lines and their bodies.", { insights: promptPath(learnings.insights, "learnings.insights"), memory: promptPath(learnings.memory, "learnings.memory") });
   }
   if (learnings !== null && learnings !== undefined) throw new Error(`prompts: learnings is for the learnings researcher only, not ${agent}`);
   return null;
@@ -1108,7 +1114,7 @@ function promptResearch(ctx, { agent, agentFile, scope = null, dossier, learning
     file ? PROMPT_LENS_RULE : null,
     promptRequestBlock(ctx),
     where,
-    job + promptFill(" Write everything you found into ONE dossier file at {dossier}: each claim with its source (a file:line, a measurement, or a URL with the date you read it) and what it means for the plan. Then return only the gist object: gist, the findings that matter most for the plan; dossier, that file's absolute path; changes_a_decision, true when a finding should change a decision the request or the brief implies (the run reads the dossier only then).", { dossier: out }) + (outside ? " When outside research could not run (no web tool answered), the gist opens with \"outside research could not run:\" and the reason." : ""),
+    job + promptFill(" Write everything you found into ONE dossier file at {dossier}: each claim with its source (a file:line, a measurement, or a URL with the date you read it) and what it means for the plan. Then return only the gist object: gist, the findings that matter most for the plan; dossier, that file's absolute path; changes_a_decision, true when a finding should change a decision the request or the brief implies (the run reads the dossier only then).", { dossier: out }) + (outside ? " Set outside_ran true only when a web search ran and every page you cite as read was fetched; when outside research could not run (no web tool answered), set it false, and open the gist with \"outside research could not run:\" and the reason." : ""),
     promptLawsBlock(ctx),
     promptToolsBlock(promptFill("Write exactly one file, your dossier at {dossier}; create, edit or delete no other file.", { dossier: out })),
     promptLaw(ctx, "gist"),
@@ -1855,7 +1861,10 @@ function readsArgs(args, { who, required = {}, optional = {} } = {}) {
 //
 // A park's relaunch (KTD11) passes skipPremise, and the parked run's scorer result as `scores` when
 // its saved result was readable: the run then starts at selection, on the scores the park was read
-// against. With skipPremise and no scores, the scorer runs again.
+// against. With skipPremise and no scores, the scorer runs again. It also passes the parked run's
+// carried premise findings as `carried` (its premise ledger's entries that summary.premise.carried
+// names), which come back as this run's own premise ledger, so the relaunch's fold, which reads only
+// its own launch's result, folds them (R4-31; U5's review: a park advances before any fold).
 //
 // Args (refused, naming each problem, before any helper starts):
 //   plan, project        the staged plan and the project's root (absolute)
@@ -1868,7 +1877,7 @@ function readsArgs(args, { who, required = {}, optional = {} } = {}) {
 //   deepened             whether the plan already carries a deepened: date (flow.mjs index's deepened)
 //   focus                optional: the external researchers' focus, passed only when research's
 //                        external call ran
-//   skipPremise, parked, scores   optional: a park's relaunch
+//   skipPremise, parked, scores, carried   optional: a park's relaunch
 //   dry                  optional: one helper per phase (the scorer, one research helper, one verifier),
 //                        no premise seat and no re-run
 // Every helper runs on Opus at xhigh (KTD13). A dead helper is an abstention: a coverage hole
@@ -1884,9 +1893,10 @@ const DEEPEN_ARCH = 'architecture, patterns'
 // whose scorer note names agent work; a risk specialist joins a system-impact, risk or operations
 // section by the plan's risk signals (security or privacy: security-sentinel; data-migration:
 // data-integrity-guardian) or a note naming performance (performance-oracle); a risk or operations
-// section none of them fits gets architecture-strategist. Our four kinds, which CE never maps, get
-// repo research with learnings, or with spec-flow for Definition of Done. Each section keeps its
-// first three.
+// section none of them fits gets architecture-strategist. Verification takes CE's "Implementation
+// Units / Verification" entry; our other three kinds, which CE never maps (goal-problem, assumptions,
+// done), get repo research with learnings, or with spec-flow for Definition of Done. Each section
+// keeps its first three.
 const DEEPEN_BASE = {
   'requirements': [['spec-flow-analyzer'], ['repo-research-analyst', DEEPEN_ARCH]],
   'open-questions': [['spec-flow-analyzer'], ['repo-research-analyst', DEEPEN_ARCH]],
@@ -1924,6 +1934,11 @@ function deepenAgentsFor(kind, note, risk) {
 }
 
 const textList = (v) => (Array.isArray(v) && v.every((m) => typeof m === 'string' && m.trim()) ? null : 'a list of non-empty text (an empty list when none)')
+// A carried premise finding as this script returns it in `premise` (run-record.mjs's PREMISE_ID is
+// the id form a fold of carried findings alone may land under "passed").
+const deepenIsCarried = (p) => Boolean(p) && typeof p === 'object' && !Array.isArray(p) &&
+  /^premise-[1-9][0-9]*$/.test(p.id) && Boolean(p.finding) && typeof p.finding === 'object' && Array.isArray(p.votes) &&
+  Boolean(p.verdict) && ((p.verdict.status === 'confirmed' && ['below', 'both'].includes(p.line)) || p.verdict.status === 'hand-verify')
 const A = readsArgs(args, {
   who: 'deepen',
   required: {
@@ -1949,6 +1964,9 @@ const A = readsArgs(args, {
     scores: (v) => (v && typeof v === 'object' && !Array.isArray(v) && Array.isArray(v.sections) && PLAN_DEPTHS.includes(v.depth) && Array.isArray(v.risk_signals)
       ? null
       : "the parked deepen's scorer result { sections, depth, risk_signals, notes }, from its saved result"),
+    carried: (v) => (Array.isArray(v) && v.every(deepenIsCarried) && new Set(v.map((p) => p.id)).size === v.length
+      ? null
+      : "the parked deepen's carried premise findings, its premise ledger's entries { id: premise-N, finding, verdict, votes, line } that the vote law confirmed below or across the P1 line, or left for hand-verify; each id once"),
     dry: 'bool',
   },
 })
@@ -1962,6 +1980,7 @@ if (A.update) {
   if (A.goalMoves !== undefined && A.goalMoves.length) crossed.push('args.goalMoves is for an update run only')
 }
 if (A.scores !== undefined && A.skipPremise !== true) crossed.push("args.scores comes only with skipPremise (a park's relaunch)")
+if (A.carried !== undefined && A.skipPremise !== true) crossed.push("args.carried comes only with skipPremise (a park's relaunch)")
 if (crossed.length) throw new Error(`deepen: ${crossed.join('; ')}`)
 // Every heading sits at or before the last line (readsSections throws, naming the one past it).
 readsSections(A.index, A.lastLine.line)
@@ -2048,7 +2067,9 @@ const [P, S] = await parallel([() => (runPremise ? premiseRead() : { answer: nul
 if (P === null || S === null) throw new Error('deepen: a script error in the Score phase (the runtime hid it as a null)')
 
 const holes = P.hole ? [P.hole] : []
-const premise = []
+// A park's relaunch starts its premise ledger with the parked run's carried findings (no premise seat
+// runs here, so they are the whole of it); any other run fills it from its own premise seat below.
+const premise = A.carried !== undefined ? A.carried.map((p) => ({ ...p })) : []
 const findings = P.answer?.findings ?? []
 if (findings.length) {
   phase('Premise')
@@ -2135,7 +2156,10 @@ if (outcome === undefined) {
     for (const c of checked) amendments.push({ id: `A${amendments.length + 1}`, section: { line: h.section.line, heading: h.section.heading }, agent: h.agent, amendment: c.amendment, verdict: c.verdict, votes: c.votes })
   }
   outcome = 'deepen'
-  reason = `${sections.length} section${sections.length === 1 ? '' : 's'} researched by ${helpers.length} helper${helpers.length === 1 ? '' : 's'}; ${amendments.length} amendment${amendments.length === 1 ? '' : 's'} verified`
+  // Counted against what was asked, never what came back (insight 013): a dead helper's section was
+  // dealt but not researched, and a dry run deals one helper of the many a real run would.
+  const answered = research.filter((r) => r.answered).length
+  reason = `${sections.length} section${sections.length === 1 ? '' : 's'} selected; ${answered} of ${helpers.length} research helper${helpers.length === 1 ? '' : 's'} answered${DRY ? ` (dry: ${helpers.length} of the ${dealt.length} dealt)` : ''}; ${amendments.length} amendment${amendments.length === 1 ? '' : 's'} verified`
 }
 
 const idsOf = (status) => amendments.filter((a) => a.verdict.status === status).map((a) => a.id)
@@ -2148,6 +2172,9 @@ return {
     skipPremise: A.skipPremise === true,
     parked: A.parked === true,
     premise: premiseSummary,
+    // A premise outcome outranks a blocked scorer, so the scorer's end is named here beside it (a
+    // park relaunched on no scores runs the scorer again); null when the scorer answered.
+    scorerBlocked: S.blocked ?? null,
     depth: scorer?.depth ?? null,
     risk: scorer?.risk_signals ?? null,
     selected: sel?.result === 'deepen' ? sel.sections.map((r) => ({ line: r.line, heading: headingAt.get(r.line) ?? r.section, points: r.points })) : [],

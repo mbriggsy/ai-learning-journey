@@ -299,14 +299,16 @@ const PROMPT_ADVERSARY_ANGLES = `Pick the angles that fit: ${PROMPT_ANGLE_LIST.s
 // added or removed (a deletion leaves no sentence in the plan, so its old text is shown), and an edit
 // with the text it replaced as well as its new text (R4-25: a clause the edit dropped is in neither
 // the plan nor its new text, and fold.mjs's ID check passes while the ID stays).
-// Round 2 admits a P0 or P1 found anywhere; round 3 checks one fix alone.
+// Round 2 admits a P0 or P1 found anywhere; round 3 checks the fixes of round 2's P0 and P1 findings,
+// all of them in one launch (U5's review: run-record.mjs reads one launch a step, so a launch per fix
+// would leave a dead one never re-checked).
 const PROMPT_CHANGE_LABELS = { edit: "edited", add: "added", delete: "removed" };
 const PROMPT_ROUND = [
   "THIS IS CHECK ROUND {round}. The plan changed since the last round; these are the changes the fold made, each with the text it added or removed, and an edit with the text it replaced (was) and its text now:",
   "{changes}",
   "Read the whole plan again. Judge first whether each change is right (an edit's dropped words included) and whether it opened a seam with any other section; a finding the last round reported and the fold closed is not new. Report a P0 or P1 wherever you find it in the plan; report a P2 or P3 only where a change causes it or touches it, and put any other in residual_risks.",
 ].join("\n");
-const PROMPT_ROUND_3 = "This round checks one fix alone, the fold of a P0 or P1 that round 2 confirmed: judge that fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else.";
+const PROMPT_ROUND_3 = "This round checks the fixes for the P0 and P1 findings round 2 confirmed, the changes above: judge each fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else.";
 
 // search_with_grounding takes a query and returns Gemini's cited summary; it reads no page the helper
 // chooses, so curl is named as the fetch tool CE's web-researcher.md asks for (R4-21).
@@ -451,7 +453,7 @@ function promptRoundBlock(round, changes, last) {
 function promptLearningsBlock(agent, learnings) {
   if (agent === "learnings-researcher") {
     if (!learnings) throw new Error("prompts: the learnings researcher needs learnings { insights, memory }: this repo keeps its lessons there, not in a fixed docs/solutions path");
-    return promptFill("WHERE LEARNINGS LIVE: this repo keeps its lessons in {insights} and in the memory folder {memory}. Search both; never a fixed docs/solutions path, which this repo does not have.", { insights: promptPath(learnings.insights, "learnings.insights"), memory: promptPath(learnings.memory, "learnings.memory") });
+    return promptFill("WHERE LEARNINGS LIVE: this repo keeps its lessons in {insights} and in the memory folder {memory}. Search both; never a fixed docs/solutions path, which this repo does not have. The memory folder's files carry name: and description: in their front matter, not title: or tags:, and its MEMORY.md indexes them: search their description: lines and their bodies.", { insights: promptPath(learnings.insights, "learnings.insights"), memory: promptPath(learnings.memory, "learnings.memory") });
   }
   if (learnings !== null && learnings !== undefined) throw new Error(`prompts: learnings is for the learnings researcher only, not ${agent}`);
   return null;
@@ -526,7 +528,7 @@ export function promptResearch(ctx, { agent, agentFile, scope = null, dossier, l
     file ? PROMPT_LENS_RULE : null,
     promptRequestBlock(ctx),
     where,
-    job + promptFill(" Write everything you found into ONE dossier file at {dossier}: each claim with its source (a file:line, a measurement, or a URL with the date you read it) and what it means for the plan. Then return only the gist object: gist, the findings that matter most for the plan; dossier, that file's absolute path; changes_a_decision, true when a finding should change a decision the request or the brief implies (the run reads the dossier only then).", { dossier: out }) + (outside ? " When outside research could not run (no web tool answered), the gist opens with \"outside research could not run:\" and the reason." : ""),
+    job + promptFill(" Write everything you found into ONE dossier file at {dossier}: each claim with its source (a file:line, a measurement, or a URL with the date you read it) and what it means for the plan. Then return only the gist object: gist, the findings that matter most for the plan; dossier, that file's absolute path; changes_a_decision, true when a finding should change a decision the request or the brief implies (the run reads the dossier only then).", { dossier: out }) + (outside ? " Set outside_ran true only when a web search ran and every page you cite as read was fetched; when outside research could not run (no web tool answered), set it false, and open the gist with \"outside research could not run:\" and the reason." : ""),
     promptLawsBlock(ctx),
     promptToolsBlock(promptFill("Write exactly one file, your dossier at {dossier}; create, edit or delete no other file.", { dossier: out })),
     promptLaw(ctx, "gist"),

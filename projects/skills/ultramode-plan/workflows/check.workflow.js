@@ -349,6 +349,10 @@ const SCHEMAS = {
       gist: capString("gist"),
       dossier: capString("dossier"),
       changes_a_decision: { type: "boolean" },
+      // An external researcher's word that outside research ran, read fail-closed by research.src.js
+      // as the deepen reads the amendment's (U5's review: a gist prefix alone read fail-open when a
+      // helper worded its failure another way). Other agents leave it out.
+      outside_ran: { type: "boolean" },
     },
     required: ["gist", "dossier", "changes_a_decision"],
   },
@@ -366,7 +370,7 @@ const SIZE_LAWS = {
   verdict: `${CAPS_LAW} turns your vote into an abstention. reasoning at most ${budgetOf("reasoning")} characters, citing file:line or the plan's line; better_fix at most ${budgetOf("betterFix")} characters, or '' when the proposed change is right. ${CAPS_LAW_END}`,
   scorer: `${CAPS_LAW} stops the deepen as blocked. At most ${budgetOf("sections")} sections, each named in at most ${budgetOf("sectionName")} characters, with the line of the index heading it starts at; at most ${budgetOf("notes")} notes, one per section scoring 2 points or more (past ${budgetOf("notes")}, the ${budgetOf("notes")} that rank highest), each with its row's line and naming its triggers in at most ${budgetOf("triggersNamed")} characters. ${CAPS_INVENTORY_LAW}. ${CAPS_LAW_END}`,
   amendment: `${CAPS_LAW} proposes nothing. At most ${budgetOf("amendments")} amendments (name further ones in overflow: at most ${budgetOf("overflow")} titles of at most ${budgetOf("overflowItem")} characters). Per amendment: section at most ${budgetOf("section")} characters, gap ${budgetOf("gap")} (the gap it closes, with its plan line), change ${budgetOf("change")}, evidence ${budgetOf("evidence")}, at most ${budgetOf("oldValues")} old_values of at most ${budgetOf("oldValue")} characters each. outside_ran: an external researcher's only, true when a web search ran and every page cited as read was fetched. ${CAPS_LAW_END}`,
-  gist: `${CAPS_LAW} returns nothing. gist at most ${budgetOf("gist")} characters; dossier is the dossier's absolute path, at most ${budgetOf("dossier")} characters. ${CAPS_LAW_END}`,
+  gist: `${CAPS_LAW} returns nothing. gist at most ${budgetOf("gist")} characters; dossier is the dossier's absolute path, at most ${budgetOf("dossier")} characters. outside_ran: an external researcher's only, true when a web search ran and every page cited as read was fetched. ${CAPS_LAW_END}`,
 };
 
 // Every problem that would let a schema carry an unbounded call, or put a required field after
@@ -740,14 +744,16 @@ const PROMPT_ADVERSARY_ANGLES = `Pick the angles that fit: ${PROMPT_ANGLE_LIST.s
 // added or removed (a deletion leaves no sentence in the plan, so its old text is shown), and an edit
 // with the text it replaced as well as its new text (R4-25: a clause the edit dropped is in neither
 // the plan nor its new text, and fold.mjs's ID check passes while the ID stays).
-// Round 2 admits a P0 or P1 found anywhere; round 3 checks one fix alone.
+// Round 2 admits a P0 or P1 found anywhere; round 3 checks the fixes of round 2's P0 and P1 findings,
+// all of them in one launch (U5's review: run-record.mjs reads one launch a step, so a launch per fix
+// would leave a dead one never re-checked).
 const PROMPT_CHANGE_LABELS = { edit: "edited", add: "added", delete: "removed" };
 const PROMPT_ROUND = [
   "THIS IS CHECK ROUND {round}. The plan changed since the last round; these are the changes the fold made, each with the text it added or removed, and an edit with the text it replaced (was) and its text now:",
   "{changes}",
   "Read the whole plan again. Judge first whether each change is right (an edit's dropped words included) and whether it opened a seam with any other section; a finding the last round reported and the fold closed is not new. Report a P0 or P1 wherever you find it in the plan; report a P2 or P3 only where a change causes it or touches it, and put any other in residual_risks.",
 ].join("\n");
-const PROMPT_ROUND_3 = "This round checks one fix alone, the fold of a P0 or P1 that round 2 confirmed: judge that fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else.";
+const PROMPT_ROUND_3 = "This round checks the fixes for the P0 and P1 findings round 2 confirmed, the changes above: judge each fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else.";
 
 // search_with_grounding takes a query and returns Gemini's cited summary; it reads no page the helper
 // chooses, so curl is named as the fetch tool CE's web-researcher.md asks for (R4-21).
@@ -892,7 +898,7 @@ function promptRoundBlock(round, changes, last) {
 function promptLearningsBlock(agent, learnings) {
   if (agent === "learnings-researcher") {
     if (!learnings) throw new Error("prompts: the learnings researcher needs learnings { insights, memory }: this repo keeps its lessons there, not in a fixed docs/solutions path");
-    return promptFill("WHERE LEARNINGS LIVE: this repo keeps its lessons in {insights} and in the memory folder {memory}. Search both; never a fixed docs/solutions path, which this repo does not have.", { insights: promptPath(learnings.insights, "learnings.insights"), memory: promptPath(learnings.memory, "learnings.memory") });
+    return promptFill("WHERE LEARNINGS LIVE: this repo keeps its lessons in {insights} and in the memory folder {memory}. Search both; never a fixed docs/solutions path, which this repo does not have. The memory folder's files carry name: and description: in their front matter, not title: or tags:, and its MEMORY.md indexes them: search their description: lines and their bodies.", { insights: promptPath(learnings.insights, "learnings.insights"), memory: promptPath(learnings.memory, "learnings.memory") });
   }
   if (learnings !== null && learnings !== undefined) throw new Error(`prompts: learnings is for the learnings researcher only, not ${agent}`);
   return null;
@@ -967,7 +973,7 @@ function promptResearch(ctx, { agent, agentFile, scope = null, dossier, learning
     file ? PROMPT_LENS_RULE : null,
     promptRequestBlock(ctx),
     where,
-    job + promptFill(" Write everything you found into ONE dossier file at {dossier}: each claim with its source (a file:line, a measurement, or a URL with the date you read it) and what it means for the plan. Then return only the gist object: gist, the findings that matter most for the plan; dossier, that file's absolute path; changes_a_decision, true when a finding should change a decision the request or the brief implies (the run reads the dossier only then).", { dossier: out }) + (outside ? " When outside research could not run (no web tool answered), the gist opens with \"outside research could not run:\" and the reason." : ""),
+    job + promptFill(" Write everything you found into ONE dossier file at {dossier}: each claim with its source (a file:line, a measurement, or a URL with the date you read it) and what it means for the plan. Then return only the gist object: gist, the findings that matter most for the plan; dossier, that file's absolute path; changes_a_decision, true when a finding should change a decision the request or the brief implies (the run reads the dossier only then).", { dossier: out }) + (outside ? " Set outside_ran true only when a web search ran and every page you cite as read was fetched; when outside research could not run (no web tool answered), set it false, and open the gist with \"outside research could not run:\" and the reason." : ""),
     promptLawsBlock(ctx),
     promptToolsBlock(promptFill("Write exactly one file, your dossier at {dossier}; create, edit or delete no other file.", { dossier: out })),
     promptLaw(ctx, "gist"),
@@ -1700,7 +1706,12 @@ function readsArgs(args, { who, required = {}, optional = {} } = {}) {
 //   their logged reason on a plan with no code (KTD6).
 //   Rounds 2 and 3 run exactly the seats args name (flow.mjs roundSeats: coherence and every seat a
 //   change touched) with the fold's changes, each { id, kind, classes, text } and an edit with its
-//   was, which the main loop builds from the record (R4-25, R4-28).
+//   was, which the main loop builds from the record (R4-25, R4-28). Round 3 checks every fix of
+//   round 2's P0 and P1 findings in one launch, its seats roundSeats over all their changes (U5's
+//   review: run-record.mjs reads one launch a step, so a launch per fix would leave a dead one never
+//   re-checked).
+// Each finding's id carries its round (c1-reach-1), so ids from rounds 1 to 3 never collide when the
+// main loop merges them into the receipt or folds them.
 // Every seat gets the same roster, in one order. Each read is checked against KTD7 and re-run once
 // inside this run when short; a second short read keeps the seat's findings and is a coverage hole
 // naming the sections it never confirmed. A dead seat is a coverage hole, never "no findings". Each
@@ -1708,7 +1719,14 @@ function readsArgs(args, { who, required = {}, optional = {} } = {}) {
 // P2, 1 for a P3), the verdict kept beside the raw votes (KTD24).
 // What counts as an open P0 or P1 is the voted severity, failing closed: a confirmed finding counts
 // when its real-voters put it at P0 or P1, or split on that line (severityLine "above" or "both"); a
-// claimed P0 or P1 they put lower does not. The claimed count comes back beside it.
+// claimed P0 or P1 they put lower does not. The claimed count comes back beside it, and the counted
+// ids as p0p1Ids. A hand-verify finding claimed at P0 or P1, or that any real-voter put there, is
+// pending (p0p1Pending): the main loop traces each (KTD8) and adds the ones it holds real to the
+// p0p1 or open it passes on, so an untraced one never reads as 0 open (U5's review). p0p1 itself
+// stays the voters' confirmed count, since run-record.mjs refuses a round-2 count with no fold.
+// A class seat with a hand-verify finding returns { pending: [ids] } (beside verified ids when it has
+// some), a form flow.mjs's receipt refuses, so the class reads "nothing found" or "verified" only
+// after the main loop's trace re-forms it.
 //
 // Args (refused, naming each problem, before any helper starts):
 //   plan, project, request, brief, update, lands, goalMoves, claudeMd, contractBrief, ce, index,
@@ -1842,8 +1860,8 @@ const done = await pipeline(
     const checked = await parallel(list.map((f, i) => async () => {
       const n = DRY ? 1 : refuterCount(f.severity)
       const builts = range(n).map((angle) => promptVerifier(ctx, { item: f, kind: 'finding', angle }))
-      const votes = await parallel(builts.map((b, angle) => () => call(b, `check:verify ${s.seat}-${i + 1} angle ${angle + 1}`, 'Verify')))
-      return { id: `${s.seat}-${i + 1}`, seat: s.seat, finding: f, verdict: judge(votes, f.severity), votes, line: severityLine(votes.filter(Boolean).filter((v) => v.real)) }
+      const votes = await parallel(builts.map((b, angle) => () => call(b, `check:verify c${A.round}-${s.seat}-${i + 1} angle ${angle + 1}`, 'Verify')))
+      return { id: `c${A.round}-${s.seat}-${i + 1}`, seat: s.seat, finding: f, verdict: judge(votes, f.severity), votes, line: severityLine(votes.filter(Boolean).filter((v) => v.real)) }
     }))
     if (checked.some((x) => x === null)) throw new Error('check: a script error in the Verify phase')
     return { s, read, checked }
@@ -1863,7 +1881,9 @@ for (const { s, read, checked } of done) {
 }
 const idsOf = (status) => findings.filter((f) => f.verdict.status === status).map((f) => f.id)
 const confirmed = findings.filter((f) => f.verdict.status === 'confirmed')
+const pending = findings.filter((f) => f.verdict.status === 'hand-verify')
 const high = (sev) => sev === 'P0' || sev === 'P1'
+const counted = confirmed.filter((f) => f.line === 'above' || f.line === 'both')
 // The adversary seats this run dispatched (a dry run dispatches only the first seat, so its roster's
 // adversary is not run here, not absent).
 const advSeats = running.filter((s) => s === 'adversarial' || CHECK_PANEL.includes(s))
@@ -1878,7 +1898,9 @@ for (const c of CHECK_CLASSES) {
   else if (holes.some((h) => h.seat === c)) classes[c] = { hole: true }
   else {
     const ids = confirmed.filter((f) => f.seat === c).map((f) => f.id)
-    classes[c] = ids.length ? { verified: ids } : { nothing: true }
+    const waiting = pending.filter((f) => f.seat === c).map((f) => f.id)
+    if (waiting.length) classes[c] = { ...(ids.length ? { verified: ids } : {}), pending: waiting }
+    else classes[c] = ids.length ? { verified: ids } : { nothing: true }
   }
 }
 const premiseSeat = done.find((d) => d.s.seat === 'premise')
@@ -1898,8 +1920,10 @@ return {
     handVerify: idsOf('hand-verify'),
     advisory: idsOf('advisory'),
     rejected: idsOf('rejected'),
-    p0p1: confirmed.filter((f) => f.line === 'above' || f.line === 'both').length,
+    p0p1: counted.length,
+    p0p1Ids: counted.map((f) => f.id),
     p0p1Claimed: confirmed.filter((f) => high(f.finding.severity)).length,
+    p0p1Pending: pending.filter((f) => high(f.finding.severity) || f.line === 'above' || f.line === 'both').map((f) => f.id),
     classes,
     // On an update, read fail-closed (R4-30): a goal the premise seat left unjudged, or a premise seat
     // that never answered, is false; null when no premise seat ran or the plan is new.

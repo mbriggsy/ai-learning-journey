@@ -62,7 +62,8 @@ export function firstStage({ update, brief = null } = {}) {
 //   deepen: "blocked"       the scorer crashed twice, or read the plan short twice (KTD5, KTD7)
 //           "premise-goal"  a verified premise finding against the pilot's own goal (KTD11)
 //           "park"          a verified premise finding against a decision of Briggsy's (KTD11)
-//           "passed"        no section scored 2 points: confidence check passed (KTD5)
+//           "passed"        no section scored 2 points: confidence check passed (KTD5); its fold,
+//                           when it has one, holds only the carried premise findings (R4-31)
 //           "deepened"      the selected sections were researched, verified and folded
 //   check-1: "done" with `changes`, how many changes its fold applied
 //   check-2: "done" with `p0p1`, how many P0 or P1 findings it confirmed (each one folded)
@@ -113,7 +114,7 @@ export function nextStep({ stage, outcome, sendBacks, changes, p0p1, open } = {}
     case "check-2":
       want(["done"]);
       return count("p0p1", p0p1) > 0
-        ? go("check-3", `round 2 confirmed ${p0p1} P0 or P1 finding${p0p1 === 1 ? "" : "s"}: a narrow round 3 on each fix alone (KTD9)`)
+        ? go("check-3", `round 2 confirmed ${p0p1} P0 or P1 finding${p0p1 === 1 ? "" : "s"}: a narrow round 3 on ${p0p1 === 1 ? "its fix" : "their fixes, in one launch"} (KTD9)`)
         : go("land", "round 2 confirmed no P0 or P1 (KTD9)", { open: 0 });
     case "check-3":
       want(["done"]);
@@ -239,7 +240,8 @@ export const CHANGE_KINDS = ["edit", "add", "delete"];
 // The seats a round re-runs: coherence, plus every running seat whose claim class one of the
 // round's changes touched, in the roster's order. A deletion is a change like any other. Each
 // change names the seats whose claim classes it touched, by their keys in `roster` (the seats this
-// run's round 1 ran). Round 3 passes one fix alone.
+// run's round 1 ran). Round 3 passes every fix of round 2's P0 and P1 findings together, since one
+// round-3 launch checks them all (run-record.mjs reads one launch a step).
 export function roundSeats({ roster, changes } = {}) {
   if (!Array.isArray(roster) || roster.length === 0) throw new Error("flow: a round needs the run's roster of seat keys");
   if (new Set(roster).size !== roster.length) throw new Error("flow: the roster names a seat twice");

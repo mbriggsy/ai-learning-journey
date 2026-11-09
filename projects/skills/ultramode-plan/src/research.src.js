@@ -41,9 +41,13 @@ export const meta = {
 //   dry            optional: true runs one helper per phase (the first seat of each)
 // Every helper runs on Opus at xhigh (KTD13). A helper that dies is an abstention, named in the
 // summary's coverage holes ({ seat, missed }; the main loop adds the resume count, KTD8), never a
-// gist that found nothing; so is an external researcher whose gist opens "outside research could not
-// run:". The return leads with its summary (KTD12): the counts, the holes and the seats whose gist
-// changes a decision; the gists follow, each with the dossier path this run assigned it.
+// gist that found nothing. So is an external researcher's outside research unless its outside_ran
+// is true, read fail-closed as the deepen reads it (U5's review: a gist prefix alone read clean when
+// a helper worded its failure another way); its gist's "outside research could not run:" opening
+// gives the hole its reason. Under a mixed call, a landscape scan whose outside research did not run
+// hands the shortlist nothing: they run on the recorded reason alone, and the notes say so. The
+// return leads with its summary (KTD12): the counts, the holes and the seats whose gist changes a
+// decision; the gists follow, each with the dossier path this run assigned it.
 
 const RESEARCH_INTENTS = ['implementation', 'landscape', 'mixed']
 const RESEARCH_IMPLEMENTATION = ['best-practices-researcher', 'framework-docs-researcher']
@@ -110,11 +114,17 @@ const results = await parallel(ran[0].map((seat) => () => callOf(seat, seat.buil
 let shortlist = []
 if (ran[1].length) {
   phase('Shortlist')
-  // The landscape scan's gist, when it answered, joins the recorded reason as each one's focus.
-  const scan = web ? results[ran[0].indexOf(web)]?.answer : null
+  // The landscape scan's gist, when it answered with its outside research run, joins the recorded
+  // reason as each one's focus; a scan that answered from the repo alone shortlists nothing.
+  const answeredScan = web ? results[ran[0].indexOf(web)]?.answer ?? null : null
+  const scan = answeredScan && answeredScan.outside_ran === true ? answeredScan : null
   const focus = scan ? `${ext.reason.replace(/[.\s]+$/, '')}. The landscape scan's shortlist (web-researcher's gist): ${scan.gist}` : ext.reason
   shortlist = await parallel(ran[1].map((seat) => () => callOf(seat, buildOf(seat, focus), 'Shortlist')))
 }
+
+// callOf answers { seat, answer } even for a dead helper, so a null here is this script's own error
+// (a builder that threw, say), which the runtime would otherwise pass off as a dead helper.
+if (results.some((x) => x === null) || shortlist.some((x) => x === null)) throw new Error('research: a script error in the Research or Shortlist phase (the runtime hid it as a null)')
 
 const gists = []
 const holes = []
@@ -130,13 +140,19 @@ ordered.forEach((seat, i) => {
     return
   }
   const gist = answer.gist.trim()
-  if (seat.focus !== undefined && gist.toLowerCase().startsWith(RESEARCH_CANNOT)) {
-    holes.push({ seat: seat.agent, missed: `outside research: ${gist.slice(RESEARCH_CANNOT.length).trim() || 'no reason given'}` })
+  // An external seat's outside research counts only when it says it ran (fail-closed); the gist's
+  // opening, when it carries one, names why it did not.
+  if (seat.focus !== undefined && answer.outside_ran !== true) {
+    const why = gist.toLowerCase().startsWith(RESEARCH_CANNOT)
+      ? gist.slice(RESEARCH_CANNOT.length).trim() || 'no reason given'
+      : 'it did not report a web search that ran with every cited page fetched'
+    holes.push({ seat: seat.agent, missed: `outside research: ${why}` })
   }
   if (!sameFile(answer.dossier.trim(), dossier)) notes.push(`${seat.agent} reported its dossier at ${answer.dossier.trim()}, not at ${dossier}, the path this run gave it`)
   gists.push({ agent: seat.agent, dossier, gist, changes_a_decision: answer.changes_a_decision })
 })
 if (web && ran[1].length && !results[ran[0].indexOf(web)]?.answer) notes.push('the landscape scan never answered, so the shortlist seats ran on the recorded reason alone')
+else if (web && ran[1].length && results[ran[0].indexOf(web)].answer.outside_ran !== true) notes.push("the landscape scan's outside research did not run, so the shortlist seats ran on the recorded reason alone")
 
 return {
   summary: {

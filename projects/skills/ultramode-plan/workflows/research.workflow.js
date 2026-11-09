@@ -199,6 +199,10 @@ const SCHEMAS = {
       gist: capString("gist"),
       dossier: capString("dossier"),
       changes_a_decision: { type: "boolean" },
+      // An external researcher's word that outside research ran, read fail-closed by research.src.js
+      // as the deepen reads the amendment's (U5's review: a gist prefix alone read fail-open when a
+      // helper worded its failure another way). Other agents leave it out.
+      outside_ran: { type: "boolean" },
     },
     required: ["gist", "dossier", "changes_a_decision"],
   },
@@ -216,7 +220,7 @@ const SIZE_LAWS = {
   verdict: `${CAPS_LAW} turns your vote into an abstention. reasoning at most ${budgetOf("reasoning")} characters, citing file:line or the plan's line; better_fix at most ${budgetOf("betterFix")} characters, or '' when the proposed change is right. ${CAPS_LAW_END}`,
   scorer: `${CAPS_LAW} stops the deepen as blocked. At most ${budgetOf("sections")} sections, each named in at most ${budgetOf("sectionName")} characters, with the line of the index heading it starts at; at most ${budgetOf("notes")} notes, one per section scoring 2 points or more (past ${budgetOf("notes")}, the ${budgetOf("notes")} that rank highest), each with its row's line and naming its triggers in at most ${budgetOf("triggersNamed")} characters. ${CAPS_INVENTORY_LAW}. ${CAPS_LAW_END}`,
   amendment: `${CAPS_LAW} proposes nothing. At most ${budgetOf("amendments")} amendments (name further ones in overflow: at most ${budgetOf("overflow")} titles of at most ${budgetOf("overflowItem")} characters). Per amendment: section at most ${budgetOf("section")} characters, gap ${budgetOf("gap")} (the gap it closes, with its plan line), change ${budgetOf("change")}, evidence ${budgetOf("evidence")}, at most ${budgetOf("oldValues")} old_values of at most ${budgetOf("oldValue")} characters each. outside_ran: an external researcher's only, true when a web search ran and every page cited as read was fetched. ${CAPS_LAW_END}`,
-  gist: `${CAPS_LAW} returns nothing. gist at most ${budgetOf("gist")} characters; dossier is the dossier's absolute path, at most ${budgetOf("dossier")} characters. ${CAPS_LAW_END}`,
+  gist: `${CAPS_LAW} returns nothing. gist at most ${budgetOf("gist")} characters; dossier is the dossier's absolute path, at most ${budgetOf("dossier")} characters. outside_ran: an external researcher's only, true when a web search ran and every page cited as read was fetched. ${CAPS_LAW_END}`,
 };
 
 // Every problem that would let a schema carry an unbounded call, or put a required field after
@@ -590,14 +594,16 @@ const PROMPT_ADVERSARY_ANGLES = `Pick the angles that fit: ${PROMPT_ANGLE_LIST.s
 // added or removed (a deletion leaves no sentence in the plan, so its old text is shown), and an edit
 // with the text it replaced as well as its new text (R4-25: a clause the edit dropped is in neither
 // the plan nor its new text, and fold.mjs's ID check passes while the ID stays).
-// Round 2 admits a P0 or P1 found anywhere; round 3 checks one fix alone.
+// Round 2 admits a P0 or P1 found anywhere; round 3 checks the fixes of round 2's P0 and P1 findings,
+// all of them in one launch (U5's review: run-record.mjs reads one launch a step, so a launch per fix
+// would leave a dead one never re-checked).
 const PROMPT_CHANGE_LABELS = { edit: "edited", add: "added", delete: "removed" };
 const PROMPT_ROUND = [
   "THIS IS CHECK ROUND {round}. The plan changed since the last round; these are the changes the fold made, each with the text it added or removed, and an edit with the text it replaced (was) and its text now:",
   "{changes}",
   "Read the whole plan again. Judge first whether each change is right (an edit's dropped words included) and whether it opened a seam with any other section; a finding the last round reported and the fold closed is not new. Report a P0 or P1 wherever you find it in the plan; report a P2 or P3 only where a change causes it or touches it, and put any other in residual_risks.",
 ].join("\n");
-const PROMPT_ROUND_3 = "This round checks one fix alone, the fold of a P0 or P1 that round 2 confirmed: judge that fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else.";
+const PROMPT_ROUND_3 = "This round checks the fixes for the P0 and P1 findings round 2 confirmed, the changes above: judge each fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else.";
 
 // search_with_grounding takes a query and returns Gemini's cited summary; it reads no page the helper
 // chooses, so curl is named as the fetch tool CE's web-researcher.md asks for (R4-21).
@@ -742,7 +748,7 @@ function promptRoundBlock(round, changes, last) {
 function promptLearningsBlock(agent, learnings) {
   if (agent === "learnings-researcher") {
     if (!learnings) throw new Error("prompts: the learnings researcher needs learnings { insights, memory }: this repo keeps its lessons there, not in a fixed docs/solutions path");
-    return promptFill("WHERE LEARNINGS LIVE: this repo keeps its lessons in {insights} and in the memory folder {memory}. Search both; never a fixed docs/solutions path, which this repo does not have.", { insights: promptPath(learnings.insights, "learnings.insights"), memory: promptPath(learnings.memory, "learnings.memory") });
+    return promptFill("WHERE LEARNINGS LIVE: this repo keeps its lessons in {insights} and in the memory folder {memory}. Search both; never a fixed docs/solutions path, which this repo does not have. The memory folder's files carry name: and description: in their front matter, not title: or tags:, and its MEMORY.md indexes them: search their description: lines and their bodies.", { insights: promptPath(learnings.insights, "learnings.insights"), memory: promptPath(learnings.memory, "learnings.memory") });
   }
   if (learnings !== null && learnings !== undefined) throw new Error(`prompts: learnings is for the learnings researcher only, not ${agent}`);
   return null;
@@ -817,7 +823,7 @@ function promptResearch(ctx, { agent, agentFile, scope = null, dossier, learning
     file ? PROMPT_LENS_RULE : null,
     promptRequestBlock(ctx),
     where,
-    job + promptFill(" Write everything you found into ONE dossier file at {dossier}: each claim with its source (a file:line, a measurement, or a URL with the date you read it) and what it means for the plan. Then return only the gist object: gist, the findings that matter most for the plan; dossier, that file's absolute path; changes_a_decision, true when a finding should change a decision the request or the brief implies (the run reads the dossier only then).", { dossier: out }) + (outside ? " When outside research could not run (no web tool answered), the gist opens with \"outside research could not run:\" and the reason." : ""),
+    job + promptFill(" Write everything you found into ONE dossier file at {dossier}: each claim with its source (a file:line, a measurement, or a URL with the date you read it) and what it means for the plan. Then return only the gist object: gist, the findings that matter most for the plan; dossier, that file's absolute path; changes_a_decision, true when a finding should change a decision the request or the brief implies (the run reads the dossier only then).", { dossier: out }) + (outside ? " Set outside_ran true only when a web search ran and every page you cite as read was fetched; when outside research could not run (no web tool answered), set it false, and open the gist with \"outside research could not run:\" and the reason." : ""),
     promptLawsBlock(ctx),
     promptToolsBlock(promptFill("Write exactly one file, your dossier at {dossier}; create, edit or delete no other file.", { dossier: out })),
     promptLaw(ctx, "gist"),
@@ -1573,9 +1579,13 @@ function readsArgs(args, { who, required = {}, optional = {} } = {}) {
 //   dry            optional: true runs one helper per phase (the first seat of each)
 // Every helper runs on Opus at xhigh (KTD13). A helper that dies is an abstention, named in the
 // summary's coverage holes ({ seat, missed }; the main loop adds the resume count, KTD8), never a
-// gist that found nothing; so is an external researcher whose gist opens "outside research could not
-// run:". The return leads with its summary (KTD12): the counts, the holes and the seats whose gist
-// changes a decision; the gists follow, each with the dossier path this run assigned it.
+// gist that found nothing. So is an external researcher's outside research unless its outside_ran
+// is true, read fail-closed as the deepen reads it (U5's review: a gist prefix alone read clean when
+// a helper worded its failure another way); its gist's "outside research could not run:" opening
+// gives the hole its reason. Under a mixed call, a landscape scan whose outside research did not run
+// hands the shortlist nothing: they run on the recorded reason alone, and the notes say so. The
+// return leads with its summary (KTD12): the counts, the holes and the seats whose gist changes a
+// decision; the gists follow, each with the dossier path this run assigned it.
 
 const RESEARCH_INTENTS = ['implementation', 'landscape', 'mixed']
 const RESEARCH_IMPLEMENTATION = ['best-practices-researcher', 'framework-docs-researcher']
@@ -1642,11 +1652,17 @@ const results = await parallel(ran[0].map((seat) => () => callOf(seat, seat.buil
 let shortlist = []
 if (ran[1].length) {
   phase('Shortlist')
-  // The landscape scan's gist, when it answered, joins the recorded reason as each one's focus.
-  const scan = web ? results[ran[0].indexOf(web)]?.answer : null
+  // The landscape scan's gist, when it answered with its outside research run, joins the recorded
+  // reason as each one's focus; a scan that answered from the repo alone shortlists nothing.
+  const answeredScan = web ? results[ran[0].indexOf(web)]?.answer ?? null : null
+  const scan = answeredScan && answeredScan.outside_ran === true ? answeredScan : null
   const focus = scan ? `${ext.reason.replace(/[.\s]+$/, '')}. The landscape scan's shortlist (web-researcher's gist): ${scan.gist}` : ext.reason
   shortlist = await parallel(ran[1].map((seat) => () => callOf(seat, buildOf(seat, focus), 'Shortlist')))
 }
+
+// callOf answers { seat, answer } even for a dead helper, so a null here is this script's own error
+// (a builder that threw, say), which the runtime would otherwise pass off as a dead helper.
+if (results.some((x) => x === null) || shortlist.some((x) => x === null)) throw new Error('research: a script error in the Research or Shortlist phase (the runtime hid it as a null)')
 
 const gists = []
 const holes = []
@@ -1662,13 +1678,19 @@ ordered.forEach((seat, i) => {
     return
   }
   const gist = answer.gist.trim()
-  if (seat.focus !== undefined && gist.toLowerCase().startsWith(RESEARCH_CANNOT)) {
-    holes.push({ seat: seat.agent, missed: `outside research: ${gist.slice(RESEARCH_CANNOT.length).trim() || 'no reason given'}` })
+  // An external seat's outside research counts only when it says it ran (fail-closed); the gist's
+  // opening, when it carries one, names why it did not.
+  if (seat.focus !== undefined && answer.outside_ran !== true) {
+    const why = gist.toLowerCase().startsWith(RESEARCH_CANNOT)
+      ? gist.slice(RESEARCH_CANNOT.length).trim() || 'no reason given'
+      : 'it did not report a web search that ran with every cited page fetched'
+    holes.push({ seat: seat.agent, missed: `outside research: ${why}` })
   }
   if (!sameFile(answer.dossier.trim(), dossier)) notes.push(`${seat.agent} reported its dossier at ${answer.dossier.trim()}, not at ${dossier}, the path this run gave it`)
   gists.push({ agent: seat.agent, dossier, gist, changes_a_decision: answer.changes_a_decision })
 })
 if (web && ran[1].length && !results[ran[0].indexOf(web)]?.answer) notes.push('the landscape scan never answered, so the shortlist seats ran on the recorded reason alone')
+else if (web && ran[1].length && results[ran[0].indexOf(web)].answer.outside_ran !== true) notes.push("the landscape scan's outside research did not run, so the shortlist seats ran on the recorded reason alone")
 
 return {
   summary: {

@@ -485,10 +485,13 @@ test("a later round lists each change as the text it added or removed, an edit a
   assert.ok(r2.includes("THIS IS CHECK ROUND 2. The plan changed since the last round; these are the changes the fold made, each with the text it added or removed, and an edit with the text it replaced (was) and its text now:\n- edited, was: U2 writes the ledger in floats.\n  now: U2 now writes the ledger in cents.\n- added: R9. The export names its columns.\n  Each column has a type.\n- removed: U5. The PDF export.\n"));
   assert.match(r2, /Judge first whether each change is right \(an edit's dropped words included\) and whether it opened a seam with any other section/);
   assert.match(r2, /Report a P0 or P1 wherever you find it in the plan; report a P2 or P3 only where a change causes it or touches it, and put any other in residual_risks\./);
-  assert.doesNotMatch(r2, /This round checks one fix alone/);
+  assert.doesNotMatch(r2, /This round checks the fixes/);
   const r3 = promptCheckSeat(CTX, { seat: "coherence", persona: null, roster: ["coherence"], round: 3, changes: EDIT }).prompt;
   assert.match(r3, /Report a P0 or P1 wherever you find it in the plan/);
-  assert.match(r3, /This round checks one fix alone, the fold of a P0 or P1 that round 2 confirmed: judge that fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else\./);
+  // One round 3 checks every fix round 2 confirmed (run-record reads one launch a step), so it never
+  // tells its seats the round holds one fix.
+  assert.match(r3, /This round checks the fixes for the P0 and P1 findings round 2 confirmed, the changes above: judge each fix and the seams it opened first, and never hold back a P0 or P1 you see anywhere else\./);
+  assert.doesNotMatch(r3, /one fix alone/);
 });
 
 test("a clause the fold's edit dropped shows in round 2 beside the edit's new text, each indented under its label so neither reads as a bullet (R4-25)", () => {
@@ -627,6 +630,9 @@ test("the learnings researcher gets this repo's lesson roots and the external re
     const l = build({ agent: "learnings-researcher", learnings }).prompt;
     assert.ok(l.includes(`WHERE LEARNINGS LIVE: this repo keeps its lessons in ${learnings.insights} and in the memory folder ${learnings.memory}.`), `${where}: no lesson roots`);
     assert.match(l, /never a fixed docs\/solutions path/);
+    // learnings-researcher.md greps title: and tags: first, which no memory file carries (U4's round 2
+    // lead, U5's review: 0 of 179 memory files), so the block names the fields memory files do carry.
+    assert.ok(l.includes("The memory folder's files carry name: and description: in their front matter, not title: or tags:, and its MEMORY.md indexes them: search their description: lines and their bodies."), `${where}: memory's front matter is not named`);
     assert.throws(() => build({ agent: "learnings-researcher" }), /needs learnings/, `${where}: a learnings researcher with no roots`);
     assert.throws(() => build({ agent: "git-history-analyzer", learnings }), /for the learnings researcher only/, `${where}: roots for another agent`);
     for (const agent of ["best-practices-researcher", "framework-docs-researcher", "web-researcher"]) {
@@ -638,11 +644,12 @@ test("the learnings researcher gets this repo's lesson roots and the external re
       assert.ok(p.includes("Search with gemini-grounding's search_with_grounding (load it with ToolSearch): it returns Gemini's cited summary, not the pages. Read a chosen page with curl -sL --max-time 15, which this prompt names as the web-fetch tool your agent file asks for, over its rule that a generic command is not one. Cite a URL as read only when you fetched it, and mark a claim that rests on a grounded summary alone."), `${where}: ${agent} has the wrong web tool line`);
       assert.doesNotMatch(p, /reads the pages/);
       assert.doesNotMatch(p, /grounded in this repo first/, `${where}: ${agent} is told repo first`);
-      // Each builder says how outside research that could not run comes back, in a field its own
-      // schema has (R4-19): research's gist, the deepen's outside_ran; never the other's, never overflow.
+      // Each builder says how outside research that could not run comes back, in outside_ran, a field
+      // its own schema has (R4-19; research's since U5's review, which found a gist prefix alone read
+      // fail-open), and never in overflow; research's gist also names the reason.
       if (where === "research") {
-        assert.ok(p.includes("When outside research could not run (no web tool answered), the gist opens with \"outside research could not run:\" and the reason."), `${where}: ${agent}`);
-        assert.doesNotMatch(p, /outside_ran|in overflow/);
+        assert.ok(p.includes("Set outside_ran true only when a web search ran and every page you cite as read was fetched; when outside research could not run (no web tool answered), set it false, and open the gist with \"outside research could not run:\" and the reason."), `${where}: ${agent}`);
+        assert.doesNotMatch(p, /in overflow/);
         assert.throws(() => build({ agent }), /focus/, `${where}: ${agent} with no focus`);
       } else {
         assert.ok(p.includes("Set outside_ran true only when a web search ran and every page you cite as read was fetched; when outside research cannot run (no web tool answers), set it false and propose only what the repo supports."), `${where}: ${agent}`);

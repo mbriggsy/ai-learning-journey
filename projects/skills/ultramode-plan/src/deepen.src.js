@@ -34,7 +34,10 @@ export const meta = {
 //
 // A park's relaunch (KTD11) passes skipPremise, and the parked run's scorer result as `scores` when
 // its saved result was readable: the run then starts at selection, on the scores the park was read
-// against. With skipPremise and no scores, the scorer runs again.
+// against. With skipPremise and no scores, the scorer runs again. It also passes the parked run's
+// carried premise findings as `carried` (its premise ledger's entries that summary.premise.carried
+// names), which come back as this run's own premise ledger, so the relaunch's fold, which reads only
+// its own launch's result, folds them (R4-31; U5's review: a park advances before any fold).
 //
 // Args (refused, naming each problem, before any helper starts):
 //   plan, project        the staged plan and the project's root (absolute)
@@ -47,7 +50,7 @@ export const meta = {
 //   deepened             whether the plan already carries a deepened: date (flow.mjs index's deepened)
 //   focus                optional: the external researchers' focus, passed only when research's
 //                        external call ran
-//   skipPremise, parked, scores   optional: a park's relaunch
+//   skipPremise, parked, scores, carried   optional: a park's relaunch
 //   dry                  optional: one helper per phase (the scorer, one research helper, one verifier),
 //                        no premise seat and no re-run
 // Every helper runs on Opus at xhigh (KTD13). A dead helper is an abstention: a coverage hole
@@ -63,9 +66,10 @@ const DEEPEN_ARCH = 'architecture, patterns'
 // whose scorer note names agent work; a risk specialist joins a system-impact, risk or operations
 // section by the plan's risk signals (security or privacy: security-sentinel; data-migration:
 // data-integrity-guardian) or a note naming performance (performance-oracle); a risk or operations
-// section none of them fits gets architecture-strategist. Our four kinds, which CE never maps, get
-// repo research with learnings, or with spec-flow for Definition of Done. Each section keeps its
-// first three.
+// section none of them fits gets architecture-strategist. Verification takes CE's "Implementation
+// Units / Verification" entry; our other three kinds, which CE never maps (goal-problem, assumptions,
+// done), get repo research with learnings, or with spec-flow for Definition of Done. Each section
+// keeps its first three.
 const DEEPEN_BASE = {
   'requirements': [['spec-flow-analyzer'], ['repo-research-analyst', DEEPEN_ARCH]],
   'open-questions': [['spec-flow-analyzer'], ['repo-research-analyst', DEEPEN_ARCH]],
@@ -103,6 +107,11 @@ function deepenAgentsFor(kind, note, risk) {
 }
 
 const textList = (v) => (Array.isArray(v) && v.every((m) => typeof m === 'string' && m.trim()) ? null : 'a list of non-empty text (an empty list when none)')
+// A carried premise finding as this script returns it in `premise` (run-record.mjs's PREMISE_ID is
+// the id form a fold of carried findings alone may land under "passed").
+const deepenIsCarried = (p) => Boolean(p) && typeof p === 'object' && !Array.isArray(p) &&
+  /^premise-[1-9][0-9]*$/.test(p.id) && Boolean(p.finding) && typeof p.finding === 'object' && Array.isArray(p.votes) &&
+  Boolean(p.verdict) && ((p.verdict.status === 'confirmed' && ['below', 'both'].includes(p.line)) || p.verdict.status === 'hand-verify')
 const A = readsArgs(args, {
   who: 'deepen',
   required: {
@@ -128,6 +137,9 @@ const A = readsArgs(args, {
     scores: (v) => (v && typeof v === 'object' && !Array.isArray(v) && Array.isArray(v.sections) && PLAN_DEPTHS.includes(v.depth) && Array.isArray(v.risk_signals)
       ? null
       : "the parked deepen's scorer result { sections, depth, risk_signals, notes }, from its saved result"),
+    carried: (v) => (Array.isArray(v) && v.every(deepenIsCarried) && new Set(v.map((p) => p.id)).size === v.length
+      ? null
+      : "the parked deepen's carried premise findings, its premise ledger's entries { id: premise-N, finding, verdict, votes, line } that the vote law confirmed below or across the P1 line, or left for hand-verify; each id once"),
     dry: 'bool',
   },
 })
@@ -141,6 +153,7 @@ if (A.update) {
   if (A.goalMoves !== undefined && A.goalMoves.length) crossed.push('args.goalMoves is for an update run only')
 }
 if (A.scores !== undefined && A.skipPremise !== true) crossed.push("args.scores comes only with skipPremise (a park's relaunch)")
+if (A.carried !== undefined && A.skipPremise !== true) crossed.push("args.carried comes only with skipPremise (a park's relaunch)")
 if (crossed.length) throw new Error(`deepen: ${crossed.join('; ')}`)
 // Every heading sits at or before the last line (readsSections throws, naming the one past it).
 readsSections(A.index, A.lastLine.line)
@@ -227,7 +240,9 @@ const [P, S] = await parallel([() => (runPremise ? premiseRead() : { answer: nul
 if (P === null || S === null) throw new Error('deepen: a script error in the Score phase (the runtime hid it as a null)')
 
 const holes = P.hole ? [P.hole] : []
-const premise = []
+// A park's relaunch starts its premise ledger with the parked run's carried findings (no premise seat
+// runs here, so they are the whole of it); any other run fills it from its own premise seat below.
+const premise = A.carried !== undefined ? A.carried.map((p) => ({ ...p })) : []
 const findings = P.answer?.findings ?? []
 if (findings.length) {
   phase('Premise')
@@ -314,7 +329,10 @@ if (outcome === undefined) {
     for (const c of checked) amendments.push({ id: `A${amendments.length + 1}`, section: { line: h.section.line, heading: h.section.heading }, agent: h.agent, amendment: c.amendment, verdict: c.verdict, votes: c.votes })
   }
   outcome = 'deepen'
-  reason = `${sections.length} section${sections.length === 1 ? '' : 's'} researched by ${helpers.length} helper${helpers.length === 1 ? '' : 's'}; ${amendments.length} amendment${amendments.length === 1 ? '' : 's'} verified`
+  // Counted against what was asked, never what came back (insight 013): a dead helper's section was
+  // dealt but not researched, and a dry run deals one helper of the many a real run would.
+  const answered = research.filter((r) => r.answered).length
+  reason = `${sections.length} section${sections.length === 1 ? '' : 's'} selected; ${answered} of ${helpers.length} research helper${helpers.length === 1 ? '' : 's'} answered${DRY ? ` (dry: ${helpers.length} of the ${dealt.length} dealt)` : ''}; ${amendments.length} amendment${amendments.length === 1 ? '' : 's'} verified`
 }
 
 const idsOf = (status) => amendments.filter((a) => a.verdict.status === status).map((a) => a.id)
@@ -327,6 +345,9 @@ return {
     skipPremise: A.skipPremise === true,
     parked: A.parked === true,
     premise: premiseSummary,
+    // A premise outcome outranks a blocked scorer, so the scorer's end is named here beside it (a
+    // park relaunched on no scores runs the scorer again); null when the scorer answered.
+    scorerBlocked: S.blocked ?? null,
     depth: scorer?.depth ?? null,
     risk: scorer?.risk_signals ?? null,
     selected: sel?.result === 'deepen' ? sel.sections.map((r) => ({ line: r.line, heading: headingAt.get(r.line) ?? r.section, points: r.points })) : [],

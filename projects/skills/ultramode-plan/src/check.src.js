@@ -18,7 +18,12 @@ export const meta = {
 //   their logged reason on a plan with no code (KTD6).
 //   Rounds 2 and 3 run exactly the seats args name (flow.mjs roundSeats: coherence and every seat a
 //   change touched) with the fold's changes, each { id, kind, classes, text } and an edit with its
-//   was, which the main loop builds from the record (R4-25, R4-28).
+//   was, which the main loop builds from the record (R4-25, R4-28). Round 3 checks every fix of
+//   round 2's P0 and P1 findings in one launch, its seats roundSeats over all their changes (U5's
+//   review: run-record.mjs reads one launch a step, so a launch per fix would leave a dead one never
+//   re-checked).
+// Each finding's id carries its round (c1-reach-1), so ids from rounds 1 to 3 never collide when the
+// main loop merges them into the receipt or folds them.
 // Every seat gets the same roster, in one order. Each read is checked against KTD7 and re-run once
 // inside this run when short; a second short read keeps the seat's findings and is a coverage hole
 // naming the sections it never confirmed. A dead seat is a coverage hole, never "no findings". Each
@@ -26,7 +31,14 @@ export const meta = {
 // P2, 1 for a P3), the verdict kept beside the raw votes (KTD24).
 // What counts as an open P0 or P1 is the voted severity, failing closed: a confirmed finding counts
 // when its real-voters put it at P0 or P1, or split on that line (severityLine "above" or "both"); a
-// claimed P0 or P1 they put lower does not. The claimed count comes back beside it.
+// claimed P0 or P1 they put lower does not. The claimed count comes back beside it, and the counted
+// ids as p0p1Ids. A hand-verify finding claimed at P0 or P1, or that any real-voter put there, is
+// pending (p0p1Pending): the main loop traces each (KTD8) and adds the ones it holds real to the
+// p0p1 or open it passes on, so an untraced one never reads as 0 open (U5's review). p0p1 itself
+// stays the voters' confirmed count, since run-record.mjs refuses a round-2 count with no fold.
+// A class seat with a hand-verify finding returns { pending: [ids] } (beside verified ids when it has
+// some), a form flow.mjs's receipt refuses, so the class reads "nothing found" or "verified" only
+// after the main loop's trace re-forms it.
 //
 // Args (refused, naming each problem, before any helper starts):
 //   plan, project, request, brief, update, lands, goalMoves, claudeMd, contractBrief, ce, index,
@@ -160,8 +172,8 @@ const done = await pipeline(
     const checked = await parallel(list.map((f, i) => async () => {
       const n = DRY ? 1 : refuterCount(f.severity)
       const builts = range(n).map((angle) => promptVerifier(ctx, { item: f, kind: 'finding', angle }))
-      const votes = await parallel(builts.map((b, angle) => () => call(b, `check:verify ${s.seat}-${i + 1} angle ${angle + 1}`, 'Verify')))
-      return { id: `${s.seat}-${i + 1}`, seat: s.seat, finding: f, verdict: judge(votes, f.severity), votes, line: severityLine(votes.filter(Boolean).filter((v) => v.real)) }
+      const votes = await parallel(builts.map((b, angle) => () => call(b, `check:verify c${A.round}-${s.seat}-${i + 1} angle ${angle + 1}`, 'Verify')))
+      return { id: `c${A.round}-${s.seat}-${i + 1}`, seat: s.seat, finding: f, verdict: judge(votes, f.severity), votes, line: severityLine(votes.filter(Boolean).filter((v) => v.real)) }
     }))
     if (checked.some((x) => x === null)) throw new Error('check: a script error in the Verify phase')
     return { s, read, checked }
@@ -181,7 +193,9 @@ for (const { s, read, checked } of done) {
 }
 const idsOf = (status) => findings.filter((f) => f.verdict.status === status).map((f) => f.id)
 const confirmed = findings.filter((f) => f.verdict.status === 'confirmed')
+const pending = findings.filter((f) => f.verdict.status === 'hand-verify')
 const high = (sev) => sev === 'P0' || sev === 'P1'
+const counted = confirmed.filter((f) => f.line === 'above' || f.line === 'both')
 // The adversary seats this run dispatched (a dry run dispatches only the first seat, so its roster's
 // adversary is not run here, not absent).
 const advSeats = running.filter((s) => s === 'adversarial' || CHECK_PANEL.includes(s))
@@ -196,7 +210,9 @@ for (const c of CHECK_CLASSES) {
   else if (holes.some((h) => h.seat === c)) classes[c] = { hole: true }
   else {
     const ids = confirmed.filter((f) => f.seat === c).map((f) => f.id)
-    classes[c] = ids.length ? { verified: ids } : { nothing: true }
+    const waiting = pending.filter((f) => f.seat === c).map((f) => f.id)
+    if (waiting.length) classes[c] = { ...(ids.length ? { verified: ids } : {}), pending: waiting }
+    else classes[c] = ids.length ? { verified: ids } : { nothing: true }
   }
 }
 const premiseSeat = done.find((d) => d.s.seat === 'premise')
@@ -216,8 +232,10 @@ return {
     handVerify: idsOf('hand-verify'),
     advisory: idsOf('advisory'),
     rejected: idsOf('rejected'),
-    p0p1: confirmed.filter((f) => f.line === 'above' || f.line === 'both').length,
+    p0p1: counted.length,
+    p0p1Ids: counted.map((f) => f.id),
     p0p1Claimed: confirmed.filter((f) => high(f.finding.severity)).length,
+    p0p1Pending: pending.filter((f) => high(f.finding.severity) || f.line === 'above' || f.line === 'both').map((f) => f.id),
     classes,
     // On an update, read fail-closed (R4-30): a goal the premise seat left unjudged, or a premise seat
     // that never answered, is false; null when no premise seat ran or the plan is new.

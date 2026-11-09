@@ -12,6 +12,7 @@ import { runWorkflow } from "./workflow-stub.mjs";
 import { SCHEMAS } from "./caps.mjs";
 import { CE_FILES } from "./resolve-ce.mjs";
 import { INLINABLE, topNames } from "./make-scripts.mjs";
+import { PREMISE_ID } from "./run-record.mjs";
 import { tmpRoot } from "../bench/testkit.mjs";
 
 const lib = dirname(fileURLToPath(import.meta.url));
@@ -140,8 +141,10 @@ const RESEARCH_ARGS = Object.freeze({
 });
 const researchArgs = (extra = {}) => ({ ...RESEARCH_ARGS, ...extra });
 const agentOf = (call) => call.opts.label.replace(/^research:/, "");
-// A research helper that answers: its gist names its agent, and its dossier is the path it was given.
-const gistFor = (call, extra = {}) => ({ gist: `${agentOf(call)} found what the plan needs`, dossier: `${DOSSIERS}/${agentOf(call)}.md`, changes_a_decision: false, ...extra });
+// A research helper that answers: its gist names its agent, and its dossier is the path it was given;
+// an external researcher reports that its outside research ran.
+const EXTERNAL = ["best-practices-researcher", "framework-docs-researcher", "web-researcher"];
+const gistFor = (call, extra = {}) => ({ gist: `${agentOf(call)} found what the plan needs`, dossier: `${DOSSIERS}/${agentOf(call)}.md`, changes_a_decision: false, ...(EXTERNAL.includes(agentOf(call)) ? { outside_ran: true } : {}), ...extra });
 const researchRun = (args, respond = (c) => gistFor(c)) => runWorkflow(script("research"), { args, respond });
 const clean = (r) => {
   assert.equal(r.error, null, `the run failed: ${r.error}`);
@@ -203,7 +206,7 @@ test("research: a dead helper is a coverage hole, never a gist that found nothin
   const reason = "the request asks what other tools do";
   const r = await researchRun(researchArgs({ external: { intent: "landscape", reason } }), (c) => {
     if (agentOf(c) === "learnings-researcher") return null;
-    if (agentOf(c) === "web-researcher") return gistFor(c, { gist: "Outside research could not run: no web tool answered" });
+    if (agentOf(c) === "web-researcher") return gistFor(c, { gist: "Outside research could not run: no web tool answered", outside_ran: false });
     return gistFor(c);
   });
   clean(r);
@@ -216,6 +219,42 @@ test("research: a dead helper is a coverage hole, never a gist that found nothin
   // A local seat's gist that opens with the same words is no outside hole: it was never sent outside.
   const local = await researchRun(researchArgs(), (c) => gistFor(c, agentOf(c) === "repo-research-analyst" ? { gist: "outside research could not run: n/a" } : {}));
   assert.deepEqual(local.result.summary.holes, []);
+});
+
+test("research: an external researcher's outside_ran is read fail-closed: left out or false is a hole, whatever its gist says, and only true is clean", async () => {
+  const reason = "pick an export library";
+  const run = (answer) => researchRun(researchArgs({ external: { intent: "implementation", reason } }), (c) => (agentOf(c) === "best-practices-researcher" ? answer(c) : gistFor(c)));
+  const generic = "outside research: it did not report a web search that ran with every cited page fetched";
+  for (const [answer, missed] of [
+    // A gist that words its failure some other way, or names none, reads as a hole by the field.
+    [(c) => ({ ...gistFor(c, { gist: "**Outside research could not run:** no web tool answered" }), outside_ran: undefined }), generic],
+    [(c) => gistFor(c, { gist: "Note: the web tools were down, so this is repo-only", outside_ran: false }), generic],
+    [(c) => gistFor(c, { gist: "  outside research could not run: gemini-grounding failed", outside_ran: false }), "outside research: gemini-grounding failed"],
+    [(c) => gistFor(c, { gist: "outside research could not run:", outside_ran: false }), "outside research: no reason given"],
+  ]) {
+    const r = await run((c) => JSON.parse(JSON.stringify(answer(c))));
+    clean(r);
+    assert.deepEqual(r.result.summary.holes, [{ seat: "best-practices-researcher", missed }]);
+    assert.equal(r.result.summary.answered, 5, "an answered helper is counted answered, its outside gap a hole beside it");
+  }
+  // outside_ran true is clean, and a local seat's outside_ran is never read.
+  const ok = await run((c) => gistFor(c));
+  assert.deepEqual(ok.result.summary.holes, []);
+  const local = await researchRun(researchArgs(), (c) => gistFor(c, agentOf(c) === "repo-research-analyst" ? { outside_ran: false } : {}));
+  assert.deepEqual(local.result.summary.holes, []);
+  // Every external seat's prompt asks for outside_ran; a local seat's never does.
+  for (const c of ok.calls) assert.equal(c.prompt.includes("Set outside_ran true only when a web search ran"), EXTERNAL.includes(agentOf(c)), agentOf(c));
+});
+
+test("research: a mixed call whose landscape scan answered without outside research runs the shortlist on the recorded reason alone and says so", async () => {
+  const reason = "pick an export library";
+  const r = await researchRun(researchArgs({ external: { intent: "mixed", reason } }), (c) => (agentOf(c) === "web-researcher" ? gistFor(c, { gist: "outside research could not run: no web tool answered", outside_ran: false }) : gistFor(c)));
+  clean(r);
+  for (const c of r.calls.filter((x) => x.opts.phase === "Shortlist")) {
+    assert.ok(c.prompt.includes(`on this focus: ${reason}. `) && !c.prompt.includes("shortlist (web-researcher's gist)"), "a shortlist seat got a scan that never ran outside as its shortlist");
+  }
+  assert.deepEqual(r.result.summary.holes.map((h) => h.seat), ["web-researcher"]);
+  assert.deepEqual(r.result.summary.notes, ["the landscape scan's outside research did not run, so the shortlist seats ran on the recorded reason alone"]);
 });
 
 test("research: a mixed call whose landscape scan died runs the shortlist on the recorded reason alone and says so", async () => {
@@ -516,6 +555,55 @@ test("deepen: a park's relaunch with recorded scores starts at selection, with n
   assert.match(bad.error, /args\.scores comes only with skipPremise/);
 });
 
+test("deepen: a park's relaunch carries the parked run's carried premise findings into its own result, so its fold sees them", async () => {
+  // The parked run: one finding its real-voters put at P0 or P1 (the park), one they put at P2 (carried).
+  const k = { 1: 0, 2: 0 };
+  const parked = await deepenRun(deepenArgs(), {
+    premise: premiseAnswer([finding("the problem never happened here", "P1"), finding("the goal names no population instance", "P1")]),
+    premiseVote: (c) => vote({ corrected_severity: c.opts.label.startsWith("deepen:premise-1 ") ? "P1" : ["P2", "P2", "P2"][k[2]++] }),
+  });
+  clean(parked);
+  assert.equal(parked.result.summary.outcome, "premise");
+  assert.deepEqual(parked.result.summary.premise.carried, [{ id: "premise-2", status: "confirmed", line: "below" }]);
+  const carried = parked.result.premise.filter((p) => p.id === "premise-2");
+  // The script's premise ids are the form run-record.mjs lets a passed deepen fold alone.
+  for (const p of parked.result.premise) assert.match(p.id, PREMISE_ID);
+  // The relaunch takes them from the parked run's saved result beside its scores, and returns them as
+  // its own premise ledger and summary, with no premise seat run.
+  const r = await deepenRun(deepenArgs({ skipPremise: true, parked: true, scores: parked.result.scorer, carried }));
+  clean(r);
+  assert.ok(!labels(r).some((l) => l.startsWith("deepen:premise")));
+  assert.deepEqual(r.result.premise, carried);
+  assert.deepEqual(r.result.summary.premise.carried, [{ id: "premise-2", status: "confirmed", line: "below" }]);
+  assert.deepEqual(r.result.summary.premise.above, []);
+  assert.equal(r.result.summary.premise.ran, false);
+  // Carried findings come only with skipPremise, each a premise ledger entry the vote law judged.
+  for (const [args, pattern] of [
+    [deepenArgs({ carried }), /args\.carried comes only with skipPremise/],
+    [deepenArgs({ skipPremise: true, carried: [{ id: "A1", finding: {}, verdict: { status: "confirmed" }, votes: [], line: "below" }] }), /args\.carried/],
+    [deepenArgs({ skipPremise: true, carried: [{ ...carried[0], verdict: { status: "rejected" } }] }), /args\.carried/],
+  ]) {
+    const bad = await deepenRun(args);
+    assert.equal(bad.calls.length, 0, String(pattern));
+    assert.match(bad.error, pattern);
+  }
+});
+
+test("deepen: the reason counts the helpers that answered, a dry run says how many it dealt, and a scorer that died beside a premise outcome is named", async () => {
+  const r = await deepenRun(deepenArgs(), { research: (agent) => (agent === "best-practices-researcher" ? null : { amendments: [amendment("Key Technical Decisions")], overflow: [] }) });
+  clean(r);
+  assert.equal(r.result.summary.reason, "2 sections selected; 3 of 4 research helpers answered; 3 amendments verified");
+  assert.equal(r.result.summary.scorerBlocked, null);
+  const dry = await deepenRun(deepenArgs({ dry: true }));
+  clean(dry);
+  assert.equal(dry.result.summary.reason, "2 sections selected; 1 of 1 research helper answered (dry: 1 of the 4 dealt); 1 amendment verified");
+  // A premise outcome outranks a blocked scorer, so the summary names the scorer's end beside it.
+  const both = await deepenRun(deepenArgs(), { premise: premiseAnswer([finding("the problem never happened here", "P1")]), scorer: [null, null] });
+  clean(both);
+  assert.equal(both.result.summary.outcome, "premise");
+  assert.equal(both.result.summary.scorerBlocked, "the scorer died twice");
+});
+
 test("deepen: scores with one candidate dispatch helpers for that section only; none at 2 points is passed", async () => {
   const one = scorerAnswer({ sections: SCORES.sections.map((s) => (s.line === 20 ? { ...s, triggers: 0 } : s)), notes: [SCORES.notes[0]] });
   const r = await deepenRun(deepenArgs(), { scorer: one });
@@ -737,13 +825,13 @@ test("check: each finding gets verifiers by its severity, 3 for a P0, 2 for a P2
   let m = 0;
   const r = await checkRun(checkArgs(), {
     seat: (s) => premiseAnswer(s === "feasibility" ? [finding("a unit cannot be built", "P0"), finding("a step is out of order", "P2"), finding("a typo", "P3")] : []),
-    verdict: (id) => (id === "feasibility-1" ? vote({ material: m++ === 0, corrected_severity: "P0" }) : vote({ corrected_severity: "P2" })),
+    verdict: (id) => (id === "c1-feasibility-1" ? vote({ material: m++ === 0, corrected_severity: "P0" }) : vote({ corrected_severity: "P2" })),
   });
   clean(r);
   const v = r.calls.filter((c) => c.opts.label.startsWith("check:verify")).map((c) => c.opts.label);
-  assert.deepEqual(v, ["check:verify feasibility-1 angle 1", "check:verify feasibility-1 angle 2", "check:verify feasibility-1 angle 3", "check:verify feasibility-2 angle 1", "check:verify feasibility-2 angle 2", "check:verify feasibility-3 angle 1"]);
-  assert.deepEqual(r.result.summary.handVerify, ["feasibility-1"]);
-  assert.deepEqual(r.result.summary.confirmed, ["feasibility-2", "feasibility-3"]);
+  assert.deepEqual(v, ["check:verify c1-feasibility-1 angle 1", "check:verify c1-feasibility-1 angle 2", "check:verify c1-feasibility-1 angle 3", "check:verify c1-feasibility-2 angle 1", "check:verify c1-feasibility-2 angle 2", "check:verify c1-feasibility-3 angle 1"]);
+  assert.deepEqual(r.result.summary.handVerify, ["c1-feasibility-1"]);
+  assert.deepEqual(r.result.summary.confirmed, ["c1-feasibility-2", "c1-feasibility-3"]);
   assert.equal(r.result.findings[0].votes.length, 3);
   // The verifiers run in the Verify group, each assigned by its own call (pipeline-safe).
   for (const c of r.calls.filter((x) => x.opts.label.startsWith("check:verify"))) assert.equal(c.opts.phase, "Verify");
@@ -751,17 +839,68 @@ test("check: each finding gets verifiers by its severity, 3 for a P0, 2 for a P2
 });
 
 test("check: an open P0 or P1 is counted by the voted severity, failing closed on a split; the claimed count comes back beside it", async () => {
-  const votesFor = { "coherence-1": ["P1", "P1", "P1"], "coherence-2": ["P2", "P2", "P2"], "coherence-3": ["P1", "P2", "P2"] };
+  const votesFor = { "c1-coherence-1": ["P1", "P1", "P1"], "c1-coherence-2": ["P2", "P2", "P2"], "c1-coherence-3": ["P1", "P2", "P2"] };
   const r = await checkRun(checkArgs(), {
     seat: (s) => premiseAnswer(s === "coherence" ? [finding("a", "P1"), finding("b", "P1"), finding("c", "P1")] : []),
     verdict: (id, angle) => vote({ corrected_severity: votesFor[id][angle - 1] }),
   });
   clean(r);
   assert.equal(r.result.summary.p0p1, 1);
+  assert.deepEqual(r.result.summary.p0p1Ids, ["c1-coherence-1"]);
   assert.equal(r.result.summary.p0p1Claimed, 3);
+  assert.deepEqual(r.result.summary.p0p1Pending, []);
   let k = 0;
   const split = await checkRun(checkArgs(), { seat: (s) => premiseAnswer(s === "coherence" ? [finding("a", "P1")] : []), verdict: () => [vote({ corrected_severity: "P1" }), vote({ corrected_severity: "P2" }), null][k++] });
   assert.equal(split.result.summary.p0p1, 1, "a one-to-one split on the P1 line is counted as open");
+});
+
+test("check: a hand-verify P0 or P1 is pending, never 0 open, and a class seat with a hand-verify finding takes a form the receipt refuses", async () => {
+  const later = (seats, extra = {}) => checkArgs({ ...LATER, round: 2, seats, changes: [{ id: "c1-reach-1", kind: "add", classes: ["reach"], text: "every export is retried" }], ...extra });
+  // Round 2: a claimed P0 whose verifiers all die, a P2 its voters split on materiality but put above
+  // the P1 line, and a P2 they split on but keep at P2.
+  const r = await checkRun(later(["coherence", "reach"]), {
+    seat: (s) => premiseAnswer(s === "coherence" ? [finding("a unit cannot be built", "P0"), finding("a step is out of order", "P2"), finding("a typo", "P2")] : []),
+    verdict: (id, angle) => {
+      if (id === "c2-coherence-1") return null;
+      return vote({ material: angle === 1, corrected_severity: id === "c2-coherence-2" ? "P1" : "P2" });
+    },
+  });
+  clean(r);
+  const s = r.result.summary;
+  assert.deepEqual(s.handVerify, ["c2-coherence-1", "c2-coherence-2", "c2-coherence-3"]);
+  assert.equal(s.p0p1, 0, "p0p1 counts the voters' confirmed findings only");
+  assert.deepEqual(s.p0p1Ids, []);
+  assert.equal(s.p0p1Claimed, 0);
+  assert.deepEqual(s.p0p1Pending, ["c2-coherence-1", "c2-coherence-2"], "a hand-verify finding claimed or voted at P0 or P1 waits for the main loop's trace");
+  // Round 1: reach's P1 with dead verifiers beside a confirmed one; blast-radius's alone.
+  const one = await checkRun(checkArgs(), {
+    seat: (s2) => premiseAnswer(s2 === "reach" ? [finding("a caller is missed", "P1"), finding("a second caller", "P2")] : s2 === "blast-radius" ? [finding("a shared file", "P1")] : []),
+    verdict: (id) => (id === "c1-reach-1" || id === "c1-blast-radius-1" ? null : vote({ corrected_severity: "P2" })),
+  });
+  clean(one);
+  assert.deepEqual(one.result.summary.classes.reach, { verified: ["c1-reach-2"], pending: ["c1-reach-1"] });
+  assert.deepEqual(one.result.summary.classes["blast-radius"], { pending: ["c1-blast-radius-1"] });
+  assert.deepEqual(one.result.summary.classes.premise, { nothing: true });
+  assert.deepEqual(one.result.summary.holes, [], "a seat that answered is no coverage hole; its untraced findings are pending");
+});
+
+test("check: ids carry their round, and round 3 checks every fix round 2 confirmed in one launch", async () => {
+  const two = await checkRun(checkArgs({ ...LATER, round: 2, seats: ["coherence"], changes: [{ id: "c1-coherence-1", kind: "add", classes: [], text: "x" }] }), { seat: () => premiseAnswer([finding("a seam", "P2")]) });
+  clean(two);
+  assert.deepEqual(two.result.summary.confirmed, ["c2-coherence-1"]);
+  const fixes = [
+    { id: "c2-premise-1", kind: "edit", classes: ["premise"], text: "the goal names the population", was: "the goal names none" },
+    { id: "c2-reach-1", kind: "add", classes: ["reach"], text: "the importer calls it too" },
+  ];
+  const three = await checkRun(checkArgs({ ...LATER, round: 3, seats: ["coherence", "premise", "reach"], changes: fixes }), { seat: (s) => premiseAnswer(s === "reach" ? [finding("still missed", "P1")] : []) });
+  clean(three);
+  assert.deepEqual(three.calls.filter((c) => !c.opts.label.startsWith("check:verify")).map(seatOf), ["coherence", "premise", "reach"]);
+  for (const c of three.calls.filter((x) => !x.opts.label.startsWith("check:verify"))) {
+    assert.match(c.prompt, /- edited, was: the goal names none\n  now: the goal names the population/);
+    assert.match(c.prompt, /- added: the importer calls it too/);
+    assert.ok(!c.prompt.includes("one fix alone"), "a round 3 of two fixes is told it checks one");
+  }
+  assert.deepEqual(three.result.summary.p0p1Ids, ["c3-reach-1"]);
 });
 
 test("check: a seat that stops short is re-run once naming what it missed; a second short read keeps its findings and is a hole naming the sections", async () => {
@@ -773,7 +912,7 @@ test("check: a seat that stops short is re-run once naming what it missed; a sec
   const twice = await checkRun(checkArgs(), { seat: (s) => (s === "coherence" ? premiseAnswer([finding("a seam", "P2")], { last_line_number: 50 }) : premiseAnswer()) });
   clean(twice);
   assert.deepEqual(twice.result.summary.holes, [{ seat: "coherence", missed: 'the sections it never confirmed reading, after its re-run read short again: "Implementation Units" (line 20), "U2. Test" (line 40), "Risks" (line 60)' }]);
-  assert.deepEqual(twice.result.summary.confirmed, ["coherence-1"], "a short reader's findings are still verified");
+  assert.deepEqual(twice.result.summary.confirmed, ["c1-coherence-1"], "a short reader's findings are still verified");
   // A 39-character quote re-runs by the inventory kind, and the prompt never holds the last line.
   const quote = await checkRun(checkArgs(), { seat: (s, c) => premiseAnswer([], s === "premise" && !c.opts.label.endsWith("(re-run)") ? { last_line_text: D_TEXT.slice(0, 39) } : {}) });
   const p = quote.calls.find((c) => c.opts.label === "check:premise (re-run)").prompt;
@@ -802,7 +941,7 @@ test("check: a later round runs exactly the named seats, names its round, and sh
   assert.deepEqual(r.result.summary.classes, { reach: { nothing: true } });
   const three = await checkRun(checkArgs({ ...LATER, round: 3, seats: ["coherence", "premise"], changes: [changes[0]] }));
   clean(three);
-  for (const c of three.calls) assert.match(c.prompt, /THIS IS CHECK ROUND 3\.[\s\S]*This round checks one fix alone/);
+  for (const c of three.calls) assert.match(c.prompt, /THIS IS CHECK ROUND 3\.[\s\S]*This round checks the fixes for the P0 and P1 findings round 2 confirmed/);
 });
 
 test("check: on an update the confirmed findings reach every seat and the premise seat's goal_judged is read fail-closed", async () => {
@@ -848,7 +987,7 @@ test("check: stringified args run like object args, identical args give identica
   assert.deepEqual(b.result, a.result);
   const dry = await checkRun(checkArgs({ dry: true }), opts);
   clean(dry);
-  assert.deepEqual(dry.calls.map((x) => x.opts.label), ["check:coherence", "check:verify coherence-1 angle 1"]);
+  assert.deepEqual(dry.calls.map((x) => x.opts.label), ["check:coherence", "check:verify c1-coherence-1 angle 1"]);
   assert.equal(dry.result.summary.dry, true);
   // A dry run never dispatched the adversary, so it reads as not in this run, never as absent (the
   // real tool's dry run, 2026-11-09, reported it absent before this).

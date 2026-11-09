@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { receipt } from "./flow.mjs";
 import { longOf, slugOf } from "./paths.mjs";
 import {
-  RECORD, advance, block, complete, defaultJobFolder, foldLand, foldStart, gate, gitFailure, helperTrail, land, landCheck, launch, launched,
+  PREMISE_ID, RECORD, advance, block, complete, defaultJobFolder, foldLand, foldStart, gate, gitFailure, helperTrail, land, landCheck, launch, launched,
   loadRecord, locate, note, receiptFields, restart, show, start, typedPath, writerOf,
 } from "./run-record.mjs";
 import { SHA_NEW, SHA_OLD, ceEntry, ceInstall, registryAt } from "./fixtures/ce-fixture.mjs";
@@ -648,6 +648,22 @@ test("an outcome must agree with the step's fold: no landed fold under passed, p
   assert.equal(advance(load(rec._path), { outcome: "done", changes: 1, session: S1 }).step, "check-2");
   runStage(w, load(rec._path), "wf_check-004");
   assert.throws(() => advance(load(rec._path), { outcome: "done", p0p1: 1, session: S1 }), /fold/);
+});
+
+test("a deepen that passed may land a fold of its carried premise findings alone (R4-31), and nothing else under passed, park or premise-goal", (t) => {
+  const w = world(t);
+  const rec = atDeepen(w);
+  fold(rec, "# New plan\n\n## Goal\n\ncarried\n", ["premise-1", "premise-2"]);
+  for (const outcome of ["park", "premise-goal"]) assert.throws(() => advance(load(rec._path), { outcome, session: S1 }), /fold landed/, outcome);
+  assert.equal(advance(load(rec._path), { outcome: "passed", session: S1 }).step, "check-1");
+  // A ledger holding an amendment beside the carried findings deepened sections, so passed contradicts it.
+  const w2 = world(t);
+  const rec2 = atDeepen(w2);
+  fold(rec2, "# New plan\n\n## Goal\n\nmixed\n", ["premise-1", "A1"]);
+  assert.throws(() => advance(load(rec2._path), { outcome: "passed", session: S1 }), /fold landed/);
+  assert.equal(advance(load(rec2._path), { outcome: "deepened", session: S1 }).step, "check-1");
+  // The id form is the deepen script's own, so the two cannot drift apart unseen.
+  assert.ok(PREMISE_ID.test("premise-12") && !PREMISE_ID.test("premise-") && !PREMISE_ID.test("premise-0") && !PREMISE_ID.test("c1-premise-1") && !PREMISE_ID.test("A1"));
 });
 
 test("a landing after a folded round 3 lands checked with its open count, and a byte changed after round 3's fold refuses it", (t) => {

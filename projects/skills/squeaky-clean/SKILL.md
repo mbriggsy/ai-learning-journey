@@ -1,6 +1,6 @@
 ---
 name: squeaky-clean
-description: End-of-session cleanup automation. Trigger when the user says "squeaky", "squeaky clean", "let's get squeaky", or any other end-of-session shutdown signal. Runs the full checklist — TODO update, typechecks, git verification, temp cleanup, commit, push, orphan dev-process cleanup, and a handoff message to the successor session when Briggsy named one.
+description: End-of-session cleanup automation. Trigger when the user says "squeaky", "squeaky clean", "let's get squeaky", or any other end-of-session shutdown signal. Runs the full checklist — TODO update, typechecks, git verification, temp cleanup, commit, push, orphan dev-process cleanup, and a handoff message to the successor session when Briggsy named one or handoff mode found one (the next-numbered session).
 user-invocable: true
 ---
 
@@ -170,9 +170,9 @@ Only after this step, report: "Squeaky clean." with a brief summary: the commit'
 
 ### 10. Hand Off to the Successor
 
-Run this step only when Briggsy named a successor this session: the session that picks up when this one closes ("b9-2 is watching", "hand off to our setup 7"). It is the last thing squeaky does, after a stop too: a close that stopped is what the successor most needs to hear. A question still waiting on Briggsy holds this step until he answers; then finish the steps that waited, run step 9 again, and come back here. With no successor named, end with "No handoff: no successor was named this session."
+Run this step only when this session has a successor, the session that picks up when this one closes: one Briggsy named this session ("b9-2 is watching", "hand off to our setup 7"), or the one handoff mode found (the window skill's "Handoff mode": the live, idle session named with this session's number plus one, `playbook-7` after `playbook-6`, with no higher-numbered lane of the same name live beside it). It is the last thing squeaky does, after a stop too: a close that stopped is what the successor most needs to hear. A question still waiting on Briggsy holds this step until he answers; then finish the steps that waited, run step 9 again, and come back here. With neither, end with "No handoff: no successor was named this session, and handoff mode found none."
 
-1. Run `ListAgents` again. The successor is the one live local session (step 0's kind) whose name is exactly the name Briggsy gave, ignoring case. A nickname finds nothing, by design: a near-miss can wake the wrong session.
+1. Run `ListAgents` again. The successor is the one live local session (step 0's kind) whose name is exactly the name Briggsy gave (or handoff mode's successor name), ignoring case. A nickname finds nothing, by design: a near-miss can wake the wrong session.
    - None: end with "No handoff: no live session on this machine is named <name>." If some names contain his, add "<each name> only contains it."
    - More than one live match: end with "No handoff: <name> matches <each name [ref]>."
 2. Load `SendMessage` with ToolSearch first if it is deferred (loading it is not a send). Send one `SendMessage` to the row's name exactly as ListAgents printed it. When any other row's name matches it, ignoring case (offline, Remote Control or cloud rows included), address it as `<name> [ref]`, copying the `[ref]` from its row: a bare name is refused when names clash. The first line carries the outcome: `Handoff: squeaky clean, your turn.`, or `Handoff: not clean, <what step 9's report led with>; your turn.` Then one line each:

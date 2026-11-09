@@ -23,7 +23,17 @@ Saying "b9-2 is watching" also makes the closing session write its close for the
 - A nickname or part of a name sends nothing, by design. Say "b9 2" when the session is `b9-2`, and you get: `No handoff: no live session on this machine is named b9 2.`
 - If two live sessions on this laptop match, nothing is sent.
 - Old sessions with the same name (offline ones, ones on another machine or in the cloud) don't count. When one shares the successor's name, the closing session addresses the live one by its short id, because a send by name alone is refused when names clash.
-- Only you name the successor. Another session's message claiming the job doesn't count.
+- Only you name the successor, in words or by numbering the sessions (below). Another session's message claiming the job doesn't count.
+
+## Handoff mode: numbered names
+
+You don't have to say "is watching" when the sessions are numbered (Briggsy, 2026-11-09). A session whose name ends in a number, such as `playbook-6`, treats the live session named with the next number, `playbook-7`, as its successor, and the chain runs on: `playbook-7` hands off to `playbook-8` the same way.
+
+- The closing session checks at each context-window check (`/window`). When it finds the next number live and idle, it tells you once ("Handoff mode: playbook-7 is live...") and owns the squeaky call: it runs squeaky when the window nears its wrap line, never just because a task finished, and squeaky's last step hands off.
+- Lanes are not a chain. When the same name with a higher number is live too (`b9-3` beside `b9-2`), or the next number is already busy with its own work, handoff mode stays off: those are parallel sessions, and you name a successor in words if you want one. (On 2026-11-08 `b9-1` to `b9-3` started within a minute of each other, and `playbook-4` and `playbook-5` began the same item 11 seconds apart.)
+- A lookalike never counts. `playboook-7` is not `playbook-7`; the closing session tells you once, so you can rename it with `/rename`.
+- A successor started early waits. While its predecessor (its number minus one) is live and hasn't handed off, it doesn't start the queue's next item unless you give it work.
+- It lives in the window skill (`projects/skills/window/SKILL.md`, "Handoff mode"), which a running session reads fresh at every check, and in step 10 of squeaky.
 
 ## What the closing session does
 

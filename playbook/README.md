@@ -6,7 +6,7 @@ Sessions about how we work start in this folder: open the terminal in `playbook/
 
 ## The plays, in order
 
-For sizable work, steps 1 to 5 are required, in this order: brief, a deepened and checked plan, the build, the whole-file review, and distill. Sizable means new logic, or work that will take more than one session ([the full line](principles.md#how-we-work)). Steps 6 and 7 close the session: squeaky when you call it, and the handoff when you have named a successor. Which tool delivers a step is Claude's call, made job by job, and it can change when a better tool comes along.
+For sizable work, steps 1 to 5 are required, in this order: brief, a deepened and checked plan, the build, the whole-file review, and distill. Sizable means new logic, or work that will take more than one session ([the full line](principles.md#how-we-work)). Steps 6 and 7 close the session: squeaky when you call it (or, in handoff mode, when the session calls it at the window's wrap line), and the handoff when a successor is named, in words or by its number (step 7). Which tool delivers a step is Claude's call, made job by job, and it can change when a better tool comes along.
 
 What keeps the steps running: each session's close writes the job's next step, by name, into the TODO's START HERE line, where the next session starts.
 
@@ -68,7 +68,7 @@ The end-of-session checklist, in order: wait for this session's own background j
 
 ### 7. Hand off to the next session
 
-When you have named the session that takes over, squeaky's last step sends it one message saying how the close went and where to start. An idle successor wakes within seconds; a busy one reads the message as soon as its current step finishes.
+When you have named the session that takes over, in words or by numbering it next (`playbook-6`, then `playbook-7`: handoff mode, in which the closing session also calls squeaky itself at the window's wrap line), squeaky's last step sends it one message saying how the close went and where to start. An idle successor wakes within seconds; a busy one reads the message as soon as its current step finishes.
 
 - **Start it:** tell the closing session the next session's whole name, for example "b9-2 is watching". Both sessions must run on this laptop (a session anywhere else gets no message) and in the same permission mode (the setting for which actions Claude may take without asking you); if the modes differ, the successor holds the message for your approval, and overnight that approval can run out. The full rules: [how-to/session-chains.md](how-to/session-chains.md).
 - **Lives in:** step 10 of [projects/skills/squeaky-clean/SKILL.md](../projects/skills/squeaky-clean/SKILL.md).

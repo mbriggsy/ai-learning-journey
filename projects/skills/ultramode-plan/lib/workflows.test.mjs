@@ -651,3 +651,203 @@ test("deepen: stringified args run like object args, identical args give identic
   assert.equal(past.calls.length, 0);
   assert.match(past.error, /heading at line 60, past the plan's last line \(50\)/);
 });
+
+// ---------------------------------------------------------------- the check (KTD6 to KTD9)
+
+// The check's args: the deepen's, without deepened and learnings, plus round 1's flags. An extra key
+// set to undefined is dropped, so a later round's args can leave round 1's flags out.
+const checkArgs = (extra = {}) => {
+  const { deepened, learnings, ...base } = DEEPEN_ARGS;
+  const a = { ...base, round: 1, highRisk: false, lenses: [], noCode: null, ...extra };
+  for (const [k, v] of Object.entries(extra)) if (v === undefined) delete a[k];
+  return a;
+};
+const seatOf = (call) => call.opts.label.replace(/^check:/, "").replace(/ \(re-run\)$/, "");
+// A responder for the check, routed by label: `seat(name, call)` answers a seat (a finder object, or
+// null for a dead one), `verdict(id, angle, call)` a verifier.
+function checkResponder({ seat = () => premiseAnswer(), verdict = () => vote() } = {}) {
+  return (c) => {
+    const m = c.opts.label.match(/^check:verify (\S+) angle (\d+)$/);
+    if (m) return verdict(m[1], Number(m[2]), c);
+    return seat(seatOf(c), c);
+  };
+}
+const checkRun = (args, opts) => runWorkflow(script("check"), { args, respond: checkResponder(opts) });
+const ROUND1 = ["coherence", "feasibility", "scope-guardian", "adversarial", "premise", "reach", "blast-radius", "test-vacuity"];
+const rosterOf = (prompt) => prompt.match(/THE ROSTER AND OWNERSHIP TABLE[^\n]*\n((?:- .*\n?)+)/)[1].trim().split("\n").map((l) => l.match(/^- ([a-z-]+):/)[1]);
+const LATER = { highRisk: undefined, lenses: undefined, noCode: undefined };
+
+test("check: round 1 runs coherence, feasibility, scope-guardian, the adversary and our four, each on Opus at xhigh with the same roster; CE seats get their persona paths", async () => {
+  const r = await checkRun(checkArgs());
+  clean(r);
+  assert.deepEqual(r.calls.map((c) => c.opts.label), ROUND1.map((s) => `check:${s}`));
+  for (const c of r.calls) {
+    assert.equal(c.opts.model, "opus");
+    assert.equal(c.opts.effort, "xhigh");
+    assert.deepEqual(c.opts.schema, SCHEMAS.finder);
+    assert.deepEqual(rosterOf(c.prompt), ROUND1, `${c.opts.label} read another roster`);
+  }
+  const persona = (seat, file) => assert.ok(r.calls.find((c) => c.opts.label === `check:${seat}`).prompt.includes(`YOUR PERSONA FILE: C:/ce/skills/ce-doc-review/references/personas/${file}`), `${seat} lost its persona`);
+  persona("coherence", "coherence-reviewer.md");
+  persona("feasibility", "feasibility-reviewer.md");
+  persona("scope-guardian", "scope-guardian-reviewer.md");
+  persona("adversarial", "adversarial-document-reviewer.md");
+  assert.match(r.calls.find((c) => c.opts.label === "check:reach").prompt, /This seat reads no CE file/);
+  assert.deepEqual(Object.keys(r.result)[0], "summary");
+  const s = r.result.summary;
+  assert.equal(s.stage, "check-1");
+  assert.deepEqual(s.roster, ROUND1);
+  assert.deepEqual(s.adversary, { ran: true, absent: [] });
+  assert.deepEqual(s.classes, { premise: { nothing: true }, reach: { nothing: true }, "blast-radius": { nothing: true }, "test-vacuity": { nothing: true } });
+  assert.deepEqual(s.holes, []);
+  assert.deepEqual(r.phases, ["Check"]);
+});
+
+test("check: a high-risk plan runs the panel in place of the adversary, the lens picks join, and a plan with no code skips reach and test vacuity with its reason", async () => {
+  const r = await checkRun(checkArgs({ highRisk: true, lenses: ["security", "product"], noCode: "the plan changes prose only" }));
+  clean(r);
+  const want = ["coherence", "feasibility", "scope-guardian", "adv-sequencing", "adv-settled", "adv-hidden-work", "adv-verification", "product", "security", "premise", "blast-radius"];
+  assert.deepEqual(r.calls.map(seatOf), want);
+  for (const c of r.calls) assert.deepEqual(rosterOf(c.prompt), want);
+  assert.deepEqual(r.result.summary.skipped, [{ seat: "reach", reason: "the plan changes prose only" }, { seat: "test-vacuity", reason: "the plan changes prose only" }]);
+  assert.deepEqual(r.result.summary.classes.reach, { skipped: "the plan changes prose only" });
+  assert.deepEqual(r.result.summary.classes["test-vacuity"], { skipped: "the plan changes prose only" });
+  assert.match(r.calls.find((c) => seatOf(c) === "adv-settled").prompt, /YOUR ASSIGNED ANGLE, hunt only this seam/);
+  for (const p of want.filter((x) => x.startsWith("adv-"))) assert.ok(r.calls.find((c) => seatOf(c) === p).prompt.includes("YOUR PERSONA FILE: C:/ce/skills/ce-doc-review/references/personas/adversarial-document-reviewer.md"), `${p} lost its persona`);
+  // A missing persona file runs the seat on its own lens.
+  const missing = await checkRun(checkArgs({ ce: ceWith(["security"]), lenses: ["security"] }));
+  assert.match(missing.calls.find((c) => seatOf(c) === "security").prompt, /CE's persona file for this seat is missing in this run/);
+});
+
+test("check: a dead seat is a coverage hole, never no findings; a dead adversary leaves the adversary absent", async () => {
+  const r = await checkRun(checkArgs(), { seat: (s) => (s === "blast-radius" || s === "adversarial" ? null : premiseAnswer()) });
+  clean(r);
+  assert.deepEqual(r.result.summary.holes, [
+    { seat: "adversarial", missed: "its class in round 1: the seat never answered" },
+    { seat: "blast-radius", missed: "its class in round 1: the seat never answered" },
+  ]);
+  assert.deepEqual(r.result.summary.classes["blast-radius"], { hole: true });
+  assert.deepEqual(r.result.summary.adversary, { ran: false, absent: ["adversarial"] });
+  // One dead panel seat leaves the adversary absent too.
+  const panel = await checkRun(checkArgs({ highRisk: true }), { seat: (s) => (s === "adv-hidden-work" ? null : premiseAnswer()) });
+  assert.deepEqual(panel.result.summary.adversary, { ran: false, absent: ["adv-hidden-work"] });
+});
+
+test("check: each finding gets verifiers by its severity, 3 for a P0, 2 for a P2, 1 for a P3; a 1-of-3 split on material is hand-verify", async () => {
+  let m = 0;
+  const r = await checkRun(checkArgs(), {
+    seat: (s) => premiseAnswer(s === "feasibility" ? [finding("a unit cannot be built", "P0"), finding("a step is out of order", "P2"), finding("a typo", "P3")] : []),
+    verdict: (id) => (id === "feasibility-1" ? vote({ material: m++ === 0, corrected_severity: "P0" }) : vote({ corrected_severity: "P2" })),
+  });
+  clean(r);
+  const v = r.calls.filter((c) => c.opts.label.startsWith("check:verify")).map((c) => c.opts.label);
+  assert.deepEqual(v, ["check:verify feasibility-1 angle 1", "check:verify feasibility-1 angle 2", "check:verify feasibility-1 angle 3", "check:verify feasibility-2 angle 1", "check:verify feasibility-2 angle 2", "check:verify feasibility-3 angle 1"]);
+  assert.deepEqual(r.result.summary.handVerify, ["feasibility-1"]);
+  assert.deepEqual(r.result.summary.confirmed, ["feasibility-2", "feasibility-3"]);
+  assert.equal(r.result.findings[0].votes.length, 3);
+  // The verifiers run in the Verify group, each assigned by its own call (pipeline-safe).
+  for (const c of r.calls.filter((x) => x.opts.label.startsWith("check:verify"))) assert.equal(c.opts.phase, "Verify");
+  for (const c of r.calls.filter((x) => !x.opts.label.startsWith("check:verify"))) assert.equal(c.opts.phase, "Check");
+});
+
+test("check: an open P0 or P1 is counted by the voted severity, failing closed on a split; the claimed count comes back beside it", async () => {
+  const votesFor = { "coherence-1": ["P1", "P1", "P1"], "coherence-2": ["P2", "P2", "P2"], "coherence-3": ["P1", "P2", "P2"] };
+  const r = await checkRun(checkArgs(), {
+    seat: (s) => premiseAnswer(s === "coherence" ? [finding("a", "P1"), finding("b", "P1"), finding("c", "P1")] : []),
+    verdict: (id, angle) => vote({ corrected_severity: votesFor[id][angle - 1] }),
+  });
+  clean(r);
+  assert.equal(r.result.summary.p0p1, 1);
+  assert.equal(r.result.summary.p0p1Claimed, 3);
+  let k = 0;
+  const split = await checkRun(checkArgs(), { seat: (s) => premiseAnswer(s === "coherence" ? [finding("a", "P1")] : []), verdict: () => [vote({ corrected_severity: "P1" }), vote({ corrected_severity: "P2" }), null][k++] });
+  assert.equal(split.result.summary.p0p1, 1, "a one-to-one split on the P1 line is counted as open");
+});
+
+test("check: a seat that stops short is re-run once naming what it missed; a second short read keeps its findings and is a hole naming the sections", async () => {
+  const short = await checkRun(checkArgs(), { seat: (s, c) => (s === "coherence" ? premiseAnswer([], { last_line_number: c.opts.label.endsWith("(re-run)") ? 80 : 50 }) : premiseAnswer()) });
+  clean(short);
+  // A stop at 50 sits inside U2 (40 to 59), under Implementation Units (20 to 59): both run past it.
+  assert.match(short.calls.find((c) => c.opts.label === "check:coherence (re-run)").prompt, /STOPPED SHORT at line 50, so these sections were not read to their end:\n- line 20: Implementation Units\n- line 40: U2\. Test\n- line 60: Risks\n/);
+  assert.deepEqual(short.result.summary.holes, []);
+  const twice = await checkRun(checkArgs(), { seat: (s) => (s === "coherence" ? premiseAnswer([finding("a seam", "P2")], { last_line_number: 50 }) : premiseAnswer()) });
+  clean(twice);
+  assert.deepEqual(twice.result.summary.holes, [{ seat: "coherence", missed: 'the sections it never confirmed reading, after its re-run read short again: "Implementation Units" (line 20), "U2. Test" (line 40), "Risks" (line 60)' }]);
+  assert.deepEqual(twice.result.summary.confirmed, ["coherence-1"], "a short reader's findings are still verified");
+  // A 39-character quote re-runs by the inventory kind, and the prompt never holds the last line.
+  const quote = await checkRun(checkArgs(), { seat: (s, c) => premiseAnswer([], s === "premise" && !c.opts.label.endsWith("(re-run)") ? { last_line_text: D_TEXT.slice(0, 39) } : {}) });
+  const p = quote.calls.find((c) => c.opts.label === "check:premise (re-run)").prompt;
+  assert.match(p, /FAILED THE RUN'S CHECK OF ITS READING INVENTORY/);
+  assert.ok(!p.includes(D_TEXT.slice(0, 30)));
+});
+
+test("check: a later round runs exactly the named seats, names its round, and shows each change, an edit with its was; a change at the last line is masked", async () => {
+  const changes = [
+    { id: "C1", kind: "edit", classes: ["reach"], text: "every export is retried twice", was: "every export is retried once" },
+    { id: "C2", kind: "add", classes: ["reach"], text: `${D_TEXT} and the run record` },
+    { id: "C3", kind: "delete", classes: [], text: "the old fallback" },
+  ];
+  const r = await checkRun(checkArgs({ ...LATER, round: 2, seats: ["coherence", "reach"], changes }));
+  clean(r);
+  assert.deepEqual(r.calls.map(seatOf), ["coherence", "reach"]);
+  for (const c of r.calls) {
+    assert.match(c.prompt, /THIS IS CHECK ROUND 2\./);
+    assert.match(c.prompt, /- edited, was: every export is retried once\n  now: every export is retried twice/);
+    assert.match(c.prompt, /- removed: the old fallback/);
+    assert.ok(c.prompt.includes("(line 80, the plan's last line: read it in the plan)"));
+    assert.ok(!c.prompt.includes(D_TEXT.slice(0, 40)), "a round-2 prompt holds the last line's text");
+    assert.deepEqual(rosterOf(c.prompt), ["coherence", "reach"]);
+  }
+  assert.equal(r.result.summary.adversary, null);
+  assert.deepEqual(r.result.summary.classes, { reach: { nothing: true } });
+  const three = await checkRun(checkArgs({ ...LATER, round: 3, seats: ["coherence", "premise"], changes: [changes[0]] }));
+  clean(three);
+  for (const c of three.calls) assert.match(c.prompt, /THIS IS CHECK ROUND 3\.[\s\S]*This round checks one fix alone/);
+});
+
+test("check: on an update the confirmed findings reach every seat and the premise seat's goal_judged is read fail-closed", async () => {
+  const update = { update: true, brief: null, lands: "C:/repo/projects/app/docs/plans/export-plan.md", goalMoves: ["a population instance in src/export.js"] };
+  const judged = await checkRun(checkArgs(update), { seat: (s) => premiseAnswer([], s === "premise" ? { goal_judged: true } : {}) });
+  clean(judged);
+  assert.equal(judged.result.summary.goalJudged, true);
+  for (const c of judged.calls) assert.ok(c.prompt.includes("- a population instance in src/export.js"), c.opts.label);
+  assert.equal((await checkRun(checkArgs(update))).result.summary.goalJudged, false);
+  assert.equal((await checkRun(checkArgs(update), { seat: (s) => (s === "premise" ? null : premiseAnswer()) })).result.summary.goalJudged, false);
+  assert.equal((await checkRun(checkArgs())).result.summary.goalJudged, null);
+});
+
+test("check: args out of their round, a roster without coherence or with both adversary forms, and a malformed change are refused before any helper starts", async () => {
+  const change = { id: "C1", kind: "add", classes: [], text: "x" };
+  for (const [args, pattern] of [
+    [checkArgs({ highRisk: undefined }), /args\.highRisk is required in round 1/],
+    [checkArgs({ seats: ["coherence"] }), /args\.seats is for rounds 2 and 3 only/],
+    [checkArgs({ ...LATER, round: 2, changes: [change] }), /args\.seats is required in round 2/],
+    [checkArgs({ ...LATER, round: 2, seats: ["coherence"], changes: [change], highRisk: true }), /args\.highRisk is for round 1 only/],
+    [checkArgs({ ...LATER, round: 2, seats: ["reach"], changes: [change] }), /args\.seats has no coherence seat/],
+    [checkArgs({ ...LATER, round: 2, seats: ["coherence", "adversarial", "adv-settled"], changes: [change] }), /runs the single adversary and the panel together/],
+    [checkArgs({ ...LATER, round: 2, seats: ["coherence"], changes: [{ ...change, was: "y" }] }), /args\.changes: the fold's changes/],
+    [checkArgs({ ...LATER, round: 2, seats: ["coherence"], changes: [{ ...change, kind: "edit" }] }), /args\.changes: the fold's changes/],
+    [checkArgs({ lenses: ["ux"] }), /args\.lenses: the lens picks/],
+    [checkArgs({ round: 4 }), /args\.round: the check round, 1, 2 or 3/],
+    [checkArgs({ deepened: false }), /args\.deepened is no field this script takes/],
+  ]) {
+    const r = await checkRun(args);
+    assert.equal(r.calls.length, 0, String(pattern));
+    assert.match(r.error, pattern);
+  }
+});
+
+test("check: stringified args run like object args, identical args give identical calls, and dry runs one helper per phase", async () => {
+  const opts = { seat: (s) => premiseAnswer(s === "coherence" ? [finding("a seam", "P1")] : []) };
+  const a = await checkRun(checkArgs(), opts);
+  const b = await checkRun(JSON.stringify(checkArgs()), opts);
+  const c = await checkRun(checkArgs(), opts);
+  clean(b);
+  assert.deepEqual(b.calls, a.calls);
+  assert.deepEqual(c.calls, a.calls);
+  assert.deepEqual(b.result, a.result);
+  const dry = await checkRun(checkArgs({ dry: true }), opts);
+  clean(dry);
+  assert.deepEqual(dry.calls.map((x) => x.opts.label), ["check:coherence", "check:verify coherence-1 angle 1"]);
+  assert.equal(dry.result.summary.dry, true);
+});

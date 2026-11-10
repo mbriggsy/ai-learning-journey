@@ -86,7 +86,9 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         mule's per-source gate: status, content-type, parse, items.
                  build_newsletter.py  — THE NIGHTLY FEUD. Turns the mule's cargo into an edition.
                                         Facts are computed, never written by a model; the design
-                                        is carried from the frozen template; no network calls.
+                                        is carried from the frozen template. In season it pulls one
+                                        snapshot first (season_cargo.py) and builds around our roster
+                                        (season_edition.py); a failed pull never costs the paper.
                  market.py            — value (priced for THIS league) vs ADP: who the room lets
                                         fall, and who it overpays for. READ-ONLY. In an 8-team
                                         league replacement is QB12, so QBs below it are worth
@@ -122,7 +124,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         section [2], who the consensus ranks that the board does
                                         not carry — the half a rank-gap metric cannot see.
                                         → docs/insights/018
-tests/           1394 tests: python -m unittest discover -s tests  (run from the root)
+tests/           1519 tests: python -m unittest discover -s tests  (run from the root)
                  fixtures/lab_feed_120.json — the spent lab room's 120 picks
 logo/            team art. deez-nuts/ is Briggsy's; hunter-maker/ is Hunter's.
 ```
@@ -281,7 +283,9 @@ all.
 
 **The Nightly Feud publishes itself now.** Its build half had never run once; **Edition #1 went out
 2026-08-08** — `python scripts/build_newsletter.py`. Deterministic code owns every fact, the design
-is carried byte-for-byte from the frozen template rather than copied, and it makes no network calls.
+is carried byte-for-byte from the frozen template rather than copied. **Since 2026-11-09 it is the
+in-season paper**: this week's matchup with start/sit calls, our roster's injuries, waiver pickups,
+standings, built from one nightly pull of rosters and three sites' projections.
 **It is scheduled** (U12): the *Family Feud Newsletter* task runs **daily at 21:45**, sixteen
 minutes behind the mule's `:29` haul. Its installer proves the job by output freshness rather than
 by an exit code, because a task pointing at a deleted script reports success indefinitely. Back

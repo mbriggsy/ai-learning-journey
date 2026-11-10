@@ -80,6 +80,11 @@ always been — the cargo timestamp in `mule_status.json` ([insight 007](insight
 
 ### 1. The Tuesday waiver report
 
+**Partly delivered 2026-11-09, nightly, inside The Nightly Feud** (`docs/nightly-feud.md`, "The
+in-season edition"): weak spots, free agents worth a claim by three-site projection, next week's
+byes, roster count and our waiver place. **Still unbuilt:** who on our roster is now droppable, and
+the read of the week's transactions (Hunter's first).
+
 **Answers:** who got dropped that we want, who on our roster is now droppable, and where our
 rolling-priority position sits.
 

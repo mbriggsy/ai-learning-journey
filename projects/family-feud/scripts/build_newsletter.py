@@ -25,7 +25,14 @@ the reference. The `<style>` block and the theme-toggle `<script>` are EXTRACTED
 time and injected, so the edition cannot drift from the design and there is no second copy of the
 CSS to maintain. A test asserts the rendered style block hashes identically to the frozen one.
 
-WHY THIS MAKES NO NETWORK CALLS. The plan had Market Watch resolving trending player ids through
+IN SEASON (from the night `sleeper_draft.json` reads `status: "complete"`) the paper is built
+around our roster instead: this week's matchup with start/sit calls, the roster's injuries, waiver
+pickups, standings. main() then reaches the network ONCE, through `haul()`: scripts/season_cargo.py
+run as a child process with a clock on it, writing one snapshot the pure functions in
+scripts/season_edition.py read. A failed pull never costs the paper -- it prints from the kept
+snapshot and says how old it is. Decisions: docs/plans/2026-11-09-001-feat-in-season-edition-plan.md.
+
+WHY THE DRAFT EDITION MAKES NO NETWORK CALLS. The plan had Market Watch resolving trending player ids through
 Sleeper's per-player endpoint, 48 calls a night, because at the time nothing on the board carried
 a Sleeper id. U6 changed that: every row now has `sleeperId`, so trending ids join straight to the
 board. Non-board trending players need no name, because they are noise by the section's own rule
@@ -42,6 +49,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -68,6 +76,15 @@ DRIVE_DIR = r"G:\My Drive\Nightly Feud"
 #: leaves the 87 earlier back issues alone -- putting those in Drive is Briggsy's call, not a
 #: side effect of a repair.
 DRIVE_SINCE = "2026-11-09"
+
+#: The in-season paper's one snapshot (rosters, matchups, three-site projections, kickoffs) and the
+#: script that pulls it. See `haul` and scripts/season_cargo.py.
+SEASON_CARGO = os.path.join(INBOX, "season_cargo.json")
+SEASON_HAULER = os.path.join(HERE, "season_cargo.py")
+#: Seconds the pull may take before the build gives up on it and prints from the kept snapshot.
+#: Measured 2026-11-09: 46 s. The scheduled task is killed at 10 minutes and a killed task writes no
+#: edition, so the pull is never allowed to be the thing that runs out the clock.
+HAUL_TIMEOUT = 300
 
 sys.path.insert(0, HERE)
 sys.path.insert(0, KIT)
@@ -405,8 +422,16 @@ def _lead_rank(item):
     return (_SEVERITY[item["kind"]], -pos, len(item["title"]))
 
 
-def wire(players):
+def _board_person(p):
+    return {"name": p["name"], "pos": p["pos"], "team": p["team"], "r": p["r"], "tier": p["tier"]}
+
+
+def wire(players, describe=_board_person):
     """Headlines that name a board player, GROUPED BY WHO THEY ARE ABOUT.
+
+    `players` is whoever the desk listens for: the draft board before the draft, and in season our
+    roster plus the free agents who would start for us (season_edition.wire_people). Each needs a
+    unique `r`, a `name`, a `pos`; `describe` says what an item carries about each one it names.
 
     One night's real feeds produced 31 matching headlines -- five of them about Jahmyr Gibbs's
     contract and four about Zay Flowers's quad, because five outlets carry the same story. A
@@ -431,8 +456,7 @@ def wire(players):
             seen_titles.add(key)
             item = {"title": title, "link": link, "when": when,
                     "kind": classify(title), "source": source,
-                    "players": [{"name": p["name"], "pos": p["pos"], "team": p["team"],
-                                 "r": p["r"], "tier": p["tier"]} for p in hits]}
+                    "players": [describe(p) for p in hits]}
             who = tuple(sorted(p["r"] for p in hits))
             g = groups.setdefault(who, {"lead": item, "sources": set(), "count": 0})
             g["sources"].add(source)
@@ -593,12 +617,134 @@ def build_context(now=None, board_path=BOARD, archive=ARCHIVE):
     }
 
 
+# ------------------------------------------------------------------ the in-season edition
+
+
+def season_mode():
+    """True once the draft is over: the paper is then built around our roster, not the draft.
+
+    The switch is a fact in cargo -- `sleeper_draft.json` reads `status: "complete"` -- not a flag
+    somebody has to remember to flip. If that file cannot be read tonight the paper stays in the
+    mode it can prove: in-season when a season snapshot is on disk, the draft edition otherwise.
+    """
+    draft, _problem = load("sleeper_draft.json")
+    if isinstance(draft, dict) and draft.get("status"):
+        return draft["status"] == "complete"
+    return os.path.exists(SEASON_CARGO)
+
+
+def haul():
+    """Refresh the season snapshot. Returns None when it worked, else why it did not, in words.
+
+    A CHILD PROCESS WITH A CLOCK ON IT, deliberately. The pull is a 16 MB download and a dozen web
+    pages; a socket that stalls mid-body is not bounded by any per-call timeout, and this job is
+    killed at ten minutes with nothing written. Whatever happens in there, the build goes on and
+    prints from the snapshot already on disk, saying how old it is.
+
+    main() reaches the network ONLY through this function, so tests replace it and never pull.
+    """
+    try:
+        done = subprocess.run([sys.executable, SEASON_HAULER], capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", timeout=HAUL_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        return f"the pull was stopped after {HAUL_TIMEOUT} seconds"
+    except OSError as e:
+        return f"the pull could not be started ({e})"
+    lines = [ln.strip() for ln in (done.stdout or "").splitlines() if ln.strip()]
+    last = lines[-1] if lines else ""
+    if done.returncode == 0 and last.startswith("ok"):
+        return None
+    err = [ln.strip() for ln in (done.stderr or "").splitlines() if ln.strip()]
+    return (last or (err[-1] if err else "") or f"the pull exited {done.returncode} and said nothing")[:300]
+
+
+def load_season_cargo(path=None):
+    """(snapshot, problem). Never raises, for the reason `load` never does."""
+    path = path or SEASON_CARGO
+    if not os.path.exists(path):
+        return None, "tonight's rosters, matchups and projections have never been pulled"
+    try:
+        with open(path, encoding="utf-8") as f:
+            snap = json.load(f)
+    except (ValueError, OSError) as e:
+        return None, f"the saved rosters and projections could not be read ({e})"
+    if not isinstance(snap, dict) or not isinstance(snap.get("rosters"), list):
+        return None, "the saved rosters and projections hold no rosters"
+    return snap, None
+
+
+def _mule_age_minutes(run_at, now):
+    try:
+        return (now - _dt.datetime.strptime(str(run_at), "%Y-%m-%d %H:%M:%S")).total_seconds() / 60
+    except (TypeError, ValueError):
+        return None
+
+
+def build_season_context(now=None, archive=None, haul_problem=None, cargo_path=None):
+    """The in-season edition's context. Same envelope as `build_context` (edition number, dates,
+    the carried design, the colophon's gaps); the sections come from season_edition.build."""
+    import season_edition
+    now = now or _dt.datetime.now()
+    archive = archive or ARCHIVE
+    snap, problem = load_season_cargo(cargo_path)
+    status = mule_status()
+    failed = sorted(k for k, v in (status.get("sources") or {}).items()
+                    if isinstance(v, str) and not v.lower().startswith("ok"))
+    css, script = frozen_parts()
+    date_slug = f"{now:%Y-%m-%d}"
+    gaps = []
+    if haul_problem:
+        gaps.append(f"tonight's pull of rosters and projections failed ({haul_problem})")
+    empty = {"rosters": [], "users": [], "weeks": {}}
+    if problem:
+        gaps.append(problem)
+        season = season_edition.build(empty, now)
+    else:
+        add, p_add = load("sleeper_trending_add.json")
+        drop, p_drop = load("sleeper_trending_drop.json")
+        gaps += [p for p in (p_add, p_drop) if p]
+        try:
+            season = season_edition.build(
+                snap, now, add if isinstance(add, list) else [], drop if isinstance(drop, list) else [],
+                wire_fn=lambda people: wire(people, describe=season_edition.describe_person))
+        except Exception as e:  # noqa: BLE001 -- THE EDITION IS ALWAYS WRITTEN. A file that is valid
+            # JSON in the wrong shape (a null week, a kickoff that is not a time) raises somewhere
+            # in there; that costs the roster sections, never the paper or its Drive copy.
+            gaps.append(f"the saved rosters and projections could not be used ({type(e).__name__}: {e})")
+            season = season_edition.build(empty, now)
+    gaps += season.pop("gaps")
+    gaps += [f"the mule reported {k} as failed" for k in failed]
+    # The watcher's stale-cargo alarm used to reach the paper through its alerts. The alerts are a
+    # draft-era desk and are gone from this edition; the one thing they still did is said here.
+    age = _mule_age_minutes(status.get("run_at"), now)
+    if age is not None and age > 150:
+        gaps.append(f"the mule last ran {age:.0f} minutes ago, so the wire and the market are stale")
+    return {
+        "template": "season.html.j2",
+        "edition_no": edition_number(date_slug, archive),
+        "date_long": f"{now:%A, %B} {now.day}, {now.year}",
+        "date_short": f"{now:%b} {now.day}, {now.year}",
+        "date_slug": date_slug,
+        "press_time": f"{now:%I:%M %p}".lstrip("0"),
+        "season": season,
+        "style": css,
+        "theme_script": script,
+        "gaps": gaps,
+        "cargo_stamp": status.get("run_at"),
+    }
+
+
 def render(context, template_dir=TEMPLATE_DIR):
-    from jinja2 import Environment, FileSystemLoader, select_autoescape
-    env = Environment(loader=FileSystemLoader(template_dir),
-                      autoescape=select_autoescape(["html"]),
+    from jinja2 import Environment, FileSystemLoader
+    # autoescape=True, NOT select_autoescape(["html"]): that helper matches a template name ENDING
+    # in .html, ours end in .html.j2, so until 2026-11-09 nothing was escaped and every feed
+    # headline went into the page raw. The carried CSS and theme script are the two values that
+    # must NOT be escaped; the templates mark exactly those two |safe.
+    env = Environment(loader=FileSystemLoader(template_dir), autoescape=True,
                       trim_blocks=True, lstrip_blocks=True)
-    return env.get_template("edition.html.j2").render(**context)
+    # Jinja's own "capitalize" filter lowercases the rest of the sentence ("Cbs and espn did not arrive").
+    env.filters["cap"] = lambda s: str(s)[:1].upper() + str(s)[1:]
+    return env.get_template(context.get("template") or "edition.html.j2").render(**context)
 
 
 def archive_cargo(slug, inbox=INBOX, dest_root=CARGO_ARCHIVE):
@@ -679,6 +825,8 @@ def main(argv=None):
                                 description="Build tonight's Nightly Feud from the mule's cargo.")
     p.add_argument("--dry-run", action="store_true", help="render and report, write nothing")
     p.add_argument("--out", default=LIVE)
+    p.add_argument("--no-haul", action="store_true",
+                   help="in season: build from the snapshot already on disk, without pulling a new one")
     a = p.parse_args(argv)
 
     try:
@@ -686,15 +834,29 @@ def main(argv=None):
     except Exception:
         pass
 
-    ctx = build_context()
+    if season_mode():
+        # --dry-run writes nothing, and a fresh snapshot is a write: it reads the kept one.
+        haul_problem = None if (a.dry_run or a.no_haul) else haul()
+        ctx = build_season_context(haul_problem=haul_problem)
+    else:
+        ctx = build_context()
     html = render(ctx)
 
     print(f"Edition #{ctx['edition_no']} — {ctx['date_long']}")
     print(f"  cargo stamped {ctx['cargo_stamp']}")
-    print(f"  wire: {len(ctx['wire'])} item(s) naming a board player")
-    print(f"  market: {len(ctx['market']['adds']['rows'])} of "
-          f"{ctx['market']['adds']['total']} trending adds are on the board, "
-          f"{len(ctx['market']['drops']['rows'])} of {ctx['market']['drops']['total']} drops")
+    if "season" in ctx:
+        s = ctx["season"]
+        lu = s.get("lineup") or {}
+        print(f"  in-season edition: rosters and projections as of {s.get('as_of') or 'never'}")
+        if lu:
+            print(f"  lineup week {lu.get('week')} vs {lu.get('opp')}: {len(lu.get('calls') or [])} call(s)"
+                  + (f", WITHHELD ({lu['withheld']})" if lu.get("withheld") else ""))
+        print(f"  wire: {len(s['wire'])} item(s) naming one of {s['wire_names']} people")
+    else:
+        print(f"  wire: {len(ctx['wire'])} item(s) naming a board player")
+        print(f"  market: {len(ctx['market']['adds']['rows'])} of "
+              f"{ctx['market']['adds']['total']} trending adds are on the board, "
+              f"{len(ctx['market']['drops']['rows'])} of {ctx['market']['drops']['total']} drops")
     for g in ctx["gaps"]:
         print(f"  [gap] {g}")
     if a.dry_run:

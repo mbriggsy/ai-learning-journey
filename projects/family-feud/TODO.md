@@ -45,8 +45,8 @@
   through `projected_total` at pre-game, Q1, halftime (`left` 0.5 from ESPN's own clock) and the final (Sleeper's
   `points` to the cent). **`tests/fixtures/gameday_tnf_wk8.json` and `gameday_espn_status.json`'s `tnf_wk8` are
   one-time captures that can never be re-made.** Don't regenerate them.
-- **Suite: 1394 tests, OK (skipped=6)**, run 2026-10-30 with `python -m unittest discover -s tests`.
-  31 test files · 29 scripts · 38 insights.
+- **Suite: 1519 tests, OK (skipped=6)**, run 2026-11-09 with `python -m unittest discover -s tests`.
+  33 test files · 31 scripts · 39 insights.
 - **Clocks:** mule hourly · `gameday_check.py` Sat 20:00 · Sun 08:00 · 11:30 · 15:00 · draft
   watcher · newsletter 21:45. Push/email are dead, so the files are the delivery.
 
@@ -83,7 +83,10 @@
    every package priced on the same data. 18 searches ran 3 at a time (~2 GB each, 6-12 min each) via
    `temp/te_run_searches.sh`. Those three files are local only (temp/ is gitignored); promote them to `scripts/` with a
    test if this becomes routine. Landmine: `xargs` chokes on `D'Andre Swift`'s apostrophe — pass id 6790 and `-d '\n'`.
-3. **Build the Tuesday waiver report** (`docs/in-season-plan.md` §1 — still unbuilt; the gameday
+3. **Finish the Tuesday waiver report.** The Nightly Feud has printed weak spots, pickups worth a
+   claim, next week's byes and our waiver place every night since 2026-11-09 (`docs/nightly-feud.md`).
+   Two answers are still missing: who on our roster is droppable, and the week's transactions with
+   Hunter's first. (`docs/in-season-plan.md` §1; the gameday
    check is §2 and done). Inputs are all in the inbox (`sleeper_transactions.json`,
    `sleeper_rosters.json`, `sleeper_state.json`, trending add/drop). Waivers clear **Wed ~03:15 ET**,
    measured twice (09-16, 09-23). Read Hunter's transaction log first, every Wednesday.

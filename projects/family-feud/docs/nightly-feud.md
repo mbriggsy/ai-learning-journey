@@ -3,6 +3,11 @@
 The intended product: a nightly league brief — waiver movement, trending adds/drops, injury news
 cross-referenced against our board — written to a local HTML page Briggsy keeps bookmarked.
 
+**Since 2026-11-09 it is the in-season paper**, built around our roster (see
+[The in-season edition](#the-in-season-edition) below). The draft edition described in the rest of
+this file is still in the code and comes back on its own when the draft cargo stops reading
+`complete`.
+
 ## Status: both halves now exist
 
 | Half | State |
@@ -34,7 +39,11 @@ days stockpiling cargo for a consumer that did not exist. It exists now.
   one. (Consequence: the now-unused `.preview-banner` rule is still in the stylesheet. The banner
   itself is gone. Editing the carried CSS to remove the rule would cost the byte-identity, which is
   the more valuable of the two.)
-- **No network.** Trending ids join the board on the frozen `sleeperId`, which retired the plan's
+- **One pull in season, none before the draft, and it can never cost the paper.** In season
+  `main()` first runs `scripts/season_cargo.py` as a child process with a 300-second limit (46
+  seconds measured). If that fails for any reason the edition prints from the kept
+  `newsletter/data/inbox/season_cargo.json`, says how old it is, and past 36 hours makes no call.
+  The functions that build the page read files only. The draft edition: trending ids join the board on the frozen `sleeperId`, which retired the plan's
   48 per-player lookups. A nightly job that touches the network is a nightly job that fails on a
   bad night.
 - **It publishes whatever arrived.** A missing or corrupt feed degrades to absent and the gap is
@@ -65,6 +74,50 @@ matched Breece Hall five times, "Kirk Cousins" matched Christian Kirk, "Herschel
 Kenneth Walker III. Football surnames are ordinary English words. The cost is that a headline
 reading only *"Nacua ruled out"* is missed; the alternative is a paper that tells you a player you
 are about to draft is hurt when he is not.
+
+## The in-season edition
+
+**The switch is a fact in cargo:** `sleeper_draft.json` reads `status: "complete"`. Nothing to flip.
+Decisions and their reasons: [`plans/2026-11-09-001-feat-in-season-edition-plan.md`](plans/2026-11-09-001-feat-in-season-edition-plan.md).
+
+```bash
+python scripts/build_newsletter.py             # pull a fresh snapshot, build, copy to Drive
+python scripts/build_newsletter.py --no-haul   # build from the snapshot already on disk
+python scripts/build_newsletter.py --dry-run   # report only: pulls nothing, writes nothing
+python scripts/season_cargo.py --stdout        # just the pull, summarised, nothing written
+```
+
+| Section | What it prints |
+|---|---|
+| Tiles | Record, place, the lineup week, the projected margin as the two lineups are set |
+| This Week | The live score once a game has kicked off (and where it should finish, and who is still playing); last week's final from Tuesday until the first kickoff; then the lineup you can still change, slot by slot for both sides, with the start/sit calls |
+| Your Roster | Everyone tagged, on bye or on injured reserve, with the reason; then the rest of the bench |
+| Waiver Wire | Weak spots, the free agents worth a claim, the best of the rest, next week's byes, roster count, waiver place |
+| The Wire | Headlines naming our players or a free agent who would start for us |
+| Market Watch | Sleeper's trending adds and drops, kept where they touch our roster or such a free agent |
+| Standings | All eight, with the playoff cut |
+
+**The rules, each one paid for** (the code's docstrings carry the receipts):
+
+- **One projected number.** QB / RB / WR / TE: the average of the sites that price him above zero,
+  and only when two or more do. K and DEF: Sleeper's number (`trade_eval.NEVER_ADJUSTED`).
+- **The lineup week** is this Sleeper week while any of its games has yet to kick off, else the next.
+- **Lock beats tag.** Sleeper tags men Out after games they played. Locks come from kickoff times
+  against the build clock, never from stored game states.
+- **The swap engine is `gameday_check.assess`**, fed through `season_edition.adapter`. Do not write
+  a second one. Its shorthand is spelled out for the reader in `season_edition.plain`.
+- **No call on one source.** A week that arrived Sleeper-only, a week with no kickoff times, or a
+  snapshot past 36 hours prints its rows and withholds every start/sit and waiver call.
+- **A pickup must clear the swap bar** (2.0 points on our best lineup), at most three per position.
+- **Byes are every team without a defense that has an opponent**, counted from the full team list.
+  The sources leave a bye team's defense out, so "a DEF row with no opponent" finds almost none.
+- **The paper names no drop** and does not sort a waiver claim from an instant add.
+
+⚠️ **`season_cargo.json` is not mule cargo.** It lives in the inbox so it is archived with the
+edition, but the 21:45 build writes it, once a night. Read its `pulled` stamp before trusting it.
+
+⚠️ **`tests/fixtures/season_cargo_20261109.json.gz` can never be re-made.** It is the real snapshot
+from Monday 2026-11-09 21:07 ET; `test_season_edition.py` pins that night's numbers on it.
 
 ## The Mule
 
@@ -135,7 +188,8 @@ newsletter/
   family-feud-newsletter.html   <- the live edition (this is the page you open)
   newsletter-template.html      <- FROZEN design reference. The build extracts its CSS and
                                    theme script; it never writes to this file.
-  templates/edition.html.j2     <- presentation only; every fact arrives from the builder
+  templates/edition.html.j2     <- the DRAFT edition. Presentation only; every fact arrives from the builder
+  templates/season.html.j2      <- the IN-SEASON edition (same rule; its second <style> block is its own)
   feud_mule.ps1                 <- the data mule (Task Scheduler runs this hourly)
   archive/                      <- dated back issues, one per DAY (U12), named
                                    YYYY-MM-DD-edition-N.html. A second build the same day
@@ -146,6 +200,7 @@ newsletter/
                                    edition after it. Self-healing, no state file to lose.
   data/
     inbox/                      <- fresh cargo, mule writes / build reads   [gitignored]
+      season_cargo.json         <- the exception: written nightly by the BUILD, not the mule
     archive/                    <- consumed cargo by date, debug trail      [gitignored]
     mule_log.txt                <- mule heartbeat, last 500 runs            [gitignored]
 ```

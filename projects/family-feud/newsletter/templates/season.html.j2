@@ -1,0 +1,387 @@
+{# The Nightly Feud -- IN-SEASON edition (from the night the draft read `complete`).
+
+   PRESENTATION ONLY. Every fact and every number arrives in the context from
+   scripts/season_edition.py by way of scripts/build_newsletter.py; nothing here computes,
+   estimates or remembers one. If you find yourself wanting to type a figure into this file, the
+   figure belongs in the builder.
+
+   The first <style> block and the theme toggle are INJECTED from newsletter-template.html, the
+   frozen design, byte for byte (a test hashes it). The SECOND <style> block below is this
+   edition's own: the pieces the draft paper never had -- a scoreboard, a lineup table, a standings
+   table -- drawn with the frozen design's colour variables and nothing else.
+
+   WORDS. One number per player, called "projected", explained once. These never reach the page,
+   and a test searches for them: consensus, spread, approx, snapshot, startable, W+1.
+   Nothing is said by colour alone -- the reader is colour blind. Every tag carries its word.
+
+   VOICE: mock-institutional setup, deadpan puncture. Second person to the owner. Hunter is the
+   antagonist. ZERO exclamation marks -- the joke is the flatness. #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Nightly Feud — {{ date_short }} (Edition #{{ edition_no }})</title>
+<style>
+{{ style|safe }}
+</style>
+<style>
+  .score { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; text-align: center; margin-bottom: 12px; }
+  .score .side { min-width: 0; }
+  .score .who { font-family: Verdana, Geneva, sans-serif; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-dim); overflow-wrap: anywhere; }
+  .score .pts { font-family: 'Playfair Display', Georgia, serif; font-size: 44px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .score .pts.lead { color: var(--gold); }
+  .score .mid { font-style: italic; color: var(--ink-faint); font-size: 14px; }
+  .score-note { font-size: 14px; color: var(--ink-dim); margin-bottom: 4px; }
+  .grid { width: 100%; border-collapse: collapse; margin: 6px 0 14px; font-size: 14px; }
+  .grid caption { text-align: left; font-family: Verdana, Geneva, sans-serif; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-dim); padding: 0 0 6px; }
+  .grid th { font-family: Verdana, Geneva, sans-serif; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; font-weight: 400; color: var(--ink-faint); text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  .grid td { padding: 7px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .grid tr:last-child td { border-bottom: none; }
+  .grid .n { text-align: right; font-family: Verdana, Geneva, sans-serif; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .grid th.n { text-align: right; }
+  .grid .slot { font-family: Verdana, Geneva, sans-serif; font-size: 10px; letter-spacing: 1px; color: var(--ink-faint); white-space: nowrap; padding-top: 10px; }
+  .grid .nm { font-weight: 700; }
+  .grid .sub { display: block; font-size: 12.5px; color: var(--ink-dim); font-weight: 400; }
+  .grid .site { color: var(--ink-dim); }
+  .grid .proj { font-weight: 700; color: var(--ink); }
+  .grid .tag { margin-left: 0; margin-right: 4px; }
+  .grid tr.me td { background: var(--panel); }
+  .grid tr.cut td { border-bottom: 3px double var(--rule); }
+  .calls-none { font-size: 15.5px; }
+  .withheld { border: 1px dashed var(--gold); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 14.5px; }
+  .item .bd + .bd { margin-top: 4px; }
+  @media (max-width: 560px) {
+    .masthead h1 { font-size: 34px; letter-spacing: 1px; }
+    .dateline { flex-direction: column; gap: 2px; text-align: center; }
+    .tiles { grid-template-columns: repeat(2, 1fr); }
+    .tile .num { font-size: 22px; }
+    .score .pts { font-size: 34px; }
+    .grid .site, .grid th.site { display: none; }
+    .grid td, .grid th { padding-left: 5px; padding-right: 5px; }
+    .grid .wide { display: none; }
+  }
+</style>
+</head>
+<body>
+<button id="themeBtn" title="Toggle light/dark">☀ daylight</button>
+<div class="paper">
+
+  <div class="masthead">
+    <h1>THE NIGHTLY <span class="accent">FEUD</span></h1>
+    <div class="tagline">All the news that's fit to start. — Family Feud League, est. 2026</div>
+  </div>
+  <div class="dateline">
+    <span>Edition #{{ edition_no }}</span>
+    <span>{{ date_long }}</span>
+    <span>Press time: {{ press_time }}</span>
+  </div>
+
+  <div class="tiles">
+    {% for t in season.tiles %}
+    <div class="tile"><div class="num">{{ t.num }}</div><div class="lbl">{{ t.lbl }}</div></div>
+    {% endfor %}
+  </div>
+
+{% macro lineup_table(rows, caption, sites) %}
+    <table class="grid">
+      <caption>{{ caption }}</caption>
+      <thead><tr>
+        <th>Slot</th><th>Player</th>
+        {% if sites %}<th class="n site">Sleeper</th><th class="n site">CBS</th><th class="n site">ESPN</th>{% endif %}
+        <th class="n">Projected</th>
+      </tr></thead>
+      <tbody>
+      {% for r in rows %}
+      <tr>
+        <td class="slot">{{ r.slot }}</td>
+        <td>
+          <span class="nm">{{ r.name }}</span>
+          {% if r.tag %}<span class="tag {{ 'hot' if 'Questionable' in r.tag else 'down' }}">{{ r.tag }}</span>{% endif %}
+          {% if r.status %}<span class="tag">{{ r.status }}{% if r.points %}: {{ r.points }}{% endif %}</span>{% endif %}
+          <span class="sub">{{ r.detail }}{% if r.split %} · sites split: {{ r.split }}{% endif %}</span>
+        </td>
+        {% if sites %}<td class="n site">{{ r.sleeper }}</td><td class="n site">{{ r.cbs }}</td><td class="n site">{{ r.espn }}</td>{% endif %}
+        <td class="n proj">{{ r.projected }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+{% endmacro %}
+
+{% if not season.have_roster %}
+  <section>
+    <h2><span class="sec-icon">🏈</span>This Week</h2>
+    <p class="lede">The roster did not arrive tonight, so this desk has nothing true to say about your team — see the colophon for what could not be hauled.</p>
+  </section>
+{% elif season.over %}
+  <section>
+    <h2><span class="sec-icon">🏈</span>This Week</h2>
+    <p class="lede">There is no game to set a lineup for. The season has run out of weeks, which is the only opponent nobody in this league has beaten.</p>
+  </section>
+{% else %}
+  {% set lu = season.lineup %}
+  {% set sb = season.scoreboard %}
+  <section>
+    <h2><span class="sec-icon">🏈</span>This Week</h2>
+
+    {% if season.last_final %}
+    {% set f = season.last_final %}
+    <div class="item {{ 'good' if f.result == 'won' else 'bad' if f.result == 'lost' else 'watch' }}">
+      <div class="hd">Week {{ f.week }} is final: you {{ f.result }}, {{ f.us }} to {{ f.them }} <span class="tag {{ 'up' if f.result == 'won' else 'down' if f.result == 'lost' else 'hot' }}">{{ f.result|upper }}</span></div>
+      <div class="bd">Against {{ f.opp }}. The record in the tiles above already counts it.</div>
+    </div>
+    {% endif %}
+
+    {% if sb %}
+    <div class="spotlight" style="margin-bottom:14px;">
+      {% if sb.has_opp %}
+      <div class="score">
+        <div class="side"><div class="who">You</div><div class="pts {{ 'lead' if sb.leading else '' }}">{{ sb.us }}</div></div>
+        <div class="mid">week {{ sb.week }}</div>
+        <div class="side"><div class="who">{{ sb.opp }}</div><div class="pts {{ 'lead' if not sb.leading and not sb.tied else '' }}">{{ sb.them }}</div></div>
+      </div>
+      <div class="score-note">{% if sb.tied %}Level.{% elif sb.leading %}You lead.{% else %}You trail.{% endif %} The score is as of {{ sb.as_of }}.</div>
+      {% if sb.expected %}
+      <div class="score-note">Where it should finish: <strong>you {{ sb.expected.us }}, {{ sb.opp }} {{ sb.expected.them }}</strong> — points already scored, plus the projection for whoever has not finished.</div>
+      <div class="score-note">Your starters: {{ sb.expected.us_counts }}. Theirs: {{ sb.expected.them_counts }}.</div>
+      {% endif %}
+      {% for side in sb.left %}
+      {% if side.playing or side.ahead %}
+      <div class="score-note"><strong>{{ side.who }}</strong>{% if side.playing %} — playing now: {{ side.playing|join(', ') }}{% endif %}{% if side.ahead %} — still to play: {{ side.ahead|join(', ') }}{% endif %}.</div>
+      {% endif %}
+      {% endfor %}
+      {% else %}
+      <div class="score-note">Week {{ sb.week }}: you have no opponent this week. Your starters have {{ sb.us }} as of {{ sb.as_of }}.</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if lu.no_game %}
+    <p class="lede">Week {{ lu.week }}: Sleeper lists no opponent for you. The lineup below still counts for nothing but pride.</p>
+    {% elif lu.is_next %}
+    <p class="lede"><strong>Next up, week {{ lu.week }}: {{ lu.opp }}.</strong> Every week-{{ season.week }} game has kicked off, so the lineup you can still change is next week's.</p>
+    {% else %}
+    <p class="lede"><strong>Week {{ lu.week }}: you against {{ lu.opp }}.</strong></p>
+    {% endif %}
+
+    {% if lu.projected and lu.projected.them %}
+    <p>As the two lineups are set tonight, week {{ lu.week }} projects <strong>you {{ lu.projected.us }}, {{ lu.opp }} {{ lu.projected.them }}</strong>. A starter who is out or on bye counts as zero until he is replaced.</p>
+    {% endif %}
+
+    {% if lu.withheld %}
+    <div class="withheld"><strong>No start/sit calls tonight.</strong> {{ lu.withheld|cap }}. The lineup is printed below as it stands; check it by hand.</div>
+    {% elif lu.calls %}
+    {% for c in lu.calls %}
+    <div class="item {{ c.kind }}">
+      <div class="hd">{{ c.title }} {% if c.label %}<span class="tag {{ 'down' if c.kind == 'bad' else 'up' if c.kind == 'good' else 'hot' if c.kind == 'watch' else '' }}">{{ c.label }}</span>{% endif %}</div>
+      {% for line in c.lines %}<div class="bd">{{ line }}</div>{% endfor %}
+    </div>
+    {% endfor %}
+    {% if season.early_week %}
+    <p style="font-size:14px;color:var(--ink-dim);">It is early in the week. An injury tag can still clear before kickoff, and the first practice reports land Wednesday.</p>
+    {% endif %}
+    {% else %}
+    <p class="calls-none">Nothing to change. Every starter is set to play, every slot is filled, and no one on your bench projects two or more points over a man he could replace.</p>
+    {% endif %}
+
+    <p style="font-size:14px;color:var(--ink-dim);">
+      {% if lu.three_site %}“Projected” is the average of Sleeper, CBS and ESPN, each scored by this league's rules. Kickers and defenses show Sleeper's number, because the other two score them by rules that are not ours.
+      {% else %}“Projected” is Sleeper's number alone tonight, which is why no call is made on it.{% endif %}
+    </p>
+    {{ lineup_table(lu.rows, 'Your lineup, week ' ~ lu.week, lu.three_site) }}
+    {% if lu.their_rows %}
+    {{ lineup_table(lu.their_rows, lu.opp ~ "'s lineup, week " ~ lu.week, lu.three_site) }}
+    {% endif %}
+  </section>
+
+  <section>
+    <h2><span class="sec-icon">🩺</span>Your Roster</h2>
+    {% set rr = season.roster %}
+    {% if rr.attention %}
+    <p class="lede">{{ rr.attention|length }} of your players need{{ 's' if rr.attention|length == 1 else '' }} a look for week {{ lu.week }}. Everyone not listed here is untagged and has a game.</p>
+    {% for a in rr.attention %}
+    <div class="item {{ 'bad' if a.hard else 'watch' }}">
+      <div class="hd">{{ a.name }} <span class="tag">{{ a.pos }} · {{ a.team or 'no team' }}</span><span class="tag">{{ a.role }}</span>{% if a.tag %}<span class="tag {{ 'down' if a.hard else 'hot' }}">{{ a.tag|upper }}</span>{% endif %}</div>
+      <div class="bd">{{ a.why|cap }}.{% if a.headlines %} {{ a.headlines }} headline{{ '' if a.headlines == 1 else 's' }} about him tonight, in The Wire below.{% endif %}</div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="lede">Nobody on your roster carries an injury tag or a bye for week {{ lu.week }}. This is the healthiest your team will look all year, so enjoy the paragraph.</p>
+    {% endif %}
+    {% if rr.bench %}
+    <table class="grid">
+      <caption>The rest of your bench, week {{ lu.week }}</caption>
+      <thead><tr><th>Player</th><th class="n">Projected</th></tr></thead>
+      <tbody>
+      {% for b in rr.bench %}
+      <tr><td><span class="nm">{{ b.name }}</span><span class="sub">{{ b.pos }} · {{ b.team }} {{ b.opp }}{% if b.headlines %} · {{ b.headlines }} headline{{ '' if b.headlines == 1 else 's' }} tonight{% endif %}</span></td><td class="n proj">{{ b.projected }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2><span class="sec-icon">🛒</span>Waiver Wire</h2>
+    {% set wv = season.waivers %}
+    {% if wv.withheld %}
+    <div class="withheld"><strong>No pickup calls tonight.</strong> {{ wv.withheld|cap }}.</div>
+    {% else %}
+      {% if wv.weak %}
+      <p class="lede">Where you are thin for week {{ lu.week }}:</p>
+      {% for w in wv.weak %}
+      <div class="item watch">
+        <div class="hd">{{ w.text }} <span class="tag hot">{{ 'HOLE' if w.hole else 'WEAK SPOT' }}</span></div>
+        <div class="bd">{% if w.best_free %}The best free agent there is {{ w.best_free }}.{% else %}No free agent at the position is set to play.{% endif %}{% if not w.hole %} A weak spot here means two or more points behind the middle of the league.{% endif %}</div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p class="lede">No position on your roster sits two or more points behind the middle of the league for week {{ lu.week }}.</p>
+      {% endif %}
+
+      {% if wv.worth %}
+      <p>Worth a claim — each of these would raise your best lineup by two points or more:</p>
+      {% for f in wv.worth %}
+      <div class="item good">
+        <div class="hd">{{ f.name }} <span class="tag">{{ f.pos }} · {{ f.team }}{% if f.opp %} vs {{ f.opp }}{% endif %}</span><span class="tag up">ADDS {{ f.gain_txt }} IN WEEK {{ f.gain_week }}</span>{% if f.tag %}<span class="tag hot">{{ f.tag|upper }}</span>{% endif %}</div>
+        <div class="bd">Projected {{ f.projected }} in week {{ f.gain_week }} (Sleeper {{ f.sleeper }}, CBS {{ f.cbs }}, ESPN {{ f.espn }}).{% if f.over %} He would start in place of {{ f.over }}.{% elif f.fills_hole %} He would fill a slot nobody on your roster can.{% endif %}</div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p><strong>Nobody on the wire is worth a claim tonight.</strong> A pickup has to raise your best lineup by two points or more, the same bar a lineup swap has to clear, and no free agent does.</p>
+      {% endif %}
+
+      {% if wv.short %}
+      <table class="grid">
+        <caption>The best of the rest, short of the two-point bar</caption>
+        <thead><tr><th>Free agent</th><th class="n">Projected</th><th class="n">Adds</th><th class="n">In week</th></tr></thead>
+        <tbody>
+        {% for f in wv.short %}
+        <tr><td><span class="nm">{{ f.name }}</span>{% if f.tag %}<span class="tag hot">{{ f.tag }}</span>{% endif %}<span class="sub">{{ f.pos }} · {{ f.team }}{% if f.opp %} vs {{ f.opp }}{% endif %}{% if f.over %} · would start over {{ f.over }}{% endif %}</span></td><td class="n proj">{{ f.projected }}</td><td class="n">+{{ f.gain_txt }}</td><td class="n">{{ f.gain_week }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+      {% if not wv.next_priced and not wv.last %}
+      <p style="font-size:14px;color:var(--ink-dim);">Only week {{ lu.week }} is judged tonight. Week {{ wv.next_week }} pickups are judged from tomorrow, once Sleeper turns the week.</p>
+      {% endif %}
+    {% endif %}
+    {% if wv.byes_next %}
+    <div class="item watch">
+      <div class="hd">Week {{ wv.next_week }} byes on your roster <span class="tag hot">PLAN AHEAD</span></div>
+      <div class="bd">{{ wv.byes_next|join(', ') }}.</div>
+    </div>
+    {% endif %}
+    <p style="font-size:14px;color:var(--ink-dim);">Your roster is {{ wv.active }} of {{ wv.cap }}{% if wv.ir %}, plus {{ wv.ir }} on injured reserve{% endif %}{% if wv.full %}, so any pickup needs a drop{% endif %}. {% if wv.waiver_position %}You are {{ wv.waiver_position }} of {{ wv.teams }} in the waiver order. {% endif %}A man dropped this week can sit on waivers until the overnight run, which has landed Wednesday around 3:15 AM Eastern both times it was measured.</p>
+  </section>
+{% endif %}
+
+  <section>
+    <h2><span class="sec-icon">🚑</span>The Wire</h2>
+    {% if season.wire %}
+    <p class="lede">{{ season.wire|length }} stor{{ 'y' if season.wire|length == 1 else 'ies' }} tonight named one of the {{ season.wire_names }} people this desk listens for: your players, and the free agents who would start for you. Everything else the feeds carried is somebody else's problem.</p>
+    {% for item in season.wire %}
+    <div class="item {{ item.kind }}">
+      <div class="hd">
+        {% if item.link %}<a href="{{ item.link }}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}
+        {% if item.kind == 'bad' %}<span class="tag down">BAD NEWS</span>
+        {% elif item.kind == 'good' %}<span class="tag up">GOOD NEWS</span>
+        {% else %}<span class="tag hot">WATCH</span>{% endif %}
+      </div>
+      <div class="bd">
+        {% for p in item.players %}
+        <strong>{{ p.name }}</strong> — {{ p.pos }}, {{ p.team }}, {% if p.who == 'MY ROSTER' %}yours ({{ p.role }}{% if p.tag %}, tagged {{ p.tag }}{% endif %}){% else %}free agent (would add {{ p.gain }}){% endif %}{{ '' if loop.last else ' · ' }}
+        {% endfor %}
+        <span style="opacity:.7"> ({{ item.outlets|join(', ') }}{% if item.when %} · {{ item.when }}{% endif %}{% if item.also %}, and {{ item.also }} more headline{{ '' if item.also == 1 else 's' }} on the same story{% endif %})</span>
+      </div>
+    </div>
+    {% endfor %}
+    {% elif season.wire_names %}
+    <p class="lede">Nothing on the wire tonight named any of the {{ season.wire_names }} people this desk listens for. The feeds were busy; none of it was about anyone you start, stash or could claim.</p>
+    {% elif season.have_roster and season.over %}
+    <p class="lede">The season is over, so this desk has stopped listening.</p>
+    {% else %}
+    <p class="lede">The Wire has no roster to listen for tonight — see the colophon.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2><span class="sec-icon">📈</span>Market Watch</h2>
+    {% set adds = season.market.adds %}{% set drops = season.market.drops %}
+    {% if adds.rows or drops.rows %}
+    <p class="lede">What every Sleeper league did in the last 24 hours, kept only where it touches your roster or a free agent who would start for you.</p>
+    {% for row in adds.rows %}
+    <div class="item good">
+      <div class="hd">{{ row.name }} <span class="tag up">BEING ADDED</span><span class="tag">{{ 'YOURS' if row.who == 'MY ROSTER' else 'FREE AGENT HERE' }}</span></div>
+      <div class="bd">{{ row.pos }}, {{ row.team }}{% if row.count %} · added {{ '{:,}'.format(row.count) }} times in 24 hours{% endif %}{% if row.who == 'MY ROSTER' %} · you already have him{% else %} · would add {{ row.gain }} to your best lineup{% endif %}</div>
+    </div>
+    {% endfor %}
+    {% for row in drops.rows %}
+    <div class="item bad">
+      <div class="hd">{{ row.name }} <span class="tag down">BEING DROPPED</span><span class="tag">YOURS</span></div>
+      <div class="bd">{{ row.pos }}, {{ row.team }}{% if row.count %} · dropped {{ '{:,}'.format(row.count) }} times in 24 hours{% endif %} · the crowd is letting go of a man you hold</div>
+    </div>
+    {% endfor %}
+    <p style="font-size:14px;color:var(--ink-dim);">Left out: {{ adds.rival }} of the {{ adds.total }} most-added players are on another roster in this league and {{ adds.other }} would not start for you; {{ drops.rival + drops.other }} of the {{ drops.total }} most-dropped are not yours.</p>
+    {% elif adds.total == 0 and drops.total == 0 %}
+    <p class="lede">{% if season.have_roster and season.over %}The season is over, so there is no market left to watch.{% else %}Sleeper's lists of the most-added and most-dropped players have nothing in them tonight — see the colophon.{% endif %}</p>
+    {% else %}
+    <p class="lede">None of the {{ adds.total }} most-added or {{ drops.total }} most-dropped players is yours, and none of the adds would start for you. The market moved; none of it moved anything of ours.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2><span class="sec-icon">🏛️</span>Standings</h2>
+    {% set st = season.standings %}
+    {% if st.rows %}
+    <p class="lede">{% if season.us %}You are <strong>{{ season.us.record }}</strong>, {{ season.us.place }} of {{ st.teams }}{% if st.cut %}; the top {{ st.cut }} make the playoffs{% endif %}.{% endif %}{% if season.hunter %} Hunter is {{ season.hunter.record }}.{% endif %}</p>
+    <table class="grid">
+      <thead><tr><th class="n">#</th><th>Team</th><th class="n">Record</th><th class="n">Points for</th><th class="n wide">Points against</th><th class="wide">Streak</th></tr></thead>
+      <tbody>
+      {% for r in st.rows %}
+      <tr class="{{ 'me' if r.us else '' }} {{ 'cut' if r.last_in else '' }}">
+        <td class="n">{{ r.place }}</td>
+        <td><span class="nm">{{ r.name }}</span>{% if r.us %}<span class="tag hot" style="margin-left:6px;">YOU</span>{% endif %}{% if r.hunter %}<span class="tag down" style="margin-left:6px;">THE RIVAL</span>{% endif %}</td>
+        <td class="n">{{ r.record }}</td>
+        <td class="n">{{ r.pf_txt }}</td>
+        <td class="n wide">{{ r.pa_txt }}</td>
+        <td class="wide">{{ r.streak_txt }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% if st.cut %}<p style="font-size:14px;color:var(--ink-dim);">The double line is the playoff cut: {{ st.cut }} of {{ st.teams }} go through. Ties in record are broken by points for. A week counts once all of its games are final.</p>{% endif %}
+    {% else %}
+    <p class="lede">The standings did not arrive tonight — see the colophon for what could not be hauled.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2><span class="sec-icon">📋</span>Owner's Action Items</h2>
+    <ul class="actions">
+      {% for a in season.actions %}
+      <li>{{ a }}</li>
+      {% endfor %}
+      {% if not season.actions %}
+      <li>Beat Hunter.</li>
+      {% endif %}
+    </ul>
+  </section>
+
+  <div class="colophon">
+    THE NIGHTLY FEUD · compiled nightly by Claude · rosters, scores and projections pulled {{ season.as_of or 'never' }} from Sleeper, CBS and ESPN · wire copy via the Feud Mule<br>
+    {% if cargo_stamp %}Mule cargo stamped {{ cargo_stamp }} · {% endif %}Back issues in <span style="color:var(--ink-dim);">newsletter/archive/</span> · debug trail in <span style="color:var(--ink-dim);">newsletter/data/archive/</span> · Beat Hunter. 🏈
+    {% if gaps %}
+    <br><br><span style="color:var(--ink-dim);">
+      {% for g in gaps %}{% if not loop.first %}<br>{% endif %}Tonight's paper is thinner than usual: {{ g }}.{% endfor %}
+    </span>
+    {% endif %}
+  </div>
+
+</div>
+<script>
+{{ theme_script|safe }}
+</script>
+</body>
+</html>

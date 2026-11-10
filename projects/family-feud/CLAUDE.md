@@ -13,7 +13,7 @@ Draft ~Aug 29, 2026. Mission: beat Hunter. [`README.md`](README.md) is the map.
 | [`docs/draft-day-runbook.md`](docs/draft-day-runbook.md) | Draft-day operating instructions + changelog |
 | [`docs/ranking-methodology.md`](docs/ranking-methodology.md) | Why the board ranks what it ranks |
 | [`docs/live-board-plan.md`](docs/live-board-plan.md) | The live auto-updating board (next feature) |
-| [`docs/nightly-feud.md`](docs/nightly-feud.md) | The newsletter — both halves built, scheduled nightly at 21:45 |
+| [`docs/nightly-feud.md`](docs/nightly-feud.md) | The newsletter — scheduled nightly at 21:45. **In-season edition since 2026-11-09**: built around our roster from one nightly pull (`scripts/season_cargo.py` → `scripts/season_edition.py`); its start/sit calls reuse `gameday_check.assess` |
 | [`docs/in-season-plan.md`](docs/in-season-plan.md) | What happens after the draft. A STUB on purpose — read its un-stub trigger before building anything in-season |
 | [`docs/insights/`](docs/insights/) | Hard-won lessons, one per file. Read before debugging something that smells familiar. |
 | [`newsletter/data/state/DRAFT_ALERTS.md`](newsletter/data/state/DRAFT_ALERTS.md) | Everything `scripts/watch_draft_state.py` has ever fired — the draft date appearing or MOVING, your slot appearing/moving/vanishing, a re-created draft, dead cargo, and the T-7/T-48/T-6 countdown. Append-only, newest last. Push and email are dead account-wide, so this file IS the delivery — **open it at the start of a session, not when you go looking** |
@@ -34,7 +34,8 @@ and never overrides them. Changelog entries quote pre-migration paths (`Draft Ki
 - **`curl -sL --max-time 15`, never WebFetch.** WebFetch has no timeout and hangs agents; a hook
   blocks it. This reverses the Cowork-era rule still quoted in the runbook's changelog.
 - **Never quote league membership, draft time, or slot from memory or from a doc.** Re-pull.
-  The mule's cargo in `newsletter/data/inbox/` is at most an hour old and costs nothing.
+  The mule's cargo in `newsletter/data/inbox/` is at most an hour old and costs nothing — except
+  `season_cargo.json`, which the 21:45 newsletter build writes once a night: read its `pulled` stamp.
 - Mermaid for diagrams. Temp files and screenshots go in `temp/` (gitignored).
 
 ## Landmines

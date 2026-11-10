@@ -19,7 +19,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Nightly Feud — {{ date_short }} (Edition #{{ edition_no }})</title>
 <style>
-{{ style }}
+{{ style|safe }}
 </style>
 </head>
 <body>
@@ -166,7 +166,7 @@
 
 </div>
 <script>
-{{ theme_script }}
+{{ theme_script|safe }}
 </script>
 </body>
 </html>

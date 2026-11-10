@@ -18,6 +18,8 @@
 
   ON EXIT CODES -- this differs from the watcher and the difference matters:
       0 = the edition was written AND Google Drive for desktop took its back issue
+          (in season a failed pull of rosters and projections is NOT a failure here: the paper
+          prints from the kept snapshot and says so in its own colophon)
           (the upload to Google is Drive's own background job; nothing here checks it)
       3 = the edition was written but a Drive copy failed (Drive not running, signed out,
           or not mounted as G:)
@@ -67,7 +69,7 @@ $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatt
             -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
 
 Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger `
-    -Settings $settings -Description "Builds The Nightly Feud from mule cargo + the board into newsletter\family-feud-newsletter.html, nightly at 21:45, and copies the dated back issue to Google Drive (G:\My Drive\Nightly Feud). Last Result 3 = edition written, Drive copy missed." `
+    -Settings $settings -Description "Builds The Nightly Feud into newsletter\family-feud-newsletter.html, nightly at 21:45 (in season: pulls rosters and three sites' projections first), and copies the dated back issue to Google Drive (G:\My Drive\Nightly Feud). Last Result 3 = edition written, Drive copy missed." `
     -Force | Out-Null
 Write-Host "Registered : $TaskName"
 
@@ -79,11 +81,18 @@ Write-Host "Trigger    : daily $At local time"
 $edition = Join-Path $project "newsletter\family-feud-newsletter.html"
 $before = if (Test-Path $edition) { (Get-Item $edition).LastWriteTime } else { [datetime]::MinValue }
 
+# Wait for the run to FINISH, however long it takes, up to the task's own 10-minute limit plus a
+# minute. In season the build pulls rosters and three sites' projections first (46 s measured
+# 2026-11-09); the old 45-second wait would have read a half-finished run as "the builder did nothing".
 Start-ScheduledTask -TaskName $TaskName
-for ($i = 0; $i -lt 60; $i++) {
+$started  = Get-Date
+$deadline = $started.AddMinutes(11)
+do {
     Start-Sleep -Milliseconds 750
-    if ((Get-ScheduledTask -TaskName $TaskName).State -ne "Running") { break }
-}
+    $running = (Get-ScheduledTask -TaskName $TaskName).State -eq "Running"
+} while ($running -and (Get-Date) -lt $deadline)
+if ($running) { throw "The task was still running 11 minutes after it started. It should have been stopped at 10. Not green." }
+Write-Host ("Run took   : {0:N0} seconds" -f ((Get-Date) - $started).TotalSeconds)
 $info = Get-ScheduledTaskInfo -TaskName $TaskName
 Write-Host "Last run   : $($info.LastRunTime)"
 Write-Host "Last result: $($info.LastTaskResult)  (0 = success; 3 = edition written, Drive copy missed; anything else is a crash)"

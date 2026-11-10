@@ -293,6 +293,17 @@ class TestTheDesignIsCarriedNotCopied(unittest.TestCase):
         self.assertIsNotNone(found, "the rendered edition has no <style> block at all")
         self.assertEqual(N.style_hash(found.group(1)), N.style_hash(css))
 
+    def test_a_headline_cannot_inject_markup_into_the_draft_edition(self):
+        """Feed titles are outside text. select_autoescape(["html"]) never matched a template named
+        *.html.j2, so until 2026-11-09 a headline went into the page raw."""
+        ctx = N.build_context()
+        ctx["wire"] = [{"title": "A <script>alert(1)</script> & B", "link": "", "when": "", "kind": "watch",
+                        "outlets": ["pft"], "also": 0,
+                        "players": [{"name": "X Y", "pos": "RB", "team": "DET", "r": 1, "tier": 1}]}]
+        html = N.render(ctx)
+        self.assertIn("A &lt;script&gt;alert(1)&lt;/script&gt; &amp; B", html)
+        self.assertNotIn("<script>alert(1)", html)
+
     def test_the_frozen_template_is_never_written_to(self):
         """It is the reference. The builder reads it and writes elsewhere."""
         with open(N.FROZEN, encoding="utf-8") as f:
@@ -728,7 +739,11 @@ class TestMainDriveCopy(unittest.TestCase):
         for name, value in (("ARCHIVE", self.archive), ("DRIVE_DIR", self.drive),
                             ("build_context", lambda: dict(self.CTX)),
                             ("render", lambda ctx: "<html>Edition #88</html>"),
-                            ("archive_cargo", lambda slug: (self.tmp, 0))):
+                            ("archive_cargo", lambda slug: (self.tmp, 0)),
+                            # These tests are about the Drive copy, in the draft edition's shape.
+                            # The in-season path (and its network pull) has its own tests.
+                            ("season_mode", lambda: False),
+                            ("haul", lambda: self.fail("a Drive-copy test reached the network pull"))):
             p = mock.patch.object(N, name, value)
             p.start()
             self.addCleanup(p.stop)

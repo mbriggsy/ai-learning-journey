@@ -91,7 +91,10 @@ and never overrides them. Changelog entries quote pre-migration paths (`Draft Ki
   hours. **The cargo timestamp in `mule_status.json` is the only real signal.**
 - **Absolute paths in scheduled tasks are how this project breaks.** Both known breakages were a
   hardcoded folder path. `scripts/install-mule.ps1` derives everything from its own location —
-  re-run it after any move rather than hand-editing a path back in.
+  re-run it after any move rather than hand-editing a path back in. The one deliberate exception:
+  `DRIVE_DIR` in `scripts/build_newsletter.py` (`G:\My Drive\Nightly Feud`, the Google Drive copy
+  of each edition). It lives outside the project, so no installer can derive it; if Drive mounts
+  under another letter, that line is the repair.
 - **A folder cannot be renamed while a Claude session's working directory is inside it** (Windows
   pins the cwd; it is not Explorer, and closing other apps won't help). Subdirectories rename
   fine. Rename the project root from a session rooted elsewhere.

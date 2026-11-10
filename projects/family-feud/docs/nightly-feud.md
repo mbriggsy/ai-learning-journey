@@ -41,6 +41,24 @@ days stockpiling cargo for a consumer that did not exist. It exists now.
   named in the colophon — a paper that quietly drops a section teaches you to trust a page that is
   lying.
 
+- **Every edition is also copied to Google Drive.** The dated back issue lands in
+  `G:\My Drive\Nightly Feud\` under the same file name (`YYYY-MM-DD-edition-N.html`). A same-day
+  rebuild replaces that day's copy, as the local archive does. The copy runs last, after everything
+  local is on disk: a Drive that is down never costs the edition, but the build then exits **3**
+  and the task's `Last Result` reads 3 instead of 0. `--dry-run` copies nothing.
+  - **A missed night repairs itself.** Every run also copies any back issue dated 2026-11-09 or
+    later that Drive does not have, so the next good run fills the hole. The 87 editions before
+    that date were not backfilled, and the repair leaves them alone (`DRIVE_SINCE`).
+  - **Exit 0 means Drive for desktop took the file**, on its `G:` drive. The upload to Google is
+    Drive's own background job and nothing here checks it; if the laptop sleeps or is offline right
+    after 21:45, the copy reaches Google when it reconnects.
+  - **It needs Google Drive for desktop running, signed in, and mounted as `G:`** (installed
+    2026-11-09). If Drive ever mounts under another letter the build exits 3 with "`G:\My Drive`
+    does not exist", and the repair is the one line `DRIVE_DIR` in `scripts/build_newsletter.py`.
+    **Re-running the installer does not fix this one.**
+  - **Google Drive's own viewer shows an `.html` file as code, not as a page.** To read an edition
+    from Drive, download it and open it in a browser.
+
 ⚠️ **The Wire matches FULL names only, and that is deliberate.** Surname matching was tried and
 measured against one night's real feeds: **10 false positives out of 11 items.** "Hall of Fame"
 matched Breece Hall five times, "Kirk Cousins" matched Christian Kirk, "Herschel Walker" matched
@@ -99,6 +117,13 @@ file:///C:/Users/brigg/ai-learning-journey/projects/family-feud/newsletter/famil
 **No bookmark required** — Briggsy's call, Aug 7. Chrome's URL autocomplete gets there after the
 first visit, and double-clicking the file in Explorer works just as well. Recorded here so the
 path is written down somewhere, not because anything depends on it.
+
+Also in Google Drive, folder **Nightly Feud**, one dated file per night. Check the job by hand:
+
+```powershell
+Get-ScheduledTaskInfo -TaskName "Family Feud Newsletter"   # LastTaskResult 0 = edition + Drive copy; 3 = edition written, Drive copy missed
+Get-ChildItem "G:\My Drive\Nightly Feud" | Sort-Object Name | Select-Object -Last 3   # tonight's date should be the newest
+```
 
 That page is a real edition now, rebuilt every time `build_newsletter.py` runs. The ☀/☾ theme
 toggle is the frozen design's own script, carried through untouched.

@@ -6,7 +6,12 @@
 
 The mule has hauled cargo hourly for days into a consumer that did not exist. This is the
 consumer. It reads `newsletter/data/inbox/`, the board, and the frozen design, and writes
-`newsletter/family-feud-newsletter.html` plus a dated back issue in `newsletter/archive/`.
+`newsletter/family-feud-newsletter.html` plus a dated back issue in `newsletter/archive/`, and
+copies that back issue, same file name, into Google Drive for desktop's folder (`DRIVE_DIR`).
+Exit 0 = the edition was written and Drive for desktop took the copy (the upload to Google is
+Drive's own job, done in the background, and is not checked here); exit 3 = the edition was
+written but a Drive copy was not. Every run also copies any earlier back issue Drive is missing,
+so one bad night is repaired by the next good run.
 
 THE HARD RULE, AND EVERYTHING ELSE FOLLOWS FROM IT: **deterministic code owns every fact and
 every number; prose owns only the connective tissue.** No figure in the output is written by a
@@ -51,6 +56,18 @@ TEMPLATE_DIR = os.path.join(NEWS, "templates")
 LIVE = os.path.join(NEWS, "family-feud-newsletter.html")
 BOARD = os.path.join(KIT, "players_data.json")
 ALERTS = os.path.join(NEWS, "data", "state", "DRAFT_ALERTS.md")
+
+#: Where each dated back issue is ALSO copied, same file name -- Briggsy's Google Drive, so the
+#: paper can be read off this laptop. The one absolute path in the build, and it has to be: Google
+#: Drive for desktop mounts the account here, outside the project. `copy_to_drive` creates only the
+#: last folder and refuses if `G:\My Drive` itself is absent, so a different disk that happens to
+#: be lettered G: is never written to.
+DRIVE_DIR = r"G:\My Drive\Nightly Feud"
+
+#: The first night the Drive copy existed. `catch_up_drive` repairs misses from this date on and
+#: leaves the 87 earlier back issues alone -- putting those in Drive is Briggsy's call, not a
+#: side effect of a repair.
+DRIVE_SINCE = "2026-11-09"
 
 sys.path.insert(0, HERE)
 sys.path.insert(0, KIT)
@@ -600,6 +617,63 @@ def archive_cargo(slug, inbox=INBOX, dest_root=CARGO_ARCHIVE):
     return dest, copied
 
 
+def copy_to_drive(back_issue, drive_dir=None):
+    """Copy the dated back issue into Google Drive under the same file name.
+
+    Returns the path written. Raises OSError when it cannot: Drive is not mounted (not installed,
+    signed out, or still starting up) or the copy itself fails. A same-day rebuild replaces the
+    day's copy, exactly as the local archive does.
+
+    The bytes go to a `.partial` sibling first and are swapped in only once they are all there:
+    writing straight onto the final name would empty the day's good copy before the first byte
+    landed, and a copy that died halfway would be uploaded as that night's paper with nothing
+    ever coming back to fix it.
+
+    `drive_dir` is read from DRIVE_DIR at CALL time, never as a default argument: a default binds
+    at import and would keep pointing at the real G: drive under a test that patched the constant.
+    """
+    drive_dir = drive_dir or DRIVE_DIR
+    parent = os.path.dirname(drive_dir)
+    if not os.path.isdir(parent):
+        raise FileNotFoundError(f"Google Drive is not mounted: {parent} does not exist")
+    os.makedirs(drive_dir, exist_ok=True)
+    dest = os.path.join(drive_dir, os.path.basename(back_issue))
+    partial = dest + ".partial"
+    try:
+        shutil.copyfile(back_issue, partial)
+        if os.path.getsize(partial) != os.path.getsize(back_issue):   # a short write, nothing more
+            raise OSError(f"the Drive copy of {os.path.basename(back_issue)} came up short")
+        os.replace(partial, dest)
+    except BaseException:
+        try:
+            os.remove(partial)
+        except OSError:
+            pass
+        raise
+    return dest
+
+
+def catch_up_drive(skip=None, archive=None, drive_dir=None, since=None):
+    """Copy every back issue from `since` on that Drive is missing. Returns the paths written.
+
+    A night whose copy failed (Drive still starting after a logon, signed out, laptop offline)
+    leaves nothing behind but an exit code the next run overwrites. So every run repairs: the
+    next one that finds Drive mounted fills the hole. `skip` is tonight's file name, which main()
+    has just copied itself. Raises OSError like `copy_to_drive`.
+    """
+    archive = archive or ARCHIVE
+    drive_dir = drive_dir or DRIVE_DIR
+    since = since or DRIVE_SINCE
+    written = []
+    for path in sorted(glob.glob(os.path.join(archive, "*-edition-*.html"))):
+        name = os.path.basename(path)
+        if name == skip or name[:10] < since:
+            continue
+        if not os.path.exists(os.path.join(drive_dir, name)):
+            written.append(copy_to_drive(path, drive_dir))
+    return written
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="build_newsletter.py",
                                 description="Build tonight's Nightly Feud from the mule's cargo.")
@@ -635,6 +709,18 @@ def main(argv=None):
     dest, copied = archive_cargo(ctx["date_slug"])
     print(f"  wrote {os.path.relpath(a.out, ROOT)} and {os.path.relpath(back_issue, ROOT)}")
     print(f"  archived {copied} cargo file(s) to {os.path.relpath(dest, ROOT)}")
+
+    # Last, and after everything local is safely on disk: a Drive that is down must never cost the
+    # edition. A miss exits 3, which the scheduled task shows as its Last Result -- but only until
+    # the next run overwrites it, and nobody is watching that. The repair is what counts: every
+    # run copies whatever earlier night Drive is still missing.
+    try:
+        print(f"  copied to {copy_to_drive(back_issue)}")
+        for healed in catch_up_drive(skip=os.path.basename(back_issue)):
+            print(f"  caught up a missed night: {healed}")
+    except OSError as e:
+        print(f"  [DRIVE COPY FAILED] {e}", file=sys.stderr)
+        return 3
     return 0
 
 

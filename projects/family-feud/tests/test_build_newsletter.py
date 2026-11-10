@@ -12,13 +12,16 @@ Second in importance: `test_the_style_block_is_byte_identical_to_the_frozen_desi
 the asset. It is EXTRACTED from newsletter-template.html at build time rather than copied into the
 Jinja template, so there is no second copy to drift -- and this proves the extraction survived.
 """
+import contextlib
 import datetime as _dt
+import io
 import json
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -585,6 +588,208 @@ class TestWireTimestamps(InboxCase):
         self.assertTrue(ctx["wire"] and ctx["wire"][0]["when"])
         html = N.render(ctx)
         self.assertIn(ctx["wire"][0]["when"], html)
+
+
+class TestCopyToDrive(unittest.TestCase):
+    """The Drive copy. Every test aims at a temp folder -- none of them touches the real G: drive."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+        self.issue = os.path.join(self.tmp, "2026-11-09-edition-88.html")
+        with open(self.issue, "w", encoding="utf-8") as f:
+            f.write("<html>Edition #88 \u2014 \u2600</html>")
+        self.mount = os.path.join(self.tmp, "My Drive")
+        self.drive = os.path.join(self.mount, "Nightly Feud")
+
+    def test_the_copy_keeps_the_file_name_and_the_bytes(self):
+        os.makedirs(self.mount)
+        dest = N.copy_to_drive(self.issue, self.drive)
+        self.assertEqual(dest, os.path.join(self.drive, "2026-11-09-edition-88.html"))
+        with open(self.issue, "rb") as a, open(dest, "rb") as b:
+            self.assertEqual(a.read(), b.read())
+
+    def test_a_same_day_rebuild_overwrites_the_days_copy(self):
+        os.makedirs(self.mount)
+        N.copy_to_drive(self.issue, self.drive)
+        with open(self.issue, "w", encoding="utf-8") as f:
+            f.write("<html>the later build</html>")
+        dest = N.copy_to_drive(self.issue, self.drive)
+        with open(dest, encoding="utf-8") as f:
+            self.assertEqual(f.read(), "<html>the later build</html>")
+        self.assertEqual(os.listdir(self.drive), ["2026-11-09-edition-88.html"])
+
+    def test_an_unmounted_drive_refuses_and_creates_nothing(self):
+        """`My Drive` absent = Drive is not there. Never build the path on whatever disk is."""
+        with self.assertRaises(OSError):
+            N.copy_to_drive(self.issue, self.drive)
+        self.assertFalse(os.path.exists(self.mount))
+
+    def test_the_real_target_is_the_folder_briggsy_named(self):
+        self.assertEqual(N.DRIVE_DIR, "G:\\My Drive\\Nightly Feud")
+
+    def test_with_no_folder_given_it_writes_where_DRIVE_DIR_points_at_call_time(self):
+        """A default argument would have bound the real G: path at import and ignored this patch."""
+        os.makedirs(self.mount)
+        with mock.patch.object(N, "DRIVE_DIR", self.drive):
+            dest = N.copy_to_drive(self.issue)
+        self.assertEqual(os.path.dirname(dest), self.drive)
+
+    def test_a_copy_that_dies_halfway_leaves_the_earlier_good_copy_alone(self):
+        os.makedirs(self.mount)
+        dest = N.copy_to_drive(self.issue, self.drive)
+
+        def half_a_file(src, dst):
+            with open(dst, "w", encoding="utf-8") as f:
+                f.write("<html>Edi")
+            raise OSError("the disk went away")
+
+        with mock.patch.object(N.shutil, "copyfile", half_a_file):
+            with self.assertRaises(OSError):
+                N.copy_to_drive(self.issue, self.drive)
+        with open(self.issue, "rb") as a, open(dest, "rb") as b:
+            self.assertEqual(a.read(), b.read())
+        self.assertEqual(os.listdir(self.drive), ["2026-11-09-edition-88.html"])   # no .partial left
+
+    def test_a_short_write_is_refused_and_never_takes_the_final_name(self):
+        os.makedirs(self.mount)
+
+        def short(src, dst):
+            with open(dst, "w", encoding="utf-8") as f:
+                f.write("<html>Edi")
+
+        with mock.patch.object(N.shutil, "copyfile", short):
+            with self.assertRaises(OSError):
+                N.copy_to_drive(self.issue, self.drive)
+        self.assertEqual(os.listdir(self.drive), [])
+
+
+class TestCatchUpDrive(unittest.TestCase):
+    """A night whose copy failed is repaired by the next run that finds Drive mounted."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+        self.archive = os.path.join(self.tmp, "archive")
+        self.drive = os.path.join(self.tmp, "My Drive", "Nightly Feud")
+        os.makedirs(self.archive)
+        os.makedirs(self.drive)
+        for name in ("2026-11-08-edition-87.html", "2026-11-09-edition-88.html",
+                     "2026-11-10-edition-89.html", "2026-11-11-edition-90.html"):
+            with open(os.path.join(self.archive, name), "w", encoding="utf-8") as f:
+                f.write(name)
+
+    def run_it(self, skip=None):
+        got = N.catch_up_drive(skip=skip, archive=self.archive, drive_dir=self.drive,
+                               since="2026-11-09")
+        return [os.path.basename(p) for p in got]
+
+    def test_it_copies_the_missed_nights_and_never_the_ones_before_the_start(self):
+        self.assertEqual(self.run_it(), ["2026-11-09-edition-88.html",
+                                         "2026-11-10-edition-89.html",
+                                         "2026-11-11-edition-90.html"])
+        self.assertNotIn("2026-11-08-edition-87.html", os.listdir(self.drive))
+
+    def test_a_night_already_in_drive_is_left_alone(self):
+        there = os.path.join(self.drive, "2026-11-10-edition-89.html")
+        with open(there, "w", encoding="utf-8") as f:
+            f.write("already here")
+        self.assertNotIn("2026-11-10-edition-89.html", self.run_it())
+        with open(there, encoding="utf-8") as f:
+            self.assertEqual(f.read(), "already here")
+
+    def test_tonights_file_is_skipped_because_main_just_copied_it(self):
+        self.assertNotIn("2026-11-11-edition-90.html",
+                         self.run_it(skip="2026-11-11-edition-90.html"))
+
+    def test_the_real_start_date_is_the_first_night_of_the_drive_copy(self):
+        self.assertEqual(N.DRIVE_SINCE, "2026-11-09")
+
+
+class TestMainDriveCopy(unittest.TestCase):
+    """The CALL SITE in main() -- insight 013: a function's tests say nothing about who calls it.
+
+    Nothing here reaches the real G: drive: DRIVE_DIR is patched to a temp folder in setUp, and
+    `copy_to_drive` reads it at call time.
+    """
+
+    CTX = {"edition_no": 88, "date_long": "Monday, November 9, 2026", "date_slug": "2026-11-09",
+           "cargo_stamp": "2026-11-09 20:29:03", "wire": [], "gaps": [],
+           "market": {"adds": {"rows": [], "total": 0}, "drops": {"rows": [], "total": 0}}}
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+        self.archive = os.path.join(self.tmp, "archive")
+        self.mount = os.path.join(self.tmp, "My Drive")
+        self.drive = os.path.join(self.mount, "Nightly Feud")
+        self.live = os.path.join(self.tmp, "live.html")
+        self.issue = os.path.join(self.archive, "2026-11-09-edition-88.html")
+        for name, value in (("ARCHIVE", self.archive), ("DRIVE_DIR", self.drive),
+                            ("build_context", lambda: dict(self.CTX)),
+                            ("render", lambda ctx: "<html>Edition #88</html>"),
+                            ("archive_cargo", lambda slug: (self.tmp, 0))):
+            p = mock.patch.object(N, name, value)
+            p.start()
+            self.addCleanup(p.stop)
+
+    def main(self, *argv):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            rc = N.main(list(argv))
+        return rc, out.getvalue(), err.getvalue()
+
+    def read(self, path):
+        with open(path, encoding="utf-8") as f:
+            return f.read()
+
+    def test_a_good_night_exits_0_with_the_same_file_in_drive(self):
+        os.makedirs(self.mount)
+        rc, out, _ = self.main("--out", self.live)
+        self.assertEqual(rc, 0)
+        self.assertEqual(self.read(os.path.join(self.drive, "2026-11-09-edition-88.html")),
+                         "<html>Edition #88</html>")
+
+    def test_a_drive_that_is_down_exits_3_and_never_costs_the_edition(self):
+        rc, _, err = self.main("--out", self.live)          # no `My Drive` folder: not mounted
+        self.assertEqual(rc, 3)
+        self.assertIn("[DRIVE COPY FAILED]", err)
+        self.assertEqual(self.read(self.live), "<html>Edition #88</html>")
+        self.assertEqual(self.read(self.issue), "<html>Edition #88</html>")
+
+    def test_the_copy_runs_only_after_the_edition_is_on_disk(self):
+        seen = {}
+
+        def spy(back_issue, drive_dir=None):
+            seen["live"] = os.path.exists(self.live)
+            seen["issue"] = os.path.exists(back_issue)
+            raise OSError("INJECTED")
+
+        with mock.patch.object(N, "copy_to_drive", spy):
+            rc, _, err = self.main("--out", self.live)
+        self.assertEqual(seen, {"live": True, "issue": True})
+        self.assertEqual(rc, 3)
+        self.assertIn("INJECTED", err)
+
+    def test_a_dry_run_copies_nothing(self):
+        os.makedirs(self.mount)
+        rc, _, _ = self.main("--dry-run", "--out", self.live)
+        self.assertEqual(rc, 0)
+        self.assertFalse(os.path.exists(self.drive))
+        self.assertFalse(os.path.exists(self.live))
+
+    def test_the_next_good_run_repairs_a_night_the_drive_missed(self):
+        os.makedirs(self.archive)
+        with open(os.path.join(self.archive, "2026-11-10-edition-89.html"), "w",
+                  encoding="utf-8") as f:
+            f.write("the night Drive was down")           # in the archive, never reached Drive
+        os.makedirs(self.mount)
+        with mock.patch.object(N, "DRIVE_SINCE", "2026-11-09"):
+            rc, out, _ = self.main("--out", self.live)
+        self.assertEqual(rc, 0)
+        self.assertEqual(sorted(os.listdir(self.drive)),
+                         ["2026-11-09-edition-88.html", "2026-11-10-edition-89.html"])
+        self.assertIn("caught up a missed night", out)
 
 
 if __name__ == "__main__":

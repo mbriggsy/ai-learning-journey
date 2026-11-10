@@ -17,11 +17,15 @@
   state files. Change the minute on the $trigger line below; nothing else depends on it.
 
   ON EXIT CODES -- this differs from the watcher and the difference matters:
-      0 = the edition was written
-      anything else = a real failure
+      0 = the edition was written AND Google Drive for desktop took its back issue
+          (the upload to Google is Drive's own background job; nothing here checks it)
+      3 = the edition was written but a Drive copy failed (Drive not running, signed out,
+          or not mounted as G:)
+      anything else = a crash
   The watcher deliberately exits 1 to mean "alerts were written", so its verifier cannot throw
-  on non-zero. build_newsletter.py has no such channel: it returns 0 or it raises. So here,
-  non-zero IS a failure and this script throws on it.
+  on non-zero. build_newsletter.py has no such channel: 0 is success, 3 is a missed Drive copy,
+  anything else is a crash. So here, every non-zero IS a failure and this script throws on it --
+  with its own message for 3, because that one means the paper is fine and Drive is not.
 
   ON THE FORCE-RUN BELOW: it builds a second edition on a day that may already have one, which
   is exactly the case that used to mint a phantom "-edition-2" dated the same day and add a
@@ -63,7 +67,7 @@ $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatt
             -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
 
 Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger `
-    -Settings $settings -Description "Builds The Nightly Feud from mule cargo + the board into newsletter\family-feud-newsletter.html, nightly at 21:45." `
+    -Settings $settings -Description "Builds The Nightly Feud from mule cargo + the board into newsletter\family-feud-newsletter.html, nightly at 21:45, and copies the dated back issue to Google Drive (G:\My Drive\Nightly Feud). Last Result 3 = edition written, Drive copy missed." `
     -Force | Out-Null
 Write-Host "Registered : $TaskName"
 
@@ -82,7 +86,7 @@ for ($i = 0; $i -lt 60; $i++) {
 }
 $info = Get-ScheduledTaskInfo -TaskName $TaskName
 Write-Host "Last run   : $($info.LastRunTime)"
-Write-Host "Last result: $($info.LastTaskResult)  (0 = success; anything else is a failure)"
+Write-Host "Last result: $($info.LastTaskResult)  (0 = success; 3 = edition written, Drive copy missed; anything else is a crash)"
 Write-Host "Next run   : $($info.NextRunTime)"
 
 # --- Prove it by OUTPUT FRESHNESS, never by the exit code. ---------------------------------
@@ -118,5 +122,6 @@ if (Test-Path $status) {
     Write-Host "Cargo      : NO mule_status.json -- the edition was built without knowing the cargo's age."
 }
 
+if ($info.LastTaskResult -eq 3) { throw "The edition was written, but the Google Drive copy failed (exit 3). Is Google Drive for desktop running and signed in, with G:\My Drive present? Not green." }
 if ($info.LastTaskResult -ne 0) { throw "Task registered but its run returned $($info.LastTaskResult). Not green." }
 Write-Host "`nNewsletter is green. Next edition: $($info.NextRunTime)"

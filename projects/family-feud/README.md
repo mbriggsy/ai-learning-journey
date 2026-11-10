@@ -285,7 +285,9 @@ is carried byte-for-byte from the frozen template rather than copied, and it mak
 **It is scheduled** (U12): the *Family Feud Newsletter* task runs **daily at 21:45**, sixteen
 minutes behind the mule's `:29` haul. Its installer proves the job by output freshness rather than
 by an exit code, because a task pointing at a deleted script reports success indefinitely. Back
-issues are not committed; the current edition is. See [`docs/nightly-feud.md`](docs/nightly-feud.md).
+issues are not committed; the current edition is. Each back issue is also copied to Google Drive
+(`G:\My Drive\Nightly Feud\`); a missed copy exits 3, never costs the edition, and is repaired by
+the next run. See [`docs/nightly-feud.md`](docs/nightly-feud.md).
 
 **What the season looks like after the draft** is stubbed, not built:
 [`docs/in-season-plan.md`](docs/in-season-plan.md) records the three deliverables, the four Sleeper

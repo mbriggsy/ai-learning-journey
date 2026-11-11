@@ -87,6 +87,14 @@ CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`
   `playing` (and `in-game` once he has a stat line). Measured 2026-10-15 on SEA @ DEN, in the 1st quarter.
   Locked means no lineup move. A **drop** still works (Block C dropped E. Wilson in-game).
 - FLEX shows as `WRT`. An empty slot or IR row reads `Empty`.
+- 🚨 **An ineligible man in an IR slot blocks EVERY lineup swap, silently** (measured 2026-11-11, Stevenson
+  `DOUB` in IR). Both clicks land, both rows read `valid`, and nothing changes: no dialog, no toast. The only
+  signals are `/rosters` not moving and one line of page text, *"You have players on your IR slot that are no
+  longer IR eligible."* (the page also carries a banner, *"You have N players no longer eligible in IR"*). Drops
+  still work, and so does moving a man OUT of IR. So clear IR first, and confirm each swap by the slot label
+  changing on the page, never by "the click was dispatched".
+- **Out of IR:** click his IR square, then the `BN Empty` row that appears and reads `valid` (it only appears when
+  the roster has room). IR straight to a starter slot reads `invalid`: bench him first, then swap (11-11, Tate).
 
 ### Add / drop a FREE AGENT — `/players`
 

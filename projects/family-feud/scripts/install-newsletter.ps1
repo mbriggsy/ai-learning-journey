@@ -1,5 +1,5 @@
 <#
-  Registers (or re-registers) the "Family Feud Newsletter" nightly scheduled task -- U12.
+  Registers (or re-registers) the "Family Feud Newsletter" daily scheduled task -- U12.
 
   RUN THIS AFTER ANY MOVE OF THE PROJECT FOLDER:
       powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-newsletter.ps1
@@ -10,11 +10,18 @@
   here; re-running this script IS the entire repair after a move.
 
   WHY IT EXISTS: Edition #1 was published on 2026-08-08 only because a human typed the command.
-  A nightly paper that needs a human is not a nightly paper.
+  A daily paper that needs a human is not a daily paper.
 
-  Runs DAILY at 21:45 -- sixteen minutes behind the mule's :29 haul, so the cargo it reads was
+  Runs DAILY at 04:45 -- sixteen minutes behind the mule's :29 haul, so the cargo it reads was
   just refreshed, and ten minutes behind the watcher's :35, so the two never race for the same
-  state files. Change the minute on the $trigger line below; nothing else depends on it.
+  state files. Change the time on the $At line below; nothing else depends on it.
+
+  WHY BEFORE DAWN (Briggsy, 2026-11-11): the paper is read in the morning, and until then it
+  printed at 21:45 the night before. The league's waivers clear Wednesday at 03:15 ET (measured
+  2026-09-16 at 03:15:40 and again 2026-11-11 at 03:15:53), so every Wednesday-morning reader
+  held a paper that knew nothing of that night's claims, ours or anyone's. 04:45 is ninety
+  minutes behind the clear. The laptop is awake for it: the hourly mule ran at 03:29, 04:29,
+  05:29 and 06:29 on every one of the eleven mornings 2026-11-01 through 11-11.
 
   ON EXIT CODES -- this differs from the watcher and the difference matters:
       0 = the edition was written AND Google Drive for desktop took its back issue
@@ -55,21 +62,21 @@ Write-Host "Python     : $python"
 
 $action = New-ScheduledTaskAction -Execute $python -Argument "`"$builder`"" -WorkingDirectory $project
 
-$At = "21:45"
+$At = "04:45"
 $trigger = New-ScheduledTaskTrigger -Daily -At $At
 # LOCAL clock time, never a fixed UTC instant: -At writes StartBoundary in UTC ("...T01:45:00Z"), and
 # Task Scheduler keeps a zoned boundary pinned to that instant, so after the DST fall-back the build
-# would run at 20:45. Written here with no zone; install-gameday.ps1 has the measurement (2026-10-30).
+# would run an hour early. Written here with no zone; install-gameday.ps1 has the measurement (2026-10-30).
 $trigger.StartBoundary = "{0:yyyy-MM-dd}T{1}:00" -f (Get-Date), $At
 
-# StartWhenAvailable so a run missed while the laptop slept fires on wake. A nightly job is far
-# more exposed to this than an hourly one: an hourly task that sleeps through 21:45 has another
+# StartWhenAvailable so a run missed while the laptop slept fires on wake. A daily job is far
+# more exposed to this than an hourly one: an hourly task that sleeps through 04:45 has another
 # window an hour later, and this one does not get a second chance until tomorrow.
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries `
             -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
 
 Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger `
-    -Settings $settings -Description "Builds The Nightly Feud into newsletter\family-feud-newsletter.html, nightly at 21:45 (in season: pulls rosters and three sites' projections first), and copies the dated back issue to Google Drive (G:\My Drive\Nightly Feud). Last Result 3 = edition written, Drive copy missed." `
+    -Settings $settings -Description "Builds The Nightly Feud into newsletter\family-feud-newsletter.html, daily at 04:45 (in season: pulls rosters and three sites' projections first), and copies the dated back issue to Google Drive (G:\My Drive\Nightly Feud). Last Result 3 = edition written, Drive copy missed." `
     -Force | Out-Null
 Write-Host "Registered : $TaskName"
 

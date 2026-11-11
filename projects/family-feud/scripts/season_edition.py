@@ -322,7 +322,7 @@ CALL_KIND = {"🚨": ("bad", "MUST FIX"), "⚠": ("watch", "QUESTIONABLE"), "↑
 def withheld_reason(week, age_hours):
     """Why this week gets no start/sit or waiver call, in plain words, or None when it gets them."""
     if age_hours is not None and age_hours > STALE_HOURS:
-        return (f"tonight's pull failed and the numbers below are {age_hours:.0f} hours old, "
+        return (f"today's pull failed and the numbers below are {age_hours:.0f} hours old, "
                 f"too old to make a call on")
     if not week.three_site:
         return ("CBS and ESPN did not arrive for this week, and no call is made on Sleeper's numbers alone"
@@ -649,7 +649,7 @@ def build(snap, now, trending_add=None, trending_drop=None, wire_fn=None):
     if age is not None and age > 2:
         out["gaps"].append(f"the roster, score and projections are as of {as_of} ({age:.0f} hours old)")
     if ours is None and snap.get("rosters"):
-        out["gaps"].append("no roster owned by PoppaBriggsy was in tonight's rosters")
+        out["gaps"].append("no roster owned by PoppaBriggsy was in today's rosters")
     for note in snap.get("notes") or []:
         out["gaps"].append(note)
 
@@ -752,7 +752,7 @@ def build(snap, now, trending_add=None, trending_drop=None, wire_fn=None):
         out["actions"].append(f"Week {lineup.n} lineup: nothing to change. Every starter is set to play and no "
                               f"bench body projects {g.SWAP_MARGIN:.0f} or more over a man he could replace.")
     if why_not is not None:
-        out["actions"].append(f"Check the week {lineup.n} lineup by hand tonight: {why_not}.")
+        out["actions"].append(f"Check the week {lineup.n} lineup by hand today: {why_not}.")
     if hunter and us_row:
         out["actions"].append(hunter_line(us_row, hunter))
     return out

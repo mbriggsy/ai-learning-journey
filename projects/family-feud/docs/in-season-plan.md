@@ -111,6 +111,13 @@ claim failed to MattiICE23. `daily_waivers: 0`. So the report's deadline is **Tu
 the read that matters is **Wednesday morning** after 03:15 — still cite this paragraph, not a
 hardcoded hour, and re-check the instant on the next cycle before scheduling anything against it.
 
+✅ **RE-CHECKED 2026-11-11, before the newsletter was scheduled against it:** all seven claims of the
+cycle (created Sun 11-08 22:00 through Tue 11-10 17:38 ET) settled at **Wed 2026-11-11 03:15:53 ET**,
+five complete and two failed. Same instant to within 13 seconds. They are filed under
+`/transactions/9`, the week they were created in, while `state/nfl` already read week 10: a reader
+of the current week's transactions alone sees none of them. The newsletter build moved to **04:45**
+that day, ninety minutes behind the clear.
+
 **Do not build FAAB tooling.** `waiver_budget: 100` is inert while `waiver_type` is `0`.
 
 ### 2. The Thursday / Sunday lineup check — ✅ BUILT 2026-09-12 (`scripts/gameday_check.py`)
@@ -196,7 +203,7 @@ quotes it without saying so is quoting a pre-season opinion as a mid-season fact
   check covers it.
 - **No FAAB anything.** See above.
 - **No second scheduled task per deliverable.** The *Family Feud Newsletter* task already runs
-  nightly at 21:45 and the mule hourly at :29. A weekly report is a branch inside an existing job,
+  daily at 04:45 and the mule hourly at :29. A weekly report is a branch inside an existing job,
   not a fourth entry in Task Scheduler — every breakage this project has had was a scheduled task
   with a path in it.
 - **No new normalizer, no new id map, no fourth glyph table.** They share U11's and U6's

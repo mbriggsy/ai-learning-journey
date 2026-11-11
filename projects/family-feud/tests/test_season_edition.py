@@ -531,7 +531,7 @@ class TestSeasonOverAndEmpty(unittest.TestCase):
         s["rosters"] = [r for r in s["rosters"] if r["roster_id"] != 3]
         c = S.build(s, MONDAY)
         self.assertFalse(c["have_roster"])
-        self.assertIn("no roster owned by PoppaBriggsy was in tonight's rosters", c["gaps"])
+        self.assertIn("no roster owned by PoppaBriggsy was in today's rosters", c["gaps"])
 
 
 # ------------------------------------------------------------------ the page and the job
@@ -607,7 +607,7 @@ class TestThePage(SeasonBuild):
         html = self.page()
         for wanted in ("You lead.", "kblizzy23", "Next up, week 10: Kaeperni", "Your lineup, week 10",
                        "Kaeperni&#39;s lineup, week 10", "Start instead: Zay Flowers", "MUST FIX",
-                       "Your Roster", "Waiver Wire", "Nobody on the wire is worth a claim tonight",
+                       "Your Roster", "Waiver Wire", "Nobody on the wire is worth a claim today",
                        "Week 11 byes on your roster", "The Wire", "Market Watch", "Standings",
                        "Hunter (briggsy007)", "THE RIVAL", "Beat Hunter. He is 3-5 and sits 5th, behind you at 4-4."):
             self.assertIn(wanted, html)
@@ -651,7 +651,7 @@ class TestThePage(SeasonBuild):
         self.write_cargo(s)
         html = self.page()
         self.assertIn("could not be used (AttributeError", html)
-        self.assertIn("The roster did not arrive tonight", html)
+        self.assertIn("The roster did not arrive today", html)
         s = fresh(snap(), MONDAY)
         s["pulled"] = "Mon Nov 9 21:07"
         self.write_cargo(s)
@@ -698,15 +698,15 @@ class TestThePage(SeasonBuild):
         s["weeks"]["10"]["three_site"] = False
         self.write_cargo(s)
         html = self.page()
-        self.assertIn("No start/sit calls tonight.", html)
-        self.assertIn("No pickup calls tonight.", html)
+        self.assertIn("No start/sit calls today.", html)
+        self.assertIn("No pickup calls today.", html)
         self.assertNotIn("Start instead:", html)
         self.assertIn("paper is thinner than usual: CBS and ESPN did not arrive for week 10", html)
 
     def test_a_missing_snapshot_still_prints_a_page(self):
         os.remove(self.cargo)
         html = self.page()
-        self.assertIn("The roster did not arrive tonight", html)
+        self.assertIn("The roster did not arrive today", html)
         self.assertIn("have never been pulled", html)
 
     def test_a_snapshot_that_is_not_json_still_prints_a_page(self):

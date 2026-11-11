@@ -285,8 +285,9 @@ all.
 2026-08-08** — `python scripts/build_newsletter.py`. Deterministic code owns every fact, the design
 is carried byte-for-byte from the frozen template rather than copied. **Since 2026-11-09 it is the
 in-season paper**: this week's matchup with start/sit calls, our roster's injuries, waiver pickups,
-standings, built from one nightly pull of rosters and three sites' projections.
-**It is scheduled** (U12): the *Family Feud Newsletter* task runs **daily at 21:45**, sixteen
+standings, built from one daily pull of rosters and three sites' projections.
+**It is scheduled** (U12): the *Family Feud Newsletter* task runs **daily at 04:45** (moved from
+21:45 on 2026-11-11, so the morning read knows Wednesday's 03:15 waiver results), sixteen
 minutes behind the mule's `:29` haul. Its installer proves the job by output freshness rather than
 by an exit code, because a task pointing at a deleted script reports success indefinitely. Back
 issues are not committed; the current edition is. Each back issue is also copied to Google Drive

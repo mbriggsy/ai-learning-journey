@@ -13,7 +13,7 @@ file. `scripts/build_newsletter.py` runs it before building and reads nothing el
 in-season sections, so the roster, the score and the projections all describe the same minute.
 
 WHY NOT THE MULE. The mule runs 24 times a day. Twenty-four player dumps and 288 CBS pages a day
-would buy a paper that prints at 21:45 nothing at all.
+would buy a paper that prints once a day (04:45 since 2026-11-11) nothing at all.
 
 WHAT IT REUSES -- no new fetcher, no new id map, no new scoring:
   * external_projections.load(week)  -> everything joined and scored by OUR rules, for this week and

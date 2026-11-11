@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """U11 -- The Nightly Feud, the half that has never run.
 
-    python scripts/build_newsletter.py              # build tonight's edition
+    python scripts/build_newsletter.py              # build today's edition
     python scripts/build_newsletter.py --dry-run    # render and report, write nothing
 
 The mule has hauled cargo hourly for days into a consumer that did not exist. This is the
@@ -17,7 +17,7 @@ THE HARD RULE, AND EVERYTHING ELSE FOLLOWS FROM IT: **deterministic code owns ev
 every number; prose owns only the connective tissue.** No figure in the output is written by a
 language model, and no figure is typed into the template. If a number cannot be derived from
 cargo, the edition says so in words rather than estimating -- `Days to Draft` renders as an
-asterisked dash tonight because `start_time` is null, and it will start rendering a real
+asterisked dash today because `start_time` is null, and it will start rendering a real
 countdown the night that changes, with no code edit.
 
 THE DESIGN IS THE ASSET AND IT IS NOT COPIED. `newsletter-template.html` stays frozen in git as
@@ -609,7 +609,7 @@ def build_context(now=None, board_path=BOARD, archive=ARCHIVE):
         "board_rows": len(players),
         "style": css,
         "theme_script": script,
-        # Every reason tonight's paper might be thinner than usual, printed in the colophon. A
+        # Every reason today's paper might be thinner than usual, printed in the colophon. A
         # newsletter that quietly drops a section teaches you to trust a page that is lying.
         "gaps": [p for p in (draft_problem, users_problem) if p]
                 + [f"the mule reported {k} as failed" for k in failed],
@@ -624,7 +624,7 @@ def season_mode():
     """True once the draft is over: the paper is then built around our roster, not the draft.
 
     The switch is a fact in cargo -- `sleeper_draft.json` reads `status: "complete"` -- not a flag
-    somebody has to remember to flip. If that file cannot be read tonight the paper stays in the
+    somebody has to remember to flip. If that file cannot be read today the paper stays in the
     mode it can prove: in-season when a season snapshot is on disk, the draft edition otherwise.
     """
     draft, _problem = load("sleeper_draft.json")
@@ -662,7 +662,7 @@ def load_season_cargo(path=None):
     """(snapshot, problem). Never raises, for the reason `load` never does."""
     path = path or SEASON_CARGO
     if not os.path.exists(path):
-        return None, "tonight's rosters, matchups and projections have never been pulled"
+        return None, "today's rosters, matchups and projections have never been pulled"
     try:
         with open(path, encoding="utf-8") as f:
             snap = json.load(f)
@@ -694,7 +694,7 @@ def build_season_context(now=None, archive=None, haul_problem=None, cargo_path=N
     date_slug = f"{now:%Y-%m-%d}"
     gaps = []
     if haul_problem:
-        gaps.append(f"tonight's pull of rosters and projections failed ({haul_problem})")
+        gaps.append(f"today's pull of rosters and projections failed ({haul_problem})")
     empty = {"rosters": [], "users": [], "weeks": {}}
     if problem:
         gaps.append(problem)
@@ -804,7 +804,7 @@ def catch_up_drive(skip=None, archive=None, drive_dir=None, since=None):
 
     A night whose copy failed (Drive still starting after a logon, signed out, laptop offline)
     leaves nothing behind but an exit code the next run overwrites. So every run repairs: the
-    next one that finds Drive mounted fills the hole. `skip` is tonight's file name, which main()
+    next one that finds Drive mounted fills the hole. `skip` is today's file name, which main()
     has just copied itself. Raises OSError like `copy_to_drive`.
     """
     archive = archive or ARCHIVE
@@ -822,7 +822,7 @@ def catch_up_drive(skip=None, archive=None, drive_dir=None, since=None):
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog="build_newsletter.py",
-                                description="Build tonight's Nightly Feud from the mule's cargo.")
+                                description="Build today's Nightly Feud from the mule's cargo.")
     p.add_argument("--dry-run", action="store_true", help="render and report, write nothing")
     p.add_argument("--out", default=LIVE)
     p.add_argument("--no-haul", action="store_true",

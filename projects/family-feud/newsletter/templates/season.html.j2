@@ -112,7 +112,7 @@
 {% if not season.have_roster %}
   <section>
     <h2><span class="sec-icon">🏈</span>This Week</h2>
-    <p class="lede">The roster did not arrive tonight, so this desk has nothing true to say about your team — see the colophon for what could not be hauled.</p>
+    <p class="lede">The roster did not arrive today, so this desk has nothing true to say about your team — see the colophon for what could not be hauled.</p>
   </section>
 {% elif season.over %}
   <section>
@@ -166,11 +166,11 @@
     {% endif %}
 
     {% if lu.projected and lu.projected.them %}
-    <p>As the two lineups are set tonight, week {{ lu.week }} projects <strong>you {{ lu.projected.us }}, {{ lu.opp }} {{ lu.projected.them }}</strong>. A starter who is out or on bye counts as zero until he is replaced.</p>
+    <p>As the two lineups are set today, week {{ lu.week }} projects <strong>you {{ lu.projected.us }}, {{ lu.opp }} {{ lu.projected.them }}</strong>. A starter who is out or on bye counts as zero until he is replaced.</p>
     {% endif %}
 
     {% if lu.withheld %}
-    <div class="withheld"><strong>No start/sit calls tonight.</strong> {{ lu.withheld|cap }}. The lineup is printed below as it stands; check it by hand.</div>
+    <div class="withheld"><strong>No start/sit calls today.</strong> {{ lu.withheld|cap }}. The lineup is printed below as it stands; check it by hand.</div>
     {% elif lu.calls %}
     {% for c in lu.calls %}
     <div class="item {{ c.kind }}">
@@ -187,7 +187,7 @@
 
     <p style="font-size:14px;color:var(--ink-dim);">
       {% if lu.three_site %}“Projected” is the average of Sleeper, CBS and ESPN, each scored by this league's rules. Kickers and defenses show Sleeper's number, because the other two score them by rules that are not ours.
-      {% else %}“Projected” is Sleeper's number alone tonight, which is why no call is made on it.{% endif %}
+      {% else %}“Projected” is Sleeper's number alone today, which is why no call is made on it.{% endif %}
     </p>
     {{ lineup_table(lu.rows, 'Your lineup, week ' ~ lu.week, lu.three_site) }}
     {% if lu.their_rows %}
@@ -203,7 +203,7 @@
     {% for a in rr.attention %}
     <div class="item {{ 'bad' if a.hard else 'watch' }}">
       <div class="hd">{{ a.name }} <span class="tag">{{ a.pos }} · {{ a.team or 'no team' }}</span><span class="tag">{{ a.role }}</span>{% if a.tag %}<span class="tag {{ 'down' if a.hard else 'hot' }}">{{ a.tag|upper }}</span>{% endif %}</div>
-      <div class="bd">{{ a.why|cap }}.{% if a.headlines %} {{ a.headlines }} headline{{ '' if a.headlines == 1 else 's' }} about him tonight, in The Wire below.{% endif %}</div>
+      <div class="bd">{{ a.why|cap }}.{% if a.headlines %} {{ a.headlines }} headline{{ '' if a.headlines == 1 else 's' }} about him today, in The Wire below.{% endif %}</div>
     </div>
     {% endfor %}
     {% else %}
@@ -215,7 +215,7 @@
       <thead><tr><th>Player</th><th class="n">Projected</th></tr></thead>
       <tbody>
       {% for b in rr.bench %}
-      <tr><td><span class="nm">{{ b.name }}</span><span class="sub">{{ b.pos }} · {{ b.team }} {{ b.opp }}{% if b.headlines %} · {{ b.headlines }} headline{{ '' if b.headlines == 1 else 's' }} tonight{% endif %}</span></td><td class="n proj">{{ b.projected }}</td></tr>
+      <tr><td><span class="nm">{{ b.name }}</span><span class="sub">{{ b.pos }} · {{ b.team }} {{ b.opp }}{% if b.headlines %} · {{ b.headlines }} headline{{ '' if b.headlines == 1 else 's' }} today{% endif %}</span></td><td class="n proj">{{ b.projected }}</td></tr>
       {% endfor %}
       </tbody>
     </table>
@@ -226,7 +226,7 @@
     <h2><span class="sec-icon">🛒</span>Waiver Wire</h2>
     {% set wv = season.waivers %}
     {% if wv.withheld %}
-    <div class="withheld"><strong>No pickup calls tonight.</strong> {{ wv.withheld|cap }}.</div>
+    <div class="withheld"><strong>No pickup calls today.</strong> {{ wv.withheld|cap }}.</div>
     {% else %}
       {% if wv.weak %}
       <p class="lede">Where you are thin for week {{ lu.week }}:</p>
@@ -249,7 +249,7 @@
       </div>
       {% endfor %}
       {% else %}
-      <p><strong>Nobody on the wire is worth a claim tonight.</strong> A pickup has to raise your best lineup by two points or more, the same bar a lineup swap has to clear, and no free agent does.</p>
+      <p><strong>Nobody on the wire is worth a claim today.</strong> A pickup has to raise your best lineup by two points or more, the same bar a lineup swap has to clear, and no free agent does.</p>
       {% endif %}
 
       {% if wv.short %}
@@ -264,7 +264,7 @@
       </table>
       {% endif %}
       {% if not wv.next_priced and not wv.last %}
-      <p style="font-size:14px;color:var(--ink-dim);">Only week {{ lu.week }} is judged tonight. Week {{ wv.next_week }} pickups are judged from tomorrow, once Sleeper turns the week.</p>
+      <p style="font-size:14px;color:var(--ink-dim);">Only week {{ lu.week }} is judged today. Week {{ wv.next_week }} pickups are judged from tomorrow, once Sleeper turns the week.</p>
       {% endif %}
     {% endif %}
     {% if wv.byes_next %}
@@ -280,7 +280,7 @@
   <section>
     <h2><span class="sec-icon">🚑</span>The Wire</h2>
     {% if season.wire %}
-    <p class="lede">{{ season.wire|length }} stor{{ 'y' if season.wire|length == 1 else 'ies' }} tonight named one of the {{ season.wire_names }} people this desk listens for: your players, and the free agents who would start for you. Everything else the feeds carried is somebody else's problem.</p>
+    <p class="lede">{{ season.wire|length }} stor{{ 'y' if season.wire|length == 1 else 'ies' }} today named one of the {{ season.wire_names }} people this desk listens for: your players, and the free agents who would start for you. Everything else the feeds carried is somebody else's problem.</p>
     {% for item in season.wire %}
     <div class="item {{ item.kind }}">
       <div class="hd">
@@ -298,11 +298,11 @@
     </div>
     {% endfor %}
     {% elif season.wire_names %}
-    <p class="lede">Nothing on the wire tonight named any of the {{ season.wire_names }} people this desk listens for. The feeds were busy; none of it was about anyone you start, stash or could claim.</p>
+    <p class="lede">Nothing on the wire today named any of the {{ season.wire_names }} people this desk listens for. The feeds were busy; none of it was about anyone you start, stash or could claim.</p>
     {% elif season.have_roster and season.over %}
     <p class="lede">The season is over, so this desk has stopped listening.</p>
     {% else %}
-    <p class="lede">The Wire has no roster to listen for tonight — see the colophon.</p>
+    <p class="lede">The Wire has no roster to listen for today — see the colophon.</p>
     {% endif %}
   </section>
 
@@ -325,7 +325,7 @@
     {% endfor %}
     <p style="font-size:14px;color:var(--ink-dim);">Left out: {{ adds.rival }} of the {{ adds.total }} most-added players are on another roster in this league and {{ adds.other }} would not start for you; {{ drops.rival + drops.other }} of the {{ drops.total }} most-dropped are not yours.</p>
     {% elif adds.total == 0 and drops.total == 0 %}
-    <p class="lede">{% if season.have_roster and season.over %}The season is over, so there is no market left to watch.{% else %}Sleeper's lists of the most-added and most-dropped players have nothing in them tonight — see the colophon.{% endif %}</p>
+    <p class="lede">{% if season.have_roster and season.over %}The season is over, so there is no market left to watch.{% else %}Sleeper's lists of the most-added and most-dropped players have nothing in them today — see the colophon.{% endif %}</p>
     {% else %}
     <p class="lede">None of the {{ adds.total }} most-added or {{ drops.total }} most-dropped players is yours, and none of the adds would start for you. The market moved; none of it moved anything of ours.</p>
     {% endif %}
@@ -353,7 +353,7 @@
     </table>
     {% if st.cut %}<p style="font-size:14px;color:var(--ink-dim);">The double line is the playoff cut: {{ st.cut }} of {{ st.teams }} go through. Ties in record are broken by points for. A week counts once all of its games are final.</p>{% endif %}
     {% else %}
-    <p class="lede">The standings did not arrive tonight — see the colophon for what could not be hauled.</p>
+    <p class="lede">The standings did not arrive today — see the colophon for what could not be hauled.</p>
     {% endif %}
   </section>
 
@@ -370,11 +370,11 @@
   </section>
 
   <div class="colophon">
-    THE NIGHTLY FEUD · compiled nightly by Claude · rosters, scores and projections pulled {{ season.as_of or 'never' }} from Sleeper, CBS and ESPN · wire copy via the Feud Mule<br>
+    THE NIGHTLY FEUD · compiled every morning by Claude · rosters, scores and projections pulled {{ season.as_of or 'never' }} from Sleeper, CBS and ESPN · wire copy via the Feud Mule<br>
     {% if cargo_stamp %}Mule cargo stamped {{ cargo_stamp }} · {% endif %}Back issues in <span style="color:var(--ink-dim);">newsletter/archive/</span> · debug trail in <span style="color:var(--ink-dim);">newsletter/data/archive/</span> · Beat Hunter. 🏈
     {% if gaps %}
     <br><br><span style="color:var(--ink-dim);">
-      {% for g in gaps %}{% if not loop.first %}<br>{% endif %}Tonight's paper is thinner than usual: {{ g }}.{% endfor %}
+      {% for g in gaps %}{% if not loop.first %}<br>{% endif %}Today's paper is thinner than usual: {{ g }}.{% endfor %}
     </span>
     {% endif %}
   </div>

@@ -53,7 +53,7 @@
       {% endif %}
     </p>
     {% else %}
-    <p class="lede">The league object did not arrive tonight, so the desk has nothing to report about the room — see the colophon for what the mule could not haul.</p>
+    <p class="lede">The league object did not arrive today, so the desk has nothing to report about the room — see the colophon for what the mule could not haul.</p>
     {% endif %}
 
     <div class="item {{ 'good' if league.scheduled else 'watch' }}">
@@ -94,7 +94,7 @@
   <section>
     <h2><span class="sec-icon">🚑</span>The Wire</h2>
     {% if wire %}
-    <p class="lede">{{ wire|length }} headline{{ '' if wire|length == 1 else 's' }} tonight named someone on our {{ board_rows }}-player board. Everything else the feeds carried is somebody else's problem.</p>
+    <p class="lede">{{ wire|length }} headline{{ '' if wire|length == 1 else 's' }} today named someone on our {{ board_rows }}-player board. Everything else the feeds carried is somebody else's problem.</p>
     {% for item in wire %}
     <div class="item {{ item.kind }}">
       <div class="hd">
@@ -112,7 +112,7 @@
     </div>
     {% endfor %}
     {% else %}
-    <p class="lede">Nothing on the wire tonight touched our {{ board_rows }}-player board. That is not a quiet news day, it is a quiet news day <em>for us</em> — the feeds were busy, none of it was about anyone you can draft.</p>
+    <p class="lede">Nothing on the wire today touched our {{ board_rows }}-player board. That is not a quiet news day, it is a quiet news day <em>for us</em> — the feeds were busy, none of it was about anyone you can draft.</p>
     {% endif %}
   </section>
 
@@ -154,12 +154,12 @@
   </section>
 
   <div class="colophon">
-    THE NIGHTLY FEUD · compiled nightly by Claude · league data &amp; wire copy via the Feud Mule (local scheduler)<br>
+    THE NIGHTLY FEUD · compiled every morning by Claude · league data &amp; wire copy via the Feud Mule (local scheduler)<br>
     {% if cargo_stamp %}Cargo stamped {{ cargo_stamp }} · {% endif %}Back issues in <span style="color:var(--ink-dim);">newsletter/archive/</span> · debug trail in <span style="color:var(--ink-dim);">newsletter/data/archive/</span> · Beat Hunter. 🏈
     {% if draft_note or gaps %}
     <br><br><span style="color:var(--ink-dim);">
       {% if draft_note %}* {{ draft_note }}.{% endif %}
-      {% for g in gaps %}<br>Tonight's paper is thinner than usual: {{ g }}.{% endfor %}
+      {% for g in gaps %}<br>Today's paper is thinner than usual: {{ g }}.{% endfor %}
     </span>
     {% endif %}
   </div>

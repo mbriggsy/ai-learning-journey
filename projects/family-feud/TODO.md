@@ -48,7 +48,7 @@
 - **Suite: 1519 tests, OK (skipped=6)**, run 2026-11-09 with `python -m unittest discover -s tests`.
   33 test files · 31 scripts · 39 insights.
 - **Clocks:** mule hourly · `gameday_check.py` Sat 20:00 · Sun 08:00 · 11:30 · 15:00 · draft
-  watcher · newsletter 21:45. Push/email are dead, so the files are the delivery.
+  watcher · newsletter 04:45 (moved from 21:45 on 11-11). Push/email are dead, so the files are the delivery.
 
 ## Ranked next
 

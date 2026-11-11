@@ -1,6 +1,6 @@
 # The Nightly Feud
 
-The intended product: a nightly league brief — waiver movement, trending adds/drops, injury news
+The intended product: a daily league brief, printed before dawn (04:45) — waiver movement, trending adds/drops, injury news
 cross-referenced against our board — written to a local HTML page Briggsy keeps bookmarked.
 
 **Since 2026-11-09 it is the in-season paper**, built around our roster (see
@@ -14,10 +14,10 @@ this file is still in the code and comes back on its own when the draft cargo st
 |---|---|
 | **The Mule** — hauls data in, hourly | ✅ **Green, and the green is now earned.** Re-verified 2026-09-17, in-season: **17 sources, 0 failed**, every payload parsed and counted rather than weighed. **5 working feeds.** *(Was 12 on 2026-08-08, 14 on 08-17; `sleeper_state` + `sleeper_matchups` + `sleeper_transactions` joined 09-17 for the in-season cadence, and the two draft-era fetchers stand down on `season_type` with an `ok` line rather than refusing hourly.)* Item counts move hourly — read `mule_status.json`, never this cell. |
 | **The build** — turns data into a newsletter | ✅ **Edition #1 published 2026-08-08** (U11). `scripts/build_newsletter.py`. |
-| **The schedule** — publishes it nightly, unattended | ✅ **Registered 2026-08-08** (U12). Task *Family Feud Newsletter*, **daily at 21:45**, sixteen minutes behind the mule's `:29` haul. Re-register after any folder move: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-newsletter.ps1` |
+| **The schedule** — publishes it nightly, unattended | ✅ **Registered 2026-08-08** (U12). Task *Family Feud Newsletter*, **daily at 04:45**, sixteen minutes behind the mule's `:29` haul. **Moved from 21:45 on 2026-11-11** (Briggsy): the paper is read in the morning, and the league's waivers clear Wednesday at 03:15 ET, so the evening print left every Wednesday reader blind to that night's claims. Re-register after any folder move: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-newsletter.ps1` |
 
 ```bash
-python scripts/build_newsletter.py            # build tonight's edition
+python scripts/build_newsletter.py            # build today's edition
 python scripts/build_newsletter.py --dry-run  # report what it found, write nothing
 ```
 
@@ -60,7 +60,7 @@ days stockpiling cargo for a consumer that did not exist. It exists now.
     that date were not backfilled, and the repair leaves them alone (`DRIVE_SINCE`).
   - **Exit 0 means Drive for desktop took the file**, on its `G:` drive. The upload to Google is
     Drive's own background job and nothing here checks it; if the laptop sleeps or is offline right
-    after 21:45, the copy reaches Google when it reconnects.
+    after 04:45, the copy reaches Google when it reconnects.
   - **It needs Google Drive for desktop running, signed in, and mounted as `G:`** (installed
     2026-11-09). If Drive ever mounts under another letter the build exits 3 with "`G:\My Drive`
     does not exist", and the repair is the one line `DRIVE_DIR` in `scripts/build_newsletter.py`.
@@ -114,7 +114,7 @@ python scripts/season_cargo.py --stdout        # just the pull, summarised, noth
 - **The paper names no drop** and does not sort a waiver claim from an instant add.
 
 ⚠️ **`season_cargo.json` is not mule cargo.** It lives in the inbox so it is archived with the
-edition, but the 21:45 build writes it, once a night. Read its `pulled` stamp before trusting it.
+edition, but the 04:45 build writes it, once a day. Read its `pulled` stamp before trusting it.
 
 ⚠️ **`tests/fixtures/season_cargo_20261109.json.gz` can never be re-made.** It is the real snapshot
 from Monday 2026-11-09 21:07 ET; `test_season_edition.py` pins that night's numbers on it.
@@ -171,11 +171,11 @@ file:///C:/Users/brigg/ai-learning-journey/projects/family-feud/newsletter/famil
 first visit, and double-clicking the file in Explorer works just as well. Recorded here so the
 path is written down somewhere, not because anything depends on it.
 
-Also in Google Drive, folder **Nightly Feud**, one dated file per night. Check the job by hand:
+Also in Google Drive, folder **Nightly Feud**, one dated file per day. Check the job by hand:
 
 ```powershell
 Get-ScheduledTaskInfo -TaskName "Family Feud Newsletter"   # LastTaskResult 0 = edition + Drive copy; 3 = edition written, Drive copy missed
-Get-ChildItem "G:\My Drive\Nightly Feud" | Sort-Object Name | Select-Object -Last 3   # tonight's date should be the newest
+Get-ChildItem "G:\My Drive\Nightly Feud" | Sort-Object Name | Select-Object -Last 3   # today's date should be the newest
 ```
 
 That page is a real edition now, rebuilt every time `build_newsletter.py` runs. The ☀/☾ theme

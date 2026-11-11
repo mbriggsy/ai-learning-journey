@@ -6,70 +6,45 @@
 > handoffs) was pruned 2026-09-27 and lives at commit **`af491a71`** — `git show af491a71:projects/family-feud/TODO.md`.
 > Read it before the 2027 draft, not before.
 
-## ▶ START HERE — as of Sun 2026-11-08 (week 9)
+## ▶ START HERE — as of Wed 2026-11-11 (week 10)
 
 **We are PoppaBriggsy, roster 3, *Saquon Deez Nuts*. `briggsy007` is HUNTER** (CLAUDE.md landmine).
 
-- **Record 4-4 (4th)**; week 8 lost to Hunter 164.38–99.36. **Week 9 vs kblizzy23 (6-2) is under way Sun 11-08**
-  (three-site ~150 vs ~149, a coin flip). The 11-08 sim: ~98% to make the playoffs, seed 3-5 likely, top-2 seed 6-8%
-  with a week-9 win. Remaining: wk10 Kaeperni · wk11 RMonk9 (no QB that week) · wk12 MattiICE23 · wk13 BuschLight420
-  (our weakest projected week) · wk14 Cltchiefs.
-- **Sun 11-08 09:15 ET, on Briggsy's word, verified on `/rosters`: added Patrick Mahomes, dropped Rachaad White;
-  Mahomes starts at QB, Maye benched** (week-11 QB for Maye's bye + denies QB-less RMonk9 the best free agent; White
-  projected 0 starts wks 10-17). Goff is now the SPARE QB. Detail + today's scratch plan: `temp/week9-moves-log.md`.
-- **Added Seth McGowan (RB IND, Taylor's backup) as a free agent and dropped the HOU DEF, 10-28 11:04 ET**, on
-  Briggsy's word. Verified: `/rosters` shows him added, HOU gone, starters unchanged; `/transactions/8` shows a
-  `free_agent` move, `complete`. SEA is now our only DEF.
-  The morning brief (lineup re-checks, the McGowan option, the Kittle trade recommendation) is
-  `temp/week8-moves-log.md` (gitignored, local). Weeks 6-7: `temp/week7-moves-log.md`.
-- **Sun 11-01 ~10:00 ET, on Briggsy's word, all verified on `/rosters`:** Stevenson → RB, Swift → BN (Henderson
-  OUT made Stevenson NE's lead back: consensus 15.7 vs 14.7) · **Carnell Tate → IR** (Out) · **added Jared Goff, no
-  drop** (week-11 QB for Maye's bye). Roster 17 = 16 active + Tate on IR. 🚨 **When Tate's Out tag clears, Sleeper
-  likely blocks our adds/claims until he leaves IR. Drop McGowan if Taylor is still a Colt after the NFL deadline
-  (Tue 11-10 4 PM ET); if Taylor was traded, McGowan becomes IND's lead back and the spare QB (Goff) goes instead —
-  Briggsy names it. Never Fannin** (revised 11-04: Fannin now out-projects Strange; 12 targets in week 8). Week-9
-  brief: `temp/week9-moves-log.md` (week 8: `temp/week8-moves-log.md`).
-- **Wed 11-04 ~18:10 ET, on Briggsy's word, verified on `/rosters`:** Swift, Collins, Fannin start over Stevenson,
-  M. Wilson, Strange · **added the JAX DEF, dropped the SEA DEF** (JAX covers SEA's week-11 bye) and slotted it in.
-- **Week 9 vs kblizzy23 (6-2). Locks: Thu 11-05 8:15 PM (Strange, Flowers) and Sun 9:30 AM Madrid (London,
-  Chase Brown), both before any GAMEDAY run except Sun 08:00.** NFL trade deadline Tue 11-10 4 PM ET (Taylor).
-- **Kaeperni's offer (A.J. Brown + Tucker Kraft for Zay Flowers) was DECLINED 10-22 ~22:20 ET** on
-  Briggsy's word. Verified: the panel read REJECTED, Active Trades was empty, `/rosters` unchanged.
-- **`scripts/trade_eval.py` is BUILT, COMMITTED (10-23) and REVIEWED (10-23):** 9 opus lenses, 18
-  verifiers, all fixes in (insight 036; the plan's decisions carry each change). Since 10-29 a man cut
-  when a trade processes can start for the other side that week (`waiver_clear_days: 1`, measured 10-28),
-  and the frozen night reads us −32.83 / −45.76, Kaeperni +38.93 / +50.18. **The fixture
-  `tests/fixtures/trade_eval_kaeperni_20261022.json.gz` can never be re-made** — it holds the 10-22
-  projections `TestThePublishedNumber` pins. Don't delete or regenerate it.
-- **The live Expected header is proven on a real game (10-30):** `TestRealThursdayNight` runs CAR @ GB (TNF wk 8)
-  through `projected_total` at pre-game, Q1, halftime (`left` 0.5 from ESPN's own clock) and the final (Sleeper's
-  `points` to the cent). **`tests/fixtures/gameday_tnf_wk8.json` and `gameday_espn_status.json`'s `tnf_wk8` are
-  one-time captures that can never be re-made.** Don't regenerate them.
-- **Suite: 1519 tests, OK (skipped=6)**, run 2026-11-09 with `python -m unittest discover -s tests`.
+- **Record 5-4 (4th)**; week 9 beat kblizzy23 120.78–118.76. **Week 10 vs Kaeperni.** Remaining: wk11 RMonk9 ·
+  wk12 MattiICE23 · wk13 BuschLight420 · wk14 Cltchiefs.
+- **Wed 11-11 10:30–10:33 ET, on Briggsy's word, verified on `/rosters`:** dropped Michael Wilson (neck fracture,
+  season over) and Seth McGowan; Tate and Stevenson moved OUT of IR (neither was eligible: Tate Questionable,
+  Stevenson Doubtful; this league's IR takes Out only). **Lineup: Maye · Taylor, C. Brown · London, Collins · Fannin ·
+  FLEX Tate, Flowers · Shrader · JAX.** Bench Goff, Mahomes, Swift (bye), Stevenson, White, Strange. 16 players, both
+  IR slots empty. Three-site about 138.5 vs Kaeperni 99.2 as set. Detail: `temp/week10-moves-log.md` (gitignored).
+- 🚨 **Tate check by Thu 11-12 8:15 PM ET.** He is Questionable (shoulder). DNP Wed + Thu → White takes his FLEX
+  before WSH @ NYG kicks off. If he is fine until Sunday and then sits, Strange is the swap (same 1:00 game, JAX @ TEN).
+  **Nothing runs Thursday; a session has to look.** Maye locks Sun 9:30 AM (Munich); Mahomes (elbow sprain, expected
+  to play) is the 1:00 fallback.
+- **When NE rules Stevenson Out (likely Fri 11-13), move him back to IR**: that frees one bench spot for an add.
+  Briggsy names the add. McGowan clears waivers Thu.
+- **Kaeperni's offer (A.J. Brown + Tucker Kraft for Zay Flowers) was DECLINED 10-22**; the Kittle hold is in Ranked
+  next.
+- **`scripts/trade_eval.py`:** the fixture `tests/fixtures/trade_eval_kaeperni_20261022.json.gz` can never be
+  re-made — it holds the 10-22 projections `TestThePublishedNumber` pins. Don't delete or regenerate it.
+- **`tests/fixtures/gameday_tnf_wk8.json` and `gameday_espn_status.json`'s `tnf_wk8` are one-time captures that can
+  never be re-made**, like `tests/fixtures/season_cargo_20261109.json.gz`. Don't regenerate them.
+- **Suite: 1519 tests, OK (skipped=6)**, run 2026-11-11 with `python -m unittest discover -s tests`.
   33 test files · 31 scripts · 39 insights.
-- **Clocks:** mule hourly · `gameday_check.py` Sat 20:00 · Sun 08:00 · 11:30 · 15:00 · draft
-  watcher · newsletter 04:45 (moved from 21:45 on 11-11). Push/email are dead, so the files are the delivery.
+- **Clocks:** mule hourly · `gameday_check.py` Sat 20:00 · Sun 08:00 · 11:30 · 15:00 · draft watcher ·
+  **The Daily Feud 04:45** (was The Nightly Feud at 21:45 until 11-11; Drive folder `Daily Feud`). Push/email are
+  dead, so the files are the delivery.
 
 ## Ranked next
 
-1. **Week 9 Sunday (11-08), then the week-10 trade window.**
-   - **Today's scratch plan** (each fallback before that game's kickoff): 11:30 — Mahomes out → Maye in; Fannin out →
-     add Juwan Johnson (NO TE), drop McGowan, start him; Taylor out → McGowan starts. ~2:35 — Collins out → Wilson.
-     ~2:55 — Stevenson out → Wilson at FLEX. Read `GAMEDAY.md`'s 11:30 and 15:00 entries.
-   - **Kittle from Kaeperni is the league's best trade — the 10-28 HOLD STANDS until Briggsy lifts it** (he was shown
-     the finding 11-08 when he asked for opportunities). Evidence: 18 offline `--search` runs (6 teams × White /
-     Stevenson / Swift, 08:24 snapshot; Hunter excluded), the frontier re-priced live 09:28, then three independent
-     lenses (workflow `wf_6046ef41-db1`: news, model audit, would-they-accept). **Opener: Zay Flowers + Brenton Strange
-     for Kittle** (us +13.4 / +14.8 three-site / Sleeper, Kaeperni +2.6 / +4.4; wk-10 head-to-head about +7 for us;
-     ~+20 for us with the news lens's Flowers markdown — BAL's QB is a stopgap with Lamar out, possibly for the season).
-     Kaeperni asked for Flowers on 10-22; Strange covers Kraft's wk-11 bye for them. **Fallback if they counter:**
-     Stevenson + Flowers (us +13.5 / +14.8). **Floor: never Chase Brown + Flowers for Kittle** (us −7.5 / −3.7).
-     **Avoid Stevenson + Chase Brown** (its +13.7 is the tool's free-agent pickups; with none it is −1.4, RB holes wk 10
-     and wk 13) and **Bijan for C. Brown + Flowers** (fragile; stacks ATL's wk-11 bye). Send only after Kittle's game is
-     final, re-price on a fresh snapshot first (`temp/te_capture.py`), and it must be accepted by about Sat 11-14 to
-     count for week 10. League deadline: week 11. Hunter is commissioner and may be able to veto alone (unconfirmed).
-   - **Tate:** activate the moment TEN clears him (Wed 11-11 report); drop McGowan if Taylor is still a Colt (see START
-     HERE). A 2-for-1 trade would open the spot instead.
+1. **Week 10 (Thu 11-12 through Mon 11-16), then the trade deadline (week 11).**
+   - **Thursday:** the Tate check in START HERE. **Friday:** Stevenson back to IR if Out, then the add.
+   - **Kittle from Kaeperni — the 10-28 HOLD STANDS until Briggsy lifts it** (shown the finding 11-08). The 11-08
+     opener was **Zay Flowers + Brenton Strange for Kittle** (us +13.4 / +14.8 three-site / Sleeper, Kaeperni
+     +2.6 / +4.4). **Those numbers are stale**: Stevenson is hurt, Wilson and McGowan are gone, Tate is back. Re-price
+     on a fresh snapshot (`temp/te_capture.py`) before any offer. **Floor: never Chase Brown + Flowers for Kittle.**
+     To count for week 10 it must be accepted by about Sat 11-14 (and we play Kaeperni this week). League deadline: week 11. Hunter is
+     commissioner and may be able to veto alone (unconfirmed).
    - **Week 13:** swap the spare QB for a K stream (Fairbairn / Little / Bates on Sleeper; re-pull three sites in wk 12).
    - **Keep the laptop on the charger** Sat–Mon (dead-battery landmine below).
 2. **Optional: make `--search` fast again without moving a number.** It takes 355-373 s for 2,736
@@ -97,7 +72,7 @@
    - **Week 10:** Swift. · **Week 12:** nobody.
    - **Week 11 is the big one:** Maye, London, Fannin, Stevenson. Mahomes (added 11-08) starts at QB; Strange covers
      TE; the JAX DEF (added 11-04 for this week, at NYG) covers DEF. Hunter loses Stafford and Myers.
-   - **Week 13:** Taylor, McGowan, Flowers, Shrader (stream a K). · **Week 14:** M. Wilson.
+   - **Week 13:** Taylor, Flowers, Shrader (stream a K). · **Week 14:** nobody (Wilson and McGowan dropped 11-11).
    - Hunter later: wk 10 D. Smith · wk 13 G. Wilson, B. Allen, BAL DEF · wk 14 McBride, Allgeier.
    - Trade deadline **week 11**. Playoffs 6 of 8, weeks 15-17.
 5. **Next August, before the 2027 draft:** the draft-era payloads still owed at the board refresh

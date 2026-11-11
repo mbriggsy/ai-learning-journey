@@ -254,3 +254,66 @@ Until it is fixed, 'no change' below means 'no new data', NOT 'nothing happened'
 Re-run scripts/install-mule.ps1 — it re-derives every path from its own location.
 
 _cargo was 401 min old when this ran_
+
+---
+
+## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-09-28 09:35:01
+
+- the mule reported sleeper_draft.json as: FAIL: fetch failed -- The remote name could not be resolved: 'api.sleeper.app' [kept previous cargo, 60 min old].
+- the mule reported sleeper_users.json as: FAIL: fetch failed -- The remote name could not be resolved: 'api.sleeper.app' [kept previous cargo, 60 min old].
+The mule runs hourly; anything past 150 minutes means it missed at least two runs.
+Until it is fixed, 'no change' below means 'no new data', NOT 'nothing happened'.
+Re-run scripts/install-mule.ps1 — it re-derives every path from its own location.
+
+_cargo was 6 min old when this ran_
+
+---
+
+## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-09-28 10:35:01
+
+- the mule reported sleeper_draft.json as: FAIL: fetch failed -- The remote name could not be resolved: 'api.sleeper.app' [kept previous cargo, 120 min old].
+- the mule reported sleeper_users.json as: FAIL: fetch failed -- The remote name could not be resolved: 'api.sleeper.app' [kept previous cargo, 120 min old].
+The mule runs hourly; anything past 150 minutes means it missed at least two runs.
+Until it is fixed, 'no change' below means 'no new data', NOT 'nothing happened'.
+Re-run scripts/install-mule.ps1 — it re-derives every path from its own location.
+
+_cargo was 6 min old when this ran_
+
+---
+
+## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-10-12 15:12:07
+
+- last mule run was 1003 minutes ago.
+- sleeper_draft.json on disk was last written 1003 minutes ago.
+- sleeper_users.json on disk was last written 1003 minutes ago.
+The mule runs hourly; anything past 150 minutes means it missed at least two runs.
+Until it is fixed, 'no change' below means 'no new data', NOT 'nothing happened'.
+Re-run scripts/install-mule.ps1 — it re-derives every path from its own location.
+
+_cargo was 1003 min old when this ran_
+
+---
+
+## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-10-12 20:42:45
+
+- last mule run was 314 minutes ago.
+- sleeper_draft.json on disk was last written 314 minutes ago.
+- sleeper_users.json on disk was last written 314 minutes ago.
+The mule runs hourly; anything past 150 minutes means it missed at least two runs.
+Until it is fixed, 'no change' below means 'no new data', NOT 'nothing happened'.
+Re-run scripts/install-mule.ps1 — it re-derives every path from its own location.
+
+_cargo was 314 min old when this ran_
+
+---
+
+## CARGO IS STALE — THIS WATCHER IS BLIND — 2026-11-10 15:13:07
+
+- last mule run was 164 minutes ago.
+- sleeper_draft.json on disk was last written 164 minutes ago.
+- sleeper_users.json on disk was last written 164 minutes ago.
+The mule runs hourly; anything past 150 minutes means it missed at least two runs.
+Until it is fixed, 'no change' below means 'no new data', NOT 'nothing happened'.
+Re-run scripts/install-mule.ps1 — it re-derives every path from its own location.
+
+_cargo was 164 min old when this ran_

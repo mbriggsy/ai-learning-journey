@@ -66,4 +66,4 @@ the same `file://` pattern as the newsletter page. There is no artifact CSP in t
   run**~~ — **FALSE as of 2026-08-17 and corrected here:** it publishes nightly and unattended.
   Verified by the artifact, not by belief — `newsletter/family-feud-newsletter.html` read
   *"Aug 17, 2026 (Edition #10)"* with an mtime of 21:45 that night, with nobody at the keyboard.
-  U11 and U12 shipped it on 2026-08-08. See [`nightly-feud.md`](nightly-feud.md).
+  U11 and U12 shipped it on 2026-08-08. See [`daily-feud.md`](daily-feud.md).

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U11 -- The Nightly Feud, the half that has never run.
+"""U11 -- The Daily Feud, the half that has never run.
 
     python scripts/build_newsletter.py              # build today's edition
     python scripts/build_newsletter.py --dry-run    # render and report, write nothing
@@ -70,7 +70,7 @@ ALERTS = os.path.join(NEWS, "data", "state", "DRAFT_ALERTS.md")
 #: Drive for desktop mounts the account here, outside the project. `copy_to_drive` creates only the
 #: last folder and refuses if `G:\My Drive` itself is absent, so a different disk that happens to
 #: be lettered G: is never written to.
-DRIVE_DIR = r"G:\My Drive\Nightly Feud"
+DRIVE_DIR = r"G:\My Drive\Daily Feud"
 
 #: The first night the Drive copy existed. `catch_up_drive` repairs misses from this date on and
 #: leaves the 87 earlier back issues alone -- putting those in Drive is Briggsy's call, not a
@@ -822,7 +822,7 @@ def catch_up_drive(skip=None, archive=None, drive_dir=None, since=None):
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog="build_newsletter.py",
-                                description="Build today's Nightly Feud from the mule's cargo.")
+                                description="Build today's Daily Feud from the mule's cargo.")
     p.add_argument("--dry-run", action="store_true", help="render and report, write nothing")
     p.add_argument("--out", default=LIVE)
     p.add_argument("--no-haul", action="store_true",

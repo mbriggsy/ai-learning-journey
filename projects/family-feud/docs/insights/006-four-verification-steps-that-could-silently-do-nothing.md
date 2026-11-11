@@ -58,6 +58,6 @@ Concrete rules this bought:
 - The board generator and schema gate (U4/U6): the gate must validate **all 174 rows**, because
   both known break modes are latent — a float `vbdDelta` passes an empty-picks smoke run and dies
   three picks in. A smoke test that cannot fail is the same bug as above, wearing a lab coat.
-- The Nightly Feud's degrade path — it must be tested by deliberately removing cargo, not by
+- The Daily Feud's degrade path — it must be tested by deliberately removing cargo, not by
   waiting for a feed to die.
 - Any future "I checked it by hand" claim in this project. Write the file.

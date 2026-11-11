@@ -4,7 +4,7 @@
     python scripts/season_cargo.py            # pull, write newsletter/data/inbox/season_cargo.json
     python scripts/season_cargo.py --stdout   # pull, print a summary, write nothing
 
-WHY THIS EXISTS. From the night the draft finished, The Nightly Feud is built around our roster:
+WHY THIS EXISTS. From the night the draft finished, The Daily Feud is built around our roster:
 who is hurt, who to start, who is worth a claim, where we stand. Every one of those needs facts the
 hourly mule does not haul -- a 16 MB player dump for names and injury tags, Sleeper's projections,
 CBS's and ESPN's (Briggsy's rule, 2026-10-14: a lineup or waiver call never reads Sleeper alone),

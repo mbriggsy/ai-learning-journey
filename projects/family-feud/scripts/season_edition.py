@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The in-season Nightly Feud: one snapshot in, every fact the page prints out.
+"""The in-season Daily Feud: one snapshot in, every fact the page prints out.
 
 PURE. No network, no clock of its own, no file but the ones it is handed. `season_cargo.py` pulls
 the snapshot; `build_newsletter.py` loads it, calls `build()` here and renders the result. The

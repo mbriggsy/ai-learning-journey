@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""U11 -- The Nightly Feud's build half.
+"""U11 -- The Daily Feud's build half.
 
 The load-bearing tests here are in `TestWireMatching`. Surname matching was tried first and
 measured against one night's real feeds it produced **10 false positives out of 11 items**:
@@ -429,7 +429,7 @@ class TestItPublishesWhateverArrived(InboxCase):
         """The whole design: it publishes with whatever arrived, and says what did not."""
         ctx = N.build_context()
         html = N.render(ctx)
-        self.assertIn("THE NIGHTLY", html)
+        self.assertIn("THE DAILY", html)
         self.assertTrue(ctx["gaps"], "an empty inbox produced no reported gaps")
 
     def test_every_gap_is_named_in_the_edition(self):
@@ -611,7 +611,7 @@ class TestCopyToDrive(unittest.TestCase):
         with open(self.issue, "w", encoding="utf-8") as f:
             f.write("<html>Edition #88 \u2014 \u2600</html>")
         self.mount = os.path.join(self.tmp, "My Drive")
-        self.drive = os.path.join(self.mount, "Nightly Feud")
+        self.drive = os.path.join(self.mount, "Daily Feud")
 
     def test_the_copy_keeps_the_file_name_and_the_bytes(self):
         os.makedirs(self.mount)
@@ -637,7 +637,7 @@ class TestCopyToDrive(unittest.TestCase):
         self.assertFalse(os.path.exists(self.mount))
 
     def test_the_real_target_is_the_folder_briggsy_named(self):
-        self.assertEqual(N.DRIVE_DIR, "G:\\My Drive\\Nightly Feud")
+        self.assertEqual(N.DRIVE_DIR, "G:\\My Drive\\Daily Feud")
 
     def test_with_no_folder_given_it_writes_where_DRIVE_DIR_points_at_call_time(self):
         """A default argument would have bound the real G: path at import and ignored this patch."""
@@ -682,7 +682,7 @@ class TestCatchUpDrive(unittest.TestCase):
         self.tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         self.archive = os.path.join(self.tmp, "archive")
-        self.drive = os.path.join(self.tmp, "My Drive", "Nightly Feud")
+        self.drive = os.path.join(self.tmp, "My Drive", "Daily Feud")
         os.makedirs(self.archive)
         os.makedirs(self.drive)
         for name in ("2026-11-08-edition-87.html", "2026-11-09-edition-88.html",
@@ -733,7 +733,7 @@ class TestMainDriveCopy(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         self.archive = os.path.join(self.tmp, "archive")
         self.mount = os.path.join(self.tmp, "My Drive")
-        self.drive = os.path.join(self.mount, "Nightly Feud")
+        self.drive = os.path.join(self.mount, "Daily Feud")
         self.live = os.path.join(self.tmp, "live.html")
         self.issue = os.path.join(self.archive, "2026-11-09-edition-88.html")
         for name, value in (("ARCHIVE", self.archive), ("DRIVE_DIR", self.drive),

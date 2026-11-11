@@ -1,4 +1,8 @@
-# The Nightly Feud
+# The Daily Feud
+
+*Called The Nightly Feud until 2026-11-11, when the print moved from 21:45 to 04:45. Back issues
+before that date carry the old masthead, and closed plans and the runbook's changelog keep the old
+name.*
 
 The intended product: a daily league brief, printed before dawn (04:45) — waiver movement, trending adds/drops, injury news
 cross-referenced against our board — written to a local HTML page Briggsy keeps bookmarked.
@@ -14,7 +18,7 @@ this file is still in the code and comes back on its own when the draft cargo st
 |---|---|
 | **The Mule** — hauls data in, hourly | ✅ **Green, and the green is now earned.** Re-verified 2026-09-17, in-season: **17 sources, 0 failed**, every payload parsed and counted rather than weighed. **5 working feeds.** *(Was 12 on 2026-08-08, 14 on 08-17; `sleeper_state` + `sleeper_matchups` + `sleeper_transactions` joined 09-17 for the in-season cadence, and the two draft-era fetchers stand down on `season_type` with an `ok` line rather than refusing hourly.)* Item counts move hourly — read `mule_status.json`, never this cell. |
 | **The build** — turns data into a newsletter | ✅ **Edition #1 published 2026-08-08** (U11). `scripts/build_newsletter.py`. |
-| **The schedule** — publishes it nightly, unattended | ✅ **Registered 2026-08-08** (U12). Task *Family Feud Newsletter*, **daily at 04:45**, sixteen minutes behind the mule's `:29` haul. **Moved from 21:45 on 2026-11-11** (Briggsy): the paper is read in the morning, and the league's waivers clear Wednesday at 03:15 ET, so the evening print left every Wednesday reader blind to that night's claims. Re-register after any folder move: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-newsletter.ps1` |
+| **The schedule** — publishes it daily, unattended | ✅ **Registered 2026-08-08** (U12). Task *Family Feud Newsletter*, **daily at 04:45**, sixteen minutes behind the mule's `:29` haul. **Moved from 21:45 on 2026-11-11** (Briggsy): the paper is read in the morning, and the league's waivers clear Wednesday at 03:15 ET, so the evening print left every Wednesday reader blind to that night's claims. Re-register after any folder move: `powershell -NoProfile -ExecutionPolicy Bypass -File scripts\install-newsletter.ps1` |
 
 ```bash
 python scripts/build_newsletter.py            # build today's edition
@@ -44,14 +48,14 @@ days stockpiling cargo for a consumer that did not exist. It exists now.
   seconds measured). If that fails for any reason the edition prints from the kept
   `newsletter/data/inbox/season_cargo.json`, says how old it is, and past 36 hours makes no call.
   The functions that build the page read files only. The draft edition: trending ids join the board on the frozen `sleeperId`, which retired the plan's
-  48 per-player lookups. A nightly job that touches the network is a nightly job that fails on a
-  bad night.
+  48 per-player lookups. A daily job that touches the network is a daily job that fails on a
+  bad day.
 - **It publishes whatever arrived.** A missing or corrupt feed degrades to absent and the gap is
   named in the colophon — a paper that quietly drops a section teaches you to trust a page that is
   lying.
 
 - **Every edition is also copied to Google Drive.** The dated back issue lands in
-  `G:\My Drive\Nightly Feud\` under the same file name (`YYYY-MM-DD-edition-N.html`). A same-day
+  `G:\My Drive\Daily Feud\` under the same file name (`YYYY-MM-DD-edition-N.html`). A same-day
   rebuild replaces that day's copy, as the local archive does. The copy runs last, after everything
   local is on disk: a Drive that is down never costs the edition, but the build then exits **3**
   and the task's `Last Result` reads 3 instead of 0. `--dry-run` copies nothing.
@@ -171,11 +175,11 @@ file:///C:/Users/brigg/ai-learning-journey/projects/family-feud/newsletter/famil
 first visit, and double-clicking the file in Explorer works just as well. Recorded here so the
 path is written down somewhere, not because anything depends on it.
 
-Also in Google Drive, folder **Nightly Feud**, one dated file per day. Check the job by hand:
+Also in Google Drive, folder **Daily Feud**, one dated file per day. Check the job by hand:
 
 ```powershell
 Get-ScheduledTaskInfo -TaskName "Family Feud Newsletter"   # LastTaskResult 0 = edition + Drive copy; 3 = edition written, Drive copy missed
-Get-ChildItem "G:\My Drive\Nightly Feud" | Sort-Object Name | Select-Object -Last 3   # today's date should be the newest
+Get-ChildItem "G:\My Drive\Daily Feud" | Sort-Object Name | Select-Object -Last 3   # today's date should be the newest
 ```
 
 That page is a real edition now, rebuilt every time `build_newsletter.py` runs. The ☀/☾ theme
@@ -200,7 +204,7 @@ newsletter/
                                    edition after it. Self-healing, no state file to lose.
   data/
     inbox/                      <- fresh cargo, mule writes / build reads   [gitignored]
-      season_cargo.json         <- the exception: written nightly by the BUILD, not the mule
+      season_cargo.json         <- the exception: written daily by the BUILD, not the mule
     archive/                    <- consumed cargo by date, debug trail      [gitignored]
     mule_log.txt                <- mule heartbeat, last 500 runs            [gitignored]
 ```

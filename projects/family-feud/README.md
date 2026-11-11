@@ -25,7 +25,7 @@ docs/            all prose — start here
   draft-day-runbook.md   THE operating manual. Read before any draft or mock.
   ranking-methodology.md why the board ranks what it ranks
   live-board-plan.md     the self-updating wall board — shipped; this is the design record
-  nightly-feud.md        the newsletter — how it builds, and the nightly job that publishes it
+  daily-feud.md          the newsletter — how it builds, and the daily job that publishes it
   in-season-plan.md      what happens after the draft. A stub on purpose; read the un-stub trigger
   jargon.md              the decoder — every term of art in plain English
   insights/              hard-won lessons, one per file. Read before debugging
@@ -43,7 +43,7 @@ draft-kit/       the draft-day arsenal (run the engine from in here)
                    what it excludes and that it does not reproduce the Aug 5 board.
   cache/           the pinned /players/nfl dump the ids were resolved against.
 
-newsletter/      The Nightly Feud machinery + the mule
+newsletter/      The Daily Feud machinery + the mule
                  data/inbox/   mule cargo (gitignored — a cache, not source)
                  data/state/   last_seen.json + ladder.json are gitignored runtime scratch;
                                DRAFT_ALERTS.md is TRACKED — it is the only channel the
@@ -84,7 +84,7 @@ scripts/         install-mule.ps1     — registers and verifies the hourly mule
                                         memory, and arms the contamination gate for you.
                  validate_cargo.py    — is this payload actually the thing we asked for? The
                                         mule's per-source gate: status, content-type, parse, items.
-                 build_newsletter.py  — THE NIGHTLY FEUD. Turns the mule's cargo into an edition.
+                 build_newsletter.py  — THE DAILY FEUD. Turns the mule's cargo into an edition.
                                         Facts are computed, never written by a model; the design
                                         is carried from the frozen template. In season it pulls one
                                         snapshot first (season_cargo.py) and builds around our roster
@@ -281,7 +281,7 @@ did not make.** Under a running clock the only trustworthy oracle is the pick CO
 identity; `picked_by` becomes trustworthy only at `pick_timer: 0`, where auto-pick has no trigger at
 all.
 
-**The Nightly Feud publishes itself now.** Its build half had never run once; **Edition #1 went out
+**The Daily Feud publishes itself now.** Its build half had never run once; **Edition #1 went out
 2026-08-08** — `python scripts/build_newsletter.py`. Deterministic code owns every fact, the design
 is carried byte-for-byte from the frozen template rather than copied. **Since 2026-11-09 it is the
 in-season paper**: this week's matchup with start/sit calls, our roster's injuries, waiver pickups,
@@ -291,8 +291,8 @@ standings, built from one daily pull of rosters and three sites' projections.
 minutes behind the mule's `:29` haul. Its installer proves the job by output freshness rather than
 by an exit code, because a task pointing at a deleted script reports success indefinitely. Back
 issues are not committed; the current edition is. Each back issue is also copied to Google Drive
-(`G:\My Drive\Nightly Feud\`); a missed copy exits 3, never costs the edition, and is repaired by
-the next run. See [`docs/nightly-feud.md`](docs/nightly-feud.md).
+(`G:\My Drive\Daily Feud\`); a missed copy exits 3, never costs the edition, and is repaired by
+the next run. See [`docs/daily-feud.md`](docs/daily-feud.md).
 
 **What the season looks like after the draft** is stubbed, not built:
 [`docs/in-season-plan.md`](docs/in-season-plan.md) records the three deliverables, the four Sleeper

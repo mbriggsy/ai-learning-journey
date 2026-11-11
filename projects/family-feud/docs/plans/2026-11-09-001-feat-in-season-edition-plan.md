@@ -169,7 +169,7 @@ text with the same deadpan voice and no exclamation marks.
   the catch-up are untouched.
 - `tests/test_season_edition.py`, `tests/test_season_cargo.py`, a trimmed real snapshot from
   2026-11-09 under `tests/fixtures/`.
-- Docs: `docs/nightly-feud.md`, `docs/in-season-plan.md` §1, `README.md`, `CLAUDE.md`'s table,
+- Docs: `docs/daily-feud.md`, `docs/in-season-plan.md` §1, `README.md`, `CLAUDE.md`'s table,
   `TODO.md` (the waiver-report item, the counts).
 
 `build_newsletter.py` stays runnable at every commit and through the build: the 21:45 job fires

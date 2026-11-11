@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The in-season Nightly Feud: the rules that keep it from being calm and wrong.
+"""The in-season Daily Feud: the rules that keep it from being calm and wrong.
 
 Everything here runs on ONE real snapshot, `fixtures/season_cargo_20261109.json.gz`, pulled Monday
 2026-11-09 21:07 ET (week 9, the Monday game under way). It can never be re-made: it holds that
@@ -549,7 +549,7 @@ class SeasonBuild(unittest.TestCase):
         self.inbox = os.path.join(self.tmp, "inbox")
         self.archive = os.path.join(self.tmp, "archive")
         self.mount = os.path.join(self.tmp, "My Drive")
-        self.drive = os.path.join(self.mount, "Nightly Feud")
+        self.drive = os.path.join(self.mount, "Daily Feud")
         self.live = os.path.join(self.tmp, "live.html")
         os.makedirs(self.inbox)
         os.makedirs(self.mount)

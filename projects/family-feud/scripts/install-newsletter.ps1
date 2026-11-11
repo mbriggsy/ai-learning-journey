@@ -76,7 +76,7 @@ $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatt
             -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 10)
 
 Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger `
-    -Settings $settings -Description "Builds The Nightly Feud into newsletter\family-feud-newsletter.html, daily at 04:45 (in season: pulls rosters and three sites' projections first), and copies the dated back issue to Google Drive (G:\My Drive\Nightly Feud). Last Result 3 = edition written, Drive copy missed." `
+    -Settings $settings -Description "Builds The Daily Feud into newsletter\family-feud-newsletter.html, daily at 04:45 (in season: pulls rosters and three sites' projections first), and copies the dated back issue to Google Drive (G:\My Drive\Daily Feud). Last Result 3 = edition written, Drive copy missed." `
     -Force | Out-Null
 Write-Host "Registered : $TaskName"
 

@@ -61,6 +61,6 @@ one that cannot. A weaker-looking signal on a stable field beats a strong signal
 ## Also Applies To
 
 - The live board's JS name matcher — same problem, same answer; do not port a similarity threshold.
-- The Nightly Feud's trending-player join and RSS wire matching, which face the identical drift.
+- The Daily Feud's trending-player join and RSS wire matching, which face the identical drift.
 - Any join between our board and an external source. The durable fix is a stable id
   (`sleeperId`, KTD-4 in the rebuild plan) — every name rule here is a stopgap until that lands.

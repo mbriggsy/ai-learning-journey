@@ -13,7 +13,7 @@ Draft ~Aug 29, 2026. Mission: beat Hunter. [`README.md`](README.md) is the map.
 | [`docs/draft-day-runbook.md`](docs/draft-day-runbook.md) | Draft-day operating instructions + changelog |
 | [`docs/ranking-methodology.md`](docs/ranking-methodology.md) | Why the board ranks what it ranks |
 | [`docs/live-board-plan.md`](docs/live-board-plan.md) | The live auto-updating board (next feature) |
-| [`docs/nightly-feud.md`](docs/nightly-feud.md) | The newsletter — scheduled daily at 04:45 (was 21:45 until 2026-11-11). **In-season edition since 2026-11-09**: built around our roster from one daily pull (`scripts/season_cargo.py` → `scripts/season_edition.py`); its start/sit calls reuse `gameday_check.assess` |
+| [`docs/daily-feud.md`](docs/daily-feud.md) | The newsletter — scheduled daily at 04:45 (was 21:45 until 2026-11-11). **In-season edition since 2026-11-09**: built around our roster from one daily pull (`scripts/season_cargo.py` → `scripts/season_edition.py`); its start/sit calls reuse `gameday_check.assess` |
 | [`docs/in-season-plan.md`](docs/in-season-plan.md) | What happens after the draft. A STUB on purpose — read its un-stub trigger before building anything in-season |
 | [`docs/insights/`](docs/insights/) | Hard-won lessons, one per file. Read before debugging something that smells familiar. |
 | [`newsletter/data/state/DRAFT_ALERTS.md`](newsletter/data/state/DRAFT_ALERTS.md) | Everything `scripts/watch_draft_state.py` has ever fired — the draft date appearing or MOVING, your slot appearing/moving/vanishing, a re-created draft, dead cargo, and the T-7/T-48/T-6 countdown. Append-only, newest last. Push and email are dead account-wide, so this file IS the delivery — **open it at the start of a session, not when you go looking** |
@@ -93,7 +93,7 @@ and never overrides them. Changelog entries quote pre-migration paths (`Draft Ki
 - **Absolute paths in scheduled tasks are how this project breaks.** Both known breakages were a
   hardcoded folder path. `scripts/install-mule.ps1` derives everything from its own location —
   re-run it after any move rather than hand-editing a path back in. The one deliberate exception:
-  `DRIVE_DIR` in `scripts/build_newsletter.py` (`G:\My Drive\Nightly Feud`, the Google Drive copy
+  `DRIVE_DIR` in `scripts/build_newsletter.py` (`G:\My Drive\Daily Feud`, the Google Drive copy
   of each edition). It lives outside the project, so no installer can derive it; if Drive mounts
   under another letter, that line is the repair.
 - **A folder cannot be renamed while a Claude session's working directory is inside it** (Windows

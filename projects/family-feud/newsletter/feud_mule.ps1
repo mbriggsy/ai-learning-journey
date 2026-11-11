@@ -1,7 +1,7 @@
 # ============================================================
 #  FEUD MULE v2.2  —  Family Feud data fetcher (Aug 2026, in-season Sep 2026)
 #  Runs hourly via Windows Task Scheduler. Fetches Sleeper league
-#  data + fantasy news feeds into data\inbox for The Nightly Feud,
+#  data + fantasy news feeds into data\inbox for The Daily Feud,
 #  and runs the two draft-kit market fetchers (v2.1) so the expert
 #  consensus and the ADP pool are never older than the last hour.
 #  Every source fails independently; status lands in mule_status.json.

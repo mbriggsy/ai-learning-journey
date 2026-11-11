@@ -83,8 +83,8 @@
    every package priced on the same data. 18 searches ran 3 at a time (~2 GB each, 6-12 min each) via
    `temp/te_run_searches.sh`. Those three files are local only (temp/ is gitignored); promote them to `scripts/` with a
    test if this becomes routine. Landmine: `xargs` chokes on `D'Andre Swift`'s apostrophe — pass id 6790 and `-d '\n'`.
-3. **Finish the Tuesday waiver report.** The Nightly Feud has printed weak spots, pickups worth a
-   claim, next week's byes and our waiver place every night since 2026-11-09 (`docs/nightly-feud.md`).
+3. **Finish the Tuesday waiver report.** The Daily Feud has printed weak spots, pickups worth a
+   claim, next week's byes and our waiver place every night since 2026-11-09 (`docs/daily-feud.md`).
    Two answers are still missing: who on our roster is droppable, and the week's transactions with
    Hunter's first. (`docs/in-season-plan.md` §1; the gameday
    check is §2 and done). Inputs are all in the inbox (`sleeper_transactions.json`,

@@ -32,7 +32,7 @@ role and the review proceeds. **Persona files are enrichment, not a dependency; 
 blocks on CE's presence or layout.** After resolving, `ls` the dir and null out any persona filename
 you planned to use that doesn't exist (CE renames things across versions). Roster when last checked (the ls decides):
 correctness, testing, maintainability, project-standards, security, performance, api-contract,
-data-migration, reliability, adversarial, previous-comments, julik-frontend-races, swift-ios,
+data-migration, reliability, adversarial, previous-comments, frontend-races,
 agent-native, learnings-researcher, deployment-verification-agent (mostly `<stem>-reviewer.md`, but
 `learnings-researcher.md` and `deployment-verification-agent.md` are not — always use the on-disk
 filename, never derive it from the stem).
@@ -69,8 +69,8 @@ const PERSONA_DIR = '<resolved personas dir, or null if PERSONAS-UNAVAILABLE>'
 // Lens = inline role (always present) + CE persona file (enrichment, NOT a dependency).
 // persona: null → the inline role carries the lens alone. No agentType, ever (see header note).
 // CE 3.14 roster notes: maintainability-reviewer absorbed simplicity + structural quality; there is
-// NO architecture or language-idiom persona anymore (inline roles only — Swift being the one
-// stack survivor, swift-ios-reviewer.md); performance-oracle and the data-integrity-guardian /
+// NO architecture or language-idiom persona anymore (inline roles only; the last stack persona,
+// swift-ios-reviewer.md, went in CE 3.37.1); performance-oracle and the data-integrity-guardian /
 // data-migrations-reviewer pair are gone (performance-reviewer.md and data-migration-reviewer.md
 // are the survivors).
 const LENSES = [

@@ -50,7 +50,7 @@ The brief = the invariants a change must not break · the values not to flag · 
 | correctness | `correctness-reviewer.md` |
 | architecture / invariants | — (no CE persona since 3.14; inline role — the contract brief carries the invariants) |
 | testing (does it prove the right *value*, or just typecheck?) | `testing-reviewer.md` |
-| language idiom | — (CE removed its stack personas — `kieran-*`/`dhh-rails` are gone; inline role. One survivor: Swift → `swift-ios-reviewer.md`) |
+| language idiom | — (CE removed its stack personas — `kieran-*`/`dhh-rails` are gone, and `swift-ios-reviewer.md` went in 3.37.1; inline role) |
 | simplicity / YAGNI + structural quality (coupling, module boundaries, type-boundary leaks) | `maintainability-reviewer.md` (CE merged simplicity + structural quality into this one; this lens owns the full merged territory) |
 | api-contract / persistence glance | `api-contract-reviewer.md` |
 | **adversarial (≥1, always-on)** — *constructs* failure scenarios to make the code return a confidently-wrong result | `adversarial-reviewer.md` (CE gates this persona by diff size — OUR always-on floor is deliberate; keep it) |
@@ -60,7 +60,7 @@ The brief = the invariants a change must not break · the values not to flag · 
 - `reliability-reviewer.md` — error handling, retries, timeouts, background jobs, async.
 - `performance-reviewer.md` — hot loops, heavy data transforms, a path about to be called K×. (`performance-oracle` no longer exists.)
 - `data-migration-reviewer.md` — persistence, migrations, schema/format changes, backfills (the old `data-integrity-guardian` + `data-migrations-reviewer` pair, merged); add `deployment-verification-agent.md` for risky/destructive migrations (go/no-go + rollback). NOTE: the persona is migration-ARTIFACT-flavored; the guardian half — persisted-shape round-trip/backward-compat, write idempotency, consistency invariants — applies even with NO migration files (a localStorage/vault blob change), and there the lens's inline role must carry it.
-- `julik-frontend-races-reviewer.md` — async UI, timers, lifecycle / DOM-timing.
+- `frontend-races-reviewer.md` — async UI, timers, lifecycle / DOM-timing.
 - `previous-comments-reviewer.md` — re-reviewing a PR that already has review threads.
 - `project-standards-reviewer.md` — the unit touches conventions governed by `CLAUDE.md`/`AGENTS.md` beyond what the contract brief already carries.
 - `agent-native-reviewer.md` — ONLY when the unit ships an agent-facing surface (MCP tools, agent APIs, features that must be agent-operable); deliberately skipped for ordinary product code.

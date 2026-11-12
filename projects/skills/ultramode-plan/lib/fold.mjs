@@ -22,6 +22,22 @@
 // which its deepen checklist says a plan must keep wherever it touches them.
 // Run by the main loop as a command; never inlined into a Workflow script (KTD1).
 //
+// THE FOLD ITSELF (`apply`, added after the first real run, 2026-11-11). The main loop folds by
+// exact text pairs, never by rewriting a section: one JSON list per fold, each edit
+//   { "ids": [the ledger ids it folds], "old": "<text copied exactly from the plan>",
+//     "new": "<its replacement, empty to delete>", "olds": [optional: short phrases it retires],
+//     "seats": [optional: other check seats whose ground it touches] }.
+// `apply` places every old text in the plan as it stands (each found exactly once, no two
+// overlapping), applies them all or none, runs the ID check and the drift grep below on the result
+// (each id's old values are its edits' olds), and writes the plan only when the ID check passes.
+// Given a changes file, it appends the fold's hunks there: each run of changed lines, whole, as
+// { id, kind, classes, text } and an edit's was, the form a later check round takes as its changes.
+// A hunk's classes are the seats its ids name (a check finding's id names its seat: c1-reach-3)
+// and its edits' seats; its id joins its ids. What earned it: the run folded 156 pairs through
+// three hand-written scripts that each refused unless every old text matched once (one miss,
+// caught before any write), and round 2's changes, one entry per folded finding with its old and
+// new text, could not be built by hand for 47 findings.
+//
 // Usage: node fold.mjs <before.md> <after.md> <changes.json>
 //   changes.json: [{ "id": "<ledger id>", "old_values": ["<value>", ...] }, ...], one entry per
 //   applied id, carrying the values the fold replaced: a deepen amendment proposes its own, and
@@ -29,10 +45,14 @@
 //   an empty list. Every fold applies at least one id, so an empty or missing file is an error.
 // Prints one JSON object. Exits 0 when the ID check passes (any drift is in the output), 1 when
 // it fails, and 2 when the input cannot be read (no check ran).
+//        node fold.mjs apply <plan.md> <edits.json> [<changes file to append to>]
+// Prints one JSON object. Exits 0 when the fold is written, 1 when the ID check fails, and 2 when
+// an edit is refused or the input cannot be read; on 1 and 2 nothing is written.
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { isMain, usage } from "./entry.mjs";
 import { readMarkdown } from "./markdown.mjs";
+import { PROMPT_CHECK_SEATS } from "./prompts.mjs";
 
 const IDS = "KTD|AE|R|U|A|F"; // every pattern follows this with \d+, so "AE1" can only read as AE
 // The three kinds of defining line. A heading or list item opens with the ID (after optional bold,
@@ -196,9 +216,186 @@ export function foldCheck(before, after, changes) {
   };
 }
 
-if (isMain(import.meta.url)) {
+// ---------------------------------------------------------------- the fold itself (apply)
+
+const EDIT_FIELDS = ["ids", "old", "new", "olds", "seats"];
+// Every seat a check round can run: the seats prompts.mjs writes a charter for, and the premise.
+export const FOLD_SEATS = [...Object.keys(PROMPT_CHECK_SEATS), "premise"];
+// A check finding's id: its round, its seat and its number (check.src.js names them so).
+const CHECK_ID = /^c[1-3]-(.+)-[1-9][0-9]*$/;
+const seatOf = (id) => id.match(CHECK_ID)?.[1] ?? null;
+const shown = (text) => JSON.stringify(text.length > 80 ? `${text.slice(0, 80)}...` : text);
+
+// Every start of `needle` in `text`, overlapping starts included.
+function startsOf(text, needle) {
+  const out = [];
+  for (let at = text.indexOf(needle); at >= 0; at = text.indexOf(needle, at + 1)) out.push(at);
+  return out;
+}
+
+// The edits checked against the plan, and each one placed: { n, at, end, ids, edit }, in plan order.
+// `problems` names every edit that is malformed, changes nothing, names an unknown seat, is not
+// found in the plan exactly once, or overlaps another; a non-empty list means nothing may be written.
+export function placeEdits(plan, edits) {
+  if (!Array.isArray(edits) || edits.length === 0) return { problems: ["the edits are a non-empty list of { ids, old, new }"], placed: [] };
+  const problems = [];
+  const placed = [];
+  edits.forEach((e, i) => {
+    const where = `edit ${i + 1}`;
+    if (!e || typeof e !== "object" || Array.isArray(e)) return void problems.push(`${where} is no object`);
+    const before = problems.length;
+    for (const k of Object.keys(e)) if (!EDIT_FIELDS.includes(k)) problems.push(`${where} has no field ${k} (its fields: ${EDIT_FIELDS.join(", ")})`);
+    const ids = Array.isArray(e.ids) && e.ids.length > 0 && e.ids.every((id) => typeof id === "string" && id.trim()) ? e.ids.map((id) => id.trim()) : null;
+    if (!ids) problems.push(`${where}: ids is a non-empty list of the ledger ids it folds`);
+    if (typeof e.old !== "string" || e.old === "") problems.push(`${where}: old is the exact text it replaces, never empty`);
+    if (typeof e.new !== "string") problems.push(`${where}: new is its replacement text ("" deletes the old text)`);
+    if (e.olds !== undefined && !(Array.isArray(e.olds) && e.olds.every((s) => typeof s === "string"))) problems.push(`${where}: olds is a list of the short phrases it retires`);
+    if (e.seats !== undefined && !(Array.isArray(e.seats) && e.seats.every((s) => FOLD_SEATS.includes(s)))) problems.push(`${where}: seats is a list of check seats (${FOLD_SEATS.join(", ")})`);
+    for (const id of ids ?? []) if (seatOf(id) !== null && !FOLD_SEATS.includes(seatOf(id))) problems.push(`${where}: ${id} reads as a check finding's id, but ${seatOf(id)} is no check seat`);
+    if (problems.length > before) return;
+    if (e.old === e.new) return void problems.push(`${where} (${ids.join(", ")}) changes nothing: its new text is its old`);
+    const hits = startsOf(plan, e.old);
+    if (hits.length !== 1) {
+      const crlf = hits.length === 0 && plan.includes("\r\n") && e.old.includes("\n") && !e.old.includes("\r") ? " (the plan's lines end in CRLF, this old text's in LF)" : "";
+      return void problems.push(`${where} (${ids.join(", ")}): its old text is in the plan ${hits.length} times, and must be there exactly once${crlf}: ${shown(e.old)}`);
+    }
+    placed.push({ n: i + 1, at: hits[0], end: hits[0] + e.old.length, ids, edit: e });
+  });
+  placed.sort((a, b) => a.at - b.at);
+  for (let i = 1; i < placed.length; i++) {
+    if (placed[i].at < placed[i - 1].end) problems.push(`edits ${placed[i - 1].n} and ${placed[i].n} overlap in the plan: make them one edit`);
+  }
+  return { problems, placed };
+}
+
+// `text` with every placed edit made (the edits in plan order and apart).
+function spliced(text, placed, offset = 0) {
+  let out = "";
+  let from = 0;
+  for (const p of placed) {
+    out += text.slice(from, p.at - offset) + p.edit.new;
+    from = p.end - offset;
+  }
+  return out + text.slice(from);
+}
+
+// A block's lines, without the empty line after its last line break, and with no line's "\r".
+const linesOf = (block) => {
+  const lines = block.split("\n").map((l) => l.replace(/\r$/, ""));
+  if (lines.at(-1) === "") lines.pop();
+  return lines;
+};
+// Lines with the blank ones at either end dropped, joined.
+const joined = (lines) => {
+  let a = 0;
+  let b = lines.length;
+  while (a < b && !lines[a].trim()) a++;
+  while (b > a && !lines[b - 1].trim()) b--;
+  return lines.slice(a, b).join("\n");
+};
+
+// The fold's hunks, in plan order: each run of whole lines the placed edits change (edits on one
+// line or on lines that overlap are one hunk), with its unchanged first and last lines trimmed off.
+// An add is lines put in, a delete lines taken out, and anything else an edit with its was. A hunk
+// that changes only blank space is counted in `blankOnly` and left out: there is nothing in it to
+// review, and a check round refuses a change whose text is its was.
+export function foldHunks(plan, placed) {
+  const starts = [0];
+  for (let i = 0; i < plan.length; i++) if (plan[i] === "\n") starts.push(i + 1);
+  const lineAt = (pos) => {
+    let lo = 0;
+    let hi = starts.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (starts[mid] <= pos) lo = mid;
+      else hi = mid - 1;
+    }
+    return lo;
+  };
+  const groups = [];
+  for (const p of placed) {
+    const first = lineAt(p.at);
+    const last = lineAt(Math.max(p.at, p.end - 1));
+    const g = groups.at(-1);
+    if (g && first <= g.last) {
+      g.last = Math.max(g.last, last);
+      g.placed.push(p);
+    } else groups.push({ first, last, placed: [p] });
+  }
+  const hunks = [];
+  let blankOnly = 0;
+  for (const g of groups) {
+    const from = starts[g.first];
+    const to = g.last + 1 < starts.length ? starts[g.last + 1] : plan.length;
+    const was = linesOf(plan.slice(from, to));
+    const now = linesOf(spliced(plan.slice(from, to), g.placed, from));
+    let a = 0;
+    while (a < was.length && a < now.length && was[a] === now[a]) a++;
+    let b = 0;
+    while (b < was.length - a && b < now.length - a && was[was.length - 1 - b] === now[now.length - 1 - b]) b++;
+    const oldText = joined(was.slice(a, was.length - b));
+    const newText = joined(now.slice(a, now.length - b));
+    const ids = [...new Set(g.placed.flatMap((p) => p.ids))];
+    const classes = [...new Set(g.placed.flatMap((p) => [...p.ids.map(seatOf).filter((s) => s !== null), ...(p.edit.seats ?? [])]))];
+    const id = ids.join(" + ");
+    if (oldText.trim() === newText.trim()) blankOnly++;
+    else if (!oldText.trim()) hunks.push({ id, kind: "add", classes, text: newText });
+    else if (!newText.trim()) hunks.push({ id, kind: "delete", classes, text: oldText });
+    else hunks.push({ id, kind: "edit", classes, text: newText, was: oldText });
+  }
+  return { hunks, blankOnly };
+}
+
+// The whole fold, in memory: the edits placed, the plan they make, the ID check and drift grep on
+// it, and its hunks. `refused` lists every problem placeEdits found; with any, nothing else runs.
+export function applyFold(plan, edits) {
+  const { problems, placed } = placeEdits(plan, edits);
+  if (problems.length) return { ok: false, refused: problems };
+  const after = spliced(plan, placed);
+  const ids = [...new Set(placed.flatMap((p) => p.ids))];
+  const grep = ids.map((id) => ({ id, old_values: [...new Set(placed.filter((p) => p.ids.includes(id)).flatMap((p) => p.edit.olds ?? []))] }));
+  const check = foldCheck(plan, after, grep);
+  return { ok: check.ok, refused: [], after, edits: placed.length, ids, check, ...foldHunks(plan, placed) };
+}
+
+function applyCommand([planPath, editsPath, changesPath]) {
+  if (!planPath || !editsPath) usage("node fold.mjs apply <plan.md> <edits.json> [<changes file to append to>]");
+  let r;
+  let earlier = [];
+  try {
+    const plan = readFileSync(planPath, "utf8");
+    r = applyFold(plan, JSON.parse(readFileSync(editsPath, "utf8")));
+    if (changesPath && existsSync(changesPath)) {
+      earlier = JSON.parse(readFileSync(changesPath, "utf8"));
+      if (!Array.isArray(earlier)) throw new Error(`the changes file ${changesPath} holds no list`);
+    }
+  } catch (e) {
+    console.error(`fold: no fold ran: ${e.message.replace(/^fold: /, "")}`);
+    process.exit(2);
+  }
+  if (r.refused.length) {
+    console.log(JSON.stringify({ ok: false, written: false, refused: r.refused }, null, 1));
+    for (const p of r.refused) console.error(`fold: ${p}`);
+    console.error(`fold: nothing was written: ${r.refused.length} problem(s) with the edits`);
+    process.exitCode = 2;
+    return;
+  }
+  if (r.ok) {
+    writeFileSync(planPath, r.after);
+    if (changesPath) writeFileSync(changesPath, `${JSON.stringify([...earlier, ...r.hunks], null, 1)}\n`);
+  }
+  const { ok, problems, before, after, missing, lost, excused, added } = r.check.ids;
+  console.log(JSON.stringify({ ok, written: ok, edits: r.edits, ids: r.ids, idCheck: { before, after, missing, lost, excused, added, problems }, drift: r.check.drift, driftLines: r.check.driftLines, hunks: r.hunks.length, blankOnly: r.blankOnly, changes: ok && changesPath ? changesPath : null }, null, 1));
+  for (const p of problems) console.error(`fold: ${p}`);
+  if (!ok) console.error("fold: nothing was written: fix the edits and apply them again");
+  if (r.check.driftLines) console.error(`fold: ${r.check.drift.length} old value(s) still appear on ${r.check.driftLines} line(s): judge each one`);
+  process.exitCode = ok ? 0 : 1;
+}
+
+if (isMain(import.meta.url) && process.argv[2] === "apply") applyCommand(process.argv.slice(3));
+else if (isMain(import.meta.url)) {
   const [beforePath, afterPath, changesPath] = process.argv.slice(2);
-  if (!beforePath || !afterPath || !changesPath) usage("node fold.mjs <before.md> <after.md> <changes.json>");
+  if (!beforePath || !afterPath || !changesPath) usage("node fold.mjs <before.md> <after.md> <changes.json>, or node fold.mjs apply <plan.md> <edits.json> [<changes file>]");
   let r;
   try {
     const changes = JSON.parse(readFileSync(changesPath, "utf8"));

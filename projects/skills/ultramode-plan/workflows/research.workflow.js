@@ -1,7 +1,7 @@
 export const meta = {
   name: 'ultramode-plan-research',
   description: 'ultramode-plan research stage: CE research.md seats each write one dossier and return a gist (KTD4)',
-  whenToUse: 'Launched by the ultramode-plan skill with args its run record builds; never by hand.',
+  whenToUse: 'Launched by the ultramode-plan skill from a copy lib/inputs.mjs bakes its args into; never by hand.',
   phases: [
     { title: 'Research', detail: 'one Opus xhigh helper per research seat, each writing one dossier' },
     { title: 'Shortlist', detail: 'a mixed external call: the implementation researchers read the landscape scan first' },
@@ -1591,7 +1591,9 @@ const RESEARCH_INTENTS = ['implementation', 'landscape', 'mixed']
 const RESEARCH_IMPLEMENTATION = ['best-practices-researcher', 'framework-docs-researcher']
 const RESEARCH_CANNOT = 'outside research could not run:'
 
-const A = readsArgs(args, {
+// A launch's args are baked into its copy of this script as LAUNCH_ARGS (lib/inputs.mjs), so the
+// main loop launches it by its path alone; a copy with none baked in reads the args it is passed.
+const A = readsArgs(typeof LAUNCH_ARGS === 'undefined' ? args : LAUNCH_ARGS, {
   who: 'research',
   required: {
     project: 'path',

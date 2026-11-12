@@ -1,7 +1,7 @@
 export const meta = {
   name: 'ultramode-plan-deepen',
   description: 'ultramode-plan deepen stage: the premise seat and the scorer, the premise gate, then research and verified amendments for the selected sections (KTD5)',
-  whenToUse: 'Launched by the ultramode-plan skill with args its run record builds; never by hand.',
+  whenToUse: 'Launched by the ultramode-plan skill from a copy lib/inputs.mjs bakes its args into; never by hand.',
   phases: [
     { title: 'Score', detail: 'the premise seat and the scorer read the whole plan, in parallel' },
     { title: 'Premise', detail: 'severity-scaled verifiers vote on each premise finding' },
@@ -1939,7 +1939,9 @@ const textList = (v) => (Array.isArray(v) && v.every((m) => typeof m === 'string
 const deepenIsCarried = (p) => Boolean(p) && typeof p === 'object' && !Array.isArray(p) &&
   /^premise-[1-9][0-9]*$/.test(p.id) && Boolean(p.finding) && typeof p.finding === 'object' && Array.isArray(p.votes) &&
   Boolean(p.verdict) && ((p.verdict.status === 'confirmed' && ['below', 'both'].includes(p.line)) || p.verdict.status === 'hand-verify')
-const A = readsArgs(args, {
+// A launch's args are baked into its copy of this script as LAUNCH_ARGS (lib/inputs.mjs), so the
+// main loop launches it by its path alone; a copy with none baked in reads the args it is passed.
+const A = readsArgs(typeof LAUNCH_ARGS === 'undefined' ? args : LAUNCH_ARGS, {
   who: 'deepen',
   required: {
     plan: 'path',

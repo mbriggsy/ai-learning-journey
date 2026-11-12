@@ -4,7 +4,10 @@ import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkIds, definedIds, definitions, drift, foldCheck, grepList } from "./fold.mjs";
+import { applyFold, checkIds, definedIds, definitions, drift, foldCheck, grepList } from "./fold.mjs";
+import { roundSeats } from "./flow.mjs";
+import { buildInputs } from "./inputs.mjs";
+import { runWorkflow } from "./workflow-stub.mjs";
 import { tmpRoot } from "../bench/testkit.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -350,4 +353,146 @@ test("the command exits 0 on a pass with drift, 1 on a failed ID check, and 2 wh
   writeFileSync(m, JSON.stringify([{ id: "D1", old_values: [] }]));
   assert.equal(run(b, join(dir, "missing.md"), m).status, 2);
   assert.deepEqual(foldCheck(PLAN, PLAN, []).ids.problems, []);
+});
+
+// ---------------------------------------------------------------- apply
+
+test("apply: every edit lands at once, each hunk is its changed lines whole, and its classes are the seats its ids name", () => {
+  const r = applyFold(PLAN, [
+    { ids: ["c1-reach-1"], old: "Uses 3 refuters", new: "Uses 4 refuters", olds: ["3 refuters"] },
+    { ids: ["c1-coherence-2", "c1-adv-hidden-work-1"], old: "Builds the bench (R1).\n", new: "Builds the bench (R1).\n- The bench runs on a copy.\n", seats: ["blast-radius"] },
+    { ids: ["c1-feasibility-3"], old: "- R2. Every helper runs on Opus at xhigh.\n", new: "" },
+  ]);
+  assert.deepEqual(r.refused, []);
+  assert.equal(r.edits, 3);
+  assert.ok(r.after.includes("- KTD1. **Three saved scripts.** Uses 4 refuters on a P1.\n"));
+  assert.ok(!r.after.includes("- R2."));
+  // Plan order, not the edits' order.
+  assert.deepEqual(r.hunks, [
+    { id: "c1-feasibility-3", kind: "delete", classes: ["feasibility"], text: "- R2. Every helper runs on Opus at xhigh." },
+    { id: "c1-reach-1", kind: "edit", classes: ["reach"], text: "- KTD1. **Three saved scripts.** Uses 4 refuters on a P1.", was: "- KTD1. **Three saved scripts.** Uses 3 refuters on a P1." },
+    { id: "c1-coherence-2 + c1-adv-hidden-work-1", kind: "add", classes: ["coherence", "adv-hidden-work", "blast-radius"], text: "- The bench runs on a copy." },
+  ]);
+  assert.equal(r.blankOnly, 0);
+  // R2 is still mentioned (KTD2 governs it) but lost its defining line, so the ID check fails.
+  assert.equal(r.ok, false);
+  assert.equal(r.check.ok, false);
+  assert.deepEqual(lostOf(r.check.ids), [`R2 ${ONE} 1->0`]);
+  // The drift grep looks for each edit's olds on every line: the vote law in U2 still says it.
+  assert.deepEqual(r.check.drift.map((d) => [d.value, d.changes, d.hits.map((h) => h.line)]), [["3 refuters", ["c1-reach-1"], [25]]]);
+});
+
+test("apply: edits on one line, or on lines that overlap, are one hunk; a change of blank space alone is counted, not listed", () => {
+  const r = applyFold(PLAN, [
+    { ids: ["A4", "c1-premise-1"], old: "### U2. Core logic\nPorts the vote law", new: "### U2. Core logic (the vote law)\nPorts and tests the vote law" },
+    { ids: ["c1-reach-2"], old: "2 on a P2.", new: "2 on a P2, 1 on a P3." },
+    { ids: ["c1-coherence-5"], old: "\n\n### U1. Bench", new: "\n\n\n### U1. Bench" },
+  ]);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.hunks, [
+    {
+      id: "A4 + c1-premise-1 + c1-reach-2",
+      kind: "edit",
+      classes: ["premise", "reach"],
+      text: "### U2. Core logic (the vote law)\nPorts and tests the vote law: 3 refuters on a P1, 2 on a P2, 1 on a P3.",
+      was: "### U2. Core logic\nPorts the vote law: 3 refuters on a P1, 2 on a P2.",
+    },
+  ]);
+  assert.equal(r.blankOnly, 1);
+});
+
+test("apply refuses, naming each problem, and places nothing: a miss, a double match, an overlap, a no-op, a bad field or seat", () => {
+  const refused = (edits) => applyFold(PLAN, edits).refused;
+  assert.match(refused([{ ids: ["c1-reach-1"], old: "Uses 5 refuters", new: "x" }])[0], /^edit 1 \(c1-reach-1\): its old text is in the plan 0 times, and must be there exactly once: "Uses 5 refuters"$/);
+  assert.match(refused([{ ids: ["c1-reach-1"], old: "3 refuters on a P1", new: "x" }])[0], /in the plan 2 times/);
+  assert.match(refused([{ ids: ["a"], old: "Three saved", new: "x" }, { ids: ["b"], old: "saved scripts", new: "y" }])[0], /^edits 1 and 2 overlap in the plan: make them one edit$/);
+  assert.match(refused([{ ids: ["a"], old: "Bench", new: "Bench" }])[0], /is in the plan 3 times|changes nothing/);
+  assert.match(refused([{ ids: ["a"], old: "Builds the bench", new: "Builds the bench" }])[0], /^edit 1 \(a\) changes nothing/);
+  const many = refused([
+    { ids: [], old: "x", new: "y" },
+    { ids: ["a"], old: "", new: "y" },
+    { ids: ["a"], old: "Builds the bench", new: 3 },
+    { ids: ["a"], old: "Builds the bench", new: "y", note: "why" },
+    { ids: ["a"], old: "Builds the bench", new: "y", seats: ["reviewer"] },
+    { ids: ["c1-reviewer-1"], old: "Builds the bench", new: "y" },
+    { ids: ["a"], old: "Builds the bench", new: "y", olds: "3 refuters" },
+    "an edit",
+  ]);
+  assert.deepEqual(many.map((p) => p.split(":")[0].replace(/ has no field.*/, "")), ["edit 1", "edit 2", "edit 3", "edit 4", "edit 5", "edit 6", "edit 7", "edit 8 is no object"]);
+  assert.match(many[3], /edit 4 has no field note/);
+  assert.match(many[5], /c1-reviewer-1 reads as a check finding's id, but reviewer is no check seat/);
+  assert.deepEqual(refused([]), ["the edits are a non-empty list of { ids, old, new }"]);
+  assert.match(applyFold(PLAN.replace(/\n/g, "\r\n"), [{ ids: ["a"], old: "R1.\n- R2.", new: "x" }]).refused[0], /the plan's lines end in CRLF, this old text's in LF/);
+});
+
+test("apply's hunks are the changes a later check round takes: the check script accepts them and runs coherence and every seat they name", async (t) => {
+  const r = applyFold(PLAN, [
+    { ids: ["c1-reach-1"], old: "Uses 3 refuters", new: "Uses 4 refuters" },
+    { ids: ["c1-blast-radius-2"], old: "Builds the bench (R1).\n", new: "Builds the bench (R1).\n- The docs say 4 refuters.\n" },
+  ]);
+  assert.equal(r.ok, true);
+  const roster = ["coherence", "feasibility", "scope-guardian", "adversarial", "premise", "reach", "blast-radius", "test-vacuity"];
+  assert.deepEqual(roundSeats({ roster, changes: r.hunks }).seats, ["coherence", "reach", "blast-radius"]);
+  // The check script's own input check, through the stub, on args built as the skill builds them.
+  const root = tmpRoot(t);
+  const plan = join(root, "plan.md");
+  writeFileSync(plan, r.after);
+  const brief = join(root, "brief.md");
+  writeFileSync(brief, "## Brief\n");
+  const contract = join(root, "contract.txt");
+  writeFileSync(contract, "INVARIANTS: none.\n");
+  const changes = join(root, "changes-2.json");
+  writeFileSync(changes, JSON.stringify(r.hunks));
+  const args = buildInputs("check", { project: root, request: "Plan the bench.", brief, contractBrief: contract, plan, round: 2, roster, changes, registry: join(root, "no-registry.json"), projectsDir: join(root, "projects") });
+  const run = await runWorkflow(readFileSync(join(here, "..", "workflows", "check.workflow.js"), "utf8"), { args, respond: () => null });
+  assert.equal(run.error, null);
+  assert.deepEqual(run.result.summary.ran, ["coherence", "reach", "blast-radius"]);
+  assert.ok(run.calls[0].prompt.includes("- edited, was: - KTD1. **Three saved scripts.** Uses 3 refuters on a P1.\n  now: - KTD1. **Three saved scripts.** Uses 4 refuters on a P1."));
+  assert.ok(run.calls[0].prompt.includes("- added: - The docs say 4 refuters."));
+});
+
+test("the apply command writes the plan and appends the hunks only on a pass; a failed ID check or a refused edit writes nothing", (t) => {
+  const dir = tmpRoot(t);
+  const plan = join(dir, "plan.md");
+  const edits = join(dir, "edits.json");
+  const changes = join(dir, "changes-2.json");
+  const run = (...args) => spawnSync(process.execPath, [join(here, "fold.mjs"), "apply", ...args], { encoding: "utf8" });
+  writeFileSync(plan, PLAN);
+  writeFileSync(edits, JSON.stringify([{ ids: ["c1-reach-1"], old: "Uses 3 refuters", new: "Uses 4 refuters", olds: ["3 refuters"] }]));
+  const pass = run(plan, edits, changes);
+  assert.equal(pass.status, 0, pass.stderr);
+  const out = JSON.parse(pass.stdout);
+  assert.deepEqual([out.ok, out.written, out.edits, out.ids, out.hunks, out.driftLines, out.changes], [true, true, 1, ["c1-reach-1"], 1, 1, changes]);
+  assert.match(pass.stderr, /still appear on 1 line/);
+  assert.ok(readFileSync(plan, "utf8").includes("Uses 4 refuters on a P1."));
+  // A second fold appends to the same changes file.
+  writeFileSync(edits, JSON.stringify([{ ids: ["c1-premise-1"], old: "Builds the bench (R1).", new: "Builds and runs the bench (R1)." }]));
+  assert.equal(run(plan, edits, changes).status, 0);
+  assert.deepEqual(JSON.parse(readFileSync(changes, "utf8")).map((c) => c.id), ["c1-reach-1", "c1-premise-1"]);
+  // A fold that drops U2's heading fails the ID check: the plan and the changes file stay as they were.
+  const kept = readFileSync(plan, "utf8");
+  const keptChanges = readFileSync(changes, "utf8");
+  writeFileSync(edits, JSON.stringify([{ ids: ["c1-coherence-1"], old: "### U2. Core logic\n", new: "" }]));
+  const fail = run(plan, edits, changes);
+  assert.equal(fail.status, 1);
+  assert.equal(JSON.parse(fail.stdout).written, false);
+  assert.match(fail.stderr, /nothing was written/);
+  assert.equal(readFileSync(plan, "utf8"), kept);
+  assert.equal(readFileSync(changes, "utf8"), keptChanges);
+  // A refused edit: exit 2, the problems on stdout and stderr, nothing written.
+  writeFileSync(edits, JSON.stringify([{ ids: ["c1-reach-2"], old: "no such text", new: "x" }]));
+  const refused = run(plan, edits, changes);
+  assert.equal(refused.status, 2);
+  assert.equal(JSON.parse(refused.stdout).refused.length, 1);
+  assert.match(refused.stderr, /0 times/);
+  assert.equal(readFileSync(plan, "utf8"), kept);
+  // No changes file named: the plan is written and no hunk goes anywhere.
+  writeFileSync(edits, JSON.stringify([{ ids: ["A1"], old: "Builds and runs", new: "Builds" }]));
+  const bare = run(plan, edits);
+  assert.equal(bare.status, 0, bare.stderr);
+  assert.equal(JSON.parse(bare.stdout).changes, null);
+  assert.equal(readFileSync(changes, "utf8"), keptChanges);
+  writeFileSync(edits, "[{");
+  assert.match(run(plan, edits).stderr, /^fold: no fold ran/);
+  assert.match(run(plan).stderr, /^usage: /);
 });

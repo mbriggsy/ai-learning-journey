@@ -11,11 +11,19 @@
 // before any helper starts, refuses what is wrong or missing. An update run (deepen and check a
 // committed plan) is not wired: every launch says update false.
 //
-// Usage: node inputs.mjs <command> <json | path to a .json file>
+// A launch's args go to the Workflow tool baked into a copy of the stage's script, never typed: given
+// a third argument, a stage command writes that copy there, and the main loop launches it by its path
+// alone. On 2026-11-11 (the first real run, the Back Nine's workbench plan) each launch's args ran to
+// about 18 KB, which the main loop retyped into the tool call and the completion notice printed back:
+// four launches cost about 5% of its window. A Workflow script cannot read a file (measured that day:
+// no Bun, fetch, require or import() in a script), so the args travel inside the script.
+//
+// Usage: node inputs.mjs <command> <json | path to a .json file> [<script copy to write>]
 //   contract-brief  { project, request, plan }            -> the prompt, as text
-//   research        the facts below                       -> research.workflow.js's args, as JSON
-//   deepen          the facts below                       -> deepen.workflow.js's args
-//   check           the facts below                       -> check.workflow.js's args
+//   research        the facts below                       -> research.workflow.js's args, as JSON;
+//                                                            with a copy's path, the copy with them baked in
+//   deepen          the facts below                       -> deepen.workflow.js's args, or its baked copy
+//   check           the facts below                       -> check.workflow.js's args, or its baked copy
 // One facts file serves a whole run: each command takes the facts it needs and leaves the rest.
 //   project        the project's root (absolute)
 //   request        what was asked for
@@ -28,22 +36,27 @@
 //   round          check: 1, 2 or 3
 //   highRisk, lenses, noCode        check round 1, as the script takes them
 //   roster, changes                 check rounds 2 and 3: round 1's roster (its summary's) and the
-//                  last fold's changes, each { id, kind, classes, text } and an edit with its was; the
-//                  seats are flow.mjs's roundSeats over them
+//                  last fold's changes, each { id, kind, classes, text } and an edit with its was, or
+//                  the absolute path of the file `fold.mjs apply` wrote them to; the seats are
+//                  flow.mjs's roundSeats over them
 //   dry            optional: one helper per phase
 //   registry, projectsDir           optional, for a fixture: the plugin registry and the Claude Code
 //                  projects folder
 // Exit 0 is an answer; 2 a refusal, on stderr, with nothing printed.
 
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { isMain, usage } from "./entry.mjs";
 import { planIndex, roundSeats } from "./flow.mjs";
 import { defaultProjectsDir, slugOf } from "./paths.mjs";
 import { promptContractBrief } from "./prompts.mjs";
 import { resolveCe } from "./resolve-ce.mjs";
+import { scriptParts } from "./workflow-stub.mjs";
 
 export const STAGES = ["research", "deepen", "check"];
+// The skill's generated scripts, one per stage.
+const WORKFLOWS = join(dirname(fileURLToPath(import.meta.url)), "..", "workflows");
 export const FACTS = ["project", "request", "brief", "contractBrief", "plan", "dossiers", "depth", "agentNative", "external", "focus", "round", "highRisk", "lenses", "noCode", "roster", "changes", "dry", "registry", "projectsDir"];
 
 const fail = (msg) => {
@@ -123,9 +136,43 @@ export function buildInputs(stage, facts) {
     return { ...onPlan, deepened, learnings, ...(facts.focus === undefined ? {} : { focus: facts.focus }), ...dry };
   }
   if (facts.round === 2 || facts.round === 3) {
-    return { ...onPlan, round: facts.round, seats: roundSeats({ roster: facts.roster, changes: facts.changes }).seats, changes: facts.changes, ...dry };
+    const changes = changesOf(facts);
+    return { ...onPlan, round: facts.round, seats: roundSeats({ roster: facts.roster, changes }).seats, changes, ...dry };
   }
   return { ...onPlan, round: facts.round, highRisk: facts.highRisk, lenses: facts.lenses, noCode: facts.noCode, ...dry };
+}
+
+// A later round's changes: the list itself, or the path of the file `fold.mjs apply` wrote it to.
+function changesOf(facts) {
+  if (typeof facts.changes !== "string") return facts.changes;
+  const file = fileAt(facts, "changes");
+  try {
+    return JSON.parse(readFileSync(file, "utf8"));
+  } catch (e) {
+    return fail(`changes names ${file}, which holds no JSON (${e.message})`);
+  }
+}
+
+// A value as one line of JavaScript: its JSON, with every character past ASCII and the "i" of every
+// "import" written as a \u escape. The copy then stays ASCII like the generated script it is made
+// from, and holds no text that workflow-stub.mjs's import scan would read as an import (the runtime
+// itself reads string data as data: a script whose strings held import('x') and Date.now() ran,
+// measured 2026-11-11). Every "import" in JSON text sits inside a string, where the escape is valid.
+export function bakedJson(value) {
+  const json = JSON.stringify(value);
+  if (json === undefined) fail("the args are no JSON value");
+  return json.replace(/[^\x00-\x7e]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`).replace(/import/g, () => "\\u0069mport");
+}
+
+// A stage's script with one launch's args baked in: the generated script's meta, then the args as
+// LAUNCH_ARGS, then its body, which reads LAUNCH_ARGS before the args global. Refuses a copy that is
+// no Workflow script by workflow-stub.mjs's rules.
+export function bakeScript(stage, args, workflows = WORKFLOWS) {
+  if (!STAGES.includes(stage)) fail(`no stage ${JSON.stringify(stage)} (one of: ${STAGES.join(", ")})`);
+  const { metaText, body } = scriptParts(readFileSync(join(workflows, `${stage}.workflow.js`), "utf8"));
+  const copy = `export const meta = ${metaText}\n\n// This launch's args, baked in by lib/inputs.mjs: launch this copy by its path, with no args.\nconst LAUNCH_ARGS = ${bakedJson(args)}\n${body}`;
+  scriptParts(copy);
+  return copy;
 }
 
 function readFacts(arg) {
@@ -133,13 +180,20 @@ function readFacts(arg) {
 }
 
 if (isMain(import.meta.url)) {
-  const [command, arg] = process.argv.slice(2);
-  if (!["contract-brief", ...STAGES].includes(command) || arg === undefined) usage(`node inputs.mjs <contract-brief | ${STAGES.join(" | ")}> <json | path to a .json file>`);
+  const [command, arg, out] = process.argv.slice(2);
+  const line = `node inputs.mjs <contract-brief | ${STAGES.join(" | ")}> <json | path to a .json file> [<script copy to write, a stage only>]`;
+  if (!["contract-brief", ...STAGES].includes(command) || arg === undefined || (command === "contract-brief" && out !== undefined)) usage(line);
   try {
     const facts = readFacts(arg);
-    console.log(command === "contract-brief" ? contractBriefPrompt(facts) : JSON.stringify(buildInputs(command, facts), null, 1));
+    if (command === "contract-brief") console.log(contractBriefPrompt(facts));
+    else if (out === undefined) console.log(JSON.stringify(buildInputs(command, facts), null, 1));
+    else {
+      const args = buildInputs(command, facts);
+      writeFileSync(out, bakeScript(command, args));
+      console.log(`inputs: wrote ${out}, the ${command} script with its args baked in (${bakedJson(args).length} characters); launch it by scriptPath, with no args`);
+    }
   } catch (e) {
-    console.error(`inputs: ${e.message.replace(/^(?:inputs|flow|prompts): /, "")}`);
+    console.error(`inputs: ${e.message.replace(/^(?:inputs|flow|prompts|workflow-stub): /, "")}`);
     process.exitCode = 2;
   }
 }

@@ -1,7 +1,7 @@
 export const meta = {
   name: 'ultramode-plan-check',
   description: 'ultramode-plan check stage: every seat reads the whole plan, every finding goes to severity-scaled verifiers (KTD6 to KTD9)',
-  whenToUse: 'Launched by the ultramode-plan skill with args its run record builds; never by hand.',
+  whenToUse: 'Launched by the ultramode-plan skill from a copy lib/inputs.mjs bakes its args into; never by hand.',
   phases: [
     { title: 'Check', detail: 'every seat in the roster reads the whole plan, re-run once when its read is short' },
     { title: 'Verify', detail: 'severity-scaled verifiers vote on each finding as soon as its seat returns' },
@@ -1748,7 +1748,9 @@ const textList = (v) => (Array.isArray(v) && v.every((m) => typeof m === 'string
 const changeList = (v) => (Array.isArray(v) && v.length > 0 && v.every((c) => c && typeof c === 'object' && typeof c.id === 'string' && c.id.trim() && ['edit', 'add', 'delete'].includes(c.kind) && Array.isArray(c.classes) && typeof c.text === 'string' && c.text.trim() && (c.kind === 'edit' ? typeof c.was === 'string' && c.was.trim() : c.was === undefined))
   ? null
   : "the fold's changes, a non-empty list of { id, kind, classes, text }, an edit with its was (the text it replaced), no other kind with one")
-const A = readsArgs(args, {
+// A launch's args are baked into its copy of this script as LAUNCH_ARGS (lib/inputs.mjs), so the
+// main loop launches it by its path alone; a copy with none baked in reads the args it is passed.
+const A = readsArgs(typeof LAUNCH_ARGS === 'undefined' ? args : LAUNCH_ARGS, {
   who: 'check',
   required: {
     plan: 'path',

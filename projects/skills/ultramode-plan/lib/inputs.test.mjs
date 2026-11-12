@@ -4,7 +4,8 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { FACTS, buildInputs, contractBriefPrompt } from "./inputs.mjs";
+import vm from "node:vm";
+import { FACTS, bakeScript, bakedJson, buildInputs, contractBriefPrompt } from "./inputs.mjs";
 import { slugOf } from "./paths.mjs";
 import { CE_FILES } from "./resolve-ce.mjs";
 import { runWorkflow } from "./workflow-stub.mjs";
@@ -214,4 +215,86 @@ test("the command prints a stage's inputs as JSON from a facts file, the contrac
   assert.equal(refused.status, 2);
   assert.match(refused.stderr, /^inputs: plan is an absolute path/);
   assert.equal(refused.stdout, "");
+});
+
+// The baked copy, launched as the main loop launches it: by its path, with no args.
+const runBaked = (copy, respond = dead) => runWorkflow(copy, { args: undefined, respond });
+
+test("bake: each stage's copy, launched with no args, passes its script's input check and sends every helper what the args would have", async (t) => {
+  const f = fixture(t);
+  const launches = [
+    ["research", buildInputs("research", { ...f.common, dossiers: join(f.job, "dossiers"), depth: "Standard", agentNative: false, external: null })],
+    ["deepen", buildInputs("deepen", { ...f.common, plan: f.plan })],
+    ["check", buildInputs("check", { ...f.common, plan: f.plan, round: 1, highRisk: false, lenses: ["security"], noCode: null })],
+    ["check", buildInputs("check", { ...f.common, plan: f.plan, round: 2, roster: ["coherence", "feasibility", "reach"], changes: [{ id: "c1-reach-1", kind: "edit", classes: ["reach"], text: "U1 also touches the importer.", was: "U1 touches the exporter." }] })],
+  ];
+  for (const [stage, args] of launches) {
+    const copy = bakeScript(stage, args);
+    assert.ok(copy.startsWith("export const meta = {"), stage);
+    const baked = await runBaked(copy);
+    cleanRun(baked);
+    const passed = await run(stage, args);
+    cleanRun(passed);
+    assert.ok(baked.calls.length > 0, stage);
+    assert.deepEqual(baked.calls.map((c) => [c.prompt, c.opts]), passed.calls.map((c) => [c.prompt, c.opts]), stage);
+    assert.deepEqual(baked.result.summary, passed.result.summary, stage);
+  }
+  // A copy with nothing baked in, launched with no args, is refused before any helper starts.
+  const bare = await runBaked(script("deepen"));
+  assert.match(bare.error, /^deepen: no args/);
+  assert.equal(bare.calls.length, 0);
+});
+
+test("bakedJson: ASCII only, no \"import\" left in the text, and the same value back when read as JavaScript", () => {
+  const value = { request: `Plan the import (CSV) feature ${String.fromCodePoint(0x2014)} caf${String.fromCodePoint(0xe9)}, ${String.fromCodePoint(0x1f600)}`, note: "a \\import, a quote \" and\na newline; import('x') and Date.now()", n: 3, list: [true, null] };
+  const text = bakedJson(value);
+  assert.ok([...text].every((c) => c.codePointAt(0) < 128), text);
+  assert.ok(!text.includes("import"), text);
+  // Through JSON, since an object made in another realm has that realm's prototypes.
+  assert.deepEqual(JSON.parse(JSON.stringify(vm.runInNewContext(`(${text})`))), value);
+  assert.throws(() => bakedJson(undefined), /inputs: the args are no JSON value/);
+});
+
+test("bake: a request holding non-ASCII text and import( still makes a copy the stub takes, and its helpers get the request whole", async (t) => {
+  const f = fixture(t);
+  const request = `Plan the import(CSV) path ${String.fromCodePoint(0x2014)} caf${String.fromCodePoint(0xe9)}`;
+  const copy = bakeScript("deepen", buildInputs("deepen", { ...f.common, request, plan: f.plan }));
+  assert.ok([...copy].every((c) => c.codePointAt(0) < 128));
+  const r = await runBaked(copy);
+  cleanRun(r);
+  assert.ok(r.calls.every((c) => c.prompt.includes(request)));
+  assert.throws(() => bakeScript("land", {}), /inputs: no stage "land"/);
+});
+
+test("check rounds 2 and 3 take their changes from the file fold.mjs apply wrote, as from the list itself", async (t) => {
+  const f = fixture(t);
+  const roster = ["coherence", "feasibility", "reach"];
+  const changes = [{ id: "c1-reach-1", kind: "add", classes: ["reach"], text: "A dry-run flag." }];
+  const file = join(f.job, "changes-2.json");
+  writeAt(file, JSON.stringify(changes));
+  const byPath = buildInputs("check", { ...f.common, plan: f.plan, round: 2, roster, changes: file });
+  assert.deepEqual(byPath, buildInputs("check", { ...f.common, plan: f.plan, round: 2, roster, changes }));
+  assert.deepEqual(byPath.seats, ["coherence", "reach"]);
+  assert.throws(() => buildInputs("check", { ...f.common, plan: f.plan, round: 2, roster, changes: "changes-2.json" }), /inputs: changes is an absolute path/);
+  assert.throws(() => buildInputs("check", { ...f.common, plan: f.plan, round: 2, roster, changes: join(f.job, "none.json") }), /inputs: changes names no file/);
+  writeAt(join(f.job, "bad.json"), "[{");
+  assert.throws(() => buildInputs("check", { ...f.common, plan: f.plan, round: 2, roster, changes: join(f.job, "bad.json") }), /inputs: changes names .*bad\.json, which holds no JSON/);
+});
+
+test("the command writes a stage's baked copy when given its path, prints one line, and takes no copy for the contract brief", async (t) => {
+  const f = fixture(t);
+  const facts = { ...f.common, plan: f.plan, round: 1, highRisk: false, lenses: [], noCode: null };
+  const file = join(f.job, "facts.json");
+  writeAt(file, JSON.stringify(facts));
+  const out = join(f.job, "check.workflow.js");
+  const cmd = (...argv) => spawnSync(process.execPath, [join(lib, "inputs.mjs"), ...argv], { encoding: "utf8" });
+  const wrote = cmd("check", file, out);
+  assert.equal(wrote.status, 0, wrote.stderr);
+  assert.match(wrote.stdout, /^inputs: wrote .*check\.workflow\.js, the check script with its args baked in \(\d+ characters\); launch it by scriptPath, with no args\n$/);
+  const copy = readFileSync(out, "utf8");
+  assert.equal(copy, bakeScript("check", buildInputs("check", facts)));
+  cleanRun(await runBaked(copy));
+  const usage = cmd("contract-brief", file, out);
+  assert.equal(usage.status, 2);
+  assert.match(usage.stderr, /^usage: /);
 });

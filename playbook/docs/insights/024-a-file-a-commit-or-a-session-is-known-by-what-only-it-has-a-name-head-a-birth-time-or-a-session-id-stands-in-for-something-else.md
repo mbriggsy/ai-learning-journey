@@ -2,7 +2,7 @@
 title: A file, a commit or a session is known by what only it has; a name, HEAD, a birth time or a session id each stands in for something else
 date: 2026-11-12
 phase: the plan step's own skill (U3's run record and its reviews)
-modules: [projects/skills/ultramode-plan/lib/run-record.mjs]
+modules: [projects/archive/skills/ultramode-plan/lib/run-record.mjs]
 tags: [attribution, identity, authorship, inode, birth-time, ntfs, tunneling, edit-tool, head, git-log, empty-commit, session-id, resume, process, shared-checkout]
 ---
 

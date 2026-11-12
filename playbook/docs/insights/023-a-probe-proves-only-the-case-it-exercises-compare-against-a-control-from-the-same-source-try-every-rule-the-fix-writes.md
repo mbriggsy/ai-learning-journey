@@ -2,7 +2,7 @@
 title: A probe proves only the case it actually exercises; compare against a control from the same source, try every rule the fix writes, and keep the condition standing at the moment the claim is about
 date: 2026-11-12
 phase: the plan step's own skill (U1's platform probe and its reviews)
-modules: [projects/skills/ultramode-plan/bench/probe/probe.mjs]
+modules: [projects/archive/skills/ultramode-plan/bench/probe/probe.mjs]
 tags: [probes, platform-behavior, control, decoys, deny-rules, short-names, mcp, workflow, background-job, session-alive, measurement]
 ---
 

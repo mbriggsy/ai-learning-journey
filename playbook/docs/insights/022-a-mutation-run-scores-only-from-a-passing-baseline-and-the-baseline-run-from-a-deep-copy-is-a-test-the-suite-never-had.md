@@ -2,7 +2,7 @@
 title: A mutation run scores only from a passing baseline, and the baseline run from a deep copy is a test the suite never had
 date: 2026-11-12
 phase: the plan step's own skill (U1 to U3's reviews)
-modules: [projects/skills/ultramode-plan/lib/run-record.mjs]
+modules: [projects/archive/skills/ultramode-plan/lib/run-record.mjs]
 tags: [mutation-testing, mutants, baseline, vacuity, scratch-copy, path-length, max-path, windows, git, core-longpaths, review]
 ---
 

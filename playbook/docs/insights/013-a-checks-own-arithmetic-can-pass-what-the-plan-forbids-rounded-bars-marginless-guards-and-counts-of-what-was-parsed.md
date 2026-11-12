@@ -35,7 +35,7 @@ Test every gate at its edge, in the plan's own words: exactly on the bar, one un
 
 ## Extended (2026-11-12): a summary or a count that an action is made from fails open when it works the answer out again, cuts it short, or reads what it could not see as clean
 
-Six cases from the plan step's own skill (`projects/skills/ultramode-plan`):
+Six cases from the plan step's own skill (`projects/archive/skills/ultramode-plan`):
 - **Working the verdict out again.** The first run digest called a fix "rework" whenever one real voter dissented, while the vote law (`lib/vote-law.mjs`'s `fixVerdict`) applies a fix on a majority. 12 of 76 real entries read rework where the law said apply, and one dissenter's fix was shown as the fold (5 of 8 review lenses). The digest now prints the law's own call and shows the dissent beside it (`6a5ab0fe`).
 - **Cutting the text an action is made from.** The digest cut every field at 300 characters, and all 29 confirmed deepen amendments ran past it, so a fold made from the digest would have dropped their tails. It now prints the fold text whole (the schema already caps it) and cuts only what is only read.
 - **Skipping an input without saying so.** `grepList` moved any old value under 3 characters to a refused list that `apply` never printed, so a retired `U7` or a changed `5%`, the very examples `SKILL.md` gave, read as "no drift" (6 of 8 lenses). It now searches such a value as a whole word and prints what it searched (`lib/fold.mjs`, `olds.wholeWord`).

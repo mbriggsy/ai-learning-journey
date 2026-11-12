@@ -2,7 +2,7 @@
 title: CE's plan check turns off its own "is the problem real?" challenge for any plan with an origin, such as a brief
 date: 2026-11-12
 phase: the plan step (the hybrid plan's design; re-read on CE 3.38.1)
-modules: [projects/skills/ultramode-plan/lib/resolve-ce.mjs]
+modules: [projects/archive/skills/ultramode-plan/lib/resolve-ce.mjs]
 tags: [compound-engineering, ce-doc-review, ce-plan, premise, origin, brief, product-lens, adversarial, plan-check, suppression, lite, depth-full, coverage-line, named-adversary]
 ---
 

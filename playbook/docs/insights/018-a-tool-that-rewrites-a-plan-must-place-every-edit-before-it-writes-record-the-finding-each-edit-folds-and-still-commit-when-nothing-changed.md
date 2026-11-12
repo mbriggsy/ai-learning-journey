@@ -2,7 +2,7 @@
 title: A tool that rewrites a plan must place every edit before it writes anything, record which finding each edit folds, and still have something to commit when nothing changed
 date: 2026-11-12
 phase: the plan step's own skill (the first real run, the Back Nine workbench plan; U3 and U4's reviews)
-modules: [projects/skills/ultramode-plan/lib/fold.mjs, projects/skills/ultramode-plan/SKILL.md]
+modules: [projects/archive/skills/ultramode-plan/lib/fold.mjs, projects/archive/skills/ultramode-plan/SKILL.md]
 tags: [fold, edits, before-copy, round-trip, drift-grep, ledger, receipt, git-log, empty-commit, terminal-path, plans, json, escaping, plain-text-blocks, converter, hand-written-edits]
 ---
 

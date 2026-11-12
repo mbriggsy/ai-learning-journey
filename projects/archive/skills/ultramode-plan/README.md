@@ -1,6 +1,34 @@
-# ultramode-plan
+# ultramode-plan — ARCHIVED 2026-11-12
 
-**Status: on trial. Typed only.** Installed at `~/.claude/skills/ultramode-plan` (a junction to this folder), and Claude never picks it on its own. The playbook's plan step is still the compound-engineering plugin's `ce-plan`. The trial below decides whether this skill replaces `ce-plan` or is shelved.
+> Kept here for anyone to see, not deleted. Briggsy, 2026-11-12: "This one warrants the archive, so our failure is out there for the world to see." It lost a blind trial to the plan step it was built to replace.
+
+## Why it lost
+
+`ultramode-plan` was our own plan step, built to beat the compound-engineering plugin's `ce-plan`: research, a written plan, a deepen, then a check in which every finding was voted on by helpers told to disprove it. On 2026-11-12 both planned the same real job, the Back Nine's 10% early-withdrawal charge, and the two plans were read blind.
+
+| | ultramode-plan | ce-plan |
+|---|---|---|
+| Sessions | 2 | 1 |
+| Helpers | 367 | 14 |
+| Helper tokens | about 47.3M | 3.5M |
+| Weekly usage meter | about 16 points | 3 points |
+| Its check | 69 findings confirmed, 77 folded into the plan | 31 found, 17 applied |
+
+Briggsy read both plans without knowing which was which and picked ce-plan's. Of three blind readers, each reading as one seat, the builder and the rules readers picked ce-plan's and the owner reader picked ours; two of the three called it close.
+
+What decided it:
+
+- **It missed a bug ce-plan found.** One of ce-plan's three research helpers worked out by hand that the engine's split between spouses moves more pre-tax money than it taxes: when one spouse's $20,000 required withdrawal meets a $10,000 need, $25,000 leaves and $20,000 is taxed. Our plan cites the same function and kept its split.
+- **Folding every finding packed the plan.** The check folded all 77 into the units they touched. The plan grew from about 61,000 to 83,000 characters, and one unit's approach became a single 320-word paragraph holding about a dozen tasks. The builder reader: "A builder working alone will misread or skip something."
+- **It set a trap for its builder.** Its charge would have turned about 40 existing hand-worked test households red, and it planned hand re-working only for the 8 oracle cases.
+
+It was more right in places (the 59½ line, the Roth basis deflated each year, the Back Nine's open build named), and the owner reader picked it partly for that. It was not worth thirteen times the cost. ce-plan stays the playbook's plan step, and the trial's one cheap addition, three blind readers after ce-plan's run, joins it.
+
+- **The lessons:** [insight 029](../../../../playbook/docs/insights/029-thirteen-times-the-helpers-bought-a-plan-that-lost-the-faults-that-decided-it-were-found-by-a-few-close-reads-of-the-code-and-the-whole-plan.md) (why more helpers did not buy a better plan), and the trial's extensions of insights 011, 018, 019, 021, 025, 027 and 028 in [playbook/docs/insights/](../../../../playbook/docs/insights/).
+- **The two plans:** `projects/the-back-nine/docs/plans/features/early-withdrawal-charge-build-spec.md`, ours at commit `566d750c` and ce-plan's, the one kept, at `8d3c91e6`.
+- **Not maintained.** It is no longer installed, and CI no longer runs its tests; they last passed in CI on its final change, `6a5ab0fe`. Everything below is this page as it stood when the trial ran.
+
+---
 
 ## What it does
 

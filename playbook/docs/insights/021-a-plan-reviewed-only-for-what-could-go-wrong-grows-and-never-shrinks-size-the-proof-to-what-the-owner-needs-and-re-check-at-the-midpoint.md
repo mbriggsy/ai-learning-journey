@@ -2,7 +2,7 @@
 title: A plan reviewed only for what could go wrong grows and never shrinks; size the proof to what the owner needs to know, and re-check a long plan against the code at its midpoint
 date: 2026-11-12
 phase: the plan step's own skill (the hybrid plan's remaining units; the lean plan, 2026-11-11)
-modules: [projects/skills/ultramode-plan/docs/plans/lean-plan-step-plan.md, projects/skills/ultramode-plan/docs/plans/hybrid-plan-step-plan.md, playbook/TODO.md]
+modules: [projects/archive/skills/ultramode-plan/docs/plans/lean-plan-step-plan.md, projects/archive/skills/ultramode-plan/docs/plans/hybrid-plan-step-plan.md, playbook/TODO.md]
 tags: [scope, plan-growth, proof, guards, head-to-head, right-size, drift, midpoint, start-here, duties, review, process, deepen, scope-guardian, ce-plan, reversal, plan-trial]
 ---
 

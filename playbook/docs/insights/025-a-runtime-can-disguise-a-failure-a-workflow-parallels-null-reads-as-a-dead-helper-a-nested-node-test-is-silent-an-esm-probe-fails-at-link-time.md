@@ -2,7 +2,7 @@
 title: A runtime can disguise a failure as something else; a Workflow parallel's null reads as a dead helper, a nested node --test is silent, and an ESM probe copy fails at link time
 date: 2026-11-12
 phase: the plan step's own skill (U3 and U5)
-modules: [projects/skills/ultramode-plan/lib/workflow-stub.mjs, projects/skills/ultramode-plan/lib/workflows.test.mjs, projects/skills/ultramode-plan/lib/run-record.test.mjs]
+modules: [projects/archive/skills/ultramode-plan/lib/workflow-stub.mjs, projects/archive/skills/ultramode-plan/lib/workflows.test.mjs, projects/archive/skills/ultramode-plan/lib/run-record.test.mjs]
 tags: [workflow, parallel, pipeline, null, swallowed-errors, dead-helper, coverage-hole, node-test, NODE_TEST_CONTEXT, esm, link-time, fault-injection, syncBuiltinESMExports, testing, agent-tool, output-file, empty-file, subagent-transcript]
 ---
 

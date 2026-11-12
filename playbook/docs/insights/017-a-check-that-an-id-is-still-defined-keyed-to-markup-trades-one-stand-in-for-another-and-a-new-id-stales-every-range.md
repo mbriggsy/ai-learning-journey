@@ -2,7 +2,7 @@
 title: A check that an ID is still defined, keyed to markup, trades one stand-in for another; model which line defines the ID, test it on real plans, and grep for the old highest ID after a fold adds one
 date: 2026-11-12
 phase: the plan step's own skill (ultramode-plan U2's fold check; the Back Nine workbench plan's check)
-modules: [projects/skills/ultramode-plan/lib/fold.mjs]
+modules: [projects/archive/skills/ultramode-plan/lib/fold.mjs]
 tags: [fold-check, id-check, definition, markup, stand-in, index-row, mermaid, headings, tiers, real-plans, ranges, drift-grep, plans]
 ---
 

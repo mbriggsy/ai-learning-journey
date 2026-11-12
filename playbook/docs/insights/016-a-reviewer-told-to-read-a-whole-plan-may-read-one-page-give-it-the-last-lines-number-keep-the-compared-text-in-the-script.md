@@ -2,7 +2,7 @@
 title: A reviewer told to read a whole plan may read one page; give it the last line's number, keep the text the check compares in the script, and walk the recovery path whenever a fix changes what the check can catch
 date: 2026-11-12
 phase: the plan step's own skill (ultramode-plan U4, and the hybrid plan's check)
-modules: [projects/skills/ultramode-plan/lib/reads.mjs, projects/skills/ultramode-plan/lib/prompts.mjs]
+modules: [projects/archive/skills/ultramode-plan/lib/reads.mjs, projects/archive/skills/ultramode-plan/lib/prompts.mjs]
 tags: [reviewers, whole-plan-read, read-tool-limit, paging, reading-check, last-line, prompt-leak, recovery-path, short-read, workflow, helpers]
 ---
 

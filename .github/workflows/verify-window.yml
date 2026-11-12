@@ -3,9 +3,7 @@ name: Verify the window skill
 # The tests of the window skill (projects/skills/window/): the window law and its one line
 # (core.mjs), the backward read of a transcript at every chunk size, and the context-watch hook
 # that announces a line crossing on its own. No test reads ~/.claude or starts claude; each
-# builds its own transcripts in a temp folder. The ultramode-plan tests that parse window.mjs's
-# line run in verify-ultramode-plan.yml, whose path filter includes this folder. Plain Node, no
-# install step.
+# builds its own transcripts in a temp folder. Plain Node, no install step.
 
 on:
   push:

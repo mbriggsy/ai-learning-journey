@@ -2,8 +2,6 @@
 // /window one-liner's live path (window.mjs), and the context-watch hook that
 // announces a line crossing on its own.
 // Run: node --test "projects/skills/window/**/*.test.mjs"
-// (The ultramode-plan tests also spawn window.mjs and parse its line; they run
-// in verify-ultramode-plan.yml, whose path filter includes this folder.)
 
 import { test, after } from "node:test";
 import assert from "node:assert/strict";

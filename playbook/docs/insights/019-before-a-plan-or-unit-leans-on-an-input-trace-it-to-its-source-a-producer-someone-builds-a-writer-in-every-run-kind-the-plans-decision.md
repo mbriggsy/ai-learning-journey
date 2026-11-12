@@ -2,7 +2,7 @@
 title: Before a plan or a unit leans on an input, trace it to its source; a gate's input to a producer someone builds, a required field to its writer in every run kind, a decision to the plan, and a goal to a source that states one
 date: 2026-11-12
 phase: the plan step's own skill (the hybrid plan's check; U4's reviews)
-modules: [projects/skills/ultramode-plan/lib/select.mjs, projects/skills/ultramode-plan/lib/flow.mjs, projects/skills/ultramode-plan/lib/run-record.mjs, projects/skills/ultramode-plan/lib/resolve-ce.mjs]
+modules: [projects/archive/skills/ultramode-plan/lib/select.mjs, projects/archive/skills/ultramode-plan/lib/flow.mjs, projects/archive/skills/ultramode-plan/lib/run-record.mjs, projects/archive/skills/ultramode-plan/lib/resolve-ce.mjs]
 tags: [inputs, producer, writer, run-kind, restart, state-machine, for-each, source-of-truth, comments, goal, request, plans, review, brief, deliberate-value, false-premise, never-flag, schema-version, cross-plan, collision, plan-trial]
 ---
 

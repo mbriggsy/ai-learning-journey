@@ -2,7 +2,7 @@
 title: A plan's builder reads only the plan; a finding left in a commit message is invisible, and a finding folded into a test the plan already has costs less than a new one
 date: 2026-11-12
 phase: the plan step's own skill (the Back Nine workbench plan's check)
-modules: [projects/skills/ultramode-plan/SKILL.md, projects/the-back-nine/docs/plans/5-workbench-plan.md]
+modules: [projects/archive/skills/ultramode-plan/SKILL.md, projects/the-back-nine/docs/plans/5-workbench-plan.md]
 tags: [fold, findings, last-round, commit-message, receipt, builder, tests, balanced, plans, check, fold-all, triage, packing, dense-prose, numbered-steps, plan-trial]
 ---
 

@@ -2,7 +2,7 @@
 title: A vote settles one finding's truth and severity, above the finder and the prompt; it does not settle the decisions many confirmed findings merge into
 date: 2026-11-12
 phase: the plan step's own skill (U4; the remaining-units update, 2026-11-11; the Back Nine workbench plan's check)
-modules: [projects/skills/ultramode-plan/lib/vote-law.mjs, projects/skills/ultramode-plan/lib/prompts.mjs]
+modules: [projects/archive/skills/ultramode-plan/lib/vote-law.mjs, projects/archive/skills/ultramode-plan/lib/prompts.mjs]
 tags: [vote, severity, refuters, verifiers, finder, prompt-scope, gate, premise-seat, decisions, critic, review, plans]
 ---
 

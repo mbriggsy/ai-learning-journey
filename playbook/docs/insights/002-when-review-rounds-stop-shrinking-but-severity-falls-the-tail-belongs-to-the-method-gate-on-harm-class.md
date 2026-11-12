@@ -47,7 +47,7 @@ The brief recall fix's bar for `applies_when` lines (a page of rules for line wr
 
 ## Extended (2026-11-12): five more reviews show the same shape, and a harm-class third round costs about a third of a full one
 
-The plan step's own skill (`projects/skills/ultramode-plan`) and its first real plan went through five reviews, and each one repeated the signature:
+The plan step's own skill (`projects/archive/skills/ultramode-plan`) and its first real plan went through five reviews, and each one repeated the signature:
 - **The hybrid plan's check.** Round 2 found five seams that round 1's fixes opened, among them an `update` mode that skipped the contract brief every prompt needs, and a window gate whose cost table no runtime file carried.
 - **U1's fix (2026-11-04).** Round 2 found a copy spelled through the repo's short (8.3) name passing the inside-the-repo check that round 1's long-form fix had left comparing raw text.
 - **U2.** Round 3 ran as a harm-class gate: five lenses, each told to report only a gate's confidently wrong answer. It found 3 confirmed against round 2's 22, on about 3.0M helper tokens against 7.6M, every one P2 or P3 after the vote.

@@ -36,7 +36,7 @@ What Claude asks `ce-plan` for, every time:
 Only Claude models do the work: the plugin's review pass by another company's model is switched off in the repo's `.compound-engineering/config.yaml`. The plan's commit message says what ran ("planned, deepened and checked", or "planned, confidence check passed, checked" when no section needed deepening), and the build starts only once the plan's history shows it.
 
 - **Start it:** nothing to say; Claude starts it for sizable work. You can also say "plan <the work>".
-- **Lives in:** the `ce-plan` and `ce-doc-review` skills of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`. The plugin updates itself: version 3.37.1 installed on its own on 2026-11-09.
+- **Lives in:** the `ce-plan` and `ce-doc-review` skills of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`. The plugin updates itself: version 3.38.0 installed on its own on 2026-11-11.
 
 ### 3. Build
 

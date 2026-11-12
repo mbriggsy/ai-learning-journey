@@ -3,7 +3,7 @@ title: A runtime can disguise a failure as something else; a Workflow parallel's
 date: 2026-11-12
 phase: the plan step's own skill (U3 and U5)
 modules: [projects/skills/ultramode-plan/lib/workflow-stub.mjs, projects/skills/ultramode-plan/lib/workflows.test.mjs, projects/skills/ultramode-plan/lib/run-record.test.mjs]
-tags: [workflow, parallel, pipeline, null, swallowed-errors, dead-helper, coverage-hole, node-test, NODE_TEST_CONTEXT, esm, link-time, fault-injection, syncBuiltinESMExports, testing]
+tags: [workflow, parallel, pipeline, null, swallowed-errors, dead-helper, coverage-hole, node-test, NODE_TEST_CONTEXT, esm, link-time, fault-injection, syncBuiltinESMExports, testing, agent-tool, output-file, empty-file, subagent-transcript]
 ---
 
 ## Problem
@@ -34,3 +34,9 @@ When a harness turns errors into nulls or silence, record what it swallowed and 
 - `Promise.allSettled` or `catch(() => null)` patterns that merge "failed" with "no result".
 - Test runners started from inside other test runners.
 - Mocks of ESM modules: keep the export shape, or the mock fails before it runs.
+
+## Extended (2026-11-12): an Agent helper's output file is empty, so it reads as a helper that said nothing
+
+An Agent tool helper's completion notice names an output file (`tasks/<id>.output` in the session's temp folder). In playbook-5 the contract-brief helper's file held 0 bytes; its words were in its transcript, `~/.claude/projects/<slug>/<session-id>/subagents/agent-<id>.jsonl`, and a saved copy was proven word for word only against that. A count on 2026-11-12 found every Agent output file on this laptop empty: 21 of 21, across seven sessions, while 4 of the 107 finished Bash and Workflow task files beside them were.
+
+What it adds: the empty file is how the Agent tool works here, not a failed helper. Read an Agent's words from its completion notice or its transcript, never from its output file, and never read that file's emptiness as a dead helper.

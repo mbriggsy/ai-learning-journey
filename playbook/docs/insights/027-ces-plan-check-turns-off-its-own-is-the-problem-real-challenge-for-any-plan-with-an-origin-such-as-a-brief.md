@@ -3,7 +3,7 @@ title: CE's plan check turns off its own "is the problem real?" challenge for an
 date: 2026-11-12
 phase: the plan step (the hybrid plan's design; re-read on CE 3.38.1)
 modules: [projects/skills/ultramode-plan/lib/resolve-ce.mjs]
-tags: [compound-engineering, ce-doc-review, ce-plan, premise, origin, brief, product-lens, adversarial, plan-check, suppression]
+tags: [compound-engineering, ce-doc-review, ce-plan, premise, origin, brief, product-lens, adversarial, plan-check, suppression, lite, depth-full, coverage-line, named-adversary]
 ---
 
 ## Problem
@@ -30,3 +30,9 @@ CE treats an origin document as proof that the premise was checked. Our briefs g
 
 - Any reviewer that skips checks because metadata says an earlier stage did them.
 - Pipelines where "approved upstream" is a field anyone can set.
+
+## Extended (2026-11-12): the check also runs "lite" unless asked for full, and asking held on its first run
+
+Since CE 3.36.0 a plan check runs `lite`, one reviewer applying the coherence, feasibility and scope lenses with no adversary, unless the caller passes `depth:full`, a saved review state records full, or a conditional persona other than the scope reviewer switches on (`ce-doc-review/references/depth.md:9-15`, read on 3.38.1). The playbook README's step 2 asks for `depth:full` and for the adversary by name. On their first run (the plan-step trial's ce-plan arm, CE 3.38.0, playbook-4), Coverage showed a full review by seven reviewers with the adversary on the team (the arm's receipt).
+
+What it adds: this is a second way the check narrows itself without the caller asking, and both are keyed to the plan's shape (an origin; no conditional persona). Lite says so in the Coverage line; the origin rule says nothing anywhere. Naming the adversary puts it on the team, but its premise challenge still switches off for a plan with an origin, so this lesson's Key Insight stands.

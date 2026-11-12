@@ -3,7 +3,7 @@ title: A plan reviewed only for what could go wrong grows and never shrinks; siz
 date: 2026-11-12
 phase: the plan step's own skill (the hybrid plan's remaining units; the lean plan, 2026-11-11)
 modules: [projects/skills/ultramode-plan/docs/plans/lean-plan-step-plan.md, projects/skills/ultramode-plan/docs/plans/hybrid-plan-step-plan.md, playbook/TODO.md]
-tags: [scope, plan-growth, proof, guards, head-to-head, right-size, drift, midpoint, start-here, duties, review, process]
+tags: [scope, plan-growth, proof, guards, head-to-head, right-size, drift, midpoint, start-here, duties, review, process, deepen, scope-guardian, ce-plan, reversal, plan-trial]
 ---
 
 ## Problem
@@ -30,3 +30,9 @@ Before a plan adds a proof or a guard, ask three things: what does the owner nee
 - Security or reliability reviews that only ever add controls.
 - Test plans sized by "what could break" instead of "what would we act on".
 - Hand-off notes that grow into a shadow spec.
+
+## Extended (2026-11-12): in ce-plan's run the deepen added two mechanisms, and only the check's scope reviewer took them out
+
+In the plan-step trial's ce-plan arm (playbook-4), the deepen's helpers added two mechanisms the request did not need: 457(b) plans as new account kinds (the deepen's KTD12), and a reach read of saved plans for the leak fix's pricing change. The plan took both. Nothing asked "does the request need this?" until the check's scope reviewer did, and the check reversed both (the arm's `check-resolved-review.md`: the kinds "bought a limit family and Act 5 coordination the charge does not need"; the reach "would cost five files for no reader", since no real save exists).
+
+What it adds: the question that subtracts has a seat, CE's scope reviewer, and every other step, the deepen included, only adds. Keep that seat in every plan check, and read its reversals as the plan's scope, not as noise.

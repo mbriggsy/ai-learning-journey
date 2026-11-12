@@ -3,7 +3,7 @@ title: A plan's builder reads only the plan; a finding left in a commit message 
 date: 2026-11-12
 phase: the plan step's own skill (the Back Nine workbench plan's check)
 modules: [projects/skills/ultramode-plan/SKILL.md, projects/the-back-nine/docs/plans/5-workbench-plan.md]
-tags: [fold, findings, last-round, commit-message, receipt, builder, tests, balanced, plans, check]
+tags: [fold, findings, last-round, commit-message, receipt, builder, tests, balanced, plans, check, fold-all, triage, packing, dense-prose, numbered-steps, plan-trial]
 ---
 
 ## Problem
@@ -30,3 +30,9 @@ Write every finding where the builder will look: the plan's own unit text. And f
 - Review comments resolved in a PR thread but never reflected in the spec.
 - Post-mortem actions recorded in a meeting note instead of the runbook.
 - Test suites that grow one test per bug report.
+
+## Extended (2026-11-12): folding every confirmed finding into the unit it touches packs the unit until its builder misreads it
+
+In the plan-step trial (insight 029), `ultramode-plan`'s check folded all 77 of its findings (round 1's 44; round 2's 25 plus 8 traced as real) into the units they touched. The plan grew from 60,945 to 82,946 characters (`5431285e` to `566d750c`). U7's approach went from one paragraph of 129 words to one of 320 holding about a dozen tasks, and the plan's longest line from 176 words to 320. The blind builder reader named it: "U7's whole approach is one paragraph of about 400 words holding a dozen tasks ... A builder working alone will misread or skip something." ce-plan's plan, the same length (83,278 characters), applied 17 of its check's 31 findings, kept numbered steps, and was the builder reader's pick.
+
+What it adds: "fold into what is already there" holds for tests, not for prose; a fold into a paragraph only makes it longer. Triage before folding: fix what a builder would hit and leave the rest named in the plan. When a unit's tasks pass a handful, rewrite it as numbered steps instead of growing its paragraph. Length was not the fault; packing was.

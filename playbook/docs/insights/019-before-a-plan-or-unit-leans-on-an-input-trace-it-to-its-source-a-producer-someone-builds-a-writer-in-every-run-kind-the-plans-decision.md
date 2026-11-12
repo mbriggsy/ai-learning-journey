@@ -3,7 +3,7 @@ title: Before a plan or a unit leans on an input, trace it to its source; a gate
 date: 2026-11-12
 phase: the plan step's own skill (the hybrid plan's check; U4's reviews)
 modules: [projects/skills/ultramode-plan/lib/select.mjs, projects/skills/ultramode-plan/lib/flow.mjs, projects/skills/ultramode-plan/lib/run-record.mjs, projects/skills/ultramode-plan/lib/resolve-ce.mjs]
-tags: [inputs, producer, writer, run-kind, restart, state-machine, for-each, source-of-truth, comments, goal, request, plans, review]
+tags: [inputs, producer, writer, run-kind, restart, state-machine, for-each, source-of-truth, comments, goal, request, plans, review, brief, deliberate-value, false-premise, never-flag, schema-version, cross-plan, collision, plan-trial]
 ---
 
 ## Problem
@@ -35,3 +35,10 @@ For every input a gate, rule or seat reads, name its writer, in every kind of ru
 - Feature flags or config keys read by code that no deploy path sets.
 - Jobs with several entry points (fresh, resume, retry) that each assume another wrote a field.
 - Reviews that grade a change against its ticket's wording instead of the spec.
+
+## Extended (2026-11-12): a brief's "never flag this" needs a source beyond a code comment, and a shared version step needs every plan that claims it
+
+- **A comment handed to every helper as a deliberate value.** The contract brief for the plan-step trial's `ultramode-plan` arm (playbook-5) told every helper: "the 59½ line is read at integer age 60. That is a year on the conservative side, the same proxy PA's gate uses: never flag the year it overcharges", citing a code comment (`src/engine/stateTax.ts:95-96`). It is half wrong. For a July-to-December birthday, the year an owner turns 60 holds days before 59½, so reading that whole year as past the line is rosy. The research and both deepen rounds pushed back anyway (playbook-5's record), and the plan overturned it (its KTD2); the trial's blind rules reader confirmed the plan's reading.
+- **A shared step two plans claim.** In the trial's ce-plan arm, three of the seven check reviewers found on their own that the workbench plan (`5-workbench-plan.md`) also claims the Back Nine's next saved-format version (the arm's receipt). Our arm's plan had caught it too.
+
+What it adds: a line in a brief that says "never flag X" is an input like any other, and a stronger one, because it switches off the check that would catch it, as an origin does in CE's check (insight 027). Give each deliberate value in a brief its source, and mark a claim unverified when only a comment states it. And a plan that takes a numbered shared step (a saved-format version, a migration number, a solver version) reads every committed plan for the same step before it claims one.

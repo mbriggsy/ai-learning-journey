@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-// THE FOLD CHECK (KTD9 of docs/plans/hybrid-plan-step-plan.md). The main loop folds verified
-// findings into a working copy of the staged plan by whole-section edits, then runs this on the
-// before and after files before the working copy replaces the staged plan:
+// THE FOLD CHECK (KTD9 of docs/plans/hybrid-plan-step-plan.md), run by `apply` below on the plan
+// before and after a fold's edits, before it writes anything:
 //   1. The ID check: every ID the plan defined before the fold keeps as many defining lines of its
 //      strongest tier as it had, and is still mentioned. The tiers: a heading (a unit's "### U5."),
 //      above a one-line definition, a list item or an index-table row ("- R1.", "| U5 |"). CE
@@ -17,7 +16,9 @@
 //      folded plan, line by line, not just at the one instance the change named, so a value
 //      changed in one section and missed in another shows up. A hit is reported, not failed: an
 //      old value can rightly stay (a "Rejected:" sentence quoting it), so the main loop judges each
-//      line. A value split across two lines is not found: the grep is per line.
+//      line. A value split across two lines is not found: the grep is per line. A value under 3
+//      characters (a renamed "U7", a changed "5%") is matched as a whole word, never as part of
+//      one, since as a bare substring it would match nearly every line.
 // The IDs are CE's families: R, U and KTD, which KTD9 names, plus CE's origin IDs (A, F, AE),
 // which its deepen checklist says a plan must keep wherever it touches them.
 // Run by the main loop as a command; never inlined into a Workflow script (KTD1).
@@ -28,8 +29,9 @@
 //     "new": "<its replacement, empty to delete>", "olds": [optional: short phrases it retires],
 //     "seats": [optional: other check seats whose ground it touches] }.
 // `apply` places every old text in the plan as it stands (each found exactly once, no two
-// overlapping), applies them all or none, runs the ID check and the drift grep below on the result
-// (each id's old values are its edits' olds), and writes the plan only when the ID check passes.
+// overlapping, none dropping the line break that ends its old text), applies them all or none, runs
+// the ID check and the drift grep on the result (each id's old values are its edits' olds), and
+// writes the plan only when the ID check passes.
 // Given a changes file, it appends the fold's hunks there: each run of changed lines, whole, as
 // { id, kind, classes, text } and an edit's was, the form a later check round takes as its changes.
 // A hunk's classes are the seats its ids name (a check finding's id names its seat: c1-reach-3)
@@ -38,18 +40,12 @@
 // caught before any write), and round 2's changes, one entry per folded finding with its old and
 // new text, could not be built by hand for 47 findings.
 //
-// Usage: node fold.mjs <before.md> <after.md> <changes.json>
-//   changes.json: [{ "id": "<ledger id>", "old_values": ["<value>", ...] }, ...], one entry per
-//   applied id, carrying the values the fold replaced: a deepen amendment proposes its own, and
-//   for a check fix the main loop records what its edit replaced. A change that only adds gives
-//   an empty list. Every fold applies at least one id, so an empty or missing file is an error.
-// Prints one JSON object. Exits 0 when the ID check passes (any drift is in the output), 1 when
-// it fails, and 2 when the input cannot be read (no check ran).
-//        node fold.mjs apply <plan.md> <edits.json> [<changes file to append to>]
+// Usage: node fold.mjs apply <plan.md> <edits.json> [<changes file to append to>]
 // Prints one JSON object. Exits 0 when the fold is written, 1 when the ID check fails, and 2 when
 // an edit is refused or the input cannot be read; on 1 and 2 nothing is written.
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { isMain, usage } from "./entry.mjs";
 import { readMarkdown } from "./markdown.mjs";
 import { PROMPT_CHECK_SEATS } from "./prompts.mjs";
@@ -155,15 +151,17 @@ export function checkIds(before, after) {
   return { ok: problems.length === 0, before: ids.length, after: now.size, missing, lost, excused: ids.filter((id) => excused.has(id)), added, problems };
 }
 
-const MIN_VALUE = 3; // an old value shorter than this (spaces aside) would match nearly every line
+// An old value shorter than this (spaces aside) is matched only as a whole word: as a substring it
+// would match nearly every line.
+const MIN_VALUE = 3;
 
 // Every change's old values, as one list: one entry per distinct value (case and inner spacing
-// aside), carrying every change that named it. Nothing is dropped quietly: a value too short to
-// search is listed under `refused`, and a change with no old value under `addsOnly`.
+// aside), carrying every change that named it, and `whole` when it is matched as a whole word.
+// Nothing is dropped: a change with no old value is listed under `addsOnly`, and a blank value
+// throws.
 export function grepList(changes) {
   if (!Array.isArray(changes)) throw new Error("fold: the changes must be a list");
   const values = new Map();
-  const refused = [];
   const addsOnly = [];
   for (const [i, a] of changes.entries()) {
     const id = a && typeof a.id === "string" && a.id.trim() ? a.id.trim() : null;
@@ -174,29 +172,28 @@ export function grepList(changes) {
     for (const raw of olds) {
       if (typeof raw !== "string") throw new Error(`fold: change ${id} has an old value that is not text (${JSON.stringify(raw)})`);
       const value = raw.replace(/\s+/g, " ").trim();
-      if (value.replace(/\s/g, "").length < MIN_VALUE) {
-        refused.push({ value, change: id, reason: `shorter than ${MIN_VALUE} characters: it would match nearly every line` });
-        continue;
-      }
+      if (!value) throw new Error(`fold: change ${id} has a blank old value`);
       const key = value.toLowerCase();
-      if (!values.has(key)) values.set(key, { value, changes: [] });
+      if (!values.has(key)) values.set(key, { value, whole: value.replace(/\s/g, "").length < MIN_VALUE, changes: [] });
       const entry = values.get(key);
       if (!entry.changes.includes(id)) entry.changes.push(id);
     }
   }
-  return { values: [...values.values()], refused, addsOnly };
+  return { values: [...values.values()], addsOnly };
 }
 
-// The lines of `text` that still carry each value, case and inner spacing aside.
+// The lines of `text` that still carry each value, case and inner spacing aside; a whole-word
+// value only where no letter, digit or underscore touches it ("U7" in "U7." but not in "U70").
 export function drift(text, list) {
   const lines = text.split(/\r?\n/);
   const norm = lines.map((l) => l.replace(/\s+/g, " ").toLowerCase());
   return list.values
-    .map(({ value, changes }) => {
+    .map(({ value, whole, changes }) => {
       const needle = value.toLowerCase();
+      const word = whole ? new RegExp(`(?<![a-z0-9_])${needle.replace(/[.*+?^${}()|[\]\\]/g, (c) => `\\${c}`)}(?![a-z0-9_])`) : null;
       const hits = [];
       norm.forEach((l, i) => {
-        if (l.includes(needle)) hits.push({ line: i + 1, text: lines[i].trim().slice(0, 200) });
+        if (word ? word.test(l) : l.includes(needle)) hits.push({ line: i + 1, text: lines[i].trim().slice(0, 200) });
       });
       return { value, changes, hits };
     })
@@ -210,7 +207,7 @@ export function foldCheck(before, after, changes) {
   return {
     ok: ids.ok,
     ids,
-    grep: { values: list.values.length, refused: list.refused, addsOnly: list.addsOnly },
+    grep: { values: list.values.length, whole: list.values.filter((v) => v.whole).map((v) => v.value), addsOnly: list.addsOnly },
     drift: found,
     driftLines: found.reduce((n, d) => n + d.hits.length, 0),
   };
@@ -249,11 +246,14 @@ export function placeEdits(plan, edits) {
     if (!ids) problems.push(`${where}: ids is a non-empty list of the ledger ids it folds`);
     if (typeof e.old !== "string" || e.old === "") problems.push(`${where}: old is the exact text it replaces, never empty`);
     if (typeof e.new !== "string") problems.push(`${where}: new is its replacement text ("" deletes the old text)`);
-    if (e.olds !== undefined && !(Array.isArray(e.olds) && e.olds.every((s) => typeof s === "string"))) problems.push(`${where}: olds is a list of the short phrases it retires`);
+    if (e.olds !== undefined && !(Array.isArray(e.olds) && e.olds.every((s) => typeof s === "string" && s.trim()))) problems.push(`${where}: olds is a list of the short phrases it retires, none blank`);
     if (e.seats !== undefined && !(Array.isArray(e.seats) && e.seats.every((s) => FOLD_SEATS.includes(s)))) problems.push(`${where}: seats is a list of check seats (${FOLD_SEATS.join(", ")})`);
     for (const id of ids ?? []) if (seatOf(id) !== null && !FOLD_SEATS.includes(seatOf(id))) problems.push(`${where}: ${id} reads as a check finding's id, but ${seatOf(id)} is no check seat`);
     if (problems.length > before) return;
     if (e.old === e.new) return void problems.push(`${where} (${ids.join(", ")}) changes nothing: its new text is its old`);
+    // A new text that drops the line break ending its old text joins the next line onto it, and
+    // that line sits outside every hunk: a heading swallowed into a sentence would pass unseen.
+    if (e.old.endsWith("\n") && e.new !== "" && !e.new.endsWith("\n")) return void problems.push(`${where} (${ids.join(", ")}): its old text ends its line and its new text does not, so the next line would join this one: end the new text with a line break too, or put the next line in the old text`);
     const hits = startsOf(plan, e.old);
     if (hits.length !== 1) {
       const crlf = hits.length === 0 && plan.includes("\r\n") && e.old.includes("\n") && !e.old.includes("\r") ? " (the plan's lines end in CRLF, this old text's in LF)" : "";
@@ -262,8 +262,11 @@ export function placeEdits(plan, edits) {
     placed.push({ n: i + 1, at: hits[0], end: hits[0] + e.old.length, ids, edit: e });
   });
   placed.sort((a, b) => a.at - b.at);
-  for (let i = 1; i < placed.length; i++) {
-    if (placed[i].at < placed[i - 1].end) problems.push(`edits ${placed[i - 1].n} and ${placed[i].n} overlap in the plan: make them one edit`);
+  // Against the edit reaching furthest so far, so one long edit that covers two later ones names both.
+  let reach = null;
+  for (const p of placed) {
+    if (reach && p.at < reach.end) problems.push(`edits ${reach.n} and ${p.n} overlap in the plan: make them one edit`);
+    if (!reach || p.end > reach.end) reach = p;
   }
   return { problems, placed };
 }
@@ -365,6 +368,7 @@ function applyCommand([planPath, editsPath, changesPath]) {
   try {
     const plan = readFileSync(planPath, "utf8");
     r = applyFold(plan, JSON.parse(readFileSync(editsPath, "utf8")));
+    if (changesPath && !(existsSync(dirname(changesPath)) && statSync(dirname(changesPath)).isDirectory())) throw new Error(`the changes file's folder ${dirname(changesPath)} does not exist`);
     if (changesPath && existsSync(changesPath)) {
       earlier = JSON.parse(readFileSync(changesPath, "utf8"));
       if (!Array.isArray(earlier)) throw new Error(`the changes file ${changesPath} holds no list`);
@@ -385,29 +389,14 @@ function applyCommand([planPath, editsPath, changesPath]) {
     if (changesPath) writeFileSync(changesPath, `${JSON.stringify([...earlier, ...r.hunks], null, 1)}\n`);
   }
   const { ok, problems, before, after, missing, lost, excused, added } = r.check.ids;
-  console.log(JSON.stringify({ ok, written: ok, edits: r.edits, ids: r.ids, idCheck: { before, after, missing, lost, excused, added, problems }, drift: r.check.drift, driftLines: r.check.driftLines, hunks: r.hunks.length, blankOnly: r.blankOnly, changes: ok && changesPath ? changesPath : null }, null, 1));
+  console.log(JSON.stringify({ ok, written: ok, edits: r.edits, ids: r.ids, idCheck: { before, after, missing, lost, excused, added, problems }, olds: { searched: r.check.grep.values, wholeWord: r.check.grep.whole }, drift: r.check.drift, driftLines: r.check.driftLines, hunks: r.hunks.length, blankOnly: r.blankOnly, changes: ok && changesPath ? changesPath : null }, null, 1));
   for (const p of problems) console.error(`fold: ${p}`);
   if (!ok) console.error("fold: nothing was written: fix the edits and apply them again");
   if (r.check.driftLines) console.error(`fold: ${r.check.drift.length} old value(s) still appear on ${r.check.driftLines} line(s): judge each one`);
   process.exitCode = ok ? 0 : 1;
 }
 
-if (isMain(import.meta.url) && process.argv[2] === "apply") applyCommand(process.argv.slice(3));
-else if (isMain(import.meta.url)) {
-  const [beforePath, afterPath, changesPath] = process.argv.slice(2);
-  if (!beforePath || !afterPath || !changesPath) usage("node fold.mjs <before.md> <after.md> <changes.json>, or node fold.mjs apply <plan.md> <edits.json> [<changes file>]");
-  let r;
-  try {
-    const changes = JSON.parse(readFileSync(changesPath, "utf8"));
-    if (Array.isArray(changes) && changes.length === 0) throw new Error("the changes list is empty: every fold applies at least one id, and a change that only adds is listed with old_values []");
-    r = foldCheck(readFileSync(beforePath, "utf8"), readFileSync(afterPath, "utf8"), changes);
-  } catch (e) {
-    console.error(`fold: no check ran: ${e.message.replace(/^fold: /, "")}`);
-    process.exit(2);
-  }
-  console.log(JSON.stringify(r, null, 1));
-  for (const p of r.ids.problems) console.error(`fold: ${p}`);
-  if (r.driftLines) console.error(`fold: ${r.drift.length} old value(s) still appear on ${r.driftLines} line(s): judge each one`);
-  // exitCode, not exit(): an exit right after a print can cut a piped stdout short.
-  process.exitCode = r.ok ? 0 : 1;
+if (isMain(import.meta.url)) {
+  if (process.argv[2] === "apply") applyCommand(process.argv.slice(3));
+  else usage("node fold.mjs apply <plan.md> <edits.json> [<changes file to append to>]");
 }

@@ -51,7 +51,7 @@ The first real run (2026-11-11, the Back Nine's Act 5 workbench plan) did resear
 Three more fixes came out of that run:
 
 - **Each launch's inputs are baked into a copy of the script** (`lib/inputs.mjs`). Claude no longer types them into the Workflow call, and the completion notice no longer prints them back. Before, each launch's inputs were about 18 KB and four launches cost about 5% of the window. A Workflow script cannot read a file, which is why the inputs travel inside the script.
-- **A digest of each result** (`lib/digest.mjs`). The first check round's result file was 486 KB. Its digest is 43 KB: the summary and every finding Claude acts on, each field cut to 300 characters.
+- **A digest of each result** (`lib/digest.mjs`). The first check round's result file was 486 KB. Its digest is 45 KB: the summary and every finding Claude acts on, with the text a fix is made from printed whole, the rest cut to 300 characters, and the voters' own call on each fix.
 - **Fixes go in through one tool** (`node lib/fold.mjs apply`). Claude writes the fixes as exact before-and-after text pairs, and the tool applies all of them or none. It refuses a pair whose old text is missing or appears twice, and refuses the whole fold if it would drop a numbered requirement, unit or decision. It also writes the list of changed lines that the next check round reviews. Building that list by hand, for 47 fixes, is what stopped the first run's second round.
 
 ## What comes back
@@ -116,7 +116,7 @@ The weekly usage meter went from 4% to 14% with every other session idle, about 
 - `SKILL.md`: the page Claude follows.
 - `workflows/`: the three scripts (research, deepen, check), generated from `src/` and `lib/` by `lib/make-scripts.mjs`. A test fails when they are stale.
 - `lib/inputs.mjs`: builds each launch's inputs from one facts file and bakes them into a copy of the script.
-- `lib/digest.mjs`: prints a result's summary and the findings Claude acts on, or chosen entries whole.
+- `lib/digest.mjs`: prints a result's summary and the findings Claude acts on, each with the voters' call on its fix, or chosen entries whole.
 - `lib/fold.mjs`: `apply` makes a fold's fixes all at once and writes the next round's changes; its check refuses a fold that drops a numbered requirement, unit or decision.
 - `lib/resolve-ce.mjs`: finds the plugin's files.
 - `lib/run-record.mjs`, `lib/flow.mjs` and `bench/`: built for runs that survive across sessions and for a blind head-to-head against `ce-plan`. Both were cut on 2026-11-11; the code stays, tested and unused, apart from the few functions `inputs.mjs` and `fold.mjs` call.
@@ -130,4 +130,4 @@ Tests: `node --test "projects/skills/ultramode-plan/**/*.test.mjs"` from the rep
 2. One code review of this page's skill file and the tools it runs that the real run changed: `lib/inputs.mjs`, `lib/fold.mjs` and `lib/digest.mjs`.
 3. On the next sizable job, `ce-plan` plans the same job. Three skeptical readers get both plans with the labels removed and say which they would build from. Briggsy reads both, and his read decides. If this skill's plan is not clearly better, the skill is shelved and `ce-plan` stays.
 
-Result so far: step 1 ran on 2026-11-11 and stopped one stage short (see "Why two sessions"). The plan is committed with a receipt that says its check is incomplete, and its check runs as the skill's second session. What broke is fixed: the two-session split and the three tools above. Steps 2 and 3 have not run.
+Result so far: step 1 ran on 2026-11-11 and stopped one stage short (see "Why two sessions"). The plan is committed with a receipt that says its check is incomplete, and its check runs as the skill's second session. What broke is fixed: the two-session split and the three tools above. Step 2 ran on 2026-11-12: eight reviewers, every finding voted on, 17 confirmed and 4 sent for a trace, all of them real. They came to ten distinct defects, and all ten are fixed. Among them: the digest made its own call on each fix instead of the voters', and cut the text a fix is made from; the fold tool skipped short retired values like `U7` without saying so; an unchanged plan could not be committed with its receipt. Step 3 has not run.

@@ -291,13 +291,13 @@ test("the grep list holds every change's old values, and drops none quietly", ()
     { id: "D4", oldValues: ["P1", "x y"] },
   ];
   const list = grepList(changes);
-  assert.deepEqual(list.values.map((v) => v.value), ["3 refuters", "three refuters", "Opus at high"]);
+  assert.deepEqual(list.values.map((v) => [v.value, v.whole]), [["3 refuters", false], ["three refuters", false], ["Opus at high", false], ["P1", true], ["x y", true]]);
   assert.deepEqual(list.values[0].changes, ["D1", "D2"], "one value named by two changes carries both");
   assert.deepEqual(list.addsOnly, ["D3"]);
-  assert.deepEqual(list.refused.map((r) => r.value), ["P1", "x y"]);
-  // Every old value of every change lands in exactly one of the lists.
-  const placed = [...list.values.map((v) => v.value.toLowerCase()), ...list.refused.map((r) => r.value.toLowerCase())];
+  // Every old value of every change lands in the list: a short one is searched as a whole word.
+  const placed = list.values.map((v) => v.value.toLowerCase());
   for (const a of changes) for (const o of a.old_values ?? a.oldValues) assert.ok(placed.includes(o.replace(/\s+/g, " ").trim().toLowerCase()), o);
+  assert.throws(() => grepList([{ id: "D7", old_values: ["  "] }]), /change D7 has a blank old value/);
   assert.throws(() => grepList([{ old_values: [] }]), /no id/);
   assert.throws(() => grepList([{ id: "D9" }]), /no old_values list/);
   assert.throws(() => grepList({}), /must be a list/);
@@ -321,38 +321,10 @@ test("drift matches an old value in any letter case and across doubled spaces", 
   assert.deepEqual(hits[0].hits.map((h) => h.line), [2, 3]);
 });
 
-test("the command exits 0 on a pass with drift, 1 on a failed ID check, and 2 when it cannot read its input", (t) => {
-  const dir = tmpRoot(t);
-  const b = join(dir, "before.md");
-  const a = join(dir, "after.md");
-  const m = join(dir, "changes.json");
-  const run = (...args) => spawnSync(process.execPath, [join(here, "fold.mjs"), ...args], { encoding: "utf8" });
-  writeFileSync(b, PLAN);
-  writeFileSync(a, swap(PLAN, "Uses 3 refuters on a P1.", "Uses 4 refuters on a P1."));
-  writeFileSync(m, JSON.stringify([{ id: "D1", old_values: ["3 refuters"] }]));
-  const pass = run(b, a, m);
-  assert.equal(pass.status, 0, pass.stderr);
-  assert.equal(JSON.parse(pass.stdout).driftLines, 1);
-  assert.match(pass.stderr, /still appear on 1 line/);
-  writeFileSync(a, swap(PLAN, "### U2. Core logic", "### U9. Core logic"));
-  const fail = run(b, a, m);
-  assert.equal(fail.status, 1);
-  assert.deepEqual(lostOf(JSON.parse(fail.stdout).ids), [`U2 ${HEAD} 1->0`]);
-  // No changes file: the drift grep would never run, so no check runs at all.
-  const none = run(b, a);
-  assert.equal(none.status, 2);
-  assert.match(none.stderr, /^usage: /m);
-  writeFileSync(m, "[]");
-  const empty = run(b, a, m);
-  assert.equal(empty.status, 2);
-  assert.match(empty.stderr, /the changes list is empty/);
-  writeFileSync(m, "{not json");
-  const bad = run(b, a, m);
-  assert.equal(bad.status, 2);
-  assert.match(bad.stderr, /^fold: no check ran/);
-  writeFileSync(m, JSON.stringify([{ id: "D1", old_values: [] }]));
-  assert.equal(run(b, join(dir, "missing.md"), m).status, 2);
-  assert.deepEqual(foldCheck(PLAN, PLAN, []).ids.problems, []);
+test("drift matches a short old value only as a whole word: a renamed U7 or a changed 5% is found, never inside U70 or 15%", () => {
+  const plan = "# P\n- U7. Bench\n- U70 is another unit.\n- Keep 5% cash; stocks at 15%.\n- (U7, at 5%)\n- au7 and 5%x\n";
+  const hits = drift(plan, grepList([{ id: "c1-reach-1", old_values: ["U7", "5%"] }]));
+  assert.deepEqual(hits.map((h) => [h.value, h.hits.map((x) => x.line)]), [["U7", [2, 5]], ["5%", [4, 5]]]);
 });
 
 // ---------------------------------------------------------------- apply
@@ -451,6 +423,31 @@ test("apply's hunks are the changes a later check round takes: the check script 
   assert.ok(run.calls[0].prompt.includes("- added: - The docs say 4 refuters."));
 });
 
+test("apply refuses a new text that drops the line break ending its old text: the next line would join it, outside every hunk", () => {
+  const joined = applyFold(PLAN, [{ ids: ["c1-reach-1"], old: "| U1 | Bench |\n", new: "| U1 | Bench and harness |" }]);
+  assert.match(joined.refused[0], /^edit 1 \(c1-reach-1\): its old text ends its line and its new text does not, so the next line would join this one/);
+  // Deleting whole lines, or keeping the break, is fine.
+  assert.equal(applyFold(PLAN, [{ ids: ["c1-reach-1"], old: "| U1 | Bench |\n", new: "| U1 | Bench and harness |\n" }]).ok, true);
+  assert.deepEqual(applyFold(PLAN, [{ ids: ["A1"], old: "Builds the bench (R1).\n", new: "" }]).refused, []);
+});
+
+test("apply names every edit an earlier, longer edit overlaps, not just its neighbour", () => {
+  const r = applyFold(PLAN, [
+    { ids: ["a"], old: "- KTD1. **Three saved scripts.** Uses 3 refuters on a P1.", new: "x" },
+    { ids: ["b"], old: "Three saved", new: "y" },
+    { ids: ["c"], old: "Uses 3 refuters", new: "z" },
+  ]);
+  assert.deepEqual(r.refused, ["edits 1 and 2 overlap in the plan: make them one edit", "edits 1 and 3 overlap in the plan: make them one edit"]);
+});
+
+test("apply searches a short old for drift as a whole word and says so: a retired P1 still standing elsewhere is found", () => {
+  const r = applyFold(PLAN, [{ ids: ["c1-coherence-2"], old: "Uses 3 refuters on a P1.", new: "Uses 3 refuters on a P0.", olds: ["P1"] }]);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.check.grep.whole, ["P1"]);
+  assert.deepEqual(r.check.drift.map((d) => [d.value, d.hits.map((h) => h.line)]), [["P1", [25]]]);
+  assert.match(applyFold(PLAN, [{ ids: ["a"], old: "Uses 3", new: "Uses 4", olds: [" "] }]).refused[0], /olds is a list of the short phrases it retires, none blank/);
+});
+
 test("the apply command writes the plan and appends the hunks only on a pass; a failed ID check or a refused edit writes nothing", (t) => {
   const dir = tmpRoot(t);
   const plan = join(dir, "plan.md");
@@ -463,6 +460,7 @@ test("the apply command writes the plan and appends the hunks only on a pass; a 
   assert.equal(pass.status, 0, pass.stderr);
   const out = JSON.parse(pass.stdout);
   assert.deepEqual([out.ok, out.written, out.edits, out.ids, out.hunks, out.driftLines, out.changes], [true, true, 1, ["c1-reach-1"], 1, 1, changes]);
+  assert.deepEqual(out.olds, { searched: 1, wholeWord: [] });
   assert.match(pass.stderr, /still appear on 1 line/);
   assert.ok(readFileSync(plan, "utf8").includes("Uses 4 refuters on a P1."));
   // A second fold appends to the same changes file.
@@ -492,7 +490,15 @@ test("the apply command writes the plan and appends the hunks only on a pass; a 
   assert.equal(bare.status, 0, bare.stderr);
   assert.equal(JSON.parse(bare.stdout).changes, null);
   assert.equal(readFileSync(changes, "utf8"), keptChanges);
+  // A changes file in a folder that does not exist: refused before anything is written, exit 2.
+  writeFileSync(edits, JSON.stringify([{ ids: ["A2"], old: "Builds the bench", new: "Builds and tests the bench" }]));
+  const before = readFileSync(plan, "utf8");
+  const noFolder = run(plan, edits, join(dir, "no-such-folder", "changes-2.json"));
+  assert.equal(noFolder.status, 2);
+  assert.match(noFolder.stderr, /^fold: no fold ran: the changes file's folder .*no-such-folder does not exist/);
+  assert.equal(readFileSync(plan, "utf8"), before);
   writeFileSync(edits, "[{");
   assert.match(run(plan, edits).stderr, /^fold: no fold ran/);
+  assert.match(spawnSync(process.execPath, [join(here, "fold.mjs"), plan, plan, edits], { encoding: "utf8" }).stderr, /^usage: node fold\.mjs apply/);
   assert.match(run(plan).stderr, /^usage: /);
 });

@@ -48,6 +48,8 @@ Each is Briggsy's, from the scoping conversation of 2026-11-09 (see origin: `doc
 - **The how is the pilot's.** "if we can replicate the simplicity of their flow, you dictate how we get there, I'm ATC baby."
 - **Same repo, same engine, same saved plan.** He agreed ("totally agree") that this is the product's next act and not a second project.
 - **Original work only.** Same jobs, our own code, screens and words. Nothing is copied from RightCapital.
+- **The workbench is next after the surplus build, with the yield build inside it.** Briggsy, 2026-11-11, choosing it over building the workbench without the interest-and-dividends work, and over finishing his D7 order first. Governs R12, R31 and U23. (session-settled: user-directed — chosen over a workbench without the yield build: the income each line reads and the room under it are what he named.)
+- **Security is not a driver here.** Briggsy, 2026-11-11: "I really think we are waaaaay over thinking the security aspect of this. We're not keeping my account numbers or passwords to said accounts in this thing. Over complicating. I already have a half dozen calculators with the same info in it. We're creating a solution looking for a problem." His real plan lives on a finished build served at its own address on his laptop (U6); nothing more is built for security in this act.
 - **Single companies count as the whole market.** Settled 2026-11-09 on his answer: no risk number of their own, a plain line saying how much rides on them, and a what-if where they fall by half or to zero. Governs R17, R29.
 - **No positions file import.** Cut 2026-11-09: positions are typed. Governs R28.
 
@@ -69,7 +71,7 @@ Each is Briggsy's, from the scoping conversation of 2026-11-09 (see origin: `doc
 - R9. The many-futures answer stays pinned beside the table and comes from the many-futures run. The table never stands alone as the answer.
 - R10. A row's flows are that calendar year's, and its balances are that year's end. A plan opened in a later year than it was built says which year row one is.
 - R11. A fact reads exactly. A projected figure reads rounded with "~". Every figure reads one money grain.
-- R12. Each year shows the income each line reads and the room left under it: the ACA cliff, each IRMAA step, and the top of the tax bracket. Each room names the income it reads and the year its bill lands. It waits on the yield build (KTD32).
+- R12. Each year shows the income each line reads and the room left under it: the ACA cliff, each IRMAA step, and the top of the tax bracket. Each room names the income it reads and the year its bill lands. U23 builds the yearly yield it needs (KTD32).
 - R13. A year the columns cannot add up says why in words: income above spending that the tool does not save, a required withdrawal larger than the year's need, and the year the money runs out.
 
 **The facts page**
@@ -100,7 +102,7 @@ Each is Briggsy's, from the scoping conversation of 2026-11-09 (see origin: `doc
 **Spending and conversions**
 
 - R30. A spending line can repeat every N years.
-- R31. A Roth conversion can be set to convert up to a chosen line each year in a window. The ACA and IRMAA lines wait on the yield build (KTD32).
+- R31. A Roth conversion can be set to convert up to a chosen line each year in a window. The ACA and IRMAA lines land once U23 has (KTD32).
 
 **The saved plan**
 
@@ -152,8 +154,6 @@ Deferred by this plan, each filed in the register by U1 before the unit that lea
 ### Outstanding Questions
 
 - OQ2. **Blocks U10's bank kind.** Where bank cash belongs is the same call as the open item in build 2's queue ("savings" means three things), which is headed for a council. That ruling can move KTD26's fold, not only the labels. U10's first commit, which adds no kind, and U13 go ahead; the bank kind lands after the ruling.
-- OQ4. **For Briggsy, before Phase 1 starts.** Where does Act 5 sit in his D7 queue (`TODO.md`), and is the yield build, that queue's third bucket, pulled into the act ahead of Phase 4? The pilot's lean: pull it in, because the table's income and the room under each line are what he named. Pulling it in costs a measurement, a council on the yield model, and re-opening the working-year floor's three-reading rule. Until he rules, R12 and R31's two lines are open, and the act does not close with them counted as met.
-- OQ5. **For Briggsy, before his first real save.** Where does the real plan live? Nothing is deployed, so today a real save lands on a dev origin, beside the dev `?vault=` plants. The pilot's lean: a production build on its own origin. U6 adds the guard that works either way.
 - OQ3. **Deferred.** If RightCapital access returns: its year-by-year figures for one plain scenario of his household, lined up against ours as leads. A difference is a question to chase in both tools, never a verdict.
 
 ### Sources
@@ -232,10 +232,10 @@ Read in the code on 2026-11-11. Each item changes something the scoping brief le
 
 **The yield gap**
 
-- KTD32. **The missing yearly interest and dividends are a build this act waits on, not a question.** The engine counts no yearly yield from taxable money (register: *The taxable account's yield never reaches a year's tax base…*), so a year's income, its tax and its room under a line read too low for a household holding taxable or bank money, by an amount nobody has measured. D7 (`docs/product.md`, ruled 2026-10-21) makes that gap a build, and it sits in `TODO.md`'s D7 queue under "Taxes it can already figure". This plan does not move its rank. Until it lands:
+- KTD32. **The missing yearly interest and dividends are built inside this act, by U23.** The engine counts no yearly yield from taxable money (register: *The taxable account's yield never reaches a year's tax base…*), so a year's income, its tax and its room under a line read too low for a household holding taxable or bank money, by an amount nobody has measured. D7 (`docs/product.md`, ruled 2026-10-21) makes that gap a build, and Briggsy pulled the build into this act on 2026-11-11. Until U23 lands:
   - U22 does not start.
-  - U19 offers the bracket-top line only. Its ACA-cliff and IRMAA-step lines are added when the yield build lands, because a conversion sized to a cliff on an income that reads low can cross the cliff in real life.
-  - U7's table carries one stopgap line for a household holding taxable or bank money. The line names the tool as the one leaving yearly interest and dividends out of a year's income and tax, and says real life taxes them each year. It covers only the years the engine prices no yield: retired years, and working years with no investment income entered. Its words are Briggsy's to rule and ship flagged. The yield build's own commit removes it.
+  - U19 offers the bracket-top line only. Its ACA-cliff and IRMAA-step lines are added when U23 lands, because a conversion sized to a cliff on an income that reads low can cross the cliff in real life.
+  - U7's table carries one stopgap line for a household holding taxable or bank money. The line names the tool as the one leaving yearly interest and dividends out of a year's income and tax, and says real life taxes them each year. It covers only the years the engine prices no yield: retired years, and working years with no investment income entered. Its words are Briggsy's to rule and ship flagged. U23's own commit removes it.
 
 ### High-Level Technical Design
 
@@ -271,8 +271,9 @@ Bets this plan made where the brief left room. Each is the pilot's, and each can
 2. **Phase 2, the saved shape and the accounts (U9 to U13).** The inherited-IRA kind comes before the rail: for any household that holds one, the table's income is wrong in exactly the years the forced withdrawals land, and a truthful table outranks more levers.
 3. **Phase 3, the rail (U14 to U17).**
 4. **Phase 4, the rest of version 1 (U18 to U22).**
+5. **The yield build (U23) runs beside the phases.** Its measurement and its council start in Phase 1, because the council's ruling may add a saved field that must ride version 6 (U9). Its build lands before U19's two lines and before U22.
 
-The whole act waits on build 2's close (its U12, its whole-file review and its `/distill`): build 2 is live in intake, the codec, the money picture and the saved shape.
+By Briggsy's ruling the act is next after build 2. The whole act waits on build 2's close (its U12, its whole-file review and its `/distill`): build 2 is live in intake, the codec, the money picture and the saved shape.
 
 ### Risks
 
@@ -280,7 +281,7 @@ The whole act waits on build 2's close (its U12, its whole-file review and its `
 - **The steady table and the front room's band can disagree about what is left in a given year.** They are different runs. U4 measures the gap on the seeds, and the table's heading names its figure as one future.
 - **A working household's what-if may take seconds.** The candidate run's cost is unmeasured. U14 measures it before the rail's copy promises anything about speed.
 - **One lever, two bases.** The rail compares withdrawal order against the plan, and the front-room sheet compares against an even split. KTD14 labels the rail's base; the sheet is unchanged.
-- **The act cannot finish R12, or all of R31, by its own units.** Both wait on the yield build, which this plan neither schedules nor sizes (KTD32). The act's close names them as open if that build has not landed.
+- **U23 is the act's least-known unit.** Its size hangs on a measurement and a council that have not run, and it re-opens an earlier working-year tax ruling. If the council's shape needs a saved field after U9 has landed, that is a second schema step.
 - **Sources not yet read at a primary:** Pennsylvania's treatment of a beneficiary's withdrawal, and the half-year rule for reaching 70½. U11 and U12 read both before use.
 - **A wide table on a laptop.** The widest source set decides the fit, not one screenshot (insight 123). U7 tests the fit at 1536×791, 1280×800 and a phone.
 
@@ -308,12 +309,13 @@ The whole act waits on build 2's close (its U12, its whole-file review and its `
 | U16 | Kept what-ifs | `src/ui/workbench/`, `src/store/` | U9, U15 |
 | U17 | The inherited-IRA pace lever | `src/ui/workbench/` | U13, U15 |
 | U18 | Repeating spending lines | `src/budget/`, `src/intake/BudgetLineItem.tsx` | U9 |
-| U19 | Convert up to a line | `src/engine/taxOverlay.ts`, `src/intake/RothLever.tsx` | U9, U15; the yield build for two lines |
+| U19 | Convert up to a line | `src/engine/taxOverlay.ts`, `src/intake/RothLever.tsx` | U9, U15; U23 for two lines |
 | U20 | Positions and the single-company line | `src/intake/AccountEntry.tsx`, `src/ui/workbench/` | U8, U9 |
 | U21 | The single-company fall | `src/ui/workbench/` | U15, U20 |
-| U22 | Lines and room | `src/ui/workbench/` | U7, U13, the yield build |
+| U22 | Lines and room | `src/ui/workbench/` | U7, U13, U23 |
+| U23 | The yearly yield | `src/engine/taxOverlay.ts`, `src/intake/` | U3; its council before U9 |
 
-Every unit's tests live in the module's sibling `__tests__/` folder. Every unit also waits on build 2's close (Sequencing), and Phase 1 waits on OQ4.
+Every unit's tests live in the module's sibling `__tests__/` folder. Every unit also waits on build 2's close (Sequencing).
 
 ### Phase 1: the table
 
@@ -323,7 +325,7 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
 - **Requirements.** R1.
 - **Dependencies.** None.
 - **Files.** `docs/product.md`, `docs/roadmap.md`, `docs/README.md`, `docs/backlog.md`, `docs/glossary.md`, `CLAUDE.md`, `README.md`, `TODO.md`, `.claude/skills/back-nine-design/SKILL.md`.
-- **Approach.** Add a dated flag in `product.md` on the scope lines this act re-opens ("not a dashboard" stays true of the front room; holdings entry; the lever set). The roadmap's four acts become five, with an Act 5 block in the You-Are-Here table listing U1 to U22. The design law's tone paragraph scopes "never a dashboard" to the front room. Read the register for entries this act absorbs before filing anything new, then file each deferred item under Scope Boundaries with its negative findings. Correct the yield entry's prescription, which still says a disclosure waits on a discussion D7 closed. Every place that says "four acts" names the fifth: `CLAUDE.md`'s map, the repo `README.md`'s act table, and the glossary. Note on the detail-door entry what KTD5 rules. Put OQ4 to Briggsy with the pilot's lean, and set `TODO.md`'s ranking from his answer.
+- **Approach.** Add a dated flag in `product.md` on the scope lines this act re-opens ("not a dashboard" stays true of the front room; holdings entry; the lever set). The roadmap's four acts become five, with an Act 5 block in the You-Are-Here table listing U1 to U23. The design law's tone paragraph scopes "never a dashboard" to the front room. Read the register for entries this act absorbs before filing anything new, then file each deferred item under Scope Boundaries with its negative findings. Correct the yield entry's prescription, which still says a disclosure waits on a discussion D7 closed. Every place that says "four acts" names the fifth: `CLAUDE.md`'s map, the repo `README.md`'s act table, and the glossary. Note on the detail-door entry what KTD5 rules. Set `TODO.md`'s ranking from his ruling: the workbench next after build 2, the yield build inside it.
 - **Test scenarios.** `pnpm verify:doc-stats` passes with the register's new count.
 - **Verification.** Each doc the scoping brief's "Owed to the canonical docs" list names carries its change.
 
@@ -402,13 +404,13 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
 - **Requirements.** R1, R2, R3.
 - **Dependencies.** U5.
 - **Files.** `src/ui/IntakeApp.tsx`, `src/ui/workbench/` (new), `src/ui/ErrorBoundary.tsx` (read), `src/ui/unloadGuard.ts`, `src/ui/devSeeds.ts`, `src/ui/copy.ts`, `e2e/`. `src/ui/App.tsx` is unchanged.
-- **Approach.** KTD31. Entering the room pushes one history entry, and a popstate handler returns to the result phase. The app has no history handling today, and the leave guard listens only for a page unload. A Back press cannot be cancelled, so with an open editor or an unkept what-if the guard pushes the entry again and asks in the app first. The room shows the plan's unsaved mark and its Save control from the one save machine, and the save and backup phases return to the room when entered from it. No plan data rides in the history entry or the address. The dev `?vault=` plant first tries the dev passphrase on any vault already on the origin and refuses to clear one it cannot open (OQ5). The door follows the rule the save control uses for an unresolved answer. A read-only tab gets the room with Keep, Apply and Save withheld. Load `back-nine-design`, `frontend-design:frontend-design` and `emil-design-eng` before any surface work, in the project's precedence.
+- **Approach.** KTD31. Entering the room pushes one history entry, and a popstate handler returns to the result phase. The app has no history handling today, and the leave guard listens only for a page unload. A Back press cannot be cancelled, so with an open editor or an unkept what-if the guard pushes the entry again and asks in the app first. The room shows the plan's unsaved mark and its Save control from the one save machine, and the save and backup phases return to the room when entered from it. Before his first real save, his real plan gets its home: the finished build (`pnpm build`) served at its own fixed address on his laptop by `scripts/serve-dist-with-headers.ts`, where the dev test links do not exist, so a cold-read link on the dev address can never clear it. The door follows the rule the save control uses for an unresolved answer. A read-only tab gets the room with Keep, Apply and Save withheld. Load `back-nine-design`, `frontend-design:frontend-design` and `emil-design-eng` before any surface work, in the project's precedence.
 - **Test scenarios.**
   - The front room's first paint is unchanged, and the entry bundle stays inside `pnpm verify:bundle`'s budget.
   - A failed chunk load shows the room's own retry; the retry loads the room with no page reload, the session still open and the draft unchanged.
   - A real Back press with an editor open asks first and loses nothing.
   - Save from the room returns to the room.
-  - A dev plant on an origin holding a vault it cannot open clears nothing and says so.
+  - The finished build at its own address opens, saves and reopens a plan, and a `?vault=` link there plants nothing.
   - Back from the room lands on the front room with the answer still shown.
   - The door is absent while the answer is unresolved.
   - In a read-only tab the room renders and no control that writes is present.
@@ -639,7 +641,7 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
 
 - **Goal.** A Roth conversion can fill to a chosen line each year in a window.
 - **Requirements.** R31.
-- **Dependencies.** U9, U15. The ACA-cliff and IRMAA-step lines also wait on the yield build (KTD32).
+- **Dependencies.** U9, U15. The ACA-cliff and IRMAA-step lines also wait on U23 (KTD32).
 - **Files.** `src/engine/taxOverlay.ts`, `src/engine/magiLandscape.ts`, `src/shared/model.ts`, `src/engine/simulate.ts`, `src/engine/roth.ts`, `src/engine/solver/`, `src/intake/intakeMap.ts`, `src/intake/RothLever.tsx`, `src/ui/workbench/`, `src/engine/pricingVersion.ts`.
 - **Approach.** KTD28. Reuse the map's existing headroom readers. The amount is clamped by the convertible balance, which excludes inherited ledgers. A line-mode plan with the mode absent is byte-identical to today. The line is a conversion control, so it is stripped everywhere conversions are stripped today: the solver's candidate apply, the two-arm builder and the solve dispatch. The solver's candidate identity and its same-plan check read it too. `SOLVER_CODE_VERSION` is bumped if a scored run can carry it. The rail's Roth lever offers both modes through the one Roth kind.
 - **Test scenarios.**
@@ -647,7 +649,7 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
   - The fixture's income varies across years; a constant-income fixture is not enough (insight 139).
   - At each cliff the root-find lands under the line and never on the far side.
   - A year whose income is already over the line converts nothing.
-  - Before the yield build lands, the bracket top is the only line offered.
+  - Before U23 lands, the bracket top is the only line offered.
   - Under a regime with no ACA cliff, that line is not offered.
   - The IRMAA line is judged against that year's own schedule, and the bill lands two years later.
   - Amount-mode plans are byte-identical before and after.
@@ -689,15 +691,31 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
 
 - **Goal.** Each year shows the income each line reads and the room under it.
 - **Requirements.** R12.
-- **Dependencies.** U7, U13, and the yield build (KTD32).
+- **Dependencies.** U7, U13 and U23 (KTD32).
 - **Files.** `src/ui/workbench/`, `src/engine/taxOverlay.ts` (the sink's fields), `src/engine/magiLandscape.ts` (read), `src/ui/copy.ts`.
-- **Approach.** Do not start until the yield build has landed (KTD32). The room for each line is recorded in the year loop from the map's own readers, in that year's frame, and the table prints it. There is no single "nearest line" figure.
+- **Approach.** Do not start until U23 has landed (KTD32). The room for each line is recorded in the year loop from the map's own readers, in that year's frame, and the table prints it. There is no single "nearest line" figure.
 - **Test scenarios.**
   - Each room equals the line minus the recorded income for that line in that year, on a fixture whose income varies by year.
   - The IRMAA room names the year its bill lands.
   - Under a regime with no ACA cliff the ACA room is absent, not zero.
   - A year over a line shows how far over, in words.
 - **Verification.** Briggsy's cold read. No stopgap line about yield is left on the table.
+
+#### U23. The yearly yield
+
+- **Goal.** The engine counts the interest and dividends taxable money pays each year, in every reader of that year's income.
+- **Requirements.** R12, R31.
+- **Dependencies.** U3. Its council rules before U9, so any saved field it needs rides version 6.
+- **Files.** `src/engine/taxOverlay.ts`, `src/engine/simulate.ts`, `src/shared/model.ts`, `src/engine/pricingVersion.ts`, `src/engine/solver/solverCodeVersion.ts`, `src/intake/`, `src/ui/copy.ts`, `docs/backlog.md`, `docs/architecture.md`.
+- **Approach.** KTD32. Follow the register entry's own prescription, in its order. First measure the omitted yield's income on every shipped seed priced for the ACA before 65 and every seed priced for IRMAA; that needs a sourced yield split, never a typed default. Then a council rules the model's shape; the entry's lean is a yield share of the taxable balance, taxed each year by its kind, with basis credited for what is reinvested, on the one shared market draw. Under D7 the household's own yield is used if it is entered and asked for if it is not. Then build. The build re-opens the working-year floor's three-reading rule, as that entry's council recorded. It moves saved plans' answers, so it appends a pricing-ledger row and bumps `SOLVER_CODE_VERSION`. Its commit removes U7's yield stopgap line and closes the register entry.
+- **Test scenarios.**
+  - A hand-derived fixture: one taxable account, a stated yield, three years; each year's ordinary income, tax and end basis match the hand figures.
+  - The yield appears in every reader of the year's income: income tax, Social Security's taxable share, the ACA income, the IRMAA income two years on, and the committed-income frame (insight 143).
+  - Basis is credited for reinvested yield, so a later sale's gain is not taxed twice.
+  - A household with no taxable or bank money is byte-identical before and after.
+  - A working year with investment income entered is not charged for that income twice.
+  - A household just under the ACA cliff without yield lands over it with yield, on a fixture built to straddle the line.
+- **Verification.** The measurement's table is in the register entry before the council sits. A mutation pass on the yield arithmetic.
 
 ## Verification Contract
 
@@ -708,14 +726,14 @@ Run from `projects/the-back-nine`:
 - `pnpm verify:csp`: no new network call, and no new worker script.
 - `pnpm verify:fit`: the room's arms at 1536×791, 1280×800 and a phone.
 - `pnpm verify:doc-stats`: after every docs change, this plan included.
-- Every engine unit (U2, U3, U11, U12, U19) proves byte-identity on every shipped seed with its feature absent, and runs a mutation pass on its new arithmetic.
+- Every engine unit (U2, U3, U11, U12, U19, U23) proves byte-identity on every shipped seed with its feature absent, and runs a mutation pass on its new arithmetic.
 - New arithmetic gets a fixture derived by an independent path before it ships: the steady path, the inherited-IRA minimum, the repeat's compile, the convert-to-a-line landing.
 - Every new surface gets a Caddie walk and Briggsy's cold read. The oracle judges correctness; his read judges tone.
 - Each phase ends with a whole-file review, with an adversary and every finding verified, then `/distill`.
 
 ## Definition of Done
 
-- Every requirement R1 to R32 is met. R12 and R31's two lines are listed as open, never as met, until the yield build lands (KTD32, OQ4); the bank kind is listed as open until OQ2 is ruled.
+- Every requirement R1 to R32 is met. The bank kind is listed as open until OQ2 is ruled.
 - Every unit's test scenarios exist and pass, and each verification line is met.
 - The roadmap's You-Are-Here table carries each unit's status.
 - Every deferred item is a register entry with its negative findings.

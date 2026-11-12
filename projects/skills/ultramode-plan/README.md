@@ -81,7 +81,18 @@ Every helper runs on Opus at the `xhigh` effort level. A run starts:
 - 8 to 11 reviewers in check round 1 (11 to 14 on a high-risk plan; 2 fewer when the plan has no code), and 1 to 3 voters per finding;
 - in rounds 2 and 3, only the reviewers whose ground a fix touched.
 
-No real run has been measured yet. The first one will put its helper count and its share of the weekly usage meter here.
+**The first real run, measured (2026-11-11, the Back Nine's Act 5 workbench plan, a Deep plan of 22 units and 731 lines, commit `952f5f04`).** It did not finish in one session: the main session's window reached its 50% no-new-fan-outs line after check round 1 was folded, so round 2 never ran.
+
+| Stage | Helpers | Helper tokens |
+|---|---|---|
+| Contract brief | 1 | 0.2M |
+| Research | 5 | 1.5M |
+| Deepen, run 1 (stopped on a goal finding) | 5 | 0.6M |
+| Deepen, run 2 | 96 | 10.7M |
+| Check, round 1 | 141 | 15.7M |
+| **Total** | **248** | **28.8M** |
+
+The weekly usage meter went from 4% to 14% with every other session idle, about 10 points. The main session's window went from 5% to 50%.
 
 ## What is inside
 
@@ -101,4 +112,4 @@ Tests: `node --test "projects/skills/ultramode-plan/**/*.test.mjs"` from the rep
 2. One code review of this page's skill file and `lib/inputs.mjs`.
 3. On the next sizable job, `ce-plan` plans the same job. Three skeptical readers get both plans with the labels removed and say which they would build from. Briggsy reads both, and his read decides. If this skill's plan is not clearly better, the skill is shelved and `ce-plan` stays.
 
-Result: not yet run.
+Result so far: step 1 ran on 2026-11-11 and stopped one stage short (see "What a run costs"). The plan is committed with a receipt that says its check is incomplete. Steps 2 and 3 have not run.

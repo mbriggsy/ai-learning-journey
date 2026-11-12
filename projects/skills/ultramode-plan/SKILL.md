@@ -17,7 +17,7 @@ The first word is the plan's path: a `.md` file that does not exist yet, inside 
 
 - **Ask Briggsy nothing.** A bet you had to make goes in the plan's assumptions. A stop is a report, never a question.
 - **Before each of the Workflow launches, read the window:** `node "$HOME/.claude/skills/window/window.mjs" "$CLAUDE_CODE_SESSION_ID"`. When its line says no new fan-outs, or to wrap up, launch nothing more: report where the run stopped. Finish a fold already begun first.
-- **Nothing resumes a run.** A run that dies or stops at the window is started over from its stage in a new session: with the plan already at its path, that is the deepen or the check, after steps 1 and 2 again.
+- **Nothing resumes a run.** A run that dies or stops at the window is started over from its stage in a new session: with the plan already at its path, that is the deepen or the check, after steps 1 and 2 again. A window stop after the plan is written still commits it as step 8 does, so the work is not left loose in a shared tree: the receipt's first line then reads `planned, deepened, check incomplete: <what did not run>`.
 - **Every helper is Opus with its effort set.** The three scripts do it themselves; the one Agent call in step 2 names `model: "opus"` and `effort: "xhigh"`.
 - **These Workflows run more than ten helpers by design.** Typing this skill is the go for that.
 - **Helpers also get the latest message Briggsy typed, above their task.** If he typed anything after this command that changes the job, add it to `request` in the facts before the next launch.

@@ -1545,7 +1545,10 @@ test("a plan another session committed after landing's copy stops the landing, n
   const msg = message(load(rec._path));
   // land's copy landed, then its commit failed and another session's commit took the plan.
   const r = load(rec._path);
-  const blob = git(w.repo, ["hash-object", join(rec.dir, "plan.md")]).trim();
+  // The bytes go to git on stdin: a run folder's path can pass 260 characters, which git on Windows
+  // cannot open (this line failed with UPLAN_TEST_TMP set to a session scratchpad, 2026-11-11).
+  const blob = spawnSync("git", ["-C", w.repo, "hash-object", "--stdin"], { input: readFileSync(join(rec.dir, "plan.md")), encoding: "utf8" }).stdout.trim();
+  assert.match(blob, /^[0-9a-f]{40}$/);
   r.landing = { copying: blob, tmp: join(dirname(w.plan), ".new-plan.md.landing.tmp"), at: "2026-11-08T00:00:00.000Z" };
   writeFileSync(r._path, JSON.stringify(r, null, 1));
   writeAt(w.plan, readFileSync(join(rec.dir, "plan.md"), "utf8"));

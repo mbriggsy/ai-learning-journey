@@ -3,7 +3,7 @@ title: A rule about the platform is a map until a run measures it, whoever wrote
 date: 2026-10-21
 phase: our-setup U2 (fixture harness, platform probes, hooks CI)
 modules: []
-tags: [probes, platform-behavior, hooks, harness, code-review, adversarial-verify, measurement, powershell, permission-denials, model-switch, verdict-hash]
+tags: [probes, platform-behavior, hooks, harness, code-review, adversarial-verify, measurement, powershell, permission-denials, model-switch, verdict-hash, workflow-runtime, script-args, zero-helper-probe, msys-no-pathconv, final-turn-only]
 ---
 
 *The probe and harness code this lesson came from was flushed on 2026-10-29 (`git show bd5ee4a2^:projects/hooks/probes/`); the lesson stands on its own.*
@@ -42,3 +42,11 @@ A sentence about platform behavior is a map, whoever wrote it: the docs, the har
 - Adversarial verifiers judging OS, shell, CLI or runtime behavior from source alone: have them say "not run", then measure.
 - Any test double that encodes an outside system (an HTTP mock, a fake clock, a stub CLI). It stays a map until a check against the real system agrees.
 - "Did the new version change it?" questions: check the model and the permission record before blaming the version.
+
+## Extended (2026-11-12): two probes that started no helper settled a design, and `permission_denials` covers only the last turn
+
+- **Measure before designing.** The plan step's queue said "test whether a script can read a file" before deciding how a Workflow script gets its inputs. A 13 ms Workflow showed the script runtime has no Bun, fetch, require or `import()` (`import()` is refused when the script is parsed), and that `args` is a plain global, undefined when none is passed. An 8 ms one showed that string data holding `import('x')` or `Date.now()` is read as data. That turned "cut the args" into "bake them into the script's copy", and one refused launch of a real 157 KB baked copy proved it end to end with no helper started (`2da3ab65`).
+- **Two more measured facts.** Workflow helpers have neither the Agent nor the Workflow tool, so a skill that runs Workflows cannot be measured from inside one; a test arm for it must be a top-level session. And Git Bash rewrites a `claude -p "/skill ..."` prompt into a file path unless `MSYS_NO_PATHCONV=1` is set.
+- **A correction to item 3 above.** `claude -p`'s `permission_denials` lists only the final turn's denials: U1's probe read 8, then 0, for the same decoys. A gate reading it alone passes a session whose denials came earlier. It is still worth reading when a run surprises you, but read the transcript for the whole run.
+
+What it adds: a probe that starts no helper costs milliseconds and can change a design before any code is written. And a platform record can cover less than its name says; measure what it covers before a gate relies on it.

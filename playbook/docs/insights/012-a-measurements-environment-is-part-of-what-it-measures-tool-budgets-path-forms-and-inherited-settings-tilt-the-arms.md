@@ -3,7 +3,7 @@ title: A measurement's environment is part of what it measures; tool output budg
 date: 2026-10-31
 phase: the brief recall fix (the plan check, U3 and U6)
 modules: [projects/skills/distill-and-brief/brief/bench/rescore.workflow.js, projects/skills/distill-and-brief/brief/bench/make-rescore.mjs, projects/skills/distill-and-brief/docs/plans/brief-recall-fix-plan.md]
-tags: [measurement, environment, bench-vs-real, tool-output-limit, preview, grep-head-limit, absolute-paths, glob, short-path, effort, inherited-settings, workflow]
+tags: [measurement, environment, bench-vs-real, tool-output-limit, preview, grep-head-limit, absolute-paths, glob, short-path, effort, inherited-settings, workflow, cost-gate, win-rule, head-to-head, secrets, api-keys, public-repo]
 ---
 
 ## Problem
@@ -33,3 +33,12 @@ Before a measured run, list every way the bench differs from real use (paths, de
 - A/B harnesses that run in CI containers but ship to user machines.
 - Prompt or recipe evals that use absolute paths, mock tools, or a model setting other than production's.
 - Any "tighten" or "limit" step feeding a size-limited sink: a preview, a context window, a message cap.
+
+## Extended (2026-11-12): a cost gate and a win rule tilt the arms too, and a recorded environment is published with the bench
+
+From the plan step's head-to-head design (cut on 2026-11-11 before it ran):
+- **A cost gate that one arm can dodge.** A gate on the main session's window rewards whichever arm moves its work into helpers: b9-6's 16 helpers summed 3,256,161 tokens counted by peak, but about 20.6M at price weights. Gate on a cost both arms pay the same way.
+- **A win rule that tests beating, not matching.** "Our worse run against their better run" asks whether the new method beats the old one. Under a toy model, a method exactly as good as the incumbent passes it 30.9% of the time.
+- **The environment as a secret store.** A bench that records a child session's environment would publish live API keys: this laptop's sessions carry two third-party API keys, stripping `CLAUDE`-prefixed variables leaves them in place, and the repo is public. Record variable names, never values, and scan every committed bench file (the hybrid plan's KTD24, found by the check's security lens).
+
+What it adds: the rules of a comparison (what it gates on, what counts as a win) are part of its environment too, and so is what it writes to disk. Before the lean plan's trial, state what its readers' picks must show: that ours is clearly better, not that it beat one run.

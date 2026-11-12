@@ -3,7 +3,7 @@ title: A blind measurement is blind only where a check proves it; answers leak t
 date: 2026-10-31
 phase: the brief recall fix (U4, U5 and U6)
 modules: [projects/skills/distill-and-brief/brief/bench/audit-transcripts.mjs, projects/skills/distill-and-brief/brief/bench/build-copies.mjs, projects/skills/distill-and-brief/brief/results/applies-when-lines-2026-10-31.json]
-tags: [blindness, benchmark, leakage, git-blob, audit, allowlist, denylist, workflow, transcripts, judges, scratch-files, measurement]
+tags: [blindness, benchmark, leakage, git-blob, audit, allowlist, denylist, workflow, transcripts, judges, scratch-files, measurement, deny-rules, short-names, 8.3-names, path-spellings]
 ---
 
 ## Problem
@@ -37,3 +37,9 @@ Blindness is a property proved after the run, not one asked for before it:
 - Eval sets built from current docs or code when the eval measures a past decision.
 - Any agent told "don't read X": audit the transcript, by an allowlist.
 - Holdout data kept next to the data being tuned on.
+
+## Extended (2026-11-12): a deny rule certifies only the spellings it names
+
+In U1's probe for the plan step's bench, the live repo's 8.3 short name (`AI-LEA~1`) walked a Write past every long-form deny rule. Measured: the rules match across case and slash direction, but not across an 8.3 name. The fix writes 2^k forms of each path (k is the number of its parts that have a short name), plus each session folder's own short name. Its lookup refuses a short input: a repo path given in short form silently dropped every long-form rule, and the probe, built from the same short path, would still have passed (round-1 review). The probe's own gap is insight 023.
+
+What it adds: a guard set before the fact is only as wide as the spellings it lists. The audit after the fact has to normalize every spelling before it compares, the same allowlist shape this insight's Key Insight asks for.

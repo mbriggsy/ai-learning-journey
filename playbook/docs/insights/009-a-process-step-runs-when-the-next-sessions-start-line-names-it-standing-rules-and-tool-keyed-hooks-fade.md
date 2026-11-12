@@ -3,7 +3,7 @@ title: A process step runs when the next session's START HERE line names it; sta
 date: 2026-10-31
 phase: dev-process
 modules: [playbook/principles.md, projects/skills/squeaky-clean, projects/hooks]
-tags: [process, flow, start-here, todo, standing-rules, hooks, enforcement, brief, distill, deepen, plan-check, squeaky-clean, sizable]
+tags: [process, flow, start-here, todo, standing-rules, hooks, enforcement, brief, distill, deepen, plan-check, squeaky-clean, sizable, start-check, wording, whole-queue-sweep, session-start-cost]
 ---
 
 ## Problem
@@ -38,3 +38,9 @@ To make a recurring step stick, put its name in the hand-off the next session ex
 - Any cadence that should recur: doc audits, the stats-site refresh, "verify once" checks owed in a TODO.
 - Any hook or check keyed on a skill or tool name: re-check it whenever the work's usual path changes.
 - A project TODO's "standing cadences" section: if a cadence matters for the next job, copy it into that job's START HERE.
+
+## Extended (2026-11-12): the start check's wording is its cost
+
+A read of 19 session starts found that the start check's cost came from its wording, not from the checking. "Verify every claim", read literally, launched two whole-queue sweeps (4.42M and 1.15M helper tokens) that found no item whose status had changed. 16 of the 19 starts found nothing wrong at all, and the rest found small slips made at close time that only opening the item's own files catches. The rule since 2026-11-08 (Briggsy's ruling): START HERE, the close's "Check at start" line, git since the close, and the item's own files and lines before building it; no whole-queue sweep unless he asks.
+
+What it adds: the same literal reading that makes a START HERE step run makes its words its cost. A session does what the line says, at the size the line says, so word a start check by its scope.

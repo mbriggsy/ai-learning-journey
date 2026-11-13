@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-13, b9-3's close):** walk 6's fix round is three commits — `e6e9c364` (the council's form), `3000a04c` (R1's typed-below line on the Result and the gate; seed and vault `datesavedtyped`) and `865e7426` (R3's sheet half); what each refined and left out is `b9-build2-surplus\u11-walk6-round\ROUND.md`. In order: (1) the four-bucket route arm (item 1's ▶ NEXT has the prescription); (2) the round's review over all three commits, the whole files, with an adversary, every finding verified, and a mutant pass with predictions written first; (3) walk 7 on it (the card is HELD for R1 until it is walked); then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the list is far past 10).
+▶ **START HERE (2026-11-13, b9-4's close):** walk 6's fix round is built and reviewed: `e6e9c364`, `3000a04c`, `865e7426`, council (6)'s four-bucket arm `972c3618`, and the round review's fixes `360bea64`; the record is `b9-build2-surplus\u11-walk6-round\ROUND.md`. In order: (1) the pair fix — name the typed figure the "now" left over rests on, on the Result AND the gate (item 1's ▶ NEXT has the prescription); (2) walk 7 on the committed tree (the card is HELD for R1 until it is walked); then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the list is far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,37 +94,40 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **the four-bucket arm, then the round review, then walk 7** (START HERE). Walk 6's fix round is
-     `e6e9c364` (council `wf_22858e04-f7a`'s checklist), `3000a04c` (R1: `workingYearCostTypedBelowLine` /
-     `workingYearCostTypedBelowDoor`, cause `'w-typed-below'`, `ReentryAnswerSentences.typedBelow`; the moved-slot
-     choice pinned — two lines on the gate, one slot on the Result with the moved clause in place of the credit
-     sentence unless a rules line hosts it; the register entry's R1 bullet has the words) and `865e7426` (R3:
-     `workingYearLeftOverWaitingWords`, `LEFT_OVER_WAITING_COPY`). Refinements and omissions: `ROUND.md`. Still owed,
-     each a prescription:
-     - **The four-bucket route arm (council (6)):** the route's bottom ≤ 791 at REAL after `settleLayout` with FOUR bucket
-       rows (pre-tax, Roth, taxable, HSA) and both benefit rows, on CI Linux. No seed carries four buckets (taxable rides
-       only spine seeds, `devSeeds.ts` 737/802/966/1004; no seed has an HSA): add a `datesavedrisenlater` twin with a
-       brokerage and an HSA account (`KIND_TO_BUCKET`, `intakeMap.ts:85`), measure its stale line first (an HSA deposit
-       moves year 0's left over, so every figure in the line is re-read from the composer, never assumed), add the twin
-       to the seed enumerations (`devSeeds.test.ts`' carrying list and its two sweep counts, now 18;
-       `stalenessExposure.test.ts`' `W_KEYED`), and an arm beside the eight in `e2e/vertical-fit.spec.ts`'s
-       `PAY_CHECK_UNLOCKS`; also hit-test the sheet's "Yes" and Keep after the Result's door opens it (council (6);
-       `scrollIntoView` is not a hit-test, insight 124). Run only the unlock arms locally first: `pnpm verify:fit -g
-       unlock.line`, pinned (8/8 at `3000a04c`, 1.1 min).
-     - **The round review:** all three commits' whole files, an adversary, every finding verified, and a mutant pass with
-       predictions written first (the walk-5 round's shape, `u11-walk5\ROUND.md`); the R10 sweep and per-key idcheck at
-       each `src` commit (`e6e9c364`, `3000a04c`, `865e7426`: 42 of 42 identical against `walk5`, `out\sweep-walk6round.json`,
-       `sweep-walk6r1.json`, `sweep-walk6r3.json`; `datesavedtyped` is candidate-only). Two calls for it to judge, both in
-       `ROUND.md`: R3 keys B's words on `workingYearCheckAtQuote`, so a NON-"saved" answer waiting on W on B still reads
-       "Until then, no money left over is added" (at the quote its question isn't asked either); and the residual filed
-       on the retype entry (a typed figure stale on its reading rides W's stale line, which never names the gap below
-       the spending).
+     ▶ NEXT: **the pair fix, then walk 7** (START HERE). Walk 6's fix round is `e6e9c364` (council `wf_22858e04-f7a`'s
+     checklist), `3000a04c` (R1, the typed-below line), `865e7426` (R3's sheet half); `972c3618` is council (6)'s
+     four-bucket arm and sheet hit-test (seed and vault `datesavedfourbuckets`; the route ends at 753.7 px of 791 locally
+     with four bucket rows, 682.0 with two; each arm logs `[route fit]` for CI Linux); `360bea64` is the round review's
+     fixes (no P0; the Keep list's state item, B's waiting words under every answer, R1's one-year pins, the no-quote
+     door, the room's floor, the round's CSS asserted in the real browser; 9 of 9 mutants red as predicted). Everything
+     the review deferred is the register's Tier 2 *The walk-6 round review's deferred findings…* and the retype
+     residual's measurement. Still owed, each a prescription:
+     - **The pair fix (the review's L3-3 / L1-5 / L2-5, P2, clarity, refuter-confirmed not rosy):** where a fresh typed
+       W sits below the quote AND the left over moved, the "now" figure ("$28,985 now, not the $16,985 you answered
+       at") is year 0 at the typed figure ($72,000), which no sentence names, beside year 0 at the quote ("At $84,000 a
+       year, your first working year, 2026, has $16,985 left over."). On the Result: in `workingYearCostTypedBelowLine`
+       (`src/intake/workingYearLeftOver.ts`, the `credit` line's moved branch), replace `workingYearLeftOverMovedClause
+       (moved)` with a new slot naming the typed figure (e.g. `slots.stalenessLeftOverClauseAt(typed, stored, live,
+       min)`: "At your $72,000 figure, the money left over in your first working year is $28,985 now, not the $16,985
+       you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the
+       two."). On the gate: the moved line drawn after R1's line (`stalenessLeftOverMoved`, composed for the gate from
+       `workingYearLeftOverMovedText` in `src/ui/IntakeApp.tsx`'s hydrate) names the same figure wherever
+       `workingYearCostTypedBelowQuote` holds on a fresh W ("…It’s $28,985 now at your $72,000 figure, so…"; a twin
+       slot). Pin each by hand on `datesavedrisenlater` retyped to $84,000 ($26,985 at $84,000, both hosts); move the
+       coordinate-tap arm's Result expectation (`e2e/vertical-fit.spec.ts`, its `slots.stalenessLeftOverClause('16,985',
+       '28,985', '16,985')` line) to the new slot; add both slots to `copyGuard.test.ts`'s slot lists (CRLF: Edit tool);
+       then run every e2e arm that reads `.cs-paycheck-note` or `.reentry-notes`, or the whole `verify:fit`
+       (`docs/landmines.md`, the fit gate's first entry).
      - **Walk 7** reads the round on the committed tree, the color-blind check re-run (the labels, the list, the route),
        and the council's yours-to-close calls: the dt register (one step up, semibold, no colon), the phone order (the
-       route after the buttons), the segments kept on the gate; the dissent's flip conditions are in the council row.
-       The walk spec now crops `reentry-door` beside `reentry-notes`. R1's surfaces: the gate is `vault:datesavedtyped`
-       (`walkVaultReturn` walks it unedited) and the Result is `intake:typedbelow`'s `result-typed-below` (it now
-       asserts the line); B's seat is `datesavedrisenshort`'s.
+       route after the buttons), the segments kept on the gate; the dissent's flip conditions are in the council row
+       (one is "the route under the buttons misses 791 on the four-bucket read-back on CI Linux": it does not — CI run
+       43385771950 at `972c3618` logged 753.7 of 791 px, the same as Windows, and 682.0 on every two-bucket arm). The walk spec crops `reentry-door` beside `reentry-notes`. R1's
+       surfaces: the gate is `vault:datesavedtyped` (`walkVaultReturn` walks it unedited) and the Result is
+       `intake:typedbelow`'s `result-typed-below`; B's seat is `datesavedrisenshort`'s (its words are new in
+       `360bea64`: "…Updating it to your spending figures or more won’t change that: at that cost your first working
+       year has nothing left over."); the W row's count list now names "any state income tax on pay" where the help
+       asks for it (unpriced, PA). Add `vault:datesavedfourbuckets` to the walk's gates.
      **Filed by the walk-5 round's review for U12** (`wf_c037b423-7f0`; the record is `u11-walk5\ROUND.md` § "The
      round review"; each finding goes into the register with its prescription):
      - (bh)'s "Because that $16,985 depends on your $X figure" names the HELD figure, which need not be the one the
@@ -283,31 +286,38 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-13 (b9-3: R1's line and R3's sheet half, on top of b9-2's `e6e9c364`; b9-2's block pruned into it):**
+**SESSION 2026-11-13 (b9-4: 3000a04c's CI red, council (6)'s four-bucket arm, the walk-6 round review and its fixes; b9-3's block pruned into it):**
 
 State at close:
-- `3000a04c` (R1) and `865e7426` (R3) committed and pushed. At each: typecheck exit 0, lint exit 0, the full suite exit 0
-  pinned to the P-cores (its count lives under `verify:doc-stats`), `verify:doc-stats` exit 0, the e2e specs typecheck
-  clean through the scratch tsconfig but `chart-text.spec.ts`'s seven pre-existing errors, the R10 sweep and per-key
-  idcheck 42 of 42 identical against `walk5`. At `3000a04c` also `pnpm build` exit 0 and `verify:fit`'s eight unlock arms
-  8/8 pinned (`-g unlock.line`); the whole `verify:fit` was NOT run locally (CI runs it). `e6e9c364`'s CI run
-  43369521005 passed.
-- One mutant planted, in R3's decider (red on its two pins); R1 has no mutant pass yet — the round review owes it.
+- `9e9fec73` (3000a04c's CI red: the coordinate-tap arm read the moved line where R1's line now holds the slot),
+  `972c3618` (council (6)'s four-bucket arm + the sheet hit-test) and `360bea64` (the round review's fixes) committed and
+  pushed. At `360bea64`: typecheck exit 0, lint exit 0, `pnpm build` exit 0, the full suite pinned exit 0 but for the
+  citation arm before `doc:reanchor 78364c9e` (its file re-run 58/58 after), `verify:doc-stats` exit 0, the e2e specs
+  typecheck clean but `chart-text.spec.ts`'s seven pre-existing errors, `verify:fit -g unlock.line` pinned 9/9, the R10
+  sweep + per-key idcheck 42 of 42 identical against `walk5` (`sweep-fixround6.json`; candidate-only `datesavedtyped`,
+  `datesavedfourbuckets`). CI: `9e9fec73` (43380104699) and `972c3618` (43385771950) passed; `865e7426` and `78364c9e`
+  failed on the coordinate-tap arm `9e9fec73` fixed.
+- The round review: 4 lenses + 4 refuters (Opus xhigh, de-authored Agents writing to files), the record in `ROUND.md` §
+  "The round review" and `u11-walk6-round\b9-4\review\`. Mutants: 3 of 3 on the four-bucket arm, 9 of 9 on the fixes,
+  every one as predicted (`u11-walk6-round\b9-4\mutants\`).
 
-Next is START HERE. b9-4 is the successor (handoff mode: b9-4 to b9-8 live and idle). This session closed at the 50%
-window line: the four-bucket arm is a new seed whose figures must be measured, then a CI-Linux read, and the round review
-after it is a fan-out that cannot start past 50%.
+Next is START HERE. b9-5 is the successor (handoff mode: b9-5 to b9-8 live and idle). This session closed past the 50%
+window line: the pair fix is a two-host copy change with a new slot each, and walk 7 is a fan-out.
 
 **Check at start:**
-- the CI runs: `gh run view 43375528470 --json status,conclusion` (`3000a04c`) and `gh run view 43379005579 --json
-  status,conclusion` (`865e7426`), both in progress at this close; the first carries `datesavedtyped`'s unlock arm on CI
-  Linux;
+- the CI run on `360bea64`: `gh run view 43391533722 --json status,conclusion` (in progress at this close; it carries
+  the round's new CSS assertions on CI Linux);
 - the ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
-
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 
-**LANDMINES (the four-bucket arm, the round review and walk 7):**
+**LANDMINES (the pair fix and walk 7):**
+- **A change to what a slot shows reds the arms of the cause it displaces** (`docs/landmines.md`, the fit gate's first
+  entry): the pair fix changes both hosts' moved words, so run every arm reading `.cs-paycheck-note` /
+  `.reentry-notes` (the coordinate-tap arm, `datesavedmoved`, the unlock loop) or the whole `verify:fit`.
+- **`pnpm doc:reanchor <BASE>` moves a citation written FRESH in the tree a second time** (`docs/landmines.md`): b9-4 ran
+  it against the session's base (`78364c9e`, 290 edits) and hand-restored the four citations it had re-pointed by
+  content that session. Run it against the commit before your first src edit, then restore your own fresh ones.
 - **`netstat` lists 127.0.0.1:4190 as LISTENING under PID 0 after a fit run (b9-3, b9-2).** Those rows are ghosts: `curl
   --max-time 5 http://127.0.0.1:4190/` refuses (exit 7). Probe the port with `curl` before reading a walk or fit failure
   as a stale server's.
@@ -1104,6 +1114,10 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - Measure a holds finding against its HONEST counterpart, on more than one household, before the card names it. Walk 6's R1 said the retype 'flips' A's headline from no date to 2035; the engine showed the honest 'Yes' at $90,000 flips it identically, so the flip died. The rosy residue lived under the rounding (lower bound 0.87 against an honest 0.85 at zero margin) and, on B, one rung of words ('about 8 of 10' against 'about 7 of 10'). Run the counterpart write at the same seed and tier (`u11-walk6\measure\R1-MEASURE.md`). *(Source: b9-1's close, 2026-11-12.)*
 - Two URLs from one provider are one witness. The ACA laws leg called the empty presentment feed 'corroborated' by govinfo BILLSTATUS; its refuter showed both are Library of Congress data with the same one-day lag, so the 11-12 gap stayed open until the House Clerk, the Senate vote menu and whitehouse.gov closed it (`wf_d2a279ae-84b`; the record's nothingEnactedChain[4]). Count independence by publisher, never by URL. *(Source: b9-1's close, 2026-11-12.)*
 - Split a paragraph's growth into words and form by re-rendering it, before a council argues form. Walk 6's R6 refuter re-rendered both walks' paragraphs from `copy.txt` in the project's own font at the captured column (every height within 1 px) and removed the breaks and the semibold one at a time: about 89% of the growth was added words, so the council ruled structure and routing, not spacing. Extends the candidate 'Measure a form cure's height before walking it'. *(Source: b9-1's close, 2026-11-12.)*
+- A slot change reds the arms of the cause it displaces, which a run of the new arm alone never reaches. R1 (`3000a04c`) let the typed-below line take the Result's standing slot; the coordinate-tap fit arm (`?seed=date`, $72,000 typed under $84,000) still expected the moved line, and CI's whole `verify:fit` redded it at both sizes (run 43375528470) while the eight unlock arms ran green locally. Fix (`9e9fec73`) and the landmine (`docs/landmines.md`, the fit gate): grep `e2e/` for every arm reading the slot and run each whose draft reaches the new predicate.
+- A "costs listed below" test is only as honest as the list it points at. Keep's condition on the W row (`workingYearCostKeepCondition`) tested a list with no state income tax, while the Result door's list under the same $6,000 test had it; a PA household following the W row kept a figure ~$4,600 too low (every working year $2,100 cheaper). Two lists for one test drift; `360bea64` made them one function (`workingCostHelpCountItems`). Found by two review lenses independently (L1-4, L3-1), refuter-measured.
+- A decider keyed on one answer leaves every other answer reading the old promise. R3's sheet half keyed B's "no until" words on `workingYearCheckAtQuote`, which reads a "saved" answer only, so an unanswered, spent or not-sure B kept "Until then, no money left over is added" — though no honest update brings the question back under any answer. Three of four review lenses found it (the builders had flagged it as a call). Fix: read the predicate's real input (year 0 at the quote), never the narrowest witness.
+- Review seats that write their reports to files keep the parent's window small: 8 Opus xhigh seats (4 lenses, 4 refuters) over three commits cost the parent about 40K tokens of returns; the refuters re-derived every finding, narrowed two severities, widened two (R3 found `datecoststale` has no other test; R2 found the gate shows the same unlabelled pair), refuted none. The R10 sweep ran beside them pinned at 20.8 min against ~17 alone, identity unaffected: a CPU-shared identity run costs time, never correctness.
 
 ## Driving the app
 

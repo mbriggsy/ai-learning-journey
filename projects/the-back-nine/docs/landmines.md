@@ -230,6 +230,8 @@ even when one exists; the plain `/` route is the Unlock check.
 
 ## The unit test suite
 
+- **(b9-8, 11-09) A `// @ts-expect-error` arm in a test still RUNS.** The directive silences tsc, not execution: put
+  compile-only arms inside a function that is never called (`workingYearTaxDisclosure.test.ts`, `_compileOnly`).
 - **(b9-4, 11-09) `WorkingYearCostStaleSentence` carries `held` on its unrisen arm too** (`src/intake/workingYearQuote.ts`): any `toEqual`
   on a `rose: false` value needs it.
 - **(b9-5, 11-08) A new dev seed moves more than its own arm's count:** `datesavedrisen` added 3 tests (parametrized seed arms),
@@ -488,6 +490,9 @@ is a guess a verifier must check, never a fact
 
 ## Caddie walks and fleets
 
+- **(b9-8, 11-09) A seat's arithmetic can borrow the wrong quote.** `stillWorking` answers
+  `employerPlanCoversRetiredMember: true` (`src/ui/devSeeds.ts`), so the pay-side premium is entered nowhere; walk 5's
+  hunter priced it from the $1,100 after-work reference quote. Check the seed's own fields before a refuter carries a figure.
 - **(b9-5, 11-09) Seats that write their reports to files never truncate** (walk 4: 16 seats, none lost; walk 5: 17, none
   lost): each brief names its output file, asks for a reply of 80 words or fewer, and the chair reads the files.
 - **(b9-4, 11-09) Two refuters' fixes can contradict each other:** R4 offered "settling on $105,000" for "checking your figure at" while

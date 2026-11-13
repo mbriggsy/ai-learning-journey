@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-12, b9-1's close):** walk 6 is chaired (HARD-FLAG, held for R1: `docs/caddie/cold-read-log.md`, top) and council `wf_22858e04-f7a` ruled the paragraph's form (7/10, EXECUTE; `docs/council-log.md`'s top row is the spec, item 1's NEXT the checklist). In order: (1) the fix round in that shape: the NoteParts block on the gate, the Result and the sheet; the gate's route under its buttons with F7's relabel; the choice sentences moved only with F11's condition above Keep (the Hawk's condition); walk 6's surviving fixes (R1–R5, F6, F7, F11, their words on the card); (2) walk 7 on it; then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the list is far past 10).
+▶ **START HERE (2026-11-13, b9-2's close):** walk 6's fix round is COMMITTED in council `wf_22858e04-f7a`'s shape (`e6e9c364`: the block form, the gate's route under its buttons with the relabel, the W row's choices off the gate with Keep's condition above Keep, R2–R5, F6, F7, F11; what it refined and left out is `b9-build2-surplus\u11-walk6-round\ROUND.md`). In order: (1) R1's line, a typed figure below spending on the Result and the gate (item 1's ▶ NEXT has the prescription), with R3's sheet half and the four-bucket route arm; (2) the round's review over both commits, the whole files, with an adversary, every finding verified, and a mutant pass; (3) walk 7 on it (the card is HELD for R1 until it is walked); then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the list is far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,20 +94,50 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **the fix round in council `wf_22858e04-f7a`'s shape, then walk 7** (START HERE; walk 6's card names every
-     surviving fix in words, `u11-walk6\panel\` holds the seat and refuter reports). The checklist, from the council's
-     row: one shared NoteParts block component (`div.note-parts` → the note-and-lead `<p>` → a `<dl>` of `div>dt+dd`
-     segments → the door), zero segments and no door rendering today's `<p>` byte for byte (pinned); the gate's door
-     shrunk to the ~40-word route in `section.reentry-door` after `.save-actions`, drawn only when `canChange`, with F7's
-     "Balances still about right — show my answer" in the same commit; "There, choose…" and S's hold sentence leave the
-     gate ONLY in the commit that puts F11's condition above Keep (`src/intake/WorkingCostQuestion.tsx:316`, above the
-     HelpLists) with `aria-describedby` and a DOM-order pin; the Result's door as the last dt/dd (the condition, the cost
-     `<ul>` from the HelpList copy keys, the Yes sentence, a block button ≥ 44 px); R1's Result and gate line for a typed
-     figure below spending (its register entry's ⚑ MEASURED bullet); R2 adds its sentence, never replaces A's or S's
-     "either way"; the gates: the route ≤ 791 px at REAL after `settleLayout` on every arm with four bucket rows, on CI
-     Linux, Yes and Keep hit-tested, the color-blind check re-run, the R10 sweep and per-key idcheck at the `src` commit;
-     the claim is "route in frame", never "Yes in frame". Walk 7 then reads the council's yours-to-close calls: the dt
-     register, the phone order, the segments kept on the gate (the dissent's flip conditions are in the row).
+     ▶ NEXT: **R1's line, then the round review, then walk 7** (START HERE). Walk 6's fix round itself is `e6e9c364`
+     (council `wf_22858e04-f7a`'s checklist met: the block, the route under the buttons, the relabel, the Keep condition
+     above every Keep, the Result's door with its list; route in frame on the seven pay-check unlock arms at REAL;
+     refinements and omissions in `b9-build2-surplus\u11-walk6-round\ROUND.md`). Still owed, each a prescription:
+     - **R1 (the blocker the card is held for):** while a TYPED W (`entered`, no `keptOverQuoteReal`) is FRESH and sits
+       below today's quote (`workingYearCostTypedBelowQuote`), the Result and the gate carry one line in W's slot and
+       form. New composer in `src/intake/workingYearLeftOver.ts` beside `workingYearCostTypedBelowNote`, its words the
+       register entry's ⚑ MEASURED bullet (A: "This answer counts a working year at your own figure of $84,000 a year,
+       below your spending of $90,000 a year. A working year almost always costs at least what you spend, so this
+       answer can look better than it really is." then, for a fresh "saved" answer only, the credit and the check at
+       the quote read off `checkAtQuote`: "It adds up to $16,985 a year to your savings; at $90,000, your first working
+       year, 2026, has $10,985 left over." / B "…at $105,000, every working year from 2026 to 2032 comes up $3,652 to
+       $4,015 short."; the budget twin in `workingCostBelowBudget`'s words; one sentence per fact, no em-dash). Result:
+       a new `StandingNoteCause` (`'w-typed-below'`, door `stalenessPayCheckCtaUpdate`, seat `working-year-cost`) in
+       `FuckOffDate.tsx`'s `STANDING_NOTE_COPY`, chosen in `Result.tsx` where the stale line is null; it sits above
+       "This range prices your full budget…" already (the slot is in the lead). Gate: `ReentryAnswerSentences` gains a
+       third required field the caller (`IntakeApp`'s hydrate) fills from the same draft; `composeReentry` pushes it
+       where W's line goes and sets `door` to the update act's `GateDoor`. Decide, before the build, the slot when the
+       left over has ALSO moved (a typed figure that differs from the one answered at): two lines on the gate are fine
+       (one cause, one line each); the Result has one slot — the typed-below line names the credited figure, so it
+       wins the slot and the moved figures ride it as a clause, or both render; pin the choice. Never a stamp, never a
+       withheld credit (D7; the stamp stays that entry's council call). Pin it by hand on `datesavedrisen` and
+       `datesavedrisenshort` with 84,000 typed; add a Caddie walk state for it (`intake:typedbelow` already reaches the
+       retype's Result; walk its gate too).
+     - **R3's sheet half:** on B (the check at the quote `firstShort` / `firstNone`), the left-over seat's and the
+       methodology row's "Until you update your figure for a working year, no money left over is added…" promise what
+       updating takes away. Add `workingLedgerLeftOverWaitingUpdateShort` and
+       `assumptionWorkingYearCheckLeftOverWaitingUpdateShort` ending "No money left over is added to your savings.",
+       picked where `workingYearCheckAtQuote(d)?.kind` is `firstShort` or `firstNone`: in
+       `src/intake/WorkingYearLeftOverQuestion.tsx` (the `waitingSeat` read) and in `src/ui/assumptionRegistry.ts`'s
+       `LEFT_OVER_KEY` / `methodologyLines` (its `act` parameter becomes a three-way "waiting words" value; the left-over
+       family's count in `assumptionRegistry.ts`'s docblock and its tests grows by one).
+     - **The four-bucket route arm (council (6)):** the route's bottom ≤ 791 at REAL after `settleLayout` with FOUR bucket
+       rows (pre-tax, Roth, taxable, HSA) and both benefit rows, on CI Linux. No seed carries four buckets: add a plant
+       (or a `datesavedrisenlater` twin with taxable + HSA accounts) and an arm beside the seven in
+       `e2e/vertical-fit.spec.ts`'s `PAY_CHECK_UNLOCKS`; also hit-test the sheet's "Yes" and Keep after the Result's door
+       opens it (council (6); `scrollIntoView` is not a hit-test, insight 124).
+     - **The round review:** both commits' whole files, an adversary, every finding verified, and a mutant pass with
+       predictions written first (the walk-5 round's shape, `u11-walk5\ROUND.md`); the R10 sweep and per-key idcheck at
+       each `src` commit (`e6e9c364`: 42 of 42 identical against `walk5`, `out\sweep-walk6round.json`).
+     - **Walk 7** reads the round on the committed tree, the color-blind check re-run (the labels, the list, the route),
+       and the council's yours-to-close calls: the dt register (one step up, semibold, no colon), the phone order (the
+       route after the buttons), the segments kept on the gate; the dissent's flip conditions are in the council row.
+       The walk spec now crops `reentry-door` beside `reentry-notes`.
      **Filed by the walk-5 round's review for U12** (`wf_c037b423-7f0`; the record is `u11-walk5\ROUND.md` § "The
      round review"; each finding goes into the register with its prescription):
      - (bh)'s "Because that $16,985 depends on your $X figure" names the HELD figure, which need not be the one the
@@ -266,30 +296,34 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-12 (b9-1: the ACA re-verify cleared; the `intake:kept` REAL capture failure not reproduced; walk 6
-chaired; the paragraph's form ruled by council; b9-2's block pruned into it):**
+**SESSION 2026-11-13 (b9-2: walk 6's fix round built in council `wf_22858e04-f7a`'s shape; b9-1's block pruned into it):**
 
 State at close:
-- `aca-last-verified.json` verified 2026-11-12 (regime unchanged), its engine twin `acaEnhancedSubsidyStatus`
-  (`src/engine/constants/health.ts`) re-dated with it; `verify:aca` exit 0;
-- typecheck exit 0, lint exit 0, the suite exit 0 (its count lives under `verify:doc-stats`), `verify:doc-stats` exit 0;
-- walk 6's card and tape row are committed (`841f8def`); R1's engine measurement is appended to the Tier 0 retype entry;
-- the council's row (`docs/council-log.md`, top) is the fix round's spec; nothing of the fix round is built.
+- `e6e9c364` committed and pushed: typecheck exit 0, lint exit 0, the full suite exit 0 pinned to the P-cores (its count
+  lives under `verify:doc-stats`), `verify:doc-stats` exit 0, `verify:fit` 175/175 locally (13.4 min, pinned), the R10
+  sweep and per-key idcheck 42 of 42 identical against `walk5`;
+- no mutant pass and no round review yet (START HERE (2)); R1's line, R3's sheet half and the four-bucket arm are
+  item 1's ▶ NEXT.
 
-Next is START HERE. b9-2 is the successor (handoff mode: b9-2 to b9-8 live and idle). This session closed at the 50%
-window line: the fix round is a full build and would not finish before the wrap line.
+Next is START HERE. b9-3 is the successor (handoff mode: b9-3 to b9-8 live and idle). This session closed at the 50%
+window line: R1's line is a new build (a composer, a cause, a gate field, pins, a walk state) and would not finish
+before the wrap line.
 
 **Check at start:**
-- the CI run on this close's commit: `gh run list --commit <full sha> --json databaseId,status,conclusion` (the full sha);
+- the CI run on `e6e9c364`: `gh run view 43369521005 --json status,conclusion` (in progress at this close; it carries
+  the first CI Linux read of the route-in-frame arms);
 - the ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 
-**LANDMINES (the fix round and walk 7):**
+**LANDMINES (R1's line and walk 7):**
 - **A first-load module reads `entryCopy`, never `copy.ts` (b9-2).** `vite build` refuses `src/ui/copy.ts` in the
-  initial JS (`scripts/entryChunkGuard.ts`); a string an entry-graph module renders goes in `src/ui/entryCopy.ts`. The
-  gate is on the first-load path: check where the route's words and F7's label render before choosing their file.
+  initial JS (`scripts/entryChunkGuard.ts`); a string an entry-graph module renders goes in `src/ui/entryCopy.ts`.
+  `e6e9c364` changed no import edge on the gate; R1's gate words must be checked the same way (`pnpm build`).
+- **W's block has no spaces between its parts in `textContent`** (`div.note-parts` → `p` → `dl` → `dt`/`dd`). An e2e
+  compare of joined parts reads `innerText` (`toContainText(…, { useInnerText: true })`) or each element; a unit test
+  compares `notePartsText(parts)` against the composer, never a host's `textContent`.
 - **The e2e specs are outside `pnpm typecheck`.** A retired copy key or a changed slot signature they read compiles
   clean and fails only in Playwright. Typecheck them through a scratch tsconfig in the session scratchpad. It must name
   `node_modules` absolutely:
@@ -300,6 +334,10 @@ change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_
     "exclude": ["<project>/node_modules/.pnpm", "<project>/dist", "<project>/e2e/held"] }
   ```
   Then run `npx tsc -p <it>`. Its only errors at b9-2's close were `chart-text.spec.ts`'s pre-existing `Node.remove`, seven.
+- **A Playwright `-g` filter run through `cmd //c "start /affinity FFF …"` loses a quoted space** ("No tests found",
+  exit 0): filter with a space-free regex (`-g unlock.line`), and read the run's count line, never the exit code.
+- **`git add -- <a path already staged as deleted>` fails the whole add** ("pathspec did not match"): stage the paths
+  that exist, then `git commit -- <every path>`, the deleted one included.
 - **A copy plant inside a slot is killed only by a test with the words typed by hand.** Every test that compares
   against `slots.*` changes its expected value with the plant. `workingYearLeftOver.test.ts`'s "the words, typed by
   hand" is the net; keep a by-hand pin for every new sentence the round adds.

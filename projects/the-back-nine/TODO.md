@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-13, b9-5's close):** walk 7 is captured and its eleven seats have read it (`b9-build2-surplus\u11-walk7\panel\CHAIR-NOTES.md`); the pair fix is `5f96411d` and its seed `dc9ff19c`. In order: (1) walk 7's refuter round, R1–R8 (item 1's ▶ NEXT); (2) R1's holds measurement through the engine; (3) walk 7's card, then the fix round its findings rule (walk 6's card stays HELD for R1 until walk 7's card closes it); then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the list is far past 10).
+▶ **START HERE (2026-11-13, b9-6's close):** walk 7's card is `86acd918` (HARD-FLAG, held on R1) and its fix round's commit 1 is `d4c38295` (spec: `b9-build2-surplus\u11-walk7-round\ROUND.md`). In order: (1) the fix round's commit 2: R2's sheet twin and R8 (b)'s capture-harness gap (item 1's ▶ NEXT); (2) the round review over both commits — whole files, an adversary, every finding verified — with a mutant pass, the R10 sweep + idcheck against `walk5`, `verify:fit`, `doc:reanchor`; (3) walk 8 on the reviewed tree, then its card (it clears R1's hold only once read); then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the list is far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,28 +94,32 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **walk 7's refuter round, then its card** (START HERE). Walk 6's round is built, reviewed and fixed
-     (`e6e9c364`, `3000a04c`, `865e7426`, `972c3618`, `360bea64`, the pair fix `5f96411d`; the record is
-     `b9-build2-surplus\u11-walk6-round\ROUND.md`, its § "The pair fix" for the last). Everything the round review
-     deferred is the register's Tier 2 *The walk-6 round review's deferred findings…* and the retype residual's
-     measurement. Walk 7 is CAPTURED and READ, not chaired: the bundle `temp\caddie\caddie-u11-b9-5-walk7\` (14
-     targets, REAL+PHONE, 28/28, tree `dc9ff19c`, which adds the pair's seed and vault `datesavedtypedmoved`), eleven
-     seat reports and the chair's notes in `b9-build2-surplus\u11-walk7\panel\` (`CHAIR-NOTES.md` first: the panel's
-     answers, R1–R8 with each claim, the re-founds, the first impressions). Still owed, in order:
-     - **The refuter round:** one fresh Opus xhigh Agent per item R1–R8 in `CHAIR-NOTES.md`, each told to read
-       `u11-walk7\panel\REFUTER-BRIEF.md` first and write `u11-walk7\panel\refuter-R<n>.md`; the claim words to hand each
-       are the R<n> bullet itself, with the bundle files and panel reports it names. b9-5's eight died at once on an API
-       403 before reading a file (`docs/landmines.md`, Claude Code); none ran.
-     - **R1's holds measurement, before the card can clear** (the skill's ⚑ holds rule: R1 questions whether TM's answer
-       counts money its named short years don't have): through the engine, the final-tier date search on
-       `datesavedrisenlater` answered "Yes" at its $105,000 quote (`writeConfirmedWorkingYearCost`) against TM
-       (`datesavedtypedmoved`, top rung 0.80) and C's stale answer (0.74), the way `u11-walk6\measure\` measured A; b9-5's
-       probe `probe-typedmoved.mts` (scratchpad, gone) did the last two with `runDateSearchEngine(buildDateInput(d),
-       d.seed, 'final', 1)` imported by `file:///` URL.
-     - **The card**, appended to `docs/caddie/cold-read-log.md` in walk 6's form, with the chair verifying each surviving
-       finding against the bundle; the fixes it rules go to a fix round in the council's shape (the verb "update", form
-       never a cut, one cause one line), and the color-blind half of the walk spec's gap (R8 (b): the CVD images stop at
-       the first frame) to the harness if its refuter keeps it.
+     ▶ NEXT: **walk 7's fix round, commit 2, then the round review** (START HERE). Walk 7's card is `86acd918`
+     (`docs/caddie/cold-read-log.md`, top; refuters and chair's notes `b9-build2-surplus\u11-walk7\panel\`, R1's engine
+     measurement `u11-walk7\measure\R1-MEASURE.md`). Commit 1, `d4c38295`, built R1, R3 (a)/(c), R4, R5, R6, R7 (a) and
+     R8 (a); `u11-walk7-round\ROUND.md` is the spec and records its four departures from the refuters' words (R1 in B's
+     ruled clause, since council `wf_7fa86902-35c` struck "takes none of those shortfalls"; R3 (c) also on the Result's
+     hosted case; R4 also after "nothing left over"; R6 (c) without the year-0 dollars, attack 4). Still owed, in order:
+     - **Commit 2, R2 (medium on TM, low on A's retype):** where the sheet's typed-below W note
+       (`workingYearCostTypedBelowNote`, `src/intake/workingYearLeftOver.ts`) shows under a credited "saved" answer
+       (`LEFT_OVER_CARRIES`), end it with the line's own at-quote sentences — `typedBelowAtQuote(checkAtQuote(d,
+       stored), figures)` — so TM's sheet names $5,985, the 2029–2032 run and R1's sentence, and A's retype names
+       $10,985; then the seat's figure line (`slots.workingLedgerLeftOverFigure`) and its moved line name the typed
+       figure ("After everything above, at your $84,000 figure, …"; "At your $84,000 figure, it's $26,985 now"). FIRST
+       read whether that note is any control's `aria-describedby` (`WorkingCostQuestion`): if it is, the red team's
+       attack 4 (no reward figure in a fork's description) decides what it may carry. Pin the sheet strings in
+       `assumptionPanel.test.tsx` and the walk's `intake:typedbelow` arm in `e2e/caddie-walk.spec.ts`.
+     - **Commit 2, R8 (b) (low):** in `e2e/caddie-walk.spec.ts`, put `fullpage.png` (or the `crop-paycheck-note` and
+       `crop-reentry-door` crops) through the three CVD filters, as the harness already does for the band and ladder
+       crops; prove it on one target before a walk relies on it.
+     - **R8 (c) stays as ruled, no build:** only the affirm button carries the scope sentence because council
+       `wf_22858e04-f7a` ruled it so (`e6e9c364`; `reentry.test.tsx:1107` pins the other button bare). File it in the
+       register as low with that ruling; never point the second button at the span without the council.
+     - **The round review** over `d4c38295` and commit 2: whole files, an adversary, every finding verified; a mutant pass
+       (R1's two arms and their figures, R4's predicate, R5's split, R3 (c)'s one-cap predicate); the R10 sweep + per-key
+       idcheck against `walk5`; `verify:fit`; `doc:reanchor` last.
+     - **Walk 8** on the reviewed tree, the same 14 targets (`temp\caddie\caddie-u11-b9-5-walk7\` is the last bundle), then
+       its card: R1's hold clears only once a panel reads the built sentence.
      **Filed by the walk-5 round's review for U12** (`wf_c037b423-7f0`; the record is `u11-walk5\ROUND.md` § "The
      round review"; each finding goes into the register with its prescription):
      - (bh)'s "Because that $16,985 depends on your $X figure" names the HELD figure, which need not be the one the
@@ -274,25 +278,24 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-13 (b9-5: the walk-6 round review's pair fix, its seed, walk 7's capture and seats; b9-4's block pruned into it):**
+**SESSION 2026-11-13 (b9-6: walk 7's refuter round, R1's engine measurement, the card, the fix round's commit 1; b9-5's block pruned into it):**
 
 State at close:
-- `5f96411d` (the pair fix: the moved core carries the typed figure, so the Result's slot clause, the gate's moved line
-  and a rules note's clause all name it), `dc9ff19c` (seed and vault `datesavedtypedmoved` + its fit unlock arm) and
-  `24983ba9` (the TODO's re-anchored citations) committed and pushed. At `dc9ff19c`: typecheck exit 0, lint exit 0,
-  `pnpm build` exit 0 (at `5f96411d`), the full suite pinned green (5157 by `verify:doc-stats`'s count, which is exit 0),
-  the e2e specs typecheck clean but `chart-text.spec.ts`'s seven pre-existing errors, the whole `verify:fit` pinned
-  177/177 at `5f96411d` and `-g unlock.line` 10/10 at `dc9ff19c`, the R10 sweep + per-key idcheck 42 of 42 identical
-  against `walk5` at both (candidate-only `datesavedtyped`, `datesavedfourbuckets`, `datesavedtypedmoved`), mutants 4
-  of 4 red as predicted (`u11-walk6-round\b9-5\mutants\`). CI: `360bea64` (43391533722), `5f96411d` (43397005229) and
-  `dc9ff19c` (43401784666) passed; `24983ba9` (43401897188, TODO only) was running.
-- Walk 7: captured (28/28) and read by eleven seats; the refuter round died on an API 403 (none ran) and the window
-  crossed 50%, so the round, R1's measurement and the card are START HERE's.
+- `86acd918` (walk 7's card, its tape row and the Tier 0 retype entry's ⚑ MEASURED-again bullet) and `d4c38295` (the
+  fix round's commit 1, with `doc:reanchor HEAD` applied: 247 edits, 3 by hand) committed and pushed. At `d4c38295`:
+  typecheck exit 0, lint exit 0, the e2e specs typecheck clean but the known `chart-text.spec.ts` /
+  `assumptions-row-look.spec.ts` errors, the full suite pinned green but the doc-stats citation arm before the
+  re-anchor and `verify:doc-stats` exit 0 after it (its count is the gate's), the whole `verify:fit` pinned 178/178, the
+  R10 sweep + per-key idcheck 42 of 42 identical against `walk5` (`u11-walk7-round\idcheck-walk7round.txt`). No mutant
+  pass yet: the round review owes one over both commits. CI: `24983ba9` (43401897188) passed; `ecb403a0`, `86acd918`
+  and `d4c38295` were running at this close.
+- Commit 2 and the round review were not started: the window crossed 50% after commit 1.
 
-Next is START HERE. b9-6 is the successor (handoff mode: b9-6 to b9-8 live and idle).
+Next is START HERE. No successor was handed this close (handoff mode found b9-9 missing between b9-8 and b9-10).
 
 **Check at start:**
-- the CI run on `24983ba9`: `gh run view 43401897188 --json status,conclusion` (TODO only; running at this close);
+- the CI runs on `86acd918` and `d4c38295`: `gh run list --commit <full sha> --json status,conclusion` (full shas:
+  `git rev-parse 86acd918 d4c38295`);
 - the ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
@@ -1107,6 +1110,8 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - A decider keyed on one answer leaves every other answer reading the old promise. R3's sheet half keyed B's "no until" words on `workingYearCheckAtQuote`, which reads a "saved" answer only, so an unanswered, spent or not-sure B kept "Until then, no money left over is added" — though no honest update brings the question back under any answer. Three of four review lenses found it (the builders had flagged it as a call). Fix: read the predicate's real input (year 0 at the quote), never the narrowest witness.
 - Review seats that write their reports to files keep the parent's window small: 8 Opus xhigh seats (4 lenses, 4 refuters) over three commits cost the parent about 40K tokens of returns; the refuters re-derived every finding, narrowed two severities, widened two (R3 found `datecoststale` has no other test; R2 found the gate shows the same unlabelled pair), refuted none. The R10 sweep ran beside them pinned at 20.8 min against ~17 alone, identity unaffected: a CPU-shared identity run costs time, never correctness.
 - A fix that names its hosts misses the one nobody listed; carry the decision in the core the hosts already read. The walk-6 round review prescribed the pair fix for two hosts (the Result's slot clause, the gate's moved line); the moved words also ride a fired rules line as its clause (`leftOverClauseHost` / `composeReentry`'s `clauseHost`), the same pair beside R1's line, and R1's refuter had called that host clean from the typed line alone. b9-5 put the basis on `WorkingYearLeftOverMoved` (`typedBelow`, the typed-below line's own predicate) so all three follow with no call site changed (`5f96411d`; mutants P1–P4 in `u11-walk6-round9-5mutants`). *Extend* insight 081 (a producer's output is the only non-drifting source).
+- A refuter verifies its fix against the page, not against the rulings that shaped the page. Walk 7's R1 refuter checked its sentence against every line on TM's screens and handed over "Your answer takes none of those shortfalls", a phrase council `wf_7fa86902-35c` had struck two walks earlier; copyGuard's retired sweep caught it only at build (b9-6, `d4c38295`, built instead in B's ruled clause). The chair's verify step owes a pass over the retired-wordings list before a refuter's words become a fix (`docs/landmines.md`, Copy and copyGuard).
+- A short-years sentence needs its figures from a rule the engine keeps, pinned where it can be seen: W comes off each working year's cash dollar for dollar, so a year's cash at a typed figure is its cash at the quote plus the gap, and the credit is min(that, the cap). b9-6 pinned the identity on TM's four shared rows ($21,000 each) before composing R1's sentence from the run's shortfalls, and gave the case it cannot cover (a year short at the typed figure too) a sentence true in every case rather than a guess.
 
 ## Driving the app
 

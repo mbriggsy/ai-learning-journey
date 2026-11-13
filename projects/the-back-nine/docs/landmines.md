@@ -496,6 +496,11 @@ is a guess a verifier must check, never a fact
 
 ## Copy and copyGuard
 
+- **(b9-6, 11-13) A refuter's fix words can bring back a wording a council struck.** Walk 7's R1 refuter wrote "Your
+  answer takes none of those shortfalls from your savings", which council `wf_7fa86902-35c` struck in walk 4; only
+  `copyGuard.test.ts`'s retired sweep (`RETIRED_EVERYWHERE`) caught it, after the build. Before building a refuter's or
+  a card's words, grep `RETIRED_EVERYWHERE` and `RETIRED_BELOW_QUOTE` for each phrase, and word the fact in the
+  council's own ruled clause where one exists.
 - **(2026-09-26, b9-8)** a UI number moved by an engine fix (the step card's $218,000 → $224,000) is a visible change inside an unchanged sentence — say so to him the same turn, the words-are-his law covers meaning
 - **(2026-09-24)** the `irmaaStep*` copy family lives in `slots` for its templated members — a PLAIN string with that prefix belongs in the `copy` catalog beside `irmaaStepBothBase` (a string dropped into `slots` made `copy.<key>` undefined and the new pins compared undefined to undefined — the render-sample census caught it, typecheck would have)
 

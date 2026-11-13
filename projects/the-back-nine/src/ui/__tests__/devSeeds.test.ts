@@ -10,8 +10,14 @@ import {
   agedWorkingYearsVintage,
   AGED_PLANTS,
 } from '../devSeeds'
-import { heldYesBelowQuote, isWorkingYearCostStale, workingYearCostStaleness } from '@intake/workingYearQuote'
-import { workingYearCheckAtQuote, workingYearCostStaleDoor, workingYearCostStaleLine, workingYearCostStaleNote } from '@intake/workingYearLeftOver'
+import { heldYesBelowQuote, isWorkingYearCostStale, workingYearCostStaleness, writeEnteredWorkingYearCost } from '@intake/workingYearQuote'
+import {
+  workingYearCheckAtQuote,
+  workingYearCostStaleDoor,
+  workingYearCostStaleLine,
+  workingYearCostStaleNote,
+  workingYearLeftOverMoved,
+} from '@intake/workingYearLeftOver'
 import { floorLineText, heroLead } from '../FuckOffDate'
 import { planClockAnchor } from '../bandAnnotations'
 import type { ScenarioDraft } from '@store/memoryModel'
@@ -1667,7 +1673,8 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     // Named, so a seed that falls off the date route cannot take its W with it unseen.
     expect(carrying).toEqual([
       'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datelateleftover', 'datemixed', 'datenc', 'datesaved',
-      'datesavedfourbuckets', 'datesavedmoved', 'datesavedrisen', 'datesavedrisenlater', 'datesavedrisenshort', 'datesavedstale', 'datesavedtyped', 'dateshort',
+      'datesavedfourbuckets', 'datesavedmoved', 'datesavedrisen', 'datesavedrisenlater', 'datesavedrisenshort', 'datesavedstale', 'datesavedtyped',
+      'datesavedtypedmoved', 'dateshort',
       'datesolo',
       'datesplit', 'dip',
     ])
@@ -1769,11 +1776,11 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       expect(shown, `${key}: the shown lines sum to the bottom line`).toBe(y0.bottomLine)
       swept++
     }
-    // Every buildable date seed carries W (the arm above), so this is all nineteen of them, the short seed, the
+    // Every buildable date seed carries W (the arm above), so this is all twenty of them, the short seed, the
     // later-left-over witness (U15), build 2's three saved witnesses (U9), U11's risen twin and its two (ae) arms
-    // (short at the quote, a later year short at the quote), U11 walk 6's retype (R1: a typed W, fresh) and the
-    // four-bucket twin (council (6)) included.
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(19)
+    // (short at the quote, a later year short at the quote), U11 walk 6's retype (R1: a typed W, fresh), the
+    // four-bucket twin (council (6)) and the retype after a move (the walk-6 round review's pair) included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(20)
   })
 
   // Build 2's KTD4 arm (U4): inside the run, year 0's Left over is the money picture's own printed bottom line, on
@@ -1800,7 +1807,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
       swept++
     }
-    expect(swept, 'the sweep reached every buildable W-carrying seed (the nineteen above)').toBe(19)
+    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty above)').toBe(20)
   })
 
   // Build 2's U9 (KTD14): the three saved witnesses, each minted through the shipped write. Every figure typed by
@@ -1988,6 +1995,22 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       { label: 'Alex', value: slots.reentryBenefitMonthly('2,333') },
       { label: 'Sam', value: slots.reentryBenefitMonthly('2,000') },
     ])
+  })
+
+  // The walk-6 round review's pair on its own seed (b9-5): `datesavedrisenlater` with its old $84,000 TYPED back in. W is
+  // fresh, and the left over moved to $26,985 at the typed figure (the alimony), so R1's line and the moved words speak
+  // together; the moved core carries the typed figure, so every host names it.
+  it('the pair’s witness: `datesavedtypedmoved` is `datesavedrisenlater` retyped to $84,000 — fresh, moved to $26,985 at it, the core naming the typed figure, and it plants as a vault with its answer', () => {
+    const d = DEV_SEEDS.datesavedtypedmoved
+    expect(d, 'the seed IS the retype, through the W step’s own write').toEqual(
+      writeEnteredWorkingYearCost(DEV_SEEDS.datesavedrisenlater, 84_000, 'year'),
+    )
+    expect(isWorkingYearCostStale(d), 'a typed figure is fresh').toBe(false)
+    expect(workingYearLeftOverShownState(d)).toBe('saved-moved')
+    expect(workingYearLeftOverMoved(d)).toEqual({ stored: 16_985, live: 26_985, typedBelow: '84,000' })
+    const built = scenarioFromDraft(d)
+    if (!built.ready) throw new Error(`datesavedtypedmoved: ${built.detail}`)
+    expect(built.scenario.workingYearLeftOver, 'it plants as a vault with its answer').toEqual({ kind: 'saved', quotedReal: 16_985 })
   })
 
   // Build 2's U15 (KTD14): the household R5 never asks, minted dark. Its year 0 prints short, and the run itself

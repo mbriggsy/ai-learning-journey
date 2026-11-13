@@ -1466,6 +1466,21 @@ const dateSavedFourBucketsWitness: ScenarioDraft = {
   ],
 }
 
+/**
+ * THE RETYPE AFTER A MOVE — `?seed=datesavedtypedmoved`, and as a vault `?vault=datesavedtypedmoved` (the walk-6 round
+ * review's pair, L3-3 / L1-5 / L2-5): `datesavedrisenlater`'s household that typed its old $84,000 back in, by the year
+ * (`writeEnteredWorkingYearCost`). W is FRESH (a typed figure is never staled on a quote, KTD10), and year 0 at $84,000
+ * now prints $26,985 (Sam's alimony began after the answer), so the stored "All of it" at $16,985 reads "saved, moved".
+ * The one seed where R1's typed-below line and a moved left over speak together, each figure naming what it rests on:
+ * on the Result the line carries the moved clause ("At your $84,000 figure, your first working year has $26,985 left
+ * over now, …") in place of its credit sentence, then year 0 at the $105,000 quote ($5,985) and the 2029–2032 run; on the
+ * gate R1's line keeps its credit sentence and the moved line follows it ("…At your $84,000 figure, it’s $26,985 now,
+ * …"), so its gate is the tallest R1 gate (two lines). No date within the window: the final tier's top rung reads 0.80,
+ * against `datesavedrisenlater`'s 0.74 (b9-5's probe, the retype residual the register's retype entry records). A "mint,
+ * then move" witness: minted once (`dateSavedWitness`), moved, given the alimony, then retyped.
+ */
+const dateSavedTypedMovedWitness: ScenarioDraft = writeEnteredWorkingYearCost(dateSavedRisenLaterWitness, 84_000, 'year')
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -1513,6 +1528,7 @@ export const DEV_SEEDS = {
   datesavedrisenlater: dateSavedRisenLaterWitness,
   datesavedtyped: dateSavedTypedWitness,
   datesavedfourbuckets: dateSavedFourBucketsWitness,
+  datesavedtypedmoved: dateSavedTypedMovedWitness,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

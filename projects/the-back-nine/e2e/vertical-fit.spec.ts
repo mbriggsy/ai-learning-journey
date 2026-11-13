@@ -2259,7 +2259,20 @@ const typedBelowLine = (answer: 'This' | 'Your'): string =>
     slots.workingCostTypedBelowAdds('16,985'),
     slots.workingCostTypedBelowAtQuoteLeftOver('90,000', 2026, '10,985'),
   ].join(' ')
-/** `note` — the gate's one note (its text, read as `innerText`). `gateDoor` — the gate's door section, or `null` where
+/** The walk-6 round review's pair on `datesavedtypedmoved` (`datesavedrisenlater` with its old $84,000 TYPED back in, the
+ *  left over moved to $26,985 at it): R1's line, "Your" on the gate with its credit sentence, "This" on the Result with the
+ *  moved clause naming the $84,000 in its place; then year 0 at the $105,000 quote ($5,985) and the 2029–2032 run. On the
+ *  gate the moved line follows as its own line (one cause, one line), naming the same figure. */
+const typedMovedLine = (answer: 'This' | 'Your', middle: string): string =>
+  [
+    slots.workingCostTypedBelowCounts(answer, '84,000', '105,000'),
+    middle,
+    slots.workingCostTypedBelowAtQuoteLeftOver('105,000', 2026, '5,985'),
+    slots.workingCostTypedBelowAtQuoteLaterShort(2029, 2032, '3,652', '4,015'),
+  ].join(' ')
+const TYPED_MOVED_GATE_MOVED_LINE = `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMovedAt('84,000', '16,985', '26,985', '16,985')} ${copy.stalenessLeftOverGateDoor}`
+/** `note` — the gate's one note (its text, read as `innerText`); `next` — a second note, its own cause, where the gate
+ *  draws two (only the typed-and-moved arm), checked in order. `gateDoor` — the gate's door section, or `null` where
  *  none is drawn (W not stale). `standing` — the Result's standing-slot lead and line (before its door), or `null`
  *  where the answer carries none (the fresh-vintage `wyclock`). `resultDoor` — the standing slot's door as its last
  *  dt/dd (the block), or `null` where the slot is its old `<p>` with the button inline. `dated` — whether the affirm
@@ -2269,6 +2282,7 @@ const typedBelowLine = (answer: 'This' | 'Your'): string =>
 const PAY_CHECK_UNLOCKS: readonly {
   readonly key: string
   readonly note: string
+  readonly next?: string
   readonly gateDoor: GateDoorWords | null
   readonly sibling: string
   readonly standing: string | null
@@ -2341,6 +2355,21 @@ const PAY_CHECK_UNLOCKS: readonly {
     standing: typedBelowLine('This'),
     resultDoor: null,
     dated: true,
+    sheet: UPDATE_SHEET,
+    readback: null,
+  },
+  // The pair (b9-5): R1's line and the moved line on one gate — the tallest R1 gate — each figure naming what it rests on;
+  // the Result's slot carries the moved clause in R1's line. No date within the window (the final tier's top rung 0.80,
+  // b9-5's probe, against `datesavedrisenlater`'s 0.74).
+  {
+    key: 'datesavedtypedmoved',
+    note: typedMovedLine('Your', slots.workingCostTypedBelowAdds('16,985')),
+    next: TYPED_MOVED_GATE_MOVED_LINE,
+    gateDoor: UPDATE_GATE_DOOR,
+    sibling: copy.stalenessPayCheckGateLead,
+    standing: typedMovedLine('This', slots.stalenessLeftOverClauseAt('84,000', '16,985', '26,985', '16,985')),
+    resultDoor: null,
+    dated: false,
     sheet: UPDATE_SHEET,
     readback: null,
   },
@@ -2447,8 +2476,14 @@ for (const u of PAY_CHECK_UNLOCKS) {
       // THE ISOLATION: one note, this plant's own — and the pay check's other line is dark (a negative
       // aimed at a live key, never a deleted one: insight 086). Each note is a direct child (a `<p>`, or W's
       // block), so the count reads the children; the text reads `innerText` across the block's dt/dd.
-      await expect(page.locator('.reentry-notes > *'), `${u.key}: exactly one gate note`).toHaveCount(1)
+      await expect(page.locator('.reentry-notes > *'), `${u.key}: exactly ${u.next === undefined ? 'one gate note' : 'two gate notes'}`).toHaveCount(
+        u.next === undefined ? 1 : 2,
+      )
       await expect(page.locator('.reentry-notes')).toContainText(u.note, { useInnerText: true })
+      if (u.next !== undefined) {
+        await expect(page.locator('.reentry-notes > *').nth(0), `${u.key}: the first note is its own cause`).toContainText(u.note, { useInnerText: true })
+        await expect(page.locator('.reentry-notes > *').nth(1), `${u.key}: the second note is the other cause`).toHaveText(u.next, { useInnerText: true })
+      }
       // W's block on the gate carries the same label type as the Result's (council (1)).
       const gateBlock = page.locator('.reentry-notes > .note-parts')
       if ((await gateBlock.count()) > 0) await assertLabelType(gateBlock, `${u.key} (gate)`)

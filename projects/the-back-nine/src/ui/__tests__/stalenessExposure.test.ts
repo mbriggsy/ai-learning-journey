@@ -276,7 +276,8 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
   // shipped seed beside it.
   // `datelateleftover` (build 2's U15) joined after W existed, so like the two witnesses before it it is measured
   // on its W-keyed self: a worker under W reads `priced`. So do build 2's three saved witnesses (U9), U11's
-  // risen twin, its two (ae) arms, U11 walk 6's retype (R1), and the four-bucket twin (council (6)).
+  // risen twin, its two (ae) arms, U11 walk 6's retype (R1), the four-bucket twin (council (6)), and the retype after a
+  // move (the walk-6 round review's pair).
   const W_KEYED = [
     'dateshort',
     'datecoststale',
@@ -289,6 +290,7 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
     'datesavedrisenlater',
     'datesavedtyped',
     'datesavedfourbuckets',
+    'datesavedtypedmoved',
   ] as const
   const withoutW = (d: ScenarioDraft): ScenarioDraft => {
     const { workingYearCost: _w, ...rest } = d

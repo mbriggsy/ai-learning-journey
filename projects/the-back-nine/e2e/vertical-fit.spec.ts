@@ -2263,8 +2263,8 @@ const typedBelowLine = (answer: 'This' | 'Your'): string =>
     slots.workingCostTypedBelowYearExtra(answer, '6,000'),
   ].join(' ')
 /** The walk-6 round review's pair on `datesavedtypedmoved` (`datesavedrisenlater` with its old $84,000 TYPED back in, the
- *  left over moved to $26,985 at it): R1's line, "Your" on the gate with its credit sentence, "This" on the Result with the
- *  moved clause naming the $84,000 in its place; then year 0 at the $105,000 quote ($5,985) and the 2029–2032 run. On the
+ *  left over moved to $26,985 at it): R1's line, "Your" on the gate (no credit sentence: the moved line after it says the
+ *  cap), "This" on the Result with the moved clause naming the $84,000 in the credit sentence's place; then year 0 at the $105,000 quote ($5,985) and the 2029–2032 run. On the
  *  gate the moved line follows as its own line (one cause, one line), naming the same figure. U11 walk 7: no second cap
  *  on the gate (`middle` null: the moved line says it, R3 (c)); 2026's $11,000 past the quote's $5,985 (R4); and what the
  *  answer does in the 2029–2032 run at the typed figure (R1). */
@@ -3904,14 +3904,19 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       }
       await expect(saved, 'the tap on "All of it" was lost').toBeChecked()
       // The press's blur committed the typed figure, and the hold let go: the W row and the seat's figure now
-      // draw the live draft.
+      // draw the live draft. The typed $72,000 sits below `date`'s $84,000 of spending, so the figure names it
+      // (U11 walk 7's R2).
       await expect(row.locator('.ap-row__value')).toHaveText(slots.assumptionWorkingCostEntered('72,000'))
-      await expect(seat.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigure('28,985'))
+      await expect(seat.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigureAt('72,000', '28,985'))
       // THE GATE: what was STORED is the figure on screen at the press. The moved line names the stored figure
-      // as the one chosen against — never the plain saved line at the live figure.
+      // as the one chosen against — never the plain saved line at the live figure — and the typed figure the live one
+      // rests on (R2).
       await expect(seat.locator('.left-over__line'), 'the stored figure is not the one on screen at the press').toHaveText(
-        slots.workingLedgerLeftOverRoseLine('16,985', '28,985'),
+        slots.workingLedgerLeftOverRoseLineAt('72,000', '16,985', '28,985'),
       )
+      // …and below it, R2's at-quote line: year 0 at the $84,000 spending, whose $16,985 is also the credit (the
+      // stored figure), so no year extra rides it. The only real-browser witness of the seat's at-quote line.
+      await expect(seat.locator('.left-over__at-quote')).toHaveText(slots.workingCostTypedBelowAtQuoteLeftOver('84,000', 2026, '16,985'))
       // A second reader of the stored answer, off the panel: the Result's standing slot names the same two. The typed
       // $72,000 sits below `date`'s $84,000 of spending, so R1's typed-below line holds the slot (U11 walk 6,
       // `3000a04c`) and carries the moved figures as its clause in place of its credit sentence (`TypedBelowHost`: no

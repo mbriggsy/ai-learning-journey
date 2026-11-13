@@ -356,7 +356,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 **Label "Pay less tax": lean KEEP (HIS call).**
 - His ruling covered the objective and the hero, not the D1/R21 vocabulary.
 - A lost PTC is a shadow tax (`pre65-healthcare.md:76`).
-- Five regex selectors pin it: `e2e/csp.spec.ts:338` (CI), `caddie-walk.spec.ts:1001/755`, `held/solve-timing.spec.ts:51`, `recommendInvite.test.tsx:127/145/213`.
+- Five regex selectors pin it: `e2e/csp.spec.ts:338` (CI), `caddie-walk.spec.ts:1005/755`, `held/solve-timing.spec.ts:51`, `recommendInvite.test.tsx:127/145/213`.
 
 **`recDiscNiit`** renders on BOTH goals. "Your federal income tax" is already wrong on NC/PA/FL.
 - Draft (HIS): "A federal surtax on higher investment income isn’t counted here, and it could apply."
@@ -408,7 +408,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 8. `pnpm verify:fit`: GoalPicker gloss wrap at 390 px and at his 1536×791.
 9. `pnpm verify:fit:rv`: a FULL run. The RV gate drives leave-more, and the rewritten NIIT and state-tax disclosures render there.
 10. **Caddie read of the re-worded hero.** No automated fit or text gate covers the pay-less-tax committed surface.
-    - Walk `pnpm caddie:walk`'s pay-less-tax arms (`solve:nc` / failing, `caddie-walk.spec.ts:1001,788`, map) at 1536×791@2.5 and on the phone.
+    - Walk `pnpm caddie:walk`'s pay-less-tax arms (`solve:nc` / failing, `caddie-walk.spec.ts:1005,788`, map) at 1536×791@2.5 and on the phone.
     - Plus one planted hl50-shape ACA household where premiums dominate.
     - Focus: does the hero say what it counts? Can "premiums" be read as out-of-pocket or money kept? Do the gloss, hero, scope, NIIT and state lines agree?
     - Run it on his candidate words BEFORE the land. The card travels with the packet: it informs his choice and cannot clear his words. A framing-level hit parks for him.

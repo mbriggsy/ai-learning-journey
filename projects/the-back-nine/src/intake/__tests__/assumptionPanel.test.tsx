@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { AssumptionPanel, methodologyArmFor, type AssumptionPanelProps } from '../AssumptionPanel'
-import { confirmedWorkingYearCost } from '../workingYearQuote'
+import { confirmedWorkingYearCost, writeEnteredWorkingYearCost } from '../workingYearQuote'
 import { workingYearCostStaleLine } from '../workingYearLeftOver'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { createMemoryModel, type MemoryModel, type MemoryModelSnapshot, type ScenarioDraft, type StickyDisplay } from '@store/memoryModel'
@@ -1651,8 +1651,24 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     )
     expect(textBelow(seat(), group)).toBe(`${slots.workingLedgerLeftOverRoseLineAt('84,000', '16,985', '26,985')}${TM_AT_QUOTE}`)
     expect(radioIn(seat(), 'workingLedgerLeftOverSaved')).toBeChecked()
-    // The pair's basis (back-nine-design's round-6 law): the moved line names the typed figure in the gate's own words.
+    // The pair's basis (back-nine-design's round-6 law): the moved line names the typed figure in the gate's own words,
+    // and the figure line names it too — both typed out here, never read back from the slot alone (DND 012; the round
+    // review's L3 F4).
     expect(slots.workingLedgerLeftOverRoseLineAt('84,000', '16,985', '26,985')).toContain('At your $84,000 figure, it’s $26,985 now,')
+    expect(slots.workingLedgerLeftOverFigureAt('84,000', '26,985')).toBe(
+      'After everything above, at your $84,000 figure, your first working year has $26,985 left over.',
+    )
+  })
+
+  it('the FELL twin (R2): `datesavedrisen` with $86,000 typed prints $14,985 at year 0, below the stored $16,985 — the fell line names the $86,000, then the $10,985 at $90,000 and the $4,000 past it (the round review’s L3 F6)', () => {
+    const fell = writeEnteredWorkingYearCost(DEV_SEEDS.datesavedrisen, 86_000, 'year')
+    renderPanel({ snapshot: snap(fell) })
+    const group = groupIn(seat())
+    const fellLine = slots.workingLedgerLeftOverFellLineAt('86,000', '16,985', '14,985')
+    expect(fellLine).toContain('At your $86,000 figure, it’s $14,985 now, so each working year adds at most $14,985 of its left over')
+    expect(textBelow(seat(), group)).toBe(
+      `${fellLine}At $90,000 a year, your first working year, 2026, has $10,985 left over. That year, your answer adds $4,000 your pay doesn’t really leave over.`,
+    )
   })
 
   it('A’s retype (R2, low): the figure names the $84,000, and below the saved line the $10,985 at $90,000 and the $6,000 past it', () => {

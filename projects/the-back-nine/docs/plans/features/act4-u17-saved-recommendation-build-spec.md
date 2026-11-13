@@ -492,7 +492,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   defect**: the doctored build year forks the derived birth year across the RMD band edge, forcing the
   household into RMDs two years early. It is pinned as found and filed.
 - **Both seeds were walked** (`datearrived` plus the existing aged plant) in the Caddie walk, and
-  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:2041-2066`) — without that allowlist entry the
+  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:2045-2070`) — without that allowlist entry the
   one plant this stage exists to cold-read would have been chaired on its landing alone.
 - **The walk hard-flagged all six faces and NOTHING shipped from it** (`docs/caddie/cold-read-log.md`,
   2026-07-27) — three carrying **calm-but-wrong BLOCKERS**, the class the batched-oracle grant has never

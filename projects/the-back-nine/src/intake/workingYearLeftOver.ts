@@ -78,9 +78,10 @@ export function writeWorkingYearLeftOver(
  *  `typedBelow` is the figure today's left over rests on, where that needs saying: the typed W (formatted, yearly)
  *  exactly where the typed-below line speaks (`freshTypedBelow`, the line's and its door's own predicate), else
  *  `null`. There the live figure is year 0 at the TYPED figure, while R1's line beside it — on every host that draws
- *  the moved words: the Result's slot (as its clause), a rules note's clause above it, the gate's own line after it —
- *  ends on year 0 at today's quote, so the words name the typed figure (the walk-6 round review's L3-3 / L1-5 / L2-5).
- *  Carried here, not decided per host, so no host can draw the bare pair beside R1's line (insight 081). */
+ *  the moved words: the Result's slot (as its clause), a rules note's clause above it, the gate's own line after it,
+ *  and the seat's at-quote line below its radios — names year 0 at today's quote, so the words name the typed figure
+ *  (the walk-6 round review's L3-3 / L1-5 / L2-5; U11 walk 7's R2 for the seat). Carried here, not decided per host,
+ *  so no host can draw the bare pair beside R1's line (insight 081). */
 export interface WorkingYearLeftOverMoved {
   readonly stored: number
   readonly live: number
@@ -645,13 +646,13 @@ export function workingYearCostTypedBelowNote(d: ScenarioDraft): string | null {
 //    (no Keep door below the quote, ruling 34). Never a stamp and never a withheld credit (D7): the figure is used as
 //    given, and whether to stamp it stays that entry's council call. ──
 
-/** Where the typed-below line is said, and so its words: on the gate the answer is "Your" (none is on screen yet) and
- *  the credit is always its own sentence, since a moved left over keeps its own line there (one cause, one line each);
- *  on the Result the answer is "This", and `carriesMoved` says whether this line holds the one standing slot the moved
- *  line would otherwise take — then the moved figures ride it as their clause, in place of the credit sentence, since
- *  the clause names the credited figure too ("adds at most … the smaller of the two"). The Result passes
- *  `!leftOverClauseHost`: where a tax, state-tax or working-years line hosts the moved clause on the hero's rules note,
- *  this line keeps its own credit sentence. */
+/** Where the typed-below line is said, and so its words: on the gate the answer is "Your" (none is on screen yet); on
+ *  the Result it is "This", and `carriesMoved` says whether this line holds the one standing slot the moved line would
+ *  otherwise take. The credit sentence speaks only where the left over has NOT moved. Where it has, the moved words say
+ *  the cap ("adds at most … the smaller of the two"), so this line says it once with them (U11 walk 7's R3 (c)): as
+ *  this line's clause where it holds the Result's slot, and not at all on the gate (the moved line follows as its own
+ *  line, one cause, one line) or where a tax, state-tax or working-years line hosts the moved clause on the hero's
+ *  rules note (the Result passes `!leftOverClauseHost`). */
 export type TypedBelowHost = { readonly kind: 'gate' } | { readonly kind: 'result'; readonly carriesMoved: boolean }
 
 /** Year 0 at today's quote, and the first later short run there (capped and whole), by what the check at the quote reads

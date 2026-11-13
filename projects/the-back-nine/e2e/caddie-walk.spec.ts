@@ -464,12 +464,16 @@ async function captureState(page: Page, dir: string): Promise<void> {
   await page.screenshot({ path: path.join(dir, 'fullpage.png'), fullPage: true, scale: 'css' })
   // The full scroll under each arm (U11 walk 7's R8 (b)): the arms above cover one screen, so on the phone the gate's
   // buttons and its door, the Result's verdict paragraph past the fold (its last label, cost list and door), the backup
-  // door and "Saved to this device" sat in no color-vision frame. Before the crops, which may scroll.
-  for (const [name, type] of CVD_ARMS) {
-    await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
-    await page.screenshot({ path: path.join(dir, `cvd-${name}-fullpage.png`), fullPage: true, scale: 'css' })
+  // door and "Saved to this device" sat in no color-vision frame. Before the crops, which may scroll. A PAGE only: on a
+  // sheet state the full scroll is the page behind the fixed sheet, the sheet cut at one screen (the round review's
+  // L2 P3-2), and the sheet's own regions reach the arms through the `cvd` crops.
+  if ((await dialog.count()) === 0) {
+    for (const [name, type] of CVD_ARMS) {
+      await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
+      await page.screenshot({ path: path.join(dir, `cvd-${name}-fullpage.png`), fullPage: true, scale: 'css' })
+    }
+    await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
   }
-  await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
   for (const crop of CROP_TARGETS) {
     const { name, selector } = crop
     const cvd = 'cvd' in crop && crop.cvd
@@ -1847,7 +1851,7 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
       [slots.workingCostTypedBelowAtQuoteLeftOver(RISEN_W_QUOTE_NOW, 2026, RISEN_AT_QUOTE), slots.workingCostTypedBelowYearExtra('Your', '6,000')].join(' '),
       { exact: true },
     ),
-    'the seat’s at-quote sentences below its radios',
+    'the seat’s at-quote sentences',
   ).toBeVisible()
   await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
   await captureState(page, path.join(outDir, 'panel-typed-below'))

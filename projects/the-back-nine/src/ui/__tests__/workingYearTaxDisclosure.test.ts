@@ -329,6 +329,8 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     for (const k of ['assumptionWorkingYearCheckLeftOverSaved', 'assumptionWorkingYearCheckLeftOverSavedMoved'] as const) {
       expect(copy[k], k).not.toMatch(/working year’s figure|two figures/)
     }
+    // …and its positive twin on the moved line (the round review's L3 F9: only the saved line had one).
+    expect(copy.assumptionWorkingYearCheckLeftOverSavedMoved).toMatch(/the smaller of the two amounts, then and now\./)
     expect(copy.assumptionWorkingYearCheckLeftOverNotAsked).toMatch(/only when your first working year shows some left over/)
   })
 

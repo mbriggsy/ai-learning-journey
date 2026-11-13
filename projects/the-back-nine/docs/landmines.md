@@ -334,7 +334,7 @@ tests
   and each REVIEW line (a citation inside a modified hunk is never moved), and move the second number of a comma pair by hand
   (the tool moves only the first).
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:762-772`
-  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:977-979`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
+  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:981-983`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
   1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:2801-2803`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
@@ -447,14 +447,14 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   double-shifts every token it already moved (its dry run proposed `solverCodeVersion.ts:154 → :171` for a citation
   already at the right line). Move the later ones by hand from content, then run `content-check.mjs` (the re-anchor
   tools folder) — every DIFF it prints must be a construct this change edited on purpose. It also rewrote a HISTORICAL
-  example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1966`…" line) as if it were
+  example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1975`…" line) as if it were
   live: reverted by hand; read its WOULD list for examples before `--apply`.
 
 - **(b9-10, 10-22) `pnpm doc:reanchor` skips `index.ts` too** (two are tracked: `src/engine/constants/index.ts` and
   `src/engine/reference/solver-cases/index.ts`), the ambiguous-basename class. Run `git grep -n "index\.ts:[0-9]"` and fix
   by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:441-444`,
   and pair-check's DOCHUNK section caught it. It also never moves a doc's citations INTO ITSELF, and neither tool flagged
-  it: two new register entries shifted `docs/backlog.md:1966`, `:2252`, `:2325` (cited from inside the register) by +36.
+  it: two new register entries shifted `docs/backlog.md:1975`, `:2261`, `:2334` (cited from inside the register) by +36.
   After any edit that adds lines to a doc, run `git grep -n "<doc>:[0-9]"` across the repo, the doc itself included, and
   compare HEAD vs tree content at each shifted number.
 
@@ -496,6 +496,12 @@ is a guess a verifier must check, never a fact
 
 ## Copy and copyGuard
 
+- **(b9-7, 11-13) A refuter's chosen HOST for new words can break R6 even when the words are right.** Walk 7's R2 put
+  the at-quote sentences at the end of the W row's typed-below note; they read the answer, and that note sits directly
+  above the left-over seat's radios in the panel, so a tap on "Spent" would have taken four sentences out from above the
+  radio it pressed. Before placing answer-keyed words, find the host's position relative to the seat's radios: above
+  them, only the methodology line and W's stale note may read the answer (the plan's R6 / KTD11 amendments); below the
+  radios is R6's home for a line chosen by the answer.
 - **(b9-6, 11-13) A refuter's fix words can bring back a wording a council struck.** Walk 7's R1 refuter wrote "Your
   answer takes none of those shortfalls from your savings", which council `wf_7fa86902-35c` struck in walk 4; only
   `copyGuard.test.ts`'s retired sweep (`RETIRED_EVERYWHERE`) caught it, after the build. Before building a refuter's or
@@ -565,6 +571,10 @@ chair; chair from a digest script, never the raw result, and expect the window t
 ## Claude Code, workflows and sessions
 
 
+- **(b9-7, 11-13) A subagent cannot write a `.md` report file: the harness refuses it ("subagents should return
+  findings as text").** All four round-review seats briefed to write `REPORT.md` sent the whole report back as their
+  reply instead, 3–5K tokens each into the main window (`.mts` probes in their folders still wrote). Brief a seat to
+  REPLY with its findings under a word cap (a table first), and write the record yourself from the replies.
 - **(b9-5, 11-13) A whole fleet of Agents can die at once on an auth error while the main loop keeps working.** Walk
   7's eight refuters, launched together, all ended before reading a file on "Please run /login · API Error: 403
   Attention Required! | Cloudflare" (authentication_failed); the eleven seats launched minutes earlier had finished

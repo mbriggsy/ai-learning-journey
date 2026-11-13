@@ -1006,7 +1006,7 @@ describe('workingYearCostTypedBelowLine and its door — R1, the Result and the 
     )
   })
 
-  it('C (`datesavedrisenlater` retyped, the left over MOVED to $26,985): on the Result the moved clause takes the credit sentence’s place, naming the $84,000 its $26,985 rests on beside the quote’s $5,985 (the round review’s pair); on the gate, or where a rules line hosts the clause, the credit is its own sentence — then $5,985 at $105,000 and the 2029–2032 run "at that cost"', () => {
+  it('C (`datesavedrisenlater` retyped, the left over MOVED to $26,985): on the Result the moved clause takes the credit sentence’s place, naming the $84,000 its $26,985 rests on beside the quote’s $5,985 (the round review’s pair); on the gate, or where a rules line hosts the clause, the line carries no cap at all (the moved words say it, R3 (c)) — then $5,985 at $105,000 and the 2029–2032 run "at that cost"', () => {
     const d = typed(DEV_SEEDS.datesavedrisenlater)
     expect(workingYearLeftOverShownState(d), 'the premise: moved').toBe('saved-moved')
     const atQuote = (answer: 'This' | 'Your') =>

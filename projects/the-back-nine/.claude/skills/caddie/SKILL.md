@@ -127,7 +127,9 @@ route, so this is its only capturable home:
   `cvd-<arm>-fullpage.png`, the full scroll under each arm at CSS scale (U11 walk 7's R8 (b): the
   above-fold arms are one screen, so the phone gate's buttons and door, a verdict paragraph past
   the fold, the backup door and "Saved to this device" reached no arm; like `fullpage.png`, a tall
-  page is downscaled at ingestion, so small text is still read from the crops); PLUS
+  page is downscaled at ingestion, so small text is still read from the crops). Pages only: on a
+  sheet state `fullpage.png` shows the page behind the fixed sheet, the sheet cut at one screen,
+  so no `cvd-<arm>-fullpage.png` is taken there; read a sheet from its crops and `dialog.txt`; PLUS
   `cvd-<arm>-<chart>.png` device-scale crops of every chart on the state (band / ladder /
   TwoFutures — increment 4: the above-fold arms were structurally blind to below-fold charts;
   `recviz`, the RecommendationViz two-arm chart — increment 6), `cvd-<arm>-survivor.png`

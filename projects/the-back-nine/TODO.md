@@ -25,13 +25,13 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-13, b9-6's close):** walk 7's card is `86acd918` (HARD-FLAG, held on R1) and its fix round's commit 1 is `d4c38295` (spec: `b9-build2-surplus\u11-walk7-round\ROUND.md`). In order: (1) DONE (b9-7): the fix round's commit 2, R2's sheet twin and R8 (b)'s capture-harness gap, R8 (c) filed (item 1's ▶ NEXT); (2) the round review over both commits — whole files, an adversary, every finding verified — with a mutant pass, the R10 sweep + idcheck against `walk5`, `verify:fit`, `doc:reanchor`; (3) walk 8 on the reviewed tree, then its card (it clears R1's hold only once read); then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the list is far past 10).
+▶ **START HERE (2026-11-13, b9-7's close):** walk 7's fix round is built and reviewed (`cf20042e`); the review found the typed-below line's at-quote part year-0-centric (R4's over-credit recurs unsaid, P1 on its worst shape; short runs unnamed or half-said), filed with one rebuild's prescription as the register's Tier 0 *A figure typed below today's spending clears W's stale line for good…*, its round-review bullet. In order: (1) `/brief the typed-below line's whole-window rebuild`; (2) its plan, deepened, checked as a whole and read by the three blind readers, a council on the words' shape inside it (walk 2's (ap) density); it adds an engine-side output (every working year's printed bottom line), so the R10 sweep's date keys MOVE by design; (3) the build, opened with `/brief`; (4) the whole-file review, with an adversary and every finding verified, a mutant pass, the sweep + idcheck, `verify:fit`, `doc:reanchor` last; (5) walk 8, the same 14 targets, then its card (R1's hold clears only once read); then U12; then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
    (`ec2c7694`), planned, deepened and checked as a whole. Council `wf_1b5d9962-73c` (8/10) ruled the six calls the 2026-10-21
    words left open; they are the plan's Key Decisions. 
-   Walk bundles kept in `temp/caddie/`: `caddie-golive-b9-1-walk3`, `-walk4`, `-walk5`. b9-6's two (`caddie-golive-b9-6`, `caddie-golive-b9-6-fix`) are still there (other b9 sessions were live at b9-1's close): any session may delete `temp/caddie/caddie-golive-b9-6` and `temp/caddie/caddie-golive-b9-6-fix` as its own task, outside squeaky's temp step, by exact path, once ListAgents shows no other live session in this folder.
+   Walk bundles kept in `temp/caddie/`: `caddie-golive-b9-1-walk3`, `-walk4`, `-walk5`. b9-6's two (`caddie-golive-b9-6`, `caddie-golive-b9-6-fix`) are still there (other b9 sessions were live at b9-1's close): any session may delete `temp/caddie/caddie-golive-b9-6`, `temp/caddie/caddie-golive-b9-6-fix` and b9-7's R2 / R8 (b) proof walk `temp/caddie/caddie-b9-7-r2-proof` as its own task, outside squeaky's temp step, by exact path, once ListAgents shows no other live session in this folder.
    **Filed by b9-1's walks 3 to 5 for U12 (the card's new hold (q) is a Tier 0 candidate; the rest go in as their seats rated
    them):** (q) **the re-entry gate attests to balances only:** it names paychecks ("Markets and paychecks move") but shows no pay,
    no W and no left-over answer, so "Still about right" never puts what the date leans on in front of the couple; measure a pay
@@ -94,20 +94,13 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **walk 7's fix round, commit 2, then the round review** (START HERE). Walk 7's card is `86acd918`
-     (`docs/caddie/cold-read-log.md`, top; refuters and chair's notes `b9-build2-surplus\u11-walk7\panel\`, R1's engine
-     measurement `u11-walk7\measure\R1-MEASURE.md`). Commit 1, `d4c38295`, built R1, R3 (a)/(c), R4, R5, R6, R7 (a) and
-     R8 (a); `u11-walk7-round\ROUND.md` is the spec and records its four departures from the refuters' words (R1 in B's
-     ruled clause, since council `wf_7fa86902-35c` struck "takes none of those shortfalls"; R3 (c) also on the Result's
-     hosted case; R4 also after "nothing left over"; R6 (c) without the year-0 dollars, attack 4). Commit 2 (b9-7) built
-     R2 in the left-over SEAT, below its radios, not at the end of the W row's note (R6: that note sits above the radios
-     and these sentences read the answer; ROUND.md records the departure), and R8 (b) (`cvd-<arm>-fullpage.png`, proven
-     on two targets); R8 (c) is filed in the register (Tier 2, council first). Still owed, in order:
-     - **The round review** over `d4c38295` and commit 2: whole files, an adversary, every finding verified; a mutant pass
-       (R1's two arms and their figures, R4's predicate, R5's split, R3 (c)'s one-cap predicate); the R10 sweep + per-key
-       idcheck against `walk5`; `verify:fit`; `doc:reanchor` last.
-     - **Walk 8** on the reviewed tree, the same 14 targets (`temp\caddie\caddie-u11-b9-5-walk7\` is the last bundle), then
-       its card: R1's hold clears only once a panel reads the built sentence.
+     ▶ NEXT: **the typed-below line's whole-window rebuild, then walk 8** (START HERE; the prescription is the
+     register's Tier 0 retype entry, its round-review bullet). Walk 7's fix round is done (`d4c38295`, `5c69f502`, the
+     review `cf20042e`); the rebuild reads its spec and departures (`b9-build2-surplus\u11-walk7-round\ROUND.md`), the
+     review's record and every seat's probe (`u11-walk7-round\review\`, `FINDINGS.md` first), and the mutant runner to
+     copy (`u11-walk7-round\mutants.cjs` + `mutants-list.cjs`). Walk 8 runs the same 14 targets as walk 7
+     (`temp\caddie\caddie-u11-b9-5-walk7\` is the last bundle; walk 7's card is `86acd918`, its panel record
+     `u11-walk7\panel\`, the form to copy).
      **Filed by the walk-5 round's review for U12** (`wf_c037b423-7f0`; the record is `u11-walk5\ROUND.md` § "The
      round review"; each finding goes into the register with its prescription):
      - (bh)'s "Because that $16,985 depends on your $X figure" names the HELD figure, which need not be the one the
@@ -266,82 +259,71 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-13 (b9-6: walk 7's refuter round, R1's engine measurement, the card, the fix round's commit 1; b9-5's block pruned into it):**
+**SESSION 2026-11-13 (b9-7: walk 7's fix round, commit 2; its round review; b9-6's block pruned into it):**
 
 State at close:
-- `86acd918` (walk 7's card, its tape row and the Tier 0 retype entry's ⚑ MEASURED-again bullet) and `d4c38295` (the
-  fix round's commit 1, with `doc:reanchor HEAD` applied: 247 edits, 3 by hand) committed and pushed. At `d4c38295`:
-  typecheck exit 0, lint exit 0, the e2e specs typecheck clean but the known `chart-text.spec.ts` /
-  `assumptions-row-look.spec.ts` errors, the full suite pinned green but the doc-stats citation arm before the
-  re-anchor and `verify:doc-stats` exit 0 after it (its count is the gate's), the whole `verify:fit` pinned 178/178, the
-  R10 sweep + per-key idcheck 42 of 42 identical against `walk5` (`u11-walk7-round\idcheck-walk7round.txt`). No mutant
-  pass yet: the round review owes one over both commits. CI: `24983ba9` (43401897188) passed; `ecb403a0`, `86acd918`
-  and `d4c38295` were running at this close.
-- Commit 2 and the round review were not started: the window crossed 50% after commit 1.
+- `5c69f502` (commit 2: R2's seat twin, R8 (b), R8 (c) filed) and `cf20042e` (the round review: the fit gate's
+  coordinate-tap arm fixed, the CVD full page skipped on sheet states, stale R3 (c) comments, three hand-typed pins, the
+  review's findings filed) committed and pushed. At `cf20042e`: typecheck exit 0, lint exit 0, the edited e2e specs
+  typecheck clean (a scratch config naming `caddie-walk.spec.ts` and `vertical-fit.spec.ts`), `verify:doc-stats` exit 0
+  (its count is the gate's), the full suite pinned, every test green; `verify:fit` pinned
+  178/178 and the R10 sweep + per-key idcheck (`walk7round2`) 42 of 42 identical against `walk5` on the review's tree
+  before its comment-only src edits; the mutant pass 18 of 18 killed (`u11-walk7-round\mutants-run.txt`). CI on
+  `5c69f502` (43468689044) went RED on `verify:fit`'s coordinate-tap arm, the one `cf20042e` fixes.
+- The review's open findings are NOT fixed: they are one rebuild (START HERE). `sweep-walk5.json` stays the baseline
+  until the rebuild moves the date keys by design.
 
-Next is START HERE. b9-7 is the successor (handoff mode: b9-7 to b9-10 live and idle, after Briggsy renamed the sessions).
+Next is START HERE. b9-8 is the successor (handoff mode: b9-8 to b9-10 live and idle).
 
 **Check at start:**
-- the CI runs on `86acd918` and `d4c38295`: `gh run list --commit <full sha> --json status,conclusion` (full shas:
-  `git rev-parse 86acd918 d4c38295`);
+- the CI run on `cf20042e` (and that `5c69f502`'s red was only the coordinate-tap arm): `gh run list --commit <full sha>
+  --json databaseId,status,conclusion` (full shas: `git rev-parse cf20042e 5c69f502`);
 - the ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 
-**LANDMINES (walk 7's refuters, R1's measurement, the card and its fix round):**
-- **A refuter fleet can die at once on an auth 403** (`docs/landmines.md`, Claude Code): read every notification's
-  status before chairing; relaunch once; the same 403 twice is a `/login` for Briggsy.
-- **A fix that names its hosts can miss one.** The pair fix's prescription named the Result's slot and the gate's line;
-  the moved words also ride a fired rules line as its clause (`leftOverClauseHost` on the Result, `clauseHost` in
-  `composeReentry`), and R1's refuters had read that host as clean from the typed line alone. Before a fix round
-  changes what a composer says, grep every caller of the composer, and prefer carrying the decision in the core
-  (`WorkingYearLeftOverMoved.typedBelow`) over a conditional per host.
-- **The constants gate reds a bare 72000 in a test** (`constants.shape.test.ts`'s single-source arm): write a typed W
-  of $6,000 a month as `6_000 * 12`.
-- **A change to what a slot shows reds the arms of the cause it displaces** (`docs/landmines.md`, the fit gate's first
-  entry): a fix to R1's line or the moved words runs every arm reading `.cs-paycheck-note` / `.reentry-notes`
-  (the coordinate-tap arm, `datesavedmoved`, the unlock loop with its new two-note `datesavedtypedmoved`) or the whole
-  `verify:fit`.
+**LANDMINES (the rebuild and walk 8):**
+- **An unlisted later year is NOT year 0's (or the last listed year's) twin in general.** The money picture lists a
+  later year only on an event or when it is short; a drift year that stays positive is unlisted yet prints differently
+  (the register's retype entry, its ⚑ NEGATIVE). The rebuild's per-year figures come from a new every-year output,
+  never from carrying a listed row forward.
+- **That new output moves the R10 sweep's date keys.** The sweep digests the money picture per date key, so adding a
+  field to it moves every date key's digest: plan it as an intended move with a new baseline and a per-key reason, never
+  meet it as a stop-the-line surprise; the spine keys must stay identical.
+- **One composer feeds three surfaces** (`TYPED_BELOW_AT_QUOTE` via `typedBelowCarried`: the Result's slot, the gate's
+  line, the seat's at-quote line), so a rebuild changes every reader at once: the fit gate's `PAY_CHECK_UNLOCKS`
+  (`typedBelowLine`, `typedMovedLine`), its coordinate-tap arm (the seat's figure, moved and at-quote lines),
+  `reentry.test.tsx`, `resultPayCheckLine.test.tsx`, `IntakeApp.test.tsx`, the caddie `intake:typedbelow` arm. The unit
+  suite never runs Playwright: grep `e2e/` for every slot the rebuild changes (commit 2 redded CI exactly this way).
+- **A refuter's chosen host for new words can break R6** (`docs/landmines.md`, Copy): above the seat's radios only the
+  methodology line and W's stale note may read the answer.
+- **A subagent cannot write a `.md` report** (`docs/landmines.md`, Claude Code): brief seats to REPLY under a word cap,
+  a table first, and write the record yourself.
+- **A fix that names its hosts can miss one.** Grep every caller of a composer before a fix round changes what it says;
+  carry the decision in the core (`WorkingYearLeftOverMoved.typedBelow`), never a conditional per host.
+- **The constants gate reds a bare 72000 in a test** (`constants.shape.test.ts`): write `6_000 * 12`.
 - **`pnpm doc:reanchor <BASE>` moves a citation written FRESH in the tree a second time** (`docs/landmines.md`): run it
-  against the commit before your first src edit, then restore your own fresh ones; b9-5 ran it twice (`8f28b078`,
-  then `5f96411d` after the seed) and found two TODO anchors already 16 lines stale before either (fixed in `24983ba9`).
-- **`netstat` lists 127.0.0.1:4190 as LISTENING under PID 0 after a fit run (b9-3, b9-2).** Those rows are ghosts: `curl
-  --max-time 5 http://127.0.0.1:4190/` refuses (exit 7). Probe the port with `curl` before reading a walk or fit failure
-  as a stale server's.
+  against the commit before your first edit; it also widens a range a hunk lands inside (b9-7 hand-fixed act4-u17's
+  `datearrived` door-walk citation, already pointing at the wrong code).
+- **`netstat` lists 127.0.0.1:4190 as LISTENING under PID 0 after a fit run.** Ghosts: probe with `curl --max-time 5`
+  before reading a fit failure as a stale server's.
 - **A scripted multi-line replace fails on the CRLF files** (`devSeeds.ts`, `devSeeds.test.ts`, `copyGuard.test.ts`):
-  a `"\n"` in the match string never meets their `\r\n`, so the count reads 0. Use the Edit tool there, and count line
-  endings with `node`, never `grep -c $'\r$'` (it read 0 on `copyGuard.test.ts`, which is all CRLF).
-- **A probe in the scratchpad imports the project's modules by `file:///C:/…` URLs, never relative paths,** and runs
-  from the project dir (`pnpm exec tsx <probe>.mts`) so the `@intake` / `@ui` aliases inside `src` resolve. Print a
-  composer's output on every witness that way BEFORE typing a by-hand pin, then type the pin from the documented
-  figures and compare.
-- **A first-load module reads `entryCopy`, never `copy.ts` (b9-2).** `vite build` refuses `src/ui/copy.ts` in the
-  initial JS (`scripts/entryChunkGuard.ts`); a string an entry-graph module renders goes in `src/ui/entryCopy.ts`.
-  R1's gate words ride `copy.ts` through the lazy `IntakeApp` (`pnpm build` exit 0 at `3000a04c`); any new gate word is
-  checked the same way.
-- **W's block has no spaces between its parts in `textContent`** (`div.note-parts` → `p` → `dl` → `dt`/`dd`). An e2e
-  compare of joined parts reads `innerText` (`toContainText(…, { useInnerText: true })`) or each element; a unit test
-  compares `notePartsText(parts)` against the composer, never a host's `textContent`.
-- **The e2e specs are outside `pnpm typecheck`.** A retired copy key or a changed slot signature they read compiles
-  clean and fails only in Playwright. Typecheck them through a scratch tsconfig in the session scratchpad. It must name
-  `node_modules` absolutely:
-  ```json
-  { "extends": "<project>/tsconfig.json",
-    "compilerOptions": { "noEmit": true, "typeRoots": ["<project>/node_modules/@types"], "types": ["node"] },
-    "include": ["<project>/src", "<project>/vite-env.d.ts", "<project>/node_modules/vite/client.d.ts", "<project>/e2e/*.ts"],
-    "exclude": ["<project>/node_modules/.pnpm", "<project>/dist", "<project>/e2e/held"] }
-  ```
-  Then run `npx tsc -p <it>`. Its only errors at b9-2's close were `chart-text.spec.ts`'s pre-existing `Node.remove`, seven.
-- **A Playwright `-g` filter run through `cmd //c "start /affinity FFF …"` loses a quoted space** ("No tests found",
-  exit 0): filter with a space-free regex (`-g unlock.line`), and read the run's count line, never the exit code.
-- **A copy plant inside a slot is killed only by a test with the words typed by hand.** Every test that compares
-  against `slots.*` changes its expected value with the plant. `workingYearLeftOver.test.ts`'s "the words, typed by
-  hand" is the net; keep a by-hand pin for every new sentence the round adds.
-- **`src/ui/__tests__/copyGuard.test.ts` is committed CRLF** (`docs/landmines.md`, Windows and the shell): the Edit
-  tool handles it; a scripted replace must match its line endings.
-- **Walk 7's record, for its chair:** the briefs (`BRIEFS.md`, `REFUTER-BRIEF.md`, `FACTS.md`), the eleven seat
-  reports and `CHAIR-NOTES.md` in `b9-build2-surplus\u11-walk7\panel\`; walk 6's whole record, the form to copy, in
-  `u11-walk6\panel\` (its card is the cold-read log's top entry) and the R1 measurement's scripts in `u11-walk6\measure\`.
+  use the Edit tool; count line endings with `node`.
+- **A probe runs from the project dir** (`pnpm exec tsx --tsconfig ./tsconfig.json <probe>.mts`, the review's seats) so
+  the `@intake` / `@ui` aliases resolve; print a composer on every witness BEFORE typing a by-hand pin.
+- **A first-load module reads `entryCopy`, never `copy.ts`** (`scripts/entryChunkGuard.ts`): a new gate word is
+  checked with `pnpm build`.
+- **W's block has no spaces between its parts in `textContent`**: an e2e compare reads `innerText`; a unit test
+  compares `notePartsText(parts)`.
+- **The e2e specs are outside `pnpm typecheck`.** Typecheck an edited spec through a scratch tsconfig in the scratchpad
+  that extends the project's, names `types` by absolute path (`<project>/node_modules/@types/node`,
+  `<project>/node_modules/vite/client`) and includes the spec by absolute path; confirm with `--listFilesOnly`.
+- **A Playwright `-g` filter run through `cmd /c "start /affinity FFF …"` loses a quoted space**: a space-free regex,
+  and read the count line, never the exit code.
+- **A copy plant inside a slot is killed only by a test with the words typed by hand** (the review's L3 F4 proved it:
+  the seat's figure line had none until `cf20042e`). Keep a by-hand pin for every new sentence.
+- **Never edit a plant file while the mutant runner runs**: it restores each file from its snapshot, so an edit there
+  is overwritten; docs are safe.
 
 **THE A6 TOOLS (durable, b9-14):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a6-tools\`
 — `seeds.mts` (`b9-seed-probe`'s, rooted at the CWD's `src`: run it once from `b9-a6-head\` — a `git archive` of HEAD's
@@ -1100,6 +1082,10 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - A fix that names its hosts misses the one nobody listed; carry the decision in the core the hosts already read. The walk-6 round review prescribed the pair fix for two hosts (the Result's slot clause, the gate's moved line); the moved words also ride a fired rules line as its clause (`leftOverClauseHost` / `composeReentry`'s `clauseHost`), the same pair beside R1's line, and R1's refuter had called that host clean from the typed line alone. b9-5 put the basis on `WorkingYearLeftOverMoved` (`typedBelow`, the typed-below line's own predicate) so all three follow with no call site changed (`5f96411d`; mutants P1–P4 in `u11-walk6-round9-5mutants`). *Extend* insight 081 (a producer's output is the only non-drifting source).
 - A refuter verifies its fix against the page, not against the rulings that shaped the page. Walk 7's R1 refuter checked its sentence against every line on TM's screens and handed over "Your answer takes none of those shortfalls", a phrase council `wf_7fa86902-35c` had struck two walks earlier; copyGuard's retired sweep caught it only at build (b9-6, `d4c38295`, built instead in B's ruled clause). The chair's verify step owes a pass over the retired-wordings list before a refuter's words become a fix (`docs/landmines.md`, Copy and copyGuard).
 - A short-years sentence needs its figures from a rule the engine keeps, pinned where it can be seen: W comes off each working year's cash dollar for dollar, so a year's cash at a typed figure is its cash at the quote plus the gap, and the credit is min(that, the cap). b9-6 pinned the identity on TM's four shared rows ($21,000 each) before composing R1's sentence from the run's shortfalls, and gave the case it cannot cover (a year short at the typed figure too) a sentence true in every case rather than a guess.
+- *Correct the entry above:* "true in every case" was not enough. The fallback ("those years cost $G less each, so … takes less") is literally true, yet on a run that straddles the gap the years whose shortfall is below it take nothing and ADD a credit, unsaid (C typed at $101,000: $348 in 2031–2032; the walk-7 round review's RF-B). A sentence can be calm-but-wrong by omission: check what the answer does in each year a sentence covers, not only that its verb holds.
+- A figure sized for one year must be checked across every year it recurs in. Walk 7's R4 refuter scoped "That year, this answer adds $6,000 your pay doesn't really leave over" to 2026 for exactness, knowing the cap binds every year; the round review's whole-window probe found the same over-credit in each of 2026–2030 on A ($41,274 over seven years, said once) and, on TM at $95,000, a "$1,000" beside $10,637–$11,000 in each of 2029–2032. A composer built off year 0 and the first short run hides the window: print every year's row at both figures before scoping a figure to one year (record `b9-build2-surplus\u11-walk7-round\review\FINDINGS.md`).
+- A ledger that lists only its event years cannot stand in for every year. The money picture names a later year only on an event or when it comes up short, so a drift year (an uninflated income stream) that stays positive is unlisted and prints differently from the listed year before it; "an unlisted year carries the last listed row" held on every seed and failed on the first drift household (the review's RF-A).
+- *Extend the first entry (e2e/ outside tsconfig):* a CHANGED slot's output bites the same way as a retired key. Commit 2 of walk 7's round changed the seat's figure and moved lines on typed-below drafts; the unit suite passed, and CI's `verify:fit` coordinate-tap arm went red on both viewports (run 43468689044). Grep `e2e/` for every slot a round changes, not only the removed ones.
 
 ## Driving the app
 

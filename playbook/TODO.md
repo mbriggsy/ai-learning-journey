@@ -8,7 +8,7 @@ The queue for work on how we work. Sessions for it start in this folder.
 
 **Next: nothing is queued here; Briggsy names the next job.** The doc audit's fixes have all landed. Back Nine work runs in Back Nine sessions, from that project's TODO (Act 5 after build 2; the early-withdrawal plan's reader faults before its U1).
 
-**Check at start:** (1) CI: "Verify the brief bench" (for `docs/insights/`) and "Verify The Back Nine" (for its `TODO.md`) run on the commit that landed the doc audit's fixes: `gh run list --workflow verify-brief.yml --commit <full sha>` and the same with `verify-the-back-nine.yml`, the sha from `git log -1 --format=%H -- playbook/docs/insights`; every push of 2026-11-12 before it is green. Playbook commits outside `docs/insights/` touch no CI path. (2) The weekly meter (`seven_day` in `~/.claude/statusline-meters.json`): 52% at 2026-11-13 02:23Z. (3) CE updates itself (3.38.1): `grep -A4 '"compound-engineering@every-marketplace"' ~/.claude/plugins/installed_plugins.json` names the live version. (4) `ListAgents` and `/window`. (5) Every spawn is Opus with its effort set.
+**Check at start:** (1) CI: none open. The doc audit's fixes (`ceba647e`) passed "Verify the brief bench" (run `43354010439`) and "Verify The Back Nine" (run `43354010470`, for its `TODO.md`), and every push of 2026-11-12 before it is green. Playbook commits outside `docs/insights/` touch no CI path. (2) The weekly meter (`seven_day` in `~/.claude/statusline-meters.json`): 52% at 2026-11-13 02:23Z. (3) CE updates itself (3.38.1): `grep -A4 '"compound-engineering@every-marketplace"' ~/.claude/plugins/installed_plugins.json` names the live version. (4) `ListAgents` and `/window`. (5) Every spawn is Opus with its effort set.
 
 ## Current state
 

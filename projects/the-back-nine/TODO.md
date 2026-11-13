@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-13, b9-7's close):** walk 7's fix round is built and reviewed (`cf20042e`); the review found the typed-below line's at-quote part year-0-centric (R4's over-credit recurs unsaid, P1 on its worst shape; short runs unnamed or half-said), filed with one rebuild's prescription as the register's Tier 0 *A figure typed below today's spending clears W's stale line for good…*, its round-review bullet. In order: (1) `/brief the typed-below line's whole-window rebuild`; (2) its plan, deepened, checked as a whole and read by the three blind readers, a council on the words' shape inside it (walk 2's (ap) density); it adds an engine-side output (every working year's printed bottom line), so the R10 sweep's date keys MOVE by design; (3) the build, opened with `/brief`; (4) the whole-file review, with an adversary and every finding verified, a mutant pass, the sweep + idcheck, `verify:fit`, `doc:reanchor` last; (5) walk 8, the same 14 targets, then its card (R1's hold clears only once read); then U12; then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
+▶ **START HERE (2026-11-13, b9-8's close):** the typed-below line's whole-window rebuild is planned (`docs/plans/features/typed-below-whole-window-rebuild-spec.md`, `259e4372`; confidence check passed, the words' shape ruled by council `wf_f74697d1-f2e`). In order: (1) the plan checked as a whole (the full team of reviewers, the adversary named, the whole plan to the contradiction and breakage reviewers), each finding checked against the code and folded; (2) the plan read by the three blind readers, each fault checked against the code, the real ones fixed in the plan, the minor ones listed there, and a commit whose message says "planned, confidence check passed, checked and read" (the build waits on it); (3) the build in the plan's three commits, each unit opened with `/brief <that unit's topic>`; (4) the whole-file review, with an adversary and every finding verified, a mutant pass, the sweep + idcheck against the plan's new `wholewindow` baseline, `verify:fit`, `doc:reanchor` last; (5) walk 8, the same 14 targets, then its card (walk 7's R1 hold clears only once read); then U12; then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,11 +94,11 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **the typed-below line's whole-window rebuild, then walk 8** (START HERE; the prescription is the
-     register's Tier 0 retype entry, its round-review bullet). Walk 7's fix round is done (`d4c38295`, `5c69f502`, the
-     review `cf20042e`); the rebuild reads its spec and departures (`b9-build2-surplus\u11-walk7-round\ROUND.md`), the
-     review's record and every seat's probe (`u11-walk7-round\review\`, `FINDINGS.md` first), and the mutant runner to
-     copy (`u11-walk7-round\mutants.cjs` + `mutants-list.cjs`). Walk 8 runs the same 14 targets as walk 7
+     ▶ NEXT: **the typed-below line's whole-window rebuild, then walk 8** (START HERE; the plan is
+     `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, and the register's Tier 0 retype entry carries the
+     council's NEGATIVE on the round review's x_t metric). Its research, the council's drafts and full result sit in
+     `b9-build2-surplus\u11-wholewindow\` (`research\witnesses.md` holds every witness's per-year engine figures); the
+     mutant runner to copy is `u11-walk7-round\mutants.cjs` + `mutants-list.cjs`. Walk 8 runs the same 14 targets as walk 7
      (`temp\caddie\caddie-u11-b9-5-walk7\` is the last bundle; walk 7's card is `86acd918`, its panel record
      `u11-walk7\panel\`, the form to copy).
      **Filed by the walk-5 round's review for U12** (`wf_c037b423-7f0`; the record is `u11-walk5\ROUND.md` § "The
@@ -259,30 +259,34 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-13 (b9-7: walk 7's fix round, commit 2; its round review; b9-6's block pruned into it):**
+**SESSION 2026-11-13 (b9-8: the rebuild's brief and plan; b9-7's block pruned into it):**
 
 State at close:
-- `5c69f502` (commit 2: R2's seat twin, R8 (b), R8 (c) filed) and `cf20042e` (the round review: the fit gate's
-  coordinate-tap arm fixed, the CVD full page skipped on sheet states, stale R3 (c) comments, three hand-typed pins, the
-  review's findings filed) committed and pushed. At `cf20042e`: typecheck exit 0, lint exit 0, the edited e2e specs
-  typecheck clean (a scratch config naming `caddie-walk.spec.ts` and `vertical-fit.spec.ts`), `verify:doc-stats` exit 0
-  (its count is the gate's), the full suite pinned, every test green; `verify:fit` pinned
-  178/178 and the R10 sweep + per-key idcheck (`walk7round2`) 42 of 42 identical against `walk5` on the review's tree
-  before its comment-only src edits; the mutant pass 18 of 18 killed (`u11-walk7-round\mutants-run.txt`). CI on
-  `5c69f502` (43468689044) went RED on `verify:fit`'s coordinate-tap arm, the one `cf20042e` fixes.
-- The review's open findings are NOT fixed: they are one rebuild (START HERE). `sweep-walk5.json` stays the baseline
-  until the rebuild moves the date keys by design.
+- `259e4372`: the plan (`docs/plans/features/typed-below-whole-window-rebuild-spec.md`), council `wf_f74697d1-f2e`'s
+  digest row, and the register's NEGATIVE on x_t. Docs only, no `src` change: `verify:doc-stats` exit 0, typecheck exit
+  0 (squeaky's run). CI on `cf20042e` (43485265336) and `ce071d3e` (43486398964) both passed, so `5c69f502`'s red was the
+  coordinate-tap arm alone.
+- The plan is confidence-check passed but NOT yet checked or read: this session stopped at the window's warn line so
+  the check (five reviewers) and the readers run in a fresh window. The request ce-plan got is word for word in
+  `b9-build2-surplus\u11-wholewindow\plan-request.md` and the brief in `...\u11-wholewindow\brief.md`: hand both to the
+  readers (`playbook\how-to\plan-step.md`'s launch args). `sweep-walk5.json` stays the baseline until U1 lands.
 
-Next is START HERE. b9-8 is the successor (handoff mode: b9-8 to b9-10 live and idle).
+Next is START HERE. b9-9 is the successor (handoff mode: b9-9 and b9-10 live and idle).
 
 **Check at start:**
-- the CI run on `cf20042e` (and that `5c69f502`'s red was only the coordinate-tap arm): `gh run list --commit <full sha>
-  --json databaseId,status,conclusion` (full shas: `git rev-parse cf20042e 5c69f502`);
+- the CE plugin's live version before the check (it updates itself; this plan was written on 3.38.1):
+  `node -e "console.log(require(process.env.USERPROFILE+'/.claude/plugins/installed_plugins.json').plugins['compound-engineering@every-marketplace'][0].version)"`;
 - the ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 
 **LANDMINES (the rebuild and walk 8):**
+- **The round review's own fix measured the wrong thing.** Its x_t (credit at the typed figure minus the print at the
+  quote) understates every year after year 0; the lean is the pair, this answer's credit against the answer at the
+  quote's (the plan's KD1; the register entry's NEGATIVE). A reviewer or reader who re-proposes x_t, "at least" or a
+  "still working" condition is re-deriving a refuted finding.
+- **W's stale line shares `checkAtQuote` / `laterShortOf` / `shortRunFrom` with today's typed-below line.** The plan
+  forks a new read (KTD5); touching that core changes W-stale words on four seeds the plan does not scope.
 - **An unlisted later year is NOT year 0's (or the last listed year's) twin in general.** The money picture lists a
   later year only on an event or when it is short; a drift year that stays positive is unlisted yet prints differently
   (the register's retype entry, its ⚑ NEGATIVE). The rebuild's per-year figures come from a new every-year output,
@@ -1083,7 +1087,8 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - A refuter verifies its fix against the page, not against the rulings that shaped the page. Walk 7's R1 refuter checked its sentence against every line on TM's screens and handed over "Your answer takes none of those shortfalls", a phrase council `wf_7fa86902-35c` had struck two walks earlier; copyGuard's retired sweep caught it only at build (b9-6, `d4c38295`, built instead in B's ruled clause). The chair's verify step owes a pass over the retired-wordings list before a refuter's words become a fix (`docs/landmines.md`, Copy and copyGuard).
 - A short-years sentence needs its figures from a rule the engine keeps, pinned where it can be seen: W comes off each working year's cash dollar for dollar, so a year's cash at a typed figure is its cash at the quote plus the gap, and the credit is min(that, the cap). b9-6 pinned the identity on TM's four shared rows ($21,000 each) before composing R1's sentence from the run's shortfalls, and gave the case it cannot cover (a year short at the typed figure too) a sentence true in every case rather than a guess.
 - *Correct the entry above:* "true in every case" was not enough. The fallback ("those years cost $G less each, so … takes less") is literally true, yet on a run that straddles the gap the years whose shortfall is below it take nothing and ADD a credit, unsaid (C typed at $101,000: $348 in 2031–2032; the walk-7 round review's RF-B). A sentence can be calm-but-wrong by omission: check what the answer does in each year a sentence covers, not only that its verb holds.
-- A figure sized for one year must be checked across every year it recurs in. Walk 7's R4 refuter scoped "That year, this answer adds $6,000 your pay doesn't really leave over" to 2026 for exactness, knowing the cap binds every year; the round review's whole-window probe found the same over-credit in each of 2026–2030 on A ($41,274 over seven years, said once) and, on TM at $95,000, a "$1,000" beside $10,637–$11,000 in each of 2029–2032. A composer built off year 0 and the first short run hides the window: print every year's row at both figures before scoping a figure to one year (record `b9-build2-surplus\u11-walk7-round\review\FINDINGS.md`).
+- A figure sized for one year must be checked across every year it recurs in. Walk 7's R4 refuter scoped "That year, this answer adds $6,000 your pay doesn't really leave over" to 2026 for exactness, knowing the cap binds every year; the round review's whole-window probe found the same over-credit in each of 2026–2030 on A ($41,274 over seven years, said once) and, on TM at $95,000, a "$1,000" beside $10,637–$11,000 in each of 2029–2032. A composer built off year 0 and the first short run hides the window: print every year's row at both figures before scoping a figure to one year (record `b9-build2-surplus\u11-walk7-round\review\FINDINGS.md`). *Corrected by the next entry:* the "$41,274" and "$1,000 beside $10,637–$11,000" are x_t's, the wrong metric.
+- A fix's prescription must measure the comparison the defect was found with. Walk 6 measured the retype as this answer's credit against the honest answer's (the pair: $16,985 against $10,985 in every year); the walk-7 round review's prescription silently switched to x_t, the credit minus the print at the quote, which matches the pair only in year 0 (the honest answer is capped at its own year-0 print while pay rises). Four seats, three refuters and the plan's own research inherited it; only council `wf_f74697d1-f2e`'s red team re-read the comparison (A: $6,000 in 2033–2034 where x_t said nothing; TM: $11,000 where x_t said $762). Before building a reviewer's formula, write the comparison the original measurement made beside it and check they are the same quantity (record `b9-build2-surplus\u11-wholewindow\council\`).
 - A ledger that lists only its event years cannot stand in for every year. The money picture names a later year only on an event or when it comes up short, so a drift year (an uninflated income stream) that stays positive is unlisted and prints differently from the listed year before it; "an unlisted year carries the last listed row" held on every seed and failed on the first drift household (the review's RF-A).
 - *Extend the first entry (e2e/ outside tsconfig):* a CHANGED slot's output bites the same way as a retired key. Commit 2 of walk 7's round changed the seat's figure and moved lines on typed-below drafts; the unit suite passed, and CI's `verify:fit` coordinate-tap arm went red on both viewports (run 43468689044). Grep `e2e/` for every slot a round changes, not only the removed ones.
 

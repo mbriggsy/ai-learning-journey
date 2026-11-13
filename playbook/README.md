@@ -6,7 +6,7 @@ Sessions about how we work start in this folder: open the terminal in `playbook/
 
 ## The plays, in order
 
-For sizable work, steps 1 to 5 are required, in this order: brief, a deepened and checked plan, the build, the whole-file review, and distill. Sizable means new logic, or work that will take more than one session ([the full line](principles.md#how-we-work)). Steps 6 and 7 close the session: squeaky when you call it (or, in handoff mode, when the session calls it at the window's wrap line), and the handoff when a successor is named, in words or by its number (step 7). Which tool delivers a step is Claude's call, made job by job, and it can change when a better tool comes along.
+For sizable work, steps 1 to 5 are required, in this order: brief, a deepened, checked and read plan, the build, the whole-file review, and distill. Sizable means new logic, or work that will take more than one session ([the full line](principles.md#how-we-work)). Steps 6 and 7 close the session: squeaky when you call it (or, in handoff mode, when the session calls it at the window's wrap line), and the handoff when a successor is named, in words or by its number (step 7). Which tool delivers a step is Claude's call, made job by job, and it can change when a better tool comes along.
 
 What keeps the steps running: each session's close writes the job's next step, by name, into the TODO's START HERE line, where the next session starts.
 
@@ -17,9 +17,9 @@ Before work starts on a topic, Claude finds the few past lessons in the project'
 - **Start it:** nothing to say for sizable work: START HERE names it. You can also say "brief me on <topic>", "any gotchas with <topic>?", "what should I know before I start <topic>?", or `/brief <topic>`.
 - **Lives in:** [projects/skills/distill-and-brief/brief/](../projects/skills/distill-and-brief/brief/SKILL.md)
 
-### 2. Plan, deepen, then check the plan
+### 2. Plan, deepen, check, then read the plan
 
-Today Claude runs the compound-engineering plugin's `ce-plan` skill from start to finish, and that one run does all three parts:
+Today Claude runs the compound-engineering plugin's `ce-plan` skill from start to finish, and that one run does the first three parts:
 
 - **Plan:** a structured plan goes into the project's own `docs/plans/` folder. Claude names the path, because otherwise the plugin picks a folder at the top of the whole repo.
 - **Deepen:** it scores every section. When some are weak, it picks the two to five weakest and sends helper agents (other copies of Claude that Claude starts to do part of a job) to research them, folding their findings in without stopping to ask you. When none are weak enough, it says the plan passed its confidence check.
@@ -33,10 +33,12 @@ What Claude asks `ce-plan` for, every time:
 - no scope question to you before it starts (`confirm:auto`), because you judge the result; a real fork that is yours still comes to you from Claude;
 - a stop after the check, because the plugin's next step hands the plan to its build skill, which moves the work off main onto a new branch.
 
-Only Claude models do the work: the plugin's review pass by another company's model is switched off in the repo's `.compound-engineering/config.yaml`. The plan's commit message says what ran ("planned, deepened and checked", or "planned, confidence check passed, checked" when no section needed deepening), and the build starts only once the plan's history shows it.
+Then **three blind readers** read the checked plan (your call, 2026-11-12: "Love the three blind mice add-on!"). Each is a helper that never saw the planning and reads the whole plan cold through one lens: the builder (could I build this alone, and where would I take a wrong turn?), the rules (are its rules, facts and cited code right?) and the owner (is it the right size, with your calls put to you with a recommended answer?). Each opens the code the plan cites and returns the plan's faults with their line numbers, and whether it would build from the plan. Claude copies [plan-readers.workflow.js](plan-readers.workflow.js) into the session's scratchpad (the Workflow tool runs a script only from there or the session's own folder), makes sure the last message you typed holds nothing that would steer them (every Workflow helper is shown it), and launches it with `{ request, plan: { path, lastLine }, entry, brief }`. Then Claude checks every fault against the code, fixes the real ones in the plan, and names them in the plan's commit message. On the trial that earned them ([insight 029](docs/insights/029-thirteen-times-the-helpers-bought-a-plan-that-lost-the-faults-that-decided-it-were-found-by-a-few-close-reads-of-the-code-and-the-whole-plan.md)), three readers cost 0.56M helper tokens and found real faults that both plans' full checks had missed. This script's first run (2026-11-12, on the kept 753-line plan) took 13 minutes and 0.74M helper tokens, and returned 34 faults to check: all three readers found two of them, and two readers found three more. Its result opens with a one-line index of every fault, since the completion notice shows only the start of a long result.
+
+Only Claude models do the work: the plugin's review pass by another company's model is switched off in the repo's `.compound-engineering/config.yaml`. The plan's commit message says what ran ("planned, deepened, checked and read", or "planned, confidence check passed, checked and read" when no section needed deepening), and the build starts only once the plan's history shows it.
 
 - **Start it:** nothing to say; Claude starts it for sizable work. You can also say "plan <the work>".
-- **Lives in:** the `ce-plan` and `ce-doc-review` skills of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`. The plugin updates itself: version 3.38.0 installed on its own on 2026-11-11.
+- **Lives in:** the `ce-plan` and `ce-doc-review` skills of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`. The plugin updates itself: version 3.38.0 installed on its own on 2026-11-11. The readers: [plan-readers.workflow.js](plan-readers.workflow.js) in this folder.
 
 ### 3. Build
 
@@ -89,6 +91,7 @@ These fire by themselves.
 - [cheat-sheet.md](cheat-sheet.md): when X happens, say Y.
 - [how-to/session-chains.md](how-to/session-chains.md): hand off from one session to a named successor.
 - [how-to/code-review.md](how-to/code-review.md): the ultramode code review, step by step.
+- [plan-readers.workflow.js](plan-readers.workflow.js): the three blind readers that finish the plan step (step 2).
 - [TODO.md](TODO.md): the queue for work on how we work. A session starts at its START HERE line.
 - [docs/insights/](docs/insights/): the lessons that work has paid for, one numbered note each. Sessions start in this folder, so `/brief` finds them here and `/distill` adds to them here.
 

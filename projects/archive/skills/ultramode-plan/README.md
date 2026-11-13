@@ -25,7 +25,8 @@ What decided it:
 It was more right in places (the 59½ line, the Roth basis deflated each year, the Back Nine's open build named), and the owner reader picked it partly for that. It was not worth thirteen times the cost. ce-plan stays the playbook's plan step, and the trial's one cheap addition, three blind readers after ce-plan's run, joins it.
 
 - **The lessons:** [insight 029](../../../../playbook/docs/insights/029-thirteen-times-the-helpers-bought-a-plan-that-lost-the-faults-that-decided-it-were-found-by-a-few-close-reads-of-the-code-and-the-whole-plan.md) (why more helpers did not buy a better plan), and the trial's extensions of insights 011, 018, 019, 021, 025, 027 and 028 in [playbook/docs/insights/](../../../../playbook/docs/insights/).
-- **The two plans:** `projects/the-back-nine/docs/plans/features/early-withdrawal-charge-build-spec.md`, ours at commit `566d750c` and ce-plan's, the one kept, at `8d3c91e6`.
+- **The two plans:** `projects/the-back-nine/docs/plans/features/early-withdrawal-charge-build-spec.md`, ours at commit `566d750c` and ce-plan's, the one kept, at `8d3c91e6`. Our arm's receipts are the messages of `5431285e` (its first session) and `566d750c` (its second).
+- **The trial's record:** [trial/](trial/) holds the key to which plan was which, the brief both arms got, ce-plan's receipt and check, the readers' script, and [the three blind readers' verdicts](trial/readers-verdicts.md), word for word.
 - **Not maintained.** It is no longer installed, and CI no longer runs its tests; they last passed in CI on its final change, `6a5ab0fe`. Everything below is this page as it stood when the trial ran.
 
 ---

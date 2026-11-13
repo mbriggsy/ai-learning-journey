@@ -2,7 +2,7 @@
 title: Thirteen times the helpers bought a plan that lost; the faults that decided the trial were found by a few close reads of the code and of the whole plan, not by more reviewers
 date: 2026-11-12
 phase: the plan-step trial (ce-plan against ultramode-plan on the Back Nine's early-withdrawal charge)
-modules: [playbook/README.md, projects/the-back-nine/docs/plans/features/early-withdrawal-charge-build-spec.md]
+modules: [playbook/README.md, playbook/plan-readers.workflow.js, projects/the-back-nine/docs/plans/features/early-withdrawal-charge-build-spec.md, projects/archive/skills/ultramode-plan/trial/readers-verdicts.md]
 tags: [plan-step, trial, ce-plan, ultramode-plan, helpers, cost, weekly-meter, review-volume, close-read, blind-readers, builder, rules, owner, lenses, research, code-reading, findings-count]
 ---
 

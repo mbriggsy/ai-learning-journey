@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-13, b9-9):** the typed-below line's whole-window rebuild is planned, checked and read (`docs/plans/features/typed-below-whole-window-rebuild-spec.md`: checked as a whole by six reviewers at `afb74a83`, read by the three blind readers in the commit after it; the words' shape ruled by council `wf_f74697d1-f2e`). In order: (1) the build in the plan's three commits, each unit opened with `/brief <that unit's topic>` (U5 also loads the four design skills), reading the plan's "Minor faults" list before the unit it names; (2) the whole-file review, with an adversary and every finding verified, a mutant pass, the sweep + idcheck against the plan's new `wholewindow` baseline, `verify:fit`, `doc:reanchor` last; (3) walk 8: walk 7's 14 targets plus the plan's three (the pension and crowned seeds, `intake:typedbelow`'s money-picture capture; the plan's Goal Capsule), then its card (walk 7's R1 hold clears only once read); then U12; then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
+▶ **START HERE (2026-11-13, b9-9's close):** the typed-below line's whole-window rebuild (`docs/plans/features/typed-below-whole-window-rebuild-spec.md`, planned, checked and read at `7c4a8a6f`) has its commit 1 built (`d5c549d7`: U1 the picture's `workingYears`, U2 `workingYearCredit` + its binding read, every engine run byte-identical). In order: (1) the build's commit 2, U3 the whole-window read (dark, test-first), opened with `/brief <U3's topic>`, reading the plan's "Minor faults" list first; then commit 3, U4 + U5 + U6 together, opened with `/brief` and (U5) the four design skills; every `src` commit swept against the `wholewindow` baseline (`idcheck.mjs <label> wholewindow`); (2) the whole-file review, with an adversary and every finding verified, a mutant pass, the sweep + idcheck against the plan's new `wholewindow` baseline, `verify:fit`, `doc:reanchor` last; (3) walk 8: walk 7's 14 targets plus the plan's three (the pension and crowned seeds, `intake:typedbelow`'s money-picture capture; the plan's Goal Capsule), then its card (walk 7's R1 hold clears only once read); then U12; then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -259,56 +259,58 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-13 (b9-8: the rebuild's brief and plan; b9-7's block pruned into it):**
+**SESSION 2026-11-13 (b9-9: the rebuild's plan checked and read, and its commit 1; b9-8's block pruned into it):**
 
 State at close:
-- `259e4372`: the plan (`docs/plans/features/typed-below-whole-window-rebuild-spec.md`), council `wf_f74697d1-f2e`'s
-  digest row, and the register's NEGATIVE on x_t. Docs only, no `src` change: `verify:doc-stats` exit 0, typecheck exit
-  0 (squeaky's run). CI on `cf20042e` (43485265336) and `ce071d3e` (43486398964) both passed, so `5c69f502`'s red was the
-  coordinate-tap arm alone.
-- The plan is confidence-check passed but NOT yet checked or read: this session stopped at the window's warn line so
-  the check (five reviewers) and the readers run in a fresh window. The request ce-plan got is word for word in
-  `b9-build2-surplus\u11-wholewindow\plan-request.md` and the brief in `...\u11-wholewindow\brief.md`: hand both to the
-  readers (`playbook\how-to\plan-step.md`'s launch args). `sweep-walk5.json` stays the baseline until U1 lands.
+- `afb74a83`: the plan checked as a whole by six reviewers (Opus at xhigh, depth full); `7c4a8a6f`: read by the three blind
+  readers (each "after-fixes", none a replan) and their faults fixed, the minor ones in the plan's own list. Both CI green
+  (43500560959, 43504340225).
+- `d5c549d7`, commit 1 (U1 `workingYears` on the money picture, U2 `workingYearCredit` + `workingYearCreditBinding` in
+  `src/engine/moneyGrain.ts`): the full suite pinned, typecheck, lint and `verify:doc-stats` all exit 0. The sweep moved
+  exactly the 23 keys with a money picture, only in `picture.workingYears` (`idcheck.mjs ww1 walk7round2
+  --strip=picture.workingYears`: 45 of 45); `stream11.mts` run from a frozen `git archive` HEAD copy and from the tree,
+  diffed key by key by the new `tools\stream11-diff.mjs`: 23 keys identical on every arm, the saved arm ran on all 23.
+  `sweep-wholewindow.json` is the baseline from here (the build-2 README's table records it and `walk7round2`).
+- Commit 2 (U3) is untouched. Its witnesses' per-year engine figures are in
+  `b9-build2-surplus\u11-wholewindow\research\witnesses.md` (each cell sourced to `research\wit\wit-probe.txt`).
 
-Next is START HERE. b9-9 is the successor (handoff mode: b9-9 and b9-10 live and idle).
+Next is START HERE. b9-10 is the successor (handoff mode: b9-10 live and idle).
 
 **Check at start:**
-- the CE plugin's live version before the check (it updates itself; this plan was written on 3.38.1):
-  `node -e "console.log(require(process.env.USERPROFILE+'/.claude/plugins/installed_plugins.json').plugins['compound-engineering@every-marketplace'][0].version)"`;
+- CI on `d5c549d7` (run 43515151846) was still running at close: `gh run view 43515151846 --json conclusion`;
 - the ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 
-**LANDMINES (the rebuild and walk 8):**
+**LANDMINES (the rebuild's commits 2 and 3, and walk 8):**
 - **The round review's own fix measured the wrong thing.** Its x_t (credit at the typed figure minus the print at the
-  quote) understates every year after year 0; the lean is the pair, this answer's credit against the answer at the
-  quote's (the plan's KD1; the register entry's NEGATIVE). A reviewer or reader who re-proposes x_t, "at least" or a
-  "still working" condition is re-deriving a refuted finding.
+  quote) understates every year after year 0; the lean is the pair (the plan's KD1; the register entry's NEGATIVE). A
+  reviewer or reader who re-proposes x_t, "at least" or a "still working" condition on a credit is re-deriving a
+  refuted finding.
+- **U3 reads `workingYears` and `workingYearCreditBinding`, never a listed row or a retyped `min` or cap.** The picture
+  lists a later year only on an event or when it is short, and a drift year that stays positive is unlisted yet prints
+  its own figure (commit 1's drift pin: 2034 $45,117 under 2033's $45,353).
 - **W's stale line shares `checkAtQuote` / `laterShortOf` / `shortRunFrom` with today's typed-below line.** The plan
   forks a new read (KTD5); touching that core changes W-stale words on four seeds the plan does not scope.
-- **An unlisted later year is NOT year 0's (or the last listed year's) twin in general.** The money picture lists a
-  later year only on an event or when it is short; a drift year that stays positive is unlisted yet prints differently
-  (the register's retype entry, its ⚑ NEGATIVE). The rebuild's per-year figures come from a new every-year output,
-  never from carrying a listed row forward.
-- **That new output moves the R10 sweep's date keys.** The sweep digests the money picture per date key, so adding a
-  field to it moves every date key's digest: plan it as an intended move with a new baseline and a per-key reason, never
-  meet it as a stop-the-line surprise; the spine keys must stay identical.
-- **One composer feeds three surfaces** (`TYPED_BELOW_AT_QUOTE` via `typedBelowCarried`: the Result's slot, the gate's
-  line, the seat's at-quote line), so a rebuild changes every reader at once: the fit gate's `PAY_CHECK_UNLOCKS`
-  (`typedBelowLine`, `typedMovedLine`), its coordinate-tap arm (the seat's figure, moved and at-quote lines),
-  `reentry.test.tsx`, `resultPayCheckLine.test.tsx`, `IntakeApp.test.tsx`, the caddie `intake:typedbelow` arm. The unit
-  suite never runs Playwright: grep `e2e/` for every slot the rebuild changes (commit 2 redded CI exactly this way).
+- **One composer feeds every host** (the Result's slot, the gate's line, and the seat, which is drawn in the details
+  sheet AND on the walk's money-picture step, KTD6), so commit 3 changes every reader at once: the fit gate's
+  `PAY_CHECK_UNLOCKS` and its coordinate-tap arm, `reentry.test.tsx`, `resultPayCheckLine.test.tsx`,
+  `IntakeApp.test.tsx`, the caddie `intake:typedbelow` arm. The unit suite never runs Playwright: grep `e2e/` for every
+  slot the rebuild retires or renames (walk 7's commit 2 redded CI exactly this way).
+- **`pnpm doc:reanchor <BASE>` runs against the commit before each commit's first edit**: `d5c549d7` for commit 2, then
+  commit 2's sha for commit 3 (it moves a citation written fresh in the tree a second time, `docs/landmines.md`). It
+  also rewrites citations in `src` comments: commit 1's run moved 117, across 25 files.
+- **`cmd /c "start … /wait /affinity FFF …"` reports exit 0 even when the child threw**: `stream11.mts`'s first run died
+  on a flag (`--arms` must include `absent`) and printed `EXIT=0`. Read the run's log or summary lines, never that exit
+  code.
 - **A refuter's chosen host for new words can break R6** (`docs/landmines.md`, Copy): above the seat's radios only the
   methodology line and W's stale note may read the answer.
 - **A subagent cannot write a `.md` report** (`docs/landmines.md`, Claude Code): brief seats to REPLY under a word cap,
   a table first, and write the record yourself.
 - **A fix that names its hosts can miss one.** Grep every caller of a composer before a fix round changes what it says;
   carry the decision in the core (`WorkingYearLeftOverMoved.typedBelow`), never a conditional per host.
-- **The constants gate reds a bare 72000 in a test** (`constants.shape.test.ts`): write `6_000 * 12`.
-- **`pnpm doc:reanchor <BASE>` moves a citation written FRESH in the tree a second time** (`docs/landmines.md`): run it
-  against the commit before your first edit; it also widens a range a hunk lands inside (b9-7 hand-fixed act4-u17's
-  `datearrived` door-walk citation, already pointing at the wrong code).
+- **The constants gate reds a bare 72000 or 750000 in `src`** (`constants.shape.test.ts`, underscores stripped): write
+  `6_000 * 12`, and keep the crowned seed's raised savings off 750,000.
 - **`netstat` lists 127.0.0.1:4190 as LISTENING under PID 0 after a fit run.** Ghosts: probe with `curl --max-time 5`
   before reading a fit failure as a stale server's.
 - **A scripted multi-line replace fails on the CRLF files** (`devSeeds.ts`, `devSeeds.test.ts`, `copyGuard.test.ts`):
@@ -324,8 +326,8 @@ change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_
   `<project>/node_modules/vite/client`) and includes the spec by absolute path; confirm with `--listFilesOnly`.
 - **A Playwright `-g` filter run through `cmd /c "start /affinity FFF …"` loses a quoted space**: a space-free regex,
   and read the count line, never the exit code.
-- **A copy plant inside a slot is killed only by a test with the words typed by hand** (the review's L3 F4 proved it:
-  the seat's figure line had none until `cf20042e`). Keep a by-hand pin for every new sentence.
+- **A copy plant inside a slot is killed only by a test with the words typed by hand** (the review's L3 F4 proved it).
+  Keep a by-hand pin for every new sentence form.
 - **Never edit a plant file while the mutant runner runs**: it restores each file from its snapshot, so an edit there
   is overwritten; docs are safe.
 
@@ -1091,6 +1093,9 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - A fix's prescription must measure the comparison the defect was found with. Walk 6 measured the retype as this answer's credit against the honest answer's (the pair: $16,985 against $10,985 in every year); the walk-7 round review's prescription silently switched to x_t, the credit minus the print at the quote, which matches the pair only in year 0 (the honest answer is capped at its own year-0 print while pay rises). Four seats, three refuters and the plan's own research inherited it; only council `wf_f74697d1-f2e`'s red team re-read the comparison (A: $6,000 in 2033–2034 where x_t said nothing; TM: $11,000 where x_t said $762). Before building a reviewer's formula, write the comparison the original measurement made beside it and check they are the same quantity (record `b9-build2-surplus\u11-wholewindow\council\`).
 - A ledger that lists only its event years cannot stand in for every year. The money picture names a later year only on an event or when it comes up short, so a drift year (an uninflated income stream) that stays positive is unlisted and prints differently from the listed year before it; "an unlisted year carries the last listed row" held on every seed and failed on the first drift household (the review's RF-A).
 - *Extend the first entry (e2e/ outside tsconfig):* a CHANGED slot's output bites the same way as a retired key. Commit 2 of walk 7's round changed the seat's figure and moved lines on typed-below drafts; the unit suite passed, and CI's `verify:fit` coordinate-tap arm went red on both viewports (run 43468689044). Grep `e2e/` for every slot a round changes, not only the removed ones.
+- A plan that states a rule AND a witness table must have every row run through the rule by hand at the check: the typed-below plan's tie rule ("a tie counts as both terms") joined TM at $95,000's $15,985-to-$5,985 step into one range while its own table and U3 test pinned three spans; four of six reviewers found it, the planner had written the table from intuition (b9-9, `afb74a83`). Lesson: the check applies the plan's rules to the plan's witnesses, cell by cell.
+- An identity proof's compare tool must compare the two records the proof will actually have, over the keys the claim names: the plan named `stream11-compare.mjs`, which checks one stream11 record against `stream.mts`'s frozen 13-key HEAD record, so it would have passed without ever comparing the typed-below seeds (two blind readers caught it; `stream11-diff.mjs` was written, b9-9). Lesson: before naming a proof tool, read its inputs and its key set.
+- `cmd /c "start \"\" /b /wait /affinity FFF <cmd>"` returns 0 whatever the child does: `stream11.mts` threw on a flag and the run printed `EXIT=0` (b9-9). The pinned-run recipe in memory `reference-hybrid-cpu-ecore-confinement` needs the line: read the log, never the exit code. *Extend* that memory and `docs/landmines.md`'s shell area.
 
 ## Driving the app
 

@@ -898,7 +898,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2806`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2804`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
 }
@@ -1627,11 +1627,28 @@ export interface WorkingYearLedgerLaterYear {
   readonly withheldBasis: WorkingYearWithheldBasis
 }
 
+/** One working year of the picture's window, named or not: its printed bottom line and the cash it rests on, the
+ *  run's own composition for that year. Nothing draws it; the typed-below line reads it (the whole-window rebuild,
+ *  `docs/plans/features/typed-below-whole-window-rebuild-spec.md` KTD1), so no year is ever filled from a listed row
+ *  before it — an unlisted year that drifts prints its own figure. */
+export interface WorkingYearLedgerWindowYear {
+  /** Years after year 0 (0 for year 0 itself). */
+  readonly yearsIn: number
+  readonly calendarYear: number
+  /** Signed whole dollars, by year 0's rule. */
+  readonly bottomLine: number
+  /** The engine's unrounded cash (money in less money out). */
+  readonly cash: number
+}
+
 /** The working-year money picture: year 0 in full, then every later working year that changes or runs short. */
 export interface WorkingYearLedger {
   readonly year0: WorkingYearLedgerYear0
   /** In year order; at most one entry per later working year (nine on the date route's window). */
   readonly laterYears: readonly WorkingYearLedgerLaterYear[]
+  /** Every working year of the window, in year order, index-aligned with the sim year (entry t is year t; entry 0
+   *  carries year 0's own `bottomLine` and `cash`). Observe-only: nothing in the engine's year loop reads it. */
+  readonly workingYears: readonly WorkingYearLedgerWindowYear[]
 }
 
 /** The schemaVersion-2 plaintext scenario: the v1 spine inputs + the U2 tax-overlay fields.

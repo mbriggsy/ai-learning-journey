@@ -181,6 +181,16 @@ const expectMatchesTheRun = (params: SimulationParams, ledger: WorkingYearLedger
   for (let t = 1; t < byYear.length; t++) {
     if (workingYearBottomLine(byYear[t]!.lines.cash) < 0) expect(named.has(t), `the run's short year ${t} is named`).toBe(true)
   }
+  // The every-year field (the whole-window rebuild's KTD1): every year of the window, named or not, is the run's own
+  // cash and its print on the one grain; entry 0 is year 0's.
+  expect(ledger.workingYears.length, 'one entry per working year').toBe(byYear.length)
+  ledger.workingYears.forEach((w, t) => {
+    expect(w.yearsIn, `entry ${t}`).toBe(t)
+    expect(w.calendarYear, `entry ${t}'s calendar year`).toBe(y0.calendarYear + t)
+    expect(Object.is(w.cash, byYear[t]!.lines.cash), `year ${t}'s cash`).toBe(true)
+    expect(w.bottomLine, `year ${t}'s print`).toBe(workingYearBottomLine(byYear[t]!.lines.cash))
+  })
+  expect(ledger.workingYears[0]!.bottomLine).toBe(y0.bottomLine)
 }
 
 /** The producer's picture of a run, cross-checked against the run itself. */

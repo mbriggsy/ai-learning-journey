@@ -58,8 +58,19 @@ const draft = (over: Partial<ScenarioDraft> = {}): ScenarioDraft => ({
   ...over,
 })
 
-const renderPicture = (ledger: WorkingYearLedger, d: ScenarioDraft = draft(), headingLevel: 3 | 4 = 3, aged = false) =>
-  render(<WorkingYearLedgerPicture ledger={ledger} draft={d} headingLevel={headingLevel} aged={aged} />)
+/** A hand-built ledger as these tests write it, year 0 and the named later years, with the required every-year field
+ *  (the whole-window rebuild's KTD1) filled from them: the picture draws nothing from that field, so its entries only
+ *  have to type-check and agree with the rows they rest on. */
+const withWindow = (ledger: Omit<WorkingYearLedger, 'workingYears'>): WorkingYearLedger => ({
+  ...ledger,
+  workingYears: [
+    { yearsIn: 0, calendarYear: ledger.year0.calendarYear, bottomLine: ledger.year0.bottomLine, cash: ledger.year0.cash },
+    ...ledger.laterYears.map((y) => ({ yearsIn: y.yearsIn, calendarYear: y.calendarYear, bottomLine: y.bottomLine, cash: y.cash })),
+  ],
+})
+
+const renderPicture = (ledger: Omit<WorkingYearLedger, 'workingYears'>, d: ScenarioDraft = draft(), headingLevel: 3 | 4 = 3, aged = false) =>
+  render(<WorkingYearLedgerPicture ledger={withWindow(ledger)} draft={d} headingLevel={headingLevel} aged={aged} />)
 
 /** The `<dd>` value beside a `<dt>` label. */
 const valueOf = (label: string) => {

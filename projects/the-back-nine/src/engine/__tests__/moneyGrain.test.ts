@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import ts from 'typescript'
-import { bottomLineFromCents, finite, toCents, workingYearBottomLine } from '@engine/moneyGrain'
+import { bottomLineFromCents, finite, toCents, workingYearBottomLine, workingYearCredit, workingYearCreditBinding } from '@engine/moneyGrain'
 import { workingYearBottomLine as ledgerBottomLine } from '@engine/workingYearLedger'
 
 describe('the cent snap: the nearest cent, a half-cent tie toward −∞, never −0', () => {
@@ -73,6 +73,46 @@ describe('KTD12’s bottom line on the cent: a draw reads at least "Short $1", a
     expect(workingYearBottomLine(1644.95)).toBe(1_644)
     expect(workingYearBottomLine(1644.996)).toBe(1_645)
     expect(workingYearBottomLine(1644.996)).toBeGreaterThan(1644.996)
+  })
+})
+
+// The whole-window rebuild's KTD2: build 2's R8 credit rule in its one home, and its binding read. Every figure typed
+// by hand from the rule: credit = the smallest of the raw cash, that cash's print, year 0's print and the stored
+// figure, in a year everyone is alive, and 0 at or below 0; the binding read compares the year's own left over (on the
+// printed grain) with the cap, min(year 0's print, stored).
+describe('the credit rule (R8) and which term binds it', () => {
+  it('the raw cash joins the min: $1,644.996 credits $1,644.996, not its $1,645 print, and the year’s own left over binds', () => {
+    expect(workingYearCredit(1_644.996, 2_000, 3_000, true)).toBe(1_644.996)
+    expect(workingYearCreditBinding(1_644.996, 2_000, 3_000, true)).toBe('ownLeftOver')
+  })
+
+  it('nothing is credited in a short year, a year that prints $0, or a year with someone dead — never a negative figure or −0', () => {
+    for (const [cash, alive] of [[-500, true], [0.4, true], [-0, true], [5_000, false]] as const) {
+      const credit = workingYearCredit(cash, 16_985, 16_985, alive)
+      expect(Object.is(credit, 0), `cash ${cash}, alive ${alive}`).toBe(true)
+      expect(workingYearCreditBinding(cash, 16_985, 16_985, alive)).toBe('none')
+    }
+  })
+
+  it('the cap binds at the stored figure, at year 0’s print, or the year’s own print binds, each by hand', () => {
+    // Stored binds: min(20,000.50, 20,000, 16,985, 10,000) = 10,000.
+    expect(workingYearCredit(20_000.5, 16_985, 10_000, true)).toBe(10_000)
+    expect(workingYearCreditBinding(20_000.5, 16_985, 10_000, true)).toBe('cap')
+    // Year 0's print binds: min(20,000, 20,000, 16,985, 26,985) = 16,985.
+    expect(workingYearCredit(20_000, 16_985, 26_985, true)).toBe(16_985)
+    expect(workingYearCreditBinding(20_000, 16_985, 26_985, true)).toBe('cap')
+    // The year's own print binds: min(5,985.40, 5,985, 15,985, 16,985) = 5,985.
+    expect(workingYearCredit(5_985.4, 15_985, 16_985, true)).toBe(5_985)
+    expect(workingYearCreditBinding(5_985.4, 15_985, 16_985, true)).toBe('ownLeftOver')
+  })
+
+  it('a tie of the cap and the year’s own left over reads "tie", on the printed grain: a cash a fraction of a cent below the dollar ties it too', () => {
+    // min(15,985.40, 15,985, 15,985, 16,985) = 15,985: the own print and year 0's print are one figure.
+    expect(workingYearCredit(15_985.4, 15_985, 16_985, true)).toBe(15_985)
+    expect(workingYearCreditBinding(15_985.4, 15_985, 16_985, true)).toBe('tie')
+    // $15,984.996 prints $15,985, so it credits its raw cash but ties the $15,985 cap on the grain the spans read.
+    expect(workingYearCredit(15_984.996, 15_985, 16_985, true)).toBe(15_984.996)
+    expect(workingYearCreditBinding(15_984.996, 15_985, 16_985, true)).toBe('tie')
   })
 })
 

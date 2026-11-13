@@ -1769,6 +1769,17 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       for (let t = 1; t < byYear.length; t++) {
         if (workingYearBottomLine(byYear[t]!.cash) < 0) expect(named.has(t), `${key}: the run's short year ${t} is named`).toBe(true)
       }
+      // The whole-window rebuild's every-year field (KTD1): EVERY year of the window is the run's own, named or not, its
+      // print on the one grain — so a year the picture does not list can never be read off the listed year before it.
+      expect(ledger.workingYears.length, `${key}: one entry per working year of the window`).toBe(DATE_OFFSET_WINDOW_TOP)
+      ledger.workingYears.forEach((w, t) => {
+        expect(w.yearsIn, `${key}: entry ${t} is year ${t}`).toBe(t)
+        expect(w.calendarYear, `${key}: entry ${t}'s calendar year`).toBe(y0.calendarYear + t)
+        expect(Object.is(w.cash, byYear[t]!.cash), `${key}: year ${t}'s cash is the run's`).toBe(true)
+        expect(w.bottomLine, `${key}: year ${t}'s print`).toBe(workingYearBottomLine(byYear[t]!.cash))
+      })
+      expect(ledger.workingYears[0]!.bottomLine, `${key}: entry 0 is year 0's own print`).toBe(y0.bottomLine)
+      for (const y of ledger.laterYears) expect(y.bottomLine, `${key}: year ${y.yearsIn} as listed`).toBe(ledger.workingYears[y.yearsIn]!.bottomLine)
       const shown =
         y0.comingIn.pay.dollars + y0.comingIn.socialSecurity.dollars + y0.comingIn.otherIncome.dollars -
         y0.goingOut.payrollTax.dollars - y0.goingOut.taxOnOutsideIncome.dollars - y0.goingOut.ownDeposits.dollars -
@@ -1781,6 +1792,36 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     // (short at the quote, a later year short at the quote), U11 walk 6's retype (R1: a typed W, fresh), the
     // four-bucket twin (council (6)) and the retype after a move (the walk-6 round review's pair) included.
     expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(20)
+  })
+
+  // The whole-window rebuild's every-year field (KTD1) on two witnesses the typed-below line reads. A (`datesavedtyped`):
+  // ten working years, 2026 through 2035, entry 0 year 0's own. The DRIFT household (the round review's RF-A construction:
+  // `datesavedrisen` with Sam's $10,000 nominal-flat alimony, typed at $84,000): its alimony shrinks in real terms every
+  // year, so the years the picture does not list print figures of their own, below the listed year before them — the
+  // case where carrying a listed row forward reads wrong (the plan's NEGATIVE). Each print is the engine's own,
+  // recorded by the plan's research probe (`u11-wholewindow\research\witnesses.md`, the drift table's P_W column) and
+  // cross-checked against the run by the sweep above's own law.
+  it('the every-year field: A has ten entries, 2026 through 2035; the drift household’s unlisted years print their own figures', () => {
+    const a = workingYearLedgerForRun(DEV_SEEDS.datesavedtyped)
+    if (a === 'unknown') throw new Error('datesavedtyped draws a picture')
+    expect(a.workingYears.map((w) => w.calendarYear)).toEqual([2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035])
+    expect(a.workingYears[0]!.bottomLine).toBe(a.year0.bottomLine)
+    expect(Object.is(a.workingYears[0]!.cash, a.year0.cash)).toBe(true)
+    const alimony: NonNullable<ScenarioDraft['incomeStreams']>[number] = {
+      ownerIndex: 1,
+      type: 'alimony',
+      executedAfter2018: true,
+      annualRealToday: 10_000,
+      startAge: 50,
+      endAge: 90,
+      colaMode: 'nominal-flat',
+      survivorPct: 0,
+    }
+    const drift = writeEnteredWorkingYearCost({ ...DEV_SEEDS.datesavedrisen, incomeStreams: [alimony] }, 84_000, 'year')
+    const ledger = workingYearLedgerForRun(drift)
+    if (ledger === 'unknown') throw new Error('the drift household draws a picture')
+    expect(ledger.laterYears.map((y) => y.calendarYear), 'the picture lists only the event years').toEqual([2031, 2033, 2035])
+    expect(ledger.workingYears.map((w) => w.bottomLine)).toEqual([26_985, 26_693, 26_410, 26_136, 25_869, 25_974, 25_722, 45_353, 45_117, 67_650])
   })
 
   // Build 2's KTD4 arm (U4): inside the run, year 0's Left over is the money picture's own printed bottom line, on

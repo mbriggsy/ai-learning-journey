@@ -67,6 +67,7 @@ import type {
   WorkingYearLedgerEvent,
   WorkingYearLedgerEventCode,
   WorkingYearLedgerLaterYear,
+  WorkingYearLedgerWindowYear,
   WorkingYearHeldBackRaise,
   WorkingYearWithheldBasis,
 } from '@shared/model'
@@ -359,6 +360,14 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
     }
     return ss + heldBack(t) - uncredited
   }
+  // Every working year of the window, named or not (the whole-window rebuild's KTD1): each year's own composed cash and
+  // its print on the one grain. A year the loop below does not list is never filled from the listed year before it.
+  const workingYears: WorkingYearLedgerWindowYear[] = years.map((y) => ({
+    yearsIn: y.t,
+    calendarYear: y.context.calendarYear,
+    bottomLine: workingYearBottomLine(y.lines.cash),
+    cash: y.lines.cash,
+  }))
   const laterYears: WorkingYearLedgerLaterYear[] = []
   for (let t = 1; t < years.length; t++) {
     const prior = years[t - 1]!
@@ -451,5 +460,6 @@ export function workingYearLedger(input: WorkingYearLedgerInput): WorkingYearLed
       savingsTaxLine,
     },
     laterYears,
+    workingYears,
   }
 }

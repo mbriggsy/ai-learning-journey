@@ -119,7 +119,7 @@ import {
 } from '@engine/magiLandscape'
 import { solveAcaFundedGross, fplForHousehold, medicareAnnualCharge, acaMagi, irmaaMagi, irmaaScheduleAsCompared, boundPartBPricingSchedule, hsaQualifiedSpend, type GrossUpSolution, type MagiComponents, type PartBYearPricing } from '@engine/healthOverlay'
 import { payrollTaxForYear, type PayrollTaxYear } from '@engine/payrollTax'
-import { workingYearBottomLine } from '@engine/moneyGrain'
+import { workingYearBottomLine, workingYearCredit } from '@engine/moneyGrain'
 import { ENGINE_MAX_DOLLAR } from '@engine/engineDomain'
 import { NEVER_DEPLETED, isRetirementState, type DepletionYear, type DrawdownPolicy, type FilingStatus, type RetirementState } from '@shared/model'
 
@@ -2597,16 +2597,14 @@ export function runTaxAwareDecumulation(
         // Build 2 (R8): the saved left over credits the smallest of the year's cash, that cash on the printed
         // grain, year 0's printed Left over on this path and the stored figure — in a year everyone is alive
         // (KTD5), skipped at or below 0 (a short year credits nothing; its shortfall, recorded just above, is
-        // drawn through `fundingNet` below). The raw cash joins the min because the cent snap rounds a cash
-        // less than half a cent below a whole dollar up to it ($1,644.996 prints $1,645), so the print can sit
-        // just above the float; a true half-cent tie snaps down. The grain is the money picture's own
-        // (`moneyGrain.ts`, KTD4). Composed here, folded at year end; nothing in the year's tax, draw or MAGI
-        // reads it.
+        // drawn through `fundingNet` below). The rule lives in one home, `workingYearCredit` in the grain leaf
+        // (`moneyGrain.ts`; the whole-window rebuild's KTD2), which intake's typed-below read calls too, so the
+        // two can never compute it differently. Year 0's print is recorded here, on this path. Composed here,
+        // folded at year end; nothing in the year's tax, draw or MAGI reads it.
         if (savedLeftOver !== undefined) {
           const printed = workingYearBottomLine(lines.cash)
           if (t === 0) leftOverYear0 = printed
-          const credit =
-            checkTerms.allAlive && leftOverYear0 !== undefined ? Math.min(lines.cash, printed, leftOverYear0, savedLeftOver) : 0
+          const credit = leftOverYear0 !== undefined ? workingYearCredit(lines.cash, leftOverYear0, savedLeftOver, checkTerms.allAlive) : 0
           if (credit > 0) creditThisYear = credit
           probe?.creditComposed?.(t, creditThisYear)
         }

@@ -125,7 +125,7 @@ export interface RankingStabilityReport {
  *  the conversion window, so every recorded vector is identically zero whatever is converted:
  *  `?seed=failing` (a $60k IRA under a ~$72k year-one draw) converts $50,268 and its $51,268 variant
  *  UNCLAMPED inside the pool and still moves nothing, because every path depletes in year 0 and the
- *  depletion break (`taxOverlay.ts:2788`) precedes the year's tax accrual (`:2810`) — terminals,
+ *  depletion break (`taxOverlay.ts:2786`) precedes the year's tax accrual (`:2808`) — terminals,
  *  depletion years, lifetime tax and Medicare cost are all 0 for every amount from $0 to $200k
  *  (probed 2026-09-04). The bin is verdict-blind: a $900k household with pretax 0 reaches it by
  *  route (i) (solveEntry.test.ts) and a failing household whose surface still responds never does.

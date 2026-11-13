@@ -33,3 +33,29 @@ export function bottomLineFromCents(cashCents: number): number {
 export function workingYearBottomLine(cash: number): number {
   return bottomLineFromCents(toCents(finite(cash, 'the cash')))
 }
+
+/** Build 2's R8 credit rule, in its one home (the whole-window rebuild's KTD2; the overlay's year loop and intake's
+ *  typed-below read both call it, so the rule cannot fork): a saved left over credits the smallest of the year's raw
+ *  cash, that cash on the printed grain, year 0's printed Left over on this path (`year0Print`) and the stored figure —
+ *  in a year everyone is alive (KTD5), and nothing at or below 0 (a short year credits nothing; its shortfall is drawn
+ *  elsewhere). The raw cash joins the min because the cent snap rounds a cash less than half a cent below a whole
+ *  dollar up to it ($1,644.996 prints $1,645), so the print can sit just above the float. Returns 0, never a negative
+ *  figure or −0, where nothing is credited. */
+export function workingYearCredit(cash: number, year0Print: number, stored: number, allAlive: boolean): number {
+  if (!allAlive) return 0
+  const credit = Math.min(cash, workingYearBottomLine(cash), year0Print, stored)
+  return credit > 0 ? credit : 0
+}
+
+/** Which term of {@link workingYearCredit} binds a year's credit: the year's own left over (its raw cash and that cash
+ *  on the printed grain, one term), the cap (the smaller of year 0's print and the stored figure), a tie of the two, or
+ *  nothing (nobody credited: someone dead, or the year at or below 0). Read on the printed grain, the grain every credit
+ *  is compared and printed on (insight 146), so a raw cash a fraction of a cent below a whole dollar ties a cap at that
+ *  dollar. The typed-below line's span model reads it; the overlay never does. */
+export type WorkingYearCreditBinding = 'none' | 'ownLeftOver' | 'cap' | 'tie'
+export function workingYearCreditBinding(cash: number, year0Print: number, stored: number, allAlive: boolean): WorkingYearCreditBinding {
+  if (workingYearCredit(cash, year0Print, stored, allAlive) === 0) return 'none'
+  const own = workingYearBottomLine(Math.min(cash, workingYearBottomLine(cash)))
+  const cap = Math.min(year0Print, stored)
+  return own < cap ? 'ownLeftOver' : cap < own ? 'cap' : 'tie'
+}

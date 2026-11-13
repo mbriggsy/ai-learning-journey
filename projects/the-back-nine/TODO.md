@@ -291,7 +291,7 @@ State at close:
   and `d4c38295` were running at this close.
 - Commit 2 and the round review were not started: the window crossed 50% after commit 1.
 
-Next is START HERE. No successor was handed this close (handoff mode found b9-9 missing between b9-8 and b9-10).
+Next is START HERE. b9-7 is the successor (handoff mode: b9-7 to b9-10 live and idle, after Briggsy renamed the sessions).
 
 **Check at start:**
 - the CI runs on `86acd918` and `d4c38295`: `gh run list --commit <full sha> --json status,conclusion` (full shas:

@@ -3737,13 +3737,24 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       await expect(seat.locator('.left-over__line'), 'the stored figure is not the one on screen at the press').toHaveText(
         slots.workingLedgerLeftOverRoseLine('16,985', '28,985'),
       )
-      // A second reader of the stored answer, off the panel: the Result's standing slot names the same two.
+      // A second reader of the stored answer, off the panel: the Result's standing slot names the same two. The typed
+      // $72,000 sits below `date`'s $84,000 of spending, so R1's typed-below line holds the slot (U11 walk 6,
+      // `3000a04c`) and carries the moved figures as its clause in place of its credit sentence (`TypedBelowHost`: no
+      // rules line hosts the clause here), then year 0 at the quote. Stored from the live render, the clause would be
+      // absent and the credit sentence would name $28,985; a lost tap would leave the first sentence alone.
       await page.keyboard.press('Escape')
       await expect(dialog).toHaveCount(0)
-      await expect(page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')).toContainText(
-        `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '28,985', '16,985')}`,
+      const standing = page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')
+      await expect(standing).toContainText(
+        [
+          slots.workingCostTypedBelowCounts('This', '72,000', '84,000'),
+          slots.stalenessLeftOverClause('16,985', '28,985', '16,985'),
+          slots.workingCostTypedBelowAtQuoteLeftOver('84,000', 2026, '16,985'),
+        ].join(' '),
         { timeout: FINAL_TIER_MS },
       )
+      // ONE CAUSE, ONE LINE: the moved line's own lead never shares the slot this line holds.
+      await expect(standing).not.toContainText(copy.stalenessLeftOverNote)
     })
   })
 }

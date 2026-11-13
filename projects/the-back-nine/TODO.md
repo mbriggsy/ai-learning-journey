@@ -73,7 +73,8 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
    "All of it" can credit up to $13,200 a year that pays a premium; measure year 0's left over with the premium against
    without, then either subtract it in the picture or name it in the check sentence. (m) **"savings" means three things:** a
    bank savings account fits both "All of it" (then grown at market returns) and "Spent, or kept as cash"; decide where bank
-   cash belongs (a framing call: the council, then the labels). (n) **"Spent" contradicts W:** it says a working year costs W
+   cash belongs (a framing call: the council, then the labels; its ruling is also Act 5's OQ2, so put that plan's KTD26
+   in front of the council: see Act 5 below). (n) **"Spent" contradicts W:** it says a working year costs W
    plus the left over ($100,985 on `date`) and nothing questions the $84,000; a check that offers to revisit W. (o) **the
    unpriced state-tax note** ("it belongs in your figure for a working year, below") reads as "already in W", so in a state
    that taxes pay the left over is too high. (p) **the stale clause after a RISEN quote** can read as an offset to "can look
@@ -187,6 +188,52 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
    After the build: the whole-file review, with an adversary and every finding verified; then `/distill`. The record (brief,
    seven research dossiers, three deepen artifacts, the doc-review's `RESOLVED.md`) is in
    `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\`.
+2. **Then Act 5, the workbench, with the yield build inside it.** His go, 2026-11-11: next after build 2, ahead of the rest
+   of the D7 queue (`docs/plans/5-workbench-plan.md`, Key Decisions). It builds or touches *An inherited IRA has no account
+   kind…*, *The taxable account's yield never reaches a year's tax base…*, *Money the household says is in cash is grown
+   and swung like bonds* and *The detail-door era — nowhere to see how a number was reached*. Its plan is planned,
+   deepened and checked (`f32f8ea2`), not yet read. In this order, before any of its units lands (U24's first step too;
+   the register correction below is the one exception):
+   1. **Settle round 3's 15 open findings in the plan, in one commit that names each id, and set the plan's `receipt:`
+      line to "planned, deepened and checked".** Round 3 confirmed 13 and left 2 untraced (c3-coherence-2, c3-reach-3):
+      trace those two against the code before folding them. All 15 sit only in `f32f8ea2`'s commit message, the P1
+      among them (an inherited excess moved to taxable is an outside inflow, not today's required-withdrawal
+      relocation), and the receipt says "1 P0/P1 open" with no pointer. Each finding's full text is in the check's run
+      record, `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-playbook\d932aa6a-37fb-41bf-85f0-fe5c8f97616e\workflows\wf_058ffbec-d5f.json`
+      (one line of JSON: pull `result.findings` with a script). Fold each from its `verdict.fix`, never the seat's own
+      `suggested_fix`: where `verdict.fix.action` is `hand-verify` (the P1 among them), most verifiers judged the seat's
+      fix wrong and gave better ones. The record's plan line numbers run one below today's (`f32f8ea2` added the
+      `receipt:` line). That message's "U12" is Act 5's U12, never build 2's U12 above, and "U12's build starts by
+      settling these" is too late: some reach units that land before it (c3-coherence-2 adds KTD25's asked figures to
+      U13's list, stored facts that schema version 6 must hold, and U9 builds version 6 before U12; three are U23's,
+      whose council starts in Phase 1).
+   2. **Then the three blind readers.** Copy `C:\Users\brigg\ai-learning-journey\playbook\plan-readers.workflow.js` into
+      the session's scratchpad and launch it as `C:\Users\brigg\ai-learning-journey\playbook\README.md`'s step 2 says:
+      `request` copied word for word from the `request` in the run record's `script` string (its `LAUNCH_ARGS`),
+      `plan.path` the plan's absolute path, `plan.lastLine` its last line with text after step 1's commit, and no
+      `brief` (the planner's brief sat in a scratchpad that is gone). Check each fault against the code, fold the real
+      ones into the plan, and name them in the commit; that commit's message and the plan's `receipt:` line then both
+      say "planned, deepened, checked and read". The build starts only once the plan's history shows that.
+   - **OQ6 goes to Briggsy before U14** (should a working household's what-if show a date?), in a Back Nine session, as he
+     asked on 2026-11-12: "let's save that when we're in a dedicated b9 session".
+   - **OQ2 rides build 2's (m) above** ("savings" means three things: where bank cash belongs). Build 2's U12 only files
+     (m), so nothing in build 2 calls that council: ask for it in Act 5's Phase 1, as the plan's Sequencing says, with
+     KTD26 in front of it, since its ruling can move KTD26's fold, not only the labels. U10's bank kind waits for it;
+     how bank cash grows stays the cash entry's own council (KTD26).
+   - **U24's first step (his real plan's home) may land before build 2 closes,** once 1 and 2 are done; the rest of the
+     act waits for build 2's close (its U12, review and `/distill`; the plan's Sequencing).
+   - **The register's yield entry is the one piece of Act 5 that lands early.** Build 2's U12 register pass (c) adds to
+     *The taxable account's yield never reaches a year's tax base…*: make the correction Act 5's U1 owns in that same
+     pass, before build 2 closes and before 1 and 2 above, since D7 already owes it (U1 then checks it against the read
+     plan). Prescription (2) waits on "his off-course discussion", and the WITHDRAWN-sentence bullet calls that discussion
+     "owed before the queue resumes". D7 (2026-10-21) closed it: a gap is a build, and a note is only its stopgap. His
+     2026-11-11 go put the build inside this act (the plan's KTD32 and U23), with U7's stopgap line until U23 lands.
+     Rewrite both spots, the owner line's own label "(the model — chapter two)" (leave its quote of the council's ruling,
+     "File the chapter-two all-years yield model…", as written) and the title's parenthetical, keeping the title's words
+     up to "tax base" so its citations still match.
+     Keep Prescription (2)'s wording rule: the line names the TOOL as the one skipping the yearly tax, says real life
+     taxes it each year, and never reads as tax law. When U1 names the fifth act wherever a doc says "four acts", include
+     this file's "Where we are".
 - **⚑ RULED by him 2026-10-31 — no tier call is open.** The council's two parked calls ("I yield to your recommendations"): a
   gloomy-only entry stays in Tier 0, and D7's "rosier" means for some household the intake accepts (the register header and the
   council row record both). And the dependents ask ("Yes, ask it"): one optional question, "none" an answer, never a guessed
@@ -297,10 +344,11 @@ to overrule (b9-12): a widow(er) benefit that STARTS in the survivor's full-reti
 mean a few months the law would test. It joined the disclosed K5 residual (the plan's U9 K5 key), beside "a claim at 67
 is paid for the whole year"; the review's two refuters split on it. Asking the birth month closes both (the register's
 *Ages are whole years from the birth year alone — the birth month isn't asked*).
-**THE D7 QUEUE — his order, ruled 2026-10-21 ("yep, seems right").** Every item is a register entry; cite it by title.
+**THE D7 QUEUE — his order, ruled 2026-10-21 ("yep, seems right").** Every item is a register entry; cite it by title. After build 2, Act 5 (the workbench) comes before the rest of this queue's numbered items (his go, 2026-11-11; START HERE's Next list); the ON THE CLOCK re-verify below still comes before all of it. Act 5 also reaches three entries listed below: it builds *The taxable account's yield never reaches a year's tax base…* (its U23), and touches *The detail-door era — nowhere to see how a number was reached* and *Money the household says is in cash is grown and swung like bonds* (its U10's bank kind rides that cash fold, KTD26).
 1. **An honest quit date (the working years).** Most of these make the date read too early:
    - (a) ✅ BUILT 2026-10-30, build 1, the pay check (the CLOSED Tier 0 *A working year never checks the household's pay against its spending…*): with W answered, every working year checks pay against W, payroll tax, the tax on outside income and its own deposits, and a short year draws from savings. Its open residuals are their own register entries, slotted below (b9-5's ranking pass);
    - (b) the 10% charge for pulling from an IRA or 401(k) before 59½: *Money taken from retirement accounts before age 59½ is never charged the 10% early-withdrawal tax…* (mind the age-55 rule for a job's plan);
+     - **Its plan:** `docs/plans/features/early-withdrawal-charge-build-spec.md` (`8d3c91e6`), planned, deepened and checked, not yet read. Before its U1: check each blind reader's fault against the code, fold the real ones into the plan, and name them in a commit whose message then says "planned, deepened, checked and read" (the playbook README's step 2; this plan has no `receipt:` line, so its commit history is the only record); the build starts only once the plan's history shows that. Two lists, none verified yet: the one in `8d3c91e6`'s commit message (the readers' faults, and a last line on stale citations), and the readers' run `wf_09480ec4-919` (34 faults; all three readers found R4's age-55 error and U4's couple-order gate), saved readable outside the repo at `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-plan-readers\early-withdrawal-charge-2026-11-12.md`. **Its line citations will be wrong by then:** the plan cites code by line number, and build 2 and all of Act 5 move the same files before its U1. `verify:doc-stats` proves only that a cited line exists and is not blank, skips a bare `:N` with no named file before it on its line (insight 136), and never reads a doc's `.md:N` citation, which this plan also uses (the register, Act 5's plan, the pay-check spec, `docs/product.md`). So before U1 re-check every citation, code and doc, by content. **And its "whichever lands second" premises are settled by then:** Act 5 lands first, so this plan takes the schema version after Act 5's version 6 (its KTD11), rewords or removes Act 5's built under-59½ row line rather than a plan sentence, and re-reads every "no real save exists" premise (its Scope Boundaries, KTD11, the saved-plans risk) against U24's home, where his first real save may sit by then.
    - (c) the Social Security figure assumes work continues to full retirement age and is used unchanged for an earlier stop: *The Social Security statement's default figure assumes continued earnings…*;
    - (d) *A pension from the job you still work at counts the same whatever stop date is tested…*;
    - (e) *Money coming in beyond what the household spends is thrown away…*: build 2, the surplus question. Council `wf_2247c0df-73b` ruled it with (a) on 2026-10-21; its shortfall half shipped with (a). The pre-W measurement found ~$70,000 a year dropped on `dateborder`;

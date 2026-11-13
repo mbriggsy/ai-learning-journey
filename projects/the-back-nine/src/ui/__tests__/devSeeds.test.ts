@@ -1667,14 +1667,14 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     // Named, so a seed that falls off the date route cannot take its W with it unseen.
     expect(carrying).toEqual([
       'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datelateleftover', 'datemixed', 'datenc', 'datesaved',
-      'datesavedmoved', 'datesavedrisen', 'datesavedrisenlater', 'datesavedrisenshort', 'datesavedstale', 'datesavedtyped', 'dateshort',
+      'datesavedfourbuckets', 'datesavedmoved', 'datesavedrisen', 'datesavedrisenlater', 'datesavedrisenshort', 'datesavedstale', 'datesavedtyped', 'dateshort',
       'datesolo',
       'datesplit', 'dip',
     ])
   })
 
-  it('every W-carrying seed reads NOT stale through the one predicate — except the five stale-W witnesses', () => {
-    const STALE = ['datecoststale', 'datesavedstale', 'datesavedrisen', 'datesavedrisenshort', 'datesavedrisenlater']
+  it('every W-carrying seed reads NOT stale through the one predicate — except the six stale-W witnesses', () => {
+    const STALE = ['datecoststale', 'datesavedstale', 'datesavedrisen', 'datesavedrisenshort', 'datesavedrisenlater', 'datesavedfourbuckets']
     for (const [key, d] of Object.entries(DEV_SEEDS)) {
       if (d.workingYearCost === undefined) continue
       expect(isWorkingYearCostStale(d), key).toBe(STALE.includes(key))
@@ -1769,10 +1769,11 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       expect(shown, `${key}: the shown lines sum to the bottom line`).toBe(y0.bottomLine)
       swept++
     }
-    // Every buildable date seed carries W (the arm above), so this is all eighteen of them, the short seed, the
+    // Every buildable date seed carries W (the arm above), so this is all nineteen of them, the short seed, the
     // later-left-over witness (U15), build 2's three saved witnesses (U9), U11's risen twin and its two (ae) arms
-    // (short at the quote, a later year short at the quote), and U11 walk 6's retype (R1: a typed W, fresh) included.
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(18)
+    // (short at the quote, a later year short at the quote), U11 walk 6's retype (R1: a typed W, fresh) and the
+    // four-bucket twin (council (6)) included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(19)
   })
 
   // Build 2's KTD4 arm (U4): inside the run, year 0's Left over is the money picture's own printed bottom line, on
@@ -1799,7 +1800,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
       swept++
     }
-    expect(swept, 'the sweep reached every buildable W-carrying seed (the eighteen above)').toBe(18)
+    expect(swept, 'the sweep reached every buildable W-carrying seed (the nineteen above)').toBe(19)
   })
 
   // Build 2's U9 (KTD14): the three saved witnesses, each minted through the shipped write. Every figure typed by
@@ -1948,6 +1949,45 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (!saved.ready) throw new Error(`${key}: ${saved.detail}`)
       expect(saved.scenario.workingYearLeftOver, key).toEqual({ kind: 'saved', quotedReal: 16_985 })
     }
+  })
+
+  // Council `wf_22858e04-f7a` (6): the gate's route in his first frame with all four bucket rows. The twin adds two
+  // accounts that take no deposit, so every working-year figure is `datesavedrisenlater`'s, and its stale line, door and
+  // money picture are that seed's to the letter (the fit arm reuses its words); the read-back is what grows.
+  it('council (6): `datesavedfourbuckets` is `datesavedrisenlater` plus a brokerage and an HSA, no deposit — the same stale line, door and picture, and a gate reading four bucket rows and both benefit rows', () => {
+    const d = DEV_SEEDS.datesavedfourbuckets
+    const base = DEV_SEEDS.datesavedrisenlater
+    const { enteredAccounts, ...rest } = d
+    const { enteredAccounts: baseAccounts, ...baseRest } = base
+    expect(rest, 'otherwise it is `datesavedrisenlater`').toEqual(baseRest)
+    expect(enteredAccounts.slice(0, baseAccounts.length), 'its base’s two accounts, first and unchanged').toEqual(baseAccounts)
+    expect(enteredAccounts.slice(baseAccounts.length)).toEqual([
+      { ownerIndex: 0, kind: 'brokerage', ticker: 'VTI', valueToday: 60_000, basis: 45_000 },
+      { ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: 18_000 },
+    ])
+    expect(workingYearLeftOverShownState(d)).toBe('waiting-on-w')
+    expect(workingYearLeftOverLive(d)).toBe(26_985)
+    expect(workingYearLedgerForRun(d), 'no deposit moves, and the yield never reaches a year’s tax base').toEqual(workingYearLedgerForRun(base))
+    expect(workingYearCheckAtQuote(d)).toEqual(workingYearCheckAtQuote(base))
+    expect(workingYearCostStaleLine(d)).toEqual(workingYearCostStaleLine(base))
+    expect(workingYearCostStaleDoor(d)).toEqual(workingYearCostStaleDoor(base))
+    // The gate's read-back, composed from the save as the gate composes it: the four rows in bucket order, then both
+    // people's benefits by the month.
+    const built = scenarioFromDraft(d)
+    if (!built.ready) throw new Error(`datesavedfourbuckets: ${built.detail}`)
+    expect(built.scenario.workingYearLeftOver, 'it plants as a vault with its answer').toEqual({ kind: 'saved', quotedReal: 16_985 })
+    const report = deriveStaleness(built.scenario, TODAY, exposureForDraft(d), { costStale: true, leftOverStale: false })
+    const view = composeReentry(built.scenario, report, { costStale: null, leftOverStale: null, typedBelow: null })
+    expect(view.balanceRows).toEqual([
+      { label: copy.reentryBucketPretax, value: '$900,000' },
+      { label: copy.reentryBucketRoth, value: '$200,000' },
+      { label: copy.reentryBucketTaxable, value: '$60,000' },
+      { label: copy.reentryBucketHsa, value: '$18,000' },
+    ])
+    expect(view.benefitRows).toEqual([
+      { label: 'Alex', value: slots.reentryBenefitMonthly('2,333') },
+      { label: 'Sam', value: slots.reentryBenefitMonthly('2,000') },
+    ])
   })
 
   // Build 2's U15 (KTD14): the household R5 never asks, minted dark. Its year 0 prints short, and the run itself

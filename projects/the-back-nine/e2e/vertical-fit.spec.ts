@@ -2224,6 +2224,10 @@ const risenResultDoor = (quoteNow: string): ResultDoorWords => ({
   tail: [copy.workingCostStaleDoorCounted, slots.workingCostStaleDoorYes(quoteNow)],
   cta: copy.stalenessPayCheckCtaUpdate,
 })
+/** The sheet the Result's W door opens, on an arm whose held figure sits BELOW today's quote: "Yes" offered, no Keep
+ *  door (ruling 34). Above the quote (the fallen arms) Keep is drawn too, its condition above it. */
+const UPDATE_SHEET = { cta: copy.stalenessPayCheckCtaUpdate, keep: null } as const
+const CONFIRM_SHEET = { cta: copy.stalenessPayCheckCta, keep: slots.workingCostKeepYearly('84,000') } as const
 const risenUnlock = (key: string, line: string, quoteNow: string) =>
   ({
     key,
@@ -2233,7 +2237,19 @@ const risenUnlock = (key: string, line: string, quoteNow: string) =>
     standing: `${copy.stalenessPayCheckNote} ${line}`,
     resultDoor: risenResultDoor(quoteNow),
     dated: false,
+    sheet: UPDATE_SHEET,
+    readback: null,
   }) as const
+/** Council `wf_22858e04-f7a` (6)'s read-back: `datesavedfourbuckets`' four bucket rows in bucket order, then both
+ *  people's benefit rows — the tallest read-back a gate draws, by name. */
+const FOUR_BUCKET_READBACK = [
+  copy.reentryBucketPretax,
+  copy.reentryBucketRoth,
+  copy.reentryBucketTaxable,
+  copy.reentryBucketHsa,
+  'Alex',
+  'Sam',
+] as const
 /** U11 walk 6's R1 on `datesavedtyped` (`datesavedrisen` with its old $84,000 TYPED back in, fresh): the typed-below
  *  line, "Your" on the gate and "This" on the Result, in W's plain form — the credit at the typed figure ($16,985 a
  *  year) and year 0 at the $90,000 quote ($10,985). Its door is the update act's, naming the same $84,000. */
@@ -2247,7 +2263,9 @@ const typedBelowLine = (answer: 'This' | 'Your'): string =>
  *  none is drawn (W not stale). `standing` — the Result's standing-slot lead and line (before its door), or `null`
  *  where the answer carries none (the fresh-vintage `wyclock`). `resultDoor` — the standing slot's door as its last
  *  dt/dd (the block), or `null` where the slot is its old `<p>` with the button inline. `dated` — whether the affirm
- *  lands a crowned date (`assertResolvedDate`) or the no-date reading (`assertNoDateReading`). */
+ *  lands a crowned date (`assertResolvedDate`) or the no-date reading (`assertNoDateReading`). `sheet` — the Result
+ *  door that opens the panel at the W row, and the Keep door's label there (`null` where none is drawn), or `null`
+ *  where the slot opens no W row. `readback` — the gate's read-back labels in order, where the arm pins them. */
 const PAY_CHECK_UNLOCKS: readonly {
   readonly key: string
   readonly note: string
@@ -2256,6 +2274,8 @@ const PAY_CHECK_UNLOCKS: readonly {
   readonly standing: string | null
   readonly resultDoor: ResultDoorWords | null
   readonly dated: boolean
+  readonly sheet: { readonly cta: string; readonly keep: string | null } | null
+  readonly readback: readonly string[] | null
 }[] = [
   {
     key: 'wyclock',
@@ -2265,6 +2285,8 @@ const PAY_CHECK_UNLOCKS: readonly {
     standing: null,
     resultDoor: null,
     dated: true,
+    sheet: null,
+    readback: null,
   },
   {
     key: 'datecoststale',
@@ -2274,6 +2296,8 @@ const PAY_CHECK_UNLOCKS: readonly {
     standing: `${copy.stalenessPayCheckNote} ${STALE_W_QUOTE}`,
     resultDoor: null,
     dated: true,
+    sheet: CONFIRM_SHEET,
+    readback: null,
   },
   {
     key: 'datesavedstale',
@@ -2283,6 +2307,8 @@ const PAY_CHECK_UNLOCKS: readonly {
     standing: `${copy.stalenessPayCheckNote} ${STALE_W_SAVED_LINE}`,
     resultDoor: STALE_W_SAVED_RESULT_DOOR,
     dated: true,
+    sheet: CONFIRM_SHEET,
+    readback: null,
   },
   {
     key: 'datesavedmoved',
@@ -2292,10 +2318,18 @@ const PAY_CHECK_UNLOCKS: readonly {
     standing: `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE}`,
     resultDoor: null,
     dated: true,
+    // Its door opens the left-over seat, never the W row (its own arm above pins where it lands).
+    sheet: null,
+    readback: null,
   },
   risenUnlock('datesavedrisen', RISEN_LINE, '90,000'),
   risenUnlock('datesavedrisenshort', RISEN_SHORT_LINE, '105,000'),
   risenUnlock('datesavedrisenlater', RISEN_LATER_LINE, '105,000'),
+  // Council (6)'s four-bucket arm: `datesavedrisenlater` plus a brokerage and an HSA that take no deposit, so its words
+  // are that seed's (devSeeds.test.ts pins the identity) — the longest stale line under the tallest read-back, and it
+  // still crowns no date (measured at the final tier, b9-4: the top rung's lower bound 0.77, against 0.74 without the
+  // two accounts).
+  { ...risenUnlock('datesavedfourbuckets', RISEN_LATER_LINE, '105,000'), readback: FOUR_BUCKET_READBACK },
   // R1: a fresh typed W has no stale line, so W's gate lead stays dark; its own line and door speak instead, and the
   // Result's slot keeps it in W's plain form (the update button inline). It crowns about 9 years out (U11 walk 6's
   // R1 measurement, draft b).
@@ -2307,6 +2341,8 @@ const PAY_CHECK_UNLOCKS: readonly {
     standing: typedBelowLine('This'),
     resultDoor: null,
     dated: true,
+    sheet: UPDATE_SHEET,
+    readback: null,
   },
 ]
 
@@ -2328,6 +2364,37 @@ async function assertStandingBlock(standing: Locator, who: string, lineText: str
     return el === null ? null : { tag: el.tagName, text: el.textContent ?? '' }
   })
   expect(last, `${who}: the door's button is the dd's last child`).toEqual({ tag: 'BUTTON', text: door.cta })
+}
+
+/** Council `wf_22858e04-f7a` (6)'s hit-test, a control in the open sheet where a reader can tap it. Only what a reader
+ *  can scroll is scrolled — the nearest `auto`/`scroll` scroller above the control (the sheet's own body), never a
+ *  clipped box and never `scrollIntoView`, which reaches through clips no reader can (insight 124) — until the control's
+ *  centre sits mid-way in that scroller's visible box; then the browser is asked what is AT that point. The control or
+ *  a descendant, or it is covered or clipped. */
+async function assertTappableInSheet(target: Locator, who: string): Promise<void> {
+  await expect(target, `${who}: drawn exactly once`).toHaveCount(1)
+  const hit = await target.evaluate((el) => {
+    let sc: Element | null = el.parentElement
+    while (sc !== null && !(sc.scrollHeight > sc.clientHeight && /auto|scroll/.test(getComputedStyle(sc).overflowY))) sc = sc.parentElement
+    const scroller = sc ?? document.scrollingElement!
+    const box = sc === null ? { top: 0, bottom: window.innerHeight } : sc.getBoundingClientRect()
+    const before = el.getBoundingClientRect()
+    scroller.scrollTop += before.top + before.height / 2 - (box.top + box.bottom) / 2
+    const r = el.getBoundingClientRect()
+    const x = r.left + r.width / 2
+    const y = r.top + r.height / 2
+    const at = document.elementFromPoint(x, y)
+    return {
+      onTarget: at !== null && el.contains(at),
+      inWindow: x >= 0 && x <= window.innerWidth && y >= 0 && y <= window.innerHeight,
+      at: at === null ? null : `${at.tagName.toLowerCase()}.${String(at.className)}`,
+      y: Math.round(y),
+      sheetScrolled: sc !== null,
+    }
+  })
+  console.log(`[sheet hit] ${who}: ${JSON.stringify(hit)}`)
+  expect(hit.inWindow, `${who}: its centre lies outside the window (${JSON.stringify(hit)})`).toBe(true)
+  expect(hit.onTarget, `${who}: covered or clipped, the point hits ${hit.at} (${JSON.stringify(hit)})`).toBe(true)
 }
 
 for (const u of PAY_CHECK_UNLOCKS) {
@@ -2353,6 +2420,12 @@ for (const u of PAY_CHECK_UNLOCKS) {
       // block), so the count reads the children; the text reads `innerText` across the block's dt/dd.
       await expect(page.locator('.reentry-notes > *'), `${u.key}: exactly one gate note`).toHaveCount(1)
       await expect(page.locator('.reentry-notes')).toContainText(u.note, { useInnerText: true })
+      // The read-back the frame must hold, where the arm pins it (council (6): the four-bucket arm is its tallest).
+      if (u.readback !== null) {
+        await expect(page.locator('.reentry-confirm .reentry-row__label'), `${u.key}: the gate's read-back, every row`).toHaveText([
+          ...u.readback,
+        ])
+      }
       await expect(page.getByText(u.sibling), 'the pay check’s other unlock line stays dark').toHaveCount(0)
       await expect(page.getByText(copy.stalenessWorkingYearCost), 'never the figure-less fallback').toHaveCount(0)
 
@@ -2383,6 +2456,7 @@ for (const u of PAY_CHECK_UNLOCKS) {
         await page.evaluate(() => window.scrollTo(0, 0))
         const doorBox = await door.boundingBox()
         expect(doorBox, 'the door reported no box').not.toBeNull()
+        console.log(`[route fit] ?vault=${u.key}: the route's bottom at ${(doorBox!.y + doorBox!.height).toFixed(1)} of ${REAL.height} px`)
         expect(doorBox!.y + doorBox!.height, `${u.key}: route in frame`).toBeLessThanOrEqual(REAL.height)
       }
 
@@ -2412,6 +2486,27 @@ for (const u of PAY_CHECK_UNLOCKS) {
       expect(trailing.maxOtherBottom, `content renders BELOW the quiet doors (${trailing.desc})`).toBeLessThanOrEqual(
         doors!.y + doors!.height + 0.5,
       )
+
+      // THE ROUTE'S END (council `wf_22858e04-f7a` (6)): the gate's route sends the household to this door, and the door
+      // opens the panel at the W row, where the choices the route promises must be tappable: "Yes" always (every arm
+      // here has a quote), and Keep exactly where the held figure sits above it (ruling 34: never below). The council
+      // claims "route in frame", never "Yes in frame", so the reader's own scroll in the sheet is allowed; a clip or a
+      // cover is not.
+      if (u.sheet !== null) {
+        await expect(standing.getByRole('button', { name: u.sheet.cta, exact: true }), `${u.key}: the Result's W door`).toHaveCount(1)
+        await standing.getByRole('button', { name: u.sheet.cta, exact: true }).click()
+        const dialog = page.getByRole('dialog')
+        await expect(dialog).toBeVisible()
+        await settleLayout(page)
+        const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+        await expect(row, `${u.key}: the door opens the panel at the W row`).toHaveCount(1)
+        await assertTappableInSheet(row.locator('label.segment').filter({ hasText: copy.workingCostYes }), `${u.key}: "${copy.workingCostYes}"`)
+        if (u.sheet.keep === null) {
+          await expect(row.getByRole('button', { name: /^Keep / }), `${u.key}: no Keep door below today's quote (ruling 34)`).toHaveCount(0)
+        } else {
+          await assertTappableInSheet(row.getByRole('button', { name: u.sheet.keep, exact: true }), `${u.key}: "${u.sheet.keep}"`)
+        }
+      }
     })
   })
 }

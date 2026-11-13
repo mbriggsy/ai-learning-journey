@@ -1447,6 +1447,25 @@ const dateSavedRisenLaterWitness: ScenarioDraft = {
   ],
 }
 
+/**
+ * THE FOUR-BUCKET READ-BACK — `?seed=datesavedfourbuckets`, and as a vault `?vault=datesavedfourbuckets` (council
+ * `wf_22858e04-f7a` (6): the gate's route must sit in his first frame with all four bucket rows and both benefit rows):
+ * `datesavedrisenlater`'s household that also holds a brokerage account (Alex's, $60,000 on a $45,000 basis) and an HSA
+ * (Sam's, $18,000, from his last job). Neither takes a deposit, so the working years' cash is `datesavedrisenlater`'s to
+ * the dollar (no deposit moves, and the taxable account's yield never reaches a year's tax base) and its stale line is
+ * the same longest line any seed draws; the gate's read-back gains the taxable and HSA rows, so it is the tallest gate
+ * a stale W can draw. Before this seed no seed carried four buckets (taxable rode only spine seeds; no seed had an
+ * HSA). A "mint, then move" witness: minted once (`dateSavedWitness`), then moved, then given the two accounts.
+ */
+const dateSavedFourBucketsWitness: ScenarioDraft = {
+  ...dateSavedRisenLaterWitness,
+  enteredAccounts: [
+    ...dateSavedRisenLaterWitness.enteredAccounts,
+    { ownerIndex: 0, kind: 'brokerage', ticker: 'VTI', valueToday: 60_000, basis: 45_000 },
+    { ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: 18_000 },
+  ],
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -1493,6 +1512,7 @@ export const DEV_SEEDS = {
   datesavedrisenshort: dateSavedRisenShortWitness,
   datesavedrisenlater: dateSavedRisenLaterWitness,
   datesavedtyped: dateSavedTypedWitness,
+  datesavedfourbuckets: dateSavedFourBucketsWitness,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

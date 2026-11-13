@@ -285,6 +285,12 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-4, 11-13) A new cause that takes another cause's slot reds THAT cause's arms, which a run of the new arm alone never
+  reaches.** R1 (`3000a04c`) let the typed-below line take the Result's standing slot wherever a fresh typed W sits below the
+  quote; the coordinate-tap arm (`?seed=date`, $72,000 typed under $84,000 of spending) still expected the moved line, and CI's
+  whole `verify:fit` redded it at both sizes (run 43375528470) while the eight unlock arms had run green locally. Before
+  committing a change to what a slot shows, grep `e2e/` for every arm that reads that slot (`.cs-paycheck-note`,
+  `.reentry-notes`), and run each one whose draft reaches the new predicate, or the whole `verify:fit`.
 - **(b9-3, 11-09) The whole `e2e/` folder does not typecheck under a scratch tsconfig that adds it:** eight pre-existing
   `Node.remove` errors in `chart-text.spec.ts` and `held/assumptions-row-look.spec.ts` (the DOM lib); filter them before
   reading an edited spec's result (Playwright compiles with esbuild and never sees them). The scratch tsconfig must name its

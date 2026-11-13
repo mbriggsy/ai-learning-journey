@@ -2364,6 +2364,35 @@ async function assertStandingBlock(standing: Locator, who: string, lineText: str
     return el === null ? null : { tag: el.tagName, text: el.textContent ?? '' }
   })
   expect(last, `${who}: the door's button is the dd's last child`).toEqual({ tag: 'BUTTON', text: door.cta })
+  await assertLabelType(standing, who)
+  // Council (4): the door's button is a block button at least 44 px tall — jsdom loads no stylesheet, so only a real
+  // browser can hold it (the walk-6 round review's L4-4: without `min-height` it fell to 24 px at his window).
+  const button = await doorPart.locator('dd > button').boundingBox()
+  expect(button, `${who}: the door's button has no box`).not.toBeNull()
+  expect(button!.height, `${who}: the door's button is at least 44 px tall`).toBeGreaterThanOrEqual(44)
+}
+
+/** Council `wf_22858e04-f7a` (1)'s label type, in a real browser (jsdom loads no stylesheet; the walk-6 round review's
+ *  L4-5): every dt in the block is the body face (never the display face), semibold or heavier, and one step LARGER
+ *  than the text it labels. */
+async function assertLabelType(block: Locator, who: string): Promise<void> {
+  const type = await block.evaluate((el) =>
+    [...el.querySelectorAll('dl > div')].map((row) => {
+      const dt = row.querySelector('dt')
+      const dd = row.querySelector('dd')
+      if (dt === null || dd === null) return null
+      const t = getComputedStyle(dt)
+      const d = getComputedStyle(dd)
+      return { label: dt.textContent ?? '', dtFace: t.fontFamily, ddFace: d.fontFamily, dtSize: parseFloat(t.fontSize), ddSize: parseFloat(d.fontSize), weight: Number(t.fontWeight) }
+    }),
+  )
+  expect(type.length, `${who}: the block draws no labelled parts`).toBeGreaterThan(0)
+  for (const r of type) {
+    expect(r, `${who}: a dt/dd row is malformed`).not.toBeNull()
+    expect(r!.dtFace, `${who}: "${r!.label}" is in the body face`).toBe(r!.ddFace)
+    expect(r!.weight, `${who}: "${r!.label}" is semibold`).toBeGreaterThanOrEqual(600)
+    expect(r!.dtSize, `${who}: "${r!.label}" is one step larger than its text`).toBeGreaterThan(r!.ddSize)
+  }
 }
 
 /** Council `wf_22858e04-f7a` (6)'s hit-test, a control in the open sheet where a reader can tap it. Only what a reader
@@ -2420,6 +2449,9 @@ for (const u of PAY_CHECK_UNLOCKS) {
       // block), so the count reads the children; the text reads `innerText` across the block's dt/dd.
       await expect(page.locator('.reentry-notes > *'), `${u.key}: exactly one gate note`).toHaveCount(1)
       await expect(page.locator('.reentry-notes')).toContainText(u.note, { useInnerText: true })
+      // W's block on the gate carries the same label type as the Result's (council (1)).
+      const gateBlock = page.locator('.reentry-notes > .note-parts')
+      if ((await gateBlock.count()) > 0) await assertLabelType(gateBlock, `${u.key} (gate)`)
       // The read-back the frame must hold, where the arm pins it (council (6): the four-bucket arm is its tallest).
       if (u.readback !== null) {
         await expect(page.locator('.reentry-confirm .reentry-row__label'), `${u.key}: the gate's read-back, every row`).toHaveText([
@@ -2451,6 +2483,12 @@ for (const u of PAY_CHECK_UNLOCKS) {
           /Yes, that’s about right|I’ll enter a different figure|Keep \$/,
         )
         await expect(door, `${u.key}: the gate points neither above nor below`).not.toContainText(/\b(above|below)\b/)
+        // Council (2): the route's heading is in the body face (the walk-6 round review's L4-5: nothing read it).
+        const faces = await door.evaluate((d) => ({
+          heading: getComputedStyle(d.querySelector('h3.reentry-door__heading')!).fontFamily,
+          body: getComputedStyle(d.querySelector('p')!).fontFamily,
+        }))
+        expect(faces.heading, `${u.key}: the route's heading is in the body face`).toBe(faces.body)
         // THE COUNCIL'S FIT GATE: the route sits in the first frame at his window, with the buttons it names.
         await settleLayout(page)
         await page.evaluate(() => window.scrollTo(0, 0))
@@ -2987,7 +3025,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2095-2099 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2098-2102 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,

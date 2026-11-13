@@ -107,7 +107,8 @@ export interface ReentryPayCheckStale {
 }
 
 /** A gate note line: plain text, or W's stale line as parts (`NotePartsBlock` draws it as a block). `text` is
- *  the parts joined — the drawn paragraph's text, and its React key (`ReEntry.tsx` keys each note by its text). */
+ *  the parts joined — the block's words in reading order, and its React key (`ReEntry.tsx` keys each note by its
+ *  text). */
 export type ReentryNoteLine = string | { readonly text: string; readonly parts: NoteParts }
 
 /** The gate's moved left-over sentences (build 2's R12 and KTD9), composed by the caller from the

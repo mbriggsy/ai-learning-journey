@@ -483,9 +483,9 @@ export const copy = {
     'the Medicare premiums of anyone on Medicare who is still working (the tool starts charging someone’s Medicare only once they stop working)',
   workingCostHelpCountLocalTax: 'any local tax on pay, like a city wage tax or earned-income tax',
   workingCostHelpCountStateDeduction: 'any state disability or family-leave deduction from pay',
-  // The Result door's cost list (council `wf_22858e04-f7a` (4): "the cost <ul> from the HelpList copy keys",
-  // `workingCostExtras`): the count list's items past "what you spend", plus this one where the W help asks the
-  // household to ADD its state's tax on pay (`stateTaxBelongsInW`: unpriced or class-based), after the local tax.
+  // The count list's state item, on the W row's help and the Result door's list alike (`workingCostHelpCountItems`;
+  // council `wf_22858e04-f7a` (4): "the cost <ul> from the HelpList copy keys"), drawn after the local tax where the W
+  // help asks the household to ADD its state's tax on pay (`stateTaxBelongsInW`: unpriced or class-based).
   workingCostDoorItemStateTax: 'any state income tax on pay',
   workingCostHelpLeaveOutLead: 'Leave out what the tool works out itself:',
   workingCostHelpLeaveOutPayrollTax: 'federal Social Security and Medicare tax',
@@ -563,12 +563,14 @@ export const copy = {
     'This question waits until you update your figure for a working year, above. Until then, no money left over is added to your savings.',
   workingLedgerLeftOverWaitingConfirm:
     'This question waits until you confirm or change your figure for a working year, above. Until then, no money left over is added to your savings.',
-  // U11 walk 6's R3 (the sheet's half), B only: where a working year at today's quote leaves year 0 nothing over
-  // (`workingYearCheckAtQuote`'s `firstShort` / `firstNone`), "Until then" promised what updating takes away — at the
-  // quote the question isn't asked and nothing is carried — so the seat ends on what is true now and after
-  // (`LEFT_OVER_WAITING_COPY` picks it).
+  // U11 walk 6's R3 (the sheet's half), B only: where a working year at today's quote leaves year 0 nothing over (short
+  // or at $0, under ANY answer: `workingYearLeftOverWaitingWords`), "waits until you update" and "Until then" promised
+  // what updating takes away — at the quote or above the question isn't asked and nothing is carried (the round
+  // review's L1-3, L2-2, L3-2) — so the seat names the update, says what is true now, and why an update at today's
+  // spending won't change it (the line's own B reason, R3: "…comes up short at that cost"). `LEFT_OVER_WAITING_COPY`
+  // picks it.
   workingLedgerLeftOverWaitingUpdateShort:
-    'This question waits until you update your figure for a working year, above. No money left over is added to your savings.',
+    'Your figure for a working year needs an update, above. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.',
   // W's STALE LINE FOR A "SAVED" ANSWER WAITING ON W (R12), its shape from council `wf_7fa86902-35c` (7/10, U11 walk
   // 4: every one-fact sentence easy, the whole only longer, the threads lost at connectives doing a label's job —
   // "So checking…", "Until…, none of it is added", C's "…so this answer can look better"). ONE string on each host,
@@ -1769,9 +1771,10 @@ export const copy = {
     'Until you update your figure for a working year, no money left over is added to your savings.',
   assumptionWorkingYearCheckLeftOverWaitingConfirm:
     'Until you confirm or change your figure for a working year, no money left over is added to your savings.',
-  // U11 walk 6's R3, B only (the seat's twin above, `workingLedgerLeftOverWaitingUpdateShort`): no "until".
+  // U11 walk 6's R3, B only (the seat's twin above, `workingLedgerLeftOverWaitingUpdateShort`): no "until", and why an
+  // update at today's spending brings nothing back.
   assumptionWorkingYearCheckLeftOverWaitingUpdateShort:
-    'Your figure for a working year needs an update. No money left over is added to your savings.',
+    'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.',
   assumptionWorkingYearCheckLeftOverAbsent:
     'Money left over in a working year isn’t added to your savings until you say what happens to it.',
   assumptionWorkingYearCheckLeftOverSaved:
@@ -2557,12 +2560,19 @@ export const WORKING_COST_HELP_COUNT: readonly CopyKey[] = [
   'workingCostHelpCountLocalTax',
   'workingCostHelpCountStateDeduction',
 ]
-/** The door's cost list: the count list past "what you spend", with the state's tax on pay after the local tax where
- *  the W help asks the household to ADD it (`stateTax`: `stateTaxBelongsInW`, unpriced or class-based). */
-export function workingCostExtras(stateTax: boolean): readonly string[] {
-  return WORKING_COST_HELP_COUNT.filter((k) => k !== 'workingCostHelpCountSpend').flatMap((k) =>
+/** The W help's count list as drawn: the items in order, with the state's tax on pay after the local tax where the W help
+ *  asks the household to ADD it (`stateTax`: `stateTaxBelongsInW`, unpriced or class-based). ONE list for both hosts of
+ *  the "costs listed" test: the W row's help (which Keep's condition calls "the costs listed below") and the Result
+ *  door's list, so a figure kept on the W row is tested against the same costs as on the Result (the walk-6 round
+ *  review's L3-1: without the state item there, a PA or unpriced household passed Keep's test with a figure too low). */
+export function workingCostHelpCountItems(stateTax: boolean): readonly string[] {
+  return WORKING_COST_HELP_COUNT.flatMap((k) =>
     k === 'workingCostHelpCountLocalTax' && stateTax ? [copy[k], copy.workingCostDoorItemStateTax] : [copy[k]],
   )
+}
+/** The door's cost list: the count list as drawn, past "what you spend". */
+export function workingCostExtras(stateTax: boolean): readonly string[] {
+  return workingCostHelpCountItems(stateTax).slice(1)
 }
 
 /**
@@ -2902,7 +2912,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2428-2431` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2561-2564` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,

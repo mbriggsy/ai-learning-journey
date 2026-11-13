@@ -331,7 +331,7 @@ tests
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:762-772`
   excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:968-970`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:2626-2628`), a once-measured
+  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:2759-2761`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
   arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:22-23`) — no date frame has ever been fit-measured either.
 - **(2026-09-27, b9-11)** the ONE width seam: a new `@media (min-width: …rem)` fails `breakpoint-mirrors.test.ts` unless it mirrors `--bp-laptop` (68rem) — a new tier is a product decision
@@ -442,14 +442,14 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   double-shifts every token it already moved (its dry run proposed `solverCodeVersion.ts:154 → :171` for a citation
   already at the right line). Move the later ones by hand from content, then run `content-check.mjs` (the re-anchor
   tools folder) — every DIFF it prints must be a construct this change edited on purpose. It also rewrote a HISTORICAL
-  example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1964`…" line) as if it were
+  example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1965`…" line) as if it were
   live: reverted by hand; read its WOULD list for examples before `--apply`.
 
 - **(b9-10, 10-22) `pnpm doc:reanchor` skips `index.ts` too** (two are tracked: `src/engine/constants/index.ts` and
   `src/engine/reference/solver-cases/index.ts`), the ambiguous-basename class. Run `git grep -n "index\.ts:[0-9]"` and fix
   by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:441-444`,
   and pair-check's DOCHUNK section caught it. It also never moves a doc's citations INTO ITSELF, and neither tool flagged
-  it: two new register entries shifted `docs/backlog.md:1964`, `:2250`, `:2323` (cited from inside the register) by +36.
+  it: two new register entries shifted `docs/backlog.md:1965`, `:2251`, `:2324` (cited from inside the register) by +36.
   After any edit that adds lines to a doc, run `git grep -n "<doc>:[0-9]"` across the repo, the doc itself included, and
   compare HEAD vs tree content at each shifted number.
 

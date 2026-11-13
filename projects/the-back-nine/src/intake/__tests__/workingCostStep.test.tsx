@@ -240,27 +240,33 @@ describe('the W step — the quote, the gate and "yes" (KTD3, KTD5)', () => {
   })
 
   it('the help is two lists — what to count, what to leave out — plus the state sentence for the DRAFT’s reading (KTD18)', () => {
-    const cases: readonly [ScenarioDraft['retirementState'], string][] = [
-      [undefined, copy.workingCostHelpStateUnpriced],
-      ['elsewhere', copy.workingCostHelpStateUnpriced],
-      ['NC', copy.workingCostHelpStateAgiDerived],
-      ['PA', copy.workingCostHelpStateClassBased],
-      ['FL', copy.workingCostHelpStateNone],
+    // The count list names the state's income tax on pay exactly where the state sentence asks the household to ADD it
+    // (unpriced, or a class-based state like PA), after the local tax: Keep's condition tests "the costs listed below",
+    // so a list without it lets a figure too low pass (the walk-6 round review's L3-1). The Result door's list is the
+    // same list past "what you spend".
+    const cases: readonly [ScenarioDraft['retirementState'], string, boolean][] = [
+      [undefined, copy.workingCostHelpStateUnpriced, true],
+      ['elsewhere', copy.workingCostHelpStateUnpriced, true],
+      ['NC', copy.workingCostHelpStateAgiDerived, false],
+      ['PA', copy.workingCostHelpStateClassBased, true],
+      ['FL', copy.workingCostHelpStateNone, false],
     ]
-    const count = [
+    const countFor = (stateTax: boolean): readonly string[] => [
       copy.workingCostHelpCountSpend,
       copy.workingCostHelpCountPremiums,
       copy.workingCostHelpCountMedicare,
       copy.workingCostHelpCountLocalTax,
+      ...(stateTax ? ['any state income tax on pay'] : []),
       copy.workingCostHelpCountStateDeduction,
     ]
+    const count = countFor(false)
     const leaveOut = [
       copy.workingCostHelpLeaveOutPayrollTax,
       copy.workingCostHelpLeaveOutIncomeTax,
       copy.workingCostHelpLeaveOutSavings,
       copy.workingCostHelpLeaveOutMedicare,
     ]
-    for (const [state, sentence] of cases) {
+    for (const [state, sentence, stateTax] of cases) {
       const d = { ...dateNoW(), ...(state === undefined ? {} : { retirementState: state }) }
       const { container } = render(<Harness model={modelWith(d)} />)
       // Each list sits right under its own lead, its items in order — never one run-on paragraph.
@@ -269,8 +275,8 @@ describe('the W step — the quote, the gate and "yes" (KTD3, KTD5)', () => {
         copy.workingCostHelpCountLead,
         copy.workingCostHelpLeaveOutLead,
       ])
-      expect(lists.map((h) => within(h as HTMLElement).getAllByRole('listitem').map((li) => li.textContent))).toEqual([
-        count,
+      expect(lists.map((h) => within(h as HTMLElement).getAllByRole('listitem').map((li) => li.textContent)), state ?? 'no state').toEqual([
+        countFor(stateTax),
         leaveOut,
       ])
       expect(screen.getByText(sentence)).toBeInTheDocument()

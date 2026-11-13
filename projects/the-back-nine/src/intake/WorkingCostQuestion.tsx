@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
-import { WORKING_COST_HELP_COUNT, copy, slots, type CopyKey } from '@ui/copy'
+import { copy, slots, workingCostHelpCountItems, type CopyKey } from '@ui/copy'
 import type { SpendEntryPeriod, WorkingYearStateTaxReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CurrencyField, SegmentedControl, formatMoney } from './fields'
@@ -9,6 +9,7 @@ import { workingYearCostFigure } from './intakeMap'
 import { WORKING_COST_ANSWER_FIELD, WORKING_COST_FIELD } from './sanity'
 import {
   heldYesBelowQuote,
+  stateTaxBelongsInW,
   workingCostBelowMedical,
   workingYearCostKeepLabel,
   workingYearCostStaleness,
@@ -88,7 +89,7 @@ export interface WorkingCostQuestionProps {
   readonly figureErrors?: ReactNode
 }
 
-/** The help's two lists (R1), in reading order: what a working year's figure holds (`WORKING_COST_HELP_COUNT`, the
+/** The help's two lists (R1), in reading order: what a working year's figure holds (`workingCostHelpCountItems`, the
  *  one home the Result door's cost list reads too), then what the tool works out itself. Each list sits under its own
  *  lead line. */
 const HELP_LEAVE_OUT: readonly CopyKey[] = [
@@ -98,13 +99,13 @@ const HELP_LEAVE_OUT: readonly CopyKey[] = [
   'workingCostHelpLeaveOutMedicare',
 ]
 
-function HelpList({ leadKey, items }: { readonly leadKey: CopyKey; readonly items: readonly CopyKey[] }) {
+function HelpList({ leadKey, items }: { readonly leadKey: CopyKey; readonly items: readonly string[] }) {
   return (
     <div className="working-cost__help">
       <p className="field-help">{copy[leadKey]}</p>
       <ul className="field-help working-cost__help-list">
-        {items.map((key) => (
-          <li key={key}>{copy[key]}</li>
+        {items.map((item) => (
+          <li key={item}>{item}</li>
         ))}
       </ul>
     </div>
@@ -357,8 +358,11 @@ export function WorkingCostQuestion({
           {left}
         </p>
       )}
-      <HelpList leadKey="workingCostHelpCountLead" items={WORKING_COST_HELP_COUNT} />
-      <HelpList leadKey="workingCostHelpLeaveOutLead" items={HELP_LEAVE_OUT} />
+      {/* The count list as Keep's condition reads it ("the costs listed below"): the state's tax on pay is an item exactly
+          where the state sentence below asks the household to add it (`workingCostHelpCountItems`, the Result door's
+          list too). */}
+      <HelpList leadKey="workingCostHelpCountLead" items={workingCostHelpCountItems(stateTaxBelongsInW(draft))} />
+      <HelpList leadKey="workingCostHelpLeaveOutLead" items={HELP_LEAVE_OUT.map((k) => copy[k])} />
       <p className="field-help">{copy[STATE_HELP[workingYearStateTaxReading(draft)]]}</p>
       {offersYes && (
         <>

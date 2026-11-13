@@ -293,8 +293,8 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     expect(new Set(Object.values(LEFT_OVER_LINE)).size, 'seven distinct lines').toBe(7)
     expect(LEFT_OVER_LINE_CONFIRM['waiting-on-w'], 'the act changes only the waiting line').not.toBe(LEFT_OVER_LINE['waiting-on-w'])
     expect(new Set([LEFT_OVER_LINE, LEFT_OVER_LINE_SHORT, LEFT_OVER_LINE_CONFIRM].map((l) => l['waiting-on-w'])).size, 'three waiting forms').toBe(3)
-    expect(copy.assumptionWorkingYearCheckLeftOverWaitingUpdateShort, 'B’s form: no "until"').toBe(
-      'Your figure for a working year needs an update. No money left over is added to your savings.',
+    expect(copy.assumptionWorkingYearCheckLeftOverWaitingUpdateShort, 'B’s form: no "until", and why updating brings nothing back').toBe(
+      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.',
     )
     // The selector without the shown state fails to compile (KTD11: REQUIRED, never defaulted).
     // Compile-time arms only, never called (the selector reads the act's Record, which an absent argument cannot index).

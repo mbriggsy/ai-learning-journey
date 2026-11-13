@@ -276,14 +276,34 @@ export function workingYearCheckAtQuote(d: ScenarioDraft): WorkingYearCheckAtQuo
   return checkAtQuote(d, stored)
 }
 
+/** Year 0's print at today's quote leaves nothing over (short, or at $0) where the spending ROSE past W — under ANY
+ *  answer, since the seat waits for every answer and the question goes unasked at the quote whatever was answered. A
+ *  "saved" answer waiting on W reads its own check at the quote (one composer, the line's); any other answer reads the
+ *  same re-confirmed picture's year 0, memoized on the source draft like the check. */
+const quoteLeavesNothingMemo = new WeakMap<ScenarioDraft, boolean>()
+function quoteLeavesNothing(d: ScenarioDraft): boolean {
+  if (workingYearCostStaleSentence(d)?.rose !== true) return false
+  const stored = savedWaitingOnW(d)
+  if (stored !== null) {
+    const kind = checkAtQuote(d, stored).kind
+    return kind === 'firstShort' || kind === 'firstNone'
+  }
+  const memo = quoteLeavesNothingMemo.get(d)
+  if (memo !== undefined) return memo
+  const ledger = workingYearLedgerForRun(writeConfirmedWorkingYearCost(d))
+  const read = ledger !== 'unknown' && ledger.year0.bottomLine < 1
+  quoteLeavesNothingMemo.set(d, read)
+  return read
+}
+
 /** Which words the left-over question's "waiting on W" face and its methodology line speak (U11 walk 6's R3, the
- *  sheet's half): the draft's act (`workingYearCostAct`), except B — a "saved" answer waiting on W whose check at the
- *  quote leaves year 0 short or at $0 (`firstShort` / `firstNone`) — whose "Until you update…, no money left over is
- *  added" promised what updating takes away (at the quote the question isn't asked, and nothing is carried), so it
- *  reads `updateShort`. Read on every draft the two faces draw; only "waiting on W" reads it. */
+ *  sheet's half): the draft's act (`workingYearCostAct`), except B — W stale with the spending risen past it, and year
+ *  0 at today's quote short or at $0 ({@link quoteLeavesNothing}), under ANY answer (the round review's L1-2 / L2-1:
+ *  keyed on "saved" alone, an unanswered, spent or not-sure B kept the promise) — whose "Until you update…, no money
+ *  left over is added" promised what updating takes away (at the quote or above the question isn't asked, and nothing
+ *  is carried), so it reads `updateShort`. Read on every draft the two faces draw; only "waiting on W" reads it. */
 export function workingYearLeftOverWaitingWords(d: ScenarioDraft): LeftOverWaitingWords {
-  const kind = workingYearCheckAtQuote(d)?.kind
-  return kind === 'firstShort' || kind === 'firstNone' ? 'updateShort' : workingYearCostAct(d)
+  return quoteLeavesNothing(d) ? 'updateShort' : workingYearCostAct(d)
 }
 
 /** The figures the risen arms print: today's quote and the held figure exactly as W's sentence printed them, and

@@ -178,15 +178,17 @@ export interface FuckOffDateProps {
    *  an aged projection with no stated premise (the spec's no-fold-legal-premise arm, made
    *  structural). Fresh sessions (plan clock 0) ignore it. */
   readonly onReconfirm?: () => void
-  /** The standing answer line, ONE slot for two causes that cannot both hold (a moved left over needs a
-   *  fresh W): W stale — the pay check's KTD21 line, the household's W no longer matches the spending or
+  /** The standing answer line, ONE slot for three causes, at most one drawn (the Result picks in this order): W stale —
+   *  the pay check's KTD21 line, the household's W no longer matches the spending or
    *  state it was given against and the date still uses that last figure (R4); `parts` are W's one stale line
    *  (`workingYearCostStaleLine`: the W step's note, plus, for a "saved" answer waiting on W, what this answer
    *  does with it now and what updating to today's quote does, as labelled parts since U11 walk 5's (bi)) and, where
    *  the door rides, what the Result says beside it (`workingYearCostStaleDoor`'s `result`). Its cause is split by
-   *  the act (`W_STALE_CAUSE`), so the door names the act the W row really offers. `'left-over-moved'` — build 2's
-   *  R12, the household's "All of it" was given against a year-0 figure that has since changed; its parts are one
-   *  plain sentence naming both. Each cause picks its own lead and door label (`STANDING_NOTE_COPY`). `onOpen`
+   *  the act (`W_STALE_CAUSE`), so the door names the act the W row really offers. `'w-typed-below'` — U11 walk 6's R1,
+   *  a fresh TYPED W below today's quote (it needs a fresh W, so it never shares the slot with W stale); one plain line
+   *  that carries a moved left over's figures as its clause where no rules line hosts them. `'left-over-moved'` — build
+   *  2's R12, the household's "All of it" was given against a year-0 figure that has since changed; its parts are one
+   *  plain sentence naming both (a moved left over needs a fresh W, so it never meets W stale either). Each cause picks its own lead and door label (`STANDING_NOTE_COPY`). `onOpen`
    *  present ⇒ the sentence carries a door into the assumptions panel at the cause's seat (Result passes it only when
    *  the tab can save); absent ⇒ the read-only face states the fact with no door (ReEntry's dead-end-CTA doctrine). */
   readonly payCheckNote?: { readonly cause: StandingNoteCause; readonly parts: NoteParts; readonly onOpen?: () => void }

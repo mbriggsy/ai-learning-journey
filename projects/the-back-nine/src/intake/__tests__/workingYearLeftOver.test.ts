@@ -805,6 +805,22 @@ describe('workingYearCostStaleDoor — the act and each host’s door', () => {
     )
   })
 
+  // The no-quote branch through the composer (the walk-6 round review's L4-2: only its slot was pinned). Reached by the
+  // budget builder's own Apply: `datesavedstale` with one windowed discretionary line, which the quote leaves out, so the
+  // quote is $0 while the answer waits on W. Words typed by hand.
+  it('with no quote to offer, the Result door’s tail is the press sentence and Keep’s no-quote exit, never a "Yes" or an amount to enter', () => {
+    const d: ScenarioDraft = {
+      ...DEV_SEEDS.datesavedstale,
+      budget: [{ label: 'Travel', category: 'travel', tier: 'discretionary', annualAmountReal: 78_000, startYear: 0, endYear: 4 }],
+    }
+    expect(workingYearQuote(d).annualReal, 'the premise: no quote').toBe(0)
+    expect(workingYearLeftOverShownState(d), 'the premise: waiting on W').toBe('waiting-on-w')
+    expect(workingYearCostStaleDoor(d)?.result?.tail).toEqual([
+      'To confirm or change it, press “Confirm or change your figure” below.',
+      'There, choose “Keep $84,000 a year” only if $84,000 covers your spending plus those costs, or type a different figure.',
+    ])
+  })
+
   // THE KEEP CONDITION (council `wf_22858e04-f7a` (3), the Hawk's condition; U11 walk 6's F11, moved ABOVE Keep): once the
   // gate stops naming the W row's choices, Keep must never read as a safe confirmation, so the W row says what it must
   // cover, above it. Above today's quote, the room ($84,000 − $78,000); at or below it, the figure's own terms.
@@ -817,6 +833,15 @@ describe('workingYearCostStaleDoor — the act and each host’s door', () => {
     )
     const { workingYearCost: _w, ...noW } = DEV_SEEDS.datesavedstale
     expect(workingYearCostKeepCondition(noW)).toBeNull()
+  })
+
+  // The room's floor (the walk-6 round review's L4-3: every room in the tests was $6,000 or $0, so `> 0` for `>= 1`
+  // survived). Money fields take cents, so a spending figure $0.40 under the yes is typeable: a room under a dollar
+  // names no room ("$0 a year or less" would be the defect) — the figure's own terms instead.
+  it('a room under a dollar names no room: the yes at $84,000 over spending of $83,999.60 reads the figure’s own terms', () => {
+    const d: ScenarioDraft = { ...DEV_SEEDS.datesaved, annualSpendingReal: 83_999.6 }
+    expect(workingYearLeftOverShownState(d), 'the premise: waiting on W').toBe('waiting-on-w')
+    expect(workingYearCostKeepCondition(d)).toBe('Choose “Keep $84,000 a year” only if $84,000 covers your spending plus the costs listed below.')
   })
 
   it('the typed-below note (the Tier 0 retype entry, prescription (1)): the whole-answer lean under a fresh typed figure, whatever the answer; the year-level fact for a "saved" answer waiting on W, where no whole-answer lean holds (the round review; `heldYesBelowQuote`’s rule, THE GUARDS)', () => {
@@ -868,11 +893,24 @@ describe('workingYearLeftOverWaitingWords — R3, the seat and the methodology l
     expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datecoststale)).toBe('confirmOrChange')
   })
 
-  it('B’s seat and method words, typed by hand: no "until", and each ends on what is true now and after updating', () => {
+  // The walk-6 round review's L1-2 / L2-1 (the builders' first call): on B the seat waits for EVERY answer, and an
+  // update at today's quote or above brings nothing back under any of them (the question goes unasked there), so the
+  // decider reads year 0 at the quote whatever the answer — never only a "saved" one.
+  it('B under every answer — unanswered, spent, not sure, saved — reads `updateShort`; A under every answer reads the act', () => {
+    for (const answer of [undefined, { kind: 'spent' }, { kind: 'not-sure' }, { kind: 'saved', quotedReal: 16_985 }] as const) {
+      expect(workingYearLeftOverWaitingWords(answered(DEV_SEEDS.datesavedrisenshort, answer)), answer?.kind ?? 'unanswered').toBe('updateShort')
+      expect(workingYearLeftOverWaitingWords(answered(RISEN_NONE, answer)), `first none, ${answer?.kind ?? 'unanswered'}`).toBe('updateShort')
+      expect(workingYearLeftOverWaitingWords(answered(DEV_SEEDS.datesavedrisen, answer)), `A, ${answer?.kind ?? 'unanswered'}`).toBe('update')
+    }
+  })
+
+  it('B’s seat and method words, typed by hand: no promise that updating brings anything back, and why not at the quote', () => {
     expect(copy[LEFT_OVER_WAITING_COPY.updateShort.seat]).toBe(
-      'This question waits until you update your figure for a working year, above. No money left over is added to your savings.',
+      'Your figure for a working year needs an update, above. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.',
     )
-    expect(copy[LEFT_OVER_WAITING_COPY.updateShort.method]).toBe('Your figure for a working year needs an update. No money left over is added to your savings.')
+    expect(copy[LEFT_OVER_WAITING_COPY.updateShort.method]).toBe(
+      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.',
+    )
     expect(copy[LEFT_OVER_WAITING_COPY.update.seat]).toBe(copy.workingLedgerLeftOverWaitingUpdate)
     expect(copy[LEFT_OVER_WAITING_COPY.confirmOrChange.method]).toBe(copy.assumptionWorkingYearCheckLeftOverWaitingConfirm)
   })
@@ -939,6 +977,22 @@ describe('workingYearCostTypedBelowLine and its door — R1, the Result and the 
     const d = { ...typed(DEV_SEEDS.datesavedrisen), annualSpendingReal: 100_985 }
     expect(workingYearCostTypedBelowLine(d, GATE)).toBe(
       `${counts('Your', '84,000', '100,985')} It adds up to $16,985 a year to your savings. At $100,985 a year, your first working year, 2026, has nothing left over.`,
+    )
+  })
+
+  // The two one-year arms (the walk-6 round review's L4-1: no test read their words, so "comes up $X short" could turn
+  // into "has $X left over" unseen). Both are reached from B by one field the intake writes, Sam's alimony's ages:
+  // from 61, only 2026 comes up short at $105,000 (Sam is 60 in it); to 65, only 2032 does after year 0's $5,985.
+  it('the one-year arms, typed by hand: year 0 the only short year at the quote, and a single later short year "at that cost"', () => {
+    const alimony = (startAge: number, endAge: number): ScenarioDraft => ({
+      ...DEV_SEEDS.datesavedrisenshort,
+      incomeStreams: [{ ...DEV_SEEDS.datesavedrisenlater.incomeStreams[0]!, startAge, endAge }],
+    })
+    expect(workingYearCostTypedBelowLine(typed(alimony(61, 70)), GATE)).toBe(
+      `${counts('Your', '84,000', '105,000')} It adds up to $16,985 a year to your savings. At $105,000 a year, your first working year, 2026, comes up $4,015 short.`,
+    )
+    expect(workingYearCostTypedBelowLine(typed(alimony(50, 65)), GATE)).toBe(
+      `${counts('Your', '84,000', '105,000')} It adds up to $16,985 a year to your savings. At $105,000 a year, your first working year, 2026, has $5,985 left over. At that cost, the working year 2032 comes up $3,652 short.`,
     )
   })
 

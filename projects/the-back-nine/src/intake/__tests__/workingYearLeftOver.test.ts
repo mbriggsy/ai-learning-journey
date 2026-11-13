@@ -97,8 +97,8 @@ describe('writeWorkingYearLeftOver — the ONE write (R2, R5, KTD8)', () => {
 })
 
 describe('workingYearLeftOverMoved — the ONE moved core (R12; U14’s obligation (f))', () => {
-  it('`datesavedmoved` returns both figures: stored $16,985, live $27,537', () => {
-    expect(workingYearLeftOverMoved(DEV_SEEDS.datesavedmoved)).toEqual({ stored: 16_985, live: 27_537 })
+  it('`datesavedmoved` returns both figures: stored $16,985, live $27,537 (W a yes at the quote: no typed figure to name)', () => {
+    expect(workingYearLeftOverMoved(DEV_SEEDS.datesavedmoved)).toEqual({ stored: 16_985, live: 27_537, typedBelow: null })
   })
 
   it('is null in every other shown state — unanswered, saved at the live figure, spent, not sure, waiting on W (even with a figure that differs), and never asked', () => {
@@ -114,7 +114,7 @@ describe('workingYearLeftOverMoved — the ONE moved core (R12; U14’s obligati
     ]
     for (const [label, d] of others) expect(workingYearLeftOverMoved(d), label).toBeNull()
     // The twin inside one household: the same stored $16,000 on a FRESH W is moved, against the $16,985 printed.
-    expect(workingYearLeftOverMoved(answered(DEV_SEEDS.date, { kind: 'saved', quotedReal: 16_000 }))).toEqual({ stored: 16_000, live: 16_985 })
+    expect(workingYearLeftOverMoved(answered(DEV_SEEDS.date, { kind: 'saved', quotedReal: 16_000 }))).toEqual({ stored: 16_000, live: 16_985, typedBelow: null })
   })
 
   it('the moved line’s sentence and the hosted clause both name the two figures, from the one value (the gate’s fact and words cannot disagree)', () => {
@@ -122,6 +122,43 @@ describe('workingYearLeftOverMoved — the ONE moved core (R12; U14’s obligati
     if (m === null) throw new Error('the premise: datesavedmoved reads moved')
     expect(workingYearLeftOverMovedText(m)).toBe(slots.stalenessLeftOverMoved('16,985', '27,537', '16,985'))
     expect(workingYearLeftOverMovedClause(m)).toBe(slots.stalenessLeftOverClause('16,985', '27,537', '16,985'))
+  })
+
+  // The walk-6 round review's pair (L3-3 / L1-5 / L2-5): under a fresh TYPED figure below today's quote, the live figure
+  // is year 0 at the TYPED figure, while the typed-below line beside it (on every host that draws the moved words: the
+  // Result's slot, a rules note, the gate's own line) ends on year 0 at the QUOTE. So the core carries the typed figure,
+  // and both forms name it — one decision for every host. Typed by hand from the documented figures: C
+  // (`datesavedrisenlater` retyped to $84,000: $26,985 at $84,000 against the stored $16,985) and the coordinate-tap
+  // draft (`datesaved` retyped to $72,000, given by the month: W comes off year 0 dollar for dollar, $16,985 + $12,000 =
+  // $28,985). The boundary: a typed figure ABOVE the quote moves the left over too, but no line names year 0 at a second
+  // figure there, so the words stay the plain pair.
+  const retype = (d: ScenarioDraft, amountReal: number, entryPeriod: 'year' | 'month' = 'year'): ScenarioDraft => {
+    const w = d.workingYearCost
+    if (w === undefined) throw new Error('[test setup] the witness holds a W')
+    return { ...d, workingYearCost: { kind: 'entered', amountReal, entryPeriod, stateTaxReading: w.stateTaxReading } }
+  }
+
+  it('names the typed figure the live figure rests on, exactly where a fresh typed figure sits below the quote', () => {
+    const c = workingYearLeftOverMoved(retype(DEV_SEEDS.datesavedrisenlater, 84_000))
+    expect(c).toEqual({ stored: 16_985, live: 26_985, typedBelow: '84,000' })
+    expect(workingYearLeftOverMovedText(c!)).toBe(
+      'You said all of it goes into your savings when it was $16,985. At your $84,000 figure, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
+    )
+    expect(workingYearLeftOverMovedClause(c!)).toBe(
+      'At your $84,000 figure, your first working year has $26,985 left over now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
+    )
+    const tap = workingYearLeftOverMoved(retype(DEV_SEEDS.datesaved, 6_000 * 12, 'month'))
+    expect(tap, 'given by the month, named by the year').toEqual({ stored: 16_985, live: 28_985, typedBelow: '72,000' })
+    expect(workingYearLeftOverMovedClause(tap!)).toBe(
+      'At your $72,000 figure, your first working year has $28,985 left over now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
+    )
+  })
+
+  it('…and nowhere else: a typed figure above the quote moves the left over with no figure to name, and the words stay the plain pair', () => {
+    const above = workingYearLeftOverMoved(retype(DEV_SEEDS.datesaved, 90_000))
+    expect(above).toEqual({ stored: 16_985, live: 10_985, typedBelow: null })
+    expect(workingYearLeftOverMovedText(above!)).toBe(slots.stalenessLeftOverMoved('16,985', '10,985', '10,985'))
+    expect(workingYearLeftOverMovedClause(above!)).toBe(slots.stalenessLeftOverClause('16,985', '10,985', '10,985'))
   })
 })
 
@@ -954,15 +991,23 @@ describe('workingYearCostTypedBelowLine and its door — R1, the Result and the 
     )
   })
 
-  it('C (`datesavedrisenlater` retyped, the left over MOVED to $26,985): on the Result the moved clause takes the credit sentence’s place; on the gate, or where a rules line hosts the clause, the credit is its own sentence — then $5,985 at $105,000 and the 2029–2032 run "at that cost"', () => {
+  it('C (`datesavedrisenlater` retyped, the left over MOVED to $26,985): on the Result the moved clause takes the credit sentence’s place, naming the $84,000 its $26,985 rests on beside the quote’s $5,985 (the round review’s pair); on the gate, or where a rules line hosts the clause, the credit is its own sentence — then $5,985 at $105,000 and the 2029–2032 run "at that cost"', () => {
     const d = typed(DEV_SEEDS.datesavedrisenlater)
     expect(workingYearLeftOverShownState(d), 'the premise: moved').toBe('saved-moved')
     const atQuote = 'At $105,000 a year, your first working year, 2026, has $5,985 left over. At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short.'
     expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(
-      `${counts('This', '84,000', '105,000')} The money left over in your first working year is $26,985 now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${atQuote}`,
+      `${counts('This', '84,000', '105,000')} At your $84,000 figure, your first working year has $26,985 left over now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${atQuote}`,
     )
     expect(workingYearCostTypedBelowLine(d, RESULT_HOSTED)).toBe(`${counts('This', '84,000', '105,000')} It adds up to $16,985 a year to your savings. ${atQuote}`)
     expect(workingYearCostTypedBelowLine(d, GATE)).toBe(`${counts('Your', '84,000', '105,000')} It adds up to $16,985 a year to your savings. ${atQuote}`)
+  })
+
+  it('the coordinate-tap draft (`datesaved` retyped to $6,000 a month, the `verify:fit` arm’s): on the Result the clause names the $72,000 its $28,985 rests on, then the quote’s own $16,985', () => {
+    const d = typed(DEV_SEEDS.datesaved, 6_000 * 12, 'month')
+    expect(workingYearLeftOverShownState(d), 'the premise: moved').toBe('saved-moved')
+    expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(
+      `${counts('This', '72,000', '84,000')} At your $72,000 figure, your first working year has $28,985 left over now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. At $84,000 a year, your first working year, 2026, has $16,985 left over.`,
+    )
   })
 
   it('the credit is the SMALLER figure: $86,000 typed on `datesavedrisen` prints $14,985 at year 0, below the stored $16,985, and the line names $14,985', () => {

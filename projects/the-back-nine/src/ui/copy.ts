@@ -3407,7 +3407,8 @@ export const slots = {
     `${answer} answer counts a working year at your own figure of $${typedFormatted} a year, below your budget’s first year after work stops, which comes to $${quoteFormatted} a year. ${belowLean(typedFormatted, true)}`,
   // …the most a "saved" answer the run carries adds a year: R8's cap, the smaller of the stored figure and year 0's print
   // at the typed figure ("up to": every year credits at most its own cash too). Where the left over has also moved and
-  // this line holds the Result's one slot, the moved clause says it instead (`stalenessLeftOverClause`).
+  // this line holds the Result's one slot, the moved clause says it instead, naming the typed figure
+  // (`stalenessLeftOverClauseAt`).
   workingCostTypedBelowAdds: (creditFormatted: string): string => `It adds up to $${creditFormatted} a year to your savings.`,
   // …then year 0 at today's quote, read off the money picture with W re-confirmed there (the "Yes" tap's own write, as
   // `workingYearCheckAtQuote` reads it): what the household's own spending leaves, beside the credit above. The quote is
@@ -3479,6 +3480,17 @@ export const slots = {
     `You said all of it goes into your savings when it was $${storedFormatted}. It’s $${liveFormatted} now, so each working year adds at most $${smallerFormatted} of its left over to your savings, the smaller of the two.`,
   stalenessLeftOverClause: (storedFormatted: string, liveFormatted: string, smallerFormatted: string): string =>
     `The money left over in your first working year is $${liveFormatted} now, not the $${storedFormatted} you answered at, so each working year adds at most $${smallerFormatted} of its left over to your savings, the smaller of the two.`,
+  // …and their twins where a fresh TYPED figure sits below today's spending (the walk-6 round review's L3-3 / L1-5 /
+  // L2-5): today's figure is year 0 at the typed figure, while the typed-below line beside it (R1's) ends on year 0 at
+  // the spending ("At $84,000 a year, your first working year, 2026, has $16,985 left over."), so two first-year figures
+  // sat a sentence apart and only one named the figure it rests on (back-nine-design's round-6 law: a same-named
+  // quantity quoted twice with different values wears its definition on EACH mention). The typed figure comes first, in
+  // the at-quote sentence's own shape, so the pair reads as the contrast it is. `typedFormatted` is yearly (the line's
+  // counts sentence names it so). The composer picks: `workingYearLeftOverMovedText` / `…Clause`.
+  stalenessLeftOverMovedAt: (typedFormatted: string, storedFormatted: string, liveFormatted: string, smallerFormatted: string): string =>
+    `You said all of it goes into your savings when it was $${storedFormatted}. At your $${typedFormatted} figure, it’s $${liveFormatted} now, so each working year adds at most $${smallerFormatted} of its left over to your savings, the smaller of the two.`,
+  stalenessLeftOverClauseAt: (typedFormatted: string, storedFormatted: string, liveFormatted: string, smallerFormatted: string): string =>
+    `At your $${typedFormatted} figure, your first working year has $${liveFormatted} left over now, not the $${storedFormatted} you answered at, so each working year adds at most $${smallerFormatted} of its left over to your savings, the smaller of the two.`,
   // Build 2's left-over question: its figure (a described-by line above the group), then the one line in
   // dollars below it, by shown state (R6). None says which way the answer moves (R16).
   workingLedgerLeftOverFigure: (amountFormatted: string): string =>
@@ -3870,7 +3882,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1635` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1639` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

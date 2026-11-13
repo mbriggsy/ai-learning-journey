@@ -72,10 +72,18 @@ export function writeWorkingYearLeftOver(
 
 /** The two figures of a "saved, moved" answer — what the household chose against, and today's printed
  *  year-0 Left over — or `null` in every other shown state. The ONE core the moved fact and its words
- *  read (obligation (f)). */
+ *  read (obligation (f)).
+ *
+ *  `typedBelow` is the figure today's left over rests on, where that needs saying: the typed W (formatted, yearly)
+ *  exactly where the typed-below line speaks (`freshTypedBelow`, the line's and its door's own predicate), else
+ *  `null`. There the live figure is year 0 at the TYPED figure, while R1's line beside it — on every host that draws
+ *  the moved words: the Result's slot (as its clause), a rules note's clause above it, the gate's own line after it —
+ *  ends on year 0 at today's quote, so the words name the typed figure (the walk-6 round review's L3-3 / L1-5 / L2-5).
+ *  Carried here, not decided per host, so no host can draw the bare pair beside R1's line (insight 081). */
 export interface WorkingYearLeftOverMoved {
   readonly stored: number
   readonly live: number
+  readonly typedBelow: string | null
 }
 
 export function workingYearLeftOverMoved(d: ScenarioDraft): WorkingYearLeftOverMoved | null {
@@ -84,19 +92,29 @@ export function workingYearLeftOverMoved(d: ScenarioDraft): WorkingYearLeftOverM
   // this on every draft).
   if (answer?.kind !== 'saved' || !LEFT_OVER_MOVED[workingYearLeftOverShownState(d)]) return null
   const live = workingYearLeftOverLive(d)
-  return live === null ? null : { stored: answer.quotedReal, live }
+  return live === null ? null : { stored: answer.quotedReal, live, typedBelow: freshTypedBelow(d)?.typed ?? null }
 }
 
 /** The moved line's sentence (after `copy.stalenessLeftOverNote`), and the clause a fired tax, state-tax or
  *  working-years line carries instead (R12) — both read off the moved core's ONE value, so the gate's fact
  *  and its words can never disagree (obligation (f)). Each names the smaller of the two as the most a year adds
- *  (R8 caps every credit at both). */
+ *  (R8 caps every credit at both), and, where the core carries one, the typed figure today's figure rests on. */
 export function workingYearLeftOverMovedText(m: WorkingYearLeftOverMoved): string {
-  return slots.stalenessLeftOverMoved(formatMoney(m.stored), formatMoney(m.live), formatMoney(Math.min(m.stored, m.live)))
+  const [stored, live, smaller] = movedFigures(m)
+  return m.typedBelow === null
+    ? slots.stalenessLeftOverMoved(stored, live, smaller)
+    : slots.stalenessLeftOverMovedAt(m.typedBelow, stored, live, smaller)
 }
 
 export function workingYearLeftOverMovedClause(m: WorkingYearLeftOverMoved): string {
-  return slots.stalenessLeftOverClause(formatMoney(m.stored), formatMoney(m.live), formatMoney(Math.min(m.stored, m.live)))
+  const [stored, live, smaller] = movedFigures(m)
+  return m.typedBelow === null
+    ? slots.stalenessLeftOverClause(stored, live, smaller)
+    : slots.stalenessLeftOverClauseAt(m.typedBelow, stored, live, smaller)
+}
+
+function movedFigures(m: WorkingYearLeftOverMoved): readonly [string, string, string] {
+  return [formatMoney(m.stored), formatMoney(m.live), formatMoney(Math.min(m.stored, m.live))]
 }
 
 // ── W'S STALE WORDS (R12; the U11 Caddie walk's (ae), council `wf_fc80029e-d93`, 7/10, Frame B; their SHAPE from

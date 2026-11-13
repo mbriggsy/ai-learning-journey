@@ -571,7 +571,7 @@ describe('composeReentry — the read-back', () => {
     const d = DEV_SEEDS.datesavedmoved
     const s = savedDraft(d)
     const moved = workingYearLeftOverMoved(d)
-    expect(moved).toEqual({ stored: 16_985, live: 27_537 })
+    expect(moved).toEqual({ stored: 16_985, live: 27_537, typedBelow: null })
     if (moved === null) return
     const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: moved !== null })
     expect(report.workingYear.leftOverStale).toBe(true)
@@ -1165,20 +1165,20 @@ describe('ReEntry — the surface', () => {
     )
   })
 
-  it('R1: where the left over ALSO moved, the gate keeps two lines, one cause each — the typed-below line with its own credit sentence, then the moved line', () => {
+  it('R1: where the left over ALSO moved, the gate keeps two lines, one cause each — the typed-below line with its own credit sentence, then the moved line, which names the $84,000 its $26,985 rests on, since the line above ends on the quote’s $5,985 (the round review’s pair)', () => {
     const later = DEV_SEEDS.datesavedrisenlater
     const w = later.workingYearCost
     if (w === undefined) throw new Error('[test setup] the witness holds a W')
     const d: ScenarioDraft = { ...later, workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: w.stateTaxReading } }
     const moved = workingYearLeftOverMoved(d)
-    expect(moved).toEqual({ stored: 16_985, live: 26_985 })
+    expect(moved).toEqual({ stored: 16_985, live: 26_985, typedBelow: '84,000' })
     const view = typedBelowView(d, true, { text: workingYearLeftOverMovedText(moved!), clause: workingYearLeftOverMovedClause(moved!), canChange: true })
     expect(view.noteLines).toEqual([
       'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. ' +
         'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
         'It adds up to $16,985 a year to your savings. At $105,000 a year, your first working year, 2026, has $5,985 left over. ' +
         'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short.',
-      `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '26,985', '16,985')} ${copy.stalenessLeftOverGateDoor}`,
+      `${copy.stalenessLeftOverNote} You said all of it goes into your savings when it was $16,985. At your $84,000 figure, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${copy.stalenessLeftOverGateDoor}`,
     ])
   })
 

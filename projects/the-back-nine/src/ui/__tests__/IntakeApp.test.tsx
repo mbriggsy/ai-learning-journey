@@ -235,6 +235,47 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
     }
   })
 
+  // The walk-6 round review's pair (L3-3 / L1-5 / L2-5), through the real hydrate: `datesavedrisenlater` with its old
+  // $84,000 TYPED back in (a fresh typed figure below the $105,000 of spending, the left over moved to $26,985 at it).
+  // R1's line above ends on the quote's $5,985, so the moved words name the $84,000 their $26,985 rests on — as their
+  // own line, and as the clause a fired working-years line hosts. Typed by hand from the seed's documented figures.
+  const typedLater = (): ScenarioDraft => {
+    const later = DEV_SEEDS.datesavedrisenlater
+    const w = later.workingYearCost
+    if (w === undefined) throw new Error('[test setup] the witness holds a W')
+    return { ...later, workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: w.stateTaxReading } }
+  }
+  const MOVED_AT_TYPED_LINE =
+    'You said all of it goes into your savings when it was $16,985. At your $84,000 figure, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
+  const MOVED_AT_TYPED_CLAUSE =
+    'At your $84,000 figure, your first working year has $26,985 left over now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
+
+  it('a typed figure below the spending, the left over moved at it: R1’s line, then the moved line naming the $84,000 its $26,985 rests on', async () => {
+    const current = h.model
+    h.model = plantedVault(typedLater())
+    try {
+      render(<IntakeApp hydrateFromVault />)
+      await screen.findByRole('button', { name: copy.reentryAffirmCta })
+      const lines = Array.from(document.querySelectorAll('.reentry-notes p')).map((p) => p.textContent ?? '')
+      expect(lines.some((t) => t.startsWith('Your answer counts a working year at your own figure of $84,000 a year')), 'R1’s line speaks').toBe(true)
+      expect(lines).toContain(`${copy.stalenessLeftOverNote} ${MOVED_AT_TYPED_LINE} ${copy.stalenessLeftOverGateDoor}`)
+    } finally {
+      h.model = current
+    }
+  })
+
+  it('…saved under an older working-years table: the clause that line hosts names the $84,000 too, and no moved line of its own speaks', async () => {
+    const current = h.model
+    h.model = plantedVault(typedLater(), (s) => doctorWorkingYearsStaleVault(s, currentEpochDay()))
+    try {
+      render(<IntakeApp hydrateFromVault />)
+      expect(await screen.findByText(`${copy.stalenessWorkingYears} ${MOVED_AT_TYPED_CLAUSE}`)).toBeInTheDocument()
+      expect(screen.queryByText(new RegExp(copy.stalenessLeftOverNote))).toBeNull()
+    } finally {
+      h.model = current
+    }
+  })
+
   // The moved line's door sentence promises a choice that leads to where the answer can change, so, like the
   // stale-W line's, it rides only a tab that can save (`canChange: !readOnly`, the `ReentryPayCheckStale` door
   // law). The go-live review found IntakeApp's own argument unpinned: a planted `canChange: true` stayed green.

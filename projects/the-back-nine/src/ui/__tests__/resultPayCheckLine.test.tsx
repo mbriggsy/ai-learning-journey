@@ -381,7 +381,7 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     expect(updateDoor()).toBeNull()
   })
 
-  it('the left over ALSO moved (`datesavedrisenlater` retyped: $26,985 at $84,000 against the stored $16,985): the typed-below line holds the one slot and carries the moved clause in place of its credit sentence — no moved line of its own; where a rules line hosts that clause at unlock, the line keeps its credit sentence', () => {
+  it('the left over ALSO moved (`datesavedrisenlater` retyped: $26,985 at $84,000 against the stored $16,985): the typed-below line holds the one slot and carries the moved clause in place of its credit sentence — no moved line of its own; where a rules line hosts that clause at unlock, the line keeps its credit sentence; either way the clause names the $84,000 its $26,985 rests on, beside the quote’s $5,985 (the round review’s pair)', () => {
     const later = DEV_SEEDS.datesavedrisenlater
     const w = later.workingYearCost
     if (w === undefined) throw new Error('[test setup] the witness holds a W')
@@ -391,13 +391,13 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
       'A working year almost always costs at least what you spend, so this answer can look better than it really is.'
     const AT_QUOTE =
       'At $105,000 a year, your first working year, 2026, has $5,985 left over. At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short.'
+    const MOVED_AT_TYPED =
+      'At your $84,000 figure, your first working year has $26,985 left over now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
     plantDateHero()
     appModel.update(() => retyped)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
     expect(document.querySelectorAll('.cs-paycheck-note')).toHaveLength(1)
-    expect(line()!.querySelector('span')!.textContent).toBe(
-      `${COUNTS} The money left over in your first working year is $26,985 now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${AT_QUOTE}`,
-    )
+    expect(line()!.querySelector('span')!.textContent).toBe(`${COUNTS} ${MOVED_AT_TYPED} ${AT_QUOTE}`)
     expect(document.body.textContent, 'no moved line of its own').not.toContain(copy.stalenessLeftOverNote)
     expect(updateDoor()).not.toBeNull()
     cleanup()
@@ -405,7 +405,9 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     appModel.update(() => retyped)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} stalenessNote leftOverClauseHost />)
     expect(line()!.querySelector('span')!.textContent).toBe(`${COUNTS} It adds up to $16,985 a year to your savings. ${AT_QUOTE}`)
-    expect(document.querySelector('.cs-staleness-note')?.textContent, 'the moved clause rides the rules note').toContain('$26,985 now, not the $16,985 you answered at')
+    expect(document.querySelector('.cs-staleness-note')?.textContent, 'the moved clause rides the rules note, its figure named there too').toBe(
+      `${copy.stalenessHeroNote} ${MOVED_AT_TYPED}`,
+    )
   })
 
   it('W stale wins the slot over a typed figure stale on its reading (Florida picked after typing): W’s own stale line speaks, never the typed-below line', () => {

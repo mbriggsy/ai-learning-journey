@@ -787,12 +787,12 @@ describe('the schema-v4 and schema-v5 bumps — a newer plan is refused before a
     // $165,000 pay, reads moved to its hand-derived $27,537 (`devSeeds.ts`).
     expect(
       workingYearLeftOverMoved({ ...hydrated.draft, workingYearLeftOver: { kind: 'saved', quotedReal: 16_000 } }),
-    ).toEqual({ stored: 16_000, live: 16_985 })
+    ).toEqual({ stored: 16_000, live: 16_985, typedBelow: null })
     expect(
       workingYearLeftOverMoved({ ...hydrated.draft, workingYearLeftOver: { kind: 'saved', quotedReal: 16_985 } }),
       'saved at the printed figure: not moved',
     ).toBeNull()
-    expect(workingYearLeftOverMoved(DEV_SEEDS.datesavedmoved)).toEqual({ stored: 16_985, live: 27_537 })
+    expect(workingYearLeftOverMoved(DEV_SEEDS.datesavedmoved)).toEqual({ stored: 16_985, live: 27_537, typedBelow: null })
     const minted = scenarioFromDraft(hydrated.draft)
     if (!minted.ready) throw new Error(minted.detail)
     expect((await session.save(minted.scenario)).ok).toBe(true)

@@ -1253,8 +1253,10 @@ export function buildDateInput(d: ScenarioDraft): DateSearchInput | null {
 }
 
 /** The stored figure `buildDateInput` carries, or `undefined`. The answer's kind is read first (the R10
- *  short-circuit above); only a "saved" draft reads the shown state, and so the picture. */
-function carriedWorkingYearLeftOver(d: ScenarioDraft): number | undefined {
+ *  short-circuit above); only a "saved" draft reads the shown state, and so the picture. Exported for the typed-below
+ *  line (`workingYearLeftOver.ts`), which credits each answer with exactly the figure its run carries, so the line and
+ *  the engine can never disagree on which answers are credited (insight 081). */
+export function carriedWorkingYearLeftOver(d: ScenarioDraft): number | undefined {
   const answer = d.workingYearLeftOver
   if (answer?.kind !== 'saved') return undefined
   return LEFT_OVER_CARRIES[workingYearLeftOverShownState(d)] ? answer.quotedReal : undefined

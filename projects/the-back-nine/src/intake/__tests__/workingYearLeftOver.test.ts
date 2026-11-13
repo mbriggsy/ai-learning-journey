@@ -38,10 +38,13 @@ import {
   workingYearLeftOverTypedBelow,
   workingYearLeftOverWaitingSeat,
   workingYearLeftOverWaitingWords,
+  workingYearTypedBelowWindow,
   writeWorkingYearLeftOver,
   shortRunFrom,
+  type TypedBelowSpan,
 } from '../workingYearLeftOver'
-import { heldYesBelowQuote, isWorkingYearCostStale, workingYearCostAct, workingYearQuote, writeConfirmedWorkingYearCost } from '../workingYearQuote'
+import { heldYesBelowQuote, isWorkingYearCostStale, workingYearCostAct, workingYearQuote, writeConfirmedWorkingYearCost, writeEnteredWorkingYearCost } from '../workingYearQuote'
+import { TYPED_BELOW_WITNESSES, type TypedBelowWitness } from './typedBelowWitnesses'
 
 const KINDS: readonly WorkingYearLeftOverKind[] = ['saved', 'spent', 'not-sure']
 const answered = (d: ScenarioDraft, answer: ScenarioDraft['workingYearLeftOver']): ScenarioDraft => ({ ...d, workingYearLeftOver: answer })
@@ -1237,5 +1240,220 @@ describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — t
     const notAsked = { ...typed(DEV_SEEDS.datesavedrisen, 101_000), annualSpendingReal: 110_000 }
     expect(workingYearLeftOverShownState(notAsked), 'the premise: not asked').toBe('not-asked')
     expect(workingYearLeftOverAtQuoteLine(notAsked)).toBeNull()
+  })
+})
+
+// The whole-window read (the rebuild's U3: `docs/plans/features/typed-below-whole-window-rebuild-spec.md` KTD3, KTD4, the
+// witness table). Every expected span below is typed by hand from the engine's own per-year figures, never read back from
+// the code under test: the research record's tables (`u11-wholewindow\research\witnesses.md`: P_Q, P_W and cr_W per year,
+// each printed by the shipped producer and the overlay's credit) and, for the four households it had no table for (B
+// retyped's later years, C typed at $100,985, the whole household, the crowned one), the U3 probe beside it
+// (`research\wit\u3-probe.out.txt`: each year's print at both figures through `workingYearLedgerForRun`, and each answer's
+// credit through U2's `workingYearCredit`). The quote answer's credit in a year is the smaller of that year's print at the
+// quote and its cap, min(the stored $16,985, year 0 at the quote); a short year credits nothing. The engine pins (each
+// credit `Object.is` the overlay's `creditComposed`) are `src/engine/__tests__/workingYearCredit.test.ts`'s.
+describe('workingYearTypedBelowWindow — the typed-below line’s whole-window read (the rebuild’s U3)', () => {
+  const $ = (least: number, most: number = least) => ({ least, most })
+  const both = (
+    firstYear: number,
+    lastYear: number,
+    credit: readonly [number, number?],
+    atQuote: readonly [number, number?],
+    difference: readonly [number, number?],
+  ): TypedBelowSpan => ({ firstYear, lastYear, kind: 'bothCredit', credit: $(...credit), creditAtQuote: $(...atQuote), difference: $(...difference) })
+  const nothingAtQuote = (firstYear: number, lastYear: number): TypedBelowSpan => ({
+    firstYear,
+    lastYear,
+    kind: 'quoteCreditsNothing',
+    credit: $(16_985),
+    difference: $(16_985),
+  })
+  const readOf = (key: TypedBelowWitness) => {
+    const read = workingYearTypedBelowWindow(TYPED_BELOW_WITNESSES[key])
+    if (read === null || read.kind !== 'read') throw new Error(`[test setup] ${key} reads the window (got ${JSON.stringify(read)})`)
+    return read
+  }
+  const spansOf = (key: TypedBelowWitness): readonly TypedBelowSpan[] => readOf(key).spans
+  const typedAt = (d: ScenarioDraft, amountReal: number): ScenarioDraft => writeEnteredWorkingYearCost(d, amountReal, 'year')
+
+  it('the witnesses’ premises: each is a fresh typed figure below its quote, under a "saved" answer the run carries at the stored figure its table names', () => {
+    const premises: Readonly<Record<TypedBelowWitness, readonly [string, number]>> = {
+      a: ['saved', 16_985],
+      pa: ['saved-moved', 16_985],
+      tm: ['saved-moved', 16_985],
+      tm95: ['saved-moved', 16_985],
+      drift: ['saved', 26_985],
+      pension: ['saved-moved', 16_985],
+      c110985: ['saved-moved', 16_985],
+      bRetyped: ['saved', 16_985],
+      c101000: ['saved-moved', 16_985],
+      c100985: ['saved-moved', 16_985],
+      whole: ['saved-moved', 16_985],
+      cMonth874999: ['saved-moved', 16_985],
+      cMonth791667: ['saved-moved', 16_985],
+      date6000Month: ['saved-moved', 16_985],
+      crowned: ['saved-moved', 16_985],
+    }
+    for (const [key, [shown, stored]] of Object.entries(premises) as [TypedBelowWitness, readonly [string, number]][]) {
+      const d = TYPED_BELOW_WITNESSES[key]
+      expect(workingYearLeftOverShownState(d), key).toBe(shown)
+      expect(d.workingYearLeftOver, key).toEqual({ kind: 'saved', quotedReal: stored })
+      expect(isWorkingYearCostStale(d), `${key}: fresh`).toBe(false)
+      expect(workingYearLeftOverTypedBelow(d), `${key}: a typed figure below the quote`).not.toBeNull()
+    }
+  })
+
+  it('A: one span, every year $16,985 against the quote answer’s $10,985 — $6,000 apart in 2033–2035 too, where x_t read nothing (KD1); PA: $16,064 against $10,064', () => {
+    expect(spansOf('a')).toEqual([both(2026, 2035, [16_985], [10_985], [6_000])])
+    expect(spansOf('pa')).toEqual([both(2026, 2035, [16_064], [10_064], [6_000])])
+  })
+
+  it('TM: three spans — $16,985 against $5,985; the 2029–2032 run short $3,652 to $4,015 at $105,000 with $16,985 credited ($20,637 to $21,000 a year apart); then $16,985 against $5,985 again (x_t’s $762 years are $11,000 apart)', () => {
+    expect(spansOf('tm')).toEqual([
+      both(2026, 2028, [16_985], [5_985], [11_000]),
+      { firstYear: 2029, lastYear: 2032, kind: 'shortLeftOverAtTyped', shortAtQuote: $(3_652, 4_015), credit: $(16_985), difference: $(20_637, 21_000) },
+      both(2033, 2035, [16_985], [5_985], [11_000]),
+    ])
+  })
+
+  it('TM at $95,000 (the tie rule’s witness): three spans — 2028’s tie at the quote answer’s cap ($15,985) never joins 2029’s drift ($5,985 to $6,348), and year 0’s tie joins the cap years by their one figure', () => {
+    expect(spansOf('tm95')).toEqual([
+      both(2026, 2028, [16_985], [15_985], [1_000]),
+      both(2029, 2032, [16_985], [5_985, 6_348], [10_637, 11_000]),
+      both(2033, 2035, [16_985], [15_985], [1_000]),
+    ])
+    const read = readOf('tm95')
+    expect(read.years.map((y) => y.bindingAtQuote), 'year 0’s tie is its own left over; a later tie is the cap').toEqual([
+      'ownLeftOver',
+      'cap',
+      'cap',
+      'ownLeftOver',
+      'ownLeftOver',
+      'ownLeftOver',
+      'ownLeftOver',
+      'cap',
+      'cap',
+      'cap',
+    ])
+    expect(read.years.map((y) => y.binding), 'this answer: the stored $16,985, below year 0’s $26,985, caps every year').toEqual(Array(10).fill('cap'))
+  })
+
+  it('the drift household (saved at its own $26,985): two spans — year 0’s tie joins the drift, 2026–2032 credited $25,722 to $26,985 against $19,722 to $20,985; then the cap, $26,985 against $20,985', () => {
+    expect(spansOf('drift')).toEqual([
+      both(2026, 2032, [25_722, 26_985], [19_722, 20_985], [6_000]),
+      both(2033, 2035, [26_985], [20_985], [6_000]),
+    ])
+    const read = readOf('drift')
+    const sevenOwn = Array(7).fill('ownLeftOver')
+    expect(read.years.map((y) => y.binding)).toEqual([...sevenOwn, 'cap', 'cap', 'cap'])
+    expect(read.years.map((y) => y.bindingAtQuote)).toEqual([...sevenOwn, 'cap', 'cap', 'cap'])
+  })
+
+  it('the pension household: five spans in time order — 2029 and 2032 each its own short span, 2030–2031 a drift at the quote ($3,005 to $3,368)', () => {
+    expect(spansOf('pension')).toEqual([
+      both(2026, 2028, [16_985], [5_985], [11_000]),
+      { firstYear: 2029, lastYear: 2029, kind: 'shortLeftOverAtTyped', shortAtQuote: $(4_015), credit: $(16_985), difference: $(21_000) },
+      both(2030, 2031, [16_985], [3_005, 3_368], [13_617, 13_980]),
+      { firstYear: 2032, lastYear: 2032, kind: 'shortLeftOverAtTyped', shortAtQuote: $(3_652), credit: $(16_985), difference: $(20_637) },
+      both(2033, 2035, [16_985], [5_985], [11_000]),
+    ])
+  })
+
+  it('C at $110,985 (year 0 at the quote exactly $0): the quote answer credits nothing in any year — nothing, short, nothing; B retyped (year 0 short at the quote): a short span from 2026, then nothing at the quote', () => {
+    expect(spansOf('c110985')).toEqual([
+      nothingAtQuote(2026, 2028),
+      { firstYear: 2029, lastYear: 2032, kind: 'shortLeftOverAtTyped', shortAtQuote: $(9_637, 10_000), credit: $(16_985), difference: $(26_622, 26_985) },
+      nothingAtQuote(2033, 2035),
+    ])
+    expect(spansOf('bRetyped')).toEqual([
+      { firstYear: 2026, lastYear: 2032, kind: 'shortLeftOverAtTyped', shortAtQuote: $(3_652, 4_015), credit: $(16_985), difference: $(20_637, 21_000) },
+      nothingAtQuote(2033, 2035),
+    ])
+  })
+
+  it('C typed at $101,000 (the straddle): 2029–2030, still $15 short at the typed figure, split from 2031–2032’s $348 left over; every span $4,000 apart', () => {
+    expect(spansOf('c101000')).toEqual([
+      both(2026, 2028, [9_985], [5_985], [4_000]),
+      { firstYear: 2029, lastYear: 2030, kind: 'shortStillShortAtTyped', shortAtQuote: $(4_015), shortAtTyped: $(15), difference: $(4_000) },
+      { firstYear: 2031, lastYear: 2032, kind: 'shortLeftOverAtTyped', shortAtQuote: $(3_652), credit: $(348), difference: $(4_000) },
+      both(2033, 2035, [9_985], [5_985], [4_000]),
+    ])
+  })
+
+  it('C typed at $100,985: 2029–2030 print exactly $0 at the typed figure (nothing over, nothing short), apart from 2031–2032’s $363', () => {
+    expect(spansOf('c100985')).toEqual([
+      both(2026, 2028, [10_000], [5_985], [4_015]),
+      { firstYear: 2029, lastYear: 2030, kind: 'shortEvenAtTyped', shortAtQuote: $(4_015), difference: $(4_015) },
+      { firstYear: 2031, lastYear: 2032, kind: 'shortLeftOverAtTyped', shortAtQuote: $(3_652), credit: $(363), difference: $(4_015) },
+      both(2033, 2035, [10_000], [5_985], [4_015]),
+    ])
+  })
+
+  it('the whole household (year 0 at the quote above the stored figure): year 0 reads `same` — the stored $16,985 caps both — and the lean starts in 2029, when the alimony ends', () => {
+    expect(spansOf('whole')).toEqual([
+      { firstYear: 2026, lastYear: 2028, kind: 'same' },
+      both(2029, 2032, [16_985], [10_985, 11_348], [5_637, 6_000]),
+      { firstYear: 2033, lastYear: 2035, kind: 'same' },
+    ])
+  })
+
+  it('`same`: twelve cents a year below the quote ($8,749.99 a month) and `?seed=date` with $6,000 a month typed each read one span; $7,916.67 a month reads every span $9,999 apart, 2035 included (credits, never prints)', () => {
+    expect(spansOf('cMonth874999')).toEqual([{ firstYear: 2026, lastYear: 2035, kind: 'same' }])
+    expect(spansOf('date6000Month')).toEqual([{ firstYear: 2026, lastYear: 2035, kind: 'same' }])
+    expect(spansOf('cMonth791667')).toEqual([
+      both(2026, 2028, [15_984], [5_985], [9_999]),
+      { firstYear: 2029, lastYear: 2032, kind: 'shortLeftOverAtTyped', shortAtQuote: $(3_652, 4_015), credit: $(5_984, 6_347), difference: $(9_999) },
+      both(2033, 2035, [15_984], [5_985], [9_999]),
+    ])
+  })
+
+  it('the crowned household is TM with more saved: savings never reach a working year’s cash, so its read is TM’s to the dollar', () => {
+    expect(readOf('crowned')).toEqual(readOf('tm'))
+  })
+
+  it('on every witness: every year of the window lies in exactly one span, in time order (R4); each year’s credit is at least the quote answer’s and its print at least the quote’s; every span but `same` is a real difference', () => {
+    for (const key of Object.keys(TYPED_BELOW_WITNESSES) as TypedBelowWitness[]) {
+      const read = readOf(key)
+      const covered = read.spans.flatMap((s) => Array.from({ length: s.lastYear - s.firstYear + 1 }, (_, i) => s.firstYear + i))
+      expect(read.years.map((y) => y.calendarYear), `${key}: the window`).toEqual([2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035])
+      expect(covered, `${key}: the spans cover the window once, in order`).toEqual(read.years.map((y) => y.calendarYear))
+      for (const y of read.years) {
+        expect(y.credit >= y.creditAtQuote, `${key} ${y.calendarYear}: credit`).toBe(true)
+        expect(y.bottomLine >= y.bottomLineAtQuote, `${key} ${y.calendarYear}: print`).toBe(true)
+      }
+      for (const s of read.spans) if (s.kind !== 'same') expect(s.difference.least, `${key} ${s.firstYear}`).toBeGreaterThan(0)
+    }
+  })
+
+  it('null wherever the typed-below line reads none: an answer the run does not carry, a "saved" answer not asked, a yes, a kept figure, a typed figure at or above the quote, one stale on its reading, an all-retired draft, no W', () => {
+    const d = TYPED_BELOW_WITNESSES.a
+    const kept: ScenarioDraft = { ...d, workingYearCost: { ...(d.workingYearCost as Extract<NonNullable<ScenarioDraft['workingYearCost']>, { kind: 'entered' }>), keptOverQuoteReal: 84_000 } }
+    const stateMoved: ScenarioDraft = { ...d, retirementState: 'FL' }
+    expect(isWorkingYearCostStale(stateMoved), 'the premise: stale on its reading').toBe(true)
+    const retired: ScenarioDraft = { ...d, people: [{ ...d.people[0], workStatus: 'retired', retirementAge: 58, earnedIncomeReal: 0 }, d.people[1]] }
+    const { workingYearCost: _w, ...noW } = d
+    const notAsked: ScenarioDraft = { ...typedAt(DEV_SEEDS.datesavedrisen, 101_000), annualSpendingReal: 110_000 }
+    expect(workingYearLeftOverShownState(notAsked), 'the premise: not asked').toBe('not-asked')
+    for (const [name, x] of [
+      ['unanswered', answered(d, undefined)],
+      ['spent', answered(d, { kind: 'spent' })],
+      ['not sure', answered(d, { kind: 'not-sure' })],
+      ['a "saved" answer not asked', notAsked],
+      ['a yes', DEV_SEEDS.datesavedrisen],
+      ['kept', kept],
+      ['at the quote', typedAt(DEV_SEEDS.datesavedrisen, 90_000)],
+      ['above it', typedAt(DEV_SEEDS.datesavedrisen, 95_000)],
+      ['stale on its reading', stateMoved],
+      ['all retired', retired],
+      ['no W', noW],
+    ] as const) {
+      expect(workingYearTypedBelowWindow(x), name).toBeNull()
+    }
+  })
+
+  it('a pure function of the draft (R12): one value per draft, read twice, and an equal draft reads an equal value — nothing reads a crown or an outcome', () => {
+    const tm = TYPED_BELOW_WITNESSES.tm
+    expect(workingYearTypedBelowWindow(tm)).toBe(workingYearTypedBelowWindow(tm))
+    expect(workingYearTypedBelowWindow(structuredClone(tm))).toEqual(workingYearTypedBelowWindow(tm))
   })
 })

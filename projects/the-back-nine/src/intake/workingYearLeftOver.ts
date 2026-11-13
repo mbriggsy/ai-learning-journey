@@ -23,6 +23,7 @@
  * because all three read the left-over answer and the money picture, which `workingYearQuote` cannot import (KTD2).
  */
 import type { WorkingYearLedgerLaterYear, WorkingYearLeftOverKind, WorkingYearLeftOverV5 } from '@shared/model'
+import { workingYearBottomLine, workingYearCredit, workingYearCreditBinding, type WorkingYearCreditBinding } from '@engine/moneyGrain'
 import type { ScenarioDraft } from '@store/memoryModel'
 import {
   LEFT_OVER_WAITING_COPY,
@@ -37,6 +38,7 @@ import {
 import type { GateDoor, NoteDoor, NoteSegment } from '@ui/noteParts'
 import { formatMoney } from './fields'
 import {
+  carriedWorkingYearLeftOver,
   workingYearCostFigure,
   workingYearCostForRun,
   workingYearLedgerForRun,
@@ -55,7 +57,7 @@ import {
   workingYearQuote,
   writeConfirmedWorkingYearCost,
 } from './workingYearQuote'
-import { LEFT_OVER_CARRIES, LEFT_OVER_FACE, LEFT_OVER_MOVED, LEFT_OVER_W_CLAUSE } from './workingYearLeftOverState'
+import { LEFT_OVER_FACE, LEFT_OVER_MOVED, LEFT_OVER_W_CLAUSE } from './workingYearLeftOverState'
 
 /** The reply as the question's radios name it, written onto `d` — or `d` unchanged where the live draft no
  *  longer passes R5's gate. `shownFigure` is the whole-dollar year-0 Left over the face showed (≥ 1 by
@@ -729,6 +731,220 @@ function freshTypedBelow(d: ScenarioDraft): ReturnType<typeof workingYearCostTyp
   return t
 }
 
+// ── THE WHOLE-WINDOW READ (the rebuild's U3: `docs/plans/features/typed-below-whole-window-rebuild-spec.md` KTD3, KTD4;
+//    council `wf_f74697d1-f2e`'s pair, KD1). Every working year of the window, this answer's credit beside the credit the
+//    answer at today's quote would give, both the engine's own; the years grouped into spans. Dark until U4 words it. ──
+
+/** What one working year of the window holds, this answer against the answer at today's quote (KTD3; an exhaustive
+ *  Record keys every choice made by it, insight 147). Compared on the money picture's grain — each credit printed
+ *  through `workingYearBottomLine`, each shortfall as its year prints it:
+ *  · `same` — both answers credit the same and draw the same. Read first, ahead of every other kind: any year where the
+ *    stored figure caps both and neither is short, and a typed figure cents below the quote;
+ *  · `bothCredit` — both credit at least $1 (this answer more);
+ *  · `quoteCreditsNothing` — this answer credits at least $1; the answer at the quote credits nothing in a year that is
+ *    not short there (year 0 at the quote below $1, so that run carries no answer: R5's gate);
+ *  · `shortLeftOverAtTyped` / `shortStillShortAtTyped` / `shortEvenAtTyped` — short at the quote, and at the typed figure
+ *    at least $1 left over, still short, or exactly $0. */
+export type TypedBelowYearKind =
+  | 'same'
+  | 'bothCredit'
+  | 'quoteCreditsNothing'
+  | 'shortLeftOverAtTyped'
+  | 'shortStillShortAtTyped'
+  | 'shortEvenAtTyped'
+
+/** Which term binds a year's credit for the span model (KTD3): U2's binding read with its tie settled — in year 0 the
+ *  cap IS the year's own print wherever the stored figure does not sit below it, so a year-0 tie counts as the year's
+ *  own left over; a later tie counts as the cap. There is no tuned ratio. */
+export type TypedBelowBinding = Exclude<WorkingYearCreditBinding, 'tie'>
+
+/** One working year of the window, both answers. `credit` and `creditAtQuote` are the engine's own credit rule
+ *  (`workingYearCredit`, the overlay's one home: each `Object.is` the overlay's `creditComposed` on that answer's run),
+ *  unrounded; `bottomLine` and `bottomLineAtQuote` are the money picture's prints at the typed figure and at the quote. */
+export interface TypedBelowYear {
+  readonly calendarYear: number
+  readonly kind: TypedBelowYearKind
+  readonly credit: number
+  readonly creditAtQuote: number
+  readonly binding: TypedBelowBinding
+  readonly bindingAtQuote: TypedBelowBinding
+  readonly bottomLine: number
+  readonly bottomLineAtQuote: number
+}
+
+/** Whole dollars on the money picture's grain: the least and the most across a span's years (equal where every year
+ *  prints alike). */
+export interface TypedBelowDollars {
+  readonly least: number
+  readonly most: number
+}
+
+/** A run of adjacent working years of one kind (KTD3), with the figures its words need, each on the printed grain:
+ *  `credit` and `creditAtQuote`, each answer's credit; `shortAtQuote` and `shortAtTyped`, the year's shortfall there
+ *  (positive); `difference`, each year's credit less its shortfall at the typed figure, against the same at the quote
+ *  (what this answer adds beyond, or takes less than, the answer at the quote), worked on the printed figures. A credit
+ *  range survives only where one binding term drifts; a shortfall or difference range is a fact of the picture. */
+export type TypedBelowSpan = { readonly firstYear: number; readonly lastYear: number } & (
+  | { readonly kind: 'same' }
+  | { readonly kind: 'bothCredit'; readonly credit: TypedBelowDollars; readonly creditAtQuote: TypedBelowDollars; readonly difference: TypedBelowDollars }
+  | { readonly kind: 'quoteCreditsNothing'; readonly credit: TypedBelowDollars; readonly difference: TypedBelowDollars }
+  | { readonly kind: 'shortLeftOverAtTyped'; readonly shortAtQuote: TypedBelowDollars; readonly credit: TypedBelowDollars; readonly difference: TypedBelowDollars }
+  | { readonly kind: 'shortStillShortAtTyped'; readonly shortAtQuote: TypedBelowDollars; readonly shortAtTyped: TypedBelowDollars; readonly difference: TypedBelowDollars }
+  | { readonly kind: 'shortEvenAtTyped'; readonly shortAtQuote: TypedBelowDollars; readonly difference: TypedBelowDollars }
+)
+
+/** The whole-window read: every working year (`years`, index-aligned with the sim year) and its spans in time order,
+ *  each year in exactly one (R4). `unknown` where it cannot be read — no picture at the quote, two windows that differ,
+ *  or a year where the answer at the quote would credit more or print higher than this one — each UNREACHABLE wherever
+ *  the typed picture is known: the re-confirmed draft differs only in W, every input the picture reads but W is the
+ *  same (`WorkingYearCheckAtQuote`'s docblock), a lower W leaves every year's cash higher by the gap (W comes off the
+ *  cash dollar for dollar; the income tax never reads it), and both caps take the one stored figure beside a year 0
+ *  that prints higher at the typed figure (KTD4). Named so a reader can never word a premise that failed. */
+export type WorkingYearTypedBelowWindow =
+  | { readonly kind: 'read'; readonly years: readonly TypedBelowYear[]; readonly spans: readonly TypedBelowSpan[] }
+  | { readonly kind: 'unknown' }
+
+/** Memoized on the SOURCE draft (the re-confirmed draft is a fresh object every call, so the picture's own memo would
+ *  miss it each time), as `checkAtQuoteMemo` is. */
+const typedBelowWindowMemo = new WeakMap<ScenarioDraft, WorkingYearTypedBelowWindow | null>()
+
+/** The whole-window read for a fresh typed figure below today's quote ({@link freshTypedBelow}) under a "saved" answer
+ *  the run carries — or `null` under any other draft (the typed-below line's own predicates: the line reads none).
+ *  A pure function of the draft (R12): it reads no crown and no outcome, so the gate (which composes before any run),
+ *  the Result on either tier and the seat all read one value. */
+export function workingYearTypedBelowWindow(d: ScenarioDraft): WorkingYearTypedBelowWindow | null {
+  const memo = typedBelowWindowMemo.get(d)
+  if (memo !== undefined) return memo
+  const read = composeTypedBelowWindow(d)
+  typedBelowWindowMemo.set(d, read)
+  return read
+}
+
+function composeTypedBelowWindow(d: ScenarioDraft): WorkingYearTypedBelowWindow | null {
+  if (freshTypedBelow(d) === null) return null
+  // The answer first: a draft that is not "saved" never composes the money picture here. Each answer is credited with
+  // exactly the figure its own run carries (`buildDateInput`'s carriage), so no year is credited that the engine skips.
+  const stored = carriedWorkingYearLeftOver(d)
+  if (stored === undefined) return null
+  const atTyped = workingYearLedgerForRun(d)
+  const quoteDraft = writeConfirmedWorkingYearCost(d)
+  const atQuote = workingYearLedgerForRun(quoteDraft)
+  if (atTyped === 'unknown' || atQuote === 'unknown') return { kind: 'unknown' }
+  const typedYears = atTyped.workingYears
+  const quoteYears = atQuote.workingYears
+  if (typedYears.length !== quoteYears.length || typedYears.some((y, t) => y.calendarYear !== quoteYears[t]!.calendarYear)) return { kind: 'unknown' }
+  // Under the quote the question goes unasked where year 0 prints below $1, so that run carries nothing (R5's gate).
+  const storedAtQuote = carriedWorkingYearLeftOver(quoteDraft)
+  const year0 = typedYears[0]!.bottomLine
+  const year0AtQuote = quoteYears[0]!.bottomLine
+  // The money picture is the no-death timeline (`workingYearLedger`): everyone is alive in every year it shows.
+  const years: TypedBelowYear[] = []
+  for (let t = 0; t < typedYears.length; t++) {
+    const w = typedYears[t]!
+    const q = quoteYears[t]!
+    const credit = workingYearCredit(w.cash, year0, stored, true)
+    const creditAtQuote = storedAtQuote === undefined ? 0 : workingYearCredit(q.cash, year0AtQuote, storedAtQuote, true)
+    const printed = workingYearBottomLine(credit)
+    const printedAtQuote = workingYearBottomLine(creditAtQuote)
+    if (printed < printedAtQuote || w.bottomLine < q.bottomLine) return { kind: 'unknown' }
+    years.push({
+      calendarYear: w.calendarYear,
+      kind: yearKind(printed, printedAtQuote, w.bottomLine, q.bottomLine),
+      credit,
+      creditAtQuote,
+      binding: settleTie(t, workingYearCreditBinding(w.cash, year0, stored, true)),
+      bindingAtQuote: storedAtQuote === undefined ? 'none' : settleTie(t, workingYearCreditBinding(q.cash, year0AtQuote, storedAtQuote, true)),
+      bottomLine: w.bottomLine,
+      bottomLineAtQuote: q.bottomLine,
+    })
+  }
+  return { kind: 'read', years, spans: spansOf(years) }
+}
+
+const drawOf = (bottomLine: number): number => (bottomLine < 0 ? -bottomLine : 0)
+
+/** A year's kind from its two printed credits and its two prints (KTD3's order: `same` first). */
+function yearKind(printed: number, printedAtQuote: number, bottomLine: number, bottomLineAtQuote: number): TypedBelowYearKind {
+  if (printed === printedAtQuote && drawOf(bottomLine) === drawOf(bottomLineAtQuote)) return 'same'
+  if (bottomLineAtQuote < 0) return bottomLine > 0 ? 'shortLeftOverAtTyped' : bottomLine < 0 ? 'shortStillShortAtTyped' : 'shortEvenAtTyped'
+  return printedAtQuote > 0 ? 'bothCredit' : 'quoteCreditsNothing'
+}
+
+const settleTie = (t: number, b: WorkingYearCreditBinding): TypedBelowBinding => (b === 'tie' ? (t === 0 ? 'ownLeftOver' : 'cap') : b)
+
+/** One answer's credits in two adjacent years join a span where they print alike, or where both are bound by the year's
+ *  own left over (a drift under one binding term; the council's split rule). */
+const creditsJoin = (a: number, b: number, bindingA: TypedBelowBinding, bindingB: TypedBelowBinding): boolean =>
+  workingYearBottomLine(a) === workingYearBottomLine(b) || (bindingA === 'ownLeftOver' && bindingB === 'ownLeftOver')
+
+/** Adjacent years join where their kind matches and, for each answer, their credits join; adjacent `same` years always
+ *  join (a `same` span prints no figure). A span that recurs later is its own span. */
+function joins(a: TypedBelowYear, b: TypedBelowYear): boolean {
+  if (a.kind !== b.kind) return false
+  return a.kind === 'same' || (creditsJoin(a.credit, b.credit, a.binding, b.binding) && creditsJoin(a.creditAtQuote, b.creditAtQuote, a.bindingAtQuote, b.bindingAtQuote))
+}
+
+function dollarsOf(years: readonly TypedBelowYear[], figure: (y: TypedBelowYear) => number): TypedBelowDollars {
+  const all = years.map(figure)
+  return { least: Math.min(...all), most: Math.max(...all) }
+}
+
+const creditDollars = (y: TypedBelowYear): number => workingYearBottomLine(y.credit)
+const creditAtQuoteDollars = (y: TypedBelowYear): number => workingYearBottomLine(y.creditAtQuote)
+const differenceDollars = (y: TypedBelowYear): number =>
+  creditDollars(y) - drawOf(y.bottomLine) - (creditAtQuoteDollars(y) - drawOf(y.bottomLineAtQuote))
+
+type SpanFigures = {
+  readonly [K in TypedBelowYearKind]: (years: readonly TypedBelowYear[]) => Omit<Extract<TypedBelowSpan, { kind: K }>, 'firstYear' | 'lastYear'>
+}
+const SPAN_FIGURES: SpanFigures = {
+  same: () => ({ kind: 'same' }),
+  bothCredit: (ys) => ({
+    kind: 'bothCredit',
+    credit: dollarsOf(ys, creditDollars),
+    creditAtQuote: dollarsOf(ys, creditAtQuoteDollars),
+    difference: dollarsOf(ys, differenceDollars),
+  }),
+  quoteCreditsNothing: (ys) => ({ kind: 'quoteCreditsNothing', credit: dollarsOf(ys, creditDollars), difference: dollarsOf(ys, differenceDollars) }),
+  shortLeftOverAtTyped: (ys) => ({
+    kind: 'shortLeftOverAtTyped',
+    shortAtQuote: dollarsOf(ys, (y) => drawOf(y.bottomLineAtQuote)),
+    credit: dollarsOf(ys, creditDollars),
+    difference: dollarsOf(ys, differenceDollars),
+  }),
+  shortStillShortAtTyped: (ys) => ({
+    kind: 'shortStillShortAtTyped',
+    shortAtQuote: dollarsOf(ys, (y) => drawOf(y.bottomLineAtQuote)),
+    shortAtTyped: dollarsOf(ys, (y) => drawOf(y.bottomLine)),
+    difference: dollarsOf(ys, differenceDollars),
+  }),
+  shortEvenAtTyped: (ys) => ({
+    kind: 'shortEvenAtTyped',
+    shortAtQuote: dollarsOf(ys, (y) => drawOf(y.bottomLineAtQuote)),
+    difference: dollarsOf(ys, differenceDollars),
+  }),
+}
+
+function spanOf(years: readonly TypedBelowYear[]): TypedBelowSpan {
+  const kind = years[0]!.kind
+  const figures = (SPAN_FIGURES[kind] as (ys: readonly TypedBelowYear[]) => Omit<TypedBelowSpan, 'firstYear' | 'lastYear'>)(years)
+  return { firstYear: years[0]!.calendarYear, lastYear: years[years.length - 1]!.calendarYear, ...figures } as TypedBelowSpan
+}
+
+function spansOf(years: readonly TypedBelowYear[]): TypedBelowSpan[] {
+  const spans: TypedBelowSpan[] = []
+  let run: TypedBelowYear[] = []
+  for (const y of years) {
+    if (run.length > 0 && !joins(run[run.length - 1]!, y)) {
+      spans.push(spanOf(run))
+      run = []
+    }
+    run.push(y)
+  }
+  if (run.length > 0) spans.push(spanOf(run))
+  return spans
+}
+
 /** The typed-below LINE (R1), one string in W's plain form on both hosts: the answer counts the typed figure, below
  *  today's quote, both yearly, and the whole-answer lean; then, for a "saved" answer the run carries (`saved` or
  *  `saved-moved`, `LEFT_OVER_CARRIES`), the most it credits a year — min(stored, year 0 at the typed figure), R8's cap —
@@ -768,18 +984,19 @@ function typedBelowCarried(
   t: NonNullable<ReturnType<typeof freshTypedBelow>>,
   answer: TypedBelowAnswer,
 ): { readonly figures: TypedBelowFigures; readonly atQuote: readonly string[] } | null {
-  const saved = d.workingYearLeftOver
-  // The answer first: a draft that is not "saved" never composes the money picture here.
-  if (saved?.kind !== 'saved' || !LEFT_OVER_CARRIES[workingYearLeftOverShownState(d)]) return null
+  // The answer first: a draft that is not "saved" never composes the money picture here (the carriage's own read, the
+  // one the whole-window read takes too, so the two can never disagree on which answers are carried).
+  const stored = carriedWorkingYearLeftOver(d)
+  if (stored === undefined) return null
   const live = workingYearLeftOverLive(d)
   // Unreachable: a carried state has a known picture (`leftOverShownState` reads "not asked" without one).
   if (live === null) return null
-  const creditDollars = Math.round(Math.min(saved.quotedReal, live))
+  const creditDollars = Math.round(Math.min(stored, live))
   // `freshTypedBelow` read an entered W below the quote: its figure and the quote, in whole dollars as printed.
   const w = d.workingYearCost
   const gapDollars = w === undefined ? 0 : Math.round(workingYearQuote(d).annualReal) - Math.round(workingYearCostFigure(w))
   const figures: TypedBelowFigures = { answer, typed: t.typed, quote: t.quote, creditDollars, gapDollars }
-  return { figures, atQuote: typedBelowAtQuote(checkAtQuote(d, saved.quotedReal), figures) }
+  return { figures, atQuote: typedBelowAtQuote(checkAtQuote(d, stored), figures) }
 }
 
 /** The typed figure (yearly, formatted) today's year-0 left over rests on, exactly where the typed-below line speaks

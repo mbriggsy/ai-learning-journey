@@ -31,6 +31,10 @@ import { workingYearBottomLine } from '@engine/moneyGrain'
 import { validationMarket } from '@engine/reference/methodology'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { buildDateInput } from '@intake/intakeMap'
+import { workingYearTypedBelowWindow } from '@intake/workingYearLeftOver'
+import { writeConfirmedWorkingYearCost } from '@intake/workingYearQuote'
+import type { ScenarioDraft } from '@store/memoryModel'
+import { TYPED_BELOW_WITNESSES, type TypedBelowWitness } from '../../intake/__tests__/typedBelowWitnesses'
 import type { CompiledBudget, DrawdownPolicy, PersonInputs, SimulationParams } from '@shared/model'
 
 const flat = (n: number, v: number): number[] => Array.from({ length: n }, () => v)
@@ -504,5 +508,89 @@ describe('the overlay backstop for the saved left over', () => {
     expect(() =>
       runTaxAwareDecumulation(m.buckets, m.stock, m.bond, m.net, 0.5, 'pre-tax-first', CONFIG, { ...inputsOf({ Ws: [25_000] }), workingYearCheck: [missing as WorkingYearCheckTerms] }),
     ).toThrow(/allAlive/)
+  })
+})
+
+// ===========================================================================
+// THE TYPED-BELOW LINE'S WHOLE-WINDOW READ AGAINST THE OVERLAY (the rebuild's U3; council `wf_f74697d1-f2e`'s E3).
+// ===========================================================================
+// Intake's read (`workingYearTypedBelowWindow`) credits each answer through the overlay's own rule (`workingYearCredit`),
+// once per working year of the money picture. Here each of those credits is checked against the overlay itself: the run
+// the picture describes (the window-top candidate, nobody dying), with the typed figure, and again with W confirmed at
+// the quote (the "Yes" tap's own write), each credit read off `creditComposed`, `Object.is`. A read that retyped the cap,
+// dropped the stored figure, or credited an answer its run does not carry fails here.
+describe('the typed-below line’s whole-window read against the overlay’s own credits (the rebuild’s U3, E3)', () => {
+  /** Every credit the overlay composes on THIS draft's run, by year, on every path (each path lives to the horizon, so
+   *  every path's working years are the picture's). */
+  const overlayCredits = (d: ScenarioDraft, offset = DATE_OFFSET_WINDOW_TOP): number[][] => {
+    const input = buildDateInput(d)
+    if (input === null) throw new Error('[test setup] the witness builds a date input')
+    const params = { ...buildCandidateParams(input, offset, 20), longevityMode: 'fixed-horizon' as const }
+    const byYear: number[][] = []
+    dist(simulate(params, d.seed!, { _workingYearProbe: { creditComposed: (t, c) => (byYear[t] ??= []).push(c) } }))
+    return byYear
+  }
+  const readOf = (key: TypedBelowWitness) => {
+    const read = workingYearTypedBelowWindow(TYPED_BELOW_WITNESSES[key])
+    if (read === null || read.kind !== 'read') throw new Error(`[test setup] ${key} reads the window`)
+    return read
+  }
+
+  // A (2033–2035, where x_t read nothing), TM (2029–2035), the drift household, $7,916.67 a month, the whole household
+  // (the one witness whose stored figure caps the quote answer: a cap read without it credits $20,985 there, against
+  // the overlay's $16,985), and the two households built for walk 8, each through the engine's own gates (insight 085).
+  it.each(['a', 'tm', 'drift', 'cMonth791667', 'whole', 'pension', 'crowned'] as const)(
+    '%s: every year’s credit, for this answer and for the answer at the quote, is the overlay’s own',
+    { timeout: 60_000 },
+    (key) => {
+      const d = TYPED_BELOW_WITNESSES[key]
+      const read = readOf(key)
+      const atTyped = overlayCredits(d)
+      const atQuote = overlayCredits(writeConfirmedWorkingYearCost(d))
+      expect(atTyped.length, `${key}: the typed run composes a credit in every working year`).toBe(read.years.length)
+      expect(atQuote.length, `${key}: so does the run at the quote (its answer is carried there)`).toBe(read.years.length)
+      read.years.forEach((y, t) => {
+        for (const c of atTyped[t]!) expect(Object.is(y.credit, c), `${key} ${y.calendarYear}: ${y.credit} against the overlay’s ${c}`).toBe(true)
+        for (const c of atQuote[t]!) expect(Object.is(y.creditAtQuote, c), `${key} ${y.calendarYear} at the quote: ${y.creditAtQuote} against ${c}`).toBe(true)
+      })
+    },
+  )
+
+  it('where year 0 at the quote is below $1 (C at $110,985, B retyped), the run at the quote carries no answer and composes no credit, and the read credits that answer nothing in every year', { timeout: 60_000 }, () => {
+    for (const key of ['c110985', 'bRetyped'] as const) {
+      const d = TYPED_BELOW_WITNESSES[key]
+      expect(buildDateInput(writeConfirmedWorkingYearCost(d))?.workingYearLeftOverSavedReal, `${key}: nothing is carried at the quote`).toBeUndefined()
+      expect(overlayCredits(writeConfirmedWorkingYearCost(d)), `${key}: no credit composed at the quote`).toEqual([])
+      const read = readOf(key)
+      expect(read.years.every((y) => y.creditAtQuote === 0 && y.bindingAtQuote === 'none'), key).toBe(true)
+      const atTyped = overlayCredits(d)
+      read.years.forEach((y, t) => {
+        for (const c of atTyped[t]!) expect(Object.is(y.credit, c), `${key} ${y.calendarYear}`).toBe(true)
+      })
+    }
+  })
+
+  // KD3's claim on a witness: every "at most" figure is true past the crown, where the crowned plan credits nothing. The
+  // date search's crowned offsets cannot run in a unit test; they are typed from the U3 crown probe
+  // (`b9-build2-surplus\u11-wholewindow\research\wit\u3-crown.out.txt`: `runDateSearchEngine(buildDateInput(d), d.seed,
+  // tier, 1)`, the app's own call, on the crowned household).
+  it('the crowned household: both tiers crown a stop before its 2033–2035 span, which the read still names; the candidate at the final crown credits at most each span’s figure in every year it works, and nothing past its stop', { timeout: 60_000 }, () => {
+    // At Alex's $1,600,000 (`CROWNED_401K`) both tiers crown offset 7 (provisional on the 0.85 bar, final at 0.86):
+    // the household works 2026 through 2032, so the read's 2033–2035 span lies wholly past the date.
+    const PROVISIONAL_CROWN = 7
+    const FINAL_CROWN = 7
+    const read = readOf('crowned')
+    const lastSpan = read.spans[read.spans.length - 1]!
+    expect([lastSpan.firstYear, lastSpan.lastYear], 'the read names 2033–2035').toEqual([2033, 2035])
+    for (const crown of [PROVISIONAL_CROWN, FINAL_CROWN]) expect(2026 + crown, 'the stop falls before the span').toBeLessThanOrEqual(lastSpan.firstYear)
+    const candidate = overlayCredits(TYPED_BELOW_WITNESSES.crowned, FINAL_CROWN)
+    expect(candidate.length, 'no working year past the stop composes a credit').toBe(FINAL_CROWN)
+    candidate.forEach((credits, t) => {
+      const year = 2026 + t
+      const span = read.spans.find((s) => s.firstYear <= year && year <= s.lastYear)!
+      if (!('credit' in span)) throw new Error('[test setup] every span of the crowned household names this answer’s credit')
+      const atMost = span.credit.most
+      for (const c of credits) expect(c, `${year}: at most $${atMost}`).toBeLessThanOrEqual(atMost)
+    })
   })
 })

@@ -14,6 +14,8 @@ were dropped then, and the contradictions the move met were reconciled in place 
 
 ## Git and the shared tree
 
+- **(b9-4, 11-13) `git add -- <a path already staged as deleted>` fails the whole add** ("pathspec did not match"):
+  stage the paths that exist, then `git commit -- <every path>`, the deleted one included.
 - **(b9-4, 11-08) Other sessions commit to the monorepo during a long run.** A tool that stamps `git HEAD` in its record
   differs between its two runs; byte-compare with the label and git lines aside (moves11 does), never a raw `cmp`.
 - **(b9-4, 11-08) A `git revert a9cacf22` now stops on a conflict in `scenarioCodec.test.ts`** (U10's corrected note sits in a
@@ -56,6 +58,9 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
+- **(b9-5, 11-13) PowerShell's `"EXIT $LASTEXITCODE" | Out-File -Append <log>` writes UTF-16** into a UTF-8 log, so a
+  later `grep "^EXIT"` never matches and a Monitor waiting on that line expires silent. Append with
+  `Add-Content -Encoding utf8`, and read a run's verdict from its own count line too.
 - **(b9-1, pay check Phase C) The pay-check review's folders hold `node_modules` JUNCTIONS.** In `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-paycheck-whole-review\`,
   `pre\`, `pre-a4\`, `head\` and several lens folders each link the project's `node_modules`: remove each link ALONE
   (`(Get-Item <folder>\node_modules).Delete()`) before deleting any folder there, or the delete walks into the live tree.
@@ -496,6 +501,11 @@ is a guess a verifier must check, never a fact
 
 ## Caddie walks and fleets
 
+- **(b9-1, 11-12) A walk failure that does not reproduce on a fresh server is the server's first.** Before reading a
+  walk failure as product, confirm nothing served the harness's port before the run: every Playwright config reuses an
+  existing server locally (`reuseExistingServer: !process.env.CI`), and a `TaskStop`ped `vite` keeps serving. The
+  11-09 `intake:kept` REAL failure passed three runs on fresh servers, with zero DOM mutations after the settle
+  (`b9-build2-surplus\u11-walk6\panel\CHAIR-NOTES.md`, its foot).
 - **(b9-8, 11-09) A seat's arithmetic can borrow the wrong quote.** `stillWorking` answers
   `employerPlanCoversRetiredMember: true` (`src/ui/devSeeds.ts`), so the pay-side premium is entered nowhere; walk 5's
   hunter priced it from the $1,100 after-work reference quote. Check the seed's own fields before a refuter carries a figure.
@@ -550,6 +560,11 @@ chair; chair from a digest script, never the raw result, and expect the window t
 ## Claude Code, workflows and sessions
 
 
+- **(b9-5, 11-13) A whole fleet of Agents can die at once on an auth error while the main loop keeps working.** Walk
+  7's eight refuters, launched together, all ended before reading a file on "Please run /login · API Error: 403
+  Attention Required! | Cloudflare" (authentication_failed); the eleven seats launched minutes earlier had finished
+  clean. Read every notification's status before chairing: a "failed" row is no report. Relaunch once; the same 403 a
+  second time is a `/login` for Briggsy, never a retry loop.
 - **(b9-10, 10-31) Every stage of a Monitor pipe must flush per line:** `grep --line-buffered … | cut -c1-600` held every event in `cut`'s
   buffer, so the first probe monitor never fired. Drop the trailing filter or line-buffer it.
 

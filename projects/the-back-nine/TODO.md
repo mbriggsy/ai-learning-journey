@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-13, b9-4's close):** walk 6's fix round is built and reviewed: `e6e9c364`, `3000a04c`, `865e7426`, council (6)'s four-bucket arm `972c3618`, and the round review's fixes `360bea64`; the record is `b9-build2-surplus\u11-walk6-round\ROUND.md`. In order: (1) the pair fix — name the typed figure the "now" left over rests on, on the Result AND the gate (item 1's ▶ NEXT has the prescription); (2) walk 7 on the committed tree (the card is HELD for R1 until it is walked); then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the list is far past 10).
+▶ **START HERE (2026-11-13, b9-5's close):** walk 7 is captured and its eleven seats have read it (`b9-build2-surplus\u11-walk7\panel\CHAIR-NOTES.md`); the pair fix is `5f96411d` and its seed `dc9ff19c`. In order: (1) walk 7's refuter round, R1–R8 (item 1's ▶ NEXT); (2) R1's holds measurement through the engine; (3) walk 7's card, then the fix round its findings rule (walk 6's card stays HELD for R1 until walk 7's card closes it); then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the list is far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,40 +94,28 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **the pair fix, then walk 7** (START HERE). Walk 6's fix round is `e6e9c364` (council `wf_22858e04-f7a`'s
-     checklist), `3000a04c` (R1, the typed-below line), `865e7426` (R3's sheet half); `972c3618` is council (6)'s
-     four-bucket arm and sheet hit-test (seed and vault `datesavedfourbuckets`; the route ends at 753.7 px of 791 locally
-     with four bucket rows, 682.0 with two; each arm logs `[route fit]` for CI Linux); `360bea64` is the round review's
-     fixes (no P0; the Keep list's state item, B's waiting words under every answer, R1's one-year pins, the no-quote
-     door, the room's floor, the round's CSS asserted in the real browser; 9 of 9 mutants red as predicted). Everything
-     the review deferred is the register's Tier 2 *The walk-6 round review's deferred findings…* and the retype
-     residual's measurement. Still owed, each a prescription:
-     - **The pair fix (the review's L3-3 / L1-5 / L2-5, P2, clarity, refuter-confirmed not rosy):** where a fresh typed
-       W sits below the quote AND the left over moved, the "now" figure ("$28,985 now, not the $16,985 you answered
-       at") is year 0 at the typed figure ($72,000), which no sentence names, beside year 0 at the quote ("At $84,000 a
-       year, your first working year, 2026, has $16,985 left over."). On the Result: in `workingYearCostTypedBelowLine`
-       (`src/intake/workingYearLeftOver.ts`, the `credit` line's moved branch), replace `workingYearLeftOverMovedClause
-       (moved)` with a new slot naming the typed figure (e.g. `slots.stalenessLeftOverClauseAt(typed, stored, live,
-       min)`: "At your $72,000 figure, the money left over in your first working year is $28,985 now, not the $16,985
-       you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the
-       two."). On the gate: the moved line drawn after R1's line (`stalenessLeftOverMoved`, composed for the gate from
-       `workingYearLeftOverMovedText` in `src/ui/IntakeApp.tsx`'s hydrate) names the same figure wherever
-       `workingYearCostTypedBelowQuote` holds on a fresh W ("…It’s $28,985 now at your $72,000 figure, so…"; a twin
-       slot). Pin each by hand on `datesavedrisenlater` retyped to $84,000 ($26,985 at $84,000, both hosts); move the
-       coordinate-tap arm's Result expectation (`e2e/vertical-fit.spec.ts`, its `slots.stalenessLeftOverClause('16,985',
-       '28,985', '16,985')` line) to the new slot; add both slots to `copyGuard.test.ts`'s slot lists (CRLF: Edit tool);
-       then run every e2e arm that reads `.cs-paycheck-note` or `.reentry-notes`, or the whole `verify:fit`
-       (`docs/landmines.md`, the fit gate's first entry).
-     - **Walk 7** reads the round on the committed tree, the color-blind check re-run (the labels, the list, the route),
-       and the council's yours-to-close calls: the dt register (one step up, semibold, no colon), the phone order (the
-       route after the buttons), the segments kept on the gate; the dissent's flip conditions are in the council row
-       (one is "the route under the buttons misses 791 on the four-bucket read-back on CI Linux": it does not — CI run
-       43385771950 at `972c3618` logged 753.7 of 791 px, the same as Windows, and 682.0 on every two-bucket arm). The walk spec crops `reentry-door` beside `reentry-notes`. R1's
-       surfaces: the gate is `vault:datesavedtyped` (`walkVaultReturn` walks it unedited) and the Result is
-       `intake:typedbelow`'s `result-typed-below`; B's seat is `datesavedrisenshort`'s (its words are new in
-       `360bea64`: "…Updating it to your spending figures or more won’t change that: at that cost your first working
-       year has nothing left over."); the W row's count list now names "any state income tax on pay" where the help
-       asks for it (unpriced, PA). Add `vault:datesavedfourbuckets` to the walk's gates.
+     ▶ NEXT: **walk 7's refuter round, then its card** (START HERE). Walk 6's round is built, reviewed and fixed
+     (`e6e9c364`, `3000a04c`, `865e7426`, `972c3618`, `360bea64`, the pair fix `5f96411d`; the record is
+     `b9-build2-surplus\u11-walk6-round\ROUND.md`, its § "The pair fix" for the last). Everything the round review
+     deferred is the register's Tier 2 *The walk-6 round review's deferred findings…* and the retype residual's
+     measurement. Walk 7 is CAPTURED and READ, not chaired: the bundle `temp\caddie\caddie-u11-b9-5-walk7\` (14
+     targets, REAL+PHONE, 28/28, tree `dc9ff19c`, which adds the pair's seed and vault `datesavedtypedmoved`), eleven
+     seat reports and the chair's notes in `b9-build2-surplus\u11-walk7\panel\` (`CHAIR-NOTES.md` first: the panel's
+     answers, R1–R8 with each claim, the re-founds, the first impressions). Still owed, in order:
+     - **The refuter round:** one fresh Opus xhigh Agent per item R1–R8 in `CHAIR-NOTES.md`, each told to read
+       `u11-walk7\panel\REFUTER-BRIEF.md` first and write `u11-walk7\panel\refuter-R<n>.md`; the claim words to hand each
+       are the R<n> bullet itself, with the bundle files and panel reports it names. b9-5's eight died at once on an API
+       403 before reading a file (`docs/landmines.md`, Claude Code); none ran.
+     - **R1's holds measurement, before the card can clear** (the skill's ⚑ holds rule: R1 questions whether TM's answer
+       counts money its named short years don't have): through the engine, the final-tier date search on
+       `datesavedrisenlater` answered "Yes" at its $105,000 quote (`writeConfirmedWorkingYearCost`) against TM
+       (`datesavedtypedmoved`, top rung 0.80) and C's stale answer (0.74), the way `u11-walk6\measure\` measured A; b9-5's
+       probe `probe-typedmoved.mts` (scratchpad, gone) did the last two with `runDateSearchEngine(buildDateInput(d),
+       d.seed, 'final', 1)` imported by `file:///` URL.
+     - **The card**, appended to `docs/caddie/cold-read-log.md` in walk 6's form, with the chair verifying each surviving
+       finding against the bundle; the fixes it rules go to a fix round in the council's shape (the verb "update", form
+       never a cut, one cause one line), and the color-blind half of the walk spec's gap (R8 (b): the CVD images stop at
+       the first frame) to the harness if its refuter keeps it.
      **Filed by the walk-5 round's review for U12** (`wf_c037b423-7f0`; the record is `u11-walk5\ROUND.md` § "The
      round review"; each finding goes into the register with its prescription):
      - (bh)'s "Because that $16,985 depends on your $X figure" names the HELD figure, which need not be the one the
@@ -286,38 +274,46 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-13 (b9-4: 3000a04c's CI red, council (6)'s four-bucket arm, the walk-6 round review and its fixes; b9-3's block pruned into it):**
+**SESSION 2026-11-13 (b9-5: the walk-6 round review's pair fix, its seed, walk 7's capture and seats; b9-4's block pruned into it):**
 
 State at close:
-- `9e9fec73` (3000a04c's CI red: the coordinate-tap arm read the moved line where R1's line now holds the slot),
-  `972c3618` (council (6)'s four-bucket arm + the sheet hit-test) and `360bea64` (the round review's fixes) committed and
-  pushed. At `360bea64`: typecheck exit 0, lint exit 0, `pnpm build` exit 0, the full suite pinned exit 0 but for the
-  citation arm before `doc:reanchor 78364c9e` (its file re-run 58/58 after), `verify:doc-stats` exit 0, the e2e specs
-  typecheck clean but `chart-text.spec.ts`'s seven pre-existing errors, `verify:fit -g unlock.line` pinned 9/9, the R10
-  sweep + per-key idcheck 42 of 42 identical against `walk5` (`sweep-fixround6.json`; candidate-only `datesavedtyped`,
-  `datesavedfourbuckets`). CI: `9e9fec73` (43380104699) and `972c3618` (43385771950) passed; `865e7426` and `78364c9e`
-  failed on the coordinate-tap arm `9e9fec73` fixed.
-- The round review: 4 lenses + 4 refuters (Opus xhigh, de-authored Agents writing to files), the record in `ROUND.md` §
-  "The round review" and `u11-walk6-round\b9-4\review\`. Mutants: 3 of 3 on the four-bucket arm, 9 of 9 on the fixes,
-  every one as predicted (`u11-walk6-round\b9-4\mutants\`).
+- `5f96411d` (the pair fix: the moved core carries the typed figure, so the Result's slot clause, the gate's moved line
+  and a rules note's clause all name it), `dc9ff19c` (seed and vault `datesavedtypedmoved` + its fit unlock arm) and
+  `24983ba9` (the TODO's re-anchored citations) committed and pushed. At `dc9ff19c`: typecheck exit 0, lint exit 0,
+  `pnpm build` exit 0 (at `5f96411d`), the full suite pinned green (5157 by `verify:doc-stats`'s count, which is exit 0),
+  the e2e specs typecheck clean but `chart-text.spec.ts`'s seven pre-existing errors, the whole `verify:fit` pinned
+  177/177 at `5f96411d` and `-g unlock.line` 10/10 at `dc9ff19c`, the R10 sweep + per-key idcheck 42 of 42 identical
+  against `walk5` at both (candidate-only `datesavedtyped`, `datesavedfourbuckets`, `datesavedtypedmoved`), mutants 4
+  of 4 red as predicted (`u11-walk6-round\b9-5\mutants\`). CI: `360bea64` (43391533722), `5f96411d` (43397005229) and
+  `dc9ff19c` (43401784666) passed; `24983ba9` (43401897188, TODO only) was running.
+- Walk 7: captured (28/28) and read by eleven seats; the refuter round died on an API 403 (none ran) and the window
+  crossed 50%, so the round, R1's measurement and the card are START HERE's.
 
-Next is START HERE. b9-5 is the successor (handoff mode: b9-5 to b9-8 live and idle). This session closed past the 50%
-window line: the pair fix is a two-host copy change with a new slot each, and walk 7 is a fan-out.
+Next is START HERE. b9-6 is the successor (handoff mode: b9-6 to b9-8 live and idle).
 
 **Check at start:**
-- the CI run on `360bea64`: `gh run view 43391533722 --json status,conclusion` (in progress at this close; it carries
-  the round's new CSS assertions on CI Linux);
+- the CI run on `24983ba9`: `gh run view 43401897188 --json status,conclusion` (TODO only; running at this close);
 - the ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 
-**LANDMINES (the pair fix and walk 7):**
+**LANDMINES (walk 7's refuters, R1's measurement, the card and its fix round):**
+- **A refuter fleet can die at once on an auth 403** (`docs/landmines.md`, Claude Code): read every notification's
+  status before chairing; relaunch once; the same 403 twice is a `/login` for Briggsy.
+- **A fix that names its hosts can miss one.** The pair fix's prescription named the Result's slot and the gate's line;
+  the moved words also ride a fired rules line as its clause (`leftOverClauseHost` on the Result, `clauseHost` in
+  `composeReentry`), and R1's refuters had read that host as clean from the typed line alone. Before a fix round
+  changes what a composer says, grep every caller of the composer, and prefer carrying the decision in the core
+  (`WorkingYearLeftOverMoved.typedBelow`) over a conditional per host.
+- **The constants gate reds a bare 72000 in a test** (`constants.shape.test.ts`'s single-source arm): write a typed W
+  of $6,000 a month as `6_000 * 12`.
 - **A change to what a slot shows reds the arms of the cause it displaces** (`docs/landmines.md`, the fit gate's first
-  entry): the pair fix changes both hosts' moved words, so run every arm reading `.cs-paycheck-note` /
-  `.reentry-notes` (the coordinate-tap arm, `datesavedmoved`, the unlock loop) or the whole `verify:fit`.
-- **`pnpm doc:reanchor <BASE>` moves a citation written FRESH in the tree a second time** (`docs/landmines.md`): b9-4 ran
-  it against the session's base (`78364c9e`, 290 edits) and hand-restored the four citations it had re-pointed by
-  content that session. Run it against the commit before your first src edit, then restore your own fresh ones.
+  entry): a fix to R1's line or the moved words runs every arm reading `.cs-paycheck-note` / `.reentry-notes`
+  (the coordinate-tap arm, `datesavedmoved`, the unlock loop with its new two-note `datesavedtypedmoved`) or the whole
+  `verify:fit`.
+- **`pnpm doc:reanchor <BASE>` moves a citation written FRESH in the tree a second time** (`docs/landmines.md`): run it
+  against the commit before your first src edit, then restore your own fresh ones; b9-5 ran it twice (`8f28b078`,
+  then `5f96411d` after the seed) and found two TODO anchors already 16 lines stale before either (fixed in `24983ba9`).
 - **`netstat` lists 127.0.0.1:4190 as LISTENING under PID 0 after a fit run (b9-3, b9-2).** Those rows are ghosts: `curl
   --max-time 5 http://127.0.0.1:4190/` refuses (exit 7). Probe the port with `curl` before reading a walk or fit failure
   as a stale server's.
@@ -347,22 +343,14 @@ change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_
   Then run `npx tsc -p <it>`. Its only errors at b9-2's close were `chart-text.spec.ts`'s pre-existing `Node.remove`, seven.
 - **A Playwright `-g` filter run through `cmd //c "start /affinity FFF …"` loses a quoted space** ("No tests found",
   exit 0): filter with a space-free regex (`-g unlock.line`), and read the run's count line, never the exit code.
-- **`git add -- <a path already staged as deleted>` fails the whole add** ("pathspec did not match"): stage the paths
-  that exist, then `git commit -- <every path>`, the deleted one included.
 - **A copy plant inside a slot is killed only by a test with the words typed by hand.** Every test that compares
   against `slots.*` changes its expected value with the plant. `workingYearLeftOver.test.ts`'s "the words, typed by
   hand" is the net; keep a by-hand pin for every new sentence the round adds.
 - **`src/ui/__tests__/copyGuard.test.ts` is committed CRLF** (`docs/landmines.md`, Windows and the shell): the Edit
   tool handles it; a scripted replace must match its line endings.
-- **A walk failure that does not reproduce on a fresh server is the server's first (b9-1).** Before reading a walk
-  failure as product, confirm nothing served the harness's port before the run: every Playwright config reuses an
-  existing server locally (`reuseExistingServer: !process.env.CI`), and a `TaskStop`ped `vite` keeps serving. The
-  11-09 `intake:kept` REAL failure passed three runs on fresh servers, with zero DOM mutations after the settle
-  (`u11-walk6\panel\CHAIR-NOTES.md`, its foot; the probes in `u11-walk6\kept-probe\`).
-- **Walk 6's record, for walk 7 to copy:** every brief, probe, seat and refuter report in
-  `b9-build2-surplus\u11-walk6\panel\` (the refuters' prompts are `panel\briefs\walk6-refuters.workflow.js`, a
-  Workflow script run as `wf_033ffe40-409`), the R1 engine measurement and its scripts in `u11-walk6\measure\`, walk
-  5's prompts in `u11-walk5\panel\briefs\`, the transcript extractors in `u11-walk5\tools\`.
+- **Walk 7's record, for its chair:** the briefs (`BRIEFS.md`, `REFUTER-BRIEF.md`, `FACTS.md`), the eleven seat
+  reports and `CHAIR-NOTES.md` in `b9-build2-surplus\u11-walk7\panel\`; walk 6's whole record, the form to copy, in
+  `u11-walk6\panel\` (its card is the cold-read log's top entry) and the R1 measurement's scripts in `u11-walk6\measure\`.
 
 **THE A6 TOOLS (durable, b9-14):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a6-tools\`
 — `seeds.mts` (`b9-seed-probe`'s, rooted at the CWD's `src`: run it once from `b9-a6-head\` — a `git archive` of HEAD's
@@ -1118,6 +1106,7 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - A "costs listed below" test is only as honest as the list it points at. Keep's condition on the W row (`workingYearCostKeepCondition`) tested a list with no state income tax, while the Result door's list under the same $6,000 test had it; a PA household following the W row kept a figure ~$4,600 too low (every working year $2,100 cheaper). Two lists for one test drift; `360bea64` made them one function (`workingCostHelpCountItems`). Found by two review lenses independently (L1-4, L3-1), refuter-measured.
 - A decider keyed on one answer leaves every other answer reading the old promise. R3's sheet half keyed B's "no until" words on `workingYearCheckAtQuote`, which reads a "saved" answer only, so an unanswered, spent or not-sure B kept "Until then, no money left over is added" — though no honest update brings the question back under any answer. Three of four review lenses found it (the builders had flagged it as a call). Fix: read the predicate's real input (year 0 at the quote), never the narrowest witness.
 - Review seats that write their reports to files keep the parent's window small: 8 Opus xhigh seats (4 lenses, 4 refuters) over three commits cost the parent about 40K tokens of returns; the refuters re-derived every finding, narrowed two severities, widened two (R3 found `datecoststale` has no other test; R2 found the gate shows the same unlabelled pair), refuted none. The R10 sweep ran beside them pinned at 20.8 min against ~17 alone, identity unaffected: a CPU-shared identity run costs time, never correctness.
+- A fix that names its hosts misses the one nobody listed; carry the decision in the core the hosts already read. The walk-6 round review prescribed the pair fix for two hosts (the Result's slot clause, the gate's moved line); the moved words also ride a fired rules line as its clause (`leftOverClauseHost` / `composeReentry`'s `clauseHost`), the same pair beside R1's line, and R1's refuter had called that host clean from the typed line alone. b9-5 put the basis on `WorkingYearLeftOverMoved` (`typedBelow`, the typed-below line's own predicate) so all three follow with no call site changed (`5f96411d`; mutants P1–P4 in `u11-walk6-round9-5mutants`). *Extend* insight 081 (a producer's output is the only non-drifting source).
 
 ## Driving the app
 

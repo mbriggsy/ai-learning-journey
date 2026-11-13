@@ -13,9 +13,9 @@ When a session closes, it can message the next session and wake it up, so work k
 1. Name both sessions, for example `b9` (closing) and `b9-2` (successor).
 2. Tell the successor what to do when the message comes: "b9 hands off to you when it closes; when its message arrives, pick up where it says to start." It acts on the message only as far as these instructions say.
 3. Tell the closing session who is next, by the successor's whole name: "b9-2 is watching." Say it any time before the close.
-4. Close it. Say "squeaky" to close it now. Or, before you walk away, tell it to run squeaky on its own at a good stopping point; that is how it closes overnight without you.
+4. Close it. Say "squeaky" to close it now, or walk away: once a successor is named, the closing session owns the squeaky call. It runs squeaky itself when its window nears the wrap line (60%), never just because a task finished, and that is how it closes overnight without you.
 
-Saying "b9-2 is watching" also makes the closing session write its close for the successor to read. Do it every time.
+Saying "b9-2 is watching" also makes the closing session write its close for the successor to read. Do it every time you name a successor in words; numbered sessions (handoff mode, below) need no words.
 
 ## Whole names only
 
@@ -29,7 +29,7 @@ Saying "b9-2 is watching" also makes the closing session write its close for the
 
 You don't have to say "is watching" when the sessions are numbered (Briggsy, 2026-11-09). A session whose name ends in a number, such as `playbook-6`, treats the live session named with the next number, `playbook-7`, as its successor, and the chain runs on: `playbook-7` hands off to `playbook-8` the same way.
 
-- The closing session checks at each context-window check (`/window`). When it finds the next number live and idle, it tells you once ("Handoff mode: playbook-7 is live...") and owns the squeaky call: it runs squeaky when the window nears its wrap line, never just because a task finished, and squeaky's last step hands off.
+- The closing session checks at each context-window check (`/window`). When it finds the next number live and idle, it tells you once ("Handoff mode: playbook-7 is live...") and owns the squeaky call, as with a successor named in words (Set it up, step 4): it runs squeaky when the window nears its wrap line, never just because a task finished, and squeaky's last step hands off.
 - A chain can be opened ahead of time. Consecutive numbers all live and idle (`b9-2` through `b9-7`) count as a chain: each waits for the one before it to hand off (Briggsy, 2026-11-08).
 - Lanes are not a chain. When any session in that run is already busy with its own work, a number in the run is missing, or two live sessions share a number, handoff mode stays off: those are parallel sessions, and you name a successor in words if you want one. (On 2026-11-08 `b9-1` to `b9-3` started within a minute of each other, and `playbook-4` and `playbook-5` began the same item 11 seconds apart.)
 - A lookalike never counts. `playboook-7` is not `playbook-7`; the closing session tells you once, so you can rename it with `/rename`.

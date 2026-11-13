@@ -6,6 +6,8 @@ modules: [projects/archive/skills/ultramode-plan/lib/workflow-stub.mjs, projects
 tags: [workflow, parallel, pipeline, null, swallowed-errors, dead-helper, coverage-hole, node-test, NODE_TEST_CONTEXT, esm, link-time, fault-injection, syncBuiltinESMExports, testing, agent-tool, output-file, empty-file, subagent-transcript]
 ---
 
+*The `ultramode-plan` code this lesson came from is archived at `projects/archive/skills/ultramode-plan/` (2026-11-12); the lesson stands on its own.*
+
 ## Problem
 
 - **A script bug reads as a dead helper.** The Workflow runtime turns a throwing `parallel` thunk into null, the same null a helper that died returns. A TypeError in the script's own code shows up as a coverage hole, never as a failure. The guard built for it then caught a test fixture that set a field to undefined, which the stub's schema check threw inside `parallel`.

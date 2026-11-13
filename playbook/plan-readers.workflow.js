@@ -4,13 +4,15 @@ export const meta = {
   phases: [{ title: 'Read', detail: 'the builder, rules and owner readers read the whole plan and open what it cites' }],
 }
 
-// The plan step's last part (playbook/README.md, step 2). After ce-plan's run, three readers who never
-// saw the planning read the checked plan whole, cold, each through one lens. They open the code the plan
-// cites, and each returns the plan's faults with its line numbers and whether it would build from the plan.
-// The lead then checks every fault against the code, fixes the real ones in the plan, and names them in
-// the plan's commit message. Earned on the plan-step trial (playbook insight 029): the same three lenses,
-// reading two plans, found real faults that both plans' full checks had missed, for 3 helpers and 0.56M
-// helper tokens.
+// The plan step's last part (playbook/README.md step 2; the steps in playbook/how-to/plan-step.md). After
+// ce-plan's run, three readers who never saw the planning read the checked plan whole, cold, each through
+// one lens. They open the code the plan cites, and each returns the plan's faults with its line numbers and
+// whether it would build from the plan. The lead then checks every fault against the code and fixes in the
+// plan the real ones a builder would hit (graded blocks or misleads), lists the minor ones in the plan
+// without folding them in, rewrites a unit as numbered steps when fixes crowd it (playbook insight 028), and
+// names the fixes in the plan's commit message. Earned on the plan-step trial (playbook insight 029): the
+// same three lenses, reading two plans, found real faults that both plans' full checks had missed, for 3
+// helpers and 0.56M helper tokens.
 //
 // The Workflow tool takes scriptPath only from the session's working folder or its scratchpad, so copy
 // this file into the scratchpad first. Launch it with args as a plain object, never a JSON string:
@@ -65,7 +67,7 @@ const LENSES = [
   },
   {
     key: 'owner',
-    text: 'You read for the owner, Briggsy. He wants "a really good process but also balanced": no guard without an incident behind it, no proof bigger than the question, no work nobody asked for, and his own calls (the words people will read, the rulings the job\'s source leaves to him) put to him with a recommended default, never decided for him and never handed back to him as mechanics the pilot should settle. Find where the plan does more or less than was asked, and where an answer it gives would read better than the truth.',
+    text: 'You read for the owner, Briggsy. He wants "a really good process but also balanced": no guard without an incident behind it, no proof bigger than the question, no work nobody asked for, and his own calls (the words people will read, the rulings the job\'s source leaves to him) put to him with a recommended default, never decided for him and never handed back to him as mechanics the pilot should settle. Find where the plan does more or less than was asked, and where an answer it gives would read better than the truth. If the plan names an origin (a brief, a scoping doc), also ask whether the problem it solves is real and whether that source shows it: ce-plan\'s own check skips this for such plans (playbook insight 027).',
   },
 ]
 

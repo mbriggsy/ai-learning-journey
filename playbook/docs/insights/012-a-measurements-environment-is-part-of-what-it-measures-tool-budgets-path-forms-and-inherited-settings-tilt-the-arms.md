@@ -42,3 +42,5 @@ From the plan step's head-to-head design (cut on 2026-11-11 before it ran):
 - **The environment as a secret store.** A bench that records a child session's environment would publish live API keys: this laptop's sessions carry two third-party API keys, stripping `CLAUDE`-prefixed variables leaves them in place, and the repo is public. Record variable names, never values, and scan every committed bench file (the hybrid plan's KTD24, found by the check's security lens).
 
 What it adds: the rules of a comparison (what it gates on, what counts as a win) are part of its environment too, and so is what it writes to disk. Before the lean plan's trial, state what its readers' picks must show: that ours is clearly better, not that it beat one run.
+
+> **Out of date (corrected 2026-11-12):** the lean plan's trial ran on 2026-11-12, and the picks went the other way: Briggsy's blind pick and two of three blind readers chose ce-plan's plan. The result lives in insight 029.

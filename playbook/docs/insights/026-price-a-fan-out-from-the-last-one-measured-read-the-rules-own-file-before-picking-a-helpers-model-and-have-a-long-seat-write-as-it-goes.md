@@ -21,7 +21,7 @@ All on 2026-11-11:
 
 ## Fix
 
-- Read the meter (`seven_day` in `~/.claude/statusline-meters.json`) before and after every fan-out, and carry the last measured ratio forward (the TODO's landmine).
+- Read the meter (`seven_day` in `~/.claude/statusline-meters.json`) before and after every fan-out, and carry the last measured ratio forward (the playbook's `docs/landmines.md`, Meters and cost).
 - Read a rule's own file before choosing a helper's model, and ask before launching when today's message and a standing rule disagree.
 - For a long seat, have it append findings as it goes, or expect to pay for the whole seat again.
 

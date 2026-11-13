@@ -6,6 +6,8 @@ modules: [projects/archive/skills/ultramode-plan/lib/reads.mjs, projects/archive
 tags: [reviewers, whole-plan-read, read-tool-limit, paging, reading-check, last-line, prompt-leak, recovery-path, short-read, workflow, helpers]
 ---
 
+*The `ultramode-plan` code this lesson came from is archived at `projects/archive/skills/ultramode-plan/` (2026-11-12); the lesson stands on its own.*
+
 ## Problem
 
 - One Read of the 153 KB pay-check spec returned lines 1 to 269 of 1,059. A reviewer told to "read the whole plan" who takes one Read reviews about a quarter of it and says nothing about the rest.

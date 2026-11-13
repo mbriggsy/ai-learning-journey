@@ -6,6 +6,8 @@ modules: [projects/archive/skills/ultramode-plan/lib/run-record.mjs]
 tags: [mutation-testing, mutants, baseline, vacuity, scratch-copy, path-length, max-path, windows, git, core-longpaths, review]
 ---
 
+*The `ultramode-plan` code this lesson came from is archived at `projects/archive/skills/ultramode-plan/` (2026-11-12); the lesson stands on its own.*
+
 ## Problem
 
 - **Mutants find vacuous fixes.** The U1 review's vacuity lens planted each mutant in a copy and ran the tests: a Rise taken over helper turns, a dropped effort field, a removed SECRET word. Each mutant that survived showed a review fix no test held.

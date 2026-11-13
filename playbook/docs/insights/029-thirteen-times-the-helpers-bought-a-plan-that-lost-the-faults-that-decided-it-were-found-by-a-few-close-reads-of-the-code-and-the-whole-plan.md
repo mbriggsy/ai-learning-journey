@@ -27,7 +27,7 @@ The faults that decided it were found cheaply:
 ## Fix
 
 - ce-plan stays the plan step (Briggsy, 2026-11-12: "Ce-plan as the plan step - cool"), and `ultramode-plan` is retired.
-- The three blind readers join the plan step after ce-plan's run (Briggsy: "Love the three blind mice add-on!"): one plan, the same three lenses, each reader returning its faults with line numbers and whether it would build from the plan. The lead checks each fault against the code before fixing the plan (the playbook TODO's START HERE item 3).
+- The three blind readers join the plan step after ce-plan's run (Briggsy: "Love the three blind mice add-on!"): one plan, the same three lenses, each reader returning its faults with line numbers and whether it would build from the plan. The lead checks each fault against the code before fixing the plan (README step 2; for the charge plan, the Back Nine TODO's D7 queue, under *Money taken from retirement accounts before age 59½ is never charged the 10% early-withdrawal tax…*).
 
 ## Key Insight
 

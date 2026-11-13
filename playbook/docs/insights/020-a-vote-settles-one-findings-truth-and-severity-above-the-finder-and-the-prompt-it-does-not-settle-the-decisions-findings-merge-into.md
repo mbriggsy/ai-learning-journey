@@ -6,6 +6,8 @@ modules: [projects/archive/skills/ultramode-plan/lib/vote-law.mjs, projects/arch
 tags: [vote, severity, refuters, verifiers, finder, prompt-scope, gate, premise-seat, decisions, critic, review, plans]
 ---
 
+*The `ultramode-plan` code this lesson came from is archived at `projects/archive/skills/ultramode-plan/` (2026-11-12); the lesson stands on its own.*
+
 ## Problem
 
 - **The finder's severity.** In the Back Nine workbench check, the test-vacuity seat rated 4 findings P0 and 16 P1. Two refuters confirmed 24 of its 30 as real and put every one at P2, since a later review would catch each before a costly run.

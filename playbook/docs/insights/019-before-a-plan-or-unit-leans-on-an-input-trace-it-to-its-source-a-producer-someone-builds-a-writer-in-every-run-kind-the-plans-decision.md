@@ -6,6 +6,8 @@ modules: [projects/archive/skills/ultramode-plan/lib/select.mjs, projects/archiv
 tags: [inputs, producer, writer, run-kind, restart, state-machine, for-each, source-of-truth, comments, goal, request, plans, review, brief, deliberate-value, false-premise, never-flag, schema-version, cross-plan, collision, plan-trial]
 ---
 
+*The `ultramode-plan` code this lesson came from is archived at `projects/archive/skills/ultramode-plan/` (2026-11-12); the lesson stands on its own.*
+
 ## Problem
 
 - **An input nobody builds.** `selectSections` counted scores against KTD7's section index, and no module produced that index. A builder grepping `^#` would have read fenced `# comment` lines as headings in 21 of the repo's 105 plans, and let a two-row list pass.

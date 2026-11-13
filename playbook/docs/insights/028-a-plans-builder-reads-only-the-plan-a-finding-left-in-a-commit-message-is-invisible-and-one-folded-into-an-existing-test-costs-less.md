@@ -6,6 +6,8 @@ modules: [projects/archive/skills/ultramode-plan/SKILL.md, projects/the-back-nin
 tags: [fold, findings, last-round, commit-message, receipt, builder, tests, balanced, plans, check, fold-all, triage, packing, dense-prose, numbered-steps, plan-trial]
 ---
 
+*The `ultramode-plan` skill this lesson came from is archived at `projects/archive/skills/ultramode-plan/` (2026-11-12); the lesson stands on its own.*
+
 ## Problem
 
 - **Left out of the plan.** The Back Nine workbench check's round 3 confirmed 13 findings (1 P1) and, by the skill's rule, folded none. They sit only in `f32f8ea2`'s commit message. The plan's front matter says "1 P0/P1 open", with no pointer to them.
@@ -19,6 +21,7 @@ tags: [fold, findings, last-round, commit-message, receipt, builder, tests, bala
 ## Fix
 
 - The last round's findings: not fixed. It is the gap the trial judges (the playbook TODO's START HERE). Meanwhile the Back Nine's TODO is to point U12's build at that commit message.
+  > **Out of date (corrected 2026-11-12):** the trial ran (insight 029). The workbench plan's open findings are the Back Nine TODO's now: its Act 5 entry, step 1, settles them in the plan before any of its units lands.
 - Folding into existing tests is the practice: before adding a test for a finding, look for one in the plan that can take it.
 
 ## Key Insight

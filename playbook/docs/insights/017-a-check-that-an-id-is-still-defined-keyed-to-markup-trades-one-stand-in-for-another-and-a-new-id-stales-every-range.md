@@ -6,6 +6,8 @@ modules: [projects/archive/skills/ultramode-plan/lib/fold.mjs]
 tags: [fold-check, id-check, definition, markup, stand-in, index-row, mermaid, headings, tiers, real-plans, ranges, drift-grep, plans]
 ---
 
+*The `ultramode-plan` code this lesson came from is archived at `projects/archive/skills/ultramode-plan/` (2026-11-12); the lesson stands on its own.*
+
 ## Problem
 
 - **The ID opens a line.** U2's first fold check passed a whole dropped unit because the units table's `| U5 |` row still opened a line, and a Mermaid `R1 -->` kept a deleted requirement "defined" (5 of 9 lenses found it).

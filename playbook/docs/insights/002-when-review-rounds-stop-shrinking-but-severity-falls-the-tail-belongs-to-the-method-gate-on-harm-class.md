@@ -9,12 +9,14 @@ tags: [code-review, ultramode, review-rounds, convergence, seams, landing-criter
 *The squeaky scripts this lesson came from were flushed on 2026-10-29 (their last version is in git history before that day); the lesson stands on its own.*
 
 ## Problem
+
 U29, the peer-safe squeaky-clean, went through six whole-file review rounds before it landed.
 - Each round ran 11 opus lenses, and every finding was adversarially verified.
 - Distinct issues per round: 15, 22, 16, 14, 14, 8.
 - The planned exit rule was "repeat until nothing material", and five rounds in, the count wasn't falling.
 
 ## Root Cause
+
 - **Each round's fixes opened the next round's seams.**
   - Round 2: the `twin: null` contradiction, stranded adds, and a recomputed commit list all came from round-1 fixes.
   - Round 6: six of its eight issues trace to a named round-5 fix; one unstage step added for excluded paths produced three of them.
@@ -23,6 +25,7 @@ U29, the peer-safe squeaky-clean, went through six whole-file review rounds befo
 - **What did converge** was severity and likelihood. One design change did more than any patch round: round 3 restated "mine" as a single exact-replay invariant, with consent bound to a content sha.
 
 ## Fix
+
 - **The exit rule became a harm-class gate** (Briggsy's ruling, 2026-10-21): after round 6, land if no P0/P1 survives that can commit, delete or kill another session's work. The P2/P3 tail goes to U7, the write-time ledger that removes the inference.
 - **Each round's hygiene:**
   - **Audit every lens transcript for barred tool calls.** Read-only is enforced by the prompt alone, and rounds 4 and 6 each had one no-op Bash call (`true`, `echo skip`). Quarantine that single vote as an abstention and check that another lens carries the finding independently.
@@ -30,6 +33,7 @@ U29, the peer-safe squeaky-clean, went through six whole-file review rounds befo
   - **Run mutation testing on a COPY only.** The harness plants mutants in SKILL.md too, so a review reading the live build would read mutants.
 
 ## Key Insight
+
 When the finding count holds flat while severity falls, what's left is a property of the method, not of the code. Two moves follow:
 - Switch the exit rule from "until nothing material" to a harm-class gate.
 - Spend the next effort on the structural change that deletes the inference, not on one more patch round.
@@ -37,6 +41,7 @@ When the finding count holds flat while severity falls, what's left is a propert
 Count each round's seams that trace to the previous round's fixes. Once those dominate, another round mostly reviews its own patches.
 
 ## Also Applies To
+
 - Any review-and-fix loop on a safety-critical unit.
 - Any heuristic attributor: blame from logs, ownership from history, "who changed this" from timestamps.
 - Mutation runs against files a reviewer or a live junction is reading.

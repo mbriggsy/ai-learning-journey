@@ -6,6 +6,8 @@ modules: [projects/archive/skills/ultramode-plan/lib/fold.mjs, projects/archive/
 tags: [fold, edits, before-copy, round-trip, drift-grep, ledger, receipt, git-log, empty-commit, terminal-path, plans, json, escaping, plain-text-blocks, converter, hand-written-edits]
 ---
 
+*The `ultramode-plan` code this lesson came from is archived at `projects/archive/skills/ultramode-plan/` (2026-11-12); the lesson stands on its own.*
+
 ## Problem
 
 - **A before-copy overwritten.** playbook-4's hand fold copied the plan to `before.md`, then checked its edit pairs. A second run, after the plan was already folded, copied the folded plan over it, and the pre-fold plan was lost (found 2026-11-12 while replaying the fold).
@@ -42,6 +44,6 @@ When the before state is lost, prove the tool by a round trip on the real data.
 
 ## Extended (2026-11-12): hand-written JSON is the fragile step; plain-text blocks and a converter removed it
 
-In the plan-step trial's deepen round 2 (playbook-5), the lead wrote the round's 41 edits as plain-text blocks (`=== ids:`, `=== old`, `=== new`, `=== olds`, `=== end`), and a 57-line script in the scratchpad turned them into `fold.mjs`'s JSON. The one apply went through with no refusal and no drift. Written straight as JSON, every quote, backslash and line break in the plan's text has to be escaped by hand, and that is where the playbook TODO's two escape traps bite: a Unicode escape typed into a Write call lands as the character itself, and the Bash tool halves a doubled backslash.
+In the plan-step trial's deepen round 2 (playbook-5), the lead wrote the round's 41 edits as plain-text blocks (`=== ids:`, `=== old`, `=== new`, `=== olds`, `=== end`), and a 57-line script in the scratchpad turned them into `fold.mjs`'s JSON. The one apply went through with no refusal and no drift. Written straight as JSON, every quote, backslash and line break in the plan's text has to be escaped by hand, and that is where two escape traps bite (the playbook's `docs/landmines.md`, Write, Bash and Grep tools): a Unicode escape typed into a Write call lands as the character itself, and the Bash tool halves a doubled backslash.
 
 What it adds: when a person or a model writes many text edits by hand, give them a format with nothing to escape and let a script make the JSON. `fold.mjs` retired with `ultramode-plan`; the rule holds for any batch of hand-written edits.

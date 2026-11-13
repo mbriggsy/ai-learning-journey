@@ -6,6 +6,8 @@ modules: [projects/archive/skills/ultramode-plan/lib/run-record.mjs]
 tags: [attribution, identity, authorship, inode, birth-time, ntfs, tunneling, edit-tool, head, git-log, empty-commit, session-id, resume, process, shared-checkout]
 ---
 
+*The `ultramode-plan` code this lesson came from is archived at `projects/archive/skills/ultramode-plan/` (2026-11-12); the lesson stands on its own.*
+
 ## Problem
 
 In the one checkout every session shares, U3's run record had to say which files and commits a run made. Each shortcut credited the wrong thing:

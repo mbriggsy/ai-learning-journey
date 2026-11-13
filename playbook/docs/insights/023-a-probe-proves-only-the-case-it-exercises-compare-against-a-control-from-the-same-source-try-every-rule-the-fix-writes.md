@@ -6,6 +6,8 @@ modules: [projects/archive/skills/ultramode-plan/bench/probe/probe.mjs]
 tags: [probes, platform-behavior, control, decoys, deny-rules, short-names, mcp, workflow, background-job, session-alive, measurement]
 ---
 
+*The `ultramode-plan` code this lesson came from is archived at `projects/archive/skills/ultramode-plan/` (2026-11-12); the lesson stands on its own.*
+
 ## Problem
 
 - **No control.** A removed MCP tool and a never-loaded one answer alike ("No such tool available"), so a check that a tool was removed passed whether or not the removal worked.

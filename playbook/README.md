@@ -6,7 +6,7 @@ Sessions about how we work start in this folder: open the terminal in `playbook/
 
 ## The plays, in order
 
-For sizable work, steps 1 to 5 are required, in this order: brief, a deepened, checked and read plan, the build, the whole-file review, and distill. Sizable means new logic, or work that will take more than one session ([the full line](principles.md#how-we-work)). Steps 6 and 7 close the session: squeaky when you call it (or, in handoff mode, when the session calls it at the window's wrap line), and the handoff when a successor is named, in words or by its number (step 7). Which tool delivers a step is Claude's call, made job by job, and it can change when a better tool comes along.
+For sizable work, steps 1 to 5 are required, in this order: brief, a deepened, checked and read plan, the build, the whole-file review, and distill. Sizable means new logic, or work that will take more than one session ([the full line](principles.md#how-we-work)). Steps 6 and 7 close the session: squeaky when you call it (or, once a successor is named, in words or by its number, when the session calls it itself at the window's wrap line), and the handoff to that successor (step 7). Which tool delivers a step is Claude's call, made job by job, and it can change when a better tool comes along.
 
 What keeps the steps running: each session's close writes the job's next step, by name, into the TODO's START HERE line, where the next session starts.
 
@@ -21,31 +21,24 @@ Before work starts on a topic, Claude finds the few past lessons in the project'
 
 Today Claude runs the compound-engineering plugin's `ce-plan` skill from start to finish, and that one run does the first three parts:
 
-- **Plan:** a structured plan goes into the project's own `docs/plans/` folder. Claude names the path, because otherwise the plugin picks a folder at the top of the whole repo.
+- **Plan:** a structured plan goes into the project's own `docs/plans/` folder, at a path Claude names.
 - **Deepen:** it scores every section. When some are weak, it picks the two to five weakest and sends helper agents (other copies of Claude that Claude starts to do part of a job) to research them, folding their findings in without stopping to ask you. When none are weak enough, it says the plan passed its confidence check.
-- **Check:** skeptical reviewers from the plugin's `ce-doc-review` skill look for parts that contradict each other, sections a later change left out of date, steps that can't be built, and work nobody asked for. Claude checks each finding against the code and puts the fixes into the plan before any code is written.
+- **Check:** skeptical reviewers from the plugin's `ce-doc-review` skill, the one who tries to break the plan included, look for parts that contradict each other, sections a later change left out of date, steps that can't be built, and work nobody asked for. Claude checks each finding against the code and puts the fixes into the plan before any code is written.
 
-What Claude asks `ce-plan` for, every time:
-- the plan's path inside the project's `docs/plans/`;
-- Opus for every helper, because otherwise the plugin sends some of them to cheaper models; and an effort level for each, xhigh for the reviewers and high for the researchers;
-- the whole plan for the reviewers who hunt contradictions and ways it could break, because by default each reviewer gets only the sections for its angle, and the check has to cover the plan as a whole;
-- the full team of reviewers, the one who tries to break the plan included, by passing `depth:full` to its `ce-doc-review` call and naming `adversarial-document-reviewer` on the team. Since plugin version 3.36.0 (installed here 2026-11-06), a plan whose text calls in none of the product, design, security or adversarial reviewers otherwise gets a "lite" check: one reviewer covering three angles at once, with no one trying to break it. The check's result says which ran: a "lite review" line there means the ask was dropped, and the check runs again;
-- no scope question to you before it starts (`confirm:auto`), because you judge the result; a real fork that is yours still comes to you from Claude;
-- a stop after the check, because the plugin's next step hands the plan to its build skill, which moves the work off main onto a new branch.
+Then **three blind readers** read the checked plan (your call, 2026-11-12: "Love the three blind mice add-on!"). Each is a helper that never saw the planning and reads the whole plan cold through one lens: the builder (could I build this alone, and where would I take a wrong turn?), the rules (are its rules, facts and cited code right?) and the owner (is it the right size, with your calls put to you with a recommended answer, and is the problem real?). Each opens the code the plan cites and returns the plan's faults with their line numbers, and whether it would build from the plan. Claude checks every fault against the code, fixes in the plan the real ones a builder would hit, lists the minor ones there without folding them in, rewrites a unit as numbered steps when fixes crowd it, and names the fixes in the plan's commit message. On their first run (2026-11-12) the readers took 13 minutes and 0.74M helper tokens on a 753-line plan. They earned their place on the plan-step trial ([insight 029](docs/insights/029-thirteen-times-the-helpers-bought-a-plan-that-lost-the-faults-that-decided-it-were-found-by-a-few-close-reads-of-the-code-and-the-whole-plan.md)), where they found real faults that both plans' full checks had missed.
 
-Then **three blind readers** read the checked plan (your call, 2026-11-12: "Love the three blind mice add-on!"). Each is a helper that never saw the planning and reads the whole plan cold through one lens: the builder (could I build this alone, and where would I take a wrong turn?), the rules (are its rules, facts and cited code right?) and the owner (is it the right size, with your calls put to you with a recommended answer?). Each opens the code the plan cites and returns the plan's faults with their line numbers, and whether it would build from the plan. Claude copies [plan-readers.workflow.js](plan-readers.workflow.js) into the session's scratchpad (the Workflow tool runs a script only from there or the session's own folder), makes sure the last message you typed holds nothing that would steer them (every Workflow helper is shown it), and launches it with `{ request, plan: { path, lastLine }, entry, brief }`. Then Claude checks every fault against the code, fixes the real ones in the plan, and names them in the plan's commit message. On the trial that earned them ([insight 029](docs/insights/029-thirteen-times-the-helpers-bought-a-plan-that-lost-the-faults-that-decided-it-were-found-by-a-few-close-reads-of-the-code-and-the-whole-plan.md)), three readers cost 0.56M helper tokens and found real faults that both plans' full checks had missed. This script's first run (2026-11-12, on the kept 753-line plan) took 13 minutes and 0.74M helper tokens, and returned 34 faults to check: all three readers found two of them, and two readers found three more. Its result opens with a one-line index of every fault, since the completion notice shows only the start of a long result.
-
-Only Claude models do the work: the plugin's review pass by another company's model is switched off in the repo's `.compound-engineering/config.yaml`. The plan's commit message says what ran ("planned, deepened, checked and read", or "planned, confidence check passed, checked and read" when no section needed deepening), and the build starts only once the plan's history shows it.
+Only Claude models do the work: the plugin's review pass by another company's model is switched off in the repo's `.compound-engineering/config.yaml`. The plan's commit message says what ran, and the build starts only once the plan's history shows it.
 
 - **Start it:** nothing to say; Claude starts it for sizable work. You can also say "plan <the work>".
-- **Lives in:** the `ce-plan` and `ce-doc-review` skills of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`. The plugin updates itself: version 3.38.0 installed on its own on 2026-11-11. The readers: [plan-readers.workflow.js](plan-readers.workflow.js) in this folder.
+- **Step by step:** [how-to/plan-step.md](how-to/plan-step.md): what Claude asks `ce-plan` for every time and why, how the readers are launched, and what happens to their faults.
+- **Lives in:** the `ce-plan` and `ce-doc-review` skills of the compound-engineering plugin (an add-on pack of skills installed into Claude Code), under `~/.claude/plugins/`. The plugin updates itself (the TODO's start check names the live version). The readers: [plan-readers.workflow.js](plan-readers.workflow.js) in this folder.
 
 ### 3. Build
 
 Claude builds from the plan and picks how: plain hands-on work for pieces that must land one after another, or a Workflow script (a script that runs several helper agents side by side) when the work splits into independent pieces. Both are built into Claude Code and get better with it. Each build unit's session opens with a brief on that unit.
 
 - **Start it:** your go-ahead on the plan. When the answer is clearly yes ([what counts](principles.md#who-decides-what)), Claude checks there is room in its working memory (the context window; see the window check under Always on) and goes without waiting.
-- **Lives in:** Claude Code itself. The compound-engineering plugin's `ce-work` build skill isn't used: from version 3.34.0 it moves the work off main onto a new branch without asking, and every session shares one copy of this repo on main. So Claude never picks `ce-plan`'s "Start ce-work" option.
+- **Lives in:** Claude Code itself. The compound-engineering plugin's `ce-work` build skill isn't used: it moves the work off main onto a new branch without asking, and every session shares one copy of this repo on main ([how-to/plan-step.md](how-to/plan-step.md#never-start-ce-work) keeps `ce-plan` from starting it).
 
 ### 4. Review (the deep review we call ultramode)
 
@@ -63,16 +56,28 @@ Claude writes the hard-won lesson as a short, numbered note in the project's `do
 
 ### 6. Squeaky (close the session)
 
-The end-of-session checklist, in order: wait for this session's own background jobs and check which other sessions are running, update `TODO.md`, run the code checks, see which changed files are this session's, delete only the temp files this session made or read, check that docs it changed don't now contradict other docs, commit only this session's own files, push (unless GitHub already has commits this laptop doesn't), stop leftover background programs, run a final check, and hand off. It says "Squeaky clean." only when that final check proves it.
+The end-of-session checklist. Other sessions share the same files, so every step touches only what this session made. In order:
+
+0. Wait for this session's own background jobs to finish, then see which other sessions are running.
+1. Update `TODO.md`: START HERE names the next step and what the next session checks at its start; the landmines that bite that step stay in the TODO, and every other one goes to the project's landmines file.
+2. Run the code checks (the typecheck).
+3. Sort the changed files into this session's and everyone else's.
+4. Delete the temp files this session made. A file it only read (a screenshot you dropped in) goes too, except while another live session is working in the same project: then it stays.
+5. Check that docs it changed don't now contradict other docs.
+6. Commit only this session's own files.
+7. Push, unless GitHub already has commits this laptop doesn't.
+8. Stop leftover background programs: dev servers only when no other session is live, and this session's own background commands always.
+9. Run a final check. It says "Squeaky clean." only when that check proves it.
+10. Hand off to the successor, when one is named ([the next play](#7-hand-off-to-the-next-session)).
 
 - **Start it:** "squeaky", "squeaky clean", or "let's get squeaky".
 - **Lives in:** [projects/skills/squeaky-clean/](../projects/skills/squeaky-clean/SKILL.md)
 
 ### 7. Hand off to the next session
 
-When you have named the session that takes over, in words or by numbering it next (`playbook-6`, then `playbook-7`: handoff mode, in which the closing session also calls squeaky itself at the window's wrap line), squeaky's last step sends it one message saying how the close went and where to start. An idle successor wakes within seconds; a busy one reads the message as soon as its current step finishes.
+When you have named the session that takes over, in words or by numbering it next (`playbook-6`, then `playbook-7`: handoff mode), the closing session calls squeaky itself when its window nears the wrap line, never just because a task finished, and squeaky's last step sends the successor one message saying how the close went and where to start. An idle successor wakes within seconds; a busy one reads the message as soon as its current step finishes.
 
-- **Start it:** tell the closing session the next session's whole name, for example "b9-2 is watching". Both sessions must run on this laptop (a session anywhere else gets no message) and in the same permission mode (the setting for which actions Claude may take without asking you); if the modes differ, the successor holds the message for your approval, and overnight that approval can run out. The full rules: [how-to/session-chains.md](how-to/session-chains.md).
+- **Start it:** tell the closing session the next session's whole name, for example "b9-2 is watching"; numbered sessions need no words. Both sessions must run on this laptop (a session anywhere else gets no message) and in the same permission mode (the setting for which actions Claude may take without asking you); if the modes differ, the successor holds the message for your approval, and overnight that approval can run out. The full rules: [how-to/session-chains.md](how-to/session-chains.md).
 - **Lives in:** step 10 of [projects/skills/squeaky-clean/SKILL.md](../projects/skills/squeaky-clean/SKILL.md).
 
 ## Always on
@@ -90,14 +95,16 @@ These fire by themselves.
 - [principles.md](principles.md): the rules underneath every play.
 - [cheat-sheet.md](cheat-sheet.md): when X happens, say Y.
 - [how-to/session-chains.md](how-to/session-chains.md): hand off from one session to a named successor.
+- [how-to/plan-step.md](how-to/plan-step.md): the plan step, step by step.
 - [how-to/code-review.md](how-to/code-review.md): the ultramode code review, step by step.
 - [plan-readers.workflow.js](plan-readers.workflow.js): the three blind readers that finish the plan step (step 2).
 - [TODO.md](TODO.md): the queue for work on how we work. A session starts at its START HERE line.
+- [docs/landmines.md](docs/landmines.md): the known traps in the tools and setup this work runs on, by area.
 - [docs/insights/](docs/insights/): the lessons that work has paid for, one numbered note each. Sessions start in this folder, so `/brief` finds them here and `/distill` adds to them here.
 
 ## Where things live
 
-- **Hooks:** [projects/hooks/](../projects/hooks/) holds the source; its [README](../projects/hooks/README.md) explains each hook. The live copies run from `~/.claude/hooks/` and match the source byte for byte: a change edits both, then compares them.
+- **Hooks:** [projects/hooks/](../projects/hooks/) holds the source; its [README](../projects/hooks/README.md) explains each hook. The live copies run from `~/.claude/hooks/` (`block-webfetch.sh`, `check-config-liveness.mjs` and `elite-engineer-session-start.sh`; the manifesto from `~/.claude/manifesto/`) and match the source byte for byte: a change edits both, then compares them.
 - **Skills we built:** [projects/skills/](../projects/skills/) holds brief and distill, squeaky-clean, ultramode-code-review, window and doc-audit. Claude Code loads them from `~/.claude/skills/`.
 - **Plugin skills:** `ce-plan` and `ce-doc-review` come from the compound-engineering plugin, installed under `~/.claude/plugins/`. It updates itself; its settings for this repo are in [.compound-engineering/config.yaml](../.compound-engineering/config.yaml).
 - **Lessons:** each project keeps its own `docs/insights/` folder, with the lessons that project's work discovered. `/distill` writes to it; `/brief` reads from it. For example: [the-back-nine](../projects/the-back-nine/docs/insights/), [burned](../projects/burned/docs/insights/), and [this folder's](docs/insights/), about how we work. Each one names the files it is about.

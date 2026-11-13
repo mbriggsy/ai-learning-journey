@@ -19,7 +19,7 @@ import type { WorkingYearLeftOverKind } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { copy, slots, workingCostExtras } from '@ui/copy'
 import { DEV_SEEDS } from '@ui/devSeeds'
-import { workingYearLeftOverShownState } from '../intakeMap'
+import { workingYearCostForRun, workingYearLeftOverShownState } from '../intakeMap'
 import {
   laterShortOf,
   workingYearCheckAtQuote,
@@ -28,6 +28,8 @@ import {
   workingYearCostStaleLine,
   workingYearCostStaleLineText,
   workingYearCostStaleNote,
+  workingYearCostTypedBelowDoor,
+  workingYearCostTypedBelowLine,
   workingYearCostTypedBelowNote,
   workingYearLeftOverMoved,
   workingYearLeftOverMovedClause,
@@ -850,6 +852,145 @@ describe('workingYearCostStaleDoor — the act and each host’s door', () => {
       const act = workingYearCostStaleDoor(d)?.act
       expect(act).toBe(heldYesBelowQuote(d) ? 'update' : 'confirmOrChange')
       expect(act).toBe(workingYearCostAct(d))
+    }
+  })
+})
+
+// U11 walk 6's R1 (the Tier 0 retype entry's ⚑ MEASURED bullet): a FRESH typed W below today's quote speaks where the
+// answer is read. Every witness is a risen seed with its old $84,000 TYPED back in (the W row's own write); the figures
+// are the seeds' documented ones (their docblocks and the risen-arm tests above): year 0 at $84,000 prints the stored
+// $16,985 on `datesavedrisen` and `datesavedrisenshort` (so "saved") and $26,985 on `datesavedrisenlater` (the alimony:
+// "saved, moved"); at the quote, $10,985 left over / a 2026–2032 short run of $3,652 to $4,015 / $5,985 then a
+// 2029–2032 run. Every sentence is typed by hand (a copy plant inside a slot dies only to these).
+describe('workingYearCostTypedBelowLine and its door — R1, the Result and the gate', () => {
+  const typed = (d: ScenarioDraft, amountReal = 84_000, entryPeriod: 'year' | 'month' = 'year'): ScenarioDraft => {
+    const w = d.workingYearCost
+    if (w === undefined) throw new Error('[test setup] the witness holds a W')
+    return { ...d, workingYearCost: { kind: 'entered', amountReal, entryPeriod, stateTaxReading: w.stateTaxReading } }
+  }
+  const RESULT = { kind: 'result', carriesMoved: true } as const
+  const RESULT_HOSTED = { kind: 'result', carriesMoved: false } as const
+  const GATE = { kind: 'gate' } as const
+  const LEAN = 'A working year almost always costs at least what you spend, so this answer can look better than it really is.'
+  const counts = (answer: 'This' | 'Your', typedFigure: string, quote: string): string =>
+    `${answer} answer counts a working year at your own figure of $${typedFigure} a year, below your spending of $${quote} a year. ${LEAN}`
+
+  it('`datesavedtyped` (A, the walk’s retype on `datesavedrisen`): the counts sentence, the lean, the $16,985 it adds, and year 0’s $10,985 at $90,000 — "This" on the Result, "Your" on the gate', () => {
+    const d = DEV_SEEDS.datesavedtyped
+    expect(d, 'the seed IS the retype').toEqual(typed(DEV_SEEDS.datesavedrisen))
+    expect(isWorkingYearCostStale(d), 'the premise: a typed figure is fresh').toBe(false)
+    expect(workingYearLeftOverShownState(d), 'the premise: carried at the stored figure').toBe('saved')
+    const tail = 'It adds up to $16,985 a year to your savings. At $90,000 a year, your first working year, 2026, has $10,985 left over.'
+    expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(`${counts('This', '84,000', '90,000')} ${tail}`)
+    expect(workingYearCostTypedBelowLine(d, RESULT_HOSTED), 'nothing moved: the host flag changes nothing').toBe(`${counts('This', '84,000', '90,000')} ${tail}`)
+    expect(workingYearCostTypedBelowLine(d, GATE)).toBe(`${counts('Your', '84,000', '90,000')} ${tail}`)
+  })
+
+  it('B (`datesavedrisenshort` retyped): at $105,000 every working year from 2026 through 2032 comes up short — the run named, never its first year alone', () => {
+    const d = typed(DEV_SEEDS.datesavedrisenshort)
+    expect(workingYearLeftOverShownState(d)).toBe('saved')
+    expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(
+      `${counts('This', '84,000', '105,000')} It adds up to $16,985 a year to your savings. At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short.`,
+    )
+  })
+
+  it('C (`datesavedrisenlater` retyped, the left over MOVED to $26,985): on the Result the moved clause takes the credit sentence’s place; on the gate, or where a rules line hosts the clause, the credit is its own sentence — then $5,985 at $105,000 and the 2029–2032 run "at that cost"', () => {
+    const d = typed(DEV_SEEDS.datesavedrisenlater)
+    expect(workingYearLeftOverShownState(d), 'the premise: moved').toBe('saved-moved')
+    const atQuote = 'At $105,000 a year, your first working year, 2026, has $5,985 left over. At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short.'
+    expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(
+      `${counts('This', '84,000', '105,000')} The money left over in your first working year is $26,985 now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${atQuote}`,
+    )
+    expect(workingYearCostTypedBelowLine(d, RESULT_HOSTED)).toBe(`${counts('This', '84,000', '105,000')} It adds up to $16,985 a year to your savings. ${atQuote}`)
+    expect(workingYearCostTypedBelowLine(d, GATE)).toBe(`${counts('Your', '84,000', '105,000')} It adds up to $16,985 a year to your savings. ${atQuote}`)
+  })
+
+  it('the credit is the SMALLER figure: $86,000 typed on `datesavedrisen` prints $14,985 at year 0, below the stored $16,985, and the line names $14,985', () => {
+    const d = typed(DEV_SEEDS.datesavedrisen, 86_000)
+    expect(workingYearLeftOverShownState(d)).toBe('saved-moved')
+    expect(workingYearCostTypedBelowLine(d, RESULT_HOSTED)).toBe(
+      `${counts('This', '86,000', '90,000')} It adds up to $14,985 a year to your savings. At $90,000 a year, your first working year, 2026, has $10,985 left over.`,
+    )
+  })
+
+  it('first none (spending $100,985): year 0 at the quote has nothing left over, worded so, never "$0 short"', () => {
+    const d = { ...typed(DEV_SEEDS.datesavedrisen), annualSpendingReal: 100_985 }
+    expect(workingYearCostTypedBelowLine(d, GATE)).toBe(
+      `${counts('Your', '84,000', '100,985')} It adds up to $16,985 a year to your savings. At $100,985 a year, your first working year, 2026, has nothing left over.`,
+    )
+  })
+
+  it('under any answer the run does not carry — unanswered, spent, not sure, a "saved" answer not asked — the counts sentence and the lean alone', () => {
+    const d = typed(DEV_SEEDS.datesavedrisen)
+    for (const answer of [undefined, { kind: 'spent' }, { kind: 'not-sure' }] as const) {
+      expect(workingYearCostTypedBelowLine(answered(d, answer), RESULT), answer?.kind ?? 'unanswered').toBe(counts('This', '84,000', '90,000'))
+    }
+    // A "saved" answer whose year 0 at the typed figure prints below $1 is "not asked": nothing is carried.
+    const notAsked = typed(DEV_SEEDS.datesavedrisen, 101_000)
+    expect(workingYearLeftOverShownState({ ...notAsked, annualSpendingReal: 110_000 }), 'the premise: not asked').toBe('not-asked')
+    expect(workingYearCostTypedBelowLine({ ...notAsked, annualSpendingReal: 110_000 }, GATE)).toBe(counts('Your', '101,000', '110,000'))
+  })
+
+  it('the budget twin names the quote in the W note’s words: "your budget’s first year after work stops, which comes to $X a year"', () => {
+    const d: ScenarioDraft = {
+      ...typed(DEV_SEEDS.datesavedrisen),
+      budget: [{ label: 'Living', category: 'housing', tier: 'essentials', annualAmountReal: 90_000, startYear: 0 }],
+    }
+    expect(workingYearQuote(d)).toMatchObject({ annualReal: 90_000, source: 'budget' })
+    expect(workingYearCostTypedBelowLine(d, RESULT)?.startsWith(
+      `This answer counts a working year at your own figure of $84,000 a year, below your budget’s first year after work stops, which comes to $90,000 a year. ${LEAN}`,
+    )).toBe(true)
+  })
+
+  it('a figure typed by the month names both figures yearly, as the W note does (7,000 a month is $84,000 a year)', () => {
+    const d = typed(DEV_SEEDS.datesavedrisen, 84_000, 'month')
+    expect(workingYearCostTypedBelowLine(d, GATE)?.startsWith(counts('Your', '84,000', '90,000'))).toBe(true)
+    expect(workingYearCostTypedBelowDoor(d)?.heading).toBe('To update your $84,000 figure')
+  })
+
+  it('null — and its door null with it — wherever no FRESH typed figure sits below the quote: a yes, a kept figure, a typed figure at or above the quote, one stale on its reading (W’s own stale line speaks there), and a W left on an all-retired draft (its run reads no W)', () => {
+    const d = typed(DEV_SEEDS.datesavedrisen)
+    const kept: ScenarioDraft = { ...d, workingYearCost: { ...(d.workingYearCost as Extract<NonNullable<ScenarioDraft['workingYearCost']>, { kind: 'entered' }>), keptOverQuoteReal: 84_000 } }
+    const stateMoved: ScenarioDraft = { ...d, retirementState: 'FL' }
+    expect(isWorkingYearCostStale(stateMoved), 'the premise: stale on its reading').toBe(true)
+    // Alex retires at 58 (a retired person needs a stop age to be buildable): the spine run, which never carries W.
+    const retired: ScenarioDraft = { ...d, people: [{ ...d.people[0], workStatus: 'retired', retirementAge: 58, earnedIncomeReal: 0 }, d.people[1]] }
+    expect(workingYearCostForRun(retired), 'the premise: the run is PROVEN to read no W').toBe('unpriced')
+    const { workingYearCost: _w, ...noW } = d
+    for (const [name, x] of [
+      ['a yes', DEV_SEEDS.datesavedrisen],
+      ['kept', kept],
+      ['at the quote', typed(DEV_SEEDS.datesavedrisen, 90_000)],
+      ['above it', typed(DEV_SEEDS.datesavedrisen, 95_000)],
+      ['stale on its reading', stateMoved],
+      ['all retired', retired],
+      ['no W', noW],
+    ] as const) {
+      expect(workingYearCostTypedBelowLine(x, RESULT), name).toBeNull()
+      expect(workingYearCostTypedBelowLine(x, GATE), name).toBeNull()
+      expect(workingYearCostTypedBelowDoor(x), name).toBeNull()
+    }
+  })
+
+  it('the gate’s door is the update act’s, naming the typed figure — word for word W’s risen door (one home, `gateDoor`)', () => {
+    const d = DEV_SEEDS.datesavedtyped
+    const door = {
+      heading: 'To update your $84,000 figure',
+      scope: 'Neither button on this page updates your $84,000 figure; both lead to where you can.',
+      route: `After “${copy.reentryAffirmCta}”, press “Update your figure for a working year” on your answer; “${copy.reentryUpdateCta}” asks about it among its questions.`,
+    }
+    expect(workingYearCostTypedBelowDoor(d)).toEqual(door)
+    expect(workingYearCostStaleDoor(DEV_SEEDS.datesavedrisen)?.gate, 'the yes it was typed over names the same door').toEqual(door)
+  })
+
+  it('no sentence on any witness says "worse" or carries an em-dash, and the line is one sentence per fact (each starts with a capital after ". ")', () => {
+    for (const d of [DEV_SEEDS.datesavedtyped, typed(DEV_SEEDS.datesavedrisenshort), typed(DEV_SEEDS.datesavedrisenlater)]) {
+      for (const host of [RESULT, RESULT_HOSTED, GATE]) {
+        const line = workingYearCostTypedBelowLine(d, host)!
+        expect(line).not.toMatch(/\bworse\b/i)
+        expect(line).not.toContain('—')
+        for (const sentence of line.split('. ').slice(1)) expect(sentence, line).toMatch(/^[A-Z]/)
+      }
     }
   })
 })

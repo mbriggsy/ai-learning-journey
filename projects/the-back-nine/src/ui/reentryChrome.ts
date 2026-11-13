@@ -62,7 +62,8 @@ export interface ReentryView {
    *  (`stalenessDate`), the working-years clock (`stalenessWorkingYears`), the ONE nameless
    *  reference-tables line, the stale-W line (the caller's W-step sentence framed by
    *  `stalenessPayCheckGateLead`, or the `stalenessWorkingYearCost` fallback when none is handed
-   *  over), the moved left-over line (build 2's R12: `stalenessLeftOverNote` and the caller's
+   *  over) — or, in its place, the typed-below line (U11 walk 6's R1: a fresh typed W below today's
+   *  quote, {@link ReentryTypedBelow}), the moved left-over line (build 2's R12: `stalenessLeftOverNote` and the caller's
    *  sentence — or, where a tax, state-tax or working-years line fired, the caller's clause on the
    *  FIRST of them instead, and no line of its own), and one budget line per boundary year (empty =
    *  nothing to flag). */
@@ -74,8 +75,9 @@ export interface ReentryView {
    *  the Result re-reads the live draft, so a left over that moves in the session rides the same host. */
   readonly leftOverClauseHost: boolean
   /** W's door (council `wf_22858e04-f7a` (2)): `section.reentry-door`, the next sibling after the gate's buttons — its
-   *  heading, the scope sentence the affirm button is described by, and the route — or `null`: W is not stale, no
-   *  sentence was handed over, or the tab cannot save (a read-only tab has no buttons to route through). */
+   *  heading, the scope sentence the affirm button is described by, and the route — or `null`: W is neither stale nor
+   *  typed below today's quote (U11 walk 6's R1, the update act's door), no sentence was handed over, or the tab cannot
+   *  save (a read-only tab has no buttons to route through). */
   readonly door: GateDoor | null
   /** The "~N years since your save" line, or null (absent savedAt / under a year —
    *  SUPPRESSED, never fabricated). */
@@ -134,15 +136,31 @@ export interface ReentryLeftOverStale {
   readonly canChange: boolean
 }
 
-/** The gate's two answer sentences, ONE required named object (build 2's KTD9 one seam down): each
- *  field is read only where the report's fact of the same name is set (`report.workingYear.costStale`,
- *  `report.workingYear.leftOverStale`). Never two adjacent positional parameters: a
+/** The gate's typed-below line (U11 walk 6's R1), composed by the caller from the HYDRATED draft
+ *  (`workingYearCostTypedBelowLine` on the gate: a fresh TYPED W below today's quote, which the report never
+ *  calls stale — a typed figure is never staled on a quote, KTD10 — so this is the only way the gate hears it):
+ *  `text` — the line, one plain paragraph; `door` — the update act's door under the buttons
+ *  (`workingYearCostTypedBelowDoor`); `canChange` — the tab can save (the door rides only then, the
+ *  {@link ReentryPayCheckStale} door law). `null` where no fresh typed figure sits below the quote, or the run
+ *  reads no W. No report fact goes with it: it is an answer read against today's quote, never a clock, so it
+ *  feeds neither `anyStale` nor `rulesMoved`. */
+export interface ReentryTypedBelow {
+  readonly text: string
+  readonly door: GateDoor
+  readonly canChange: boolean
+}
+
+/** The gate's answer sentences, ONE required named object (build 2's KTD9 one seam down): `costStale` and
+ *  `leftOverStale` are read only where the report's fact of the same name is set
+ *  (`report.workingYear.costStale`, `report.workingYear.leftOverStale`); `typedBelow` has no fact (see
+ *  {@link ReentryTypedBelow}) and is read where W's line is not. Never adjacent positional parameters: a
  *  {@link ReentryPayCheckStale} is assignable to a {@link ReentryLeftOverStale}, so a swapped pair
- *  would compile clean and drop the W sentence for its fallback. Both fields REQUIRED, never
+ *  would compile clean and drop the W sentence for its fallback. Every field REQUIRED, never
  *  optional-with-a-default: a caller that forgets one must fail to compile. */
 export interface ReentryAnswerSentences {
   readonly costStale: ReentryPayCheckStale | null
   readonly leftOverStale: ReentryLeftOverStale | null
+  readonly typedBelow: ReentryTypedBelow | null
 }
 
 export function composeReentry(
@@ -150,7 +168,7 @@ export function composeReentry(
   report: StalenessReport,
   sentences: ReentryAnswerSentences,
 ): ReentryView {
-  const { costStale: payCheckStale, leftOverStale } = sentences
+  const { costStale: payCheckStale, leftOverStale, typedBelow } = sentences
   // The intro's register (Caddie card #1). It USED to double as the blend note's route-true
   // wording selector; U17 §S4 made the blend clock nameless on both routes, so this predicate
   // now has exactly one consumer (insight 087 — the comment is swept with the code it described).
@@ -251,6 +269,12 @@ export function composeReentry(
       noteLines.push({ text: notePartsText(parts), parts })
       if (payCheckStale.canChange) door = payCheckStale.door
     }
+  } else if (typedBelow !== null) {
+    // U11 walk 6's R1: a fresh TYPED W below today's quote, in W's place and W's plain form, with the update act's
+    // door. The caller builds it only on a fresh W, so it never meets W's stale line; were both handed over, W's
+    // line would win, as it does on the Result — the one standing slot there reads them in this order.
+    noteLines.push(typedBelow.text)
+    if (typedBelow.canChange) door = typedBelow.door
   }
   // Build 2's moved left over (R12): the household's own "saved" answer no longer matches today's
   // year-0 figure. An answer fact like the W line above, never a rules line (it rides `anyStale`

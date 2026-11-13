@@ -39,6 +39,8 @@ import {
   workingYearCostStaleLine,
   workingYearCostStaleLineText,
   workingYearCostStaleNote,
+  workingYearCostTypedBelowDoor,
+  workingYearCostTypedBelowLine,
   workingYearLeftOverMoved,
   workingYearLeftOverMovedClause,
   workingYearLeftOverMovedText,
@@ -93,7 +95,7 @@ const pricing = (e: StalenessExposure, s: PricedState | undefined): StalenessExp
 const reportFor = (s: CurrentScenario, exposure: StalenessExposure = RETIRED_EXPOSURE) =>
   deriveStaleness(s, TODAY, exposure, { costStale: false, leftOverStale: false })
 /** No answer sentence handed over — the arms that test a clock line, not an answer's line. */
-const NO_SENTENCES: ReentryAnswerSentences = { costStale: null, leftOverStale: null }
+const NO_SENTENCES: ReentryAnswerSentences = { costStale: null, leftOverStale: null, typedBelow: null }
 
 // The pay check's W. `date` without W (whatever W the seed registry later gives it), and the same
 // household with W confirmed — typed by hand from the seed's own facts: no budget ⇒ the quote is its
@@ -378,12 +380,12 @@ describe('composeReentry — the read-back', () => {
     // `wf_22858e04-f7a` (2)).
     const DOOR = { heading: 'A fixture heading', scope: 'A fixture scope sentence.', route: 'A fixture route.' }
     const line = { opening: text, segments: [{ label: 'A label', sentences: ['One.'] }] }
-    const view = composeReentryParts(s, report, { costStale: { line, door: DOOR, canChange: true }, leftOverStale: null })
+    const view = composeReentryParts(s, report, { costStale: { line, door: DOOR, canChange: true }, leftOverStale: null, typedBelow: null })
     const opening = `${copy.stalenessPayCheckGateLead} ${text}`
     expect(view.noteLines).toEqual([{ text: `${opening} A label One.`, parts: { opening, segments: line.segments, door: null } }])
     expect(notePartsText((view.noteLines[0] as { parts: Parameters<typeof notePartsText>[0] }).parts)).toBe(`${opening} A label One.`)
     expect(view.door, 'the door rides the view, under the buttons').toEqual(DOOR)
-    const readOnly = composeReentryParts(s, report, { costStale: { line, door: DOOR, canChange: false }, leftOverStale: null })
+    const readOnly = composeReentryParts(s, report, { costStale: { line, door: DOOR, canChange: false }, leftOverStale: null, typedBelow: null })
     expect(readOnly.door, 'a read-only tab gets no door it cannot open, and no buttons named to press').toBeNull()
     expect(readOnly.noteLines).toEqual(view.noteLines)
     // The figure-less fallback only where no sentence is handed over.
@@ -394,7 +396,7 @@ describe('composeReentry — the read-back', () => {
   it('the pay check: a W that still matches carries no stale line, even handed a sentence (the report decides, never the caller)', () => {
     const fresh = savedDraft(DATE_STALE_W)
     const report = deriveStaleness(fresh, TODAY, exposureForDraft(DATE_STALE_W), { costStale: false, leftOverStale: false })
-    expect(composeReentry(fresh, report, { costStale: { line: { opening: 'never rendered', segments: [] }, door: { heading: 'h', scope: 's', route: 'r' }, canChange: true }, leftOverStale: null })).toMatchObject({ noteLines: [], door: null })
+    expect(composeReentry(fresh, report, { costStale: { line: { opening: 'never rendered', segments: [] }, door: { heading: 'h', scope: 's', route: 'r' }, canChange: true }, leftOverStale: null, typedBelow: null })).toMatchObject({ noteLines: [], door: null })
   })
 
   it('the pay check: push order — the contribution clock, then the working-years clock, then the stale-answer line', () => {
@@ -424,6 +426,7 @@ describe('composeReentry — the read-back', () => {
   const LEFT_OVER_SENTENCE: ReentryAnswerSentences = {
     costStale: null,
     leftOverStale: { text: LEFT_OVER_TEXT, clause: LEFT_OVER_CLAUSE, canChange: true },
+    typedBelow: null,
   }
   const LEFT_OVER_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_TEXT} ${copy.stalenessLeftOverGateDoor}`
   const leftOverReport = (s: CurrentScenario, d: ScenarioDraft, leftOverStale: boolean) =>
@@ -439,6 +442,7 @@ describe('composeReentry — the read-back', () => {
     const readOnlySentence: ReentryAnswerSentences = {
       costStale: null,
       leftOverStale: { text: LEFT_OVER_TEXT, clause: LEFT_OVER_CLAUSE, canChange: false },
+      typedBelow: null,
     }
     expect(composeReentry(s, report, readOnlySentence).noteLines).toEqual([`${copy.stalenessLeftOverNote} ${LEFT_OVER_TEXT}`])
   })
@@ -574,6 +578,7 @@ describe('composeReentry — the read-back', () => {
     const view = composeReentry(s, report, {
       costStale: null,
       leftOverStale: { text: workingYearLeftOverMovedText(moved), clause: workingYearLeftOverMovedClause(moved), canChange: true },
+      typedBelow: null,
     })
     expect(view.noteLines).toEqual([
       `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')} ${copy.stalenessLeftOverGateDoor}`,
@@ -602,6 +607,7 @@ describe('composeReentry — the read-back', () => {
     const view = composeReentry(s, report, {
       costStale: line === null || door === null ? null : { line, door: door.gate, canChange: true },
       leftOverStale: null,
+      typedBelow: null,
     })
     expect(view.noteLines).toEqual([[copy.stalenessPayCheckGateLead, workingYearCostStaleLineText(line!)].join(' ')])
     expect(view.door).toEqual(gate)
@@ -1047,7 +1053,7 @@ describe('ReEntry — the surface', () => {
     const line = workingYearCostStaleLine(d)
     const door = workingYearCostStaleDoor(d)
     if (line === null || door === null) throw new Error('[test setup] W is stale')
-    return composeReentryParts(s, report, { costStale: { line, door: door.gate, canChange }, leftOverStale: null })
+    return composeReentryParts(s, report, { costStale: { line, door: door.gate, canChange }, leftOverStale: null, typedBelow: null })
   }
 
   it('W’s stale line is a block: div.note-parts → p.note-parts__opening → dl of div>dt+dd, labels with no colon in the ruled order, no heading inside the notes, no door words in them', () => {
@@ -1114,6 +1120,81 @@ describe('ReEntry — the surface', () => {
     const { container } = render(<ReEntry view={baseView()} readOnly={false} onAffirm={() => {}} onUpdate={() => {}} />)
     expect(container.querySelector('.reentry-door')).toBeNull()
     expect(screen.getByRole('button', { name: copy.reentryAffirmCta })).not.toHaveAttribute('aria-describedby')
+  })
+
+  // U11 walk 6's R1: a FRESH typed W below today's quote has no report fact (a typed figure is never staled on a quote,
+  // KTD10), so the caller hands the gate its line and door from the hydrated draft — the real producers here, as
+  // `IntakeApp`'s hydrate calls them. Words typed by hand from `datesavedtyped`'s documented figures.
+  const typedBelowView = (d: ScenarioDraft, canChange = true, leftOverStale: ReentryAnswerSentences['leftOverStale'] = null) => {
+    const s = savedDraft(d)
+    const moved = workingYearLeftOverMoved(d)
+    const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: moved !== null })
+    const text = workingYearCostTypedBelowLine(d, { kind: 'gate' })
+    const door = workingYearCostTypedBelowDoor(d)
+    return composeReentryParts(s, report, {
+      costStale: null,
+      leftOverStale,
+      typedBelow: text === null || door === null ? null : { text, door, canChange },
+    })
+  }
+  const TYPED_GATE_LINE =
+    'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. ' +
+    'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
+    'It adds up to $16,985 a year to your savings. At $90,000 a year, your first working year, 2026, has $10,985 left over.'
+
+  it('R1: `datesavedtyped` as a vault — the typed-below line in W’s place and plain form, and the update act’s door under the buttons naming $84,000; no anyStale, no rules echo', () => {
+    const d = DEV_SEEDS.datesavedtyped
+    const report = deriveStaleness(savedDraft(d), TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: false })
+    expect(report.anyStale, 'the premise: nothing on this vault is stale').toBe(false)
+    const view = typedBelowView(d)
+    expect(view.noteLines).toEqual([TYPED_GATE_LINE])
+    expect(view.door).toEqual({
+      heading: 'To update your $84,000 figure',
+      scope: 'Neither button on this page updates your $84,000 figure; both lead to where you can.',
+      route: `After “${copy.reentryAffirmCta}”, press “Update your figure for a working year” on your answer; “${copy.reentryUpdateCta}” asks about it among its questions.`,
+    })
+    expect(typedBelowView(d, false).door, 'a read-only tab gets no door').toBeNull()
+    expect(typedBelowView(d, false).noteLines).toEqual([TYPED_GATE_LINE])
+    const { container } = render(<ReEntry view={view} readOnly={false} onAffirm={() => {}} onUpdate={() => {}} />)
+    expect(Array.from(container.querySelector('.reentry-notes')!.children).map((c) => c.outerHTML)).toEqual([
+      `<p class="save-step__note save-field__note--block">${TYPED_GATE_LINE}</p>`,
+    ])
+    expect(container.querySelector('.save-actions')?.nextElementSibling).toBe(container.querySelector('section.reentry-door'))
+    expect(screen.getByRole('button', { name: copy.reentryAffirmCta })).toHaveAccessibleDescription(
+      'Neither button on this page updates your $84,000 figure; both lead to where you can.',
+    )
+  })
+
+  it('R1: where the left over ALSO moved, the gate keeps two lines, one cause each — the typed-below line with its own credit sentence, then the moved line', () => {
+    const later = DEV_SEEDS.datesavedrisenlater
+    const w = later.workingYearCost
+    if (w === undefined) throw new Error('[test setup] the witness holds a W')
+    const d: ScenarioDraft = { ...later, workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: w.stateTaxReading } }
+    const moved = workingYearLeftOverMoved(d)
+    expect(moved).toEqual({ stored: 16_985, live: 26_985 })
+    const view = typedBelowView(d, true, { text: workingYearLeftOverMovedText(moved!), clause: workingYearLeftOverMovedClause(moved!), canChange: true })
+    expect(view.noteLines).toEqual([
+      'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. ' +
+        'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
+        'It adds up to $16,985 a year to your savings. At $105,000 a year, your first working year, 2026, has $5,985 left over. ' +
+        'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short.',
+      `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMoved('16,985', '26,985', '16,985')} ${copy.stalenessLeftOverGateDoor}`,
+    ])
+  })
+
+  it('R1: W’s stale line wins where both are handed over (the order the Result’s one slot reads them in) — the typed-below line never rides beside it', () => {
+    const d = DEV_SEEDS.datesavedrisen
+    const s = savedDraft(d)
+    const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: true, leftOverStale: false })
+    const line = workingYearCostStaleLine(d)!
+    const door = workingYearCostStaleDoor(d)!
+    const view = composeReentryParts(s, report, {
+      costStale: { line, door: door.gate, canChange: true },
+      leftOverStale: null,
+      typedBelow: { text: 'never rendered', door: { heading: 'h', scope: 's', route: 'r' }, canChange: true },
+    })
+    expect(view.noteLines.map((l) => (typeof l === 'string' ? l : l.text))).not.toContain('never rendered')
+    expect(view.door).toEqual(door.gate)
   })
 
   it('the affirm button names what it affirms: "Balances still about right — show my answer" (hunter F7 at U11 walk 6)', () => {

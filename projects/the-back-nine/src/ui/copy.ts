@@ -2705,6 +2705,11 @@ const belowLean = (typedFormatted: string, answerLean: boolean): string =>
     ? 'A working year almost always costs at least what you spend, so this answer can look better than it really is.'
     : `A working year almost always costs at least what you spend, so your $${typedFormatted} figure makes any working year your pay doesn’t cover look cheaper than it really is.`
 
+/** Which answer the typed-below line names (`slots.workingCostTypedBelowCounts`): "This" on the Result, beside the
+ *  answer; "Your" on the re-entry gate, which shows no answer yet — the pair W's own leads keep
+ *  (`stalenessPayCheckNote` / `stalenessPayCheckGateLead`). */
+export type TypedBelowAnswer = 'This' | 'Your'
+
 /** The Keep door's figure in the label's own unit: "$84,000", or "$7,000 a month" beside "Keep $7,000 a month". */
 const keepFigure = (keepFormatted: string, keepMonthly: boolean): string => `$${keepFormatted}${keepMonthly ? ' a month' : ''}`
 
@@ -3354,6 +3359,42 @@ export const slots = {
     `Your $${typedFormatted} a year is below your spending figure of $${quoteFormatted} a year. ${belowLean(typedFormatted, answerLean)}`,
   workingCostBelowBudget: (typedFormatted: string, quoteFormatted: string, answerLean: boolean): string =>
     `Your $${typedFormatted} a year is below your budget’s first year after work stops, which comes to $${quoteFormatted} a year. ${belowLean(typedFormatted, answerLean)}`,
+  /** U11 walk 6's R1 (the same Tier 0 entry's ⚑ MEASURED bullet: the refuter's prescription, its words): the note above
+   *  reaches only the W surfaces, and a household that types the figure and leaves never sees them again, so the
+   *  Result's standing line and the re-entry gate say it too, while the typed figure is FRESH (a stale one rides W's own
+   *  stale line). Measured through the engine on `datesavedrisen`: the retype credits $16,985 in each working year where
+   *  the honest "Yes" credits $10,985, and shows a 0.02 cushion over a crown that sits on its bar with no margin; on
+   *  `datesavedrisenshort` it reads one odds rung rosier. The answer named ({@link TypedBelowAnswer}), both figures yearly,
+   *  then the whole-answer lean (`belowLean`: under a fresh typed figure a lower figure only cheapens the years and,
+   *  under "All of it", credits more). The budget twin names the quote in `workingCostBelowBudget`'s words. Then, for a
+   *  "saved" answer the run carries, what it credits and what the quote's own year 0 has (the slots below). One sentence
+   *  per fact; no em-dash. The composer: `workingYearCostTypedBelowLine`. */
+  workingCostTypedBelowCounts: (answer: TypedBelowAnswer, typedFormatted: string, quoteFormatted: string): string =>
+    `${answer} answer counts a working year at your own figure of $${typedFormatted} a year, below your spending of $${quoteFormatted} a year. ${belowLean(typedFormatted, true)}`,
+  workingCostTypedBelowCountsBudget: (answer: TypedBelowAnswer, typedFormatted: string, quoteFormatted: string): string =>
+    `${answer} answer counts a working year at your own figure of $${typedFormatted} a year, below your budget’s first year after work stops, which comes to $${quoteFormatted} a year. ${belowLean(typedFormatted, true)}`,
+  // …the most a "saved" answer the run carries adds a year: R8's cap, the smaller of the stored figure and year 0's print
+  // at the typed figure ("up to": every year credits at most its own cash too). Where the left over has also moved and
+  // this line holds the Result's one slot, the moved clause says it instead (`stalenessLeftOverClause`).
+  workingCostTypedBelowAdds: (creditFormatted: string): string => `It adds up to $${creditFormatted} a year to your savings.`,
+  // …then year 0 at today's quote, read off the money picture with W re-confirmed there (the "Yes" tap's own write, as
+  // `workingYearCheckAtQuote` reads it): what the household's own spending leaves, beside the credit above. The quote is
+  // said "a year", so "At $90,000" can't read as a total. A run of short years is named as a run (U11 walk 2's (am)),
+  // in the money picture's range words (`shortAmount`).
+  workingCostTypedBelowAtQuoteLeftOver: (quoteFormatted: string, year: number, leftOverFormatted: string): string =>
+    `At $${quoteFormatted} a year, your first working year, ${year}, has $${leftOverFormatted} left over.`,
+  workingCostTypedBelowAtQuoteNone: (quoteFormatted: string, year: number): string =>
+    `At $${quoteFormatted} a year, your first working year, ${year}, has nothing left over.`,
+  workingCostTypedBelowAtQuoteShort: (quoteFormatted: string, firstYear: number, lastYear: number, leastFormatted: string, mostFormatted: string): string =>
+    firstYear === lastYear
+      ? `At $${quoteFormatted} a year, your first working year, ${firstYear}, comes up $${mostFormatted} short.`
+      : `At $${quoteFormatted} a year, each working year from ${firstYear} through ${lastYear} comes up ${shortAmount(leastFormatted, mostFormatted)} short.`,
+  // …and, after year 0's left over, the first later run that comes up short at the quote (the red team's attack 2 at
+  // (ae): a short year the main thread can compute is never left unsaid), "at that cost" so the quote is said once.
+  workingCostTypedBelowAtQuoteLaterShort: (firstYear: number, lastYear: number, leastFormatted: string, mostFormatted: string): string =>
+    firstYear === lastYear
+      ? `At that cost, the working year ${firstYear} comes up $${mostFormatted} short.`
+      : `At that cost, each working year from ${firstYear} through ${lastYear} comes up ${shortAmount(leastFormatted, mostFormatted)} short.`,
   /** The fork's legend, naming the figure "Yes" sets (copy-law F8 at U11 walk 5; the yearly quote, as the stale note
    *  names it). Drawn only where there is a quote to offer. */
   workingCostLegendFigure: (quoteFormatted: string): string => `Is $${quoteFormatted} a year about what a year costs while you’re working?`,

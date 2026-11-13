@@ -2234,6 +2234,15 @@ const risenUnlock = (key: string, line: string, quoteNow: string) =>
     resultDoor: risenResultDoor(quoteNow),
     dated: false,
   }) as const
+/** U11 walk 6's R1 on `datesavedtyped` (`datesavedrisen` with its old $84,000 TYPED back in, fresh): the typed-below
+ *  line, "Your" on the gate and "This" on the Result, in W's plain form — the credit at the typed figure ($16,985 a
+ *  year) and year 0 at the $90,000 quote ($10,985). Its door is the update act's, naming the same $84,000. */
+const typedBelowLine = (answer: 'This' | 'Your'): string =>
+  [
+    slots.workingCostTypedBelowCounts(answer, '84,000', '90,000'),
+    slots.workingCostTypedBelowAdds('16,985'),
+    slots.workingCostTypedBelowAtQuoteLeftOver('90,000', 2026, '10,985'),
+  ].join(' ')
 /** `note` — the gate's one note (its text, read as `innerText`). `gateDoor` — the gate's door section, or `null` where
  *  none is drawn (W not stale). `standing` — the Result's standing-slot lead and line (before its door), or `null`
  *  where the answer carries none (the fresh-vintage `wyclock`). `resultDoor` — the standing slot's door as its last
@@ -2287,6 +2296,18 @@ const PAY_CHECK_UNLOCKS: readonly {
   risenUnlock('datesavedrisen', RISEN_LINE, '90,000'),
   risenUnlock('datesavedrisenshort', RISEN_SHORT_LINE, '105,000'),
   risenUnlock('datesavedrisenlater', RISEN_LATER_LINE, '105,000'),
+  // R1: a fresh typed W has no stale line, so W's gate lead stays dark; its own line and door speak instead, and the
+  // Result's slot keeps it in W's plain form (the update button inline). It crowns about 9 years out (U11 walk 6's
+  // R1 measurement, draft b).
+  {
+    key: 'datesavedtyped',
+    note: typedBelowLine('Your'),
+    gateDoor: UPDATE_GATE_DOOR,
+    sibling: copy.stalenessPayCheckGateLead,
+    standing: typedBelowLine('This'),
+    resultDoor: null,
+    dated: true,
+  },
 ]
 
 /** The standing slot drawn as a block (W's stale line for a "saved" answer): still one `.cs-paycheck-note`, now

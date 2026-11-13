@@ -1120,7 +1120,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
     expect(report.date.blendMoved, 'and the blend stamp DID move — the silence is the gate biting').toBe(true)
     expect(report.rulesMoved, 'the hero echo may ride — tax + the Medicare figures genuinely moved').toBe(true)
 
-    const view = composeReentry(aged, report, { costStale: null, leftOverStale: null })
+    const view = composeReentry(aged, report, { costStale: null, leftOverStale: null, typedBelow: null })
     // THE ENGINE-PRICING LINES (the ledger — the engine-domain council, 2026-09-27), from an
     // INDEPENDENT oracle over the ledger rows, never the reader's code: the plant saves ~760 days
     // back, so every `reprice` row shipped after that save and reaching a family this household
@@ -1667,7 +1667,8 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     // Named, so a seed that falls off the date route cannot take its W with it unseen.
     expect(carrying).toEqual([
       'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datelateleftover', 'datemixed', 'datenc', 'datesaved',
-      'datesavedmoved', 'datesavedrisen', 'datesavedrisenlater', 'datesavedrisenshort', 'datesavedstale', 'dateshort', 'datesolo',
+      'datesavedmoved', 'datesavedrisen', 'datesavedrisenlater', 'datesavedrisenshort', 'datesavedstale', 'datesavedtyped', 'dateshort',
+      'datesolo',
       'datesplit', 'dip',
     ])
   })
@@ -1768,10 +1769,10 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       expect(shown, `${key}: the shown lines sum to the bottom line`).toBe(y0.bottomLine)
       swept++
     }
-    // Every buildable date seed carries W (the arm above), so this is all seventeen of them, the short seed, the
+    // Every buildable date seed carries W (the arm above), so this is all eighteen of them, the short seed, the
     // later-left-over witness (U15), build 2's three saved witnesses (U9), U11's risen twin and its two (ae) arms
-    // (short at the quote, a later year short at the quote) included.
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(17)
+    // (short at the quote, a later year short at the quote), and U11 walk 6's retype (R1: a typed W, fresh) included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(18)
   })
 
   // Build 2's KTD4 arm (U4): inside the run, year 0's Left over is the money picture's own printed bottom line, on
@@ -1798,7 +1799,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
       swept++
     }
-    expect(swept, 'the sweep reached every buildable W-carrying seed (the seventeen above)').toBe(17)
+    expect(swept, 'the sweep reached every buildable W-carrying seed (the eighteen above)').toBe(18)
   })
 
   // Build 2's U9 (KTD14): the three saved witnesses, each minted through the shipped write. Every figure typed by
@@ -2021,7 +2022,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(report.controls.stateTaxMoved).toBe(false)
     expect(report.healthcare.moved).toBe(false)
     expect(report.date).toEqual({ contributionMoved: false, blendMoved: false })
-    expect(composeReentry(aged, report, { costStale: null, leftOverStale: null }).noteLines).toEqual([copy.stalenessWorkingYears])
+    expect(composeReentry(aged, report, { costStale: null, leftOverStale: null, typedBelow: null }).noteLines).toEqual([copy.stalenessWorkingYears])
   })
 
   it('the light doctor is ENGINE-ACCEPTED: the aged vault hydrates, builds and dates like the fresh seed (insight 085)', async () => {
@@ -2055,7 +2056,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       leftOverStale: false,
     })
     expect(report.workingYear).toEqual({ vintageMoved: true, costStale: false, leftOverStale: false })
-    expect(composeReentry(aged, report, { costStale: null, leftOverStale: null }).noteLines).toEqual([copy.stalenessWorkingYears])
+    expect(composeReentry(aged, report, { costStale: null, leftOverStale: null, typedBelow: null }).noteLines).toEqual([copy.stalenessWorkingYears])
     // The doctor moves no engine input (only `savedAt` and the stamp), so the affirm's recompute is
     // `?seed=date`'s own: identical date-search inputs, and the search is deterministic in them.
     expect(buildDateInput(hydrated.draft)).toEqual(buildDateInput(DEV_SEEDS.date))
@@ -2095,7 +2096,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     }
     expect(workingYearCostStaleDoor(hydrated.draft)).toEqual({ act: 'confirmOrChange', result: null, gate: gateDoor })
     const parts = { opening: `${copy.stalenessPayCheckGateLead} ${slots.workingCostStaleQuote('84,000', '78,000')}`, segments: [], door: null }
-    const view = composeReentry(built.scenario, report, { costStale: { line: line!, door: gateDoor, canChange: true }, leftOverStale: null })
+    const view = composeReentry(built.scenario, report, { costStale: { line: line!, door: gateDoor, canChange: true }, leftOverStale: null, typedBelow: null })
     expect(view.noteLines).toEqual([{ text: parts.opening, parts }])
     expect(view.door).toEqual(gateDoor)
   })

@@ -1795,8 +1795,9 @@ const TYPED_BELOW_TEST_MS = 4 * FINAL_TIER_MS + 120_000
  * it" saved) → its standing line's door → the panel's W row → "No — I'll enter a different figure", "Each year"
  * tapped first (the untapped unit is a month, KTD17), and the old $84,000 typed back in.
  *  - `panel-typed-below`: the row, the note under it;
- *  - `result-typed-below`: the Result after that edit's re-run (the re-run watch the kept walk uses) — the standing
- *    line gone, since a typed figure carries no stamp;
+ *  - `result-typed-below`: the Result after that edit's re-run (the re-run watch the kept walk uses) — no stale line,
+ *    since a typed figure carries no stamp, but R1's typed-below line in the slot (U11 walk 6); its gate is
+ *    `vault:datesavedtyped` (the same draft as a plant, walked by `walkVaultReturn` unedited);
  *  - `walk-typed-below`: the re-walk's W step, the same note on the walk's host.
  * Every sentence asserted is the shipped slot over the seed's own figures.
  */
@@ -1823,7 +1824,18 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
   await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
   await expect(dialog).toBeHidden()
   await expect(settledResult(page)).toBeAttached({ timeout: FINAL_TIER_MS })
-  await expect(page.locator('.cs-paycheck-note'), 'a typed figure carries no stamp: no standing line').toHaveCount(0)
+  // U11 walk 6's R1: no stale line (a typed figure carries no stamp), but its own typed-below line holds the slot, in
+  // W's plain form with the update button inline — the credit at $84,000 and year 0 at the $90,000 quote.
+  const standing = page.locator('.cs-paycheck-note')
+  await expect(standing, 'the typed-below line holds the standing slot').toHaveCount(1)
+  await expect(standing).toContainText(
+    [
+      slots.workingCostTypedBelowCounts('This', STALE_W_CONFIRMED, RISEN_W_QUOTE_NOW),
+      slots.workingCostTypedBelowAdds('16,985'),
+      slots.workingCostTypedBelowAtQuoteLeftOver(RISEN_W_QUOTE_NOW, 2026, '10,985'),
+    ].join(' '),
+  )
+  await expect(standing.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate })).toBeVisible()
   await captureState(page, path.join(outDir, 'result-typed-below'))
   await page.locator('[data-door="assumptions"]').click()
   await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()

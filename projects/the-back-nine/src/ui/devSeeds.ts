@@ -36,7 +36,7 @@ import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
 import { FIRST_UNAMBIGUOUS_SAVE_DAY } from '@engine/pricingVersion'
 import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { buildSolveRequest } from '@intake/solveDispatch'
-import { confirmedWorkingYearCost } from '@intake/workingYearQuote'
+import { confirmedWorkingYearCost, writeEnteredWorkingYearCost } from '@intake/workingYearQuote'
 import { workingYearLeftOverLive } from '@intake/intakeMap'
 import { writeWorkingYearLeftOver } from '@intake/workingYearLeftOver'
 import { mintSavedRecommendation } from '@store/savedRecommendationMint'
@@ -1416,6 +1416,21 @@ const dateSavedRisenShortWitness: ScenarioDraft = {
  * names (`laterShort`): a check credits it nothing and draws more there. A "mint, then move" witness: minted
  * once (`dateSavedWitness`), then moved.
  */
+/**
+ * THE RETYPE — `?seed=datesavedtyped`, and as a vault `?vault=datesavedtyped` (U11 walk 6's R1; the Tier 0 entry *A
+ * figure typed below today's spending clears W's stale line for good…*): `datesavedrisen`'s household that answered its
+ * stale line with "No — I'll enter a different figure" and typed its old $84,000 back in, by the year
+ * (`writeEnteredWorkingYearCost`, the W step's and the panel row's own write). A typed figure is never staled on a quote
+ * (KTD10), so W is FRESH: year 0 at $84,000 prints $16,985 again, the stored "All of it" reads "saved" and is carried
+ * whole, and no stale line speaks. R1's typed-below line does, on the Result and, as a vault, on the gate
+ * (`workingYearCostTypedBelowLine`): the answer counts $84,000, below the $90,000 spending, so it can look better; it adds
+ * up to $16,985 a year; at $90,000 a year, year 0 has $10,985 left over (`datesavedrisen`'s check at the quote). U11
+ * walk 6 measured exactly this draft (`u11-walk6\measure\R1-MEASURE.md`, draft b): about 9 years out at a 0.87 lower
+ * bound, where the honest "Yes" at $90,000 crowns the same year on the 0.85 bar with no margin. A "mint, then move"
+ * witness: minted once (`dateSavedWitness`), moved, then retyped.
+ */
+const dateSavedTypedWitness: ScenarioDraft = writeEnteredWorkingYearCost(dateSavedRisenWitness, 84_000, 'year')
+
 const dateSavedRisenLaterWitness: ScenarioDraft = {
   ...dateSavedRisenShortWitness,
   incomeStreams: [
@@ -1477,6 +1492,7 @@ export const DEV_SEEDS = {
   datesavedrisen: dateSavedRisenWitness,
   datesavedrisenshort: dateSavedRisenShortWitness,
   datesavedrisenlater: dateSavedRisenLaterWitness,
+  datesavedtyped: dateSavedTypedWitness,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

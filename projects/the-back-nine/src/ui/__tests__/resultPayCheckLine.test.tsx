@@ -348,3 +348,72 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
     }
   })
 })
+
+// U11 walk 6's R1: a FRESH typed W below today's quote — no stale line ever names it (a typed figure is never staled on a
+// quote, KTD10) — takes the standing slot in W's plain form, the update act's button inline after it. Every sentence is
+// typed by hand from the seeds' documented figures (`datesavedtyped`: $84,000 typed under a $90,000 spending figure,
+// "All of it" stored at $16,985, year 0 at the quote $10,985).
+describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
+  const TYPED_LINE =
+    'This answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. ' +
+    'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
+    'It adds up to $16,985 a year to your savings. At $90,000 a year, your first working year, 2026, has $10,985 left over.'
+  const updateDoor = () => screen.queryByRole('button', { name: 'Update your figure for a working year' })
+
+  it('`datesavedtyped`: the line in the slot’s plain <p>, byte for byte — no lead before it, its own first sentence names the answer and both figures — and the update door inline, which lands on the W row', () => {
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datesavedtyped)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    expect(line()!.outerHTML).toBe(
+      `<p class="fod-note cs-paycheck-note"><span>${TYPED_LINE}</span> <button type="button" class="band-premise__cta">Update your figure for a working year</button></p>`,
+    )
+    expect(document.body.textContent, 'no W lead: W is fresh').not.toContain(copy.stalenessPayCheckNote)
+    fireEvent.click(updateDoor()!)
+    expect(screen.getByRole('heading', { name: copy.assumptionTitle })).toBeInTheDocument()
+    expect(document.activeElement).toBe(wRowName())
+  })
+
+  it('a READ-ONLY tab states the line with no door', () => {
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datesavedtyped)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
+    expect(line()!.outerHTML).toBe(`<p class="fod-note cs-paycheck-note"><span>${TYPED_LINE}</span></p>`)
+    expect(updateDoor()).toBeNull()
+  })
+
+  it('the left over ALSO moved (`datesavedrisenlater` retyped: $26,985 at $84,000 against the stored $16,985): the typed-below line holds the one slot and carries the moved clause in place of its credit sentence — no moved line of its own; where a rules line hosts that clause at unlock, the line keeps its credit sentence', () => {
+    const later = DEV_SEEDS.datesavedrisenlater
+    const w = later.workingYearCost
+    if (w === undefined) throw new Error('[test setup] the witness holds a W')
+    const retyped = { ...later, workingYearCost: { kind: 'entered' as const, amountReal: 84_000, entryPeriod: 'year' as const, stateTaxReading: w.stateTaxReading } }
+    const COUNTS =
+      'This answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. ' +
+      'A working year almost always costs at least what you spend, so this answer can look better than it really is.'
+    const AT_QUOTE =
+      'At $105,000 a year, your first working year, 2026, has $5,985 left over. At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short.'
+    plantDateHero()
+    appModel.update(() => retyped)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    expect(document.querySelectorAll('.cs-paycheck-note')).toHaveLength(1)
+    expect(line()!.querySelector('span')!.textContent).toBe(
+      `${COUNTS} The money left over in your first working year is $26,985 now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${AT_QUOTE}`,
+    )
+    expect(document.body.textContent, 'no moved line of its own').not.toContain(copy.stalenessLeftOverNote)
+    expect(updateDoor()).not.toBeNull()
+    cleanup()
+    plantDateHero()
+    appModel.update(() => retyped)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} stalenessNote leftOverClauseHost />)
+    expect(line()!.querySelector('span')!.textContent).toBe(`${COUNTS} It adds up to $16,985 a year to your savings. ${AT_QUOTE}`)
+    expect(document.querySelector('.cs-staleness-note')?.textContent, 'the moved clause rides the rules note').toContain('$26,985 now, not the $16,985 you answered at')
+  })
+
+  it('W stale wins the slot over a typed figure stale on its reading (Florida picked after typing): W’s own stale line speaks, never the typed-below line', () => {
+    plantDateHero()
+    appModel.update(() => ({ ...DEV_SEEDS.datesavedtyped, retirementState: 'FL' }))
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    expect(document.querySelectorAll('.cs-paycheck-note')).toHaveLength(1)
+    expect(line()!.textContent).toContain(copy.stalenessPayCheckNote)
+    expect(line()!.textContent).not.toContain('answer counts a working year at your own figure')
+  })
+})

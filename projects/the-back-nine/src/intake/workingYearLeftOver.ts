@@ -24,11 +24,18 @@
  */
 import type { WorkingYearLedgerLaterYear, WorkingYearLeftOverKind, WorkingYearLeftOverV5 } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { WORKING_COST_ACT_COPY, copy, slots, workingCostExtras, type WorkingCostAct } from '@ui/copy'
+import { WORKING_COST_ACT_COPY, copy, slots, workingCostExtras, type TypedBelowAnswer, type WorkingCostAct } from '@ui/copy'
 import type { GateDoor, NoteDoor, NoteSegment } from '@ui/noteParts'
 import { formatMoney } from './fields'
-import { workingYearCostFigure, workingYearLedgerForRun, workingYearLeftOverLive, workingYearLeftOverShownState } from './intakeMap'
 import {
+  workingYearCostFigure,
+  workingYearCostForRun,
+  workingYearLedgerForRun,
+  workingYearLeftOverLive,
+  workingYearLeftOverShownState,
+} from './intakeMap'
+import {
+  isWorkingYearCostStale,
   stateTaxBelongsInW,
   workingYearCostAct,
   workingYearCostKeepFigure,
@@ -39,7 +46,7 @@ import {
   workingYearQuote,
   writeConfirmedWorkingYearCost,
 } from './workingYearQuote'
-import { LEFT_OVER_FACE, LEFT_OVER_MOVED, LEFT_OVER_W_CLAUSE } from './workingYearLeftOverState'
+import { LEFT_OVER_CARRIES, LEFT_OVER_FACE, LEFT_OVER_MOVED, LEFT_OVER_W_CLAUSE } from './workingYearLeftOverState'
 
 /** The reply as the question's radios name it, written onto `d` — or `d` unchanged where the live draft no
  *  longer passes R5's gate. `shownFigure` is the whole-dollar year-0 Left over the face showed (≥ 1 by
@@ -444,8 +451,8 @@ export function workingYearCostStaleDoor(d: ScenarioDraft): WorkingYearCostStale
   const act = workingYearCostAct(d)
   const a = WORKING_COST_ACT_COPY[act]
   const doorLabel = copy[a.resultDoor]
-  const heading = slots[a.doorHeading](s.held)
-  const gate: GateDoor = { heading, scope: slots[a.gateScope](s.held), route: slots.workingCostStaleGateRoute(doorLabel) }
+  const gate = gateDoor(act, s.held)
+  const heading = gate.heading
   if (savedWaitingOnW(d) === null) return { act, gate, result: null }
   const press = slots[a.resultDoorLead](doorLabel)
   const items = workingCostExtras(stateTaxBelongsInW(d))
@@ -483,6 +490,19 @@ export function workingYearCostStaleDoor(d: ScenarioDraft): WorkingYearCostStale
           slots.workingCostStaleDoorNoPlus(...enter(s.quote)),
         ]
   return { act, gate, result: { label: heading, lead: [copy.workingCostStaleDoorHold], items, tail } }
+}
+
+/** The gate's door in an act, for the figure it names (`section.reentry-door`, council `wf_22858e04-f7a` (2)): the
+ *  heading, the scope sentence and the route, each in the act's own words (`WORKING_COST_ACT_COPY`). ONE home for W's
+ *  stale door and the typed-below line's ({@link workingYearCostTypedBelowDoor}), so the two can never word one door
+ *  two ways. */
+function gateDoor(act: WorkingCostAct, heldFormatted: string): GateDoor {
+  const a = WORKING_COST_ACT_COPY[act]
+  return {
+    heading: slots[a.doorHeading](heldFormatted),
+    scope: slots[a.gateScope](heldFormatted),
+    route: slots.workingCostStaleGateRoute(copy[a.resultDoor]),
+  }
 }
 
 /** The room a held figure ABOVE today's quote leaves for the costs the W help lists — the held figure less the quote,
@@ -526,4 +546,91 @@ export function workingYearCostTypedBelowNote(d: ScenarioDraft): string | null {
   return t.source === 'budget'
     ? slots.workingCostBelowBudget(t.typed, t.quote, answerLean)
     : slots.workingCostBelowSpending(t.typed, t.quote, answerLean)
+}
+
+// ── THE TYPED-BELOW LINE (U11 walk 6's R1; the Tier 0 entry *A figure typed below today's spending clears W's stale line
+//    for good…*, its ⚑ MEASURED bullet). The note above reaches the W surfaces only, so a household that types its old
+//    figure back in and leaves reads nothing on the surfaces it returns to: W's stale line clears for good (a typed
+//    figure is never staled on a quote, KTD10) and the stored "All of it" is credited whole. This line speaks where the
+//    answer is read — the Result's standing slot and the re-entry gate — in W's slot and form, with the update act's door
+//    (no Keep door below the quote, ruling 34). Never a stamp and never a withheld credit (D7): the figure is used as
+//    given, and whether to stamp it stays that entry's council call. ──
+
+/** Where the typed-below line is said, and so its words: on the gate the answer is "Your" (none is on screen yet) and
+ *  the credit is always its own sentence, since a moved left over keeps its own line there (one cause, one line each);
+ *  on the Result the answer is "This", and `carriesMoved` says whether this line holds the one standing slot the moved
+ *  line would otherwise take — then the moved figures ride it as their clause, in place of the credit sentence, since
+ *  the clause names the credited figure too ("adds at most … the smaller of the two"). The Result passes
+ *  `!leftOverClauseHost`: where a tax, state-tax or working-years line hosts the moved clause on the hero's rules note,
+ *  this line keeps its own credit sentence. */
+export type TypedBelowHost = { readonly kind: 'gate' } | { readonly kind: 'result'; readonly carriesMoved: boolean }
+
+/** Year 0 at today's quote, and the first later short run there (capped and whole), by what the check at the quote reads
+ *  (an exhaustive Record, insight 147). Capped and whole print alike here: the line states what the quote's year 0 has,
+ *  never what updating adds (W's stale line says that, where the answer waits on W). `unknown` says nothing at the
+ *  quote (unreachable wherever a picture at the typed figure is known: `WorkingYearCheckAtQuote`'s docblock). */
+type TypedBelowAtQuote = {
+  readonly [K in WorkingYearCheckAtQuote['kind']]: (c: Extract<WorkingYearCheckAtQuote, { kind: K }>, quote: string) => readonly string[]
+}
+const leftOverAtQuote = (c: Extract<WorkingYearCheckAtQuote, { kind: 'capped' | 'whole' }>, quote: string): readonly string[] => [
+  slots.workingCostTypedBelowAtQuoteLeftOver(quote, c.year, formatMoney(c.leftOver)),
+  ...(c.laterShort === null
+    ? []
+    : [slots.workingCostTypedBelowAtQuoteLaterShort(c.laterShort.firstYear, c.laterShort.lastYear, formatMoney(c.laterShort.least), formatMoney(c.laterShort.most))]),
+]
+const TYPED_BELOW_AT_QUOTE: TypedBelowAtQuote = {
+  capped: leftOverAtQuote,
+  whole: leftOverAtQuote,
+  firstShort: (c, quote) => [
+    slots.workingCostTypedBelowAtQuoteShort(quote, c.run.firstYear, c.run.lastYear, formatMoney(c.run.least), formatMoney(c.run.most)),
+  ],
+  firstNone: (c, quote) => [slots.workingCostTypedBelowAtQuoteNone(quote, c.year)],
+  unknown: () => [],
+}
+function typedBelowAtQuote(c: WorkingYearCheckAtQuote, quote: string): readonly string[] {
+  return (TYPED_BELOW_AT_QUOTE[c.kind] as (c: WorkingYearCheckAtQuote, quote: string) => readonly string[])(c, quote)
+}
+
+/** The typed figure below today's quote, while it is FRESH and the run reads it — or `null`. Fresh: a typed figure
+ *  stales only on its state-tax reading, and a stale W rides its own stale line (which wins the slot on both hosts), so
+ *  the two never speak at once. Read: on a draft whose run carries no W (a W left on an all-retired draft,
+ *  `workingYearCostForRun`'s `'unpriced'` proof — the same conjunct that silences W's stale line on the gate) the line
+ *  would claim a working year the answer never counts; `'unknown'` keeps it (fail-safe, as there). */
+function freshTypedBelow(d: ScenarioDraft): ReturnType<typeof workingYearCostTypedBelowQuote> {
+  const t = workingYearCostTypedBelowQuote(d)
+  if (t === null || isWorkingYearCostStale(d) || workingYearCostForRun(d) === 'unpriced') return null
+  return t
+}
+
+/** The typed-below LINE (R1), one string in W's plain form on both hosts: the answer counts the typed figure, below
+ *  today's quote, both yearly, and the whole-answer lean; then, for a "saved" answer the run carries (`saved` or
+ *  `saved-moved`, `LEFT_OVER_CARRIES`), the most it credits a year — min(stored, year 0 at the typed figure), R8's cap —
+ *  and what the quote's own year 0 has (left over, nothing, or a run of short years), with the first later short run
+ *  there. Under any other answer (absent, spent, not sure, a "saved" answer not asked) the first two sentences alone:
+ *  nothing is credited, and the lower figure only cheapens the years. `null` where no fresh typed figure sits below
+ *  the quote ({@link freshTypedBelow}). The figures are the typed-below pair exactly as the W surfaces' note prints them
+ *  (`workingYearCostTypedBelowQuote`), so the line and the note can never name two figures for one. */
+export function workingYearCostTypedBelowLine(d: ScenarioDraft, host: TypedBelowHost): string | null {
+  const t = freshTypedBelow(d)
+  if (t === null) return null
+  const answer: TypedBelowAnswer = host.kind === 'gate' ? 'Your' : 'This'
+  const counts =
+    t.source === 'budget' ? slots.workingCostTypedBelowCountsBudget(answer, t.typed, t.quote) : slots.workingCostTypedBelowCounts(answer, t.typed, t.quote)
+  const saved = d.workingYearLeftOver
+  // The answer first: a draft that is not "saved" never composes the money picture here.
+  if (saved?.kind !== 'saved' || !LEFT_OVER_CARRIES[workingYearLeftOverShownState(d)]) return counts
+  const live = workingYearLeftOverLive(d)
+  // Unreachable: a carried state has a known picture (`leftOverShownState` reads "not asked" without one).
+  if (live === null) return counts
+  const moved = host.kind === 'result' && host.carriesMoved ? workingYearLeftOverMoved(d) : null
+  const credit = moved === null ? slots.workingCostTypedBelowAdds(formatMoney(Math.min(saved.quotedReal, live))) : workingYearLeftOverMovedClause(moved)
+  return [counts, credit, ...typedBelowAtQuote(checkAtQuote(d, saved.quotedReal), t.quote)].join(' ')
+}
+
+/** The typed-below line's door on the gate: the update act's (`gateDoor`), naming the typed figure — or `null` exactly
+ *  where the line is. The Result's door is the update act's button (`stalenessPayCheckCtaUpdate`), inline after the
+ *  line, as on W's plain stale line. */
+export function workingYearCostTypedBelowDoor(d: ScenarioDraft): GateDoor | null {
+  const t = freshTypedBelow(d)
+  return t === null ? null : gateDoor('update', t.typed)
 }

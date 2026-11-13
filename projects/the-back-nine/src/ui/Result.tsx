@@ -26,6 +26,7 @@ import type { AssumptionLandingSeat } from './assumptionRegistry'
 import {
   workingYearCostStaleDoor,
   workingYearCostStaleLine,
+  workingYearCostTypedBelowLine,
   workingYearLeftOverMoved,
   workingYearLeftOverMovedClause,
   workingYearLeftOverMovedText,
@@ -293,6 +294,15 @@ export function Result({
   // slot (never both — a moved left over needs a fresh W, so the W line never shares it either), whose door
   // opens the left-over seat.
   const leftOverMoved = useMemo(() => workingYearLeftOverMoved(snapshot.draft), [snapshot.draft])
+  // U11 walk 6's R1: a fresh TYPED W below today's quote, which W's stale line never reaches (a typed figure is never
+  // staled on a quote, KTD10) — its own line in the same slot, read LIVE off the draft like the two above. It can never
+  // share the slot with W stale (that needs a stale W; this, a fresh one), so W stale goes first only as the order the
+  // three are written in. Where the left over has ALSO moved and no rules line hosts that clause, this line takes the
+  // slot and carries the moved figures as its clause, since it names the credited figure too (`TypedBelowHost`).
+  const typedBelowLine = useMemo(
+    () => workingYearCostTypedBelowLine(snapshot.draft, { kind: 'result', carriesMoved: !leftOverClauseHost }),
+    [snapshot.draft, leftOverClauseHost],
+  )
   // The pay-less-tax ALL-IN hero's scope (build spec D7): did the SOLVE's built overlay price
   // healthcare? Deliberately NOT `medicarePriced` above — that one ORs the date route in (structurally
   // priced there), while the solve never runs on the date route (`spine-unready`) and its base is
@@ -732,9 +742,11 @@ export function Result({
             payCheckNote={
               payCheckStaleText !== null && payCheckStaleDoor !== null
                 ? standingNote(W_STALE_CAUSE[payCheckStaleDoor.act], payCheckStaleText, 'working-year-cost', payCheckStaleDoor.result)
-                : leftOverMoved !== null && !leftOverClauseHost
-                  ? standingNote('left-over-moved', plainNote(workingYearLeftOverMovedText(leftOverMoved)), 'working-year-left-over')
-                  : undefined
+                : typedBelowLine !== null
+                  ? standingNote('w-typed-below', plainNote(typedBelowLine), 'working-year-cost')
+                  : leftOverMoved !== null && !leftOverClauseHost
+                    ? standingNote('left-over-moved', plainNote(workingYearLeftOverMovedText(leftOverMoved)), 'working-year-left-over')
+                    : undefined
             }
           />
         )}

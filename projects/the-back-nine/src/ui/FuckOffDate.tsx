@@ -196,9 +196,10 @@ export interface FuckOffDateProps {
   readonly stalenessClause?: string
 }
 
-/** The standing answer line's causes (`payCheckNote`): W stale, split by the act its door names, and the moved
- *  left over. */
-export type StandingNoteCause = 'w-stale-update' | 'w-stale-confirm-or-change' | 'left-over-moved'
+/** The standing answer line's causes (`payCheckNote`): W stale, split by the act its door names; a fresh TYPED W below
+ *  today's quote (U11 walk 6's R1, `workingYearCostTypedBelowLine`: it can never share the slot with W stale, which needs
+ *  a stale W, and it carries a moved left over's figures as its clause); and the moved left over. */
+export type StandingNoteCause = 'w-stale-update' | 'w-stale-confirm-or-change' | 'w-typed-below' | 'left-over-moved'
 
 /** W stale's cause for each act (`workingYearQuote.workingYearCostAct`, council `wf_7fa86902-35c`), exhaustive: the
  *  Result picks the cause with the helper, never a free door label. */
@@ -208,11 +209,21 @@ export const W_STALE_CAUSE: Readonly<Record<WorkingCostAct, StandingNoteCause>> 
 }
 
 /** Each cause's lead and door label, exhaustive (insight 147): W's line never borrows the left over's words,
- *  nor the reverse, and its door is the act's own (`WORKING_COST_ACT_COPY`, the one home of the act's words). */
-const STANDING_NOTE_COPY: Readonly<Record<StandingNoteCause, { readonly lead: CopyKey; readonly cta: CopyKey }>> = {
+ *  nor the reverse, and its door is the act's own (`WORKING_COST_ACT_COPY`, the one home of the act's words). The
+ *  typed-below line has no digit-free lead: its first sentence names the answer and both figures itself
+ *  (`slots.workingCostTypedBelowCounts`), so `null`; its door is the update act's (no Keep door below the quote,
+ *  ruling 34). */
+const STANDING_NOTE_COPY: Readonly<Record<StandingNoteCause, { readonly lead: CopyKey | null; readonly cta: CopyKey }>> = {
   'w-stale-update': { lead: 'stalenessPayCheckNote', cta: WORKING_COST_ACT_COPY.update.resultDoor },
   'w-stale-confirm-or-change': { lead: 'stalenessPayCheckNote', cta: WORKING_COST_ACT_COPY.confirmOrChange.resultDoor },
+  'w-typed-below': { lead: null, cta: WORKING_COST_ACT_COPY.update.resultDoor },
   'left-over-moved': { lead: 'stalenessLeftOverNote', cta: 'stalenessLeftOverCta' },
+}
+
+/** The standing line's opening as drawn: the cause's lead, then the line's own opening. */
+function standingOpening(cause: StandingNoteCause, opening: string): string {
+  const lead = STANDING_NOTE_COPY[cause].lead
+  return lead === null ? opening : `${copy[lead]} ${opening}`
 }
 
 /** The hero claim's heading text — shared by the render and the polite sharpen announce, so what
@@ -492,7 +503,7 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
               the last dt/dd with its button as a block of its own. */}
           {payCheckNote !== undefined && isPlainNote(payCheckNote.parts) && (
             <p className="fod-note cs-paycheck-note">
-              <span>{`${copy[STANDING_NOTE_COPY[payCheckNote.cause].lead]} ${payCheckNote.parts.opening}`}</span>
+              <span>{standingOpening(payCheckNote.cause, payCheckNote.parts.opening)}</span>
               {payCheckNote.onOpen !== undefined && (
                 <>
                   {' '}
@@ -506,7 +517,7 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
           {payCheckNote !== undefined && !isPlainNote(payCheckNote.parts) && (
             <NotePartsBlock
               className="fod-note cs-paycheck-note"
-              parts={{ ...payCheckNote.parts, opening: `${copy[STANDING_NOTE_COPY[payCheckNote.cause].lead]} ${payCheckNote.parts.opening}` }}
+              parts={{ ...payCheckNote.parts, opening: standingOpening(payCheckNote.cause, payCheckNote.parts.opening) }}
               button={
                 payCheckNote.onOpen !== undefined && payCheckNote.parts.door !== null ? (
                   <button type="button" className="band-premise__cta note-parts__cta" onClick={payCheckNote.onOpen}>

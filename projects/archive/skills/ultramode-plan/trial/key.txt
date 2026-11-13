@@ -1,0 +1,3 @@
+The trial's key, written 2026-11-12T22:50:19.059Z by playbook-6. Coin: node crypto.randomInt(2) = 0.
+A.md = ours (the ultramode-plan arm) | source projects/the-back-nine/docs/plans/features/early-withdrawal-charge-build-spec.md | sha256 d59c8a92e78a5b06 | lines cut after the front matter: none | last line with text 492
+B.md = the ce-plan arm | source ~/.claude/projects/<playbook slug>/trial-early-withdrawal/ce-plan/early-withdrawal-charge-plan.md | sha256 79c27612073ebadf | lines cut after the front matter: 749, 750, 751, 752 | last line with text 739

@@ -1,0 +1,32 @@
+Trial arm (a): ce-plan on the Back Nine's early-withdrawal charge. Session playbook-4, 2026-11-12.
+
+Receipt line (README step 2): planned, deepened and checked.
+
+Plan: ce-plan/early-withdrawal-charge-plan.md (this folder). 12 units (U1-U12), 17 requirements, 13 technical decisions. Not committed (the arm's rule).
+
+CE version: 3.38.0 as loaded by this session at start. 3.38.1 (d8f8e03) was installed; the ce-plan and ce-doc-review folders of 3.38.0 and 3.38.1 were compared before the run and are byte-identical.
+
+Helpers: 14, every one Opus with its effort set.
+- Research (high): 3. Repo patterns, tax law from primary sources, user-flow gaps. The learnings researcher was not dispatched: the repo has no CE solutions folder and no packs; brief.md was named as the past lessons instead.
+- Deepening (high): 4. Architecture, open questions against the repo, performance, data integrity. Sections strengthened: key technical decisions, open questions, units, system-wide impact and risks.
+- Check (xhigh): 7. coherence, feasibility, scope-guardian, adversarial-document-reviewer, product-lens, design-lens, security-lens. Coherence, feasibility and the adversary read the whole plan.
+- Helper tokens: research 804,107; deepening 955,780; check 1,739,192; total 3,499,079.
+
+Check result: 31 findings from 7 reviewers. 17 fixes applied (merged), 1 proposed fix left for the author (R4: an earlier-job plan exempt at 55 is still charged in a working year), 0 decisions, 2 FYI observations, 2 deferred questions. 2 findings at P1, both fixed.
+
+Coverage line: full review (depth:full passed); all seven reviewers returned; no "lite review" line; the adversary was named on the team. Cross-model pass: disabled by checkout config (peer.outcome: in-process-fallback). This is the first run of README step 2's depth:full and named-adversary asks, and both held.
+
+Weekly meter: 29% before (2026-11-12 18:13Z), 32% after (19:26Z).
+
+Run notes:
+- Scoping confirmation off (confirm:auto); the opt-in announcement was sent; inferred scope sits under Assumptions.
+- No model elevation (no plan_model set; the session model is Opus).
+- No bake-off: the open HOWs were settled by the codebase's own patterns or are Briggsy's rulings (U2).
+- Scratch went to the session scratchpad, not the system temp folder.
+- The run stopped after the check, as the request said: no ce-work, no branch, no commit.
+- The window crossed 40% at the deepening synthesis, 50% during the check, and 60% as the check's fixes landed.
+
+Distill candidates from this arm (held here so the other arm stays blind; move them to playbook/TODO.md's distill list after Briggsy's read):
+- The check reversed two mechanisms the deepening pass had added (457(b) as two new account kinds; a pricing-row reach for the leak fix): the deepen helpers proposed them, and nothing applied the "build only what the request needs" test until the check's scope reviewer did.
+- README step 2's depth:full and named-adversary asks held on their first run (CE 3.38.0/3.38.1): Coverage showed a full review and the adversary on the team; that TODO landmine is retired.
+- Three of seven reviewers independently found the same cross-plan collision (Act 5 also claims the next schema version): a plan that touches the saved format must read every committed plan for the same version step.

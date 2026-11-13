@@ -1632,6 +1632,69 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     expect(new Set(states.map(([, , below]) => below)).size).toBe(states.length)
   })
 
+  // U11 walk 7's R2: TM's sheet (`datesavedtypedmoved`: "All of it" at $16,985, then its old $84,000 TYPED back in below
+  // a $105,000 spending figure, so year 0 at $84,000 prints $26,985) named neither the $5,985 its spending leaves nor the
+  // 2029–2032 run, and A's retype (`datesavedtyped`, at $90,000) never named its $10,985 — on the sheet the Result's door
+  // opens. The seat names the typed figure its figure rests on, and under a "saved" answer the run carries it ends with
+  // the typed-below line's own at-quote sentences BELOW its radios: R6 keeps everything above them, the W row included,
+  // the same under every answer.
+  const TM_AT_QUOTE =
+    'At $105,000 a year, your first working year, 2026, has $5,985 left over. That year, your answer adds $11,000 your pay doesn’t really leave over. ' +
+    'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
+    'Your $84,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds $16,985 to your savings in each of them.'
+
+  it('TM’s sheet (R2): the figure and the moved line name the $84,000 the $26,985 rests on, and below the radios the $5,985 at $105,000, its $11,000, the 2029–2032 run and what the answer does in it', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datesavedtypedmoved) })
+    const group = groupIn(seat())
+    expect(textAbove(seat(), group)).toBe(
+      `${copy.assumptionWorkingCostLeftOverName}${slots.workingLedgerLeftOverFigureAt('84,000', '26,985')}${slots.workingLedgerLeftOverCheck('26,985', '20,000', '46,985')}`,
+    )
+    expect(textBelow(seat(), group)).toBe(`${slots.workingLedgerLeftOverRoseLineAt('84,000', '16,985', '26,985')}${TM_AT_QUOTE}`)
+    expect(radioIn(seat(), 'workingLedgerLeftOverSaved')).toBeChecked()
+    // The pair's basis (back-nine-design's round-6 law): the moved line names the typed figure in the gate's own words.
+    expect(slots.workingLedgerLeftOverRoseLineAt('84,000', '16,985', '26,985')).toContain('At your $84,000 figure, it’s $26,985 now,')
+  })
+
+  it('A’s retype (R2, low): the figure names the $84,000, and below the saved line the $10,985 at $90,000 and the $6,000 past it', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datesavedtyped) })
+    const group = groupIn(seat())
+    expect(within(seat()).getByText(slots.workingLedgerLeftOverFigureAt('84,000', '16,985'))).toBeInTheDocument()
+    expect(textBelow(seat(), group)).toBe(
+      `${slots.workingLedgerLeftOverSavedLine('16,985')}At $90,000 a year, your first working year, 2026, has $10,985 left over. That year, your answer adds $6,000 your pay doesn’t really leave over.`,
+    )
+  })
+
+  it('over TM’s picture ($26,985 at the typed $84,000), the five states share the text above the group AND the W row word for word (R6: no answer is read above the radios), and only the two carried "saved" states add the at-quote sentences below', () => {
+    const tm = DEV_SEEDS.datesavedtypedmoved
+    // "Saved" at the printed $26,985 credits $26,985: $21,000 past the quote's $5,985 in 2026, and in 2029–2032 each
+    // year's $21,000 gap less its $3,652–$4,015 shortfall (R1's rule).
+    const SAVED_AT_QUOTE =
+      'At $105,000 a year, your first working year, 2026, has $5,985 left over. That year, your answer adds $21,000 your pay doesn’t really leave over. ' +
+      'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
+      'Your $84,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds between $16,985 and $17,348 to your savings in each of them.'
+    const states = [
+      ['absent', undefined, slots.workingLedgerLeftOverAbsentLine('26,985')],
+      ['saved', { kind: 'saved', quotedReal: 26_985 }, `${slots.workingLedgerLeftOverSavedLine('26,985')}${SAVED_AT_QUOTE}`],
+      ['saved, moved', { kind: 'saved', quotedReal: 16_985 }, `${slots.workingLedgerLeftOverRoseLineAt('84,000', '16,985', '26,985')}${TM_AT_QUOTE}`],
+      ['spent', { kind: 'spent' }, slots.workingLedgerLeftOverSpentLine('26,985')],
+      ['not sure', { kind: 'not-sure' }, slots.workingLedgerLeftOverNotSureLine('26,985')],
+    ] as const
+    const above = `${copy.assumptionWorkingCostLeftOverName}${slots.workingLedgerLeftOverFigureAt('84,000', '26,985')}${slots.workingLedgerLeftOverCheck('26,985', '20,000', '46,985')}`
+    let wRowText: string | null = null
+    for (const [label, answer, below] of states) {
+      renderPanel({ snapshot: snap({ ...tm, workingYearLeftOver: answer }) })
+      const group = groupIn(seat())
+      expect(textAbove(seat(), group), `${label}: the text above the group`).toBe(above)
+      expect(textBelow(seat(), group), `${label}: the text below the group`).toBe(below)
+      // The W row sits above the seat: its text (the typed-below note among it) is the same under every answer.
+      const text = wRow().textContent ?? ''
+      expect(text, `${label}: the W row is drawn`).toContain(slots.workingCostBelowSpending('84,000', '105,000', true))
+      if (wRowText === null) wRowText = text
+      else expect(text, `${label}: the W row reads no answer`).toBe(wRowText)
+      cleanup()
+    }
+  })
+
   it('on `datesavedmoved`, a tap on the already-checked "All of it" stores today’s $27,537 and the moved line gives way to the saved line (U7)', () => {
     const m = freshModel()
     m.update(() => DEV_SEEDS.datesavedmoved)

@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-13, b9-6's close):** walk 7's card is `86acd918` (HARD-FLAG, held on R1) and its fix round's commit 1 is `d4c38295` (spec: `b9-build2-surplus\u11-walk7-round\ROUND.md`). In order: (1) the fix round's commit 2: R2's sheet twin and R8 (b)'s capture-harness gap (item 1's ▶ NEXT); (2) the round review over both commits — whole files, an adversary, every finding verified — with a mutant pass, the R10 sweep + idcheck against `walk5`, `verify:fit`, `doc:reanchor`; (3) walk 8 on the reviewed tree, then its card (it clears R1's hold only once read); then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the list is far past 10).
+▶ **START HERE (2026-11-13, b9-6's close):** walk 7's card is `86acd918` (HARD-FLAG, held on R1) and its fix round's commit 1 is `d4c38295` (spec: `b9-build2-surplus\u11-walk7-round\ROUND.md`). In order: (1) DONE (b9-7): the fix round's commit 2, R2's sheet twin and R8 (b)'s capture-harness gap, R8 (c) filed (item 1's ▶ NEXT); (2) the round review over both commits — whole files, an adversary, every finding verified — with a mutant pass, the R10 sweep + idcheck against `walk5`, `verify:fit`, `doc:reanchor`; (3) walk 8 on the reviewed tree, then its card (it clears R1's hold only once read); then U12, carrying U11's figures and every filing for it; then the whole-file review, with an adversary and every finding verified; then `/distill` (the list is far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -99,22 +99,10 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      measurement `u11-walk7\measure\R1-MEASURE.md`). Commit 1, `d4c38295`, built R1, R3 (a)/(c), R4, R5, R6, R7 (a) and
      R8 (a); `u11-walk7-round\ROUND.md` is the spec and records its four departures from the refuters' words (R1 in B's
      ruled clause, since council `wf_7fa86902-35c` struck "takes none of those shortfalls"; R3 (c) also on the Result's
-     hosted case; R4 also after "nothing left over"; R6 (c) without the year-0 dollars, attack 4). Still owed, in order:
-     - **Commit 2, R2 (medium on TM, low on A's retype):** where the sheet's typed-below W note
-       (`workingYearCostTypedBelowNote`, `src/intake/workingYearLeftOver.ts`) shows under a credited "saved" answer
-       (`LEFT_OVER_CARRIES`), end it with the line's own at-quote sentences — `typedBelowAtQuote(checkAtQuote(d,
-       stored), figures)` — so TM's sheet names $5,985, the 2029–2032 run and R1's sentence, and A's retype names
-       $10,985; then the seat's figure line (`slots.workingLedgerLeftOverFigure`) and its moved line name the typed
-       figure ("After everything above, at your $84,000 figure, …"; "At your $84,000 figure, it's $26,985 now"). FIRST
-       read whether that note is any control's `aria-describedby` (`WorkingCostQuestion`): if it is, the red team's
-       attack 4 (no reward figure in a fork's description) decides what it may carry. Pin the sheet strings in
-       `assumptionPanel.test.tsx` and the walk's `intake:typedbelow` arm in `e2e/caddie-walk.spec.ts`.
-     - **Commit 2, R8 (b) (low):** in `e2e/caddie-walk.spec.ts`, put `fullpage.png` (or the `crop-paycheck-note` and
-       `crop-reentry-door` crops) through the three CVD filters, as the harness already does for the band and ladder
-       crops; prove it on one target before a walk relies on it.
-     - **R8 (c) stays as ruled, no build:** only the affirm button carries the scope sentence because council
-       `wf_22858e04-f7a` ruled it so (`e6e9c364`; `reentry.test.tsx:1107` pins the other button bare). File it in the
-       register as low with that ruling; never point the second button at the span without the council.
+     hosted case; R4 also after "nothing left over"; R6 (c) without the year-0 dollars, attack 4). Commit 2 (b9-7) built
+     R2 in the left-over SEAT, below its radios, not at the end of the W row's note (R6: that note sits above the radios
+     and these sentences read the answer; ROUND.md records the departure), and R8 (b) (`cvd-<arm>-fullpage.png`, proven
+     on two targets); R8 (c) is filed in the register (Tier 2, council first). Still owed, in order:
      - **The round review** over `d4c38295` and commit 2: whole files, an adversary, every finding verified; a mutant pass
        (R1's two arms and their figures, R4's predicate, R5's split, R3 (c)'s one-cap predicate); the R10 sweep + per-key
        idcheck against `walk5`; `verify:fit`; `doc:reanchor` last.
@@ -581,7 +569,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:1163`, `:1168, :1182, :1184, :1192, :1194` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1342`, `:1348`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1334-1336`). Unfiled: `shadowRateHeadroom` (`copy.ts:3835`)
+   (gated on `statePriced` alone — `copy.ts:1334-1336`). Unfiled: `shadowRateHeadroom` (`copy.ts:3859`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -834,7 +822,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:3739-3741` under the NUMBER AGREEMENT post-mortem at `copy.ts:3725`, covered by `copyGuard.test.ts:987`):
+    `copy.ts:3763-3765` under the NUMBER AGREEMENT post-mortem at `copy.ts:3749`, covered by `copyGuard.test.ts:990`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
@@ -885,7 +873,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     both harnesses model it with a wipe). ENLARGED TEXT: `Page.setFontSizes` re-probed 2026-09-04 against
     the repo's chromium-1223 — the param shape is `{ fontSizes: { standard: 24, fixed: 24 } }` (the flat
     form is rejected); it propagates because the type scale is rem/clamp with ZERO literal-px `font-size`
-    rules; the `newCDPSession` pattern is at `caddie-walk.spec.ts:442`, and the shipped arm's own helper is `raiseDefaultFont` (`vertical-fit.spec.ts:494-507`); re-run the 8 REAL+TIER one-frame
+    rules; the `newCDPSession` pattern is at `caddie-walk.spec.ts:443`, and the shipped arm's own helper is `raiseDefaultFont` (`vertical-fit.spec.ts:494-507`); re-run the 8 REAL+TIER one-frame
     arms (4 spine seeds × 2), not all 52; PROTECTED = `vertical-fit.spec.ts:17-21`.
 
 ### Tier 3 — Briggsy's call
@@ -935,7 +923,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:4153` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:4177` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -951,7 +939,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:4201`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:4225`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test

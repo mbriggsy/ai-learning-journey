@@ -12,8 +12,10 @@
  *    face; the walk never gets here, because the W step's gate stops a stale W before this step);
  *  · every other state — the year-0 figure and the check sentence (the group's described-by lines, which
  *    read the picture, never the answer), the radio group (a static legend and static labels, nothing
- *    pre-checked), and one line in dollars BELOW the group, chosen by the state (R6). Nothing above the
- *    radios reads the answer.
+ *    pre-checked), and one line in dollars BELOW the group, chosen by the state (R6) — then, under a carried
+ *    "saved" answer on a fresh typed figure below today's spending, the typed-below line's at-quote sentences
+ *    (U11 walk 7's R2). Nothing above the radios reads the answer: where a typed figure sits below the
+ *    spending, the figure names it off W alone.
  *
  * `draft` is the draft the face DRAWS: the walk's live draft; in the panel, the draft the gesture hold
  * drew at a press (`AssumptionPanel`'s `WorkingYearRows`). "All of it" stores the figure drawn here; the
@@ -30,18 +32,25 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import { slots } from '@ui/copy'
 import { SegmentedControl, formatMoney } from './fields'
 import { workingYearLeftOverDepositsLive, workingYearLeftOverLive, workingYearLeftOverShownState } from './intakeMap'
-import { workingYearLeftOverMoved, workingYearLeftOverWaitingSeat, writeWorkingYearLeftOver } from './workingYearLeftOver'
+import {
+  workingYearLeftOverAtQuoteLine,
+  workingYearLeftOverMoved,
+  workingYearLeftOverTypedBelow,
+  workingYearLeftOverWaitingSeat,
+  writeWorkingYearLeftOver,
+} from './workingYearLeftOver'
 import { LEFT_OVER_FACE, type LeftOverShownState } from './workingYearLeftOverState'
 
 /** The one line in dollars below the group (R6), by shown state. `live` is today's printed year-0 Left
- *  over (formatted); `moved` is the moved core's two figures (formatted) and whether today's ROSE above the
- *  stored one: the stored figure is then the smaller, the one a year adds at most (R8), and the line gives the
+ *  over (formatted); `moved` is the moved core's two figures (formatted), whether today's ROSE above the
+ *  stored one — the stored figure is then the smaller, the one a year adds at most (R8), and the line gives the
  *  household that saves it but not all of today's its own way out; where today's FELL, it is already the one
- *  credited. A state with no group draws no line. */
+ *  credited — and the typed figure today's rests on, where the core carries one (U11 walk 7's R2: the line then
+ *  names it, beside the at-quote sentences below it). A state with no group draws no line. */
 const LINE: Readonly<
   Record<
     LeftOverShownState,
-    ((live: string, moved: { stored: string; live: string; rose: boolean } | null) => string) | null
+    ((live: string, moved: { stored: string; live: string; rose: boolean; typedBelow: string | null } | null) => string) | null
   >
 > = {
   'not-asked': null,
@@ -52,9 +61,13 @@ const LINE: Readonly<
   'saved-moved': (live, moved) =>
     moved === null
       ? slots.workingLedgerLeftOverSavedLine(live)
-      : moved.rose
-        ? slots.workingLedgerLeftOverRoseLine(moved.stored, moved.live)
-        : slots.workingLedgerLeftOverFellLine(moved.stored, moved.live),
+      : moved.typedBelow !== null
+        ? moved.rose
+          ? slots.workingLedgerLeftOverRoseLineAt(moved.typedBelow, moved.stored, moved.live)
+          : slots.workingLedgerLeftOverFellLineAt(moved.typedBelow, moved.stored, moved.live)
+        : moved.rose
+          ? slots.workingLedgerLeftOverRoseLine(moved.stored, moved.live)
+          : slots.workingLedgerLeftOverFellLine(moved.stored, moved.live),
   spent: (live) => slots.workingLedgerLeftOverSpentLine(live),
   'not-sure': (live) => slots.workingLedgerLeftOverNotSureLine(live),
 }
@@ -82,6 +95,10 @@ export function WorkingYearLeftOverQuestion({
   const live = useMemo(() => workingYearLeftOverLive(draft), [draft])
   const deposits = useMemo(() => workingYearLeftOverDepositsLive(draft), [draft])
   const moved = useMemo(() => workingYearLeftOverMoved(draft), [draft])
+  // U11 walk 7's R2: the typed figure the figure rests on (read off W alone, so the text above the radios stays the same
+  // under every answer, R6), and, under a carried "saved" answer, the typed-below line's at-quote sentences below them.
+  const typedBelow = useMemo(() => workingYearLeftOverTypedBelow(draft), [draft])
+  const atQuote = useMemo(() => workingYearLeftOverAtQuoteLine(draft), [draft])
   const face = LEFT_OVER_FACE[state]
   const line = LINE[state]
   if (face === 'none' || live === null) return null
@@ -112,7 +129,7 @@ export function WorkingYearLeftOverQuestion({
   return (
     <div className="left-over">
       <p className="left-over__figure" id={figureId}>
-        {slots.workingLedgerLeftOverFigure(shown)}
+        {typedBelow === null ? slots.workingLedgerLeftOverFigure(shown) : slots.workingLedgerLeftOverFigureAt(typedBelow, shown)}
       </p>
       <p className="field-help" id={checkId}>
         {check}
@@ -139,10 +156,15 @@ export function WorkingYearLeftOverQuestion({
                   stored: formatMoney(moved.stored),
                   live: formatMoney(moved.live),
                   rose: moved.live > moved.stored,
+                  typedBelow: moved.typedBelow,
                 },
           )}
         </p>
       )}
+      {/* The typed-below line's at-quote sentences (U11 walk 7's R2), after the per-answer line: what the household's
+          own spending leaves in year 0 and in its short years, beside what this answer credits. Below the radios because
+          they read the answer (R6); `workingYearLeftOverAtQuoteLine`'s docblock says why never above, in the W row. */}
+      {atQuote !== null && <p className="field-help left-over__at-quote">{atQuote}</p>}
     </div>
   )
 }

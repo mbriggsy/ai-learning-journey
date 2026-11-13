@@ -746,25 +746,65 @@ export function workingYearCostTypedBelowLine(d: ScenarioDraft, host: TypedBelow
   const answer: TypedBelowAnswer = host.kind === 'gate' ? 'Your' : 'This'
   const counts =
     t.source === 'budget' ? slots.workingCostTypedBelowCountsBudget(answer, t.typed, t.quote) : slots.workingCostTypedBelowCounts(answer, t.typed, t.quote)
-  const saved = d.workingYearLeftOver
-  // The answer first: a draft that is not "saved" never composes the money picture here.
-  if (saved?.kind !== 'saved' || !LEFT_OVER_CARRIES[workingYearLeftOverShownState(d)]) return counts
-  const live = workingYearLeftOverLive(d)
-  // Unreachable: a carried state has a known picture (`leftOverShownState` reads "not asked" without one).
-  if (live === null) return counts
-  const creditDollars = Math.round(Math.min(saved.quotedReal, live))
+  const c = typedBelowCarried(d, t, answer)
+  if (c === null) return counts
   const moved = workingYearLeftOverMoved(d)
   const credit: readonly string[] =
     moved === null
-      ? [slots.workingCostTypedBelowAdds(formatMoney(creditDollars))]
+      ? [slots.workingCostTypedBelowAdds(formatMoney(c.figures.creditDollars))]
       : host.kind === 'result' && host.carriesMoved
         ? [workingYearLeftOverMovedClause(moved)]
         : []
+  return [counts, ...credit, ...c.atQuote].join(' ')
+}
+
+/** For a "saved" answer the run carries (`saved` or `saved-moved`, `LEFT_OVER_CARRIES`) under a fresh typed figure `t`:
+ *  the line's figures — R8's cap and the gap, in whole dollars as printed — and its at-quote sentences
+ *  ({@link TypedBelowAtQuote}); `null` under any other answer. The ONE read the Result's and the gate's line and the
+ *  seat's at-quote line ({@link workingYearLeftOverAtQuoteLine}) share, so the sheet can never word them two ways. */
+function typedBelowCarried(
+  d: ScenarioDraft,
+  t: NonNullable<ReturnType<typeof freshTypedBelow>>,
+  answer: TypedBelowAnswer,
+): { readonly figures: TypedBelowFigures; readonly atQuote: readonly string[] } | null {
+  const saved = d.workingYearLeftOver
+  // The answer first: a draft that is not "saved" never composes the money picture here.
+  if (saved?.kind !== 'saved' || !LEFT_OVER_CARRIES[workingYearLeftOverShownState(d)]) return null
+  const live = workingYearLeftOverLive(d)
+  // Unreachable: a carried state has a known picture (`leftOverShownState` reads "not asked" without one).
+  if (live === null) return null
+  const creditDollars = Math.round(Math.min(saved.quotedReal, live))
   // `freshTypedBelow` read an entered W below the quote: its figure and the quote, in whole dollars as printed.
   const w = d.workingYearCost
   const gapDollars = w === undefined ? 0 : Math.round(workingYearQuote(d).annualReal) - Math.round(workingYearCostFigure(w))
   const figures: TypedBelowFigures = { answer, typed: t.typed, quote: t.quote, creditDollars, gapDollars }
-  return [counts, ...credit, ...typedBelowAtQuote(checkAtQuote(d, saved.quotedReal), figures)].join(' ')
+  return { figures, atQuote: typedBelowAtQuote(checkAtQuote(d, saved.quotedReal), figures) }
+}
+
+/** The typed figure (yearly, formatted) today's year-0 left over rests on, exactly where the typed-below line speaks
+ *  ({@link freshTypedBelow}, its own predicate), else `null` — the seat's figure line names it (U11 walk 7's R2). It
+ *  reads no answer, so the figure line above the seat's radios stays the same under every answer (R6); where the left
+ *  over has moved it is the moved core's `typedBelow`, the one value the moved line names too. */
+export function workingYearLeftOverTypedBelow(d: ScenarioDraft): string | null {
+  return freshTypedBelow(d)?.typed ?? null
+}
+
+/** The seat's half of the typed-below line (U11 walk 7's R2): under a "saved" answer the run carries, on a fresh typed
+ *  figure below today's quote, the line's own at-quote sentences ({@link TypedBelowAtQuote}: year 0 at the quote, what the
+ *  answer adds past it that year (R4), the first run of short years there and what the answer does in it (R1)) — the
+ *  answer said "Your", as on the gate. `null` under any other answer, wherever no fresh typed figure sits below the quote,
+ *  and where the check at the quote reads nothing (`unknown`). The details sheet, which the Result's door opens, named
+ *  none of them (TM's $5,985 and 2029–2032 run; A's $10,985).
+ *  WHERE IT IS DRAWN: below the seat's radios, never at the end of the W row's typed-below note, where the refuter put it.
+ *  That note sits directly above the seat, and these sentences read the answer, so a tap on "Spent" would take four
+ *  sentences out from above the radio it pressed — R6's law that nothing above the control reads the answer
+ *  (`docs/plans/features/working-year-surplus-build-spec.md`, its sanctioned readers amended in only where the answer
+ *  is frozen or the reader sits far above the seat). Below the radios is R6's own home for a line chosen by the answer. */
+export function workingYearLeftOverAtQuoteLine(d: ScenarioDraft): string | null {
+  const t = freshTypedBelow(d)
+  if (t === null) return null
+  const c = typedBelowCarried(d, t, 'Your')
+  return c === null || c.atQuote.length === 0 ? null : c.atQuote.join(' ')
 }
 
 /** The typed-below line's door on the gate: the update act's (`gateDoor`), naming the typed figure — or `null` exactly

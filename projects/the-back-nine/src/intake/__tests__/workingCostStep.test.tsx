@@ -1237,6 +1237,32 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
     expect(textBeside(leftOverGroup(), 'above')).not.toBe(above[0])
   })
 
+  it('on a typed figure below the spending (`datesavedtypedmoved` unanswered: $84,000 typed under $105,000), the figure names the $84,000 it rests on; "All of it" adds the at-quote sentences BELOW the group, and "Spent" takes them away, while the text above stays put (U11 walk 7’s R2; R6)', () => {
+    const m = modelWith(withLeftOver(DEV_SEEDS.datesavedtypedmoved, undefined))
+    render(<LedgerStep model={m} />)
+    const group = leftOverGroup()
+    expect(describedTextsOf(group)).toEqual([
+      slots.workingLedgerLeftOverFigureAt('84,000', '26,985'),
+      slots.workingLedgerLeftOverCheck('26,985', '20,000', '46,985'),
+    ])
+    const above = textBeside(group, 'above')
+    const atQuote = (credit: string, extra: string) =>
+      `At $105,000 a year, your first working year, 2026, has $5,985 left over. That year, your answer adds $${extra} your pay doesn’t really leave over. ` +
+      'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
+      `Your $84,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds ${credit} to your savings in each of them.`
+    expect(screen.queryByText(/your first working year, 2026, has \$5,985 left over/)).toBeNull()
+    pickLeftOver('workingLedgerLeftOverSaved')
+    expect(leftOver(m)).toStrictEqual({ kind: 'saved', quotedReal: 26_985 })
+    // Stored at $26,985, the cap is $26,985: $21,000 past the quote's $5,985 in 2026, and in 2029–2032 each year's $21,000
+    // gap less its shortfall.
+    const line = screen.getByText(atQuote('between $16,985 and $17,348', '21,000'))
+    expect(group.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING, 'below the group').not.toBe(0)
+    expect(textBeside(leftOverGroup(), 'above'), 'the text above the group reads no answer').toBe(above)
+    pickLeftOver('workingLedgerLeftOverSpent')
+    expect(screen.queryByText(/your first working year, 2026, has \$5,985 left over/)).toBeNull()
+    expect(textBeside(leftOverGroup(), 'above')).toBe(above)
+  })
+
   it('absent’s line differs from not sure’s, and both name the $16,985', () => {
     render(<LedgerStep model={modelWith(withLeftOver(DEV_SEEDS.date, undefined))} />)
     const absentLine = slots.workingLedgerLeftOverAbsentLine('16,985')

@@ -24,7 +24,8 @@ import type { WorkingYearLeftOverKind } from '../src/shared/model'
  *  - Color-vision arms use Chrome's own emulation (CDP setEmulatedVisionDeficiency), the same
  *    transform DevTools applies — a screening flag for the readers, never a color verdict.
  *  - Capture order matters: fold/aria/copy first (no visual side effects), then the above-fold
- *    + CVD shots (same pinned scroll), then fullpage + element crops LAST (they may scroll).
+ *    + CVD shots (same pinned scroll), then fullpage (and the full scroll under each CVD arm,
+ *    `cvd-<arm>-fullpage.png`, since U11 walk 7's R8 (b)) + element crops LAST (they may scroll).
  *
  * Increment 2 (2026-07-10, the tape's first two lessons):
  *  - RUN-STAMPED bundle dirs — temp/caddie/<run>/<target>/<viewport>/<state>/; a re-walk
@@ -461,6 +462,14 @@ async function captureState(page: Page, dir: string): Promise<void> {
 
   // 3) Full page, then element crops LAST — locator screenshots may scroll to their target.
   await page.screenshot({ path: path.join(dir, 'fullpage.png'), fullPage: true, scale: 'css' })
+  // The full scroll under each arm (U11 walk 7's R8 (b)): the arms above cover one screen, so on the phone the gate's
+  // buttons and its door, the Result's verdict paragraph past the fold (its last label, cost list and door), the backup
+  // door and "Saved to this device" sat in no color-vision frame. Before the crops, which may scroll.
+  for (const [name, type] of CVD_ARMS) {
+    await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
+    await page.screenshot({ path: path.join(dir, `cvd-${name}-fullpage.png`), fullPage: true, scale: 'css' })
+  }
+  await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
   for (const crop of CROP_TARGETS) {
     const { name, selector } = crop
     const cvd = 'cvd' in crop && crop.cvd
@@ -1801,7 +1810,8 @@ const TYPED_BELOW_TEST_MS = 4 * FINAL_TIER_MS + 120_000
  * household reaches it: `datesavedrisen`'s Result (a yes to $84,000, stale under a $90,000 spending figure, "All of
  * it" saved) → its standing line's door → the panel's W row → "No — I'll enter a different figure", "Each year"
  * tapped first (the untapped unit is a month, KTD17), and the old $84,000 typed back in.
- *  - `panel-typed-below`: the row, the note under it;
+ *  - `panel-typed-below`: the row, the note under it, and the seat below naming the typed figure and ending on the
+ *    typed-below line's at-quote sentences (U11 walk 7's R2);
  *  - `result-typed-below`: the Result after that edit's re-run (the re-run watch the kept walk uses) — no stale line,
  *    since a typed figure carries no stamp, but R1's typed-below line in the slot (U11 walk 6); its gate is
  *    `vault:datesavedtyped` (the same draft as a plant, walked by `walkVaultReturn` unedited);
@@ -1825,6 +1835,20 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
   await armResultRerunWatch(page)
   await typeFieldValue(face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true }), '84000', STALE_W_CONFIRMED)
   await expect(face.getByText(note, { exact: true }), 'the typed-below note under the row').toBeVisible()
+  // U11 walk 7's R2: the seat below names the $84,000 its $16,985 rests on and, below its radios, ends on the line's own
+  // at-quote sentences — the $10,985 at $90,000 and the $6,000 the answer adds past it that year.
+  const seat = dialog.locator('[data-assumption-seat="working-year-left-over"]')
+  await expect(
+    seat.getByText(slots.workingLedgerLeftOverFigureAt(STALE_W_CONFIRMED, DATE_LEFT_OVER), { exact: true }),
+    'the seat’s figure names the typed figure',
+  ).toBeVisible()
+  await expect(
+    seat.getByText(
+      [slots.workingCostTypedBelowAtQuoteLeftOver(RISEN_W_QUOTE_NOW, 2026, RISEN_AT_QUOTE), slots.workingCostTypedBelowYearExtra('Your', '6,000')].join(' '),
+      { exact: true },
+    ),
+    'the seat’s at-quote sentences below its radios',
+  ).toBeVisible()
   await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
   await captureState(page, path.join(outDir, 'panel-typed-below'))
   await expectResultRerun(page, 'intake:typedbelow')

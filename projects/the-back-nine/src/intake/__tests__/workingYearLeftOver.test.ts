@@ -31,9 +31,11 @@ import {
   workingYearCostTypedBelowDoor,
   workingYearCostTypedBelowLine,
   workingYearCostTypedBelowNote,
+  workingYearLeftOverAtQuoteLine,
   workingYearLeftOverMoved,
   workingYearLeftOverMovedClause,
   workingYearLeftOverMovedText,
+  workingYearLeftOverTypedBelow,
   workingYearLeftOverWaitingSeat,
   workingYearLeftOverWaitingWords,
   writeWorkingYearLeftOver,
@@ -1157,5 +1159,83 @@ describe('workingYearCostTypedBelowLine and its door — R1, the Result and the 
         for (const sentence of line.split('. ').slice(1)) expect(sentence, line).toMatch(/^[A-Z]/)
       }
     }
+  })
+})
+
+// U11 walk 7's R2: the details sheet, where the Result's door lands, named neither TM's $5,985 nor its 2029–2032 run, and
+// never A's $10,985. The seat names the typed figure its year-0 left over rests on, and, under a "saved" answer the run
+// carries, ends with the typed-below line's own at-quote sentences, BELOW its radios (R6: the W row above the seat reads
+// no answer, so a tap on "Spent" never takes four sentences out from above the radio it pressed).
+describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — the seat’s half of the typed-below line (U11 walk 7’s R2)', () => {
+  const typed = (d: ScenarioDraft, amountReal = 84_000): ScenarioDraft => {
+    const w = d.workingYearCost
+    if (w === undefined) throw new Error('[test setup] the witness holds a W')
+    return { ...d, workingYearCost: { kind: 'entered', amountReal, entryPeriod: 'year', stateTaxReading: w.stateTaxReading } }
+  }
+  const GATE = { kind: 'gate' } as const
+  const A_AT_QUOTE = 'At $90,000 a year, your first working year, 2026, has $10,985 left over. That year, your answer adds $6,000 your pay doesn’t really leave over.'
+  const TM_AT_QUOTE =
+    'At $105,000 a year, your first working year, 2026, has $5,985 left over. That year, your answer adds $11,000 your pay doesn’t really leave over. ' +
+    'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
+    'Your $84,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds $16,985 to your savings in each of them.'
+  const B_AT_QUOTE =
+    'At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short. ' +
+    'Your $84,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds $16,985 to your savings in each of them.'
+  const WITNESSES: ReadonlyArray<readonly [string, ScenarioDraft, string]> = [
+    ['A (`datesavedtyped`, saved)', DEV_SEEDS.datesavedtyped, A_AT_QUOTE],
+    ['TM (`datesavedtypedmoved`, saved, moved)', DEV_SEEDS.datesavedtypedmoved, TM_AT_QUOTE],
+    ['B retyped (`datesavedrisenshort` at $84,000, saved)', typed(DEV_SEEDS.datesavedrisenshort), B_AT_QUOTE],
+  ]
+
+  it.each(WITNESSES)('%s: the typed figure is named, and the at-quote sentences are the Result’s own words for that draft', (_name, d, atQuote) => {
+    expect(workingYearLeftOverTypedBelow(d)).toBe('84,000')
+    expect(workingYearLeftOverAtQuoteLine(d)).toBe(atQuote)
+  })
+
+  it.each(WITNESSES)('%s: ONE composer — the gate’s typed-below line ends on exactly these sentences (insight 081: the sheet and the gate can never word them two ways)', (_name, d, atQuote) => {
+    expect(workingYearCostTypedBelowLine(d, GATE)?.endsWith(` ${atQuote}`)).toBe(true)
+  })
+
+  it('where the left over has moved, the seat’s typed figure is the moved core’s, so the moved line and the figure line can never name two figures', () => {
+    const tm = DEV_SEEDS.datesavedtypedmoved
+    expect(workingYearLeftOverMoved(tm)?.typedBelow).toBe(workingYearLeftOverTypedBelow(tm))
+  })
+
+  it('under an answer the run does not carry — unanswered, spent, not sure — the typed figure is still named (it reads no answer) and the at-quote sentences are not drawn', () => {
+    for (const [name, d] of WITNESSES) {
+      for (const answer of [undefined, { kind: 'spent' }, { kind: 'not-sure' }] as const) {
+        const x = answered(d, answer)
+        const who = `${name}, ${answer?.kind ?? 'unanswered'}`
+        expect(workingYearLeftOverTypedBelow(x), who).toBe('84,000')
+        expect(workingYearLeftOverAtQuoteLine(x), who).toBeNull()
+      }
+    }
+  })
+
+  it('both null wherever no FRESH typed figure sits below the quote (the typed-below line’s own predicate): a yes, a kept figure, at or above the quote, stale on its reading, an all-retired draft, no W', () => {
+    const d = typed(DEV_SEEDS.datesavedrisen)
+    const kept: ScenarioDraft = { ...d, workingYearCost: { ...(d.workingYearCost as Extract<NonNullable<ScenarioDraft['workingYearCost']>, { kind: 'entered' }>), keptOverQuoteReal: 84_000 } }
+    const stateMoved: ScenarioDraft = { ...d, retirementState: 'FL' }
+    const retired: ScenarioDraft = { ...d, people: [{ ...d.people[0], workStatus: 'retired', retirementAge: 58, earnedIncomeReal: 0 }, d.people[1]] }
+    const { workingYearCost: _w, ...noW } = d
+    for (const [name, x] of [
+      ['a yes', DEV_SEEDS.datesavedrisen],
+      ['kept', kept],
+      ['at the quote', typed(DEV_SEEDS.datesavedrisen, 90_000)],
+      ['above it', typed(DEV_SEEDS.datesavedrisen, 95_000)],
+      ['stale on its reading', stateMoved],
+      ['all retired', retired],
+      ['no W', noW],
+      ['`datesaved` (a fresh yes)', DEV_SEEDS.datesaved],
+    ] as const) {
+      expect(workingYearLeftOverTypedBelow(x), name).toBeNull()
+      expect(workingYearLeftOverAtQuoteLine(x), name).toBeNull()
+    }
+  })
+
+  it('a "saved" answer that is not asked (year 0 at the typed figure below $1) carries nothing, so no at-quote sentences', () => {
+    const notAsked = { ...typed(DEV_SEEDS.datesavedrisen, 101_000), annualSpendingReal: 110_000 }
+    expect(workingYearLeftOverShownState(notAsked), 'the premise: not asked').toBe('not-asked')
+    expect(workingYearLeftOverAtQuoteLine(notAsked)).toBeNull()
   })
 })

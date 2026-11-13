@@ -124,6 +124,10 @@ route, so this is its only capturable home:
   echo, the disclaimer) — small text is read from crops, never from the full frame
 - `cvd-deuteranopia.png` / `cvd-protanopia.png` / `cvd-grayscale.png` — Chrome-native CVD
   emulation (CDP `Emulation.setEmulatedVisionDeficiency`) of the above-fold frame; PLUS
+  `cvd-<arm>-fullpage.png`, the full scroll under each arm at CSS scale (U11 walk 7's R8 (b): the
+  above-fold arms are one screen, so the phone gate's buttons and door, a verdict paragraph past
+  the fold, the backup door and "Saved to this device" reached no arm; like `fullpage.png`, a tall
+  page is downscaled at ingestion, so small text is still read from the crops); PLUS
   `cvd-<arm>-<chart>.png` device-scale crops of every chart on the state (band / ladder /
   TwoFutures — increment 4: the above-fold arms were structurally blind to below-fold charts;
   `recviz`, the RecommendationViz two-arm chart — increment 6), `cvd-<arm>-survivor.png`

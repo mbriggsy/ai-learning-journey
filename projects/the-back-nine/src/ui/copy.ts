@@ -2757,6 +2757,17 @@ const belowLean = (typedFormatted: string, answerLean: boolean): string =>
  *  (`stalenessPayCheckNote` / `stalenessPayCheckGateLead`). */
 export type TypedBelowAnswer = 'This' | 'Your'
 
+/** The moved seat lines' second sentence opens on today's left over — and, where a fresh TYPED figure sits below today's
+ *  spending, on the figure it rests on, in the gate's moved-line words (U11 walk 7's R2: the sheet's below-the-radios
+ *  twin of the at-quote sentence now names the quote's year 0, so this figure wears its definition too, back-nine-design's
+ *  round-6 law). `slots.workingLedgerLeftOverRoseLine` / `…FellLine` and their `…At` twins share every other word. */
+const leftOverNow = (liveFormatted: string, typedFormatted: string | null): string =>
+  typedFormatted === null ? `It’s $${liveFormatted} now` : `At your $${typedFormatted} figure, it’s $${liveFormatted} now`
+const leftOverRoseLine = (storedFormatted: string, liveFormatted: string, typedFormatted: string | null): string =>
+  `You chose this when the left over was $${storedFormatted}. ${leftOverNow(liveFormatted, typedFormatted)}, so each working year adds at most $${storedFormatted} of its left over to your savings, the smaller of the two. If all of this $${liveFormatted} now goes into your savings or investments each year, on top of what you already put in, choose “All of it” once more. Each working year then adds at most $${liveFormatted}. If at least $${storedFormatted} of the $${liveFormatted} still goes in, but not all of it, leave this as it is: your answer still counts the $${storedFormatted} you said goes in. If less than $${storedFormatted} of it goes in, choose “Some of it, or not sure”, which adds none of it for now.`
+const leftOverFellLine = (storedFormatted: string, liveFormatted: string, typedFormatted: string | null): string =>
+  `You chose this when the left over was $${storedFormatted}. ${leftOverNow(liveFormatted, typedFormatted)}, so each working year adds at most $${liveFormatted} of its left over to your savings, the smaller of the two. If all of this $${liveFormatted} still goes into your savings or investments each year, on top of what you already put in, choose “All of it” once more. If less of it goes in, choose “Some of it, or not sure”, which adds none of it for now.`
+
 /** The Keep door's figure in the label's own unit: "$84,000", or "$7,000 a month" beside "Keep $7,000 a month". */
 const keepFigure = (keepFormatted: string, keepMonthly: boolean): string => `$${keepFormatted}${keepMonthly ? ' a month' : ''}`
 
@@ -3547,6 +3558,12 @@ export const slots = {
   // dollars below it, by shown state (R6). None says which way the answer moves (R16).
   workingLedgerLeftOverFigure: (amountFormatted: string): string =>
     `After everything above, your first working year has $${amountFormatted} left over.`,
+  // …and its twin where a fresh TYPED figure sits below today's spending (U11 walk 7's R2, the refuter's words): "After
+  // everything above" reached past the "$105,000" question on TM's sheet, so $26,985 could read as the left over at the
+  // spending, and the at-quote sentences below the radios now name the quote's own year 0 beside it. Above the radios, so
+  // it reads no answer (R6): keyed on the typed figure alone (`workingYearLeftOverTypedBelow`).
+  workingLedgerLeftOverFigureAt: (typedFormatted: string, amountFormatted: string): string =>
+    `After everything above, at your $${typedFormatted} figure, your first working year has $${amountFormatted} left over.`,
   // The seat's B face where year 0 at the quote comes up SHORT (U11 walk 7's R5): "has nothing left over" read as
   // breaking even where every year 2026–2032 draws $3,652 to $4,015, and the only word on updating was what it won't
   // do. The run in the money picture's range words (`shortAmount`, as the Result's B arm names it), then what updating
@@ -3593,9 +3610,16 @@ export const slots = {
   // never told two things; each threshold is a share OF the left over ("at least $S" alone was met by the deposits
   // every household already makes); and the re-tap is named as a choice of the reply already checked ("choose", never the phone's "tap": walk 5).
   workingLedgerLeftOverRoseLine: (storedFormatted: string, liveFormatted: string): string =>
-    `You chose this when the left over was $${storedFormatted}. It’s $${liveFormatted} now, so each working year adds at most $${storedFormatted} of its left over to your savings, the smaller of the two. If all of this $${liveFormatted} now goes into your savings or investments each year, on top of what you already put in, choose “All of it” once more. Each working year then adds at most $${liveFormatted}. If at least $${storedFormatted} of the $${liveFormatted} still goes in, but not all of it, leave this as it is: your answer still counts the $${storedFormatted} you said goes in. If less than $${storedFormatted} of it goes in, choose “Some of it, or not sure”, which adds none of it for now.`,
+    leftOverRoseLine(storedFormatted, liveFormatted, null),
   workingLedgerLeftOverFellLine: (storedFormatted: string, liveFormatted: string): string =>
-    `You chose this when the left over was $${storedFormatted}. It’s $${liveFormatted} now, so each working year adds at most $${liveFormatted} of its left over to your savings, the smaller of the two. If all of this $${liveFormatted} still goes into your savings or investments each year, on top of what you already put in, choose “All of it” once more. If less of it goes in, choose “Some of it, or not sure”, which adds none of it for now.`,
+    leftOverFellLine(storedFormatted, liveFormatted, null),
+  // …and their twins where a fresh TYPED figure sits below today's spending (U11 walk 7's R2): "At your $84,000 figure,
+  // it’s $26,985 now", the gate's moved-line words, so today's figure names what it rests on beside the quote's year 0
+  // (`leftOverNow`). The composer picks off the moved core's `typedBelow` (`WorkingYearLeftOverQuestion`'s `LINE`).
+  workingLedgerLeftOverRoseLineAt: (typedFormatted: string, storedFormatted: string, liveFormatted: string): string =>
+    leftOverRoseLine(storedFormatted, liveFormatted, typedFormatted),
+  workingLedgerLeftOverFellLineAt: (typedFormatted: string, storedFormatted: string, liveFormatted: string): string =>
+    leftOverFellLine(storedFormatted, liveFormatted, typedFormatted),
   // The partial saver's reply, and its zero, before the pick (walks 3 and 4: the zero showed only after it, so an
   // honest partial saver met it too late, and "All of it" was the only way to count anything).
   workingLedgerLeftOverAbsentLine: (amountFormatted: string): string =>
@@ -3946,7 +3970,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1654` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1660` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

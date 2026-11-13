@@ -248,7 +248,7 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
   const MOVED_AT_TYPED_LINE =
     'You said all of it goes into your savings when it was $16,985. At your $84,000 figure, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
   const MOVED_AT_TYPED_CLAUSE =
-    'At your $84,000 figure, your first working year has $26,985 left over now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
+    'You said all of it goes into your savings when your first working year had $16,985 left over. At your $84,000 figure, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
 
   it('a typed figure below the spending, the left over moved at it: R1’s line, then the moved line naming the $84,000 its $26,985 rests on', async () => {
     const current = h.model
@@ -368,7 +368,7 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
         [
           slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
           slots.workingCostStaleEachDollar('90,000', '10,985'),
-          slots.workingCostStaleLowerAddsMore('90,000', '16,985'),
+          slots.workingCostStaleLowerAddsMore('90,000', '10,985', '6,000', '16,985'),
         ].join(' '),
       ])
       const door = document.querySelector('.save-actions + section.reentry-door')

@@ -1896,7 +1896,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
           sentences: [
             slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
             slots.workingCostStaleEachDollar('90,000', '10,985'),
-            slots.workingCostStaleLowerAddsMore('90,000', '16,985'),
+            slots.workingCostStaleLowerAddsMore('90,000', '10,985', '6,000', '16,985'),
           ],
         },
       ],

@@ -19,7 +19,7 @@ import type { WorkingYearLeftOverKind } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { LEFT_OVER_WAITING_COPY, copy, slots, workingCostExtras } from '@ui/copy'
 import { DEV_SEEDS } from '@ui/devSeeds'
-import { workingYearCostForRun, workingYearLeftOverShownState } from '../intakeMap'
+import { workingYearCostForRun, workingYearLedgerForRun, workingYearLeftOverShownState } from '../intakeMap'
 import {
   laterShortOf,
   workingYearCheckAtQuote,
@@ -34,11 +34,12 @@ import {
   workingYearLeftOverMoved,
   workingYearLeftOverMovedClause,
   workingYearLeftOverMovedText,
+  workingYearLeftOverWaitingSeat,
   workingYearLeftOverWaitingWords,
   writeWorkingYearLeftOver,
   shortRunFrom,
 } from '../workingYearLeftOver'
-import { heldYesBelowQuote, isWorkingYearCostStale, workingYearCostAct, workingYearQuote } from '../workingYearQuote'
+import { heldYesBelowQuote, isWorkingYearCostStale, workingYearCostAct, workingYearQuote, writeConfirmedWorkingYearCost } from '../workingYearQuote'
 
 const KINDS: readonly WorkingYearLeftOverKind[] = ['saved', 'spent', 'not-sure']
 const answered = (d: ScenarioDraft, answer: ScenarioDraft['workingYearLeftOver']): ScenarioDraft => ({ ...d, workingYearLeftOver: answer })
@@ -145,12 +146,12 @@ describe('workingYearLeftOverMoved — the ONE moved core (R12; U14’s obligati
       'You said all of it goes into your savings when it was $16,985. At your $84,000 figure, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
     )
     expect(workingYearLeftOverMovedClause(c!)).toBe(
-      'At your $84,000 figure, your first working year has $26,985 left over now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
+      'You said all of it goes into your savings when your first working year had $16,985 left over. At your $84,000 figure, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
     )
     const tap = workingYearLeftOverMoved(retype(DEV_SEEDS.datesaved, 6_000 * 12, 'month'))
     expect(tap, 'given by the month, named by the year').toEqual({ stored: 16_985, live: 28_985, typedBelow: '72,000' })
     expect(workingYearLeftOverMovedClause(tap!)).toBe(
-      'At your $72,000 figure, your first working year has $28,985 left over now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
+      'You said all of it goes into your savings when your first working year had $16,985 left over. At your $72,000 figure, it has $28,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
     )
   })
 
@@ -307,7 +308,7 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
           sentences: [
             slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
             slots.workingCostStaleEachDollar('90,000', '10,985'),
-            slots.workingCostStaleLowerAddsMore('90,000', '16,985'),
+            slots.workingCostStaleLowerAddsMore('90,000', '10,985', '6,000', '16,985'),
           ],
         },
       ],
@@ -377,7 +378,7 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
             slots.workingCostStaleLeftOverGainYears(2026, 2028, 2033),
             slots.workingCostStaleEachDollar('105,000', '5,985'),
             slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000'),
-            copy.workingCostStaleLowerCounts,
+            slots.workingCostStaleLowerCountsMore('16,985'),
           ],
         },
       ],
@@ -478,7 +479,7 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
         sentences: [
           slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
           slots.workingCostStaleEachDollar('90,000', '10,985'),
-          slots.workingCostStaleLowerAddsMore('90,000', '16,985'),
+          slots.workingCostStaleLowerAddsMore('90,000', '10,985', '6,000', '16,985'),
         ],
       },
     ]
@@ -518,7 +519,7 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
     const RISEN_TO = (quote: string) =>
       `You said yes to $84,000 a year. Your spending figures have changed since then, and now come to $${quote} a year.`
     const GAP_90 =
-      'Your $84,000 figure is $6,000 below your spending, so it makes $6,000 a year more of your pay look left over than a working year at $90,000 would leave.'
+      'Your $84,000 figure is $6,000 below your spending. So every working year looks to leave $6,000 more of your pay than it would at $90,000.'
     const YEARS_CHEAPER = 'Your $84,000 figure makes any working year your pay doesn’t cover look cheaper than it really is.'
     const EITHER = 'Updating your figure can move this answer either way, depending on what a working year really costs you.'
     expect(workingYearCostStaleLine(DEV_SEEDS.datesavedrisen)).toEqual({
@@ -531,7 +532,7 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
             'Your first working year, 2026, has $10,985 left over. ' +
               'Since a working year almost always costs at least what you spend, updating your figure to $90,000 or more adds at most $10,985 a year to your savings.',
             'Each dollar you add above $90,000 comes off that $10,985.',
-            'A figure below $90,000 would add more, up to $16,985 a year, but the extra is money your pay doesn’t really leave over.',
+            'A figure below $90,000 would count money your pay doesn’t really leave over: up to $6,000 a year more than the $10,985, for as much as $16,985 a year.',
           ],
         },
       ],
@@ -567,7 +568,7 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
               'Your $84,000 figure makes those years look cheaper. ' +
               'The money those shortfalls would take is still counted in your savings for every year after. ' +
               'So those years pull this answer toward looking better than it really is.',
-            LOWER_COUNTS,
+            'A lower figure could count more of the $16,985 again, but only by pricing a working year below what you spend.',
           ],
         },
       ],
@@ -863,7 +864,7 @@ describe('workingYearCostStaleDoor — the act and each host’s door', () => {
   // cover, above it. Above today's quote, the room ($84,000 − $78,000); at or below it, the figure's own terms.
   it('the Keep condition: on `datesavedstale` the room the $84,000 leaves over $78,000; on a kept figure equal to the quote, the figure’s own terms in its own unit; null with no W', () => {
     expect(workingYearCostKeepCondition(DEV_SEEDS.datesavedstale)).toBe(
-      'Choose “Keep $84,000 a year” only if the costs listed below come to $6,000 a year or less, on top of your $78,000 of spending.',
+      'Choose “Keep $84,000 a year” only if the costs listed below, other than what you spend, come to $6,000 a year or less on top of your $78,000 of spending.',
     )
     expect(workingYearCostKeepCondition(monthlyMoved)).toBe(
       'Choose “Keep $7,000 a month” only if $7,000 a month covers your spending plus the costs listed below.',
@@ -922,9 +923,11 @@ describe('workingYearCostStaleDoor — the act and each host’s door', () => {
 // U11 walk 6's R3, the sheet's half: on B — a "saved" answer waiting on W whose year 0 at the quote is short or at $0 —
 // "Until you update…, no money left over is added" promised what updating takes away, so B reads its own form.
 describe('workingYearLeftOverWaitingWords — R3, the seat and the methodology line on B', () => {
-  it('B (`datesavedrisenshort`, first short) and first none ($100,985) read `updateShort`; A, C, the whole arm and every other stale W read the act', () => {
+  const B_SHORT_SEAT =
+    'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short, so nothing is left over to add. Updating to $105,000 or more won’t add any, but it puts those shortfalls into your answer.'
+  it('B (`datesavedrisenshort`, first short) reads `updateShort` and first none ($100,985) `updateNone` (U11 walk 7\'s R5); A, C, the whole arm and every other stale W read the act', () => {
     expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datesavedrisenshort)).toBe('updateShort')
-    expect(workingYearLeftOverWaitingWords(RISEN_NONE)).toBe('updateShort')
+    expect(workingYearLeftOverWaitingWords(RISEN_NONE)).toBe('updateNone')
     for (const d of [DEV_SEEDS.datesavedrisen, DEV_SEEDS.datesavedrisenlater, RISEN_WHOLE]) expect(workingYearLeftOverWaitingWords(d)).toBe('update')
     expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datesavedstale)).toBe('confirmOrChange')
     expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datecoststale)).toBe('confirmOrChange')
@@ -933,21 +936,30 @@ describe('workingYearLeftOverWaitingWords — R3, the seat and the methodology l
   // The walk-6 round review's L1-2 / L2-1 (the builders' first call): on B the seat waits for EVERY answer, and an
   // update at today's quote or above brings nothing back under any of them (the question goes unasked there), so the
   // decider reads year 0 at the quote whatever the answer — never only a "saved" one.
-  it('B under every answer — unanswered, spent, not sure, saved — reads `updateShort`; A under every answer reads the act', () => {
+  it('B under every answer — unanswered, spent, not sure, saved — reads `updateShort` (first none `updateNone`); A under every answer reads the act', () => {
     for (const answer of [undefined, { kind: 'spent' }, { kind: 'not-sure' }, { kind: 'saved', quotedReal: 16_985 }] as const) {
       expect(workingYearLeftOverWaitingWords(answered(DEV_SEEDS.datesavedrisenshort, answer)), answer?.kind ?? 'unanswered').toBe('updateShort')
-      expect(workingYearLeftOverWaitingWords(answered(RISEN_NONE, answer)), `first none, ${answer?.kind ?? 'unanswered'}`).toBe('updateShort')
+      expect(workingYearLeftOverWaitingWords(answered(RISEN_NONE, answer)), `first none, ${answer?.kind ?? 'unanswered'}`).toBe('updateNone')
+      expect(workingYearLeftOverWaitingSeat(answered(DEV_SEEDS.datesavedrisenshort, answer)), `B's seat, ${answer?.kind ?? 'unanswered'}`).toBe(B_SHORT_SEAT)
       expect(workingYearLeftOverWaitingWords(answered(DEV_SEEDS.datesavedrisen, answer)), `A, ${answer?.kind ?? 'unanswered'}`).toBe('update')
     }
   })
 
-  it('B’s seat and method words, typed by hand: no promise that updating brings anything back, and why not at the quote', () => {
-    expect(copy[LEFT_OVER_WAITING_COPY.updateShort.seat]).toBe(
-      'Your figure for a working year needs an update, above. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.',
-    )
+  it('B’s seat and method words, typed by hand: no promise that updating brings anything back, and why not at the quote — short with its run in dollars, exactly $0 in the old words (U11 walk 7’s R5)', () => {
+    expect(workingYearLeftOverWaitingSeat(DEV_SEEDS.datesavedrisenshort)).toBe(B_SHORT_SEAT)
     expect(copy[LEFT_OVER_WAITING_COPY.updateShort.method]).toBe(
-      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.',
+      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year comes up short. Updating puts the short years into your answer.',
     )
+    const none = 'Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.'
+    expect(workingYearLeftOverWaitingSeat(RISEN_NONE)).toBe(`Your figure for a working year needs an update, above. No money left over is added to your savings. ${none}`)
+    expect(copy[LEFT_OVER_WAITING_COPY.updateNone.method]).toBe(`Your figure for a working year needs an update. No money left over is added to your savings. ${none}`)
+    // The one-year run: Sam's alimony from 61 leaves only 2026 short at $105,000.
+    const oneYear = { ...DEV_SEEDS.datesavedrisenshort, incomeStreams: [{ ...DEV_SEEDS.datesavedrisenlater.incomeStreams[0]!, startAge: 61, endAge: 70 }] }
+    expect(workingYearLeftOverWaitingSeat(oneYear)).toBe(
+      'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, your first working year, 2026, comes up $4,015 short, so nothing is left over to add. Updating to $105,000 or more won’t add any, but it puts that shortfall into your answer.',
+    )
+    for (const d of [DEV_SEEDS.datesavedrisen, DEV_SEEDS.datesavedrisenlater]) expect(workingYearLeftOverWaitingSeat(d)).toBe(copy.workingLedgerLeftOverWaitingUpdate)
+    expect(workingYearLeftOverWaitingSeat(DEV_SEEDS.datesavedstale)).toBe(copy.workingLedgerLeftOverWaitingConfirm)
     expect(copy[LEFT_OVER_WAITING_COPY.update.seat]).toBe(copy.workingLedgerLeftOverWaitingUpdate)
     expect(copy[LEFT_OVER_WAITING_COPY.confirmOrChange.method]).toBe(copy.assumptionWorkingYearCheckLeftOverWaitingConfirm)
   })
@@ -977,51 +989,58 @@ describe('workingYearCostTypedBelowLine and its door — R1, the Result and the 
     expect(d, 'the seed IS the retype').toEqual(typed(DEV_SEEDS.datesavedrisen))
     expect(isWorkingYearCostStale(d), 'the premise: a typed figure is fresh').toBe(false)
     expect(workingYearLeftOverShownState(d), 'the premise: carried at the stored figure').toBe('saved')
-    const tail = 'It adds up to $16,985 a year to your savings. At $90,000 a year, your first working year, 2026, has $10,985 left over.'
-    expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(`${counts('This', '84,000', '90,000')} ${tail}`)
-    expect(workingYearCostTypedBelowLine(d, RESULT_HOSTED), 'nothing moved: the host flag changes nothing').toBe(`${counts('This', '84,000', '90,000')} ${tail}`)
-    expect(workingYearCostTypedBelowLine(d, GATE)).toBe(`${counts('Your', '84,000', '90,000')} ${tail}`)
+    const tail = (answer: 'this' | 'your') =>
+      `It adds at most $16,985 a year to your savings. At $90,000 a year, your first working year, 2026, has $10,985 left over. That year, ${answer} answer adds $6,000 your pay doesn’t really leave over.`
+    expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(`${counts('This', '84,000', '90,000')} ${tail('this')}`)
+    expect(workingYearCostTypedBelowLine(d, RESULT_HOSTED), 'nothing moved: the host flag changes nothing').toBe(`${counts('This', '84,000', '90,000')} ${tail('this')}`)
+    expect(workingYearCostTypedBelowLine(d, GATE)).toBe(`${counts('Your', '84,000', '90,000')} ${tail('your')}`)
   })
 
   it('B (`datesavedrisenshort` retyped): at $105,000 every working year from 2026 through 2032 comes up short — the run named, never its first year alone', () => {
     const d = typed(DEV_SEEDS.datesavedrisenshort)
     expect(workingYearLeftOverShownState(d)).toBe('saved')
     expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(
-      `${counts('This', '84,000', '105,000')} It adds up to $16,985 a year to your savings. At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short.`,
+      `${counts('This', '84,000', '105,000')} It adds at most $16,985 a year to your savings. At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short. Your $84,000 figure leaves those shortfalls out of this answer: at that figure, those years have money left over, and it adds $16,985 to your savings in each of them.`,
     )
   })
 
   it('C (`datesavedrisenlater` retyped, the left over MOVED to $26,985): on the Result the moved clause takes the credit sentence’s place, naming the $84,000 its $26,985 rests on beside the quote’s $5,985 (the round review’s pair); on the gate, or where a rules line hosts the clause, the credit is its own sentence — then $5,985 at $105,000 and the 2029–2032 run "at that cost"', () => {
     const d = typed(DEV_SEEDS.datesavedrisenlater)
     expect(workingYearLeftOverShownState(d), 'the premise: moved').toBe('saved-moved')
-    const atQuote = 'At $105,000 a year, your first working year, 2026, has $5,985 left over. At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short.'
+    const atQuote = (answer: 'This' | 'Your') =>
+      'At $105,000 a year, your first working year, 2026, has $5,985 left over. ' +
+      `That year, ${answer.toLowerCase()} answer adds $11,000 your pay doesn’t really leave over. ` +
+      'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
+      `Your $84,000 figure leaves those shortfalls out of ${answer.toLowerCase()} answer: at that figure, those years have money left over, and it adds $16,985 to your savings in each of them.`
     expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(
-      `${counts('This', '84,000', '105,000')} At your $84,000 figure, your first working year has $26,985 left over now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${atQuote}`,
+      `${counts('This', '84,000', '105,000')} You said all of it goes into your savings when your first working year had $16,985 left over. At your $84,000 figure, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${atQuote('This')}`,
     )
-    expect(workingYearCostTypedBelowLine(d, RESULT_HOSTED)).toBe(`${counts('This', '84,000', '105,000')} It adds up to $16,985 a year to your savings. ${atQuote}`)
-    expect(workingYearCostTypedBelowLine(d, GATE)).toBe(`${counts('Your', '84,000', '105,000')} It adds up to $16,985 a year to your savings. ${atQuote}`)
+    // The moved words say the cap on the gate's own line and under a rules note's hosted clause: no second cap here (R3 (c)).
+    expect(workingYearCostTypedBelowLine(d, RESULT_HOSTED)).toBe(`${counts('This', '84,000', '105,000')} ${atQuote('This')}`)
+    expect(workingYearCostTypedBelowLine(d, GATE)).toBe(`${counts('Your', '84,000', '105,000')} ${atQuote('Your')}`)
+    expect(DEV_SEEDS.datesavedtypedmoved, 'the seed IS this retype').toEqual(d)
   })
 
   it('the coordinate-tap draft (`datesaved` retyped to $6,000 a month, the `verify:fit` arm’s): on the Result the clause names the $72,000 its $28,985 rests on, then the quote’s own $16,985', () => {
     const d = typed(DEV_SEEDS.datesaved, 6_000 * 12, 'month')
     expect(workingYearLeftOverShownState(d), 'the premise: moved').toBe('saved-moved')
     expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(
-      `${counts('This', '72,000', '84,000')} At your $72,000 figure, your first working year has $28,985 left over now, not the $16,985 you answered at, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. At $84,000 a year, your first working year, 2026, has $16,985 left over.`,
+      `${counts('This', '72,000', '84,000')} You said all of it goes into your savings when your first working year had $16,985 left over. At your $72,000 figure, it has $28,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two. At $84,000 a year, your first working year, 2026, has $16,985 left over.`,
     )
   })
 
   it('the credit is the SMALLER figure: $86,000 typed on `datesavedrisen` prints $14,985 at year 0, below the stored $16,985, and the line names $14,985', () => {
     const d = typed(DEV_SEEDS.datesavedrisen, 86_000)
     expect(workingYearLeftOverShownState(d)).toBe('saved-moved')
-    expect(workingYearCostTypedBelowLine(d, RESULT_HOSTED)).toBe(
-      `${counts('This', '86,000', '90,000')} It adds up to $14,985 a year to your savings. At $90,000 a year, your first working year, 2026, has $10,985 left over.`,
+    expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(
+      `${counts('This', '86,000', '90,000')} You said all of it goes into your savings when your first working year had $16,985 left over. At your $86,000 figure, it has $14,985 left over now. So each working year adds at most $14,985 of its left over to your savings, the smaller of the two. At $90,000 a year, your first working year, 2026, has $10,985 left over. That year, this answer adds $4,000 your pay doesn’t really leave over.`,
     )
   })
 
   it('first none (spending $100,985): year 0 at the quote has nothing left over, worded so, never "$0 short"', () => {
     const d = { ...typed(DEV_SEEDS.datesavedrisen), annualSpendingReal: 100_985 }
     expect(workingYearCostTypedBelowLine(d, GATE)).toBe(
-      `${counts('Your', '84,000', '100,985')} It adds up to $16,985 a year to your savings. At $100,985 a year, your first working year, 2026, has nothing left over.`,
+      `${counts('Your', '84,000', '100,985')} It adds at most $16,985 a year to your savings. At $100,985 a year, your first working year, 2026, has nothing left over. That year, your answer adds $16,985 your pay doesn’t really leave over.`,
     )
   })
 
@@ -1034,11 +1053,36 @@ describe('workingYearCostTypedBelowLine and its door — R1, the Result and the 
       incomeStreams: [{ ...DEV_SEEDS.datesavedrisenlater.incomeStreams[0]!, startAge, endAge }],
     })
     expect(workingYearCostTypedBelowLine(typed(alimony(61, 70)), GATE)).toBe(
-      `${counts('Your', '84,000', '105,000')} It adds up to $16,985 a year to your savings. At $105,000 a year, your first working year, 2026, comes up $4,015 short.`,
+      `${counts('Your', '84,000', '105,000')} It adds at most $16,985 a year to your savings. At $105,000 a year, your first working year, 2026, comes up $4,015 short. Your $84,000 figure leaves that shortfall out of your answer: at that figure, that year has money left over, and it adds $16,985 of it to your savings.`,
     )
     expect(workingYearCostTypedBelowLine(typed(alimony(50, 65)), GATE)).toBe(
-      `${counts('Your', '84,000', '105,000')} It adds up to $16,985 a year to your savings. At $105,000 a year, your first working year, 2026, has $5,985 left over. At that cost, the working year 2032 comes up $3,652 short.`,
+      `${counts('Your', '84,000', '105,000')} At $105,000 a year, your first working year, 2026, has $5,985 left over. That year, your answer adds $11,000 your pay doesn’t really leave over. At that cost, the working year 2032 comes up $3,652 short. Your $84,000 figure leaves that shortfall out of your answer: at that figure, that year has money left over, and it adds $16,985 of it to your savings.`,
     )
+  })
+
+  // U11 walk 7's R1: what the answer does in a run of short years at the quote, off the run's own rule — each year's cash
+  // at the typed figure is its cash at the quote plus the gap (pinned on every row both pictures list, below), and the
+  // engine credits min(that, the cap), nothing where it is short. On C at $105,000 the run is 2029–2032, short $3,652 to
+  // $4,015.
+  it('R1’s arms off the run’s own rule: the cap in each year (TM, above); a range below the cap ($99,000: the gap $6,000 leaves $1,985 to $2,348, under year 0’s $11,985); and where some year is short at the typed figure too ($102,000: the gap $3,000 is below the $4,015), the fact true in every case', () => {
+    const at = (amount: number): string => workingYearCostTypedBelowLine(typed(DEV_SEEDS.datesavedrisenlater, amount), GATE)!
+    expect(at(99_000).endsWith(
+      'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. Your $99,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds between $1,985 and $2,348 to your savings in each of them.',
+    )).toBe(true)
+    expect(at(102_000).endsWith(
+      'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. At your $102,000 figure, those years cost $3,000 less each, so your answer takes less from your savings in them.',
+    )).toBe(true)
+  })
+
+  it('the rule’s premise: W comes off each working year’s cash dollar for dollar, so on TM every row both pictures list differs by the gap ($21,000)', () => {
+    const tm = DEV_SEEDS.datesavedtypedmoved
+    const atTyped = workingYearLedgerForRun(tm)
+    const atQuote = workingYearLedgerForRun(writeConfirmedWorkingYearCost(tm))
+    if (atTyped === 'unknown' || atQuote === 'unknown') throw new Error('[test setup] both pictures are known')
+    expect(atTyped.year0.bottomLine - atQuote.year0.bottomLine).toBeCloseTo(21_000, 6)
+    const both = atTyped.laterYears.filter((r) => atQuote.laterYears.some((q) => q.calendarYear === r.calendarYear))
+    expect(both.map((r) => r.calendarYear), 'the rows both list').toEqual([2029, 2031, 2033, 2035])
+    for (const r of both) expect(r.bottomLine - atQuote.laterYears.find((q) => q.calendarYear === r.calendarYear)!.bottomLine, String(r.calendarYear)).toBeCloseTo(21_000, 6)
   })
 
   it('under any answer the run does not carry — unanswered, spent, not sure, a "saved" answer not asked — the counts sentence and the lean alone', () => {

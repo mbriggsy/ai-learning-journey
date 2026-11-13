@@ -888,6 +888,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingLedgerLaterShortRange: slots.workingLedgerLaterShortRange('3,100', '3,400'),
     workingLedgerStillShortSince: slots.workingLedgerStillShortSince(2026),
     workingLedgerLeftOverFigure: slots.workingLedgerLeftOverFigure('16,985'),
+    workingLedgerLeftOverWaitingShort: slots.workingLedgerLeftOverWaitingShort('105,000', 2026, 2032, '3,652', '4,015'),
     workingLedgerLeftOverCheck: slots.workingLedgerLeftOverCheck('16,985', '20,000', '36,985'),
     workingLedgerLeftOverCheckNoDeposits: slots.workingLedgerLeftOverCheckNoDeposits('16,985'),
     workingLedgerLeftOverSavedLine: slots.workingLedgerLeftOverSavedLine('16,985'),
@@ -918,7 +919,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostStaleLeftOverNoneNow: slots.workingCostStaleLeftOverNoneNow('16,985', '84,000'),
     workingCostStaleNoSmallerAmount: slots.workingCostStaleNoSmallerAmount('90,000'),
     workingCostStaleEachDollar: slots.workingCostStaleEachDollar('90,000', '10,985'),
-    workingCostStaleLowerAddsMore: slots.workingCostStaleLowerAddsMore('90,000', '16,985'),
+    workingCostStaleLowerAddsMore: slots.workingCostStaleLowerAddsMore('90,000', '10,985', '6,000', '16,985'),
+    workingCostStaleLowerCountsMore: slots.workingCostStaleLowerCountsMore('16,985'),
     workingCostStaleDoorHeadingUpdate: slots.workingCostStaleDoorHeadingUpdate('84,000'),
     workingCostStaleDoorHeadingConfirm: slots.workingCostStaleDoorHeadingConfirm('84,000'),
     workingCostStaleGateScopeUpdate: slots.workingCostStaleGateScopeUpdate('84,000'),
@@ -940,6 +942,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostTypedBelowCounts: slots.workingCostTypedBelowCounts('This', '84,000', '90,000'),
     workingCostTypedBelowCountsBudget: slots.workingCostTypedBelowCountsBudget('Your', '84,000', '90,000'),
     workingCostTypedBelowAdds: slots.workingCostTypedBelowAdds('16,985'),
+    workingCostTypedBelowYearExtra: slots.workingCostTypedBelowYearExtra('This', '6,000'),
+    workingCostTypedBelowShortCredit: slots.workingCostTypedBelowShortCredit('Your', '84,000', false, '16,985', '16,985'),
+    workingCostTypedBelowShortLess: slots.workingCostTypedBelowShortLess('This', '84,000', false, '21,000'),
     workingCostTypedBelowAtQuoteLeftOver: slots.workingCostTypedBelowAtQuoteLeftOver('90,000', 2026, '10,985'),
     workingCostTypedBelowAtQuoteNone: slots.workingCostTypedBelowAtQuoteNone('100,985', 2026),
     workingCostTypedBelowAtQuoteShort: slots.workingCostTypedBelowAtQuoteShort('105,000', 2026, 2032, '3,652', '4,015'),
@@ -1467,6 +1472,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.workingLedgerLaterShortEach(S),
       slots.workingLedgerLaterShortRange(S, S),
       slots.workingLedgerLeftOverFigure(S),
+      slots.workingLedgerLeftOverWaitingShort(S, Number.NaN, Number.NaN, S, S),
+      slots.workingLedgerLeftOverWaitingShort(S, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, S, S),
       slots.workingLedgerLeftOverCheck(S, S, S),
       slots.workingLedgerLeftOverCheckNoDeposits(S),
       slots.workingLedgerLeftOverSavedLine(S),
@@ -1497,7 +1504,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.workingCostStaleLeftOverNoneNow(S, S),
       slots.workingCostStaleNoSmallerAmount(S),
       slots.workingCostStaleEachDollar(S, S),
-      slots.workingCostStaleLowerAddsMore(S, S),
+      slots.workingCostStaleLowerAddsMore(S, S, S, S),
+      slots.workingCostStaleLowerCountsMore(S),
       slots.workingCostStaleDoorHeadingUpdate(S),
       slots.workingCostStaleDoorHeadingConfirm(S),
       slots.workingCostStaleGateScopeUpdate(S),
@@ -1526,6 +1534,13 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.workingCostTypedBelowCounts('Your', S, S),
       slots.workingCostTypedBelowCountsBudget('This', S, S),
       slots.workingCostTypedBelowAdds(S),
+      slots.workingCostTypedBelowYearExtra('This', S),
+      slots.workingCostTypedBelowYearExtra('Your', S),
+      slots.workingCostTypedBelowShortCredit('This', S, false, S, S),
+      slots.workingCostTypedBelowShortCredit('Your', S, false, S, `${S}x`),
+      slots.workingCostTypedBelowShortCredit('This', S, true, S, S),
+      slots.workingCostTypedBelowShortLess('This', S, false, S),
+      slots.workingCostTypedBelowShortLess('Your', S, true, S),
       slots.workingCostTypedBelowAtQuoteLeftOver(S, Number.NaN, S),
       slots.workingCostTypedBelowAtQuoteNone(S, Number.NaN),
       // NaN never equals itself, so it renders the run arm; Infinity does, and prints no digit either: the one-year arm.
@@ -1815,7 +1830,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:938-948, :994-1011), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:942-952, :998-1015), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

@@ -1295,7 +1295,7 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
   it('on `datesavedstale`, Keep’s condition sits above Keep, inside the stale note, as Keep’s description — the room $84,000 leaves over $78,000 — and Keep still sits above the cost lists', () => {
     render(<Harness model={modelWith(DEV_SEEDS.datesavedstale)} />)
     const keep = screen.getByRole('button', { name: 'Keep $84,000 a year' })
-    const condition = 'Choose “Keep $84,000 a year” only if the costs listed below come to $6,000 a year or less, on top of your $78,000 of spending.'
+    const condition = 'Choose “Keep $84,000 a year” only if the costs listed below, other than what you spend, come to $6,000 a year or less on top of your $78,000 of spending.'
     expect(keep).toHaveAccessibleDescription(condition)
     const conditionEl = screen.getByText(condition)
     expect(conditionEl.compareDocumentPosition(keep) & Node.DOCUMENT_POSITION_FOLLOWING, 'the condition comes first in the DOM').toBeTruthy()

@@ -27,10 +27,10 @@
 import { useId, useMemo } from 'react'
 import type { WorkingYearLeftOverKind } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { LEFT_OVER_WAITING_COPY, copy, slots } from '@ui/copy'
+import { slots } from '@ui/copy'
 import { SegmentedControl, formatMoney } from './fields'
 import { workingYearLeftOverDepositsLive, workingYearLeftOverLive, workingYearLeftOverShownState } from './intakeMap'
-import { workingYearLeftOverMoved, workingYearLeftOverWaitingWords, writeWorkingYearLeftOver } from './workingYearLeftOver'
+import { workingYearLeftOverMoved, workingYearLeftOverWaitingSeat, writeWorkingYearLeftOver } from './workingYearLeftOver'
 import { LEFT_OVER_FACE, type LeftOverShownState } from './workingYearLeftOverState'
 
 /** The one line in dollars below the group (R6), by shown state. `live` is today's printed year-0 Left
@@ -95,8 +95,9 @@ export function WorkingYearLeftOverQuestion({
             <circle cx="8" cy="4.5" r="0.9" fill="currentColor" />
           </svg>
           {/* In the act's verb, the reader acting (U11 walk 5's (bn); `WORKING_COST_ACT_COPY`): W is stale here — or, where
-              updating carries nothing either (U11 walk 6's R3, B), no "until" (`workingYearLeftOverWaitingWords`). */}
-          <span>{copy[LEFT_OVER_WAITING_COPY[workingYearLeftOverWaitingWords(draft)].seat]}</span>
+              updating carries nothing either (U11 walk 6's R3, B), no "until", and where year 0 at the quote comes up
+              short, its run in dollars (U11 walk 7's R5; `workingYearLeftOverWaitingSeat`). */}
+          <span>{workingYearLeftOverWaitingSeat(draft)}</span>
         </p>
       </div>
     )

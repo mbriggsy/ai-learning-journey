@@ -2192,7 +2192,8 @@ const RISEN_LINE = [
   slots.workingCostStaleLabelIf('90,000'),
   slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
   slots.workingCostStaleEachDollar('90,000', '10,985'),
-  slots.workingCostStaleLowerAddsMore('90,000', '16,985'),
+  // The extra a lower figure counts: the stored $16,985 less year 0's $10,985 at the quote (U11 walk 7's R6 (a)).
+  slots.workingCostStaleLowerAddsMore('90,000', '10,985', '6,000', '16,985'),
 ].join(' ')
 const RISEN_SHORT_LINE = [
   slots.workingCostStaleQuote('84,000', '105,000'),
@@ -2213,7 +2214,7 @@ const RISEN_LATER_LINE = [
   slots.workingCostStaleLeftOverGainYears(2026, 2028, 2033),
   slots.workingCostStaleEachDollar('105,000', '5,985'),
   slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000'),
-  copy.workingCostStaleLowerCounts,
+  slots.workingCostStaleLowerCountsMore('16,985'),
 ].join(' ')
 /** The risen arms' Result door ("update": no Keep door below the quote): the press sentence and the condition, ending
  *  on the list; after it, that the tool counts them only if added, then "Yes" at today's quote. */
@@ -2258,17 +2259,23 @@ const typedBelowLine = (answer: 'This' | 'Your'): string =>
     slots.workingCostTypedBelowCounts(answer, '84,000', '90,000'),
     slots.workingCostTypedBelowAdds('16,985'),
     slots.workingCostTypedBelowAtQuoteLeftOver('90,000', 2026, '10,985'),
+    // U11 walk 7's R4: the year's $6,000 the credit counts past what $90,000 leaves.
+    slots.workingCostTypedBelowYearExtra(answer, '6,000'),
   ].join(' ')
 /** The walk-6 round review's pair on `datesavedtypedmoved` (`datesavedrisenlater` with its old $84,000 TYPED back in, the
  *  left over moved to $26,985 at it): R1's line, "Your" on the gate with its credit sentence, "This" on the Result with the
  *  moved clause naming the $84,000 in its place; then year 0 at the $105,000 quote ($5,985) and the 2029–2032 run. On the
- *  gate the moved line follows as its own line (one cause, one line), naming the same figure. */
-const typedMovedLine = (answer: 'This' | 'Your', middle: string): string =>
+ *  gate the moved line follows as its own line (one cause, one line), naming the same figure. U11 walk 7: no second cap
+ *  on the gate (`middle` null: the moved line says it, R3 (c)); 2026's $11,000 past the quote's $5,985 (R4); and what the
+ *  answer does in the 2029–2032 run at the typed figure (R1). */
+const typedMovedLine = (answer: 'This' | 'Your', middle: string | null): string =>
   [
     slots.workingCostTypedBelowCounts(answer, '84,000', '105,000'),
-    middle,
+    ...(middle === null ? [] : [middle]),
     slots.workingCostTypedBelowAtQuoteLeftOver('105,000', 2026, '5,985'),
+    slots.workingCostTypedBelowYearExtra(answer, '11,000'),
     slots.workingCostTypedBelowAtQuoteLaterShort(2029, 2032, '3,652', '4,015'),
+    slots.workingCostTypedBelowShortCredit(answer, '84,000', false, '16,985', '16,985'),
   ].join(' ')
 const TYPED_MOVED_GATE_MOVED_LINE = `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMovedAt('84,000', '16,985', '26,985', '16,985')} ${copy.stalenessLeftOverGateDoor}`
 /** `note` — the gate's one note (its text, read as `innerText`); `next` — a second note, its own cause, where the gate
@@ -2363,7 +2370,7 @@ const PAY_CHECK_UNLOCKS: readonly {
   // b9-5's probe, against `datesavedrisenlater`'s 0.74).
   {
     key: 'datesavedtypedmoved',
-    note: typedMovedLine('Your', slots.workingCostTypedBelowAdds('16,985')),
+    note: typedMovedLine('Your', null),
     next: TYPED_MOVED_GATE_MOVED_LINE,
     gateDoor: UPDATE_GATE_DOOR,
     sibling: copy.stalenessPayCheckGateLead,
@@ -3060,7 +3067,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2098-2102 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2108-2112 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,

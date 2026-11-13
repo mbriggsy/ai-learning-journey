@@ -250,14 +250,16 @@ const WORK_STATE_FAMILY: ReadonlySet<CopyKey> = new Set(Object.values(WORK_STATE
  *  over the seven so a state added later fails to compile here (insight 147), and by the act where the state
  *  names it: "waiting on W" says the act in its own verb, the reader acting (U11 walk 5's (bn);
  *  `WORKING_COST_ACT_COPY`, the act's one home) — or, B only, the update act's form with no "until" where updating carries
- *  nothing either (U11 walk 6's R3: `LEFT_OVER_WAITING_COPY`, `workingYearLeftOverWaitingWords`). No dollars, no lean
- *  (R14, R16): the dollars ride the question's own line under its radios. */
-const sameForEitherAct = (k: CopyKey): Readonly<Record<LeftOverWaitingWords, CopyKey>> => ({ update: k, updateShort: k, confirmOrChange: k })
+ *  nothing either (U11 walk 6's R3: `LEFT_OVER_WAITING_COPY`, `workingYearLeftOverWaitingWords`), split by year 0's sign at
+ *  the quote since U11 walk 7's R5 (it comes up short, or exactly $0). No dollars, no lean (R14, R16): the dollars ride
+ *  the question's own line under its radios. */
+const sameForEitherAct = (k: CopyKey): Readonly<Record<LeftOverWaitingWords, CopyKey>> => ({ update: k, updateShort: k, updateNone: k, confirmOrChange: k })
 const LEFT_OVER_KEY: Readonly<Record<LeftOverShownState, Readonly<Record<LeftOverWaitingWords, CopyKey>>>> = {
   'not-asked': sameForEitherAct('assumptionWorkingYearCheckLeftOverNotAsked'),
   'waiting-on-w': {
     update: LEFT_OVER_WAITING_COPY.update.method,
     updateShort: LEFT_OVER_WAITING_COPY.updateShort.method,
+    updateNone: LEFT_OVER_WAITING_COPY.updateNone.method,
     confirmOrChange: LEFT_OVER_WAITING_COPY.confirmOrChange.method,
   },
   absent: sameForEitherAct('assumptionWorkingYearCheckLeftOverAbsent'),
@@ -367,6 +369,7 @@ export const METHODOLOGY_DISCLOSURES: readonly MethodologyDisclosure[] = [
       'assumptionWorkingYearCheckLeftOverNotAsked',
       'assumptionWorkingYearCheckLeftOverWaitingUpdate',
       'assumptionWorkingYearCheckLeftOverWaitingUpdateShort',
+      'assumptionWorkingYearCheckLeftOverWaitingUpdateNone',
       'assumptionWorkingYearCheckLeftOverWaitingConfirm',
       'assumptionWorkingYearCheckLeftOverAbsent',
       'assumptionWorkingYearCheckLeftOverSaved',

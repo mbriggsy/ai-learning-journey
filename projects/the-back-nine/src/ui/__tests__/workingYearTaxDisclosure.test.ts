@@ -260,10 +260,15 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     ...LEFT_OVER_LINE,
     'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaitingConfirm',
   }
-  // U11 walk 6's R3, B only: no "until" where updating carries nothing either.
+  // U11 walk 6's R3, B only: no "until" where updating carries nothing either — split by year 0's sign at the quote
+  // since U11 walk 7's R5 (it comes up short, or exactly $0).
   const LEFT_OVER_LINE_SHORT: Readonly<Record<LeftOverShownState, string>> = {
     ...LEFT_OVER_LINE,
     'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaitingUpdateShort',
+  }
+  const LEFT_OVER_LINE_NONE: Readonly<Record<LeftOverShownState, string>> = {
+    ...LEFT_OVER_LINE,
+    'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaitingUpdateNone',
   }
 
   it('the W-absent arm is today’s row, verbatim (KTD22) — under every reading and every left-over state', () => {
@@ -284,7 +289,7 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     expect(copy).not.toHaveProperty('assumptionWorkingYearCheckLeftOver')
     const k9Slot = W_ARM.indexOf('assumptionWorkingYearCheckLeftOverAbsent')
     expect(k9Slot, 'between the either-way group and the a-little-worse group').toBe(W_ARM.indexOf('assumptionWorkingYearCheckWageFigures') + 1)
-    for (const [act, lines] of [['update', LEFT_OVER_LINE], ['updateShort', LEFT_OVER_LINE_SHORT], ['confirmOrChange', LEFT_OVER_LINE_CONFIRM]] as const) {
+    for (const [act, lines] of [['update', LEFT_OVER_LINE], ['updateShort', LEFT_OVER_LINE_SHORT], ['updateNone', LEFT_OVER_LINE_NONE], ['confirmOrChange', LEFT_OVER_LINE_CONFIRM]] as const) {
       for (const s of LEFT_OVER_SHOWN_STATES) {
         const expected = W_ARM.map((k, i) => (i === k9Slot ? lines[s] : k))
         expect(methodologyLines(row(), 'workingCost', 'agi-derived', s, act), `${s} (${act})`).toEqual(expected)
@@ -292,8 +297,11 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     }
     expect(new Set(Object.values(LEFT_OVER_LINE)).size, 'seven distinct lines').toBe(7)
     expect(LEFT_OVER_LINE_CONFIRM['waiting-on-w'], 'the act changes only the waiting line').not.toBe(LEFT_OVER_LINE['waiting-on-w'])
-    expect(new Set([LEFT_OVER_LINE, LEFT_OVER_LINE_SHORT, LEFT_OVER_LINE_CONFIRM].map((l) => l['waiting-on-w'])).size, 'three waiting forms').toBe(3)
+    expect(new Set([LEFT_OVER_LINE, LEFT_OVER_LINE_SHORT, LEFT_OVER_LINE_NONE, LEFT_OVER_LINE_CONFIRM].map((l) => l['waiting-on-w'])).size, 'four waiting forms').toBe(4)
     expect(copy.assumptionWorkingYearCheckLeftOverWaitingUpdateShort, 'B’s form: no "until", and why updating brings nothing back').toBe(
+      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year comes up short. Updating puts the short years into your answer.',
+    )
+    expect(copy.assumptionWorkingYearCheckLeftOverWaitingUpdateNone, 'B at exactly $0: the old words').toBe(
       'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.',
     )
     // The selector without the shown state fails to compile (KTD11: REQUIRED, never defaulted).
@@ -316,7 +324,11 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     }
     // KTD11's two fixed frames: "saved" states the at-most-year-0 frame; "not asked" says nothing is added
     // where the first working year has none.
-    expect(copy.assumptionWorkingYearCheckLeftOverSaved).toMatch(/up to your first working year’s figure/)
+    expect(copy.assumptionWorkingYearCheckLeftOverSaved).toMatch(/up to the amount your first working year has left over/)
+    // U11 walk 7's R8 (a): never "figure" for the left over, beside "your figure for a working year" (the cap read as W).
+    for (const k of ['assumptionWorkingYearCheckLeftOverSaved', 'assumptionWorkingYearCheckLeftOverSavedMoved'] as const) {
+      expect(copy[k], k).not.toMatch(/working year’s figure|two figures/)
+    }
     expect(copy.assumptionWorkingYearCheckLeftOverNotAsked).toMatch(/only when your first working year shows some left over/)
   })
 

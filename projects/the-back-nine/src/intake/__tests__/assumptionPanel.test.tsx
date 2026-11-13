@@ -254,7 +254,7 @@ describe('the R7 registry completeness walk (the compile gate’s runtime half)'
     // ⚠️ NON-VACUITY CENSUS — the only assertion in this arm lives INSIDE the loop, so an empty
     // (or silently-shrunken) roster passes GREEN while proving nothing, and the R7 completeness
     // claim evaporates with the gate still reporting OK. `requiredSeats()` derives from TWO
-    // sources (`assumptionRegistry.ts:385-392`: the non-`internal` DRAFT_DISPOSITIONS, plus
+    // sources (`assumptionRegistry.ts:388-395`: the non-`internal` DRAFT_DISPOSITIONS, plus
     // METHODOLOGY_DISCLOSURES), so census BOTH — either half dropping out would otherwise be
     // invisible here.
     const seats = requiredSeats()
@@ -1546,9 +1546,9 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
 
   it('on `datesavedrisenshort` (B: year 0 at $105,000 comes up short) the seat waits with no promise — updating carries nothing either (U11 walk 6’s R3; the round review’s L1-3) — and the method row says the same, under every answer', () => {
     const SEAT_B =
-      'Your figure for a working year needs an update, above. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.'
+      'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short, so nothing is left over to add. Updating to $105,000 or more won’t add any, but it puts those shortfalls into your answer.'
     const METHOD_B =
-      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.'
+      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year comes up short. Updating puts the short years into your answer.'
     for (const answer of [{ kind: 'saved', quotedReal: 16_985 }, { kind: 'spent' }, undefined] as const) {
       const { unmount } = renderPanel({ snapshot: snap({ ...DEV_SEEDS.datesavedrisenshort, workingYearLeftOver: answer }) })
       const who = answer?.kind ?? 'unanswered'

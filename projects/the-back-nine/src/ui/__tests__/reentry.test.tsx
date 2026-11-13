@@ -1140,7 +1140,8 @@ describe('ReEntry — the surface', () => {
   const TYPED_GATE_LINE =
     'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. ' +
     'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
-    'It adds up to $16,985 a year to your savings. At $90,000 a year, your first working year, 2026, has $10,985 left over.'
+    'It adds at most $16,985 a year to your savings. At $90,000 a year, your first working year, 2026, has $10,985 left over. ' +
+    'That year, your answer adds $6,000 your pay doesn’t really leave over.'
 
   it('R1: `datesavedtyped` as a vault — the typed-below line in W’s place and plain form, and the update act’s door under the buttons naming $84,000; no anyStale, no rules echo', () => {
     const d = DEV_SEEDS.datesavedtyped
@@ -1165,7 +1166,7 @@ describe('ReEntry — the surface', () => {
     )
   })
 
-  it('R1: where the left over ALSO moved, the gate keeps two lines, one cause each — the typed-below line with its own credit sentence, then the moved line, which names the $84,000 its $26,985 rests on, since the line above ends on the quote’s $5,985 (the round review’s pair)', () => {
+  it('R1: where the left over ALSO moved, the gate keeps two lines, one cause each — the typed-below line (no second cap since U11 walk 7’s R3 (c): the moved line says it), then the moved line, which names the $84,000 its $26,985 rests on, since the line above ends on the quote’s $5,985 (the round review’s pair)', () => {
     const later = DEV_SEEDS.datesavedrisenlater
     const w = later.workingYearCost
     if (w === undefined) throw new Error('[test setup] the witness holds a W')
@@ -1176,8 +1177,10 @@ describe('ReEntry — the surface', () => {
     expect(view.noteLines).toEqual([
       'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. ' +
         'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
-        'It adds up to $16,985 a year to your savings. At $105,000 a year, your first working year, 2026, has $5,985 left over. ' +
-        'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short.',
+        'At $105,000 a year, your first working year, 2026, has $5,985 left over. ' +
+        'That year, your answer adds $11,000 your pay doesn’t really leave over. ' +
+        'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
+        'Your $84,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds $16,985 to your savings in each of them.',
       `${copy.stalenessLeftOverNote} You said all of it goes into your savings when it was $16,985. At your $84,000 figure, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${copy.stalenessLeftOverGateDoor}`,
     ])
   })

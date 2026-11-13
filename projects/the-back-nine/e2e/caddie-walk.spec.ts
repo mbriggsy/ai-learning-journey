@@ -1425,7 +1425,8 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
     slots.workingCostStaleLabelIf(RISEN_W_QUOTE_NOW),
     slots.workingCostStaleLeftOverIfCapped(RISEN_AT_QUOTE, 2026, RISEN_W_QUOTE_NOW, false),
     slots.workingCostStaleEachDollar(RISEN_W_QUOTE_NOW, RISEN_AT_QUOTE),
-    slots.workingCostStaleLowerAddsMore(RISEN_W_QUOTE_NOW, DATE_LEFT_OVER),
+    // The extra a lower figure counts: the stored $16,985 less year 0's $10,985 at the quote (U11 walk 7's R6 (a)).
+    slots.workingCostStaleLowerAddsMore(RISEN_W_QUOTE_NOW, RISEN_AT_QUOTE, '6,000', DATE_LEFT_OVER),
   ]),
   // Increment 11, the risen twin's two other arms (`devSeeds.ts`'s docblocks carry the hand sums): at $105,000 year
   // 0 comes up $4,015 short, so a check adds none of the $16,985 and the short-year lean rides…
@@ -1435,7 +1436,7 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
     slots.workingCostStaleLabelIf(RISEN_SHORT_QUOTE),
     slots.workingCostStaleLeftOverIfFirstShortRun(2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, RISEN_SHORT_QUOTE, STALE_W_CONFIRMED, DATE_LEFT_OVER),
     copy.workingCostStaleLowerCounts,
-  ], copy.workingLedgerLeftOverWaitingUpdateShort),
+  ], slots.workingLedgerLeftOverWaitingShort(RISEN_SHORT_QUOTE, 2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY)),
   // …and with Sam's alimony to 62, year 0 at $105,000 has $5,985 left over (the most a check adds) while 2029, the
   // alimony ended, comes up $4,015 short — named, with the years-cheaper lean.
   datesavedrisenlater: risenWitness(RISEN_SHORT_QUOTE, slots.workingCostStaleLeftOverYearsCheaper(STALE_W_CONFIRMED), [
@@ -1446,7 +1447,7 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
     slots.workingCostStaleLeftOverGainYears(2026, RISEN_LATER_SHORT_YEAR - 1, RISEN_LATER_RESUMES),
     slots.workingCostStaleEachDollar(RISEN_SHORT_QUOTE, RISEN_LATER_AT_QUOTE),
     slots.workingCostStaleShortLaterYears(RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, STALE_W_CONFIRMED),
-    copy.workingCostStaleLowerCounts,
+    slots.workingCostStaleLowerCountsMore(DATE_LEFT_OVER),
   ]),
 }
 
@@ -1839,6 +1840,7 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
       slots.workingCostTypedBelowCounts('This', STALE_W_CONFIRMED, RISEN_W_QUOTE_NOW),
       slots.workingCostTypedBelowAdds('16,985'),
       slots.workingCostTypedBelowAtQuoteLeftOver(RISEN_W_QUOTE_NOW, 2026, '10,985'),
+      slots.workingCostTypedBelowYearExtra('This', '6,000'),
     ].join(' '),
   )
   await expect(standing.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate })).toBeVisible()

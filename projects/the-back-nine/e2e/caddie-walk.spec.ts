@@ -1286,8 +1286,14 @@ const gateDoorOf = (act: 'update' | 'confirm'): GateDoorWords =>
  *  routes can save, so the doors ride: on the Result W's block ends on its door (the heading, the press sentence and the
  *  condition, the cost list, that the tool counts them only if added, then "Yes" at today's quote: below the quote the
  *  W row offers no Keep door); on the gate the door is its own section under the buttons. The seat waits (no figure,
- *  no radios) in the act's verb ((bn)) as on every stale-W witness. */
-function risenWitness(quoteNow: string, lean: string, tail: readonly string[]): LeftOverWitness {
+ *  no radios) in the act's verb ((bn)) as on every stale-W witness — on B (year 0 short at the quote) with no "until"
+ *  (U11 walk 6's R3: `seatLine`). */
+function risenWitness(
+  quoteNow: string,
+  lean: string,
+  tail: readonly string[],
+  seatLine: string = copy.workingLedgerLeftOverWaitingUpdate,
+): LeftOverWitness {
   const head = [slots.workingCostStaleQuote(STALE_W_CONFIRMED, quoteNow), lean]
   const gateDoor = gateDoorOf('update')
   return {
@@ -1312,7 +1318,7 @@ function risenWitness(quoteNow: string, lean: string, tail: readonly string[]): 
       notLead: copy.stalenessLeftOverNote,
       door: gateDoor,
     },
-    seat: { figure: null, line: copy.workingLedgerLeftOverWaitingUpdate, radios: 0, checked: null },
+    seat: { figure: null, line: seatLine, radios: 0, checked: null },
   }
 }
 
@@ -1429,7 +1435,7 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
     slots.workingCostStaleLabelIf(RISEN_SHORT_QUOTE),
     slots.workingCostStaleLeftOverIfFirstShortRun(2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, RISEN_SHORT_QUOTE, STALE_W_CONFIRMED, DATE_LEFT_OVER),
     copy.workingCostStaleLowerCounts,
-  ]),
+  ], copy.workingLedgerLeftOverWaitingUpdateShort),
   // …and with Sam's alimony to 62, year 0 at $105,000 has $5,985 left over (the most a check adds) while 2029, the
   // alimony ended, comes up $4,015 short — named, with the years-cheaper lean.
   datesavedrisenlater: risenWitness(RISEN_SHORT_QUOTE, slots.workingCostStaleLeftOverYearsCheaper(STALE_W_CONFIRMED), [

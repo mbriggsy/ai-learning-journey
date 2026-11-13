@@ -24,7 +24,15 @@
  */
 import type { WorkingYearLedgerLaterYear, WorkingYearLeftOverKind, WorkingYearLeftOverV5 } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { WORKING_COST_ACT_COPY, copy, slots, workingCostExtras, type TypedBelowAnswer, type WorkingCostAct } from '@ui/copy'
+import {
+  WORKING_COST_ACT_COPY,
+  copy,
+  slots,
+  workingCostExtras,
+  type LeftOverWaitingWords,
+  type TypedBelowAnswer,
+  type WorkingCostAct,
+} from '@ui/copy'
 import type { GateDoor, NoteDoor, NoteSegment } from '@ui/noteParts'
 import { formatMoney } from './fields'
 import {
@@ -266,6 +274,16 @@ export function workingYearCheckAtQuote(d: ScenarioDraft): WorkingYearCheckAtQuo
   const stored = savedWaitingOnW(d)
   if (stored === null || workingYearCostStaleSentence(d)?.rose !== true) return null
   return checkAtQuote(d, stored)
+}
+
+/** Which words the left-over question's "waiting on W" face and its methodology line speak (U11 walk 6's R3, the
+ *  sheet's half): the draft's act (`workingYearCostAct`), except B — a "saved" answer waiting on W whose check at the
+ *  quote leaves year 0 short or at $0 (`firstShort` / `firstNone`) — whose "Until you update…, no money left over is
+ *  added" promised what updating takes away (at the quote the question isn't asked, and nothing is carried), so it
+ *  reads `updateShort`. Read on every draft the two faces draw; only "waiting on W" reads it. */
+export function workingYearLeftOverWaitingWords(d: ScenarioDraft): LeftOverWaitingWords {
+  const kind = workingYearCheckAtQuote(d)?.kind
+  return kind === 'firstShort' || kind === 'firstNone' ? 'updateShort' : workingYearCostAct(d)
 }
 
 /** The figures the risen arms print: today's quote and the held figure exactly as W's sentence printed them, and

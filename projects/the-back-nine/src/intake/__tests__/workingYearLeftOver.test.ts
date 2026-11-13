@@ -17,7 +17,7 @@
 import { describe, expect, it } from 'vitest'
 import type { WorkingYearLeftOverKind } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { copy, slots, workingCostExtras } from '@ui/copy'
+import { LEFT_OVER_WAITING_COPY, copy, slots, workingCostExtras } from '@ui/copy'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { workingYearCostForRun, workingYearLeftOverShownState } from '../intakeMap'
 import {
@@ -34,6 +34,7 @@ import {
   workingYearLeftOverMoved,
   workingYearLeftOverMovedClause,
   workingYearLeftOverMovedText,
+  workingYearLeftOverWaitingWords,
   writeWorkingYearLeftOver,
   shortRunFrom,
 } from '../workingYearLeftOver'
@@ -853,6 +854,27 @@ describe('workingYearCostStaleDoor — the act and each host’s door', () => {
       expect(act).toBe(heldYesBelowQuote(d) ? 'update' : 'confirmOrChange')
       expect(act).toBe(workingYearCostAct(d))
     }
+  })
+})
+
+// U11 walk 6's R3, the sheet's half: on B — a "saved" answer waiting on W whose year 0 at the quote is short or at $0 —
+// "Until you update…, no money left over is added" promised what updating takes away, so B reads its own form.
+describe('workingYearLeftOverWaitingWords — R3, the seat and the methodology line on B', () => {
+  it('B (`datesavedrisenshort`, first short) and first none ($100,985) read `updateShort`; A, C, the whole arm and every other stale W read the act', () => {
+    expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datesavedrisenshort)).toBe('updateShort')
+    expect(workingYearLeftOverWaitingWords(RISEN_NONE)).toBe('updateShort')
+    for (const d of [DEV_SEEDS.datesavedrisen, DEV_SEEDS.datesavedrisenlater, RISEN_WHOLE]) expect(workingYearLeftOverWaitingWords(d)).toBe('update')
+    expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datesavedstale)).toBe('confirmOrChange')
+    expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datecoststale)).toBe('confirmOrChange')
+  })
+
+  it('B’s seat and method words, typed by hand: no "until", and each ends on what is true now and after updating', () => {
+    expect(copy[LEFT_OVER_WAITING_COPY.updateShort.seat]).toBe(
+      'This question waits until you update your figure for a working year, above. No money left over is added to your savings.',
+    )
+    expect(copy[LEFT_OVER_WAITING_COPY.updateShort.method]).toBe('Your figure for a working year needs an update. No money left over is added to your savings.')
+    expect(copy[LEFT_OVER_WAITING_COPY.update.seat]).toBe(copy.workingLedgerLeftOverWaitingUpdate)
+    expect(copy[LEFT_OVER_WAITING_COPY.confirmOrChange.method]).toBe(copy.assumptionWorkingYearCheckLeftOverWaitingConfirm)
   })
 })
 

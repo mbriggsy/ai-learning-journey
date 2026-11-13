@@ -1544,6 +1544,18 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     expect(within(seat()).queryAllByRole('radio')).toHaveLength(0)
   })
 
+  it('on `datesavedrisenshort` (B: year 0 at $105,000 comes up short) the seat waits with no "until" — updating carries nothing either (U11 walk 6’s R3) — and the method row says the same', () => {
+    renderPanel({ snapshot: snap(DEV_SEEDS.datesavedrisenshort) })
+    expect(within(seat()).getByText(
+      'This question waits until you update your figure for a working year, above. No money left over is added to your savings.',
+    )).toBeInTheDocument()
+    expect(within(seat()).queryByText(copy.workingLedgerLeftOverWaitingUpdate)).toBeNull()
+    expect(within(seat()).queryAllByRole('radio')).toHaveLength(0)
+    // The panel's own call binds the method row to the same decider (the selector's arms are pinned on their own).
+    expect(screen.getByText('Your figure for a working year needs an update. No money left over is added to your savings.')).toBeInTheDocument()
+    expect(screen.queryByText(copy.assumptionWorkingYearCheckLeftOverWaitingUpdate)).toBeNull()
+  })
+
   it('no seat renders where the question is not asked (`dateshort`, `datelateleftover`: year 0 is short) — but it does on `date`', () => {
     for (const key of ['dateshort', 'datelateleftover'] as const) {
       renderPanel({ snapshot: snap(DEV_SEEDS[key]) })

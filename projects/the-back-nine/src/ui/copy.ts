@@ -563,6 +563,12 @@ export const copy = {
     'This question waits until you update your figure for a working year, above. Until then, no money left over is added to your savings.',
   workingLedgerLeftOverWaitingConfirm:
     'This question waits until you confirm or change your figure for a working year, above. Until then, no money left over is added to your savings.',
+  // U11 walk 6's R3 (the sheet's half), B only: where a working year at today's quote leaves year 0 nothing over
+  // (`workingYearCheckAtQuote`'s `firstShort` / `firstNone`), "Until then" promised what updating takes away — at the
+  // quote the question isn't asked and nothing is carried — so the seat ends on what is true now and after
+  // (`LEFT_OVER_WAITING_COPY` picks it).
+  workingLedgerLeftOverWaitingUpdateShort:
+    'This question waits until you update your figure for a working year, above. No money left over is added to your savings.',
   // W's STALE LINE FOR A "SAVED" ANSWER WAITING ON W (R12), its shape from council `wf_7fa86902-35c` (7/10, U11 walk
   // 4: every one-fact sentence easy, the whole only longer, the threads lost at connectives doing a label's job —
   // "So checking…", "Until…, none of it is added", C's "…so this answer can look better"). ONE string on each host,
@@ -1763,6 +1769,9 @@ export const copy = {
     'Until you update your figure for a working year, no money left over is added to your savings.',
   assumptionWorkingYearCheckLeftOverWaitingConfirm:
     'Until you confirm or change your figure for a working year, no money left over is added to your savings.',
+  // U11 walk 6's R3, B only (the seat's twin above, `workingLedgerLeftOverWaitingUpdateShort`): no "until".
+  assumptionWorkingYearCheckLeftOverWaitingUpdateShort:
+    'Your figure for a working year needs an update. No money left over is added to your savings.',
   assumptionWorkingYearCheckLeftOverAbsent:
     'Money left over in a working year isn’t added to your savings until you say what happens to it.',
   assumptionWorkingYearCheckLeftOverSaved:
@@ -2523,6 +2532,19 @@ export const WORKING_COST_ACT_COPY: Readonly<
     gateScope: 'workingCostStaleGateScopeConfirm',
     doorHeading: 'workingCostStaleDoorHeadingConfirm',
   },
+}
+
+/** Which words the left-over question's "waiting on W" face and its methodology line speak: the act's own, or — U11
+ *  walk 6's R3, B only — the update act's where a working year at today's quote leaves year 0 nothing over, so
+ *  updating carries nothing either (`workingYearLeftOver.workingYearLeftOverWaitingWords` decides). */
+export type LeftOverWaitingWords = WorkingCostAct | 'updateShort'
+
+/** Each waiting form's seat and methodology keys, exhaustive (insight 147): the two acts read their own
+ *  (`WORKING_COST_ACT_COPY`, the act's one home), and B's form its pair. */
+export const LEFT_OVER_WAITING_COPY: Readonly<Record<LeftOverWaitingWords, { readonly seat: CopyKey; readonly method: CopyKey }>> = {
+  update: { seat: WORKING_COST_ACT_COPY.update.waitingSeat, method: WORKING_COST_ACT_COPY.update.waitingMethod },
+  updateShort: { seat: 'workingLedgerLeftOverWaitingUpdateShort', method: 'assumptionWorkingYearCheckLeftOverWaitingUpdateShort' },
+  confirmOrChange: { seat: WORKING_COST_ACT_COPY.confirmOrChange.waitingSeat, method: WORKING_COST_ACT_COPY.confirmOrChange.waitingMethod },
 }
 
 /** The W help's count list (R1), in reading order — ONE home for the W row's list and the Result door's: the door

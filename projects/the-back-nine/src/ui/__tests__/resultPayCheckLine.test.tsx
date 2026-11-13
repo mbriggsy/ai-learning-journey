@@ -5,9 +5,8 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { Result } from '../Result'
 import { appModel } from '../appModel'
 import { resolvedFocusKey, selectElevatedAnswer } from '../answerView'
-import { copy, slots } from '@ui/copy'
+import { copy, slots, workingCostExtras } from '@ui/copy'
 import { DEV_SEEDS } from '../devSeeds'
-import { workingYearCostStaleDoor, workingYearCostStaleLine, workingYearCostStaleLineText } from '@intake/workingYearLeftOver'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
 
 /*
@@ -144,76 +143,116 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
     expect(line()).toBeNull()
   })
 
-  it('`datesavedstale`: W’s one line leads with the either-way sentence in "confirm or change", then "This answer now:" — after work it already uses $78,000, the $16,985 dated, none of it added until they confirm or change it; no moved line speaks', () => {
+  // W's line as a BLOCK on the Result (council `wf_22858e04-f7a` (1), (4), amending KTD21's element only): the opening
+  // as a <p>, the labelled parts as a <dl>, and — where the tab can save — the door as the last dt/dd. Read off the DOM.
+  const block = () => {
+    const l = line()!
+    return {
+      opening: l.querySelector(':scope > p.note-parts__opening')?.textContent,
+      labels: Array.from(l.querySelectorAll(':scope > dl > div > dt')).map((dt) => dt.textContent),
+      bodies: Array.from(l.querySelectorAll(':scope > dl > div:not(.note-parts__door) > dd')).map((dd) => dd.textContent),
+      door: l.querySelector(':scope > dl > div.note-parts__door'),
+    }
+  }
+
+  it('`datesavedstale`: W’s one line leads with the either-way sentence in "confirm or change", then "This answer now" — after work it already uses $78,000, the $16,985 dated, none of it added until they confirm or change it, and no amount guessed at; no moved line speaks', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedstale)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
-    expect(line()?.textContent).toBe(
-      [
-        copy.stalenessPayCheckNote,
-        slots.workingCostStaleQuote('84,000', '78,000'),
-        copy.workingCostStaleEitherWayConfirm,
-        copy.workingCostStaleLabelNow,
-        slots.workingCostStaleAfterWork('78,000', true),
-        slots.workingCostStaleLeftOverAnswered('16,985'),
-        slots.workingCostStaleLeftOverNoneConfirm('16,985', '84,000'),
-      ].join(' '),
-    )
+    expect(block()).toEqual({
+      opening: [copy.stalenessPayCheckNote, slots.workingCostStaleQuote('84,000', '78,000'), copy.workingCostStaleEitherWayConfirm].join(' '),
+      labels: [copy.workingCostStaleLabelNow],
+      bodies: [
+        [
+          slots.workingCostStaleAfterWork('78,000', true),
+          slots.workingCostStaleLeftOverAnswered('16,985'),
+          slots.workingCostStaleLeftOverNoneConfirm('16,985', '84,000'),
+          copy.workingCostStaleNoGuess,
+        ].join(' '),
+      ],
+      door: null,
+    })
+    expect(document.body.textContent).not.toContain(copy.stalenessLeftOverNote)
   })
 
   // The U11 walk's (ae), in council `wf_7fa86902-35c`'s shape: where the spending ROSE past the yes, the Result's line
-  // carries the year-level lean, the lead, "This answer now:", then "If a working year costs $X:" and what updating
-  // does there (year 0 at $90,000, hand-derived: 150,000 − 11,475 − 17,540 − 20,000 − 90,000 = $10,985) — and where
-  // year 0 at the quote is short (at $105,000: −$4,015), the short-year lead and that updating still adds none of it.
-  it('`datesavedrisen` and `datesavedrisenshort`: W’s line carries the year-level lean, the arm’s lead, "This answer now:", then what updating to the quote does — at most $10,985, or none of the $16,985', () => {
-    const NOW = (spending: string) => [
-      copy.workingCostStaleLabelNow,
-      slots.workingCostStaleAfterWork(spending, true),
-      slots.workingCostStaleLeftOverAnswered('16,985'),
-      slots.workingCostStaleLeftOverNoneUpdate('16,985', '84,000'),
-    ]
+  // carries the lean (R2's gap where no year at the quote runs short), the lead, "This answer now", then "If a working
+  // year costs $X" and what updating does there (year 0 at $90,000, hand-derived: 150,000 − 11,475 − 17,540 − 20,000 −
+  // 90,000 = $10,985) — and where year 0 at the quote is short (at $105,000: −$4,015), the short-year lead, "This answer
+  // now" ending on today (R3), and that updating brings none of it back.
+  it('`datesavedrisen` and `datesavedrisenshort`: W’s line carries its lean, the arm’s lead, "This answer now", then what updating to the quote does — at most $10,985 and what lowers it, or none of the $16,985 back — and what a lower figure does', () => {
+    const NOW = (spending: string, tail: readonly string[]) =>
+      [slots.workingCostStaleAfterWork(spending, true), slots.workingCostStaleLeftOverAnswered('16,985'), ...tail].join(' ')
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedrisen)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
-    expect(line()?.textContent).toBe(
-      [
+    expect(block()).toEqual({
+      opening: [
         copy.stalenessPayCheckNote,
         slots.workingCostStaleQuote('84,000', '90,000'),
-        slots.workingCostStaleLeftOverYearsCheaper('84,000'),
+        slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000'),
         copy.workingCostStaleEitherWayUpdate,
-        ...NOW('90,000'),
-        slots.workingCostStaleLabelIf('90,000'),
-        slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
       ].join(' '),
-    )
+      labels: [copy.workingCostStaleLabelNow, slots.workingCostStaleLabelIf('90,000')],
+      bodies: [
+        NOW('90,000', [slots.workingCostStaleLeftOverNoneUpdate('16,985', '84,000'), slots.workingCostStaleNoSmallerAmount('90,000')]),
+        [
+          slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
+          slots.workingCostStaleEachDollar('90,000', '10,985'),
+          slots.workingCostStaleLowerAddsMore('90,000', '16,985'),
+        ].join(' '),
+      ],
+      door: null,
+    })
     cleanup()
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedrisenshort)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
-    expect(line()?.textContent).toBe(
-      [
+    expect(block()).toEqual({
+      opening: [
         copy.stalenessPayCheckNote,
         slots.workingCostStaleQuote('84,000', '105,000'),
         slots.workingCostStaleLeftOverYearsCheaper('84,000'),
         slots.workingCostStaleShortUntilUpdated('84,000'),
-        ...NOW('105,000'),
-        slots.workingCostStaleLabelIf('105,000'),
-        slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985'),
       ].join(' '),
-    )
+      labels: [copy.workingCostStaleLabelNow, slots.workingCostStaleLabelIf('105,000')],
+      bodies: [
+        NOW('105,000', [slots.workingCostStaleLeftOverNoneNow('16,985', '84,000')]),
+        [slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985'), copy.workingCostStaleLowerCounts].join(' '),
+      ],
+      door: null,
+    })
   })
 
-  // THE DOOR (council `wf_7fa86902-35c`): the act picks the door's words, and the act's definition rides just before
-  // it — only where the door does (a read-only tab, above, is told no buttons to press).
-  it('a writable tab: the risen line ends with "To update it, press … below." and "There, …", then "Update your figure for a working year", which lands on the W row; the fallen line names its Keep door and keeps "Confirm or change your figure"', () => {
+  // THE DOOR (council `wf_7fa86902-35c`; its form, council `wf_22858e04-f7a` (4)): the last dt/dd — the act's heading,
+  // the condition, the W help's own cost items as a list, the "Yes" sentence, then the button as a block — only where
+  // the tab can save (a read-only tab, above, is told no buttons to press).
+  it('a writable tab: the risen door — its heading, "To update it, press … below." and the condition, the list, "Yes", then "Update your figure for a working year" as a block, which lands on the W row; the fallen door names its Keep with the room it leaves and keeps "Confirm or change your figure"', () => {
     const updateDoor = () => screen.queryByRole('button', { name: copy.stalenessPayCheckCtaUpdate })
-    const text = (d: typeof DEV_SEEDS.date) => workingYearCostStaleLineText(workingYearCostStaleLine(d)!)
+    const doorParts = () => {
+      const d = block().door!
+      const dd = d.querySelector('dd')!
+      return {
+        label: d.querySelector('dt')?.textContent,
+        children: Array.from(dd.children).map((c) => c.tagName),
+        paras: Array.from(dd.querySelectorAll(':scope > p')).map((p) => p.textContent),
+        items: Array.from(dd.querySelectorAll(':scope > ul > li')).map((li) => li.textContent),
+        button: dd.lastElementChild?.matches('button.band-premise__cta.note-parts__cta') ? dd.lastElementChild.textContent : null,
+      }
+    }
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedrisen)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
-    const door = [slots.workingCostStaleResultDoorUpdate(copy.stalenessPayCheckCtaUpdate), slots.workingCostStaleDefineUpdate('90,000', true, '90,000', false)]
-    expect(workingYearCostStaleDoor(DEV_SEEDS.datesavedrisen)?.result).toEqual(door)
-    expect(line()?.querySelector('span')?.textContent).toBe(`${copy.stalenessPayCheckNote} ${text(DEV_SEEDS.datesavedrisen)} ${door.join(' ')}`)
+    expect(doorParts()).toEqual({
+      label: slots.workingCostStaleDoorHeadingUpdate('84,000'),
+      children: ['P', 'UL', 'P', 'BUTTON'],
+      paras: [
+        [slots.workingCostStaleResultDoorUpdate(copy.stalenessPayCheckCtaUpdate), slots.workingCostStaleDoorIfUpdate('90,000', false)].join(' '),
+        [copy.workingCostStaleDoorCounted, slots.workingCostStaleDoorYes('90,000')].join(' '),
+      ],
+      items: workingCostExtras(true),
+      button: copy.stalenessPayCheckCtaUpdate,
+    })
     expect(lineDoor(), 'no "confirm or change" below the quote: the W row offers no Keep door').toBeNull()
     fireEvent.click(updateDoor()!)
     expect(document.activeElement).toBe(wRowName())
@@ -221,38 +260,73 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedstale)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
-    const fallenDoor = [
-      slots.workingCostStaleDefineHold(true),
-      slots.workingCostStaleResultDoorConfirm(copy.stalenessPayCheckCta),
-      slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '84,000', false, '78,000', '78,000', false),
-    ]
-    expect(line()?.querySelector('span')?.textContent).toBe(`${copy.stalenessPayCheckNote} ${text(DEV_SEEDS.datesavedstale)} ${fallenDoor.join(' ')}`)
+    expect(doorParts()).toEqual({
+      label: slots.workingCostStaleDoorHeadingConfirm('84,000'),
+      children: ['P', 'UL', 'P', 'BUTTON'],
+      paras: [
+        copy.workingCostStaleDoorHold,
+        [
+          slots.workingCostStaleDoorMore('84,000', '6,000', '78,000'),
+          slots.workingCostStaleResultDoorConfirm(copy.stalenessPayCheckCta),
+          slots.workingCostStaleDoorKeepUpTo('Keep $84,000 a year', '6,000'),
+          slots.workingCostStaleDoorYes('78,000'),
+          slots.workingCostStaleDoorNoPlus('78,000', false),
+        ].join(' '),
+      ],
+      items: workingCostExtras(true),
+      button: copy.stalenessPayCheckCta,
+    })
     expect(updateDoor()).toBeNull()
     expect(lineDoor()).not.toBeNull()
   })
 
-  // U11 walk 5's (bi), on the Result's real draw: each label starts its own line in a <strong>, the door's sentences
-  // start one too, and the button follows them.
-  it('the labels are structure on the Result: each in a <strong> after a <br>; the door’s sentences after a <br> of their own, then the button', () => {
+  it('the block’s form on the Result: div.note-parts in the slot’s register (no <p> holding a <dl>), p then dl, each part a div>dt+dd, the door last, no heading and no run-in label inside; read-only keeps the parts and drops the door and its button', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedrisenlater)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
-    const span = line()!.querySelector('span')!
-    const labels = Array.from(span.querySelectorAll('strong.note-parts__label'))
-    expect(labels.map((l) => l.textContent)).toEqual([copy.workingCostStaleLabelNow, slots.workingCostStaleLabelIf('105,000')])
-    for (const l of labels) expect(l.previousElementSibling?.tagName).toBe('BR')
-    expect(span.querySelectorAll('br')).toHaveLength(3)
-    expect(span.lastChild?.textContent).toBe(workingYearCostStaleDoor(DEV_SEEDS.datesavedrisenlater)!.result.join(' '))
-    expect(span.lastChild?.previousSibling?.nodeName).toBe('BR')
-    expect(line()!.querySelector('span + button')?.textContent).toBe(copy.stalenessPayCheckCtaUpdate)
-    // Read-only: the labels stay, the door's line and the button go.
+    const l = line()!
+    expect(l.tagName).toBe('DIV')
+    expect(Array.from(l.classList).sort()).toEqual(['cs-paycheck-note', 'fod-note', 'note-parts'])
+    expect(Array.from(l.children).map((c) => c.tagName)).toEqual(['P', 'DL'])
+    const groups = Array.from(l.querySelectorAll(':scope > dl > div'))
+    expect(groups.map((g) => Array.from(g.children).map((c) => c.tagName))).toEqual([
+      ['DT', 'DD'],
+      ['DT', 'DD'],
+      ['DT', 'DD'],
+    ])
+    expect(groups.map((g) => g.querySelector('dt')?.textContent)).toEqual([
+      'This answer now',
+      'If a working year costs $105,000',
+      'To update your $84,000 figure',
+    ])
+    expect(groups[2]!.classList.contains('note-parts__door')).toBe(true)
+    expect(l.querySelector('h1, h2, h3, h4, strong, br'), 'no heading, no run-in label, no line break').toBeNull()
+    expect(l.querySelectorAll('button')).toHaveLength(1)
     cleanup()
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedrisenlater)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
-    expect(line()!.querySelectorAll('strong.note-parts__label')).toHaveLength(2)
-    expect(line()!.querySelectorAll('br')).toHaveLength(2)
+    expect(block().labels).toEqual(['This answer now', 'If a working year costs $105,000'])
+    expect(block().door).toBeNull()
     expect(line()!.querySelector('button')).toBeNull()
+  })
+
+  it('a note with no parts keeps the slot’s old <p>, byte for byte, its button inline (the reduce-to-plain): W stale with no answer stored, and the moved left over', () => {
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datecoststale)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    expect(line()!.outerHTML).toBe(
+      `<p class="fod-note cs-paycheck-note"><span>${copy.stalenessPayCheckNote} ${slots.workingCostStaleQuote('84,000', '78,000')}</span> ` +
+        `<button type="button" class="band-premise__cta">${copy.stalenessPayCheckCta}</button></p>`,
+    )
+    cleanup()
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datesavedmoved)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    expect(line()!.outerHTML).toBe(
+      `<p class="fod-note cs-paycheck-note"><span>${copy.stalenessLeftOverNote} ${MOVED}</span> ` +
+        `<button type="button" class="band-premise__cta">${copy.stalenessLeftOverCta}</button></p>`,
+    )
   })
 
   it('an absent, spent or not-sure answer shows no left-over line or clause — fresh or with W stale', () => {

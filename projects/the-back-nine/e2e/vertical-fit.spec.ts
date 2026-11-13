@@ -4,7 +4,7 @@ import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, PHONE_DPR, FINAL_TIER_MS,
 // string this spec injects or reads back is the one the app ships: a spec-local literal would pin a
 // reservation, a clause list or a heading against a fiction, and a re-word that overflowed the real
 // box would escape the gate silently (U17 §S5 step 14).
-import { copy, slots, staticDisclosures } from '../src/ui/copy'
+import { copy, slots, staticDisclosures, workingCostExtras } from '../src/ui/copy'
 import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
 
 /**
@@ -1810,7 +1810,7 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // THE GATE FRAME: the balance confirm + the fired clocks render BEFORE any verdict, and
     // the decision pair must sit in the first frame (the gate is the reveal's front door —
     // a below-fold affirm strands the survivor at a dead-looking screen).
-    const affirm = page.getByRole('button', { name: /Still about right/ })
+    const affirm = page.getByRole('button', { name: /still about right/i })
     await expect(affirm).toBeVisible({ timeout: 30_000 })
     await page.evaluate(() => document.fonts.ready)
     await page.evaluate(() => window.scrollTo(0, 0))
@@ -1969,7 +1969,7 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
 
     // THE GATE FRAME: the decision pair sits in the first frame (a below-fold affirm strands the
     // survivor at a dead-looking screen).
-    const affirm = page.getByRole('button', { name: /Still about right/ })
+    const affirm = page.getByRole('button', { name: /still about right/i })
     await expect(affirm).toBeVisible({ timeout: 30_000 })
     await page.evaluate(() => document.fonts.ready)
     await page.evaluate(() => window.scrollTo(0, 0))
@@ -2080,7 +2080,7 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
 // `wyclock` is `date` saved under the PREVIOUS working-years vintage (the light doctor), so the
 // working-years clock fires; `datecoststale` is the stale-W witness planted as a vault, so KTD21's line
 // fires (an input re-confirm, never a rules line) — since b9-7 the W step's own stale sentence framed by
-// the gate's lead and door hint ($84,000 said yes to, $78,000 now), never the figure-less fallback.
+// the gate's lead ($84,000 said yes to, $78,000 now), never the figure-less fallback.
 // Build 2 (R12) adds two answer lines, each on an undoctored seed planted as a vault: `datesavedstale` is
 // `datecoststale` with "All of it" stored at $16,985 before the spending moved, so W's own line carries the
 // clause naming in dollars what is not added while W is stale; `datesavedmoved` stored $16,985 and then got a
@@ -2097,123 +2097,228 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
 // still prints (R4: the engine runs on the last W given); $27,537 is `datesavedmoved`'s after its raise to
 // $165,000, hand-derived from the primaries by the build-2 record's `year0check.mts` (pay 165,000 − payroll
 // 12,622.50 − tax 20,840 − deposits 20,000 − W 84,000 = 27,537.50, a surplus rounding down).
+//
+// THE FORM (council `wf_22858e04-f7a`, U11 walk 6's fix round): a note with parts is a BLOCK — `div.note-parts`, the
+// opening as a `<p>`, then a `<dl>` of `div>dt+dd` (labels with no colon of their own), and on the Result only the door
+// as the last dt/dd (its lead `<p>`, the cost `<ul>`, its tail `<p>`, then the button). Its `textContent` has no space
+// between a dt and its dd, so every joined compare below reads `innerText` (`useInnerText`: a newline between blocks,
+// which the matcher's whitespace normalization reads as one space). A note with no parts stays its old single `<p>`.
+// THE GATE'S DOOR left the notes: `section.reentry-door`, the next element sibling of `.save-actions`, drawn only where
+// the tab can save — its heading, then one `<p>`: the scope sentence (the affirm button's description) and the route.
+//
+// STILL OWED (the council asked for it; no seed or vault carries four buckets): a read-back arm on a four-bucket
+// household, where the balances' read-back is tallest and the door below the buttons has the least room in frame.
 const STALE_W_QUOTE = slots.workingCostStaleQuote('84,000', '78,000')
-// The gate's door sentence, on EVERY stale arm where the tab can save (U11 walk 5's (bj)): neither gate button changes
-// the figure, and where each leads — "confirm or change" where the spending fell (the W row's Keep door is real).
-const STALE_W_GATE_DOOR = slots.workingCostStaleGateDoorConfirm('84,000', copy.stalenessPayCheckCta)
-const STALE_W_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE} ${STALE_W_GATE_DOOR}`
-// Council `wf_7fa86902-35c` (U11 walk 4), drawn as parts since walk 5's (bi): a "saved" answer waiting on W reads,
-// after its note, a lead, "This answer now:" (after work it already uses the spending, the stored $16,985 dated, and
-// why none of it is added, in the act's verb), and on the risen arms "If a working year costs $X:". The drawn
-// `textContent` is the parts one space apart (`NotePartsBody` draws a space before each <br>). Beside the door (both
-// walked tabs can save) each host says its own: the gate its door sentence, the Result "press … below", then
-// "There, …" in the W row's button words — "confirm or change" where the spending fell, "update" where it rose past
-// the yes (no Keep door). No budget on these seeds, so the after-work figure is exact (no "about"), and no state is
-// priced, so "or state" rides the definition.
-const savedNow = (spending: string, none: string): readonly string[] => [
+/** The Result door's cost list: the W help's own items. No seed here carries a budget or a priced state, so the
+ *  state-tax item rides after the local-tax one. */
+const STALE_W_EXTRAS = workingCostExtras(true)
+/** The gate's door words (`section.reentry-door`), on EVERY stale arm where the tab can save: the heading, the scope
+ *  sentence (neither gate button changes the figure; the affirm button's description), and the route (where each
+ *  leads, naming the Result door's own label) — "confirm or change" where the spending fell (the W row's Keep door is
+ *  real), "update" where it rose past the yes. */
+interface GateDoorWords {
+  readonly heading: string
+  readonly scope: string
+  readonly route: string
+}
+const CONFIRM_GATE_DOOR: GateDoorWords = {
+  heading: slots.workingCostStaleDoorHeadingConfirm('84,000'),
+  scope: slots.workingCostStaleGateScopeConfirm('84,000'),
+  route: slots.workingCostStaleGateRoute(copy.stalenessPayCheckCta),
+}
+const UPDATE_GATE_DOOR: GateDoorWords = {
+  heading: slots.workingCostStaleDoorHeadingUpdate('84,000'),
+  scope: slots.workingCostStaleGateScopeUpdate('84,000'),
+  route: slots.workingCostStaleGateRoute(copy.stalenessPayCheckCtaUpdate),
+}
+/** The Result's door (its last dt/dd), for a "saved" answer waiting on W: the heading (the gate's, word for word), the
+ *  sentences before the list, the list, the sentences after it, and the button's label (the dd's last child). */
+interface ResultDoorWords {
+  readonly heading: string
+  readonly lead: readonly string[]
+  readonly items: readonly string[]
+  readonly tail: readonly string[]
+  readonly cta: string
+}
+const resultDoorText = (d: ResultDoorWords): string => [d.heading, ...d.lead, ...d.items, ...d.tail].join(' ')
+// Council `wf_7fa86902-35c` (U11 walk 4), drawn as a block since `wf_22858e04-f7a`: a "saved" answer waiting on W
+// reads, after its note, a lead, "This answer now" (after work it already uses the spending, the stored $16,985
+// dated, why none of it is added, in the act's verb, and — where `none` does not already say it — why no smaller
+// amount either), and on the risen arms "If a working year costs $X". No budget on these seeds, so the after-work
+// figure is exact (no "about").
+const savedNow = (spending: string, none: string, why?: string): readonly string[] => [
   copy.workingCostStaleLabelNow,
   slots.workingCostStaleAfterWork(spending, true),
   slots.workingCostStaleLeftOverAnswered('16,985'),
   none,
+  ...(why === undefined ? [] : [why]),
 ]
 const STALE_W_SAVED_LINE = [
   STALE_W_QUOTE,
   copy.workingCostStaleEitherWayConfirm,
-  ...savedNow('78,000', slots.workingCostStaleLeftOverNoneConfirm('16,985', '84,000')),
+  ...savedNow('78,000', slots.workingCostStaleLeftOverNoneConfirm('16,985', '84,000'), copy.workingCostStaleNoGuess),
 ].join(' ')
-const STALE_W_SAVED_HOLD = slots.workingCostStaleDefineHold(true)
-const STALE_W_SAVED_THERE = slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '84,000', false, '78,000', '78,000', false)
-const STALE_W_SAVED_RESULT_DOOR = `${STALE_W_SAVED_HOLD} ${slots.workingCostStaleResultDoorConfirm(copy.stalenessPayCheckCta)} ${STALE_W_SAVED_THERE}`
-const STALE_W_SAVED_GATE_LINE = `${copy.stalenessPayCheckGateLead} ${STALE_W_SAVED_LINE} ${STALE_W_SAVED_HOLD} ${STALE_W_GATE_DOOR} ${STALE_W_SAVED_THERE}`
+/** The fallen arm's Result door ("confirm or change"): the hold sentence ends on the list; after it, the $6,000 the
+ *  held figure leaves above the $78,000 quote, the press sentence, then each choice with its condition first. */
+const STALE_W_SAVED_RESULT_DOOR: ResultDoorWords = {
+  heading: CONFIRM_GATE_DOOR.heading,
+  lead: [copy.workingCostStaleDoorHold],
+  items: STALE_W_EXTRAS,
+  tail: [
+    slots.workingCostStaleDoorMore('84,000', '6,000', '78,000'),
+    slots.workingCostStaleResultDoorConfirm(copy.stalenessPayCheckCta),
+    slots.workingCostStaleDoorKeepUpTo(slots.workingCostKeepYearly('84,000'), '6,000'),
+    slots.workingCostStaleDoorYes('78,000'),
+    slots.workingCostStaleDoorNoPlus('78,000', false),
+  ],
+  cta: copy.stalenessPayCheckCta,
+}
 const LEFT_OVER_MOVED_SENTENCE = slots.stalenessLeftOverMoved('16,985', '27,537', '16,985')
 const LEFT_OVER_MOVED_GATE_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE} ${copy.stalenessLeftOverGateDoor}`
-// The U11 walk's (ae): the risen family's W line — W's sentence, the year-level lean, then the tail by what a check
-// at the quote does. Year 0 at the quote, by hand from `date`'s sum above with W at the quote: $10,985 at $90,000
-// (capped); −$4,015 at $105,000 (first short); $5,985 there with `datesavedrisenlater`'s $10,000 of untaxed
-// alimony, whose end at Sam's 62 makes 2029 the short arm's −$4,015 again (later short). The later-short line is
-// the LONGEST stale line any seed draws (with its gain years and its short run), so its arm is the gate's wrap-risk
-// arm. Each risen line names its own quote in the definition ("to use $90,000 a year").
-// After work the answer uses the risen spending figure, which on these seeds IS the quote (no budget): (bl) puts it
-// first under "This answer now:" on the risen arms too.
+// The U11 walk's (ae): the risen family's W line — W's sentence, the lean, then the tail by what a check at the quote
+// does. Year 0 at the quote, by hand from `date`'s sum above with W at the quote: $10,985 at $90,000 (capped, no later
+// short year: the lean is the left over reading $6,000 high, U11 walk 6's R2); −$4,015 at $105,000 (first short);
+// $5,985 there with `datesavedrisenlater`'s $10,000 of untaxed alimony, whose end at Sam's 62 makes 2029 the short
+// arm's −$4,015 again (later short). The later-short line is the LONGEST stale line any seed draws (with its gain years
+// and its short run), so its arm is the gate's wrap-risk arm. After work the answer uses the risen spending figure,
+// which on these seeds IS the quote (no budget).
 const risenNow = (quoteNow: string): readonly string[] =>
-  savedNow(quoteNow, slots.workingCostStaleLeftOverNoneUpdate('16,985', '84,000'))
-const risenLine = (quoteNow: string, tail: readonly string[]): string =>
-  [slots.workingCostStaleQuote('84,000', quoteNow), slots.workingCostStaleLeftOverYearsCheaper('84,000'), ...tail].join(' ')
-const RISEN_LINE = risenLine('90,000', [
+  savedNow(quoteNow, slots.workingCostStaleLeftOverNoneUpdate('16,985', '84,000'), slots.workingCostStaleNoSmallerAmount(quoteNow))
+const RISEN_LINE = [
+  slots.workingCostStaleQuote('84,000', '90,000'),
+  slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000'),
   copy.workingCostStaleEitherWayUpdate,
   ...risenNow('90,000'),
   slots.workingCostStaleLabelIf('90,000'),
   slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
-])
-const RISEN_SHORT_LINE = risenLine('105,000', [
+  slots.workingCostStaleEachDollar('90,000', '10,985'),
+  slots.workingCostStaleLowerAddsMore('90,000', '16,985'),
+].join(' ')
+const RISEN_SHORT_LINE = [
+  slots.workingCostStaleQuote('84,000', '105,000'),
+  slots.workingCostStaleLeftOverYearsCheaper('84,000'),
   slots.workingCostStaleShortUntilUpdated('84,000'),
-  ...risenNow('105,000'),
+  ...savedNow('105,000', slots.workingCostStaleLeftOverNoneNow('16,985', '84,000')),
   slots.workingCostStaleLabelIf('105,000'),
   slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985'),
-])
-const RISEN_LATER_LINE = risenLine('105,000', [
+  copy.workingCostStaleLowerCounts,
+].join(' ')
+const RISEN_LATER_LINE = [
+  slots.workingCostStaleQuote('84,000', '105,000'),
+  slots.workingCostStaleLeftOverYearsCheaper('84,000'),
   copy.workingCostStaleEitherWayUpdate,
   ...risenNow('105,000'),
   slots.workingCostStaleLabelIf('105,000'),
   slots.workingCostStaleLeftOverIfCapped('5,985', 2026, '105,000', true),
   slots.workingCostStaleLeftOverGainYears(2026, 2028, 2033),
+  slots.workingCostStaleEachDollar('105,000', '5,985'),
   slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000'),
-])
-/** What each host says beside its door on a risen arm ("update": no Keep door below the quote): the gate's door
- *  sentence, or the Result's "press … below", then "There, …" naming the W row's buttons at today's quote. */
-const risenGateDoor = (quoteNow: string): string =>
-  `${slots.workingCostStaleGateDoorUpdate('84,000', copy.stalenessPayCheckCtaUpdate)} ${slots.workingCostStaleDefineUpdate(quoteNow, true, quoteNow, false)}`
-const risenResultDoor = (quoteNow: string): string =>
-  `${slots.workingCostStaleResultDoorUpdate(copy.stalenessPayCheckCtaUpdate)} ${slots.workingCostStaleDefineUpdate(quoteNow, true, quoteNow, false)}`
+  copy.workingCostStaleLowerCounts,
+].join(' ')
+/** The risen arms' Result door ("update": no Keep door below the quote): the press sentence and the condition, ending
+ *  on the list; after it, that the tool counts them only if added, then "Yes" at today's quote. */
+const risenResultDoor = (quoteNow: string): ResultDoorWords => ({
+  heading: UPDATE_GATE_DOOR.heading,
+  lead: [slots.workingCostStaleResultDoorUpdate(copy.stalenessPayCheckCtaUpdate), slots.workingCostStaleDoorIfUpdate(quoteNow, false)],
+  items: STALE_W_EXTRAS,
+  tail: [copy.workingCostStaleDoorCounted, slots.workingCostStaleDoorYes(quoteNow)],
+  cta: copy.stalenessPayCheckCtaUpdate,
+})
 const risenUnlock = (key: string, line: string, quoteNow: string) =>
   ({
     key,
-    note: `${copy.stalenessPayCheckGateLead} ${line} ${risenGateDoor(quoteNow)}`,
+    note: `${copy.stalenessPayCheckGateLead} ${line}`,
+    gateDoor: UPDATE_GATE_DOOR,
     sibling: copy.stalenessLeftOverNote,
-    standing: `${copy.stalenessPayCheckNote} ${line} ${risenResultDoor(quoteNow)}`,
+    standing: `${copy.stalenessPayCheckNote} ${line}`,
+    resultDoor: risenResultDoor(quoteNow),
     dated: false,
   }) as const
-/** `standing` — the Result's standing-slot sentence after the affirm (the lead and the sentence, before its
- *  door), or `null` where the answer carries none (the fresh-vintage `wyclock`). `dated` — whether the affirm
+/** `note` — the gate's one note (its text, read as `innerText`). `gateDoor` — the gate's door section, or `null` where
+ *  none is drawn (W not stale). `standing` — the Result's standing-slot lead and line (before its door), or `null`
+ *  where the answer carries none (the fresh-vintage `wyclock`). `resultDoor` — the standing slot's door as its last
+ *  dt/dd (the block), or `null` where the slot is its old `<p>` with the button inline. `dated` — whether the affirm
  *  lands a crowned date (`assertResolvedDate`) or the no-date reading (`assertNoDateReading`). */
-const PAY_CHECK_UNLOCKS = [
-  { key: 'wyclock', note: copy.stalenessWorkingYears, sibling: copy.stalenessPayCheckGateLead, standing: null, dated: true },
+const PAY_CHECK_UNLOCKS: readonly {
+  readonly key: string
+  readonly note: string
+  readonly gateDoor: GateDoorWords | null
+  readonly sibling: string
+  readonly standing: string | null
+  readonly resultDoor: ResultDoorWords | null
+  readonly dated: boolean
+}[] = [
+  {
+    key: 'wyclock',
+    note: copy.stalenessWorkingYears,
+    gateDoor: null,
+    sibling: copy.stalenessPayCheckGateLead,
+    standing: null,
+    resultDoor: null,
+    dated: true,
+  },
   {
     key: 'datecoststale',
-    note: STALE_W_GATE_LINE,
+    note: `${copy.stalenessPayCheckGateLead} ${STALE_W_QUOTE}`,
+    gateDoor: CONFIRM_GATE_DOOR,
     sibling: copy.stalenessWorkingYears,
     standing: `${copy.stalenessPayCheckNote} ${STALE_W_QUOTE}`,
+    resultDoor: null,
     dated: true,
   },
   {
     key: 'datesavedstale',
-    note: STALE_W_SAVED_GATE_LINE,
+    note: `${copy.stalenessPayCheckGateLead} ${STALE_W_SAVED_LINE}`,
+    gateDoor: CONFIRM_GATE_DOOR,
     sibling: copy.stalenessLeftOverNote,
-    standing: `${copy.stalenessPayCheckNote} ${STALE_W_SAVED_LINE} ${STALE_W_SAVED_RESULT_DOOR}`,
+    standing: `${copy.stalenessPayCheckNote} ${STALE_W_SAVED_LINE}`,
+    resultDoor: STALE_W_SAVED_RESULT_DOOR,
     dated: true,
   },
   {
     key: 'datesavedmoved',
     note: LEFT_OVER_MOVED_GATE_LINE,
+    gateDoor: null,
     sibling: copy.stalenessPayCheckGateLead,
     standing: `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE}`,
+    resultDoor: null,
     dated: true,
   },
   risenUnlock('datesavedrisen', RISEN_LINE, '90,000'),
   risenUnlock('datesavedrisenshort', RISEN_SHORT_LINE, '105,000'),
   risenUnlock('datesavedrisenlater', RISEN_LATER_LINE, '105,000'),
-] as const
+]
+
+/** The standing slot drawn as a block (W's stale line for a "saved" answer): still one `.cs-paycheck-note`, now
+ *  `div.note-parts`; its lead and line, then the door's heading, every list item, the tail, in order (`innerText`); the
+ *  door's dt is the gate's heading word for word; and the door's button is the dd's LAST child, by its label. */
+async function assertStandingBlock(standing: Locator, who: string, lineText: string, door: ResultDoorWords): Promise<void> {
+  await expect(standing, `${who}: the standing slot is drawn as a block`).toHaveClass(/(^|\s)note-parts(\s|$)/)
+  await expect(standing, `${who}: the standing slot speaks its line, then its door, in order`).toContainText(
+    `${lineText} ${resultDoorText(door)}`,
+    { useInnerText: true },
+  )
+  const doorPart = standing.locator('.note-parts__door')
+  await expect(doorPart, `${who}: exactly one door, the block's last dt/dd`).toHaveCount(1)
+  await expect(doorPart.locator('dt')).toHaveText(door.heading)
+  await expect(doorPart.locator('li'), `${who}: the door's cost list, every item in order`).toHaveText([...door.items])
+  const last = await doorPart.locator('dd').evaluate((dd) => {
+    const el = dd.lastElementChild
+    return el === null ? null : { tag: el.tagName, text: el.textContent ?? '' }
+  })
+  expect(last, `${who}: the door's button is the dd's last child`).toEqual({ tag: 'BUTTON', text: door.cta })
+}
 
 for (const u of PAY_CHECK_UNLOCKS) {
   test.describe(`the pay check’s unlock line (?vault=${u.key}) — one note, the decision pair in frame (${REAL.width}×${REAL.height})`, () => {
     test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-    test('exactly one gate note, by name; the affirm lands the resolved date reading, doors last', async ({ page }) => {
+    test('exactly one gate note, by name; the door under the buttons in frame; the affirm lands the resolved date reading, doors last', async ({ page }) => {
       await page.goto(`/?vault=${u.key}`)
       const unlock = page.getByRole('button', { name: 'Open my plan' })
       await expect(unlock, `the ${u.key} plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
       await unlock.click()
 
-      const affirm = page.getByRole('button', { name: /Still about right/ })
+      const affirm = page.getByRole('button', { name: /still about right/i })
       await expect(affirm).toBeVisible({ timeout: 30_000 })
       await page.evaluate(() => document.fonts.ready)
       await page.evaluate(() => window.scrollTo(0, 0))
@@ -2223,12 +2328,42 @@ for (const u of PAY_CHECK_UNLOCKS) {
         REAL.height,
       )
       // THE ISOLATION: one note, this plant's own — and the pay check's other line is dark (a negative
-      // aimed at a live key, never a deleted one: insight 086).
-      const notes = page.locator('.reentry-notes p')
-      await expect(notes, `${u.key}: exactly one gate note`).toHaveCount(1)
-      await expect(notes).toContainText(u.note)
+      // aimed at a live key, never a deleted one: insight 086). Each note is a direct child (a `<p>`, or W's
+      // block), so the count reads the children; the text reads `innerText` across the block's dt/dd.
+      await expect(page.locator('.reentry-notes > *'), `${u.key}: exactly one gate note`).toHaveCount(1)
+      await expect(page.locator('.reentry-notes')).toContainText(u.note, { useInnerText: true })
       await expect(page.getByText(u.sibling), 'the pay check’s other unlock line stays dark').toHaveCount(0)
       await expect(page.getByText(copy.stalenessWorkingYearCost), 'never the figure-less fallback').toHaveCount(0)
+
+      // THE GATE'S DOOR (council `wf_22858e04-f7a` (2)): on every stale-W arm (each tab here can save), its own section
+      // right after the buttons — never in the notes — naming no W-row button and pointing neither up nor down.
+      const door = page.locator('section.reentry-door')
+      if (u.gateDoor === null) {
+        await expect(door, `${u.key}: W is not stale, so no door under the buttons`).toHaveCount(0)
+      } else {
+        await expect(door, `${u.key}: exactly one door under the buttons`).toHaveCount(1)
+        const placed = await page.evaluate(() => {
+          const actions = document.querySelector('.reentry-confirm > .save-actions')
+          const d = document.querySelector('section.reentry-door')
+          return actions !== null && d !== null && actions.nextElementSibling === d
+        })
+        expect(placed, `${u.key}: the door is the next element sibling of the gate's buttons`).toBe(true)
+        await expect(door.locator('h3.reentry-door__heading')).toHaveText(u.gateDoor.heading)
+        await expect(door.locator('p')).toHaveText(`${u.gateDoor.scope} ${u.gateDoor.route}`)
+        await expect(affirm, `${u.key}: the affirm button is described by the scope sentence`).toHaveAccessibleDescription(
+          u.gateDoor.scope,
+        )
+        await expect(door, `${u.key}: the gate names no W-row button`).not.toContainText(
+          /Yes, that’s about right|I’ll enter a different figure|Keep \$/,
+        )
+        await expect(door, `${u.key}: the gate points neither above nor below`).not.toContainText(/\b(above|below)\b/)
+        // THE COUNCIL'S FIT GATE: the route sits in the first frame at his window, with the buttons it names.
+        await settleLayout(page)
+        await page.evaluate(() => window.scrollTo(0, 0))
+        const doorBox = await door.boundingBox()
+        expect(doorBox, 'the door reported no box').not.toBeNull()
+        expect(doorBox!.y + doorBox!.height, `${u.key}: route in frame`).toBeLessThanOrEqual(REAL.height)
+      }
 
       await affirm.click()
       await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
@@ -2238,10 +2373,17 @@ for (const u of PAY_CHECK_UNLOCKS) {
       await (u.dated ? assertOneVisibleDisclaimer(page, 'laptop') : assertOneVisibleDisclaimerNoDate(page))
       // The stale answer survives the save: the result keeps its standing line (R4 — the engine still
       // runs on the last figure given), in the gate's own cause; a moved left over keeps its own (R12). The
-      // fresh-vintage answer on `wyclock` carries none.
+      // fresh-vintage answer on `wyclock` carries none. The gate's door section never rides the Result.
+      await expect(page.locator('section.reentry-door')).toHaveCount(0)
       const standing = page.locator('.cs-paycheck-note')
       await expect(standing).toHaveCount(u.standing === null ? 0 : 1)
-      if (u.standing !== null) await expect(standing, `${u.key}: the standing slot speaks the gate’s cause`).toContainText(u.standing)
+      if (u.standing !== null) {
+        if (u.resultDoor === null) {
+          await expect(standing, `${u.key}: the standing slot speaks the gate’s cause`).toContainText(u.standing)
+        } else {
+          await assertStandingBlock(standing, u.key, u.standing, u.resultDoor)
+        }
+      }
       const doors = await page.locator('.result-quiet-row').boundingBox()
       expect(doors, 'the quiet doors render').not.toBeNull()
       const trailing = await doorsLastWalk(page, 'body')
@@ -2271,7 +2413,7 @@ test.describe(`the aged date return (?vault=datestale) — one clock across hero
     await unlock.click()
 
     // The gate's decision pair sits in the first frame on the DATE route's gate too.
-    const affirm = page.getByRole('button', { name: /Still about right/ })
+    const affirm = page.getByRole('button', { name: /still about right/i })
     await expect(affirm).toBeVisible({ timeout: 30_000 })
     await page.evaluate(() => document.fonts.ready)
     await page.evaluate(() => window.scrollTo(0, 0))
@@ -2385,7 +2527,7 @@ test.describe(`the arrived date return (?vault=datearrived) — the aged x-axis 
     })
     await unlock.click()
 
-    const affirm = page.getByRole('button', { name: /Still about right/ })
+    const affirm = page.getByRole('button', { name: /still about right/i })
     await expect(affirm).toBeVisible({ timeout: 30_000 })
     await affirm.click()
 
@@ -2526,7 +2668,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     // The re-entry gate is UNCONDITIONAL on every return (ReEntry.tsx) — but this plant ages NO
     // vintage, so it must arrive with the clock lines DARK: the record card has to be readable in
     // isolation, not beside a staleness echo it did not cause.
-    const affirm = page.getByRole('button', { name: /Still about right/ })
+    const affirm = page.getByRole('button', { name: /still about right/i })
     await expect(affirm).toBeVisible({ timeout: 30_000 })
     await expect(page.locator('.reentry-notes p'), 'the rec plant ages no stamp — no clock may fire').toHaveCount(0)
     await affirm.click()
@@ -2664,7 +2806,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
         timeout: 30_000,
       })
       await unlock.click()
-      const affirm = page.getByRole('button', { name: /Still about right/ })
+      const affirm = page.getByRole('button', { name: /still about right/i })
       await expect(affirm).toBeVisible({ timeout: 30_000 })
       await affirm.click()
       await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
@@ -2804,7 +2946,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     const unlock = page.getByRole('button', { name: 'Open my plan' })
     await expect(unlock, 'the rec plant did not land on the unlock screen').toBeVisible({ timeout: 30_000 })
     await unlock.click()
-    const affirm = page.getByRole('button', { name: /Still about right/ })
+    const affirm = page.getByRole('button', { name: /still about right/i })
     await expect(affirm).toBeVisible({ timeout: 30_000 })
     await affirm.click()
     await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
@@ -2901,7 +3043,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     const unlock = page.getByRole('button', { name: 'Open my plan' })
     await expect(unlock, 'the recold plant did not land on the unlock screen').toBeVisible({ timeout: 30_000 })
     await unlock.click()
-    const affirm = page.getByRole('button', { name: /Still about right/ })
+    const affirm = page.getByRole('button', { name: /still about right/i })
     await expect(affirm).toBeVisible({ timeout: 30_000 })
     await affirm.click()
     await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
@@ -3147,7 +3289,8 @@ async function assertIntakeStepHolds(page: Page, where: string, minBoxes: number
   expect(nav!.y, `${where}: Continue overlaps the step's content`).toBeGreaterThanOrEqual(body!.y + body!.height - 0.5)
 }
 
-/** The Result's standing slot, placed (`p.fod-note.cs-paycheck-note`: the pay check's KTD21 line, and build 2's
+/** The Result's standing slot, placed (`.fod-note.cs-paycheck-note` — a `<p>`, or W's block `div.note-parts` for a
+ *  "saved" answer waiting on W: the pay check's KTD21 line, and build 2's
  *  moved left over in the same slot, keyed by cause — R12): the lead's LAST note and before the graphs in DOM
  *  order (at REAL the graphs sit BESIDE the lead, so "above" is DOM order there); at PHONE above the first
  *  graph in geometry, with the caveat's order and reach; at REAL one visible disclaimer and the doors last.
@@ -3403,9 +3546,11 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
     test('the standing line carries the whole later-short line in place; its door opens a W row whose note holds the lean, nothing sideways', async ({ page }) => {
       await gotoSeedFinal(page, 'datesavedrisenlater')
       await assertNoDateReading(page)
-      const line = page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')
+      // A "saved" answer waiting on W: the slot is W's block (`div.note-parts`, council `wf_22858e04-f7a`), still the
+      // lead's direct child in the same `.fod-note` register; its words read across the dt/dd as `innerText`.
+      const line = page.locator('.fod-reveal .reveal__lead > div.note-parts.fod-note.cs-paycheck-note')
       await expect(line, 'the standing line renders in the lead').toHaveCount(1)
-      await expect(line).toContainText(`${copy.stalenessPayCheckNote} ${RISEN_LATER_LINE} ${risenResultDoor('105,000')}`)
+      await assertStandingBlock(line, 'datesavedrisenlater', `${copy.stalenessPayCheckNote} ${RISEN_LATER_LINE}`, risenResultDoor('105,000'))
       await assertStandingLinePlaced(page, line, vp.use.viewport.width === PHONE.width, false)
       // Below the quote the door says "update" (council `wf_7fa86902-35c`): the W row offers no Keep door there.
       await page.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate }).click()

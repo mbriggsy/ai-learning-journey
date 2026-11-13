@@ -483,6 +483,10 @@ export const copy = {
     'the Medicare premiums of anyone on Medicare who is still working (the tool starts charging someone’s Medicare only once they stop working)',
   workingCostHelpCountLocalTax: 'any local tax on pay, like a city wage tax or earned-income tax',
   workingCostHelpCountStateDeduction: 'any state disability or family-leave deduction from pay',
+  // The Result door's cost list (council `wf_22858e04-f7a` (4): "the cost <ul> from the HelpList copy keys",
+  // `workingCostExtras`): the count list's items past "what you spend", plus this one where the W help asks the
+  // household to ADD its state's tax on pay (`stateTaxBelongsInW`: unpriced or class-based), after the local tax.
+  workingCostDoorItemStateTax: 'any state income tax on pay',
   workingCostHelpLeaveOutLead: 'Leave out what the tool works out itself:',
   workingCostHelpLeaveOutPayrollTax: 'federal Social Security and Medicare tax',
   workingCostHelpLeaveOutIncomeTax: 'federal income tax',
@@ -580,9 +584,26 @@ export const copy = {
   workingCostStaleEitherWayUpdate: 'Updating your figure can move this answer either way, depending on what a working year really costs you.',
   workingCostStaleEitherWayConfirm:
     'Confirming or changing your figure can move this answer either way, depending on what a working year really costs you.',
-  // THE TWO LABELS (the council's run-in words; "If", a condition, never "At today's": the red team's reading of a
-  // present-tense "today" as a promise). The second is a slot: it carries the quote.
-  workingCostStaleLabelNow: 'This answer now:',
+  // THE TWO LABELS (the council's words; "If", a condition, never "At today's": the red team's reading of a
+  // present-tense "today" as a promise). The second is a slot: it carries the quote. Each is a `<dt>` on its own line
+  // since council `wf_22858e04-f7a` (U11 walk 6: semibold run-in labels read "clinical", 5/5), so the colon went with
+  // the run-in form (punctuation follows form).
+  workingCostStaleLabelNow: 'This answer now',
+  // Why the answer counts no smaller amount either, where the spending fell or only the state moved (U11 walk 6's F6,
+  // S's form: no direction, constraint 3) — after "…until you confirm or change your figure." The risen arms say it
+  // with the quote (`slots.workingCostStaleNoSmallerAmount`).
+  workingCostStaleNoGuess:
+    'It doesn’t guess at an amount either, because what’s left over depends on what a working year costs you now, and only you can say that.',
+  // What a figure BELOW today's quote does, where the at-most sentence has no single cap to name (U11 walk 6's R4, the B
+  // and C form): the paragraph priced only the honest figure. It prices dollars, never the answer, so the either-way
+  // lead stands. A's form names its cap (`slots.workingCostStaleLowerAddsMore`).
+  workingCostStaleLowerCounts: 'A lower figure could count some of it again, but only by pricing a working year below what you spend.',
+  // THE RESULT'S DOOR (council `wf_22858e04-f7a` (4)): the last dt/dd of W's block — the condition, the cost list (the
+  // W help's own items, `workingCostExtras`), the "Yes" sentence, then the button. The update arm's tail opens with
+  // this; the confirm arm's lead is the hold sentence, which ends on the list.
+  workingCostStaleDoorCounted: 'The tool counts them in a working year only if you add them.',
+  workingCostStaleDoorHold:
+    'Your figure for a working year should also hold any of these you pay, since the tool counts them in a working year only if you add them:',
   // What this answer does with the stored figure today is a slot in the act's verb since U11 walk 5's (bh)
   // (`slots.workingCostStaleLeftOverNoneUpdate` / `…Confirm`): with no reason, "adds none of it" read as a bug.
   workingLedgerHeldBackNote:
@@ -1791,7 +1812,9 @@ export const copy = {
   reentryBucketRoth: 'Roth accounts',
   reentryBucketTaxable: 'Brokerage',
   reentryBucketHsa: 'HSA',
-  reentryAffirmCta: 'Still about right — show my answer',
+  // "Balances" names what the button affirms (council `wf_22858e04-f7a`, hunter F7 at U11 walk 6: A and S would press
+  // "Still about right" as if it confirmed the W row's "Yes, that’s about right"; it affirms the read-back alone).
+  reentryAffirmCta: 'Balances still about right — show my answer',
   reentryUpdateCta: 'Something’s changed — update them',
   reentryContinueCta: 'Continue to your answer',
   // The calm per-clock drift lines (Q1 — the disclosure that rides WITH the recompute; each
@@ -2475,7 +2498,8 @@ export const WORKING_COST_ACT_COPY: Readonly<
       readonly waitingMethod: CopyKey
       readonly leftOverNone: 'workingCostStaleLeftOverNoneUpdate' | 'workingCostStaleLeftOverNoneConfirm'
       readonly resultDoorLead: 'workingCostStaleResultDoorUpdate' | 'workingCostStaleResultDoorConfirm'
-      readonly gateDoor: 'workingCostStaleGateDoorUpdate' | 'workingCostStaleGateDoorConfirm'
+      readonly gateScope: 'workingCostStaleGateScopeUpdate' | 'workingCostStaleGateScopeConfirm'
+      readonly doorHeading: 'workingCostStaleDoorHeadingUpdate' | 'workingCostStaleDoorHeadingConfirm'
     }
   >
 > = {
@@ -2486,7 +2510,8 @@ export const WORKING_COST_ACT_COPY: Readonly<
     waitingMethod: 'assumptionWorkingYearCheckLeftOverWaitingUpdate',
     leftOverNone: 'workingCostStaleLeftOverNoneUpdate',
     resultDoorLead: 'workingCostStaleResultDoorUpdate',
-    gateDoor: 'workingCostStaleGateDoorUpdate',
+    gateScope: 'workingCostStaleGateScopeUpdate',
+    doorHeading: 'workingCostStaleDoorHeadingUpdate',
   },
   confirmOrChange: {
     eitherWay: 'workingCostStaleEitherWayConfirm',
@@ -2495,8 +2520,27 @@ export const WORKING_COST_ACT_COPY: Readonly<
     waitingMethod: 'assumptionWorkingYearCheckLeftOverWaitingConfirm',
     leftOverNone: 'workingCostStaleLeftOverNoneConfirm',
     resultDoorLead: 'workingCostStaleResultDoorConfirm',
-    gateDoor: 'workingCostStaleGateDoorConfirm',
+    gateScope: 'workingCostStaleGateScopeConfirm',
+    doorHeading: 'workingCostStaleDoorHeadingConfirm',
   },
+}
+
+/** The W help's count list (R1), in reading order — ONE home for the W row's list and the Result door's: the door
+ *  lists the items past "what you spend" (`workingCostExtras`), in the help's own words, so the two can never name
+ *  different costs (council `wf_22858e04-f7a` (4): "the cost <ul> from the HelpList copy keys"). */
+export const WORKING_COST_HELP_COUNT: readonly CopyKey[] = [
+  'workingCostHelpCountSpend',
+  'workingCostHelpCountPremiums',
+  'workingCostHelpCountMedicare',
+  'workingCostHelpCountLocalTax',
+  'workingCostHelpCountStateDeduction',
+]
+/** The door's cost list: the count list past "what you spend", with the state's tax on pay after the local tax where
+ *  the W help asks the household to ADD it (`stateTax`: `stateTaxBelongsInW`, unpriced or class-based). */
+export function workingCostExtras(stateTax: boolean): readonly string[] {
+  return WORKING_COST_HELP_COUNT.filter((k) => k !== 'workingCostHelpCountSpend').flatMap((k) =>
+    k === 'workingCostHelpCountLocalTax' && stateTax ? [copy[k], copy.workingCostDoorItemStateTax] : [copy[k]],
+  )
 }
 
 /**
@@ -2641,9 +2685,12 @@ const yearSpan = (firstYear: number, lastYear: number): string => (firstYear ===
  *  sentences up). U11 walk 5's (bp): "still adds none of that $16,985" held the sum as money being held back, so the
  *  figure is dated in the past tense, and year 0 at that cost is the reason. "When you answered", never "at $84,000":
  *  the held figure need not be the one the answer was given at (a later "Yes" at another figure, then a rise past it),
- *  the rule `leftOverAnswered` keeps for (al). `year0` — the clause naming year 0 at the quote. */
+ *  the rule `leftOverAnswered` keeps for (al). `year0` — the clause naming year 0 at the quote.
+ *  U11 walk 6's R3: B's readers lost the thread at "adds none of it … until you update your figure" beside "$105,000
+ *  or more adds none", and with no floor "$105,000 or more" pulled toward a lower figure — so B's "This answer now"
+ *  ends on what is true today, and this sentence carries A's and C's reason and says the money doesn't come back. */
 const addsNoneBecause = (quoteFormatted: string, storedFormatted: string, year0: string): string =>
-  `Updating your figure to $${quoteFormatted} or more adds none of the $${storedFormatted} you had left over when you answered, because ${year0} at that cost.`
+  `${SINCE_AT_LEAST_SPENDING}, updating your figure to $${quoteFormatted} or more brings none of the $${storedFormatted} back, because ${year0} at that cost.`
 
 /** The at-most sentence's floor (U11 walk 5's (bm), the refuter's words): "updating your figure to $90,000 or more
  *  adds at most $10,985" beside the dated $16,985 read as a dial the update turns down, and invited the retype; the
@@ -2658,17 +2705,6 @@ const belowLean = (typedFormatted: string, answerLean: boolean): string =>
     ? 'A working year almost always costs at least what you spend, so this answer can look better than it really is.'
     : `A working year almost always costs at least what you spend, so your $${typedFormatted} figure makes any working year your pay doesn’t cover look cheaper than it really is.`
 
-/** What a working year's figure should also hold, in the W help's own items (U11 walk 5's (bk): "health premiums"
- *  read as a plan bought on one's own, and "a tax on pay the tool doesn't work out" as "the tool doesn't work").
- *  `stateTax` — the help asks this household to ADD a state's tax on pay (`stateTaxBelongsInW`: unpriced or
- *  class-based), so "or state" rides. The two shapes: a list after "costs you" (the update arms' condition), and one
- *  after "should also hold" (the confirm arm's). */
-const extrasAfterCosts = (stateTax: boolean): string =>
-  `health premiums, even ones taken out of a paycheck, or a local${stateTax ? ' or state' : ''} tax or a state disability or family-leave deduction taken from pay`
-const extrasAfterHold = (stateTax: boolean): string =>
-  `any health premiums you pay, even ones taken out of a paycheck, and any local${stateTax ? ' or state' : ''} tax or state disability or family-leave deduction taken from pay`
-const COUNTED_ONLY_IF_ADDED = 'since the tool counts them in a working year only if you add them'
-
 /** The Keep door's figure in the label's own unit: "$84,000", or "$7,000 a month" beside "Keep $7,000 a month". */
 const keepFigure = (keepFormatted: string, keepMonthly: boolean): string => `$${keepFormatted}${keepMonthly ? ' a month' : ''}`
 
@@ -2678,14 +2714,15 @@ const keepFigure = (keepFormatted: string, keepMonthly: boolean): string => `$${
  *  other box opens its unit unanswered, where the prompt catches a yearly figure typed in months. */
 const enterFigure = (enterFormatted: string, enterMonthly: boolean): string => `$${enterFormatted} a ${enterMonthly ? 'month' : 'year'}`
 
-/** The gate's door sentence (U11 walk 5's (bj)): all four cold looks hunted the gate for the W row's "Yes, that’s
- *  about right", and S's read "Still about right" as it. So it says first that neither of the gate's buttons changes
- *  the figure, then where each leads: the answer's door by its own label, and the walk, whose W step a stale figure
- *  cannot pass (`working-cost-unanswered`; the walk reaches it second-last, `intakeSteps`). The gate's labels are the
- *  catalog's, so the sentence never names a button the gate doesn't draw. */
-const gateDoor = (actVerb: string, heldFormatted: string, resultDoorLabel: string): string =>
-  `Neither button on this page ${actVerb} your $${heldFormatted} figure; both lead to where you can. ` +
-  `After “${copy.reentryAffirmCta}”, press “${resultDoorLabel}” on your answer; “${copy.reentryUpdateCta}” asks about it among its questions.`
+/** The gate's door (U11 walk 5's (bj); its place since council `wf_22858e04-f7a` (2): `section.reentry-door`, the next
+ *  sibling after the gate's buttons, so the names sit under the buttons they name). All four walk-5 cold looks hunted
+ *  the gate for the W row's "Yes, that’s about right", so it says first that neither of the gate's buttons changes the
+ *  figure — the SCOPE sentence, the affirm button's description — then where each leads: the answer's door by its own
+ *  label, and the walk, whose W step a stale figure cannot pass (`working-cost-unanswered`; the walk reaches it
+ *  second-last, `intakeSteps`). The gate's labels are the catalog's, so it never names a button the gate doesn't draw,
+ *  never names the W row's buttons, and never points above or below. */
+const gateScope = (actVerb: string, heldFormatted: string): string =>
+  `Neither button on this page ${actVerb} your $${heldFormatted} figure; both lead to where you can.`
 
 /** The at-most sentence's reach where a later run prints short at the quote (U11 walk 3, b9-4, (at)): "adds at
  *  most $5,985 a year" read as every year, and two cold readers netted one year of gain against four short
@@ -3056,6 +3093,13 @@ export const slots = {
   // "this household has short years".
   workingCostStaleLeftOverYearsCheaper: (lastFormatted: string): string =>
     `Your $${lastFormatted} figure makes any working year your pay doesn’t cover look cheaper than it really is.`,
+  // …and where NO working year comes up short at today's quote (`capped` / `whole` with no later short run): the
+  // sentence above names a harm that household doesn't have — two walk-6 readers took it as "we have short years" (the
+  // dissent's own flip condition) — and leaves the one it does have unnamed: each working year's left over reads high
+  // by the gap (U11 walk 6's R2, the refuter's words). Exact every year there: W comes off each year's cash dollar for
+  // dollar and the income tax doesn't depend on it. One sentence for one; the either-way lead stays (constraint 3).
+  workingCostStaleLeftOverInflated: (lastFormatted: string, gapFormatted: string, quoteFormatted: string): string =>
+    `Your $${lastFormatted} figure is $${gapFormatted} below your spending, so it makes $${gapFormatted} a year more of your pay look left over than a working year at $${quoteFormatted} would leave.`,
   // Build 2 (R12): "THIS ANSWER NOW:" for a "saved" answer waiting on W — the household said "All of it" and the
   // picture, read on the stale W, still shows a year-0 left over (the shown state "waiting on W"; under "not asked"
   // none of this rides): nothing left over is credited while W is stale (R7). The figure is the one the household
@@ -3071,6 +3115,19 @@ export const slots = {
     `Because that $${storedFormatted} depends on your $${heldFormatted} figure, this answer adds none of it to your savings until you update your figure.`,
   workingCostStaleLeftOverNoneConfirm: (storedFormatted: string, heldFormatted: string): string =>
     `Because that $${storedFormatted} depends on your $${heldFormatted} figure, this answer adds none of it to your savings until you confirm or change your figure.`,
+  // …where year 0 at today's quote leaves nothing over (`firstShort` / `firstNone`, B): no "until" — updating to the
+  // quote or more brings none of it back, so "until you update" promised what the next part takes away (U11 walk 6's
+  // R3: "It already adds none. So updating changes nothing?"). It ends on what is true today.
+  workingCostStaleLeftOverNoneNow: (storedFormatted: string, heldFormatted: string): string =>
+    `Because that $${storedFormatted} depends on your $${heldFormatted} figure, this answer adds none of it to your savings.`,
+  // …and why it counts no SMALLER amount either, on the risen arms where a check adds some (U11 walk 6's F6: the zero
+  // read as a penalty, 5 of 5; A's probe: "with one sentence on why it's playing safe, I'd call it a sensible rule").
+  // The zero is honest — the at-quote figure is a ceiling, since a working year can cost more than the spending (a
+  // premium entered nowhere) — and this names the missing input, never a rule. B's form ("a smaller amount"), so the
+  // figure "If a working year costs $X" names is said once there, with F7's sentence, and no forward pointer rides the
+  // gate (council `wf_22858e04-f7a`: its copy never says above or below).
+  workingCostStaleNoSmallerAmount: (quoteFormatted: string): string =>
+    `It doesn’t count a smaller amount either, because a working year can cost more than your $${quoteFormatted} of spending, and only you can say how much more.`,
   // …and, first under "This answer now:" on every arm where the spending moved (U11 walk 5's (bl): on the risen arms
   // the spouse and two cold looks could not tell whether retirement runs on $84,000; walk 4's (bf) the same on the
   // fallen one): after work the answer uses the spending figure, door 1's own anchor (`budgetAnchorLead`, the draft's
@@ -3095,7 +3152,7 @@ export const slots = {
   // (ae)). "Updating your figure", one name for the act on these arms (`WORKING_COST_ACT_COPY.update`; walk 4's
   // (az): three names for one act). `laterShort` limits the reach to the years that don't come up short ((at),
   // `atMostReach`), and year 0 is named by its calendar year ((aw)).
-  workingCostStaleLabelIf: (quoteFormatted: string): string => `If a working year costs $${quoteFormatted}:`,
+  workingCostStaleLabelIf: (quoteFormatted: string): string => `If a working year costs $${quoteFormatted}`,
   workingCostStaleLeftOverIfCapped: (leftOverFormatted: string, year: number, quoteFormatted: string, laterShort: boolean): string =>
     `Your first working year, ${year}, has $${leftOverFormatted} left over. ${SINCE_AT_LEAST_SPENDING}, updating your figure to $${quoteFormatted} or more adds at most $${leftOverFormatted} a year to your savings${atMostReach(laterShort)}.`,
   workingCostStaleLeftOverIfWhole: (
@@ -3113,6 +3170,17 @@ export const slots = {
   // composer leaves the reach to the mechanism phrase above and says no years.
   workingCostStaleLeftOverGainYears: (firstYear: number, lastYear: number, resumesFrom: number): string =>
     `Those are ${yearSpan(firstYear, lastYear)}, and any working year from ${resumesFrom} on.`,
+  // …what lowers that cap (U11 walk 6's F7: "'at most', so how much less could it be?"): W comes off year 0's cash
+  // dollar for dollar, so each dollar above the quote comes off the at-quote left over until none is left. `capped`
+  // only — under `whole` the stored figure is the cap, so the first dollars above the quote take nothing off it.
+  workingCostStaleEachDollar: (quoteFormatted: string, leftOverFormatted: string): string =>
+    `Each dollar you add above $${quoteFormatted} comes off that $${leftOverFormatted}.`,
+  // …and what a figure BELOW the quote does (U11 walk 6's R4: the paragraph priced only the honest figure, and A's
+  // readers reached for the retype). A's form, where no working year at the quote comes up short and year 0 there
+  // prints below the stored figure (`capped`): a lower figure adds up to the stored figure, money the pay doesn't
+  // really leave over. Never under `whole` (the stored figure already caps it there: a lower figure adds no more).
+  workingCostStaleLowerAddsMore: (quoteFormatted: string, storedFormatted: string): string =>
+    `A figure below $${quoteFormatted} would add more, up to $${storedFormatted} a year, but the extra is money your pay doesn’t really leave over.`,
   // …and where year 0 at the quote leaves nothing over (`firstShort` / `firstNone`): updating carries nothing (its
   // shown state is "not asked"), so these replace the at-most sentence. A run of short years from year 0 is named
   // as a run in the money picture's own words (U11 walk 2, (am): one year alone read as a one-off); how each
@@ -3120,7 +3188,8 @@ export const slots = {
   // the Hawk's own words ("makes those years look cheaper", walk 4's council: B and C carry it), with no "better"
   // (R16's sweep reads this prefix: the whole-answer lean is B's LEAD, `workingCostStaleShortUntilUpdated`); then
   // what updating still adds, the stored figure named (`stillAddsNone`; walk 4's (bd): B had never said what this
-  // answer does with it now — "This answer now:" says it).
+  // answer does with it now — "This answer now:" says it). U11 walk 6's F9 (with R3): B said "look cheaper" three
+  // times; the run sentence now says what the held figure does to those years in this answer, in their amount.
   workingCostStaleLeftOverIfFirstShort: (
     year: number,
     shortFormatted: string,
@@ -3128,7 +3197,7 @@ export const slots = {
     heldFormatted: string,
     storedFormatted: string,
   ): string =>
-    `Your first working year, ${year}, comes up $${shortFormatted} short, and your $${heldFormatted} figure makes that year look cheaper. ${SHORTFALL_ONE} ${addsNoneBecause(quoteFormatted, storedFormatted, `your first working year, ${year}, comes up short`)}`,
+    `Your first working year, ${year}, comes up $${shortFormatted} short, and your $${heldFormatted} figure leaves that shortfall out of this answer. ${SHORTFALL_ONE} ${addsNoneBecause(quoteFormatted, storedFormatted, `your first working year, ${year}, comes up short`)}`,
   workingCostStaleLeftOverIfFirstShortRun: (
     firstYear: number,
     lastYear: number,
@@ -3138,7 +3207,7 @@ export const slots = {
     heldFormatted: string,
     storedFormatted: string,
   ): string =>
-    `Each working year from ${firstYear} through ${lastYear} comes up ${shortAmount(leastFormatted, mostFormatted)} short, and your $${heldFormatted} figure makes those years look cheaper. ${SHORTFALL_EACH} ${addsNoneBecause(quoteFormatted, storedFormatted, `your first working year, ${firstYear}, comes up short`)}`,
+    `Each working year from ${firstYear} through ${lastYear} comes up ${shortAmount(leastFormatted, mostFormatted)} short, and your $${heldFormatted} figure leaves those shortfalls out of this answer. ${SHORTFALL_EACH} ${addsNoneBecause(quoteFormatted, storedFormatted, `your first working year, ${firstYear}, comes up short`)}`,
   // First none: one sentence, since the reason names year 0 at that cost (its old "has nothing left over." before it
   // said the same fact twice once (bp)'s reason joined).
   workingCostStaleLeftOverIfFirstNone: (year: number, quoteFormatted: string, storedFormatted: string): string =>
@@ -3164,8 +3233,11 @@ export const slots = {
   // U11 walk 5: (bq) the run with no "if" ("If you’re still working from 2029…" under a no-date headline put an "if"
   // only on the short years; the label above already carries the condition), and (bo) the close scoped to the years
   // it is about (four reads took "either way" and an unscoped "so this answer can look better" as a contradiction).
+  // U11 walk 6's R5: "in those years this answer can look better" — an answer is one date and one set of odds, it
+  // can't look better IN years; the money a hidden shortfall would take stays counted for every year after, which
+  // lifts the headline. Three sentences, one fact each; "pull toward" names one side only (the net is (ax)'s).
   workingCostStaleShortLaterYear: (year: number, shortFormatted: string, heldFormatted: string): string =>
-    `The working year ${year} comes up $${shortFormatted} short. ${SHORTFALL_ONE} Your $${heldFormatted} figure makes that year look cheaper, so in that year this answer can look better than it really is.`,
+    `The working year ${year} comes up $${shortFormatted} short. ${SHORTFALL_ONE} Your $${heldFormatted} figure makes that year look cheaper. The money that shortfall would take is still counted in your savings for every year after. So that year pulls this answer toward looking better than it really is.`,
   workingCostStaleShortLaterYears: (
     firstYear: number,
     lastYear: number,
@@ -3173,53 +3245,59 @@ export const slots = {
     mostFormatted: string,
     heldFormatted: string,
   ): string =>
-    `Each working year from ${firstYear} through ${lastYear} comes up ${shortAmount(leastFormatted, mostFormatted)} short. ${SHORTFALL_EACH} Your $${heldFormatted} figure makes those years look cheaper, so in those years this answer can look better than it really is.`,
-  // THE ACT, DEFINED (council `wf_7fa86902-35c`: "define the act once per surface by what the figure holds, naming
-  // the sheet's two buttons"), said only beside the door (`workingYearCostStaleDoor`; a read-only tab draws no
-  // door, so it is told no buttons to press). Each names the buttons the W row really draws for this draft: below
-  // today's spending, "Yes" at today's quote and "No" (no Keep door, ruling 34); otherwise the Keep door by its own
-  // label (`workingYearCostKeepLabel`), "Yes" where there is a quote to offer, and "No". The labels are the
-  // catalog's own (`copy.workingCostYes`, `copy.workingCostDifferent`), so the line can never quote a button the face
-  // doesn't draw. "Update" says what the figure holds beyond the spending "Yes" uses: hunter-2's F8 at walk 4 — a
-  // "Yes" at $90,000 untouched leaves out what door 5 lists (premiums, a local wage tax); "a tax on pay the tool
-  // doesn't work out", never "any tax on pay", which would ask for the federal taxes the W help says to leave out.
-  //
-  // U11 walk 5 reshaped it on both hosts ((bj), (bk)). Each host first says where its door is — the gate, that neither
-  // of its buttons changes the figure and where each leads (`slots.workingCostStaleGateDoor…`); the Result, "press …
-  // below" (`slots.workingCostStaleResultDoor…`) — and only then "There, …" names the W row's buttons, so no reader
-  // hunts a page for a button it doesn't draw. The condition comes first, in the W help's own items
-  // (`extrasAfterCosts`), "since the tool counts them in a working year only if you add them", then "Yes": "Yes" first
-  // read as the default, and "a tax on pay the tool doesn’t work out" as "the tool doesn’t work". Where the Keep door is
-  // real, the figure's contents come first in a sentence of their own (`workingCostStaleDefineHold`, it names no
-  // button), then each of the three exits carries its condition (S's had none, so a couple could keep a spending-only
-  // figure). `stateTax` — the W help asks this household to add its state's tax on pay (unpriced or class-based).
-  // `enterFormatted` / `enterMonthly` — today's quote in the unit of the box "No" leaves the reader in (`enterFigure`).
-  workingCostStaleDefineUpdate: (quoteFormatted: string, stateTax: boolean, enterFormatted: string, enterMonthly: boolean): string =>
-    `There, if a working year also costs you ${extrasAfterCosts(stateTax)}, choose “${copy.workingCostDifferent}” and enter ${enterFigure(enterFormatted, enterMonthly)} plus those costs, ${COUNTED_ONLY_IF_ADDED}. If not, choose “${copy.workingCostYes}” to use $${quoteFormatted} a year.`,
-  workingCostStaleDefineHold: (stateTax: boolean): string =>
-    `Your figure for a working year should also hold ${extrasAfterHold(stateTax)}, ${COUNTED_ONLY_IF_ADDED}.`,
-  workingCostStaleDefineConfirm: (
-    keepLabel: string,
-    keepFormatted: string,
-    keepMonthly: boolean,
-    quoteFormatted: string,
-    enterFormatted: string,
-    enterMonthly: boolean,
-  ): string =>
-    `There, choose “${keepLabel}” only if ${keepFigure(keepFormatted, keepMonthly)} covers your spending plus those costs, “${copy.workingCostYes}” to use $${quoteFormatted} a year only if you have none of them, or “${copy.workingCostDifferent}” to enter ${enterFigure(enterFormatted, enterMonthly)} plus them.`,
-  // …and where no spending figure is left to quote: the face draws the Keep door and the figure box, no fork.
-  workingCostStaleDefineConfirmNoQuote: (keepLabel: string, keepFormatted: string, keepMonthly: boolean): string =>
-    `There, choose “${keepLabel}” only if ${keepFigure(keepFormatted, keepMonthly)} covers your spending plus those costs, or type a different figure.`,
+    `Each working year from ${firstYear} through ${lastYear} comes up ${shortAmount(leastFormatted, mostFormatted)} short. ${SHORTFALL_EACH} Your $${heldFormatted} figure makes those years look cheaper. The money those shortfalls would take is still counted in your savings for every year after. So those years pull this answer toward looking better than it really is.`,
+  // THE DOOR (council `wf_7fa86902-35c`: "define the act once per surface by what the figure holds, naming the sheet's
+  // buttons"; its FORM since council `wf_22858e04-f7a`), said only where the tab can save (a read-only tab draws no
+  // door, so it is told no buttons to press). Its heading names the act and the held figure — the gate's h3 and the
+  // Result door's dt, one name for one door. ON THE GATE: the scope sentence and the route (`gateScope`,
+  // `workingCostStaleGateRoute`) and nothing else — the W row's buttons are named only where they can be acted on (the
+  // Result's door and the W row itself), so "Yes, that’s about right" never sits beside "Balances still about right"
+  // (three walks tried to reword that near-namesake away; insight 100: a routing problem). ON THE RESULT: the
+  // condition, the cost list (the W help's own items, `workingCostExtras`, a list the eye can tick through: copylaw
+  // F3), the "Yes" sentence, then the button. Each names the buttons the W row really draws for this draft: below
+  // today's spending "No" and "Yes" at today's quote (no Keep door, ruling 34); otherwise the Keep door by its own label
+  // (`workingYearCostKeepLabel`), "Yes" where there is a quote to offer, and "No". The labels are the catalog's own
+  // (`copy.workingCostYes`, `copy.workingCostDifferent`). `enterFormatted` / `enterMonthly` — today's quote in the unit
+  // of the box "No" leaves the reader in (`enterFigure`).
+  workingCostStaleDoorHeadingUpdate: (heldFormatted: string): string => `To update your $${heldFormatted} figure`,
+  workingCostStaleDoorHeadingConfirm: (heldFormatted: string): string => `To confirm or change your $${heldFormatted} figure`,
+  workingCostStaleGateScopeUpdate: (heldFormatted: string): string => gateScope('updates', heldFormatted),
+  workingCostStaleGateScopeConfirm: (heldFormatted: string): string => gateScope('confirms or changes', heldFormatted),
+  workingCostStaleGateRoute: (resultDoorLabel: string): string =>
+    `After “${copy.reentryAffirmCta}”, press “${resultDoorLabel}” on your answer; “${copy.reentryUpdateCta}” asks about it among its questions.`,
   // The Result's sentence before its door, in the act (`WORKING_COST_ACT_COPY.resultDoorLead`); the label is the
   // button's own (`WORKING_COST_ACT_COPY.resultDoor`), passed in, so the two can never differ.
   workingCostStaleResultDoorUpdate: (buttonLabel: string): string => `To update it, press “${buttonLabel}” below.`,
   workingCostStaleResultDoorConfirm: (buttonLabel: string): string => `To confirm or change it, press “${buttonLabel}” below.`,
-  // The gate's door sentence, in the act (`WORKING_COST_ACT_COPY.gateDoor`; `gateDoor`'s docblock), on every stale
-  // arm where the tab can save; the answer's door label passed in.
-  workingCostStaleGateDoorUpdate: (heldFormatted: string, resultDoorLabel: string): string =>
-    gateDoor('updates', heldFormatted, resultDoorLabel),
-  workingCostStaleGateDoorConfirm: (heldFormatted: string, resultDoorLabel: string): string =>
-    gateDoor('confirms or changes', heldFormatted, resultDoorLabel),
+  // The update arm (risen): the condition first, then "No", ending on the list it names.
+  workingCostStaleDoorIfUpdate: (enterFormatted: string, enterMonthly: boolean): string =>
+    `There, if a working year also costs you any of these, choose “${copy.workingCostDifferent}” and enter ${enterFigure(enterFormatted, enterMonthly)} plus them:`,
+  // "Yes" after its condition, on both arms (F11's words): "Yes" first read as the default.
+  workingCostStaleDoorYes: (quoteFormatted: string): string =>
+    `If you have none of them, choose “${copy.workingCostYes}” to use $${quoteFormatted} a year.`,
+  // The confirm arm (the spending fell): U11 walk 6's F11 — one sentence held three choices ("I'd want three separate
+  // lines"), and the room the held figure leaves was never written. Where the held figure is above today's quote, the
+  // gap first, then each choice with its condition first. `heldFormatted` — the yearly figure the note printed.
+  workingCostStaleDoorMore: (heldFormatted: string, moreFormatted: string, quoteFormatted: string): string =>
+    `Your $${heldFormatted} figure is $${moreFormatted} more than your $${quoteFormatted} of spending.`,
+  workingCostStaleDoorKeepUpTo: (keepLabel: string, moreFormatted: string): string =>
+    `There, if those costs come to $${moreFormatted} a year or less, choose “${keepLabel}”.`,
+  // …and where it is not above the quote (a state-only move, or a typed figure), the condition in the figure's terms.
+  workingCostStaleDoorKeepCovers: (keepLabel: string, keepFormatted: string, keepMonthly: boolean): string =>
+    `There, choose “${keepLabel}” only if ${keepFigure(keepFormatted, keepMonthly)} covers your spending plus those costs.`,
+  workingCostStaleDoorNoPlus: (enterFormatted: string, enterMonthly: boolean): string =>
+    `Or choose “${copy.workingCostDifferent}” to enter ${enterFigure(enterFormatted, enterMonthly)} plus them.`,
+  // …and where no spending figure is left to quote: the face draws the Keep door and the figure box, no fork.
+  workingCostStaleDoorKeepNoQuote: (keepLabel: string, keepFormatted: string, keepMonthly: boolean): string =>
+    `There, choose “${keepLabel}” only if ${keepFigure(keepFormatted, keepMonthly)} covers your spending plus those costs, or type a different figure.`,
+  // THE KEEP CONDITION ON THE W ROW (council `wf_22858e04-f7a` (3), the Hawk's condition): once the gate stops naming
+  // the W row's choices, Keep — drawn above the cost lists — must not read as a safe confirmation, so its condition sits
+  // ABOVE it, its `aria-describedby` (U11 walk 6's F11: "I'd probably just hit 'Keep $84,000' because it's easiest").
+  // Above today's quote: the room the figure leaves; otherwise (or with no quote) the figure's own terms.
+  workingCostKeepConditionUpTo: (keepLabel: string, moreFormatted: string, quoteFormatted: string): string =>
+    `Choose “${keepLabel}” only if the costs listed below come to $${moreFormatted} a year or less, on top of your $${quoteFormatted} of spending.`,
+  workingCostKeepConditionCovers: (keepLabel: string, keepFormatted: string, keepMonthly: boolean): string =>
+    `Choose “${keepLabel}” only if ${keepFigure(keepFormatted, keepMonthly)} covers your spending plus the costs listed below.`,
   workingCostStaleQuoteGone: (lastFormatted: string): string =>
     `You said yes to $${lastFormatted} a year, but your spending figures have changed since, and there’s no spending figure to offer now.`,
   workingCostStaleStateConfirmed: (lastFormatted: string): string =>

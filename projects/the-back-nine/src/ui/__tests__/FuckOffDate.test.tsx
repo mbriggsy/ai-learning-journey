@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { FuckOffDate, W_STALE_CAUSE } from '../FuckOffDate'
-import { notePartsText, plainNote } from '../noteParts'
+import { plainNote } from '../noteParts'
 import { copy, slots } from '../copy'
 import { dateOddsText } from '../dateOdds'
 import { deriveDateBandAnnotations } from '../bandAnnotations'
@@ -623,28 +623,51 @@ describe('the pay check’s standing line (KTD21)', () => {
     expect(notes[payIdx]!.getAttribute('role')).toBeNull()
   })
 
-  // U11 walk 5's (bi): W's line as parts — each label starts its own line in the body's semibold (a <strong> after a
-  // <br>), and the door's sentences start one too, unlabelled, before the button. The text reads the parts joined.
-  it('draws the parts as structure: the opening, then each label in a <strong> after a <br>, then the door’s sentences after a <br>, then the button', () => {
+  // W's line as a BLOCK (council `wf_22858e04-f7a` (1), (4)): the opening (its cause's lead prefixed) as a <p>, each
+  // labelled part a div>dt+dd in one <dl>, the door the last dt/dd — its lead, its cost list, its tail, then the button
+  // as a block. A fixture here: the block renders whatever parts it is handed.
+  it('draws the parts as a block: the opening <p>, then a <dl> of div>dt+dd per part, the door last with its list and its button at the end of its dd; no heading, no run-in label, no line break', () => {
+    const onOpen = vi.fn()
     const parts = {
       opening: 'The note. The lead.',
       segments: [
-        { label: 'This answer now:', sentences: ['One.', 'Two.'] },
-        { label: 'If a working year costs $90,000:', sentences: ['Three.'] },
+        { label: 'This answer now', sentences: ['One.', 'Two.'] },
+        { label: 'If a working year costs $90,000', sentences: ['Three.'] },
       ],
-      door: ['Press below.', 'There, choose.'],
+      door: { label: 'To update your $84,000 figure', lead: ['Press below.', 'There, if any of these:'], items: ['a cost', 'another cost'], tail: ['Then yes.'] },
     }
-    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: W_STALE_CAUSE.update, parts, onOpen: () => {} }} />)
-    const span = container.querySelector('.cs-paycheck-note > span')!
-    expect(span.textContent).toBe(`${copy.stalenessPayCheckNote} ${notePartsText(parts)}`)
-    const labels = Array.from(span.querySelectorAll('strong.note-parts__label'))
-    expect(labels.map((l) => l.textContent)).toEqual(['This answer now:', 'If a working year costs $90,000:'])
-    for (const l of labels) expect(l.previousElementSibling?.tagName, `${l.textContent} follows a line break`).toBe('BR')
-    expect(span.querySelectorAll('br')).toHaveLength(3)
-    expect(span.lastChild?.textContent, 'the door’s sentences close the paragraph, unlabelled').toBe('Press below. There, choose.')
-    expect(span.lastChild?.previousSibling?.nodeName, '…after a line break of their own').toBe('BR')
-    // The button follows the paragraph's words.
-    expect(container.querySelector('.cs-paycheck-note > span + button')).not.toBeNull()
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: W_STALE_CAUSE.update, parts, onOpen }} />)
+    const block = container.querySelector('div.note-parts.fod-note.cs-paycheck-note')!
+    expect(block, 'one block in the slot, never a <p> around a <dl>').not.toBeNull()
+    expect(container.querySelector('p.cs-paycheck-note')).toBeNull()
+    expect(block.querySelector(':scope > p.note-parts__opening')?.textContent).toBe(`${copy.stalenessPayCheckNote} The note. The lead.`)
+    const groups = Array.from(block.querySelectorAll(':scope > dl > div'))
+    expect(groups.map((g) => [g.querySelector('dt.note-parts__label')?.textContent, g.querySelector('dd')?.children.length === 0 ? g.querySelector('dd')?.textContent : null])).toEqual([
+      ['This answer now', 'One. Two.'],
+      ['If a working year costs $90,000', 'Three.'],
+      ['To update your $84,000 figure', null],
+    ])
+    const doorDd = groups[2]!.querySelector('dd')!
+    expect(Array.from(doorDd.children).map((c) => [c.tagName, c.tagName === 'UL' ? Array.from(c.children).map((li) => li.textContent).join('|') : c.textContent])).toEqual([
+      ['P', 'Press below. There, if any of these:'],
+      ['UL', 'a cost|another cost'],
+      ['P', 'Then yes.'],
+      ['BUTTON', 'Update your figure for a working year'],
+    ])
+    expect(doorDd.lastElementChild?.matches('button.band-premise__cta.note-parts__cta')).toBe(true)
+    expect(block.querySelector('h1, h2, h3, h4, strong, br')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Update your figure for a working year' }))
+    expect(onOpen).toHaveBeenCalledTimes(1)
+  })
+
+  it('a note with no parts is the slot’s old <p>, byte for byte — the reduce-to-plain (`plainNote`)', () => {
+    const { container } = render(
+      <FuckOffDate view={dates(DATE_FIXTURES.confirmed)} payCheckNote={{ cause: 'w-stale-confirm-or-change', parts: plainNote(STALE), onOpen: () => {} }} />,
+    )
+    expect(container.querySelector('.cs-paycheck-note')?.outerHTML).toBe(
+      `<p class="fod-note cs-paycheck-note"><span>${copy.stalenessPayCheckNote} ${STALE}</span> <button type="button" class="band-premise__cta">${copy.stalenessPayCheckCta}</button></p>`,
+    )
+    expect(container.querySelector('.note-parts')).toBeNull()
   })
 
   it('names no state in the Card 4 matrix’s words — it never doubles the one state clause', () => {

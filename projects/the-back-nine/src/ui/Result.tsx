@@ -47,7 +47,7 @@ import { copy, slots } from './copy'
 import { appModel } from './appModel'
 import { Disclaimer } from './Disclaimer'
 import { FuckOffDate, W_STALE_CAUSE, type StandingNoteCause } from './FuckOffDate'
-import { plainNote, type NoteParts } from './noteParts'
+import { plainNote, type NoteDoor, type NoteParts } from './noteParts'
 import { ConfidenceStatement } from './ConfidenceStatement'
 import { selectElevatedAnswer, resolvedFocusKey } from './answerView'
 import type { ResaveCopyKey } from './unlockCopy'
@@ -224,11 +224,11 @@ export function Result({
   if (!assumptionsOpen && assumptionsSeat !== undefined) setAssumptionsSeat(undefined)
   // The standing answer line for one cause: its door opens the panel at that cause's seat, and exists only
   // where the tab can save (a read-only tab reads the fact alone). `door` — what is said beside the door (for W, the
-  // Result's own sentences from `workingYearCostStaleDoor`: "press … below", then "There, …") — rides only with the
+  // Result's door from `workingYearCostStaleDoor`: its last dt/dd, council `wf_22858e04-f7a`) — rides only with the
   // door, so a read-only tab is never told buttons to press.
-  const standingNote = (cause: StandingNoteCause, line: Omit<NoteParts, 'door'>, seat: AssumptionLandingSeat, door: readonly string[] = []) =>
+  const standingNote = (cause: StandingNoteCause, line: Omit<NoteParts, 'door'>, seat: AssumptionLandingSeat, door: NoteDoor | null = null) =>
     readOnly
-      ? { cause, parts: { ...line, door: [] } }
+      ? { cause, parts: { ...line, door: null } }
       : {
           cause,
           parts: { ...line, door },

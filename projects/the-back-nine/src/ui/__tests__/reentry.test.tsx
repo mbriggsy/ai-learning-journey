@@ -373,18 +373,19 @@ describe('composeReentry — the read-back', () => {
     // The door sentence is the act's own (council `wf_7fa86902-35c`; the act is the caller's, read off the draft):
     // this fixture's spending rose past its yes, so "update"; the definition, where one is handed over, rides just
     // before the door, and both only where the tab can save.
-    // What the gate says beside its buttons is the caller's, read off the draft (`workingYearCostStaleDoor`'s `gate`): it
-    // rides as the line's last part, only where the tab can save (U11 walk 5's (bi), (bj)).
-    const DOOR = ['A fixture door sentence naming where each button leads.', 'There, a fixture definition.']
-    const line = { opening: text, segments: [{ label: 'A label:', sentences: ['One.'] }] }
-    const parts = composeReentryParts(s, report, { costStale: { line, door: DOOR, canChange: true }, leftOverStale: null }).noteLines
+    // The gate's door is the caller's, read off the draft (`workingYearCostStaleDoor`'s `gate`): never a part of the line
+    // in the story column, but the view's own field, drawn under the buttons, and only where the tab can save (council
+    // `wf_22858e04-f7a` (2)).
+    const DOOR = { heading: 'A fixture heading', scope: 'A fixture scope sentence.', route: 'A fixture route.' }
+    const line = { opening: text, segments: [{ label: 'A label', sentences: ['One.'] }] }
+    const view = composeReentryParts(s, report, { costStale: { line, door: DOOR, canChange: true }, leftOverStale: null })
     const opening = `${copy.stalenessPayCheckGateLead} ${text}`
-    expect(parts).toEqual([{ text: `${opening} A label: One. ${DOOR.join(' ')}`, parts: { opening, segments: line.segments, door: DOOR } }])
-    expect(notePartsText((parts[0] as { parts: Parameters<typeof notePartsText>[0] }).parts)).toBe(`${opening} A label: One. ${DOOR.join(' ')}`)
-    expect(
-      composeReentry(s, report, { costStale: { line, door: DOOR, canChange: false }, leftOverStale: null }).noteLines,
-      'a read-only tab gets no door it cannot open, and no buttons named to press',
-    ).toEqual([`${opening} A label: One.`])
+    expect(view.noteLines).toEqual([{ text: `${opening} A label One.`, parts: { opening, segments: line.segments, door: null } }])
+    expect(notePartsText((view.noteLines[0] as { parts: Parameters<typeof notePartsText>[0] }).parts)).toBe(`${opening} A label One.`)
+    expect(view.door, 'the door rides the view, under the buttons').toEqual(DOOR)
+    const readOnly = composeReentryParts(s, report, { costStale: { line, door: DOOR, canChange: false }, leftOverStale: null })
+    expect(readOnly.door, 'a read-only tab gets no door it cannot open, and no buttons named to press').toBeNull()
+    expect(readOnly.noteLines).toEqual(view.noteLines)
     // The figure-less fallback only where no sentence is handed over.
     expect(composeReentry(s, report, NO_SENTENCES).noteLines).toEqual([copy.stalenessWorkingYearCost])
     expect(copy.stalenessWorkingYearCost, 'distinct text — ReEntry keys each note by it').not.toBe(copy.stalenessWorkingYears)
@@ -393,7 +394,7 @@ describe('composeReentry — the read-back', () => {
   it('the pay check: a W that still matches carries no stale line, even handed a sentence (the report decides, never the caller)', () => {
     const fresh = savedDraft(DATE_STALE_W)
     const report = deriveStaleness(fresh, TODAY, exposureForDraft(DATE_STALE_W), { costStale: false, leftOverStale: false })
-    expect(composeReentry(fresh, report, { costStale: { line: { opening: 'never rendered', segments: [] }, door: [], canChange: true }, leftOverStale: null }).noteLines).toEqual([])
+    expect(composeReentry(fresh, report, { costStale: { line: { opening: 'never rendered', segments: [] }, door: { heading: 'h', scope: 's', route: 'r' }, canChange: true }, leftOverStale: null })).toMatchObject({ noteLines: [], door: null })
   })
 
   it('the pay check: push order — the contribution clock, then the working-years clock, then the stale-answer line', () => {
@@ -588,21 +589,22 @@ describe('composeReentry — the read-back', () => {
     expect(line?.opening).toBe(`${workingYearCostStaleNote(d)} ${copy.workingCostStaleEitherWayConfirm}`)
     expect(line?.segments[0]?.label).toBe(copy.workingCostStaleLabelNow)
     expect(line?.segments[0]?.sentences).toContain(slots.workingCostStaleLeftOverAnswered('16,985'))
-    // The door: "confirm or change" (the spending fell, so the Keep door is real): what the figure holds, the door
-    // sentence, then its three exits.
+    // The door: "confirm or change" (the spending fell, so the Keep door is real) — on the gate its heading, the scope
+    // sentence and the route, and never the W row's choices (council `wf_22858e04-f7a` (2), (3)).
     const door = workingYearCostStaleDoor(d)
-    const gate = [
-      slots.workingCostStaleDefineHold(true),
-      slots.workingCostStaleGateDoorConfirm('84,000', copy.stalenessPayCheckCta),
-      slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '84,000', false, '78,000', '78,000', false),
-    ]
+    const gate = {
+      heading: slots.workingCostStaleDoorHeadingConfirm('84,000'),
+      scope: slots.workingCostStaleGateScopeConfirm('84,000'),
+      route: slots.workingCostStaleGateRoute(copy.stalenessPayCheckCta),
+    }
     expect(door?.act).toBe('confirmOrChange')
     expect(door?.gate).toEqual(gate)
     const view = composeReentry(s, report, {
       costStale: line === null || door === null ? null : { line, door: door.gate, canChange: true },
       leftOverStale: null,
     })
-    expect(view.noteLines).toEqual([[copy.stalenessPayCheckGateLead, workingYearCostStaleLineText(line!), ...gate].join(' ')])
+    expect(view.noteLines).toEqual([[copy.stalenessPayCheckGateLead, workingYearCostStaleLineText(line!)].join(' ')])
+    expect(view.door).toEqual(gate)
     // Under any other answer W's line gains no clause.
     expect(workingYearCostStaleLine(DEV_SEEDS.datecoststale)).toEqual({ opening: workingYearCostStaleNote(DEV_SEEDS.datecoststale), segments: [] })
   })
@@ -1034,6 +1036,88 @@ describe('ReEntry — the surface', () => {
     expect(screen.getByRole('button', { name: copy.reentryContinueCta })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: copy.reentryUpdateCta })).toBeNull()
     expect(screen.getByText(copy.reentryBalancesLegend)).toBeInTheDocument()
+  })
+
+  // THE FORM ON THE GATE (council `wf_22858e04-f7a`; U11 walk 6): W's line is a block in the story column — the opening,
+  // then a <dl> of labelled parts, never a heading — and its door sits under the buttons it names, the scope sentence
+  // describing the affirm button; a note with no parts keeps its old <p>, byte for byte. Read off the real draft.
+  const wStaleView = (d: ScenarioDraft, canChange = true) => {
+    const s = savedDraft(d)
+    const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: false })
+    const line = workingYearCostStaleLine(d)
+    const door = workingYearCostStaleDoor(d)
+    if (line === null || door === null) throw new Error('[test setup] W is stale')
+    return composeReentryParts(s, report, { costStale: { line, door: door.gate, canChange }, leftOverStale: null })
+  }
+
+  it('W’s stale line is a block: div.note-parts → p.note-parts__opening → dl of div>dt+dd, labels with no colon in the ruled order, no heading inside the notes, no door words in them', () => {
+    const { container } = render(<ReEntry view={wStaleView(DEV_SEEDS.datesavedrisenlater)} readOnly={false} onAffirm={() => {}} onUpdate={() => {}} />)
+    const notes = container.querySelector('.reentry-notes')!
+    const block = notes.querySelector(':scope > div.note-parts')!
+    expect(block, 'one block in the story column').not.toBeNull()
+    expect(block.firstElementChild?.matches('p.note-parts__opening')).toBe(true)
+    expect(block.firstElementChild?.textContent).toBe(
+      `${copy.stalenessPayCheckGateLead} ${workingYearCostStaleLine(DEV_SEEDS.datesavedrisenlater)!.opening}`,
+    )
+    const groups = Array.from(block.querySelectorAll(':scope > dl > div'))
+    expect(groups.map((g) => Array.from(g.children).map((c) => c.tagName))).toEqual([
+      ['DT', 'DD'],
+      ['DT', 'DD'],
+    ])
+    expect(groups.map((g) => g.querySelector('dt.note-parts__label')?.textContent)).toEqual(['This answer now', 'If a working year costs $105,000'])
+    expect(notes.querySelector('h1, h2, h3, h4, strong, br'), 'no heading, no run-in label, no line break inside the notes').toBeNull()
+    expect(notes.textContent).not.toContain('Neither button on this page')
+    expect(notes.textContent).not.toContain('Yes, that’s about right')
+  })
+
+  it('a note with no parts keeps its old <p>, byte for byte (the reduce-to-plain): `datecoststale` (no answer stored)', () => {
+    const d = DEV_SEEDS.datecoststale
+    const { container } = render(<ReEntry view={wStaleView(d)} readOnly={false} onAffirm={() => {}} onUpdate={() => {}} />)
+    const text = `${copy.stalenessPayCheckGateLead} ${workingYearCostStaleNote(d)}`
+    const notes = container.querySelector('.reentry-notes')!
+    expect(notes.querySelector('.note-parts')).toBeNull()
+    expect(Array.from(notes.children).map((c) => c.outerHTML)).toContain(`<p class="save-step__note save-field__note--block">${text}</p>`)
+  })
+
+  it('W’s door sits right after the buttons it names: section.reentry-door, its h3 the heading, the scope sentence the affirm button’s description; it names no W-row button and points neither above nor below', () => {
+    const d = DEV_SEEDS.datesavedstale
+    const { container } = render(<ReEntry view={wStaleView(d)} readOnly={false} onAffirm={() => {}} onUpdate={() => {}} />)
+    const door = container.querySelector('section.reentry-door')!
+    expect(door, 'drawn where the tab can save').not.toBeNull()
+    expect(container.querySelector('.save-actions')?.nextElementSibling).toBe(door)
+    expect(door.querySelector('h3')?.textContent).toBe('To confirm or change your $84,000 figure')
+    const affirm = screen.getByRole('button', { name: copy.reentryAffirmCta })
+    expect(affirm).toHaveAccessibleDescription('Neither button on this page confirms or changes your $84,000 figure; both lead to where you can.')
+    expect(door.textContent).toBe(
+      'To confirm or change your $84,000 figure' +
+        'Neither button on this page confirms or changes your $84,000 figure; both lead to where you can. ' +
+        'After “Balances still about right — show my answer”, press “Confirm or change your figure” on your answer; ' +
+        '“Something’s changed — update them” asks about it among its questions.',
+    )
+    expect(door.textContent).not.toContain('Yes, that’s about right')
+    expect(door.textContent).not.toContain('No — I’ll enter a different figure')
+    expect(door.textContent).not.toMatch(/\bKeep\b/)
+    expect(door.textContent).not.toMatch(/\b(above|below)\b/i)
+    expect(screen.getByRole('button', { name: copy.reentryUpdateCta })).not.toHaveAttribute('aria-describedby')
+  })
+
+  it('…and nowhere else: no door read-only (and no description on Continue), none where the view hands no door (a fresh W)', () => {
+    const d = DEV_SEEDS.datesavedstale
+    const ro = render(<ReEntry view={wStaleView(d, false)} readOnly onAffirm={() => {}} onUpdate={() => {}} />)
+    expect(ro.container.querySelector('.reentry-door')).toBeNull()
+    expect(screen.getByRole('button', { name: copy.reentryContinueCta })).not.toHaveAttribute('aria-describedby')
+    cleanup()
+    // A view that carries a door, drawn read-only, still draws none (the second guard).
+    render(<ReEntry view={wStaleView(d)} readOnly onAffirm={() => {}} onUpdate={() => {}} />)
+    expect(document.querySelector('.reentry-door')).toBeNull()
+    cleanup()
+    const { container } = render(<ReEntry view={baseView()} readOnly={false} onAffirm={() => {}} onUpdate={() => {}} />)
+    expect(container.querySelector('.reentry-door')).toBeNull()
+    expect(screen.getByRole('button', { name: copy.reentryAffirmCta })).not.toHaveAttribute('aria-describedby')
+  })
+
+  it('the affirm button names what it affirms: "Balances still about right — show my answer" (hunter F7 at U11 walk 6)', () => {
+    expect(copy.reentryAffirmCta).toBe('Balances still about right — show my answer')
   })
 
   it('a PROMPT, never an attestation: no checkbox, and no "confirm" wording anywhere on the surface (R19 — a reflexive tap must not read as a freshness claim)', () => {

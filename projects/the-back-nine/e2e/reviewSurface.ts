@@ -115,7 +115,7 @@ export async function gotoVaultFinal(page: Page, key: string): Promise<void> {
   const unlock = page.getByRole('button', { name: 'Open my plan' })
   await expect(unlock, `?vault=${key}: the plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
   await unlock.click()
-  const affirm = page.getByRole('button', { name: /Still about right/ })
+  const affirm = page.getByRole('button', { name: /still about right/i })
   await expect(affirm, `?vault=${key}: the re-entry gate never mounted after unlock`).toBeVisible({ timeout: 30_000 })
   await affirm.click()
   await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })

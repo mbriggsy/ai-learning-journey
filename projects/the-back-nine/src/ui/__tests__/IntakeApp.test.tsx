@@ -259,76 +259,82 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
   // `datecoststale`, which stores no answer, so its line is the W step's bare sentence either way, and the
   // `datesavedstale` arms in `reentry.test.tsx` call the core themselves. A call site reverted to the bare
   // sentence would drop the clause from the gate alone, every other test green.
-  it('`datesavedstale`: the gate’s stale-W line is the W step’s sentence, the either-way lead in “confirm or change”, “This answer now:” with the $16,985 a year not added, the act’s three exits, then the door', async () => {
+  it('`datesavedstale`: the gate’s stale-W line is a block — the W step’s sentence and the either-way lead in “confirm or change”, then “This answer now” with the $16,985 a year not added and no amount guessed at; its door under the buttons, naming no W-row choice', async () => {
     const current = h.model
     h.model = plantedVault(DEV_SEEDS.datesavedstale)
     try {
       render(<IntakeApp hydrateFromVault />)
       await screen.findByRole('button', { name: copy.reentryAffirmCta })
-      const line = Array.from(document.querySelectorAll('.reentry-notes p'))
-        .map((p) => p.textContent ?? '')
-        .find((t) => t.startsWith(copy.stalenessPayCheckGateLead))
+      const block = document.querySelector('.reentry-notes > div.note-parts')
+      expect(block, 'the clause rides the gate’s W line, as a block').not.toBeNull()
       // The W step's sentence for a yes to $84,000 the spending fell below ($78,000): no lean (the safe side).
-      const sentence = slots.workingCostStaleQuote('84,000', '78,000')
-      expect(line, 'the clause rides the gate’s W line').toBe(
+      expect(block!.querySelector('p.note-parts__opening')?.textContent).toBe(
+        [copy.stalenessPayCheckGateLead, slots.workingCostStaleQuote('84,000', '78,000'), copy.workingCostStaleEitherWayConfirm].join(' '),
+      )
+      expect(Array.from(block!.querySelectorAll('dt')).map((dt) => dt.textContent)).toEqual([copy.workingCostStaleLabelNow])
+      expect(Array.from(block!.querySelectorAll('dd')).map((dd) => dd.textContent)).toEqual([
         [
-          copy.stalenessPayCheckGateLead,
-          sentence,
-          copy.workingCostStaleEitherWayConfirm,
-          copy.workingCostStaleLabelNow,
           slots.workingCostStaleAfterWork('78,000', true),
           slots.workingCostStaleLeftOverAnswered('16,985'),
           slots.workingCostStaleLeftOverNoneConfirm('16,985', '84,000'),
-          slots.workingCostStaleDefineHold(true),
-          slots.workingCostStaleGateDoorConfirm('84,000', copy.stalenessPayCheckCta),
-          slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '84,000', false, '78,000', '78,000', false),
+          copy.workingCostStaleNoGuess,
         ].join(' '),
+      ])
+      // The door, through IntakeApp's own call (council `wf_22858e04-f7a` (2)): under the buttons, the heading, the
+      // scope sentence, the route; the W row's choices ride the Result and the W row only (the move, (3)).
+      const door = document.querySelector('.save-actions + section.reentry-door')
+      expect(door?.querySelector('h3')?.textContent).toBe(slots.workingCostStaleDoorHeadingConfirm('84,000'))
+      expect(door?.querySelector('p')?.textContent).toBe(
+        [slots.workingCostStaleGateScopeConfirm('84,000'), slots.workingCostStaleGateRoute(copy.stalenessPayCheckCta)].join(' '),
       )
-      // U11 walk 5's (bi) on IntakeApp's own call: the label is structure (a <strong> after a <br>), and the door's
-      // sentences start a line of their own.
-      const p = Array.from(document.querySelectorAll('.reentry-notes p')).find((el) => el.textContent === line)!
-      const labels = Array.from(p.querySelectorAll('strong.note-parts__label'))
-      expect(labels.map((l) => l.textContent)).toEqual([copy.workingCostStaleLabelNow])
-      expect(labels[0]!.previousElementSibling?.tagName).toBe('BR')
-      expect(p.querySelectorAll('br')).toHaveLength(2)
+      const gateText = document.querySelector('main')?.textContent ?? ''
+      expect(gateText).not.toContain(copy.workingCostStaleDoorHold)
+      expect(gateText).not.toContain(copy.workingCostYes)
     } finally {
       h.model = current
     }
   })
 
-  // …and the RISEN twin (the U11 walk's (ae)): the gate's W line carries the year-level lean, the clause, and the
-  // most a check at the quote adds — year 0 at $90,000, hand-derived (150,000 − 11,475 − 17,540 − 20,000 −
-  // 90,000 = $10,985). A call site reverted to the W step's note would drop the clause and the check alone.
-  it('`datesavedrisen`: the gate’s stale-W line is the note (the year-level lean), the either-way lead in “update”, “This answer now:”, “If a working year costs $90,000:” with the most updating adds, the act defined, then the update door', async () => {
+  // …and the RISEN twin (the U11 walk's (ae)): the gate's W line carries R2's lean (no working year at $90,000 runs
+  // short), the clause, and the most a check at the quote adds — year 0 at $90,000, hand-derived (150,000 − 11,475 −
+  // 17,540 − 20,000 − 90,000 = $10,985). A call site reverted to the W step's note would drop the clause and the check.
+  it('`datesavedrisen`: the gate’s stale-W line is the note (R2’s gap lean), the either-way lead in “update”, “This answer now”, “If a working year costs $90,000” with the most updating adds, what lowers it and what a lower figure does; the update door under the buttons', async () => {
     const current = h.model
     h.model = plantedVault(DEV_SEEDS.datesavedrisen)
     try {
       render(<IntakeApp hydrateFromVault />)
       await screen.findByRole('button', { name: copy.reentryAffirmCta })
-      const line = Array.from(document.querySelectorAll('.reentry-notes p'))
-        .map((p) => p.textContent ?? '')
-        .find((t) => t.startsWith(copy.stalenessPayCheckGateLead))
-      expect(line).toBe(
+      const block = document.querySelector('.reentry-notes > div.note-parts')!
+      expect(block.querySelector('p.note-parts__opening')?.textContent).toBe(
         [
           copy.stalenessPayCheckGateLead,
           slots.workingCostStaleQuote('84,000', '90,000'),
-          slots.workingCostStaleLeftOverYearsCheaper('84,000'),
+          slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000'),
           copy.workingCostStaleEitherWayUpdate,
-          copy.workingCostStaleLabelNow,
+        ].join(' '),
+      )
+      expect(Array.from(block.querySelectorAll('dt')).map((dt) => dt.textContent)).toEqual([
+        copy.workingCostStaleLabelNow,
+        slots.workingCostStaleLabelIf('90,000'),
+      ])
+      expect(Array.from(block.querySelectorAll('dd')).map((dd) => dd.textContent)).toEqual([
+        [
           slots.workingCostStaleAfterWork('90,000', true),
           slots.workingCostStaleLeftOverAnswered('16,985'),
           slots.workingCostStaleLeftOverNoneUpdate('16,985', '84,000'),
-          slots.workingCostStaleLabelIf('90,000'),
-          slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
-          slots.workingCostStaleGateDoorUpdate('84,000', copy.stalenessPayCheckCtaUpdate),
-          slots.workingCostStaleDefineUpdate('90,000', true, '90,000', false),
+          slots.workingCostStaleNoSmallerAmount('90,000'),
         ].join(' '),
+        [
+          slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
+          slots.workingCostStaleEachDollar('90,000', '10,985'),
+          slots.workingCostStaleLowerAddsMore('90,000', '16,985'),
+        ].join(' '),
+      ])
+      const door = document.querySelector('.save-actions + section.reentry-door')
+      expect(door?.querySelector('h3')?.textContent).toBe(slots.workingCostStaleDoorHeadingUpdate('84,000'))
+      expect(door?.querySelector('p')?.textContent).toBe(
+        [slots.workingCostStaleGateScopeUpdate('84,000'), slots.workingCostStaleGateRoute(copy.stalenessPayCheckCtaUpdate)].join(' '),
       )
-      const p = Array.from(document.querySelectorAll('.reentry-notes p')).find((el) => el.textContent === line)!
-      const labels = Array.from(p.querySelectorAll('strong.note-parts__label'))
-      expect(labels.map((l) => l.textContent)).toEqual([copy.workingCostStaleLabelNow, slots.workingCostStaleLabelIf('90,000')])
-      for (const l of labels) expect(l.previousElementSibling?.tagName).toBe('BR')
-      expect(p.querySelectorAll('br')).toHaveLength(3)
     } finally {
       h.model = current
     }
@@ -475,19 +481,21 @@ describe('IntakeApp — the U13 re-entry gate (council 2026-07-09, constraints (
       .map((p) => p.textContent ?? '')
       .find((t) => t.startsWith(copy.stalenessPayCheckGateLead))
 
-  it('a READ-ONLY return over a stale W says the stale line without the door sentence; a writable one says it', async () => {
+  it('a READ-ONLY return over a stale W says the stale line and draws no door; a writable one draws the door under its buttons', async () => {
     const fresh = h.model
     try {
       h.model = staleW.scenario
       render(<IntakeApp hydrateFromVault readOnly />)
       await screen.findByRole('button', { name: copy.reentryContinueCta })
-      const door = slots.workingCostStaleGateDoorConfirm('84,000', copy.stalenessPayCheckCta)
+      const door = [slots.workingCostStaleGateScopeConfirm('84,000'), slots.workingCostStaleGateRoute(copy.stalenessPayCheckCta)].join(' ')
       expect(payCheckLine(), 'the stale-W line renders read-only').toBeDefined()
-      expect(payCheckLine()).not.toContain(door)
+      expect(document.querySelector('.reentry-door'), 'no door read-only').toBeNull()
+      expect(document.querySelector('main')?.textContent).not.toContain(slots.workingCostStaleGateScopeConfirm('84,000'))
       cleanup()
       render(<IntakeApp hydrateFromVault />)
       await screen.findByRole('button', { name: copy.reentryAffirmCta })
-      expect(payCheckLine()?.endsWith(door), 'the writable tab names the door').toBe(true)
+      expect(payCheckLine(), 'the same line, writable').toBeDefined()
+      expect(document.querySelector('.save-actions + section.reentry-door p')?.textContent, 'the writable tab names the door').toBe(door)
     } finally {
       h.model = fresh
     }

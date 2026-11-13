@@ -179,8 +179,8 @@ for (const { seed, goal } of TARGETS) {
     await stampClick(unlock, 'unlockClick')
 
     // 3. The re-entry gate holds the recompute until the household affirms — when it mounts.
-    const affirm = page.getByRole('button', { name: /Still about right/ })
-    await expect(page.locator(`${PROBES.verdict}, button:has-text("Still about right")`).first()).toBeAttached({ timeout: VERDICT_MS })
+    const affirm = page.getByRole('button', { name: /still about right/i })
+    await expect(page.locator(`${PROBES.verdict}, button:has-text("still about right")`).first()).toBeAttached({ timeout: VERDICT_MS })
     if (await affirm.isVisible()) await stampClick(affirm, 'affirmClick')
     await expect(page.locator(PROBES.verdict), `${seed}: no final-tier verdict`).toBeAttached({ timeout: VERDICT_MS })
 

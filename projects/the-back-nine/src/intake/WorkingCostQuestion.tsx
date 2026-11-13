@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
-import { copy, slots, type CopyKey } from '@ui/copy'
+import { WORKING_COST_HELP_COUNT, copy, slots, type CopyKey } from '@ui/copy'
 import type { SpendEntryPeriod, WorkingYearStateTaxReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { CurrencyField, SegmentedControl, formatMoney } from './fields'
@@ -21,7 +21,7 @@ import {
   writeWorkingYearCostPeriod,
   type WorkingYearQuote,
 } from './workingYearQuote'
-import { workingYearCostStaleNote, workingYearCostTypedBelowNote } from './workingYearLeftOver'
+import { workingYearCostKeepCondition, workingYearCostStaleNote, workingYearCostTypedBelowNote } from './workingYearLeftOver'
 
 /**
  * The pay check's W question (`docs/plans/features/working-year-pay-check-build-spec.md` U8; KTD5,
@@ -88,15 +88,9 @@ export interface WorkingCostQuestionProps {
   readonly figureErrors?: ReactNode
 }
 
-/** The help's two lists (R1), in reading order: what a working year's figure holds, then what the tool
- *  works out itself. Each list sits under its own lead line. */
-const HELP_COUNT: readonly CopyKey[] = [
-  'workingCostHelpCountSpend',
-  'workingCostHelpCountPremiums',
-  'workingCostHelpCountMedicare',
-  'workingCostHelpCountLocalTax',
-  'workingCostHelpCountStateDeduction',
-]
+/** The help's two lists (R1), in reading order: what a working year's figure holds (`WORKING_COST_HELP_COUNT`, the
+ *  one home the Result door's cost list reads too), then what the tool works out itself. Each list sits under its own
+ *  lead line. */
 const HELP_LEAVE_OUT: readonly CopyKey[] = [
   'workingCostHelpLeaveOutPayrollTax',
   'workingCostHelpLeaveOutIncomeTax',
@@ -175,6 +169,7 @@ export function WorkingCostQuestion({
   const offersYes = quote.annualReal > 0
   const id = useId()
   const staleId = `${id}-stale`
+  const keepConditionId = `${id}-keep-condition`
   const quoteId = `${id}-quote`
   const leftId = `${id}-left`
   // A figure the host REFUSED on blur (the panel's period rule — the only refusal a figure above $0
@@ -291,6 +286,9 @@ export function WorkingCostQuestion({
   // the spending is ALWAYS below the quote (its staleness is that), so its door never shows: a keep would
   // carry the stamp forward and leave it as stale as it was.
   const keepable = noteW !== undefined && !heldYesBelowQuote(noteDraft)
+  // Keep's condition, ABOVE it (council `wf_22858e04-f7a` (3), the Hawk's condition): the gate no longer names the W
+  // row's choices, so the one-tap keep says here what it must cover, from the same held draft the door is drawn from.
+  const keepCondition = keepable ? workingYearCostKeepCondition(noteDraft) : null
   const typedBelowNote = workingYearCostTypedBelowNote(noteDraft)
 
   return (
@@ -313,10 +311,16 @@ export function WorkingCostQuestion({
               below it is the rosy side, and that answer goes through the fork instead (`keepable`).
               A keep of a yes stamps the figure with the quote this note shows (KTD10), so a later rise
               in the spending past it still says so. */}
+          {keepable && keepCondition !== null && (
+            <p className="field-help working-cost__keep-condition" id={keepConditionId}>
+              {keepCondition}
+            </p>
+          )}
           {keepable && (
             <button
               type="button"
               className="btn-quiet working-cost__keep"
+              aria-describedby={keepCondition === null ? undefined : keepConditionId}
               onClick={() => {
                 keepTapped.current = true
                 // A figure the panel refused a moment ago is not the answer that now stands: the input
@@ -353,7 +357,7 @@ export function WorkingCostQuestion({
           {left}
         </p>
       )}
-      <HelpList leadKey="workingCostHelpCountLead" items={HELP_COUNT} />
+      <HelpList leadKey="workingCostHelpCountLead" items={WORKING_COST_HELP_COUNT} />
       <HelpList leadKey="workingCostHelpLeaveOutLead" items={HELP_LEAVE_OUT} />
       <p className="field-help">{copy[STATE_HELP[workingYearStateTaxReading(draft)]]}</p>
       {offersYes && (

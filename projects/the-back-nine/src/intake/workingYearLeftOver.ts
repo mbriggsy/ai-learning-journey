@@ -24,9 +24,10 @@
  */
 import type { WorkingYearLedgerLaterYear, WorkingYearLeftOverKind, WorkingYearLeftOverV5 } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { WORKING_COST_ACT_COPY, copy, slots, type WorkingCostAct } from '@ui/copy'
+import { WORKING_COST_ACT_COPY, copy, slots, workingCostExtras, type WorkingCostAct } from '@ui/copy'
+import type { GateDoor, NoteDoor, NoteSegment } from '@ui/noteParts'
 import { formatMoney } from './fields'
-import { workingYearLedgerForRun, workingYearLeftOverLive, workingYearLeftOverShownState } from './intakeMap'
+import { workingYearCostFigure, workingYearLedgerForRun, workingYearLeftOverLive, workingYearLeftOverShownState } from './intakeMap'
 import {
   stateTaxBelongsInW,
   workingYearCostAct,
@@ -106,27 +107,44 @@ function savedWaitingOnW(d: ScenarioDraft): number | null {
   return LEFT_OVER_W_CLAUSE[workingYearLeftOverShownState(d)] ? answer.quotedReal : null
 }
 
-/** The lean after a risen stale sentence, by what the answer is (an exhaustive Record, insight 147). */
-type StaleLean = 'spendingAlone' | 'yearsCheaper'
-const STALE_LEAN_WORDS: Readonly<Record<StaleLean, (heldFormatted: string) => string>> = {
-  // Absent, spent, not sure, or a "saved" answer that is not asked: no left over is credited at either figure,
-  // so the too-low figure can only hide a short year (b9-7; the U11 walk's (af)).
-  spendingAlone: slots.workingCostStaleLeansBetter,
-  // "Saved", waiting on W: the stale run carries no left over and its checked twin carries one, so no
-  // whole-answer lean is true across the extension; the year-level fact is (the Hawk's counterweight).
-  yearsCheaper: slots.workingCostStaleLeftOverYearsCheaper,
-}
+/** The lean after a risen stale sentence, by what the answer is and what a check at the quote does (an exhaustive
+ *  Record, insight 147). */
+type StaleLean = 'spendingAlone' | 'yearsCheaper' | 'leftOverHigh'
 
 /** W's stale NOTE — the W step's stale note and the panel's W row (`WorkingCostQuestion`, on the draft its
  *  press holds): W's sentence (`workingYearCostStaleSentence`), then, where the spending rose past the held
- *  figure, the lean for this answer. `null` while W is not stale. No dollars beyond W's own two figures: a
- *  figure here would sit in the fork's described-by as a reward for a "yes" (the red team's attack 4; PA's tax
- *  on pay lives in W, so the quote alone is rosy there). */
+ *  figure, the lean for this answer:
+ *  · `spendingAlone` — absent, spent, not sure, or a "saved" answer that is not asked: no left over is credited at
+ *    either figure, so the too-low figure can only hide a short year (b9-7; the U11 walk's (af));
+ *  · `yearsCheaper` — "saved", waiting on W, where a working year at the quote comes up short: the stale run carries
+ *    no left over and its checked twin carries one, so no whole-answer lean is true across the extension; the
+ *    year-level fact is (the Hawk's counterweight);
+ *  · `leftOverHigh` — "saved", waiting on W, where NO working year at the quote comes up short (`capped` / `whole` with
+ *    no later run): the year-level sentence named a harm that household doesn't have (U11 walk 6's R2: "Does our pay
+ *    not cover our years?"), so it says the one it does have — each year's left over reads high by the gap.
+ *  `null` while W is not stale. No dollars beyond W's own figures and their gap: a figure here would sit in the fork's
+ *  described-by as a reward for a "yes" (the red team's attack 4; PA's tax on pay lives in W, so the quote alone is
+ *  rosy there). */
 export function workingYearCostStaleNote(d: ScenarioDraft): string | null {
   const s = workingYearCostStaleSentence(d)
   if (s === null || !s.rose) return s?.sentence ?? null
-  const lean: StaleLean = savedWaitingOnW(d) === null ? 'spendingAlone' : 'yearsCheaper'
-  return `${s.sentence} ${STALE_LEAN_WORDS[lean](s.held)}`
+  const stored = savedWaitingOnW(d)
+  const c = stored === null ? null : checkAtQuote(d, stored)
+  const lean: StaleLean =
+    c === null ? 'spendingAlone' : (c.kind === 'capped' || c.kind === 'whole') && c.laterShort === null ? 'leftOverHigh' : 'yearsCheaper'
+  const words: Readonly<Record<StaleLean, () => string>> = {
+    spendingAlone: () => slots.workingCostStaleLeansBetter(s.held),
+    yearsCheaper: () => slots.workingCostStaleLeftOverYearsCheaper(s.held),
+    leftOverHigh: () => slots.workingCostStaleLeftOverInflated(s.held, gapFormatted(d), s.quote),
+  }
+  return `${s.sentence} ${words[lean]()}`
+}
+
+/** Today's quote less the held figure, as the note's two figures print it (whole dollars). Read only where the
+ *  spending rose past the held figure, so it is positive. */
+function gapFormatted(d: ScenarioDraft): string {
+  const w = d.workingYearCost
+  return w === undefined ? '0' : formatMoney(workingYearQuote(d).annualReal - workingYearCostFigure(w))
 }
 
 /** What a check at today's quote does with a "saved" answer waiting on W whose spending rose past the held
@@ -251,39 +269,30 @@ interface TailFigures {
   readonly stored: string
 }
 
-/** One labelled part of W's stale line (U11 walk 5's (bi)): the run-in label and the sentences under it. The hosts
- *  start each part on its own line inside the one paragraph, the label set in the body's semibold (same size and
- *  ink, never color): mid-line in body weight, every cold look read "This answer now:" as a broken sentence. */
-export interface WorkingYearCostStaleSegment {
-  readonly label: string
-  readonly sentences: readonly string[]
-}
+/** One labelled part of W's stale line: its label and the sentences under it (`NoteSegment`; the hosts draw it as a
+ *  `div>dt+dd`, council `wf_22858e04-f7a`). */
+export type WorkingYearCostStaleSegment = NoteSegment
 /** W's stale line as parts: the `opening` — the note ({@link workingYearCostStaleNote}, so it always begins with
  *  what the W surfaces say), then, for a "saved" answer waiting on W, the arm's direction lead — and the labelled
- *  `segments` in the council's order ("This answer now:", then on the risen arms "If a working year costs $X:").
- *  Every other answer: the note alone, no segments. The door's sentences are the host's
- *  ({@link workingYearCostStaleDoor}). */
+ *  `segments` in the council's order ("This answer now", then on the risen arms "If a working year costs $X").
+ *  Every other answer: the note alone, no segments. The door is the host's ({@link workingYearCostStaleDoor}). */
 export interface WorkingYearCostStaleLine {
   readonly opening: string
   readonly segments: readonly WorkingYearCostStaleSegment[]
 }
-/** The line as one string, its parts in order one space apart: what the hosts' `textContent` reads (each draws a
- *  space before its line break), the gate's React key, and what a screen reader hears. */
+/** The line as one string, its parts in order one space apart: what a test compares and a reader's full text. */
 export function workingYearCostStaleLineText(l: WorkingYearCostStaleLine): string {
   return [l.opening, ...l.segments.flatMap((s) => [s.label, ...s.sentences])].join(' ')
 }
 
-/** "This answer now:" and what this answer does with the stored figure today — every "saved" arm waiting on W says
- *  it (walk 4's (bd)), after its lead and before its "If" part: after work it already uses the spending figure where
- *  the spending moved (walk 5's (bl)), the stored figure dated, and why it adds none of it, in the act's verb ((bh)). */
-function nowSegment(d: ScenarioDraft, f: Omit<TailFigures, 'quote'>, afterWork: string | null): WorkingYearCostStaleSegment {
+/** "This answer now" and what this answer does with the stored figure today — every "saved" arm waiting on W says it
+ *  (walk 4's (bd)), after its lead and before its "If" part: after work it already uses the spending figure where the
+ *  spending moved (walk 5's (bl)), the stored figure dated, why it adds none of it ((bh); `none`), then why it counts no
+ *  smaller amount either (U11 walk 6's F6; `why`, absent where `none` already says it brings none back). */
+function nowSegment(f: Omit<TailFigures, 'quote'>, afterWork: string | null, none: string, why: string | null): WorkingYearCostStaleSegment {
   return {
     label: copy.workingCostStaleLabelNow,
-    sentences: [
-      ...(afterWork === null ? [] : [afterWork]),
-      slots.workingCostStaleLeftOverAnswered(f.stored),
-      slots[WORKING_COST_ACT_COPY[workingYearCostAct(d)].leftOverNone](f.stored, f.held),
-    ],
+    sentences: [...(afterWork === null ? [] : [afterWork]), slots.workingCostStaleLeftOverAnswered(f.stored), none, ...(why === null ? [] : [why])],
   }
 }
 /** The after-work sentence, said where the spending moved (`quoteMoved`: on a state-only move the two figures are the
@@ -295,11 +304,13 @@ function afterWorkSentence(d: ScenarioDraft): string | null {
 }
 /** The either-way lead, in the draft's act (`WORKING_COST_ACT_COPY`). */
 const eitherWayLead = (d: ScenarioDraft): string => copy[WORKING_COST_ACT_COPY[workingYearCostAct(d)].eitherWay]
-/** After the at-most sentence where a later run prints short at the quote: the years that don't come up short,
- *  where the ledger names them (`resumesFrom`), then the run and its close (C keeps it: the safe-side lean, true by
- *  mechanism, scoped to those years since walk 5's (bo)). */
-const laterShortWords = (year0: number, s: WorkingYearLaterShort, f: TailFigures): readonly string[] => [
+/** After the at-most sentence where a later run prints short at the quote: the years that don't come up short, where
+ *  the ledger names them (`resumesFrom`), then what lowers the cap (F7: after "Those are …", never before it, or
+ *  "Those" loses its referent), then the run and its close (C keeps it: the safe-side lean, true by mechanism, scoped to
+ *  those years since walk 5's (bo), three sentences since walk 6's R5). `eachDollar` — F7's sentence (`capped` only). */
+const laterShortWords = (year0: number, s: WorkingYearLaterShort, f: TailFigures, eachDollar: string | null): readonly string[] => [
   ...(s.resumesFrom === null ? [] : [slots.workingCostStaleLeftOverGainYears(year0, s.firstYear - 1, s.resumesFrom)]),
+  ...(eachDollar === null ? [] : [eachDollar]),
   s.lastYear === s.firstYear
     ? slots.workingCostStaleShortLaterYear(s.firstYear, formatMoney(s.most), f.held)
     : slots.workingCostStaleShortLaterYears(s.firstYear, s.lastYear, formatMoney(s.least), formatMoney(s.most), f.held),
@@ -308,66 +319,81 @@ const firstShortWords = (s: WorkingYearShortRun, f: TailFigures): string =>
   s.lastYear === s.firstYear
     ? slots.workingCostStaleLeftOverIfFirstShort(s.firstYear, formatMoney(s.most), f.quote, f.held, f.stored)
     : slots.workingCostStaleLeftOverIfFirstShortRun(s.firstYear, s.lastYear, formatMoney(s.least), formatMoney(s.most), f.quote, f.held, f.stored)
-/** Each arm's lead (closing the opening) and the sentences under "If a working year costs $X:" (`null`: no such part). */
+/** Each arm's lead (closing the opening), whether year 0 at the quote leaves nothing over (`short`: B's "This answer
+ *  now" then ends on what is true today, R3), and the sentences under "If a working year costs $X" (`null`: no such
+ *  part). */
 interface CheckWordsOf {
   readonly lead: string
+  readonly short: boolean
   readonly ifSentences: readonly string[] | null
 }
 type CheckWords = {
   readonly [K in WorkingYearCheckAtQuote['kind']]: (c: Extract<WorkingYearCheckAtQuote, { kind: K }>, f: TailFigures, lead: string) => CheckWordsOf
 }
 /** The risen line after the note, by what a check at the quote does (exhaustive, insight 147), in the council's
- *  order: the lead, "This answer now:", "If a working year costs $X:". The LEAD (council `wf_7fa86902-35c`): where
+ *  order: the lead, "This answer now", "If a working year costs $X". The LEAD (council `wf_7fa86902-35c`): where
  *  year 0 at the quote leaves nothing over (`firstShort` / `firstNone`) the stale answer can look better by
  *  mechanism across the arm, so that leads; everywhere else no whole-answer lean holds across the extension (Frame
- *  B, the Hawk's veto), so the either-way sentence leads (`lead`, in the draft's act). */
+ *  B, the Hawk's veto), so the either-way sentence leads (`lead`, in the draft's act). U11 walk 6 closes each "If"
+ *  part with what a LOWER figure does (R4: A's form where the cap is year 0's print, B's and C's where a year runs
+ *  short; none under `whole`, where the stored figure caps it already), and `capped` with what lowers the cap (F7). */
 const CHECK_WORDS: CheckWords = {
   capped: (c, f, lead) => ({
     lead,
+    short: false,
     ifSentences: [
       slots.workingCostStaleLeftOverIfCapped(formatMoney(c.leftOver), c.year, f.quote, c.laterShort !== null),
-      ...(c.laterShort === null ? [] : laterShortWords(c.year, c.laterShort, f)),
+      ...(c.laterShort === null
+        ? [slots.workingCostStaleEachDollar(f.quote, formatMoney(c.leftOver)), slots.workingCostStaleLowerAddsMore(f.quote, f.stored)]
+        : [...laterShortWords(c.year, c.laterShort, f, slots.workingCostStaleEachDollar(f.quote, formatMoney(c.leftOver))), copy.workingCostStaleLowerCounts]),
     ],
   }),
   whole: (c, f, lead) => ({
     lead,
+    short: false,
     ifSentences: [
       slots.workingCostStaleLeftOverIfWhole(formatMoney(c.leftOver), c.year, f.quote, f.stored, c.laterShort !== null),
-      ...(c.laterShort === null ? [] : laterShortWords(c.year, c.laterShort, f)),
+      ...(c.laterShort === null ? [] : laterShortWords(c.year, c.laterShort, f, null)),
     ],
   }),
-  firstShort: (c, f) => ({ lead: slots.workingCostStaleShortUntilUpdated(f.held), ifSentences: [firstShortWords(c.run, f)] }),
+  firstShort: (c, f) => ({
+    lead: slots.workingCostStaleShortUntilUpdated(f.held),
+    short: true,
+    ifSentences: [firstShortWords(c.run, f), copy.workingCostStaleLowerCounts],
+  }),
   firstNone: (c, f) => ({
     lead: slots.workingCostStaleShortUntilUpdated(f.held),
-    ifSentences: [slots.workingCostStaleLeftOverIfFirstNone(c.year, f.quote, f.stored)],
+    short: true,
+    ifSentences: [slots.workingCostStaleLeftOverIfFirstNone(c.year, f.quote, f.stored), copy.workingCostStaleLowerCounts],
   }),
   // No picture at the quote: what R7 makes true, with no figure at the quote and no lean but the either-way one.
-  unknown: (_c, _f, lead) => ({ lead, ifSentences: null }),
+  unknown: (_c, _f, lead) => ({ lead, short: false, ifSentences: null }),
 }
 function checkWords(c: WorkingYearCheckAtQuote, f: TailFigures, lead: string): CheckWordsOf {
   return (CHECK_WORDS[c.kind] as (c: WorkingYearCheckAtQuote, f: TailFigures, lead: string) => CheckWordsOf)(c, f, lead)
 }
 
-/** W's ONE stale LINE as the Result and the re-entry gate say it (R12), as parts ({@link WorkingYearCostStaleLine};
- *  U11 walk 5's (bi)): the note ({@link workingYearCostStaleNote}, so the line always begins with what the W surfaces
- *  say), then, for a "saved" answer waiting on W, what the stale W withholds in dollars. `null` while W is not stale.
- *  Under any other answer, and under "not asked" (no picture, or below a printed $1), the line is the note alone. The
- *  door's words are NOT here: each host says its own beside its door only ({@link workingYearCostStaleDoor}).
+/** W's ONE stale LINE as the Result and the re-entry gate say it (R12), as parts ({@link WorkingYearCostStaleLine}):
+ *  the note ({@link workingYearCostStaleNote}, so the line always begins with what the W surfaces say), then, for a
+ *  "saved" answer waiting on W, what the stale W withholds in dollars. `null` while W is not stale. Under any other
+ *  answer, and under "not asked" (no picture, or below a printed $1), the line is the note alone. The door's words are
+ *  NOT here: each host says its own ({@link workingYearCostStaleDoor}).
  *  · Where the spending rose past the held figure: by what a check at the quote does
- *    ({@link workingYearCheckAtQuote}), the lead, "This answer now:" (after work it already uses the spending, the
- *    stored figure dated, why none of it is added), then "If a working year costs $X:" with year 0 there and the most
- *    updating adds (and a later short run, where one prints); or, where year 0 at the quote leaves nothing over, the
- *    short-year lead and that updating adds none of it.
+ *    ({@link workingYearCheckAtQuote}), the lead, "This answer now" (after work it already uses the spending, the
+ *    stored figure dated, why none of it is added, why no smaller amount either), then "If a working year costs $X"
+ *    with year 0 there, the most updating adds and what lowers it (and a later short run, where one prints), and what
+ *    a lower figure does; or, where year 0 at the quote leaves nothing over, the short-year lead, "This answer now"
+ *    ending on what is true today (U11 walk 6's R3), and that updating brings none of it back.
  *  · Otherwise (the spending fell, or only the state moved): the either-way lead in "confirm or change" (the Keep
- *    door is real there), then "This answer now:" — after work it already uses the spending figure, where the
- *    spending moved (walk 4's (bf): both real readers took the answer to run on $84,000 of spending), and the
- *    stored figure, dated. No figure at the quote (the council struck the fallen arm's at-quote pair: there a
- *    check adds at most the stored figure, and naming a print above it would read as more). Its figure is the one
- *    the household ANSWERED at (`quotedReal`), never the live print (KTD7's review, `wf_1b3d4a9f-f3f`): the live
- *    print is read on the stale W, and once a raise lifts it above the stored figure it would name money no
- *    checked W can credit — R8 caps every credit at the stored figure. (Where pay FELL since the answer as well, a
- *    check there can add less than the stored figure: a moved left over hidden behind the stale W, since "waiting
- *    on W" outranks "saved, moved". Filed for U12's register pass as the U11 walk's (al).) */
+ *    door is real there), then "This answer now" — after work it already uses the spending figure, where the
+ *    spending moved (walk 4's (bf)), the stored figure, dated, and that it guesses at no amount (F6, S's form). No
+ *    figure at the quote (the council struck the fallen arm's at-quote pair: there a check adds at most the stored
+ *    figure, and naming a print above it would read as more). Its figure is the one the household ANSWERED at
+ *    (`quotedReal`), never the live print (KTD7's review, `wf_1b3d4a9f-f3f`): the live print is read on the stale W,
+ *    and once a raise lifts it above the stored figure it would name money no checked W can credit — R8 caps every
+ *    credit at the stored figure. (Where pay FELL since the answer as well, a check there can add less than the
+ *    stored figure: a moved left over hidden behind the stale W, since "waiting on W" outranks "saved, moved". Filed
+ *    for U12's register pass as the U11 walk's (al).) */
 export function workingYearCostStaleLine(d: ScenarioDraft): WorkingYearCostStaleLine | null {
   const note = workingYearCostStaleNote(d)
   if (note === null) return null
@@ -376,31 +402,39 @@ export function workingYearCostStaleLine(d: ScenarioDraft): WorkingYearCostStale
   // `s` is null exactly where the note is (the note is W's sentence): narrowing for the held figure.
   if (stored === null || s === null) return { opening: note, segments: [] }
   const f = { held: s.held, stored: formatMoney(stored) }
-  const now = nowSegment(d, f, afterWorkSentence(d))
-  if (!s.rose) return { opening: `${note} ${eitherWayLead(d)}`, segments: [now] }
+  const act = WORKING_COST_ACT_COPY[workingYearCostAct(d)]
+  const until = slots[act.leftOverNone](f.stored, f.held)
+  if (!s.rose) {
+    return { opening: `${note} ${eitherWayLead(d)}`, segments: [nowSegment(f, afterWorkSentence(d), until, copy.workingCostStaleNoGuess)] }
+  }
   const words = checkWords(checkAtQuote(d, stored), { ...f, quote: s.quote }, eitherWayLead(d))
+  const now = words.short
+    ? nowSegment(f, afterWorkSentence(d), slots.workingCostStaleLeftOverNoneNow(f.stored, f.held), null)
+    : nowSegment(f, afterWorkSentence(d), until, slots.workingCostStaleNoSmallerAmount(s.quote))
   return {
     opening: `${note} ${words.lead}`,
     segments: [now, ...(words.ifSentences === null ? [] : [{ label: slots.workingCostStaleLabelIf(s.quote), sentences: words.ifSentences }])],
   }
 }
 
-/** What each host says beside the stale line's DOOR (council `wf_7fa86902-35c`; U11 walk 5's (bj), (bk)), said only
- *  where the tab can save (a read-only tab draws no door, so it is told no buttons to press), after the line's parts
- *  and on a line of their own, unlabelled. `act` picks the door's own words (`WORKING_COST_ACT_COPY`).
- *  · `gate` — the door sentence, on EVERY stale arm: neither of the gate's buttons changes the figure, and where each
- *    leads (all four walk-5 cold looks hunted the gate for "Yes, that’s about right").
- *  · `result` — the Result's sentences before its button: none where the line leans on the act nowhere but the door
- *    (every answer but a "saved" one waiting on W); otherwise "press … below".
- *  For a "saved" answer waiting on W both then say "There, …": the condition first, in the W help's own items, then the
- *  W row's buttons by their own labels — risen, "No" (enter the quote plus those costs) or "Yes" at today's figure (no
- *  Keep door below the quote: `keepable` is exactly `!heldYesBelowQuote`); otherwise the Keep door by its own label,
- *  then "Yes" where a quote is offered (`offersYes`), and "No", each with its condition, after the figure's contents
- *  in a sentence of their own (it names no button, so it comes first on both hosts). `null` while W is not stale. */
+/** W's stale DOOR on each host (council `wf_7fa86902-35c`; its FORM since council `wf_22858e04-f7a`), said only where
+ *  the tab can save (a read-only tab draws no door, so it is told no buttons to press). `act` picks the door's own words
+ *  (`WORKING_COST_ACT_COPY`).
+ *  · `gate` — on EVERY stale arm: `section.reentry-door` under the gate's buttons, its heading, the scope sentence
+ *    (neither of the gate's buttons changes the figure) and the route (where each leads). The W row's buttons are named
+ *    only on the Result and the W row itself: on the gate "Yes, that’s about right" sat beside "Balances still about
+ *    right" (council (2), (3) — moved only with the Keep condition above Keep, `workingYearCostKeepCondition`).
+ *  · `result` — the Result door's last dt/dd, for a "saved" answer waiting on W only (`null` elsewhere: the line leans on
+ *    the act nowhere but the door, so the button rides inline): the press sentence, the condition, the cost list (the W
+ *    help's own items), then each choice with its condition first — risen, "No" (enter the quote plus them) and "Yes"
+ *    at today's figure (no Keep door below the quote: `keepable` is exactly `!heldYesBelowQuote`); fallen, what the
+ *    figure should hold (it names no button), where the held figure is above the quote the room it leaves (F11), then
+ *    the Keep door by its own label, "Yes" where a quote is offered (`offersYes`), and "No".
+ *  `null` while W is not stale. */
 export interface WorkingYearCostStaleDoor {
   readonly act: WorkingCostAct
-  readonly result: readonly string[]
-  readonly gate: readonly string[]
+  readonly gate: GateDoor
+  readonly result: NoteDoor | null
 }
 
 export function workingYearCostStaleDoor(d: ScenarioDraft): WorkingYearCostStaleDoor | null {
@@ -410,10 +444,11 @@ export function workingYearCostStaleDoor(d: ScenarioDraft): WorkingYearCostStale
   const act = workingYearCostAct(d)
   const a = WORKING_COST_ACT_COPY[act]
   const doorLabel = copy[a.resultDoor]
-  const gateDoor = slots[a.gateDoor](s.held, doorLabel)
-  if (savedWaitingOnW(d) === null) return { act, result: [], gate: [gateDoor] }
-  const resultDoor = slots[a.resultDoorLead](doorLabel)
-  const stateTax = stateTaxBelongsInW(d)
+  const heading = slots[a.doorHeading](s.held)
+  const gate: GateDoor = { heading, scope: slots[a.gateScope](s.held), route: slots.workingCostStaleGateRoute(doorLabel) }
+  if (savedWaitingOnW(d) === null) return { act, gate, result: null }
+  const press = slots[a.resultDoorLead](doorLabel)
+  const items = workingCostExtras(stateTaxBelongsInW(d))
   // The figure "No" asks for, in the unit of the box it leaves the reader in: a figure held as typed by the month
   // opens its box in months with the unit already answered (the period prompt never asks there), so today's quote is
   // said a month; every other box opens its unit unanswered, so it is said a year (the round review).
@@ -421,17 +456,59 @@ export function workingYearCostStaleDoor(d: ScenarioDraft): WorkingYearCostStale
   const enter = (quoteFormatted: string): readonly [string, boolean] =>
     enterMonthly ? [formatMoney(workingYearQuote(d).annualReal / 12), true] : [quoteFormatted, false]
   if (s.rose) {
-    const there = slots.workingCostStaleDefineUpdate(s.quote, stateTax, ...enter(s.quote))
-    return { act, result: [resultDoor, there], gate: [gateDoor, there] }
+    return {
+      act,
+      gate,
+      result: {
+        label: heading,
+        lead: [press, slots.workingCostStaleDoorIfUpdate(...enter(s.quote))],
+        items,
+        tail: [copy.workingCostStaleDoorCounted, slots.workingCostStaleDoorYes(s.quote)],
+      },
+    }
   }
-  const hold = slots.workingCostStaleDefineHold(stateTax)
   const keepLabel = workingYearCostKeepLabel(w)
   const keep = workingYearCostKeepFigure(w)
-  const there =
+  const room = keepRoom(d)
+  const tail =
     s.quote === null
-      ? slots.workingCostStaleDefineConfirmNoQuote(keepLabel, keep.formatted, keep.monthly)
-      : slots.workingCostStaleDefineConfirm(keepLabel, keep.formatted, keep.monthly, s.quote, ...enter(s.quote))
-  return { act, result: [hold, resultDoor, there], gate: [hold, gateDoor, there] }
+      ? [press, slots.workingCostStaleDoorKeepNoQuote(keepLabel, keep.formatted, keep.monthly)]
+      : [
+          ...(room === null ? [] : [slots.workingCostStaleDoorMore(s.held, room, s.quote)]),
+          press,
+          room === null
+            ? slots.workingCostStaleDoorKeepCovers(keepLabel, keep.formatted, keep.monthly)
+            : slots.workingCostStaleDoorKeepUpTo(keepLabel, room),
+          slots.workingCostStaleDoorYes(s.quote),
+          slots.workingCostStaleDoorNoPlus(...enter(s.quote)),
+        ]
+  return { act, gate, result: { label: heading, lead: [copy.workingCostStaleDoorHold], items, tail } }
+}
+
+/** The room a held figure ABOVE today's quote leaves for the costs the W help lists — the held figure less the quote,
+ *  whole dollars — or `null` where it is not a dollar or more above it (or no quote is offered). F11's "$6,000", the one
+ *  home the Result's door and the Keep condition read (U11 walk 6: "The $6,000 is never written"). */
+function keepRoom(d: ScenarioDraft): string | null {
+  const w = d.workingYearCost
+  const quote = workingYearQuote(d).annualReal
+  if (w === undefined || !(quote > 0)) return null
+  const room = workingYearCostFigure(w) - quote
+  return room >= 1 ? formatMoney(room) : null
+}
+
+/** The Keep door's condition, drawn ABOVE it on the W row (council `wf_22858e04-f7a` (3), the Hawk's condition; U11 walk
+ *  6's F11, moved above): with the gate no longer naming the W row's choices, Keep — drawn above the cost lists — must
+ *  never read as a safe confirmation. Above today's quote, the room the figure leaves for the costs listed below;
+ *  otherwise (or with no quote), the figure's own terms. Read on the draft the press holds (`WorkingCostQuestion`'s
+ *  note draft, like the door it describes); `null` with no W. */
+export function workingYearCostKeepCondition(d: ScenarioDraft): string | null {
+  const w = d.workingYearCost
+  if (w === undefined) return null
+  const label = workingYearCostKeepLabel(w)
+  const room = keepRoom(d)
+  if (room !== null) return slots.workingCostKeepConditionUpTo(label, room, formatMoney(workingYearQuote(d).annualReal))
+  const keep = workingYearCostKeepFigure(w)
+  return slots.workingCostKeepConditionCovers(label, keep.formatted, keep.monthly)
 }
 
 /** The Tier 0 register entry's note (*A figure typed below today's spending clears W's stale line for good…*,

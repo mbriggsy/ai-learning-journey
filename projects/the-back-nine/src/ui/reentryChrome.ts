@@ -18,7 +18,7 @@ import { KIND_TO_BUCKET } from '@intake/intakeMap'
 import type { StalenessReport } from '@store/staleness'
 import type { PricingFamily } from '@engine/pricingVersion'
 import { copy, slots, type CopyKey } from './copy'
-import { notePartsText, type NoteParts } from './noteParts'
+import { notePartsText, type GateDoor, type NoteParts } from './noteParts'
 
 /** Each engine-pricing family's phrase in the ONE method line — exhaustive by type, so a family the
  *  ledger can declare can never be named with no words. */
@@ -73,6 +73,10 @@ export interface ReentryView {
    *  app-default clocks, none of which carries it). Independent of whether the left over moved at unlock:
    *  the Result re-reads the live draft, so a left over that moves in the session rides the same host. */
   readonly leftOverClauseHost: boolean
+  /** W's door (council `wf_22858e04-f7a` (2)): `section.reentry-door`, the next sibling after the gate's buttons — its
+   *  heading, the scope sentence the affirm button is described by, and the route — or `null`: W is not stale, no
+   *  sentence was handed over, or the tab cannot save (a read-only tab has no buttons to route through). */
+  readonly door: GateDoor | null
   /** The "~N years since your save" line, or null (absent savedAt / under a year —
    *  SUPPRESSED, never fabricated). */
   readonly elapsedLine: string | null
@@ -88,19 +92,19 @@ const BUCKET_LABEL_KEY: Readonly<Record<'pretax' | 'roth' | 'taxable' | 'hsa', C
 /** The gate's KTD21 sentence, composed by the caller from the HYDRATED draft this report describes
  *  (`workingYearCostStaleLine`: the W step's own note, `workingYearCostStaleNote`, plus build 2's R12
  *  dollars clause and, where the spending rose, what a check at the quote adds, for a "saved" answer waiting
- *  on W — this seam never re-derives the quote): `line` is that line's parts (U11 walk 5's (bi)); `door` is what the
- *  gate says beside its buttons (`workingYearCostStaleDoor`'s `gate`: the door sentence in the act's words, then, for
- *  a "saved" answer waiting on W, "There, …"); and `canChange` is whether the answer will offer the door to change it
- *  (a tab that can save) — the door's sentences ride only then. `null` where W is not stale. REQUIRED, never
+ *  on W — this seam never re-derives the quote): `line` is that line's parts; `door` is the gate's door under its
+ *  buttons (`workingYearCostStaleDoor`'s `gate`: the heading, the scope sentence, the route; council
+ *  `wf_22858e04-f7a`); and `canChange` is whether the answer will offer the door to change it (a tab that can save)
+ *  — the door rides only then. `null` where W is not stale. REQUIRED, never
  *  optional-with-a-default: a caller that forgets it must fail to compile, never fall back to the figure-less line
  *  in silence. */
 export interface ReentryPayCheckStale {
   readonly line: Omit<NoteParts, 'door'>
-  readonly door: readonly string[]
+  readonly door: GateDoor
   readonly canChange: boolean
 }
 
-/** A gate note line: plain text, or W's stale line as parts (`NotePartsBody` draws its labels as structure). `text` is
+/** A gate note line: plain text, or W's stale line as parts (`NotePartsBlock` draws it as a block). `text` is
  *  the parts joined — the drawn paragraph's text, and its React key (`ReEntry.tsx` keys each note by its text). */
 export type ReentryNoteLine = string | { readonly text: string; readonly parts: NoteParts }
 
@@ -232,8 +236,9 @@ export function composeReentry(
   // it leans — b9-7's U10 Caddie card; plus build 2's dollars clause for a "saved" answer waiting on W,
   // `workingYearCostStaleLine`), and the static figure-less line is only the fallback for a report that
   // calls W stale with no sentence beside it.
-  // One <p> as parts (U11 walk 5's (bi)): the gate's lead and the line's opening, its labelled segments, and, where the
-  // tab can save, the door's sentences on a line of their own (the door sentence in the act's words, then "There, …").
+  // As parts (council `wf_22858e04-f7a`): the gate's lead and the line's opening, then its labelled segments, drawn as a
+  // block in the story column; its door is the view's own field, drawn under the buttons, and only where the tab can save.
+  let door: GateDoor | null = null
   if (report.workingYear.costStale) {
     if (payCheckStale === null) {
       noteLines.push(copy.stalenessWorkingYearCost)
@@ -241,9 +246,10 @@ export function composeReentry(
       const parts: NoteParts = {
         opening: `${copy.stalenessPayCheckGateLead} ${payCheckStale.line.opening}`,
         segments: payCheckStale.line.segments,
-        door: payCheckStale.canChange ? payCheckStale.door : [],
+        door: null,
       }
       noteLines.push({ text: notePartsText(parts), parts })
+      if (payCheckStale.canChange) door = payCheckStale.door
     }
   }
   // Build 2's moved left over (R12): the household's own "saved" answer no longer matches today's
@@ -300,5 +306,6 @@ export function composeReentry(
     noteLines,
     elapsedLine,
     leftOverClauseHost: clauseHost !== undefined,
+    door,
   }
 }

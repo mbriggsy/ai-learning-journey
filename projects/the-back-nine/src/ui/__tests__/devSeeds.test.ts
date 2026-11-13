@@ -1856,7 +1856,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
   // product: the yes to $84,000 on `date`'s draft (its spending then), the spending raised to $90,000, the stored
   // $16,985 (`datesaved`'s arm above), and year 0 at $90,000: pay 150,000 − payroll tax 11,475 − tax on outside
   // income 17,540 − deposits 20,000 − W 90,000 = $10,985.
-  it('build 2 (U11, (ae)): `datesavedrisen` is `datesaved` with its spending raised to $90,000 — W below the quote, waiting on W, nothing carried (R7), and its line is W’s sentence, the year-level lean, the clause, then the most a check adds ($10,985)', () => {
+  it('build 2 (U11, (ae)): `datesavedrisen` is `datesaved` with its spending raised to $90,000 — W below the quote, waiting on W, nothing carried (R7), and its line is W’s sentence, R2’s gap lean, the clause, then the most a check adds ($10,985), what lowers it and what a lower figure does', () => {
     const d = DEV_SEEDS.datesavedrisen
     expect(d.workingYearLeftOver).toEqual({ kind: 'saved', quotedReal: 16_985 })
     expect(workingYearCostStaleness(d)).toEqual({ quoteMoved: true, readingMoved: false })
@@ -1864,14 +1864,14 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(workingYearLeftOverShownState(d)).toBe('waiting-on-w')
     expect(workingYearLeftOverLive(d), 'a stale W still rides at $84,000: never moved').toBe(16_985)
     expect(workingYearCostStaleNote(d)).toBe(
-      `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeftOverYearsCheaper('84,000')}`,
+      `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000')}`,
     )
     // Council `wf_7fa86902-35c`'s order: the note, the either-way lead ("update": no Keep door below the quote),
     // "This answer now:" with the stored figure dated, then "If a working year costs $90,000:" and year 0 there.
     // As parts since U11 walk 5's (bi), with after work's $90,000 first under "This answer now:" ((bl)) and why none of
     // the $16,985 is added until they update ((bh)).
     expect(workingYearCostStaleLine(d)).toEqual({
-      opening: [slots.workingCostStaleQuote('84,000', '90,000'), slots.workingCostStaleLeftOverYearsCheaper('84,000'), copy.workingCostStaleEitherWayUpdate].join(' '),
+      opening: [slots.workingCostStaleQuote('84,000', '90,000'), slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000'), copy.workingCostStaleEitherWayUpdate].join(' '),
       segments: [
         {
           label: copy.workingCostStaleLabelNow,
@@ -1879,9 +1879,17 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
             slots.workingCostStaleAfterWork('90,000', true),
             slots.workingCostStaleLeftOverAnswered('16,985'),
             slots.workingCostStaleLeftOverNoneUpdate('16,985', '84,000'),
+            slots.workingCostStaleNoSmallerAmount('90,000'),
           ],
         },
-        { label: slots.workingCostStaleLabelIf('90,000'), sentences: [slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false)] },
+        {
+          label: slots.workingCostStaleLabelIf('90,000'),
+          sentences: [
+            slots.workingCostStaleLeftOverIfCapped('10,985', 2026, '90,000', false),
+            slots.workingCostStaleEachDollar('90,000', '10,985'),
+            slots.workingCostStaleLowerAddsMore('90,000', '16,985'),
+          ],
+        },
       ],
     })
     const { annualSpendingReal, ...rest } = d
@@ -2077,14 +2085,19 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       opening: slots.workingCostStaleQuote('84,000', '78,000'),
       segments: [],
     })
-    // Its door names "confirm or change" (the spending fell: the W row's Keep door is real): on the gate its door
-    // sentence alone, on the Result its button alone (no "saved" answer, so the line leans on the act nowhere else).
-    const gateDoor = slots.workingCostStaleGateDoorConfirm('84,000', copy.stalenessPayCheckCta)
-    expect(workingYearCostStaleDoor(hydrated.draft)).toEqual({ act: 'confirmOrChange', result: [], gate: [gateDoor] })
-    const parts = { opening: `${copy.stalenessPayCheckGateLead} ${slots.workingCostStaleQuote('84,000', '78,000')}`, segments: [], door: [gateDoor] }
-    expect(
-      composeReentry(built.scenario, report, { costStale: { line: line!, door: [gateDoor], canChange: true }, leftOverStale: null }).noteLines,
-    ).toEqual([{ text: `${parts.opening} ${gateDoor}`, parts }])
+    // Its door names "confirm or change" (the spending fell: the W row's Keep door is real): on the gate its heading, the
+    // scope sentence and the route under the buttons (council `wf_22858e04-f7a`); on the Result its button alone (no
+    // "saved" answer, so the line leans on the act nowhere else).
+    const gateDoor = {
+      heading: slots.workingCostStaleDoorHeadingConfirm('84,000'),
+      scope: slots.workingCostStaleGateScopeConfirm('84,000'),
+      route: slots.workingCostStaleGateRoute(copy.stalenessPayCheckCta),
+    }
+    expect(workingYearCostStaleDoor(hydrated.draft)).toEqual({ act: 'confirmOrChange', result: null, gate: gateDoor })
+    const parts = { opening: `${copy.stalenessPayCheckGateLead} ${slots.workingCostStaleQuote('84,000', '78,000')}`, segments: [], door: null }
+    const view = composeReentry(built.scenario, report, { costStale: { line: line!, door: gateDoor, canChange: true }, leftOverStale: null })
+    expect(view.noteLines).toEqual([{ text: parts.opening, parts }])
+    expect(view.door).toEqual(gateDoor)
   })
 
   it('the light doctor fails LOUD on a plan that never reads the table, and on a stamp it cannot age', () => {

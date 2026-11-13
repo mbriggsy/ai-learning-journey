@@ -659,8 +659,8 @@ export default function IntakeApp({
         // The gate's KTD21 sentence from the SAME hydrated draft — the W step's own stale sentence,
         // which the answer's standing line repeats (b9-7), with build 2's clause for a "saved" answer
         // waiting on W (R12); the door hint only where this tab can save, the same condition as the
-        // answer's door (`Result`'s `onOpen`). What the gate says beside its buttons from the same draft
-        // (`workingYearCostStaleDoor`'s `gate`; U11 walk 5's (bj)); `composeReentry` says it only with the door.
+        // answer's door (`Result`'s `onOpen`). The gate's door under its buttons from the same draft
+        // (`workingYearCostStaleDoor`'s `gate`, council `wf_22858e04-f7a`); `composeReentry` draws it only where the tab can save.
         const payCheckStaleLine = workingYearCostStaleLine(hydrated.draft)
         const payCheckStaleDoor = workingYearCostStaleDoor(hydrated.draft)
         const payCheckStale =

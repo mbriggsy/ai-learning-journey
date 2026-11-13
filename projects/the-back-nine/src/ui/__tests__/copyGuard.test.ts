@@ -12,7 +12,7 @@ import {
 import { HAWK_BAN, LEFT_OVER_LEAN_BAN } from './hawkBan'
 import { DEV_SEEDS } from '../devSeeds'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { workingYearCostStaleDoor, workingYearCostStaleLine, workingYearCostStaleLineText } from '@intake/workingYearLeftOver'
+import { workingYearCostKeepCondition, workingYearCostStaleDoor, workingYearCostStaleLine, workingYearCostStaleLineText } from '@intake/workingYearLeftOver'
 import { heldYesBelowQuote } from '@intake/workingYearQuote'
 
 /** The survival-claim corpus (council wf_6e72eca9-c20) — every phrasing a card could use to sell the
@@ -911,14 +911,30 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostStaleShortUntilUpdated: slots.workingCostStaleShortUntilUpdated('84,000'),
     workingCostStaleShortLaterYear: slots.workingCostStaleShortLaterYear(2029, '4,015', '84,000'),
     workingCostStaleShortLaterYears: slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000'),
-    workingCostStaleDefineUpdate: slots.workingCostStaleDefineUpdate('90,000', true, '90,000', false),
-    workingCostStaleDefineHold: slots.workingCostStaleDefineHold(true),
-    workingCostStaleDefineConfirm: slots.workingCostStaleDefineConfirm('Keep $84,000 a year', '84,000', false, '78,000', '78,000', false),
-    workingCostStaleDefineConfirmNoQuote: slots.workingCostStaleDefineConfirmNoQuote('Keep $84,000 a year', '84,000', false),
+    // U11 walk 6's words (council `wf_22858e04-f7a`'s form): R2's gap lean, R3's "This answer now" for B, F6's why, F7's
+    // what lowers the cap, R4's lower figure; the doors (the gate's heading, scope and route; the Result's last dt/dd);
+    // the Keep condition above Keep.
+    workingCostStaleLeftOverInflated: slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000'),
+    workingCostStaleLeftOverNoneNow: slots.workingCostStaleLeftOverNoneNow('16,985', '84,000'),
+    workingCostStaleNoSmallerAmount: slots.workingCostStaleNoSmallerAmount('90,000'),
+    workingCostStaleEachDollar: slots.workingCostStaleEachDollar('90,000', '10,985'),
+    workingCostStaleLowerAddsMore: slots.workingCostStaleLowerAddsMore('90,000', '16,985'),
+    workingCostStaleDoorHeadingUpdate: slots.workingCostStaleDoorHeadingUpdate('84,000'),
+    workingCostStaleDoorHeadingConfirm: slots.workingCostStaleDoorHeadingConfirm('84,000'),
+    workingCostStaleGateScopeUpdate: slots.workingCostStaleGateScopeUpdate('84,000'),
+    workingCostStaleGateScopeConfirm: slots.workingCostStaleGateScopeConfirm('84,000'),
+    workingCostStaleGateRoute: slots.workingCostStaleGateRoute('Update your figure for a working year'),
     workingCostStaleResultDoorUpdate: slots.workingCostStaleResultDoorUpdate('Update your figure for a working year'),
     workingCostStaleResultDoorConfirm: slots.workingCostStaleResultDoorConfirm('Confirm or change your figure'),
-    workingCostStaleGateDoorUpdate: slots.workingCostStaleGateDoorUpdate('84,000', 'Update your figure for a working year'),
-    workingCostStaleGateDoorConfirm: slots.workingCostStaleGateDoorConfirm('84,000', 'Confirm or change your figure'),
+    workingCostStaleDoorIfUpdate: slots.workingCostStaleDoorIfUpdate('90,000', false),
+    workingCostStaleDoorYes: slots.workingCostStaleDoorYes('90,000'),
+    workingCostStaleDoorMore: slots.workingCostStaleDoorMore('84,000', '6,000', '78,000'),
+    workingCostStaleDoorKeepUpTo: slots.workingCostStaleDoorKeepUpTo('Keep $84,000 a year', '6,000'),
+    workingCostStaleDoorKeepCovers: slots.workingCostStaleDoorKeepCovers('Keep $7,000 a month', '7,000', true),
+    workingCostStaleDoorNoPlus: slots.workingCostStaleDoorNoPlus('78,000', false),
+    workingCostStaleDoorKeepNoQuote: slots.workingCostStaleDoorKeepNoQuote('Keep $84,000 a year', '84,000', false),
+    workingCostKeepConditionUpTo: slots.workingCostKeepConditionUpTo('Keep $84,000 a year', '6,000', '78,000'),
+    workingCostKeepConditionCovers: slots.workingCostKeepConditionCovers('Keep $7,000 a month', '7,000', true),
     workingCostBelowSpending: slots.workingCostBelowSpending('84,000', '90,000', true),
     workingCostBelowBudget: slots.workingCostBelowBudget('84,000', '90,000', true),
     workingCostLegendFigure: slots.workingCostLegendFigure('90,000'),
@@ -1302,6 +1318,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     /\bEither button on this page\b/,
     /\ba tax on pay the tool doesn[’']t work out\b/,
     /\bfor a working year(, above,)? is checked\b/,
+    // U11 walk 6 (council `wf_22858e04-f7a`): the run-in label's colon (each label is a <dt> now), and the one sentence
+    // that held all three of S's choices (F11).
+    /\bThis answer now:/,
+    /, or “No — I’ll enter a different figure” to enter\b/,
   ]
   const RETIRED_BELOW_QUOTE: readonly RegExp[] = [/\bconfirm or change your\b/i, /\bchecking your figure\b/i]
   const RISEN = DEV_SEEDS.datesavedrisen
@@ -1323,15 +1343,24 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
         : RISEN,
     ],
   ]
-  /** What each witness puts in front of a reader: the line, the gate's whole line on a tab that can save (the act's
-   *  definition and door included), and the Result's door label. */
+  /** What each witness puts in front of a reader: the line, the line with the gate's door on a tab that can save (its
+   *  heading, scope and route), the line with the Result's door (its label, sentences and list), the Result's door
+   *  label, and — wherever the W row draws Keep (never below the quote) — the condition above it. */
   const seen = (d: ScenarioDraft): readonly string[] => {
     const parts = workingYearCostStaleLine(d)
     const door = workingYearCostStaleDoor(d)
     if (parts === null || door === null) throw new Error('[test setup] every witness holds a stale W')
     const line = workingYearCostStaleLineText(parts)
     const a = WORKING_COST_ACT_COPY[door.act]
-    return [line, [line, ...door.gate].join(' '), [line, ...door.result].join(' '), copy[a.resultDoor]]
+    const result = door.result === null ? [] : [door.result.label, ...door.result.lead, ...door.result.items, ...door.result.tail]
+    const keep = heldYesBelowQuote(d) ? null : workingYearCostKeepCondition(d)
+    return [
+      line,
+      [line, door.gate.heading, door.gate.scope, door.gate.route].join(' '),
+      [line, ...result].join(' '),
+      copy[a.resultDoor],
+      ...(keep === null ? [] : [keep]),
+    ]
   }
 
   it('the retired wordings never return: "So checking", "instead of none", "takes none of those shortfalls" and "doesn’t move this answer" in no catalog string, rendered slot or composed line', () => {
@@ -1353,6 +1382,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       'Either button on this page leads to where you can update your figure.',
       '…if a working year also costs you health premiums or a tax on pay the tool doesn’t work out.',
       'This question waits until your figure for a working year, above, is checked.',
+      'This answer now: Once you’ve both stopped working…',
+      'There, choose “Keep $84,000 a year” only if…, “Yes, that’s about right” to use $78,000 a year only if…, or “No — I’ll enter a different figure” to enter $78,000 a year plus them.',
     ]
     expect(planted.length, 'one plant per pattern').toBe(RETIRED_EVERYWHERE.length)
     planted.forEach((p, i) => expect(p).toMatch(RETIRED_EVERYWHERE[i]!))
@@ -1453,17 +1484,31 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.workingCostStaleShortUntilUpdated(S),
       slots.workingCostStaleShortLaterYear(Number.NaN, S, S),
       slots.workingCostStaleShortLaterYears(Number.NaN, Number.NaN, S, S, S),
-      slots.workingCostStaleDefineUpdate(S, true, S, false),
-      slots.workingCostStaleDefineUpdate(S, false, S, true),
-      slots.workingCostStaleDefineHold(true),
-      slots.workingCostStaleDefineHold(false),
-      slots.workingCostStaleDefineConfirm(S, S, true, S, S, true),
-      slots.workingCostStaleDefineConfirm(S, S, false, S, S, false),
-      slots.workingCostStaleDefineConfirmNoQuote(S, S, false),
+      slots.workingCostStaleLeftOverInflated(S, S, S),
+      slots.workingCostStaleLeftOverNoneNow(S, S),
+      slots.workingCostStaleNoSmallerAmount(S),
+      slots.workingCostStaleEachDollar(S, S),
+      slots.workingCostStaleLowerAddsMore(S, S),
+      slots.workingCostStaleDoorHeadingUpdate(S),
+      slots.workingCostStaleDoorHeadingConfirm(S),
+      slots.workingCostStaleGateScopeUpdate(S),
+      slots.workingCostStaleGateScopeConfirm(S),
+      slots.workingCostStaleGateRoute(S),
       slots.workingCostStaleResultDoorUpdate(S),
       slots.workingCostStaleResultDoorConfirm(S),
-      slots.workingCostStaleGateDoorUpdate(S, S),
-      slots.workingCostStaleGateDoorConfirm(S, S),
+      slots.workingCostStaleDoorIfUpdate(S, false),
+      slots.workingCostStaleDoorIfUpdate(S, true),
+      slots.workingCostStaleDoorYes(S),
+      slots.workingCostStaleDoorMore(S, S, S),
+      slots.workingCostStaleDoorKeepUpTo(S, S),
+      slots.workingCostStaleDoorKeepCovers(S, S, true),
+      slots.workingCostStaleDoorKeepCovers(S, S, false),
+      slots.workingCostStaleDoorNoPlus(S, true),
+      slots.workingCostStaleDoorNoPlus(S, false),
+      slots.workingCostStaleDoorKeepNoQuote(S, S, false),
+      slots.workingCostKeepConditionUpTo(S, S, S),
+      slots.workingCostKeepConditionCovers(S, S, true),
+      slots.workingCostKeepConditionCovers(S, S, false),
       slots.workingCostBelowSpending(S, S, true),
       slots.workingCostBelowSpending(S, S, false),
       slots.workingCostBelowBudget(S, S, true),

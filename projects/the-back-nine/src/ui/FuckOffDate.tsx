@@ -71,8 +71,8 @@ import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import { LADDER_LABELS } from './oddsLadderChrome'
 import { axisDollarFormatterFor, formatAbsoluteDollar, formatAxisDollar } from './money'
 import type { DateBand, DateTrackOutcome } from '@shared/model'
-import type { NoteParts } from './noteParts'
-import { NotePartsBody } from './NotePartsBody'
+import { isPlainNote, type NoteParts } from './noteParts'
+import { NotePartsBlock } from './NotePartsBlock'
 import './styles/fuckOffDate.css'
 
 /** What the surface shows. `dates` carries BOTH independent tracks (U9b — the pure composeDateSplit
@@ -487,13 +487,12 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
               and above the graphs: a calm note in the same register, never role=alert. Its door is
               inline after the sentence (the band premise's grammar), and only where the tab can act
               on it; a read-only tab reads the fact alone. */}
-          {payCheckNote !== undefined && (
+          {/* With parts (W's stale line for a "saved" answer), a block in the same slot and register (council
+              `wf_22858e04-f7a` (4), amending KTD21's element only): the opening, the labelled segments, and the door as
+              the last dt/dd with its button as a block of its own. */}
+          {payCheckNote !== undefined && isPlainNote(payCheckNote.parts) && (
             <p className="fod-note cs-paycheck-note">
-              <span>
-                <NotePartsBody
-                  parts={{ ...payCheckNote.parts, opening: `${copy[STANDING_NOTE_COPY[payCheckNote.cause].lead]} ${payCheckNote.parts.opening}` }}
-                />
-              </span>
+              <span>{`${copy[STANDING_NOTE_COPY[payCheckNote.cause].lead]} ${payCheckNote.parts.opening}`}</span>
               {payCheckNote.onOpen !== undefined && (
                 <>
                   {' '}
@@ -503,6 +502,19 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
                 </>
               )}
             </p>
+          )}
+          {payCheckNote !== undefined && !isPlainNote(payCheckNote.parts) && (
+            <NotePartsBlock
+              className="fod-note cs-paycheck-note"
+              parts={{ ...payCheckNote.parts, opening: `${copy[STANDING_NOTE_COPY[payCheckNote.cause].lead]} ${payCheckNote.parts.opening}` }}
+              button={
+                payCheckNote.onOpen !== undefined && payCheckNote.parts.door !== null ? (
+                  <button type="button" className="band-premise__cta note-parts__cta" onClick={payCheckNote.onOpen}>
+                    {copy[STANDING_NOTE_COPY[payCheckNote.cause].cta]}
+                  </button>
+                ) : undefined
+              }
+            />
           )}
         </div>
         {/* BOTH GRAPHS share one wrapper: display:contents in single column (the phone DOM renders

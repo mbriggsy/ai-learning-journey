@@ -1,6 +1,57 @@
-/* A standing note's run-in labels (U11 walk 5's (bi), `NotePartsBody`): the body's semibold, in the note's own size
-   and ink — weight is the one signal, never color (the reader is color-blind) and never a size step (the labels are
-   structure inside one calm paragraph, not headings). `strong`'s default `bolder` would land on 700. */
+/* A standing note drawn as a block (`NotePartsBlock`; council `wf_22858e04-f7a`, U11 walk 6). The parts are told apart by
+   their own line, the space above, the body face's semibold and one size step — never color (the reader is
+   color-blind). Tokens only; no motion (the parts ride their host's one entrance). */
+
+/* W's block breathes apart from the notes around it (the council: --space-4 on both sides). `div.` outranks each host's
+   single-class `margin: 0` (`.save-step__note`, `.fod-note`) whatever the stylesheet order. */
+div.note-parts {
+  margin-block: var(--space-4);
+}
+
+.note-parts__opening,
+.note-parts__para {
+  margin: 0;
+}
+
+.note-parts__segments {
+  margin: 0;
+}
+
+/* The label: its own line, --space-3 above and --space-1 below; the body face (the type law: its figures are Source
+   Sans numerals), semibold, full ink, ONE token step above the host's text — the gate's --text-sm notes take
+   --text-base, the Result's --text-base notes take --text-lg (below). */
 .note-parts__label {
+  margin: var(--space-3) 0 var(--space-1);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
   font-weight: var(--weight-semibold);
+  line-height: var(--leading-body);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.fod-note .note-parts__label {
+  font-size: var(--text-lg);
+}
+
+.note-parts__body {
+  margin: 0;
+}
+
+/* The door's cost list: a list the eye can tick through (copylaw F3), the host's own text, a quiet marker. */
+.note-parts__list {
+  margin: var(--space-2) 0;
+  padding-inline-start: 1.25em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* The Result door's button: a block of its own under the door's sentences, never inline at the tail of a paragraph,
+   and the 44 px touch floor at every tier (the inline control's 24 px fine-pointer minimum is for its own line). */
+.band-premise__cta.note-parts__cta {
+  display: block;
+  min-height: var(--tap-min);
+  margin-block-start: var(--space-2);
+  text-align: start;
 }

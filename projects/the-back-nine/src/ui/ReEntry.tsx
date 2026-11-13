@@ -22,11 +22,12 @@
  * Medicare-spending re-confirm when they apply (the Q1 disclosure; reentryChrome.ts
  * composes them). The hero carries only the standing one-line echo.
  */
-import { useEffect, useRef } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { focusHeading } from '@intake/a11y'
 import { copy } from './copy'
 import type { ReentryView } from './reentryChrome'
-import { NotePartsBody } from './NotePartsBody'
+import { isPlainNote } from './noteParts'
+import { NotePartsBlock } from './NotePartsBlock'
 
 export interface ReEntryProps {
   readonly view: ReentryView
@@ -59,6 +60,9 @@ function ReadbackGroup({ legend, rows }: { legend: string; rows: ReentryView['ba
 
 export function ReEntry({ view, readOnly, onAffirm, onUpdate }: ReEntryProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
+  const doorId = useId()
+  // W's door rides under the buttons only where the tab can save (the view decides; read-only is the second guard).
+  const door = readOnly ? null : view.door
   // The intake focus law: heading-as-focus-target IS the announcement (no live region here).
   useEffect(() => {
     focusHeading(headingRef.current)
@@ -80,16 +84,14 @@ export function ReEntry({ view, readOnly, onAffirm, onUpdate }: ReEntryProps) {
           {view.noteLines.length > 0 && (
             <div className="reentry-notes">
               {/* Keyed by each note's text (composeReentry pushes each at most once); W's stale line is
-                  drawn from its parts, its labels as structure (U11 walk 5's (bi)). */}
+                  drawn from its parts as a block (council `wf_22858e04-f7a`), and as its old <p> where it has none. */}
               {view.noteLines.map((line) =>
-                typeof line === 'string' ? (
-                  <p key={line} className="save-step__note save-field__note--block">
-                    {line}
+                typeof line === 'string' || isPlainNote(line.parts) ? (
+                  <p key={typeof line === 'string' ? line : line.text} className="save-step__note save-field__note--block">
+                    {typeof line === 'string' ? line : line.parts.opening}
                   </p>
                 ) : (
-                  <p key={line.text} className="save-step__note save-field__note--block">
-                    <NotePartsBody parts={line.parts} />
-                  </p>
+                  <NotePartsBlock key={line.text} parts={line.parts} className="save-step__note save-field__note--block" />
                 ),
               )}
             </div>
@@ -105,7 +107,12 @@ export function ReEntry({ view, readOnly, onAffirm, onUpdate }: ReEntryProps) {
               </button>
             ) : (
               <>
-                <button type="button" className="btn-primary" onClick={onAffirm}>
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={onAffirm}
+                  aria-describedby={door === null ? undefined : `${doorId}-scope`}
+                >
                   {copy.reentryAffirmCta}
                 </button>
                 <button type="button" className="btn-quiet" onClick={onUpdate}>
@@ -114,6 +121,19 @@ export function ReEntry({ view, readOnly, onAffirm, onUpdate }: ReEntryProps) {
               </>
             )}
           </div>
+          {/* W's door (council `wf_22858e04-f7a` (2)): the next sibling after the buttons it names, so on the phone it
+              lands right under them and at a wide window it fills the column's room below them. The scope sentence
+              describes the affirm button: it records nothing about W. */}
+          {door !== null && (
+            <section className="reentry-door" aria-labelledby={`${doorId}-heading`}>
+              <h3 className="reentry-door__heading" id={`${doorId}-heading`}>
+                {door.heading}
+              </h3>
+              <p className="save-step__note save-field__note--block">
+                <span id={`${doorId}-scope`}>{door.scope}</span> {door.route}
+              </p>
+            </section>
+          )}
         </div>
       </section>
     </main>

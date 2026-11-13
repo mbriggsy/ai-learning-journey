@@ -1527,14 +1527,15 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     expect(note.textContent, 'the W row’s note never names the left over').not.toContain(clause)
   })
 
-  it('on `datesavedrisen` the W row’s note gives the year-level lean — never the whole-answer "can look better", never the clause or a figure at the quote — and the seat waits (the U11 walk’s (ae); R6 / KTD11 as amended)', () => {
+  it('on `datesavedrisen` the W row’s note gives R2’s gap lean (no working year at the quote runs short, U11 walk 6) — never the whole-answer "can look better", never the clause or a figure at the quote — and the seat waits (the U11 walk’s (ae); R6 / KTD11 as amended)', () => {
     // The spending raised to $90,000 past the yes to $84,000 (the seed's docblock), "All of it" stored at $16,985.
     // The note reads the answer above the seat — the amendment's one new reader — while the seat draws no radios.
     renderPanel({ snapshot: snap(DEV_SEEDS.datesavedrisen) })
     const note = within(wRow()).getByRole('note')
     expect(note.textContent).toContain(
-      `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeftOverYearsCheaper('84,000')}`,
+      `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000')}`,
     )
+    expect(note.textContent, 'never the short-year harm this household lacks').not.toContain(slots.workingCostStaleLeftOverYearsCheaper('84,000'))
     expect(note.textContent, 'no whole-answer lean for a "saved" answer waiting on W').not.toContain(slots.workingCostStaleLeansBetter('84,000'))
     expect(note.textContent, 'no clause on the W row').not.toContain(slots.workingCostStaleLeftOverAnswered('16,985'))
     expect(note.textContent, 'no figure at the quote in the fork’s description (the red team’s attack 4)').not.toContain('10,985')

@@ -1284,6 +1284,33 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
     expect(leftOver(m), 'the answer is untouched until a reply is pressed').toStrictEqual({ kind: 'saved', quotedReal: LEFT_OVER_DATE })
   })
 
+  // THE KEEP CONDITION (council `wf_22858e04-f7a` (3), the Hawk's condition; U11 walk 6's F11): the gate no longer names
+  // the W row's choices, so Keep — drawn above the cost lists — carries its condition ABOVE it, as its description.
+  it('on `datesavedstale`, Keep’s condition sits above Keep, inside the stale note, as Keep’s description — the room $84,000 leaves over $78,000 — and Keep still sits above the cost lists', () => {
+    render(<Harness model={modelWith(DEV_SEEDS.datesavedstale)} />)
+    const keep = screen.getByRole('button', { name: 'Keep $84,000 a year' })
+    const condition = 'Choose “Keep $84,000 a year” only if the costs listed below come to $6,000 a year or less, on top of your $78,000 of spending.'
+    expect(keep).toHaveAccessibleDescription(condition)
+    const conditionEl = screen.getByText(condition)
+    expect(conditionEl.compareDocumentPosition(keep) & Node.DOCUMENT_POSITION_FOLLOWING, 'the condition comes first in the DOM').toBeTruthy()
+    expect(keep.compareDocumentPosition(screen.getByText(copy.workingCostHelpCountLead)) & Node.DOCUMENT_POSITION_FOLLOWING, 'the cost lists follow Keep').toBeTruthy()
+    expect(conditionEl.closest('[role="note"]'), 'inside the stale note, with its door').toBe(keep.closest('[role="note"]'))
+  })
+
+  it('…and on a figure kept at today’s quote (typed by the month, then Florida picked: stale on the reading alone), the figure’s own terms, in its own unit', () => {
+    const yes = DEV_SEEDS.datesaved.workingYearCost
+    if (yes?.kind !== 'confirmed') throw new Error('[test setup] datesaved holds a yes')
+    const monthlyMoved: ScenarioDraft = {
+      ...DEV_SEEDS.datesaved,
+      retirementState: 'FL',
+      workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'month', stateTaxReading: yes.stateTaxReading },
+    }
+    render(<Harness model={modelWith(monthlyMoved)} />)
+    expect(screen.getByRole('button', { name: 'Keep $7,000 a month' })).toHaveAccessibleDescription(
+      'Choose “Keep $7,000 a month” only if $7,000 a month covers your spending plus the costs listed below.',
+    )
+  })
+
   it('Continue completes the walk with the question unanswered or answered: it never gates and never shows a field error', () => {
     const cases: readonly [string, ScenarioDraft][] = [
       ['unanswered', withLeftOver(DEV_SEEDS.date, undefined)],

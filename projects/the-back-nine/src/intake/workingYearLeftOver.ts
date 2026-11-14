@@ -83,7 +83,8 @@ export function writeWorkingYearLeftOver(
  *  exactly where the typed-below line speaks (`freshTypedBelow`, the line's and its door's own predicate), else
  *  `null`. There the live figure is year 0 at the TYPED figure, while R1's line beside it — on every host that draws
  *  the moved words: the Result's slot (as its clause), a rules note's clause above it, the gate's own line after it,
- *  and the seat's at-quote line below its radios — names year 0 at today's quote, so the words name the typed figure
+ *  and the seat's spans below its radios — names figures at today's quote (the whole-window rebuild's spans), so the
+ *  words name the typed figure
  *  (the walk-6 round review's L3-3 / L1-5 / L2-5; U11 walk 7's R2 for the seat). Carried here, not decided per host,
  *  so no host can draw the bare pair beside R1's line (insight 081). */
 export interface WorkingYearLeftOverMoved {
@@ -667,6 +668,8 @@ export type TypedBelowHost = { readonly kind: 'gate' } | { readonly kind: 'resul
  *  the counts sentence in its "Your" form (`step`), or the pair would show with nothing saying which answer is the real
  *  one. The host says so; the seat never guesses it. */
 export type TypedBelowSeatHost = 'sheet' | 'step'
+/** Whether the seat's line opens on the counts sentence, by host (an exhaustive Record, insight 147). */
+const SEAT_OPENS_ON_COUNTS: Readonly<Record<TypedBelowSeatHost, boolean>> = { sheet: false, step: true }
 
 /** The typed figure below today's quote, while it is FRESH and the run reads it — or `null`. Fresh: a typed figure
  *  stales only on its state-tax reading, and a stale W rides its own stale line (which wins the slot on both hosts), so
@@ -708,7 +711,9 @@ export type TypedBelowBinding = Exclude<WorkingYearCreditBinding, 'tie'>
 
 /** One working year of the window, both answers. `credit` and `creditAtQuote` are the engine's own credit rule
  *  (`workingYearCredit`, the overlay's one home: each `Object.is` the overlay's `creditComposed` on that answer's run),
- *  unrounded; `bottomLine` and `bottomLineAtQuote` are the money picture's prints at the typed figure and at the quote. */
+ *  unrounded; `bottomLine` and `bottomLineAtQuote` are the money picture's prints at the typed figure and at the quote;
+ *  `cash` and `cashAtQuote` the raw cash each print is taken from (the pictures' own `workingYears[t].cash`, each the
+ *  run's composed cash), the draw the engine really takes in a short year ({@link stillShortDifferenceDollars}). */
 export interface TypedBelowYear {
   readonly calendarYear: number
   readonly kind: TypedBelowYearKind
@@ -718,6 +723,8 @@ export interface TypedBelowYear {
   readonly bindingAtQuote: TypedBelowBinding
   readonly bottomLine: number
   readonly bottomLineAtQuote: number
+  readonly cash: number
+  readonly cashAtQuote: number
 }
 
 /** Whole dollars on the money picture's grain: the least and the most across a span's years (equal where every year
@@ -804,6 +811,8 @@ function composeTypedBelowWindow(d: ScenarioDraft): WorkingYearTypedBelowWindow 
       bindingAtQuote: storedAtQuote === undefined ? 'none' : settleTie(t, workingYearCreditBinding(q.cash, year0AtQuote, storedAtQuote, true)),
       bottomLine: w.bottomLine,
       bottomLineAtQuote: q.bottomLine,
+      cash: w.cash,
+      cashAtQuote: q.cash,
     })
   }
   return { kind: 'read', years, spans: spansOf(years) }
@@ -841,6 +850,16 @@ const creditDollars = (y: TypedBelowYear): number => workingYearBottomLine(y.cre
 const creditAtQuoteDollars = (y: TypedBelowYear): number => workingYearBottomLine(y.creditAtQuote)
 const differenceDollars = (y: TypedBelowYear): number =>
   creditDollars(y) - drawOf(y.bottomLine) - (creditAtQuoteDollars(y) - drawOf(y.bottomLineAtQuote))
+/** The still-short kind's yearly difference: what this answer takes less from savings, said "at most" (R5). Worked on
+ *  the printed figures (R6, V9) it is two shortfalls each printed rounded UP, and their difference can land up to 99¢
+ *  under the draws the engine really takes (C at $8,416.67 a month: $4,015 − $16 = $3,999, where the engine draws
+ *  $3,999.96 less), so the "at most" would be false, on the rosy side. R5 wins over V9 (the whole-file review of the
+ *  rebuild, round 1, finding #1; the pilot's call, flagged for walk 8): the raw draws' difference, snapped to the cent and
+ *  rounded up, so the figure can sit $1 above its own two printed shortfalls' difference but never under the engine.
+ *  Every other kind's figure already sits at or above the engine's (a printed credit never sits under its raw credit:
+ *  the credit rule's min holds the year's own print). */
+const stillShortDifferenceDollars = (y: TypedBelowYear): number =>
+  Math.ceil(Math.round((Math.max(0, -y.cashAtQuote) - Math.max(0, -y.cash)) * 100) / 100)
 
 type SpanFigures = {
   readonly [K in TypedBelowYearKind]: (years: readonly TypedBelowYear[]) => Omit<Extract<TypedBelowSpan, { kind: K }>, 'firstYear' | 'lastYear'>
@@ -864,7 +883,7 @@ const SPAN_FIGURES: SpanFigures = {
     kind: 'shortStillShortAtTyped',
     shortAtQuote: dollarsOf(ys, (y) => drawOf(y.bottomLineAtQuote)),
     shortAtTyped: dollarsOf(ys, (y) => drawOf(y.bottomLine)),
-    difference: dollarsOf(ys, differenceDollars),
+    difference: dollarsOf(ys, stillShortDifferenceDollars),
   }),
   shortEvenAtTyped: (ys) => ({
     kind: 'shortEvenAtTyped',
@@ -929,8 +948,11 @@ export function workingYearCostTypedBelowLine(d: ScenarioDraft, host: TypedBelow
 type FreshTypedBelow = NonNullable<ReturnType<typeof freshTypedBelow>>
 
 /** The counts sentence and its lean, in the quote's own words (the spending, or the budget twin). */
-const typedBelowCounts = (t: FreshTypedBelow, answer: TypedBelowAnswer): string =>
-  t.source === 'budget' ? slots.workingCostTypedBelowCountsBudget(answer, t.typed, t.quote) : slots.workingCostTypedBelowCounts(answer, t.typed, t.quote)
+const TYPED_BELOW_COUNTS: Readonly<Record<FreshTypedBelow['source'], (answer: TypedBelowAnswer, typed: string, quote: string) => string>> = {
+  spending: slots.workingCostTypedBelowCounts,
+  budget: slots.workingCostTypedBelowCountsBudget,
+}
+const typedBelowCounts = (t: FreshTypedBelow, answer: TypedBelowAnswer): string => TYPED_BELOW_COUNTS[t.source](answer, t.typed, t.quote)
 
 /** R8's cap as the line said it before the rebuild — min(stored, year 0 at the typed figure), whole dollars — read only
  *  on the whole-window read's `unknown` arm (the plan's Minor faults: live, kept fail-safe so the credit is still said);
@@ -956,7 +978,7 @@ function typedBelowSpansParts(
     oneYear: s.firstYear === s.lastYear,
     typed: t.typed,
     quote: t.quote,
-    budget: t.source === 'budget',
+    source: t.source,
   })
   if (spans.length < 2) return plainNote([...opening, ...spans.flatMap((s) => typedBelowSpanSentences(s, frame(s, true)))].join(' '))
   return {
@@ -1025,7 +1047,7 @@ export function workingYearLeftOverAtQuoteLine(d: ScenarioDraft, host: TypedBelo
   if (t === null) return null
   const read = workingYearTypedBelowWindow(d)
   if (read === null || read.kind === 'unknown' || read.spans.length === 0) return null
-  return typedBelowSpansParts(host === 'step' ? [typedBelowCounts(t, 'Your')] : [], read.spans, t, 'Your', copy.workingLedgerLeftOverSpansLead)
+  return typedBelowSpansParts(SEAT_OPENS_ON_COUNTS[host] ? [typedBelowCounts(t, 'Your')] : [], read.spans, t, 'Your', copy.workingLedgerLeftOverSpansLead)
 }
 
 /** The typed-below line's door on the gate: the update act's (`gateDoor`), naming the typed figure — or `null` exactly

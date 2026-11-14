@@ -6,7 +6,9 @@ import './styles/noteParts.css'
  * A standing note drawn as a BLOCK (council `wf_22858e04-f7a`, U11 walk 6; the parts are `noteParts.ts`'s): a wrapper
  * `div.note-parts` holding the opening as a `<p>`, then a `<dl>` with one `div>dt+dd` per segment — each label on its own
  * line, a size step above the note in the body face (`noteParts.css`; never color) — and, on the Result, the door as
- * the last dt/dd: its lead, its cost `<ul>`, its tail, then the host's `button` as a block. No heading element rides
+ * the last dt/dd: its lead, its cost `<ul>`, its tail, then the host's `button` as a block. A block with NO door (the
+ * typed-below line's spans, the whole-window rebuild's KTD6) still draws the host's `button`, last in the block, where the
+ * tab can act on it. No heading element rides
  * inside (an h3 would pull the Result's graphs under "If a working year costs…" in the outline, and on the gate the
  * budget lines push after W's line). The HOST draws a note with no segments and no door as its old `<p>` instead
  * (`isPlainNote`; the pinned reduce-to-plain), so this renders only the block. `className` — the host's note classes
@@ -19,7 +21,8 @@ export function NotePartsBlock({
 }: {
   readonly parts: NoteParts
   readonly className: string
-  /** The Result's door button, drawn last in the door's dd (present only beside a door). */
+  /** The Result's button: drawn last in the door's dd beside a door, and last in the block where there is none (the
+   *  typed-below line's spans). */
   readonly button?: ReactNode
 }) {
   const { door } = parts
@@ -53,7 +56,7 @@ export function NotePartsBlock({
           )}
         </dl>
       )}
-      {/* No door to carry it (no host passes one so today): the button still never goes missing. */}
+      {/* No door to carry it (the typed-below line's spans on the Result): the button is the block's last child. */}
       {door === null && button}
     </div>
   )

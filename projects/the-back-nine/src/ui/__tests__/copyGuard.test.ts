@@ -671,9 +671,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // The typed-below spans' frames (the whole-window rebuild's KTD7, `TypedBelowSpanFrame`): a one-span line on the Result
   // (A: "Each working year, this answer…"), a several-year span on the gate or seat (TM's), and a one-year span on a
   // budget's quote — so the samples below render each branch of the frame at least once between them.
-  const SPAN_ONE: TypedBelowSpanFrame = { answer: 'This', opener: true, oneYear: false, typed: '84,000', quote: '90,000', budget: false }
-  const SPAN_RUN: TypedBelowSpanFrame = { answer: 'Your', opener: false, oneYear: false, typed: '84,000', quote: '105,000', budget: false }
-  const SPAN_YEAR: TypedBelowSpanFrame = { answer: 'This', opener: false, oneYear: true, typed: '100,985', quote: '105,000', budget: true }
+  const SPAN_ONE: TypedBelowSpanFrame = { answer: 'This', opener: true, oneYear: false, typed: '84,000', quote: '90,000', source: 'spending' }
+  const SPAN_RUN: TypedBelowSpanFrame = { answer: 'Your', opener: false, oneYear: false, typed: '84,000', quote: '105,000', source: 'spending' }
+  const SPAN_YEAR: TypedBelowSpanFrame = { answer: 'This', opener: false, oneYear: true, typed: '100,985', quote: '105,000', source: 'budget' }
 
   // --- slots: render with representative args, then scan. Slots are the SANCTIONED numeric channel,
   //     so they are NOT free-numeral scanned; the verdict voice still must hold. Record<keyof typeof
@@ -1335,14 +1335,14 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
         /^(workingLedgerLeftOver|assumptionWorkingCostLeftOver|assumptionWorkingYearCheckLeftOver|stalenessLeftOver|workingCostStaleLeftOver)/.test(name) ||
         (TYPED_BELOW_SPAN_SLOTS as readonly string[]).includes(name),
     )
-  /** Every span slot rendered over every frame the composer can pass (answer × opener × one year × budget), with a range
+  /** Every span slot rendered over every frame the composer can pass (answer × opener × one year × the quote's source), with a range
    *  and with one figure, so a branch the one sample above never takes is swept too. */
   const spanRenders = (S: string, T: string): readonly string[] =>
     (['This', 'Your'] as const).flatMap((answer) =>
       [true, false].flatMap((opener) =>
         [true, false].flatMap((oneYear) =>
-          [true, false].flatMap((budget) => {
-            const f: TypedBelowSpanFrame = { answer, opener, oneYear, typed: S, quote: S, budget }
+          (['spending', 'budget'] as const).flatMap((source) => {
+            const f: TypedBelowSpanFrame = { answer, opener, oneYear, typed: S, quote: S, source }
             return [
               slots.workingCostTypedBelowSpanCredit(f, [S, S]),
               slots.workingCostTypedBelowSpanCredit(f, [S, T]),

@@ -1897,7 +1897,7 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
  *  would add at most $10,985, $6,000 less. One span names no years, so its first sentence opens "Each working year,"
  *  on every host (a one-span line of a credit kind). */
 const typedBelowOneSpan = (answer: 'This' | 'Your'): string => {
-  const f = { answer, opener: true, oneYear: false, typed: STALE_W_CONFIRMED, quote: RISEN_W_QUOTE_NOW, budget: false } as const
+  const f = { answer, opener: true, oneYear: false, typed: STALE_W_CONFIRMED, quote: RISEN_W_QUOTE_NOW, source: 'spending' } as const
   return [
     slots.workingCostTypedBelowSpanCredit(f, [DATE_LEFT_OVER, DATE_LEFT_OVER]),
     slots.workingCostTypedBelowSpanAtQuoteCredit(f, [RISEN_AT_QUOTE, RISEN_AT_QUOTE], ['6,000', '6,000']),

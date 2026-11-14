@@ -1122,6 +1122,51 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
       'At your spending of $105,000 a year, that working year comes up $3,652 short.',
       'At your figure of $101,348 a year, it leaves nothing over and nothing short, and this answer takes at most $3,652 a year less from your savings, plus any income tax on it.',
     ])
+    // `shortStillShortAtTyped` with cents (the whole-file review's round 1, finding #1; R5 over V9): C typed at $8,416.67 a
+    // month draws $15.04 in 2029 and 2030 (printed $16) against the quote's $4,015, so the engine takes $3,999.96 less. The
+    // two printed shortfalls' difference, $3,999, would put the "at most" under the engine; the figure is the raw draws'
+    // difference rounded up, $4,000, a dollar above $4,015 − $16 (flagged for walk 8).
+    expect(segment(typed(DEV_SEEDS.datesavedrisenlater, 8_416.67 * 12, 'month'), GATE, '2029 through 2030')).toEqual([
+      'At your spending of $105,000 a year, each working year comes up $4,015 short.',
+      'At your figure of $101,000 a year, each still comes up $16 short, and your answer takes at most $4,000 a year less from your savings, plus any income tax on it.',
+    ])
+  })
+
+  // The whole-file review's round 1, finding #1 (R5 over V9): an "at most" never sits under what the engine does. Each short
+  // span's yearly difference is checked against the engine's own in each of its years, read straight off the two money
+  // pictures (the draw the overlay takes is −cash in a short year) and the credit rule's raw credit; the read's own raw
+  // cash is the pictures' to the bit. The cents still-short household is the witness the printed-figure rule failed on.
+  it('every short span’s "at most" difference sits at or above the engine’s own in each of its years, on every witness and on the cents still-short household (R5)', () => {
+    const witnesses: Readonly<Record<string, ScenarioDraft>> = {
+      ...TYPED_BELOW_WITNESSES,
+      centsStillShort: typed(DEV_SEEDS.datesavedrisenlater, 8_416.67 * 12, 'month'),
+    }
+    const SHORT_KINDS: readonly string[] = ['shortLeftOverAtTyped', 'shortStillShortAtTyped', 'shortEvenAtTyped']
+    let years = 0
+    for (const [key, d] of Object.entries(witnesses)) {
+      const read = workingYearTypedBelowWindow(d)
+      const atTyped = workingYearLedgerForRun(d)
+      const atQuote = workingYearLedgerForRun(writeConfirmedWorkingYearCost(d))
+      if (read?.kind !== 'read' || atTyped === 'unknown' || atQuote === 'unknown') throw new Error(`[test setup] ${key} reads both pictures`)
+      read.years.forEach((y, t) => {
+        expect(Object.is(y.cash, atTyped.workingYears[t]!.cash), `${key} ${y.calendarYear}: the raw cash at the typed figure`).toBe(true)
+        expect(Object.is(y.cashAtQuote, atQuote.workingYears[t]!.cash), `${key} ${y.calendarYear}: the raw cash at the quote`).toBe(true)
+      })
+      for (const s of read.spans) {
+        if (!SHORT_KINDS.includes(s.kind) || !('difference' in s)) continue
+        const engine = read.years.flatMap((y, t) => {
+          if (y.calendarYear < s.firstYear || y.calendarYear > s.lastYear) return []
+          const drawT = Math.max(0, -atTyped.workingYears[t]!.cash)
+          const drawQ = Math.max(0, -atQuote.workingYears[t]!.cash)
+          return [y.credit - drawT - (y.creditAtQuote - drawQ)]
+        })
+        years += engine.length
+        const who = `${key} ${s.firstYear}–${s.lastYear} (${s.kind}): $${s.difference.least}–$${s.difference.most} against the engine's ${engine.join(', ')}`
+        expect(s.difference.least, who).toBeGreaterThanOrEqual(Math.min(...engine))
+        expect(s.difference.most, who).toBeGreaterThanOrEqual(Math.max(...engine))
+      }
+    }
+    expect(years, 'the sweep is non-vacuous').toBeGreaterThanOrEqual(30)
   })
 
   it('`same`: a labelled span says the answer adds the same, no figure; a one-span `same` line opens "Each working year," and keeps the opening’s lean (never "here it doesn’t"), its quote to the cent where the pair prints cents', () => {
@@ -1175,8 +1220,12 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
   // R5 and R8 (the plan's U4 test 4), over every witness and every host: the opening's counts sentence sits outside it (it
   // names both figures by design), and so does the Result's moved clause (the moved words' own pins).
   it('the density law on every witness’s spans: no sentence names both sides; the yearly difference rides only a span’s second sentence; no "so"; at most two sentences per span; and every figure for what the answer adds or takes is "at most", a fact of the picture, or a difference set beside its pair', () => {
-    const QUOTE_SIDE = /\byour (spending of|budget’s) \$/
-    const TYPED_SIDE = /\byour figure of \$/
+    // Case-blind (the whole-file review's round 1, finding #5): the short span's second sentence OPENS "Your figure of", so a
+    // case-sensitive side never fired on it, and a quote figure planted there passed the law.
+    const QUOTE_SIDE = /\byour (spending of|budget’s) \$/i
+    const TYPED_SIDE = /\byour figure of \$/i
+    let quoteSides = 0
+    let typedSides = 0
     const FIG = String.raw`\$[\d,]+(?:\.\d\d)?`
     const RANGE = String.raw`${FIG}(?: to ${FIG})?`
     const DIFFERENCE = new RegExp(String.raw`${RANGE}(?: a year)? (?:less|more)\b`)
@@ -1196,6 +1245,8 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
           expect(sentences.length, `${who} — at most two sentences`).toBeLessThanOrEqual(2)
           expect(sentences[0], `${who} — the first sentence carries no difference`).not.toMatch(DIFFERENCE)
           for (const s of sentences) {
+            if (QUOTE_SIDE.test(s)) quoteSides += 1
+            if (TYPED_SIDE.test(s)) typedSides += 1
             expect(QUOTE_SIDE.test(s) && TYPED_SIDE.test(s), `${who} — one side per dollar sentence (R8)`).toBe(false)
             expect(s, `${who} — no "so"`).not.toMatch(/\bso\b/i)
             const rest = s
@@ -1210,6 +1261,13 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
       }
     }
     expect(spans, 'the sweep is non-vacuous: every witness, every host').toBeGreaterThanOrEqual(Object.keys(TYPED_BELOW_WITNESSES).length * HOSTS.length)
+    // Each side fires across the sweep, the typed side on TM's short span's second sentence too, and the R8 predicate
+    // catches both sides planted in that sentence.
+    expect(quoteSides, 'the quote side fires').toBeGreaterThan(0)
+    expect(typedSides, 'the typed side fires').toBeGreaterThan(0)
+    expect(TYPED_SIDE.test(segment(TYPED_BELOW_WITNESSES.tm, GATE, '2029 through 2032')[1]!), 'TM’s "Your figure of" sentence').toBe(true)
+    const planted = 'Your figure of $84,000 a year, below your spending of $105,000 a year, leaves those shortfalls out of your answer.'
+    expect(QUOTE_SIDE.test(planted) && TYPED_SIDE.test(planted), 'a two-sided sentence is caught').toBe(true)
   })
 
   it('a figure typed by the month names both figures yearly, and "your figure of $84,000 a year" on every host — never "your $84,000 figure" outside the gate’s door, which keeps it (R9)', () => {

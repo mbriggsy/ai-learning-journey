@@ -2766,23 +2766,30 @@ export type TypedBelowAnswer = 'This' | 'Your'
  *  flagged for walk 8): `answer` — the answer named; `opener` — a one-span line of a credit kind opens its first sentence
  *  "Each working year," (the line names no years then); `oneYear` — a span of one year takes "that working year" and
  *  "that shortfall"; `typed` and `quote` — the typed-below pair exactly as the W surfaces print it (to the cent a cent
- *  apart, `workingYearCostTypedBelowQuote`); `budget` — the quote is the budget's first year after work stops, named in
- *  the shorter "your budget’s $Q a year" (KD2's third pilot call: the opening's counts twin already names the year). The
- *  composer: `workingYearCostTypedBelowLine`. */
+ *  apart, `workingYearCostTypedBelowQuote`); `source` — where the quote comes from: the spending, or the budget's first
+ *  year after work stops, named in the shorter "your budget’s $Q a year" (KD2's third pilot call: the opening's counts
+ *  twin already names the year). The composer: `workingYearCostTypedBelowLine`. */
 export interface TypedBelowSpanFrame {
   readonly answer: TypedBelowAnswer
   readonly opener: boolean
   readonly oneYear: boolean
   readonly typed: string
   readonly quote: string
-  readonly budget: boolean
+  readonly source: TypedBelowQuoteSource
 }
+/** Where today's quote comes from (`WorkingYearQuote['source']`, restated here because the catalog imports no feature
+ *  layer; the composer passes its own reading, so a third source fails to compile until it is worded here). */
+export type TypedBelowQuoteSource = 'spending' | 'budget'
 /** A span's figure in whole dollars as the money picture prints it, its least and its most (equal where every year of
  *  the span prints alike: one figure, else "$X to $Y", the picture's own range words, `shortAmount`). */
 export type TypedBelowMoney = readonly [least: string, most: string]
 const spanMoney = ([least, most]: TypedBelowMoney): string => shortAmount(least, most)
-/** The quote by its source (R9): "your spending of $Q a year", or the budget twin. */
-const spanQuote = (f: TypedBelowSpanFrame): string => (f.budget ? `your budget’s $${f.quote} a year` : `your spending of $${f.quote} a year`)
+/** The quote by its source (R9): "your spending of $Q a year", or the budget twin (an exhaustive Record, insight 147). */
+const SPAN_QUOTE: Readonly<Record<TypedBelowQuoteSource, (quoteFormatted: string) => string>> = {
+  spending: (q) => `your spending of $${q} a year`,
+  budget: (q) => `your budget’s $${q} a year`,
+}
+const spanQuote = (f: TypedBelowSpanFrame): string => SPAN_QUOTE[f.source](f.quote)
 /** The answer as a span's first sentence opens on it: "Each working year, this answer" on a one-span line, else "This answer". */
 const spanAnswerHead = (f: TypedBelowSpanFrame): string =>
   f.opener ? `Each working year, ${f.answer.toLowerCase()} answer` : `${f.answer} answer`
@@ -2793,9 +2800,9 @@ const spanYears = (f: TypedBelowSpanFrame): string => (f.oneYear ? 'that working
 const spanShortfalls = (f: TypedBelowSpanFrame): string => (f.oneYear ? 'that shortfall' : 'those shortfalls')
 
 /** The moved seat lines' second sentence opens on today's left over — and, where a fresh TYPED figure sits below today's
- *  spending, on the figure it rests on, in the gate's moved-line words (U11 walk 7's R2: the sheet's below-the-radios
- *  twin of the at-quote sentence now names the quote's year 0, so this figure wears its definition too, back-nine-design's
- *  round-6 law). `slots.workingLedgerLeftOverRoseLine` / `…FellLine` and their `…At` twins share every other word. */
+ *  spending, on the figure it rests on, in the gate's moved-line words (U11 walk 7's R2; since the whole-window rebuild
+ *  the spans below the radios name today's quote, "At your spending of $Q a year…", beside this answer's credits, so this
+ *  figure wears its definition too, back-nine-design's round-6 law). `slots.workingLedgerLeftOverRoseLine` / `…FellLine` and their `…At` twins share every other word. */
 const leftOverNow = (liveFormatted: string, typedFormatted: string | null): string =>
   typedFormatted === null ? `It’s $${liveFormatted} now` : `At your figure of $${typedFormatted} a year, it’s $${liveFormatted} now`
 const leftOverRoseLine = (storedFormatted: string, liveFormatted: string, typedFormatted: string | null): string =>
@@ -3471,8 +3478,8 @@ export const slots = {
    *  `datesavedrisenshort` it reads one odds rung rosier. The answer named ({@link TypedBelowAnswer}), both figures yearly,
    *  then the whole-answer lean (`belowLean`: under a fresh typed figure a lower figure only cheapens the years and,
    *  under "All of it", credits more). The budget twin names the quote in `workingCostBelowBudget`'s words. Then, for a
-   *  "saved" answer the run carries, what it credits and what the quote's own year 0 has (the slots below). One sentence
-   *  per fact; no em-dash. The composer: `workingYearCostTypedBelowLine`. */
+   *  "saved" answer the run carries, the spans over the whole working window (the span slots below: in each run of years,
+   *  this answer's credit beside the answer at the quote's). One sentence per fact; no em-dash. The composer: `workingYearCostTypedBelowLine`. */
   workingCostTypedBelowCounts: (answer: TypedBelowAnswer, typedFormatted: string, quoteFormatted: string): string =>
     `${answer} answer counts a working year at your own figure of $${typedFormatted} a year, below your spending of $${quoteFormatted} a year. ${belowLean(typedFormatted, true)}`,
   workingCostTypedBelowCountsBudget: (answer: TypedBelowAnswer, typedFormatted: string, quoteFormatted: string): string =>
@@ -3582,11 +3589,11 @@ export const slots = {
   stalenessLeftOverClause: (storedFormatted: string, liveFormatted: string, smallerFormatted: string): string =>
     `The money left over in your first working year is $${liveFormatted} now, not the $${storedFormatted} you answered at, so each working year adds at most $${smallerFormatted} of its left over to your savings, the smaller of the two.`,
   // …and their twins where a fresh TYPED figure sits below today's spending (the walk-6 round review's L3-3 / L1-5 /
-  // L2-5): today's figure is year 0 at the typed figure, while the typed-below line beside it (R1's) ends on year 0 at
-  // the spending ("At $84,000 a year, your first working year, 2026, has $16,985 left over."), so two first-year figures
-  // sat a sentence apart and only one named the figure it rests on (back-nine-design's round-6 law: a same-named
-  // quantity quoted twice with different values wears its definition on EACH mention). The typed figure comes first, in
-  // the at-quote sentence's own shape, so the pair reads as the contrast it is. `typedFormatted` is yearly (the line's
+  // L2-5): today's figure is year 0 at the typed figure, while the typed-below line beside it (R1's) names figures at
+  // today's spending (since the whole-window rebuild, its spans: "At your spending of $105,000 a year, it would add at most
+  // $5,985…"), so figures at two costs sit a sentence apart, and each names the figure it rests on (back-nine-design's
+  // round-6 law: a same-named quantity quoted twice with different values wears its definition on EACH mention). The
+  // typed figure comes first, in the spans' own "At your … a year" shape, so the pair reads as the contrast it is. `typedFormatted` is yearly (the line's
   // counts sentence names it so). The composer picks: `workingYearLeftOverMovedText` / `…Clause`.
   stalenessLeftOverMovedAt: (typedFormatted: string, storedFormatted: string, liveFormatted: string, smallerFormatted: string): string =>
     `You said all of it goes into your savings when it was $${storedFormatted}. At your figure of $${typedFormatted} a year, it’s $${liveFormatted} now, so each working year adds at most $${smallerFormatted} of its left over to your savings, the smaller of the two.`,
@@ -3601,7 +3608,7 @@ export const slots = {
     `After everything above, your first working year has $${amountFormatted} left over.`,
   // …and its twin where a fresh TYPED figure sits below today's spending (U11 walk 7's R2, the refuter's words): "After
   // everything above" reached past the "$105,000" question on TM's sheet, so $26,985 could read as the left over at the
-  // spending, and the at-quote sentences below the radios now name the quote's own year 0 beside it. Above the radios, so
+  // spending, and the spans below the radios name figures at today's spending beside it. Above the radios, so
   // it reads no answer (R6): keyed on the typed figure alone (`workingYearLeftOverTypedBelow`).
   workingLedgerLeftOverFigureAt: (typedFormatted: string, amountFormatted: string): string =>
     `After everything above, at your figure of $${typedFormatted} a year, your first working year has $${amountFormatted} left over.`,
@@ -3658,9 +3665,9 @@ export const slots = {
     leftOverRoseLine(storedFormatted, liveFormatted, null),
   workingLedgerLeftOverFellLine: (storedFormatted: string, liveFormatted: string): string =>
     leftOverFellLine(storedFormatted, liveFormatted, null),
-  // …and their twins where a fresh TYPED figure sits below today's spending (U11 walk 7's R2): "At your $84,000 figure,
-  // it’s $26,985 now", the gate's moved-line words, so today's figure names what it rests on beside the quote's year 0
-  // (`leftOverNow`). The composer picks off the moved core's `typedBelow` (`WorkingYearLeftOverQuestion`'s `LINE`).
+  // …and their twins where a fresh TYPED figure sits below today's spending (U11 walk 7's R2): "At your figure of $84,000
+  // a year, it’s $26,985 now" (R9's yearly form), the gate's moved-line words, so today's figure names what it rests on
+  // beside the spans' figures at today's spending (`leftOverNow`). The composer picks off the moved core's `typedBelow` (`WorkingYearLeftOverQuestion`'s `LINE`).
   workingLedgerLeftOverRoseLineAt: (typedFormatted: string, storedFormatted: string, liveFormatted: string): string =>
     leftOverRoseLine(storedFormatted, liveFormatted, typedFormatted),
   workingLedgerLeftOverFellLineAt: (typedFormatted: string, storedFormatted: string, liveFormatted: string): string =>

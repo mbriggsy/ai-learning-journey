@@ -2257,7 +2257,7 @@ const FOUR_BUCKET_READBACK = [
  *  research record's `witnesses.md`). A span's words in the order a block draws them, as `innerText` reads them: its label
  *  (the dt), then its sentences (the dd). `typed` / `quote` — the typed-below pair as the W surfaces print it. */
 const spanFrame = (answer: 'This' | 'Your', first: number, last: number, typed: string, quote: string, opener = false) =>
-  ({ answer, opener, oneYear: first === last, typed, quote, budget: false }) as const
+  ({ answer, opener, oneYear: first === last, typed, quote, source: 'spending' }) as const
 const one = (x: string): readonly [string, string] => [x, x]
 const spanText = (first: number, last: number, sentences: readonly string[]): string =>
   [slots.workingCostTypedBelowSpanLabel(first, last), ...sentences].join(' ')
@@ -4060,7 +4060,7 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       // at the $84,000 spending in every working year, so they add the same (KTD3) and no figure is printed. The only
       // real-browser witness of the seat's line.
       const sameSpan = (answer: 'This' | 'Your'): string =>
-        slots.workingCostTypedBelowSpanSame({ answer, opener: true, oneYear: false, typed: '72,000', quote: '84,000', budget: false })
+        slots.workingCostTypedBelowSpanSame({ answer, opener: true, oneYear: false, typed: '72,000', quote: '84,000', source: 'spending' })
       await expect(seat.locator('p.left-over__at-quote')).toHaveText(sameSpan('Your'))
       // A second reader of the stored answer, off the panel: the Result's standing slot names the same two. The typed
       // $72,000 sits below `date`'s $84,000 of spending, so R1's typed-below line holds the slot (U11 walk 6,

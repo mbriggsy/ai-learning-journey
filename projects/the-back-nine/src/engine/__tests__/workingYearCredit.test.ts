@@ -18,7 +18,7 @@
  */
 import { describe, it, expect } from 'vitest'
 import { simulate, ENGINE_MAX_DOLLAR, type SimOutput } from '@engine/simulate'
-import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP } from '@engine/dateSearch'
+import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, runDateSearch } from '@engine/dateSearch'
 import {
   runTaxAwareDecumulation,
   type TaxOverlayConfig,
@@ -571,20 +571,38 @@ describe('the typed-below line’s whole-window read against the overlay’s own
   })
 
   // KD3's claim on a witness: every "at most" figure is true past the crown, where the crowned plan credits nothing. The
-  // date search's crowned offsets cannot run in a unit test; they are typed from the U3 crown probe
-  // (`b9-build2-surplus\u11-wholewindow\research\wit\u3-crown.out.txt`: `runDateSearchEngine(buildDateInput(d), d.seed,
-  // tier, 1)`, the app's own call, on the crowned household).
-  it('the crowned household: both tiers crown a stop before its 2033–2035 span, which the read still names; the candidate at the final crown credits at most each span’s figure in every year it works, and nothing past its stop', { timeout: 60_000 }, () => {
-    // At Alex's $1,600,000 (`CROWNED_401K`) both tiers crown offset 7 (provisional on the 0.85 bar, final at 0.86):
-    // the household works 2026 through 2032, so the read's 2033–2035 span lies wholly past the date.
-    const PROVISIONAL_CROWN = 7
-    const FINAL_CROWN = 7
+  // crowns are the date search's own, run here at both tiers through the app's call (`runDateSearch` on
+  // `buildDateInput`, as `devSeeds.test.ts`'s crown arms do), never typed from a probe: the whole-file review's round 1
+  // (findings #2 and #8) found the seed's defining fact held only by two typed constants, so a drift in the search left
+  // "the stop falls before the span" comparing a constant with a constant.
+  it('the crowned household: both tiers crown a stop before its 2033–2035 span, which the read still names; the candidate at the final crown credits at most each span’s figure in every year it works, and nothing past its stop', { timeout: 240_000 }, async () => {
+    const d = TYPED_BELOW_WITNESSES.crowned
+    const input = buildDateInput(d)
+    if (input === null || d.seed === undefined) throw new Error('[test setup] the crowned household builds a date input and carries a seed')
     const read = readOf('crowned')
     const lastSpan = read.spans[read.spans.length - 1]!
     expect([lastSpan.firstYear, lastSpan.lastYear], 'the read names 2033–2035').toEqual([2033, 2035])
-    for (const crown of [PROVISIONAL_CROWN, FINAL_CROWN]) expect(2026 + crown, 'the stop falls before the span').toBeLessThanOrEqual(lastSpan.firstYear)
-    const candidate = overlayCredits(TYPED_BELOW_WITNESSES.crowned, FINAL_CROWN)
-    expect(candidate.length, 'no working year past the stop composes a credit').toBe(FINAL_CROWN)
+    let finalCrown: number | null = null
+    for (const tier of ['provisional', 'final'] as const) {
+      const out = await runDateSearch(input, d.seed, { tier })
+      expect(out.kind, `${tier}: a dates outcome`).toBe('dates')
+      if (out.kind !== 'dates') return
+      // The kinds before the narrowing guard (insight 029): a track that crowned nothing would skip every pin below.
+      expect(out.floor.kind, `${tier}: the floor crowns a confirmed date`).toBe('confirmed-date')
+      expect(out.lifestyle.kind, `${tier}: the lifestyle track crowns a confirmed date`).toBe('confirmed-date')
+      if (!('offsetYears' in out.floor) || !('offsetYears' in out.lifestyle)) return
+      // At Alex's $1,600,000 (`CROWNED_401K`) both tracks crown offset 7 on both tiers (the provisional on the 0.85 bar with
+      // no margin, the final at 0.86): the household works 2026 through 2032, so the read's 2033–2035 span lies wholly
+      // past the date.
+      expect(out.floor.offsetYears, `${tier}: the floor's crown`).toBe(7)
+      expect(out.lifestyle.offsetYears, `${tier}: the lifestyle track's crown`).toBe(7)
+      expect(2026 + out.lifestyle.offsetYears, `${tier}: the stop falls before the span`).toBeLessThanOrEqual(lastSpan.firstYear)
+      if (tier === 'final') finalCrown = out.lifestyle.offsetYears
+    }
+    if (finalCrown === null) throw new Error('[test setup] the final tier crowned')
+    // The candidate is built from the offset the final tier RETURNED, so a crown that moves moves the check with it.
+    const candidate = overlayCredits(d, finalCrown)
+    expect(candidate.length, 'no working year past the stop composes a credit').toBe(finalCrown)
     candidate.forEach((credits, t) => {
       const year = 2026 + t
       const span = read.spans.find((s) => s.firstYear <= year && year <= s.lastYear)!

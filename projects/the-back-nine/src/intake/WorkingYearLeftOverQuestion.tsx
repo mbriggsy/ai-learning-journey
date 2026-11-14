@@ -50,7 +50,7 @@ import { LEFT_OVER_FACE, type LeftOverShownState } from './workingYearLeftOverSt
  *  stored one — the stored figure is then the smaller, the one a year adds at most (R8), and the line gives the
  *  household that saves it but not all of today's its own way out; where today's FELL, it is already the one
  *  credited — and the typed figure today's rests on, where the core carries one (U11 walk 7's R2: the line then
- *  names it, beside the at-quote sentences below it). A state with no group draws no line. */
+ *  names it, beside the typed-below spans below it). A state with no group draws no line. */
 const LINE: Readonly<
   Record<
     LeftOverShownState,

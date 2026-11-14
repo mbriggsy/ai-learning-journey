@@ -23,7 +23,7 @@
  * because all three read the left-over answer and the money picture, which `workingYearQuote` cannot import (KTD2).
  */
 import type { WorkingYearLedgerLaterYear, WorkingYearLeftOverKind, WorkingYearLeftOverV5 } from '@shared/model'
-import { workingYearBottomLine, workingYearCredit, workingYearCreditBinding, type WorkingYearCreditBinding } from '@engine/moneyGrain'
+import { toCents, workingYearBottomLine, workingYearCredit, workingYearCreditBinding, type WorkingYearCreditBinding } from '@engine/moneyGrain'
 import type { ScenarioDraft } from '@store/memoryModel'
 import {
   LEFT_OVER_WAITING_COPY,
@@ -737,8 +737,10 @@ export interface TypedBelowDollars {
 /** A run of adjacent working years of one kind (KTD3), with the figures its words need, each on the printed grain:
  *  `credit` and `creditAtQuote`, each answer's credit; `shortAtQuote` and `shortAtTyped`, the year's shortfall there
  *  (positive); `difference`, each year's credit less its shortfall at the typed figure, against the same at the quote
- *  (what this answer adds beyond, or takes less than, the answer at the quote), worked on the printed figures. A credit
- *  range survives only where one binding term drifts; a shortfall or difference range is a fact of the picture. */
+ *  (what this answer adds beyond, or takes less than, the answer at the quote), worked on the printed figures, except the
+ *  still-short kind's: the two draws' difference on the cent grain, rounded up ({@link stillShortDifferenceDollars}; R5
+ *  over V9), never the two printed shortfalls subtracted. A credit range survives only where one binding term drifts; a
+ *  shortfall or difference range is a fact of the picture. Every figure is the ALL-ALIVE picture's. */
 export type TypedBelowSpan = { readonly firstYear: number; readonly lastYear: number } & (
   | { readonly kind: 'same' }
   | { readonly kind: 'bothCredit'; readonly credit: TypedBelowDollars; readonly creditAtQuote: TypedBelowDollars; readonly difference: TypedBelowDollars }
@@ -854,12 +856,17 @@ const differenceDollars = (y: TypedBelowYear): number =>
  *  the printed figures (R6, V9) it is two shortfalls each printed rounded UP, and their difference can land up to 99¢
  *  under the draws the engine really takes (C at $8,416.67 a month: $4,015 − $16 = $3,999, where the engine draws
  *  $3,999.96 less), so the "at most" would be false, on the rosy side. R5 wins over V9 (the whole-file review of the
- *  rebuild, round 1, finding #1; the pilot's call, flagged for walk 8): the raw draws' difference, snapped to the cent and
- *  rounded up, so the figure can sit $1 above its own two printed shortfalls' difference but never under the engine.
- *  Every other kind's figure already sits at or above the engine's (a printed credit never sits under its raw credit:
- *  the credit rule's min holds the year's own print). */
+ *  rebuild, round 1, finding #1; the pilot's call, flagged for walk 8): the two draws' difference on the money
+ *  picture's grain, each cash snapped to the cent first exactly as its printed shortfall is (`toCents`, insight 146),
+ *  then rounded up to the dollar. It never sits under the engine's draws on that grain, never under the reader's
+ *  subtraction of the two printed shortfalls, and at most $1 over it (round 2, finding #2: snapping the raw DIFFERENCE
+ *  instead let a typed figure with sub-cent digits, or two cashes each a hair past a cent, print a dollar under both).
+ *  Every other kind's figure already sits at or above the engine's on that grain (a printed credit never sits under its
+ *  raw credit: the credit rule's min holds the year's own print). All of this is the ALL-ALIVE picture: on a path where
+ *  one of you has died nobody is credited and W follows the survivor rule, so a comparison there can run past these
+ *  figures (round 2, finding #1; the council's ruling governs the words). */
 const stillShortDifferenceDollars = (y: TypedBelowYear): number =>
-  Math.ceil(Math.round((Math.max(0, -y.cashAtQuote) - Math.max(0, -y.cash)) * 100) / 100)
+  Math.ceil((Math.max(0, -toCents(y.cashAtQuote)) - Math.max(0, -toCents(y.cash))) / 100)
 
 type SpanFigures = {
   readonly [K in TypedBelowYearKind]: (years: readonly TypedBelowYear[]) => Omit<Extract<TypedBelowSpan, { kind: K }>, 'firstYear' | 'lastYear'>

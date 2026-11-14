@@ -1260,6 +1260,8 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
     // each year's own left over at the typed figure, $16,985 to $17,348, $21,000 a year past the quote's draw.
     const block = document.querySelector<HTMLElement>('.left-over__at-quote')
     expect(block?.tagName, 'three spans draw the block').toBe('DIV')
+    // The block ends the seat: intake.css drops its trailing margin by `:last-child` (the design read, round 2's #9).
+    expect(block!.parentElement?.lastElementChild, 'the block is the seat’s last child').toBe(block)
     expect(block!.querySelector('.note-parts__opening')?.textContent).toBe(
       `${STEP_COUNTS('84,000', '105,000')} What this answer adds to your savings in each working year:`,
     )

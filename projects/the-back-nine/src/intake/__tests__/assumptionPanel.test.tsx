@@ -1674,6 +1674,8 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     expect(block?.tagName, 'two or more spans draw the block').toBe('DIV')
     expect(block?.classList.contains('note-parts')).toBe(true)
     expect(group.compareDocumentPosition(block!) & Node.DOCUMENT_POSITION_FOLLOWING, 'the block sits below the group').toBeTruthy()
+    // …and ends the seat: intake.css drops the block's trailing margin by `:last-child` (the design read, round 2's #9).
+    expect(block!.parentElement?.lastElementChild, 'the block is the seat’s last child').toBe(block)
     expect([...block!.querySelectorAll('dt')].map((dt) => dt.textContent)).toEqual(['2026 through 2028', '2029 through 2032', '2033 through 2035'])
     expect(block!.querySelector('.note-parts__opening')?.textContent).toBe(SPANS_LEAD)
     // The pair's basis (back-nine-design's round-6 law): the moved line names the typed figure in the gate's own words,

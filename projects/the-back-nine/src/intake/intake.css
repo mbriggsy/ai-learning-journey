@@ -842,8 +842,9 @@
 
 /* The typed-below spans at two or more (`NotePartsBlock`, the whole-window rebuild's KTD6, host 3) end the seat: they keep
  * the block's breathing room above (the seat's gap plus noteParts.css's --space-4, a section break from the answer's line),
- * but nothing follows them inside the seat, so the block's own --space-4 below would only pad the row's foot 16 px past
- * every other row's. `.left-over >` + `:last-child` outranks noteParts.css's `div.note-parts`. */
+ * but nothing follows them inside the seat, so the block's own --space-4 below would only pad the end: the sheet row's foot
+ * 16 px past every other row's, and on the money-picture step the gap above the step's buttons 16 px past the one-span
+ * seat's. `.left-over >` + `:last-child` outranks noteParts.css's `div.note-parts`; the fit gate's unlock arms read it. */
 .left-over > div.note-parts:last-child {
   margin-block-end: 0;
 }

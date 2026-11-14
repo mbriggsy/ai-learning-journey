@@ -2701,6 +2701,18 @@ for (const u of PAY_CHECK_UNLOCKS) {
         } else {
           await assertTappableInSheet(row.getByRole('button', { name: u.sheet.keep, exact: true }), `${u.key}: "${u.sheet.keep}"`)
         }
+        // The rebuild's host 3 in a real browser (round 2, finding #9: jsdom loads no stylesheet): where the line speaks
+        // two or more spans, the left-over seat below draws them as one block whose labels are a step above their text in
+        // the body face, at this width where the control sheet's laptop rule widens `.field-help`; and the block ends the
+        // seat with no trailing margin (intake.css's `.left-over > div.note-parts:last-child`, the design read).
+        if (u.standingLabels !== undefined) {
+          const seatBlock = dialog.locator('[data-assumption-seat="working-year-left-over"] .left-over > div.note-parts')
+          await expect(seatBlock, `${u.key}: the left-over seat draws its spans as one block`).toHaveCount(1)
+          await expect(seatBlock.locator('dt'), `${u.key}: one label per span in the seat`).toHaveText([...u.standingLabels])
+          await assertLabelType(seatBlock, `${u.key}: the seat's spans`)
+          const foot = await seatBlock.evaluate((el) => ({ last: el.parentElement?.lastElementChild === el, end: getComputedStyle(el).marginBlockEnd }))
+          expect(foot, `${u.key}: the spans end the seat with no trailing margin`).toEqual({ last: true, end: '0px' })
+        }
       }
     })
   })

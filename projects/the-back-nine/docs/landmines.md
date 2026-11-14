@@ -289,6 +289,7 @@ even when one exists; the plain `/` route is the Unlock check.
 - **(2026-09-08)** jsdom 29 has NO
 `document.scrollingElement` (the TS lib types it non-optional) — the guard must be nullish, a `!== null` check threw in 60
 tests
+- **(b9-2, 11-14) The crown test runs two date searches** (~40 s in `workingYearCredit.test.ts`, timeout 240 s): run the suite pinned and alone, never raise the timeout. The crowned seed's provisional crown sits on the bar (margin 0): if walk 8 shows another offset, the test reds first; read its log before the line.
 
 ## The fit gate and e2e
 

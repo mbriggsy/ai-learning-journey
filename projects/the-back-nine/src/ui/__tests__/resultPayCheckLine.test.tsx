@@ -349,19 +349,21 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
   })
 })
 
-// U11 walk 6's R1: a FRESH typed W below today's quote — no stale line ever names it (a typed figure is never staled on a
-// quote, KTD10) — takes the standing slot in W's plain form, the update act's button inline after it. Every sentence is
-// typed by hand from the seeds' documented figures (`datesavedtyped`: $84,000 typed under a $90,000 spending figure,
-// "All of it" stored at $16,985, year 0 at the quote $10,985).
+// U11 walk 6's R1, rebuilt over the whole working window (the rebuild's KTD6, host 1): a FRESH typed W below today's
+// quote — no stale line ever names it (a typed figure is never staled on a quote, KTD10) — takes the standing slot, the
+// update act's button with it. One span is the slot's plain <p>, the button inline; two or more are the labelled block,
+// its button drawn last as a block of its own (the block carries no door, so `FuckOffDate`'s parts branch passes the
+// button wherever the tab can act). Every sentence typed by hand from the seeds' documented figures (`datesavedtyped`:
+// $84,000 typed under a $90,000 spending figure, "All of it" stored at $16,985, the quote answer's $10,985 in every year).
 describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
   const TYPED_LINE =
     'This answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. ' +
     'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
-    'It adds at most $16,985 a year to your savings. At $90,000 a year, your first working year, 2026, has $10,985 left over. ' +
-    'That year, this answer adds $6,000 your pay doesn’t really leave over.'
+    'Each working year, this answer adds at most $16,985 a year to your savings. ' +
+    'At your spending of $90,000 a year, it would add at most $10,985, $6,000 less.'
   const updateDoor = () => screen.queryByRole('button', { name: 'Update your figure for a working year' })
 
-  it('`datesavedtyped`: the line in the slot’s plain <p>, byte for byte — no lead before it, its own first sentence names the answer and both figures — and the update door inline, which lands on the W row', () => {
+  it('`datesavedtyped` (one span): the line in the slot’s plain <p>, byte for byte — no lead before it, its own first sentence names the answer and both figures — and the update door inline, which lands on the W row', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedtyped)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
@@ -382,36 +384,57 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     expect(updateDoor()).toBeNull()
   })
 
-  it('the left over ALSO moved (`datesavedrisenlater` retyped: $26,985 at $84,000 against the stored $16,985): the typed-below line holds the one slot and carries the moved clause in place of its credit sentence — no moved line of its own; where a rules line hosts that clause at unlock, the line says no cap of its own (the clause says it, U11 walk 7’s R3 (c)); either way the clause names the $84,000 its $26,985 rests on, beside the quote’s $5,985 (the round review’s pair)', () => {
-    const later = DEV_SEEDS.datesavedrisenlater
-    const w = later.workingYearCost
-    if (w === undefined) throw new Error('[test setup] the witness holds a W')
-    const retyped = { ...later, workingYearCost: { kind: 'entered' as const, amountReal: 84_000, entryPeriod: 'year' as const, stateTaxReading: w.stateTaxReading } }
-    const COUNTS =
-      'This answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. ' +
-      'A working year almost always costs at least what you spend, so this answer can look better than it really is.'
-    const AT_QUOTE =
-      'At $105,000 a year, your first working year, 2026, has $5,985 left over. That year, this answer adds $11,000 your pay doesn’t really leave over. ' +
-      'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
-      'Your $84,000 figure leaves those shortfalls out of this answer: at that figure, those years have money left over, and it adds $16,985 to your savings in each of them.'
-    const MOVED_AT_TYPED =
-      'You said all of it goes into your savings when your first working year had $16,985 left over. At your $84,000 figure, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
+  // TM (`datesavedtypedmoved`: $26,985 at $84,000 against the stored $16,985, $105,000 of spending): three spans.
+  const COUNTS =
+    'This answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. ' +
+    'A working year almost always costs at least what you spend, so this answer can look better than it really is.'
+  const MOVED_AT_TYPED =
+    'You said all of it goes into your savings when your first working year had $16,985 left over. At your figure of $84,000 a year, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
+  const BOTH = 'This answer adds at most $16,985 a year to your savings. At your spending of $105,000 a year, it would add at most $5,985, $11,000 less.'
+  const TM_SEGMENTS: readonly (readonly [string, string])[] = [
+    ['2026 through 2028', BOTH],
+    [
+      '2029 through 2032',
+      'At your spending of $105,000 a year, each working year comes up $3,652 to $4,015 short, and this answer would add nothing. ' +
+        'Your figure of $84,000 a year leaves those shortfalls out of this answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, plus any income tax on those shortfalls.',
+    ],
+    ['2033 through 2035', BOTH],
+  ]
+  const block = (opening: string, button: boolean): string =>
+    '<div class="note-parts fod-note cs-paycheck-note">' +
+    `<p class="note-parts__opening">${opening}</p>` +
+    '<dl class="note-parts__segments">' +
+    TM_SEGMENTS.map(([label, body]) => `<div class="note-parts__segment"><dt class="note-parts__label">${label}</dt><dd class="note-parts__body">${body}</dd></div>`).join('') +
+    '</dl>' +
+    (button ? '<button type="button" class="band-premise__cta note-parts__cta">Update your figure for a working year</button>' : '') +
+    '</div>'
+
+  it('TM (three spans, the left over ALSO moved): the typed-below line holds the one slot as a BLOCK — the counts sentence and the moved clause, then three labelled spans — its update button drawn last; no moved line of its own; where a rules line hosts the clause at unlock, the block opens on the counts sentence alone and the clause rides the rules note', () => {
+    expect(DEV_SEEDS.datesavedtypedmoved.workingYearCost).toMatchObject({ kind: 'entered', amountReal: 84_000 })
     plantDateHero()
-    appModel.update(() => retyped)
+    appModel.update(() => DEV_SEEDS.datesavedtypedmoved)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
     expect(document.querySelectorAll('.cs-paycheck-note')).toHaveLength(1)
-    expect(line()!.querySelector('span')!.textContent).toBe(`${COUNTS} ${MOVED_AT_TYPED} ${AT_QUOTE}`)
+    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${MOVED_AT_TYPED}`, true))
     expect(document.body.textContent, 'no moved line of its own').not.toContain(copy.stalenessLeftOverNote)
-    expect(updateDoor()).not.toBeNull()
+    expect(line()!.lastElementChild, 'the button is the block’s last child').toBe(updateDoor())
+    fireEvent.click(updateDoor()!)
+    expect(document.activeElement, 'the button lands on the W row').toBe(wRowName())
     cleanup()
     plantDateHero()
-    appModel.update(() => retyped)
+    appModel.update(() => DEV_SEEDS.datesavedtypedmoved)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} stalenessNote leftOverClauseHost />)
-    // The rules note hosts the clause, which says the cap: no second cap in the line (U11 walk 7's R3 (c)).
-    expect(line()!.querySelector('span')!.textContent).toBe(`${COUNTS} ${AT_QUOTE}`)
+    expect(line()!.outerHTML).toBe(block(COUNTS, true))
     expect(document.querySelector('.cs-staleness-note')?.textContent, 'the moved clause rides the rules note, its figure named there too').toBe(
       `${copy.stalenessHeroNote} ${MOVED_AT_TYPED}`,
     )
+    cleanup()
+    // A read-only tab draws the block with no button.
+    plantDateHero()
+    appModel.update(() => DEV_SEEDS.datesavedtypedmoved)
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
+    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${MOVED_AT_TYPED}`, false))
+    expect(updateDoor()).toBeNull()
   })
 
   it('W stale wins the slot over a typed figure stale on its reading (Florida picked after typing): W’s own stale line speaks, never the typed-below line', () => {

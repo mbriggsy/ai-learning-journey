@@ -13,9 +13,10 @@
  *  · every other state — the year-0 figure and the check sentence (the group's described-by lines, which
  *    read the picture, never the answer), the radio group (a static legend and static labels, nothing
  *    pre-checked), and one line in dollars BELOW the group, chosen by the state (R6) — then, under a carried
- *    "saved" answer on a fresh typed figure below today's spending, the typed-below line's at-quote sentences
- *    (U11 walk 7's R2). Nothing above the radios reads the answer: where a typed figure sits below the
- *    spending, the figure names it off W alone.
+ *    "saved" answer on a fresh typed figure below today's spending, the typed-below line's spans over the whole
+ *    working window (U11 walk 7's R2; the whole-window rebuild's KTD6, host 3: one span as a paragraph, two or more as
+ *    labelled parts). Nothing above the radios reads the answer: where a typed figure sits below the spending, the
+ *    figure names it off W alone.
  *
  * `draft` is the draft the face DRAWS: the walk's live draft; in the panel, the draft the gesture hold
  * drew at a press (`AssumptionPanel`'s `WorkingYearRows`). "All of it" stores the figure drawn here; the
@@ -30,6 +31,8 @@ import { useId, useMemo } from 'react'
 import type { WorkingYearLeftOverKind } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { slots } from '@ui/copy'
+import { NotePartsBlock } from '@ui/NotePartsBlock'
+import { isPlainNote } from '@ui/noteParts'
 import { SegmentedControl, formatMoney } from './fields'
 import { workingYearLeftOverDepositsLive, workingYearLeftOverLive, workingYearLeftOverShownState } from './intakeMap'
 import {
@@ -38,6 +41,7 @@ import {
   workingYearLeftOverTypedBelow,
   workingYearLeftOverWaitingSeat,
   writeWorkingYearLeftOver,
+  type TypedBelowSeatHost,
 } from './workingYearLeftOver'
 import { LEFT_OVER_FACE, type LeftOverShownState } from './workingYearLeftOverState'
 
@@ -81,11 +85,16 @@ const OPTIONS = [
 export function WorkingYearLeftOverQuestion({
   draft,
   onWrite,
+  typedBelowHost,
 }: {
   readonly draft: ScenarioDraft
   /** The host's commit seam (the walk's `api.update`, the panel's `commitOpen`). The write runs on the
    *  store's CURRENT draft. */
   readonly onWrite: (write: (d: ScenarioDraft) => ScenarioDraft) => void
+  /** Which home draws the seat, so whether the typed-below spans below the radios open on the counts sentence
+   *  (`TypedBelowSeatHost`: the panel's W row above carries the lean, the walk's money-picture step has none above).
+   *  Required: each home states it, and the seat never guesses its host. */
+  readonly typedBelowHost: TypedBelowSeatHost
 }) {
   const figureId = useId()
   const checkId = useId()
@@ -96,9 +105,9 @@ export function WorkingYearLeftOverQuestion({
   const deposits = useMemo(() => workingYearLeftOverDepositsLive(draft), [draft])
   const moved = useMemo(() => workingYearLeftOverMoved(draft), [draft])
   // U11 walk 7's R2: the typed figure the figure rests on (read off W alone, so the text above the radios stays the same
-  // under every answer, R6), and, under a carried "saved" answer, the typed-below line's at-quote sentences below them.
+  // under every answer, R6), and, under a carried "saved" answer, the typed-below line's spans below them.
   const typedBelow = useMemo(() => workingYearLeftOverTypedBelow(draft), [draft])
-  const atQuote = useMemo(() => workingYearLeftOverAtQuoteLine(draft), [draft])
+  const atQuote = useMemo(() => workingYearLeftOverAtQuoteLine(draft, typedBelowHost), [draft, typedBelowHost])
   const face = LEFT_OVER_FACE[state]
   const line = LINE[state]
   if (face === 'none' || live === null) return null
@@ -161,10 +170,16 @@ export function WorkingYearLeftOverQuestion({
           )}
         </p>
       )}
-      {/* The typed-below line's at-quote sentences (U11 walk 7's R2), after the per-answer line: what the household's
-          own spending leaves in year 0 and in its short years, beside what this answer credits. Below the radios because
-          they read the answer (R6); `workingYearLeftOverAtQuoteLine`'s docblock says why never above, in the W row. */}
-      {atQuote !== null && <p className="field-help left-over__at-quote">{atQuote}</p>}
+      {/* The typed-below line's spans (U11 walk 7's R2; the whole-window rebuild's KTD6, host 3), after the per-answer
+          line: in every working year, what this answer adds beside what the answer at the household's own spending would.
+          Below the radios because they read the answer (R6); `workingYearLeftOverAtQuoteLine`'s docblock says why never
+          above, in the W row. One span is its old paragraph; two or more, the labelled block every host draws. */}
+      {atQuote !== null &&
+        (isPlainNote(atQuote) ? (
+          <p className="field-help left-over__at-quote">{atQuote.opening}</p>
+        ) : (
+          <NotePartsBlock parts={atQuote} className="field-help left-over__at-quote" />
+        ))}
     </div>
   )
 }

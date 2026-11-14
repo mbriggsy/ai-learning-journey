@@ -140,13 +140,14 @@ export interface ReentryLeftOverStale {
 /** The gate's typed-below line (U11 walk 6's R1), composed by the caller from the HYDRATED draft
  *  (`workingYearCostTypedBelowLine` on the gate: a fresh TYPED W below today's quote, which the report never
  *  calls stale — a typed figure is never staled on a quote, KTD10 — so this is the only way the gate hears it):
- *  `text` — the line, one plain paragraph; `door` — the update act's door under the buttons
+ *  `line` — the line as parts (the whole-window rebuild's KTD6: one span folds into its opening, a plain note drawn as
+ *  its old paragraph; two or more draw one labelled part per span); `door` — the update act's door under the buttons
  *  (`workingYearCostTypedBelowDoor`); `canChange` — the tab can save (the door rides only then, the
  *  {@link ReentryPayCheckStale} door law). `null` where no fresh typed figure sits below the quote, or the run
  *  reads no W. No report fact goes with it: it is an answer read against today's quote, never a clock, so it
  *  feeds neither `anyStale` nor `rulesMoved`. */
 export interface ReentryTypedBelow {
-  readonly text: string
+  readonly line: NoteParts
   readonly door: GateDoor
   readonly canChange: boolean
 }
@@ -271,10 +272,11 @@ export function composeReentry(
       if (payCheckStale.canChange) door = payCheckStale.door
     }
   } else if (typedBelow !== null) {
-    // U11 walk 6's R1: a fresh TYPED W below today's quote, in W's place and W's plain form, with the update act's
-    // door. The caller builds it only on a fresh W, so it never meets W's stale line; were both handed over, W's
-    // line would win, as it does on the Result — the one standing slot there reads them in this order.
-    noteLines.push(typedBelow.text)
+    // U11 walk 6's R1: a fresh TYPED W below today's quote, in W's place, with the update act's door. The caller builds
+    // it only on a fresh W, so it never meets W's stale line; were both handed over, W's line would win, as it does on
+    // the Result — the one standing slot there reads them in this order. As parts, the way W's line is pushed (the
+    // whole-window rebuild's KTD6): a one-span line is a plain note, drawn as its old paragraph; two or more spans, a block.
+    noteLines.push({ text: notePartsText(typedBelow.line), parts: typedBelow.line })
     if (typedBelow.canChange) door = typedBelow.door
   }
   // Build 2's moved left over (R12): the household's own "saved" answer no longer matches today's

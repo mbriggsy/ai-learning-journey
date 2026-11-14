@@ -1237,7 +1237,13 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
     expect(textBeside(leftOverGroup(), 'above')).not.toBe(above[0])
   })
 
-  it('on a typed figure below the spending (`datesavedtypedmoved` unanswered: $84,000 typed under $105,000), the figure names the $84,000 it rests on; "All of it" adds the at-quote sentences BELOW the group, and "Spent" takes them away, while the text above stays put (U11 walk 7’s R2; R6)', () => {
+  // The rebuild's KTD6, host 3 (U5 test 4): on the walk's money-picture step nothing above the seat carries the lean (the
+  // W note lives on the W step), so the seat's spans open on the counts sentence in its "Your" form, then the seat's lead
+  // and one labelled part per span — all BELOW the radios, so a tap moves nothing above them (R6). Typed by hand.
+  const STEP_COUNTS = (typedFigure: string, quote: string) =>
+    `Your answer counts a working year at your own figure of $${typedFigure} a year, below your spending of $${quote} a year. A working year almost always costs at least what you spend, so this answer can look better than it really is.`
+
+  it('on a typed figure below the spending (`datesavedtypedmoved` unanswered: $84,000 typed under $105,000), the figure names the $84,000 it rests on; "All of it" draws the counts sentence, the lead and TM’s three spans as a block BELOW the group, and "Spent" takes them away, while the text above stays put (KTD6, host 3; R6)', () => {
     const m = modelWith(withLeftOver(DEV_SEEDS.datesavedtypedmoved, undefined))
     render(<LedgerStep model={m} />)
     const group = leftOverGroup()
@@ -1245,22 +1251,43 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
       slots.workingLedgerLeftOverFigureAt('84,000', '26,985'),
       slots.workingLedgerLeftOverCheck('26,985', '20,000', '46,985'),
     ])
+    expect(slots.workingLedgerLeftOverFigureAt('84,000', '26,985')).toBe('After everything above, at your figure of $84,000 a year, your first working year has $26,985 left over.')
     const above = textBeside(group, 'above')
-    const atQuote = (credit: string, extra: string) =>
-      `At $105,000 a year, your first working year, 2026, has $5,985 left over. That year, your answer adds $${extra} your pay doesn’t really leave over. ` +
-      'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
-      `Your $84,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds ${credit} to your savings in each of them.`
-    expect(screen.queryByText(/your first working year, 2026, has \$5,985 left over/)).toBeNull()
+    expect(document.querySelector('.left-over__at-quote'), 'no spans before an answer').toBeNull()
     pickLeftOver('workingLedgerLeftOverSaved')
     expect(leftOver(m)).toStrictEqual({ kind: 'saved', quotedReal: 26_985 })
-    // Stored at $26,985, the cap is $26,985: $21,000 past the quote's $5,985 in 2026, and in 2029–2032 each year's $21,000
-    // gap less its shortfall.
-    const line = screen.getByText(atQuote('between $16,985 and $17,348', '21,000'))
-    expect(group.compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING, 'below the group').not.toBe(0)
+    // Stored at $26,985, the cap is $26,985: $21,000 past the quote's $5,985 in 2026–2028 and 2033–2035, and in 2029–2032
+    // each year's own left over at the typed figure, $16,985 to $17,348, $21,000 a year past the quote's draw.
+    const block = document.querySelector<HTMLElement>('.left-over__at-quote')
+    expect(block?.tagName, 'three spans draw the block').toBe('DIV')
+    expect(block!.querySelector('.note-parts__opening')?.textContent).toBe(
+      `${STEP_COUNTS('84,000', '105,000')} What this answer adds to your savings in each working year:`,
+    )
+    const both = 'Your answer adds at most $26,985 a year to your savings. At your spending of $105,000 a year, it would add at most $5,985, $21,000 less.'
+    expect([...block!.querySelectorAll('.note-parts__segment')].map((row) => [row.querySelector('dt')?.textContent, row.querySelector('dd')?.textContent])).toEqual([
+      ['2026 through 2028', both],
+      [
+        '2029 through 2032',
+        'At your spending of $105,000 a year, each working year comes up $3,652 to $4,015 short, and your answer would add nothing. ' +
+          'Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most $16,985 to $17,348 a year to your savings, at most $21,000 a year more, plus any income tax on those shortfalls.',
+      ],
+      ['2033 through 2035', both],
+    ])
+    expect(group.compareDocumentPosition(block!) & Node.DOCUMENT_POSITION_FOLLOWING, 'below the group').not.toBe(0)
     expect(textBeside(leftOverGroup(), 'above'), 'the text above the group reads no answer').toBe(above)
     pickLeftOver('workingLedgerLeftOverSpent')
-    expect(screen.queryByText(/your first working year, 2026, has \$5,985 left over/)).toBeNull()
+    expect(document.querySelector('.left-over__at-quote'), '"Spent" takes the spans away').toBeNull()
     expect(textBeside(leftOverGroup(), 'above')).toBe(above)
+  })
+
+  it('A (`datesavedtyped`, one span) on the walk’s step: the counts sentence, then "Each working year," as ONE paragraph below the group', () => {
+    render(<LedgerStep model={modelWith(DEV_SEEDS.datesavedtyped)} />)
+    const p = document.querySelector('.left-over__at-quote')
+    expect(p?.tagName, 'one span is a paragraph').toBe('P')
+    expect(p?.textContent).toBe(
+      `${STEP_COUNTS('84,000', '90,000')} Each working year, your answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less.`,
+    )
+    expect(leftOverGroup().compareDocumentPosition(p!) & Node.DOCUMENT_POSITION_FOLLOWING, 'below the group').not.toBe(0)
   })
 
   it('absent’s line differs from not sure’s, and both name the $16,985', () => {

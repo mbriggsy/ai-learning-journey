@@ -2251,38 +2251,100 @@ const FOUR_BUCKET_READBACK = [
   'Alex',
   'Sam',
 ] as const
+/** The typed-below line's spans (the whole-window rebuild, `docs/plans/features/typed-below-whole-window-rebuild-spec.md`
+ *  KTD6/KTD7): each working year this answer's credit beside the credit the answer at today's quote would give, the years
+ *  grouped into spans, every word from the slots and every figure the engine's own on the seed (U3's witness table, the
+ *  research record's `witnesses.md`). A span's words in the order a block draws them, as `innerText` reads them: its label
+ *  (the dt), then its sentences (the dd). `typed` / `quote` — the typed-below pair as the W surfaces print it. */
+const spanFrame = (answer: 'This' | 'Your', first: number, last: number, typed: string, quote: string, opener = false) =>
+  ({ answer, opener, oneYear: first === last, typed, quote, budget: false }) as const
+const one = (x: string): readonly [string, string] => [x, x]
+const spanText = (first: number, last: number, sentences: readonly string[]): string =>
+  [slots.workingCostTypedBelowSpanLabel(first, last), ...sentences].join(' ')
+/** A `bothCredit` span at the typed $84,000 under the $105,000 quote: this answer's credit, then the quote answer's and
+ *  the difference beside the pair. */
+const bothCreditSpan = (
+  answer: 'This' | 'Your',
+  first: number,
+  last: number,
+  creditAtQuote: readonly [string, string],
+  difference: readonly [string, string],
+): string => {
+  const f = spanFrame(answer, first, last, '84,000', '105,000')
+  return spanText(first, last, [
+    slots.workingCostTypedBelowSpanCredit(f, one('16,985')),
+    slots.workingCostTypedBelowSpanAtQuoteCredit(f, creditAtQuote, difference),
+  ])
+}
+/** A `shortLeftOverAtTyped` span at the typed $84,000 under the $105,000 quote: the quote's shortfall and its nothing,
+ *  then the ruled clause, this answer's $16,985, the whole yearly difference and the tax rider. */
+const shortLeftOverSpan = (
+  answer: 'This' | 'Your',
+  first: number,
+  last: number,
+  short: readonly [string, string],
+  difference: readonly [string, string],
+): string => {
+  const f = spanFrame(answer, first, last, '84,000', '105,000')
+  return spanText(first, last, [
+    slots.workingCostTypedBelowSpanShortNothing(f, short),
+    slots.workingCostTypedBelowSpanShortOut(f, one('16,985'), difference),
+  ])
+}
 /** U11 walk 6's R1 on `datesavedtyped` (`datesavedrisen` with its old $84,000 TYPED back in, fresh): the typed-below
- *  line, "Your" on the gate and "This" on the Result, in W's plain form — the credit at the typed figure ($16,985 a
- *  year) and year 0 at the $90,000 quote ($10,985). Its door is the update act's, naming the same $84,000. */
-const typedBelowLine = (answer: 'This' | 'Your'): string =>
-  [
+ *  line, "Your" on the gate and "This" on the Result — the counts sentence, then its ONE span over the whole window
+ *  (A: $16,985 against $10,985 in every year, 2026–2035), folded into the opening as a plain paragraph with no label
+ *  (a one-span line of a credit kind opens "Each working year,"). Its door is the update act's, naming the same $84,000. */
+const typedBelowLine = (answer: 'This' | 'Your'): string => {
+  const f = spanFrame(answer, 2026, 2035, '84,000', '90,000', true)
+  return [
     slots.workingCostTypedBelowCounts(answer, '84,000', '90,000'),
-    slots.workingCostTypedBelowAdds('16,985'),
-    slots.workingCostTypedBelowAtQuoteLeftOver('90,000', 2026, '10,985'),
-    // U11 walk 7's R4: the year's $6,000 the credit counts past what $90,000 leaves.
-    slots.workingCostTypedBelowYearExtra(answer, '6,000'),
+    slots.workingCostTypedBelowSpanCredit(f, one('16,985')),
+    slots.workingCostTypedBelowSpanAtQuoteCredit(f, one('10,985'), one('6,000')),
   ].join(' ')
+}
 /** The walk-6 round review's pair on `datesavedtypedmoved` (`datesavedrisenlater` with its old $84,000 TYPED back in, the
- *  left over moved to $26,985 at it): R1's line, "Your" on the gate (no credit sentence: the moved line after it says the
- *  cap), "This" on the Result with the moved clause naming the $84,000 in the credit sentence's place; then year 0 at the $105,000 quote ($5,985) and the 2029–2032 run. On the
- *  gate the moved line follows as its own line (one cause, one line), naming the same figure. U11 walk 7: no second cap
- *  on the gate (`middle` null: the moved line says it, R3 (c)); 2026's $11,000 past the quote's $5,985 (R4); and what the
- *  answer does in the 2029–2032 run at the typed figure (R1). */
+ *  left over moved to $26,985 at it): R1's line as a block of three labelled spans (TM: 2026 through 2028, $16,985
+ *  against $5,985; the 2029–2032 run $3,652 to $4,015 short at $105,000; 2033 through 2035, $16,985 against $5,985 — the
+ *  years the old year-0 line called $762), "Your" on the gate with no moved clause (the moved line follows as its own
+ *  note: one cause, one line), "This" on the Result with the moved clause after the counts sentence (`middle`). Each
+ *  span states the pair, so the cap is said in the moved words and again in each span (KD2's second pilot call, read
+ *  by walk 8). */
+const TYPED_MOVED_LABELS = ['2026 through 2028', '2029 through 2032', '2033 through 2035'] as const
 const typedMovedLine = (answer: 'This' | 'Your', middle: string | null): string =>
   [
     slots.workingCostTypedBelowCounts(answer, '84,000', '105,000'),
     ...(middle === null ? [] : [middle]),
-    slots.workingCostTypedBelowAtQuoteLeftOver('105,000', 2026, '5,985'),
-    slots.workingCostTypedBelowYearExtra(answer, '11,000'),
-    slots.workingCostTypedBelowAtQuoteLaterShort(2029, 2032, '3,652', '4,015'),
-    slots.workingCostTypedBelowShortCredit(answer, '84,000', false, '16,985', '16,985'),
+    bothCreditSpan(answer, 2026, 2028, one('5,985'), one('11,000')),
+    shortLeftOverSpan(answer, 2029, 2032, ['3,652', '4,015'], ['20,637', '21,000']),
+    bothCreditSpan(answer, 2033, 2035, one('5,985'), one('11,000')),
   ].join(' ')
+/** The rebuild's five-span household on `datesavedtypedpension` (`datesavedrisenlater` plus Sam's $9,000 pension at 64
+ *  and 65, the old $84,000 typed back in): the pension lifts 2030 and 2031 above $0 at $105,000, so its short years at
+ *  the quote split into two one-year spans, 2029 and 2032 ("that working year", "that shortfall"), around a drifting
+ *  2030–2031 span ($3,005 to $3,368 at the quote). Saved-moved as TM is (year 0 $26,985 at the typed figure), so the
+ *  same `middle` on the Result and the same moved line after it on the gate. */
+const TYPED_PENSION_LABELS = ['2026 through 2028', '2029', '2030 through 2031', '2032', '2033 through 2035'] as const
+const typedPensionLine = (answer: 'This' | 'Your', middle: string | null): string =>
+  [
+    slots.workingCostTypedBelowCounts(answer, '84,000', '105,000'),
+    ...(middle === null ? [] : [middle]),
+    bothCreditSpan(answer, 2026, 2028, one('5,985'), one('11,000')),
+    shortLeftOverSpan(answer, 2029, 2029, one('4,015'), one('21,000')),
+    bothCreditSpan(answer, 2030, 2031, ['3,005', '3,368'], ['13,617', '13,980']),
+    shortLeftOverSpan(answer, 2032, 2032, one('3,652'), one('20,637')),
+    bothCreditSpan(answer, 2033, 2035, one('5,985'), one('11,000')),
+  ].join(' ')
+/** The moved clause the Result's slot carries on TM and the pension household (no rules line hosts it there). */
+const TYPED_MOVED_CLAUSE = slots.stalenessLeftOverClauseAt('84,000', '16,985', '26,985', '16,985')
 const TYPED_MOVED_GATE_MOVED_LINE = `${copy.stalenessLeftOverNote} ${slots.stalenessLeftOverMovedAt('84,000', '16,985', '26,985', '16,985')} ${copy.stalenessLeftOverGateDoor}`
 /** `note` — the gate's one note (its text, read as `innerText`); `next` — a second note, its own cause, where the gate
  *  draws two (only the typed-and-moved arm), checked in order. `gateDoor` — the gate's door section, or `null` where
  *  none is drawn (W not stale). `standing` — the Result's standing-slot lead and line (before its door), or `null`
  *  where the answer carries none (the fresh-vintage `wyclock`). `resultDoor` — the standing slot's door as its last
- *  dt/dd (the block), or `null` where the slot is its old `<p>` with the button inline. `dated` — whether the affirm
+ *  dt/dd (the block), or `null` where the slot is its old `<p>` with the button inline — or, with `standingLabels`, a
+ *  block with NO door (the typed-below line at two or more spans: its labels in order, its button the block's last
+ *  child). `dated` — whether the affirm
  *  lands a crowned date (`assertResolvedDate`) or the no-date reading (`assertNoDateReading`). `sheet` — the Result
  *  door that opens the panel at the W row, and the Keep door's label there (`null` where none is drawn), or `null`
  *  where the slot opens no W row. `readback` — the gate's read-back labels in order, where the arm pins them. */
@@ -2294,6 +2356,7 @@ const PAY_CHECK_UNLOCKS: readonly {
   readonly sibling: string
   readonly standing: string | null
   readonly resultDoor: ResultDoorWords | null
+  readonly standingLabels?: readonly string[]
   readonly dated: boolean
   readonly sheet: { readonly cta: string; readonly keep: string | null } | null
   readonly readback: readonly string[] | null
@@ -2367,15 +2430,34 @@ const PAY_CHECK_UNLOCKS: readonly {
   },
   // The pair (b9-5): R1's line and the moved line on one gate — the tallest R1 gate — each figure naming what it rests on;
   // the Result's slot carries the moved clause in R1's line. No date within the window (the final tier's top rung 0.80,
-  // b9-5's probe, against `datesavedrisenlater`'s 0.74).
+  // b9-5's probe, against `datesavedrisenlater`'s 0.74). Since the whole-window rebuild R1's line is a block of three
+  // labelled spans on both hosts, the Result's with no door of its own (its button the block's last child).
   {
     key: 'datesavedtypedmoved',
     note: typedMovedLine('Your', null),
     next: TYPED_MOVED_GATE_MOVED_LINE,
     gateDoor: UPDATE_GATE_DOOR,
     sibling: copy.stalenessPayCheckGateLead,
-    standing: typedMovedLine('This', slots.stalenessLeftOverClauseAt('84,000', '16,985', '26,985', '16,985')),
+    standing: typedMovedLine('This', TYPED_MOVED_CLAUSE),
     resultDoor: null,
+    standingLabels: TYPED_MOVED_LABELS,
+    dated: false,
+    sheet: UPDATE_SHEET,
+    readback: null,
+  },
+  // The rebuild's five-span household (walk 8's first added target): the longest R1 line, five labelled spans on the
+  // gate above the decision pair, then the moved line as its own note. No date within the window on either tier
+  // (probed node-side through the app's own date search, b9-1: `no-date-in-window` on the floor and lifestyle tracks,
+  // provisional and final).
+  {
+    key: 'datesavedtypedpension',
+    note: typedPensionLine('Your', null),
+    next: TYPED_MOVED_GATE_MOVED_LINE,
+    gateDoor: UPDATE_GATE_DOOR,
+    sibling: copy.stalenessPayCheckGateLead,
+    standing: typedPensionLine('This', TYPED_MOVED_CLAUSE),
+    resultDoor: null,
+    standingLabels: TYPED_PENSION_LABELS,
     dated: false,
     sheet: UPDATE_SHEET,
     readback: null,
@@ -2406,6 +2488,37 @@ async function assertStandingBlock(standing: Locator, who: string, lineText: str
   const button = await doorPart.locator('dd > button').boundingBox()
   expect(button, `${who}: the door's button has no box`).not.toBeNull()
   expect(button!.height, `${who}: the door's button is at least 44 px tall`).toBeGreaterThanOrEqual(44)
+}
+
+/** The standing slot drawn as a block with NO door (the typed-below line at two or more spans, the whole-window
+ *  rebuild's KTD6 host 1): still one `.cs-paycheck-note`, now `div.note-parts`; its words — the opening, then each span's
+ *  label and sentences — in order, read as `innerText` (a block's `textContent` runs its parts together); exactly the
+ *  labels given, one segment each, and no door part; the label type; and the Result's button ("Update your figure for a
+ *  working year") still drawn wherever the tab can act, as the block's LAST child and a block at least 44 px tall
+ *  (`FuckOffDate` passes it whenever `onOpen` is set; before the rebuild a doorless block dropped it). */
+async function assertDoorlessStandingBlock(
+  standing: Locator,
+  who: string,
+  lineText: string,
+  labels: readonly string[],
+  cta: string,
+): Promise<void> {
+  await expect(standing, `${who}: the standing slot is drawn as a block`).toHaveClass(/(^|\s)note-parts(\s|$)/)
+  await expect(standing, `${who}: the standing slot speaks its opening, then every span, in order`).toContainText(lineText, {
+    useInnerText: true,
+  })
+  await expect(standing.locator('.note-parts__segment'), `${who}: one labelled part per span`).toHaveCount(labels.length)
+  await expect(standing.locator('dt'), `${who}: each span's years are its label, in time order`).toHaveText([...labels])
+  await expect(standing.locator('.note-parts__door'), `${who}: the typed-below block carries no door part`).toHaveCount(0)
+  await assertLabelType(standing, who)
+  const last = await standing.evaluate((el) => {
+    const c = el.lastElementChild
+    return c === null ? null : { tag: c.tagName, text: c.textContent ?? '' }
+  })
+  expect(last, `${who}: the block's button is its last child`).toEqual({ tag: 'BUTTON', text: cta })
+  const button = await standing.locator(':scope > button').boundingBox()
+  expect(button, `${who}: the block's button has no box`).not.toBeNull()
+  expect(button!.height, `${who}: the block's button is at least 44 px tall`).toBeGreaterThanOrEqual(44)
 }
 
 /** Council `wf_22858e04-f7a` (1)'s label type, in a real browser (jsdom loads no stylesheet; the walk-6 round review's
@@ -2553,10 +2666,12 @@ for (const u of PAY_CHECK_UNLOCKS) {
       const standing = page.locator('.cs-paycheck-note')
       await expect(standing).toHaveCount(u.standing === null ? 0 : 1)
       if (u.standing !== null) {
-        if (u.resultDoor === null) {
-          await expect(standing, `${u.key}: the standing slot speaks the gate’s cause`).toContainText(u.standing)
-        } else {
+        if (u.resultDoor !== null) {
           await assertStandingBlock(standing, u.key, u.standing, u.resultDoor)
+        } else if (u.standingLabels !== undefined) {
+          await assertDoorlessStandingBlock(standing, u.key, u.standing, u.standingLabels, copy.stalenessPayCheckCtaUpdate)
+        } else {
+          await expect(standing, `${u.key}: the standing slot speaks the gate’s cause`).toContainText(u.standing)
         }
       }
       const doors = await page.locator('.result-quiet-row').boundingBox()
@@ -3067,7 +3182,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2108-2112 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2112-2116 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,
@@ -3762,6 +3877,32 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
     })
   })
 
+  // ── the whole-window rebuild's five-span line in the Result's standing slot (walk 8's first added target;
+  //    `datesavedtypedpension`): no typed-below seed had a placement arm. A block of five labelled spans with no door of
+  //    its own, its button its last child; the lead's last note and before the graphs (the no-date reading draws no band,
+  //    so at PHONE no first graph to sit above), doors last. The date route scrolls, so no one-frame claim: whether five
+  //    segments read as a wall is walk 8's read. ──
+  test.describe(`the typed-below line’s five spans on ?seed=datesavedtypedpension (${vp.name})`, () => {
+    test.use(vp.use)
+
+    test('the block sits in the lead after the other notes, above the graphs, doors last; five labelled spans, its button last', async ({ page }) => {
+      await gotoSeedFinal(page, 'datesavedtypedpension')
+      await assertNoDateReading(page)
+      const line = page.locator('.fod-reveal .reveal__lead > div.note-parts.fod-note.cs-paycheck-note')
+      await expect(line, 'the typed-below block renders in the lead').toHaveCount(1)
+      await assertDoorlessStandingBlock(
+        line,
+        'datesavedtypedpension',
+        typedPensionLine('This', TYPED_MOVED_CLAUSE),
+        TYPED_PENSION_LABELS,
+        copy.stalenessPayCheckCtaUpdate,
+      )
+      // ONE CAUSE, ONE LINE: the moved line's own lead never shares the slot this line holds.
+      await expect(line).not.toContainText(copy.stalenessLeftOverNote)
+      await assertStandingLinePlaced(page, line, vp.use.viewport.width === PHONE.width, false)
+    })
+  })
+
   // ── build 2's left-over question in the panel and on the Result (U7, U14, U9) ───────────────────
   // The seat is its own row below the W row (KTD8), drawn with the W row from ONE gesture hold
   // (`WorkingYearRows`, `gestureHold.ts`'s two-element arm). The figures are hand-derived in the unlock block
@@ -3914,15 +4055,19 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       await expect(seat.locator('.left-over__line'), 'the stored figure is not the one on screen at the press').toHaveText(
         slots.workingLedgerLeftOverRoseLineAt('72,000', '16,985', '28,985'),
       )
-      // …and below it, R2's at-quote line: year 0 at the $84,000 spending, whose $16,985 is also the credit (the
-      // stored figure), so no year extra rides it. The only real-browser witness of the seat's at-quote line.
-      await expect(seat.locator('.left-over__at-quote')).toHaveText(slots.workingCostTypedBelowAtQuoteLeftOver('84,000', 2026, '16,985'))
+      // …and below it, the typed-below line's spans (the whole-window rebuild, KTD6 host 3): ONE `same` span, a plain
+      // paragraph in the sheet (the W row above carries the lean). The stored $16,985 caps both this answer and the answer
+      // at the $84,000 spending in every working year, so they add the same (KTD3) and no figure is printed. The only
+      // real-browser witness of the seat's line.
+      const sameSpan = (answer: 'This' | 'Your'): string =>
+        slots.workingCostTypedBelowSpanSame({ answer, opener: true, oneYear: false, typed: '72,000', quote: '84,000', budget: false })
+      await expect(seat.locator('p.left-over__at-quote')).toHaveText(sameSpan('Your'))
       // A second reader of the stored answer, off the panel: the Result's standing slot names the same two. The typed
       // $72,000 sits below `date`'s $84,000 of spending, so R1's typed-below line holds the slot (U11 walk 6,
-      // `3000a04c`) and carries the moved figures as its clause in place of its credit sentence (`TypedBelowHost`: no
-      // rules line hosts the clause here), naming the typed $72,000 its $28,985 rests on (the walk-6 round review's
-      // pair), then year 0 at the quote. Stored from the live render, the clause would be absent and the credit
-      // sentence would name $28,985; a lost tap would leave the first sentence alone.
+      // `3000a04c`) and carries the moved figures as its clause after its counts sentence (`TypedBelowHost`: no rules
+      // line hosts the clause here), naming the typed $72,000 its $28,985 rests on (the walk-6 round review's pair), then
+      // the one `same` span. Stored from the live render, the clause would be absent and the span would read $28,985
+      // against the quote answer's $16,985; a lost tap would leave the counts sentence alone.
       await page.keyboard.press('Escape')
       await expect(dialog).toHaveCount(0)
       const standing = page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')
@@ -3930,7 +4075,7 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
         [
           slots.workingCostTypedBelowCounts('This', '72,000', '84,000'),
           slots.stalenessLeftOverClauseAt('72,000', '16,985', '28,985', '16,985'),
-          slots.workingCostTypedBelowAtQuoteLeftOver('84,000', 2026, '16,985'),
+          sameSpan('This'),
         ].join(' '),
         { timeout: FINAL_TIER_MS },
       )

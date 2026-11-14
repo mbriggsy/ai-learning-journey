@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { WORKING_COST_ACT_COPY, copy, slots, staticDisclosures, HEDGE_TOKENS, type CopyKey } from '../copy'
+import { WORKING_COST_ACT_COPY, copy, slots, staticDisclosures, HEDGE_TOKENS, type CopyKey, type TypedBelowSpanFrame } from '../copy'
 import {
   lintCopy,
   isVerdictKey,
@@ -12,8 +12,18 @@ import {
 import { HAWK_BAN, LEFT_OVER_LEAN_BAN } from './hawkBan'
 import { DEV_SEEDS } from '../devSeeds'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { workingYearCostKeepCondition, workingYearCostStaleDoor, workingYearCostStaleLine, workingYearCostStaleLineText } from '@intake/workingYearLeftOver'
+import {
+  workingYearCostKeepCondition,
+  workingYearCostStaleDoor,
+  workingYearCostStaleLine,
+  workingYearCostStaleLineText,
+  workingYearCostTypedBelowDoor,
+  workingYearCostTypedBelowLine,
+  workingYearLeftOverAtQuoteLine,
+} from '@intake/workingYearLeftOver'
 import { heldYesBelowQuote } from '@intake/workingYearQuote'
+import { TYPED_BELOW_WITNESSES } from '@intake/__tests__/typedBelowWitnesses'
+import { notePartsText } from '../noteParts'
 
 /** The survival-claim corpus (council wf_6e72eca9-c20) — every phrasing a card could use to sell the
  *  crown as a survival win or a survival tie. Each SURVIVAL_CLAIMS pattern owns at least one sample
@@ -658,6 +668,13 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     }
   })
 
+  // The typed-below spans' frames (the whole-window rebuild's KTD7, `TypedBelowSpanFrame`): a one-span line on the Result
+  // (A: "Each working year, this answer…"), a several-year span on the gate or seat (TM's), and a one-year span on a
+  // budget's quote — so the samples below render each branch of the frame at least once between them.
+  const SPAN_ONE: TypedBelowSpanFrame = { answer: 'This', opener: true, oneYear: false, typed: '84,000', quote: '90,000', budget: false }
+  const SPAN_RUN: TypedBelowSpanFrame = { answer: 'Your', opener: false, oneYear: false, typed: '84,000', quote: '105,000', budget: false }
+  const SPAN_YEAR: TypedBelowSpanFrame = { answer: 'This', opener: false, oneYear: true, typed: '100,985', quote: '105,000', budget: true }
+
   // --- slots: render with representative args, then scan. Slots are the SANCTIONED numeric channel,
   //     so they are NOT free-numeral scanned; the verdict voice still must hold. Record<keyof typeof
   //     slots, …> makes a new slot without a sample a COMPILE error (no silent no-op — burned/070). ---
@@ -945,13 +962,16 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostTypedBelowCounts: slots.workingCostTypedBelowCounts('This', '84,000', '90,000'),
     workingCostTypedBelowCountsBudget: slots.workingCostTypedBelowCountsBudget('Your', '84,000', '90,000'),
     workingCostTypedBelowAdds: slots.workingCostTypedBelowAdds('16,985'),
-    workingCostTypedBelowYearExtra: slots.workingCostTypedBelowYearExtra('This', '6,000'),
-    workingCostTypedBelowShortCredit: slots.workingCostTypedBelowShortCredit('Your', '84,000', false, '16,985', '16,985'),
-    workingCostTypedBelowShortLess: slots.workingCostTypedBelowShortLess('This', '84,000', false, '21,000'),
-    workingCostTypedBelowAtQuoteLeftOver: slots.workingCostTypedBelowAtQuoteLeftOver('90,000', 2026, '10,985'),
-    workingCostTypedBelowAtQuoteNone: slots.workingCostTypedBelowAtQuoteNone('100,985', 2026),
-    workingCostTypedBelowAtQuoteShort: slots.workingCostTypedBelowAtQuoteShort('105,000', 2026, 2032, '3,652', '4,015'),
-    workingCostTypedBelowAtQuoteLaterShort: slots.workingCostTypedBelowAtQuoteLaterShort(2029, 2032, '4,015', '4,015'),
+    workingCostTypedBelowSpanLabel: slots.workingCostTypedBelowSpanLabel(2026, 2028),
+    workingCostTypedBelowSpanCredit: slots.workingCostTypedBelowSpanCredit(SPAN_ONE, ['16,985', '16,985']),
+    workingCostTypedBelowSpanAtQuoteCredit: slots.workingCostTypedBelowSpanAtQuoteCredit(SPAN_RUN, ['5,985', '6,348'], ['10,637', '11,000']),
+    workingCostTypedBelowSpanAtQuoteNothing: slots.workingCostTypedBelowSpanAtQuoteNothing(SPAN_RUN, ['16,985', '16,985']),
+    workingCostTypedBelowSpanShortNothing: slots.workingCostTypedBelowSpanShortNothing(SPAN_RUN, ['3,652', '4,015']),
+    workingCostTypedBelowSpanShortOut: slots.workingCostTypedBelowSpanShortOut(SPAN_RUN, ['16,985', '16,985'], ['20,637', '21,000']),
+    workingCostTypedBelowSpanShort: slots.workingCostTypedBelowSpanShort(SPAN_YEAR, ['4,015', '4,015']),
+    workingCostTypedBelowSpanStillShort: slots.workingCostTypedBelowSpanStillShort(SPAN_RUN, ['15', '15'], ['4,000', '4,000']),
+    workingCostTypedBelowSpanEven: slots.workingCostTypedBelowSpanEven(SPAN_YEAR, ['4,015', '4,015']),
+    workingCostTypedBelowSpanSame: slots.workingCostTypedBelowSpanSame(SPAN_ONE),
     workingCostLegendFigure: slots.workingCostLegendFigure('90,000'),
     stalenessLeftOverMoved: slots.stalenessLeftOverMoved('16,985', '27,537', '16,985'),
     stalenessLeftOverClause: slots.stalenessLeftOverClause('16,985', '27,537', '16,985'),
@@ -1294,17 +1314,82 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     prefix (the question's keys and slots, the seat's name, the methodology family; U14's lines join by
   //     the same prefixes), so a string added later is swept with no edit. Scoped to these strings ALONE:
   //     W's stale line legitimately says "can look better" right beside U14's clause. ---
+  // The whole-window rebuild (KTD9): the typed-below spans are left-over strings too (each states what this answer adds
+  // beside the answer at the quote), so they join BY NAME. Never the bare `workingCostTypedBelow` prefix: its counts
+  // slots end on "can look better than it really is" (the W lean, not a left-over lean), which this ban reds.
+  const TYPED_BELOW_SPAN_SLOTS = [
+    'workingCostTypedBelowSpanLabel',
+    'workingCostTypedBelowSpanCredit',
+    'workingCostTypedBelowSpanAtQuoteCredit',
+    'workingCostTypedBelowSpanAtQuoteNothing',
+    'workingCostTypedBelowSpanShortNothing',
+    'workingCostTypedBelowSpanShortOut',
+    'workingCostTypedBelowSpanShort',
+    'workingCostTypedBelowSpanStillShort',
+    'workingCostTypedBelowSpanEven',
+    'workingCostTypedBelowSpanSame',
+  ] as const satisfies readonly (keyof typeof slots)[]
   const LEFT_OVER_STRINGS = (): readonly (readonly [string, string])[] =>
-    payCheckStrings().filter(([name]) =>
-      /^(workingLedgerLeftOver|assumptionWorkingCostLeftOver|assumptionWorkingYearCheckLeftOver|stalenessLeftOver|workingCostStaleLeftOver)/.test(name),
+    payCheckStrings().filter(
+      ([name]) =>
+        /^(workingLedgerLeftOver|assumptionWorkingCostLeftOver|assumptionWorkingYearCheckLeftOver|stalenessLeftOver|workingCostStaleLeftOver)/.test(name) ||
+        (TYPED_BELOW_SPAN_SLOTS as readonly string[]).includes(name),
+    )
+  /** Every span slot rendered over every frame the composer can pass (answer × opener × one year × budget), with a range
+   *  and with one figure, so a branch the one sample above never takes is swept too. */
+  const spanRenders = (S: string, T: string): readonly string[] =>
+    (['This', 'Your'] as const).flatMap((answer) =>
+      [true, false].flatMap((opener) =>
+        [true, false].flatMap((oneYear) =>
+          [true, false].flatMap((budget) => {
+            const f: TypedBelowSpanFrame = { answer, opener, oneYear, typed: S, quote: S, budget }
+            return [
+              slots.workingCostTypedBelowSpanCredit(f, [S, S]),
+              slots.workingCostTypedBelowSpanCredit(f, [S, T]),
+              slots.workingCostTypedBelowSpanAtQuoteCredit(f, [S, S], [S, S]),
+              slots.workingCostTypedBelowSpanAtQuoteCredit(f, [S, T], [S, T]),
+              slots.workingCostTypedBelowSpanAtQuoteNothing(f, [S, S]),
+              slots.workingCostTypedBelowSpanAtQuoteNothing(f, [S, T]),
+              slots.workingCostTypedBelowSpanShortNothing(f, [S, S]),
+              slots.workingCostTypedBelowSpanShortNothing(f, [S, T]),
+              slots.workingCostTypedBelowSpanShortOut(f, [S, S], [S, S]),
+              slots.workingCostTypedBelowSpanShortOut(f, [S, T], [S, T]),
+              slots.workingCostTypedBelowSpanShort(f, [S, S]),
+              slots.workingCostTypedBelowSpanShort(f, [S, T]),
+              slots.workingCostTypedBelowSpanStillShort(f, [S, S], [S, S]),
+              slots.workingCostTypedBelowSpanStillShort(f, [S, T], [S, T]),
+              slots.workingCostTypedBelowSpanEven(f, [S, S]),
+              slots.workingCostTypedBelowSpanEven(f, [S, T]),
+              slots.workingCostTypedBelowSpanSame(f),
+            ]
+          }),
+        ),
+      ),
     )
 
   it('no left-over string names a lean — never earlier, better, worse or conservative (R16), and the sweep is non-vacuous', () => {
     const strings = LEFT_OVER_STRINGS()
-    expect(strings.length, strings.map(([n]) => n).join(', ')).toBeGreaterThanOrEqual(24)
+    // 62 at the whole-window rebuild: 52 by prefix (its seat's spans lead among them) and its ten span slots by name.
+    expect(strings.length, strings.map(([n]) => n).join(', ')).toBeGreaterThanOrEqual(60)
     for (const [name, text] of strings) {
       for (const b of LEFT_OVER_LEAN_BAN) expect(text, `${name} says "${b.word}": "${text}"`).not.toMatch(b.re)
     }
+    // …and every branch of every span slot, beyond the one sample each above (16 frames, 17 renders a frame).
+    const branches = spanRenders('16,985', '21,000')
+    expect(branches.length).toBe(16 * 17)
+    for (const text of branches) for (const b of LEFT_OVER_LEAN_BAN) expect(text, `a span says "${b.word}": "${text}"`).not.toMatch(b.re)
+  })
+
+  it('the R16 list counts every typed-below span slot by name and never the counts slots; its ban still reds "better" planted in a span', () => {
+    const names = LEFT_OVER_STRINGS().map(([n]) => n)
+    for (const k of TYPED_BELOW_SPAN_SLOTS) expect(names, `${k} joins the R16 list`).toContain(k)
+    expect(names, 'the seat’s spans lead joins by prefix').toContain('workingLedgerLeftOverSpansLead')
+    for (const k of ['workingCostTypedBelowCounts', 'workingCostTypedBelowCountsBudget', 'workingCostTypedBelowAdds'] as const) {
+      expect(names, `${k} stays out (the W lean, not a left-over lean)`).not.toContain(k)
+    }
+    // Non-vacuous: a span with a lean planted in it is caught.
+    const planted = `${SLOT_RENDER.workingCostTypedBelowSpanCredit} So this answer looks better.`
+    expect(LEFT_OVER_LEAN_BAN.some((b) => b.re.test(planted)), planted).toBe(true)
   })
 
   it('the left-over lean ban catches its planted samples, and passes R6’s own required words ("later year")', () => {
@@ -1380,13 +1465,49 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     ]
   }
 
+  /** Every composed typed-below line over every whole-window witness (the rebuild's KTD9; `TYPED_BELOW_WITNESSES`), as a
+   *  reader sees it (`notePartsText`): the Result holding the moved clause and with it hosted elsewhere, the gate, the
+   *  gate's line with its door, and the seat in the details sheet and on the walk's money-picture step. Every witness
+   *  draws every host (a "saved" answer the run carries, on a fresh typed figure below the quote), so a null throws. */
+  const TYPED_BELOW_COMPOSED = (): readonly (readonly [string, string])[] =>
+    Object.entries(TYPED_BELOW_WITNESSES).flatMap(([name, d]) => {
+      const door = workingYearCostTypedBelowDoor(d)
+      const hosts = [
+        ['Result', workingYearCostTypedBelowLine(d, { kind: 'result', carriesMoved: true })],
+        ['Result, clause hosted', workingYearCostTypedBelowLine(d, { kind: 'result', carriesMoved: false })],
+        ['gate', workingYearCostTypedBelowLine(d, { kind: 'gate' })],
+        ['seat, sheet', workingYearLeftOverAtQuoteLine(d, 'sheet')],
+        ['seat, step', workingYearLeftOverAtQuoteLine(d, 'step')],
+      ] as const
+      const texts = hosts.map(([host, parts]) => {
+        if (parts === null) throw new Error(`[test setup] ${name} draws no typed-below line on the ${host}`)
+        return [`${name} (${host})`, notePartsText(parts)] as const
+      })
+      if (door === null) throw new Error(`[test setup] ${name} draws no typed-below door`)
+      return [...texts, [`${name} (gate, door)`, [texts[2]![1], door.heading, door.scope, door.route].join(' ')] as const]
+    })
+
+  it('every composed typed-below line, on every witness and host, keeps the retired wordings, the below-quote acts and the Hawk’s ban out (KTD9)', () => {
+    const composed = TYPED_BELOW_COMPOSED()
+    // Non-vacuous: six readings a witness (five hosts and the gate with its door), every witness.
+    expect(composed.length).toBe(Object.keys(TYPED_BELOW_WITNESSES).length * 6)
+    expect(composed.length, 'the witness set never silently empties').toBeGreaterThanOrEqual(90)
+    for (const [name, text] of composed) {
+      for (const re of RETIRED_EVERYWHERE) expect(text, `${name}: ${re}`).not.toMatch(re)
+      // A typed figure sits below the quote on every witness, so no Keep door is drawn there (ruling 34).
+      for (const re of RETIRED_BELOW_QUOTE) expect(text, `${name}: ${re}`).not.toMatch(re)
+      for (const b of HAWK_BAN) expect(text, `${name} says "${b.word}": "${text}"`).not.toMatch(b.re)
+    }
+  })
+
   it('the retired wordings never return: "So checking", "instead of none", "takes none of those shortfalls" and "doesn’t move this answer" in no catalog string, rendered slot or composed line', () => {
     const strings: (readonly [string, string])[] = [
       ...(Object.keys(copy) as CopyKey[]).map((k) => [k, copy[k]] as const),
       ...(Object.keys(SLOT_RENDER) as (keyof typeof slots)[]).map((k) => [k, SLOT_RENDER[k]] as const),
       ...STALE_W_WITNESSES.flatMap(([label, d]) => seen(d).map((t) => [label, t] as const)),
+      ...TYPED_BELOW_COMPOSED(),
     ]
-    expect(strings.length, "the sweep is non-vacuous").toBeGreaterThan(900)
+    expect(strings.length, "the sweep is non-vacuous").toBeGreaterThan(990)
     for (const [name, text] of strings) for (const re of RETIRED_EVERYWHERE) expect(text, `${name}: ${re}`).not.toMatch(re)
     // Non-vacuous: each pattern catches the wording it retires.
     const planted = [
@@ -1540,20 +1661,11 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.workingCostTypedBelowCounts('Your', S, S),
       slots.workingCostTypedBelowCountsBudget('This', S, S),
       slots.workingCostTypedBelowAdds(S),
-      slots.workingCostTypedBelowYearExtra('This', S),
-      slots.workingCostTypedBelowYearExtra('Your', S),
-      slots.workingCostTypedBelowShortCredit('This', S, false, S, S),
-      slots.workingCostTypedBelowShortCredit('Your', S, false, S, `${S}x`),
-      slots.workingCostTypedBelowShortCredit('This', S, true, S, S),
-      slots.workingCostTypedBelowShortLess('This', S, false, S),
-      slots.workingCostTypedBelowShortLess('Your', S, true, S),
-      slots.workingCostTypedBelowAtQuoteLeftOver(S, Number.NaN, S),
-      slots.workingCostTypedBelowAtQuoteNone(S, Number.NaN),
+      // The typed-below spans (the whole-window rebuild): every slot over every frame, one figure and a range.
+      ...spanRenders(S, `${S}x`),
       // NaN never equals itself, so it renders the run arm; Infinity does, and prints no digit either: the one-year arm.
-      slots.workingCostTypedBelowAtQuoteShort(S, Number.NaN, Number.NaN, S, S),
-      slots.workingCostTypedBelowAtQuoteShort(S, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, S, S),
-      slots.workingCostTypedBelowAtQuoteLaterShort(Number.NaN, Number.NaN, S, S),
-      slots.workingCostTypedBelowAtQuoteLaterShort(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, S, S),
+      slots.workingCostTypedBelowSpanLabel(Number.NaN, Number.NaN),
+      slots.workingCostTypedBelowSpanLabel(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY),
       slots.workingCostLegendFigure(S),
       slots.stalenessLeftOverMoved(S, S, S),
       slots.stalenessLeftOverClause(S, S, S),
@@ -1836,7 +1948,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:942-952, :998-1015), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:946-956, :1002-1019), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

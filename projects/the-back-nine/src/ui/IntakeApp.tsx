@@ -680,10 +680,10 @@ export default function IntakeApp({
         // U11 walk 6's R1: a fresh TYPED W below today's quote, from the same draft — the report never calls it
         // stale (a typed figure is never staled on a quote, KTD10), so the gate hears it only here. The line and its
         // door read one predicate (`freshTypedBelow`), so they are null together; the door rides where the tab can save.
-        const typedBelowText = workingYearCostTypedBelowLine(hydrated.draft, { kind: 'gate' })
+        const typedBelowLine = workingYearCostTypedBelowLine(hydrated.draft, { kind: 'gate' })
         const typedBelowDoor = workingYearCostTypedBelowDoor(hydrated.draft)
         const typedBelow =
-          typedBelowText === null || typedBelowDoor === null ? null : { text: typedBelowText, door: typedBelowDoor, canChange: !readOnly }
+          typedBelowLine === null || typedBelowDoor === null ? null : { line: typedBelowLine, door: typedBelowDoor, canChange: !readOnly }
         setReentry({
           view: composeReentry(model, report, { costStale: payCheckStale, leftOverStale, typedBelow }),
           rulesMoved: report.rulesMoved,

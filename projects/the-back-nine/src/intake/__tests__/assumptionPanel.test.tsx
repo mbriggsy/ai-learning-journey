@@ -1546,7 +1546,7 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
 
   it('on `datesavedrisenshort` (B: year 0 at $105,000 comes up short) the seat waits with no promise — updating carries nothing either (U11 walk 6’s R3; the round review’s L1-3) — and the method row says the same, under every answer', () => {
     const SEAT_B =
-      'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short, so nothing is left over to add. Updating to $105,000 or more won’t add any, but it puts those shortfalls into your answer.'
+      'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short. Because your first working year, 2026, comes up short at that cost, updating to $105,000 or more won’t add any, but it puts those shortfalls into your answer.'
     const METHOD_B =
       'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year comes up short. Updating puts the short years into your answer.'
     for (const answer of [{ kind: 'saved', quotedReal: 16_985 }, { kind: 'spent' }, undefined] as const) {
@@ -1632,66 +1632,89 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     expect(new Set(states.map(([, , below]) => below)).size).toBe(states.length)
   })
 
-  // U11 walk 7's R2: TM's sheet (`datesavedtypedmoved`: "All of it" at $16,985, then its old $84,000 TYPED back in below
-  // a $105,000 spending figure, so year 0 at $84,000 prints $26,985) named neither the $5,985 its spending leaves nor the
-  // 2029–2032 run, and A's retype (`datesavedtyped`, at $90,000) never named its $10,985 — on the sheet the Result's door
-  // opens. The seat names the typed figure its figure rests on, and under a "saved" answer the run carries it ends with
-  // the typed-below line's own at-quote sentences BELOW its radios: R6 keeps everything above them, the W row included,
-  // the same under every answer.
-  const TM_AT_QUOTE =
-    'At $105,000 a year, your first working year, 2026, has $5,985 left over. That year, your answer adds $11,000 your pay doesn’t really leave over. ' +
-    'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
-    'Your $84,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds $16,985 to your savings in each of them.'
+  // U11 walk 7's R2, rebuilt over the whole working window (the rebuild's KTD6, host 3): TM's sheet (`datesavedtypedmoved`:
+  // "All of it" at $16,985, then its old $84,000 TYPED back in below a $105,000 spending figure, so year 0 at $84,000
+  // prints $26,985) and A's retype (`datesavedtyped`, at $90,000), on the sheet the Result's door opens. The seat names the
+  // typed figure its figure rests on (R9: "your figure of $84,000 a year"), and under a "saved" answer the run carries it
+  // ends with the typed-below line's spans BELOW its radios: one span a paragraph, two or more the labelled block. R6
+  // keeps everything above them, the W row included, the same under every answer. In the sheet the W row's note above
+  // carries the lean, so the spans open on no counts sentence. Every span typed by hand.
+  /** A block's text as the walker reads it (text nodes joined with nothing between): the opening, then each label and its sentences. */
+  const blockText = (opening: string, segments: readonly (readonly [string, readonly string[]])[]): string =>
+    `${opening}${segments.map(([label, sentences]) => `${label}${sentences.join(' ')}`).join('')}`
+  const SPANS_LEAD = 'What this answer adds to your savings in each working year:'
+  /** TM's three spans in the seat's words: `credit`, the figure the answer carries in 2026–2028 and 2033–2035; `shortCredit`,
+   *  the 2029–2032 credit; `less`, the yearly difference at the quote's $5,985; `more`, the short run's yearly difference. */
+  const tmSpans = (credit: string, shortCredit: string, less: string, more: string): readonly (readonly [string, readonly string[]])[] => {
+    const both = [`Your answer adds at most $${credit} a year to your savings.`, `At your spending of $105,000 a year, it would add at most $5,985, $${less} less.`]
+    return [
+      ['2026 through 2028', both],
+      [
+        '2029 through 2032',
+        [
+          'At your spending of $105,000 a year, each working year comes up $3,652 to $4,015 short, and your answer would add nothing.',
+          `Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most ${shortCredit} a year to your savings, at most ${more} a year more, plus any income tax on those shortfalls.`,
+        ],
+      ],
+      ['2033 through 2035', both],
+    ]
+  }
+  const TM_SPANS = blockText(SPANS_LEAD, tmSpans('16,985', '$16,985', '11,000', '$20,637 to $21,000'))
 
-  it('TM’s sheet (R2): the figure and the moved line name the $84,000 the $26,985 rests on, and below the radios the $5,985 at $105,000, its $11,000, the 2029–2032 run and what the answer does in it', () => {
+  it('TM’s sheet: the figure and the moved line name the $84,000 the $26,985 rests on ("your figure of $84,000 a year", R9), and below the radios its three spans as a labelled block, the seat’s lead first and no counts sentence (the W row above carries the lean)', () => {
     renderPanel({ snapshot: snap(DEV_SEEDS.datesavedtypedmoved) })
     const group = groupIn(seat())
     expect(textAbove(seat(), group)).toBe(
       `${copy.assumptionWorkingCostLeftOverName}${slots.workingLedgerLeftOverFigureAt('84,000', '26,985')}${slots.workingLedgerLeftOverCheck('26,985', '20,000', '46,985')}`,
     )
-    expect(textBelow(seat(), group)).toBe(`${slots.workingLedgerLeftOverRoseLineAt('84,000', '16,985', '26,985')}${TM_AT_QUOTE}`)
+    expect(textBelow(seat(), group)).toBe(`${slots.workingLedgerLeftOverRoseLineAt('84,000', '16,985', '26,985')}${TM_SPANS}`)
     expect(radioIn(seat(), 'workingLedgerLeftOverSaved')).toBeChecked()
+    // The spans are ONE block below the group: `div.note-parts`, its lead a <p>, one dt per span in time order.
+    const block = seat().querySelector('.left-over__at-quote')
+    expect(block?.tagName, 'two or more spans draw the block').toBe('DIV')
+    expect(block?.classList.contains('note-parts')).toBe(true)
+    expect(group.compareDocumentPosition(block!) & Node.DOCUMENT_POSITION_FOLLOWING, 'the block sits below the group').toBeTruthy()
+    expect([...block!.querySelectorAll('dt')].map((dt) => dt.textContent)).toEqual(['2026 through 2028', '2029 through 2032', '2033 through 2035'])
+    expect(block!.querySelector('.note-parts__opening')?.textContent).toBe(SPANS_LEAD)
     // The pair's basis (back-nine-design's round-6 law): the moved line names the typed figure in the gate's own words,
     // and the figure line names it too — both typed out here, never read back from the slot alone (DND 012; the round
     // review's L3 F4).
-    expect(slots.workingLedgerLeftOverRoseLineAt('84,000', '16,985', '26,985')).toContain('At your $84,000 figure, it’s $26,985 now,')
+    expect(slots.workingLedgerLeftOverRoseLineAt('84,000', '16,985', '26,985')).toContain('At your figure of $84,000 a year, it’s $26,985 now,')
     expect(slots.workingLedgerLeftOverFigureAt('84,000', '26,985')).toBe(
-      'After everything above, at your $84,000 figure, your first working year has $26,985 left over.',
+      'After everything above, at your figure of $84,000 a year, your first working year has $26,985 left over.',
     )
   })
 
-  it('the FELL twin (R2): `datesavedrisen` with $86,000 typed prints $14,985 at year 0, below the stored $16,985 — the fell line names the $86,000, then the $10,985 at $90,000 and the $4,000 past it (the round review’s L3 F6)', () => {
+  it('the FELL twin: `datesavedrisen` with $86,000 typed prints $14,985 at year 0, below the stored $16,985 — the fell line names the $86,000, then its one span as a paragraph: $14,985 beside the $10,985 at $90,000, $4,000 less (the round review’s L3 F6)', () => {
     const fell = writeEnteredWorkingYearCost(DEV_SEEDS.datesavedrisen, 86_000, 'year')
     renderPanel({ snapshot: snap(fell) })
     const group = groupIn(seat())
     const fellLine = slots.workingLedgerLeftOverFellLineAt('86,000', '16,985', '14,985')
-    expect(fellLine).toContain('At your $86,000 figure, it’s $14,985 now, so each working year adds at most $14,985 of its left over')
+    expect(fellLine).toContain('At your figure of $86,000 a year, it’s $14,985 now, so each working year adds at most $14,985 of its left over')
     expect(textBelow(seat(), group)).toBe(
-      `${fellLine}At $90,000 a year, your first working year, 2026, has $10,985 left over. That year, your answer adds $4,000 your pay doesn’t really leave over.`,
+      `${fellLine}Each working year, your answer adds at most $14,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $4,000 less.`,
     )
+    expect(seat().querySelector('.left-over__at-quote')?.tagName, 'one span is a paragraph').toBe('P')
   })
 
-  it('A’s retype (R2, low): the figure names the $84,000, and below the saved line the $10,985 at $90,000 and the $6,000 past it', () => {
+  it('A’s retype: the figure names the $84,000, and below the saved line its one span as a paragraph: $16,985 beside the $10,985 at $90,000, $6,000 less', () => {
     renderPanel({ snapshot: snap(DEV_SEEDS.datesavedtyped) })
     const group = groupIn(seat())
     expect(within(seat()).getByText(slots.workingLedgerLeftOverFigureAt('84,000', '16,985'))).toBeInTheDocument()
     expect(textBelow(seat(), group)).toBe(
-      `${slots.workingLedgerLeftOverSavedLine('16,985')}At $90,000 a year, your first working year, 2026, has $10,985 left over. That year, your answer adds $6,000 your pay doesn’t really leave over.`,
+      `${slots.workingLedgerLeftOverSavedLine('16,985')}Each working year, your answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less.`,
     )
+    expect(seat().querySelector('.left-over__at-quote')?.tagName, 'one span is a paragraph').toBe('P')
   })
 
-  it('over TM’s picture ($26,985 at the typed $84,000), the five states share the text above the group AND the W row word for word (R6: no answer is read above the radios), and only the two carried "saved" states add the at-quote sentences below', () => {
+  it('over TM’s picture ($26,985 at the typed $84,000), the five states share the text above the group AND the W row word for word (R6: no answer is read above the radios), and only the two carried "saved" states add the spans below', () => {
     const tm = DEV_SEEDS.datesavedtypedmoved
-    // "Saved" at the printed $26,985 credits $26,985: $21,000 past the quote's $5,985 in 2026, and in 2029–2032 each
-    // year's $21,000 gap less its $3,652–$4,015 shortfall (R1's rule).
-    const SAVED_AT_QUOTE =
-      'At $105,000 a year, your first working year, 2026, has $5,985 left over. That year, your answer adds $21,000 your pay doesn’t really leave over. ' +
-      'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
-      'Your $84,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds between $16,985 and $17,348 to your savings in each of them.'
+    // "Saved" at the printed $26,985 credits $26,985: $21,000 past the quote's $5,985 in 2026–2028 and 2033–2035, and in
+    // 2029–2032 $16,985 to $17,348 (each year's own left over at the typed figure), $21,000 a year past the quote's draw.
     const states = [
       ['absent', undefined, slots.workingLedgerLeftOverAbsentLine('26,985')],
-      ['saved', { kind: 'saved', quotedReal: 26_985 }, `${slots.workingLedgerLeftOverSavedLine('26,985')}${SAVED_AT_QUOTE}`],
-      ['saved, moved', { kind: 'saved', quotedReal: 16_985 }, `${slots.workingLedgerLeftOverRoseLineAt('84,000', '16,985', '26,985')}${TM_AT_QUOTE}`],
+      ['saved', { kind: 'saved', quotedReal: 26_985 }, `${slots.workingLedgerLeftOverSavedLine('26,985')}${blockText(SPANS_LEAD, tmSpans('26,985', '$16,985 to $17,348', '21,000', '$21,000'))}`],
+      ['saved, moved', { kind: 'saved', quotedReal: 16_985 }, `${slots.workingLedgerLeftOverRoseLineAt('84,000', '16,985', '26,985')}${TM_SPANS}`],
       ['spent', { kind: 'spent' }, slots.workingLedgerLeftOverSpentLine('26,985')],
       ['not sure', { kind: 'not-sure' }, slots.workingLedgerLeftOverNotSureLine('26,985')],
     ] as const

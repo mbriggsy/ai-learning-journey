@@ -743,7 +743,7 @@ export function Result({
               payCheckStaleText !== null && payCheckStaleDoor !== null
                 ? standingNote(W_STALE_CAUSE[payCheckStaleDoor.act], payCheckStaleText, 'working-year-cost', payCheckStaleDoor.result)
                 : typedBelowLine !== null
-                  ? standingNote('w-typed-below', plainNote(typedBelowLine), 'working-year-cost')
+                  ? standingNote('w-typed-below', typedBelowLine, 'working-year-cost')
                   : leftOverMoved !== null && !leftOverClauseHost
                     ? standingNote('left-over-moved', plainNote(workingYearLeftOverMovedText(leftOverMoved)), 'working-year-left-over')
                     : undefined

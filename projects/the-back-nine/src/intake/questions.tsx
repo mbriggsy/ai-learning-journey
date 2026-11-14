@@ -1352,7 +1352,7 @@ function WorkingLedgerStepBody({
   return (
     <>
       <WorkingYearLedgerPicture ledger={ledger} draft={draft} headingLevel={3} aged={aged} />
-      <WorkingYearLeftOverQuestion draft={draft} onWrite={onWrite} />
+      <WorkingYearLeftOverQuestion draft={draft} onWrite={onWrite} typedBelowHost="step" />
     </>
   )
 }

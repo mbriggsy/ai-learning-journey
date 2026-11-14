@@ -332,7 +332,7 @@ function WorkingYearLeftOverRow({
       <p className="ap-row__name" tabIndex={-1} ref={nameRef}>
         {copy.assumptionWorkingCostLeftOverName}
       </p>
-      <WorkingYearLeftOverQuestion draft={shown} onWrite={onWrite} />
+      <WorkingYearLeftOverQuestion draft={shown} onWrite={onWrite} typedBelowHost="sheet" />
     </Row>
   )
 }

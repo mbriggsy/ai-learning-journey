@@ -33,9 +33,11 @@ import {
   workingCostExtras,
   type LeftOverWaitingWords,
   type TypedBelowAnswer,
+  type TypedBelowMoney,
+  type TypedBelowSpanFrame,
   type WorkingCostAct,
 } from '@ui/copy'
-import type { GateDoor, NoteDoor, NoteSegment } from '@ui/noteParts'
+import { plainNote, type GateDoor, type NoteDoor, type NoteParts, type NoteSegment } from '@ui/noteParts'
 import { formatMoney } from './fields'
 import {
   carriedWorkingYearLeftOver,
@@ -650,75 +652,21 @@ export function workingYearCostTypedBelowNote(d: ScenarioDraft): string | null {
 
 /** Where the typed-below line is said, and so its words: on the gate the answer is "Your" (none is on screen yet); on
  *  the Result it is "This", and `carriesMoved` says whether this line holds the one standing slot the moved line would
- *  otherwise take. The credit sentence speaks only where the left over has NOT moved. Where it has, the moved words say
- *  the cap ("adds at most … the smaller of the two"), so this line says it once with them (U11 walk 7's R3 (c)): as
- *  this line's clause where it holds the Result's slot, and not at all on the gate (the moved line follows as its own
- *  line, one cause, one line) or where a tax, state-tax or working-years line hosts the moved clause on the hero's
- *  rules note (the Result passes `!leftOverClauseHost`). */
+ *  otherwise take. Where the left over has moved, the moved words say the cap ("adds at most … the smaller of the
+ *  two"): as this line's clause, after the counts sentence and before the spans, where it holds the Result's slot; and
+ *  not here at all on the gate (the moved line follows as its own line, one cause, one line) or where a tax, state-tax
+ *  or working-years line hosts the moved clause on the hero's rules note (the Result passes `!leftOverClauseHost`).
+ *  Each span still states this answer's own credit (the rebuild's KD2, its second pilot call: "each item states the
+ *  pair"; a span's credit can drift below the cap), so under a moved left over TM says $16,985 in the moved words and
+ *  again in each span. Walk 8 reads both orders; the dissent's base-pair form is the fallback. */
 export type TypedBelowHost = { readonly kind: 'gate' } | { readonly kind: 'result'; readonly carriesMoved: boolean }
 
-/** Year 0 at today's quote, and the first later short run there (capped and whole), by what the check at the quote reads
- *  (an exhaustive Record, insight 147). Capped and whole print alike here: the line states what the quote's year 0 has,
- *  never what updating adds (W's stale line says that, where the answer waits on W). `unknown` says nothing at the
- *  quote (unreachable wherever a picture at the typed figure is known: `WorkingYearCheckAtQuote`'s docblock).
- *  U11 walk 7 adds what the answer does beside each figure there, read off the run's own rule:
- *  · R4 — after year 0's print at the quote (capped, whole, none), where the credit exceeds it, by how much that year;
- *  · R1 — after a run of short years at the quote (year 0's, or a later one), what the answer does in them
- *    ({@link typedBelowShortYears}). */
-interface TypedBelowFigures {
-  readonly answer: TypedBelowAnswer
-  readonly typed: string
-  readonly quote: string
-  /** The most a year credits, R8's cap (min(stored, year 0 at the typed figure)), in whole dollars as printed. */
-  readonly creditDollars: number
-  /** Today's quote less the typed figure, whole dollars: what W at the typed figure leaves in each working year's cash
-   *  beyond the quote (W comes off each year's cash dollar for dollar, and the income tax does not read it). */
-  readonly gapDollars: number
-}
-type TypedBelowAtQuote = {
-  readonly [K in WorkingYearCheckAtQuote['kind']]: (c: Extract<WorkingYearCheckAtQuote, { kind: K }>, f: TypedBelowFigures) => readonly string[]
-}
-/** R4's sentence after year 0's print at the quote, where the credit is above it (`[]` where it is not). */
-const yearExtra = (atQuoteDollars: number, f: TypedBelowFigures): readonly string[] =>
-  f.creditDollars > atQuoteDollars ? [slots.workingCostTypedBelowYearExtra(f.answer, formatMoney(f.creditDollars - atQuoteDollars))] : []
-/** R1's sentence after a run of short years at the quote: what the answer does in them at the typed figure. Each year's
- *  cash there is its cash at the quote plus the gap, and the engine credits min(that, the cap) where it is $1 or more
- *  (R8; nothing in a year that comes up short). Where every year of the run leaves money over at the typed figure
- *  (gap − the largest shortfall ≥ $1), it takes none of the shortfalls and adds that credit in each — one figure where
- *  every year's rounds alike, else the range; otherwise (some year short at the typed figure too: no seed reaches it)
- *  the fact true in every case: those years cost the gap less, so it takes less from savings in them. */
-const typedBelowShortYears = (run: WorkingYearShortRun, f: TypedBelowFigures): string => {
-  const oneYear = run.firstYear === run.lastYear
-  const least = Math.round(run.least)
-  const most = Math.round(run.most)
-  if (f.gapDollars - most < 1) return slots.workingCostTypedBelowShortLess(f.answer, f.typed, oneYear, formatMoney(f.gapDollars))
-  const low = Math.min(f.gapDollars - most, f.creditDollars)
-  const high = Math.min(f.gapDollars - least, f.creditDollars)
-  return slots.workingCostTypedBelowShortCredit(f.answer, f.typed, oneYear, formatMoney(low), formatMoney(high))
-}
-const leftOverAtQuote = (c: Extract<WorkingYearCheckAtQuote, { kind: 'capped' | 'whole' }>, f: TypedBelowFigures): readonly string[] => [
-  slots.workingCostTypedBelowAtQuoteLeftOver(f.quote, c.year, formatMoney(c.leftOver)),
-  ...yearExtra(Math.round(c.leftOver), f),
-  ...(c.laterShort === null
-    ? []
-    : [
-        slots.workingCostTypedBelowAtQuoteLaterShort(c.laterShort.firstYear, c.laterShort.lastYear, formatMoney(c.laterShort.least), formatMoney(c.laterShort.most)),
-        typedBelowShortYears(c.laterShort, f),
-      ]),
-]
-const TYPED_BELOW_AT_QUOTE: TypedBelowAtQuote = {
-  capped: leftOverAtQuote,
-  whole: leftOverAtQuote,
-  firstShort: (c, f) => [
-    slots.workingCostTypedBelowAtQuoteShort(f.quote, c.run.firstYear, c.run.lastYear, formatMoney(c.run.least), formatMoney(c.run.most)),
-    typedBelowShortYears(c.run, f),
-  ],
-  firstNone: (c, f) => [slots.workingCostTypedBelowAtQuoteNone(f.quote, c.year), ...yearExtra(0, f)],
-  unknown: () => [],
-}
-function typedBelowAtQuote(c: WorkingYearCheckAtQuote, f: TypedBelowFigures): readonly string[] {
-  return (TYPED_BELOW_AT_QUOTE[c.kind] as (c: WorkingYearCheckAtQuote, f: TypedBelowFigures) => readonly string[])(c, f)
-}
+/** Where the seat's spans are drawn (the rebuild's KTD6, host 3), and so whether its line opens on the counts sentence:
+ *  in the details sheet the W row's typed-below note sits directly above the seat and carries the lean (`sheet`); on the
+ *  walk's money-picture step nothing above the seat does (the W note lives on the W step), so there the line opens with
+ *  the counts sentence in its "Your" form (`step`), or the pair would show with nothing saying which answer is the real
+ *  one. The host says so; the seat never guesses it. */
+export type TypedBelowSeatHost = 'sheet' | 'step'
 
 /** The typed figure below today's quote, while it is FRESH and the run reads it — or `null`. Fresh: a typed figure
  *  stales only on its state-tax reading, and a stale W rides its own stale line (which wins the slot on both hosts), so
@@ -945,58 +893,112 @@ function spansOf(years: readonly TypedBelowYear[]): TypedBelowSpan[] {
   return spans
 }
 
-/** The typed-below LINE (R1), one string in W's plain form on both hosts: the answer counts the typed figure, below
- *  today's quote, both yearly, and the whole-answer lean; then, for a "saved" answer the run carries (`saved` or
- *  `saved-moved`, `LEFT_OVER_CARRIES`), the most it credits a year — min(stored, year 0 at the typed figure), R8's cap —
- *  and what the quote's own year 0 has (left over, nothing, or a run of short years), with the first later short run
- *  there, and what the answer does beside each (U11 walk 7's R4 and R1, {@link TypedBelowAtQuote}). Where the left
- *  over has also moved, the credit sentence gives way to the moved words: as this line's clause where it holds the
- *  Result's one slot, and on the gate or under a rules note's hosted clause not at all, since the moved words say the
- *  cap there (U11 walk 7's R3 (c): said twice, it read as "a math error"). Under any other answer (absent, spent, not
- *  sure, a "saved" answer not asked) the first two sentences alone: nothing is credited, and the lower figure only
- *  cheapens the years. `null` where no fresh typed figure sits below the quote ({@link freshTypedBelow}). The figures
- *  are the typed-below pair exactly as the W surfaces' note prints them (`workingYearCostTypedBelowQuote`), so the line
- *  and the note can never name two figures for one. */
-export function workingYearCostTypedBelowLine(d: ScenarioDraft, host: TypedBelowHost): string | null {
+/** The typed-below LINE (U11 walk 6's R1), rebuilt over the whole working window
+ *  (`docs/plans/features/typed-below-whole-window-rebuild-spec.md`, KTD6; council `wf_f74697d1-f2e`), as parts on both
+ *  hosts: the opening says the answer counts the typed figure, below today's quote, both yearly, and the whole-answer
+ *  lean (the counts sentence); then, on the Result where this line holds the slot under a moved left over, the moved
+ *  clause ({@link TypedBelowHost}). Then, for a "saved" answer the run carries (`saved` or `saved-moved`), the window's
+ *  spans ({@link workingYearTypedBelowWindow}), each in its kind's words ({@link TYPED_BELOW_SPAN_WORDS}): one span folds
+ *  into the opening as plain sentences, so `isPlainNote` holds and every host draws its single paragraph; two or more
+ *  draw as labelled parts, one segment per span in time order, its years the label (KD2). The opening's own credit
+ *  sentence retires wherever the spans speak (each states this answer's credit). Under any other answer (absent,
+ *  spent, not sure, a "saved" answer not asked) the counts sentence alone: nothing is credited, and the lower figure
+ *  only cheapens the years. Where the read is `unknown` (unreachable wherever the typed picture is known), the
+ *  fail-safe credit sentence ({@link typedBelowFailSafeCap}), so the credit is still said. `null` where no fresh typed
+ *  figure sits below the quote ({@link freshTypedBelow}). The figures are the typed-below pair exactly as the W
+ *  surfaces' note prints them (`workingYearCostTypedBelowQuote`), so the line and the note never name two figures for
+ *  one. A pure function of the draft (R12): it reads no crown and no outcome, so the gate (which composes before any
+ *  run) and the Result on either tier draw one line. */
+export function workingYearCostTypedBelowLine(d: ScenarioDraft, host: TypedBelowHost): NoteParts | null {
   const t = freshTypedBelow(d)
   if (t === null) return null
   const answer: TypedBelowAnswer = host.kind === 'gate' ? 'Your' : 'This'
-  const counts =
-    t.source === 'budget' ? slots.workingCostTypedBelowCountsBudget(answer, t.typed, t.quote) : slots.workingCostTypedBelowCounts(answer, t.typed, t.quote)
-  const c = typedBelowCarried(d, t, answer)
-  if (c === null) return counts
+  const counts = typedBelowCounts(t, answer)
+  const read = workingYearTypedBelowWindow(d)
+  if (read === null) return plainNote(counts)
   const moved = workingYearLeftOverMoved(d)
-  const credit: readonly string[] =
-    moved === null
-      ? [slots.workingCostTypedBelowAdds(formatMoney(c.figures.creditDollars))]
-      : host.kind === 'result' && host.carriesMoved
-        ? [workingYearLeftOverMovedClause(moved)]
-        : []
-  return [counts, ...credit, ...c.atQuote].join(' ')
+  const movedClause = moved !== null && host.kind === 'result' && host.carriesMoved ? [workingYearLeftOverMovedClause(moved)] : []
+  if (read.kind === 'unknown') {
+    const cap = typedBelowFailSafeCap(d)
+    const credit = moved !== null ? movedClause : cap === null ? [] : [slots.workingCostTypedBelowAdds(formatMoney(cap))]
+    return plainNote([counts, ...credit].join(' '))
+  }
+  return typedBelowSpansParts([counts, ...movedClause], read.spans, t, answer, null)
 }
 
-/** For a "saved" answer the run carries (`saved` or `saved-moved`, `LEFT_OVER_CARRIES`) under a fresh typed figure `t`:
- *  the line's figures — R8's cap and the gap, in whole dollars as printed — and its at-quote sentences
- *  ({@link TypedBelowAtQuote}); `null` under any other answer. The ONE read the Result's and the gate's line and the
- *  seat's at-quote line ({@link workingYearLeftOverAtQuoteLine}) share, so the sheet can never word them two ways. */
-function typedBelowCarried(
-  d: ScenarioDraft,
-  t: NonNullable<ReturnType<typeof freshTypedBelow>>,
-  answer: TypedBelowAnswer,
-): { readonly figures: TypedBelowFigures; readonly atQuote: readonly string[] } | null {
-  // The answer first: a draft that is not "saved" never composes the money picture here (the carriage's own read, the
-  // one the whole-window read takes too, so the two can never disagree on which answers are carried).
+type FreshTypedBelow = NonNullable<ReturnType<typeof freshTypedBelow>>
+
+/** The counts sentence and its lean, in the quote's own words (the spending, or the budget twin). */
+const typedBelowCounts = (t: FreshTypedBelow, answer: TypedBelowAnswer): string =>
+  t.source === 'budget' ? slots.workingCostTypedBelowCountsBudget(answer, t.typed, t.quote) : slots.workingCostTypedBelowCounts(answer, t.typed, t.quote)
+
+/** R8's cap as the line said it before the rebuild — min(stored, year 0 at the typed figure), whole dollars — read only
+ *  on the whole-window read's `unknown` arm (the plan's Minor faults: live, kept fail-safe so the credit is still said);
+ *  `null` where no answer is carried or no year 0 is pictured. */
+function typedBelowFailSafeCap(d: ScenarioDraft): number | null {
   const stored = carriedWorkingYearLeftOver(d)
-  if (stored === undefined) return null
   const live = workingYearLeftOverLive(d)
-  // Unreachable: a carried state has a known picture (`leftOverShownState` reads "not asked" without one).
-  if (live === null) return null
-  const creditDollars = Math.round(Math.min(stored, live))
-  // `freshTypedBelow` read an entered W below the quote: its figure and the quote, in whole dollars as printed.
-  const w = d.workingYearCost
-  const gapDollars = w === undefined ? 0 : Math.round(workingYearQuote(d).annualReal) - Math.round(workingYearCostFigure(w))
-  const figures: TypedBelowFigures = { answer, typed: t.typed, quote: t.quote, creditDollars, gapDollars }
-  return { figures, atQuote: typedBelowAtQuote(checkAtQuote(d, stored), figures) }
+  return stored === undefined || live === null ? null : Math.round(Math.min(stored, live))
+}
+
+/** The opening's sentences and the spans as parts: at most one span folds into the opening (a one-span line of a credit
+ *  kind opens "Each working year,"); two or more draw one segment per span, `lead` (the seat's) closing the opening. */
+function typedBelowSpansParts(
+  opening: readonly string[],
+  spans: readonly TypedBelowSpan[],
+  t: FreshTypedBelow,
+  answer: TypedBelowAnswer,
+  lead: string | null,
+): NoteParts {
+  const frame = (s: TypedBelowSpan, opener: boolean): TypedBelowSpanFrame => ({
+    answer,
+    opener,
+    oneYear: s.firstYear === s.lastYear,
+    typed: t.typed,
+    quote: t.quote,
+    budget: t.source === 'budget',
+  })
+  if (spans.length < 2) return plainNote([...opening, ...spans.flatMap((s) => typedBelowSpanSentences(s, frame(s, true)))].join(' '))
+  return {
+    opening: [...opening, ...(lead === null ? [] : [lead])].join(' '),
+    segments: spans.map((s) => ({ label: slots.workingCostTypedBelowSpanLabel(s.firstYear, s.lastYear), sentences: typedBelowSpanSentences(s, frame(s, false)) })),
+    door: null,
+  }
+}
+
+/** Each span's words by its kind (KTD7; an exhaustive Record, insight 147: a new kind fails to compile until it is
+ *  worded). A span carries only its own kind's figures, so no kind can word a figure it does not have. At most two
+ *  sentences, one side each (R8): the first states one answer's side, the second the other's, and the yearly
+ *  difference rides only the second. */
+type TypedBelowSpanWords = {
+  readonly [K in TypedBelowYearKind]: (s: Extract<TypedBelowSpan, { kind: K }>, f: TypedBelowSpanFrame) => readonly string[]
+}
+const money = (m: TypedBelowDollars): TypedBelowMoney => [formatMoney(m.least), formatMoney(m.most)]
+const TYPED_BELOW_SPAN_WORDS: TypedBelowSpanWords = {
+  same: (_s, f) => [slots.workingCostTypedBelowSpanSame(f)],
+  bothCredit: (s, f) => [
+    slots.workingCostTypedBelowSpanCredit(f, money(s.credit)),
+    slots.workingCostTypedBelowSpanAtQuoteCredit(f, money(s.creditAtQuote), money(s.difference)),
+  ],
+  quoteCreditsNothing: (s, f) => [
+    slots.workingCostTypedBelowSpanCredit(f, money(s.credit)),
+    slots.workingCostTypedBelowSpanAtQuoteNothing(f, money(s.difference)),
+  ],
+  shortLeftOverAtTyped: (s, f) => [
+    slots.workingCostTypedBelowSpanShortNothing(f, money(s.shortAtQuote)),
+    slots.workingCostTypedBelowSpanShortOut(f, money(s.credit), money(s.difference)),
+  ],
+  shortStillShortAtTyped: (s, f) => [
+    slots.workingCostTypedBelowSpanShort(f, money(s.shortAtQuote)),
+    slots.workingCostTypedBelowSpanStillShort(f, money(s.shortAtTyped), money(s.difference)),
+  ],
+  shortEvenAtTyped: (s, f) => [
+    slots.workingCostTypedBelowSpanShort(f, money(s.shortAtQuote)),
+    slots.workingCostTypedBelowSpanEven(f, money(s.difference)),
+  ],
+}
+function typedBelowSpanSentences(s: TypedBelowSpan, f: TypedBelowSpanFrame): readonly string[] {
+  return (TYPED_BELOW_SPAN_WORDS[s.kind] as (s: TypedBelowSpan, f: TypedBelowSpanFrame) => readonly string[])(s, f)
 }
 
 /** The typed figure (yearly, formatted) today's year-0 left over rests on, exactly where the typed-below line speaks
@@ -1007,22 +1009,23 @@ export function workingYearLeftOverTypedBelow(d: ScenarioDraft): string | null {
   return freshTypedBelow(d)?.typed ?? null
 }
 
-/** The seat's half of the typed-below line (U11 walk 7's R2): under a "saved" answer the run carries, on a fresh typed
- *  figure below today's quote, the line's own at-quote sentences ({@link TypedBelowAtQuote}: year 0 at the quote, what the
- *  answer adds past it that year (R4), the first run of short years there and what the answer does in it (R1)) — the
- *  answer said "Your", as on the gate. `null` under any other answer, wherever no fresh typed figure sits below the quote,
- *  and where the check at the quote reads nothing (`unknown`). The details sheet, which the Result's door opens, named
- *  none of them (TM's $5,985 and 2029–2032 run; A's $10,985).
- *  WHERE IT IS DRAWN: below the seat's radios, never at the end of the W row's typed-below note, where the refuter put it.
- *  That note sits directly above the seat, and these sentences read the answer, so a tap on "Spent" would take four
- *  sentences out from above the radio it pressed — R6's law that nothing above the control reads the answer
+/** The seat's half of the typed-below line (the rebuild's KTD6, host 3): under a "saved" answer the run carries, on a
+ *  fresh typed figure below today's quote, the window's spans in the line's own words, the answer said "Your", as on the
+ *  gate: one span as plain sentences, two or more behind the seat's lead (`workingLedgerLeftOverSpansLead`) as labelled
+ *  parts. On the walk's money-picture step, where nothing above the seat carries the lean, the line opens with the counts
+ *  sentence in its "Your" form ({@link TypedBelowSeatHost}). `null` under any other answer, wherever no fresh typed figure
+ *  sits below the quote, and where the read is `unknown`.
+ *  WHERE IT IS DRAWN: below the seat's radios, never at the end of the W row's typed-below note, where walk 7's refuter
+ *  put it. That note sits directly above the seat, and these sentences read the answer, so a tap on "Spent" would take
+ *  them out from above the radio it pressed — R6's law that nothing above the control reads the answer
  *  (`docs/plans/features/working-year-surplus-build-spec.md`, its sanctioned readers amended in only where the answer
  *  is frozen or the reader sits far above the seat). Below the radios is R6's own home for a line chosen by the answer. */
-export function workingYearLeftOverAtQuoteLine(d: ScenarioDraft): string | null {
+export function workingYearLeftOverAtQuoteLine(d: ScenarioDraft, host: TypedBelowSeatHost): NoteParts | null {
   const t = freshTypedBelow(d)
   if (t === null) return null
-  const c = typedBelowCarried(d, t, 'Your')
-  return c === null || c.atQuote.length === 0 ? null : c.atQuote.join(' ')
+  const read = workingYearTypedBelowWindow(d)
+  if (read === null || read.kind === 'unknown' || read.spans.length === 0) return null
+  return typedBelowSpansParts(host === 'step' ? [typedBelowCounts(t, 'Your')] : [], read.spans, t, 'Your', copy.workingLedgerLeftOverSpansLead)
 }
 
 /** The typed-below line's door on the gate: the update act's (`gateDoor`), naming the typed figure — or `null` exactly

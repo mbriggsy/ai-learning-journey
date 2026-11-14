@@ -1439,8 +1439,9 @@ const dateSavedRisenLaterWitness: ScenarioDraft = {
  * (`writeEnteredWorkingYearCost`, the W step's and the panel row's own write). A typed figure is never staled on a quote
  * (KTD10), so W is FRESH: year 0 at $84,000 prints $16,985 again, the stored "All of it" reads "saved" and is carried
  * whole, and no stale line speaks. R1's typed-below line does, on the Result and, as a vault, on the gate
- * (`workingYearCostTypedBelowLine`): the answer counts $84,000, below the $90,000 spending, so it can look better; it adds
- * at most $16,985 a year; at $90,000 a year, year 0 has $10,985 left over (`datesavedrisen`'s check at the quote). U11
+ * (`workingYearCostTypedBelowLine`): the answer counts $84,000, below the $90,000 spending, so it can look better; then
+ * its one span over the whole window (the whole-window rebuild), a plain paragraph: each working year it adds at most
+ * $16,985 a year, where at $90,000 a year it would add at most $10,985, $6,000 less. U11
  * walk 6 measured exactly this draft (`u11-walk6\measure\R1-MEASURE.md`, draft b): about 9 years out at a 0.87 lower
  * bound, where the honest "Yes" at $90,000 crowns the same year on the 0.85 bar with no margin. A "mint, then move"
  * witness: minted once (`dateSavedWitness`), moved, then retyped.
@@ -1472,14 +1473,53 @@ const dateSavedFourBucketsWitness: ScenarioDraft = {
  * (`writeEnteredWorkingYearCost`). W is FRESH (a typed figure is never staled on a quote, KTD10), and year 0 at $84,000
  * now prints $26,985 (Sam's alimony began after the answer), so the stored "All of it" at $16,985 reads "saved, moved".
  * The one seed where R1's typed-below line and a moved left over speak together, each figure naming what it rests on:
- * on the Result the line carries the moved clause ("…At your $84,000 figure, it has $26,985 left over now. …") in place
- * of its credit sentence, then year 0 at the $105,000 quote ($5,985) and the 2029–2032 run; on the gate R1's line drops
- * its credit sentence (U11 walk 7's R3 (c): the moved words say the cap) and the moved line follows it ("…At your
- * $84,000 figure, it’s $26,985 now, …"), so its gate is the tallest R1 gate (two lines). No date within the window: the final tier's top rung reads 0.80,
+ * on the Result the line carries the moved clause ("…At your figure of $84,000 a year, it has $26,985 left over now. …")
+ * after its counts sentence, then its three spans as labelled parts (the whole-window rebuild: 2026 through 2028, the
+ * 2029–2032 run that comes up short at $105,000, 2033 through 2035), each stating this answer's $16,985 beside the
+ * answer at the quote; on the gate the moved line follows R1's line as its own line ("…At your figure of $84,000 a year,
+ * it’s $26,985 now, …"). No date within the window: the final tier's top rung reads 0.80,
  * against `datesavedrisenlater`'s 0.74 (b9-5's probe, the retype residual the register's retype entry records). A "mint,
  * then move" witness: minted once (`dateSavedWitness`), moved, given the alimony, then retyped.
  */
 const dateSavedTypedMovedWitness: ScenarioDraft = writeEnteredWorkingYearCost(dateSavedRisenLaterWitness, 84_000, 'year')
+
+/**
+ * THE PENSION RETYPE — `?seed=datesavedtypedpension`, and as a vault `?vault=datesavedtypedpension` (the whole-window
+ * rebuild's five-span witness, `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, walk 8's first added
+ * target): `datesavedrisenlater`'s household with Sam's $9,000 a year pension at 64 and 65 (real-flat, no survivor
+ * share), its old $84,000 typed back in by the year. The pension lifts 2030 and 2031 above $0 at the $105,000 quote, so
+ * the short years there split into two runs, 2029 and 2032, and the typed-below line draws five spans on the gate, the
+ * Result and the seat. The stored $16,985 sits below year 0's $26,985, so the answer reads "saved, moved", as on
+ * `datesavedtypedmoved`, and its gate draws two notes. Built here from the seed it moves, never by importing the test
+ * builder (that file imports `DEV_SEEDS`: a cycle, and app code reading a test file); `devSeeds.test.ts` pins it equal
+ * to `typedBelowPensionHousehold()`.
+ */
+const dateSavedTypedPensionWitness: ScenarioDraft = writeEnteredWorkingYearCost(
+  {
+    ...dateSavedRisenLaterWitness,
+    incomeStreams: [
+      ...(dateSavedRisenLaterWitness.incomeStreams ?? []),
+      { ownerIndex: 1, type: 'pension', annualRealToday: 9_000, startAge: 64, endAge: 65, colaMode: 'real-flat', survivorPct: 0 },
+    ],
+  },
+  84_000,
+  'year',
+)
+
+/**
+ * THE CROWNED RETYPE — `?seed=datesavedtypedcrowned`, and as a vault `?vault=datesavedtypedcrowned` (the whole-window
+ * rebuild's crowned witness, walk 8's second added target): `datesavedtypedmoved`'s household with Alex's 401(k) raised
+ * to $1,600,000, so the date route crowns a stop inside the window before its 2033–2035 span: 7 years out on both tiers
+ * (U3's probe, `u3-crown.out.txt`: the provisional at a 0.85 lower bound on the bar with no margin, the final at 0.86).
+ * Savings never enter a working year's cash (no deposit moves, and the accounts' yield never reaches a year's tax base),
+ * so both money pictures, and so the spans, are TM's to the dollar: the one seed where a span is named past the
+ * headline's date (the line reads no crown, R12). Built here, never by importing the test builder;
+ * `devSeeds.test.ts` pins it equal to `typedBelowCrownedHousehold()`.
+ */
+const dateSavedTypedCrownedWitness: ScenarioDraft = {
+  ...dateSavedTypedMovedWitness,
+  enteredAccounts: dateSavedTypedMovedWitness.enteredAccounts.map((a, i) => (i === 0 ? { ...a, valueToday: 1_600_000 } : a)),
+}
 
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
@@ -1529,6 +1569,9 @@ export const DEV_SEEDS = {
   datesavedtyped: dateSavedTypedWitness,
   datesavedfourbuckets: dateSavedFourBucketsWitness,
   datesavedtypedmoved: dateSavedTypedMovedWitness,
+  // The whole-window rebuild (walk 8's added targets): the five-span household and the crowned one.
+  datesavedtypedpension: dateSavedTypedPensionWitness,
+  datesavedtypedcrowned: dateSavedTypedCrownedWitness,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS
@@ -1816,7 +1859,7 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  * arrived household: born 1963, planned at 57 to stop at offset 5, and that year is now behind them.
  *
  * ⚠️ THIS PLANT LIGHTS **ONE** ARRIVED ARM, NOT TWO. The floor crowns at 0, and `floorLineText`
- * (`FuckOffDate.tsx:268`) SHORT-CIRCUITS offset 0 to the plain `dateFloorCovered` line BEFORE the
+ * (`FuckOffDate.tsx:269`) SHORT-CIRCUITS offset 0 to the plain `dateFloorCovered` line BEFORE the
  * three-way split — mirroring `heroLead`'s free-today precedence, deliberately ("covered from the
  * plan's own start ⇒ still covered now"). So `dateFloorCoveredPast` does NOT fire here; its live
  * route is and remains `?vault=datestale`, whose floor crown sits strictly inside its window. (An
@@ -2054,7 +2097,7 @@ export function doctorRecordSuperseded(s: CurrentScenario, todayEpochDay: number
  *  the two corrections this note's first draft got wrong (it ages `birthYear` alongside
  *  `startCalendarYear` to hold the `currentAge === startCalendarYear − birthYear` model invariant,
  *  and it lights ONE arrived arm rather than two, because a floor crown of 0 short-circuits past
- *  the three-way split at `FuckOffDate.tsx:268`). The base must be STATELESS: `datenc` rejects at
+ *  the three-way split at `FuckOffDate.tsx:269`). The base must be STATELESS: `datenc` rejects at
  *  any depth ≥1 with "startCalendarYear precedes the priced state rate schedule"
  *  (`simulate.ts:966-969`), which is the real bound the S6 spec's `earliestPricedRateYear` probe
  *  was reaching for — and that probe is VACUOUS on a stateless base (the gate is `isPricedState`-

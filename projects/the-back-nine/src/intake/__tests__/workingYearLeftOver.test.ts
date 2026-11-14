@@ -19,6 +19,7 @@ import type { WorkingYearLeftOverKind } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { LEFT_OVER_WAITING_COPY, copy, slots, workingCostExtras } from '@ui/copy'
 import { DEV_SEEDS } from '@ui/devSeeds'
+import { isPlainNote, notePartsText, type NoteParts } from '@ui/noteParts'
 import { workingYearCostForRun, workingYearLedgerForRun, workingYearLeftOverShownState } from '../intakeMap'
 import {
   laterShortOf,
@@ -41,6 +42,8 @@ import {
   workingYearTypedBelowWindow,
   writeWorkingYearLeftOver,
   shortRunFrom,
+  type TypedBelowHost,
+  type TypedBelowSeatHost,
   type TypedBelowSpan,
 } from '../workingYearLeftOver'
 import { heldYesBelowQuote, isWorkingYearCostStale, workingYearCostAct, workingYearQuote, writeConfirmedWorkingYearCost, writeEnteredWorkingYearCost } from '../workingYearQuote'
@@ -148,15 +151,15 @@ describe('workingYearLeftOverMoved — the ONE moved core (R12; U14’s obligati
     const c = workingYearLeftOverMoved(retype(DEV_SEEDS.datesavedrisenlater, 84_000))
     expect(c).toEqual({ stored: 16_985, live: 26_985, typedBelow: '84,000' })
     expect(workingYearLeftOverMovedText(c!)).toBe(
-      'You said all of it goes into your savings when it was $16,985. At your $84,000 figure, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
+      'You said all of it goes into your savings when it was $16,985. At your figure of $84,000 a year, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
     )
     expect(workingYearLeftOverMovedClause(c!)).toBe(
-      'You said all of it goes into your savings when your first working year had $16,985 left over. At your $84,000 figure, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
+      'You said all of it goes into your savings when your first working year had $16,985 left over. At your figure of $84,000 a year, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
     )
     const tap = workingYearLeftOverMoved(retype(DEV_SEEDS.datesaved, 6_000 * 12, 'month'))
     expect(tap, 'given by the month, named by the year').toEqual({ stored: 16_985, live: 28_985, typedBelow: '72,000' })
     expect(workingYearLeftOverMovedClause(tap!)).toBe(
-      'You said all of it goes into your savings when your first working year had $16,985 left over. At your $72,000 figure, it has $28,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
+      'You said all of it goes into your savings when your first working year had $16,985 left over. At your figure of $72,000 a year, it has $28,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
     )
   })
 
@@ -929,7 +932,7 @@ describe('workingYearCostStaleDoor — the act and each host’s door', () => {
 // "Until you update…, no money left over is added" promised what updating takes away, so B reads its own form.
 describe('workingYearLeftOverWaitingWords — R3, the seat and the methodology line on B', () => {
   const B_SHORT_SEAT =
-    'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short, so nothing is left over to add. Updating to $105,000 or more won’t add any, but it puts those shortfalls into your answer.'
+    'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short. Because your first working year, 2026, comes up short at that cost, updating to $105,000 or more won’t add any, but it puts those shortfalls into your answer.'
   it('B (`datesavedrisenshort`, first short) reads `updateShort` and first none ($100,985) `updateNone` (U11 walk 7\'s R5); A, C, the whole arm and every other stale W read the act', () => {
     expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datesavedrisenshort)).toBe('updateShort')
     expect(workingYearLeftOverWaitingWords(RISEN_NONE)).toBe('updateNone')
@@ -961,7 +964,7 @@ describe('workingYearLeftOverWaitingWords — R3, the seat and the methodology l
     // The one-year run: Sam's alimony from 61 leaves only 2026 short at $105,000.
     const oneYear = { ...DEV_SEEDS.datesavedrisenshort, incomeStreams: [{ ...DEV_SEEDS.datesavedrisenlater.incomeStreams[0]!, startAge: 61, endAge: 70 }] }
     expect(workingYearLeftOverWaitingSeat(oneYear)).toBe(
-      'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, your first working year, 2026, comes up $4,015 short, so nothing is left over to add. Updating to $105,000 or more won’t add any, but it puts that shortfall into your answer.',
+      'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, your first working year, 2026, comes up $4,015 short. Because it comes up short at that cost, updating to $105,000 or more won’t add any, but it puts that shortfall into your answer.',
     )
     for (const d of [DEV_SEEDS.datesavedrisen, DEV_SEEDS.datesavedrisenlater]) expect(workingYearLeftOverWaitingSeat(d)).toBe(copy.workingLedgerLeftOverWaitingUpdate)
     expect(workingYearLeftOverWaitingSeat(DEV_SEEDS.datesavedstale)).toBe(copy.workingLedgerLeftOverWaitingConfirm)
@@ -970,113 +973,192 @@ describe('workingYearLeftOverWaitingWords — R3, the seat and the methodology l
   })
 })
 
-// U11 walk 6's R1 (the Tier 0 retype entry's ⚑ MEASURED bullet): a FRESH typed W below today's quote speaks where the
-// answer is read. Every witness is a risen seed with its old $84,000 TYPED back in (the W row's own write); the figures
-// are the seeds' documented ones (their docblocks and the risen-arm tests above): year 0 at $84,000 prints the stored
-// $16,985 on `datesavedrisen` and `datesavedrisenshort` (so "saved") and $26,985 on `datesavedrisenlater` (the alimony:
-// "saved, moved"); at the quote, $10,985 left over / a 2026–2032 short run of $3,652 to $4,015 / $5,985 then a
-// 2029–2032 run. Every sentence is typed by hand (a copy plant inside a slot dies only to these).
-describe('workingYearCostTypedBelowLine and its door — R1, the Result and the gate', () => {
+// U11 walk 6's R1 (the Tier 0 retype entry's ⚑ MEASURED bullet), rebuilt over the whole working window (the rebuild's
+// U4: `docs/plans/features/typed-below-whole-window-rebuild-spec.md` KTD6, KTD7; council `wf_f74697d1-f2e`). A FRESH typed
+// W below today's quote speaks where the answer is read, as parts: the counts sentence and its lean, the moved clause
+// where this line holds the Result's slot, then one span per run of working years, this answer's credit beside the
+// credit of the answer at today's quote. Every sentence below is TYPED BY HAND (a copy plant inside a slot dies only to
+// words typed out, `docs/landmines.md`), each figure the engine's own as the U3 witness table and the U3 probe print it
+// (`u11-wholewindow\research\witnesses.md`, `research\wit\u3-probe.out.txt`); U3's suite below pins every witness's spans.
+describe('workingYearCostTypedBelowLine and its door — R1 over the whole working window (the rebuild’s U4)', () => {
   const typed = (d: ScenarioDraft, amountReal = 84_000, entryPeriod: 'year' | 'month' = 'year'): ScenarioDraft => {
     const w = d.workingYearCost
     if (w === undefined) throw new Error('[test setup] the witness holds a W')
     return { ...d, workingYearCost: { kind: 'entered', amountReal, entryPeriod, stateTaxReading: w.stateTaxReading } }
   }
+  /** C's household (`datesavedrisenshort`) with Sam's alimony between the two ages: from 61, only 2026 comes up short at
+   *  $105,000; to 65, only 2032 does (the one-year witnesses, each one field the intake writes). */
+  const alimony = (startAge: number, endAge: number): ScenarioDraft => ({
+    ...DEV_SEEDS.datesavedrisenshort,
+    incomeStreams: [{ ...DEV_SEEDS.datesavedrisenlater.incomeStreams[0]!, startAge, endAge }],
+  })
   const RESULT = { kind: 'result', carriesMoved: true } as const
   const RESULT_HOSTED = { kind: 'result', carriesMoved: false } as const
   const GATE = { kind: 'gate' } as const
+  const HOSTS = [RESULT, RESULT_HOSTED, GATE] as const
   const LEAN = 'A working year almost always costs at least what you spend, so this answer can look better than it really is.'
   const counts = (answer: 'This' | 'Your', typedFigure: string, quote: string): string =>
     `${answer} answer counts a working year at your own figure of $${typedFigure} a year, below your spending of $${quote} a year. ${LEAN}`
+  const plain = (opening: string): NoteParts => ({ opening, segments: [], door: null })
+  const line = (d: ScenarioDraft, host: TypedBelowHost): NoteParts => {
+    const parts = workingYearCostTypedBelowLine(d, host)
+    if (parts === null) throw new Error('[test setup] the witness draws the line')
+    return parts
+  }
+  /** One labelled segment's sentences, by its label. */
+  const segment = (d: ScenarioDraft, host: TypedBelowHost, label: string): readonly string[] => {
+    const s = line(d, host).segments.find((x) => x.label === label)
+    if (s === undefined) throw new Error(`[test setup] no segment "${label}"`)
+    return s.sentences
+  }
+  /** TM's three spans, typed out whole: "This" on the Result, "Your" on the gate and the seat. */
+  const TM_SEGMENTS = (answer: 'This' | 'Your'): NoteParts['segments'] => {
+    const lower = answer.toLowerCase()
+    const credit = [`${answer} answer adds at most $16,985 a year to your savings.`, 'At your spending of $105,000 a year, it would add at most $5,985, $11,000 less.']
+    return [
+      { label: '2026 through 2028', sentences: credit },
+      {
+        label: '2029 through 2032',
+        sentences: [
+          `At your spending of $105,000 a year, each working year comes up $3,652 to $4,015 short, and ${lower} answer would add nothing.`,
+          `Your figure of $84,000 a year leaves those shortfalls out of ${lower} answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, plus any income tax on those shortfalls.`,
+        ],
+      },
+      { label: '2033 through 2035', sentences: credit },
+    ]
+  }
+  const TM_MOVED_CLAUSE =
+    'You said all of it goes into your savings when your first working year had $16,985 left over. At your figure of $84,000 a year, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
 
-  it('`datesavedtyped` (A, the walk’s retype on `datesavedrisen`): the counts sentence, the lean, the $16,985 it adds, and year 0’s $10,985 at $90,000 — "This" on the Result, "Your" on the gate', () => {
+  it('A (`datesavedtyped`): ONE span, so ONE plain paragraph on every host — the counts sentence, the lean, then "Each working year," its $16,985 beside the quote answer’s $10,985, $6,000 less', () => {
     const d = DEV_SEEDS.datesavedtyped
     expect(d, 'the seed IS the retype').toEqual(typed(DEV_SEEDS.datesavedrisen))
     expect(isWorkingYearCostStale(d), 'the premise: a typed figure is fresh').toBe(false)
     expect(workingYearLeftOverShownState(d), 'the premise: carried at the stored figure').toBe('saved')
-    const tail = (answer: 'this' | 'your') =>
-      `It adds at most $16,985 a year to your savings. At $90,000 a year, your first working year, 2026, has $10,985 left over. That year, ${answer} answer adds $6,000 your pay doesn’t really leave over.`
-    expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(`${counts('This', '84,000', '90,000')} ${tail('this')}`)
-    expect(workingYearCostTypedBelowLine(d, RESULT_HOSTED), 'nothing moved: the host flag changes nothing').toBe(`${counts('This', '84,000', '90,000')} ${tail('this')}`)
-    expect(workingYearCostTypedBelowLine(d, GATE)).toBe(`${counts('Your', '84,000', '90,000')} ${tail('your')}`)
+    const span = (answer: 'this' | 'your') =>
+      `Each working year, ${answer} answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less.`
+    expect(line(d, RESULT)).toEqual(plain(`${counts('This', '84,000', '90,000')} ${span('this')}`))
+    expect(line(d, RESULT_HOSTED), 'nothing moved: the host flag changes nothing').toEqual(plain(`${counts('This', '84,000', '90,000')} ${span('this')}`))
+    expect(line(d, GATE)).toEqual(plain(`${counts('Your', '84,000', '90,000')} ${span('your')}`))
+    for (const host of HOSTS) expect(isPlainNote(line(d, host)), 'a one-span line is a plain note').toBe(true)
   })
 
-  it('B (`datesavedrisenshort` retyped): at $105,000 every working year from 2026 through 2032 comes up short — the run named, never its first year alone', () => {
-    const d = typed(DEV_SEEDS.datesavedrisenshort)
-    expect(workingYearLeftOverShownState(d)).toBe('saved')
-    expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(
-      `${counts('This', '84,000', '105,000')} It adds at most $16,985 a year to your savings. At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short. Your $84,000 figure leaves those shortfalls out of this answer: at that figure, those years have money left over, and it adds $16,985 to your savings in each of them.`,
-    )
-  })
-
-  it('C (`datesavedrisenlater` retyped, the left over MOVED to $26,985): on the Result the moved clause takes the credit sentence’s place, naming the $84,000 its $26,985 rests on beside the quote’s $5,985 (the round review’s pair); on the gate, or where a rules line hosts the clause, the line carries no cap at all (the moved words say it, R3 (c)) — then $5,985 at $105,000 and the 2029–2032 run "at that cost"', () => {
-    const d = typed(DEV_SEEDS.datesavedrisenlater)
+  it('TM (`datesavedtypedmoved`, the left over MOVED to $26,985): three labelled spans in time order; on the Result the moved clause after the counts sentence, then the spans; on the gate, or under a rules note’s hosted clause, the counts sentence alone opens them', () => {
+    const d = DEV_SEEDS.datesavedtypedmoved
+    expect(d, 'the seed IS the retype').toEqual(typed(DEV_SEEDS.datesavedrisenlater))
     expect(workingYearLeftOverShownState(d), 'the premise: moved').toBe('saved-moved')
-    const atQuote = (answer: 'This' | 'Your') =>
-      'At $105,000 a year, your first working year, 2026, has $5,985 left over. ' +
-      `That year, ${answer.toLowerCase()} answer adds $11,000 your pay doesn’t really leave over. ` +
-      'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
-      `Your $84,000 figure leaves those shortfalls out of ${answer.toLowerCase()} answer: at that figure, those years have money left over, and it adds $16,985 to your savings in each of them.`
-    expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(
-      `${counts('This', '84,000', '105,000')} You said all of it goes into your savings when your first working year had $16,985 left over. At your $84,000 figure, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${atQuote('This')}`,
-    )
-    // The moved words say the cap on the gate's own line and under a rules note's hosted clause: no second cap here (R3 (c)).
-    expect(workingYearCostTypedBelowLine(d, RESULT_HOSTED)).toBe(`${counts('This', '84,000', '105,000')} ${atQuote('This')}`)
-    expect(workingYearCostTypedBelowLine(d, GATE)).toBe(`${counts('Your', '84,000', '105,000')} ${atQuote('Your')}`)
-    expect(DEV_SEEDS.datesavedtypedmoved, 'the seed IS this retype').toEqual(d)
+    expect(line(d, RESULT)).toEqual({ opening: `${counts('This', '84,000', '105,000')} ${TM_MOVED_CLAUSE}`, segments: TM_SEGMENTS('This'), door: null })
+    expect(line(d, RESULT_HOSTED)).toEqual({ opening: counts('This', '84,000', '105,000'), segments: TM_SEGMENTS('This'), door: null })
+    expect(line(d, GATE)).toEqual({ opening: counts('Your', '84,000', '105,000'), segments: TM_SEGMENTS('Your'), door: null })
+    // The retired year-0 sentences are gone from every host (the plan's U4 retire list).
+    for (const host of HOSTS) {
+      const text = notePartsText(line(d, host))
+      expect(text, 'no year-0 extra').not.toContain('your pay doesn’t really leave over')
+      expect(text, 'no year-0 at-quote sentence').not.toContain('your first working year, 2026, has')
+      expect(text, 'no fail-safe credit sentence where the spans speak').not.toContain('It adds at most')
+    }
   })
 
-  it('the coordinate-tap draft (`datesaved` retyped to $6,000 a month, the `verify:fit` arm’s): on the Result the clause names the $72,000 its $28,985 rests on, then the quote’s own $16,985', () => {
-    const d = typed(DEV_SEEDS.datesaved, 6_000 * 12, 'month')
-    expect(workingYearLeftOverShownState(d), 'the premise: moved').toBe('saved-moved')
-    expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(
-      `${counts('This', '72,000', '84,000')} You said all of it goes into your savings when your first working year had $16,985 left over. At your $72,000 figure, it has $28,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two. At $84,000 a year, your first working year, 2026, has $16,985 left over.`,
-    )
-  })
-
-  it('the credit is the SMALLER figure: $86,000 typed on `datesavedrisen` prints $14,985 at year 0, below the stored $16,985, and the line names $14,985', () => {
-    const d = typed(DEV_SEEDS.datesavedrisen, 86_000)
-    expect(workingYearLeftOverShownState(d)).toBe('saved-moved')
-    expect(workingYearCostTypedBelowLine(d, RESULT)).toBe(
-      `${counts('This', '86,000', '90,000')} You said all of it goes into your savings when your first working year had $16,985 left over. At your $86,000 figure, it has $14,985 left over now. So each working year adds at most $14,985 of its left over to your savings, the smaller of the two. At $90,000 a year, your first working year, 2026, has $10,985 left over. That year, this answer adds $4,000 your pay doesn’t really leave over.`,
-    )
-  })
-
-  it('first none (spending $100,985): year 0 at the quote has nothing left over, worded so, never "$0 short"', () => {
-    const d = { ...typed(DEV_SEEDS.datesavedrisen), annualSpendingReal: 100_985 }
-    expect(workingYearCostTypedBelowLine(d, GATE)).toBe(
-      `${counts('Your', '84,000', '100,985')} It adds at most $16,985 a year to your savings. At $100,985 a year, your first working year, 2026, has nothing left over. That year, your answer adds $16,985 your pay doesn’t really leave over.`,
-    )
-  })
-
-  // The two one-year arms (the walk-6 round review's L4-1: no test read their words, so "comes up $X short" could turn
-  // into "has $X left over" unseen). Both are reached from B by one field the intake writes, Sam's alimony's ages:
-  // from 61, only 2026 comes up short at $105,000 (Sam is 60 in it); to 65, only 2032 does after year 0's $5,985.
-  it('the one-year arms, typed by hand: year 0 the only short year at the quote, and a single later short year "at that cost"', () => {
-    const alimony = (startAge: number, endAge: number): ScenarioDraft => ({
-      ...DEV_SEEDS.datesavedrisenshort,
-      incomeStreams: [{ ...DEV_SEEDS.datesavedrisenlater.incomeStreams[0]!, startAge, endAge }],
-    })
-    expect(workingYearCostTypedBelowLine(typed(alimony(61, 70)), GATE)).toBe(
-      `${counts('Your', '84,000', '105,000')} It adds at most $16,985 a year to your savings. At $105,000 a year, your first working year, 2026, comes up $4,015 short. Your $84,000 figure leaves that shortfall out of your answer: at that figure, that year has money left over, and it adds $16,985 of it to your savings.`,
-    )
-    expect(workingYearCostTypedBelowLine(typed(alimony(50, 65)), GATE)).toBe(
-      `${counts('Your', '84,000', '105,000')} At $105,000 a year, your first working year, 2026, has $5,985 left over. That year, your answer adds $11,000 your pay doesn’t really leave over. At that cost, the working year 2032 comes up $3,652 short. Your $84,000 figure leaves that shortfall out of your answer: at that figure, that year has money left over, and it adds $16,985 of it to your savings.`,
+  it('KTD7’s credit rows, typed by hand: `bothCredit` with a drifting credit on either side ("at most $X to $Y"), and `quoteCreditsNothing` ("it would add nothing, $16,985 a year less")', () => {
+    // The drift household (saved at its own $26,985): this answer's credit drifts under its own left over.
+    const drift = TYPED_BELOW_WITNESSES.drift
+    expect(segment(drift, RESULT, '2026 through 2032')).toEqual([
+      'This answer adds at most $25,722 to $26,985 a year to your savings.',
+      'At your spending of $90,000 a year, it would add at most $19,722 to $20,985, $6,000 less.',
+    ])
+    expect(segment(drift, RESULT, '2033 through 2035')).toEqual([
+      'This answer adds at most $26,985 a year to your savings.',
+      'At your spending of $90,000 a year, it would add at most $20,985, $6,000 less.',
+    ])
+    // TM at $95,000: the quote answer's credit drifts, so the difference is a range too.
+    expect(segment(TYPED_BELOW_WITNESSES.tm95, GATE, '2029 through 2032')).toEqual([
+      'Your answer adds at most $16,985 a year to your savings.',
+      'At your spending of $95,000 a year, it would add at most $5,985 to $6,348, $10,637 to $11,000 less.',
+    ])
+    // C at $110,985: year 0 at the quote is exactly $0, so the answer there credits nothing in a year that is not short.
+    expect(segment(TYPED_BELOW_WITNESSES.c110985, GATE, '2026 through 2028')).toEqual([
+      'Your answer adds at most $16,985 a year to your savings.',
+      'At your spending of $110,985 a year, it would add nothing, $16,985 a year less.',
+    ])
+    // …and as the one span of a plain line, with the opener (first none: spending $100,985).
+    expect(line({ ...typed(DEV_SEEDS.datesavedrisen), annualSpendingReal: 100_985 }, GATE)).toEqual(
+      plain(
+        `${counts('Your', '84,000', '100,985')} Each working year, your answer adds at most $16,985 a year to your savings. At your spending of $100,985 a year, it would add nothing, $16,985 a year less.`,
+      ),
     )
   })
 
-  // U11 walk 7's R1: what the answer does in a run of short years at the quote, off the run's own rule — each year's cash
-  // at the typed figure is its cash at the quote plus the gap (pinned on every row both pictures list, below), and the
-  // engine credits min(that, the cap), nothing where it is short. On C at $105,000 the run is 2029–2032, short $3,652 to
-  // $4,015.
-  it('R1’s arms off the run’s own rule: the cap in each year (TM, above); a range below the cap ($99,000: the gap $6,000 leaves $1,985 to $2,348, under year 0’s $11,985); and where some year is short at the typed figure too ($102,000: the gap $3,000 is below the $4,015), the fact true in every case', () => {
-    const at = (amount: number): string => workingYearCostTypedBelowLine(typed(DEV_SEEDS.datesavedrisenlater, amount), GATE)!
-    expect(at(99_000).endsWith(
-      'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. Your $99,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds between $1,985 and $2,348 to your savings in each of them.',
-    )).toBe(true)
-    expect(at(102_000).endsWith(
-      'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. At your $102,000 figure, those years cost $3,000 less each, so your answer takes less from your savings in them.',
-    )).toBe(true)
+  it('KTD7’s short rows in their several-year and one-year forms, the tax rider on every figure that counts a shortfall drawn from savings: left over at the typed figure, still short there, and exactly $0 there', () => {
+    // `shortLeftOverAtTyped`, several years: TM (above), and a credit range below the cap ($99,000 on C).
+    expect(segment(typed(DEV_SEEDS.datesavedrisenlater, 99_000), GATE, '2029 through 2032')).toEqual([
+      'At your spending of $105,000 a year, each working year comes up $3,652 to $4,015 short, and your answer would add nothing.',
+      'Your figure of $99,000 a year leaves those shortfalls out of your answer, and it adds at most $1,985 to $2,348 a year to your savings, at most $6,000 a year more, plus any income tax on those shortfalls.',
+    ])
+    // …one year: the pension household's 2029, and B with the alimony from 61 (year 0 the only short year).
+    expect(segment(TYPED_BELOW_WITNESSES.pension, RESULT, '2029')).toEqual([
+      'At your spending of $105,000 a year, that working year comes up $4,015 short, and this answer would add nothing.',
+      'Your figure of $84,000 a year leaves that shortfall out of this answer, and it adds at most $16,985 a year to your savings, at most $21,000 a year more, plus any income tax on that shortfall.',
+    ])
+    expect(line(typed(alimony(61, 70)), GATE).segments.map((s) => s.label), 'year 0 short alone, then nothing at the quote').toEqual(['2026', '2027 through 2035'])
+    // `shortStillShortAtTyped`, several years: C typed at $101,000 (KTD7's own row), and one year (the alimony to 65 at $102,000).
+    expect(segment(TYPED_BELOW_WITNESSES.c101000, GATE, '2029 through 2030')).toEqual([
+      'At your spending of $105,000 a year, each working year comes up $4,015 short.',
+      'At your figure of $101,000 a year, each still comes up $15 short, and your answer takes at most $4,000 a year less from your savings, plus any income tax on it.',
+    ])
+    expect(segment(TYPED_BELOW_WITNESSES.c101000, GATE, '2031 through 2032')).toEqual([
+      'At your spending of $105,000 a year, each working year comes up $3,652 short, and your answer would add nothing.',
+      'Your figure of $101,000 a year leaves those shortfalls out of your answer, and it adds at most $348 a year to your savings, at most $4,000 a year more, plus any income tax on those shortfalls.',
+    ])
+    expect(segment(typed(alimony(50, 65), 102_000), RESULT, '2032')).toEqual([
+      'At your spending of $105,000 a year, that working year comes up $3,652 short.',
+      'At your figure of $102,000 a year, it still comes up $652 short, and this answer takes at most $3,000 a year less from your savings, plus any income tax on it.',
+    ])
+    // `shortEvenAtTyped`, several years: C typed at $100,985; one year: the alimony to 65 at $101,348 (2032 prints $0).
+    expect(segment(TYPED_BELOW_WITNESSES.c100985, GATE, '2029 through 2030')).toEqual([
+      'At your spending of $105,000 a year, each working year comes up $4,015 short.',
+      'At your figure of $100,985 a year, each leaves nothing over and nothing short, and your answer takes at most $4,015 a year less from your savings, plus any income tax on it.',
+    ])
+    expect(segment(typed(alimony(50, 65), 101_348), RESULT, '2032')).toEqual([
+      'At your spending of $105,000 a year, that working year comes up $3,652 short.',
+      'At your figure of $101,348 a year, it leaves nothing over and nothing short, and this answer takes at most $3,652 a year less from your savings, plus any income tax on it.',
+    ])
+  })
+
+  it('`same`: a labelled span says the answer adds the same, no figure; a one-span `same` line opens "Each working year," and keeps the opening’s lean (never "here it doesn’t"), its quote to the cent where the pair prints cents', () => {
+    const whole = TYPED_BELOW_WITNESSES.whole
+    expect(segment(whole, RESULT, '2026 through 2028')).toEqual(['This answer adds the same to your savings as it would at your spending of $90,000 a year.'])
+    expect(segment(whole, GATE, '2033 through 2035')).toEqual(['Your answer adds the same to your savings as it would at your spending of $90,000 a year.'])
+    expect(line(TYPED_BELOW_WITNESSES.cMonth874999, RESULT_HOSTED)).toEqual(
+      plain(
+        'This answer counts a working year at your own figure of $104,999.88 a year, below your spending of $105,000.00 a year. ' +
+          `${LEAN} Each working year, this answer adds the same to your savings as it would at your spending of $105,000.00 a year.`,
+      ),
+    )
+  })
+
+  it('the budget twin (KD2’s third pilot call): the counts sentence keeps the W note’s long form, each span names the quote "your budget’s $90,000 a year" (A’s household, its quote from a budget whose first year after work stops is $90,000, probed)', () => {
+    const d: ScenarioDraft = {
+      ...typed(DEV_SEEDS.datesavedrisen),
+      budget: [{ label: 'Living', category: 'housing', tier: 'essentials', annualAmountReal: 90_000, startYear: 0 }],
+    }
+    expect(workingYearQuote(d)).toMatchObject({ annualReal: 90_000, source: 'budget' })
+    expect(line(d, RESULT)).toEqual(
+      plain(
+        `This answer counts a working year at your own figure of $84,000 a year, below your budget’s first year after work stops, which comes to $90,000 a year. ${LEAN} ` +
+          'Each working year, this answer adds at most $16,985 a year to your savings. At your budget’s $90,000 a year, it would add at most $10,985, $6,000 less.',
+      ),
+    )
+  })
+
+  it('under any answer the run does not carry — unanswered, spent, not sure, a "saved" answer not asked — the counts sentence and the lean alone, a plain note', () => {
+    const d = typed(DEV_SEEDS.datesavedrisen)
+    for (const answer of [undefined, { kind: 'spent' }, { kind: 'not-sure' }] as const) {
+      expect(line(answered(d, answer), RESULT), answer?.kind ?? 'unanswered').toEqual(plain(counts('This', '84,000', '90,000')))
+    }
+    // A "saved" answer whose year 0 at the typed figure prints below $1 is "not asked": nothing is carried.
+    const notAsked = { ...typed(DEV_SEEDS.datesavedrisen, 101_000), annualSpendingReal: 110_000 }
+    expect(workingYearLeftOverShownState(notAsked), 'the premise: not asked').toBe('not-asked')
+    expect(line(notAsked, GATE)).toEqual(plain(counts('Your', '101,000', '110,000')))
   })
 
   it('the rule’s premise: W comes off each working year’s cash dollar for dollar, so on TM every row both pictures list differs by the gap ($21,000)', () => {
@@ -1090,32 +1172,63 @@ describe('workingYearCostTypedBelowLine and its door — R1, the Result and the 
     for (const r of both) expect(r.bottomLine - atQuote.laterYears.find((q) => q.calendarYear === r.calendarYear)!.bottomLine, String(r.calendarYear)).toBeCloseTo(21_000, 6)
   })
 
-  it('under any answer the run does not carry — unanswered, spent, not sure, a "saved" answer not asked — the counts sentence and the lean alone', () => {
-    const d = typed(DEV_SEEDS.datesavedrisen)
-    for (const answer of [undefined, { kind: 'spent' }, { kind: 'not-sure' }] as const) {
-      expect(workingYearCostTypedBelowLine(answered(d, answer), RESULT), answer?.kind ?? 'unanswered').toBe(counts('This', '84,000', '90,000'))
+  // R5 and R8 (the plan's U4 test 4), over every witness and every host: the opening's counts sentence sits outside it (it
+  // names both figures by design), and so does the Result's moved clause (the moved words' own pins).
+  it('the density law on every witness’s spans: no sentence names both sides; the yearly difference rides only a span’s second sentence; no "so"; at most two sentences per span; and every figure for what the answer adds or takes is "at most", a fact of the picture, or a difference set beside its pair', () => {
+    const QUOTE_SIDE = /\byour (spending of|budget’s) \$/
+    const TYPED_SIDE = /\byour figure of \$/
+    const FIG = String.raw`\$[\d,]+(?:\.\d\d)?`
+    const RANGE = String.raw`${FIG}(?: to ${FIG})?`
+    const DIFFERENCE = new RegExp(String.raw`${RANGE}(?: a year)? (?:less|more)\b`)
+    let spans = 0
+    for (const [key, d] of Object.entries(TYPED_BELOW_WITNESSES)) {
+      for (const host of HOSTS) {
+        const parts = line(d, host)
+        const spanTexts: readonly (readonly string[])[] =
+          parts.segments.length > 0
+            ? parts.segments.map((s) => s.sentences)
+            : // One span folded into the opening: its sentences start at "Each working year," (a credit kind) or "At your" (a
+              // short kind) after the counts sentence and any moved clause.
+              [parts.opening.slice(parts.opening.search(/Each working year, |At your (spending|budget)/)).split(/(?<=\.) (?=[A-Z])/)]
+        for (const sentences of spanTexts) {
+          spans += 1
+          const who = `${key} (${host.kind}${'carriesMoved' in host ? `, ${host.carriesMoved}` : ''}): ${sentences.join(' ')}`
+          expect(sentences.length, `${who} — at most two sentences`).toBeLessThanOrEqual(2)
+          expect(sentences[0], `${who} — the first sentence carries no difference`).not.toMatch(DIFFERENCE)
+          for (const s of sentences) {
+            expect(QUOTE_SIDE.test(s) && TYPED_SIDE.test(s), `${who} — one side per dollar sentence (R8)`).toBe(false)
+            expect(s, `${who} — no "so"`).not.toMatch(/\bso\b/i)
+            const rest = s
+              .replace(new RegExp(String.raw`your (?:spending of|figure of) ${FIG} a year`, 'gi'), '')
+              .replace(new RegExp(String.raw`your budget’s ${FIG} a year`, 'g'), '')
+              .replace(new RegExp(String.raw`comes up ${RANGE} short`, 'g'), '')
+              .replace(new RegExp(String.raw`(would add (?:at most ${RANGE}|nothing)), ${RANGE}(?: a year)? less`, 'g'), '$1')
+              .replace(new RegExp(String.raw`at most ${RANGE}`, 'g'), '')
+            expect(rest, `${who} — a figure that is neither "at most", a fact of the picture, nor a difference beside its pair`).not.toMatch(/\$\d/)
+          }
+        }
+      }
     }
-    // A "saved" answer whose year 0 at the typed figure prints below $1 is "not asked": nothing is carried.
-    const notAsked = typed(DEV_SEEDS.datesavedrisen, 101_000)
-    expect(workingYearLeftOverShownState({ ...notAsked, annualSpendingReal: 110_000 }), 'the premise: not asked').toBe('not-asked')
-    expect(workingYearCostTypedBelowLine({ ...notAsked, annualSpendingReal: 110_000 }, GATE)).toBe(counts('Your', '101,000', '110,000'))
+    expect(spans, 'the sweep is non-vacuous: every witness, every host').toBeGreaterThanOrEqual(Object.keys(TYPED_BELOW_WITNESSES).length * HOSTS.length)
   })
 
-  it('the budget twin names the quote in the W note’s words: "your budget’s first year after work stops, which comes to $X a year"', () => {
-    const d: ScenarioDraft = {
-      ...typed(DEV_SEEDS.datesavedrisen),
-      budget: [{ label: 'Living', category: 'housing', tier: 'essentials', annualAmountReal: 90_000, startYear: 0 }],
-    }
-    expect(workingYearQuote(d)).toMatchObject({ annualReal: 90_000, source: 'budget' })
-    expect(workingYearCostTypedBelowLine(d, RESULT)?.startsWith(
-      `This answer counts a working year at your own figure of $84,000 a year, below your budget’s first year after work stops, which comes to $90,000 a year. ${LEAN}`,
-    )).toBe(true)
-  })
-
-  it('a figure typed by the month names both figures yearly, as the W note does (7,000 a month is $84,000 a year)', () => {
+  it('a figure typed by the month names both figures yearly, and "your figure of $84,000 a year" on every host — never "your $84,000 figure" outside the gate’s door, which keeps it (R9)', () => {
     const d = typed(DEV_SEEDS.datesavedrisen, 84_000, 'month')
-    expect(workingYearCostTypedBelowLine(d, GATE)?.startsWith(counts('Your', '84,000', '90,000'))).toBe(true)
-    expect(workingYearCostTypedBelowDoor(d)?.heading).toBe('To update your $84,000 figure')
+    expect(line(d, GATE).opening.startsWith(counts('Your', '84,000', '90,000'))).toBe(true)
+    // The coordinate-tap draft, typed by the month ($6,000), moved: every host and the seat, and the moved words themselves.
+    const tap = typed(DEV_SEEDS.datesaved, 6_000 * 12, 'month')
+    const moved = workingYearLeftOverMoved(tap)
+    if (moved === null) throw new Error('[test setup] the tap draft is moved')
+    const texts = [
+      ...HOSTS.map((h) => notePartsText(line(tap, h))),
+      ...HOSTS.map((h) => notePartsText(line(TYPED_BELOW_WITNESSES.cMonth791667, h))),
+      notePartsText(workingYearLeftOverAtQuoteLine(tap, 'step')!),
+      workingYearLeftOverMovedText(moved),
+      workingYearLeftOverMovedClause(moved),
+    ]
+    expect(texts.join(' '), 'the yearly form is named').toContain('your figure of $72,000 a year')
+    for (const t of texts) expect(t, t).not.toMatch(/\byour \$[\d,]+ figure\b/)
+    expect(workingYearCostTypedBelowDoor(d)?.heading, 'the gate’s door keeps its form (shared with W’s stale door)').toBe('To update your $84,000 figure')
   })
 
   it('null — and its door null with it — wherever no FRESH typed figure sits below the quote: a yes, a kept figure, a typed figure at or above the quote, one stale on its reading (W’s own stale line speaks there), and a W left on an all-retired draft (its run reads no W)', () => {
@@ -1153,50 +1266,80 @@ describe('workingYearCostTypedBelowLine and its door — R1, the Result and the 
     expect(workingYearCostStaleDoor(DEV_SEEDS.datesavedrisen)?.gate, 'the yes it was typed over names the same door').toEqual(door)
   })
 
-  it('no sentence on any witness says "worse" or carries an em-dash, and the line is one sentence per fact (each starts with a capital after ". ")', () => {
-    for (const d of [DEV_SEEDS.datesavedtyped, typed(DEV_SEEDS.datesavedrisenshort), typed(DEV_SEEDS.datesavedrisenlater)]) {
-      for (const host of [RESULT, RESULT_HOSTED, GATE]) {
-        const line = workingYearCostTypedBelowLine(d, host)!
-        expect(line).not.toMatch(/\bworse\b/i)
-        expect(line).not.toContain('—')
-        for (const sentence of line.split('. ').slice(1)) expect(sentence, line).toMatch(/^[A-Z]/)
+  it('no sentence on any witness says "worse" or carries an em-dash, and every sentence starts with a capital after ". "', () => {
+    for (const d of Object.values(TYPED_BELOW_WITNESSES)) {
+      for (const host of HOSTS) {
+        const parts = line(d, host)
+        for (const text of [parts.opening, ...parts.segments.flatMap((s) => s.sentences)]) {
+          expect(text).not.toMatch(/\bworse\b/i)
+          expect(text).not.toContain('—')
+          for (const sentence of text.split('. ').slice(1)) expect(sentence, text).toMatch(/^[A-Z]/)
+        }
       }
     }
   })
 })
 
-// U11 walk 7's R2: the details sheet, where the Result's door lands, named neither TM's $5,985 nor its 2029–2032 run, and
-// never A's $10,985. The seat names the typed figure its year-0 left over rests on, and, under a "saved" answer the run
-// carries, ends with the typed-below line's own at-quote sentences, BELOW its radios (R6: the W row above the seat reads
-// no answer, so a tap on "Spent" never takes four sentences out from above the radio it pressed).
-describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — the seat’s half of the typed-below line (U11 walk 7’s R2)', () => {
+// The seat's half (U11 walk 7's R2; the rebuild's KTD6, host 3): the details sheet, where the Result's door lands, and the
+// walk's money-picture step draw the same spans BELOW the seat's radios (R6: nothing above the radios reads the answer).
+// In the sheet the W row's typed-below note above carries the lean; on the step nothing above does, so the line opens on
+// the counts sentence in its "Your" form. Typed by hand on A and TM; the rest is the one-composer identity.
+describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — the seat’s half of the typed-below line (KTD6, host 3)', () => {
   const typed = (d: ScenarioDraft, amountReal = 84_000): ScenarioDraft => {
     const w = d.workingYearCost
     if (w === undefined) throw new Error('[test setup] the witness holds a W')
     return { ...d, workingYearCost: { kind: 'entered', amountReal, entryPeriod: 'year', stateTaxReading: w.stateTaxReading } }
   }
   const GATE = { kind: 'gate' } as const
-  const A_AT_QUOTE = 'At $90,000 a year, your first working year, 2026, has $10,985 left over. That year, your answer adds $6,000 your pay doesn’t really leave over.'
-  const TM_AT_QUOTE =
-    'At $105,000 a year, your first working year, 2026, has $5,985 left over. That year, your answer adds $11,000 your pay doesn’t really leave over. ' +
-    'At that cost, each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
-    'Your $84,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds $16,985 to your savings in each of them.'
-  const B_AT_QUOTE =
-    'At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short. ' +
-    'Your $84,000 figure leaves those shortfalls out of your answer: at that figure, those years have money left over, and it adds $16,985 to your savings in each of them.'
-  const WITNESSES: ReadonlyArray<readonly [string, ScenarioDraft, string]> = [
-    ['A (`datesavedtyped`, saved)', DEV_SEEDS.datesavedtyped, A_AT_QUOTE],
-    ['TM (`datesavedtypedmoved`, saved, moved)', DEV_SEEDS.datesavedtypedmoved, TM_AT_QUOTE],
-    ['B retyped (`datesavedrisenshort` at $84,000, saved)', typed(DEV_SEEDS.datesavedrisenshort), B_AT_QUOTE],
-  ]
+  const RESULT = { kind: 'result', carriesMoved: true } as const
+  const COUNTS_A = 'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. A working year almost always costs at least what you spend, so this answer can look better than it really is.'
+  const COUNTS_TM = 'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. A working year almost always costs at least what you spend, so this answer can look better than it really is.'
+  const A_SPAN = 'Each working year, your answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less.'
+  const LEAD = 'What this answer adds to your savings in each working year:'
+  const seat = (d: ScenarioDraft, host: TypedBelowSeatHost): NoteParts => {
+    const parts = workingYearLeftOverAtQuoteLine(d, host)
+    if (parts === null) throw new Error('[test setup] the seat draws the spans')
+    return parts
+  }
 
-  it.each(WITNESSES)('%s: the typed figure is named, and the at-quote sentences are the Result’s own words for that draft', (_name, d, atQuote) => {
+  it('A (one span): in the sheet the span alone, a plain paragraph; on the step the counts sentence first', () => {
+    const d = DEV_SEEDS.datesavedtyped
     expect(workingYearLeftOverTypedBelow(d)).toBe('84,000')
-    expect(workingYearLeftOverAtQuoteLine(d)).toBe(atQuote)
+    expect(seat(d, 'sheet')).toEqual({ opening: A_SPAN, segments: [], door: null })
+    expect(seat(d, 'step')).toEqual({ opening: `${COUNTS_A} ${A_SPAN}`, segments: [], door: null })
   })
 
-  it.each(WITNESSES)('%s: ONE composer — the gate’s typed-below line ends on exactly these sentences (insight 081: the sheet and the gate can never word them two ways)', (_name, d, atQuote) => {
-    expect(workingYearCostTypedBelowLine(d, GATE)?.endsWith(` ${atQuote}`)).toBe(true)
+  it('TM (three spans): the seat’s lead, then one labelled part per span in "Your" words; on the step the counts sentence opens ahead of the lead', () => {
+    const d = DEV_SEEDS.datesavedtypedmoved
+    const sheet = seat(d, 'sheet')
+    expect(sheet.opening).toBe(LEAD)
+    expect(sheet.segments.map((s) => s.label)).toEqual(['2026 through 2028', '2029 through 2032', '2033 through 2035'])
+    expect(sheet.segments[1]!.sentences).toEqual([
+      'At your spending of $105,000 a year, each working year comes up $3,652 to $4,015 short, and your answer would add nothing.',
+      'Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, plus any income tax on those shortfalls.',
+    ])
+    expect(sheet.door).toBeNull()
+    expect(seat(d, 'step')).toEqual({ ...sheet, opening: `${COUNTS_TM} ${LEAD}` })
+    expect(workingYearLeftOverTypedBelow(d)).toBe('84,000')
+  })
+
+  it('ONE composer (U4 test 5): on every witness the seat’s spans are the gate’s word for word, and the Result’s apart from "This" / "Your" — the sheet, the gate and the Result can never word a span two ways', () => {
+    const toYour = (s: string): string => s.replace(/\bThis answer\b/g, 'Your answer').replace(/\bthis answer\b/g, 'your answer')
+    for (const [key, d] of Object.entries(TYPED_BELOW_WITNESSES)) {
+      const sheet = seat(d, 'sheet')
+      const gate = workingYearCostTypedBelowLine(d, GATE)!
+      const result = workingYearCostTypedBelowLine(d, RESULT)!
+      if (gate.segments.length === 0) {
+        expect(gate.opening.endsWith(` ${sheet.opening}`), `${key}: the gate ends on the seat’s one span`).toBe(true)
+        expect(toYour(result.opening).endsWith(` ${sheet.opening}`), `${key}: the Result ends on it, "This" for "Your"`).toBe(true)
+        expect(sheet.segments, key).toEqual([])
+      } else {
+        expect(sheet.segments, key).toEqual(gate.segments)
+        expect(result.segments.map((s) => ({ label: s.label, sentences: s.sentences.map(toYour) })), key).toEqual(sheet.segments)
+        expect(sheet.opening, key).toBe(LEAD)
+      }
+      expect(seat(d, 'step').segments, `${key}: the step draws the sheet’s spans`).toEqual(sheet.segments)
+    }
   })
 
   it('where the left over has moved, the seat’s typed figure is the moved core’s, so the moved line and the figure line can never name two figures', () => {
@@ -1204,13 +1347,14 @@ describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — t
     expect(workingYearLeftOverMoved(tm)?.typedBelow).toBe(workingYearLeftOverTypedBelow(tm))
   })
 
-  it('under an answer the run does not carry — unanswered, spent, not sure — the typed figure is still named (it reads no answer) and the at-quote sentences are not drawn', () => {
-    for (const [name, d] of WITNESSES) {
+  it('under an answer the run does not carry — unanswered, spent, not sure — the typed figure is still named (it reads no answer) and no spans are drawn, on either host', () => {
+    for (const [name, d] of [['A', DEV_SEEDS.datesavedtyped], ['TM', DEV_SEEDS.datesavedtypedmoved], ['B retyped', typed(DEV_SEEDS.datesavedrisenshort)]] as const) {
       for (const answer of [undefined, { kind: 'spent' }, { kind: 'not-sure' }] as const) {
         const x = answered(d, answer)
         const who = `${name}, ${answer?.kind ?? 'unanswered'}`
         expect(workingYearLeftOverTypedBelow(x), who).toBe('84,000')
-        expect(workingYearLeftOverAtQuoteLine(x), who).toBeNull()
+        expect(workingYearLeftOverAtQuoteLine(x, 'sheet'), who).toBeNull()
+        expect(workingYearLeftOverAtQuoteLine(x, 'step'), who).toBeNull()
       }
     }
   })
@@ -1232,14 +1376,15 @@ describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — t
       ['`datesaved` (a fresh yes)', DEV_SEEDS.datesaved],
     ] as const) {
       expect(workingYearLeftOverTypedBelow(x), name).toBeNull()
-      expect(workingYearLeftOverAtQuoteLine(x), name).toBeNull()
+      expect(workingYearLeftOverAtQuoteLine(x, 'sheet'), name).toBeNull()
+      expect(workingYearLeftOverAtQuoteLine(x, 'step'), name).toBeNull()
     }
   })
 
-  it('a "saved" answer that is not asked (year 0 at the typed figure below $1) carries nothing, so no at-quote sentences', () => {
+  it('a "saved" answer that is not asked (year 0 at the typed figure below $1) carries nothing, so no spans', () => {
     const notAsked = { ...typed(DEV_SEEDS.datesavedrisen, 101_000), annualSpendingReal: 110_000 }
     expect(workingYearLeftOverShownState(notAsked), 'the premise: not asked').toBe('not-asked')
-    expect(workingYearLeftOverAtQuoteLine(notAsked)).toBeNull()
+    expect(workingYearLeftOverAtQuoteLine(notAsked, 'step')).toBeNull()
   })
 })
 

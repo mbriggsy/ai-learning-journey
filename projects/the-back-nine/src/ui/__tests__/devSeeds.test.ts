@@ -66,6 +66,7 @@ import {
 } from '@engine/dateSearch'
 import type { WorkingYearCashLines } from '@engine/taxOverlay'
 import { workingYearBottomLine } from '@engine/workingYearLedger'
+import { typedBelowCrownedHousehold, typedBelowPensionHousehold } from '@intake/__tests__/typedBelowWitnesses'
 
 /**
  * The dev-seed validity proof (the SAME render-anchor coupling intakeMap.test.ts
@@ -1422,7 +1423,7 @@ describe('the arrived aged plant (the first live route to the hero\'s dateInYear
     ).toBeLessThan(depth)
     // NOT an incidental observation: the floor crowning at 0 is exactly why this plant lights ONE
     // arrived arm and not two. `floorLineText` short-circuits offset 0 BEFORE the three-way split
-    // (FuckOffDate.tsx:268, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
+    // (FuckOffDate.tsx:269, mirroring heroLead's free-today precedence), so `dateFloorCoveredPast`
     // cannot fire here — its live route is and remains `?vault=datestale`. Arm 3 proves the
     // consequence on the renderer rather than leaving it as a comment.
     expect(out.floor.offsetYears, 'the floor crowns at 0 — the plain covered line, never the Past arm').toBe(0)
@@ -1674,7 +1675,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(carrying).toEqual([
       'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datelateleftover', 'datemixed', 'datenc', 'datesaved',
       'datesavedfourbuckets', 'datesavedmoved', 'datesavedrisen', 'datesavedrisenlater', 'datesavedrisenshort', 'datesavedstale', 'datesavedtyped',
-      'datesavedtypedmoved', 'dateshort',
+      'datesavedtypedcrowned', 'datesavedtypedmoved', 'datesavedtypedpension', 'dateshort',
       'datesolo',
       'datesplit', 'dip',
     ])
@@ -1790,8 +1791,9 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     // Every buildable date seed carries W (the arm above), so this is all twenty of them, the short seed, the
     // later-left-over witness (U15), build 2's three saved witnesses (U9), U11's risen twin and its two (ae) arms
     // (short at the quote, a later year short at the quote), U11 walk 6's retype (R1: a typed W, fresh), the
-    // four-bucket twin (council (6)) and the retype after a move (the walk-6 round review's pair) included.
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(20)
+    // four-bucket twin (council (6)), the retype after a move (the walk-6 round review's pair) and the whole-window
+    // rebuild's two (the pension household and the crowned one) included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(22)
   })
 
   // The whole-window rebuild's every-year field (KTD1) on two witnesses the typed-below line reads. A (`datesavedtyped`):
@@ -1848,7 +1850,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
       swept++
     }
-    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty above)').toBe(20)
+    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty-two above)').toBe(22)
   })
 
   // Build 2's U9 (KTD14): the three saved witnesses, each minted through the shipped write. Every figure typed by
@@ -2052,6 +2054,26 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     const built = scenarioFromDraft(d)
     if (!built.ready) throw new Error(`datesavedtypedmoved: ${built.detail}`)
     expect(built.scenario.workingYearLeftOver, 'it plants as a vault with its answer').toEqual({ kind: 'saved', quotedReal: 16_985 })
+  })
+
+  // The whole-window rebuild's two seeds (walk 8's added targets), each built in `devSeeds.ts` itself (never by importing the
+  // test builder, which imports `DEV_SEEDS`) and pinned EQUAL to the builder U3's witness pins read: the pension household
+  // (five spans) and the crowned one (a span past the headline's date). Both fresh, both "saved, moved" as TM is, and
+  // both plant as a vault with their answer, so walk 8 takes them as `seed:` and `vault:` targets.
+  it('the whole-window rebuild’s seeds: `datesavedtypedpension` and `datesavedtypedcrowned` ARE the U3 witness builders’ households — fresh, moved to $26,985 at the typed $84,000, and each plants as a vault with its answer', () => {
+    expect(DEV_SEEDS.datesavedtypedpension).toEqual(typedBelowPensionHousehold())
+    expect(DEV_SEEDS.datesavedtypedcrowned).toEqual(typedBelowCrownedHousehold())
+    expect(DEV_SEEDS.datesavedtypedcrowned.enteredAccounts[0], 'only Alex’s 401(k) differs from TM’s').toMatchObject({ kind: '401k', valueToday: 1_600_000 })
+    expect(DEV_SEEDS.datesavedtypedcrowned.enteredAccounts.slice(1)).toEqual(DEV_SEEDS.datesavedtypedmoved.enteredAccounts.slice(1))
+    for (const key of ['datesavedtypedpension', 'datesavedtypedcrowned'] as const) {
+      const d = DEV_SEEDS[key]
+      expect(isWorkingYearCostStale(d), `${key}: a typed figure is fresh`).toBe(false)
+      expect(workingYearLeftOverShownState(d), key).toBe('saved-moved')
+      expect(workingYearLeftOverMoved(d), key).toEqual({ stored: 16_985, live: 26_985, typedBelow: '84,000' })
+      const built = scenarioFromDraft(d)
+      if (!built.ready) throw new Error(`${key}: ${built.detail}`)
+      expect(built.scenario.workingYearLeftOver, `${key} plants as a vault with its answer`).toEqual({ kind: 'saved', quotedReal: 16_985 })
+    }
   })
 
   // Build 2's U15 (KTD14): the household R5 never asks, minted dark. Its year 0 prints short, and the run itself

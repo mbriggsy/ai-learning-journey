@@ -185,8 +185,9 @@ export interface FuckOffDateProps {
    *  does with it now and what updating to today's quote does, as labelled parts since U11 walk 5's (bi)) and, where
    *  the door rides, what the Result says beside it (`workingYearCostStaleDoor`'s `result`). Its cause is split by
    *  the act (`W_STALE_CAUSE`), so the door names the act the W row really offers. `'w-typed-below'` — U11 walk 6's R1,
-   *  a fresh TYPED W below today's quote (it needs a fresh W, so it never shares the slot with W stale); one plain line
-   *  that carries a moved left over's figures as its clause where no rules line hosts them. `'left-over-moved'` — build
+   *  a fresh TYPED W below today's quote (it needs a fresh W, so it never shares the slot with W stale); its line as parts
+   *  (the whole-window rebuild's KTD6: one span a plain line, two or more a block of labelled spans, its door the button
+   *  alone), carrying a moved left over's figures as its clause where no rules line hosts them. `'left-over-moved'` — build
    *  2's R12, the household's "All of it" was given against a year-0 figure that has since changed; its parts are one
    *  plain sentence naming both (a moved left over needs a fresh W, so it never meets W stale either). Each cause picks its own lead and door label (`STANDING_NOTE_COPY`). `onOpen`
    *  present ⇒ the sentence carries a door into the assumptions panel at the cause's seat (Result passes it only when
@@ -500,9 +501,11 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
               and above the graphs: a calm note in the same register, never role=alert. Its door is
               inline after the sentence (the band premise's grammar), and only where the tab can act
               on it; a read-only tab reads the fact alone. */}
-          {/* With parts (W's stale line for a "saved" answer), a block in the same slot and register (council
-              `wf_22858e04-f7a` (4), amending KTD21's element only): the opening, the labelled segments, and the door as
-              the last dt/dd with its button as a block of its own. */}
+          {/* With parts (W's stale line for a "saved" answer; the typed-below line at two or more spans), a block in the same
+              slot and register (council `wf_22858e04-f7a` (4), amending KTD21's element only): the opening, the labelled
+              segments, and the door as the last dt/dd with its button as a block of its own. A block with no door (the
+              typed-below line's) still carries its button wherever the tab can act: the block draws it last, as a block
+              (the whole-window rebuild's KTD6, host 1). */}
           {payCheckNote !== undefined && isPlainNote(payCheckNote.parts) && (
             <p className="fod-note cs-paycheck-note">
               <span>{standingOpening(payCheckNote.cause, payCheckNote.parts.opening)}</span>
@@ -521,7 +524,7 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
               className="fod-note cs-paycheck-note"
               parts={{ ...payCheckNote.parts, opening: standingOpening(payCheckNote.cause, payCheckNote.parts.opening) }}
               button={
-                payCheckNote.onOpen !== undefined && payCheckNote.parts.door !== null ? (
+                payCheckNote.onOpen !== undefined ? (
                   <button type="button" className="band-premise__cta note-parts__cta" onClick={payCheckNote.onOpen}>
                     {copy[STANDING_NOTE_COPY[payCheckNote.cause].cta]}
                   </button>

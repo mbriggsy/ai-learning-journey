@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-14, b9-10's close):** the typed-below line's whole-window rebuild (`docs/plans/features/typed-below-whole-window-rebuild-spec.md`) has commits 1 and 2 built (`d5c549d7`: U1 + U2; `02835abe`: U3, the whole-window read, dark). In order: (1) the build's commit 3, U4 + U5 + U6 landing as ONE commit, opened with `/brief the typed-below line's span words and their three hosts (U4)` and, before U5, the four design skills; read the plan's "Minor faults" list first; it lands only once the close block's "Commit 3's gates" pass; (2) the whole-file review over all three commits, with an adversary and every finding verified, and a mutant pass; its fix commit re-runs those gates; (3) walk 8: walk 7's 14 targets plus the plan's three (its Goal Capsule), then its card (walk 7's R1 hold clears only once read); then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
+▶ **START HERE (2026-11-14, b9-1's close):** the typed-below line's whole-window rebuild (`docs/plans/features/typed-below-whole-window-rebuild-spec.md`) is built in three commits (`d5c549d7`, `02835abe`, `c8fd5bc8`), its whole-file review's round 1 folded in `7e581a44` (`wf_76724546-212`). In order: (0) the step b9-1 skipped: the four design skills read commit 3's two new faces (the seat's parts block below the radios; the Result's doorless block); (1) the review's round 2 on round 1's fix code (the close block's "Round 2's scope"), with an adversary and every finding verified, then round 3, a harm-class gate, then the mutant pass (the close block's "The mutant pass"), each fix commit behind "The review's gates"; (2) walk 8: walk 7's 14 targets plus the plan's three (its Goal Capsule), with the close block's "Walk 8's reads", then its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,7 +94,7 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **the typed-below line's whole-window rebuild, then walk 8** (START HERE; the plan is
+     ▶ NEXT: **the rebuild's review rounds 2 and 3 and its mutant pass, then walk 8** (START HERE; the plan is
      `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, and the register's Tier 0 retype entry carries the
      council's NEGATIVE on the round review's x_t metric). Its research, the council's drafts and full result sit in
      `b9-build2-surplus\u11-wholewindow\` (`research\witnesses.md` holds every witness's per-year engine figures); the
@@ -259,103 +259,51 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-14 (b9-10: the rebuild's commit 2; b9-9's block pruned into it):**
+**SESSION 2026-11-14 (b9-1: the rebuild's commit 3 and its review's round 1; b9-10's block pruned into it):**
 
 State at close:
-- `d5c549d7` (commit 1: U1 `workingYears`, U2 `workingYearCredit` + its binding read) and `02835abe` (commit 2: U3) are built.
-  U3 is `workingYearTypedBelowWindow` in `src/intake/workingYearLeftOver.ts`, dark: each window year's credit for this
-  answer and for the answer at the quote (`workingYearCredit`, with the stored figure each run carries:
-  `carriedWorkingYearLeftOver`, now exported from `src/intake/intakeMap.ts`, which `typedBelowCarried` reads too), a
-  `TypedBelowYearKind` per year, and `TypedBelowSpan`s (a union per kind: `credit`, `creditAtQuote`, `shortAtQuote`,
-  `shortAtTyped`, `difference`, each on the printed grain); `unknown` where a premise fails (each unreachable).
-- Its witnesses are `src/intake/__tests__/typedBelowWitnesses.ts` (`TYPED_BELOW_WITNESSES`, fifteen households;
-  `typedBelowPensionHousehold` and `typedBelowCrownedHousehold` are the builders commit 3's two seeds are pinned equal
-  to). Every span the plan's witness table names held as written; the probe records are
-  `b9-build2-surplus\u11-wholewindow\research\wit\u3-probe.out.txt` and `u3-crown.out.txt`.
-- Gates on `02835abe`'s tree: typecheck, lint and `verify:doc-stats` exit 0; the full suite pinned, all green (its count
-  under `verify:doc-stats`); the sweep `ww2` identical to `wholewindow` on all 45 keys (the build-2 README's table);
-  mutants 9 of 9 live plants red, the 2 predicted equivalents survived (`u11-wholewindow\u3-mutants\RESULT.md`). CI green
-  on `d5c549d7` (43515151846), b9-9's close (43515592549) and `02835abe` (43522040798).
-- This close was cold-read by three blind readers (`wf_61babe1c-b9e`: the next session, an adversary, commit 3's
-  builder); every finding they verified is folded in below.
+- `c8fd5bc8` (commit 3) is live: the span words (`TYPED_BELOW_SPAN_WORDS` over ten `workingCostTypedBelowSpan*` slots, KTD7's drafts), `workingYearCostTypedBelowLine` and `workingYearLeftOverAtQuoteLine` return NoteParts (one span plain, two or more labelled parts), the Result's doorless block keeps its button, the gate pushes `{ text, parts }`, the seat draws the parts below the radios and takes its host (`TypedBelowSeatHost`), R9's "your figure of $84,000 a year", R10's year-0 reason, and two seeds: `datesavedtypedpension` (five spans; no date on either tier) and `datesavedtypedcrowned` (crowned 7 years out on both tiers, the provisional on the bar).
+- The review's round 1 (`wf_76724546-212`; its record and script in `<B>\u11-wholewindow\review-r1\`): 19 raw, 15 deduped, 8 confirmed (3 P2, 5 P3), 7 rejected (real but immaterial, or already filed: #15 is (g)). Folded in `7e581a44`: #1 a still-short span's "at most" is the raw draw difference rounded up on the cent grain (R5 over V9; the plan's R6 as-built note); #2 / #8 the crown computed by `runDateSearch`; #3 the V3 register entry widened to every year-0-anchored composer; #4 Records for the quote source and the seat host; #5 the density law's sides non-vacuous; #6 seven stale comments. #7 goes to walk 8.
+- Gates on `7e581a44`'s tree: typecheck and lint exit 0; the full suite pinned, all green (its count under `verify:doc-stats`); `verify:doc-stats` exit 0; `pnpm build` exit 0; `verify:fit` pinned 181 of 181; the sweep `ww4` identical to `ww3` on all 47 keys (`<B>\idcheck-ww4.txt`). `ww3` (commit 3) is the baseline: 45 of 45 identical to `wholewindow`, the two new seeds its candidate-only keys. CI green on `fd8170b0` (43609383186) and `c8fd5bc8` (43616244761).
 
-Next is START HERE. No successor named (Briggsy starts a new b9 series).
+Next is START HERE. Successor: b9-2 (handoff mode).
 
 **Check at start:**
-- CI on this close's own commit: `gh run list --commit <its full sha>` (`git log -1 --format=%H -- TODO.md`);
+- CI on `7e581a44` and on this close's own commit: `gh run list --commit <full sha>` for each (`git log -2 --format=%H -- .`);
 - the ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 
-**Commit 3's gates** (the plan's Verification Contract rows for commit 3; it lands only once all pass). Each heavy run
-alone, in sequence, pinned to the P-cores from PowerShell (the landmine below); `<B>` is
-`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus`:
-1. Before the first edit, record the re-anchor base: `git rev-parse HEAD` (this close's commit; its `src` is `02835abe`'s).
-2. After the last edit: `pnpm typecheck`, `pnpm lint`, and every edited e2e spec through a scratch tsconfig (landmine below).
-3. `pnpm doc:reanchor <base>` dry, each proposed edit classified by the cited content, then `--apply` once; then the full
-   suite pinned (`pnpm test`); then `pnpm verify:doc-stats` (retype the test count in `README.md` and `docs/roadmap.md`
-   from the live count it prints).
-4. `pnpm build` (the entry-chunk guard) and `pnpm verify:fit`, pinned.
-5. The sweep: `pnpm exec tsx <B>\tools\sweep.mts ww3 --today=20758`, then `node <B>\tools\idcheck.mjs ww3 wholewindow`
-   (exit 0; the two new seeds are tree-only keys, listed, never compared). Then make `sweep-ww3.json` the baseline (a row in
-   `<B>\README.md`'s table) so the review's fix commit compares the new seeds too.
-The review's fix commit re-runs 2–5, re-anchoring against commit 3's sha (never this close's twice).
+**Round 2's scope** (the review's next round, aimed at round 1's fix code; copy `<B>\u11-wholewindow\review-r1\review.workflow.js`, point its BRIEF at `7e581a44` beside the three commits, keep its six lenses, four adversaries and the refuter quorum, `model: 'opus'` and `effort: 'xhigh'` on every agent): `stillShortDifferenceDollars` and the two raw-cash fields on `TypedBelowYear` (`src/intake/workingYearLeftOver.ts`); `TypedBelowQuoteSource`, `SPAN_QUOTE`, `TYPED_BELOW_COUNTS`, `SEAT_OPENS_ON_COUNTS`; the crown test in `src/engine/__tests__/workingYearCredit.test.ts`; the density law's sides in `src/intake/__tests__/workingYearLeftOver.test.ts`; and every frame reader the source Record re-pointed (copyGuard, both e2e specs).
 
-**LANDMINES (the rebuild's commit 3, its review, and walk 8):**
-- **The round review's own fix measured the wrong thing.** Its x_t (credit at the typed figure minus the print at the
-  quote) understates every year after year 0; the lean is the pair (the plan's KD1; the register entry's NEGATIVE). A
-  reviewer or reader who re-proposes x_t, "at least" or a "still working" condition on a credit is re-deriving a
-  refuted finding.
-- **The typed-below line's and the seat's words read `workingYearTypedBelowWindow`'s spans, never a listed row, a retyped
-  `min` or cap, or `checkAtQuote`** (R10's waiting sentence keeps `quoteLeavesNothing`, U4 step 4). A span carries only
-  its own kind's figures: a `shortStillShortAtTyped` or `shortEvenAtTyped` span has no `credit`, a `same` span none at
-  all, so a words Record keyed by kind (insight 147) is what makes `tsc` find every reader. The read's three answers:
-  `null` means no spans, NOT no line: the Result's and the gate's line still prints its counts sentence and lean under
-  any answer the run does not carry, exactly as today (`workingYearCostTypedBelowLine`'s `if (c === null) return counts`),
-  and only `freshTypedBelow(d) === null` means no line; `unknown` keeps the fail-safe `workingCostTypedBelowAdds` (the
-  plan's Minor faults); `read` speaks the spans.
-- **KTD7's table has no credit-range form and no one-year form for its still-short and even rows.** U3 returns credit
-  ranges (TM at $95,000's quote answer $5,985 to $6,348; the drift household $25,722 to $26,985 against $19,722 to
-  $20,985; $7,916.67 a month's short span $5,984 to $6,347). Draft them in the table's own range form ("at most $X to
-  $Y"), pin each by hand on those three witnesses, and flag the drafts for walk 8.
-- **The two new seeds are built in `src/ui/devSeeds.ts` itself**, the way `dateSavedTypedMovedWitness` is (from
-  `dateSavedRisenLaterWitness`: plus Sam's pension at 64–65 typed at `84_000`; with Alex's 401(k) at `1_600_000`), never by
-  importing the builder (it imports `DEV_SEEDS`: a cycle, and app code reading a test file); then pin
-  `expect(DEV_SEEDS.datesavedtypedpension).toEqual(typedBelowPensionHousehold())`, the same for the crowned seed.
-- **W's stale line shares `checkAtQuote` / `laterShortOf` / `shortRunFrom` with today's typed-below line.** The plan
-  forks a new read (KTD5); touching that core changes W-stale words on four seeds the plan does not scope. The typed-below
-  line's own use goes with the seven retired at-quote slots (`typedBelowCarried`'s `checkAtQuote` call and
-  `TYPED_BELOW_AT_QUOTE`, by the plan's no-dead-branch rule), never the shared functions.
-- **One composer feeds every host** (the Result's slot, the gate's line, and the seat, which is drawn in the details
-  sheet AND on the walk's money-picture step, KTD6), so commit 3 changes every reader at once: the fit gate's
-  `PAY_CHECK_UNLOCKS` and its coordinate-tap arm, `reentry.test.tsx`, `resultPayCheckLine.test.tsx`,
-  `IntakeApp.test.tsx`, the caddie `intake:typedbelow` arm. The unit suite never runs Playwright: grep `e2e/` for every
-  slot the rebuild retires or renames (walk 7's commit 2 redded CI exactly this way).
-- **`pnpm doc:reanchor` reads a bare `:N` after a file name as a live citation**: commit 2's run proposed moving the
-  quoted `:2217` in `docs/landmines.md:411` (an old TODO.md example inside that landmine's prose) because TODO.md had
-  changed since its base. Refuse such a move by hand (in Git Bash from the project dir,
-  `git show HEAD:projects/the-back-nine/docs/landmines.md > docs/landmines.md` restores it when that file has no other
-  change; it is LF-only). It also rewrites citations in `src` comments, and an edit after its one `--apply` is not
-  re-anchored (`docs/landmines.md`).
-- **A pinned run is launched from PowerShell** (`cmd /c "start `"`" /b /wait /affinity FFF <cmd> > <log> 2>&1"`):
-  through Git Bash's `cmd //c` the same line hangs with no child process (it did, b9-10). It reports exit 0 even when the
-  child threw: read the run's log or summary lines, or wrap the command in `<B>\tools\run-pinned.cmd`, which prints
-  `PINNED_EXIT=<the real code>`.
-- **The sweep, the suite, `verify:fit` and the mutant runner run one at a time** (`docs/landmines.md`, the mutation
-  harness): each imports `src` live, so edit no `src` file while one runs. `ww2` took about 21 minutes of per-key time.
-- **The review's mutant pass copies `<B>\u11-wholewindow\u3-mutants\mutants.cjs`** (this supersedes the plan's
-  Verification Contract pointer to `u11-walk7-round`): reset its `FILES` to commit 3's suites (`workingYearLeftOver`,
-  `copyGuard`, `devSeeds`, `stalenessExposure`, `reentry`, `resultPayCheckLine`, `IntakeApp`, `assumptionPanel`,
-  `workingCostStep`), or a plant in `copy.ts` or a host runs no test that can catch it; predictions written first.
-- **The crowned seed's provisional crown sits on the bar** (offset 7 at 0.85, margin 0; final 0.86): a later engine
-  change can move it. If walk 8's capture shows another offset, re-probe from the project dir
-  (`pnpm exec tsx --tsconfig ./tsconfig.json <B>\u11-wholewindow\research\wit\u3-crown.mts 1600000`; with no figure it
-  prints nothing) before reading the line against the date.
-- **The constants gate reds a bare 72000 or 750000 in `src`** (`constants.shape.test.ts`, underscores stripped): write
-  `6_000 * 12`, and keep the crowned seed's raised savings off 750,000 (its 401(k) is `CROWNED_401K`, $1,600,000).
-- **Before commit 3, read `docs/landmines.md`'s The fit gate and e2e, The mutation harness, Copy and copyGuard,
-  Windows and the shell, and Probes and measurement sections**: the shell, e2e, copy-gate and harness landmines this
-  build trips (the CRLF files, the fit ghosts, the specs outside `pnpm typecheck`, `entryCopy`, the by-hand pins) live there.
+**The review's gates** (each fix commit; each heavy run alone, in sequence, pinned to the P-cores from PowerShell; `<B>` is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus`):
+1. Before the first edit: `git rev-parse HEAD`, the re-anchor base.
+2. After the last edit: `pnpm typecheck`, `pnpm lint`, and every edited e2e spec through a scratch tsconfig (landmine below).
+3. `pnpm doc:reanchor <base>` dry, each move classified (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry output>`), then `--apply` once; restore `e2e/held/fit-24px-measurements.md` from HEAD and refuse the moves of the quoted examples in `docs/landmines.md` (the "two new register entries shifted `docs/backlog.md:1975`…" lines); then the full suite pinned; then `pnpm verify:doc-stats` (retype the count in `README.md` and `docs/roadmap.md`).
+4. `pnpm build` and `pnpm verify:fit`, pinned.
+5. The sweep: `pnpm exec tsx <B>\tools\sweep.mts <label> --today=20758`, then `node <B>\tools\idcheck.mjs <label> ww3` (exit 0). A row in `<B>\README.md`'s table.
+
+**The mutant pass** (after round 3): copy `<B>\u11-wholewindow\u3-mutants\mutants.cjs` + `mutants-list.cjs`, reset `FILES` to the rebuild's suites (`workingYearLeftOver`, `workingYearCredit`, `copyGuard`, `devSeeds`, `stalenessExposure`, `reentry`, `resultPayCheckLine`, `IntakeApp`, `assumptionPanel`, `workingCostStep`), predictions written first. Plants owed, besides the composer's own: "at most" dropped from `workingCostTypedBelowSpanAtQuoteCredit` (the density sweep's non-vacuity, never yet planted); the still-short difference back to printed subtraction (`stillShortDifferenceDollars`); a span join that ignores the binding term; `SEAT_OPENS_ON_COUNTS` flipped; FuckOffDate's parts branch gating its button on a door again; a one-year form lost.
+
+**Walk 8's reads** (each a flagged draft or pilot call; the card rules on each):
+- KD2's three pilot calls: the density of a short span (TM's 2029–2032 segment); the cap said in every span and again in the moved words (on PA's witness the Result says $16,064 twice in a row); the budget twin's short form.
+- KD3, on T (`vault:datesavedtyped`, an unpriced state): does "$6,000 less" read as the whole lean?
+- Review #7: a drifting span prints its two ranges in opposite orders ("at most $5,985 to $6,348, $10,637 to $11,000 less" on TM at $95,000; the pension seed's 2030–2031 is the same shape), so a reader pairing low with low reads a cap that is not $16,985. The fallback: drop the difference where this answer's credit is one figure (the pair states it), a form call for a council.
+- Review #1's residual: "$4,015 short … $16 short … at most $4,000" (the reader's subtraction runs $1 under the figure; R5 over V9).
+- The seat's lead says "What this answer adds…" above spans that say "Your answer…" (the plan's literal words; the counts sentence already mixes "Your answer counts … so this answer can look better").
+- A one-year span keeps "a year" on its credit and difference ("2029: … adds at most $16,985 a year … at most $21,000 a year more").
+
+**LANDMINES (the review's rounds, the mutant pass and walk 8):**
+- **x_t is refuted** (the plan's KD1; the register entry's NEGATIVE): a reviewer or reader who re-proposes x_t, "at least" or a "still working" condition on a credit re-derives a refuted finding.
+- **A still-short span's difference reads the raw cash** (`TypedBelowYear.cash` / `.cashAtQuote`); every other kind reads the printed figures. A reviewer who "unifies" the two re-opens review #1.
+- **The line's and the seat's words read `workingYearTypedBelowWindow`'s spans, never a listed row, a retyped `min` or cap, or `checkAtQuote`**; `null` means no spans, not no line (the counts sentence still prints), `unknown` keeps the fail-safe `workingCostTypedBelowAdds`.
+- **W's stale line shares `checkAtQuote` / `laterShortOf` / `shortRunFrom`** (KTD5): touching that core changes W-stale words on four seeds; its holes are the widened V3 register entry's, never a fix inside a typed-below round.
+- **One composer feeds every host** (the Result's slot, the gate, the seat in the sheet AND on the money-picture step): a change reds the fit gate's `PAY_CHECK_UNLOCKS` (TM's and the pension's doorless blocks, `assertDoorlessStandingBlock`), the coordinate-tap arm, `reentry.test.tsx`, `resultPayCheckLine.test.tsx`, `IntakeApp.test.tsx` and the caddie `intake:typedbelow` arm. The unit suite never runs Playwright: grep `e2e/` for every slot a round renames.
+- **The crown test runs two date searches** (~40 s in `workingYearCredit.test.ts`, timeout 240 s): run the suite pinned and alone, never raise the timeout. The crowned seed's provisional crown sits on the bar (margin 0): if walk 8 shows another offset, the test reds first; read its log before the line.
+- **The e2e specs are outside `pnpm typecheck`**: a scratch tsconfig in the scratchpad that extends the project's, names `types` by absolute path and includes the specs (`docs/landmines.md`, The fit gate and e2e).
+- **The constants gate reds a bare 72000 or 750000 in `src`**: write `6_000 * 12`; the crowned seed's 401(k) is $1,600,000.
+- **A pinned run from PowerShell reports exit 0 when the child threw**: wrap it in `<B>\tools\run-pinned.cmd` and read `PINNED_EXIT`, the suite's "Tests" line and the fit gate's "passed" line.
+- **Before a fix commit, read `docs/landmines.md`'s The fit gate and e2e, The mutation harness, Copy and copyGuard, Windows and the shell, and Probes and measurement sections.**
 
 **THE A6 TOOLS (durable, b9-14):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a6-tools\`
 — `seeds.mts` (`b9-seed-probe`'s, rooted at the CWD's `src`: run it once from `b9-a6-head\` — a `git archive` of HEAD's
@@ -1124,6 +1072,10 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - `cmd /c "start \"\" /b /wait /affinity FFF <cmd>"` returns 0 whatever the child does: `stream11.mts` threw on a flag and the run printed `EXIT=0` (b9-9). The pinned-run recipe in memory `reference-hybrid-cpu-ecore-confinement` needs the line: read the log, never the exit code. *Extend* that memory and `docs/landmines.md`'s shell area.
 - *Extend 136 (a citation gate proves the line exists):* the re-anchor tool's bare-`:N` inference reads a QUOTED historical number in prose as a live citation. b9-10's `pnpm doc:reanchor d5c549d7` proposed moving `docs/landmines.md:411`'s `:2217` (the old TODO.md example that landmine quotes) by +5, because TODO.md had changed between the base and the tree; the dry run, classified by the cited content, caught it, and the file was restored from HEAD. A base whose diff includes a doc that prose quotes numbers from invites it: take the base AFTER any doc-only commit (b9-10, commit 2 of the whole-window rebuild).
 - *Extend 135 (a `min` cap binds only when it is the smaller arm):* a mutant's prediction for a plant on one term of a `min` must read, per witness, which term binds there. U3's M6 (this answer's cap read off year 0 at the QUOTE) was predicted red on the whole household and silent on the drift household; it was the reverse: the whole household's stored $16,985 binds below the quote's year-0 $20,985, so moving the year-0 term changed nothing, while the drift household's stored $26,985 sits above the quote's $20,985, so it bound there (`b9-build2-surplus\u11-wholewindow\u3-mutants\RESULT.md`, b9-10).
+- *Extend 146 (money has one grain):* a difference of two figures each rounded the gloomy way (shortfalls round up) can sit up to $0.99 UNDER the raw difference, so an "at most" bound built by subtracting printed figures can be false on the rosy side (review round 1's #1, b9-1: "at most $3,999" against the engine's $3,999.96 on C at $8,416.67 a month). Compute a bound on the raw grain and round it up (`stillShortDifferenceDollars`), and accept the $1 mismatch with the reader's own subtraction as the lesser fault. *(Source: b9-1's close.)*
+- A constant copied into a test from an out-of-repo probe pins nothing: the crowned seed's "crown 7" was typed in and compared with itself, and the test's "a unit test runs no date search" premise was false (`devSeeds.test.ts` already ran `runDateSearch`). Before typing a figure a test could compute, look for a sibling test that computes it (review round 1's #2 / #8, b9-1). *(Source: b9-1's close.)*
+- Four forks, each owning an explicit file list (the unit tests, copyGuard, the e2e specs, the docs) and forbidden the suite, `verify:fit` and the sweep while siblings ran, built a 45-file commit's tests, specs and docs in about 20 minutes without one conflict, while the parent kept `src` and every gate, and the parent's window held near 43% through the build (b9-1, commit 3). A fork inherits the whole context, so the brief names only the files and the pilot's calls. *(Source: b9-1's close.)*
+
 
 ## Driving the app
 

@@ -840,6 +840,14 @@
   margin: 0;
 }
 
+/* The typed-below spans at two or more (`NotePartsBlock`, the whole-window rebuild's KTD6, host 3) end the seat: they keep
+ * the block's breathing room above (the seat's gap plus noteParts.css's --space-4, a section break from the answer's line),
+ * but nothing follows them inside the seat, so the block's own --space-4 below would only pad the row's foot 16 px past
+ * every other row's. `.left-over >` + `:last-child` outranks noteParts.css's `div.note-parts`. */
+.left-over > div.note-parts:last-child {
+  margin-block-end: 0;
+}
+
 /* The panel seat's face while W is stale: the stale note's calm well and info glyph, words first —
  * never a colored badge, never an alert (role="note"). */
 .left-over__waiting {

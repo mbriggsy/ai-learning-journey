@@ -232,6 +232,8 @@ clears it and the page survives) · Playwright `fill` on a formatted currency fi
 "6600" → "65,006,600"); click → Ctrl+A → `pressSequentially` replaces · "Edit in the walk-through"
 lands on step 1, never the section's step (no start-at-step API) · a `?seed=` route bypasses the vault
 even when one exists; the plain `/` route is the Unlock check.
+- **(b9-9/b9-10, 11-13) A scripted multi-line replace fails on the CRLF files** (`devSeeds.ts`, `devSeeds.test.ts`, `copyGuard.test.ts`):
+  use the Edit tool; count line endings with `node`.
 
 ## The unit test suite
 
@@ -372,6 +374,15 @@ gitignored, and squeaky's step 4 deletes each closing session's own files there 
 another session is live), so nothing irreplaceable may live there: the 24 px instrument + measurements moved to `e2e/held/`
 and the icon generator + sheets to `scripts/icons/` on 2026-09-08; screenshots are regenerable. *Reconciled 2026-11-09: this
 said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the closing session's own files.*
+- **(b9-9/b9-10, 11-13) `netstat` lists 127.0.0.1:4190 as LISTENING under PID 0 after a fit run.** Ghosts: probe with `curl --max-time 5`
+  before reading a fit failure as a stale server's.
+- **(b9-9/b9-10, 11-13) The e2e specs are outside `pnpm typecheck`.** Typecheck an edited spec through a scratch tsconfig in the scratchpad
+  that extends the project's, names `types` by absolute path (`<project>/node_modules/@types/node`,
+  `<project>/node_modules/vite/client`) and includes the spec by absolute path; confirm with `--listFilesOnly`.
+- **(b9-9/b9-10, 11-13) A Playwright `-g` filter run through `cmd /c "start /affinity FFF …"` loses a quoted space**: a space-free regex,
+  and read the count line, never the exit code.
+- **(b9-9/b9-10, 11-13) W's block has no spaces between its parts in `textContent`**: an e2e compare reads `innerText`; a unit test
+  compares `notePartsText(parts)`.
 
 ## The mutation harness
 
@@ -402,6 +413,10 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 - **(2026-09-24 evening)** a mutant script MUTATES source on disk — never run it while any other vitest or measurement job is reading the engine
 - **(2026-09-10, late)** never `git checkout -- <file>` to revert a mutant while the tree carries uncommitted work —
 `cp` a backup and restore it.
+- **(b9-9/b9-10, 11-13) A copy plant inside a slot is killed only by a test with the words typed by hand** (the review's L3 F4 proved it).
+  Keep a by-hand pin for every new sentence form.
+- **(b9-9/b9-10, 11-13) Never edit a plant file while the mutant runner runs**: it restores each file from its snapshot, so an edit there
+  is overwritten; docs are safe.
 
 ## Citations and the doc gates
 
@@ -509,6 +524,10 @@ is a guess a verifier must check, never a fact
   council's own ruled clause where one exists.
 - **(2026-09-26, b9-8)** a UI number moved by an engine fix (the step card's $218,000 → $224,000) is a visible change inside an unchanged sentence — say so to him the same turn, the words-are-his law covers meaning
 - **(2026-09-24)** the `irmaaStep*` copy family lives in `slots` for its templated members — a PLAIN string with that prefix belongs in the `copy` catalog beside `irmaaStepBothBase` (a string dropped into `slots` made `copy.<key>` undefined and the new pins compared undefined to undefined — the render-sample census caught it, typecheck would have)
+- **(b9-9/b9-10, 11-13) A first-load module reads `entryCopy`, never `copy.ts`** (`scripts/entryChunkGuard.ts`): a new gate word is
+  checked with `pnpm build`.
+- **(b9-9/b9-10, 11-13) A fix that names its hosts can miss one.** Grep every caller of a composer before a fix round changes what it says;
+  carry the decision in the core (`WorkingYearLeftOverMoved.typedBelow`), never a conditional per host.
 
 ## Caddie walks and fleets
 
@@ -609,6 +628,9 @@ chair; chair from a digest script, never the raw result, and expect the window t
 - **(2026-10-03 late, b9-5)** the worker script exposes `{ ...engineApi, ...poolApi }` and `EngineHandle` is SPINE-only (`Promisified<EngineApi>`) — a new pool method goes on `poolApi`, never forwarded by the resettable handle; a new `EngineApi` method still breaks every hand-rolled fake by design
 - **(2026-10-03 late, b9-5)** the roster measurement recipe: a tsx script OUTSIDE `src/` (doc-stats counts `*.test.ts` under it) over `DEV_SEEDS` + `buildSolveRequest`, run on the tree, then run on a frozen HEAD copy (insight 148: a `git archive` of HEAD's `src` + tsconfig + package.json with a `node_modules` junction, the archive run from the repo root per the Git section) — never `git stash` `src`, which moves every session's uncommitted work there. *Reconciled 2026-11-09: this said `git stash push -q -- src`, run, `git stash pop`, against the Git section's "never `stash` the held paths".*
 - **From the b9-4 close (2026-10-03, the solve-time levers + the pool's generator foundation):** his LAPTOP STATE swings a solve's wall clock ~2× on the same code (`retired` 639 s on 10-01, 338.5 s on 10-03, both on AC / High performance, cause not recoverable) — compare timings only WITHIN one session, take a same-session baseline before every re-time, and never mix days in one table · node runs the engine ~2.5× slower than Chrome (the identity gate's 256-path `retired` solve ~11 s in vitest) — vitest runs one FILE's tests serially, so a heavy fixture goes in its own file to run in parallel (`solvePayloadIdentity.health.test.ts`) · `verify:doc-stats` counts any `*.test.ts` under `src/` — a scratch runner (the digest anchor, the call-sequence recorder) lives OUTSIDE the tree and is copied in only for its run, then deleted (the session's two were `zzAnchor.test.ts` = `bitDigest` of `solveWithMint` payload + `packSolveWire` on F1–F4 / F6 via `identityRequest`, and `zzCalls.test.ts` = `vi.mock('@engine/simulate')` recording `bitDigest([params, seed, options])` per call, shipped AND legacy — re-create them from that description; the scratchpad is per-session) · a HEAD-vs-tree differential by `git stash push -- src` leaves UNTRACKED files in place — sound only while HEAD's code imports none of them · `node -e "…"` in Git Bash interpolates backticks (it ate a docblock's identifier) — any edit carrying backticks goes through a script FILE or the Edit tool · an FNV lane with an EVEN multiplier flushes to a constant over a long walk (`bitDigest`'s first cut — a 64-bit digest with 32 live bits); both halves are now pinned to vary · one added import line in `intakeMap.ts` moves ~90 citations — `pnpm doc:reanchor HEAD` handles them, never by hand · a mutant plant must be grep-verified as LANDED and the file `cmp`-restored after (`scratchpad/plant.mjs` refused a missing anchor with exit 2 — re-create it: replace one exact string or exit 2).
+- **(b9-9/b9-10, 11-13) A probe runs from the project dir** (`pnpm exec tsx --tsconfig ./tsconfig.json <probe>.mts`, absolute `file:///`
+  imports of the modules) so the `@intake` / `@ui` aliases resolve; print a composer on every witness BEFORE typing a
+  by-hand pin (U3's probe, `u3-probe.mts`, is the one to extend).
 
 ## Engine and tax math
 

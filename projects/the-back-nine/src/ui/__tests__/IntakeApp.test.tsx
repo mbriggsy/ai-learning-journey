@@ -260,10 +260,17 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
       expect(lines.some((t) => t.startsWith('Your answer counts a working year at your own figure of $84,000 a year')), 'R1’s line speaks').toBe(true)
       expect(lines).toContain(`${copy.stalenessLeftOverNote} ${MOVED_AT_TYPED_LINE} ${copy.stalenessLeftOverGateDoor}`)
       // The rebuild's KTD6, host 2: R1's line is the block of TM's three spans, the first of the two notes, and the moved
-      // line its own paragraph after it (one cause, one line).
+      // line its own paragraph after it (one cause, one line). TM opens the survivor gate (Sam, 60 and retired, can die from
+      // 66, in 2032, while Alex works), so the block ends on the survivor coda's own one-item list, after the spans'.
       const notes = Array.from(document.querySelector('.reentry-notes')!.children)
       expect(notes.map((c) => c.tagName)).toEqual(['DIV', 'P'])
-      expect(Array.from(notes[0]!.querySelectorAll('dt')).map((dt) => dt.textContent)).toEqual(['2026 through 2028', '2029 through 2032', '2033 through 2035'])
+      expect(Array.from(notes[0]!.querySelectorAll('dt')).map((dt) => dt.textContent)).toEqual([
+        '2026 through 2028',
+        '2029 through 2032',
+        '2033 through 2035',
+        'If only one of you is alive',
+      ])
+      expect(notes[0]!.querySelector('.note-parts__coda dt')?.textContent, 'the condition is the coda’s, never one more span').toBe('If only one of you is alive')
     } finally {
       h.model = current
     }

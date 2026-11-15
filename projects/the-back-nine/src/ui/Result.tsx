@@ -48,7 +48,7 @@ import { copy, slots } from './copy'
 import { appModel } from './appModel'
 import { Disclaimer } from './Disclaimer'
 import { FuckOffDate, W_STALE_CAUSE, type StandingNoteCause } from './FuckOffDate'
-import { plainNote, type NoteDoor, type NoteParts } from './noteParts'
+import { plainNote, withoutDoor, type NoteParts } from './noteParts'
 import { ConfidenceStatement } from './ConfidenceStatement'
 import { selectElevatedAnswer, resolvedFocusKey } from './answerView'
 import type { ResaveCopyKey } from './unlockCopy'
@@ -224,15 +224,15 @@ export function Result({
   const [assumptionsSeat, setAssumptionsSeat] = useState<AssumptionLandingSeat | undefined>(undefined)
   if (!assumptionsOpen && assumptionsSeat !== undefined) setAssumptionsSeat(undefined)
   // The standing answer line for one cause: its door opens the panel at that cause's seat, and exists only
-  // where the tab can save (a read-only tab reads the fact alone). `door` — what is said beside the door (for W, the
-  // Result's door from `workingYearCostStaleDoor`: its last dt/dd, council `wf_22858e04-f7a`) — rides only with the
-  // door, so a read-only tab is never told buttons to press.
-  const standingNote = (cause: StandingNoteCause, line: Omit<NoteParts, 'door'>, seat: AssumptionLandingSeat, door: NoteDoor | null = null) =>
+  // where the tab can save (a read-only tab reads the fact alone). The parts' `door` — what is said beside the door (for
+  // W, the Result's door from `workingYearCostStaleDoor`: its last dt/dd, council `wf_22858e04-f7a`) — rides only with the
+  // door, so a read-only tab is never told buttons to press (`withoutDoor`).
+  const standingNote = (cause: StandingNoteCause, parts: NoteParts, seat: AssumptionLandingSeat) =>
     readOnly
-      ? { cause, parts: { ...line, door: null } }
+      ? { cause, parts: withoutDoor(parts) }
       : {
           cause,
-          parts: { ...line, door },
+          parts,
           onOpen: () => {
             setAssumptionsSeat(seat)
             setAssumptionsOpen(true)
@@ -741,7 +741,7 @@ export function Result({
             onReconfirm={onReview}
             payCheckNote={
               payCheckStaleText !== null && payCheckStaleDoor !== null
-                ? standingNote(W_STALE_CAUSE[payCheckStaleDoor.act], payCheckStaleText, 'working-year-cost', payCheckStaleDoor.result)
+                ? standingNote(W_STALE_CAUSE[payCheckStaleDoor.act], { ...payCheckStaleText, door: payCheckStaleDoor.result }, 'working-year-cost')
                 : typedBelowLine !== null
                   ? standingNote('w-typed-below', typedBelowLine, 'working-year-cost')
                   : leftOverMoved !== null && !leftOverClauseHost

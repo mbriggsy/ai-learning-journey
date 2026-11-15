@@ -215,8 +215,8 @@ status: shipped
    own affirmation ships, rather than silently dressing a future SC household in Florida's
    "no state income tax" words.
 3. **FIVE disclosure homes, not the four this plan first named** (SIX since 2026-09-11 — the standalone verdict note, see the S5 note below) — `verdictMedicareResidual`
-   (copy.ts:1414), `rothOmissionsNote` (copy.ts:1166), `controlHealthOmissionsNote`
-   (copy.ts:1345), the spendHelp branch (`spendHelpKeyFor`, intakeMap.ts:1123), and the
+   (copy.ts:1421), `rothOmissionsNote` (copy.ts:1173), `controlHealthOmissionsNote`
+   (copy.ts:1352), the spendHelp branch (`spendHelpKeyFor`, intakeMap.ts:1123), and the
    RECOMMENDATION surface's disclosure rail (`recDiscStateTax`). The fifth was born unguarded:
    it shipped as the only household-DEPENDENT builder with no condition, so an NC household
    would read "this compares federal tax only" three inches under a spine that had just named

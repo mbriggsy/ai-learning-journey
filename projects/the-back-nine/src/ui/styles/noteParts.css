@@ -38,6 +38,13 @@ div.note-parts {
   margin: 0;
 }
 
+/* The coda's own list (the typed-below line's "If only one of you is alive"): a condition over the spans, never one more
+   of them, so it stands one step further off the last span than the spans stand off each other (its label's --space-3
+   plus this --space-2), told apart by space alone — never color, never a rule. */
+.note-parts__coda {
+  margin-block-start: var(--space-2);
+}
+
 /* The door's cost list: a list the eye can tick through (copylaw F3), the host's own text, a quiet marker. */
 .note-parts__list {
   margin: var(--space-2) 0;

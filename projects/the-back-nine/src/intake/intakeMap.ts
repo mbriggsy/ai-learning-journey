@@ -1445,14 +1445,41 @@ export function workingYearLedgerForRun(d: ScenarioDraft): WorkingYearLedger | '
 }
 
 function composeWorkingYearLedger(d: ScenarioDraft): WorkingYearLedger | 'unknown' {
-  // The input BEFORE the left-over figure, never `buildDateInput`: the carriage reads this picture, so
-  // composing from the carried input would recurse without end. The producer never reads the figure.
+  const params = workingYearWindowTopParams(d)
+  if (params === 'unknown') return 'unknown'
+  try {
+    return workingYearLedger({ params, draftEvents: workingYearDraftEvents(d, params.maxHorizonYears) })
+  } catch {
+    return 'unknown'
+  }
+}
+
+/** The window-top candidate's params, memoized on the draft reference like the picture's own read. */
+const windowTopParamsMemo = new WeakMap<ScenarioDraft, SimulationParams | 'unknown'>()
+
+/** The ONE window-top route (the survivor-path build's KTD1, `docs/plans/features/typed-below-survivor-path-build-spec.md`):
+ *  the candidate params the money picture composes from — `buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, 1)` on
+ *  the input BEFORE the left-over figure — or `'unknown'` on exactly the picture's `'unknown'` conditions: no date run
+ *  can be built, the run carries no W, a horizon at or below the window top, or the candidate build throws. The money
+ *  picture ({@link workingYearLedgerForRun}) and the typed-below line's survivor read (`workingYearLeftOver.ts`) both
+ *  read it, so the two can never build different candidates (insight 088: the producer of the run the surface describes).
+ *  The input before the left-over figure, never `buildDateInput`: the carriage reads the picture, so composing from the
+ *  carried input would recurse without end; the figure rides the input, never the params, so nothing here misses it.
+ *  A pure function of the draft (no clock: the draft carries `startCalendarYear`). */
+export function workingYearWindowTopParams(d: ScenarioDraft): SimulationParams | 'unknown' {
+  const memo = windowTopParamsMemo.get(d)
+  if (memo !== undefined) return memo
+  const read = composeWindowTopParams(d)
+  windowTopParamsMemo.set(d, read)
+  return read
+}
+
+function composeWindowTopParams(d: ScenarioDraft): SimulationParams | 'unknown' {
   const input = buildDateInputBeforeLeftOver(d)
   if (input === null || input.workingYearCostReal === undefined) return 'unknown'
   if (input.params.maxHorizonYears <= DATE_OFFSET_WINDOW_TOP) return 'unknown'
   try {
-    const params = buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, 1)
-    return workingYearLedger({ params, draftEvents: workingYearDraftEvents(d, params.maxHorizonYears) })
+    return buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, 1)
   } catch {
     return 'unknown'
   }

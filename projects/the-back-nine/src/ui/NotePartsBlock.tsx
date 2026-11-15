@@ -8,7 +8,8 @@ import './styles/noteParts.css'
  * line, a size step above the note in the body face (`noteParts.css`; never color) — and, on the Result, the door as
  * the last dt/dd: its lead, its cost `<ul>`, its tail, then the host's `button` as a block. A block with NO door (the
  * typed-below line's spans, the whole-window rebuild's KTD6) still draws the host's `button`, last in the block, where the
- * tab can act on it. No heading element rides
+ * tab can act on it; a note with a coda (the typed-below line's survivor condition, the survivor-path build's KTD6) draws
+ * it as its own one-item `<dl>` between the segments' list and that button. No heading element rides
  * inside (an h3 would pull the Result's graphs under "If a working year costs…" in the outline, and on the gate the
  * budget lines push after W's line). The HOST draws a note with no segments and no door as its old `<p>` instead
  * (`isPlainNote`; the pinned reduce-to-plain), so this renders only the block. `className` — the host's note classes
@@ -25,7 +26,7 @@ export function NotePartsBlock({
    *  typed-below line's spans). */
   readonly button?: ReactNode
 }) {
-  const { door } = parts
+  const { door, coda } = parts
   return (
     <div className={`note-parts ${className}`}>
       <p className="note-parts__opening">{parts.opening}</p>
@@ -54,6 +55,17 @@ export function NotePartsBlock({
               </dd>
             </div>
           )}
+        </dl>
+      )}
+      {/* The coda (the typed-below line's "If only one of you is alive"): a condition, never one more span, so it is its
+          own one-item list after the segments' list, apart from the list the lead introduces; the segment's markup, its
+          label in the segments' face. A note with a coda has no door. */}
+      {coda !== undefined && (
+        <dl className="note-parts__segments note-parts__coda">
+          <div className="note-parts__segment">
+            <dt className="note-parts__label">{coda.label}</dt>
+            <dd className="note-parts__body">{coda.sentences.join(' ')}</dd>
+          </div>
         </dl>
       )}
       {/* No door to carry it (the typed-below line's spans on the Result): the button is the block's last child. */}

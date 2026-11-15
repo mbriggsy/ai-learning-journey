@@ -8,6 +8,7 @@ import { resolvedFocusKey, selectElevatedAnswer } from '../answerView'
 import { copy, slots, workingCostExtras } from '@ui/copy'
 import { DEV_SEEDS } from '../devSeeds'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
+import { councilBudgetHousehold } from '@intake/__tests__/typedBelowWitnesses'
 
 /*
  * The pay check's KTD21 standing line, wired through Result (`docs/plans/features/working-year-pay-check-build-spec.md`
@@ -356,14 +357,19 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
 // button wherever the tab can act). Every sentence typed by hand from the seeds' documented figures (`datesavedtyped`:
 // $84,000 typed under a $90,000 spending figure, "All of it" stored at $16,985, the quote answer's $10,985 in every year).
 describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
+  // Every seed here opens the survivor gate (Sam, 60 and retired, can die from 66, in 2032, while Alex works through 2035):
+  // the one-span opener carries "you’re both alive" and the survivor coda's two sentences close the paragraph (0.75 of each
+  // figure, $63,000 and $67,500, X $4,500).
   const TYPED_LINE =
     'This answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. ' +
     'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
-    'Each working year, this answer adds at most $16,985 a year to your savings. ' +
-    'At your spending of $90,000 a year, it would add at most $10,985, $6,000 less.'
+    'Each working year you’re both alive, this answer adds at most $16,985 a year to your savings. ' +
+    'At your spending of $90,000 a year, it would add at most $10,985, $6,000 less. ' +
+    'If only one of you is alive in a working year, this answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, plus any income tax on it. ' +
+    'Such a year’s costs count as $63,000 a year at your figure and $67,500 at your spending.'
   const updateDoor = () => screen.queryByRole('button', { name: 'Update your figure for a working year' })
 
-  it('`datesavedtyped` (one span): the line in the slot’s plain <p>, byte for byte — no lead before it, its own first sentence names the answer and both figures — and the update door inline, which lands on the W row', () => {
+  it('`datesavedtyped` (one span): the line in the slot’s plain <p>, byte for byte — no lead before it, its own first sentence names the answer and both figures, the survivor coda’s sentences last inside it — and the update door inline, which lands on the W row', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedtyped)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
@@ -395,27 +401,35 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     ['2026 through 2028', BOTH],
     [
       '2029 through 2032',
-      'At your spending of $105,000 a year, each working year comes up $3,652 to $4,015 short, and this answer would add nothing. ' +
+      'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and this answer would add nothing. ' +
         'Your figure of $84,000 a year leaves those shortfalls out of this answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, plus any income tax on those shortfalls.',
     ],
     ['2033 through 2035', BOTH],
   ]
+  /** The Result's scoped lead, last in the opening above two or more spans under the survivor gate. */
+  const LEAD = 'What this answer adds to your savings in each working year you’re both alive:'
+  /** TM's survivor coda: X $15,750, 0.75 of $84,000 and of $105,000. */
+  const TM_CODA =
+    'In such a working year, this answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, plus any income tax on it. ' +
+    'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.'
   const block = (opening: string, button: boolean): string =>
     '<div class="note-parts fod-note cs-paycheck-note">' +
     `<p class="note-parts__opening">${opening}</p>` +
     '<dl class="note-parts__segments">' +
     TM_SEGMENTS.map(([label, body]) => `<div class="note-parts__segment"><dt class="note-parts__label">${label}</dt><dd class="note-parts__body">${body}</dd></div>`).join('') +
     '</dl>' +
+    '<dl class="note-parts__segments note-parts__coda"><div class="note-parts__segment">' +
+    `<dt class="note-parts__label">If only one of you is alive</dt><dd class="note-parts__body">${TM_CODA}</dd></div></dl>` +
     (button ? '<button type="button" class="band-premise__cta note-parts__cta">Update your figure for a working year</button>' : '') +
     '</div>'
 
-  it('TM (three spans, the left over ALSO moved): the typed-below line holds the one slot as a BLOCK — the counts sentence and the moved clause, then three labelled spans — its update button drawn last; no moved line of its own; where a rules line hosts the clause at unlock, the block opens on the counts sentence alone and the clause rides the rules note', () => {
+  it('TM (three spans, the left over ALSO moved): the typed-below line holds the one slot as a BLOCK — the counts sentence, the moved clause and the scoped lead, then three labelled spans, then the survivor coda as its own list — its update button drawn last; no moved line of its own; where a rules line hosts the clause at unlock, the block opens on the counts sentence and the lead alone and the clause rides the rules note', () => {
     expect(DEV_SEEDS.datesavedtypedmoved.workingYearCost).toMatchObject({ kind: 'entered', amountReal: 84_000 })
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedtypedmoved)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
     expect(document.querySelectorAll('.cs-paycheck-note')).toHaveLength(1)
-    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${MOVED_AT_TYPED}`, true))
+    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${MOVED_AT_TYPED} ${LEAD}`, true))
     expect(document.body.textContent, 'no moved line of its own').not.toContain(copy.stalenessLeftOverNote)
     expect(line()!.lastElementChild, 'the button is the block’s last child').toBe(updateDoor())
     fireEvent.click(updateDoor()!)
@@ -424,7 +438,7 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedtypedmoved)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} stalenessNote leftOverClauseHost />)
-    expect(line()!.outerHTML).toBe(block(COUNTS, true))
+    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${LEAD}`, true))
     expect(document.querySelector('.cs-staleness-note')?.textContent, 'the moved clause rides the rules note, its figure named there too').toBe(
       `${copy.stalenessHeroNote} ${MOVED_AT_TYPED}`,
     )
@@ -433,8 +447,39 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedtypedmoved)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
-    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${MOVED_AT_TYPED}`, false))
+    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${MOVED_AT_TYPED} ${LEAD}`, false))
     expect(updateDoor()).toBeNull()
+  })
+
+  // AE1 and the council's reading-order check (R3): the council's C — $105,000 all-sticky budget, "All of it" at $5,985,
+  // $90,000 typed — on the Result. The `same` segments carry no year noun and take their scope from the lead, so the lead
+  // must come BEFORE the spans' list in the DOM a screen reader walks, and the coda's list after it, apart from it.
+  it('AE1 through the Result: C at 100 % sticky — the scoped lead ends the opening <p>, which precedes the spans’ list; the two `same` segments sit in it; the short span’s year subject is scoped; the whole-gap coda is its own list after the spans’ list, before the button', () => {
+    plantDateHero()
+    appModel.update(() => councilBudgetHousehold(1))
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    const block = line()!
+    const opening = block.querySelector('p.note-parts__opening')!
+    const spans = block.querySelector('dl.note-parts__segments:not(.note-parts__coda)')!
+    const coda = block.querySelector('dl.note-parts__coda')!
+    expect(opening.textContent!.endsWith(` ${LEAD}`), 'the scoped lead ends the opening').toBe(true)
+    const follows = (a: Element, b: Element): boolean => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+    expect(follows(opening, spans), 'the lead’s text before the spans’ list').toBe(true)
+    expect(follows(spans, coda), 'the coda’s list after the spans’ list').toBe(true)
+    expect(follows(coda, updateDoor()!), 'the button after the coda').toBe(true)
+    expect(spans.contains(coda), 'the coda is never one more item of the spans’ list').toBe(false)
+    const same = 'This answer adds the same to your savings as it would at your budget’s $105,000 a year.'
+    expect([...spans.querySelectorAll('dd')].map((dd) => dd.textContent)).toEqual([
+      same,
+      'At your budget’s $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and this answer would add nothing. ' +
+        'Your figure of $90,000 a year leaves those shortfalls out of this answer, and it adds at most $5,985 a year to your savings, at most $9,637 to $10,000 a year more, plus any income tax on those shortfalls.',
+      same,
+    ])
+    expect(coda.querySelector('dt')!.textContent).toBe('If only one of you is alive')
+    expect(coda.querySelector('dd')!.textContent).toBe(
+      'In such a working year, this answer takes at most $15,000 a year less from your savings than it would at your budget’s $105,000 a year, plus any income tax on it. ' +
+        'That is the whole gap to your figure of $90,000 a year.',
+    )
   })
 
   it('W stale wins the slot over a typed figure stale on its reading (Florida picked after typing): W’s own stale line speaks, never the typed-below line', () => {

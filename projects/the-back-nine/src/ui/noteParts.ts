@@ -24,12 +24,30 @@ export interface NoteDoor {
   readonly tail: readonly string[]
 }
 
-export interface NoteParts {
+interface NotePartsCore {
   readonly opening: string
   readonly segments: readonly NoteSegment[]
-  /** The Result's door (null: no door — every note but W's stale line for a "saved" answer, and every read-only tab). */
-  readonly door: NoteDoor | null
 }
+
+/** The parts. A note carries a door, or a CODA, never both (the typed-below survivor-path build's KTD6,
+ *  `docs/plans/features/typed-below-survivor-path-build-spec.md`): the coda is a labelled closing part that holds a
+ *  condition, not one more segment — the typed-below line's "If only one of you is alive" after its spans — so every host
+ *  draws it as its own one-item list after the segments' list, apart from the list the lead above introduces. Only the
+ *  typed-below line sets one, and it never sets a door; W's stale line, the only parts value with a door, never carries a
+ *  coda. Absent everywhere else (never written as `undefined`). */
+export type NoteParts = NotePartsCore &
+  (
+    | {
+        /** The Result's door (W's stale line for a "saved" answer, on a tab that can act). */
+        readonly door: NoteDoor
+        readonly coda?: never
+      }
+    | {
+        /** No door — every other note, and every read-only tab. */
+        readonly door: null
+        readonly coda?: NoteSegment
+      }
+  )
 
 /** The re-entry gate's door (council `wf_22858e04-f7a` (2)): `section.reentry-door`, the next sibling after its buttons,
  *  drawn only where the tab can save. The heading (an h3 in the body face), the SCOPE sentence — neither button here
@@ -44,12 +62,20 @@ export interface GateDoor {
 /** A note with no parts: the opening alone. */
 export const plainNote = (text: string): NoteParts => ({ opening: text, segments: [], door: null })
 
-/** No segments and no door: every host draws it as its old single `<p>` (the pinned reduce-to-plain). */
-export const isPlainNote = (p: NoteParts): boolean => p.segments.length === 0 && p.door === null
+/** The note without its door (a read-only tab reads the fact alone). A note carries a coda or a door, never both, so a
+ *  note with a door has no coda to keep; a doorless note comes back as it is. */
+export const withoutDoor = (p: NoteParts): NoteParts =>
+  p.door === null ? p : { opening: p.opening, segments: p.segments, door: null }
 
-/** The parts in order, one space apart — the gate's React key and the text a test compares; the door's list items ride
- *  in order between its lead and its tail. */
+/** No segments, no door and no coda: every host draws it as its old single `<p>` (the pinned reduce-to-plain). */
+export const isPlainNote = (p: NoteParts): boolean => p.segments.length === 0 && p.door === null && p.coda === undefined
+
+/** The parts in order, one space apart — the gate's React key and the text a test compares: the opening, the segments,
+ *  the coda, the door (a note carries a coda or a door, never both); the door's list items ride in order between its lead
+ *  and its tail. */
 export function notePartsText(p: NoteParts): string {
+  const part = (s: NoteSegment): string[] => [s.label, ...s.sentences]
+  const coda = p.coda === undefined ? [] : part(p.coda)
   const door = p.door === null ? [] : [p.door.label, ...p.door.lead, ...p.door.items, ...p.door.tail]
-  return [p.opening, ...p.segments.flatMap((s) => [s.label, ...s.sentences]), ...door].join(' ')
+  return [p.opening, ...p.segments.flatMap(part), ...coda, ...door].join(' ')
 }

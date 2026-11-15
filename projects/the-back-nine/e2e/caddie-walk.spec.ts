@@ -1821,7 +1821,8 @@ const TYPED_BELOW_TEST_MS = 4 * FINAL_TIER_MS + 180_000
  * it" saved) → its standing line's door → the panel's W row → "No — I'll enter a different figure", "Each year"
  * tapped first (the untapped unit is a month, KTD17), and the old $84,000 typed back in.
  *  - `panel-typed-below`: the row, the note under it, and the seat below naming the typed figure and ending on the
- *    typed-below line's spans (U11 walk 7's R2; the whole-window rebuild: A's one span, a plain paragraph);
+ *    typed-below line's spans (U11 walk 7's R2; the whole-window rebuild: A's one span, a plain paragraph, closed by
+ *    the survivor-path build's coda);
  *  - `result-typed-below`: the Result after that edit's re-run (the re-run watch the kept walk uses) — no stale line,
  *    since a typed figure carries no stamp, but R1's typed-below line in the slot (U11 walk 6); its gate is
  *    `vault:datesavedtyped` (the same draft as a plant, walked by `walkVaultReturn` unedited);
@@ -1849,14 +1850,17 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
   await expect(face.getByText(note, { exact: true }), 'the typed-below note under the row').toBeVisible()
   // U11 walk 7's R2: the seat below names the $84,000 its $16,985 rests on and, below its radios, ends on the line's
   // spans (the whole-window rebuild's KTD6, host 3): A's one span over the whole window, a plain paragraph in the
-  // sheet (the W row above carries the lean, so no counts sentence) — each working year this answer's $16,985 beside
-  // the $10,985 the answer at $90,000 would add, $6,000 less.
+  // sheet (the W row above carries the lean, so no counts sentence) — each working year you’re both alive this answer's
+  // $16,985 beside the $10,985 the answer at $90,000 would add, $6,000 less — then the survivor coda in the same
+  // paragraph (the survivor-path build's KTD6).
   const seat = dialog.locator('[data-assumption-seat="working-year-left-over"]')
   await expect(
     seat.getByText(slots.workingLedgerLeftOverFigureAt(STALE_W_CONFIRMED, DATE_LEFT_OVER), { exact: true }),
     'the seat’s figure names the typed figure',
   ).toBeVisible()
-  await expect(seat.locator('p.left-over__at-quote'), 'the seat’s one span').toHaveText(typedBelowOneSpan('Your'))
+  await expect(seat.locator('p.left-over__at-quote'), 'the seat’s one span and its coda').toHaveText(
+    [typedBelowOneSpan('Your'), typedBelowOneSpanCoda('Your')].join(' '),
+  )
   await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
   await captureState(page, path.join(outDir, 'panel-typed-below'))
   await expectResultRerun(page, 'intake:typedbelow')
@@ -1864,11 +1868,16 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
   await expect(dialog).toBeHidden()
   await expect(settledResult(page)).toBeAttached({ timeout: FINAL_TIER_MS })
   // U11 walk 6's R1: no stale line (a typed figure carries no stamp), but its own typed-below line holds the slot, in
-  // W's plain form with the update button inline — the counts sentence, then its one span (the whole-window rebuild).
+  // W's plain form with the update button inline — the counts sentence, then its one span (the whole-window rebuild),
+  // then the survivor coda (the survivor-path build).
   const standing = page.locator('p.cs-paycheck-note')
   await expect(standing, 'the typed-below line holds the standing slot, one span a plain paragraph').toHaveCount(1)
   await expect(standing).toContainText(
-    [slots.workingCostTypedBelowCounts('This', STALE_W_CONFIRMED, RISEN_W_QUOTE_NOW), typedBelowOneSpan('This')].join(' '),
+    [
+      slots.workingCostTypedBelowCounts('This', STALE_W_CONFIRMED, RISEN_W_QUOTE_NOW),
+      typedBelowOneSpan('This'),
+      typedBelowOneSpanCoda('This'),
+    ].join(' '),
   )
   await expect(standing.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate })).toBeVisible()
   await captureState(page, path.join(outDir, 'result-typed-below'))
@@ -1880,13 +1889,18 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
   await captureState(page, path.join(outDir, 'walk-typed-below'))
   // One step further (the whole-window rebuild's U5, walk 8's third added target): the walk's money-picture step, the
   // seat's other home. Nothing above the seat there carries the lean (the W note lives on the W step), so under "All
-  // of it" the seat's line below the radios opens with the counts sentence in its "Your" form, then the one span.
+  // of it" the seat's line below the radios opens with the counts sentence in its "Your" form, then the one span and
+  // the survivor coda.
   await advanceIntakeTo(page, copy.qWorkingLedgerHeading, 'intake:typedbelow')
   const question = page.locator('.intake-shell .step-body .left-over')
   await expect(question, 'the left-over question renders once, inside the step').toHaveCount(1)
   await expect(question.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true }), '“All of it” stays checked').toBeChecked()
   await expect(question.locator('p.left-over__at-quote'), 'the step’s seat opens with the counts sentence').toHaveText(
-    [slots.workingCostTypedBelowCounts('Your', STALE_W_CONFIRMED, RISEN_W_QUOTE_NOW), typedBelowOneSpan('Your')].join(' '),
+    [
+      slots.workingCostTypedBelowCounts('Your', STALE_W_CONFIRMED, RISEN_W_QUOTE_NOW),
+      typedBelowOneSpan('Your'),
+      typedBelowOneSpanCoda('Your'),
+    ].join(' '),
   )
   await question.locator('.left-over__at-quote').evaluate((el) => el.scrollIntoView({ block: 'center' }))
   await captureState(page, path.join(outDir, 'walk-typed-below-ledger'))
@@ -1895,12 +1909,27 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
 /** A's one span over the whole window (`datesavedtyped`: $84,000 typed under $90,000 of spending, the stored $16,985),
  *  its two sentences from the slots: each working year the answer adds at most $16,985, where the answer at $90,000
  *  would add at most $10,985, $6,000 less. One span names no years, so its first sentence opens "Each working year,"
- *  on every host (a one-span line of a credit kind). */
+ *  on every host (a one-span line of a credit kind) — "Each working year you’re both alive," here: `date`'s couple
+ *  (Alex 58, working; Sam 60, retired) opens the survivor-path build's gate, since the engine can draw a working year
+ *  with Sam dead and Alex still working (2032–2035), so the frame states `bothAlive` (KTD3/KTD7,
+ *  `docs/plans/features/typed-below-survivor-path-build-spec.md`). */
 const typedBelowOneSpan = (answer: 'This' | 'Your'): string => {
-  const f = { answer, opener: true, oneYear: false, typed: STALE_W_CONFIRMED, quote: RISEN_W_QUOTE_NOW, source: 'spending' } as const
+  const f = { answer, opener: true, oneYear: false, typed: STALE_W_CONFIRMED, quote: RISEN_W_QUOTE_NOW, source: 'spending', bothAlive: true } as const
   return [
     slots.workingCostTypedBelowSpanCredit(f, [DATE_LEFT_OVER, DATE_LEFT_OVER]),
     slots.workingCostTypedBelowSpanAtQuoteCredit(f, [RISEN_AT_QUOTE, RISEN_AT_QUOTE], ['6,000', '6,000']),
+  ].join(' ')
+}
+/** …and the survivor coda that closes the same paragraph (a one-span line stays one `<p>`, its condition opening the
+ *  first sentence: KTD6): in a working year with only one of them alive, this answer takes at most $4,500 a year less
+ *  from savings than the answer at $90,000 would, then the two survivor charges. By hand (DND 012), the default 0.75
+ *  survivor ratio of each W (`src/shared/appDefaults.ts`; no budget on this seed): $84,000 × 0.75 = $63,000 at the
+ *  figure, $90,000 × 0.75 = $67,500 at the spending, $4,500 apart. */
+const typedBelowOneSpanCoda = (answer: 'This' | 'Your'): string => {
+  const f = { answer, typed: STALE_W_CONFIRMED, quote: RISEN_W_QUOTE_NOW, source: 'spending' } as const
+  return [
+    slots.workingCostTypedBelowSurvivorOneSpan(f, '4,500'),
+    slots.workingCostTypedBelowSurvivorCharges(f, ['63,000', '67,500']),
   ].join(' ')
 }
 

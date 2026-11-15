@@ -11,11 +11,12 @@
  * against the overlay's own credits). The pension and crowned households are the builders commit 3's dev seeds
  * (`datesavedtypedpension`, `datesavedtypedcrowned`) are pinned equal to (U5).
  */
+import type { BudgetLineItem } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { workingYearLeftOverLive } from '../intakeMap'
 import { writeWorkingYearLeftOver } from '../workingYearLeftOver'
-import { writeEnteredWorkingYearCost } from '../workingYearQuote'
+import { workingYearQuote, writeConfirmedWorkingYearCost, writeEnteredWorkingYearCost } from '../workingYearQuote'
 
 type Stream = NonNullable<ScenarioDraft['incomeStreams']>[number]
 
@@ -115,3 +116,70 @@ export const TYPED_BELOW_WITNESSES = {
 } as const satisfies Readonly<Record<string, ScenarioDraft>>
 
 export type TypedBelowWitness = keyof typeof TYPED_BELOW_WITNESSES
+
+// ── THE SURVIVOR-PATH BUILD'S HOUSEHOLDS (`docs/plans/features/typed-below-survivor-path-build-spec.md`, U1). Named exports,
+//    never members of TYPED_BELOW_WITNESSES (its sweeps assume a gate-on household with six readings). Every one descends
+//    from `stillWorking` (Alex 58, working; Sam 60, retired at 58), through the dev seeds. ──
+
+/** A budget of `total` a year in two essentials lines, `stickyFraction` of it housing (survivor-sticky) and the rest
+ *  food (not): the council probes' construction (`council-survivor\clerk-death-allkinds.mts`, `budgetOf`). */
+function councilBudget(total: number, stickyFraction: number): BudgetLineItem[] {
+  const housing = Math.round(total * stickyFraction)
+  return [
+    ...(stickyFraction > 0 ? [{ label: 'Housing', category: 'housing', tier: 'essentials', annualAmountReal: housing, startYear: 0 } as const] : []),
+    ...(stickyFraction < 1 ? [{ label: 'Food', category: 'food', tier: 'essentials', annualAmountReal: total - housing, startYear: 0 } as const] : []),
+  ]
+}
+
+/** THE COUNCIL'S C ON A BUDGET (council `wf_dfb7949b-4a7`; round 2's finding #1): `datesavedrisenlater`'s household on a
+ *  $105,000 budget (less its out-of-pocket medical, which the compile injects), `stickyFraction` of it survivor-sticky;
+ *  the quote confirmed, "All of it" answered at the picture's live figure, then `typed` entered by the year, the council
+ *  probes' own construction. At 100 % the held part covers the quote, so X is the whole gap. */
+export function councilBudgetHousehold(stickyFraction: 1 | 0.9 | 0.8, typed: number = 90_000): ScenarioDraft {
+  const c = DEV_SEEDS.datesavedrisenlater
+  const budgeted: ScenarioDraft = { ...c, budget: councilBudget(105_000 - (c.health.oopMedicalAnnual ?? 0), stickyFraction) }
+  const confirmed = writeConfirmedWorkingYearCost(budgeted)
+  return typedAt(savedAtLive({ ...confirmed, workingYearLeftOver: undefined }), typed)
+}
+
+/** A household recast as an all-sticky budget at its own quote (the council probes' `seedbudget:<name>:1`): the stored
+ *  answer and the typed figure kept, the quote's source now the budget. */
+function asAllStickyBudget(d: ScenarioDraft): ScenarioDraft {
+  const quote = workingYearQuote(d).annualReal
+  return { ...d, budget: councilBudget(quote - (d.health.oopMedicalAnnual ?? 0), 1) }
+}
+
+/** TM and the pension household recast as all-sticky budgets ($105,000, typed $84,000: X is the whole $21,000 gap). */
+export const TM_ALL_STICKY_BUDGET: ScenarioDraft = asAllStickyBudget(TYPED_BELOW_WITNESSES.tm)
+export const PENSION_ALL_STICKY_BUDGET: ScenarioDraft = asAllStickyBudget(TYPED_BELOW_WITNESSES.pension)
+
+/** A's household (`datesavedtyped`) with Sam at `age`, retired at it (a retired person's `retirementAge` at or below their
+ *  age: left at 58, a Sam of 55–57 would read as still working and open the gate through Alex), `birthYear` kept with the
+ *  age. The stored answer is kept; the run carries it in either saved state. */
+function aWithSamAt(age: number): ScenarioDraft {
+  const a = TYPED_BELOW_WITNESSES.a
+  const [alex, sam] = a.people
+  return { ...a, people: [alex, { ...sam, currentAge: age, birthYear: a.startCalendarYear! - age, retirementAge: age }] }
+}
+
+/** The gate's witnesses (KTD3): which households the engine can draw a working year with one of them dead. */
+export const SURVIVOR_GATE_WITNESSES = {
+  /** Sam 56: he can die no earlier than 66, past the window's last working year (2035): the gate is off. */
+  sam56: aWithSamAt(56),
+  /** Sam 57: 66 in 2035, the window's last working year: the gate is on in 2035 only. */
+  sam57: aWithSamAt(57),
+  /** The younger non-worker: Alex 62 works (she can die from 66, 2030), Sam 55 is retired and cannot die inside the window.
+   *  A year where the only worker has died is no working year, so the gate is off. */
+  youngerNonWorker: ((): ScenarioDraft => {
+    const s = aWithSamAt(55)
+    const [alex, sam] = s.people
+    return { ...s, people: [{ ...alex, currentAge: 62, birthYear: s.startCalendarYear! - 62 }, sam] }
+  })(),
+  /** Both working, Alex 58 and Sam 60: either death leaves a living worker, so the gate loops over ordered pairs. */
+  bothWorking: ((): ScenarioDraft => {
+    const a = TYPED_BELOW_WITNESSES.a
+    const [alex, sam] = a.people
+    const working: ScenarioDraft = { ...a, people: [alex, { ...sam, workStatus: 'working', retirementAge: undefined, earnedIncomeReal: 40_000 }] }
+    return working
+  })(),
+} as const satisfies Readonly<Record<string, ScenarioDraft>>

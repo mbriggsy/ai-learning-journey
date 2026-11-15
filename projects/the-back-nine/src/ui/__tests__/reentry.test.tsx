@@ -1139,14 +1139,19 @@ describe('ReEntry — the surface', () => {
       typedBelow: line === null || door === null ? null : { line, door, canChange },
     })
   }
+  // Both seeds open the survivor gate (Sam, 60 and retired, can die from 66, in 2032, while Alex works through 2035): the
+  // one-span opener carries "you’re both alive" and the survivor coda's two sentences close the one paragraph (0.75 of
+  // each figure, $63,000 and $67,500, X $4,500) — the paragraph keeps its shape, a <p>, moved only by its words.
   const TYPED_GATE_LINE =
     'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. ' +
     'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
-    'Each working year, your answer adds at most $16,985 a year to your savings. ' +
-    'At your spending of $90,000 a year, it would add at most $10,985, $6,000 less.'
+    'Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. ' +
+    'At your spending of $90,000 a year, it would add at most $10,985, $6,000 less. ' +
+    'If only one of you is alive in a working year, your answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, plus any income tax on it. ' +
+    'Such a year’s costs count as $63,000 a year at your figure and $67,500 at your spending.'
   const TYPED_GATE_NOTE = { text: TYPED_GATE_LINE, parts: { opening: TYPED_GATE_LINE, segments: [], door: null } }
 
-  it('R1: `datesavedtyped` as a vault — the typed-below line (one span) in W’s place, drawn as its plain paragraph, and the update act’s door under the buttons naming $84,000; no anyStale, no rules echo', () => {
+  it('R1: `datesavedtyped` as a vault — the typed-below line (one span, its survivor coda closing it) in W’s place, drawn as its plain paragraph, and the update act’s door under the buttons naming $84,000; no anyStale, no rules echo', () => {
     const d = DEV_SEEDS.datesavedtyped
     const report = deriveStaleness(savedDraft(d), TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: false })
     expect(report.anyStale, 'the premise: nothing on this vault is stale').toBe(false)
@@ -1169,28 +1174,36 @@ describe('ReEntry — the surface', () => {
     )
   })
 
-  it('R1: TM (`datesavedtypedmoved`, three spans, the left over ALSO moved) — the gate keeps two notes, one cause each: the typed-below line as a BLOCK of three labelled spans (each stating its own credit: the rebuild’s KD2), then the moved line, which names "your figure of $84,000 a year" its $26,985 rests on', () => {
+  it('R1: TM (`datesavedtypedmoved`, three spans, the left over ALSO moved) — the gate keeps two notes, one cause each: the typed-below line as a BLOCK — the gate’s scoped lead, three labelled spans (each stating its own credit: the rebuild’s KD2), then the survivor coda in "your answer" words as its own list after the spans’ list — then the moved line, which names "your figure of $84,000 a year" its $26,985 rests on', () => {
     const d = DEV_SEEDS.datesavedtypedmoved
     const moved = workingYearLeftOverMoved(d)
     expect(moved).toEqual({ stored: 16_985, live: 26_985, typedBelow: '84,000' })
     const view = typedBelowView(d, true, { text: workingYearLeftOverMovedText(moved!), clause: workingYearLeftOverMovedClause(moved!), canChange: true })
     const both = ['Your answer adds at most $16,985 a year to your savings.', 'At your spending of $105,000 a year, it would add at most $5,985, $11,000 less.']
+    const LEAD = 'What your answer adds to your savings in each working year you’re both alive:'
     const parts = {
       opening:
         'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. ' +
-        'A working year almost always costs at least what you spend, so this answer can look better than it really is.',
+        `A working year almost always costs at least what you spend, so this answer can look better than it really is. ${LEAD}`,
       segments: [
         { label: '2026 through 2028', sentences: both },
         {
           label: '2029 through 2032',
           sentences: [
-            'At your spending of $105,000 a year, each working year comes up $3,652 to $4,015 short, and your answer would add nothing.',
+            'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and your answer would add nothing.',
             'Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, plus any income tax on those shortfalls.',
           ],
         },
         { label: '2033 through 2035', sentences: both },
       ],
       door: null,
+      coda: {
+        label: 'If only one of you is alive',
+        sentences: [
+          'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, plus any income tax on it.',
+          'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.',
+        ],
+      },
     }
     const MOVED_LINE = `${copy.stalenessLeftOverNote} You said all of it goes into your savings when it was $16,985. At your figure of $84,000 a year, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${copy.stalenessLeftOverGateDoor}`
     expect(view.noteLines).toEqual([{ text: notePartsText(parts), parts }, MOVED_LINE])
@@ -1198,7 +1211,20 @@ describe('ReEntry — the surface', () => {
     const notes = Array.from(container.querySelector('.reentry-notes')!.children)
     expect(notes.map((c) => c.tagName), 'the block, then the moved line as its own paragraph').toEqual(['DIV', 'P'])
     expect(notes[0]!.classList.contains('note-parts')).toBe(true)
-    expect(Array.from(notes[0]!.querySelectorAll('dt')).map((dt) => dt.textContent)).toEqual(['2026 through 2028', '2029 through 2032', '2033 through 2035'])
+    expect(Array.from(notes[0]!.querySelectorAll('dt')).map((dt) => dt.textContent)).toEqual([
+      '2026 through 2028',
+      '2029 through 2032',
+      '2033 through 2035',
+      'If only one of you is alive',
+    ])
+    // Reading order (the council's a11y check, R3): the scoped lead's text, then the spans' list, then the coda's own list.
+    expect(Array.from(notes[0]!.children).map((c) => `${c.tagName} ${c.className}`)).toEqual([
+      'P note-parts__opening',
+      'DL note-parts__segments',
+      'DL note-parts__segments note-parts__coda',
+    ])
+    expect(notes[0]!.children[0]!.textContent!.endsWith(` ${LEAD}`), 'the scoped lead ends the opening, before the spans’ list').toBe(true)
+    expect(notes[0]!.children[2]!.querySelectorAll('dt'), 'the coda is one item').toHaveLength(1)
     expect(notes[1]!.textContent).toBe(MOVED_LINE)
   })
 

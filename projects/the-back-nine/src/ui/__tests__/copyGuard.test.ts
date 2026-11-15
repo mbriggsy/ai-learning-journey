@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { WORKING_COST_ACT_COPY, copy, slots, staticDisclosures, HEDGE_TOKENS, type CopyKey, type TypedBelowSpanFrame } from '../copy'
+import { WORKING_COST_ACT_COPY, copy, slots, staticDisclosures, HEDGE_TOKENS, type CopyKey, type TypedBelowSpanFrame, type TypedBelowSurvivorFrame } from '../copy'
 import {
   lintCopy,
   isVerdictKey,
@@ -22,7 +22,13 @@ import {
   workingYearLeftOverAtQuoteLine,
 } from '@intake/workingYearLeftOver'
 import { heldYesBelowQuote } from '@intake/workingYearQuote'
-import { TYPED_BELOW_WITNESSES } from '@intake/__tests__/typedBelowWitnesses'
+import {
+  PENSION_ALL_STICKY_BUDGET,
+  SURVIVOR_GATE_WITNESSES,
+  TM_ALL_STICKY_BUDGET,
+  TYPED_BELOW_WITNESSES,
+  councilBudgetHousehold,
+} from '@intake/__tests__/typedBelowWitnesses'
 import { notePartsText } from '../noteParts'
 
 /** The survival-claim corpus (council wf_6e72eca9-c20) — every phrasing a card could use to sell the
@@ -671,9 +677,14 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // The typed-below spans' frames (the whole-window rebuild's KTD7, `TypedBelowSpanFrame`): a one-span line on the Result
   // (A: "Each working year, this answer…"), a several-year span on the gate or seat (TM's), and a one-year span on a
   // budget's quote — so the samples below render each branch of the frame at least once between them.
-  const SPAN_ONE: TypedBelowSpanFrame = { answer: 'This', opener: true, oneYear: false, typed: '84,000', quote: '90,000', source: 'spending' }
-  const SPAN_RUN: TypedBelowSpanFrame = { answer: 'Your', opener: false, oneYear: false, typed: '84,000', quote: '105,000', source: 'spending' }
-  const SPAN_YEAR: TypedBelowSpanFrame = { answer: 'This', opener: false, oneYear: true, typed: '100,985', quote: '105,000', source: 'budget' }
+  // Since the survivor-path build every witness opens the gate, so the samples carry `bothAlive: true` but for the run's,
+  // which keeps today's words in the sample set too (the sweep below renders both ways).
+  const SPAN_ONE: TypedBelowSpanFrame = { answer: 'This', opener: true, oneYear: false, typed: '84,000', quote: '90,000', source: 'spending', bothAlive: true }
+  const SPAN_RUN: TypedBelowSpanFrame = { answer: 'Your', opener: false, oneYear: false, typed: '84,000', quote: '105,000', source: 'spending', bothAlive: false }
+  const SPAN_YEAR: TypedBelowSpanFrame = { answer: 'This', opener: false, oneYear: true, typed: '100,985', quote: '105,000', source: 'budget', bothAlive: true }
+  // The survivor coda's frames (the survivor-path build's KTD5): "this" on the Result over the spending, "your" over a budget.
+  const CODA_SPENDING: TypedBelowSurvivorFrame = { answer: 'This', typed: '84,000', quote: '90,000', source: 'spending' }
+  const CODA_BUDGET: TypedBelowSurvivorFrame = { answer: 'Your', typed: '90,000', quote: '105,000', source: 'budget' }
 
   // --- slots: render with representative args, then scan. Slots are the SANCTIONED numeric channel,
   //     so they are NOT free-numeral scanned; the verdict voice still must hold. Record<keyof typeof
@@ -972,6 +983,11 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostTypedBelowSpanStillShort: slots.workingCostTypedBelowSpanStillShort(SPAN_RUN, ['15', '15'], ['4,000', '4,000']),
     workingCostTypedBelowSpanEven: slots.workingCostTypedBelowSpanEven(SPAN_YEAR, ['4,015', '4,015']),
     workingCostTypedBelowSpanSame: slots.workingCostTypedBelowSpanSame(SPAN_ONE),
+    workingCostTypedBelowSurvivorLead: slots.workingCostTypedBelowSurvivorLead('Your'),
+    workingCostTypedBelowSurvivorOneSpan: slots.workingCostTypedBelowSurvivorOneSpan(CODA_SPENDING, '4,500'),
+    workingCostTypedBelowSurvivorAtMost: slots.workingCostTypedBelowSurvivorAtMost(CODA_BUDGET, '15,000'),
+    workingCostTypedBelowSurvivorWholeGap: slots.workingCostTypedBelowSurvivorWholeGap(CODA_BUDGET),
+    workingCostTypedBelowSurvivorCharges: slots.workingCostTypedBelowSurvivorCharges(CODA_SPENDING, ['63,000', '67,500']),
     workingCostLegendFigure: slots.workingCostLegendFigure('90,000'),
     stalenessLeftOverMoved: slots.stalenessLeftOverMoved('16,985', '27,537', '16,985'),
     stalenessLeftOverClause: slots.stalenessLeftOverClause('16,985', '27,537', '16,985'),
@@ -1328,6 +1344,13 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     'workingCostTypedBelowSpanStillShort',
     'workingCostTypedBelowSpanEven',
     'workingCostTypedBelowSpanSame',
+    // The survivor-path build's lead and coda (KTD5–KTD7): a comparison's scope and its survivor ceiling are left-over
+    // strings too.
+    'workingCostTypedBelowSurvivorLead',
+    'workingCostTypedBelowSurvivorOneSpan',
+    'workingCostTypedBelowSurvivorAtMost',
+    'workingCostTypedBelowSurvivorWholeGap',
+    'workingCostTypedBelowSurvivorCharges',
   ] as const satisfies readonly (keyof typeof slots)[]
   const LEFT_OVER_STRINGS = (): readonly (readonly [string, string])[] =>
     payCheckStrings().filter(
@@ -1335,14 +1358,15 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
         /^(workingLedgerLeftOver|assumptionWorkingCostLeftOver|assumptionWorkingYearCheckLeftOver|stalenessLeftOver|workingCostStaleLeftOver)/.test(name) ||
         (TYPED_BELOW_SPAN_SLOTS as readonly string[]).includes(name),
     )
-  /** Every span slot rendered over every frame the composer can pass (answer × opener × one year × the quote's source), with a range
-   *  and with one figure, so a branch the one sample above never takes is swept too. */
+  /** Every span slot rendered over every frame the composer can pass (answer × opener × one year × the quote's source ×
+   *  the survivor scope), with a range and with one figure, so a branch the one sample above never takes is swept too. */
   const spanRenders = (S: string, T: string): readonly string[] =>
     (['This', 'Your'] as const).flatMap((answer) =>
       [true, false].flatMap((opener) =>
         [true, false].flatMap((oneYear) =>
+          ([true, false] as const).flatMap((bothAlive) =>
           (['spending', 'budget'] as const).flatMap((source) => {
-            const f: TypedBelowSpanFrame = { answer, opener, oneYear, typed: S, quote: S, source }
+            const f: TypedBelowSpanFrame = { answer, opener, oneYear, typed: S, quote: S, source, bothAlive }
             return [
               slots.workingCostTypedBelowSpanCredit(f, [S, S]),
               slots.workingCostTypedBelowSpanCredit(f, [S, T]),
@@ -1363,8 +1387,23 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
               slots.workingCostTypedBelowSpanSame(f),
             ]
           }),
+          ),
         ),
       ),
+    )
+  /** Every coda slot over every coda frame (answer × the quote's source), both forms. */
+  const codaRenders = (S: string, T: string): readonly string[] =>
+    (['This', 'Your'] as const).flatMap((answer) =>
+      (['spending', 'budget'] as const).flatMap((source) => {
+        const f: TypedBelowSurvivorFrame = { answer, typed: T, quote: S, source }
+        return [
+          slots.workingCostTypedBelowSurvivorLead(answer),
+          slots.workingCostTypedBelowSurvivorOneSpan(f, S),
+          slots.workingCostTypedBelowSurvivorAtMost(f, S),
+          slots.workingCostTypedBelowSurvivorWholeGap(f),
+          slots.workingCostTypedBelowSurvivorCharges(f, [T, S]),
+        ]
+      }),
     )
 
   it('no left-over string names a lean — never earlier, better, worse or conservative (R16), and the sweep is non-vacuous', () => {
@@ -1374,10 +1413,34 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     for (const [name, text] of strings) {
       for (const b of LEFT_OVER_LEAN_BAN) expect(text, `${name} says "${b.word}": "${text}"`).not.toMatch(b.re)
     }
-    // …and every branch of every span slot, beyond the one sample each above (16 frames, 17 renders a frame).
-    const branches = spanRenders('16,985', '21,000')
-    expect(branches.length).toBe(16 * 17)
+    // …and every branch of every span slot, beyond the one sample each above (32 frames, 17 renders a frame), and every
+    // coda slot (4 frames, 5 renders a frame).
+    const branches = [...spanRenders('16,985', '21,000'), ...codaRenders('16,985', '21,000')]
+    expect(branches.length).toBe(32 * 17 + 4 * 5)
     for (const text of branches) for (const b of LEFT_OVER_LEAN_BAN) expect(text, `a span says "${b.word}": "${text}"`).not.toMatch(b.re)
+  })
+
+  it('the survivor words (the survivor-path build’s U3): never "on your own" (the catalog’s living one-earner word), every one past the catastrophe and Hawk bans, and with the scope off every span slot renders today’s words', () => {
+    const coda = [...codaRenders('4,500', '84,000'), copy.workingCostTypedBelowSurvivorLabel, copy.workingLedgerLeftOverSpansLeadSurvivor]
+    for (const text of coda) {
+      expect(text, text).not.toMatch(/on your own/i)
+      for (const b of HAWK_BAN) expect(text, `says "${b.word}": "${text}"`).not.toMatch(b.re)
+    }
+    // The keys carry "Survivor", so the catastrophe gate sweeps them by name (`isSurvivorKey`).
+    for (const k of [...TYPED_BELOW_SPAN_SLOTS.filter((n) => n.includes('Survivor')), 'workingCostTypedBelowSurvivorLabel', 'workingLedgerLeftOverSpansLeadSurvivor']) {
+      expect(k, k).toMatch(/survivor/i)
+    }
+    // Today's words, typed by hand, where the scope is off (a household the engine draws no such year for).
+    const off = (opener: boolean, oneYear: boolean): TypedBelowSpanFrame => ({ answer: 'This', opener, oneYear, typed: '84,000', quote: '105,000', source: 'spending', bothAlive: false })
+    expect(slots.workingCostTypedBelowSpanCredit(off(true, false), ['16,985', '16,985'])).toBe('Each working year, this answer adds at most $16,985 a year to your savings.')
+    expect(slots.workingCostTypedBelowSpanShort(off(false, false), ['3,652', '4,015'])).toBe('At your spending of $105,000 a year, each working year comes up $3,652 to $4,015 short.')
+    expect(slots.workingCostTypedBelowSpanShort(off(false, true), ['4,015', '4,015'])).toBe('At your spending of $105,000 a year, that working year comes up $4,015 short.')
+    // …and the scope, typed by hand, where it is on.
+    const on = (opener: boolean, oneYear: boolean): TypedBelowSpanFrame => ({ ...off(opener, oneYear), bothAlive: true })
+    expect(slots.workingCostTypedBelowSpanSame(on(true, false))).toBe('Each working year you’re both alive, this answer adds the same to your savings as it would at your spending of $105,000 a year.')
+    expect(slots.workingCostTypedBelowSpanShort(on(false, false), ['3,652', '4,015'])).toBe('At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short.')
+    expect(slots.workingCostTypedBelowSpanShort(on(false, true), ['4,015', '4,015'])).toBe('At your spending of $105,000 a year, that working year, if you’re both alive, comes up $4,015 short.')
+    expect(slots.workingCostTypedBelowSpanSame(on(false, false)), 'a segment’s `same` takes its scope from the lead').toBe('This answer adds the same to your savings as it would at your spending of $105,000 a year.')
   })
 
   it('the R16 list counts every typed-below span slot by name and never the counts slots; its ban still reds "better" planted in a span', () => {
@@ -1465,12 +1528,31 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     ]
   }
 
-  /** Every composed typed-below line over every whole-window witness (the rebuild's KTD9; `TYPED_BELOW_WITNESSES`), as a
-   *  reader sees it (`notePartsText`): the Result holding the moved clause and with it hosted elsewhere, the gate, the
-   *  gate's line with its door, and the seat in the details sheet and on the walk's money-picture step. Every witness
-   *  draws every host (a "saved" answer the run carries, on a fresh typed figure below the quote), so a null throws. */
+  /** The households the composed sweep reads: every whole-window witness (the rebuild's KTD9; `TYPED_BELOW_WITNESSES`, each
+   *  of which opens the survivor gate), and the survivor-path build's — the council's C on a $105,000 budget at 100, 90
+   *  and 80 % sticky and at $101,000 typed, TM and the pension household as all-sticky budgets (the coda's whole-gap
+   *  form, on a budget quote), the gate's witnesses on (Sam 57, both working) and off (Sam 56, the younger non-worker:
+   *  today's words, no coda). */
+  const TYPED_BELOW_GATE_OFF = ['sam56', 'youngerNonWorker'] as const
+  const TYPED_BELOW_SWEPT: Readonly<Record<string, ScenarioDraft>> = {
+    ...TYPED_BELOW_WITNESSES,
+    c100: councilBudgetHousehold(1),
+    c90: councilBudgetHousehold(0.9),
+    c80: councilBudgetHousehold(0.8),
+    c100at101000: councilBudgetHousehold(1, 101_000),
+    tmBudget: TM_ALL_STICKY_BUDGET,
+    pensionBudget: PENSION_ALL_STICKY_BUDGET,
+    ...SURVIVOR_GATE_WITNESSES,
+  }
+  /** The survivor coda's condition, in every reading that carries it: the label of its own part on two or more spans, the
+   *  opening of its first sentence on one ("If only one of you is alive in a working year, …"). */
+  const SURVIVOR_CODA = 'If only one of you is alive'
+  /** Every composed typed-below line over {@link TYPED_BELOW_SWEPT}, as a reader sees it (`notePartsText`, the coda
+   *  included): the Result holding the moved clause and with it hosted elsewhere, the gate, the gate's line with its door,
+   *  and the seat in the details sheet and on the walk's money-picture step. Every household draws every host (a "saved"
+   *  answer the run carries, on a fresh typed figure below the quote), so a null throws. */
   const TYPED_BELOW_COMPOSED = (): readonly (readonly [string, string])[] =>
-    Object.entries(TYPED_BELOW_WITNESSES).flatMap(([name, d]) => {
+    Object.entries(TYPED_BELOW_SWEPT).flatMap(([name, d]) => {
       const door = workingYearCostTypedBelowDoor(d)
       const hosts = [
         ['Result', workingYearCostTypedBelowLine(d, { kind: 'result', carriesMoved: true })],
@@ -1487,17 +1569,28 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       return [...texts, [`${name} (gate, door)`, [texts[2]![1], door.heading, door.scope, door.route].join(' ')] as const]
     })
 
-  it('every composed typed-below line, on every witness and host, keeps the retired wordings, the below-quote acts and the Hawk’s ban out (KTD9)', () => {
+  it('every composed typed-below line, on every witness and host, keeps the retired wordings, the below-quote acts and the Hawk’s ban out (KTD9) — the survivor coda counted in every gate-on reading, in both its forms, and never "on your own" (the survivor-path build’s R8)', () => {
     const composed = TYPED_BELOW_COMPOSED()
-    // Non-vacuous: six readings a witness (five hosts and the gate with its door), every witness.
-    expect(composed.length).toBe(Object.keys(TYPED_BELOW_WITNESSES).length * 6)
-    expect(composed.length, 'the witness set never silently empties').toBeGreaterThanOrEqual(90)
+    const households = Object.keys(TYPED_BELOW_SWEPT).length
+    // Non-vacuous: six readings a household (five hosts and the gate with its door), every household.
+    expect(composed.length).toBe(households * 6)
+    expect(composed.length, 'the witness set never silently empties').toBeGreaterThanOrEqual(150)
     for (const [name, text] of composed) {
       for (const re of RETIRED_EVERYWHERE) expect(text, `${name}: ${re}`).not.toMatch(re)
       // A typed figure sits below the quote on every witness, so no Keep door is drawn there (ruling 34).
       for (const re of RETIRED_BELOW_QUOTE) expect(text, `${name}: ${re}`).not.toMatch(re)
       for (const b of HAWK_BAN) expect(text, `${name} says "${b.word}": "${text}"`).not.toMatch(b.re)
+      // The coda's words never borrow the living one-earner year's "on your own" (R8).
+      expect(text, `${name}: "on your own"`).not.toMatch(/\bon your own\b/i)
     }
+    // The sweep reads the coda: every reading of every gate-on household carries its condition (six a household), and no
+    // reading of a gate-off household does; both forms' second sentences are among them.
+    const gateOff = (name: string): boolean => TYPED_BELOW_GATE_OFF.some((k) => name.startsWith(`${k} (`))
+    const withCoda = composed.filter(([, text]) => text.includes(SURVIVOR_CODA))
+    expect(withCoda.length, 'the coda in every gate-on reading').toBe((households - TYPED_BELOW_GATE_OFF.length) * 6)
+    expect(withCoda.some(([name]) => gateOff(name)), 'and in no gate-off reading').toBe(false)
+    expect(composed.filter(([, text]) => text.includes('That is the whole gap to your figure of')).length, 'the whole-gap form: C at 100 % twice, TM and the pension as budgets').toBe(4 * 6)
+    expect(composed.filter(([, text]) => text.includes('Such a year’s costs count as')).length, 'the charges form: every other gate-on household').toBe((households - TYPED_BELOW_GATE_OFF.length - 4) * 6)
   })
 
   it('the retired wordings never return: "So checking", "instead of none", "takes none of those shortfalls" and "doesn’t move this answer" in no catalog string, rendered slot or composed line', () => {
@@ -1508,6 +1601,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       ...TYPED_BELOW_COMPOSED(),
     ]
     expect(strings.length, "the sweep is non-vacuous").toBeGreaterThan(990)
+    // …and it reads the survivor coda: every gate-on household's six composed readings carry it.
+    expect(strings.filter(([, text]) => text.includes(SURVIVOR_CODA) && text.includes('plus any income tax on it')).length, 'the coda is swept').toBeGreaterThanOrEqual(
+      (Object.keys(TYPED_BELOW_SWEPT).length - TYPED_BELOW_GATE_OFF.length) * 6,
+    )
     for (const [name, text] of strings) for (const re of RETIRED_EVERYWHERE) expect(text, `${name}: ${re}`).not.toMatch(re)
     // Non-vacuous: each pattern catches the wording it retires.
     const planted = [
@@ -1948,7 +2045,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:946-956, :1002-1019), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:953-963, :1009-1026), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

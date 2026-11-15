@@ -2255,9 +2255,13 @@ const FOUR_BUCKET_READBACK = [
  *  KTD6/KTD7): each working year this answer's credit beside the credit the answer at today's quote would give, the years
  *  grouped into spans, every word from the slots and every figure the engine's own on the seed (U3's witness table, the
  *  research record's `witnesses.md`). A span's words in the order a block draws them, as `innerText` reads them: its label
- *  (the dt), then its sentences (the dd). `typed` / `quote` — the typed-below pair as the W surfaces print it. */
+ *  (the dt), then its sentences (the dd). `typed` / `quote` — the typed-below pair as the W surfaces print it.
+ *  `bothAlive` is true on every frame here: every seed and vault this spec walks is `date`'s couple (Alex 58, working;
+ *  Sam 60, retired), so the engine can draw a working year with Sam dead and Alex still working (2032–2035, Sam's 66 on),
+ *  and the survivor-path build's gate is on (`docs/plans/features/typed-below-survivor-path-build-spec.md`, KTD3/KTD7):
+ *  the one-span opener and the short kinds' year subject carry "you’re both alive". */
 const spanFrame = (answer: 'This' | 'Your', first: number, last: number, typed: string, quote: string, opener = false) =>
-  ({ answer, opener, oneYear: first === last, typed, quote, source: 'spending' }) as const
+  ({ answer, opener, oneYear: first === last, typed, quote, source: 'spending', bothAlive: true }) as const
 const one = (x: string): readonly [string, string] => [x, x]
 const spanText = (first: number, last: number, sentences: readonly string[]): string =>
   [slots.workingCostTypedBelowSpanLabel(first, last), ...sentences].join(' ')
@@ -2291,16 +2295,52 @@ const shortLeftOverSpan = (
     slots.workingCostTypedBelowSpanShortOut(f, one('16,985'), difference),
   ])
 }
+/** The survivor coda (the survivor-path build's KTD5/KTD6; council `wf_dfb7949b-4a7`): in a working year with only one
+ *  of them alive, the most this answer takes less from savings than the answer at the quote would (X, "at most"), then
+ *  the two survivor charges X is the difference of. Each seed's figures by hand (DND 012), never through the engine's
+ *  `workingYearCostForYear`: no seed here carries a budget, so the survivor rule charges the app's default survivor ratio
+ *  (0.75, `src/shared/appDefaults.ts`) of each W — $84,000 × 0.75 = $63,000 at the typed figure; $90,000 × 0.75 =
+ *  $67,500 and $105,000 × 0.75 = $78,750 at the quotes — and X is their difference: $4,500 on `datesavedtyped`, $15,750
+ *  on TM and the pension household (`survivorCharges` form: a ratio below 1 never spans the whole gap). `typed` /
+ *  `quote` — the typed-below pair; `most` — X; `charges` — at the typed figure, then at the quote. */
+interface SurvivorCodaFigures {
+  readonly typed: string
+  readonly quote: string
+  readonly most: string
+  readonly charges: readonly [string, string]
+}
+const SURVIVOR_A: SurvivorCodaFigures = { typed: '84,000', quote: '90,000', most: '4,500', charges: ['63,000', '67,500'] }
+const SURVIVOR_TM: SurvivorCodaFigures = { typed: '84,000', quote: '105,000', most: '15,750', charges: ['63,000', '78,750'] }
+const survivorFrame = (answer: 'This' | 'Your', c: SurvivorCodaFigures) =>
+  ({ answer, typed: c.typed, quote: c.quote, source: 'spending' }) as const
+/** The coda on a one-span line: its two sentences close the plain paragraph, the condition opening the first (KTD6). */
+const survivorCodaOneSpan = (answer: 'This' | 'Your', c: SurvivorCodaFigures): string => {
+  const f = survivorFrame(answer, c)
+  return [slots.workingCostTypedBelowSurvivorOneSpan(f, c.most), slots.workingCostTypedBelowSurvivorCharges(f, c.charges)].join(' ')
+}
+/** The coda on two or more spans: its own one-item list after the spans' (`dl.note-parts__coda`), its label (the dt),
+ *  then its two sentences (the dd), as `innerText` reads them (KTD6). */
+const survivorCodaBlock = (answer: 'This' | 'Your', c: SurvivorCodaFigures): string => {
+  const f = survivorFrame(answer, c)
+  return [
+    copy.workingCostTypedBelowSurvivorLabel,
+    slots.workingCostTypedBelowSurvivorAtMost(f, c.most),
+    slots.workingCostTypedBelowSurvivorCharges(f, c.charges),
+  ].join(' ')
+}
 /** U11 walk 6's R1 on `datesavedtyped` (`datesavedrisen` with its old $84,000 TYPED back in, fresh): the typed-below
  *  line, "Your" on the gate and "This" on the Result — the counts sentence, then its ONE span over the whole window
  *  (A: $16,985 against $10,985 in every year, 2026–2035), folded into the opening as a plain paragraph with no label
- *  (a one-span line of a credit kind opens "Each working year,"). Its door is the update act's, naming the same $84,000. */
+ *  (a one-span line of a credit kind opens "Each working year you’re both alive," under the survivor scope), and the
+ *  survivor coda's two sentences closing the same paragraph ($4,500; $63,000 and $67,500). Its door is the update act's,
+ *  naming the same $84,000. */
 const typedBelowLine = (answer: 'This' | 'Your'): string => {
   const f = spanFrame(answer, 2026, 2035, '84,000', '90,000', true)
   return [
     slots.workingCostTypedBelowCounts(answer, '84,000', '90,000'),
     slots.workingCostTypedBelowSpanCredit(f, one('16,985')),
     slots.workingCostTypedBelowSpanAtQuoteCredit(f, one('10,985'), one('6,000')),
+    survivorCodaOneSpan(answer, SURVIVOR_A),
   ].join(' ')
 }
 /** The walk-6 round review's pair on `datesavedtypedmoved` (`datesavedrisenlater` with its old $84,000 TYPED back in, the
@@ -2309,31 +2349,38 @@ const typedBelowLine = (answer: 'This' | 'Your'): string => {
  *  years the old year-0 line called $762), "Your" on the gate with no moved clause (the moved line follows as its own
  *  note: one cause, one line), "This" on the Result with the moved clause after the counts sentence (`middle`). Each
  *  span states the pair, so the cap is said in the moved words and again in each span (KD2's second pilot call, read
- *  by walk 8). */
+ *  by walk 8). Under the survivor scope the opening ends on the scoped lead (neither host drew a lead before: KTD7), the
+ *  short span's year subject is "each working year you’re both alive", and the coda follows the spans as its own list
+ *  ($15,750; $63,000 and $78,750). */
 const TYPED_MOVED_LABELS = ['2026 through 2028', '2029 through 2032', '2033 through 2035'] as const
 const typedMovedLine = (answer: 'This' | 'Your', middle: string | null): string =>
   [
     slots.workingCostTypedBelowCounts(answer, '84,000', '105,000'),
     ...(middle === null ? [] : [middle]),
+    slots.workingCostTypedBelowSurvivorLead(answer),
     bothCreditSpan(answer, 2026, 2028, one('5,985'), one('11,000')),
     shortLeftOverSpan(answer, 2029, 2032, ['3,652', '4,015'], ['20,637', '21,000']),
     bothCreditSpan(answer, 2033, 2035, one('5,985'), one('11,000')),
+    survivorCodaBlock(answer, SURVIVOR_TM),
   ].join(' ')
 /** The rebuild's five-span household on `datesavedtypedpension` (`datesavedrisenlater` plus Sam's $9,000 pension at 64
  *  and 65, the old $84,000 typed back in): the pension lifts 2030 and 2031 above $0 at $105,000, so its short years at
  *  the quote split into two one-year spans, 2029 and 2032 ("that working year", "that shortfall"), around a drifting
  *  2030–2031 span ($3,005 to $3,368 at the quote). Saved-moved as TM is (year 0 $26,985 at the typed figure), so the
- *  same `middle` on the Result and the same moved line after it on the gate. */
+ *  same `middle` on the Result and the same moved line after it on the gate. The survivor scope as on TM: the scoped
+ *  lead, each one-year span's subject "that working year, if you’re both alive,", and TM's coda (the same W pair). */
 const TYPED_PENSION_LABELS = ['2026 through 2028', '2029', '2030 through 2031', '2032', '2033 through 2035'] as const
 const typedPensionLine = (answer: 'This' | 'Your', middle: string | null): string =>
   [
     slots.workingCostTypedBelowCounts(answer, '84,000', '105,000'),
     ...(middle === null ? [] : [middle]),
+    slots.workingCostTypedBelowSurvivorLead(answer),
     bothCreditSpan(answer, 2026, 2028, one('5,985'), one('11,000')),
     shortLeftOverSpan(answer, 2029, 2029, one('4,015'), one('21,000')),
     bothCreditSpan(answer, 2030, 2031, ['3,005', '3,368'], ['13,617', '13,980']),
     shortLeftOverSpan(answer, 2032, 2032, one('3,652'), one('20,637')),
     bothCreditSpan(answer, 2033, 2035, one('5,985'), one('11,000')),
+    survivorCodaBlock(answer, SURVIVOR_TM),
   ].join(' ')
 /** The moved clause the Result's slot carries on TM and the pension household (no rules line hosts it there). */
 const TYPED_MOVED_CLAUSE = slots.stalenessLeftOverClauseAt('84,000', '16,985', '26,985', '16,985')
@@ -2343,8 +2390,8 @@ const TYPED_MOVED_GATE_MOVED_LINE = `${copy.stalenessLeftOverNote} ${slots.stale
  *  none is drawn (W not stale). `standing` — the Result's standing-slot lead and line (before its door), or `null`
  *  where the answer carries none (the fresh-vintage `wyclock`). `resultDoor` — the standing slot's door as its last
  *  dt/dd (the block), or `null` where the slot is its old `<p>` with the button inline — or, with `standingLabels`, a
- *  block with NO door (the typed-below line at two or more spans: its labels in order, its button the block's last
- *  child). `dated` — whether the affirm
+ *  block with NO door (the typed-below line at two or more spans: its spans' labels in order, the survivor coda's label
+ *  in its own list after them, its button the block's last child). `dated` — whether the affirm
  *  lands a crowned date (`assertResolvedDate`) or the no-date reading (`assertNoDateReading`). `sheet` — the Result
  *  door that opens the panel at the W row, and the Keep door's label there (`null` where none is drawn), or `null`
  *  where the slot opens no W row. `readback` — the gate's read-back labels in order, where the arm pins them. */
@@ -2431,7 +2478,8 @@ const PAY_CHECK_UNLOCKS: readonly {
   // The pair (b9-5): R1's line and the moved line on one gate — the tallest R1 gate — each figure naming what it rests on;
   // the Result's slot carries the moved clause in R1's line. No date within the window (the final tier's top rung 0.80,
   // b9-5's probe, against `datesavedrisenlater`'s 0.74). Since the whole-window rebuild R1's line is a block of three
-  // labelled spans on both hosts, the Result's with no door of its own (its button the block's last child).
+  // labelled spans on both hosts, the Result's with no door of its own (its button the block's last child); since the
+  // survivor-path build, under the scoped lead and closed by the survivor coda's own list (the gate's tallest R1 note).
   {
     key: 'datesavedtypedmoved',
     note: typedMovedLine('Your', null),
@@ -2490,12 +2538,48 @@ async function assertStandingBlock(standing: Locator, who: string, lineText: str
   expect(button!.height, `${who}: the door's button is at least 44 px tall`).toBeGreaterThanOrEqual(44)
 }
 
+/** The typed-below block's labelled parts, on any host (the survivor-path build's KTD6): the opening `<p>`, then the
+ *  spans' own list — one segment per span, its years its label, in time order — then the survivor coda as its OWN
+ *  one-item list (`dl.note-parts__coda`: a condition, never one more span, so a `dt` count over the whole block includes
+ *  its label), and last, where the host passes one, its button. No door part. Every block here carries the coda: every
+ *  typed-below seed and vault this spec walks opens the survivor gate (`spanFrame`'s docblock). */
+async function assertTypedBelowParts(block: Locator, who: string, spanLabels: readonly string[], withButton: boolean): Promise<void> {
+  const spans = block.locator(':scope > dl.note-parts__segments:not(.note-parts__coda)')
+  await expect(spans, `${who}: the spans are one list`).toHaveCount(1)
+  await expect(spans.locator(':scope > .note-parts__segment'), `${who}: one labelled part per span`).toHaveCount(spanLabels.length)
+  await expect(spans.locator('dt'), `${who}: each span's years are its label, in time order`).toHaveText([...spanLabels])
+  const coda = block.locator(':scope > dl.note-parts__coda')
+  await expect(coda, `${who}: the survivor coda is its own list`).toHaveCount(1)
+  await expect(coda.locator(':scope > .note-parts__segment'), `${who}: the coda is one labelled part`).toHaveCount(1)
+  await expect(coda.locator('dt'), `${who}: the coda's label`).toHaveText(copy.workingCostTypedBelowSurvivorLabel)
+  await expect(block.locator('.note-parts__door'), `${who}: the typed-below block carries no door part`).toHaveCount(0)
+  const order = await block.evaluate((el) =>
+    [...el.children].map((c) =>
+      c.matches('p.note-parts__opening')
+        ? 'opening'
+        : c.matches('dl.note-parts__coda')
+          ? 'coda'
+          : c.matches('dl.note-parts__segments')
+            ? 'spans'
+            : c.tagName.toLowerCase(),
+    ),
+  )
+  expect(order, `${who}: the opening, the spans, the coda after them${withButton ? ', the button last' : ''}`).toEqual([
+    'opening',
+    'spans',
+    'coda',
+    ...(withButton ? ['button'] : []),
+  ])
+}
+
 /** The standing slot drawn as a block with NO door (the typed-below line at two or more spans, the whole-window
- *  rebuild's KTD6 host 1): still one `.cs-paycheck-note`, now `div.note-parts`; its words — the opening, then each span's
- *  label and sentences — in order, read as `innerText` (a block's `textContent` runs its parts together); exactly the
- *  labels given, one segment each, and no door part; the label type; and the Result's button ("Update your figure for a
- *  working year") still drawn wherever the tab can act, as the block's LAST child and a block at least 44 px tall
- *  (`FuckOffDate` passes it whenever `onOpen` is set; before the rebuild a doorless block dropped it). */
+ *  rebuild's KTD6 host 1): still one `.cs-paycheck-note`, now `div.note-parts`; its words — the opening ending on the
+ *  scoped lead, then each span's label and sentences, then the survivor coda's label and sentences — in order, read as
+ *  `innerText` (a block's `textContent` runs its parts together); its parts (`assertTypedBelowParts`: exactly the span
+ *  labels given in the spans' list, the coda's in its own); the label type, the coda's label included; and the Result's
+ *  button ("Update your figure for a working year") still drawn wherever the tab can act, as the block's LAST child and a
+ *  block at least 44 px tall (`FuckOffDate` passes it whenever `onOpen` is set; before the rebuild a doorless block
+ *  dropped it). */
 async function assertDoorlessStandingBlock(
   standing: Locator,
   who: string,
@@ -2504,12 +2588,10 @@ async function assertDoorlessStandingBlock(
   cta: string,
 ): Promise<void> {
   await expect(standing, `${who}: the standing slot is drawn as a block`).toHaveClass(/(^|\s)note-parts(\s|$)/)
-  await expect(standing, `${who}: the standing slot speaks its opening, then every span, in order`).toContainText(lineText, {
+  await expect(standing, `${who}: the standing slot speaks its opening, every span, then the coda, in order`).toContainText(lineText, {
     useInnerText: true,
   })
-  await expect(standing.locator('.note-parts__segment'), `${who}: one labelled part per span`).toHaveCount(labels.length)
-  await expect(standing.locator('dt'), `${who}: each span's years are its label, in time order`).toHaveText([...labels])
-  await expect(standing.locator('.note-parts__door'), `${who}: the typed-below block carries no door part`).toHaveCount(0)
+  await assertTypedBelowParts(standing, who, labels, true)
   await assertLabelType(standing, who)
   const last = await standing.evaluate((el) => {
     const c = el.lastElementChild
@@ -2607,6 +2689,9 @@ for (const u of PAY_CHECK_UNLOCKS) {
       // W's block on the gate carries the same label type as the Result's (council (1)).
       const gateBlock = page.locator('.reentry-notes > .note-parts')
       if ((await gateBlock.count()) > 0) await assertLabelType(gateBlock, `${u.key} (gate)`)
+      // The typed-below line at two or more spans is the gate's block: its spans' list, then the survivor coda's own
+      // list (the survivor-path build's KTD6, host 2); the gate passes no button.
+      if (u.standingLabels !== undefined) await assertTypedBelowParts(gateBlock, `${u.key} (gate)`, u.standingLabels, false)
       // The read-back the frame must hold, where the arm pins it (council (6): the four-bucket arm is its tallest).
       if (u.readback !== null) {
         await expect(page.locator('.reentry-confirm .reentry-row__label'), `${u.key}: the gate's read-back, every row`).toHaveText([
@@ -2704,12 +2789,14 @@ for (const u of PAY_CHECK_UNLOCKS) {
         // The rebuild's host 3 in a real browser (round 2, finding #9: jsdom loads no stylesheet): where the line speaks
         // two or more spans, the left-over seat below draws them as one block whose labels are a step above their text in
         // the body face, at this width where the control sheet's laptop rule widens `.field-help`; and the block ends the
-        // seat with no trailing margin (intake.css's `.left-over > div.note-parts:last-child`, the design read).
+        // seat with no trailing margin (intake.css's `.left-over > div.note-parts:last-child`, the design read). The
+        // survivor coda rides the seat too, its own list after the spans (KTD6), its label in the same type; the seat
+        // passes no button, so the coda is the block's last part.
         if (u.standingLabels !== undefined) {
           const seatBlock = dialog.locator('[data-assumption-seat="working-year-left-over"] .left-over > div.note-parts')
           await expect(seatBlock, `${u.key}: the left-over seat draws its spans as one block`).toHaveCount(1)
-          await expect(seatBlock.locator('dt'), `${u.key}: one label per span in the seat`).toHaveText([...u.standingLabels])
-          await assertLabelType(seatBlock, `${u.key}: the seat's spans`)
+          await assertTypedBelowParts(seatBlock, `${u.key}: the seat`, u.standingLabels, false)
+          await assertLabelType(seatBlock, `${u.key}: the seat's spans and coda`)
           const foot = await seatBlock.evaluate((el) => ({ last: el.parentElement?.lastElementChild === el, end: getComputedStyle(el).marginBlockEnd }))
           expect(foot, `${u.key}: the spans end the seat with no trailing margin`).toEqual({ last: true, end: '0px' })
         }
@@ -3194,7 +3281,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2112-2116 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2119-2123 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,
@@ -3890,8 +3977,9 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
   })
 
   // ── the whole-window rebuild's five-span line in the Result's standing slot (walk 8's first added target;
-  //    `datesavedtypedpension`): no typed-below seed had a placement arm. A block of five labelled spans with no door of
-  //    its own, its button its last child; the lead's last note and before the graphs (the no-date reading draws no band,
+  //    `datesavedtypedpension`): no typed-below seed had a placement arm. A block of five labelled spans under the scoped
+  //    lead, then the survivor coda as its own list (the survivor-path build), with no door of its own, its button its
+  //    last child; the lead's last note and before the graphs (the no-date reading draws no band,
   //    so at PHONE no first graph to sit above), doors last. The date route scrolls, so no one-frame claim: whether five
   //    segments read as a wall is walk 8's read. ──
   test.describe(`the typed-below line’s five spans on ?seed=datesavedtypedpension (${vp.name})`, () => {
@@ -4070,15 +4158,21 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
       // …and below it, the typed-below line's spans (the whole-window rebuild, KTD6 host 3): ONE `same` span, a plain
       // paragraph in the sheet (the W row above carries the lean). The stored $16,985 caps both this answer and the answer
       // at the $84,000 spending in every working year, so they add the same (KTD3) and no figure is printed. The only
-      // real-browser witness of the seat's line.
+      // real-browser witness of the seat's line. `date`'s couple opens the survivor gate (`spanFrame`'s docblock), so the
+      // one span opens "Each working year you’re both alive," and the coda's two sentences close the same paragraph
+      // (the survivor-path build's KTD6): by hand, the default 0.75 survivor ratio of each W, $72,000 × 0.75 = $54,000 at
+      // the typed figure and $84,000 × 0.75 = $63,000 at the spending, so at most $9,000 a year less.
       const sameSpan = (answer: 'This' | 'Your'): string =>
-        slots.workingCostTypedBelowSpanSame({ answer, opener: true, oneYear: false, typed: '72,000', quote: '84,000', source: 'spending' })
+        [
+          slots.workingCostTypedBelowSpanSame({ answer, opener: true, oneYear: false, typed: '72,000', quote: '84,000', source: 'spending', bothAlive: true }),
+          survivorCodaOneSpan(answer, { typed: '72,000', quote: '84,000', most: '9,000', charges: ['54,000', '63,000'] }),
+        ].join(' ')
       await expect(seat.locator('p.left-over__at-quote')).toHaveText(sameSpan('Your'))
       // A second reader of the stored answer, off the panel: the Result's standing slot names the same two. The typed
       // $72,000 sits below `date`'s $84,000 of spending, so R1's typed-below line holds the slot (U11 walk 6,
       // `3000a04c`) and carries the moved figures as its clause after its counts sentence (`TypedBelowHost`: no rules
       // line hosts the clause here), naming the typed $72,000 its $28,985 rests on (the walk-6 round review's pair), then
-      // the one `same` span. Stored from the live render, the clause would be absent and the span would read $28,985
+      // the one `same` span and the coda. Stored from the live render, the clause would be absent and the span would read $28,985
       // against the quote answer's $16,985; a lost tap would leave the counts sentence alone.
       await page.keyboard.press('Escape')
       await expect(dialog).toHaveCount(0)

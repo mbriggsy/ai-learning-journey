@@ -339,7 +339,7 @@ tests
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:762-772`
   excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:987-989`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:2928-2930`), a once-measured
+  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:3015-3017`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
   arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:22-23`) — no date frame has ever been fit-measured either.
 - **(2026-09-27, b9-11)** the ONE width seam: a new `@media (min-width: …rem)` fails `breakpoint-mirrors.test.ts` unless it mirrors `--bp-laptop` (68rem) — a new tier is a product decision
@@ -635,6 +635,14 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Engine and tax math
 
+- **(b9-4, 11-14) The typed-below coda's bound rests on a death crediting NOTHING** (council `wf_dfb7949b-4a7`'s "U12
+  landmine"). Build 2's KTD5 credits 0 in any year not everyone is alive (`workingYearCredit`'s `allAlive`,
+  `src/engine/moneyGrain.ts`), so in a survivor working year the two answers differ by their two survivor charges alone,
+  and the coda's X (`TypedBelowSurvivor.most`, `src/intake/workingYearLeftOver.ts`) bounds exactly that. The day anything
+  credits a survivor year, the credit-0 tripwire and the SURVIVOR (KTD5) arms in
+  `src/engine/__tests__/workingYearCredit.test.ts` red: the coda's words and X change with the credit, never the test
+  alone. Build 2's D7 item "the left over after a death" (`docs/plans/features/working-year-surplus-build-spec.md`,
+  Scope Boundaries) is the work that would do it.
 - **(b9-8) The HSA leaves-out row's TRAP 3 (Tier 0 of `TODO.md`'s 2026-08 tiered list) calls its three cited branches "zeroing" ones, but
   the third (`taxOverlay.ts`'s knife-edge buckets) is not a depletion branch** — since C2 it holds the year's deposits and
   since U4 the left-over credit. Whoever builds that row re-reads it before writing the HSA sentence.

@@ -577,6 +577,13 @@ export const copy = {
   // the radios, under a carried "saved" answer on a fresh typed figure below today's spending, ahead of one labelled
   // part per span (`workingYearLeftOverAtQuoteLine`). A draft, flagged for walk 8.
   workingLedgerLeftOverSpansLead: 'What this answer adds to your savings in each working year:',
+  // …and its survivor-scoped twin (the survivor-path build's KTD7; council `wf_dfb7949b-4a7`): where the engine can draw a
+  // working year with one of you dead and the other still working, the spans are the all-alive picture's, so the lead
+  // scopes the segments that carry no year noun of their own. A draft, flagged for walk 8.
+  workingLedgerLeftOverSpansLeadSurvivor: 'What this answer adds to your savings in each working year you’re both alive:',
+  // The survivor coda's label above its sentences, on a line of two or more spans (the survivor-path build's KTD6; the
+  // council's words: never "on your own", which the catalog keeps for a living one-earner year). A draft, flagged for walk 8.
+  workingCostTypedBelowSurvivorLabel: 'If only one of you is alive',
   // W's STALE LINE FOR A "SAVED" ANSWER WAITING ON W (R12), its shape from council `wf_7fa86902-35c` (7/10, U11 walk
   // 4: every one-fact sentence easy, the whole only longer, the threads lost at connectives doing a label's job —
   // "So checking…", "Until…, none of it is added", C's "…so this answer can look better"). ONE string on each host,
@@ -2768,7 +2775,12 @@ export type TypedBelowAnswer = 'This' | 'Your'
  *  "that shortfall"; `typed` and `quote` — the typed-below pair exactly as the W surfaces print it (to the cent a cent
  *  apart, `workingYearCostTypedBelowQuote`); `source` — where the quote comes from: the spending, or the budget's first
  *  year after work stops, named in the shorter "your budget’s $Q a year" (KD2's third pilot call: the opening's counts
- *  twin already names the year). The composer: `workingYearCostTypedBelowLine`. */
+ *  twin already names the year); `bothAlive` — the survivor-path build's scope (`docs/plans/features/typed-below-survivor-path-build-spec.md`,
+ *  KTD7; council `wf_dfb7949b-4a7`): where the engine can draw a working year with one of you dead and the other still
+ *  working, every comparison is the all-alive picture's, so the one-span opener and the short kinds' year subject say
+ *  "you’re both alive" on their own head noun, in every span (a lead three items up is a context rescue for a sentence
+ *  with its own year noun: the council's red team). Required, so every frame states it. The composer:
+ *  `workingYearCostTypedBelowLine`. */
 export interface TypedBelowSpanFrame {
   readonly answer: TypedBelowAnswer
   readonly opener: boolean
@@ -2776,6 +2788,7 @@ export interface TypedBelowSpanFrame {
   readonly typed: string
   readonly quote: string
   readonly source: TypedBelowQuoteSource
+  readonly bothAlive: boolean
 }
 /** Where today's quote comes from (`WorkingYearQuote['source']`, restated here because the catalog imports no feature
  *  layer; the composer passes its own reading, so a third source fails to compile until it is worded here). */
@@ -2790,14 +2803,47 @@ const SPAN_QUOTE: Readonly<Record<TypedBelowQuoteSource, (quoteFormatted: string
   budget: (q) => `your budget’s $${q} a year`,
 }
 const spanQuote = (f: TypedBelowSpanFrame): string => SPAN_QUOTE[f.source](f.quote)
-/** The answer as a span's first sentence opens on it: "Each working year, this answer" on a one-span line, else "This answer". */
+/** The answer as a span's first sentence opens on it: "Each working year, this answer" on a one-span line ("Each working
+ *  year you’re both alive, this answer" under the survivor scope), else "This answer" (a segment's `same`, `bothCredit`
+ *  and `quoteCreditsNothing` carry no year noun and take their scope from the lead above the spans, R3). */
 const spanAnswerHead = (f: TypedBelowSpanFrame): string =>
-  f.opener ? `Each working year, ${f.answer.toLowerCase()} answer` : `${f.answer} answer`
+  f.opener ? `Each working year${f.bothAlive ? ' you’re both alive' : ''}, ${f.answer.toLowerCase()} answer` : `${f.answer} answer`
 /** The answer mid-sentence, lower-cased. */
 const spanAnswer = (f: TypedBelowSpanFrame): string => `${f.answer.toLowerCase()} answer`
-/** The short years' subject (insight 140: "each working year", never a bare "each", carries the scope on its own head). */
-const spanYears = (f: TypedBelowSpanFrame): string => (f.oneYear ? 'that working year' : 'each working year')
+/** The short years' subject (insight 140: "each working year", never a bare "each", carries the scope on its own head);
+ *  under the survivor scope it carries "you’re both alive" too ("that working year, if you’re both alive," for one year). */
+const spanYears = (f: TypedBelowSpanFrame): string =>
+  f.oneYear
+    ? f.bothAlive
+      ? 'that working year, if you’re both alive,'
+      : 'that working year'
+    : f.bothAlive
+      ? 'each working year you’re both alive'
+      : 'each working year'
 const spanShortfalls = (f: TypedBelowSpanFrame): string => (f.oneYear ? 'that shortfall' : 'those shortfalls')
+
+/** How the typed-below line's survivor coda is said (the survivor-path build's KTD5–KTD7; council `wf_dfb7949b-4a7`'s
+ *  words, drafts flagged for walk 8): `answer` — the answer named, as the spans name it ("this" on the Result, "your" on
+ *  the gate and the seat); `typed` and `quote` — the typed-below pair exactly as the spans print it; `source` — where the
+ *  quote comes from. The composer: `workingYearCostTypedBelowLine`. */
+export interface TypedBelowSurvivorFrame {
+  readonly answer: TypedBelowAnswer
+  readonly typed: string
+  readonly quote: string
+  readonly source: TypedBelowQuoteSource
+}
+/** The two survivor charges, each pre-formatted (to the cent wherever a whole-dollar pair would print one figure for two,
+ *  `formatMoneyPair`): at the typed figure, then at the quote. */
+export type TypedBelowSurvivorCharges = readonly [atTyped: string, atQuote: string]
+/** The quote's side of the coda's charge sentence, by its source (an exhaustive Record, insight 147). */
+const SURVIVOR_AT_QUOTE: Readonly<Record<TypedBelowQuoteSource, string>> = {
+  spending: 'at your spending',
+  budget: 'at your budget',
+}
+/** The coda's ceiling clause, after its condition: the most this answer takes less from savings in such a year, beside the
+ *  quote's side, with the money picture's own tax rider ("any": a draw from a Roth carries none). */
+const survivorTakesLess = (f: TypedBelowSurvivorFrame, mostFormatted: string): string =>
+  `${f.answer.toLowerCase()} answer takes at most $${mostFormatted} a year less from your savings than it would at ${SPAN_QUOTE[f.source](f.quote)}, plus any income tax on it.`
 
 /** The moved seat lines' second sentence opens on today's left over — and, where a fresh TYPED figure sits below today's
  *  spending, on the figure it rests on, in the gate's moved-line words (U11 walk 7's R2; since the whole-window rebuild
@@ -2980,7 +3026,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2730-2733` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2817-2820` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -3536,6 +3582,32 @@ export const slots = {
    *  the money picture's later rows, R6). Never "here it doesn’t": the opening's lean stays true on a one-span `same`
    *  line, since a working year can cost more than the spending too (KTD7). */
   workingCostTypedBelowSpanSame: (f: TypedBelowSpanFrame): string => `${spanAnswerHead(f)} adds the same to your savings as it would at ${spanQuote(f)}.`,
+  // THE SURVIVOR PATH (`docs/plans/features/typed-below-survivor-path-build-spec.md`; council `wf_dfb7949b-4a7`, its
+  // hardened (B)): every span above is the ALL-ALIVE picture's. Where the engine can draw a working year with one of you
+  // dead and the other still working, it credits nothing there and counts the working cost by its survivor rule, so the
+  // two answers differ by the difference of their two survivor charges, not by the spans' figures. So the comparisons
+  // take "you’re both alive" (the frame's `bothAlive`, and the scoped leads), and the line closes on this coda: the most
+  // this answer takes less from savings in such a year, "at most" (rounded up, KTD4), with the tax rider, then exactly
+  // the two figures that difference is of. Never "on your own" (the catalog's word for a living one-earner year), and
+  // never a claim that nothing is credited after a death. Every word a draft, flagged for walk 8.
+  /** The Result's and the gate's lead over two or more spans under the survivor scope (KTD7: today neither host has a
+   *  lead; the seat's twin is `workingLedgerLeftOverSpansLeadSurvivor`). */
+  workingCostTypedBelowSurvivorLead: (answer: TypedBelowAnswer): string =>
+    `What ${answer.toLowerCase()} answer adds to your savings in each working year you’re both alive:`,
+  /** The coda's first sentence on a one-span line, its condition opening the sentence (the council's one-span ruling: the
+   *  plain paragraph keeps its shape). */
+  workingCostTypedBelowSurvivorOneSpan: (f: TypedBelowSurvivorFrame, mostFormatted: string): string =>
+    `If only one of you is alive in a working year, ${survivorTakesLess(f, mostFormatted)}`,
+  /** …and under the label (`workingCostTypedBelowSurvivorLabel`) on two or more spans. */
+  workingCostTypedBelowSurvivorAtMost: (f: TypedBelowSurvivorFrame, mostFormatted: string): string =>
+    `In such a working year, ${survivorTakesLess(f, mostFormatted)}`,
+  /** The second sentence where the ceiling is the whole gap between the two figures (an all-sticky budget, or a survivor
+   *  ratio of 1: KTD5's `wholeGap`). */
+  workingCostTypedBelowSurvivorWholeGap: (f: TypedBelowSurvivorFrame): string => `That is the whole gap to your figure of $${f.typed} a year.`,
+  /** …and where it is not (KTD5's `survivorCharges`): the two survivor charges themselves, the quote's side in its
+   *  source's words. */
+  workingCostTypedBelowSurvivorCharges: (f: TypedBelowSurvivorFrame, [atTyped, atQuote]: TypedBelowSurvivorCharges): string =>
+    `Such a year’s costs count as $${atTyped} a year at your figure and $${atQuote} ${SURVIVOR_AT_QUOTE[f.source]}.`,
   /** The fork's legend, naming the figure "Yes" sets (copy-law F8 at U11 walk 5; the yearly quote, as the stale note
    *  names it). Drawn only where there is a quote to offer. */
   workingCostLegendFigure: (quoteFormatted: string): string => `Is $${quoteFormatted} a year about what a year costs while you’re working?`,
@@ -4022,7 +4094,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1772` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1869` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

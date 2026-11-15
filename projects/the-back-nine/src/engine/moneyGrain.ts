@@ -19,6 +19,11 @@ export const finite = (x: number, label: string): number => {
  *  below any money, and far above the float dust of a sum of real-money terms at any household's scale: one
  *  float step in cents stays under it below about $85 million of cash). */
 const HALF_CENT_DUST = 1e-6
+/** {@link HALF_CENT_DUST} in dollars, for a rule that reads a raw dollar difference on this grain without first snapping
+ *  each side to the cent: the typed-below line's survivor ceiling (`docs/plans/features/typed-below-survivor-path-build-spec.md`,
+ *  KTD4) rounds a raw difference UP to the dollar, and float dust a hair above a whole dollar must not lift it a dollar
+ *  more. Read by nothing in the engine. */
+export const HALF_CENT_DUST_DOLLARS = HALF_CENT_DUST / 100
 /** A figure in whole cents, never −0: the nearest cent, a half-cent tie (within dust) toward −∞ — the gloomy
  *  side of every line and of the cash (`Math.round` would settle the tie by the dust's sign, upward on a
  *  true tie: −$12.005 would read "Short $12"). */

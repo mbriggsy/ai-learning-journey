@@ -6,6 +6,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import { AssumptionPanel, methodologyArmFor, type AssumptionPanelProps } from '../AssumptionPanel'
 import { confirmedWorkingYearCost, writeEnteredWorkingYearCost } from '../workingYearQuote'
 import { workingYearCostStaleLine } from '../workingYearLeftOver'
+import { TYPED_BELOW_WITNESSES } from './typedBelowWitnesses'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { createMemoryModel, type MemoryModel, type MemoryModelSnapshot, type ScenarioDraft, type StickyDisplay } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
@@ -1639,10 +1640,25 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
   // ends with the typed-below line's spans BELOW its radios: one span a paragraph, two or more the labelled block. R6
   // keeps everything above them, the W row included, the same under every answer. In the sheet the W row's note above
   // carries the lean, so the spans open on no counts sentence. Every span typed by hand.
-  /** A block's text as the walker reads it (text nodes joined with nothing between): the opening, then each label and its sentences. */
-  const blockText = (opening: string, segments: readonly (readonly [string, readonly string[]])[]): string =>
-    `${opening}${segments.map(([label, sentences]) => `${label}${sentences.join(' ')}`).join('')}`
-  const SPANS_LEAD = 'What this answer adds to your savings in each working year:'
+  /** A block's text as the walker reads it (text nodes joined with nothing between): the opening, then each label and its
+   *  sentences, then the survivor coda's label and sentences (its own list after the spans'). */
+  const blockText = (opening: string, segments: readonly (readonly [string, readonly string[]])[], coda: readonly [string, readonly string[]]): string =>
+    `${opening}${[...segments, coda].map(([label, sentences]) => `${label}${sentences.join(' ')}`).join('')}`
+  // Every seed here opens the survivor gate (Sam, 60 and retired, can die from 66, in 2032, while Alex works through 2035):
+  // the seat's lead is scoped, the short kinds' year subject too, and the coda closes the line — 0.75 of each figure.
+  const SPANS_LEAD = 'What this answer adds to your savings in each working year you’re both alive:'
+  /** TM's coda in the seat's words: X $15,750, the survivor charges $63,000 and $78,750 (whatever the answer credits). */
+  const TM_CODA: readonly [string, readonly string[]] = [
+    'If only one of you is alive',
+    [
+      'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, plus any income tax on it.',
+      'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.',
+    ],
+  ]
+  /** A's one-span coda, closing its paragraph: X $4,500, the survivor charges $63,000 and $67,500. */
+  const A_CODA =
+    'If only one of you is alive in a working year, your answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, plus any income tax on it. ' +
+    'Such a year’s costs count as $63,000 a year at your figure and $67,500 at your spending.'
   /** TM's three spans in the seat's words: `credit`, the figure the answer carries in 2026–2028 and 2033–2035; `shortCredit`,
    *  the 2029–2032 credit; `less`, the yearly difference at the quote's $5,985; `more`, the short run's yearly difference. */
   const tmSpans = (credit: string, shortCredit: string, less: string, more: string): readonly (readonly [string, readonly string[]])[] => {
@@ -1652,16 +1668,16 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
       [
         '2029 through 2032',
         [
-          'At your spending of $105,000 a year, each working year comes up $3,652 to $4,015 short, and your answer would add nothing.',
+          'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and your answer would add nothing.',
           `Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most ${shortCredit} a year to your savings, at most ${more} a year more, plus any income tax on those shortfalls.`,
         ],
       ],
       ['2033 through 2035', both],
     ]
   }
-  const TM_SPANS = blockText(SPANS_LEAD, tmSpans('16,985', '$16,985', '11,000', '$20,637 to $21,000'))
+  const TM_SPANS = blockText(SPANS_LEAD, tmSpans('16,985', '$16,985', '11,000', '$20,637 to $21,000'), TM_CODA)
 
-  it('TM’s sheet: the figure and the moved line name the $84,000 the $26,985 rests on ("your figure of $84,000 a year", R9), and below the radios its three spans as a labelled block, the seat’s lead first and no counts sentence (the W row above carries the lean)', () => {
+  it('TM’s sheet: the figure and the moved line name the $84,000 the $26,985 rests on ("your figure of $84,000 a year", R9), and below the radios its three spans as a labelled block, the seat’s scoped lead first and no counts sentence (the W row above carries the lean), the survivor coda its own list after the spans’ list', () => {
     renderPanel({ snapshot: snap(DEV_SEEDS.datesavedtypedmoved) })
     const group = groupIn(seat())
     expect(textAbove(seat(), group)).toBe(
@@ -1676,8 +1692,15 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     expect(group.compareDocumentPosition(block!) & Node.DOCUMENT_POSITION_FOLLOWING, 'the block sits below the group').toBeTruthy()
     // …and ends the seat: intake.css drops the block's trailing margin by `:last-child` (the design read, round 2's #9).
     expect(block!.parentElement?.lastElementChild, 'the block is the seat’s last child').toBe(block)
-    expect([...block!.querySelectorAll('dt')].map((dt) => dt.textContent)).toEqual(['2026 through 2028', '2029 through 2032', '2033 through 2035'])
+    expect([...block!.querySelectorAll('dt')].map((dt) => dt.textContent)).toEqual(['2026 through 2028', '2029 through 2032', '2033 through 2035', 'If only one of you is alive'])
     expect(block!.querySelector('.note-parts__opening')?.textContent).toBe(SPANS_LEAD)
+    // Reading order (the council's a11y check, R3): the scoped lead, then the spans' list, then the coda's own one-item list.
+    expect([...block!.children].map((c) => `${c.tagName} ${c.className}`)).toEqual([
+      'P note-parts__opening',
+      'DL note-parts__segments',
+      'DL note-parts__segments note-parts__coda',
+    ])
+    expect(block!.children[2]!.querySelectorAll('dt'), 'the coda is one item, never one more span').toHaveLength(1)
     // The pair's basis (back-nine-design's round-6 law): the moved line names the typed figure in the gate's own words,
     // and the figure line names it too — both typed out here, never read back from the slot alone (DND 012; the round
     // review's L3 F4).
@@ -1687,26 +1710,43 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     )
   })
 
-  it('the FELL twin: `datesavedrisen` with $86,000 typed prints $14,985 at year 0, below the stored $16,985 — the fell line names the $86,000, then its one span as a paragraph: $14,985 beside the $10,985 at $90,000, $4,000 less (the round review’s L3 F6)', () => {
+  it('the FELL twin: `datesavedrisen` with $86,000 typed prints $14,985 at year 0, below the stored $16,985 — the fell line names the $86,000, then its one span as a paragraph: $14,985 beside the $10,985 at $90,000, $4,000 less, its survivor coda last ($64,500 and $67,500, 0.75 of each figure: at most $3,000)', () => {
     const fell = writeEnteredWorkingYearCost(DEV_SEEDS.datesavedrisen, 86_000, 'year')
     renderPanel({ snapshot: snap(fell) })
     const group = groupIn(seat())
     const fellLine = slots.workingLedgerLeftOverFellLineAt('86,000', '16,985', '14,985')
     expect(fellLine).toContain('At your figure of $86,000 a year, it’s $14,985 now, so each working year adds at most $14,985 of its left over')
     expect(textBelow(seat(), group)).toBe(
-      `${fellLine}Each working year, your answer adds at most $14,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $4,000 less.`,
+      `${fellLine}Each working year you’re both alive, your answer adds at most $14,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $4,000 less. ` +
+        'If only one of you is alive in a working year, your answer takes at most $3,000 a year less from your savings than it would at your spending of $90,000 a year, plus any income tax on it. ' +
+        'Such a year’s costs count as $64,500 a year at your figure and $67,500 at your spending.',
     )
     expect(seat().querySelector('.left-over__at-quote')?.tagName, 'one span is a paragraph').toBe('P')
   })
 
-  it('A’s retype: the figure names the $84,000, and below the saved line its one span as a paragraph: $16,985 beside the $10,985 at $90,000, $6,000 less', () => {
+  it('A’s retype: the figure names the $84,000, and below the saved line its one span as a paragraph: $16,985 beside the $10,985 at $90,000, $6,000 less, the survivor coda closing it ($63,000 and $67,500: AE2)', () => {
     renderPanel({ snapshot: snap(DEV_SEEDS.datesavedtyped) })
     const group = groupIn(seat())
     expect(within(seat()).getByText(slots.workingLedgerLeftOverFigureAt('84,000', '16,985'))).toBeInTheDocument()
     expect(textBelow(seat(), group)).toBe(
-      `${slots.workingLedgerLeftOverSavedLine('16,985')}Each working year, your answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less.`,
+      `${slots.workingLedgerLeftOverSavedLine('16,985')}Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less. ${A_CODA}`,
     )
     expect(seat().querySelector('.left-over__at-quote')?.tagName, 'one span is a paragraph').toBe('P')
+  })
+
+  it('the pension and crowned households in the sheet: the seat’s scoped lead first, then the spans, then the coda’s own list (the seat’s reading order)', () => {
+    for (const [key, d, labels] of [
+      ['pension', TYPED_BELOW_WITNESSES.pension, ['2026 through 2028', '2029', '2030 through 2031', '2032', '2033 through 2035']],
+      ['crowned', TYPED_BELOW_WITNESSES.crowned, ['2026 through 2028', '2029 through 2032', '2033 through 2035']],
+    ] as const) {
+      renderPanel({ snapshot: snap(d) })
+      const block = seat().querySelector('.left-over__at-quote')!
+      expect(block.querySelector('.note-parts__opening')?.textContent, `${key}: the scoped lead`).toBe(SPANS_LEAD)
+      expect([...block.children].map((c) => c.className), `${key}: lead, spans, coda`).toEqual(['note-parts__opening', 'note-parts__segments', 'note-parts__segments note-parts__coda'])
+      expect([...block.querySelectorAll('.note-parts__segments:not(.note-parts__coda) dt')].map((dt) => dt.textContent), key).toEqual(labels)
+      expect(block.querySelector('.note-parts__coda')?.textContent, `${key}: the coda`).toBe(`${TM_CODA[0]}${TM_CODA[1].join(' ')}`)
+      cleanup()
+    }
   })
 
   it('over TM’s picture ($26,985 at the typed $84,000), the five states share the text above the group AND the W row word for word (R6: no answer is read above the radios), and only the two carried "saved" states add the spans below', () => {
@@ -1715,7 +1755,7 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     // 2029–2032 $16,985 to $17,348 (each year's own left over at the typed figure), $21,000 a year past the quote's draw.
     const states = [
       ['absent', undefined, slots.workingLedgerLeftOverAbsentLine('26,985')],
-      ['saved', { kind: 'saved', quotedReal: 26_985 }, `${slots.workingLedgerLeftOverSavedLine('26,985')}${blockText(SPANS_LEAD, tmSpans('26,985', '$16,985 to $17,348', '21,000', '$21,000'))}`],
+      ['saved', { kind: 'saved', quotedReal: 26_985 }, `${slots.workingLedgerLeftOverSavedLine('26,985')}${blockText(SPANS_LEAD, tmSpans('26,985', '$16,985 to $17,348', '21,000', '$21,000'), TM_CODA)}`],
       ['saved, moved', { kind: 'saved', quotedReal: 16_985 }, `${slots.workingLedgerLeftOverRoseLineAt('84,000', '16,985', '26,985')}${TM_SPANS}`],
       ['spent', { kind: 'spent' }, slots.workingLedgerLeftOverSpentLine('26,985')],
       ['not sure', { kind: 'not-sure' }, slots.workingLedgerLeftOverNotSureLine('26,985')],

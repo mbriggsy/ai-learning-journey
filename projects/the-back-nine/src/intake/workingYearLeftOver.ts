@@ -22,8 +22,17 @@
  * surfaces print, the line the Result and the gate print, and what their door says are composed here, below,
  * because all three read the left-over answer and the money picture, which `workingYearQuote` cannot import (KTD2).
  */
-import type { WorkingYearLedgerLaterYear, WorkingYearLeftOverKind, WorkingYearLeftOverV5 } from '@shared/model'
-import { toCents, workingYearBottomLine, workingYearCredit, workingYearCreditBinding, type WorkingYearCreditBinding } from '@engine/moneyGrain'
+import type { SimulationParams, WorkingYearLedgerLaterYear, WorkingYearLeftOverKind, WorkingYearLeftOverV5 } from '@shared/model'
+import { survivalToYear } from '@engine/longevity'
+import {
+  HALF_CENT_DUST_DOLLARS,
+  toCents,
+  workingYearBottomLine,
+  workingYearCredit,
+  workingYearCreditBinding,
+  type WorkingYearCreditBinding,
+} from '@engine/moneyGrain'
+import { personOffsetsFor, workingYearCostForYear } from '@engine/simulate'
 import type { ScenarioDraft } from '@store/memoryModel'
 import {
   LEFT_OVER_WAITING_COPY,
@@ -35,10 +44,11 @@ import {
   type TypedBelowAnswer,
   type TypedBelowMoney,
   type TypedBelowSpanFrame,
+  type TypedBelowSurvivorFrame,
   type WorkingCostAct,
 } from '@ui/copy'
 import { plainNote, type GateDoor, type NoteDoor, type NoteParts, type NoteSegment } from '@ui/noteParts'
-import { formatMoney } from './fields'
+import { formatMoney, formatMoneyPair } from './fields'
 import {
   carriedWorkingYearLeftOver,
   workingYearCostFigure,
@@ -46,6 +56,7 @@ import {
   workingYearLedgerForRun,
   workingYearLeftOverLive,
   workingYearLeftOverShownState,
+  workingYearWindowTopParams,
 } from './intakeMap'
 import {
   isWorkingYearCostStale,
@@ -758,8 +769,45 @@ export type TypedBelowSpan = { readonly firstYear: number; readonly lastYear: nu
  *  cash dollar for dollar; the income tax never reads it), and both caps take the one stored figure beside a year 0
  *  that prints higher at the typed figure (KTD4). Named so a reader can never word a premise that failed. */
 export type WorkingYearTypedBelowWindow =
-  | { readonly kind: 'read'; readonly years: readonly TypedBelowYear[]; readonly spans: readonly TypedBelowSpan[] }
+  | {
+      readonly kind: 'read'
+      readonly years: readonly TypedBelowYear[]
+      readonly spans: readonly TypedBelowSpan[]
+      /** The survivor read ({@link TypedBelowSurvivor}): `null` exactly where the gate is off. It rides THIS arm only, so a
+       *  line can never show the scope without the coda's figure (the survivor-path build's R10). */
+      readonly survivor: TypedBelowSurvivor | null
+    }
   | { readonly kind: 'unknown' }
+
+/** How the coda names the two figures its ceiling is the difference of (the survivor-path build's KTD5; an exhaustive
+ *  Record keys every choice made by it, insight 147): `wholeGap` — the two survivor charges differ by exactly the quote
+ *  less the typed figure on the cent grain (an all-sticky budget, or a survivor ratio of 1), so the coda names that gap;
+ *  `survivorCharges` — any other rule (a ratio below 1, or a vault's ratio above 1), so it names the two charges
+ *  themselves. Decided on cents, never by comparing the held part with either figure. */
+export type TypedBelowSurvivorForm = 'wholeGap' | 'survivorCharges'
+
+/** The typed-below line's survivor read (`docs/plans/features/typed-below-survivor-path-build-spec.md`, KTD2–KTD5; council
+ *  `wf_dfb7949b-4a7`). The spans are the all-alive picture's; on a path where one of you has died while the other still
+ *  works, nobody is credited (`workingYearCredit`'s `allAlive`) and W is charged by the engine's survivor rule
+ *  (`workingYearCostForYear`), so the two answers differ by the difference of their two survivor charges. Read only where
+ *  the engine can draw such a year (the gate, KTD3), each figure the engine's own on the window-top candidate:
+ *  · `survivorYears` — the calendar years of the window where it can (ascending, never empty);
+ *  · `chargeAtTyped` / `chargeAtQuote` — what such a year's working cost counts as at the typed figure and at the quote,
+ *    each run's own carried W through `workingYearCostForYear` (raw dollars);
+ *  · `most` — X, the most this answer takes less from savings in such a year: the raw charge difference rounded UP to the
+ *    dollar after the money grain's dust (KTD4), so it never sits under the cent-grain draw difference (each draw is
+ *    snapped to the cent alone; the cash differs by exactly the charge difference, since W comes off the cash dollar for
+ *    dollar and nothing else in that year reads it), and at most $1 over it;
+ *  · `form` — {@link TypedBelowSurvivorForm}.
+ *  The bound rests on a death crediting NOTHING (build 2's KTD5, `moneyGrain.ts`): the day anything credits a survivor
+ *  year, X and the coda's words must change with it (`docs/landmines.md`, the engine's credit-0 tripwire). */
+export interface TypedBelowSurvivor {
+  readonly survivorYears: readonly number[]
+  readonly chargeAtTyped: number
+  readonly chargeAtQuote: number
+  readonly most: number
+  readonly form: TypedBelowSurvivorForm
+}
 
 /** Memoized on the SOURCE draft (the re-confirmed draft is a fresh object every call, so the picture's own memo would
  *  miss it each time), as `checkAtQuoteMemo` is. */
@@ -817,7 +865,55 @@ function composeTypedBelowWindow(d: ScenarioDraft): WorkingYearTypedBelowWindow 
       cashAtQuote: q.cash,
     })
   }
-  return { kind: 'read', years, spans: spansOf(years) }
+  // The survivor read (KTD2): both answers' window-top candidates, the same params each picture just composed from
+  // (`workingYearWindowTopParams`, KTD1). Known wherever both pictures are; `'unknown'` here is unreachable, and kept as
+  // the whole read's `unknown` so no line can speak a comparison without the read behind it.
+  const paramsAtTyped = workingYearWindowTopParams(d)
+  const paramsAtQuote = workingYearWindowTopParams(quoteDraft)
+  if (paramsAtTyped === 'unknown' || paramsAtQuote === 'unknown') return { kind: 'unknown' }
+  const survivor = survivorReadOf(paramsAtTyped, paramsAtQuote, years)
+  if (survivor === 'unknown') return { kind: 'unknown' }
+  return { kind: 'read', years, spans: spansOf(years), survivor }
+}
+
+/** The gate (KTD3): the calendar years among the window's working years (`calendarYears`, index-aligned with the sim
+ *  year) where the engine can draw a year with one of the household dead and another still working — some ordered pair of
+ *  people (i, j), i ≠ j, with j still working at t (`t < retire_j`, the engine's own offset read, `personOffsetsFor`) and
+ *  i one the engine can sample dead by t (`survivalToYear(i, t) < 1`: below 1 exactly where the sampler can draw a death,
+ *  none before 66, so no age is re-typed here). One person has no pair; a year where the only worker is the one who may
+ *  have died is no working year, so a worker's own possible death never opens it. Household-wide, never per span (the
+ *  plan's Key Decisions). Exported for the witness tests (a one-person household is no draft); the line reads it only
+ *  through the whole-window read's `survivor`, so the scope can never show without X (R10). */
+export function typedBelowSurvivorYears(params: SimulationParams, calendarYears: readonly number[]): readonly number[] {
+  const people = params.people
+  const { offsets } = personOffsetsFor(people)
+  return calendarYears.filter((_, t) =>
+    people.some((dies, i) => survivalToYear(dies, t) < 1 && offsets.some((o, j) => j !== i && t < o.retire)),
+  )
+}
+
+/** The gate and X (KTD3–KTD5), or `null` where the gate is off ({@link typedBelowSurvivorYears}, read on the typed
+ *  answer's candidate: the two candidates differ only in W). `'unknown'` where either candidate carries no W
+ *  (unreachable: both pictures composed from it). */
+function survivorReadOf(
+  paramsAtTyped: SimulationParams,
+  paramsAtQuote: SimulationParams,
+  years: readonly TypedBelowYear[],
+): TypedBelowSurvivor | null | 'unknown' {
+  const survivorYears = typedBelowSurvivorYears(paramsAtTyped, years.map((y) => y.calendarYear))
+  if (survivorYears.length === 0) return null
+  const atTyped = paramsAtTyped.overlay?.accumulation?.workingYearCostReal
+  const atQuote = paramsAtQuote.overlay?.accumulation?.workingYearCostReal
+  if (atTyped === undefined || atQuote === undefined) return 'unknown'
+  const chargeAtTyped = workingYearCostForYear(paramsAtTyped, atTyped, false)
+  const chargeAtQuote = workingYearCostForYear(paramsAtQuote, atQuote, false)
+  return {
+    survivorYears,
+    chargeAtTyped,
+    chargeAtQuote,
+    most: Math.max(0, Math.ceil(chargeAtQuote - chargeAtTyped - HALF_CENT_DUST_DOLLARS)),
+    form: toCents(chargeAtQuote) - toCents(chargeAtTyped) === toCents(atQuote) - toCents(atTyped) ? 'wholeGap' : 'survivorCharges',
+  }
 }
 
 const drawOf = (bottomLine: number): number => (bottomLine < 0 ? -bottomLine : 0)
@@ -936,20 +1032,46 @@ function spansOf(years: readonly TypedBelowYear[]): TypedBelowSpan[] {
  *  one. A pure function of the draft (R12): it reads no crown and no outcome, so the gate (which composes before any
  *  run) and the Result on either tier draw one line. */
 export function workingYearCostTypedBelowLine(d: ScenarioDraft, host: TypedBelowHost): NoteParts | null {
+  const s = workingYearCostTypedBelowStructure(d, host)
+  return s === null ? null : foldTypedBelow(s)
+}
+
+/** The typed-below line as STRUCTURE, before a one-span line folds into one paragraph (the survivor-path build's KTD8):
+ *  the opening's sentences (the counts sentence, any moved clause, any lead), each span's label and sentences, and the
+ *  survivor coda's label and sentences, or `null` where there is none. Exported for the density law, which reads it rather
+ *  than slicing a folded paragraph, so the coda's sentences are never counted as a span's; every host's line is
+ *  {@link foldTypedBelow} of it. */
+export interface TypedBelowLineStructure {
+  readonly opening: readonly string[]
+  readonly spans: readonly NoteSegment[]
+  readonly coda: NoteSegment | null
+}
+
+/** {@link workingYearCostTypedBelowLine}'s structure: `null` exactly where the line is. */
+export function workingYearCostTypedBelowStructure(d: ScenarioDraft, host: TypedBelowHost): TypedBelowLineStructure | null {
   const t = freshTypedBelow(d)
   if (t === null) return null
   const answer: TypedBelowAnswer = host.kind === 'gate' ? 'Your' : 'This'
   const counts = typedBelowCounts(t, answer)
   const read = workingYearTypedBelowWindow(d)
-  if (read === null) return plainNote(counts)
+  if (read === null) return { opening: [counts], spans: [], coda: null }
   const moved = workingYearLeftOverMoved(d)
   const movedClause = moved !== null && host.kind === 'result' && host.carriesMoved ? [workingYearLeftOverMovedClause(moved)] : []
   if (read.kind === 'unknown') {
     const cap = typedBelowFailSafeCap(d)
     const credit = moved !== null ? movedClause : cap === null ? [] : [slots.workingCostTypedBelowAdds(formatMoney(cap))]
-    return plainNote([counts, ...credit].join(' '))
+    return { opening: [counts, ...credit], spans: [], coda: null }
   }
-  return typedBelowSpansParts([counts, ...movedClause], read.spans, t, answer, null)
+  return typedBelowStructure([counts, ...movedClause], read, t, answer, host.kind)
+}
+
+/** The line from its structure: at most one span folds into the opening as plain sentences, the coda's after them, so
+ *  `isPlainNote` holds and every host draws its one paragraph (the council's one-span ruling: the paragraph and its pins
+ *  keep their shape); two or more draw as labelled parts, one segment per span, the coda as its own part (KTD6). */
+function foldTypedBelow(s: TypedBelowLineStructure): NoteParts {
+  if (s.spans.length < 2) return plainNote([...s.opening, ...s.spans.flatMap((x) => x.sentences), ...(s.coda?.sentences ?? [])].join(' '))
+  const opening = s.opening.join(' ')
+  return s.coda === null ? { opening, segments: s.spans, door: null } : { opening, segments: s.spans, door: null, coda: s.coda }
 }
 
 type FreshTypedBelow = NonNullable<ReturnType<typeof freshTypedBelow>>
@@ -970,29 +1092,66 @@ function typedBelowFailSafeCap(d: ScenarioDraft): number | null {
   return stored === undefined || live === null ? null : Math.round(Math.min(stored, live))
 }
 
-/** The opening's sentences and the spans as parts: at most one span folds into the opening (a one-span line of a credit
- *  kind opens "Each working year,"); two or more draw one segment per span, `lead` (the seat's) closing the opening. */
-function typedBelowSpansParts(
+/** Every host the line is drawn on, as the lead Record keys it (KTD7): the Result, the re-entry gate, and the seat in the
+ *  details sheet and on the money-picture step. */
+type TypedBelowLineHost = TypedBelowHost['kind'] | TypedBelowSeatHost
+/** How many spans the line draws: one folds into a paragraph (no lead on any host), two or more draw behind a lead. */
+type TypedBelowSpanCount = 'one' | 'many'
+/** The lead above the spans, by host and span count, with the survivor gate off (today's) and on (the survivor-path
+ *  build's KTD7; an exhaustive Record, insight 147): on two or more spans the Result and the gate draw no lead today and
+ *  the scoped lead under the gate ("…in each working year you’re both alive:"), so the `same`, `bothCredit` and
+ *  `quoteCreditsNothing` segments, which carry no year noun of their own, take their scope from it; the seat keeps its
+ *  lead, scoped under the gate. One span names no lead on any host. */
+const TYPED_BELOW_LEAD: Readonly<Record<TypedBelowLineHost, Readonly<Record<TypedBelowSpanCount, { readonly off: string | null; readonly on: string | null }>>>> = {
+  result: { one: { off: null, on: null }, many: { off: null, on: slots.workingCostTypedBelowSurvivorLead('This') } },
+  gate: { one: { off: null, on: null }, many: { off: null, on: slots.workingCostTypedBelowSurvivorLead('Your') } },
+  sheet: { one: { off: null, on: null }, many: { off: copy.workingLedgerLeftOverSpansLead, on: copy.workingLedgerLeftOverSpansLeadSurvivor } },
+  step: { one: { off: null, on: null }, many: { off: copy.workingLedgerLeftOverSpansLead, on: copy.workingLedgerLeftOverSpansLeadSurvivor } },
+}
+
+/** The structure over a read's spans: the opening's sentences and the host's lead, each span in its kind's words (a
+ *  one-span line of a credit kind opens "Each working year,"), and — where the gate shows (the read's `survivor`) — the
+ *  scope on every span's frame and the coda after the spans (R1, R3, R5; the gate is household-wide, never per span). */
+function typedBelowStructure(
   opening: readonly string[],
-  spans: readonly TypedBelowSpan[],
+  read: Extract<WorkingYearTypedBelowWindow, { kind: 'read' }>,
   t: FreshTypedBelow,
   answer: TypedBelowAnswer,
-  lead: string | null,
-): NoteParts {
-  const frame = (s: TypedBelowSpan, opener: boolean): TypedBelowSpanFrame => ({
+  host: TypedBelowLineHost,
+): TypedBelowLineStructure {
+  const { spans, survivor } = read
+  const count: TypedBelowSpanCount = spans.length < 2 ? 'one' : 'many'
+  const lead = TYPED_BELOW_LEAD[host][count][survivor === null ? 'off' : 'on']
+  const frame = (s: TypedBelowSpan): TypedBelowSpanFrame => ({
     answer,
-    opener,
+    opener: count === 'one',
     oneYear: s.firstYear === s.lastYear,
     typed: t.typed,
     quote: t.quote,
     source: t.source,
+    bothAlive: survivor !== null,
   })
-  if (spans.length < 2) return plainNote([...opening, ...spans.flatMap((s) => typedBelowSpanSentences(s, frame(s, true)))].join(' '))
   return {
-    opening: [...opening, ...(lead === null ? [] : [lead])].join(' '),
-    segments: spans.map((s) => ({ label: slots.workingCostTypedBelowSpanLabel(s.firstYear, s.lastYear), sentences: typedBelowSpanSentences(s, frame(s, false)) })),
-    door: null,
+    opening: [...opening, ...(lead === null ? [] : [lead])],
+    spans: spans.map((s) => ({ label: slots.workingCostTypedBelowSpanLabel(s.firstYear, s.lastYear), sentences: typedBelowSpanSentences(s, frame(s)) })),
+    coda: survivor === null || spans.length === 0 ? null : typedBelowSurvivorCoda(survivor, t, answer, count),
   }
+}
+
+/** The coda (R5–R8; council `wf_dfb7949b-4a7`): its label, then two sentences — X with "at most", the quote's side and
+ *  the tax rider (its condition opening the sentence on a one-span line, under the label on two or more), then exactly the
+ *  two figures X is the difference of, by the read's form (KTD5): the whole gap to the typed figure, or the two survivor
+ *  charges, printed so they differ wherever they differ (`formatMoneyPair`, R7). X is the read's, never re-derived here. */
+function typedBelowSurvivorCoda(s: TypedBelowSurvivor, t: FreshTypedBelow, answer: TypedBelowAnswer, count: TypedBelowSpanCount): NoteSegment {
+  const f: TypedBelowSurvivorFrame = { answer, typed: t.typed, quote: t.quote, source: t.source }
+  const most = formatMoney(s.most)
+  const first = count === 'one' ? slots.workingCostTypedBelowSurvivorOneSpan(f, most) : slots.workingCostTypedBelowSurvivorAtMost(f, most)
+  return { label: copy.workingCostTypedBelowSurvivorLabel, sentences: [first, TYPED_BELOW_SURVIVOR_PAIR[s.form](f, s)] }
+}
+/** The coda's second sentence by form (an exhaustive Record, insight 147). */
+const TYPED_BELOW_SURVIVOR_PAIR: Readonly<Record<TypedBelowSurvivorForm, (f: TypedBelowSurvivorFrame, s: TypedBelowSurvivor) => string>> = {
+  wholeGap: (f) => slots.workingCostTypedBelowSurvivorWholeGap(f),
+  survivorCharges: (f, s) => slots.workingCostTypedBelowSurvivorCharges(f, formatMoneyPair(s.chargeAtTyped, s.chargeAtQuote)),
 }
 
 /** Each span's words by its kind (KTD7; an exhaustive Record, insight 147: a new kind fails to compile until it is
@@ -1050,11 +1209,17 @@ export function workingYearLeftOverTypedBelow(d: ScenarioDraft): string | null {
  *  (`docs/plans/features/working-year-surplus-build-spec.md`, its sanctioned readers amended in only where the answer
  *  is frozen or the reader sits far above the seat). Below the radios is R6's own home for a line chosen by the answer. */
 export function workingYearLeftOverAtQuoteLine(d: ScenarioDraft, host: TypedBelowSeatHost): NoteParts | null {
+  const s = workingYearLeftOverAtQuoteStructure(d, host)
+  return s === null ? null : foldTypedBelow(s)
+}
+
+/** {@link workingYearLeftOverAtQuoteLine}'s structure (KTD8): `null` exactly where the line is. */
+export function workingYearLeftOverAtQuoteStructure(d: ScenarioDraft, host: TypedBelowSeatHost): TypedBelowLineStructure | null {
   const t = freshTypedBelow(d)
   if (t === null) return null
   const read = workingYearTypedBelowWindow(d)
   if (read === null || read.kind === 'unknown' || read.spans.length === 0) return null
-  return typedBelowSpansParts(SEAT_OPENS_ON_COUNTS[host] ? [typedBelowCounts(t, 'Your')] : [], read.spans, t, 'Your', copy.workingLedgerLeftOverSpansLead)
+  return typedBelowStructure(SEAT_OPENS_ON_COUNTS[host] ? [typedBelowCounts(t, 'Your')] : [], read, t, 'Your', host)
 }
 
 /** The typed-below line's door on the gate: the update act's (`gateDoor`), naming the typed figure — or `null` exactly

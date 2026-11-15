@@ -27,7 +27,7 @@ import {
   type WorkingYearProbe,
 } from '@engine/taxOverlay'
 import { totalAcrossBuckets, type AccountBuckets } from '@engine/sequencing'
-import { workingYearBottomLine } from '@engine/moneyGrain'
+import { workingYearBottomLine, workingYearCredit } from '@engine/moneyGrain'
 import { validationMarket } from '@engine/reference/methodology'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import { buildDateInput } from '@intake/intakeMap'
@@ -236,6 +236,20 @@ describe('R8–R9 on a direct overlay call: where the credit lands, and how much
     expect(credits[1]).toBe(0)
     const m = { ...ONE_YEAR, buckets: { taxable: 0, pretax: 500_000, roth: 0 } }
     expect(run(m, { Ws: [25_000], allAlive: [false], saved: 10_000 })).toEqual(run(m, { Ws: [25_000], allAlive: [false] }))
+  })
+
+  it('THE CODA’S TRIPWIRE: the rule credits 0 in a year someone is dead, whatever the positive cash (the typed-below survivor coda’s X rests on it)', () => {
+    // The typed-below line's survivor coda (`docs/plans/features/typed-below-survivor-path-build-spec.md`, KTD4, U5) bounds
+    // what this answer takes less from savings in a survivor working year by X, the difference of the two survivor
+    // charges, and nothing more, ONLY because a death credits nothing on either answer. The presence companion (insight
+    // 029): with everyone alive the same call credits the cash, so each 0 below is the death's alone.
+    expect(workingYearCredit(4_040, 16_985, 10_000, true), 'alive, the same cash credits').toBe(4_040)
+    for (const cash of [0.01, 4_040, 16_985, 1e9]) {
+      expect(
+        workingYearCredit(cash, 16_985, 10_000, false),
+        `a survivor year with cash ${cash} credits 0: the typed-below coda's bound (X, \`TypedBelowSurvivor.most\`) rests on a death crediting nothing — any rule that credits a survivor year must change the coda's words and X with it (docs/landmines.md)`,
+      ).toBe(0)
+    }
   })
 
   it('SHORT YEAR: a year short $5,960 draws its shortfall exactly as without the figure and credits nothing; a short year 0 credits nothing ever', () => {

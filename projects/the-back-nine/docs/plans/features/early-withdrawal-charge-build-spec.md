@@ -51,7 +51,7 @@ The miss is rosy, so it is a cardinal-rule problem: every uncharged dollar is ta
 - The date search tests stops 0–10 years out (`src/engine/dateSearch.ts:60-69`), so a household in its late 50s draws pre-tax right after a tested stop.
 - Since the pay check (2026-10-30), a short working year is paid from savings through the withdrawal order, so an under-59½ owner's pre-tax money can pay part of it, uncharged like every other draw.
 
-The only words about the gap are K1 (`copy.assumptionWorkingYearCheckEarlyCharge`, `src/ui/copy.ts:1710-1711`), and they cover working years only. The retired route says nothing. D7 says a gap like this is a build item, never a sentence: K1 may stand only until the charge lands.
+The only words about the gap are K1 (`copy.assumptionWorkingYearCheckEarlyCharge`, `src/ui/copy.ts:1717-1718`), and they cover working years only. The retired route says nothing. D7 says a gap like this is a build item, never a sentence: K1 may stand only until the charge lands.
 
 ### Requirements
 
@@ -111,7 +111,7 @@ Considered and not built:
 - **A gate on drawing a current employer's 401(k) while still working.** The law mostly forbids it before 59½ and the engine draws it anyway; that is an availability gap, filed, not this charge.
 - **Pennsylvania's household-level 59½ gate.** It stays as it is (`src/engine/stateTax.ts:88-97`); only its comment changes if U2's ruling makes the comment untrue.
 - **A safe-by-default construct (absent means fully charged, with an explicit off for direct callers).** Weighed in KTD4 and not built: it would move every hand fixture with an owner aged 46–60 without proving anything new about the charge. A production builder path that skipped the construct would change this.
-- **Merging the schema raise into U10 so no build reads the new version without pricing it.** Not built while no deployment and no real save exist (`docs/backlog.md:4513`): only a rollback could open a U10 save in a U9 build. Act 5's U24 plans a home build and Briggsy's first real save, so U9 re-checks this at its start (KTD11); if a home or a real save exists by then, the raise and the writers move into U10's commit.
+- **Merging the schema raise into U10 so no build reads the new version without pricing it.** Not built while no deployment and no real save exist (`docs/backlog.md:4532`): only a rollback could open a U10 save in a U9 build. Act 5's U24 plans a home build and Briggsy's first real save, so U9 re-checks this at its start (KTD11); if a home or a real save exists by then, the raise and the writers move into U10's commit.
 - **A row-level reach for U3's leak fix.** Not built: a row's reach is read only for plans saved before it ships, and no real save exists. A real save made before U3 lands would change this.
 - **The death exception for an inherited IRA entered as the household's own.** Until Act 5's inherited-IRA kind lands, such an account can only be entered as a traditional or Roth IRA, and an heir under 59½ is charged on it although §72(t)(2)(A)(ii) frees it (gloomy). U11 records this on the register entry *An inherited IRA has no account kind…*.
 
@@ -544,7 +544,7 @@ These are bets made without Briggsy's confirmation. Each can be overturned at U2
 - `src/ui/copy.ts`: drafts, each tagged with the surface that will show it
 
 **Approach:**
-1. Draft plainly, in his "no PhD" register: each ask and its "not sure" (the job link, the earlier job's separation, each Roth account's basis, the 457(b) answer and its rolled-in amount); the charge's name wherever the year's tax is shown; any line whose meaning changes, such as the money picture's "Plus any income tax on what savings pays out…" (`src/ui/copy.ts:608`); K1's deletion; anything a U2 ruling leaves the household to know.
+1. Draft plainly, in his "no PhD" register: each ask and its "not sure" (the job link, the earlier job's separation, each Roth account's basis, the 457(b) answer and its rolled-in amount); the charge's name wherever the year's tax is shown; any line whose meaning changes, such as the money picture's "Plus any income tax on what savings pays out…" (`src/ui/copy.ts:615`); K1's deletion; anything a U2 ruling leaves the household to know.
 2. copyGuard bans "penalty" only in survivor copy (`src/ui/copyGuard.ts:294-308`); the word itself is his call at U12. Whatever he picks, the charge never becomes a line inside the working-year cash lines (KTD9).
 
 **Test expectation:** none. These are drafts. U12 puts them to Briggsy on real screens, and U10 pins the words he picks.
@@ -624,7 +624,7 @@ These are bets made without Briggsy's confirmation. Each can be overturned at U2
 - `src/intake/__tests__/intakeMap.test.ts`: the builder-side proof over every dev seed and candidate (KTD4)
 - `src/engine/pricingVersion.ts` and `src/engine/__tests__/pricingVersion.test.ts`; `src/store/staleness.ts` and its test; `src/ui/stalenessExposure.ts` and its test: the reach predicate U6 exported, wired in
 - `src/engine/solver/solverCodeVersion.ts`; `src/engine/__tests__/pricingWitness.test.ts`
-- K1's removal: `src/ui/copy.ts:1710-1711`, `src/ui/assumptionRegistry.ts:352-379`, `src/intake/__tests__/assumptionPanel.test.tsx`, `src/ui/__tests__/workingYearTaxDisclosure.test.ts`
+- K1's removal: `src/ui/copy.ts:1717-1718`, `src/ui/assumptionRegistry.ts:352-379`, `src/intake/__tests__/assumptionPanel.test.tsx`, `src/ui/__tests__/workingYearTaxDisclosure.test.ts`
 - the pins U7 marked moved: `src/ui/__tests__/devSeeds.test.ts`, `e2e/chart-text.spec.ts`, `src/ui/__tests__/healthSheetSeedGate.test.ts`, `src/ui/__tests__/allInWitnessHl50.test.ts`, `src/ui/__tests__/solvePayloadIdentity.health.test.ts`, `src/ui/__tests__/solvePoolIdentity.health.test.ts`, `src/ui/devSeeds.ts` docblocks
 - `src/ui/devSeeds.ts`: the amendment's household, if Briggsy said yes at U12
 - the words he picked at U12, in `src/ui/copy.ts` and their pins; if he ruled a line of the charge's own, the presence-keyed display sink System-Wide Impact describes, with its surface and test
@@ -673,7 +673,7 @@ These are bets made without Briggsy's confirmation. Each can be overturned at U2
 
 - **Pricing and the recommendation:** every tax-on run changes for a reached household, on both routes. The solver's scored retired spine is reached (`healthgap`, `health`, `healthnc`), so the solver version moves at U10 and possibly at U3.
 - **Solve and date-search time:** the charge runs inside every gross-up pass, and an ACA year runs about 40 to 75 gross-ups. The reached pre-65 seeds carry the cost, `healthgap` most of all: about 20 under-59½ years per path on the largest roster (101), never yet timed. Unreached households (`retired`, `nc`, `surplus`, the state twins) must show no change, because the year's preparation gives them a structural `+ 0` (KTD2). The date search is never pooled, so its share of the cost is the same on every device. Any per-year charge output for display rides a presence-keyed sink on display runs only (the `healthOut` / `balancesOut` pattern, `src/engine/taxOverlay.ts:2813-2825`), never the solve's candidate evaluations, whose heap is already 999 MB at P = 12.
-- **Saved plans:** the schema moves one version, and its mechanics are deliverables (KTD11): the nested refusal, the minted version-N fixtures, the clears behind the Save gate, the floor raise. No real save exists yet (`docs/backlog.md:4513`), so no household data is converted. The run fingerprint moves once, at U10, because the classes and Roth balances ride the construct.
+- **Saved plans:** the schema moves one version, and its mechanics are deliverables (KTD11): the nested refusal, the minted version-N fixtures, the clears behind the Save gate, the floor raise. No real save exists yet (`docs/backlog.md:4532`), so no household data is converted. The run fingerprint moves once, at U10, because the classes and Roth balances ride the construct.
 - **Other register entries:** the still-working RMD deferral and the IRA-basis build reuse U4's classes. The money picture's worded-tax-line trigger re-derives the RMD gate (`src/engine/workingYearLedger.ts:321-336`), and whoever changes that gate edits all three places together.
 - **Act 5:** its plan's U3 flag says the run "charges no early-withdrawal penalty" (`docs/plans/5-workbench-plan.md:373`), and it claims the next schema version too (its KTD16). Whichever lands second amends the other's flag text and takes the next free version (KTD11). Act 5's inherited ledger sits outside `alloc.pretax` and `alloc.roth`, so this charge never reaches it.
 - **Docs:** `src/engine/taxOverlay.ts` is the most-cited file in the docs. Every engine unit shifts lines that `verify:doc-stats` arm 4 checks.
@@ -685,7 +685,7 @@ These are bets made without Briggsy's confirmation. Each can be overturned at U2
 | Risk | Mitigation |
 |---|---|
 | The gross-up or the ACA bisection stops converging with the charge in it | KTD7: re-derive the factor, raise the cap to at least 384, re-derive the band bound, stress both; non-convergence keeps failing loud |
-| The charge slows the solve on reached households past "a few minutes" | U1 and U7 count the work; U10 times `healthgap`, `healthnc` and `retired`; a miss goes to the pending-line entry (`docs/backlog.md:4432`) and to Briggsy, never to a thinner charge |
+| The charge slows the solve on reached households past "a few minutes" | U1 and U7 count the work; U10 times `healthgap`, `healthnc` and `retired`; a miss goes to the pending-line entry (`docs/backlog.md:4451`) and to Briggsy, never to a thinner charge |
 | `dip` loses the dip it exists to test, or `datesplit`'s floor crown moves with the 59½ ruling | U7 marks every pin; a move stops for re-derivation, and a `dip` re-tune is Briggsy's call |
 | Act 5 and this build both claim the next schema version | KTD11: the step names the live version's successor; the second to land re-mints its fixtures and re-pins its ladder |
 | No dev seed holds pre-tax or Roth on both spouses, so the per-owner split, the couple order and the Roth split never meet a seed | U1 builds such households in the probe and U7 measures them; the hand fixtures and property tests run through the probe hooks |

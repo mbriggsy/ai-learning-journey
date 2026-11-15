@@ -237,6 +237,11 @@ even when one exists; the plain `/` route is the Unlock check.
 
 ## The unit test suite
 
+- **(b9-5, 11-15) Claude Code reaps a heavy BACKGROUND shell when the machine runs low on memory while the session
+  idles** (a different killer from the OS reaper below): the pinned full suite launched with `run_in_background` died at
+  its start line (7.4 GB of 32 GB free just after, ten Claude sessions holding their MCP servers and up to ~1.2 GB of tsserver each). The
+  notice says never to re-launch it unasked. Run the files the change reaches in the FOREGROUND with `--maxWorkers=2`
+  (11 files, 639 tests, 220 s, fine), and let CI's `pnpm test` be the full run; say so in the commit and the close.
 - **(b9-8, 11-09) A `// @ts-expect-error` arm in a test still RUNS.** The directive silences tsc, not execution: put
   compile-only arms inside a function that is never called (`workingYearTaxDisclosure.test.ts`, `_compileOnly`).
 - **(b9-4, 11-09) `WorkingYearCostStaleSentence` carries `held` on its unrisen arm too** (`src/intake/workingYearQuote.ts`): any `toEqual`
@@ -592,6 +597,11 @@ chair; chair from a digest script, never the raw result, and expect the window t
 ## Claude Code, workflows and sessions
 
 
+- **(b9-5, 11-15) The Workflow tool needs Briggsy's opt-in IN THE SESSION** ("use a workflow", ultracode confirmed by a
+  system message, or a skill he invoked): a squeaky handoff or a TODO line is not it. The council and the three blind
+  plan readers are Workflows, so a session without it cannot run them; ask at the session's start. A review round can
+  still run as Agent seats (`BRIEF.md` + `VERIFY.md` in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\u11-wholewindow\review-r3\` are the shape: briefs as files,
+  replies as JSON under a cap, three refuters each judging every finding).
 - **(b9-4, 11-15) A helper can go idle on a progress line and never send its result.** The U4 pins helper's last word
   was "waiting on the final combined run"; no run existed, and the main loop reported it as live for about 16 hours.
   An idle row with no result is no running job: read `Get-CimInstance Win32_Process` for the command line, then run the

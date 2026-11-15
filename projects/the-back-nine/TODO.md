@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-15, b9-4's close):** the rebuild's review round 3, a harm-class gate over the rebuild and the survivor-path build (`490afa87`) together, with an adversary and every finding verified, its fix commits behind the close block's "The review's gates"; then the mutant pass (the close block's "The mutant pass"); then walk 8: walk 7's 14 targets plus the survivor plan's three (its Goal Capsule), with the close block's "Walk 8's reads", then its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
+▶ **START HERE (2026-11-15, b9-5's close):** the build for round 3's surviving P1, the register's Tier 0 *The typed-below line's tax rider names only the tax on those shortfalls…*: the plan, deepened, checked as a whole and read by the three blind readers, with a council for the rider's words, then the build behind the close block's "The review's gates" (the council and the blind readers are Workflows: ask Briggsy for "use a workflow" first; until he says it, run the mutant pass first); then the mutant pass (the close block's "The mutant pass"); then walk 8: walk 7's 14 targets plus the survivor plan's three (its Goal Capsule), with the close block's "Walk 8's reads" and the new rider, then its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,8 +94,8 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **the rebuild's review round 3 and its mutant pass, then walk 8** (START HERE; the survivor build landed in
-     `490afa87`, its plan `docs/plans/features/typed-below-survivor-path-build-spec.md`; the rebuild's plan is
+     ▶ NEXT: **round 3's P1 build (the tax rider), the mutant pass, then walk 8** (START HERE; round 3 landed in `d5fb99ba`,
+     its record `<B>\u11-wholewindow\review-r3\ROUND.md`; the survivor build landed in `490afa87`, its plan `docs/plans/features/typed-below-survivor-path-build-spec.md`; the rebuild's plan is
      `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, and the register's Tier 0 retype entry
      carries the council's NEGATIVE on the round review's x_t metric). Its research, the council's drafts and full result sit in
      `b9-build2-surplus\u11-wholewindow\` (`research\witnesses.md` holds every witness's per-year engine figures); the
@@ -260,22 +260,22 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-15 (b9-4: the survivor-path build; b9-3's block pruned into it):**
+**SESSION 2026-11-15 (b9-5: the review's round 3; b9-4's block pruned into it):**
 
 State at close:
-- `490afa87`: the survivor-path build (U1 to U7), closing the register's Tier 0 *The typed-below line's comparisons are the all-alive picture's…*; its death-path proof holds X on all six council households (no Stop fired).
-- Gates on its tree, each exit 0: typecheck, lint, the full suite pinned, `verify:doc-stats`, build, `verify:fit` pinned, the sweep `survivor` against `ww3` (47 of 47 identical; `ww3` stays the baseline).
-- For Briggsy's digest: KTD4's departure from the council's literal X (each charge snapped first printed a dollar low), and the council's mortality words (walk 8 reads them).
+- `d5fb99ba`: round 3 (harm-class) over the rebuild and the survivor build, five finder seats and three refuters as Agent seats (no Workflow opt-in this session), record `<B>\u11-wholewindow\review-r3\ROUND.md`. S fixed (`same` compares the two draws in cents, `centDrawOf`); T confirmed P1 and filed Tier 0 (the tax rider, START HERE); D rejected as harm and filed as a NEGATIVE on the rebuild's register entry. The surcharge look-back entry records that no witness reaches its feed.
+- Gates on its tree: typecheck 0, lint 0, `verify:doc-stats` 0, build 0, and the 11 test files the change reaches (639 tests) green in the foreground. The pinned full suite was reaped for low memory (void; not re-run, as the notice said); `verify:fit` and the sweep not run. The diff touches no engine file or draft writer and moves no dev seed's words, so CI's `pnpm test` and `verify:fit` are its full run; `ww3` stays the sweep's baseline.
+- For Briggsy's digest: KTD4's departure from the council's literal X, the council's mortality words (walk 8 reads them), and T's rider words (a council, behind his "use a workflow").
 
-Next is START HERE. Successor: b9-5 (handoff mode).
+Next is START HERE. Successor: b9-6 (handoff mode).
 
 **Check at start:**
-- CI on `490afa87` and on this close's own commit: `gh run list --commit <full sha>` for each (`git log -2 --format=%H -- .`);
+- CI on `d5fb99ba` (run 43729798454) and on this close's own commit: `gh run list --commit <full sha>` for each (`git log -2 --format=%H -- .`); a red on `pnpm test` or `verify:fit` there is this round's to fix first;
 - the ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 
-**Round 3's inputs:** its scope is the rebuild (`c8fd5bc8` through `6b63c697`) and the survivor build (`490afa87`) together, harm-class: a sentence that reads rosier than the engine on some path the engine draws. The survivor build's records: `<B>\u11-wholewindow\survivor-plan\` (`repo-research.md`, `spec-flow.md`) and `<B>\u11-wholewindow\council-survivor\`. Every composed line on every witness and host, printed by the shipped composer: `<B>\u11-wholewindow\survivor-build\survivor-probe.mts` (run from the project dir with `pnpm exec tsx --tsconfig ./tsconfig.json <probe> <outfile>`; `probe-tree-u4.txt` beside it is its output at the build, and `u6-tsconfig.json` the scratch e2e typecheck config); the new households are `typedBelowWitnesses.ts`'s `councilBudgetHousehold`, `TM_ALL_STICKY_BUDGET`, `PENSION_ALL_STICKY_BUDGET` and `SURVIVOR_GATE_WITNESSES`.
+**The rider build's inputs:** the register entry (its figures, its four claims by kind, the council's candidate words and its NEGATIVE); `<B>\u11-wholewindow\review-r3\` (`ROUND.md`; the finder's `alive\taxmix-probe.mts` with its `variants.mts` and outputs, `alive\alive-probe.mts`, the refuters' `verify-1\t-dist.mts` and `verify-2\t-dist.mts`, each run from the project dir with `pnpm exec tsx --tsconfig ./tsconfig.json <probe> <outfile> …`). The rebuild plan's R5 (a difference beside its pair compares credits) and R6 (the rider exists so a figure never sits below the engine's gap) are the two rules the words must square. Every composed line on every witness and host: `<B>\u11-wholewindow\survivor-build\survivor-probe.mts` (`review-r3\probe-after-fix.txt` is its output at `d5fb99ba`; `survivor-build\u6-tsconfig.json` the scratch e2e typecheck config).
 
 **The review's gates** (each fix commit; each heavy run alone, in sequence, pinned to the P-cores from PowerShell; `<B>` is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus`):
 1. Before the first edit: `git rev-parse HEAD`, the re-anchor base.
@@ -284,7 +284,7 @@ change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_
 4. `pnpm build` and `pnpm verify:fit`, pinned.
 5. The sweep: `pnpm exec tsx <B>\tools\sweep.mts <label> --today=20758`, then `node <B>\tools\idcheck.mjs <label> ww3` (exit 0; the run takes over 10 minutes: launch it in the background). A row in `<B>\README.md`'s table.
 
-**The mutant pass** (after round 3): copy `<B>\u11-wholewindow\u3-mutants\mutants.cjs` + `mutants-list.cjs`, reset `FILES` to the rebuild's suites (`workingYearLeftOver`, `workingYearCredit`, `copyGuard`, `devSeeds`, `stalenessExposure`, `reentry`, `resultPayCheckLine`, `IntakeApp`, `assumptionPanel`, `workingCostStep`) plus the survivor build's (`typedBelowSurvivor`, the block test), predictions written first. Plants owed, besides the composer's own and the survivor build's (the gate inverted, X fed the all-alive difference, the coda dropped on one host, the lead's Record cell skipped on the sheet seat): "at most" dropped from `workingCostTypedBelowSpanAtQuoteCredit` (the density sweep's non-vacuity, never yet planted); a span join that ignores the binding term; `SEAT_OPENS_ON_COUNTS` flipped; FuckOffDate's parts branch gating its button on a door again; a one-year form lost. Already planted and killed by round 2's fix (each reds the hand pins and the R5 invariant): the still-short rule at the nearest dollar, rounded down, the raw-difference snap, and the printed subtraction.
+**The mutant pass** (after round 3; round 3's own plant, `same` back on the printed draws in `yearKind`, was seen red first, so it is owed no run): copy `<B>\u11-wholewindow\u3-mutants\mutants.cjs` + `mutants-list.cjs`, reset `FILES` to the rebuild's suites (`workingYearLeftOver`, `workingYearCredit`, `copyGuard`, `devSeeds`, `stalenessExposure`, `reentry`, `resultPayCheckLine`, `IntakeApp`, `assumptionPanel`, `workingCostStep`) plus the survivor build's (`typedBelowSurvivor`, the block test), predictions written first. Plants owed, besides the composer's own and the survivor build's (the gate inverted, X fed the all-alive difference, the coda dropped on one host, the lead's Record cell skipped on the sheet seat): "at most" dropped from `workingCostTypedBelowSpanAtQuoteCredit` (the density sweep's non-vacuity, never yet planted); a span join that ignores the binding term; `SEAT_OPENS_ON_COUNTS` flipped; FuckOffDate's parts branch gating its button on a door again; a one-year form lost. Already planted and killed by round 2's fix (each reds the hand pins and the R5 invariant): the still-short rule at the nearest dollar, rounded down, the raw-difference snap, and the printed subtraction.
 
 **Walk 8's reads** (each a flagged draft or pilot call; the card rules on each):
 - KD2's three pilot calls: the density of a short span (TM's 2029–2032 segment); the cap said in every span and again in the moved words (on PA's witness the Result says $16,064 twice in a row); the budget twin's short form.
@@ -294,9 +294,12 @@ change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_
 - The seat's lead says "What this answer adds…" above spans that say "Your answer…" (the plan's literal words; the counts sentence already mixes "Your answer counts … so this answer can look better").
 - A one-year span keeps "a year" on its credit and difference ("2029: … adds at most $16,985 a year … at most $21,000 a year more").
 - The survivor build's words, cold (the council's item 6 and the plan's Deferred list): "you're both alive" on the opener, the year subject and the three scoped leads; the coda ("If only one of you is alive", both forms); C's `same` segments under the scoped lead beside a scoped short span; "That is the whole gap…" right after "plus any income tax on it"; a coda whose printed figures subtract to $1 under its X (the round-up); the departure from the app's "on your own" survivor frame (`assumptionSurvivorRatioLabel`); the crowned seed's coda, which its own crown may never reach.
+- Round 3's leftovers for the readers: `bothCredit`'s "…it would add at most $10,985, $6,000 less" carries no "a year" where `quoteCreditsNothing`'s "$16,985 a year less" does (a one-off reading understates the lean); a typed figure with cents prints whole ("$84,000.50" as "$84,001"); `cMonth874999`'s three spans for a 12¢ gap (the density round 3's fix costs).
 - **The pension seed's seat in the SHEET has no harness frame:** the `vault:` / `seed:` walk stops at the Result, so walk 8's "pension seed on the gate, the Result and the sheet" needs the sheet's seat captured (the Result's "Update your figure for a working year" → the panel's left-over seat). Add the step to the vault walk or capture it by hand (b9-2's `seat-pension-*.png` is the shape).
 
-**LANDMINES (round 3, the mutant pass and walk 8):**
+**LANDMINES (the rider build, the mutant pass and walk 8):**
+- **The rider's tax is ONE joint tax per year:** the engine never splits a year's income tax between the shortfall and the premium, so a measure of "the tax on those shortfalls" alone is a convention; read the next year without a shortfall for the premium's own share (the refuters' check, $218 on TM), and compare gross draws, never `fundingNet` alone (equal `fundingNet` hid the whole gap).
+- **A heavy background run can be killed by the harness's low-memory reaper while the session idles** (round 3's pinned suite): run the gates in the foreground, the reached files with `--maxWorkers=2`, and let CI run the full suite; never re-launch a reaped run unasked (`docs/landmines.md`, The unit test suite).
 - **Every existing witness and dev seed opens the survivor gate** (all descend from `stillWorking`: Alex 58 working, Sam 60 retired; Sam can die from 2032): only `SURVIVOR_GATE_WITNESSES.sam56` and `.youngerNonWorker` print the gate-off words. A fix to a span slot moves every pin on every host; retype the vitest pins by hand, never composed from the slots.
 - **A gate-off witness derived from `stillWorking` must lower the retired Sam's `retirementAge` to at or below his `currentAge`**: left at 58, a Sam of 55 to 57 reads as still working, and Alex's possible death opens the gate.- **The window read's `unknown` arm is unreachable by any draft** (its docblock; a horizon at the window top reads `null`): never write a test that demands it.
 - **`NotePartsBlock` draws the door inside the segments' `<dl>`**: the coda's own list goes after that list and before the doorless button, and a coda never sits beside a door (KTD6).
@@ -309,23 +312,6 @@ change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_
 - **The e2e specs are outside `pnpm typecheck`**: a scratch tsconfig in the scratchpad that extends the project's, names `types` by absolute path and includes the specs (`docs/landmines.md`, The fit gate and e2e). The plan's required `bothAlive` frame field is what makes that typecheck find every stale frame literal.
 - **Before a fix commit, read `docs/landmines.md`'s The fit gate and e2e, The mutation harness, Copy and copyGuard, Windows and the shell, and Probes and measurement sections.**
 
-**THE A6 TOOLS (durable, b9-14):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a6-tools\`
-— `seeds.mts` (`b9-seed-probe`'s, rooted at the CWD's `src`: run it once from `b9-a6-head\` — a `git archive` of HEAD's
-`src` + tsconfig with a `node_modules` junction; refresh it with `git archive HEAD:projects/the-back-nine src tsconfig.json
-package.json` — and once from the project, then `cmp` the two outputs for a byte-identity proof that never touches the live
-tree), `timing.mts` (final-tier wall time, W-absent vs W-present, alternating), `unreanchor.mjs` (its landmine is in `docs/landmines.md`) and
-the A6 mutant specs. The A6 review's repros: `b9-a6-review\` (`wf_fdc509f6-84c`).
-**THE SEED PROBES (durable, b9-11):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-seed-probe\`
-— `seeds.mts` (every dev seed's FULL engine output through the app's own calls: the spine run with band fan + survivor
-reading + health readout, both date tiers; typed arrays digested), `diff.mjs` (every moved field per seed — it stops at 80
-lines per seed, so recount from the JSON), `solve.mts` (`buildSolveRequest` → `solveWithMint`; pass `seed:goal`),
-`extras.mts` (`healthss`'s spend solve + the step-down distribution path by path) and `reach.mts` (HEAD's function against
-the tree's, per seed). Re-point each script's output DIR off this session's scratchpad; run from the project dir with
-`pnpm exec tsx`. For a "before" run, snapshot the HEAD module with an absolute constants import (as `reach.mts`'s comment
-says) or swap the HEAD file in with snapshot + restore + `cmp`, never `git checkout`.
-**THE MUTATION HARNESS (durable):** `mutants-spec.cjs` in the re-anchor tools folder (UNFINISHED's path), run from the
-project dir as `node <tools>\mutants-spec.cjs <spec.json>`; `mutants-spec.example-a3.json` is A3's eight-mutant spec. Each
-plant must land exactly once, the named tests must go red, and every file is restored and byte-compared.
 **FOR HIM (one read, no rush):** two `docs/product.md` spots still lean on friends using the tool — R13's "kept on honesty
 grounds for friend-users" and the test-driver list naming real friends' households. The tool is built for him (his
 correction, 2026-10-21); whether R13's reason and the test-driver framing change is his call. And one A4 call that is his
@@ -1086,6 +1072,9 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - A witness derived from a seed by changing only its ages inherits the fields whose meaning depends on age: the survivor plan's gate-off witnesses (a retired Sam aged 55 to 57) kept `stillWorking`'s `retirementAge` 58, so the engine would read Sam as still working and Alex's possible death would open the gate. The builder reader caught it from the plan (b9-3, `wf_a95a1029-7d8`). Re-state every age-keyed field (stop age, birth year, claim age) when deriving a witness.
 - A plan that departs from a ruling's letter to keep the ruling's own bar must name the departure where its precedence line can see it: the survivor council ruled X as each charge snapped to the cent then rounded up; the adversary reproduced that rule printing a dollar under the cent-grain draw difference, so the plan rounds the raw difference up, and the rules reader showed that, unnamed, the plan's "the council wins on a conflict" would send the builder back to the rosy formula (b9-3, KTD4).
 - An idle helper's last status line is not its result: the U4 pins helper went idle on "waiting on the final combined run" and never reported; the pilot relayed that line to Briggsy as live work about 16 hours later, and his "I can't see anything running" was Earth (no vitest process existed). Before saying a job runs, read the process list and the helper's own result; a helper idle with no result is re-checked by running its gate yourself (b9-4: its suites were green, 706 of 706).
+- *Extend 146 (money has one grain):* a comparison that PRINTS no figure still reads a grain. Round 1 moved the still-short figure to the cent grain, but `same`'s equality kept comparing the two printed (rounded-up) shortfalls, so "adds the same" stood over draws up to 99¢ a year apart (C at $104,999.01; round 3, two seats). Sweep every comparison of two money figures for its grain, not only the ones that print; the twin invariant reads the claim itself (`same` means equal in cents), seen red first (b9-5, `d5fb99ba`).
+- Equal `fundingNet` (draws net of income tax) is not equal gross: two answers' draws can match net while their income tax differs, because the account mix earlier credits and shortfalls left prices a later year's tax on the SAME draw (the quote's run pays more tax on the Medicare premium: ~$76–$182 a year on TM, $1,639 under taxable-first). The survivor proof and round 3's sweeps all read `fundingNet` and saw a residual of $0; only a per-year tax compare found it. A lean measured on one engine output can hide a lean in its neighbour: name the gross, the net and the tax (extends insight 143's "enumerate every feed"; b9-5, round 3's T).
+- A harm-class round can run without a Workflow as Agent seats: five finders (one failure-mode angle each, one brief file, a JSON reply under a cap) and three refuters who each judge EVERY finding independently (3 agents, not one per finding); it cost about 2.8M helper tokens and about 40 % of the window to land with its fix commit. Two seats converging on one finding (S) validated it; the refuters' severity split on T (P0/P1/P3 over one fact) was a claim question (what the sentence asserts), settled by reading the plan's own rule for that sentence (R6), never by the vote (b9-5).
 
 
 ## Driving the app
@@ -1143,3 +1132,22 @@ reloading in one step silently leaves the vault in place and you land on Unlock 
 ⚠️ **AND ANY OTHER TAB with the app open blocks it the same way** (bit again 2026-08-20: the
 deleting tab did the about:blank dance correctly while a second tab held the connection — the
 vault silently survived a "successful" deletion). Close every other app tab first.
+
+**The durable probe and mutation tools** (moved here from the close block, b9-5; the steps above name them):
+**THE A6 TOOLS (durable, b9-14):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a6-tools\`
+— `seeds.mts` (`b9-seed-probe`'s, rooted at the CWD's `src`: run it once from `b9-a6-head\` — a `git archive` of HEAD's
+`src` + tsconfig with a `node_modules` junction; refresh it with `git archive HEAD:projects/the-back-nine src tsconfig.json
+package.json` — and once from the project, then `cmp` the two outputs for a byte-identity proof that never touches the live
+tree), `timing.mts` (final-tier wall time, W-absent vs W-present, alternating), `unreanchor.mjs` (its landmine is in `docs/landmines.md`) and
+the A6 mutant specs. The A6 review's repros: `b9-a6-review\` (`wf_fdc509f6-84c`).
+**THE SEED PROBES (durable, b9-11):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-seed-probe\`
+— `seeds.mts` (every dev seed's FULL engine output through the app's own calls: the spine run with band fan + survivor
+reading + health readout, both date tiers; typed arrays digested), `diff.mjs` (every moved field per seed — it stops at 80
+lines per seed, so recount from the JSON), `solve.mts` (`buildSolveRequest` → `solveWithMint`; pass `seed:goal`),
+`extras.mts` (`healthss`'s spend solve + the step-down distribution path by path) and `reach.mts` (HEAD's function against
+the tree's, per seed). Re-point each script's output DIR off this session's scratchpad; run from the project dir with
+`pnpm exec tsx`. For a "before" run, snapshot the HEAD module with an absolute constants import (as `reach.mts`'s comment
+says) or swap the HEAD file in with snapshot + restore + `cmp`, never `git checkout`.
+**THE MUTATION HARNESS (durable):** `mutants-spec.cjs` in the re-anchor tools folder (UNFINISHED's path), run from the
+project dir as `node <tools>\mutants-spec.cjs <spec.json>`; `mutants-spec.example-a3.json` is A3's eight-mutant spec. Each
+plant must land exactly once, the named tests must go red, and every file is restored and byte-compared.

@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-15, b9-5's close):** the build for round 3's surviving P1, the register's Tier 0 *The typed-below line's tax rider names only the tax on those shortfalls…*: the plan, deepened, checked as a whole and read by the three blind readers, with a council for the rider's words, then the build behind the close block's "The review's gates" (the council and the blind readers are Workflows: ask Briggsy for "use a workflow" first; until he says it, run the mutant pass first); then the mutant pass (the close block's "The mutant pass"); then walk 8: walk 7's 14 targets plus the survivor plan's three (its Goal Capsule), with the close block's "Walk 8's reads" and the new rider, then its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
+▶ **START HERE (2026-11-15, b9-5's close):** the build for round 3's surviving P1, the register's Tier 0 *The typed-below line's tax rider names only the tax on those shortfalls…*: the plan, deepened, checked as a whole and read by the three blind readers, with a council for the rider's words, then the build behind the close block's "The review's gates" (the council and the blind readers are Workflows: they wait on Briggsy's "use a workflow"; the plan's own steps before them do not). The mutant pass is DONE (b9-6: 27 of 27 plants killed over `48f12672`, none survived; `<B>\u11-wholewindow\mutants-r3\RESULT.md`). Then walk 8: walk 7's 14 targets plus the survivor plan's three (its Goal Capsule), with the close block's "Walk 8's reads" and the new rider, then its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,12 +94,12 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **round 3's P1 build (the tax rider), the mutant pass, then walk 8** (START HERE; round 3 landed in `d5fb99ba`,
+     ▶ NEXT: **round 3's P1 build (the tax rider), then walk 8** (START HERE; round 3 landed in `d5fb99ba`,
      its record `<B>\u11-wholewindow\review-r3\ROUND.md`; the survivor build landed in `490afa87`, its plan `docs/plans/features/typed-below-survivor-path-build-spec.md`; the rebuild's plan is
      `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, and the register's Tier 0 retype entry
      carries the council's NEGATIVE on the round review's x_t metric). Its research, the council's drafts and full result sit in
      `b9-build2-surplus\u11-wholewindow\` (`research\witnesses.md` holds every witness's per-year engine figures); the
-     mutant runner to copy is `u11-wholewindow\u3-mutants\mutants.cjs` + `mutants-list.cjs` (U3's pass; reset its FILES, the close block's landmine). Walk 8 runs walk 7's 14 targets plus the
+     mutant runner to copy for the rider build's own pass is `u11-wholewindow\mutants-r3\` (`mutants.cjs`, `setup-copy.cjs`: plants in a scratch copy, never the live tree). Walk 8 runs walk 7's 14 targets plus the
      plan's three (`temp\caddie\caddie-u11-b9-5-walk7\` is the last bundle; walk 7's card is `86acd918`, its panel record
      `u11-walk7\panel\`, the form to copy).
      **Filed by the walk-5 round's review for U12** (`wf_c037b423-7f0`; the record is `u11-walk5\ROUND.md` § "The
@@ -284,8 +284,6 @@ change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_
 4. `pnpm build` and `pnpm verify:fit`, pinned.
 5. The sweep: `pnpm exec tsx <B>\tools\sweep.mts <label> --today=20758`, then `node <B>\tools\idcheck.mjs <label> ww3` (exit 0; the run takes over 10 minutes: launch it in the background). A row in `<B>\README.md`'s table.
 
-**The mutant pass** (after round 3; round 3's own plant, `same` back on the printed draws in `yearKind`, was seen red first, so it is owed no run): copy `<B>\u11-wholewindow\u3-mutants\mutants.cjs` + `mutants-list.cjs`, reset `FILES` to the rebuild's suites (`workingYearLeftOver`, `workingYearCredit`, `copyGuard`, `devSeeds`, `stalenessExposure`, `reentry`, `resultPayCheckLine`, `IntakeApp`, `assumptionPanel`, `workingCostStep`) plus the survivor build's (`typedBelowSurvivor`, the block test), predictions written first. Plants owed, besides the composer's own and the survivor build's (the gate inverted, X fed the all-alive difference, the coda dropped on one host, the lead's Record cell skipped on the sheet seat): "at most" dropped from `workingCostTypedBelowSpanAtQuoteCredit` (the density sweep's non-vacuity, never yet planted); a span join that ignores the binding term; `SEAT_OPENS_ON_COUNTS` flipped; FuckOffDate's parts branch gating its button on a door again; a one-year form lost. Already planted and killed by round 2's fix (each reds the hand pins and the R5 invariant): the still-short rule at the nearest dollar, rounded down, the raw-difference snap, and the printed subtraction.
-
 **Walk 8's reads** (each a flagged draft or pilot call; the card rules on each):
 - KD2's three pilot calls: the density of a short span (TM's 2029–2032 segment); the cap said in every span and again in the moved words (on PA's witness the Result says $16,064 twice in a row); the budget twin's short form.
 - KD3, on T (`vault:datesavedtyped`, an unpriced state): does "$6,000 less" read as the whole lean?
@@ -297,7 +295,7 @@ change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_
 - Round 3's leftovers for the readers: `bothCredit`'s "…it would add at most $10,985, $6,000 less" carries no "a year" where `quoteCreditsNothing`'s "$16,985 a year less" does (a one-off reading understates the lean); a typed figure with cents prints whole ("$84,000.50" as "$84,001"); `cMonth874999`'s three spans for a 12¢ gap (the density round 3's fix costs).
 - **The pension seed's seat in the SHEET has no harness frame:** the `vault:` / `seed:` walk stops at the Result, so walk 8's "pension seed on the gate, the Result and the sheet" needs the sheet's seat captured (the Result's "Update your figure for a working year" → the panel's left-over seat). Add the step to the vault walk or capture it by hand (b9-2's `seat-pension-*.png` is the shape).
 
-**LANDMINES (the rider build, the mutant pass and walk 8):**
+**LANDMINES (the rider build and walk 8):**
 - **The rider's tax is ONE joint tax per year:** the engine never splits a year's income tax between the shortfall and the premium, so a measure of "the tax on those shortfalls" alone is a convention; read the next year without a shortfall for the premium's own share (the refuters' check, $218 on TM), and compare gross draws, never `fundingNet` alone (equal `fundingNet` hid the whole gap).
 - **A heavy background run can be killed by the harness's low-memory reaper while the session idles** (round 3's pinned suite): run the gates in the foreground, the reached files with `--maxWorkers=2`, and let CI run the full suite; never re-launch a reaped run unasked (`docs/landmines.md`, The unit test suite).
 - **Every existing witness and dev seed opens the survivor gate** (all descend from `stillWorking`: Alex 58 working, Sam 60 retired; Sam can die from 2032): only `SURVIVOR_GATE_WITNESSES.sam56` and `.youngerNonWorker` print the gate-off words. A fix to a span slot moves every pin on every host; retype the vitest pins by hand, never composed from the slots.

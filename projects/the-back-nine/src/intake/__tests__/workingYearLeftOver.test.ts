@@ -1274,6 +1274,18 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     ])
   })
 
+  // The households both grain sweeps read (R5's below, and its twin for `same`): every witness, and the cents households
+  // the printed-figure rule, the nearest-dollar rule, the raw-difference snap and the printed-grain `same` each failed on
+  // (C at $104,999.01 a year: two shortfalls 99¢ apart, both printed $4,015; round 3).
+  const GRAIN_WITNESSES: Readonly<Record<string, ScenarioDraft>> = {
+    ...TYPED_BELOW_WITNESSES,
+    centsStillShort: typed(DEV_SEEDS.datesavedrisenlater, 8_416.67 * 12, 'month'),
+    cents873: CENTS_873,
+    subCent: SUB_CENT,
+    tmGrain: TM_GRAIN,
+    centsBelowQuote: typed(DEV_SEEDS.datesavedrisenlater, 104_999.01),
+  }
+
   // The whole-file review's round 1, finding #1 (R5 over V9): an "at most" never sits under what the engine does. Each short
   // span's yearly difference is checked against the engine's own in each of its years, read straight off the two money
   // pictures (the draw the overlay takes is −cash in a short year) and the credit rule's credit, on the money picture's
@@ -1282,13 +1294,7 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
   // (round 2, finding #3: the round-up's other side). The cents households are the witnesses the printed-figure rule, the
   // nearest-dollar rule and the raw-difference snap each failed on. This is the ALL-ALIVE picture (round 2, finding #1).
   it('every short span’s "at most" difference sits at or above the engine’s own on the cent grain in each of its years, and less than a dollar above it, on every witness and the cents households (R5)', () => {
-    const witnesses: Readonly<Record<string, ScenarioDraft>> = {
-      ...TYPED_BELOW_WITNESSES,
-      centsStillShort: typed(DEV_SEEDS.datesavedrisenlater, 8_416.67 * 12, 'month'),
-      cents873: CENTS_873,
-      subCent: SUB_CENT,
-      tmGrain: TM_GRAIN,
-    }
+    const witnesses = GRAIN_WITNESSES
     // Which kinds say their difference "at most" (copy.ts's ShortOut, StillShort and Even); the two credit kinds print a
     // plain difference beside their pair and `same` prints none. A Record, so a new kind cannot skip the sweep silently
     // (round 2, finding #8; insight 147).
@@ -1334,20 +1340,77 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     expect(yearsOfKind.get('shortStillShortAtTyped'), 'the still-short kind on every cents household').toBeGreaterThanOrEqual(8)
   })
 
-  it('`same`: a labelled span says the answer adds the same, no figure (its scope rides the lead); a one-span `same` line opens "Each working year you’re both alive," and keeps the opening’s lean (never "here it doesn’t"), its quote to the cent where the pair prints cents — and its coda prints "at most $1" beside the two charges to the cent, $78,749.91 and $78,750.00, never two equal dollar figures (AE4)', () => {
+  // R5's twin for the kind that prints no figure (the review's round 3: two seats and three refuters). `same` claims
+  // equality ("adds the same to your savings"), so the sweep above, which reads "at most" figures, skips it; read on the
+  // PRINTED shortfalls, two draws inside one rounded-up dollar read alike, and the line said "the same" where the engine
+  // draws up to 99¢ a year less at the typed figure ($104,999.01 a year: $4,014.01 against $4,015.00, both printed
+  // $4,015). Every `same` year credits the same and draws the same on the cent grain, the grain the still-short figure
+  // reads: the engine's own yearly difference there is exactly $0. Read straight off the two money pictures, as above.
+  it('every `same` year credits the same and draws the same on the cent grain: the engine’s own yearly difference is exactly $0, on every witness and the cents households (round 3)', () => {
+    let sameYears = 0
+    for (const [key, d] of Object.entries(GRAIN_WITNESSES)) {
+      const read = workingYearTypedBelowWindow(d)
+      const atTyped = workingYearLedgerForRun(d)
+      const atQuote = workingYearLedgerForRun(writeConfirmedWorkingYearCost(d))
+      if (read?.kind !== 'read' || atTyped === 'unknown' || atQuote === 'unknown') throw new Error(`[test setup] ${key} reads both pictures`)
+      read.years.forEach((y, t) => {
+        if (y.kind !== 'same') return
+        const drawT = Math.max(0, -toCents(atTyped.workingYears[t]!.cash))
+        const drawQ = Math.max(0, -toCents(atQuote.workingYears[t]!.cash))
+        expect(toCents(y.credit), `${key} ${y.calendarYear}: the two credits`).toBe(toCents(y.creditAtQuote))
+        expect(drawT, `${key} ${y.calendarYear}: the two draws, in cents`).toBe(drawQ)
+        sameYears += 1
+      })
+    }
+    // Non-vacuous: `same` is read on most witnesses (the stored figure capping both answers, and every year either cap
+    // leaves alike). The draw check bites on a short year: it was seen red first on C at $8,749.99 a month and at
+    // $104,999.01 a year, each of whose 2029–2032 read `same` on the printed grain.
+    expect(sameYears, '`same` years swept').toBeGreaterThanOrEqual(20)
+  })
+
+  it('`same`: a labelled span says the answer adds the same, no figure (its scope rides the lead); a one-span `same` line opens "Each working year you’re both alive," and keeps the opening’s lean (never "here it doesn’t") — and twelve cents a year below the quote reads `same` only where neither answer is short: 2029–2032 take at most $1 a year less, the quote to the cent, and the coda prints "at most $1" beside the two charges to the cent, $78,749.91 and $78,750.00, never two equal dollar figures (AE4; round 3)', () => {
     const whole = TYPED_BELOW_WITNESSES.whole
     expect(segment(whole, RESULT, '2026 through 2028')).toEqual(['This answer adds the same to your savings as it would at your spending of $90,000 a year.'])
     expect(segment(whole, GATE, '2033 through 2035')).toEqual(['Your answer adds the same to your savings as it would at your spending of $90,000 a year.'])
     expect(line(whole, RESULT).opening.endsWith(' What this answer adds to your savings in each working year you’re both alive:'), 'the `same` segments sit under the scoped lead').toBe(true)
-    // The survivor charges are 0.75 of each figure: $78,749.91 and $78,750.00, a raw $0.09 apart, rounded up to $1.
-    expect(line(TYPED_BELOW_WITNESSES.cMonth874999, RESULT_HOSTED)).toEqual(
+    // `?seed=date` with $6,000 a month typed: the stored $16,985 caps both answers in every year and neither is short, so
+    // one `same` span. Its survivor charges are 0.75 of each figure: $54,000 and $63,000, X the $9,000 between them.
+    expect(line(TYPED_BELOW_WITNESSES.date6000Month, RESULT_HOSTED)).toEqual(
       plain(
-        'This answer counts a working year at your own figure of $104,999.88 a year, below your spending of $105,000.00 a year. ' +
-          `${LEAN} Each working year you’re both alive, this answer adds the same to your savings as it would at your spending of $105,000.00 a year. ` +
-          'If only one of you is alive in a working year, this answer takes at most $1 a year less from your savings than it would at your spending of $105,000.00 a year, plus any income tax on it. ' +
-          'Such a year’s costs count as $78,749.91 a year at your figure and $78,750.00 at your spending.',
+        'This answer counts a working year at your own figure of $72,000 a year, below your spending of $84,000 a year. ' +
+          `${LEAN} Each working year you’re both alive, this answer adds the same to your savings as it would at your spending of $84,000 a year. ` +
+          'If only one of you is alive in a working year, this answer takes at most $9,000 a year less from your savings than it would at your spending of $84,000 a year, plus any income tax on it. ' +
+          'Such a year’s costs count as $54,000 a year at your figure and $63,000 at your spending.',
       ),
     )
+    // $8,749.99 a month ($104,999.88 a year): in 2029–2032 both answers come up short, $4,014.88 against $4,015.00 and
+    // $3,651.88 against $3,652.00, each printed $4,015 and $3,652. The draws differ by 12¢, so those years are no longer
+    // `same` (the review's round 3): this answer takes at most $1 a year less, the 12¢ rounded up. Its survivor charges are
+    // 0.75 of each figure, $78,749.91 and $78,750.00, a raw $0.09 apart, rounded up to $1.
+    expect(line(TYPED_BELOW_WITNESSES.cMonth874999, RESULT_HOSTED)).toEqual({
+      opening:
+        'This answer counts a working year at your own figure of $104,999.88 a year, below your spending of $105,000.00 a year. ' +
+        `${LEAN} What this answer adds to your savings in each working year you’re both alive:`,
+      segments: [
+        { label: '2026 through 2028', sentences: ['This answer adds the same to your savings as it would at your spending of $105,000.00 a year.'] },
+        {
+          label: '2029 through 2032',
+          sentences: [
+            'At your spending of $105,000.00 a year, each working year you’re both alive comes up $3,652 to $4,015 short.',
+            'At your figure of $104,999.88 a year, each still comes up $3,652 to $4,015 short, and this answer takes at most $1 a year less from your savings, plus any income tax on it.',
+          ],
+        },
+        { label: '2033 through 2035', sentences: ['This answer adds the same to your savings as it would at your spending of $105,000.00 a year.'] },
+      ],
+      door: null,
+      coda: {
+        label: 'If only one of you is alive',
+        sentences: [
+          'In such a working year, this answer takes at most $1 a year less from your savings than it would at your spending of $105,000.00 a year, plus any income tax on it.',
+          'Such a year’s costs count as $78,749.91 a year at your figure and $78,750.00 at your spending.',
+        ],
+      },
+    })
   })
 
   it('the budget twin (KD2’s third pilot call): the counts sentence keeps the W note’s long form, each span and the coda name the quote "your budget’s $90,000 a year" (A’s household, its quote from a budget whose first year after work stops is $90,000, probed); its one line is housing, held whole after a death, so the coda’s X is the whole $6,000 gap', () => {
@@ -1975,8 +2038,12 @@ describe('workingYearTypedBelowWindow — the typed-below line’s whole-window 
     ])
   })
 
-  it('`same`: twelve cents a year below the quote ($8,749.99 a month) and `?seed=date` with $6,000 a month typed each read one span; $7,916.67 a month reads every span $9,999 apart, 2035 included (credits, never prints)', () => {
-    expect(spansOf('cMonth874999')).toEqual([{ firstYear: 2026, lastYear: 2035, kind: 'same' }])
+  it('`same`: `?seed=date` with $6,000 a month typed reads one span; twelve cents a year below the quote ($8,749.99 a month) reads `same` only where neither answer is short, its short 2029–2032 still short at $1 a year less (the draws compared to the cent, round 3); $7,916.67 a month reads every span $9,999 apart, 2035 included (credits, never prints)', () => {
+    expect(spansOf('cMonth874999')).toEqual([
+      { firstYear: 2026, lastYear: 2028, kind: 'same' },
+      { firstYear: 2029, lastYear: 2032, kind: 'shortStillShortAtTyped', shortAtQuote: $(3_652, 4_015), shortAtTyped: $(3_652, 4_015), difference: $(1) },
+      { firstYear: 2033, lastYear: 2035, kind: 'same' },
+    ])
     expect(spansOf('date6000Month')).toEqual([{ firstYear: 2026, lastYear: 2035, kind: 'same' }])
     expect(spansOf('cMonth791667')).toEqual([
       both(2026, 2028, [15_984], [5_985], [9_999]),

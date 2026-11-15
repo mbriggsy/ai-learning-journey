@@ -699,9 +699,12 @@ function freshTypedBelow(d: ScenarioDraft): ReturnType<typeof workingYearCostTyp
 
 /** What one working year of the window holds, this answer against the answer at today's quote (KTD3; an exhaustive
  *  Record keys every choice made by it, insight 147). Compared on the money picture's grain — each credit printed
- *  through `workingYearBottomLine`, each shortfall as its year prints it:
- *  · `same` — both answers credit the same and draw the same. Read first, ahead of every other kind: any year where the
- *    stored figure caps both and neither is short, and a typed figure cents below the quote;
+ *  through `workingYearBottomLine`, each shortfall as its year prints it, except that `same` compares the two draws on
+ *  the cent grain ({@link centDrawOf}):
+ *  · `same` — both answers credit the same and draw the same, to the cent: two draws inside one printed dollar are not the
+ *    same (the review's round 3: "adds the same" stood over a draw 99¢ a year smaller at the typed figure). Read first,
+ *    ahead of every other kind: any year where the stored figure caps both and neither is short; a typed figure cents
+ *    below the quote reads `same` only in the years neither answer is short;
  *  · `bothCredit` — both credit at least $1 (this answer more);
  *  · `quoteCreditsNothing` — this answer credits at least $1; the answer at the quote credits nothing in a year that is
  *    not short there (year 0 at the quote below $1, so that run carries no answer: R5's gate);
@@ -854,7 +857,7 @@ function composeTypedBelowWindow(d: ScenarioDraft): WorkingYearTypedBelowWindow 
     if (printed < printedAtQuote || w.bottomLine < q.bottomLine) return { kind: 'unknown' }
     years.push({
       calendarYear: w.calendarYear,
-      kind: yearKind(printed, printedAtQuote, w.bottomLine, q.bottomLine),
+      kind: yearKind(printed, printedAtQuote, w.bottomLine, q.bottomLine, w.cash, q.cash),
       credit,
       creditAtQuote,
       binding: settleTie(t, workingYearCreditBinding(w.cash, year0, stored, true)),
@@ -917,10 +920,22 @@ function survivorReadOf(
 }
 
 const drawOf = (bottomLine: number): number => (bottomLine < 0 ? -bottomLine : 0)
+/** A year's draw in whole cents: its cash snapped to the cent exactly as its printed shortfall is (`toCents`, insight
+ *  146), so two draws inside one printed dollar still differ. Every comparison of two draws reads it — `same`'s
+ *  equality and the still-short difference ({@link stillShortDifferenceDollars}) — never two printed shortfalls, each
+ *  rounded up. Positive exactly where the year prints short (`bottomLineFromCents` reads the same cents). */
+const centDrawOf = (cash: number): number => Math.max(0, -toCents(cash))
 
-/** A year's kind from its two printed credits and its two prints (KTD3's order: `same` first). */
-function yearKind(printed: number, printedAtQuote: number, bottomLine: number, bottomLineAtQuote: number): TypedBelowYearKind {
-  if (printed === printedAtQuote && drawOf(bottomLine) === drawOf(bottomLineAtQuote)) return 'same'
+/** A year's kind from its two printed credits, its two prints and its two raw cashes (KTD3's order: `same` first). */
+function yearKind(
+  printed: number,
+  printedAtQuote: number,
+  bottomLine: number,
+  bottomLineAtQuote: number,
+  cash: number,
+  cashAtQuote: number,
+): TypedBelowYearKind {
+  if (printed === printedAtQuote && centDrawOf(cash) === centDrawOf(cashAtQuote)) return 'same'
   if (bottomLineAtQuote < 0) return bottomLine > 0 ? 'shortLeftOverAtTyped' : bottomLine < 0 ? 'shortStillShortAtTyped' : 'shortEvenAtTyped'
   return printedAtQuote > 0 ? 'bothCredit' : 'quoteCreditsNothing'
 }
@@ -958,11 +973,11 @@ const differenceDollars = (y: TypedBelowYear): number =>
  *  subtraction of the two printed shortfalls, and at most $1 over it (round 2, finding #2: snapping the raw DIFFERENCE
  *  instead let a typed figure with sub-cent digits, or two cashes each a hair past a cent, print a dollar under both).
  *  Every other kind's figure already sits at or above the engine's on that grain (a printed credit never sits under its
- *  raw credit: the credit rule's min holds the year's own print). All of this is the ALL-ALIVE picture: on a path where
+ *  raw credit: the credit rule's min holds the year's own print), and `same`, which prints none, reads its two draws on
+ *  this grain too ({@link centDrawOf}; the review's round 3). All of this is the ALL-ALIVE picture: on a path where
  *  one of you has died nobody is credited and W follows the survivor rule, so a comparison there can run past these
  *  figures (round 2, finding #1; the council's ruling governs the words). */
-const stillShortDifferenceDollars = (y: TypedBelowYear): number =>
-  Math.ceil((Math.max(0, -toCents(y.cashAtQuote)) - Math.max(0, -toCents(y.cash))) / 100)
+const stillShortDifferenceDollars = (y: TypedBelowYear): number => Math.ceil((centDrawOf(y.cashAtQuote) - centDrawOf(y.cash)) / 100)
 
 type SpanFigures = {
   readonly [K in TypedBelowYearKind]: (years: readonly TypedBelowYear[]) => Omit<Extract<TypedBelowSpan, { kind: K }>, 'firstYear' | 'lastYear'>

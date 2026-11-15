@@ -267,7 +267,8 @@ even when one exists; the plain `/` route is the Unlock check.
 
 - **(b9-10, 10-22) The single-source gate in `constants.shape.test.ts` scans EVERY `src` file, tests included**; only `engine/constants/`
   is exempt. A test elsewhere that types a DISTINCTIVE figure (now including `184500`) reds. Read the figure from the
-  constant and type only the derived dollars.
+  constant and type only the derived dollars. (b9-4, 11-15) A DERIVED figure can collide too: C at 80 %'s survivor X,
+  11,250, redded it in two test files; write such a figure as its subtraction (`99_750 - 88_500`).
 - **From the b9-toronto1 close (2026-10-14/15, the survivor basis + trim cut, the ACA itemized probe, three health-sheet Tier 0s):** the OS MEMORY REAPER kills a background full suite on this laptop — vitest's workers die, the log stalls with no summary, and the parent tree lives on as a zombie (kill it with `taskkill /T /F /PID <root>` after reading its command line); results are VOID, so never count a stalled log, never restart it unasked — run the files the change reaches in the foreground and let CI be the full run · `pnpm doc:reanchor` missed 27 bare continuations on PARTLY-moved multi-citation lines in one run (`ee62a839`) and `verify:doc-stats` arm 4 passed them green (it checks only that the line exists and is not blank — insight 136); after every re-anchor run a POSITIONAL pair-check — pair each bare token with the named citation it continues, re-read both lines at HEAD and on the tree, fix by content (754 pairs that day) · a stray `cat > file` with no heredoc blocks forever on stdin and leaves an EMPTY file behind — write scripts with the Write tool · `node -e` given a Git Bash path (`/c/Users/…`) inside a JS string resolves it as `C:\c\Users\…` (ENOENT) — put the script in a `.cjs` file and use `__dirname` or `C:/…` paths · a vite dev server launched in a background shell can survive `TaskStop` and keep its port — find the PID by port, read its command line, then `Stop-Process`.
 - **`console.log` in a vitest run is SWALLOWED here** — a measurement probe that prints its answer
   produces a green run and no output, which reads as a silent failure. Write results to a file
@@ -591,6 +592,10 @@ chair; chair from a digest script, never the raw result, and expect the window t
 ## Claude Code, workflows and sessions
 
 
+- **(b9-4, 11-15) A helper can go idle on a progress line and never send its result.** The U4 pins helper's last word
+  was "waiting on the final combined run"; no run existed, and the main loop reported it as live for about 16 hours.
+  An idle row with no result is no running job: read `Get-CimInstance Win32_Process` for the command line, then run the
+  helper's gate yourself before reporting its state.
 - **(b9-7, 11-13) A subagent cannot write a `.md` report file: the harness refuses it ("subagents should return
   findings as text").** All four round-review seats briefed to write `REPORT.md` sent the whole report back as their
   reply instead, 3–5K tokens each into the main window (`.mts` probes in their folders still wrote). Brief a seat to

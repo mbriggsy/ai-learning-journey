@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-14, b9-3's close):** the typed-below line's survivor-path build from its checked and read plan, `docs/plans/features/typed-below-survivor-path-build-spec.md` (`22ac78dd`; U1 to U7 in one commit, the plan's Sequencing), each unit opened with `/brief <that unit's topic>`, behind the close block's "The review's gates" and its "The build's inputs"; then the rebuild's review round 3, a harm-class gate over the rebuild and that build together, with an adversary and every finding verified; then the mutant pass (the close block's "The mutant pass"); then walk 8: walk 7's 14 targets plus the plan's three (its Goal Capsule), with the close block's "Walk 8's reads", then its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
+▶ **START HERE (2026-11-15, b9-4's close):** the rebuild's review round 3, a harm-class gate over the rebuild and the survivor-path build (`490afa87`) together, with an adversary and every finding verified, its fix commits behind the close block's "The review's gates"; then the mutant pass (the close block's "The mutant pass"); then walk 8: walk 7's 14 targets plus the survivor plan's three (its Goal Capsule), with the close block's "Walk 8's reads", then its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,8 +94,8 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **the survivor-path build, then the rebuild's review round 3 and its mutant pass, then walk 8** (START HERE;
-     the survivor build's plan is `docs/plans/features/typed-below-survivor-path-build-spec.md`; the rebuild's plan is
+     ▶ NEXT: **the rebuild's review round 3 and its mutant pass, then walk 8** (START HERE; the survivor build landed in
+     `490afa87`, its plan `docs/plans/features/typed-below-survivor-path-build-spec.md`; the rebuild's plan is
      `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, and the register's Tier 0 retype entry
      carries the council's NEGATIVE on the round review's x_t metric). Its research, the council's drafts and full result sit in
      `b9-build2-surplus\u11-wholewindow\` (`research\witnesses.md` holds every witness's per-year engine figures); the
@@ -260,27 +260,27 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-14 (b9-3: the survivor-path plan; b9-2's block pruned into it):**
+**SESSION 2026-11-15 (b9-4: the survivor-path build; b9-3's block pruned into it):**
 
 State at close:
-- `22ac78dd`: the survivor-path plan, `docs/plans/features/typed-below-survivor-path-build-spec.md` (U1 to U7): planned, confidence check passed (KTD9's premium premise verified at source), checked at full depth (coherence, feasibility, adversarial, scope, design) and read by the three blind readers (`wf_a95a1029-7d8`, all three "after-fixes"; the 12 misleads fixed, the 20 minors listed in the plan's "Minor faults"). No `src` change this session.
-- Gates: `pnpm verify:doc-stats` exit 0 on `22ac78dd`'s tree and after this close. CI green on `6b63c697` and `6456f642`.
-- Flagged for Briggsy's digest: the plan's one departure from the council's letter (KTD4: X rounds the raw survivor-charge difference up, instead of snapping each charge to the cent first, which the adversary showed prints a cent-grain draw difference a dollar low), beside the council's mortality words.
+- `490afa87`: the survivor-path build (U1 to U7), closing the register's Tier 0 *The typed-below line's comparisons are the all-alive picture's…*; its death-path proof holds X on all six council households (no Stop fired).
+- Gates on its tree, each exit 0: typecheck, lint, the full suite pinned, `verify:doc-stats`, build, `verify:fit` pinned, the sweep `survivor` against `ww3` (47 of 47 identical; `ww3` stays the baseline).
+- For Briggsy's digest: KTD4's departure from the council's literal X (each charge snapped first printed a dollar low), and the council's mortality words (walk 8 reads them).
 
-Next is START HERE. Successor: b9-4 (handoff mode).
+Next is START HERE. Successor: b9-5 (handoff mode).
 
 **Check at start:**
-- CI on `22ac78dd` and on this close's own commit: `gh run list --commit <full sha>` for each (`git log -2 --format=%H -- .`);
+- CI on `490afa87` and on this close's own commit: `gh run list --commit <full sha>` for each (`git log -2 --format=%H -- .`);
 - the ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 
-**The build's inputs:** the plan is the whole scope; read its Goal Capsule, then each unit with its KTDs. Records in `<B>\u11-wholewindow\survivor-plan\`: `repo-research.md` (every host, renderer, pin and witness, cited by line), `spec-flow.md` (every household shape and read state), `gate-probe.mts` (the gate and X through the real route; run from the project dir with `pnpm exec tsx --tsconfig ./tsconfig.json <file>`) and `doc-review-r1\` (the five reviewers' returns and the resolved review). The council's record and the C-on-a-budget construction U1 copies: `<B>\u11-wholewindow\council-survivor\` (`result.json`, `clerk-death-allkinds.mts`'s `budgetOf`, `ref3-death-count.mts`). Round 2's `u4-words.mts` in `<B>\u11-wholewindow\review-r2\` prints every witness's line on every host: rerun it after U4 to read the new words.
+**Round 3's inputs:** its scope is the rebuild (`c8fd5bc8` through `6b63c697`) and the survivor build (`490afa87`) together, harm-class: a sentence that reads rosier than the engine on some path the engine draws. The survivor build's records: `<B>\u11-wholewindow\survivor-plan\` (`repo-research.md`, `spec-flow.md`) and `<B>\u11-wholewindow\council-survivor\`. Every composed line on every witness and host, printed by the shipped composer: `<B>\u11-wholewindow\survivor-build\survivor-probe.mts` (run from the project dir with `pnpm exec tsx --tsconfig ./tsconfig.json <probe> <outfile>`; `probe-tree-u4.txt` beside it is its output at the build, and `u6-tsconfig.json` the scratch e2e typecheck config); the new households are `typedBelowWitnesses.ts`'s `councilBudgetHousehold`, `TM_ALL_STICKY_BUDGET`, `PENSION_ALL_STICKY_BUDGET` and `SURVIVOR_GATE_WITNESSES`.
 
 **The review's gates** (each fix commit; each heavy run alone, in sequence, pinned to the P-cores from PowerShell; `<B>` is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus`):
 1. Before the first edit: `git rev-parse HEAD`, the re-anchor base.
 2. After the last edit: `pnpm typecheck`, `pnpm lint`, and every edited e2e spec through a scratch tsconfig (landmine below).
-3. `pnpm doc:reanchor <base>` dry, each move classified (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry output>`), then `--apply` once; restore `e2e/held/fit-24px-measurements.md` from HEAD and refuse the moves of the quoted examples in `docs/landmines.md` (the "two new register entries shifted `docs/backlog.md:1975`…" lines) and in this block's own step 3; then the full suite pinned; then `pnpm verify:doc-stats` (retype the count in `README.md` and `docs/roadmap.md`).
+3. `pnpm doc:reanchor <base>` dry, each move classified (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry output>`), then `--apply` once; restore `e2e/held/fit-24px-measurements.md` from HEAD and refuse the moves of the quoted examples in `docs/landmines.md` (the "two new register entries shifted `docs/backlog.md:1975`…" lines) and in this block's own step 3, and restore `docs/council-log.md` and insight 136 from HEAD where the commit edits neither; then the full suite pinned; then `pnpm verify:doc-stats` (retype the count in `README.md` and `docs/roadmap.md`).
 4. `pnpm build` and `pnpm verify:fit`, pinned.
 5. The sweep: `pnpm exec tsx <B>\tools\sweep.mts <label> --today=20758`, then `node <B>\tools\idcheck.mjs <label> ww3` (exit 0; the run takes over 10 minutes: launch it in the background). A row in `<B>\README.md`'s table.
 
@@ -296,14 +296,13 @@ change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_
 - The survivor build's words, cold (the council's item 6 and the plan's Deferred list): "you're both alive" on the opener, the year subject and the three scoped leads; the coda ("If only one of you is alive", both forms); C's `same` segments under the scoped lead beside a scoped short span; "That is the whole gap…" right after "plus any income tax on it"; a coda whose printed figures subtract to $1 under its X (the round-up); the departure from the app's "on your own" survivor frame (`assumptionSurvivorRatioLabel`); the crowned seed's coda, which its own crown may never reach.
 - **The pension seed's seat in the SHEET has no harness frame:** the `vault:` / `seed:` walk stops at the Result, so walk 8's "pension seed on the gate, the Result and the sheet" needs the sheet's seat captured (the Result's "Update your figure for a working year" → the panel's left-over seat). Add the step to the vault walk or capture it by hand (b9-2's `seat-pension-*.png` is the shape).
 
-**LANDMINES (the survivor build, round 3, the mutant pass and walk 8):**
-- **Every existing witness and dev seed opens the gate** (all descend from `stillWorking`: Alex 58 working, Sam 60 retired; Sam can die from 2032): every typed-below pin on every host moves. Retype the vitest pins by hand, never composed from the slots (they are hand-typed on purpose).
-- **A gate-off witness derived from `stillWorking` must lower the retired Sam's `retirementAge` to at or below his `currentAge`**: left at 58, a Sam of 55 to 57 reads as still working, and Alex's possible death opens the gate.
-- **The window read's `unknown` arm is unreachable by any draft** (its docblock; a horizon at the window top reads `null`): never write a test that demands it.
+**LANDMINES (round 3, the mutant pass and walk 8):**
+- **Every existing witness and dev seed opens the survivor gate** (all descend from `stillWorking`: Alex 58 working, Sam 60 retired; Sam can die from 2032): only `SURVIVOR_GATE_WITNESSES.sam56` and `.youngerNonWorker` print the gate-off words. A fix to a span slot moves every pin on every host; retype the vitest pins by hand, never composed from the slots.
+- **A gate-off witness derived from `stillWorking` must lower the retired Sam's `retirementAge` to at or below his `currentAge`**: left at 58, a Sam of 55 to 57 reads as still working, and Alex's possible death opens the gate.- **The window read's `unknown` arm is unreachable by any draft** (its docblock; a horizon at the window top reads `null`): never write a test that demands it.
 - **`NotePartsBlock` draws the door inside the segments' `<dl>`**: the coda's own list goes after that list and before the doorless button, and a coda never sits beside a door (KTD6).
 - **x_t is refuted** (the rebuild plan's KD1; the register entry's NEGATIVE): a reviewer or reader who re-proposes x_t, "at least" or a "still working" condition on a credit re-derives a refuted finding. The survivor council's scope is "you're both alive", on a COMPARISON's head noun; credit sentences stay unconditioned.
 - **A still-short span's difference is each cash on the cent, subtracted, rounded up** (`stillShortDifferenceDollars`); every other kind reads the printed figures. The register's V9 NEGATIVE forbids the printed subtraction and the raw-difference snap. The coda's X is not that rule: it rounds the raw survivor-charge difference up (the plan's KTD4).
-- **Every span figure is the ALL-ALIVE picture's** until the survivor build lands: no review round may call a comparison "true on every path".
+- **Every span figure is the ALL-ALIVE picture's**; since `490afa87` the comparisons say "you're both alive" and the death path's bound is the coda's X alone (the death-path proof holds it on six households, one seed). A reviewer who calls a span "true on every path", or asks a span to carry a survivor figure, re-derives a ruled shape (council `wf_dfb7949b-4a7`).
 - **The line's and the seat's words read `workingYearTypedBelowWindow`'s spans, never a listed row, a retyped `min` or cap, or `checkAtQuote`**; `null` means no spans, not no line (the counts sentence still prints), `unknown` keeps the fail-safe `workingCostTypedBelowAdds`.
 - **W's stale line shares `checkAtQuote` / `laterShortOf` / `shortRunFrom`** (KTD5): touching that core changes W-stale words on four seeds; its holes are the widened V3 register entry's, never a fix inside a typed-below round.
 - **One composer feeds every host** (the Result's slot, the gate, the seat in the sheet AND on the money-picture step): a change reds the fit gate's `PAY_CHECK_UNLOCKS` (TM's and the pension's doorless blocks and their seat blocks in the open sheet), the coordinate-tap arm, `reentry.test.tsx`, `resultPayCheckLine.test.tsx`, `IntakeApp.test.tsx` and the caddie `intake:typedbelow` arm. The unit suite never runs Playwright: grep `e2e/` for every slot a round renames.
@@ -1086,6 +1085,7 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - A red team that clears a feedback channel by reading one term of an additive sum can miss the others: the survivor council's angle (1) cleared IRMAA because the working-year MAGI override is the same for both answers, but the history write also adds the computed gross-up's MAGI (`src/engine/taxOverlay.ts`, the post-branch write). The plan's spec-flow pass caught it (b9-3); the coda held for a different reason (no living member is Medicare-enrolled in a survivor working year), and the all-alive half was filed for the register. Read every term of a sum before calling a channel closed.
 - A witness derived from a seed by changing only its ages inherits the fields whose meaning depends on age: the survivor plan's gate-off witnesses (a retired Sam aged 55 to 57) kept `stillWorking`'s `retirementAge` 58, so the engine would read Sam as still working and Alex's possible death would open the gate. The builder reader caught it from the plan (b9-3, `wf_a95a1029-7d8`). Re-state every age-keyed field (stop age, birth year, claim age) when deriving a witness.
 - A plan that departs from a ruling's letter to keep the ruling's own bar must name the departure where its precedence line can see it: the survivor council ruled X as each charge snapped to the cent then rounded up; the adversary reproduced that rule printing a dollar under the cent-grain draw difference, so the plan rounds the raw difference up, and the rules reader showed that, unnamed, the plan's "the council wins on a conflict" would send the builder back to the rosy formula (b9-3, KTD4).
+- An idle helper's last status line is not its result: the U4 pins helper went idle on "waiting on the final combined run" and never reported; the pilot relayed that line to Briggsy as live work about 16 hours later, and his "I can't see anything running" was Earth (no vitest process existed). Before saying a job runs, read the process list and the helper's own result; a helper idle with no result is re-checked by running its gate yourself (b9-4: its suites were green, 706 of 706).
 
 
 ## Driving the app

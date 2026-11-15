@@ -6,23 +6,22 @@
 > handoffs) was pruned 2026-09-27 and lives at commit **`af491a71`** — `git show af491a71:projects/family-feud/TODO.md`.
 > Read it before the 2027 draft, not before.
 
-## ▶ START HERE — as of Wed 2026-11-11 (week 10)
+## ▶ START HERE — as of Sun 2026-11-15 (week 10, game day)
 
 **We are PoppaBriggsy, roster 3, *Saquon Deez Nuts*. `briggsy007` is HUNTER** (CLAUDE.md landmine).
 
 - **Record 5-4 (4th)**; week 9 beat kblizzy23 120.78–118.76. **Week 10 vs Kaeperni.** Remaining: wk11 RMonk9 ·
   wk12 MattiICE23 · wk13 BuschLight420 · wk14 Cltchiefs.
-- **Wed 11-11 10:30–10:33 ET, on Briggsy's word, verified on `/rosters`:** dropped Michael Wilson (neck fracture,
-  season over) and Seth McGowan; Tate and Stevenson moved OUT of IR (neither was eligible: Tate Questionable,
-  Stevenson Doubtful; this league's IR takes Out only). **Lineup: Maye · Taylor, C. Brown · London, Collins · Fannin ·
-  FLEX Tate, Flowers · Shrader · JAX.** Bench Goff, Mahomes, Swift (bye), Stevenson, White, Strange. 16 players, both
-  IR slots empty. Three-site about 138.5 vs Kaeperni 99.2 as set. Detail: `temp/week10-moves-log.md` (gitignored).
-- 🚨 **Tate check by Thu 11-12 8:15 PM ET.** He is Questionable (shoulder). DNP Wed + Thu → White takes his FLEX
-  before WSH @ NYG kicks off. If he is fine until Sunday and then sits, Strange is the swap (same 1:00 game, JAX @ TEN).
-  **Nothing runs Thursday; a session has to look.** Maye locks Sun 9:30 AM (Munich); Mahomes (elbow sprain, expected
-  to play) is the 1:00 fallback.
-- **When NE rules Stevenson Out (likely Fri 11-13), move him back to IR**: that frees one bench spot for an add.
-  Briggsy names the add. McGowan clears waivers Thu.
+- **Sun 11-15 09:20–09:35 ET, on Briggsy's word, verified on `/rosters`:** Tate and Hockenson (both Out) to IR; added
+  Deebo Samuel Sr. and the BAL DEF with no drops. **Lineup: Maye · Taylor, C. Brown · London, Collins · Fannin ·
+  FLEX Deebo, Flowers · Shrader · BAL.** Bench Goff, Mahomes, Swift (bye), Stevenson, Strange, JAX. 16 active + 2 IR,
+  full. Sleeper expected 143.0 vs Kaeperni 122.5 at 09:35. (Fri 11-13: claimed Hockenson, dropped White.) Research
+  and its refutations: workflow `wf_37f8e94e-fc4`, four seats.
+- 🚨 **Today ~2:55 PM ET: SF inactives.** If Deebo is inactive, drop him and add Ryan Flournoy (DAL WR, 4:25; DAL TE
+  Ferguson is out) before 4:25. The 15:00 gameday check writes it to GAMEDAY.md; **a session has to look.**
+- 🚨 **IR exit, week 11:** when Tate's or Hockenson's tag changes from Out, Sleeper silently blocks EVERY lineup swap
+  until he leaves IR (skill: *An ineligible man in an IR slot*), and leaving IR needs an open bench spot. The roster is
+  full, so **drop the BAL DEF after MNF** (a one-week rental; JAX is the week-11 DEF at NYG). Briggsy names the drop.
 - **Kaeperni's offer (A.J. Brown + Tucker Kraft for Zay Flowers) was DECLINED 10-22**; the Kittle hold is in Ranked
   next.
 - **`scripts/trade_eval.py`:** the fixture `tests/fixtures/trade_eval_kaeperni_20261022.json.gz` can never be
@@ -38,7 +37,7 @@
 ## Ranked next
 
 1. **Week 10 (Thu 11-12 through Mon 11-16), then the trade deadline (week 11).**
-   - **Thursday:** the Tate check in START HERE. **Friday:** Stevenson back to IR if Out, then the add.
+   - **Sunday:** the 2:55 Deebo check in START HERE. **Tuesday:** BAL off, Tate/Hockenson out of IR when cleared.
    - **Kittle from Kaeperni — the 10-28 HOLD STANDS until Briggsy lifts it** (shown the finding 11-08). The 11-08
      opener was **Zay Flowers + Brenton Strange for Kittle** (us +13.4 / +14.8 three-site / Sleeper, Kaeperni
      +2.6 / +4.4). **Those numbers are stale**: Stevenson is hurt, Wilson and McGowan are gone, Tate is back. Re-price
@@ -70,8 +69,8 @@
    Re-derive after any roster move):
    - **Never trade Hunter a RB or any flex body.** The 10-27 trade search left him out on purpose.
    - **Week 10:** Swift. · **Week 12:** nobody.
-   - **Week 11 is the big one:** Maye, London, Fannin, Stevenson. Mahomes (added 11-08) starts at QB; Strange covers
-     TE; the JAX DEF (added 11-04 for this week, at NYG) covers DEF. Hunter loses Stafford and Myers.
+   - **Week 11 is the big one:** Maye, London, Fannin, Stevenson. Mahomes (added 11-08) starts at QB; Deebo (SF, added
+     11-15) covers WR; Strange covers TE; the JAX DEF (added 11-04 for this week, at NYG) covers DEF. Hunter loses Stafford and Myers.
    - **Week 13:** Taylor, Flowers, Shrader (stream a K). · **Week 14:** nobody (Wilson and McGowan dropped 11-11).
    - Hunter later: wk 10 D. Smith · wk 13 G. Wilson, B. Allen, BAL DEF · wk 14 McBride, Allgeier.
    - Trade deadline **week 11**. Playoffs 6 of 8, weeks 15-17.

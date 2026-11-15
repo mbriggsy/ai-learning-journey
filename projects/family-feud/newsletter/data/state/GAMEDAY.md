@@ -382,3 +382,37 @@ vs **kblizzy23** (roster 7). Expected: us 133.5, them 133.1 — live points for 
 Our starters: 3 done, 4 playing, 3 to go · theirs: 0 done, 5 playing, 5 to go.
 
 Nothing to do. Every starter is untagged, every slot filled, no bench body projects 2+ over a starter he could replace.
+
+---
+
+## WEEK 10 GAME DAY — 2026-11-14 20:00:04
+
+vs **Kaeperni** (roster 5). Expected: us 130.7, them 122.5 — live points for games under way, projections for the rest. On the board now: 0.0 / 7.4.
+Our starters: 0 done, 0 playing, 10 to go · theirs: 1 done, 0 playing, 9 to go.
+
+### 🚨 STARTER NOT PLAYING — Carnell Tate (FLEX)
+
+Carnell Tate (WR, TEN) (no projection -- Sleeper pulls it for a player who is out) proj 0.0 [Out: Shoulder] is tagged Out in the FLEX slot.
+Start instead: Brenton Strange (TE, JAX) vs TEN proj 9.9
+
+### ℹ OPPONENT'S TAGGED STARTERS
+
+WR: A.J. Brown (WR, NE) vs DET proj 14.2 [Questionable: Knee]
+FLEX: Denzel Boston (WR, CLE) vs HOU proj 10.4 [Questionable: Toe]
+
+---
+
+## WEEK 10 GAME DAY — 2026-11-15 08:00:03
+
+vs **Kaeperni** (roster 5). Expected: us 131.5, them 122.7 — live points for games under way, projections for the rest. On the board now: 0.0 / 7.4.
+Our starters: 0 done, 0 playing, 10 to go · theirs: 1 done, 0 playing, 9 to go.
+
+### 🚨 STARTER NOT PLAYING — Carnell Tate (FLEX)
+
+Carnell Tate (WR, TEN) (no projection -- Sleeper pulls it for a player who is out) proj 0.0 [Out: Shoulder] is tagged Out in the FLEX slot.
+Start instead: Brenton Strange (TE, JAX) vs TEN proj 10.0
+
+### ℹ OPPONENT'S TAGGED STARTERS
+
+WR: A.J. Brown (WR, NE) vs DET proj 14.4 [Questionable: Knee]
+FLEX: Denzel Boston (WR, CLE) vs HOU proj 10.6 [Questionable: Toe]

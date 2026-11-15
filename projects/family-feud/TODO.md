@@ -17,6 +17,9 @@
   FLEX Deebo, Flowers · Shrader · BAL.** Bench Goff, Mahomes, Swift (bye), Stevenson, Strange, JAX. 16 active + 2 IR,
   full. Sleeper expected 143.0 vs Kaeperni 122.5 at 09:35. (Fri 11-13: claimed Hockenson, dropped White.) Research
   and its refutations: workflow `wf_37f8e94e-fc4`, four seats.
+- 🚨 **Maye hurt his ankle in week 10** (sacked by Hutchinson, 1st quarter, ESPN play-by-play; ruled out per a
+  grounding summary, unverified at a primary source). NE's bye is week 11, when Mahomes starts anyway. **Before week 12:
+  re-pull Maye's status**; if he's Out, he goes to IR (that needs an open IR slot) and Mahomes or Goff starts.
 - 🚨 **Today ~2:55 PM ET: SF inactives.** If Deebo is inactive, drop him and add Ryan Flournoy (DAL WR, 4:25; DAL TE
   Ferguson is out) before 4:25. The 15:00 gameday check writes it to GAMEDAY.md; **a session has to look.**
 - 🚨 **IR exit, week 11:** when Tate's or Hockenson's tag changes from Out, Sleeper silently blocks EVERY lineup swap

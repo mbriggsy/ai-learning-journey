@@ -416,3 +416,14 @@ Start instead: Brenton Strange (TE, JAX) vs TEN proj 10.0
 
 WR: A.J. Brown (WR, NE) vs DET proj 14.4 [Questionable: Knee]
 FLEX: Denzel Boston (WR, CLE) vs HOU proj 10.6 [Questionable: Toe]
+
+---
+
+## WEEK 10 GAME DAY — 2026-11-15 11:30:03
+
+vs **Kaeperni** (roster 5). Expected: us 132.3, them 114.8 — live points for games under way, projections for the rest. On the board now: 3.0 / 7.4.
+Our starters: 0 done, 1 playing, 9 to go · theirs: 1 done, 1 playing, 8 to go.
+
+### ℹ OPPONENT'S TAGGED STARTERS
+
+FLEX: Denzel Boston (WR, CLE) vs HOU proj 10.6 [Questionable: Toe]

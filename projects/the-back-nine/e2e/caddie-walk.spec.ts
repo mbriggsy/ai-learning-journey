@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type CDPSession, type Page } from '@playwright/test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { REAL, REAL_DPR, PHONE, PHONE_DPR, FINAL_TIER_MS, advanceIntakeTo, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
@@ -392,7 +392,50 @@ const FOLD_TARGETS = [
   '.rec-note',
 ] as const
 
+/**
+ * One state's bundle, re-captured whole ONCE when a late re-run replaces a captured element mid-capture
+ * (walk 8, b9-1, 2026-11-16: under the 40-target load `intake:kept` REAL's `result-kept-stale-both` failed in the
+ * CVD chart loop, "Element is not attached to the DOM": a commit landed after the settled frame and re-mounted
+ * the chart; the same target passed alone). Retrying only the failed crop would mix two frames in one bundle (the
+ * copy and aria from before the commit, the crop from after), so the files this call wrote are removed, the Result
+ * is waited back to its settled final frame, and the whole state is captured again. The re-capture is never
+ * silent: `recaptured.txt` in the state's folder and a console line say it happened, and a second detach fails
+ * the walk (the config's retries-0 law: a flaky capture is seen, never retried into a different frame). What
+ * commits after the settled frame is not measured here (the landmine names it).
+ */
 async function captureState(page: Page, dir: string): Promise<void> {
+  const before = new Set(fs.existsSync(dir) ? fs.readdirSync(dir) : [])
+  // ONE color-vision session for the whole state, owned here, so a throw mid-arm can never leave the page under an
+  // arm: the re-capture's viewport.png would be taken through it.
+  const cdp = await page.context().newCDPSession(page)
+  try {
+    await captureStateOnce(page, dir, cdp)
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    if (!/not attached to the DOM|detached from the DOM/i.test(message)) throw e
+    await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
+    for (const f of fs.readdirSync(dir)) if (!before.has(f)) fs.rmSync(path.join(dir, f), { recursive: true, force: true })
+    if ((await page.locator('main.result').count()) > 0) {
+      await expect(settledResult(page), 'after a late re-run, the Result never settled again').toBeAttached({ timeout: FINAL_TIER_MS })
+    }
+    console.log(`[caddie] re-captured ${dir} whole: a late re-run replaced an element mid-capture (${message.split('\n')[0]})`)
+    await captureStateOnce(page, dir, cdp)
+    fs.writeFileSync(
+      path.join(dir, 'recaptured.txt'),
+      [
+        'This state was captured twice. The first capture failed because an element was replaced mid-capture (a late',
+        're-run after the settled frame), so its files were removed and every file here is from the second capture.',
+        '',
+        `First failure: ${message.split('\n')[0]}`,
+      ].join('\n'),
+    )
+  } finally {
+    await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' }).catch(() => {})
+    await cdp.detach().catch(() => {})
+  }
+}
+
+async function captureStateOnce(page: Page, dir: string, cdp: CDPSession): Promise<void> {
   fs.mkdirSync(dir, { recursive: true })
   // The spend lane (2026-09-26): the verdict clause's real figure lands a beat AFTER the final
   // stamp. A reader reads the SETTLED sentence, so every capture waits the pending clause out — the
@@ -459,7 +502,6 @@ async function captureState(page: Page, dir: string): Promise<void> {
 
   // 2) The above-fold frame + its color-vision arms, all at the SAME pinned scroll origin.
   await page.screenshot({ path: path.join(dir, 'viewport.png'), scale: 'css' })
-  const cdp = await page.context().newCDPSession(page)
   for (const [name, type] of CVD_ARMS) {
     await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
     await page.screenshot({ path: path.join(dir, `cvd-${name}.png`), scale: 'css' })
@@ -496,7 +538,7 @@ async function captureState(page: Page, dir: string): Promise<void> {
     ) {
       // A region taller than its sheet's visible box crops in segments; everything else (every
       // page-level region, and a sheet row that fits) keeps the plain element crop.
-      if (!(await captureTallSheetRegion(page, target, dir, name, cvd))) {
+      if (!(await captureTallSheetRegion(page, target, dir, name, cvd ? cdp : null))) {
         await target.screenshot({ path: path.join(dir, `crop-${name}.png`), scale: 'device' })
         // `cvd` rides BOTH branches (the whole-file review, H-D9): a W row face that fits its box (the
         // stale and unknown faces carry no money picture) reached only this branch, and the flag was
@@ -538,7 +580,6 @@ async function captureState(page: Page, dir: string): Promise<void> {
     }
     if (emulating) await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
   }
-  await cdp.detach()
   await page.evaluate(() => window.scrollTo(0, 0))
 }
 
@@ -594,10 +635,11 @@ async function captureCvdRegion(
  * Each segment sets the sheet's OWN scroller (the nearest scrolling ancestor — `role="dialog"` IS
  * that element) and clips the page frame to the region ∩ the scroller's visible box, at device
  * scale: `crop-<name>-1.png`, `-2.png`, … top to bottom, overlapping by `SEGMENT_OVERLAP_PX` so a
- * line on a cut reads whole in one of them. With `cvd`, each segment is also captured under every
- * CVD arm (`cvd-<arm>-<name>-<n>.png`). The page is pinned to scroll 0 first, so a clip's viewport
+ * line on a cut reads whole in one of them. With a session (`cdp`: `captureState`'s own, passed
+ * where the crop's `cvd` flag is on), each segment is also captured under every CVD arm
+ * (`cvd-<arm>-<name>-<n>.png`). The page is pinned to scroll 0 first, so a clip's viewport
  * coordinates are its page coordinates (the sheet is fixed). The scroller's own scrollTop is
- * restored afterwards: later crops expect the frame they were written against.
+ * restored afterwards, on a throw too: later crops expect the frame they were written against.
  *
  * Returns false, capturing nothing, when the region has no scrolling ancestor or fits its box —
  * the caller keeps the plain element crop (and, with `cvd`, takes that crop under every arm too).
@@ -609,7 +651,7 @@ async function captureTallSheetRegion(
   target: ReturnType<Page['locator']>,
   dir: string,
   name: string,
-  cvd: boolean,
+  cdp: CDPSession | null,
 ): Promise<boolean> {
   const fits = await target.evaluate((el) => {
     let sc = el.parentElement
@@ -639,41 +681,46 @@ async function captureTallSheetRegion(
     }
   })
   const step = boxHeight - SEGMENT_OVERLAP_PX
-  const cdp = cvd ? await page.context().newCDPSession(page) : null
-  for (let n = 1, offset = 0; offset < regionHeight; n++, offset += step) {
-    await scroller.evaluate((sc, top) => {
-      sc.scrollTop = top
-    }, regionTop + offset)
-    await settleLayout(page)
-    const clip = await target.evaluate((el) => {
-      const sc = el.closest('[data-caddie-scroller]')!
-      const r = el.getBoundingClientRect()
-      const s = sc.getBoundingClientRect()
-      const visTop = s.top + sc.clientTop
-      const top = Math.max(r.top, visTop)
-      const bottom = Math.min(r.bottom, visTop + sc.clientHeight)
-      const left = Math.max(r.left, s.left)
-      const right = Math.min(r.right, s.right)
-      return { x: left, y: top, width: right - left, height: bottom - top }
-    })
-    if (clip.height <= 0 || clip.width <= 0) break
-    await page.screenshot({ path: path.join(dir, `crop-${name}-${n}.png`), clip, scale: 'device' })
-    if (cdp !== null) {
-      for (const [armName, type] of CVD_ARMS) {
-        await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
-        await page.screenshot({ path: path.join(dir, `cvd-${armName}-${name}-${n}.png`), clip, scale: 'device' })
+  try {
+    for (let n = 1, offset = 0; offset < regionHeight; n++, offset += step) {
+      await scroller.evaluate((sc, top) => {
+        sc.scrollTop = top
+      }, regionTop + offset)
+      await settleLayout(page)
+      const clip = await target.evaluate((el) => {
+        const sc = el.closest('[data-caddie-scroller]')!
+        const r = el.getBoundingClientRect()
+        const s = sc.getBoundingClientRect()
+        const visTop = s.top + sc.clientTop
+        const top = Math.max(r.top, visTop)
+        const bottom = Math.min(r.bottom, visTop + sc.clientHeight)
+        const left = Math.max(r.left, s.left)
+        const right = Math.min(r.right, s.right)
+        return { x: left, y: top, width: right - left, height: bottom - top }
+      })
+      if (clip.height <= 0 || clip.width <= 0) break
+      await page.screenshot({ path: path.join(dir, `crop-${name}-${n}.png`), clip, scale: 'device' })
+      if (cdp !== null) {
+        for (const [armName, type] of CVD_ARMS) {
+          await cdp.send('Emulation.setEmulatedVisionDeficiency', { type })
+          await page.screenshot({ path: path.join(dir, `cvd-${armName}-${name}-${n}.png`), clip, scale: 'device' })
+        }
+        await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
       }
-      await cdp.send('Emulation.setEmulatedVisionDeficiency', { type: 'none' })
+      // A scroller clamped at its end cannot bring a later offset up; the region's bottom is in this frame.
+      const atEnd = await scroller.evaluate((sc) => sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1)
+      if (atEnd) break
     }
-    // A scroller clamped at its end cannot bring a later offset up; the region's bottom is in this frame.
-    const atEnd = await scroller.evaluate((sc) => sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1)
-    if (atEnd) break
+  } finally {
+    // Restored even on a throw (a late re-run's detach, `captureState`), so the re-capture's frames are the ones the
+    // walk set up. A querySelector, never the locator: a locator waits out its timeout on a scroller the re-run replaced.
+    await page.evaluate((top) => {
+      const sc = document.querySelector('[data-caddie-scroller]')
+      if (sc === null) return
+      sc.scrollTop = top
+      sc.removeAttribute('data-caddie-scroller')
+    }, startScrollTop)
   }
-  if (cdp !== null) await cdp.detach()
-  await scroller.evaluate((sc, top) => {
-    sc.scrollTop = top
-    sc.removeAttribute('data-caddie-scroller')
-  }, startScrollTop)
   return true
 }
 

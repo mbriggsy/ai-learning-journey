@@ -816,7 +816,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     both harnesses model it with a wipe). ENLARGED TEXT: `Page.setFontSizes` re-probed 2026-09-04 against
     the repo's chromium-1223 — the param shape is `{ fontSizes: { standard: 24, fixed: 24 } }` (the flat
     form is rejected); it propagates because the type scale is rem/clamp with ZERO literal-px `font-size`
-    rules; the `newCDPSession` pattern is at `caddie-walk.spec.ts:449`, and the shipped arm's own helper is `raiseDefaultFont` (`vertical-fit.spec.ts:494-507`); re-run the 8 REAL+TIER one-frame
+    rules; the `newCDPSession` pattern is at `caddie-walk.spec.ts:410`, and the shipped arm's own helper is `raiseDefaultFont` (`vertical-fit.spec.ts:494-507`); re-run the 8 REAL+TIER one-frame
     arms (4 spine seeds × 2), not all 52; PROTECTED = `vertical-fit.spec.ts:17-21`.
 
 ### Tier 3 — Briggsy's call

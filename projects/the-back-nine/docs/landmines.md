@@ -346,7 +346,7 @@ tests
   and each REVIEW line (a citation inside a modified hunk is never moved), and move the second number of a comma pair by hand
   (the tool moves only the first).
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:762-772`
-  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:987-989`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
+  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1034-1036`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
   1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:3015-3017`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
@@ -556,12 +556,14 @@ is a guess a verifier must check, never a fact
   existing server locally (`reuseExistingServer: !process.env.CI`), and a `TaskStop`ped `vite` keeps serving. The
   11-09 `intake:kept` REAL failure passed three runs on fresh servers, with zero DOM mutations after the settle
   (`b9-build2-surplus\u11-walk6\panel\CHAIR-NOTES.md`, its foot).
-- **(b9-1, 11-16) Under a 40-target walk, the CVD chart loop can race the Result's late rerun.** On walk 8,
-  `intake:kept` REAL failed at `result-kept-stale-both` in `captureState`'s `cvd-<arm>-<chart>` crop ("Element is not
-  attached to the DOM": the rerun replaced the chart mid-crop), and passed alone (`--grep "intake:kept at REAL"`, the
-  same `CADDIE_RUN`, the failed partial deleted first). Re-capture the one target alone before reading it as product.
-  The harness fix is owed (walk 8's card): re-query the chart and retry once on a detach, or wait out the rerun before
-  the CVD loop.
+- **(b9-1, 11-16; b9-2 the same day) Under a 40-target walk, a commit can land after the settled frame and replace a
+  captured element.** On walk 8, `intake:kept` REAL failed at `result-kept-stale-both` in the CVD chart crop ("Element
+  is not attached to the DOM") and passed alone. Since b9-2, `captureState` (`e2e/caddie-walk.spec.ts`) removes the
+  files that capture wrote, waits the Result back to its settled final frame and captures the whole state ONCE more,
+  so a bundle never mixes two frames; it writes `recaptured.txt` in that state's folder and logs a line. Read a
+  `recaptured.txt` as a late commit on that state: its words may differ from what the walk asserted before the capture,
+  so check them against the walk's own assertions. A second detach still fails the walk. What commits late is
+  unmeasured; a fix to the product starts by recording which run commits after the settled frame.
 - **(b9-8, 11-09) A seat's arithmetic can borrow the wrong quote.** `stillWorking` answers
   `employerPlanCoversRetiredMember: true` (`src/ui/devSeeds.ts`), so the pay-side premium is entered nowhere; walk 5's
   hunter priced it from the $1,100 after-work reference quote. Check the seed's own fields before a refuter carries a figure.

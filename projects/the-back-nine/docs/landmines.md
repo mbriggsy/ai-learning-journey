@@ -58,6 +58,7 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
+- **(b9-1, 11-15) A gate piped through `grep … | head` loses its exit code:** `pnpm verify:doc-stats 2>&1 | grep … | head -4 && git commit …` committed and pushed a red (`1a12e706`, START HERE over its cap), since the `&&` read `head`'s 0. Write the gate's output to a file, read `$?` (or `PINNED_EXIT`), and only then commit.
 - **(b9-5, 11-13) PowerShell's `"EXIT $LASTEXITCODE" | Out-File -Append <log>` writes UTF-16** into a UTF-8 log, so a
   later `grep "^EXIT"` never matches and a Monitor waiting on that line expires silent. Append with
   `Add-Content -Encoding utf8`, and read a run's verdict from its own count line too.
@@ -237,6 +238,8 @@ even when one exists; the plain `/` route is the Unlock check.
 
 ## The unit test suite
 
+- **(b9-6, 11-15) A gate-off witness derived from `stillWorking` must lower the retired Sam's `retirementAge` to at or below his `currentAge`**: left at 58, a Sam of 55 to 57 reads as still working, and Alex's possible death opens the survivor gate (`SURVIVOR_GATE_WITNESSES`, `src/intake/__tests__/typedBelowWitnesses.ts`).
+- **(b9-6, 11-15) The typed-below window read's `unknown` arm is unreachable by any draft** (its docblock in `src/intake/workingYearLeftOver.ts`; a horizon at the window top reads `null`): never write a test that demands it.
 - **(b9-5, 11-15) Claude Code reaps a heavy BACKGROUND shell when the machine runs low on memory while the session
   idles** (a different killer from the OS reaper below): the pinned full suite launched with `run_in_background` died at
   its start line (7.4 GB of 32 GB free just after, ten Claude sessions holding their MCP servers and up to ~1.2 GB of tsserver each). The
@@ -518,6 +521,8 @@ is a guess a verifier must check, never a fact
 
 ## Copy and copyGuard
 
+- **(b9-6, 11-15) The typed-below line's and seat's words read `workingYearTypedBelowWindow`'s spans, never a listed row, a retyped `min` or cap, or `checkAtQuote`**; `null` means no spans, not no line (the counts sentence still prints), and `unknown` keeps the fail-safe `workingCostTypedBelowAdds`.
+- **(b9-6, 11-15) W's stale line shares `checkAtQuote` / `laterShortOf` / `shortRunFrom`** (the rebuild's KTD5): touching that core changes W-stale words on four seeds; its holes are the widened V3 register entry's, never a fix inside a typed-below round.
 - **(b9-7, 11-13) A refuter's chosen HOST for new words can break R6 even when the words are right.** Walk 7's R2 put
   the at-quote sentences at the end of the W row's typed-below note; they read the answer, and that note sits directly
   above the left-over seat's radios in the panel, so a tap on "Spent" would have taken four sentences out from above the
@@ -638,6 +643,7 @@ chair; chair from a digest script, never the raw result, and expect the window t
 ## Probes and measurement
 
 
+- **(b9-1, 11-15) A type-and-comment-only reformat of an engine file after its sweep needs no second sweep:** prove it instead by esbuild's emitted JS, `node_modules/.bin/esbuild <old copy> --format=esm --legal-comments=none` against the same for the new file, then `cmp` (U1b's `taxOverlay.ts`: byte-identical). Folding a new field onto existing lines also keeps every `taxOverlay.ts:N` citation still (0 re-anchor edits, against 128 for the multi-line form).
 - **(b9-11, 10-27) A dev seed carries no `chosenGoal`**, so `buildSolveRequest` returns `spine-unready` for it — a node-side solve
   probe passes `{ ...seed, chosenGoal }` (`b9-seed-probe\solve.mts`'s `seed:goal`). Single-threaded, `healthss` takes
   ~15–18 min per goal.
@@ -650,6 +656,7 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Engine and tax math
 
+- **(b9-1, 11-15) `checkDrawn`'s `fundingNet` leaves out what an HSA pays:** the HSA's qualified spend (an owner-65+ Medicare premium, its surcharge included) is paid outside the gross-up, so two answers whose Medicare differs can show equal `fundingNet` past their shortfalls. What savings funds is `grossWithdrawal + hsaSpend` (the probe field since U1b): an identity on `fundingNet` alone holds on HSA-free households and fails on one with an HSA (`TM_NEAR_IRMAA_LINE_HSA`).
 - **(b9-4, 11-14) The typed-below coda's bound rests on a death crediting NOTHING** (council `wf_dfb7949b-4a7`'s "U12
   landmine"). Build 2's KTD5 credits 0 in any year not everyone is alive (`workingYearCredit`'s `allAlive`,
   `src/engine/moneyGrain.ts`), so in a survivor working year the two answers differ by their two survivor charges alone,
@@ -717,6 +724,7 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## UI and product
 
+- **(b9-6, 11-15) `NotePartsBlock` draws the door inside the segments' `<dl>`**: the typed-below coda's own list goes after that list and before the doorless button, and a coda never sits beside a door (the survivor plan's KTD6).
 - **(b9-4, 11-05) Never call `buildDateInput` from inside the money picture's path.** On a "saved" draft `buildDateInput` now reads
   `workingYearLedgerForRun`; the picture composes from `buildDateInputBeforeLeftOver`. Any new reader inside
   `composeWorkingYearLedger` that calls `buildDateInput` recurses forever on a saved draft.

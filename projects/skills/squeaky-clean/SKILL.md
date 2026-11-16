@@ -108,6 +108,19 @@ The count is `<behind> <ahead>`. The log lists every commit the push will send: 
 - Ahead 0: nothing to push; say so.
 - Otherwise `git push` — never `--force`, `--force-with-lease`, `-f` or a `+` refspec. Verify the push succeeded.
 
+#### 7b. Back up our setup (`~/.claude`)
+
+`~/.claude` is its own git repo (an allowlist `.gitignore`: rules, manifesto, memory, settings, hooks, our skills) with a PRIVATE remote, `mbriggsy/claude-config`, added 2026-11-16 because the laptop kept dying and 33 memory changes had piled up uncommitted with no off-machine copy. Every squeaky backs it up:
+
+```bash
+git -C ~/.claude add -A
+git -C ~/.claude diff --cached --quiet || git -C ~/.claude commit -m "memory/config: <one line on what changed this session>"
+git -C ~/.claude fetch && git -C ~/.claude rev-list --left-right --count '@{u}...HEAD'
+git -C ~/.claude push
+```
+
+Same push rules as step 7: behind > 0 means don't push, report it; never force. Before committing, `git -C ~/.claude diff --cached --name-only` must show no `.credentials.json`, `.jsonl`, `.env` or cache path; if one shows, the allowlist broke: unstage it, fix `.gitignore`, report it.
+
 ### 8. Cleanup Orphan Dev Processes
 
 Long-running dev servers (vite, wrangler/workerd, webpack, etc.) often

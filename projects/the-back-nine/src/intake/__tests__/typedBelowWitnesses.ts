@@ -183,3 +183,23 @@ export const SURVIVOR_GATE_WITNESSES = {
     return working
   })(),
 } as const satisfies Readonly<Record<string, ScenarioDraft>>
+
+// ── THE TAX RIDER BUILD'S HOUSEHOLD (`docs/plans/features/typed-below-tax-rider-build-spec.md`, U1 step 4). A named export,
+//    never a member of TYPED_BELOW_WITNESSES. ──
+
+/** Alex's working-year investment income in the near-line household (the probe that picked it:
+ *  `b9-build2-surplus/u11-wholewindow/rider-u1/near-line-probe.mts`, its `scan2.out.txt`). */
+export const NEAR_LINE_INVESTMENT = 70_000
+
+/** THE NEAR-LINE HOUSEHOLD: TM (`datesavedtypedmoved`) under `pre-tax-first`, with Alex's working-year investment income
+ *  raised to {@link NEAR_LINE_INVESTMENT}. Medicare reads that figure as working-year income (`buildDateInput`), and the
+ *  pay check charges its tax, so every year through 2032 is short at the quote, year 0 among them (the run at the quote
+ *  carries no answer: the read's R5 gate). In 2029–2032 the typed answer's recorded Medicare income sits under the first
+ *  joint line that year is compared with and the quote's over it, so Sam, enrolled from 2031, pays the first surcharge at
+ *  the quote alone in 2031–2034. Each short year's whole draw at the quote comes from the 401(k), so those figures do
+ *  not depend on the path while it lasts. */
+export const TM_NEAR_IRMAA_LINE: ScenarioDraft = {
+  ...TYPED_BELOW_WITNESSES.tm,
+  drawdownPolicy: 'pre-tax-first',
+  health: { ...TYPED_BELOW_WITNESSES.tm.health, workingYearInvestmentByPerson: [NEAR_LINE_INVESTMENT, 0] },
+}

@@ -1603,7 +1603,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     ]
     expect(strings.length, "the sweep is non-vacuous").toBeGreaterThan(990)
     // …and it reads the survivor coda: every gate-on household's six composed readings carry it.
-    expect(strings.filter(([, text]) => text.includes(SURVIVOR_CODA) && text.includes('not including any difference in income tax and Medicare’s income surcharge')).length, 'the coda is swept').toBeGreaterThanOrEqual(
+    // Keyed on the coda's OWN sentence ("…than it would at your … a year, not including…"): the spans carry the same rider
+    // since the tax rider build, so the rider alone would count a reading whose coda lost it (its mutant pass, R3).
+    const CODA_RIDER = /\bthan it would at your (?:spending of|budget’s) \$[\d,]+(?:\.\d\d)? a year, not including any difference in income tax and Medicare’s income surcharge\./
+    expect(strings.filter(([, text]) => text.includes(SURVIVOR_CODA) && CODA_RIDER.test(text)).length, 'the coda is swept').toBeGreaterThanOrEqual(
       (Object.keys(TYPED_BELOW_SWEPT).length - TYPED_BELOW_GATE_OFF.length) * 6,
     )
     for (const [name, text] of strings) for (const re of RETIRED_EVERYWHERE) expect(text, `${name}: ${re}`).not.toMatch(re)

@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-16, b9-2):** the tax rider build's U2 to U5 are in (one commit; both Tier 0 entries closed). Next its mutant pass (the plan's Verification Contract: seven plants, each red). Then walk 8: walk 7's 14 targets plus the survivor plan's three (its Goal Capsule), with the close block's "Walk 8's reads" and the new rider (`docs/plans/features/typed-below-tax-rider-build-spec.md`, KD2's ⚑ words and fallback), then its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
+▶ **START HERE (2026-11-16, b9-2):** the tax rider build is in (U2 to U5 `ad4de579`, both Tier 0 entries closed; its mutant pass 7 of 7 killed, record `<B>\u11-wholewindow\rider-mutants\RESULT.md`). Next walk 8: walk 7's 14 targets plus the survivor plan's three (its Goal Capsule), with the close block's "Walk 8's reads" and the new rider (`docs/plans/features/typed-below-tax-rider-build-spec.md`, KD2's ⚑ words and fallback), then its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,7 +94,7 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **the tax rider's mutant pass, then walk 8** (START HERE; the rider's U2 to U5 landed in b9-2's commit; round 3 landed in `d5fb99ba`,
+     ▶ NEXT: **walk 8** (START HERE; the rider build landed in `ad4de579`, its mutant pass 7 of 7 killed; round 3 landed in `d5fb99ba`,
      its record `<B>\u11-wholewindow\review-r3\ROUND.md`; the survivor build landed in `490afa87`, its plan `docs/plans/features/typed-below-survivor-path-build-spec.md`; the rebuild's plan is
      `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, and the register's Tier 0 retype entry
      carries the council's NEGATIVE on the round review's x_t metric). Its research, the council's drafts and full result sit in

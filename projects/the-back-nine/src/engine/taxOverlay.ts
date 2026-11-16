@@ -1594,10 +1594,10 @@ export interface WorkingYearProbe {
   readonly floorPrepared?: (t: number, floor: PreparedWorkingYearFloor) => void
   /** A year carrying the check: the floor its composition read (`===` the one prepared) and its lines. */
   readonly checkComposed?: (t: number, floor: PreparedWorkingYearFloor, lines: WorkingYearCashLines) => void
-  /** A checked year's draw, after the allocation: what savings funded and what the pre-tax bucket paid. */
+  /** A checked year's draw, after the allocation: what savings funded (`grossWithdrawal` plus `hsaSpend`, the HSA's qualified spend outside the gross-up, which `fundingNet` nets out: the tax rider build's U1b) and what the pre-tax bucket paid. */
   readonly checkDrawn?: (
     t: number,
-    drawn: { readonly shortfall: number; readonly fundingNet: number; readonly grossWithdrawal: number; readonly pretaxDrawn: number },
+    drawn: { readonly shortfall: number; readonly fundingNet: number; readonly grossWithdrawal: number; readonly pretaxDrawn: number; readonly hsaSpend: number },
   ) => void
   /** Every year's IRMAA-MAGI as recorded into the lagged history (healthcare on). */
   readonly irmaaMagiRecorded?: (t: number, irmaaMagi: number) => void
@@ -2736,9 +2736,9 @@ export function runTaxAwareDecumulation(
     const alloc = allocateWithdrawal(drawPool, grossWithdrawal, policy, bracketFillCeiling, customOrder)
     const drawn = alloc.taxable + alloc.pretax + alloc.roth
     // The pay check's probe-only draw observation (KTD20's pre-59½ count reads it): a checked year's
-    // shortfall, its funded need, the converged gross and what the pre-tax bucket paid.
+    // shortfall, its funded need, the converged gross, what the pre-tax bucket paid and what the HSA paid.
     if (checkShortfallThisYear !== undefined) {
-      probe?.checkDrawn?.(t, { shortfall: checkShortfallThisYear, fundingNet: fundingNetThisYear, grossWithdrawal, pretaxDrawn: alloc.pretax })
+      probe?.checkDrawn?.(t, { shortfall: checkShortfallThisYear, fundingNet: fundingNetThisYear, grossWithdrawal, pretaxDrawn: alloc.pretax, hsaSpend: hsaSpendThisYear })
     }
 
     // GENERAL-DEPLETION (U3 · M5): with a live HSA the authoritative total (which `stepYear`'s own

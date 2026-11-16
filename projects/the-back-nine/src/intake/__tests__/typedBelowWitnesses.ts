@@ -203,3 +203,16 @@ export const TM_NEAR_IRMAA_LINE: ScenarioDraft = {
   drawdownPolicy: 'pre-tax-first',
   health: { ...TYPED_BELOW_WITNESSES.tm.health, workingYearInvestmentByPerson: [NEAR_LINE_INVESTMENT, 0] },
 }
+
+/** Sam's HSA in the near-line household's HSA twin (the probe: `rider-u1/hsa-probe.mts`, its `hsa.out.txt`): enough to pay
+ *  his Medicare base and surcharge through the window's last working year. */
+export const NEAR_LINE_HSA = 20_000
+
+/** THE NEAR-LINE HOUSEHOLD WITH AN HSA (the council `wf_33aa98fe-a26`'s blocking run, the tax rider build's U1b): the
+ *  near-line household plus an HSA owned by Sam, which pays his Medicare premiums outside the gross-up. At the quote it pays
+ *  the surcharge too, so the two answers' `fundingNet`s differ by the shortfall difference alone while their Medicare
+ *  differs by the surcharge: what each answer takes from savings is the gross draw plus the HSA's spend. */
+export const TM_NEAR_IRMAA_LINE_HSA: ScenarioDraft = {
+  ...TM_NEAR_IRMAA_LINE,
+  enteredAccounts: [...TM_NEAR_IRMAA_LINE.enteredAccounts, { ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: NEAR_LINE_HSA }],
+}

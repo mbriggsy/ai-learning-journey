@@ -9,13 +9,16 @@
  * year is read off the overlay's recording probe and the run's health readout. In every working year, on every pass:
  *  · the bound: the engine's own credit and shortfall difference between the two answers, each on the cent, sits at or
  *    under the span's printed `difference.most`, and is 0 in a `same` span;
- *  · the identity: the two answers' draws net of income tax (`fundingNet`) differ by exactly the shortfall difference plus
- *    the Medicare charge difference (the readout's base, surcharge and extras), so what is left between their gross draws
- *    is the year's income tax, `grossWithdrawal − fundingNet` on each run (no ACA premium is priced: asserted below).
+ *  · the identity: what each answer funds besides its income tax (`fundingNet`, plus what the HSA pays outside the
+ *    gross-up) differs by exactly the shortfall difference plus the Medicare charge difference (the readout's base,
+ *    surcharge and extras; the base and the extras equal at both answers, so the difference is the surcharge alone), so
+ *    what is left between the two answers' gross draws is the year's income tax, `grossWithdrawal − fundingNet` on each
+ *    run (no ACA premium is priced: asserted below).
  * So what the two answers do to savings differs by what the printed figure bounds, plus the difference in income tax and
  * Medicare premiums, and nothing else. Every figure is the engine's own (DND 012): nothing here re-derives a credit, a
  * shortfall, a tax or a premium. Two arms show both halves of the rider are live (R7): TM's 2033 pays a different income
- * tax at the two answers with no shortfall at either, and the near-line household's Medicare differs in 2031–2034.
+ * tax at the two answers with no shortfall at either, and the near-line household's Medicare differs in 2031–2034; its HSA
+ * twin pays that surcharge partly from the HSA, which `fundingNet` alone would miss (council `wf_33aa98fe-a26`, U1b).
  *
  * The readout observes the FULL track only, so a budget run's floor pass carries no Medicare figures: there the identity
  * reads the shortfall difference alone (the budget twin is TM at the default order, far from every surcharge line, and its
@@ -32,7 +35,7 @@ import { workingYearTypedBelowWindow, type TypedBelowSpan, type WorkingYearTyped
 import { writeConfirmedWorkingYearCost } from '@intake/workingYearQuote'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { DrawdownPolicy, SimulationParams } from '@shared/model'
-import { TM_ALL_STICKY_BUDGET, TM_NEAR_IRMAA_LINE, TYPED_BELOW_WITNESSES } from '../../intake/__tests__/typedBelowWitnesses'
+import { TM_ALL_STICKY_BUDGET, TM_NEAR_IRMAA_LINE, TM_NEAR_IRMAA_LINE_HSA, TYPED_BELOW_WITNESSES } from '../../intake/__tests__/typedBelowWitnesses'
 
 const dist = (o: SimOutput) => {
   if (o.indeterminate) throw new Error(`unexpected indeterminate: ${o.reason}`)
@@ -64,6 +67,7 @@ const HOUSEHOLDS: Readonly<Record<string, { readonly draft: ScenarioDraft; reado
     ]),
   ),
   'the near-line household': { draft: TM_NEAR_IRMAA_LINE, order: 'pre-tax-first' },
+  'the near-line household with an HSA': { draft: TM_NEAR_IRMAA_LINE_HSA, order: 'pre-tax-first' },
 }
 type Household = keyof typeof HOUSEHOLDS
 
@@ -89,7 +93,7 @@ interface CheckedYear {
   readonly t: number
   readonly shortfall: number
   credit?: number
-  drawn?: { readonly fundingNet: number; readonly grossWithdrawal: number }
+  drawn?: { readonly fundingNet: number; readonly grossWithdrawal: number; readonly hsaSpend: number }
 }
 
 /** One year's health charges off the readout (one path, so each median is the path's own value). */
@@ -125,7 +129,7 @@ function runOn(d: ScenarioDraft, seed: number): Run {
     checkDrawn: (t, drawn) => {
       const y = own(t, 'a draw')
       if (y.drawn !== undefined) throw new Error(`[test] a second draw for year ${t}`)
-      y.drawn = { fundingNet: drawn.fundingNet, grossWithdrawal: drawn.grossWithdrawal }
+      y.drawn = { fundingNet: drawn.fundingNet, grossWithdrawal: drawn.grossWithdrawal, hsaSpend: drawn.hsaSpend }
     },
   }
   const out = dist(simulate(candidateOf(d), seed, { _workingYearProbe: probe, healthReadout: true }))
@@ -243,8 +247,9 @@ describe('the typed-below line’s rider on the whole engine: the gap beyond the
             } else {
               expect(engineCents, `${where} ${year} ${span.kind}: the engine's ${engineCents}¢ sits at or under the printed $${span.difference.most}`).toBeLessThanOrEqual(span.difference.most * 100)
             }
-            // The identity: past the shortfall difference, the draws net of income tax differ by the Medicare charge alone.
-            const residual = q.drawn!.fundingNet - y.drawn!.fundingNet - (q.shortfall - y.shortfall)
+            // The identity: past the shortfall difference, what each answer funds besides its income tax (the HSA's spend
+            // included) differs by the Medicare charge alone.
+            const residual = q.drawn!.fundingNet + q.drawn!.hsaSpend - (y.drawn!.fundingNet + y.drawn!.hsaSpend) - (q.shortfall - y.shortfall)
             if (k === 0) {
               const hT = typed.health[t]
               const hQ = quote.health[t]
@@ -252,9 +257,12 @@ describe('the typed-below line’s rider on the whole engine: the gap beyond the
               // The premise of the tax read: a clamped working year prices no ACA premium.
               expect(hT.aca, `${where} ${year}: no ACA premium at the typed figure`).toBe(0)
               expect(hQ.aca, `${where} ${year}: no ACA premium at the quote`).toBe(0)
-              expect(toCents(residual - (hQ.medicare - hT.medicare)), `${where} ${year}: fundingNet moves by the shortfall and Medicare differences alone (residual ${residual}, Medicare ${hQ.medicare - hT.medicare})`).toBe(0)
+              // The rider's noun (council `wf_33aa98fe-a26`): only the surcharge can differ, the base and the extras never.
+              expect(toCents(hQ.base), `${where} ${year}: the Medicare base is the same at both answers`).toBe(toCents(hT.base))
+              expect(toCents(hQ.extras), `${where} ${year}: the Medicare extras are the same at both answers`).toBe(toCents(hT.extras))
+              expect(toCents(residual - (hQ.medicare - hT.medicare)), `${where} ${year}: fundingNet and the HSA's spend move by the shortfall and Medicare differences alone (residual ${residual}, Medicare ${hQ.medicare - hT.medicare})`).toBe(0)
             } else {
-              expect(toCents(residual), `${where} ${year}: fundingNet moves by the shortfall difference alone (residual ${residual})`).toBe(0)
+              expect(toCents(residual), `${where} ${year}: fundingNet and the HSA's spend move by the shortfall difference alone (residual ${residual})`).toBe(0)
             }
           }
         })
@@ -287,6 +295,21 @@ describe('the typed-below line’s rider on the whole engine: the gap beyond the
         return Math.abs(hQ.medicare - hT.medicare) >= 1 && toCents(hQ.base) === toCents(hT.base) && toCents(hQ.extras) === toCents(hT.extras) && hQ.surcharge !== hT.surcharge
       })
       expect(differing.length, `seed ${seed}: a year whose Medicare differs by the surcharge alone`).toBeGreaterThan(0)
+    }
+  })
+
+  it('U1b (the council’s HSA run): the near-line household’s HSA pays the quote’s surcharge, so fundingNet alone misses what savings pays and the HSA’s spend closes it', { timeout: 60_000 }, () => {
+    const { startYear, seeds } = measure('the near-line household with an HSA')
+    for (const { seed, typed, quote } of seeds) {
+      const reached = [2031, 2032, 2033, 2034].filter((year) => {
+        const t = year - startYear
+        const y = typed.passes[0]![t]!
+        const q = quote.passes[0]![t]!
+        const medicare = quote.health[t]!.medicare - typed.health[t]!.medicare
+        const onFundingNetAlone = q.drawn!.fundingNet - y.drawn!.fundingNet - (q.shortfall - y.shortfall)
+        return q.drawn!.hsaSpend - y.drawn!.hsaSpend >= 1 && toCents(onFundingNetAlone - medicare) !== 0
+      })
+      expect(reached.length, `seed ${seed}: a year whose HSA pays part of the Medicare difference, past fundingNet`).toBeGreaterThan(0)
     }
   })
 })

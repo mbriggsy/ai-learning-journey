@@ -1267,18 +1267,18 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
     expect(block!.querySelector('.note-parts__opening')?.textContent).toBe(
       `${STEP_COUNTS('84,000', '105,000')} What this answer adds to your savings in each working year you’re both alive:`,
     )
-    const both = 'Your answer adds at most $26,985 a year to your savings. At your spending of $105,000 a year, it would add at most $5,985, $21,000 less.'
+    const both = 'Your answer adds at most $26,985 a year to your savings. At your spending of $105,000 a year, it would add at most $5,985, $21,000 less, not including any difference in income tax and Medicare’s income surcharge.'
     expect([...block!.querySelectorAll('.note-parts__segment')].map((row) => [row.querySelector('dt')?.textContent, row.querySelector('dd')?.textContent])).toEqual([
       ['2026 through 2028', both],
       [
         '2029 through 2032',
         'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and your answer would add nothing. ' +
-          'Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most $16,985 to $17,348 a year to your savings, at most $21,000 a year more, plus any income tax on those shortfalls.',
+          'Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most $16,985 to $17,348 a year to your savings, at most $21,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
       ],
       ['2033 through 2035', both],
       [
         'If only one of you is alive',
-        'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, plus any income tax on it. ' +
+        'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
           'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.',
       ],
     ])
@@ -1297,8 +1297,8 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
     const p = document.querySelector('.left-over__at-quote')
     expect(p?.tagName, 'one span is a paragraph').toBe('P')
     expect(p?.textContent).toBe(
-      `${STEP_COUNTS('84,000', '90,000')} Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less. ` +
-        'If only one of you is alive in a working year, your answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, plus any income tax on it. ' +
+      `${STEP_COUNTS('84,000', '90,000')} Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge. ` +
+        'If only one of you is alive in a working year, your answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
         'Such a year’s costs count as $63,000 a year at your figure and $67,500 at your spending.',
     )
     expect(leftOverGroup().compareDocumentPosition(p!) & Node.DOCUMENT_POSITION_FOLLOWING, 'below the group').not.toBe(0)

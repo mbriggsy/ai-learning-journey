@@ -1146,8 +1146,8 @@ describe('ReEntry — the surface', () => {
     'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. ' +
     'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
     'Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. ' +
-    'At your spending of $90,000 a year, it would add at most $10,985, $6,000 less. ' +
-    'If only one of you is alive in a working year, your answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, plus any income tax on it. ' +
+    'At your spending of $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge. ' +
+    'If only one of you is alive in a working year, your answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
     'Such a year’s costs count as $63,000 a year at your figure and $67,500 at your spending.'
   const TYPED_GATE_NOTE = { text: TYPED_GATE_LINE, parts: { opening: TYPED_GATE_LINE, segments: [], door: null } }
 
@@ -1179,7 +1179,7 @@ describe('ReEntry — the surface', () => {
     const moved = workingYearLeftOverMoved(d)
     expect(moved).toEqual({ stored: 16_985, live: 26_985, typedBelow: '84,000' })
     const view = typedBelowView(d, true, { text: workingYearLeftOverMovedText(moved!), clause: workingYearLeftOverMovedClause(moved!), canChange: true })
-    const both = ['Your answer adds at most $16,985 a year to your savings.', 'At your spending of $105,000 a year, it would add at most $5,985, $11,000 less.']
+    const both = ['Your answer adds at most $16,985 a year to your savings.', 'At your spending of $105,000 a year, it would add at most $5,985, $11,000 less, not including any difference in income tax and Medicare’s income surcharge.']
     const LEAD = 'What your answer adds to your savings in each working year you’re both alive:'
     const parts = {
       opening:
@@ -1191,7 +1191,7 @@ describe('ReEntry — the surface', () => {
           label: '2029 through 2032',
           sentences: [
             'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and your answer would add nothing.',
-            'Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, plus any income tax on those shortfalls.',
+            'Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
           ],
         },
         { label: '2033 through 2035', sentences: both },
@@ -1200,7 +1200,7 @@ describe('ReEntry — the surface', () => {
       coda: {
         label: 'If only one of you is alive',
         sentences: [
-          'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, plus any income tax on it.',
+          'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.',
           'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.',
         ],
       },

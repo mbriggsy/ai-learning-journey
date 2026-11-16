@@ -1651,25 +1651,25 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
   const TM_CODA: readonly [string, readonly string[]] = [
     'If only one of you is alive',
     [
-      'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, plus any income tax on it.',
+      'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.',
       'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.',
     ],
   ]
   /** A's one-span coda, closing its paragraph: X $4,500, the survivor charges $63,000 and $67,500. */
   const A_CODA =
-    'If only one of you is alive in a working year, your answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, plus any income tax on it. ' +
+    'If only one of you is alive in a working year, your answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
     'Such a year’s costs count as $63,000 a year at your figure and $67,500 at your spending.'
   /** TM's three spans in the seat's words: `credit`, the figure the answer carries in 2026–2028 and 2033–2035; `shortCredit`,
    *  the 2029–2032 credit; `less`, the yearly difference at the quote's $5,985; `more`, the short run's yearly difference. */
   const tmSpans = (credit: string, shortCredit: string, less: string, more: string): readonly (readonly [string, readonly string[]])[] => {
-    const both = [`Your answer adds at most $${credit} a year to your savings.`, `At your spending of $105,000 a year, it would add at most $5,985, $${less} less.`]
+    const both = [`Your answer adds at most $${credit} a year to your savings.`, `At your spending of $105,000 a year, it would add at most $5,985, $${less} less, not including any difference in income tax and Medicare’s income surcharge.`]
     return [
       ['2026 through 2028', both],
       [
         '2029 through 2032',
         [
           'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and your answer would add nothing.',
-          `Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most ${shortCredit} a year to your savings, at most ${more} a year more, plus any income tax on those shortfalls.`,
+          `Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most ${shortCredit} a year to your savings, at most ${more} a year more, not including any difference in income tax and Medicare’s income surcharge.`,
         ],
       ],
       ['2033 through 2035', both],
@@ -1717,8 +1717,8 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     const fellLine = slots.workingLedgerLeftOverFellLineAt('86,000', '16,985', '14,985')
     expect(fellLine).toContain('At your figure of $86,000 a year, it’s $14,985 now, so each working year adds at most $14,985 of its left over')
     expect(textBelow(seat(), group)).toBe(
-      `${fellLine}Each working year you’re both alive, your answer adds at most $14,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $4,000 less. ` +
-        'If only one of you is alive in a working year, your answer takes at most $3,000 a year less from your savings than it would at your spending of $90,000 a year, plus any income tax on it. ' +
+      `${fellLine}Each working year you’re both alive, your answer adds at most $14,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $4,000 less, not including any difference in income tax and Medicare’s income surcharge. ` +
+        'If only one of you is alive in a working year, your answer takes at most $3,000 a year less from your savings than it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
         'Such a year’s costs count as $64,500 a year at your figure and $67,500 at your spending.',
     )
     expect(seat().querySelector('.left-over__at-quote')?.tagName, 'one span is a paragraph').toBe('P')
@@ -1729,7 +1729,7 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     const group = groupIn(seat())
     expect(within(seat()).getByText(slots.workingLedgerLeftOverFigureAt('84,000', '16,985'))).toBeInTheDocument()
     expect(textBelow(seat(), group)).toBe(
-      `${slots.workingLedgerLeftOverSavedLine('16,985')}Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less. ${A_CODA}`,
+      `${slots.workingLedgerLeftOverSavedLine('16,985')}Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge. ${A_CODA}`,
     )
     expect(seat().querySelector('.left-over__at-quote')?.tagName, 'one span is a paragraph').toBe('P')
   })

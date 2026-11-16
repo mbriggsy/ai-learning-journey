@@ -364,8 +364,8 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     'This answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. ' +
     'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
     'Each working year you’re both alive, this answer adds at most $16,985 a year to your savings. ' +
-    'At your spending of $90,000 a year, it would add at most $10,985, $6,000 less. ' +
-    'If only one of you is alive in a working year, this answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, plus any income tax on it. ' +
+    'At your spending of $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge. ' +
+    'If only one of you is alive in a working year, this answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
     'Such a year’s costs count as $63,000 a year at your figure and $67,500 at your spending.'
   const updateDoor = () => screen.queryByRole('button', { name: 'Update your figure for a working year' })
 
@@ -396,13 +396,13 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     'A working year almost always costs at least what you spend, so this answer can look better than it really is.'
   const MOVED_AT_TYPED =
     'You said all of it goes into your savings when your first working year had $16,985 left over. At your figure of $84,000 a year, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
-  const BOTH = 'This answer adds at most $16,985 a year to your savings. At your spending of $105,000 a year, it would add at most $5,985, $11,000 less.'
+  const BOTH = 'This answer adds at most $16,985 a year to your savings. At your spending of $105,000 a year, it would add at most $5,985, $11,000 less, not including any difference in income tax and Medicare’s income surcharge.'
   const TM_SEGMENTS: readonly (readonly [string, string])[] = [
     ['2026 through 2028', BOTH],
     [
       '2029 through 2032',
       'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and this answer would add nothing. ' +
-        'Your figure of $84,000 a year leaves those shortfalls out of this answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, plus any income tax on those shortfalls.',
+        'Your figure of $84,000 a year leaves those shortfalls out of this answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
     ],
     ['2033 through 2035', BOTH],
   ]
@@ -410,7 +410,7 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
   const LEAD = 'What this answer adds to your savings in each working year you’re both alive:'
   /** TM's survivor coda: X $15,750, 0.75 of $84,000 and of $105,000. */
   const TM_CODA =
-    'In such a working year, this answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, plus any income tax on it. ' +
+    'In such a working year, this answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
     'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.'
   const block = (opening: string, button: boolean): string =>
     '<div class="note-parts fod-note cs-paycheck-note">' +
@@ -468,17 +468,17 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     expect(follows(spans, coda), 'the coda’s list after the spans’ list').toBe(true)
     expect(follows(coda, updateDoor()!), 'the button after the coda').toBe(true)
     expect(spans.contains(coda), 'the coda is never one more item of the spans’ list').toBe(false)
-    const same = 'This answer adds the same to your savings as it would at your budget’s $105,000 a year.'
+    const same = 'This answer adds the same to your savings as it would at your budget’s $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.'
     expect([...spans.querySelectorAll('dd')].map((dd) => dd.textContent)).toEqual([
       same,
       'At your budget’s $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and this answer would add nothing. ' +
-        'Your figure of $90,000 a year leaves those shortfalls out of this answer, and it adds at most $5,985 a year to your savings, at most $9,637 to $10,000 a year more, plus any income tax on those shortfalls.',
+        'Your figure of $90,000 a year leaves those shortfalls out of this answer, and it adds at most $5,985 a year to your savings, at most $9,637 to $10,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
       same,
     ])
     expect(coda.querySelector('dt')!.textContent).toBe('If only one of you is alive')
     expect(coda.querySelector('dd')!.textContent).toBe(
-      'In such a working year, this answer takes at most $15,000 a year less from your savings than it would at your budget’s $105,000 a year, plus any income tax on it. ' +
-        'That is the whole gap to your figure of $90,000 a year.',
+      'In such a working year, this answer takes at most $15,000 a year less from your savings than it would at your budget’s $105,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
+        'That $15,000 a year is the whole gap to your figure of $90,000 a year.',
     )
   })
 

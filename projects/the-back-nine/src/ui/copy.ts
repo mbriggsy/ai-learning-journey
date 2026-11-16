@@ -2821,6 +2821,19 @@ const spanYears = (f: TypedBelowSpanFrame): string =>
       ? 'each working year you’re both alive'
       : 'each working year'
 const spanShortfalls = (f: TypedBelowSpanFrame): string => (f.oneYear ? 'that shortfall' : 'those shortfalls')
+/** The rider every comparison the typed-below line makes ends on, its joiner included: each span's second sentence,
+ *  `same`'s one sentence and the survivor coda's first (the tax rider build, `docs/plans/features/typed-below-tax-rider-build-spec.md`,
+ *  KD1, KD2, KTD1; council `wf_33aa98fe-a26`'s words, ⚑ for walk 8's tone read). Its scope is the WHOLE difference in
+ *  income tax and Medicare's income surcharge between the two answers in a year, never the tax on one draw: the engine
+ *  pays one joint tax a year and never splits it, the credit's full-basis money shifts the tax on every later draw, and
+ *  a short year's larger draw at the quote can cross a Medicare surcharge line two years on (the plan's U1 and U1b prove
+ *  that this and the printed figure are the whole gap; the Medicare base and extras are equal at both answers, so only
+ *  the surcharge is named). "Not including" is the price-tag idiom: it names no direction (the difference runs either
+ *  way) and no figure (the register's NEGATIVE). One home, so the same costs are said one way on every host; no word
+ *  test imports it: every pin types it by hand. */
+const COMPARISON_RIDER = ', not including any difference in income tax and Medicare’s income surcharge.'
+/** A comparison's clause, closed on {@link COMPARISON_RIDER}: the one helper every rider-bearing slot ends through. */
+const withRider = (clause: string): string => `${clause}${COMPARISON_RIDER}`
 
 /** How the typed-below line's survivor coda is said (the survivor-path build's KTD5–KTD7; council `wf_dfb7949b-4a7`'s
  *  words, drafts flagged for walk 8): `answer` — the answer named, as the spans name it ("this" on the Result, "your" on
@@ -2841,9 +2854,11 @@ const SURVIVOR_AT_QUOTE: Readonly<Record<TypedBelowQuoteSource, string>> = {
   budget: 'at your budget',
 }
 /** The coda's ceiling clause, after its condition: the most this answer takes less from savings in such a year, beside the
- *  quote's side, with the money picture's own tax rider ("any": a draw from a Roth carries none). */
+ *  quote's side, with the spans' own rider ({@link COMPARISON_RIDER}: the line names the same costs one way, the tax
+ *  rider build's R3; direction-free, so it holds in survivor years, where round 3 measured the typed answer paying
+ *  $61 to $163 more tax, and no living member is Medicare-enrolled there, the survivor plan's KTD9). */
 const survivorTakesLess = (f: TypedBelowSurvivorFrame, mostFormatted: string): string =>
-  `${f.answer.toLowerCase()} answer takes at most $${mostFormatted} a year less from your savings than it would at ${SPAN_QUOTE[f.source](f.quote)}, plus any income tax on it.`
+  withRider(`${f.answer.toLowerCase()} answer takes at most $${mostFormatted} a year less from your savings than it would at ${SPAN_QUOTE[f.source](f.quote)}`)
 
 /** The moved seat lines' second sentence opens on today's left over — and, where a fresh TYPED figure sits below today's
  *  spending, on the figure it rests on, in the gate's moved-line words (U11 walk 7's R2; since the whole-window rebuild
@@ -3543,53 +3558,59 @@ export const slots = {
   // years its label where the line has two or more. One side per dollar sentence (R8): a span's first sentence states
   // one answer's side, its second the other's, and the span's yearly difference rides only the second. Every figure
   // for what this answer adds or takes is "at most", a fact of the picture ("comes up … short"), or a difference set
-  // beside its pair (R5). Each figure counting a shortfall drawn from savings carries the money picture's own tax
-  // rider (`workingLedgerSavingsTax`; "any": a draw from a Roth carries none, R6). The words are drafts, flagged for
-  // walk 8 (KD2's three pilot calls). The composer: `workingYearCostTypedBelowLine`.
+  // beside its pair (R5). Every comparison ends on one rider (`COMPARISON_RIDER`, the tax rider build's KD2, council
+  // `wf_33aa98fe-a26`; it replaces R6's "plus any income tax on those shortfalls", which named the tax on one draw while
+  // the engine's gap also holds the tax on the other draws and Medicare's income surcharge): each span's second sentence,
+  // the credit kinds' and the short kinds' alike, and `same`'s one sentence (KD2's call 2: a span without it would read
+  // as "no difference in income tax here", measured false). The words are drafts, flagged for walk 8 (the rebuild's
+  // KD2 three pilot calls, and the rider's ⚑ words). The composer: `workingYearCostTypedBelowLine`.
   /** A span's label: its years (one year alone, else "first through last"), W's stale line's own run words. */
   workingCostTypedBelowSpanLabel: (firstYear: number, lastYear: number): string => yearSpan(firstYear, lastYear),
   /** `bothCredit` and `quoteCreditsNothing`, the first sentence: this answer's credit. */
   workingCostTypedBelowSpanCredit: (f: TypedBelowSpanFrame, credit: TypedBelowMoney): string =>
     `${spanAnswerHead(f)} adds at most ${spanMoney(credit)} a year to your savings.`,
-  /** `bothCredit`, the second: the answer at the quote's credit, then the difference beside the pair (bare: it compares
-   *  two stated figures, true past the crown too, R5). */
+  /** `bothCredit`, the second: the answer at the quote's credit, then the difference beside the pair (no "at most": it
+   *  compares two stated figures, true past the crown too, R5), then the rider. */
   workingCostTypedBelowSpanAtQuoteCredit: (f: TypedBelowSpanFrame, creditAtQuote: TypedBelowMoney, difference: TypedBelowMoney): string =>
-    `At ${spanQuote(f)}, it would add at most ${spanMoney(creditAtQuote)}, ${spanMoney(difference)} less.`,
-  /** `quoteCreditsNothing`, the second: the answer at the quote credits nothing in a year that is not short there. */
+    withRider(`At ${spanQuote(f)}, it would add at most ${spanMoney(creditAtQuote)}, ${spanMoney(difference)} less`),
+  /** `quoteCreditsNothing`, the second: the answer at the quote credits nothing in a year that is not short there, then
+   *  the rider. */
   workingCostTypedBelowSpanAtQuoteNothing: (f: TypedBelowSpanFrame, difference: TypedBelowMoney): string =>
-    `At ${spanQuote(f)}, it would add nothing, ${spanMoney(difference)} a year less.`,
+    withRider(`At ${spanQuote(f)}, it would add nothing, ${spanMoney(difference)} a year less`),
   /** `shortLeftOverAtTyped`, the first: the quote's side, its shortfall and its nothing. */
   workingCostTypedBelowSpanShortNothing: (f: TypedBelowSpanFrame, shortAtQuote: TypedBelowMoney): string =>
     `At ${spanQuote(f)}, ${spanYears(f)} comes up ${spanMoney(shortAtQuote)} short, and ${spanAnswer(f)} would add nothing.`,
   /** `shortLeftOverAtTyped`, the second: the typed figure's side in council `wf_7fa86902-35c`'s ruled clause ("leaves those
    *  shortfalls out of this answer"; "takes none of those shortfalls" stays struck), this answer's credit, the whole yearly
    *  difference (the credit plus the shortfall the quote draws: "at most", since that draw stops at the crown), and the
-   *  tax rider on the shortfalls the difference counts. */
+   *  rider. */
   workingCostTypedBelowSpanShortOut: (f: TypedBelowSpanFrame, credit: TypedBelowMoney, difference: TypedBelowMoney): string =>
-    `Your figure of $${f.typed} a year leaves ${spanShortfalls(f)} out of ${spanAnswer(f)}, and it adds at most ${spanMoney(credit)} a year to your savings, at most ${spanMoney(difference)} a year more, plus any income tax on ${spanShortfalls(f)}.`,
+    withRider(`Your figure of $${f.typed} a year leaves ${spanShortfalls(f)} out of ${spanAnswer(f)}, and it adds at most ${spanMoney(credit)} a year to your savings, at most ${spanMoney(difference)} a year more`),
   /** `shortStillShortAtTyped` and `shortEvenAtTyped`, the first: the quote's shortfall, a fact of the picture. */
   workingCostTypedBelowSpanShort: (f: TypedBelowSpanFrame, shortAtQuote: TypedBelowMoney): string =>
     `At ${spanQuote(f)}, ${spanYears(f)} comes up ${spanMoney(shortAtQuote)} short.`,
   /** `shortStillShortAtTyped`, the second: short at the typed figure too, and the draw this answer takes less (each year's
-   *  shortfall at the quote less its own, "at most"), with the tax rider on that draw. */
+   *  shortfall at the quote less its own, "at most"), with the rider. */
   workingCostTypedBelowSpanStillShort: (f: TypedBelowSpanFrame, shortAtTyped: TypedBelowMoney, difference: TypedBelowMoney): string =>
-    `At your figure of $${f.typed} a year, ${f.oneYear ? 'it' : 'each'} still comes up ${spanMoney(shortAtTyped)} short, and ${spanAnswer(f)} takes at most ${spanMoney(difference)} a year less from your savings, plus any income tax on it.`,
+    withRider(`At your figure of $${f.typed} a year, ${f.oneYear ? 'it' : 'each'} still comes up ${spanMoney(shortAtTyped)} short, and ${spanAnswer(f)} takes at most ${spanMoney(difference)} a year less from your savings`),
   /** `shortEvenAtTyped`, the second: exactly $0 at the typed figure (it credits nothing and draws nothing), so this answer
-   *  takes the quote's whole shortfall less, "at most", with the tax rider. */
+   *  takes the quote's whole shortfall less, "at most", with the rider. */
   workingCostTypedBelowSpanEven: (f: TypedBelowSpanFrame, difference: TypedBelowMoney): string =>
-    `At your figure of $${f.typed} a year, ${f.oneYear ? 'it' : 'each'} leaves nothing over and nothing short, and ${spanAnswer(f)} takes at most ${spanMoney(difference)} a year less from your savings, plus any income tax on it.`,
+    withRider(`At your figure of $${f.typed} a year, ${f.oneYear ? 'it' : 'each'} leaves nothing over and nothing short, and ${spanAnswer(f)} takes at most ${spanMoney(difference)} a year less from your savings`),
   /** `same`, its one sentence: both answers credit and draw alike there, so no figure (its short years, if any, stay on
-   *  the money picture's later rows, R6). Never "here it doesn’t": the opening's lean stays true on a one-span `same`
-   *  line, since a working year can cost more than the spending too (KTD7). */
-  workingCostTypedBelowSpanSame: (f: TypedBelowSpanFrame): string => `${spanAnswerHead(f)} adds the same to your savings as it would at ${spanQuote(f)}.`,
+   *  the money picture's later rows, R6), then the rider (the two answers' income tax can still differ there: round 3
+   *  measured $48.52 beside `whole`'s "adds the same"). Never "here it doesn’t": the opening's lean stays true on a
+   *  one-span `same` line, since a working year can cost more than the spending too (KTD7). */
+  workingCostTypedBelowSpanSame: (f: TypedBelowSpanFrame): string => withRider(`${spanAnswerHead(f)} adds the same to your savings as it would at ${spanQuote(f)}`),
   // THE SURVIVOR PATH (`docs/plans/features/typed-below-survivor-path-build-spec.md`; council `wf_dfb7949b-4a7`, its
   // hardened (B)): every span above is the ALL-ALIVE picture's. Where the engine can draw a working year with one of you
   // dead and the other still working, it credits nothing there and counts the working cost by its survivor rule, so the
   // two answers differ by the difference of their two survivor charges, not by the spans' figures. So the comparisons
   // take "you’re both alive" (the frame's `bothAlive`, and the scoped leads), and the line closes on this coda: the most
-  // this answer takes less from savings in such a year, "at most" (rounded up, KTD4), with the tax rider, then exactly
-  // the two figures that difference is of. Never "on your own" (the catalog's word for a living one-earner year), and
-  // never a claim that nothing is credited after a death. Every word a draft, flagged for walk 8.
+  // this answer takes less from savings in such a year, "at most" (rounded up, KTD4), with the spans' own rider (the
+  // tax rider build's R3, in lockstep), then exactly the two figures that difference is of. Never "on your own" (the
+  // catalog's word for a living one-earner year), and never a claim that nothing is credited after a death. Every word
+  // a draft, flagged for walk 8.
   /** The Result's and the gate's lead over two or more spans under the survivor scope (KTD7: today neither host has a
    *  lead; the seat's twin is `workingLedgerLeftOverSpansLeadSurvivor`). */
   workingCostTypedBelowSurvivorLead: (answer: TypedBelowAnswer): string =>
@@ -3602,8 +3623,11 @@ export const slots = {
   workingCostTypedBelowSurvivorAtMost: (f: TypedBelowSurvivorFrame, mostFormatted: string): string =>
     `In such a working year, ${survivorTakesLess(f, mostFormatted)}`,
   /** The second sentence where the ceiling is the whole gap between the two figures (an all-sticky budget, or a survivor
-   *  ratio of 1: KTD5's `wholeGap`). */
-  workingCostTypedBelowSurvivorWholeGap: (f: TypedBelowSurvivorFrame): string => `That is the whole gap to your figure of $${f.typed} a year.`,
+   *  ratio of 1: KTD5's `wholeGap`). It echoes X, the same string the first sentence prints, so "That" can never be read
+   *  as the rider's costs right before it (the tax rider build's KD2, the Honesty Hawk's veto honoured; it amends the
+   *  survivor plan's KTD8). */
+  workingCostTypedBelowSurvivorWholeGap: (f: TypedBelowSurvivorFrame, mostFormatted: string): string =>
+    `That $${mostFormatted} a year is the whole gap to your figure of $${f.typed} a year.`,
   /** …and where it is not (KTD5's `survivorCharges`): the two survivor charges themselves, the quote's side in its
    *  source's words. */
   workingCostTypedBelowSurvivorCharges: (f: TypedBelowSurvivorFrame, [atTyped, atQuote]: TypedBelowSurvivorCharges): string =>
@@ -4094,7 +4118,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1869` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1870` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

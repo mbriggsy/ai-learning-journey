@@ -986,7 +986,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostTypedBelowSurvivorLead: slots.workingCostTypedBelowSurvivorLead('Your'),
     workingCostTypedBelowSurvivorOneSpan: slots.workingCostTypedBelowSurvivorOneSpan(CODA_SPENDING, '4,500'),
     workingCostTypedBelowSurvivorAtMost: slots.workingCostTypedBelowSurvivorAtMost(CODA_BUDGET, '15,000'),
-    workingCostTypedBelowSurvivorWholeGap: slots.workingCostTypedBelowSurvivorWholeGap(CODA_BUDGET),
+    workingCostTypedBelowSurvivorWholeGap: slots.workingCostTypedBelowSurvivorWholeGap(CODA_BUDGET, '15,000'),
     workingCostTypedBelowSurvivorCharges: slots.workingCostTypedBelowSurvivorCharges(CODA_SPENDING, ['63,000', '67,500']),
     workingCostLegendFigure: slots.workingCostLegendFigure('90,000'),
     stalenessLeftOverMoved: slots.stalenessLeftOverMoved('16,985', '27,537', '16,985'),
@@ -1400,7 +1400,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
           slots.workingCostTypedBelowSurvivorLead(answer),
           slots.workingCostTypedBelowSurvivorOneSpan(f, S),
           slots.workingCostTypedBelowSurvivorAtMost(f, S),
-          slots.workingCostTypedBelowSurvivorWholeGap(f),
+          slots.workingCostTypedBelowSurvivorWholeGap(f, S),
           slots.workingCostTypedBelowSurvivorCharges(f, [T, S]),
         ]
       }),
@@ -1437,10 +1437,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     expect(slots.workingCostTypedBelowSpanShort(off(false, true), ['4,015', '4,015'])).toBe('At your spending of $105,000 a year, that working year comes up $4,015 short.')
     // …and the scope, typed by hand, where it is on.
     const on = (opener: boolean, oneYear: boolean): TypedBelowSpanFrame => ({ ...off(opener, oneYear), bothAlive: true })
-    expect(slots.workingCostTypedBelowSpanSame(on(true, false))).toBe('Each working year you’re both alive, this answer adds the same to your savings as it would at your spending of $105,000 a year.')
+    expect(slots.workingCostTypedBelowSpanSame(on(true, false))).toBe('Each working year you’re both alive, this answer adds the same to your savings as it would at your spending of $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.')
     expect(slots.workingCostTypedBelowSpanShort(on(false, false), ['3,652', '4,015'])).toBe('At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short.')
     expect(slots.workingCostTypedBelowSpanShort(on(false, true), ['4,015', '4,015'])).toBe('At your spending of $105,000 a year, that working year, if you’re both alive, comes up $4,015 short.')
-    expect(slots.workingCostTypedBelowSpanSame(on(false, false)), 'a segment’s `same` takes its scope from the lead').toBe('This answer adds the same to your savings as it would at your spending of $105,000 a year.')
+    expect(slots.workingCostTypedBelowSpanSame(on(false, false)), 'a segment’s `same` takes its scope from the lead').toBe('This answer adds the same to your savings as it would at your spending of $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.')
   })
 
   it('the R16 list counts every typed-below span slot by name and never the counts slots; its ban still reds "better" planted in a span', () => {
@@ -1589,7 +1589,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     const withCoda = composed.filter(([, text]) => text.includes(SURVIVOR_CODA))
     expect(withCoda.length, 'the coda in every gate-on reading').toBe((households - TYPED_BELOW_GATE_OFF.length) * 6)
     expect(withCoda.some(([name]) => gateOff(name)), 'and in no gate-off reading').toBe(false)
-    expect(composed.filter(([, text]) => text.includes('That is the whole gap to your figure of')).length, 'the whole-gap form: C at 100 % twice, TM and the pension as budgets').toBe(4 * 6)
+    expect(composed.filter(([, text]) => /\bThat \$[\d,]+(?:\.\d\d)? a year is the whole gap to your figure of\b/.test(text)).length, 'the whole-gap form, X echoed (the tax rider build’s KD2): C at 100 % twice, TM and the pension as budgets').toBe(4 * 6)
+    expect(composed.filter(([, text]) => text.includes('That is the whole gap')).length, 'never the bare "That"').toBe(0)
     expect(composed.filter(([, text]) => text.includes('Such a year’s costs count as')).length, 'the charges form: every other gate-on household').toBe((households - TYPED_BELOW_GATE_OFF.length - 4) * 6)
   })
 
@@ -1602,7 +1603,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     ]
     expect(strings.length, "the sweep is non-vacuous").toBeGreaterThan(990)
     // …and it reads the survivor coda: every gate-on household's six composed readings carry it.
-    expect(strings.filter(([, text]) => text.includes(SURVIVOR_CODA) && text.includes('plus any income tax on it')).length, 'the coda is swept').toBeGreaterThanOrEqual(
+    expect(strings.filter(([, text]) => text.includes(SURVIVOR_CODA) && text.includes('not including any difference in income tax and Medicare’s income surcharge')).length, 'the coda is swept').toBeGreaterThanOrEqual(
       (Object.keys(TYPED_BELOW_SWEPT).length - TYPED_BELOW_GATE_OFF.length) * 6,
     )
     for (const [name, text] of strings) for (const re of RETIRED_EVERYWHERE) expect(text, `${name}: ${re}`).not.toMatch(re)

@@ -1053,14 +1053,14 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
    *  (Sam can die from 66, in 2032, while Alex works), so the short span's year subject carries the scope. */
   const TM_SEGMENTS = (answer: 'This' | 'Your'): NoteParts['segments'] => {
     const lower = answer.toLowerCase()
-    const credit = [`${answer} answer adds at most $16,985 a year to your savings.`, 'At your spending of $105,000 a year, it would add at most $5,985, $11,000 less.']
+    const credit = [`${answer} answer adds at most $16,985 a year to your savings.`, 'At your spending of $105,000 a year, it would add at most $5,985, $11,000 less, not including any difference in income tax and Medicare’s income surcharge.']
     return [
       { label: '2026 through 2028', sentences: credit },
       {
         label: '2029 through 2032',
         sentences: [
           `At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and ${lower} answer would add nothing.`,
-          `Your figure of $84,000 a year leaves those shortfalls out of ${lower} answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, plus any income tax on those shortfalls.`,
+          `Your figure of $84,000 a year leaves those shortfalls out of ${lower} answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, not including any difference in income tax and Medicare’s income surcharge.`,
         ],
       },
       { label: '2033 through 2035', sentences: credit },
@@ -1070,7 +1070,7 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
   const TM_CODA = (answer: 'This' | 'Your') => ({
     label: 'If only one of you is alive',
     sentences: [
-      `In such a working year, ${answer.toLowerCase()} answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, plus any income tax on it.`,
+      `In such a working year, ${answer.toLowerCase()} answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.`,
       'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.',
     ],
   })
@@ -1085,8 +1085,8 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     expect(isWorkingYearCostStale(d), 'the premise: a typed figure is fresh').toBe(false)
     expect(workingYearLeftOverShownState(d), 'the premise: carried at the stored figure').toBe('saved')
     const span = (answer: 'this' | 'your') =>
-      `Each working year you’re both alive, ${answer} answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less. ` +
-      `If only one of you is alive in a working year, ${answer} answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, plus any income tax on it. ` +
+      `Each working year you’re both alive, ${answer} answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge. ` +
+      `If only one of you is alive in a working year, ${answer} answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge. ` +
       'Such a year’s costs count as $63,000 a year at your figure and $67,500 at your spending.'
     expect(line(d, RESULT)).toEqual(plain(`${counts('This', '84,000', '90,000')} ${span('this')}`))
     expect(line(d, RESULT_HOSTED), 'nothing moved: the host flag changes nothing').toEqual(plain(`${counts('This', '84,000', '90,000')} ${span('this')}`))
@@ -1124,9 +1124,9 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
   // at its live $5,985, then $90,000 typed. Every figure is typed by hand: the short years are C's ($3,652 to $4,015 at the
   // quote, so $5,985 + those, $9,637 to $10,000, a year more), and a death leaves the whole sticky budget, so X is the whole
   // $15,000 gap ($105,000 less $90,000).
-  it('AE1: C at 100 % sticky on the Result — the scoped lead before the spans, the two `same` segments under it, the short span’s year subject scoped, then the `wholeGap` coda as its own part: at most $15,000, "That is the whole gap to your figure of $90,000 a year."', () => {
+  it('AE1: C at 100 % sticky on the Result — the scoped lead before the spans, the two `same` segments under it, the short span’s year subject scoped, then the `wholeGap` coda as its own part: at most $15,000, "That $15,000 a year is the whole gap to your figure of $90,000 a year." (the echo, the tax rider build’s KD2)', () => {
     const c100 = councilBudgetHousehold(1)
-    const same = 'This answer adds the same to your savings as it would at your budget’s $105,000 a year.'
+    const same = 'This answer adds the same to your savings as it would at your budget’s $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.'
     expect(line(c100, RESULT)).toEqual({
       opening:
         'This answer counts a working year at your own figure of $90,000 a year, below your budget’s first year after work stops, which comes to $105,000 a year. ' +
@@ -1138,7 +1138,7 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
           label: '2029 through 2032',
           sentences: [
             'At your budget’s $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and this answer would add nothing.',
-            'Your figure of $90,000 a year leaves those shortfalls out of this answer, and it adds at most $5,985 a year to your savings, at most $9,637 to $10,000 a year more, plus any income tax on those shortfalls.',
+            'Your figure of $90,000 a year leaves those shortfalls out of this answer, and it adds at most $5,985 a year to your savings, at most $9,637 to $10,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
           ],
         },
         { label: '2033 through 2035', sentences: [same] },
@@ -1147,8 +1147,8 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
       coda: {
         label: 'If only one of you is alive',
         sentences: [
-          'In such a working year, this answer takes at most $15,000 a year less from your savings than it would at your budget’s $105,000 a year, plus any income tax on it.',
-          'That is the whole gap to your figure of $90,000 a year.',
+          'In such a working year, this answer takes at most $15,000 a year less from your savings than it would at your budget’s $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.',
+          'That $15,000 a year is the whole gap to your figure of $90,000 a year.',
         ],
       },
     })
@@ -1162,7 +1162,7 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     expect(coda).toEqual({
       label: 'If only one of you is alive',
       sentences: [
-        'In such a working year, your answer takes at most $11,250 a year less from your savings than it would at your budget’s $105,000 a year, plus any income tax on it.',
+        'In such a working year, your answer takes at most $11,250 a year less from your savings than it would at your budget’s $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.',
         'Such a year’s costs count as $88,500 a year at your figure and $99,750 at your budget.',
       ],
     })
@@ -1177,7 +1177,7 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     const read = workingYearTypedBelowWindow(sam56)
     expect(read?.kind === 'read' && read.survivor === null, 'the premise: the gate is off').toBe(true)
     const span = (answer: 'this' | 'your') =>
-      `Each working year, ${answer} answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less.`
+      `Each working year, ${answer} answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge.`
     expect(line(sam56, RESULT)).toEqual(plain(`${counts('This', '84,000', '90,000')} ${span('this')}`))
     expect(line(sam56, RESULT_HOSTED)).toEqual(plain(`${counts('This', '84,000', '90,000')} ${span('this')}`))
     expect(line(sam56, GATE)).toEqual(plain(`${counts('Your', '84,000', '90,000')} ${span('your')}`))
@@ -1190,28 +1190,28 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     const drift = TYPED_BELOW_WITNESSES.drift
     expect(segment(drift, RESULT, '2026 through 2032')).toEqual([
       'This answer adds at most $25,722 to $26,985 a year to your savings.',
-      'At your spending of $90,000 a year, it would add at most $19,722 to $20,985, $6,000 less.',
+      'At your spending of $90,000 a year, it would add at most $19,722 to $20,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     expect(segment(drift, RESULT, '2033 through 2035')).toEqual([
       'This answer adds at most $26,985 a year to your savings.',
-      'At your spending of $90,000 a year, it would add at most $20,985, $6,000 less.',
+      'At your spending of $90,000 a year, it would add at most $20,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     // TM at $95,000: the quote answer's credit drifts, so the difference is a range too.
     expect(segment(TYPED_BELOW_WITNESSES.tm95, GATE, '2029 through 2032')).toEqual([
       'Your answer adds at most $16,985 a year to your savings.',
-      'At your spending of $95,000 a year, it would add at most $5,985 to $6,348, $10,637 to $11,000 less.',
+      'At your spending of $95,000 a year, it would add at most $5,985 to $6,348, $10,637 to $11,000 less, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     // C at $110,985: year 0 at the quote is exactly $0, so the answer there credits nothing in a year that is not short.
     expect(segment(TYPED_BELOW_WITNESSES.c110985, GATE, '2026 through 2028')).toEqual([
       'Your answer adds at most $16,985 a year to your savings.',
-      'At your spending of $110,985 a year, it would add nothing, $16,985 a year less.',
+      'At your spending of $110,985 a year, it would add nothing, $16,985 a year less, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     // …and as the one span of a plain line, with the scoped opener and the one-span coda (first none: spending $100,985;
     // the survivor charges are 0.75 of each figure, $63,000 and $75,738.75, so X is $12,739, the raw $12,738.75 rounded up).
     expect(line({ ...typed(DEV_SEEDS.datesavedrisen), annualSpendingReal: 100_985 }, GATE)).toEqual(
       plain(
-        `${counts('Your', '84,000', '100,985')} Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. At your spending of $100,985 a year, it would add nothing, $16,985 a year less. ` +
-          'If only one of you is alive in a working year, your answer takes at most $12,739 a year less from your savings than it would at your spending of $100,985 a year, plus any income tax on it. ' +
+        `${counts('Your', '84,000', '100,985')} Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. At your spending of $100,985 a year, it would add nothing, $16,985 a year less, not including any difference in income tax and Medicare’s income surcharge. ` +
+          'If only one of you is alive in a working year, your answer takes at most $12,739 a year less from your savings than it would at your spending of $100,985 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
           'Such a year’s costs count as $63,000 a year at your figure and $75,739 at your spending.',
       ),
     )
@@ -1221,35 +1221,35 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     // `shortLeftOverAtTyped`, several years: TM (above), and a credit range below the cap ($99,000 on C).
     expect(segment(typed(DEV_SEEDS.datesavedrisenlater, 99_000), GATE, '2029 through 2032')).toEqual([
       'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and your answer would add nothing.',
-      'Your figure of $99,000 a year leaves those shortfalls out of your answer, and it adds at most $1,985 to $2,348 a year to your savings, at most $6,000 a year more, plus any income tax on those shortfalls.',
+      'Your figure of $99,000 a year leaves those shortfalls out of your answer, and it adds at most $1,985 to $2,348 a year to your savings, at most $6,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     // …one year: the pension household's 2029, and B with the alimony from 61 (year 0 the only short year).
     expect(segment(TYPED_BELOW_WITNESSES.pension, RESULT, '2029')).toEqual([
       'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $4,015 short, and this answer would add nothing.',
-      'Your figure of $84,000 a year leaves that shortfall out of this answer, and it adds at most $16,985 a year to your savings, at most $21,000 a year more, plus any income tax on that shortfall.',
+      'Your figure of $84,000 a year leaves that shortfall out of this answer, and it adds at most $16,985 a year to your savings, at most $21,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     expect(line(typed(alimony(61, 70)), GATE).segments.map((s) => s.label), 'year 0 short alone, then nothing at the quote').toEqual(['2026', '2027 through 2035'])
     // `shortStillShortAtTyped`, several years: C typed at $101,000 (KTD7's own row), and one year (the alimony to 65 at $102,000).
     expect(segment(TYPED_BELOW_WITNESSES.c101000, GATE, '2029 through 2030')).toEqual([
       'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short.',
-      'At your figure of $101,000 a year, each still comes up $15 short, and your answer takes at most $4,000 a year less from your savings, plus any income tax on it.',
+      'At your figure of $101,000 a year, each still comes up $15 short, and your answer takes at most $4,000 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     expect(segment(TYPED_BELOW_WITNESSES.c101000, GATE, '2031 through 2032')).toEqual([
       'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 short, and your answer would add nothing.',
-      'Your figure of $101,000 a year leaves those shortfalls out of your answer, and it adds at most $348 a year to your savings, at most $4,000 a year more, plus any income tax on those shortfalls.',
+      'Your figure of $101,000 a year leaves those shortfalls out of your answer, and it adds at most $348 a year to your savings, at most $4,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     expect(segment(typed(alimony(50, 65), 102_000), RESULT, '2032')).toEqual([
       'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $3,652 short.',
-      'At your figure of $102,000 a year, it still comes up $652 short, and this answer takes at most $3,000 a year less from your savings, plus any income tax on it.',
+      'At your figure of $102,000 a year, it still comes up $652 short, and this answer takes at most $3,000 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     // `shortEvenAtTyped`, several years: C typed at $100,985; one year: the alimony to 65 at $101,348 (2032 prints $0).
     expect(segment(TYPED_BELOW_WITNESSES.c100985, GATE, '2029 through 2030')).toEqual([
       'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short.',
-      'At your figure of $100,985 a year, each leaves nothing over and nothing short, and your answer takes at most $4,015 a year less from your savings, plus any income tax on it.',
+      'At your figure of $100,985 a year, each leaves nothing over and nothing short, and your answer takes at most $4,015 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     expect(segment(typed(alimony(50, 65), 101_348), RESULT, '2032')).toEqual([
       'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $3,652 short.',
-      'At your figure of $101,348 a year, it leaves nothing over and nothing short, and this answer takes at most $3,652 a year less from your savings, plus any income tax on it.',
+      'At your figure of $101,348 a year, it leaves nothing over and nothing short, and this answer takes at most $3,652 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     // `shortStillShortAtTyped` with cents (the whole-file review's round 1, finding #1; R5 over V9): C typed at $8,416.67 a
     // month draws $15.04 in 2029 and 2030 (printed $16) against the quote's $4,015, so the engine takes $3,999.96 less. The
@@ -1257,20 +1257,20 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     // difference rounded up, $4,000, a dollar above $4,015 − $16 (flagged for walk 8).
     expect(segment(typed(DEV_SEEDS.datesavedrisenlater, 8_416.67 * 12, 'month'), GATE, '2029 through 2030')).toEqual([
       'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short.',
-      'At your figure of $101,000 a year, each still comes up $16 short, and your answer takes at most $4,000 a year less from your savings, plus any income tax on it.',
+      'At your figure of $101,000 a year, each still comes up $16 short, and your answer takes at most $4,000 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     // …and where the rounding's DIRECTION shows (round 2, finding #3): at $8,416.73 a month the engine draws $3,999.24 less,
     // so rounding to the nearest dollar, or down, would print $3,999, under the engine; up prints $4,000.
     expect(segment(CENTS_873, GATE, '2029 through 2030')).toEqual([
       'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short.',
-      'At your figure of $101,001 a year, each still comes up $16 short, and your answer takes at most $4,000 a year less from your savings, plus any income tax on it.',
+      'At your figure of $101,001 a year, each still comes up $16 short, and your answer takes at most $4,000 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     // …and where each cash must meet the cent BEFORE the subtraction (round 2, finding #2): pay a cent lower and a figure
     // typed to a tenth of a cent leave draws of $4,015.006 and $16.002 (cent grain $4,015.01 and $16.00); snapping their raw
     // difference ($3,999.004) printed $3,999, a dollar under both the cent grain and $4,016 − $16.
     expect(segment(SUB_CENT, GATE, '2029 through 2030')).toEqual([
       'At your spending of $105,000 a year, each working year you’re both alive comes up $4,016 short.',
-      'At your figure of $101,001 a year, each still comes up $16 short, and your answer takes at most $4,000 a year less from your savings, plus any income tax on it.',
+      'At your figure of $101,001 a year, each still comes up $16 short, and your answer takes at most $4,000 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
     ])
   })
 
@@ -1370,16 +1370,16 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
 
   it('`same`: a labelled span says the answer adds the same, no figure (its scope rides the lead); a one-span `same` line opens "Each working year you’re both alive," and keeps the opening’s lean (never "here it doesn’t") — and twelve cents a year below the quote reads `same` only where neither answer is short: 2029–2032 take at most $1 a year less, the quote to the cent, and the coda prints "at most $1" beside the two charges to the cent, $78,749.91 and $78,750.00, never two equal dollar figures (AE4; round 3)', () => {
     const whole = TYPED_BELOW_WITNESSES.whole
-    expect(segment(whole, RESULT, '2026 through 2028')).toEqual(['This answer adds the same to your savings as it would at your spending of $90,000 a year.'])
-    expect(segment(whole, GATE, '2033 through 2035')).toEqual(['Your answer adds the same to your savings as it would at your spending of $90,000 a year.'])
+    expect(segment(whole, RESULT, '2026 through 2028')).toEqual(['This answer adds the same to your savings as it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge.'])
+    expect(segment(whole, GATE, '2033 through 2035')).toEqual(['Your answer adds the same to your savings as it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge.'])
     expect(line(whole, RESULT).opening.endsWith(' What this answer adds to your savings in each working year you’re both alive:'), 'the `same` segments sit under the scoped lead').toBe(true)
     // `?seed=date` with $6,000 a month typed: the stored $16,985 caps both answers in every year and neither is short, so
     // one `same` span. Its survivor charges are 0.75 of each figure: $54,000 and $63,000, X the $9,000 between them.
     expect(line(TYPED_BELOW_WITNESSES.date6000Month, RESULT_HOSTED)).toEqual(
       plain(
         'This answer counts a working year at your own figure of $72,000 a year, below your spending of $84,000 a year. ' +
-          `${LEAN} Each working year you’re both alive, this answer adds the same to your savings as it would at your spending of $84,000 a year. ` +
-          'If only one of you is alive in a working year, this answer takes at most $9,000 a year less from your savings than it would at your spending of $84,000 a year, plus any income tax on it. ' +
+          `${LEAN} Each working year you’re both alive, this answer adds the same to your savings as it would at your spending of $84,000 a year, not including any difference in income tax and Medicare’s income surcharge. ` +
+          'If only one of you is alive in a working year, this answer takes at most $9,000 a year less from your savings than it would at your spending of $84,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
           'Such a year’s costs count as $54,000 a year at your figure and $63,000 at your spending.',
       ),
     )
@@ -1392,21 +1392,21 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
         'This answer counts a working year at your own figure of $104,999.88 a year, below your spending of $105,000.00 a year. ' +
         `${LEAN} What this answer adds to your savings in each working year you’re both alive:`,
       segments: [
-        { label: '2026 through 2028', sentences: ['This answer adds the same to your savings as it would at your spending of $105,000.00 a year.'] },
+        { label: '2026 through 2028', sentences: ['This answer adds the same to your savings as it would at your spending of $105,000.00 a year, not including any difference in income tax and Medicare’s income surcharge.'] },
         {
           label: '2029 through 2032',
           sentences: [
             'At your spending of $105,000.00 a year, each working year you’re both alive comes up $3,652 to $4,015 short.',
-            'At your figure of $104,999.88 a year, each still comes up $3,652 to $4,015 short, and this answer takes at most $1 a year less from your savings, plus any income tax on it.',
+            'At your figure of $104,999.88 a year, each still comes up $3,652 to $4,015 short, and this answer takes at most $1 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
           ],
         },
-        { label: '2033 through 2035', sentences: ['This answer adds the same to your savings as it would at your spending of $105,000.00 a year.'] },
+        { label: '2033 through 2035', sentences: ['This answer adds the same to your savings as it would at your spending of $105,000.00 a year, not including any difference in income tax and Medicare’s income surcharge.'] },
       ],
       door: null,
       coda: {
         label: 'If only one of you is alive',
         sentences: [
-          'In such a working year, this answer takes at most $1 a year less from your savings than it would at your spending of $105,000.00 a year, plus any income tax on it.',
+          'In such a working year, this answer takes at most $1 a year less from your savings than it would at your spending of $105,000.00 a year, not including any difference in income tax and Medicare’s income surcharge.',
           'Such a year’s costs count as $78,749.91 a year at your figure and $78,750.00 at your spending.',
         ],
       },
@@ -1422,9 +1422,9 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     expect(line(d, RESULT)).toEqual(
       plain(
         `This answer counts a working year at your own figure of $84,000 a year, below your budget’s first year after work stops, which comes to $90,000 a year. ${LEAN} ` +
-          'Each working year you’re both alive, this answer adds at most $16,985 a year to your savings. At your budget’s $90,000 a year, it would add at most $10,985, $6,000 less. ' +
-          'If only one of you is alive in a working year, this answer takes at most $6,000 a year less from your savings than it would at your budget’s $90,000 a year, plus any income tax on it. ' +
-          'That is the whole gap to your figure of $84,000 a year.',
+          'Each working year you’re both alive, this answer adds at most $16,985 a year to your savings. At your budget’s $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge. ' +
+          'If only one of you is alive in a working year, this answer takes at most $6,000 a year less from your savings than it would at your budget’s $90,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
+          'That $6,000 a year is the whole gap to your figure of $84,000 a year.',
       ),
     )
   })
@@ -1453,16 +1453,24 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     for (const r of both) expect(r.bottomLine - atQuote.laterYears.find((q) => q.calendarYear === r.calendarYear)!.bottomLine, String(r.calendarYear)).toBeCloseTo(21_000, 6)
   })
 
-  /** The coda's own law (the survivor-path build's KTD8), a pure verdict so a plant can be shown to red on THIS law's own
-   *  clause and no other (insight 152): `null` where the coda keeps it, else the first clause it breaks. Two sentences: the
-   *  first states X with "at most", the quote's side and the income-tax rider, and no other figure; the second states
-   *  exactly the two figures X is the difference of — the typed figure beside the first sentence's quote (the whole gap),
-   *  or the two survivor charges — and nothing else, and they subtract to X or to at most $1 under it (X is the raw
-   *  difference rounded up, KTD4: the gloomy side). R8: never "on your own", never that nothing is credited. */
+  /** The rider every comparison the line makes ends on (the tax rider build's KD2, council `wf_33aa98fe-a26`), typed by
+   *  hand: never read from the copy constant or a slot (KTD1), so a plant in the copy reds here. */
+  const RIDER = ', not including any difference in income tax and Medicare’s income surcharge.'
+  /** The coda's own law (the survivor-path build's KTD8; the tax rider build's KD2 and KTD4), a pure verdict so a plant
+   *  can be shown to red on THIS law's own clause and no other (insight 152): `null` where the coda keeps it, else the
+   *  first clause it breaks. Two sentences: the first states X with "at most", the quote's side and the rider, and no
+   *  other figure; the second states exactly the two figures X is the difference of — in the whole-gap form, X echoed
+   *  to the cent and then the typed figure, the quote less the typed figure being the gap ("That $X a year is the whole
+   *  gap to your figure of $T a year.": the echo, so "That" can never read as the rider's costs); or the two survivor
+   *  charges — and nothing else, and they subtract to X or to at most $1 under it (X is the raw difference rounded up,
+   *  KTD4: the gloomy side). R8: never "on your own", never that nothing is credited. */
   const CODA_FIG = String.raw`\$[\d,]+(?:\.\d\d)?`
   const toCentsOf = (fig: string): number => Math.round(Number(fig.replace(/[$,]/g, '')) * 100)
   const figuresIn = (s: string): readonly number[] => [...s.matchAll(new RegExp(CODA_FIG, 'g'))].map((m) => toCentsOf(m[0]))
+  const CODA_FIRST = 'the first sentence states X "at most", the quote’s side and the rider'
   const CODA_SECOND_PAIR = 'the second sentence names exactly the two figures X is the difference of, and nothing else'
+  const CODA_ECHO_FORM = 'the whole-gap sentence opens on X: "That $X a year is the whole gap to your figure of $T a year."'
+  const CODA_ECHO_X = 'the whole-gap sentence’s echo is X to the cent'
   const CODA_SUBTRACTS = 'the pair subtracts to X or to at most $1 under it'
   const codaLaw = (coda: NoteSegment, count: 'one' | 'many'): string | null => {
     if (coda.label !== 'If only one of you is alive') return 'its label is its condition'
@@ -1471,21 +1479,26 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     const opens = count === 'one' ? 'If only one of you is alive in a working year, ' : 'In such a working year, '
     if (!first.startsWith(opens)) return `the first sentence opens "${opens}"`
     const at = new RegExp(
-      String.raw`\b(?:this|your) answer takes at most (${CODA_FIG}) a year less from your savings than it would at your (?:spending of|budget’s) (${CODA_FIG}) a year, plus any income tax on it\.$`,
+      String.raw`\b(?:this|your) answer takes at most (${CODA_FIG}) a year less from your savings than it would at your (?:spending of|budget’s) (${CODA_FIG}) a year, not including any difference in income tax and Medicare’s income surcharge\.$`,
     ).exec(first)
-    if (at === null) return 'the first sentence states X "at most", the quote’s side and the income-tax rider'
+    if (at === null) return CODA_FIRST
     if (figuresIn(first).length !== 2) return 'the first sentence names X and the quote and no other figure'
     const x = toCentsOf(at[1]!)
     const quote = toCentsOf(at[2]!)
     const figures = figuresIn(second)
-    const whole = new RegExp(String.raw`\byour figure of (${CODA_FIG}) a year\b`).exec(second)
-    const charges = new RegExp(String.raw`(${CODA_FIG}) a year at your figure and (${CODA_FIG}) at your (?:spending|budget)\b`).exec(second)
-    const pair: readonly [number, number] | null =
-      figures.length === 1 && whole !== null
-        ? [toCentsOf(whole[1]!), quote]
-        : figures.length === 2 && charges !== null
-          ? [toCentsOf(charges[1]!), toCentsOf(charges[2]!)]
-          : null
+    let pair: readonly [number, number] | null
+    if (/\bwhole gap\b/.test(second)) {
+      // The whole-gap form (KD2's strict branch): exactly two figures, X echoed to the cent, then the typed figure. A
+      // third figure is the pair clause's; one figure alone (the bare "That is the whole gap…") is the echo's form.
+      if (figures.length > 2) return CODA_SECOND_PAIR
+      const echo = new RegExp(String.raw`^That (${CODA_FIG}) a year is the whole gap to your figure of (${CODA_FIG}) a year\.$`).exec(second)
+      if (echo === null) return CODA_ECHO_FORM
+      if (toCentsOf(echo[1]!) !== x) return CODA_ECHO_X
+      pair = [toCentsOf(echo[2]!), quote]
+    } else {
+      const charges = new RegExp(String.raw`(${CODA_FIG}) a year at your figure and (${CODA_FIG}) at your (?:spending|budget)\b`).exec(second)
+      pair = figures.length === 2 && charges !== null ? [toCentsOf(charges[1]!), toCentsOf(charges[2]!)] : null
+    }
     if (pair === null) return CODA_SECOND_PAIR
     const under = x - (pair[1] - pair[0])
     if (under < 0 || under > 100) return `${CODA_SUBTRACTS} (X ${x / 100}, the pair ${(pair[1] - pair[0]) / 100} apart)`
@@ -1495,11 +1508,36 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     return null
   }
 
+  /** The span rider rule (the tax rider build's KTD4), a pure verdict so its plants red on THIS rule alone (insight 152):
+   *  whether each span kind's last sentence ends on {@link RIDER}, an exhaustive Record over the kinds (insight 147): every
+   *  kind does (KD2's call 2: the credit kinds and `same` with the short kinds, since under the whole-difference scope a
+   *  span without it reads as "no difference in income tax here", round 3's measurement says otherwise). The rider rides
+   *  once a span, on its last sentence alone (the density law: no third sentence, R5), and never with the old wording
+   *  beside it. `null` where the span keeps it, else the clause it breaks. */
+  const SPAN_ENDS_ON_RIDER: Readonly<Record<TypedBelowYearKind, boolean>> = {
+    same: true,
+    bothCredit: true,
+    quoteCreditsNothing: true,
+    shortLeftOverAtTyped: true,
+    shortStillShortAtTyped: true,
+    shortEvenAtTyped: true,
+  }
+  const SPAN_RIDER_END = 'the span’s last sentence ends on the rider'
+  const SPAN_RIDER_ONCE = 'the rider once a span, on its last sentence alone'
+  const SPAN_RIDER_OLD = 'never the old rider ("plus any income tax on …")'
+  const spanRiderLaw = (kind: TypedBelowYearKind, sentences: readonly string[]): string | null => {
+    const ends = SPAN_ENDS_ON_RIDER[kind]
+    if ((sentences.at(-1) ?? '').endsWith(RIDER) !== ends) return ends ? SPAN_RIDER_END : 'the span carries no rider'
+    if (sentences.join(' ').split(RIDER).length - 1 !== (ends ? 1 : 0)) return SPAN_RIDER_ONCE
+    if (/\bplus any income tax\b/i.test(sentences.join(' '))) return SPAN_RIDER_OLD
+    return null
+  }
+
   // R5 and R8 (the plan's U4 test 4), over every witness and all four hosts, read from the line's exported STRUCTURE (the
   // survivor-path build's KTD8), never a folded paragraph sliced by a regex: the opening's sentences (the counts sentence,
   // which names both figures by design; the Result's moved clause, the moved words' own pins; the lead) sit outside the
   // span law, each span keeps it, and the coda keeps its own ({@link codaLaw}), so its sentences are never counted as a span's.
-  it('the density law on every witness’s structure, all four hosts: no span sentence names both sides; the yearly difference rides only a span’s second sentence; no "so"; at most two sentences per span; every figure for what the answer adds or takes is "at most", a fact of the picture, or a difference set beside its pair; and the survivor coda is two sentences — X "at most" with the quote’s side and the income-tax rider, then exactly the two figures X is the difference of', () => {
+  it('the density law on every witness’s structure, all four hosts: no span sentence names both sides; the yearly difference rides only a span’s second sentence; no "so"; at most two sentences per span; every span’s last sentence ends on the rider, once (the tax rider build’s KTD4); every figure for what the answer adds or takes is "at most", a fact of the picture, or a difference set beside its pair; and the survivor coda is two sentences — X "at most" with the quote’s side and the rider, then exactly the two figures X is the difference of, X echoed in the whole-gap form', () => {
     // Case-blind (the whole-file review's round 1, finding #5): the short span's second sentence OPENS "Your figure of", so a
     // case-sensitive side never fired on it, and a quote figure planted there passed the law. The typed side is also the
     // credit kinds' first sentence, "This/Your answer adds at most $X" (round 2, finding #4: it fired on neither side, so
@@ -1602,10 +1640,13 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
             if (s.kind.startsWith('short')) expect(structure.spans[i]!.sentences[0], `${where} — a short kind’s year subject carries the scope`).toContain('you’re both alive')
           })
         }
-        for (const { sentences } of structure.spans) {
+        expect(structure.spans.length, `${where} — one segment per span of the read`).toBe(read.spans.length)
+        for (const [i, { sentences }] of structure.spans.entries()) {
           spans += 1
           const who = `${where}: ${sentences.join(' ')}`
           expect(sentences.length, `${who} — at most two sentences`).toBeLessThanOrEqual(2)
+          // The tax rider build's KTD4: every kind's last sentence ends on the rider, once.
+          expect(spanRiderLaw(read.spans[i]!.kind, sentences), who).toBeNull()
           expect(sentences[0], `${who} — the first sentence carries no difference`).not.toMatch(DIFFERENCE)
           for (const s of sentences) {
             if (QUOTE_SIDE.test(s)) quoteSides += 1
@@ -1666,9 +1707,31 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     expect(codaLaw(tmCoda, 'many'), 'the control: TM’s coda keeps the law').toBeNull()
     expect(codaLaw(c100Coda, 'many'), 'the control: C’s whole-gap coda keeps the law').toBeNull()
     const withSecond = (c: NoteSegment, second: string): NoteSegment => ({ label: c.label, sentences: [c.sentences[0]!, second] })
+    const withFirst = (c: NoteSegment, first: string): NoteSegment => ({ label: c.label, sentences: [first, c.sentences[1]!] })
     expect(codaLaw(withSecond(tmCoda, 'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending, $15,750 apart.'), 'many'), 'a third figure beside the charges').toBe(CODA_SECOND_PAIR)
-    expect(codaLaw(withSecond(c100Coda, 'That is the whole gap to your figure of $90,000 a year, below your budget’s $105,000.'), 'many'), 'a second figure beside the whole gap').toBe(CODA_SECOND_PAIR)
+    expect(codaLaw(withSecond(c100Coda, 'That $15,000 a year is the whole gap to your figure of $90,000 a year, below your budget’s $105,000.'), 'many'), 'a third figure beside the whole gap').toBe(CODA_SECOND_PAIR)
     expect(codaLaw(withSecond(tmCoda, 'Such a year’s costs count as $63,000 a year at your figure and $78,000 at your spending.'), 'many'), 'a pair $750 short of X').toMatch(/^the pair subtracts to X or to at most \$1 under it/)
+    // The tax rider build's plants (U3), each on its own clause: the coda with the old rider; the whole-gap echo off X;
+    // the bare "That is the whole gap…" (the reading the echo closes: "That" as the rider's costs); and the typed figure
+    // off the gap behind a true echo.
+    expect(c100Coda.sentences[1], 'the control: C’s whole-gap sentence, typed by hand').toBe('That $15,000 a year is the whole gap to your figure of $90,000 a year.')
+    expect(codaLaw(withFirst(tmCoda, tmCoda.sentences[0]!.replace(RIDER, ', plus any income tax on it.')), 'many'), 'the coda with the old rider').toBe(CODA_FIRST)
+    expect(codaLaw(withSecond(c100Coda, 'That $14,000 a year is the whole gap to your figure of $90,000 a year.'), 'many'), 'an echo off X').toBe(CODA_ECHO_X)
+    expect(codaLaw(withSecond(c100Coda, 'That is the whole gap to your figure of $90,000 a year.'), 'many'), 'the bare "That"').toBe(CODA_ECHO_FORM)
+    expect(codaLaw(withSecond(c100Coda, 'That $15,000 a year is the whole gap to your figure of $91,000 a year.'), 'many'), 'a typed figure off the gap').toMatch(/^the pair subtracts to X or to at most \$1 under it/)
+    // The span rider rule is not vacuous either (KTD4): TM's real spans keep it; a short span with the old rider and a
+    // credit span with no rider each red its end clause; a rider said twice reds its once clause.
+    const tmShort = segment(TYPED_BELOW_WITNESSES.tm, GATE, '2029 through 2032')
+    const tmCredit = segment(TYPED_BELOW_WITNESSES.tm, GATE, '2026 through 2028')
+    expect(spanRiderLaw('shortLeftOverAtTyped', tmShort), 'the control: TM’s short span').toBeNull()
+    expect(spanRiderLaw('bothCredit', tmCredit), 'the control: TM’s credit span').toBeNull()
+    expect(tmCredit[1], 'the control: TM’s credit span’s second sentence, typed by hand').toBe(
+      'At your spending of $105,000 a year, it would add at most $5,985, $11,000 less, not including any difference in income tax and Medicare’s income surcharge.',
+    )
+    expect(spanRiderLaw('shortLeftOverAtTyped', [tmShort[0]!, tmShort[1]!.replace(RIDER, ', plus any income tax on those shortfalls.')]), 'a short span with the old rider').toBe(SPAN_RIDER_END)
+    expect(spanRiderLaw('bothCredit', [tmCredit[0]!, 'At your spending of $105,000 a year, it would add at most $5,985, $11,000 less.']), 'a credit span with no rider').toBe(SPAN_RIDER_END)
+    expect(spanRiderLaw('bothCredit', [tmCredit[0]!.replace(/\.$/, RIDER), tmCredit[1]!]), 'the rider on both sentences').toBe(SPAN_RIDER_ONCE)
+    expect(spanRiderLaw('shortLeftOverAtTyped', [tmShort[0]!, tmShort[1]!.replace(RIDER, `, plus any income tax on those shortfalls${RIDER}`)]), 'the old rider beside the new').toBe(SPAN_RIDER_OLD)
   })
 
   it('a figure typed by the month names both figures yearly, and "your figure of $84,000 a year" on every host — never "your $84,000 figure" outside the gate’s door, which keeps it (R9)', () => {
@@ -1755,8 +1818,8 @@ describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — t
   const COUNTS_TM = 'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. A working year almost always costs at least what you spend, so this answer can look better than it really is.'
   /** A's one span under the survivor gate, its scoped opener, then the one-span coda's two sentences closing the paragraph. */
   const A_SPAN =
-    'Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less. ' +
-    'If only one of you is alive in a working year, your answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, plus any income tax on it. ' +
+    'Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge. ' +
+    'If only one of you is alive in a working year, your answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
     'Such a year’s costs count as $63,000 a year at your figure and $67,500 at your spending.'
   /** The seat's lead above two or more spans, scoped under the gate (every witness opens it). */
   const LEAD = 'What this answer adds to your savings in each working year you’re both alive:'
@@ -1764,7 +1827,7 @@ describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — t
   const TM_CODA = {
     label: 'If only one of you is alive',
     sentences: [
-      'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, plus any income tax on it.',
+      'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.',
       'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.',
     ],
   }
@@ -1789,7 +1852,7 @@ describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — t
     expect(sheet.segments.map((s) => s.label)).toEqual(['2026 through 2028', '2029 through 2032', '2033 through 2035'])
     expect(sheet.segments[1]!.sentences).toEqual([
       'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and your answer would add nothing.',
-      'Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, plus any income tax on those shortfalls.',
+      'Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
     ])
     expect(sheet.coda).toEqual(TM_CODA)
     expect(sheet.door).toBeNull()

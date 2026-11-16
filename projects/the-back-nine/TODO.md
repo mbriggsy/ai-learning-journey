@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-15, b9-1's close):** the tax rider build's U2 to U5, as one commit behind its plan's Verification Contract (`docs/plans/features/typed-below-tax-rider-build-spec.md`: the council's ruled words are its KD2; U1 and U1b are in; the register's Tier 0 *The typed-below line's tax rider names only the tax on those shortfalls…* and the surcharge entry above it close with that commit). Then walk 8: walk 7's 14 targets plus the survivor plan's three (its Goal Capsule), with the close block's "Walk 8's reads" and the new rider, then its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
+▶ **START HERE (2026-11-16, b9-2):** the tax rider build's U2 to U5 are in (one commit; both Tier 0 entries closed). Next its mutant pass (the plan's Verification Contract: seven plants, each red). Then walk 8: walk 7's 14 targets plus the survivor plan's three (its Goal Capsule), with the close block's "Walk 8's reads" and the new rider (`docs/plans/features/typed-below-tax-rider-build-spec.md`, KD2's ⚑ words and fallback), then its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,7 +94,7 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **round 3's P1 build (the tax rider), then walk 8** (START HERE; round 3 landed in `d5fb99ba`,
+     ▶ NEXT: **the tax rider's mutant pass, then walk 8** (START HERE; the rider's U2 to U5 landed in b9-2's commit; round 3 landed in `d5fb99ba`,
      its record `<B>\u11-wholewindow\review-r3\ROUND.md`; the survivor build landed in `490afa87`, its plan `docs/plans/features/typed-below-survivor-path-build-spec.md`; the rebuild's plan is
      `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, and the register's Tier 0 retype entry
      carries the council's NEGATIVE on the round review's x_t metric). Its research, the council's drafts and full result sit in
@@ -109,9 +109,8 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
        credits min(stored, year 0 at the held W) — and never rosy. Decide it with (al).
      - The composer's one-year branches (`laterShortWords`, `firstShortWords` in `src/intake/workingYearLeftOver.ts`)
        reach no witness; only their slots are pinned (low, pre-existing). Pin each with a draft whose run is one year.
-     **Filed by walk 4 for U12** (the rest of its findings are the fix round's): (bg) "plus any income tax on taking it
-     out" reads as maybe none (low; "plus income tax on what comes out of pre-tax accounts", still true under a Roth-first
-     order); (al)'s rise arm RAISED to high (the dated figure does not explain a change the page never names: name the
+     **Filed by walk 4 for U12** (the rest of its findings are the fix round's): (bg) moved into the register's
+     *W's stale line's rider names only the tax on taking the shortfall out…* (the tax rider build's U5), its one home; (al)'s rise arm RAISED to high (the dated figure does not explain a change the page never names: name the
      income begun since the answer, or today's left over at the held figure, $26,985 on `datesavedrisenlater`); (r) gains
      the N9 refuter's candidate "Balances still about right" and the count (all four cold looks split between the gate's
      buttons). Re-found, no change: (ax) (now the Tier 0 gate entry's), (q), (aw)(a), (l), the Tier 0 PA scope entry ((ak);
@@ -285,7 +284,7 @@ change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_
 5. The sweep, only where the plan's Verification Contract calls it: `pnpm exec tsx <B>\tools\sweep.mts <label> --today=20758`, then `node <B>\tools\idcheck.mjs <label> ww3` (over 10 minutes: launch it in the background). A row in `<B>\README.md`'s table.
 
 **Walk 8's reads** (each a flagged draft or pilot call; the card rules on each):
-- **The rider (KD2's ⚑ words):** does "not including" read as "the answer ignores tax and Medicare" or as "small"; the near-line household's 2033 span (`TM_NEAR_IRMAA_LINE`, a test witness: a `vault:` or seed twin is owed to walk it) and C at 100 %'s coda, by eye and by ear (screen-reader order); how a 58 and 60 couple takes "Medicare’s income surcharge"; a credit span's density with the rider; whether the coda drops below the fold at 1536×791 (U4's logged positions).
+- **The rider (KD2's ⚑ words):** does "not including" read as "the answer ignores tax and Medicare" or as "small"; the near-line household's 2033 span (`TM_NEAR_IRMAA_LINE`, a test witness: a `vault:` or seed twin is owed to walk it) and C at 100 %'s coda, by eye and by ear (screen-reader order); how a 58 and 60 couple takes "Medicare’s income surcharge"; a credit span's density with the rider; whether the coda drops below the fold at 1536×791. U4's log (the gate after "Open my plan", the entrance settled; `top`/`bottom` in px of the 791 frame): TM (`vault:datesavedtypedmoved`) coda bottom 784.3 → **833.9, now below the fold** (story column 932.3 → 981.9); the pension household's coda 996.1 → 1120.0 (already below; story 1144 → 1268, the notes +351 characters); `datesavedtyped` (one span, no coda part) story 394.4 → 419.2. The decision pair holds in frame on all three (the confirm column ends at 682.0, unchanged). Any fix is static (KD2's Fit).
 - KD2's three pilot calls (the rebuild): the density of a short span (TM's 2029–2032 segment); the cap said in every span and again in the moved words (on PA's witness the Result says $16,064 twice in a row); the budget twin's short form.
 - KD3, on T (`vault:datesavedtyped`, an unpriced state): does "$6,000 less" read as the whole lean?
 - Review #7: a drifting span prints its two ranges in opposite orders ("at most $5,985 to $6,348, $10,637 to $11,000 less" on TM at $95,000; the pension seed's 2030–2031 is the same shape), so a reader pairing low with low reads a cap that is not $16,985. The fallback: drop the difference where this answer's credit is one figure (the pair states it), a form call for a council.
@@ -520,7 +519,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:1174`, `:1179, :1193, :1195, :1203, :1205` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1353`, `:1359`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1345-1347`). Unfiled: `shadowRateHeadroom` (`copy.ts:3983`)
+   (gated on `statePriced` alone — `copy.ts:1345-1347`). Unfiled: `shadowRateHeadroom` (`copy.ts:4007`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -773,7 +772,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:3887-3889` under the NUMBER AGREEMENT post-mortem at `copy.ts:3873`, covered by `copyGuard.test.ts:1026`):
+    `copy.ts:3911-3913` under the NUMBER AGREEMENT post-mortem at `copy.ts:3897`, covered by `copyGuard.test.ts:1026`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
@@ -874,7 +873,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:4301` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:4325` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -890,7 +889,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:4349`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:4373`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test
@@ -1059,7 +1058,7 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - A plan that states a rule AND a witness table must have every row run through the rule by hand at the check: the typed-below plan's tie rule ("a tie counts as both terms") joined TM at $95,000's $15,985-to-$5,985 step into one range while its own table and U3 test pinned three spans; four of six reviewers found it, the planner had written the table from intuition (b9-9, `afb74a83`). Lesson: the check applies the plan's rules to the plan's witnesses, cell by cell.
 - An identity proof's compare tool must compare the two records the proof will actually have, over the keys the claim names: the plan named `stream11-compare.mjs`, which checks one stream11 record against `stream.mts`'s frozen 13-key HEAD record, so it would have passed without ever comparing the typed-below seeds (two blind readers caught it; `stream11-diff.mjs` was written, b9-9). Lesson: before naming a proof tool, read its inputs and its key set.
 - `cmd /c "start \"\" /b /wait /affinity FFF <cmd>"` returns 0 whatever the child does: `stream11.mts` threw on a flag and the run printed `EXIT=0` (b9-9). The pinned-run recipe in memory `reference-hybrid-cpu-ecore-confinement` needs the line: read the log, never the exit code. *Extend* that memory and `docs/landmines.md`'s shell area.
-- *Extend 136 (a citation gate proves the line exists):* the re-anchor tool's bare-`:N` inference reads a QUOTED historical number in prose as a live citation. b9-10's `pnpm doc:reanchor d5c549d7` proposed moving `docs/landmines.md:411`'s `:2225` (the old TODO.md example that landmine quotes) by +5, because TODO.md had changed between the base and the tree; the dry run, classified by the cited content, caught it, and the file was restored from HEAD. A base whose diff includes a doc that prose quotes numbers from invites it: take the base AFTER any doc-only commit (b9-10, commit 2 of the whole-window rebuild).
+- *Extend 136 (a citation gate proves the line exists):* the re-anchor tool's bare-`:N` inference reads a QUOTED historical number in prose as a live citation. b9-10's `pnpm doc:reanchor d5c549d7` proposed moving `docs/landmines.md:411`'s `:2237` (the old TODO.md example that landmine quotes) by +5, because TODO.md had changed between the base and the tree; the dry run, classified by the cited content, caught it, and the file was restored from HEAD. A base whose diff includes a doc that prose quotes numbers from invites it: take the base AFTER any doc-only commit (b9-10, commit 2 of the whole-window rebuild).
 - *Extend 135 (a `min` cap binds only when it is the smaller arm):* a mutant's prediction for a plant on one term of a `min` must read, per witness, which term binds there. U3's M6 (this answer's cap read off year 0 at the QUOTE) was predicted red on the whole household and silent on the drift household; it was the reverse: the whole household's stored $16,985 binds below the quote's year-0 $20,985, so moving the year-0 term changed nothing, while the drift household's stored $26,985 sits above the quote's $20,985, so it bound there (`b9-build2-surplus\u11-wholewindow\u3-mutants\RESULT.md`, b9-10).
 - *Extend 146 (money has one grain):* a difference of two figures each rounded the gloomy way (shortfalls round up) can sit up to $0.99 UNDER the raw difference, so an "at most" bound built by subtracting printed figures can be false on the rosy side (review round 1's #1, b9-1: "at most $3,999" against the engine's $3,999.96 on C at $8,416.67 a month). Compute a bound on the raw grain and round it up (`stillShortDifferenceDollars`), and accept the $1 mismatch with the reader's own subtraction as the lesser fault. *(Source: b9-1's close.)*
 - A constant copied into a test from an out-of-repo probe pins nothing: the crowned seed's "crown 7" was typed in and compared with itself, and the test's "a unit test runs no date search" premise was false (`devSeeds.test.ts` already ran `runDateSearch`). Before typing a figure a test could compute, look for a sibling test that computes it (review round 1's #2 / #8, b9-1). *(Source: b9-1's close.)*

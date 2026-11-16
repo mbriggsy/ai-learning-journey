@@ -1154,18 +1154,20 @@ function typedBelowStructure(
 }
 
 /** The coda (R5–R8; council `wf_dfb7949b-4a7`): its label, then two sentences — X with "at most", the quote's side and
- *  the tax rider (its condition opening the sentence on a one-span line, under the label on two or more), then exactly the
- *  two figures X is the difference of, by the read's form (KTD5): the whole gap to the typed figure, or the two survivor
- *  charges, printed so they differ wherever they differ (`formatMoneyPair`, R7). X is the read's, never re-derived here. */
+ *  the spans' own rider (the tax rider build's R3; its condition opening the sentence on a one-span line, under the label
+ *  on two or more), then exactly the two figures X is the difference of, by the read's form (KTD5): the whole gap to the
+ *  typed figure, echoing X (the tax rider build's KD2), or the two survivor charges, printed so they differ wherever they
+ *  differ (`formatMoneyPair`, R7). X is the read's, never re-derived here, and formatted once for both sentences. */
 function typedBelowSurvivorCoda(s: TypedBelowSurvivor, t: FreshTypedBelow, answer: TypedBelowAnswer, count: TypedBelowSpanCount): NoteSegment {
   const f: TypedBelowSurvivorFrame = { answer, typed: t.typed, quote: t.quote, source: t.source }
   const most = formatMoney(s.most)
   const first = count === 'one' ? slots.workingCostTypedBelowSurvivorOneSpan(f, most) : slots.workingCostTypedBelowSurvivorAtMost(f, most)
-  return { label: copy.workingCostTypedBelowSurvivorLabel, sentences: [first, TYPED_BELOW_SURVIVOR_PAIR[s.form](f, s)] }
+  return { label: copy.workingCostTypedBelowSurvivorLabel, sentences: [first, TYPED_BELOW_SURVIVOR_PAIR[s.form](f, s, most)] }
 }
-/** The coda's second sentence by form (an exhaustive Record, insight 147). */
-const TYPED_BELOW_SURVIVOR_PAIR: Readonly<Record<TypedBelowSurvivorForm, (f: TypedBelowSurvivorFrame, s: TypedBelowSurvivor) => string>> = {
-  wholeGap: (f) => slots.workingCostTypedBelowSurvivorWholeGap(f),
+/** The coda's second sentence by form (an exhaustive Record, insight 147); `most` is X exactly as the first sentence
+ *  prints it. */
+const TYPED_BELOW_SURVIVOR_PAIR: Readonly<Record<TypedBelowSurvivorForm, (f: TypedBelowSurvivorFrame, s: TypedBelowSurvivor, most: string) => string>> = {
+  wholeGap: (f, _s, most) => slots.workingCostTypedBelowSurvivorWholeGap(f, most),
   survivorCharges: (f, s) => slots.workingCostTypedBelowSurvivorCharges(f, formatMoneyPair(s.chargeAtTyped, s.chargeAtQuote)),
 }
 

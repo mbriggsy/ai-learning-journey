@@ -521,6 +521,14 @@ is a guess a verifier must check, never a fact
 
 ## Copy and copyGuard
 
+- **(b9-2, 11-16) The typed-below rider's completeness leans on two engine gates outside the copy** (the tax rider build's
+  council, its architect). ", not including any difference in income tax and Medicare’s income surcharge." covers the
+  whole gap beyond the printed figure only because every working year prices no ACA premium and no HSA-qualified
+  out-of-pocket spend (explicit 0s, `src/engine/healthcareStreams.ts`'s gated working years), and the intake refuses the
+  date where the employer plan does not cover a retired pre-65 member (`health.employerPlanCoversRetiredMember`). Lifting
+  either gate, or any change that makes the two answers' draw schedules differ (CRN), reopens the rider's words: re-run
+  `src/engine/__tests__/typedBelowTaxRider.test.ts`'s identity first, then a council. The rider is one constant
+  (`COMPARISON_RIDER`) that no word test imports: every pin types it by hand.
 - **(b9-6, 11-15) The typed-below line's and seat's words read `workingYearTypedBelowWindow`'s spans, never a listed row, a retyped `min` or cap, or `checkAtQuote`**; `null` means no spans, not no line (the counts sentence still prints), and `unknown` keeps the fail-safe `workingCostTypedBelowAdds`.
 - **(b9-6, 11-15) W's stale line shares `checkAtQuote` / `laterShortOf` / `shortRunFrom`** (the rebuild's KTD5): touching that core changes W-stale words on four seeds; its holes are the widened V3 register entry's, never a fix inside a typed-below round.
 - **(b9-7, 11-13) A refuter's chosen HOST for new words can break R6 even when the words are right.** Walk 7's R2 put
@@ -643,6 +651,10 @@ chair; chair from a digest script, never the raw result, and expect the window t
 ## Probes and measurement
 
 
+- **(b9-2, 11-16) A year's portfolio income tax is `grossWithdrawal − fundingNet` only in a clamped working year**, which
+  prices no ACA premium (the tax rider build's KTD2): outside the working window that difference also carries the ACA
+  net premium. And `simulate`'s `healthReadout` observes the FULL track only, so a budget run's floor pass has no
+  Medicare readout to read; the rider proof rests its floor pass on the same clamp instead (said in its comment).
 - **(b9-1, 11-15) A type-and-comment-only reformat of an engine file after its sweep needs no second sweep:** prove it instead by esbuild's emitted JS, `node_modules/.bin/esbuild <old copy> --format=esm --legal-comments=none` against the same for the new file, then `cmp` (U1b's `taxOverlay.ts`: byte-identical). Folding a new field onto existing lines also keeps every `taxOverlay.ts:N` citation still (0 re-anchor edits, against 128 for the multi-line form).
 - **(b9-11, 10-27) A dev seed carries no `chosenGoal`**, so `buildSolveRequest` returns `spine-unready` for it — a node-side solve
   probe passes `{ ...seed, chosenGoal }` (`b9-seed-probe\solve.mts`'s `seed:goal`). Single-threaded, `healthss` takes

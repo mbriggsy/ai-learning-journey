@@ -556,6 +556,12 @@ is a guess a verifier must check, never a fact
   existing server locally (`reuseExistingServer: !process.env.CI`), and a `TaskStop`ped `vite` keeps serving. The
   11-09 `intake:kept` REAL failure passed three runs on fresh servers, with zero DOM mutations after the settle
   (`b9-build2-surplus\u11-walk6\panel\CHAIR-NOTES.md`, its foot).
+- **(b9-1, 11-16) Under a 40-target walk, the CVD chart loop can race the Result's late rerun.** On walk 8,
+  `intake:kept` REAL failed at `result-kept-stale-both` in `captureState`'s `cvd-<arm>-<chart>` crop ("Element is not
+  attached to the DOM": the rerun replaced the chart mid-crop), and passed alone (`--grep "intake:kept at REAL"`, the
+  same `CADDIE_RUN`, the failed partial deleted first). Re-capture the one target alone before reading it as product.
+  The harness fix is owed (walk 8's card): re-query the chart and retry once on a detach, or wait out the rerun before
+  the CVD loop.
 - **(b9-8, 11-09) A seat's arithmetic can borrow the wrong quote.** `stillWorking` answers
   `employerPlanCoversRetiredMember: true` (`src/ui/devSeeds.ts`), so the pay-side premium is entered nowhere; walk 5's
   hunter priced it from the $1,100 after-work reference quote. Check the seed's own fields before a refuter carries a figure.

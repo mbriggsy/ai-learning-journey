@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-16, b9-2's close):** walk 8: walk 7's 14 targets plus the survivor plan's three (its Goal Capsule), with the close block's "Walk 8's reads" (the tax rider's ⚑ words, `docs/plans/features/typed-below-tax-rider-build-spec.md` KD2, and U4's fit log first), then its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
+▶ **START HERE (2026-11-16, b9-1's close):** walk 8's card is in (`docs/caddie/cold-read-log.md`, 2026-11-16 b9-1: HARD-FLAG, held on W8-R7 and W8-R12 (a)). Next: `/council` on the typed-below line's form (the close block's "The form council"); then the walk-8 fix round in the council's shape, each commit through the review's gates; then walk 9 on the changed strings and its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,14 +94,14 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **walk 8** (START HERE; the rider build landed in `ad4de579`, its mutant pass 7 of 7 killed; round 3 landed in `d5fb99ba`,
-     its record `<B>\u11-wholewindow\review-r3\ROUND.md`; the survivor build landed in `490afa87`, its plan `docs/plans/features/typed-below-survivor-path-build-spec.md`; the rebuild's plan is
-     `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, and the register's Tier 0 retype entry
-     carries the council's NEGATIVE on the round review's x_t metric). Its research, the council's drafts and full result sit in
-     `b9-build2-surplus\u11-wholewindow\` (`research\witnesses.md` holds every witness's per-year engine figures); the
-     mutant runner to copy for the rider build's own pass is `u11-wholewindow\mutants-r3\` (`mutants.cjs`, `setup-copy.cjs`: plants in a scratch copy, never the live tree). Walk 8 runs walk 7's 14 targets plus the
-     plan's three (`temp\caddie\caddie-u11-b9-5-walk7\` is the last bundle; walk 7's card is `86acd918`, its panel record
-     `u11-walk7\panel\`, the form to copy).
+     ▶ NEXT: **the walk-8 form council, then its fix round** (START HERE; walk 8's card is `451fa373`, its panel record
+     `<B>\u11-walk8\panel\` (`CHAIR-NOTES.md` maps every finding to its refuter), its bundle `temp\caddie\caddie-u11-b9-1-walk8\`).
+     The line's plans: the rebuild `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, the survivor path
+     `docs/plans/features/typed-below-survivor-path-build-spec.md`, the rider `docs/plans/features/typed-below-tax-rider-build-spec.md`;
+     the register's Tier 0 retype entry carries the council's NEGATIVE on the round review's x_t metric. Research and every
+     witness's per-year engine figures: `b9-build2-surplus\u11-wholewindow\` (`research\witnesses.md`); every composed line
+     on every witness and host: `u11-walk8\measure\line-probe.mts`; the mutant runner to copy: `u11-wholewindow\mutants-r3\`
+     (`mutants.cjs`, `setup-copy.cjs`: plants in a scratch copy, never the live tree).
      **Filed by the walk-5 round's review for U12** (`wf_c037b423-7f0`; the record is `u11-walk5\ROUND.md` § "The
      round review"; each finding goes into the register with its prescription):
      - (bh)'s "Because that $16,985 depends on your $X figure" names the HELD figure, which need not be the one the
@@ -259,23 +259,29 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-16 (b9-2: the tax rider build's U2 to U5 and its mutant pass; b9-1's block pruned into it):**
+**SESSION 2026-11-16 (b9-1: the crash recovery and walk 8; b9-2's block pruned into it):**
 
 State at close:
-- The tax rider build is DONE: U1 `2e25f917`, U1b `42c0b907`, U2 to U5 `ad4de579` (the register's two Tier 0 rider entries closed; W's stale line's own rider filed as its own Tier 0 entry, measure first), the mutant pass `024b77cb` (7 of 7 killed; it keyed copyGuard's coda count on the coda's own sentence). Records: `<B>\u11-wholewindow\rider-u1\README.md`, `<B>\u11-wholewindow\rider-mutants\RESULT.md`.
-- Gates at close: `pnpm typecheck` 0, `pnpm lint` 0, the 20 reached files 897/897 pinned, `pnpm build` 0, `pnpm verify:fit` 181/181 pinned, `pnpm verify:doc-stats` 0. CI: `124ee65c` success; the rest still running (Check at start).
-- Stopped at 40% of the window, at this clean milestone: walk 8's panel (walk 7 seated about 25 readers and refuters, `<B>\u11-walk7\panel\`) cannot finish before the 60% wrap, so it starts in a fresh window.
-- For Briggsy's digest (carried): KTD4's departure from the survivor council's literal X; the survivor council's mortality words (walk 8 reads them); and ⚑ the rider's words, now shipped, ", not including any difference in income tax and Medicare’s income surcharge." (the fallback, if walk 8's readers take "not including" as "ignores tax" or "small": "plus" on the less and more sentences, "except for" on `same`).
+- The laptop hard-crashed four times on 2026-11-16 (about 01:00, then 12:06, 12:33 and 12:49; up since 12:57). b9-3's walk-8 twins, left uncommitted by the 01:00 crash, were re-verified and landed in `0453fa07` (the sweep `twins`, 47 of 47 identical against `ww3`). Commit and push at every verified checkpoint while this machine lasts.
+- Walk 8 is DONE: its card `451fa373`, HARD-FLAG — HELD FOR THE ORACLE on W8-R7 (the band's "This range prices your full budget" beside a lower working-year figure) and W8-R12 (a) (the stale pages' silent survivor years), both filed as Tier 0 candidates in the register. Walk 7's R1 closed (its sentence read clean). The rider's ruled flip condition is met on "ignores tax"; KD2's short-span fallback condition is met; the pension household reads as a wall; KD2's dissent does not flip.
+- Gates at close: `pnpm typecheck` 0, `pnpm verify:doc-stats` 0. CI: Check at start.
+- For Briggsy's digest (carried): KTD4's departure from the survivor council's literal X; the survivor council's mortality words (walk 8: readers found the part cold, low); the rider's words, now owed their ruled swap ("plus" / "except for").
 
-Next is START HERE. Successor: b9-3 (handoff mode).
+Next is START HERE. Successor: b9-2 (handoff mode).
 
 **Check at start:**
-- CI on `42c0b907` (run 43806374808), `0c88cea8` (run 43806804098), `ad4de579` (run 43810053200), `024b77cb` and this close's commit: `gh run view <id> --json conclusion` / `gh run list --commit <full sha>` (the `verify` job runs about 43 minutes).
+- CI on `0453fa07`, `451fa373` and this close's commit: `gh run list --commit <full sha>` (the `verify` job runs about 43 minutes).
 - The ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 
-**Walk 8's seats are Agents, not a Workflow** (`.claude/skills/caddie/SKILL.md`: each reader a fresh Agent), so the walk needs no Workflow opt-in; a council its card calls for is a Workflow and does (`docs/landmines.md`, Claude Code, workflows and sessions). Every composed line on every witness and host, for the card's quotes: `<B>\u11-wholewindow\survivor-build\survivor-probe.mts`. The rider's council record: `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\142671fc-8e6c-4658-b950-b0b5e47e4fa1\subagents\workflows\wf_33aa98fe-a26\journal.jsonl`.
+**The form council (walk 8's; the first step):** `/council` (a Workflow) on the typed-below line's FORM, never a cut (D7), with the card, `<B>\u11-walk8\panel\` (refuter-R1 to R5), the three plans above and the rider's council record in context (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\142671fc-8e6c-4658-b950-b0b5e47e4fa1\subagents\workflows\wf_33aa98fe-a26\journal.jsonl`). Five questions:
+1. The rider's ruled swap ("plus any difference…" on the less and more sentences, "except for any difference…" on `same`) and refuter-R1's three: where the survivor part's clause sits after "your spending of $105,000 a year" (a trailing "plus" reads as spending plus tax; the distill list's "plus" line is the same trap); whether "plus" reads as a direction; whether one line may say what no gate or answer page does, "The tool works out your federal income tax and Medicare premiums every year, under both answers". With it the gloss: "Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, if your income is high)".
+2. The short span (W8-R2): "the answer at that spending" for "your/this answer would add nothing"; ", which would be taken from your savings" after the shortfall; the difference as its own sentence (KD2's fallback).
+3. The crossed ranges (W8-R3 (a)): order the second range's ends by year (the refuter's) or review #7's fallback (drop the difference where the credit is one figure); and naming the at-spending answer's own cap (W8-R3 (c): "why $11,000, when the gap is $21,000?").
+4. The survivor part (W8-R4): out of the runs' list as plain sentences after it, its costs first and named as three-quarters of each figure; ST's "count in full, since your budget is all housing".
+5. The pension household's five runs read as a wall on the phone and in the sheet: a form for a long line, never a cut.
+The rest goes straight into the fix round, no council: W8-R7 (its register entry carries the refuter's caption), W8-R5 (a) and (b), W8-R6 (every run label after the first reads "If you’re still working in …"), W8-R8, W8-R10, the lows, W8-R12 (a) after its measurement (its register entry), and the harness's CVD-crop flake (`docs/landmines.md`, Caddie walks and fleets). Each fix commit runs the review's gates below; then walk 9 re-reads the changed strings.
 
 **The review's gates** (each fix commit, as its plan's Verification Contract scopes them; each heavy run alone, in sequence, pinned to the P-cores from PowerShell; `<B>` is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus`):
 1. Before the first edit: `git rev-parse HEAD`, the re-anchor base.
@@ -284,19 +290,9 @@ change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_
 4. `pnpm build` and `pnpm verify:fit`, pinned (the fit gate ran 11.1 min here: past the 10-minute foreground cap, the harness moves it to the background; wait for its notice).
 5. The sweep, only where the plan's Verification Contract calls it: `pnpm exec tsx <B>\tools\sweep.mts <label> --today=20758`, then `node <B>\tools\idcheck.mjs <label> ww3` (over 10 minutes: launch it in the background). A row in `<B>\README.md`'s table.
 
-**Walk 8's reads** (each a flagged draft or pilot call; the card rules on each):
-- **The rider (KD2's ⚑ words):** does "not including" read as "the answer ignores tax and Medicare" or as "small"; the near-line household's 2033 span (`TM_NEAR_IRMAA_LINE`; its twin `?seed=`/`?vault=datesavedtypednearline`, b9-3) and C at 100 %'s coda (`councilBudgetHousehold(1)`; its twin `datesavedtypedsticky`), by eye and by ear (screen-reader order); how a 58 and 60 couple takes "Medicare’s income surcharge"; a credit span's density with the rider; whether the coda drops below the fold at 1536×791. U4's log (the gate after "Open my plan", the entrance settled; `top`/`bottom` in px of the 791 frame): TM (`vault:datesavedtypedmoved`) coda bottom 784.3 → **833.9, now below the fold** (story column 932.3 → 981.9); the pension household's coda 996.1 → 1120.0 (already below; story 1144 → 1268, the notes +351 characters); `datesavedtyped` (one span, no coda part) story 394.4 → 419.2. The decision pair holds in frame on all three (the confirm column ends at 682.0, unchanged). Any fix is static (KD2's Fit). The probe and both logs: `<B>\u11-wholewindow\rider-u4-fit\` (`node gate-fit.mjs <label> <port>` against a dev server on that port, 4197 by default).
-- KD2's three pilot calls (the rebuild): the density of a short span (TM's 2029–2032 segment); the cap said in every span and again in the moved words (on PA's witness the Result says $16,064 twice in a row); the budget twin's short form.
-- KD3, on T (`vault:datesavedtyped`, an unpriced state): does "$6,000 less" read as the whole lean?
-- Review #7: a drifting span prints its two ranges in opposite orders ("at most $5,985 to $6,348, $10,637 to $11,000 less" on TM at $95,000; the pension seed's 2030–2031 is the same shape), so a reader pairing low with low reads a cap that is not $16,985. The fallback: drop the difference where this answer's credit is one figure (the pair states it), a form call for a council.
-- Review #1's residual: "$4,015 short … $16 short … at most $4,000" (the reader's subtraction runs $1 under the figure; R5 over V9).
-- The seat's lead says "What this answer adds…" above spans that say "Your answer…" (the plan's literal words; the counts sentence already mixes "Your answer counts … so this answer can look better").
-- A one-year span keeps "a year" on its credit and difference ("2029: … adds at most $16,985 a year … at most $21,000 a year more").
-- The survivor build's words, cold (the council's item 6 and the plan's Deferred list): "you're both alive" on the opener, the year subject and the three scoped leads; the coda ("If only one of you is alive", both forms); C's `same` segments under the scoped lead beside a scoped short span; the `wholeGap` echo ("That $15,000 a year is the whole gap…") after the rider; a coda whose printed figures subtract to $1 under its X (the round-up); the departure from the app's "on your own" survivor frame (`assumptionSurvivorRatioLabel`); the crowned seed's coda, which its own crown may never reach.
-- Round 3's leftovers for the readers: `bothCredit`'s "…it would add at most $10,985, $6,000 less" carries no "a year" where `quoteCreditsNothing`'s "$16,985 a year less" does (a one-off reading understates the lean); a typed figure with cents prints whole ("$84,000.50" as "$84,001"); `cMonth874999`'s three spans for a 12¢ gap (the density round 3's fix costs).
-- **The pension seed's seat in the SHEET has no harness frame:** the `vault:` / `seed:` walk stops at the Result, so walk 8's "pension seed on the gate, the Result and the sheet" needs the sheet's seat captured (the Result's "Update your figure for a working year" → the panel's left-over seat). Add the step to the vault walk or capture it by hand (b9-2's `seat-pension-*.png` is the shape).
-
-**LANDMINES (walk 8 and U12):**
+**LANDMINES (the walk-8 fix round and U12):**
+- **The full-budget caption is two strings,** `copy.bandPricesFullBudgetNote` (`src/ui/copy.ts:833`) and `slots.bandPricesFullBudgetWithLevels`, both drawn as the band's track note in `src/ui/FuckOffDate.tsx`: key the fix on the note's own condition (a working-year figure different from the spending), never on "typed". The kept household hits it too, and S's is the gloomy side.
+- **W8-R12 (a) moves the survivor build's KTD6 rule** (a coda never set with a door, `NotePartsBlock`): putting the part on the stale line moves every stale-line pin on every host. Measure the lean first (its register entry).
 - **The rider names no direction and no size, by ruling:** the engine never splits a year's tax between the shortfall and the premium, and the two answers' tax difference runs both ways (TM taxable-first's credit years). A reader or refuter who asks the rider to say which answer pays more, or to print a figure, re-derives the register's NEGATIVE; a reading of "not including" as "ignores tax" or "small" is the ruled flip to the fallback, a council's form call (an exhaustive Record).
 - **The rider is ONE constant, `COMPARISON_RIDER` (`src/ui/copy.ts`), through `withRider`:** a word change there moves every pin on every host, each retyped by hand (no test imports it). `spanRiderLaw` and `codaLaw` read it by hand too.
 - **The gate is two columns at 1536 (`src/ui/styles/save.css`; the plan cites `src/ui/save.css`):** nothing pins the story column, so the coda below the fold is a walk-8 read, never a gate red; any fix is static (KD2's Fit).
@@ -1075,6 +1071,7 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - An identity proved on households that lack a channel proves nothing about that channel: U1's `fundingNet` identity held on 17 runs, none with an HSA, and would have redded on the first one (the HSA pays the surcharge outside `fundingNet`). The council's red team rated it low; the chair made it blocking because the plan's own stop condition named an HSA that no run could trigger ("a stop no run can trigger is no stop"). Enumerate the stop's channels, then give each one a run (insight 143's discipline, applied to the proof's households).
 - After "less", a rider that opens on "plus" can attach to the wrong figure: with "on it" gone, "$11,000 less, plus any difference…" can fold the rider into the quote's side and shrink the lean (the council's red team, conceded by six seats). "Not including" is the price-tag idiom ("$X, not including tax"): whatever figure it follows, it says that figure leaves these costs out. Read a joiner against every sentence form it ends, not only the one it was drafted on.
 - When a phrase that one sentence kind owned spreads to every kind, each sweep keyed on that phrase goes blind to that kind: copyGuard's "the coda is swept" count matched "plus any income tax on it", which only the coda said; retyped to the new rider, it matched every reading through the spans too, and the mutant pass's R3 (the old rider planted back on the coda) left it green. Key a count on the sentence's own frame ("…than it would at your … a year, not including…", which no span says), and plant the kind's old words to prove the count still sees it (b9-2, `024b77cb`).
+- A label means what its siblings on the page make it mean: `bandPricesFullBudgetNote` was written as the lifestyle side of a lifestyle-versus-essentials pair, but no page that shows it shows the pair, so beside a note naming a lower working-year figure it read as "every year at the full spending", false for the working years (walk 8's W8-R7, 2026-11-16, refuter-confirmed). When a page gains a second figure, re-read every label written for the old contrast. *(Source: walk 8's card, `docs/caddie/cold-read-log.md`.)*
 
 
 ## Driving the app

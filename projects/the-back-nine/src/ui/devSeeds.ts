@@ -1521,6 +1521,46 @@ const dateSavedTypedCrownedWitness: ScenarioDraft = {
   enteredAccounts: dateSavedTypedMovedWitness.enteredAccounts.map((a, i) => (i === 0 ? { ...a, valueToday: 1_600_000 } : a)),
 }
 
+/**
+ * THE NEAR-LINE RETYPE — `?seed=datesavedtypednearline`, and as a vault `?vault=datesavedtypednearline` (the tax rider
+ * build's household, `docs/plans/features/typed-below-tax-rider-build-spec.md` U1; walk 8 reads its 2033 span by eye and
+ * by ear): `datesavedtypedmoved`'s household drawing pre-tax money first, with Alex's working-year investment income
+ * raised to $70,000. Medicare reads that figure as working-year income and the pay check charges its tax, so every year
+ * through 2032 comes up short at the $105,000 quote, year 0 among them; in 2029–2032 the typed answer's recorded
+ * Medicare income sits under the first joint line and the quote's over it, so Sam, on Medicare from 2031, pays the first
+ * income surcharge at the quote alone in 2031–2034: the household whose comparisons leave out a real surcharge
+ * difference (the rider's "not including any difference in income tax and Medicare’s income surcharge"). Built here,
+ * never by importing the test witness (that file imports `DEV_SEEDS`); `devSeeds.test.ts` pins it equal to
+ * `TM_NEAR_IRMAA_LINE`.
+ */
+const dateSavedTypedNearLineWitness: ScenarioDraft = {
+  ...dateSavedTypedMovedWitness,
+  drawdownPolicy: 'pre-tax-first',
+  health: { ...dateSavedTypedMovedWitness.health, workingYearInvestmentByPerson: [70_000, 0] },
+}
+
+/**
+ * THE ALL-STICKY RETYPE — `?seed=datesavedtypedsticky`, and as a vault `?vault=datesavedtypedsticky` (council
+ * `wf_dfb7949b-4a7`'s C on a budget at 100 %, the survivor-path build's AE1; walk 8 reads its closing part): the household
+ * of `datesavedrisenlater` on a $105,000 budget, all of it housing (survivor-sticky), less the out-of-pocket medical the
+ * compile adds back. Its quote confirmed, "All of it" answered at year 0's own $5,985, then $90,000 typed by the year. A
+ * survivor's working year then costs the whole budget, so the closing part's ceiling is the whole $15,000 gap and draws
+ * the one form that echoes it: "That $15,000 a year is the whole gap to your figure of $90,000 a year." Built here, never
+ * by importing the test witness; `devSeeds.test.ts` pins it equal to `councilBudgetHousehold(1)`.
+ */
+const dateSavedTypedStickyWitness: ScenarioDraft = ((): ScenarioDraft => {
+  const c = dateSavedRisenLaterWitness
+  const housing: BudgetLineItem = {
+    label: 'Housing',
+    category: 'housing',
+    tier: 'essentials',
+    annualAmountReal: Math.round(105_000 - (c.health.oopMedicalAnnual ?? 0)),
+    startYear: 0,
+  }
+  const confirmed = withConfirmedW({ ...c, budget: [housing] })
+  return writeEnteredWorkingYearCost(withSavedLeftOver({ ...confirmed, workingYearLeftOver: undefined }), 90_000, 'year')
+})()
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -1572,6 +1612,10 @@ export const DEV_SEEDS = {
   // The whole-window rebuild (walk 8's added targets): the five-span household and the crowned one.
   datesavedtypedpension: dateSavedTypedPensionWitness,
   datesavedtypedcrowned: dateSavedTypedCrownedWitness,
+  // The tax rider build's walk-8 twins: the near-line household (a surcharge paid at the quote alone) and C on an
+  // all-sticky budget (the closing part's whole-gap form).
+  datesavedtypednearline: dateSavedTypedNearLineWitness,
+  datesavedtypedsticky: dateSavedTypedStickyWitness,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

@@ -66,7 +66,12 @@ import {
 } from '@engine/dateSearch'
 import type { WorkingYearCashLines } from '@engine/taxOverlay'
 import { workingYearBottomLine } from '@engine/workingYearLedger'
-import { typedBelowCrownedHousehold, typedBelowPensionHousehold } from '@intake/__tests__/typedBelowWitnesses'
+import {
+  councilBudgetHousehold,
+  TM_NEAR_IRMAA_LINE,
+  typedBelowCrownedHousehold,
+  typedBelowPensionHousehold,
+} from '@intake/__tests__/typedBelowWitnesses'
 
 /**
  * The dev-seed validity proof (the SAME render-anchor coupling intakeMap.test.ts
@@ -1675,7 +1680,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(carrying).toEqual([
       'atceiling', 'date', 'date65', 'dateborder', 'datecoststale', 'datelateleftover', 'datemixed', 'datenc', 'datesaved',
       'datesavedfourbuckets', 'datesavedmoved', 'datesavedrisen', 'datesavedrisenlater', 'datesavedrisenshort', 'datesavedstale', 'datesavedtyped',
-      'datesavedtypedcrowned', 'datesavedtypedmoved', 'datesavedtypedpension', 'dateshort',
+      'datesavedtypedcrowned', 'datesavedtypedmoved', 'datesavedtypednearline', 'datesavedtypedpension', 'datesavedtypedsticky', 'dateshort',
       'datesolo',
       'datesplit', 'dip',
     ])
@@ -1791,9 +1796,10 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     // Every buildable date seed carries W (the arm above), so this is all twenty of them, the short seed, the
     // later-left-over witness (U15), build 2's three saved witnesses (U9), U11's risen twin and its two (ae) arms
     // (short at the quote, a later year short at the quote), U11 walk 6's retype (R1: a typed W, fresh), the
-    // four-bucket twin (council (6)), the retype after a move (the walk-6 round review's pair) and the whole-window
-    // rebuild's two (the pension household and the crowned one) included.
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(22)
+    // four-bucket twin (council (6)), the retype after a move (the walk-6 round review's pair), the whole-window
+    // rebuild's two (the pension household and the crowned one) and the tax rider's two walk-8 twins (the near-line
+    // household and the all-sticky one) included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(24)
   })
 
   // The whole-window rebuild's every-year field (KTD1) on two witnesses the typed-below line reads. A (`datesavedtyped`):
@@ -1850,7 +1856,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
       swept++
     }
-    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty-two above)').toBe(22)
+    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty-four above)').toBe(24)
   })
 
   // Build 2's U9 (KTD14): the three saved witnesses, each minted through the shipped write. Every figure typed by
@@ -2073,6 +2079,28 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       const built = scenarioFromDraft(d)
       if (!built.ready) throw new Error(`${key}: ${built.detail}`)
       expect(built.scenario.workingYearLeftOver, `${key} plants as a vault with its answer`).toEqual({ kind: 'saved', quotedReal: 16_985 })
+    }
+  })
+
+  // The tax rider build's walk-8 twins (`docs/plans/features/typed-below-tax-rider-build-spec.md`, walk 8's reads): built in
+  // devSeeds.ts and pinned EQUAL to the test witnesses the rider's engine proof and the survivor build's AE1 read. Each
+  // figure below is the shipped producer's own (b9-3's probe, 2026-11-16): both are fresh typed figures that read
+  // "saved, moved", and both plant as a vault with their answer, so walk 8 takes them as `seed:` and `vault:` targets.
+  it('the tax rider’s walk-8 twins: `datesavedtypednearline` IS the near-line household and `datesavedtypedsticky` IS C on an all-sticky budget — fresh, moved, and each plants as a vault with its answer', () => {
+    expect(DEV_SEEDS.datesavedtypednearline).toEqual(TM_NEAR_IRMAA_LINE)
+    expect(DEV_SEEDS.datesavedtypedsticky).toEqual(councilBudgetHousehold(1))
+    const cases = [
+      ['datesavedtypednearline', { stored: 16_985, live: 18_185, typedBelow: '84,000' }],
+      ['datesavedtypedsticky', { stored: 5_985, live: 20_985, typedBelow: '90,000' }],
+    ] as const
+    for (const [key, moved] of cases) {
+      const d = DEV_SEEDS[key]
+      expect(isWorkingYearCostStale(d), `${key}: a typed figure is fresh`).toBe(false)
+      expect(workingYearLeftOverShownState(d), key).toBe('saved-moved')
+      expect(workingYearLeftOverMoved(d), key).toEqual(moved)
+      const built = scenarioFromDraft(d)
+      if (!built.ready) throw new Error(`${key}: ${built.detail}`)
+      expect(built.scenario.workingYearLeftOver, `${key} plants as a vault with its answer`).toEqual({ kind: 'saved', quotedReal: moved.stored })
     }
   })
 

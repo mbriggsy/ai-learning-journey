@@ -294,6 +294,9 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
     // The whole-window rebuild's two seeds (walk 8's added targets): the pension household and the crowned one.
     'datesavedtypedpension',
     'datesavedtypedcrowned',
+    // The tax rider build's walk-8 twins: the near-line household and C on an all-sticky budget.
+    'datesavedtypednearline',
+    'datesavedtypedsticky',
   ] as const
   const withoutW = (d: ScenarioDraft): ScenarioDraft => {
     const { workingYearCost: _w, ...rest } = d

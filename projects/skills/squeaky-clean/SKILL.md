@@ -119,7 +119,14 @@ git -C ~/.claude fetch && git -C ~/.claude rev-list --left-right --count '@{u}..
 git -C ~/.claude push
 ```
 
-Same push rules as step 7: behind > 0 means don't push, report it; never force. Before committing, `git -C ~/.claude diff --cached --name-only` must show no `.credentials.json`, `.jsonl`, `.env` or cache path; if one shows, the allowlist broke: unstage it, fix `.gitignore`, report it.
+Then refresh the secrets copy, which no repo may hold (Briggsy's call 2026-11-16: Google Drive):
+
+```bash
+D="/g/My Drive/Claude backup - secrets"
+[ -d "$D" ] && cp -p ~/ai-learning-journey/.env "$D/ai-learning-journey/.env" && cp -p ~/.claude.json "$D/home/.claude.json"
+```
+
+If `G:` isn't mounted, report it and go on. Same push rules as step 7: behind > 0 means don't push, report it; never force. Before committing, `git -C ~/.claude diff --cached --name-only` must show no `.credentials.json`, `.jsonl`, `.env` or cache path; if one shows, the allowlist broke: unstage it, fix `.gitignore`, report it.
 
 ### 8. Cleanup Orphan Dev Processes
 

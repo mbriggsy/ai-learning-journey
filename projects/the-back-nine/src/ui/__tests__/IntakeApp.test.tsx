@@ -247,8 +247,10 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
   }
   const MOVED_AT_TYPED_LINE =
     'You said all of it goes into your savings when it was $16,985. At your figure of $84,000 a year, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
+  // The clause in W8-R5 (b)'s words ("all the money left over in a working year"); the moved line above keeps "all of
+  // it", its own lead naming the left over.
   const MOVED_AT_TYPED_CLAUSE =
-    'You said all of it goes into your savings when your first working year had $16,985 left over. At your figure of $84,000 a year, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
+    'You said all the money left over in a working year goes into your savings, when your first working year had $16,985 left over. At your figure of $84,000 a year, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
 
   it('a typed figure below the spending, the left over moved at it: R1’s line, then the moved line naming the $84,000 its $26,985 rests on', async () => {
     const current = h.model
@@ -259,18 +261,27 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
       const lines = Array.from(document.querySelectorAll('.reentry-notes p')).map((p) => p.textContent ?? '')
       expect(lines.some((t) => t.startsWith('Your answer counts a working year at your own figure of $84,000 a year')), 'R1’s line speaks').toBe(true)
       expect(lines).toContain(`${copy.stalenessLeftOverNote} ${MOVED_AT_TYPED_LINE} ${copy.stalenessLeftOverGateDoor}`)
-      // The rebuild's KTD6, host 2: R1's line is the block of TM's three spans, the first of the two notes, and the moved
+      // The rebuild's KTD6, host 2: R1's line is the block of TM's three runs, the first of the two notes, and the moved
       // line its own paragraph after it (one cause, one line). TM opens the survivor gate (Sam, 60 and retired, can die from
-      // 66, in 2032, while Alex works), so the block ends on the survivor coda's own one-item list, after the spans'.
+      // 66, in 2032, while Alex works), so the block ends on the survivor part's paragraph, after the runs' ordered list
+      // (the walk-8 form council's KD7 and KD8), every run after the first labelled "If you’re still working in" (W8-R6).
       const notes = Array.from(document.querySelector('.reentry-notes')!.children)
       expect(notes.map((c) => c.tagName)).toEqual(['DIV', 'P'])
-      expect(Array.from(notes[0]!.querySelectorAll('dt')).map((dt) => dt.textContent)).toEqual([
-        '2026 through 2028',
-        '2029 through 2032',
-        '2033 through 2035',
-        'If only one of you is alive',
+      expect(Array.from(notes[0]!.children).map((c) => `${c.tagName} ${c.className}`)).toEqual([
+        'P note-parts__opening',
+        'OL note-parts__runs',
+        'P note-parts__closing',
       ])
-      expect(notes[0]!.querySelector('.note-parts__coda dt')?.textContent, 'the condition is the coda’s, never one more span').toBe('If only one of you is alive')
+      expect(Array.from(notes[0]!.querySelectorAll('ol.note-parts__runs > li > p.note-parts__label')).map((p) => p.textContent)).toEqual([
+        '2026 through 2028',
+        'If you’re still working in 2029 through 2032',
+        'If you’re still working in 2033 through 2035',
+      ])
+      expect(
+        notes[0]!.querySelector(':scope > p.note-parts__closing')?.textContent?.startsWith('If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year.'),
+        'the condition is the survivor part’s, after the list, never one more run',
+      ).toBe(true)
+      expect(notes[0]!.querySelector('ol.note-parts__runs')?.textContent, 'and never inside the list').not.toContain('If only one of you is alive')
     } finally {
       h.model = current
     }

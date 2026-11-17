@@ -58,6 +58,11 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
+- **(b9-3, 11-16) PowerShell variable names are case-blind:** a gate chain's `foreach ($s in $steps)` overwrote the
+  scratchpad path held in `$S`, every log path became `…\System.Collections.Hashtable\…`, nothing ran, and the background
+  task still exited 0. Name a loop variable apart from every other variable in the script (`$step`), and read the
+  chain's own summary file before believing a gate ran.
+
 - **(b9-1, 11-15) A gate piped through `grep … | head` loses its exit code:** `pnpm verify:doc-stats 2>&1 | grep … | head -4 && git commit …` committed and pushed a red (`1a12e706`, START HERE over its cap), since the `&&` read `head`'s 0. Write the gate's output to a file, read `$?` (or `PINNED_EXIT`), and only then commit.
 - **(b9-5, 11-13) PowerShell's `"EXIT $LASTEXITCODE" | Out-File -Append <log>` writes UTF-16** into a UTF-8 log, so a
   later `grep "^EXIT"` never matches and a Monitor waiting on that line expires silent. Append with
@@ -348,7 +353,7 @@ tests
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:762-772`
   excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1034-1036`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:3015-3017`), a once-measured
+  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:3077-3079`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
   arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:22-23`) — no date frame has ever been fit-measured either.
 - **(2026-09-27, b9-11)** the ONE width seam: a new `@media (min-width: …rem)` fails `breakpoint-mirrors.test.ts` unless it mirrors `--bp-laptop` (68rem) — a new tier is a product decision
@@ -522,7 +527,8 @@ is a guess a verifier must check, never a fact
 ## Copy and copyGuard
 
 - **(b9-2, 11-16) The typed-below rider's completeness leans on two engine gates outside the copy** (the tax rider build's
-  council, its architect). ", not including any difference in income tax and Medicare’s income surcharge." covers the
+  council, its architect). The rider (since the walk-8 form council: ", not including any difference between the two
+  answers in income tax and Medicare’s income surcharge.", glossed on each line's first rider) covers the
   whole gap beyond the printed figure only because every working year prices no ACA premium and no HSA-qualified
   out-of-pocket spend (explicit 0s, `src/engine/healthcareStreams.ts`'s gated working years), and the intake refuses the
   date where the employer plan does not cover a retired pre-65 member (`health.employerPlanCoversRetiredMember`). Lifting
@@ -677,7 +683,7 @@ chair; chair from a digest script, never the raw result, and expect the window t
 ## Engine and tax math
 
 - **(b9-1, 11-15) `checkDrawn`'s `fundingNet` leaves out what an HSA pays:** the HSA's qualified spend (an owner-65+ Medicare premium, its surcharge included) is paid outside the gross-up, so two answers whose Medicare differs can show equal `fundingNet` past their shortfalls. What savings funds is `grossWithdrawal + hsaSpend` (the probe field since U1b): an identity on `fundingNet` alone holds on HSA-free households and fails on one with an HSA (`TM_NEAR_IRMAA_LINE_HSA`).
-- **(b9-4, 11-14) The typed-below coda's bound rests on a death crediting NOTHING** (council `wf_dfb7949b-4a7`'s "U12
+- **(b9-4, 11-14) The typed-below survivor part's bound (once "the coda") rests on a death crediting NOTHING** (council `wf_dfb7949b-4a7`'s "U12
   landmine"). Build 2's KTD5 credits 0 in any year not everyone is alive (`workingYearCredit`'s `allAlive`,
   `src/engine/moneyGrain.ts`), so in a survivor working year the two answers differ by their two survivor charges alone,
   and the coda's X (`TypedBelowSurvivor.most`, `src/intake/workingYearLeftOver.ts`) bounds exactly that. The day anything
@@ -744,7 +750,7 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## UI and product
 
-- **(b9-6, 11-15) `NotePartsBlock` draws the door inside the segments' `<dl>`**: the typed-below coda's own list goes after that list and before the doorless button, and a coda never sits beside a door (the survivor plan's KTD6).
+- **(b9-6, 11-15; b9-3, 11-16) `NotePartsBlock` draws two lists, never both**: W's stale line as the segments' `<dl>` with the door inside it, and the typed-below line's runs as an `<ol role="list">` (`role` because WebKit drops list semantics under `list-style: none`) with the survivor part as the `<p class="note-parts__closing">` after it, before the doorless button (the walk-8 form council's KD7, KD8). jsdom loads no stylesheet: the runs' spacing (`noteParts.css`) is seen only in a real browser.
 - **(b9-4, 11-05) Never call `buildDateInput` from inside the money picture's path.** On a "saved" draft `buildDateInput` now reads
   `workingYearLedgerForRun`; the picture composes from `buildDateInputBeforeLeftOver`. Any new reader inside
   `composeWorkingYearLedger` that calls `buildDateInput` recurses forever on a saved draft.

@@ -1,73 +1,178 @@
 // @vitest-environment jsdom
 /**
- * The standing note's parts and their block (`noteParts.ts`, `NotePartsBlock.tsx`): the survivor-path build's U2
- * (`docs/plans/features/typed-below-survivor-path-build-spec.md`, KTD6). A note may close on a CODA — the typed-below
- * line's survivor condition — drawn as its own one-item list after the segments' list and before the doorless button, so
- * neither a screen reader nor the eye takes the condition as one more segment of the list the lead introduces. A note
- * with no coda draws exactly as before (every host's existing pins hold).
+ * The standing note's parts and their block (`noteParts.ts`, `NotePartsBlock.tsx`), in its two forms, each pinned as the
+ * exact DOM, typed by hand:
+ * - The typed-below line's RUNS (the walk-8 form spec's U2, `docs/plans/features/typed-below-walk8-form-build-spec.md`,
+ *   KD7 and KD8): an `<ol role="list">`, one `<li>` per run holding its label and then each of its sentences as its own
+ *   `<p>`; after the list, the closing `<p>` (the survivor part: a condition over the runs, never one more of them) where
+ *   there is one; the host's button last. No `<dl>`, no coda list, no heading, no table.
+ * - W's stale line (segments and, on the Result, the door): unchanged by U2, byte for byte. These pins were run green
+ *   against the renderer as it stood before U2 (`git show f51be29a:src/ui/NotePartsBlock.tsx`), where the runs arms
+ *   redded, and then against U2's.
  */
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, render, within } from '@testing-library/react'
 import { NotePartsBlock } from '../NotePartsBlock'
 import { isPlainNote, notePartsText, plainNote, withoutDoor, type NoteParts } from '../noteParts'
 
 afterEach(cleanup)
 
-const SEGMENTS = [
-  { label: '2026 through 2028', sentences: ['First sentence.', 'Second sentence.'] },
-  { label: '2029 through 2035', sentences: ['Third sentence.'] },
+const RUN_ITEMS = [
+  { label: '2026 through 2028', sentences: ['Run one, sentence one.', 'Run one, sentence two.', 'Run one, sentence three.'] },
+  {
+    label: 'If you’re still working in 2029 through 2032',
+    sentences: ['Run two, sentence one.', 'Run two, sentence two.', 'Run two, sentence three.'],
+  },
+  {
+    label: 'If you’re still working in 2033 through 2035',
+    sentences: ['Run three, sentence one.', 'Run three, sentence two.', 'Run three, sentence three.'],
+  },
 ] as const
-const CODA = { label: 'If only one of you is alive', sentences: ['In such a working year, a fourth sentence.', 'A fifth.'] } as const
-const WITH_CODA: NoteParts = { opening: 'The opening. The lead:', segments: SEGMENTS, door: null, coda: CODA }
-const WITHOUT_CODA: NoteParts = { opening: 'The opening. The lead:', segments: SEGMENTS, door: null }
-const BUTTON = <button className="band-premise__cta note-parts__cta">Update your figure</button>
+const CLOSING = ['If only one of you is alive in a working year, the closing’s first sentence.', 'The closing’s second.'] as const
+const OPENING = 'The opening. The lead:'
+const WITH_CLOSING: NoteParts = { opening: OPENING, segments: [], door: null, runs: { items: RUN_ITEMS, closing: CLOSING } }
+const NO_CLOSING: NoteParts = { opening: OPENING, segments: [], door: null, runs: { items: RUN_ITEMS, closing: null } }
+const BUTTON = (
+  <button type="button" className="band-premise__cta note-parts__cta">
+    Update your figure
+  </button>
+)
 
-describe('the coda (the survivor-path build’s U2, KTD6)', () => {
-  it('draws as its own one-item list after the segments’ list and before the doorless button, in the segment’s markup', () => {
-    const { container } = render(<NotePartsBlock parts={WITH_CODA} className="fod-note" button={BUTTON} />)
-    const block = container.querySelector('div.note-parts')!
-    const children = [...block.children].map((c) => `${c.tagName.toLowerCase()}.${[...c.classList].join('.')}`)
-    expect(children).toEqual([
-      'p.note-parts__opening',
-      'dl.note-parts__segments',
-      'dl.note-parts__segments.note-parts__coda',
-      'button.band-premise__cta.note-parts__cta',
-    ])
-    const [spans, coda] = block.querySelectorAll('dl')
-    expect([...spans!.querySelectorAll('dt')].map((dt) => dt.textContent)).toEqual(['2026 through 2028', '2029 through 2035'])
-    expect(spans!.textContent, 'the condition is never an item of the spans’ list').not.toContain(CODA.label)
-    expect(coda!.querySelectorAll('div.note-parts__segment')).toHaveLength(1)
-    expect(coda!.querySelector('dt.note-parts__label')).toHaveTextContent(CODA.label)
-    expect(coda!.querySelector('dd.note-parts__body')).toHaveTextContent('In such a working year, a fourth sentence. A fifth.')
+// The DOM, typed by hand (never composed from the fixtures above: a renderer that reorders, joins or drops a part reds).
+const OPENING_HTML = '<p class="note-parts__opening">The opening. The lead:</p>'
+const RUNS_HTML =
+  '<ol role="list" class="note-parts__runs">' +
+  '<li class="note-parts__run"><p class="note-parts__label">2026 through 2028</p>' +
+  '<p class="note-parts__para">Run one, sentence one.</p><p class="note-parts__para">Run one, sentence two.</p>' +
+  '<p class="note-parts__para">Run one, sentence three.</p></li>' +
+  '<li class="note-parts__run"><p class="note-parts__label">If you’re still working in 2029 through 2032</p>' +
+  '<p class="note-parts__para">Run two, sentence one.</p><p class="note-parts__para">Run two, sentence two.</p>' +
+  '<p class="note-parts__para">Run two, sentence three.</p></li>' +
+  '<li class="note-parts__run"><p class="note-parts__label">If you’re still working in 2033 through 2035</p>' +
+  '<p class="note-parts__para">Run three, sentence one.</p><p class="note-parts__para">Run three, sentence two.</p>' +
+  '<p class="note-parts__para">Run three, sentence three.</p></li>' +
+  '</ol>'
+const CLOSING_HTML =
+  '<p class="note-parts__closing">If only one of you is alive in a working year, the closing’s first sentence. The closing’s second.</p>'
+const BUTTON_HTML = '<button type="button" class="band-premise__cta note-parts__cta">Update your figure</button>'
+
+describe('the typed-below line’s runs (the walk-8 form spec’s U2, KD7 and KD8)', () => {
+  it('draws the opening, the ordered list of runs (each its label, then each sentence its own paragraph), the closing paragraph, then the button', () => {
+    const { container } = render(<NotePartsBlock parts={WITH_CLOSING} className="fod-note cs-paycheck-note" button={BUTTON} />)
+    expect(container.innerHTML).toBe(`<div class="note-parts fod-note cs-paycheck-note">${OPENING_HTML}${RUNS_HTML}${CLOSING_HTML}${BUTTON_HTML}</div>`)
   })
 
-  it('the text runs opening, segments, coda (the gate’s React key and every test’s compare)', () => {
-    expect(notePartsText(WITH_CODA)).toBe(
-      'The opening. The lead: 2026 through 2028 First sentence. Second sentence. 2029 through 2035 Third sentence. If only one of you is alive In such a working year, a fourth sentence. A fifth.',
+  it('the list is a list in the accessibility tree, one item per run, and the closing is never one of its items', () => {
+    const { container } = render(<NotePartsBlock parts={WITH_CLOSING} className="save-step__note" />)
+    const block = container.querySelector('div.note-parts')!
+    const list = within(block as HTMLElement).getByRole('list')
+    expect(list).toHaveAttribute('role', 'list')
+    const items = within(list).getAllByRole('listitem')
+    expect(items.map((li) => li.querySelector(':scope > p.note-parts__label')?.textContent)).toEqual([
+      '2026 through 2028',
+      'If you’re still working in 2029 through 2032',
+      'If you’re still working in 2033 through 2035',
+    ])
+    expect(list.textContent, 'the survivor part sits outside the list').not.toContain('If only one of you is alive')
+    expect(block.lastElementChild?.matches('p.note-parts__closing')).toBe(true)
+    expect(container.querySelector('dl'), 'no description list: the coda list is gone').toBeNull()
+    expect(container.querySelector('.note-parts__coda')).toBeNull()
+    expect(container.querySelector('h1, h2, h3, h4, h5, h6, table'), 'no heading and no table inside').toBeNull()
+  })
+
+  it('every host’s mix of closing and button: the closing follows the list where there is one, and the button is always last', () => {
+    const tails: [NoteParts, boolean, string][] = [
+      [WITH_CLOSING, false, `${RUNS_HTML}${CLOSING_HTML}`],
+      [NO_CLOSING, true, `${RUNS_HTML}${BUTTON_HTML}`],
+      [NO_CLOSING, false, RUNS_HTML],
+    ]
+    for (const [parts, withButton, tail] of tails) {
+      const { container, unmount } = render(<NotePartsBlock parts={parts} className="field-help left-over__at-quote" button={withButton ? BUTTON : undefined} />)
+      expect(container.innerHTML).toBe(`<div class="note-parts field-help left-over__at-quote">${OPENING_HTML}${tail}</div>`)
+      unmount()
+    }
+  })
+
+  it('the text runs opening, each run’s label then its sentences, the closing (the gate’s React key and every test’s compare)', () => {
+    expect(notePartsText(WITH_CLOSING)).toBe(
+      'The opening. The lead: 2026 through 2028 Run one, sentence one. Run one, sentence two. Run one, sentence three. ' +
+        'If you’re still working in 2029 through 2032 Run two, sentence one. Run two, sentence two. Run two, sentence three. ' +
+        'If you’re still working in 2033 through 2035 Run three, sentence one. Run three, sentence two. Run three, sentence three. ' +
+        'If only one of you is alive in a working year, the closing’s first sentence. The closing’s second.',
+    )
+    expect(notePartsText(NO_CLOSING).endsWith('Run three, sentence three.')).toBe(true)
+  })
+
+  it('a note with runs is never plain, and a read-only tab keeps it as it is (it has no door to drop)', () => {
+    expect(isPlainNote(WITH_CLOSING)).toBe(false)
+    expect(isPlainNote(NO_CLOSING)).toBe(false)
+    expect(isPlainNote(plainNote('A.'))).toBe(true)
+    expect(withoutDoor(WITH_CLOSING)).toBe(WITH_CLOSING)
+  })
+
+  it('a note with runs carries no segments and no door (by type)', () => {
+    // Never called: a compile-only arm (a `@ts-expect-error` arm still runs, `docs/landmines.md`).
+    const _compileOnly = (): NoteParts[] => [
+      // @ts-expect-error — runs and a door never ride together (KD8: the typed-below line has no door)
+      { opening: 'A.', segments: [], door: { label: 'D', lead: [], items: [], tail: [] }, runs: { items: RUN_ITEMS, closing: null } },
+      // @ts-expect-error — runs and segments never ride together (one list per block)
+      { opening: 'A.', segments: RUN_ITEMS, door: null, runs: { items: RUN_ITEMS, closing: null } },
+    ]
+    expect(typeof _compileOnly).toBe('function')
+  })
+})
+
+describe('W’s stale line (segments and the Result’s door): unchanged by U2', () => {
+  const SEGMENTS = [
+    { label: 'This answer now', sentences: ['First sentence.', 'Second sentence.'] },
+    { label: 'If a working year costs $105,000', sentences: ['Third sentence.'] },
+  ] as const
+  const DOOR = { label: 'To update your figure', lead: ['The door’s lead.', 'Its second.'], items: ['A cost.', 'Another cost.'], tail: ['The tail.'] }
+  const SEGMENTS_HTML =
+    '<div class="note-parts__segment"><dt class="note-parts__label">This answer now</dt>' +
+    '<dd class="note-parts__body">First sentence. Second sentence.</dd></div>' +
+    '<div class="note-parts__segment"><dt class="note-parts__label">If a working year costs $105,000</dt>' +
+    '<dd class="note-parts__body">Third sentence.</dd></div>'
+
+  it('with the door: one dl, a div>dt+dd per segment, the door last with its lead, its cost list, its tail and the button inside its dd', () => {
+    const doored: NoteParts = { opening: 'The note.', segments: SEGMENTS, door: DOOR }
+    const { container } = render(<NotePartsBlock parts={doored} className="fod-note cs-paycheck-note" button={BUTTON} />)
+    expect(container.innerHTML).toBe(
+      '<div class="note-parts fod-note cs-paycheck-note">' +
+        '<p class="note-parts__opening">The note.</p>' +
+        '<dl class="note-parts__segments">' +
+        SEGMENTS_HTML +
+        '<div class="note-parts__segment note-parts__door"><dt class="note-parts__label">To update your figure</dt>' +
+        '<dd class="note-parts__body"><p class="note-parts__para">The door’s lead. Its second.</p>' +
+        '<ul class="note-parts__list"><li>A cost.</li><li>Another cost.</li></ul>' +
+        '<p class="note-parts__para">The tail.</p>' +
+        BUTTON_HTML +
+        '</dd></div>' +
+        '</dl></div>',
     )
   })
 
-  it('a note with a coda is never plain, even with no segments; one without draws exactly as before', () => {
-    expect(isPlainNote({ opening: 'A.', segments: [], door: null, coda: CODA })).toBe(false)
-    expect(isPlainNote(plainNote('A.'))).toBe(true)
-    const { container } = render(<NotePartsBlock parts={WITHOUT_CODA} className="fod-note" button={BUTTON} />)
-    expect(container.querySelectorAll('dl')).toHaveLength(1)
-    expect(container.querySelector('.note-parts__coda')).toBeNull()
-    expect(notePartsText(WITHOUT_CODA)).toBe('The opening. The lead: 2026 through 2028 First sentence. Second sentence. 2029 through 2035 Third sentence.')
-  })
-
-  it('a read-only tab drops a door and keeps a doorless note (coda and all) as it is', () => {
-    expect(withoutDoor(WITH_CODA)).toBe(WITH_CODA)
-    const doored: NoteParts = { opening: 'A.', segments: SEGMENTS, door: { label: 'Door', lead: ['L.'], items: [], tail: [] } }
-    expect(withoutDoor(doored)).toEqual({ opening: 'A.', segments: SEGMENTS, door: null })
-  })
-
-  it('a coda and a door cannot both be set (by type)', () => {
-    // Never called: a compile-only arm (a `@ts-expect-error` arm still runs, `docs/landmines.md`).
-    const _compileOnly = (): NoteParts =>
-      // @ts-expect-error — a note carries a coda or a door, never both (KTD6)
-      ({ opening: 'A.', segments: [], door: { label: 'D', lead: [], items: [], tail: [] }, coda: CODA })
-    expect(typeof _compileOnly).toBe('function')
+  it('a read-only tab: the door and its button drop, the segments stay; a door with no list or tail draws its lead alone', () => {
+    const doored: NoteParts = { opening: 'The note.', segments: SEGMENTS, door: DOOR }
+    const readOnly = withoutDoor(doored)
+    expect(readOnly).toEqual({ opening: 'The note.', segments: SEGMENTS, door: null })
+    const { container, unmount } = render(<NotePartsBlock parts={readOnly} className="save-step__note save-field__note--block" />)
+    expect(container.innerHTML).toBe(
+      '<div class="note-parts save-step__note save-field__note--block"><p class="note-parts__opening">The note.</p>' +
+        `<dl class="note-parts__segments">${SEGMENTS_HTML}</dl></div>`,
+    )
+    unmount()
+    const bare: NoteParts = { opening: 'A.', segments: [], door: { label: 'Door', lead: ['L.'], items: [], tail: [] } }
+    const { container: bareContainer } = render(<NotePartsBlock parts={bare} className="fod-note" />)
+    expect(bareContainer.innerHTML).toBe(
+      '<div class="note-parts fod-note"><p class="note-parts__opening">A.</p><dl class="note-parts__segments">' +
+        '<div class="note-parts__segment note-parts__door"><dt class="note-parts__label">Door</dt>' +
+        '<dd class="note-parts__body"><p class="note-parts__para">L.</p></dd></div></dl></div>',
+    )
+    expect(notePartsText(doored)).toBe(
+      'The note. This answer now First sentence. Second sentence. If a working year costs $105,000 Third sentence. ' +
+        'To update your figure The door’s lead. Its second. A cost. Another cost. The tail.',
+    )
   })
 })

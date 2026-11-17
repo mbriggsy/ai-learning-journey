@@ -75,7 +75,7 @@ refusal (`RothLever.tsx:54`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:580`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:4219`,
+attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:4262`,
 `FuckOffDate.tsx:156`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
@@ -103,7 +103,7 @@ attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `
   `bandClockSavedLabel` (`'Your save'`) + `bandClockSavedDesc` (*"When you saved this — ages A and B"*)
   at plan-year 0. On a **re-saver** (built last year, saved five minutes ago) that is **false**, and it
   contradicts the fresh "Saved to this device" badge on the same screen. The key is now
-  `bandClockBuiltLabel` — **`'Plan built'`** (`copy.ts:873`, rendered at `bandAnnotations.ts:169`) — with
+  `bandClockBuiltLabel` — **`'Plan built'`** (`copy.ts:871`, rendered at `bandAnnotations.ts:169`) — with
   `bandClockBuiltDesc` naming the BUILD year and the ages at that year. **Both renderers moved in the same
   change** (insight 086): the annotation arm and `twoFuturesChrome.ts:210-212`'s today-label, which picks
   the built label over `bandClockTodayLabel` exactly when the plan clock is positive.
@@ -170,7 +170,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
 
 **The coverage hole this closed.** `rothPlanEcho` had **zero** aged coverage: both its tests ran at
 elapsed 0, one comparing the slot against its own output — pinning routing, not the sentence — and the
-other a bare string in the copy guard (`copyGuard.test.ts:772`). **The `RothLever` sheet echo had no assertions of any kind**, and
+other a bare string in the copy guard (`copyGuard.test.ts:774`). **The `RothLever` sheet echo had no assertions of any kind**, and
 while `RothLever` did receive a `savedAnchor`, it routed it only to `composeTwoFutures`; the echo sentence
 three lines above never saw it. The same verifier lesson landed on this stage's own first cut: the
 sheet-echo test's `toBe(slots.…)` was the insight-081 tautology and a tense-arm swap sailed through it, so
@@ -209,7 +209,7 @@ literal tense regexes pin it now. Three mutants red → reverted.
    twin in `FuckOffDate`), so an aged projection with an unstated premise is unrepresentable. `onReconfirm`
    routes to the guided re-walk (`onReview`).
 5. **On a split, the crown names WHICH date** at the marker — `bandClockWorkStopsSplitLabel`,
-   *'Essentials date'* (`copy.ts:854`, selected at `bandAnnotations.ts:350`) — with its own a11y sentence.
+   *'Essentials date'* (`copy.ts:852`, selected at `bandAnnotations.ts:350`) — with its own a11y sentence.
    **§S2.5, ruled by the pilot at build:** the arrived idiom is the STRICT three-way split. Strictly-past
    speaks "come and gone" (`dateInYearsPast`, with `dateFloorCoveredPast` as its floor mirror);
    exactly-this-year speaks "about now" (`dateInYearsNow` / `dateFloorCoveredNow` — the old text kept at
@@ -492,7 +492,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   defect**: the doctored build year forks the derived birth year across the RMD band edge, forcing the
   household into RMDs two years early. It is pinned as found and filed.
 - **Both seeds were walked** (`datearrived` plus the existing aged plant) in the Caddie walk, and
-  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:2144-2169`) — without that allowlist entry the
+  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:2130-2155`) — without that allowlist entry the
   one plant this stage exists to cold-read would have been chaired on its landing alone.
 - **The walk hard-flagged all six faces and NOTHING shipped from it** (`docs/caddie/cold-read-log.md`,
   2026-07-27) — three carrying **calm-but-wrong BLOCKERS**, the class the batched-oracle grant has never
@@ -510,7 +510,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
 - **Owed from the walk, and not filed until 2026-09-25 (from the 2026-09-24 doc audit):** the arrived-walk's state-tax blindness. `?vault=datearrived` is stateless by construction (`doctorArrivedVault` refuses a priced-state base, `devSeeds.ts:1900-1907`), so no walk has read the arrived face on a priced state. It is carried in `docs/backlog.md` under "The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed".
 - **The aged band's x-axis has its first real-browser arm.** Before S6 no fit arm asserted it — the aged
   axis appeared nowhere in `e2e/`, so §S0's rename had shipped on unit arms alone. `?vault=datearrived` is
-  now driven at `e2e/vertical-fit.spec.ts:2704-2852`, asserting that the year-0 endpoint names the BUILD
+  now driven at `e2e/vertical-fit.spec.ts:2716-2864`, asserting that the year-0 endpoint names the BUILD
   year (`'Plan built'`, `:2220-2224`) and that no named marker renders left of Today — neither the plain
   label nor the split one, since the array picks between them (`:2230-2240`). Both are mutation-proven, and
   the withdrawal mutant draws
@@ -529,7 +529,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts:745-751`, `copy.ts:4383` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts:745-751`, `copy.ts:4426` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

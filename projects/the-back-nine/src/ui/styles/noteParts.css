@@ -1,6 +1,8 @@
-/* A standing note drawn as a block (`NotePartsBlock`; council `wf_22858e04-f7a`, U11 walk 6). The parts are told apart by
-   their own line, the space above, the body face's semibold and one size step — never color (the reader is
-   color-blind). Tokens only; no motion (the parts ride their host's one entrance). */
+/* A standing note drawn as a block (`NotePartsBlock`; council `wf_22858e04-f7a`, U11 walk 6), in one of two lists: W's
+   stale line's segments (a `<dl>`, the Result's door its last part) or the typed-below line's runs (an `<ol>` and its
+   closing paragraph; the walk-8 form council `wf_98d8bc0e-e0a`, KD7 and KD8). The parts are told apart by their own
+   line, the space above, the body face's semibold and one size step — never color, never a rule (the reader is
+   color-blind). Tokens only; no motion (the parts ride their host's one entrance), the same at every width. */
 
 /* W's block breathes apart from the notes around it (the council: --space-4 on both sides). `div.` outranks each host's
    single-class `margin: 0` (`.save-step__note`, `.fod-note`) whatever the stylesheet order. */
@@ -17,9 +19,11 @@ div.note-parts {
   margin: 0;
 }
 
-/* The label: its own line, --space-3 above and --space-1 below; the body face (the type law: its figures are Source
-   Sans numerals), semibold, full ink, ONE token step above the host's text — the gate's --text-sm notes take
-   --text-base, the Result's --text-base notes take --text-lg (below). */
+/* The label (a segment's `<dt>`, a run's first `<p>`): its own line, --space-3 above and --space-1 below; the body face
+   (the type law: its figures are Source Sans numerals), semibold, full ink, ONE token step above the host's text — the
+   gate's --text-sm notes take --text-base, the Result's --text-base notes take --text-lg (below). Its years and dollars
+   keep base.css's figure law by inheritance (tabular lining numerals): a restatement here set tabular-nums alone, which
+   dropped lining-nums, and KD8 deleted it. */
 .note-parts__label {
   margin: var(--space-3) 0 var(--space-1);
   font-family: var(--font-body);
@@ -27,7 +31,6 @@ div.note-parts {
   font-weight: var(--weight-semibold);
   line-height: var(--leading-body);
   color: var(--ink);
-  font-variant-numeric: tabular-nums;
 }
 
 .fod-note .note-parts__label {
@@ -38,11 +41,28 @@ div.note-parts {
   margin: 0;
 }
 
-/* The coda's own list (the typed-below line's "If only one of you is alive"): a condition over the spans, never one more
-   of them, so it stands one step further off the last span than the spans stand off each other (its label's --space-3
-   plus this --space-2), told apart by space alone — never color, never a rule. */
-.note-parts__coda {
+/* The runs (KD8): an ordered list with no marker and no indent of its own — each run's label is its marker, and the
+   text keeps the opening's left edge. `role="list"` on the element keeps the list a list where WebKit would drop it
+   under `list-style: none`. A run's label keeps the segment label's place and face, so the runs stand --space-3 apart. */
+.note-parts__runs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* A run's sentences (KD4: the spending side, the typed side, the close, one paragraph each): --space-2 between them, a
+   paragraph break the eye sees even where a sentence's last line runs the full measure — the door's own step between its
+   paragraphs and its list. It is the second rung of one ladder, told apart by space alone: a label --space-1 above its
+   first sentence, sentences --space-2 apart, runs --space-3 apart, the closing --space-4 off the list (below). */
+.note-parts__run > .note-parts__para + .note-parts__para {
   margin-block-start: var(--space-2);
+}
+
+/* The closing (KD7, the survivor part): a condition over the runs, never one more of them, so it carries no label and
+   stands one step further off the list than the runs stand off each other (--space-4 to their --space-3; the council's
+   position) — told apart by space alone, never color, never a rule. */
+.note-parts__closing {
+  margin: var(--space-4) 0 0;
 }
 
 /* The door's cost list: a list the eye can tick through (copylaw F3), the host's own text, a quiet marker. */

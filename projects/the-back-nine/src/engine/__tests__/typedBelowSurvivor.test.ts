@@ -4,7 +4,8 @@
  *
  * The line's spans are the all-alive money picture's. On a path where Sam dies while Alex still works, the engine credits
  * nothing on either answer (`workingYearCredit`'s `allAlive`) and charges W by its survivor rule, so the two answers'
- * shortfalls can differ by more than any all-alive span prints, and by at most the coda's X (the read's `survivor.most`).
+ * shortfalls can differ by more than any all-alive run prints, and by at most the survivor part's X (the read's
+ * `survivor.most`).
  * Each of the six households the council named runs here through the real run's route (`buildDateInput`, then
  * `buildCandidateParams` at the window top, so the saved left over rides and the credit rule runs) at one path, on a
  * seed whose drawn path kills Sam at the first age the sampler can draw a death (66: sim year 6, 2032) and keeps Alex
@@ -16,7 +17,7 @@
  *    surcharge moved (KTD9: no living member is Medicare-enrolled in such a year).
  * X is the read's, never re-derived here (DND 012: nothing in this file calls `workingYearCostForYear`); the engine's own
  * draws are the oracle. The planted arm: on C at 100 %, 2032's difference runs past the $10,000 the all-alive span prints
- * for 2029–2032, so a coda fed the all-alive figure would be rosy, and the bound arm reds on it.
+ * for 2029–2032, so a survivor part fed the all-alive figure would be rosy, and the bound arm reds on it.
  */
 import { describe, it, expect } from 'vitest'
 import { sampleCouplePath } from '@engine/longevity'

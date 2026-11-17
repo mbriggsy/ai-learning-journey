@@ -238,16 +238,17 @@ describe('R8–R9 on a direct overlay call: where the credit lands, and how much
     expect(run(m, { Ws: [25_000], allAlive: [false], saved: 10_000 })).toEqual(run(m, { Ws: [25_000], allAlive: [false] }))
   })
 
-  it('THE CODA’S TRIPWIRE: the rule credits 0 in a year someone is dead, whatever the positive cash (the typed-below survivor coda’s X rests on it)', () => {
-    // The typed-below line's survivor coda (`docs/plans/features/typed-below-survivor-path-build-spec.md`, KTD4, U5) bounds
-    // what this answer takes less from savings in a survivor working year by X, the difference of the two survivor
-    // charges, and nothing more, ONLY because a death credits nothing on either answer. The presence companion (insight
-    // 029): with everyone alive the same call credits the cash, so each 0 below is the death's alone.
+  it('THE SURVIVOR PART’S TRIPWIRE: the rule credits 0 in a year someone is dead, whatever the positive cash (the typed-below line’s survivor part’s X rests on it)', () => {
+    // The typed-below line's survivor part (`docs/plans/features/typed-below-survivor-path-build-spec.md`, KTD4, U5; its
+    // form the walk-8 form council's KD7) bounds how much less is in savings at the spending in a survivor working year by
+    // X, the difference of the two survivor charges, and nothing more, ONLY because a death credits nothing on either
+    // answer. The presence companion (insight 029): with everyone alive the same call credits the cash, so each 0 below
+    // is the death's alone.
     expect(workingYearCredit(4_040, 16_985, 10_000, true), 'alive, the same cash credits').toBe(4_040)
     for (const cash of [0.01, 4_040, 16_985, 1e9]) {
       expect(
         workingYearCredit(cash, 16_985, 10_000, false),
-        `a survivor year with cash ${cash} credits 0: the typed-below coda's bound (X, \`TypedBelowSurvivor.most\`) rests on a death crediting nothing — any rule that credits a survivor year must change the coda's words and X with it (docs/landmines.md)`,
+        `a survivor year with cash ${cash} credits 0: the typed-below survivor part's bound (X, \`TypedBelowSurvivor.most\`) rests on a death crediting nothing — any rule that credits a survivor year must change the survivor part's words and X with it (docs/landmines.md)`,
       ).toBe(0)
     }
   })

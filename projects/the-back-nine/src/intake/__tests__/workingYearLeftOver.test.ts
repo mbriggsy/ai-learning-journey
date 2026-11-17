@@ -15,6 +15,7 @@
  * (`workingCostStep.test.tsx`) and the panel's (`assumptionPanel.test.tsx`).
  */
 import { describe, expect, it } from 'vitest'
+import fc from 'fast-check'
 import type { WorkingYearLeftOverKind } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { LEFT_OVER_WAITING_COPY, copy, slots, workingCostExtras } from '@ui/copy'
@@ -45,12 +46,17 @@ import {
   workingYearTypedBelowWindow,
   writeWorkingYearLeftOver,
   shortRunFrom,
+  typedBelowPairingOf,
   typedBelowSurvivorYears,
+  type TypedBelowFigure,
   type TypedBelowHost,
   type TypedBelowLineStructure,
+  type TypedBelowPairing,
+  type TypedBelowQuoteCap,
   type TypedBelowSeatHost,
   type TypedBelowSpan,
   type TypedBelowSurvivor,
+  type TypedBelowYear,
   type TypedBelowYearKind,
 } from '../workingYearLeftOver'
 import { toCents } from '@engine/moneyGrain'
@@ -59,6 +65,7 @@ import {
   PENSION_ALL_STICKY_BUDGET,
   SURVIVOR_GATE_WITNESSES,
   TM_ALL_STICKY_BUDGET,
+  TM_NEAR_IRMAA_LINE,
   TYPED_BELOW_WITNESSES,
   councilBudgetHousehold,
   type TypedBelowWitness,
@@ -162,19 +169,22 @@ describe('workingYearLeftOverMoved — the ONE moved core (R12; U14’s obligati
     return { ...d, workingYearCost: { kind: 'entered', amountReal, entryPeriod, stateTaxReading: w.stateTaxReading } }
   }
 
-  it('names the typed figure the live figure rests on, exactly where a fresh typed figure sits below the quote', () => {
+  // The answer page's moved clause names its noun (the walk-8 card's W8-R5 (b), the walk-8 form spec's U2: "all of it" had
+  // no referent): "all the money left over in a working year". The moved line's own sentence keeps its words (the spec
+  // names the clause and the sheet's caveat only).
+  it('names the typed figure the live figure rests on, exactly where a fresh typed figure sits below the quote; the clause names its noun (W8-R5 (b))', () => {
     const c = workingYearLeftOverMoved(retype(DEV_SEEDS.datesavedrisenlater, 84_000))
     expect(c).toEqual({ stored: 16_985, live: 26_985, typedBelow: '84,000' })
     expect(workingYearLeftOverMovedText(c!)).toBe(
       'You said all of it goes into your savings when it was $16,985. At your figure of $84,000 a year, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
     )
     expect(workingYearLeftOverMovedClause(c!)).toBe(
-      'You said all of it goes into your savings when your first working year had $16,985 left over. At your figure of $84,000 a year, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
+      'You said all the money left over in a working year goes into your savings, when your first working year had $16,985 left over. At your figure of $84,000 a year, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
     )
     const tap = workingYearLeftOverMoved(retype(DEV_SEEDS.datesaved, 6_000 * 12, 'month'))
     expect(tap, 'given by the month, named by the year').toEqual({ stored: 16_985, live: 28_985, typedBelow: '72,000' })
     expect(workingYearLeftOverMovedClause(tap!)).toBe(
-      'You said all of it goes into your savings when your first working year had $16,985 left over. At your figure of $72,000 a year, it has $28,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
+      'You said all the money left over in a working year goes into your savings, when your first working year had $16,985 left over. At your figure of $72,000 a year, it has $28,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
     )
   })
 
@@ -988,14 +998,93 @@ describe('workingYearLeftOverWaitingWords — R3, the seat and the methodology l
   })
 })
 
+// ── THE TYPED-BELOW LINE'S WORDS, typed by hand once for the three suites below (the walk-8 form council
+// `wf_98d8bc0e-e0a`; `docs/plans/features/typed-below-walk8-form-build-spec.md`, "The words"). None is read from
+// `COMPARISON_RIDER`, a slot or the composer's Records, so a plant in the copy or the composer reds here
+// (`docs/landmines.md`, Copy and copyGuard: no word test imports what it pins).
+/** [R]: the rider every comparison the line makes ends on (KD1, KD2: "between the two answers", never "plus"). */
+const RIDER = ', not including any difference between the two answers in income tax and Medicare’s income surcharge.'
+/** [G]: the gloss inside the period of each composed line's FIRST rider (KD3), "two" the engine's own look-back. */
+const GLOSS = ' (the extra premium Medicare charges once you’re on it, when your income two years before was high)'
+/** A line's first rider: [R] with [G] before its period. */
+const GLOSSED =
+  ', not including any difference between the two answers in income tax and Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, when your income two years before was high).'
+/** The lead above two or more runs under the survivor scope, on every host ("each answer": every run states both). */
+const SCOPED_LEAD = 'What each answer adds to your savings in each working year you’re both alive:'
+/** …and with the gate off, which the seat alone draws (the Result and the gate draw no lead there). */
+const PLAIN_LEAD = 'What each answer adds to your savings in each working year:'
+/** The whole-answer lean in the host's own noun (KD9): never "this answer" under "Your answer counts". */
+const lean = (answer: 'This' | 'Your'): string =>
+  `A working year almost always costs at least what you spend, so ${answer.toLowerCase()} answer can look better than it really is.`
+/** The counts sentence and its lean, on a spending quote. */
+const counts = (answer: 'This' | 'Your', typedFigure: string, quote: string): string =>
+  `${answer} answer counts a working year at your own figure of $${typedFigure} a year, below your spending of $${quote} a year. ${lean(answer)}`
+/** A line of one run: one plain paragraph (KD8: the run and the survivor part fold into the opening). */
+const plain = (opening: string): NoteParts => ({ opening, segments: [], door: null })
+/** A line of two or more runs (KD8): the opening, the ordered list of runs, then the survivor part after it (KD7). */
+const block = (opening: string, items: readonly NoteSegment[], closing: readonly string[] | null): NoteParts => ({
+  opening,
+  segments: [],
+  door: null,
+  runs: { items, closing },
+})
+/** A line's runs, its ordered list: none on a plain note. */
+const runsOf = (parts: NoteParts): readonly NoteSegment[] => parts.runs?.items ?? []
+/** The noun swapped, "This" for "Your": the hosts' words differ in nothing else (KD9). */
+const toYour = (s: string): string => s.replace(/\bThis answer\b/g, 'Your answer').replace(/\bthis answer\b/g, 'your answer')
+const runsToYour = (items: readonly NoteSegment[]): readonly NoteSegment[] => items.map((s) => ({ label: s.label, sentences: s.sentences.map(toYour) }))
+/** A's cap sentence (KD5: year 0 at $90,000 leaves $10,985, under the stored $16,985), naming the floor (W8-R8). */
+const A_CAP =
+  'At your spending of $90,000 a year, the least a working year almost always costs, your first working year would have $10,985 left over, so the answer at that spending would add at most $10,985 in any working year.'
+/** A's one run and survivor part, its paragraph's tail after the cap sentence: one run draws no label and no lead, so its
+ *  opener carries the scope on its own head (pilot call 3); $63,000 and $67,500 are the 0.75 survivor charges, X $4,500
+ *  (AE2). */
+const A_TAIL = (answer: 'This' | 'Your'): string =>
+  'Each working year you’re both alive, the answer at your spending of $90,000 a year would add at most $10,985 a year. ' +
+  `${answer} answer adds at most $16,985 a year to your savings. ` +
+  `At your spending, that’s $6,000 a year less in your savings${GLOSSED} ` +
+  'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year. ' +
+  `At your spending, that’s at most $4,500 a year less in your savings${RIDER}`
+/** TM's cap sentence (KD5: year 0 at $105,000 leaves $5,985, under the stored $16,985), naming the floor (W8-R8). */
+const TM_CAP =
+  'At your spending of $105,000 a year, the least a working year almost always costs, your first working year would have $5,985 left over, so the answer at that spending would add at most $5,985 in any working year.'
+/** TM's three runs, typed out whole, the noun by host (KD9). TM opens the survivor gate (Sam can die from 66, in 2032,
+ *  while Alex works), so the short run's year subject carries the scope; the gloss rides the first run's close alone. */
+const TM_RUNS = (answer: 'This' | 'Your'): readonly NoteSegment[] => {
+  const credit = (rider: string): readonly string[] => [
+    'The answer at your spending of $105,000 a year would add at most $5,985 a year.',
+    `${answer} answer adds at most $16,985 a year to your savings.`,
+    `At your spending, that’s $11,000 a year less in your savings${rider}`,
+  ]
+  return [
+    { label: '2026 through 2028', sentences: credit(GLOSSED) },
+    {
+      label: 'If you’re still working in 2029 through 2032',
+      sentences: [
+        'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, which would be taken from your savings, and the answer at that spending would add nothing.',
+        `Your figure of $84,000 a year leaves those shortfalls out of ${answer.toLowerCase()} answer, which adds at most $16,985 a year to your savings.`,
+        `At your spending, that’s at most $20,637 to $21,000 a year less in your savings${RIDER}`,
+      ],
+    },
+    { label: 'If you’re still working in 2033 through 2035', sentences: credit(RIDER) },
+  ]
+}
+/** TM's survivor part (KD7): the costs first, then the runs' close with X $15,750 ($78,750 less $63,000, the 0.75 survivor
+ *  charges). It names no answer, so it reads alike on every host. */
+const TM_SURVIVOR: readonly string[] = [
+  'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year.',
+  `At your spending, that’s at most $15,750 a year less in your savings${RIDER}`,
+]
+
 // U11 walk 6's R1 (the Tier 0 retype entry's ⚑ MEASURED bullet), rebuilt over the whole working window (the rebuild's
-// U4: `docs/plans/features/typed-below-whole-window-rebuild-spec.md` KTD6, KTD7; council `wf_f74697d1-f2e`). A FRESH typed
-// W below today's quote speaks where the answer is read, as parts: the counts sentence and its lean, the moved clause
-// where this line holds the Result's slot, then one span per run of working years, this answer's credit beside the
-// credit of the answer at today's quote. Every sentence below is TYPED BY HAND (a copy plant inside a slot dies only to
-// words typed out, `docs/landmines.md`), each figure the engine's own as the U3 witness table and the U3 probe print it
-// (`u11-wholewindow\research\witnesses.md`, `research\wit\u3-probe.out.txt`); U3's suite below pins every witness's spans.
-describe('workingYearCostTypedBelowLine and its door — R1 over the whole working window (the rebuild’s U4)', () => {
+// U4: `docs/plans/features/typed-below-whole-window-rebuild-spec.md` KTD6, KTD7; council `wf_f74697d1-f2e`), in the walk-8
+// form council's form (its spec's U2). A FRESH typed W below today's quote speaks where the answer is read, as parts: the
+// counts sentence and its lean in the host's noun (KD9), the moved clause where this line holds the Result's slot, the
+// cap sentence where the answer at the quote has a cap of its own (KD5), the lead, then the window's runs, three beats
+// each (KD4: the spending side, the typed side, the close from the spending side), and the survivor part after them
+// (KD7). Every sentence below is TYPED BY HAND from the U2 line probe's output (every witness on every host), each figure
+// the engine's own as the U3 witness table prints it; U3's suite below pins every witness's spans.
+describe('workingYearCostTypedBelowLine and its door — R1 over the whole working window, in the walk-8 form (U2)', () => {
   const typed = (d: ScenarioDraft, amountReal = 84_000, entryPeriod: 'year' | 'month' = 'year'): ScenarioDraft => {
     const w = d.workingYearCost
     if (w === undefined) throw new Error('[test setup] the witness holds a W')
@@ -1015,8 +1104,8 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
   }
   /** The budget twin of a household: one all-essentials line whose first year, with the medical figure, is the same quote
    *  the spending gave, so every figure but the quote's name is unchanged (round 2, findings #4 and #5). Housing by
-   *  default, which the engine holds whole after a death (so the survivor coda's X is the whole gap); a food line holds
-   *  nothing, so the coda names the two survivor charges. */
+   *  default, which the engine holds whole after a death (so the survivor part's X is the whole gap); a food line holds
+   *  nothing, so the survivor part names the two survivor charges. */
   const budgetTwin = (d: ScenarioDraft, category: 'housing' | 'food' = 'housing'): ScenarioDraft => {
     const q = workingYearQuote(d)
     if (q === null) throw new Error('[test setup] the household has a quote')
@@ -1035,243 +1124,291 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
   const RESULT_HOSTED = { kind: 'result', carriesMoved: false } as const
   const GATE = { kind: 'gate' } as const
   const HOSTS = [RESULT, RESULT_HOSTED, GATE] as const
-  const LEAN = 'A working year almost always costs at least what you spend, so this answer can look better than it really is.'
-  const counts = (answer: 'This' | 'Your', typedFigure: string, quote: string): string =>
-    `${answer} answer counts a working year at your own figure of $${typedFigure} a year, below your spending of $${quote} a year. ${LEAN}`
-  const plain = (opening: string): NoteParts => ({ opening, segments: [], door: null })
   const line = (d: ScenarioDraft, host: TypedBelowHost): NoteParts => {
     const parts = workingYearCostTypedBelowLine(d, host)
     if (parts === null) throw new Error('[test setup] the witness draws the line')
     return parts
   }
-  /** One labelled segment's sentences, by its label. */
-  const segment = (d: ScenarioDraft, host: TypedBelowHost, label: string): readonly string[] => {
-    const s = line(d, host).segments.find((x) => x.label === label)
-    if (s === undefined) throw new Error(`[test setup] no segment "${label}"`)
+  /** One run's three sentences, by its label. */
+  const run = (d: ScenarioDraft, host: TypedBelowHost, label: string): readonly string[] => {
+    const s = runsOf(line(d, host)).find((x) => x.label === label)
+    if (s === undefined) throw new Error(`[test setup] no run "${label}"`)
     return s.sentences
   }
-  /** TM's three spans, typed out whole: "This" on the Result, "Your" on the gate and the seat. TM opens the survivor gate
-   *  (Sam can die from 66, in 2032, while Alex works), so the short span's year subject carries the scope. */
-  const TM_SEGMENTS = (answer: 'This' | 'Your'): NoteParts['segments'] => {
-    const lower = answer.toLowerCase()
-    const credit = [`${answer} answer adds at most $16,985 a year to your savings.`, 'At your spending of $105,000 a year, it would add at most $5,985, $11,000 less, not including any difference in income tax and Medicare’s income surcharge.']
-    return [
-      { label: '2026 through 2028', sentences: credit },
-      {
-        label: '2029 through 2032',
-        sentences: [
-          `At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and ${lower} answer would add nothing.`,
-          `Your figure of $84,000 a year leaves those shortfalls out of ${lower} answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, not including any difference in income tax and Medicare’s income surcharge.`,
-        ],
-      },
-      { label: '2033 through 2035', sentences: credit },
-    ]
-  }
-  /** TM's survivor coda, its own labelled part after the spans: X $15,750 ($78,750 less $63,000, the 0.75 survivor charges). */
-  const TM_CODA = (answer: 'This' | 'Your') => ({
-    label: 'If only one of you is alive',
-    sentences: [
-      `In such a working year, ${answer.toLowerCase()} answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.`,
-      'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.',
-    ],
-  })
-  /** The scoped lead the Result and the gate draw above two or more spans under the gate (none there with it off). */
-  const SCOPED_LEAD = (answer: 'This' | 'Your'): string => `What ${answer.toLowerCase()} answer adds to your savings in each working year you’re both alive:`
+  /** The moved clause, its noun named (the walk-8 card's W8-R5 (b): "all of it" had no referent). */
   const TM_MOVED_CLAUSE =
-    'You said all of it goes into your savings when your first working year had $16,985 left over. At your figure of $84,000 a year, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
+    'You said all the money left over in a working year goes into your savings, when your first working year had $16,985 left over. At your figure of $84,000 a year, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
 
-  it('A (`datesavedtyped`): ONE span, so ONE plain paragraph on every host — the counts sentence, the lean, then "Each working year you’re both alive," its $16,985 beside the quote answer’s $10,985, $6,000 less, then the one-span survivor coda closing the paragraph: at most $4,500, $63,000 at the figure and $67,500 at the spending (AE2)', () => {
+  it('A (`datesavedtyped`): ONE run, so ONE plain paragraph on every host — the counts sentence and its lean in the host’s noun, the cap sentence naming the floor (year 0 at $90,000 leaves $10,985), then the run’s three beats opening "Each working year you’re both alive," ($10,985 at the spending, $16,985 at the figure, $6,000 a year less, the gloss on its rider), then the survivor part closing the paragraph: $63,000 at the figure and $67,500 at the spending, at most $4,500 (AE2)', () => {
     const d = DEV_SEEDS.datesavedtyped
     expect(d, 'the seed IS the retype').toEqual(typed(DEV_SEEDS.datesavedrisen))
     expect(isWorkingYearCostStale(d), 'the premise: a typed figure is fresh').toBe(false)
     expect(workingYearLeftOverShownState(d), 'the premise: carried at the stored figure').toBe('saved')
-    const span = (answer: 'this' | 'your') =>
-      `Each working year you’re both alive, ${answer} answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge. ` +
-      `If only one of you is alive in a working year, ${answer} answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge. ` +
-      'Such a year’s costs count as $63,000 a year at your figure and $67,500 at your spending.'
-    expect(line(d, RESULT)).toEqual(plain(`${counts('This', '84,000', '90,000')} ${span('this')}`))
-    expect(line(d, RESULT_HOSTED), 'nothing moved: the host flag changes nothing').toEqual(plain(`${counts('This', '84,000', '90,000')} ${span('this')}`))
-    expect(line(d, GATE)).toEqual(plain(`${counts('Your', '84,000', '90,000')} ${span('your')}`))
-    for (const host of HOSTS) expect(isPlainNote(line(d, host)), 'a one-span line is a plain note: the coda rides it as sentences, never a part').toBe(true)
+    expect(line(d, RESULT)).toEqual(plain(`${counts('This', '84,000', '90,000')} ${A_CAP} ${A_TAIL('This')}`))
+    expect(line(d, RESULT_HOSTED), 'nothing moved: the host flag changes nothing').toEqual(plain(`${counts('This', '84,000', '90,000')} ${A_CAP} ${A_TAIL('This')}`))
+    expect(line(d, GATE), 'the gate’s noun is "Your", the lean’s too (KD9)').toEqual(plain(`${counts('Your', '84,000', '90,000')} ${A_CAP} ${A_TAIL('Your')}`))
+    for (const host of HOSTS) expect(isPlainNote(line(d, host)), 'a one-run line is a plain note: the survivor part rides it as sentences').toBe(true)
   })
 
-  it('TM (`datesavedtypedmoved`, the left over MOVED to $26,985): three labelled spans in time order behind the scoped lead, then the survivor coda as its own part; on the Result the moved clause after the counts sentence, then the lead; on the gate, or under a rules note’s hosted clause, the counts sentence and the lead alone open them', () => {
+  it('TM (`datesavedtypedmoved`, the left over MOVED to $26,985): three runs in time order behind the scoped lead, every label after the first "If you’re still working in …" (W8-R6), then the survivor part after the list (KD7); on the Result the moved clause after the counts sentence, then the cap sentence, then the lead; on the gate, or under a rules note’s hosted clause, the counts sentence, the cap sentence and the lead', () => {
     const d = DEV_SEEDS.datesavedtypedmoved
     expect(d, 'the seed IS the retype').toEqual(typed(DEV_SEEDS.datesavedrisenlater))
     expect(workingYearLeftOverShownState(d), 'the premise: moved').toBe('saved-moved')
-    expect(line(d, RESULT)).toEqual({
-      opening: `${counts('This', '84,000', '105,000')} ${TM_MOVED_CLAUSE} ${SCOPED_LEAD('This')}`,
-      segments: TM_SEGMENTS('This'),
-      door: null,
-      coda: TM_CODA('This'),
-    })
-    expect(line(d, RESULT_HOSTED)).toEqual({ opening: `${counts('This', '84,000', '105,000')} ${SCOPED_LEAD('This')}`, segments: TM_SEGMENTS('This'), door: null, coda: TM_CODA('This') })
-    expect(line(d, GATE), 'the gate’s scoped lead and coda say "your answer"').toEqual({
-      opening: `${counts('Your', '84,000', '105,000')} ${SCOPED_LEAD('Your')}`,
-      segments: TM_SEGMENTS('Your'),
-      door: null,
-      coda: TM_CODA('Your'),
-    })
-    // The retired year-0 sentences are gone from every host (the plan's U4 retire list).
+    expect(line(d, RESULT)).toEqual(block(`${counts('This', '84,000', '105,000')} ${TM_MOVED_CLAUSE} ${TM_CAP} ${SCOPED_LEAD}`, TM_RUNS('This'), TM_SURVIVOR))
+    expect(line(d, RESULT_HOSTED)).toEqual(block(`${counts('This', '84,000', '105,000')} ${TM_CAP} ${SCOPED_LEAD}`, TM_RUNS('This'), TM_SURVIVOR))
+    expect(line(d, GATE), 'the gate says "your answer" in the lean and the runs').toEqual(block(`${counts('Your', '84,000', '105,000')} ${TM_CAP} ${SCOPED_LEAD}`, TM_RUNS('Your'), TM_SURVIVOR))
     for (const host of HOSTS) {
-      const text = notePartsText(line(d, host))
+      const parts = line(d, host)
+      expect(isPlainNote(parts), 'two or more runs: a block, never a plain note').toBe(false)
+      // The retired year-0 sentences are gone from every host (the rebuild plan's U4 retire list).
+      const text = notePartsText(parts)
       expect(text, 'no year-0 extra').not.toContain('your pay doesn’t really leave over')
       expect(text, 'no year-0 at-quote sentence').not.toContain('your first working year, 2026, has')
-      expect(text, 'no fail-safe credit sentence where the spans speak').not.toContain('It adds at most')
+      expect(text, 'no fail-safe credit sentence where the runs speak').not.toContain('It adds at most')
     }
   })
 
   // AE1 (R1, R3, R5, R7): the council's C — Alex 58 working, Sam 60 retired — on a $105,000 all-sticky budget, "All of it"
   // at its live $5,985, then $90,000 typed. Every figure is typed by hand: the short years are C's ($3,652 to $4,015 at the
-  // quote, so $5,985 + those, $9,637 to $10,000, a year more), and a death leaves the whole sticky budget, so X is the whole
-  // $15,000 gap ($105,000 less $90,000).
-  it('AE1: C at 100 % sticky on the Result — the scoped lead before the spans, the two `same` segments under it, the short span’s year subject scoped, then the `wholeGap` coda as its own part: at most $15,000, "That $15,000 a year is the whole gap to your figure of $90,000 a year." (the echo, the tax rider build’s KD2)', () => {
+  // quote, so $5,985 + those, $9,637 to $10,000, a year less at the budget), and a death leaves the whole sticky budget, so X
+  // is the whole $15,000 gap ($105,000 less $90,000). PREMISES THAT CHANGED with the walk-8 form: the `same` runs state
+  // their credit, $5,985 (W8-R5 (a)); year 0 at the budget ($5,985) does not sit below the stored $5,985, so the stored
+  // figure binds both and no cap sentence is drawn (KD5), and the floor rides the first run's first sentence (W8-R8); the
+  // whole-gap survivor part names both whole figures before its close, the old "That $15,000 a year is the whole gap…" echo
+  // retired (the spec's survivor part).
+  it('AE1: C at 100 % sticky on the Result — no cap sentence (the stored figure binds), the scoped lead, the two `same` runs stating their $5,985 and closing "the same in your savings", the short run’s year subject scoped, then the whole-gap survivor part: "still count in full", at most $15,000', () => {
     const c100 = councilBudgetHousehold(1)
-    const same = 'This answer adds the same to your savings as it would at your budget’s $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.'
-    expect(line(c100, RESULT)).toEqual({
-      opening:
+    expect(line(c100, RESULT)).toEqual(
+      block(
         'This answer counts a working year at your own figure of $90,000 a year, below your budget’s first year after work stops, which comes to $105,000 a year. ' +
-        `${LEAN} You said all of it goes into your savings when your first working year had $5,985 left over. At your figure of $90,000 a year, it has $20,985 left over now. ` +
-        'So each working year adds at most $5,985 of its left over to your savings, the smaller of the two. What this answer adds to your savings in each working year you’re both alive:',
-      segments: [
-        { label: '2026 through 2028', sentences: [same] },
-        {
-          label: '2029 through 2032',
-          sentences: [
-            'At your budget’s $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and this answer would add nothing.',
-            'Your figure of $90,000 a year leaves those shortfalls out of this answer, and it adds at most $5,985 a year to your savings, at most $9,637 to $10,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
-          ],
-        },
-        { label: '2033 through 2035', sentences: [same] },
-      ],
-      door: null,
-      coda: {
-        label: 'If only one of you is alive',
-        sentences: [
-          'In such a working year, this answer takes at most $15,000 a year less from your savings than it would at your budget’s $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.',
-          'That $15,000 a year is the whole gap to your figure of $90,000 a year.',
+          `${lean('This')} You said all the money left over in a working year goes into your savings, when your first working year had $5,985 left over. At your figure of $90,000 a year, it has $20,985 left over now. ` +
+          `So each working year adds at most $5,985 of its left over to your savings, the smaller of the two. ${SCOPED_LEAD}`,
+        [
+          {
+            label: '2026 through 2028',
+            sentences: [
+              'The answer at your budget’s $105,000 a year, the least a working year almost always costs, would add at most $5,985 a year.',
+              'This answer adds at most $5,985 a year to your savings.',
+              `At your budget, that’s the same in your savings${GLOSSED}`,
+            ],
+          },
+          {
+            label: 'If you’re still working in 2029 through 2032',
+            sentences: [
+              'At your budget’s $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, which would be taken from your savings, and the answer at that budget would add nothing.',
+              'Your figure of $90,000 a year leaves those shortfalls out of this answer, which adds at most $5,985 a year to your savings.',
+              `At your budget, that’s at most $9,637 to $10,000 a year less in your savings${RIDER}`,
+            ],
+          },
+          {
+            label: 'If you’re still working in 2033 through 2035',
+            sentences: [
+              'The answer at your budget’s $105,000 a year would add at most $5,985 a year.',
+              'This answer adds at most $5,985 a year to your savings.',
+              `At your budget, that’s the same in your savings${RIDER}`,
+            ],
+          },
         ],
-      },
-    })
-    expect(isPlainNote(line(c100, RESULT)), 'two or more spans and a coda: a block, never a plain note').toBe(false)
-  })
-
-  // C at 80 % sticky: a death keeps the $84,000 held part whole and 0.75 of the rest, so the survivor charges are $88,500 at
-  // the $90,000 figure ($84,000 + 0.75 × $6,000) and $99,750 at the budget ($84,000 + 0.75 × $21,000), X $11,250.
-  it('C at 80 % sticky on the gate: the coda names the two survivor charges, and its quote is "your budget" in both sentences, never "your spending"', () => {
-    const coda = line(councilBudgetHousehold(0.8), GATE).coda
-    expect(coda).toEqual({
-      label: 'If only one of you is alive',
-      sentences: [
-        'In such a working year, your answer takes at most $11,250 a year less from your savings than it would at your budget’s $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.',
-        'Such a year’s costs count as $88,500 a year at your figure and $99,750 at your budget.',
-      ],
-    })
-    expect(coda?.sentences.join(' ')).not.toContain('your spending')
-  })
-
-  // AE3 (R1, R12): A's household with Sam 56 — he can die no earlier than 66, past the window's last working year, so the
-  // engine draws no working year with one of them dead and the gate is off. Every host's words are A's before the
-  // survivor-path build, byte for byte: the old hand pins, typed out again here.
-  it('AE3: Sam 56 opens no gate, so on all four hosts the line is A’s words before the survivor build, byte for byte — no scope, no lead, no coda', () => {
-    const sam56 = SURVIVOR_GATE_WITNESSES.sam56
-    const read = workingYearTypedBelowWindow(sam56)
-    expect(read?.kind === 'read' && read.survivor === null, 'the premise: the gate is off').toBe(true)
-    const span = (answer: 'this' | 'your') =>
-      `Each working year, ${answer} answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge.`
-    expect(line(sam56, RESULT)).toEqual(plain(`${counts('This', '84,000', '90,000')} ${span('this')}`))
-    expect(line(sam56, RESULT_HOSTED)).toEqual(plain(`${counts('This', '84,000', '90,000')} ${span('this')}`))
-    expect(line(sam56, GATE)).toEqual(plain(`${counts('Your', '84,000', '90,000')} ${span('your')}`))
-    expect(workingYearLeftOverAtQuoteLine(sam56, 'sheet')).toEqual(plain(span('your')))
-    expect(workingYearLeftOverAtQuoteLine(sam56, 'step')).toEqual(plain(`${counts('Your', '84,000', '90,000')} ${span('your')}`))
-  })
-
-  it('KTD7’s credit rows, typed by hand: `bothCredit` with a drifting credit on either side ("at most $X to $Y"), and `quoteCreditsNothing` ("it would add nothing, $16,985 a year less")', () => {
-    // The drift household (saved at its own $26,985): this answer's credit drifts under its own left over.
-    const drift = TYPED_BELOW_WITNESSES.drift
-    expect(segment(drift, RESULT, '2026 through 2032')).toEqual([
-      'This answer adds at most $25,722 to $26,985 a year to your savings.',
-      'At your spending of $90,000 a year, it would add at most $19,722 to $20,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge.',
-    ])
-    expect(segment(drift, RESULT, '2033 through 2035')).toEqual([
-      'This answer adds at most $26,985 a year to your savings.',
-      'At your spending of $90,000 a year, it would add at most $20,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge.',
-    ])
-    // TM at $95,000: the quote answer's credit drifts, so the difference is a range too.
-    expect(segment(TYPED_BELOW_WITNESSES.tm95, GATE, '2029 through 2032')).toEqual([
-      'Your answer adds at most $16,985 a year to your savings.',
-      'At your spending of $95,000 a year, it would add at most $5,985 to $6,348, $10,637 to $11,000 less, not including any difference in income tax and Medicare’s income surcharge.',
-    ])
-    // C at $110,985: year 0 at the quote is exactly $0, so the answer there credits nothing in a year that is not short.
-    expect(segment(TYPED_BELOW_WITNESSES.c110985, GATE, '2026 through 2028')).toEqual([
-      'Your answer adds at most $16,985 a year to your savings.',
-      'At your spending of $110,985 a year, it would add nothing, $16,985 a year less, not including any difference in income tax and Medicare’s income surcharge.',
-    ])
-    // …and as the one span of a plain line, with the scoped opener and the one-span coda (first none: spending $100,985;
-    // the survivor charges are 0.75 of each figure, $63,000 and $75,738.75, so X is $12,739, the raw $12,738.75 rounded up).
-    expect(line({ ...typed(DEV_SEEDS.datesavedrisen), annualSpendingReal: 100_985 }, GATE)).toEqual(
-      plain(
-        `${counts('Your', '84,000', '100,985')} Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. At your spending of $100,985 a year, it would add nothing, $16,985 a year less, not including any difference in income tax and Medicare’s income surcharge. ` +
-          'If only one of you is alive in a working year, your answer takes at most $12,739 a year less from your savings than it would at your spending of $100,985 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
-          'Such a year’s costs count as $63,000 a year at your figure and $75,739 at your spending.',
+        [
+          'If only one of you is alive in a working year, that year’s costs still count in full: your figure of $90,000 a year and your budget’s $105,000 a year.',
+          `At your budget, that’s at most $15,000 a year less in your savings${RIDER}`,
+        ],
       ),
     )
   })
 
-  it('KTD7’s short rows in their several-year and one-year forms, the tax rider on every figure that counts a shortfall drawn from savings: left over at the typed figure, still short there, and exactly $0 there; every household here opens the survivor gate, so each first sentence’s year subject carries "you’re both alive" ("each working year you’re both alive", "that working year, if you’re both alive,")', () => {
-    // `shortLeftOverAtTyped`, several years: TM (above), and a credit range below the cap ($99,000 on C).
-    expect(segment(typed(DEV_SEEDS.datesavedrisenlater, 99_000), GATE, '2029 through 2032')).toEqual([
-      'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and your answer would add nothing.',
-      'Your figure of $99,000 a year leaves those shortfalls out of your answer, and it adds at most $1,985 to $2,348 a year to your savings, at most $6,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
+  // C at 80 % sticky: a death keeps the $84,000 held part whole and 0.75 of the rest, so the survivor charges are $88,500 at
+  // the $90,000 figure ($84,000 + 0.75 × $6,000) and $99,750 at the budget ($84,000 + 0.75 × $21,000), X $11,250.
+  it('C at 80 % sticky on the gate: the survivor part names the two survivor charges, and its quote is "your budget" in both sentences, never "your spending"', () => {
+    const closing = line(councilBudgetHousehold(0.8), GATE).runs?.closing
+    expect(closing).toEqual([
+      'If only one of you is alive in a working year, that year’s costs count as $88,500 at your figure of $90,000 a year and $99,750 at your budget’s $105,000 a year.',
+      `At your budget, that’s at most $11,250 a year less in your savings${RIDER}`,
     ])
-    // …one year: the pension household's 2029, and B with the alimony from 61 (year 0 the only short year).
-    expect(segment(TYPED_BELOW_WITNESSES.pension, RESULT, '2029')).toEqual([
-      'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $4,015 short, and this answer would add nothing.',
-      'Your figure of $84,000 a year leaves that shortfall out of this answer, and it adds at most $16,985 a year to your savings, at most $21,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
+    expect(closing?.join(' ')).not.toContain('your spending')
+  })
+
+  // AE3 (R1, R12): A's household with Sam 56 — he can die no earlier than 66, past the window's last working year, so the
+  // engine draws no working year with one of them dead and the gate is off: no scope anywhere, no survivor part. PREMISE THAT
+  // CHANGED: the words are no longer A's words before the survivor build byte for byte (the walk-8 form rewrote them);
+  // they are A's in the walk-8 form with the scope and the survivor part taken out, which is what this pins on all five hosts.
+  it('AE3: Sam 56 opens no gate, so on all five hosts the line names no scope and draws no survivor part — A’s cap sentence and run, opening "Each working year," its one rider glossed', () => {
+    const sam56 = SURVIVOR_GATE_WITNESSES.sam56
+    const read = workingYearTypedBelowWindow(sam56)
+    expect(read?.kind === 'read' && read.survivor === null, 'the premise: the gate is off').toBe(true)
+    const body = (answer: 'This' | 'Your') =>
+      'Each working year, the answer at your spending of $90,000 a year would add at most $10,985 a year. ' +
+      `${answer} answer adds at most $16,985 a year to your savings. ` +
+      `At your spending, that’s $6,000 a year less in your savings${GLOSSED}`
+    expect(line(sam56, RESULT)).toEqual(plain(`${counts('This', '84,000', '90,000')} ${A_CAP} ${body('This')}`))
+    expect(line(sam56, RESULT_HOSTED)).toEqual(plain(`${counts('This', '84,000', '90,000')} ${A_CAP} ${body('This')}`))
+    expect(line(sam56, GATE)).toEqual(plain(`${counts('Your', '84,000', '90,000')} ${A_CAP} ${body('Your')}`))
+    expect(workingYearLeftOverAtQuoteLine(sam56, 'sheet'), 'the sheet: "This" (KD9)').toEqual(plain(`${A_CAP} ${body('This')}`))
+    expect(workingYearLeftOverAtQuoteLine(sam56, 'step')).toEqual(plain(`${counts('Your', '84,000', '90,000')} ${A_CAP} ${body('Your')}`))
+  })
+
+  // The spec's worked example ("the pension household's runs 2 to 4"): 2029 and 2032 are short at the quote, each its own
+  // one-year run; 2030–2031 is a drift at the quote ($3,005 to $3,368) whose difference runs the other way ($13,980 to
+  // $13,617), so the first range names its end years and the difference prints in their order (KD6; the walk-8 card's
+  // W8-R3 (a): "at most $3,005 to $3,368, $13,617 to $13,980 less" paired crosswise in reading order).
+  it('the spec’s worked example, the pension household’s runs 2 to 4 on the Result: 2029 and 2032 each a one-year short run ("that working year, if you’re both alive", no "a year" on the credit or the difference: W8-R5 (c)); 2030–2031 the drift, its first range naming its end years ("$3,005 in 2030 to $3,368 in 2031") and the difference in their order ("$13,980 to $13,617 a year less", KD6)', () => {
+    const pension = TYPED_BELOW_WITNESSES.pension
+    expect(runsOf(line(pension, RESULT)).map((s) => s.label)).toEqual([
+      '2026 through 2028',
+      'If you’re still working in 2029',
+      'If you’re still working in 2030 through 2031',
+      'If you’re still working in 2032',
+      'If you’re still working in 2033 through 2035',
     ])
-    expect(line(typed(alimony(61, 70)), GATE).segments.map((s) => s.label), 'year 0 short alone, then nothing at the quote').toEqual(['2026', '2027 through 2035'])
-    // `shortStillShortAtTyped`, several years: C typed at $101,000 (KTD7's own row), and one year (the alimony to 65 at $102,000).
-    expect(segment(TYPED_BELOW_WITNESSES.c101000, GATE, '2029 through 2030')).toEqual([
-      'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short.',
-      'At your figure of $101,000 a year, each still comes up $15 short, and your answer takes at most $4,000 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
+    expect(run(pension, RESULT, 'If you’re still working in 2029')).toEqual([
+      'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $4,015 short, which would be taken from your savings, and the answer at that spending would add nothing.',
+      'Your figure of $84,000 a year leaves that shortfall out of this answer, which adds at most $16,985 to your savings.',
+      `At your spending, that’s at most $21,000 less in your savings${RIDER}`,
     ])
-    expect(segment(TYPED_BELOW_WITNESSES.c101000, GATE, '2031 through 2032')).toEqual([
-      'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 short, and your answer would add nothing.',
-      'Your figure of $101,000 a year leaves those shortfalls out of your answer, and it adds at most $348 a year to your savings, at most $4,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
+    expect(run(pension, RESULT, 'If you’re still working in 2030 through 2031')).toEqual([
+      'The answer at your spending of $105,000 a year would add at most $3,005 in 2030 to $3,368 in 2031.',
+      'This answer adds at most $16,985 a year to your savings.',
+      `At your spending, that’s $13,980 to $13,617 a year less in your savings${RIDER}`,
     ])
-    expect(segment(typed(alimony(50, 65), 102_000), RESULT, '2032')).toEqual([
-      'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $3,652 short.',
-      'At your figure of $102,000 a year, it still comes up $652 short, and this answer takes at most $3,000 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
+    expect(run(pension, RESULT, 'If you’re still working in 2032')).toEqual([
+      'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $3,652 short, which would be taken from your savings, and the answer at that spending would add nothing.',
+      'Your figure of $84,000 a year leaves that shortfall out of this answer, which adds at most $16,985 to your savings.',
+      `At your spending, that’s at most $20,637 less in your savings${RIDER}`,
+    ])
+  })
+
+  it('the credit kinds’ three beats, typed by hand: `bothCredit` with a drift on both sides ("at most $X to $Y a year": the drift household, whose ranges rise together, so no year is named); TM at $95,000, whose quote answer’s drift runs against its difference, split year by year (KD6); and `quoteCreditsNothing` ("would add nothing", $16,985 a year less), under the cap sentence’s third member (year 0 at the quote exactly $0: pilot call 2)', () => {
+    // The drift household (saved at its own $26,985): both credits drift under their own left over, the difference flat.
+    const drift = TYPED_BELOW_WITNESSES.drift
+    expect(run(drift, RESULT, '2026 through 2032')).toEqual([
+      'The answer at your spending of $90,000 a year would add at most $19,722 to $20,985 a year.',
+      'This answer adds at most $25,722 to $26,985 a year to your savings.',
+      `At your spending, that’s $6,000 a year less in your savings${GLOSSED}`,
+    ])
+    expect(run(drift, RESULT, 'If you’re still working in 2033 through 2035')).toEqual([
+      'The answer at your spending of $90,000 a year would add at most $20,985 a year.',
+      'This answer adds at most $26,985 a year to your savings.',
+      `At your spending, that’s $6,000 a year less in your savings${RIDER}`,
+    ])
+    // TM at $95,000 — A PREMISE THAT CHANGED (KD6, pilot call 1): its 2029–2032 drift at the quote ($5,985 in 2029 and 2030,
+    // $6,348 in 2031 and 2032) runs against the difference ($11,000, then $10,637), and each end spans two years, so no one
+    // year can be named: the run splits, 2029–2030 and 2031–2032, each one figure.
+    const tm95 = TYPED_BELOW_WITNESSES.tm95
+    expect(runsOf(line(tm95, GATE)).map((s) => s.label)).toEqual([
+      '2026 through 2028',
+      'If you’re still working in 2029 through 2030',
+      'If you’re still working in 2031 through 2032',
+      'If you’re still working in 2033 through 2035',
+    ])
+    expect(run(tm95, GATE, 'If you’re still working in 2029 through 2030')).toEqual([
+      'The answer at your spending of $95,000 a year would add at most $5,985 a year.',
+      'Your answer adds at most $16,985 a year to your savings.',
+      `At your spending, that’s $11,000 a year less in your savings${RIDER}`,
+    ])
+    expect(run(tm95, GATE, 'If you’re still working in 2031 through 2032')).toEqual([
+      'The answer at your spending of $95,000 a year would add at most $6,348 a year.',
+      'Your answer adds at most $16,985 a year to your savings.',
+      `At your spending, that’s $10,637 a year less in your savings${RIDER}`,
+    ])
+    // C at $110,985: year 0 at the quote is exactly $0, so the answer there credits nothing in a year that is not short,
+    // and the cap sentence says why (KD5's `yearZeroNone`).
+    const c110985 = TYPED_BELOW_WITNESSES.c110985
+    expect(line(c110985, GATE).opening).toBe(
+      `${counts('Your', '84,000', '110,985')} At your spending of $110,985 a year, the least a working year almost always costs, your first working year would have nothing left over, so the answer at that spending would add nothing in any working year. ${SCOPED_LEAD}`,
+    )
+    expect(run(c110985, GATE, '2026 through 2028')).toEqual([
+      'The answer at your spending of $110,985 a year would add nothing.',
+      'Your answer adds at most $16,985 a year to your savings.',
+      `At your spending, that’s $16,985 a year less in your savings${GLOSSED}`,
+    ])
+    // …and as the one run of a plain line, its opener scoped (first none: spending $100,985; the survivor charges are 0.75
+    // of each figure, $63,000 and $75,738.75, so X is $12,739, the raw $12,738.75 rounded up).
+    expect(line({ ...typed(DEV_SEEDS.datesavedrisen), annualSpendingReal: 100_985 }, GATE)).toEqual(
+      plain(
+        `${counts('Your', '84,000', '100,985')} At your spending of $100,985 a year, the least a working year almost always costs, your first working year would have nothing left over, so the answer at that spending would add nothing in any working year. ` +
+          'Each working year you’re both alive, the answer at your spending of $100,985 a year would add nothing. Your answer adds at most $16,985 a year to your savings. ' +
+          `At your spending, that’s $16,985 a year less in your savings${GLOSSED} ` +
+          'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $75,739 at your spending of $100,985 a year. ' +
+          `At your spending, that’s at most $12,739 a year less in your savings${RIDER}`,
+      ),
+    )
+  })
+
+  it('the short kinds’ three beats in their several-year and one-year forms: the spending side first, where the shortfall would be taken from ("which would be taken from your savings"), then the typed side, then the close "at most" (KD4); every household here opens the survivor gate, so each year subject carries "you’re both alive" ("each working year you’re both alive", "that working year, if you’re both alive,"), and a one-year run says no "a year" on its credit or difference (W8-R5 (c))', () => {
+    // `shortLeftOverAtTyped`, several years: TM (above), and C at $99,000 — A PREMISE THAT CHANGED (KD6): its 2029–2032
+    // shortfall falls ($4,015, then $3,652) as its credit rises ($1,985, then $2,348), each end two years, so it splits.
+    const c99 = typed(DEV_SEEDS.datesavedrisenlater, 99_000)
+    expect(run(c99, GATE, 'If you’re still working in 2029 through 2030')).toEqual([
+      'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short, which would be taken from your savings, and the answer at that spending would add nothing.',
+      'Your figure of $99,000 a year leaves those shortfalls out of your answer, which adds at most $1,985 a year to your savings.',
+      `At your spending, that’s at most $6,000 a year less in your savings${RIDER}`,
+    ])
+    expect(run(c99, GATE, 'If you’re still working in 2031 through 2032')).toEqual([
+      'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 short, which would be taken from your savings, and the answer at that spending would add nothing.',
+      'Your figure of $99,000 a year leaves those shortfalls out of your answer, which adds at most $2,348 a year to your savings.',
+      `At your spending, that’s at most $6,000 a year less in your savings${RIDER}`,
+    ])
+    // …one year: the pension household's 2029 (the worked example above), and B with the alimony from 61: year 0 the only
+    // short year, so the FIRST run is one year, and its close carries the line's one gloss.
+    const alim = typed(alimony(61, 70))
+    expect(runsOf(line(alim, GATE)).map((s) => s.label), 'year 0 short alone, then nothing at the quote').toEqual(['2026', 'If you’re still working in 2027 through 2035'])
+    expect(run(alim, GATE, '2026')).toEqual([
+      'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $4,015 short, which would be taken from your savings, and the answer at that spending would add nothing.',
+      'Your figure of $84,000 a year leaves that shortfall out of your answer, which adds at most $16,985 to your savings.',
+      `At your spending, that’s at most $21,000 less in your savings${GLOSSED}`,
+    ])
+    // `shortStillShortAtTyped`, several years: C typed at $101,000 (KTD7's own row), beside its left-over 2031–2032; and one
+    // year (the alimony to 65 at $102,000).
+    const c101000 = TYPED_BELOW_WITNESSES.c101000
+    expect(run(c101000, GATE, 'If you’re still working in 2029 through 2030')).toEqual([
+      'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short, which would be taken from your savings.',
+      'At your figure of $101,000 a year, each working year you’re both alive still comes up $15 short, which would be taken from your savings, and your answer adds nothing.',
+      `At your spending, that’s at most $4,000 a year less in your savings${RIDER}`,
+    ])
+    expect(run(c101000, GATE, 'If you’re still working in 2031 through 2032')).toEqual([
+      'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 short, which would be taken from your savings, and the answer at that spending would add nothing.',
+      'Your figure of $101,000 a year leaves those shortfalls out of your answer, which adds at most $348 a year to your savings.',
+      `At your spending, that’s at most $4,000 a year less in your savings${RIDER}`,
+    ])
+    expect(run(typed(alimony(50, 65), 102_000), RESULT, 'If you’re still working in 2032')).toEqual([
+      'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $3,652 short, which would be taken from your savings.',
+      'At your figure of $102,000 a year, that working year, if you’re both alive, still comes up $652 short, which would be taken from your savings, and this answer adds nothing.',
+      `At your spending, that’s at most $3,000 less in your savings${RIDER}`,
     ])
     // `shortEvenAtTyped`, several years: C typed at $100,985; one year: the alimony to 65 at $101,348 (2032 prints $0).
-    expect(segment(TYPED_BELOW_WITNESSES.c100985, GATE, '2029 through 2030')).toEqual([
-      'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short.',
-      'At your figure of $100,985 a year, each leaves nothing over and nothing short, and your answer takes at most $4,015 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
+    expect(run(TYPED_BELOW_WITNESSES.c100985, GATE, 'If you’re still working in 2029 through 2030')).toEqual([
+      'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short, which would be taken from your savings.',
+      'At your figure of $100,985 a year, each working year you’re both alive leaves nothing over and nothing short.',
+      `At your spending, that’s at most $4,015 a year less in your savings${RIDER}`,
     ])
-    expect(segment(typed(alimony(50, 65), 101_348), RESULT, '2032')).toEqual([
-      'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $3,652 short.',
-      'At your figure of $101,348 a year, it leaves nothing over and nothing short, and this answer takes at most $3,652 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
+    expect(run(typed(alimony(50, 65), 101_348), RESULT, 'If you’re still working in 2032')).toEqual([
+      'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $3,652 short, which would be taken from your savings.',
+      'At your figure of $101,348 a year, that working year, if you’re both alive, leaves nothing over and nothing short.',
+      `At your spending, that’s at most $3,652 less in your savings${RIDER}`,
     ])
     // `shortStillShortAtTyped` with cents (the whole-file review's round 1, finding #1; R5 over V9): C typed at $8,416.67 a
     // month draws $15.04 in 2029 and 2030 (printed $16) against the quote's $4,015, so the engine takes $3,999.96 less. The
     // two printed shortfalls' difference, $3,999, would put the "at most" under the engine; the figure is the raw draws'
     // difference rounded up, $4,000, a dollar above $4,015 − $16 (flagged for walk 8).
-    expect(segment(typed(DEV_SEEDS.datesavedrisenlater, 8_416.67 * 12, 'month'), GATE, '2029 through 2030')).toEqual([
-      'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short.',
-      'At your figure of $101,000 a year, each still comes up $16 short, and your answer takes at most $4,000 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
+    expect(run(typed(DEV_SEEDS.datesavedrisenlater, 8_416.67 * 12, 'month'), GATE, 'If you’re still working in 2029 through 2030')).toEqual([
+      'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short, which would be taken from your savings.',
+      'At your figure of $101,000 a year, each working year you’re both alive still comes up $16 short, which would be taken from your savings, and your answer adds nothing.',
+      `At your spending, that’s at most $4,000 a year less in your savings${RIDER}`,
     ])
     // …and where the rounding's DIRECTION shows (round 2, finding #3): at $8,416.73 a month the engine draws $3,999.24 less,
     // so rounding to the nearest dollar, or down, would print $3,999, under the engine; up prints $4,000.
-    expect(segment(CENTS_873, GATE, '2029 through 2030')).toEqual([
-      'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short.',
-      'At your figure of $101,001 a year, each still comes up $16 short, and your answer takes at most $4,000 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
+    expect(run(CENTS_873, GATE, 'If you’re still working in 2029 through 2030')).toEqual([
+      'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short, which would be taken from your savings.',
+      'At your figure of $101,001 a year, each working year you’re both alive still comes up $16 short, which would be taken from your savings, and your answer adds nothing.',
+      `At your spending, that’s at most $4,000 a year less in your savings${RIDER}`,
     ])
     // …and where each cash must meet the cent BEFORE the subtraction (round 2, finding #2): pay a cent lower and a figure
     // typed to a tenth of a cent leave draws of $4,015.006 and $16.002 (cent grain $4,015.01 and $16.00); snapping their raw
     // difference ($3,999.004) printed $3,999, a dollar under both the cent grain and $4,016 − $16.
-    expect(segment(SUB_CENT, GATE, '2029 through 2030')).toEqual([
-      'At your spending of $105,000 a year, each working year you’re both alive comes up $4,016 short.',
-      'At your figure of $101,001 a year, each still comes up $16 short, and your answer takes at most $4,000 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
+    expect(run(SUB_CENT, GATE, 'If you’re still working in 2029 through 2030')).toEqual([
+      'At your spending of $105,000 a year, each working year you’re both alive comes up $4,016 short, which would be taken from your savings.',
+      'At your figure of $101,001 a year, each working year you’re both alive still comes up $16 short, which would be taken from your savings, and your answer adds nothing.',
+      `At your spending, that’s at most $4,000 a year less in your savings${RIDER}`,
     ])
   })
 
@@ -1294,11 +1431,11 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
   // that is right to the cent); the read's own raw cash is the pictures' to the bit. And never a dollar or more above it
   // (round 2, finding #3: the round-up's other side). The cents households are the witnesses the printed-figure rule, the
   // nearest-dollar rule and the raw-difference snap each failed on. This is the ALL-ALIVE picture (round 2, finding #1).
-  it('every short span’s "at most" difference sits at or above the engine’s own on the cent grain in each of its years, and less than a dollar above it, on every witness and the cents households (R5)', () => {
+  it('every short run’s "at most" difference sits at or above the engine’s own on the cent grain in each of its years, and less than a dollar above it, on every witness and the cents households (R5)', () => {
     const witnesses = GRAIN_WITNESSES
-    // Which kinds say their difference "at most" (copy.ts's ShortOut, StillShort and Even); the two credit kinds print a
-    // plain difference beside their pair and `same` prints none. A Record, so a new kind cannot skip the sweep silently
-    // (round 2, finding #8; insight 147).
+    // Which kinds' close says its difference "at most" (KD4: the short kinds, where the quote's draw makes the figure a
+    // bound); the two credit kinds' close states a plain difference of the two figures above it, and `same` states "the
+    // same". A Record, so a new kind cannot skip the sweep silently (round 2, finding #8; insight 147).
     const SAYS_AT_MOST: Readonly<Record<TypedBelowYearKind, boolean>> = {
       same: false,
       bothCredit: false,
@@ -1341,12 +1478,12 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     expect(yearsOfKind.get('shortStillShortAtTyped'), 'the still-short kind on every cents household').toBeGreaterThanOrEqual(8)
   })
 
-  // R5's twin for the kind that prints no figure (the review's round 3: two seats and three refuters). `same` claims
-  // equality ("adds the same to your savings"), so the sweep above, which reads "at most" figures, skips it; read on the
-  // PRINTED shortfalls, two draws inside one rounded-up dollar read alike, and the line said "the same" where the engine
-  // draws up to 99¢ a year less at the typed figure ($104,999.01 a year: $4,014.01 against $4,015.00, both printed
-  // $4,015). Every `same` year credits the same and draws the same on the cent grain, the grain the still-short figure
-  // reads: the engine's own yearly difference there is exactly $0. Read straight off the two money pictures, as above.
+  // R5's twin for the kind whose close claims equality ("that’s the same in your savings"; the review's round 3: two seats
+  // and three refuters). The sweep above reads the "at most" figures, so it skips `same`; read on the PRINTED shortfalls,
+  // two draws inside one rounded-up dollar read alike, and the line said "the same" where the engine draws up to 99¢ a year
+  // less at the typed figure ($104,999.01 a year: $4,014.01 against $4,015.00, both printed $4,015). Every `same` year
+  // credits the same and draws the same on the cent grain, the grain the still-short figure reads: the engine's own yearly
+  // difference there is exactly $0. Read straight off the two money pictures, as above.
   it('every `same` year credits the same and draws the same on the cent grain: the engine’s own yearly difference is exactly $0, on every witness and the cents households (round 3)', () => {
     let sameYears = 0
     for (const [key, d] of Object.entries(GRAIN_WITNESSES)) {
@@ -1369,52 +1506,111 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     expect(sameYears, '`same` years swept').toBeGreaterThanOrEqual(20)
   })
 
-  it('`same`: a labelled span says the answer adds the same, no figure (its scope rides the lead); a one-span `same` line opens "Each working year you’re both alive," and keeps the opening’s lean (never "here it doesn’t") — and twelve cents a year below the quote reads `same` only where neither answer is short: 2029–2032 take at most $1 a year less, the quote to the cent, and the coda prints "at most $1" beside the two charges to the cent, $78,749.91 and $78,750.00, never two equal dollar figures (AE4; round 3)', () => {
-    const whole = TYPED_BELOW_WITNESSES.whole
-    expect(segment(whole, RESULT, '2026 through 2028')).toEqual(['This answer adds the same to your savings as it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge.'])
-    expect(segment(whole, GATE, '2033 through 2035')).toEqual(['Your answer adds the same to your savings as it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge.'])
-    expect(line(whole, RESULT).opening.endsWith(' What this answer adds to your savings in each working year you’re both alive:'), 'the `same` segments sit under the scoped lead').toBe(true)
+  // PREMISES THAT CHANGED for `same` (W8-R5 (a): "adds the same" with no figure read as no figure at all): a `same` run now
+  // states its one credit on both sides and closes "that’s the same in your savings" with the rider; `same` years join on
+  // their credits like every kind, so `whole` splits where its drift at the quote runs against the difference (KD6), and
+  // where the stored figure binds the quote answer (`whole`, `date6000Month`) no cap sentence is drawn and the first run's
+  // first sentence names the floor (W8-R8).
+  it('`same` states its credit (W8-R5 (a)): the whole household’s runs, the floor on its first sentence (no cap sentence: the stored figure binds both, KD5) and its 2029–2032 split in two (KD6); a one-run `same` line opens "Each working year you’re both alive," and keeps the opening’s lean; twelve cents a year below the quote reads `same` only where neither answer is short: 2029–2032 take at most $1 a year less, the quote to the cent, and the survivor part prints the two charges to the cent, $78,749.91 and $78,750.00, never two equal dollar figures (AE4; round 3)', () => {
+    expect(line(TYPED_BELOW_WITNESSES.whole, RESULT_HOSTED)).toEqual(
+      block(
+        `${counts('This', '84,000', '90,000')} ${SCOPED_LEAD}`,
+        [
+          {
+            label: '2026 through 2028',
+            sentences: [
+              'The answer at your spending of $90,000 a year, the least a working year almost always costs, would add at most $16,985 a year.',
+              'This answer adds at most $16,985 a year to your savings.',
+              `At your spending, that’s the same in your savings${GLOSSED}`,
+            ],
+          },
+          {
+            label: 'If you’re still working in 2029 through 2030',
+            sentences: [
+              'The answer at your spending of $90,000 a year would add at most $10,985 a year.',
+              'This answer adds at most $16,985 a year to your savings.',
+              `At your spending, that’s $6,000 a year less in your savings${RIDER}`,
+            ],
+          },
+          {
+            label: 'If you’re still working in 2031 through 2032',
+            sentences: [
+              'The answer at your spending of $90,000 a year would add at most $11,348 a year.',
+              'This answer adds at most $16,985 a year to your savings.',
+              `At your spending, that’s $5,637 a year less in your savings${RIDER}`,
+            ],
+          },
+          {
+            label: 'If you’re still working in 2033 through 2035',
+            sentences: [
+              'The answer at your spending of $90,000 a year would add at most $16,985 a year.',
+              'This answer adds at most $16,985 a year to your savings.',
+              `At your spending, that’s the same in your savings${RIDER}`,
+            ],
+          },
+        ],
+        [
+          'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year.',
+          `At your spending, that’s at most $4,500 a year less in your savings${RIDER}`,
+        ],
+      ),
+    )
     // `?seed=date` with $6,000 a month typed: the stored $16,985 caps both answers in every year and neither is short, so
-    // one `same` span. Its survivor charges are 0.75 of each figure: $54,000 and $63,000, X the $9,000 between them.
+    // one `same` run. Its survivor charges are 0.75 of each figure: $54,000 and $63,000, X the $9,000 between them.
     expect(line(TYPED_BELOW_WITNESSES.date6000Month, RESULT_HOSTED)).toEqual(
       plain(
-        'This answer counts a working year at your own figure of $72,000 a year, below your spending of $84,000 a year. ' +
-          `${LEAN} Each working year you’re both alive, this answer adds the same to your savings as it would at your spending of $84,000 a year, not including any difference in income tax and Medicare’s income surcharge. ` +
-          'If only one of you is alive in a working year, this answer takes at most $9,000 a year less from your savings than it would at your spending of $84,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
-          'Such a year’s costs count as $54,000 a year at your figure and $63,000 at your spending.',
+        `${counts('This', '72,000', '84,000')} ` +
+          'Each working year you’re both alive, the answer at your spending of $84,000 a year, the least a working year almost always costs, would add at most $16,985 a year. ' +
+          'This answer adds at most $16,985 a year to your savings. ' +
+          `At your spending, that’s the same in your savings${GLOSSED} ` +
+          'If only one of you is alive in a working year, that year’s costs count as $54,000 at your figure of $72,000 a year and $63,000 at your spending of $84,000 a year. ' +
+          `At your spending, that’s at most $9,000 a year less in your savings${RIDER}`,
       ),
     )
     // $8,749.99 a month ($104,999.88 a year): in 2029–2032 both answers come up short, $4,014.88 against $4,015.00 and
     // $3,651.88 against $3,652.00, each printed $4,015 and $3,652. The draws differ by 12¢, so those years are no longer
     // `same` (the review's round 3): this answer takes at most $1 a year less, the 12¢ rounded up. Its survivor charges are
-    // 0.75 of each figure, $78,749.91 and $78,750.00, a raw $0.09 apart, rounded up to $1.
-    expect(line(TYPED_BELOW_WITNESSES.cMonth874999, RESULT_HOSTED)).toEqual({
-      opening:
+    // 0.75 of each figure, $78,749.91 and $78,750.00, a raw $0.09 apart, rounded up to $1. Year 0 at the quote ($5,985)
+    // sits under the stored $16,985, so the cap sentence speaks.
+    expect(line(TYPED_BELOW_WITNESSES.cMonth874999, RESULT_HOSTED)).toEqual(
+      block(
         'This answer counts a working year at your own figure of $104,999.88 a year, below your spending of $105,000.00 a year. ' +
-        `${LEAN} What this answer adds to your savings in each working year you’re both alive:`,
-      segments: [
-        { label: '2026 through 2028', sentences: ['This answer adds the same to your savings as it would at your spending of $105,000.00 a year, not including any difference in income tax and Medicare’s income surcharge.'] },
-        {
-          label: '2029 through 2032',
-          sentences: [
-            'At your spending of $105,000.00 a year, each working year you’re both alive comes up $3,652 to $4,015 short.',
-            'At your figure of $104,999.88 a year, each still comes up $3,652 to $4,015 short, and this answer takes at most $1 a year less from your savings, not including any difference in income tax and Medicare’s income surcharge.',
-          ],
-        },
-        { label: '2033 through 2035', sentences: ['This answer adds the same to your savings as it would at your spending of $105,000.00 a year, not including any difference in income tax and Medicare’s income surcharge.'] },
-      ],
-      door: null,
-      coda: {
-        label: 'If only one of you is alive',
-        sentences: [
-          'In such a working year, this answer takes at most $1 a year less from your savings than it would at your spending of $105,000.00 a year, not including any difference in income tax and Medicare’s income surcharge.',
-          'Such a year’s costs count as $78,749.91 a year at your figure and $78,750.00 at your spending.',
+          `${lean('This')} At your spending of $105,000.00 a year, the least a working year almost always costs, your first working year would have $5,985 left over, so the answer at that spending would add at most $5,985 in any working year. ${SCOPED_LEAD}`,
+        [
+          {
+            label: '2026 through 2028',
+            sentences: [
+              'The answer at your spending of $105,000.00 a year would add at most $5,985 a year.',
+              'This answer adds at most $5,985 a year to your savings.',
+              `At your spending, that’s the same in your savings${GLOSSED}`,
+            ],
+          },
+          {
+            label: 'If you’re still working in 2029 through 2032',
+            sentences: [
+              'At your spending of $105,000.00 a year, each working year you’re both alive comes up $3,652 to $4,015 short, which would be taken from your savings.',
+              'At your figure of $104,999.88 a year, each working year you’re both alive still comes up $3,652 to $4,015 short, which would be taken from your savings, and this answer adds nothing.',
+              `At your spending, that’s at most $1 a year less in your savings${RIDER}`,
+            ],
+          },
+          {
+            label: 'If you’re still working in 2033 through 2035',
+            sentences: [
+              'The answer at your spending of $105,000.00 a year would add at most $5,985 a year.',
+              'This answer adds at most $5,985 a year to your savings.',
+              `At your spending, that’s the same in your savings${RIDER}`,
+            ],
+          },
         ],
-      },
-    })
+        [
+          'If only one of you is alive in a working year, that year’s costs count as $78,749.91 at your figure of $104,999.88 a year and $78,750.00 at your spending of $105,000.00 a year.',
+          `At your spending, that’s at most $1 a year less in your savings${RIDER}`,
+        ],
+      ),
+    )
   })
 
-  it('the budget twin (KD2’s third pilot call): the counts sentence keeps the W note’s long form, each span and the coda name the quote "your budget’s $90,000 a year" (A’s household, its quote from a budget whose first year after work stops is $90,000, probed); its one line is housing, held whole after a death, so the coda’s X is the whole $6,000 gap', () => {
+  it('the budget twin (KD2’s third pilot call): the counts sentence keeps the W note’s long form; the cap sentence, the run and the survivor part name the quote "your budget’s $90,000 a year", "the answer at that budget", and close "At your budget" (pilot call 4) (A’s household, its quote from a budget whose first year after work stops is $90,000, probed); its one line is housing, held whole after a death, so the survivor part is the whole gap: both whole figures, at most $6,000', () => {
     const d: ScenarioDraft = {
       ...typed(DEV_SEEDS.datesavedrisen),
       budget: [{ label: 'Living', category: 'housing', tier: 'essentials', annualAmountReal: 90_000, startYear: 0 }],
@@ -1422,20 +1618,71 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     expect(workingYearQuote(d)).toMatchObject({ annualReal: 90_000, source: 'budget' })
     expect(line(d, RESULT)).toEqual(
       plain(
-        `This answer counts a working year at your own figure of $84,000 a year, below your budget’s first year after work stops, which comes to $90,000 a year. ${LEAN} ` +
-          'Each working year you’re both alive, this answer adds at most $16,985 a year to your savings. At your budget’s $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge. ' +
-          'If only one of you is alive in a working year, this answer takes at most $6,000 a year less from your savings than it would at your budget’s $90,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
-          'That $6,000 a year is the whole gap to your figure of $84,000 a year.',
+        `This answer counts a working year at your own figure of $84,000 a year, below your budget’s first year after work stops, which comes to $90,000 a year. ${lean('This')} ` +
+          'At your budget’s $90,000 a year, the least a working year almost always costs, your first working year would have $10,985 left over, so the answer at that budget would add at most $10,985 in any working year. ' +
+          'Each working year you’re both alive, the answer at your budget’s $90,000 a year would add at most $10,985 a year. This answer adds at most $16,985 a year to your savings. ' +
+          `At your budget, that’s $6,000 a year less in your savings${GLOSSED} ` +
+          'If only one of you is alive in a working year, that year’s costs still count in full: your figure of $84,000 a year and your budget’s $90,000 a year. ' +
+          `At your budget, that’s at most $6,000 a year less in your savings${RIDER}`,
       ),
     )
   })
 
-  it('under any answer the run does not carry — unanswered, spent, not sure, a "saved" answer not asked — the counts sentence and the lean alone, a plain note, even on a household that opens the survivor gate (no comparison, no scope, no coda: R2)', () => {
+  // KD5 (the walk-8 card's W8-R3 (c): "why $11,000 when the gap is $21,000?"): the answer at the quote has a cap of its own,
+  // the smaller of the stored figure and its year 0, so where year 0 binds it the line says so, after the lean and any moved
+  // clause and before the lead, on every host. One witness per member of the read's `quoteCap`, an exhaustive Record
+  // (insight 147), each sentence typed by hand.
+  it('KD5’s cap sentence, one witness per member of the quote answer’s cap: year 0 at the spending leaves $5,985 (TM); comes up $4,015 short (B retyped) or $2,815 short (the near-line household); has exactly nothing over (C at $110,985, pilot call 2); the stored figure binds both (the whole household): no sentence — on the gate the counts sentence, the cap sentence, the lead; in the sheet the cap sentence and the lead', () => {
+    const CAP: Readonly<Record<TypedBelowQuoteCap['kind'], readonly (readonly [string, ScenarioDraft, string, string | null])[]>> = {
+      yearZeroLeftOver: [['tm', TYPED_BELOW_WITNESSES.tm, '105,000', TM_CAP]],
+      yearZeroShort: [
+        [
+          'bRetyped',
+          TYPED_BELOW_WITNESSES.bRetyped,
+          '105,000',
+          'At your spending of $105,000 a year, the least a working year almost always costs, your first working year would come up $4,015 short, so the answer at that spending would add nothing in any working year.',
+        ],
+        [
+          'nearline',
+          TM_NEAR_IRMAA_LINE,
+          '105,000',
+          'At your spending of $105,000 a year, the least a working year almost always costs, your first working year would come up $2,815 short, so the answer at that spending would add nothing in any working year.',
+        ],
+      ],
+      yearZeroNone: [
+        [
+          'c110985',
+          TYPED_BELOW_WITNESSES.c110985,
+          '110,985',
+          'At your spending of $110,985 a year, the least a working year almost always costs, your first working year would have nothing left over, so the answer at that spending would add nothing in any working year.',
+        ],
+      ],
+      stored: [['whole', TYPED_BELOW_WITNESSES.whole, '90,000', null]],
+    }
+    for (const [kind, witnesses] of Object.entries(CAP) as [TypedBelowQuoteCap['kind'], (typeof CAP)[TypedBelowQuoteCap['kind']]][]) {
+      for (const [key, d, quote, cap] of witnesses) {
+        const read = workingYearTypedBelowWindow(d)
+        expect(read?.kind === 'read' && read.quoteCap.kind, `${key}: the premise, its cap`).toBe(kind)
+        const capped = cap === null ? [] : [cap]
+        expect(workingYearCostTypedBelowStructure(d, GATE)?.opening, `${key} (gate)`).toEqual([counts('Your', '84,000', quote), ...capped, SCOPED_LEAD])
+        expect(workingYearCostTypedBelowStructure(d, RESULT_HOSTED)?.opening, `${key} (Result)`).toEqual([counts('This', '84,000', quote), ...capped, SCOPED_LEAD])
+        expect(workingYearLeftOverAtQuoteStructure(d, 'sheet')?.opening, `${key} (sheet)`).toEqual([...capped, SCOPED_LEAD])
+        expect(workingYearLeftOverAtQuoteStructure(d, 'step')?.opening, `${key} (step)`).toEqual([counts('Your', '84,000', quote), ...capped, SCOPED_LEAD])
+        // Under the moved clause on the Result: after it, before the lead.
+        const moved = workingYearCostTypedBelowStructure(d, RESULT)!.opening
+        expect(moved.at(-1), `${key} (Result, moved): the lead last`).toBe(SCOPED_LEAD)
+        if (cap !== null) expect(moved.at(-2), `${key} (Result, moved): the cap sentence right before the lead`).toBe(cap)
+      }
+    }
+  })
+
+  it('under any answer the run does not carry — unanswered, spent, not sure, a "saved" answer not asked — the counts sentence and the lean alone, a plain note, even on a household that opens the survivor gate (no comparison, no cap sentence, no scope, no survivor part: R2)', () => {
     const d = typed(DEV_SEEDS.datesavedrisen)
     const saved = workingYearTypedBelowWindow(d)
     expect(saved?.kind === 'read' && saved.survivor !== null, 'the premise: carried, this household opens the gate').toBe(true)
     for (const answer of [undefined, { kind: 'spent' }, { kind: 'not-sure' }] as const) {
       expect(line(answered(d, answer), RESULT), answer?.kind ?? 'unanswered').toEqual(plain(counts('This', '84,000', '90,000')))
+      expect(line(answered(d, answer), GATE), `${answer?.kind ?? 'unanswered'} on the gate`).toEqual(plain(counts('Your', '84,000', '90,000')))
     }
     // A "saved" answer whose year 0 at the typed figure prints below $1 is "not asked": nothing is carried.
     const notAsked = { ...typed(DEV_SEEDS.datesavedrisen, 101_000), annualSpendingReal: 110_000 }
@@ -1454,68 +1701,74 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     for (const r of both) expect(r.bottomLine - atQuote.laterYears.find((q) => q.calendarYear === r.calendarYear)!.bottomLine, String(r.calendarYear)).toBeCloseTo(21_000, 6)
   })
 
-  /** The rider every comparison the line makes ends on (the tax rider build's KD2, council `wf_33aa98fe-a26`), typed by
-   *  hand: never read from the copy constant or a slot (KTD1), so a plant in the copy reds here. */
-  const RIDER = ', not including any difference in income tax and Medicare’s income surcharge.'
-  /** The coda's own law (the survivor-path build's KTD8; the tax rider build's KD2 and KTD4), a pure verdict so a plant
-   *  can be shown to red on THIS law's own clause and no other (insight 152): `null` where the coda keeps it, else the
-   *  first clause it breaks. Two sentences: the first states X with "at most", the quote's side and the rider, and no
-   *  other figure; the second states exactly the two figures X is the difference of — in the whole-gap form, X echoed
-   *  to the cent and then the typed figure, the quote less the typed figure being the gap ("That $X a year is the whole
-   *  gap to your figure of $T a year.": the echo, so "That" can never read as the rider's costs); or the two survivor
-   *  charges — and nothing else, and they subtract to X or to at most $1 under it (X is the raw difference rounded up,
-   *  KTD4: the gloomy side). R8: never "on your own", never that nothing is credited. */
-  const CODA_FIG = String.raw`\$[\d,]+(?:\.\d\d)?`
+  // ── THE LAWS (the walk-8 form spec's U2), each a PURE verdict over the line's exported STRUCTURE (the survivor-path
+  // build's KTD8: never a folded paragraph sliced by a regex) — `null` where the structure keeps it, else the first clause
+  // it breaks — so each plant below can be shown to red on THIS law's own clause and no other (insight 152). Every word
+  // they match is typed by hand; none reads a slot or the composer's Records.
+  const FIG = String.raw`\$[\d,]+(?:\.\d\d)?`
+  /** An amount as a run prints it (KD6): one figure, a range, or a range whose ends name their years. */
+  const AMOUNT = String.raw`${FIG}(?: in \d{4})?(?: to ${FIG}(?: in \d{4})?)?`
+  /** A base figure, never a claim: the quote or the typed figure, yearly. */
+  const BASE = new RegExp(String.raw`your (?:spending of|figure of|budget’s) ${FIG} a year`, 'gi')
   const toCentsOf = (fig: string): number => Math.round(Number(fig.replace(/[$,]/g, '')) * 100)
-  const figuresIn = (s: string): readonly number[] => [...s.matchAll(new RegExp(CODA_FIG, 'g'))].map((m) => toCentsOf(m[0]))
-  const CODA_FIRST = 'the first sentence states X "at most", the quote’s side and the rider'
-  const CODA_SECOND_PAIR = 'the second sentence names exactly the two figures X is the difference of, and nothing else'
-  const CODA_ECHO_FORM = 'the whole-gap sentence opens on X: "That $X a year is the whole gap to your figure of $T a year."'
-  const CODA_ECHO_X = 'the whole-gap sentence’s echo is X to the cent'
-  const CODA_SUBTRACTS = 'the pair subtracts to X or to at most $1 under it'
-  const codaLaw = (coda: NoteSegment, count: 'one' | 'many'): string | null => {
-    if (coda.label !== 'If only one of you is alive') return 'its label is its condition'
-    if (coda.sentences.length !== 2) return 'two sentences'
-    const [first, second] = coda.sentences as readonly [string, string]
-    const opens = count === 'one' ? 'If only one of you is alive in a working year, ' : 'In such a working year, '
-    if (!first.startsWith(opens)) return `the first sentence opens "${opens}"`
-    const at = new RegExp(
-      String.raw`\b(?:this|your) answer takes at most (${CODA_FIG}) a year less from your savings than it would at your (?:spending of|budget’s) (${CODA_FIG}) a year, not including any difference in income tax and Medicare’s income surcharge\.$`,
-    ).exec(first)
-    if (at === null) return CODA_FIRST
-    if (figuresIn(first).length !== 2) return 'the first sentence names X and the quote and no other figure'
-    const x = toCentsOf(at[1]!)
-    const quote = toCentsOf(at[2]!)
-    const figures = figuresIn(second)
-    let pair: readonly [number, number] | null
-    if (/\bwhole gap\b/.test(second)) {
-      // The whole-gap form (KD2's strict branch): exactly two figures, X echoed to the cent, then the typed figure. A
-      // third figure is the pair clause's; one figure alone (the bare "That is the whole gap…") is the echo's form.
-      if (figures.length > 2) return CODA_SECOND_PAIR
-      const echo = new RegExp(String.raw`^That (${CODA_FIG}) a year is the whole gap to your figure of (${CODA_FIG}) a year\.$`).exec(second)
-      if (echo === null) return CODA_ECHO_FORM
-      if (toCentsOf(echo[1]!) !== x) return CODA_ECHO_X
-      pair = [toCentsOf(echo[2]!), quote]
-    } else {
-      const charges = new RegExp(String.raw`(${CODA_FIG}) a year at your figure and (${CODA_FIG}) at your (?:spending|budget)\b`).exec(second)
-      pair = figures.length === 2 && charges !== null ? [toCentsOf(charges[1]!), toCentsOf(charges[2]!)] : null
-    }
-    if (pair === null) return CODA_SECOND_PAIR
-    const under = x - (pair[1] - pair[0])
-    if (under < 0 || under > 100) return `${CODA_SUBTRACTS} (X ${x / 100}, the pair ${(pair[1] - pair[0]) / 100} apart)`
-    if (/\bat most\b|\bso\b/i.test(second)) return 'the second sentence states the pair alone, no "at most", no "so"'
-    if (/\bon your own\b/i.test(`${first} ${second}`)) return 'never "on your own" (R8)'
-    if (/\bnothing\b/i.test(`${first} ${second}`)) return 'never that nothing is credited (R8)'
+  type QuoteSource = 'spending' | 'budget'
+  /** The close's opening by the quote's source (pilot call 4), and the quote's own words. */
+  const CLOSE_AT: Readonly<Record<QuoteSource, string>> = { spending: 'At your spending', budget: 'At your budget' }
+  const QUOTE_WORDS: Readonly<Record<QuoteSource, string>> = { spending: 'spending of', budget: 'budget’s' }
+
+  /** THE DENSITY LAW (KD4, R5, R8). The two sides, case-blind (the whole-file review's round 1, finding #5: a short run's
+   *  typed side OPENS "Your figure of"): the spending side names the quote ("your spending of $" / "your budget’s $") or
+   *  the answer at it ("the answer at"); the typed side names the typed figure ("your figure of $") or the answer that
+   *  counts it ("this answer adds" / "your answer adds"). What each kind's close says: "at most" exactly where today's slot
+   *  for that kind carried it (the short kinds, whose difference counts a shortfall the quote draws), "the same" on `same`,
+   *  else a plain difference of the two figures above it — an exhaustive Record (insight 147). */
+  const QUOTE_SIDE = /\byour (?:spending of|budget’s) \$|\bthe answer at\b/i
+  const TYPED_SIDE = /\byour figure of \$|\b(?:this|your) answer adds\b/i
+  const CLOSE_OF: Readonly<Record<TypedBelowYearKind, 'same' | 'atMost' | 'plain'>> = {
+    same: 'same',
+    bothCredit: 'plain',
+    quoteCreditsNothing: 'plain',
+    shortLeftOverAtTyped: 'atMost',
+    shortStillShortAtTyped: 'atMost',
+    shortEvenAtTyped: 'atMost',
+  }
+  const D_THREE = 'every run is exactly three sentences'
+  const D_SPENDING = 'sentence 1 states the spending side only'
+  const D_TYPED = 'sentence 2 states the typed side only'
+  const D_CLOSE = 'sentence 3 is the close, "At your spending|budget, that’s … in your savings", in the quote’s own source, naming no side'
+  const D_CLOSE_KIND = 'the close says "at most" exactly on the short kinds and "the same" exactly on `same`'
+  const D_SO = 'no "so" in a run sentence'
+  const D_PLUS = 'no "plus" in a run sentence'
+  const D_GAIN = 'no typed-side gain ("more", "takes"): KD4'
+  const D_FIGURES = 'every figure is "at most", a shortfall (a fact of the picture), or the close’s difference'
+  const densityLaw = (kind: TypedBelowYearKind, sentences: readonly string[], source: QuoteSource): string | null => {
+    if (sentences.length !== 3) return D_THREE
+    const [first, second, close] = sentences as readonly [string, string, string]
+    if (!QUOTE_SIDE.test(first) || TYPED_SIDE.test(first)) return D_SPENDING
+    if (!TYPED_SIDE.test(second) || QUOTE_SIDE.test(second)) return D_TYPED
+    const said = new RegExp(String.raw`^${CLOSE_AT[source]}, that’s (?:(at most )?${AMOUNT}(?: a year)? less|(the same)) in your savings\b`).exec(close)
+    if (said === null || QUOTE_SIDE.test(close) || TYPED_SIDE.test(close)) return D_CLOSE
+    if ((said[2] !== undefined ? 'same' : said[1] !== undefined ? 'atMost' : 'plain') !== CLOSE_OF[kind]) return D_CLOSE_KIND
+    if (sentences.some((s) => /\bso\b/i.test(s))) return D_SO
+    if (sentences.some((s) => /\bplus\b/i.test(s))) return D_PLUS
+    if (sentences.some((s) => /\bmore\b|\btakes?\b/i.test(s))) return D_GAIN
+    const unclaimed = (s: string): string =>
+      s
+        .replace(BASE, '')
+        .replace(new RegExp(String.raw`comes up ${AMOUNT} short`, 'g'), '')
+        .replace(new RegExp(String.raw`at most ${AMOUNT}`, 'g'), '')
+        .replace(new RegExp(String.raw`^${CLOSE_AT[source]}, that’s ${AMOUNT}`), '')
+    if (sentences.some((s) => /\$\d/.test(unclaimed(s)))) return D_FIGURES
     return null
   }
 
-  /** The span rider rule (the tax rider build's KTD4), a pure verdict so its plants red on THIS rule alone (insight 152):
-   *  whether each span kind's last sentence ends on {@link RIDER}, an exhaustive Record over the kinds (insight 147): every
-   *  kind does (KD2's call 2: the credit kinds and `same` with the short kinds, since under the whole-difference scope a
-   *  span without it reads as "no difference in income tax here", round 3's measurement says otherwise). The rider rides
-   *  once a span, on its last sentence alone (the density law: no third sentence, R5), and never with the old wording
-   *  beside it. `null` where the span keeps it, else the clause it breaks. */
-  const SPAN_ENDS_ON_RIDER: Readonly<Record<TypedBelowYearKind, boolean>> = {
+  /** THE RIDER LAW (KD2, KD3; the tax rider build's KTD4), over a whole line: each run's close ends on the rider, once;
+   *  the rider's left neighbour is the difference ("less in your savings" or "the same in your savings"), never a cost;
+   *  exactly one gloss on a composed line, on its first rider; never the old rider, and never "plus" (KD1). Every kind's
+   *  close ends on it (the tax rider build's KD2 call 2: a run without it would read as "no difference in income tax
+   *  here", measured false), an exhaustive Record (insight 147). */
+  const RIDER_STEM = ', not including any difference between the two answers in income tax and Medicare’s income surcharge'
+  const RUN_ENDS_ON_RIDER: Readonly<Record<TypedBelowYearKind, true>> = {
     same: true,
     bothCredit: true,
     quoteCreditsNothing: true,
@@ -1523,45 +1776,152 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     shortStillShortAtTyped: true,
     shortEvenAtTyped: true,
   }
-  const SPAN_RIDER_END = 'the span’s last sentence ends on the rider'
-  const SPAN_RIDER_ONCE = 'the rider once a span, on its last sentence alone'
-  const SPAN_RIDER_OLD = 'never the old rider ("plus any income tax on …")'
-  const spanRiderLaw = (kind: TypedBelowYearKind, sentences: readonly string[]): string | null => {
-    const ends = SPAN_ENDS_ON_RIDER[kind]
-    if ((sentences.at(-1) ?? '').endsWith(RIDER) !== ends) return ends ? SPAN_RIDER_END : 'the span carries no rider'
-    if (sentences.join(' ').split(RIDER).length - 1 !== (ends ? 1 : 0)) return SPAN_RIDER_ONCE
-    if (/\bplus any income tax\b/i.test(sentences.join(' '))) return SPAN_RIDER_OLD
+  const R_END = 'each run’s close ends on the rider'
+  const R_ONCE = 'the rider once a run, on its close alone'
+  const R_NEIGHBOUR = 'the rider’s left neighbour ends "less in your savings" or "the same in your savings"'
+  const R_GLOSS_ONE = 'exactly one gloss on a composed line'
+  const R_GLOSS_FIRST = 'the gloss rides the line’s first rider (the first run’s close)'
+  const R_OLD = 'never the old rider (no "between the two answers")'
+  const R_PLUS = 'never "plus" (KD1)'
+  type LineRuns = Pick<TypedBelowLineStructure, 'spans' | 'survivor'>
+  const spanRiderLaw = (s: LineRuns, kinds: readonly TypedBelowYearKind[]): string | null => {
+    const runs = s.spans.map((x) => x.sentences)
+    const all = [...runs.flat(), ...(s.survivor ?? [])]
+    for (const [i, sentences] of runs.entries()) {
+      const close = sentences.at(-1) ?? ''
+      if (RUN_ENDS_ON_RIDER[kinds[i]!] && !close.endsWith(RIDER) && !close.endsWith(GLOSSED)) return R_END
+      if (sentences.join(' ').split(RIDER_STEM).length - 1 !== 1) return R_ONCE
+    }
+    for (const sentence of all) {
+      const at = sentence.indexOf(RIDER_STEM)
+      if (at !== -1 && !/(?:less|the same) in your savings$/.test(sentence.slice(0, at))) return R_NEIGHBOUR
+    }
+    if (all.join(' ').split(GLOSS).length - 1 !== 1) return R_GLOSS_ONE
+    if (!(runs[0]?.at(-1) ?? '').endsWith(GLOSSED)) return R_GLOSS_FIRST
+    if (/, not including any difference in income tax\b/.test(all.join(' '))) return R_OLD
+    if (/\bplus\b/i.test(all.join(' '))) return R_PLUS
     return null
   }
 
-  // R5 and R8 (the plan's U4 test 4), over every witness and all four hosts, read from the line's exported STRUCTURE (the
-  // survivor-path build's KTD8), never a folded paragraph sliced by a regex: the opening's sentences (the counts sentence,
-  // which names both figures by design; the Result's moved clause, the moved words' own pins; the lead) sit outside the
-  // span law, each span keeps it, and the coda keeps its own ({@link codaLaw}), so its sentences are never counted as a span's.
-  it('the density law on every witness’s structure, all four hosts: no span sentence names both sides; the yearly difference rides only a span’s second sentence; no "so"; at most two sentences per span; every span’s last sentence ends on the rider, once (the tax rider build’s KTD4); every figure for what the answer adds or takes is "at most", a fact of the picture, or a difference set beside its pair; and the survivor coda is two sentences — X "at most" with the quote’s side and the rider, then exactly the two figures X is the difference of, X echoed in the whole-gap form', () => {
-    // Case-blind (the whole-file review's round 1, finding #5): the short span's second sentence OPENS "Your figure of", so a
-    // case-sensitive side never fired on it, and a quote figure planted there passed the law. The typed side is also the
-    // credit kinds' first sentence, "This/Your answer adds at most $X" (round 2, finding #4: it fired on neither side, so
-    // a quote figure planted there passed too). Every sentence with a dollar figure states EXACTLY one side.
-    const QUOTE_SIDE = /\byour (spending of|budget’s) \$/i
-    const TYPED_SIDE = /\b(?:your figure of|(?:this|your) answer adds at most) \$/i
-    let quoteSides = 0
-    let typedSides = 0
-    const FIG = String.raw`\$[\d,]+(?:\.\d\d)?`
-    const RANGE = String.raw`${FIG}(?: to ${FIG})?`
-    const DIFFERENCE = new RegExp(String.raw`${RANGE}(?: a year)? (?:less|more)\b`)
+  /** THE SURVIVOR LAW (KD7; the survivor-path build's KTD4, KTD5), `codaLaw`'s successor: two sentences, the costs first —
+   *  the two survivor charges beside their figures, or, where the whole gap holds, both whole figures — then the runs'
+   *  close with X, "at most", and the rider (no gloss: the first rider is a run's). X is the read's `most`; the two charges
+   *  subtract to X or to at most $1 under it (X is the raw difference rounded up, KTD4: the gloomy side), and in the
+   *  whole-gap form that strict check sits on the costs sentence: the quote less the typed figure. Never "on your own"
+   *  (the catalog's word for a living one-earner year), "three-quarters" or any ratio (false on a budget that holds some
+   *  part whole), "nothing" (the credit-0 rule stays unsaid), or a reason ("all housing" is false at a ratio of 1). */
+  const S_TWO = 'two sentences: the costs, then the close'
+  const S_NEVER = 'never "on your own", "three-quarters", "nothing", a ratio or a reason ("all housing")'
+  const S_COSTS = 'the costs sentence first, in one of its two forms, in the quote’s own source, naming no other figure'
+  const S_CLOSE = 'the close: "At your spending|budget, that’s at most $X a year less in your savings" and the rider, unglossed'
+  const S_X = 'X is the read’s `survivor.most`'
+  const S_PAIR = 'the two charges subtract to X or to at most $1 under it'
+  const S_GAP = 'the whole gap: the quote less the typed figure is X or at most $1 under it'
+  const survivorLaw = (sentences: readonly string[], source: QuoteSource, most: number): string | null => {
+    if (sentences.length !== 2) return S_TWO
+    if (/\bon your own\b|\bthree-quarters\b|\bquarters?\b|\bnothing\b|\bratio\b|\d\s?%|\bper ?cent\b|\bhousing\b/i.test(sentences.join(' '))) return S_NEVER
+    const [costs, close] = sentences as readonly [string, string]
+    const q = QUOTE_WORDS[source]
+    const charges = new RegExp(
+      String.raw`^If only one of you is alive in a working year, that year’s costs count as (${FIG}) at your figure of (${FIG}) a year and (${FIG}) at your ${q} (${FIG}) a year\.$`,
+    ).exec(costs)
+    const whole = new RegExp(String.raw`^If only one of you is alive in a working year, that year’s costs still count in full: your figure of (${FIG}) a year and your ${q} (${FIG}) a year\.$`).exec(costs)
+    if (charges === null && whole === null) return S_COSTS
+    const at = close.endsWith(RIDER) ? new RegExp(String.raw`^${CLOSE_AT[source]}, that’s at most (${FIG}) a year less in your savings$`).exec(close.slice(0, -RIDER.length)) : null
+    if (at === null) return S_CLOSE
+    const x = toCentsOf(at[1]!)
+    if (x !== most * 100) return S_X
+    const under = (lower: string, higher: string): number => x - (toCentsOf(higher) - toCentsOf(lower))
+    if (charges !== null) {
+      const u = under(charges[1]!, charges[3]!)
+      if (u < 0 || u > 100) return S_PAIR
+    } else {
+      const u = under(whole![1]!, whole![2]!)
+      if (u < 0 || u > 100) return S_GAP
+    }
+    return null
+  }
+
+  /** THE HOST NOUN (KD9; the walk-8 card's W8-R5 (d)), typed by hand: an exhaustive Record over the line's hosts (insight
+   *  147), never read from the composer's own. "This" where an answer is on screen (the Result, and the sheet over it, whose
+   *  title and warning already say "this answer": pilot call 6), "Your" where none is yet (the gate, the walk's step) — in
+   *  the counts sentence's lean, the runs, and nowhere the other noun. */
+  type LineHost = 'result' | 'gate' | 'sheet' | 'step'
+  const HOST_NOUN: Readonly<Record<LineHost, 'This' | 'Your'>> = { result: 'This', gate: 'Your', sheet: 'This', step: 'Your' }
+  const N_COUNTS = 'the counts sentence opens on the host’s noun, and its lean names it (none in the sheet)'
+  const N_RUNS = 'the runs name the host’s noun, and only it'
+  const N_OTHER = 'the other noun nowhere on the line'
+  const nounLaw = (host: LineHost, s: TypedBelowLineStructure): string | null => {
+    const noun = HOST_NOUN[host]
+    const first = s.opening[0] ?? ''
+    if (host === 'sheet') {
+      if (/\banswer counts\b/.test(s.opening.join(' '))) return N_COUNTS
+    } else if (!first.startsWith(`${noun} answer counts `) || !first.endsWith(` so ${noun.toLowerCase()} answer can look better than it really is.`)) return N_COUNTS
+    const named = [...s.spans.flatMap((x) => x.sentences).join(' ').matchAll(/\b(this|your) answer\b/gi)].map((m) => m[1]!.toLowerCase())
+    if (named.length === 0 || named.some((n) => n !== noun.toLowerCase())) return N_RUNS
+    const text = [...s.opening, ...s.spans.flatMap((x) => [x.label, ...x.sentences]), ...(s.survivor ?? [])].join(' ')
+    if (new RegExp(String.raw`\b${noun === 'This' ? 'your' : 'this'} answer\b`, 'i').test(text)) return N_OTHER
+    return null
+  }
+
+  /** THE LABELS (the walk-8 card's W8-R6: a crowned household's runs past its date read as the app doubting the plan): the
+   *  first run's label its years alone, every later run's "If you’re still working in …", the years typed out here. */
+  const yearsWords = (first: number, last: number): string => (first === last ? `${first}` : `${first} through ${last}`)
+  const L_FIRST = 'the first run’s label is its years alone'
+  const L_LATER = 'every later run’s label reads "If you’re still working in …"'
+  const labelLaw = (labels: readonly string[], spans: readonly TypedBelowSpan[]): string | null => {
+    for (const [i, s] of spans.entries()) {
+      const years = yearsWords(s.firstYear, s.lastYear)
+      if (i === 0 && labels[0] !== years) return L_FIRST
+      if (i > 0 && labels[i] !== `If you’re still working in ${years}`) return L_LATER
+    }
+    return null
+  }
+
+  /** THE FLOOR (the walk-8 card's W8-R8, the pilot's placement): the line's first spending-side base names the spending as
+   *  the least a working year almost always costs — on the cap sentence where one is drawn, else on the first run's first
+   *  sentence — and never twice on a line. */
+  const FLOOR = ', the least a working year almost always costs,'
+  const CAP_HEAD = /^At your (?:spending of|budget’s) \$[\d,.]+ a year, the least a working year almost always costs, your first working year would /
+  const F_ONCE = 'the floor named exactly once on a line'
+  const F_WHERE = 'the floor on the cap sentence where one is drawn, else on the first run’s first sentence'
+  const floorLaw = (s: TypedBelowLineStructure): string | null => {
+    const text = [...s.opening, ...s.spans.flatMap((x) => x.sentences), ...(s.survivor ?? [])].join(' ')
+    if (text.split(FLOOR).length - 1 !== 1) return F_ONCE
+    const home = s.opening.find((x) => /\byour first working year would\b/.test(x)) ?? s.spans[0]?.sentences[0] ?? ''
+    if (!home.includes(FLOOR)) return F_WHERE
+    return null
+  }
+
+  /** THE ONE-YEAR WORDS (the walk-8 card's W8-R5 (c)): a run of one year says no "a year" on its credit or difference (a
+   *  base figure keeps it), and a short kind's year subject is "that working year". */
+  const Y_NO_A_YEAR = 'a one-year run says no "a year" on its credit or difference'
+  const Y_THAT_YEAR = 'a one-year short run’s year subject is "that working year"'
+  const oneYearLaw = (kind: TypedBelowYearKind, oneYear: boolean, sentences: readonly string[]): string | null => {
+    if (!oneYear) return null
+    if (sentences.some((s) => new RegExp(String.raw`${FIG} a year\b`).test(s.replace(BASE, '')))) return Y_NO_A_YEAR
+    if (kind.startsWith('short') && !(sentences[0] ?? '').includes(' that working year')) return Y_THAT_YEAR
+    return null
+  }
+
+  // R5, R8 and the walk-8 form (the spec's U2), over every witness and all five hosts, read from the line's exported
+  // STRUCTURE: the opening's sentences (the counts sentence, which names both figures by design; the Result's moved
+  // clause, the moved words' own pins; the cap sentence; the lead) sit outside the run laws, each run keeps them, and the
+  // survivor part keeps its own ({@link survivorLaw}), so its sentences are never counted as a run's.
+  it('every law on every household’s structure, all five hosts: the line is its structure folded (one run a paragraph; two or more a list, the survivor part after it); the scope where the survivor gate opens and nowhere else; the lead and the cap sentence in their places (KD5); the density law on every run; the rider law, the survivor law, the host noun, the labels (W8-R6), the floor (W8-R8) and the one-year words (W8-R5 (c)) on every line — and every cell reached: each kind on both quotes, each short kind one year and several on both, the survivor part in both forms on both quotes at both run counts, the gate off at both, every member of the quote answer’s cap', () => {
     /** A household with Sam at `age`, retired at it, `birthYear` kept with the age (the witnesses' `aWithSamAt`, on any). */
     const samAt = (d: ScenarioDraft, age: number): ScenarioDraft => {
       const [alex, sam] = d.people
       return { ...d, people: [alex, { ...sam, currentAge: age, birthYear: d.startCalendarYear! - age, retirementAge: age }] }
     }
-    // The witnesses, and the forms no witness reaches (round 2, finding #5): every span kind on a budget quote, and each
+    // The witnesses, and the forms no witness reaches (round 2, finding #5): every run kind on a budget quote, and each
     // short kind's one-year form on both quotes; then the survivor build's households: the gate's off and on witnesses
-    // (Sam 56 off on A's one span and on TM's several), and the coda's forms on both quotes and both span counts (a ratio
-    // of 1 makes X the whole gap on a spending quote; a food budget holds nothing, so it names the charges). The sweep
-    // below proves every cell is reached.
+    // (Sam 56 off on A's one run and on TM's several), and the survivor part's forms on both quotes and both run counts (a
+    // ratio of 1 makes X the whole gap on a spending quote; a food budget holds nothing, so it names the charges); and the
+    // near-line household (year 0 short at the quote). The sweep below proves every cell is reached.
     const SWEEP: Readonly<Record<string, ScenarioDraft>> = {
       ...TYPED_BELOW_WITNESSES,
+      nearline: TM_NEAR_IRMAA_LINE,
       budgetWhole: budgetTwin(TYPED_BELOW_WITNESSES.whole),
       budgetTm: budgetTwin(TYPED_BELOW_WITNESSES.tm),
       budgetPension: budgetTwin(TYPED_BELOW_WITNESSES.pension),
@@ -1587,152 +1947,314 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
       aAtOne: { ...TYPED_BELOW_WITNESSES.a, survivorSpendingRatio: 1 },
       tmAtOne: { ...TYPED_BELOW_WITNESSES.tm, survivorSpendingRatio: 1 },
     }
-    const STRUCTURES: readonly (readonly [string, (d: ScenarioDraft) => TypedBelowLineStructure | null, (d: ScenarioDraft) => NoteParts | null])[] = [
+    const STRUCTURES: readonly (readonly [string, LineHost, (d: ScenarioDraft) => TypedBelowLineStructure | null, (d: ScenarioDraft) => NoteParts | null])[] = [
       ...HOSTS.map(
         (h) =>
           [
             `${h.kind}${'carriesMoved' in h ? `, ${h.carriesMoved}` : ''}`,
+            h.kind,
             (d: ScenarioDraft) => workingYearCostTypedBelowStructure(d, h),
             (d: ScenarioDraft) => workingYearCostTypedBelowLine(d, h),
           ] as const,
       ),
       ...(['sheet', 'step'] as const).map(
-        (h) => [h, (d: ScenarioDraft) => workingYearLeftOverAtQuoteStructure(d, h), (d: ScenarioDraft) => workingYearLeftOverAtQuoteLine(d, h)] as const,
+        (h) => [h, h, (d: ScenarioDraft) => workingYearLeftOverAtQuoteStructure(d, h), (d: ScenarioDraft) => workingYearLeftOverAtQuoteLine(d, h)] as const,
       ),
     ]
+    /** The lead above two or more runs with the gate off, by host (an exhaustive Record, insight 147): the seat draws one,
+     *  the Result and the gate none (the survivor-path build's KTD7). */
+    const LEAD_GATE_OFF: Readonly<Record<LineHost, string | null>> = { result: null, gate: null, sheet: PLAIN_LEAD, step: PLAIN_LEAD }
     const cells = new Set<string>()
-    const codaCells = new Set<string>()
+    const survivorCells = new Set<string>()
+    const capKinds = new Set<string>()
     const gateOff = new Set<string>()
     let gateOn = 0
-    let spans = 0
-    let codas = 0
+    let runs = 0
+    let survivors = 0
     for (const [key, d] of Object.entries(SWEEP)) {
       const read = workingYearTypedBelowWindow(d)
       const quote = workingYearQuote(d)
       if (read?.kind !== 'read' || quote === null) throw new Error(`[test setup] ${key} reads its window and quote`)
       if (read.survivor !== null) gateOn += 1
+      capKinds.add(read.quoteCap.kind)
       const source = quote.source
       for (const s of read.spans) cells.add(`${s.kind} ${s.firstYear === s.lastYear ? 'one year' : 'several'} ${source}`)
       const count = read.spans.length < 2 ? 'one' : 'many'
-      for (const [host, structureOf, lineOf] of STRUCTURES) {
+      for (const [host, noun, structureOf, lineOf] of STRUCTURES) {
         const structure = structureOf(d)
         const drawn = lineOf(d)
         if (structure === null || drawn === null) throw new Error(`[test setup] ${key} (${host}) draws the line`)
         const where = `${key} (${host})`
-        // The law reads what is drawn: the line is its structure folded (one span into one paragraph, the coda's sentences
-        // last; two or more as parts, the coda its own part).
+        // The laws read what is drawn: the line is its structure folded (KD8).
         expect(drawn, `${where} — the line is its structure, folded`).toEqual(
           count === 'one'
-            ? { opening: [...structure.opening, ...structure.spans.flatMap((x) => x.sentences), ...(structure.coda?.sentences ?? [])].join(' '), segments: [], door: null }
-            : { opening: structure.opening.join(' '), segments: structure.spans, door: null, ...(structure.coda === null ? {} : { coda: structure.coda }) },
+            ? plain([...structure.opening, ...structure.spans.flatMap((x) => x.sentences), ...(structure.survivor ?? [])].join(' '))
+            : block(structure.opening.join(' '), structure.spans, structure.survivor),
         )
-        // The gate (R1, R3): off, no scope anywhere and no coda, so today's words; on, the coda on every host, and the
-        // scope on the one-span opener or the lead above several spans, and on every short kind's year subject.
-        const text = notePartsText(drawn)
+        // The gate (R1, R3): off, no scope anywhere and no survivor part; on, the survivor part on every host, and the scope
+        // on the one-run opener (no label, no lead: pilot call 3) and on every short kind's year subject.
         if (read.survivor === null) {
-          gateOff.add(`${count}`)
-          expect(text, `${where} — gate off: no scope`).not.toContain('both alive')
-          expect(structure.coda, `${where} — gate off: no coda`).toBeNull()
+          gateOff.add(count)
+          expect(notePartsText(drawn), `${where} — gate off: no scope`).not.toContain('both alive')
+          expect(structure.survivor, `${where} — gate off: no survivor part`).toBeNull()
         } else {
-          expect(structure.coda, `${where} — gate on: the coda`).not.toBeNull()
-          if (count === 'one') expect(structure.spans[0]!.sentences[0], `${where} — the one-span opener carries the scope`).toContain('you’re both alive')
-          else expect(structure.opening.at(-1), `${where} — the scoped lead last in the opening`).toMatch(/^What (?:this|your) answer adds to your savings in each working year you’re both alive:$/)
+          expect(structure.survivor, `${where} — gate on: the survivor part`).not.toBeNull()
+          if (count === 'one') expect(structure.spans[0]!.sentences[0], `${where} — the one-run opener carries the scope`).toMatch(/^Each working year you’re both alive, /)
           read.spans.forEach((s, i) => {
             if (s.kind.startsWith('short')) expect(structure.spans[i]!.sentences[0], `${where} — a short kind’s year subject carries the scope`).toContain('you’re both alive')
           })
         }
-        expect(structure.spans.length, `${where} — one segment per span of the read`).toBe(read.spans.length)
+        // The lead, last in the opening where one is drawn; the cap sentence right before it, exactly where the stored
+        // figure does not bind the answer at the quote (KD5).
+        const lead = count === 'one' ? null : read.survivor !== null ? SCOPED_LEAD : LEAD_GATE_OFF[noun]
+        if (lead !== null) expect(structure.opening.at(-1), `${where} — the lead closes the opening`).toBe(lead)
+        const capAt = structure.opening.findIndex((x) => CAP_HEAD.test(x))
+        expect(capAt !== -1, `${where} — a cap sentence exactly where the stored figure does not bind (${read.quoteCap.kind})`).toBe(read.quoteCap.kind !== 'stored')
+        if (capAt !== -1) expect(capAt, `${where} — the cap sentence after the lean and any moved clause, before the lead`).toBe(structure.opening.length - (lead === null ? 1 : 2))
+        expect(structure.spans.length, `${where} — one run per span of the read`).toBe(read.spans.length)
+        expect(nounLaw(noun, structure), where).toBeNull()
+        expect(spanRiderLaw(structure, read.spans.map((s) => s.kind)), where).toBeNull()
+        expect(labelLaw(structure.spans.map((x) => x.label), read.spans), where).toBeNull()
+        expect(floorLaw(structure), where).toBeNull()
         for (const [i, { sentences }] of structure.spans.entries()) {
-          spans += 1
-          const who = `${where}: ${sentences.join(' ')}`
-          expect(sentences.length, `${who} — at most two sentences`).toBeLessThanOrEqual(2)
-          // The tax rider build's KTD4: every kind's last sentence ends on the rider, once.
-          expect(spanRiderLaw(read.spans[i]!.kind, sentences), who).toBeNull()
-          expect(sentences[0], `${who} — the first sentence carries no difference`).not.toMatch(DIFFERENCE)
-          for (const s of sentences) {
-            if (QUOTE_SIDE.test(s)) quoteSides += 1
-            if (TYPED_SIDE.test(s)) typedSides += 1
-            if (/\$\d/.test(s)) expect(QUOTE_SIDE.test(s) !== TYPED_SIDE.test(s), `${who} — exactly one side per dollar sentence (R8): ${s}`).toBe(true)
-            expect(s, `${who} — no "so"`).not.toMatch(/\bso\b/i)
-            const rest = s
-              .replace(new RegExp(String.raw`your (?:spending of|figure of) ${FIG} a year`, 'gi'), '')
-              .replace(new RegExp(String.raw`your budget’s ${FIG} a year`, 'g'), '')
-              .replace(new RegExp(String.raw`comes up ${RANGE} short`, 'g'), '')
-              .replace(new RegExp(String.raw`(would add (?:at most ${RANGE}|nothing)), ${RANGE}(?: a year)? less`, 'g'), '$1')
-              .replace(new RegExp(String.raw`at most ${RANGE}`, 'g'), '')
-            expect(rest, `${who} — a figure that is neither "at most", a fact of the picture, nor a difference beside its pair`).not.toMatch(/\$\d/)
-          }
+          runs += 1
+          const s = read.spans[i]!
+          const who = `${where} ${s.firstYear}–${s.lastYear}: ${sentences.join(' ')}`
+          expect(densityLaw(s.kind, sentences, source), who).toBeNull()
+          expect(oneYearLaw(s.kind, s.firstYear === s.lastYear, sentences), who).toBeNull()
         }
-        if (structure.coda !== null && read.survivor !== null) {
-          codas += 1
-          const who = `${where} coda: ${structure.coda.sentences.join(' ')}`
-          expect(codaLaw(structure.coda, count), who).toBeNull()
-          // X is the read's, and the quote the counts sentence's, in the quote's own words (R7).
-          expect(toCentsOf(/at most (\$[\d,]+(?:\.\d\d)?)/.exec(structure.coda.sentences[0]!)![1]!), `${who} — X is the read’s`).toBe(read.survivor.most * 100)
-          expect(structure.coda.sentences.join(' '), `${who} — the quote in its source’s words`).not.toMatch(source === 'budget' ? /\byour spending\b/ : /\byour budget\b/)
-          codaCells.add(`${read.survivor.form} ${source} ${count}`)
+        if (structure.survivor !== null && read.survivor !== null) {
+          survivors += 1
+          expect(survivorLaw(structure.survivor, source, read.survivor.most), `${where}: ${structure.survivor.join(' ')}`).toBeNull()
+          survivorCells.add(`${read.survivor.form} ${source} ${count}`)
         }
       }
     }
-    expect(spans, 'the sweep is non-vacuous: every household, every host').toBeGreaterThanOrEqual(Object.keys(SWEEP).length * STRUCTURES.length)
-    // Every cell is reached: each kind on both quotes, and each short kind (the kinds whose words read `oneYear`) in its
-    // one-year and several-year forms on both; the coda in both forms on both quotes at both span counts; the gate off
-    // at both span counts.
+    expect(runs, 'the sweep is non-vacuous: every household, every host').toBeGreaterThanOrEqual(Object.keys(SWEEP).length * STRUCTURES.length)
+    // Every cell is reached: each kind on both quotes, and each short kind (the kinds whose words read `oneYear` in their year
+    // subject) in its one-year and several-year forms on both; the survivor part in both forms on both quotes at both run
+    // counts; the gate off at both run counts; every member of the quote answer's cap.
     const SHORT: readonly TypedBelowYearKind[] = ['shortLeftOverAtTyped', 'shortStillShortAtTyped', 'shortEvenAtTyped']
     for (const source of ['spending', 'budget'] as const) {
       for (const kind of ['same', 'bothCredit', 'quoteCreditsNothing'] as const) expect(cells.has(`${kind} several ${source}`), `${kind} on a ${source} quote`).toBe(true)
       for (const kind of SHORT) for (const n of ['one year', 'several']) expect(cells.has(`${kind} ${n} ${source}`), `${kind}, ${n}, on a ${source} quote`).toBe(true)
       for (const form of ['wholeGap', 'survivorCharges'] as const) {
-        for (const n of ['one', 'many']) expect(codaCells.has(`${form} ${source} ${n}`), `the ${form} coda on a ${source} quote, ${n} span(s)`).toBe(true)
+        for (const n of ['one', 'many']) expect(survivorCells.has(`${form} ${source} ${n}`), `the ${form} survivor part on a ${source} quote, ${n} run(s)`).toBe(true)
       }
     }
-    expect([...gateOff].sort(), 'the gate off is swept on one span and on several').toEqual(['many', 'one'])
-    expect(codas, 'every gate-on household’s coda on every host is read').toBe(gateOn * STRUCTURES.length)
+    expect([...gateOff].sort(), 'the gate off is swept on one run and on several').toEqual(['many', 'one'])
+    expect([...capKinds].sort(), 'every member of the quote answer’s cap').toEqual(['stored', 'yearZeroLeftOver', 'yearZeroNone', 'yearZeroShort'])
+    expect(survivors, 'every gate-on household’s survivor part on every host is read').toBe(gateOn * STRUCTURES.length)
     expect(gateOn, 'all but the three gate-off households open the gate').toBe(Object.keys(SWEEP).length - 3)
-    // Each side fires across the sweep, the typed side on TM's short span's second sentence and on a credit span's first,
-    // and the R8 predicate catches both sides planted in either.
-    expect(quoteSides, 'the quote side fires').toBeGreaterThan(0)
-    expect(typedSides, 'the typed side fires').toBeGreaterThan(0)
-    expect(TYPED_SIDE.test(segment(TYPED_BELOW_WITNESSES.tm, GATE, '2029 through 2032')[1]!), 'TM’s "Your figure of" sentence').toBe(true)
-    expect(TYPED_SIDE.test(segment(TYPED_BELOW_WITNESSES.tm, GATE, '2026 through 2028')[0]!), 'TM’s "Your answer adds at most" sentence').toBe(true)
-    for (const planted of [
-      'Your figure of $84,000 a year, below your spending of $105,000 a year, leaves those shortfalls out of your answer.',
-      'This answer adds at most $16,985 a year to your savings, where your spending of $105,000 a year adds at most $5,985.',
-    ]) {
-      expect(QUOTE_SIDE.test(planted) !== TYPED_SIDE.test(planted), `a two-sided sentence is caught: ${planted}`).toBe(false)
+  })
+
+  it('each law reds on its OWN clause beside a passing control (insight 152): the density law, the rider law, the survivor law, the host noun, the labels, the floor and the one-year words', () => {
+    const tm = workingYearCostTypedBelowStructure(TYPED_BELOW_WITNESSES.tm, GATE)!
+    const tmSheet = workingYearLeftOverAtQuoteStructure(TYPED_BELOW_WITNESSES.tm, 'sheet')!
+    const c100 = workingYearCostTypedBelowStructure(councilBudgetHousehold(1), GATE)!
+    const tmRead = workingYearTypedBelowWindow(TYPED_BELOW_WITNESSES.tm)
+    if (tmRead?.kind !== 'read') throw new Error('[test setup] TM reads its window')
+    // The controls, typed by hand: TM on the gate, its runs and survivor part, and C's whole-gap survivor part.
+    expect(tm.spans, 'the control: TM’s runs on the gate').toEqual(TM_RUNS('Your'))
+    expect(tm.survivor, 'the control: TM’s survivor part').toEqual(TM_SURVIVOR)
+    expect(c100.survivor, 'the control: C’s whole-gap survivor part').toEqual([
+      'If only one of you is alive in a working year, that year’s costs still count in full: your figure of $90,000 a year and your budget’s $105,000 a year.',
+      `At your budget, that’s at most $15,000 a year less in your savings${RIDER}`,
+    ])
+    const [c1, c2, c3] = tm.spans[0]!.sentences as readonly [string, string, string]
+    const [s1, s2, s3] = tm.spans[1]!.sentences as readonly [string, string, string]
+    const withRun = (s: TypedBelowLineStructure, i: number, sentences: readonly string[]): TypedBelowLineStructure => ({
+      ...s,
+      spans: s.spans.map((x, j) => (j === i ? { label: x.label, sentences } : x)),
+    })
+    const withSurvivor = (s: TypedBelowLineStructure, survivor: readonly string[]): TypedBelowLineStructure => ({ ...s, survivor })
+    const withOpening = (s: TypedBelowLineStructure, opening: readonly string[]): TypedBelowLineStructure => ({ ...s, opening })
+
+    // THE DENSITY LAW.
+    expect(densityLaw('bothCredit', [c1, c2, c3], 'spending'), 'the control: TM’s credit run').toBeNull()
+    expect(densityLaw('shortLeftOverAtTyped', [s1, s2, s3], 'spending'), 'the control: TM’s short run').toBeNull()
+    expect(densityLaw('bothCredit', [c1, c2], 'spending'), 'a run of two sentences').toBe(D_THREE)
+    expect(densityLaw('bothCredit', [c1, c2, c3, c3], 'spending'), 'a run of four').toBe(D_THREE)
+    expect(densityLaw('bothCredit', [c2, c1, c3], 'spending'), 'the typed side first (KD4: the spending side first)').toBe(D_SPENDING)
+    expect(
+      densityLaw('bothCredit', ['The answer at your spending of $105,000 a year would add at most $5,985 a year, where your answer adds at most $16,985.', c2, c3], 'spending'),
+      'both sides in sentence 1',
+    ).toBe(D_SPENDING)
+    expect(
+      densityLaw(
+        'shortLeftOverAtTyped',
+        [s1, 'Your figure of $84,000 a year, below your spending of $105,000 a year, leaves those shortfalls out of your answer, which adds at most $16,985 a year to your savings.', s3],
+        'spending',
+      ),
+      'both sides in sentence 2',
+    ).toBe(D_TYPED)
+    expect(densityLaw('bothCredit', [c1, c2, `Your savings get $11,000 a year more under your answer${RIDER}`], 'spending'), 'a typed-side gain close (KD4; the red team’s attack 1)').toBe(D_CLOSE)
+    expect(densityLaw('bothCredit', [c1, c2, `At your spending of $105,000 a year, it would add at most $5,985, $11,000 less${RIDER}`], 'spending'), 'the old second sentence as the close').toBe(D_CLOSE)
+    expect(densityLaw('bothCredit', [c1, c2, `At your budget, that’s $11,000 a year less in your savings${GLOSSED}`], 'spending'), 'the close in the other source’s words').toBe(D_CLOSE)
+    expect(densityLaw('shortLeftOverAtTyped', [s1, s2, `At your spending, that’s $20,637 to $21,000 a year less in your savings${RIDER}`], 'spending'), 'a short close without "at most"').toBe(D_CLOSE_KIND)
+    expect(densityLaw('bothCredit', [c1, c2, `At your spending, that’s at most $11,000 a year less in your savings${GLOSSED}`], 'spending'), 'a credit close with "at most"').toBe(D_CLOSE_KIND)
+    expect(densityLaw('same', [c1, c2, c3], 'spending'), 'a `same` run closing on a difference').toBe(D_CLOSE_KIND)
+    expect(densityLaw('bothCredit', [c1, 'So your answer adds at most $16,985 a year to your savings.', c3], 'spending'), '"so"').toBe(D_SO)
+    expect(
+      densityLaw('bothCredit', [c1, c2, `At your spending, that’s $11,000 a year less in your savings, plus any income tax on it${GLOSSED}`], 'spending'),
+      '"plus" (KD1)',
+    ).toBe(D_PLUS)
+    expect(densityLaw('bothCredit', [c1, 'Your answer adds at most $16,985 a year more to your savings.', c3], 'spending'), 'a typed-side gain').toBe(D_GAIN)
+    expect(densityLaw('bothCredit', ['The answer at your spending of $105,000 a year would add $5,985 a year.', c2, c3], 'spending'), 'a credit without "at most"').toBe(D_FIGURES)
+    expect(densityLaw('bothCredit', [c1, 'Your answer adds at most $16,985 a year to your savings, $11,000 a year less.', c3], 'spending'), 'the difference in sentence 2 (it rides the close alone)').toBe(D_FIGURES)
+
+    // THE RIDER LAW.
+    const tmKinds = tmRead.spans.map((s) => s.kind)
+    expect(spanRiderLaw(tm, tmKinds), 'the control: TM’s line').toBeNull()
+    expect(spanRiderLaw(c100, ['same', 'shortLeftOverAtTyped', 'same']), 'the control: C’s line, its `same` runs closing on the rider').toBeNull()
+    expect(spanRiderLaw(withRun(tm, 1, [s1, s2, s3.replace(RIDER, ', plus any income tax on those shortfalls.')]), tmKinds), 'a short run with the struck rider').toBe(R_END)
+    expect(spanRiderLaw(withRun(tm, 2, [c1, c2, 'At your spending, that’s $11,000 a year less in your savings.']), tmKinds), 'a credit run with no rider').toBe(R_END)
+    expect(spanRiderLaw(withRun(tm, 1, [s1, s2.replace(/\.$/, RIDER), s3]), tmKinds), 'the rider on two sentences of a run').toBe(R_ONCE)
+    expect(spanRiderLaw(withSurvivor(tm, [TM_SURVIVOR[0]!.replace(/\.$/, RIDER), TM_SURVIVOR[1]!]), tmKinds), 'the rider beside a cost, not a difference').toBe(R_NEIGHBOUR)
+    expect(spanRiderLaw(withRun(tm, 1, [s1, s2, s3.replace(RIDER, GLOSSED)]), tmKinds), 'a second gloss, on a later run').toBe(R_GLOSS_ONE)
+    expect(spanRiderLaw(withSurvivor(tm, [TM_SURVIVOR[0]!, TM_SURVIVOR[1]!.replace(RIDER, GLOSSED)]), tmKinds), 'a second gloss, on the survivor part').toBe(R_GLOSS_ONE)
+    expect(spanRiderLaw(withRun(tm, 0, [c1, c2, c3.replace(GLOSSED, RIDER)]), tmKinds), 'no gloss').toBe(R_GLOSS_ONE)
+    expect(
+      spanRiderLaw(withRun(withRun(tm, 0, [c1, c2, c3.replace(GLOSSED, RIDER)]), 1, [s1, s2, s3.replace(RIDER, GLOSSED)]), tmKinds),
+      'the gloss on a later rider, the first plain',
+    ).toBe(R_GLOSS_FIRST)
+    expect(
+      spanRiderLaw(withRun(tm, 0, [c1, 'Your answer adds at most $16,985 a year to your savings, not including any difference in income tax and Medicare’s income surcharge.', c3]), tmKinds),
+      'the old rider beside the new',
+    ).toBe(R_OLD)
+    expect(spanRiderLaw(withRun(tm, 0, [c1, 'Your answer adds at most $16,985 a year to your savings, plus any income tax on it.', c3]), tmKinds), '"plus" (KD1)').toBe(R_PLUS)
+
+    // THE SURVIVOR LAW.
+    const [costs, close] = TM_SURVIVOR as readonly [string, string]
+    const [gapCosts, gapClose] = c100.survivor as readonly [string, string]
+    expect(survivorLaw(TM_SURVIVOR, 'spending', 15_750), 'the control: TM’s charges form').toBeNull()
+    expect(survivorLaw(c100.survivor!, 'budget', 15_000), 'the control: C’s whole-gap form').toBeNull()
+    expect(survivorLaw([costs], 'spending', 15_750), 'the costs alone').toBe(S_TWO)
+    for (const planted of ['on your own', 'three-quarters', 'nothing left over is added', 'a ratio of 75 %', 'all housing']) {
+      expect(survivorLaw([costs.replace('that year’s costs', `that year’s costs (${planted})`), close], 'spending', 15_750), planted).toBe(S_NEVER)
     }
-    // The coda's law is not vacuous, and each plant reds on its OWN clause (insight 152): a third figure in the second
-    // sentence, in each form, and a pair that does not subtract to X; the real codas beside them keep the law.
-    const tmCoda = workingYearCostTypedBelowStructure(TYPED_BELOW_WITNESSES.tm, GATE)!.coda!
-    const c100Coda = workingYearCostTypedBelowStructure(councilBudgetHousehold(1), GATE)!.coda!
-    expect(codaLaw(tmCoda, 'many'), 'the control: TM’s coda keeps the law').toBeNull()
-    expect(codaLaw(c100Coda, 'many'), 'the control: C’s whole-gap coda keeps the law').toBeNull()
-    const withSecond = (c: NoteSegment, second: string): NoteSegment => ({ label: c.label, sentences: [c.sentences[0]!, second] })
-    const withFirst = (c: NoteSegment, first: string): NoteSegment => ({ label: c.label, sentences: [first, c.sentences[1]!] })
-    expect(codaLaw(withSecond(tmCoda, 'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending, $15,750 apart.'), 'many'), 'a third figure beside the charges').toBe(CODA_SECOND_PAIR)
-    expect(codaLaw(withSecond(c100Coda, 'That $15,000 a year is the whole gap to your figure of $90,000 a year, below your budget’s $105,000.'), 'many'), 'a third figure beside the whole gap').toBe(CODA_SECOND_PAIR)
-    expect(codaLaw(withSecond(tmCoda, 'Such a year’s costs count as $63,000 a year at your figure and $78,000 at your spending.'), 'many'), 'a pair $750 short of X').toMatch(/^the pair subtracts to X or to at most \$1 under it/)
-    // The tax rider build's plants (U3), each on its own clause: the coda with the old rider; the whole-gap echo off X;
-    // the bare "That is the whole gap…" (the reading the echo closes: "That" as the rider's costs); and the typed figure
-    // off the gap behind a true echo.
-    expect(c100Coda.sentences[1], 'the control: C’s whole-gap sentence, typed by hand').toBe('That $15,000 a year is the whole gap to your figure of $90,000 a year.')
-    expect(codaLaw(withFirst(tmCoda, tmCoda.sentences[0]!.replace(RIDER, ', plus any income tax on it.')), 'many'), 'the coda with the old rider').toBe(CODA_FIRST)
-    expect(codaLaw(withSecond(c100Coda, 'That $14,000 a year is the whole gap to your figure of $90,000 a year.'), 'many'), 'an echo off X').toBe(CODA_ECHO_X)
-    expect(codaLaw(withSecond(c100Coda, 'That is the whole gap to your figure of $90,000 a year.'), 'many'), 'the bare "That"').toBe(CODA_ECHO_FORM)
-    expect(codaLaw(withSecond(c100Coda, 'That $15,000 a year is the whole gap to your figure of $91,000 a year.'), 'many'), 'a typed figure off the gap').toMatch(/^the pair subtracts to X or to at most \$1 under it/)
-    // The span rider rule is not vacuous either (KTD4): TM's real spans keep it; a short span with the old rider and a
-    // credit span with no rider each red its end clause; a rider said twice reds its once clause.
-    const tmShort = segment(TYPED_BELOW_WITNESSES.tm, GATE, '2029 through 2032')
-    const tmCredit = segment(TYPED_BELOW_WITNESSES.tm, GATE, '2026 through 2028')
-    expect(spanRiderLaw('shortLeftOverAtTyped', tmShort), 'the control: TM’s short span').toBeNull()
-    expect(spanRiderLaw('bothCredit', tmCredit), 'the control: TM’s credit span').toBeNull()
-    expect(tmCredit[1], 'the control: TM’s credit span’s second sentence, typed by hand').toBe(
-      'At your spending of $105,000 a year, it would add at most $5,985, $11,000 less, not including any difference in income tax and Medicare’s income surcharge.',
+    expect(survivorLaw([close, costs], 'spending', 15_750), 'the close first').toBe(S_COSTS)
+    expect(survivorLaw([costs.replace(/\.$/, ', $15,750 apart.'), close], 'spending', 15_750), 'a third figure beside the charges').toBe(S_COSTS)
+    expect(survivorLaw([costs.replace('your spending of', 'your budget’s'), close], 'spending', 15_750), 'the costs in the other source’s words').toBe(S_COSTS)
+    expect(survivorLaw(['Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.', close], 'spending', 15_750), 'the old coda’s costs').toBe(S_COSTS)
+    expect(survivorLaw([costs, close.replace(RIDER, GLOSSED)], 'spending', 15_750), 'a glossed survivor close').toBe(S_CLOSE)
+    expect(survivorLaw([costs, close.replace('at most ', '')], 'spending', 15_750), 'a survivor close without "at most"').toBe(S_CLOSE)
+    expect(
+      survivorLaw(
+        [costs, 'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.'],
+        'spending',
+        15_750,
+      ),
+      'the old coda’s first sentence as the close',
+    ).toBe(S_CLOSE)
+    expect(survivorLaw([costs, close.replace('$15,750', '$15,751')], 'spending', 15_750), 'X off the read').toBe(S_X)
+    expect(survivorLaw([costs.replace('$78,750', '$78,000'), close], 'spending', 15_750), 'a pair $750 short of X').toBe(S_PAIR)
+    expect(survivorLaw([costs.replace('$63,000', '$62,998'), close], 'spending', 15_750), 'a pair $2 over X').toBe(S_PAIR)
+    expect(survivorLaw([gapCosts.replace('$90,000', '$91,000'), gapClose], 'budget', 15_000), 'a typed figure off the whole gap').toBe(S_GAP)
+
+    // THE HOST NOUN.
+    expect(nounLaw('gate', tm), 'the control: TM on the gate').toBeNull()
+    expect(nounLaw('sheet', tmSheet), 'the control: TM in the sheet').toBeNull()
+    expect(nounLaw('gate', withOpening(tm, [tm.opening[0]!.replace('so your answer', 'so this answer'), ...tm.opening.slice(1)])), 'walk 8’s lean: "this answer" under "Your answer"').toBe(N_COUNTS)
+    expect(nounLaw('result', tm), 'the gate’s line on the Result').toBe(N_COUNTS)
+    expect(nounLaw('sheet', withOpening(tmSheet, [counts('This', '84,000', '105,000'), ...tmSheet.opening])), 'a counts sentence in the sheet').toBe(N_COUNTS)
+    expect(nounLaw('gate', withRun(tm, 0, [c1, 'This answer adds at most $16,985 a year to your savings.', c3])), 'a run in the other noun').toBe(N_RUNS)
+    expect(
+      nounLaw('gate', withOpening(tm, [...tm.opening.slice(0, -1), 'What this answer adds to your savings in each working year you’re both alive:'])),
+      'walk 8’s lead, "this answer" under "Your answer"',
+    ).toBe(N_OTHER)
+
+    // THE LABELS.
+    const labels = tm.spans.map((x) => x.label)
+    expect(labelLaw(labels, tmRead.spans), 'the control: TM’s labels').toBeNull()
+    expect(labelLaw(['If you’re still working in 2026 through 2028', ...labels.slice(1)], tmRead.spans), 'the first label with the condition').toBe(L_FIRST)
+    expect(labelLaw([labels[0]!, '2029 through 2032', labels[2]!], tmRead.spans), 'a later label without it (walk 8’s W8-R6)').toBe(L_LATER)
+
+    // THE FLOOR.
+    const whole = workingYearCostTypedBelowStructure(TYPED_BELOW_WITNESSES.whole, GATE)!
+    expect(floorLaw(tm), 'the control: on TM’s cap sentence').toBeNull()
+    expect(floorLaw(whole), 'the control: no cap sentence, so on the whole household’s first run').toBeNull()
+    const floorOnRun = c1.replace(' a year would', ' a year, the least a working year almost always costs, would')
+    expect(floorLaw(withRun(tm, 0, [floorOnRun, c2, c3])), 'the floor twice').toBe(F_ONCE)
+    const capNoFloor = tm.opening.map((x) => x.replace(FLOOR, ','))
+    expect(floorLaw(withOpening(tm, capNoFloor)), 'no floor').toBe(F_ONCE)
+    expect(floorLaw(withRun(withOpening(tm, capNoFloor), 0, [floorOnRun, c2, c3])), 'the floor on the first run where a cap sentence is drawn').toBe(F_WHERE)
+
+    // THE ONE-YEAR WORDS: the pension household's 2029.
+    const p2029 = workingYearCostTypedBelowStructure(TYPED_BELOW_WITNESSES.pension, GATE)!.spans[1]!.sentences as readonly [string, string, string]
+    expect(oneYearLaw('shortLeftOverAtTyped', true, p2029), 'the control: the pension household’s 2029').toBeNull()
+    expect(oneYearLaw('shortLeftOverAtTyped', true, [p2029[0], p2029[1].replace('$16,985 to', '$16,985 a year to'), p2029[2]]), '"a year" on a one-year credit').toBe(Y_NO_A_YEAR)
+    expect(oneYearLaw('shortLeftOverAtTyped', true, [p2029[0], p2029[1], p2029[2].replace('$21,000 less', '$21,000 a year less')]), '"a year" on a one-year difference').toBe(Y_NO_A_YEAR)
+    expect(
+      oneYearLaw('shortLeftOverAtTyped', true, [p2029[0].replace('that working year, if you’re both alive,', 'each working year you’re both alive'), p2029[1], p2029[2]]),
+      'the several-year subject on one year',
+    ).toBe(Y_THAT_YEAR)
+  })
+
+  /** KD10's count, pinned (the walk-8 form council: "growth is a reviewed number"): each witness's line on each host, its
+   *  words (split on white space) and its dollar figures, in the text a screen reader hears (`notePartsText`: the run
+   *  labels count), typed by hand from the U2 line probe's printed counts. A change to any line's length reds here first:
+   *  re-pin from the probe, and say the new number in the commit. `resultHosted` is the Result under a rules note's
+   *  hosted clause (no moved clause). Walk 8 read 400 to 530 words and 23 to 38 figures on the page before the first button. */
+  const KD10: Readonly<Record<string, Readonly<Record<'result' | 'resultHosted' | 'gate' | 'sheet' | 'step', readonly [words: number, figures: number]>>>> = {
+    a: { result: [218, 14], resultHosted: [218, 14], gate: [218, 14], sheet: [176, 12], step: [218, 14] },
+    pa: { result: [275, 18], resultHosted: [218, 14], gate: [218, 14], sheet: [176, 12], step: [218, 14] },
+    tm: { result: [443, 29], resultHosted: [386, 25], gate: [386, 25], sheet: [344, 23], step: [386, 25] },
+    tm95: { result: [469, 30], resultHosted: [412, 26], gate: [412, 26], sheet: [370, 24], step: [412, 26] },
+    drift: { result: [294, 20], resultHosted: [294, 20], gate: [294, 20], sheet: [252, 18], step: [294, 20] },
+    pension: { result: [588, 38], resultHosted: [531, 34], gate: [531, 34], sheet: [489, 32], step: [531, 34] },
+    c110985: { result: [433, 25], resultHosted: [376, 21], gate: [376, 21], sheet: [334, 19], step: [376, 21] },
+    bRetyped: { result: [319, 19], resultHosted: [319, 19], gate: [319, 19], sheet: [277, 17], step: [319, 19] },
+    c101000: { result: [529, 32], resultHosted: [472, 28], gate: [472, 28], sheet: [430, 26], step: [472, 28] },
+    c100985: { result: [518, 31], resultHosted: [461, 27], gate: [461, 27], sheet: [419, 25], step: [461, 27] },
+    whole: { result: [434, 25], resultHosted: [377, 21], gate: [377, 21], sheet: [335, 19], step: [377, 21] },
+    cMonth874999: { result: [437, 27], resultHosted: [380, 23], gate: [380, 23], sheet: [338, 21], step: [380, 23] },
+    cMonth791667: { result: [531, 32], resultHosted: [474, 28], gate: [474, 28], sheet: [432, 26], step: [474, 28] },
+    date6000Month: { result: [242, 14], resultHosted: [185, 10], gate: [185, 10], sheet: [143, 8], step: [185, 10] },
+    crowned: { result: [443, 29], resultHosted: [386, 25], gate: [386, 25], sheet: [344, 23], step: [386, 25] },
+    sam56: { result: [154, 9], resultHosted: [154, 9], gate: [154, 9], sheet: [112, 7], step: [154, 9] },
+    sam57: { result: [218, 14], resultHosted: [218, 14], gate: [218, 14], sheet: [176, 12], step: [218, 14] },
+    youngerNonWorker: { result: [154, 9], resultHosted: [154, 9], gate: [154, 9], sheet: [112, 7], step: [154, 9] },
+    bothWorking: { result: [242, 14], resultHosted: [185, 10], gate: [185, 10], sheet: [143, 8], step: [185, 10] },
+    c100: { result: [409, 22], resultHosted: [352, 18], gate: [352, 18], sheet: [303, 16], step: [352, 18] },
+    c90: { result: [411, 24], resultHosted: [354, 20], gate: [354, 20], sheet: [305, 18], step: [354, 20] },
+    c80: { result: [411, 24], resultHosted: [354, 20], gate: [354, 20], sheet: [305, 18], step: [354, 20] },
+    c100at101000: { result: [494, 25], resultHosted: [437, 21], gate: [437, 21], sheet: [388, 19], step: [437, 21] },
+    tmBudget: { result: [443, 27], resultHosted: [386, 23], gate: [386, 23], sheet: [337, 21], step: [386, 23] },
+    pensionBudget: { result: [586, 36], resultHosted: [529, 32], gate: [529, 32], sheet: [480, 30], step: [529, 32] },
+    nearline: { result: [556, 31], resultHosted: [499, 27], gate: [499, 27], sheet: [457, 25], step: [499, 27] },
+  }
+
+  it('KD10’s count, pinned: every witness’s line on every host, its words and its dollar figures in the text a screen reader hears — growth is a reviewed number (the longest, the pension household’s Result, 588 words and 38 figures; its gate 531 and 34)', () => {
+    const HOUSEHOLDS: Readonly<Record<string, ScenarioDraft>> = {
+      ...TYPED_BELOW_WITNESSES,
+      ...SURVIVOR_GATE_WITNESSES,
+      c100: councilBudgetHousehold(1),
+      c90: councilBudgetHousehold(0.9),
+      c80: councilBudgetHousehold(0.8),
+      c100at101000: councilBudgetHousehold(1, 101_000),
+      tmBudget: TM_ALL_STICKY_BUDGET,
+      pensionBudget: PENSION_ALL_STICKY_BUDGET,
+      nearline: TM_NEAR_IRMAA_LINE,
+    }
+    const measure = (parts: NoteParts | null): readonly [number, number] => {
+      if (parts === null) throw new Error('[test setup] the household draws the line on every host')
+      const text = notePartsText(parts)
+      return [text.split(/\s+/).filter(Boolean).length, (text.match(/\$\d[\d,]*(?:\.\d\d)?/g) ?? []).length]
+    }
+    const measured = Object.fromEntries(
+      Object.entries(HOUSEHOLDS).map(([key, d]) => [
+        key,
+        {
+          result: measure(workingYearCostTypedBelowLine(d, RESULT)),
+          resultHosted: measure(workingYearCostTypedBelowLine(d, RESULT_HOSTED)),
+          gate: measure(workingYearCostTypedBelowLine(d, GATE)),
+          sheet: measure(workingYearLeftOverAtQuoteLine(d, 'sheet')),
+          step: measure(workingYearLeftOverAtQuoteLine(d, 'step')),
+        },
+      ]),
     )
-    expect(spanRiderLaw('shortLeftOverAtTyped', [tmShort[0]!, tmShort[1]!.replace(RIDER, ', plus any income tax on those shortfalls.')]), 'a short span with the old rider').toBe(SPAN_RIDER_END)
-    expect(spanRiderLaw('bothCredit', [tmCredit[0]!, 'At your spending of $105,000 a year, it would add at most $5,985, $11,000 less.']), 'a credit span with no rider').toBe(SPAN_RIDER_END)
-    expect(spanRiderLaw('bothCredit', [tmCredit[0]!.replace(/\.$/, RIDER), tmCredit[1]!]), 'the rider on both sentences').toBe(SPAN_RIDER_ONCE)
-    expect(spanRiderLaw('shortLeftOverAtTyped', [tmShort[0]!, tmShort[1]!.replace(RIDER, `, plus any income tax on those shortfalls${RIDER}`)]), 'the old rider beside the new').toBe(SPAN_RIDER_OLD)
+    expect(measured).toEqual(KD10)
   })
 
   it('a figure typed by the month names both figures yearly, and "your figure of $84,000 a year" on every host — never "your $84,000 figure" outside the gate’s door, which keeps it (R9)', () => {
@@ -1789,116 +2311,100 @@ describe('workingYearCostTypedBelowLine and its door — R1 over the whole worki
     expect(workingYearCostStaleDoor(DEV_SEEDS.datesavedrisen)?.gate, 'the yes it was typed over names the same door').toEqual(door)
   })
 
-  it('no sentence on any witness says "worse" or carries an em-dash, and every sentence starts with a capital after ". "', () => {
+  it('no sentence on any witness, on any of the five hosts, says "worse" or carries an em-dash, and every sentence starts with a capital after ". "', () => {
+    const lines = (d: ScenarioDraft): readonly NoteParts[] =>
+      [...HOSTS.map((h) => workingYearCostTypedBelowLine(d, h)), workingYearLeftOverAtQuoteLine(d, 'sheet'), workingYearLeftOverAtQuoteLine(d, 'step')].map((p) => {
+        if (p === null) throw new Error('[test setup] every witness draws the line on every host')
+        return p
+      })
+    let read = 0
     for (const d of Object.values(TYPED_BELOW_WITNESSES)) {
-      for (const host of HOSTS) {
-        const parts = line(d, host)
-        for (const text of [parts.opening, ...parts.segments.flatMap((s) => s.sentences)]) {
+      for (const parts of lines(d)) {
+        for (const text of [parts.opening, ...runsOf(parts).flatMap((s) => [s.label, ...s.sentences]), ...(parts.runs?.closing ?? [])]) {
+          read += 1
           expect(text).not.toMatch(/\bworse\b/i)
           expect(text).not.toContain('—')
           for (const sentence of text.split('. ').slice(1)) expect(sentence, text).toMatch(/^[A-Z]/)
         }
       }
     }
+    expect(read, 'non-vacuous').toBeGreaterThan(Object.keys(TYPED_BELOW_WITNESSES).length * 5)
   })
 })
 
 // The seat's half (U11 walk 7's R2; the rebuild's KTD6, host 3): the details sheet, where the Result's door lands, and the
-// walk's money-picture step draw the same spans BELOW the seat's radios (R6: nothing above the radios reads the answer).
-// In the sheet the W row's typed-below note above carries the lean; on the step nothing above does, so the line opens on
-// the counts sentence in its "Your" form. Typed by hand on A and TM; the rest is the one-composer identity.
-describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — the seat’s half of the typed-below line (KTD6, host 3)', () => {
+// walk's money-picture step draw the same runs BELOW the seat's radios (R6: nothing above the radios reads the answer). In
+// the sheet the W row's typed-below note above carries the lean; on the step nothing above does, so the line opens on the
+// counts sentence. The noun by host (KD9): "This" in the sheet, whose title and warning already say "this answer" (the
+// walk-8 card's W8-R5 (d); pilot call 6), "Your" on the step. Typed by hand on A and TM; the rest is the one-composer
+// identity.
+describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — the seat’s half of the typed-below line (KTD6, host 3), in the walk-8 form', () => {
   const typed = (d: ScenarioDraft, amountReal = 84_000): ScenarioDraft => {
     const w = d.workingYearCost
     if (w === undefined) throw new Error('[test setup] the witness holds a W')
     return { ...d, workingYearCost: { kind: 'entered', amountReal, entryPeriod: 'year', stateTaxReading: w.stateTaxReading } }
   }
   const GATE = { kind: 'gate' } as const
-  const RESULT = { kind: 'result', carriesMoved: true } as const
-  const COUNTS_A = 'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. A working year almost always costs at least what you spend, so this answer can look better than it really is.'
-  const COUNTS_TM = 'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. A working year almost always costs at least what you spend, so this answer can look better than it really is.'
-  /** A's one span under the survivor gate, its scoped opener, then the one-span coda's two sentences closing the paragraph. */
-  const A_SPAN =
-    'Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. At your spending of $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge. ' +
-    'If only one of you is alive in a working year, your answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
-    'Such a year’s costs count as $63,000 a year at your figure and $67,500 at your spending.'
-  /** The seat's lead above two or more spans, scoped under the gate (every witness opens it). */
-  const LEAD = 'What this answer adds to your savings in each working year you’re both alive:'
-  /** TM's coda in the seat's "your" words: its own labelled part after the spans. */
-  const TM_CODA = {
-    label: 'If only one of you is alive',
-    sentences: [
-      'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.',
-      'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.',
-    ],
-  }
+  const RESULT_HOSTED = { kind: 'result', carriesMoved: false } as const
   const seat = (d: ScenarioDraft, host: TypedBelowSeatHost): NoteParts => {
     const parts = workingYearLeftOverAtQuoteLine(d, host)
-    if (parts === null) throw new Error('[test setup] the seat draws the spans')
+    if (parts === null) throw new Error('[test setup] the seat draws the runs')
     return parts
   }
 
-  it('A (one span): in the sheet the span alone, a plain paragraph ending on the one-span survivor coda ($63,000 at the figure, $67,500 at the spending: AE2); on the step the counts sentence first', () => {
+  it('A (one run): in the sheet the cap sentence and the run in "This" words, a plain paragraph ending on the survivor part ($63,000 at the figure, $67,500 at the spending: AE2); on the step the counts sentence first, and "Your" in its lean and its run (KD9)', () => {
     const d = DEV_SEEDS.datesavedtyped
     expect(workingYearLeftOverTypedBelow(d)).toBe('84,000')
-    expect(seat(d, 'sheet')).toEqual({ opening: A_SPAN, segments: [], door: null })
-    expect(seat(d, 'step')).toEqual({ opening: `${COUNTS_A} ${A_SPAN}`, segments: [], door: null })
-    for (const host of ['sheet', 'step'] as const) expect(isPlainNote(seat(d, host)), `${host}: one span stays a plain note`).toBe(true)
+    expect(seat(d, 'sheet')).toEqual(plain(`${A_CAP} ${A_TAIL('This')}`))
+    expect(seat(d, 'step')).toEqual(plain(`${counts('Your', '84,000', '90,000')} ${A_CAP} ${A_TAIL('Your')}`))
+    for (const host of ['sheet', 'step'] as const) expect(isPlainNote(seat(d, host)), `${host}: one run stays a plain note`).toBe(true)
   })
 
-  it('TM (three spans): the seat’s scoped lead, then one labelled part per span in "Your" words, then the survivor coda as its own part; on the step the counts sentence opens ahead of the lead', () => {
+  it('TM (three runs): in the sheet the cap sentence and the scoped lead, then one item per run in "This" words, then the survivor part after the list; on the step the counts sentence ahead of them, and "Your" in every run', () => {
     const d = DEV_SEEDS.datesavedtypedmoved
-    const sheet = seat(d, 'sheet')
-    expect(sheet.opening).toBe(LEAD)
-    expect(sheet.segments.map((s) => s.label)).toEqual(['2026 through 2028', '2029 through 2032', '2033 through 2035'])
-    expect(sheet.segments[1]!.sentences).toEqual([
-      'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and your answer would add nothing.',
-      'Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
-    ])
-    expect(sheet.coda).toEqual(TM_CODA)
-    expect(sheet.door).toBeNull()
-    expect(seat(d, 'step')).toEqual({ ...sheet, opening: `${COUNTS_TM} ${LEAD}` })
+    expect(seat(d, 'sheet')).toEqual(block(`${TM_CAP} ${SCOPED_LEAD}`, TM_RUNS('This'), TM_SURVIVOR))
+    expect(seat(d, 'step')).toEqual(block(`${counts('Your', '84,000', '105,000')} ${TM_CAP} ${SCOPED_LEAD}`, TM_RUNS('Your'), TM_SURVIVOR))
     expect(workingYearLeftOverTypedBelow(d)).toBe('84,000')
   })
 
-  it('the pension and crowned households on both seat hosts: the seat’s scoped lead above the spans, the coda after them; the sheet opens on the lead, the step still on the counts sentence', () => {
-    const PENSION_CODA = TM_CODA
+  it('the pension and crowned households on both seat hosts: the cap sentence and the scoped lead above the runs, every later label "If you’re still working in …", the survivor part after them; the sheet opens on the cap sentence, the step on the counts sentence', () => {
     for (const [key, d, labels] of [
-      ['pension', TYPED_BELOW_WITNESSES.pension, ['2026 through 2028', '2029', '2030 through 2031', '2032', '2033 through 2035']],
-      ['crowned', TYPED_BELOW_WITNESSES.crowned, ['2026 through 2028', '2029 through 2032', '2033 through 2035']],
+      [
+        'pension',
+        TYPED_BELOW_WITNESSES.pension,
+        ['2026 through 2028', 'If you’re still working in 2029', 'If you’re still working in 2030 through 2031', 'If you’re still working in 2032', 'If you’re still working in 2033 through 2035'],
+      ],
+      ['crowned', TYPED_BELOW_WITNESSES.crowned, ['2026 through 2028', 'If you’re still working in 2029 through 2032', 'If you’re still working in 2033 through 2035']],
     ] as const) {
       const sheet = seat(d, 'sheet')
-      expect(sheet.opening, `${key}: the sheet opens on the scoped lead`).toBe(LEAD)
-      expect(sheet.segments.map((s) => s.label), key).toEqual(labels)
-      expect(sheet.coda, `${key}: the coda after the spans`).toEqual(PENSION_CODA)
-      expect(seat(d, 'step'), `${key}: the step opens on the counts sentence, then the lead`).toEqual({ ...sheet, opening: `${COUNTS_TM} ${LEAD}` })
+      expect(sheet.opening, `${key}: the sheet opens on the cap sentence and the lead`).toBe(`${TM_CAP} ${SCOPED_LEAD}`)
+      expect(runsOf(sheet).map((s) => s.label), key).toEqual(labels)
+      expect(sheet.runs?.closing, `${key}: the survivor part after the runs`).toEqual(TM_SURVIVOR)
+      expect(seat(d, 'step'), `${key}: the step opens on the counts sentence, then the cap sentence and the lead`).toEqual(
+        block(`${counts('Your', '84,000', '105,000')} ${TM_CAP} ${SCOPED_LEAD}`, runsToYour(runsOf(sheet)), TM_SURVIVOR),
+      )
     }
-    // The pension household's one-year short spans carry the one-year scope ("that working year, if you’re both alive,").
-    expect(seat(TYPED_BELOW_WITNESSES.pension, 'sheet').segments[3]!.sentences[0]).toBe(
-      'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $3,652 short, and your answer would add nothing.',
+    // The pension household's one-year short runs carry the one-year scope ("that working year, if you’re both alive,").
+    expect(runsOf(seat(TYPED_BELOW_WITNESSES.pension, 'sheet'))[3]!.sentences[0]).toBe(
+      'At your spending of $105,000 a year, that working year, if you’re both alive, comes up $3,652 short, which would be taken from your savings, and the answer at that spending would add nothing.',
     )
   })
 
-  it('ONE composer (U4 test 5): on every witness the seat’s spans and coda are the gate’s word for word, and the Result’s apart from "This" / "Your" — the sheet, the gate and the Result can never word a span or the coda two ways', () => {
-    const toYour = (s: string): string => s.replace(/\bThis answer\b/g, 'Your answer').replace(/\bthis answer\b/g, 'your answer')
+  it('ONE composer (U4 test 5): on every witness the step’s line is the gate’s whole ("Your" on both), and the sheet’s is the Result’s without its counts sentence (no moved clause there), "This" on both; the two pairs differ only in the noun — the hosts can never word a run or the survivor part two ways', () => {
     for (const [key, d] of Object.entries(TYPED_BELOW_WITNESSES)) {
       const sheet = seat(d, 'sheet')
       const gate = workingYearCostTypedBelowLine(d, GATE)!
-      const result = workingYearCostTypedBelowLine(d, RESULT)!
-      if (gate.segments.length === 0) {
-        expect(gate.opening.endsWith(` ${sheet.opening}`), `${key}: the gate ends on the seat’s one span and its coda`).toBe(true)
-        expect(toYour(result.opening).endsWith(` ${sheet.opening}`), `${key}: the Result ends on it, "This" for "Your"`).toBe(true)
-        expect(sheet.segments, key).toEqual([])
+      const result = workingYearCostTypedBelowLine(d, RESULT_HOSTED)!
+      expect(seat(d, 'step'), `${key}: the step is the gate’s line`).toEqual(gate)
+      expect(result.opening.endsWith(` ${sheet.opening}`), `${key}: the Result ends its opening on the sheet’s`).toBe(true)
+      if (runsOf(gate).length === 0) {
+        expect(gate.opening.endsWith(` ${toYour(sheet.opening)}`), `${key}: the gate ends on the sheet’s one run and survivor part, "Your" for "This"`).toBe(true)
+        expect(isPlainNote(sheet), key).toBe(true)
       } else {
-        expect(sheet.segments, key).toEqual(gate.segments)
-        expect(result.segments.map((s) => ({ label: s.label, sentences: s.sentences.map(toYour) })), key).toEqual(sheet.segments)
-        expect(sheet.opening, key).toBe(LEAD)
-        expect(sheet.coda, `${key}: the coda is the gate’s`).toEqual(gate.coda)
-        expect(result.coda === undefined ? undefined : { label: result.coda.label, sentences: result.coda.sentences.map(toYour) }, `${key}: and the Result’s, "This" for "Your"`).toEqual(sheet.coda)
-        expect(sheet.coda, `${key}: every witness opens the gate, so every block carries a coda`).toBeDefined()
+        expect(sheet.runs, `${key}: the sheet’s runs are the Result’s`).toEqual(result.runs)
+        expect(gate.runs, `${key}: and the gate’s, "Your" for "This"`).toEqual({ items: runsToYour(runsOf(sheet)), closing: sheet.runs!.closing })
+        expect(sheet.runs!.closing, `${key}: every witness opens the gate, so every list carries a survivor part`).not.toBeNull()
       }
-      expect(seat(d, 'step').segments, `${key}: the step draws the sheet’s spans`).toEqual(sheet.segments)
-      expect(seat(d, 'step').coda, `${key}: and its coda`).toEqual(sheet.coda)
     }
   })
 
@@ -1907,7 +2413,7 @@ describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — t
     expect(workingYearLeftOverMoved(tm)?.typedBelow).toBe(workingYearLeftOverTypedBelow(tm))
   })
 
-  it('under an answer the run does not carry — unanswered, spent, not sure — the typed figure is still named (it reads no answer) and no spans are drawn, on either host', () => {
+  it('under an answer the run does not carry — unanswered, spent, not sure — the typed figure is still named (it reads no answer) and no runs are drawn, on either host', () => {
     for (const [name, d] of [['A', DEV_SEEDS.datesavedtyped], ['TM', DEV_SEEDS.datesavedtypedmoved], ['B retyped', typed(DEV_SEEDS.datesavedrisenshort)]] as const) {
       for (const answer of [undefined, { kind: 'spent' }, { kind: 'not-sure' }] as const) {
         const x = answered(d, answer)
@@ -1941,7 +2447,7 @@ describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — t
     }
   })
 
-  it('a "saved" answer that is not asked (year 0 at the typed figure below $1) carries nothing, so no spans', () => {
+  it('a "saved" answer that is not asked (year 0 at the typed figure below $1) carries nothing, so no runs', () => {
     const notAsked = { ...typed(DEV_SEEDS.datesavedrisen, 101_000), annualSpendingReal: 110_000 }
     expect(workingYearLeftOverShownState(notAsked), 'the premise: not asked').toBe('not-asked')
     expect(workingYearLeftOverAtQuoteLine(notAsked, 'step')).toBeNull()
@@ -1949,15 +2455,19 @@ describe('workingYearLeftOverTypedBelow and workingYearLeftOverAtQuoteLine — t
 })
 
 // The whole-window read (the rebuild's U3: `docs/plans/features/typed-below-whole-window-rebuild-spec.md` KTD3, KTD4, the
-// witness table). Every expected span below is typed by hand from the engine's own per-year figures, never read back from
-// the code under test: the research record's tables (`u11-wholewindow\research\witnesses.md`: P_Q, P_W and cr_W per year,
-// each printed by the shipped producer and the overlay's credit) and, for the four households it had no table for (B
-// retyped's later years, C typed at $100,985, the whole household, the crowned one), the U3 probe beside it
-// (`research\wit\u3-probe.out.txt`: each year's print at both figures through `workingYearLedgerForRun`, and each answer's
-// credit through U2's `workingYearCredit`). The quote answer's credit in a year is the smaller of that year's print at the
-// quote and its cap, min(the stored $16,985, year 0 at the quote); a short year credits nothing. The engine pins (each
-// credit `Object.is` the overlay's `creditComposed`) are `src/engine/__tests__/workingYearCredit.test.ts`'s.
-describe('workingYearTypedBelowWindow — the typed-below line’s whole-window read (the rebuild’s U3)', () => {
+// witness table), with the walk-8 form's changes to its grouping (`docs/plans/features/typed-below-walk8-form-build-spec.md`,
+// U2: `same` joins and prints its credit, W8-R5 (a); a run splits where its year pairing fails, KD6; the read carries the
+// quote answer's cap, KD5). Every expected span below is typed by hand from the engine's own per-year figures, never read
+// back from the code under test: the research record's tables (`u11-wholewindow\research\witnesses.md`: P_Q, P_W and cr_W
+// per year, each printed by the shipped producer and the overlay's credit) and, for the households it had no table for (B
+// retyped's later years, C typed at $100,985, the whole household, the crowned one, the near-line household), the per-year
+// probes beside it (`research\wit\u3-probe.out.txt`, and the walk-8 form's per-year probe of the same reads: each year's
+// print at both figures through `workingYearLedgerForRun`, and each answer's credit through U2's `workingYearCredit`, the
+// rebuild's U2, not the walk-8 form's). The quote answer's credit in a year
+// is the smaller of that year's print at the quote and its cap, min(the stored $16,985, year 0 at the quote); a short year
+// credits nothing. The engine pins (each credit `Object.is` the overlay's `creditComposed`) are
+// `src/engine/__tests__/workingYearCredit.test.ts`'s.
+describe('workingYearTypedBelowWindow — the typed-below line’s whole-window read (the rebuild’s U3, the walk-8 form’s grouping)', () => {
   const $ = (least: number, most: number = least) => ({ least, most })
   const both = (
     firstYear: number,
@@ -1973,6 +2483,8 @@ describe('workingYearTypedBelowWindow — the typed-below line’s whole-window 
     credit: $(16_985),
     difference: $(16_985),
   })
+  /** A `same` span: both answers credit `credit` (W8-R5 (a): it now states its figure). */
+  const same = (firstYear: number, lastYear: number, credit: number): TypedBelowSpan => ({ firstYear, lastYear, kind: 'same', credit: $(credit) })
   const readOf = (key: TypedBelowWitness) => {
     const read = workingYearTypedBelowWindow(TYPED_BELOW_WITNESSES[key])
     if (read === null || read.kind !== 'read') throw new Error(`[test setup] ${key} reads the window (got ${JSON.stringify(read)})`)
@@ -2013,7 +2525,7 @@ describe('workingYearTypedBelowWindow — the typed-below line’s whole-window 
     expect(spansOf('pa')).toEqual([both(2026, 2035, [16_064], [10_064], [6_000])])
   })
 
-  it('TM: three spans — $16,985 against $5,985; the 2029–2032 run short $3,652 to $4,015 at $105,000 with $16,985 credited ($20,637 to $21,000 a year apart); then $16,985 against $5,985 again (x_t’s $762 years are $11,000 apart)', () => {
+  it('TM: three spans — $16,985 against $5,985; the 2029–2032 run short $3,652 to $4,015 at $105,000 with $16,985 credited ($20,637 to $21,000 a year apart: the difference rises with the shortfall, so no year is named); then $16,985 against $5,985 again (x_t’s $762 years are $11,000 apart)', () => {
     expect(spansOf('tm')).toEqual([
       both(2026, 2028, [16_985], [5_985], [11_000]),
       { firstYear: 2029, lastYear: 2032, kind: 'shortLeftOverAtTyped', shortAtQuote: $(3_652, 4_015), credit: $(16_985), difference: $(20_637, 21_000) },
@@ -2021,10 +2533,14 @@ describe('workingYearTypedBelowWindow — the typed-below line’s whole-window 
     ])
   })
 
-  it('TM at $95,000 (the tie rule’s witness): three spans — 2028’s tie at the quote answer’s cap ($15,985) never joins 2029’s drift ($5,985 to $6,348), and year 0’s tie joins the cap years by their one figure', () => {
+  // A PREMISE THAT CHANGED (KD6, pilot call 1): the 2029–2032 drift at the quote ($5,985 in 2029 and 2030, $6,348 in 2031
+  // and 2032) runs against its difference ($11,000, then $10,637), and each end of the first range spans two years, so no
+  // one year can be named: the run splits year by year, 2029–2030 and 2031–2032.
+  it('TM at $95,000 (the tie rule’s witness): four spans — 2028’s tie at the quote answer’s cap ($15,985) never joins 2029’s drift, and the drift splits where it runs against its difference (KD6: 2029–2030 at $5,985, 2031–2032 at $6,348); year 0’s tie joins the cap years by their one figure', () => {
     expect(spansOf('tm95')).toEqual([
       both(2026, 2028, [16_985], [15_985], [1_000]),
-      both(2029, 2032, [16_985], [5_985, 6_348], [10_637, 11_000]),
+      both(2029, 2030, [16_985], [5_985], [11_000]),
+      both(2031, 2032, [16_985], [6_348], [10_637]),
       both(2033, 2035, [16_985], [15_985], [1_000]),
     ])
     const read = readOf('tm95')
@@ -2043,7 +2559,7 @@ describe('workingYearTypedBelowWindow — the typed-below line’s whole-window 
     expect(read.years.map((y) => y.binding), 'this answer: the stored $16,985, below year 0’s $26,985, caps every year').toEqual(Array(10).fill('cap'))
   })
 
-  it('the drift household (saved at its own $26,985): two spans — year 0’s tie joins the drift, 2026–2032 credited $25,722 to $26,985 against $19,722 to $20,985; then the cap, $26,985 against $20,985', () => {
+  it('the drift household (saved at its own $26,985): two spans — year 0’s tie joins the drift, 2026–2032 credited $25,722 to $26,985 against $19,722 to $20,985 (the two drifts rise together, the difference flat: no year named); then the cap, $26,985 against $20,985', () => {
     expect(spansOf('drift')).toEqual([
       both(2026, 2032, [25_722, 26_985], [19_722, 20_985], [6_000]),
       both(2033, 2035, [26_985], [20_985], [6_000]),
@@ -2054,11 +2570,14 @@ describe('workingYearTypedBelowWindow — the typed-below line’s whole-window 
     expect(read.years.map((y) => y.bindingAtQuote)).toEqual([...sevenOwn, 'cap', 'cap', 'cap'])
   })
 
-  it('the pension household: five spans in time order — 2029 and 2032 each its own short span, 2030–2031 a drift at the quote ($3,005 to $3,368)', () => {
+  // A PREMISE THAT CHANGED (KD6): the 2030–2031 drift at the quote ($3,005, then $3,368) runs against its difference
+  // ($13,980, then $13,617), each end one year, so the span carries its pairing: the first range in the words' order (the
+  // quote answer's credit) names 2030 and 2031, and the difference prints most first.
+  it('the pension household: five spans in time order — 2029 and 2032 each its own short span, 2030–2031 a drift at the quote ($3,005 to $3,368) that carries its year pairing (the difference most first)', () => {
     expect(spansOf('pension')).toEqual([
       both(2026, 2028, [16_985], [5_985], [11_000]),
       { firstYear: 2029, lastYear: 2029, kind: 'shortLeftOverAtTyped', shortAtQuote: $(4_015), credit: $(16_985), difference: $(21_000) },
-      both(2030, 2031, [16_985], [3_005, 3_368], [13_617, 13_980]),
+      { ...both(2030, 2031, [16_985], [3_005, 3_368], [13_617, 13_980]), pairing: { named: 'creditAtQuote', years: [2030, 2031], mostFirst: ['difference'] } },
       { firstYear: 2032, lastYear: 2032, kind: 'shortLeftOverAtTyped', shortAtQuote: $(3_652), credit: $(16_985), difference: $(20_637) },
       both(2033, 2035, [16_985], [5_985], [11_000]),
     ])
@@ -2094,30 +2613,75 @@ describe('workingYearTypedBelowWindow — the typed-below line’s whole-window 
     ])
   })
 
-  it('the whole household (year 0 at the quote above the stored figure): year 0 reads `same` — the stored $16,985 caps both — and the lean starts in 2029, when the alimony ends', () => {
+  // PREMISES THAT CHANGED: `same` states its credit, $16,985 (W8-R5 (a)); and the 2029–2032 drift at the quote ($10,985 in
+  // 2029 and 2030, $11,348 in 2031 and 2032) runs against its difference ($6,000, then $5,637), each end two years, so it
+  // splits (KD6).
+  it('the whole household (year 0 at the quote above the stored figure): year 0 reads `same` — the stored $16,985 caps both, its credit stated — and the lean starts in 2029, when the alimony ends, split where the quote answer’s drift runs against the difference (2029–2030 at $10,985, 2031–2032 at $11,348)', () => {
     expect(spansOf('whole')).toEqual([
-      { firstYear: 2026, lastYear: 2028, kind: 'same' },
-      both(2029, 2032, [16_985], [10_985, 11_348], [5_637, 6_000]),
-      { firstYear: 2033, lastYear: 2035, kind: 'same' },
+      same(2026, 2028, 16_985),
+      both(2029, 2030, [16_985], [10_985], [6_000]),
+      both(2031, 2032, [16_985], [11_348], [5_637]),
+      same(2033, 2035, 16_985),
     ])
   })
 
-  it('`same`: `?seed=date` with $6,000 a month typed reads one span; twelve cents a year below the quote ($8,749.99 a month) reads `same` only where neither answer is short, its short 2029–2032 still short at $1 a year less (the draws compared to the cent, round 3); $7,916.67 a month reads every span $9,999 apart, 2035 included (credits, never prints)', () => {
+  // PREMISES THAT CHANGED: every `same` span states its credit (W8-R5 (a)); and $7,916.67 a month's 2029–2032 shortfall at
+  // the quote falls ($4,015, then $3,652) as its credit rises ($5,984, then $6,347), each end two years, so it splits (KD6).
+  it('`same`: `?seed=date` with $6,000 a month typed reads one span at $16,985; twelve cents a year below the quote ($8,749.99 a month) reads `same` at $5,985 only where neither answer is short, its short 2029–2032 still short at $1 a year less (the draws compared to the cent, round 3); $7,916.67 a month reads every span $9,999 apart, 2035 included (credits, never prints), its short run split in two', () => {
     expect(spansOf('cMonth874999')).toEqual([
-      { firstYear: 2026, lastYear: 2028, kind: 'same' },
+      same(2026, 2028, 5_985),
       { firstYear: 2029, lastYear: 2032, kind: 'shortStillShortAtTyped', shortAtQuote: $(3_652, 4_015), shortAtTyped: $(3_652, 4_015), difference: $(1) },
-      { firstYear: 2033, lastYear: 2035, kind: 'same' },
+      same(2033, 2035, 5_985),
     ])
-    expect(spansOf('date6000Month')).toEqual([{ firstYear: 2026, lastYear: 2035, kind: 'same' }])
+    expect(spansOf('date6000Month')).toEqual([same(2026, 2035, 16_985)])
     expect(spansOf('cMonth791667')).toEqual([
       both(2026, 2028, [15_984], [5_985], [9_999]),
-      { firstYear: 2029, lastYear: 2032, kind: 'shortLeftOverAtTyped', shortAtQuote: $(3_652, 4_015), credit: $(5_984, 6_347), difference: $(9_999) },
+      { firstYear: 2029, lastYear: 2030, kind: 'shortLeftOverAtTyped', shortAtQuote: $(4_015), credit: $(5_984), difference: $(9_999) },
+      { firstYear: 2031, lastYear: 2032, kind: 'shortLeftOverAtTyped', shortAtQuote: $(3_652), credit: $(6_347), difference: $(9_999) },
       both(2033, 2035, [15_984], [5_985], [9_999]),
+    ])
+  })
+
+  it('the near-line household (TM under pre-tax-first, Alex’s working-year investment income raised): every year through 2032 short at the quote, year 0 among them, so the answer there is never asked and credits nothing anywhere; its 2029–2032 shortfall falls ($12,815, then $12,452) as the credit rises ($8,185, then $8,548), each end two years, so it splits (KD6)', () => {
+    const read = workingYearTypedBelowWindow(TM_NEAR_IRMAA_LINE)
+    if (read?.kind !== 'read') throw new Error('[test setup] the near-line household reads its window')
+    expect(read.spans).toEqual([
+      { firstYear: 2026, lastYear: 2028, kind: 'shortLeftOverAtTyped', shortAtQuote: $(2_815), credit: $(16_985), difference: $(19_800) },
+      { firstYear: 2029, lastYear: 2030, kind: 'shortLeftOverAtTyped', shortAtQuote: $(12_815), credit: $(8_185), difference: $(21_000) },
+      { firstYear: 2031, lastYear: 2032, kind: 'shortLeftOverAtTyped', shortAtQuote: $(12_452), credit: $(8_548), difference: $(21_000) },
+      nothingAtQuote(2033, 2035),
     ])
   })
 
   it('the crowned household is TM with more saved: savings never reach a working year’s cash, so its read is TM’s to the dollar', () => {
     expect(readOf('crowned')).toEqual(readOf('tm'))
+  })
+
+  it('the read carries the quote answer’s cap (KD5, keyed on the rebuild’s KTD4: the smaller of the stored figure and year 0 at the quote, on the printed grain): year 0 there below the stored $16,985 is the cap; year 0 short or at exactly $0 there, never asked; else the stored figure binds both', () => {
+    const CAPS: Readonly<Record<TypedBelowWitness, TypedBelowQuoteCap>> = {
+      a: { kind: 'yearZeroLeftOver', leftOver: 10_985 },
+      pa: { kind: 'yearZeroLeftOver', leftOver: 10_064 },
+      tm: { kind: 'yearZeroLeftOver', leftOver: 5_985 },
+      tm95: { kind: 'yearZeroLeftOver', leftOver: 15_985 },
+      drift: { kind: 'yearZeroLeftOver', leftOver: 20_985 },
+      pension: { kind: 'yearZeroLeftOver', leftOver: 5_985 },
+      c110985: { kind: 'yearZeroNone' },
+      bRetyped: { kind: 'yearZeroShort', short: 4_015 },
+      c101000: { kind: 'yearZeroLeftOver', leftOver: 5_985 },
+      c100985: { kind: 'yearZeroLeftOver', leftOver: 5_985 },
+      whole: { kind: 'stored' },
+      cMonth874999: { kind: 'yearZeroLeftOver', leftOver: 5_985 },
+      cMonth791667: { kind: 'yearZeroLeftOver', leftOver: 5_985 },
+      date6000Month: { kind: 'stored' },
+      crowned: { kind: 'yearZeroLeftOver', leftOver: 5_985 },
+    }
+    for (const key of Object.keys(CAPS) as TypedBelowWitness[]) expect(readOf(key).quoteCap, key).toEqual(CAPS[key])
+    const nearline = workingYearTypedBelowWindow(TM_NEAR_IRMAA_LINE)
+    expect(nearline?.kind === 'read' && nearline.quoteCap, 'the near-line household: year 0 at the quote $2,815 short').toEqual({ kind: 'yearZeroShort', short: 2_815 })
+    // The drift household is saved at its own $26,985, so its quote answer's year 0 ($20,985) is the cap there, and C on its
+    // all-sticky budget, year 0 at the quote equal to its stored $5,985, reads the stored figure (KTD4's tie: the stored binds).
+    const c100 = workingYearTypedBelowWindow(councilBudgetHousehold(1))
+    expect(c100?.kind === 'read' && c100.quoteCap, 'C at 100 % sticky').toEqual({ kind: 'stored' })
   })
 
   it('on every witness: every year of the window lies in exactly one span, in time order (R4); each year’s credit is at least the quote answer’s and its print at least the quote’s; every span but `same` is a real difference', () => {
@@ -2131,6 +2695,160 @@ describe('workingYearTypedBelowWindow — the typed-below line’s whole-window 
         expect(y.bottomLine >= y.bottomLineAtQuote, `${key} ${y.calendarYear}: print`).toBe(true)
       }
       for (const s of read.spans) if (s.kind !== 'same') expect(s.difference.least, `${key} ${s.firstYear}`).toBeGreaterThan(0)
+    }
+  })
+
+  // KD6's pairing law (the walk-8 form council: "ranges carry each end's year"; the walk-8 card's W8-R3 (a)), as a property
+  // over runs of `TypedBelowYear`-shaped years built by hand, one kind a run. The test reads each kind's figures in the
+  // words' order — the spending side, the typed side, the close — through its OWN restatement (never the composer's
+  // `SPAN_FIGURE_READS`), and every figure is whole dollars, so each year's printed figure is the figure itself (a short
+  // year's draw on the cent grain too: its cash is its print).
+  const FIGURES_OF: Readonly<Record<TypedBelowYearKind, readonly (readonly [TypedBelowFigure, (y: TypedBelowYear) => number])[]>> = {
+    same: [['credit', (y) => y.credit]],
+    bothCredit: [
+      ['creditAtQuote', (y) => y.creditAtQuote],
+      ['credit', (y) => y.credit],
+      ['difference', (y) => y.credit - y.creditAtQuote],
+    ],
+    quoteCreditsNothing: [
+      ['credit', (y) => y.credit],
+      ['difference', (y) => y.credit],
+    ],
+    shortLeftOverAtTyped: [
+      ['shortAtQuote', (y) => -y.bottomLineAtQuote],
+      ['credit', (y) => y.credit],
+      ['difference', (y) => y.credit - y.bottomLineAtQuote],
+    ],
+    shortStillShortAtTyped: [
+      ['shortAtQuote', (y) => -y.bottomLineAtQuote],
+      ['shortAtTyped', (y) => -y.bottomLine],
+      ['difference', (y) => y.bottomLine - y.bottomLineAtQuote],
+    ],
+    shortEvenAtTyped: [
+      ['shortAtQuote', (y) => -y.bottomLineAtQuote],
+      ['difference', (y) => -y.bottomLineAtQuote],
+    ],
+  }
+  type YearFigures = Pick<TypedBelowYear, 'credit' | 'creditAtQuote' | 'bottomLine' | 'bottomLineAtQuote'>
+  /** A working year built by hand, its cash the print it is read from; the bindings are unread by the law. */
+  const yearOf = (calendarYear: number, kind: TypedBelowYearKind, f: YearFigures): TypedBelowYear => ({
+    calendarYear,
+    kind,
+    ...f,
+    binding: 'cap',
+    bindingAtQuote: 'cap',
+    cash: f.bottomLine,
+    cashAtQuote: f.bottomLineAtQuote,
+  })
+  /** Each kind's year, as the read builds it (`yearKind`): four levels a figure, so ties and both directions are common. */
+  const level = fc.constantFrom(1_000, 2_000, 3_000, 4_000)
+  const YEAR_OF_KIND: Readonly<Record<TypedBelowYearKind, fc.Arbitrary<YearFigures>>> = {
+    same: level.map((c) => ({ credit: c, creditAtQuote: c, bottomLine: c, bottomLineAtQuote: c })),
+    bothCredit: fc.tuple(level, level).map(([q, gap]) => ({ credit: q + gap, creditAtQuote: q, bottomLine: q + gap, bottomLineAtQuote: q })),
+    quoteCreditsNothing: level.map((c) => ({ credit: c, creditAtQuote: 0, bottomLine: c, bottomLineAtQuote: 0 })),
+    shortLeftOverAtTyped: fc.tuple(level, level).map(([s, c]) => ({ credit: c, creditAtQuote: 0, bottomLine: c, bottomLineAtQuote: -s })),
+    shortStillShortAtTyped: fc.tuple(level, level).map(([t, gap]) => ({ credit: 0, creditAtQuote: 0, bottomLine: -t, bottomLineAtQuote: -(t + gap) })),
+    shortEvenAtTyped: level.map((s) => ({ credit: 0, creditAtQuote: 0, bottomLine: 0, bottomLineAtQuote: -s })),
+  }
+  const KIND_LIST = Object.keys(YEAR_OF_KIND) as TypedBelowYearKind[]
+  const runArb = fc
+    .constantFrom(...KIND_LIST)
+    .chain((kind) => fc.array(YEAR_OF_KIND[kind], { minLength: 1, maxLength: 6 }).map((rows) => ({ kind, years: rows.map((f, t) => yearOf(2026 + t, kind, f)) })))
+  /** The pairing law's verdict on a run, checked against the run's own figures: `null` where it holds, else what broke. */
+  const pairingHolds = (kind: TypedBelowYearKind, years: readonly TypedBelowYear[], p: TypedBelowPairing | null | 'fails'): string | null => {
+    if (years.length <= 2 && p === 'fails') return 'a run of one or two years always pairs'
+    if (p === 'fails') return null
+    const ranged = FIGURES_OF[kind].map(([name, read]) => ({ name, values: years.map(read) })).filter((f) => Math.min(...f.values) !== Math.max(...f.values))
+    const [first, ...later] = ranged
+    if (first === undefined) return p === null ? null : 'no range, no pairing'
+    const lo = Math.min(...first.values)
+    const hi = Math.max(...first.values)
+    if (p === null) {
+      // Every later range rises with the first: its least where the first is least, its most where the first is most.
+      for (const f of later) {
+        const flo = Math.min(...f.values)
+        const fhi = Math.max(...f.values)
+        if (first.values.some((v, i) => (v === lo && f.values[i] !== flo) || (v === hi && f.values[i] !== fhi))) return `${f.name} does not rise with ${first.name}`
+      }
+      return null
+    }
+    if (p.named !== first.name) return 'the named range is the run’s first range in the words’ order'
+    const atLo = years.filter((_, i) => first.values[i] === lo)
+    const atHi = years.filter((_, i) => first.values[i] === hi)
+    if (atLo.length !== 1 || atHi.length !== 1) return 'each end of the named range falls in exactly one year'
+    if (!(p.years[0] < p.years[1])) return 'the named years in time order'
+    if ([...p.years].sort().join() !== [atLo[0]!.calendarYear, atHi[0]!.calendarYear].sort().join()) return 'the named years are the two ends’ years'
+    const [early, late] = p.years.map((cy) => years.findIndex((y) => y.calendarYear === cy)) as [number, number]
+    for (const f of ranged) {
+      const ends = [f.values[early]!, f.values[late]!].sort((a, b) => a - b)
+      if (ends[0] !== Math.min(...f.values) || ends[1] !== Math.max(...f.values)) return `${f.name}: its printed ends are its least and its most`
+      if (p.mostFirst.includes(f.name) !== (f.values[early]! > f.values[late]!)) return `${f.name}: most first exactly where its first year holds its most`
+    }
+    if (p.mostFirst.length === 0 || p.mostFirst.length === ranged.length) return 'a pairing only where a later range runs the other way'
+    return null
+  }
+
+  it('KD6’s year-order pairing law, a property (fast-check, 2,000 runs of one to six hand-built years of one kind): never "fails" on one or two years; where it pairs, each end of the named range (the first in the words’ order) falls in exactly one year, the years in time order, every range printing its least and its most there, most first exactly where it falls; where it names none, every later range rises with the first', () => {
+    const outcomes = { paired: 0, none: 0, fails: 0 }
+    fc.assert(
+      fc.property(runArb, ({ kind, years }) => {
+        const p = typedBelowPairingOf(kind, years)
+        outcomes[p === 'fails' ? 'fails' : p === null ? 'none' : 'paired'] += 1
+        expect(pairingHolds(kind, years, p), `${kind}: ${JSON.stringify(years.map((y) => FIGURES_OF[kind].map(([, read]) => read(y))))} → ${JSON.stringify(p)}`).toBeNull()
+      }),
+      { numRuns: 2_000 },
+    )
+    expect(outcomes.paired, 'pairings drawn').toBeGreaterThan(0)
+    expect(outcomes.none, 'runs that name no year').toBeGreaterThan(0)
+    expect(outcomes.fails, 'runs that fail').toBeGreaterThan(0)
+    // The verdict's own plants, each beside the law's real answer on the same years (insight 152): a two-year drift whose
+    // difference runs the other way, its first range FALLING in time (so it prints most first too).
+    const falling = [
+      yearOf(2026, 'bothCredit', { credit: 4_000, creditAtQuote: 3_000, bottomLine: 4_000, bottomLineAtQuote: 3_000 }),
+      yearOf(2027, 'bothCredit', { credit: 4_000, creditAtQuote: 2_000, bottomLine: 4_000, bottomLineAtQuote: 2_000 }),
+    ]
+    const real = typedBelowPairingOf('bothCredit', falling)
+    expect(real, 'the law: the first range names 2026 and 2027, falling, the difference rising').toEqual({ named: 'creditAtQuote', years: [2026, 2027], mostFirst: ['creditAtQuote'] })
+    expect(pairingHolds('bothCredit', falling, real), 'the control').toBeNull()
+    expect(pairingHolds('bothCredit', falling, 'fails'), 'a two-year run that fails').toBe('a run of one or two years always pairs')
+    expect(pairingHolds('bothCredit', falling, null), 'no pairing where a range runs the other way').toBe('difference does not rise with creditAtQuote')
+    expect(pairingHolds('bothCredit', falling, { ...real as TypedBelowPairing, years: [2027, 2026] }), 'the years out of time order').toBe('the named years in time order')
+    expect(pairingHolds('bothCredit', falling, { ...real as TypedBelowPairing, mostFirst: [] }), 'every range least first').toBe('creditAtQuote: most first exactly where its first year holds its most')
+    expect(pairingHolds('bothCredit', falling, { ...real as TypedBelowPairing, named: 'difference' }), 'a later range named').toBe('the named range is the run’s first range in the words’ order')
+  })
+
+  it('…and on every witness the read’s spans (the composer’s `spansOf`) are runs of one kind whose pairing never fails, each carrying the law’s own pairing (absent, never `undefined`, where it names none), covering the window once in time order; the split is year by year, so `whole`, `tm95`, `cMonth791667` and the near-line household break 2029–2032 exactly where adding 2031 would fail', () => {
+    const households: Readonly<Record<string, ScenarioDraft>> = { ...TYPED_BELOW_WITNESSES, nearline: TM_NEAR_IRMAA_LINE, pensionBudget: PENSION_ALL_STICKY_BUDGET }
+    let paired = 0
+    for (const [key, d] of Object.entries(households)) {
+      const read = workingYearTypedBelowWindow(d)
+      if (read?.kind !== 'read') throw new Error(`[test setup] ${key} reads its window`)
+      for (const s of read.spans) {
+        const years = read.years.filter((y) => y.calendarYear >= s.firstYear && y.calendarYear <= s.lastYear)
+        const who = `${key} ${s.firstYear}–${s.lastYear}`
+        expect(years.every((y) => y.kind === s.kind), `${who}: one kind`).toBe(true)
+        const p = typedBelowPairingOf(s.kind, years)
+        expect(p, `${who}: never fails`).not.toBe('fails')
+        expect(s.pairing ?? null, `${who}: the law’s own pairing`).toEqual(p)
+        expect('pairing' in s, `${who}: present exactly where the law names years`).toBe(p !== null)
+        if (p !== null) paired += 1
+      }
+      const covered = read.spans.flatMap((s) => Array.from({ length: s.lastYear - s.firstYear + 1 }, (_, i) => s.firstYear + i))
+      expect(covered, `${key}: the spans cover the window once, in order`).toEqual(read.years.map((y) => y.calendarYear))
+    }
+    expect(paired, 'the pension household and its budget twin each carry one pairing').toBe(2)
+    for (const [key, d] of [
+      ['whole', TYPED_BELOW_WITNESSES.whole],
+      ['tm95', TYPED_BELOW_WITNESSES.tm95],
+      ['cMonth791667', TYPED_BELOW_WITNESSES.cMonth791667],
+      ['nearline', TM_NEAR_IRMAA_LINE],
+    ] as const) {
+      const read = workingYearTypedBelowWindow(d)
+      if (read?.kind !== 'read') throw new Error(`[test setup] ${key} reads its window`)
+      const in2029to = (last: number) => read.years.filter((y) => y.calendarYear >= 2029 && y.calendarYear <= last)
+      expect(typedBelowPairingOf(in2029to(2030)[0]!.kind, in2029to(2030)), `${key}: 2029 through 2030 pairs`).not.toBe('fails')
+      expect(typedBelowPairingOf(in2029to(2031)[0]!.kind, in2029to(2031)), `${key}: 2029 through 2031 cannot`).toBe('fails')
+      expect(read.spans.some((s) => s.firstYear === 2029 && s.lastYear === 2030) && read.spans.some((s) => s.firstYear === 2031 && s.lastYear === 2032), `${key}: split at 2031`).toBe(true)
     }
   })
 
@@ -2252,7 +2970,7 @@ describe('the survivor read — the gate and X (the survivor-path build’s U1: 
     expect(onOf('cents', d).most).toBe(4_501)
   })
 
-  it('only the coda moves with the survivor terms: A at a ratio of 1 reads A’s spans exactly, its X the whole $6,000 gap', () => {
+  it('only the survivor part moves with the survivor terms: A at a ratio of 1 reads A’s spans exactly, its X the whole $6,000 gap', () => {
     const a = TYPED_BELOW_WITNESSES.a
     const atOne: ScenarioDraft = { ...a, survivorSpendingRatio: 1 }
     const readA = workingYearTypedBelowWindow(a)

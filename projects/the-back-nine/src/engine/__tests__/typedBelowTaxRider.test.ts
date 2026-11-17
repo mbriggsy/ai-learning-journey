@@ -286,8 +286,11 @@ describe('the typed-below line’s rider on the whole engine: the gap beyond the
 
   it('R7, Medicare (AE5): on the near-line household, a year in 2031–2034 has the two answers’ Medicare differing by the surcharge alone, on every kept seed', { timeout: 60_000 }, () => {
     const { read, startYear, seeds } = measure('the near-line household')
-    // The household still reads a short span over the surcharge's look-back years at the quote.
-    expect(read.spans.some((s) => s.kind === 'shortLeftOverAtTyped' && s.firstYear <= 2029 && 2032 <= s.lastYear), 'a short span over 2029–2032').toBe(true)
+    // The household still reads short spans over the surcharge's look-back years at the quote: every year 2029–2032
+    // lies in a short span (since the walk-8 form's pairing law, 2029–2030 and 2031–2032 apart: the shortfall falls
+    // where the credit rises, and neither end of the shortfall's range falls in one year to name).
+    const shortYears = read.spans.filter((s) => s.kind === 'shortLeftOverAtTyped').flatMap((s) => Array.from({ length: s.lastYear - s.firstYear + 1 }, (_, i) => s.firstYear + i))
+    expect([2029, 2030, 2031, 2032].every((y) => shortYears.includes(y)), 'every year 2029–2032 in a short span').toBe(true)
     for (const { seed, typed, quote } of seeds) {
       const differing = [2031, 2032, 2033, 2034].filter((year) => {
         const hT = typed.health[year - startYear]!

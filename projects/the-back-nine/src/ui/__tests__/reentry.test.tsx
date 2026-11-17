@@ -15,7 +15,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
 import { composeReentry as composeReentryParts, type ReentryAnswerSentences, type ReentryView } from '../reentryChrome'
-import { notePartsText } from '../noteParts'
+import { notePartsText, type NoteParts } from '../noteParts'
 
 /** `composeReentry` with each note line read as its text (U11 walk 5's (bi): W's stale line is a parts entry, its
  *  React key and drawn text the parts joined). Every arm here reads the lines' words; the W line's parts are pinned
@@ -1125,8 +1125,9 @@ describe('ReEntry — the surface', () => {
   // U11 walk 6's R1, rebuilt over the whole working window (the rebuild's KTD6, host 2): a FRESH typed W below today's
   // quote has no report fact (a typed figure is never staled on a quote, KTD10), so the caller hands the gate its line, as
   // parts, and its door from the hydrated draft — the real producers here, as `IntakeApp`'s hydrate calls them. The gate
-  // pushes `{ text, parts }`, the way W's stale line is pushed: one span a plain note, drawn as its old paragraph; two or
-  // more a block. Words typed by hand from the seeds' documented figures.
+  // pushes `{ text, parts }`, the way W's stale line is pushed: one run a plain note, drawn as its old paragraph; two or
+  // more a block (the walk-8 form council's KD7 and KD8: an ordered list of runs, then the survivor part's paragraph).
+  // Words typed by hand from the seeds' documented figures.
   const typedBelowView = (d: ScenarioDraft, canChange = true, leftOverStale: ReentryAnswerSentences['leftOverStale'] = null) => {
     const s = savedDraft(d)
     const moved = workingYearLeftOverMoved(d)
@@ -1140,18 +1141,22 @@ describe('ReEntry — the surface', () => {
     })
   }
   // Both seeds open the survivor gate (Sam, 60 and retired, can die from 66, in 2032, while Alex works through 2035): the
-  // one-span opener carries "you’re both alive" and the survivor coda's two sentences close the one paragraph (0.75 of
-  // each figure, $63,000 and $67,500, X $4,500) — the paragraph keeps its shape, a <p>, moved only by its words.
+  // one-run opener carries "you’re both alive" and the survivor part's two sentences close the one paragraph (0.75 of
+  // each figure, $63,000 and $67,500, X $4,500) — the paragraph keeps its shape, a <p>, moved only by its words: the gate's
+  // noun "Your" in the lean too (KD9), the cap sentence naming the floor (KD5, W8-R8: year 0 at $90,000 leaves $10,985),
+  // the run's three beats (KD4) and the gloss on the line's first rider alone (KD3).
   const TYPED_GATE_LINE =
     'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. ' +
-    'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
-    'Each working year you’re both alive, your answer adds at most $16,985 a year to your savings. ' +
-    'At your spending of $90,000 a year, it would add at most $10,985, $6,000 less, not including any difference in income tax and Medicare’s income surcharge. ' +
-    'If only one of you is alive in a working year, your answer takes at most $4,500 a year less from your savings than it would at your spending of $90,000 a year, not including any difference in income tax and Medicare’s income surcharge. ' +
-    'Such a year’s costs count as $63,000 a year at your figure and $67,500 at your spending.'
+    'A working year almost always costs at least what you spend, so your answer can look better than it really is. ' +
+    'At your spending of $90,000 a year, the least a working year almost always costs, your first working year would have $10,985 left over, so the answer at that spending would add at most $10,985 in any working year. ' +
+    'Each working year you’re both alive, the answer at your spending of $90,000 a year would add at most $10,985 a year. ' +
+    'Your answer adds at most $16,985 a year to your savings. ' +
+    'At your spending, that’s $6,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, when your income two years before was high). ' +
+    'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year. ' +
+    'At your spending, that’s at most $4,500 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.'
   const TYPED_GATE_NOTE = { text: TYPED_GATE_LINE, parts: { opening: TYPED_GATE_LINE, segments: [], door: null } }
 
-  it('R1: `datesavedtyped` as a vault — the typed-below line (one span, its survivor coda closing it) in W’s place, drawn as its plain paragraph, and the update act’s door under the buttons naming $84,000; no anyStale, no rules echo', () => {
+  it('R1: `datesavedtyped` as a vault — the typed-below line (one run, its survivor part closing it) in W’s place, drawn as its plain paragraph, and the update act’s door under the buttons naming $84,000; no anyStale, no rules echo', () => {
     const d = DEV_SEEDS.datesavedtyped
     const report = deriveStaleness(savedDraft(d), TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: false })
     expect(report.anyStale, 'the premise: nothing on this vault is stale').toBe(false)
@@ -1174,34 +1179,41 @@ describe('ReEntry — the surface', () => {
     )
   })
 
-  it('R1: TM (`datesavedtypedmoved`, three spans, the left over ALSO moved) — the gate keeps two notes, one cause each: the typed-below line as a BLOCK — the gate’s scoped lead, three labelled spans (each stating its own credit: the rebuild’s KD2), then the survivor coda in "your answer" words as its own list after the spans’ list — then the moved line, which names "your figure of $84,000 a year" its $26,985 rests on', () => {
+  it('R1: TM (`datesavedtypedmoved`, three runs, the left over ALSO moved) — the gate keeps two notes, one cause each: the typed-below line as a BLOCK — the cap sentence and the scoped lead, an ordered list of three runs (each its label, then the spending side, the typed side and the close, one paragraph each: the walk-8 form council’s KD4 and KD8), then the survivor part as the paragraph after the list (KD7) — then the moved line, which names "your figure of $84,000 a year" its $26,985 rests on', () => {
     const d = DEV_SEEDS.datesavedtypedmoved
     const moved = workingYearLeftOverMoved(d)
     expect(moved).toEqual({ stored: 16_985, live: 26_985, typedBelow: '84,000' })
     const view = typedBelowView(d, true, { text: workingYearLeftOverMovedText(moved!), clause: workingYearLeftOverMovedClause(moved!), canChange: true })
-    const both = ['Your answer adds at most $16,985 a year to your savings.', 'At your spending of $105,000 a year, it would add at most $5,985, $11,000 less, not including any difference in income tax and Medicare’s income surcharge.']
-    const LEAD = 'What your answer adds to your savings in each working year you’re both alive:'
-    const parts = {
+    const LEAD = 'What each answer adds to your savings in each working year you’re both alive:'
+    const credit = (gloss: string): string[] => [
+      'The answer at your spending of $105,000 a year would add at most $5,985 a year.',
+      'Your answer adds at most $16,985 a year to your savings.',
+      `At your spending, that’s $11,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge${gloss}.`,
+    ]
+    const parts: NoteParts = {
       opening:
         'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. ' +
-        `A working year almost always costs at least what you spend, so this answer can look better than it really is. ${LEAD}`,
-      segments: [
-        { label: '2026 through 2028', sentences: both },
-        {
-          label: '2029 through 2032',
-          sentences: [
-            'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, and your answer would add nothing.',
-            'Your figure of $84,000 a year leaves those shortfalls out of your answer, and it adds at most $16,985 a year to your savings, at most $20,637 to $21,000 a year more, not including any difference in income tax and Medicare’s income surcharge.',
-          ],
-        },
-        { label: '2033 through 2035', sentences: both },
-      ],
+        'A working year almost always costs at least what you spend, so your answer can look better than it really is. ' +
+        'At your spending of $105,000 a year, the least a working year almost always costs, your first working year would have $5,985 left over, so the answer at that spending would add at most $5,985 in any working year. ' +
+        LEAD,
+      segments: [],
       door: null,
-      coda: {
-        label: 'If only one of you is alive',
-        sentences: [
-          'In such a working year, your answer takes at most $15,750 a year less from your savings than it would at your spending of $105,000 a year, not including any difference in income tax and Medicare’s income surcharge.',
-          'Such a year’s costs count as $63,000 a year at your figure and $78,750 at your spending.',
+      runs: {
+        items: [
+          { label: '2026 through 2028', sentences: credit(' (the extra premium Medicare charges once you’re on it, when your income two years before was high)') },
+          {
+            label: 'If you’re still working in 2029 through 2032',
+            sentences: [
+              'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, which would be taken from your savings, and the answer at that spending would add nothing.',
+              'Your figure of $84,000 a year leaves those shortfalls out of your answer, which adds at most $16,985 a year to your savings.',
+              'At your spending, that’s at most $20,637 to $21,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.',
+            ],
+          },
+          { label: 'If you’re still working in 2033 through 2035', sentences: credit('') },
+        ],
+        closing: [
+          'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year.',
+          'At your spending, that’s at most $15,750 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.',
         ],
       },
     }
@@ -1211,20 +1223,29 @@ describe('ReEntry — the surface', () => {
     const notes = Array.from(container.querySelector('.reentry-notes')!.children)
     expect(notes.map((c) => c.tagName), 'the block, then the moved line as its own paragraph').toEqual(['DIV', 'P'])
     expect(notes[0]!.classList.contains('note-parts')).toBe(true)
-    expect(Array.from(notes[0]!.querySelectorAll('dt')).map((dt) => dt.textContent)).toEqual([
-      '2026 through 2028',
-      '2029 through 2032',
-      '2033 through 2035',
-      'If only one of you is alive',
-    ])
-    // Reading order (the council's a11y check, R3): the scoped lead's text, then the spans' list, then the coda's own list.
+    // Reading order (the council's a11y check, R3; KD7, KD8): the scoped lead's text, then the runs' ordered list, then
+    // the survivor part's paragraph, outside the list.
     expect(Array.from(notes[0]!.children).map((c) => `${c.tagName} ${c.className}`)).toEqual([
       'P note-parts__opening',
-      'DL note-parts__segments',
-      'DL note-parts__segments note-parts__coda',
+      'OL note-parts__runs',
+      'P note-parts__closing',
     ])
-    expect(notes[0]!.children[0]!.textContent!.endsWith(` ${LEAD}`), 'the scoped lead ends the opening, before the spans’ list').toBe(true)
-    expect(notes[0]!.children[2]!.querySelectorAll('dt'), 'the coda is one item').toHaveLength(1)
+    const list = notes[0]!.children[1]!
+    expect(list.getAttribute('role'), 'a list in the accessibility tree').toBe('list')
+    expect(Array.from(list.children).map((li) => [li.tagName, Array.from(li.children).map((p) => p.className)])).toEqual(
+      Array.from({ length: 3 }, () => ['LI', ['note-parts__label', 'note-parts__para', 'note-parts__para', 'note-parts__para']]),
+    )
+    expect(Array.from(list.querySelectorAll('li > p.note-parts__label')).map((p) => p.textContent)).toEqual([
+      '2026 through 2028',
+      'If you’re still working in 2029 through 2032',
+      'If you’re still working in 2033 through 2035',
+    ])
+    expect(notes[0]!.children[0]!.textContent!.endsWith(` ${LEAD}`), 'the scoped lead ends the opening, before the runs’ list').toBe(true)
+    expect(notes[0]!.children[2]!.textContent, 'the survivor part, never one more run').toBe(
+      'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year. ' +
+        'At your spending, that’s at most $15,750 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.',
+    )
+    expect(notes[0]!.querySelector('dl'), 'no description list: the coda’s list is gone').toBeNull()
     expect(notes[1]!.textContent).toBe(MOVED_LINE)
   })
 

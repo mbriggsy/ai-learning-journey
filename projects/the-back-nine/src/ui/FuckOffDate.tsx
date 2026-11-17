@@ -505,11 +505,11 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
               and above the graphs: a calm note in the same register, never role=alert. Its door is
               inline after the sentence (the band premise's grammar), and only where the tab can act
               on it; a read-only tab reads the fact alone. */}
-          {/* With parts (W's stale line for a "saved" answer; the typed-below line at two or more spans), a block in the same
-              slot and register (council `wf_22858e04-f7a` (4), amending KTD21's element only): the opening, the labelled
-              segments, and the door as the last dt/dd with its button as a block of its own. A block with no door (the
-              typed-below line's) still carries its button wherever the tab can act: the block draws it last, as a block
-              (the whole-window rebuild's KTD6, host 1). */}
+          {/* With parts (W's stale line for a "saved" answer; the typed-below line at two or more runs), a block in the same
+              slot and register (council `wf_22858e04-f7a` (4), amending KTD21's element only): the opening, then W's labelled
+              segments with the door as the last dt/dd and its button a block of its own, or the typed-below line's runs as an
+              ordered list and its survivor part's paragraph (the walk-8 form council's KD7, KD8), which has no door yet still
+              carries its button wherever the tab can act: the block draws it last, as a block (the rebuild's KTD6, host 1). */}
           {payCheckNote !== undefined && isPlainNote(payCheckNote.parts) && (
             <p className="fod-note cs-paycheck-note">
               <span>{standingOpening(payCheckNote.cause, payCheckNote.parts.opening)}</span>

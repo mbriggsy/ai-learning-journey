@@ -334,6 +334,15 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     expect(copy.assumptionWorkingYearCheckLeftOverNotAsked).toMatch(/only when your first working year shows some left over/)
   })
 
+  it('U11 walk 8’s W8-R5 (b): the two "saved" lines name what was saved — "all the money left over in a working year", never the bare "all of it", which had no referent in the sheet — typed by hand', () => {
+    expect(copy.assumptionWorkingYearCheckLeftOverSaved).toBe(
+      'You said all the money left over in a working year is saved, so in each working year you’re both alive, what’s left over is added to your savings, up to the amount your first working year has left over. The left over is only as real as your figure for a working year: if that figure is too low, the plan adds money that isn’t really left over.',
+    )
+    expect(copy.assumptionWorkingYearCheckLeftOverSavedMoved).toBe(
+      'You said all the money left over in a working year is saved, but your first working year’s left over has changed since, so each working year adds at most the smaller of the two amounts, then and now. The left over is only as real as your figure for a working year: if that figure is too low, the plan adds money that isn’t really left over.',
+    )
+  })
+
   it('K7 (the state tax on pay) is ONE sentence per reading: either way under NC, the rosy group under FL, PA and an unpriced state', () => {
     // FL charges a working year no state tax, the least any work state can: only flattering. PA and an
     // unpriced state charge none on pay at all — it counts only where the household added it to W.

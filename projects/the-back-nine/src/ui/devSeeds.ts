@@ -1440,8 +1440,8 @@ const dateSavedRisenLaterWitness: ScenarioDraft = {
  * (KTD10), so W is FRESH: year 0 at $84,000 prints $16,985 again, the stored "All of it" reads "saved" and is carried
  * whole, and no stale line speaks. R1's typed-below line does, on the Result and, as a vault, on the gate
  * (`workingYearCostTypedBelowLine`): the answer counts $84,000, below the $90,000 spending, so it can look better; then
- * its one span over the whole window (the whole-window rebuild), a plain paragraph: each working year it adds at most
- * $16,985 a year, where at $90,000 a year it would add at most $10,985, $6,000 less. U11
+ * its one run over the whole window, a plain paragraph: the answer at $90,000 a year would add at most $10,985 a year,
+ * this answer at most $16,985 a year, so at the spending $6,000 a year less in your savings. U11
  * walk 6 measured exactly this draft (`u11-walk6\measure\R1-MEASURE.md`, draft b): about 9 years out at a 0.87 lower
  * bound, where the honest "Yes" at $90,000 crowns the same year on the 0.85 bar with no margin. A "mint, then move"
  * witness: minted once (`dateSavedWitness`), moved, then retyped.
@@ -1529,9 +1529,9 @@ const dateSavedTypedCrownedWitness: ScenarioDraft = {
  * through 2032 comes up short at the $105,000 quote, year 0 among them; in 2029–2032 the typed answer's recorded
  * Medicare income sits under the first joint line and the quote's over it, so Sam, on Medicare from 2031, pays the first
  * income surcharge at the quote alone in 2031–2034: the household whose comparisons leave out a real surcharge
- * difference (the rider's "not including any difference in income tax and Medicare’s income surcharge"). Built here,
- * never by importing the test witness (that file imports `DEV_SEEDS`); `devSeeds.test.ts` pins it equal to
- * `TM_NEAR_IRMAA_LINE`.
+ * difference (the rider's "not including any difference between the two answers in income tax and Medicare’s income
+ * surcharge"). Built here, never by importing the test witness (that file imports `DEV_SEEDS`); `devSeeds.test.ts` pins
+ * it equal to `TM_NEAR_IRMAA_LINE`.
  */
 const dateSavedTypedNearLineWitness: ScenarioDraft = {
   ...dateSavedTypedMovedWitness,
@@ -1544,8 +1544,8 @@ const dateSavedTypedNearLineWitness: ScenarioDraft = {
  * `wf_dfb7949b-4a7`'s C on a budget at 100 %, the survivor-path build's AE1; walk 8 reads its closing part): the household
  * of `datesavedrisenlater` on a $105,000 budget, all of it housing (survivor-sticky), less the out-of-pocket medical the
  * compile adds back. Its quote confirmed, "All of it" answered at year 0's own $5,985, then $90,000 typed by the year. A
- * survivor's working year then costs the whole budget, so the closing part's ceiling is the whole $15,000 gap and draws
- * the one form that echoes it: "That $15,000 a year is the whole gap to your figure of $90,000 a year." Built here, never
+ * survivor's working year then costs the whole budget, so the closing part's ceiling is the whole $15,000 gap, its costs
+ * named whole: "that year’s costs still count in full: your figure of $90,000 a year and your budget’s $105,000 a year." Built here, never
  * by importing the test witness; `devSeeds.test.ts` pins it equal to `councilBudgetHousehold(1)`.
  */
 const dateSavedTypedStickyWitness: ScenarioDraft = ((): ScenarioDraft => {

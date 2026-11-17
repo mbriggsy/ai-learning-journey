@@ -14,8 +14,8 @@
  *    read the picture, never the answer), the radio group (a static legend and static labels, nothing
  *    pre-checked), and one line in dollars BELOW the group, chosen by the state (R6) — then, under a carried
  *    "saved" answer on a fresh typed figure below today's spending, the typed-below line's spans over the whole
- *    working window (U11 walk 7's R2; the whole-window rebuild's KTD6, host 3: one span as a paragraph, two or more as
- *    labelled parts). Nothing above the radios reads the answer: where a typed figure sits below the spending, the
+ *    working window (U11 walk 7's R2; the whole-window rebuild's KTD6, host 3: one run as a paragraph, two or more as
+ *    an ordered list of runs). Nothing above the radios reads the answer: where a typed figure sits below the spending, the
  *    figure names it off W alone.
  *
  * `draft` is the draft the face DRAWS: the walk's live draft; in the panel, the draft the gesture hold
@@ -170,10 +170,10 @@ export function WorkingYearLeftOverQuestion({
           )}
         </p>
       )}
-      {/* The typed-below line's spans (U11 walk 7's R2; the whole-window rebuild's KTD6, host 3), after the per-answer
-          line: in every working year, what this answer adds beside what the answer at the household's own spending would.
+      {/* The typed-below line's runs (U11 walk 7's R2; the whole-window rebuild's KTD6, host 3), after the per-answer
+          line: in every working year, what the answer at the household's own spending would add beside this answer's.
           Below the radios because they read the answer (R6); `workingYearLeftOverAtQuoteLine`'s docblock says why never
-          above, in the W row. One span is its old paragraph; two or more, the labelled block every host draws. */}
+          above, in the W row. One run is its old paragraph; two or more, the runs' block every host draws (KD7, KD8). */}
       {atQuote !== null &&
         (isPlainNote(atQuote) ? (
           <p className="field-help left-over__at-quote">{atQuote.opening}</p>

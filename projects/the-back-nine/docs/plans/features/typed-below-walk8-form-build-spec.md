@@ -43,15 +43,16 @@ round's other walk-8 items (U3, U4). No engine output moves; `src/engine` and `i
   then the moved line); the answer page reads counts and lean, the moved clause, the cap sentence, the lead.
 - **KD6. Ranges carry each end's year.** Later ranges in a run print their ends in the first range's year order; the
   first range names its end years where a later range descends. A pure law plus a property test splits any run whose
-  pairing fails (`creditsJoin` can join a drift that does not complement, `workingYearLeftOver.ts:948-949`).
+  pairing fails (`creditsJoin` can join a drift that does not complement, `workingYearLeftOver.ts:981-982`).
 - **KD7. The survivor part leaves the list** (the survivor build's KTD6 moves: as a fourth term under "both alive" it
   fails WCAG 1.3.1). A `<p>` after the list, costs first, then the same close. No survivor ratio, no "three-quarters"
   (false on c90 and c80), no "nothing left over is added" (the credit-0 rule stays unsaid, council `wf_dfb7949b-4a7`),
   no reason ("all housing" is false at a ratio of 1).
 - **KD8. Form:** an `<ol role="list">`, one `<li>` per run (its label, then its sentences as `<p>`s); no table (a rider in
   a header is heard once), no `h3`, no motion, the same DOM at every width. Delete the coda `<dl>`
-  (`NotePartsBlock.tsx:60-70`), `.note-parts__coda` and the tabular-nums restatement at `src/ui/styles/noteParts.css:30`
-  (`src/ui/styles/base.css:35` is the figure law; the restatement dropped lining-nums).
+  (lines 60 to 70 of `NotePartsBlock.tsx` before U2), `.note-parts__coda` and the tabular-nums restatement (line 30 of
+  `src/ui/styles/noteParts.css` before U2; `src/ui/styles/base.css:35` is the figure law; the restatement dropped
+  lining-nums). Done in U2.
 - **KD9. One host-noun Record:** [N]/[n] is "Your"/"your" on the gate and the step, "This"/"this" on the answer page.
   `belowLean` reads it (today it hard-codes "this answer" under the gate's "Your answer"). The sheet's cell is "This"
   (W8-R5 (d): the sheet's title and warning already say "this answer").
@@ -148,6 +149,26 @@ close, "At your spending" or "At your budget". **[T]** the typed figure.
   / "Your answer adds at most $16,985 a year to your savings." / "At your spending, that’s $13,980 to $13,617 a year less
   in your savings[R]"
 - 2032: as 2029, with $3,652 and $20,637.
+
+**As built in U2: the pilot's calls where these words are silent** (each flagged for walk 9, each in the code's docblocks):
+- **KD6's split.** A later range "descends" when, printed in the first range's least-to-most year order, it falls; the first
+  range then names its end years and every range prints in their time order ("$3,005 in 2030 to $3,368 in 2031", "$13,980
+  to $13,617"). Naming needs each end of the first range in ONE year: where an end spans several years and a later range
+  runs the other way, the pairing fails and the run splits, year by year (`typedBelowPairingOf`, `spansOf`). So `whole`,
+  TM at $95,000, C at $7,916.67 a month and the near-line household now read 2029–2030 and 2031–2032 apart, each with one
+  figure, never "$12,452 in 2031 and 2032 to $12,815 in 2029 and 2030".
+- **KD5's fourth member.** Year 0 at the quote exactly $0 (C at $110,985): "…your first working year would have nothing
+  left over, so the answer at that spending would add nothing in any working year." A tie with the stored figure is
+  `stored`: no sentence.
+- **The one-run line** has no label and no lead, so its first beat opens "Each working year[ you’re both alive], the
+  answer at [Q] would add…" (the old one-span opener, moved to the new first beat).
+- **[AQ] and the close follow the source**: "the answer at that budget", "At your budget".
+- **`same`** prints its credit (W8-R5 (a)), so it now joins as every kind does (its credits must join); where both answers
+  add $0 it says "would add nothing" (no witness reaches it).
+- **KD9's sheet cell.** The chair's recommendation line names "Your" on the sheet; its positions left the sheet's noun to
+  the fix round ("unless the fix round adopts W8-R5 (d)"), and this spec adopts it: "This", where an answer is on screen.
+- **The sheet's two rows**: W8-R5 (b)'s noun lands on `assumptionWorkingYearCheckLeftOverSaved` too, the moved row's twin
+  with the same unreferenced "all of it".
 
 ## Units
 

@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-16, b9-4's close):** the walk-8 form spec's U1–U4 are all in (U4 is the out-of-date family: the stale line's survivor part, its scope, the waiting seats, the walk-8 lows; `docs/plans/features/typed-below-walk8-form-build-spec.md`, whose "As built in U2" and "As built in U4" name the pilot's calls). Next: walk 9 on the changed strings and its card (the close block's "Walk 9" list); then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
+▶ **START HERE (2026-11-16, b9-5, walk 9 done):** walk 9's card is in `docs/caddie/cold-read-log.md` (HARD-FLAG, held on W9-R8 and W9-R7; panel and measurements `b9-build2-surplus\u11-walk9\`). All three of the form spec's flips fired. Next, in order: (1) one walk-9 form council: flip (ii)'s three beats on credit runs WITH the gate's order (refuters R3 and R5 (e): compose the gate in the answer page's order), the cap sentence's aside (R5 (c)), the run labels years-first (R9 (8)), the survivor part's opening and its two named answers (R6 (a), R2 (a)), the gloss's "high" (R1); (2) the walk-9 fix round: flip (i) as ruled (`COMPARISON_RIDER` → ", except for any difference between the two answers in income tax and Medicare’s income surcharge."), flip (iii) as ruled (each year inside the run: R4's words), the council's calls, T's one-run twin merged (R5 (d)), the lows on the card, and W9-R7's fix (the register's new Tier 0 entry: the answered draft + a re-figuring tell); (3) walk 10; (4) W9-R8 (the honest date on the page: the retype entry's measured bullet; a build or (2)'s council); then build 2's U12, the whole-file review, `/distill` (far past 10). The weekly usage meter read 96 % at walk 9's close (resets 2026-11-18 09:00): a council is ~20 seats.
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,8 +94,10 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **walk 9** (U1–U4 are in) (START HERE; `docs/plans/features/typed-below-walk8-form-build-spec.md`; walk 8's card is `451fa373`, its panel record
-     `<B>\u11-walk8\panel\` (`CHAIR-NOTES.md` maps every finding to its refuter), its bundle `temp\caddie\caddie-u11-b9-1-walk8\`).
+     ▶ NEXT: **the walk-9 form council, then its fix round, then walk 10** (START HERE; walk 9's card is the newest in `docs/caddie/cold-read-log.md`, its panel record
+     `<B>\u11-walk9\panel\` (`CHAIR-NOTES.md` maps every finding to its refuter), its measurements `<B>\u11-walk9\measure\`
+     (the line probe, the KD10 on-page counter, the typed-vs-honest headline run), its bundle `temp\caddie\caddie-u11-b9-5-walk9\`;
+     walk 8's card `451fa373`, its record `<B>\u11-walk8\panel\`).
      The line's plans: the rebuild `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, the survivor path
      `docs/plans/features/typed-below-survivor-path-build-spec.md`, the rider `docs/plans/features/typed-below-tax-rider-build-spec.md`;
      the register's Tier 0 retype entry carries the council's NEGATIVE on the round review's x_t metric. Research and every
@@ -278,9 +280,7 @@ Next is START HERE. Successor: b9-5 (handoff mode).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 
-**Walk 9 (the first step):** walk 8's targets plus the out-of-date family on every host U4 changed: A, B, C and F (`datesavedrisen`, `…risenshort`, `…risenlater`, `datesavedfourbuckets`) on the gate, the Result (the survivor part between the segments and the door), the sheet's waiting seat and its method line, and S (`datesavedstale`) for the none-first Keep condition and door; an ear seat and a phone seat on the pension household; KD10's counts (the table in `src/intake/__tests__/workingYearLeftOver.test.ts`); the spec's three flips tested; U2's watch items below; U4's calls (the spec's "As built in U4": the R14 method lines, the kept placement, the seats' survivor part, "the two answers" on a line that names no second answer). Then the card, its holds, and build 2's U12.
-
-**Walk 9's U2 watch items** (each true and per spec, each a reading risk): one-run lines say the quote's cap twice back to back (A: "…at most $10,985 in any working year." then "…would add at most $10,985 a year.", walk 7's "a math error" shape); year-0-short lines say the shortfall twice (B retyped, the near-line household); C at 90 % reads "$90,000 at your figure of $90,000 a year"; budget lines name the floor on "your budget’s $105,000 a year"; the pairing split's extra runs (`whole`, TM at $95,000, C at $7,916.67 a month, the near-line household: 2029–2030 and 2031–2032 apart).
+**Walk 9: DONE (b9-5)** — its targets, the flips, KD10's counts, U2's watch items and U4's calls are each ruled on its card (`docs/caddie/cold-read-log.md`, the newest); START HERE carries what follows.
 
 **The review's gates** (each fix commit, as its plan's Verification Contract scopes them; each heavy run alone, in sequence, pinned to the P-cores from PowerShell; `<B>` is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus`):
 1. Before the first edit: `git rev-parse HEAD`, the re-anchor base.

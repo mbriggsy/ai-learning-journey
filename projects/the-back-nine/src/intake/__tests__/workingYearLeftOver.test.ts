@@ -23,6 +23,7 @@ import { isPlainNote, notePartsText, type NoteParts, type NoteSegment } from '@u
 import { workingYearCostForRun, workingYearLedgerForRun, workingYearLeftOverShownState, workingYearWindowTopParams } from '../intakeMap'
 import {
   laterShortOf,
+  workingYearFigureBesideQuote,
   workingYearCheckAtQuote,
   workingYearCostKeepCondition,
   workingYearCostStaleDoor,
@@ -2263,5 +2264,27 @@ describe('the survivor read — the gate and X (the survivor-path build’s U1: 
 
   it('no comparison, no survivor read: a "spent" answer on a gate-on household reads no window at all', () => {
     expect(workingYearTypedBelowWindow(answered(TYPED_BELOW_WITNESSES.a, { kind: 'spent' }))).toBeNull()
+  })
+})
+
+describe('workingYearFigureBesideQuote — the band caption’s working-year figure (W8-R7)', () => {
+  it('names the run’s own figure beside the quote on a fresh typed figure (T, CR, the pension household, ST’s budget)', () => {
+    expect(workingYearFigureBesideQuote(DEV_SEEDS.datesavedtyped)).toEqual({ figure: '84,000', quote: '90,000', last: false })
+    expect(workingYearFigureBesideQuote(DEV_SEEDS.datesavedtypedcrowned)).toEqual({ figure: '84,000', quote: '105,000', last: false })
+    expect(workingYearFigureBesideQuote(DEV_SEEDS.datesavedtypedsticky)).toEqual({ figure: '90,000', quote: '105,000', last: false })
+  })
+  it('names the LAST figure where W’s answer is out of date, above or below the quote (B, the kept household, S)', () => {
+    expect(workingYearFigureBesideQuote(DEV_SEEDS.datesavedrisenshort)).toEqual({ figure: '84,000', quote: '105,000', last: true })
+    expect(workingYearFigureBesideQuote(DEV_SEEDS.datecoststale)).toEqual({ figure: '84,000', quote: '78,000', last: true })
+    expect(workingYearFigureBesideQuote(DEV_SEEDS.datesavedstale)).toEqual({ figure: '84,000', quote: '78,000', last: true })
+  })
+  it('is null where the run counts a working year at the quote itself (`date`: W at the spending) or carries no W (`retired`)', () => {
+    expect(workingYearFigureBesideQuote(DEV_SEEDS.date)).toBeNull()
+    expect(workingYearFigureBesideQuote(DEV_SEEDS.retired)).toBeNull()
+  })
+  it('is null where the figure and the quote print alike, though they differ in cents (a monthly entry)', () => {
+    const d = writeEnteredWorkingYearCost(DEV_SEEDS.datesavedtyped, 90_000.04, 'month')
+    expect(workingYearQuote(d).annualReal).toBe(90_000)
+    expect(workingYearFigureBesideQuote(d)).toBeNull()
   })
 })

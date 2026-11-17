@@ -43,7 +43,7 @@ round's other walk-8 items (U3, U4). No engine output moves; `src/engine` and `i
   then the moved line); the answer page reads counts and lean, the moved clause, the cap sentence, the lead.
 - **KD6. Ranges carry each end's year.** Later ranges in a run print their ends in the first range's year order; the
   first range names its end years where a later range descends. A pure law plus a property test splits any run whose
-  pairing fails (`creditsJoin` can join a drift that does not complement, `workingYearLeftOver.ts:947-948`).
+  pairing fails (`creditsJoin` can join a drift that does not complement, `workingYearLeftOver.ts:948-949`).
 - **KD7. The survivor part leaves the list** (the survivor build's KTD6 moves: as a fourth term under "both alive" it
   fails WCAG 1.3.1). A `<p>` after the list, costs first, then the same close. No survivor ratio, no "three-quarters"
   (false on c90 and c80), no "nothing left over is added" (the credit-0 rule stays unsaid, council `wf_dfb7949b-4a7`),

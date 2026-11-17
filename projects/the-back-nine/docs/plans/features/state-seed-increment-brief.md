@@ -25,7 +25,7 @@ The increment's own discipline caught TWO real defects before exposure, each of 
 
 **F1 — five new seeds; ZERO edits to existing seeds.**
 - `nc` / `pa` / `fl` / `elsewhere` = clones of `retiredOnTrack` (66/65 both retired — the state clause renders ONLY inside the `medicarePricedNote` block, `ConfidenceStatement.tsx:491-504`, so the household must be all-65+) with `retirementState: 'NC' | 'PA' | 'FL' | 'elsewhere'` respectively.
-- `datenc` = clone of `stillWorkingAllMedicare` (the `date65` seed) + `retirementState: 'NC'` — the date route's affirmation mount (`FuckOffDate.tsx:451-464`) rides its OWN producer (`dateStatePriced`, `intakeMap.ts:895`); insight 080's lesson: the second producer gets its own live witness.
+- `datenc` = clone of `stillWorkingAllMedicare` (the `date65` seed) + `retirementState: 'NC'` — the date route's affirmation mount (`FuckOffDate.tsx:455-468`) rides its OWN producer (`dateStatePriced`, `intakeMap.ts:895`); insight 080's lesson: the second producer gets its own live witness.
 - Existing seeds stay **byte-identical**: `?seed=retired`'s UNANSWERED panel-row face is a walked, regression-live surface (Card 2, chair fix #1 — `assumptionStateUnsetNote`). `date65`'s purpose (the insight-080 no-false-unpriced witness) is pinned; never repurpose it.
 - Registration: draft const + `DEV_SEEDS` entry (`devSeeds.ts` — the only dispatch table); the registry auto-iterates into the validator-acceptance test.
 

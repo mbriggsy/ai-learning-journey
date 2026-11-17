@@ -57,7 +57,7 @@ Before this stage the "has this offset already passed?" test was **re-typed** in
 `heroTrack.offsetYears < elapsedYears` in `FuckOffDate.tsx`. Neither compare exists any more. S0.1 exported
 **one** predicate, strict `planOffset < elapsed` — `offsetHasPassed`, defined once at `curveMarks.ts:107` —
 and every arrived question in the codebase now calls it: the ladder filter (`curveMarks.ts:143`), the hero
-crown-arrived withdraw and the floor arm (`FuckOffDate.tsx:240`, `:275`, `:410`), the band's Roth row
+crown-arrived withdraw and the floor arm (`FuckOffDate.tsx:244`, `:279`, `:414`), the band's Roth row
 (`bandAnnotations.ts:133`), the work-stops withdraw (`bandAnnotations.ts:341`), `dateTradeoff.ts:53`'s
 offer filter — **a third re-typing this spec had not enumerated**, found at build — and §S1's write-side
 refusal (`RothLever.tsx:54`).
@@ -75,8 +75,8 @@ refusal (`RothLever.tsx:54`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:580`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:4209`,
-`FuckOffDate.tsx:152`) — and the band's `'saved'` label did exactly that.
+attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:4219`,
+`FuckOffDate.tsx:156`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
   consumer comment prosed to *"since you built this plan."* The name now carries the contract at every
@@ -203,7 +203,7 @@ literal tense regexes pin it now. Three mutants red → reverted.
    **RENDERED re-confirm control** (insight 100 — a copy promise is a UI contract). The residual is
    disclosed as **UNDETERMINED, never "conservative."** Both ship as `.band-premise` (`result.css:229`,
    one family home) under BOTH routes' band panes — `ConfidenceStatement.tsx:428-435` and
-   `FuckOffDate.tsx:559-574`; the OLD-SAVE arm names the `agedBalancesYearFor` vintage and the re-saver
+   `FuckOffDate.tsx:563-583`; the OLD-SAVE arm names the `agedBalancesYearFor` vintage and the re-saver
    reads the build-anchor arm. **No premise line ⇒ no aged fan, and that law is STRUCTURAL:** the resolved
    memo withdraws the aged fan when no `onReconfirm` route exists (`ConfidenceStatement.tsx:290`, and its
    twin in `FuckOffDate`), so an aged projection with an unstated premise is unrepresentable. `onReconfirm`
@@ -215,7 +215,7 @@ literal tense regexes pin it now. Three mutants red → reverted.
    exactly-this-year speaks "about now" (`dateInYearsNow` / `dateFloorCoveredNow` — the old text kept at
    its one true boundary, agreeing with the ladder's "stopping today" crown); future speaks the anchored
    count. The old non-strict `<= 0` had collapsed "this year" and "three years gone" into one sentence.
-   The three-way branch reads at `FuckOffDate.tsx:240-243` (hero) and `:275-279` (floor).
+   The three-way branch reads at `FuckOffDate.tsx:244-247` (hero) and `:279-283` (floor).
 
 **One clause of arm 5 was superseded after U17 closed, and the reason is worth keeping.** Split-ness was
 originally derived from
@@ -223,7 +223,7 @@ originally derived from
 (`8d4d4e58`, council wf_457f0930-dba) made that derivation wrong: a both-dated household is still
 `'split'`, but its band now rides the LIFESTYLE crown, so the old question answered `true` and painted
 "Essentials date" onto a marker sitting at the lifestyle year. The name now reads the band's own published
-track — `band.track === 'floor'` (`answerView.ts:145`), the same authority tag the offset one line below
+track — `band.track === 'floor'` (`answerView.ts:147`), the same authority tag the offset one line below
 already reads. The lesson is insight 081 in its sharper form, and it is recorded in that file: the old code
 DID consume the shared producer and was still wrong, because it asked that producer a question about
 split-ness when the thing it needed to know was which track the band drew.
@@ -472,7 +472,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   arm at `devSeeds.test.ts:688-712`, whose rationale comment is `:639-649`.
 - **Two corrections to the probe that specced this plant**, both caught by opening source rather than
   trusting the filing. (1) It lights **ONE** arrived arm, not two: the floor crowns at 0 and `floorLineText`
-  short-circuits offset 0 before the three-way split (`FuckOffDate.tsx:269`), so `dateFloorCoveredPast`
+  short-circuits offset 0 before the three-way split (`FuckOffDate.tsx:273`), so `dateFloorCoveredPast`
   never fires here and keeps `?vault=datestale` as its only live route. (2) Aging `startCalendarYear` alone
   breaks the documented `currentAge === startCalendarYear − birthYear` model invariant (`model.ts:99`) and
   forks the engine's two birth-year reads, so `doctorArrivedVault` ages `birthYear` in step (the
@@ -529,7 +529,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts:745-751`, `copy.ts:4373` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts:745-751`, `copy.ts:4383` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

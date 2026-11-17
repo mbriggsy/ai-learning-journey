@@ -114,6 +114,10 @@ export type FuckOffDateView =
        *  never built a budget: there is no second level to name, and the copy that would quote it
        *  must not render rather than invent one. */
       readonly spendLevels?: { readonly essentials: number; readonly full: number }
+      /** W8-R7 (`docs/plans/features/typed-below-walk8-form-build-spec.md`, U3): the figure the run counts a working
+       *  year at, beside today's quote, where the two print differently (`workingYearFigureBesideQuote`); absent where
+       *  they print alike or the run carries no W. The full-budget caption names both. */
+      readonly workingYearFigure?: { readonly figure: string; readonly quote: string; readonly last: boolean }
     }
   | { readonly kind: 'pending' }
   | { readonly kind: 'compute-error'; readonly onRetry: () => void }
@@ -563,14 +567,19 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
                     // one there is no second level to name, so the level-free sentence stands (never
                     // a fabricated figure — burned/062: absence is absence, not a default).
                     const s = view.spendLevels
+                    // W8-R7: where the run counts a working year at a figure other than the spending, the
+                    // full-budget arm names both (never "prices your full budget" alone beside that note).
+                    const w = view.workingYearFigure
                     if (s === undefined) {
-                      return t === 'floor' ? copy.bandPricesEssentialsNote : copy.bandPricesFullBudgetNote
+                      if (t === 'floor') return copy.bandPricesEssentialsNote
+                      return w === undefined ? copy.bandPricesFullBudgetNote : slots.bandCountsWorkingYearsNote(w.figure, w.quote, w.last)
                     }
                     const full = formatAbsoluteDollar(s.full)
                     const essentials = formatAbsoluteDollar(s.essentials)
-                    return t === 'floor'
-                      ? slots.bandPricesEssentialsWithLevels(essentials, full)
-                      : slots.bandPricesFullBudgetWithLevels(full, essentials)
+                    if (t === 'floor') return slots.bandPricesEssentialsWithLevels(essentials, full)
+                    return w === undefined
+                      ? slots.bandPricesFullBudgetWithLevels(full, essentials)
+                      : slots.bandCountsWorkingYearsWithLevels(w.figure, w.last, full, essentials)
                   })()}
                 </p>
               )}

@@ -784,6 +784,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     // universal gates — correct: they state two arithmetic facts and must wear no hedge.
     bandPricesFullBudgetWithLevels: slots.bandPricesFullBudgetWithLevels('74,000', '46,000'),
     bandPricesEssentialsWithLevels: slots.bandPricesEssentialsWithLevels('46,000', '74,000'),
+    // W8-R7: the full-budget caption where the run counts a working year at another figure. Sampled on each word
+    // ("own" for a fresh figure, "last" for an out-of-date one) at walk 8's own figures (T's, and ST's budget twin).
+    bandCountsWorkingYearsNote: `${slots.bandCountsWorkingYearsNote('84,000', '90,000', false)} ${slots.bandCountsWorkingYearsNote('84,000', '105,000', true)}`,
+    bandCountsWorkingYearsWithLevels: slots.bandCountsWorkingYearsWithLevels('90,000', false, '105,000', '105,000'),
     // U17 §S6 — the applied conversion's own passed start, STATED where §S1's refusal used to fire.
     // Named `leverRoth*` on purpose: a `roth*` spelling would be control-scoped and require-hedge
     // would demand a modal on a year read straight from the reader's saved plan (see the slot's

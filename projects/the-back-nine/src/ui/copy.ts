@@ -3014,6 +3014,16 @@ export const slots = {
    *  the scalable-essentials tier; both failure modes are mutation-pinned). */
   bandPricesFullBudgetWithLevels: (fullFormatted: string, essentialsFormatted: string): string =>
     `This range prices your full budget — about $${fullFormatted} a year to start. Your essentials alone, medical included, would be about $${essentialsFormatted}.`,
+  /** U11 walk 8's W8-R7 (`docs/plans/features/typed-below-walk8-form-build-spec.md`, U3): the full-budget caption where
+   *  the run counts a working year at a figure other than the spending (`workingYearFigureBesideQuote`: its own, or its
+   *  last where W's answer is out of date). "This range prices your full budget" read there as the date measured at the
+   *  spending in every year, beside a note that the working years count at the lower figure (walk 8: "Is that $90,000
+   *  or $84,000? Same life, or not?"). Both figures, each with its years; the same life the date is measured against.
+   *  The levels twin keeps its own two figures and names the working-year figure first. Figures pre-formatted. */
+  bandCountsWorkingYearsNote: (figureFormatted: string, quoteFormatted: string, last: boolean): string =>
+    `This range counts each working year at your ${last ? 'last' : 'own'} figure of $${figureFormatted} a year, and your spending of $${quoteFormatted} a year once you’ve both stopped working. That is the same life the date above is measured against.`,
+  bandCountsWorkingYearsWithLevels: (figureFormatted: string, last: boolean, fullFormatted: string, essentialsFormatted: string): string =>
+    `This range counts each working year at your ${last ? 'last' : 'own'} figure of $${figureFormatted} a year. Once you’ve both stopped working, it prices your full budget, about $${fullFormatted} a year to start. Your essentials alone, medical included, would be about $${essentialsFormatted}.`,
   bandPricesEssentialsWithLevels: (essentialsFormatted: string, fullFormatted: string): string =>
     `This range prices your essentials only — about $${essentialsFormatted} a year to start, medical included. Your full budget would be about $${fullFormatted}.`,
   /** The OLD-SAVE arm: the balances behind the fan were saved in a named past year. (Tightened
@@ -4118,7 +4128,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:1873` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:1877` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

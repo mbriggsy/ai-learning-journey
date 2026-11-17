@@ -700,3 +700,50 @@ describe('the pay check’s standing line (KTD21)', () => {
     expect(plain.container.querySelector('.cs-staleness-note')?.textContent).toBe(copy.stalenessHeroNote)
   })
 })
+
+describe('FuckOffDate — the band caption beside a working-year figure (W8-R7)', () => {
+  // A lifestyle-crowned band (BAND's own track) on one date, with or without the two spending levels.
+  const banded = (extra: Record<string, unknown>) => ({
+    ...dates(DATE_FIXTURES.confirmed),
+    band: BAND,
+    bandAnnotations: deriveDateBandAnnotations(58, 60, 4, 40, undefined, false),
+    ...extra,
+  })
+  const caption = (container: HTMLElement): string | null | undefined => container.querySelector('.fod-band__tracknote')?.textContent
+
+  it('names both figures where the run counts a working year at another figure, own or last', () => {
+    const own = render(<FuckOffDate view={banded({ workingYearFigure: { figure: '84,000', quote: '90,000', last: false } })} />)
+    expect(caption(own.container)).toBe(
+      'This range counts each working year at your own figure of $84,000 a year, and your spending of $90,000 a year once you’ve both stopped working. That is the same life the date above is measured against.',
+    )
+    cleanup()
+    const last = render(<FuckOffDate view={banded({ workingYearFigure: { figure: '84,000', quote: '105,000', last: true } })} />)
+    expect(caption(last.container)).toBe(
+      'This range counts each working year at your last figure of $84,000 a year, and your spending of $105,000 a year once you’ve both stopped working. That is the same life the date above is measured against.',
+    )
+  })
+
+  it('keeps the full-budget caption where no working-year figure differs', () => {
+    const { container } = render(<FuckOffDate view={banded({})} />)
+    expect(caption(container)).toBe(copy.bandPricesFullBudgetNote)
+  })
+
+  // The levels keep their own dialect (`formatAbsoluteDollar`, "about", two significant figures): $105,000 reads "about
+  // $110,000" here, beside the line's exact "$105,000" on the same page — pre-existing on every levels caption, filed on the
+  // W8-R7 register entry for walk 9's read, never changed inside this caption alone.
+  it('the levels twin names the working-year figure first, then the full budget and the essentials', () => {
+    const { container } = render(
+      <FuckOffDate view={banded({ spendLevels: { full: 105_000, essentials: 105_000 }, workingYearFigure: { figure: '90,000', quote: '105,000', last: false } })} />,
+    )
+    expect(caption(container)).toBe(
+      'This range counts each working year at your own figure of $90,000 a year. Once you’ve both stopped working, it prices your full budget, about $110,000 a year to start. Your essentials alone, medical included, would be about $110,000.',
+    )
+  })
+
+  it('a floor-keyed band keeps its essentials caption (the working-year figure rides only the full-budget arm)', () => {
+    const { container } = render(
+      <FuckOffDate view={banded({ band: { ...BAND, track: 'floor' as const }, workingYearFigure: { figure: '84,000', quote: '90,000', last: false } })} />,
+    )
+    expect(caption(container)).toBe(copy.bandPricesEssentialsNote)
+  })
+})

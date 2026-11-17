@@ -50,6 +50,7 @@ import {
 import { plainNote, type GateDoor, type NoteDoor, type NoteParts, type NoteSegment } from '@ui/noteParts'
 import { formatMoney, formatMoneyPair } from './fields'
 import {
+  buildDateInput,
   carriedWorkingYearLeftOver,
   workingYearCostFigure,
   workingYearCostForRun,
@@ -1204,6 +1205,31 @@ const TYPED_BELOW_SPAN_WORDS: TypedBelowSpanWords = {
 }
 function typedBelowSpanSentences(s: TypedBelowSpan, f: TypedBelowSpanFrame): readonly string[] {
   return (TYPED_BELOW_SPAN_WORDS[s.kind] as (s: TypedBelowSpan, f: TypedBelowSpanFrame) => readonly string[])(s, f)
+}
+
+/** The band caption's working-year half (U11 walk 8's W8-R7; `docs/plans/features/typed-below-walk8-form-build-spec.md`,
+ *  U3): the figure the run counts a working year at, beside today's quote, wherever the two print differently, so the
+ *  band's "prices your full budget" never reads as every year at the spending. `last` where W's answer is out of date
+ *  (the run still carries its last figure: `buildDateInput`'s own W). Keyed on the figures the run and the quote carry,
+ *  never on "typed": a kept figure, an out-of-date yes and a typed figure count alike, below or above the quote. `null`
+ *  where the run carries no W, there is no quote, or the two print alike (a monthly entry a few cents off the quote). */
+export interface WorkingYearFigureBesideQuote {
+  readonly figure: string
+  readonly quote: string
+  readonly last: boolean
+}
+const figureBesideQuoteMemo = new WeakMap<ScenarioDraft, WorkingYearFigureBesideQuote | null>()
+export function workingYearFigureBesideQuote(d: ScenarioDraft): WorkingYearFigureBesideQuote | null {
+  const memo = figureBesideQuoteMemo.get(d)
+  if (memo !== undefined) return memo
+  const w = buildDateInput(d)?.workingYearCostReal
+  const quote = workingYearQuote(d).annualReal
+  const read =
+    w === undefined || quote <= 0 || formatMoney(w) === formatMoney(quote)
+      ? null
+      : { figure: formatMoney(w), quote: formatMoney(quote), last: isWorkingYearCostStale(d) }
+  figureBesideQuoteMemo.set(d, read)
+  return read
 }
 
 /** The typed figure (yearly, formatted) today's year-0 left over rests on, exactly where the typed-below line speaks

@@ -20,6 +20,7 @@
  */
 import type { MemoryModelSnapshot } from '@store/memoryModel'
 import { isDateRoute } from '@intake/intakeMap'
+import { workingYearFigureBesideQuote, type WorkingYearFigureBesideQuote } from '@intake/workingYearLeftOver'
 import type { BandFan, DateBand, DateSearchOutcome, SimulationResult } from '@shared/model'
 import type { XAnnotation } from '@viz/bandData'
 import { truncateFanAtThinCohort } from '@viz/bandGeometry'
@@ -112,6 +113,7 @@ function dateBand(
   readonly bandAnnotations?: readonly XAnnotation[]
   readonly bandAges?: (yearsFromNow: number) => string
   readonly spendLevels?: { readonly essentials: number; readonly full: number }
+  readonly workingYearFigure?: WorkingYearFigureBesideQuote
 } {
   const rawBand = outcome.band
   if (!rawBand || rawBand.fan.byYear.length < 2) return {}
@@ -157,7 +159,10 @@ function dateBand(
         full: budgetYearZeroFullTotal(draft.budget, draft.health.oopMedicalAnnual),
       }
     : undefined
-  return { band, bandAnnotations, bandAges, spendLevels }
+  // W8-R7: the figure the run counts a working year at, where it prints different from today's quote (the caption names
+  // both; read from the draft through the composer's own producer, never re-derived here).
+  const workingYearFigure = workingYearFigureBesideQuote(draft) ?? undefined
+  return { band, bandAnnotations, bandAges, spendLevels, workingYearFigure }
 }
 
 /**

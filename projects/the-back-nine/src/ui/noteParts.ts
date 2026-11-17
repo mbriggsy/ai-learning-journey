@@ -37,19 +37,28 @@ export interface NoteRuns {
 /** The parts: the opening, then EITHER labelled segments (W's stale line, a description list) with the Result's door,
  *  OR the typed-below line's runs (an ordered list and its closing paragraph), never both. Only the typed-below line sets
  *  `runs`, and then its `segments` is empty and it has no door; `runs` is absent everywhere else (never written as
- *  `undefined`). */
+ *  `undefined`).
+ *
+ *  W's stale line has a closing paragraph of its own (`closing`; the walk-8 form spec's U4, U11 walk 8's W8-R12 (a)):
+ *  the survivor part, a condition over its segments' runs, never one more segment (as a fourth labelled part it would
+ *  fail WCAG 1.3.1, KD7's reason). It sits after the segments and BEFORE the door, which is the household's act and comes
+ *  last, so a line with a door can carry it (the survivor build's KTD6 kept it off a line with a door only because the
+ *  runs' type forbids one). Present only where there is one (never written as `undefined`). */
 export type NoteParts =
   | {
       readonly opening: string
       readonly segments: readonly NoteSegment[]
       /** The Result's door (W's stale line for a "saved" answer, on a tab that can act), or none. */
       readonly door: NoteDoor | null
+      /** The survivor part's sentences, drawn as one paragraph after the segments and before the door. */
+      readonly closing?: readonly string[]
       readonly runs?: never
     }
   | {
       readonly opening: string
       readonly segments: readonly []
       readonly door: null
+      readonly closing?: never
       readonly runs: NoteRuns
     }
 
@@ -66,20 +75,22 @@ export interface GateDoor {
 /** A note with no parts: the opening alone. */
 export const plainNote = (text: string): NoteParts => ({ opening: text, segments: [], door: null })
 
-/** The note without its door (a read-only tab reads the fact alone). A note with runs never has a door, so a note with a
- *  door has no runs to keep; a doorless note comes back as it is. */
+/** The note without its door (a read-only tab reads the fact alone; the survivor part stays, a fact). A note with runs
+ *  never has a door, so a note with a door has no runs to keep; a doorless note comes back as it is. */
 export const withoutDoor = (p: NoteParts): NoteParts =>
-  p.door === null ? p : { opening: p.opening, segments: p.segments, door: null }
+  p.door === null ? p : { opening: p.opening, segments: p.segments, door: null, ...(p.closing === undefined ? {} : { closing: p.closing }) }
 
-/** No segments, no door and no runs: every host draws it as its old single `<p>` (the pinned reduce-to-plain). */
-export const isPlainNote = (p: NoteParts): boolean => p.segments.length === 0 && p.door === null && p.runs === undefined
+/** No segments, no door, no closing and no runs: every host draws it as its old single `<p>` (the pinned
+ *  reduce-to-plain). */
+export const isPlainNote = (p: NoteParts): boolean =>
+  p.segments.length === 0 && p.door === null && p.closing === undefined && p.runs === undefined
 
 /** The parts in order, one space apart — the gate's React key and the text a test compares: the opening, the segments,
- *  the runs and their closing paragraph, the door (a note carries runs or a door, never both); the door's list items
- *  ride in order between its lead and its tail. */
+ *  W's closing paragraph or the runs and theirs, the door (a note carries runs or a door, never both); the door's list
+ *  items ride in order between its lead and its tail. */
 export function notePartsText(p: NoteParts): string {
   const part = (s: NoteSegment): string[] => [s.label, ...s.sentences]
   const runs = p.runs === undefined ? [] : [...p.runs.items.flatMap(part), ...(p.runs.closing ?? [])]
   const door = p.door === null ? [] : [p.door.label, ...p.door.lead, ...p.door.items, ...p.door.tail]
-  return [p.opening, ...p.segments.flatMap(part), ...runs, ...door].join(' ')
+  return [p.opening, ...p.segments.flatMap(part), ...(p.closing ?? []), ...runs, ...door].join(' ')
 }

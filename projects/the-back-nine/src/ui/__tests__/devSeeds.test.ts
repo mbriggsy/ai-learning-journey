@@ -1922,14 +1922,16 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(workingYearLeftOverShownState(d)).toBe('waiting-on-w')
     expect(workingYearLeftOverLive(d), 'a stale W still rides at $84,000: never moved').toBe(16_985)
     expect(workingYearCostStaleNote(d)).toBe(
-      `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000')}`,
+      `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000', false)}`,
     )
     // Council `wf_7fa86902-35c`'s order: the note, the either-way lead ("update": no Keep door below the quote),
     // "This answer now:" with the stored figure dated, then "If a working year costs $90,000:" and year 0 there.
     // As parts since U11 walk 5's (bi), with after work's $90,000 first under "This answer now:" ((bl)) and why none of
     // the $16,985 is added until they update ((bh)).
     expect(workingYearCostStaleLine(d)).toEqual({
-      opening: [slots.workingCostStaleQuote('84,000', '90,000'), slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000'), copy.workingCostStaleEitherWayUpdate].join(' '),
+      // On the line the gap comparison is scoped and the survivor part closes it (U11 walk 8's W8-R12 (a)): Sam can die
+      // from 2032 (his 66) while Alex still works, and the survivor rule counts 75 % of $84,000 and of $90,000.
+      opening: [slots.workingCostStaleQuote('84,000', '90,000'), slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000', true), copy.workingCostStaleEitherWayUpdate].join(' '),
       segments: [
         {
           label: copy.workingCostStaleLabelNow,
@@ -1948,6 +1950,10 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
             slots.workingCostStaleLowerAddsMore('90,000', '10,985', '6,000', '16,985'),
           ],
         },
+      ],
+      closing: [
+        slots.workingCostTypedBelowSurvivorCharges({ typed: '84,000', quote: '90,000', source: 'spending' }, ['63,000', '67,500']),
+        slots.workingCostTypedBelowSurvivorLess({ typed: '84,000', quote: '90,000', source: 'spending' }, '4,500', 2),
       ],
     })
     const { annualSpendingReal, ...rest } = d

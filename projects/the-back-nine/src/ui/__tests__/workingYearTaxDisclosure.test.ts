@@ -270,6 +270,11 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     ...LEFT_OVER_LINE,
     'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaitingUpdateNone',
   }
+  // U11 walk 8's W8-R10 (a), C only: a later working year short at the quote (the walk-8 form spec's U4).
+  const LEFT_OVER_LINE_LATER_SHORT: Readonly<Record<LeftOverShownState, string>> = {
+    ...LEFT_OVER_LINE,
+    'waiting-on-w': 'assumptionWorkingYearCheckLeftOverWaitingUpdateLaterShort',
+  }
 
   it('the W-absent arm is today’s row, verbatim (KTD22) — under every reading and every left-over state', () => {
     for (const s of LEFT_OVER_SHOWN_STATES) {
@@ -289,7 +294,7 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     expect(copy).not.toHaveProperty('assumptionWorkingYearCheckLeftOver')
     const k9Slot = W_ARM.indexOf('assumptionWorkingYearCheckLeftOverAbsent')
     expect(k9Slot, 'between the either-way group and the a-little-worse group').toBe(W_ARM.indexOf('assumptionWorkingYearCheckWageFigures') + 1)
-    for (const [act, lines] of [['update', LEFT_OVER_LINE], ['updateShort', LEFT_OVER_LINE_SHORT], ['updateNone', LEFT_OVER_LINE_NONE], ['confirmOrChange', LEFT_OVER_LINE_CONFIRM]] as const) {
+    for (const [act, lines] of [['update', LEFT_OVER_LINE], ['updateShort', LEFT_OVER_LINE_SHORT], ['updateNone', LEFT_OVER_LINE_NONE], ['updateLaterShort', LEFT_OVER_LINE_LATER_SHORT], ['confirmOrChange', LEFT_OVER_LINE_CONFIRM]] as const) {
       for (const s of LEFT_OVER_SHOWN_STATES) {
         const expected = W_ARM.map((k, i) => (i === k9Slot ? lines[s] : k))
         expect(methodologyLines(row(), 'workingCost', 'agi-derived', s, act), `${s} (${act})`).toEqual(expected)
@@ -297,10 +302,20 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
     }
     expect(new Set(Object.values(LEFT_OVER_LINE)).size, 'seven distinct lines').toBe(7)
     expect(LEFT_OVER_LINE_CONFIRM['waiting-on-w'], 'the act changes only the waiting line').not.toBe(LEFT_OVER_LINE['waiting-on-w'])
-    expect(new Set([LEFT_OVER_LINE, LEFT_OVER_LINE_SHORT, LEFT_OVER_LINE_NONE, LEFT_OVER_LINE_CONFIRM].map((l) => l['waiting-on-w'])).size, 'four waiting forms').toBe(4)
+    expect(
+      new Set([LEFT_OVER_LINE, LEFT_OVER_LINE_SHORT, LEFT_OVER_LINE_NONE, LEFT_OVER_LINE_LATER_SHORT, LEFT_OVER_LINE_CONFIRM].map((l) => l['waiting-on-w'])).size,
+      'five waiting forms',
+    ).toBe(5)
+    // W8-R10 (b): its referents named in words; build 2's R14 holds it static, with no dollars and no direction.
     expect(copy.assumptionWorkingYearCheckLeftOverWaitingUpdateShort, 'B’s form: no "until", and why updating brings nothing back').toBe(
-      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year comes up short. Updating puts the short years into your answer.',
+      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that, because at your spending figures your first working year comes up short. It does put each working year that comes up short at your spending figures into your answer.',
     )
+    expect(copy.assumptionWorkingYearCheckLeftOverWaitingUpdateLaterShort, 'C’s form: the later short years named, no dollars, no direction').toBe(
+      'Until you update your figure for a working year, no money left over is added to your savings. Updating it also puts each later working year that comes up short at your spending figures into your answer.',
+    )
+    for (const k of ['assumptionWorkingYearCheckLeftOverWaitingUpdateShort', 'assumptionWorkingYearCheckLeftOverWaitingUpdateLaterShort'] as const) {
+      expect(copy[k], `${k}: R14, no dollars`).not.toMatch(/\$|\d/)
+    }
     expect(copy.assumptionWorkingYearCheckLeftOverWaitingUpdateNone, 'B at exactly $0: the old words').toBe(
       'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.',
     )

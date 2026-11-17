@@ -7,7 +7,9 @@ import './styles/noteParts.css'
  * `div.note-parts` holding the opening as a `<p>`, then ONE of two lists, never both.
  * - W's stale line: a `<dl>` with one `div>dt+dd` per segment — each label on its own line, a size step above the note
  *   in the body face (`noteParts.css`; never color) — and, on the Result, the door as the last dt/dd: its lead, its cost
- *   `<ul>`, its tail, then the host's `button` as a block.
+ *   `<ul>`, its tail, then the host's `button` as a block. Where the line carries a closing paragraph (the survivor part,
+ *   the walk-8 form spec's U4), it follows the segments' `<dl>` as `p.note-parts__closing`, and the door, where there is
+ *   one, follows it in a `<dl>` of its own.
  * - The typed-below line's runs (the walk-8 form council `wf_98d8bc0e-e0a`, KD7 and KD8;
  *   `docs/plans/features/typed-below-walk8-form-build-spec.md`): an `<ol role="list">`, one `<li>` per run — its label
  *   as a `<p>` in the segment label's place and face, then each of its sentences its own `<p>` — and, after the list,
@@ -33,10 +35,32 @@ export function NotePartsBlock({
   readonly button?: ReactNode
 }) {
   const { door, runs } = parts
+  // W's stale line's closing paragraph (the walk-8 form spec's U4: the survivor part), after its segments and before its
+  // door. A `<p>` cannot sit inside a `<dl>`, so where both are drawn the door takes a `<dl>` of its own after it — still
+  // a dt/dd, still the block's last part; with no closing the door stays the segments' last dt/dd, as ruled.
+  const closing = parts.closing ?? null
+  const doorPart =
+    door === null ? null : (
+      <div className="note-parts__segment note-parts__door">
+        <dt className="note-parts__label">{door.label}</dt>
+        <dd className="note-parts__body">
+          {door.lead.length > 0 && <p className="note-parts__para">{door.lead.join(' ')}</p>}
+          {door.items.length > 0 && (
+            <ul className="note-parts__list">
+              {door.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
+          {door.tail.length > 0 && <p className="note-parts__para">{door.tail.join(' ')}</p>}
+          {button}
+        </dd>
+      </div>
+    )
   return (
     <div className={`note-parts ${className}`}>
       <p className="note-parts__opening">{parts.opening}</p>
-      {(parts.segments.length > 0 || door !== null) && (
+      {(parts.segments.length > 0 || (doorPart !== null && closing === null)) && (
         <dl className="note-parts__segments">
           {parts.segments.map((s) => (
             <div key={s.label} className="note-parts__segment">
@@ -44,25 +68,11 @@ export function NotePartsBlock({
               <dd className="note-parts__body">{s.sentences.join(' ')}</dd>
             </div>
           ))}
-          {door !== null && (
-            <div className="note-parts__segment note-parts__door">
-              <dt className="note-parts__label">{door.label}</dt>
-              <dd className="note-parts__body">
-                {door.lead.length > 0 && <p className="note-parts__para">{door.lead.join(' ')}</p>}
-                {door.items.length > 0 && (
-                  <ul className="note-parts__list">
-                    {door.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                )}
-                {door.tail.length > 0 && <p className="note-parts__para">{door.tail.join(' ')}</p>}
-                {button}
-              </dd>
-            </div>
-          )}
+          {closing === null && doorPart}
         </dl>
       )}
+      {closing !== null && <p className="note-parts__closing">{closing.join(' ')}</p>}
+      {closing !== null && doorPart !== null && <dl className="note-parts__segments">{doorPart}</dl>}
       {/* The runs (KD8): the years run in order, so an ordered list; each sentence is its own paragraph (KD4's three
           beats). A run's years are its label and never repeat on a line; its sentences keep their place (index keys). */}
       {runs !== undefined && (

@@ -43,7 +43,7 @@ round's other walk-8 items (U3, U4). No engine output moves; `src/engine` and `i
   then the moved line); the answer page reads counts and lean, the moved clause, the cap sentence, the lead.
 - **KD6. Ranges carry each end's year.** Later ranges in a run print their ends in the first range's year order; the
   first range names its end years where a later range descends. A pure law plus a property test splits any run whose
-  pairing fails (`creditsJoin` can join a drift that does not complement, `workingYearLeftOver.ts:981-982`).
+  pairing fails (`creditsJoin` can join a drift that does not complement, `workingYearLeftOver.ts:1095-1096`).
 - **KD7. The survivor part leaves the list** (the survivor build's KTD6 moves: as a fourth term under "both alive" it
   fails WCAG 1.3.1). A `<p>` after the list, costs first, then the same close. No survivor ratio, no "three-quarters"
   (false on c90 and c80), no "nothing left over is added" (the credit-0 rule stays unsaid, council `wf_dfb7949b-4a7`),
@@ -169,6 +169,35 @@ close, "At your spending" or "At your budget". **[T]** the typed figure.
   the fix round ("unless the fix round adopts W8-R5 (d)"), and this spec adopts it: "This", where an answer is on screen.
 - **The sheet's two rows**: W8-R5 (b)'s noun lands on `assumptionWorkingYearCheckLeftOverSaved` too, the moved row's twin
   with the same unreferenced "all of it".
+
+**As built in U4: the pilot's calls** (each flagged for walk 9, each in the code's docblocks; the stale family's figures
+measured through the engine at `3f2d6e4f` and reproduced by the composer: A $4,500 on $63,000 against $67,500, B, C and F
+$15,750 on $63,000 against $78,750, S −$4,500):
+- **Where the survivor part rides.** W's stale line (`workingYearCostStaleLine`) for a "saved" answer waiting on W whose
+  spending rose past the held figure, wherever the survivor gate is on (`staleSurvivor`: the typed-below read, the held
+  figure in the typed figure's place, against the same draft re-confirmed at the quote): A, B, C and F. Never S (its
+  survivor year errs cautious) and never a non-"saved" answer, whose line is the note alone and whose note already leans
+  the whole answer rosy (the walk-8 card's W8-R12 (d) kill). KD7's sentences through one helper (`survivorPartOf`), its
+  close glossed: it is the stale line's first rider.
+- **Its home.** `NoteParts` gained `closing` on the segments arm (the survivor build's KTD6 rule changes with it): drawn
+  as `p.note-parts__closing` after the segments' `<dl>` and before the door; a `<p>` cannot sit in a `<dl>`, so where both
+  are drawn the door takes a `<dl>` of its own, still the block's last dt/dd. A read-only tab keeps the part.
+- **The scope.** A run of two or more years, and a later year alone, carry "you’re both alive" on the head noun ("From 2029
+  through 2032, each working year you’re both alive comes up…"; the years lead, or "both alive from 2029 through 2032"
+  reads as alive the whole run). Year 0 alone carries none: no one can have died by then. A's gap comparison is scoped
+  on the LINE only; the W step and the panel's W row keep the unscoped note, where no survivor part sits (a scope never
+  shows without its figure: the survivor build's R10). Credit sentences stay unconditioned.
+- **The waiting seat too** (beyond the card's letter, by the same R10): the sheet hides the answer page, and B's and C's
+  seats now speak their runs, so each seat that speaks a run carries the scope and closes on the survivor part.
+- **W8-R10, the method lines held to build 2's R14.** The refuter put the seat's dollars and lean on B's and C's method
+  lines; R14 holds that row static, with no dollars and no direction word, because it reads the live draft far above the
+  seat (`ArmedMethodologyLines`; insight 035). So the method lines name their referents in words ("at your spending
+  figures", "each working year that comes up short at your spending figures") and the seats carry the dollars and the
+  lean. C and F read a new waiting form, `updateLaterShort`, under any answer (as B's form does).
+- **W8-R12 (c), the placement kept.** The none choice now comes first on the W row's Keep condition and on the Result
+  door's confirm arm; the refuter's move of the condition and Keep below the cost list was not taken (council
+  `wf_22858e04-f7a` (3) placed it above Keep, its described-by, inside the stale note), so "listed below" still points
+  past the button.
 
 ## Units
 

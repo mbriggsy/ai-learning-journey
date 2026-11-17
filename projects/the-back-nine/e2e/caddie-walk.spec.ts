@@ -1354,6 +1354,14 @@ const gateDoorOf = (act: 'update' | 'confirm'): GateDoorWords =>
  *  W row offers no Keep door); on the gate the door is its own section under the buttons. The seat waits (no figure,
  *  no radios) in the act's verb ((bn)) as on every stale-W witness — on B (year 0 short at the quote) with no "until"
  *  (U11 walk 6's R3: `seatLine`). */
+/** The survivor part on W's stale line and its seat (U11 walk 8's W8-R12 (a), the walk-8 form spec's U4): every witness here
+ *  descends from `stillWorking`, so the engine can draw a working year with Sam dead and Alex working from 2032, and the
+ *  survivor rule counts 75 % of each figure (no budget, no medical held whole): $84,000 → $63,000. Its close is the
+ *  line's first rider, so glossed (two years, the engine's look-back). */
+function staleSurvivorWords(quote: string, chargeAtQuote: string, most: string): readonly string[] {
+  const f = { typed: STALE_W_CONFIRMED, quote, source: 'spending' } as const
+  return [slots.workingCostTypedBelowSurvivorCharges(f, ['63,000', chargeAtQuote]), slots.workingCostTypedBelowSurvivorLess(f, most, 2)]
+}
 function risenWitness(
   quoteNow: string,
   lean: string,
@@ -1469,8 +1477,9 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
           ...STALE_W_EXTRAS,
           slots.workingCostStaleDoorMore(STALE_W_CONFIRMED, STALE_W_ROOM, STALE_W_QUOTE_NOW),
           slots.workingCostStaleResultDoorConfirm(copy.stalenessPayCheckCta),
+          // U11 walk 8's W8-R12 (c): the none choice first, then Keep for some costs within the room.
+          slots.workingCostStaleDoorYesFirst(STALE_W_QUOTE_NOW),
           slots.workingCostStaleDoorKeepUpTo(slots.workingCostKeepYearly(STALE_W_CONFIRMED), STALE_W_ROOM),
-          slots.workingCostStaleDoorYes(STALE_W_QUOTE_NOW),
           slots.workingCostStaleDoorNoPlus(STALE_W_QUOTE_NOW, false),
         ],
         notLead: copy.stalenessLeftOverNote,
@@ -1485,7 +1494,8 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
   // $90,000 or more adds at most ($10,985, year 0 at the quote) and what lowers it; the seat waits as on
   // `datesavedstale`. No working year at $90,000 runs short, so the lean is the left over reading $6,000 high (U11 walk
   // 6's R2). The ORDER is pinned in `devSeeds.test.ts` (the seed's own arm); here each must ride the one line.
-  datesavedrisen: risenWitness(RISEN_W_QUOTE_NOW, slots.workingCostStaleLeftOverInflated(STALE_W_CONFIRMED, RISEN_W_GAP, RISEN_W_QUOTE_NOW), [
+  // U11 walk 8's W8-R12 (a): on the line the gap comparison is scoped and the survivor part closes it (`staleSurvivorWords`).
+  datesavedrisen: risenWitness(RISEN_W_QUOTE_NOW, slots.workingCostStaleLeftOverInflated(STALE_W_CONFIRMED, RISEN_W_GAP, RISEN_W_QUOTE_NOW, true), [
     copy.workingCostStaleEitherWayUpdate,
     ...risenNow(RISEN_W_QUOTE_NOW),
     slots.workingCostStaleLabelIf(RISEN_W_QUOTE_NOW),
@@ -1493,6 +1503,7 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
     slots.workingCostStaleEachDollar(RISEN_W_QUOTE_NOW, RISEN_AT_QUOTE),
     // The extra a lower figure counts: the stored $16,985 less year 0's $10,985 at the quote (U11 walk 7's R6 (a)).
     slots.workingCostStaleLowerAddsMore(RISEN_W_QUOTE_NOW, RISEN_AT_QUOTE, '6,000', DATE_LEFT_OVER),
+    ...staleSurvivorWords(RISEN_W_QUOTE_NOW, '67,500', '4,500'),
   ]),
   // Increment 11, the risen twin's two other arms (`devSeeds.ts`'s docblocks carry the hand sums): at $105,000 year
   // 0 comes up $4,015 short, so a check adds none of the $16,985 and the short-year lean rides…
@@ -1500,9 +1511,16 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
     slots.workingCostStaleShortUntilUpdated(STALE_W_CONFIRMED),
     ...savedNow(RISEN_SHORT_QUOTE, slots.workingCostStaleLeftOverNoneNow(DATE_LEFT_OVER, STALE_W_CONFIRMED)),
     slots.workingCostStaleLabelIf(RISEN_SHORT_QUOTE),
-    slots.workingCostStaleLeftOverIfFirstShortRun(2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, RISEN_SHORT_QUOTE, STALE_W_CONFIRMED, DATE_LEFT_OVER),
+    slots.workingCostStaleLeftOverIfFirstShortRun(2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, RISEN_SHORT_QUOTE, STALE_W_CONFIRMED, DATE_LEFT_OVER, true),
     copy.workingCostStaleLowerCounts,
-  ], slots.workingLedgerLeftOverWaitingShort(RISEN_SHORT_QUOTE, 2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY)),
+    ...staleSurvivorWords(RISEN_SHORT_QUOTE, '78,750', '15,750'),
+  ], [
+    // W8-R10 (b): the run (scoped), the lean before the loss, what updating does, then the survivor part.
+    slots.workingLedgerLeftOverWaitingShort(RISEN_SHORT_QUOTE, 2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, true),
+    slots.workingCostStaleSeatShortLean(STALE_W_CONFIRMED, false),
+    slots.workingLedgerLeftOverWaitingShortUpdate(RISEN_SHORT_QUOTE, 2026, false),
+    ...staleSurvivorWords(RISEN_SHORT_QUOTE, '78,750', '15,750'),
+  ].join(' ')),
   // …and with Sam's alimony to 62, year 0 at $105,000 has $5,985 left over (the most a check adds) while 2029, the
   // alimony ended, comes up $4,015 short — named, with the years-cheaper lean.
   datesavedrisenlater: risenWitness(RISEN_SHORT_QUOTE, slots.workingCostStaleLeftOverYearsCheaper(STALE_W_CONFIRMED), [
@@ -1512,9 +1530,15 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
     slots.workingCostStaleLeftOverIfCapped(RISEN_LATER_AT_QUOTE, 2026, RISEN_SHORT_QUOTE, true),
     slots.workingCostStaleLeftOverGainYears(2026, RISEN_LATER_SHORT_YEAR - 1, RISEN_LATER_RESUMES),
     slots.workingCostStaleEachDollar(RISEN_SHORT_QUOTE, RISEN_LATER_AT_QUOTE),
-    slots.workingCostStaleShortLaterYears(RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, STALE_W_CONFIRMED),
+    slots.workingCostStaleShortLaterYears(RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, STALE_W_CONFIRMED, true),
     slots.workingCostStaleLowerCountsMore(DATE_LEFT_OVER),
-  ]),
+    ...staleSurvivorWords(RISEN_SHORT_QUOTE, '78,750', '15,750'),
+  ], [
+    // W8-R10 (a): the act's waiting words, then the later run at the quote and the years' lean, then the survivor part.
+    copy.workingLedgerLeftOverWaitingUpdate,
+    slots.workingCostStaleSeatLaterShort(RISEN_SHORT_QUOTE, RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, STALE_W_CONFIRMED, true),
+    ...staleSurvivorWords(RISEN_SHORT_QUOTE, '78,750', '15,750'),
+  ].join(' ')),
 }
 
 /** The Result's ONE standing line speaks the witness's cause, in one line, behind its own door. */

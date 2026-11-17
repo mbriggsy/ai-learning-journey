@@ -179,6 +179,13 @@ type StaleLean = 'spendingAlone' | 'yearsCheaper' | 'leftOverHigh'
  *  described-by as a reward for a "yes" (the red team's attack 4; PA's tax on pay lives in W, so the quote alone is
  *  rosy there). */
 export function workingYearCostStaleNote(d: ScenarioDraft): string | null {
+  return staleNoteOf(d, false)
+}
+
+/** The note, its `leftOverHigh` comparison scoped "you’re both alive" where `bothAlive` (U11 walk 8's W8-R12 (a)): only
+ *  the LINE passes it, where the survivor part follows and sizes such a year; the W surfaces read the unscoped note
+ *  (no survivor part beside it there: a scope never shows without its figure, the survivor build's R10). */
+function staleNoteOf(d: ScenarioDraft, bothAlive: boolean): string | null {
   const s = workingYearCostStaleSentence(d)
   if (s === null || !s.rose) return s?.sentence ?? null
   const stored = savedWaitingOnW(d)
@@ -188,7 +195,7 @@ export function workingYearCostStaleNote(d: ScenarioDraft): string | null {
   const words: Readonly<Record<StaleLean, () => string>> = {
     spendingAlone: () => slots.workingCostStaleLeansBetter(s.held),
     yearsCheaper: () => slots.workingCostStaleLeftOverYearsCheaper(s.held),
-    leftOverHigh: () => slots.workingCostStaleLeftOverInflated(s.held, gapFormatted(d), s.quote),
+    leftOverHigh: () => slots.workingCostStaleLeftOverInflated(s.held, gapFormatted(d), s.quote, bothAlive),
   }
   return `${s.sentence} ${words[lean]()}`
 }
@@ -320,27 +327,45 @@ export function workingYearCheckAtQuote(d: ScenarioDraft): WorkingYearCheckAtQuo
  *  leaves $1 or more, or the spending did not rise. A "saved" answer waiting on W reads its own check at the quote (one
  *  composer, the line's); any other answer reads the same re-confirmed picture's year 0, memoized on the source draft
  *  like the check. */
-type QuoteLeavesNothing = { readonly kind: 'short'; readonly run: WorkingYearShortRun } | { readonly kind: 'none' }
+//  U11 walk 8's W8-R10 (a) (the walk-8 form spec's U4) adds C's form: year 0 there leaves $1 or more, and a LATER working
+//  year there comes up short (`laterShort`, the run `laterShortOf` names) — the sheet said S's words there and never named
+//  the run its answer page names. Read the same way, under any answer.
+type QuoteLeavesNothing =
+  | { readonly kind: 'short'; readonly run: WorkingYearShortRun }
+  | { readonly kind: 'none' }
+  | { readonly kind: 'laterShort'; readonly run: WorkingYearLaterShort }
 const quoteLeavesNothingMemo = new WeakMap<ScenarioDraft, QuoteLeavesNothing | null>()
 function quoteLeavesNothing(d: ScenarioDraft): QuoteLeavesNothing | null {
   if (workingYearCostStaleSentence(d)?.rose !== true) return null
   const stored = savedWaitingOnW(d)
   if (stored !== null) {
     const c = checkAtQuote(d, stored)
-    return c.kind === 'firstShort' ? { kind: 'short', run: c.run } : c.kind === 'firstNone' ? { kind: 'none' } : null
+    if (c.kind === 'firstShort') return { kind: 'short', run: c.run }
+    if (c.kind === 'firstNone') return { kind: 'none' }
+    return (c.kind === 'capped' || c.kind === 'whole') && c.laterShort !== null ? { kind: 'laterShort', run: c.laterShort } : null
   }
   const memo = quoteLeavesNothingMemo.get(d)
   if (memo !== undefined) return memo
   const ledger = workingYearLedgerForRun(writeConfirmedWorkingYearCost(d))
   const year0 = ledger === 'unknown' ? null : ledger.year0
-  const read: QuoteLeavesNothing | null =
-    ledger === 'unknown' || year0 === null || year0.bottomLine >= 1
-      ? null
-      : year0.bottomLine < 0
-        ? { kind: 'short', run: shortRunFrom(year0, ledger.laterYears) }
-        : { kind: 'none' }
+  let read: QuoteLeavesNothing | null = null
+  if (ledger !== 'unknown' && year0 !== null) {
+    if (year0.bottomLine < 0) read = { kind: 'short', run: shortRunFrom(year0, ledger.laterYears) }
+    else if (year0.bottomLine < 1) read = { kind: 'none' }
+    else {
+      const later = laterShortOf(ledger.laterYears)
+      read = later === null ? null : { kind: 'laterShort', run: later }
+    }
+  }
   quoteLeavesNothingMemo.set(d, read)
   return read
+}
+
+/** The waiting form a read names, where it names one (`null`: the draft's act). */
+const QUOTE_LEAVES_WORDS: Readonly<Record<QuoteLeavesNothing['kind'], LeftOverWaitingWords>> = {
+  short: 'updateShort',
+  none: 'updateNone',
+  laterShort: 'updateLaterShort',
 }
 
 /** Which words the left-over question's "waiting on W" face and its methodology line speak (U11 walk 6's R3, the
@@ -353,20 +378,42 @@ function quoteLeavesNothing(d: ScenarioDraft): QuoteLeavesNothing | null {
  *  "waiting on W" reads it. */
 export function workingYearLeftOverWaitingWords(d: ScenarioDraft): LeftOverWaitingWords {
   const q = quoteLeavesNothing(d)
-  return q === null ? workingYearCostAct(d) : q.kind === 'short' ? 'updateShort' : 'updateNone'
+  return q === null ? workingYearCostAct(d) : QUOTE_LEAVES_WORDS[q.kind]
 }
 
-/** The seat's "waiting on W" words: the waiting form's copy key, or — `updateShort`, whose words carry the draft's
- *  dollars — the run of short years at today's quote, named as the Result's B arm names it (U11 walk 7's R5). */
+/** The seat's "waiting on W" words: the waiting form's copy key, or — `updateShort` and `updateLaterShort`, whose words
+ *  carry the draft's dollars — the run of short years at today's quote with its lean, named as the Result's B and C arms
+ *  name them (U11 walk 7's R5; walk 8's W8-R10): B, the waiting words and the run, the whole-answer lean, then what
+ *  updating does (the lean before the loss, W8-R10 (b)); C, the act's waiting words, then the later run and the years'
+ *  lean (W8-R10 (a)). Each run is the all-alive picture's, so under the survivor gate it carries the scope on its head
+ *  noun and the seat closes on the survivor part, as the stale line does (W8-R12 (a); a scope never shows without its
+ *  figure). Year 0 alone carries neither: no one can have died by then. */
 export function workingYearLeftOverWaitingSeat(d: ScenarioDraft): string {
   const q = quoteLeavesNothing(d)
-  if (q?.kind === 'short') {
-    const quote = workingYearCostStaleSentence(d)?.quote ?? formatMoney(workingYearQuote(d).annualReal)
-    const r = q.run
-    return slots.workingLedgerLeftOverWaitingShort(quote, r.firstYear, r.lastYear, formatMoney(r.least), formatMoney(r.most))
+  // `s` is non-null wherever `q` is (the read needs the spending risen past the held figure): narrowing for its figures.
+  const s = workingYearCostStaleSentence(d)
+  if (q === null || q.kind === 'none' || s === null) {
+    // Every keyed form reads its key (the words `workingYearLeftOverWaitingWords` returns off the same `q`).
+    return copy[LEFT_OVER_WAITING_COPY[q === null ? workingYearCostAct(d) : 'updateNone'].seat]
   }
-  // Every other form reads its key (the words `workingYearLeftOverWaitingWords` returns off the same `q`).
-  return copy[LEFT_OVER_WAITING_COPY[q === null ? workingYearCostAct(d) : 'updateNone'].seat]
+  const quote = s.quote ?? formatMoney(workingYearQuote(d).annualReal)
+  const held = s.held
+  const r = q.run
+  const oneYear = r.firstYear === r.lastYear
+  const survivor = oneYear && q.kind === 'short' ? null : staleSurvivor(d)
+  const bothAlive = survivor !== null
+  const words =
+    q.kind === 'short'
+      ? [
+          slots.workingLedgerLeftOverWaitingShort(quote, r.firstYear, r.lastYear, formatMoney(r.least), formatMoney(r.most), bothAlive),
+          slots.workingCostStaleSeatShortLean(held, oneYear),
+          slots.workingLedgerLeftOverWaitingShortUpdate(quote, r.firstYear, oneYear),
+        ]
+      : [
+          copy[WORKING_COST_ACT_COPY[workingYearCostAct(d)].waitingSeat],
+          slots.workingCostStaleSeatLaterShort(quote, r.firstYear, r.lastYear, formatMoney(r.least), formatMoney(r.most), held, bothAlive),
+        ]
+  return [...words, ...(survivor === null ? [] : staleSurvivorPart(d, survivor))].join(' ')
 }
 
 /** The figures the risen arms print: today's quote and the held figure exactly as W's sentence printed them, and
@@ -378,6 +425,9 @@ interface TailFigures {
   /** The stored figure in whole dollars, as `stored` prints it: the arithmetic a sentence states between printed
    *  figures (A's lower-figure extra, U11 walk 7's R6 (a)) is done on what the reader sees. */
   readonly storedDollars: number
+  /** The survivor gate is on (`staleSurvivor`): every run of two or more years, and a later year alone, carries "you’re
+   *  both alive" on its head noun, and the line closes on the survivor part (U11 walk 8's W8-R12 (a)). */
+  readonly bothAlive: boolean
 }
 
 /** One labelled part of W's stale line: its label and the sentences under it (`NoteSegment`; the hosts draw it as a
@@ -390,10 +440,16 @@ export type WorkingYearCostStaleSegment = NoteSegment
 export interface WorkingYearCostStaleLine {
   readonly opening: string
   readonly segments: readonly WorkingYearCostStaleSegment[]
+  /** The survivor part (U11 walk 8's W8-R12 (a), the walk-8 form spec's U4), the line's closing paragraph after its
+   *  segments and before any door ({@link staleSurvivorPart}): present exactly where the line carries segments, the
+   *  spending rose past the held figure, and the engine can draw a working year with one of you dead and the other still
+   *  working (A, B, C and F; never S, whose survivor year errs cautious). Absent otherwise (never written as
+   *  `undefined`). */
+  readonly closing?: readonly string[]
 }
 /** The line as one string, its parts in order one space apart: what a test compares and a reader's full text. */
 export function workingYearCostStaleLineText(l: WorkingYearCostStaleLine): string {
-  return [l.opening, ...l.segments.flatMap((s) => [s.label, ...s.sentences])].join(' ')
+  return [l.opening, ...l.segments.flatMap((s) => [s.label, ...s.sentences]), ...(l.closing ?? [])].join(' ')
 }
 
 /** "This answer now" and what this answer does with the stored figure today — every "saved" arm waiting on W says it
@@ -423,13 +479,14 @@ const laterShortWords = (year0: number, s: WorkingYearLaterShort, f: TailFigures
   ...(s.resumesFrom === null ? [] : [slots.workingCostStaleLeftOverGainYears(year0, s.firstYear - 1, s.resumesFrom)]),
   ...(eachDollar === null ? [] : [eachDollar]),
   s.lastYear === s.firstYear
-    ? slots.workingCostStaleShortLaterYear(s.firstYear, formatMoney(s.most), f.held)
-    : slots.workingCostStaleShortLaterYears(s.firstYear, s.lastYear, formatMoney(s.least), formatMoney(s.most), f.held),
+    ? slots.workingCostStaleShortLaterYear(s.firstYear, formatMoney(s.most), f.held, f.bothAlive)
+    : slots.workingCostStaleShortLaterYears(s.firstYear, s.lastYear, formatMoney(s.least), formatMoney(s.most), f.held, f.bothAlive),
 ]
+// Year 0 alone carries no scope (no one can have died by then); a run from it does.
 const firstShortWords = (s: WorkingYearShortRun, f: TailFigures): string =>
   s.lastYear === s.firstYear
     ? slots.workingCostStaleLeftOverIfFirstShort(s.firstYear, formatMoney(s.most), f.quote, f.held, f.stored)
-    : slots.workingCostStaleLeftOverIfFirstShortRun(s.firstYear, s.lastYear, formatMoney(s.least), formatMoney(s.most), f.quote, f.held, f.stored)
+    : slots.workingCostStaleLeftOverIfFirstShortRun(s.firstYear, s.lastYear, formatMoney(s.least), formatMoney(s.most), f.quote, f.held, f.stored, f.bothAlive)
 /** Each arm's lead (closing the opening), whether year 0 at the quote leaves nothing over (`short`: B's "This answer
  *  now" then ends on what is true today, R3), and the sentences under "If a working year costs $X" (`null`: no such
  *  part). */
@@ -510,26 +567,75 @@ function checkWords(c: WorkingYearCheckAtQuote, f: TailFigures, lead: string): C
  *    stored figure: a moved left over hidden behind the stale W, since "waiting on W" outranks "saved, moved". Filed
  *    for U12's register pass as the U11 walk's (al).) */
 export function workingYearCostStaleLine(d: ScenarioDraft): WorkingYearCostStaleLine | null {
-  const note = workingYearCostStaleNote(d)
-  if (note === null) return null
+  const plain = workingYearCostStaleNote(d)
+  if (plain === null) return null
   const stored = savedWaitingOnW(d)
   const s = workingYearCostStaleSentence(d)
   // `s` is null exactly where the note is (the note is W's sentence): narrowing for the held figure.
-  if (stored === null || s === null) return { opening: note, segments: [] }
-  const f = { held: s.held, stored: formatMoney(stored), storedDollars: Math.round(stored) }
+  if (stored === null || s === null) return { opening: plain, segments: [] }
+  const f = { held: s.held, stored: formatMoney(stored), storedDollars: Math.round(stored), bothAlive: false }
   const act = WORKING_COST_ACT_COPY[workingYearCostAct(d)]
   const until = slots[act.leftOverNone](f.stored, f.held)
   if (!s.rose) {
-    return { opening: `${note} ${eitherWayLead(d)}`, segments: [nowSegment(f, afterWorkSentence(d), until, copy.workingCostStaleNoGuess)] }
+    return { opening: `${plain} ${eitherWayLead(d)}`, segments: [nowSegment(f, afterWorkSentence(d), until, copy.workingCostStaleNoGuess)] }
   }
-  const words = checkWords(checkAtQuote(d, stored), { ...f, quote: s.quote }, eitherWayLead(d))
+  // The survivor read (W8-R12 (a)): where it is on, the runs and the note's comparison carry the scope, and the line
+  // closes on the survivor part (a scope never shows without its figure).
+  const survivor = staleSurvivor(d)
+  const bothAlive = survivor !== null
+  const note = bothAlive ? (staleNoteOf(d, true) ?? plain) : plain
+  const words = checkWords(checkAtQuote(d, stored), { ...f, quote: s.quote, bothAlive }, eitherWayLead(d))
   const now = words.short
     ? nowSegment(f, afterWorkSentence(d), slots.workingCostStaleLeftOverNoneNow(f.stored, f.held), null)
     : nowSegment(f, afterWorkSentence(d), until, slots.workingCostStaleNoSmallerAmount(s.quote))
   return {
     opening: `${note} ${words.lead}`,
     segments: [now, ...(words.ifSentences === null ? [] : [{ label: slots.workingCostStaleLabelIf(s.quote), sentences: words.ifSentences }])],
+    ...(survivor === null ? {} : { closing: staleSurvivorPart(d, survivor) }),
   }
+}
+
+// ── THE OUT-OF-DATE FAMILY'S SURVIVOR PART (U11 walk 8's W8-R12 (a); the walk-8 form spec's U4, measured `3f2d6e4f`: A
+//    $4,500, B, C and F $15,750, S −$4,500). Every comparison the stale line and its waiting seat make is the ALL-ALIVE
+//    picture's. In a working year with one of you dead and the other still working, the engine credits nothing at either
+//    figure and counts W by its survivor rule (`workingYearCostForYear`), so a held figure below today's quote takes the
+//    survivor charges' difference less from savings than the quote would, and no stale page said so. The typed-below
+//    line's read and words, one home (KD7's words, council `wf_98d8bc0e-e0a`): the held figure in the typed figure's
+//    place, the run's carried W against the same draft re-confirmed at today's quote (the "Yes" tap's write). ──
+
+const staleSurvivorMemo = new WeakMap<ScenarioDraft, TypedBelowSurvivor | null>()
+
+/** The survivor read for W's stale figure where the spending rose past it, or `null`: the gate off (no working year of
+ *  the window where the engine can draw one of you dead and the other working), the spending not risen past the held
+ *  figure (a held figure ABOVE the quote errs cautious in such a year: S's −$4,500), or a ceiling under $1. Under any
+ *  answer (the survivor charges read no answer). `'unknown'` reads (no picture, no candidate) give `null`: UNREACHABLE
+ *  wherever the stale line is drawn, since the line's own check composes from the same two drafts. Memoized on the
+ *  source draft (the re-confirmed draft is a fresh object every call). */
+function staleSurvivor(d: ScenarioDraft): TypedBelowSurvivor | null {
+  const memo = staleSurvivorMemo.get(d)
+  if (memo !== undefined) return memo
+  const read = composeStaleSurvivor(d)
+  staleSurvivorMemo.set(d, read)
+  return read
+}
+
+function composeStaleSurvivor(d: ScenarioDraft): TypedBelowSurvivor | null {
+  if (workingYearCostStaleSentence(d)?.rose !== true) return null
+  const ledger = workingYearLedgerForRun(d)
+  const paramsAtHeld = workingYearWindowTopParams(d)
+  const paramsAtQuote = workingYearWindowTopParams(writeConfirmedWorkingYearCost(d))
+  if (ledger === 'unknown' || paramsAtHeld === 'unknown' || paramsAtQuote === 'unknown') return null
+  const read = survivorReadOf(paramsAtHeld, paramsAtQuote, ledger.workingYears.map((y) => y.calendarYear))
+  return read === 'unknown' || read === null || read.most < 1 ? null : read
+}
+
+/** The stale line's (and its waiting seat's) survivor part: KD7's sentences, the held figure in the typed figure's place,
+ *  today's quote in its source's words; its close the line's first rider, so glossed (KD3). */
+function staleSurvivorPart(d: ScenarioDraft, survivor: TypedBelowSurvivor): readonly string[] {
+  const s = workingYearCostStaleSentence(d)
+  const q = workingYearQuote(d)
+  const frame: TypedBelowSurvivorFrame = { typed: s?.held ?? formatMoney(survivor.chargeAtTyped), quote: s?.quote ?? formatMoney(q.annualReal), source: q.source }
+  return survivorPartOf(survivor, frame, irmaa.value.magiLookbackYears)
 }
 
 /** W's stale DOOR on each host (council `wf_7fa86902-35c`; its FORM since council `wf_22858e04-f7a`), said only where
@@ -588,15 +694,22 @@ export function workingYearCostStaleDoor(d: ScenarioDraft): WorkingYearCostStale
   const tail =
     s.quote === null
       ? [press, slots.workingCostStaleDoorKeepNoQuote(keepLabel, keep.formatted, keep.monthly)]
-      : [
-          ...(room === null ? [] : [slots.workingCostStaleDoorMore(s.held, room, s.quote)]),
-          press,
-          room === null
-            ? slots.workingCostStaleDoorKeepCovers(keepLabel, keep.formatted, keep.monthly)
-            : slots.workingCostStaleDoorKeepUpTo(keepLabel, room),
-          slots.workingCostStaleDoorYes(s.quote),
-          slots.workingCostStaleDoorNoPlus(...enter(s.quote)),
-        ]
+      : room === null
+        ? [
+            press,
+            slots.workingCostStaleDoorKeepCovers(keepLabel, keep.formatted, keep.monthly),
+            slots.workingCostStaleDoorYes(s.quote),
+            slots.workingCostStaleDoorNoPlus(...enter(s.quote)),
+          ]
+        : // Above the quote, the none choice first (U11 walk 8's W8-R12 (c)): a household with none of the costs met
+          // "$6,000 or less" and was steered to Keep.
+          [
+            slots.workingCostStaleDoorMore(s.held, room, s.quote),
+            press,
+            slots.workingCostStaleDoorYesFirst(s.quote),
+            slots.workingCostStaleDoorKeepUpTo(keepLabel, room),
+            slots.workingCostStaleDoorNoPlus(...enter(s.quote)),
+          ]
   return { act, gate, result: { label: heading, lead: [copy.workingCostStaleDoorHold], items, tail } }
 }
 
@@ -895,7 +1008,7 @@ function composeTypedBelowWindow(d: ScenarioDraft): WorkingYearTypedBelowWindow 
   const paramsAtTyped = workingYearWindowTopParams(d)
   const paramsAtQuote = workingYearWindowTopParams(quoteDraft)
   if (paramsAtTyped === 'unknown' || paramsAtQuote === 'unknown') return { kind: 'unknown' }
-  const survivor = survivorReadOf(paramsAtTyped, paramsAtQuote, years)
+  const survivor = survivorReadOf(paramsAtTyped, paramsAtQuote, years.map((y) => y.calendarYear))
   if (survivor === 'unknown') return { kind: 'unknown' }
   // The quote answer's cap (KD5, KTD4). A year 0 at the quote of $1 or more is always asked there, so its stored figure is
   // carried; `unknown` where it is not is unreachable, kept so no line can word a cap it did not read.
@@ -931,13 +1044,14 @@ export function typedBelowSurvivorYears(params: SimulationParams, calendarYears:
 
 /** The gate and X (KTD3–KTD5), or `null` where the gate is off ({@link typedBelowSurvivorYears}, read on the typed
  *  answer's candidate: the two candidates differ only in W). `'unknown'` where either candidate carries no W
- *  (unreachable: both pictures composed from it). */
+ *  (unreachable: both pictures composed from it). `calendarYears` — the window's working years, index-aligned with the
+ *  sim year. Read for the typed-below line and for W's stale line (its held figure in the typed figure's place). */
 function survivorReadOf(
   paramsAtTyped: SimulationParams,
   paramsAtQuote: SimulationParams,
-  years: readonly TypedBelowYear[],
+  calendarYears: readonly number[],
 ): TypedBelowSurvivor | null | 'unknown' {
-  const survivorYears = typedBelowSurvivorYears(paramsAtTyped, years.map((y) => y.calendarYear))
+  const survivorYears = typedBelowSurvivorYears(paramsAtTyped, calendarYears)
   if (survivorYears.length === 0) return null
   const atTyped = paramsAtTyped.overlay?.accumulation?.workingYearCostReal
   const atQuote = paramsAtQuote.overlay?.accumulation?.workingYearCostReal
@@ -1286,8 +1400,13 @@ function typedBelowStructure(
 /** The survivor part (KD7; council `wf_dfb7949b-4a7`): the costs first, by the read's form (KTD5), then the runs' close
  *  with X, "at most", and the rider. X is the read's, never re-derived here. */
 function typedBelowSurvivorPart(s: TypedBelowSurvivor, t: FreshTypedBelow): readonly string[] {
-  const f: TypedBelowSurvivorFrame = { typed: t.typed, quote: t.quote, source: t.source }
-  return [TYPED_BELOW_SURVIVOR_COSTS[s.form](f, s), slots.workingCostTypedBelowSurvivorLess(f, formatMoney(s.most))]
+  // Never glossed here: the typed-below line's first rider is a run's (KD3).
+  return survivorPartOf(s, { typed: t.typed, quote: t.quote, source: t.source }, null)
+}
+/** KD7's two sentences for a read and its frame, one home for the typed-below line and W's stale line; `glossYears` where
+ *  the close is its line's first rider (KD3). */
+function survivorPartOf(s: TypedBelowSurvivor, f: TypedBelowSurvivorFrame, glossYears: number | null): readonly string[] {
+  return [TYPED_BELOW_SURVIVOR_COSTS[s.form](f, s), slots.workingCostTypedBelowSurvivorLess(f, formatMoney(s.most), glossYears)]
 }
 /** The survivor part's costs sentence by form (an exhaustive Record, insight 147): both whole figures where the whole gap
  *  holds, else the two survivor charges, printed so they differ wherever they differ (`formatMoneyPair`, R7). */

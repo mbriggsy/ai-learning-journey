@@ -255,7 +255,7 @@ describe('the R7 registry completeness walk (the compile gate’s runtime half)'
     // ⚠️ NON-VACUITY CENSUS — the only assertion in this arm lives INSIDE the loop, so an empty
     // (or silently-shrunken) roster passes GREEN while proving nothing, and the R7 completeness
     // claim evaporates with the gate still reporting OK. `requiredSeats()` derives from TWO
-    // sources (`assumptionRegistry.ts:388-395`: the non-`internal` DRAFT_DISPOSITIONS, plus
+    // sources (`assumptionRegistry.ts:396-403`: the non-`internal` DRAFT_DISPOSITIONS, plus
     // METHODOLOGY_DISCLOSURES), so census BOTH — either half dropping out would otherwise be
     // invisible here.
     const seats = requiredSeats()
@@ -1534,7 +1534,8 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     renderPanel({ snapshot: snap(DEV_SEEDS.datesavedrisen) })
     const note = within(wRow()).getByRole('note')
     expect(note.textContent).toContain(
-      `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000')}`,
+      // The W row's note keeps the unscoped comparison: no survivor part sits beside it (W8-R12 (a): the line's alone).
+      `${slots.workingCostStaleQuote('84,000', '90,000')} ${slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000', false)}`,
     )
     expect(note.textContent, 'never the short-year harm this household lacks').not.toContain(slots.workingCostStaleLeftOverYearsCheaper('84,000'))
     expect(note.textContent, 'no whole-answer lean for a "saved" answer waiting on W').not.toContain(slots.workingCostStaleLeansBetter('84,000'))
@@ -1546,10 +1547,15 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
   })
 
   it('on `datesavedrisenshort` (B: year 0 at $105,000 comes up short) the seat waits with no promise — updating carries nothing either (U11 walk 6’s R3; the round review’s L1-3) — and the method row says the same, under every answer', () => {
+    // U11 walk 8's W8-R10 (b): the run (scoped), the lean before the loss, what updating does, then the survivor part
+    // (W8-R12 (a)); the method row names its referents in words (R14: no dollars, no direction).
     const SEAT_B =
-      'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short. Because your first working year, 2026, comes up short at that cost, updating to $105,000 or more won’t add any, but it puts those shortfalls into your answer.'
+      'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, from 2026 through 2032, each working year you’re both alive comes up $3,652 to $4,015 short. ' +
+      'Your $84,000 figure leaves those shortfalls out, so this answer can look better than it really is. Updating to $105,000 or more puts them in. It adds no money left over, because your first working year, 2026, comes up short at that cost. ' +
+      'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year. ' +
+      'At your spending, that’s at most $15,750 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, when your income two years before was high).'
     const METHOD_B =
-      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year comes up short. Updating puts the short years into your answer.'
+      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that, because at your spending figures your first working year comes up short. It does put each working year that comes up short at your spending figures into your answer.'
     for (const answer of [{ kind: 'saved', quotedReal: 16_985 }, { kind: 'spent' }, undefined] as const) {
       const { unmount } = renderPanel({ snapshot: snap({ ...DEV_SEEDS.datesavedrisenshort, workingYearLeftOver: answer }) })
       const who = answer?.kind ?? 'unanswered'

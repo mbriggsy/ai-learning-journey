@@ -263,10 +263,13 @@ export function composeReentry(
     if (payCheckStale === null) {
       noteLines.push(copy.stalenessWorkingYearCost)
     } else {
+      // The survivor part (the walk-8 form spec's U4) rides as the block's closing paragraph; the gate's door is its own
+      // section under the buttons, so nothing follows it here.
       const parts: NoteParts = {
         opening: `${copy.stalenessPayCheckGateLead} ${payCheckStale.line.opening}`,
         segments: payCheckStale.line.segments,
         door: null,
+        ...(payCheckStale.line.closing === undefined ? {} : { closing: payCheckStale.line.closing }),
       }
       noteLines.push({ text: notePartsText(parts), parts })
       if (payCheckStale.canChange) door = payCheckStale.door

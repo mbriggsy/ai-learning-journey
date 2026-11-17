@@ -923,7 +923,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingLedgerStillShortSince: slots.workingLedgerStillShortSince(2026),
     workingLedgerLeftOverFigure: slots.workingLedgerLeftOverFigure('16,985'),
     workingLedgerLeftOverFigureAt: slots.workingLedgerLeftOverFigureAt('84,000', '26,985'),
-    workingLedgerLeftOverWaitingShort: slots.workingLedgerLeftOverWaitingShort('105,000', 2026, 2032, '3,652', '4,015'),
+    workingLedgerLeftOverWaitingShort: slots.workingLedgerLeftOverWaitingShort('105,000', 2026, 2032, '3,652', '4,015', true),
+    workingLedgerLeftOverWaitingShortUpdate: slots.workingLedgerLeftOverWaitingShortUpdate('105,000', 2026, false),
+    workingCostStaleSeatShortLean: slots.workingCostStaleSeatShortLean('84,000', false),
+    workingCostStaleSeatLaterShort: slots.workingCostStaleSeatLaterShort('105,000', 2029, 2032, '3,652', '4,015', '84,000', true),
     workingLedgerLeftOverCheck: slots.workingLedgerLeftOverCheck('16,985', '20,000', '36,985'),
     workingLedgerLeftOverCheckNoDeposits: slots.workingLedgerLeftOverCheckNoDeposits('16,985'),
     workingLedgerLeftOverSavedLine: slots.workingLedgerLeftOverSavedLine('16,985'),
@@ -944,15 +947,15 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostStaleLeftOverIfWhole: slots.workingCostStaleLeftOverIfWhole('21,537', 2026, '90,000', '16,985', true),
     workingCostStaleLeftOverGainYears: slots.workingCostStaleLeftOverGainYears(2026, 2028, 2033),
     workingCostStaleLeftOverIfFirstShort: slots.workingCostStaleLeftOverIfFirstShort(2026, '4,015', '105,000', '84,000', '16,985'),
-    workingCostStaleLeftOverIfFirstShortRun: slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985'),
+    workingCostStaleLeftOverIfFirstShortRun: slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985', true),
     workingCostStaleLeftOverIfFirstNone: slots.workingCostStaleLeftOverIfFirstNone(2026, '100,985', '16,985'),
     workingCostStaleShortUntilUpdated: slots.workingCostStaleShortUntilUpdated('84,000'),
-    workingCostStaleShortLaterYear: slots.workingCostStaleShortLaterYear(2029, '4,015', '84,000'),
-    workingCostStaleShortLaterYears: slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000'),
+    workingCostStaleShortLaterYear: slots.workingCostStaleShortLaterYear(2029, '4,015', '84,000', true),
+    workingCostStaleShortLaterYears: slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000', true),
     // U11 walk 6's words (council `wf_22858e04-f7a`'s form): R2's gap lean, R3's "This answer now" for B, F6's why, F7's
     // what lowers the cap, R4's lower figure; the doors (the gate's heading, scope and route; the Result's last dt/dd);
     // the Keep condition above Keep.
-    workingCostStaleLeftOverInflated: slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000'),
+    workingCostStaleLeftOverInflated: slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000', true),
     workingCostStaleLeftOverNoneNow: slots.workingCostStaleLeftOverNoneNow('16,985', '84,000'),
     workingCostStaleNoSmallerAmount: slots.workingCostStaleNoSmallerAmount('90,000'),
     workingCostStaleEachDollar: slots.workingCostStaleEachDollar('90,000', '10,985'),
@@ -969,6 +972,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostStaleDoorYes: slots.workingCostStaleDoorYes('90,000'),
     workingCostStaleDoorMore: slots.workingCostStaleDoorMore('84,000', '6,000', '78,000'),
     workingCostStaleDoorKeepUpTo: slots.workingCostStaleDoorKeepUpTo('Keep $84,000 a year', '6,000'),
+    workingCostStaleDoorYesFirst: slots.workingCostStaleDoorYesFirst('78,000'),
     workingCostStaleDoorKeepCovers: slots.workingCostStaleDoorKeepCovers('Keep $7,000 a month', '7,000', true),
     workingCostStaleDoorNoPlus: slots.workingCostStaleDoorNoPlus('78,000', false),
     workingCostStaleDoorKeepNoQuote: slots.workingCostStaleDoorKeepNoQuote('Keep $84,000 a year', '84,000', false),
@@ -997,7 +1001,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workingCostTypedBelowCapNone: slots.workingCostTypedBelowCapNone('spending', '110,985'),
     workingCostTypedBelowSurvivorCharges: slots.workingCostTypedBelowSurvivorCharges(SURVIVOR_SPENDING, ['63,000', '67,500']),
     workingCostTypedBelowSurvivorWholeGap: slots.workingCostTypedBelowSurvivorWholeGap(SURVIVOR_BUDGET),
-    workingCostTypedBelowSurvivorLess: slots.workingCostTypedBelowSurvivorLess(SURVIVOR_BUDGET, '15,000'),
+    workingCostTypedBelowSurvivorLess: slots.workingCostTypedBelowSurvivorLess(SURVIVOR_BUDGET, '15,000', null),
     workingCostLegendFigure: slots.workingCostLegendFigure('90,000'),
     stalenessLeftOverMoved: slots.stalenessLeftOverMoved('16,985', '27,537', '16,985'),
     stalenessLeftOverClause: slots.stalenessLeftOverClause('16,985', '27,537', '16,985'),
@@ -1429,7 +1433,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       return [
         slots.workingCostTypedBelowSurvivorCharges(f, [T, S]),
         slots.workingCostTypedBelowSurvivorWholeGap(f),
-        slots.workingCostTypedBelowSurvivorLess(f, S),
+        ...GLOSSES.map((g) => slots.workingCostTypedBelowSurvivorLess(f, S, g)),
       ]
     })
 
@@ -1442,9 +1446,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       for (const b of LEFT_OVER_LEAN_BAN) expect(text, `${name} says "${b.word}": "${text}"`).not.toMatch(b.re)
     }
     // …and every branch of every run slot, beyond the one sample each above, every cap sentence (2 sources, 3 a source)
-    // and every survivor-part slot (2 frames, 3 renders a frame).
+    // and every survivor-part slot (2 frames, 5 renders a frame: the two costs forms and the close over every gloss).
     const branches = [...spanRenders('16,985', '21,000', 2030), ...capRenders('16,985'), ...survivorRenders('16,985', '21,000')]
-    expect(branches.length).toBe(SPAN_RENDERS_COUNT + 2 * 3 + 2 * 3)
+    expect(branches.length).toBe(SPAN_RENDERS_COUNT + 2 * 3 + 2 * 5)
     for (const text of branches) for (const b of LEFT_OVER_LEAN_BAN) expect(text, `a run says "${b.word}": "${text}"`).not.toMatch(b.re)
   })
 
@@ -1740,8 +1744,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.workingLedgerLaterShortRange(S, S),
       slots.workingLedgerLeftOverFigure(S),
       slots.workingLedgerLeftOverFigureAt(S, S),
-      slots.workingLedgerLeftOverWaitingShort(S, Number.NaN, Number.NaN, S, S),
-      slots.workingLedgerLeftOverWaitingShort(S, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, S, S),
+      slots.workingLedgerLeftOverWaitingShort(S, Number.NaN, Number.NaN, S, S, true),
+      slots.workingLedgerLeftOverWaitingShortUpdate(S, Number.NaN, false),
+      slots.workingCostStaleSeatLaterShort(S, Number.NaN, Number.NaN, S, S, S, true),
+      slots.workingLedgerLeftOverWaitingShort(S, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, S, S, false),
       slots.workingLedgerLeftOverCheck(S, S, S),
       slots.workingLedgerLeftOverCheckNoDeposits(S),
       slots.workingLedgerLeftOverSavedLine(S),
@@ -1765,12 +1771,12 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.workingCostStaleLeftOverIfWhole(S, Number.NaN, S, S, true),
       slots.workingCostStaleLeftOverGainYears(Number.NaN, Number.NaN, Number.NaN),
       slots.workingCostStaleLeftOverIfFirstShort(Number.NaN, S, S, S, S),
-      slots.workingCostStaleLeftOverIfFirstShortRun(Number.NaN, Number.NaN, S, S, S, S, S),
+      slots.workingCostStaleLeftOverIfFirstShortRun(Number.NaN, Number.NaN, S, S, S, S, S, true),
       slots.workingCostStaleLeftOverIfFirstNone(Number.NaN, S, S),
       slots.workingCostStaleShortUntilUpdated(S),
-      slots.workingCostStaleShortLaterYear(Number.NaN, S, S),
-      slots.workingCostStaleShortLaterYears(Number.NaN, Number.NaN, S, S, S),
-      slots.workingCostStaleLeftOverInflated(S, S, S),
+      slots.workingCostStaleShortLaterYear(Number.NaN, S, S, true),
+      slots.workingCostStaleShortLaterYears(Number.NaN, Number.NaN, S, S, S, true),
+      slots.workingCostStaleLeftOverInflated(S, S, S, true),
       slots.workingCostStaleLeftOverNoneNow(S, S),
       slots.workingCostStaleNoSmallerAmount(S),
       slots.workingCostStaleEachDollar(S, S),
@@ -2096,7 +2102,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:951-961, :1007-1024), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:952-962, :1008-1025), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

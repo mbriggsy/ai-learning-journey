@@ -373,8 +373,16 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
         [
           copy.stalenessPayCheckGateLead,
           slots.workingCostStaleQuote('84,000', '90,000'),
-          slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000'),
+          slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000', true),
           copy.workingCostStaleEitherWayUpdate,
+        ].join(' '),
+      )
+      // The survivor part (U11 walk 8's W8-R12 (a)): the block's closing paragraph after its segments (the gate's door is
+      // its own section under the buttons).
+      expect(block.querySelector(':scope > p.note-parts__closing')?.textContent).toBe(
+        [
+          slots.workingCostTypedBelowSurvivorCharges({ typed: '84,000', quote: '90,000', source: 'spending' }, ['63,000', '67,500']),
+          slots.workingCostTypedBelowSurvivorLess({ typed: '84,000', quote: '90,000', source: 'spending' }, '4,500', 2),
         ].join(' '),
       )
       expect(Array.from(block.querySelectorAll('dt')).map((dt) => dt.textContent)).toEqual([

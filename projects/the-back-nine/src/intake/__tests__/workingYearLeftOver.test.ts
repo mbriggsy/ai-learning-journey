@@ -212,7 +212,20 @@ const S1_RISEN = slots.workingCostStaleQuote('84,000', '90,000')
 const CHEAPER = slots.workingCostStaleLeftOverYearsCheaper('84,000')
 /** U11 walk 6's R2: where no working year at the quote comes up short (`capped` / `whole` with no later run), the lean
  *  names the gap the household has — $90,000 − $84,000 — never short years it doesn't have. */
-const HIGH_90 = slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000')
+const HIGH_90 = slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000', false)
+/** …and on the LINE, where the survivor part follows (U11 walk 8's W8-R12 (a)): the comparison scoped "you’re both alive". */
+const HIGH_90_BOTH = slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000', true)
+/** The survivor part on the stale line and its seat (W8-R12 (a), the walk-8 form spec's U4), derived by hand: every
+ *  witness here descends from `stillWorking` (Alex 58 working, Sam 60 retired), so the engine can draw a working year
+ *  with Sam dead and Alex working from 2032 (Sam's 66), and no budget or out-of-pocket medical holds any part whole, so
+ *  the survivor rule counts 75 % of W: $84,000 → $63,000, $90,000 → $67,500 (X $4,500), $100,985 → $75,738.75 (printed
+ *  $75,739; X $12,739, rounded up), $105,000 → $78,750 (X $15,750). The gloss is the line's first rider: two years. */
+const SURVIVOR = (quote: string, chargeAtQuote: string, most: string): readonly string[] => [
+  slots.workingCostTypedBelowSurvivorCharges({ typed: '84,000', quote, source: 'spending' }, ['63,000', chargeAtQuote]),
+  slots.workingCostTypedBelowSurvivorLess({ typed: '84,000', quote, source: 'spending' }, most, 2),
+]
+const SURVIVOR_90 = SURVIVOR('90,000', '67,500', '4,500')
+const SURVIVOR_105 = SURVIVOR('105,000', '78,750', '15,750')
 const LABEL_NOW = copy.workingCostStaleLabelNow
 /** "This answer now" on a "saved" arm waiting on W: after work it already uses the spending figure (walk 5's (bl):
  *  every arm, the risen ones first under the label), the stored $16,985 dated, why this answer adds none of it until
@@ -333,7 +346,7 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
     // No working year at the quote runs short (2031 $11,348, 2033 $31,223, 2035 $53,986: b9-2's probe), so the
     // whole answer can move either way by the figure (U11 walk 2): said first, with no threshold and no "worse".
     expect(workingYearCostStaleLine(d)).toEqual({
-      opening: [S1_RISEN, HIGH_90, EITHER_WAY_UPDATE].join(' '),
+      opening: [S1_RISEN, HIGH_90_BOTH, EITHER_WAY_UPDATE].join(' '),
       segments: [
         nowSegment('90,000', 'update'),
         {
@@ -345,6 +358,7 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
           ],
         },
       ],
+      closing: SURVIVOR_90,
     })
   })
 
@@ -352,11 +366,12 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
     expect(workingYearLeftOverShownState(RISEN_WHOLE), 'the premise: waiting on W').toBe('waiting-on-w')
     expect(workingYearCheckAtQuote(RISEN_WHOLE)).toEqual({ kind: 'whole', year: 2026, leftOver: 21_537, laterShort: null })
     expect(workingYearCostStaleLine(RISEN_WHOLE)).toEqual({
-      opening: [S1_RISEN, HIGH_90, EITHER_WAY_UPDATE].join(' '),
+      opening: [S1_RISEN, HIGH_90_BOTH, EITHER_WAY_UPDATE].join(' '),
       segments: [
         nowSegment('90,000', 'update'),
         { label: slots.workingCostStaleLabelIf('90,000'), sentences: [slots.workingCostStaleLeftOverIfWhole('21,537', 2026, '90,000', '16,985', false)] },
       ],
+      closing: SURVIVOR_90,
     })
   })
 
@@ -371,9 +386,10 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
         nowSegment('105,000', 'short'),
         {
           label: slots.workingCostStaleLabelIf('105,000'),
-          sentences: [slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985'), copy.workingCostStaleLowerCounts],
+          sentences: [slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985', true), copy.workingCostStaleLowerCounts],
         },
       ],
+      closing: SURVIVOR_105,
     })
     expect(lineText(d), 'a short year 0 leads with its lean, never the either-way sentence').not.toContain(EITHER_WAY_UPDATE)
   })
@@ -387,6 +403,7 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
         nowSegment('100,985', 'short'),
         { label: slots.workingCostStaleLabelIf('100,985'), sentences: [slots.workingCostStaleLeftOverIfFirstNone(2026, '100,985', '16,985'), copy.workingCostStaleLowerCounts] },
       ],
+      closing: SURVIVOR('100,985', '75,739', '12,739'),
     })
   })
 
@@ -410,11 +427,12 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
             slots.workingCostStaleLeftOverIfCapped('5,985', 2026, '105,000', true),
             slots.workingCostStaleLeftOverGainYears(2026, 2028, 2033),
             slots.workingCostStaleEachDollar('105,000', '5,985'),
-            slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000'),
+            slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000', true),
             slots.workingCostStaleLowerCountsMore('16,985'),
           ],
         },
       ],
+      closing: SURVIVOR_105,
     })
   })
 
@@ -517,14 +535,14 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
       },
     ]
     const keptS1 = slots.workingCostStaleKeptQuote('84,000', '90,000')
-    expect(workingYearCostStaleLine(kept)).toEqual({ opening: [keptS1, HIGH_90, EITHER_WAY_UPDATE].join(' '), segments })
+    expect(workingYearCostStaleLine(kept)).toEqual({ opening: [keptS1, HIGH_90_BOTH, EITHER_WAY_UPDATE].join(' '), segments, closing: SURVIVOR_90 })
     // Both causes: the state answer moved too (the yes was given under `date`'s unpriced reading; Florida reads
     // "none"), and the spending rose. Florida taxes no income and an unpriced state is charged nothing in the
     // picture, so year 0's tax line, and with it the $10,985 at the quote, are unchanged.
     const both: ScenarioDraft = { ...DEV_SEEDS.datesavedrisen, retirementState: 'FL' }
     const bothS1 = slots.workingCostStaleBoth('84,000', '90,000')
     expect(workingYearCostStaleNote(both)).toBe(`${bothS1} ${HIGH_90}`)
-    expect(workingYearCostStaleLine(both)).toEqual({ opening: [bothS1, HIGH_90, EITHER_WAY_UPDATE].join(' '), segments })
+    expect(workingYearCostStaleLine(both)).toEqual({ opening: [bothS1, HIGH_90_BOTH, EITHER_WAY_UPDATE].join(' '), segments, closing: SURVIVOR_90 })
   })
 
   // The words, typed by hand. Walk 5's fix round (the TODO's prescription; `u11-walk5\ROUND.md`): the parts per arm
@@ -548,11 +566,16 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
     const NONE_TODAY = 'Because that $16,985 depends on your $84,000 figure, this answer adds none of it to your savings.'
     const NO_SMALLER = (quote: string) =>
       `It doesn’t count a smaller amount either, because a working year can cost more than your $${quote} of spending, and only you can say how much more.`
-    const LOWER_COUNTS = 'A lower figure could count some of it again, but only by pricing a working year below what you spend.'
+    const LOWER_COUNTS = 'A lower figure would price a working year below what you spend. Only then could it count some of it again.'
+    // The survivor part (W8-R12 (a)): costs first, then the close at most, its rider glossed (the line's first rider).
+    const SURVIVOR_WORDS = (quote: string, atQuote: string, most: string): readonly string[] => [
+      `If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $${atQuote} at your spending of $${quote} a year.`,
+      `At your spending, that’s at most $${most} a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, when your income two years before was high).`,
+    ]
     const RISEN_TO = (quote: string) =>
       `You said yes to $84,000 a year. Your spending figures have changed since then, and now come to $${quote} a year.`
     const GAP_90 =
-      'Your $84,000 figure is $6,000 below your spending. So every working year looks to leave $6,000 more of your pay than it would at $90,000.'
+      'Your $84,000 figure is $6,000 below your spending. So every working year you’re both alive looks to leave $6,000 more of your pay than it would at $90,000.'
     const YEARS_CHEAPER = 'Your $84,000 figure makes any working year your pay doesn’t cover look cheaper than it really is.'
     const EITHER = 'Updating your figure can move this answer either way, depending on what a working year really costs you.'
     expect(workingYearCostStaleLine(DEV_SEEDS.datesavedrisen)).toEqual({
@@ -565,10 +588,11 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
             'Your first working year, 2026, has $10,985 left over. ' +
               'Since a working year almost always costs at least what you spend, updating your figure to $90,000 or more adds at most $10,985 a year to your savings.',
             'Each dollar you add above $90,000 comes off that $10,985.',
-            'A figure below $90,000 would count money your pay doesn’t really leave over: up to $6,000 a year more than the $10,985, for as much as $16,985 a year.',
+            'A figure below $90,000 would count money your pay doesn’t really leave over. That could be up to $6,000 a year more than the $10,985, so as much as $16,985 a year.',
           ],
         },
       ],
+      closing: SURVIVOR_WORDS('90,000', '67,500', '4,500'),
     })
     expect(workingYearCostStaleLine(DEV_SEEDS.datesavedrisenshort)).toEqual({
       opening: [RISEN_TO('105,000'), YEARS_CHEAPER, 'Until you update your $84,000 figure, this answer can look better than it really is.'].join(' '),
@@ -577,13 +601,14 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
         {
           label: 'If a working year costs $105,000',
           sentences: [
-            'Each working year from 2026 through 2032 comes up $3,652 to $4,015 short, and your $84,000 figure leaves those shortfalls out of this answer. ' +
+            'From 2026 through 2032, each working year you’re both alive comes up $3,652 to $4,015 short, and your $84,000 figure leaves those shortfalls out of this answer. ' +
               'Each year’s shortfall would be taken from your savings, plus any income tax on taking it out. ' +
               'Since a working year almost always costs at least what you spend, updating your figure to $105,000 or more brings none of the $16,985 back, because your first working year, 2026, comes up short at that cost.',
             LOWER_COUNTS,
           ],
         },
       ],
+      closing: SURVIVOR_WORDS('105,000', '78,750', '15,750'),
     })
     expect(workingYearCostStaleLine(DEV_SEEDS.datesavedrisenlater)).toEqual({
       opening: [RISEN_TO('105,000'), YEARS_CHEAPER, EITHER].join(' '),
@@ -596,15 +621,16 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
               'Since a working year almost always costs at least what you spend, updating your figure to $105,000 or more adds at most $5,985 a year to your savings, in each working year that doesn’t come up short.',
             'Those are 2026 through 2028, and any working year from 2033 on.',
             'Each dollar you add above $105,000 comes off that $5,985.',
-            'Each working year from 2029 through 2032 comes up $3,652 to $4,015 short. ' +
+            'From 2029 through 2032, each working year you’re both alive comes up $3,652 to $4,015 short. ' +
               'Each year’s shortfall would be taken from your savings, plus any income tax on taking it out. ' +
               'Your $84,000 figure makes those years look cheaper. ' +
               'The money those shortfalls would take is still counted in your savings for every year after. ' +
               'So those years pull this answer toward looking better than it really is.',
-            'A lower figure could count more of the $16,985 again, but only by pricing a working year below what you spend.',
+            'A lower figure would price a working year below what you spend. Only then could it count more of the $16,985 again.',
           ],
         },
       ],
+      closing: SURVIVOR_WORDS('105,000', '78,750', '15,750'),
     })
     expect(workingYearCostStaleLine(DEV_SEEDS.datesavedstale)).toEqual({
       opening:
@@ -630,6 +656,7 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
           ],
         },
       ],
+      closing: SURVIVOR_WORDS('90,000', '67,500', '4,500'),
     })
     expect(workingYearCostStaleLine(RISEN_NONE)?.segments).toEqual([
       NOW('100,985', [NONE_TODAY]),
@@ -647,7 +674,7 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
         'That shortfall would be taken from your savings, plus any income tax on taking it out. ' +
         'Since a working year almost always costs at least what you spend, updating your figure to $105,000 or more brings none of the $16,985 back, because your first working year, 2026, comes up short at that cost.',
     )
-    expect(slots.workingCostStaleShortLaterYear(2029, '4,015', '84,000')).toBe(
+    expect(slots.workingCostStaleShortLaterYear(2029, '4,015', '84,000', false)).toBe(
       'The working year 2029 comes up $4,015 short. That shortfall would be taken from your savings, plus any income tax on taking it out. ' +
         'Your $84,000 figure makes that year look cheaper. The money that shortfall would take is still counted in your savings for every year after. ' +
         'So that year pulls this answer toward looking better than it really is.',
@@ -657,7 +684,8 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
 
   it('the joined text is the parts in order, one space apart (the React key, the e2e reads, what a screen reader hears)', () => {
     const l = workingYearCostStaleLine(DEV_SEEDS.datesavedrisen)!
-    expect(workingYearCostStaleLineText(l)).toBe([l.opening, ...l.segments.flatMap((s) => [s.label, ...s.sentences])].join(' '))
+    expect(l.closing, 'the premise: the survivor part closes the line').toBeDefined()
+    expect(workingYearCostStaleLineText(l)).toBe([l.opening, ...l.segments.flatMap((s) => [s.label, ...s.sentences]), ...(l.closing ?? [])].join(' '))
     expect(workingYearCostStaleLineText(noteOnly('A note.'))).toBe('A note.')
   })
 
@@ -676,22 +704,24 @@ describe('workingYearCostStaleNote and workingYearCostStaleLine — W’s stale 
       ['risen, not asked', withPay(DEV_SEEDS.datesavedrisen, 100_000)],
     ]
     const B_LEAD = slots.workingCostStaleShortUntilUpdated('84,000')
-    const LATER_CLOSES = [slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000')]
+    const LATER_CLOSES = [slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000', true)]
     let bLeads = 0
     for (const [label, d] of all) {
       const note = workingYearCostStaleNote(d)
       const parts = workingYearCostStaleLine(d)
       if (note === null || parts === null) throw new Error(`[test setup] ${label}: W is stale`)
       const line = workingYearCostStaleLineText(parts)
-      expect(parts.opening.startsWith(note), `${label}: the opening begins with the note`).toBe(true)
+      // The note, its gap comparison scoped where the line closes on the survivor part (W8-R12 (a)): the only difference.
+      const lineNote = parts.closing === undefined ? note : note.replace('So every working year looks', 'So every working year you’re both alive looks')
+      expect(parts.opening.startsWith(lineNote), `${label}: the opening begins with the note`).toBe(true)
       expect(line, label).not.toMatch(/\bworse\b/i)
       const c = workingYearCheckAtQuote(d)
       if (c === null) continue
       expect(note, `${label}: a "saved" note waiting on W names no whole-answer lean`).not.toMatch(/\bbetter\b/i)
-      let rest = line.slice(note.length)
+      let rest = line.slice(lineNote.length)
       if (c.kind === 'firstShort' || c.kind === 'firstNone') {
         expect(rest.startsWith(` ${B_LEAD} `), `${label}: B’s lead sits right after the note`).toBe(true)
-        expect(parts.opening, `${label}: B’s lead closes the opening`).toBe(`${note} ${B_LEAD}`)
+        expect(parts.opening, `${label}: B’s lead closes the opening`).toBe(`${lineNote} ${B_LEAD}`)
         rest = rest.slice(B_LEAD.length + 1)
         bLeads += 1
       }
@@ -768,8 +798,9 @@ describe('workingYearCostStaleDoor — the act and each host’s door', () => {
     tail: [
       'Your $84,000 figure is $6,000 more than your $78,000 of spending.',
       PRESS_CONFIRM,
-      'There, if those costs come to $6,000 a year or less, choose “Keep $84,000 a year”.',
-      'If you have none of them, choose “Yes, that’s about right” to use $78,000 a year.',
+      // U11 walk 8's W8-R12 (c): the none choice first, then Keep for some costs within the room.
+      'There, if you have none of them, choose “Yes, that’s about right” to use $78,000 a year.',
+      'If you pay some of them and they come to $6,000 a year or less, choose “Keep $84,000 a year”.',
       'Or choose “No — I’ll enter a different figure” to enter $78,000 a year plus them.',
     ],
   }
@@ -896,8 +927,9 @@ describe('workingYearCostStaleDoor — the act and each host’s door', () => {
   // gate stops naming the W row's choices, Keep must never read as a safe confirmation, so the W row says what it must
   // cover, above it. Above today's quote, the room ($84,000 − $78,000); at or below it, the figure's own terms.
   it('the Keep condition: on `datesavedstale` the room the $84,000 leaves over $78,000; on a kept figure equal to the quote, the figure’s own terms in its own unit; null with no W', () => {
+    // W8-R12 (c): the none choice first, then Keep's own condition.
     expect(workingYearCostKeepCondition(DEV_SEEDS.datesavedstale)).toBe(
-      'Choose “Keep $84,000 a year” only if the costs listed below, other than what you spend, come to $6,000 a year or less on top of your $78,000 of spending.',
+      'If you pay none of the costs listed below besides what you spend, choose “Yes, that’s about right”. Choose “Keep $84,000 a year” only if you pay some of them and they come to $6,000 a year or less on top of your $78,000 of spending.',
     )
     expect(workingYearCostKeepCondition(monthlyMoved)).toBe(
       'Choose “Keep $7,000 a month” only if $7,000 a month covers your spending plus the costs listed below.',
@@ -956,12 +988,31 @@ describe('workingYearCostStaleDoor — the act and each host’s door', () => {
 // U11 walk 6's R3, the sheet's half: on B — a "saved" answer waiting on W whose year 0 at the quote is short or at $0 —
 // "Until you update…, no money left over is added" promised what updating takes away, so B reads its own form.
 describe('workingYearLeftOverWaitingWords — R3, the seat and the methodology line on B', () => {
+  /** The survivor part on the seat (W8-R12 (a)): $84,000 and $105,000 at 75 % (no budget, no medical held whole). */
+  const SEAT_SURVIVOR_105 =
+    'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year. ' +
+    'At your spending, that’s at most $15,750 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, when your income two years before was high).'
+  // U11 walk 8's W8-R10 (b): the run, then the lean before the loss (the refuter's reorder, the gate's own words), then
+  // what updating does; the run scoped and the survivor part closing it (W8-R12 (a)).
   const B_SHORT_SEAT =
-    'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, each working year from 2026 through 2032 comes up $3,652 to $4,015 short. Because your first working year, 2026, comes up short at that cost, updating to $105,000 or more won’t add any, but it puts those shortfalls into your answer.'
-  it('B (`datesavedrisenshort`, first short) reads `updateShort` and first none ($100,985) `updateNone` (U11 walk 7\'s R5); A, C, the whole arm and every other stale W read the act', () => {
+    'Your figure for a working year needs an update, above. No money left over is added to your savings. ' +
+    'At $105,000 a year, from 2026 through 2032, each working year you’re both alive comes up $3,652 to $4,015 short. ' +
+    'Your $84,000 figure leaves those shortfalls out, so this answer can look better than it really is. ' +
+    'Updating to $105,000 or more puts them in. It adds no money left over, because your first working year, 2026, comes up short at that cost. ' +
+    SEAT_SURVIVOR_105
+  /** C's seat (W8-R10 (a)): the act's waiting words, then the later run at the quote and the years' lean, in the answer
+   *  page's words, then the survivor part. */
+  const C_LATER_SEAT =
+    'This question waits until you update your figure for a working year, above. Until then, no money left over is added to your savings. ' +
+    'At $105,000 a year, from 2029 through 2032, each working year you’re both alive comes up $3,652 to $4,015 short. ' +
+    'Your $84,000 figure leaves those shortfalls out, so those years pull this answer toward looking better than it really is. ' +
+    SEAT_SURVIVOR_105
+  it('B (`datesavedrisenshort`, first short) reads `updateShort`, first none ($100,985) `updateNone` (U11 walk 7\'s R5), C and F (a later run short at the quote) `updateLaterShort` (walk 8\'s W8-R10 (a)); A, the whole arm and every other stale W read the act', () => {
     expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datesavedrisenshort)).toBe('updateShort')
     expect(workingYearLeftOverWaitingWords(RISEN_NONE)).toBe('updateNone')
-    for (const d of [DEV_SEEDS.datesavedrisen, DEV_SEEDS.datesavedrisenlater, RISEN_WHOLE]) expect(workingYearLeftOverWaitingWords(d)).toBe('update')
+    expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datesavedrisenlater)).toBe('updateLaterShort')
+    expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datesavedfourbuckets)).toBe('updateLaterShort')
+    for (const d of [DEV_SEEDS.datesavedrisen, RISEN_WHOLE]) expect(workingYearLeftOverWaitingWords(d)).toBe('update')
     expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datesavedstale)).toBe('confirmOrChange')
     expect(workingYearLeftOverWaitingWords(DEV_SEEDS.datecoststale)).toBe('confirmOrChange')
   })
@@ -975,23 +1026,33 @@ describe('workingYearLeftOverWaitingWords — R3, the seat and the methodology l
       expect(workingYearLeftOverWaitingWords(answered(RISEN_NONE, answer)), `first none, ${answer?.kind ?? 'unanswered'}`).toBe('updateNone')
       expect(workingYearLeftOverWaitingSeat(answered(DEV_SEEDS.datesavedrisenshort, answer)), `B's seat, ${answer?.kind ?? 'unanswered'}`).toBe(B_SHORT_SEAT)
       expect(workingYearLeftOverWaitingWords(answered(DEV_SEEDS.datesavedrisen, answer)), `A, ${answer?.kind ?? 'unanswered'}`).toBe('update')
+      // C's form reads year 0 and the later rows at the quote whatever the answer, as B's does (the round review's L1-2).
+      expect(workingYearLeftOverWaitingWords(answered(DEV_SEEDS.datesavedrisenlater, answer)), `C, ${answer?.kind ?? 'unanswered'}`).toBe('updateLaterShort')
+      expect(workingYearLeftOverWaitingSeat(answered(DEV_SEEDS.datesavedrisenlater, answer)), `C's seat, ${answer?.kind ?? 'unanswered'}`).toBe(C_LATER_SEAT)
     }
   })
 
   it('B’s seat and method words, typed by hand: no promise that updating brings anything back, and why not at the quote — short with its run in dollars, exactly $0 in the old words (U11 walk 7’s R5)', () => {
     expect(workingYearLeftOverWaitingSeat(DEV_SEEDS.datesavedrisenshort)).toBe(B_SHORT_SEAT)
+    // W8-R10 (b)'s method line in build 2's R14 form: its referents named in words, no dollars and no direction.
     expect(copy[LEFT_OVER_WAITING_COPY.updateShort.method]).toBe(
-      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year comes up short. Updating puts the short years into your answer.',
+      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that, because at your spending figures your first working year comes up short. It does put each working year that comes up short at your spending figures into your answer.',
+    )
+    expect(copy[LEFT_OVER_WAITING_COPY.updateLaterShort.method]).toBe(
+      'Until you update your figure for a working year, no money left over is added to your savings. Updating it also puts each later working year that comes up short at your spending figures into your answer.',
     )
     const none = 'Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.'
     expect(workingYearLeftOverWaitingSeat(RISEN_NONE)).toBe(`Your figure for a working year needs an update, above. No money left over is added to your savings. ${none}`)
     expect(copy[LEFT_OVER_WAITING_COPY.updateNone.method]).toBe(`Your figure for a working year needs an update. No money left over is added to your savings. ${none}`)
-    // The one-year run: Sam's alimony from 61 leaves only 2026 short at $105,000.
+    // The one-year run: Sam's alimony from 61 leaves only 2026 short at $105,000. Year 0 alone carries no scope (no one
+    // can have died by then), so no survivor part either.
     const oneYear = { ...DEV_SEEDS.datesavedrisenshort, incomeStreams: [{ ...DEV_SEEDS.datesavedrisenlater.incomeStreams[0]!, startAge: 61, endAge: 70 }] }
     expect(workingYearLeftOverWaitingSeat(oneYear)).toBe(
-      'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, your first working year, 2026, comes up $4,015 short. Because it comes up short at that cost, updating to $105,000 or more won’t add any, but it puts that shortfall into your answer.',
+      'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, your first working year, 2026, comes up $4,015 short. Your $84,000 figure leaves that shortfall out, so this answer can look better than it really is. Updating to $105,000 or more puts it in. It adds no money left over, because that year comes up short at that cost.',
     )
-    for (const d of [DEV_SEEDS.datesavedrisen, DEV_SEEDS.datesavedrisenlater]) expect(workingYearLeftOverWaitingSeat(d)).toBe(copy.workingLedgerLeftOverWaitingUpdate)
+    expect(workingYearLeftOverWaitingSeat(DEV_SEEDS.datesavedrisenlater)).toBe(C_LATER_SEAT)
+    expect(workingYearLeftOverWaitingSeat(DEV_SEEDS.datesavedfourbuckets)).toBe(C_LATER_SEAT)
+    for (const d of [DEV_SEEDS.datesavedrisen, RISEN_WHOLE]) expect(workingYearLeftOverWaitingSeat(d)).toBe(copy.workingLedgerLeftOverWaitingUpdate)
     expect(workingYearLeftOverWaitingSeat(DEV_SEEDS.datesavedstale)).toBe(copy.workingLedgerLeftOverWaitingConfirm)
     expect(copy[LEFT_OVER_WAITING_COPY.update.seat]).toBe(copy.workingLedgerLeftOverWaitingUpdate)
     expect(copy[LEFT_OVER_WAITING_COPY.confirmOrChange.method]).toBe(copy.assumptionWorkingYearCheckLeftOverWaitingConfirm)

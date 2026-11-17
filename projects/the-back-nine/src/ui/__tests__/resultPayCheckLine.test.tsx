@@ -152,9 +152,16 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
       opening: l.querySelector(':scope > p.note-parts__opening')?.textContent,
       labels: Array.from(l.querySelectorAll(':scope > dl > div > dt')).map((dt) => dt.textContent),
       bodies: Array.from(l.querySelectorAll(':scope > dl > div:not(.note-parts__door) > dd')).map((dd) => dd.textContent),
+      // The survivor part (U11 walk 8's W8-R12 (a)): the line's closing paragraph after its segments, before any door.
+      closing: l.querySelector(':scope > p.note-parts__closing')?.textContent ?? null,
       door: l.querySelector(':scope > dl > div.note-parts__door'),
     }
   }
+  /** The survivor part's words on the stale line, typed by hand (W8-R12 (a)): the survivor rule counts 75 % of each
+   *  figure on these witnesses (no budget, no medical held whole), its close the line's first rider, so glossed. */
+  const STALE_SURVIVOR = (quote: string, atQuote: string, most: string): string =>
+    `If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $${atQuote} at your spending of $${quote} a year. ` +
+    `At your spending, that’s at most $${most} a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, when your income two years before was high).`
 
   it('`datesavedstale`: W’s one line leads with the either-way sentence in "confirm or change", then "This answer now" — after work it already uses $78,000, the $16,985 dated, none of it added until they confirm or change it, and no amount guessed at; no moved line speaks', () => {
     plantDateHero()
@@ -171,6 +178,7 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
           copy.workingCostStaleNoGuess,
         ].join(' '),
       ],
+      closing: null,
       door: null,
     })
     expect(document.body.textContent).not.toContain(copy.stalenessLeftOverNote)
@@ -191,7 +199,7 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
       opening: [
         copy.stalenessPayCheckNote,
         slots.workingCostStaleQuote('84,000', '90,000'),
-        slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000'),
+        slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000', true),
         copy.workingCostStaleEitherWayUpdate,
       ].join(' '),
       labels: [copy.workingCostStaleLabelNow, slots.workingCostStaleLabelIf('90,000')],
@@ -203,6 +211,7 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
           slots.workingCostStaleLowerAddsMore('90,000', '10,985', '6,000', '16,985'),
         ].join(' '),
       ],
+      closing: STALE_SURVIVOR('90,000', '67,500', '4,500'),
       door: null,
     })
     cleanup()
@@ -219,8 +228,9 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
       labels: [copy.workingCostStaleLabelNow, slots.workingCostStaleLabelIf('105,000')],
       bodies: [
         NOW('105,000', [slots.workingCostStaleLeftOverNoneNow('16,985', '84,000')]),
-        [slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985'), copy.workingCostStaleLowerCounts].join(' '),
+        [slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985', true), copy.workingCostStaleLowerCounts].join(' '),
       ],
+      closing: STALE_SURVIVOR('105,000', '78,750', '15,750'),
       door: null,
     })
   })
@@ -269,8 +279,9 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
         [
           slots.workingCostStaleDoorMore('84,000', '6,000', '78,000'),
           slots.workingCostStaleResultDoorConfirm(copy.stalenessPayCheckCta),
+          // W8-R12 (c): the none choice first, then Keep for some costs within the room.
+          slots.workingCostStaleDoorYesFirst('78,000'),
           slots.workingCostStaleDoorKeepUpTo('Keep $84,000 a year', '6,000'),
-          slots.workingCostStaleDoorYes('78,000'),
           slots.workingCostStaleDoorNoPlus('78,000', false),
         ].join(' '),
       ],
@@ -281,14 +292,22 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
     expect(lineDoor()).not.toBeNull()
   })
 
-  it('the block’s form on the Result: div.note-parts in the slot’s register (no <p> holding a <dl>), p then dl, each part a div>dt+dd, the door last, no heading and no run-in label inside; read-only keeps the parts and drops the door and its button', () => {
+  it('the block’s form on the Result: div.note-parts in the slot’s register (no <p> holding a <dl>), p then dl, each part a div>dt+dd, then the survivor part’s paragraph, then the door last in a dl of its own, no heading and no run-in label inside; read-only keeps the parts and the survivor part and drops the door and its button', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedrisenlater)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
     const l = line()!
     expect(l.tagName).toBe('DIV')
     expect(Array.from(l.classList).sort()).toEqual(['cs-paycheck-note', 'fod-note', 'note-parts'])
-    expect(Array.from(l.children).map((c) => c.tagName)).toEqual(['P', 'DL'])
+    // The survivor part (U11 walk 8's W8-R12 (a)) after the segments and before the door: a <p> cannot sit inside a <dl>,
+    // so the door takes a dl of its own after it, still a dt/dd and still the block's last part.
+    expect(Array.from(l.children).map((c) => `${c.tagName}.${c.className}`)).toEqual([
+      'P.note-parts__opening',
+      'DL.note-parts__segments',
+      'P.note-parts__closing',
+      'DL.note-parts__segments',
+    ])
+    expect(l.children[3]!.children, 'the second dl holds the door alone').toHaveLength(1)
     const groups = Array.from(l.querySelectorAll(':scope > dl > div'))
     expect(groups.map((g) => Array.from(g.children).map((c) => c.tagName))).toEqual([
       ['DT', 'DD'],
@@ -308,6 +327,8 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
     appModel.update(() => DEV_SEEDS.datesavedrisenlater)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
     expect(block().labels).toEqual(['This answer now', 'If a working year costs $105,000'])
+    expect(block().closing, 'read-only keeps the survivor part: a fact, never a door').toBe(STALE_SURVIVOR('105,000', '78,750', '15,750'))
+    expect(Array.from(line()!.children).map((c) => c.tagName), 'with no door, nothing follows the survivor part').toEqual(['P', 'DL', 'P'])
     expect(block().door).toBeNull()
     expect(line()!.querySelector('button')).toBeNull()
   })

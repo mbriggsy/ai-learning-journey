@@ -253,13 +253,20 @@ const WORK_STATE_FAMILY: ReadonlySet<CopyKey> = new Set(Object.values(WORK_STATE
  *  nothing either (U11 walk 6's R3: `LEFT_OVER_WAITING_COPY`, `workingYearLeftOverWaitingWords`), split by year 0's sign at
  *  the quote since U11 walk 7's R5 (it comes up short, or exactly $0). No dollars, no lean (R14, R16): the dollars ride
  *  the question's own line under its radios. */
-const sameForEitherAct = (k: CopyKey): Readonly<Record<LeftOverWaitingWords, CopyKey>> => ({ update: k, updateShort: k, updateNone: k, confirmOrChange: k })
+const sameForEitherAct = (k: CopyKey): Readonly<Record<LeftOverWaitingWords, CopyKey>> => ({
+  update: k,
+  updateShort: k,
+  updateNone: k,
+  updateLaterShort: k,
+  confirmOrChange: k,
+})
 const LEFT_OVER_KEY: Readonly<Record<LeftOverShownState, Readonly<Record<LeftOverWaitingWords, CopyKey>>>> = {
   'not-asked': sameForEitherAct('assumptionWorkingYearCheckLeftOverNotAsked'),
   'waiting-on-w': {
     update: LEFT_OVER_WAITING_COPY.update.method,
     updateShort: LEFT_OVER_WAITING_COPY.updateShort.method,
     updateNone: LEFT_OVER_WAITING_COPY.updateNone.method,
+    updateLaterShort: LEFT_OVER_WAITING_COPY.updateLaterShort.method,
     confirmOrChange: LEFT_OVER_WAITING_COPY.confirmOrChange.method,
   },
   absent: sameForEitherAct('assumptionWorkingYearCheckLeftOverAbsent'),
@@ -370,6 +377,7 @@ export const METHODOLOGY_DISCLOSURES: readonly MethodologyDisclosure[] = [
       'assumptionWorkingYearCheckLeftOverWaitingUpdate',
       'assumptionWorkingYearCheckLeftOverWaitingUpdateShort',
       'assumptionWorkingYearCheckLeftOverWaitingUpdateNone',
+      'assumptionWorkingYearCheckLeftOverWaitingUpdateLaterShort',
       'assumptionWorkingYearCheckLeftOverWaitingConfirm',
       'assumptionWorkingYearCheckLeftOverAbsent',
       'assumptionWorkingYearCheckLeftOverSaved',

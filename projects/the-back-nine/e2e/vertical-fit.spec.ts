@@ -2167,8 +2167,9 @@ const STALE_W_SAVED_RESULT_DOOR: ResultDoorWords = {
   tail: [
     slots.workingCostStaleDoorMore('84,000', '6,000', '78,000'),
     slots.workingCostStaleResultDoorConfirm(copy.stalenessPayCheckCta),
+    // U11 walk 8's W8-R12 (c): the none choice first, then Keep for some costs within the room.
+    slots.workingCostStaleDoorYesFirst('78,000'),
     slots.workingCostStaleDoorKeepUpTo(slots.workingCostKeepYearly('84,000'), '6,000'),
-    slots.workingCostStaleDoorYes('78,000'),
     slots.workingCostStaleDoorNoPlus('78,000', false),
   ],
   cta: copy.stalenessPayCheckCta,
@@ -2182,11 +2183,18 @@ const LEFT_OVER_MOVED_GATE_LINE = `${copy.stalenessLeftOverNote} ${LEFT_OVER_MOV
 // arm's −$4,015 again (later short). The later-short line is the LONGEST stale line any seed draws (with its gain years
 // and its short run), so its arm is the gate's wrap-risk arm. After work the answer uses the risen spending figure,
 // which on these seeds IS the quote (no budget).
+/** The survivor part closing each risen line (U11 walk 8's W8-R12 (a)): the survivor rule counts 75 % of each figure on
+ *  these seeds (Sam can die from 2032 while Alex works; no budget, no medical held whole), its close glossed (the line's
+ *  first rider). Before the Result's door; the gate's door is its own section. */
+const staleSurvivorWords = (quote: string, chargeAtQuote: string, most: string): readonly string[] => [
+  slots.workingCostTypedBelowSurvivorCharges({ typed: '84,000', quote, source: 'spending' }, ['63,000', chargeAtQuote]),
+  slots.workingCostTypedBelowSurvivorLess({ typed: '84,000', quote, source: 'spending' }, most, 2),
+]
 const risenNow = (quoteNow: string): readonly string[] =>
   savedNow(quoteNow, slots.workingCostStaleLeftOverNoneUpdate('16,985', '84,000'), slots.workingCostStaleNoSmallerAmount(quoteNow))
 const RISEN_LINE = [
   slots.workingCostStaleQuote('84,000', '90,000'),
-  slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000'),
+  slots.workingCostStaleLeftOverInflated('84,000', '6,000', '90,000', true),
   copy.workingCostStaleEitherWayUpdate,
   ...risenNow('90,000'),
   slots.workingCostStaleLabelIf('90,000'),
@@ -2194,6 +2202,7 @@ const RISEN_LINE = [
   slots.workingCostStaleEachDollar('90,000', '10,985'),
   // The extra a lower figure counts: the stored $16,985 less year 0's $10,985 at the quote (U11 walk 7's R6 (a)).
   slots.workingCostStaleLowerAddsMore('90,000', '10,985', '6,000', '16,985'),
+  ...staleSurvivorWords('90,000', '67,500', '4,500'),
 ].join(' ')
 const RISEN_SHORT_LINE = [
   slots.workingCostStaleQuote('84,000', '105,000'),
@@ -2201,8 +2210,9 @@ const RISEN_SHORT_LINE = [
   slots.workingCostStaleShortUntilUpdated('84,000'),
   ...savedNow('105,000', slots.workingCostStaleLeftOverNoneNow('16,985', '84,000')),
   slots.workingCostStaleLabelIf('105,000'),
-  slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985'),
+  slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985', true),
   copy.workingCostStaleLowerCounts,
+  ...staleSurvivorWords('105,000', '78,750', '15,750'),
 ].join(' ')
 const RISEN_LATER_LINE = [
   slots.workingCostStaleQuote('84,000', '105,000'),
@@ -2213,8 +2223,9 @@ const RISEN_LATER_LINE = [
   slots.workingCostStaleLeftOverIfCapped('5,985', 2026, '105,000', true),
   slots.workingCostStaleLeftOverGainYears(2026, 2028, 2033),
   slots.workingCostStaleEachDollar('105,000', '5,985'),
-  slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000'),
+  slots.workingCostStaleShortLaterYears(2029, 2032, '3,652', '4,015', '84,000', true),
   slots.workingCostStaleLowerCountsMore('16,985'),
+  ...staleSurvivorWords('105,000', '78,750', '15,750'),
 ].join(' ')
 /** The risen arms' Result door ("update": no Keep door below the quote): the press sentence and the condition, ending
  *  on the list; after it, that the tool counts them only if added, then "Yes" at today's quote. */
@@ -3343,7 +3354,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2119-2123 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2132-2136 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,

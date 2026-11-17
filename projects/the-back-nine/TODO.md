@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-16, b9-1's close):** walk 8's card is in (`docs/caddie/cold-read-log.md`, 2026-11-16 b9-1: HARD-FLAG, held on W8-R7 and W8-R12 (a)). Next: `/council` on the typed-below line's form (the close block's "The form council"); then the walk-8 fix round in the council's shape, each commit through the review's gates; then walk 9 on the changed strings and its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
+▶ **START HERE (2026-11-16, b9-2's close):** the walk-8 form council ruled (`wf_98d8bc0e-e0a`, 7/10, executed); its exact words and units are `docs/plans/features/typed-below-walk8-form-build-spec.md`, with U1 (`3646a258`) and U3 (`045509c1`, the band caption) in. Next: the spec's U2, the typed-below line's form in one commit, opened with `/brief typed-below line form`; then U4 (the out-of-date family); then walk 9 on the changed strings and its card; then build 2's U12 (`working-year-surplus-build-spec.md`); then the whole-file review, with an adversary and every finding verified; then `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -94,7 +94,7 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **the walk-8 form council, then its fix round** (START HERE; walk 8's card is `451fa373`, its panel record
+     ▶ NEXT: **the form spec's U2, then U4** (START HERE; `docs/plans/features/typed-below-walk8-form-build-spec.md`; walk 8's card is `451fa373`, its panel record
      `<B>\u11-walk8\panel\` (`CHAIR-NOTES.md` maps every finding to its refuter), its bundle `temp\caddie\caddie-u11-b9-1-walk8\`).
      The line's plans: the rebuild `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, the survivor path
      `docs/plans/features/typed-below-survivor-path-build-spec.md`, the rider `docs/plans/features/typed-below-tax-rider-build-spec.md`;
@@ -259,29 +259,23 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-16 (b9-1: the crash recovery and walk 8; b9-2's block pruned into it):**
+**SESSION 2026-11-16 (b9-2: the walk-8 form council, its spec, U3; b9-1's block pruned into it):**
 
 State at close:
-- The laptop hard-crashed four times on 2026-11-16 (about 01:00, then 12:06, 12:33 and 12:49; up since 12:57). b9-3's walk-8 twins, left uncommitted by the 01:00 crash, were re-verified and landed in `0453fa07` (the sweep `twins`, 47 of 47 identical against `ww3`). Commit and push at every verified checkpoint while this machine lasts.
-- Walk 8 is DONE: its card `451fa373`, HARD-FLAG — HELD FOR THE ORACLE on W8-R7 (the band's "This range prices your full budget" beside a lower working-year figure) and W8-R12 (a) (the stale pages' silent survivor years), both filed as Tier 0 candidates in the register. Walk 7's R1 closed (its sentence read clean). The rider's ruled flip condition is met on "ignores tax"; KD2's short-span fallback condition is met; the pension household reads as a wall; KD2's dissent does not flip.
-- Gates at close: `pnpm typecheck` 0, `pnpm verify:doc-stats` 0. CI: Check at start.
-- For Briggsy's digest (carried): KTD4's departure from the survivor council's literal X; the survivor council's mortality words (walk 8: readers found the part cold, low); the rider's words, now owed their ruled swap ("plus" / "except for").
+- The laptop's drive is failing (memory `project-laptop-ssd-failing`; four hard crashes on 2026-11-16): commit and push at every verified checkpoint, and no restarts or sleep.
+- The form council is DONE (`wf_98d8bc0e-e0a`, full, 21 seats, 7/10, executed; its row in `docs/council-log.md`). The chair's exact words are in the spec (`3646a258`); build from it, never from the council's machine-local journal. U3 (W8-R7, the band caption) is in (`045509c1`); the harness's CVD-crop flake is fixed (`8743fecb`: a late commit mid-capture re-captures the state whole, with `recaptured.txt`); W8-R12 (a) is measured (`3f2d6e4f`: A $4,500, B, C and F $15,750, S none).
+- Gates at close: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm verify:doc-stats` 0, `pnpm build` 0, `pnpm verify:fit` 181 passed (10.5 min, pinned).
+- For Briggsy's digest (all for walk 9's card): the form council's ⚑ (the three-beat order, the gloss and lead words, "between the two answers", the pension line's length, about 374 to about 480 words); KTD4's departure from the survivor council's literal X; the survivor council's mortality words.
 
-Next is START HERE. Successor: b9-2 (handoff mode).
+Next is START HERE. Successor: b9-3 (handoff mode).
 
 **Check at start:**
-- CI on `0453fa07`, `451fa373` and this close's commit: `gh run list --commit <full sha>` (the `verify` job runs about 43 minutes).
+- CI on `3646a258` and `045509c1` and this close's commit: `gh run list --commit <full sha>` (the `verify` job runs about 43 minutes).
 - The ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 
-**The form council (walk 8's; the first step):** `/council` (a Workflow) on the typed-below line's FORM, never a cut (D7), with the card, `<B>\u11-walk8\panel\` (refuter-R1 to R5), the three plans above and the rider's council record in context (`C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\142671fc-8e6c-4658-b950-b0b5e47e4fa1\subagents\workflows\wf_33aa98fe-a26\journal.jsonl`). Five questions:
-1. The rider's ruled swap ("plus any difference…" on the less and more sentences, "except for any difference…" on `same`) and refuter-R1's three: where the survivor part's clause sits after "your spending of $105,000 a year" (a trailing "plus" reads as spending plus tax; the distill list's "plus" line is the same trap); whether "plus" reads as a direction; whether one line may say what no gate or answer page does, "The tool works out your federal income tax and Medicare premiums every year, under both answers". With it the gloss: "Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, if your income is high)".
-2. The short span (W8-R2): "the answer at that spending" for "your/this answer would add nothing"; ", which would be taken from your savings" after the shortfall; the difference as its own sentence (KD2's fallback).
-3. The crossed ranges (W8-R3 (a)): order the second range's ends by year (the refuter's) or review #7's fallback (drop the difference where the credit is one figure); and naming the at-spending answer's own cap (W8-R3 (c): "why $11,000, when the gap is $21,000?").
-4. The survivor part (W8-R4): out of the runs' list as plain sentences after it, its costs first and named as three-quarters of each figure; ST's "count in full, since your budget is all housing".
-5. The pension household's five runs read as a wall on the phone and in the sheet: a form for a long line, never a cut.
-The rest goes straight into the fix round, no council: W8-R7 (its register entry carries the refuter's caption), W8-R5 (a) and (b), W8-R6 (every run label after the first reads "If you’re still working in …"), W8-R8, W8-R10, the lows, W8-R12 (a) after its measurement (its register entry), and the harness's CVD-crop flake (`docs/landmines.md`, Caddie walks and fleets). Each fix commit runs the review's gates below; then walk 9 re-reads the changed strings.
+**U2 (the first step):** the spec's U2, one commit, every pin with it. Read the spec's Key decisions and The words whole first, and load the four UI design skills (the renderer changes). W8-R5 (a) to (d), W8-R6 and W8-R8 ride U2 (they are this line's words). Then U4: W8-R12 (a) in KD7's words on A, B, C and F (S none), W8-R10, and the walk-8 lows (W8-R11's B, C and F order and A's colon; W8-R12 (c)). Then walk 9: walk 8's targets, an ear seat and a phone seat on the pension household, KD10's counts, and the spec's three flips tested.
 
 **The review's gates** (each fix commit, as its plan's Verification Contract scopes them; each heavy run alone, in sequence, pinned to the P-cores from PowerShell; `<B>` is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus`):
 1. Before the first edit: `git rev-parse HEAD`, the re-anchor base.
@@ -290,11 +284,11 @@ The rest goes straight into the fix round, no council: W8-R7 (its register entry
 4. `pnpm build` and `pnpm verify:fit`, pinned (the fit gate ran 11.1 min here: past the 10-minute foreground cap, the harness moves it to the background; wait for its notice).
 5. The sweep, only where the plan's Verification Contract calls it: `pnpm exec tsx <B>\tools\sweep.mts <label> --today=20758`, then `node <B>\tools\idcheck.mjs <label> ww3` (over 10 minutes: launch it in the background). A row in `<B>\README.md`'s table.
 
-**LANDMINES (the walk-8 fix round and U12):**
-- **The full-budget caption is two strings,** `copy.bandPricesFullBudgetNote` (`src/ui/copy.ts:833`) and `slots.bandPricesFullBudgetWithLevels`, both drawn as the band's track note in `src/ui/FuckOffDate.tsx`: key the fix on the note's own condition (a working-year figure different from the spending), never on "typed". The kept household hits it too, and S's is the gloomy side.
-- **W8-R12 (a) moves the survivor build's KTD6 rule** (a coda never set with a door, `NotePartsBlock`): putting the part on the stale line moves every stale-line pin on every host. Measure the lean first (its register entry).
-- **The rider names no direction and no size, by ruling:** the engine never splits a year's tax between the shortfall and the premium, and the two answers' tax difference runs both ways (TM taxable-first's credit years). A reader or refuter who asks the rider to say which answer pays more, or to print a figure, re-derives the register's NEGATIVE; a reading of "not including" as "ignores tax" or "small" is the ruled flip to the fallback, a council's form call (an exhaustive Record).
-- **The rider is ONE constant, `COMPARISON_RIDER` (`src/ui/copy.ts`), through `withRider`:** a word change there moves every pin on every host, each retyped by hand (no test imports it). `spanRiderLaw` and `codaLaw` read it by hand too.
+**LANDMINES (U2, U4 and U12):**
+- **"Plus" is retired** (the form spec's KD1): with the gap stated from the spending side it claims a direction the engine refutes. The open flip is ", except for any difference between the two answers in…" on every kind; never re-propose "plus", a typed-side "gain" close, "three-quarters", "all housing" or a "the tool works out your tax" line (the Hawk's vetoes).
+- **The rider is ONE constant, `COMPARISON_RIDER` (`src/ui/copy.ts`), through `withRider`; U2 adds the gloss on each line's FIRST rider only:** a word change there moves every pin on every host, each retyped by hand (no test imports it). `spanRiderLaw` and `codaLaw` read it by hand too.
+- **`NotePartsBlock` also draws the out-of-date line's labelled parts and its door:** U2's runs list (KD8) is the typed-below line's own shape; the out-of-date line keeps its `<dl>`, and deleting the coda `<dl>` must not touch its door branch.
+- **The levels caption's figures round** (`formatAbsoluteDollar`): ST's $105,000 budget prints "about $110,000" beside the line's exact figure, pre-existing and filed on the W8-R7 register entry; never change the rounding inside U2.
 - **The gate is two columns at 1536 (`src/ui/styles/save.css`; the plan cites `src/ui/save.css`):** nothing pins the story column, so the coda below the fold is a walk-8 read, never a gate red; any fix is static (KD2's Fit).
 - **Every existing witness and dev seed opens the survivor gate** (all descend from `stillWorking`: Alex 58 working, Sam 60 retired; Sam can die from 2032): only `SURVIVOR_GATE_WITNESSES.sam56` and `.youngerNonWorker` print the gate-off words. A fix to a span slot moves every pin on every host; retype the vitest pins by hand, never composed from the slots.
 - **x_t is refuted** (the rebuild plan's KD1; the register entry's NEGATIVE): a reviewer or reader who re-proposes x_t, "at least" or a "still working" condition on a credit re-derives a refuted finding. The survivor council's scope is "you're both alive", on a COMPARISON's head noun; credit sentences stay unconditioned.
@@ -336,6 +330,8 @@ is paid for the whole year"; the review's two refuters split on it. Asking the b
 **Keep out of every commit from here:** the family-feud working file(s) (today: `../family-feud/newsletter/family-feud-newsletter.html`) are uncommitted on purpose; never stage them from this project.
 
 ---
+- *New (b9-2, 2026-11-16): a flip condition copied into a digest loses its conjuncts.* The rider council's chair wrote its flip as two conditions ("not including" read as "ignores", WHILE "plus" after "less" reads as widening the lean); the plan, the council-log row and the register each kept only the first, so walk 8 "met" a flip whose second half no walk had tested, and the next council had to re-derive it from the machine-local journal. Record a flip in the chair's own words, every conjunct, and cite the journal line.
+- *New (b9-2, 2026-11-16): exact words that live only in a session journal live on one disk.* The form council's worked examples sat in the chair's deliberation text (`agent-*.jsonl`), outside the repo, on a drive that crashed four times that day; the structured verdict's size law keeps them out of the returned JSON. Land a council's exact words in a repo spec in the same session.
 
 ## Below the D7 queue — the pre-D7 ranked lists
 

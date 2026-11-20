@@ -35,6 +35,11 @@ harness can drive: the hero needs a planted answer the door tests don't stand up
 and every sheet channel needs an account, which destroys the divergence itself (the early return
 requires $0 accounts). The source-bind was proven RED under a planted revert-mutant, then reverted.
 
+> **Out of date (corrected 2026-11-20):** the hero channel now reaches the divergence household. W9-R7's harness
+> plants an answered draft (the `getSnapshot` wrapper in `src/ui/__tests__/resultPayCheckLine.test.tsx`), and since
+> `2d0de57a` that file's "the hero reads the ANSWERED draft whole" list pins the hero's priced term behaviorally with
+> it (its Medicare case). The source-bind in `resultControlDoors.test.tsx` still stands beside it.
+
 ## Key Insight
 
 Two rules. (1) A "single-sourced, never drifts" claim between a producer and a mirror is only true

@@ -313,6 +313,8 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-5, 11-20) The hero's eyebrow slot overlays `.result`'s top padding only at the two-pane tier** (W9-R7's U4, `c644ec2f`: the re-figuring line and the provisional tag, absolute above the lead in `fuckOffDate.css` / `confidence.css`). It holds ONE line: at the short tier the padding is 32 px and the line 18.2 px with an 8 px margin, so a wrap (a longer string, CI's taller metrics) climbs above the page top. Below the two-pane tier the slot is in the flow (a raised root font would push an overlay off the page), so the phone's date hero sits lower while the slot shows: 36.4 px + a gap under the two-line re-figuring line, 32.1 px under the tag until the final. A string change in the slot, or a re-point that moves the short tier's padding, re-measures it.
+- **(b9-5, 11-20) A window one run long can't be screenshotted reliably** (the spine's re-figuring window is ~3 s; 1440's hero shot missed it while 1536's and 1280's caught it). Read live geometry with an in-page `requestAnimationFrame` recorder armed BEFORE the edit that records the rects on the first frame the element exists; a dev preview with the state forced on is the measurement of record.
 - **(b9-4, 11-13) A new cause that takes another cause's slot reds THAT cause's arms, which a run of the new arm alone never
   reaches.** R1 (`3000a04c`) let the typed-below line take the Result's standing slot wherever a fresh typed W sits below the
   quote; the coordinate-tap arm (`?seed=date`, $72,000 typed under $84,000 of spending) still expected the moved line, and CI's
@@ -532,6 +534,7 @@ is a guess a verifier must check, never a fact
 
 ## Copy and copyGuard
 
+- (migrated from TODO's standing block by b9-5, 11-20) **One composer feeds every host** (the Result's slot, the gate, the seat in the sheet AND on the money-picture step): a change reds the fit gate's `PAY_CHECK_UNLOCKS` (TM's and the pension's doorless blocks and their seat blocks in the open sheet), the coordinate-tap arm, `reentry.test.tsx`, `resultPayCheckLine.test.tsx`, `IntakeApp.test.tsx`, `src/engine/__tests__/typedBelowTaxRider.test.ts` (it reads the near-line household's spans; U2's full suite caught it, no lane's own files did) and the caddie `intake:typedbelow` arm; since U2 also `src/intake/__tests__/typedBelowAmount.pbt.test.ts` (the amount rule through the real slots), `assumptionPanel.test.tsx`, `workingCostStep.test.tsx`, `devSeeds.test.ts` and `notePartsBlock.test.tsx`. The unit suite never runs Playwright: grep `e2e/` for every slot a round renames.
 - **(the typed-below line's standing rules, migrated from TODO's close block 2026-11-20, b9-2):**
   - **The rider is ONE constant, `COMPARISON_RIDER` (`src/ui/copy.ts`), through `withRider(clause, glossYears)`**, the gloss on
     each line's first rider only (its look-back the engine's `irmaa` constant): a word change moves every pin on every host,
@@ -710,6 +713,7 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Probes and measurement
 
+- (migrated from TODO's standing block by b9-5, 11-20) **The Dell's session-folder tools are gone** (2026-11-19): every walk panel's `CHAIR-NOTES.md`, the line probe, the sweep, the idcheck, the re-anchor classifier (replaced 2026-11-20 by `scripts/check-reanchor-moves.mjs`, in the repo, gate step 3), the tier-sweep and plan-reader folders. Each card in `docs/caddie/cold-read-log.md`, the register and the specs are what remain. A line probe is quick to rebuild from the composer over `DEV_SEEDS` (`file:///` imports, `pnpm exec tsx`); KD10's test is the count of record, and the witnesses' figures are pinned in `workingYearLeftOver.test.ts`. A walk's lost record can be rebuilt from a frozen `git archive` of the walked commit with `node_modules` junctioned in (b9-3 did it for walk 9's lows).
 
 - **(b9-2, 11-16) A year's portfolio income tax is `grossWithdrawal − fundingNet` only in a clamped working year**, which
   prices no ACA premium (the tax rider build's KTD2): outside the working window that difference also carries the ACA

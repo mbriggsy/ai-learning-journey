@@ -1378,9 +1378,12 @@ type TypedBelowLineHost = TypedBelowHost['kind'] | TypedBelowSeatHost
 /** The answer each host names (the walk-8 form council's KD9; an exhaustive Record, insight 147): "This" where an answer is
  *  on screen — the answer page, and the details sheet opened over it, whose title and warning already say "this answer"
  *  (the walk-8 card's W8-R5 (d), adopted by this fix round as the council's own positions allowed: the chair named
- *  "Your" there while that finding was open) — and "Your" where none is yet: the re-entry gate and the walk's
- *  money-picture step. The lean, the runs and the survivor part all read it, so one line never says "Your answer" and
- *  "this answer" for one answer. */
+ *  "Your" there while that finding was open) — and "Your" on the re-entry gate, where no answer is on screen yet, and on
+ *  the walk's money-picture step. The step DOES show an answer (the provisional strip at its top), so "none is yet" is not
+ *  its reason: the line there sits right under the left-over question's reply buttons, where a "This answer" would point at
+ *  the reply just chosen (council `wf_9bd3c243-4e7`, which corrected this docblock). Whether the step's "Your answer" reads
+ *  as that reply too is walk 10's watch item W9 (5), with a step-noun council pre-loaded on one unprompted raise. The lean,
+ *  the runs and the survivor part all read it, so one line never says "Your answer" and "this answer" for one answer. */
 const TYPED_BELOW_NOUN: Readonly<Record<TypedBelowLineHost, TypedBelowAnswer>> = { result: 'This', gate: 'Your', sheet: 'This', step: 'Your' }
 /** The lean's form by host (the walk-9 form council's call (2); an exhaustive Record, insight 147): the host's noun where
  *  the line opens on its counts sentence, and the floor alone in the details sheet, where the W row's note above already

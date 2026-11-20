@@ -1025,7 +1025,7 @@ describe('workingYearLeftOverWaitingWords — R3, the seat and the methodology l
     'Your figure for a working year needs an update, above. No money left over is added to your savings. ' +
     'At $105,000 a year, from 2026 through 2032, each working year you’re both alive comes up $4,015 short in 2026 through 2030 and $3,652 short in 2031 through 2032. ' +
     'Your $84,000 figure leaves those shortfalls out, so this answer can look better than it really is. ' +
-    'Updating to $105,000 or more puts them in. It adds no money left over, because your first working year, 2026, comes up short at that cost. ' +
+    'Updating to $105,000 or more puts those shortfalls in. Even then, no money left over is added, because your first working year, 2026, comes up short at that cost. ' +
     SEAT_SURVIVOR_105
   /** C's seat (W8-R10 (a)): the act's waiting words, then the later run at the quote and the years' lean, in the answer
    *  page's words, then the survivor part. */
@@ -1062,20 +1062,21 @@ describe('workingYearLeftOverWaitingWords — R3, the seat and the methodology l
   it('B’s seat and method words, typed by hand: no promise that updating brings anything back, and why not at the quote — short with its run in dollars, exactly $0 in the old words (U11 walk 7’s R5)', () => {
     expect(workingYearLeftOverWaitingSeat(DEV_SEEDS.datesavedrisenshort)).toBe(B_SHORT_SEAT)
     // W8-R10 (b)'s method line in build 2's R14 form: its referents named in words, no dollars and no direction.
+    // U11 walk 9's R9 (1)–(2), reworded in place: the figure and the act named, never "it".
     expect(copy[LEFT_OVER_WAITING_COPY.updateShort.method]).toBe(
-      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that, because at your spending figures your first working year comes up short. It does put each working year that comes up short at your spending figures into your answer.',
+      'Your figure for a working year needs an update. No money left over is added to your savings. Updating your figure to what your spending figures come to, or more, won’t change that, because at that cost your first working year comes up short. Updating does count the shortfall of each working year that comes up short at that cost.',
     )
     expect(copy[LEFT_OVER_WAITING_COPY.updateLaterShort.method]).toBe(
-      'Until you update your figure for a working year, no money left over is added to your savings. Updating it also puts each later working year that comes up short at your spending figures into your answer.',
+      'Until you update your figure for a working year, no money left over is added to your savings. Updating your figure to what your spending figures come to also counts the shortfall of each later working year that comes up short at that cost.',
     )
-    const none = 'Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.'
+    const none = 'Updating your figure to what your spending figures come to, or more, won’t change that, because at that cost your first working year has nothing left over.'
     expect(workingYearLeftOverWaitingSeat(RISEN_NONE)).toBe(`Your figure for a working year needs an update, above. No money left over is added to your savings. ${none}`)
     expect(copy[LEFT_OVER_WAITING_COPY.updateNone.method]).toBe(`Your figure for a working year needs an update. No money left over is added to your savings. ${none}`)
     // The one-year run: Sam's alimony from 61 leaves only 2026 short at $105,000. Year 0 alone carries no scope (no one
     // can have died by then), so no survivor part either.
     const oneYear = { ...DEV_SEEDS.datesavedrisenshort, incomeStreams: [{ ...DEV_SEEDS.datesavedrisenlater.incomeStreams[0]!, startAge: 61, endAge: 70 }] }
     expect(workingYearLeftOverWaitingSeat(oneYear)).toBe(
-      'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, your first working year, 2026, comes up $4,015 short. Your $84,000 figure leaves that shortfall out, so this answer can look better than it really is. Updating to $105,000 or more puts it in. It adds no money left over, because that year comes up short at that cost.',
+      'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, your first working year, 2026, comes up $4,015 short. Your $84,000 figure leaves that shortfall out, so this answer can look better than it really is. Updating to $105,000 or more puts that shortfall in. Even then, no money left over is added, because that year comes up short at that cost.',
     )
     expect(workingYearLeftOverWaitingSeat(DEV_SEEDS.datesavedrisenlater)).toBe(C_LATER_SEAT)
     expect(workingYearLeftOverWaitingSeat(DEV_SEEDS.datesavedfourbuckets)).toBe(C_LATER_SEAT)

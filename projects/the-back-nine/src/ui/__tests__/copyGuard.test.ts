@@ -1617,6 +1617,10 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     /, the least a working year almost always costs,/,
     /\bnot including any difference between the two answers\b/,
     /\(the extra premium Medicare charges once you[’']re on it\b/,
+    // U11 walk 9's lows (the walk-9 form spec's U3): B's seat's two pronouns, each reaching back past a sentence (R9 (3a)),
+    // and the out-of-date methodology lines' "Updating it", whose "it" sat after "your savings" (R9 (1)–(2)).
+    /\bputs (?:them|it) in\. It adds no money left over\b/,
+    /\bUpdating it (?:to your spending figures|also puts)\b/,
   ]
   /** Retired on the typed-below line ONLY (the walk-9 form council's call (3)): W8-R6's run label. The money picture's
    *  ledger keeps its own "If you’re still working in …" rows on purpose — its year 0 is its own row, so every later row it
@@ -1800,9 +1804,20 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       'At your spending of $105,000 a year, the least a working year almost always costs, your first working year would have $5,985 left over.',
       '…$11,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.',
       '…Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, when your income two years before was high).',
+      'Updating to $105,000 or more puts them in. It adds no money left over, because your first working year, 2026, comes up short at that cost.',
+      'Updating it to your spending figures or more won’t change that, because at your spending figures your first working year comes up short.',
     ]
     expect(planted.length, 'one plant per pattern').toBe(RETIRED_EVERYWHERE.length)
     planted.forEach((p, i) => expect(p).toMatch(RETIRED_EVERYWHERE[i]!))
+  })
+
+  it('U11 walk 9’s R9 (5): no moved line names an answer — the moved note sits under the reply buttons, where "answer" reads as the reply just chosen (council `wf_9bd3c243-4e7`)', () => {
+    const NAMES_AN_ANSWER = /\banswers?\b/i
+    const moved = ['workingLedgerLeftOverRoseLine', 'workingLedgerLeftOverFellLine', 'workingLedgerLeftOverRoseLineAt', 'workingLedgerLeftOverFellLineAt'] as const
+    for (const k of moved) expect(SLOT_RENDER[k], k).not.toMatch(NAMES_AN_ANSWER)
+    // Non-vacuous: the clause it retires reds, beside the clause that replaced it, which passes.
+    expect('…but not all of it, leave this as it is: your answer still counts the $16,985 you said goes in.', 'the plant').toMatch(NAMES_AN_ANSWER)
+    expect(SLOT_RENDER.workingLedgerLeftOverRoseLineAt, 'the control').toContain('leave this as it is: each working year still adds at most the $16,985 you said goes in.')
   })
 
   it('below today’s spending (no Keep door, ruling 34) no line, gate line or door says “confirm or change your” or “checking your figure”; where the Keep door is real, “confirm or change” is the act', () => {
@@ -2241,7 +2256,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:952-962, :1008-1025), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:953-963, :1009-1026), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

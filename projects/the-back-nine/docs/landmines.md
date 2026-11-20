@@ -580,6 +580,8 @@ is a guess a verifier must check, never a fact
   checked with `pnpm build`.
 - **(b9-9/b9-10, 11-13) A fix that names its hosts can miss one.** Grep every caller of a composer before a fix round changes what it says;
   carry the decision in the core (`WorkingYearLeftOverMoved.typedBelow`), never a conditional per host.
+- **(b9-2, 11-20; migrated from TODO’s close block by b9-3) The methodology row is R14's** (`docs/plans/features/working-year-surplus-build-spec.md`): one static line by shown state, no dollars and no direction word (it reads the live draft far above the seat). A walk finding that asks it for dollars or a lean goes on the seat instead.
+- **(b9-2, 11-20; migrated from TODO’s close block by b9-3) The levels caption's figures round** (`formatAbsoluteDollar`): ST's $105,000 budget prints "about $110,000" beside the line's exact figure, pre-existing and filed on the W8-R7 register entry; never change the rounding inside a copy round.
 
 ## Caddie walks and fleets
 

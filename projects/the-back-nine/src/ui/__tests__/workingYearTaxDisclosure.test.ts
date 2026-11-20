@@ -307,17 +307,22 @@ describe('the pay check’s arm of the working-year row (U9, R17)', () => {
       'five waiting forms',
     ).toBe(5)
     // W8-R10 (b): its referents named in words; build 2's R14 holds it static, with no dollars and no direction.
+    // U11 walk 9's R9 (1)–(2): reworded in place, R14 holding — the figure and the act named (no "it"), the cost once and
+    // then "that cost", what updating counts, and no answer noun beside the list's "the answer".
     expect(copy.assumptionWorkingYearCheckLeftOverWaitingUpdateShort, 'B’s form: no "until", and why updating brings nothing back').toBe(
-      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that, because at your spending figures your first working year comes up short. It does put each working year that comes up short at your spending figures into your answer.',
+      'Your figure for a working year needs an update. No money left over is added to your savings. Updating your figure to what your spending figures come to, or more, won’t change that, because at that cost your first working year comes up short. Updating does count the shortfall of each working year that comes up short at that cost.',
     )
     expect(copy.assumptionWorkingYearCheckLeftOverWaitingUpdateLaterShort, 'C’s form: the later short years named, no dollars, no direction').toBe(
-      'Until you update your figure for a working year, no money left over is added to your savings. Updating it also puts each later working year that comes up short at your spending figures into your answer.',
+      'Until you update your figure for a working year, no money left over is added to your savings. Updating your figure to what your spending figures come to also counts the shortfall of each later working year that comes up short at that cost.',
     )
+    for (const k of ['assumptionWorkingYearCheckLeftOverWaitingUpdateShort', 'assumptionWorkingYearCheckLeftOverWaitingUpdateLaterShort', 'assumptionWorkingYearCheckLeftOverWaitingUpdateNone'] as const) {
+      expect(copy[k], `${k}: walk 9's R9, no pronoun "it" and no answer noun`).not.toMatch(/\b(it|its)\b|\banswer\b/i)
+    }
     for (const k of ['assumptionWorkingYearCheckLeftOverWaitingUpdateShort', 'assumptionWorkingYearCheckLeftOverWaitingUpdateLaterShort'] as const) {
       expect(copy[k], `${k}: R14, no dollars`).not.toMatch(/\$|\d/)
     }
-    expect(copy.assumptionWorkingYearCheckLeftOverWaitingUpdateNone, 'B at exactly $0: the old words').toBe(
-      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that: at that cost your first working year has nothing left over.',
+    expect(copy.assumptionWorkingYearCheckLeftOverWaitingUpdateNone, 'B at exactly $0: the old words, the update clause B’s').toBe(
+      'Your figure for a working year needs an update. No money left over is added to your savings. Updating your figure to what your spending figures come to, or more, won’t change that, because at that cost your first working year has nothing left over.',
     )
     // The selector without the shown state fails to compile (KTD11: REQUIRED, never defaulted).
     // Compile-time arms only, never called (the selector reads the act's Record, which an absent argument cannot index).

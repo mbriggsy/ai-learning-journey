@@ -1553,11 +1553,11 @@ describe('the left-over seat — its own row below the W row (U7; R5, R6)', () =
     // beside its charge (call (4)), the rider and its gloss in their ruled words (flip (i), call (5)).
     const SEAT_B =
       'Your figure for a working year needs an update, above. No money left over is added to your savings. At $105,000 a year, from 2026 through 2032, each working year you’re both alive comes up $4,015 short in 2026 through 2030 and $3,652 short in 2031 through 2032. ' +
-      'Your $84,000 figure leaves those shortfalls out, so this answer can look better than it really is. Updating to $105,000 or more puts them in. It adds no money left over, because your first working year, 2026, comes up short at that cost. ' +
+      'Your $84,000 figure leaves those shortfalls out, so this answer can look better than it really is. Updating to $105,000 or more puts those shortfalls in. Even then, no money left over is added, because your first working year, 2026, comes up short at that cost. ' +
       'In a working year with only one of you alive, that year’s costs count as $63,000 in this answer at your figure of $84,000 a year, and $78,750 in the answer at your spending of $105,000 a year. ' +
       'At your spending, that’s at most $15,750 a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge, the extra Medicare premium you pay when your income two years before was high.'
     const METHOD_B =
-      'Your figure for a working year needs an update. No money left over is added to your savings. Updating it to your spending figures or more won’t change that, because at your spending figures your first working year comes up short. It does put each working year that comes up short at your spending figures into your answer.'
+      'Your figure for a working year needs an update. No money left over is added to your savings. Updating your figure to what your spending figures come to, or more, won’t change that, because at that cost your first working year comes up short. Updating does count the shortfall of each working year that comes up short at that cost.'
     for (const answer of [{ kind: 'saved', quotedReal: 16_985 }, { kind: 'spent' }, undefined] as const) {
       const { unmount } = renderPanel({ snapshot: snap({ ...DEV_SEEDS.datesavedrisenshort, workingYearLeftOver: answer }) })
       const who = answer?.kind ?? 'unanswered'

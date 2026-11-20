@@ -325,6 +325,7 @@ The page before the first button (the door scope sits under the buttons, so it l
 **F3, the floor (W8-R8 regression).** Walk 10 must seat T, CR and PN.
 - **Trigger, EITHER:** (a) any one seat on T, CR or PN reads a close's "$X a year less" as the whole size of the lean; OR (b) any one seat stops on the lean sentence the way eight stopped on the aside.
 - **Action:** the floor becomes its own short sentence placed immediately after the cap sentence (with no cap sentence, after run 1's first sentence): `A working year almost always costs at least that $105,000.` The lean sentence then drops its floor half, and its "so your answer can look better than it really is" rejoins the counts sentence. The floor is said once.
+- **Bound (council `wf_9bd3c243-4e7`, U3):** on the step, the rejoined sentence is the walk-8 form W9 (5) flagged ("Your answer counts … so your answer can look better than it really is", under the reply buttons). If F3 fires, the step-noun council rules the step's noun in the same round, before the rejoin ships there.
 - W9-R8's honest-date build (after walk 10) is the structural cure for the magnitude reading either way.
 
 **F4, the labels.**
@@ -408,6 +409,12 @@ The page before the first button (the door scope sits under the buttons, so it l
   the line probe and its new numbers said in the commit message.
 - **U3.** The walk-9 card's remaining lows: R9 (1)–(2) B's and C's method lines in place (R14 holds), (3a) B's two pronouns,
   (5) "this answer" on TM's sheet and step 14. (The `:1418` / `:1183` docblock rides U2's amount rule.)
+  **As built (b9-3, the panel's record lost with the Dell, so each low reconstructed from walk 9's frozen tree):** (1)–(2)
+  reworded in place, R14 holding (no "it", no answer noun, "what your spending figures come to" then "that cost", updating
+  "counts the shortfall"), the exactly-$0 twin and its seat with them; (3a) "puts those shortfalls in. Even then, no money
+  left over is added…"; (5) **REDUCED, not closed** (council `wf_9bd3c243-4e7`, light, 7/10): the moved note's "your answer
+  still counts" became "each working year still adds at most the $S", and the step's "Your answer" is walk 10's watch item
+  W9 (5), F3 bound above.
 - **Then** W9-R7, its own plan (`docs/plans/features/answered-draft-build-spec.md`), and then **walk 10** on the changed strings:
   walk 9's targets; seats on T, CR and PN (F3) and the phone seat, wide-PN and the listener on PN (F2); every flip above tested; at
   Briggsy's NEW viewport, 1440×731 at DPR 2 (measured in his Chrome 2026-11-19), so the fit gate and the capture harness are

@@ -30,6 +30,11 @@ const draft = (over: Partial<ScenarioDraft> = {}): ScenarioDraft => ({
   ...over,
 })
 
+/** The answered draft and run key every planted resolved answer carries (W9-R7, KTD1); `snap` swaps in
+ *  the snapshot's own draft, so these fixtures read as a settled page (the answer figured from the
+ *  draft on screen). */
+const PLANTED = { draft: draft(), inputKey: 'test' } as const
+
 // isDateRoute = "is anyone still working?" — one working person routes date-first; all-retired spine.
 const working = draft({ people: [{ workStatus: 'working' }, { workStatus: 'retired' }] })
 const retired = draft({ people: [{ workStatus: 'retired' }, { workStatus: 'retired' }] })
@@ -47,10 +52,11 @@ const snap = (
   displayed: StickyDisplay | null = null, // U12 sticky triple — threaded into the SPINE reading only
 ): MemoryModelSnapshot => ({
   draft: d,
-  answer,
+  answer: answer.kind === 'headline' || answer.kind === 'date' ? { ...answer, draft: d } : answer,
   displayed,
   solve: { kind: 'idle' }, // U15 solve channel — answerView reads the first beat only
   spend: { kind: 'idle' }, // the spend lane
+  refiguring: false,
   runningInWorker: true,
 })
 
@@ -114,6 +120,7 @@ const datesAnswer = (track: DateTrackOutcome = DATE_FIXTURES.confirmed, bandData
     ...(bandData ? { band: bandData } : {}),
   },
   tier: 'final',
+  ...PLANTED,
 })
 
 const distributionWith = (bandFan?: BandFan): SimulationResult['distribution'] => ({
@@ -139,6 +146,7 @@ const headlineAnswer = (
     seed: 1,
   },
   tier: 'final',
+  ...PLANTED,
 })
 
 describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
@@ -265,13 +273,13 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
 
   it('a date input-failure → fallback (names the missing inputs, never a hero date)', () => {
     expect(
-      selectElevatedAnswer(snap({ kind: 'date', outcome: { kind: 'input-failure', reason: 'x' }, tier: 'final' }, working), noop),
+      selectElevatedAnswer(snap({ kind: 'date', outcome: { kind: 'input-failure', reason: 'x' }, tier: 'final', ...PLANTED }, working), noop),
     ).toEqual({ kind: 'fallback' })
   })
 
   it('a date cancelled outcome → fallback (defensive; memoryModel never commits cancelled)', () => {
     expect(
-      selectElevatedAnswer(snap({ kind: 'date', outcome: { kind: 'cancelled' }, tier: 'final' }, working), noop),
+      selectElevatedAnswer(snap({ kind: 'date', outcome: { kind: 'cancelled' }, tier: 'final', ...PLANTED }, working), noop),
     ).toEqual({ kind: 'fallback' })
   })
 
@@ -342,6 +350,7 @@ describe('selectElevatedAnswer — D2 state-adaptive routing', () => {
         seed: 1,
       },
       tier: 'final',
+      ...PLANTED,
     }
     const r = selectElevatedAnswer(snap(answer, retiredWithAges), noop)
     if (r.kind !== 'spine' || r.view.kind !== 'reading') throw new Error('expected a spine reading')

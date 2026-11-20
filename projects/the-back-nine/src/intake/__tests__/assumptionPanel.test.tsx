@@ -168,6 +168,7 @@ const snap = (draft: ScenarioDraft, over: Partial<MemoryModelSnapshot> = {}): Me
   displayed: null,
   solve: { kind: 'idle' },
   spend: { kind: 'idle' },
+  refiguring: false,
   runningInWorker: true,
   ...over,
 })
@@ -559,7 +560,7 @@ describe('the live answer echo', () => {
     const rawResult = { headline: { xOfTen: { value: 8 } } } as unknown as SimulationResult
     renderPanel({
       snapshot: snap(mixedDraft, {
-        answer: { kind: 'headline', result: rawResult, tier: 'final' },
+        answer: { kind: 'headline', result: rawResult, tier: 'final', draft: mixedDraft, inputKey: 'test' },
         displayed: shown(7),
       }),
     })

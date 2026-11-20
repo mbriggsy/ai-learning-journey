@@ -395,13 +395,21 @@ describe('the F9 demotion — the hawk veto arms (planted-fail against the pre-U
     expect(frames.some((f) => f.kind === 'inputs-incomplete')).toBe(true) // the demotion was observed
   })
 
-  it('same seed, same draft ⇒ byte-identical displayed triple across recomputes (the no-jitter guarantee)', async () => {
-    const { client } = realSpineClient()
-    const model = createMemoryModel({ client, builders: wideningBuilders, mintSeed: () => 7 })
-    model.update((d) => ({ ...retire(d), annualSpendingReal: 40_000 }))
-    await model.recompute('final')
-    const first = model.getSnapshot().displayed
-    await model.recompute('final')
-    expect(model.getSnapshot().displayed).toEqual(first)
+  it('same seed, same draft ⇒ byte-identical displayed triple across runs (the no-jitter guarantee)', async () => {
+    // Two models, so both runs really reach the engine: since W9-R7 (KTD3) a re-run of the shown
+    // answer's own inputs on ONE model settles from the shown answer and never re-runs at all.
+    const first = createMemoryModel({ client: realSpineClient().client, builders: wideningBuilders, mintSeed: () => 7 })
+    const second = createMemoryModel({ client: realSpineClient().client, builders: wideningBuilders, mintSeed: () => 7 })
+    for (const model of [first, second]) {
+      model.update((d) => ({ ...retire(d), annualSpendingReal: 40_000 }))
+      await model.recompute('final')
+    }
+    expect(first.getSnapshot().displayed).not.toBeNull()
+    expect(second.getSnapshot().displayed).toEqual(first.getSnapshot().displayed)
+    // …and on one model, the same-input settle leaves the triple exactly where it was.
+    const held = first.getSnapshot().displayed
+    first.update((d) => ({ ...d }))
+    await first.recompute('final')
+    expect(first.getSnapshot().displayed).toBe(held)
   })
 })

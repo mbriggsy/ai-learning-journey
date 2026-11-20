@@ -80,10 +80,11 @@ describe('the room sentence on `steer` — the lane found no room to quote, and 
         open
         snapshot={{
           draft,
-          answer: { kind: 'headline', result, tier: 'final' },
+          answer: { kind: 'headline', result, tier: 'final', draft, inputKey: 'test' },
           displayed: display,
           solve: { kind: 'idle' },
           spend,
+          refiguring: false,
           runningInWorker: true,
         }}
         missing={[]}

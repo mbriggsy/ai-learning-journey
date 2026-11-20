@@ -274,7 +274,7 @@ describe('the Assumptions door — the seat swap + the hatch gate', () => {
 describe('the edit → recompute cadence (the ratified F6 policy)', () => {
   it('SPINE route: a committed panel edit recomputes FINAL-ONLY (the tiers are byte-identical — a provisional is waste)', async () => {
     plantResolved()
-    const recompute = vi.spyOn(appModel, 'recompute').mockResolvedValue(undefined)
+    const recompute = vi.spyOn(appModel, 'recompute').mockResolvedValue(true)
     renderResult()
     fireEvent.click(door()!)
     const input = screen.getByLabelText(copy.assumptionSurvivorRatioLabel)
@@ -295,7 +295,7 @@ describe('the edit → recompute cadence (the ratified F6 policy)', () => {
         { ...d.people[1], workStatus: 'retired' as const },
       ],
     }))
-    const recompute = vi.spyOn(appModel, 'recompute').mockResolvedValue(undefined)
+    const recompute = vi.spyOn(appModel, 'recompute').mockResolvedValue(true)
     renderResult()
     fireEvent.click(door()!)
     const input = screen.getByLabelText(copy.assumptionSurvivorRatioLabel)

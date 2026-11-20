@@ -169,7 +169,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
 - The pre-dispatch `blocked` arm stays DISTINCT from the committed withheld payload — two calm
   renders, both naming the true reason (§Q5). The gap vocabulary shipped as
   `SolvePreconditionGap = 'goal-unset' | SolveBlockReason` over `SolveBlockReason = 'no-pretax' |
-  'spine-unready'` (`memoryModel.ts:289`, `:294`):
+  'spine-unready'` (`memoryModel.ts:312`, `:317`):
   `goal-unset` steers to the GoalPicker, and the single `buckets-defaulted` gap this spec first
   prescribed became the builder's TYPED refusal `no-pretax` | `spine-unready` landing verbatim as
   the gap, each with its own true note (the steer-seed increment, 2026-07-23, commits `8b9cab61` +

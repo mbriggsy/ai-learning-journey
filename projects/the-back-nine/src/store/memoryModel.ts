@@ -24,7 +24,10 @@
  *      on this);
  *  (f) stamps each dispatched run with a monotonic request epoch and DISCARDS
  *      any resolved result older than the latest committed epoch, so racing
- *      in-flight runs never render a stale intermediate.
+ *      in-flight runs never render a stale intermediate — and (W9-R7) commits a
+ *      resolved answer only when it was built from the NEWEST inputs the household
+ *      asked for, records with it the draft it was figured from, and raises
+ *      `refiguring` while a run on different inputs is in flight (see `recompute`).
  *
  * THE DATE-ROUTE EPOCH ORDER (C3 forward item (b), engineProtocol.ts:103-111):
  * result-discard alone cannot stop a sweep already running worker-side — the
@@ -255,8 +258,28 @@ export type ModelAnswer =
   // synchronization — the compiler holds the door. Note the spine's two tiers are byte-identical
   // TODAY (the spine run below ignores the tier); the stamp still records the truthful fact —
   // whether the 'final' dispatch is the one that landed.
-  | { readonly kind: 'headline'; readonly result: SimulationResult; readonly tier: DateSearchTier } // spine route (incl. outcomeState 'indeterminate')
-  | { readonly kind: 'date'; readonly outcome: DateSearchOutcome; readonly tier: DateSearchTier } // date route (incl. its defined input-failure)
+  //
+  // W9-R7 (KTD1, KTD2): each resolved arm also carries the draft it was FIGURED FROM (`draft`) and
+  // a key of its BUILT engine input (`inputKey`; see `runKey`). Every sentence that describes the
+  // shown answer reads `draft`, never the live one, which an edit moves before the answer does; the
+  // controls keep the live draft. Both REQUIRED, as `tier` is: a sibling field on the snapshot let a
+  // test plant an answer beside a null draft, and a "fall back to the live draft" there would bring
+  // the defect back, so the compiler holds the door here. Session-only, never serialized (the
+  // `lastDisplayed` rule).
+  | {
+      readonly kind: 'headline'
+      readonly result: SimulationResult
+      readonly tier: DateSearchTier
+      readonly draft: ScenarioDraft
+      readonly inputKey: string
+    } // spine route (incl. outcomeState 'indeterminate')
+  | {
+      readonly kind: 'date'
+      readonly outcome: DateSearchOutcome
+      readonly tier: DateSearchTier
+      readonly draft: ScenarioDraft
+      readonly inputKey: string
+    } // date route (incl. its defined input-failure)
   // U12 (the F9 demotion, council 2026-07-08): a required fact stopped being validly
   // present AFTER an answer had resolved (`missingRequiredFacts` — the one authority; the
   // builders return null on it). Deliberately TIER-LESS: this is not an answer, and the
@@ -351,6 +374,13 @@ export interface MemoryModelSnapshot {
   readonly solve: SolveAnswer
   /** The spend solve for the committed spine answer's clause — see {@link SpendAnswer}. */
   readonly spend: SpendAnswer
+  /** W9-R7 (KTD4) — true exactly while the newest recompute is in flight on engine inputs different
+   *  from the shown answer's (or over a shown `inputs-incomplete` / `compute-error`, which have no
+   *  inputs to match); false over `idle` and `pending` (the pending view is its own working state).
+   *  Written inside `commit` before its single notify, so no frame pairs a new answer with an old
+   *  flag. A fact about the store, not about one answer: its default, false, can never recreate the
+   *  shown-answer-names-new-inputs defect in a test that plants an answer. */
+  readonly refiguring: boolean
   readonly runningInWorker: boolean
 }
 
@@ -405,8 +435,15 @@ export interface MemoryModel {
   /** Dispatch the state-appropriate engine run for the current draft: the
    *  date-search when ≥1 person's ASKED work status is 'working'; the spine
    *  headline when all are 'retired' (status drives routing — never inferred
-   *  from salary). No-op (→ idle) below minimum-viable input. */
-  recompute(tier?: DateSearchTier): Promise<void>
+   *  from salary). No-op (→ idle) below minimum-viable input. A draft whose built
+   *  input is the shown answer's own, at a tier no higher than the shown one, never
+   *  reaches the engine: it settles from the shown answer at once (W9-R7, KTD3).
+   *
+   *  Resolves `false` when a newer recompute was dispatched before this one settled,
+   *  or when its run was held (cancelled, or killed by an engine reset); `true`
+   *  otherwise. A provisional/final pair dispatches its final only on `true` (KTD7):
+   *  a provisional a newer edit superseded must not send its final. */
+  recompute(tier?: DateSearchTier): Promise<boolean>
   /** U15 §S5 (5) — invite the recommend-second solve for the current draft (the SECOND beat,
    *  a separate channel from `recompute`'s first beat). Refuses to dispatch on an unmet
    *  precondition (goal unset ⇒ `blocked{goal-unset}`; the injected builder returns its TYPED
@@ -557,6 +594,17 @@ const defaultMintSeed = (): number => {
  *  never came off a keyboard. */
 export const draftIdentityKey = (d: ScenarioDraft): string => canonicalIdentityToken(d)
 
+/** W9-R7 (KTD2) — a run's identity: a route-tagged key of its BUILT engine input. Never
+ *  `draftIdentityKey`: the draft carries fields the engine never reads (the goal, the heirs'
+ *  bracket, a saved record, the save stamps, the spend's entry period, the names, W's entry
+ *  period), and the first run's seed mint swaps the draft object after the build. The tier and the
+ *  seed ride BESIDE the input, never in it: a sharpen keeps its key, and the seed never changes once
+ *  minted. */
+const runKey = (route: 'date' | 'spine', input: DateSearchInput | SimulationParams): string =>
+  `${route}:${canonicalIdentityToken(input)}`
+
+const TIER_RANK: Readonly<Record<DateSearchTier, number>> = { provisional: 0, final: 1 }
+
 export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   const mintSeed = deps.mintSeed ?? defaultMintSeed
   const startYear = deps.startCalendarYear ?? new Date().getFullYear()
@@ -594,6 +642,16 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
   // rendering. A resolve whose epoch ≤ committed is DISCARDED unrendered.
   let dispatchedEpoch = 0
   let committedEpoch = 0
+  // W9-R7 — the NEWEST dispatch: what the household last asked for (KTD3, KTD4). Every recompute
+  // that gets past the router writes it: a real dispatch (unsettled until it commits or is held), a
+  // same-input settle (settled at once, keyed by the shown answer) and the builder-null demotion
+  // (settled at once, keyless). A keyed run commits only when its key is this one's, so no run built
+  // from inputs the household has since replaced reaches the screen — the A→B→A revert included,
+  // where B is not cancellable on the spine. `refiguring` derives from it in ONE place.
+  let newestEpoch = 0
+  let newestKey: string | null = null
+  let newestSettled = true
+  let refiguring = false
   // U15 — the solve's OWN epoch pair (commit-if-newer on the solve channel, so a rapid
   // re-invite discards a stale in-flight solve). The lane's CANCEL is the edit-time kill in
   // `update()` — a worker reset, since the solve is one synchronous call; cancel.ts's cooperative
@@ -617,12 +675,63 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     displayed: lastDisplayed,
     solve: solveAnswer,
     spend: spendAnswer,
+    refiguring,
     runningInWorker: deps.client.runningInWorker,
   }
 
   const notify = () => {
-    snapshot = { draft, answer, displayed: lastDisplayed, solve: solveAnswer, spend: spendAnswer, runningInWorker: deps.client.runningInWorker }
+    snapshot = {
+      draft,
+      answer,
+      displayed: lastDisplayed,
+      solve: solveAnswer,
+      spend: spendAnswer,
+      refiguring,
+      runningInWorker: deps.client.runningInWorker,
+    }
     for (const l of listeners) l()
+  }
+
+  /** KTD4's one derivation: the newest dispatch is unsettled and the shown answer is not its inputs
+   *  (a keyless shown arm has no inputs, so it never is). Off over `idle` and `pending`. */
+  const deriveRefiguring = (): boolean => {
+    if (newestSettled) return false
+    switch (answer.kind) {
+      case 'headline':
+      case 'date':
+        return answer.inputKey !== newestKey
+      case 'inputs-incomplete':
+      case 'compute-error':
+        return true
+      case 'idle':
+      case 'pending':
+        return false
+    }
+  }
+
+  /** Re-derive the flag; true when it moved (the caller owes a notify). */
+  const refreshRefiguring = (): boolean => {
+    const next = deriveRefiguring()
+    const moved = next !== refiguring
+    refiguring = next
+    return moved
+  }
+
+  /** Mark the newest dispatch: a real dispatch passes `settled: false`; the same-input settle and the
+   *  builder-null demotion pass `true` (KTD3, KTD4). */
+  const markNewest = (epoch: number, key: string | null, settled: boolean): void => {
+    newestEpoch = epoch
+    newestKey = key
+    newestSettled = settled
+  }
+
+  /** A run that returns HELD (a cancelled sweep, an engine reset) commits nothing; when it was the
+   *  newest dispatch, nothing is in flight for the household's latest inputs any more, so the flag
+   *  clears (KTD4). Notifies only when the flag moved. */
+  const settleHeld = (epoch: number): void => {
+    if (epoch !== newestEpoch || newestSettled) return
+    newestSettled = true
+    if (refreshRefiguring()) notify()
   }
 
   const ensureSeed = (): number => {
@@ -634,7 +743,13 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
 
   const commit = (epoch: number, next: ModelAnswer): void => {
     if (epoch <= committedEpoch) return // stale — discard unrendered (f)
+    // W9-R7 (KTD3) — beside the epoch guard: a keyed arm commits only when it was built from the
+    // NEWEST inputs. An older run on the same inputs may still land (a provisional while its own
+    // final runs, the straddling pair's final built after the edit); a run on replaced inputs never
+    // does. The keyless arms commit as before.
+    if ((next.kind === 'headline' || next.kind === 'date') && next.inputKey !== newestKey) return
     committedEpoch = epoch
+    if (epoch === newestEpoch) newestSettled = true
     if (next.kind === 'headline' || next.kind === 'date') everResolved = true
     // U12 — the sticky display resolves INSIDE the commit, before its single
     // notify (burned/017): one snapshot carries the answer AND its displayed
@@ -651,6 +766,9 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
     // must never ride the new sentence (a resolve for an older commit is dropped by the epoch guard).
     spendAnswer = { kind: 'idle' }
     answer = next
+    // The flag re-derives INSIDE the commit, before its single notify (KTD4, the burned/017 rule the
+    // sticky triple follows): no listener sees the new answer beside the old flag.
+    refreshRefiguring()
     notify()
   }
 
@@ -816,10 +934,12 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       notify()
     },
 
-    async recompute(tier: DateSearchTier = 'provisional'): Promise<void> {
+    async recompute(tier: DateSearchTier = 'provisional'): Promise<boolean> {
       const anyWorking = draft.people.some((p) => p.workStatus === 'working')
       const allStatusesAnswered = draft.people.every((p) => p.workStatus !== undefined)
-      if (!allStatusesAnswered) return // work-status is THE router — unanswered ⇒ no dispatch
+      // Work-status is THE router — unanswered ⇒ no dispatch. Nothing ran, so nothing was
+      // superseded: `true` (KTD7), and a pair's final makes the same no-op check.
+      if (!allStatusesAnswered) return true
 
       // Build BEFORE any state change: builder-null = intake-domain
       // incompleteness (`missingRequiredFacts`, the ONE authority — U12 widened
@@ -835,13 +955,44 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       if (anyWorking ? input === null : params === null) {
         if (everResolved) {
           const epoch = ++dispatchedEpoch
+          // The demotion is the newest dispatch, settled at once and keyless (KTD4), so an older run
+          // resolving after it can neither commit (no key matches null) nor raise the flag.
+          markNewest(epoch, null, true)
           void deps.client.engine.setLatestEpoch(epoch).catch(() => {}) // best-effort cancel signal (see below)
           commit(epoch, { kind: 'inputs-incomplete' })
         }
-        return
+        return true
+      }
+
+      // W9-R7 — the run's identity, from the BUILT input and before any await (KTD2; insight 030: a
+      // value read across an await is a stale view). `builtFrom` is the draft these builders saw,
+      // captured before `ensureSeed` swaps the draft object on a first run (KTD1).
+      const builtFrom = draft
+      const key = anyWorking ? runKey('date', input!) : runKey('spine', params!)
+
+      // THE SAME-INPUT SETTLE (KTD3): the built input is the shown answer's own and the tier is no
+      // higher than the shown one's — a blur that changed nothing, a label or display-only edit, the
+      // A→B→A revert. No engine run: it becomes the newest dispatch (so nothing built from other
+      // inputs can commit after it), refreshes the shown arm's draft to the live one in place (the
+      // same key, so only fields the engine never reads differ), settles at once and notifies once.
+      // It never goes through `commit`: the committed epoch, the sticky triple and the spend lane all
+      // stay (a sized spend clause still describes this very answer). The worker-side cancel fires
+      // only on the date route and only while a run on a DIFFERENT key is in flight (the A→B→A
+      // revert: the worker drops B's sweep between candidates); a spine run is not cancellable, and
+      // the newest-key test in `commit` already holds it off.
+      if ((answer.kind === 'headline' || answer.kind === 'date') && answer.inputKey === key && TIER_RANK[tier] <= TIER_RANK[answer.tier]) {
+        const differentInFlight = !newestSettled && newestKey !== key
+        const epoch = ++dispatchedEpoch
+        markNewest(epoch, key, true)
+        if (anyWorking && differentInFlight) void deps.client.engine.setLatestEpoch(epoch).catch(() => {})
+        answer = { ...answer, draft: builtFrom }
+        refreshRefiguring()
+        notify()
+        return true
       }
 
       const epoch = ++dispatchedEpoch
+      markNewest(epoch, key, false)
       // The cancel signal is route-INDEPENDENT (AT2, D1 review): bump the
       // worker-side epoch before ANY dispatch so a spine recompute ALSO cancels
       // an in-flight date sweep (FIFO on the same port), not only a date→date
@@ -851,12 +1002,12 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
       // so its rejection is swallowed HERE: a worker reset (or a dead worker) rejects it, and a void
       // promise must never surface as an unhandled rejection — it is a best-effort signal either way.
       void deps.client.engine.setLatestEpoch(epoch).catch(() => {})
-      if (answer.kind === 'idle') {
-        // `pending` exists only in the pre-first-resolve window; once anything
-        // has committed we hold the last answer visible (no re-blank).
-        answer = { kind: 'pending' }
-        notify()
-      }
+      // `pending` exists only in the pre-first-resolve window; once anything has committed we hold
+      // the last answer visible (no re-blank). The flag rises here when this run's inputs are not the
+      // shown answer's (KTD4) — one notify covers both moves, and none when neither moved.
+      const wasIdle = answer.kind === 'idle'
+      if (wasIdle) answer = { kind: 'pending' }
+      if (refreshRefiguring() || wasIdle) notify()
 
       try {
         if (anyWorking) {
@@ -866,13 +1017,17 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
           // A superseded sweep resolves `cancelled` — HOLD the prior answer, never
           // commit it: committing renders AnswerStrip's null arm → a blanked strip
           // until the newer epoch lands (the no-re-blank contract, AC1/D1 review).
-          if (res.ok && res.outcome.kind === 'cancelled') return
+          if (res.ok && res.outcome.kind === 'cancelled') {
+            settleHeld(epoch)
+            return false
+          }
           commit(
             epoch,
             res.ok
-              ? { kind: 'date', outcome: res.outcome, tier }
+              ? { kind: 'date', outcome: res.outcome, tier, draft: builtFrom, inputKey: key }
               : { kind: 'compute-error', reason: res.reason },
           )
+          return epoch === newestEpoch
         } else {
           const seed = ensureSeed()
           // The spine headline run opts into the per-year percentile fan (the U6/U7 band INPUT), the
@@ -887,7 +1042,7 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
           commit(
             epoch,
             res.ok
-              ? { kind: 'headline', result: res.result, tier }
+              ? { kind: 'headline', result: res.result, tier, draft: builtFrom, inputKey: key }
               : { kind: 'compute-error', reason: res.reason },
           )
           // The clause's REAL figure (the spend lane) — after the FINAL commit only, and only when
@@ -902,6 +1057,7 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
           ) {
             void dispatchSpend(epoch, params!, seed)
           }
+          return epoch === newestEpoch
         }
       } catch (e) {
         // A RESET — this run was killed by the household's own edit (`update()` → `client.reset()`)
@@ -912,8 +1068,12 @@ export function createMemoryModel(deps: MemoryModelDeps): MemoryModel {
         // the not-yet-recomputed edit it already tolerates between advances. Never a compute-error
         // render for a run the household killed. Any OTHER rejection (a dead worker, a clone
         // failure) is the calm compute-error mode — never an uncaught rejection into the UI.
-        if (isEngineReset(e)) return
+        if (isEngineReset(e)) {
+          settleHeld(epoch)
+          return false
+        }
         commit(epoch, { kind: 'compute-error', reason: 'engine-unavailable' })
+        return epoch === newestEpoch
       }
     },
 

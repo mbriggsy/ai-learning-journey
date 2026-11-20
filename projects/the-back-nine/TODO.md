@@ -794,7 +794,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     · **no document a friend reads** — the in-app honest-limits total is two sentences, and the app tells
     them to "validate with a professional" while handing that professional nothing readable · ✅ the solve
     lane's EDIT-TIME cancel shipped 2026-09-03 (`engineClient.ts:278 createResettableEngine` +
-    `memoryModel.ts:788-791`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
+    `memoryModel.ts:906-909`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
     freezes the tab for the whole solve and says nothing — its `reset` is a documented no-op
     (`engineClient.ts:51-63`; the old `:55` anchor named nothing about freezing).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 8 — icons · WebKit arm · enlarged-text arm) — its 2026-09-04 re-verify clause, still live:** ✅ PWA icons DONE 2026-09-08 (his eye audits the silhouette sheet — path in the register's device entry) · ✅ WebKit e2e

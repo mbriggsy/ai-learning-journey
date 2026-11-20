@@ -32,19 +32,26 @@ const draft = (over: Partial<ScenarioDraft> = {}): ScenarioDraft => ({
   ...over,
 })
 
-const snap = (answer: ModelAnswer, over: Partial<ScenarioDraft> = {}): MemoryModelSnapshot => ({
-  draft: draft(over),
-  answer,
-  displayed: null, // U12 sticky triple — the strip never reads it
-  solve: { kind: 'idle' }, // U15 solve channel — the strip never reads it
-  spend: { kind: 'idle' }, // the spend lane — the strip never reads it
-  runningInWorker: true,
-})
+const snap = (answer: ModelAnswer, over: Partial<ScenarioDraft> = {}): MemoryModelSnapshot => {
+  const d = draft(over)
+  return {
+    draft: d,
+    // A settled page: the shown answer was figured from the draft on screen (W9-R7's answered draft).
+    answer: answer.kind === 'headline' || answer.kind === 'date' ? { ...answer, draft: d } : answer,
+    displayed: null, // U12 sticky triple — the strip never reads it
+    solve: { kind: 'idle' }, // U15 solve channel — the strip never reads it
+    spend: { kind: 'idle' }, // the spend lane — the strip never reads it
+    refiguring: false, // W9-R7 — the strip ignores the flag during intake (KTD6)
+    runningInWorker: true,
+  }
+}
 
 const headline = (outcomeState: OutcomeState, xOfTen: number): ModelAnswer => ({
   kind: 'headline',
   result: { headline: { outcomeState, xOfTen: { value: xOfTen } } } as unknown as SimulationResult,
   tier: 'final',
+  draft: draft(), // replaced by the snapshot's own draft in `snap`
+  inputKey: 'test',
 })
 
 const renderStrip = (answer: ModelAnswer, over?: Partial<ScenarioDraft>) =>
@@ -107,7 +114,7 @@ describe('AnswerStrip — the honesty branches (D1 review T3)', () => {
   })
 
   it('a cancelled date outcome renders nothing (hold quiet — a newer sweep is in flight)', () => {
-    renderStrip({ kind: 'date', outcome: { kind: 'cancelled' }, tier: 'provisional' })
+    renderStrip({ kind: 'date', outcome: { kind: 'cancelled' }, tier: 'provisional', draft: draft(), inputKey: 'test' })
     expect(screen.queryByTestId('engine-reading')).toBeNull()
     expect(screen.queryByTestId('provisional-tag')).toBeNull()
   })

@@ -74,7 +74,7 @@ refusal (`RothLever.tsx:54`).
 ### S0.2 The plan clock is years-since-BUILT — renamed and prosed
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
-at `memoryModel.ts:580`, never re-anchored, survives every re-save). Four separate comments already forbade
+at `memoryModel.ts:628`, never re-anchored, survives every re-save). Four separate comments already forbade
 attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:4470`,
 `FuckOffDate.tsx:156`) — and the band's `'saved'` label did exactly that.
 
@@ -416,7 +416,7 @@ load-bearing.**
   `fingerprintOf`/`currentDraftFingerprint` in exactly the `SolverRunFingerprint | null` shape the
   trichotomy wants, and explicitly bans a re-typed subset. But that did not mean "no seam work here": both
   were private closures inside `createMemoryModel` and **neither was on the returned surface**, so the
-  stage's seam work was **EXPOSING `currentDraftFingerprint()` on `MemoryModel`** (`memoryModel.ts:429`,
+  stage's seam work was **EXPOSING `currentDraftFingerprint()` on `MemoryModel`** (`memoryModel.ts:466`,
   returned at `:997`, derived at `:708`) — not re-deriving it. The committed `SolveAnswer.fingerprint` is
   the MINT basis, *not* the trichotomy's fresh fingerprint.
 - **The mint is NOT independent of the plan-save machine.** The record participates in the dirty/clean

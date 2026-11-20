@@ -301,6 +301,10 @@ const RESOLVED: ModelAnswer = {
     seed: 1,
   },
   tier: 'final',
+  // W9-R7 (KTD1) — the answered draft: a placeholder the snapshot spy below replaces with the live
+  // draft, so the planted answer always reads as figured from the draft on screen (a settled page).
+  draft: appModel.getSnapshot().draft,
+  inputKey: 'test',
 }
 
 /**
@@ -326,14 +330,16 @@ const getSnapshotSpy = vi.spyOn(appModel, 'getSnapshot').mockImplementation((): 
     cachedBase = base
     cachedSolve = plant.solve
     cachedAnswer = plant.answer
-    cachedSnapshot = { ...base, solve: plant.solve, answer: plant.answer }
+    const answer =
+      plant.answer.kind === 'headline' || plant.answer.kind === 'date' ? { ...plant.answer, draft: base.draft } : plant.answer
+    cachedSnapshot = { ...base, solve: plant.solve, answer }
   }
   return cachedSnapshot
 })
 void getSnapshotSpy
 
 // The engine is never dispatched here (the reveal cadence + the re-entry affirm both call it).
-const recomputeSpy = vi.spyOn(appModel, 'recompute').mockResolvedValue(undefined)
+const recomputeSpy = vi.spyOn(appModel, 'recompute').mockResolvedValue(true)
 // THE STORE WRITE — the whole ordering law is "this must not have been called yet".
 const updateSpy = vi.spyOn(appModel, 'update')
 // The two expensive reads the record-card memo short-circuits (call-through: they still run).

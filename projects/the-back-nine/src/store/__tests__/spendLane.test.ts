@@ -62,7 +62,9 @@ function client(opts: { runningInWorker?: boolean; params?: SimulationParams } =
 }
 
 const builders = (params: SimulationParams = PARAMS): ParamsBuilders => ({
-  buildSpineParams: () => params,
+  // The draft's spend, when set, moves the built input (W9-R7: a spend edit is a different-input run,
+  // and only a different-input run reaches the engine again after a final).
+  buildSpineParams: (d) => (d.annualSpendingReal === undefined ? params : { ...params, annualSpendingReal: d.annualSpendingReal }),
   buildDateInput: () => null,
   buildSolveDispatch: () =>
     ({
@@ -140,7 +142,10 @@ describe('the spend lane', () => {
     model.update(retire)
     await model.recompute('final')
     expect(k.spendCalls).toHaveLength(1)
+    model.update((d) => ({ ...d, annualSpendingReal: 41_000 })) // an edit, so the next final is a new answer
     await model.recompute('final') // a second final commit — its own solve dispatches
+    const snap = model.getSnapshot()
+    expect(snap.answer.kind === 'headline' && snap.answer.result.dollar.direction).toBe('room') // the premise, measured
     expect(k.spendCalls).toHaveLength(2)
     expect(k.spendCalls[1]!.spineEpoch).toBeGreaterThan(k.spendCalls[0]!.spineEpoch)
     k.spendRelease[0]!(SIZED) // the OLD solve resolves late
@@ -149,6 +154,29 @@ describe('the spend lane', () => {
     k.spendRelease[1]!(SIZED)
     await flush()
     expect(model.getSnapshot().spend.kind).toBe('resolved')
+  })
+
+  it('a same-input settle (a blur that changed nothing) keeps the clause: no commit, no spend reset, no cancel — pending or sized (W9-R7, KTD3)', async () => {
+    const k = client()
+    const model = createMemoryModel({ client: k.client, builders: builders(), mintSeed: () => 7 })
+    model.update(retire)
+    await model.recompute('final')
+    expect(model.getSnapshot().spend).toEqual({ kind: 'pending' })
+    // While the spend solve is in flight: the pair re-runs the shown inputs and never reaches the engine.
+    model.update((d) => ({ ...d }))
+    await expect(model.recompute('provisional')).resolves.toBe(true)
+    await expect(model.recompute('final')).resolves.toBe(true)
+    expect(model.getSnapshot().spend).toEqual({ kind: 'pending' })
+    k.spendRelease[0]!(SIZED) // still the committed answer's solve, so it lands
+    await flush()
+    expect(model.getSnapshot().spend).toEqual({ kind: 'resolved', outcome: SIZED.outcome })
+    // And once sized: another no-op blur keeps the figure.
+    model.update((d) => ({ ...d }))
+    await model.recompute('provisional')
+    await model.recompute('final')
+    expect(model.getSnapshot().spend).toEqual({ kind: 'resolved', outcome: SIZED.outcome })
+    expect(k.spendCalls).toHaveLength(1) // no new spend solve
+    expect(k.spendEpochCommits).toEqual([]) // and no spend cancel
   })
 
   it('a cancelled / failed solve leaves the clause figure-less (idle), never pending forever', async () => {

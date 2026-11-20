@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { createMemoryModel, type MemoryModel, type ParamsBuilders, type ScenarioDraft, type SolveBlockReason } from '../memoryModel'
+import {
+  createMemoryModel,
+  type MemoryModel,
+  type ModelAnswer,
+  type ParamsBuilders,
+  type ScenarioDraft,
+  type SolveBlockReason,
+} from '../memoryModel'
 import { EngineDeadError, EngineResetError, type EngineClient } from '../engineClient'
 import type { DateSearchInput } from '@engine/dateSearch'
+import type { DateSearchTier } from '@shared/model'
+import { buildDateInput, buildSpineParams } from '@intake/intakeMap'
 import type { DateSearchWire, EngineWire, SolveWire } from '@engine/engineWire'
 import type { SolveRequest } from '@engine/solver/solveEntry'
 import type { CandidateStrategy } from '@engine/solver/candidates'
@@ -38,17 +47,21 @@ interface Call {
 }
 
 /** A controllable fake engine client: date-search + solve promises resolve only when the
- *  test releases them (out-of-order races become deterministic). */
-function fakeClient(opts?: { runWire?: EngineWire; runningInWorker?: boolean; resetRejects?: boolean }) {
+ *  test releases them (out-of-order races become deterministic). `controlledRun` does the same
+ *  for the SPINE run (W9-R7's spine arms: a spine run is not cancellable, so only the store's
+ *  commit rule holds a superseded one off). */
+function fakeClient(opts?: { runWire?: EngineWire; runningInWorker?: boolean; resetRejects?: boolean; controlledRun?: boolean }) {
   const calls: Call[] = []
   const datePending: Array<(w: DateSearchWire) => void> = []
   const solvePending: Array<(w: SolveWire) => void> = []
+  const runPending: Array<(w: EngineWire) => void> = []
   // The reset's OBSERVABLE contract (the real handle's, engineClient.test.ts): every call in flight
   // on the killed worker rejects with EngineResetError. Counted, so an arm can pin "reset exactly
   // once". `resetRejects: false` models the main-thread fallback, whose reset is a no-op — the
   // in-flight solve there finishes anyway, for the old draft.
   const dateRejects: Array<(e: Error) => void> = []
   const solveRejects: Array<(e: Error) => void> = []
+  const runRejects: Array<(e: Error) => void> = []
   let resets = 0
   const client: EngineClient = {
     runningInWorker: opts?.runningInWorker ?? true,
@@ -57,11 +70,18 @@ function fakeClient(opts?: { runWire?: EngineWire; runningInWorker?: boolean; re
       if (opts?.resetRejects === false) return
       for (const reject of dateRejects.splice(0)) reject(new EngineResetError())
       for (const reject of solveRejects.splice(0)) reject(new EngineResetError())
+      for (const reject of runRejects.splice(0)) reject(new EngineResetError())
     },
     engine: {
       ping: async () => 'pong' as const,
       run: async (params, seed) => {
         calls.push({ method: 'run', args: [params, seed] })
+        if (opts?.controlledRun) {
+          return new Promise<EngineWire>((resolve, reject) => {
+            runPending.push(resolve)
+            runRejects.push(reject)
+          })
+        }
         if (!opts?.runWire) throw new Error('fake run not configured')
         return opts.runWire
       },
@@ -89,13 +109,44 @@ function fakeClient(opts?: { runWire?: EngineWire; runningInWorker?: boolean; re
       },
     },
   }
-  return { client, calls, datePending, solvePending, resets: () => resets }
+  return { client, calls, datePending, solvePending, runPending, resets: () => resets }
 }
 
 const dateBuilders: ParamsBuilders = {
   buildSpineParams: () => null,
   buildDateInput: () => FAKE_DATE_INPUT,
 }
+
+// W9-R7 (the answered draft): builders whose BUILT input moves with the draft's spend, so a spend
+// edit is a different-input run and a re-dispatch of an unchanged draft is a same-input one (KTD2:
+// a run's identity is its built engine input). `dateBuilders` above returns one shared input, which
+// cannot tell the two apart. The spend reads as missing at undefined or ≤ 0 (the widened
+// not-validly-present contract), so a zeroed spend demotes to `inputs-incomplete`.
+const spendOf = (d: ScenarioDraft): number | null =>
+  d.annualSpendingReal !== undefined && d.annualSpendingReal > 0 ? d.annualSpendingReal : null
+const keyedDateBuilders: ParamsBuilders = {
+  buildSpineParams: () => null,
+  buildDateInput: (d) => {
+    const s = spendOf(d)
+    return s === null ? null : ({ fake: true, spend: s } as unknown as DateSearchInput)
+  },
+}
+const keyedSpineBuilders: ParamsBuilders = {
+  buildSpineParams: (d) => {
+    const s = spendOf(d)
+    return s === null ? null : { ...SPINE_PARAMS, annualSpendingReal: s }
+  },
+  buildDateInput: () => null,
+}
+const spend =
+  (s: number) =>
+  (d: ScenarioDraft): ScenarioDraft => ({ ...d, annualSpendingReal: s })
+/** A blur that changed nothing: every blur commits and mints a new draft object (TODO's W9-R7
+ *  landmine), so the store sees a new draft whose built input is the shown answer's. */
+const noOpBlur = (d: ScenarioDraft): ScenarioDraft => ({ ...d })
+const sweepsOf = (calls: readonly Call[]) => calls.filter((c) => c.method === 'runDateSearch')
+const runsOf = (calls: readonly Call[]) => calls.filter((c) => c.method === 'run')
+const cancelsOf = (calls: readonly Call[]) => calls.filter((c) => c.method === 'setLatestEpoch')
 
 function workingDraft(d: ScenarioDraft): ScenarioDraft {
   return {
@@ -156,12 +207,13 @@ describe('memoryModel — seed identity (contract #1b)', () => {
   it('mints the seed exactly once across N recomputes and passes the SAME seed every time', async () => {
     const { client, calls, datePending } = fakeClient()
     const seeds = seedSequence(0xabc12345)
-    const model = createMemoryModel({ client, builders: dateBuilders, mintSeed: seeds.mint })
-    model.update(workingDraft)
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: seeds.mint })
+    model.update((d) => spend(84_000)(workingDraft(d)))
 
     const r1 = model.recompute()
     datePending[0]!(inputFailureWire('r1'))
     await r1
+    model.update(spend(90_000)) // a real edit, so the second recompute reaches the engine (KTD3)
     const r2 = model.recompute()
     datePending[1]!(inputFailureWire('r2'))
     await r2
@@ -226,7 +278,7 @@ describe('memoryModel — the request-epoch contract (#1f + C3(b))', () => {
 
     datePending[1]!(inputFailureWire('B-newest')) // B resolves FIRST
     await rB
-    expect(model.getSnapshot().answer).toEqual({
+    expect(model.getSnapshot().answer).toMatchObject({
       kind: 'date',
       outcome: { kind: 'input-failure', reason: 'B-newest' },
       tier: 'provisional',
@@ -240,14 +292,15 @@ describe('memoryModel — the request-epoch contract (#1f + C3(b))', () => {
 
   it('commits in-order results normally (A renders, then B replaces it)', async () => {
     const { client, datePending } = fakeClient()
-    const model = createMemoryModel({ client, builders: dateBuilders, mintSeed: () => 7 })
-    model.update(workingDraft)
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    model.update((d) => spend(84_000)(workingDraft(d)))
 
     const rA = model.recompute()
     datePending[0]!(inputFailureWire('A'))
     await rA
     expect(model.getSnapshot().answer).toMatchObject({ outcome: { reason: 'A' } })
 
+    model.update(spend(90_000))
     const rB = model.recompute()
     datePending[1]!(inputFailureWire('B'))
     await rB
@@ -256,14 +309,16 @@ describe('memoryModel — the request-epoch contract (#1f + C3(b))', () => {
 
   it('holds the last answer during a newer in-flight dispatch (never re-enters pending)', async () => {
     const { client, datePending } = fakeClient()
-    const model = createMemoryModel({ client, builders: dateBuilders, mintSeed: () => 7 })
-    model.update(workingDraft)
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    model.update((d) => spend(84_000)(workingDraft(d)))
 
     const rA = model.recompute()
     datePending[0]!(inputFailureWire('A'))
     await rA
 
+    model.update(spend(90_000))
     void model.recompute() // B in flight, unresolved
+    expect(datePending).toHaveLength(2) // B really dispatched (a different input)
     expect(model.getSnapshot().answer).toMatchObject({ outcome: { reason: 'A' } }) // held, not pending
   })
 
@@ -282,8 +337,8 @@ describe('memoryModel — the request-epoch contract (#1f + C3(b))', () => {
 
   it('a superseded sweep resolving `cancelled` HOLDS the prior answer (never re-blanks)', async () => {
     const { client, datePending } = fakeClient()
-    const model = createMemoryModel({ client, builders: dateBuilders, mintSeed: () => 7 })
-    model.update(workingDraft)
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    model.update((d) => spend(84_000)(workingDraft(d)))
 
     const rA = model.recompute() // commits a real answer first
     datePending[0]!(inputFailureWire('A'))
@@ -292,11 +347,12 @@ describe('memoryModel — the request-epoch contract (#1f + C3(b))', () => {
 
     // A newer dispatch's older sibling resolves `cancelled` — it must NOT commit
     // (committing renders AnswerStrip's null arm → a blanked strip). HOLD (AC1).
-    const before = model.getSnapshot()
+    model.update(spend(90_000))
     const rB = model.recompute()
+    const before = model.getSnapshot() // the answer held under the flag (W9-R7)
     datePending[1]!(cancelledWire)
     await rB
-    expect(model.getSnapshot()).toBe(before) // unchanged — cancelled never committed
+    expect(model.getSnapshot().answer).toBe(before.answer) // unchanged — cancelled never committed
   })
 
   it('passes the requested tier through to runDateSearch (the final-tier crown; D1 review R3)', async () => {
@@ -548,7 +604,9 @@ const tokenWithheldWire: SolveWire = {
  *  recompute, so it is inert there. */
 const solveBuilders = (dispatch: (d: ScenarioDraft) => SolveRequest | SolveBlockReason): ParamsBuilders => ({
   buildSpineParams: () => null,
-  buildDateInput: () => FAKE_DATE_INPUT,
+  // Keyed on the spend (never null), so a spend edit is a different-input recompute (W9-R7's KTD3)
+  // while the solve fingerprint below stays where it was.
+  buildDateInput: (d) => ({ fake: true, spend: d.annualSpendingReal ?? null }) as unknown as DateSearchInput,
   buildSolveDispatch: dispatch,
 })
 
@@ -1110,6 +1168,7 @@ describe('memoryModel — THE EDIT-TIME KILL (§S6, 2026-09-03 — the solve-lan
     await withCommittedSpine(model, datePending) // answer: the committed 'date' beat
     const before = model.getSnapshot().answer
     const solve = model.dispatchSolve()
+    model.update(spend(90_000)) // not a ranking input — the solve keeps running
     const queued = model.recompute() // a spine sweep now queued behind the solve on the one port
     expect(datePending).toHaveLength(2)
     expect(solvePending).toHaveLength(1)
@@ -1158,15 +1217,19 @@ describe('memoryModel — THE EDIT-TIME KILL (§S6, 2026-09-03 — the solve-lan
         runSolve: async () => refusedWire,
       },
     }
-    const model = createMemoryModel({ client, builders: dateBuilders })
-    model.update(workingDraft)
+    const model = createMemoryModel({ client, builders: keyedDateBuilders })
+    model.update((d) => spend(84_000)(workingDraft(d)))
     await model.recompute()
     const committed = model.getSnapshot().answer
     expect(committed.kind).toBe('date')
+    model.update(spend(90_000)) // each sweep below is a real edit's (a re-run of the shown inputs never reaches the engine)
     await model.recompute() // sweep 2: killed by a reset → HELD
     expect(model.getSnapshot().answer).toEqual(committed)
+    expect(model.getSnapshot().refiguring).toBe(false) // the held newest dispatch settled (W9-R7, KTD4)
+    model.update(spend(96_000))
     await model.recompute() // sweep 3: the worker died → the calm compute-error mode
     expect(model.getSnapshot().answer).toEqual({ kind: 'compute-error', reason: 'engine-unavailable' })
+    expect(sweep).toBe(3)
   })
 
   it('a rejected fire-and-forget setLatestEpoch (a reset landing on the cancel signal) never throws out of recompute', async () => {
@@ -1188,7 +1251,7 @@ describe('memoryModel — THE EDIT-TIME KILL (§S6, 2026-09-03 — the solve-lan
     }
     const model = createMemoryModel({ client, builders: dateBuilders })
     model.update(workingDraft)
-    await expect(model.recompute()).resolves.toBeUndefined()
+    await expect(model.recompute()).resolves.toBe(true) // settled as the newest (KTD7)
     expect(model.getSnapshot().answer.kind).toBe('date')
   })
 })
@@ -1253,5 +1316,430 @@ describe('memoryModel — the resolve-time guard is the second derivation, drive
     await p // build #2 at resolve → tieTolerance 1 → moved → stale
     expect(model.getSnapshot().solve).toEqual({ kind: 'stale', label: 'inputs-changed' })
     expect(resets()).toBe(0) // nothing was killed — this is the resolve-time derivation alone
+  })
+})
+
+// ---------------------------------------------------------------------------
+// W9-R7 (docs/plans/features/answered-draft-build-spec.md, U1) — the answered draft, the
+// newest-inputs commit rule and the re-figuring flag. Every committed answer carries the draft it
+// was figured from and a key of its BUILT engine input (KTD1, KTD2). Only a run built from the
+// newest inputs commits, and a re-run of the shown answer's own inputs at a tier no higher never
+// reaches the engine (KTD3). `refiguring` is on exactly while a different-input run is in flight
+// (KTD4), and `recompute` resolves whether its run settled as the newest (KTD7).
+// ---------------------------------------------------------------------------
+
+let spineWireMemo: EngineWire | undefined
+/** One real spine result wire (64 paths), reused for every controlled spine release. Its numbers are
+ *  not under test: the arms read the committed arm's draft, its key and the snapshot's identity. */
+const spineWire = (): EngineWire => (spineWireMemo ??= engineApi.run(SPINE_PARAMS, 7, {}))
+
+type Keyed = Extract<ModelAnswer, { readonly kind: 'headline' | 'date' }>
+const keyed = (a: ModelAnswer): Keyed => {
+  if (a.kind !== 'headline' && a.kind !== 'date') throw new Error(`expected a resolved answer, got ${a.kind}`)
+  return a
+}
+
+/** A date-route model brought to a committed answer at spend `s` (one sweep, released at once). */
+async function shownDate(
+  model: MemoryModel,
+  datePending: Array<(w: DateSearchWire) => void>,
+  s: number,
+  tier: DateSearchTier = 'final',
+): Promise<Keyed> {
+  model.update((d) => spend(s)(workingDraft(d)))
+  const i = datePending.length
+  const r = model.recompute(tier)
+  datePending[i]!(inputFailureWire(`at-${s}`))
+  await r
+  return keyed(model.getSnapshot().answer)
+}
+
+/** A spine-route model (controlled runs) brought to a committed answer at spend `s`. */
+async function shownSpine(
+  model: MemoryModel,
+  runPending: Array<(w: EngineWire) => void>,
+  s: number,
+  tier: DateSearchTier = 'final',
+): Promise<Keyed> {
+  model.update((d) => spend(s)(retiredDraft(d)))
+  const i = runPending.length
+  const r = model.recompute(tier)
+  runPending[i]!(spineWire())
+  await r
+  return keyed(model.getSnapshot().answer)
+}
+
+/** Every field a display reads and the engine never does (KTD2's list): the names, the spend's entry
+ *  period, the goal, the heirs' bracket, a saved record and W's entry period. */
+const displayOnlyEdit = (d: ScenarioDraft, record: SavedRecommendationV3): ScenarioDraft => {
+  const w = d.workingYearCost
+  return {
+    ...d,
+    people: [
+      { ...d.people[0], name: 'Pat' },
+      { ...d.people[1], name: 'Lee' },
+    ],
+    spendEntryPeriod: d.spendEntryPeriod === 'month' ? 'year' : 'month',
+    chosenGoal: d.chosenGoal === 'leave-more' ? 'pay-less-tax' : 'leave-more',
+    heirBracket: 0.32,
+    savedRecommendation: record,
+    ...(w?.kind === 'entered' ? { workingYearCost: { ...w, entryPeriod: w.entryPeriod === 'month' ? 'year' : 'month' } } : {}),
+  }
+}
+
+describe('memoryModel — W9-R7: the answered draft, the newest-inputs commit rule and the re-figuring flag', () => {
+  it('an edit dispatches a different-input run: the flag turns on with ONE notify over the held answer, and off in the SAME frame the new answer commits', async () => {
+    const { client, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    const a = await shownDate(model, datePending, 84_000)
+    expect(model.getSnapshot().refiguring).toBe(false)
+    expect(a.draft.annualSpendingReal).toBe(84_000) // the answered draft is the one it was figured from
+    const frames: Array<{ readonly answer: ModelAnswer; readonly refiguring: boolean }> = []
+    model.subscribe(() => {
+      const s = model.getSnapshot()
+      frames.push({ answer: s.answer, refiguring: s.refiguring })
+    })
+
+    model.update(spend(90_000))
+    expect(frames).toHaveLength(1)
+    expect(frames[0]!.refiguring).toBe(false) // the edit alone raises nothing: no run is in flight yet
+    const rB = model.recompute('provisional')
+    expect(frames).toHaveLength(2) // ONE notify raises the flag…
+    expect(frames[1]!.refiguring).toBe(true)
+    expect(frames[1]!.answer).toBe(a) // …over the old answer, still on screen
+
+    datePending[1]!(inputFailureWire('at-90000'))
+    await expect(rB).resolves.toBe(true)
+    expect(frames).toHaveLength(3) // the commit and the flag's fall share ONE frame
+    expect(frames[2]!.refiguring).toBe(false)
+    const b = keyed(frames[2]!.answer)
+    expect(b).toMatchObject({ outcome: { reason: 'at-90000' } })
+    expect(b.draft.annualSpendingReal).toBe(90_000)
+    expect(b.inputKey).not.toBe(a.inputKey)
+  })
+
+  it('a provisional then its final on the same draft: the flag never turns on (a sharpen is not a re-figuring)', async () => {
+    const { client, calls, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    const flags: boolean[] = []
+    model.subscribe(() => flags.push(model.getSnapshot().refiguring))
+    model.update((d) => spend(84_000)(workingDraft(d)))
+    const rp = model.recompute('provisional')
+    datePending[0]!(inputFailureWire('p'))
+    await rp
+    const rf = model.recompute('final')
+    expect(sweepsOf(calls)).toHaveLength(2) // the final reaches the engine (a higher tier than the shown one)
+    datePending[1]!(inputFailureWire('f'))
+    await rf
+    expect(keyed(model.getSnapshot().answer).tier).toBe('final')
+    expect(flags.length).toBeGreaterThan(0)
+    expect(flags.every((f) => !f)).toBe(true)
+  })
+
+  it('a blur that changed nothing after a final: no engine call, the shown answer and tier stay, and the arm carries the LIVE draft', async () => {
+    const { client, calls, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    const a = await shownDate(model, datePending, 84_000, 'final')
+    const sweeps = sweepsOf(calls).length
+    const cancels = cancelsOf(calls).length
+    let pings = 0
+    model.subscribe(() => (pings += 1))
+
+    model.update(noOpBlur)
+    const live = model.getSnapshot().draft
+    expect(live).not.toBe(a.draft) // the blur minted a new draft object…
+    pings = 0
+    await expect(model.recompute('provisional')).resolves.toBe(true) // …the pair's provisional…
+    await expect(model.recompute('final')).resolves.toBe(true) // …and its final both settle from the shown answer
+    expect(sweepsOf(calls)).toHaveLength(sweeps) // no engine call
+    expect(cancelsOf(calls)).toHaveLength(cancels) // and no worker-side cancel (nothing else was in flight)
+    expect(pings).toBe(2) // one notify each
+    const after = keyed(model.getSnapshot().answer)
+    expect(after.tier).toBe('final') // never a silent downgrade to the provisional tier (spec-flow C3)
+    expect(after.inputKey).toBe(a.inputKey)
+    expect(after.kind === 'date' && a.kind === 'date' && after.outcome).toBe(a.kind === 'date' && a.outcome)
+    expect(after.draft).toBe(live)
+    expect(model.getSnapshot().refiguring).toBe(false)
+  })
+
+  it('a label-only edit (a name) is the same engine input: no engine call, the flag stays off, and the arm carries the new name', async () => {
+    const { client, calls, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    await shownDate(model, datePending, 84_000)
+    const sweeps = sweepsOf(calls).length
+    model.update((d) => ({ ...d, people: [{ ...d.people[0], name: 'Sam' }, d.people[1]] }))
+    await model.recompute('provisional')
+    expect(sweepsOf(calls)).toHaveLength(sweeps)
+    expect(model.getSnapshot().refiguring).toBe(false)
+    expect(keyed(model.getSnapshot().answer).draft.people[0].name).toBe('Sam')
+  })
+
+  it('A→B→A on the SPINE while B is in flight (spine runs are not cancellable): the revert settles from the shown answer with no engine call and the flag clears at once; B resolves later and never commits', async () => {
+    const { client, calls, runPending } = fakeClient({ controlledRun: true })
+    const model = createMemoryModel({ client, builders: keyedSpineBuilders, mintSeed: () => 7 })
+    const a = await shownSpine(model, runPending, 40_000)
+    const cancels = cancelsOf(calls).length
+
+    model.update(spend(48_000))
+    const rB = model.recompute('provisional')
+    expect(runsOf(calls)).toHaveLength(2)
+    expect(model.getSnapshot().refiguring).toBe(true)
+    expect(model.getSnapshot().answer).toBe(a)
+
+    model.update(spend(40_000)) // back to A
+    await expect(model.recompute('provisional')).resolves.toBe(true)
+    expect(runsOf(calls)).toHaveLength(2) // no engine call for the revert
+    expect(cancelsOf(calls)).toHaveLength(cancels + 1) // B's dispatch only: the spine revert fires no cancel (KTD3)
+    expect(model.getSnapshot().refiguring).toBe(false)
+    const settled = model.getSnapshot()
+    expect(keyed(settled.answer).inputKey).toBe(a.inputKey)
+
+    runPending[1]!(spineWire()) // B lands late
+    await expect(rB).resolves.toBe(false) // superseded
+    expect(model.getSnapshot()).toBe(settled) // never committed: A's answer stands, untouched
+  })
+
+  it('A→B→A on the DATE route: the revert fires the worker-side cancel past B, and B’s cancelled sweep is held', async () => {
+    const { client, calls, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    const a = await shownDate(model, datePending, 84_000)
+    model.update(spend(90_000))
+    const rB = model.recompute('provisional')
+    const bEpoch = sweepsOf(calls)[1]!.args[3] as number
+    model.update(spend(84_000))
+    await expect(model.recompute('provisional')).resolves.toBe(true)
+    expect(sweepsOf(calls)).toHaveLength(2)
+    const lastCancel = cancelsOf(calls).at(-1)!.args[0] as number
+    expect(lastCancel).toBeGreaterThan(bEpoch) // the worker drops B's sweep between candidates
+    expect(model.getSnapshot().refiguring).toBe(false)
+    const settled = model.getSnapshot()
+    datePending[1]!(cancelledWire)
+    await expect(rB).resolves.toBe(false)
+    expect(model.getSnapshot()).toBe(settled)
+    expect(keyed(settled.answer).inputKey).toBe(a.inputKey)
+  })
+
+  it('a no-op blur while the shown answer is provisional and its final is in flight: the pair’s provisional settles from the shown answer, its final dispatches and commits, and the flag never turns on', async () => {
+    const { client, calls, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    await shownDate(model, datePending, 84_000, 'provisional')
+    const rf1 = model.recompute('final') // the first pair's final, in flight
+    const flags: boolean[] = []
+    model.subscribe(() => flags.push(model.getSnapshot().refiguring))
+
+    model.update(noOpBlur)
+    await expect(model.recompute('provisional')).resolves.toBe(true) // the second pair's provisional: no engine call
+    expect(sweepsOf(calls)).toHaveLength(2)
+    const rf2 = model.recompute('final') // the second pair's final reaches the engine
+    expect(sweepsOf(calls)).toHaveLength(3)
+    datePending[1]!(cancelledWire) // the worker cancels the first final (its epoch is older)
+    await expect(rf1).resolves.toBe(false)
+    datePending[2]!(inputFailureWire('final'))
+    await expect(rf2).resolves.toBe(true)
+    expect(keyed(model.getSnapshot().answer).tier).toBe('final')
+    expect(flags.every((f) => !f)).toBe(true)
+  })
+
+  it('shown A, an edit to B dispatched, then a blur on B with B unchanged: the second B run dispatches, the flag holds until a B run commits, and A’s arm never takes B’s draft', async () => {
+    const { client, calls, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    const a = await shownDate(model, datePending, 84_000)
+    model.update(spend(90_000))
+    const rB1 = model.recompute('provisional')
+    model.update(noOpBlur)
+    const rB2 = model.recompute('provisional')
+    expect(sweepsOf(calls)).toHaveLength(3) // B is not the shown key, so the blur's run dispatches
+    expect(model.getSnapshot().answer).toBe(a)
+    expect(a.draft.annualSpendingReal).toBe(84_000) // A's arm never takes B's draft
+    expect(model.getSnapshot().refiguring).toBe(true)
+
+    datePending[1]!(inputFailureWire('B1')) // the older B run lands: built from the newest inputs, so it commits
+    await expect(rB1).resolves.toBe(false) // but it did not settle as the newest
+    expect(model.getSnapshot().refiguring).toBe(false)
+    expect(keyed(model.getSnapshot().answer).draft.annualSpendingReal).toBe(90_000)
+    datePending[2]!(inputFailureWire('B2'))
+    await expect(rB2).resolves.toBe(true)
+    expect(model.getSnapshot().answer).toMatchObject({ outcome: { reason: 'B2' } })
+  })
+
+  it('an edit that empties a required fact while an older SPINE run is in flight: inputs-incomplete commits with the flag off, and the older run resolves without turning it on', async () => {
+    const { client, runPending } = fakeClient({ controlledRun: true })
+    const model = createMemoryModel({ client, builders: keyedSpineBuilders, mintSeed: () => 7 })
+    await shownSpine(model, runPending, 40_000)
+    model.update(spend(48_000))
+    const rB = model.recompute('provisional')
+    expect(model.getSnapshot().refiguring).toBe(true)
+    model.update(spend(0)) // the required spend, zeroed
+    await expect(model.recompute('provisional')).resolves.toBe(true)
+    expect(model.getSnapshot().answer.kind).toBe('inputs-incomplete')
+    expect(model.getSnapshot().refiguring).toBe(false)
+    runPending[1]!(spineWire())
+    await expect(rB).resolves.toBe(false)
+    expect(model.getSnapshot().answer.kind).toBe('inputs-incomplete')
+    expect(model.getSnapshot().refiguring).toBe(false)
+  })
+
+  it('three edits in a row on the spine: only the last edit’s answer commits', async () => {
+    const { client, runPending } = fakeClient({ controlledRun: true })
+    const model = createMemoryModel({ client, builders: keyedSpineBuilders, mintSeed: () => 7 })
+    const a = await shownSpine(model, runPending, 40_000)
+    const rs = [44_000, 48_000, 52_000].map((s) => {
+      model.update(spend(s))
+      return model.recompute('provisional')
+    })
+    runPending[1]!(spineWire()) // B and C land first, in order: neither is the newest inputs
+    runPending[2]!(spineWire())
+    expect(await rs[0]).toBe(false)
+    expect(await rs[1]).toBe(false)
+    expect(model.getSnapshot().answer).toBe(a)
+    expect(model.getSnapshot().refiguring).toBe(true)
+    runPending[3]!(spineWire())
+    expect(await rs[2]).toBe(true)
+    expect(keyed(model.getSnapshot().answer).draft.annualSpendingReal).toBe(52_000)
+    expect(model.getSnapshot().refiguring).toBe(false)
+  })
+
+  it('the straddling pair: a final dispatched after B was asked for is built from B and may commit; nothing built from A commits once B was dispatched', async () => {
+    const { client, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    await shownDate(model, datePending, 80_000)
+    model.update(spend(84_000))
+    const rpA = model.recompute('provisional') // A's pair: its provisional
+    model.update(spend(90_000))
+    const rpB = model.recompute('provisional') // B's pair: its provisional
+    const rfX = model.recompute('final') // A's pair's final — dispatched now, so built from the LIVE draft, B
+    const shownSpends: Array<number | undefined> = []
+    model.subscribe(() => {
+      const ans = model.getSnapshot().answer
+      if (ans.kind === 'date') shownSpends.push(ans.draft.annualSpendingReal)
+    })
+    datePending[1]!(inputFailureWire('A-provisional'))
+    await expect(rpA).resolves.toBe(false)
+    datePending[2]!(inputFailureWire('B-provisional'))
+    await expect(rpB).resolves.toBe(false) // committed, but a newer dispatch (the final) followed it
+    datePending[3]!(inputFailureWire('B-final'))
+    await expect(rfX).resolves.toBe(true)
+    expect(shownSpends.every((s) => s !== 84_000)).toBe(true) // A never reached the screen
+    expect(model.getSnapshot().answer).toMatchObject({ kind: 'date', tier: 'final', outcome: { reason: 'B-final' } })
+    expect(keyed(model.getSnapshot().answer).draft.annualSpendingReal).toBe(90_000)
+  })
+
+  it('the newest dispatch HELD (it resolves cancelled, or an engine reset kills it): the flag clears with nothing committed', async () => {
+    for (const hold of ['cancelled', 'reset'] as const) {
+      const { client, datePending } = fakeClient()
+      const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+      const a = await shownDate(model, datePending, 84_000)
+      model.update(spend(90_000))
+      const rB = model.recompute('provisional')
+      expect(model.getSnapshot().refiguring, hold).toBe(true)
+      if (hold === 'cancelled') datePending[1]!(cancelledWire)
+      else client.reset()
+      await expect(rB, hold).resolves.toBe(false)
+      expect(model.getSnapshot().refiguring, hold).toBe(false)
+      expect(model.getSnapshot().answer, hold).toBe(a)
+    }
+  })
+
+  it('an edit that empties a required fact: inputs-incomplete commits with the flag off; the repair dispatches and the flag is on over the keyless arm until its answer lands', async () => {
+    const { client, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    await shownDate(model, datePending, 84_000)
+    model.update(spend(0))
+    await model.recompute('provisional')
+    expect(model.getSnapshot().answer.kind).toBe('inputs-incomplete')
+    expect(model.getSnapshot().refiguring).toBe(false)
+    model.update(spend(84_000)) // the repair — the same inputs as before the gap, but nothing keyed is shown now
+    const r = model.recompute('provisional')
+    expect(datePending).toHaveLength(2) // the repair reaches the engine
+    expect(model.getSnapshot().answer.kind).toBe('inputs-incomplete')
+    expect(model.getSnapshot().refiguring).toBe(true)
+    datePending[1]!(inputFailureWire('repaired'))
+    await r
+    expect(model.getSnapshot().answer).toMatchObject({ kind: 'date', outcome: { reason: 'repaired' } })
+    expect(model.getSnapshot().refiguring).toBe(false)
+  })
+
+  it('the first run of a fresh draft (the seed minted AFTER the build): the committed key equals the next same-input build’s, so the next recompute never reaches the engine', async () => {
+    const { client, calls, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    model.update((d) => spend(84_000)(workingDraft(d)))
+    expect(model.getSnapshot().draft.seed).toBeUndefined()
+    const r = model.recompute('final')
+    datePending[0]!(inputFailureWire('first'))
+    await r
+    expect(model.getSnapshot().draft.seed).toBe(7) // the mint swapped the draft object after the build
+    await model.recompute('provisional')
+    expect(sweepsOf(calls)).toHaveLength(1)
+  })
+
+  it('every frame across an edit, a sharpen and a held return pairs the shown answer with a consistent flag (the sharpen.test.ts frames shape)', async () => {
+    const { client, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    await shownDate(model, datePending, 84_000)
+    const frames: string[] = []
+    model.subscribe(() => {
+      const s = model.getSnapshot()
+      const shown = s.answer.kind === 'date' ? `${s.answer.draft.annualSpendingReal}/${s.answer.tier}` : s.answer.kind
+      frames.push(`${shown} ${s.refiguring ? 'REFIGURING' : 'settled'}`)
+    })
+    model.update(spend(90_000))
+    const rB = model.recompute('provisional')
+    datePending[1]!(inputFailureWire('B'))
+    await rB
+    const rBf = model.recompute('final') // the sharpen: the same inputs, a higher tier, no flag
+    datePending[2]!(inputFailureWire('B-final'))
+    await rBf
+    model.update(spend(96_000))
+    const rC = model.recompute('provisional')
+    datePending[3]!(cancelledWire) // the newest dispatch held
+    await rC
+    expect(frames).toEqual([
+      '84000/final settled', // the edit
+      '84000/final REFIGURING', // B dispatched over the held answer
+      '90000/provisional settled', // B committed, the flag down in the same frame
+      '90000/final settled', // the sharpen landed (its dispatch raised nothing, so it notified nothing)
+      '90000/final settled', // the next edit
+      '90000/final REFIGURING', // C dispatched
+      '90000/final settled', // C held: nothing committed, the flag down
+    ])
+  })
+
+  it('the REAL builders key every dev seed’s built input, and a display-only edit (the names, the spend’s entry period, the goal, the heirs’ bracket, a saved record, W’s entry period) never moves it', async () => {
+    const record = aRealSavedRecord()
+    let checked = 0
+    for (const [name, seed] of Object.entries(DEV_SEEDS)) {
+      let runs = 0
+      const client: EngineClient = {
+        runningInWorker: true,
+        reset: () => {},
+        engine: {
+          ping: async () => 'pong' as const,
+          run: async () => {
+            runs += 1
+            return spineWire()
+          },
+          setLatestEpoch: async () => {},
+          runDateSearch: async () => {
+            runs += 1
+            return inputFailureWire('real-builders')
+          },
+          runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+          runSpendSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+          setLatestSpendEpoch: async () => {},
+          runSolve: async () => refusedWire,
+        },
+      }
+      const model = createMemoryModel({ client, builders: { buildSpineParams, buildDateInput }, mintSeed: () => 7 })
+      model.update(() => seed)
+      await model.recompute('final')
+      if (!['headline', 'date'].includes(model.getSnapshot().answer.kind)) continue
+      const runsBefore = runs
+      model.update((d) => displayOnlyEdit(d, record))
+      await model.recompute('final')
+      expect(runs, `${name}: a display-only edit re-ran the engine`).toBe(runsBefore)
+      expect(keyed(model.getSnapshot().answer).draft.people[0].name, name).toBe('Pat')
+      checked += 1
+    }
+    expect(checked).toBeGreaterThan(20)
   })
 })

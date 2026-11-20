@@ -177,7 +177,7 @@ stateDiagram-v2
 **Goal:** a provisional superseded by a newer edit never sends its final, so the newer edit gets its own provisional.
 **Requirements:** R6.
 **Dependencies:** U1.
-**Files:** `src/ui/Result.tsx` (`recomputeBoth`), `src/ui/IntakeApp.tsx` (`revealAndSharpen`); tests `src/ui/__tests__/Result.test.tsx`, `src/ui/__tests__/IntakeApp.test.tsx` or the nearest existing caller test, and every test spy that stubs `recompute` to resolve `undefined` (`IntakeApp.test.tsx:132` and the three others a grep for `recompute` spies finds), which now resolve KTD7's result shape.
+**Files:** `src/ui/Result.tsx` (`recomputeBoth`), `src/ui/IntakeApp.tsx` (`revealAndSharpen`); tests `src/ui/__tests__/Result.test.tsx`, `src/ui/__tests__/IntakeApp.test.tsx` or the nearest existing caller test, and every test spy that stubs `recompute` to resolve `undefined` (`IntakeApp.test.tsx:132` and the three others a grep for `recompute` spies finds), which now resolve KTD7's result shape. As built, U1 already moved the four the compiler named to `true` (KTD7's boolean; `true` keeps today's behavior); `resultBudgetDoor.test.tsx`'s two `undefined as never` stubs compile and are still U2's, since the guard reads `undefined` as superseded.
 **Approach:** read the settled-as-newest result U1 gives `recompute` (KTD7) after the provisional and skip the final when it is false; no store change here.
 **Test scenarios:**
 - An edit lands while a pair's provisional is in flight: that pair dispatches no final; the newer pair's provisional and final both dispatch.

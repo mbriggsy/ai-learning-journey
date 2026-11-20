@@ -129,7 +129,7 @@ h.model = ready.scenario
 
 // P3·U13: the recompute is GATED behind the re-entry confirm (constraint (b)) — the spy both
 // fakes the engine and lets the gate-order arms count dispatches.
-const recomputeSpy = vi.spyOn(appModel, 'recompute').mockResolvedValue(undefined)
+const recomputeSpy = vi.spyOn(appModel, 'recompute').mockResolvedValue(true)
 
 /** Walk the U13 re-entry gate (every hydrate mount lands on it before the result). */
 async function affirmGate(readOnly = false) {

@@ -635,8 +635,8 @@ async function assertMedicareSnugLeading(page: Page): Promise<void> {
 
 for (const { seed, medicareNote, stateNote, survivor } of SPINE_SEEDS) {
   test.describe(`?seed=${seed} — the one-frame fit law`, () => {
-    test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
-      test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+    test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+      test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
       test(`${seed}: everything but the doors fits one frame`, async ({ page }) => {
         await gotoSeedFinal(page, seed)
         await assertResolvedSpine(page)
@@ -1242,8 +1242,8 @@ async function assertPricedSpineFrame(
 // survives onto the hero — a BORDERLINE one until the 2026-08-02 rate pin — the exact insight-033
 // question this increment exists to answer: the affirm+residual set is outcome-scoped in copy but
 // outcome-INDEPENDENT in gating, so a band-crossing verdict would still name the state — no priced-state seed crosses the band today).
-test.describe(`?seed=nc — the NC state clause on the priced residual (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+test.describe(`?seed=nc — the NC state clause on the priced residual (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('the hero still names North Carolina (on-track since the 2026-08-02 rate pin; it read borderline at mint); the unpriced monolith clause is gone', async ({ page }) => {
     await gotoSeedFinal(page, 'nc')
     await assertResolvedSpine(page)
@@ -1263,8 +1263,8 @@ test.describe('?seed=pa — the LONGEST priced clause (the wrap-risk arm) + one-
   // Pennsylvania exempts most retirement income, so the clause carries the extra "usually a small
   // piece …" qualifier — the longest state variant, where a wrap would breach the fold first.
   const PA_PINS = ['Pennsylvania', 'Pennsylvania leaves most retirement income untaxed'] as const
-  test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
-    test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
     test('pa: everything but the doors fits; the residual names Pennsylvania (untaxed)', async ({ page }) => {
       await assertPricedSpineFrame(page, 'pa', PA_PINS, { snug: true })
     })
@@ -1279,8 +1279,8 @@ test.describe('?seed=pa — the LONGEST priced clause (the wrap-risk arm) + one-
 
 test.describe('?seed=fl — the constitutional-$0 priced clause + one-frame fit', () => {
   const FL_PINS = ['Florida has no state income tax'] as const
-  test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
-    test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
     test('fl: everything but the doors fits; the residual names the Florida $0 fact', async ({ page }) => {
       await assertPricedSpineFrame(page, 'fl', FL_PINS, { snug: true })
     })
@@ -1296,8 +1296,8 @@ test.describe('?seed=fl — the constitutional-$0 priced clause + one-frame fit'
 // elsewhere: the ANSWERED-but-unpriced face (the cards' noted coverage gap — 'elsewhere' is an
 // explicit roster member, NOT in PRICED_STATES, so the run reduces byte-identically to the
 // state-absent twin and the residual reads the shipped monolith VERBATIM, no state named).
-test.describe(`?seed=elsewhere — the answered-but-unpriced monolith, no state clause (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+test.describe(`?seed=elsewhere — the answered-but-unpriced monolith, no state clause (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('the residual reads the shipped monolith with NO built state affirmation', async ({ page }) => {
     await gotoSeedFinal(page, 'elsewhere')
     await assertResolvedSpine(page)
@@ -1322,8 +1322,8 @@ test.describe(`?seed=elsewhere — the answered-but-unpriced monolith, no state 
 // verdict's ONLY state clause — so until Card 4 this household's verdict said nothing about state tax
 // while its run priced NC. The clause now arrives by the standalone note: NAMES the state, ships with
 // its narrowing tail (never affirm-alone), exactly ONE clause on the page, and the frame still fits.
-test.describe(`?seed=healthnc — the priced pre-65 household's standalone state clause (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+test.describe(`?seed=healthnc — the priced pre-65 household's standalone state clause (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('no residual, ONE standalone clause naming North Carolina, and the frame fits', async ({ page }) => {
     await gotoSeedFinal(page, 'healthnc')
     await assertResolvedSpine(page)
@@ -1351,7 +1351,7 @@ test.describe(`?seed=healthnc — the priced pre-65 household's standalone state
 // ── the date route (?seed=dip): scrolls BY DESIGN — its contract is ORDER ─────────────────────
 
 test.describe(`?seed=dip — the date route's order contract (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('graphs → in-frame disclaimer → quiet doors, doors last', async ({ page }) => {
     await gotoSeedFinal(page, 'dip')
     // Presence companions: the two-pane stamped, BOTH graphs drawn (the fan band + the odds
@@ -1409,7 +1409,7 @@ test.describe(`?seed=dip — the date route's order contract (${REAL.width}×${R
 // contract plus the priced-in naming, never a full one-frame fit.
 
 test.describe(`?seed=date65 — priced Medicare on the date route, no false "unpriced" note (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('the date surface names Medicare priced (affirmation + residual) and holds graphs → disclaimer → doors', async ({ page }) => {
     await gotoSeedFinal(page, 'date65')
     // Presence companions (insight 029): the date hero two-pane stamped, BOTH graphs drawn, doors offered.
@@ -1455,8 +1455,8 @@ test.describe(`?seed=date65 — priced Medicare on the date route, no false "unp
 // route scrolls by design, so this arm pins the NC clause on the residual + the ORDER contract
 // (graphs → in-frame disclaimer → doors LAST, the dip block's stronger check), never a full fit.
 
-test.describe(`?seed=datenc — the NC clause on the date residual + the order contract (${REAL.width}×${REAL.height} @ 2.5dpr)`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+test.describe(`?seed=datenc — the NC clause on the date residual + the order contract (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('the date hero names North Carolina; graphs → in-frame disclaimer → doors last', async ({ page }) => {
     await gotoSeedFinal(page, 'datenc')
     // Presence companions (insight 029): the date hero two-pane stamped, BOTH graphs drawn, doors offered.
@@ -1528,7 +1528,7 @@ test.describe(`the honesty floor — 68rem exactly (${FLOOR.width}×${FLOOR.heig
 // ── the legend contract at the showcase width ─────────────────────────────────────────────────
 
 test.describe(`the band legend (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('exactly 3 legend rows render with the spine band', async ({ page }) => {
     await gotoSeedFinal(page, 'retired')
     await assertResolvedSpine(page)
@@ -2011,7 +2011,7 @@ test.describe(`the re-figuring signal, live (?seed=retired, ${REAL.width}×${REA
 // off-screen with no scrollbar to reach it. The assertion is on the DIALOG BOX, not the content.
 
 test.describe(`the assumption panel's vertical extent (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('the open panel is fully inside the viewport; its content scrolls internally', async ({ page }) => {
     await gotoSeedFinal(page, 'retired')
     await assertResolvedSpine(page)
@@ -2051,7 +2051,7 @@ test.describe(`the assumption panel's vertical extent (${REAL.width}×${REAL.hei
 // param, and lands on the unlock screen with the dev passphrase PRE-FILLED.
 
 test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo frame (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('the gate offers its decision pair in-frame with the aged-vault disclosures; the echoed result frame holds the one-frame law', async ({ page }) => {
     await page.goto('/?vault=stale')
     const unlock = page.getByRole('button', { name: 'Open my plan' })
@@ -2211,7 +2211,7 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
 // is the only live route to the stalenessStateTax note AND to the state clause on a writable stale return.
 
 test.describe(`the state-tax staleness return (?vault=statestale) — the isolated clock + the NC-clause echo frame (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('the gate fires the state-tax clock in isolation, decision pair in-frame; the echoed hero names NC and holds the one-frame law', async ({ page }) => {
     await page.goto('/?vault=statestale')
     const unlock = page.getByRole('button', { name: 'Open my plan' })
@@ -3221,7 +3221,7 @@ for (const u of PAY_CHECK_UNLOCKS) {
 // plus the aged surface's own honesty composition, never a full one-frame fit.
 
 test.describe(`the aged date return (?vault=datestale) — one clock across hero and ladder (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('the hero count and the ladder crown speak the same years-from-today; the aged-balances caveat rides the ladder; order holds', async ({ page }) => {
     await page.goto('/?vault=datestale')
     const unlock = page.getByRole('button', { name: 'Open my plan' })
@@ -3334,7 +3334,7 @@ test.describe(`the aged date return (?vault=datestale) — one clock across hero
 // screenshot, from a marker someone forgot to draw. (Whether that silence READS honest or missing
 // is Briggsy's parked tone call; this arm only holds the mechanism still while he rules.)
 test.describe(`the arrived date return (?vault=datearrived) — the aged x-axis + the withdrawn marker (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('the year-0 endpoint names the BUILD year, wall-time Today is marked, and no named marker renders left of Today', async ({
     page,
   }) => {
@@ -3444,7 +3444,7 @@ test.describe(`the arrived date return (?vault=datearrived) — the aged x-axis 
 // "unchanged from the record-free return" is a comparison, not a remembered constant.
 
 test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) — the memory card on the protected idle frame (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: 2.5 })
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('the card paints its HOLDS face and leaves the spine above it byte-identical (surface r4, caveat r5)', async ({
     page,
   }) => {

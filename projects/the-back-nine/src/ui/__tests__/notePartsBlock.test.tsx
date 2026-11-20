@@ -19,17 +19,17 @@ import { isPlainNote, notePartsText, plainNote, withoutDoor, type NoteParts } fr
 afterEach(cleanup)
 
 const RUN_ITEMS = [
-  { label: '2026 through 2028', sentences: ['Run one, sentence one.', 'Run one, sentence two.', 'Run one, sentence three.'] },
+  { label: '2026 through 2028, while you’re still working', sentences: ['Run one, sentence one.', 'Run one, sentence two.', 'Run one, sentence three.'] },
   {
-    label: 'If you’re still working in 2029 through 2032',
+    label: '2029 through 2032, while you’re still working',
     sentences: ['Run two, sentence one.', 'Run two, sentence two.', 'Run two, sentence three.'],
   },
   {
-    label: 'If you’re still working in 2033 through 2035',
+    label: '2033 through 2035, while you’re still working',
     sentences: ['Run three, sentence one.', 'Run three, sentence two.', 'Run three, sentence three.'],
   },
 ] as const
-const CLOSING = ['If only one of you is alive in a working year, the closing’s first sentence.', 'The closing’s second.'] as const
+const CLOSING = ['In a working year with only one of you alive, the closing’s first sentence.', 'The closing’s second.'] as const
 const OPENING = 'The opening. The lead:'
 const WITH_CLOSING: NoteParts = { opening: OPENING, segments: [], door: null, runs: { items: RUN_ITEMS, closing: CLOSING } }
 const NO_CLOSING: NoteParts = { opening: OPENING, segments: [], door: null, runs: { items: RUN_ITEMS, closing: null } }
@@ -43,18 +43,18 @@ const BUTTON = (
 const OPENING_HTML = '<p class="note-parts__opening">The opening. The lead:</p>'
 const RUNS_HTML =
   '<ol role="list" class="note-parts__runs">' +
-  '<li class="note-parts__run"><p class="note-parts__label">2026 through 2028</p>' +
+  '<li class="note-parts__run"><p class="note-parts__label">2026 through 2028, while you’re still working</p>' +
   '<p class="note-parts__para">Run one, sentence one.</p><p class="note-parts__para">Run one, sentence two.</p>' +
   '<p class="note-parts__para">Run one, sentence three.</p></li>' +
-  '<li class="note-parts__run"><p class="note-parts__label">If you’re still working in 2029 through 2032</p>' +
+  '<li class="note-parts__run"><p class="note-parts__label">2029 through 2032, while you’re still working</p>' +
   '<p class="note-parts__para">Run two, sentence one.</p><p class="note-parts__para">Run two, sentence two.</p>' +
   '<p class="note-parts__para">Run two, sentence three.</p></li>' +
-  '<li class="note-parts__run"><p class="note-parts__label">If you’re still working in 2033 through 2035</p>' +
+  '<li class="note-parts__run"><p class="note-parts__label">2033 through 2035, while you’re still working</p>' +
   '<p class="note-parts__para">Run three, sentence one.</p><p class="note-parts__para">Run three, sentence two.</p>' +
   '<p class="note-parts__para">Run three, sentence three.</p></li>' +
   '</ol>'
 const CLOSING_HTML =
-  '<p class="note-parts__closing">If only one of you is alive in a working year, the closing’s first sentence. The closing’s second.</p>'
+  '<p class="note-parts__closing">In a working year with only one of you alive, the closing’s first sentence. The closing’s second.</p>'
 const BUTTON_HTML = '<button type="button" class="band-premise__cta note-parts__cta">Update your figure</button>'
 
 describe('the typed-below line’s runs (the walk-8 form spec’s U2, KD7 and KD8)', () => {
@@ -70,11 +70,11 @@ describe('the typed-below line’s runs (the walk-8 form spec’s U2, KD7 and KD
     expect(list).toHaveAttribute('role', 'list')
     const items = within(list).getAllByRole('listitem')
     expect(items.map((li) => li.querySelector(':scope > p.note-parts__label')?.textContent)).toEqual([
-      '2026 through 2028',
-      'If you’re still working in 2029 through 2032',
-      'If you’re still working in 2033 through 2035',
+      '2026 through 2028, while you’re still working',
+      '2029 through 2032, while you’re still working',
+      '2033 through 2035, while you’re still working',
     ])
-    expect(list.textContent, 'the survivor part sits outside the list').not.toContain('If only one of you is alive')
+    expect(list.textContent, 'the survivor part sits outside the list').not.toContain('In a working year with only one of you alive')
     expect(block.lastElementChild?.matches('p.note-parts__closing')).toBe(true)
     expect(container.querySelector('dl'), 'no description list: the coda list is gone').toBeNull()
     expect(container.querySelector('.note-parts__coda')).toBeNull()
@@ -96,10 +96,10 @@ describe('the typed-below line’s runs (the walk-8 form spec’s U2, KD7 and KD
 
   it('the text runs opening, each run’s label then its sentences, the closing (the gate’s React key and every test’s compare)', () => {
     expect(notePartsText(WITH_CLOSING)).toBe(
-      'The opening. The lead: 2026 through 2028 Run one, sentence one. Run one, sentence two. Run one, sentence three. ' +
-        'If you’re still working in 2029 through 2032 Run two, sentence one. Run two, sentence two. Run two, sentence three. ' +
-        'If you’re still working in 2033 through 2035 Run three, sentence one. Run three, sentence two. Run three, sentence three. ' +
-        'If only one of you is alive in a working year, the closing’s first sentence. The closing’s second.',
+      'The opening. The lead: 2026 through 2028, while you’re still working Run one, sentence one. Run one, sentence two. Run one, sentence three. ' +
+        '2029 through 2032, while you’re still working Run two, sentence one. Run two, sentence two. Run two, sentence three. ' +
+        '2033 through 2035, while you’re still working Run three, sentence one. Run three, sentence two. Run three, sentence three. ' +
+        'In a working year with only one of you alive, the closing’s first sentence. The closing’s second.',
     )
     expect(notePartsText(NO_CLOSING).endsWith('Run three, sentence three.')).toBe(true)
   })

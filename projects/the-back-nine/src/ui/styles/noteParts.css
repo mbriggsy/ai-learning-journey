@@ -50,19 +50,22 @@ div.note-parts {
   list-style: none;
 }
 
-/* A run's sentences (KD4: the spending side, the typed side, the close, one paragraph each): --space-2 between them, a
-   paragraph break the eye sees even where a sentence's last line runs the full measure — the door's own step between its
-   paragraphs and its list. It is the second rung of one ladder, told apart by space alone: a label --space-1 above its
-   first sentence, sentences --space-2 apart, runs --space-3 apart, the closing --space-4 off the list (below). */
+/* A run's paragraphs (KD4: the spending side, the typed side, the close; inside a list a credit run's pair shares one, the
+   walk-9 form council's call (1b)): --space-2 between them, a paragraph break the eye sees even where a sentence's last
+   line runs the full measure — the door's own step between its paragraphs and its list. It is the second rung of one
+   ladder, told apart by space alone: a label --space-1 above its first paragraph, paragraphs --space-2 apart, runs
+   --space-3 apart, the closing --space-5 off the list (below). */
 .note-parts__run > .note-parts__para + .note-parts__para {
   margin-block-start: var(--space-2);
 }
 
 /* The closing (KD7, the survivor part): a condition over the runs, never one more of them, so it carries no label and
-   stands one step further off the list than the runs stand off each other (--space-4 to their --space-3; the council's
-   position) — told apart by space alone, never color, never a rule. */
+   stands further off the list than the runs stand off each other — told apart by space alone, never color, never a
+   rule. --space-5 since the walk-9 form council's call (4) (20px to the runs' 12px): it sits between the run gap and the
+   block's 24px outer edge on the gate, and --space-6 or more would tie or overshoot that edge (the motion seat's math).
+   ⚑ Briggsy's to close on walk 10's card. */
 .note-parts__closing {
-  margin: var(--space-4) 0 0;
+  margin: var(--space-5) 0 0;
 }
 
 /* The door's cost list: a list the eye can tick through (copylaw F3), the host's own text, a quiet marker. */

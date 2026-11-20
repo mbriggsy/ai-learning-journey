@@ -6,7 +6,7 @@ import { REAL, REAL_DPR, PHONE, PHONE_DPR, FINAL_TIER_MS, advanceIntakeTo, gotoS
  * precedent the fit specs cite). A hardcoded literal here is a second copy of the product's words: U17 §S6
  * reworded this exact string, and a literal would have re-broken the only walk that reaches the
  * face — the same blind spot `c55913b0` had just repaired. */
-import { copy, slots, workingCostExtras } from '../src/ui/copy'
+import { copy, slots, workingCostExtras, type TypedBelowAmount } from '../src/ui/copy'
 import type { WorkingYearLeftOverKind } from '../src/shared/model'
 
 /**
@@ -1298,9 +1298,19 @@ const RISEN_LATER_AT_QUOTE = '5,985'
 const RISEN_LATER_SHORT_YEAR = 2029
 /** U11 walk 2 (b9-3): the short years at $105,000 run on — `datesavedrisenshort` every year from 2026 through 2032,
  *  `datesavedrisenlater` from 2029 through 2032 — at $4,015, then $3,652 once Sam's Medicare starts (2031), each
- *  read off the money picture at the quote (b9-2's probe, `u11-ae\probe-ledger.out.txt`). */
+ *  read off the money picture at the quote (b9-2's probe, `u11-ae\probe-ledger.out.txt`). In the one amount rule (the
+ *  walk-9 form council's call (1), flip (iii)) the run is two groups, each figure beside its own years ("$4,015 short in
+ *  2026 through 2030 and $3,652 short in 2031 through 2032"), never the old "$3,652 to $4,015" range. */
 const RISEN_SHORT_LAST_YEAR = 2032
 const RISEN_SHORT_LEAST = '3,652'
+const RISEN_SHORT_MEDICARE_YEAR = 2031
+const risenShortRun = (firstYear: number): TypedBelowAmount => ({
+  kind: 'two',
+  groups: [
+    { figure: RISEN_SHORT_BY, firstYear, lastYear: RISEN_SHORT_MEDICARE_YEAR - 1 },
+    { figure: RISEN_SHORT_LEAST, firstYear: RISEN_SHORT_MEDICARE_YEAR, lastYear: RISEN_SHORT_LAST_YEAR },
+  ],
+})
 /** U11 walk 4 (council `wf_7fa86902-35c`): after `datesavedrisenlater`'s run, 2033 (a claim) prints left over at
  *  $105,000 and no later row is short (b9-2's probe), so the years that don't come up short resume there. */
 const RISEN_LATER_RESUMES = 2033
@@ -1357,9 +1367,11 @@ const gateDoorOf = (act: 'update' | 'confirm'): GateDoorWords =>
 /** The survivor part on W's stale line and its seat (U11 walk 8's W8-R12 (a), the walk-8 form spec's U4): every witness here
  *  descends from `stillWorking`, so the engine can draw a working year with Sam dead and Alex working from 2032, and the
  *  survivor rule counts 75 % of each figure (no budget, no medical held whole): $84,000 → $63,000. Its close is the
- *  line's first rider, so glossed (two years, the engine's look-back). */
+ *  line's first rider, so glossed (two years, the engine's look-back). W's out-of-date line and its seat name the two
+ *  answers beside their figures (the walk-9 form council's call (4): `names: 'answers'`), since they compare them in
+ *  dollars nowhere else. */
 function staleSurvivorWords(quote: string, chargeAtQuote: string, most: string): readonly string[] {
-  const f = { typed: STALE_W_CONFIRMED, quote, source: 'spending' } as const
+  const f = { typed: STALE_W_CONFIRMED, quote, source: 'spending', names: 'answers' } as const
   return [slots.workingCostTypedBelowSurvivorCharges(f, ['63,000', chargeAtQuote]), slots.workingCostTypedBelowSurvivorLess(f, most, 2)]
 }
 function risenWitness(
@@ -1511,12 +1523,12 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
     slots.workingCostStaleShortUntilUpdated(STALE_W_CONFIRMED),
     ...savedNow(RISEN_SHORT_QUOTE, slots.workingCostStaleLeftOverNoneNow(DATE_LEFT_OVER, STALE_W_CONFIRMED)),
     slots.workingCostStaleLabelIf(RISEN_SHORT_QUOTE),
-    slots.workingCostStaleLeftOverIfFirstShortRun(2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, RISEN_SHORT_QUOTE, STALE_W_CONFIRMED, DATE_LEFT_OVER, true),
+    slots.workingCostStaleLeftOverIfFirstShortRun(2026, RISEN_SHORT_LAST_YEAR, risenShortRun(2026), RISEN_SHORT_QUOTE, STALE_W_CONFIRMED, DATE_LEFT_OVER, true),
     copy.workingCostStaleLowerCounts,
     ...staleSurvivorWords(RISEN_SHORT_QUOTE, '78,750', '15,750'),
   ], [
     // W8-R10 (b): the run (scoped), the lean before the loss, what updating does, then the survivor part.
-    slots.workingLedgerLeftOverWaitingShort(RISEN_SHORT_QUOTE, 2026, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, true),
+    slots.workingLedgerLeftOverWaitingShort(RISEN_SHORT_QUOTE, 2026, RISEN_SHORT_LAST_YEAR, risenShortRun(2026), true),
     slots.workingCostStaleSeatShortLean(STALE_W_CONFIRMED, false),
     slots.workingLedgerLeftOverWaitingShortUpdate(RISEN_SHORT_QUOTE, 2026, false),
     ...staleSurvivorWords(RISEN_SHORT_QUOTE, '78,750', '15,750'),
@@ -1530,13 +1542,13 @@ const LEFT_OVER_WITNESSES: Readonly<Record<string, LeftOverWitness | undefined>>
     slots.workingCostStaleLeftOverIfCapped(RISEN_LATER_AT_QUOTE, 2026, RISEN_SHORT_QUOTE, true),
     slots.workingCostStaleLeftOverGainYears(2026, RISEN_LATER_SHORT_YEAR - 1, RISEN_LATER_RESUMES),
     slots.workingCostStaleEachDollar(RISEN_SHORT_QUOTE, RISEN_LATER_AT_QUOTE),
-    slots.workingCostStaleShortLaterYears(RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, STALE_W_CONFIRMED, true),
+    slots.workingCostStaleShortLaterYears(RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, risenShortRun(RISEN_LATER_SHORT_YEAR), STALE_W_CONFIRMED, true),
     slots.workingCostStaleLowerCountsMore(DATE_LEFT_OVER),
     ...staleSurvivorWords(RISEN_SHORT_QUOTE, '78,750', '15,750'),
   ], [
     // W8-R10 (a): the act's waiting words, then the later run at the quote and the years' lean, then the survivor part.
     copy.workingLedgerLeftOverWaitingUpdate,
-    slots.workingCostStaleSeatLaterShort(RISEN_SHORT_QUOTE, RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, RISEN_SHORT_LEAST, RISEN_SHORT_BY, STALE_W_CONFIRMED, true),
+    slots.workingCostStaleSeatLaterShort(RISEN_SHORT_QUOTE, RISEN_LATER_SHORT_YEAR, RISEN_SHORT_LAST_YEAR, risenShortRun(RISEN_LATER_SHORT_YEAR), STALE_W_CONFIRMED, true),
     ...staleSurvivorWords(RISEN_SHORT_QUOTE, '78,750', '15,750'),
   ].join(' ')),
 }
@@ -1922,16 +1934,18 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
   await expect(face.getByText(note, { exact: true }), 'the typed-below note under the row').toBeVisible()
   // U11 walk 7's R2: the seat below names the $84,000 its $16,985 rests on and, below its radios, ends on the line's
   // runs (the whole-window rebuild's KTD6, host 3): A's one run over the whole window, a plain paragraph in the
-  // sheet (the W row above carries the lean, so no counts sentence) — the cap sentence, then each working year you’re
-  // both alive the $10,985 the answer at $90,000 would add beside this answer's $16,985, $6,000 a year less in savings at
-  // the spending — then the survivor part in the same paragraph. The sheet names "this answer" (the walk-8 form
-  // council's KD9).
+  // sheet (the W row above carries the "can look better" half, so no counts sentence) — the bare lean naming the
+  // $90,000 (the walk-9 form council's call (2)), the cap sentence, this answer's $16,985, $6,000 less in savings in
+  // each working year you're both alive at the spending — then the survivor part in the same paragraph. The sheet names
+  // "this answer" (the walk-8 form council's KD9).
   const seat = dialog.locator('[data-assumption-seat="working-year-left-over"]')
   await expect(
     seat.getByText(slots.workingLedgerLeftOverFigureAt(STALE_W_CONFIRMED, DATE_LEFT_OVER), { exact: true }),
     'the seat’s figure names the typed figure',
   ).toBeVisible()
-  await expect(seat.locator('p.left-over__at-quote'), 'the seat’s one run and its survivor part').toHaveText(typedBelowOneRun('This'))
+  await expect(seat.locator('p.left-over__at-quote'), 'the seat’s lean, its one run and its survivor part').toHaveText(
+    `${TYPED_BELOW_SHEET_LEAN} ${typedBelowOneRun('This')}`,
+  )
   await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
   await captureState(page, path.join(outDir, 'panel-typed-below'))
   await expectResultRerun(page, 'intake:typedbelow')
@@ -1939,11 +1953,11 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
   await expect(dialog).toBeHidden()
   await expect(settledResult(page)).toBeAttached({ timeout: FINAL_TIER_MS })
   // U11 walk 6's R1: no stale line (a typed figure carries no stamp), but its own typed-below line holds the slot, in
-  // W's plain form with the update button inline — the counts sentence, then its one run (the whole-window rebuild),
-  // then the survivor part (the survivor-path build), in the walk-8 form council's words.
+  // W's plain form with the update button inline — the counts sentence, the lean, then its one run (the whole-window
+  // rebuild), then the survivor part (the survivor-path build), in the walk-9 form council's words.
   const standing = page.locator('p.cs-paycheck-note')
   await expect(standing, 'the typed-below line holds the standing slot, one run a plain paragraph').toHaveCount(1)
-  await expect(standing).toContainText(`${typedBelowCounts('This')} ${typedBelowOneRun('This')}`)
+  await expect(standing).toContainText(`${typedBelowCounts('This')} ${typedBelowLean('This')} ${typedBelowOneRun('This')}`)
   await expect(standing.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate })).toBeVisible()
   await captureState(page, path.join(outDir, 'result-typed-below'))
   await page.locator('[data-door="assumptions"]').click()
@@ -1954,40 +1968,47 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
   await captureState(page, path.join(outDir, 'walk-typed-below'))
   // One step further (the whole-window rebuild's U5, walk 8's third added target): the walk's money-picture step, the
   // seat's other home. Nothing above the seat there carries the lean (the W note lives on the W step), so under "All
-  // of it" the seat's line below the radios opens with the counts sentence in its "Your" form (its lean too: KD9), then
+  // of it" the seat's line below the radios opens with the counts sentence in its "Your" form, then its lean (KD9), then
   // the one run and the survivor part.
   await advanceIntakeTo(page, copy.qWorkingLedgerHeading, 'intake:typedbelow')
   const question = page.locator('.intake-shell .step-body .left-over')
   await expect(question, 'the left-over question renders once, inside the step').toHaveCount(1)
   await expect(question.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true }), '“All of it” stays checked').toBeChecked()
   await expect(question.locator('p.left-over__at-quote'), 'the step’s seat opens with the counts sentence').toHaveText(
-    `${typedBelowCounts('Your')} ${typedBelowOneRun('Your')}`,
+    `${typedBelowCounts('Your')} ${typedBelowLean('Your')} ${typedBelowOneRun('Your')}`,
   )
   await question.locator('.left-over__at-quote').evaluate((el) => el.scrollIntoView({ block: 'center' }))
   await captureState(page, path.join(outDir, 'walk-typed-below-ledger'))
 }
 
-/** A's counts sentence (`datesavedtyped`: $84,000 typed under $90,000 of spending), its lean naming the host's answer
- *  (the walk-8 form council's KD9): "This" on the Result, "Your" on the walk's step. Typed by hand. */
+/** A's counts sentence (`datesavedtyped`: $84,000 typed under $90,000 of spending), naming the host's answer (the
+ *  walk-8 form council's KD9): "This" on the Result, "Your" on the walk's step. No lean in it since the walk-9 form
+ *  council's call (2). Typed by hand from the U2 probe (`probe.out.txt`, witness `a`). */
 const typedBelowCounts = (noun: 'This' | 'Your'): string =>
-  `${noun} answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. ` +
-  `A working year almost always costs at least what you spend, so ${noun === 'This' ? 'this' : 'your'} answer can look better than it really is.`
-/** …and the rest of A's one paragraph, typed by hand (the walk-8 form council's words,
- *  `docs/plans/features/typed-below-walk8-form-build-spec.md`): the cap sentence (KD5: year 0 at $90,000 leaves $10,985,
- *  below the stored $16,985; the floor named there, W8-R8); its ONE run over the whole window in three beats (KD4), which
- *  names no years, so its first sentence opens "Each working year you’re both alive," (`date`'s couple — Alex 58,
- *  working; Sam 60, retired — opens the survivor-path build's gate, since the engine can draw a working year with Sam
- *  dead and Alex still working, 2032–2035), the gloss on its rider (KD3: the line's first); then the survivor part (KD7):
- *  by hand (DND 012), the default 0.75 survivor ratio of each W (`src/shared/appDefaults.ts`; no budget on this seed),
+  `${noun} answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year.`
+/** …the lean, its own sentence after the counts sentence, naming the quote in dollars (call (2)) and the host's answer… */
+const typedBelowLean = (noun: 'This' | 'Your'): string =>
+  `A working year almost always costs at least your spending of $90,000 a year, so ${noun === 'This' ? 'this' : 'your'} answer can look better than it really is.`
+/** …and in the details sheet, which has no counts sentence (the W row's note above says the "can look better" half), the
+ *  bare lean. */
+const TYPED_BELOW_SHEET_LEAN = 'A working year almost always costs at least your spending of $90,000 a year.'
+/** …and the rest of A's one paragraph, typed by hand (the walk-9 form council's words,
+ *  `docs/plans/features/typed-below-walk9-form-build-spec.md`): the cap sentence (KD5: year 0 at $90,000 leaves $10,985,
+ *  below the stored $16,985; "At your spending" alone, the lean having said the dollars, no floor aside); its ONE run over
+ *  the whole window, whose at-spending figure IS the cap, so it drops its first beat (T's twin, call (2)): this answer's
+ *  $16,985, then the close carrying the survivor scope, "$6,000 less in your savings in each working year you’re both
+ *  alive" (`date`'s couple — Alex 58, working; Sam 60, retired — opens the survivor-path build's gate, since the engine can
+ *  draw a working year with Sam dead and Alex still working, 2032–2035), the gloss on its rider (the line's first, inside
+ *  the period, no brackets); then the survivor part (KD7, opening "In a working year with only one of you alive,"): by
+ *  hand (DND 012), the default 0.75 survivor ratio of each W (`src/shared/appDefaults.ts`; no budget on this seed),
  *  $84,000 × 0.75 = $63,000 at the figure and $90,000 × 0.75 = $67,500 at the spending, so at most $4,500 a year less. */
 const typedBelowOneRun = (noun: 'This' | 'Your'): string =>
   [
-    'At your spending of $90,000 a year, the least a working year almost always costs, your first working year would have $10,985 left over, so the answer at that spending would add at most $10,985 in any working year.',
-    'Each working year you’re both alive, the answer at your spending of $90,000 a year would add at most $10,985 a year.',
+    'At your spending, your first working year would have $10,985 left over, so the answer at that spending would add at most $10,985 in any working year.',
     `${noun} answer adds at most $16,985 a year to your savings.`,
-    'At your spending, that’s $6,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, when your income two years before was high).',
-    'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year.',
-    'At your spending, that’s at most $4,500 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.',
+    'At your spending, that’s $6,000 less in your savings in each working year you’re both alive, except for any difference between the two answers in income tax and Medicare’s income surcharge, the extra Medicare premium you pay when your income two years before was high.',
+    'In a working year with only one of you alive, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year.',
+    'At your spending, that’s at most $4,500 a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge.',
   ].join(' ')
 
 /**

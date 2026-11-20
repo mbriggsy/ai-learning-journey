@@ -65,8 +65,8 @@ export interface ReentryView {
    *  over) — or, in its place, the typed-below line (U11 walk 6's R1: a fresh typed W below today's
    *  quote, {@link ReentryTypedBelow}), the moved left-over line (build 2's R12: `stalenessLeftOverNote` and the caller's
    *  sentence — or, where a tax, state-tax or working-years line fired, the caller's clause on the
-   *  FIRST of them instead, and no line of its own), and one budget line per boundary year (empty =
-   *  nothing to flag). */
+   *  FIRST of them instead, and no line of its own; or, where none fired and the typed-below line is drawn, that line's
+   *  own clause: {@link LeftOverHost}), and one budget line per boundary year (empty = nothing to flag). */
   readonly noteLines: readonly ReentryNoteLine[]
   /** Build 2's clause host, decided ONCE, here (obligation (f)): did a tax, state-tax or working-years
    *  line fire — the three lines that carry a moved left over as a clause? The Result reads THIS for its
@@ -138,19 +138,34 @@ export interface ReentryLeftOverStale {
 }
 
 /** The gate's typed-below line (U11 walk 6's R1), composed by the caller from the HYDRATED draft
- *  (`workingYearCostTypedBelowLine` on the gate: a fresh TYPED W below today's quote, which the report never
+ *  (`workingYearCostTypedBelowComposed` on the gate: a fresh TYPED W below today's quote, which the report never
  *  calls stale — a typed figure is never staled on a quote, KTD10 — so this is the only way the gate hears it):
- *  `line` — the line as parts (the whole-window rebuild's KTD6: one span folds into its opening, a plain note drawn as
- *  its old paragraph; two or more draw one labelled part per span); `door` — the update act's door under the buttons
- *  (`workingYearCostTypedBelowDoor`); `canChange` — the tab can save (the door rides only then, the
- *  {@link ReentryPayCheckStale} door law). `null` where no fresh typed figure sits below the quote, or the run
- *  reads no W. No report fact goes with it: it is an answer read against today's quote, never a clock, so it
- *  feeds neither `anyStale` nor `rulesMoved`. */
+ *  `compose` — the line as parts (the whole-window rebuild's KTD6: one span folds into its opening, a plain note drawn as
+ *  its old paragraph; two or more draw one labelled part per run), for whether THIS seam assigned it the moved left
+ *  over's clause, and whether it carried it — a closure over the caller's one hydrated draft, so the caller never decides
+ *  the host (the walk-9 form council's call (1a), insight 081); `door` — the update act's door under the buttons
+ *  (`workingYearCostTypedBelowDoor`), in both forms: `plain`, and `carryingMoved`, whose scope sentence names the moved
+ *  fact's noun too; `canChange` — the tab can save (the door rides only then, the {@link ReentryPayCheckStale} door
+ *  law). `null` where no fresh typed figure sits below the quote, or the run reads no W. No report fact goes with it: it
+ *  is an answer read against today's quote, never a clock, so it feeds neither `anyStale` nor `rulesMoved`. */
 export interface ReentryTypedBelow {
-  readonly line: NoteParts
-  readonly door: GateDoor
+  readonly compose: (carriesMoved: boolean) => { readonly parts: NoteParts; readonly carriedMoved: boolean }
+  readonly door: { readonly plain: GateDoor; readonly carryingMoved: GateDoor }
   readonly canChange: boolean
 }
+
+/** Where the moved left over's fact is said on the gate (the walk-9 form council `wf_9f28e691-1dc`, call (1a);
+ *  `docs/plans/features/typed-below-walk9-form-build-spec.md`), decided ONCE, here, from the report and the lines drawn —
+ *  an exhaustive Record keys every choice made by it (insight 147):
+ *  · `rulesLine` — a tax, state-tax or working-years line fired: the clause rides the first of them (the Result reads
+ *    the same decision as `leftOverClauseHost`);
+ *  · `typedBelowLine` — no rules line fired, and the typed-below line DRAWN carried the clause (read off the line itself,
+ *    never off a branch test): the clause after its counts sentence, no moved note, and its door's scope sentence naming
+ *    the fact's noun;
+ *  · `ownNote` — neither: the moved note of its own, its lead, its sentence and its door sentence, unchanged (register (r)
+ *    stays U12's). Also wherever the typed-below line was offered the clause and was never drawn (W's stale line outranks
+ *    it) or was drawn without it: never silence. */
+type LeftOverHost = 'rulesLine' | 'typedBelowLine' | 'ownNote'
 
 /** The gate's answer sentences, ONE required named object (build 2's KTD9 one seam down): `costStale` and
  *  `leftOverStale` are read only where the report's fact of the same name is set
@@ -259,6 +274,18 @@ export function composeReentry(
   // As parts (council `wf_22858e04-f7a`): the gate's lead and the line's opening, then its labelled segments, drawn as a
   // block in the story column; its door is the view's own field, drawn under the buttons, and only where the tab can save.
   let door: GateDoor | null = null
+  // The moved left over's host (call (1a)). The fact without its sentence is the wiring fault `ReentryLeftOverStale`
+  // names, whichever host would have said it. A fired rules line hosts it; otherwise the typed-below line is OFFERED it,
+  // and whether that line hosts it is read off what was actually drawn (`typedBelowCarried`, below) — never off a second
+  // copy of the branch test, which could drift from the branch and leave the fact assigned to a line never drawn (the
+  // insight-081 fork). Wherever the line did not carry it, its own note says it: never silence.
+  if (report.workingYear.leftOverStale && leftOverStale === null) {
+    throw new Error(
+      'composeReentry: the report says the left over moved, but no left-over sentence was passed; the caller reads both off one draft',
+    )
+  }
+  let leftOverHost: LeftOverHost | null = !report.workingYear.leftOverStale ? null : clauseHost !== undefined ? 'rulesLine' : 'typedBelowLine'
+  let typedBelowCarried = false
   if (report.workingYear.costStale) {
     if (payCheckStale === null) {
       noteLines.push(copy.stalenessWorkingYearCost)
@@ -279,33 +306,42 @@ export function composeReentry(
     // it only on a fresh W, so it never meets W's stale line; were both handed over, W's line would win, as it does on
     // the Result — the one standing slot there reads them in this order. As parts, the way W's line is pushed (the
     // whole-window rebuild's KTD6): a one-span line is a plain note, drawn as its old paragraph; two or more spans, a block.
-    noteLines.push({ text: notePartsText(typedBelow.line), parts: typedBelow.line })
-    if (typedBelow.canChange) door = typedBelow.door
+    // It is offered the moved clause where no rules line hosts it (call (1a)), and its door names the fact exactly where
+    // the line drawn carried it.
+    const line = typedBelow.compose(leftOverHost === 'typedBelowLine')
+    typedBelowCarried = leftOverHost === 'typedBelowLine' && line.carriedMoved
+    noteLines.push({ text: notePartsText(line.parts), parts: line.parts })
+    if (typedBelow.canChange) door = typedBelowCarried ? typedBelow.door.carryingMoved : typedBelow.door.plain
   }
+  // The fallback (call (1a)): the fact was offered to the typed-below line, and that line was never drawn (W's stale line
+  // drawn in its place, or none handed over) or was drawn without the clause, so the fact takes its own note.
+  if (leftOverHost === 'typedBelowLine' && !typedBelowCarried) leftOverHost = 'ownNote'
   // Build 2's moved left over (R12): the household's own "saved" answer no longer matches today's
   // year-0 figure. An answer fact like the W line above, never a rules line (it rides `anyStale`
-  // only), so its own line sits beside it. The report decides, never the caller: a sentence handed
-  // over with the fact unset renders nothing (the exposure conjunct may have silenced it), and the
-  // fact set with no sentence is the wiring fault `ReentryLeftOverStale` names — whether the fact
-  // would land as a line or as a clause. ONE CAUSE, ONE LINE (insight 101): where a tax, state-tax or
-  // working-years line fired, the two figures ride the first of them as a clause, and no second line
-  // speaks; the hosted clause adds no door sentence, because its host line names no door.
-  if (report.workingYear.leftOverStale) {
-    if (leftOverStale === null) {
-      throw new Error(
-        'composeReentry: the report says the left over moved, but no left-over sentence was passed; the caller reads both off one draft',
-      )
+  // only). The report decides, never the caller: a sentence handed over with the fact unset renders
+  // nothing (the exposure conjunct may have silenced it), and the fact set with no sentence threw
+  // above. ONE CAUSE, ONE LINE (insight 101), its host decided once above: where a tax, state-tax or
+  // working-years line fired, the two figures ride the first of them as a clause; where the
+  // typed-below line carried them, they are said there; otherwise its own line. A hosted clause adds
+  // no door sentence, because its host line names no door (the typed-below line's door names the
+  // fact in its scope sentence instead).
+  if (leftOverHost !== null && leftOverStale !== null) {
+    const sentences = leftOverStale
+    const place: Readonly<Record<LeftOverHost, () => void>> = {
+      rulesLine: () => {
+        // Unreachable without an index: `rulesLine` is chosen exactly where `pushHost` set one.
+        if (clauseHost === undefined) throw new Error('composeReentry: the clause host is a fired rules line')
+        const host = noteLines[clauseHost]
+        // Unreachable: only `pushHost` sets the index, and it pushes the plain rules lines.
+        if (typeof host !== 'string') throw new Error('composeReentry: the clause host is a plain rules line')
+        noteLines[clauseHost] = `${host} ${sentences.clause}`
+      },
+      typedBelowLine: () => {},
+      ownNote: () => {
+        noteLines.push([copy.stalenessLeftOverNote, sentences.text, ...(sentences.canChange ? [copy.stalenessLeftOverGateDoor] : [])].join(' '))
+      },
     }
-    if (clauseHost !== undefined) {
-      const host = noteLines[clauseHost]
-      // Unreachable: only `pushHost` sets the index, and it pushes the plain rules lines.
-      if (typeof host !== 'string') throw new Error('composeReentry: the clause host is a plain rules line')
-      noteLines[clauseHost] = `${host} ${leftOverStale.clause}`
-    } else {
-      noteLines.push(
-        [copy.stalenessLeftOverNote, leftOverStale.text, ...(leftOverStale.canChange ? [copy.stalenessLeftOverGateDoor] : [])].join(' '),
-      )
-    }
+    place[leftOverHost]()
   }
   // One line per boundary YEAR: the copy quotes only the calendar year, so two lines
   // sharing an endYear would render byte-identical sentences (and collide on the render

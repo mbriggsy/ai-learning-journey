@@ -1952,8 +1952,8 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
         },
       ],
       closing: [
-        slots.workingCostTypedBelowSurvivorCharges({ typed: '84,000', quote: '90,000', source: 'spending' }, ['63,000', '67,500']),
-        slots.workingCostTypedBelowSurvivorLess({ typed: '84,000', quote: '90,000', source: 'spending' }, '4,500', 2),
+        slots.workingCostTypedBelowSurvivorCharges({ typed: '84,000', quote: '90,000', source: 'spending', names: 'answers' }, ['63,000', '67,500']),
+        slots.workingCostTypedBelowSurvivorLess({ typed: '84,000', quote: '90,000', source: 'spending', names: 'answers' }, '4,500', 2),
       ],
     })
     const { annualSpendingReal, ...rest } = d
@@ -1977,7 +1977,12 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(heldYesBelowQuote(d)).toBe(true)
     expect(workingYearLeftOverShownState(d)).toBe('waiting-on-w')
     expect(workingYearLeftOverLive(d), 'a stale W still rides at $84,000').toBe(16_985)
-    expect(workingYearCheckAtQuote(d)).toEqual({ kind: 'firstShort', run: { firstYear: 2026, lastYear: 2032, least: 3_652, most: 4_015 } })
+    // Each year's shortfall in year order (`byYear`, which the walk-9 form council's amount rule reads to name each group
+    // with its years): $4,015 in 2026 through 2030 (year 0's is the derivation above), then $3,652 in 2031 through 2032.
+    expect(workingYearCheckAtQuote(d)).toEqual({
+      kind: 'firstShort',
+      run: { firstYear: 2026, lastYear: 2032, least: 3_652, most: 4_015, byYear: [4_015, 4_015, 4_015, 4_015, 4_015, 3_652, 3_652] },
+    })
     const { annualSpendingReal, ...rest } = d
     const { annualSpendingReal: _s, ...savedRest } = DEV_SEEDS.datesaved
     expect(rest, 'otherwise it is `datesaved`').toEqual(savedRest)
@@ -1994,7 +1999,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       kind: 'capped',
       year: 2026,
       leftOver: 5_985,
-      laterShort: { firstYear: 2029, lastYear: 2032, least: 3_652, most: 4_015, resumesFrom: 2033 },
+      laterShort: { firstYear: 2029, lastYear: 2032, least: 3_652, most: 4_015, byYear: [4_015, 4_015, 3_652, 3_652], resumesFrom: 2033 },
     })
     const { incomeStreams, ...rest } = d
     const { incomeStreams: none, ...shortRest } = DEV_SEEDS.datesavedrisenshort

@@ -237,63 +237,91 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
 
   // The walk-6 round review's pair (L3-3 / L1-5 / L2-5), through the real hydrate: `datesavedrisenlater` with its old
   // $84,000 TYPED back in (a fresh typed figure below the $105,000 of spending, the left over moved to $26,985 at it).
-  // R1's line above ends on the quote's $5,985, so the moved words name the $84,000 their $26,985 rests on — as their
-  // own line, and as the clause a fired working-years line hosts. Typed by hand from the seed's documented figures.
+  // The moved words name the $84,000 their $26,985 rests on, wherever the gate says them. Since the walk-9 form council's
+  // call (1a) that is decided once, in `composeReentry`: with no rules line fired, R1's line CARRIES the clause after its
+  // counts sentence (no moved note of its own, and its door's scope sentence names the left over); with a working-years
+  // line fired, the clause rides that line and R1's line is drawn plain. Typed by hand from the seed's documented figures.
   const typedLater = (): ScenarioDraft => {
     const later = DEV_SEEDS.datesavedrisenlater
     const w = later.workingYearCost
     if (w === undefined) throw new Error('[test setup] the witness holds a W')
     return { ...later, workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: w.stateTaxReading } }
   }
-  const MOVED_AT_TYPED_LINE =
-    'You said all of it goes into your savings when it was $16,985. At your figure of $84,000 a year, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
-  // The clause in W8-R5 (b)'s words ("all the money left over in a working year"); the moved line above keeps "all of
-  // it", its own lead naming the left over.
+  // The clause in W8-R5 (b)'s words ("all the money left over in a working year"), one text on both of its hosts.
   const MOVED_AT_TYPED_CLAUSE =
     'You said all the money left over in a working year goes into your savings, when your first working year had $16,985 left over. At your figure of $84,000 a year, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
+  /** R1's opening on the gate around the clause (call (1a)'s order): the counts sentence before it; the lean, the cap
+   *  sentence and the scoped lead after it. */
+  const TYPED_COUNTS = 'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year.'
+  const TYPED_AFTER_CLAUSE =
+    'A working year almost always costs at least your spending of $105,000 a year, so your answer can look better than it really is. ' +
+    'At your spending, your first working year would have $5,985 left over, so the answer at that spending would add at most $5,985 in any working year. ' +
+    'What each answer adds to your savings in each working year you’re both alive:'
+  /** The typed-below door's route under the buttons, the same on both scope forms. */
+  const TYPED_ROUTE =
+    'After “Balances still about right — show my answer”, press “Update your figure for a working year” on your answer; “Something’s changed — update them” asks about it among its questions.'
+  const doorText = () => {
+    const door = document.querySelector('.save-actions + section.reentry-door')
+    return { heading: door?.querySelector('h3')?.textContent, scope: door?.querySelector('p')?.textContent }
+  }
 
-  it('a typed figure below the spending, the left over moved at it: R1’s line, then the moved line naming the $84,000 its $26,985 rests on', async () => {
+  it('a typed figure below the spending, the left over moved at it, no rules line fired: R1’s line carries the clause naming the $84,000 its $26,985 rests on, after its counts sentence — no moved note of its own — and its door’s scope sentence names the left over', async () => {
     const current = h.model
     h.model = plantedVault(typedLater())
     try {
       render(<IntakeApp hydrateFromVault />)
       await screen.findByRole('button', { name: copy.reentryAffirmCta })
-      const lines = Array.from(document.querySelectorAll('.reentry-notes p')).map((p) => p.textContent ?? '')
-      expect(lines.some((t) => t.startsWith('Your answer counts a working year at your own figure of $84,000 a year')), 'R1’s line speaks').toBe(true)
-      expect(lines).toContain(`${copy.stalenessLeftOverNote} ${MOVED_AT_TYPED_LINE} ${copy.stalenessLeftOverGateDoor}`)
-      // The rebuild's KTD6, host 2: R1's line is the block of TM's three runs, the first of the two notes, and the moved
-      // line its own paragraph after it (one cause, one line). TM opens the survivor gate (Sam, 60 and retired, can die from
-      // 66, in 2032, while Alex works), so the block ends on the survivor part's paragraph, after the runs' ordered list
-      // (the walk-8 form council's KD7 and KD8), every run after the first labelled "If you’re still working in" (W8-R6).
+      // The rebuild's KTD6, host 2: R1's line is the block of TM's three runs, now the gate's ONE note (one cause, one
+      // line: the clause rides it). TM opens the survivor gate (Sam, 60 and retired, can die from 66, in 2032, while Alex
+      // works), so the block ends on the survivor part's paragraph, after the runs' ordered list (the walk-8 form council's
+      // KD7 and KD8), every run labelled "…, while you’re still working" (the walk-9 form council's call (3)).
       const notes = Array.from(document.querySelector('.reentry-notes')!.children)
-      expect(notes.map((c) => c.tagName)).toEqual(['DIV', 'P'])
+      expect(notes.map((c) => c.tagName), 'R1’s block alone: no moved note beside it').toEqual(['DIV'])
       expect(Array.from(notes[0]!.children).map((c) => `${c.tagName} ${c.className}`)).toEqual([
         'P note-parts__opening',
         'OL note-parts__runs',
         'P note-parts__closing',
       ])
+      expect(notes[0]!.querySelector(':scope > p.note-parts__opening')?.textContent, 'the clause after the counts sentence, before the lean').toBe(
+        `${TYPED_COUNTS} ${MOVED_AT_TYPED_CLAUSE} ${TYPED_AFTER_CLAUSE}`,
+      )
+      const gateText = document.querySelector('.reentry-notes')!.textContent ?? ''
+      expect(gateText.split(MOVED_AT_TYPED_CLAUSE).length - 1, 'the moved fact said once').toBe(1)
+      expect(gateText, 'no moved note’s lead').not.toContain(copy.stalenessLeftOverNote)
+      expect(gateText, 'no moved note’s door sentence').not.toContain(copy.stalenessLeftOverGateDoor)
       expect(Array.from(notes[0]!.querySelectorAll('ol.note-parts__runs > li > p.note-parts__label')).map((p) => p.textContent)).toEqual([
-        '2026 through 2028',
-        'If you’re still working in 2029 through 2032',
-        'If you’re still working in 2033 through 2035',
+        '2026 through 2028, while you’re still working',
+        '2029 through 2032, while you’re still working',
+        '2033 through 2035, while you’re still working',
       ])
       expect(
-        notes[0]!.querySelector(':scope > p.note-parts__closing')?.textContent?.startsWith('If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year.'),
+        notes[0]!.querySelector(':scope > p.note-parts__closing')?.textContent?.startsWith('In a working year with only one of you alive, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year.'),
         'the condition is the survivor part’s, after the list, never one more run',
       ).toBe(true)
-      expect(notes[0]!.querySelector('ol.note-parts__runs')?.textContent, 'and never inside the list').not.toContain('If only one of you is alive')
+      expect(notes[0]!.querySelector('ol.note-parts__runs')?.textContent, 'and never inside the list').not.toContain('In a working year with only one of you alive')
+      // The moved note's door fact moved into the typed-below door's scope sentence, under the buttons (the tab can save).
+      expect(doorText()).toEqual({
+        heading: 'To update your $84,000 figure',
+        scope: `Neither button on this page updates your $84,000 figure or what you said about the money left over; both lead to where you can. ${TYPED_ROUTE}`,
+      })
     } finally {
       h.model = current
     }
   })
 
-  it('…saved under an older working-years table: the clause that line hosts names the $84,000 too, and no moved line of its own speaks', async () => {
+  it('…saved under an older working-years table: the clause that line hosts names the $84,000 too, no moved line of its own speaks, and R1’s line and its door are drawn plain', async () => {
     const current = h.model
     h.model = plantedVault(typedLater(), (s) => doctorWorkingYearsStaleVault(s, currentEpochDay()))
     try {
       render(<IntakeApp hydrateFromVault />)
       expect(await screen.findByText(`${copy.stalenessWorkingYears} ${MOVED_AT_TYPED_CLAUSE}`)).toBeInTheDocument()
       expect(screen.queryByText(new RegExp(copy.stalenessLeftOverNote))).toBeNull()
+      // R1's line opens on its counts sentence and goes straight to the lean: the clause is the rules line's alone.
+      expect(document.querySelector('.reentry-notes p.note-parts__opening')?.textContent).toBe(`${TYPED_COUNTS} ${TYPED_AFTER_CLAUSE}`)
+      expect(doorText()).toEqual({
+        heading: 'To update your $84,000 figure',
+        scope: `Neither button on this page updates your $84,000 figure; both lead to where you can. ${TYPED_ROUTE}`,
+      })
     } finally {
       h.model = current
     }
@@ -381,8 +409,8 @@ describe('IntakeApp — build 2’s moved left over reaches the re-entry gate fr
       // its own section under the buttons).
       expect(block.querySelector(':scope > p.note-parts__closing')?.textContent).toBe(
         [
-          slots.workingCostTypedBelowSurvivorCharges({ typed: '84,000', quote: '90,000', source: 'spending' }, ['63,000', '67,500']),
-          slots.workingCostTypedBelowSurvivorLess({ typed: '84,000', quote: '90,000', source: 'spending' }, '4,500', 2),
+          slots.workingCostTypedBelowSurvivorCharges({ typed: '84,000', quote: '90,000', source: 'spending', names: 'answers' }, ['63,000', '67,500']),
+          slots.workingCostTypedBelowSurvivorLess({ typed: '84,000', quote: '90,000', source: 'spending', names: 'answers' }, '4,500', 2),
         ].join(' '),
       )
       expect(Array.from(block.querySelectorAll('dt')).map((dt) => dt.textContent)).toEqual([

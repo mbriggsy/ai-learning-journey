@@ -1238,16 +1238,17 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
   })
 
   // The rebuild's KTD6, host 3 (U5 test 4): on the walk's money-picture step nothing above the seat carries the lean (the
-  // W note lives on the W step), so the seat's runs open on the counts sentence in its "Your" form (the lean's noun too:
-  // the walk-8 form council's KD9), then the cap sentence and the seat's lead and the runs' ordered list — all BELOW the
-  // radios, so a tap moves nothing above them (R6). Typed by hand.
+  // W note lives on the W step), so the seat's runs open on the counts sentence in its "Your" form, then the lean as its
+  // own sentence naming the quote in dollars (its noun "your answer" too: the walk-8 form council's KD9; the walk-9 form
+  // council's call (2)), then the cap sentence and the seat's lead and the runs' ordered list — all BELOW the radios, so a
+  // tap moves nothing above them (R6). Typed by hand.
   const STEP_COUNTS = (typedFigure: string, quote: string) =>
-    `Your answer counts a working year at your own figure of $${typedFigure} a year, below your spending of $${quote} a year. A working year almost always costs at least what you spend, so your answer can look better than it really is.`
-  /** The rider, typed by hand (the walk-8 form council's KD2), and the gloss its first use on a line carries (KD3). */
-  const RIDER = 'not including any difference between the two answers in income tax and Medicare’s income surcharge'
-  const GLOSS = ' (the extra premium Medicare charges once you’re on it, when your income two years before was high)'
+    `Your answer counts a working year at your own figure of $${typedFigure} a year, below your spending of $${quote} a year. A working year almost always costs at least your spending of $${quote} a year, so your answer can look better than it really is.`
+  /** The rider, typed by hand (the walk-9 form council's flip (i)), and the gloss its first use on a line carries (call (5)). */
+  const RIDER = 'except for any difference between the two answers in income tax and Medicare’s income surcharge'
+  const GLOSS = ', the extra Medicare premium you pay when your income two years before was high'
 
-  it('on a typed figure below the spending (`datesavedtypedmoved` unanswered: $84,000 typed under $105,000), the figure names the $84,000 it rests on; "All of it" draws the counts sentence, the cap sentence, the scoped lead, TM’s runs and then the survivor part as a block BELOW the group — opening, the runs’ ordered list, the survivor part’s paragraph, in that reading order — and "Spent" takes them all away, while the text above stays put (KTD6, host 3; R6)', () => {
+  it('on a typed figure below the spending (`datesavedtypedmoved` unanswered: $84,000 typed under $105,000), the figure names the $84,000 it rests on; "All of it" draws the counts sentence, the lean, the cap sentence, the scoped lead, TM’s runs and then the survivor part as a block BELOW the group — opening, the runs’ ordered list, the survivor part’s paragraph, in that reading order — and "Spent" takes them all away, while the text above stays put (KTD6, host 3; R6)', () => {
     const m = modelWith(withLeftOver(DEV_SEEDS.datesavedtypedmoved, undefined))
     render(<LedgerStep model={m} />)
     const group = leftOverGroup()
@@ -1269,41 +1270,44 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
     // The block ends the seat: intake.css drops its trailing margin by `:last-child` (the design read, round 2's #9).
     expect(block!.parentElement?.lastElementChild, 'the block is the seat’s last child').toBe(block)
     // TM opens the survivor gate (Sam, 60 and retired, can die from 66, in 2032, while Alex works): the step still opens on
-    // the counts sentence, then the cap sentence (year 0 at $105,000 leaves $5,985, the floor named: W8-R8) and the seat's
-    // scoped lead; the survivor part (0.75 of each figure: $63,000 and $78,750, X $15,750) last.
+    // the counts sentence and the lean, then the cap sentence (year 0 at $105,000 leaves $5,985; the lean said the quote's
+    // dollars, so it drops them: the walk-9 form council's call (2)) and the seat's scoped lead; the survivor part (0.75 of
+    // each figure: $63,000 and $78,750, X $15,750) last.
     expect(block!.querySelector(':scope > p.note-parts__opening')?.textContent).toBe(
-      `${STEP_COUNTS('84,000', '105,000')} At your spending of $105,000 a year, the least a working year almost always costs, your first working year would have $5,985 left over, so the answer at that spending would add at most $5,985 in any working year. What each answer adds to your savings in each working year you’re both alive:`,
+      `${STEP_COUNTS('84,000', '105,000')} At your spending, your first working year would have $5,985 left over, so the answer at that spending would add at most $5,985 in any working year. What each answer adds to your savings in each working year you’re both alive:`,
     )
+    // Inside the list (call (1b)): a credit run's two beats share one paragraph, the quote's and the typed figure's
+    // dollars and "to your savings" not restated (the lean, the counts sentence and the lead said them). 2029 through 2032
+    // credit less than the stored $26,985 in every year, so their typed side names why (NL's third limit).
     const credit = (gloss: string): readonly string[] => [
-      'The answer at your spending of $105,000 a year would add at most $5,985 a year.',
-      'Your answer adds at most $26,985 a year to your savings.',
+      'The answer at your spending would add at most $5,985 a year. Your answer adds at most $26,985 a year.',
       `At your spending, that’s $21,000 a year less in your savings, ${RIDER}${gloss}.`,
     ]
     expect([...block!.querySelectorAll(':scope > ol.note-parts__runs > li.note-parts__run')].map((li) => [...li.children].map((p) => p.textContent))).toEqual([
-      ['2026 through 2028', ...credit(GLOSS)],
+      ['2026 through 2028, while you’re still working', ...credit(GLOSS)],
       [
-        'If you’re still working in 2029 through 2030',
-        'At your spending of $105,000 a year, each working year you’re both alive comes up $4,015 short, which would be taken from your savings, and the answer at that spending would add nothing.',
-        'Your figure of $84,000 a year leaves those shortfalls out of your answer, which adds at most $16,985 a year to your savings.',
+        '2029 through 2030, while you’re still working',
+        'At your spending, each working year you’re both alive comes up $4,015 short, which would be taken from your savings, and the answer at that spending would add nothing.',
+        'Your figure leaves those shortfalls out of your answer, which adds at most $16,985 a year, all that’s left over at your figure in those years.',
         `At your spending, that’s at most $21,000 a year less in your savings, ${RIDER}.`,
       ],
       [
-        'If you’re still working in 2031 through 2032',
-        'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 short, which would be taken from your savings, and the answer at that spending would add nothing.',
-        'Your figure of $84,000 a year leaves those shortfalls out of your answer, which adds at most $17,348 a year to your savings.',
+        '2031 through 2032, while you’re still working',
+        'At your spending, each working year you’re both alive comes up $3,652 short, which would be taken from your savings, and the answer at that spending would add nothing.',
+        'Your figure leaves those shortfalls out of your answer, which adds at most $17,348 a year, all that’s left over at your figure in those years.',
         `At your spending, that’s at most $21,000 a year less in your savings, ${RIDER}.`,
       ],
-      ['If you’re still working in 2033 through 2035', ...credit('')],
+      ['2033 through 2035, while you’re still working', ...credit('')],
     ])
     expect(block!.querySelector(':scope > p.note-parts__closing')?.textContent).toBe(
-      'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year. ' +
+      'In a working year with only one of you alive, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year. ' +
         `At your spending, that’s at most $15,750 a year less in your savings, ${RIDER}.`,
     )
     // Reading order (the council's a11y check, R3; KD7, KD8): the opening's text, then the runs' ordered list, then the
     // survivor part's paragraph, outside the list.
     expect([...block!.children].map((c) => `${c.tagName} ${c.className}`)).toEqual(['P note-parts__opening', 'OL note-parts__runs', 'P note-parts__closing'])
     expect(block!.querySelector('ol')?.getAttribute('role'), 'a list in the accessibility tree').toBe('list')
-    expect(block!.querySelector('ol')?.textContent, 'the survivor part is never one more run').not.toContain('If only one of you is alive')
+    expect(block!.querySelector('ol')?.textContent, 'the survivor part is never one more run').not.toContain('In a working year with only one of you alive')
     expect(group.compareDocumentPosition(block!) & Node.DOCUMENT_POSITION_FOLLOWING, 'below the group').not.toBe(0)
     expect(textBeside(leftOverGroup(), 'above'), 'the text above the group reads no answer').toBe(above)
     pickLeftOver('workingLedgerLeftOverSpent')
@@ -1311,17 +1315,18 @@ describe('the money-picture step — build 2’s left-over question (U7; R5, R6,
     expect(textBeside(leftOverGroup(), 'above')).toBe(above)
   })
 
-  it('A (`datesavedtyped`, one run) on the walk’s step: the counts sentence, the cap sentence, then "Each working year you’re both alive," the run’s three beats and the survivor part as ONE paragraph below the group ($63,000 at the figure, $67,500 at the spending: AE2)', () => {
+  it('A (`datesavedtyped`, one run) on the walk’s step: the counts sentence, the lean, the cap sentence, then the run’s beats and the survivor part as ONE paragraph below the group — T’s twin, so no first beat and the close carries "in each working year you’re both alive" ($63,000 at the figure, $67,500 at the spending: AE2)', () => {
     render(<LedgerStep model={modelWith(DEV_SEEDS.datesavedtyped)} />)
     const p = document.querySelector('.left-over__at-quote')
     expect(p?.tagName, 'one run is a paragraph').toBe('P')
+    // T's twin (the walk-9 form council's call (2)): one run, the cap sentence drawn, and the answer at the spending adds
+    // the cap's $10,985 in every year, so the run's first beat would repeat the cap sentence and is not drawn.
     expect(p?.textContent).toBe(
       `${STEP_COUNTS('84,000', '90,000')} ` +
-        'At your spending of $90,000 a year, the least a working year almost always costs, your first working year would have $10,985 left over, so the answer at that spending would add at most $10,985 in any working year. ' +
-        'Each working year you’re both alive, the answer at your spending of $90,000 a year would add at most $10,985 a year. ' +
+        'At your spending, your first working year would have $10,985 left over, so the answer at that spending would add at most $10,985 in any working year. ' +
         'Your answer adds at most $16,985 a year to your savings. ' +
-        `At your spending, that’s $6,000 a year less in your savings, ${RIDER}${GLOSS}. ` +
-        'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year. ' +
+        `At your spending, that’s $6,000 less in your savings in each working year you’re both alive, ${RIDER}${GLOSS}. ` +
+        'In a working year with only one of you alive, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year. ' +
         `At your spending, that’s at most $4,500 a year less in your savings, ${RIDER}.`,
     )
     expect(leftOverGroup().compareDocumentPosition(p!) & Node.DOCUMENT_POSITION_FOLLOWING, 'below the group').not.toBe(0)

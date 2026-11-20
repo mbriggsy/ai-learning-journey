@@ -14,7 +14,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
-import { composeReentry as composeReentryParts, type ReentryAnswerSentences, type ReentryView } from '../reentryChrome'
+import { composeReentry as composeReentryParts, type ReentryAnswerSentences, type ReentryTypedBelow, type ReentryView } from '../reentryChrome'
 import { notePartsText, type NoteParts } from '../noteParts'
 
 /** `composeReentry` with each note line read as its text (U11 walk 5's (bi): W's stale line is a parts entry, its
@@ -39,8 +39,8 @@ import {
   workingYearCostStaleLine,
   workingYearCostStaleLineText,
   workingYearCostStaleNote,
+  workingYearCostTypedBelowComposed,
   workingYearCostTypedBelowDoor,
-  workingYearCostTypedBelowLine,
   workingYearLeftOverMoved,
   workingYearLeftOverMovedClause,
   workingYearLeftOverMovedText,
@@ -1124,49 +1124,61 @@ describe('ReEntry — the surface', () => {
 
   // U11 walk 6's R1, rebuilt over the whole working window (the rebuild's KTD6, host 2): a FRESH typed W below today's
   // quote has no report fact (a typed figure is never staled on a quote, KTD10), so the caller hands the gate its line, as
-  // parts, and its door from the hydrated draft — the real producers here, as `IntakeApp`'s hydrate calls them. The gate
-  // pushes `{ text, parts }`, the way W's stale line is pushed: one run a plain note, drawn as its old paragraph; two or
-  // more a block (the walk-8 form council's KD7 and KD8: an ordered list of runs, then the survivor part's paragraph).
-  // Words typed by hand from the seeds' documented figures.
-  const typedBelowView = (d: ScenarioDraft, canChange = true, leftOverStale: ReentryAnswerSentences['leftOverStale'] = null) => {
-    const s = savedDraft(d)
-    const moved = workingYearLeftOverMoved(d)
-    const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: moved !== null })
-    const line = workingYearCostTypedBelowLine(d, { kind: 'gate' })
-    const door = workingYearCostTypedBelowDoor(d)
-    return composeReentryParts(s, report, {
-      costStale: null,
-      leftOverStale,
-      typedBelow: line === null || door === null ? null : { line, door, canChange },
-    })
+  // parts, and its door from the hydrated draft — the real producers here, as `IntakeApp`'s hydrate calls them: both forms
+  // of the line (with and without the moved clause) behind `compose`, and both doors; `composeReentry` decides which (the
+  // walk-9 form council's call (1a)). The gate pushes `{ text, parts }`, the way W's stale line is pushed: one run a plain
+  // note, drawn as its old paragraph; two or more a block (the walk-8 form council's KD7 and KD8: an ordered list of runs,
+  // then the survivor part's paragraph). Words typed by hand from the seeds' documented figures (the U2 line probe).
+  const typedBelowSentence = (d: ScenarioDraft, canChange = true): ReentryTypedBelow | null => {
+    const plain = workingYearCostTypedBelowComposed(d, { kind: 'gate', carriesMoved: false })
+    const carrying = workingYearCostTypedBelowComposed(d, { kind: 'gate', carriesMoved: true })
+    const door = workingYearCostTypedBelowDoor(d, false)
+    const doorMoved = workingYearCostTypedBelowDoor(d, true)
+    return plain === null || carrying === null || door === null || doorMoved === null
+      ? null
+      : { compose: (carriesMoved) => (carriesMoved ? carrying : plain), door: { plain: door, carryingMoved: doorMoved }, canChange }
   }
-  // Both seeds open the survivor gate (Sam, 60 and retired, can die from 66, in 2032, while Alex works through 2035): the
-  // one-run opener carries "you’re both alive" and the survivor part's two sentences close the one paragraph (0.75 of
-  // each figure, $63,000 and $67,500, X $4,500) — the paragraph keeps its shape, a <p>, moved only by its words: the gate's
-  // noun "Your" in the lean too (KD9), the cap sentence naming the floor (KD5, W8-R8: year 0 at $90,000 leaves $10,985),
-  // the run's three beats (KD4) and the gloss on the line's first rider alone (KD3).
+  /** The moved left over's sentences off the one moved core, as `IntakeApp` builds them, or `null` where nothing moved. */
+  const movedSentences = (d: ScenarioDraft, canChange = true): ReentryAnswerSentences['leftOverStale'] => {
+    const moved = workingYearLeftOverMoved(d)
+    return moved === null ? null : { text: workingYearLeftOverMovedText(moved), clause: workingYearLeftOverMovedClause(moved), canChange }
+  }
+  const typedBelowView = (d: ScenarioDraft, canChange = true, s: CurrentScenario = savedDraft(d)) => {
+    const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: workingYearLeftOverMoved(d) !== null })
+    return composeReentryParts(s, report, { costStale: null, leftOverStale: movedSentences(d, canChange), typedBelow: typedBelowSentence(d, canChange) })
+  }
+  // Both seeds open the survivor gate (Sam, 60 and retired, can die from 66, in 2032, while Alex works through 2035). A's one
+  // run is T's twin (the walk-9 form council's call (2)): the counts sentence, the lean naming the $90,000 in the gate's noun
+  // "Your" (KD9), the cap sentence without it (year 0 at the spending leaves $10,985), then no first beat, the typed side,
+  // and the close carrying the both-alive scope and the line's one gloss; the survivor part's two sentences close the one
+  // paragraph (0.75 of each figure, $63,000 and $67,500, X $4,500) — the paragraph keeps its shape, a <p>.
   const TYPED_GATE_LINE =
     'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. ' +
-    'A working year almost always costs at least what you spend, so your answer can look better than it really is. ' +
-    'At your spending of $90,000 a year, the least a working year almost always costs, your first working year would have $10,985 left over, so the answer at that spending would add at most $10,985 in any working year. ' +
-    'Each working year you’re both alive, the answer at your spending of $90,000 a year would add at most $10,985 a year. ' +
+    'A working year almost always costs at least your spending of $90,000 a year, so your answer can look better than it really is. ' +
+    'At your spending, your first working year would have $10,985 left over, so the answer at that spending would add at most $10,985 in any working year. ' +
     'Your answer adds at most $16,985 a year to your savings. ' +
-    'At your spending, that’s $6,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, when your income two years before was high). ' +
-    'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year. ' +
-    'At your spending, that’s at most $4,500 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.'
+    'At your spending, that’s $6,000 less in your savings in each working year you’re both alive, except for any difference between the two answers in income tax and Medicare’s income surcharge, the extra Medicare premium you pay when your income two years before was high. ' +
+    'In a working year with only one of you alive, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year. ' +
+    'At your spending, that’s at most $4,500 a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge.'
   const TYPED_GATE_NOTE = { text: TYPED_GATE_LINE, parts: { opening: TYPED_GATE_LINE, segments: [], door: null } }
+  const UPDATE_DOOR = {
+    heading: 'To update your $84,000 figure',
+    scope: 'Neither button on this page updates your $84,000 figure; both lead to where you can.',
+    route: `After “${copy.reentryAffirmCta}”, press “Update your figure for a working year” on your answer; “${copy.reentryUpdateCta}” asks about it among its questions.`,
+  }
+  /** …where the line carries the moved clause (call (1a)): the moved note's door fact in the scope sentence, its noun named. */
+  const UPDATE_DOOR_MOVED = {
+    ...UPDATE_DOOR,
+    scope: 'Neither button on this page updates your $84,000 figure or what you said about the money left over; both lead to where you can.',
+  }
 
-  it('R1: `datesavedtyped` as a vault — the typed-below line (one run, its survivor part closing it) in W’s place, drawn as its plain paragraph, and the update act’s door under the buttons naming $84,000; no anyStale, no rules echo', () => {
+  it('R1: `datesavedtyped` as a vault — the typed-below line (one run, its survivor part closing it) in W’s place, drawn as its plain paragraph, and the update act’s door under the buttons naming $84,000; nothing moved, so the door’s plain scope; no anyStale, no rules echo', () => {
     const d = DEV_SEEDS.datesavedtyped
     const report = deriveStaleness(savedDraft(d), TODAY, exposureForDraft(d), { costStale: isWorkingYearCostStale(d), leftOverStale: false })
     expect(report.anyStale, 'the premise: nothing on this vault is stale').toBe(false)
     const view = typedBelowView(d)
     expect(view.noteLines).toEqual([TYPED_GATE_NOTE])
-    expect(view.door).toEqual({
-      heading: 'To update your $84,000 figure',
-      scope: 'Neither button on this page updates your $84,000 figure; both lead to where you can.',
-      route: `After “${copy.reentryAffirmCta}”, press “Update your figure for a working year” on your answer; “${copy.reentryUpdateCta}” asks about it among its questions.`,
-    })
+    expect(view.door).toEqual(UPDATE_DOOR)
     expect(typedBelowView(d, false).door, 'a read-only tab gets no door').toBeNull()
     expect(typedBelowView(d, false).noteLines).toEqual([TYPED_GATE_NOTE])
     const { container } = render(<ReEntry view={view} readOnly={false} onAffirm={() => {}} onUpdate={() => {}} />)
@@ -1179,89 +1191,165 @@ describe('ReEntry — the surface', () => {
     )
   })
 
-  it('R1: TM (`datesavedtypedmoved`, three runs, the left over ALSO moved) — the gate keeps two notes, one cause each: the typed-below line as a BLOCK — the cap sentence and the scoped lead, an ordered list of three runs (each its label, then the spending side, the typed side and the close, one paragraph each: the walk-8 form council’s KD4 and KD8), then the survivor part as the paragraph after the list (KD7) — then the moved line, which names "your figure of $84,000 a year" its $26,985 rests on', () => {
-    const d = DEV_SEEDS.datesavedtypedmoved
-    const moved = workingYearLeftOverMoved(d)
-    expect(moved).toEqual({ stored: 16_985, live: 26_985, typedBelow: '84,000' })
-    const view = typedBelowView(d, true, { text: workingYearLeftOverMovedText(moved!), clause: workingYearLeftOverMovedClause(moved!), canChange: true })
-    const LEAD = 'What each answer adds to your savings in each working year you’re both alive:'
-    const credit = (gloss: string): string[] => [
-      'The answer at your spending of $105,000 a year would add at most $5,985 a year.',
-      'Your answer adds at most $16,985 a year to your savings.',
-      `At your spending, that’s $11,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge${gloss}.`,
-    ]
-    const parts: NoteParts = {
-      opening:
-        'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. ' +
-        'A working year almost always costs at least what you spend, so your answer can look better than it really is. ' +
-        'At your spending of $105,000 a year, the least a working year almost always costs, your first working year would have $5,985 left over, so the answer at that spending would add at most $5,985 in any working year. ' +
-        LEAD,
-      segments: [],
-      door: null,
-      runs: {
-        items: [
-          { label: '2026 through 2028', sentences: credit(' (the extra premium Medicare charges once you’re on it, when your income two years before was high)') },
-          {
-            label: 'If you’re still working in 2029 through 2032',
-            sentences: [
-              'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, which would be taken from your savings, and the answer at that spending would add nothing.',
-              'Your figure of $84,000 a year leaves those shortfalls out of your answer, which adds at most $16,985 a year to your savings.',
-              'At your spending, that’s at most $20,637 to $21,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.',
-            ],
-          },
-          { label: 'If you’re still working in 2033 through 2035', sentences: credit('') },
-        ],
-        closing: [
-          'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year.',
-          'At your spending, that’s at most $15,750 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.',
+  // TM (`datesavedtypedmoved`): three runs, the left over ALSO moved, typed by hand once for the arms below. The gate's runs
+  // inside the list (call (1b)): a credit run's pair one paragraph, then the close; the short run three paragraphs, its
+  // figures each beside its own years (flip (iii)); every label "…, while you’re still working" (call (3)).
+  const TM_LEAD = 'What each answer adds to your savings in each working year you’re both alive:'
+  const TM_CLAUSE =
+    'You said all the money left over in a working year goes into your savings, when your first working year had $16,985 left over. ' +
+    'At your figure of $84,000 a year, it has $26,985 left over now. ' +
+    'So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
+  const TM_COUNTS = 'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year.'
+  const TM_AFTER_CLAUSE =
+    'A working year almost always costs at least your spending of $105,000 a year, so your answer can look better than it really is. ' +
+    'At your spending, your first working year would have $5,985 left over, so the answer at that spending would add at most $5,985 in any working year. ' +
+    TM_LEAD
+  const TM_RUNS: NonNullable<NoteParts['runs']> = {
+    items: [
+      {
+        label: '2026 through 2028, while you’re still working',
+        sentences: [
+          'The answer at your spending would add at most $5,985 a year. Your answer adds at most $16,985 a year.',
+          'At your spending, that’s $11,000 a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge, the extra Medicare premium you pay when your income two years before was high.',
         ],
       },
-    }
-    const MOVED_LINE = `${copy.stalenessLeftOverNote} You said all of it goes into your savings when it was $16,985. At your figure of $84,000 a year, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${copy.stalenessLeftOverGateDoor}`
-    expect(view.noteLines).toEqual([{ text: notePartsText(parts), parts }, MOVED_LINE])
+      {
+        label: '2029 through 2032, while you’re still working',
+        sentences: [
+          'At your spending, each working year you’re both alive comes up $4,015 short in 2029 through 2030 and $3,652 short in 2031 through 2032, which would be taken from your savings, and the answer at that spending would add nothing.',
+          'Your figure leaves those shortfalls out of your answer, which adds at most $16,985 a year.',
+          'At your spending, that’s at most $21,000 less in your savings in 2029 through 2030 and $20,637 less in 2031 through 2032, except for any difference between the two answers in income tax and Medicare’s income surcharge.',
+        ],
+      },
+      {
+        label: '2033 through 2035, while you’re still working',
+        sentences: [
+          'The answer at your spending would add at most $5,985 a year. Your answer adds at most $16,985 a year.',
+          'At your spending, that’s $11,000 a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge.',
+        ],
+      },
+    ],
+    closing: [
+      'In a working year with only one of you alive, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year.',
+      'At your spending, that’s at most $15,750 a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge.',
+    ],
+  }
+  /** TM's line, with the moved clause after its counts sentence where it carries it, else without. */
+  const tmLine = (carried: boolean): NoteParts => ({
+    opening: [TM_COUNTS, ...(carried ? [TM_CLAUSE] : []), TM_AFTER_CLAUSE].join(' '),
+    segments: [],
+    door: null,
+    runs: TM_RUNS,
+  })
+  /** The moved left over's own note on TM, the figure it rests on named (the walk-6 round review's L3-3). */
+  const TM_MOVED_NOTE = `${copy.stalenessLeftOverNote} You said all of it goes into your savings when it was $16,985. At your figure of $84,000 a year, it’s $26,985 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${copy.stalenessLeftOverGateDoor}`
+
+  // THE MOVED FACT'S HOST (the walk-9 form council `wf_9f28e691-1dc`, call (1a)), decided once in `composeReentry` as an
+  // exhaustive Record over `rulesLine | typedBelowLine | ownNote`, pinned on all three arms with real drafts — TM, the moved
+  // typed-below witness, on the first two; `datesavedmoved` (a yes, no typed-below line) on the third — and the fallback.
+  it('call (1a), `typedBelowLine`: TM as a vault with no rules line fired — ONE note, the typed-below line carrying the moved clause after its counts sentence (before the lean), no moved note of its own, and the door’s scope naming the moved fact; read-only, the same line and no door', () => {
+    const d = DEV_SEEDS.datesavedtypedmoved
+    expect(workingYearLeftOverMoved(d), 'the premise: moved').toEqual({ stored: 16_985, live: 26_985, typedBelow: '84,000' })
+    const view = typedBelowView(d)
+    expect(view.leftOverClauseHost, 'no rules line hosts it').toBe(false)
+    expect(view.noteLines).toEqual([{ text: notePartsText(tmLine(true)), parts: tmLine(true) }])
+    expect(view.door).toEqual(UPDATE_DOOR_MOVED)
+    const readOnly = typedBelowView(d, false)
+    expect(readOnly.noteLines, 'a read-only tab: the same line, the fact still said').toEqual([{ text: notePartsText(tmLine(true)), parts: tmLine(true) }])
+    expect(readOnly.door).toBeNull()
     const { container } = render(<ReEntry view={view} readOnly={false} onAffirm={() => {}} onUpdate={() => {}} />)
     const notes = Array.from(container.querySelector('.reentry-notes')!.children)
-    expect(notes.map((c) => c.tagName), 'the block, then the moved line as its own paragraph').toEqual(['DIV', 'P'])
+    expect(notes.map((c) => c.tagName), 'the block alone: no moved note').toEqual(['DIV'])
     expect(notes[0]!.classList.contains('note-parts')).toBe(true)
-    // Reading order (the council's a11y check, R3; KD7, KD8): the scoped lead's text, then the runs' ordered list, then
-    // the survivor part's paragraph, outside the list.
+    // Reading order (the council's a11y check, R3; KD7, KD8): the opening (the clause before the lean), then the runs'
+    // ordered list, then the survivor part's paragraph, outside the list.
     expect(Array.from(notes[0]!.children).map((c) => `${c.tagName} ${c.className}`)).toEqual([
       'P note-parts__opening',
       'OL note-parts__runs',
       'P note-parts__closing',
     ])
+    expect(notes[0]!.children[0]!.textContent).toBe(`${TM_COUNTS} ${TM_CLAUSE} ${TM_AFTER_CLAUSE}`)
     const list = notes[0]!.children[1]!
     expect(list.getAttribute('role'), 'a list in the accessibility tree').toBe('list')
-    expect(Array.from(list.children).map((li) => [li.tagName, Array.from(li.children).map((p) => p.className)])).toEqual(
-      Array.from({ length: 3 }, () => ['LI', ['note-parts__label', 'note-parts__para', 'note-parts__para', 'note-parts__para']]),
-    )
-    expect(Array.from(list.querySelectorAll('li > p.note-parts__label')).map((p) => p.textContent)).toEqual([
-      '2026 through 2028',
-      'If you’re still working in 2029 through 2032',
-      'If you’re still working in 2033 through 2035',
+    // A credit run inside the list is its pair as one paragraph, then the close; the short run keeps three (call (1b)).
+    expect(Array.from(list.children).map((li) => [li.tagName, Array.from(li.children).map((p) => p.className)])).toEqual([
+      ['LI', ['note-parts__label', 'note-parts__para', 'note-parts__para']],
+      ['LI', ['note-parts__label', 'note-parts__para', 'note-parts__para', 'note-parts__para']],
+      ['LI', ['note-parts__label', 'note-parts__para', 'note-parts__para']],
     ])
-    expect(notes[0]!.children[0]!.textContent!.endsWith(` ${LEAD}`), 'the scoped lead ends the opening, before the runs’ list').toBe(true)
-    expect(notes[0]!.children[2]!.textContent, 'the survivor part, never one more run').toBe(
-      'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year. ' +
-        'At your spending, that’s at most $15,750 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.',
-    )
-    expect(notes[0]!.querySelector('dl'), 'no description list: the coda’s list is gone').toBeNull()
-    expect(notes[1]!.textContent).toBe(MOVED_LINE)
+    expect(Array.from(list.querySelectorAll('li > p.note-parts__label')).map((p) => p.textContent)).toEqual([
+      '2026 through 2028, while you’re still working',
+      '2029 through 2032, while you’re still working',
+      '2033 through 2035, while you’re still working',
+    ])
+    expect(notes[0]!.children[2]!.textContent, 'the survivor part, never one more run').toBe(TM_RUNS.closing!.join(' '))
+    expect(notes[0]!.querySelector('dl'), 'no description list').toBeNull()
+    expect(container.textContent, 'no moved note’s lead anywhere on the gate').not.toContain(copy.stalenessLeftOverNote)
+    expect(screen.getByRole('button', { name: copy.reentryAffirmCta })).toHaveAccessibleDescription(UPDATE_DOOR_MOVED.scope)
   })
 
-  it('R1: W’s stale line wins where both are handed over (the order the Result’s one slot reads them in) — the typed-below line never rides beside it', () => {
+  it('call (1a), `rulesLine`: TM with the working-years clock fired — the clause rides that rules line, the typed-below line draws without it, no moved note, and the door’s plain scope', () => {
+    const d = DEV_SEEDS.datesavedtypedmoved
+    const view = typedBelowView(d, true, withOlderWorkingYearsStamp(savedDraft(d)))
+    expect(view.leftOverClauseHost, 'the working-years line hosts it').toBe(true)
+    expect(view.noteLines).toEqual([`${copy.stalenessWorkingYears} ${TM_CLAUSE}`, { text: notePartsText(tmLine(false)), parts: tmLine(false) }])
+    expect(view.door).toEqual(UPDATE_DOOR)
+  })
+
+  it('call (1a), `ownNote`: a moved left over with no typed-below line and no rules line (`datesavedmoved`, a yes) — its own note, its lead, its sentence and its door sentence, unchanged', () => {
+    const d = DEV_SEEDS.datesavedmoved
+    expect(typedBelowSentence(d), 'the premise: no typed-below line').toBeNull()
+    const view = typedBelowView(d)
+    expect(view.leftOverClauseHost).toBe(false)
+    expect(view.noteLines).toEqual([
+      `${copy.stalenessLeftOverNote} You said all of it goes into your savings when it was $16,985. It’s $27,537 now, so each working year adds at most $16,985 of its left over to your savings, the smaller of the two. ${copy.stalenessLeftOverGateDoor}`,
+    ])
+    expect(view.door, 'no W door: a yes that is fresh').toBeNull()
+  })
+
+  it('call (1a), the fallback: where the typed-below line was assigned the clause and did not carry it, the moved fact falls back to its own note — never silence — and the door keeps its plain scope (the structure reports carriage; a forced `carriedMoved: false`)', () => {
+    const d = DEV_SEEDS.datesavedtypedmoved
+    const s = savedDraft(d)
+    const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: false, leftOverStale: true })
+    const real = typedBelowSentence(d)!
+    const notCarried: ReentryTypedBelow = { ...real, compose: () => real.compose(false) }
+    expect(notCarried.compose(true).carriedMoved, 'the plant: assigned, not carried').toBe(false)
+    const view = composeReentryParts(s, report, { costStale: null, leftOverStale: movedSentences(d), typedBelow: notCarried })
+    expect(view.noteLines).toEqual([{ text: notePartsText(tmLine(false)), parts: tmLine(false) }, TM_MOVED_NOTE])
+    expect(view.door).toEqual(UPDATE_DOOR)
+    // …and the fact with no sentence still throws, whichever host would have said it.
+    expect(() => composeReentryParts(s, report, { costStale: null, leftOverStale: null, typedBelow: real })).toThrow(/left over moved/)
+  })
+
+  it('R1: W’s stale line wins where both are handed over (the order the Result’s one slot reads them in) — the typed-below line never rides beside it, and a moved fact offered to that undrawn line falls back to its own note (call (1a))', () => {
     const d = DEV_SEEDS.datesavedrisen
     const s = savedDraft(d)
     const report = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: true, leftOverStale: false })
     const line = workingYearCostStaleLine(d)!
     const door = workingYearCostStaleDoor(d)!
+    const never = { parts: { opening: 'never rendered', segments: [], door: null }, carriedMoved: false } as const
     const view = composeReentryParts(s, report, {
       costStale: { line, door: door.gate, canChange: true },
       leftOverStale: null,
-      typedBelow: { line: { opening: 'never rendered', segments: [], door: null }, door: { heading: 'h', scope: 's', route: 'r' }, canChange: true },
+      typedBelow: { compose: () => never, door: { plain: { heading: 'h', scope: 's', route: 'r' }, carryingMoved: { heading: 'h', scope: 's', route: 'r' } }, canChange: true },
     })
     expect(view.noteLines.map((l) => (typeof l === 'string' ? l : l.text))).not.toContain('never rendered')
     expect(view.door).toEqual(door.gate)
+    // …and the moved fact offered to the typed-below line that was never drawn (call (1a), read off what was drawn): its
+    // own note, never silence. Unreachable with a real draft (a moved left over needs a fresh W), so the report's two facts
+    // are set by hand here, with a line that WOULD carry the clause had it been drawn.
+    const both = deriveStaleness(s, TODAY, exposureForDraft(d), { costStale: true, leftOverStale: true })
+    expect(both.workingYear.leftOverStale && both.workingYear.costStale, 'the premise: both facts set').toBe(true)
+    const wouldCarry = { parts: { opening: 'never rendered either', segments: [], door: null }, carriedMoved: true } as const
+    const neverDrawn = composeReentryParts(s, both, {
+      costStale: { line, door: door.gate, canChange: true },
+      leftOverStale: { text: 'A fixture moved sentence.', clause: 'A fixture clause.', canChange: true },
+      typedBelow: { compose: () => wouldCarry, door: { plain: { heading: 'h', scope: 's', route: 'r' }, carryingMoved: { heading: 'h', scope: 's', route: 'r' } }, canChange: true },
+    })
+    const texts = neverDrawn.noteLines.map((l) => (typeof l === 'string' ? l : l.text))
+    expect(texts).not.toContain('never rendered either')
+    expect(texts.at(-1), 'the moved fact in its own note').toBe(`${copy.stalenessLeftOverNote} A fixture moved sentence. ${copy.stalenessLeftOverGateDoor}`)
+    expect(neverDrawn.door).toEqual(door.gate)
   })
 
   it('the affirm button names what it affirms: "Balances still about right — show my answer" (hunter F7 at U11 walk 6)', () => {

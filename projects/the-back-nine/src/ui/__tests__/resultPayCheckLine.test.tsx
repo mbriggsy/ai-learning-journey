@@ -158,10 +158,11 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
     }
   }
   /** The survivor part's words on the stale line, typed by hand (W8-R12 (a)): the survivor rule counts 75 % of each
-   *  figure on these witnesses (no budget, no medical held whole), its close the line's first rider, so glossed. */
+   *  figure on these witnesses (no budget, no medical held whole), each charge beside its answer (the out-of-date family
+   *  names the answers: the walk-9 form council's call (4)), its close the line's first rider, so glossed (call (5)). */
   const STALE_SURVIVOR = (quote: string, atQuote: string, most: string): string =>
-    `If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $${atQuote} at your spending of $${quote} a year. ` +
-    `At your spending, that’s at most $${most} a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, when your income two years before was high).`
+    `In a working year with only one of you alive, that year’s costs count as $63,000 in this answer at your figure of $84,000 a year, and $${atQuote} in the answer at your spending of $${quote} a year. ` +
+    `At your spending, that’s at most $${most} a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge, the extra Medicare premium you pay when your income two years before was high.`
 
   it('`datesavedstale`: W’s one line leads with the either-way sentence in "confirm or change", then "This answer now" — after work it already uses $78,000, the $16,985 dated, none of it added until they confirm or change it, and no amount guessed at; no moved line speaks', () => {
     plantDateHero()
@@ -228,7 +229,20 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
       labels: [copy.workingCostStaleLabelNow, slots.workingCostStaleLabelIf('105,000')],
       bodies: [
         NOW('105,000', [slots.workingCostStaleLeftOverNoneNow('16,985', '84,000')]),
-        [slots.workingCostStaleLeftOverIfFirstShortRun(2026, 2032, '3,652', '4,015', '105,000', '84,000', '16,985', true), copy.workingCostStaleLowerCounts].join(' '),
+        [
+          // The run's shortfall in the one amount rule (the walk-9 form council's call (1)): $4,015 in 2026 through 2030, then
+          // $3,652 in 2031 through 2032, each figure beside its own years.
+          slots.workingCostStaleLeftOverIfFirstShortRun(
+            2026,
+            2032,
+            { kind: 'two', groups: [{ figure: '4,015', firstYear: 2026, lastYear: 2030 }, { figure: '3,652', firstYear: 2031, lastYear: 2032 }] },
+            '105,000',
+            '84,000',
+            '16,985',
+            true,
+          ),
+          copy.workingCostStaleLowerCounts,
+        ].join(' '),
       ],
       closing: STALE_SURVIVOR('105,000', '78,750', '15,750'),
       door: null,
@@ -380,18 +394,19 @@ describe('build 2’s left-over lines through Result (U14, R12)', () => {
 // spending figure, "All of it" stored at $16,985, the quote answer's $10,985 in every year).
 describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
   // Every seed here opens the survivor gate (Sam, 60 and retired, can die from 66, in 2032, while Alex works through 2035):
-  // the one-run opener carries "you’re both alive" and the survivor part's two sentences close the paragraph (0.75 of each
-  // figure, $63,000 and $67,500, X $4,500). The cap sentence names the floor (KD5, W8-R8), the run's three beats follow
-  // (KD4), and the gloss rides the line's first rider alone (KD3).
+  // the survivor part's two sentences close the paragraph (0.75 of each figure, $63,000 and $67,500, X $4,500). The walk-9
+  // form council's order (call (1)): the counts sentence, the lean naming the quote in dollars (call (2)), then the cap
+  // sentence with no dollars of the quote and no floor aside. This is T's twin (one run, the cap sentence drawn, the
+  // answer at the spending adding the cap's $10,985 in every year: call (2)), so no first beat, and the both-alive scope
+  // rides the close's own claim; the gloss rides the line's first rider alone (call (5)).
   const TYPED_LINE =
     'This answer counts a working year at your own figure of $84,000 a year, below your spending of $90,000 a year. ' +
-    'A working year almost always costs at least what you spend, so this answer can look better than it really is. ' +
-    'At your spending of $90,000 a year, the least a working year almost always costs, your first working year would have $10,985 left over, so the answer at that spending would add at most $10,985 in any working year. ' +
-    'Each working year you’re both alive, the answer at your spending of $90,000 a year would add at most $10,985 a year. ' +
+    'A working year almost always costs at least your spending of $90,000 a year, so this answer can look better than it really is. ' +
+    'At your spending, your first working year would have $10,985 left over, so the answer at that spending would add at most $10,985 in any working year. ' +
     'This answer adds at most $16,985 a year to your savings. ' +
-    'At your spending, that’s $6,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, when your income two years before was high). ' +
-    'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year. ' +
-    'At your spending, that’s at most $4,500 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.'
+    'At your spending, that’s $6,000 less in your savings in each working year you’re both alive, except for any difference between the two answers in income tax and Medicare’s income surcharge, the extra Medicare premium you pay when your income two years before was high. ' +
+    'In a working year with only one of you alive, that year’s costs count as $63,000 at your figure of $84,000 a year and $67,500 at your spending of $90,000 a year. ' +
+    'At your spending, that’s at most $4,500 a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge.'
   const updateDoor = () => screen.queryByRole('button', { name: 'Update your figure for a working year' })
 
   it('`datesavedtyped` (one run): the line in the slot’s plain <p>, byte for byte — no lead before it, its own first sentence names the answer and both figures, the survivor part’s sentences last inside it — and the update door inline, which lands on the W row', () => {
@@ -416,39 +431,43 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
   })
 
   // TM (`datesavedtypedmoved`: $26,985 at $84,000 against the stored $16,985, $105,000 of spending): three runs.
-  const COUNTS =
-    'This answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year. ' +
-    'A working year almost always costs at least what you spend, so this answer can look better than it really is.'
+  /** The counts sentence alone (the walk-9 form council's call (2) split the lean out of it). */
+  const COUNTS = 'This answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year.'
   // The moved clause in W8-R5 (b)'s words: "all the money left over in a working year", never the referent-less "all of it".
   const MOVED_AT_TYPED =
     'You said all the money left over in a working year goes into your savings, when your first working year had $16,985 left over. At your figure of $84,000 a year, it has $26,985 left over now. So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.'
-  /** The cap sentence (KD5): year 0 at the $105,000 leaves $5,985, below the stored $16,985; it names the floor (W8-R8). */
+  /** The lean, its own sentence naming the quote in dollars, after the clause (call (2); call (1a)'s order). */
+  const LEAN = 'A working year almost always costs at least your spending of $105,000 a year, so this answer can look better than it really is.'
+  /** The cap sentence: year 0 at the $105,000 leaves $5,985, below the stored $16,985; the lean said the quote's dollars,
+   *  so it drops them and the floor aside (call (2)). */
   const CAP =
-    'At your spending of $105,000 a year, the least a working year almost always costs, your first working year would have $5,985 left over, so the answer at that spending would add at most $5,985 in any working year.'
-  /** A credit run's three beats (KD4); the line's first rider alone carries the gloss (KD3). */
+    'At your spending, your first working year would have $5,985 left over, so the answer at that spending would add at most $5,985 in any working year.'
+  /** A credit run in a multi-run list (call (1b)): its two beats one paragraph, the quote's dollars and "to your savings"
+   *  not restated (the lean and the lead said them), then the close; the line's first rider alone carries the gloss. */
   const credit = (gloss: string): readonly string[] => [
-    'The answer at your spending of $105,000 a year would add at most $5,985 a year.',
-    'This answer adds at most $16,985 a year to your savings.',
-    `At your spending, that’s $11,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge${gloss}.`,
+    'The answer at your spending would add at most $5,985 a year. This answer adds at most $16,985 a year.',
+    `At your spending, that’s $11,000 a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge${gloss}.`,
   ]
+  // Every run labelled "…, while you’re still working" (call (3)); the short run's figures each beside their own years
+  // (call (1)'s amount rule), and the typed figure's dollars said once, in the counts sentence.
   const TM_RUNS: readonly (readonly [string, readonly string[]])[] = [
-    ['2026 through 2028', credit(' (the extra premium Medicare charges once you’re on it, when your income two years before was high)')],
+    ['2026 through 2028, while you’re still working', credit(', the extra Medicare premium you pay when your income two years before was high')],
     [
-      'If you’re still working in 2029 through 2032',
+      '2029 through 2032, while you’re still working',
       [
-        'At your spending of $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, which would be taken from your savings, and the answer at that spending would add nothing.',
-        'Your figure of $84,000 a year leaves those shortfalls out of this answer, which adds at most $16,985 a year to your savings.',
-        'At your spending, that’s at most $20,637 to $21,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.',
+        'At your spending, each working year you’re both alive comes up $4,015 short in 2029 through 2030 and $3,652 short in 2031 through 2032, which would be taken from your savings, and the answer at that spending would add nothing.',
+        'Your figure leaves those shortfalls out of this answer, which adds at most $16,985 a year.',
+        'At your spending, that’s at most $21,000 less in your savings in 2029 through 2030 and $20,637 less in 2031 through 2032, except for any difference between the two answers in income tax and Medicare’s income surcharge.',
       ],
     ],
-    ['If you’re still working in 2033 through 2035', credit('')],
+    ['2033 through 2035, while you’re still working', credit('')],
   ]
   /** The Result's scoped lead, last in the opening above two or more runs under the survivor gate. */
   const LEAD = 'What each answer adds to your savings in each working year you’re both alive:'
   /** TM's survivor part (KD7): the two survivor charges, 0.75 of $84,000 and of $105,000, then X $15,750. */
   const TM_SURVIVOR =
-    'If only one of you is alive in a working year, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year. ' +
-    'At your spending, that’s at most $15,750 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.'
+    'In a working year with only one of you alive, that year’s costs count as $63,000 at your figure of $84,000 a year and $78,750 at your spending of $105,000 a year. ' +
+    'At your spending, that’s at most $15,750 a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge.'
   const block = (opening: string, button: boolean): string =>
     '<div class="note-parts fod-note cs-paycheck-note">' +
     `<p class="note-parts__opening">${opening}</p>` +
@@ -462,13 +481,13 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     (button ? '<button type="button" class="band-premise__cta note-parts__cta">Update your figure for a working year</button>' : '') +
     '</div>'
 
-  it('TM (three runs, the left over ALSO moved): the typed-below line holds the one slot as a BLOCK — the counts sentence, the moved clause, the cap sentence and the scoped lead, then the ordered list of three runs, then the survivor part’s paragraph — its update button drawn last; no moved line of its own; where a rules line hosts the clause at unlock, the block opens on the counts sentence, the cap sentence and the lead alone and the clause rides the rules note', () => {
+  it('TM (three runs, the left over ALSO moved): the typed-below line holds the one slot as a BLOCK — the counts sentence, the moved clause, the lean, the cap sentence and the scoped lead, then the ordered list of three runs, then the survivor part’s paragraph — its update button drawn last; no moved line of its own; where a rules line hosts the clause at unlock, the block opens on the counts sentence, the lean, the cap sentence and the lead alone and the clause rides the rules note', () => {
     expect(DEV_SEEDS.datesavedtypedmoved.workingYearCost).toMatchObject({ kind: 'entered', amountReal: 84_000 })
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedtypedmoved)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
     expect(document.querySelectorAll('.cs-paycheck-note')).toHaveLength(1)
-    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${MOVED_AT_TYPED} ${CAP} ${LEAD}`, true))
+    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${MOVED_AT_TYPED} ${LEAN} ${CAP} ${LEAD}`, true))
     expect(document.body.textContent, 'no moved line of its own').not.toContain(copy.stalenessLeftOverNote)
     expect(line()!.lastElementChild, 'the button is the block’s last child').toBe(updateDoor())
     fireEvent.click(updateDoor()!)
@@ -477,7 +496,7 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedtypedmoved)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} stalenessNote leftOverClauseHost />)
-    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${CAP} ${LEAD}`, true))
+    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${LEAN} ${CAP} ${LEAD}`, true))
     expect(document.querySelector('.cs-staleness-note')?.textContent, 'the moved clause rides the rules note, its figure named there too').toBe(
       `${copy.stalenessHeroNote} ${MOVED_AT_TYPED}`,
     )
@@ -486,7 +505,7 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     plantDateHero()
     appModel.update(() => DEV_SEEDS.datesavedtypedmoved)
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
-    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${MOVED_AT_TYPED} ${CAP} ${LEAD}`, false))
+    expect(line()!.outerHTML).toBe(block(`${COUNTS} ${MOVED_AT_TYPED} ${LEAN} ${CAP} ${LEAD}`, false))
     expect(updateDoor()).toBeNull()
   })
 
@@ -494,7 +513,7 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
   // $90,000 typed — on the Result. The runs' sentences with no year noun of their own take their scope from the lead, so
   // the lead must come BEFORE the runs' list in the DOM a screen reader walks, and the survivor part's paragraph after
   // it, outside it (KD7).
-  it('AE1 through the Result: C at 100 % sticky — the scoped lead ends the opening <p>, which precedes the runs’ list; the two `same` runs sit in it, their figure stated (W8-R5 (a)); the short run’s year subject is scoped; the whole-gap survivor part is the paragraph after the list, before the button', () => {
+  it('AE1 through the Result: C at 100 % sticky — the scoped lead ends the opening <p>, which precedes the runs’ list; the two `same` runs sit in it, their figure stated in one sentence for both answers (W8-R5 (a); the walk-9 form council’s call (1b)); the short run’s year subject is scoped; the whole-gap survivor part is the paragraph after the list, before the button', () => {
     plantDateHero()
     appModel.update(() => councilBudgetHousehold(1))
     render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
@@ -510,27 +529,25 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     expect(runs.contains(survivor), 'the survivor part is never one more item of the runs’ list').toBe(false)
     expect([...runs.querySelectorAll(':scope > li')].map((li) => [...li.querySelectorAll('p')].map((p) => p.textContent))).toEqual([
       [
-        '2026 through 2028',
-        'The answer at your budget’s $105,000 a year, the least a working year almost always costs, would add at most $5,985 a year.',
-        'This answer adds at most $5,985 a year to your savings.',
-        'At your budget, that’s the same in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge (the extra premium Medicare charges once you’re on it, when your income two years before was high).',
+        '2026 through 2028, while you’re still working',
+        'Both answers add at most $5,985 a year.',
+        'At your budget, that’s the same in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge, the extra Medicare premium you pay when your income two years before was high.',
       ],
       [
-        'If you’re still working in 2029 through 2032',
-        'At your budget’s $105,000 a year, each working year you’re both alive comes up $3,652 to $4,015 short, which would be taken from your savings, and the answer at that budget would add nothing.',
-        'Your figure of $90,000 a year leaves those shortfalls out of this answer, which adds at most $5,985 a year to your savings.',
-        'At your budget, that’s at most $9,637 to $10,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.',
+        '2029 through 2032, while you’re still working',
+        'At your budget, each working year you’re both alive comes up $4,015 short in 2029 through 2030 and $3,652 short in 2031 through 2032, which would be taken from your savings, and the answer at that budget would add nothing.',
+        'Your figure leaves those shortfalls out of this answer, which adds at most $5,985 a year.',
+        'At your budget, that’s at most $10,000 less in your savings in 2029 through 2030 and $9,637 less in 2031 through 2032, except for any difference between the two answers in income tax and Medicare’s income surcharge.',
       ],
       [
-        'If you’re still working in 2033 through 2035',
-        'The answer at your budget’s $105,000 a year would add at most $5,985 a year.',
-        'This answer adds at most $5,985 a year to your savings.',
-        'At your budget, that’s the same in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.',
+        '2033 through 2035, while you’re still working',
+        'Both answers add at most $5,985 a year.',
+        'At your budget, that’s the same in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge.',
       ],
     ])
     expect(survivor.textContent).toBe(
-      'If only one of you is alive in a working year, that year’s costs still count in full: your figure of $90,000 a year and your budget’s $105,000 a year. ' +
-        'At your budget, that’s at most $15,000 a year less in your savings, not including any difference between the two answers in income tax and Medicare’s income surcharge.',
+      'In a working year with only one of you alive, that year’s costs still count in full: your figure of $90,000 a year and your budget’s $105,000 a year. ' +
+        'At your budget, that’s at most $15,000 a year less in your savings, except for any difference between the two answers in income tax and Medicare’s income surcharge.',
     )
   })
 

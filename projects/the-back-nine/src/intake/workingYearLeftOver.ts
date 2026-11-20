@@ -44,8 +44,10 @@ import {
   type LeftOverWaitingWords,
   type TypedBelowAmount,
   type TypedBelowAnswer,
+  type TypedBelowLeanForm,
   type TypedBelowSpanFrame,
   type TypedBelowSurvivorFrame,
+  type TypedBelowYearGroup,
   type WorkingCostAct,
 } from '@ui/copy'
 import { plainNote, type GateDoor, type NoteDoor, type NoteParts, type NoteSegment } from '@ui/noteParts'
@@ -95,9 +97,9 @@ export function writeWorkingYearLeftOver(
  *  `typedBelow` is the figure today's left over rests on, where that needs saying: the typed W (formatted, yearly)
  *  exactly where the typed-below line speaks (`freshTypedBelow`, the line's and its door's own predicate), else
  *  `null`. There the live figure is year 0 at the TYPED figure, while R1's line beside it — on every host that draws
- *  the moved words: the Result's slot (as its clause), a rules note's clause above it, the gate's own line after it,
- *  and the seat's spans below its radios — names figures at today's quote (the whole-window rebuild's spans), so the
- *  words name the typed figure
+ *  the moved words: the Result's slot and the gate (as that line's own clause, the walk-9 form council's call (1a)), a
+ *  rules note's clause above it, the gate's own moved line where neither carries it, and the seat's spans below its
+ *  radios — names figures at today's quote (the whole-window rebuild's spans), so the words name the typed figure
  *  (the walk-6 round review's L3-3 / L1-5 / L2-5; U11 walk 7's R2 for the seat). Carried here, not decided per host,
  *  so no host can draw the bare pair beside R1's line (insight 081). */
 export interface WorkingYearLeftOverMoved {
@@ -235,6 +237,10 @@ export interface WorkingYearShortRun {
   /** Whole dollars, positive: the smallest and the largest shortfall in the run. */
   readonly least: number
   readonly most: number
+  /** Whole dollars, positive: each year's shortfall as it prints, in year order from `firstYear` (one per calendar year
+   *  of the run). The run's sentences say them in the one amount rule ({@link typedBelowAmountOf}: the walk-9 form
+   *  council's call (1), flip (iii)), each figure beside its own years where two groups print. */
+  readonly byYear: readonly number[]
 }
 /** A later run of short years at the quote, and where the years that don't come up short resume after it (U11
  *  walk 4, (be): the gain years named, read off the ledger rows). `resumesFrom` — the calendar year right after
@@ -265,16 +271,18 @@ export function shortRunFrom(
   after: readonly WorkingYearLedgerLaterYear[],
 ): WorkingYearShortRun {
   let lastYear = first.calendarYear
-  let least = -first.bottomLine
-  let most = least
+  const byYear = [-first.bottomLine]
   for (const y of after) {
     if (y.calendarYear !== lastYear + 1 || y.bottomLine >= 0) break
     lastYear = y.calendarYear
-    least = Math.min(least, -y.bottomLine)
-    most = Math.max(most, -y.bottomLine)
+    byYear.push(-y.bottomLine)
   }
-  return { firstYear: first.calendarYear, lastYear, least, most }
+  return { firstYear: first.calendarYear, lastYear, least: Math.min(...byYear), most: Math.max(...byYear), byYear }
 }
+
+/** A run of short years' shortfall in the one amount rule ({@link typedBelowAmountOf}), from its own per-year figures. */
+const shortRunAmount = (r: WorkingYearShortRun): TypedBelowAmount =>
+  typedBelowAmountOf(r.byYear.map((dollars, i) => ({ calendarYear: r.firstYear + i, dollars })))
 
 /** The first later run of short years in a picture's later rows (in year order), with where the years that don't
  *  come up short resume after it ({@link WorkingYearLaterShort}), or `null` where no later row prints short.
@@ -405,13 +413,13 @@ export function workingYearLeftOverWaitingSeat(d: ScenarioDraft): string {
   const words =
     q.kind === 'short'
       ? [
-          slots.workingLedgerLeftOverWaitingShort(quote, r.firstYear, r.lastYear, formatMoney(r.least), formatMoney(r.most), bothAlive),
+          slots.workingLedgerLeftOverWaitingShort(quote, r.firstYear, r.lastYear, shortRunAmount(r), bothAlive),
           slots.workingCostStaleSeatShortLean(held, oneYear),
           slots.workingLedgerLeftOverWaitingShortUpdate(quote, r.firstYear, oneYear),
         ]
       : [
           copy[WORKING_COST_ACT_COPY[workingYearCostAct(d)].waitingSeat],
-          slots.workingCostStaleSeatLaterShort(quote, r.firstYear, r.lastYear, formatMoney(r.least), formatMoney(r.most), held, bothAlive),
+          slots.workingCostStaleSeatLaterShort(quote, r.firstYear, r.lastYear, shortRunAmount(r), held, bothAlive),
         ]
   return [...words, ...(survivor === null ? [] : staleSurvivorPart(d, survivor))].join(' ')
 }
@@ -480,13 +488,13 @@ const laterShortWords = (year0: number, s: WorkingYearLaterShort, f: TailFigures
   ...(eachDollar === null ? [] : [eachDollar]),
   s.lastYear === s.firstYear
     ? slots.workingCostStaleShortLaterYear(s.firstYear, formatMoney(s.most), f.held, f.bothAlive)
-    : slots.workingCostStaleShortLaterYears(s.firstYear, s.lastYear, formatMoney(s.least), formatMoney(s.most), f.held, f.bothAlive),
+    : slots.workingCostStaleShortLaterYears(s.firstYear, s.lastYear, shortRunAmount(s), f.held, f.bothAlive),
 ]
 // Year 0 alone carries no scope (no one can have died by then); a run from it does.
 const firstShortWords = (s: WorkingYearShortRun, f: TailFigures): string =>
   s.lastYear === s.firstYear
     ? slots.workingCostStaleLeftOverIfFirstShort(s.firstYear, formatMoney(s.most), f.quote, f.held, f.stored)
-    : slots.workingCostStaleLeftOverIfFirstShortRun(s.firstYear, s.lastYear, formatMoney(s.least), formatMoney(s.most), f.quote, f.held, f.stored, f.bothAlive)
+    : slots.workingCostStaleLeftOverIfFirstShortRun(s.firstYear, s.lastYear, shortRunAmount(s), f.quote, f.held, f.stored, f.bothAlive)
 /** Each arm's lead (closing the opening), whether year 0 at the quote leaves nothing over (`short`: B's "This answer
  *  now" then ends on what is true today, R3), and the sentences under "If a working year costs $X" (`null`: no such
  *  part). */
@@ -630,11 +638,17 @@ function composeStaleSurvivor(d: ScenarioDraft): TypedBelowSurvivor | null {
 }
 
 /** The stale line's (and its waiting seat's) survivor part: KD7's sentences, the held figure in the typed figure's place,
- *  today's quote in its source's words; its close the line's first rider, so glossed (KD3). */
+ *  today's quote in its source's words, the two answers named beside their figures (the walk-9 form council's call (4):
+ *  this family compares two answers in dollars nowhere else); its close the line's first rider, so glossed (KD3). */
 function staleSurvivorPart(d: ScenarioDraft, survivor: TypedBelowSurvivor): readonly string[] {
   const s = workingYearCostStaleSentence(d)
   const q = workingYearQuote(d)
-  const frame: TypedBelowSurvivorFrame = { typed: s?.held ?? formatMoney(survivor.chargeAtTyped), quote: s?.quote ?? formatMoney(q.annualReal), source: q.source }
+  const frame: TypedBelowSurvivorFrame = {
+    typed: s?.held ?? formatMoney(survivor.chargeAtTyped),
+    quote: s?.quote ?? formatMoney(q.annualReal),
+    source: q.source,
+    names: 'answers',
+  }
   return survivorPartOf(survivor, frame, irmaa.value.magiLookbackYears)
 }
 
@@ -778,15 +792,15 @@ export function workingYearCostTypedBelowNote(d: ScenarioDraft): string | null {
 //    given, and whether to stamp it stays that entry's council call. ──
 
 /** Where the typed-below line is said, and so its words: on the gate the answer is "Your" (none is on screen yet); on
- *  the Result it is "This", and `carriesMoved` says whether this line holds the one standing slot the moved line would
- *  otherwise take. Where the left over has moved, the moved words say the cap ("adds at most … the smaller of the
- *  two"): as this line's clause, after the counts sentence and before the spans, where it holds the Result's slot; and
- *  not here at all on the gate (the moved line follows as its own line, one cause, one line) or where a tax, state-tax
- *  or working-years line hosts the moved clause on the hero's rules note (the Result passes `!leftOverClauseHost`).
- *  Each span still states this answer's own credit (the rebuild's KD2, its second pilot call: "each item states the
- *  pair"; a span's credit can drift below the cap), so under a moved left over TM says $16,985 in the moved words and
- *  again in each span. Walk 8 reads both orders; the dissent's base-pair form is the fallback. */
-export type TypedBelowHost = { readonly kind: 'gate' } | { readonly kind: 'result'; readonly carriesMoved: boolean }
+ *  the Result it is "This". `carriesMoved` — this line hosts the moved left over's clause, one decision per host, read by
+ *  both alike (the walk-9 form council `wf_9f28e691-1dc`, call (1a); `docs/plans/features/typed-below-walk9-form-build-spec.md`):
+ *  on the gate, `composeReentry`'s host Record (no tax, state-tax or working-years line fired, and this line is the one
+ *  drawn), through `ReentryTypedBelow.compose`; on the Result, the session's `!leftOverClauseHost`. Where the left over
+ *  has moved, the moved words say the cap ("adds at most … the smaller of the two"), after the counts sentence and before
+ *  the lean, ONE order on both hosts. Each run still states this answer's own credit (the rebuild's KD2, its second pilot
+ *  call: "each item states the pair"; a span's credit can drift below the cap), so under a moved left over TM says
+ *  $16,985 in the moved words and again in each run. */
+export type TypedBelowHost = { readonly kind: 'result' | 'gate'; readonly carriesMoved: boolean }
 
 /** Where the seat's spans are drawn (the rebuild's KTD6, host 3), and so whether its line opens on the counts sentence:
  *  in the details sheet the W row's typed-below note sits directly above the seat and carries the lean (`sheet`); on the
@@ -871,9 +885,9 @@ export interface TypedBelowDollars {
  *  over V9), never the two printed shortfalls subtracted. A credit range survives only where one binding term drifts; a
  *  shortfall or difference range is a fact of the picture. Every figure is the ALL-ALIVE picture's. `same` states the
  *  one credit both answers give (the walk-8 card's W8-R5 (a): "adds the same" with no figure read as no figure at all).
- *  `pairing` — the year pairing its words need ({@link TypedBelowPairing}), present exactly where a later range runs the
- *  other way, else absent (never written as `undefined`). */
-export type TypedBelowSpan = { readonly firstYear: number; readonly lastYear: number; readonly pairing?: TypedBelowPairing } & (
+ *  How the words SAY a figure that varies across the run is the amount rule's ({@link typedBelowAmountOf}, read off the
+ *  run's years), never these two ends. */
+export type TypedBelowSpan = { readonly firstYear: number; readonly lastYear: number } & (
   | { readonly kind: 'same'; readonly credit: TypedBelowDollars }
   | { readonly kind: 'bothCredit'; readonly credit: TypedBelowDollars; readonly creditAtQuote: TypedBelowDollars; readonly difference: TypedBelowDollars }
   | { readonly kind: 'quoteCreditsNothing'; readonly credit: TypedBelowDollars; readonly difference: TypedBelowDollars }
@@ -896,6 +910,10 @@ export type WorkingYearTypedBelowWindow =
       readonly spans: readonly TypedBelowSpan[]
       /** How the answer at today's quote is capped ({@link TypedBelowQuoteCap}): the cap sentence's one decision. */
       readonly quoteCap: TypedBelowQuoteCap
+      /** THIS answer's cap, whole dollars on the printed grain: the smaller of the stored figure and year 0's print at the
+       *  typed figure (R8; the stored figure IS a print, KTD8). Where a run's credit prints below it in every year, that
+       *  run's own left over binds, and the typed side says so (NL's third limit, the walk-9 form council's call (1)). */
+      readonly typedCap: number
       /** The survivor read ({@link TypedBelowSurvivor}): `null` exactly where the gate is off. It rides THIS arm only, so a
        *  line can never show the scope without the survivor part's figure (the survivor-path build's R10). */
       readonly survivor: TypedBelowSurvivor | null
@@ -1023,7 +1041,7 @@ function composeTypedBelowWindow(d: ScenarioDraft): WorkingYearTypedBelowWindow 
             ? { kind: 'yearZeroLeftOver', leftOver: year0AtQuote }
             : { kind: 'stored' }
   if (quoteCap === 'unknown') return { kind: 'unknown' }
-  return { kind: 'read', years, spans: spansOf(years), quoteCap, survivor }
+  return { kind: 'read', years, spans: spansOf(years), quoteCap, typedCap: workingYearBottomLine(Math.min(year0, stored)), survivor }
 }
 
 /** The gate (KTD3): the calendar years among the window's working years (`calendarYears`, index-aligned with the sim
@@ -1135,8 +1153,8 @@ const shortAtTypedDollars = (y: TypedBelowYear): number => drawOf(y.bottomLine)
 export type TypedBelowFigure = 'creditAtQuote' | 'credit' | 'shortAtQuote' | 'shortAtTyped' | 'difference'
 
 /** Each kind's figures in the order its words state them (the walk-8 form council's KD4: the spending side, the typed
- *  side, the close), each with its yearly read on the printed grain — the ONE home both a span's figures and the pairing
- *  law read, so they can never name two figures for one (an exhaustive Record, insight 147). */
+ *  side, the close), each with its yearly read on the printed grain — the ONE home a span's figures, the split rule and
+ *  the amount rule all read, so they can never name two figures for one (an exhaustive Record, insight 147). */
 const SPAN_FIGURE_READS: Readonly<Record<TypedBelowYearKind, readonly (readonly [TypedBelowFigure, (y: TypedBelowYear) => number])[]>> = {
   same: [['credit', creditDollars]],
   bothCredit: [
@@ -1164,33 +1182,20 @@ const SPAN_FIGURE_READS: Readonly<Record<TypedBelowYearKind, readonly (readonly 
   ],
 }
 
-/** A run's year pairing (the walk-8 form council's KD6, "ranges carry each end's year"; the walk-8 card's W8-R3 (a): the
- *  pension household's "at most $3,005 to $3,368, $13,617 to $13,980 less" paired crosswise in reading order). Present only
- *  where a later range in the run runs the other way from the first (its value where the first range is least is its
- *  most); then the first range names its two end years and every range prints in their time order:
- *  · `named` — the run's first range, its first figure in the words' order that prints as a range;
- *  · `years` — that range's two end years, in time order: each range prints its figure in the first, then in the second;
- *  · `mostFirst` — the ranges whose figure in `years[0]` is their most, so they print most first. */
-export interface TypedBelowPairing {
-  readonly named: TypedBelowFigure
-  readonly years: readonly [number, number]
-  readonly mostFirst: readonly TypedBelowFigure[]
-}
-
-/** KD6's pairing law, pure (exported for its property test). A run's ranges pair when every later range's ends fall on
- *  the years where the first range is least and where it is most, one value on each: then a reader who pairs the ends in
- *  order pairs each year with itself. Where every later range rises the first one's way the words print each range least
- *  first and name no year (`null`, as on TM's 2029 through 2032: "$3,652 to $4,015 short", "$20,637 to $21,000 a year
- *  less"); where one runs the other way the first range names its end years, so each must fall in ONE year (the
- *  pairing). `'fails'` where a later range's ends fall elsewhere — `creditsJoin` can join a drift that does not
- *  complement — or where one runs the other way while an end of the first range spans several years, with no one year
- *  to name: {@link spansOf} splits such a run. A run of one or two years always pairs. */
-export function typedBelowPairingOf(kind: TypedBelowYearKind, years: readonly TypedBelowYear[]): TypedBelowPairing | null | 'fails' {
+/** THE SPLIT RULE (the walk-8 form council's KD6, kept byte for byte by the walk-9 form council's build so every run it
+ *  drew stays the run it was: the chair's counts assume today's runs), pure, exported for its property test. It once
+ *  also chose the words: a run whose later range ran the other way from its first named that range's end years. The
+ *  amount rule ({@link typedBelowAmountOf}) now says every figure beside its own years, so only the split survives: a run
+ *  `'pairs'` while every later range's ends fall on the years where the first range is least and where it is most, one
+ *  value on each, and — where one of them runs the other way — each end of the first range falls in ONE year; `'fails'`
+ *  otherwise (`creditsJoin` can join a drift that does not complement; an end of the first range can span several
+ *  years), and {@link spansOf} splits the run there. A run of one or two years always pairs. */
+export function typedBelowPairingOf(kind: TypedBelowYearKind, years: readonly TypedBelowYear[]): 'pairs' | 'fails' {
   const ranged = SPAN_FIGURE_READS[kind]
     .map(([name, read]) => ({ name, values: years.map(read) }))
     .filter((s) => Math.min(...s.values) !== Math.max(...s.values))
   const first = ranged[0]
-  if (first === undefined) return null
+  if (first === undefined) return 'pairs'
   const atLeast = indicesOf(first.values, Math.min(...first.values))
   const atMost = indicesOf(first.values, Math.max(...first.values))
   let runsOtherWay = false
@@ -1205,27 +1210,15 @@ export function typedBelowPairingOf(kind: TypedBelowYearKind, years: readonly Ty
     if (!((a === least && b === most) || (a === most && b === least))) return 'fails'
     if (a! > b!) runsOtherWay = true
   }
-  if (!runsOtherWay) return null
-  if (atLeast.length !== 1 || atMost.length !== 1) return 'fails'
-  const [early, late] = atLeast[0]! < atMost[0]! ? [atLeast[0]!, atMost[0]!] : [atMost[0]!, atLeast[0]!]
-  return {
-    named: first.name,
-    years: [years[early]!.calendarYear, years[late]!.calendarYear],
-    mostFirst: ranged.filter((s) => s.values[early]! > s.values[late]!).map((s) => s.name),
-  }
+  if (!runsOtherWay) return 'pairs'
+  return atLeast.length === 1 && atMost.length === 1 ? 'pairs' : 'fails'
 }
 const indicesOf = (values: readonly number[], v: number): number[] => values.flatMap((x, i) => (x === v ? [i] : []))
 
-function spanOf(years: readonly TypedBelowYear[], pairing: TypedBelowPairing | null): TypedBelowSpan {
+function spanOf(years: readonly TypedBelowYear[]): TypedBelowSpan {
   const kind = years[0]!.kind
   const figures = Object.fromEntries(SPAN_FIGURE_READS[kind].map(([name, read]) => [name, dollarsOf(years, read)]))
-  return {
-    firstYear: years[0]!.calendarYear,
-    lastYear: years[years.length - 1]!.calendarYear,
-    kind,
-    ...figures,
-    ...(pairing === null ? {} : { pairing }),
-  } as TypedBelowSpan
+  return { firstYear: years[0]!.calendarYear, lastYear: years[years.length - 1]!.calendarYear, kind, ...figures } as TypedBelowSpan
 }
 
 /** The spans: adjacent years join ({@link joins}) while the run they make still pairs ({@link typedBelowPairingOf});
@@ -1233,54 +1226,98 @@ function spanOf(years: readonly TypedBelowYear[], pairing: TypedBelowPairing | n
 function spansOf(years: readonly TypedBelowYear[]): TypedBelowSpan[] {
   const spans: TypedBelowSpan[] = []
   let run: TypedBelowYear[] = []
-  let pairing: TypedBelowPairing | null = null
   for (const y of years) {
     const extended = run.length === 0 || !joins(run[run.length - 1]!, y) ? 'fails' : typedBelowPairingOf(y.kind, [...run, y])
     if (extended === 'fails') {
-      if (run.length > 0) spans.push(spanOf(run, pairing))
+      if (run.length > 0) spans.push(spanOf(run))
       run = [y]
-      pairing = null
     } else {
       run.push(y)
-      pairing = extended
     }
   }
-  if (run.length > 0) spans.push(spanOf(run, pairing))
+  if (run.length > 0) spans.push(spanOf(run))
   return spans
 }
 
+/** One year's printed figure, for the amount rule: its calendar year and its whole dollars. */
+export interface TypedBelowYearFigure {
+  readonly calendarYear: number
+  readonly dollars: number
+}
+
+/** THE AMOUNT RULE (the walk-9 form council `wf_9f28e691-1dc`, call (1): R4 (b) and walk 9's flip (iii), its general
+ *  form; `docs/plans/features/typed-below-walk9-form-build-spec.md`), ONE home for every sentence that prints a run's
+ *  figure — on the typed-below line, on W's stale line (B, C, F) and on the waiting seats (insight 101). A run's years
+ *  (consecutive calendar years, in year order) group where consecutive years print the same figure; then: one group, one
+ *  figure ("$X a year"; "$X" on a one-year run); two groups, each figure with its own years, in year order ("$3,005 in
+ *  2030 and $3,368 in 2031"; "$4,015 short in 2029 through 2030 and $3,652 short in 2031 through 2032"), so no reader can
+ *  pair a figure with the other group's years (walk 8's W8-R3 (a): two ranges side by side paired crosswise); three or
+ *  more groups (the drift witness alone; no walked household), the least and the most as a band that names no order
+ *  ("between $19,722 and $20,985 a year"). Groups compare the PRINTED figure, so two years a cent apart under one dollar
+ *  are one group. The words never group or sort a figure themselves (`TypedBelowAmount`). Exported for its property test. */
+export function typedBelowAmountOf(years: readonly TypedBelowYearFigure[]): TypedBelowAmount {
+  const groups: { figure: string; dollars: number; firstYear: number; lastYear: number }[] = []
+  for (const y of years) {
+    const figure = formatMoney(y.dollars)
+    const last = groups[groups.length - 1]
+    if (last !== undefined && last.figure === figure && y.calendarYear === last.lastYear + 1) last.lastYear = y.calendarYear
+    else groups.push({ figure, dollars: y.dollars, firstYear: y.calendarYear, lastYear: y.calendarYear })
+  }
+  const [g0, g1] = groups
+  if (g0 === undefined) throw new Error('typedBelowAmountOf: a run has at least one year')
+  if (g1 === undefined) return { kind: 'one', figure: g0.figure }
+  const group = (g: (typeof groups)[number]): TypedBelowYearGroup => ({ figure: g.figure, firstYear: g.firstYear, lastYear: g.lastYear })
+  if (groups.length === 2) return { kind: 'two', groups: [group(g0), group(g1)] }
+  const all = groups.map((g) => g.dollars)
+  return { kind: 'band', least: formatMoney(Math.min(...all)), most: formatMoney(Math.max(...all)) }
+}
+
 /** The typed-below LINE (U11 walk 6's R1), rebuilt over the whole working window
- *  (`docs/plans/features/typed-below-whole-window-rebuild-spec.md`, KTD6; council `wf_f74697d1-f2e`), in the walk-8 form
- *  council's form (`docs/plans/features/typed-below-walk8-form-build-spec.md`; council `wf_98d8bc0e-e0a`), as parts on
- *  both hosts: the opening says the answer counts the typed figure, below today's quote, both yearly, and the
- *  whole-answer lean (the counts sentence); then, on the Result where this line holds the slot under a moved left over,
- *  the moved clause ({@link TypedBelowHost}); then the cap sentence where the answer at the quote has a cap of its own
- *  (KD5, {@link TypedBelowQuoteCap}). Then, for a "saved" answer the run carries (`saved` or `saved-moved`), the window's
- *  runs ({@link workingYearTypedBelowWindow}), each three sentences in its kind's words ({@link TYPED_BELOW_SPAN_WORDS}),
- *  and the survivor part after them: one run folds into the opening as plain sentences, so `isPlainNote` holds and every
- *  host draws its single paragraph; two or more draw as an ordered list, one item per run, its years the label, and the
- *  survivor part as the paragraph after the list (KD7, KD8). Under any other answer (absent, spent, not sure, a "saved"
- *  answer not asked) the counts sentence alone: nothing is credited, and the lower figure only cheapens the years. Where
- *  the read is `unknown` (unreachable wherever the typed picture is known), the fail-safe credit sentence
- *  ({@link typedBelowFailSafeCap}), so the credit is still said. `null` where no fresh typed figure sits below the quote
- *  ({@link freshTypedBelow}). The figures are the typed-below pair exactly as the W surfaces' note prints them
- *  (`workingYearCostTypedBelowQuote`), so the line and the note never name two figures for one. A pure function of the
- *  draft (R12): it reads no crown and no outcome, so the gate (which composes before any run) and the Result on either
- *  tier draw one line. */
+ *  (`docs/plans/features/typed-below-whole-window-rebuild-spec.md`, KTD6; council `wf_f74697d1-f2e`), in the walk-9 form
+ *  council's form (`docs/plans/features/typed-below-walk9-form-build-spec.md`; council `wf_9f28e691-1dc`), as parts, ONE
+ *  order on every host: the counts sentence (the answer counts the typed figure, below today's quote, both yearly); the
+ *  moved clause where this line hosts it ({@link TypedBelowHost}); the lean, its own sentence naming the quote in dollars
+ *  (call (2)); the cap sentence where the answer at the quote has a cap of its own (KD5, {@link TypedBelowQuoteCap}); the
+ *  lead on two or more runs. Then, for a "saved" answer the run carries (`saved` or `saved-moved`), the window's runs
+ *  ({@link workingYearTypedBelowWindow}) in their kind's words ({@link TYPED_BELOW_SPAN_WORDS}), and the survivor part
+ *  after them: one run folds into the opening as plain sentences, so `isPlainNote` holds and every host draws its single
+ *  paragraph; two or more draw as an ordered list, one item per run, its years and condition the label, and the survivor
+ *  part as the paragraph after the list (KD7, KD8). Under any other answer (absent, spent, not sure, a "saved" answer not
+ *  asked) the counts sentence, any moved clause and the lean alone: nothing is credited, and the lower figure only
+ *  cheapens the years. Where the read is `unknown` (unreachable wherever the typed picture is known), the fail-safe credit
+ *  sentence after them ({@link typedBelowFailSafeCap}), so the credit is still said — except where the left over moved,
+ *  whose words say the cap. `null` where no fresh typed figure sits below the quote ({@link freshTypedBelow}). The figures
+ *  are the typed-below pair exactly as the W surfaces' note prints them (`workingYearCostTypedBelowQuote`), so the line and
+ *  the note never name two figures for one. A pure function of the draft (R12): it reads no crown and no outcome, so the
+ *  gate (which composes before any run) and the Result on either tier draw one line. */
 export function workingYearCostTypedBelowLine(d: ScenarioDraft, host: TypedBelowHost): NoteParts | null {
+  return workingYearCostTypedBelowComposed(d, host)?.parts ?? null
+}
+
+/** The line and whether it carried the moved clause — what the gate's `ReentryTypedBelow.compose` hands
+ *  `composeReentry`, which falls back to the moved note of its own where the fact is set and this line did not carry it
+ *  (the walk-9 form council's call (1a): never silence). `null` exactly where the line is. */
+export interface TypedBelowLineComposed {
+  readonly parts: NoteParts
+  readonly carriedMoved: boolean
+}
+export function workingYearCostTypedBelowComposed(d: ScenarioDraft, host: TypedBelowHost): TypedBelowLineComposed | null {
   const s = workingYearCostTypedBelowStructure(d, host)
-  return s === null ? null : foldTypedBelow(s)
+  return s === null ? null : { parts: foldTypedBelow(s), carriedMoved: s.carriedMoved }
 }
 
 /** The typed-below line as STRUCTURE, before a one-run line folds into one paragraph (the survivor-path build's KTD8):
- *  the opening's sentences (the counts sentence, any moved clause, any cap sentence, any lead), each run's label and
- *  sentences, and the survivor part's sentences, or `null` where there is none. Exported for the density law, which reads
- *  it rather than slicing a folded paragraph, so the survivor part's sentences are never counted as a run's; every host's
- *  line is {@link foldTypedBelow} of it. */
+ *  the opening's sentences (the counts sentence, any moved clause, the lean, any cap sentence, any lead), each run's label
+ *  and sentences, and the survivor part's sentences, or `null` where there is none. Exported for the density law, which
+ *  reads it rather than slicing a folded paragraph, so the survivor part's sentences are never counted as a run's; every
+ *  host's line is {@link foldTypedBelow} of it. `carriedMoved` — the opening carries the moved left over's clause (the
+ *  walk-9 form council's call (1a): the structure reports carriage, so a host the fact was assigned to can never print it
+ *  nowhere in silence); `false` on the seat's structure, which never carries it. */
 export interface TypedBelowLineStructure {
   readonly opening: readonly string[]
   readonly spans: readonly NoteSegment[]
   readonly survivor: readonly string[] | null
+  readonly carriedMoved: boolean
 }
 
 /** {@link workingYearCostTypedBelowLine}'s structure: `null` exactly where the line is. */
@@ -1288,16 +1325,24 @@ export function workingYearCostTypedBelowStructure(d: ScenarioDraft, host: Typed
   const t = freshTypedBelow(d)
   if (t === null) return null
   const counts = typedBelowCounts(t, TYPED_BELOW_NOUN[host.kind])
-  const read = workingYearTypedBelowWindow(d)
-  if (read === null) return { opening: [counts], spans: [], survivor: null }
+  // The moved clause BEFORE every early return (the walk-9 form council's call (1a), its landmine): with the clause
+  // assigned to this line, an arm that returned before reading it would print the moved fact nowhere, and nothing would
+  // throw. Every arm below carries it where the host does.
   const moved = workingYearLeftOverMoved(d)
-  const movedClause = moved !== null && host.kind === 'result' && host.carriesMoved ? [workingYearLeftOverMovedClause(moved)] : []
-  if (read.kind === 'unknown') {
-    const cap = typedBelowFailSafeCap(d)
-    const credit = moved !== null ? movedClause : cap === null ? [] : [slots.workingCostTypedBelowAdds(formatMoney(cap))]
-    return { opening: [counts, ...credit], spans: [], survivor: null }
+  const clause = moved !== null && host.carriesMoved ? [workingYearLeftOverMovedClause(moved)] : []
+  const carriedMoved = clause.length > 0
+  const read = workingYearTypedBelowWindow(d)
+  if (read === null || read.kind === 'unknown') {
+    // The counts-only arms: [counts, …clause, lean, …the fail-safe credit where the read is `unknown` and nothing moved].
+    const cap = read === null || moved !== null ? null : typedBelowFailSafeCap(d)
+    return {
+      opening: [counts, ...clause, typedBelowLean(t, host.kind), ...(cap === null ? [] : [slots.workingCostTypedBelowAdds(formatMoney(cap))])],
+      spans: [],
+      survivor: null,
+      carriedMoved,
+    }
   }
-  return typedBelowStructure([counts, ...movedClause], read, t, host.kind)
+  return typedBelowStructure(counts, clause, read, t, host.kind, carriedMoved)
 }
 
 /** The line from its structure: at most one run folds into the opening as plain sentences, the survivor part's after
@@ -1310,7 +1355,8 @@ function foldTypedBelow(s: TypedBelowLineStructure): NoteParts {
 
 type FreshTypedBelow = NonNullable<ReturnType<typeof freshTypedBelow>>
 
-/** The counts sentence and its lean, in the quote's own words (the spending, or the budget twin). */
+/** The counts sentence, in the quote's own words (the spending, or the budget twin). Its lean is its own slot since the
+ *  walk-9 form council's call (2) ({@link typedBelowLean}). */
 const TYPED_BELOW_COUNTS: Readonly<Record<FreshTypedBelow['source'], (answer: TypedBelowAnswer, typed: string, quote: string) => string>> = {
   spending: slots.workingCostTypedBelowCounts,
   budget: slots.workingCostTypedBelowCountsBudget,
@@ -1333,9 +1379,14 @@ type TypedBelowLineHost = TypedBelowHost['kind'] | TypedBelowSeatHost
  *  on screen — the answer page, and the details sheet opened over it, whose title and warning already say "this answer"
  *  (the walk-8 card's W8-R5 (d), adopted by this fix round as the council's own positions allowed: the chair named
  *  "Your" there while that finding was open) — and "Your" where none is yet: the re-entry gate and the walk's
- *  money-picture step. The counts sentence's lean, the runs and the survivor part all read it, so one line never says
- *  "Your answer" and "this answer" for one answer. */
+ *  money-picture step. The lean, the runs and the survivor part all read it, so one line never says "Your answer" and
+ *  "this answer" for one answer. */
 const TYPED_BELOW_NOUN: Readonly<Record<TypedBelowLineHost, TypedBelowAnswer>> = { result: 'This', gate: 'Your', sheet: 'This', step: 'Your' }
+/** The lean's form by host (the walk-9 form council's call (2); an exhaustive Record, insight 147): the host's noun where
+ *  the line opens on its counts sentence, and the floor alone in the details sheet, where the W row's note above already
+ *  says the "can look better" half. */
+const TYPED_BELOW_LEAN: Readonly<Record<TypedBelowLineHost, TypedBelowLeanForm>> = { result: 'this', gate: 'your', sheet: 'bare', step: 'your' }
+const typedBelowLean = (t: FreshTypedBelow, host: TypedBelowLineHost): string => slots.workingCostTypedBelowLean(t.source, t.quote, TYPED_BELOW_LEAN[host])
 /** How many runs the line draws: one folds into a paragraph (no lead on any host), two or more draw behind a lead. */
 type TypedBelowSpanCount = 'one' | 'many'
 /** The lead above the runs, by host and run count, with the survivor gate off and on (the survivor-path build's KTD7; an
@@ -1350,58 +1401,110 @@ const TYPED_BELOW_LEAD: Readonly<Record<TypedBelowLineHost, Readonly<Record<Type
 }
 
 /** The cap sentence by the quote answer's cap (KD5; an exhaustive Record, insight 147): `null` where the stored figure
- *  binds it. */
+ *  binds it. The quote's dollars are the lean's, one sentence earlier on every host (call (2)). */
 const TYPED_BELOW_CAP: { readonly [K in TypedBelowQuoteCap['kind']]: (c: Extract<TypedBelowQuoteCap, { kind: K }>, t: FreshTypedBelow) => string | null } = {
-  yearZeroLeftOver: (c, t) => slots.workingCostTypedBelowCapLeftOver(t.source, t.quote, formatMoney(c.leftOver)),
-  yearZeroShort: (c, t) => slots.workingCostTypedBelowCapShort(t.source, t.quote, formatMoney(c.short)),
-  yearZeroNone: (_c, t) => slots.workingCostTypedBelowCapNone(t.source, t.quote),
+  yearZeroLeftOver: (c, t) => slots.workingCostTypedBelowCapLeftOver(t.source, formatMoney(c.leftOver)),
+  yearZeroShort: (c, t) => slots.workingCostTypedBelowCapShort(t.source, formatMoney(c.short)),
+  yearZeroNone: (_c, t) => slots.workingCostTypedBelowCapNone(t.source),
   stored: () => null,
 }
 const typedBelowCap = (c: TypedBelowQuoteCap, t: FreshTypedBelow): string | null =>
   (TYPED_BELOW_CAP[c.kind] as (c: TypedBelowQuoteCap, t: FreshTypedBelow) => string | null)(c, t)
 
-/** The structure over a read's runs: the opening's sentences, the cap sentence (KD5: after the lean and any moved clause,
- *  before the lead) and the host's lead; each run in its kind's words, labelled by its years, every run after the first
- *  "If you’re still working in …" (the walk-8 card's W8-R6); the first spending-side base on the line naming the floor
- *  (W8-R8: the cap sentence where there is one, else the first run's first sentence); the gloss on the line's first rider
- *  alone (KD3: the first run's close), its look-back the engine's own; and — where the gate shows (the read's `survivor`)
- *  — the scope on every run's frame and the survivor part after the runs (R1, R3, R5; household-wide, never per run). */
+/** T'S TWIN (the walk-9 form council's call (2), W9-R5 (d); an exhaustive Record, insight 147): on a ONE-RUN line whose cap
+ *  sentence is drawn, the run's first beat restates the cap sentence's figure where the at-spending figure equals it in
+ *  every year — `bothCredit` with one `creditAtQuote` equal to year 0's left over at the quote, or `quoteCreditsNothing`
+ *  under a short or none cap — so it is not drawn, and the close carries the both-alive scope on its own claim. The
+ *  pilot's added condition: the close's difference is ONE figure, or the scope cannot ride it ("$X less … in each working
+ *  year you're both alive" names one figure), and the run keeps its three beats. Computed here, never by host. */
+const TYPED_BELOW_TWIN: { readonly [K in TypedBelowYearKind]: (s: Extract<TypedBelowSpan, { kind: K }>, cap: TypedBelowQuoteCap) => boolean } = {
+  same: () => false,
+  bothCredit: (s, cap) =>
+    cap.kind === 'yearZeroLeftOver' &&
+    s.creditAtQuote.least === s.creditAtQuote.most &&
+    formatMoney(s.creditAtQuote.most) === formatMoney(cap.leftOver) &&
+    s.difference.least === s.difference.most,
+  quoteCreditsNothing: (s, cap) => (cap.kind === 'yearZeroShort' || cap.kind === 'yearZeroNone') && s.difference.least === s.difference.most,
+  shortLeftOverAtTyped: () => false,
+  shortStillShortAtTyped: () => false,
+  shortEvenAtTyped: () => false,
+}
+const isTwin = (s: TypedBelowSpan, cap: TypedBelowQuoteCap): boolean =>
+  (TYPED_BELOW_TWIN[s.kind] as (s: TypedBelowSpan, cap: TypedBelowQuoteCap) => boolean)(s, cap)
+
+type TypedBelowRead = Extract<WorkingYearTypedBelowWindow, { kind: 'read' }>
+
+/** The structure over a read's runs, in the walk-9 form council's ONE order: the head (`counts` where the host opens on
+ *  it, then any moved `clause`), the lean, the cap sentence (KD5) and the host's lead; each run in its kind's words,
+ *  labelled by its years and the condition (call (3)); the gloss on the line's first rider alone (KD3: the first run's
+ *  close), its look-back the engine's own; and — where the gate shows (the read's `survivor`) — the scope on every run's
+ *  frame and the survivor part after the runs (R1, R3, R5; household-wide, never per run). THE RESTATEMENT PREDICATES
+ *  (call (1b); {@link TypedBelowSpanFrame}) are read off what this line has printed before each run, never off a host or
+ *  a kind: the quote's dollars (the lean), the typed figure's (the counts sentence, or the first run sentence that names
+ *  it), "your savings" (the lead). */
 function typedBelowStructure(
-  opening: readonly string[],
-  read: Extract<WorkingYearTypedBelowWindow, { kind: 'read' }>,
+  counts: string | null,
+  clause: readonly string[],
+  read: TypedBelowRead,
   t: FreshTypedBelow,
   host: TypedBelowLineHost,
+  carriedMoved: boolean,
 ): TypedBelowLineStructure {
+  const lean = typedBelowLean(t, host)
+  const head = [...(counts === null ? [] : [counts]), ...clause, lean]
   const { spans, survivor } = read
-  if (spans.length === 0) return { opening, spans: [], survivor: null }
+  if (spans.length === 0) return { opening: head, spans: [], survivor: null, carriedMoved }
   const answer = TYPED_BELOW_NOUN[host]
   const count: TypedBelowSpanCount = spans.length < 2 ? 'one' : 'many'
   const lead = TYPED_BELOW_LEAD[host][count][survivor === null ? 'off' : 'on']
   const cap = typedBelowCap(read.quoteCap, t)
-  const frame = (s: TypedBelowSpan, i: number): TypedBelowSpanFrame => ({
-    answer,
-    opener: count === 'one',
-    oneYear: s.firstYear === s.lastYear,
-    typed: t.typed,
-    quote: t.quote,
-    source: t.source,
-    bothAlive: survivor !== null,
-    floor: cap === null && i === 0,
-  })
-  const label = (s: TypedBelowSpan, i: number): string =>
-    i === 0 ? slots.workingCostTypedBelowSpanLabel(s.firstYear, s.lastYear) : slots.workingCostTypedBelowSpanLabelLater(s.firstYear, s.lastYear)
-  return {
-    opening: [...opening, ...(cap === null ? [] : [cap]), ...(lead === null ? [] : [lead])],
-    spans: spans.map((s, i) => ({ label: label(s, i), sentences: typedBelowSpanSentences(s, frame(s, i), i === 0 ? irmaa.value.magiLookbackYears : null) })),
-    survivor: survivor === null ? null : typedBelowSurvivorPart(survivor, t),
+  const opening = [...head, ...(cap === null ? [] : [cap]), ...(lead === null ? [] : [lead])]
+  // What the line has printed before its runs: the lean says the quote's dollars (`SPAN_QUOTE`), the lead says "your
+  // savings", and the counts sentence the typed figure's dollars.
+  const quoteNamed = opening.includes(lean)
+  const savingsNamed = lead !== null && opening.includes(lead)
+  let typedNamed = counts !== null && opening.includes(counts)
+  const items: NoteSegment[] = []
+  for (const [i, s] of spans.entries()) {
+    const years = read.years.filter((y) => y.calendarYear >= s.firstYear && y.calendarYear <= s.lastYear)
+    const amounts = new Map(
+      SPAN_FIGURE_READS[s.kind].map(([name, figureOf]) => [name, typedBelowAmountOf(years.map((y) => ({ calendarYear: y.calendarYear, dollars: figureOf(y) })))]),
+    )
+    const words = typedBelowRunWords(s, {
+      f: {
+        answer,
+        opener: count === 'one',
+        oneYear: s.firstYear === s.lastYear,
+        typed: t.typed,
+        quote: t.quote,
+        source: t.source,
+        bothAlive: survivor !== null,
+        quoteNamed,
+        typedNamed,
+        savingsNamed,
+      },
+      amount: (name) => {
+        const a = amounts.get(name)
+        // Unreachable: each kind's words read only its own figures (`SPAN_FIGURE_READS`, the Record they are keyed by).
+        if (a === undefined) throw new Error(`typedBelowStructure: a ${s.kind} run has no ${name}`)
+        return a
+      },
+      gloss: i === 0 ? irmaa.value.magiLookbackYears : null,
+      twin: count === 'one' && isTwin(s, read.quoteCap),
+      allLeftOver: years.every((y) => workingYearBottomLine(y.credit) < read.typedCap),
+    })
+    items.push({ label: slots.workingCostTypedBelowSpanLabel(s.firstYear, s.lastYear), sentences: words.sentences })
+    typedNamed = typedNamed || words.namesTyped
   }
+  return { opening, spans: items, survivor: survivor === null ? null : typedBelowSurvivorPart(survivor, t), carriedMoved }
 }
 
 /** The survivor part (KD7; council `wf_dfb7949b-4a7`): the costs first, by the read's form (KTD5), then the runs' close
- *  with X, "at most", and the rider. X is the read's, never re-derived here. */
+ *  with X, "at most", and the rider. X is the read's, never re-derived here. The answers are not named beside the costs:
+ *  the runs above named each one (the walk-9 form council's call (4), `names: 'none'`). */
 function typedBelowSurvivorPart(s: TypedBelowSurvivor, t: FreshTypedBelow): readonly string[] {
   // Never glossed here: the typed-below line's first rider is a run's (KD3).
-  return survivorPartOf(s, { typed: t.typed, quote: t.quote, source: t.source }, null)
+  return survivorPartOf(s, { typed: t.typed, quote: t.quote, source: t.source, names: 'none' }, null)
 }
 /** KD7's two sentences for a read and its frame, one home for the typed-below line and W's stale line; `glossYears` where
  *  the close is its line's first rider (KD3). */
@@ -1415,61 +1518,99 @@ const TYPED_BELOW_SURVIVOR_COSTS: Readonly<Record<TypedBelowSurvivorForm, (f: Ty
   survivorCharges: (f, s) => slots.workingCostTypedBelowSurvivorCharges(f, formatMoneyPair(s.chargeAtTyped, s.chargeAtQuote)),
 }
 
-/** A run's figure as its words print it (KD6): one figure, a range in the run's year order, or — on the run's first range
- *  where its pairing names years — that range with its end years. */
-function amountOf(s: TypedBelowSpan, name: TypedBelowFigure, d: TypedBelowDollars): TypedBelowAmount {
-  if (d.least === d.most) return { kind: 'one', figure: formatMoney(d.least) }
-  const p = s.pairing
-  if (p === undefined) return { kind: 'range', from: formatMoney(d.least), to: formatMoney(d.most) }
-  const [from, to] = p.mostFirst.includes(name) ? [d.most, d.least] : [d.least, d.most]
-  return p.named === name
-    ? { kind: 'named', from: formatMoney(from), fromYear: p.years[0], to: formatMoney(to), toYear: p.years[1] }
-    : { kind: 'range', from: formatMoney(from), to: formatMoney(to) }
+/** What a run's words need beyond its span: the frame (its predicates included), each figure in the amount rule, the
+ *  gloss (the engine's look-back on the line's first run, `null` on every later one), T's twin, and NL's third limit
+ *  (`allLeftOver`: this answer's credit prints below its own cap in every year of the run). */
+interface TypedBelowRunContext {
+  readonly f: TypedBelowSpanFrame
+  readonly amount: (name: TypedBelowFigure) => TypedBelowAmount
+  readonly gloss: number | null
+  readonly twin: boolean
+  readonly allLeftOver: boolean
 }
+/** A run's sentences (each its own paragraph) and whether they printed the typed figure's dollars, so the next run on the
+ *  line says "your figure" (call (1b)). */
+interface TypedBelowRunWords {
+  readonly sentences: readonly string[]
+  readonly namesTyped: boolean
+}
+/** A credit kind's beats by the line's shape (the walk-9 form council's call (1b) and call (2)): T's twin draws no first
+ *  beat; a one-run line keeps three paragraphs; inside a list the pair is ONE paragraph of two sentences, then the close.
+ *  ⚑ The pair as one paragraph is Briggsy's to close on walk 10's card. */
+const creditBeats = (first: string, second: string, close: string, c: TypedBelowRunContext): readonly string[] =>
+  c.twin ? [second, close] : c.f.opener ? [first, second, close] : [`${first} ${second}`, close]
 
-/** Each run's three sentences by its kind (KD4; an exhaustive Record, insight 147: a new kind fails to compile until it
- *  is worded): the spending side, the typed side, the close. A run carries only its own kind's figures, so no kind can
- *  word a figure it does not have. `gloss` — the engine's look-back on the line's first run, `null` on every later one. */
+/** Each run's words by its kind (KD4; an exhaustive Record, insight 147: a new kind fails to compile until it is worded):
+ *  the spending side, the typed side, the close — a short run three paragraphs (the years that draw on savings look
+ *  heavier, which is honest); a credit run inside a list two (its pair, then the close); `same` inside a list its merged
+ *  sentence, then the close. A run carries only its own kind's figures, so no kind can word a figure it does not have. */
 type TypedBelowSpanWords = {
-  readonly [K in TypedBelowYearKind]: (s: Extract<TypedBelowSpan, { kind: K }>, f: TypedBelowSpanFrame, gloss: number | null) => readonly string[]
+  readonly [K in TypedBelowYearKind]: (s: Extract<TypedBelowSpan, { kind: K }>, c: TypedBelowRunContext) => TypedBelowRunWords
 }
 const TYPED_BELOW_SPAN_WORDS: TypedBelowSpanWords = {
-  same: (s, f, gloss) =>
-    s.credit.most === 0
-      ? [slots.workingCostTypedBelowSpanAtQuoteNothing(f), slots.workingCostTypedBelowSpanAddsNothing(f), slots.workingCostTypedBelowSpanSame(f, gloss)]
-      : [
-          slots.workingCostTypedBelowSpanAtQuoteAdds(f, amountOf(s, 'credit', s.credit)),
-          slots.workingCostTypedBelowSpanAdds(f, amountOf(s, 'credit', s.credit)),
-          slots.workingCostTypedBelowSpanSame(f, gloss),
-        ],
-  bothCredit: (s, f, gloss) => [
-    slots.workingCostTypedBelowSpanAtQuoteAdds(f, amountOf(s, 'creditAtQuote', s.creditAtQuote)),
-    slots.workingCostTypedBelowSpanAdds(f, amountOf(s, 'credit', s.credit)),
-    slots.workingCostTypedBelowSpanLess(f, amountOf(s, 'difference', s.difference), false, gloss),
-  ],
-  quoteCreditsNothing: (s, f, gloss) => [
-    slots.workingCostTypedBelowSpanAtQuoteNothing(f),
-    slots.workingCostTypedBelowSpanAdds(f, amountOf(s, 'credit', s.credit)),
-    slots.workingCostTypedBelowSpanLess(f, amountOf(s, 'difference', s.difference), false, gloss),
-  ],
-  shortLeftOverAtTyped: (s, f, gloss) => [
-    slots.workingCostTypedBelowSpanShortNothing(f, amountOf(s, 'shortAtQuote', s.shortAtQuote)),
-    slots.workingCostTypedBelowSpanShortOut(f, amountOf(s, 'credit', s.credit)),
-    slots.workingCostTypedBelowSpanLess(f, amountOf(s, 'difference', s.difference), true, gloss),
-  ],
-  shortStillShortAtTyped: (s, f, gloss) => [
-    slots.workingCostTypedBelowSpanShort(f, amountOf(s, 'shortAtQuote', s.shortAtQuote)),
-    slots.workingCostTypedBelowSpanStillShort(f, amountOf(s, 'shortAtTyped', s.shortAtTyped)),
-    slots.workingCostTypedBelowSpanLess(f, amountOf(s, 'difference', s.difference), true, gloss),
-  ],
-  shortEvenAtTyped: (s, f, gloss) => [
-    slots.workingCostTypedBelowSpanShort(f, amountOf(s, 'shortAtQuote', s.shortAtQuote)),
-    slots.workingCostTypedBelowSpanEven(f),
-    slots.workingCostTypedBelowSpanLess(f, amountOf(s, 'difference', s.difference), true, gloss),
-  ],
+  same: (s, c) => {
+    const nothing = s.credit.most === 0
+    const close = slots.workingCostTypedBelowSpanSame(c.f, c.gloss)
+    // Never NL's third limit: both answers credit alike there.
+    if (!c.f.opener) {
+      return {
+        sentences: [nothing ? slots.workingCostTypedBelowSpanBothNothing(c.f) : slots.workingCostTypedBelowSpanBothAdd(c.f, c.amount('credit')), close],
+        namesTyped: false,
+      }
+    }
+    return {
+      sentences: nothing
+        ? [slots.workingCostTypedBelowSpanAtQuoteNothing(c.f), slots.workingCostTypedBelowSpanAddsNothing(c.f), close]
+        : [slots.workingCostTypedBelowSpanAtQuoteAdds(c.f, c.amount('credit')), slots.workingCostTypedBelowSpanAdds(c.f, c.amount('credit'), false), close],
+      namesTyped: false,
+    }
+  },
+  bothCredit: (_s, c) => ({
+    sentences: creditBeats(
+      slots.workingCostTypedBelowSpanAtQuoteAdds(c.f, c.amount('creditAtQuote')),
+      slots.workingCostTypedBelowSpanAdds(c.f, c.amount('credit'), c.allLeftOver),
+      c.twin ? slots.workingCostTypedBelowSpanLessTwin(c.f, c.amount('difference'), c.gloss) : slots.workingCostTypedBelowSpanLess(c.f, c.amount('difference'), false, c.gloss),
+      c,
+    ),
+    namesTyped: false,
+  }),
+  quoteCreditsNothing: (_s, c) => ({
+    sentences: creditBeats(
+      slots.workingCostTypedBelowSpanAtQuoteNothing(c.f),
+      slots.workingCostTypedBelowSpanAdds(c.f, c.amount('credit'), c.allLeftOver),
+      c.twin ? slots.workingCostTypedBelowSpanLessTwin(c.f, c.amount('difference'), c.gloss) : slots.workingCostTypedBelowSpanLess(c.f, c.amount('difference'), false, c.gloss),
+      c,
+    ),
+    namesTyped: false,
+  }),
+  // The short kinds' typed side names the typed figure; in full where the line has not yet printed it (`typedNamed`).
+  shortLeftOverAtTyped: (_s, c) => ({
+    sentences: [
+      slots.workingCostTypedBelowSpanShortNothing(c.f, c.amount('shortAtQuote')),
+      slots.workingCostTypedBelowSpanShortOut(c.f, c.amount('credit'), c.allLeftOver),
+      slots.workingCostTypedBelowSpanLess(c.f, c.amount('difference'), true, c.gloss),
+    ],
+    namesTyped: !c.f.typedNamed,
+  }),
+  shortStillShortAtTyped: (_s, c) => ({
+    sentences: [
+      slots.workingCostTypedBelowSpanShort(c.f, c.amount('shortAtQuote')),
+      slots.workingCostTypedBelowSpanStillShort(c.f, c.amount('shortAtTyped')),
+      slots.workingCostTypedBelowSpanLess(c.f, c.amount('difference'), true, c.gloss),
+    ],
+    namesTyped: !c.f.typedNamed,
+  }),
+  shortEvenAtTyped: (_s, c) => ({
+    sentences: [
+      slots.workingCostTypedBelowSpanShort(c.f, c.amount('shortAtQuote')),
+      slots.workingCostTypedBelowSpanEven(c.f),
+      slots.workingCostTypedBelowSpanLess(c.f, c.amount('difference'), true, c.gloss),
+    ],
+    namesTyped: !c.f.typedNamed,
+  }),
 }
-function typedBelowSpanSentences(s: TypedBelowSpan, f: TypedBelowSpanFrame, gloss: number | null): readonly string[] {
-  return (TYPED_BELOW_SPAN_WORDS[s.kind] as (s: TypedBelowSpan, f: TypedBelowSpanFrame, gloss: number | null) => readonly string[])(s, f, gloss)
+function typedBelowRunWords(s: TypedBelowSpan, c: TypedBelowRunContext): TypedBelowRunWords {
+  return (TYPED_BELOW_SPAN_WORDS[s.kind] as (s: TypedBelowSpan, c: TypedBelowRunContext) => TypedBelowRunWords)(s, c)
 }
 
 /** The band caption's working-year half (U11 walk 8's W8-R7; `docs/plans/features/typed-below-walk8-form-build-spec.md`,
@@ -1507,11 +1648,13 @@ export function workingYearLeftOverTypedBelow(d: ScenarioDraft): string | null {
 
 /** The seat's half of the typed-below line (the rebuild's KTD6, host 3): under a "saved" answer the run carries, on a
  *  fresh typed figure below today's quote, the window's runs in the line's own words, the answer named by host
- *  ({@link TYPED_BELOW_NOUN}: "This" in the sheet, "Your" on the step), its cap sentence first where there is one: one run
- *  as plain sentences, two or more behind the seat's lead (`workingLedgerLeftOverSpansLead`) as an ordered list. On the
- *  walk's money-picture step, where nothing above the seat carries the lean, the line opens with the counts sentence
- *  ({@link TypedBelowSeatHost}). `null` under any other answer, wherever no fresh typed figure
- *  sits below the quote, and where the read is `unknown`.
+ *  ({@link TYPED_BELOW_NOUN}: "This" in the sheet, "Your" on the step), its lean first (the quote in dollars; in the
+ *  sheet the floor alone, the W row's note above saying the rest: the walk-9 form council's call (2)), then its cap
+ *  sentence where there is one: one run as plain sentences, two or more behind the seat's lead
+ *  (`workingLedgerLeftOverSpansLead`) as an ordered list. On the walk's money-picture step, where nothing above the seat
+ *  carries the lean, the line opens with the counts sentence ({@link TypedBelowSeatHost}). It never carries the moved
+ *  clause. `null` under any other answer, wherever no fresh typed figure sits below the quote, and where the read is
+ *  `unknown`.
  *  WHERE IT IS DRAWN: below the seat's radios, never at the end of the W row's typed-below note, where walk 7's refuter
  *  put it. That note sits directly above the seat, and these sentences read the answer, so a tap on "Spent" would take
  *  them out from above the radio it pressed — R6's law that nothing above the control reads the answer
@@ -1528,13 +1671,17 @@ export function workingYearLeftOverAtQuoteStructure(d: ScenarioDraft, host: Type
   if (t === null) return null
   const read = workingYearTypedBelowWindow(d)
   if (read === null || read.kind === 'unknown' || read.spans.length === 0) return null
-  return typedBelowStructure(SEAT_OPENS_ON_COUNTS[host] ? [typedBelowCounts(t, TYPED_BELOW_NOUN[host])] : [], read, t, host)
+  return typedBelowStructure(SEAT_OPENS_ON_COUNTS[host] ? typedBelowCounts(t, TYPED_BELOW_NOUN[host]) : null, [], read, t, host, false)
 }
 
 /** The typed-below line's door on the gate: the update act's (`gateDoor`), naming the typed figure — or `null` exactly
- *  where the line is. The Result's door is the update act's button (`stalenessPayCheckCtaUpdate`), inline after the
- *  line, as on W's plain stale line. */
-export function workingYearCostTypedBelowDoor(d: ScenarioDraft): GateDoor | null {
+ *  where the line is. `carriesMoved` — the line on this gate carries the moved left over's clause, so no moved note (nor
+ *  its door sentence) is drawn, and the scope sentence names that fact's noun too (the walk-9 form council's call (1a);
+ *  `composeReentry` picks the variant from its host Record). The Result's door is the update act's button
+ *  (`stalenessPayCheckCtaUpdate`), inline after the line, as on W's plain stale line. */
+export function workingYearCostTypedBelowDoor(d: ScenarioDraft, carriesMoved: boolean): GateDoor | null {
   const t = freshTypedBelow(d)
-  return t === null ? null : gateDoor('update', t.typed)
+  if (t === null) return null
+  const door = gateDoor('update', t.typed)
+  return carriesMoved ? { ...door, scope: slots.workingCostTypedBelowGateScopeMoved(t.typed) } : door
 }

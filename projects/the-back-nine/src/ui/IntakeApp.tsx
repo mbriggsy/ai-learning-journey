@@ -9,8 +9,8 @@ import { isWorkingYearCostStale } from '@intake/workingYearQuote'
 import {
   workingYearCostStaleDoor,
   workingYearCostStaleLine,
+  workingYearCostTypedBelowComposed,
   workingYearCostTypedBelowDoor,
-  workingYearCostTypedBelowLine,
   workingYearLeftOverMoved,
   workingYearLeftOverMovedClause,
   workingYearLeftOverMovedText,
@@ -680,10 +680,23 @@ export default function IntakeApp({
         // U11 walk 6's R1: a fresh TYPED W below today's quote, from the same draft — the report never calls it
         // stale (a typed figure is never staled on a quote, KTD10), so the gate hears it only here. The line and its
         // door read one predicate (`freshTypedBelow`), so they are null together; the door rides where the tab can save.
-        const typedBelowLine = workingYearCostTypedBelowLine(hydrated.draft, { kind: 'gate' })
-        const typedBelowDoor = workingYearCostTypedBelowDoor(hydrated.draft)
+        // Whether the line carries the moved clause is `composeReentry`'s one decision (the walk-9 form council's call
+        // (1a)), never this caller's: it hands both forms of the one hydrated draft's line, and both doors.
+        const typedBelowLines = {
+          plain: workingYearCostTypedBelowComposed(hydrated.draft, { kind: 'gate', carriesMoved: false }),
+          carryingMoved: workingYearCostTypedBelowComposed(hydrated.draft, { kind: 'gate', carriesMoved: true }),
+        }
+        const typedBelowDoor = workingYearCostTypedBelowDoor(hydrated.draft, false)
+        const typedBelowDoorMoved = workingYearCostTypedBelowDoor(hydrated.draft, true)
+        const { plain: typedBelowPlain, carryingMoved: typedBelowCarrying } = typedBelowLines
         const typedBelow =
-          typedBelowLine === null || typedBelowDoor === null ? null : { line: typedBelowLine, door: typedBelowDoor, canChange: !readOnly }
+          typedBelowPlain === null || typedBelowCarrying === null || typedBelowDoor === null || typedBelowDoorMoved === null
+            ? null
+            : {
+                compose: (carriesMoved: boolean) => (carriesMoved ? typedBelowCarrying : typedBelowPlain),
+                door: { plain: typedBelowDoor, carryingMoved: typedBelowDoorMoved },
+                canChange: !readOnly,
+              }
         setReentry({
           view: composeReentry(model, report, { costStale: payCheckStale, leftOverStale, typedBelow }),
           rulesMoved: report.rulesMoved,

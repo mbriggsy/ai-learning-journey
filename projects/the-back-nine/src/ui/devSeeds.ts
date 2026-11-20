@@ -1439,9 +1439,12 @@ const dateSavedRisenLaterWitness: ScenarioDraft = {
  * (`writeEnteredWorkingYearCost`, the W step's and the panel row's own write). A typed figure is never staled on a quote
  * (KTD10), so W is FRESH: year 0 at $84,000 prints $16,985 again, the stored "All of it" reads "saved" and is carried
  * whole, and no stale line speaks. R1's typed-below line does, on the Result and, as a vault, on the gate
- * (`workingYearCostTypedBelowLine`): the answer counts $84,000, below the $90,000 spending, so it can look better; then
- * its one run over the whole window, a plain paragraph: the answer at $90,000 a year would add at most $10,985 a year,
- * this answer at most $16,985 a year, so at the spending $6,000 a year less in your savings. U11
+ * (`workingYearCostTypedBelowLine`): the answer counts $84,000, below the $90,000 spending; a working year almost always
+ * costs at least that $90,000, so it can look better; at the spending year 0 would have $10,985 left over, so the answer
+ * there adds at most that in any working year. Then its one run over the whole window, a plain paragraph, in T's twin
+ * form (the walk-9 form council's call (2): the cap sentence already said the answer at the spending's $10,985, so the
+ * run draws no first beat): this answer adds at most $16,985 a year, so at the spending $6,000 less in your savings in
+ * each working year you're both alive; then the survivor part. U11
  * walk 6 measured exactly this draft (`u11-walk6\measure\R1-MEASURE.md`, draft b): about 9 years out at a 0.87 lower
  * bound, where the honest "Yes" at $90,000 crowns the same year on the 0.85 bar with no margin. A "mint, then move"
  * witness: minted once (`dateSavedWitness`), moved, then retyped.
@@ -1473,11 +1476,12 @@ const dateSavedFourBucketsWitness: ScenarioDraft = {
  * (`writeEnteredWorkingYearCost`). W is FRESH (a typed figure is never staled on a quote, KTD10), and year 0 at $84,000
  * now prints $26,985 (Sam's alimony began after the answer), so the stored "All of it" at $16,985 reads "saved, moved".
  * The one seed where R1's typed-below line and a moved left over speak together, each figure naming what it rests on:
- * on the Result the line carries the moved clause ("…At your figure of $84,000 a year, it has $26,985 left over now. …")
- * after its counts sentence, then its three spans as labelled parts (the whole-window rebuild: 2026 through 2028, the
- * 2029–2032 run that comes up short at $105,000, 2033 through 2035), each stating this answer's $16,985 beside the
- * answer at the quote; on the gate the moved line follows R1's line as its own line ("…At your figure of $84,000 a year,
- * it’s $26,985 now, …"). No date within the window: the final tier's top rung reads 0.80,
+ * on the Result and, with no rules line fired, on the gate (the walk-9 form council's call (1a): one order on both hosts,
+ * one note on the gate) the line carries the moved clause ("…At your figure of $84,000 a year, it has $26,985 left over
+ * now. …") after its counts sentence and before the lean, then its three runs as an ordered list (the whole-window
+ * rebuild: 2026 through 2028, the 2029–2032 run that comes up short at $105,000, 2033 through 2035), each stating this
+ * answer's $16,985 beside the answer at the quote; the gate's door scope then names the left over too, and no moved line
+ * of its own is drawn. No date within the window: the final tier's top rung reads 0.80,
  * against `datesavedrisenlater`'s 0.74 (b9-5's probe, the retype residual the register's retype entry records). A "mint,
  * then move" witness: minted once (`dateSavedWitness`), moved, given the alimony, then retyped.
  */
@@ -1490,7 +1494,8 @@ const dateSavedTypedMovedWitness: ScenarioDraft = writeEnteredWorkingYearCost(da
  * share), its old $84,000 typed back in by the year. The pension lifts 2030 and 2031 above $0 at the $105,000 quote, so
  * the short years there split into two runs, 2029 and 2032, and the typed-below line draws five spans on the gate, the
  * Result and the seat. The stored $16,985 sits below year 0's $26,985, so the answer reads "saved, moved", as on
- * `datesavedtypedmoved`, and its gate draws two notes. Built here from the seed it moves, never by importing the test
+ * `datesavedtypedmoved`, and its gate draws one note, the typed-below line carrying the moved clause (the walk-9 form
+ * council's call (1a)). Built here from the seed it moves, never by importing the test
  * builder (that file imports `DEV_SEEDS`: a cycle, and app code reading a test file); `devSeeds.test.ts` pins it equal
  * to `typedBelowPensionHousehold()`.
  */
@@ -1529,8 +1534,8 @@ const dateSavedTypedCrownedWitness: ScenarioDraft = {
  * through 2032 comes up short at the $105,000 quote, year 0 among them; in 2029–2032 the typed answer's recorded
  * Medicare income sits under the first joint line and the quote's over it, so Sam, on Medicare from 2031, pays the first
  * income surcharge at the quote alone in 2031–2034: the household whose comparisons leave out a real surcharge
- * difference (the rider's "not including any difference between the two answers in income tax and Medicare’s income
- * surcharge"). Built here, never by importing the test witness (that file imports `DEV_SEEDS`); `devSeeds.test.ts` pins
+ * difference (the rider's "except for any difference between the two answers in income tax and Medicare’s income
+ * surcharge", walk 9's flip (i)). Built here, never by importing the test witness (that file imports `DEV_SEEDS`); `devSeeds.test.ts` pins
  * it equal to `TM_NEAR_IRMAA_LINE`.
  */
 const dateSavedTypedNearLineWitness: ScenarioDraft = {

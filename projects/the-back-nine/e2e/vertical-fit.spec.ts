@@ -1,6 +1,23 @@
 import { test, expect, type Page, type Locator, type BrowserContext, type CDPSession } from '@playwright/test'
-import { REAL, REAL_DPR, TIER, SHOWCASE, FLOOR, PHONE, PHONE_DPR, FINAL_TIER_MS, advanceIntakeTo, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
-// THE SHIPPED CATALOG, never re-typed here (the `e2e/caddie-walk.spec.ts:9` precedent). Every
+import {
+  REAL,
+  REAL_DPR,
+  TIER,
+  SHOWCASE,
+  FLOOR,
+  PHONE,
+  PHONE_DPR,
+  FINAL_TIER_MS,
+  SETTLED_RESULT,
+  advanceIntakeTo,
+  armRefiguringWatch,
+  expectRefiguringSeen,
+  gotoSeedFinal,
+  refiguringLog,
+  rewalkSeedTo,
+  settleLayout,
+} from './reviewSurface'
+// THE SHIPPED CATALOG, never re-typed here (the `e2e/caddie-walk.spec.ts:22` precedent). Every
 // string this spec injects or reads back is the one the app ships: a spec-local literal would pin a
 // reservation, a clause list or a heading against a fiction, and a re-word that overflowed the real
 // box would escape the gate silently (U17 §S5 step 14).
@@ -52,14 +69,17 @@ import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
  * door wrap-count, the survivor face) — a token-sum arithmetic gate would go green while the
  * frame overflows — and the `?seed=` routes this drives are DCE'd out of dist/.
  *
- * EVERY measurement waits for the FINAL engine tier via the `data-answer-tier="final"` stamp
- * (memoryModel records which recompute tier COMMITTED the rendered answer; Result.tsx mirrors it):
- * the provisional→final sharpen re-keys the band axis and can re-wrap lines — measuring the
- * provisional frame would pin the frame the user does NOT end up reading. (The gate's OWN
- * adversarial review killed this spec's first draft here: it waited on `.fod-provisional` /
- * `.cs-provisional` reaching count 0 — classes that never render on the result hero, a wait that
- * passes vacuously at first paint. The stamp is a real synchronization; the spine's two tiers
- * merely HAPPEN to be byte-identical today because the spine run ignores the tier.)
+ * EVERY measurement waits for the SETTLED result (`SETTLED_RESULT`, e2e/reviewSurface.ts: the
+ * `data-answer-tier="final"` stamp — memoryModel records which recompute tier COMMITTED the rendered
+ * answer; Result.tsx mirrors it — with `data-answer-refiguring` absent, no run on newer inputs in
+ * flight): the provisional→final sharpen re-keys the band axis and can re-wrap lines, and since W9-R7
+ * the date hero wears the provisional tag until the final lands — measuring the provisional frame
+ * would pin the frame the user does NOT end up reading. (The gate's OWN adversarial review killed
+ * this spec's first draft here: it waited on `.fod-provisional` / `.cs-provisional` reaching count 0
+ * — classes the result hero did not render then, a wait that passed vacuously at first paint. The
+ * stamp is a real synchronization; the spine's two tiers merely HAPPEN to be byte-identical because
+ * the spine run ignores the tier.) The one frame measured INSIDE the re-figuring window is the
+ * re-figuring block's, on a preview that holds the window open (its header says why).
  *
  * Falsifiability (insight 016): each assertion here was proven RED against a planted violation
  * before this gate shipped — the mutation ledger lives in the gate's landing commit message.
@@ -1010,7 +1030,7 @@ for (const seed of DEAD_RAIL_SEEDS) {
 //
 // EVERY STRING COMES FROM THE SHIPPED CATALOG (`copy`), never re-typed here. A spec-local literal
 // would pin the reservation against a fiction: re-word the ceremony hint one line longer and the
-// gate would stay green while the real control overflowed. `e2e/caddie-walk.spec.ts:9` is the
+// gate would stay green while the real control overflowed. `e2e/caddie-walk.spec.ts:22` is the
 // precedent for importing src into an e2e spec.
 //
 // INJECTED, not solved: a live committed solve was 80–200s single-worker (recorded 2026-07-22
@@ -1750,6 +1770,239 @@ for (const vp of [PHONE, REAL] as const) {
   })
 }
 
+// ── W9-R7: the re-figuring window (`docs/plans/features/answered-draft-build-spec.md`, U5) ─────────
+// After an edit on the answer page the store holds the shown answer while a run on the new inputs is in
+// flight, and the page says so (U4): a line in the hero's eyebrow slot, a clause on the date band's caption,
+// one line in the panel echo. Two kinds of arm:
+//  - THE FRAME, on `?preview=refiguring&seed=<key>` (src/ui/preview/RefiguringPreview.tsx): the real app on
+//    the seed with every run after its first final held, so the window's frame stands still to be measured.
+//    Live it lasts one run (the `retired` edit below cleared in ~120 ms on the Lenovo; a date provisional
+//    ~2 s), too short to measure without racing it. The spine arms prove R5's fold at the two-pane tier: the
+//    line is ONE line inside the frame and above the verdict, the verdict and the R13 disclaimer stand where
+//    they stood before the edit (the slot overlays `.result`'s top padding there, b9-5's landmine), and the
+//    whole frame still fits. The date arms prove the line and the caption's clause render and overlap
+//    nothing. The phone arms prove the in-flow slot keeps its order (above the hero, over nothing); the hero
+//    moving down there is walk 10's read (U4's watch item (h)), never a law here.
+//  - THE SIGNAL, live on `?seed=retired`: a spending edit in the panel raises `data-answer-refiguring`, and it
+//    clears in the same commit that puts up the edit's own answer — the shared watch (`armRefiguringWatch`)
+//    seeing a SPINE panel edit, which dispatches the final tier alone (its tier never leaves "final").
+
+/** A box the re-figuring arms read: viewport-relative edges, its height, and whether it is one line box
+ *  (no taller than one and a half of its own computed line-height). */
+type RefigBox = { readonly top: number; readonly bottom: number; readonly height: number; readonly oneLine: boolean }
+
+async function refigBoxes(page: Page, sels: Readonly<Record<string, string>>): Promise<Readonly<Record<string, RefigBox | null>>> {
+  return page.evaluate((s) => {
+    const out: Record<string, RefigBox | null> = {}
+    for (const [k, sel] of Object.entries(s)) {
+      const el = document.querySelector(sel)
+      if (el === null) {
+        out[k] = null
+        continue
+      }
+      const r = el.getBoundingClientRect()
+      const lh = parseFloat(getComputedStyle(el).lineHeight)
+      out[k] = { top: r.top, bottom: r.bottom, height: r.height, oneLine: Number.isFinite(lh) && r.height <= lh * 1.5 }
+    }
+    return out
+  }, sels)
+}
+
+function refigPresent(box: RefigBox | null | undefined, what: string): RefigBox {
+  expect(box, `${what} is not on the page`).toBeTruthy()
+  return box!
+}
+
+/** One route's reading of the held window: the hero's line and heading, the heading's other reading box
+ *  (the spine's verdict lockup, the date's headline itself), the line's words. */
+const REFIG_ROUTES = {
+  spine: { seed: 'budget', line: '.cs-refiguring', heading: SPINE_VERDICT, anchor: '.cs-verdict', words: copy.answerRefiguringVerdict },
+  date: { seed: 'date', line: '.fod-refiguring', heading: DATE_VERDICT, anchor: DATE_VERDICT, words: copy.answerRefiguringDate },
+} as const
+
+const REFIG_FRAME = {
+  disclaimer: 'footer.disclaimer.disclaimer--in-frame',
+  drawer: '.fod-band .band-drawer',
+  caption: '.fod-band__tracknote',
+  echo: '[role="dialog"] .ap-echo',
+} as const
+
+/**
+ * Drive the preview into the held window and settle it: the settled landing (its boxes read), the panel
+ * opened (the echo's box read), one engine-input edit — the survivor spending share, 75 ↔ 70 — with the flag
+ * SEEN (a presence the edit's dispatch mints, never an absence), the echo read again, the panel closed, and
+ * the page settled with the flag still up. The caller reads the window's boxes, then `expectStillHeld`.
+ */
+async function enterHeldWindow(
+  page: Page,
+  route: (typeof REFIG_ROUTES)[keyof typeof REFIG_ROUTES],
+): Promise<{
+  readonly before: Readonly<Record<string, RefigBox | null>>
+  readonly captionBefore: string | null
+  readonly echoBefore: RefigBox
+  readonly echoAfter: RefigBox
+  readonly echoText: string | null
+}> {
+  await page.goto(`/?preview=refiguring&seed=${route.seed}`)
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+  await settleLayout(page)
+  await expect(page.locator(route.line), 'a settled landing shows no re-figuring line').toHaveCount(0)
+  const before = await refigBoxes(page, { anchor: route.anchor, ...REFIG_FRAME })
+  // Read only where it renders: a locator action on an absent node waits out the test's whole budget.
+  const caption = page.locator(REFIG_FRAME.caption)
+  const captionBefore = (await caption.count()) > 0 ? await caption.textContent() : null
+  await page.locator('[data-door="assumptions"]').click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await settleLayout(page)
+  const echoBefore = refigPresent((await refigBoxes(page, { echo: REFIG_FRAME.echo })).echo, 'the panel echo')
+  const field = dialog.getByLabel(copy.assumptionSurvivorRatioLabel)
+  const now = (await field.inputValue()).replace(/[^0-9]/g, '')
+  await field.fill(now === '70' ? '65' : '70')
+  await field.press('Tab')
+  await expect(page.locator('main.result[data-answer-refiguring]'), 'the edit raised no re-figuring flag').toBeAttached({ timeout: 30_000 })
+  await settleLayout(page)
+  const echoAfter = refigPresent((await refigBoxes(page, { echo: REFIG_FRAME.echo })).echo, 'the panel echo')
+  const echoText = await dialog.locator('.ap-echo').textContent()
+  await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
+  await expect(dialog).toBeHidden()
+  await settleLayout(page)
+  return { before, captionBefore, echoBefore, echoAfter, echoText }
+}
+
+/** Read AFTER the window's boxes: the flag still stands and the shown answer is still the old final, so every
+ *  box was read inside the window (the flag cannot fall and rise again without another edit). */
+async function expectStillHeld(page: Page): Promise<void> {
+  await expect(page.locator('main.result[data-answer-refiguring][data-answer-tier="final"]'), 'the preview let the window close before the read').toHaveCount(1)
+}
+
+/** The line names itself first in the heading's description, the R13 caveat after it (U4, KTD6). */
+async function expectHeadingDescribedByLine(page: Page, route: (typeof REFIG_ROUTES)[keyof typeof REFIG_ROUTES]): Promise<void> {
+  const lineId = await page.locator(route.line).getAttribute('id')
+  const caveatId = await page.locator(REFIG_FRAME.disclaimer).getAttribute('id')
+  expect(lineId, 'the re-figuring line carries no id to be named').toBeTruthy()
+  expect(caveatId, 'the in-frame caveat carries no id to be named').toBeTruthy()
+  await expect(page.locator(route.heading)).toHaveAttribute('aria-describedby', `${String(lineId)} ${String(caveatId)}`)
+}
+
+for (const vp of [REAL, TIER] as const) {
+  const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
+  test.describe(`the re-figuring window, held (${vp.width}×${vp.height}, two-pane)`, () => {
+    test.use({ viewport: vp, ...scale })
+
+    test('spine (?seed=budget): the line is one line above the verdict, and the verdict and the R13 disclaimer do not move', async ({ page }) => {
+      const route = REFIG_ROUTES.spine
+      const { before, echoBefore, echoAfter, echoText } = await enterHeldWindow(page, route)
+      await assertOneVisibleDisclaimer(page, 'laptop')
+      await expect(page.locator(route.line)).toHaveText(route.words)
+      await expect(page.locator(route.line)).toBeVisible()
+      const after = await refigBoxes(page, { line: route.line, anchor: route.anchor, disclaimer: REFIG_FRAME.disclaimer })
+      const line = refigPresent(after.line, 'the re-figuring line')
+      const verdict = refigPresent(after.anchor, 'the verdict lockup')
+      const caveat = refigPresent(after.disclaimer, 'the in-frame R13 disclaimer')
+      const verdictBefore = refigPresent(before.anchor, 'the settled verdict lockup')
+      const caveatBefore = refigPresent(before.disclaimer, 'the settled R13 disclaimer')
+      expect(line.oneLine, `the line wraps (${line.height.toFixed(1)} px): its slot holds one line`).toBe(true)
+      expect(line.top, 'the line climbs above the page top').toBeGreaterThanOrEqual(0)
+      expect(line.bottom, 'the line overlaps the verdict').toBeLessThanOrEqual(verdict.top + 0.5)
+      expect(Math.abs(verdict.top - verdictBefore.top), `the verdict moved ${(verdict.top - verdictBefore.top).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
+      expect(Math.abs(caveat.top - caveatBefore.top), `the R13 disclaimer moved ${(caveat.top - caveatBefore.top).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
+      expect(caveat.bottom, 'the R13 disclaimer left the frame').toBeLessThanOrEqual(vp.height)
+      await assertFrameFits(page, true)
+      await expectHeadingDescribedByLine(page, route)
+      expect(echoText, 'the panel echo says the answer is being figured again').toBe(copy.assumptionEchoRefiguring)
+      expect(Math.abs(echoAfter.height - echoBefore.height), `the echo's reserved box changed height (${echoBefore.height.toFixed(1)} → ${echoAfter.height.toFixed(1)} px)`).toBeLessThanOrEqual(0.5)
+      await expectStillHeld(page)
+    })
+
+    test('date (?seed=date): the line sits above the headline, and the caption adds its clause over nothing', async ({ page }) => {
+      const route = REFIG_ROUTES.date
+      const { before, captionBefore, echoText } = await enterHeldWindow(page, route)
+      await assertResolvedDate(page)
+      await assertTier(page, 'laptop')
+      await expect(page.locator(route.line)).toHaveText(route.words)
+      await expect(page.locator(route.line)).toBeVisible()
+      expect(captionBefore, 'the settled band carries no caption').toBeTruthy()
+      await expect(page.locator(REFIG_FRAME.caption)).toHaveText(`${String(captionBefore)} ${copy.answerRefiguringCaption}`)
+      const after = await refigBoxes(page, { line: route.line, anchor: route.anchor, drawer: REFIG_FRAME.drawer, caption: REFIG_FRAME.caption })
+      const line = refigPresent(after.line, 'the re-figuring line')
+      const headline = refigPresent(after.anchor, 'the headline')
+      const headlineBefore = refigPresent(before.anchor, 'the settled headline')
+      const drawer = refigPresent(after.drawer, 'the band')
+      const caption = refigPresent(after.caption, 'the band caption')
+      expect(line.oneLine, `the line wraps (${line.height.toFixed(1)} px): its slot holds one line`).toBe(true)
+      expect(line.top, 'the line climbs above the page top').toBeGreaterThanOrEqual(0)
+      expect(line.bottom, 'the line overlaps the headline').toBeLessThanOrEqual(headline.top + 0.5)
+      expect(Math.abs(headline.top - headlineBefore.top), `the headline moved ${(headline.top - headlineBefore.top).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
+      expect(caption.top, 'the caption overlaps the band').toBeGreaterThanOrEqual(drawer.bottom - 0.5)
+      await expectHeadingDescribedByLine(page, route)
+      expect(echoText, 'the panel echo says the answer is being figured again').toBe(copy.assumptionEchoRefiguring)
+      await expectStillHeld(page)
+    })
+  })
+}
+
+test.describe(`the re-figuring window, held (phone ${PHONE.width}×${PHONE.height}, stacked)`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
+  for (const key of ['spine', 'date'] as const) {
+    test(`${key} (?seed=${REFIG_ROUTES[key].seed}): the line sits in the flow above the hero, over nothing`, async ({ page }) => {
+      const route = REFIG_ROUTES[key]
+      await enterHeldWindow(page, route)
+      await assertTier(page, 'narrow')
+      await expect(page.locator(route.line)).toHaveText(route.words)
+      await expect(page.locator(route.line)).toBeVisible()
+      const after = await refigBoxes(page, { line: route.line, anchor: route.anchor })
+      const line = refigPresent(after.line, 'the re-figuring line')
+      const hero = refigPresent(after.anchor, key === 'spine' ? 'the verdict lockup' : 'the headline')
+      expect(line.top, 'the line climbs above the page top').toBeGreaterThanOrEqual(0)
+      expect(line.bottom, 'the line overlaps the hero below it').toBeLessThanOrEqual(hero.top + 0.5)
+      await expectHeadingDescribedByLine(page, route)
+      await expectStillHeld(page)
+    })
+  }
+})
+
+test.describe(`the re-figuring signal, live (?seed=retired, ${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+  test('a panel spending edit raises data-answer-refiguring over the old verdict, and it clears in the commit that puts up the new one', async ({ page }) => {
+    await gotoSeedFinal(page, 'retired')
+    await assertResolvedSpine(page)
+    await page.locator('[data-door="assumptions"]').click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    const field = dialog.getByLabel(copy.spendLabel, { exact: true })
+    await expect(field, '`retired` enters its $78,000 a year by the month').toHaveValue('6,500')
+    await armRefiguringWatch(page)
+    // $9,500 a month ($114,000 a year) takes `retired` from on track to off track (measured 2026-11-20), so the
+    // verdict's own words move in the commit that clears the flag. A raise that left them still would leave
+    // that commit unseen: the arm then fails below, and wants a larger raise, never a weaker check.
+    await field.click()
+    await field.press('ControlOrMeta+a')
+    await field.pressSequentially('9500')
+    await field.blur()
+    await expect(field).toHaveValue('9,500')
+    await expectRefiguringSeen(page, 'the live re-figuring arm')
+    await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
+    await expect(dialog).toBeHidden()
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+    const log = await refiguringLog(page)
+    const first = log[0]
+    expect(first, 'the watch read nothing').toBeTruthy()
+    expect(first!.refiguring, 'the watch was armed on a page already re-figuring').toBe(false)
+    const rose = log.findIndex((r) => r.refiguring === true)
+    const fell = log.findIndex((r, i) => i > rose && r.refiguring === false)
+    const story = log.map((r) => `${r.t}ms ${String(r.refiguring)}/${String(r.tier)} "${r.verdict}"`).join(' · ')
+    expect(rose, `the flag never rose: ${story}`).toBeGreaterThan(0)
+    expect(fell, `the flag never cleared: ${story}`).toBeGreaterThan(rose)
+    for (const r of log.slice(rose, fell)) {
+      expect(r.verdict, `while the flag stood the hero showed an answer other than the one from before the edit: ${story}`).toBe(first!.verdict)
+    }
+    expect(log[fell]!.verdict, `the flag cleared with the old verdict still up, so no new answer committed there: ${story}`).not.toBe(first!.verdict)
+    expect(log[fell]!.tier, `a spine panel edit dispatches the final tier alone: ${story}`).toBe('final')
+    expect(log.slice(fell).every((r) => r.refiguring === false), `the flag rose again with no second edit: ${story}`).toBe(true)
+  })
+})
+
 // ── U12: the AssumptionPanel's OWN vertical extent (the F4 council mandate) ───────────────────
 // "Door count stays 5" proves the RESULT frame fits; it says nothing about the panel. The full
 // assumption inventory (two sections, ~20 rows) is a density surface no other arm measures: the
@@ -1867,7 +2120,7 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // Affirm → the gate releases the held recompute pair; wait out the FINAL tier like every
     // other arm, then settle animations before measuring (the gotoSeedFinal discipline).
     await affirm.click()
-    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({
       timeout: FINAL_TIER_MS,
     })
     await page.evaluate(() => document.fonts.ready)
@@ -2010,7 +2263,7 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
 
     // Affirm → the held recompute pair; wait the FINAL tier, then settle (the gotoSeedFinal discipline).
     await affirm.click()
-    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({
       timeout: FINAL_TIER_MS,
     })
     await page.evaluate(() => document.fonts.ready)
@@ -2894,7 +3147,7 @@ for (const u of PAY_CHECK_UNLOCKS) {
       }
 
       await affirm.click()
-      await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
+      await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
       await settleLayout(page)
       await page.evaluate(() => window.scrollTo(0, 0))
       await (u.dated ? assertResolvedDate(page) : assertNoDateReading(page))
@@ -2990,7 +3243,7 @@ test.describe(`the aged date return (?vault=datestale) — one clock across hero
     ).toBeLessThanOrEqual(REAL.height)
     await affirm.click()
 
-    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({
       timeout: FINAL_TIER_MS,
     })
     await page.evaluate(() => document.fonts.ready)
@@ -3096,7 +3349,7 @@ test.describe(`the arrived date return (?vault=datearrived) — the aged x-axis 
     await expect(affirm).toBeVisible({ timeout: 30_000 })
     await affirm.click()
 
-    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({
       timeout: FINAL_TIER_MS,
     })
     await page.evaluate(() => document.fonts.ready)
@@ -3238,7 +3491,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     await expect(page.locator('.reentry-notes p'), 'the rec plant ages no stamp — no clock may fire').toHaveCount(0)
     await affirm.click()
 
-    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
     await settleLayout(page)
     await assertResolvedSpine(page)
 
@@ -3374,7 +3627,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       const affirm = page.getByRole('button', { name: /still about right/i })
       await expect(affirm).toBeVisible({ timeout: 30_000 })
       await affirm.click()
-      await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
+      await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
       await settleLayout(page)
       // NON-VACUITY (insight 029): every claim below is about a frame that carries the card, so a
       // frame that quietly stopped rendering one must fail here, never pass an empty walk.
@@ -3514,7 +3767,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     const affirm = page.getByRole('button', { name: /still about right/i })
     await expect(affirm).toBeVisible({ timeout: 30_000 })
     await affirm.click()
-    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
     await settleLayout(page)
 
     const rows = async () =>
@@ -3611,7 +3864,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     const affirm = page.getByRole('button', { name: /still about right/i })
     await expect(affirm).toBeVisible({ timeout: 30_000 })
     await affirm.click()
-    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
     await settleLayout(page)
     await assertResolvedSpine(page)
 

@@ -251,9 +251,11 @@ export type ModelAnswer =
   | { readonly kind: 'idle' } // nothing dispatched yet (pre-minimum-viable input)
   | { readonly kind: 'pending' } // first dispatch in flight, nothing ever resolved
   // The resolved arms RECORD WHICH RECOMPUTE TIER COMMITTED them (`tier`): the real-browser
-  // vertical-fit gate synchronizes on it (Result.tsx mirrors it as `data-answer-tier`, and
-  // e2e/vertical-fit.spec.ts waits for "final" before measuring — the gate's adversarial review
-  // proved a class-absence wait is vacuous on the hero, which never renders a provisional tag).
+  // harnesses synchronize on it (Result.tsx mirrors it as `data-answer-tier`, and every e2e settle
+  // waits for "final" with `data-answer-refiguring` absent — `SETTLED_RESULT`, e2e/reviewSurface.ts —
+  // because a class-absence wait was proven vacuous: the fit gate's first draft waited on the
+  // provisional tag's classes, which the hero did not render then). The date hero has worn the
+  // provisional tag over a provisional-tier answer since W9-R7 (`answerView.ts`'s module note).
   // REQUIRED, not optional: a commit that forgot the stamp would silently break that
   // synchronization — the compiler holds the door. Note the spine's two tiers are byte-identical
   // TODAY (the spine run below ignores the tier); the stamp still records the truthful fact —

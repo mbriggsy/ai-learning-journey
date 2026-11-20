@@ -1,5 +1,5 @@
 import { test, expect, type BrowserContext, type Page } from '@playwright/test'
-import { REAL, REAL_DPR, FLOOR, PHONE, PHONE_DPR, PHONE_LS, FINAL_TIER_MS, gotoSeedFinal, gotoVaultFinal, settleLayout } from './reviewSurface'
+import { REAL, REAL_DPR, FLOOR, PHONE, PHONE_DPR, PHONE_LS, FINAL_TIER_MS, SETTLED_RESULT, gotoSeedFinal, gotoVaultFinal, settleLayout } from './reviewSurface'
 import { type Audit, type Rect, TOL, floorPx, audit, assertChartText } from './chartTextAudit'
 /* The band's scrub SNAPS to one of LATTICE_POINTS columns, so the readout's whole placement state
  * space is finite — the sweep below walks EVERY column rather than sampling a few (importing from
@@ -735,7 +735,7 @@ async function setRootFont20(page: Page, context: BrowserContext): Promise<void>
 async function raiseRootFont(page: Page, context: BrowserContext): Promise<void> {
   await setRootFont20(page, context)
   await page.reload()
-  await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
   await settleLayout(page)
 }
 
@@ -1627,7 +1627,7 @@ test.describe('chart text — reduced motion changes nothing', () => {
     const motion = await audit(page, ...BAND)
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.reload()
-    await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({ timeout: FINAL_TIER_MS })
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
     await settleLayout(page)
     const reduced = await audit(page, ...BAND)
     const shape = (a: Audit) => a.nodes.map((n) => `${n.text}|${n.fontPx}|${n.hidden}`)

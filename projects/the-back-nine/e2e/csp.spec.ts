@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { SETTLED_RESULT } from './reviewSurface'
 
 /**
  * Proves a REAL browser enforces the strict CSP shipped in `vercel.json` — the in-memory decrypted
@@ -328,7 +329,7 @@ test.describe('CSP — real browser enforcement', () => {
     })
     await installCollector(page)
     await driveIntakeToResult(page)
-    await expect(page.locator('main.result[data-answer-tier="final"]'), 'no final-tier verdict — the invite cannot mount').toBeAttached({ timeout: 120_000 })
+    await expect(page.locator(SETTLED_RESULT), 'no final-tier verdict — the invite cannot mount').toBeAttached({ timeout: 120_000 })
     expect(page.workers(), 'before the solve: the spine worker alone').toHaveLength(1)
 
     const invite = page.locator('.result-recommend-invite')

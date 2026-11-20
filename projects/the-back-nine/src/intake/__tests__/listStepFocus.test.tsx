@@ -13,7 +13,7 @@ import { copy } from '@ui/copy'
  * WHERE FOCUS LANDS ON THE TWO LIST STEPS (accounts · other income) — the three mutations of the
  * same view that no other gate watches.
  *
- * 1. ARRIVAL, UNDER <StrictMode>. src/main.tsx:42 wraps the app in StrictMode, so React's dev build
+ * 1. ARRIVAL, UNDER <StrictMode>. src/main.tsx's root render wraps the app in StrictMode, so React's dev build
  *    double-invokes a NEWLY-PLACED fiber's effects (setup → cleanup → setup). The step body is
  *    exactly that on every advance (flow.tsx keys its `<section>` by step id) while IntakeFlow
  *    itself is NOT — so the parent's own heading effect runs once, before the double-invoke, and

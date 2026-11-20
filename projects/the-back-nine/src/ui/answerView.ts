@@ -60,7 +60,8 @@ export type ElevatedAnswer =
  *    under D1's provisional string class and is never crowned as final"). On a first reveal too:
  *    Briggsy's ruling, 2026-11-19 ("Yes, tag it"). Until W9-R7 the hero was provisional-free, and
  *    the fit gate's first draft waited on this class reaching zero — a wait that could never wait
- *    (insight 070); the gate's wait is the `data-answer-tier` presence. The spine is never tagged:
+ *    (insight 070); the harnesses' settle is `data-answer-tier="final"` with `data-answer-refiguring`
+ *    absent (`SETTLED_RESULT`, e2e/reviewSurface.ts). The spine is never tagged:
  *    its two tiers are byte-identical (its run ignores the tier), so its provisional IS its final.
  *  The re-figuring line outranks the tag (one slot, one line): over an answer being re-figured,
  *  "with what you've entered so far" is false.

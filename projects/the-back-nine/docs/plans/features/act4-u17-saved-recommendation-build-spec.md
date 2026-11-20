@@ -74,7 +74,7 @@ refusal (`RothLever.tsx:54`).
 ### S0.2 The plan clock is years-since-BUILT — renamed and prosed
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
-at `memoryModel.ts:628`, never re-anchored, survives every re-save). Four separate comments already forbade
+at `memoryModel.ts:630`, never re-anchored, survives every re-save). Four separate comments already forbade
 attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:4499`,
 `FuckOffDate.tsx:163`) — and the band's `'saved'` label did exactly that.
 
@@ -223,7 +223,7 @@ originally derived from
 (`8d4d4e58`, council wf_457f0930-dba) made that derivation wrong: a both-dated household is still
 `'split'`, but its band now rides the LIFESTYLE crown, so the old question answered `true` and painted
 "Essentials date" onto a marker sitting at the lifestyle year. The name now reads the band's own published
-track — `band.track === 'floor'` (`answerView.ts:161`), the same authority tag the offset one line below
+track — `band.track === 'floor'` (`answerView.ts:162`), the same authority tag the offset one line below
 already reads. The lesson is insight 081 in its sharper form, and it is recorded in that file: the old code
 DID consume the shared producer and was still wrong, because it asked that producer a question about
 split-ness when the thing it needed to know was which track the band drew.
@@ -416,7 +416,7 @@ load-bearing.**
   `fingerprintOf`/`currentDraftFingerprint` in exactly the `SolverRunFingerprint | null` shape the
   trichotomy wants, and explicitly bans a re-typed subset. But that did not mean "no seam work here": both
   were private closures inside `createMemoryModel` and **neither was on the returned surface**, so the
-  stage's seam work was **EXPOSING `currentDraftFingerprint()` on `MemoryModel`** (`memoryModel.ts:466`,
+  stage's seam work was **EXPOSING `currentDraftFingerprint()` on `MemoryModel`** (`memoryModel.ts:468`,
   returned at `:997`, derived at `:708`) — not re-deriving it. The committed `SolveAnswer.fingerprint` is
   the MINT basis, *not* the trichotomy's fresh fingerprint.
 - **The mint is NOT independent of the plan-save machine.** The record participates in the dirty/clean
@@ -492,7 +492,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   defect**: the doctored build year forks the derived birth year across the RMD band edge, forcing the
   household into RMDs two years early. It is pinned as found and filed.
 - **Both seeds were walked** (`datearrived` plus the existing aged plant) in the Caddie walk, and
-  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:2203-2228`) — without that allowlist entry the
+  `datearrived` joined the door walk (`e2e/caddie-walk.spec.ts:2168-2193`) — without that allowlist entry the
   one plant this stage exists to cold-read would have been chaired on its landing alone.
 - **The walk hard-flagged all six faces and NOTHING shipped from it** (`docs/caddie/cold-read-log.md`,
   2026-07-27) — three carrying **calm-but-wrong BLOCKERS**, the class the batched-oracle grant has never
@@ -510,7 +510,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
 - **Owed from the walk, and not filed until 2026-09-25 (from the 2026-09-24 doc audit):** the arrived-walk's state-tax blindness. `?vault=datearrived` is stateless by construction (`doctorArrivedVault` refuses a priced-state base, `devSeeds.ts:1905-1912`), so no walk has read the arrived face on a priced state. It is carried in `docs/backlog.md` under "The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed".
 - **The aged band's x-axis has its first real-browser arm.** Before S6 no fit arm asserted it — the aged
   axis appeared nowhere in `e2e/`, so §S0's rename had shipped on unit arms alone. `?vault=datearrived` is
-  now driven at `e2e/vertical-fit.spec.ts:2796-2957`, asserting that the year-0 endpoint names the BUILD
+  now driven at `e2e/vertical-fit.spec.ts:3049-3210`, asserting that the year-0 endpoint names the BUILD
   year (`'Plan built'`, `:2220-2224`) and that no named marker renders left of Today — neither the plain
   label nor the split one, since the array picks between them (`:2230-2240`). Both are mutation-proven, and
   the withdrawal mutant draws

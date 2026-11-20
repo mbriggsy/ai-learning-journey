@@ -2115,7 +2115,7 @@ export const copy = {
   recommendSaveSavedBadge: 'Saved to this device — your plan and this strategy read',
   // THE REFUSALS. None carries a retry control: the mint is deterministic, so a retry re-fails
   // identically, and an affordance that cannot succeed is the lying-remedy shape
-  // (Result.tsx:575-583). Each says what did NOT happen, in the reader's frame.
+  // (Result.tsx:577-585). Each says what did NOT happen, in the reader's frame.
   recommendSaveRefusalRecordInvalidHeading: 'This strategy read couldn’t be kept',
   recommendSaveRefusalRecordInvalidBody:
     'We couldn’t build a record of it, so nothing reached this device — your plan here is exactly as you left it. The answer above is still current.',
@@ -3221,7 +3221,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:2922-2925` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:3175-3178` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,

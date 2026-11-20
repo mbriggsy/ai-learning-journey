@@ -1,7 +1,20 @@
 import { test, expect, type CDPSession, type Page } from '@playwright/test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { REAL, REAL_DPR, PHONE, PHONE_DPR, FINAL_TIER_MS, advanceIntakeTo, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
+import {
+  REAL,
+  REAL_DPR,
+  PHONE,
+  PHONE_DPR,
+  FINAL_TIER_MS,
+  SETTLED_RESULT,
+  advanceIntakeTo,
+  armRefiguringWatch,
+  expectRefiguringSeen,
+  gotoSeedFinal,
+  rewalkSeedTo,
+  settleLayout,
+} from './reviewSurface'
 /* The no-anchor arm's handle reads the CATALOG, never a re-typed sentence (this import is the
  * precedent the fit specs cite). A hardcoded literal here is a second copy of the product's words: U17 §S6
  * reworded this exact string, and a literal would have re-broken the only walk that reaches the
@@ -184,6 +197,12 @@ import type { WorkingYearLeftOverKind } from '../src/shared/model'
  * Increment 14 (2026-11-20, b9-3, for walk 10's watch item W9 (5)):
  *  - `intake:typedmoved` re-walks TM (`datesavedtypedmoved`) to its money-picture step (`walk-typed-moved-ledger`: the
  *    moved note and the typed-below line under "All of it", the saved-moved step no other arm reached).
+ *
+ * Increment 15 (2026-11-20, W9-R7's U5):
+ *  - Every settle reads `SETTLED_RESULT` (a final tier with no run on newer inputs in flight), and the panel
+ *    walks' re-run watch keys on `data-answer-refiguring` alone. It lives in reviewSurface.ts
+ *    (`armRefiguringWatch` / `expectRefiguringSeen`), shared with the fit gate's live arm, which proves it fires
+ *    on a spine panel edit (the tier-and-words watch it replaces never could: a spine edit stays "final").
  *
  * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
  * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
@@ -843,8 +862,8 @@ async function walkDoors(page: Page, outDir: string, witness?: LeftOverWitness):
   for (let i = 0; i < count; i++) {
     const door = doors.nth(i)
     const name = (await door.innerText()).trim()
-    // The assumptions door by its OWN stable stamp (Result.tsx:728), never by index: the
-    // `.result-recommend-invite` door (Result.tsx:688) is conditional, so door-4 is door-4 only
+    // The assumptions door by its OWN stable stamp (Result.tsx:730), never by index: the
+    // `.result-recommend-invite` door (Result.tsx:690) is conditional, so door-4 is door-4 only
     // on the plants where the solve is un-invitable. Read BEFORE the click — the row survives the
     // open, but nothing here should depend on that.
     const isAssumptions = (await door.getAttribute('data-door')) === 'assumptions'
@@ -854,7 +873,7 @@ async function walkDoors(page: Page, outDir: string, witness?: LeftOverWitness):
     // exact class, the same one `SequencingControl`/`HealthcareSheet` use. So on every target where
     // `solveInvitable` holds, the walk opened this door, CHECKED A GOAL RADIO as a side effect, then
     // waited 120s for a TwoFutures `svg.tf` that the GoalPicker never renders — and this door is
-    // FIRST in the doors DOM order (Result.tsx:683-696), so the walk died before reaching any other
+    // FIRST in the doors DOM order (Result.tsx:685-698), so the walk died before reaching any other
     // door, including the assumptions panel the Card 11 crops below live on. Measured RED at both
     // viewports on `seed:retired`, which is the walk's DEFAULT target.
     // This is the `datemixed` shape at a new site, and the header comment above already names it:
@@ -913,9 +932,9 @@ async function walkDoors(page: Page, outDir: string, witness?: LeftOverWitness):
     await expect(dialog).toBeHidden()
   }
   // The receipt tests the SAME predicate the crops do, not a weaker one: it fails iff the loop
-  // never entered the branch that writes them. `hatchReachable` (Result.tsx:427-436) is satisfied
+  // never entered the branch that writes them. `hatchReachable` (Result.tsx) is satisfied
   // by `focusKey`, and every walkDoors caller has already awaited
-  // `main.result[data-answer-tier="final"]` — so a missing assumptions door means the door row
+  // `SETTLED_RESULT` — so a missing assumptions door means the door row
   // changed shape under the harness, which is exactly when a silent skip would be worst.
   expect(
     panelScreened,
@@ -956,7 +975,7 @@ async function walkVaultReturn(
   await captureState(page, path.join(outDir, 'gate'))
 
   await page.getByRole('button', { name: /still about right/i }).click()
-  await expect(page.locator('main.result[data-answer-tier="final"]')).toBeAttached({
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({
     timeout: 120_000,
   })
   if (opts.witness !== undefined) await assertStandingNote(page, `vault:${key}`, opts.witness)
@@ -1672,63 +1691,14 @@ async function walkIntakeLeftOver(page: Page, outDir: string): Promise<void> {
 const KEPT_W = STALE_W_CONFIRMED
 const KEPT_W_MONTHLY = '7,000'
 /** The kept walk's budget: ten final-tier waits (three fresh landings; in branches A and B the settle before the
- *  re-run watch is armed, the re-run's first commit and its final frame; in branch C, which arms no watch, the
- *  final frame alone) at FINAL_TIER_MS each, plus three minutes for its ten captures per viewport and the two
- *  re-walks. */
+ *  re-run watch is armed, the wait for the run to show and its settled frame; in branch C, which arms no watch,
+ *  the settled frame alone) at FINAL_TIER_MS each, plus three minutes for its ten captures per viewport and the
+ *  two re-walks. */
 const KEPT_TEST_MS = 10 * FINAL_TIER_MS + 180_000
 
-/** The settled final Result (the kept and typed-below walks read it). */
-const settledResult = (page: Page) => page.locator('main.result[data-answer-tier="final"][data-inframe-disclaimer]')
-
-/** The re-run watch (`walkIntakeKept`'s comment at its call site says why it watches two signals). Armed just
- *  before a panel's LAST edit: it records the Result behind the sheet leaving its settled final frame, or the
- *  verdict's own words changing. */
-async function armResultRerunWatch(page: Page): Promise<void> {
-  await expect(settledResult(page), 'an earlier edit’s re-run never settled').toBeAttached({ timeout: FINAL_TIER_MS })
-  await page.evaluate(() => {
-    const w = window as unknown as { __caddieRerun?: boolean; __caddieTierLog?: string[] }
-    const verdict = (): string => {
-      const h = document.querySelector('main.result h2')
-      return h === null ? '' : `${h.textContent ?? ''} | ${h.nextElementSibling?.textContent ?? ''}`
-    }
-    const before = verdict()
-    if (before === '') throw new Error('the re-run watch found no verdict heading on the Result')
-    w.__caddieRerun = false
-    w.__caddieTierLog = []
-    new MutationObserver(() => {
-      const m = document.querySelector('main.result')
-      const tier = m === null ? 'no-main' : `${m.getAttribute('data-answer-tier')}/${m.hasAttribute('data-inframe-disclaimer')}`
-      const now = verdict()
-      w.__caddieTierLog!.push(`${Math.round(performance.now())}:${tier}${now === before ? '' : ':moved'}`)
-      if (m === null || m.getAttribute('data-answer-tier') !== 'final' || !m.hasAttribute('data-inframe-disclaimer') || now !== before) {
-        w.__caddieRerun = true
-      }
-    }).observe(document.body, {
-      subtree: true,
-      childList: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: ['data-answer-tier', 'data-inframe-disclaimer'],
-    })
-  })
-}
-
-/** Passes once the watch armed by `armResultRerunWatch` has seen the edit's re-run start; on a miss it prints the
- *  history the watcher recorded, labelled with the walk. */
-async function expectResultRerun(page: Page, walk: string): Promise<void> {
-  try {
-    await expect
-      .poll(() => page.evaluate(() => (window as unknown as { __caddieRerun?: boolean }).__caddieRerun), {
-        message: 'the panel edit started no re-run behind the sheet',
-        timeout: FINAL_TIER_MS,
-      })
-      .toBe(true)
-  } catch (e) {
-    const history = await page.evaluate(() => (window as unknown as { __caddieTierLog?: string[] }).__caddieTierLog ?? [])
-    console.log(`[${walk}] the Result's tier since the watch was armed (ms:tier/settled): ${history.slice(0, 40).join(' ')}`)
-    throw e
-  }
-}
+/** The settled final Result (the kept and typed-below walks read it): `SETTLED_RESULT` with the in-frame
+ *  disclaimer stamped. */
+const settledResult = (page: Page) => page.locator(`${SETTLED_RESULT}[data-inframe-disclaimer]`)
 
 /**
  * The KEPT walk (increment 10 — `intake:kept`; the header names what it is for). Every branch starts from a
@@ -1750,12 +1720,12 @@ async function expectResultRerun(page: Page, walk: string): Promise<void> {
  *     Keep door shows → Continue: `walk-kept-stale-state-blocked` (the gate names that door by its own words).
  * Every sentence asserted is the shipped slot over the seed's own figures. The spending is typed in `date`'s
  * own unit, a month ($7,500 = $90,000 a year). A panel edit re-runs the answer behind the sheet: in A and B,
- * the two branches that capture the Result, the walk sees that run start before the panel closes (the Result
- * leaves its settled final frame), and after it, waits for the final frame again — so a Result capture never
- * shows the answer from before the edit. C captures no Result and arms no watch (its comment says why).
+ * the two branches that capture the Result, the walk sees that run start before the panel closes (the Result's
+ * `data-answer-refiguring` appears), and after it, waits for the settled final frame again — so a Result capture
+ * never shows the answer from before the edit. C captures no Result and arms no watch (its comment says why).
  */
 async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
-  const settled = page.locator('main.result[data-answer-tier="final"][data-inframe-disclaimer]')
+  const settled = settledResult(page)
   const pick = async (radio: ReturnType<Page['locator']>): Promise<void> => {
     await radio.evaluate((el) => (el as HTMLInputElement).click())
     await expect(radio, 'the picked radio did not commit').toBeChecked()
@@ -1788,21 +1758,15 @@ async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
     await expect(face.getByRole('radio', { name: copy.periodYear })).toBeChecked()
     await expect(face.getByRole('button', { name: /^Keep \$/ }), 'no Keep door on a kept figure below the quote').toHaveCount(0)
   }
-  // Armed just before the panel's LAST edit: a watcher that records the Result behind the sheet leaving its
-  // settled final frame (a re-run started). The capture between that edit and the close can outlast the
-  // re-run itself, so "not settled at the close" would be a race; "left settled since the edit" is not. It
-  // reads `main.result` afresh on every mutation, so a Result remounted by the re-run is still seen.
-  // A run shows in the DOM only when it COMMITS (memoryModel holds the last answer while one runs), so the
-  // watch is armed only once every earlier edit's runs have settled — an older run can then never commit
-  // after the edit's own (its epoch is stale). The edit's re-run is seen two ways, because one is not
-  // enough: its provisional tier commits (the tier attribute leaves "final"), or — where two re-runs
-  // dispatched by one edit cancel each other's provisional sweep and only the last final commits, the tier
-  // never leaving "final" (measured in walk 1's branch B: the hero moved from a date to "No fuck-off date"
-  // with every tier read "final") — the verdict's own words change: the hero heading and the line under it,
-  // which only a run writes (the standing line under them reads the draft and moves at the edit itself).
-  const armRerunWatch = (): Promise<void> => armResultRerunWatch(page)
-  // Closes the panel onto the Result and reads its one standing line, which reads the draft and so moves at the
-  // edit itself, with no run needed for it.
+  // Armed just before the panel's LAST edit (`armRefiguringWatch`, reviewSurface.ts, says why the attribute is
+  // the signal): it records `data-answer-refiguring` appearing on the Result behind the sheet, the store's mark
+  // that a run on the edited inputs is in flight. The capture between that edit and the close can outlast the
+  // run itself, so "still re-figuring at the close" would be a race; "re-figured since the edit" is not. The
+  // watch is armed only once every earlier edit's runs have settled, so the appearance is this edit's.
+  const armRerunWatch = (): Promise<void> => armRefiguringWatch(page)
+  // Closes the panel onto the Result, waits it settled (the edit's own answer has committed, since the watch saw
+  // the run start), and reads its one standing line. That line describes the shown answer, so it reads the draft
+  // the answer was figured from (W9-R7's U3) and moves with the commit, never at the edit.
   const closePanel = async (dialog: ReturnType<Page['getByRole']>, line: string): Promise<void> => {
     await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
     await expect(dialog).toBeHidden()
@@ -1811,10 +1775,10 @@ async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
     await expect(note, 'the Result must carry exactly one standing line').toHaveCount(1)
     await expect(note).toContainText(line)
   }
-  // On a household with no date in the window the re-run's sweep tries every candidate year, so the wait is
-  // a final-tier budget, and a miss prints the history the watcher recorded.
+  // On a household with no date in the window the re-run's sweep tries every candidate year, so the settle is
+  // a final-tier budget; a watch that never saw the run start prints what it read.
   const closeToResult = async (dialog: ReturnType<Page['getByRole']>, line: string): Promise<void> => {
-    await expectResultRerun(page, 'intake:kept')
+    await expectRefiguringSeen(page, 'intake:kept')
     await closePanel(dialog, line)
   }
 
@@ -1874,10 +1838,11 @@ async function walkIntakeKept(page: Page, outDir: string): Promise<void> {
 
   // Branch C (walk 2, the U11 walk's (ad)): the state answer moved alone, so the kept figure is stale on the state
   // and the note's Keep door shows; on the walk's W step the gate names that door by its own words, or a retype.
-  // No re-run watch: this branch captures no Result, and the watch could never fire here. The move to
-  // Pennsylvania alone re-runs the answer (`commitAssumptionEdit` re-runs every date-route edit), but that run
-  // leaves this household's verdict word for word and its tier at "final" (walk 2's first run, 2026-11-09: the
-  // watch saw no change in 150 s at both viewports), so nothing the watch reads ever moves.
+  // No re-run watch: this branch captures no Result, so nothing here needs the edit's own answer on screen. The
+  // move to Pennsylvania does re-run the answer (`commitAssumptionEdit` re-runs every date-route edit), and the
+  // settle in `closePanel` waits that run out. (The watch this walk used before W9-R7, keyed on the tier and the
+  // hero's words, saw nothing here in 150 s at both viewports on walk 2's first run, 2026-11-09: the run leaves
+  // this household's verdict word for word and its tier at "final".)
   {
     const { dialog, face } = await openPanelAndKeep()
     await pick(dialog.locator('[data-assumption-seat="retirement-state"]').getByRole('radio', { name: /Pennsylvania/ }).first())
@@ -1933,7 +1898,7 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
   const year = face.getByRole('radio', { name: copy.periodYear })
   await year.evaluate((el) => (el as HTMLInputElement).click())
   await expect(year, 'the year tap did not commit').toBeChecked()
-  await armResultRerunWatch(page)
+  await armRefiguringWatch(page)
   await typeFieldValue(face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true }), '84000', STALE_W_CONFIRMED)
   await expect(face.getByText(note, { exact: true }), 'the typed-below note under the row').toBeVisible()
   // U11 walk 7's R2: the seat below names the $84,000 its $16,985 rests on and, below its radios, ends on the line's
@@ -1952,7 +1917,7 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
   )
   await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
   await captureState(page, path.join(outDir, 'panel-typed-below'))
-  await expectResultRerun(page, 'intake:typedbelow')
+  await expectRefiguringSeen(page, 'intake:typedbelow')
   await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
   await expect(dialog).toBeHidden()
   await expect(settledResult(page)).toBeAttached({ timeout: FINAL_TIER_MS })

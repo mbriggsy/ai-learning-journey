@@ -100,7 +100,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  *
  * AND BE HONEST ABOUT WHERE THIS ONE ALREADY TRAVELS (a reviewer's catch, 2026-07-25 — the clause
  * above overstated its own boundary). This read feeds `rulesMoved`, and `rulesMoved` is carried to
- * `IntakeApp.tsx:884` → `Result.tsx:775,710` → `FuckOffDate.tsx:540`, which renders the standing
+ * `IntakeApp.tsx:884` → `Result.tsx:777,710` → `FuckOffDate.tsx:540`, which renders the standing
  * hero echo BESIDE THE CROWNED DATE. So for a 63-working/67-retired household with the required
  * quote pair, a moved `acaStatus` names the ACA line at the gate (honest — the gate is pre-crown)
  * and ALSO lights that echo, even where a crown ≥2 years out puts both members at 65+ and the

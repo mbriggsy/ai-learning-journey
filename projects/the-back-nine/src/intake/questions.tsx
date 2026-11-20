@@ -1000,7 +1000,7 @@ function AccountsStep({ api }: { api: StepApi }) {
   // focus fell to the body. Both hooks sit ABOVE the editor branch below — it returns early, and a
   // hook after it would not run on the editor render (rules of hooks).
   const listHeadingRef = useRef<HTMLHeadingElement | null>(null)
-  // THE LATCH IS THE PREVIOUS `editing`, NEVER A SPENT BOOLEAN. src/main.tsx:42 wraps the app in
+  // THE LATCH IS THE PREVIOUS `editing`, NEVER A SPENT BOOLEAN. src/main.tsx's root render wraps the app in
   // <StrictMode>, so React's dev build double-invokes a NEWLY-PLACED fiber's effects — setup,
   // cleanup, setup — and this step body is exactly that on every advance (flow.tsx keys its
   // <section> by step id). A `useRef(true)` flag is spent by pass 1, so pass 2 saw

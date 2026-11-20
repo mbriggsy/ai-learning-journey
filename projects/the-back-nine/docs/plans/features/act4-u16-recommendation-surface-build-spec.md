@@ -38,7 +38,7 @@ below is a corollary.
 1. No U16 code re-derives a decision from displayed seed-B figures (render-the-flag + planted-fail guards, burned/070).
 2. The interactive tier reduces SEARCH precision only — grades + every displayed figure ALWAYS at `solverMinBPaths`; never down-sampled.
 3. The A↔B residual is NEVER a rendered number. Name the baseline, never the residual.
-4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:755` stamps the attribute from the DATE-search tier alone — `answerTier` at `:640-643`, the `DateSearchTier` the committed headline or date answer carries).
+4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:757` stamps the attribute from the DATE-search tier alone — `answerTier` at `:640-643`, the `DateSearchTier` the committed headline or date answer carries).
 5. No inert lying affordance: the save gesture was **ABSENT in U16** — a reserved layout slot only (§S4). U17 §S5 landed the gesture and the v3 write together (2026-07-26/27) into that same reservation, so the slot is live today and the wall did its job: no inert Save ever rendered.
 6. A withheld reason renders TRUE and humane, never laundered, never color/opacity-only; unclassified **fails CLOSED**.
 
@@ -169,7 +169,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
 - The pre-dispatch `blocked` arm stays DISTINCT from the committed withheld payload — two calm
   renders, both naming the true reason (§Q5). The gap vocabulary shipped as
   `SolvePreconditionGap = 'goal-unset' | SolveBlockReason` over `SolveBlockReason = 'no-pretax' |
-  'spine-unready'` (`memoryModel.ts:312`, `:317`):
+  'spine-unready'` (`memoryModel.ts:314`, `:319`):
   `goal-unset` steers to the GoalPicker, and the single `buckets-defaulted` gap this spec first
   prescribed became the builder's TYPED refusal `no-pretax` | `spine-unready` landing verbatim as
   the gap, each with its own true note (the steer-seed increment, 2026-07-23, commits `8b9cab61` +
@@ -199,7 +199,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   affordance's own posture. Both walk seeds measured IN-FRAME. Spine content is never pushed below
   the fold to keep the invitation.
 - **The affordance is offered on the all-retired route only** (a recorded v1 deviation):
-  `solveInvitable` guards `!isDateRoute(snapshot.draft)` (`Result.tsx:478`), because the
+  `solveInvitable` guards `!isDateRoute(snapshot.draft)` (`Result.tsx:480`), because the
   working/date-route base is the crowned date offset — a follow-up increment. Both fit-gate
   affordance seeds are all-retired, so the measured posture is unregressed.
 - **GoalPicker** (`src/intake/GoalPicker.tsx`) renders INSIDE the `ControlSheet` scaffold

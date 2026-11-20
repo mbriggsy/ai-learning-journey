@@ -153,8 +153,9 @@ export function Result({
 }) {
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
-  // Retry re-runs the FINAL tier: the result screen only ever shows the crowned final answer, never a
-  // provisional re-blank (a provisional re-fire would mint a higher epoch and supersede the final).
+  // Retry re-runs the FINAL tier alone, one run with no quick reading first (a provisional re-fire would
+  // mint a higher epoch and supersede the final). The date hero does show a provisional-tier answer, under
+  // its tag, on a first reveal and after an edit (W9-R7); a retry never passes through one.
   const retry = useCallback(() => void appModel.recompute('final'), [])
 
   // The save slot's TRANSITION announcements (ultramode 2026-07-02). The slot swaps whole nodes
@@ -381,8 +382,9 @@ export function Result({
     },
     [crownedOffset],
   )
-  // Apply/escape recompute provisional→final (the decrypt-on-return fast-show precedent): the
-  // provisional lands quickly under the thinking-breathe, the final sharpens in the background.
+  // Apply/escape recompute provisional→final (the decrypt-on-return fast-show precedent): on the date
+  // route the provisional lands quickly under the breathing provisional tag (W9-R7, R9) and the final
+  // sharpens behind it; the spine's two tiers are byte-identical (its run ignores the tier).
   // W9-R7 (R6, KTD7): a provisional that a newer edit superseded before it settled sends NO final —
   // the newer edit's own pair carries the household's latest inputs, provisional first. (Sent anyway,
   // the old pair's final would be built from the newer draft and its epoch bump would cancel the newer

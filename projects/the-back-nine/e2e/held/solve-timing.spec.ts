@@ -42,7 +42,7 @@ import { cpus } from 'node:os'
 import { join, resolve } from 'node:path'
 import { build } from 'vite'
 
-import { REAL, REAL_DPR } from '../reviewSurface'
+import { REAL, REAL_DPR, SETTLED_RESULT } from '../reviewSurface'
 import type { PlantReport } from './solveTimingPlant'
 
 const ROOT = resolve(import.meta.dirname, '../..')
@@ -71,7 +71,7 @@ const LOCKUP_MS = 95 * 60_000
 
 /** The in-page probes: first-seen time of each, read by the poll. */
 const PROBES = {
-  verdict: 'main.result[data-answer-tier="final"]',
+  verdict: SETTLED_RESULT,
   invite: '.result-recommend-invite',
   pending: '.solve-pending',
   lockup: '.rec-held, .rec-committed',

@@ -1418,6 +1418,35 @@ describe('memoryModel — W9-R7: the answered draft, the newest-inputs commit ru
     expect(b.inputKey).not.toBe(a.inputKey)
   })
 
+  it('the same on the SPINE, whose commit branch is its own: ONE notify raises the flag over the held verdict, and the new verdict commits with the flag down in the SAME frame — no frame shows the flag down over the old verdict', async () => {
+    // Found by U5's planted-fault pass: a flag dropped one notify ahead of the spine commit passed every store
+    // test (the frames tests above and below drive the date route only), and the page cannot catch it — React
+    // paints the two notifies of one task as one frame — so it is pinned here, at the subscriber.
+    const { client, runPending } = fakeClient({ controlledRun: true })
+    const model = createMemoryModel({ client, builders: keyedSpineBuilders, mintSeed: () => 7 })
+    const a = await shownSpine(model, runPending, 40_000)
+    const frames: Array<{ readonly answer: ModelAnswer; readonly refiguring: boolean }> = []
+    model.subscribe(() => {
+      const s = model.getSnapshot()
+      frames.push({ answer: s.answer, refiguring: s.refiguring })
+    })
+
+    model.update(spend(48_000))
+    const i = runPending.length
+    const r = model.recompute('final') // a spine panel edit dispatches the final tier alone (Result.tsx's commitAssumptionEdit)
+    expect(frames).toHaveLength(2) // the edit, then ONE notify raising the flag…
+    expect(frames[1]!.refiguring).toBe(true)
+    expect(frames[1]!.answer).toBe(a) // …over the old verdict, still on screen
+
+    runPending[i]!(spineWire())
+    await expect(r).resolves.toBe(true)
+    const committed = frames.findIndex((f) => f.answer !== a)
+    expect(committed, 'the frame after the dispatch is the commit itself').toBe(2)
+    expect(frames[committed]!.refiguring).toBe(false) // the flag down in the commit's own frame
+    expect(keyed(frames[committed]!.answer).draft.annualSpendingReal).toBe(48_000)
+    expect(frames.slice(committed).every((f) => !f.refiguring)).toBe(true) // a later spend-lane notify raises nothing
+  })
+
   it('a provisional then its final on the same draft: the flag never turns on (a sharpen is not a re-figuring)', async () => {
     const { client, calls, datePending } = fakeClient()
     const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })

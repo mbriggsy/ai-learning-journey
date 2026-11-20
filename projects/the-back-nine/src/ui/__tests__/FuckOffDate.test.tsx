@@ -8,6 +8,7 @@ import { copy, slots } from '../copy'
 import { dateOddsText } from '../dateOdds'
 import { deriveDateBandAnnotations } from '../bandAnnotations'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
+import { IN_FRAME_DISCLAIMER_ID } from '../Disclaimer'
 import type { DateBand } from '@shared/model'
 
 /*
@@ -745,5 +746,92 @@ describe('FuckOffDate — the band caption beside a working-year figure (W8-R7)'
       <FuckOffDate view={banded({ band: { ...BAND, track: 'floor' as const }, workingYearFigure: { figure: '84,000', quote: '90,000', last: false } })} />,
     )
     expect(caption(container)).toBe(copy.bandPricesEssentialsNote)
+  })
+})
+
+describe('FuckOffDate — W9-R7: the re-figuring tell and the provisional tag (KTD6, KTD8)', () => {
+  const lineOf = (container: HTMLElement): Element | null => container.querySelector('.fod-refiguring')
+  // A lifestyle-crowned band whose caption names a working-year figure (W8-R7's sentence).
+  const banded = {
+    ...dates(DATE_FIXTURES.confirmed),
+    band: BAND,
+    bandAnnotations: deriveDateBandAnnotations(58, 60, 4, 40, undefined, false),
+    workingYearFigure: { figure: '84,000', quote: '90,000', last: false },
+  }
+
+  it('the flag on a dated answer: the eyebrow slot reads the DATE words ahead of the headline, the heading names it before the caveat, and it is never a live region', () => {
+    const { container } = render(<FuckOffDate view={{ ...dates(DATE_FIXTURES.confirmed), refiguring: true }} />)
+    const line = lineOf(container)!
+    expect(line.textContent).toBe(copy.answerRefiguringDate)
+    const heading = screen.getByRole('heading', { name: slots.dateInYears(4) })
+    expect(line.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(heading.getAttribute('aria-describedby')).toBe(`${line.id} ${IN_FRAME_DISCLAIMER_ID}`)
+    expect(line.closest('[role="status"], [role="alert"], [aria-live]')).toBeNull()
+  })
+
+  it('without the flag: no line, and the heading names the caveat alone (the settled DOM before W9-R7)', () => {
+    const { container } = render(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} />)
+    expect(lineOf(container)).toBeNull()
+    expect(screen.getByRole('heading', { name: slots.dateInYears(4) }).getAttribute('aria-describedby')).toBe(
+      IN_FRAME_DISCLAIMER_ID,
+    )
+  })
+
+  it('the flag on a NO-DATE answer: the VERDICT words (no date to name), and the headline drops the entered-so-far tail the line makes false', () => {
+    const on = render(<FuckOffDate view={{ ...dates(DATE_FIXTURES.noDate), refiguring: true }} />)
+    expect(lineOf(on.container)!.textContent).toBe(copy.answerRefiguringVerdict)
+    expect(screen.getByRole('heading', { name: slots.noDateInWindowRefiguring(DATE_WINDOW_TOP) })).toBeInTheDocument()
+    expect(on.container.textContent).not.toContain('with what you’ve entered so far')
+    cleanup()
+    render(<FuckOffDate view={dates(DATE_FIXTURES.noDate)} />)
+    expect(screen.getByRole('heading', { name: slots.noDateInWindow(DATE_WINDOW_TOP) })).toBeInTheDocument()
+  })
+
+  it('the extreme inversion’s floor line drops its tail under the flag and keeps it without', () => {
+    const view = { kind: 'dates', floor: DATE_FIXTURES.noDate, lifestyle: DATE_FIXTURES.confirmed, windowTopYears: DATE_WINDOW_TOP } as const
+    const on = render(<FuckOffDate view={{ ...view, refiguring: true }} />)
+    expect(on.container.querySelector('.fod-floor')!.textContent).toBe(slots.dateFloorNotWithinRefiguring(DATE_WINDOW_TOP))
+    cleanup()
+    const off = render(<FuckOffDate view={view} />)
+    expect(off.container.querySelector('.fod-floor')!.textContent).toBe(slots.dateFloorNotWithin(DATE_WINDOW_TOP))
+  })
+
+  it('the band caption: W8-R7’s sentence, then the clause while the flag is on; the sentence alone without', () => {
+    const sentence = slots.bandCountsWorkingYearsNote('84,000', '90,000', false)
+    const on = render(<FuckOffDate view={{ ...banded, refiguring: true }} />)
+    expect(on.container.querySelector('.fod-band__tracknote')!.textContent).toBe(`${sentence} ${copy.answerRefiguringCaption}`)
+    cleanup()
+    const off = render(<FuckOffDate view={banded} />)
+    expect(off.container.querySelector('.fod-band__tracknote')!.textContent).toBe(sentence)
+  })
+
+  it('the line comes and goes without moving focus or closing the open "Study the range" modal (insight 047)', async () => {
+    const { rerender } = render(<FuckOffDate view={banded} focusSignal={1} />)
+    fireEvent.click(screen.getByRole('button', { name: copy.bandStudyRange }))
+    const dialog = await screen.findByRole('dialog')
+    const focused = document.activeElement
+    rerender(<FuckOffDate view={{ ...banded, refiguring: true }} focusSignal={1} />)
+    expect(screen.getByRole('dialog')).toBe(dialog)
+    expect(document.activeElement).toBe(focused)
+    rerender(<FuckOffDate view={banded} focusSignal={1} />)
+    expect(screen.getByRole('dialog')).toBe(dialog)
+    expect(document.activeElement).toBe(focused)
+    document.documentElement.classList.remove('band-modal-open')
+  })
+
+  it('the provisional tag: over a provisional-tier date (no flag) the eyebrow reads the tag, and it is gone once the final lands', () => {
+    const { container, rerender } = render(<FuckOffDate view={{ ...dates(DATE_FIXTURES.confirmed), provisional: true }} />)
+    expect(container.querySelector('.fod-provisional')!.textContent).toBe(copy.answerProvisionalTag)
+    expect(lineOf(container)).toBeNull()
+    rerender(<FuckOffDate view={dates(DATE_FIXTURES.confirmed)} />)
+    expect(container.querySelector('.fod-provisional')).toBeNull()
+  })
+
+  it('both flags at once (answerView never builds it) still draw ONE line: the re-figuring line outranks the tag', () => {
+    const { container } = render(
+      <FuckOffDate view={{ ...dates(DATE_FIXTURES.confirmed), provisional: true, refiguring: true }} />,
+    )
+    expect(lineOf(container)).not.toBeNull()
+    expect(container.querySelector('.fod-provisional')).toBeNull()
   })
 })

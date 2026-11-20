@@ -6,6 +6,7 @@ import { ConfidenceStatement } from '../ConfidenceStatement'
 import { copy, slots } from '../copy'
 import { READING_FIXTURES, SURVIVOR_FIXTURES } from '../preview/fixtures'
 import { deriveSpineBandAnnotations } from '../bandAnnotations'
+import { IN_FRAME_DISCLAIMER_ID } from '../Disclaimer'
 import { simulate } from '@engine/simulate'
 import { summarize } from '@engine/confidence'
 import { productionMarket } from '@engine/reference/methodology'
@@ -798,4 +799,48 @@ describe('Card 4 — exactly ONE state clause on every spine verdict ({all-65+, 
       }
     })
   }
+})
+
+describe('ConfidenceStatement — W9-R7: the re-figuring tell (KTD6)', () => {
+  const view = { kind: 'reading' as const, ...READING_FIXTURES['on-track'] }
+  const lineOf = (container: HTMLElement): Element | null => container.querySelector('.cs-refiguring')
+
+  it('the flag: the eyebrow slot reads the VERDICT words ahead of the verdict, the heading names it before the caveat, and it is never a live region', () => {
+    const { container } = render(<ConfidenceStatement view={{ ...view, refiguring: true }} />)
+    const line = lineOf(container)!
+    expect(line.textContent).toBe(copy.answerRefiguringVerdict)
+    const heading = screen.getByRole('heading', { name: copy.outcomeOnTrack })
+    expect(line.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(heading.getAttribute('aria-describedby')).toBe(`${line.id} ${IN_FRAME_DISCLAIMER_ID}`)
+    expect(line.closest('[role="status"], [role="alert"], [aria-live]')).toBeNull()
+    // the spine's eyebrow never carries the date words, nor the provisional tag beside the line
+    expect(container.textContent).not.toContain(copy.answerRefiguringDate)
+    expect(container.querySelector('.cs-provisional')).toBeNull()
+  })
+
+  it('without the flag: no line, and the heading names the caveat alone (the settled DOM before W9-R7)', () => {
+    const { container } = render(<ConfidenceStatement view={view} />)
+    expect(lineOf(container)).toBeNull()
+    expect(screen.getByRole('heading', { name: copy.outcomeOnTrack }).getAttribute('aria-describedby')).toBe(
+      IN_FRAME_DISCLAIMER_ID,
+    )
+  })
+
+  it('the line comes and goes without re-keying the verdict (no crossfade, no announce), re-stealing focus, or closing the open range modal (insight 047)', async () => {
+    const { container, rerender } = render(<ConfidenceStatement view={view} focusSignal="k" />)
+    const word = container.querySelector('.cs-word__text')!
+    fireEvent.click(screen.getByRole('button', { name: copy.bandStudyRange }))
+    const dialog = await screen.findByRole('dialog')
+    const focused = document.activeElement
+    rerender(<ConfidenceStatement view={{ ...view, refiguring: true }} focusSignal="k" />)
+    expect(container.querySelector('.cs-word__text')).toBe(word) // same node: the verdict keys never moved
+    expect(word).not.toHaveClass('cs-swap')
+    expect(container.querySelector('[role="status"]')!.textContent).toBe('') // nothing announced
+    expect(screen.getByRole('dialog')).toBe(dialog)
+    expect(document.activeElement).toBe(focused)
+    rerender(<ConfidenceStatement view={view} focusSignal="k" />)
+    expect(container.querySelector('.cs-word__text')).toBe(word)
+    expect(screen.getByRole('dialog')).toBe(dialog)
+    expect(document.activeElement).toBe(focused)
+  })
 })

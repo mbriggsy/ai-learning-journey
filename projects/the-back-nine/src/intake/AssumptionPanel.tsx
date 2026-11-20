@@ -443,7 +443,7 @@ export function AssumptionPanel({
   const leftOverNameRef = useRef<HTMLParagraphElement | null>(null)
   // Stable, so the W row's announce effect never re-runs on a mere re-render.
   const announce = useCallback((text: string) => announcerRef.current?.announce(text), [])
-  const { draft, answer, displayed, spend } = snapshot
+  const { draft, answer, displayed, spend, refiguring } = snapshot
   const governs = budgetGoverns(draft.budget)
   const dateRoute = isDateRoute(draft)
   // U17 §S1 — the Roth row's start in CALENDAR terms, derived ONCE through the shared producer
@@ -650,7 +650,14 @@ export function AssumptionPanel({
           is aria-modal (the hero behind it is out of the AT tree), so this region is the AT
           user's answer feedback: role=status announces the moved reading, atomically. */}
       <div className="ap-echo" role="status" aria-atomic="true">
-        {displayed !== null && echoVerdict !== null ? (
+        {refiguring && (answer.kind === 'headline' || answer.kind === 'date') ? (
+          // W9-R7 (KTD6): a run on the panel's newest inputs is in flight, and everything this box
+          // would say (the held verdict readout on the spine, "edits flow straight into your answer"
+          // on the date route) describes the answer from before the edit. One line, in place of
+          // them, inside the same reserved box — never an added line (insight 035). The keyless
+          // arms (incomplete, error) keep their own lines: the flag drives no words there.
+          <p className="ap-echo__lead ap-echo__lead--muted">{copy.assumptionEchoRefiguring}</p>
+        ) : displayed !== null && echoVerdict !== null ? (
           <>
             <p className="ap-echo__lead">{`${echoVerdict.word} — ${echoVerdict.reading}`}</p>
             <p className="ap-echo__dollar">{echoVerdict.clause}</p>

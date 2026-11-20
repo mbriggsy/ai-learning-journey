@@ -160,6 +160,18 @@
   color: var(--ink-muted);
 }
 
+/* W9-R7 (KTD6) — the re-figuring line, the eyebrow slot's other tenant: the verdict shown is from
+   before the latest change, and a run on the change is under way. fuckOffDate.css's .fod-refiguring
+   register, mirrored (fine print, muted ink, sentence case; the words carry the signal). */
+.cs-refiguring {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
+
 /* ----- the range / indeterminate mode (no verdict — the answer is incomplete, not bad) ----- */
 
 .cs-range {
@@ -253,11 +265,28 @@
   }
   /* the words become a real left-column stack (override the single-column display:contents). */
   .confidence-reveal[data-twopane] > .reveal__lead {
+    position: relative; /* the eyebrow slot's anchor (below) */
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
     grid-column: 1;
     grid-row: 1;
+  }
+  /* THE EYEBROW SLOT OVERLAYS the frame's top padding (W9-R7, KTD6 and R5): the one-frame fit law
+     binds this tier, and the tallest frames hold no slack, so a re-figuring line in the flow would
+     push the protected R13 disclaimer past the fold for the run's few seconds. Sat above the lead's
+     top edge, inside `.result`'s block padding (32px at the short tier, the tightest; the slot is
+     one line, ~18px, at the --measure column), it takes no row, so the verdict, its fold and every
+     tap target sit exactly where they sit without it (insight 035). The fit gate's flag-on arm
+     proves it (U5). Below the two-pane tier the hero scrolls and the slot stays in the flow.
+     Mirrored in fuckOffDate.css — the two routes share one two-pane rhythm. */
+  .confidence-reveal[data-twopane] .cs-provisional,
+  .confidence-reveal[data-twopane] .cs-refiguring {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 100%;
+    margin: 0 0 var(--space-2);
+    line-height: var(--leading-snug);
   }
   /* the band: right column, pinned to the top, spanning the left column's word/action rows but
      STOPPING above the full-width disclaimer + doors rows (1/-1 would overlap them in column 2). */

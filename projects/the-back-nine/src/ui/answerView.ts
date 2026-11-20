@@ -47,9 +47,23 @@ export type ElevatedAnswer =
 /**
  * Map the committed snapshot to the elevated lead surface + its view. A pure function of the snapshot
  * except for `onRetry`, which is threaded verbatim into the `compute-error` view (the surfaces own the
- * retry button; the model owns the recompute). The result is provisional-free by construction — the
- * elevated hero shows only the FINAL answer (the provisional reading lives in the quiet strip during
- * intake), so the `provisional` eyebrow is never set here.
+ * retry button; the model owns the recompute).
+ *
+ * THE EYEBROW (W9-R7, `docs/plans/features/answered-draft-build-spec.md` KTD6 and KTD8). Both flags
+ * ride the view PRESENCE-keyed (absent when off), so every settled view is byte-identical to the
+ * one before them:
+ *  - `refiguring` — the store's flag (`snapshot.refiguring`): a run on inputs different from the
+ *    shown answer's is in flight, so the hero says the shown answer is from before the latest change.
+ *  - `provisional` (the date route only) — the shown answer is the 2,000-path PROVISIONAL tier and
+ *    no re-figuring is under way, so the date renders under the provisional tag until its final
+ *    lands (`docs/architecture.md`'s provisional-class rule: a provisional reading "renders only
+ *    under D1's provisional string class and is never crowned as final"). On a first reveal too:
+ *    Briggsy's ruling, 2026-11-19 ("Yes, tag it"). Until W9-R7 the hero was provisional-free, and
+ *    the fit gate's first draft waited on this class reaching zero — a wait that could never wait
+ *    (insight 070); the gate's wait is the `data-answer-tier` presence. The spine is never tagged:
+ *    its two tiers are byte-identical (its run ignores the tier), so its provisional IS its final.
+ *  The re-figuring line outranks the tag (one slot, one line): over an answer being re-figured,
+ *  "with what you've entered so far" is false.
  */
 /**
  * The spine band + its household-clock annotations, SCREENED for the $0-portfolio household.
@@ -222,6 +236,12 @@ export function selectElevatedAnswer(
             // The band describes the shown answer, so its ages, spend levels and caption figure come
             // from the draft that answer was figured from (W9-R7, KTD5) — never the live one.
             ...dateBand(outcome, answer.draft, savedAnchor),
+            // The eyebrow (the module note): the re-figuring line, else the provisional tag.
+            ...(snapshot.refiguring
+              ? { refiguring: true as const }
+              : answer.tier === 'provisional'
+                ? { provisional: true }
+                : {}),
           },
         }
       }
@@ -263,6 +283,8 @@ export function selectElevatedAnswer(
           ...spineBand(answer.result, answer.draft, savedAnchor), // the answered draft, as on the date route
           ...(answer.result.survivorReading ? { survivorReading: answer.result.survivorReading } : {}),
           ...(answer.result.floorReading ? { floorReading: answer.result.floorReading } : {}),
+          // The re-figuring line (the module note); never the provisional tag on the spine.
+          ...(snapshot.refiguring ? { refiguring: true as const } : {}),
         },
       }
     }

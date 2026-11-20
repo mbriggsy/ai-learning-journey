@@ -34,13 +34,13 @@
  * U7 copyGuard); every numeral enters through a typed slot. CSP-clean: all styling is class-driven
  * (confidence.css), never an inline style attribute.
  */
-import { useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useRef, type ReactNode } from 'react'
 import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { VerdictIcon } from './verdictSignal'
 import { SurvivorReadout } from './SurvivorReadout'
 import { TwoTierHeadline } from './TwoTierHeadline'
-import { IN_FRAME_DISCLAIMER_ID } from './Disclaimer'
+import { verdictDescribedBy } from './Disclaimer'
 import { floorRelief } from './twoTier'
 import { axisDollarFormatterFor, formatAxisDollar } from './money'
 import { composeVerdictReading, reserveClauseFor, spendClauseFor } from './verdictSentence'
@@ -89,8 +89,14 @@ export type ConfidenceStatementView =
        *  slot the annotations use). Absent ⇒ the readout omits its ages line. */
       readonly bandAges?: (yearsFromNow: number) => string
       /** Renders the PROVISIONAL eyebrow — a reading taken before the account set is complete is a
-       *  labeled provisional update, never a final answer (back-nine-design intake §progressive). */
+       *  labeled provisional update, never a final answer (back-nine-design intake §progressive).
+       *  The result hero never sets it: the spine's two tiers are byte-identical (answerView's note). */
       readonly provisional?: boolean
+      /** W9-R7 (KTD6): a run on inputs different from the shown answer's is in flight, so the eyebrow
+       *  slot says the shown verdict is from before the latest change. Presence-keyed: absent when off.
+       *  At the two-pane tier the line OVERLAYS the frame's top padding (confidence.css), so it never
+       *  moves the verdict's one-frame fold (R5). */
+      readonly refiguring?: true
       /** The U7 "as the survivor" reading — the quieter second statement. Present iff the spine run
        *  carried a survivor phase (the parent, answerView, decides); when present, SurvivorReadout
        *  mounts below the band. Spine-only: the date route renders a timing claim, not a joint verdict. */
@@ -206,6 +212,10 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
       if (!sheetOpen) focusHeading(headingRef.current)
     }
   }, [focusSignal, sheetOpen])
+  // W9-R7 (KTD6): a run on newer inputs is in flight. The eyebrow line's id leads the heading's
+  // description, so a reader who jumps to the verdict hears it before the caveat.
+  const refiguring = view.kind === 'reading' && view.refiguring === true
+  const refiguringId = useId()
 
   // ── U12 C2 — the sticky sentence + the verdict crossfade ────────────────────────────────────
   // WHAT THE SENTENCE SHOWS: the sticky DISPLAY triple when one rides the view (production — the
@@ -388,10 +398,25 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
     body = (
       <div className="confidence-reveal" data-framing={shownPres!.framing} data-twopane={resolved ? '' : undefined}>
         <div className="reveal__lead">
-          {view.provisional && <p className="cs-provisional">{copy.answerProvisionalTag}</p>}
+          {/* THE EYEBROW SLOT, one line at most (W9-R7, KTD6): the re-figuring line while a run on
+              newer inputs is in flight. A plain node — no key, no focus, no live region (insight 047:
+              the landing latch and the crossfade keys stay untouched); the heading's description
+              names it instead. */}
+          {refiguring ? (
+            <p className="cs-refiguring" id={refiguringId}>
+              {copy.answerRefiguringVerdict}
+            </p>
+          ) : (
+            view.provisional && <p className="cs-provisional">{copy.answerProvisionalTag}</p>
+          )}
           <div className="cs-verdict">
             <VerdictIcon key={`glyph:${verdictKey}`} state={s.outcomeState} className={swapCls('cs-glyph')} />
-            <h2 className="cs-word" tabIndex={-1} ref={headingRef} aria-describedby={IN_FRAME_DISCLAIMER_ID}>
+            <h2
+              className="cs-word"
+              tabIndex={-1}
+              ref={headingRef}
+              aria-describedby={verdictDescribedBy(refiguring ? refiguringId : undefined)}
+            >
               <span key={`word:${verdictKey}`} className={swapCls('cs-word__text')}>
                 {shownWord}
               </span>

@@ -53,13 +53,13 @@
  * reduced-motion drops the movement, final state identical. STRING-FREE inline: every string from
  * copy.ts (copyGuard-gated); every numeral through a typed slot. CSP-clean: class-driven.
  */
-import { useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useRef, type ReactNode } from 'react'
 import { WORKING_COST_ACT_COPY, copy, slots, type CopyKey, type WorkingCostAct } from './copy'
 import { dateOddsText } from './dateOdds'
 import { dateTradeoffPoint } from './dateTradeoff'
 import { composeDateSplit, type DateSplitView } from './dateSplit'
 import { composeVerdictMedicareResidual, composeVerdictStateNote } from './stateTaxDisclosure'
-import { IN_FRAME_DISCLAIMER_ID } from './Disclaimer'
+import { verdictDescribedBy } from './Disclaimer'
 import type { PricedState } from '@engine/constants/stateTax'
 import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
@@ -88,7 +88,14 @@ export type FuckOffDateView =
       readonly lifestyle: DateTrackOutcome
       /** The window top this run evaluated — the no-date answer names its own window. */
       readonly windowTopYears: number
+      /** The shown answer is the 2,000-path provisional tier and no re-figuring is under way: the date
+       *  renders under the provisional tag until its final lands (W9-R7, KTD8 — answerView's module note). */
       readonly provisional?: boolean
+      /** W9-R7 (KTD6): a run on inputs different from the shown answer's is in flight, so the eyebrow
+       *  slot says the shown answer is from before the latest change (the date words over a date, the
+       *  verdict words over a no-date answer), the band caption adds that the change isn't in its
+       *  figures yet, and the no-date lines drop their entered-so-far tail. Presence-keyed: absent when off. */
+      readonly refiguring?: true
       /** The crowned date's projection band — FLOOR-crowned, present iff the floor crowned
        *  (engine-owned iff; a floor-no-date run has none). When present, the "show me the
        *  range" drawer mounts under the worded answer. */
@@ -237,13 +244,18 @@ function standingOpening(cause: StandingNoteCause, opening: string): string {
  *  is spoken is exactly what is shown. With an anchor (P3·U13): the calendar label is the
  *  wall-time-STABLE claim (startCalendarYear + offset — byte-identical however old the plan)
  *  and the relative count re-derives from today (offset − years since the plan was BUILT). The
- *  engine's own offset is NEVER mutated — this is presentation arithmetic only. */
+ *  engine's own offset is NEVER mutated — this is presentation arithmetic only. `refiguring`
+ *  (W9-R7, KTD6): the no-date claim drops its entered-so-far tail, which the re-figuring line
+ *  above it makes false. */
 export function heroLead(
   hero: DateTrackOutcome,
   windowTopYears: number,
   anchor?: BandPlanClockAnchor,
+  refiguring = false,
 ): string {
-  if (hero.kind === 'no-date-in-window') return slots.noDateInWindow(windowTopYears)
+  if (hero.kind === 'no-date-in-window') {
+    return refiguring ? slots.noDateInWindowRefiguring(windowTopYears) : slots.noDateInWindow(windowTopYears)
+  }
   if (hero.offsetYears === 0) return copy.dateFreeToday
   if (anchor === undefined) return slots.dateInYears(hero.offsetYears)
   const calendarYear = anchor.startCalendarYear + hero.offsetYears
@@ -263,20 +275,20 @@ export function heroLead(
  *  Anchored EXACTLY like `heroLead` (ultramode 2026-07-09): both lines share one screen, so
  *  an aged plan must never show a wall-time-corrected hero beside a floor replaying its
  *  build-day count — two time bases can even invert the true floor<lifestyle ordering.
- *  Exported for the anchor battery (the heroLead precedent). */
+ *  Exported for the anchor battery (the heroLead precedent). `refiguring`: heroLead's tail rule. */
 export function floorLineText(
   split: Extract<DateSplitView, { kind: 'split' }>,
   windowTopYears: number,
   anchor?: BandPlanClockAnchor,
+  refiguring = false,
 ): string {
   const fl = split.floor
   if (fl.kind === 'not-within-window') {
     // Lifestyle no-date too ⇒ the quiet severity disclosure ("either" — the hero line above
     // already names the window); lifestyle dated ⇒ the extreme-inversion statement of fact
     // (the inversion note carries the why). Both name their own years (audit 2026-07-03).
-    return split.lifestyle.kind === 'no-date-in-window'
-      ? slots.dateFloorNotWithinEither(windowTopYears)
-      : slots.dateFloorNotWithin(windowTopYears)
+    if (split.lifestyle.kind === 'no-date-in-window') return slots.dateFloorNotWithinEither(windowTopYears)
+    return refiguring ? slots.dateFloorNotWithinRefiguring(windowTopYears) : slots.dateFloorNotWithin(windowTopYears)
   }
   const odds = dateOddsText(fl.quantizedLowerBound)
   // Offset 0 mirrors heroLead's free-today precedence: "covered from today" holds under any
@@ -294,6 +306,29 @@ export function floorLineText(
     return slots.dateFloorCoveredNow(calendarYear, odds, fl.unconfirmed)
   }
   return slots.dateFloorCoveredAnchored(fl.offsetYears - anchor.yearsSincePlanBuilt, calendarYear, odds, fl.unconfirmed)
+}
+
+/** The band's track note: the world the range prices, named by the band's OWN track (never split-ness —
+ *  see the render's note). With a budget it names both spending levels — the gap is the whole reason
+ *  this household has two dates, and it was the one quantity the surface never stated; without one
+ *  there is no second level to name, so the level-free sentence stands (never a fabricated figure —
+ *  burned/062: absence is absence, not a default). W8-R7: where the run counts a working year at a
+ *  figure other than the spending, the full-budget arm names both (never "prices your full budget"
+ *  alone beside that note). */
+function bandTracknote(view: Extract<FuckOffDateView, { kind: 'dates' }>, band: DateBand): string {
+  const t = band.track
+  const s = view.spendLevels
+  const w = view.workingYearFigure
+  if (s === undefined) {
+    if (t === 'floor') return copy.bandPricesEssentialsNote
+    return w === undefined ? copy.bandPricesFullBudgetNote : slots.bandCountsWorkingYearsNote(w.figure, w.quote, w.last)
+  }
+  const full = formatAbsoluteDollar(s.full)
+  const essentials = formatAbsoluteDollar(s.essentials)
+  if (t === 'floor') return slots.bandPricesEssentialsWithLevels(essentials, full)
+  return w === undefined
+    ? slots.bandPricesFullBudgetWithLevels(full, essentials)
+    : slots.bandCountsWorkingYearsWithLevels(w.figure, w.last, full, essentials)
 }
 
 export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, statePricedNote, stalenessNote = false, dateAnchor, agedBalancesYear, sheetOpen = false, onReconfirm, payCheckNote, stalenessClause }: FuckOffDateProps) {
@@ -316,6 +351,10 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
   // The two-track composition — pure (insight 048), decided ONCE per view.
   const split = view.kind === 'dates' ? composeDateSplit(view.floor, view.lifestyle) : null
   const hero = split === null ? null : split.kind === 'single' ? split.track : split.lifestyle
+  // W9-R7 (KTD6): a run on newer inputs is in flight. The eyebrow line's id leads the heading's
+  // description, so a reader who jumps to the heading hears it before the caveat.
+  const refiguring = view.kind === 'dates' && view.refiguring === true
+  const refiguringId = useId()
 
   // THE SHARPEN ANNOUNCE (build-gate 3's second arm): focus never re-fires, so a hero claim that
   // CHANGES across the provisional→final sharpen (a different lifestyle crown; date↔no-date) would
@@ -335,8 +374,8 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
     if (view.kind !== 'dates' || hero === null) return
     // Behind an open sheet the panel echo is the AT feedback for the edit (aria-modal does
     // not silence background live regions) — the key bookkeeping above still runs.
-    if (!sheetOpen) announcer.announce(heroLead(hero, view.windowTopYears, dateAnchor))
-  }, [heroClaimKey, hero, view, announcer, sheetOpen, dateAnchor])
+    if (!sheetOpen) announcer.announce(heroLead(hero, view.windowTopYears, dateAnchor, refiguring))
+  }, [heroClaimKey, hero, view, announcer, sheetOpen, dateAnchor, refiguring])
 
   // The producer seam: resolve the floor-crowned fan into drawable geometry ONCE per view
   // (resolveBandData owns the fail-loud honesty guards — a malformed fan throws, never a silently-
@@ -430,7 +469,19 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
         data-twopane={resolved ? '' : undefined}
       >
         <div className="reveal__lead">
-          {view.provisional && <p className="fod-provisional">{copy.answerProvisionalTag}</p>}
+          {/* THE EYEBROW SLOT, one line at most (W9-R7, KTD6 and KTD8 — answerView's module note):
+              while a run on newer inputs is in flight, the re-figuring line (the date words over a
+              date; over a no-date answer, which has no date to name, the verdict words); else, over
+              a provisional-tier date, the provisional tag until the final lands. A plain node — no
+              key, no focus, no live region (insight 047: the heading's landing latch and the band's
+              re-draw key stay untouched); the heading's description names it instead. */}
+          {refiguring ? (
+            <p className="fod-refiguring" id={refiguringId}>
+              {heroDated ? copy.answerRefiguringDate : copy.answerRefiguringVerdict}
+            </p>
+          ) : (
+            view.provisional && <p className="fod-provisional">{copy.answerProvisionalTag}</p>
+          )}
           {/* The hero verdict NAMES the caveat (council 2026-09-10, clause 3 — the same link
               ConfidenceStatement's h2.cs-word carries): the screen reader reads R13 as this
               headline's own description, so the date reader meets "this can be wrong" with the
@@ -440,9 +491,9 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
             className={heroDated ? 'fod-headline' : 'fod-headline fod-headline--quiet'}
             tabIndex={-1}
             ref={headingRef}
-            aria-describedby={IN_FRAME_DISCLAIMER_ID}
+            aria-describedby={verdictDescribedBy(refiguring ? refiguringId : undefined)}
           >
-            {heroLead(heroTrack, view.windowTopYears, dateAnchor)}
+            {heroLead(heroTrack, view.windowTopYears, dateAnchor, refiguring)}
           </h2>
           {heroTrack.kind !== 'no-date-in-window' ? (
             <p className="fod-odds">{dateOddsText(heroTrack.grade.quantizedLowerBound)}</p>
@@ -462,7 +513,7 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
               inversion is disclosed, never reordered to put a sooner-looking date first). */}
           {split !== null && split.kind === 'split' && (
             <>
-              <p className="fod-floor">{floorLineText(split, view.windowTopYears, dateAnchor)}</p>
+              <p className="fod-floor">{floorLineText(split, view.windowTopYears, dateAnchor, refiguring)}</p>
               {split.inverted && <p className="fod-note">{copy.dateFloorInversionNote}</p>}
             </>
           )}
@@ -560,27 +611,10 @@ export function FuckOffDate({ view, focusSignal, actionsSlot, medicarePricedNote
                   the note AFFIRMS rather than contrasts; on the floor-keyed fallback it still warns. */}
               {view.band !== undefined && (
                 <p className="fod-band__tracknote">
-                  {(() => {
-                    const t = view.band.track
-                    // With a budget, NAME BOTH LEVELS — the gap is the whole reason this household
-                    // has two dates, and it was the one quantity the surface never stated. Without
-                    // one there is no second level to name, so the level-free sentence stands (never
-                    // a fabricated figure — burned/062: absence is absence, not a default).
-                    const s = view.spendLevels
-                    // W8-R7: where the run counts a working year at a figure other than the spending, the
-                    // full-budget arm names both (never "prices your full budget" alone beside that note).
-                    const w = view.workingYearFigure
-                    if (s === undefined) {
-                      if (t === 'floor') return copy.bandPricesEssentialsNote
-                      return w === undefined ? copy.bandPricesFullBudgetNote : slots.bandCountsWorkingYearsNote(w.figure, w.quote, w.last)
-                    }
-                    const full = formatAbsoluteDollar(s.full)
-                    const essentials = formatAbsoluteDollar(s.essentials)
-                    if (t === 'floor') return slots.bandPricesEssentialsWithLevels(essentials, full)
-                    return w === undefined
-                      ? slots.bandPricesFullBudgetWithLevels(full, essentials)
-                      : slots.bandCountsWorkingYearsWithLevels(w.figure, w.last, full, essentials)
-                  })()}
+                  {/* W9-R7 (KTD6): while a run on newer inputs is in flight, the caption adds that the
+                      latest change isn't in these figures yet — the figures it names are the shown
+                      answer's (KTD5), the household's newest are already in the editors. */}
+                  {refiguring ? `${bandTracknote(view, view.band)} ${copy.answerRefiguringCaption}` : bandTracknote(view, view.band)}
                 </p>
               )}
               {/* U17 §S2 — the aged fan's premise line + RENDERED re-confirm control (the fan is

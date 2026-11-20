@@ -170,7 +170,13 @@ h4[tabindex='-1']:focus-visible {
  *   .fod-provisional /
  *   .cs-provisional        — the "Provisional —" tag: the heartbeat that keeps beating
  *                            while the heavy FINAL sharpens in the background (the
- *                            working route's ~20s sweep), and stops when it lands.
+ *                            working route's ~20s sweep), and is gone when it lands
+ *                            (the date hero shows it over every provisional-tier date
+ *                            since W9-R7; the spine hero never does)
+ *   .fod-refiguring /
+ *   .cs-refiguring         — W9-R7's re-figuring line: "figuring again with your latest
+ *                            change", from the moment a run on newer inputs is dispatched
+ *                            until the first answer at those inputs commits.
  * The trough (0.65) keeps the muted ink readable mid-dip; the peak is full strength.
  * An ambient loop is keyframes-correct (the interruptibility rule targets state
  * transitions, not continuous idles). */
@@ -191,7 +197,9 @@ h4[tabindex='-1']:focus-visible {
 .result-save-pending,
 .solve-pending,
 .fod-provisional,
-.cs-provisional {
+.cs-provisional,
+.fod-refiguring,
+.cs-refiguring {
   animation: thinking-breathe var(--dur-breathe) var(--ease-in-out) infinite;
 }
 
@@ -213,7 +221,9 @@ h4[tabindex='-1']:focus-visible {
   .result-save-pending,
   .solve-pending,
   .fod-provisional,
-  .cs-provisional {
+  .cs-provisional,
+  .fod-refiguring,
+  .cs-refiguring {
     animation: none;
   }
 }

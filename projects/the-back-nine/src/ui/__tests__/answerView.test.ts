@@ -512,3 +512,53 @@ describe('selectElevatedAnswer — W9-R7: the band reads the ANSWERED draft, nev
     expect(s.view.spendLevels).toBeUndefined()
   })
 })
+
+describe('selectElevatedAnswer — W9-R7: the eyebrow flags ride presence-keyed (KTD6, KTD8)', () => {
+  const atTier = (a: ModelAnswer, tier: 'provisional' | 'final'): ModelAnswer =>
+    a.kind === 'headline' || a.kind === 'date' ? { ...a, tier } : a
+  const flagged = (s: MemoryModelSnapshot): MemoryModelSnapshot => ({ ...s, refiguring: true })
+  const dateView = (s: MemoryModelSnapshot) => {
+    const r = selectElevatedAnswer(s, noop)
+    if (r.kind !== 'date' || r.view.kind !== 'dates') throw new Error('expected a date dates view')
+    return r.view
+  }
+  const spineView = (s: MemoryModelSnapshot) => {
+    const r = selectElevatedAnswer(s, noop)
+    if (r.kind !== 'spine' || r.view.kind !== 'reading') throw new Error('expected a spine reading')
+    return r.view
+  }
+
+  it('a settled date answer (final tier, flag off) carries NEITHER key — the view before W9-R7, whole', () => {
+    const v = dateView(snap(datesAnswer(), working))
+    expect(v).not.toHaveProperty('refiguring')
+    expect(v).not.toHaveProperty('provisional')
+  })
+
+  it('a provisional-tier date answer with the flag off carries the tag — a first landing included (Briggsy, 2026-11-19: "Yes, tag it")', () => {
+    // No "followed an edit" signal exists: the ruling tags every provisional-tier date, so the tier alone decides.
+    const v = dateView(snap(atTier(datesAnswer(), 'provisional'), working))
+    expect(v.provisional).toBe(true)
+    expect(v).not.toHaveProperty('refiguring')
+  })
+
+  it('the flag on a date answer: the re-figuring line, and never the tag beside it — at either tier (one slot, the line outranks)', () => {
+    for (const tier of ['provisional', 'final'] as const) {
+      const v = dateView(flagged(snap(atTier(datesAnswer(), tier), working)))
+      expect(v.refiguring).toBe(true)
+      expect(v).not.toHaveProperty('provisional')
+    }
+  })
+
+  it('the flag on a spine reading: the re-figuring line; the spine never carries the tag, even at the provisional tier (its tiers are byte-identical)', () => {
+    expect(spineView(flagged(snap(headlineAnswer('on-track'), retired))).refiguring).toBe(true)
+    const settled = spineView(snap(atTier(headlineAnswer('on-track'), 'provisional'), retired))
+    expect(settled).not.toHaveProperty('refiguring')
+    expect(settled).not.toHaveProperty('provisional')
+  })
+
+  it('the flag over a keyless arm drives no words here: the incomplete fallback and the retry view are unchanged', () => {
+    expect(selectElevatedAnswer(flagged(snap({ kind: 'inputs-incomplete' }, working)), noop)).toEqual({ kind: 'fallback' })
+    const err = selectElevatedAnswer(flagged(snap({ kind: 'compute-error', reason: 'x' }, working)), noop)
+    expect(err).toEqual({ kind: 'date', view: { kind: 'compute-error', onRetry: noop } })
+  })
+})

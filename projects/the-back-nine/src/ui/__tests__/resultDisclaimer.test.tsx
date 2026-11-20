@@ -6,7 +6,7 @@ import { Result } from '../Result'
 import { appModel } from '../appModel'
 import { resolvedFocusKey } from '../answerView'
 import { staticDisclosures } from '../copy'
-import { Disclaimer, IN_FRAME_DISCLAIMER_ID } from '../Disclaimer'
+import { Disclaimer, IN_FRAME_DISCLAIMER_ID, verdictDescribedBy } from '../Disclaimer'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
@@ -122,14 +122,21 @@ describe('the in-frame R13 disclaimer (the Hawk order contract)', () => {
     // The hero verdict (ConfidenceStatement's h2.cs-word) and the date verdict (FuckOffDate) each name
     // this id; a jsdom Result on the pristine draft carries no committed headline, so the LINK itself is
     // asserted in the real browser (e2e/vertical-fit.spec.ts, the scrolling-tier ORDER arms). These
-    // greps pin that BOTH verdict surfaces reference the exported constant, never a re-typed string.
+    // greps pin that BOTH verdict surfaces name it through the ONE list builder beside the exported
+    // constant (W9-R7 put the re-figuring line ahead of it), never a re-typed string.
     for (const verdict of ['../ConfidenceStatement.tsx', '../FuckOffDate.tsx']) {
       expect(
         readFileSync(resolve(__dirname, verdict), 'utf8'),
-        `${verdict} must name the caveat via aria-describedby={IN_FRAME_DISCLAIMER_ID} — a verdict ` +
+        `${verdict} must name the caveat via aria-describedby={verdictDescribedBy(…)} — a verdict ` +
           `whose description is unlinked reads as unqualified certainty to a screen reader.`,
-      ).toContain('aria-describedby={IN_FRAME_DISCLAIMER_ID}')
+      ).toContain('aria-describedby={verdictDescribedBy(')
     }
+  })
+
+  it('the verdict description list always names the caveat, LAST — alone, or after a lead line', () => {
+    // W9-R7 (KTD6): the re-figuring line is heard first, then the caveat, which is never dropped.
+    expect(verdictDescribedBy()).toBe(IN_FRAME_DISCLAIMER_ID)
+    expect(verdictDescribedBy('line-1')).toBe(`line-1 ${IN_FRAME_DISCLAIMER_ID}`)
   })
 
   it('the id belongs to the in-frame mount ALONE — a bare <Disclaimer /> carries none', () => {
@@ -162,5 +169,17 @@ describe('the in-frame R13 disclaimer (the Hawk order contract)', () => {
     const { container } = renderResult()
     expect(container.querySelector('main.result')!).toHaveAttribute('data-inframe-disclaimer')
     expect(container.querySelector('main.result')!).not.toHaveAttribute('data-answer-tier')
+  })
+
+  it('data-answer-refiguring mirrors the store’s flag PRESENCE-keyed (W9-R7, KTD9): absent on a settled page, present only while a run on newer inputs is in flight', () => {
+    // The harnesses' settle signal is `data-answer-tier="final"` with THIS attribute absent: a final-tier
+    // wait alone passes inside the window, where the old answer still says final.
+    plantResolved()
+    const settled = renderResult()
+    expect(settled.container.querySelector('main.result')!).not.toHaveAttribute('data-answer-refiguring')
+    settled.unmount()
+    vi.spyOn(appModel, 'getSnapshot').mockReturnValue({ ...appModel.getSnapshot(), refiguring: true })
+    const { container } = renderResult()
+    expect(container.querySelector('main.result')!).toHaveAttribute('data-answer-refiguring')
   })
 })

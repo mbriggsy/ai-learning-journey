@@ -711,6 +711,18 @@ export const copy = {
   kindHsaBothSpouses: 'Two HSAs, one for each of you',
   answerPending: 'Working it out…',
   answerProvisionalTag: 'Provisional — with what you’ve entered so far',
+  // --- W9-R7 (`docs/plans/features/answered-draft-build-spec.md`, KTD6): THE RE-FIGURING TELL. An
+  //     edit on the answer page changes the draft at once, but the answer only when its run lands;
+  //     in between, the hero still shows the answer figured at the OLD inputs. These say so, beside
+  //     it, while a run on different inputs is in flight (`snapshot.refiguring`), and are gone the
+  //     moment the first answer at the new inputs commits. The hero line takes the eyebrow slot
+  //     (the date words over a dated answer; the verdict words over a spine verdict AND over the
+  //     date route's no-date answer, which has no date to name); the caption clause rides the date
+  //     band's tracknote. "answer"-prefixed, so verdict-scoped: no digit, no "$", no superlative.
+  //     The pilot's drafts, shipped flagged for walk 10 (nothing parks). ---
+  answerRefiguringDate: 'Figuring your date again with your latest change. The one shown is from before it.',
+  answerRefiguringVerdict: 'Figuring this again with your latest change. The answer shown is from before it.',
+  answerRefiguringCaption: 'Your latest change isn’t in these figures yet.',
   answerNotYet:
     'Not there yet — with what’s entered so far. Accounts usually move this; the picture isn’t complete.',
   dateFreeToday: 'Your fuck-off date is today, by this math',
@@ -1540,6 +1552,11 @@ export const copy = {
   // The echo's quiet arm (date route / no standing spine verdict): a plain statement of
   // where edits land — never a fabricated verdict echo.
   assumptionEchoQuiet: 'Edits here flow straight into your answer.',
+  // W9-R7 (KTD6): the echo while a run on the panel's newest inputs is in flight
+  // (`snapshot.refiguring`) — in place of the quiet line above on the date route, and in place of
+  // the held verdict readout on the spine (inside the echo's reserved box, never an added line:
+  // insight 035). The quiet line's "flow straight into your answer" is false through that window.
+  assumptionEchoRefiguring: 'Your answer is being figured again with this change.',
   // The truer-picture line (R8's honest-worsening arm; F8/council 2026-07-08): renders ONLY
   // when an edit lands the displayed verdict BELOW the panel-open baseline. The moved
   // numbers live in the echo above it (word + count + dollars — the non-color signal
@@ -1620,7 +1637,7 @@ export const copy = {
   // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
   // (`spendDisplayed`, AssumptionPanel.tsx:630-635), so the reader watches the number move while
   // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:893-903, the `entered * 12` arm at :900) then multiplies by 12
+  // commit (AssumptionPanel.tsx:900-910, the `entered * 12` arm at :907) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
   // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:533) hard-disarms
   // `spend-period-unconfirmed` (sanity.ts:390-413, the disarm read at :401) on this surface, and
@@ -2732,6 +2749,15 @@ const XOFTEN_CEILING = 'better than 9 in 10'
  *  shape (council 2026-07-18, the hawk's veto). Same proportion form, same never-"10 of 10". */
 const XOFTEN_CEILING_ADVERSE = 'more than 9 in 10'
 
+/** The date route's two no-date claims, each SINGLE-SOURCED across its arms (W9-R7, KTD6): the settled
+ *  arm carries {@link ENTERED_SO_FAR_TAIL}, the re-figuring arm drops it (the hero line above it makes
+ *  it false), and the floor's "either" arm leans on the hero line's tail. One head per claim, so an
+ *  edit to the claim can never reach one arm and not the other. */
+const noDateClaim = (windowYears: number): string => `No fuck-off date within the next ${windowYears} years`
+const floorNotWithinClaim = (windowYears: number): string =>
+  `Covering just the essentials doesn’t clear within the next ${windowYears} years`
+const ENTERED_SO_FAR_TAIL = ' — with what you’ve entered so far.'
+
 /** The adverse-frequency phrase: the hedged count below the ceiling, the valence-neutral
  *  proportion AT it. Branches on the unclamped count — never on sniffing a rendered string
  *  (a string sniff would silently orphan the adverse constant when a wording moves). The
@@ -3244,17 +3270,20 @@ export const slots = {
   dateInYears: (n: number): string =>
     n === 1 ? 'Your fuck-off date is about a year out' : `Your fuck-off date is about ${n} years out`,
   /** The first-class no-date answer names its own window (§3c). */
-  noDateInWindow: (windowYears: number): string =>
-    `No fuck-off date within the next ${windowYears} years — with what you’ve entered so far.`,
+  noDateInWindow: (windowYears: number): string => `${noDateClaim(windowYears)}${ENTERED_SO_FAR_TAIL}`,
+  /** …and the same claim while the answer is being re-figured (W9-R7, KTD6): the hero line above it
+   *  says the shown answer is from BEFORE the latest change, so the entered-so-far tail would be
+   *  false. The hero's own render only — the intake strip ignores the flag (M7) and keeps the tail. */
+  noDateInWindowRefiguring: (windowYears: number): string => `${noDateClaim(windowYears)}.`,
   /** The floor's no-date arm while the FULL plan is dated (the extreme R27 inversion arm — the
    *  inversion note carries the why; this line only states the fact). Names its own window
    *  (the noDateInWindow precedent — Sonnet-5 audit 2026-07-03). */
-  dateFloorNotWithin: (windowYears: number): string =>
-    `Covering just the essentials doesn’t clear within the next ${windowYears} years — with what you’ve entered so far.`,
+  dateFloorNotWithin: (windowYears: number): string => `${floorNotWithinClaim(windowYears)}${ENTERED_SO_FAR_TAIL}`,
+  /** …and its tail-less twin while the answer is being re-figured (W9-R7, KTD6; noDateInWindowRefiguring's reason). */
+  dateFloorNotWithinRefiguring: (windowYears: number): string => `${floorNotWithinClaim(windowYears)}.`,
   /** The quiet severity disclosure when the lifestyle has no date either — the hero line above
    *  already names the window + carries the entered-so-far tail, so this one leans on it. */
-  dateFloorNotWithinEither: (windowYears: number): string =>
-    `Covering just the essentials doesn’t clear within the next ${windowYears} years either.`,
+  dateFloorNotWithinEither: (windowYears: number): string => `${floorNotWithinClaim(windowYears)} either.`,
   /** Odds rider for the date line — the below-ceiling arm ("about 8 of 10 odds"). */
   withOdds: (xOfTenText: string): string => `about ${xOfTenText} odds`,
   /** The odds rider AT the ceiling — the bound stands alone, no "about": "better than" IS the
@@ -4379,7 +4408,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2080` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2083` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,

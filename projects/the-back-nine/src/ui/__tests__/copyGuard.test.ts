@@ -759,6 +759,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     xOfTenAtCeiling: slots.xOfTenAtCeiling(),
     dateInYears: slots.dateInYears(8),
     noDateInWindow: slots.noDateInWindow(30),
+    noDateInWindowRefiguring: slots.noDateInWindowRefiguring(30),
     withOdds: slots.withOdds('7 of 10'),
     withOddsAtCeiling: slots.withOddsAtCeiling(),
     dateTradeoff: slots.dateTradeoff(2, slots.xOfTen(8)),
@@ -847,6 +848,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     acaCostCliff: slots.acaCostCliff(3),
     acaCostCliffOverCliff: slots.acaCostCliffOverCliff(3, '84,600'),
     dateFloorNotWithin: slots.dateFloorNotWithin(11),
+    dateFloorNotWithinRefiguring: slots.dateFloorNotWithinRefiguring(11),
     dateFloorNotWithinEither: slots.dateFloorNotWithinEither(11),
     shadowRateLine: slots.shadowRateLine(34),
     shadowRateHeadroom: slots.shadowRateHeadroom('66,600', '84,600', '18,000'),
@@ -1321,6 +1323,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       copy.dateFloorInversionNote, // R27's inversion disclosure — the floor can land LATER
       slots.dateFloorCovered(0, slots.withOdds(slots.xOfTen(9)), false),
       slots.dateFloorNotWithin(11),
+      slots.dateFloorNotWithinRefiguring(11),
     ]
     for (const s of MUST_PASS) {
       expect(essentialsClaims(s), `MUST pass: "${s}"`).toEqual([])
@@ -2256,7 +2259,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:953-963, :1009-1026), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:965-975, :1021-1038), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

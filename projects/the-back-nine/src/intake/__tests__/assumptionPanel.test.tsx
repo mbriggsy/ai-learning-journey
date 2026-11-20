@@ -2053,3 +2053,46 @@ describe('the working-year methodology row reads exactly one left-over line, its
     expectOnlyLine('not-sure', 'after "not sure"')
   })
 })
+
+// ─── W9-R7: the echo while the panel's newest inputs are being figured (KTD6) ────────────
+
+describe('the live answer echo — W9-R7: re-figuring', () => {
+  const echo = (): HTMLElement => document.querySelector('.ap-echo') as HTMLElement
+  const spineAnswer = {
+    kind: 'headline' as const,
+    result: { headline: { xOfTen: { value: 6 }, outcomeState: 'on-track' } } as unknown as SimulationResult,
+    tier: 'final' as const,
+    draft: mixedDraft,
+    inputKey: 'test',
+  }
+
+  it('the spine: the line takes the held verdict readout’s place (word, count, clause and the truer-picture line all describe the old answer) — inside the same status box', () => {
+    const r = renderPanel({ snapshot: snap(mixedDraft, { answer: spineAnswer, displayed: shown(7) }) })
+    expect(within(echo()).getByText(`${copy.outcomeOnTrack} — ${slots.xOfTen(7)}`)).toBeInTheDocument()
+    // a WORSE landing would show the truer-picture line; under the flag nothing of the old answer stays
+    r.rerender(<AssumptionPanel {...r.props} snapshot={snap(mixedDraft, { answer: spineAnswer, displayed: shown(6), refiguring: true })} />)
+    expect(echo()).toHaveAttribute('role', 'status')
+    expect(echo().textContent).toBe(copy.assumptionEchoRefiguring)
+    // the new answer commits (the flag drops in the same frame): the readout is back
+    r.rerender(<AssumptionPanel {...r.props} snapshot={snap(mixedDraft, { answer: spineAnswer, displayed: shown(6) })} />)
+    expect(within(echo()).getByText(`${copy.outcomeOnTrack} — ${slots.xOfTen(6)}`)).toBeInTheDocument()
+    expect(within(echo()).getByText(copy.assumptionTruerPicture)).toBeInTheDocument()
+  })
+
+  it('the date route: the line takes the quiet line’s place ("flow straight into your answer" is false through the window)', () => {
+    const dateAnswer = { kind: 'date' as const, outcome: { kind: 'cancelled' as const }, tier: 'final' as const, draft: mixedDraft, inputKey: 'test' }
+    const r = renderPanel({ snapshot: snap(mixedDraft, { answer: dateAnswer }) })
+    expect(echo().textContent).toBe(copy.assumptionEchoQuiet)
+    r.rerender(<AssumptionPanel {...r.props} snapshot={snap(mixedDraft, { answer: dateAnswer, refiguring: true })} />)
+    expect(echo().textContent).toBe(copy.assumptionEchoRefiguring)
+  })
+
+  it('the keyless arms keep their own words: the flag over inputs-incomplete still names what is missing (the flag drives no line there)', () => {
+    renderPanel({
+      snapshot: snap(mixedDraft, { answer: { kind: 'inputs-incomplete' }, refiguring: true }),
+      missing: [{ labelKey: 'spendLabel' }],
+    })
+    expect(within(echo()).getByText(copy.answerIncomplete)).toBeInTheDocument()
+    expect(echo().textContent).not.toContain(copy.assumptionEchoRefiguring)
+  })
+})

@@ -4,6 +4,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { AnswerStrip, missingFactNames, threeThenMore } from '../AnswerStrip'
 import { copy, slots } from '@ui/copy'
+import { DATE_FIXTURES, DATE_WINDOW_TOP } from '@ui/preview/dateFixtures'
 import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 import type { OutcomeState, SimulationResult } from '@shared/model'
 
@@ -134,6 +135,23 @@ describe('AnswerStrip — the honesty branches (D1 review T3)', () => {
     renderStrip({ kind: 'date', outcome: { kind: 'cancelled' }, tier: 'provisional', draft: draft(), inputKey: 'test' })
     expect(screen.queryByTestId('engine-reading')).toBeNull()
     expect(screen.queryByTestId('provisional-tag')).toBeNull()
+  })
+
+  it('W9-R7 (KTD6, M7): the strip ignores the re-figuring flag — a no-date reading keeps its entered-so-far tail and its provisional tag, and no hero line appears', () => {
+    const noDate: ModelAnswer = {
+      kind: 'date',
+      outcome: { kind: 'dates', floor: DATE_FIXTURES.noDate, lifestyle: DATE_FIXTURES.noDate, tier: 'provisional', windowTopYears: DATE_WINDOW_TOP, seed: 1 },
+      tier: 'provisional',
+      draft: draft(),
+      inputKey: 'test',
+    }
+    const { container } = render(
+      <AnswerStrip snapshot={{ ...snap(noDate), refiguring: true }} missing={[]} onRetry={() => {}} />,
+    )
+    expect(container.textContent).toContain(slots.noDateInWindow(DATE_WINDOW_TOP))
+    expect(screen.getByTestId('provisional-tag')).toHaveTextContent(copy.answerProvisionalTag)
+    expect(container.textContent).not.toContain(copy.answerRefiguringVerdict)
+    expect(container.textContent).not.toContain(copy.answerRefiguringDate)
   })
 
   it('the region carries a STABLE label and is announced to AT (CLUSTER E)', () => {

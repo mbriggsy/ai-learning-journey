@@ -762,7 +762,16 @@ export function Result({
     // hides the page-trailing disclaimer behind it at EVERY width (tier-independent since
     // 2026-09-10), so a frame with no visible disclaimer is unrepresentable — the trailing mount
     // stands whenever the in-frame one is out.
-    <main className="result" data-inframe-disclaimer={computing ? undefined : true} data-answer-tier={answerTier}>
+    // data-answer-refiguring (W9-R7, KTD9) mirrors the store's flag PRESENCE-keyed (absent when off,
+    // the data-answer-tier precedent): a run on inputs different from the shown answer's is in flight.
+    // A settled page is `data-answer-tier="final"` with this attribute absent — the harnesses' signal,
+    // since a final-tier wait alone passes inside the window (the old answer still says final).
+    <main
+      className="result"
+      data-inframe-disclaimer={computing ? undefined : true}
+      data-answer-tier={answerTier}
+      data-answer-refiguring={snapshot.refiguring ? true : undefined}
+    >
       <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
       <div className="result-hero">
         {elevated.kind === 'date' && (

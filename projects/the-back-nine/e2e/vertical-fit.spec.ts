@@ -238,8 +238,8 @@ async function assertTier(page: Page, tier: 'laptop' | 'narrow'): Promise<void> 
     const query = window.matchMedia('(min-width: 68rem)').matches
     // (2) what the page ACTUALLY LAID OUT. `[data-twopane]` is stamped whenever a band resolved —
     // at EVERY width (ConfidenceStatement.tsx / FuckOffDate.tsx), so its mere presence is NOT the
-    // tier. The two-pane grid is what the 68rem query turns on: confidence.css :233 /
-    // fuckOffDate.css :220 give the stamped reveal `display: grid` with TWO columns inside the
+    // tier. The two-pane grid is what the 68rem query turns on: confidence.css :245 /
+    // fuckOffDate.css :235 give the stamped reveal `display: grid` with TWO columns inside the
     // query and nothing outside it, so the reveal's RESOLVED column count is the rendered tier.
     // A media-query answer that disagreed with the pixels (a breakpoint mirror drifting, a
     // `display` override) would go unseen if the arm only re-computed the query.
@@ -3436,7 +3436,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
       // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2142-2146 enforceable
+      // copy rather than a formality: it is what makes the length note in copy.ts:2159-2163 enforceable
       // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,

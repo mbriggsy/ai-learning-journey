@@ -121,12 +121,27 @@
   max-width: var(--measure);
 }
 
-/* The provisional eyebrow (a date taken before the account set is complete). */
+/* The provisional eyebrow: the date is the 2,000-path quick reading, sharpening behind it (W9-R7,
+   KTD8 — every provisional-tier date since then, the first reveal included). */
 .fod-provisional {
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-overline);
   text-transform: uppercase;
   color: var(--ink-muted);
+}
+
+/* W9-R7 (KTD6) — the re-figuring line, the eyebrow slot's other tenant (never both at once): the
+   date shown is from before the latest change, and a run on the change is under way. The eyebrow's
+   fine-print size and muted ink, but SENTENCE CASE — it is two sentences to read, never an
+   overline — and the words carry the signal, never the color alone (back-nine-design §2). It
+   breathes with the app's one working tell (base.css), and stops under reduced motion. */
+.fod-refiguring {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--ink-muted);
+  max-width: var(--measure);
 }
 
 /* The pending mode (pre-first-resolve). */
@@ -236,11 +251,28 @@
   }
   /* the words become a real left-column stack (override the single-column display:contents). */
   .fod-reveal[data-twopane] > .reveal__lead {
+    position: relative; /* the eyebrow slot's anchor (below) */
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
     grid-column: 1;
     grid-row: 1;
+  }
+  /* THE EYEBROW SLOT OVERLAYS the frame's top padding (W9-R7, KTD6; mirrored in confidence.css,
+     where it is load-bearing). The provisional tag and the re-figuring line come and go with the
+     engine — the tag on every provisional landing until its final, the line for one run after an
+     edit — so in the flow they would push the whole two-pane down and back up again while the
+     reader reads and taps (insight 035). Sat above the lead's top edge, inside `.result`'s block
+     padding (32px at the short tier, the tightest; the slot is one line, ~18px, at the --measure
+     column), they take no row, so every frame measures exactly as it does without them. Below the
+     two-pane tier the route scrolls and the slot stays in the flow (the line can wrap there). */
+  .fod-reveal[data-twopane] .fod-provisional,
+  .fod-reveal[data-twopane] .fod-refiguring {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 100%;
+    margin: 0 0 var(--space-2);
+    line-height: var(--leading-snug);
   }
   /* BOTH GRAPHS in one right-column cell spanning the word/action rows — STOPPING above the
      full-width disclaimer + doors rows (spanning to -1 would overlap them in column 2). */

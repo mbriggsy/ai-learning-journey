@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **226 open items** (294 entries, 68 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **227 open items** (295 entries, 68 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -2266,6 +2266,19 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
   3. The caveat frames: U3's rungs in its order, each pinned on both sides of the tier, stopping at the first rung that holds on both platforms; then assert every new plant in the gate.
   4. The record card's standing line: the ladder is exhausted, which is KTD10's flip condition. A placement council (whether that line may scroll, the card's seat, the card above the caveat), then Briggsy rules on his 2026-07-26 ruling; the Tier 3 yearly-return entry folds in here.
 - ⚑ NEGATIVE: never a word cut, a copy change, a hero size or a new type size to fit (the tier's law, `--bp-laptop-short`'s docblock); never a tolerance or a chosen margin (insight 065); never call the one-frame law met on the gate's plant set alone; the temporary plants were reverted and are never committed as they stand.
+- **DEADLINE 2027-01-01 (b9-4, measured):** from New Year's Day every real household that saved a recommendation in 2026 meets the 754.5 px frame (the plan clock ticks to 1 and the band column binds), and so do the gate's own `rec` and `recold` arms: the next entry. Prescription (4)'s council and his ruling are due before then.
+
+### The fit gate reads the wall clock: on 2027-01-01 every seed renders as a plan built last year, the saved-record arms' standing line drops below his fold and the gate goes red on CI
+
+`S` · **pilot** (build) · filed 2026-11-20 (b9-4) by the composites plan's learnings research (traced) and the pilot's probe (measured)
+
+- **The gap (measured, Windows, 1440×731 @ 2, HEAD `8be9589a`, the page's clock pinned to 2027-01-02 through Playwright's `page.clock.setFixedTime`; the probe is `b9-4-fit.mjs` with one clock line, its readings `clock2027.txt` in the session scratchpad, summarized in the composites folder's README).** Every dev seed hardcodes `startCalendarYear: 2026` (`src/ui/devSeeds.ts`, ten literals) and the Result's plan clock is the wall year minus that year (`src/ui/Result.tsx:196-200`), so from New Year's Day every seed and plant renders the aged band (529 → 645.2 px), with no code change:
+  - `?vault=rec` and `?vault=recold`: the caveat 645 → 692.4 and the standing line 707 → **754.5**, 23.5 px past 731. The gate asserts that line inside the frame (the re-point plan's KTD10), so `verify:fit` goes red on CI that day.
+  - `?seed=retired`, `pa` and `budget` and `?vault=statestale`: the band binds and each caveat sits at 692.4, inside; `?vault=stale` is unchanged at 716.5 (already aged).
+- **Direction.** None on an answer: the gate goes red, and the frames it certifies change under it. The product half is the composites entry above: the same frame is every real 2026 saver's return.
+- **Reach.** Every fit harness that renders a seed or a plant reads the page's wall clock; nothing in `e2e/` sets a clock today. The unit suite's own wall-clock reads are unmeasured (the `annualRoll` tripwire reds it on that day by design, the TODO's Dated table).
+- **Prescription.** Make the gate's calendar explicit: every arm pins the page clock, fresh arms to the plants' own save day and yearly-return arms a calendar year later; the composites plan (`docs/plans/features/one-frame-composites-build-spec.md`) carries it as its first unit.
+- ⚑ NEGATIVE: never make the seeds' start year follow the wall year by shifting `birthYear` alongside (it moves the Social Security and required-withdrawal birth-year bands on `retired`, the documented knife-edge seed, so every outcome pin would move each New Year); never relax the standing-line assertion to ride out the date.
 
 ## Tier 1 — the differentiator does not land
 

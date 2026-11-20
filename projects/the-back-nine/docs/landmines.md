@@ -314,7 +314,7 @@ tests
 ## The fit gate and e2e
 
 - **(b9-5, 11-20) The hero's eyebrow slot overlays `.result`'s top padding only at the two-pane tier** (W9-R7's U4, `c644ec2f`: the re-figuring line and the provisional tag, absolute above the lead in `fuckOffDate.css` / `confidence.css`). It holds ONE line: at the short tier the padding is 32 px and the line 18.2 px with an 8 px margin, so a wrap (a longer string, CI's taller metrics) climbs above the page top. Below the two-pane tier the slot is in the flow (a raised root font would push an overlay off the page), so the phone's date hero sits lower while the slot shows: 36.4 px + a gap under the two-line re-figuring line, 32.1 px under the tag until the final. A string change in the slot, or a re-point that moves the short tier's padding, re-measures it.
-- **(b9-5, 11-20) A window one run long can't be screenshotted reliably** (the spine's re-figuring window is ~3 s; 1440's hero shot missed it while 1536's and 1280's caught it). Read live geometry with an in-page `requestAnimationFrame` recorder armed BEFORE the edit that records the rects on the first frame the element exists; a dev preview with the state forced on is the measurement of record.
+- **(b9-5, 11-20) A window one run long can't be screenshotted reliably** (the spine's re-figuring window is ~3 s; 1440's hero shot missed it while 1536's and 1280's caught it). Read live geometry with an in-page `requestAnimationFrame` recorder armed BEFORE the edit that records the rects on the first frame the element exists; a dev preview with the state forced on is the measurement of record. For the re-figuring window that preview is `?preview=refiguring&seed=<key>` (`src/ui/preview/RefiguringPreview.tsx`, U5): the real app with every run after the seed's first final held, so one edit holds the window open. Its one blind spot: two notifies in one task paint as one frame, so a store-order fault that never crosses a task is the store suite's to catch, never the page's (`e95c17db`).
 - **(b9-4, 11-13) A new cause that takes another cause's slot reds THAT cause's arms, which a run of the new arm alone never
   reaches.** R1 (`3000a04c`) let the typed-below line take the Result's standing slot wherever a fresh typed W sits below the
   quote; the coordinate-tap arm (`?seed=date`, $72,000 typed under $84,000 of spending) still expected the moved line, and CI's
@@ -618,10 +618,14 @@ is a guess a verifier must check, never a fact
 - **(b9-3, 11-09) The blocked W step's capture is scrolled to the top** (the settle recipe's `scrollTo(0,0)`), so its
   alert, about 1,300 px down, is never in `viewport.png` and no CVD arm covers it; no capture shows whether a real press
   scrolls to it.
-- **(b9-5, 11-08) A Caddie panel capture shows the OLD answer behind the sheet.** Each `intake:kept` panel state is captured
-  ~5 s after its edit, while the Result behind is still re-running (the walk measured a first commit up to ~18 s later), so the
-  dimmed hero still reads the pre-edit date. Four seats read it as "the answer doesn't follow the edits"; the refuter traced it
-  to timing (and found (ag) under it). Tell the seats, or settle the re-run before a panel capture, in walk 2.
+- **(b9-5, 11-08; rewritten by W9-R7's U6, 11-20) A Caddie panel capture shows the OLD answer behind the sheet, and since W9-R7
+  that is the honest frame.** A panel state is captured seconds after its edit, while the run on it is still in flight (walk 1
+  measured a first commit up to ~18 s later), so the dimmed hero reads the answer from before the edit — walk 1's four seats read
+  "the answer doesn't follow the edits". Since `c644ec2f` the window is marked: the hero's eyebrow line and the panel echo say the
+  answer is being figured again, and `main.result` carries `data-answer-refiguring` until the first answer at the new inputs
+  commits. So tell the seats the line is the signal, never retime the capture; a RESULT capture after an edit arms
+  `armRefiguringWatch` before the edit, `expectRefiguringSeen` after it, then waits `SETTLED_RESULT` (all in
+  `e2e/reviewSurface.ts`; the kept and typed-below walks do).
 - **(b9-5, 11-05) Read a workflow's result through a summarizer script into a scratch file**, never printed raw: the `.output` file is
   JSON (`result` holds the script's return value) and the journal has one `result` line per agent. Printing them, and the go-live's
   whole diffs, is what spent b9-5's window.

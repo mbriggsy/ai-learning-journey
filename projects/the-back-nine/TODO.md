@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-16, b9-5, walk 9 done):** walk 9's card is in `docs/caddie/cold-read-log.md` (HARD-FLAG, held on W9-R8 and W9-R7; panel and measurements `b9-build2-surplus\u11-walk9\`). All three of the form spec's flips fired. Next, in order: (1) one walk-9 form council: flip (ii)'s three beats on credit runs WITH the gate's order (refuters R3 and R5 (e): compose the gate in the answer page's order), the cap sentence's aside (R5 (c)), the run labels years-first (R9 (8)), the survivor part's opening and its two named answers (R6 (a), R2 (a)), the gloss's "high" (R1); (2) the walk-9 fix round: flip (i) as ruled (`COMPARISON_RIDER` → ", except for any difference between the two answers in income tax and Medicare’s income surcharge."), flip (iii) as ruled (each year inside the run: R4's words), the council's calls, T's one-run twin merged (R5 (d)), the lows on the card, and W9-R7's fix (the register's new Tier 0 entry: the answered draft + a re-figuring tell); (3) walk 10; (4) W9-R8 (the honest date on the page: the retype entry's measured bullet; a build or (2)'s council); then build 2's U12, the whole-file review, `/distill` (far past 10). The weekly usage meter read 96 % at walk 9's close (resets 2026-11-18 09:00): a council is ~20 seats.
+▶ **START HERE (2026-11-19, b9-1, the walk-9 form council done):** its words are `docs/plans/features/typed-below-walk9-form-build-spec.md` (`c78fb981`), and W9-R7’s plan is `docs/plans/features/answered-draft-build-spec.md` (`aefad7f5`, its open question RULED). Next, in order: (1) the walk-9 form spec’s U2, ONE build commit opened with `/brief the typed-below line’s composer and its hosts`, the four UI design skills loaded first (the council’s words with walk 9’s flips (i) and (iii); KD10 repinned and said in the commit), then its U3 lows; (2) W9-R7’s plan, U1 to U6, each opened with `/brief <that unit’s topic>`; (3) re-point the fit gate and the Caddie capture harness to his NEW viewport, 1440×731 at DPR 2 (measured 2026-11-19 in his Chrome; both are tuned to the Dell’s 1536×791), and run `pnpm verify:fit` there; (4) walk 10 on the changed strings (the walk-9 spec’s Units line: seats on T, CR and PN for F3, the phone seat, wide-PN and the listener on PN for F2, every flip tested); (5) W9-R8 (the honest date on the page); then build 2’s U12, the whole-file review with an adversary and every finding verified, and `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -81,11 +81,10 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
    better than it really is"; no walk renders it (U11 measures the reach, then a walk on `datesavedstale` with spending
    raised) — WALKED and CLOSED by measurement (b9-5, the other way: the stale answer reads gloomier; its fix is (ae),
    `c6b15120`: council `wf_fc80029e-d93`'s Frame B, its walk-2 card in `docs/caddie/cold-read-log.md`, 2026-11-09 (b9-3)).
-      At EVERY `src` commit from here: the sweep (`tools\sweep.mts`) and the per-key `idcheck` (`tools\idcheck.mjs <label> wholewindow`),
-   both in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\`
-   (the close block's "Commit 3's gates" has the exact commands; run them pinned to the P-cores), against the latest baseline,
-   `wholewindow` since the rebuild's commit 1, `d5c549d7` (PER KEY: never a whole-file `cmp`); the per-commit record is the table at the foot of
-   `b9-build2-surplus\README.md`. Then the build units in the plan's order, each opened with `/brief <that unit's topic>`:
+      At every commit that touches `src/engine` or `intakeMap`: the sweep and the per-key idcheck against the latest baseline
+   (`wholewindow` since the rebuild's commit 1, `d5c549d7`; PER KEY, never a whole-file `cmp`). Both tools, their README table
+   and the baselines lived in `b9-build2-surplus\` and died with the Dell (2026-11-19): rebuild them before the first such
+   commit. Then the build units in the plan's order, each opened with `/brief <that unit's topic>`:
    - **The Phase A engine review's forward obligations** (`wf_0f808964-4a9`; each a prescription for the unit named): (c) **U12's register pass:** add to *The taxable account's yield never reaches a year's tax base…* that
      every credited dollar lands in taxable and widens that gap's reach, unmeasured.
    - **U5's forward obligations:** (e) **U12's
@@ -94,16 +93,14 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **the walk-9 form council, then its fix round, then walk 10** (START HERE; walk 9's card is the newest in `docs/caddie/cold-read-log.md`, its panel record
-     `<B>\u11-walk9\panel\` (`CHAIR-NOTES.md` maps every finding to its refuter), its measurements `<B>\u11-walk9\measure\`
-     (the line probe, the KD10 on-page counter, the typed-vs-honest headline run), its bundle `temp\caddie\caddie-u11-b9-5-walk9\`;
-     walk 8's card `451fa373`, its record `<B>\u11-walk8\panel\`).
-     The line's plans: the rebuild `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, the survivor path
+     ▶ NEXT: **START HERE** (the walk-9 form spec's U2, W9-R7's plan, the viewport re-point, walk 10). Walk 9's card is the
+     newest in `docs/caddie/cold-read-log.md`; its panel record, measurements and bundle lived on the Dell and are gone.
+     The line's plans: the walk-9 form spec `docs/plans/features/typed-below-walk9-form-build-spec.md`, the rebuild `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, the survivor path
      `docs/plans/features/typed-below-survivor-path-build-spec.md`, the rider `docs/plans/features/typed-below-tax-rider-build-spec.md`;
-     the register's Tier 0 retype entry carries the council's NEGATIVE on the round review's x_t metric. Research and every
-     witness's per-year engine figures: `b9-build2-surplus\u11-wholewindow\` (`research\witnesses.md`); every composed line
-     on every witness and host: `u11-walk8\measure\line-probe.mts`; the mutant runner to copy: `u11-wholewindow\mutants-r3\`
-     (`mutants.cjs`, `setup-copy.cjs`: plants in a scratch copy, never the live tree).
+     the register's Tier 0 retype entry carries the council's NEGATIVE on the round review's x_t metric. The witnesses'
+     research record, the line probe and the mutant runner (`u11-wholewindow\`, `u11-walk8\measure\`) died with the Dell;
+     the witnesses' figures are pinned in `src/intake/__tests__/workingYearLeftOver.test.ts`, and a mutant still plants in a
+     scratch copy, never the live tree.
      **Filed by the walk-5 round's review for U12** (`wf_c037b423-7f0`; the record is `u11-walk5\ROUND.md` § "The
      round review"; each finding goes into the register with its prescription):
      - (bh)'s "Because that $16,985 depends on your $X figure" names the HELD figure, which need not be the one the
@@ -261,47 +258,49 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-16 (b9-4: the form spec's U4; b9-3's block pruned into it):**
+**SESSION 2026-11-19 (b9-1: the walk-9 form council and W9-R7's plan; b9-4's block pruned into it):**
 
 State at close:
-- NEW LAPTOP since 2026-11-19 (a Lenovo; the Dell died, memory `project-laptop-ssd-failing`), so the Dell's no-restart and no-sleep rules are dead. The Dell's `<B>` folder (`b9-build2-surplus\`: every walk panel's `CHAIR-NOTES.md`, walk 9's `measure\`, `tools\run-pinned.cmd`, the probe copies) and `temp\caddie\` did NOT survive (the config backup never covered that session folder): each walk's card in `docs/caddie/cold-read-log.md` and the register's entries are what remain, so START HERE's council works from walk 9's card.
-- The form council is DONE (`wf_98d8bc0e-e0a`, 7/10, executed); its words are the spec's, built from it, never from the council's machine-local journal. U1 (`3646a258`), U3 (`045509c1`) and U2 (`81f42077`, 39 files) are in: the composer (`src/intake/workingYearLeftOver.ts`: `TypedBelowQuoteCap`, `typedBelowPairingOf`, `TYPED_BELOW_NOUN`), the words (`src/ui/copy.ts`: the run, cap and survivor slots, `COMPARISON_RIDER` and its gloss), the renderer (`NotePartsBlock`'s `runs`: `ol.note-parts__runs[role=list]`, `p.note-parts__closing`), every pin, and the fit gate's block law with computed-style checks.
-- For Briggsy's digest from U2 (all for walk 9's card): the form council's ⚑ (the three-beat order, the gloss and lead words, "between the two answers", the length: the pension gate line is now 531 words and 34 figures, its answer page 588 and 38, against the spec's ~480 and walk 8's 400-530); the U2 pilot calls (the spec's "As built in U2"); KTD4's departure from the survivor council's literal X; the survivor council's mortality words.
+- The walk-9 form council is DONE (`wf_9f28e691-1dc`, 7/10, executed; the Honesty Hawk's veto on naming the raw surcharge figure honoured). Its words are `docs/plans/features/typed-below-walk9-form-build-spec.md` (`c78fb981`), built from the chair's own file, never from the council's machine-local journal. None of it is in `src` yet: that is the spec's U2.
+- W9-R7's plan is DONE (`aefad7f5`: planned, confidence check passed, checked and read), with Briggsy's ruling on its open question recorded in it (the close's commit).
+- The Lenovo: heavy suites run UNPINNED (197 s against 287 s on the P-cores, `docs/landmines.md`, Windows and the shell, "THE LENOVO"); his Chrome viewport is 1440×731 at DPR 2 (memory `project-back-nine-laptop-primary`); claude-in-chrome is connected.
+- Gates at close: `pnpm typecheck` 0, `pnpm verify:doc-stats` 0. The whole suite ran green at `d9e5b637` (the A/B, both arms); no `src` file changed after it. CI green through `d9e5b637` (run 44671719980).
+- For Briggsy's digest (walk 10's card): the walk-9 spec's ⚑ items (the credit run's pair as one paragraph, ", while you’re still working", `--space-5`) and its call (5) override (the gloss's dollar figure deferred to a register build over four seats).
 
-- U4 is in (the commit after `adfc868e`): `workingYearCostStaleLine`'s `closing` (KD7's survivor part, `staleSurvivor`, on A, B, C and F), the scope on the stale runs and on A's gap comparison (the line only), B's and C's waiting seats (C and F read the new `updateLaterShort` form), the method lines in R14's form, W8-R11's order and A's split, W8-R12 (c)'s none-first. The spec's "As built in U4" names every pilot call; the register's W8-R12 (a) entry carries the ⚑ BUILT bullet.
-- Gates at close (U4): `pnpm typecheck` 0, `pnpm lint` 0, the two edited e2e specs typecheck through a scratch tsconfig, the reached test files and `pnpm verify:doc-stats` 0 (5285 tests), `pnpm build` 0, `pnpm verify:fit` (its result in the close's commit message).
-- For Briggsy's digest (walk 9's card): the method lines held to build 2's R14 against the walk-8 refuter's dollars-and-lean text; W8-R12 (c)'s placement kept at the council's; the survivor part on the waiting seats (beyond the card's letter, by the survivor build's R10); "the two answers" in the rider on the stale line and seats, which name no second answer by that noun.
-
-Next is START HERE. Successor: b9-5 (handoff mode).
+Next is START HERE. Successor: b9-2 (handoff mode).
 
 **Check at start:**
-- The new laptop (2026-11-19): pnpm 10.30.3, `node_modules` and the Playwright browsers were installed at the non-B9 close that wrote this line (`pnpm typecheck` and `pnpm verify:doc-stats` ran there; see that commit's message). Before the first heavy gate, A/B one heavy run unpinned vs `/affinity F`: the Lenovo's P-cores are logical CPUs 0-3 (mask `F`), so `docs/landmines.md`'s `FFF` recipe pins to 4 P-cores + 8 E-cores (memory `reference-hybrid-cpu-ecore-confinement`). Rebuild `run-pinned.cmd` from that file's wrapper landmine. Re-measure his viewport in his Chrome before a fit judgment (memory `project-back-nine-laptop-primary`). CI is green through `e6f8baf0` (run 44008110953).
+- CI for the close's pushes: `gh run list --commit <full sha>` on `c78fb981`, `aefad7f5` and the close's own commit.
 - The ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
+**⚑ RULED by Briggsy 2026-11-19 (b9-1): "Yes, tag it."** The first reveal's quick reading carries the provisional tag until the
+final lands (W9-R7's plan, Open Questions). Never re-ask.
 
-**Walk 9: DONE (b9-5)** — its targets, the flips, KD10's counts, U2's watch items and U4's calls are each ruled on its card (`docs/caddie/cold-read-log.md`, the newest); START HERE carries what follows.
-
-**The review's gates** (each fix commit, as its plan's Verification Contract scopes them; each heavy run alone, in sequence, pinned to the P-cores from PowerShell; `<B>` is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus`):
+**The review's gates** (each fix commit, as its plan's Verification Contract scopes them; each heavy run alone, in sequence, UNPINNED on the Lenovo; `<B>` is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus`, which since the Dell died holds only `tools\run-pinned.cmd`):
 1. Before the first edit: `git rev-parse HEAD`, the re-anchor base.
 2. After the last edit: `pnpm typecheck`, `pnpm lint`, and every edited e2e spec through a scratch tsconfig (landmine below).
-3. `pnpm doc:reanchor <base>` dry, each move classified (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry output>`), then `--apply` once; restore `e2e/held/fit-24px-measurements.md` from HEAD and refuse the moves of the quoted examples in `docs/landmines.md` (the "two new register entries shifted `docs/backlog.md:1975`…" lines) and in this block's own step 3, and restore `docs/council-log.md` and insight 136 from HEAD where the commit edits neither; then the reached files pinned in the foreground (`--maxWorkers=2`; CI runs the full suite); then `pnpm verify:doc-stats` (retype the count in `README.md` and `docs/roadmap.md`), its exit code read from a file, never through a pipe.
-4. `pnpm build` and `pnpm verify:fit`, pinned (the fit gate ran 11.1 min here: past the 10-minute foreground cap, the harness moves it to the background; wait for its notice).
-5. The sweep, only where the plan's Verification Contract calls it: `pnpm exec tsx <B>\tools\sweep.mts <label> --today=20758`, then `node <B>\tools\idcheck.mjs <label> ww3` (over 10 minutes: launch it in the background). A row in `<B>\README.md`'s table.
+3. `pnpm doc:reanchor <base>` dry, each move checked BY HAND (the Dell's classifier did not survive: every move must be a line shift the diff explains), then `--apply` once; restore `e2e/held/fit-24px-measurements.md` from HEAD and refuse the moves of the quoted examples in `docs/landmines.md` (the "two new register entries shifted `docs/backlog.md:1975`…" lines) and in this block's own step 3, and restore `docs/council-log.md` and insight 136 from HEAD where the commit edits neither; then the reached test files (CI runs the full suite; the whole suite takes ~200 s here); then `pnpm verify:doc-stats` (retype the count in `README.md` and `docs/roadmap.md`), its exit code read from a file, never through a pipe.
+4. `pnpm build` and `pnpm verify:fit` (over 10 minutes: launch it in the background and wait for its notice).
+5. The sweep and the per-key idcheck, only where a plan's Verification Contract calls them (a unit that touches `src/engine` or `intakeMap`): both lived in `<B>\tools\` and died with the Dell; rebuild them before such a unit. The walk-9 spec's units touch neither.
 
-**LANDMINES (U4 and U12):**
-- **"Plus" is retired** (the form spec's KD1): with the gap stated from the spending side it claims a direction the engine refutes. The open flip is ", except for any difference between the two answers in…" on every kind; never re-propose "plus", a typed-side "gain" close, "three-quarters", "all housing" or a "the tool works out your tax" line (the Hawk's vetoes).
+**LANDMINES (the walk-9 spec's U2, W9-R7's plan, and U12):**
+- **"Plus" is retired** (the walk-8 form spec's KD1): with the gap stated from the spending side it claims a direction the engine refutes. Walk 9 FIRED the flip: the rider becomes ", except for any difference between the two answers in…" on every kind in the walk-9 spec's U2; never re-propose "plus", a typed-side "gain" close, "three-quarters", "all housing" or a "the tool works out your tax" line (the Hawk's vetoes).
 - **The rider is ONE constant, `COMPARISON_RIDER` (`src/ui/copy.ts`), through `withRider(clause, glossYears)`**, the gloss on each line's first rider only (the first run's close; its look-back the engine's `irmaa` constant): a word change moves every pin on every host, each retyped by hand (no test imports it). The laws (`densityLaw`, `spanRiderLaw`, `survivorLaw` in `src/intake/__tests__/workingYearLeftOver.test.ts`) and copyGuard's retired sweeps read the words by hand too.
 - **`NotePartsBlock` draws two lists, never both:** W's stale line (the out-of-date line) as the segments' `<dl>` with its door; the typed-below runs as `ol.note-parts__runs` with the survivor part's `p.note-parts__closing`. Since U4 the stale line has its own `closing` (the segments arm's): drawn after the segments' `<dl>` and before the door, which then takes a `<dl>` of its own; never route the stale line through `runs`. A test reading the block's children sees `P DL P DL` there.
 - **The stale survivor part keys on the draft, not the answer's host:** `staleSurvivor` (`src/intake/workingYearLeftOver.ts`) reads the held figure against the draft re-confirmed at the quote, under any answer; the LINE draws it only for a "saved" answer waiting on W, the waiting seat wherever it speaks a run. A's gap comparison is scoped on the line only (`staleNoteOf(d, true)`): the W surfaces' note stays unscoped, so the guard "the opening begins with the note" compares the scoped note there.
 - **The methodology row is R14's** (`docs/plans/features/working-year-surplus-build-spec.md`): one static line by shown state, no dollars and no direction word (it reads the live draft far above the seat). A walk finding that asks it for dollars or a lean goes on the seat instead.
 - **The levels caption's figures round** (`formatAbsoluteDollar`): ST's $105,000 budget prints "about $110,000" beside the line's exact figure, pre-existing and filed on the W8-R7 register entry; never change the rounding inside U2.
-- **The gate is two columns at 1536 (`src/ui/styles/save.css`; the plan cites `src/ui/save.css`):** nothing pins the story column, so the coda below the fold is a walk-8 read, never a gate red; any fix is static (KD2's Fit).
+- **The gate is two columns at 1536; his screen is 1440×731 now** (measured 2026-11-19), so a fit judgment at 1536 is no longer his frame (`src/ui/styles/save.css`; the plan cites `src/ui/save.css`): nothing pins the story column, so the coda below the fold is a walk-8 read, never a gate red; any fix is static (KD2's Fit).
 - **Every existing witness and dev seed opens the survivor gate** (all descend from `stillWorking`: Alex 58 working, Sam 60 retired; Sam can die from 2032): only `SURVIVOR_GATE_WITNESSES.sam56` and `.youngerNonWorker` print the gate-off words. A fix to a span slot moves every pin on every host; retype the vitest pins by hand, never composed from the slots.
 - **x_t is refuted** (the rebuild plan's KD1; the register entry's NEGATIVE): a reviewer or reader who re-proposes x_t, "at least" or a "still working" condition on a credit re-derives a refuted finding. The survivor council's scope is "you're both alive", on a COMPARISON's head noun; credit sentences stay unconditioned.
 - **A still-short span's difference is each cash on the cent, subtracted, rounded up** (`stillShortDifferenceDollars`); every other kind reads the printed figures. The register's V9 NEGATIVE forbids the printed subtraction and the raw-difference snap. The survivor part's X is not that rule: it rounds the raw survivor-charge difference up (the survivor plan's KTD4).
 - **Every span figure is the ALL-ALIVE picture's**; the comparisons say "you're both alive" and the death path's bound is the survivor part's X alone. A reviewer who calls a span "true on every path", or asks a span to carry a survivor figure, re-derives a ruled shape (council `wf_dfb7949b-4a7`).
 - **One composer feeds every host** (the Result's slot, the gate, the seat in the sheet AND on the money-picture step): a change reds the fit gate's `PAY_CHECK_UNLOCKS` (TM's and the pension's doorless blocks and their seat blocks in the open sheet), the coordinate-tap arm, `reentry.test.tsx`, `resultPayCheckLine.test.tsx`, `IntakeApp.test.tsx`, `src/engine/__tests__/typedBelowTaxRider.test.ts` (it reads the near-line household's spans; U2's full suite caught it, no lane's own files did) and the caddie `intake:typedbelow` arm. The unit suite never runs Playwright: grep `e2e/` for every slot a round renames.
+- **The moved clause can print nowhere** (the walk-9 spec, call (1)): `workingYearCostTypedBelowStructure` returns early (`read === null`) BEFORE it computes `movedClause`. With the clause assigned to the typed-below line, compute it before every early return, and let `composeReentry` fall back to `ownNote` where the line did not carry it; a test pins the moved fact on all three arms of the host Record.
+- **The money picture's ledger keeps "If you’re still working in …"** (the walk-9 spec, call (3)): its year 0 is its own row, so it marks no false stop. Never "fix" the ledger to match the line's ", while you’re still working" labels, or the reverse.
+- **W9-R7: never compare drafts to find "different inputs".** Every blur commits and mints a new draft even when nothing changed, and the first run's seed mint swaps the draft object; `draftIdentityKey` carries non-engine fields. Key the BUILT engine input (the plan's KTD2). And every e2e wait on `data-answer-tier="final"` passes INSIDE the W9-R7 window (the old answer still says final): the plan's settle attribute is the harnesses' real signal.
+- **The Dell's session-folder tools are gone** (2026-11-19): every walk panel's `CHAIR-NOTES.md`, the line probe, the sweep, the idcheck, the re-anchor classifier, the tier-sweep and plan-reader folders. Each card in `docs/caddie/cold-read-log.md`, the register and the specs are what remain. A line probe is quick to rebuild from the composer over `DEV_SEEDS` (`file:///` imports, `pnpm exec tsx`); KD10's test is the count of record.
 - **Before a fix commit, read `docs/landmines.md`'s The fit gate and e2e, The mutation harness, Copy and copyGuard, Windows and the shell, and Probes and measurement sections.**
 
 **FOR HIM (one read, no rush):** two `docs/product.md` spots still lean on friends using the tool — R13's "kept on honesty
@@ -929,6 +928,15 @@ drop an entry once its insight is written. Past 10 entries, START HERE names `/d
 line keeps the facts `/distill` needs; its source line is in this file as it stood at commit `89b4fa58`
 (`git show 89b4fa58:projects/the-back-nine/TODO.md`), where the full original stands. A line marked *Correct* or
 *Extend* amends that insight instead of adding a new one.
+
+- *New (b9-1, 2026-11-19): a tool a gate names must live where the backups reach.* The Dell's death took every tool and
+  record in the session folder (the sweep, the idcheck, the re-anchor classifier the gates' step 3 names, every walk panel's
+  `CHAIR-NOTES.md`, the line probe), because the config backup covers `~/.claude`'s allowlist, not session folders. The
+  TODO kept pointing at them. A tool a gate or a START HERE step names belongs in the repo (or the backed-up config); a
+  record a later step reads belongs in the repo the day it is made.
+- *New (b9-1, 2026-11-19): ask a council seat for words in its reply or a file, never "in your deliberation text".* Five of
+  nine opening seats died on a `reasoning_extraction` safeguard flag; a resume kept the clerk (same prompt, cached) and
+  rewrote only the brief's tail for every later seat, and the chair's file became the spec's verbatim source.
 
 - e2e/ is outside tsconfig's include (src, scripts/**/*.ts, vite.config.ts). So a retired copy key that a Playwright spec still reads passes `pnpm typecheck` and fails only in Playwright. Any round that removes a copy key must grep e2e/ for it. This is the removal-side twin of insight 086 (key splits); insight 128 records the fact that tsc skips e2e/. *(Source: line 513.)*
 - A `// @ts-expect-error` arm in a vitest file still runs. The directive silences tsc, not execution, so once the methodology selector indexed the act's Record, the three-argument call threw at runtime. Put compile-only arms inside a function that is never called: `const _compileOnly = () => {...}; void _compileOnly` (workingYearTaxDisclosure.test.ts). *(Source: line 515.)*

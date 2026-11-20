@@ -275,7 +275,7 @@ Heavy runs go one at a time and unpinned (`docs/landmines.md`, "THE LENOVO"). Be
 
 ## Open Questions
 
-- **Briggsy's call (not blocking):** should the first reveal's quick reading carry the provisional tag? Architecture says a provisional-tier date renders only under the provisional tag; the hero's first reveal shows it untagged today and then sharpens. Recommended: yes, the tag on the first reveal too (it is the architecture's own rule, and the stylesheet's breathe family was built for it); it changes the magic moment's first frame, so it is his to rule. Filed in U6 as its own register entry.
+- **⚑ RULED by Briggsy 2026-11-19 (b9-1): "Yes, tag it."** The first reveal's quick reading carries the provisional tag until the final lands. U6's register entry is filed as a RULED build (its own unit after this plan's), never re-asked. The question as put: should the first reveal's quick reading carry the provisional tag? Architecture says a provisional-tier date renders only under the provisional tag; the hero's first reveal shows it untagged today and then sharpens. Recommended: yes, the tag on the first reveal too (it is the architecture's own rule, and the stylesheet's breathe family was built for it); it changes the magic moment's first frame, so it is his to rule. Filed in U6 as its own register entry.
 
 ## Minor faults the plan readers found (not folded in)
 

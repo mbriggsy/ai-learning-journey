@@ -28,6 +28,8 @@ and the only tiered route was asserted order-only. The layout-mutant proof could
 this — every mutant broke the FRAME, none broke the WAIT, and the wait's failure mode is
 "measures too early," invisible when early and late frames coincide.
 
+> **Out of date (corrected 2026-11-20):** since `c644ec2f` (W9-R7's U4, Briggsy's 2026-11-19 ruling "Yes, tag it") the date hero DOES render `.fod-provisional` over a provisional-tier date, so "those classes never render on the result hero" no longer holds on the date route; the spine hero stays untagged. The lesson stands: the settle signal is still a presence the producer stamps, never a class's absence. The current law lives in `src/ui/answerView.ts`'s THE EYEBROW note (`selectElevatedAnswer`'s docblock) and the harnesses' settle signal in `src/ui/Result.tsx`'s `data-answer-refiguring` comment.
+
 ## Fix
 
 Made the synchronization real and falsifiable: `ModelAnswer`'s resolved arms carry a REQUIRED

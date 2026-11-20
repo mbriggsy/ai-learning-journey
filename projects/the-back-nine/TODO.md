@@ -264,7 +264,7 @@ real plan.
 **SESSION 2026-11-16 (b9-4: the form spec's U4; b9-3's block pruned into it):**
 
 State at close:
-- The laptop's drive is failing (memory `project-laptop-ssd-failing`; four hard crashes on 2026-11-16): commit and push at every verified checkpoint, and no restarts or sleep.
+- NEW LAPTOP since 2026-11-19 (a Lenovo; the Dell died, memory `project-laptop-ssd-failing`), so the Dell's no-restart and no-sleep rules are dead. The Dell's `<B>` folder (`b9-build2-surplus\`: every walk panel's `CHAIR-NOTES.md`, walk 9's `measure\`, `tools\run-pinned.cmd`, the probe copies) and `temp\caddie\` did NOT survive (the config backup never covered that session folder): each walk's card in `docs/caddie/cold-read-log.md` and the register's entries are what remain, so START HERE's council works from walk 9's card.
 - The form council is DONE (`wf_98d8bc0e-e0a`, 7/10, executed); its words are the spec's, built from it, never from the council's machine-local journal. U1 (`3646a258`), U3 (`045509c1`) and U2 (`81f42077`, 39 files) are in: the composer (`src/intake/workingYearLeftOver.ts`: `TypedBelowQuoteCap`, `typedBelowPairingOf`, `TYPED_BELOW_NOUN`), the words (`src/ui/copy.ts`: the run, cap and survivor slots, `COMPARISON_RIDER` and its gloss), the renderer (`NotePartsBlock`'s `runs`: `ol.note-parts__runs[role=list]`, `p.note-parts__closing`), every pin, and the fit gate's block law with computed-style checks.
 - For Briggsy's digest from U2 (all for walk 9's card): the form council's ⚑ (the three-beat order, the gloss and lead words, "between the two answers", the length: the pension gate line is now 531 words and 34 figures, its answer page 588 and 38, against the spec's ~480 and walk 8's 400-530); the U2 pilot calls (the spec's "As built in U2"); KTD4's departure from the survivor council's literal X; the survivor council's mortality words.
 
@@ -275,7 +275,7 @@ State at close:
 Next is START HERE. Successor: b9-5 (handoff mode).
 
 **Check at start:**
-- CI on `81f42077`, `adfc868e`, U4's `15c17edc` and this close's commit: `gh run list --commit <full sha>` (the `verify` job runs about 43 minutes; `81f42077` and `adfc868e` were still running at b9-4's close). CI on `3646a258`, `045509c1` and `f51be29a` is green.
+- The new laptop (2026-11-19): pnpm 10.30.3, `node_modules` and the Playwright browsers were installed at the non-B9 close that wrote this line (`pnpm typecheck` and `pnpm verify:doc-stats` ran there; see that commit's message). Before the first heavy gate, A/B one heavy run unpinned vs `/affinity F`: the Lenovo's P-cores are logical CPUs 0-3 (mask `F`), so `docs/landmines.md`'s `FFF` recipe pins to 4 P-cores + 8 E-cores (memory `reference-hybrid-cpu-ecore-confinement`). Rebuild `run-pinned.cmd` from that file's wrapper landmine. Re-measure his viewport in his Chrome before a fit judgment (memory `project-back-nine-laptop-primary`). CI is green through `e6f8baf0` (run 44008110953).
 - The ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.

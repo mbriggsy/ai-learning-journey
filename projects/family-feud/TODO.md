@@ -10,6 +10,18 @@
 
 **We are PoppaBriggsy, roster 3, *Saquon Deez Nuts*. `briggsy007` is HUNTER** (CLAUDE.md landmine).
 
+- 🚨 **NEW LAPTOP (2026-11-19): NONE of the four scheduled tasks exist here** (`Get-ScheduledTask` showed no Family Feud task), and the
+  Dell is dead, so nothing has run since Mon 11-16 night. **Install them when Briggsy says go ("not just yet, we will shortly",
+  11-19), and before Sat 11-21 20:00 (game day's first check).** In order: (1) bring back the three Dell files never committed: `DRAFT_ALERTS.md`,
+  `GAMEDAY.md` and `family-feud-newsletter.html`, from `~/.claude/wip/ai-learning-journey-uncommitted-2026-11-16.patch` (apply ONLY
+  its `projects/family-feud/` hunks; its B9 hunks were committed on 11-16); (2) the git-ignored cargo is in Drive `Claude backup -
+  project assets\ai-learning-journey-ignored-assets-2026-11-16.tar` (`projects/family-feud/newsletter`, 1,521 files, as of 11-16
+  17:50); (3) the Python add-ons the scripts import (`jinja2`, `reportlab`, `pypdf`, `defusedxml`) into the one Python 3.14 (never
+  a second Python: the installers bake in whichever `python` resolves first); (4) `scripts\install-mule.ps1`, `-watcher`,
+  `-newsletter`, `-gameday`, each from PowerShell with `-NoProfile -ExecutionPolicy Bypass -File`; (5) check sleep-on-AC: the Dell
+  was set to never sleep, the Lenovo is likely at the Windows default, and a sleeping laptop skips game day. The 11-17 to 11-19
+  Daily Feuds were never printed (Drive `Daily Feud`'s newest is `2026-11-16-edition-95.html`).
+
 - **Record 5-4 (4th)**; week 9 beat kblizzy23 120.78–118.76. **Week 10 vs Kaeperni.** Remaining: wk11 RMonk9 ·
   wk12 MattiICE23 · wk13 BuschLight420 · wk14 Cltchiefs.
 - **Sun 11-15 09:20–09:35 ET, on Briggsy's word, verified on `/rosters`:** Tate and Hockenson (both Out) to IR; added

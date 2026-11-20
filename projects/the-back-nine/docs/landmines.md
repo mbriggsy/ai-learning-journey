@@ -88,7 +88,7 @@ working tree untouched; `fsck` proves nothing else was hit.
 - **(b9-1, 11-08) `cmd /c "start "" /b /wait /affinity FFF <cmd>"` reports exit 0 even when the command failed** (a failing vitest
   run came back 0). Launch through a wrapper `.cmd` that runs `call %*` then `echo PINNED_EXIT=%errorlevel%`, and read that line:
   the copy is `<b9-build2-surplus>\tools\run-pinned.cmd` (three lines; from PowerShell, `cmd /c "start `"`" /b /wait /affinity FFF <that path> pnpm test"`; proven with `node -e process.exit(3)` → `PINNED_EXIT=3`). The child really is pinned
-  (a node child read its own affinity as 4095 = 0xFFF).
+  (a node child read its own affinity as 4095 = 0xFFF). **2026-11-19: the wrapper lived in `<B>`, which did not survive the Dell; rebuild its three lines from this entry. `FFF` is the Dell's mask: on the new Lenovo the P-cores are logical CPUs 0-3 (mask `F`); A/B unpinned vs `F` before pinning.**
 - **(b9-1, 11-08) Never run a heavy job on the E-cores beside a pinned P-core run.** The identity sweep on `/affinity FF000` slowed
   the pinned suite from 534 s to 863 s (the cores share one power budget). Serialize: the sweep, then `verify:fit`, then the suite.
 - **(b9-1, 11-08) The laptop ran about 2.5x slower than on 11-05 under sustained load**, with no other process busy: the whole suite
@@ -99,7 +99,7 @@ working tree untouched; `fsck` proves nothing else was hit.
 - **(b9-1, 11-08) Another session's work shares the CPU:** the Feud session's `te_replay.py` searches each held a core through
   b9-1's first suite, and an orphaned `python.exe -` from a dead 10-30 session had held one for 9 days (killed with his OK, by
   `taskkill /PID`). Check `Get-CimInstance Win32_Process` for busy python before a heavy local gate.
-- **(b9-6) Run every heavy local check pinned to the P-cores, launched from PowerShell:** `cmd /c "start `"`" /b /wait /affinity FFF
+- **(b9-6) Run every heavy local check pinned to the P-cores, launched from PowerShell** (the masks here are the DELL's; the Lenovo since 2026-11-19 has 4 P-cores, mask `F`, unmeasured: A/B first)**:** `cmd /c "start `"`" /b /wait /affinity FFF
   <command>"` (the children inherit the mask; vitest and Playwright size their pools to 12 CPUs). Unpinned, the work lands on
   the E-cores and the solve tests time out. The same `start` line through Git Bash's `cmd //c` hung with no child process.
   *Reconciled 2026-11-09: this entry's last line (b9-6, 11-05) said a light suite on the E-cores (`/affinity FF000`) beside

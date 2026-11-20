@@ -36,7 +36,7 @@ Sorted alphabetically; `§` and number-prefixed statutory terms are grouped at t
 
 **byte-identity** — see **reduce-to-spine**.
 
-**Caddie** — the Briggsy-proxy cold reader: walks the real rendered UI at his 1536×791 laptop viewport and on phone, fans out fresh-context readers calibrated on his taste corpus, hunts the calm-but-wrong reading, and files a chaired verdict card. A subordinate stand-in, never his N=1 read — every prediction is scored against his eye on [the tape](caddie/tape.md). → [caddie/cold-read-log.md](caddie/cold-read-log.md)
+**Caddie** — the Briggsy-proxy cold reader: walks the real rendered UI at his 1440×731 laptop window (DPR 2, since 2026-11-20) and on phone, fans out fresh-context readers calibrated on his taste corpus, hunts the calm-but-wrong reading, and files a chaired verdict card. A subordinate stand-in, never his N=1 read — every prediction is scored against his eye on [the tape](caddie/tape.md). → [caddie/cold-read-log.md](caddie/cold-read-log.md)
 
 **Cardinal rule** — *"calm-but-wrong is the sin."* The governing constraint on every engine decision, disclosure, and the voice itself; the bar **rises** for a recommender. → [product.md §2](product.md)
 

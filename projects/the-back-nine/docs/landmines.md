@@ -323,6 +323,15 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-3, 11-20) The short laptop tier's law has ONE home: `--bp-laptop-short`'s docblock in `src/ui/styles/tokens.css`.**
+  The re-point amended it from "whitespace only" to insight 082's ordered ladder (whitespace, then leading, then a type
+  register borrowed from an equal-rank subordinate in the same frame, only for a frame still outside after the first two).
+  Every short-tier block's header (`survivor.css`, `confidence.css`, `result.css`, `app.css`, `save.css`, `band.css`)
+  points there; never restate the law in a block header (seven restatements were the drift class), and change it only
+  there. The date route's own block (`fuckOffDate.css`) stays whitespace-only. A new rung lands inside
+  `(min-width: 68rem) and (max-height: 840px)` with a computed-style pin on both sides of the boundary
+  (`assertDensityTier` in `e2e/vertical-fit.spec.ts`), or the 917 SHOWCASE and the phone stop being byte-identical.
+
 - **(b9-1, 11-20) The record HOLDS arm's hero-relative twin check reads −1 px against its ±1** (the re-point's KTD9: the
   0.8 px between the record-free twin's save button, 84.8 px, and the saved badge, 84 px; deterministic, and CI agrees).
   Anything that changes the save slot's height on either face reds it. Re-measure that gap before touching the slot.
@@ -375,7 +384,7 @@ tests
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:930-940`
   excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1057-1059`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:3621-3623`), a once-measured
+  measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:3621-3623`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
   arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:39-40`) — no date frame has ever been fit-measured either.
 - **(2026-09-27, b9-11)** the ONE width seam: a new `@media (min-width: …rem)` fails `breakpoint-mirrors.test.ts` unless it mirrors `--bp-laptop` (68rem) — a new tier is a product decision
@@ -801,6 +810,14 @@ chair; chair from a digest script, never the raw result, and expect the window t
 refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## CI
+
+- **(b9-3, 11-20) Test stdout reaches the `verify` job's log through a reporter nobody configured.**
+  `playwright.fit.config.ts` lists `[['github'], ['html']]` on CI. The github reporter prints no test output
+  (`printsToStdio()` is false), so Playwright prepends a `DotReporter` on CI, and that is what writes each arm's
+  `console.log` lines (`[route fit]`, `[U17 record return]`, `[20px-root fit]`) into the log. Each line is glued after the
+  progress dots with no test name: parse by its tag, and keep only an arm's final attempt (a retried arm prints twice).
+  Never add `list` to that config: it changes the line format any log reader parses. (`playwright.fit-rv.config.ts`
+  already lists `list`; leave it.)
 
 - **(b9-3, 11-04) Two commits pushed at once run CI only on the head.** A prerequisite fix committed first keeps each tree
   honest, but only the head's run is read; say so in the report.

@@ -303,7 +303,7 @@ These are the pilot's bets, made without a confirmation step; each is cheap to c
 
 **Phase B** opens with U5 (label 4, live on the W step) and the dark U13. Then the frozen version-4 fixtures are minted from a git archive of the go-live commit's parent. The single go-live commit carries U6, U7, U8, U14 and U9.
 - The four design skills load before any UI file is touched: `back-nine-design`, `emil-design-eng`, `frontend-design:frontend-design` and `web-design-guidelines`.
-- The Caddie walk runs on the built tree before the commit lands, at 1536×791 @ 2.5× and on the phone.
+- The Caddie walk runs on the built tree before the commit lands, at 1536×791 @ 2.5× and on the phone. (That was the Dell's window. Since the 1440×731 re-point, 2026-11-20, every walk this plan still owes, U11's and U12's among them, captures his Lenovo window, 1440×731 @ 2×, the harness's `REAL`.)
 - U10 follows as its own commit.
 
 **Phase C** is U11, then U12.

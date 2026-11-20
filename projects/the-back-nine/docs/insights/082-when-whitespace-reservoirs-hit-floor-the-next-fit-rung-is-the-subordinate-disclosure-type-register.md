@@ -50,3 +50,13 @@ or cutting words are all still forbidden — the ladder buys pixels from density
 meaning. And every rung, whatever its mechanism, is pinned by computed style so the fix is
 falsifiable on the platform where it ISN'T needed (075: a green local run carries zero
 information about the failing regime).
+
+> **Out of date (corrected 2026-11-20, the 1440×731 re-point):** round 4 did not borrow the R13 disclaimer's
+> register. The disclaimer's text has worn `--text-xs` since 2026-06-14 (`fbb03738`; `.disclaimer p` in
+> `src/ui/styles/app.css`), so the `--text-sm` the pair stepped into is the register the frame's OTHER subordinates
+> wear: the survivor eyebrow (`.survivor__eyebrow`, `src/ui/styles/survivor.css`), the save hint
+> (`.result-keep__hint`, `src/ui/styles/result.css`) and the band legend (`.band-legend`, `src/viz/band.css`). The
+> rung's honesty stands, because an equal-rank subordinate in the same frame does wear that register; only its
+> attribution was wrong. The ladder is now the short laptop tier's written law, with one home in
+> `--bp-laptop-short`'s docblock (`src/ui/styles/tokens.css`), amended from "whitespace only" by the re-point
+> (`docs/plans/features/viewport-1440x731-repoint-build-spec.md`, KTD4).

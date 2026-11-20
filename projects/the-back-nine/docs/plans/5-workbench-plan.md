@@ -286,7 +286,7 @@ By Briggsy's ruling the act is next after build 2. The whole act but U24's first
 - **One lever, two bases.** The rail compares withdrawal order against the plan, and the front-room sheet compares against an even split. KTD14 labels the rail's base; the sheet is unchanged.
 - **U23 is the act's least-known unit.** Its size hangs on a measurement and a council that have not run, and it re-opens an earlier working-year tax ruling. If the council's shape needs a saved field after U9 has landed, that is a second schema step.
 - **Sources not yet read at a primary:** Pennsylvania's treatment of a beneficiary's withdrawal, and the half-year rule for reaching 70½. U11 and U12 read both before use.
-- **A wide table on a laptop.** The widest source set decides the fit, not one screenshot (insight 123). U7 tests the fit at 1536×791, 1280×800 and a phone.
+- **A wide table on a laptop.** The widest source set decides the fit, not one screenshot (insight 123). U7 tests the fit at 1440×731, 1280×800 and a phone.
 
 ## Implementation Units
 
@@ -455,7 +455,7 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
   - Each of the three table states renders its words; an edit during a pending date search never shows new facts at the old date's offset.
   - A working household whose search crowned no date shows the window-top year's table, and the heading says no date was found.
   - The heading never contains "typical", "average", "expected" or "median" (a copyGuard rule).
-  - The table fits without sideways page scroll at 1536×791 and 1280×800 with the widest Phase 1 source set (two people's pre-tax, Roth, taxable, HSA), with no inner scroller hiding a column at the laptop sizes (the `sidewaysReport` walk), and reads on a phone.
+  - The table fits without sideways page scroll at 1440×731 and 1280×800 with the widest Phase 1 source set (two people's pre-tax, Roth, taxable, HSA), with no inner scroller hiding a column at the laptop sizes (the `sidewaysReport` walk), and reads on a phone.
   - The pinned answer landing after the table moves no tap target (a real-browser coordinate walk).
 - **Verification.** `pnpm verify:fit` gains the room's arms, and `pnpm verify:csp`'s room arm shows the steady and rough views (U6). A Caddie walk and Briggsy's cold read of the table.
 
@@ -571,7 +571,7 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
   - Saving with any required answer blank is refused.
   - A household holding an inherited IRA sees the recommendation's held-pace line in the front room.
   - The table shows the account's own columns, with the year's required amount beside what was taken, and the last year named.
-  - The table fits at 1536×791, 1280×800 and a raised font, and reads on a phone, on a made-up seed holding two inherited IRAs with their own columns.
+  - The table fits at 1440×731, 1280×800 and a raised font, and reads on a phone, on a made-up seed holding two inherited IRAs with their own columns.
 - **Verification.** A Caddie walk and Briggsy's cold read of the questions.
 
 ### Phase 3: the rail
@@ -614,7 +614,7 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
   - The rail keeps focus and open state when the pinned answer lands (insight 047).
   - From hand-built readings: equal counts give the even line; pending and error give no difference; a plan at 6 beside a what-if at 8, and a plan at 8 beside a what-if at 6, each speak every count under its own run's label.
   - On the floor track, a spending lever that touches only a line the floor pass never reads says so and never shows the even line.
-  - The paired form fits at 1536×791, 1280×800 and a raised font with the widest source set, and no inner scroller hides a paired column; the phone form reads, each figure with its run's name beside it.
+  - The paired form fits at 1440×731, 1280×800 and a raised font with the widest source set, and no inner scroller hides a paired column; the phone form reads, each figure with its run's name beside it.
   - A ban on lean words ("helps you", "costs you", "better", "worse", "safer") passes over every rail string that carries no measured reading, with samples it must catch; the levers' own words, such as "stop a year later", pass.
 - **Verification.** A Caddie walk and Briggsy's cold read of the rail. `pnpm verify:csp`'s room arm runs one what-if (U6).
 
@@ -763,7 +763,7 @@ Run from `projects/the-back-nine`:
 - `pnpm typecheck`, `pnpm lint` and `pnpm test` pass on every unit's commit.
 - `pnpm build` and `pnpm verify:bundle`: the room is a lazy chunk, and the entry stays inside its budget.
 - `pnpm verify:csp`: no new network call and no new worker script, proven by its room arm (U6).
-- `pnpm verify:fit`: the room's arms at 1536×791, 1280×800 and a phone.
+- `pnpm verify:fit`: the room's arms at 1440×731, 1280×800 and a phone.
 - `pnpm verify:doc-stats`: after every docs change, this plan included.
 - Every engine unit (U2, U3, U11, U12, U19, U23) proves byte-identity on every shipped seed with its feature absent, and runs a mutation pass on its new arithmetic. A byte-identity claim across a commit takes its BEFORE from a `git archive` of the HEAD before that commit (insight 148) and compares every field of every seed's result, both date tiers' crowns included (AE7's bar), never the headline answer.
 - New arithmetic gets a fixture derived by an independent path before it ships: the steady path, the inherited-IRA minimum, the repeat's compile, the convert-to-a-line landing.

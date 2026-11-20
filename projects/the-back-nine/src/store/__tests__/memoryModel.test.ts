@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   createMemoryModel,
   type MemoryModel,
@@ -1622,6 +1622,36 @@ describe('memoryModel — W9-R7: the answered draft, the newest-inputs commit ru
     expect(shownSpends.every((s) => s !== 84_000)).toBe(true) // A never reached the screen
     expect(model.getSnapshot().answer).toMatchObject({ kind: 'date', tier: 'final', outcome: { reason: 'B-final' } })
     expect(keyed(model.getSnapshot().answer).draft.annualSpendingReal).toBe(90_000)
+  })
+
+  it('a burst of two edits through the GUARDED pair (W9-R7 U2, R6): the last edit gets its own provisional commit, then its final, and the superseded pair sends no final', async () => {
+    // `pair` mirrors Result's recomputeBoth and IntakeApp's revealAndSharpen; the callers' own tests
+    // (resultAssumptionsDoor, IntakeApp) pin that they are wired this way. This arm shows the store
+    // outcome R6 is for.
+    const { client, datePending } = fakeClient()
+    const model = createMemoryModel({ client, builders: keyedDateBuilders, mintSeed: () => 7 })
+    await shownDate(model, datePending, 80_000)
+    const pair = async (): Promise<void> => {
+      if (!(await model.recompute('provisional'))) return
+      await model.recompute('final')
+    }
+    const shown: string[] = []
+    model.subscribe(() => {
+      const a = model.getSnapshot().answer
+      if (a.kind === 'date') shown.push(`${a.draft.annualSpendingReal}/${a.tier}`)
+    })
+    model.update(spend(84_000))
+    const pA = pair()
+    model.update(spend(90_000))
+    const pB = pair()
+    datePending[1]!(cancelledWire) // the worker drops A's provisional: B's dispatch bumped the epoch past it
+    datePending[2]!(inputFailureWire('B-provisional'))
+    await vi.waitFor(() => expect(datePending).toHaveLength(4)) // B's final, and only B's
+    datePending[3]!(inputFailureWire('B-final'))
+    await Promise.all([pA, pB])
+    expect(datePending).toHaveLength(4) // A's pair sent no final
+    // The held answer under the flag, then B's own provisional, then B's final; A (84,000) never shows.
+    expect(shown.filter((s, i) => s !== shown[i - 1])).toEqual(['80000/final', '90000/provisional', '90000/final'])
   })
 
   it('the newest dispatch HELD (it resolves cancelled, or an engine reset kills it): the flag clears with nothing committed', async () => {

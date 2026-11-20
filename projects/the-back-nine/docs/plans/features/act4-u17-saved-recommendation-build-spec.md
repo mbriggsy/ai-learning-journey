@@ -360,7 +360,7 @@ session cannot persist, and a gesture whose commit cannot persist is a lie. **`w
 cannot call it, and `save()`'s `{ ok:false, reason:'not-writable' }` (`session.ts:597`) is a last-resort
 backstop rather than a gate. The two non-writable states are detected separately:
 
-- **recovery-unlocked survivor** → `session.status() === 'recovery-unlocked'` (`IntakeApp.tsx:448-456`).
+- **recovery-unlocked survivor** → `session.status() === 'recovery-unlocked'` (`IntakeApp.tsx:450-458`).
   `recoveryUnlock` clears `passphraseWrapCurrent` and returns a bare `{ ok: true }`; `RecoveryUnlockResult`
   carries **no** `readOnly`, so `deriveResultSave`'s read-only parameter does not cover this state.
 - **read-only second tab** → the existing `UnlockResult.readOnly`, already threaded into

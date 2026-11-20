@@ -343,8 +343,12 @@ export function Result({
   )
   // Apply/escape recompute provisional→final (the decrypt-on-return fast-show precedent): the
   // provisional lands quickly under the thinking-breathe, the final sharpens in the background.
+  // W9-R7 (R6, KTD7): a provisional that a newer edit superseded before it settled sends NO final —
+  // the newer edit's own pair carries the household's latest inputs, provisional first. (Sent anyway,
+  // the old pair's final would be built from the newer draft and its epoch bump would cancel the newer
+  // pair's provisional: the household would wait out the final with no first reading of its change.)
   const recomputeBoth = useCallback(async () => {
-    await appModel.recompute('provisional')
+    if (!(await appModel.recompute('provisional'))) return
     await appModel.recompute('final')
   }, [])
 

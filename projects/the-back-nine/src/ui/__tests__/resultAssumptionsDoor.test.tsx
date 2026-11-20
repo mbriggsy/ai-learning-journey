@@ -305,4 +305,41 @@ describe('the edit → recompute cadence (the ratified F6 policy)', () => {
     await waitFor(() => expect(recompute.mock.calls.length).toBe(2))
     expect(recompute.mock.calls).toEqual([['provisional'], ['final']])
   })
+
+  it('DATE route: a provisional a newer edit superseded sends NO final, and the newer edit’s pair sends both (W9-R7, KTD7) — with its settled-as-newest twin as the control', async () => {
+    for (const settledAsNewest of [false, true]) {
+      plantResolved()
+      appModel.update((d) => ({
+        ...d,
+        people: [
+          { ...d.people[0], workStatus: 'working' as const },
+          { ...d.people[1], workStatus: 'retired' as const },
+        ],
+      }))
+      // The first edit's provisional stays in flight until released; every later call resolves at once.
+      let release!: (newest: boolean) => void
+      const firstProvisional = new Promise<boolean>((r) => (release = r))
+      const recompute = vi.spyOn(appModel, 'recompute').mockImplementationOnce(() => firstProvisional).mockResolvedValue(true)
+      const view = renderResult()
+      fireEvent.click(door()!)
+      const input = screen.getByLabelText(copy.assumptionSurvivorRatioLabel)
+      for (const value of ['60', '55']) {
+        fireEvent.focus(input)
+        fireEvent.change(input, { target: { value } })
+        fireEvent.blur(input)
+      }
+      // The second edit's pair ran whole while the first's provisional was still in flight.
+      await waitFor(() => expect(recompute.mock.calls).toEqual([['provisional'], ['provisional'], ['final']]))
+      release(settledAsNewest)
+      // The first pair awaited this promise before the test did, so its decision is made by the time this resumes.
+      await firstProvisional
+      expect(recompute.mock.calls, `settled as newest: ${settledAsNewest}`).toEqual(
+        settledAsNewest
+          ? [['provisional'], ['provisional'], ['final'], ['final']] // the control: the same wait sees a final when one is owed
+          : [['provisional'], ['provisional'], ['final']],
+      )
+      recompute.mockRestore()
+      view.unmount()
+    }
+  })
 })

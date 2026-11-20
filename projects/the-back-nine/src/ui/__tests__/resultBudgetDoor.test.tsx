@@ -116,7 +116,7 @@ describe('the budget door — presence + wording', () => {
 describe('the budget door — Result’s commit wiring', () => {
   it('Apply lands the ATOMIC patch in the store (Σactive@0 + M) and requests the provisional→final sharpen', async () => {
     plantResolved()
-    const recompute = vi.spyOn(appModel, 'recompute').mockResolvedValue(undefined as never)
+    const recompute = vi.spyOn(appModel, 'recompute').mockResolvedValue(true)
     // The pre-set scalar (40k) is deliberately DISTINCT from the reconciled anchor (35k+5k=40k
     // would be self-satisfying — the assertion would pass even if the patch dropped M; ultramode
     // 2026-07-02 nit). Pre-set 99k so only a genuine Σactive@0 + M reconciliation can land 40k.
@@ -147,7 +147,7 @@ describe('the budget door — Result’s commit wiring', () => {
 
   it('the escape clears the budget to strictly-undefined, keeps the last reconciled scalar, and re-words the door back', async () => {
     plantResolved()
-    const recompute = vi.spyOn(appModel, 'recompute').mockResolvedValue(undefined as never)
+    const recompute = vi.spyOn(appModel, 'recompute').mockResolvedValue(true)
     appModel.update((d) => ({
       ...d,
       budget: [line()],

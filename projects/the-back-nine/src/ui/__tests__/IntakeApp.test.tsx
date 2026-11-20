@@ -527,6 +527,26 @@ describe('IntakeApp — the U13 re-entry gate (council 2026-07-09, constraints (
     expect(recomputeSpy.mock.calls.map((c) => c[0])).toEqual(['provisional', 'final'])
   })
 
+  it('the reveal’s provisional, superseded before it settled (an edit on the Result re-ran), sends NO final (W9-R7, KTD7) — with its settled-as-newest twin as the control', async () => {
+    for (const settledAsNewest of [false, true]) {
+      recomputeSpy.mockClear()
+      let release!: (newest: boolean) => void
+      const provisional = new Promise<boolean>((r) => (release = r))
+      recomputeSpy.mockImplementationOnce(() => provisional)
+      const view = render(<IntakeApp hydrateFromVault />)
+      fireEvent.click(await screen.findByRole('button', { name: copy.reentryAffirmCta }))
+      await screen.findByText('result stub')
+      expect(recomputeSpy.mock.calls.map((c) => c[0])).toEqual(['provisional'])
+      release(settledAsNewest)
+      // The reveal awaited this promise before the test did, so its decision is made by the time this resumes.
+      await provisional
+      expect(recomputeSpy.mock.calls.map((c) => c[0]), `settled as newest: ${settledAsNewest}`).toEqual(
+        settledAsNewest ? ['provisional', 'final'] : ['provisional'],
+      )
+      view.unmount()
+    }
+  })
+
   it('the update route lands in the walk-through (answers preserved, no recompute — the terminal advance owns it)', async () => {
     render(<IntakeApp hydrateFromVault />)
     fireEvent.click(await screen.findByRole('button', { name: copy.reentryUpdateCta }))

@@ -325,10 +325,12 @@ export default function IntakeApp({
   // await ORDER is load-bearing: the provisional must COMMIT (lower epoch) before the
   // final dispatches, or the final's epoch bump cancels the in-flight provisional and the
   // reveal is back to a bare blocking spinner. The result holds the provisional reading
-  // while the final computes (no re-blank), then upgrades.
+  // while the final computes (no re-blank), then upgrades. W9-R7 (R6, KTD7): a provisional that a
+  // newer recompute superseded before it settled (an edit on the Result during the reveal) sends NO
+  // final — the newer edit's own pair sharpens the household's latest inputs.
   const revealAndSharpen = useCallback(async () => {
     setPhase('result')
-    await appModel.recompute('provisional')
+    if (!(await appModel.recompute('provisional'))) return
     await appModel.recompute('final')
   }, [])
   const complete = useCallback(async () => {

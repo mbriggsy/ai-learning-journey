@@ -323,6 +323,10 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-1, 11-20) The record HOLDS arm's hero-relative twin check reads −1 px against its ±1** (the re-point's KTD9: the
+  0.8 px between the record-free twin's save button, 84.8 px, and the saved badge, 84 px; deterministic, and CI agrees).
+  Anything that changes the save slot's height on either face reds it. Re-measure that gap before touching the slot.
+
 - **(b9-5, 11-20) The hero's eyebrow slot overlays `.result`'s top padding only at the two-pane tier** (W9-R7's U4, `c644ec2f`: the re-figuring line and the provisional tag, absolute above the lead in `fuckOffDate.css` / `confidence.css`). It holds ONE line: at the short tier the padding is 32 px and the line 18.2 px with an 8 px margin, so a wrap (a longer string, CI's taller metrics) climbs above the page top. Below the two-pane tier the slot is in the flow (a raised root font would push an overlay off the page), so the phone's date hero sits lower while the slot shows: 36.4 px + a gap under the two-line re-figuring line, 32.1 px under the tag until the final. A string change in the slot, or a re-point that moves the short tier's padding, re-measures it.
 - **(b9-5, 11-20) A window one run long can't be screenshotted reliably** (the spine's re-figuring window is ~3 s; 1440's hero shot missed it while 1536's and 1280's caught it). Read live geometry with an in-page `requestAnimationFrame` recorder armed BEFORE the edit that records the rects on the first frame the element exists; a dev preview with the state forced on is the measurement of record. For the re-figuring window that preview is `?preview=refiguring&seed=<key>` (`src/ui/preview/RefiguringPreview.tsx`, U5): the real app with every run after the seed's first final held, so one edit holds the window open. Its one blind spot: two notifies in one task paint as one frame, so a store-order fault that never crosses a task is the store suite's to catch, never the page's (`e95c17db`).
 - **(b9-4, 11-13) A new cause that takes another cause's slot reds THAT cause's arms, which a run of the new arm alone never

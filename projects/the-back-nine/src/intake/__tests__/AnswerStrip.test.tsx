@@ -71,6 +71,23 @@ describe('AnswerStrip — the honesty branches (D1 review T3)', () => {
     expect(screen.getByTestId('engine-reading').textContent).toContain(copy.outcomeOffTrack)
   })
 
+  it('W9-R7 (KTD5): the guard asks about the reading SHOWN — figured at zero accounts, it keeps the trust-hazard copy after an account is typed; figured WITH one, it keeps the verdict word after the account is removed', () => {
+    const account = [{ ownerIndex: 0, kind: '401k', valueToday: 500_000 }] as const
+    const withAccount = draft({ enteredAccounts: account })
+    const withNone = draft()
+    const at = (answered: ScenarioDraft, live: ScenarioDraft): MemoryModelSnapshot => ({
+      ...snap(headline('off-track', 3)),
+      draft: live,
+      answer: { ...(headline('off-track', 3) as Extract<ModelAnswer, { kind: 'headline' }>), draft: answered },
+    })
+    const first = render(<AnswerStrip snapshot={at(withNone, withAccount)} missing={[]} onRetry={() => {}} />)
+    expect(screen.getByText(copy.answerNotYet)).toBeInTheDocument()
+    expect(screen.queryByTestId('engine-reading')).toBeNull()
+    first.unmount()
+    render(<AnswerStrip snapshot={at(withAccount, withNone)} missing={[]} onRetry={() => {}} />)
+    expect(screen.getByTestId('engine-reading').textContent).toContain(copy.outcomeOffTrack)
+  })
+
   it('an OVER-FUNDED reading rides the composer’s ceiling route — "better than 9 in 10", byte-identical to the hero, never the raw clamped count (council 2026-07-18 Q4a: the strip was the un-folded sibling of the U12 echo desync)', () => {
     renderStrip(headline('over-funded', 9), {
       enteredAccounts: [{ ownerIndex: 0, kind: '401k', valueToday: 5_000_000 }],

@@ -246,6 +246,13 @@ export function Result({
   // priced-healthcare gate (healthcarePriced — single-sourced with buildOverlay; council
   // 2026-07-03: no hollow door).
   const healthPriced = healthcarePriced(snapshot.draft)
+  // W9-R7 (KTD5) — THE ANSWERED DRAFT: the draft the SHOWN answer was figured from. Every hero sentence below
+  // that describes the shown answer reads it (its Medicare and state notes, the moved left over, W's stale line
+  // and its door's words, the typed-below line); every control and every sheet reads the live draft. With no
+  // resolved answer on screen it is null and the hero describes nothing (neither hero renders a note outside a
+  // resolved view), so no test can reach a note through the live draft by planting a view without an answer.
+  const answeredDraft: ScenarioDraft | null =
+    snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date' ? snapshot.answer.draft : null
   // P3·U11 follow-up (the post-65 Medicare pricing unit, 2026-07-10) — "was Medicare priced in this
   // run?", route-aware and read off the BUILT params' own overlay decision, never ages and never a
   // re-derivation of the builder's inputs (insight 080; the ultramode fold's sharpening: the age
@@ -260,14 +267,25 @@ export function Result({
     [snapshot.draft],
   )
   const medicarePricedNote = showMedicarePricedNote({ medicarePriced, reachesHealthDoor: healthPriced })
+  // …and its HERO twin, off the answered draft whole (the door's reach included: the hero's note describes the
+  // run it shows; the Roth lever keeps the live note above, since it describes the run it will preview — KTD5).
+  const heroMedicarePricedNote = useMemo(
+    () =>
+      answeredDraft !== null &&
+      showMedicarePricedNote({
+        medicarePriced: isDateRoute(answeredDraft) || spineMedicarePriced(answeredDraft),
+        reachesHealthDoor: healthcarePriced(answeredDraft),
+      }),
+    [answeredDraft],
+  )
   // The ask-for-Medicare-extras on-typical appendix (F5, population A): per-person BUILT
   // dollars + draft provenance + the name fallback (medicareExtrasDisclosureView — the ONE
   // assembly both F5 homes consume, insight 081), composed to the ONE bi-directional
   // sentence appended inside the residual paragraph. `undefined` for entered/affirmed
   // households and non-priced runs.
   const medicareExtrasTypicalNote = useMemo(
-    () => composeMedicareExtrasTypicalNote(medicareExtrasDisclosureView(snapshot.draft)),
-    [snapshot.draft],
+    () => (answeredDraft === null ? undefined : composeMedicareExtrasTypicalNote(medicareExtrasDisclosureView(answeredDraft))),
+    [answeredDraft],
   )
   // The state-tax unit (S5) — "which PRICED state did THIS run price?", read route-aware off the
   // route's OWN built-params overlay decision (never draft.retirementState — insight 081; never a
@@ -277,31 +295,53 @@ export function Result({
   // omission, and the sheet's conversion tile adds the state's tax to its cents; the RECOMMENDATION
   // surface drops its state-tax scope note, `recDiscStateTax`), each gating on `!== undefined`.
   const statePricedNote = useMemo(() => pricedStateForRun(snapshot.draft), [snapshot.draft])
+  // …and its HERO twin, read off the answered draft (KTD5: two values — the sheets and the recommendation surface
+  // describe what they will run next, the hero what it ran).
+  const heroStatePricedNote = useMemo(
+    () => (answeredDraft === null ? undefined : pricedStateForRun(answeredDraft)),
+    [answeredDraft],
+  )
   // The pay check's KTD21 standing line: the household's W no longer matches the spending or state
   // it was given against, and the date still runs on that last figure (R4). The ONE stale predicate
   // (`workingYearQuote.ts`), read off the draft — the same answer the walk's gate and the panel's
   // row read. Its door opens the panel at the W row, and exists only where the tab can save. W's ONE stale line
   // (`workingYearCostStaleLine`): build 2 adds the clause for a "saved" answer waiting on W (R12), and, where the
   // spending rose, what a check at the quote adds (the U11 walk's (ae); memoized on the draft, as the line is here).
-  const payCheckStaleText = useMemo(() => workingYearCostStaleLine(snapshot.draft), [snapshot.draft])
+  // W9-R7 (KTD5): the line, its choice of note and its door's words all describe the shown answer, so they read the
+  // answered draft; only the door's open action is live (it opens the panel, which reads the live draft). Choosing
+  // from the live draft split the slot: a W fixed in the panel made the note vanish while the date still ran on the
+  // old figure (spec-flow I1).
+  const payCheckStaleText = useMemo(
+    () => (answeredDraft === null ? null : workingYearCostStaleLine(answeredDraft)),
+    [answeredDraft],
+  )
   // …and its door (council `wf_7fa86902-35c`): the act, which picks the cause and so the door's words
   // (`W_STALE_CAUSE`), and what the Result says beside it (U11 walk 5's (bj), (bk)).
-  const payCheckStaleDoor = useMemo(() => workingYearCostStaleDoor(snapshot.draft), [snapshot.draft])
+  const payCheckStaleDoor = useMemo(
+    () => (answeredDraft === null ? null : workingYearCostStaleDoor(answeredDraft)),
+    [answeredDraft],
+  )
   // Build 2's moved left over (R12), read LIVE off the draft through the one moved core. Where a tax, state-tax
   // or working-years line fired at unlock (`leftOverClauseHost`, decided once by `composeReentry` and kept for
   // the session, whether or not the left over had moved then), the two figures ride the hero's rules note,
   // with no door of their own (the Assumptions door still reaches the seat); otherwise they take the standing
   // slot (never both — a moved left over needs a fresh W, so the W line never shares it either), whose door
   // opens the left-over seat.
-  const leftOverMoved = useMemo(() => workingYearLeftOverMoved(snapshot.draft), [snapshot.draft])
+  const leftOverMoved = useMemo(
+    () => (answeredDraft === null ? null : workingYearLeftOverMoved(answeredDraft)),
+    [answeredDraft],
+  )
   // U11 walk 6's R1: a fresh TYPED W below today's quote, which W's stale line never reaches (a typed figure is never
   // staled on a quote, KTD10) — its own line in the same slot, read LIVE off the draft like the two above. It can never
   // share the slot with W stale (that needs a stale W; this, a fresh one), so W stale goes first only as the order the
   // three are written in. Where the left over has ALSO moved and no rules line hosts that clause, this line takes the
   // slot and carries the moved figures as its clause, since it names the credited figure too (`TypedBelowHost`).
   const typedBelowLine = useMemo(
-    () => workingYearCostTypedBelowLine(snapshot.draft, { kind: 'result', carriesMoved: !leftOverClauseHost }),
-    [snapshot.draft, leftOverClauseHost],
+    () =>
+      answeredDraft === null
+        ? null
+        : workingYearCostTypedBelowLine(answeredDraft, { kind: 'result', carriesMoved: !leftOverClauseHost }),
+    [answeredDraft, leftOverClauseHost],
   )
   // The pay-less-tax ALL-IN hero's scope (build spec D7): did the SOLVE's built overlay price
   // healthcare? Deliberately NOT `medicarePriced` above — that one ORs the date route in (structurally
@@ -730,9 +770,9 @@ export function Result({
             view={elevated.view}
             focusSignal={focusKey}
             actionsSlot={seatInLead ? actionsNode : undefined}
-            medicarePricedNote={medicarePricedNote}
+            medicarePricedNote={heroMedicarePricedNote}
             medicareExtrasTypicalNote={medicareExtrasTypicalNote}
-            statePricedNote={statePricedNote}
+            statePricedNote={heroStatePricedNote}
             stalenessNote={stalenessNote}
             stalenessClause={
               stalenessNote && leftOverClauseHost && leftOverMoved !== null
@@ -759,9 +799,9 @@ export function Result({
             view={elevated.view}
             focusSignal={focusKey}
             actionsSlot={seatInLead ? actionsNode : undefined}
-            medicarePricedNote={medicarePricedNote}
+            medicarePricedNote={heroMedicarePricedNote}
             medicareExtrasTypicalNote={medicareExtrasTypicalNote}
-            statePricedNote={statePricedNote}
+            statePricedNote={heroStatePricedNote}
             stalenessNote={stalenessNote}
             sheetOpen={sheetOpen}
             savedAnchor={dateAnchor}

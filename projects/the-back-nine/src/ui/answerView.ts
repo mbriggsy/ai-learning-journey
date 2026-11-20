@@ -219,7 +219,9 @@ export function selectElevatedAnswer(
             floor: outcome.floor,
             lifestyle: outcome.lifestyle,
             windowTopYears: outcome.windowTopYears,
-            ...dateBand(outcome, draft, savedAnchor),
+            // The band describes the shown answer, so its ages, spend levels and caption figure come
+            // from the draft that answer was figured from (W9-R7, KTD5) — never the live one.
+            ...dateBand(outcome, answer.draft, savedAnchor),
           },
         }
       }
@@ -258,7 +260,7 @@ export function selectElevatedAnswer(
           ...(snapshot.displayed ? { displayed: snapshot.displayed } : {}),
           // The spend lane rides beside the sticky triple (its gate lives in verdictSentence.spendClauseFor).
           spend: snapshot.spend,
-          ...spineBand(answer.result, draft, savedAnchor),
+          ...spineBand(answer.result, answer.draft, savedAnchor), // the answered draft, as on the date route
           ...(answer.result.survivorReading ? { survivorReading: answer.result.survivorReading } : {}),
           ...(answer.result.floorReading ? { floorReading: answer.result.floorReading } : {}),
         },

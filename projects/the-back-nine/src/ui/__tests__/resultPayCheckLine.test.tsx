@@ -9,6 +9,8 @@ import { copy, slots, workingCostExtras } from '@ui/copy'
 import { DEV_SEEDS } from '../devSeeds'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
 import { councilBudgetHousehold } from '@intake/__tests__/typedBelowWitnesses'
+import { workingYearCostStaleLine } from '@intake/workingYearLeftOver'
+import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 
 /*
  * The pay check's KTD21 standing line, wired through Result (`docs/plans/features/working-year-pay-check-build-spec.md`
@@ -44,17 +46,50 @@ vi.stubGlobal(
 const pristineDraft = appModel.getSnapshot().draft
 const confirmedDate = { kind: 'dates', floor: DATE_FIXTURES.confirmed, lifestyle: DATE_FIXTURES.confirmed, windowTopYears: DATE_WINDOW_TOP } as const
 
+/*
+ * W9-R7 (KTD5): the hero's lines describe the draft the SHOWN answer was figured from, so a planted hero needs a
+ * planted answer. The store's answer only resolves through the real worker, so it is planted by wrapping
+ * `getSnapshot` (the recommendationSaveGesture precedent; cached on its inputs, since `useSyncExternalStore` throws
+ * on a snapshot whose identity changes on every read). `answeredAt: null` is a settled page: the answer was figured
+ * from whatever draft is on screen. A draft is an answer committed THERE, with every later edit not yet re-figured.
+ */
+const realGetSnapshot = appModel.getSnapshot.bind(appModel)
+interface Planted {
+  readonly answeredAt: ScenarioDraft | null
+}
+let planted: Planted | null = null
+let cached: { readonly base: MemoryModelSnapshot; readonly planted: Planted; readonly snap: MemoryModelSnapshot } | null = null
+vi.spyOn(appModel, 'getSnapshot').mockImplementation((): MemoryModelSnapshot => {
+  const base = realGetSnapshot()
+  if (planted === null) return base
+  if (cached !== null && cached.base === base && cached.planted === planted) return cached.snap
+  const answer: ModelAnswer = {
+    kind: 'date',
+    outcome: { ...confirmedDate, tier: 'final', seed: 1 },
+    tier: 'final',
+    draft: planted.answeredAt ?? base.draft,
+    inputKey: 'planted',
+  }
+  const snap: MemoryModelSnapshot = { ...base, answer }
+  cached = { base, planted, snap }
+  return snap
+})
+
 afterEach(() => {
   cleanup()
+  planted = null
+  cached = null
   appModel.update(() => pristineDraft)
   vi.mocked(resolvedFocusKey).mockReset()
   vi.mocked(selectElevatedAnswer).mockReset()
   document.documentElement.classList.remove('control-sheet-open')
 })
 
-function plantDateHero() {
+/** A resolved date hero over a planted answer: settled at the draft on screen, or committed at `answeredAt`. */
+function plantDateHero(answeredAt: ScenarioDraft | null = null) {
   vi.mocked(resolvedFocusKey).mockReturnValue('planted-focus-key')
   vi.mocked(selectElevatedAnswer).mockReturnValue({ kind: 'date', view: confirmedDate })
+  planted = { answeredAt }
 }
 
 const line = () => document.querySelector('.cs-paycheck-note')
@@ -71,6 +106,26 @@ describe('the pay check’s standing line through Result (KTD21)', () => {
     fireEvent.click(lineDoor()!)
     expect(screen.getByRole('heading', { name: copy.assumptionTitle })).toBeInTheDocument()
     expect(document.activeElement).toBe(wRowName())
+  })
+
+  it('W9-R7 (KTD5): a W fixed in the panel but not yet re-figured KEEPS the line — the shown date still runs on the old figure — and its door still lands on the W row; once the answer is figured at the fix, the line goes', () => {
+    appModel.update(() => DEV_SEEDS.datecoststale)
+    plantDateHero(realGetSnapshot().draft) // the shown answer, committed at the stale yes
+    // The household types the quote in: a fresh entered figure (a typed figure is never staled on a quote, KTD10).
+    appModel.update((d) => {
+      const w = d.workingYearCost
+      if (w === undefined) throw new Error('the seed carries a W')
+      return { ...d, workingYearCost: { kind: 'entered', amountReal: 78_000, entryPeriod: 'year', stateTaxReading: w.stateTaxReading } }
+    })
+    expect(workingYearCostStaleLine(realGetSnapshot().draft), 'the LIVE draft has no stale W').toBeNull()
+    const view = render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    expect(line()?.textContent).toContain(copy.stalenessPayCheckNote)
+    fireEvent.click(lineDoor()!)
+    expect(document.activeElement).toBe(wRowName())
+    view.unmount()
+    plantDateHero() // the re-figured answer lands, at the draft on screen
+    render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    expect(line()).toBeNull()
   })
 
   it('a W that still matches reads no line', () => {
@@ -559,4 +614,62 @@ describe('U11 walk 6’s R1 — the typed-below line through Result', () => {
     expect(line()!.textContent).toContain(copy.stalenessPayCheckNote)
     expect(line()!.textContent).not.toContain('answer counts a working year at your own figure')
   })
+})
+
+// W9-R7 (KTD5): every hero sentence describes the shown answer, so the hero's whole text, answered at draft A with
+// the live draft already moved to B, must equal the hero settled at A — and settled at B it must differ (the
+// control: the edit really moves what the hero says, so the equality is not vacuous). One arm guards every hero
+// describer at once: the standing slot, the moved left over, the typed-below line, the state, Medicare and extras notes.
+describe('W9-R7 (KTD5): the hero reads the ANSWERED draft whole', () => {
+  // The hero's DESCRIBING text: the actions row can seat inside the hero's lead, and its doors are controls, which
+  // rightly follow the live draft (a spouse turned 60 brings the Healthcare door at once), so it is left out.
+  const heroText = (): string => {
+    const hero = document.querySelector('.result-hero')
+    if (hero === null) return ''
+    const copyOf = hero.cloneNode(true) as Element
+    copyOf.querySelectorAll('.result-actions').forEach((n) => n.remove())
+    return copyOf.textContent ?? ''
+  }
+  const heroAt = (answeredAt: ScenarioDraft | null): string => {
+    plantDateHero(answeredAt)
+    const view = render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} readOnly />)
+    const text = heroText()
+    view.unmount()
+    return text
+  }
+  const cases: ReadonlyArray<readonly [string, ScenarioDraft, (d: ScenarioDraft) => ScenarioDraft]> = [
+    [
+      'TM (typed below, the left over moved)',
+      DEV_SEEDS.datesavedtypedmoved,
+      (d) => ({ ...d, workingYearCost: undefined, workingYearLeftOver: undefined }),
+    ],
+    [
+      'the moved left over in the slot',
+      DEV_SEEDS.datesavedmoved,
+      (d) => ({ ...d, workingYearLeftOver: undefined }),
+    ],
+    [
+      'the all-65+ still-working household in North Carolina (then a spouse under 65 with a quote pair, so the Healthcare door reaches)',
+      { ...DEV_SEEDS.date65, retirementState: 'NC' },
+      (d) => ({
+        ...d,
+        retirementState: 'elsewhere',
+        medicareExtrasByPerson: undefined,
+        people: [d.people[0], { ...d.people[1], currentAge: 60, birthYear: d.startCalendarYear - 60 }],
+        health: { ...d.health, slcspMonthlyToday: 1_400, enrolledPremiumMonthlyToday: 1_100 },
+      }),
+    ],
+  ]
+  for (const [name, a, edit] of cases) {
+    it(`${name}: answered at A with the live draft moved, the hero says exactly what it says settled at A`, () => {
+      appModel.update(() => a)
+      const atA = heroAt(null)
+      const answeredDraft = realGetSnapshot().draft
+      appModel.update(edit)
+      const answeredAtA = heroAt(answeredDraft)
+      const atB = heroAt(null)
+      expect(atB, 'the control: settled at B, the hero says something else').not.toBe(atA)
+      expect(answeredAtA).toBe(atA)
+    })
+  }
 })

@@ -2098,7 +2098,7 @@ export const copy = {
   recommendSaveSavedBadge: 'Saved to this device — your plan and this strategy read',
   // THE REFUSALS. None carries a retry control: the mint is deterministic, so a retry re-fails
   // identically, and an affordance that cannot succeed is the lying-remedy shape
-  // (Result.tsx:535-543). Each says what did NOT happen, in the reader's frame.
+  // (Result.tsx:575-583). Each says what did NOT happen, in the reader's frame.
   recommendSaveRefusalRecordInvalidHeading: 'This strategy read couldn’t be kept',
   recommendSaveRefusalRecordInvalidBody:
     'We couldn’t build a record of it, so nothing reached this device — your plan here is exactly as you left it. The answer above is still current.',

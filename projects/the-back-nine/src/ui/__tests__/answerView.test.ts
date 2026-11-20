@@ -4,6 +4,8 @@ import { selectElevatedAnswer, resolvedFocusKey } from '../answerView'
 import { copy } from '../copy'
 import { READING_FIXTURES, SURVIVOR_FIXTURES } from '../preview/fixtures'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
+import { DEV_SEEDS } from '../devSeeds'
+import { workingYearFigureBesideQuote } from '@intake/workingYearLeftOver'
 import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
 import type { BandFan, DateBand, DateTrackOutcome, OutcomeState, SimulationResult, SurvivorReading } from '@shared/model'
 
@@ -449,5 +451,64 @@ describe('resolvedFocusKey — the one-shot landing announce', () => {
         view: { kind: 'dates', floor: DATE_FIXTURES.noDate, lifestyle: DATE_FIXTURES.noDate, windowTopYears: DATE_WINDOW_TOP },
       }),
     ).toBe('date:no-date-in-window:none')
+  })
+})
+
+// W9-R7 (KTD5) — the band describes the shown answer, so every figure it names (the ages, the two spending
+// levels, the caption's working-year figure) comes from the draft that answer was figured from; an edit not
+// yet re-figured moves the live draft only. The routing of pending and compute-error stays live.
+describe('selectElevatedAnswer — W9-R7: the band reads the ANSWERED draft, never the live one', () => {
+  const answeredAt = (answer: ModelAnswer, answered: ScenarioDraft, live: ScenarioDraft): MemoryModelSnapshot => ({
+    draft: live,
+    answer: answer.kind === 'headline' || answer.kind === 'date' ? { ...answer, draft: answered } : answer,
+    displayed: null,
+    solve: { kind: 'idle' },
+    spend: { kind: 'idle' },
+    refiguring: false,
+    runningInWorker: true,
+  })
+
+  it('the work-stops ages: an age edit not yet re-figured leaves them at the answered draft’s', () => {
+    const live = draft({
+      people: [
+        { workStatus: 'working', currentAge: 59 },
+        { workStatus: 'retired', currentAge: 61 },
+      ],
+    })
+    const r = selectElevatedAnswer(answeredAt(datesAnswer(confirmedAt(6), dateBandTo(40, 6)), workingWithAges, live), noop)
+    if (r.kind !== 'date' || r.view.kind !== 'dates') throw new Error('expected a date dates view')
+    expect(r.view.bandAnnotations?.find((m) => m.id === 'work-stops')?.ages).toBe('64 / 66') // 58+6 / 60+6, not 59+6 / 61+6
+  })
+
+  it('the SPINE band’s readout ages: an age edit not yet re-figured leaves them at the answered draft’s', () => {
+    const live = draft({
+      people: [
+        { workStatus: 'retired', currentAge: 70 },
+        { workStatus: 'retired', currentAge: 68 },
+      ],
+    })
+    const r = selectElevatedAnswer(answeredAt(headlineAnswer('on-track'), retiredWithAges, live), noop)
+    if (r.kind !== 'spine' || r.view.kind !== 'reading') throw new Error('expected a spine reading')
+    const settled = selectElevatedAnswer(answeredAt(headlineAnswer('on-track'), live, live), noop)
+    if (settled.kind !== 'spine' || settled.view.kind !== 'reading') throw new Error('expected a spine reading')
+    expect(r.view.bandAges?.(0)).toBeDefined()
+    expect(r.view.bandAges?.(0)).not.toBe(settled.view.bandAges?.(0)) // 66 / 64, never the live 70 / 68
+  })
+
+  it('the caption’s working-year figure and the two spending levels: the answered draft’s, and gone once the answer is figured at the live draft', () => {
+    const answered = DEV_SEEDS.datesavedtypedsticky // a typed W below the quote, on an all-sticky budget
+    const live: ScenarioDraft = { ...answered, budget: undefined, workingYearCost: undefined }
+    const premise = workingYearFigureBesideQuote(answered)
+    expect(premise, 'the seed prints its working-year figure beside the quote').not.toBeNull()
+    const band = dateBandTo(40, 6)
+    const r = selectElevatedAnswer(answeredAt(datesAnswer(confirmedAt(6), band), answered, live), noop)
+    if (r.kind !== 'date' || r.view.kind !== 'dates') throw new Error('expected a date dates view')
+    expect(r.view.workingYearFigure).toEqual(premise)
+    expect(r.view.spendLevels).toBeDefined()
+    // The settled twin at the live draft names neither (the same view machinery, so the arm above is not vacuous).
+    const s = selectElevatedAnswer(answeredAt(datesAnswer(confirmedAt(6), band), live, live), noop)
+    if (s.kind !== 'date' || s.view.kind !== 'dates') throw new Error('expected a date dates view')
+    expect(s.view.workingYearFigure).toBeUndefined()
+    expect(s.view.spendLevels).toBeUndefined()
   })
 })

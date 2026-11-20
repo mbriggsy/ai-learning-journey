@@ -175,8 +175,11 @@ export function AnswerStrip({
   // a spine reading is computed against a $0 portfolio — a NEGATIVE verdict
   // there is structurally misleading and wears the incompleteness-tied class,
   // NEVER the verdict word (positives can only improve as accounts land, so
-  // they render normally under the provisional tag).
-  const accountsEntered = snapshot.draft.enteredAccounts.length > 0
+  // they render normally under the provisional tag). It asks whether the reading SHOWN was
+  // computed against zero accounts, so it reads the draft that reading was figured from (W9-R7,
+  // KTD5), never the live one an edit has already moved.
+  const shownFrom = answer.kind === 'headline' || answer.kind === 'date' ? answer.draft : snapshot.draft
+  const accountsEntered = shownFrom.enteredAccounts.length > 0
   const negativeStates: ReadonlySet<OutcomeState> = new Set(['off-track', 'already-failing'])
 
   return (

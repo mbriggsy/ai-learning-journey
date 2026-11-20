@@ -58,16 +58,16 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
-- **(b9-1, 11-20) The Lenovo drops into Modern Standby about 30 s after a wake while the session is locked, and a long gate
-  freezes with it.** The re-point's U2 builder saw `verify:fit` go 188/192, four arms timing out at 180 s in page setup or
-  teardown with no assertion failing. The Windows System log showed Kernel-Power 506 ("entering Modern Standby, Reason: Idle
-  Timeout") and 507 (the power button) 208 s apart. A unit-suite run froze the same way: one engine test hit 231 s. Before
-  any gate over a couple of minutes (`verify:fit`, the full suite, a mutant pass), hold a keep-awake request for the run's
-  length and release it after. Never change a power setting. The recipe is a background PowerShell job that calls
-  `SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED)` (0x80000003) through `Add-Type`'s
-  `kernel32.dll` import, polls for a stop file every 5 s with a 40-minute cap, then calls `SetThreadExecutionState(ES_CONTINUOUS)`
-  and exits. The request lives only as long as that process does. A timeout in setup or teardown with no assertion line is
-  this, until the System log says otherwise: read events 506/507 before calling it a regression.
+- **(b9-1, 11-20) A gate that times out in page setup or teardown with no assertion line can be the laptop asleep, not a
+  regression.** The re-point's U2 builder saw `verify:fit` go 188/192: four arms timed out at 180 s, none on an assertion.
+  The Windows System log showed Kernel-Power 506 ("entering Modern Standby, Reason: Idle Timeout") and 507 (the power
+  button) 208 s apart. A unit-suite run froze the same way, with one engine test at 231 s. The cause was the battery: the
+  laptop had been unplugged by accident, so the battery's idle timeout applied (Briggsy, 11-20). Plugged in, it stays up,
+  so no keep-awake step is owed on ordinary runs. Before calling such a timeout a regression, read events 506/507 and check
+  the power source. If a long run must go on battery, hold a per-process keep-awake for its length and never change a power
+  setting: a background PowerShell job calls `SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED |
+  ES_DISPLAY_REQUIRED)` (0x80000003) through `Add-Type`'s `kernel32.dll` import, polls for a stop file, then calls
+  `SetThreadExecutionState(ES_CONTINUOUS)` and exits.
 - **(b9-3, 11-16) PowerShell variable names are case-blind:** a gate chain's `foreach ($s in $steps)` overwrote the
   scratchpad path held in `$S`, every log path became `…\System.Collections.Hashtable\…`, nothing ran, and the background
   task still exited 0. Name a loop variable apart from every other variable in the script (`$step`), and read the

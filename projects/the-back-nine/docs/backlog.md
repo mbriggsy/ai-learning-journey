@@ -3286,7 +3286,7 @@ In the committed frame, taxable income is $0 in every window year at $0–$5k of
       - off-track from $6,490.
     - Over ($5,200, $6,500]: room 5, hold 34, borderline 89, off-track 2 of 130 (3.8 / 26.2 / 68.5 / 1.5 %, derived).
     - On the app's $100 grid: 0 / 3 / 9 / 1. The entered spend is the only off-track point.
-  - **The walk's `retired` @ $10,000 frame** (`e2e/caddie-walk.spec.ts:998-1023`; not a dev seed):
+  - **The walk's `retired` @ $10,000 frame** (`e2e/caddie-walk.spec.ts:1002-1027`; not a dev seed):
     - F is $6,400.
     - Edges at $6,410, $6,670 and $7,380.
     - Over ($6,400, $10,000]: hold 26, borderline 71, off-track 263 of 360 (7.2 / 19.7 / 73.1 %, derived).

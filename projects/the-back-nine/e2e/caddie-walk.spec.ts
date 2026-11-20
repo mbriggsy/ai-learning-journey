@@ -181,6 +181,10 @@ import type { WorkingYearLeftOverKind } from '../src/shared/model'
  *  - Two new dev seeds walk as `seed:` and `vault:` with no edit here: `datesavedtypedpension` (five spans) and
  *    `datesavedtypedcrowned` (a span named past the headline's date).
  *
+ * Increment 14 (2026-11-20, b9-3, for walk 10's watch item W9 (5)):
+ *  - `intake:typedmoved` re-walks TM (`datesavedtypedmoved`) to its money-picture step (`walk-typed-moved-ledger`: the
+ *    moved note and the typed-below line under "All of it", the saved-moved step no other arm reached).
+ *
  * Targets: `CADDIE_TARGETS="vault:retired,vault:stale,seed:date,intake:fork"` (comma list).
  * Back-compat: `CADDIE_SEED=budget` still works (one seed target). Default: `seed:retired`.
  */
@@ -1981,6 +1985,30 @@ async function walkIntakeTypedBelow(page: Page, outDir: string): Promise<void> {
   await captureState(page, path.join(outDir, 'walk-typed-below-ledger'))
 }
 
+/**
+ * The SAVED-MOVED money-picture step (`intake:typedmoved`, b9-3, for walk 10's watch item W9 (5), council
+ * `wf_9bd3c243-4e7`): TM (`datesavedtypedmoved`: $84,000 typed under $105,000 of spending, "All of it" saved when the left
+ * over was $16,985, $26,985 now) re-walked from its settled Result to the money-picture step ("Question 14"). Under the
+ * reply buttons the step draws the moved note, its clause with no answer noun since U3, then the typed-below line in its
+ * "Your" form: the two places walk 10 reads for "answer" taken as the couple's reply. The line's words are pinned by the
+ * unit suite; this arm pins the note's clause and the counts sentence's opening, and captures the frame.
+ */
+async function walkIntakeTypedMoved(page: Page, outDir: string): Promise<void> {
+  await rewalkSeedTo(page, 'datesavedtypedmoved', copy.qWorkingLedgerHeading, { final: true })
+  const question = page.locator('.intake-shell .step-body .left-over')
+  await expect(question, 'the left-over question renders once, inside the step').toHaveCount(1)
+  await expect(question.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true }), '“All of it” stays checked').toBeChecked()
+  await expect(question, 'the moved note’s clause, no answer noun (U3)').toContainText(
+    'leave this as it is: each working year still adds at most the $16,985 you said goes in.',
+  )
+  // Three runs, so the seat is `NotePartsBlock`'s `div.note-parts` (one run would be a `p`): select by class alone.
+  await expect(question.locator('.left-over__at-quote'), 'the step’s seat opens with the counts sentence, in its "Your" form').toContainText(
+    'Your answer counts a working year at your own figure of $84,000 a year, below your spending of $105,000 a year.',
+  )
+  await question.locator('.left-over__at-quote').evaluate((el) => el.scrollIntoView({ block: 'center' }))
+  await captureState(page, path.join(outDir, 'walk-typed-moved-ledger'))
+}
+
 /** A's counts sentence (`datesavedtyped`: $84,000 typed under $90,000 of spending), naming the host's answer (the
  *  walk-8 form council's KD9): "This" on the Result, "Your" on the walk's step. No lean in it since the walk-9 form
  *  council's call (2). Typed by hand from the U2 probe (`probe.out.txt`, witness `a`). */
@@ -2208,7 +2236,8 @@ for (const target of TARGETS) {
           else if (target.key === 'leftover') await walkIntakeLeftOver(page, outDir)
           else if (target.key === 'kept') await walkIntakeKept(page, outDir)
           else if (target.key === 'typedbelow') await walkIntakeTypedBelow(page, outDir)
-          else throw new Error(`unknown intake walk "${target.key}" — intake:fork, intake:paycheck, intake:leftover, intake:kept and intake:typedbelow exist`)
+          else if (target.key === 'typedmoved') await walkIntakeTypedMoved(page, outDir)
+          else throw new Error(`unknown intake walk "${target.key}" — intake:fork, intake:paycheck, intake:leftover, intake:kept, intake:typedbelow and intake:typedmoved exist`)
         } else if (target.kind === 'solve') {
           await walkSolve(page, target.key, outDir)
         } else {

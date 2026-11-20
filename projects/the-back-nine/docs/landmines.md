@@ -532,6 +532,26 @@ is a guess a verifier must check, never a fact
 
 ## Copy and copyGuard
 
+- **(the typed-below line's standing rules, migrated from TODO's close block 2026-11-20, b9-2):**
+  - **The rider is ONE constant, `COMPARISON_RIDER` (`src/ui/copy.ts`), through `withRider(clause, glossYears)`**, the gloss on
+    each line's first rider only (its look-back the engine's `irmaa` constant): a word change moves every pin on every host,
+    each retyped by hand (no test imports it). The laws in `src/intake/__tests__/workingYearLeftOver.test.ts` and copyGuard's
+    retired sweeps read the words by hand too.
+  - **`NotePartsBlock` draws two lists, never both:** W's stale line (the out-of-date line) as the segments' `<dl>` with its
+    door; the typed-below runs as `ol.note-parts__runs` with the survivor part's `p.note-parts__closing`. The stale line has
+    its own `closing` (the segments arm's), drawn after the segments' `<dl>` and before the door, which then takes a `<dl>` of
+    its own; never route the stale line through `runs`. A test reading the block's children sees `P DL P DL` there.
+  - **x_t is refuted** (the rebuild plan's KD1; the register entry's NEGATIVE): a reviewer or reader who re-proposes x_t,
+    "at least" or a "still working" condition on a credit re-derives a refuted finding. The survivor council's scope is
+    "you're both alive", on a COMPARISON's head noun; credit sentences stay unconditioned ("while you’re still working"
+    lives on the run LABEL only, the walk-9 spec's call (3)).
+  - **A still-short span's difference is each cash on the cent, subtracted, rounded up** (`stillShortDifferenceDollars`);
+    every other kind reads the printed figures. The register's V9 NEGATIVE forbids the printed subtraction and the
+    raw-difference snap. The survivor part's X is not that rule: it rounds the raw survivor-charge difference up (the
+    survivor plan's KTD4).
+  - **Every span figure is the ALL-ALIVE picture's**; the comparisons say "you're both alive" and the death path's bound is
+    the survivor part's X alone. A reviewer who calls a span "true on every path", or asks a span to carry a survivor figure,
+    re-derives a ruled shape (council `wf_dfb7949b-4a7`).
 - **(b9-2, 11-16) The typed-below rider's completeness leans on two engine gates outside the copy** (the tax rider build's
   council, its architect). The rider (since walk 9's flip (i), the walk-9 form spec's U2: ", except for any difference between the two
   answers in income tax and Medicare’s income surcharge.", glossed by a comma clause on each line's first rider) covers the
@@ -638,6 +658,10 @@ chair; chair from a digest script, never the raw result, and expect the window t
 ## Claude Code, workflows and sessions
 
 
+- **(b9-2, 11-20) A teammate's final report arrives TRUNCATED past a few thousand characters** ("[result truncated — ask
+  the agent for the rest via SendMessage]", twice in one session): ask it to resend the rest in numbered parts, and never
+  act on the half that arrived. A helper a teammate spawns hands back to the ORCHESTRATOR when its spawner sits idle
+  ("the agent that spawned me had already stopped"): relay its report to the teammate that owns the work.
 - **(b9-5, 11-15) The Workflow tool needs Briggsy's opt-in IN THE SESSION** ("use a workflow", ultracode confirmed by a
   system message, or a skill he invoked): a squeaky handoff or a TODO line is not it. The council and the three blind
   plan readers are Workflows, so a session without it cannot run them; ask at the session's start. A review round can

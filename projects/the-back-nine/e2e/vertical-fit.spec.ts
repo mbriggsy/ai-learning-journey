@@ -552,8 +552,9 @@ type DensityRows = {
   readonly fold?: boolean
   /** The remembered-record card (the arm asserted it on the frame). */
   readonly record?: boolean
-  /** `?vault=stale` / `?vault=statestale`: those arms' own echo-gap pins own the note frames' grid and
-   *  subordinates row-gaps (W4), so the helper leaves them alone there. */
+  /** `?vault=stale` / `?vault=statestale`: those arms read the note frames' grid and subordinates
+   *  row-gaps themselves (statestale's pin is W4's; stale's 2px is written by round 5 AND W4, so it
+   *  kills neither alone: see its comment), so the helper leaves them alone there. */
   readonly skipNoteGaps?: boolean
 }
 
@@ -2301,9 +2302,12 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // encoding of the measured-delta rule; U13 post-fold review advisory 6): the only other
     // guard on the `:has(.cs-staleness-note)` step-down is assertFrameFits GEOMETRY, which a
     // deleted :has() rule can survive on Windows text metrics while red on CI (the exact 075
-    // loop). Pin the COMPUTED styles: two tokens below the ≤840px density tier since the
-    // 2026-07-11 round-3 reservoir step — row-gap --space-1 (4px) on the two-pane grid,
-    // gap --space-1 (4px) on the subordinates.
+    // loop). Pin the COMPUTED styles. TWO RULES WRITE THIS 2px AT REAL (the 1440×731 re-point's
+    // review, 2026-11-20): round 5's on-typical step (2px at every two-pane height) and W4 (2px on
+    // every note frame inside the short tier). Deleting either one alone leaves 2px here, so this pin
+    // kills neither rule by itself: round 5 is killed by the spine matrix's tall read on the
+    // on-typical `budget` at SHOWCASE, W4 by the spine arms' short reads. It still reds if both
+    // go, or if the echo frame stops being a two-pane grid with a 2px rhythm.
     const echoGaps = await page
       .locator('.confidence-reveal[data-twopane]')
       .evaluate((reveal) => ({
@@ -2313,11 +2317,11 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
         subordinatesRowGap: getComputedStyle(reveal.querySelector('.reveal__subordinates')!).rowGap,
       }))
     // ROUND 5: the stale vault is an ON-TYPICAL frame (doctorStaleVault strips the fork —
-    // the recompute funds typical-both), so its chain gaps ride the 2px typical tier.
-    expect(echoGaps.rowGap, 'the ON-TYPICAL note-frame row-gap steps to 2px (round 5)').toBe('2px')
+    // the recompute funds typical-both), so its chain gaps ride the 2px typical tier, and W4 agrees.
+    expect(echoGaps.rowGap, 'the ON-TYPICAL note-frame row-gap is 2px (round 5, and W4 inside the short tier)').toBe('2px')
     expect(
       echoGaps.subordinatesRowGap,
-      'the ON-TYPICAL subordinates row-gap steps to 2px (round 5)',
+      'the ON-TYPICAL subordinates row-gap is 2px (round 5, and W4 inside the short tier)',
     ).toBe('2px')
     await assertOneVisibleDisclaimer(page, 'laptop')
 
@@ -3217,8 +3221,8 @@ async function assertTappableInSheet(target: Locator, who: string): Promise<void
  *  `assertTypedBelowParts`'s). Read inside the short tier only: no contract sets a tall rhythm for the gate (the plan's
  *  Scope Boundaries; the planning probe found the 917 showcase and the phone byte-identical at build). Exact strings,
  *  `rowGap` never the `gap` shorthand, so deleting any W6 rule reds HERE on every platform (insight 075). Every plant
- *  this reads draws both read-back groups; a gate draws one where a bucket set is empty (`ReEntry.tsx`'s
- *  `ReadbackGroup` renders nothing for no rows), so the second group's lead-in is read where a second group renders. */
+ *  this reads draws both read-back groups, and the helper asserts that count; a gate draws one where a bucket set is
+ *  empty (`ReEntry.tsx`'s `ReadbackGroup` renders nothing for no rows), so a one-group plant would need its own read. */
 async function assertGateDensity(page: Page, who: string): Promise<void> {
   const read = await page.evaluate(() => {
     const style = (sel: string) => {
@@ -3240,9 +3244,13 @@ async function assertGateDensity(page: Page, who: string): Promise<void> {
   expect(read.padTop, `${who}: W6: the gate's top padding ${at}`).toBe('32px')
   expect(read.gridRowGap, `${who}: W6: the gate grid's row-gap under the heading ${at}`).toBe('12px')
   expect(read.confirmRowGap, `${who}: W6: the confirm half's row-gap ${at}`).toBe('12px')
-  expect(read.groupTops.length, `${who}: the confirm half draws no read-back group (insight 029)`).toBeGreaterThan(0)
+  // Every plant this helper reads draws BOTH read-back groups (the docblock above), so the count is
+  // asserted, never branched on: a plant that dropped to one group would silently take W6's group rule
+  // off its only pin (insight 029; the re-point's review, 2026-11-20). A one-group plant added on purpose
+  // changes this line with it.
+  expect(read.groupTops.length, `${who}: the confirm half draws both read-back groups (insight 029)`).toBe(2)
   expect(read.groupTops[0], `${who}: the first read-back group keeps no lead-in, so the halves start on one line`).toBe('0px')
-  if (read.groupTops.length > 1) expect(read.groupTops[1], `${who}: W6: the second read-back group's lead-in ${at}`).toBe('8px')
+  expect(read.groupTops[1], `${who}: W6: the second read-back group's lead-in ${at}`).toBe('8px')
   expect(read.actionsTop, `${who}: W6: the confirm half's buttons' lead-in ${at}`).toBe('8px')
   expect(read.storyRowGap, `${who}: the story column's gap is never W6's (--space-5)`).toBe('20px')
 }
@@ -3773,7 +3781,8 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     // caveat, and the caveat's distance from the hero's top carries it whole. Both distances come from
     // unrounded rects and only their difference is rounded: the two caveats already sit 0.8px apart
     // (the twin's save slot holds the 84.8px CTA where the vault's holds the 84px saved badge), and
-    // rounding each distance first could add up to another pixel. ±1px absorbs that, nothing more —
+    // rounding each distance first could add up to another pixel. A rounded difference of at most 1 absorbs
+    // that (it admits |Δ| < 1.5 px unrounded; the measured Δ is −0.8), nothing more —
     // the breach this replaced was 67px, and the card seated back in grid row 4 moves the caveat ~150px.
     expect(
       Math.abs(fromHero),
@@ -3791,6 +3800,15 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     // reads with the rest.
     await assertOneVisibleDisclaimer(page, 'laptop')
     await assertDensityTier(page, 'short', { record: true })
+
+    // (4) W5's TALL side (the 1440×731 re-point's review, 2026-11-20): no other arm renders a record
+    // card above the short tier, so without this read a W5 rule written outside the tier would change
+    // the 917 SHOWCASE card while every arm stayed green (R4). The same frame, widened to SHOWCASE,
+    // must read every rung dark, the card's own included. A computed-style read only, so the resize
+    // needs no fresh load.
+    await page.setViewportSize(SHOWCASE)
+    await settleLayout(page)
+    await assertDensityTier(page, 'tall', { record: true })
   })
 
   /**
@@ -4841,9 +4859,10 @@ for (const vp of PAY_CHECK_VIEWPORTS) {
 // the working-year figure can miss…", cured by `src/intake/gestureHold.ts`. The figure commits on blur,
 // and the press on "Each month" is what blurs it; the commit un-stales W, so the content above the
 // control changes between the press and the release (the walk's stale note unmounts; the panel's money
-// picture mounts above the question). Chromium's scroll anchoring moves the scroller back on every
-// screen of his (1536×791, 1536×960 full screen, 448×891 phone: 19 of 19 coordinate taps landed, b9-10's
-// `tapProbe2.mts`), so these arms run where it cannot: a 1536×1300 window (mouse) and a 1024×1366 touch
+// picture mounts above the question). Chromium's scroll anchoring moved the scroller back on every
+// screen of his then (the Dell's 1536×791 and 1536×960 full screen, a 448×891 phone: 19 of 19 coordinate
+// taps landed, b9-10's `tapProbe2.mts`; his Lenovo's 1440×731 window and 1440×900 screen, 2026-11-19, are
+// shorter than both miss geometries and were not re-probed), so these arms run where it cannot: a 1536×1300 window (mouse) and a 1024×1366 touch
 // screen, which missed 4 of 4 before the hold — a monthly 7,000 left as $7,000 a YEAR, unasked.
 // A REAL coordinate tap (a press, 80 ms, the release — or a touch tap), never `.click()` / `check()`: those
 // re-resolve the target between the halves, which is the race itself. Each arm's non-vacuity floor is the

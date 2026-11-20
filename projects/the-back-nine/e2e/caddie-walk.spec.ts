@@ -652,7 +652,7 @@ async function captureCvdRegion(
  * showed the landing's hero and band over its top third, then the backdrop, and none of the
  * confirmed answer, Pay or the tax lines — four panel seats read them from copy.txt alone, and the
  * CVD seat could not screen the row at all. PANEL_CVD_REGIONS dodged the same limit by cropping
- * smaller pieces; the money picture alone is taller than the laptop's 743px sheet, so that cannot
+ * smaller pieces; the money picture alone is taller than the laptop's sheet (94dvh: 743px on the Dell's 791 window, 687px at REAL's 731), so that cannot
  * close it here.
  *
  * Each segment sets the sheet's OWN scroller (the nearest scrolling ancestor — `role="dialog"` IS

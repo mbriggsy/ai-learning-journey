@@ -101,7 +101,8 @@ test.describe(`Briggsy's window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)
 
   // 20 px — Chrome's one-click "Large": 68rem is 1360 px, so this window STAYS two-pane and the
   // one-frame budget binds at 1.25× ink. `budget` is the worst measured seed (the protected
-  // caveat ended at 936 px against 791). The open fork's frame.
+  // caveat ends at 878 px against 731 at REAL, re-recorded 2026-11-20; 936 against the Dell's 791).
+  // The open fork's frame.
   test('laptop-20px-budget', async ({ page, context }) => {
     await raise(page, context, 20)
     await gotoSeedFinal(page, 'budget')

@@ -86,7 +86,8 @@ main.result[data-inframe-disclaimer] ~ .disclaimer {
     /* In-frame chrome: the grid row-gap owns the spacing above; the hairline + fine print read
        as the frame's own footer rule. No deep bottom padding — the doors row follows it.
        (--space-2, not -3: the worst seed's doors row peeked 2px past Briggsy's 791px frame —
-       measured 2026-07-08; neutral chrome pays, per the whitespace-only law.) */
+       measured 2026-07-08; neutral chrome pays, per the whitespace-only law of the day — the
+       short tier's law is insight 082's ladder since 2026-11-20, one home in tokens.css.) */
     margin-block-start: 0;
     padding: var(--space-2) var(--gutter) 0;
   }

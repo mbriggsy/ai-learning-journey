@@ -249,12 +249,17 @@ describe('--bp-laptop source-bind', () => {
  * every fit arm asserts against REAL.height, and no CSS rule reads the token. Nothing tied the two,
  * and they drifted apart: the token read 800px while the gate enforced 791, and an earlier 768-vs-800
  * split between the stylesheets' comments hid the 2026-07-08 regression. So the token must equal
- * REAL.height in px, read from the source, never re-typed. One test, deliberately: no incident asks
- * for binding every `(max-height: …px)` literal to `--bp-laptop-short`, and the fit spec's two-sided
- * density helper already reds the moment a viewport crosses that boundary.
+ * REAL.height in px, read from the source, never re-typed. Comments are stripped first: the token's
+ * own docblock records its history, and a quoted old declaration there must never satisfy the bind.
+ * (The short tier's prelude, the `(max-height: …px)` literals among them, is bound by the next describe.)
  */
+/** A stylesheet with its block comments removed, so a declaration quoted in prose never reads as live. */
+function withoutComments(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, '')
+}
+
 function declaredLaptopFitHeightPx(): number {
-  const tokens = readFileSync(TOKENS_PATH, 'utf-8')
+  const tokens = withoutComments(readFileSync(TOKENS_PATH, 'utf-8'))
   const m = /--laptop-fit-height:\s*([0-9]+(?:\.[0-9]+)?)px\s*;/.exec(tokens)
   if (m === null) {
     throw new Error(
@@ -275,5 +280,58 @@ describe('--laptop-fit-height source-bind', () => {
         `the law and its enforcement now name two frames (the 768-vs-800 and 800-vs-791 drift class). ` +
         `Move the token and REAL together, in one commit.`,
     ).toBe(REAL.height)
+  })
+})
+
+/*
+ * THE SHORT TIER'S WHOLE PRELUDE (the 1440×731 re-point's review, 2026-11-20). Every short-tier rule keys
+ * on `[data-twopane]`, which the reveals stamp at EVERY width, so the `(min-width: <--bp-laptop>)` half of
+ * the tier's prelude is the only thing keeping the rungs off the stacked layouts: a raised root font at his
+ * own 1440×731 window, the 844×390 landscape phone. Drop that half from one block and those frames tighten
+ * while every fit arm stays green: the stacked arms assert ORDER and REACHABILITY, which tightening cannot
+ * break, and the density helper's two sides (REAL/TIER short, SHOWCASE tall) both sit at ≥68rem. So every
+ * `@media` prelude under src/** that names a max-height must be exactly the tier's, both halves read from
+ * the tokens (R4 of the re-point plan: the sub-68rem tiers stay byte-identical).
+ */
+function declaredBpLaptopShortPx(): number {
+  const tokens = withoutComments(readFileSync(TOKENS_PATH, 'utf-8'))
+  const m = /--bp-laptop-short:\s*([0-9]+(?:\.[0-9]+)?)px\s*;/.exec(tokens)
+  if (m === null) {
+    throw new Error(
+      `[bp-laptop-short] no \`--bp-laptop-short: <N>px;\` declaration in ${rel(TOKENS_PATH)} — the short ` +
+        `laptop tier's boundary has no source of truth, so its re-stated literals are unanchored.`,
+    )
+  }
+  return Number.parseFloat(m[1]!)
+}
+
+const SHORT_TIER_PRELUDE = `@media (min-width: ${TOKEN_REM}rem) and (max-height: ${declaredBpLaptopShortPx()}px) {`
+
+const HEIGHT_PRELUDES = SRC_FILES.flatMap((absolute) =>
+  readFileSync(absolute, 'utf-8')
+    .split(/\r?\n/)
+    .flatMap((text, i) =>
+      /@media/.test(text) && /max-height/.test(text) ? [{ where: `${rel(absolute)}:${i + 1}`, text: text.trim() }] : [],
+    ),
+)
+
+describe('the short laptop tier prelude', () => {
+  it('finds the tier blocks to check (the sweep is not vacuous)', () => {
+    expect(
+      HEIGHT_PRELUDES.length,
+      `[bp-laptop-short] no \`@media … max-height\` prelude under src/** — the sweep broke, or the short ` +
+        `tier is gone (then delete this describe on purpose).`,
+    ).toBeGreaterThan(0)
+  })
+
+  it('every max-height prelude is the whole tier prelude: the width half and the height half, from the tokens', () => {
+    const wrong = HEIGHT_PRELUDES.filter((p) => p.text !== SHORT_TIER_PRELUDE)
+    expect(
+      wrong.map((p) => `${p.where} :: ${p.text}`),
+      `[bp-laptop-short] a max-height @media prelude is not \`${SHORT_TIER_PRELUDE}\`. Without the width half ` +
+        `the rungs reach the stacked layouts (a raised root at his window, the landscape phone) and no fit ` +
+        `arm can see it; a different height is a second tier, which is a product decision (the 1440×731 ` +
+        `re-point plan's KTD3), not a literal to slip past this file.`,
+    ).toEqual([])
   })
 })

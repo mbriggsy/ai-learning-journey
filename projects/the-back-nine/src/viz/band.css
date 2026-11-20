@@ -252,8 +252,11 @@
    band column (measured in real Chromium at 1440×731 @ 2). The padding is written as longhands: the
    inline 24 px is the two-pane honesty floor's chrome input, and twoPaneHonestyFloor.test.ts reads
    the base .band-drawer rule above, which stays. The accent tab sits at padding-top + 4 and moves
-   with it (absolutely positioned, so no frame pixel moves). Both routes' inline drawers are the only
-   .band-drawer there is; the enlarge modal's row legend sits outside .band-drawer and keeps its
+   with it (absolutely positioned, so no frame pixel moves). The selectors are unscoped, so W7 reaches
+   every .band-drawer inside the tier: both routes' inline drawers, and the range answer's placeholder
+   drawer (ConfidenceStatement.tsx mounts one in its single-column reveal; it steps with the real band,
+   so nothing shifts when the answer resolves, and no arm measures it). A new host of ConfidenceBandPanel
+   inherits W7 too. The enlarge modal's row legend sits outside .band-drawer and keeps its
    rhythm. The band column binds only on an aged frame (the stale return's premise line), and this is
    what keeps it from binding there. 840px re-stated as a literal (@media can't read a custom
    property). */

@@ -269,7 +269,8 @@
    had ~6px of slack — the one-frame fit law (--laptop-fit-height, tokens.css) is reclaimed on the
    tier's ladder, never from the disclosures (content-outranks-aesthetics). The tier's law has ONE
    home, tokens.css --bp-laptop-short. This block is one whitespace step, the block padding; the
-   two-pane steps live in confidence.css, fuckOffDate.css, survivor.css, app.css and band.css.
+   two-pane steps live in confidence.css, fuckOffDate.css, survivor.css, app.css and band.css, the
+   re-entry gate's in save.css (search "--bp-laptop-short" for every block; a test binds each prelude).
    Boundary: --bp-laptop-short (840px), re-stated as a literal (@media can't read a custom property);
    the 917 showcase keeps --space-8. */
 @media (min-width: 68rem) and (max-height: 840px) {

@@ -312,7 +312,7 @@ describe('readoutSeat — the in-plot seat is legal only while the ink is contai
   const chromePx = 26
 
   it('a wide host seats the box in the PLOT: the ink fits the cap AND the box fits beside a mid-plot rule', () => {
-    // REAL (1536 @2.5): a 446 px host → plot 356.8, half 178.4, cap 169.5. The widest UNBREAKABLE
+    // REAL (1440 @2 since 2026-11-20; 1536 @2.5 before, the same capped frame): a 446 px host → plot 356.8, half 178.4, cap 169.5. The widest UNBREAKABLE
     // line is 128.8 px ("$1.055M – $1.055M"); the widest column's max-content is 138 px (the label,
     // which WRAPS and so never governs containment). 128.8 + 26 = 154.8 ≤ 169.5, and
     // min(138 + 26, 169.5) + 10 = 174 ≤ 178.4.

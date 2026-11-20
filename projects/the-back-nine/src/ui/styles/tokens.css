@@ -141,10 +141,14 @@
     No rule reads it: it states the law, and the gate's REAL enforces it.
     ONE source — app.css / result.css / confidence.css comments point HERE (a 768-vs-800
     contradiction between those files hid the 2026-07-08 regression; 768 is formally retired).
-    THE DEGRADE CONTRACT when honest content outgrows the frame: the quiet DOORS are the only
-    permitted below-fold casualty — the verdict, the priced-Medicare disclosure lines, the band, and
-    the R13 disclaimer are PROTECTED (the Honesty-Hawk veto: a reassuring verdict in-frame with
-    "this can be wrong" scrolled out of sight is the calm-but-wrong sin). Enforcement is a
+    THE DEGRADE CONTRACT when honest content outgrows the frame: the quiet DOORS are the
+    permitted below-fold casualty, with two more an arm must name at its call site (the fit spec's
+    SanctionedDoors: the backup door, and the remembered-record card's body, Briggsy's 2026-07-26
+    placement) — the verdict, the priced-Medicare disclosure lines, the band, and the R13
+    disclaimer are PROTECTED (the Honesty-Hawk veto: a reassuring verdict in-frame with "this can be
+    wrong" scrolled out of sight is the calm-but-wrong sin), and so are the record card's standing
+    line (the superseded face's one meaning-bearing line) and the re-entry gate's route (its
+    buttons). Enforcement is a
     REAL-BROWSER height assertion, never a token-sum (vertical fit is reflow-dominated — line
     wraps, door wrap-count, the survivor face — which no layout-less arithmetic can see). */
   --bp-laptop-short: 840px; /* the short-laptop DENSITY tier boundary (council 2026-07-08): every
@@ -161,10 +165,14 @@
         already wears, and only for a frame the fit gate still measures outside the frame (on
         Windows or on CI's ubuntu) after rungs 1–2.
     NEVER a new type size, a word or copy change, the hero (the verdict word, the count reading,
-    the magnitude clause and the gaps between them), .result's top padding (it holds the eyebrow
-    slot), or the save slot's reserve (insight 035). Every rung is pinned by a computed-style
-    assertion that goes red on every platform when its rule is deleted (insight 075; the density
-    helper in e2e/vertical-fit.spec.ts). The date route's own block stays whitespace-only
+    the magnitude clause and the gaps between them), a further step of .result's top padding (its
+    one 2026-07-08 step, 40 → 32 px in result.css, stands; it holds the eyebrow slot), or the save
+    slot's reserve (insight 035). Every rung the re-point added (W1–W7, L1, L2) is pinned by a
+    computed-style assertion that goes red on every platform when its rule is deleted (insight 075:
+    assertDensityTier, assertNoteLeading and assertGateDensity in e2e/vertical-fit.spec.ts), on
+    the short side, and on the tall side too except W6 (no contract sets the gate's tall rhythm) and
+    W7's tab (out of flow, it pays 0 px). The 2026-07-08 whitespace rules and the date route's
+    block carry no computed-style pin. The date route's own block stays whitespace-only
     (fuckOffDate.css says why). AMENDED 2026-11-20 by the 1440×731 re-point: from 2026-07-08 this
     law read "whitespace only, never a font-size or line-height", written before insight 082
     named leading and register as the next rungs; whitespace outside the hero had run out on the

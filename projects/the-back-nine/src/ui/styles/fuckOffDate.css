@@ -316,9 +316,12 @@
   }
 }
 
-/* ── the SHORT-laptop density tier (council 2026-07-08 — see result.css / tokens.css
-   --bp-laptop-short): mirrors confidence.css, the two routes share one two-pane rhythm.
-   Whitespace only. 840px re-stated as a literal (@media can't read a custom property). */
+/* ── the SHORT-laptop density tier (tokens.css --bp-laptop-short carries the tier's law, its one
+   home): mirrors confidence.css's first whitespace step, the two routes share one two-pane rhythm.
+   This route's OWN block stays WHITESPACE-ONLY: the date route promises ORDER and REACHABILITY,
+   never one frame (council 2026-09-13), so it changes only through the two rules it shares with the
+   spine, app.css's in-frame caveat padding and band.css's drawer. 840px re-stated as a literal
+   (@media can't read a custom property). */
 @media (min-width: 68rem) and (max-height: 840px) {
   .fod-reveal[data-twopane] {
     row-gap: var(--space-3);

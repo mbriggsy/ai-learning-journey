@@ -374,9 +374,11 @@
     /* ROUND 4 (the ask-for-Medicare-extras unit, 2026-07-11): the pair grew again — the
        affirmation now names extra coverage and the on-typical frames append the per-person
        bi-directional sentence INSIDE the residual (same block, no new row). The gaps sit at
-       their round-3 floor and the leading is already snug, so the pair steps into the R13
-       disclaimer's own subordinate-disclosure register (--text-sm — the SAME register, the
-       same frame, long-cleared): ~3px/line + ~12% more glyphs per line ≈ 40–50px recovered
+       their round-3 floor and the leading is already snug, so the pair steps into the --text-sm
+       register the frame's other subordinates already wear (the survivor eyebrow, the save hint,
+       the band legend: the same frame, long-cleared; until 2026-11-20 this note said "the R13
+       disclaimer's own register", but the disclaimer wears --text-xs, app.css):
+       ~3px/line + ~12% more glyphs per line ≈ 40–50px recovered
        on the on-typical frames, words untouched (the degrade law — type density adapts,
        content never cut). TWO-PANE ONLY: the phone column scrolls freely and keeps the pair
        at base, byte-identical. The staleness echo deliberately does NOT join (its own class,
@@ -565,10 +567,23 @@
   }
 }
 
-/* ── the SHORT-laptop density tier (council 2026-07-08 — see result.css / tokens.css
-   --bp-laptop-short): the two-pane rhythm steps its WHITESPACE down one token so the honest
-   content U10/U11 added stays in one --laptop-fit-height frame. Whitespace only — the type of
-   the survivor / floor-relief / Medicare lines never moves. 840px re-stated as a literal. */
+/* ── the SHORT-laptop density tier (tokens.css --bp-laptop-short carries the tier's law, its one
+   home; result.css carries the frame's padding step, survivor.css the subordinate cards'): the
+   two-pane rhythm steps down so the honest content stays in one --laptop-fit-height frame. The
+   first three rules are the 2026-07-08 whitespace step. The rest are the 1440×731 re-point's
+   (2026-11-20), each measured in real Chromium at 1440×731 @ 2 at the frame's protected element:
+   - W4, whitespace: the NON-typical note frames' grid row-gap and subordinates row-gap step
+     --space-1 → 2px, the typical frames' round-5 value (14 px on statestale and rec, 12 on
+     surplus). Written on the round-3 :has() selectors above so it carries their specificity, and
+     placed after them, where file order settles the tie (insight 075).
+   - W5, whitespace: the remembered-record card's padding-block 12 → 8 and gap 8 → 4 (8 px at its
+     standing line, nothing above the caveat moves). Written on the card's seat selector (0,3,0),
+     never a bare .rec-record: its chrome comes from recommendation.css .rec-note, whose load order
+     against this file follows the module graph, so only the higher specificity wins for certain.
+   - L2, leading: the Medicare pair and the standalone state note step --leading-snug →
+     --leading-tight (1.3, the typical frames' round-5 value; the typical frames already read it).
+     11.2 px on the non-typical frames, and no line break moves.
+   840px re-stated as a literal. */
 @media (min-width: 68rem) and (max-height: 840px) {
   .confidence-reveal[data-twopane] {
     row-gap: var(--space-3);
@@ -578,6 +593,25 @@
   }
   .confidence-reveal[data-twopane] > .reveal__subordinates {
     gap: var(--space-2);
+  }
+  .confidence-reveal[data-twopane]:has(.cs-staleness-note),
+  .confidence-reveal[data-twopane]:has(.cs-medicare-note),
+  .confidence-reveal[data-twopane]:has(.cs-state-note) {
+    row-gap: 2px;
+  }
+  .confidence-reveal[data-twopane]:has(.cs-staleness-note) > .reveal__subordinates,
+  .confidence-reveal[data-twopane]:has(.cs-medicare-note) > .reveal__subordinates,
+  .confidence-reveal[data-twopane]:has(.cs-state-note) > .reveal__subordinates {
+    row-gap: 2px;
+  }
+  .confidence-reveal[data-twopane] .rec-record {
+    padding-block: var(--space-2);
+    gap: var(--space-1);
+  }
+  .confidence-reveal[data-twopane] .cs-medicare-note,
+  .confidence-reveal[data-twopane] .cs-medicare-residual,
+  .confidence-reveal[data-twopane] .cs-state-note {
+    line-height: var(--leading-tight);
   }
 }
 

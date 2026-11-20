@@ -202,25 +202,33 @@
   transition: color var(--dur-fast) var(--ease-out);
 }
 
-/* ── the SHORT-laptop density tier (council 2026-07-08 — tokens.css --bp-laptop-short; result.css and
-   confidence.css carry the frame + two-pane steps). The subordinate statements (the floor relief and the
-   survivor, which share these classes) step their WHITESPACE: the inline card's top padding takes the
-   folded card's own --space-3 (.survivor-fold, above — the family's existing value, not a new one), and
-   the stack gap steps one token, in the open card and the closed fold's summary alike, so closed and
-   open still read as one statement family. WHITESPACE ONLY — no font-size or line-height moves, ever
-   (content-outranks-aesthetics). Why (2026-10-14, b9-toronto1): the survivor's spending-basis line
-   (Briggsy's ruling) costs one line at his 1536×791 window, and the record-return frames carry ~17px of
-   slack under the record card's standing line (vertical-fit.spec.ts, the ?vault=rec/recold arms).
-   Measured in real Chromium: this step reclaims 24px on a survivor frame, so no one-frame arm grew more
-   than 4px (rec's standing line 774 → 777px); budget's relief frame sits 28px tighter. 840px re-stated as
-   a literal (@media can't read a custom property). */
+/* ── the SHORT-laptop density tier (tokens.css --bp-laptop-short carries the tier's law, its one home;
+   result.css and confidence.css carry the frame + two-pane steps). The subordinate statements (the
+   floor relief and the survivor, which share these classes) step on the law's first two rungs, in the
+   open card and the closed fold alike, so closed and open still read as one statement family:
+   - WHITESPACE: the card's top padding takes --space-1, the Medicare note's hairline rhythm
+     (confidence.css .cs-medicare-note), on the inline card, on the closed fold's row and on the opened
+     fold's inner body (this selector out-ranks `.survivor-fold > .survivor` above, so it reaches it);
+     the stack gap takes --space-1 too.
+   - LEADING: the eyebrow, the context paragraph and the floor relief's step-down go body 1.55 →
+     --leading-snug 1.4. No line break moves (line counts measured equal before and after).
+   Measured in real Chromium at 1440×731 @ 2 (the 1440×731 re-point, 2026-11-20): the whitespace pays
+   32 px on budget's two cards and 20 px on a one-card frame, the leading 10 to 13 px. History: the
+   first whitespace step (2026-10-14, b9-toronto1) paid for the survivor's spending-basis line at the
+   Dell's 1536×791 window. 840px re-stated as a literal (@media can't read a custom property). */
 @media (min-width: 68rem) and (max-height: 840px) {
-  .confidence-reveal[data-twopane] .survivor {
-    padding-top: var(--space-3);
+  .confidence-reveal[data-twopane] .survivor,
+  .confidence-reveal[data-twopane] .survivor-fold {
+    padding-top: var(--space-1);
   }
   .confidence-reveal[data-twopane] .survivor-reveal,
   .confidence-reveal[data-twopane] .survivor-fold__summary {
-    gap: var(--space-2);
+    gap: var(--space-1);
+  }
+  .confidence-reveal[data-twopane] .survivor__eyebrow,
+  .confidence-reveal[data-twopane] .survivor__context,
+  .confidence-reveal[data-twopane] .survivor__stepdown {
+    line-height: var(--leading-snug);
   }
 }
 

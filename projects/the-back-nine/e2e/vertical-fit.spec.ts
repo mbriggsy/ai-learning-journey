@@ -55,8 +55,9 @@ import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
  *    an overflow:hidden ancestor), and the route's hero verdict NAMES the caveat in
  *    `aria-describedby`. No fit claim is made on any scrolling tier; the one-frame law binds the
  *    ≥68rem two-pane tier only.
- *  - The short-laptop DENSITY tier (≥68rem ∧ ≤840px) steps `.result` padding-block one token
- *    (40px → 32px, whitespace only); the 917 showcase keeps the generous rhythm.
+ *  - The short-laptop DENSITY tier (≥68rem ∧ ≤840px) steps the frame down on the tier law's ladder
+ *    (its one home: tokens.css `--bp-laptop-short`); `assertDensityTier` pins every rung on both
+ *    sides of the boundary, and the 917 showcase keeps the generous rhythm.
  *  - The two-pane honesty floor (absorbed from the parked D2d e2e): at 1088px (68rem exactly) the
  *    band's percentile labels — the color-blind reader's honesty channel — must still render
  *    (the ≤260px container query must NOT fire at the tightest in-range pane width).
@@ -543,13 +544,147 @@ async function assertRootRose(page: Page, at16: number): Promise<number> {
   return raised
 }
 
-/** The density tier is WHITESPACE-ONLY and boundary-exact: `.result` padding-block steps
- *  --space-8 (40px) → --space-7 (32px) at ≥68rem ∧ ≤840px, and ONLY there. */
-async function assertResultPadding(page: Page, px: '32px' | '40px'): Promise<void> {
-  const padding = await page
-    .locator('main.result')
-    .evaluate((el) => window.getComputedStyle(el).paddingBlockStart)
-  expect(padding, `.result padding-block-start (density tier ${px === '32px' ? 'ON' : 'OFF'})`).toBe(px)
+/** The rows `assertDensityTier` reads only where the calling arm has already asserted the fact that
+ *  puts them on the frame (insight 029: a row the frame must carry fails loudly when it is missing). */
+type DensityRows = {
+  /** `budget`: the floor relief holds the inline slot, so the survivor card is FOLDED (SPINE_SEEDS):
+   *  the relief card with its step-down, the closed fold's row and summary, and the fold's inner body. */
+  readonly fold?: boolean
+  /** The remembered-record card (the arm asserted it on the frame). */
+  readonly record?: boolean
+  /** `?vault=stale` / `?vault=statestale`: those arms' own echo-gap pins own the note frames' grid and
+   *  subordinates row-gaps (W4), so the helper leaves them alone there. */
+  readonly skipNoteGaps?: boolean
+}
+
+/** The short-laptop density tier, read on BOTH sides of its boundary: the spec's ONE home for the values
+ *  every rung sets (the tier's LAW lives once, in tokens.css `--bp-laptop-short`'s docblock: whitespace,
+ *  then leading, then a borrowed register; never the hero, never a new size). 'short' is ≥68rem ∧ ≤840px
+ *  (REAL and TIER), 'tall' the showcase above it, where every rule is dark. Deleting a rung's rule reds
+ *  HERE on every platform (insight 075: the fold arms alone red only where the platform's text metrics
+ *  run out of slack). Gaps and paddings read exact strings (`rowGap`, never the `gap` shorthand); leading
+ *  reads ratio bands. The rungs (the 1440×731 re-point plan's names), each as its tall → short value:
+ *   - .result padding-block 40 → 32 (2026-07-08), outside the ladder since (it holds the eyebrow slot);
+ *   - W1, the survivor cards' top padding 24 → 4 (the relief card and the inline card; the closed fold's
+ *     row and the fold's inner body 12 → 4, read open or closed: a computed length);
+ *   - W2, the survivor stack gap 12 → 4, in the open card and the fold's summary alike;
+ *   - W3, the in-frame caveat's top padding 8 → 4;
+ *   - W4, the note frames' grid and subordinates row-gaps → 2 (the typical frames carry 2 on both sides
+ *     since round 5; the non-typical ones 4 above the tier);
+ *   - W5, the record card's padding-block 12 → 8 and gap 8 → 4;
+ *   - W7, the band drawer's block padding 20/24 → 16/16 (the inline 24 never moves: it is the two-pane
+ *     honesty floor's input), its pull's margin 12 → 8, its legend's margin 16 → 8 and gap 8 → 4;
+ *   - L1, the survivor eyebrow, context and step-down leading body 1.55 → snug 1.4.
+ *  L2 (the Medicare pair and the state note) is `assertNoteLeading`'s, on both tiers. */
+async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: DensityRows = {}): Promise<void> {
+  const short = tier === 'short'
+  const read = await page.evaluate(() => {
+    const reveal = document.querySelector('.confidence-reveal[data-twopane]')
+    const within = (sel: string): Element[] => (reveal === null ? [] : Array.from(reveal.querySelectorAll(sel)))
+    const style = (el: Element | null | undefined) => (el === null || el === undefined ? null : getComputedStyle(el))
+    const ratio = (el: Element): number => {
+      const s = getComputedStyle(el)
+      return parseFloat(s.lineHeight) / parseFloat(s.fontSize)
+    }
+    const has = (sel: string): boolean => reveal !== null && reveal.querySelector(sel) !== null
+    const survivors = within('.survivor')
+    const cards = survivors.filter((el) => el.closest('.survivor-fold') === null)
+    const drawer = document.querySelector('.cs-band .band-drawer')
+    const subordinates = reveal?.querySelector(':scope > .reveal__subordinates')
+    const record = style(reveal?.querySelector('.rec-record'))
+    return {
+      stamped: reveal !== null,
+      resultPaddingTop: style(document.querySelector('main.result'))?.paddingBlockStart ?? null,
+      cardPaddingTop: cards.map((el) => getComputedStyle(el).paddingTop),
+      foldBodyPaddingTop: survivors.filter((el) => el.closest('.survivor-fold') !== null).map((el) => getComputedStyle(el).paddingTop),
+      foldPaddingTop: within('.survivor-fold').map((el) => getComputedStyle(el).paddingTop),
+      foldSummaryGap: within('.survivor-fold__summary').map((el) => getComputedStyle(el).rowGap),
+      revealGap: within('.survivor-reveal').map((el) => getComputedStyle(el).rowGap),
+      eyebrowLeading: within('.survivor__eyebrow').map(ratio),
+      // the cards' own context and step-down (the folded card's body is read for padding only: it is
+      // not rendered while the fold is closed)
+      contextLeading: cards.flatMap((el) => Array.from(el.querySelectorAll('.survivor__context'))).map(ratio),
+      stepdownLeading: cards.flatMap((el) => Array.from(el.querySelectorAll('.survivor__stepdown'))).map(ratio),
+      reliefStepdowns: within('.floor-readout .survivor__stepdown').length,
+      caveatPaddingTop: style(document.querySelector('footer.disclaimer.disclaimer--in-frame'))?.paddingTop ?? null,
+      drawer:
+        drawer === null
+          ? null
+          : {
+              top: getComputedStyle(drawer).paddingTop,
+              bottom: getComputedStyle(drawer).paddingBottom,
+              left: getComputedStyle(drawer).paddingLeft,
+              right: getComputedStyle(drawer).paddingRight,
+              pull: style(drawer.querySelector('.band-drawer__pull'))?.marginBottom ?? null,
+              legendTop: style(drawer.querySelector('.band-legend'))?.marginTop ?? null,
+              legendGap: style(drawer.querySelector('.band-legend'))?.rowGap ?? null,
+            },
+      noteFrame: has('.cs-medicare-note, .cs-state-note, .cs-staleness-note'),
+      typical: has('.cs-medicare-residual--typical'),
+      gridRowGap: style(reveal)?.rowGap ?? null,
+      subordinatesRowGap: style(subordinates)?.rowGap ?? null,
+      record: record === null ? null : { top: record.paddingTop, bottom: record.paddingBottom, gap: record.rowGap },
+    }
+  })
+  const at = `(density tier ${short ? 'ON' : 'OFF'})`
+  const exact = (actual: string | null | undefined, onShort: string, onTall: string, what: string): void => {
+    expect(actual, `${what} ${at}`).toBe(short ? onShort : onTall)
+  }
+  const leading = (ratios: readonly number[], what: string): void => {
+    for (const r of ratios) {
+      const [lo, hi] = short ? [1.35, 1.45] : [1.5, 1.6]
+      expect(r, `${what} leading ${at}: ${short ? '--leading-snug ~1.4' : 'body ~1.55'}`).toBeGreaterThan(lo)
+      expect(r, `${what} leading ${at}: ${short ? '--leading-snug ~1.4' : 'body ~1.55'}`).toBeLessThan(hi)
+    }
+  }
+  expect(read.stamped, 'no two-pane reveal is stamped — the density read would be vacuous (insight 029)').toBe(true)
+  exact(read.resultPaddingTop, '32px', '40px', '.result padding-block-start')
+  // W1 / W2 / L1 — the survivor cards (every spine frame carries at least one)
+  expect(read.cardPaddingTop.length, 'the frame carries no survivor card — W1 would read nothing').toBeGreaterThan(0)
+  for (const p of read.cardPaddingTop) exact(p, '4px', '24px', 'W1: the survivor card padding-top')
+  expect(read.revealGap.length, 'the frame carries no survivor stack — W2 would read nothing').toBeGreaterThan(0)
+  for (const g of read.revealGap) exact(g, '4px', '12px', 'W2: the survivor stack row-gap')
+  expect(read.eyebrowLeading.length, 'the frame carries no survivor eyebrow — L1 would read nothing').toBeGreaterThan(0)
+  leading(read.eyebrowLeading, 'L1: the survivor eyebrow')
+  leading(read.stepdownLeading, 'L1: the survivor step-down')
+  if (rows.fold === true) {
+    expect(read.foldPaddingTop.length, 'the folded frame carries no survivor fold').toBe(1)
+    exact(read.foldPaddingTop[0], '4px', '12px', 'W1: the closed fold row padding-top')
+    expect(read.foldSummaryGap.length, 'the folded frame carries no fold summary').toBe(1)
+    exact(read.foldSummaryGap[0], '4px', '12px', 'W2: the fold summary row-gap')
+    expect(read.foldBodyPaddingTop.length, 'the folded frame carries no inner survivor body').toBe(1)
+    exact(read.foldBodyPaddingTop[0], '4px', '12px', "W1: the fold's inner body padding-top")
+    expect(read.reliefStepdowns, "the floor relief's step-down must render on the folded frame").toBeGreaterThan(0)
+    expect(read.eyebrowLeading.length, 'the folded frame carries BOTH eyebrows (the relief card and the fold summary)').toBe(2)
+  } else {
+    expect(read.contextLeading.length, 'the inline survivor card carries no context paragraph').toBeGreaterThan(0)
+    leading(read.contextLeading, 'L1: the survivor context')
+  }
+  // W3 — the in-frame caveat
+  exact(read.caveatPaddingTop, '4px', '8px', 'W3: the in-frame caveat padding-top')
+  // W7 — the band drawer
+  expect(read.drawer, 'the band drawer is not on the frame').not.toBeNull()
+  exact(read.drawer!.top, '16px', '20px', 'W7: the drawer padding-top')
+  exact(read.drawer!.bottom, '16px', '24px', 'W7: the drawer padding-bottom')
+  exact(read.drawer!.left, '24px', '24px', "W7: the drawer's inline padding (the honesty floor's input)")
+  exact(read.drawer!.right, '24px', '24px', "W7: the drawer's inline padding (the honesty floor's input)")
+  exact(read.drawer!.pull, '8px', '12px', "W7: the drawer pull's margin-bottom")
+  exact(read.drawer!.legendTop, '8px', '16px', "W7: the drawer legend's margin-top")
+  exact(read.drawer!.legendGap, '4px', '8px', "W7: the drawer legend's row-gap")
+  // W4 — the note frames' grid and subordinates row-gaps
+  if (rows.skipNoteGaps !== true) {
+    expect(read.noteFrame, 'W4 reads a note frame (a Medicare pair, a state note or the staleness echo), and this frame carries none').toBe(true)
+    const tall = read.typical ? '2px' : '4px'
+    exact(read.gridRowGap, '2px', tall, `W4: the ${read.typical ? 'ON-typical' : 'non-typical'} note frame's grid row-gap`)
+    exact(read.subordinatesRowGap, '2px', tall, `W4: the ${read.typical ? 'ON-typical' : 'non-typical'} note frame's subordinates row-gap`)
+  }
+  // W5 — the record card
+  if (rows.record === true) {
+    expect(read.record, 'the record card is not on the frame').not.toBeNull()
+    exact(read.record!.top, '8px', '12px', 'W5: the record card padding-top')
+    exact(read.record!.bottom, '8px', '12px', 'W5: the record card padding-bottom')
+    exact(read.record!.gap, '4px', '8px', 'W5: the record card row-gap')
+  }
 }
 
 async function assertMedicareNote(page: Page, expected: boolean): Promise<void> {
@@ -607,27 +742,33 @@ async function assertSurvivorBasis(page: Page, placement: 'inline' | 'folded'): 
   await expect(line, 'the line reads the ruled sentence, with two real figures').toHaveText(shape)
 }
 
-async function assertMedicareSnugLeading(page: Page): Promise<void> {
-  // The Linux wrap-drift reservoir (CI 2026-07-11, run 29170580301): the pair pays for the
-  // magnitude-honest residual in LEADING (body 1.55 → snug 1.4) — a platform-independent
-  // delta pinned here by computed style, so deleting the rule goes red on EVERY platform
-  // (insight 075's standing encoding), never only under ubuntu's taller text metrics.
-  // ROUND 5: the ON-TYPICAL frames (the appended bi-directional typical sentence — the
-  // modifier class) step one further to --leading-tight (~1.3); entered/mixed frames keep
-  // snug. Branch on the modifier so BOTH regimes stay pinned.
-  const { ratio, typical } = await page.locator('.cs-medicare-residual').evaluate((el) => {
-    const cs = getComputedStyle(el)
-    return {
-      ratio: parseFloat(cs.lineHeight) / parseFloat(cs.fontSize),
-      typical: el.classList.contains('cs-medicare-residual--typical'),
-    }
+/** The Medicare pair's and the standalone state note's LEADING, on both sides of the density tier. The
+ *  Linux wrap-drift reservoir (CI 2026-07-11, run 29170580301) paid for the magnitude-honest residual in
+ *  leading (body 1.55 → snug 1.4, round 2); ROUND 5 stepped the ON-TYPICAL frames (the appended
+ *  bi-directional typical sentence: the modifier class) on to --leading-tight (~1.3) at every two-pane
+ *  height; the 1440×731 re-point's L2 (2026-11-20) brings every other note frame to tight INSIDE the short
+ *  tier. So: 'short' (REAL, TIER) reads tight on every note; 'tall' (the showcase) reads tight on a typical
+ *  frame and snug on the rest, so round 2's rule keeps a reader. Pinned by computed style, so deleting a
+ *  rule goes red on EVERY platform (insight 075's standing encoding), never only under ubuntu's taller text
+ *  metrics. Every note the frame carries is read; a frame that carries none fails loudly (insight 029). */
+async function assertNoteLeading(page: Page, tier: 'short' | 'tall'): Promise<void> {
+  const notes = await page.evaluate(() => {
+    const typical = document.querySelector('.cs-medicare-residual--typical') !== null
+    return Array.from(document.querySelectorAll('.cs-medicare-note, .cs-medicare-residual, .cs-state-note')).map((el) => {
+      const cs = getComputedStyle(el)
+      return { cls: el.className, ratio: parseFloat(cs.lineHeight) / parseFloat(cs.fontSize), typical }
+    })
   })
-  if (typical) {
-    expect(ratio, 'the ON-TYPICAL pair rides --leading-tight (~1.3) — round 5').toBeGreaterThan(1.25)
-    expect(ratio, 'the ON-TYPICAL pair rides --leading-tight (~1.3) — round 5').toBeLessThan(1.35)
-  } else {
-    expect(ratio, 'the medicare pair rides --leading-snug (~1.4)').toBeGreaterThan(1.35)
-    expect(ratio, 'the medicare pair rides --leading-snug (~1.4)').toBeLessThan(1.45)
+  expect(notes.length, 'the frame carries no Medicare pair or state note — the leading read would be vacuous').toBeGreaterThan(0)
+  for (const n of notes) {
+    if (tier === 'short' || n.typical) {
+      const why = tier === 'short' ? 'inside the short tier every note rides --leading-tight (~1.3), L2' : 'the ON-TYPICAL pair rides --leading-tight (~1.3), round 5'
+      expect(n.ratio, `.${n.cls}: ${why}`).toBeGreaterThan(1.25)
+      expect(n.ratio, `.${n.cls}: ${why}`).toBeLessThan(1.35)
+    } else {
+      expect(n.ratio, `.${n.cls}: above the short tier the note rides --leading-snug (~1.4), round 2`).toBeGreaterThan(1.35)
+      expect(n.ratio, `.${n.cls}: above the short tier the note rides --leading-snug (~1.4), round 2`).toBeLessThan(1.45)
+    }
   }
 }
 
@@ -642,11 +783,14 @@ for (const { seed, medicareNote, stateNote, survivor } of SPINE_SEEDS) {
         await assertResolvedSpine(page)
         await assertMedicareNote(page, medicareNote)
         await assertStateNote(page, stateNote)
-        if (medicareNote) await assertMedicareSnugLeading(page)
         await assertOneVisibleDisclaimer(page, 'laptop')
-        await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves his window
         await assertFrameFits(page, true)
         await assertSurvivorBasis(page, survivor) // after the frame: the folded arm opens the fold
+        // The density pins read AFTER the fit (a deleted rung reds on its own line with the fold check
+        // already passed) and after the fold opens. REAL sits inside the short tier (tokens.css
+        // --bp-laptop-short carries the tier's law).
+        if (medicareNote || stateNote) await assertNoteLeading(page, 'short')
+        await assertDensityTier(page, 'short', { fold: survivor === 'folded' })
       })
     })
 
@@ -656,8 +800,10 @@ for (const { seed, medicareNote, stateNote, survivor } of SPINE_SEEDS) {
         await gotoSeedFinal(page, seed)
         await assertResolvedSpine(page)
         await assertOneVisibleDisclaimer(page, 'laptop')
-        await assertResultPadding(page, '32px') // 800 ≤ 840 — tier fires here too
         await assertFrameFits(page, true)
+        // 800 ≤ 840 — the tier fires here too
+        if (medicareNote || stateNote) await assertNoteLeading(page, 'short')
+        await assertDensityTier(page, 'short', { fold: survivor === 'folded' })
       })
     })
 
@@ -667,8 +813,10 @@ for (const { seed, medicareNote, stateNote, survivor } of SPINE_SEEDS) {
         await gotoSeedFinal(page, seed)
         await assertResolvedSpine(page)
         await assertOneVisibleDisclaimer(page, 'laptop')
-        await assertResultPadding(page, '40px') // 917 > 840 — the showcase keeps the generous rhythm
         await assertFrameFits(page, false)
+        // 917 > 840 — the showcase keeps the generous rhythm, and every rung's tall side is pinned here
+        if (medicareNote || stateNote) await assertNoteLeading(page, 'tall')
+        await assertDensityTier(page, 'tall', { fold: survivor === 'folded' })
       })
     })
   })
@@ -1212,22 +1360,17 @@ for (const seed of SAVE_SLOT_SEEDS) {
 // pins nc's FRAME across three viewports; these bespoke arms add what the matrix never reads — the
 // rendered residual TEXT — and carry pa/fl at BOTH laptop tiers (pa is the LONGEST clause variant,
 // the wrap-risk arm). All are non-typical (retiredOnTrack's mixed-provenance extras — one entered,
-// one MA-$0), so the residual rides --leading-snug, asserted where the house asserts it (REAL).
+// one MA-$0), so the pair rides --leading-snug above the short tier and --leading-tight inside it
+// (L2, the 1440×731 re-point); both callers' windows sit inside it, so both read tight.
 
 /** The priced-state spine face: pin the one-frame law PLUS the rendered state clause the matrix
- *  never reads. `snug` only on the REAL medicare-note frame (the house asserts leading there). */
-async function assertPricedSpineFrame(
-  page: Page,
-  seed: string,
-  clausePins: readonly string[],
-  opts: { readonly snug: boolean },
-): Promise<void> {
+ *  never reads. Both callers (REAL and TIER) sit inside the short density tier, so the note leading
+ *  and the density rungs read their short side at both. */
+async function assertPricedSpineFrame(page: Page, seed: string, clausePins: readonly string[]): Promise<void> {
   await gotoSeedFinal(page, seed)
   await assertResolvedSpine(page)
   await assertMedicareNote(page, true)
-  if (opts.snug) await assertMedicareSnugLeading(page)
   await assertOneVisibleDisclaimer(page, 'laptop')
-  await assertResultPadding(page, '32px') // both laptop tiers (791, 800) ≤ 840 — the density tier
   for (const pin of clausePins) {
     await expect(
       page.locator('.cs-medicare-residual'),
@@ -1236,6 +1379,9 @@ async function assertPricedSpineFrame(
   }
   await assertFrameFits(page, true)
   await assertSurvivorBasis(page, 'inline')
+  // after the fit, so a deleted rung reds on its own line with the fold check already passed
+  await assertNoteLeading(page, 'short')
+  await assertDensityTier(page, 'short')
 }
 
 // nc: the residual-TEXT pin at the REAL tier (the matrix proves the frame; this proves the clause
@@ -1266,13 +1412,13 @@ test.describe('?seed=pa — the LONGEST priced clause (the wrap-risk arm) + one-
   test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
     test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
     test('pa: everything but the doors fits; the residual names Pennsylvania (untaxed)', async ({ page }) => {
-      await assertPricedSpineFrame(page, 'pa', PA_PINS, { snug: true })
+      await assertPricedSpineFrame(page, 'pa', PA_PINS)
     })
   })
   test.describe(`at the fit-law tier floor (${TIER.width}×${TIER.height})`, () => {
     test.use({ viewport: TIER })
     test('pa: everything but the doors fits; the residual names Pennsylvania (untaxed)', async ({ page }) => {
-      await assertPricedSpineFrame(page, 'pa', PA_PINS, { snug: false })
+      await assertPricedSpineFrame(page, 'pa', PA_PINS)
     })
   })
 })
@@ -1282,13 +1428,13 @@ test.describe('?seed=fl — the constitutional-$0 priced clause + one-frame fit'
   test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
     test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
     test('fl: everything but the doors fits; the residual names the Florida $0 fact', async ({ page }) => {
-      await assertPricedSpineFrame(page, 'fl', FL_PINS, { snug: true })
+      await assertPricedSpineFrame(page, 'fl', FL_PINS)
     })
   })
   test.describe(`at the fit-law tier floor (${TIER.width}×${TIER.height})`, () => {
     test.use({ viewport: TIER })
     test('fl: everything but the doors fits; the residual names the Florida $0 fact', async ({ page }) => {
-      await assertPricedSpineFrame(page, 'fl', FL_PINS, { snug: false })
+      await assertPricedSpineFrame(page, 'fl', FL_PINS)
     })
   })
 })
@@ -2171,7 +2317,6 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
       'the ON-TYPICAL subordinates row-gap steps to 2px (round 5)',
     ).toBe('2px')
     await assertOneVisibleDisclaimer(page, 'laptop')
-    await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves this frame too
 
     // THE FOLD-PRIORITY FIX (the Medicare-pricing unit, 2026-07-10 — the pulled-forward TODO-7 /
     // Caddie-#3 inversion): this all-65+ writable stale return is the tallest composite frame —
@@ -2197,6 +2342,9 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // sibling <footer>, so it stays measured — the arm still fails if the caveat itself breaches.
     await assertFrameFits(page, true, { backupDoor: true })
     await assertSurvivorBasis(page, 'inline')
+    // REAL sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law); read after
+    // the fit. The echo-gap pins above own this frame's W4 row-gaps, so the helper skips them here.
+    await assertDensityTier(page, 'short', { skipNoteGaps: true })
   })
 })
 
@@ -2290,21 +2438,22 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
     // THE ECHO WHITESPACE BUDGET (insight 075) — pinned by COMPUTED style so a deleted
     // `:has(.cs-staleness-note)` rule goes red on EVERY platform, never only under CI's taller
     // metrics. UNLIKE ?vault=stale (on-typical — the full doctor strips the extras fork, so its
-    // gaps step to the 2px round-5 tier): the LIGHT doctor KEEPS the base's mixed-provenance
-    // extras, so statestale is a NON-typical staleness-echo frame — the round-3 --space-1 (4px) tier.
+    // gaps step to the 2px round-5 tier at every two-pane height): the LIGHT doctor KEEPS the base's
+    // mixed-provenance extras, so statestale is a NON-typical staleness-echo frame — the round-3
+    // --space-1 (4px) tier above the short density tier, stepped to 2px inside it by W4 (the
+    // 1440×731 re-point, confidence.css's short-tier block). REAL sits inside the short tier.
     const echoGaps = await page
       .locator('.confidence-reveal[data-twopane]')
       .evaluate((reveal) => ({
         rowGap: getComputedStyle(reveal).rowGap,
         subordinatesRowGap: getComputedStyle(reveal.querySelector('.reveal__subordinates')!).rowGap,
       }))
-    expect(echoGaps.rowGap, 'the NON-typical note-frame row-gap rides --space-1 (4px, round 3)').toBe('4px')
+    expect(echoGaps.rowGap, 'the NON-typical note-frame row-gap steps to 2px inside the short tier (W4)').toBe('2px')
     expect(
       echoGaps.subordinatesRowGap,
-      'the NON-typical subordinates row-gap rides --space-1 (4px, round 3)',
-    ).toBe('4px')
+      'the NON-typical subordinates row-gap steps to 2px inside the short tier (W4)',
+    ).toBe('2px')
     await assertOneVisibleDisclaimer(page, 'laptop')
-    await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves this frame too
 
     // The all-65+ writable stale return is a tall composite (priced-Medicare pair + staleness echo +
     // backup door). Prove non-vacuous (the priced-Medicare affirmation renders) and that the
@@ -2326,6 +2475,9 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
     // is a sibling <footer>, so it stays measured — the arm still fails if the caveat itself breaches).
     await assertFrameFits(page, true, { backupDoor: true })
     await assertSurvivorBasis(page, 'inline')
+    // REAL sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law); read after
+    // the fit. The echo-gap pins above own this frame's W4 row-gaps, so the helper skips them here.
+    await assertDensityTier(page, 'short', { skipNoteGaps: true })
   })
 })
 
@@ -3463,10 +3615,16 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
             height: Math.round(r.height),
           }
         }
+        // The caveat's distance from the hero's top, from UNROUNDED rects (only a difference of two of
+        // these is ever rounded — the twin check below says why).
+        const hero = document.querySelector('.confidence-reveal[data-twopane] > .reveal__lead')
+        const caveat = document.querySelector('footer.disclaimer.disclaimer--in-frame')
         return {
           surface: cs('.recommendation-surface'),
           disclaimer: cs('footer.disclaimer.disclaimer--in-frame'),
           card: cs('.rec-record'),
+          caveatFromHero:
+            hero === null || caveat === null ? null : caveat.getBoundingClientRect().bottom - hero.getBoundingClientRect().top,
         }
       })
 
@@ -3528,6 +3686,9 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     expect(withCard.surface, 'the surface must be on the page').not.toBeNull()
     expect(withCard.disclaimer, 'the in-frame disclaimer must be on the page').not.toBeNull()
     expect(withCard.card, 'the card must have a box to measure').not.toBeNull()
+    expect(withCard.caveatFromHero, 'the hero and the caveat must both be on the record-bearing frame').not.toBeNull()
+    expect(recordFree.caveatFromHero, 'the hero and the caveat must both be on the record-free frame').not.toBeNull()
+    const fromHero = Math.round(withCard.caveatFromHero! - recordFree.caveatFromHero!)
     console.log(
       `[U17 record return] ?vault=rec ${REAL.width}x${REAL.height}: ` +
         `card h=${withCard.card!.height} bottom=${withCard.card!.bottom} · ` +
@@ -3535,7 +3696,8 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
         `(record-free r${recordFree.surface!.row}c${recordFree.surface!.column} h=${recordFree.surface!.height}) · ` +
         `disclaimer r${withCard.disclaimer!.row} bottom=${withCard.disclaimer!.bottom} ` +
         `(record-free r${recordFree.disclaimer!.row} bottom=${recordFree.disclaimer!.bottom}) · ` +
-        `Δfold=${withCard.disclaimer!.bottom - recordFree.disclaimer!.bottom}px · frame=${REAL.height}px`,
+        `Δfold=${withCard.disclaimer!.bottom - recordFree.disclaimer!.bottom}px · ` +
+        `Δcaveat-from-hero=${fromHero}px · frame=${REAL.height}px`,
     )
 
     // (2) THE GRID SEAT — the surface stays in the r4 idle slack of the LEFT column and the
@@ -3556,12 +3718,21 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     expect(recordFree.surface!.row).toBe('4')
     expect(recordFree.disclaimer!.row).toBe('5')
     // THE SPINE ABOVE THE CAVEAT IS UNMOVED IN PIXELS, not just in row numbers (the row equality
-    // alone would survive a re-sized track). ±1px absorbs sub-pixel rounding between the two
-    // navigations, nothing more — the breach this replaced was 67px.
+    // alone would survive a re-sized track) — measured as the caveat's distance from the HERO'S TOP,
+    // never as two absolute bottoms (the 1440×731 re-point plan's KTD9). `.result` centres any frame
+    // shorter than the viewport, and the record-free twin is the shorter frame here (the vault's carries
+    // the card and the backup door below the caveat), so wherever the twin fits the viewport it centres
+    // and an absolute comparison reads the centring offset instead of the card (about 11px at 1536×791
+    // once the re-point's density rungs land). The claim is that the card is purely ADDITIVE below the
+    // caveat, and the caveat's distance from the hero's top carries it whole. Both distances come from
+    // unrounded rects and only their difference is rounded: the two caveats already sit 0.8px apart
+    // (the twin's save slot holds the 84.8px CTA where the vault's holds the 84px saved badge), and
+    // rounding each distance first could add up to another pixel. ±1px absorbs that, nothing more —
+    // the breach this replaced was 67px, and the card seated back in grid row 4 moves the caveat ~150px.
     expect(
-      Math.abs(withCard.disclaimer!.bottom - recordFree.disclaimer!.bottom),
-      `the caveat moved ${withCard.disclaimer!.bottom - recordFree.disclaimer!.bottom}px between the ` +
-        `record-free and record-bearing frames — the card must be purely additive BELOW it`,
+      Math.abs(fromHero),
+      `the caveat moved ${fromHero}px relative to the hero between the record-free and record-bearing ` +
+        `frames — the card must be purely additive BELOW it`,
     ).toBeLessThanOrEqual(1)
     // The card's own seat: the row DIRECTLY below the protected caveat, in the LEFT reading column
     // (confidence.css pins it — auto-placement would drop it into the dead right rail, and would
@@ -3569,9 +3740,11 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     expect(withCard.card!.row, 'the card seats on the row below the caveat').toBe('6')
     expect(withCard.card!.column, 'the card reads in the LEFT column with the other doors').toBe('1')
 
-    // (3) The two-mount contract and the density tier are unmoved by the card.
+    // (3) The two-mount contract and the density tier are unmoved by the card; REAL sits inside the
+    // short tier (tokens.css --bp-laptop-short carries the tier's law), and the card's own rung (W5)
+    // reads with the rest.
     await assertOneVisibleDisclaimer(page, 'laptop')
-    await assertResultPadding(page, '32px') // 791 ≤ 840 — the density tier serves this frame too
+    await assertDensityTier(page, 'short', { record: true })
   })
 
   /**
@@ -3730,6 +3903,9 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // either, so it stays measured — this still fails if the caveat itself breaches.
       await assertFrameFits(page, true, { backupDoor: true, recordCard: true })
       await assertSurvivorBasis(page, 'inline')
+      // The card's own rung (W5) on BOTH faces, read after the fit and the standing line passed; REAL
+      // sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law).
+      await assertDensityTier(page, 'short', { record: true })
 
       // (4) BELOW THE FOLD IS NOT LOST: the card is one flick away with its re-open control and the
       // cost line that prices it intact. A door the household cannot reach would be a worse answer
@@ -4001,6 +4177,97 @@ test.describe('the spend lane — the solved figure lands without moving anythin
       const transition = diag.td
       expect(transition.split(',').every((d) => parseFloat(d) === 0), `transition-duration ${transition}`).toBe(true)
     })
+  })
+})
+
+// ── THE 1440×731 PROBE — RECORD-ONLY, never asserted (the 1440×731 re-point plan's KTD8; its U4
+// DELETES this describe) ─────────────────────────────────────────────────────────────────────────────
+// Briggsy's new laptop window is 1440×731 CSS px @ DPR 2 (his own Chrome, 2026-11-19). Before the gate's
+// REAL moves there, CI's ubuntu metrics are READ at exactly that window for the four spine frames ubuntu
+// has never logged, never inferred from Windows: `?seed=budget` (also the held re-figuring window's
+// frame), `?vault=stale`, `?vault=statestale` and `?seed=surplus` (pending and sized). Each arm drives
+// its frame exactly as its asserting arm does, asserts the tier (two panes AND the short density tier),
+// asserts NO fit (the 20 px arm's record-only precedent), and prints one plain line per frame for the
+// plan's U3 to read from the verify job's log:
+//   [fit probe] <frame>: caveat bottom=<px> left end=<px> band end=<px>
+// The caveat is the in-frame R13 disclaimer; the left end is the save slot's bottom + 2 px, the left
+// column's comparable end; the band end is the band's bottom (it spans grid rows 1 to 5). Both column
+// ends print because on an aged frame the band can bind (the stale return's premise line). A missing
+// element throws; it never prints a blank.
+const PROBE_WINDOW = { width: 1440, height: 731 } as const
+const PROBE_DPR = 2
+
+async function printFitProbe(page: Page, frame: string): Promise<void> {
+  await assertTier(page, 'laptop')
+  const shortTier = await page.evaluate(() => window.matchMedia('(min-width: 68rem) and (max-height: 840px)').matches)
+  expect(shortTier, 'the probe window must sit inside the short density tier').toBe(true)
+  const read = await page.evaluate(() => {
+    const bottom = (sel: string): number => {
+      const el = document.querySelector(sel)
+      if (el === null) throw new Error(`[fit probe] ${sel} is not on the page`)
+      return el.getBoundingClientRect().bottom
+    }
+    return {
+      caveat: bottom('footer.disclaimer.disclaimer--in-frame'),
+      leftEnd: bottom('.confidence-reveal[data-twopane] .result-save-slot') + 2,
+      bandEnd: bottom('.confidence-reveal[data-twopane] > .cs-band'),
+    }
+  })
+  for (const [what, px] of Object.entries(read)) {
+    expect(Number.isFinite(px), `[fit probe] ${frame}: ${what} is not a number`).toBe(true)
+  }
+  console.log(
+    `[fit probe] ${frame}: caveat bottom=${read.caveat.toFixed(1)} left end=${read.leftEnd.toFixed(1)} band end=${read.bandEnd.toFixed(1)}`,
+  )
+}
+
+/** The `?vault=stale` / `?vault=statestale` drive, step for step as their asserting arms take it: unlock,
+ *  affirm at the gate, wait out the FINAL tier, then settle INLINE (never `settleLayout`, as those arms). */
+async function driveVaultReturn(page: Page, key: 'stale' | 'statestale'): Promise<void> {
+  await page.goto(`/?vault=${key}`)
+  const unlock = page.getByRole('button', { name: 'Open my plan' })
+  await expect(unlock, `the ${key} plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
+  await unlock.click()
+  const affirm = page.getByRole('button', { name: /still about right/i })
+  await expect(affirm).toBeVisible({ timeout: 30_000 })
+  await page.evaluate(() => document.fonts.ready)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await affirm.click()
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+  await page.evaluate(() => document.fonts.ready)
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => {
+      const timing = a.effect?.getTiming()
+      return timing?.iterations === Infinity || a.playState !== 'running'
+    }),
+  )
+  await page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
+  await page.evaluate(() => window.scrollTo(0, 0))
+}
+
+test.describe(`the 1440×731 probe — RECORD-ONLY, never asserted (${PROBE_WINDOW.width}×${PROBE_WINDOW.height} @ ${PROBE_DPR}dpr)`, () => {
+  test.use({ viewport: PROBE_WINDOW, deviceScaleFactor: PROBE_DPR })
+  test('?seed=budget — the budget frame (also the held re-figuring window’s)', async ({ page }) => {
+    await gotoSeedFinal(page, 'budget')
+    await assertResolvedSpine(page)
+    await printFitProbe(page, '?seed=budget')
+  })
+  for (const key of ['stale', 'statestale'] as const) {
+    test(`?vault=${key} — the staleness-echo frame`, async ({ page }) => {
+      await driveVaultReturn(page, key)
+      await assertResolvedSpine(page)
+      await expect(page.locator('.cs-staleness-note')).toBeVisible()
+      await printFitProbe(page, `?vault=${key}`)
+    })
+  }
+  test('?seed=surplus — the spend lane, pending and sized', async ({ page }) => {
+    await gotoSeedFinal(page, 'surplus')
+    await assertResolvedSpine(page)
+    await expect(page.locator('.cs-magnitude')).toHaveAttribute('data-spend', 'pending')
+    await printFitProbe(page, '?seed=surplus pending')
+    await expect(page.locator('.cs-magnitude')).toHaveAttribute('data-spend', 'sized', { timeout: 90_000 })
+    await settleLayout(page)
+    await printFitProbe(page, '?seed=surplus sized')
   })
 })
 

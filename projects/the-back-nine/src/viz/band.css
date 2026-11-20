@@ -246,6 +246,34 @@
   stroke-width: 3;
 }
 
+/* ── the SHORT-laptop density tier (tokens.css --bp-laptop-short carries the tier's law, its one
+   home). W7, whitespace (the 1440×731 re-point, 2026-11-20): the inline drawer's block padding steps
+   20/24 → 16/16, its pull's margin 12 → 8, and its legend's margin 16 → 8 and gap 8 → 4, 32 px off the
+   band column (measured in real Chromium at 1440×731 @ 2). The padding is written as longhands: the
+   inline 24 px is the two-pane honesty floor's chrome input, and twoPaneHonestyFloor.test.ts reads
+   the base .band-drawer rule above, which stays. The accent tab sits at padding-top + 4 and moves
+   with it (absolutely positioned, so no frame pixel moves). Both routes' inline drawers are the only
+   .band-drawer there is; the enlarge modal's row legend sits outside .band-drawer and keeps its
+   rhythm. The band column binds only on an aged frame (the stale return's premise line), and this is
+   what keeps it from binding there. 840px re-stated as a literal (@media can't read a custom
+   property). */
+@media (min-width: 68rem) and (max-height: 840px) {
+  .band-drawer {
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
+  }
+  .band-drawer__tab {
+    top: calc(var(--space-4) + var(--space-1));
+  }
+  .band-drawer__pull {
+    margin-bottom: var(--space-2);
+  }
+  .band-drawer .band-legend {
+    margin-top: var(--space-2);
+    gap: var(--space-1);
+  }
+}
+
 /* the graph IS the enlarge button — a chromeless focusable surface (no border / background /
    padding); the band fills it edge-to-edge. The zoom-in cursor + the focus ring live here, so one
    affordance serves mouse AND keyboard/AT; the band's own non-color signal is untouched. */

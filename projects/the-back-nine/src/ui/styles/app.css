@@ -92,6 +92,19 @@ main.result[data-inframe-disclaimer] ~ .disclaimer {
   }
 }
 
+/* ── the SHORT-laptop density tier (tokens.css --bp-laptop-short carries the tier's law, its one
+   home). W3, whitespace (the 1440×731 re-point, 2026-11-20): the in-frame caveat's hairline-to-text
+   padding steps --space-2 → --space-1, 4 px at every protected bottom (measured in real Chromium at
+   1440×731 @ 2). The R13 text keeps its two lines at --text-xs: the 2026-07-08 council killed
+   re-laying it (that recovers 0 px), and this moves only the padding above it. It reaches the
+   in-frame mount on both routes and on every ≥68rem answer (fallback and range frames too,
+   harmlessly). 840px re-stated as a literal (@media can't read a custom property). */
+@media (min-width: 68rem) and (max-height: 840px) {
+  .disclaimer--in-frame {
+    padding-top: var(--space-1);
+  }
+}
+
 /* ── Fork C(ii): the standing view-only banner ─────────────────────────────────────────────────
  * Always mounted (empty when writable — the live region must exist BEFORE it populates or the
  * announce may not fire, burned/045). Empty ⇒ zero footprint; populated ⇒ a quiet raised strip

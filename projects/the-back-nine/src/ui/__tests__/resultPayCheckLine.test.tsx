@@ -10,6 +10,7 @@ import { DEV_SEEDS } from '../devSeeds'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
 import { councilBudgetHousehold } from '@intake/__tests__/typedBelowWitnesses'
 import { workingYearCostStaleLine } from '@intake/workingYearLeftOver'
+import { buildSpineParams, healthcarePriced, isDateRoute, missingRequiredFacts, spineMedicarePriced } from '@intake/intakeMap'
 import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 
 /*
@@ -637,7 +638,27 @@ describe('W9-R7 (KTD5): the hero reads the ANSWERED draft whole', () => {
     view.unmount()
     return text
   }
-  const cases: ReadonlyArray<readonly [string, ScenarioDraft, (d: ScenarioDraft) => ScenarioDraft]> = [
+  // U3's one unguarded describer (the register's W9-R7 entry, "Still open here"): the hero Medicare note's PRICED term.
+  // Every other case keeps a member working, so both drafts stay on the date route and the term reads true in each: no
+  // arm could see the hero read it off the live draft. Here both members retire with no accounts and Social Security
+  // only, a spine household whose builder makes no overlay (insight 081's divergence household), so the term turns
+  // false, while the door's reach stays false in both drafts (all 65 or older): the term alone moves the note.
+  const medicareRetiredEdit = (d: ScenarioDraft): ScenarioDraft => ({
+    ...d,
+    people: [{ ...d.people[0], workStatus: 'retired', retirementAge: 65, earnedIncomeReal: 0 }, d.people[1]],
+    enteredAccounts: [],
+  })
+  it('the Medicare case’s B is a whole spine household whose builder makes no overlay: the degenerate early return, never a null builder', () => {
+    const b = medicareRetiredEdit(DEV_SEEDS.date65)
+    expect(isDateRoute(b), 'B is on the spine route').toBe(false)
+    expect(missingRequiredFacts(b), 'B asks for nothing, so its builder runs').toEqual([])
+    expect(buildSpineParams(b), 'the builder runs').not.toBeNull()
+    expect(spineMedicarePriced(b), 'and builds no overlay, so Medicare reads not priced').toBe(false)
+    expect(healthcarePriced(b) || healthcarePriced(DEV_SEEDS.date65), 'neither draft reaches the Healthcare door').toBe(false)
+  })
+  // The fourth member, where given, is a sentence the case exists to guard: said settled at A and not at B, so the
+  // equality can see the hero read it off the live draft, and a seed change that stops the edit moving it reds here.
+  const cases: ReadonlyArray<readonly [string, ScenarioDraft, (d: ScenarioDraft) => ScenarioDraft, string?]> = [
     [
       'TM (typed below, the left over moved)',
       DEV_SEEDS.datesavedtypedmoved,
@@ -659,8 +680,14 @@ describe('W9-R7 (KTD5): the hero reads the ANSWERED draft whole', () => {
         health: { ...d.health, slcspMonthlyToday: 1_400, enrolledPremiumMonthlyToday: 1_100 },
       }),
     ],
+    [
+      'the all-65+ still-working household (then both retired on Social Security alone, no accounts: Medicare priced turns false)',
+      DEV_SEEDS.date65,
+      medicareRetiredEdit,
+      copy.verdictMedicarePriced,
+    ],
   ]
-  for (const [name, a, edit] of cases) {
+  for (const [name, a, edit, moves] of cases) {
     it(`${name}: answered at A with the live draft moved, the hero says exactly what it says settled at A`, () => {
       appModel.update(() => a)
       const atA = heroAt(null)
@@ -669,6 +696,10 @@ describe('W9-R7 (KTD5): the hero reads the ANSWERED draft whole', () => {
       const answeredAtA = heroAt(answeredDraft)
       const atB = heroAt(null)
       expect(atB, 'the control: settled at B, the hero says something else').not.toBe(atA)
+      if (moves !== undefined) {
+        expect(atA, 'the guarded sentence is said settled at A').toContain(moves)
+        expect(atB, 'and not settled at B').not.toContain(moves)
+      }
       expect(answeredAtA).toBe(atA)
     })
   }

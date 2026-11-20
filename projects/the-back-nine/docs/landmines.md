@@ -88,7 +88,7 @@ working tree untouched; `fsck` proves nothing else was hit.
 - **(b9-1, 11-08) `cmd /c "start "" /b /wait /affinity FFF <cmd>"` reports exit 0 even when the command failed** (a failing vitest
   run came back 0). Launch through a wrapper `.cmd` that runs `call %*` then `echo PINNED_EXIT=%errorlevel%`, and read that line:
   the copy is `<b9-build2-surplus>\tools\run-pinned.cmd` (three lines; from PowerShell, `cmd /c "start `"`" /b /wait /affinity FFF <that path> pnpm test"`; proven with `node -e process.exit(3)` → `PINNED_EXIT=3`). The child really is pinned
-  (a node child read its own affinity as 4095 = 0xFFF). **2026-11-19: the wrapper lived in `<B>`, which did not survive the Dell; rebuild its three lines from this entry. `FFF` is the Dell's mask: on the new Lenovo the P-cores are logical CPUs 0-3 (mask `F`); A/B unpinned vs `F` before pinning.**
+  (a node child read its own affinity as 4095 = 0xFFF). **2026-11-19: the wrapper lived in `<B>`, which did not survive the Dell; rebuilt the same day at the same path from this entry. `FFF` is the Dell's mask; on the Lenovo, run unpinned (this section's "THE LENOVO" entry, b9-1, 11-19).**
 - **(b9-1, 11-08) Never run a heavy job on the E-cores beside a pinned P-core run.** The identity sweep on `/affinity FF000` slowed
   the pinned suite from 534 s to 863 s (the cores share one power budget). Serialize: the sweep, then `verify:fit`, then the suite.
 - **(b9-1, 11-08) The laptop ran about 2.5x slower than on 11-05 under sustained load**, with no other process busy: the whole suite
@@ -99,7 +99,13 @@ working tree untouched; `fsck` proves nothing else was hit.
 - **(b9-1, 11-08) Another session's work shares the CPU:** the Feud session's `te_replay.py` searches each held a core through
   b9-1's first suite, and an orphaned `python.exe -` from a dead 10-30 session had held one for 9 days (killed with his OK, by
   `taskkill /PID`). Check `Get-CimInstance Win32_Process` for busy python before a heavy local gate.
-- **(b9-6) Run every heavy local check pinned to the P-cores, launched from PowerShell** (the masks here are the DELL's; the Lenovo since 2026-11-19 has 4 P-cores, mask `F`, unmeasured: A/B first)**:** `cmd /c "start `"`" /b /wait /affinity FFF
+- **(b9-1, 11-19) THE LENOVO: run heavy checks UNPINNED.** The whole vitest suite at `d9e5b637`, serial, the machine
+  otherwise idle: unpinned 197 s, `/affinity F` (its 4 P-cores) 287 s, 5285/5285 green both ways. Four cores starve
+  vitest's pool, so every "pinned to the P-cores" step below and in `TODO.md` is the DELL's and is dead here: launch the
+  gate plainly, still one heavy run at a time. 197 s is this machine's whole-suite baseline; a run far past it is
+  something else sharing the CPU (check `Win32_Process`). The `PINNED_EXIT` wrapper below still gives an honest exit code
+  without `start /affinity` (rebuilt 11-19 at `<b9-build2-surplus>\tools\run-pinned.cmd`).
+- **(b9-6) [THE DELL's — dead on the Lenovo, entry above] Run every heavy local check pinned to the P-cores, launched from PowerShell:** `cmd /c "start `"`" /b /wait /affinity FFF
   <command>"` (the children inherit the mask; vitest and Playwright size their pools to 12 CPUs). Unpinned, the work lands on
   the E-cores and the solve tests time out. The same `start` line through Git Bash's `cmd //c` hung with no child process.
   *Reconciled 2026-11-09: this entry's last line (b9-6, 11-05) said a light suite on the E-cores (`/affinity FF000`) beside
@@ -617,6 +623,14 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Council
 
+- **(b9-1, 11-19) Never ask a council seat to put its words "in your deliberation text" or "in your reasoning".** The walk-9
+  form council's brief asked the chair and every seat for exact words there; five of nine opening seats (architect,
+  minimalist, craftsman, advocate, design-engineer) died at once on an API `invalid_request`, "Opus 5.5's safeguards
+  flagged this message", details `reasoning_extraction`, recorded by the workflow as abstentions. Fixed by a resume
+  that kept the clerk's prompt byte-identical (so its 45-minute dossier replayed from cache) and rewrote the brief's tail
+  after it: the chair WRITES the exact words to a file, the seats give theirs in their recommendation. A long ruling's
+  words belong in a file the chair writes, which is also the durable record (b9-2's lesson: words that live only in a
+  journal live on one disk).
 - **(2026-09-26)** a council's draft copy is a floor, not the words — his read cut its duration phrase; offer the lean form, then take his ruling and record the evidence honestly (the "how long?" was the pilot's question, not his).
 - **(2026-09-13 late)** a dead session's Workflow verdict lives in `~/.claude/projects/<proj>/<session>/tasks/<task>.output` (the `result` field) and its script under `workflows/scripts/` — recover from there, never re-run the council
 - **(2026-09-13 evening)** the council-log's table header repeats per section — anchor an insert on the FIRST DATA ROW, never the header

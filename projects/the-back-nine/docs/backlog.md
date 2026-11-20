@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **220 open items** (288 entries, 68 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **221 open items** (289 entries, 68 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -1795,6 +1795,14 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
 
 - **The gap (the refuter's trace, unverified by measurement).** The date route requests no survivor reading (`memoryModel.ts:883-885`) and `answerView.ts:240` withholds the survivor card, though `summarize` builds it from the same sampled deaths on request (`confidence.ts:283-286`) and `SurvivorReadout`'s own header calls that reading "typically WORSE" than the joint one. So every working (date-route) household is shown only the joint picture.
 - **Prescription.** (1) Measure first, one run per date seed (not the sweep): the survivor reading at the crowned offset against the headline's. (2) If it reads worse anywhere, the date route shows it as the spine does (a council on where: the card, or a line under the date). Never answer "is the one left okay" in the typed-below line's survivor part (its words are ruled: costs only).
+
+### The rider's gloss names the Medicare surcharge line in dollars
+
+`S` · **pilot** · filed 2026-11-19 (b9-1) by the walk-9 form council `wf_9f28e691-1dc`, call (5) (W9-R1's "high" is unquantified; D7: a gap is a build item, and "high" is its stopgap) · **Tier 1** (the gloss explains a cost the line leaves out; no figure on the page is wrong) · the form spec's flip F6 moves it before the next walk if any seat asks how high "high" is or guesses a threshold
+
+- **What ships meanwhile** (`docs/plans/features/typed-below-walk9-form-build-spec.md`, call (5)): `riderGloss` = ", the extra Medicare premium you pay when your income two years before was high", "two" read from `irmaa.value.magiLookbackYears`.
+- **Prescription (the chair's).** Read both lines through `irmaaScheduleAsCompared` over the line's own MAGI years; take the LOWEST single line, rounded down to $1,000, and print the couple's line as twice it. Candidate words: "…when your income two years before was more than about $230,000 while you were both alive, or about $115,000 with only one of you alive". Add a cross-surface law against `healthSheetChrome`'s step card (which reads its own year, the next step, at $100 grain), and repin KD10 (about +17 words and +2 figures per glossed line).
+- **⚑ NEGATIVEs (the Honesty Hawk's veto, honoured by the council).** Never the raw `irmaa.tiers` figures ($218,000 / $109,000): two CPI years low, and they disagree with the Healthcare sheet. Never the couple's line alone: the survivor close sits under the same gloss. Never "for one of you alone": every figure seat's words read as one spouse's own income while married.
 
 ### ✅ CLOSED 2026-11-14 — The typed-below line's comparisons are the all-alive picture's — where one of you dies while the other still works, a working year can take more than the line's "at most" says (C: "at most $10,000 a year more", the engine $13,609)
 

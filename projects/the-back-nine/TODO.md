@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-20, b9-5 close):** W9-R7’s plan (`docs/plans/features/answered-draft-build-spec.md`) is four units in: U1 the store (`f2796d00`), U2 the pair guard (`4dcd6a2d`), U3 the describers (`41cdf6bf`), U4 the tell (`c644ec2f`). Next, in order: (1) W9-R7’s U5 (the harnesses and the flag-on preview; `pnpm verify:fit` green, no assertion edited) and U6 (the register; U3’s residual, the first-reveal tag as BUILT), one commit each, each opened with `/brief <that unit’s topic>`; (2) re-point the fit gate and the Caddie capture harness to his viewport, 1440×731 at DPR 2: MEASURED by b9-3, 7 of 181 `verify:fit` arms red there, all the one-frame fit law (the close block lists each with its pixels), a layout unit with the four UI design skills loaded first, never a word cut; (3) walk 10 on the changed strings (the walk-9 spec’s Units line: seats on T, CR and PN for F3, the phone seat, wide-PN and the listener on PN for F2, every flip tested; plus the watch items (a) to (j) below, and W9-R7’s window frames: the phone after Close and the laptop beside the open panel); (4) W9-R8 (the honest date on the page); then build 2’s U12, the whole-file review with an adversary and every finding verified, and `/distill` (far past 10).
+▶ **START HERE (2026-11-20, b9-6 close):** W9-R7’s plan (`docs/plans/features/answered-draft-build-spec.md`) is built, U1 to U6; its register entry closes at walk 10. Next, in order: (1) U3’s one unguarded describer, the one test case the register’s W9-R7 entry prescribes ("Still open here"), opened with `/brief <the answered draft’s describers>`; (2) re-point the fit gate and the Caddie capture harness to his viewport, 1440×731 at DPR 2: MEASURED by b9-3, 7 of 181 `verify:fit` arms red there, all the one-frame fit law (the close block lists each with its pixels; the seven re-figuring arms U5 added re-run there too), a layout unit opened with `/brief <the re-point>` and the four UI design skills loaded first, never a word cut; (3) walk 10 on the changed strings (the walk-9 spec’s Units line: seats on T, CR and PN for F3, the phone seat, wide-PN and the listener on PN for F2, every flip tested; plus the watch items (a) to (j) below, and W9-R7’s window frames: the phone after Close and the laptop beside the open panel); (4) W9-R8 (the honest date on the page); (5) measure the register’s *Two describers still read past the answered draft inside the re-figuring window…*; then build 2’s U12, the whole-file review with an adversary and every finding verified, and `/distill` (far past 10).
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -255,14 +255,12 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-20 (b9-5: W9-R7's U4 built; b9-4's block pruned into it):**
+**SESSION 2026-11-20 (b9-6: W9-R7's U5 and U6 built, the plan done; b9-5's block pruned into it):**
 
 State at close:
-- Built: W9-R7's U4 `c644ec2f` (U1 to U3: `f2796d00`, `4dcd6a2d`, `41cdf6bf`); its message carries the gates, the 16-mutant planted-fault proof (16 of 16 red, each landed, each restored) and the real-Chromium measures. At `c644ec2f`: `pnpm typecheck` 0, `pnpm lint` 0, the whole suite green (its count under `verify:doc-stats`), `pnpm build` 0, `pnpm verify:doc-stats` 0; `pnpm verify:fit` 181 of 181 green (9.5 min, alone, unpinned): no existing arm reds on the tell, so U4 went out alone, ahead of U5.
-- **U4's decision, for U6:** KTD8's "the answer followed an edit on this page" signal was NOT built. Briggsy's 2026-11-19 ruling ("Yes, tag it") tags every provisional-tier date, the first reveal included, so the tier alone decides (`answerView.ts`'s module note). The plan's Open-Question register entry for the first-reveal tag is therefore filed as BUILT in `c644ec2f`, never as open work.
-- **Owed from U3, for U6:** one unguarded describer, its prescription in W9-R7's register entry ("Building").
-- **Landmines for U5** (the general rules are `docs/landmines.md`'s, The fit gate and e2e, b9-5's two): on the phone the eyebrow is in the flow, so a phone date arm measuring right after `final` without the attribute's absence measures a frame 32–52 px low; the spine overlay has 5.8 px above it at the short tier, so the flag-on arm asserts one line, top ≥ 0, and the verdict-to-disclaimer distance unchanged (671.1 px) at REAL and TIER; `heroLead` / `floorLineText` take `refiguring` as a fourth argument.
-- **The 1440×731 re-point, MEASURED** (b9-3: `e2e/reviewSurface.ts`'s `REAL`/`REAL_DPR` swapped from a snapshot, restored byte-identical, never committed): 7 of 181 arms red, each the one-frame fit law. The in-frame disclaimer ends at 752 px on `?seed=budget`'s spine frame (`e2e/vertical-fit.spec.ts:640`), 754 on the `?vault=stale` gate (`:2055`), 737 on `?vault=statestale` (`:1962`) and 762 on the spend lane's surplus pending frame (`:3722`); `datesavedfourbuckets`' gate route ends at 753.7 (`:2805`); the memory card's standing line ends at 777 on `?vault=rec` and `?vault=recold` (`:3365`, 46 px over, the worst). Also owed with it: `:619` hard-codes `deviceScaleFactor: 2.5` (read `REAL_DPR`); `pnpm verify:fit:rv` reads `REAL` too (run it); the Caddie skill and its taste corpus name 1536×791@2.5; the stylesheets' comments cite 1536. U4's eyebrow overlay leans on the 32 px short-tier padding the re-point must keep, or re-measure.
+- Built: W9-R7's U5 `a18964e8` and U6 `7cafeecf` (U1 to U4: `f2796d00`, `4dcd6a2d`, `41cdf6bf`, `c644ec2f`), plus `e95c17db` (the store's spine-route frames, unpinned until U5's planted-fault pass) and `20ac6dad` (insight 070's out-of-date note). U5's message carries its gates and its 11-plant proof. At `a18964e8`: `pnpm typecheck` 0, `pnpm lint` 0, the whole suite green (its count under `verify:doc-stats`), `pnpm build` 0, `pnpm verify:csp` 0, `pnpm verify:doc-stats` 0, `pnpm verify:fit` 188 of 188 (9.8 min, alone, unpinned), `pnpm caddie:walk` `intake:typedbelow` + `intake:kept` 4 of 4. At `7cafeecf`: `verify:doc-stats` 0.
+- W9-R7's register entry is BUILT and stays open until walk 10 reads the window. Two small items stay open, both in the register: U3's one unguarded describer (W9-R7's entry, "Still open here": one test case, START HERE (1)) and the new Tier 0 candidate *Two describers still read past the answered draft inside the re-figuring window…* (measure first: a first read found the plan's diagnosis mixed).
+- **The 1440×731 re-point, MEASURED** (b9-3: `e2e/reviewSurface.ts`'s `REAL`/`REAL_DPR` swapped from a snapshot, restored byte-identical, never committed): 7 of the then-181 arms red, each the one-frame fit law. The in-frame disclaimer ends at 752 px on `?seed=budget`'s spine frame (`e2e/vertical-fit.spec.ts:640`), 754 on the `?vault=stale` gate (`:2055`), 737 on `?vault=statestale` (`:2215`) and 762 on the spend lane's surplus pending frame (`:3975`); `datesavedfourbuckets`' gate route ends at 753.7 (`:3058`); the memory card's standing line ends at 777 on `?vault=rec` and `?vault=recold` (`:3618`, 46 px over, the worst). Also owed with it: `:639` hard-codes `deviceScaleFactor: 2.5` (read `REAL_DPR`); `pnpm verify:fit:rv` reads `REAL` too (run it); the Caddie skill and its taste corpus name 1536×791@2.5; the stylesheets' comments cite 1536. U4's eyebrow overlay leans on the 32 px short-tier padding the re-point must keep, or re-measure: the held spine arm (`the re-figuring window, held`, U5) measures exactly that, and with the six other re-figuring arms it reads `REAL`/`TIER` too.
 - **For Briggsy's digest (walk 10's card):**
   - U4's four strings (`copy.ts`'s `answerRefiguring*` and `assumptionEchoRefiguring`), the pilot's drafts shipped flagged; the card may re-word them without a council (the plan's Assumptions).
   - U3's (5), REDUCED by council `wf_9bd3c243-4e7` (7/10, ⚑ wording flagged): the moved note's "each working year still adds at most the $S you said goes in" (the Hawk's form over "the plan still counts"); the advocate's dissent, "Your provisional answer" on step 14 now, flips on one walk-10 raise.
@@ -272,7 +270,7 @@ State at close:
     - The restatement predicates apply on EVERY line, one-run lines included. A non-twin one-run opener reads "Each working year you’re both alive, the answer at your spending would add at most …".
     - T's twin also requires the close's difference to be one figure. That is unreachable on every witness: the review proved it.
 
-Next is START HERE. Successor: b9-6 (handoff mode).
+Next is START HERE. No successor: no live b9-7 at close.
 
 **U2's watch items for walk 10** (each spec-forced; a reader's stumble files a register entry, never a fix inside a round):
 - (a) B's, C's and F's stale run sentences, and the waiting seats, name the run's years twice, once in the head and once beside each amount: "From 2026 through 2032, each working year you’re both alive comes up $4,015 short in 2026 through 2030 and $3,652 short in 2031 through 2032". `shortRunHead` predates the amount rule, and dropping the head's years would be a new wording call (a council's).
@@ -290,7 +288,7 @@ Next is START HERE. Successor: b9-6 (handoff mode).
 - (j) **The spine line's seat at the short laptop tier**: fine print in muted ink 5.8 px under the page top, above the verdict. Does the reader see it in the ~3 s it stands, and read "from before it" as the old answer rather than a broken edit (the plan's Success Criteria)?
 
 **Check at start:**
-- CI for `c644ec2f` and the close's commit (pushed together, so CI runs the tip), and `41cdf6bf` (run 44714662938, still in its `verify` job at close): `gh run list --commit <full sha>`. (`f2796d00`, `4dcd6a2d` and `d22fd59a` went green.)
+- CI for `a18964e8` (run 44730210590, in progress at close), `7cafeecf` (run 44730684671, queued) and the close's commit: `gh run list --commit <full sha>`. (`b7066e20`, carrying U4, and `41cdf6bf` went green.)
 - The ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
@@ -304,9 +302,8 @@ final lands (W9-R7's plan, Open Questions). Never re-ask.
 4. `pnpm build` and `pnpm verify:fit` (over 10 minutes: launch it in the background and wait for its notice).
 5. The sweep and the per-key idcheck, only where a plan's Verification Contract calls them (a unit that touches `src/engine` or `intakeMap`): both lived in `<B>\tools\` and died with the Dell; rebuild them before such a unit. The walk-9 spec's units touch neither.
 
-**LANDMINES (W9-R7's plan, the 1440×731 re-point, walk 10 and U12):**
+**LANDMINES (the 1440×731 re-point, walk 10 and U12):**
 - **The gate is two columns at 1536; his screen is 1440×731 now** (measured 2026-11-19), so a fit judgment at 1536 is no longer his frame (`src/ui/styles/save.css`; the plan cites `src/ui/save.css`): nothing pins the story column, so the coda below the fold is a walk-8 read, never a gate red; any fix is static (KD2's Fit).
-- **W9-R7: never compare drafts to find "different inputs".** Every blur commits and mints a new draft even when nothing changed, and the first run's seed mint swaps the draft object; `draftIdentityKey` carries non-engine fields. Key the BUILT engine input (the plan's KTD2). And every e2e wait on `data-answer-tier="final"` passes INSIDE the W9-R7 window (the old answer still says final): the plan's settle attribute is the harnesses' real signal.
 - **Before a fix commit, read `docs/landmines.md`'s The fit gate and e2e, The mutation harness, Copy and copyGuard, Windows and the shell, and Probes and measurement sections.**
 
 **FOR HIM (one read, no rush):** two `docs/product.md` spots still lean on friends using the tool — R13's "kept on honesty
@@ -935,6 +932,18 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 (`git show 89b4fa58:projects/the-back-nine/TODO.md`), where the full original stands. A line marked *Correct* or
 *Extend* amends that insight instead of adding a new one.
 
+- *New (b9-6, 2026-11-20): a page-level arm cannot see a store-order fault that never crosses a task.* W9-R7's U5 plant M6
+  dropped the re-figuring flag one notify ahead of the spine commit: React painted both notifies of that task as one frame, so
+  every fit arm stayed green, and so did the store suite, whose frames tests drove the date route only. The same plant with a
+  60 ms task gap redded the live arm alone. Pin store ordering at the subscriber, once per commit branch (`e95c17db`); a page
+  arm owns only what crosses a frame.
+- *New (b9-6, 2026-11-20): a held-run preview turns a one-run window into a measurable frame.* `src/ui/preview/RefiguringPreview.tsx`
+  wraps the one engine handle the store calls at run time and arms on the first final-tier commit, so an edit's run never lands
+  and the REAL page stands in the window as long as an arm needs (b9-5's live numbers reproduced to the tenth). It beats a
+  component preview whenever the law spans surfaces the component doesn't own: the fold ran to `Result.tsx`'s R13 disclaimer.
+- *Extend 126 (b9-6, 2026-11-20): a mutant runner's "landed" check compares bytes to the planted text.* An anchor that is a
+  prefix of its own replacement passes an "anchor gone" check falsely (U5's M6, first run), and a CRLF file (`confidence.css`)
+  takes its anchors in CRLF: msys `sed -n` hides the `\r` (it showed none), so read bytes with node or `git ls-files --eol`.
 - *New (b9-5, 2026-11-20): a transient line on a fold-law frame overlays the frame's padding instead of taking a row.* W9-R7's
   re-figuring line and the date's provisional tag come and go with the engine; in the flow they would push the spine's
   protected disclaimer past the fold for a run (R5) and drop the date hero at every final. Positioned absolute above the

@@ -804,6 +804,10 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## UI and product
 
+- **(b9-5, 11-19; moved from TODO by b9-6) Never compare drafts to find "different inputs".** Every blur commits and mints a new
+  draft even when nothing changed, the first run's seed mint swaps the draft object, and `draftIdentityKey` carries fields the
+  engine never reads. Key the BUILT engine input (`memoryModel.ts`'s `runKey`, W9-R7's KTD2). And an e2e wait reads
+  `SETTLED_RESULT` (`e2e/reviewSurface.ts`), never a bare `data-answer-tier="final"`, which passes inside the re-figuring window.
 - **(b9-6, 11-15; b9-3, 11-16) `NotePartsBlock` draws two lists, never both**: W's stale line as the segments' `<dl>` with the door inside it, and the typed-below line's runs as an `<ol role="list">` (`role` because WebKit drops list semantics under `list-style: none`) with the survivor part as the `<p class="note-parts__closing">` after it, before the doorless button (the walk-8 form council's KD7, KD8). jsdom loads no stylesheet: the runs' spacing (`noteParts.css`) is seen only in a real browser.
 - **(b9-4, 11-05) Never call `buildDateInput` from inside the money picture's path.** On a "saved" draft `buildDateInput` now reads
   `workingYearLedgerForRun`; the picture composes from `buildDateInputBeforeLeftOver`. Any new reader inside

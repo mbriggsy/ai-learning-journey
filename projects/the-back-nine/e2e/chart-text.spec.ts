@@ -21,7 +21,7 @@ import { LATTICE_POINTS } from '../src/viz/bandData'
  * been red (insight 032 / 016).
  *
  * WHAT IT PINS, on every VIEWPORT arm the product ships to (PHONE 390 @3 touch · PHONE_LS, the
- * landscape phone 844×390 @3 touch · a 320 reflow arm · FLOOR 1088 · REAL 1536 @2.5), over FIVE
+ * landscape phone 844×390 @3 touch · a 320 reflow arm · FLOOR 1088 · REAL 1440×731 @2), over FIVE
  * households — the two dense date routes, the one-frame spine, `borderline`, the widest-y-tick
  * household (38.5 CSS px of Windows ink), and `atceiling`, the ceiling crown — never all of them; plus the
  * AGED spine return (`?vault=stale`) on every arm INSIDE that loop, and — off it — `?vault=datestale`,
@@ -819,8 +819,9 @@ for (const arm of ARMS) {
       expect(named.some((t) => /^Plan built/.test(t)), `${arm.name}: no "Plan built" label — the plant is not aged (${named.join(' | ')})`).toBe(true)
       expect(named.some((t) => /^Today/.test(t)), `${arm.name}: no wall-time "Today" label beside "Plan built" (${named.join(' | ')})`).toBe(true)
       // THE ROW COUNT, recorded from the first measurement of this route (2026-09-07): TWO on every
-      // arm from 320 to 1536 — "Plan built" at year 0 and "Today" at year 2 overlap on every width
-      // this product renders, so the aged spine takes one row more than the fresh spine's one
+      // arm from 320 to REAL (1536 then, 1440 since 2026-11-20) — "Plan built" at year 0 and "Today"
+      // at year 2 overlap on every width this product renders, so the aged spine takes one row more
+      // than the fresh spine's one
       // (docs/architecture.md §12 records the fresh count; this arm is the aged amendment). Recorded,
       // never a re-typed "1" (the fresh pin above) and never a loose "<= 2": a remedy that changed the
       // aged pair or the pack would move this number, and only a recorded value can see it.
@@ -1283,7 +1284,7 @@ test.describe('chart text — the CROWN oracles bite (planted-fail controls)', (
     ).toHaveCount(1)
     const narrowed = await auditCrown(page)
     report(
-      `crown re-decision on a live 1536 → 320 resize: seat=${restored.seat} → ${narrowed.seat} — headroom ${restored.headroomPx.toFixed(1)}px → ` +
+      `crown re-decision on a live ${REAL.width} → 320 resize: seat=${restored.seat} → ${narrowed.seat} — headroom ${restored.headroomPx.toFixed(1)}px → ` +
         `${narrowed.headroomPx.toFixed(1)}px against a ${narrowed.probeHeightPx.toFixed(1)}px callout; the row reserves ${narrowed.rowReservePx.toFixed(1)}px`,
     )
     expect(
@@ -1745,7 +1746,7 @@ test.describe(`chart text — the enlarge modal (the transformed frame) — REAL
     const modalRows = await page.locator('.band-modal__dialog figure.band-figure .band-annotations').evaluate((el) => getComputedStyle(el).getPropertyValue('--ct-rows').trim())
     report(`REAL enlarge modal: figure ${modalW.toFixed(1)} px vs inline ${inlineW.toFixed(1)}; rows = ${modalRows} (inline ${inlineRows})`)
     // A canary, not this arm's contract: the enlarged figure is min(100%, 68vh) of the dialog
-    // (band.css), 537.9 px at 791 against the inline 446, so a wider frame can never NEED more rows
+    // (band.css), 497.1 px at REAL's 731 against the inline 446, so a wider frame can never NEED more rows
     // (the stagger packs MEASURED boxes, chartText.tsx). Equality is NOT the contract — the modal may
     // resolve a collision the drawer cannot. The arm's real coverage is assertChartText on a frame no
     // gate had ever measured. Both reads must be a count: `Number('')` is 0, and 0 <= 1 would pass.

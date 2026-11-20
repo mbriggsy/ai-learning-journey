@@ -10,16 +10,22 @@ import { copy } from '../src/ui/copy'
  * harness), so they live here.
  */
 
-/** Briggsy's REAL laptop window — 1536×791 CSS px @ DPR 2.5, measured in his own Chrome
- *  2026-07-08 (TODO landmine: the old "1871×917" screenshot number is his SCREEN, not his
- *  window — never tune a fit against it; 1871×917 serves only as the tall SHOWCASE arm
- *  where the density tier must NOT fire). */
-export const REAL = { width: 1536, height: 791 }
+/** Briggsy's REAL laptop window — 1440×731 CSS px @ DPR 2, his Lenovo, measured in his own
+ *  Chrome 2026-11-19 (the 1440×731 re-point, 2026-11-20; the Dell's 1536×791 @ 2.5 window,
+ *  measured 2026-07-08, died with that laptop). It sits in the two-pane tier AND the short
+ *  density tier (731 ≤ 840, tokens.css --bp-laptop-short). tokens.css `--laptop-fit-height`
+ *  mirrors REAL.height, and scripts/__tests__/breakpoint-mirrors.test.ts binds the two. */
+export const REAL = { width: 1440, height: 731 }
 /** The DPR his window runs at — pair with REAL wherever a context is created. */
-export const REAL_DPR = 2.5
-/** The `--laptop-fit-height` tier floor (tokens.css): the shortest laptop the fit law serves. */
+export const REAL_DPR = 2
+/** A DPR-1 laptop inside the short density tier (800 ≤ 840) — NOT a narrower-width arm. At a
+ *  16 px root, 1280, 1440, 1536 and 1871 all render the same capped 1120 px frame
+ *  (--content-wide; measured identical y-values, 2026-11-20), so what this arm adds over REAL is
+ *  DPR 1 and the short tier at 800 px. FLOOR is the only narrower two-pane width. */
 export const TIER = { width: 1280, height: 800 }
-/** The tall showcase: two-pane, but ABOVE the 840px density boundary — generous rhythm. */
+/** The tall showcase: two-pane, but ABOVE the 840px density boundary — the generous rhythm, where
+ *  every density rung's tall side is pinned. A TEST arm, not any screen of his: 1871×917 was the
+ *  Dell's screen, and his Lenovo's full screen (1440×900 @ 2) also leaves the short tier off. */
 export const SHOWCASE = { width: 1871, height: 917 }
 /** The two-pane breakpoint in REM, mirroring `--bp-laptop` in src/ui/styles/tokens.css (@media
  *  cannot read a custom property, so every @media rule re-states it as a literal too).

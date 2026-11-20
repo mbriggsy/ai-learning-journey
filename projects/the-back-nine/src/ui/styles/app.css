@@ -35,9 +35,9 @@
 }
 
 /* Laptop (≥ --bp-laptop as a literal — see tokens.css): the fine-print footer tightens so a
-   resolved two-pane answer + this disclaimer fit a --laptop-fit-height (800px, tokens.css — the
-   ONE source) viewport in one frame (Briggsy 2026-07-02). Fine print under a hairline stays
-   legible at these margins; the phone/intake rhythm above keeps the generous spacing. NOTE (the
+   resolved two-pane answer + this disclaimer fit a --laptop-fit-height (his window's height;
+   tokens.css is the ONE source) viewport in one frame (Briggsy 2026-07-02). Fine print under a
+   hairline stays legible here; the phone/intake rhythm above keeps the generous spacing. NOTE (the
    Hawk's veto, council 2026-07-08): this footer is the page-TRAILING element — the structural
    first casualty of any overflow — and it is PROTECTED by the degrade contract at
    --laptop-fit-height; if the quiet doors are ever chosen as the below-fold flex, this
@@ -65,7 +65,7 @@
      the page's LAST element, after the record card, the backup door and the quiet doors — was
      the only caveat: the reader met the exits before "this can be wrong". That was the exact
      inversion this swap exists to prevent, live on the phone since July, and it is also what an
-     enlarged browser default (a 24 px root makes a 1536 px laptop a sub-68rem device — 68rem is
+     enlarged browser default (a 24 px root makes his 1440 px laptop a sub-68rem device — 68rem is
      1632 px there) put in front of the large-text reader. The scrolling tiers' honesty contract
      is ORDER + REACHABILITY (caveat above the doors, doors last, the caveat reachable by scroll —
      e2e/vertical-fit.spec.ts); the one-frame law binds the ≥68rem two-pane tier only. */

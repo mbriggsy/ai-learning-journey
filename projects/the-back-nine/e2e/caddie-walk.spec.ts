@@ -31,7 +31,7 @@ import type { WorkingYearLeftOverKind } from '../src/shared/model'
  * Bundle law (from the verified research, 2026-07-09):
  *  - Words are captured VERBATIM from the DOM (`copy.txt`/`dialog.txt`) — a reader never OCRs
  *    the product's sentences off pixels.
- *  - The above-fold frame ships at CSS scale (1536px long edge — under the ~2576px model
+ *  - The above-fold frame ships at CSS scale (REAL's 1440px long edge — under the ~2576px model
  *    ingestion cap, so it is never silently downscaled); text-critical regions additionally
  *    ship as DEVICE-scale crops (small text survives).
  *  - Color-vision arms use Chrome's own emulation (CDP setEmulatedVisionDeficiency), the same
@@ -342,7 +342,7 @@ const CVD_CHART_TARGETS = [
  * at the laptop tier, sheetShell.css:84+94, so 88dvh is the PHONE/base rule and never the REAL
  * arm's). BOTH the viewport-scoped `cvd-*.png` arms AND the `crop-panel` element crop therefore
  * stop at that container's visible box — the scrolled-out content is never painted into either.
- * MEASURED on the retired base at REAL (1536×791): the door-4 `fold.json` puts the dialog at
+ * MEASURED on the retired base at the old REAL (1536×791): the door-4 `fold.json` puts the dialog at
  * 24→767px, i.e. a 743px visible box (= 94dvh; docs/caddie/cold-read-log.md, Card 10c). The panel
  * carries 24 radio/textbox controls and only about THREE fit that box, so ~21 were captured in no
  * arm at all, normal or simulated. The unscreened set is exactly the segmented controls the

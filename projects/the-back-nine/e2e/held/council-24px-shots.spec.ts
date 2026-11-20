@@ -85,7 +85,7 @@ test.describe(`Briggsy's window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)
     await shoot(page, 'laptop-16px-retired-control', 16)
   })
 
-  // 24 px: 68rem resolves to 1632 px, so this 1536 window renders the STACKED tier — the regime
+  // 24 px: 68rem resolves to 1632 px, so this 1440 window renders the STACKED tier — the regime
   // the scrolling law governs, and the one his eye is auditing.
   test('laptop-24px-retired', async ({ page, context }) => {
     await raise(page, context, 24)

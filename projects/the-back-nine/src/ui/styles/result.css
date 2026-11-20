@@ -178,8 +178,8 @@
 
 @media (min-width: 68rem) {
   /* Laptop vertical budget (Briggsy 2026-07-02 — "the answer should FULLY fit"): a resolved
-     two-pane answer + the disclaimer must land inside a --laptop-fit-height (800px — the ONE
-     source is tokens.css) viewport with no scroll. One step down on the block padding (48→40);
+     two-pane answer + the disclaimer must land inside a --laptop-fit-height (his window's height —
+     the ONE source is tokens.css) viewport with no scroll. One step down on the block padding (48→40);
      the phone/single-column rhythm keeps --space-9 (the phone pass is a separately-owed
      cold-read — don't fold it in blind). */
   .result {

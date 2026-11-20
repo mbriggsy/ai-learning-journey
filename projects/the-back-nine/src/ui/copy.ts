@@ -2191,16 +2191,16 @@ export const copy = {
   // the mechanism's.
   //
   // LENGTH IS A CONSTRAINT HERE, and the constraint is ONE LINE — never a character count. MEASURED at
-  // the real 1536×791 frame (`verify:fit`, both plants): this line's bottom sits at 774px with 17px of
-  // frame left, and a second line costs ~27px. So ANY wrap puts the card's whole meaning below the
-  // fold and re-creates the defect this wording fixes. `vertical-fit.spec.ts` asserts this line's own
-  // bottom against the frame on BOTH plants — mutation-proven RED at 801px with a two-line variant.
+  // his 1440×731 @ 2 window (`verify:fit`, both plants, 2026-11-20): this line's bottom sits at 707px
+  // with 24px of frame left, and a second line costs ~28px. So ANY wrap puts the card's whole meaning
+  // below the fold and re-creates the defect this wording fixes. `vertical-fit.spec.ts` asserts this
+  // line's bottom against the frame on BOTH plants — RED on a two-line variant (801px, the Dell's 791 frame).
   //
   // ⚠️ DO NOT RE-REJECT A CANDIDATE ON A GUESSED WIDTH. "It may no longer be the right read for the two
   // of you." (54 chars) was filed as being "one wrap from eating the fold slack"; measured, it wraps
-  // not at all and lands on the SAME 774px. It lost on tone, not on pixels — the shipped line names the
-  // consequence to the household rather than to the reading, which is the whole point of the fix. The
-  // gate is the arbiter of width; prose estimates of it have been wrong here before.
+  // not at all and lands on the SAME bottom (774px at the Dell's frame). It lost on tone, not on pixels:
+  // the shipped line names the consequence to the household rather than to the reading, which is the
+  // whole point of the fix. The gate is the arbiter of width; prose estimates of it have been wrong before.
   recommendRecordSuperseded: 'It may no longer fit the two of you.',
   // ONE clause per `SavedRecommendationSupersededCause`. Each names WHAT moved, in the reader's
   // frame, with no blame register — "your numbers have changed" is neutral, never a fault.
@@ -3221,7 +3221,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:3370-3373` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:3373-3376` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,

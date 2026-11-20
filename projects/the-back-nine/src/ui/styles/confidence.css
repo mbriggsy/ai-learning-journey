@@ -257,8 +257,8 @@
     grid-template-rows: auto auto auto 1fr auto auto auto;
     column-gap: var(--space-9);
     /* --space-4, one step under the single-column --space-5 rhythm: the two-pane's vertical
-       budget is the binding constraint (fit one --laptop-fit-height/800px frame — tokens.css is
-       the ONE source; this comment once said 768 and that contradiction hid a regression); the
+       budget is the binding constraint (fit one --laptop-fit-height frame — tokens.css is the ONE
+       source; this comment once said 768, then 800, and the first contradiction hid a regression); the
        hairline rules inside the subordinates carry the separation the extra 4px used to. */
     row-gap: var(--space-4);
     align-items: start;

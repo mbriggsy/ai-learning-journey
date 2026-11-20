@@ -48,7 +48,7 @@ import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
  *    doors — was the phone's only caveat: the reader met the exits before "this can be wrong".)
  *  - THE SCROLLING TIERS' LAW, which replaces the one-frame promise wherever it cannot be kept —
  *    the phone, any width the reader's browser default makes sub-68rem (in a media query `rem`
- *    reads the BROWSER default, so a 24 px root makes 68rem 1632 px and a 1536 laptop a stacked
+ *    reads the BROWSER default, so a 24 px root makes 68rem 1632 px and his 1440 laptop a stacked
  *    device), and the DATE route at every width. It is ORDER + REACHABILITY: the caveat sits
  *    ABOVE the quiet doors in RENDERED GEOMETRY, the doors are LAST, the caveat can be brought
  *    fully into view by a DOCUMENT scroll (never scrollIntoView — a reader's wheel cannot scroll
@@ -251,7 +251,7 @@ async function assertFrameFits(
 
 /** The layout TIER the page actually rendered — read from the breakpoint itself, never inferred
  *  from the viewport width: in a media query `rem` reads the BROWSER DEFAULT font, so a 24 px
- *  default makes `68rem` 1632 px and a 1536-wide laptop a sub-68rem device (council 2026-09-10).
+ *  default makes `68rem` 1632 px and his 1440-wide laptop a sub-68rem device (council 2026-09-10).
  *  The literal mirrors tokens.css's --bp-laptop (a source-bind test pins every mirror). */
 async function assertTier(page: Page, tier: 'laptop' | 'narrow'): Promise<void> {
   const observed = await page.evaluate(() => {
@@ -794,7 +794,7 @@ for (const { seed, medicareNote, stateNote, survivor } of SPINE_SEEDS) {
       })
     })
 
-    test.describe(`at the fit-law tier floor (${TIER.width}×${TIER.height})`, () => {
+    test.describe(`at a DPR-1 laptop inside the short tier (${TIER.width}×${TIER.height} @ 1dpr)`, () => {
       test.use({ viewport: TIER })
       test(`${seed}: everything but the doors fits one frame`, async ({ page }) => {
         await gotoSeedFinal(page, seed)
@@ -1415,7 +1415,7 @@ test.describe('?seed=pa — the LONGEST priced clause (the wrap-risk arm) + one-
       await assertPricedSpineFrame(page, 'pa', PA_PINS)
     })
   })
-  test.describe(`at the fit-law tier floor (${TIER.width}×${TIER.height})`, () => {
+  test.describe(`at a DPR-1 laptop inside the short tier (${TIER.width}×${TIER.height} @ 1dpr)`, () => {
     test.use({ viewport: TIER })
     test('pa: everything but the doors fits; the residual names Pennsylvania (untaxed)', async ({ page }) => {
       await assertPricedSpineFrame(page, 'pa', PA_PINS)
@@ -1431,7 +1431,7 @@ test.describe('?seed=fl — the constitutional-$0 priced clause + one-frame fit'
       await assertPricedSpineFrame(page, 'fl', FL_PINS)
     })
   })
-  test.describe(`at the fit-law tier floor (${TIER.width}×${TIER.height})`, () => {
+  test.describe(`at a DPR-1 laptop inside the short tier (${TIER.width}×${TIER.height} @ 1dpr)`, () => {
     test.use({ viewport: TIER })
     test('fl: everything but the doors fits; the residual names the Florida $0 fact', async ({ page }) => {
       await assertPricedSpineFrame(page, 'fl', FL_PINS)
@@ -1686,7 +1686,7 @@ test.describe(`the band legend (${REAL.width}×${REAL.height})`, () => {
 
 // ── the scrolling tiers: ORDER + REACHABILITY, never one frame (council 2026-09-10) ──────────
 // The phone at the reader's default font, and the laptop at a raised default (68rem reads the
-// BROWSER default, so at 24 px both 1536 and 1280 render the stacked tier). Until 2026-09-10 the
+// BROWSER default, so at 24 px both 1440 and 1280 render the stacked tier). Until 2026-09-10 the
 // phone arm asserted the trailing mount visible and the in-frame mount dark — certifying the
 // inversion (caveat AFTER the doors, on the phone since July) as the contract. Now: tier asserted
 // first, one visible mount (the in-frame one), the caveat above the doors, the doors last, the
@@ -1714,18 +1714,21 @@ test.describe(`the phone tier (${PHONE.width}×${PHONE.height}) — ORDER + REAC
 })
 
 // ── the reader's raised default font (CDP Page.setFontSizes) — the two regimes ─────────────────
-// (a) 20 px: Chrome's one-click "Large". 68rem is 1360 px there, so the 1536 laptop STAYS two-pane
-//     with 1.25× rem ink against the same 791 px budget — the binding case, first MEASURED
-//     2026-09-10 (68rem binds every root ≤ 22.6 px on his window; measured headroom at 16 px was
-//     ~2 px). THE MEASUREMENT: budget / retired / nc RED the one-frame law — the save slot ends at
-//     806–871 px and the PROTECTED in-frame caveat at 877–936 px against the 791 px frame (86–145 px
-//     past the fold); health fits (offenders=none). That is the PRODUCT finding the council
+// (a) 20 px: Chrome's one-click "Large". 68rem is 1360 px there, so his 1440 laptop STAYS two-pane
+//     with 1.25× rem ink against the same 731 px budget — the binding case (the two-pane tier holds
+//     every root up to 21.2 px on his window: 1440 / 68). FIRST MEASURED 2026-09-10 on the Dell's
+//     1536×791 @ 2.5: budget / retired / nc RED the one-frame law — the save slot ended at 806–871 px
+//     and the PROTECTED in-frame caveat at 877–936 px against 791 (86–145 px past the fold); health
+//     fit. RE-RECORDED 2026-11-20 at REAL 1440×731 @ 2 (the re-point, with the short tier's density
+//     rungs in place): budget's caveat ends at 878 px (its CTA at 777, the save slot at 818),
+//     retired's and nc's at 804 px (the save slot at 743) — 73–147 px past the 731 px fold; health
+//     still fits (offenders=none). That is the PRODUCT finding the council
 //     pre-registered as a NEW FORK (register: "The app on someone else's device"), never a density
 //     regime (rejected on mechanics) and never a `test.fail()`. Until the fork is decided this arm
 //     RECORDS: it pins the root rose, the tier is two-pane, one caveat is visible, and logs the
 //     walk — it does NOT assert the fit (a red gate would stall every other arm behind a product
 //     decision that is Briggsy's). The assertion returns with the fork's ruling.
-// (b) 24 px: 68rem is 1632 px, so 1536 and 1280 both render the stacked tier — the scrolling law.
+// (b) 24 px: 68rem is 1632 px, so 1440 and 1280 both render the stacked tier — the scrolling law.
 //     The 2026-09-08 measurement asserted the one-frame law on this tier and red all eight arms
 //     against the trailing footer; the magnitude is still RECORDED here (frameReport, non-asserting)
 //     so the instrument survives, but the assertion is ORDER + REACHABILITY.
@@ -3765,7 +3768,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     // never as two absolute bottoms (the 1440×731 re-point plan's KTD9). `.result` centres any frame
     // shorter than the viewport, and the record-free twin is the shorter frame here (the vault's carries
     // the card and the backup door below the caveat), so wherever the twin fits the viewport it centres
-    // and an absolute comparison reads the centring offset instead of the card (about 11px at 1536×791
+    // and an absolute comparison reads the centring offset instead of the card (about 11px at the old 1536×791
     // once the re-point's density rungs land). The claim is that the card is purely ADDITIVE below the
     // caveat, and the caveat's distance from the hero's top carries it whole. Both distances come from
     // unrounded rects and only their difference is rounded: the two caveats already sit 0.8px apart
@@ -3904,9 +3907,10 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // out of frame, the card degrades to a heading over nothing — strictly worse than the defect the
       // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
       //
-      // The bound is TIGHT BY CONSTRUCTION (~10px at 1536×791), so this is a live constraint on the
-      // copy rather than a formality: it is what makes the length note in copy.ts:2159-2163 enforceable
-      // instead of advisory. Text is captured so a red names the sentence that outgrew the slack.
+      // The bound is TIGHT BY CONSTRUCTION (24px of slack at 1440×731 @ 2, under the ~28px a second line
+      // costs), so this is a live constraint on the copy rather than a formality: it is what makes the
+      // LENGTH note on `recommendRecordSuperseded` in src/ui/copy.ts enforceable instead of advisory.
+      // Text is captured so a red names the sentence that outgrew the slack.
       expect(
         geometry.standingBottom,
         `the card's standing line ends at ${geometry.standingBottom}px, past the ${REAL.height}px frame — ` +
@@ -4220,97 +4224,6 @@ test.describe('the spend lane — the solved figure lands without moving anythin
       const transition = diag.td
       expect(transition.split(',').every((d) => parseFloat(d) === 0), `transition-duration ${transition}`).toBe(true)
     })
-  })
-})
-
-// ── THE 1440×731 PROBE — RECORD-ONLY, never asserted (the 1440×731 re-point plan's KTD8; its U4
-// DELETES this describe) ─────────────────────────────────────────────────────────────────────────────
-// Briggsy's new laptop window is 1440×731 CSS px @ DPR 2 (his own Chrome, 2026-11-19). Before the gate's
-// REAL moves there, CI's ubuntu metrics are READ at exactly that window for the four spine frames ubuntu
-// has never logged, never inferred from Windows: `?seed=budget` (also the held re-figuring window's
-// frame), `?vault=stale`, `?vault=statestale` and `?seed=surplus` (pending and sized). Each arm drives
-// its frame exactly as its asserting arm does, asserts the tier (two panes AND the short density tier),
-// asserts NO fit (the 20 px arm's record-only precedent), and prints one plain line per frame for the
-// plan's U3 to read from the verify job's log:
-//   [fit probe] <frame>: caveat bottom=<px> left end=<px> band end=<px>
-// The caveat is the in-frame R13 disclaimer; the left end is the save slot's bottom + 2 px, the left
-// column's comparable end; the band end is the band's bottom (it spans grid rows 1 to 5). Both column
-// ends print because on an aged frame the band can bind (the stale return's premise line). A missing
-// element throws; it never prints a blank.
-const PROBE_WINDOW = { width: 1440, height: 731 } as const
-const PROBE_DPR = 2
-
-async function printFitProbe(page: Page, frame: string): Promise<void> {
-  await assertTier(page, 'laptop')
-  const shortTier = await page.evaluate(() => window.matchMedia('(min-width: 68rem) and (max-height: 840px)').matches)
-  expect(shortTier, 'the probe window must sit inside the short density tier').toBe(true)
-  const read = await page.evaluate(() => {
-    const bottom = (sel: string): number => {
-      const el = document.querySelector(sel)
-      if (el === null) throw new Error(`[fit probe] ${sel} is not on the page`)
-      return el.getBoundingClientRect().bottom
-    }
-    return {
-      caveat: bottom('footer.disclaimer.disclaimer--in-frame'),
-      leftEnd: bottom('.confidence-reveal[data-twopane] .result-save-slot') + 2,
-      bandEnd: bottom('.confidence-reveal[data-twopane] > .cs-band'),
-    }
-  })
-  for (const [what, px] of Object.entries(read)) {
-    expect(Number.isFinite(px), `[fit probe] ${frame}: ${what} is not a number`).toBe(true)
-  }
-  console.log(
-    `[fit probe] ${frame}: caveat bottom=${read.caveat.toFixed(1)} left end=${read.leftEnd.toFixed(1)} band end=${read.bandEnd.toFixed(1)}`,
-  )
-}
-
-/** The `?vault=stale` / `?vault=statestale` drive, step for step as their asserting arms take it: unlock,
- *  affirm at the gate, wait out the FINAL tier, then settle INLINE (never `settleLayout`, as those arms). */
-async function driveVaultReturn(page: Page, key: 'stale' | 'statestale'): Promise<void> {
-  await page.goto(`/?vault=${key}`)
-  const unlock = page.getByRole('button', { name: 'Open my plan' })
-  await expect(unlock, `the ${key} plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
-  await unlock.click()
-  const affirm = page.getByRole('button', { name: /still about right/i })
-  await expect(affirm).toBeVisible({ timeout: 30_000 })
-  await page.evaluate(() => document.fonts.ready)
-  await page.evaluate(() => window.scrollTo(0, 0))
-  await affirm.click()
-  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
-  await page.evaluate(() => document.fonts.ready)
-  await page.waitForFunction(() =>
-    document.getAnimations().every((a) => {
-      const timing = a.effect?.getTiming()
-      return timing?.iterations === Infinity || a.playState !== 'running'
-    }),
-  )
-  await page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
-  await page.evaluate(() => window.scrollTo(0, 0))
-}
-
-test.describe(`the 1440×731 probe — RECORD-ONLY, never asserted (${PROBE_WINDOW.width}×${PROBE_WINDOW.height} @ ${PROBE_DPR}dpr)`, () => {
-  test.use({ viewport: PROBE_WINDOW, deviceScaleFactor: PROBE_DPR })
-  test('?seed=budget — the budget frame (also the held re-figuring window’s)', async ({ page }) => {
-    await gotoSeedFinal(page, 'budget')
-    await assertResolvedSpine(page)
-    await printFitProbe(page, '?seed=budget')
-  })
-  for (const key of ['stale', 'statestale'] as const) {
-    test(`?vault=${key} — the staleness-echo frame`, async ({ page }) => {
-      await driveVaultReturn(page, key)
-      await assertResolvedSpine(page)
-      await expect(page.locator('.cs-staleness-note')).toBeVisible()
-      await printFitProbe(page, `?vault=${key}`)
-    })
-  }
-  test('?seed=surplus — the spend lane, pending and sized', async ({ page }) => {
-    await gotoSeedFinal(page, 'surplus')
-    await assertResolvedSpine(page)
-    await expect(page.locator('.cs-magnitude')).toHaveAttribute('data-spend', 'pending')
-    await printFitProbe(page, '?seed=surplus pending')
-    await expect(page.locator('.cs-magnitude')).toHaveAttribute('data-spend', 'sized', { timeout: 90_000 })
-    await settleLayout(page)
-    await printFitProbe(page, '?seed=surplus sized')
   })
 })
 

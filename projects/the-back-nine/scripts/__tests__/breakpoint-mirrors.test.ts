@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
-import { BP_LAPTOP_REM, BROWSER_DEFAULT_PX, FLOOR } from '../../e2e/reviewSurface'
+import { BP_LAPTOP_REM, BROWSER_DEFAULT_PX, FLOOR, REAL } from '../../e2e/reviewSurface'
 
 /*
  * scripts/__tests__/breakpoint-mirrors.test.ts — the `--bp-laptop` SOURCE-BIND.
@@ -240,5 +240,40 @@ describe('--bp-laptop source-bind', () => {
         `FLOOR arm exists to sit EXACTLY on the two-pane seam (the honesty floor); a width off the ` +
         `seam measures a layout no user is at.`,
     ).toBe(TOKEN_REM * CSS_INITIAL_FONT_PX)
+  })
+})
+
+/*
+ * THE HEIGHT MIRROR (the 1440×731 re-point plan's KTD12, 2026-11-20). The one-frame fit law is
+ * STATED by `--laptop-fit-height` in tokens.css and ENFORCED by e2e/reviewSurface.ts's REAL.height:
+ * every fit arm asserts against REAL.height, and no CSS rule reads the token. Nothing tied the two,
+ * and they drifted apart: the token read 800px while the gate enforced 791, and an earlier 768-vs-800
+ * split between the stylesheets' comments hid the 2026-07-08 regression. So the token must equal
+ * REAL.height in px, read from the source, never re-typed. One test, deliberately: no incident asks
+ * for binding every `(max-height: …px)` literal to `--bp-laptop-short`, and the fit spec's two-sided
+ * density helper already reds the moment a viewport crosses that boundary.
+ */
+function declaredLaptopFitHeightPx(): number {
+  const tokens = readFileSync(TOKENS_PATH, 'utf-8')
+  const m = /--laptop-fit-height:\s*([0-9]+(?:\.[0-9]+)?)px\s*;/.exec(tokens)
+  if (m === null) {
+    throw new Error(
+      `[laptop-fit-height] no \`--laptop-fit-height: <N>px;\` declaration in ${rel(TOKENS_PATH)} — the ` +
+        `one-frame fit law has no statement, so the gate's REAL.height enforces a number nothing declares.`,
+    )
+  }
+  return Number.parseFloat(m[1]!)
+}
+
+describe('--laptop-fit-height source-bind', () => {
+  it("--laptop-fit-height equals e2e/reviewSurface.ts's REAL.height — the law and its gate name one frame", () => {
+    const tokenPx = declaredLaptopFitHeightPx()
+    expect(
+      tokenPx,
+      `[laptop-fit-height] ${rel(TOKENS_PATH)} declares --laptop-fit-height: ${tokenPx}px while ` +
+        `e2e/reviewSurface.ts's REAL is ${REAL.width}×${REAL.height}. The fit gate enforces REAL.height, so ` +
+        `the law and its enforcement now name two frames (the 768-vs-800 and 800-vs-791 drift class). ` +
+        `Move the token and REAL together, in one commit.`,
+    ).toBe(REAL.height)
   })
 })

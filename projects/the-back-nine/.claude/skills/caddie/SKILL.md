@@ -2,7 +2,7 @@
 name: caddie
 description: >-
   The Caddie — the Briggsy-proxy cold reader. Walks the REAL rendered UI (capture harness at
-  his exact 1536×791@2.5dpr viewport + phone), fans out fresh-context readers calibrated on his
+  his exact 1440×731@2dpr laptop window + phone), fans out fresh-context readers calibrated on his
   taste corpus, adversarially hunts the calm-but-wrong reading, and files a chaired verdict
   card that ships — his eye audits the tape at product cadence instead of walking pixels per
   surface. Use BEFORE calling any new or changed user-facing surface
@@ -120,7 +120,7 @@ route, so this is its only capturable home:
 - `viewport.png` — the above-fold frame at CSS scale (what he sees first; long edge < the
   ~2576px model-ingestion cap, so it is never silently downscaled)
 - `fullpage.png` — the full scroll at CSS scale
-- `crop-*.png` — DEVICE-scale (2.5×/3×) crops of the text-critical regions (band labels, the
+- `crop-*.png` — DEVICE-scale (2×/3×) crops of the text-critical regions (band labels, the
   echo, the disclaimer) — small text is read from crops, never from the full frame
 - `cvd-deuteranopia.png` / `cvd-protanopia.png` / `cvd-grayscale.png` — Chrome-native CVD
   emulation (CDP `Emulation.setEmulatedVisionDeficiency`) of the above-fold frame; PLUS
@@ -259,10 +259,11 @@ are advisory, touch no tape, and carry no PASS.
 
 ## Landmines
 
-- **DPR:** capture through the Playwright harness (deviceScaleFactor 2.5/3), never
-  Playwright-MCP `browser_resize` (it cannot set DPR). Never tune against 1871×917 (his
-  SCREEN, not his window).
-- **Downscaling:** a full frame at device scale (3840px long edge) exceeds the model-ingestion
+- **DPR:** capture through the Playwright harness (deviceScaleFactor 2/3: his laptop window is
+  1440×731 @ 2, the phone 390×844 @ 3), never Playwright-MCP `browser_resize` (it cannot set
+  DPR). Never tune a fit against the harness's 1871×917 SHOWCASE: it is a tall test arm, not any
+  screen of his.
+- **Downscaling:** a full frame at device scale (2880px long edge) exceeds the model-ingestion
   cap and is silently downscaled — text-critical reads come from the device-scale CROPS, and
   the first-look readback is the canary.
 - **Words from the DOM, never OCR.** `copy.txt` is ground truth for what the surface says;

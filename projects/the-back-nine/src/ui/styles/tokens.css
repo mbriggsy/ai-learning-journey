@@ -132,8 +132,13 @@
     --laptop-fit-height as the thing holding 68rem either — that is a HEIGHT assertion and constrains
     no width. (The svg-text era's derivation compared the same 358 to a 260px label-DROP floor —
     retired 2026-09-05 with the chart text layer; the labels no longer scale or drop.) */
-  --laptop-fit-height: 800px; /* THE ONE-FRAME FIT LAW (council 2026-07-08, wf_a2d93977-960): a
+  --laptop-fit-height: 731px; /* THE ONE-FRAME FIT LAW (council 2026-07-08, wf_a2d93977-960): a
     resolved two-pane answer + the R13 disclaimer land inside a viewport THIS tall with no scroll.
+    THE FRAME is Briggsy's laptop window, 1440×731 CSS px @ DPR 2: his Lenovo, measured in his own
+    Chrome 2026-11-19 (the 1440×731 re-point, 2026-11-20). Until then this token read 800px while the
+    gate enforced the Dell's 791 (1536×791 @ 2.5), one law with two numbers; now it mirrors
+    e2e/reviewSurface.ts REAL.height, and scripts/__tests__/breakpoint-mirrors.test.ts binds the two.
+    No rule reads it: it states the law, and the gate's REAL enforces it.
     ONE source — app.css / result.css / confidence.css comments point HERE (a 768-vs-800
     contradiction between those files hid the 2026-07-08 regression; 768 is formally retired).
     THE DEGRADE CONTRACT when honest content outgrows the frame: the quiet DOORS are the only

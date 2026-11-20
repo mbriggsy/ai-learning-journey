@@ -127,7 +127,7 @@ supersedes anything derived from this file.
     verdict covers what he has seen, not what has not been built. **Direction of error to fear now:
     over-flagging burns his attention on a lane he has already cleared.**
 
-### Layout & density (his real viewport: 1536×791 CSS px @ 2.5 DPR — never the 1871×917 screen number)
+### Layout & density (his real viewport: 1440×731 CSS px @ 2 DPR, his Lenovo laptop window — never the 1871×917 SHOWCASE test arm)
 
 20. **Broken layout first.** `[briggsy-general]` Report clipping, overflow, off-frame elements, unreadable labels,
     untappable controls BEFORE any aesthetic critique. A P0 layout break outranks color theory.

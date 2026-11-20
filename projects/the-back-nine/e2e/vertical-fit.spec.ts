@@ -3204,6 +3204,46 @@ async function assertTappableInSheet(target: Locator, who: string): Promise<void
   expect(hit.onTarget, `${who}: covered or clipped, the point hits ${hit.at} (${JSON.stringify(hit)})`).toBe(true)
 }
 
+/** The re-entry gate's short-tier rung, W6 (the 1440×731 re-point plan's KTD6 and KTD11; the tier's LAW lives once, in
+ *  tokens.css `--bp-laptop-short`'s docblock), read on the gate's open frame: the gate's first short-tier block
+ *  (`save.css`), on its top spacing and its confirm half only. Two rules are gate-wide and lift both halves as a block —
+ *  the step's top padding 40 → 32 and the grid's row-gap under the heading 20 → 12 — and three tighten the confirm half:
+ *  its stack gap 20 → 12, and the lead-ins of the second read-back group and of the buttons 16 → 8. The first group keeps
+ *  the ≥68rem block's zero, so the halves still start on one line. The story column's own gap stays --space-5 (20 px):
+ *  W6 never touches it (the walk-9 form council reasoned the survivor part's --space-5 against it; that margin is
+ *  `assertTypedBelowParts`'s). Read inside the short tier only: no contract sets a tall rhythm for the gate (the plan's
+ *  Scope Boundaries; the planning probe found the 917 showcase and the phone byte-identical at build). Exact strings,
+ *  `rowGap` never the `gap` shorthand, so deleting any W6 rule reds HERE on every platform (insight 075). Every plant
+ *  this reads draws both read-back groups; a gate draws one where a bucket set is empty (`ReEntry.tsx`'s
+ *  `ReadbackGroup` renders nothing for no rows), so the second group's lead-in is read where a second group renders. */
+async function assertGateDensity(page: Page, who: string): Promise<void> {
+  const read = await page.evaluate(() => {
+    const style = (sel: string) => {
+      const el = document.querySelector(sel)
+      return el === null ? null : getComputedStyle(el)
+    }
+    return {
+      short: window.matchMedia('(min-width: 68rem) and (max-height: 840px)').matches,
+      padTop: style('main.save.save--reentry')?.paddingTop ?? null,
+      gridRowGap: style('section.reentry')?.rowGap ?? null,
+      confirmRowGap: style('.reentry-confirm')?.rowGap ?? null,
+      groupTops: Array.from(document.querySelectorAll('.reentry-confirm > .reentry-group')).map((g) => getComputedStyle(g).marginTop),
+      actionsTop: style('.reentry-confirm > .save-actions')?.marginTop ?? null,
+      storyRowGap: style('.reentry-story')?.rowGap ?? null,
+    }
+  })
+  const at = '(density tier ON)'
+  expect(read.short, `${who}: the gate arm runs inside the short tier (≥68rem ∧ ≤840px, tokens.css --bp-laptop-short)`).toBe(true)
+  expect(read.padTop, `${who}: W6: the gate's top padding ${at}`).toBe('32px')
+  expect(read.gridRowGap, `${who}: W6: the gate grid's row-gap under the heading ${at}`).toBe('12px')
+  expect(read.confirmRowGap, `${who}: W6: the confirm half's row-gap ${at}`).toBe('12px')
+  expect(read.groupTops.length, `${who}: the confirm half draws no read-back group (insight 029)`).toBeGreaterThan(0)
+  expect(read.groupTops[0], `${who}: the first read-back group keeps no lead-in, so the halves start on one line`).toBe('0px')
+  if (read.groupTops.length > 1) expect(read.groupTops[1], `${who}: W6: the second read-back group's lead-in ${at}`).toBe('8px')
+  expect(read.actionsTop, `${who}: W6: the confirm half's buttons' lead-in ${at}`).toBe('8px')
+  expect(read.storyRowGap, `${who}: the story column's gap is never W6's (--space-5)`).toBe('20px')
+}
+
 for (const u of PAY_CHECK_UNLOCKS) {
   test.describe(`the pay check’s unlock line (?vault=${u.key}) — one note, the decision pair in frame (${REAL.width}×${REAL.height})`, () => {
     test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
@@ -3296,6 +3336,9 @@ for (const u of PAY_CHECK_UNLOCKS) {
         expect(doorBox, 'the door reported no box').not.toBeNull()
         console.log(`[route fit] ?vault=${u.key}: the route's bottom at ${(doorBox!.y + doorBox!.height).toFixed(1)} of ${REAL.height} px`)
         expect(doorBox!.y + doorBox!.height, `${u.key}: route in frame`).toBeLessThanOrEqual(REAL.height)
+        // The gate's density pins read AFTER the route fit (a deleted W6 rule reds on its own line with the route check
+        // already passed). REAL sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law).
+        await assertGateDensity(page, u.key)
       }
 
       await affirm.click()

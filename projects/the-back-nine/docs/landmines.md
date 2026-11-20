@@ -58,6 +58,16 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
+- **(b9-1, 11-20) The Lenovo drops into Modern Standby about 30 s after a wake while the session is locked, and a long gate
+  freezes with it.** The re-point's U2 builder saw `verify:fit` go 188/192, four arms timing out at 180 s in page setup or
+  teardown with no assertion failing. The Windows System log showed Kernel-Power 506 ("entering Modern Standby, Reason: Idle
+  Timeout") and 507 (the power button) 208 s apart. A unit-suite run froze the same way: one engine test hit 231 s. Before
+  any gate over a couple of minutes (`verify:fit`, the full suite, a mutant pass), hold a keep-awake request for the run's
+  length and release it after. Never change a power setting. The recipe is a background PowerShell job that calls
+  `SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED)` (0x80000003) through `Add-Type`'s
+  `kernel32.dll` import, polls for a stop file every 5 s with a 40-minute cap, then calls `SetThreadExecutionState(ES_CONTINUOUS)`
+  and exits. The request lives only as long as that process does. A timeout in setup or teardown with no assertion line is
+  this, until the System log says otherwise: read events 506/507 before calling it a regression.
 - **(b9-3, 11-16) PowerShell variable names are case-blind:** a gate chain's `foreach ($s in $steps)` overwrote the
   scratchpad path held in `$S`, every log path became `…\System.Collections.Hashtable\…`, nothing ran, and the background
   task still exited 0. Name a loop variable apart from every other variable in the script (`$step`), and read the
@@ -361,7 +371,7 @@ tests
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:930-940`
   excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1057-1059`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:3575-3577`), a once-measured
+  1536×791 measure. And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:3618-3620`), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
   arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:39-40`) — no date frame has ever been fit-measured either.
 - **(2026-09-27, b9-11)** the ONE width seam: a new `@media (min-width: …rem)` fails `breakpoint-mirrors.test.ts` unless it mirrors `--bp-laptop` (68rem) — a new tier is a product decision

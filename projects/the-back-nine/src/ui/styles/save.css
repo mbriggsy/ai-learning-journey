@@ -407,3 +407,34 @@
   font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
+
+/* ── the SHORT-laptop density tier (tokens.css --bp-laptop-short carries the tier's law, its one
+   home). W6, whitespace (the 1440×731 re-point, 2026-11-20): the gate's first short-tier block, on
+   its top spacing and its confirm half only. Two rules are gate-wide and lift both halves 16 px as
+   a block, so they still start on one line: the step's top padding --space-8 → --space-7 and the
+   grid's row-gap under the heading --space-5 → --space-3. Three tighten the confirm half: its stack
+   gap --space-5 → --space-3, and the lead-ins of the second read-back group and of the buttons
+   --space-4 → --space-2. The first group keeps the ≥68rem block's zero (`:first-child` out-ranks
+   the group rule here), so the halves still start on one line. Measured in real Chromium at
+   1440×731 @ 2: 56 px off the four-bucket gate's route (753.7 → 697.7), the tallest a gate draws.
+   Untouched: the story column's own spacing (its gap moves no route pixel, and the walk-9 form
+   council reasoned the survivor part's --space-5 against it), .save-actions outside the gate, the
+   first-save ceremony and the unlock screen. 840px re-stated as a literal (@media can't read a
+   custom property). */
+@media (min-width: 68rem) and (max-height: 840px) {
+  .save--reentry {
+    padding-top: var(--space-7);
+  }
+  .reentry {
+    row-gap: var(--space-3);
+  }
+  .reentry-confirm {
+    gap: var(--space-3);
+  }
+  .reentry-confirm > .reentry-group {
+    margin-block-start: var(--space-2);
+  }
+  .reentry-confirm > .save-actions {
+    margin-block-start: var(--space-2);
+  }
+}

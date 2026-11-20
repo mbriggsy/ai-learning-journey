@@ -170,9 +170,10 @@
     slot's reserve (insight 035). Every rung the re-point added (W1–W7, L1, L2) is pinned by a
     computed-style assertion that goes red on every platform when its rule is deleted (insight 075:
     assertDensityTier, assertNoteLeading and assertGateDensity in e2e/vertical-fit.spec.ts), on
-    the short side, and on the tall side too except W6 (no contract sets the gate's tall rhythm) and
-    W7's tab (out of flow, it pays 0 px). The 2026-07-08 whitespace rules and the date route's
-    block carry no computed-style pin. The date route's own block stays whitespace-only
+    both sides of the tier, with two exceptions: W6's tall side (no contract sets the gate's tall
+    rhythm) and W7's tab, which carries no pin on either side (out of flow, it pays 0 px). Of the
+    2026-07-08 rules only .result's padding step is pinned (assertDensityTier, both sides); the
+    rest, and the date route's block, carry none. The date route's own block stays whitespace-only
     (fuckOffDate.css says why). AMENDED 2026-11-20 by the 1440×731 re-point: from 2026-07-08 this
     law read "whitespace only, never a font-size or line-height", written before insight 082
     named leading and register as the next rungs; whitespace outside the hero had run out on the

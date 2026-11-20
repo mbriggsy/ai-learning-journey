@@ -136,7 +136,9 @@ function scan(absolute: string, pattern: RegExp, contextOnly: boolean): Breakpoi
 /** The declared token — read, never re-typed. Absence is a LOUD failure, not a skip: a silently
  *  missing token would make every mirror below vacuously "agree" with nothing. */
 function declaredBpLaptopRem(): number {
-  const tokens = readFileSync(TOKENS_PATH, 'utf-8')
+  // Comments stripped (withoutComments, below; a hoisted declaration): a quoted old declaration in the
+  // token's history must never stand in for the live one (round 2 of the re-point's review).
+  const tokens = withoutComments(readFileSync(TOKENS_PATH, 'utf-8'))
   const m = /--bp-laptop:\s*([0-9]+(?:\.[0-9]+)?)rem\s*;/.exec(tokens)
   if (m === null) {
     throw new Error(
@@ -290,9 +292,19 @@ describe('--laptop-fit-height source-bind', () => {
  * own 1440×731 window, the 844×390 landscape phone. Drop that half from one block and those frames tighten
  * while every fit arm stays green: the stacked arms assert ORDER and REACHABILITY, which tightening cannot
  * break, and the density helper's two sides (REAL/TIER short, SHOWCASE tall) both sit at ≥68rem. So every
- * `@media` prelude under src/** that names a max-height must be exactly the tier's, both halves read from
- * the tokens (R4 of the re-point plan: the sub-68rem tiers stay byte-identical).
+ * `@media` prelude in a stylesheet under src/** that names ANY height feature (max-height, min-height,
+ * height in range syntax, aspect-ratio, orientation) must be exactly the tier's, both halves read from the
+ * tokens (R4 of the re-point plan: the sub-68rem tiers stay byte-identical), and no prelude may use range
+ * syntax at all (`<`, `>`), which the rem one-seam arm above cannot read either. Preludes are read WHOLE:
+ * comments blanked first (their newlines kept, so line numbers stay true), then every `@media … {` across
+ * line breaks, its whitespace collapsed (round 2 of the review: a line-and-literal sweep let range syntax,
+ * a wrapped prelude and an inverted min-height block through). The tier lives in stylesheets only: no
+ * `matchMedia` under src/** names a height (the one there reads the pointer).
  */
+/** Comments replaced by spaces, newlines kept, so an offset still maps to its line. */
+function blankComments(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '))
+}
 function declaredBpLaptopShortPx(): number {
   const tokens = withoutComments(readFileSync(TOKENS_PATH, 'utf-8'))
   const m = /--bp-laptop-short:\s*([0-9]+(?:\.[0-9]+)?)px\s*;/.exec(tokens)
@@ -307,31 +319,46 @@ function declaredBpLaptopShortPx(): number {
 
 const SHORT_TIER_PRELUDE = `@media (min-width: ${TOKEN_REM}rem) and (max-height: ${declaredBpLaptopShortPx()}px) {`
 
-const HEIGHT_PRELUDES = SRC_FILES.flatMap((absolute) =>
-  readFileSync(absolute, 'utf-8')
-    .split(/\r?\n/)
-    .flatMap((text, i) =>
-      /@media/.test(text) && /max-height/.test(text) ? [{ where: `${rel(absolute)}:${i + 1}`, text: text.trim() }] : [],
-    ),
-)
+/** Every `@media` prelude in every stylesheet under src/**, read whole, its whitespace collapsed. */
+const PRELUDES = SRC_FILES.filter((f) => f.endsWith('.css')).flatMap((absolute) => {
+  const css = blankComments(readFileSync(absolute, 'utf-8'))
+  return [...css.matchAll(/@media\b[^{]*\{/gi)].map((m) => ({
+    where: `${rel(absolute)}:${css.slice(0, m.index).split('\n').length}`,
+    text: m[0].replace(/\s+/g, ' ').trim(),
+  }))
+})
+
+/** A height feature in any spelling: max-/min-height, `height` in range syntax, aspect-ratio, orientation. */
+const HEIGHT_FEATURE_RE = /\b(?:(?:min|max)-)?(?:device-)?(?:height|aspect-ratio)\b|\borientation\b/i
+
+const HEIGHT_PRELUDES = PRELUDES.filter((p) => HEIGHT_FEATURE_RE.test(p.text))
 
 describe('the short laptop tier prelude', () => {
   it('finds the tier blocks to check (the sweep is not vacuous)', () => {
     expect(
       HEIGHT_PRELUDES.length,
-      `[bp-laptop-short] no \`@media … max-height\` prelude under src/** — the sweep broke, or the short ` +
+      `[bp-laptop-short] no \`@media\` prelude naming a height under src/** — the sweep broke, or the short ` +
         `tier is gone (then delete this describe on purpose).`,
     ).toBeGreaterThan(0)
   })
 
-  it('every max-height prelude is the whole tier prelude: the width half and the height half, from the tokens', () => {
+  it('every prelude that names a height is the whole tier prelude: the width half and the height half, from the tokens', () => {
     const wrong = HEIGHT_PRELUDES.filter((p) => p.text !== SHORT_TIER_PRELUDE)
     expect(
       wrong.map((p) => `${p.where} :: ${p.text}`),
-      `[bp-laptop-short] a max-height @media prelude is not \`${SHORT_TIER_PRELUDE}\`. Without the width half ` +
-        `the rungs reach the stacked layouts (a raised root at his window, the landscape phone) and no fit ` +
-        `arm can see it; a different height is a second tier, which is a product decision (the 1440×731 ` +
-        `re-point plan's KTD3), not a literal to slip past this file.`,
+      `[bp-laptop-short] an @media prelude that names a height is not \`${SHORT_TIER_PRELUDE}\`. Without the ` +
+        `width half the rungs reach the stacked layouts (a raised root at his window, the landscape phone) and ` +
+        `no fit arm can see it; a different height, or a height condition written any other way, is a second ` +
+        `tier, which is a product decision (the 1440×731 re-point plan's KTD3), not a literal to slip past this file.`,
+    ).toEqual([])
+  })
+
+  it('no @media prelude uses range syntax (<, >), which neither this describe nor the rem seam arm reads', () => {
+    const ranged = PRELUDES.filter((p) => /[<>]/.test(p.text))
+    expect(
+      ranged.map((p) => `${p.where} :: ${p.text}`),
+      `[bp-laptop] an @media prelude uses range syntax. Write the width as \`(min-width: ${TOKEN_REM}rem)\` and ` +
+        `the height as the tier's \`(max-height: …px)\`, so the seam and the tier stay bound to their tokens.`,
     ).toEqual([])
   })
 })

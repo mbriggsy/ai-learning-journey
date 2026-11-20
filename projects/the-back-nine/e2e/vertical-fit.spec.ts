@@ -3782,7 +3782,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     // unrounded rects and only their difference is rounded: the two caveats already sit 0.8px apart
     // (the twin's save slot holds the 84.8px CTA where the vault's holds the 84px saved badge), and
     // rounding each distance first could add up to another pixel. A rounded difference of at most 1 absorbs
-    // that (it admits |Δ| < 1.5 px unrounded; the measured Δ is −0.8), nothing more —
+    // that (it admits an unrounded Δ from −1.5 up to, not including, +1.5 px; the measured Δ is −0.8), nothing more —
     // the breach this replaced was 67px, and the card seated back in grid row 4 moves the caveat ~150px.
     expect(
       Math.abs(fromHero),

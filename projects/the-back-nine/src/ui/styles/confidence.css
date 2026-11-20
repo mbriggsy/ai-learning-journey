@@ -319,11 +319,12 @@
      echo-less frame keeps the cleared rhythm byte-identical (:has() scopes it; precedent
      intake.css); :has beats the 2026-07-08 density rules on specificity, but the short tier's own
      :has rules (W4, 2026-11-20) tie it and win by FILE ORDER, so they must stay after this block. The
-     verify:fit ?vault=stale arm enforces this frame on CI's own metrics — AND pins these
-     computed gaps directly (4px/4px at the 2026-07-11 round-3 step, mutant-proven; since round 5
-     and W4 that arm's frame reads 2px, written by both, and its comment names which arm kills each), so
-     deleting this block is red on every
-     platform, not just CI's taller text metrics (insight 075's standing encoding).
+     verify:fit ?vault=stale arm enforces this frame on CI's own metrics. Its gap pins read 2px now,
+     written by round 5 and W4 (its comment says which arm kills each), so they no longer reach this
+     block: the spine matrix's SHOWCASE read of the non-typical note frames (retired, nc, health:
+     4px) is what reds a deleted row-gap or subordinates rule below, on every platform (insight
+     075's standing encoding), through its Medicare-note selectors; its staleness-note and
+     state-note selectors alone, and its lead gap (8px), are read by no arm.
      SCOPE NOTE (post-fold review 2026-07-09, 5-lens convergence): this block carries NO max-height
      gate, so ABOVE 840px — where the density tier is dark — the echo steps TWO tokens below the
      16/16/12 base, not "one below the tier." Deliberate for now: tighter-only is the sanctioned

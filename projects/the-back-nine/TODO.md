@@ -25,13 +25,12 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-20, b9-1 close):** the 1440×731 re-point (`docs/plans/features/viewport-1440x731-repoint-build-spec.md`) is built through U5, green on CI at his window (`cc57f136`, run 44811750879). Next, in order: (1) the plan's U6, docs only (this close did its TODO part; the re-recorded 20 px numbers are in `cc57f136`'s message), then the re-anchor and `verify:doc-stats`; (2) the re-point's whole-file review over its four commits, with an adversary and every finding verified; (3) walk 10 at the new `REAL`, on the targets and watch items (a) to (m) below; (4) W9-R8 (the honest date on the page); (5) measure the register's *Two describers still read past the answered draft inside the re-figuring window…*; then build 2's U12, the whole-file review with an adversary and every finding verified, and `/distill` (far past 10).
+▶ **START HERE (2026-11-20, b9-3 close):** the 1440×731 re-point is built and reviewed two rounds (`1b27303e`, `8014a32b`); the review MEASURED real households past 731: the Tier 0 *The tallest real composites break the one-frame law at his 1440×731 window…*, read first. Next, in order: (1) that entry as a sizable job: `/brief one-frame law composites`; the plan from its prescription (1) to (3) (real plants and record-only arms read on ubuntu, the two yearly-return forms no plant made, U3's rungs for the caveat frames), deepened, checked as a whole and read by the three blind readers; the build, each unit opened with `/brief <that unit's topic>`; (2) its prescription (4), the record card's seat the ladder cannot fit: a council, then Briggsy rules on his 2026-07-26 placement; (3) the review's round 3, a harm-class gate over the re-point and the composite build (can a real household's frame put a protected line past 731 with the gate green?); (4) walk 10 at `REAL`, its targets and watch items (a) to (m) below plus the composite plants; (5) W9-R8 (the honest date on the page); (6) measure the register's *Two describers still read past the answered draft inside the re-figuring window…*; then build 2's U12, the whole-file review with an adversary and every finding verified, and `/distill`.
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
    (`ec2c7694`), planned, deepened and checked as a whole. Council `wf_1b5d9962-73c` (8/10) ruled the six calls the 2026-10-21
    words left open; they are the plan's Key Decisions. 
-   Walk bundles kept in `temp/caddie/`: `caddie-golive-b9-1-walk3`, `-walk4`, `-walk5`. b9-6's two (`caddie-golive-b9-6`, `caddie-golive-b9-6-fix`) are still there (other b9 sessions were live at b9-1's close): any session may delete `temp/caddie/caddie-golive-b9-6`, `temp/caddie/caddie-golive-b9-6-fix` and b9-7's R2 / R8 (b) proof walk `temp/caddie/caddie-b9-7-r2-proof` as its own task, outside squeaky's temp step, by exact path, once ListAgents shows no other live session in this folder.
    **Filed by b9-1's walks 3 to 5 for U12 (the card's new hold (q) is a Tier 0 candidate; the rest go in as their seats rated
    them):** (q) **the re-entry gate attests to balances only:** it names paychecks ("Markets and paychecks move") but shows no pay,
    no W and no left-over answer, so "Still about right" never puts what the date leans on in front of the couple; measure a pay
@@ -93,8 +92,7 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
      survives every test) — pin it the day anything reads it.
    - Phase C: U11, then U12.
 
-     ▶ NEXT: **START HERE** (the re-point's U6 and review, walk 10). Walk 9's card is the
-     newest in `docs/caddie/cold-read-log.md`.
+     ▶ NEXT: **START HERE**. Walk 9's card is the newest in `docs/caddie/cold-read-log.md`.
      The line's plans: the walk-9 form spec `docs/plans/features/typed-below-walk9-form-build-spec.md`, the rebuild `docs/plans/features/typed-below-whole-window-rebuild-spec.md`, the survivor path
      `docs/plans/features/typed-below-survivor-path-build-spec.md`, the rider `docs/plans/features/typed-below-tax-rider-build-spec.md`;
      the register's Tier 0 retype entry carries the council's NEGATIVE on the round review's x_t metric.
@@ -255,13 +253,15 @@ the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-pres
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-20 (b9-1: U3's unguarded describer pinned; the 1440×731 re-point planned, read and built through U5; b9-6's block pruned into it):**
+**SESSION 2026-11-20 (b9-3: the re-point's U6, its whole-file review through round 2, the composite frames measured; b9-1's block pruned into it):**
 
 State at close:
-- Built and pushed: `2d0de57a` (the hero Medicare note's priced term pinned, the register's W9-R7 "Still open here" closed in `7de537f1`, insight 081 corrected in `ecf17bf8`); the re-point's plan `2b6eaec4` and `3ec179d2` (28 blind-reader faults folded), `c1ef71da` (the fit spec's REAL arms read `REAL_DPR`), U1 `83802b7a`, U2 `7d90f1db`, U4+U5 `cc57f136`. U3 passed with no rung (ubuntu identical to Windows on the four probed frames; the table is in `cc57f136`'s message). At `cc57f136`: `pnpm typecheck` 0, `pnpm lint` 0, the whole suite green (its count under `verify:doc-stats`), `pnpm build` 0, `pnpm verify:fit` 188 of 188 at 1440×731 @ 2, `pnpm verify:fit:rv` 3 of 3, `verify:doc-stats` 0; CI run 44811750879 green on both jobs. `pnpm caddie:walk` `seed:budget` captures every laptop state at `{"width":1440,"height":731,"dpr":2}`.
+- Built and pushed: U6 `4eafabbc` (every live statement of the old window names 1440×731 @ 2; the 20 px fork re-recorded; three register filings; insight 082 corrected); the review's round 1 `1b27303e` and round 2 `8014a32b`. At `8014a32b`: `pnpm typecheck` 0, `pnpm lint` 0, the whole suite green (its count under `verify:doc-stats`), `pnpm build` 0, `verify:doc-stats` 0; `pnpm verify:fit` 188 of 188 at `1b27303e`, alone (round 2 changed no CSS rule and no spec assertion). CI: U6 green on both jobs (run 44822007641); the two review commits are this close's check at start.
+- The review: round 1 six Opus lenses at xhigh, round 2 three, none crashed; fixed, advisory (none with an incident) and thrown out are in `1b27303e`'s and `8014a32b`'s messages. Round 3 did not run (the window's no-fan-out line): START HERE (3).
+- The composite frames were measured through temporary plants, reverted by snapshot + cmp; the numbers, the plant code, the probe and the ladder candidates are in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-repoint\composites\`, the planner's probe and U3's evidence one folder up.
 - W9-R7's register entry is BUILT and stays open until walk 10 reads the window. Its last small item, the Tier 0 candidate *Two describers still read past the answered draft inside the re-figuring window…*, stays open (measure first: a first read found the plan's diagnosis mixed).
-- The re-point's own record (the planner's probe, the reader rulings, U3's evidence) is in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-repoint\`; the plan's KTDs and Appendix carry what the build needs.
 - **For Briggsy's digest (walk 10's card):**
+  - NEW (b9-3): on a household that answered "not sure" for Medicare extras and saved a recommendation, the record card's standing line sits below his window's fold (748.6 to 799.3 px against 731), and the tier's whole ladder cannot lift it. His 2026-07-26 placement is the call, after a council (START HERE (2)).
   - U4's four strings (`copy.ts`'s `answerRefiguring*` and `assumptionEchoRefiguring`), the pilot's drafts shipped flagged; the card may re-word them without a council (the plan's Assumptions).
   - U3's (5), REDUCED by council `wf_9bd3c243-4e7` (7/10, ⚑ wording flagged): the moved note's "each working year still adds at most the $S you said goes in" (the Hawk's form over "the plan still counts"); the advocate's dissent, "Your provisional answer" on step 14 now, flips on one walk-10 raise.
   - The walk-9 spec's ⚑ items: the credit run's pair as one paragraph, ", while you’re still working", `--space-5`.
@@ -270,7 +270,7 @@ State at close:
     - The restatement predicates apply on EVERY line, one-run lines included. A non-twin one-run opener reads "Each working year you’re both alive, the answer at your spending would add at most …".
     - T's twin also requires the close's difference to be one figure. That is unreachable on every witness: the review proved it.
 
-Next is START HERE. No successor: b9-2 was not live at close (b9-3 to b9-9 were, all idle, a broken run).
+Next is START HERE. Handed to b9-4 (handoff mode: b9-4 to b9-9 live and idle at close).
 
 **Walk 10's targets, at `REAL` (1440×731 @ 2):** the changed strings (the walk-9 spec's Units line: seats on T, CR and PN for F3, the phone seat, wide-PN and the listener on PN for F2, every flip tested); W9-R7's window frames (the phone after Close, the laptop beside the open panel); the re-point's frames `seed:budget`, `vault:stale`, `vault:statestale`, `seed:surplus`, `vault:rec`, `vault:recold`, `vault:datesavedfourbuckets`.
 
@@ -295,7 +295,7 @@ Next is START HERE. No successor: b9-2 was not live at close (b9-3 to b9-9 were,
 - (m) **The quiet doors' row is sliced through its words at the 731 fold** on `?seed=budget`'s landing (seen in b9-1's `pnpm caddie:walk` capture at `REAL`; walk 10 re-captures it): the doors are the law's one sanctioned casualty, but a half-cut row of text can read as a mistake rather than "scroll for more".
 
 **Check at start:**
-- CI for the b9-1 close commit: `gh run list --commit <its full sha>` (`cc57f136`, the re-point's flip, went green: run 44811750879).
+- CI for the review's two commits, by id: run 44828631738 (`1b27303e`, round 1: its new tall W5 read and the gate's group count assert on ubuntu for the first time) and run 44830858505 (`8014a32b`, round 2), each `gh run view <id> --json status,conclusion`; and the b9-3 close commit's own run, `gh run list --commit <its full sha>`.
 - The ACA's next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes); `aca-last-verified.json` goes stale about 2026-12-12 and `verify:aca` runs first in CI, so a slip past it reds every push.
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
@@ -309,7 +309,8 @@ final lands (W9-R7's plan, Open Questions). Never re-ask.
 4. `pnpm build` and `pnpm verify:fit` (over 10 minutes: launch it in the background and wait for its notice).
 5. The sweep and the per-key idcheck, only where a plan's Verification Contract calls them (a unit that touches `src/engine` or `intakeMap`): both lived in `<B>\tools\` and died with the Dell; rebuild them before such a unit. The walk-9 spec's units touch neither.
 
-**LANDMINES (U6, the re-point's review, walk 10 and U12):**
+**LANDMINES (the composite build, the review's round 3, walk 10 and U12):**
+- **`doctorStaleVault` throws on a priced base and strips the extras answer and its typical vintage** (`src/ui/devSeeds.ts`): a priced yearly return needs a doctor that keeps `startCalendarYear` (the composites README's `tempYearlyReturn`), and a plant on either doctor measures the TYPICAL-extras form only. Only `retired` enters extras (`pa`, `nc`, `fl`, `elsewhere`, `rec`, `recold` spread it): a new plant names its extras form in its key or docblock.
 - **The gate is two columns at his 1440×731 window too** (68rem), and nothing pins the story column's fold, so its coda below the fold is a walk read, never a gate red; any fix is static (KD2's Fit). U2 pinned the story column's 20 px gap, not its bottom.
 - **Before a fix commit, read `docs/landmines.md`'s The fit gate and e2e, The mutation harness, Copy and copyGuard, Windows and the shell, and Probes and measurement sections.**
 
@@ -346,8 +347,6 @@ is paid for the whole year"; the review's two refuters split on it. Asking the b
 **Keep out of every commit from here:** the family-feud working file(s) (today: `../family-feud/newsletter/family-feud-newsletter.html`) are uncommitted on purpose; never stage them from this project.
 
 ---
-- *New (b9-2, 2026-11-16): a flip condition copied into a digest loses its conjuncts.* The rider council's chair wrote its flip as two conditions ("not including" read as "ignores", WHILE "plus" after "less" reads as widening the lean); the plan, the council-log row and the register each kept only the first, so walk 8 "met" a flip whose second half no walk had tested, and the next council had to re-derive it from the machine-local journal. Record a flip in the chair's own words, every conjunct, and cite the journal line.
-- *New (b9-2, 2026-11-16): exact words that live only in a session journal live on one disk.* The form council's worked examples sat in the chair's deliberation text (`agent-*.jsonl`), outside the repo, on a drive that crashed four times that day; the structured verdict's size law keeps them out of the returned JSON. Land a council's exact words in a repo spec in the same session.
 
 ## Below the D7 queue — the pre-D7 ranked lists
 
@@ -1133,6 +1132,11 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - A layout probe that resets the scroll measures a page position, not what an arm sees after a gesture (b9-1, the re-point's planning): the planner's probe counted the steer note as a ninth red at 755.25 px because its `settle()` ended in `scrollTo(0,0)`. The arm reads the note right after the goal pick, when focus lands on a quiet door and the page has scrolled 162 px (593.25 in the viewport). The note's page position was 755.25 at the Dell's 1536×791 too. Replicate the arm's own measurement point (no settle after the gesture), and check a "new red" against a real gate run before planning a fix for it.
 - Read the tree, not the editor, after a helper's edits (b9-1, U1 and U2): the TypeScript diagnostics delivered after a builder subagent's run named seven calls to a renamed helper and an unused new one, while the file held neither. They were snapshots from mid-edit. A scratch-tsconfig typecheck of the file as it stands (0 errors) and a grep settled each in one call. Never act on a diagnostic about a file another agent was editing until the tree confirms it.
 - Probe only what no log already measures (b9-1, the re-point's readers): the plan's 18-arm pre-flip ubuntu probe shrank to the four spine frames ubuntu had never logged, because the record card and the gates are top-aligned at 791 and the layout is width-invariant from ~1031 px up, so their existing `[U17 record return]` / `[route fit]` lines at the old window ARE the 731 readings. The four-frame read came back identical to Windows, and the flip went green first time.
+- *New (b9-2, 2026-11-16): a flip condition copied into a digest loses its conjuncts.* The rider council's chair wrote its flip as two conditions ("not including" read as "ignores", WHILE "plus" after "less" reads as widening the lean); the plan, the council-log row and the register each kept only the first, so walk 8 "met" a flip whose second half no walk had tested, and the next council had to re-derive it from the machine-local journal. Record a flip in the chair's own words, every conjunct, and cite the journal line.
+- *New (b9-2, 2026-11-16): exact words that live only in a session journal live on one disk.* The form council's worked examples sat in the chair's deliberation text (`agent-*.jsonl`), outside the repo, on a drive that crashed four times that day; the structured verdict's size law keeps them out of the returned JSON. Land a council's exact words in a repo spec in the same session.
+- *New (b9-3, 2026-11-20): a fit law's plant set must hold the tallest frames real households reach, not one base seed's answers.* Every priced and record plant spread `retired`'s ENTERED Medicare extras, so the "not sure" residual (two lines longer, +41.6 px), the yearly return's echo, Pennsylvania's longer clause and the record card were never planted together. The re-point's U3 read "no rung" off that set and passed; real composites breach 731 by 6 to 68 px (the Tier 0 *The tallest real composites…*). Before a law's arms are called complete, list the content dimensions that lengthen the frame and plant their worst product.
+- *New (b9-3, 2026-11-20): measure an adversary's arithmetic before arguing it.* Temporary `AGED_PLANTS` entries and a 70-line probe (a dev server on its own port; candidate CSS appended after the page settles) measured twenty composites and five ladder candidates in minutes, after the controls reproduced the committed numbers to 0.1 px. The measurements matched the adversary's predictions to 0.1 px on three frames and found a worse one (778.5 against a predicted 755). Snapshot before, restore with `cmp` after.
+- *Extend 126 (b9-3, 2026-11-20): a guard that matches one line and one literal is the first thing an adversary routes around.* Round 1's prelude test read `@media` and `max-height` on the same line; round 2's adversary passed range syntax (`height <= 840px`), a wrapped prelude and an inverted `min-height` block, every arm green. Parse the construct whole (comments blanked, newlines kept, the prelude collapsed across lines) and judge every spelling of the feature, then plant each spelling.
 
 
 ## Driving the app

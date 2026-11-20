@@ -16,13 +16,13 @@ execution: code
 ## Goal Capsule
 
 - **Objective:** on Briggsy's laptop window (1440×731 CSS px at DPR 2), the tallest real households the app can hold show the verdict, its disclosures, the band and the "this can be wrong" caveat without a scroll, on Windows and on CI's Linux. The fit gate keeps measuring those same frames on any date, instead of going red by itself on 2027-01-01.
-- **Means:** an explicit calendar for the gate (KTD1, KTD2), plants built only through the app's real producers (KTD3, KTD4, KTD5), record-only Linux probes before anything is asserted (KTD6), the ladder's rungs only on the frames that need them (KTD7), then the assertions (KTD8).
+- **Means:** an explicit calendar for the gate (KTD1, KTD2), plants built only through the app's real producers (KTD3, KTD4, KTD5), record-only Linux probes before anything is asserted (KTD6), the ladder's leading rungs on the return frames and its borrowed size only where a frame still fails (KTD7), then the assertions (KTD8).
 - **Authority:** the project's laws (`CLAUDE.md`, and the short tier's law in `--bp-laptop-short`'s docblock in `src/ui/styles/tokens.css`) outrank this plan. Requirements outrank KTDs on behavior, KTDs outrank units on mechanism. Where this plan cites the precedent plan (`docs/plans/features/viewport-1440x731-repoint-build-spec.md`), the cited rule binds.
 - **Stop conditions:**
   - pinning the clock changes any number an existing arm prints today (U1): stop and diagnose before U2;
   - a plant's engine-acceptance pin or cause-list proof fails (U2, U3): stop, never loosen the proof;
-  - a caveat frame is still outside 731 px on either platform after rung 3 (U5): stop and call a council, never a tolerance, a word cut or a new type size.
-- **Execution profile:** commits on `main`, one unit per commit, in order. U4 and each rung in U5 are pushed alone, because their CI log is the evidence. The record card's seat is not this plan's: a council, then Briggsy's ruling (Open Questions).
+  - a new plant's caveat is still outside 731 px on either platform after rung 2b and rung 3 has no stable key, or after rung 3, or the band column holds it (U5): stop and call a council, never a tolerance, a word cut, a new type size or a wider scope.
+- **Execution profile:** commits on `main`, one unit per commit, in order. U1, U4 and each rung in U5 are pushed alone, because each one's CI run is the evidence the next step waits on. The record card's seat is not this plan's: a council, then Briggsy's ruling (Open Questions).
 
 ---
 
@@ -30,7 +30,7 @@ execution: code
 
 ### Summary
 
-Pin the page clock in every fit harness so the gate's frames stop depending on the date. Add the tallest measured real households as committed plants, built the way the app would really hold them. Read their bottoms on CI's Linux before asserting anything. Step the ladder's rungs only on the frames that still fail, then assert every new plant. The record-bearing plants assert their caveat. Their standing line is printed until the record card's seat is ruled.
+Pin the page clock in every fit harness so the gate's frames stop depending on the date. Add the tallest measured real households as committed plants, built the way the app would really hold them. Read their bottoms on CI's Linux before asserting anything. Step the ladder's leading rungs on the return frames, and its borrowed type size only on a frame that still fails, then assert every new plant. The record-bearing plants assert their caveat. Their standing line is printed until the record card's seat is ruled.
 
 ### Problem Frame
 
@@ -56,7 +56,7 @@ A second problem surfaced while planning. The gate reads the wall clock (the reg
 **Measurement and the law**
 
 - R5. Before any rung or assertion lands, each new plant's bottoms are read on CI's Linux at the target, beside Windows.
-- R6. Every caveat-class plant holds the one-frame law on both platforms. It gets there only through the ladder's rungs in order, each applied only to the frames that need it.
+- R6. Every new plant's caveat, and every caveat-class plant's whole frame, holds the one-frame law on both platforms. It gets there only through the ladder's rungs in order, under the short tier's law: the leading rungs on the class of frames that carries the breach, and the borrowed type size only on a frame still outside after them.
 - R7. Every record-bearing plant asserts its caveat inside the frame, its card below the caveat, and its card's cause count. Its standing line is printed until the record card's seat is ruled.
 
 ### Scope Boundaries
@@ -64,12 +64,12 @@ A second problem surfaced while planning. The gate reads the wall clock (the reg
 - Not in this plan: the record card's seat (the register entry's prescription (4)). A council sits, then Briggsy rules on his 2026-07-26 placement. The record plants this plan adds are its evidence.
 - Considered and not built:
   - seeds whose start year follows the wall year. Shifting `birthYear` alongside moves the Social Security and required-withdrawal birth-year bands on `retired`, the documented knife-edge seed, so every outcome pin would move each New Year. Evidence that would reopen it: a ruling that the gate must see the live year.
-  - a `?clock=` URL parameter for viewing a yearly-return plant by hand. Viewed by hand before 2027, the plant floors to a same-year save under older rules, which is still an honest household (KTD3). Reopen it if a Caddie walk needs the yearly-return face before New Year.
+  - a `?clock=` URL parameter for viewing a yearly-return plant by hand. Viewed by hand before 2027, the plant floors to a same-year save under older rules, which is still an honest household (KTD3), and the Caddie harness pins its own clock (KTD1). Reopen it if a by-hand reading needs the yearly-return face before New Year.
   - a chosen margin or tolerance on any bottom (insight 065, and the precedent plan's KTD15).
 
 ### Deferred to Follow-Up Work
 
-- The Caddie capture harness's clock (`e2e/caddie-walk.spec.ts`). Walk 10 runs before New Year. A walk after it needs the same pin, filed in U7.
+- The seeds' build-year roll. KTD2's binding test reds when the first engine-pricing ledger row of 2027 ships (rows shipped 2026-09-27, 10-09 and 10-21, so likely within weeks of New Year). Do the roll ahead of that row, so the pricing change never lands in one commit with the roll's outcome moves. Filed in U7 with KTD2's surface.
 - The unit suite's own wall-clock reads on 2027-01-01, unmeasured. The `annualRoll` tripwire reds the suite that day by design, and nothing else is known. Filed in U7.
 
 ---
@@ -83,7 +83,8 @@ A second problem surfaced while planning. The gate reads the wall clock (the reg
   - **The pin.** Playwright's `page.clock.setFixedTime` at UTC noon of the day. The fit config sets no `timezoneId`, so Windows reads Eastern time and CI reads UTC; UTC noon is the same calendar day in both, where a midnight pin reads as the day before on Windows. It fixes `Date` and leaves timers and animation frames running (measured 2026-11-20: every frame settled under it). Each arm reads the page's day back and asserts it is the pinned day.
   - **The mechanism.** An auto fixture in `e2e/reviewSurface.ts` that every listed spec takes its `test` from, plus one guard arm that reds when a listed spec imports `test` straight from `@playwright/test`. Without the guard, a future spec would read the wall clock and nobody would notice until a New Year.
   - **Node-side reads.** Each date the specs compute in Node reads the shared pinned day, never `new Date()`: the stale arm's ledger oracle (`e2e/vertical-fit.spec.ts:2250`) and `recold`'s "Saved in" check (`e2e/vertical-fit.spec.ts:4141`).
-  - **Coverage.** `e2e/vertical-fit.spec.ts`, `e2e/chart-text.spec.ts`, `e2e/intake-fold.spec.ts` and `e2e/chart-text-rv.spec.ts`: every CI-gated harness that renders a seed or a plant. Chart-text and the recommendation chart read the plan clock too. Not `e2e/csp.spec.ts`, which asserts no layout.
+  - **Coverage.** `e2e/vertical-fit.spec.ts`, `e2e/chart-text.spec.ts`, `e2e/intake-fold.spec.ts` and `e2e/chart-text-rv.spec.ts`: every CI-gated harness that renders a seed or a plant. Chart-text and the recommendation chart read the plan clock too. Also `e2e/caddie-walk.spec.ts`, so walk 10's captures show each yearly-return plant at `RETURN_DAY`, the face the gate certifies, rather than a same-year save. Not `e2e/csp.spec.ts`, which asserts no layout.
+  - **The New Year alarm.** Once the gate is pinned, `rec` and `recold` read 707 px on any date, so nothing would go red if the record card's seat were still unruled on 2027-01-01. A wall-clock tripwire test in the `annualRoll` pattern reds from that day and names the seat as the job. The seat's ruling build deletes it.
 
   Rejected alternative: seeds that follow the wall year (Scope Boundaries).
 - KTD2. **The seeds' build year is one constant, bound to the gate's day.** The ten `startCalendarYear: 2026` literals in `src/ui/devSeeds.ts` read one exported `SEED_BUILD_YEAR`. A unit test asserts that `FIRST_UNAMBIGUOUS_SAVE_DAY`'s calendar year equals it (R2), and that `RETURN_DAY`'s year is exactly one later. The day an engine-pricing ledger row ships in a later year, that test reds. Rolling the seeds' year is then a named job, never a date bump. Its known surface: the outcome pins, every seed's birth years (they must move with the start year to keep the same people), and the year literals in `e2e/vertical-fit.spec.ts` (`:1312`, `:2613-2850`). The test's failure message names that surface.
@@ -96,12 +97,15 @@ A second problem surfaced while planning. The gate reads the wall clock (the reg
 - KTD4. **A record on a yearly return is minted under the rulebooks of its save.** `withMintedRecord` mints it on the doctored save day at this build's solver version. Its `era` is then set to the aged scenario's own five stamps, the record a build of that day would have minted (the `eraOf(s)` idiom, `src/store/__tests__/savedRecommendation.test.ts:44`). The doctor proves at plant time that `deriveSavedRecommendationStatus` yields exactly `['rules-changed']`, and it throws otherwise. `doctorRecordSuperseded`'s docblock, which says no hand should touch the era, is reworded in the same commit to name this one honest exception.
 - KTD5. **"Not sure" is the answer the intake writes.** That is `{ kind: 'typical', adoptionVintage: medicareExtrasTypical.value.vintage }` per person (`src/intake/questions.tsx:890`), never a stripped field. A stripped field is a pre-extras save, and it adds a re-confirm line on the gate. Two new seeds carry it: `patypical` (Pennsylvania) and `failingtypical` (the off-track household). Each is a spread of its base that sets only `medicareExtrasByPerson`.
 - KTD6. **Linux is read before anything is asserted.** This is the precedent's KTD8 shape. A record-only describe at 1440×731 @ 2 drives each new plant at its own day and asserts the laptop tier and the short tier. Per plant it prints one line: `[fit probe] <plant>: clock=<YYYY-MM-DD> attempt=<n> caveat bottom=<px> left end=<px> band end=<px>`, plus ` standing bottom=<px> causes=<n>` on a record plant. The clock is the page's day read back. The attempt is Playwright's retry index, so a retried arm's two lines tell themselves apart. The lines are read from CI's verify log by tag, final attempt only. Attempts that disagree are unknown, and an unknown fails the frame.
-- KTD7. **Rungs are for the caveat frames only, scoped to the frames that carry the staleness echo.** They follow the precedent's U3 order:
+- KTD7. **The leading rungs go on the return frames; the borrowed size goes only on a frame still outside after them.** The order is the precedent's U3 order, under the short tier's law (rungs 1–2 may apply across the tier; a borrowed register only to a frame still outside after them):
   - rung 2a, the survivor statements' leading → tight, as `.confidence-reveal[data-twopane]:has(.cs-staleness-note)` inside `survivor.css`'s short-tier block;
-  - rung 2b, `.cs-staleness-note`'s leading → snug, written at the specificity the precedent names;
-  - rung 3, the survivor context and its step-down → `--text-sm`, on frames carrying the echo and either the Medicare pair or the state note (the precedent's U3 scope).
+  - rung 2b, `.cs-staleness-note`'s leading → snug, written at the specificity the precedent names.
 
-  Echo-scoping departs from the precedent, which planned rung 2a tier-wide but never landed it: frames that fit keep the look he has seen. Each rung is pinned on both sides of the tier, the tall side by resizing an echo frame to SHOWCASE (the W5 precedent). Each is followed by `pnpm build`, pushed alone and re-read. Stop at the first rung that holds on both platforms.
+  The echo is the class that carries the breach, and from New Year every real return carries it, so rungs 2a and 2b also land on echo frames that already fit: `?vault=stale`, `statestale` and `yearrec`. Every return then reads with one rhythm. Their arms' leading pins take the echo flag. The precedent planned rung 2a tier-wide and never landed it; echo-scoping keeps the fresh frames he has seen unchanged.
+  - rung 3, the survivor context and its inner step-down (`.survivor__context .survivor__stepdown`, never a bare `.survivor__stepdown`, which would also shrink the floor relief's trim note) → `--text-sm`. It is keyed to a stable class of each frame still outside after rung 2b, a class that cannot change after the final answer (insight 035). Today none exists: the echo, the Medicare pair and the state note sit on `?vault=stale` too, and the reveal carries no verdict-state attribute. So when U5 reaches rung 3, it stops for a council on the key (a new state hook, or another route), never a wider scope.
+  - A fresh frame without the echo (`patypical`, 708.2 on Windows) that Linux puts outside takes the same rule with its own stable class, or the same stop.
+
+  Each rung is pinned on both sides of the tier, the tall side by resizing an echo frame to SHOWCASE (the W5 precedent). Each is followed by `pnpm build`, pushed alone and re-read. Stop at the first rung that holds on both platforms.
 - KTD8. **What each plant asserts.** A caveat-class plant gets the full one-frame law in the `?vault=stale` arm's shape. A record plant gets its caveat inside the frame, its card below the caveat in pixels and in the DOM, and its card's cause count. Its standing line is printed, never asserted, until the seat is ruled. This is the 20 px arm's record-only precedent (`e2e/vertical-fit.spec.ts:1718-1731`), never `test.fail`.
 - KTD9. **The pin changes no frame today.** After U1, every line the existing arms print (`[U17 record return]`, `[route fit]` and the others) reads the same as before U1, from one `verify:fit` run each side. Today's date (2026-11-20) and `GATE_DAY` (2026-10-22) share a year, and an undoctored plant saves on whatever day the page reads as today, so its frame is the same on both days. The one predicted exception is `?vault=datearrived`'s gate (U1's test scenarios).
 
@@ -136,11 +140,12 @@ The plant catalog. The Windows numbers come from the temporary plants, with stri
 - A1. The "not sure" answer renders the same result frame as the stripped field the temporary plants measured. On the gate it differs: there is no re-confirm line, and the extras-typical clock stays silent at a fresh vintage. U4's probe confirms or refutes the result frame.
 - A2. The 754.5 band-binding frame is faithful. It was measured twice: once by the temporary start-year doctor, and once with no doctor at all, `?vault=rec` under a 2027-01-02 clock. The second needs no birth-year shift, and `yearrec` is that second form plus the aged stamps.
 - A3. CI keeps writing test stdout into the verify job's log through the `DotReporter` that Playwright prepends (the precedent's A2). `playwright.fit.config.ts` never gains `list`.
-- A4. The tighter leading and the borrowed register on echo frames read calm to his eye. Walk 10 is that check, and its targets gain the new plants (U7).
+- A4. The tighter leading on echo frames reads calm to his eye. Walk 10 is that check, and its targets gain the new plants (U7).
+- A5. The left column binds on both Pennsylvania yearly-return plants. Pennsylvania's aged band has never been measured: the engine refused the start-year doctor, and the clock pin is what first makes it measurable. If U4 shows the band binding on `yearpa` or `yearparec`, no left-column rung moves it, and U5 stops for the council.
 
 ### Open Questions
 
-- **The record card's seat. Blocking for the record plants' standing-line assertion only, and due before 2027-01-01.** Every measured record frame puts the standing line past 731, and the ladder is exhausted (Appendix). From New Year it is every real 2026 saver's frame, and the gate's own `rec`/`recold` arms are its witnesses. Recommended: the council sits on U4's Linux table, then Briggsy rules on his 2026-07-26 placement. The ruling's build adds the standing-line assertion to every record plant.
+- **The record card's seat. Blocking for the record plants' standing-line assertion only, and due before 2027-01-01.** Every measured record frame puts the standing line past 731, and the ladder is exhausted (Appendix). From New Year it is every real 2026 saver's frame. After U1 its witness in the gate is `yearrec`, and U1's tripwire is its alarm. Recommended: the council sits on U4's Linux table, then Briggsy rules on his 2026-07-26 placement. The ruling's build adds the standing-line assertion to every record plant.
 
 ### Risks
 
@@ -165,17 +170,18 @@ The plant catalog. The Windows numbers come from the temporary plants, with stri
 
 **Files:**
 - `e2e/reviewSurface.ts`: `GATE_DAY`, `RETURN_DAY`, the auto fixture that pins the clock, and the Node-side pinned-day helper.
-- `e2e/vertical-fit.spec.ts`, `e2e/chart-text.spec.ts`, `e2e/intake-fold.spec.ts`, `e2e/chart-text-rv.spec.ts`: each takes `test` from the fixture; `vertical-fit` also swaps its two Node-side date reads (`:2250`, `:4141`) for the helper.
+- `e2e/vertical-fit.spec.ts`, `e2e/chart-text.spec.ts`, `e2e/intake-fold.spec.ts`, `e2e/chart-text-rv.spec.ts`, `e2e/caddie-walk.spec.ts`: each takes `test` from the fixture; `vertical-fit` also swaps its two Node-side date reads (`:2250`, `:4141`) for the helper.
 - `scripts/__tests__/playwright-harness-partition.test.ts`: the import guard (it already reads every spec's collector).
 - `src/ui/devSeeds.ts`: `SEED_BUILD_YEAR` replaces the ten literals.
 - `src/ui/__tests__/devSeeds.test.ts`: the binding test.
+- A new tripwire test beside the existing wall-clock tripwires (`git ls-files | grep tripwire`): the record card's seat, red from 2027-01-01 (KTD1's New Year alarm).
 
 **Approach:**
 1. Before U1's code, run `pnpm verify:fit` alone and keep its printed lines. That is the "before" side of KTD9.
 2. Add the days, the fixture and the helper to `e2e/reviewSurface.ts`, the harnesses' shared home (it already holds `REAL`), per KTD1. The fixture pins `GATE_DAY` by default. An arm that needs `RETURN_DAY` re-pins before its own navigation.
 3. Point each listed spec's `test` import at the fixture, swap `vertical-fit`'s two Node-side date reads, and add the guard.
-4. Replace the ten seed literals with `SEED_BUILD_YEAR`, and add the binding test (KTD2).
-5. Re-run `pnpm verify:fit` and `pnpm verify:fit:rv` alone, and compare the printed lines with step 1's.
+4. Replace the ten seed literals with `SEED_BUILD_YEAR`, and add the binding test (KTD2) and the seat's tripwire (KTD1).
+5. Re-run `pnpm verify:fit` alone and compare its printed lines with step 1's. Run `pnpm verify:fit:rv` alone for a green verdict only: its one printed line is a duration, which changes every run.
 
 **Patterns to follow:** `REAL`/`REAL_DPR` in `e2e/reviewSurface.ts` (one home, every harness reads it); the `breakpoint-mirrors.test.ts` binding style for a constant two places share.
 
@@ -185,9 +191,10 @@ The plant catalog. The Windows numbers come from the temporary plants, with stri
 - The guard reds when one listed spec imports `test` from `@playwright/test` (a planted fault, reverted the same way).
 - With the fixture's day moved to 2027-01-02, `?vault=rec`'s record arm reds at a standing line near 754.5. This planted fault proves the pin reaches the page; revert it the same way.
 - Every arm's read-back day equals its pinned day, on Windows and on CI.
-- Every line the existing arms print reads the same before and after U1 (KTD9). One delta is predicted and is the only allowed one: `?vault=datearrived`'s gate gains the newest ledger row's method line, because its doctor saves at today − 30 with no floor. No fit arm counts that gate's notes. If any printed line other than that one moves, stop (a stop condition).
+- The seat's tripwire passes today and reds under a faked system date of 2027-01-02, naming the record card's seat.
+- Every line the existing arms print reads the same before and after U1 (KTD9). If any printed line moves, stop (a stop condition). One unprinted change is predicted: `?vault=datearrived`'s gate names the engine-pricing rows its save now falls before, because its doctor saves at today − 30 with no floor. No fit arm prints or counts that gate's notes.
 
-**Verification:** the KTD9 comparison holds; `pnpm verify:fit` and `pnpm verify:fit:rv` are green; CI is green on U1's commit.
+**Verification:** the KTD9 comparison holds; `pnpm test` and `pnpm verify:doc-stats` are green (U1 adds tests); `pnpm verify:fit` and `pnpm verify:fit:rv` are green; CI is green on U1's commit, pushed alone.
 
 ### U2. The two "not sure" seeds
 
@@ -234,7 +241,8 @@ The plant catalog. The Windows numbers come from the temporary plants, with stri
 
 **Patterns to follow:** `doctorStateStaleVault` (the floored `savedAt`), `doctorStaleVault` (stamp ageing by year arithmetic), `doctorRecordSuperseded` (prove the cause, never a silent one), `statestale`'s engine-acceptance arm (`devSeeds.test.ts`).
 
-**Test scenarios:** unit tests call each doctor with `today = RETURN_DAY` (or `GATE_DAY` for `recpa`) passed in, never the wall clock.
+**Test scenarios:** the new arms call each doctor with `today = RETURN_DAY` (or `GATE_DAY` for `recpa`) passed in, never the wall clock. The existing sweeps they extend keep their own `currentEpochDay()`.
+- Each yearly-return plant's re-entry gate speaks exactly two staleness notes (the tax and the healthcare clocks), derived through `deriveStaleness` and `composeReentry`, never typed.
 - Each plant hydrates, builds, passes `validateParams` and resolves a real `outcomeState`, pinned as found (insight 085).
 - `yearrec` and `yearparec`: the status's causes equal `['rules-changed']`; the record's era equals the doctored scenario's five stamps; its fingerprint equals the fresh one; its `mintedAt` year comes before `RETURN_DAY`'s year.
 - `yearpa`, `yearfailing`, `yearrec` and `yearparec`: `savedAt` is not before `FIRST_UNAMBIGUOUS_SAVE_DAY`, so the gate's engine-pricing note count is zero, derived from the ledger, never typed.
@@ -268,17 +276,17 @@ The plant catalog. The Windows numbers come from the temporary plants, with stri
 
 **Verification:** a written table with a Linux and a Windows number for every plant, read from the head run's final attempts.
 
-### U5. Rungs for the caveat frames that fail
+### U5. Rungs for the caveats that fail
 
-**Goal:** every caveat-class plant inside 731 on both platforms (R6), through KTD7's rungs in order.
+**Goal:** every new plant's caveat inside 731 on both platforms, record plants included (`yearparec`'s caveat measured 737.3), through KTD7's rungs in order (R6). "A failing caveat" below means any new plant whose caveat bottom U4 reads past 731 on either platform.
 
 **Requirements:** R6 (KTD7).
 
-**Dependencies:** U4. U5 is skipped when U4's table shows every caveat frame inside on both platforms.
+**Dependencies:** U4. U5 is skipped when U4's table shows every new plant's caveat inside on both platforms.
 
 **Files:**
 - `src/ui/styles/survivor.css` and `src/ui/styles/confidence.css`, inside their existing short-tier blocks.
-- `e2e/vertical-fit.spec.ts`: each rung's computed-style pin on both sides of the tier. The leading and register helpers gain an echo flag. A new reader covers `.cs-staleness-note`'s leading.
+- `e2e/vertical-fit.spec.ts`: each rung's computed-style pin on both sides of the tier. `assertDensityTier`'s survivor-leading band gains an echo flag, passed by every echo arm (`?vault=stale`, `statestale` and the new yearly-return plants), whose pins rung 2a moves. A new reader covers `.cs-staleness-note`'s leading.
 - `src/ui/styles/tokens.css`: the law's docblock names the new rungs beside W1–W7, L1 and L2.
 
 **Approach:** for each failing frame, take the next rung:
@@ -288,7 +296,7 @@ The plant catalog. The Windows numbers come from the temporary plants, with stri
 4. Run `pnpm verify:fit` alone.
 5. Push it alone and re-read the probe lines on Linux.
 
-The precedent's Windows deltas are the starting estimates: rung 2a −8.8 px, rung 2b −2.7 px, rung 3 −11.2 px (Appendix). Each later rung is re-measured on top of the earlier ones.
+The precedent's Windows deltas are the starting estimates: rung 2a −8.8 px, rung 2b −2.7 px, rung 3 −11.2 px (Appendix). Each later rung is re-measured on top of the earlier ones. The Windows estimates already put the off-track yearly return at 732.9 after rung 2b, so expect rung 3, and with it KTD7's council stop on its key, unless Linux measures it inside. A caveat that the band column holds (A5) also stops for the council: no left-column rung moves it.
 
 **Execution note:** the rule decides, not the estimate. A rung that does not move the Linux number did nothing (insight 075).
 
@@ -296,8 +304,9 @@ The precedent's Windows deltas are the starting estimates: rung 2a −8.8 px, ru
 - Each rung's pin reds on every platform when its rule is deleted (a planted fault, reverted by snapshot + `cmp`). Name, before running it, which arms can red and which cannot (insight 126).
 - On the tall side, the echo frame resized to SHOWCASE reads every new rung dark.
 - No rung moves a frame without the staleness echo: the existing arms' printed lines stay the same.
+- If rung 3 lands, `?vault=stale`, `statestale` and `yearrec` keep the survivor context and its step-down at body size, and so does the floor relief's trim note on every frame.
 
-**Verification:** U4's table, re-read, shows every caveat frame inside 731 on both platforms at the commit U6 builds on.
+**Verification:** U4's table, re-read, shows every new plant's caveat inside 731 on both platforms at the commit U6 builds on.
 
 ### U6. The asserting arms
 
@@ -314,7 +323,7 @@ The precedent's Windows deltas are the starting estimates: rung 2a −8.8 px, ru
 2. `yearpa` and `yearfailing` get arms in `?vault=stale`'s shape at `RETURN_DAY`:
    - the gate frame first: the affirm button inside the frame, and the note count derived from the ledger;
    - then the result: the echo visible, one visible caveat, the backup door below it, `assertFrameFits` with the backup door sanctioned, the survivor basis inline, and the density tier with KTD7's flags.
-3. `yearrec`, `recpa` and `yearparec` join the record loop, each at its own day. Each asserts its caveat inside the frame, its card below the caveat in pixels and in the DOM, and its card's cause count. Each prints its `[U17 record return]` line with the standing bottom. The loop's standing-line assertion stays on `rec` and `recold` only.
+3. `yearrec`, `recpa` and `yearparec` join the record loop, each at its own day. Each asserts its caveat inside the frame, its card below the caveat in pixels and in the DOM, and its card's cause count. Each prints its `[U17 record return]` line with the standing bottom. The loop's standing-line assertion stays on `rec` and `recold` only. `yearrec` and `yearparec` carry the echo, so their density check passes KTD7's echo flag.
 4. Delete the probe describe.
 
 **Patterns to follow:** the `?vault=stale` arm, the record loop and its `[U17 record return]` print, and the 20 px arm's record-only comment, quoted at the record plants' print.
@@ -339,9 +348,9 @@ The precedent's Windows deltas are the starting estimates: rung 2a −8.8 px, ru
   - the composites entry's prescriptions (1) and (3) marked built, with U4's table; its prescription (4) stays open, with the deadline;
   - *The fit gate reads the wall clock…* closed by U1;
   - the Tier 3 yearly-return entry pointed at the composites entry;
-  - two new entries: the Caddie harness's clock and the unit suite's 2027 reads (the Deferred list).
+  - two new entries from the Deferred list: the seeds' build-year roll (its trigger is the first 2027 engine-pricing ledger row; do it before that row; its surface is KTD2's) and the unit suite's 2027 reads.
 - `docs/landmines.md`: under the fit gate's area, the gate's calendar — every arm pins it, and a yearly return is a plant at `RETURN_DAY`, never a start-year doctor.
-- `TODO.md`: the Dated row for 2027-01-01 rewritten to what remains (the record card's seat); walk 10's targets gain the new plants.
+- `TODO.md`: the Dated row for 2027-01-01 rewritten to what remains (the record card's seat, with U1's tripwire), a Dated row for the build-year roll beside the `annualRoll` re-source row, and walk 10's targets gain the new plants.
 
 **Test expectation:** none -- docs only. `pnpm verify:doc-stats` is the gate.
 
@@ -359,14 +368,14 @@ The precedent's Windows deltas are the starting estimates: rung 2a −8.8 px, ru
 | build | `pnpm build` | U1, every U5 rung, U6 |
 | fit gate | `pnpm verify:fit`, alone on an idle machine, never beside another suite | U1 (before and after), U4, every U5 rung, U6 |
 | recommendation chart | `pnpm verify:fit:rv`, alone | U1 |
-| doc numbers | `pnpm verify:doc-stats` | U2, U3, U7 |
+| doc numbers | `pnpm verify:doc-stats` | U1, U2, U3, U7 (CI runs it before `verify:fit`, so a stale count hides the fit run) |
 | CI | the run for the full sha, by run id (`gh run view <id> --json status,conclusion`) | every push; U4 and each rung read from the log |
 
 ---
 
 ## Definition of Done
 
-- Every arm in the four fit harnesses pins its clock. The binding test stands, and the KTD9 comparison read the same.
+- Every arm in the four fit harnesses and the Caddie harness pins its clock. The binding test and the seat's tripwire stand, and the KTD9 comparison read the same.
 - `patypical`, `failingtypical`, `yearpa`, `yearfailing`, `yearrec`, `recpa` and `yearparec` are committed. Each has its engine-acceptance pin, and each record has its cause-list proof.
 - U4's table holds a Windows and a Linux number for every plant, and it is written in the commit history and in the composites folder's README.
 - Every caveat-class plant passes the one-frame law on CI and on Windows. Each rung that landed has its pins on both sides.

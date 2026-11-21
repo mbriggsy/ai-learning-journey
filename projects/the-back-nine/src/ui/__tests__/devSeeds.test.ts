@@ -57,6 +57,7 @@ import { acaEnhancedSubsidyStatus } from '@engine/constants'
 import { stateTaxVintageStamp } from '@engine/constants/stateTax'
 import { deriveStaleness } from '@store/staleness'
 import { ENGINE_PRICING_LEDGER, FIRST_UNAMBIGUOUS_SAVE_DAY } from '@engine/pricingVersion'
+import { medicareExtrasTypical } from '@engine/constants/health'
 import { exposureForDraft } from '../stalenessExposure'
 import { composeReentry } from '../reentryChrome'
 import { copy, slots } from '../copy'
@@ -99,13 +100,85 @@ describe("the fit gate's calendar: the seeds' build year binds to the gate's day
     expect(GATE_DAY, "the gate's day is the first unambiguous save day, read, never typed").toBe(FIRST_UNAMBIGUOUS_SAVE_DAY)
   })
 
-  it('the yearly return is the same calendar date one year after the gate\'s day', () => {
+  it('the yearly return is the same calendar date one year after the gate\'s day (see also the "not sure" seeds below)', () => {
     const [y, md] = [isoOf(GATE_DAY).slice(0, 4), isoOf(GATE_DAY).slice(4)]
     // An independent route to the same day: the ISO date with its year bumped (29 February excepted —
     // the doctor's docblock rolls it to 1 March; the gate's day is not one).
     expect(md, 'the gate\'s day is a 29 February — this route cannot say which day follows').not.toBe('-02-29')
     expect(isoOf(RETURN_DAY)).toBe(`${Number(y) + 1}${md}`)
     expect(yearOf(RETURN_DAY)).toBe(SEED_BUILD_YEAR + 1)
+  })
+})
+
+/**
+ * THE "NOT SURE" EXTRAS SEEDS (the one-frame composites plan's U2, KTD5): `patypical` and `failingtypical`
+ * are their bases with every person answering "not sure" on Medicare extras, the answer the intake writes
+ * (`{ kind: 'typical', adoptionVintage }`), never a stripped field (a pre-extras save, which adds a gate
+ * line). The sweep above proves each engine-accepted; these arms prove the answer, its round trip, the
+ * staleness silence of a fresh save (with the clock firing on a moved vintage as its control, insight 103)
+ * and each verdict, pinned as the engine found it.
+ */
+describe('the "not sure" Medicare-extras seeds (the composites plan\'s U2)', () => {
+  const TYPICAL = [
+    ['patypical', 'pa'],
+    ['failingtypical', 'failing'],
+  ] as const
+  const notSure = { kind: 'typical', adoptionVintage: medicareExtrasTypical.value.vintage } as const
+  const TODAY = currentEpochDay()
+
+  for (const [key, base] of TYPICAL) {
+    it(`'${key}' is '${base}' with every person answering "not sure", and nothing else changed`, () => {
+      const { medicareExtrasByPerson: extras, ...rest } = DEV_SEEDS[key]
+      const { medicareExtrasByPerson: _baseExtras, ...baseRest } = DEV_SEEDS[base]
+      expect(extras).toEqual(DEV_SEEDS[base].people.map(() => notSure))
+      expect(rest).toEqual(baseRest)
+    })
+
+    it(`'${key}' keeps the typical answer and its live vintage through the codec's round trip`, () => {
+      const built = scenarioFromDraft(DEV_SEEDS[key])
+      expect(built.ready, `${key} must be save-ready`).toBe(true)
+      if (!built.ready) throw new Error('unreachable — asserted above')
+      const round = decodeScenario(encodeScenario(built.scenario))
+      expect(round.ok, `${key} must survive the codec`).toBe(true)
+      if (!round.ok) throw new Error('unreachable — asserted above')
+      expect(round.droppedAtoms).toEqual([])
+      expect((round.scenario as CurrentScenario).medicareExtrasByPerson).toEqual(DEV_SEEDS[base].people.map(() => notSure))
+    })
+
+    it(`'${key}': a fresh save fires no staleness clock, and the same save under a moved extras vintage fires the extras-typical clock`, () => {
+      const d = DEV_SEEDS[key]
+      const built = scenarioFromDraft(d)
+      if (!built.ready) throw new Error(`${key} must be save-ready`)
+      const exposure = exposureForDraft(d)
+      const fresh = deriveStaleness(built.scenario, TODAY, exposure, { costStale: false, leftOverStale: false })
+      expect(fresh.healthcare.movedClocks, `${key}: nothing moved at a fresh save`).toEqual([])
+      expect(fresh.anyStale, `${key}: a fresh save speaks no gate line`).toBe(false)
+      // The control: the clock is live for this household, so the silence above is the vintage matching.
+      const hv = built.scenario.healthcareVintage
+      expect(hv?.medicareExtrasTypicalVintage, 'the save stamps the extras vintage').toBe(medicareExtrasTypical.value.vintage)
+      const moved: CurrentScenario = {
+        ...built.scenario,
+        healthcareVintage: { ...hv!, medicareExtrasTypicalVintage: 'an-extras-vintage-before-this-build' },
+      }
+      const aged = deriveStaleness(moved, TODAY, exposure, { costStale: false, leftOverStale: false })
+      expect(aged.healthcare.movedClocks, `${key}: the typical answer is exposed, so a moved vintage fires`).toEqual(['extras-typical'])
+    })
+  }
+
+  it("each verdict through the real engine, pinned as found: 'patypical' borderline, 'failingtypical' already-failing", () => {
+    const verdict = (key: 'patypical' | 'failingtypical'): string => {
+      const d = DEV_SEEDS[key]
+      const params = buildSpineParams(d)
+      expect(params, `${key}: buildSpineParams`).not.toBeNull()
+      const wire = runEngine(params!, d.seed!)
+      expect(wire.kind, `${key}: a resolved run`).toBe('resolved')
+      if (wire.kind !== 'resolved') throw new Error('unreachable — asserted above')
+      return wire.headline.outcomeState
+    }
+    // Found 2026-11-20: "not sure" funds the typical extras for both people, more than `pa`'s entered pair
+    // ($220 + $0), and tips Pennsylvania from on-track to borderline: the "On the line" face its plants carry.
+    expect(verdict('patypical'), 'the typical extras tip pa (on-track) to borderline').toBe('borderline')
+    expect(verdict('failingtypical')).toBe('already-failing')
   })
 })
 

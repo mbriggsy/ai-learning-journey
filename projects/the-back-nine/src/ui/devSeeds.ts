@@ -31,6 +31,7 @@ import {
   type StateTaxProfile,
 } from '@engine/constants/stateTax'
 import { solverAssumedHeirBracket } from '@engine/constants'
+import { medicareExtrasTypical } from '@engine/constants/health'
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
 import { SOLVER_CODE_VERSION } from '@engine/solver/solverCodeVersion'
 import { FIRST_UNAMBIGUOUS_SAVE_DAY } from '@engine/pricingVersion'
@@ -1080,6 +1081,31 @@ const ncAffirmation: ScenarioDraft = { ...retiredOnTrack, retirementState: 'NC' 
  */
 const paAffirmation: ScenarioDraft = { ...retiredOnTrack, retirementState: 'PA' }
 
+/** "Not sure" on Medicare extras, per person: the answer the intake writes for it
+ *  (`src/intake/questions.tsx`'s extras question: `{ kind: 'typical', adoptionVintage }`, the vintage read
+ *  from the constant, never typed). A STRIPPED field is a different household, a save from before the
+ *  extras question existed, which adds a re-confirm line at the gate. */
+const notSureExtras = (people: number): NonNullable<ScenarioDraft['medicareExtrasByPerson']> =>
+  Array.from({ length: people }, () => ({ kind: 'typical' as const, adoptionVintage: medicareExtrasTypical.value.vintage }))
+
+/**
+ * `?seed=patypical` (the one-frame composites plan's U2, KTD5): `pa` with both people answering "not sure"
+ * on Medicare extras, so the typical figure funds them and its residual paragraph runs two lines longer
+ * (+41.6 px) than the entered form every other priced seed carries. It is the tallest real Pennsylvania
+ * face, and the base of the yearly-return and record plants that put the R13 caveat past 731 px (the
+ * register's Tier 0 *The tallest real composites break the one-frame law…*). The answer only: a spread of
+ * `pa` that sets `medicareExtrasByPerson` and nothing else.
+ */
+const paTypicalExtras: ScenarioDraft = { ...paAffirmation, medicareExtrasByPerson: notSureExtras(paAffirmation.people.length) }
+
+/**
+ * `?seed=failingtypical` (the one-frame composites plan's U2, KTD5): `failing` (the off-track household,
+ * "Already short") with both people answering "not sure" on Medicare extras. `failing` itself carries no
+ * extras answer at all; this seed gives it the intake's typical answer, the base of the off-track
+ * yearly-return plant (its caveat measured at 744.3 px with the typical residual). The answer only.
+ */
+const failingTypicalExtras: ScenarioDraft = { ...retiredFailing, medicareExtrasByPerson: notSureExtras(retiredFailing.people.length) }
+
 /**
  * THE FL $0-CONSTITUTIONAL AFFIRMATION — `retiredOnTrack`'s couple in Florida. FL is a sourced
  * constitutional $0 (Fla. Const. Art. VII § 5(a)): every decumulation dollar incurs $0 state tax,
@@ -1602,6 +1628,7 @@ export const DEV_SEEDS = {
   borderline: retiredBorderline,
   dateborder: withConfirmedW(stillWorkingBorderline),
   failing: retiredFailing,
+  failingtypical: failingTypicalExtras,
   budget: retiredBudget,
   datesplit: withConfirmedW(dateSplitSeed),
   datemixed: withConfirmedW(dateMixedSeed),
@@ -1614,6 +1641,7 @@ export const DEV_SEEDS = {
   steer: noPretaxSteer,
   nc: ncAffirmation,
   pa: paAffirmation,
+  patypical: paTypicalExtras,
   fl: flAffirmation,
   elsewhere: elsewhereAnswered,
   datenc: withConfirmedW(dateNcSeed),

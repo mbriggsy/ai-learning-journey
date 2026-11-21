@@ -7,8 +7,9 @@
  * exactly "This assumes about $[survivor] a month of spending on your own (today: $[couple] together)."
  *
  * THE CENSUS (read): the card renders only on the SPINE route (`answerView.ts` carries `survivorReading`
- * on the spine view only; the date route's working member means no card), so its universe is the 16
- * spine dev seeds plus the four aged vault plants built on them (`?vault=stale` / `statestale` / `rec` /
+ * on the spine view only; the date route's working member means no card), so its universe is the 18
+ * spine dev seeds plus the four aged vault plants built on them (the composites plan's U3 adds five more
+ * vault plants that render the card; their rows land with them) (`?vault=stale` / `statestale` / `rec` /
  * `recold`, doctored exactly as `plantDevVault` doctors them). The census arm below fails if a new spine
  * seed lands without a row here — no silent no-op (burned/070).
  *
@@ -82,7 +83,9 @@ const ROWS: readonly {
   readonly rendered: string
 }[] = [
   // The retired family — S $78,000, r 0.75, no M, no budget: 0.75 × 78,000 = 58,500 → $4,875.00 → "4,880".
-  ...(['retired', 'buckets', 'steer', 'nc', 'pa', 'fl', 'elsewhere'] as const).map((key) => ({
+  // `patypical` (the composites plan's U2) answers "not sure" on Medicare extras: the extras fund through the
+  // engine's costs, never the spending basis, so its row is `pa`'s.
+  ...(['retired', 'buckets', 'steer', 'nc', 'pa', 'patypical', 'fl', 'elsewhere'] as const).map((key) => ({
     key,
     draft: () => DEV_SEEDS[key],
     annual: { survivor: 58_500, couple: 78_000 },
@@ -93,6 +96,8 @@ const ROWS: readonly {
   // S $96,000: 0.75 × 96,000 = 72 thousand a year → $6,000 a month; 96,000 / 12 = $8,000. (Written 6,000 × 12:
   // the bare six-digit figure is the §415(c) ceiling the constants shape gate guards against re-typing.)
   { key: 'failing', draft: () => DEV_SEEDS.failing, annual: { survivor: 6_000 * 12, couple: 96_000 }, rendered: line('6,000', '8,000') },
+  // `failingtypical` (the composites plan's U2): `failing` with "not sure" extras, the same spending basis.
+  { key: 'failingtypical', draft: () => DEV_SEEDS.failingtypical, annual: { survivor: 6_000 * 12, couple: 96_000 }, rendered: line('6,000', '8,000') },
   { key: 'order', draft: () => DEV_SEEDS.order, annual: { survivor: 6_000 * 12, couple: 96_000 }, rendered: line('6,000', '8,000') },
   // S $60,000: 0.75 × 60,000 = 45,000 → $3,750; $5,000.
   { key: 'surplus', draft: () => DEV_SEEDS.surplus, annual: { survivor: 45_000, couple: 60_000 }, rendered: line('3,750', '5,000') },
@@ -145,7 +150,7 @@ describe('the survivor card’s spending-basis line on every household that rend
   it('the census: the rows are exactly the spine dev seeds (+ the four aged plants) — a new spine seed must add its row', () => {
     const spineSeeds = (Object.keys(DEV_SEEDS) as DevSeedKey[]).filter((k) => buildSpineParams(DEV_SEEDS[k]) !== null)
     expect(ROWS.filter((r) => !r.key.startsWith('vault:')).map((r) => r.key).sort()).toEqual([...spineSeeds].sort())
-    expect(spineSeeds).toHaveLength(16)
+    expect(spineSeeds).toHaveLength(18)
   })
 
   it('no CARD-BEARING household is ramped — the ramped dev seeds (`dip`, the Go-go years line) ride the date route, which renders no card, so no dev household drives the withheld line live', () => {

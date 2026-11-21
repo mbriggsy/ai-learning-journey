@@ -332,13 +332,20 @@ tests
 
 ## The fit gate and e2e
 
-- **(b9-8, 11-21) Five arms are HELD, and nothing forces them back** (grep `FRAMES_OUTSIDE_COUNCIL`): `?vault=yearsurplus`
+- **(b9-8, 11-21) Six arms are HELD, and nothing forces them back** (grep `FRAMES_OUTSIDE_COUNCIL`): `?vault=yearsurplus`, `?vault=yearpafailing` (b9-9: outside on ubuntu only)
   and `?seed=surplustypical` / `?seed=pafailingtypical` at REAL print the caveat's bottom (`assertFrameFitsHoldingCaveat`),
   and the two fresh seeds at SHOWCASE print the full fit's offenders (`assertFullFitHeld`); each stays green whatever it
   reads. The frames-outside council's build swaps each back to `assertFrameFits` and deletes the constant. The record
   loop's `standing: 'print'` rows (`yearrec`, `recpa`, `yearparec`) turn `'assert'` only with the card seat's ruling. A `-g`
   filter on `playwright.fit.config.ts` also collects `e2e/chart-text.spec.ts` (`?vault=stale)` matches six of its titles):
   count those arms in a mutant's predicted set.
+- **(b9-9, 11-21) A re-sized paragraph's number is Windows-only until a CI run that carries the change reads it:** the
+  plants read Windows = ubuntu to 0.1 px at body size, yet rung 3's borrowed size put `?vault=yearpafailing` at 722.5 on
+  Windows and 743 on ubuntu (run 44872977380, red): Linux's slightly wider glyph advances pushed the step-down's last two
+  words onto a third line. A frame inside by less than one wrap line (20.8 px at `--text-sm`) can flip. Read the fit log of
+  the run that carries a size, leading or wrap change before restoring an assertion or writing "Linux" in a doc (the
+  register said "Linux: rung 3's CI logs" before that run finished). The ubuntu wraps are readable without Linux: `gh run
+  download <id> -n playwright-report`, unzip `data/*.zip` (the retry's trace), and read `screencast/`'s last frame.
 - **(b9-8, 11-21) `assertDensityTier` reads rung 3 on every arm that calls it:** it derives the frame's key from its own
   markers (the shown direction `rethink` or `trim` on `.cs-magnitude[data-direction]`, the echo, the typical residual) and
   requires the arm's `register` flag to match, as `echo` does. A new arm over a key frame passes `register: true` (it

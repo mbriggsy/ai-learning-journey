@@ -252,7 +252,8 @@
      typical Medicare residual.
        · rethink + echo + typical: the already-failing household at its yearly return (`?vault=yearfailing`,
          732.9 px after rung 2b on Windows and CI; this rung measured -31.2 px there, and the same on
-         Pennsylvania's, `yearpafailing`, 753.7 → 722.5);
+         Pennsylvania's, `yearpafailing`, 753.7 → 722.5 on Windows; on CI's ubuntu its step-down re-wraps to a third
+         line and it stays outside at 743, held for the frames-outside council);
        · trim + echo + typical: the off-track household at its yearly return (`?vault=yearofftrack`, 732.9 px
          after rung 2b on Windows, still outside once the rethink entry landed): its own entry, as the ruling
          gives a trim frame still outside after rung 3.

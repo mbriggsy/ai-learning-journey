@@ -2531,23 +2531,23 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
 //
 // RUNG 3 (council wf_540221e4-42d) borrows the eyebrow's register for the survivor context on the frames
 // carrying its key (`register`): the shown direction `rethink` or `trim`, the echo and the typical residual.
-// Measured on Windows, rung 2b → rung 3: `yearfailing` 732.9 → 701.7, `yearpafailing` 753.7 → 722.5,
-// `yearofftrack` 732.9 → 722.5; `yearfailingentered` (no typical residual) stays body at 692.4.
+// Rung 2b → rung 3: `yearfailing` 732.9 → 701.7, `yearofftrack` 732.9 → 722.5, `yearfailingentered` (no typical
+// residual) stays body at 692.4; `yearpafailing` 753.7 → 722.5 on Windows but 743 on CI's ubuntu (run 44872977380).
 //
-// THE ROOM FRAME IS A NEW STOP (`yearsurplus`, "More than covered" answering "not sure", 760.8 px): no
-// direction the key reads, and its own council decides whether a stable key exists (the ruling: "a room
-// frame, or any frame still outside after rung 3, is a NEW STOP for its own council"). So its caveat
-// assertion is HELD: the arm prints the caveat's bottom and asserts everything else
-// (`assertFrameFitsHoldingCaveat`); that council's build restores `assertFrameFits` here.
+// THE FRAMES STILL OUTSIDE WITH EVERY RUNG ON ARE A NEW STOP: `yearsurplus` ("More than covered" answering "not
+// sure", 760.8 px; no direction the key reads) and `yearpafailing` on ubuntu (its step-down re-wraps to three lines
+// at the borrowed size there). The ruling: "a room frame, or any frame still outside after rung 3, is a NEW STOP for
+// its own council". So their caveat assertions are HELD: each arm prints the caveat's bottom and asserts everything
+// else (`assertFrameFitsHoldingCaveat`); that council's build restores `assertFrameFits` here.
 const FRAMES_OUTSIDE_COUNCIL =
-  "the frames still outside after rung 3 (the room frame and the fresh Pennsylvania already-failing frame): their own council, the composites entry's prescription (3)"
+  "the frames still outside after rung 3 (the room frame, the fresh Pennsylvania already-failing frame, and its yearly return on CI's ubuntu): their own council, the composites entry's prescription (3)"
 
 test.describe(`the yearly returns — the gate + the echoed frame, rung 3 on its key (${REAL.width}×${REAL.height})`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   for (const { key, what, word, typical, register, held } of [
     { key: 'yearpa', what: 'Pennsylvania answering "not sure", a year on', word: copy.outcomeBorderline, typical: 1, register: false, held: null },
     { key: 'yearfailing', what: 'the already-failing household answering "not sure", a year on', word: copy.outcomeAlreadyFailing, typical: 1, register: true, held: null },
-    { key: 'yearpafailing', what: 'Pennsylvania already short, "not sure", a year on', word: copy.outcomeAlreadyFailing, typical: 1, register: true, held: null },
+    { key: 'yearpafailing', what: 'Pennsylvania already short, "not sure", a year on', word: copy.outcomeAlreadyFailing, typical: 1, register: true, held: FRAMES_OUTSIDE_COUNCIL },
     { key: 'yearofftrack', what: 'the off-track household answering "not sure", a year on', word: copy.outcomeOffTrack, typical: 1, register: true, held: null },
     { key: 'yearfailingentered', what: 'the already-failing household with entered extras, a year on', word: copy.outcomeAlreadyFailing, typical: 0, register: false, held: null },
     { key: 'yearsurplus', what: 'the reassuring room frame answering "not sure", a year on', word: copy.outcomeOverFunded, typical: 1, register: false, held: FRAMES_OUTSIDE_COUNCIL },

@@ -332,19 +332,26 @@ tests
 
 ## The fit gate and e2e
 
-- **(b9-7, 11-20) `?vault=yearfailing`'s caveat is HELD, and nothing forces it back:** its arm calls
-  `assertFrameFitsHoldingCaveat` (`RUNG3_KEY_COUNCIL`), which prints the caveat's bottom and holds every other element to
-  the frame, so it stays green whatever the caveat reads, rung 3 landed or not. The rung-3 build swaps the call back to
-  `assertFrameFits` and deletes the constant (grep `RUNG3_KEY_COUNCIL`); the record loop's `standing: 'print'` rows
-  (`yearrec`, `recpa`, `yearparec`) turn `'assert'` only with the card seat's ruling. And a `-g` filter on
-  `playwright.fit.config.ts` also collects `e2e/chart-text.spec.ts` (`?vault=stale)` matches six of its titles): count
-  those arms in a mutant's predicted set.
+- **(b9-8, 11-21) Five arms are HELD, and nothing forces them back** (grep `FRAMES_OUTSIDE_COUNCIL`): `?vault=yearsurplus`
+  and `?seed=surplustypical` / `?seed=pafailingtypical` at REAL print the caveat's bottom (`assertFrameFitsHoldingCaveat`),
+  and the two fresh seeds at SHOWCASE print the full fit's offenders (`assertFullFitHeld`); each stays green whatever it
+  reads. The frames-outside council's build swaps each back to `assertFrameFits` and deletes the constant. The record
+  loop's `standing: 'print'` rows (`yearrec`, `recpa`, `yearparec`) turn `'assert'` only with the card seat's ruling. A `-g`
+  filter on `playwright.fit.config.ts` also collects `e2e/chart-text.spec.ts` (`?vault=stale)` matches six of its titles):
+  count those arms in a mutant's predicted set.
+- **(b9-8, 11-21) `assertDensityTier` reads rung 3 on every arm that calls it:** it derives the frame's key from its own
+  markers (the shown direction `rethink` or `trim` on `.cs-magnitude[data-direction]`, the echo, the typical residual) and
+  requires the arm's `register` flag to match, as `echo` does. A new arm over a key frame passes `register: true` (it
+  stays true above the tier, where the read expects body); a selector entry added to the rung without the matching key
+  in the helper reds every frame it borrows on. The off-track household now has a seed (`offtracktypical`, the trim
+  clause), so `trim` is a live direction on the plant set.
 - **(b9-6, 11-20) A yearly return rides `doctorYearlyReturn` (or `doctorYearlyReturnRecord`), never `doctorStaleVault`**
   (`src/ui/devSeeds.ts`): the stale doctor throws on a priced base and strips the extras answer and its vintage (a
   pre-extras save, which adds a re-confirm line); the yearly one keeps the start year and every answer and floors the save
   at `FIRST_UNAMBIGUOUS_SAVE_DAY`, and a plant using it declares `viewDay: RETURN_DAY`. Only `retired` enters extras
-  (`pa`, `nc`, `fl`, `elsewhere`, `rec`, `recold` spread it; `patypical` and `failingtypical` answer "not sure"): a new
-  plant names its extras form in its key or docblock. An echo arm passes `echo: true` to `assertDensityTier`, which reds
+  (`pa`, `nc`, `fl`, `elsewhere`, `rec`, `recold` and `failingentered` spread it; `patypical`, `failingtypical`,
+  `surplustypical`, `offtracktypical` and `pafailingtypical` answer "not sure"; `failing` answers nothing, which funds and
+  shows the typical residual too): a new plant names its extras form in its key or docblock. An echo arm passes `echo: true` to `assertDensityTier`, which reds
   when the flag does not match the frame.
 - **(b9-5, 11-20) The gate has a calendar: every spec the fit, fit-rv or Caddie harness collects takes `test` from
   `e2e/reviewSurface.ts`, never from `@playwright/test`** (the partition test's guard reds otherwise). That `test` pins each

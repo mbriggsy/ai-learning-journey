@@ -1,5 +1,5 @@
-import { test, expect, type Page } from '@playwright/test'
-import { PHONE, PHONE_DPR, settleLayout } from './reviewSurface'
+import { expect, type Page } from '@playwright/test'
+import { test, PHONE, PHONE_DPR, settleLayout } from './reviewSurface'
 import { copy } from '../src/ui/copy'
 
 /**

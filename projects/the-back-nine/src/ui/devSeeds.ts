@@ -50,6 +50,35 @@ import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
 const DEV_CRN_SEED = 0xbada55
 
 /**
+ * THE FIT GATE'S CALENDAR (the one-frame composites plan, KTD1 + KTD2,
+ * `docs/plans/features/one-frame-composites-build-spec.md`). Every seed below is a plan built in
+ * `SEED_BUILD_YEAR`. Every fit harness pins the page's clock to `GATE_DAY`, or to the view day a plant
+ * declares (`AgedPlant.viewDay`: `RETURN_DAY` for a yearly return), so a frame the gate certifies never
+ * moves with the wall clock. Before the pin, from 2027-01-01 every plant would render as a plan built
+ * last year, and the saved-record arms' standing line would drop from 707 to 754.5 px with no code
+ * change (measured under a pinned page clock, b9-4, 2026-11-20).
+ *
+ * `devSeeds.test.ts` binds `SEED_BUILD_YEAR` to `GATE_DAY`'s calendar year. The day an engine-pricing
+ * ledger row ships in a later year, `GATE_DAY` moves into that year and the binding test goes red:
+ * rolling the seeds' build year is then a named job (the register's build-year-roll entry), never a
+ * date bump.
+ */
+export const SEED_BUILD_YEAR = 2026
+/** The day a fresh plant is viewed and saved on: the first day a save is unambiguously this build's
+ *  (`FIRST_UNAMBIGUOUS_SAVE_DAY`, read, never typed). A LOCAL-calendar epoch-day, `currentEpochDay`'s
+ *  unit, so a harness pins it at UTC noon (the same calendar day in every timezone the gate runs in). */
+export const GATE_DAY: number = FIRST_UNAMBIGUOUS_SAVE_DAY
+/** A yearly return: the same calendar date one year after `GATE_DAY` (a 29 February rolls to 1 March).
+ *  Rolled, never counted: a fixed 365 days can land in the same calendar year (2028-01-01 + 365 is
+ *  2028-12-31). */
+export const RETURN_DAY: number = sameDateNextYear(GATE_DAY)
+
+function sameDateNextYear(epochDay: number): number {
+  const d = new Date(epochDay * 86_400_000)
+  return Date.UTC(d.getUTCFullYear() + 1, d.getUTCMonth(), d.getUTCDate()) / 86_400_000
+}
+
+/**
  * The all-retired, on-track couple Briggsy drove live (2026-06-28) — the SPINE
  * route (both `retired` ⇒ the confidence statement + spine band). 66/65, a single
  * $1M Traditional IRA at 60/30/10, both claiming Social Security at 67. At 66/65
@@ -128,7 +157,7 @@ const retiredOnTrack: ScenarioDraft = {
   survivorSpendingRatio: 0.75,
   drawdownPolicy: 'proportional',
   filing: 'mfj',
-  startCalendarYear: 2026,
+  startCalendarYear: SEED_BUILD_YEAR,
   taxVintage: 'OBBBA-2025',
   appDefaultVersion: 'p2-dev-seed',
   seed: DEV_CRN_SEED,
@@ -198,7 +227,7 @@ const stillWorking: ScenarioDraft = {
   survivorSpendingRatio: 0.75,
   drawdownPolicy: 'proportional',
   filing: 'mfj',
-  startCalendarYear: 2026,
+  startCalendarYear: SEED_BUILD_YEAR,
   taxVintage: 'OBBBA-2025',
   appDefaultVersion: 'p2-dev-seed',
   seed: DEV_CRN_SEED,
@@ -269,7 +298,7 @@ const retiredBorderline: ScenarioDraft = {
   survivorSpendingRatio: 0.75,
   drawdownPolicy: 'proportional',
   filing: 'mfj',
-  startCalendarYear: 2026,
+  startCalendarYear: SEED_BUILD_YEAR,
   taxVintage: 'OBBBA-2025',
   appDefaultVersion: 'p2-dev-seed',
   seed: DEV_CRN_SEED,
@@ -343,7 +372,7 @@ const stillWorkingBorderline: ScenarioDraft = {
   survivorSpendingRatio: 0.75,
   drawdownPolicy: 'proportional',
   filing: 'mfj',
-  startCalendarYear: 2026,
+  startCalendarYear: SEED_BUILD_YEAR,
   taxVintage: 'OBBBA-2025',
   appDefaultVersion: 'p2-dev-seed',
   seed: DEV_CRN_SEED,
@@ -400,7 +429,7 @@ const retiredFailing: ScenarioDraft = {
   survivorSpendingRatio: 0.75,
   drawdownPolicy: 'proportional',
   filing: 'mfj',
-  startCalendarYear: 2026,
+  startCalendarYear: SEED_BUILD_YEAR,
   taxVintage: 'OBBBA-2025',
   appDefaultVersion: 'p2-dev-seed',
   seed: DEV_CRN_SEED,
@@ -671,7 +700,7 @@ const dateDipSeed: ScenarioDraft = {
   survivorSpendingRatio: 0.75,
   drawdownPolicy: 'proportional',
   filing: 'mfj',
-  startCalendarYear: 2026,
+  startCalendarYear: SEED_BUILD_YEAR,
   taxVintage: 'OBBBA-2025',
   appDefaultVersion: 'p2-dev-seed',
   seed: DEV_CRN_SEED,
@@ -755,7 +784,7 @@ const customOrderSeed: ScenarioDraft = {
   drawdownPolicy: 'custom',
   drawdownOrder: ['roth', 'pretax', 'taxable'],
   filing: 'mfj',
-  startCalendarYear: 2026,
+  startCalendarYear: SEED_BUILD_YEAR,
   taxVintage: 'OBBBA-2025',
   appDefaultVersion: 'p2-dev-seed',
   seed: DEV_CRN_SEED,
@@ -830,7 +859,7 @@ const retiredHealth: ScenarioDraft = {
   survivorSpendingRatio: 0.75,
   drawdownPolicy: 'proportional',
   filing: 'mfj',
-  startCalendarYear: 2026,
+  startCalendarYear: SEED_BUILD_YEAR,
   taxVintage: 'OBBBA-2025',
   appDefaultVersion: 'p2-dev-seed',
   seed: DEV_CRN_SEED,
@@ -899,7 +928,7 @@ const stillWorkingAllMedicare: ScenarioDraft = {
   survivorSpendingRatio: 0.75,
   drawdownPolicy: 'proportional',
   filing: 'mfj',
-  startCalendarYear: 2026,
+  startCalendarYear: SEED_BUILD_YEAR,
   taxVintage: 'OBBBA-2025',
   appDefaultVersion: 'p2-dev-seed',
   seed: DEV_CRN_SEED,
@@ -1273,7 +1302,7 @@ const dateShortWitness: ScenarioDraft = {
   survivorSpendingRatio: 0.75,
   drawdownPolicy: 'proportional',
   filing: 'mfj',
-  startCalendarYear: 2026,
+  startCalendarYear: SEED_BUILD_YEAR,
   taxVintage: 'OBBBA-2025',
   appDefaultVersion: 'p2-dev-seed',
   seed: DEV_CRN_SEED,
@@ -2181,6 +2210,12 @@ export function doctorRecordSuperseded(s: CurrentScenario, todayEpochDay: number
 export interface AgedPlant {
   readonly base: DevSeedKey
   readonly doctor: (s: CurrentScenario, todayEpochDay: number) => CurrentScenario
+  /** The day every harness views this plant on (the gate's calendar, above): a local-calendar
+   *  epoch-day the page clock is pinned to before navigating. Absent means `GATE_DAY`. A yearly
+   *  return declares `RETURN_DAY`. Declared HERE, once, so the fit arms and the Caddie walk can never
+   *  view one plant on two different days; a harness reads it through `reviewSurface.ts`'s pin, never
+   *  re-typing a day per arm. */
+  readonly viewDay?: number
 }
 
 /** EXPORTED for the devSeeds battery (like the doctors): the pay check's U10 sweep builds EVERY plant

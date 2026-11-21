@@ -1,5 +1,8 @@
-import { expect, type Page } from '@playwright/test'
+import { test as base, expect, type BrowserContext, type Page } from '@playwright/test'
 import { copy } from '../src/ui/copy'
+import { AGED_PLANTS, GATE_DAY } from '../src/ui/devSeeds'
+
+export { GATE_DAY, RETURN_DAY } from '../src/ui/devSeeds'
 
 /**
  * The ONE canonical home of the review-surface constants + the settle recipe, shared by every
@@ -50,6 +53,83 @@ export const PHONE_DPR = 3
  *  measured beside REAL / FLOOR / PHONE (temp/chart-text/ink.md), and the WIDEST phone band figure
  *  of any arm (526 px against portrait's 308): a coarse pointer over a desktop-width chart. */
 export const PHONE_LS = { width: 844, height: 390 }
+
+/*
+ * THE GATE'S CALENDAR (the one-frame composites plan, KTD1). Every harness that renders the app takes
+ * its `test` from here, never from `@playwright/test`: this `test` pins every page's clock to
+ * `GATE_DAY` before the arm runs, so a frame the gate certifies is the same frame on any date. A plant
+ * that declares a view day (`AgedPlant.viewDay` in `src/ui/devSeeds.ts`) is re-pinned to it by
+ * `pinPlantDay`, which `gotoVaultFinal` calls; an arm that drives such a plant by its own `page.goto`
+ * calls it first. When the arm ends, the page's own day is read back the way the app reads it and must
+ * equal the last day pinned. `scripts/__tests__/playwright-harness-partition.test.ts` reds any spec the
+ * fit, fit-rv or Caddie harness collects that takes `test` from `@playwright/test`.
+ *
+ * WHY UTC NOON: the fit configs set no `timezoneId`, so the laptop reads Eastern time and CI reads UTC.
+ * The app's day is the LOCAL calendar's (`currentEpochDay`), and UTC noon of a day is that same
+ * calendar day in both; a midnight pin reads as the day before on the laptop. `setFixedTime` fixes
+ * `Date` only, so timers and animation frames keep running and every settle wait still works.
+ */
+const DAY_MS = 86_400_000
+const pinnedDays = new WeakMap<BrowserContext, number>()
+
+/** Pin the page's clock (its whole context's) to UTC noon of a local-calendar epoch-day, and record it. */
+export async function pinDay(page: Page, epochDay: number): Promise<void> {
+  await page.clock.setFixedTime(epochDay * DAY_MS + DAY_MS / 2)
+  pinnedDays.set(page.context(), epochDay)
+}
+
+/** The day a plant is viewed on: the one it declares, or `GATE_DAY`. Reads the plant's own entry. */
+export function plantDay(key: string): number {
+  const plant = Object.hasOwn(AGED_PLANTS, key) ? AGED_PLANTS[key] : undefined
+  return plant?.viewDay ?? GATE_DAY
+}
+
+/** Re-pin the page to the day the plant `key` declares. Call BEFORE navigating to `?vault=<key>`. */
+export async function pinPlantDay(page: Page, key: string): Promise<void> {
+  await pinDay(page, plantDay(key))
+}
+
+/** The day the page is pinned to, for a date an arm computes in Node. Never `new Date()` in a spec. */
+export function pinnedDay(page: Page): number {
+  const day = pinnedDays.get(page.context())
+  if (day === undefined) {
+    throw new Error(
+      "[gate calendar] this page's clock was never pinned: take `test` from e2e/reviewSurface.ts, not @playwright/test",
+    )
+  }
+  return day
+}
+
+/** The calendar year of the pinned day (the app's local calendar). */
+export function pinnedYear(page: Page): number {
+  return new Date(pinnedDay(page) * DAY_MS).getUTCFullYear()
+}
+
+/** The page's own day, read the way the app reads it (`currentEpochDay` in `src/ui/scenarioFromDraft.ts`). */
+export async function pageDay(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const now = new Date()
+    return Math.floor((now.getTime() - now.getTimezoneOffset() * 60_000) / 86_400_000)
+  })
+}
+
+/** `@playwright/test`'s `test` with the gate's calendar: the context is pinned to `GATE_DAY` before any
+ *  page opens, and the page's own day is read back against the last pin when the arm ends. */
+export const test = base.extend({
+  context: async ({ context }, use) => {
+    await context.clock.setFixedTime(GATE_DAY * DAY_MS + DAY_MS / 2)
+    pinnedDays.set(context, GATE_DAY)
+    await use(context)
+  },
+  page: async ({ page }, use) => {
+    await use(page)
+    if (page.isClosed()) return
+    expect(
+      await pageDay(page),
+      "[gate calendar] the page's own day is not the day the arm pinned: a clock read the pin missed",
+    ).toBe(pinnedDay(page))
+  },
+})
 
 /**
  * Settle a rendered page for measurement/capture: fonts, finite animations, a two-frame
@@ -219,6 +299,7 @@ export async function expectRefiguringSeen(page: Page, who: string): Promise<voi
  * and caddie-walk.spec.ts each carry this drive inline, and a spec cannot import another spec.
  */
 export async function gotoVaultFinal(page: Page, key: string): Promise<void> {
+  await pinPlantDay(page, key)
   await page.goto(`/?vault=${key}`)
   const unlock = page.getByRole('button', { name: 'Open my plan' })
   await expect(unlock, `?vault=${key}: the plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })

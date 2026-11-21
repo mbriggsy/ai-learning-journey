@@ -1,5 +1,5 @@
-import { test, expect, type Page } from '@playwright/test'
-import { REAL, REAL_DPR, FLOOR, PHONE, PHONE_DPR, gotoSeedFinal, settleLayout } from './reviewSurface'
+import { expect, type Page } from '@playwright/test'
+import { test, REAL, REAL_DPR, FLOOR, PHONE, PHONE_DPR, gotoSeedFinal, settleLayout } from './reviewSurface'
 import { type Audit, floorPx, audit, assertChartText } from './chartTextAudit'
 
 /**

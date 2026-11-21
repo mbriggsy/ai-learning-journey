@@ -323,6 +323,20 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-5, 11-20) The gate has a calendar: every spec the fit, fit-rv or Caddie harness collects takes `test` from
+  `e2e/reviewSurface.ts`, never from `@playwright/test`** (the partition test's guard reds otherwise). That `test` pins each
+  page's clock to `GATE_DAY` at UTC noon and reads the page's own day back when the arm ends; a date a spec computes in Node
+  reads `pinnedDay(page)` or `pinnedYear(page)`, never `new Date()`. A plant viewed later (a yearly return) declares
+  `viewDay` on its `AGED_PLANTS` entry and must be driven through `gotoVaultFinal`, or after `pinPlantDay(page, key)`: an
+  arm's own `page.goto('/?vault=<key>')` without it views that plant on `GATE_DAY`. A yearly return is a plant viewed at
+  its declared `RETURN_DAY`, never a doctor that moves the start year (a priced base refuses one). Only `Date` is fixed:
+  `performance.now`, timers and animation frames run, so every settle wait still works.
+- **(b9-5, 11-20) A before/after comparison of `verify:fit`'s printed lines meets one noisy count:** `seed=budget` at
+  1440×731 prints `counted=86` / `84` on most runs and `87` / `85` (below the fold 69 / 70) on some, in the
+  `[20px-root fit]` and `[24px-root instrument]` lines, with every position (`caveatBottom=2482`) unchanged; seen across
+  three runs of one tree, two of them clock-pinned, during the composites plan's U1. Compare those two lines by their
+  positions, and read any other moved number as a real move.
+
 - **(b9-3, 11-20) The short laptop tier's law has ONE home: `--bp-laptop-short`'s docblock in `src/ui/styles/tokens.css`.**
   The re-point amended it from "whitespace only" to insight 082's ordered ladder (whitespace, then leading, then a type
   register borrowed from an equal-rank subordinate in the same frame, only for a frame still outside after the first two).
@@ -381,12 +395,12 @@ tests
   (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry-run output>` — SAFE / CARRIED / FRESH), hand-check each FRESH one
   and each REVIEW line (a citation inside a modified hunk is never moved), and move the second number of a comma pair by hand
   (the tool moves only the first).
-- **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:931-941`
-  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1057-1059`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
+- **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:934-944`
+  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1062-1064`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:3823-3825`, measured at the Dell's 1536×791 @ 2.5), a once-measured
+  measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:3826-3828`, measured at the Dell's 1536×791 @ 2.5), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
-  arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:39-40`) — no date frame has ever been fit-measured either.
+  arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:42-43`) — no date frame has ever been fit-measured either.
 - **(2026-09-27, b9-11)** the ONE width seam: a new `@media (min-width: …rem)` fails `breakpoint-mirrors.test.ts` unless it mirrors `--bp-laptop` (68rem) — a new tier is a product decision
 - **(2026-09-26)** the spend lane lands a beat AFTER `data-answer-tier="final"`: a capture must wait out `.cs-magnitude[data-spend="pending"]` (the Caddie walk does since `2f43761f`), while a fit arm measuring right after `final` is measuring the RESERVED pending box — both states are laws
 - **(2026-09-23 evening)** a held look spec's style-tag lift must be REMOVED before the next dialog opens (a leaked `max-height:none` made the Roth frame an uncapped sheet no reader sees)

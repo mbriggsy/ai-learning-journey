@@ -109,6 +109,16 @@ function ciGateConfigs(): string[] {
  *  still prints a full JSON report, and that empty report must reach the authored assertion below
  *  rather than surfacing as a raw CLI dump. */
 function collect(config: string): Map<string, Set<string>> {
+  const cached = collected.get(config)
+  if (cached !== undefined) return cached
+  const claimed = collectUncached(config)
+  collected.set(config, claimed)
+  return claimed
+}
+/** One collector run per config per suite run: both arms below read the same collection. */
+const collected = new Map<string, Map<string, Set<string>>>()
+
+function collectUncached(config: string): Map<string, Set<string>> {
   const run = spawnSync(process.execPath, [CLI, 'test', '--list', '--config', config, '--reporter=json'], {
     cwd: ROOT,
     encoding: 'utf-8',
@@ -145,6 +155,36 @@ function collect(config: string): Map<string, Set<string>> {
   }
   report.suites.forEach(walk)
   return claimed
+}
+
+/** The harnesses that render the app and certify or capture its frames, so each views it on the gate's
+ *  calendar (the one-frame composites plan, KTD1): every spec they collect takes `test` from
+ *  `e2e/reviewSurface.ts`, whose `test` pins the page clock. Not the CSP gate (it asserts no layout)
+ *  and not the held instruments (on demand, never a gate). */
+const CALENDAR_CONFIGS = ['playwright.fit.config.ts', 'playwright.fit-rv.config.ts', 'playwright.caddie.config.ts']
+
+/** Why `src` fails the gate's calendar, or null when it takes `test` from `./reviewSurface` and nothing
+ *  of `test` from `@playwright/test`. A namespace or default import of `@playwright/test` fails too: it
+ *  could reach the unpinned `test` by another name. */
+function calendarFault(src: string): string | null {
+  let fromSurface = false
+  for (const m of src.matchAll(/^import\s+(?!type\s)([\s\S]*?)\s+from\s+['"]([^'"]+)['"]/gm)) {
+    const clause = m[1]!
+    const from = m[2]!
+    const named = (/\{([\s\S]*)\}/.exec(clause)?.[1] ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s !== '' && !s.startsWith('type '))
+      .map((s) => s.split(/\s+as\s+/)[0]!)
+    if (from === '@playwright/test') {
+      if (/\*\s*as\s/.test(clause) || /^[A-Za-z_$][\w$]*\s*(,|$)/.test(clause.trim())) {
+        return 'a namespace or default import of @playwright/test'
+      }
+      if (named.includes('test')) return '`test` taken from @playwright/test'
+    }
+    if (from === './reviewSurface' && named.includes('test')) fromSurface = true
+  }
+  return fromSurface ? null : '`test` not taken from ./reviewSurface'
 }
 
 describe('the Playwright harnesses partition e2e/ — one owner per spec, no instrument in a CI gate', () => {
@@ -229,6 +269,38 @@ describe('the Playwright harnesses partition e2e/ — one owner per spec, no ins
         shared,
         `spec(s) collected by MORE than one harness — a dev-server spec on the dist harness fails ` +
           `confusingly (no seeds), a dist spec on the dev harness measures uncommitted state:\n${table}`,
+      ).toEqual([])
+    },
+    180_000,
+  )
+
+  it(
+    "every spec the fit, fit-rv and Caddie harnesses collect takes `test` from reviewSurface.ts (the gate's calendar)",
+    () => {
+      // The set is the collectors', never a typed list of specs: a spec added to one of these harnesses
+      // later is exactly the one that would read the wall clock unnoticed until a New Year.
+      const known = new Set(configFiles())
+      const missing = CALENDAR_CONFIGS.filter((c) => !known.has(c))
+      expect(missing, 'a calendar harness this guard names no longer exists — re-point the list').toEqual([])
+      const specs = new Set<string>()
+      for (const config of CALENDAR_CONFIGS) {
+        const claimed = collect(config)
+        // Per config, never a total: a spec that fails to compile empties its WHOLE config's collection,
+        // and a guard reading the other configs' specs would then pass over it (seen planting this guard's
+        // own fault, 2026-11-20).
+        expect(claimed.size, `${config} collects ZERO specs — the guard would pass over every spec it holds`).toBeGreaterThan(0)
+        for (const file of claimed.keys()) specs.add(file)
+      }
+      const faults = [...specs]
+        .sort()
+        .map((file) => [file, calendarFault(readFileSync(join(ROOT, file), 'utf-8'))] as const)
+        .filter(([, fault]) => fault !== null)
+        .map(([file, fault]) => `  ${file}: ${fault}`)
+      expect(
+        faults,
+        "spec(s) that would view the app on the WALL clock: take `test` from './reviewSurface', whose " +
+          'fixture pins every page to the gate\'s calendar (from 2027-01-01 an unpinned frame renders every ' +
+          'plant as a plan built last year):\n' + faults.join('\n'),
       ).toEqual([])
     },
     180_000,

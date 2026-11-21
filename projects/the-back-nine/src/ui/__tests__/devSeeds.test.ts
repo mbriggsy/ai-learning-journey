@@ -9,6 +9,9 @@ import {
   doctorWorkingYearsStaleVault,
   agedWorkingYearsVintage,
   AGED_PLANTS,
+  GATE_DAY,
+  RETURN_DAY,
+  SEED_BUILD_YEAR,
 } from '../devSeeds'
 import { heldYesBelowQuote, isWorkingYearCostStale, workingYearCostStaleness, writeEnteredWorkingYearCost } from '@intake/workingYearQuote'
 import {
@@ -53,7 +56,7 @@ import { epochDayFromIsoDate } from '@engine/validation/oracleToken'
 import { acaEnhancedSubsidyStatus } from '@engine/constants'
 import { stateTaxVintageStamp } from '@engine/constants/stateTax'
 import { deriveStaleness } from '@store/staleness'
-import { ENGINE_PRICING_LEDGER } from '@engine/pricingVersion'
+import { ENGINE_PRICING_LEDGER, FIRST_UNAMBIGUOUS_SAVE_DAY } from '@engine/pricingVersion'
 import { exposureForDraft } from '../stalenessExposure'
 import { composeReentry } from '../reentryChrome'
 import { copy, slots } from '../copy'
@@ -72,6 +75,39 @@ import {
   typedBelowCrownedHousehold,
   typedBelowPensionHousehold,
 } from '@intake/__tests__/typedBelowWitnesses'
+
+/**
+ * THE FIT GATE'S CALENDAR (the one-frame composites plan, KTD2). The seeds are plans built in
+ * `SEED_BUILD_YEAR`, and every fit harness views them on `GATE_DAY` or a plant's declared day. The year
+ * is read off the ENGINE-PRICING LEDGER here, never off `GATE_DAY` (whose definition could move with it),
+ * so the day a ledger row ships in a later calendar year this arm goes red, and nothing else does: the
+ * plants would otherwise be viewed in a year their plans were not built in.
+ */
+describe("the fit gate's calendar: the seeds' build year binds to the gate's day", () => {
+  const yearOf = (epochDay: number): number => new Date(epochDay * 86_400_000).getUTCFullYear()
+  const isoOf = (epochDay: number): string => new Date(epochDay * 86_400_000).toISOString().slice(0, 10)
+
+  it('the first unambiguous save day falls in the seeds\' build year — a later ledger year is the build-year roll', () => {
+    expect(
+      yearOf(FIRST_UNAMBIGUOUS_SAVE_DAY),
+      `THE SEEDS' BUILD-YEAR ROLL IS DUE: an engine-pricing ledger row shipped in ${yearOf(FIRST_UNAMBIGUOUS_SAVE_DAY)}, ` +
+        `so the gate's day (${isoOf(FIRST_UNAMBIGUOUS_SAVE_DAY)}) is no longer in SEED_BUILD_YEAR (${SEED_BUILD_YEAR}). ` +
+        'Roll it as a job, never a date bump (the register\'s build-year-roll entry): SEED_BUILD_YEAR in ' +
+        'src/ui/devSeeds.ts; every seed\'s birth years with it (the same people); the outcome pins the roll ' +
+        'moves; and the year literals in e2e/vertical-fit.spec.ts and e2e/caddie-walk.spec.ts.',
+    ).toBe(SEED_BUILD_YEAR)
+    expect(GATE_DAY, "the gate's day is the first unambiguous save day, read, never typed").toBe(FIRST_UNAMBIGUOUS_SAVE_DAY)
+  })
+
+  it('the yearly return is the same calendar date one year after the gate\'s day', () => {
+    const [y, md] = [isoOf(GATE_DAY).slice(0, 4), isoOf(GATE_DAY).slice(4)]
+    // An independent route to the same day: the ISO date with its year bumped (29 February excepted —
+    // the doctor's docblock rolls it to 1 March; the gate's day is not one).
+    expect(md, 'the gate\'s day is a 29 February — this route cannot say which day follows').not.toBe('-02-29')
+    expect(isoOf(RETURN_DAY)).toBe(`${Number(y) + 1}${md}`)
+    expect(yearOf(RETURN_DAY)).toBe(SEED_BUILD_YEAR + 1)
+  })
+})
 
 /**
  * The dev-seed validity proof (the SAME render-anchor coupling intakeMap.test.ts

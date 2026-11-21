@@ -1,5 +1,5 @@
-import { test, expect, type BrowserContext, type Page } from '@playwright/test'
-import { REAL, REAL_DPR, FLOOR, PHONE, PHONE_DPR, PHONE_LS, FINAL_TIER_MS, SETTLED_RESULT, gotoSeedFinal, gotoVaultFinal, settleLayout } from './reviewSurface'
+import { expect, type BrowserContext, type Page } from '@playwright/test'
+import { test, REAL, REAL_DPR, FLOOR, PHONE, PHONE_DPR, PHONE_LS, FINAL_TIER_MS, SETTLED_RESULT, gotoSeedFinal, gotoVaultFinal, settleLayout } from './reviewSurface'
 import { type Audit, type Rect, TOL, floorPx, audit, assertChartText } from './chartTextAudit'
 /* The band's scrub SNAPS to one of LATTICE_POINTS columns, so the readout's whole placement state
  * space is finite — the sweep below walks EVERY column rather than sampling a few (importing from

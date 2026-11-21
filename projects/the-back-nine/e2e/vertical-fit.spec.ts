@@ -1,5 +1,8 @@
-import { test, expect, type Page, type Locator, type BrowserContext, type CDPSession } from '@playwright/test'
+import { expect, type Page, type Locator, type BrowserContext, type CDPSession } from '@playwright/test'
 import {
+  test,
+  pinnedDay,
+  pinnedYear,
   REAL,
   REAL_DPR,
   TIER,
@@ -17,7 +20,7 @@ import {
   rewalkSeedTo,
   settleLayout,
 } from './reviewSurface'
-// THE SHIPPED CATALOG, never re-typed here (the `e2e/caddie-walk.spec.ts:22` precedent). Every
+// THE SHIPPED CATALOG, never re-typed here (the `e2e/caddie-walk.spec.ts:25` precedent). Every
 // string this spec injects or reads back is the one the app ships: a spec-local literal would pin a
 // reservation, a clause list or a heading against a fiction, and a re-word that overflowed the real
 // box would escape the gate silently (U17 §S5 step 14).
@@ -1179,7 +1182,7 @@ for (const seed of DEAD_RAIL_SEEDS) {
 //
 // EVERY STRING COMES FROM THE SHIPPED CATALOG (`copy`), never re-typed here. A spec-local literal
 // would pin the reservation against a fiction: re-word the ceremony hint one line longer and the
-// gate would stay green while the real control overflowed. `e2e/caddie-walk.spec.ts:22` is the
+// gate would stay green while the real control overflowed. `e2e/caddie-walk.spec.ts:25` is the
 // precedent for importing src into an e2e spec.
 //
 // INJECTED, not solved: a live committed solve was 80–200s single-worker (recorded 2026-07-22
@@ -2247,8 +2250,8 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // The count is derived in a unit arm — `devSeeds.test.ts` "'stale' composes EXACTLY the
     // lines…" — so a re-bucketing fails there first, in a second, not here in ninety; the ledger term
     // below is that arm's own oracle, so neither pin drifts with the calendar.
-    const now = new Date()
-    const plantSavedAt = Math.floor((now.getTime() - now.getTimezoneOffset() * 60_000) / 86_400_000) - 760
+    // The plant's today is the pinned day (the gate's calendar, `e2e/reviewSurface.ts`), never Node's clock.
+    const plantSavedAt = pinnedDay(page) - 760
     const methodLine = ENGINE_PRICING_LEDGER.some(
       (r) => r.kind === 'reprice' && r.sinceEpochDay > plantSavedAt && r.families.some((fam) => fam === 'tax' || fam === 'medicare'),
     )
@@ -4138,7 +4141,7 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       slots.recommendRecordSavedIn(year),
     )
     expect(year, 'a record minted THIS calendar year suppresses the clause instead').toBeLessThan(
-      new Date().getFullYear(),
+      pinnedYear(page),
     )
 
     // THE WORST CASE, measured on the real card: add the one clause the producer could still emit

@@ -1,7 +1,10 @@
-import { test, expect, type CDPSession, type Page } from '@playwright/test'
+import { expect, type CDPSession, type Page } from '@playwright/test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import {
+  test,
+  pinPlantDay,
+  pinnedYear,
   REAL,
   REAL_DPR,
   PHONE,
@@ -829,9 +832,9 @@ async function driveLeverPreview(
   // The Roth plan grammar (RothLever): amount / start / years — a COMPLETE plan fires the
   // preview. Values are small-but-real (a $20k, 4-year plan starting next year). U17 §S1: the
   // start field speaks the CALENDAR YEAR now — a bare offset ('1' = year 1 AD) is a past start
-  // the write side REFUSES aloud, so the drive types next wall year (valid on every vault, aged
-  // or fresh, and never rots across a New Year).
-  const nextYear = String(new Date().getFullYear() + 1)
+  // the write side REFUSES aloud, so the drive types the year after the page's pinned day (valid on
+  // every vault, aged or fresh, and never rots across a New Year: the gate's calendar, reviewSurface.ts).
+  const nextYear = String(pinnedYear(page) + 1)
   const plan = dialog.locator('.control-plan input')
   if ((await plan.count()) >= 3) {
     await typeFieldValue(plan.nth(0), '20000', '20,000')
@@ -958,6 +961,7 @@ async function walkVaultReturn(
   outDir: string,
   opts: { readonly doors: boolean; readonly witness?: LeftOverWitness },
 ): Promise<void> {
+  await pinPlantDay(page, key)
   await page.goto(`/?vault=${key}`)
   const open = page.getByRole('button', { name: 'Open my plan' })
   await expect(open, 'the vault plant did not land on the unlock screen').toBeVisible({
@@ -987,6 +991,7 @@ async function walkVaultReturn(
  *  first frame (accounts are edited where they were entered). One capture — the batch judges
  *  the button pair's wording and where the update door drops you. */
 async function walkUpdateRoute(page: Page, key: string, outDir: string): Promise<void> {
+  await pinPlantDay(page, key)
   await page.goto(`/?vault=${key}`)
   const open = page.getByRole('button', { name: 'Open my plan' })
   await expect(open).toBeVisible({ timeout: 30_000 })

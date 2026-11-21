@@ -246,7 +246,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - **DND-012 externally-derived fixtures**, including the F3 asymmetric survivor golden (F3 above).
 - **verify:fit arms re-pinned WITHOUT assuming monotone shrink** — the omission axis shrank but
   the real-flat clause broadened. The fit spec now pins non-typical extras arms explicitly
-  (`e2e/vertical-fit.spec.ts:1363-1364` — the priced-state faces, all non-typical; `:2447-2449` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
+  (`e2e/vertical-fit.spec.ts:1366-1367` — the priced-state faces, all non-typical; `:2450-2452` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
   (`e2e/csp.spec.ts:135`, the one integration gap `503213f4` left, fixed in `e921f2bb`).
 - **Color-blind-safe encoding** on adopted-vs-entered / typical-vs-your-bill / priced-vs-residual:
   every distinction is carried in words, never a hue. Each door fact line states its provenance in
@@ -259,7 +259,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   `src/engine/taxOverlay.ts:2165-2166`.
 - **Dev-seed drift recorded before any re-tune.** The flagship `retiredOnTrack` seed carries the
   mixed-provenance showcase — one entered dollar, one affirmed MA-$0
-  (`src/ui/devSeeds.ts:124-125`) — and the `borderline` / `?seed=dip` seeds were re-probed under
+  (`src/ui/devSeeds.ts:153-154`) — and the `borderline` / `?seed=dip` seeds were re-probed under
   the extras engine on 2026-07-11 and again through the U14 S0 typical refresh.
 - The unit landed as ONE feature commit (`503213f4`, the ACA-sheet real-flat gap kept to its own
   touch, never a rider), then the integration fix `e921f2bb`, the ultramode fold `019f5334`, and

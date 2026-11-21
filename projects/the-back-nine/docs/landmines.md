@@ -58,6 +58,9 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
+- **(b9-7, 11-20) `src/ui/devSeeds.ts` and `src/ui/__tests__/devSeeds.test.ts` are CRLF** (`git ls-files --eol`: `i/crlf w/crlf`),
+  while `e2e/vertical-fit.spec.ts` and the docs are LF: an edit script's anchors must match each file's own line ends, or
+  find nothing (the composites plan's U2 line said LF until `aa22ac78`). Read `git ls-files --eol <path>` before a scripted edit.
 - **(b9-5, 11-20) `TaskStop` on a background `pnpm dev` kills the `pnpm` wrapper and leaves Vite's `node` child serving the
   port** (seen on 4197: still 200 after the stop). Before reading a port as free, probe it (`curl --max-time 5`), find the
   listener (`Get-NetTCPConnection -LocalPort <port> -State Listen`), confirm its command line is your Vite

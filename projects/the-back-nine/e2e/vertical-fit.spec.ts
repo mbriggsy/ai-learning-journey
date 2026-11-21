@@ -1,7 +1,6 @@
 import { expect, type Page, type Locator, type BrowserContext, type CDPSession } from '@playwright/test'
 import {
   test,
-  pageDay,
   pinPlantDay,
   pinnedDay,
   pinnedYear,
@@ -273,8 +272,9 @@ async function assertFrameFits(
 }
 
 /**
- * U5'S STOP PATH (the one-frame composites plan's U6 step 4): a frame whose PROTECTED R13 caveat the ladder
- * could not bring inside the fold before the council it stopped for has ruled. Its caveat's bottom is
+ * A COUNCIL'S STOP PATH (the one-frame composites plan's U6 step 4; since rung 3 landed, the frames still outside
+ * after it, `FRAMES_OUTSIDE_COUNCIL`): a frame whose PROTECTED R13 caveat the ladder could not bring inside the
+ * fold before the council it stopped for has ruled. Its caveat's bottom is
  * PRINTED and annotated first (measure, then assert: insight 120), and every OTHER element is held to the
  * frame exactly as `assertFrameFits` holds it, the caveat's own subtree alone skipped (`frameReport`'s
  * `holdCaveat`). It is the 20 px arm's record-only precedent, quoted: "never a `test.fail()`. Until the
@@ -297,10 +297,32 @@ async function assertFrameFitsHoldingCaveat(
     caveatBottom > vh! + 0.5 ? `${(caveatBottom - vh!).toFixed(1)} px past the fold` : 'inside the fold'
   }) — its assertion HELD for ${council}`
   console.log(`[held caveat] ${line}`)
-  test.info().annotations.push({ type: 'held caveat (RECORDED — the rung-3 key council owed)', description: line })
+  test.info().annotations.push({ type: 'held caveat (RECORDED — a council owed)', description: line })
   const report = await frameReport(page, true, sanctioned, true)
   expect(report.counted, 'frame walk counted too few elements — page did not render').toBeGreaterThan(WALK_FLOOR)
   expect(report.offenders, 'elements other than the held caveat end below the sanctioned frame').toEqual([])
+}
+
+/**
+ * The SHOWCASE twin of {@link assertFrameFitsHoldingCaveat}, for a frame held by a council: above the short tier no
+ * rung applies, and the showcase's FULL fit (doors included, `assertFrameFits(page, false)`) is the law there. The
+ * full fit's offenders are PRINTED and annotated first (measure, then assert: insight 120), then the laptop law is
+ * asserted in full (every element but the doors' row and its ancestors inside the frame, the caveat included). Never
+ * a ceiling on the printed numbers (insight 065). The council's ruling build replaces this call with
+ * `assertFrameFits(page, false)`.
+ */
+async function assertFullFitHeld(page: Page, frame: string, council: string): Promise<void> {
+  const full = await frameReport(page, false)
+  const vh = page.viewportSize()?.height
+  expect(vh, 'the arm runs at a fixed viewport').toBeDefined()
+  const line = `${frame} ${String(vh)}px frame, FULL fit: ${
+    full.offenders.length === 0
+      ? 'no element below the fold'
+      : full.offenders.map((o) => `${o.desc} bottom=${o.bottom.toFixed(1)}`).join(', ')
+  } — its full fit HELD for ${council}`
+  console.log(`[held full fit] ${line}`)
+  test.info().annotations.push({ type: 'held full fit (RECORDED — a council owed)', description: line })
+  await assertFrameFits(page, true)
 }
 
 /** The layout TIER the page actually rendered — read from the breakpoint itself, never inferred
@@ -615,6 +637,13 @@ type DensityRows = {
    *  match it, so an echo arm can never read the snug band by forgetting the flag (the composites plan's
    *  U5, KTD7). */
   readonly echo?: boolean
+  /** Rung 3's key is on the frame (council wf_540221e4-42d): the SHOWN direction is `rethink` or `trim`
+   *  (`.cs-magnitude[data-direction]`), the staleness echo shows and the typical Medicare residual runs.
+   *  Inside the short tier the survivor context and its inner step-down then borrow the eyebrow's register;
+   *  above it they stay body. The helper derives the key from the frame's own markers and requires this flag
+   *  to match it, the `echo` pattern, so an arm can never pass a borrowing frame by forgetting the flag, and
+   *  a rule that borrowed off its key reds every arm whose frame lacks it. */
+  readonly register?: boolean
 }
 
 /** The short-laptop density tier, read on BOTH sides of its boundary: the spec's ONE home for the values
@@ -637,7 +666,12 @@ type DensityRows = {
  *   - L1, the survivor eyebrow, context and step-down leading body 1.55 → snug 1.4;
  *   - L3 (the one-frame composites plan's rung 2a), on a frame with the staleness echo, the same three
  *     statements one step further, → tight 1.3 (`rows.echo`, checked against the frame's own echo);
- *   - L4 (rung 2b), the staleness echo's own line body 1.55 → snug 1.4.
+ *   - L4 (rung 2b), the staleness echo's own line body 1.55 → snug 1.4;
+ *   - RUNG 3 (council wf_540221e4-42d), on a frame carrying its key (`rows.register`, checked against the
+ *     frame's own markers), the survivor context and the step-down inside it body → the card's own eyebrow
+ *     size (--text-sm, borrowed). Read on EVERY frame: body wherever the key is absent or the tier is off,
+ *     and the floor relief's trim note (`.floor-readout .survivor__stepdown`) body always. "Body" is the px
+ *     of a CSSOM probe set to var(--text-base) inside the reveal, never a typed number.
  *  L2 (the Medicare pair and the state note) is `assertNoteLeading`'s, on both tiers. */
 async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: DensityRows = {}): Promise<void> {
   const short = tier === 'short'
@@ -689,6 +723,26 @@ async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: Densi
       gridRowGap: style(reveal)?.rowGap ?? null,
       subordinatesRowGap: style(subordinates)?.rowGap ?? null,
       record: record === null ? null : { top: record.paddingTop, bottom: record.paddingBottom, gap: record.rowGap },
+      // RUNG 3: the shown direction (the key's first marker), each inline card's context and inner step-down
+      // beside its own eyebrow, the floor relief's trim notes, and body (a CSSOM probe at var(--text-base),
+      // appended inside the reveal so it reads the same root and viewport, then removed).
+      direction: reveal?.querySelector('.cs-magnitude')?.getAttribute('data-direction') ?? null,
+      register: cards.map((card) => ({
+        eyebrow: parseFloat(getComputedStyle(card.querySelector('.survivor__eyebrow') ?? card).fontSize),
+        hasEyebrow: card.querySelector('.survivor__eyebrow') !== null,
+        context: Array.from(card.querySelectorAll('.survivor__context')).map((el) => parseFloat(getComputedStyle(el).fontSize)),
+        stepdown: Array.from(card.querySelectorAll('.survivor__context .survivor__stepdown')).map((el) => parseFloat(getComputedStyle(el).fontSize)),
+      })),
+      trimNotes: within('.floor-readout .survivor__stepdown').map((el) => parseFloat(getComputedStyle(el).fontSize)),
+      body: (() => {
+        if (reveal === null) return null
+        const probe = document.createElement('span')
+        probe.style.fontSize = 'var(--text-base)'
+        reveal.appendChild(probe)
+        const px = parseFloat(getComputedStyle(probe).fontSize)
+        probe.remove()
+        return px
+      })(),
     }
   })
   const at = `(density tier ${short ? 'ON' : 'OFF'})`
@@ -765,6 +819,30 @@ async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: Densi
     exact(read.record!.bottom, '8px', '12px', 'W5: the record card padding-bottom')
     exact(read.record!.gap, '4px', '8px', 'W5: the record card row-gap')
   }
+  // RUNG 3 — the borrowed register, keyed to the frame's own markers (the ruling, written here independently of
+  // survivor.css's selectors): the shown direction is `rethink` or `trim`, the echo shows, the typical residual runs.
+  expect(['trim', 'room', 'on-the-line', 'rethink'], 'the magnitude clause stamps its shown direction (rung 3 reads it)').toContain(read.direction)
+  const key = (read.direction === 'rethink' || read.direction === 'trim') && read.echo && read.typical
+  expect(key, `rung 3's key must match the frame: direction ${read.direction}, echo ${read.echo}, typical ${read.typical}`).toBe(rows.register === true)
+  const borrow = short && key
+  expect(read.body, 'the body-size probe read nothing').not.toBeNull()
+  const body = read.body!
+  let contextsRead = 0
+  for (const card of read.register) {
+    for (const px of [...card.context, ...card.stepdown]) {
+      contextsRead += 1
+      if (borrow) {
+        expect(card.hasEyebrow, 'a borrowing card carries the eyebrow it borrows from').toBe(true)
+        expect(px, `rung 3 ${at}: the survivor context borrows its own eyebrow's register`).toBe(card.eyebrow)
+        expect(px, `rung 3 ${at}: the borrowed register is smaller than body`).toBeLessThan(body)
+      } else {
+        expect(px, `rung 3 ${at}${key ? ' (the key holds, the tier is off)' : ' (no key on this frame)'}: the survivor context stays body`).toBe(body)
+      }
+    }
+  }
+  if (rows.fold !== true) expect(contextsRead, 'the inline survivor card carries no context paragraph — rung 3 would read nothing').toBeGreaterThan(0)
+  // The trim note's presence on the folded frame is asserted above (W1's relief check), so this never reads nothing there.
+  for (const px of read.trimNotes) expect(px, `rung 3 ${at}: the floor relief's trim note keeps body size`).toBe(body)
 }
 
 async function assertMedicareNote(page: Page, expected: boolean): Promise<void> {
@@ -2441,31 +2519,40 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
   })
 })
 
-// ── the YEARLY RETURNS (?vault=yearpa / ?vault=yearfailing — the one-frame composites plan's U6) ──────
-// The tallest real echo frames: a household answering "not sure" on Medicare extras (the typical residual,
-// two lines longer than the entered one), saved on `GATE_DAY` and opened a calendar year later under the
-// previous year's tax and Medicare rulebooks (`doctorYearlyReturn`, `src/ui/devSeeds.ts`; each plant viewed
-// at its declared `RETURN_DAY` through `pinPlantDay`). From New Year every real return is this frame, so
-// each is held to the `?vault=stale` arm's law: the gate's decision pair in the first frame, then the
-// echoed result inside the fold, the backup door its one sanctioned casualty. Every presence field is U4's
-// probe reading (`4625f077`, Windows = Linux to 0.1 px): the Medicare pair on, the state clause inside the
+// ── the YEARLY RETURNS (the one-frame composites plan's U6, and the rung-3 key council's plants) ──────
+// The tallest real echo frames: a household's plan saved on `GATE_DAY` and opened a calendar year later under
+// the previous year's tax and Medicare rulebooks (`doctorYearlyReturn`, `src/ui/devSeeds.ts`; each plant viewed
+// at its declared `RETURN_DAY` through `pinPlantDay`), most answering "not sure" on Medicare extras (the
+// typical residual, two lines longer than the entered one). From New Year every real return is this frame, so
+// each is held to the `?vault=stale` arm's law: the gate's decision pair in the first frame, then the echoed
+// result inside the fold, the backup door its one sanctioned casualty. Every presence field is a probe reading
+// (U4's `4625f077` and the council's plants, `e49e352f`): the Medicare pair on, the state clause inside the
 // residual (no standalone note), the survivor card inline, the gate's affirm at 391 px.
 //
-// U5'S STOP PATH (`yearfailing`): rungs 2a (L3) and 2b (L4) brought `yearpa` from 737.3 to 725.8 px, but
-// the already-failing household's caveat still ends at 732.9 on both platforms, and rung 3 (the borrowed
-// `--text-sm`) has no stable class to key on (the register's composites entry, prescription (3)). So its
-// caveat assertion is HELD: the arm prints the caveat's bottom and asserts everything else
-// (`assertFrameFitsHoldingCaveat`), and the council's ruling build lands rung 3 on its key and restores
-// `assertFrameFits` here.
-const RUNG3_KEY_COUNCIL = "council wf_540221e4-42d (rung 3's key, the composites entry's prescription (3))"
+// RUNG 3 (council wf_540221e4-42d) borrows the eyebrow's register for the survivor context on the frames
+// carrying its key (`register`): the shown direction `rethink` or `trim`, the echo and the typical residual.
+// Measured on Windows, rung 2b → rung 3: `yearfailing` 732.9 → 701.7, `yearpafailing` 753.7 → 722.5,
+// `yearofftrack` 732.9 → 722.5; `yearfailingentered` (no typical residual) stays body at 692.4.
+//
+// THE ROOM FRAME IS A NEW STOP (`yearsurplus`, "More than covered" answering "not sure", 760.8 px): no
+// direction the key reads, and its own council decides whether a stable key exists (the ruling: "a room
+// frame, or any frame still outside after rung 3, is a NEW STOP for its own council"). So its caveat
+// assertion is HELD: the arm prints the caveat's bottom and asserts everything else
+// (`assertFrameFitsHoldingCaveat`); that council's build restores `assertFrameFits` here.
+const FRAMES_OUTSIDE_COUNCIL =
+  "the frames still outside after rung 3 (the room frame and the fresh Pennsylvania already-failing frame): their own council, the composites entry's prescription (3)"
 
-test.describe(`the yearly returns (?vault=yearpa / ?vault=yearfailing) — the gate + the echoed "not sure" frame (${REAL.width}×${REAL.height})`, () => {
+test.describe(`the yearly returns — the gate + the echoed frame, rung 3 on its key (${REAL.width}×${REAL.height})`, () => {
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  for (const { key, what, held } of [
-    { key: 'yearpa', what: 'Pennsylvania answering "not sure", a year on', held: null },
-    { key: 'yearfailing', what: 'the already-failing household answering "not sure", a year on', held: RUNG3_KEY_COUNCIL },
+  for (const { key, what, word, typical, register, held } of [
+    { key: 'yearpa', what: 'Pennsylvania answering "not sure", a year on', word: copy.outcomeBorderline, typical: 1, register: false, held: null },
+    { key: 'yearfailing', what: 'the already-failing household answering "not sure", a year on', word: copy.outcomeAlreadyFailing, typical: 1, register: true, held: null },
+    { key: 'yearpafailing', what: 'Pennsylvania already short, "not sure", a year on', word: copy.outcomeAlreadyFailing, typical: 1, register: true, held: null },
+    { key: 'yearofftrack', what: 'the off-track household answering "not sure", a year on', word: copy.outcomeOffTrack, typical: 1, register: true, held: null },
+    { key: 'yearfailingentered', what: 'the already-failing household with entered extras, a year on', word: copy.outcomeAlreadyFailing, typical: 0, register: false, held: null },
+    { key: 'yearsurplus', what: 'the reassuring room frame answering "not sure", a year on', word: copy.outcomeOverFunded, typical: 1, register: false, held: FRAMES_OUTSIDE_COUNCIL },
   ] as const) {
-    test(`?vault=${key} — ${what}: the decision pair in frame; the echoed result ${held === null ? 'holds the one-frame law' : 'holds every line but its caveat, which is printed (U5’s stop path)'}`, async ({ page }) => {
+    test(`?vault=${key} — ${what}: the decision pair in frame; the echoed result ${held === null ? 'holds the one-frame law' : 'holds every line but its caveat, which is printed (a new stop)'}`, async ({ page }) => {
       await pinPlantDay(page, key)
       await page.goto(`/?vault=${key}`)
       const unlock = page.getByRole('button', { name: 'Open my plan' })
@@ -2501,8 +2588,12 @@ test.describe(`the yearly returns (?vault=yearpa / ?vault=yearfailing) — the g
       await expect(page.locator('.cs-staleness-note')).toBeVisible()
       await expect(page.locator('.band-premise')).toBeVisible()
       await expect(page.getByRole('button', { name: 'Re-confirm your numbers' })).toBeVisible()
+      await expect(page.locator(SPINE_VERDICT), `?vault=${key}: the verdict the plant is built to show`).toHaveText(word)
       await assertMedicareNote(page, true)
-      await expect(page.locator('.cs-medicare-residual--typical'), 'the "not sure" answer funds the typical residual').toHaveCount(1)
+      await expect(
+        page.locator('.cs-medicare-residual--typical'),
+        typical === 1 ? 'the "not sure" answer funds the typical residual' : 'the entered answer carries no typical residual',
+      ).toHaveCount(typical)
       await assertStateNote(page, false)
       await assertOneVisibleDisclaimer(page, 'laptop')
 
@@ -2521,176 +2612,87 @@ test.describe(`the yearly returns (?vault=yearpa / ?vault=yearfailing) — the g
       if (held === null) await assertFrameFits(page, true, { backupDoor: true })
       else await assertFrameFitsHoldingCaveat(page, `?vault=${key} ${REAL.width}x${REAL.height}`, { backupDoor: true }, held)
       await assertSurvivorBasis(page, 'inline')
-      // REAL sits inside the short tier; the echo flag is checked against the frame's own echo (L3 and L4).
+      // REAL sits inside the short tier; the echo flag is checked against the frame's own echo (L3 and L4), and
+      // the register flag against the frame's own rung-3 key.
       await assertNoteLeading(page, 'short')
-      await assertDensityTier(page, 'short', { echo: true })
+      await assertDensityTier(page, 'short', { echo: true, register })
     })
   }
+
+  // Rung 3's tall side (the ruling's pins): the same key frame above the short tier borrows nothing. A computed-style
+  // read only, so the widening needs no fresh load (the `?vault=stale` arm's SHOWCASE idiom).
+  test(`?vault=yearfailing — rung 3's key holds, and above the short tier the survivor context stays body`, async ({ page }) => {
+    await gotoVaultFinal(page, 'yearfailing')
+    await assertResolvedSpine(page)
+    await assertDensityTier(page, 'short', { echo: true, register: true })
+    await page.setViewportSize(SHOWCASE)
+    await settleLayout(page)
+    await assertTier(page, 'laptop')
+    await assertDensityTier(page, 'tall', { echo: true, register: true })
+  })
 })
 
-// ── THE RUNG-3 KEY COUNCIL'S PLANTS — RECORD-ONLY, never asserted (council wf_540221e4-42d; the ruling's build
-// replaces this describe with each frame's own arm once rung 3 lands) ───────────────────────────────────────────
-// The council (`docs/council-log.md`'s rung-3 row) ordered its plants read on real engine runs BEFORE rung 3 lands:
-// four bases in `src/ui/devSeeds.ts` and their yearly returns in `AGED_PLANTS`, each probing one edge of the key
-// (the shown direction `rethink`, the staleness echo, the typical residual):
-//  · `surplustypical` / `yearsurplus`: the reassuring ROOM frame, "More than covered" answering "not sure" (the red
-//    team's frame, measured outside the fold FRESH on Windows by b9-7's temporary plant; a new stop for its council);
-//  · `offtracktypical` / `yearofftrack`: the off-track TRIM frame, answering "not sure";
-//  · `pafailingtypical` / `yearpafailing`: Pennsylvania's already-failing household, answering "not sure" (all three
-//    of the key's terms, on the longest priced clause);
-//  · `failingentered` / `yearfailingentered`: the already-failing household with ENTERED extras (no typical residual,
-//    so the key must leave it at body size).
-// The fresh seeds read at REAL, TIER and SHOWCASE (U4's sizes), the yearly returns at REAL, each at its declared day.
-// A room or trim clause is sized by the spend lane a beat AFTER the final tier (`docs/landmines.md`, the fit gate:
-// "both states are laws"), so every frame is read TWICE: FIRST, right after the final (the reserved box the asserting
-// arms measure), and SETTLED, once `.cs-magnitude` leaves `data-spend="pending"`. One line per frame and size:
-//   [plant probe] <frame> <size>: clock=<YYYY-MM-DD> attempt=<n> word="<verdict>" spend=<first>-><settled>
-//   caveat bottom=<first>/<settled> left end=<first>/<settled> band end=<first>/<settled> survivor=<inline|folded|none>
-//   medicare note=<n> typical=<n> state note=<n> echo=<n> [ gate affirm bottom=<px> gate notes=<n>] [ doors bottom=<px>]
-// (on one log line). The clock is the page's own day, read back; the attempt is the retry index (read the final
-// attempt only). The caveat is the in-frame R13 disclaimer, the left end the save slot's bottom + 2 px, the band end the
-// band's bottom (on an aged frame the band can bind). The arm asserts the tier it expects, prints, then asserts the frame
-// is the one it names (its verdict word, its echo, its typical residual), never the fit: a missing element throws.
-type PlantProbeSize = 'REAL' | 'TIER' | 'SHOWCASE'
-
-type PlantProbeGate = { readonly affirmBottom: number; readonly notes: number }
-
-type PlantProbeRead = {
-  readonly px: { readonly caveat: number; readonly leftEnd: number; readonly bandEnd: number; readonly doors?: number }
-  readonly spend: string
-  readonly word: string
-  readonly survivor: string
-  readonly medicareNote: number
-  readonly typical: number
-  readonly stateNote: number
-  readonly echo: number
-}
-
-/** A yearly return's drive, step for step as its asserting arm takes it, reading the re-entry gate on the way: pin
- *  the plant's declared day, unlock, read the affirm and the gate's notes, affirm, settle. */
-async function drivePlantProbeVault(page: Page, key: string): Promise<PlantProbeGate> {
-  await pinPlantDay(page, key)
-  await page.goto(`/?vault=${key}`)
-  const unlock = page.getByRole('button', { name: 'Open my plan' })
-  await expect(unlock, `?vault=${key}: the plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
-  await unlock.click()
-  const affirm = page.getByRole('button', { name: /still about right/i })
-  await expect(affirm, `?vault=${key}: the re-entry gate never mounted`).toBeVisible({ timeout: 30_000 })
-  await page.evaluate(() => document.fonts.ready)
-  await page.evaluate(() => window.scrollTo(0, 0))
-  const box = await affirm.boundingBox()
-  if (box === null) throw new Error(`[plant probe] ?vault=${key}: the gate's affirm reported no box`)
-  const notes = await page.locator('.reentry-notes p').count()
-  await affirm.click()
-  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
-  await settleLayout(page)
-  return { affirmBottom: box.y + box.height, notes }
-}
-
-async function readPlantProbe(page: Page, doors: boolean): Promise<PlantProbeRead> {
-  return page.evaluate((withDoors) => {
-    const bottom = (sel: string): number => {
-      const el = document.querySelector(sel)
-      if (el === null) throw new Error(`[plant probe] ${sel} is not on the page`)
-      return el.getBoundingClientRect().bottom
-    }
-    const magnitude = document.querySelector('.cs-magnitude')
-    if (magnitude === null) throw new Error('[plant probe] .cs-magnitude is not on the page')
-    return {
-      px: {
-        caveat: bottom('footer.disclaimer.disclaimer--in-frame'),
-        leftEnd: bottom('.confidence-reveal[data-twopane] .result-save-slot') + 2,
-        bandEnd: bottom('.confidence-reveal[data-twopane] > .cs-band'),
-        ...(withDoors ? { doors: bottom('.result-quiet-row') } : {}),
-      },
-      spend: magnitude.getAttribute('data-spend') ?? 'absent',
-      word: (document.querySelector('h2.cs-word')?.textContent ?? '').trim(),
-      survivor:
-        document.querySelector('details.survivor-fold') !== null
-          ? 'folded'
-          : document.querySelector('.survivor__basis') !== null
-            ? 'inline'
-            : 'none',
-      medicareNote: document.querySelectorAll('.cs-medicare-note').length,
-      typical: document.querySelectorAll('.cs-medicare-residual--typical').length,
-      stateNote: document.querySelectorAll('.cs-state-note').length,
-      echo: document.querySelectorAll('.cs-staleness-note').length,
-    }
-  }, doors)
-}
-
-async function printPlantProbe(page: Page, frame: string, size: PlantProbeSize, gate?: PlantProbeGate): Promise<PlantProbeRead> {
-  await assertTier(page, 'laptop')
-  const shortTier = await page.evaluate(() => window.matchMedia('(min-width: 68rem) and (max-height: 840px)').matches)
-  expect(shortTier, `${frame} ${size}: the short density tier is on at REAL and TIER and off at SHOWCASE`).toBe(size !== 'SHOWCASE')
-  const doors = size === 'SHOWCASE'
-  const first = await readPlantProbe(page, doors)
-  await page.waitForFunction(() => document.querySelector('.cs-magnitude')?.getAttribute('data-spend') !== 'pending', null, {
-    timeout: FINAL_TIER_MS,
-  })
-  await settleLayout(page)
-  const settled = await readPlantProbe(page, doors)
-  for (const [when, read] of [['first', first], ['settled', settled]] as const) {
-    for (const [what, value] of Object.entries(read.px)) {
-      expect(Number.isFinite(value), `[plant probe] ${frame} ${size}: ${when} ${what} is not a number`).toBe(true)
-    }
-  }
-  const clock = new Date((await pageDay(page)) * 86_400_000).toISOString().slice(0, 10)
-  const f = (n: number): string => n.toFixed(1)
-  const pair = (a: number, b: number): string => `${f(a)}/${f(b)}`
-  console.log(
-    `[plant probe] ${frame} ${size}: clock=${clock} attempt=${test.info().retry} word="${settled.word}" ` +
-      `spend=${first.spend}->${settled.spend} caveat bottom=${pair(first.px.caveat, settled.px.caveat)} ` +
-      `left end=${pair(first.px.leftEnd, settled.px.leftEnd)} band end=${pair(first.px.bandEnd, settled.px.bandEnd)} ` +
-      `survivor=${settled.survivor} medicare note=${settled.medicareNote} typical=${settled.typical} ` +
-      `state note=${settled.stateNote} echo=${settled.echo}` +
-      (gate === undefined ? '' : ` gate affirm bottom=${f(gate.affirmBottom)} gate notes=${gate.notes}`) +
-      (settled.px.doors === undefined ? '' : ` doors bottom=${f(settled.px.doors)}`),
-  )
-  return settled
-}
-
-const RUNG3_PLANTS = [
-  { seed: 'surplustypical', plant: 'yearsurplus', word: copy.outcomeOverFunded, typical: 1, what: 'the reassuring room frame, "not sure"' },
-  { seed: 'offtracktypical', plant: 'yearofftrack', word: copy.outcomeOffTrack, typical: 1, what: 'the off-track trim frame, "not sure"' },
-  { seed: 'pafailingtypical', plant: 'yearpafailing', word: copy.outcomeAlreadyFailing, typical: 1, what: 'Pennsylvania already short, "not sure"' },
-  { seed: 'failingentered', plant: 'yearfailingentered', word: copy.outcomeAlreadyFailing, typical: 0, what: 'already short, entered extras' },
+// ── RUNG 3'S FRESH FRAMES (council wf_540221e4-42d; its plants, `e49e352f`) ─────────────────────────────────
+// The ruling's body-size pins on FRESH frames (no staleness echo, so rung 3's key is absent and the survivor
+// context stays body): `?seed=failing` and `failingtypical`, the already-failing household (its `rethink` clause
+// alone fits, 715.3 px), and the council's plants: `failingentered` (entered extras) and `offtracktypical` (the
+// off-track trim frame, "not sure"). Each holds the one-frame law at REAL, TIER and SHOWCASE.
+//
+// Two fresh frames sit outside his 731 px fold at REAL and are a NEW STOP (`FRAMES_OUTSIDE_COUNCIL`):
+// `surplustypical`, the reassuring room frame ("More than covered", 743.1 px on Windows), and
+// `pafailingtypical`, Pennsylvania's already-failing household answering "not sure" (736.0 px): no echo, so the
+// ruled key cannot reach it, and nothing stable separates it from `failingtypical`, which fits. Each prints its
+// caveat's bottom and holds every other line to the frame (`assertFrameFitsHoldingCaveat`). Both also break the
+// SHOWCASE's full fit, where no rung applies: their doors end inside 917 px (904.4 / 897.3) but `main.result`'s
+// bottom padding ends at 937 (measured on Windows, b9-8), so that arm prints the full fit's offenders and asserts
+// the laptop law (`assertFullFitHeld`). Both fit at TIER in full. A room or trim clause is sized a beat after the final; the arms
+// measure right after it, as the spine matrix does (the reserve holds the sized height: the plants' probe read
+// FIRST equal to SETTLED on every frame).
+const RUNG3_FRESH = [
+  { seed: 'failing', word: copy.outcomeAlreadyFailing, typical: 1, newStop: false },
+  { seed: 'failingtypical', word: copy.outcomeAlreadyFailing, typical: 1, newStop: false },
+  { seed: 'failingentered', word: copy.outcomeAlreadyFailing, typical: 0, newStop: false },
+  { seed: 'offtracktypical', word: copy.outcomeOffTrack, typical: 1, newStop: false },
+  { seed: 'pafailingtypical', word: copy.outcomeAlreadyFailing, typical: 1, newStop: true },
+  { seed: 'surplustypical', word: copy.outcomeOverFunded, typical: 1, newStop: true },
 ] as const
 
-test.describe("the rung-3 key council's plants — RECORD-ONLY, never asserted (council wf_540221e4-42d)", () => {
-  for (const size of ['REAL', 'TIER', 'SHOWCASE'] as const) {
-    test.describe(`the fresh seeds at ${size}`, () => {
-      if (size === 'REAL') test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-      else test.use({ viewport: size === 'TIER' ? TIER : SHOWCASE })
-      for (const { seed, word, typical, what } of RUNG3_PLANTS) {
-        test(`?seed=${seed} ${size} — ${what}, fresh`, async ({ page }) => {
-          await gotoSeedFinal(page, seed)
-          await assertResolvedSpine(page)
-          const read = await printPlantProbe(page, `?seed=${seed}`, size)
-          // After the line, so the numbers print either way: the frame read is the one it names.
-          expect(read.word, `?seed=${seed}: the verdict`).toBe(word)
-          expect(read.typical, `?seed=${seed}: the typical residual`).toBe(typical)
-          expect(read.echo, `?seed=${seed}: a fresh frame carries no echo`).toBe(0)
-        })
-      }
-    })
-  }
-
-  test.describe(`the yearly returns at REAL (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
-    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-    for (const { plant, word, typical, what } of RUNG3_PLANTS) {
-      test(`?vault=${plant} REAL — ${what}, a year on`, async ({ page }) => {
-        const gate = await drivePlantProbeVault(page, plant)
+for (const size of ['REAL', 'TIER', 'SHOWCASE'] as const) {
+  test.describe(`rung 3's fresh frames at ${size} — no echo, so the survivor context stays body`, () => {
+    if (size === 'REAL') test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+    else test.use({ viewport: size === 'TIER' ? TIER : SHOWCASE })
+    for (const { seed, word, typical, newStop } of RUNG3_FRESH) {
+      const held = newStop && size !== 'TIER'
+      const law =
+        size === 'REAL'
+          ? held
+            ? 'every line but its caveat fits (a new stop; the caveat printed)'
+            : 'everything but the doors fits one frame'
+          : size === 'SHOWCASE'
+            ? held
+              ? 'everything but the doors fits; the full fit printed (a new stop)'
+              : 'FULL fit, doors included'
+            : 'everything but the doors fits one frame'
+      test(`?seed=${seed} ${size}: ${law}`, async ({ page }) => {
+        await gotoSeedFinal(page, seed)
         await assertResolvedSpine(page)
-        const read = await printPlantProbe(page, `?vault=${plant}`, 'REAL', gate)
-        expect(read.word, `?vault=${plant}: the verdict`).toBe(word)
-        expect(read.typical, `?vault=${plant}: the typical residual`).toBe(typical)
-        expect(read.echo, `?vault=${plant}: the staleness echo`).toBe(1)
-        expect(gate.notes, `?vault=${plant}: the gate speaks the tax and Medicare lines (devSeeds.test.ts derives them)`).toBe(2)
+        await expect(page.locator(SPINE_VERDICT), `?seed=${seed}: the verdict the seed is built to show`).toHaveText(word)
+        await assertMedicareNote(page, true)
+        await expect(page.locator('.cs-medicare-residual--typical'), `?seed=${seed}: the typical residual`).toHaveCount(typical)
+        await expect(page.locator('.cs-staleness-note'), `?seed=${seed}: a fresh frame carries no echo`).toHaveCount(0)
+        await assertStateNote(page, false)
+        await assertOneVisibleDisclaimer(page, 'laptop')
+        if (held && size === 'REAL') await assertFrameFitsHoldingCaveat(page, `?seed=${seed} ${REAL.width}x${REAL.height}`, {}, FRAMES_OUTSIDE_COUNCIL)
+        else if (held) await assertFullFitHeld(page, `?seed=${seed} ${SHOWCASE.width}x${SHOWCASE.height}`, FRAMES_OUTSIDE_COUNCIL)
+        else await assertFrameFits(page, size !== 'SHOWCASE')
+        await assertSurvivorBasis(page, 'inline')
+        const tier = size === 'SHOWCASE' ? 'tall' : 'short'
+        await assertNoteLeading(page, tier)
+        await assertDensityTier(page, tier)
       })
     }
   })
-})
+}
 
 // ── the state-tax staleness return (?vault=statestale — the state-carrying seed increment) ────
 // The state-tax analog of ?vault=stale, on the LIGHT doctor (F2 supersession, 2026-07-15): the

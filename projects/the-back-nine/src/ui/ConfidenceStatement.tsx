@@ -426,7 +426,22 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
             <span className="cs-reading__count">{shownReading}</span>{' '}
             <span className="cs-reading__frame">{copy.confidenceCoverageCaption}</span>
           </p>
-          <p key={`magnitude:${lockupKey}`} className={swapCls('cs-magnitude')} data-spend={spendState}>
+          {/* `data-direction` — RUNG 3'S KEY (council wf_540221e4-42d, 2026-11-20; survivor.css's short-tier
+              block carries the rule, tokens.css --bp-laptop-short's docblock the law): the SHOWN direction this
+              clause renders from (`s`, the sticky display), so the key and the clause can never disagree, even
+              during a hold where the raw result has already moved (memoryModel's sticky seam). It is a legal
+              SIZE key because it is fixed once the final answer stands: the engine sets it in the verdict's
+              own run (`buildDollar`, src/engine/confidence.ts), the spend lane never moves it, and it changes
+              only with the clause, which re-keys this node (insight 035: a size keyed to a class that can change after the final would
+              shift taps mid-gesture). `data-spend` is NOT a legal size key: it moves after the final
+              (pending, then sized or unsized) while the reserve holds the box, so a size keyed to it would
+              reflow a settled frame. */}
+          <p
+            key={`magnitude:${lockupKey}`}
+            className={swapCls('cs-magnitude')}
+            data-spend={spendState}
+            data-direction={s.direction}
+          >
             {reserveClause === null ? (
               shownClause
             ) : (

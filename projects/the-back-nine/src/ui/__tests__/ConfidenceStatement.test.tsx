@@ -505,6 +505,25 @@ describe('U12 C2 — the sticky sentence + the verdict crossfade', () => {
     expect(container.querySelector('.floor-readout')).toBeNull()
   })
 
+  it("rung 3's key stamps the SHOWN direction on the magnitude line, never the raw one, through a hold (council wf_540221e4-42d)", () => {
+    // HELD's trim against RAW's room: a key read off the raw result would size the frame for a clause it is not
+    // showing (the shown sentence is the trim clause, asserted beside it).
+    expect(RAW.dollar.direction, 'the oracle: raw and held directions differ').toBe('room')
+    const { container, rerender } = render(<ConfidenceStatement view={stickyView(HELD)} />)
+    const magnitude = () => container.querySelector('.cs-magnitude')!
+    expect(magnitude()).toHaveAttribute('data-direction', 'trim')
+    expect(magnitude().textContent).toContain(HELD_TRIM)
+    // The hold moves on to `rethink` (the shown verdict now already short) while the raw result stays put: the
+    // key follows the clause.
+    const rethink: StickyDisplay = { xOfTen: 0, outcomeState: 'already-failing', spendPerMonthReal: 6_500, direction: 'rethink' }
+    rerender(<ConfidenceStatement view={stickyView(rethink)} />)
+    expect(magnitude()).toHaveAttribute('data-direction', 'rethink')
+    // With no displayed triple the sentence and the key both read the raw result.
+    rerender(<ConfidenceStatement view={{ kind: 'reading', ...RAW }} />)
+    expect(magnitude()).toHaveAttribute('data-direction', 'room')
+    expect(magnitude().textContent).toContain(slots.verdictRoomClause('6,500'))
+  })
+
   it('without a displayed triple (the preview harness) the sentence reads the raw result — unchanged shipped behavior', () => {
     const { container } = render(<ConfidenceStatement view={{ kind: 'reading', ...RAW }} />)
     expect(screen.getByRole('heading', { name: copy.outcomeOnTrack })).toBeInTheDocument()

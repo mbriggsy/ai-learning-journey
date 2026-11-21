@@ -243,6 +243,34 @@
   .confidence-reveal[data-twopane]:has(.cs-staleness-note) .survivor__stepdown {
     line-height: var(--leading-tight);
   }
+  /* RUNG 3 (council wf_540221e4-42d, 2026-11-20; the tier's law and its selector-list growth law live in
+     tokens.css --bp-laptop-short's docblock): the survivor's context paragraph and the step-down inside it
+     BORROW --text-sm, the register the survivor eyebrow already wears in this same card, on exactly the
+     frames the fit gate measures outside after rungs 1 and 2. Each selector names one class of frame by
+     markers that are fixed once the final answer stands: the SHOWN direction (`.cs-magnitude`'s
+     data-direction, ConfidenceStatement.tsx says why it is a legal size key), the staleness echo and the
+     typical Medicare residual.
+       · rethink + echo + typical: the already-failing household at its yearly return (`?vault=yearfailing`,
+         732.9 px after rung 2b on Windows and CI; this rung measured -31.2 px there, and the same on
+         Pennsylvania's, `yearpafailing`, 753.7 → 722.5);
+       · trim + echo + typical: the off-track household at its yearly return (`?vault=yearofftrack`, 732.9 px
+         after rung 2b on Windows, still outside once the rethink entry landed): its own entry, as the ruling
+         gives a trim frame still outside after rung 3.
+     Only the context and the step-down INSIDE it, never a bare .survivor__stepdown: the floor relief's trim
+     note is its own <p> with that class and keeps body size. No transition: the size is set before the
+     reveal settles and never moves after. */
+  .confidence-reveal[data-twopane]:has(.cs-magnitude[data-direction='rethink']):has(.cs-staleness-note):has(.cs-medicare-residual--typical)
+    .survivor__context,
+  .confidence-reveal[data-twopane]:has(.cs-magnitude[data-direction='rethink']):has(.cs-staleness-note):has(.cs-medicare-residual--typical)
+    .survivor__context
+    .survivor__stepdown,
+  .confidence-reveal[data-twopane]:has(.cs-magnitude[data-direction='trim']):has(.cs-staleness-note):has(.cs-medicare-residual--typical)
+    .survivor__context,
+  .confidence-reveal[data-twopane]:has(.cs-magnitude[data-direction='trim']):has(.cs-staleness-note):has(.cs-medicare-residual--typical)
+    .survivor__context
+    .survivor__stepdown {
+    font-size: var(--text-sm);
+  }
 }
 
 /* Reduced motion: the reveal is already movement-free (opacity only); shorten it to the quick

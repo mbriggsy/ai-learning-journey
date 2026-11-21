@@ -332,6 +332,16 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-3, 11-21) The widest plants' arms (the frames-outside plan's U6):** `?seed=failingwidest`'s closed frame shows none
+  of its monthly figures (the relief combination folds the survivor card, and the rethink clause quotes no figure), so its
+  widest-string check has the residual's 20-character name alone; `?seed=surpluswidest` shows "40,000", "30,000",
+  "22,830" and, while pending, the reserve's "120,000". A room arm's pending read (KTD6) can miss: on `surpluswidest`'s
+  scratch twin the spend lane settled before `gotoSeedFinal` returned, its `settleLayout` included. Read the first frame
+  right after `SETTLED_RESULT` attaches, or accept "unknown". A second tab opened read-only (another tab holds the writer)
+  shows the re-entry gate's "Continue to your answer", never "still about right" (`gotoVaultFinal` waits for the latter).
+- **(b9-3, 11-21) A scratch vitest probe's `console.log` printed nothing** in `pnpm vitest run <file>`'s output here; write a
+  probe's readings to a file in the scratchpad (`appendFileSync`).
+
 - **(b9-8, 11-21) Six arms are HELD, and nothing forces them back** (grep `FRAMES_OUTSIDE_COUNCIL`): `?vault=yearsurplus`, `?vault=yearpafailing` (b9-9: outside on ubuntu only)
   and `?seed=surplustypical` / `?seed=pafailingtypical` at REAL print the caveat's bottom (`assertFrameFitsHoldingCaveat`),
   and the two fresh seeds at SHOWCASE print the full fit's offenders (`assertFullFitHeld`); each stays green whatever it

@@ -1,6 +1,8 @@
 import { expect, type Page, type Locator, type BrowserContext, type CDPSession } from '@playwright/test'
 import {
   test,
+  pageDay,
+  pinPlantDay,
   pinnedDay,
   pinnedYear,
   REAL,
@@ -4245,6 +4247,140 @@ test.describe('the spend lane — the solved figure lands without moving anythin
       const transition = diag.td
       expect(transition.split(',').every((d) => parseFloat(d) === 0), `transition-duration ${transition}`).toBe(true)
     })
+  })
+})
+
+// ── THE COMPOSITES PROBE — RECORD-ONLY, never asserted (the one-frame composites plan's U4, KTD6; its U6
+// DELETES this describe) ─────────────────────────────────────────────────────────────────────────────
+// The plan's six new frames (`docs/plans/features/one-frame-composites-build-spec.md`): `?seed=patypical`
+// and the five vault plants of its U3. Before any rung or assertion lands, each one's bottoms are READ on
+// CI's Linux beside Windows (insight 075: Linux can wrap a line taller), at every size its U6 arm will
+// assert: `patypical` at REAL, TIER and SHOWCASE (it joins SPINE_SEEDS in U6), each vault plant at REAL
+// (the size the `?vault=stale` arm and the record loop assert). Each arm drives its frame the way its
+// asserting arm will, at the plant's declared day (a yearly return is viewed at RETURN_DAY), asserts the
+// tier it expects there (insight 125), asserts NO fit, and prints one line per frame and size:
+//   [fit probe] <plant> <size>: clock=<YYYY-MM-DD> attempt=<n> caveat bottom=<px> left end=<px>
+//   band end=<px> survivor=<inline|folded|none> medicare note=<0|1> state note=<0|1>
+//   [ gate affirm bottom=<px> gate notes=<n>] [ standing bottom=<px> causes=<n>] [ doors bottom=<px>]
+// (all on one log line). The clock is the page's own day, read back. The attempt is Playwright's retry
+// index, so a retried arm's lines tell themselves apart: read the final attempt only, and an arm whose
+// attempts disagree is unknown, which fails the frame. The presence fields are what U6 writes into
+// `patypical`'s SPINE_SEEDS row and the yearly-return arms' survivor and note checks, read, never guessed.
+// The caveat is the in-frame R13 disclaimer; the left end is the save slot's bottom + 2 px, the left
+// column's comparable end; the band end is the band's bottom (it spans grid rows 1 to 5), printed because
+// on an aged frame the band can bind (the plan's A5). The gate fields are a vault return's re-entry gate
+// before the affirm; the record fields are the card's standing line and its cause list; the doors are the
+// quiet row at SHOWCASE, where the full fit includes them. A missing element throws; a non-finite value
+// fails the arm; it never prints a blank.
+type ProbeSize = 'REAL' | 'TIER' | 'SHOWCASE'
+
+type ProbeGate = { readonly affirmBottom: number; readonly notes: number }
+
+/** A vault plant's drive, step for step as its asserting arm takes it, reading the re-entry gate on the
+ *  way: pin the plant's declared day, unlock, read the affirm and the gate's notes, affirm, settle. */
+async function driveProbeVault(page: Page, key: string): Promise<ProbeGate> {
+  await pinPlantDay(page, key)
+  await page.goto(`/?vault=${key}`)
+  const unlock = page.getByRole('button', { name: 'Open my plan' })
+  await expect(unlock, `?vault=${key}: the plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
+  await unlock.click()
+  const affirm = page.getByRole('button', { name: /still about right/i })
+  await expect(affirm, `?vault=${key}: the re-entry gate never mounted`).toBeVisible({ timeout: 30_000 })
+  await page.evaluate(() => document.fonts.ready)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  const box = await affirm.boundingBox()
+  if (box === null) throw new Error(`[fit probe] ?vault=${key}: the gate's affirm reported no box`)
+  const notes = await page.locator('.reentry-notes p').count()
+  await affirm.click()
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+  await settleLayout(page)
+  return { affirmBottom: box.y + box.height, notes }
+}
+
+async function printCompositeProbe(
+  page: Page,
+  frame: string,
+  size: ProbeSize,
+  opts: { readonly record: boolean; readonly gate?: ProbeGate },
+): Promise<void> {
+  await assertTier(page, 'laptop')
+  const shortTier = await page.evaluate(() => window.matchMedia('(min-width: 68rem) and (max-height: 840px)').matches)
+  expect(shortTier, `${frame} ${size}: the short density tier is on at REAL and TIER and off at SHOWCASE`).toBe(size !== 'SHOWCASE')
+  const read = await page.evaluate(
+    ({ record, doors }) => {
+      const bottom = (sel: string): number => {
+        const el = document.querySelector(sel)
+        if (el === null) throw new Error(`[fit probe] ${sel} is not on the page`)
+        return el.getBoundingClientRect().bottom
+      }
+      const survivor =
+        document.querySelector('details.survivor-fold') !== null
+          ? 'folded'
+          : document.querySelector('.survivor__basis') !== null
+            ? 'inline'
+            : 'none'
+      return {
+        px: {
+          caveat: bottom('footer.disclaimer.disclaimer--in-frame'),
+          leftEnd: bottom('.confidence-reveal[data-twopane] .result-save-slot') + 2,
+          bandEnd: bottom('.confidence-reveal[data-twopane] > .cs-band'),
+          ...(record ? { standing: bottom('.rec-record__standing') } : {}),
+          ...(doors ? { doors: bottom('.result-quiet-row') } : {}),
+        },
+        survivor,
+        medicareNote: document.querySelectorAll('.cs-medicare-note').length,
+        stateNote: document.querySelectorAll('.cs-state-note').length,
+        causes: record ? document.querySelectorAll('.rec-record__causes li').length : null,
+      }
+    },
+    { record: opts.record, doors: size === 'SHOWCASE' },
+  )
+  const px: Record<string, number> = { ...read.px, ...(opts.gate === undefined ? {} : { gateAffirm: opts.gate.affirmBottom }) }
+  for (const [what, value] of Object.entries(px)) {
+    expect(Number.isFinite(value), `[fit probe] ${frame} ${size}: ${what} is not a number`).toBe(true)
+  }
+  const clock = new Date((await pageDay(page)) * 86_400_000).toISOString().slice(0, 10)
+  const f = (n: number): string => n.toFixed(1)
+  console.log(
+    `[fit probe] ${frame} ${size}: clock=${clock} attempt=${test.info().retry} ` +
+      `caveat bottom=${f(read.px.caveat)} left end=${f(read.px.leftEnd)} band end=${f(read.px.bandEnd)} ` +
+      `survivor=${read.survivor} medicare note=${read.medicareNote} state note=${read.stateNote}` +
+      (opts.gate === undefined ? '' : ` gate affirm bottom=${f(opts.gate.affirmBottom)} gate notes=${opts.gate.notes}`) +
+      (read.px.standing === undefined ? '' : ` standing bottom=${f(read.px.standing)} causes=${read.causes}`) +
+      (read.px.doors === undefined ? '' : ` doors bottom=${f(read.px.doors)}`),
+  )
+}
+
+test.describe("the composites probe — RECORD-ONLY, never asserted (the one-frame composites plan's U4)", () => {
+  for (const size of ['REAL', 'TIER', 'SHOWCASE'] as const) {
+    test.describe(`?seed=patypical at ${size}`, () => {
+      if (size === 'REAL') test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+      else test.use({ viewport: size === 'TIER' ? TIER : SHOWCASE })
+      test(`?seed=patypical ${size} — Pennsylvania answering "not sure", fresh`, async ({ page }) => {
+        await gotoSeedFinal(page, 'patypical')
+        await assertResolvedSpine(page)
+        await printCompositeProbe(page, '?seed=patypical', size, { record: false })
+      })
+    })
+  }
+
+  test.describe(`the vault plants at REAL (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+    for (const { key, record, echo, what } of [
+      { key: 'yearpa', record: false, echo: true, what: 'Pennsylvania "not sure" at its yearly return' },
+      { key: 'yearfailing', record: false, echo: true, what: 'the off-track household "not sure" at its yearly return' },
+      { key: 'yearrec', record: true, echo: true, what: 'the entered-extras household at its yearly return, with a record' },
+      { key: 'recpa', record: true, echo: false, what: 'Pennsylvania "not sure" with a record that holds, fresh' },
+      { key: 'yearparec', record: true, echo: true, what: 'Pennsylvania "not sure" at its yearly return, with a record' },
+    ] as const) {
+      test(`?vault=${key} REAL — ${what}`, async ({ page }) => {
+        const gate = await driveProbeVault(page, key)
+        await assertResolvedSpine(page)
+        await printCompositeProbe(page, `?vault=${key}`, 'REAL', { record, gate })
+        // After the line, so the numbers print either way: the frame read is the one U6 will assert.
+        await expect(page.locator('.cs-staleness-note'), `?vault=${key}: the staleness echo`).toHaveCount(echo ? 1 : 0)
+      })
+    }
   })
 })
 

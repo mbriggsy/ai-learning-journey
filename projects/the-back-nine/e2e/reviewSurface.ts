@@ -2,7 +2,7 @@ import { test as base, expect, type BrowserContext, type Page } from '@playwrigh
 import { copy } from '../src/ui/copy'
 import { AGED_PLANTS, GATE_DAY } from '../src/ui/devSeeds'
 
-export { GATE_DAY, RETURN_DAY } from '../src/ui/devSeeds'
+export { GATE_DAY, NAME_CEILING, RETURN_DAY, SPENDING_CEILING_PER_MONTH } from '../src/ui/devSeeds'
 
 /**
  * The ONE canonical home of the review-surface constants + the settle recipe, shared by every

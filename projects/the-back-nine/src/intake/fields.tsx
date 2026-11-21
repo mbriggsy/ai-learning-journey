@@ -1,4 +1,5 @@
 import { useId, useState, type ReactNode } from 'react'
+import { NAME_CEILING } from '@shared/nameBounds'
 import { copy, type CopyKey } from '@ui/copy'
 import { fieldErrorId } from './FieldError'
 
@@ -247,7 +248,9 @@ export function PercentField(props: CommonFieldProps & { readonly placeholderKey
 }
 
 /** Short text field (names). Identity-shaped, not financial — autocomplete
- *  carries its real token (WCAG 1.3.5). */
+ *  carries its real token (WCAG 1.3.5). Typing stops at `NAME_CEILING` (the input's own length
+ *  limit, so no error and no copy); a stored name that is already longer still renders and commits
+ *  whole — the limit never rewrites what was saved. */
 export function NameField({
   labelKey,
   value,
@@ -273,6 +276,7 @@ export function NameField({
         autoComplete={autoCompleteToken}
         enterKeyHint="next"
         spellCheck={false}
+        maxLength={NAME_CEILING}
         value={editing ?? value ?? ''}
         onChange={(e) => setEditing(e.target.value)}
         onBlur={() => {

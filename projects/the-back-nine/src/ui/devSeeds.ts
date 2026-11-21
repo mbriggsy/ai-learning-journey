@@ -88,6 +88,28 @@ function sameDateNextYear(epochDay: number): number {
 }
 
 /**
+ * THE DESIGN CEILING (Briggsy's ruling, 2026-11-21; the register's composites entry, "RULED by Briggsy
+ * 2026-11-21"; the frames-outside plan's KTD3, `docs/plans/features/frames-outside-widest-member-build-spec.md`).
+ * His words: "$83 billion a month is nuts, let's name a ceiling - we don't need to solve for extremes like
+ * that. If I have the money to spend a million a month, I know it and don't need an app." The one-frame
+ * promise is made for a household spending under this much a month, ON THE FIGURE AS SHOWN: `formatPerMonth`
+ * rounds a monthly figure to its display step, so the largest figure under the ceiling shows as the ceiling
+ * less one step, and an entered figure within half a step of the ceiling already shows as the ceiling, a
+ * seven-character figure outside the promise.
+ *
+ * The app still accepts and computes any larger figure (D7's "use it": dollar entry is never capped); above
+ * the ceiling it promises nothing about one frame. Never plant, measure or brief a council at the engine's
+ * cap (`ENGINE_MAX_DOLLAR`) instead: the ruling's own NEGATIVE. Only tests and the fit gate read this; no
+ * shipping code does. Each widest plant's expected figures are derived from it through the shipped
+ * formatter, never typed.
+ */
+export const SPENDING_CEILING_PER_MONTH = 100_000
+/** The name ceiling's one home is `src/shared/nameBounds.ts`: the shipping name field reads it, and a
+ *  shipping module must never import this DEV-only file. Re-exported here beside the spending ceiling for
+ *  the seeds, their tests and the fit gate. */
+export { NAME_CEILING } from '@shared/nameBounds'
+
+/**
  * The all-retired, on-track couple Briggsy drove live (2026-06-28) — the SPINE
  * route (both `retired` ⇒ the confidence statement + spine band). 66/65, a single
  * $1M Traditional IRA at 60/30/10, both claiming Social Security at 67. At 66/65

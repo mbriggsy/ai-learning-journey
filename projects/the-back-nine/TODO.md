@@ -487,7 +487,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    ⚑ **The direction claim must be CLIFF-SCOPED, never blanket.** `healthOverlay.ts:231`+`:303` give
    under-cliff net = `enrolled − slcsp + contribution`, and `intakeMap.ts:733-734` scale **both** streams by
    the same `escalateQuote` factor — so under the cliff a missing trend is **zero** when E=S
-   (`devSeeds.ts:698-699` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:221` invites.
+   (`devSeeds.ts:720-721` = 4200/4200) and **reversed (pessimistic)** when E<S, which `copy.ts:221` invites.
    It bites one-way optimistic **only over the cliff** (`healthOverlay.ts:308-312`, full enrolled premium).
    The shipped sibling `recDiscAcaSlcsp` (`copy.ts:2487-2488`) hedges bidirectionally on this exact fact and
    `medicare-pricing-build-spec.md:43` bans the false unidirectional. Draft to append to BOTH strings:
@@ -771,7 +771,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     (same bytes, `backup.ts:84-93`). No build ever wrote either. *(Re-scoped 2026-10-31, b9-3: this bullet
     said a future v4 would push today's v3 vaults into that arm. The schema-v4 bump did not: version 3
     relabels to 4 at decode, a label-only step — `docs/architecture.md` §7.3.)* · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
-    caller is the dev seed planter, `devSeeds.ts:2546` — eight test/e2e files also call it).
+    caller is the dev seed planter, `devSeeds.ts:2568` — eight test/e2e files also call it).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 9 — the aged note, the v2→v3 ladder, the leaves-out section) — its 2026-09-04 re-verify clause, still live:** Aged-window disclosure note (S; the ranking fork stays yours, three arms with corrected costs, due
     before 2027-01-01) · migration ladder scaffold (S; the honest legacy state names NO remedy — the
     backup carries the same bytes) · HSA-forfeit + LTC "What this leaves out" section (M; pilot per the
@@ -1014,7 +1014,7 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - A Vite library-mode (IIFE) harness bundle leaves `process.env.NODE_ENV` for its consumer, and throws 'process is not defined' in the page unless you `define` it 'production'. Playwright's `page.addScriptTag({ content })` RESOLVES even when the script throws, so assert the global (`typeof window.X`) with the `pageerror` text (e2e/held/solve-phase-profile.spec.ts). *(Source: line 1798.)*
 - Playwright's default headless browser is the chromium headless SHELL, not Chrome. A timing instrument meant to match the user's browser sets `channel: 'chrome'` to drive the installed Chrome in new headless (e2e/held/solve-timing.config.ts). A figure measured on the shell is a different browser's. *(Source: line 1798.)*
 - A directional caveat written beside a measured number is a claim that needs its own run. 'Low path counts under-count this, read it as a floor' on the demotion-frequency probe was backwards: 15% at 400 paths, 11% at 1600. One 4× re-run, five minutes, inverted the conclusion. *(Source: line 1837.)*
-- A prop added to a component's TYPE but not to its destructure silently resolves to any same-named module binding: `describedBy` in src/intake/fields.tsx is a module function at :98. A `(s): s is string` filter guard then hides it from tsc. Destructure first, and name new props so they cannot collide (the prop is now `describedByIds`, fields.tsx/349). *(Source: line 1884.)*
+- A prop added to a component's TYPE but not to its destructure silently resolves to any same-named module binding: `describedBy` in src/intake/fields.tsx is a module function at :99. A `(s): s is string` filter guard then hides it from tsc. Destructure first, and name new props so they cannot collide (the prop is now `describedByIds`, fields.tsx/349). *(Source: line 1884.)*
 - A fake transport lane must `structuredClone` its REPLY like the real wire, or the candidate re-attach path is never exercised. A pooled differential must tally lanes (≥ 2 used), or a silent one-lane fallback passes as a pool. *(Source: line 1891.)*
 - A price or constant fix can make an existing witness VACUOUS. At the bill-year prices both seeds rounded the two-of-you figure the same whether formatted once or as 2 × the rounded figure, so the chrome arm's formatted-once pin went dead on the re-pin. After any re-pin, re-prove each rounding-order witness with a planted mutant, and rebuild it on a fixture where the two roundings differ (an aged 2024 start). *(Source: line 1897.)*
 - A TRUE figure can read as a bug beside a figure the reader expects it to resemble: the Part D surcharge at ~3× after the 2030 reset read 'too big' to two seats. The fix is the LABEL that explains the difference, never the number. *(Source: line 1897.)*
@@ -1157,7 +1157,7 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 ## Driving the app
 
 `pnpm dev`, then a `?seed=` or `?vault=` param. DEV-only, DCE'd from prod. Source of truth:
-`src/ui/devSeeds.ts` — `DEV_SEEDS` at `devSeeds.ts:1675`, `AGED_PLANTS` at `devSeeds.ts:2446`.
+`src/ui/devSeeds.ts` — `DEV_SEEDS` at `devSeeds.ts:1697`, `AGED_PLANTS` at `devSeeds.ts:2468`.
 
 **Scenario seeds** — jump straight to a worded result + band:
 
@@ -1200,7 +1200,7 @@ like prod; re-planting is an explicit re-entry of the URL, never a refresh side 
 
 ⚑ **NO-SOLVE DRIVE RECIPE, so the next walk costs minutes not hours.** `?vault=rec` → Unlock
 (passphrase pre-filled) → *"I forgot my passphrase"* → RecoveryFlow. Recovery word for every plant
-is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:1756`). For RestoreFlow you need a
+is **`lattice harbor cinder vellum 48 thicket`** (`devSeeds.ts:1778`). For RestoreFlow you need a
 real backup FILE and no full intake is required: unlock any plant → Result → **"Save a backup
 file"** → *Download backup* (an `<a>` with a blob URL, **not** a button — a `button:has-text()`
 selector misses it) → then delete the DB and reload. **`indexedDB.deleteDatabase` is BLOCKED while

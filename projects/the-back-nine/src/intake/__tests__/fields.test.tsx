@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import {
   CurrencyField,
   IntegerField,
+  NameField,
   PercentField,
   SegmentedControl,
   parseMoney,
@@ -124,6 +126,41 @@ describe('CurrencyField — the currency entry discipline', () => {
     fireEvent.change(input, { target: { value: '' } })
     fireEvent.blur(input)
     expect(onCommit).toHaveBeenCalledWith(undefined)
+  })
+})
+
+// The name ceiling (Briggsy's design-ceiling ruling, 2026-11-21; the frames-outside plan's KTD12). The 20
+// is typed here once on purpose, never read from NAME_CEILING: a test that derives its number from the
+// constant moves with the constant and can never catch a wrong edit to it (insight 151).
+describe('NameField — typing stops at the name ceiling; a stored name is never rewritten', () => {
+  const name25 = 'Abcdefghijklmnopqrstuvwxy'
+  it('typing a 25-character name keeps the first 20, and commits those 20', async () => {
+    const onCommit = vi.fn()
+    render(<NameField labelKey="nameLabel" value={undefined} autoCompleteToken="given-name" onCommit={onCommit} />)
+    const input = screen.getByLabelText(copy.nameLabel)
+    const user = userEvent.setup()
+    await user.type(input, name25)
+    expect(input).toHaveProperty('value', name25.slice(0, 20))
+    fireEvent.blur(input)
+    expect(onCommit).toHaveBeenCalledWith(name25.slice(0, 20))
+  })
+  it('a 20-character name is kept whole', async () => {
+    const onCommit = vi.fn()
+    render(<NameField labelKey="nameLabel" value={undefined} autoCompleteToken="given-name" onCommit={onCommit} />)
+    const input = screen.getByLabelText(copy.nameLabel)
+    const user = userEvent.setup()
+    await user.type(input, 'Abcdefghij Klmnopqrs')
+    fireEvent.blur(input)
+    expect(onCommit).toHaveBeenCalledWith('Abcdefghij Klmnopqrs')
+  })
+  it('a restored name already longer than the ceiling renders whole and commits whole (the cap limits typing only)', () => {
+    const onCommit = vi.fn()
+    render(<NameField labelKey="nameLabel" value={name25} autoCompleteToken="given-name" onCommit={onCommit} />)
+    const input = screen.getByLabelText(copy.nameLabel)
+    expect(input).toHaveProperty('value', name25)
+    fireEvent.focus(input)
+    fireEvent.blur(input)
+    expect(onCommit).toHaveBeenCalledWith(name25)
   })
 })
 

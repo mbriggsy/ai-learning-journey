@@ -8,10 +8,11 @@
  *
  * THE CENSUS (read): the card renders only on the SPINE route (`answerView.ts` carries `survivorReading`
  * on the spine view only; the date route's working member means no card), so its universe is the 18
- * spine dev seeds plus the four aged vault plants built on them (the composites plan's U3 adds five more
- * vault plants that render the card; their rows land with them) (`?vault=stale` / `statestale` / `rec` /
- * `recold`, doctored exactly as `plantDevVault` doctors them). The census arm below fails if a new spine
- * seed lands without a row here — no silent no-op (burned/070).
+ * spine dev seeds plus the nine aged vault plants built on them (`?vault=stale` / `statestale` / `rec` /
+ * `recold`, and the composites plan's U3 five: `yearpa` / `yearfailing` / `yearrec` / `recpa` /
+ * `yearparec`), each doctored exactly as `plantDevVault` doctors it. The census arm below fails if a new
+ * spine seed or a new spine-based vault plant (read off `AGED_PLANTS`) lands without a row here — no
+ * silent no-op (burned/070).
  *
  * THE EXPECTATIONS ARE HAND-DERIVED (DND 012) from each household's entered S, r = 0.75, M and budget —
  * the arithmetic sits in the table, never the engine's formula re-run. The rendered dollars ride the
@@ -34,11 +35,14 @@ import { FIRST_UNAMBIGUOUS_SAVE_DAY } from '@engine/pricingVersion'
 import type { CurrentScenario, SimulationParams, SurvivorReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import {
+  AGED_PLANTS,
   DEV_SEEDS,
   doctorRecordHolds,
   doctorRecordSuperseded,
   doctorStaleVault,
   doctorStateStaleVault,
+  doctorYearlyReturn,
+  doctorYearlyReturnRecord,
   type DevSeedKey,
 } from '../devSeeds'
 import { scenarioFromDraft } from '../scenarioFromDraft'
@@ -57,6 +61,11 @@ const PLANTS = {
   statestale: ['nc', doctorStateStaleVault],
   rec: ['retired', doctorRecordHolds],
   recold: ['retired', doctorRecordSuperseded],
+  yearpa: ['patypical', doctorYearlyReturn],
+  yearfailing: ['failingtypical', doctorYearlyReturn],
+  yearrec: ['retired', doctorYearlyReturnRecord],
+  recpa: ['patypical', doctorRecordHolds],
+  yearparec: ['patypical', doctorYearlyReturnRecord],
 } as const satisfies Record<string, readonly [DevSeedKey, (s: CurrentScenario, today: number) => CurrentScenario]>
 
 const plantDraft = (key: keyof typeof PLANTS): ScenarioDraft => {
@@ -125,6 +134,16 @@ const ROWS: readonly {
     rendered: line('4,880', '6,500'),
   })),
   { key: 'vault:recold', draft: () => plantDraft('recold'), annual: { survivor: 63_000, couple: 84_000 }, rendered: line('5,250', '7,000') },
+  // The composites plan's U3 plants. Their doctors move the save day, two stamps and the record, never a
+  // spending input, so each keeps its base's S: `retired` / `patypical` $78,000 (the retired family's
+  // 58,500 → "4,880"), `failingtypical` $96,000 (`failing`'s 6,000 a month).
+  ...(['yearpa', 'yearrec', 'recpa', 'yearparec'] as const).map((key) => ({
+    key: `vault:${key}`,
+    draft: () => plantDraft(key),
+    annual: { survivor: 58_500, couple: 78_000 },
+    rendered: line('4,880', '6,500'),
+  })),
+  { key: 'vault:yearfailing', draft: () => plantDraft('yearfailing'), annual: { survivor: 6_000 * 12, couple: 96_000 }, rendered: line('6,000', '8,000') },
 ]
 
 const spineParams = (d: ScenarioDraft, key: string): SimulationParams => {
@@ -147,10 +166,18 @@ const readingThroughTheWire = (d: ScenarioDraft, key: string): SurvivorReading =
 }
 
 describe('the survivor card’s spending-basis line on every household that renders the card', { timeout: 240_000 }, () => {
-  it('the census: the rows are exactly the spine dev seeds (+ the four aged plants) — a new spine seed must add its row', () => {
+  it('the census: the rows are exactly the spine dev seeds and the spine vault plants — a new one of either must add its row', () => {
     const spineSeeds = (Object.keys(DEV_SEEDS) as DevSeedKey[]).filter((k) => buildSpineParams(DEV_SEEDS[k]) !== null)
     expect(ROWS.filter((r) => !r.key.startsWith('vault:')).map((r) => r.key).sort()).toEqual([...spineSeeds].sort())
     expect(spineSeeds).toHaveLength(18)
+    // Every registered plant over a spine base renders the card, so each needs a row, doctored as the
+    // registry doctors it: read off `AGED_PLANTS`, never re-typed, so a new spine plant reds here.
+    const spinePlants = Object.entries(AGED_PLANTS).filter(([, p]) => p !== undefined && spineSeeds.includes(p.base))
+    expect(Object.keys(PLANTS).sort()).toEqual(spinePlants.map(([k]) => k).sort())
+    for (const [key, p] of spinePlants) {
+      expect(PLANTS[key as keyof typeof PLANTS], `${key}: the census doctors it as the registry does`).toEqual([p!.base, p!.doctor])
+    }
+    expect(ROWS.filter((r) => r.key.startsWith('vault:')).map((r) => r.key.slice('vault:'.length)).sort()).toEqual(Object.keys(PLANTS).sort())
   })
 
   it('no CARD-BEARING household is ramped — the ramped dev seeds (`dip`, the Go-go years line) ride the date route, which renders no card, so no dev household drives the withheld line live', () => {

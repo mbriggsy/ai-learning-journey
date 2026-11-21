@@ -22,7 +22,13 @@
  * intake AND the Save ceremony every time. It is equally DEV-gated + DCE'd.
  */
 import type { ScenarioDraft } from '@store/memoryModel'
-import type { BudgetLineItem, RecommendationGoal, CurrentScenario } from '@shared/model'
+import type {
+  BudgetLineItem,
+  RecommendationGoal,
+  CurrentScenario,
+  SavedRecommendationEraV3,
+  SavedRecommendationV3,
+} from '@shared/model'
 import {
   STATE_TAX_PROFILES,
   isPricedState,
@@ -41,9 +47,11 @@ import { confirmedWorkingYearCost, writeEnteredWorkingYearCost } from '@intake/w
 import { workingYearLeftOverLive } from '@intake/intakeMap'
 import { writeWorkingYearLeftOver } from '@intake/workingYearLeftOver'
 import { mintSavedRecommendation } from '@store/savedRecommendationMint'
-import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
+import { deriveSavedRecommendationStatus } from '@store/savedRecommendation'
+import { decodeScenario, encodeScenario, validateSavedRecommendation } from '@shared/scenarioCodec'
 import { draftFromScenario } from './draftFromScenario'
 import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
+import { exposureForDraft } from './stalenessExposure'
 
 /** A fixed dev CRN seed → the same fan every drive (a reproducible cold-read).
  *  Any uint32 satisfies the engine's integer-seed gate; `ensureSeed` REUSES a
@@ -2155,9 +2163,12 @@ export function doctorRecordHolds(s: CurrentScenario, todayEpochDay: number): Cu
  *    fail-closed in BOTH directions). `− 1` is unavailable: the live constant is 1 and the codec
  *    floors the field at ≥ 1, so an older-build fixture is not currently mintable.
  *
- * The era stays FRESH — deliberately. Ageing it would fire `rules-changed` too, but only by
- * hand-doctoring the one field of this record no hand should touch (the stamp snapshot), and the
- * two causes above are both produced by real producers. The rulebook clause keeps its unit arms.
+ * The era stays FRESH — deliberately. Ageing it here would fire `rules-changed` too, but only by
+ * hand-doctoring the stamp snapshot over a save whose own stamps are fresh, a record no build could
+ * write, and the two causes above are both produced by real producers. The ONE honest exception is
+ * {@link doctorYearlyReturnRecord}: there the scenario's own stamps are aged first, and the era is set
+ * to exactly those stamps, the snapshot a build that wrote them would have minted beside them, so the
+ * record and its plan agree on the rules they were priced under.
  *
  * Minted ~400 days back, so this plant is ALSO the live route to the card's `Saved in <year>` slot.
  */
@@ -2176,6 +2187,143 @@ export function doctorRecordSuperseded(s: CurrentScenario, todayEpochDay: number
     )
   }
   return edited
+}
+
+// ── THE YEARLY RETURN (the one-frame composites plan's U3, KTD3 + KTD4) ─────────────────────────
+//
+// The face every real household meets from the first New Year after it saves: a plan built and saved
+// in one calendar year, opened in the next, under rulebooks that have since moved. The gate's calendar
+// (above) pins the page clock, so a yearly return is a PLANT viewed a calendar year after its save
+// (`AgedPlant.viewDay` = `RETURN_DAY`), never a start-year doctor: moving `startCalendarYear` back
+// forks the derived birth year (the `stale` plant's measured RMD fork) and puts a priced state before
+// its first rate row (the engine refuses it, insight 085).
+
+/** How far back a yearly return's save sits before the day it is viewed, before the floor below binds.
+ *  400, `RECORD_AGED_DAYS`' rationale: 365 stays inside one calendar year when the view day is a leap
+ *  year's 31 December. At `RETURN_DAY` the floor binds, so the save lands on `GATE_DAY` itself. */
+const YEARLY_RETURN_GAP_DAYS = 400
+
+/**
+ * A YEARLY RETURN: the save one calendar year behind the day it is viewed, under the previous year's
+ * federal tax and Medicare rulebooks. It moves exactly three things and nothing else:
+ *
+ *  · `savedAt` → `max(today − 400, FIRST_UNAMBIGUOUS_SAVE_DAY)`, the `statestale` floor, so no
+ *    engine-pricing method line can speak beside the two clocks (a save before a ledger row would add a
+ *    calendar-dependent third note);
+ *  · `taxVintageDetail.taxYear` − 1, keeping its `legalBasis` (the bracket year moved, the law did not);
+ *  · `healthcareVintage.coverageYear` − 1 and `partBStandardMonthly` − 10 (the `doctorStaleVault`
+ *    idiom by year arithmetic, never a fixed date, so the clocks fire against whatever the live stamps
+ *    become).
+ *
+ * It keeps `startCalendarYear`, every answer and every other stamp. In particular it does NOT strip the
+ * Medicare-extras answer or its vintage, as {@link doctorStaleVault} does for a save from before the
+ * extras question existed: a yearly return is a save from after it, so the gate speaks exactly the tax
+ * and Medicare lines and no extras re-confirm (derived in `devSeeds.test.ts`, never typed).
+ *
+ * WHAT IT SHOWS. Viewed at `RETURN_DAY` (the gate's pin): a plan built in `SEED_BUILD_YEAR`, saved on
+ * `GATE_DAY` and opened a year later, with the aged band, the aged-balances clause and the staleness
+ * echo. The elapsed line speaks too ("about a year ago": 365 days, the line's floor). Viewed by hand on a
+ * real date before `GATE_DAY` + 400 days, the floor still binds: the save lands on `GATE_DAY`, so it
+ * reads as a recent save in the same year, with the same two clocks firing and no aged band.
+ *
+ * WHAT IS NOT ORGANIC, said out loud (the blind readers' owner 4): no build of `GATE_DAY` stamped the
+ * previous year's rulebooks. A real save from that day, opened a year on, compares the SAME saved stamps
+ * against a newer build's: the honest part is the RELATION, the saved stamps one year behind the live
+ * ones, which is all the staleness clocks read. Nothing on the frame prints a stamp's year (the stamps
+ * reach only the clocks' comparisons), so no face says "2025". A real record from that day would likely
+ * also read `solver-changed` a year on; see {@link doctorYearlyReturnRecord}.
+ *
+ * FAIL LOUD on a base without a tax or healthcare stamp: it could not fire the clocks it exists to fire
+ * (a wiring error, never a silent no-op). Every spine seed carries both, since `scenarioFromDraft` stamps
+ * them at every save. `?vault=yearpa` and `?vault=yearfailing` ride it ({@link AGED_PLANTS}).
+ */
+export function doctorYearlyReturn(s: CurrentScenario, todayEpochDay: number): CurrentScenario {
+  const { taxVintageDetail, healthcareVintage } = s
+  if (taxVintageDetail === undefined || healthcareVintage === undefined) {
+    throw new Error(
+      'doctorYearlyReturn requires a base with both a tax and a healthcare stamp: without them the tax ' +
+        'and Medicare clocks it exists to fire can never fire (a wiring error, never a silent no-op).',
+    )
+  }
+  return {
+    ...s,
+    savedAt: Math.max(todayEpochDay - YEARLY_RETURN_GAP_DAYS, FIRST_UNAMBIGUOUS_SAVE_DAY),
+    taxVintageDetail: { ...taxVintageDetail, taxYear: taxVintageDetail.taxYear - 1 },
+    healthcareVintage: {
+      ...healthcareVintage,
+      coverageYear: healthcareVintage.coverageYear - 1,
+      partBStandardMonthly: healthcareVintage.partBStandardMonthly - 10,
+    },
+  }
+}
+
+/** The five era-bearing fields of a scenario, as a record's era must carry them: all five present
+ *  (`SavedRecommendationEraV3`'s docblock says why the scenario's absent-is-quiet contract does not
+ *  transplant to a record, insight 102). Throws rather than `!`-asserting: an era short one stamp pins
+ *  that rulebook's clock quiet forever. The `eraOf(s)` idiom (`savedRecommendation.test.ts`). */
+function eraOfScenario(s: CurrentScenario): SavedRecommendationEraV3 {
+  const { taxVintageDetail, stateTaxVintage, healthcareVintage, dateVintage } = s
+  if (
+    taxVintageDetail === undefined ||
+    stateTaxVintage === undefined ||
+    healthcareVintage === undefined ||
+    dateVintage === undefined
+  ) {
+    throw new Error('eraOfScenario: scenarioFromDraft stamps all four vintages at every save — this base is not a real save')
+  }
+  return { appDefaultVersion: s.appDefaultVersion, taxVintageDetail, stateTaxVintage, healthcareVintage, dateVintage }
+}
+
+/**
+ * A YEARLY RETURN WITH A SAVED RECOMMENDATION (the composites plan's KTD4): {@link doctorYearlyReturn},
+ * then a record minted on the doctored save day at this build's solver version, its `era` set to the
+ * aged scenario's own five stamps, the snapshot a build that wrote those stamps would have minted beside
+ * them. The household's inputs are untouched, so its fingerprint matches; its version is this build's;
+ * so the one cause is the rulebooks: the card reads "no longer holds" for `rules-changed` alone.
+ *
+ * THE ONE HONEST HAND ON THE ERA ({@link doctorRecordSuperseded}'s docblock names it). The mint reads the
+ * era off this build's live constants, which is right for a real gesture and would make this record's
+ * era FRESH beside an aged plan, a pair no build writes. Setting the era to the plan's own aged stamps
+ * makes the record and its plan agree, which is what any real save of a recommendation produces.
+ *
+ * Owner 4's residual, named: a real record saved in `SEED_BUILD_YEAR` and opened a year on would likely
+ * ALSO read `solver-changed`, if the ranking code moved in between. This plant holds the solver version
+ * so the cause list is one clause. The standing line sits above the cause list, so the count moves no
+ * line the one-frame law protects.
+ *
+ * PROVEN AT PLANT TIME, never assumed (the {@link doctorRecordSuperseded} law): it derives the status
+ * through the real trichotomy (`deriveSavedRecommendationStatus`, the hydrated draft's own exposure and
+ * fingerprint) and THROWS unless the causes are exactly `['rules-changed']`, and it re-runs the codec's
+ * record validator over the re-dressed record. `?vault=yearrec` and `?vault=yearparec` ride it.
+ */
+export function doctorYearlyReturnRecord(s: CurrentScenario, todayEpochDay: number): CurrentScenario {
+  const aged = doctorYearlyReturn(s, todayEpochDay)
+  const savedAt = aged.savedAt
+  if (savedAt === undefined) throw new Error('doctorYearlyReturnRecord: the yearly return stamped no save day')
+  const minted = withMintedRecord(aged, savedAt, SOLVER_CODE_VERSION, todayEpochDay)
+  const fresh = minted.savedRecommendation
+  if (fresh === undefined) throw new Error('doctorYearlyReturnRecord: the mint put no record on the plan')
+  const record: SavedRecommendationV3 = { ...fresh, era: eraOfScenario(aged) }
+  const valid = validateSavedRecommendation(record)
+  if (!valid.ok) throw new Error(`doctorYearlyReturnRecord: the codec refuses the re-dressed record: ${valid.detail}`)
+  const planted: CurrentScenario = { ...minted, savedRecommendation: record }
+  const hydrated = draftFromScenario(planted)
+  if (!hydrated.ok) throw new Error(`doctorYearlyReturnRecord: the planted plan does not hydrate: ${hydrated.detail}`)
+  const status = deriveSavedRecommendationStatus({
+    record,
+    scenario: planted,
+    freshFingerprint: recordFingerprintFor(planted, todayEpochDay),
+    todayEpochDay,
+    exposure: exposureForDraft(hydrated.draft),
+  })
+  if (status.causes.length !== 1 || status.causes[0] !== 'rules-changed') {
+    throw new Error(
+      `doctorYearlyReturnRecord: the record's causes are [${status.causes.join(', ')}], not exactly ` +
+        `[rules-changed]. This plant exists to show the one-cause card a yearly return produces; a ` +
+        `second cause, or none, means a doctor or a producer moved. Diagnose it, never loosen this.`,
+    )
+  }
+  return planted
 }
 
 /** The AGED plants: `?vault=<key>` → a doctor over a base seed (each key names BOTH — the state-tax
@@ -2280,6 +2428,22 @@ export const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
   // contribution and blend stamps stay fresh (the doctor touches neither). The doctor moves no engine
   // input, so the affirm lands `?seed=date`'s own reading.
   wyclock: { base: 'date', doctor: doctorWorkingYearsStaleVault },
+  // The one-frame composites plan's U3 — the tallest real frames the gate measures (the register's Tier 0
+  // *The tallest real composites break the one-frame law…*). The yearly returns declare `RETURN_DAY`, so
+  // every harness pins the page clock a calendar year after their save, the face a real household meets
+  // from its first New Year after saving; `recpa` declares none and is viewed on `GATE_DAY`.
+  //  · `yearpa`: Pennsylvania answering "not sure" on Medicare extras, at its yearly return (the R13
+  //    caveat's tallest measured frame on a borderline household).
+  //  · `yearfailing`: the off-track household answering "not sure", at its yearly return.
+  //  · `yearrec`: the entered-extras spine household at its yearly return with a saved recommendation
+  //    (his likeliest return: one cause on the card, `rules-changed`).
+  //  · `recpa`: Pennsylvania "not sure" with a saved recommendation that holds, fresh.
+  //  · `yearparec`: Pennsylvania "not sure" at its yearly return with a saved recommendation.
+  yearpa: { base: 'patypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
+  yearfailing: { base: 'failingtypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
+  yearrec: { base: 'retired', doctor: doctorYearlyReturnRecord, viewDay: RETURN_DAY },
+  recpa: { base: 'patypical', doctor: doctorRecordHolds },
+  yearparec: { base: 'patypical', doctor: doctorYearlyReturnRecord, viewDay: RETURN_DAY },
 }
 
 async function runPlantDevVault(key: string): Promise<PlantResult> {

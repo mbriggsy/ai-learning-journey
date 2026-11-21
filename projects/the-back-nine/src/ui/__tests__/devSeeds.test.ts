@@ -7,6 +7,8 @@ import {
   doctorStaleVault,
   doctorStateStaleVault,
   doctorWorkingYearsStaleVault,
+  doctorYearlyReturn,
+  doctorYearlyReturnRecord,
   agedWorkingYearsVintage,
   AGED_PLANTS,
   GATE_DAY,
@@ -1340,13 +1342,23 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
 describe('the record-bearing plants (the remembered recommendation the fit gate measures)', () => {
   const TODAY = currentEpochDay()
 
-  /** The plant's own chain, up to the point the app takes over: build the seed, doctor it, run the
-   *  vault round-trip, and hydrate exactly as unlock does. Returns both halves the trichotomy needs. */
-  function plant(doctor: (s: CurrentScenario, today: number) => CurrentScenario) {
-    const built = scenarioFromDraft(DEV_SEEDS.retired)
-    expect(built.ready, 'retired must be save-ready').toBe(true)
+  /** The plant's own chain, up to the point the app takes over: build the seed, stamp it a save by this
+   *  build (`runPlantDevVault`'s floor), doctor it, run the vault round-trip, and hydrate exactly as unlock
+   *  does. Returns both halves the trichotomy needs. `base` and `today` are parameters (the composites
+   *  plan's U3): its plants ride other bases and are viewed on the gate's calendar, never the wall clock. */
+  function plant(
+    doctor: (s: CurrentScenario, today: number) => CurrentScenario,
+    base: keyof typeof DEV_SEEDS = 'retired',
+    today: number = TODAY,
+  ) {
+    const built = scenarioFromDraft(DEV_SEEDS[base])
+    expect(built.ready, `${base} must be save-ready`).toBe(true)
     if (!built.ready) throw new Error('unreachable — asserted above')
-    const doctored = doctor(built.scenario, TODAY)
+    const thisBuildSave: CurrentScenario = {
+      ...built.scenario,
+      savedAt: Math.max(built.scenario.savedAt ?? FIRST_UNAMBIGUOUS_SAVE_DAY, FIRST_UNAMBIGUOUS_SAVE_DAY),
+    }
+    const doctored = doctor(thisBuildSave, today)
     // THE PLANT'S OWN GUARD, re-run here: a doctor adds its atom AFTER the save gate ran, and the
     // record is the codec's ONE tolerated non-fatal drop — an invalid one would be DELETED at
     // unlock and the plant would land a record-FREE vault (which reads as a broken CARD, not a
@@ -1366,7 +1378,7 @@ describe('the record-bearing plants (the remembered recommendation the fit gate 
     // The FRESH run identity, off the HYDRATED draft — the exact production path
     // `appModel.currentDraftFingerprint()` takes (`buildSolveRequest` → `solverRunFingerprint`),
     // never a value read back off the record it is about to be compared to.
-    const request = buildSolveRequest(hydrated.draft, TODAY)
+    const request = buildSolveRequest(hydrated.draft, today)
     expect(typeof request, 'a planted household must still build a solve run').not.toBe('string')
     if (typeof request === 'string') throw new Error('unreachable — asserted above')
     const freshFingerprint = solverRunFingerprint(request.base, request.candidates, request.ranking, {
@@ -1377,11 +1389,12 @@ describe('the record-bearing plants (the remembered recommendation the fit gate 
       scenario,
       record,
       freshFingerprint,
+      hydrated: hydrated.draft,
       status: deriveSavedRecommendationStatus({
         record,
         scenario,
         freshFingerprint,
-        todayEpochDay: TODAY,
+        todayEpochDay: today,
         exposure: exposureForDraft(hydrated.draft),
       }),
     }
@@ -1458,6 +1471,222 @@ describe('the record-bearing plants (the remembered recommendation the fit gate 
     // Both carry the picked goal — a saved recommendation only exists for a household that ran one.
     expect(holds.scenario.chosenGoal).toBe('leave-more')
     expect(superseded.scenario.chosenGoal).toBe('leave-more')
+  })
+})
+
+// ===========================================================================
+// The one-frame composites plan's U3 — the YEARLY-RETURN and Pennsylvania record plants (`yearpa`,
+// `yearfailing`, `yearrec`, `recpa`, `yearparec`), the tallest real frames the fit gate will measure.
+// Each is driven THROUGH THE REGISTRY (`AGED_PLANTS[key]`: its base, its doctor, its declared view day),
+// so a mis-wired base, doctor or day fails here, and each doctor is called with the plant's declared day
+// passed in (`RETURN_DAY`, or `GATE_DAY` for `recpa`), never the wall clock. The chain is the plant's own:
+// a save by this build → the doctor → the vault round trip → the unlock hydrate → the exposure → the
+// staleness reader and the gate composer → (a record plant) the trichotomy → the engine.
+// ===========================================================================
+describe('the yearly-return and Pennsylvania record plants (the one-frame composites plan\'s U3)', () => {
+  const YEARLY = ['yearpa', 'yearfailing', 'yearrec', 'yearparec'] as const
+  const RECORDS = ['yearrec', 'yearparec'] as const
+  type U3Key = (typeof YEARLY)[number] | 'recpa'
+  const NOTHING_STALE = { costStale: false, leftOverStale: false } as const
+  const NO_SENTENCES = { costStale: null, leftOverStale: null, typedBelow: null } as const
+
+  function planted(key: U3Key) {
+    const entry = AGED_PLANTS[key]
+    if (entry === undefined) throw new Error(`[test setup] ${key} is not registered in AGED_PLANTS`)
+    const today = entry.viewDay ?? GATE_DAY
+    const built = scenarioFromDraft(DEV_SEEDS[entry.base])
+    if (!built.ready) throw new Error(`[test setup] ${key}'s base ${entry.base} must be save-ready`)
+    const save: CurrentScenario = {
+      ...built.scenario,
+      savedAt: Math.max(built.scenario.savedAt ?? FIRST_UNAMBIGUOUS_SAVE_DAY, FIRST_UNAMBIGUOUS_SAVE_DAY),
+    }
+    const doctored = entry.doctor(save, today)
+    // The plant's own guard (`runPlantDevVault`): a doctored atom must survive the codec, and the record is
+    // its one tolerated drop, so a dropped record would land a record-free vault.
+    const round = decodeScenario(encodeScenario(doctored))
+    expect(round.ok, `${key}: the doctored scenario survives the codec`).toBe(true)
+    if (!round.ok) throw new Error('unreachable — asserted above')
+    expect(round.droppedAtoms, `${key}: no atom is dropped (no 'record-dropped')`).toEqual([])
+    if (round.scenario.schemaVersion !== CURRENT_SCHEMA_VERSION) throw new Error(`${key}: not the current schema`)
+    const scenario = round.scenario
+    const hydrated = draftFromScenario(scenario)
+    if (!hydrated.ok) throw new Error(`${key}: the planted vault does not hydrate: ${hydrated.detail}`)
+    const exposure = exposureForDraft(hydrated.draft)
+    const report = deriveStaleness(scenario, today, exposure, NOTHING_STALE)
+    const view = composeReentry(scenario, report, NO_SENTENCES)
+    return { entry, today, save, doctored, scenario, draft: hydrated.draft, exposure, report, view }
+  }
+
+  it('the registry declares each plant\'s base, doctor and view day', () => {
+    expect(AGED_PLANTS.yearpa).toEqual({ base: 'patypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
+    expect(AGED_PLANTS.yearfailing).toEqual({ base: 'failingtypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
+    expect(AGED_PLANTS.yearrec).toEqual({ base: 'retired', doctor: doctorYearlyReturnRecord, viewDay: RETURN_DAY })
+    expect(AGED_PLANTS.recpa, 'a fresh record plant is viewed on GATE_DAY: it declares no day').toEqual({ base: 'patypical', doctor: doctorRecordHolds })
+    expect(AGED_PLANTS.yearparec).toEqual({ base: 'patypical', doctor: doctorYearlyReturnRecord, viewDay: RETURN_DAY })
+  })
+
+  for (const key of YEARLY) {
+    it(`'${key}' moves only the save day and two stamps (a year behind a fresh save's) beside any record and its goal, and keeps its start year and answers`, () => {
+      const { save, doctored } = planted(key)
+      // Independent of the doctor: the fresh save's own stamps, one year back by arithmetic here.
+      const freshTax = save.taxVintageDetail!
+      const freshHealth = save.healthcareVintage!
+      expect(doctored.taxVintageDetail).toEqual({ taxYear: freshTax.taxYear - 1, legalBasis: freshTax.legalBasis })
+      expect(doctored.healthcareVintage).toEqual({
+        ...freshHealth,
+        coverageYear: freshHealth.coverageYear - 1,
+        partBStandardMonthly: freshHealth.partBStandardMonthly - 10,
+      })
+      expect(doctored.healthcareVintage!.medicareExtrasTypicalVintage, 'a save from after the extras question keeps its vintage').toBe(
+        medicareExtrasTypical.value.vintage,
+      )
+      expect(doctored.startCalendarYear, 'the doctor never moves the start year (KTD3)').toBe(SEED_BUILD_YEAR)
+      const strip = (s: CurrentScenario) => {
+        const { savedAt: _a, taxVintageDetail: _t, healthcareVintage: _h, savedRecommendation: _r, chosenGoal: _g, ...rest } = s
+        return rest
+      }
+      expect(strip(doctored), `${key}: every answer and every other stamp is its base's, byte for byte`).toEqual(strip(save))
+      expect(doctored.medicareExtrasByPerson, 'the extras answer rides through').toEqual(save.medicareExtrasByPerson)
+    })
+
+    it(`'${key}' saves on the gate's day at its yearly return, so the gate speaks no engine-pricing line (derived from the ledger)`, () => {
+      const { scenario, report, today } = planted(key)
+      expect(today).toBe(RETURN_DAY)
+      expect(scenario.savedAt, 'at RETURN_DAY the floor binds: the save lands on GATE_DAY itself').toBe(GATE_DAY)
+      expect(scenario.savedAt!, 'never before the first unambiguous save day').toBeGreaterThanOrEqual(FIRST_UNAMBIGUOUS_SAVE_DAY)
+      // An independent oracle over the ledger rows, never the reader's code: rows crossed by, or shipped on,
+      // the save day. None may exist, so no method line, nameless twin or spending re-confirm can speak.
+      const crossedOrSameDay = ENGINE_PRICING_LEDGER.filter((r) => r.sinceEpochDay >= scenario.savedAt!)
+      expect(crossedOrSameDay, 'no ledger row reaches a save on the first unambiguous day').toEqual([])
+      expect(report.pricing.namedFamilies).toEqual([])
+      expect(report.pricing.hedged).toBe(false)
+      expect(report.pricing.reconfirmMedicareSpending, 'the extras marker is present and no row was crossed').toBe(false)
+    })
+
+    it(`'${key}''s gate speaks exactly the tax and Medicare lines, derived through the reader and the composer, and "about a year ago"`, () => {
+      const { report, view, exposure, scenario, today } = planted(key)
+      // The exposure that gates every clock: an all-65+ spine household with an IRA (tax priced), Medicare
+      // priced, no marketplace years, no priced state for the stateless bases.
+      expect(exposure.overlayBuilt).toBe('priced')
+      expect(exposure.medicare).toBe('priced')
+      expect(exposure.aca, 'everyone is 65 or over: no marketplace year').toBe('unpriced')
+      expect(report.controls.taxMoved, 'the bracket year is a year behind').toBe(true)
+      expect(report.controls.stateTaxMoved, 'the state stamp is fresh').toBe(false)
+      expect(report.healthcare.movedClocks).toEqual(['coverage-year', 'part-b'])
+      expect(report.healthcare.medicareMoved).toBe(true)
+      expect(report.healthcare.acaMoved, 'they price no marketplace year, so that line would be false').toBe(false)
+      expect(report.spine.appDefaultMoved).toBe(false)
+      expect(report.unattributed.clocks).toEqual([])
+      expect(report.budget.expiredLines, 'no budget window ends between the save and the return').toEqual([])
+      expect(report.rulesMoved, 'the hero echo rides').toBe(true)
+      // THE GATE'S LINES, the number U6's arm will pin: exactly two staleness notes.
+      expect(view.noteLines).toEqual([copy.stalenessTax, copy.stalenessMedicare])
+      expect(today - scenario.savedAt!, 'a calendar year from GATE_DAY').toBeGreaterThanOrEqual(365)
+      expect(view.elapsedLine, 'the elapsed line fires from 365 days and rounds to one year').toBe(slots.reentryElapsedYears(1))
+    })
+  }
+
+  for (const key of [...YEARLY, 'recpa'] as const) {
+    it(`'${key}' is ENGINE-ACCEPTED and resolves to its base's own verdict (insight 085), pinned as found`, () => {
+      const { draft, entry } = planted(key)
+      const verdictOf = (d: ScenarioDraft, label: string): string => {
+        const params = buildSpineParams(d)
+        expect(params, `${label}: buildSpineParams`).not.toBeNull()
+        expect(validateParams(params!), `${label}: the engine accepts it`).toBeNull()
+        const wire = runEngine(params!, d.seed!)
+        expect(wire.kind, `${label}: a resolved run, never the R19 indeterminate`).toBe('resolved')
+        if (wire.kind !== 'resolved') throw new Error('unreachable — asserted above')
+        return wire.headline.outcomeState
+      }
+      const found = verdictOf(draft, key)
+      // The doctors move the save day, two stamps and the record, none of them an engine input, so the
+      // verdict is the base's: the mechanism, checked beside the literal.
+      expect(found, `${key} reads its base's verdict`).toBe(verdictOf(DEV_SEEDS[entry.base], entry.base))
+      const AS_FOUND: Record<U3Key, string> = {
+        yearpa: 'borderline',
+        yearfailing: 'already-failing',
+        yearrec: 'on-track',
+        recpa: 'borderline',
+        yearparec: 'borderline',
+      }
+      expect(found).toBe(AS_FOUND[key])
+    })
+  }
+
+  for (const key of RECORDS) {
+    it(`'${key}' — the record no longer holds for ONE cause, the rulebooks, against an era a year behind`, () => {
+      const { scenario, draft, today, save } = planted(key)
+      const record = scenario.savedRecommendation
+      expect(record, `${key} carries a record`).not.toBeUndefined()
+      if (record === undefined) throw new Error('unreachable — asserted above')
+      // The era is the planted plan's own five stamps, and those are a fresh save's, aged by a year here.
+      expect(record.era).toEqual({
+        appDefaultVersion: scenario.appDefaultVersion,
+        taxVintageDetail: scenario.taxVintageDetail,
+        stateTaxVintage: scenario.stateTaxVintage,
+        healthcareVintage: scenario.healthcareVintage,
+        dateVintage: scenario.dateVintage,
+      })
+      expect(record.era.taxVintageDetail.taxYear).toBe(save.taxVintageDetail!.taxYear - 1)
+      expect(record.era.healthcareVintage.coverageYear).toBe(save.healthcareVintage!.coverageYear - 1)
+      expect(record.era.stateTaxVintage, 'the state rulebook is untouched').toEqual(save.stateTaxVintage)
+      // The fresh identity, off the hydrated draft (the production path), equals the record's.
+      const request = buildSolveRequest(draft, today)
+      if (typeof request === 'string') throw new Error(`${key}: no solve run builds (${request})`)
+      const freshFingerprint = solverRunFingerprint(request.base, request.candidates, request.ranking, {
+        seedA: request.seedA,
+        tieTolerance: request.tieTolerance,
+      })
+      expect(record.fingerprint).toBe(freshFingerprint)
+      expect(record.solverCodeVersion).toBe(SOLVER_CODE_VERSION)
+      const status = deriveSavedRecommendationStatus({
+        record,
+        scenario,
+        freshFingerprint,
+        todayEpochDay: today,
+        exposure: exposureForDraft(draft),
+      })
+      expect(status.causes, 'one cause: the card reads "no longer holds" for the rulebooks alone').toEqual(['rules-changed'])
+      expect(status.current).toBe(false)
+      // Minted on the save day, a calendar year before the return: the card's "Saved in <year>" slot speaks.
+      expect(record.mintedAt).toBe(scenario.savedAt)
+      expect(epochDayToCalendarYear(record.mintedAt)).toBeLessThan(epochDayToCalendarYear(RETURN_DAY))
+      expect(scenario.chosenGoal, 'a record exists only beside a picked goal').toBe('leave-more')
+    })
+  }
+
+  it("'recpa' — Pennsylvania's record still holds on the gate's day: every conjunct passes", () => {
+    const { scenario, draft, today } = planted('recpa')
+    expect(today).toBe(GATE_DAY)
+    const record = scenario.savedRecommendation
+    if (record === undefined) throw new Error('recpa carries no record')
+    const request = buildSolveRequest(draft, today)
+    if (typeof request === 'string') throw new Error(`recpa: no solve run builds (${request})`)
+    const freshFingerprint = solverRunFingerprint(request.base, request.candidates, request.ranking, {
+      seedA: request.seedA,
+      tieTolerance: request.tieTolerance,
+    })
+    const status = deriveSavedRecommendationStatus({ record, scenario, freshFingerprint, todayEpochDay: today, exposure: exposureForDraft(draft) })
+    expect(status.causes).toEqual([])
+    expect(status.current).toBe(true)
+    expect(scenario.retirementState).toBe('PA')
+  })
+
+  it("'recpa''s gate is silent: a fresh save under fresh stamps, viewed on the day it was saved", () => {
+    const { view } = planted('recpa')
+    expect(view.noteLines, 'no staleness line').toEqual([])
+    expect(view.elapsedLine).toBeNull()
+  })
+
+  it('the yearly-return doctor fails loud on a base with no tax or healthcare stamp — never a silent no-op', () => {
+    const built = scenarioFromDraft(DEV_SEEDS.patypical)
+    if (!built.ready) throw new Error('[test setup] patypical must be save-ready')
+    const { healthcareVintage: _h, ...noHealth } = built.scenario
+    const { taxVintageDetail: _t, ...noTax } = built.scenario
+    expect(() => doctorYearlyReturn(noHealth, RETURN_DAY)).toThrow(/tax and a healthcare stamp/)
+    expect(() => doctorYearlyReturn(noTax, RETURN_DAY)).toThrow(/tax and a healthcare stamp/)
+    // The control: the same base with both stamps doctors cleanly, so the throws above are the guard.
+    expect(() => doctorYearlyReturn(built.scenario, RETURN_DAY)).not.toThrow()
   })
 })
 
@@ -1805,7 +2034,10 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
 
   it('every aged plant built through its OWN doctor reads not stale — its W rides the save untouched', () => {
     const plants = Object.entries(AGED_PLANTS)
-    expect(plants.map(([k]) => k).sort()).toEqual(['datearrived', 'datestale', 'rec', 'recold', 'stale', 'statestale', 'wyclock'])
+    expect(plants.map(([k]) => k).sort()).toEqual([
+      'datearrived', 'datestale', 'rec', 'recold', 'recpa', 'stale', 'statestale', 'wyclock',
+      'yearfailing', 'yearpa', 'yearparec', 'yearrec',
+    ])
     for (const [key, plant] of plants) {
       const built = scenarioFromDraft(DEV_SEEDS[plant!.base])
       if (!built.ready) throw new Error(`[test setup] ${key}'s base ${plant!.base} must be save-ready`)

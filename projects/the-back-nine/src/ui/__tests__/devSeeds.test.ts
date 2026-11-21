@@ -118,22 +118,30 @@ describe("the fit gate's calendar: the seeds' build year binds to the gate's day
  * (`{ kind: 'typical', adoptionVintage }`), never a stripped field (a pre-extras save, which adds a gate
  * line). The sweep above proves each engine-accepted; these arms prove the answer, its round trip, the
  * staleness silence of a fresh save (with the clock firing on a moved vintage as its control, insight 103)
- * and each verdict, pinned as the engine found it.
+ * and each verdict, pinned as the engine found it. The rung-3 key council's three "not sure" bases
+ * (`wf_540221e4-42d`: `surplustypical`, `offtracktypical`, `pafailingtypical`) ride the same arms, each beside the
+ * one other field its docblock names (the spend, the state), written here from the base, never read off the seed.
  */
-describe('the "not sure" Medicare-extras seeds (the composites plan\'s U2)', () => {
+describe('the "not sure" Medicare-extras seeds (the composites plan\'s U2, and the rung-3 key council\'s plants)', () => {
   const TYPICAL = [
-    ['patypical', 'pa'],
-    ['failingtypical', 'failing'],
+    ['patypical', 'pa', {}],
+    ['failingtypical', 'failing', {}],
+    ['surplustypical', 'surplus', {}],
+    ['offtracktypical', 'retired', { annualSpendingReal: 8_500 * 12 }],
+    ['pafailingtypical', 'failing', { retirementState: 'PA' }],
   ] as const
   const notSure = { kind: 'typical', adoptionVintage: medicareExtrasTypical.value.vintage } as const
   const TODAY = currentEpochDay()
 
-  for (const [key, base] of TYPICAL) {
-    it(`'${key}' is '${base}' with every person answering "not sure", and nothing else changed`, () => {
+  for (const [key, base, also] of TYPICAL) {
+    const named = Object.keys(also).length === 0 ? 'nothing else changed' : `only ${Object.keys(also).join(', ')} besides`
+    it(`'${key}' is '${base}' with every person answering "not sure", ${named}`, () => {
       const { medicareExtrasByPerson: extras, ...rest } = DEV_SEEDS[key]
       const { medicareExtrasByPerson: _baseExtras, ...baseRest } = DEV_SEEDS[base]
       expect(extras).toEqual(DEV_SEEDS[base].people.map(() => notSure))
-      expect(rest).toEqual(baseRest)
+      expect(rest).toEqual({ ...baseRest, ...also })
+      // Non-vacuity: each named change really differs from the base, so the spread above is not a no-op.
+      for (const [field, value] of Object.entries(also)) expect(DEV_SEEDS[base][field as keyof ScenarioDraft], field).not.toEqual(value)
     })
 
     it(`'${key}' keeps the typical answer and its live vintage through the codec's round trip`, () => {
@@ -181,6 +189,34 @@ describe('the "not sure" Medicare-extras seeds (the composites plan\'s U2)', () 
     // ($220 + $0), and tips Pennsylvania from on-track to borderline: the "On the line" face its plants carry.
     expect(verdict('patypical'), 'the typical extras tip pa (on-track) to borderline').toBe('borderline')
     expect(verdict('failingtypical')).toBe('already-failing')
+  })
+
+  // The rung-3 key council's four bases. The key reads the SHOWN direction, so each pins its direction beside its
+  // state: the engine forks `rethink` from `trim` on the state (`buildDollar`, `src/engine/confidence.ts`), and a
+  // drift that moved one across would re-aim the plant at a different edge of the key.
+  it("the council's bases through the real engine, pinned as found: room, trim and two rethinks", () => {
+    const reading = (key: 'surplustypical' | 'offtracktypical' | 'pafailingtypical' | 'failingentered') => {
+      const d = DEV_SEEDS[key]
+      const params = buildSpineParams(d)
+      expect(params, `${key}: buildSpineParams`).not.toBeNull()
+      const wire = runEngine(params!, d.seed!)
+      expect(wire.kind, `${key}: a resolved run`).toBe('resolved')
+      if (wire.kind !== 'resolved') throw new Error('unreachable — asserted above')
+      return { state: wire.headline.outcomeState, direction: wire.dollar.direction }
+    }
+    // Found 2026-11-21 (b9-8), before any pin was typed.
+    expect(reading('surplustypical'), '"More than covered" with room to spend').toEqual({ state: 'over-funded', direction: 'room' })
+    expect(reading('offtracktypical'), 'the one off-track seed, its clause a trim').toEqual({ state: 'off-track', direction: 'trim' })
+    expect(reading('pafailingtypical'), "Pennsylvania's exemptions leave it short").toEqual({ state: 'already-failing', direction: 'rethink' })
+    expect(reading('failingentered'), 'the entered answer leaves it short').toEqual({ state: 'already-failing', direction: 'rethink' })
+  })
+
+  it("'failingentered' is 'failing' with 'retired''s entered extras answer, and nothing else changed", () => {
+    const { medicareExtrasByPerson: extras, ...rest } = DEV_SEEDS.failingentered
+    expect(extras).toEqual([{ kind: 'entered', monthly: 220 }, { kind: 'none' }])
+    expect(extras).toEqual(DEV_SEEDS.retired.medicareExtrasByPerson)
+    expect(DEV_SEEDS.failing.medicareExtrasByPerson, '`failing` itself answers nothing (the control)').toBeUndefined()
+    expect(rest).toEqual(DEV_SEEDS.failing)
   })
 })
 
@@ -1484,7 +1520,8 @@ describe('the record-bearing plants (the remembered recommendation the fit gate 
 // staleness reader and the gate composer → (a record plant) the trichotomy → the engine.
 // ===========================================================================
 describe('the yearly-return and Pennsylvania record plants (the one-frame composites plan\'s U3)', () => {
-  const YEARLY = ['yearpa', 'yearfailing', 'yearrec', 'yearparec'] as const
+  // The rung-3 key council's four yearly returns (`wf_540221e4-42d`) ride every yearly-return arm too.
+  const YEARLY = ['yearpa', 'yearfailing', 'yearrec', 'yearparec', 'yearsurplus', 'yearofftrack', 'yearpafailing', 'yearfailingentered'] as const
   const RECORDS = ['yearrec', 'yearparec'] as const
   type U3Key = (typeof YEARLY)[number] | 'recpa'
   const NOTHING_STALE = { costStale: false, leftOverStale: false } as const
@@ -1523,6 +1560,10 @@ describe('the yearly-return and Pennsylvania record plants (the one-frame compos
     expect(AGED_PLANTS.yearrec).toEqual({ base: 'retired', doctor: doctorYearlyReturnRecord, viewDay: RETURN_DAY })
     expect(AGED_PLANTS.recpa, 'a fresh record plant is viewed on GATE_DAY: it declares no day').toEqual({ base: 'patypical', doctor: doctorRecordHolds })
     expect(AGED_PLANTS.yearparec).toEqual({ base: 'patypical', doctor: doctorYearlyReturnRecord, viewDay: RETURN_DAY })
+    expect(AGED_PLANTS.yearsurplus).toEqual({ base: 'surplustypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
+    expect(AGED_PLANTS.yearofftrack).toEqual({ base: 'offtracktypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
+    expect(AGED_PLANTS.yearpafailing).toEqual({ base: 'pafailingtypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
+    expect(AGED_PLANTS.yearfailingentered).toEqual({ base: 'failingentered', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
   })
 
   for (const key of YEARLY) {
@@ -1608,6 +1649,10 @@ describe('the yearly-return and Pennsylvania record plants (the one-frame compos
         yearrec: 'on-track',
         recpa: 'borderline',
         yearparec: 'borderline',
+        yearsurplus: 'over-funded',
+        yearofftrack: 'off-track',
+        yearpafailing: 'already-failing',
+        yearfailingentered: 'already-failing',
       }
       expect(found).toBe(AS_FOUND[key])
     })
@@ -2036,7 +2081,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     const plants = Object.entries(AGED_PLANTS)
     expect(plants.map(([k]) => k).sort()).toEqual([
       'datearrived', 'datestale', 'rec', 'recold', 'recpa', 'stale', 'statestale', 'wyclock',
-      'yearfailing', 'yearpa', 'yearparec', 'yearrec',
+      'yearfailing', 'yearfailingentered', 'yearofftrack', 'yearpa', 'yearpafailing', 'yearparec', 'yearrec', 'yearsurplus',
     ])
     for (const [key, plant] of plants) {
       const built = scenarioFromDraft(DEV_SEEDS[plant!.base])

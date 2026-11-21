@@ -1114,6 +1114,48 @@ const paTypicalExtras: ScenarioDraft = { ...paAffirmation, medicareExtrasByPerso
  */
 const failingTypicalExtras: ScenarioDraft = { ...retiredFailing, medicareExtrasByPerson: notSureExtras(retiredFailing.people.length) }
 
+// THE RUNG-3 KEY COUNCIL'S PLANTS (`wf_540221e4-42d`, 2026-11-20; `docs/council-log.md`'s row): four bases whose yearly
+// returns ({@link AGED_PLANTS}) put rung 3's key to the test on real engine runs before it lands. Rung 3 borrows
+// `--text-sm` for the survivor context only where the shown direction is `rethink`, the staleness echo shows and the
+// typical Medicare residual runs; each plant probes one edge of that key. Each names its Medicare-extras form in its key.
+
+/**
+ * `?seed=surplustypical`: `surplus` (over-funded, "More than covered") with both people answering "not sure" on
+ * Medicare extras. The red team's reassuring ROOM frame: its sized room clause plus the typical residual put the R13
+ * caveat below his fold on a FRESH frame (743.1 px, b9-7's temporary plant), with no echo for rungs 2a or 2b to reach,
+ * so it is a new stop for its own council (the register's composites entry). The answer only, a spread of `surplus`.
+ */
+const surplusTypicalExtras: ScenarioDraft = { ...surplusWitness, medicareExtrasByPerson: notSureExtras(surplusWitness.people.length) }
+
+/**
+ * `?seed=offtracktypical`: the OFF-TRACK household, the one spine state no other seed reaches. `retired`'s couple at
+ * $8,500 a month, both answering "not sure" on Medicare extras: off-track, so its clause is `trim`, sized by the spend
+ * lane (the shown direction the key reads is `trim`, never `rethink`). The spend sits mid-band on purpose: found
+ * 2026-11-21 through the engine, the same household reads off-track from $7,500 to $10,000 a month, so $8,500 stays
+ * clear of borderline above and already-failing below. Pinned as found in `devSeeds.test.ts`.
+ */
+const offTrackTypicalExtras: ScenarioDraft = {
+  ...retiredOnTrack,
+  annualSpendingReal: 8_500 * 12,
+  medicareExtrasByPerson: notSureExtras(retiredOnTrack.people.length),
+}
+
+/**
+ * `?seed=pafailingtypical`: `failingtypical` in Pennsylvania, the already-failing household answering "not sure" with
+ * Pennsylvania's clause inside its residual, the longest priced one. Its yearly return carries all three of rung 3's
+ * terms on the tallest residual the key covers (the typical class follows the extras note alone, never the state). PA
+ * exempts this all-65+ household's IRA draw, so the verdict stays already-failing (pinned as found).
+ */
+const paFailingTypicalExtras: ScenarioDraft = { ...failingTypicalExtras, retirementState: 'PA' }
+
+/**
+ * `?seed=failingentered`: `failing` with `retired`'s ENTERED Medicare extras ($220 a month for Alex, Sam's affirmed
+ * $0), the form every priced seed spreads. Its yearly return carries `rethink` and the echo but not the typical
+ * residual, so rung 3's key must leave its survivor context at body size: the scope's third term, read on a real run
+ * (the red team's arithmetic put this frame near 691 px, inside the fold, so it never needs the borrow).
+ */
+const failingEnteredExtras: ScenarioDraft = { ...retiredFailing, medicareExtrasByPerson: retiredOnTrack.medicareExtrasByPerson }
+
 /**
  * THE FL $0-CONSTITUTIONAL AFFIRMATION — `retiredOnTrack`'s couple in Florida. FL is a sourced
  * constitutional $0 (Fla. Const. Art. VII § 5(a)): every decumulation dollar incurs $0 state tax,
@@ -1635,8 +1677,11 @@ export const DEV_SEEDS = {
   date: withConfirmedW(stillWorking),
   borderline: retiredBorderline,
   dateborder: withConfirmedW(stillWorkingBorderline),
+  offtracktypical: offTrackTypicalExtras,
   failing: retiredFailing,
   failingtypical: failingTypicalExtras,
+  pafailingtypical: paFailingTypicalExtras,
+  failingentered: failingEnteredExtras,
   budget: retiredBudget,
   datesplit: withConfirmedW(dateSplitSeed),
   datemixed: withConfirmedW(dateMixedSeed),
@@ -1645,6 +1690,7 @@ export const DEV_SEEDS = {
   health: retiredHealth,
   date65: withConfirmedW(stillWorkingAllMedicare),
   surplus: surplusWitness,
+  surplustypical: surplusTypicalExtras,
   buckets: multiBucketWitness,
   steer: noPretaxSteer,
   nc: ncAffirmation,
@@ -2444,6 +2490,15 @@ export const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
   yearrec: { base: 'retired', doctor: doctorYearlyReturnRecord, viewDay: RETURN_DAY },
   recpa: { base: 'patypical', doctor: doctorRecordHolds },
   yearparec: { base: 'patypical', doctor: doctorYearlyReturnRecord, viewDay: RETURN_DAY },
+  // The rung-3 key council's plants (`wf_540221e4-42d`), each a yearly return over its base (above):
+  //  · `yearsurplus`: the reassuring ROOM frame ("More than covered", "not sure"), a year on (FIRST in the ruling).
+  //  · `yearofftrack`: the off-track TRIM frame ("not sure"), a year on.
+  //  · `yearpafailing`: Pennsylvania's already-failing household ("not sure"), a year on.
+  //  · `yearfailingentered`: the already-failing household with ENTERED extras, a year on (no typical residual).
+  yearsurplus: { base: 'surplustypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
+  yearofftrack: { base: 'offtracktypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
+  yearpafailing: { base: 'pafailingtypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
+  yearfailingentered: { base: 'failingentered', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
 }
 
 async function runPlantDevVault(key: string): Promise<PlantResult> {

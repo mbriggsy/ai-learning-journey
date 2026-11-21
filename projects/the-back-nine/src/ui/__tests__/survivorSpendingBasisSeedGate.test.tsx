@@ -66,6 +66,10 @@ const PLANTS = {
   yearrec: ['retired', doctorYearlyReturnRecord],
   recpa: ['patypical', doctorRecordHolds],
   yearparec: ['patypical', doctorYearlyReturnRecord],
+  yearsurplus: ['surplustypical', doctorYearlyReturn],
+  yearofftrack: ['offtracktypical', doctorYearlyReturn],
+  yearpafailing: ['pafailingtypical', doctorYearlyReturn],
+  yearfailingentered: ['failingentered', doctorYearlyReturn],
 } as const satisfies Record<string, readonly [DevSeedKey, (s: CurrentScenario, today: number) => CurrentScenario]>
 
 const plantDraft = (key: keyof typeof PLANTS): ScenarioDraft => {
@@ -107,9 +111,22 @@ const ROWS: readonly {
   { key: 'failing', draft: () => DEV_SEEDS.failing, annual: { survivor: 6_000 * 12, couple: 96_000 }, rendered: line('6,000', '8,000') },
   // `failingtypical` (the composites plan's U2): `failing` with "not sure" extras, the same spending basis.
   { key: 'failingtypical', draft: () => DEV_SEEDS.failingtypical, annual: { survivor: 6_000 * 12, couple: 96_000 }, rendered: line('6,000', '8,000') },
+  // The rung-3 key council's two already-failing bases: `failingtypical` in Pennsylvania, and `failing` with entered
+  // extras. Neither the state nor the extras answer is a spending input, so each keeps `failing`'s basis.
+  ...(['pafailingtypical', 'failingentered'] as const).map((key) => ({
+    key,
+    draft: () => DEV_SEEDS[key],
+    annual: { survivor: 6_000 * 12, couple: 96_000 },
+    rendered: line('6,000', '8,000'),
+  })),
+  // `offtracktypical` (the council's off-track base): `retired`'s couple at S $102,000 (8,500 × 12), r 0.75, no M, no
+  // budget: 0.75 × 102,000 = 76,500 → $6,375.00 → "6,380" (the $10 step rounds half up); 102,000 / 12 = $8,500.
+  { key: 'offtracktypical', draft: () => DEV_SEEDS.offtracktypical, annual: { survivor: 76_500, couple: 8_500 * 12 }, rendered: line('6,380', '8,500') },
   { key: 'order', draft: () => DEV_SEEDS.order, annual: { survivor: 6_000 * 12, couple: 96_000 }, rendered: line('6,000', '8,000') },
   // S $60,000: 0.75 × 60,000 = 45,000 → $3,750; $5,000.
   { key: 'surplus', draft: () => DEV_SEEDS.surplus, annual: { survivor: 45_000, couple: 60_000 }, rendered: line('3,750', '5,000') },
+  // `surplustypical` (the council's room base): `surplus` answering "not sure" on extras, the same spending basis.
+  { key: 'surplustypical', draft: () => DEV_SEEDS.surplustypical, annual: { survivor: 45_000, couple: 60_000 }, rendered: line('3,750', '5,000') },
   // The itemized household — sticky 33,200 (survivor-fixed: housing 18,000 + utilities 4,800 + other 4,400 =
   // 27,200 typed, plus the injected $6,000 OOP medical), scalable essentials 14,400 (food 9,600 +
   // transportation 4,800), discretionary 18,000: 33,200 + 0.75 × 14,400 + 0.75 × 18,000 = 33,200 + 10,800 + 13,500 =
@@ -144,6 +161,15 @@ const ROWS: readonly {
     rendered: line('4,880', '6,500'),
   })),
   { key: 'vault:yearfailing', draft: () => plantDraft('yearfailing'), annual: { survivor: 6_000 * 12, couple: 96_000 }, rendered: line('6,000', '8,000') },
+  // The rung-3 key council's yearly returns: the same doctor, so each keeps its base's S (rows above).
+  { key: 'vault:yearsurplus', draft: () => plantDraft('yearsurplus'), annual: { survivor: 45_000, couple: 60_000 }, rendered: line('3,750', '5,000') },
+  { key: 'vault:yearofftrack', draft: () => plantDraft('yearofftrack'), annual: { survivor: 76_500, couple: 8_500 * 12 }, rendered: line('6,380', '8,500') },
+  ...(['yearpafailing', 'yearfailingentered'] as const).map((key) => ({
+    key: `vault:${key}`,
+    draft: () => plantDraft(key),
+    annual: { survivor: 6_000 * 12, couple: 96_000 },
+    rendered: line('6,000', '8,000'),
+  })),
 ]
 
 const spineParams = (d: ScenarioDraft, key: string): SimulationParams => {
@@ -169,7 +195,7 @@ describe('the survivor card’s spending-basis line on every household that rend
   it('the census: the rows are exactly the spine dev seeds and the spine vault plants — a new one of either must add its row', () => {
     const spineSeeds = (Object.keys(DEV_SEEDS) as DevSeedKey[]).filter((k) => buildSpineParams(DEV_SEEDS[k]) !== null)
     expect(ROWS.filter((r) => !r.key.startsWith('vault:')).map((r) => r.key).sort()).toEqual([...spineSeeds].sort())
-    expect(spineSeeds).toHaveLength(18)
+    expect(spineSeeds).toHaveLength(22)
     // Every registered plant over a spine base renders the card, so each needs a row, doctored as the
     // registry doctors it: read off `AGED_PLANTS`, never re-typed, so a new spine plant reds here.
     const spinePlants = Object.entries(AGED_PLANTS).filter(([, p]) => p !== undefined && spineSeeds.includes(p.base))

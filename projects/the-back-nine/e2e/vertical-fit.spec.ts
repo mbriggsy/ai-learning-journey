@@ -1,6 +1,7 @@
 import { expect, type Page, type Locator, type BrowserContext, type CDPSession } from '@playwright/test'
 import {
   test,
+  pageDay,
   pinPlantDay,
   pinnedDay,
   pinnedYear,
@@ -2525,6 +2526,170 @@ test.describe(`the yearly returns (?vault=yearpa / ?vault=yearfailing) — the g
       await assertDensityTier(page, 'short', { echo: true })
     })
   }
+})
+
+// ── THE RUNG-3 KEY COUNCIL'S PLANTS — RECORD-ONLY, never asserted (council wf_540221e4-42d; the ruling's build
+// replaces this describe with each frame's own arm once rung 3 lands) ───────────────────────────────────────────
+// The council (`docs/council-log.md`'s rung-3 row) ordered its plants read on real engine runs BEFORE rung 3 lands:
+// four bases in `src/ui/devSeeds.ts` and their yearly returns in `AGED_PLANTS`, each probing one edge of the key
+// (the shown direction `rethink`, the staleness echo, the typical residual):
+//  · `surplustypical` / `yearsurplus`: the reassuring ROOM frame, "More than covered" answering "not sure" (the red
+//    team's frame, measured outside the fold FRESH on Windows by b9-7's temporary plant; a new stop for its council);
+//  · `offtracktypical` / `yearofftrack`: the off-track TRIM frame, answering "not sure";
+//  · `pafailingtypical` / `yearpafailing`: Pennsylvania's already-failing household, answering "not sure" (all three
+//    of the key's terms, on the longest priced clause);
+//  · `failingentered` / `yearfailingentered`: the already-failing household with ENTERED extras (no typical residual,
+//    so the key must leave it at body size).
+// The fresh seeds read at REAL, TIER and SHOWCASE (U4's sizes), the yearly returns at REAL, each at its declared day.
+// A room or trim clause is sized by the spend lane a beat AFTER the final tier (`docs/landmines.md`, the fit gate:
+// "both states are laws"), so every frame is read TWICE: FIRST, right after the final (the reserved box the asserting
+// arms measure), and SETTLED, once `.cs-magnitude` leaves `data-spend="pending"`. One line per frame and size:
+//   [plant probe] <frame> <size>: clock=<YYYY-MM-DD> attempt=<n> word="<verdict>" spend=<first>-><settled>
+//   caveat bottom=<first>/<settled> left end=<first>/<settled> band end=<first>/<settled> survivor=<inline|folded|none>
+//   medicare note=<n> typical=<n> state note=<n> echo=<n> [ gate affirm bottom=<px> gate notes=<n>] [ doors bottom=<px>]
+// (on one log line). The clock is the page's own day, read back; the attempt is the retry index (read the final
+// attempt only). The caveat is the in-frame R13 disclaimer, the left end the save slot's bottom + 2 px, the band end the
+// band's bottom (on an aged frame the band can bind). The arm asserts the tier it expects, prints, then asserts the frame
+// is the one it names (its verdict word, its echo, its typical residual), never the fit: a missing element throws.
+type PlantProbeSize = 'REAL' | 'TIER' | 'SHOWCASE'
+
+type PlantProbeGate = { readonly affirmBottom: number; readonly notes: number }
+
+type PlantProbeRead = {
+  readonly px: { readonly caveat: number; readonly leftEnd: number; readonly bandEnd: number; readonly doors?: number }
+  readonly spend: string
+  readonly word: string
+  readonly survivor: string
+  readonly medicareNote: number
+  readonly typical: number
+  readonly stateNote: number
+  readonly echo: number
+}
+
+/** A yearly return's drive, step for step as its asserting arm takes it, reading the re-entry gate on the way: pin
+ *  the plant's declared day, unlock, read the affirm and the gate's notes, affirm, settle. */
+async function drivePlantProbeVault(page: Page, key: string): Promise<PlantProbeGate> {
+  await pinPlantDay(page, key)
+  await page.goto(`/?vault=${key}`)
+  const unlock = page.getByRole('button', { name: 'Open my plan' })
+  await expect(unlock, `?vault=${key}: the plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
+  await unlock.click()
+  const affirm = page.getByRole('button', { name: /still about right/i })
+  await expect(affirm, `?vault=${key}: the re-entry gate never mounted`).toBeVisible({ timeout: 30_000 })
+  await page.evaluate(() => document.fonts.ready)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  const box = await affirm.boundingBox()
+  if (box === null) throw new Error(`[plant probe] ?vault=${key}: the gate's affirm reported no box`)
+  const notes = await page.locator('.reentry-notes p').count()
+  await affirm.click()
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+  await settleLayout(page)
+  return { affirmBottom: box.y + box.height, notes }
+}
+
+async function readPlantProbe(page: Page, doors: boolean): Promise<PlantProbeRead> {
+  return page.evaluate((withDoors) => {
+    const bottom = (sel: string): number => {
+      const el = document.querySelector(sel)
+      if (el === null) throw new Error(`[plant probe] ${sel} is not on the page`)
+      return el.getBoundingClientRect().bottom
+    }
+    const magnitude = document.querySelector('.cs-magnitude')
+    if (magnitude === null) throw new Error('[plant probe] .cs-magnitude is not on the page')
+    return {
+      px: {
+        caveat: bottom('footer.disclaimer.disclaimer--in-frame'),
+        leftEnd: bottom('.confidence-reveal[data-twopane] .result-save-slot') + 2,
+        bandEnd: bottom('.confidence-reveal[data-twopane] > .cs-band'),
+        ...(withDoors ? { doors: bottom('.result-quiet-row') } : {}),
+      },
+      spend: magnitude.getAttribute('data-spend') ?? 'absent',
+      word: (document.querySelector('h2.cs-word')?.textContent ?? '').trim(),
+      survivor:
+        document.querySelector('details.survivor-fold') !== null
+          ? 'folded'
+          : document.querySelector('.survivor__basis') !== null
+            ? 'inline'
+            : 'none',
+      medicareNote: document.querySelectorAll('.cs-medicare-note').length,
+      typical: document.querySelectorAll('.cs-medicare-residual--typical').length,
+      stateNote: document.querySelectorAll('.cs-state-note').length,
+      echo: document.querySelectorAll('.cs-staleness-note').length,
+    }
+  }, doors)
+}
+
+async function printPlantProbe(page: Page, frame: string, size: PlantProbeSize, gate?: PlantProbeGate): Promise<PlantProbeRead> {
+  await assertTier(page, 'laptop')
+  const shortTier = await page.evaluate(() => window.matchMedia('(min-width: 68rem) and (max-height: 840px)').matches)
+  expect(shortTier, `${frame} ${size}: the short density tier is on at REAL and TIER and off at SHOWCASE`).toBe(size !== 'SHOWCASE')
+  const doors = size === 'SHOWCASE'
+  const first = await readPlantProbe(page, doors)
+  await page.waitForFunction(() => document.querySelector('.cs-magnitude')?.getAttribute('data-spend') !== 'pending', null, {
+    timeout: FINAL_TIER_MS,
+  })
+  await settleLayout(page)
+  const settled = await readPlantProbe(page, doors)
+  for (const [when, read] of [['first', first], ['settled', settled]] as const) {
+    for (const [what, value] of Object.entries(read.px)) {
+      expect(Number.isFinite(value), `[plant probe] ${frame} ${size}: ${when} ${what} is not a number`).toBe(true)
+    }
+  }
+  const clock = new Date((await pageDay(page)) * 86_400_000).toISOString().slice(0, 10)
+  const f = (n: number): string => n.toFixed(1)
+  const pair = (a: number, b: number): string => `${f(a)}/${f(b)}`
+  console.log(
+    `[plant probe] ${frame} ${size}: clock=${clock} attempt=${test.info().retry} word="${settled.word}" ` +
+      `spend=${first.spend}->${settled.spend} caveat bottom=${pair(first.px.caveat, settled.px.caveat)} ` +
+      `left end=${pair(first.px.leftEnd, settled.px.leftEnd)} band end=${pair(first.px.bandEnd, settled.px.bandEnd)} ` +
+      `survivor=${settled.survivor} medicare note=${settled.medicareNote} typical=${settled.typical} ` +
+      `state note=${settled.stateNote} echo=${settled.echo}` +
+      (gate === undefined ? '' : ` gate affirm bottom=${f(gate.affirmBottom)} gate notes=${gate.notes}`) +
+      (settled.px.doors === undefined ? '' : ` doors bottom=${f(settled.px.doors)}`),
+  )
+  return settled
+}
+
+const RUNG3_PLANTS = [
+  { seed: 'surplustypical', plant: 'yearsurplus', word: copy.outcomeOverFunded, typical: 1, what: 'the reassuring room frame, "not sure"' },
+  { seed: 'offtracktypical', plant: 'yearofftrack', word: copy.outcomeOffTrack, typical: 1, what: 'the off-track trim frame, "not sure"' },
+  { seed: 'pafailingtypical', plant: 'yearpafailing', word: copy.outcomeAlreadyFailing, typical: 1, what: 'Pennsylvania already short, "not sure"' },
+  { seed: 'failingentered', plant: 'yearfailingentered', word: copy.outcomeAlreadyFailing, typical: 0, what: 'already short, entered extras' },
+] as const
+
+test.describe("the rung-3 key council's plants — RECORD-ONLY, never asserted (council wf_540221e4-42d)", () => {
+  for (const size of ['REAL', 'TIER', 'SHOWCASE'] as const) {
+    test.describe(`the fresh seeds at ${size}`, () => {
+      if (size === 'REAL') test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+      else test.use({ viewport: size === 'TIER' ? TIER : SHOWCASE })
+      for (const { seed, word, typical, what } of RUNG3_PLANTS) {
+        test(`?seed=${seed} ${size} — ${what}, fresh`, async ({ page }) => {
+          await gotoSeedFinal(page, seed)
+          await assertResolvedSpine(page)
+          const read = await printPlantProbe(page, `?seed=${seed}`, size)
+          // After the line, so the numbers print either way: the frame read is the one it names.
+          expect(read.word, `?seed=${seed}: the verdict`).toBe(word)
+          expect(read.typical, `?seed=${seed}: the typical residual`).toBe(typical)
+          expect(read.echo, `?seed=${seed}: a fresh frame carries no echo`).toBe(0)
+        })
+      }
+    })
+  }
+
+  test.describe(`the yearly returns at REAL (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+    for (const { plant, word, typical, what } of RUNG3_PLANTS) {
+      test(`?vault=${plant} REAL — ${what}, a year on`, async ({ page }) => {
+        const gate = await drivePlantProbeVault(page, plant)
+        await assertResolvedSpine(page)
+        const read = await printPlantProbe(page, `?vault=${plant}`, 'REAL', gate)
+        expect(read.word, `?vault=${plant}: the verdict`).toBe(word)
+        expect(read.typical, `?vault=${plant}: the typical residual`).toBe(typical)
+        expect(read.echo, `?vault=${plant}: the staleness echo`).toBe(1)
+        expect(gate.notes, `?vault=${plant}: the gate speaks the tax and Medicare lines (devSeeds.test.ts derives them)`).toBe(2)
+      })
+    }
+  })
 })
 
 // ── the state-tax staleness return (?vault=statestale — the state-carrying seed increment) ────

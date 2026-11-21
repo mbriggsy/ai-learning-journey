@@ -127,6 +127,18 @@ const ROWS: readonly {
   { key: 'surplus', draft: () => DEV_SEEDS.surplus, annual: { survivor: 45_000, couple: 60_000 }, rendered: line('3,750', '5,000') },
   // `surplustypical` (the council's room base): `surplus` answering "not sure" on extras, the same spending basis.
   { key: 'surplustypical', draft: () => DEV_SEEDS.surplustypical, annual: { survivor: 45_000, couple: 60_000 }, rendered: line('3,750', '5,000') },
+  // The frames-outside plan's U1. `pasurplustypical` is `surplustypical` in Pennsylvania: the state is not a spending
+  // input, so the same basis.
+  { key: 'pasurplustypical', draft: () => DEV_SEEDS.pasurplustypical, annual: { survivor: 45_000, couple: 60_000 }, rendered: line('3,750', '5,000') },
+  // `surpluswidest` — S $480,000 (40,000 × 12), r 0.75, no M, no budget: 0.75 × 480,000 = 360,000 → $30,000 a month;
+  // 480,000 / 12 = $40,000.
+  { key: 'surpluswidest', draft: () => DEV_SEEDS.surpluswidest, annual: { survivor: 30_000 * 12, couple: 40_000 * 12 }, rendered: line('30,000', '40,000') },
+  // `failingwidest` — itemized: housing 120,000 is an essentials line of a survivor-fixed category (sticky, never scaled;
+  // the budget row below reads housing the same way), no scalable essentials, travel 1,079,880 discretionary (the
+  // ceiling's widest spend, (100,000 − 10) × 12 = 1,199,880, less the housing), no M: 120,000 + 0.75 × 1,079,880 =
+  // 120,000 + 809,910 = 929,910 → $77,492.50 → "77,490" (the $10 step rounds 7,749.25 steps down); couple 1,199,880
+  // → $99,990.
+  { key: 'failingwidest', draft: () => DEV_SEEDS.failingwidest, annual: { survivor: 929_910, couple: 1_199_880 }, rendered: line('77,490', '99,990') },
   // The itemized household — sticky 33,200 (survivor-fixed: housing 18,000 + utilities 4,800 + other 4,400 =
   // 27,200 typed, plus the injected $6,000 OOP medical), scalable essentials 14,400 (food 9,600 +
   // transportation 4,800), discretionary 18,000: 33,200 + 0.75 × 14,400 + 0.75 × 18,000 = 33,200 + 10,800 + 13,500 =
@@ -195,7 +207,7 @@ describe('the survivor card’s spending-basis line on every household that rend
   it('the census: the rows are exactly the spine dev seeds and the spine vault plants — a new one of either must add its row', () => {
     const spineSeeds = (Object.keys(DEV_SEEDS) as DevSeedKey[]).filter((k) => buildSpineParams(DEV_SEEDS[k]) !== null)
     expect(ROWS.filter((r) => !r.key.startsWith('vault:')).map((r) => r.key).sort()).toEqual([...spineSeeds].sort())
-    expect(spineSeeds).toHaveLength(22)
+    expect(spineSeeds).toHaveLength(25)
     // Every registered plant over a spine base renders the card, so each needs a row, doctored as the
     // registry doctors it: read off `AGED_PLANTS`, never re-typed, so a new spine plant reds here.
     const spinePlants = Object.entries(AGED_PLANTS).filter(([, p]) => p !== undefined && spineSeeds.includes(p.base))

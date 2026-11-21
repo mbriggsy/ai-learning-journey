@@ -49,7 +49,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - **Optional-with-average, never a required fact** (a required fact strands the non-finance
   survivor and blocks the calm first pass — U12 doctrine; R5 never-gate). Nothing on the step
   blocks advance except the self-contradictory entered-with-no-dollar half-answer, which the R19
-  sanity rule `medicare-extras-entered-blank` (`src/intake/sanity.ts:352-367`) names at the field.
+  sanity rule `medicare-extras-entered-blank` (`src/intake/sanity.ts:354-369`) names at the field.
 - **WHO:** the step is gated on `anyNearMedicare` (`src/intake/questions.tsx:1376-1377`) — any
   member aged 64 or older, the same cohort gate as the IRMAA seed
   (`src/intake/questions.tsx:1399` pushes both under the one predicate). That covers the all-65+
@@ -259,7 +259,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   `src/engine/taxOverlay.ts:2165-2166`.
 - **Dev-seed drift recorded before any re-tune.** The flagship `retiredOnTrack` seed carries the
   mixed-provenance showcase — one entered dollar, one affirmed MA-$0
-  (`src/ui/devSeeds.ts:184-185`) — and the `borderline` / `?seed=dip` seeds were re-probed under
+  (`src/ui/devSeeds.ts:185-186`) — and the `borderline` / `?seed=dip` seeds were re-probed under
   the extras engine on 2026-07-11 and again through the U14 S0 typical refresh.
 - The unit landed as ONE feature commit (`503213f4`, the ACA-sheet real-flat gap kept to its own
   touch, never a rider), then the integration fix `e921f2bb`, the ultramode fold `019f5334`, and

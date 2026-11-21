@@ -75,8 +75,10 @@ export const SS_CLAIM_MAX = 70
  *  years of COLA headroom — no annual re-verify burden) while it catches the
  *  consequential 12× misentries (any benefit ≳ $700/mo entered as the yearly
  *  total). A real benefit under the bound that is still wrong is the second-line
- *  case the magnitude check is explicitly NOT the first defense for. */
-const PIA_CEILING_ANNUAL = 100_000
+ *  case the magnitude check is explicitly NOT the first defense for.
+ *  Exported for the widest plants' legality pins (`devSeeds.test.ts`), which plant a benefit one dollar
+ *  over it as a counter-case, read here, never re-typed. */
+export const PIA_CEILING_ANNUAL = 100_000
 
 /** The period-confirm floor (R19 period defense, line one): while the spend
  *  unit is still the UNCONFIRMED default, an entered figure at or above this

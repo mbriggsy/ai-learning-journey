@@ -12,9 +12,23 @@ import {
   agedWorkingYearsVintage,
   AGED_PLANTS,
   GATE_DAY,
+  NAME_CEILING,
   RETURN_DAY,
   SEED_BUILD_YEAR,
+  SPENDING_CEILING_PER_MONTH,
 } from '../devSeeds'
+import {
+  PIA_CEILING_ANNUAL,
+  WORKING_COST_ANSWER_FIELD,
+  WORKING_COST_FIELD,
+  WORKING_COST_PERIOD_FIELD,
+  accountField,
+  incomeField,
+  personField,
+  validateDraft,
+} from '@intake/sanity'
+import { PER_MONTH_DISPLAY_STEP, formatPerMonth } from '../money'
+import { reserveClauseFor } from '../verdictSentence'
 import { heldYesBelowQuote, isWorkingYearCostStale, workingYearCostStaleness, writeEnteredWorkingYearCost } from '@intake/workingYearQuote'
 import {
   workingYearCheckAtQuote,
@@ -48,8 +62,9 @@ import {
   workingYearLedgerForRun,
   workingYearLeftOverLive,
   workingYearLeftOverShownState,
+  medicareExtrasDisclosureView,
 } from '@intake/intakeMap'
-import { showMedicarePricedNote } from '../healthSheetChrome'
+import { composeMedicareExtrasTypicalNote, showMedicarePricedNote } from '../healthSheetChrome'
 import { simulate, validateParams, ENGINE_MAX_DOLLAR } from '@engine/simulate'
 import { runEngine, engineApi } from '@engine/engineProtocol'
 import { solveFromWire } from '@engine/engineWire'
@@ -129,6 +144,8 @@ describe('the "not sure" Medicare-extras seeds (the composites plan\'s U2, and t
     ['surplustypical', 'surplus', {}],
     ['offtracktypical', 'retired', { annualSpendingReal: 8_500 * 12 }],
     ['pafailingtypical', 'failing', { retirementState: 'PA' }],
+    // The frames-outside plan's U1: the Pennsylvania room plant, `surplustypical` in Pennsylvania.
+    ['pasurplustypical', 'surplus', { retirementState: 'PA' }],
   ] as const
   const notSure = { kind: 'typical', adoptionVintage: medicareExtrasTypical.value.vintage } as const
   const TODAY = currentEpochDay()
@@ -217,6 +234,191 @@ describe('the "not sure" Medicare-extras seeds (the composites plan\'s U2, and t
     expect(extras).toEqual(DEV_SEEDS.retired.medicareExtrasByPerson)
     expect(DEV_SEEDS.failing.medicareExtrasByPerson, '`failing` itself answers nothing (the control)').toBeUndefined()
     expect(rest).toEqual(DEV_SEEDS.failing)
+  })
+})
+
+/**
+ * THE WIDEST PLANTS (the frames-outside plan's U1, KTD2 to KTD4 and KTD12): `failingwidest` (class B's widest),
+ * `surpluswidest` (class A's widest) and the Pennsylvania room plant `pasurplustypical` (whose "not sure" arms ride the
+ * TYPICAL list above). LEGAL means intake-legal with every rule's fields touched, engine-accepted, inside the design
+ * ceiling, and saveable (KTD2, KTD4). `validateDraft` reports only violations on touched fields and its rule list is not
+ * exported, so the touched set is built by hand and named here; planted counter-cases prove it reads each family a plant
+ * could break: the household's survivor share, a person's benefit base, an income stream's shares, the spend's period.
+ * Every expected width derives from `SPENDING_CEILING_PER_MONTH` through the shipped formatters, never typed, so a moved
+ * ceiling reds the width pins.
+ */
+describe("the widest plants (the frames-outside plan's U1)", () => {
+  const PLANTS = ['failingwidest', 'surpluswidest', 'pasurplustypical'] as const
+  const WIDEST = ['failingwidest', 'surpluswidest'] as const
+
+  /** KTD2's named touched set: per person the retirement age, claim age, birth year and benefit base; the survivor
+   *  share; the spend and its period confirmation; each person's Medicare extras figure; each account's contribution and
+   *  employer match; each income stream's survivor, taxable, exclusion and cost-of-living fields; W's answer, amount
+   *  and period. */
+  const touchedFor = (d: ScenarioDraft): Set<string> =>
+    new Set([
+      ...d.people.flatMap((_, i) => ['retirementAge', 'socialSecurityClaimAge', 'birthYear', 'pia'].map((f) => personField(i, f))),
+      'survivorSpendingRatio',
+      'annualSpendingReal',
+      'spendEntryPeriod',
+      ...d.people.map((_, i) => `medicareExtrasByPerson.${i}.monthly`),
+      ...d.enteredAccounts.flatMap((_, i) => ['annualContribution', 'employerMatchAnnual'].map((f) => accountField(i, f))),
+      ...d.incomeStreams.flatMap((_, i) => ['survivorPct', 'taxableFraction', 'exclusionFraction', 'colaPct'].map((f) => incomeField(i, f))),
+      WORKING_COST_ANSWER_FIELD,
+      WORKING_COST_FIELD,
+      WORKING_COST_PERIOD_FIELD,
+    ])
+  const rulesFired = (d: ScenarioDraft, touched: ReadonlySet<string> = touchedFor(d)): string[] =>
+    validateDraft(d, touched).map((v) => v.rule)
+
+  const run = (d: ScenarioDraft) => {
+    const params = buildSpineParams(d)
+    if (params === null) throw new Error('not a spine household')
+    const wire = runEngine(params, d.seed!, { survivorConditioned: true })
+    if (wire.kind !== 'resolved') throw new Error(`the run did not resolve: ${wire.kind}`)
+    return wire
+  }
+
+  /** The largest monthly figure the ceiling holds, as shown: the ceiling less one display step, through the shipped
+   *  formatter. Its length is every monthly figure's widest width under the ceiling (tabular numerals). */
+  const WIDEST_MONTHLY = SPENDING_CEILING_PER_MONTH - PER_MONTH_DISPLAY_STEP
+  const WIDEST_SHOWN = formatPerMonth(WIDEST_MONTHLY)
+  /** The household's own monthly figures as the frame shows them: the spend, the survivor's spend, the step-down. */
+  const shownMonthly = (d: ScenarioDraft) => {
+    const reading = run(d).survivorReading
+    if (reading?.spendingBasis === undefined) throw new Error('no survivor reading with its spending basis')
+    return {
+      spend: formatPerMonth(d.annualSpendingReal! / 12),
+      survivor: formatPerMonth(reading.spendingBasis.survivorMonthlyReal),
+      stepDown: formatPerMonth(reading.incomeStepDownMonthlyReal),
+    }
+  }
+  const insideCeiling = (figures: Record<string, string>): boolean =>
+    Object.values(figures).every((f) => Number(f.replace(/,/g, '')) <= WIDEST_MONTHLY)
+  /** The figure the room clause's reserved sentence quotes, through the shipped `reserveClauseFor`. */
+  const reserveFigure = (monthly: number): string => {
+    const clause = reserveClauseFor({ outcomeState: 'over-funded', xOfTen: 9, spendPerMonthReal: monthly, direction: 'room' })
+    const figure = /At about \$([\d,]+) a month/.exec(clause ?? '')?.[1]
+    if (figure === undefined) throw new Error(`no figure in the reserved sentence: ${clause}`)
+    return figure
+  }
+
+  for (const key of PLANTS) {
+    it(`'${key}' passes every sanity rule with every rule's fields touched, the engine accepts it, and it saves`, () => {
+      const d = DEV_SEEDS[key]
+      expect(rulesFired(d), `${key}: the sanity rules`).toEqual([])
+      const params = buildSpineParams(d)
+      expect(params, `${key}: a spine household`).not.toBeNull()
+      expect(validateParams(params!), `${key}: the engine accepts it`).toBeNull()
+      const built = scenarioFromDraft(d)
+      expect(built.ready, `${key}: save-ready`).toBe(true)
+      if (!built.ready) throw new Error('unreachable — asserted above')
+      const round = decodeScenario(encodeScenario(built.scenario))
+      expect(round.ok, `${key}: it survives the codec`).toBe(true)
+      if (!round.ok) throw new Error('unreachable — asserted above')
+      expect(round.droppedAtoms).toEqual([])
+    })
+  }
+
+  it("the touched set reads each family: planted counter-cases on a copy of 'failingwidest', each refused by exactly its own rule", () => {
+    const d = DEV_SEEDS.failingwidest
+    const [p0, p1] = d.people
+    const [s0, s1] = d.incomeStreams
+    if (s0 === undefined || s1 === undefined || s0.type !== 'annuity' || s0.qualified) throw new Error('the plant carries two non-qualified annuities')
+    expect(rulesFired({ ...d, survivorSpendingRatio: 2 })).toEqual(['survivor-ratio-ceiling'])
+    expect(rulesFired({ ...d, people: [{ ...p0, pia: PIA_CEILING_ANNUAL + 1 }, p1] })).toEqual(['pia-over-ceiling'])
+    expect(rulesFired({ ...d, incomeStreams: [{ ...s0, exclusionFraction: 1.5 }, s1] })).toEqual(['income-exclusion-range'])
+    const pension = {
+      ownerIndex: s0.ownerIndex,
+      annualRealToday: s0.annualRealToday,
+      startAge: s0.startAge,
+      colaMode: s0.colaMode,
+      survivorPct: s0.survivorPct,
+      type: 'pension' as const,
+      taxableFraction: 1.5,
+    }
+    expect(rulesFired({ ...d, incomeStreams: [pension, s1] })).toEqual(['income-taxable-range'])
+    const unconfirmed = touchedFor(d)
+    unconfirmed.delete('spendEntryPeriod')
+    expect(rulesFired(d, unconfirmed), 'the period confirmation is in the set').toEqual(['spend-period-unconfirmed'])
+  })
+
+  it('each verdict and direction through the real engine, pinned as found, and the combination U1 picked', () => {
+    // Found 2026-11-21 (b9-3), before any pin was typed.
+    const b = run(DEV_SEEDS.failingwidest)
+    expect({ state: b.headline.outcomeState, direction: b.dollar.direction }).toEqual({ state: 'already-failing', direction: 'rethink' })
+    expect(floorRelief(b.headline, b.floorReading, 0), "B's widest renders the relief combination").not.toBeNull()
+    const a = run(DEV_SEEDS.surpluswidest)
+    expect({ state: a.headline.outcomeState, direction: a.dollar.direction }).toEqual({ state: 'over-funded', direction: 'room' })
+    expect(a.floorReading, "A's widest carries no budget, so no essentials card: the inline combination").toBeUndefined()
+    const pa = run(DEV_SEEDS.pasurplustypical)
+    expect({ state: pa.headline.outcomeState, direction: pa.dollar.direction }).toEqual({ state: 'over-funded', direction: 'room' })
+  }, 60_000)
+
+  it("each widest plant's monthly figures sit inside the ceiling at the ceiling's widest width, and A's reserve at its widest", () => {
+    for (const key of WIDEST) {
+      const figures = shownMonthly(DEV_SEEDS[key])
+      expect(insideCeiling(figures), `${key}: ${JSON.stringify(figures)}`).toBe(true)
+      for (const [name, figure] of Object.entries(figures)) expect(figure, `${key}: the ${name} figure`).toHaveLength(WIDEST_SHOWN.length)
+    }
+    expect(shownMonthly(DEV_SEEDS.failingwidest).spend, "B spends the ceiling's largest shown figure").toBe(WIDEST_SHOWN)
+    // A's room clause, while its figure is worked out, reserves the sentence at three times the spend: as wide as that
+    // figure gets under the ceiling, and wider than any monthly figure.
+    const aReserve = reserveFigure(DEV_SEEDS.surpluswidest.annualSpendingReal! / 12)
+    expect(aReserve).toHaveLength(reserveFigure(WIDEST_MONTHLY).length)
+    expect(aReserve.length).toBeGreaterThan(WIDEST_SHOWN.length)
+  }, 60_000)
+
+  it("a copy of 'failingwidest' spending above the ceiling fails the ceiling pin, and so does a copy whose step-down shows above it", () => {
+    const d = DEV_SEEDS.failingwidest
+    const [essentials, travel] = d.budget!
+    const stepAYear = PER_MONTH_DISPLAY_STEP * 12
+    const overSpend: ScenarioDraft = {
+      ...d,
+      budget: [essentials!, { ...travel!, annualAmountReal: travel!.annualAmountReal + stepAYear }],
+      annualSpendingReal: d.annualSpendingReal! + stepAYear,
+    }
+    const spendFigures = shownMonthly(overSpend)
+    expect(spendFigures.spend, 'one step over shows the ceiling itself').toBe(formatPerMonth(SPENDING_CEILING_PER_MONTH))
+    expect(insideCeiling(spendFigures)).toBe(false)
+    const overStepDown: ScenarioDraft = { ...d, incomeStreams: d.incomeStreams.map((s) => ({ ...s, annualRealToday: SPENDING_CEILING_PER_MONTH * 12 })) }
+    const stepDownFigures = shownMonthly(overStepDown)
+    expect(Number(stepDownFigures.stepDown.replace(/,/g, '')), 'the step-down shows above the ceiling').toBeGreaterThan(WIDEST_MONTHLY)
+    expect(insideCeiling(stepDownFigures)).toBe(false)
+  }, 60_000)
+
+  it('each widest plant differs from its base only in the fields its docblock names, and each named field differs', () => {
+    const cases = [
+      ['failingwidest', 'pafailingtypical', ['people', 'medicareExtrasByPerson', 'enteredAccounts', 'incomeStreams', 'budget', 'annualSpendingReal']],
+      ['surpluswidest', 'pasurplustypical', ['people', 'medicareExtrasByPerson', 'incomeStreams', 'annualSpendingReal']],
+    ] as const
+    for (const [key, base, named] of cases) {
+      const plant: Record<string, unknown> = { ...DEV_SEEDS[key] }
+      const from: Record<string, unknown> = { ...DEV_SEEDS[base] }
+      const others = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([k]) => !(named as readonly string[]).includes(k)))
+      expect(others(plant), `${key}: everything else is ${base}'s`).toEqual(others(from))
+      for (const field of named) expect(plant[field], `${key}.${field} differs from ${base}`).not.toEqual(from[field])
+      // Within `people`, only person 0's name moved.
+      const nameless = (d: ScenarioDraft) => d.people.map(({ name: _name, ...rest }) => rest)
+      expect(nameless(DEV_SEEDS[key]), `${key}: the people, names aside`).toEqual(nameless(DEV_SEEDS[base]))
+      expect(DEV_SEEDS[key].people[1]?.name).toBe(DEV_SEEDS[base].people[1]?.name)
+    }
+    // B's one account: its balance only (its kind and blend kept, so the doors stay the class's own).
+    const balanceless = (d: ScenarioDraft) => d.enteredAccounts.map(({ valueToday: _v, ...rest }) => rest)
+    expect(balanceless(DEV_SEEDS.failingwidest)).toEqual(balanceless(DEV_SEEDS.pafailingtypical))
+  })
+
+  it("each widest plant's one name is exactly the name ceiling, and the residual's one typical sentence names it", () => {
+    for (const key of WIDEST) {
+      const d = DEV_SEEDS[key]
+      const name = d.people[0]!.name!
+      expect(name, `${key}: a real-looking name at the ceiling`).toHaveLength(NAME_CEILING)
+      expect(d.medicareExtrasByPerson?.map((e) => e.kind), `${key}: one person alone on "not sure"`).toEqual(['typical', 'none'])
+      const note = composeMedicareExtrasTypicalNote(medicareExtrasDisclosureView(d))
+      const figure = /about \$([\d,]+) a month/.exec(note ?? '')?.[1]
+      expect(figure, `${key}: the typical figure`).toBeDefined()
+      expect(note, `${key}: the one-person sentence`).toBe(slots.medicareExtrasTypicalOne(name, figure!))
+    }
   })
 })
 

@@ -52,6 +52,7 @@ import { decodeScenario, encodeScenario, validateSavedRecommendation } from '@sh
 import { draftFromScenario } from './draftFromScenario'
 import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
 import { exposureForDraft } from './stalenessExposure'
+import { PER_MONTH_DISPLAY_STEP } from './money'
 
 /** A fixed dev CRN seed → the same fan every drive (a reproducible cold-read).
  *  Any uint32 satisfies the engine's integer-seed gate; `ensureSeed` REUSES a
@@ -1178,6 +1179,105 @@ const paFailingTypicalExtras: ScenarioDraft = { ...failingTypicalExtras, retirem
  */
 const failingEnteredExtras: ScenarioDraft = { ...retiredFailing, medicareExtrasByPerson: retiredOnTrack.medicareExtrasByPerson }
 
+// THE WIDEST PLANTS (the frames-outside plan's U1, `docs/plans/features/frames-outside-widest-member-build-spec.md`, KTD1
+// to KTD4 and KTD12). A class is met only when its WIDEST legal household reads inside his 731 px fold on Windows and on
+// CI's ubuntu (R3): a plant reading proves the plant, never the class. "Widest" is measured, never assumed: U1 read every
+// member of each closed axis in these households' own frames (Windows, 1440×731 @ 2, b9-3, 2026-11-21; the composites
+// record folder's README carries the table) and minted the tallest. Every figure sits inside the design ceiling
+// (`SPENDING_CEILING_PER_MONTH`), every plant passes the intake's sanity rules with every rule's fields touched, the engine
+// accepts it and it saves: `devSeeds.test.ts` pins each of those, and each plant's direction, as found.
+
+/**
+ * `?seed=pasurplustypical` (the Pennsylvania room plant): `surplustypical` (over-funded, "More than covered", both
+ * people "not sure" on Medicare extras) in Pennsylvania, at today's figures. Its residual carries Pennsylvania's clause,
+ * the longest priced one, so it is `surplustypical` with that clause's extra residual line (+20.8 px, b9-9): the room
+ * class at the figures its plants already carry, beside the widest. The state only, a spread of `surplustypical`.
+ */
+const paSurplusTypicalExtras: ScenarioDraft = { ...surplusTypicalExtras, retirementState: 'PA' }
+
+/** The widest plants' one named person: a real-looking name exactly at the name ceiling (`NAME_CEILING`), title case
+ *  (Briggsy's ruling on the plan's A7, 2026-11-21: "a real-looking name", never twenty of the font's widest capital). */
+const WIDEST_NAME = 'Christopher Hartwell'
+
+/** Person 0 renamed to {@link WIDEST_NAME} and alone on "not sure"; person 1 affirmed $0. The one-person typical
+ *  sentence then names him in the residual, the form U1 read one line taller than the both-people form. */
+function widestNameAloneOnTypical(d: ScenarioDraft): Pick<ScenarioDraft, 'people' | 'medicareExtrasByPerson'> {
+  const [first, second] = d.people
+  return {
+    people: [{ ...first, name: WIDEST_NAME }, second],
+    medicareExtrasByPerson: [notSureExtras(1)[0]!, { kind: 'none' }],
+  }
+}
+
+/** One stream per person, paid until that person's death (`survivorPct` 0), so the income step-down at the first death
+ *  is the stream itself: the only way a step-down reaches six characters (a step-down resting on Social Security alone
+ *  stays at five, because the benefit base is capped, `pia-over-ceiling`). TAX-FREE (a non-qualified annuity whose whole
+ *  payment is return of basis): a retired year's income above spending is dropped while its tax is paid from savings
+ *  (the register's Tier 1 *Money coming in beyond what the household spends is thrown away…*), so a taxable stream drains
+ *  the portfolio of a household it more than covers, and neither plant below would reach its class. */
+const untaxedStreamEach = (annualRealToday: number): ScenarioDraft['incomeStreams'] =>
+  ([0, 1] as const).map((ownerIndex) => ({
+    ownerIndex,
+    annualRealToday,
+    startAge: 60,
+    colaMode: 'real-flat' as const,
+    survivorPct: 0,
+    type: 'annuity' as const,
+    qualified: false as const,
+    exclusionFraction: 1,
+  }))
+
+/** The largest annual spend the ceiling holds: the ceiling less one display step, a month, times twelve (shown "99,990"). */
+const WIDEST_ANNUAL_SPEND = (SPENDING_CEILING_PER_MONTH - PER_MONTH_DISPLAY_STEP) * 12
+
+/**
+ * `?seed=failingwidest` (class B's widest: direction `rethink`, the typical residual). `pafailingtypical`'s couple at
+ * the largest spend the ceiling holds, with the members U1 measured tallest:
+ *  · Pennsylvania's clause and the ONE-PERSON typical sentence naming a 20-character name: 8 residual lines against the
+ *    both-people form's 7 and every other state's 6;
+ *  · the RELIEF combination: an essentials budget whose reading differs from the full one, so the essentials card
+ *    shows and the survivor card folds. It read 775.7 px against the inline combination's 756.8 (+18.8), so it is this
+ *    class's widest. The fold hides the survivor's spending and the step-down, and the rethink clause quotes no figure,
+ *    so the closed frame shows none of this household's monthly figures; each still sits inside the ceiling.
+ * The essentials card needs an essentials reading that holds while the full spend runs short from the start: $120,000
+ * of essentials under two $130,000 tax-free streams, over the base's one IRA raised to $1,000,000 so the floor's
+ * Medicare and tax drains never empty it (with taxable streams, or the base's $60,000, the floor reads already-failing
+ * too: the dropped-surplus defect above). The full spend draws about $916,000 in year one: already-failing, 0 of 10.
+ * Changed from `pafailingtypical`: person 0's name, the extras answers, the spend, the streams, the IRA's balance (its
+ * kind and blend kept, so the doors stay the class's own) and the budget.
+ */
+const failingWidest: ScenarioDraft = {
+  ...paFailingTypicalExtras,
+  ...widestNameAloneOnTypical(paFailingTypicalExtras),
+  enteredAccounts: [{ ...paFailingTypicalExtras.enteredAccounts[0]!, valueToday: 1_000_000 }],
+  incomeStreams: untaxedStreamEach(130_000),
+  budget: [
+    bline('housing', 'Mortgage & taxes', 120_000, 'essentials'),
+    bline('travel', 'Travel', WIDEST_ANNUAL_SPEND - 120_000, 'discretionary'),
+  ],
+  annualSpendingReal: WIDEST_ANNUAL_SPEND,
+}
+
+/**
+ * `?seed=surpluswidest` (class A's widest: direction `room`, the typical residual). The Pennsylvania room plant's couple
+ * at $40,000 a month, with the members U1 measured tallest:
+ *  · Pennsylvania's clause and the ONE-PERSON typical sentence naming a 20-character name (8 residual lines);
+ *  · the INLINE combination: the survivor card open, its spending basis and step-down at six characters ($30,000 and
+ *    $22,830 a month). It read 784.7 px against the relief combination's 775.7;
+ *  · the room clause's sized form, three lines, the most of any room form. While the figure is being worked out, the
+ *    reserved sentence quotes three times the spend ($120,000, seven characters: `reserveClauseFor`), so $40,000, a
+ *    third of the ceiling and over, is what puts the reserve at its widest; every six-character spend reads the same
+ *    width (tabular numerals), so it stands for the whole range.
+ * Over-funded at that spend because two $250,000 tax-free streams and the base's $3,000,000 IRA carry it. Changed from
+ * `pasurplustypical`: person 0's name, the extras answers, the spend and the streams.
+ */
+const surplusWidest: ScenarioDraft = {
+  ...paSurplusTypicalExtras,
+  ...widestNameAloneOnTypical(paSurplusTypicalExtras),
+  incomeStreams: untaxedStreamEach(250_000),
+  annualSpendingReal: 40_000 * 12,
+}
+
 /**
  * THE FL $0-CONSTITUTIONAL AFFIRMATION — `retiredOnTrack`'s couple in Florida. FL is a sourced
  * constitutional $0 (Fla. Const. Art. VII § 5(a)): every decumulation dollar incurs $0 state tax,
@@ -1713,6 +1813,10 @@ export const DEV_SEEDS = {
   date65: withConfirmedW(stillWorkingAllMedicare),
   surplus: surplusWitness,
   surplustypical: surplusTypicalExtras,
+  // The frames-outside plan's U1: the Pennsylvania room plant and the two widest plants (B's, A's).
+  pasurplustypical: paSurplusTypicalExtras,
+  failingwidest: failingWidest,
+  surpluswidest: surplusWidest,
   buckets: multiBucketWitness,
   steer: noPretaxSteer,
   nc: ncAffirmation,

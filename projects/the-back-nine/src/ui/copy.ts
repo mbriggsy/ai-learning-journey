@@ -1640,8 +1640,8 @@ export const copy = {
   // commit (AssumptionPanel.tsx:900-910, the `entered * 12` arm at :907) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
   // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:533) hard-disarms
-  // `spend-period-unconfirmed` (sanity.ts:390-413, the disarm read at :401) on this surface, and
-  // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:90) regardless — so the rule could not have
+  // `spend-period-unconfirmed` (sanity.ts:392-415, the disarm read at :403) on this surface, and
+  // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:92) regardless — so the rule could not have
   // caught it even armed. The replacement must therefore say BOTH halves — the money is
   // unchanged AND the next figure you enter is read in the unit you just picked. A draft that said
   // only "the same money either way" was REJECTED for exactly that omission.
@@ -4819,8 +4819,8 @@ export const slots = {
   /** The RecommendationViz accessible sentence (the role="img" name): both arms' magnitudes AND the
    *  delta, so the whole comparison is reachable in the a11y tree (A2 AT-parity). "about" carries the
    *  hedge; every figure arrives pre-formatted, so the sentence carries no bare numeral — the ENDPOINTS in
-   *  the humane "$X.XM" prose dialect (`formatAbsoluteDollar`, money.ts:74), the DELTA in grouped digits
-   *  (`formatDeltaDollar`, money.ts:55). NOT formatAxisDollar's exact-when-round RULER precision (money.ts:188):
+   *  the humane "$X.XM" prose dialect (`formatAbsoluteDollar`, money.ts:75), the DELTA in grouped digits
+   *  (`formatDeltaDollar`, money.ts:56). NOT formatAxisDollar's exact-when-round RULER precision (money.ts:189):
    *  that dialect never touches this sentence, and naming it here would point a reader at the wrong rounding law.
    *
    *  ⚠️ WEALTH-SHAPED ⇒ LEAVE-MORE ONLY (2026-09-08). "lands near about $X" describes a level the reader

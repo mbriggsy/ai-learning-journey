@@ -19,8 +19,9 @@ const grouped = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
 /** $/month magnitudes round to this for a calm verdict figure ("$430", never "$427.13"). A UI
  *  display choice (humane precision) — deliberately NOT imported from the engine's DOLLAR_STEP
  *  (ui owns its own presentation; it shares the $10 granularity only because the same humane
- *  rounding is right in both places). */
-const PER_MONTH_DISPLAY_STEP = 10
+ *  rounding is right in both places). Exported for the design ceiling's widest figure (the ceiling less
+ *  one step, `src/ui/devSeeds.ts`), so the seeds and their pins read it, never re-type it. */
+export const PER_MONTH_DISPLAY_STEP = 10
 
 /** A $/month magnitude for the verdict clause — sign-agnostic (the clause WORD carries the
  *  direction: "room" / "less"), rounded so "$430", never "$427.13". Pre-formats the slot input,

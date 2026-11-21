@@ -298,8 +298,8 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 - **Premium-only plant:** a difference in premium alone moves all five sites.
 
 **5.3 hl50: the register's "~$50k-spend witness household".** It is OWED by the RULED block; case vi is the chair's addition.
-- `retiredHealth` at `annualSpendingReal` 50,000 (`devSeeds.ts:834-897`, map), constructed in the test.
-- Keep it OUT of DEV_SEEDS: membership enrolls it in every DEV_SEEDS loop and in Caddie (`devSeeds.test.ts:248-282`). Adding it is HIS call.
+- `retiredHealth` at `annualSpendingReal` 50,000 (`devSeeds.ts:835-898`, map), constructed in the test.
+- Keep it OUT of DEV_SEEDS: membership enrolls it in every DEV_SEEDS loop and in Caddie (`devSeeds.test.ts:450-484`). Adding it is HIS call.
 - Roster: {the user baseline, pre-tax-first:0, bracket-fill:0}, at 16,000 paths on BOTH live seeds (12245589 / −1438857764), then `selectRecommendation`.
 - The expected crown is bracket-fill:0, taken from an INDEPENDENT ranker: direct `simulate(applyCandidate)` plus the test's own tier-1/tier-2 sort over the three summed vectors (register method b).
 - Assert:

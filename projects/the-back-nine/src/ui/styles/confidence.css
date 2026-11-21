@@ -587,6 +587,10 @@
    - L2, leading: the Medicare pair and the standalone state note step --leading-snug →
      --leading-tight (1.3, the typical frames' round-5 value; the typical frames already read it).
      11.2 px on the non-typical frames, and no line break moves.
+   - L4, leading (the one-frame composites plan's rung 2b, 2026-11-20): the staleness echo's own line
+     steps body → --leading-snug. Written on the reveal (0,3,0) because the echo's base rule sits later
+     in this file at 0,1,0, so a bare .cs-staleness-note here would lose (insight 075). It pays 2.7 px on
+     a yearly return (measured at 1440×731 @ 2), after L3 in survivor.css.
    840px re-stated as a literal. */
 @media (min-width: 68rem) and (max-height: 840px) {
   .confidence-reveal[data-twopane] {
@@ -616,6 +620,9 @@
   .confidence-reveal[data-twopane] .cs-medicare-residual,
   .confidence-reveal[data-twopane] .cs-state-note {
     line-height: var(--leading-tight);
+  }
+  .confidence-reveal[data-twopane] .cs-staleness-note {
+    line-height: var(--leading-snug);
   }
 }
 

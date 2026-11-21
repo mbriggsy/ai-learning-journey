@@ -587,7 +587,8 @@ type DensityRows = {
  *     honesty floor's input), its pull's margin 12 → 8, its legend's margin 16 → 8 and gap 8 → 4;
  *   - L1, the survivor eyebrow, context and step-down leading body 1.55 → snug 1.4;
  *   - L3 (the one-frame composites plan's rung 2a), on a frame with the staleness echo, the same three
- *     statements one step further, → tight 1.3 (`rows.echo`, checked against the frame's own echo).
+ *     statements one step further, → tight 1.3 (`rows.echo`, checked against the frame's own echo);
+ *   - L4 (rung 2b), the staleness echo's own line body 1.55 → snug 1.4.
  *  L2 (the Medicare pair and the state note) is `assertNoteLeading`'s, on both tiers. */
 async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: DensityRows = {}): Promise<void> {
   const short = tier === 'short'
@@ -634,6 +635,7 @@ async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: Densi
             },
       noteFrame: has('.cs-medicare-note, .cs-state-note, .cs-staleness-note'),
       echo: has('.cs-staleness-note'),
+      stalenessLeading: within('.cs-staleness-note').map(ratio),
       typical: has('.cs-medicare-residual--typical'),
       gridRowGap: style(reveal)?.rowGap ?? null,
       subordinatesRowGap: style(subordinates)?.rowGap ?? null,
@@ -657,6 +659,16 @@ async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: Densi
   }
   expect(read.stamped, 'no two-pane reveal is stamped — the density read would be vacuous (insight 029)').toBe(true)
   expect(read.echo, `the echo flag must match the frame: the staleness echo is ${read.echo ? 'ON' : 'OFF'} here`).toBe(rows.echo === true)
+  // L4 — the echo's own line: snug inside the short tier, body above it
+  if (rows.echo === true) {
+    expect(read.stalenessLeading.length, 'the echo frame carries exactly one staleness line — L4 would read nothing').toBe(1)
+    for (const r of read.stalenessLeading) {
+      const [lo, hi] = short ? [1.35, 1.45] : [1.5, 1.6]
+      const name = short ? 'L4: --leading-snug ~1.4' : 'body ~1.55'
+      expect(r, `the staleness echo's leading ${at}: ${name}`).toBeGreaterThan(lo)
+      expect(r, `the staleness echo's leading ${at}: ${name}`).toBeLessThan(hi)
+    }
+  }
   exact(read.resultPaddingTop, '32px', '40px', '.result padding-block-start')
   // W1 / W2 / L1 — the survivor cards (every spine frame carries at least one)
   expect(read.cardPaddingTop.length, 'the frame carries no survivor card — W1 would read nothing').toBeGreaterThan(0)

@@ -561,6 +561,11 @@ type DensityRows = {
    *  row-gaps themselves (statestale's pin is W4's; stale's 2px is written by round 5 AND W4, so it
    *  kills neither alone: see its comment), so the helper leaves them alone there. */
   readonly skipNoteGaps?: boolean
+  /** The staleness echo (`.cs-staleness-note`) is on the frame: inside the short tier L3 steps the survivor
+   *  statements' leading to tight there. The helper reads the frame's own echo and requires this flag to
+   *  match it, so an echo arm can never read the snug band by forgetting the flag (the composites plan's
+   *  U5, KTD7). */
+  readonly echo?: boolean
 }
 
 /** The short-laptop density tier, read on BOTH sides of its boundary: the spec's ONE home for the values
@@ -580,7 +585,9 @@ type DensityRows = {
  *   - W5, the record card's padding-block 12 → 8 and gap 8 → 4;
  *   - W7, the band drawer's block padding 20/24 → 16/16 (the inline 24 never moves: it is the two-pane
  *     honesty floor's input), its pull's margin 12 → 8, its legend's margin 16 → 8 and gap 8 → 4;
- *   - L1, the survivor eyebrow, context and step-down leading body 1.55 → snug 1.4.
+ *   - L1, the survivor eyebrow, context and step-down leading body 1.55 → snug 1.4;
+ *   - L3 (the one-frame composites plan's rung 2a), on a frame with the staleness echo, the same three
+ *     statements one step further, → tight 1.3 (`rows.echo`, checked against the frame's own echo).
  *  L2 (the Medicare pair and the state note) is `assertNoteLeading`'s, on both tiers. */
 async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: DensityRows = {}): Promise<void> {
   const short = tier === 'short'
@@ -626,6 +633,7 @@ async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: Densi
               legendGap: style(drawer.querySelector('.band-legend'))?.rowGap ?? null,
             },
       noteFrame: has('.cs-medicare-note, .cs-state-note, .cs-staleness-note'),
+      echo: has('.cs-staleness-note'),
       typical: has('.cs-medicare-residual--typical'),
       gridRowGap: style(reveal)?.rowGap ?? null,
       subordinatesRowGap: style(subordinates)?.rowGap ?? null,
@@ -636,14 +644,19 @@ async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: Densi
   const exact = (actual: string | null | undefined, onShort: string, onTall: string, what: string): void => {
     expect(actual, `${what} ${at}`).toBe(short ? onShort : onTall)
   }
+  // The survivor statements' leading: tight on a short echo frame (L3), snug on any other short frame
+  // (L1), body above the tier.
+  const tightEcho = short && rows.echo === true
   const leading = (ratios: readonly number[], what: string): void => {
+    const name = tightEcho ? 'L3 on the echo frame: --leading-tight ~1.3' : short ? '--leading-snug ~1.4' : 'body ~1.55'
     for (const r of ratios) {
-      const [lo, hi] = short ? [1.35, 1.45] : [1.5, 1.6]
-      expect(r, `${what} leading ${at}: ${short ? '--leading-snug ~1.4' : 'body ~1.55'}`).toBeGreaterThan(lo)
-      expect(r, `${what} leading ${at}: ${short ? '--leading-snug ~1.4' : 'body ~1.55'}`).toBeLessThan(hi)
+      const [lo, hi] = tightEcho ? [1.25, 1.35] : short ? [1.35, 1.45] : [1.5, 1.6]
+      expect(r, `${what} leading ${at}: ${name}`).toBeGreaterThan(lo)
+      expect(r, `${what} leading ${at}: ${name}`).toBeLessThan(hi)
     }
   }
   expect(read.stamped, 'no two-pane reveal is stamped — the density read would be vacuous (insight 029)').toBe(true)
+  expect(read.echo, `the echo flag must match the frame: the staleness echo is ${read.echo ? 'ON' : 'OFF'} here`).toBe(rows.echo === true)
   exact(read.resultPaddingTop, '32px', '40px', '.result padding-block-start')
   // W1 / W2 / L1 — the survivor cards (every spine frame carries at least one)
   expect(read.cardPaddingTop.length, 'the frame carries no survivor card — W1 would read nothing').toBeGreaterThan(0)
@@ -2356,7 +2369,14 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     await assertSurvivorBasis(page, 'inline')
     // REAL sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law); read after
     // the fit. The echo-gap pins above own this frame's W4 row-gaps, so the helper skips them here.
-    await assertDensityTier(page, 'short', { skipNoteGaps: true })
+    await assertDensityTier(page, 'short', { skipNoteGaps: true, echo: true })
+    // L3's TALL side (the one-frame composites plan's U5, the W5 precedent): no other arm renders the echo
+    // above the short tier, so without this read an echo rule written outside the tier would change the 917
+    // SHOWCASE while every arm stayed green. The same frame, widened to SHOWCASE, must read every rung dark,
+    // L3's included. A computed-style read only, so the resize needs no fresh load.
+    await page.setViewportSize(SHOWCASE)
+    await settleLayout(page)
+    await assertDensityTier(page, 'tall', { skipNoteGaps: true, echo: true })
   })
 })
 
@@ -2489,7 +2509,7 @@ test.describe(`the state-tax staleness return (?vault=statestale) — the isolat
     await assertSurvivorBasis(page, 'inline')
     // REAL sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law); read after
     // the fit. The echo-gap pins above own this frame's W4 row-gaps, so the helper skips them here.
-    await assertDensityTier(page, 'short', { skipNoteGaps: true })
+    await assertDensityTier(page, 'short', { skipNoteGaps: true, echo: true })
   })
 })
 

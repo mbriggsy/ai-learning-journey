@@ -224,7 +224,7 @@ The plant catalog. The Windows numbers come from the temporary plants, with stri
 - `src/ui/__tests__/survivorSpendingBasisSeedGate.test.tsx`: two census rows, and its count of 16 becomes 18.
 - Any other hand-listed seed census the full suite names when it reds.
 
-**Approach:** each seed is a spread of its base that sets only `medicareExtrasByPerson`, one typical entry per person, with `adoptionVintage` read from the constant. `devSeeds.ts` and its test are LF (read at HEAD during U1, 2026-11-20; this line once said CRLF).
+**Approach:** each seed is a spread of its base that sets only `medicareExtrasByPerson`, one typical entry per person, with `adoptionVintage` read from the constant. `devSeeds.ts` and its test are CRLF (`git ls-files --eol` reads `i/crlf w/crlf` for both, b9-7, 2026-11-20; a U1 reading recorded LF here, which was wrong: an edit script must match CRLF line ends).
 
 **Patterns to follow:** `paAffirmation`'s one-field spread; the census rows' hand derivation in `survivorSpendingBasisSeedGate.test.tsx`.
 

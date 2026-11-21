@@ -408,10 +408,10 @@ tests
   (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry-run output>` — SAFE / CARRIED / FRESH), hand-check each FRESH one
   and each REVIEW line (a citation inside a modified hunk is never moved), and move the second number of a comma pair by hand
   (the tool moves only the first).
-- **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:961-971`
+- **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:1009-1019`
   excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1062-1064`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:3860-3862`, measured at the Dell's 1536×791 @ 2.5), a once-measured
+  measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:3995-3997`, measured at the Dell's 1536×791 @ 2.5), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
   arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:44-45`) — no date frame has ever been fit-measured either.
 - **(2026-09-27, b9-11)** the ONE width seam: a new `@media (min-width: …rem)` fails `breakpoint-mirrors.test.ts` unless it mirrors `--bp-laptop` (68rem) — a new tier is a product decision

@@ -1,7 +1,6 @@
 import { expect, type Page, type Locator, type BrowserContext, type CDPSession } from '@playwright/test'
 import {
   test,
-  pageDay,
   pinPlantDay,
   pinnedDay,
   pinnedYear,
@@ -18,6 +17,7 @@ import {
   armRefiguringWatch,
   expectRefiguringSeen,
   gotoSeedFinal,
+  gotoVaultFinal,
   refiguringLog,
   rewalkSeedTo,
   settleLayout,
@@ -94,8 +94,9 @@ import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
 // The viewport constants (REAL/TIER/SHOWCASE/FLOOR/PHONE) and the settle recipe live in
 // e2e/reviewSurface.ts — the ONE canonical home, shared with the Caddie cold-read walk.
 
-/** The FOUR spine seeds the frame contract walks — the council's three plus `nc`, the NC priced
- *  face (its own rationale sits on its entry below). The priced-Medicare disclosure
+/** The FIVE spine seeds the frame contract walks — the council's three plus `nc`, the NC priced
+ *  face, and `patypical`, Pennsylvania answering "not sure" (each one's rationale sits on its entry
+ *  below). The priced-Medicare disclosure
  *  lines (`.cs-medicare-note` affirmation + `.cs-medicare-residual`) are per-seed HONEST, not
  *  blanket: they render only for an all-65+ household with NO ACA door (showMedicarePricedNote,
  *  keyed off the run's pricing facts never ages — insight 080) — `retired` (66/65) and `budget`
@@ -119,6 +120,12 @@ const SPINE_SEEDS = [
   // (statePricedNote = pricedStateForRun off the built params, never the verdict), so the affirmation
   // shape is unchanged by the pin; the clause TEXT is pinned by the `?seed=nc` arm below, never here.
   { seed: 'nc', medicareNote: true, stateNote: false, survivor: 'inline' },
+  // The tallest FRESH frame (the one-frame composites plan's U6): Pennsylvania's longest priced clause over
+  // the "not sure" Medicare-extras answer, `{ kind: 'typical' }` per person as the intake writes it (KTD5),
+  // whose typical residual runs two lines longer than the entered one. Its presence fields are U4's probe
+  // readings, read on CI's Linux and on Windows alike (`4625f077`), never guessed: the Medicare pair on, the
+  // state clause inside the residual (no standalone note), the survivor card inline.
+  { seed: 'patypical', medicareNote: true, stateNote: false, survivor: 'inline' },
 ] as const
 
 /** The spine presence companions (insight 029 — geometry over an unresolved/blank page passes
@@ -181,22 +188,31 @@ type SanctionedDoors = {
  *
  * `counted` guards the walk itself: a blank/error page yields near-zero rendered elements and
  * MUST fail the companion floor, never pass an empty-offender check (insight 029).
+ *
+ * `holdCaveat` is NOT a sanction and never rides `SanctionedDoors` (the caveat is PROTECTED): it is U5's
+ * stop path only (`assertFrameFitsHoldingCaveat`), and it skips the in-frame caveat's own SUBTREE, never
+ * its ancestors, so an ancestor or a sibling past the fold still reds.
  */
 async function frameReport(
   page: Page,
   excludeQuietRow: boolean,
   sanctioned: SanctionedDoors = {},
+  holdCaveat = false,
 ): Promise<FrameReport> {
   const excludeBackupDoor = sanctioned.backupDoor === true
   const excludeRecordCard = sanctioned.recordCard === true
-  return page.evaluate(({ excludeQuiet, excludeBackup, excludeRecord }) => {
+  return page.evaluate(({ excludeQuiet, excludeBackup, excludeRecord, holdTheCaveat }) => {
     const vh = window.innerHeight
     const quiet = document.querySelector('.result-quiet-row')
     const backup = document.querySelector('.result-backup-door')
     const record = document.querySelector('.rec-record')
+    const caveat = holdTheCaveat ? document.querySelector('footer.disclaimer.disclaimer--in-frame') : null
+    if (holdTheCaveat && caveat === null) throw new Error('frameReport: the held caveat is not on the page')
     const offenders: Array<{ desc: string; bottom: number }> = []
     let counted = 0
     for (const el of Array.from(document.querySelectorAll('body *'))) {
+      // The held caveat's subtree only (U5's stop path): its bottom is the caller's printed reading.
+      if (caveat !== null && caveat.contains(el)) continue
       if (excludeQuiet && quiet !== null && (quiet.contains(el) || el.contains(quiet))) continue
       // The backup door is an UNPROTECTED durability affordance, DOM-ordered BELOW the disclaimer
       // (Result.tsx). On the tallest composite frame (an all-65+ writable stale return) it is a
@@ -232,6 +248,7 @@ async function frameReport(
     excludeQuiet: excludeQuietRow,
     excludeBackup: excludeBackupDoor,
     excludeRecord: excludeRecordCard,
+    holdTheCaveat: holdCaveat,
   })
 }
 
@@ -252,6 +269,37 @@ async function assertFrameFits(
     report.offenders,
     `elements end below the ${excludeQuietRow ? 'sanctioned' : 'FULL-fit'} frame`,
   ).toEqual([])
+}
+
+/**
+ * U5'S STOP PATH (the one-frame composites plan's U6 step 4): a frame whose PROTECTED R13 caveat the ladder
+ * could not bring inside the fold before the council it stopped for has ruled. Its caveat's bottom is
+ * PRINTED and annotated first (measure, then assert: insight 120), and every OTHER element is held to the
+ * frame exactly as `assertFrameFits` holds it, the caveat's own subtree alone skipped (`frameReport`'s
+ * `holdCaveat`). It is the 20 px arm's record-only precedent, quoted: "never a `test.fail()`. Until the
+ * fork is decided this arm RECORDS ... The assertion returns with the fork's ruling." A `test.fail()`
+ * would swallow every other assertion in the arm as "expected", and a ceiling on the printed number would
+ * be a chosen margin (insight 065). The council's ruling build replaces this call with `assertFrameFits`.
+ */
+async function assertFrameFitsHoldingCaveat(
+  page: Page,
+  frame: string,
+  sanctioned: SanctionedDoors,
+  council: string,
+): Promise<void> {
+  const caveatBottom = await page
+    .locator('footer.disclaimer.disclaimer--in-frame')
+    .evaluate((el) => el.getBoundingClientRect().bottom)
+  const vh = page.viewportSize()?.height
+  expect(vh, 'the arm runs at a fixed viewport').toBeDefined()
+  const line = `${frame} ${String(vh)}px frame: caveat bottom=${caveatBottom.toFixed(1)} (${
+    caveatBottom > vh! + 0.5 ? `${(caveatBottom - vh!).toFixed(1)} px past the fold` : 'inside the fold'
+  }) — its assertion HELD for ${council}`
+  console.log(`[held caveat] ${line}`)
+  test.info().annotations.push({ type: 'held caveat (RECORDED — the rung-3 key council owed)', description: line })
+  const report = await frameReport(page, true, sanctioned, true)
+  expect(report.counted, 'frame walk counted too few elements — page did not render').toBeGreaterThan(WALK_FLOOR)
+  expect(report.offenders, 'elements other than the held caveat end below the sanctioned frame').toEqual([])
 }
 
 /** The layout TIER the page actually rendered — read from the breakpoint itself, never inferred
@@ -803,7 +851,7 @@ async function assertNoteLeading(page: Page, tier: 'short' | 'tall'): Promise<vo
   }
 }
 
-// ── the spine frame matrix: {budget, retired, health, nc} × {REAL, TIER, SHOWCASE} ────────────
+// ── the spine frame matrix: {budget, retired, health, nc, patypical} × {REAL, TIER, SHOWCASE} ──
 
 for (const { seed, medicareNote, stateNote, survivor } of SPINE_SEEDS) {
   test.describe(`?seed=${seed} — the one-frame fit law`, () => {
@@ -2392,6 +2440,93 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
   })
 })
 
+// ── the YEARLY RETURNS (?vault=yearpa / ?vault=yearfailing — the one-frame composites plan's U6) ──────
+// The tallest real echo frames: a household answering "not sure" on Medicare extras (the typical residual,
+// two lines longer than the entered one), saved on `GATE_DAY` and opened a calendar year later under the
+// previous year's tax and Medicare rulebooks (`doctorYearlyReturn`, `src/ui/devSeeds.ts`; each plant viewed
+// at its declared `RETURN_DAY` through `pinPlantDay`). From New Year every real return is this frame, so
+// each is held to the `?vault=stale` arm's law: the gate's decision pair in the first frame, then the
+// echoed result inside the fold, the backup door its one sanctioned casualty. Every presence field is U4's
+// probe reading (`4625f077`, Windows = Linux to 0.1 px): the Medicare pair on, the state clause inside the
+// residual (no standalone note), the survivor card inline, the gate's affirm at 391 px.
+//
+// U5'S STOP PATH (`yearfailing`): rungs 2a (L3) and 2b (L4) brought `yearpa` from 737.3 to 725.8 px, but
+// the off-track household's caveat still ends at 732.9 on both platforms, and rung 3 (the borrowed
+// `--text-sm`) has no stable class to key on (the register's composites entry, prescription (3)). So its
+// caveat assertion is HELD: the arm prints the caveat's bottom and asserts everything else
+// (`assertFrameFitsHoldingCaveat`), and the council's ruling build lands rung 3 on its key and restores
+// `assertFrameFits` here.
+const RUNG3_KEY_COUNCIL = "council wf_540221e4-42d (rung 3's key, the composites entry's prescription (3))"
+
+test.describe(`the yearly returns (?vault=yearpa / ?vault=yearfailing) — the gate + the echoed "not sure" frame (${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+  for (const { key, what, held } of [
+    { key: 'yearpa', what: 'Pennsylvania answering "not sure", a year on', held: null },
+    { key: 'yearfailing', what: 'the off-track household answering "not sure", a year on', held: RUNG3_KEY_COUNCIL },
+  ] as const) {
+    test(`?vault=${key} — ${what}: the decision pair in frame; the echoed result ${held === null ? 'holds the one-frame law' : 'holds every line but its caveat, which is printed (U5’s stop path)'}`, async ({ page }) => {
+      await pinPlantDay(page, key)
+      await page.goto(`/?vault=${key}`)
+      const unlock = page.getByRole('button', { name: 'Open my plan' })
+      await expect(unlock, `?vault=${key}: the plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
+      await unlock.click()
+
+      // THE GATE FRAME: the decision pair in the first frame, beside exactly the notes the household earns.
+      const affirm = page.getByRole('button', { name: /still about right/i })
+      await expect(affirm).toBeVisible({ timeout: 30_000 })
+      await page.evaluate(() => document.fonts.ready)
+      await page.evaluate(() => window.scrollTo(0, 0))
+      const affirmBox = await affirm.boundingBox()
+      expect(affirmBox, 'the affirm CTA reported no box').not.toBeNull()
+      expect(affirmBox!.y + affirmBox!.height, 'the affirm CTA sits below the first frame at the real window').toBeLessThanOrEqual(
+        REAL.height,
+      )
+      // The two clocks the doctor fires, in the composer's order, and nothing else. The count is derived in
+      // the unit arms (`devSeeds.test.ts`: "…saves on the gate's day at its yearly return, so the gate speaks
+      // no engine-pricing line (derived from the ledger)" and "…gate speaks exactly the tax and Medicare
+      // lines…"): the doctor's floor puts the save on `GATE_DAY`, the day after the newest ledger row, so no
+      // method line, nameless twin or extras re-confirm can speak beside them (the answer keeps its vintage).
+      await expect(page.locator('.reentry-notes p')).toHaveText([copy.stalenessTax, copy.stalenessMedicare])
+      await expect(page.getByText(slots.reentryElapsedYears(1)), 'the elapsed line reads a year').toBeVisible()
+
+      // Affirm → the held recompute pair; the FINAL tier, then a settled layout (the gotoSeedFinal discipline).
+      await affirm.click()
+      await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+      await settleLayout(page)
+
+      await assertResolvedSpine(page)
+      // The frame under measure IS the echoed one, carrying the aged band beside its premise and the rendered
+      // re-confirm control (U17 §S2, the `?vault=stale` arm's pins: the fold-legality half).
+      await expect(page.locator('.cs-staleness-note')).toBeVisible()
+      await expect(page.locator('.band-premise')).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Re-confirm your numbers' })).toBeVisible()
+      await assertMedicareNote(page, true)
+      await expect(page.locator('.cs-medicare-residual--typical'), 'the "not sure" answer funds the typical residual').toHaveCount(1)
+      await assertStateNote(page, false)
+      await assertOneVisibleDisclaimer(page, 'laptop')
+
+      // The UNPROTECTED backup door sits BELOW the PROTECTED caveat, so any overflow sacrifices it first.
+      const foldOrder = await page.evaluate(() => {
+        const disc = document.querySelector('footer.disclaimer.disclaimer--in-frame')
+        const door = document.querySelector('.result-backup-door')
+        if (disc === null || door === null) return null
+        return { discBottom: disc.getBoundingClientRect().bottom, doorTop: door.getBoundingClientRect().top }
+      })
+      expect(foldOrder, 'the disclaimer and the backup door must both render on this frame').not.toBeNull()
+      expect(foldOrder!.doorTop, 'the backup door must sit BELOW the R13 disclaimer (the caveat wins the fold)').toBeGreaterThanOrEqual(
+        foldOrder!.discBottom - 0.5,
+      )
+
+      if (held === null) await assertFrameFits(page, true, { backupDoor: true })
+      else await assertFrameFitsHoldingCaveat(page, `?vault=${key} ${REAL.width}x${REAL.height}`, { backupDoor: true }, held)
+      await assertSurvivorBasis(page, 'inline')
+      // REAL sits inside the short tier; the echo flag is checked against the frame's own echo (L3 and L4).
+      await assertNoteLeading(page, 'short')
+      await assertDensityTier(page, 'short', { echo: true })
+    })
+  }
+})
+
 // ── the state-tax staleness return (?vault=statestale — the state-carrying seed increment) ────
 // The state-tax analog of ?vault=stale, on the LIGHT doctor (F2 supersession, 2026-07-15): the
 // NC-priced spine household saved ~150d ago with startCalendarYear UNTOUCHED (2026) and the tax /
@@ -3881,31 +4016,51 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
    * reads 857px; re-hoist it above `<Disclaimer inFrame/>` in Result.tsx and the document-order
    * assertion fails while the pixels stay put — which is exactly the CSS-only reorder (WCAG 2.4.3)
    * that a geometry-only gate would wave through.
+   *
+   * THE COMPOSITES' RECORD PLANTS (the one-frame composites plan's U6, KTD8): `yearrec` (the entered-extras
+   * household at its yearly return), `recpa` (Pennsylvania answering "not sure", fresh, a record that holds)
+   * and `yearparec` (the two together, a year on) join this loop at their declared days. Each asserts its
+   * caveat inside the frame, its card below the caveat in pixels and in the DOM, and its card's face and
+   * causes, the plant's own (a yearly-return record reads the one rulebook clause, `doctorYearlyReturnRecord`
+   * proves `['rules-changed']` at plant time). Its standing line is PRINTED, never asserted, until the card's
+   * seat is ruled (the composites entry's prescription (4): every measured record frame puts it past 731,
+   * 754.5 / 769.4 / 799.3 px on U4's table, and the ladder is exhausted). That is the 20 px arm's record-only
+   * precedent, quoted: "never a `test.fail()`. Until the fork is decided this arm RECORDS ... The assertion
+   * returns with the fork's ruling." The seat's ruling build turns `standing: 'print'` into `'assert'`.
    */
-  for (const { plant, face } of [
-    { plant: 'rec', face: 'HOLDS' },
+  for (const { plant, face, causes, echo, standing } of [
+    { plant: 'rec', face: 'HOLDS', causes: [], echo: false, standing: 'assert' },
     // The superseded face is the tall one — two cause clauses plus the mint year. If the law holds
     // here it holds on every standing the producer can emit (the recold arm below measures the
     // three-clause producible maximum on the same frame).
-    { plant: 'recold', face: 'SUPERSEDED' },
+    {
+      plant: 'recold',
+      face: 'SUPERSEDED',
+      causes: [copy.recommendRecordSupersededInputs, copy.recommendRecordSupersededSolver],
+      echo: false,
+      standing: 'assert',
+    },
+    { plant: 'yearrec', face: 'SUPERSEDED', causes: [copy.recommendRecordSupersededRules], echo: true, standing: 'print' },
+    { plant: 'recpa', face: 'HOLDS', causes: [], echo: false, standing: 'print' },
+    { plant: 'yearparec', face: 'SUPERSEDED', causes: [copy.recommendRecordSupersededRules], echo: true, standing: 'print' },
   ] as const) {
-    test(`?vault=${plant} — the ${face} card reads BELOW the PROTECTED R13 disclaimer, which keeps the frame`, async ({
-      page,
-    }) => {
-      await page.goto(`/?vault=${plant}`)
-      const unlock = page.getByRole('button', { name: 'Open my plan' })
-      await expect(unlock, `the ${plant} plant did not land on the unlock screen`).toBeVisible({
-        timeout: 30_000,
-      })
-      await unlock.click()
-      const affirm = page.getByRole('button', { name: /still about right/i })
-      await expect(affirm).toBeVisible({ timeout: 30_000 })
-      await affirm.click()
-      await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
-      await settleLayout(page)
+    test(`?vault=${plant} — the ${face} card reads BELOW the PROTECTED R13 disclaimer, which keeps the frame${
+      standing === 'print' ? ' (its standing line RECORDED: the seat is owed)' : ''
+    }`, async ({ page }) => {
+      // Pinned to the plant's declared day (`RETURN_DAY` for a yearly return; `GATE_DAY` for the rest).
+      await gotoVaultFinal(page, plant)
       // NON-VACUITY (insight 029): every claim below is about a frame that carries the card, so a
       // frame that quietly stopped rendering one must fail here, never pass an empty walk.
       await expect(page.locator('.rec-record'), 'the frame under measure must carry the card').toBeVisible()
+      // The card's face and its causes, the plant's own, in the producer's order (the face's lead sentence
+      // never the other face's: the superseded card reading "holds" would be the calm-but-wrong direction).
+      const standingLine = page.locator('.rec-record__standing')
+      await expect(standingLine).toHaveAttribute('data-standing', face === 'HOLDS' ? 'holds' : 'superseded')
+      await expect(standingLine).toContainText(face === 'HOLDS' ? copy.recommendRecordHolds : copy.recommendRecordSuperseded)
+      const causeLines = page.locator('.rec-record__causes li')
+      await expect(causeLines, `the ${face} card's cause count`).toHaveCount(causes.length)
+      if (causes.length > 0) await expect(causeLines).toHaveText([...causes])
+      await expect(page.locator('.cs-staleness-note'), `?vault=${plant}: the staleness echo`).toHaveCount(echo ? 1 : 0)
 
       const geometry = await page.evaluate(() => {
         const disc = document.querySelector('footer.disclaimer.disclaimer--in-frame')!
@@ -3966,11 +4121,16 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       // costs), so this is a live constraint on the copy rather than a formality: it is what makes the
       // LENGTH note on `recommendRecordSuperseded` in src/ui/copy.ts enforceable instead of advisory.
       // Text is captured so a red names the sentence that outgrew the slack.
-      expect(
-        geometry.standingBottom,
-        `the card's standing line ends at ${geometry.standingBottom}px, past the ${REAL.height}px frame — ` +
-          `the meaning-bearing sentence must never be the scroll casualty (line: "${geometry.standingText}")`,
-      ).toBeLessThanOrEqual(REAL.height)
+      //
+      // On the composites' record plants (`standing: 'print'`) the standing bottom is the `[U17 record return]`
+      // line's reading above, RECORDED until the card's seat is ruled (this loop's docblock says why).
+      if (standing === 'assert') {
+        expect(
+          geometry.standingBottom,
+          `the card's standing line ends at ${geometry.standingBottom}px, past the ${REAL.height}px frame — ` +
+            `the meaning-bearing sentence must never be the scroll casualty (line: "${geometry.standingText}")`,
+        ).toBeLessThanOrEqual(REAL.height)
+      }
 
       // (3) THE SANCTION IS NARROW (burned/070 — a sweep needs a guard, and an exclusion that
       // quietly swallowed a neighbour would be the defect's next home). `recordCard` skips the
@@ -4006,8 +4166,9 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       await assertFrameFits(page, true, { backupDoor: true, recordCard: true })
       await assertSurvivorBasis(page, 'inline')
       // The card's own rung (W5) on BOTH faces, read after the fit and the standing line passed; REAL
-      // sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law).
-      await assertDensityTier(page, 'short', { record: true })
+      // sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law). A yearly return
+      // carries the staleness echo, so its survivor statements read L3's tight leading (`echo`).
+      await assertDensityTier(page, 'short', { record: true, echo })
 
       // (4) BELOW THE FOLD IS NOT LOST: the card is one flick away with its re-open control and the
       // cost line that prices it intact. A door the household cannot reach would be a worse answer
@@ -4279,140 +4440,6 @@ test.describe('the spend lane — the solved figure lands without moving anythin
       const transition = diag.td
       expect(transition.split(',').every((d) => parseFloat(d) === 0), `transition-duration ${transition}`).toBe(true)
     })
-  })
-})
-
-// ── THE COMPOSITES PROBE — RECORD-ONLY, never asserted (the one-frame composites plan's U4, KTD6; its U6
-// DELETES this describe) ─────────────────────────────────────────────────────────────────────────────
-// The plan's six new frames (`docs/plans/features/one-frame-composites-build-spec.md`): `?seed=patypical`
-// and the five vault plants of its U3. Before any rung or assertion lands, each one's bottoms are READ on
-// CI's Linux beside Windows (insight 075: Linux can wrap a line taller), at every size its U6 arm will
-// assert: `patypical` at REAL, TIER and SHOWCASE (it joins SPINE_SEEDS in U6), each vault plant at REAL
-// (the size the `?vault=stale` arm and the record loop assert). Each arm drives its frame the way its
-// asserting arm will, at the plant's declared day (a yearly return is viewed at RETURN_DAY), asserts the
-// tier it expects there (insight 125), asserts NO fit, and prints one line per frame and size:
-//   [fit probe] <plant> <size>: clock=<YYYY-MM-DD> attempt=<n> caveat bottom=<px> left end=<px>
-//   band end=<px> survivor=<inline|folded|none> medicare note=<0|1> state note=<0|1>
-//   [ gate affirm bottom=<px> gate notes=<n>] [ standing bottom=<px> causes=<n>] [ doors bottom=<px>]
-// (all on one log line). The clock is the page's own day, read back. The attempt is Playwright's retry
-// index, so a retried arm's lines tell themselves apart: read the final attempt only, and an arm whose
-// attempts disagree is unknown, which fails the frame. The presence fields are what U6 writes into
-// `patypical`'s SPINE_SEEDS row and the yearly-return arms' survivor and note checks, read, never guessed.
-// The caveat is the in-frame R13 disclaimer; the left end is the save slot's bottom + 2 px, the left
-// column's comparable end; the band end is the band's bottom (it spans grid rows 1 to 5), printed because
-// on an aged frame the band can bind (the plan's A5). The gate fields are a vault return's re-entry gate
-// before the affirm; the record fields are the card's standing line and its cause list; the doors are the
-// quiet row at SHOWCASE, where the full fit includes them. A missing element throws; a non-finite value
-// fails the arm; it never prints a blank.
-type ProbeSize = 'REAL' | 'TIER' | 'SHOWCASE'
-
-type ProbeGate = { readonly affirmBottom: number; readonly notes: number }
-
-/** A vault plant's drive, step for step as its asserting arm takes it, reading the re-entry gate on the
- *  way: pin the plant's declared day, unlock, read the affirm and the gate's notes, affirm, settle. */
-async function driveProbeVault(page: Page, key: string): Promise<ProbeGate> {
-  await pinPlantDay(page, key)
-  await page.goto(`/?vault=${key}`)
-  const unlock = page.getByRole('button', { name: 'Open my plan' })
-  await expect(unlock, `?vault=${key}: the plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
-  await unlock.click()
-  const affirm = page.getByRole('button', { name: /still about right/i })
-  await expect(affirm, `?vault=${key}: the re-entry gate never mounted`).toBeVisible({ timeout: 30_000 })
-  await page.evaluate(() => document.fonts.ready)
-  await page.evaluate(() => window.scrollTo(0, 0))
-  const box = await affirm.boundingBox()
-  if (box === null) throw new Error(`[fit probe] ?vault=${key}: the gate's affirm reported no box`)
-  const notes = await page.locator('.reentry-notes p').count()
-  await affirm.click()
-  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
-  await settleLayout(page)
-  return { affirmBottom: box.y + box.height, notes }
-}
-
-async function printCompositeProbe(
-  page: Page,
-  frame: string,
-  size: ProbeSize,
-  opts: { readonly record: boolean; readonly gate?: ProbeGate },
-): Promise<void> {
-  await assertTier(page, 'laptop')
-  const shortTier = await page.evaluate(() => window.matchMedia('(min-width: 68rem) and (max-height: 840px)').matches)
-  expect(shortTier, `${frame} ${size}: the short density tier is on at REAL and TIER and off at SHOWCASE`).toBe(size !== 'SHOWCASE')
-  const read = await page.evaluate(
-    ({ record, doors }) => {
-      const bottom = (sel: string): number => {
-        const el = document.querySelector(sel)
-        if (el === null) throw new Error(`[fit probe] ${sel} is not on the page`)
-        return el.getBoundingClientRect().bottom
-      }
-      const survivor =
-        document.querySelector('details.survivor-fold') !== null
-          ? 'folded'
-          : document.querySelector('.survivor__basis') !== null
-            ? 'inline'
-            : 'none'
-      return {
-        px: {
-          caveat: bottom('footer.disclaimer.disclaimer--in-frame'),
-          leftEnd: bottom('.confidence-reveal[data-twopane] .result-save-slot') + 2,
-          bandEnd: bottom('.confidence-reveal[data-twopane] > .cs-band'),
-          ...(record ? { standing: bottom('.rec-record__standing') } : {}),
-          ...(doors ? { doors: bottom('.result-quiet-row') } : {}),
-        },
-        survivor,
-        medicareNote: document.querySelectorAll('.cs-medicare-note').length,
-        stateNote: document.querySelectorAll('.cs-state-note').length,
-        causes: record ? document.querySelectorAll('.rec-record__causes li').length : null,
-      }
-    },
-    { record: opts.record, doors: size === 'SHOWCASE' },
-  )
-  const px: Record<string, number> = { ...read.px, ...(opts.gate === undefined ? {} : { gateAffirm: opts.gate.affirmBottom }) }
-  for (const [what, value] of Object.entries(px)) {
-    expect(Number.isFinite(value), `[fit probe] ${frame} ${size}: ${what} is not a number`).toBe(true)
-  }
-  const clock = new Date((await pageDay(page)) * 86_400_000).toISOString().slice(0, 10)
-  const f = (n: number): string => n.toFixed(1)
-  console.log(
-    `[fit probe] ${frame} ${size}: clock=${clock} attempt=${test.info().retry} ` +
-      `caveat bottom=${f(read.px.caveat)} left end=${f(read.px.leftEnd)} band end=${f(read.px.bandEnd)} ` +
-      `survivor=${read.survivor} medicare note=${read.medicareNote} state note=${read.stateNote}` +
-      (opts.gate === undefined ? '' : ` gate affirm bottom=${f(opts.gate.affirmBottom)} gate notes=${opts.gate.notes}`) +
-      (read.px.standing === undefined ? '' : ` standing bottom=${f(read.px.standing)} causes=${read.causes}`) +
-      (read.px.doors === undefined ? '' : ` doors bottom=${f(read.px.doors)}`),
-  )
-}
-
-test.describe("the composites probe — RECORD-ONLY, never asserted (the one-frame composites plan's U4)", () => {
-  for (const size of ['REAL', 'TIER', 'SHOWCASE'] as const) {
-    test.describe(`?seed=patypical at ${size}`, () => {
-      if (size === 'REAL') test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-      else test.use({ viewport: size === 'TIER' ? TIER : SHOWCASE })
-      test(`?seed=patypical ${size} — Pennsylvania answering "not sure", fresh`, async ({ page }) => {
-        await gotoSeedFinal(page, 'patypical')
-        await assertResolvedSpine(page)
-        await printCompositeProbe(page, '?seed=patypical', size, { record: false })
-      })
-    })
-  }
-
-  test.describe(`the vault plants at REAL (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
-    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-    for (const { key, record, echo, what } of [
-      { key: 'yearpa', record: false, echo: true, what: 'Pennsylvania "not sure" at its yearly return' },
-      { key: 'yearfailing', record: false, echo: true, what: 'the off-track household "not sure" at its yearly return' },
-      { key: 'yearrec', record: true, echo: true, what: 'the entered-extras household at its yearly return, with a record' },
-      { key: 'recpa', record: true, echo: false, what: 'Pennsylvania "not sure" with a record that holds, fresh' },
-      { key: 'yearparec', record: true, echo: true, what: 'Pennsylvania "not sure" at its yearly return, with a record' },
-    ] as const) {
-      test(`?vault=${key} REAL — ${what}`, async ({ page }) => {
-        const gate = await driveProbeVault(page, key)
-        await assertResolvedSpine(page)
-        await printCompositeProbe(page, `?vault=${key}`, 'REAL', { record, gate })
-        // After the line, so the numbers print either way: the frame read is the one U6 will assert.
-        await expect(page.locator('.cs-staleness-note'), `?vault=${key}: the staleness echo`).toHaveCount(echo ? 1 : 0)
-      })
-    }
   })
 })
 

@@ -510,7 +510,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
 - **Owed from the walk, and not filed until 2026-09-25 (from the 2026-09-24 doc audit):** the arrived-walk's state-tax blindness. `?vault=datearrived` is stateless by construction (`doctorArrivedVault` refuses a priced-state base, `devSeeds.ts:1970-1977`), so no walk has read the arrived face on a priced state. It is carried in `docs/backlog.md` under "The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed".
 - **The aged band's x-axis has its first real-browser arm.** Before S6 no fit arm asserted it — the aged
   axis appeared nowhere in `e2e/`, so §S0's rename had shipped on unit arms alone. `?vault=datearrived` is
-  now driven at `e2e/vertical-fit.spec.ts:3245-3453`, asserting that the year-0 endpoint names the BUILD
+  now driven at `e2e/vertical-fit.spec.ts:3380-3588`, asserting that the year-0 endpoint names the BUILD
   year (`'Plan built'`, `:2220-2224`) and that no named marker renders left of Today — neither the plain
   label nor the split one, since the array picks between them (`:2230-2240`). Both are mutation-proven, and
   the withdrawal mutant draws

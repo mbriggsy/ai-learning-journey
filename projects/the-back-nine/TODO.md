@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-20, b9-5 close):** the Tier 0 composites job, `docs/plans/features/one-frame-composites-build-spec.md` (read by the three blind readers, `945d0ad5`), is built through U2: U1 the gate's calendar (`78925edb`), U2 the two "not sure" seeds (`4c0a4d25`). Next, in order: (1) the build's next units, each opened with `/brief <that unit's topic>`: U3 (the yearly-return doctor and the five vault plants, with their pins and census rows; the plan's minors list names U3's items), U4 pushed alone and read on CI's Linux before anything asserts, U5's rungs each pushed alone (its stop path still lands U6 and U7), U6, U7; (2) the record card's seat (the composites entry's prescription (4)): a council on U4's Linux table, his concern in its dossier, then Briggsy rules on his 2026-07-26 placement, due before the first New Year after his first real save (⚑ his ruling, 2026-11-20: not 2027-01-01); (3) the review's round 3, a harm-class gate over the re-point and the composite build; (4) walk 10 at `REAL`, its targets and watch items (a) to (m) below; (5) W9-R8; (6) measure *Two describers still read past the answered draft…*; then build 2's U12, the whole-file review with an adversary and every finding verified, and `/distill`.
+▶ **START HERE (2026-11-20, b9-6 close):** the Tier 0 composites job, `docs/plans/features/one-frame-composites-build-spec.md`, is built through U5's rung 2b; only `?vault=yearfailing`'s caveat is still outside 731, so U5 takes its stop path. Next, in order: (1) a council on rung 3's key (its dossier: the register's composites entry, prescription (3)); (2) U6 on this head without waiting for the ruling, opened with `/brief <the composites' asserting arms>`; (3) U7, the docs; (4) the council's ruling build (rung 3 on its key, the held assertion restored); (5) the record card's seat (the composites entry's prescription (4)): a council on U4's Linux table, his concern in its dossier, then Briggsy rules on his 2026-07-26 placement, due before the first New Year after his first real save (⚑ his ruling, 2026-11-20: not 2027-01-01); (6) the review's round 3, a harm-class gate over the re-point and the composite build; (7) walk 10 at `REAL`, its targets and watch items (a) to (m) below; (8) W9-R8; (9) measure *Two describers still read past the answered draft…*; then build 2's U12, the whole-file review with an adversary and every finding verified, and `/distill`.
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** `/brief` DONE (b9-5); the plan DONE (b9-6): `docs/plans/features/working-year-surplus-build-spec.md`
@@ -76,10 +76,7 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
    in front of the council: see Act 5 below). (n) **"Spent" contradicts W:** it says a working year costs W
    plus the left over ($100,985 on `date`) and nothing questions the $84,000; a check that offers to revisit W. (o) **the
    unpriced state-tax note** ("it belongs in your figure for a working year, below") reads as "already in W", so in a state
-   that taxes pay the left over is too high. (p) **the stale clause after a RISEN quote** can read as an offset to "can look
-   better than it really is"; no walk renders it (U11 measures the reach, then a walk on `datesavedstale` with spending
-   raised) — WALKED and CLOSED by measurement (b9-5, the other way: the stale answer reads gloomier; its fix is (ae),
-   `c6b15120`: council `wf_fc80029e-d93`'s Frame B, its walk-2 card in `docs/caddie/cold-read-log.md`, 2026-11-09 (b9-3)).
+   that taxes pay the left over is too high. ((p), the stale clause after a risen quote, closed by measurement: (ae), `c6b15120`.)
       At every commit that touches `src/engine` or `intakeMap`: the sweep and the per-key idcheck against the latest baseline
    (`wholewindow` since the rebuild's commit 1, `d5c549d7`; PER KEY, never a whole-file `cmp`). Both tools, their README table
    and the baselines lived in `b9-build2-surplus\` and died with the Dell (2026-11-19): rebuild them before the first such
@@ -247,19 +244,18 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
   covers…* (needs its own refuter pass before it files). Lifted whole, with riders that can split when built: *The 2026-10-06 pre-land
   read's other pre-existing findings…*, *The 2026-10-15 held-flat walk's other pre-existing sheet findings…*, *U17 S7 riders…*, and
   *Knowingly omitted costs…* (D7 answered it: close it and split its open builds when the first is picked up).
-**The tier sweep's tools, durable:** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-tier-sweep\` — its `README.md` indexes the slice extractor,
-the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-preservation check) and `tierrefs.mjs` (the stale
-"Tier N *Title*" scan); re-point the briefs' scratchpad paths before reuse.
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-20 (b9-5: the composites plan read by the three blind readers, its U1 and U2 built; b9-4's block pruned into it):**
+**SESSION 2026-11-20 (b9-6: the composites plan's U3, U4 and U5 rungs 2a and 2b; b9-5's block pruned into it):**
 
 State at close:
-- Pushed: `945d0ad5` (the plan read; its minors listed in it), `78925edb` (U1; CI green on both jobs, run 44849649099), `4c0a4d25` (U2; its run is the Check at start). At `4c0a4d25`: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm test` green, `verify:doc-stats` 0; U1's `verify:fit` 188/188 and `verify:fit:rv` 3/3 on the laptop.
-- The composites plan: U1 and U2 built, U3 next. Its Open Question on the seat is RULED; its minors list marks the three U1 closed.
+- Pushed: `1b3478cf` (U3), `4625f077` (U4), `52dd3e90` (rung 2a), `24f5dcd0` (rung 2b), `8e204deb` (the citation pair-check), and this close. CI green on both jobs for U2 (run 44852615275), b9-5's close, U3 (44854825582), U4 (44856589326) and rung 2a (44861524623); rung 2b's run is the Check at start. At this close: `pnpm typecheck` 0, `pnpm lint` 0, `pnpm test` green, `pnpm build` 0, `verify:doc-stats` 0; `verify:fit` green alone at every rung (196 passed).
+- **The composites:** after rung 2b only `?vault=yearfailing`'s caveat is outside (732.9); every step read Windows = Linux to 0.1 px. The measured steps and the rung-3 key council's dossier are in the register's composites entry, prescription (3); the full table in the composites README's b9-6 section.
+- **U6 (the plan's U6, on this head), what the probe added to it:** `patypical`'s `SPINE_SEEDS` row is `medicareNote: true`, `stateNote: false`, `survivor: 'inline'`; the yearly arms read survivor inline, the Medicare pair, the gate's 2 notes and its affirm at 391.0. `yearfailing`'s caveat assertion is held record-only, naming the council. `assertDensityTier` REQUIRES the `echo` flag to match the frame: every yearly arm passes `echo: true`.
 - W9-R7's register entry stays open until walk 10 reads the window; its last item, the Tier 0 candidate *Two describers still read past the answered draft inside the re-figuring window…*, stays open (measure first).
 - **For Briggsy's digest (walk 10's card):**
+  - NEW (b9-6): every return frame (the staleness echo) now reads the survivor statements at tight leading (L3) and the echo's line at snug (L4); fresh frames are unchanged. Walk 10's (k) reads whether it feels cramped.
   - NEW (b9-5): `patypical` ("not sure" on Medicare extras, Pennsylvania) lands BORDERLINE where `pa` (entered $220 + $0) is on-track: not knowing the extras tips the household across the band edge (pinned in `devSeeds.test.ts`).
   - NEW (b9-4; re-dated by b9-5): from the first New Year after a saved recommendation, the record card's standing line sits below his fold (754.5 px against 731, the band column binding). The gate no longer reds on its own (U1 pins its calendar); the seat is due before the first New Year after his first real save (his ruling, 2026-11-20): START HERE (2).
   - b9-3's finding stands beside it: a "not sure" household with a saved recommendation already sits below the fold (748.6 to 799.3), past the tier's whole ladder.
@@ -271,7 +267,7 @@ State at close:
     - The restatement predicates apply on EVERY line, one-run lines included. A non-twin one-run opener reads "Each working year you’re both alive, the answer at your spending would add at most …".
     - T's twin also requires the close's difference to be one figure. That is unreachable on every witness: the review proved it.
 
-Next is START HERE. Handed to b9-6 (handoff mode: b9-6 to b9-9 live and idle at close).
+Next is START HERE. Handed to b9-7 (handoff mode: b9-7 to b9-9 live and idle at close).
 
 **Walk 10's targets, at `REAL` (1440×731 @ 2):** the changed strings (the walk-9 spec's Units line: seats on T, CR and PN for F3, the phone seat, wide-PN and the listener on PN for F2, every flip tested); W9-R7's window frames (the phone after Close, the laptop beside the open panel); the re-point's frames `seed:budget`, `vault:stale`, `vault:statestale`, `seed:surplus`, `vault:rec`, `vault:recold`, `vault:datesavedfourbuckets`; once the composites plan's U6 lands, its plants (`seed:patypical`, `vault:yearpa`, `vault:yearfailing`, `vault:yearrec`, `vault:recpa`, `vault:yearparec`, the yearly ones at `RETURN_DAY` through the Caddie harness's pin).
 
@@ -296,7 +292,7 @@ Next is START HERE. Handed to b9-6 (handoff mode: b9-6 to b9-9 live and idle at 
 - (m) **The quiet doors' row is sliced through its words at the 731 fold** on `?seed=budget`'s landing (seen in b9-1's `pnpm caddie:walk` capture at `REAL`; walk 10 re-captures it): the doors are the law's one sanctioned casualty, but a half-cut row of text can read as a mistake rather than "scroll for more".
 
 **Check at start:**
-- CI for U2 (`4c0a4d25`): run 44852615275, `gh run view 44852615275 --json status,conclusion`.
+- CI for rung 2b (`24f5dcd0`): run 44863922648 (`gh run view 44863922648 --json status,conclusion`); its verify log's `[fit probe]` lines should read `yearpa` / `yearparec` 725.8, `yearfailing` 732.9. And this close's run.
 - The ACA: its next pass is due the week of 2026-12-07 (the record's forwardClock head says why it is two passes). `aca-last-verified.json` goes stale about 2026-12-12 00:00 UTC, and `verify:aca` runs before `verify:fit` in CI, so every composites push whose evidence is CI's fit log (U4, each U5 rung, U6) lands before then or after that pass (the plan's ACA precondition).
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
@@ -311,7 +307,7 @@ final lands (W9-R7's plan, Open Questions). Never re-ask.
 5. The sweep and the per-key idcheck, only where a plan's Verification Contract calls them (a unit that touches `src/engine` or `intakeMap`): both lived in `<B>\tools\` and died with the Dell; rebuild them before such a unit. The walk-9 spec's units touch neither.
 
 **LANDMINES (the composite build, the review's round 3, walk 10 and U12):**
-- **`doctorStaleVault` throws on a priced base and strips the extras answer and its typical vintage** (`src/ui/devSeeds.ts`): a priced yearly return needs a doctor that keeps `startCalendarYear` (the composites README's `tempYearlyReturn`), and a plant on either doctor measures the TYPICAL-extras form only. Only `retired` enters extras (`pa`, `nc`, `fl`, `elsewhere`, `rec`, `recold` spread it): a new plant names its extras form in its key or docblock.
+- **Every commit that runs `pnpm doc:reanchor` follows the review's gates step 3 below**, not only the review's (`docs/landmines.md`, Citations and the doc gates).
 - **The gate is two columns at his 1440×731 window too** (68rem), and nothing pins the story column's fold, so its coda below the fold is a walk read, never a gate red; any fix is static (KD2's Fit). U2 pinned the story column's 20 px gap, not its bottom.
 - **The gate has a calendar (U1):** a new plant arm drives a plant that declares a view day through `gotoVaultFinal` or after `pinPlantDay`, and a before/after comparison of printed lines reads the budget seed's two noisy counts by position (both in `docs/landmines.md`'s fit-gate area).
 - **Before a fix commit, read `docs/landmines.md`'s The fit gate and e2e, The mutation harness, Copy and copyGuard, Windows and the shell, and Probes and measurement sections.**
@@ -942,6 +938,7 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 (`git show 89b4fa58:projects/the-back-nine/TODO.md`), where the full original stands. A line marked *Correct* or
 *Extend* amends that insight instead of adding a new one.
 
+- *New (b9-6, 2026-11-20, the composites build): a line-map re-anchor tool rewrites history unless every dated number is frozen.* Insight 136, itself the record of citation rot, had its two named citations walked by runs across sessions (`devSeeds.ts` 1079 → 1115, `vertical-fit.spec.ts` 396-406 → 424-434) while its bare ones stayed put, so its own "drifted six lines" story stopped adding up; the held measurement record `e2e/held/fit-24px-measurements.md` was moved the same way. Restored to the text each was written with and frozen with the tool's "(then)" marker (`8e204deb`). The same session's positional pair-check (465 tokens across 215 docs, base against head through the composed line maps) found six bare citations in a plan brief already wrong at base: partly moved lines rot a little more on every run. A dated record's numbers are history: freeze them at writing, never let a mover touch them.
 - *New (b9-6, 2026-11-20): a page-level arm cannot see a store-order fault that never crosses a task.* W9-R7's U5 plant M6
   dropped the re-figuring flag one notify ahead of the spine commit: React painted both notifies of that task as one frame, so
   every fit arm stayed green, and so did the store suite, whose frames tests drove the date route only. The same plant with a
@@ -1202,6 +1199,10 @@ reloading in one step silently leaves the vault in place and you land on Unlock 
 ⚠️ **AND ANY OTHER TAB with the app open blocks it the same way** (bit again 2026-08-20: the
 deleting tab did the about:blank dance correctly while a second tab held the connection — the
 vault silently survived a "successful" deletion). Close every other app tab first.
+
+**The tier sweep's tools, durable** (moved here from the start-of-file section, b9-6): `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-tier-sweep\` — its `README.md` indexes the slice extractor,
+the reader and refuter briefs, `retier.mjs` (move + stamp, with the content-preservation check) and `tierrefs.mjs` (the stale
+"Tier N *Title*" scan); re-point the briefs' scratchpad paths before reuse.
 
 **The durable probe and mutation tools** (moved here from the close block, b9-5; the steps above name them):
 **THE A6 TOOLS (durable, b9-14):** `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-a6-tools\`

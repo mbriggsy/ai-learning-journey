@@ -329,6 +329,13 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-6, 11-20) A yearly return rides `doctorYearlyReturn` (or `doctorYearlyReturnRecord`), never `doctorStaleVault`**
+  (`src/ui/devSeeds.ts`): the stale doctor throws on a priced base and strips the extras answer and its vintage (a
+  pre-extras save, which adds a re-confirm line); the yearly one keeps the start year and every answer and floors the save
+  at `FIRST_UNAMBIGUOUS_SAVE_DAY`, and a plant using it declares `viewDay: RETURN_DAY`. Only `retired` enters extras
+  (`pa`, `nc`, `fl`, `elsewhere`, `rec`, `recold` spread it; `patypical` and `failingtypical` answer "not sure"): a new
+  plant names its extras form in its key or docblock. An echo arm passes `echo: true` to `assertDensityTier`, which reds
+  when the flag does not match the frame.
 - **(b9-5, 11-20) The gate has a calendar: every spec the fit, fit-rv or Caddie harness collects takes `test` from
   `e2e/reviewSurface.ts`, never from `@playwright/test`** (the partition test's guard reds otherwise). That `test` pins each
   page's clock to `GATE_DAY` at UTC noon and reads the page's own day back when the arm ends; a date a spec computes in Node
@@ -486,6 +493,14 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 
 ## Citations and the doc gates
 
+- **(b9-6, 11-20) `pnpm doc:reanchor` moves frozen records unless they are restored or marked**: in four runs of the
+  composites build it moved the held quote `e2e/held/fit-24px-measurements.md` and walked insight 136's two named
+  historical citations (across sessions, `devSeeds.ts` 1079 → 1115 and `vertical-fit.spec.ts` 396-406 → 424-434) while
+  their bare partners stayed put. TODO's review-gates step 3 (content-check each move, restore the held record and the
+  frozen rows from HEAD) binds EVERY commit that runs the tool, not only the review's. A dated number marked "(then)"
+  right after its backticks is frozen by the tool's own rule; insight 136's two are now (`8e204deb`). After the apply, the
+  positional pair-check below still runs: that day's found six bare citations in
+  `docs/plans/features/state-seed-increment-brief.md` already wrong at base.
 - **(b9-6, 11-09) `pnpm doc:reanchor <base> --apply` edits `src` comments too** (370 edits in walk 4's round,
   `devSeeds.ts` and `stalenessExposure.ts` among them): run it once, last, after the sweep and the mutants, never while a
   plant is live.

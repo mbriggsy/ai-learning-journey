@@ -339,6 +339,16 @@ tests
   scratch twin the spend lane settled before `gotoSeedFinal` returned, its `settleLayout` included. Read the first frame
   right after `SETTLED_RESULT` attaches, or accept "unknown". A second tab opened read-only (another tab holds the writer)
   shows the re-entry gate's "Continue to your answer", never "still about right" (`gotoVaultFinal` waits for the latter).
+- **(b9-4, 11-21) The pending room read (the frames-outside plan's KTD6) cannot be a check after `gotoSeedFinal`,** which
+  ends in `settleLayout`: the spend-lane arm's check (`e2e/vertical-fit.spec.ts:4647`) holds only because `surplus` solves in
+  about 5 s. Arm an init script before navigation, the `probeComputingFrame` pattern (`e2e/vertical-fit.spec.ts:2076`), that
+  on every animation frame where `main.result[data-answer-tier="final"]` carries no `data-answer-refiguring` and
+  `.cs-magnitude[data-spend="pending"]` holds `.cs-magnitude__reserve` (`src/ui/ConfidenceStatement.tsx:450`,
+  `aria-hidden`) keeps the latest caveat bottom, the reserve's text and whether any animation is running. No such frame,
+  or only frames with an animation running, is "unknown".
+- **(b9-4, 11-21) A planted fault on the doors row also reds `div.result-hero`, `section.confidence` and
+  `div.confidence-reveal`** under the content walk: they carry no padding and end flush with the last door (measured at
+  SHOWCASE, `5d3c7d81`'s message), so they are content. Predict them in every door fault.
 - **(b9-3, 11-21) A scratch vitest probe's `console.log` printed nothing** in `pnpm vitest run <file>`'s output here; write a
   probe's readings to a file in the scratchpad (`appendFileSync`).
 
@@ -765,6 +775,14 @@ chair; chair from a digest script, never the raw result, and expect the window t
 ## Claude Code, workflows and sessions
 
 
+- **(b9-4, 11-21) Claude Code's background-shell memory reaper can stop a long gate chain mid-run, and it leaves the
+  chain's children running.** A backgrounded run of CI's list was stopped during `pnpm test` with "critically low on
+  memory" while RAM was not short (measured afterwards: 11.6 GB available, the page file 118 MB used; the commit charge
+  stood at 38.3 of 43.6 GB with ten sessions open). The vitest pool (`vitest run` and its 14 workers, about 3.5 GB) kept
+  running: find such a tree by `Win32_Process` parent and `taskkill /PID <cmd parent> /T /F` it. Read memory as Available
+  MBytes and the commit charge, never `FreePhysicalMemory` alone (it leaves out the standby cache). The harness says
+  not to restart a reaped command unasked; Briggsy restarts it. The reaper stays off when Claude Code starts with
+  `CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1` in its environment.
 - **(b9-2, 11-20) A teammate's final report arrives TRUNCATED past a few thousand characters** ("[result truncated — ask
   the agent for the rest via SendMessage]", twice in one session): ask it to resend the rest in numbered parts, and never
   act on the half that arrived. A helper a teammate spawns hands back to the ORCHESTRATOR when its spawner sits idle

@@ -329,6 +329,13 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-7, 11-20) `?vault=yearfailing`'s caveat is HELD, and nothing forces it back:** its arm calls
+  `assertFrameFitsHoldingCaveat` (`RUNG3_KEY_COUNCIL`), which prints the caveat's bottom and holds every other element to
+  the frame, so it stays green whatever the caveat reads, rung 3 landed or not. The rung-3 build swaps the call back to
+  `assertFrameFits` and deletes the constant (grep `RUNG3_KEY_COUNCIL`); the record loop's `standing: 'print'` rows
+  (`yearrec`, `recpa`, `yearparec`) turn `'assert'` only with the card seat's ruling. And a `-g` filter on
+  `playwright.fit.config.ts` also collects `e2e/chart-text.spec.ts` (`?vault=stale)` matches six of its titles): count
+  those arms in a mutant's predicted set.
 - **(b9-6, 11-20) A yearly return rides `doctorYearlyReturn` (or `doctorYearlyReturnRecord`), never `doctorStaleVault`**
   (`src/ui/devSeeds.ts`): the stale doctor throws on a priced base and strips the extras answer and its vintage (a
   pre-extras save, which adds a re-confirm line); the yearly one keeps the start year and every answer and floors the save

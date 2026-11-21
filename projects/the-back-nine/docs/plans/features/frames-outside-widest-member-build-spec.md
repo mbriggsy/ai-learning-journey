@@ -6,7 +6,7 @@ deepened: 2026-11-21
 artifact_contract: ce-unified-plan/v1
 product_contract_source: ce-plan-bootstrap
 execution: code
-receipt: "planned, deepened and checked"
+receipt: "planned, deepened, checked and read"
 ---
 
 # Frames Outside, Widest-Member Readings - Plan
@@ -118,7 +118,8 @@ The register owns these words: the composites entry's RULED bullet, CORRECTED bu
 - no assertion at 841;
 - no new `@media` prelude and no height written in one (the prelude bind in `scripts/__tests__/breakpoint-mirrors.test.ts`);
 - no plant keyed to Briggsy's real figures (the repo is public);
-- no engine-side fit lever, and no CSS-only reorder or sticky positioning offered as a seat.
+- no engine-side fit lever, and no CSS-only reorder or sticky positioning offered as a seat;
+- never plant, measure or brief a council at the engine's cap again, and never cap dollar entry (Briggsy's ceiling ruling's own ⚑ NEGATIVE; D7's "use it" stands).
 
 ### Deferred to Follow-Up Work
 
@@ -136,8 +137,8 @@ The register owns these words: the composites entry's RULED bullet, CORRECTED bu
 
   | axis | kind | widest member, and its source |
   |---|---|---|
-  | save box | CLOSED | the reserved box (first, dirty, saving and clean share one minimum height) over none. None renders only on a draft that cannot be saved (`deriveResultSave`). The failed state can run taller and is unmeasured |
-  | subordinate face | CLOSED | picked by measured height over the inline survivor card and the essentials-relief card above the closed survivor fold. The relief face renders when an essentials budget's reading differs from the full one (`floorRelief`), with its trim note on a fresh plan; `?seed=budget` carries it |
+  | save box | CLOSED | the reserved box (first, dirty, saving and clean share one minimum height) over none. None renders on a draft that cannot be saved, which is shorter, and on a read-only session (another tab holds the writer, `deriveResultSave`), which mounts the in-flow View-only banner above the frame instead: U1 reads that member against the reserved box. The failed state can run taller and is unmeasured |
+  | subordinate face | CLOSED, and coupled | the inline survivor card, or the essentials-relief card above the closed survivor fold (`floorRelief`: an essentials budget whose reading differs from the full one; its trim note on a fresh plan; `?seed=budget` carries it). Not independent of the other axes: a budget stops the spend lane, so a room frame with the relief face shows the figure-less room clause, never the reserve or a sized figure, and the fold hides X and Z. So each class is read as two whole combinations (U1), and the taller is its widest. Where a base cannot show the relief face (its essentials reading equals the full one), U1 records it and the inline combination stands |
   | survivor context form | CLOSED | the basis sentence plus the step-down sentence (the other forms are subsets) |
   | state clause inside the residual | CLOSED | picked by measured line count over Pennsylvania, North Carolina, Florida and the unpriced pair |
   | typical residual form | CLOSED | picked by measured line count over the both-people form and the one-person form (whose name axis is below) |
@@ -145,15 +146,17 @@ The register owns these words: the composites entry's RULED bullet, CORRECTED bu
   | trim clause form | CLOSED | picked by measured line count over the sized and unsized forms and the pending reserve. Its figures are the entered spending and a solved figure at most that, so six characters (`verdictSentence.ts`) |
   | Y, the couple's spending a month; the entered spending in the room and trim clauses | CEILINGED | six characters: the design ceiling (KTD3) |
   | X, the survivor's spending a month | CEILINGED | at most Y: the intake rule `survivor-ratio-ceiling` holds the share at 1 or under. The engine alone does not bound it |
-  | Z, the income step-down a month | CEILINGED | six characters: the design ceiling covers every monthly figure the Result shows, the step-down included (KTD3, the pilot's reading, A9). Intake caps no income stream, so the bound is the ruling's, not the code's |
+  | Z, the income step-down a month | CEILINGED only if ruled | six characters, if Briggsy rules that the ceiling covers the step-down (A9, whose answer gates U1). Derived from source, Z has no finite bound: its Social Security part is held by `pia-over-ceiling`, but intake caps no income stream. Without that ruling Z is OPEN, R1 cannot be met as written, and the plan is amended before U1 |
   | F, the room figure, settled or in the pending reserve | CEILINGED | seven characters: at most three times the entered spending (`SPEND_SOLVE_ROOM_CAP_MULTIPLE`, `reserveClauseFor`). The pending reserve always prints the full three times; the settled figure can print fewer |
-  | a typed name | CEILINGED | the name ceiling's characters, read at a real-looking 20-character name (KTD12, A7). It renders in the frame only in the one-person typical residual. The fallback "Your spouse" is shorter than the ceiling |
+  | a typed name | CEILINGED | the name ceiling's characters (KTD12), read at the name Briggsy's answer to A7 sets: a real-looking 20-character name, or 20 of the font's widest capital. It renders in the frame only in the one-person typical residual. The fallback "Your spouse" is shorter than the ceiling |
 
   The band column and the door row are not left-column axes, but both depend on the draft (the band's lattice on the balances, the doors on accounts, filing status and health pricing). Each widest plant keeps its base seed's accounts and filing so those stay the class's own.
 - KTD2. **Legal means intake-legal, engine-accepted and inside the ceiling.** A widest plant passes `validateDraft` with every rule's fields touched, passes `validateParams`, and prints no figure wider than KTD1 allows. `validateDraft` reports only violations on touched fields and the rule list is not exported, so the touched set is built by hand and named in the test: per person the retirement age, claim age, birth year and benefit base; the survivor share; the yearly spending and its entry-period confirmation; each person's Medicare extras figure; each account's contribution and employer-match fields; each income stream's survivor, taxable, exclusion and cost-of-living fields; the working-year cost's answer and its amount. Planted counter-cases prove the set reads each family (U1).
-- KTD3. **The design ceiling is Briggsy's, and it has one home.** Ruled 2026-11-21: the tool is for a household spending under $100,000 a month. The plan reads the ceiling as covering every monthly figure the Result shows (the spending, the survivor's spending and the income step-down), because the ruling's reason, a household that knows it needs the tool, bounds its income as much as its spending. That reading is the pilot's (A9). The app still accepts and computes any larger figure; above the ceiling it promises nothing about one frame. The ceiling is on the figure as shown: `formatPerMonth` rounds a monthly figure to $10, so the largest figure under the ceiling shows as 99,990, and an entered $99,995 or more shows as 100,000, seven characters, outside the promise. Every shown figure from $10,000 to $99,990 prints six characters in tabular lining numerals (`base.css`'s body rule), so one plant in that range reads the whole range's width. The ceiling is one exported constant, 100,000, beside `GATE_DAY` in `src/ui/devSeeds.ts`, re-exported by `e2e/reviewSurface.ts`, with a docblock that carries the ruling. Each widest figure is that constant less the $10 display step, formatted through `formatPerMonth`, and its expected character count is derived from it, never typed, so a moved ceiling reds the widest pins. Rejected alternative: the engine's cap (`ENGINE_MAX_DOLLAR`), which the correction ruled and Briggsy overrode: it describes a household the tool is not for.
+- KTD3. **The design ceiling is Briggsy's, and it has one home.** Ruled 2026-11-21: the tool is for a household spending under $100,000 a month. Whether the ceiling also covers the income step-down is put to Briggsy (A9), and his answer gates U1. The room figure is derived from the spending (at most three times it) and prints up to seven characters by design. The app still accepts and computes any larger figure; above the ceiling it promises nothing about one frame. The ceiling is on the figure as shown: `formatPerMonth` rounds a monthly figure to $10, so the largest figure under the ceiling shows as 99,990, and an entered $99,995 or more shows as 100,000, seven characters, outside the promise. Every shown figure from $10,000 to $99,990 prints six characters in tabular lining numerals (`base.css`'s body rule), so one plant in that range reads the whole range's width. The ceiling is one exported constant, 100,000, beside `GATE_DAY` in `src/ui/devSeeds.ts`, re-exported by `e2e/reviewSurface.ts`, with a docblock that carries the ruling. Each widest figure is that constant less the $10 display step, formatted through `formatPerMonth`, and its expected character count is derived from it, never typed, so a moved ceiling reds the widest pins. Rejected alternative: the engine's cap (`ENGINE_MAX_DOLLAR`), which the correction ruled and Briggsy overrode: it describes a household the tool is not for.
 - KTD4. **Every widest plant can be saved.** A draft that cannot be saved renders no save box, and the save box is a left-column row above the caveat, so an unsaveable plant measures a frame shorter than its class. B's and A's widest name both people. The unnamed-spouse fallback needs no plant: its sentence is the named one with a shorter name.
-- KTD5. **One record-only measuring describe reads everything first, on both platforms.** It follows the composites probe's shape: each arm drives its frame the way its asserting arm will, asserts the tier it expects, asserts identity (verdict word, direction, the residual's form, the widest strings on the page), asserts no fit, and prints one line by tag. It stays in the tree through U3, so run M2 re-reads every frame B's entry changes, and U4 deletes it. A's two candidate rungs are read inside it, on an unedited stylesheet: the exact scoped rules are injected right after navigation and before the final answer, so both room states are read under them; the baseline is a separate load with nothing injected. The injected rules carry the same `:has()` terms the real entries would, so they win by specificity exactly as a stylesheet entry would.
+- KTD5. **One record-only measuring describe reads everything first, on both platforms.** It follows the composites probe's shape: each arm drives its frame the way its asserting arm will, asserts the tier it expects, asserts identity (verdict word, direction, the residual's form, the widest strings on the page), asserts no fit, and prints one line by tag. It stays in the tree through U3, so run M2 re-reads every frame B's entry changes, and U4 deletes it. A's two candidate rungs are read inside it, on an unedited stylesheet: the exact scoped rules are injected right after navigation and before the final answer, so both room states are read under them; the baseline is a separate load with nothing injected. The injected rules carry the same `:has()` terms the real entries would, so they win by specificity exactly as a stylesheet entry would. Both sit inside the short tier's `@media` prelude, keyed `.confidence-reveal[data-twopane]:has(.cs-magnitude[data-direction='room']):has(.cs-medicare-residual--typical)`, with no echo term and no state marker (ruling (3)):
+  - **the room leading rule** (L3 for room + typical): that key on `.survivor__eyebrow`, `.survivor__context` and `.survivor__stepdown` sets `line-height: var(--leading-tight)`, KTD7's entry with `room` in place of `rethink`;
+  - **the room size borrow** (rung 3 for room + typical): that key on `.survivor__context` and `.survivor__context .survivor__stepdown` sets `font-size: var(--text-sm)`, rung 3's rule in `survivor.css` with this key in place of its own.
 - KTD6. **Both room states are read, and the pending one is proven caught.** The gate measures right after the final answer, while the room clause can still be pending, so the reserved box is a law state. A room arm's first read takes the caveat bottom and `.cs-magnitude`'s `data-spend` in one evaluation and requires `pending` with the reserve node present. A first read that is already settled leaves the pending reading unknown. The settled read follows once `data-spend` leaves `pending`. The taller of the two is the frame's reading.
 - KTD7. **B's leading entry, and the test that keeps it.** The entry sits inside `survivor.css`'s existing short-tier block, after the echo entry: the reveal carrying `.cs-magnitude[data-direction='rethink']` and `.cs-medicare-residual--typical` sets the survivor eyebrow, context and step-down to `--leading-tight`. Its step-down selector is the bare one, as the two existing leading entries use. It has no echo term and no state marker. It newly tightens `?seed=failing`, `failingtypical`, `pafailingtypical` and B's widest plant. It re-matches the two echo frames the echo entry already tightens, whose delta is zero by construction and counts as no evidence.
   - **The test:** `?seed=pafailingtypical`, at today's figures, read from the edited tree, inside 731 on Windows and on ubuntu. This is the correction's recorded flip for the minimalist's dissent. B's widest plant is not the test: it joins the seat set on its own reading.
@@ -172,7 +175,7 @@ The register owns these words: the composites entry's RULED bullet, CORRECTED bu
   | `trim`, `room`, `on-the-line` | no | any | snug |
 
   Above the tier every cell reads body leading.
-- KTD12. **The name ceiling is 20 characters, enforced in the field.** `NameField` stops accepting input at the ceiling, and one exported constant carries the number. A name is not a figure the math needs, so capping it costs the household nothing. The widest plants name one person with a real-looking 20-character name in title case, committed once, and that person alone is on typical extras, so the name renders in the residual. Proportional letters differ in width, so each reading is labelled with the name it used. A 20-character name of unusually wide letters (all capitals, say) can run wider than the plant's: like a figure shown above 99,990, the field accepts it and it sits beyond the promise (A7). U5 records it with what lies beyond the ceiling.
+- KTD12. **The name ceiling is 20 characters, enforced in the field.** `NameField` stops accepting input at the ceiling, and one exported constant carries the number. A name is not a figure the math needs, so capping it costs the household nothing. The widest plants name one person with a 20-character name, committed once, and that person alone is on typical extras, so the name renders in the residual. Proportional letters differ in width, so which 20 characters is Briggsy's call (A7), answered before U1 mints: a real-looking name in title case (then a name of unusually wide letters is accepted and sits beyond the promise, and U5 records it with what lies beyond the ceiling), or 20 of the font's widest capital (then U1 measures each capital's width at `REAL` and plants 20 of the widest). Each reading is labelled with the name it used.
 
 ### High-Level Technical Design
 
@@ -220,11 +223,13 @@ The plant catalog. Every figure comes from the real producers and is re-run befo
 
 | plant | class | what it is | predicted at `REAL` |
 |---|---|---|---|
-| B's widest | B | the Pennsylvania already-short base, its accounts and filing kept; one person with a 20-character name, alone on typical extras; spending, the survivor's spending and the income step-down each at six characters; the taller subordinate face U1 reads | outside |
-| A's widest | A | the surplus base in Pennsylvania, its accounts and filing kept; the same naming and extras; spending at six characters and at least a third of the ceiling, so the pending reserve's room figure (three times the entered spending) prints seven; the taller subordinate face U1 reads | outside, in both states |
+| B's widest | B | the already-short base, its accounts and filing kept; the state clause and residual form U1 step 1 picks (predicted: Pennsylvania, one person with a 20-character name alone on typical extras); spending, the survivor's spending and the income step-down each at six characters; the taller combination U1 reads (KTD1's subordinate face) | outside |
+| A's widest | A | the surplus base, its accounts and filing kept; the state clause and residual form U1 step 1 picks (predicted as for B); spending at six characters and at least a third of the ceiling; the taller of its two combinations: the inline card with the pending reserve's room figure (three times the entered spending) at seven characters, or the relief face with the figure-less room clause | outside, in both states |
 | the Pennsylvania room plant | A | `surplustypical` with Pennsylvania, today's figures | outside: about 763.9 unedited (743.1 plus 20.8) and about 744.8 with both room rungs (724.0 plus 20.8), by arithmetic |
 
 Research showed that untaxed income streams keep a high-spending household over-funded while taxable ones tip it to already-short, and that the step-down's median falls back to the Social Security drop unless both people carry a stream. U1 uses that to reach each direction.
+
+The first ruling asked for a Pennsylvania and a North Carolina rethink + typical plant. The correction measures each closed axis at its most-lines member instead, so B's widest carries whichever state clause U1 step 1 reads with the most lines, and the other clauses are read as rows (U6).
 
 ### Assumptions
 
@@ -234,20 +239,23 @@ Research showed that untaxed income streams keep a high-spending household over-
 - A4. The predictions, written before any run: B's widest outside by about one line; A's widest outside in both states; the Pennsylvania room plant outside; `pafailingtypical` with the scoped entry inside by less than one line (727.3 on Windows from an unscoped append, which is an estimate, not a reading).
 - A5. No surface after the Result lets a survivor share above 1 or a benefit base above the intake ceiling reach a real save. The assumption panel's header says its survivor-share edit is checked against the sanity rules on the patched draft and refused. U1 confirms it for both fields by reading the panel's commit path, and files a register entry if either slips through.
 - A6. Above the tier, an overflowing frame reads the same caveat bottom at 841, at 900 and at `SHOWCASE`, because every width from 1280 to 1871 renders the same capped frame. Derived from Windows readings; U6's print confirms it.
-- A7. The name ceiling's number (20) and its enforcement in the field are the planner's proposal under Briggsy's ruling, put to him on 2026-11-21 with no objection when this was written. A different number changes one constant and one plant name. Reading the name axis at a real-looking 20-character name, never at 20 of the font's widest letter, is the pilot's reading of the same ruling ("we don't need to solve for extremes like that"), put to him on 2026-11-21 after the check and not waited on. If he wants the widest letters instead, U1 measures each capital's width at `REAL` and both widest plants carry 20 of the widest.
+- A7. The name ceiling's number (20) and its enforcement in the field are the planner's proposal under Briggsy's ruling, put to him on 2026-11-21; he had not answered when this was written. A different number changes one constant and one plant name. Which 20 characters the plants carry (a real-looking name, recommended under his "we don't need to solve for extremes like that", or 20 of the font's widest capital) was put to him the same day after the check. His answer gates U1 (KTD12).
 - A8. Scope taken without asking, since confirmation was off: the widest plants are printed at `REAL`, `LENOVO_FULL` and `SHOWCASE`; the asserted classes get a Windows-only six-character reading, not committed plants.
-- A9. The design ceiling covers every monthly figure the Result shows, the income step-down included (KTD3). Briggsy's ruling names spending, and intake caps no income stream, so this reading is the pilot's, put to him on 2026-11-21 after the check and not waited on. If he rules it covers spending only, the Z axis is OPEN and the plan is amended before U1 mints a plant.
+- A9. Whether the design ceiling also covers the income step-down (KTD1's Z row) was put to Briggsy on 2026-11-21 after the check, recommended yes: a household losing $100,000 a month of income at the first death is the extreme his ruling set aside. His ruling names spending, and intake caps no income stream, so his answer gates U1. If he rules it covers spending only, Z is OPEN and the plan is amended before U1 mints a plant.
 
 ### Open Questions
 
 None blocks the build. Ruled, never re-ask: **the ceiling. ⚑ RULED by Briggsy 2026-11-21: "let's name a ceiling - we don't need to solve for extremes like that."** (KTD3.)
 
-Four go to Briggsy's digest in U5, each a ⚑, none waited on:
+Two were put to Briggsy on 2026-11-21 after the check, and **U1 waits on both answers** (U7 does not):
+
+- **The ceiling's reach to income** (A9): does the ceiling also cover the income step-down? Recommended: yes.
+- **Which 20-character name the plants carry** (A7): a real-looking name, or 20 of the font's widest capital? Recommended: a real-looking name.
+
+Two go to Briggsy's digest in U5, each a ⚑, neither waited on:
 
 - **The tighter survivor leading on "Already short" frames that answered "not sure"** (`?seed=failing`, `failingtypical`, `pafailingtypical`). Walk 10 reads it. If he reads it as worse, KTD7's revert runs.
 - **"More than covered" with the caveat out of view is reachable today** on a fresh frame. It is the reason the seat council is next.
-- **The ceiling's reach to income** (A9): the ceiling read as covering every monthly figure the Result shows, the income step-down included. Recommended: yes.
-- **The name read at a real-looking name** (A7): never 20 of the font's widest letter. Recommended: yes.
 
 ### Risks
 
@@ -280,7 +288,7 @@ Four go to Briggsy's digest in U5, each a ⚑, none waited on:
 - `src/intake/fields.tsx`: `NameField` stops at the name ceiling.
 - `src/intake/__tests__/`: the field's test.
 - `e2e/reviewSurface.ts`: re-exports both.
-- `docs/product.md`: one line beside D7: the one-frame promise holds while every monthly figure the Result shows is under $100,000 and the name is up to 20 characters of ordinary letters; a larger figure is still used and computed.
+- `docs/product.md`: one line beside D7, in the ruling's words only: the one-frame promise holds for spending under $100,000 a month (a figure shown as 99,990 or less) and names up to 20 characters; a larger figure is still used and computed. Briggsy's answers to A7 and A9 join that line in the commit after he gives them, never before.
 - `README.md`, `docs/roadmap.md`: the test count, read from `pnpm verify:doc-stats`.
 
 **Approach:**
@@ -303,7 +311,7 @@ Four go to Briggsy's digest in U5, each a ⚑, none waited on:
 
 **Requirements:** R1, R2, R4, R5 (KTD1, KTD2, KTD3, KTD4, KTD12).
 
-**Dependencies:** U7.
+**Dependencies:** U7, and Briggsy's answers to A7 and A9 (Open Questions). Without them U1 does not start.
 
 **Files:**
 - `src/ui/devSeeds.ts`: three seeds in `DEV_SEEDS` (B's widest, A's widest, the Pennsylvania room plant), each docblock naming its class, its extras form and what it is for.
@@ -313,9 +321,16 @@ Four go to Briggsy's digest in U5, each a ⚑, none waited on:
 - The composites record folder's `README.md` (machine-local, Appendix): the catalog table and the six-character reading.
 
 **Approach:**
-1. Read the closed axes on Windows, from a scratch probe against a dev server, with temporary seeds reverted by snapshot and byte comparison. For each catalog in KTD1, record each member's rendered line count at `REAL` and pick the member with the most. For the subordinate face, read both faces on B's base and on A's base, each with a temporary essentials-budget twin whose essentials reading differs from the full one, and pick the taller by measured height.
-2. In the same probe, read each asserted class once at six characters: the spine seeds, the fresh rung-3 seeds outside classes A and B (`failingentered`, `offtracktypical`), the yearly returns and the record plants, each with its dollar inputs scaled so its monthly figures print six characters. Scaling can move a household across a tax or surcharge line, so re-tune each scaled twin until it keeps its base's verdict, direction, residual form and echo, and record any twin that cannot. Record each caveat bottom, and write each twin's inputs to the record folder so the seat council can plant it again. This is a Windows-only reading of the households the tool is for; it commits nothing. A twin that reads outside 731 marks its class NOT met in the register's composites entry and joins the seat question (U5), labelled "Windows only, temporary seed, ubuntu owed".
-3. Mint the three seeds as spreads of their bases, changing only the fields the catalog names (each widest plant carries the subordinate face step 1 picked), and re-run each through the real builder, engine and solve before pinning.
+1. Read the closed axes on Windows, from a scratch probe against a dev server, with temporary seeds reverted by snapshot and byte comparison. The probe needs its own Playwright config (`playwright.fit.config.ts` collects only its three specs): the b9-9 outside probe's shape (machine-local, Appendix). Read every member at six-character figures, in the widest plant's own context:
+   1. For each catalog in KTD1, record each member's rendered line count at `REAL` and pick the member with the most.
+   2. Read each class's two combinations (KTD1's subordinate face): the inline card with the widest clause form, and the relief face (a temporary essentials-budget twin whose essentials reading differs from the full one) with its folded card and, on a room frame, the figure-less clause. Pick the taller by caveat bottom.
+   3. Read the read-only member: the picked combination with a second tab holding the writer, so the View-only banner sits above the frame and the save box is gone, against the same frame with its save box.
+2. In the same probe, read each asserted class once at six-character spending:
+   1. The population is every frame the gate asserts at `REAL` today outside classes A, B and C: the five `SPINE_SEEDS`, the `pa` and `fl` priced spine frames, `failingentered`, `offtracktypical`, the yearly-return vaults the gate asserts, and the record plants `rec`, `recold`, `yearrec`, `recpa` and `yearparec`. List them once from the spec before the probe runs.
+   2. Scale each one's spending to six characters and every other dollar input (balances, income streams) by the same factor, so the household keeps its shape. A step-down that rests on Social Security alone stays at five characters (the benefit base is capped); record each figure's characters as reached. A vault plant's twin is a temporary `AGED_PLANTS` entry over the scaled base, with its base's doctor and view day.
+   3. If a twin leaves its class (verdict, direction, residual form or echo), try one other factor. If it still leaves, record "cannot be held in class at six characters" and move on.
+   4. Record each caveat bottom, and write each twin's inputs to the record folder so the seat council can plant it again. This is a Windows-only reading of the households the tool is for; it commits nothing. A twin that reads outside 731 marks its class NOT met in the register's composites entry and joins the seat question (U5), labelled "Windows only, temporary seed, ubuntu owed".
+3. Mint the three seeds as spreads of their bases, changing only the fields step 1's picks name (every closed-axis member and the combination it picked), and re-run each through the real builder, engine and solve before pinning. A read-only member that read taller is never planted (it needs two tabs): U5 names it in the seat question as a Windows-only member.
 4. Add the legality pins with KTD2's named touched set, and the census rows. `devSeeds.ts` and its test are CRLF: edit with the Edit tool.
 5. Confirm A5 by reading the assumption panel's commit path for the survivor share and for any benefit-base edit.
 
@@ -326,8 +341,8 @@ Four go to Briggsy's digest in U5, each a ⚑, none waited on:
 **Test scenarios:**
 - Each new seed (B's widest, A's widest and the Pennsylvania room plant) passes the sanity rules over the named touched set, the engine accepts it, it sits inside the ceiling, and it saves.
 - B's widest reads already-failing and `rethink`; A's widest and the Pennsylvania room plant read over-funded and `room`.
-- Each widest seed renders the subordinate face step 1 picked.
-- Each widest seed's printed figures have the character counts the ceiling constant derives (six for every monthly figure, the step-down included; seven for A's pending reserve figure, three times the entered spending through `reserveClauseFor`), computed through the shipped formatters.
+- Each widest seed renders the combination step 1 picked.
+- Each widest seed's shown figures have the character counts the ceiling constant derives (six for every monthly figure the picked combination shows; seven for A's pending reserve figure, three times the entered spending through `reserveClauseFor`, when A's widest carries the inline combination), computed through the shipped formatters.
 - Counter-cases on a copy of B's widest, each returning exactly its own rule: a survivor share of 2; a benefit base one dollar above the intake ceiling; an income stream's taxable share of 1.5; the same seed with the spending-period confirmation left out of the touched set.
 - A copy of B's widest with spending above the ceiling fails the ceiling pin, and so does a copy whose step-down shows above it.
 - Each widest seed differs from its base only in the named fields, and each named field does differ.
@@ -344,7 +359,7 @@ Four go to Briggsy's digest in U5, each a ⚑, none waited on:
 
 **Files:**
 - `e2e/reviewSurface.ts`: `LENOVO_FULL`, the tall edge, the size table.
-- `e2e/vertical-fit.spec.ts`: the content-only walk in `frameReport`; offender bottoms kept unrounded at their source; one print helper carrying the attempt and unrounded values, used by `assertFrameFitsHoldingCaveat`'s print and replacing the print half of `assertFullFitHeld`; the header's two-laws note.
+- `e2e/vertical-fit.spec.ts`: the content-only walk in `frameReport`; offender bottoms kept unrounded at their source; one print helper carrying the attempt and unrounded values, used by `assertFrameFitsHoldingCaveat`'s print and replacing the print half of `assertFullFitHeld`. Every held full-fit print names the doors' bottom and the lowest content bottom whether or not anything sits below the fold: after the content walk the two held `SHOWCASE` frames have no offender, and today's print would say only "no element below the fold". The header's two-laws note.
 - `scripts/__tests__/breakpoint-mirrors.test.ts`: KTD9's binding arm.
 - `README.md`, `docs/roadmap.md`: the test count.
 
@@ -380,7 +395,7 @@ Four go to Briggsy's digest in U5, each a ⚑, none waited on:
    - B's widest, A's widest and the Pennsylvania room plant at `REAL`, `LENOVO_FULL` and `SHOWCASE`, each room frame in both states (KTD6);
    - A's widest, the Pennsylvania room plant and `surplustypical` at `REAL` again under each injected candidate (the room leading rule, the room size borrow, both), in both states, each on its own load (KTD5);
    - one row per closed-axis member a committed seed carries: the state clauses on `pa`, `nc`, `fl` and `elsewhere`; the both-people residual on `pafailingtypical`; the room forms on `surplus` and `steer`; the relief face on `budget`;
-   - every frame the 900 arm will assert in U4: the spine seeds, the fresh rung-3 seeds, the yearly returns, the record plants (their standing line printed);
+   - every frame the 900 arm will assert in U4: the five `SPINE_SEEDS`, the `pa` and `fl` priced spine frames (U4's `assertPricedSpineFrame` arms), the fresh rung-3 seeds, the yearly returns, the record plants (their standing line printed);
    - the tall echo set at the tall edge: `yearsurplus`, `yearpafailing` and the record plants, plus the Pennsylvania room plant, whose arm passes no echo.
 2. Run `pnpm verify:fit` alone on Windows and keep the lines. Push alone. Read run M1's verify log by tag, final attempts only.
 3. Record the table (frame, size, state, Windows, ubuntu, run id) in the record folder and in the next commit's message. Apply the stop conditions.
@@ -391,7 +406,7 @@ Four go to Briggsy's digest in U5, each a ⚑, none waited on:
 
 **Test scenarios:**
 - Each measuring arm throws on a missing element and fails on a non-finite value.
-- Each widest arm compares the page with strings whose character counts come from the ceiling constant, never from the seed. Planted on the expectation side (the constant divided by ten), the arm reds on the widest-string line, and the household's verdict is unchanged.
+- Each widest arm compares the page with strings whose character counts come from the ceiling constant, never from the seed, and only the strings its combination shows (a relief combination's fold hides X and Z). Planted on the expectation side (the constant divided by ten), the arm reds on the widest-string line, and the household's verdict is unchanged.
 - The pending reserve's figure is read from the reserve node's text, which is hidden from a visible-text locator.
 - A room arm whose first read is not `pending` reports the pending reading as unknown.
 - Each `LENOVO_FULL` and tall-edge arm reds on its tier assertion when its viewport height is planted at 731.
@@ -426,14 +441,14 @@ Four go to Briggsy's digest in U5, each a ⚑, none waited on:
 
 **Patterns to follow:** the echo entry and its docblock; rung 3's `register` flag and its derived key; commits `52dd3e90` and `24f5dcd0` (a rung pushed alone and re-read).
 
-**Test scenarios:** each planted fault is predicted first, with the filter it runs under and the chart-text arms that filter also collects; each kill is read on its own failure line.
+**Test scenarios:** each planted fault is predicted first, with the filter it runs under and the chart-text arms that filter also collects; each kill is read on its own failure line. Each kill set is read off step 2's dry-run marker list (every caller's direction, echo and typical residual, at each size it runs), never from memory. The predictions below are the reading so far.
 - `failing`, `failingtypical` and `pafailingtypical` read tight survivor leading at `REAL` and `TIER`, and body leading at `SHOWCASE`.
 - `failingentered` (rethink, entered extras), `offtracktypical` (trim, typical), `patypical` (on the line, typical) and `surplustypical` (room, typical) still read snug.
 - Planted fault: deleting the entry (the file read back to confirm the selector is gone) reds the leading expectation of the three fresh frames at `REAL` and `TIER` on any platform, and cannot red `SHOWCASE`, `LENOVO_FULL` or an echo frame.
 - Planted fault: the entry without its typical term reds `failingentered`'s leading at `REAL` and `TIER`; its fit stays green; `yearfailingentered` stays green.
-- Planted fault: the entry moved outside the short-tier block reds the three fresh frames' `SHOWCASE` leading (body expected).
-- Planted fault: the entry without its `rethink` term reds `surplustypical`, `offtracktypical` and `patypical` at `REAL` and `TIER`.
-- Planted fault: the table ignoring the typical marker reds every caller the dry run lists as rethink with no echo and no typical residual, at every size.
+- Planted fault: the entry moved outside the short-tier block reds the three fresh frames' `SHOWCASE` leading (body expected), and `?vault=yearfailing`'s tall-side arm (rethink, typical and echo, body expected at `SHOWCASE`).
+- Planted fault: the entry without its `rethink` term reds `surplustypical`, `offtracktypical`, `patypical` and `?seed=budget` (a typical frame) at `REAL` and `TIER`, and `?vault=recpa` (a record plant over `patypical`, no echo) at `REAL`.
+- Planted fault: the table ignoring the typical marker reds every caller the dry run lists as rethink with no echo and no typical residual, at `REAL` and `TIER` only (above the tier every cell reads body).
 
 **Verification:** `pafailingtypical`'s caveat printed inside 731 by run M2 on ubuntu and by the local run on Windows, or the revert pushed and green.
 
@@ -486,15 +501,15 @@ Four go to Briggsy's digest in U5, each a ⚑, none waited on:
 **Files:**
 - `docs/backlog.md`:
   - the composites entry: prescription (3) marked built with the readings table and each class's status;
-  - prescription (4) rewritten once: every member (the fresh room frame marked reachable today, the Pennsylvania room plant, A's widest, both class C frames, B's widest, `pafailingtypical` if the entry was not kept, and every asserted-class twin U1 read outside at six characters, labelled "Windows only, temporary seed, ubuntu owed", with its inputs from the record folder), each marked fresh or saved; the acceptance test (the widest arms on both platforms in both room states); the `SHOWCASE` door reading for the widest plants if they pass 917;
+  - prescription (4) rewritten once: every member (the fresh room frame marked reachable today, the Pennsylvania room plant, A's widest, both class C frames, B's widest, `pafailingtypical` if the entry was not kept, every asserted-class twin U1 read outside at six characters, labelled "Windows only, temporary seed, ubuntu owed", with its inputs from the record folder, and the read-only member if U1 read it taller), each marked fresh or saved; the acceptance test (the widest arms on both platforms in both room states); the `SHOWCASE` door reading for the widest plants if they pass 917;
   - the DUE line: the fresh frames are not bounded by a first save;
-  - new entries, each after reading the register for it: overflow-wrap; six-character plants owed for the asserted classes, with U1's Windows reading; the save box's failed state and the survivor-short room form as unmeasured members; the 841 to 916 band as unasserted outside the 900 arm (841 printed only); an empty-string name rendering a leading dash; a restored vault carrying a survivor share above 1 (append if an entry exists); one entry listing what sits beyond the ceiling and is not built (Scope Boundaries), including a monthly figure entered at $99,995 or more (shown as 100,000) and a 20-character name of unusually wide letters;
+  - new entries, each after reading the register for it: overflow-wrap; six-character plants owed for the asserted classes, with U1's Windows reading; the save box's failed state and the survivor-short room form as unmeasured members; the 841 to 916 band as unasserted outside the 900 arm (841 printed only); an empty-string name rendering a leading dash; a restored vault carrying a survivor share above 1 (append if an entry exists); one entry listing what sits beyond the ceiling and is not built (Scope Boundaries), including a monthly figure entered at $99,995 or more (shown as 100,000) and, if Briggsy ruled the plants carry a real-looking name (A7), a 20-character name of unusually wide letters;
   - the step-down attribution entry: this build's sighting appended.
 - `docs/landmines.md`: the derived leading table beside rung 3's key, if U3 kept B's entry; the content walk; the rule that every earlier CI step must be green for a measuring commit to measure.
 - `docs/roadmap.md`: the "Vertical fit + chart text" gate row gains the content walk, the 900 arm and the 841 print.
 - `docs/council-log.md`: both rows' action cells turn to the outcome, with the ceiling ruling and the ⚑ for `failing`, worded as "Caddie walk owed (walk 10's watch line); then awaiting his read". The session that runs walk 10 rewrites it.
 - `src/ui/styles/confidence.css`: the 841 scope note amended to name the 900 arm and the 841 print (the file is CRLF).
-- `TODO.md`: START HERE moves to the seat council; walk 10's targets gain the new plants; the digest gains the four ⚑ items (Open Questions), minus any Briggsy has answered by then.
+- `TODO.md`: START HERE moves to this build's whole-file review (with an adversary, every finding verified), then the seat council, keeping the rest of the ranked queue in its order; walk 10's targets gain the new plants; the digest gains the two ⚑ items (Open Questions).
 - The composites record folder's `README.md` (machine-local).
 
 **Test expectation:** none -- docs only. `pnpm verify:doc-stats` is the gate.
@@ -554,3 +569,24 @@ The Pennsylvania clause adds 20.8 px to a frame's residual, which is where the P
 ### Where the evidence lives (machine-local, best effort)
 
 `C:\Users\brigg\.claude\projects\C--users-brigg-ai-learning-journey-projects-the-back-nine\b9-repoint\composites\`: both councils' full outputs, the repo research dossier, the b9-9 outside probe and its log, the b9-8 mutant runner and its predictions, and `frames-outside-plan-research\` (this plan's research and deepening findings). Research there that mints households at the engine's cap predates the ceiling ruling and is superseded by KTD3. A missing file blocks nothing: the register's composites entry carries the rulings and the numbers.
+
+---
+
+## Minor faults from the blind readers (listed, not folded)
+
+The three readers (2026-11-21, workflow `wf_3fdd59c9-f09`) graded these `minor`: worth fixing, harming nothing if the builder misses them. Each was checked against the code. The builder takes them in the unit they touch.
+
+1. **U4, lint.** `eslint .` lints `e2e/` with `no-unused-vars` as an error, and lint runs before `verify:fit` in CI. If both `SHOWCASE` arms return to the full fit, `assertFullFitHeld` loses its last caller, and deleting the measuring describe can orphan its helpers. Delete each in the same commit.
+2. **Verification Contract, citations.** The re-anchor is the project's whole procedure (`docs/landmines.md`'s citations section): a dry run, `scripts/check-reanchor-moves.mjs`, restoring the frozen records it moves (`e2e/held/fit-24px-measurements.md`, the council log, insight 136), then `scripts/check-citation-pairs.mjs`. "Once per pushed commit" there and "inside each commit" in the Risks table mean the same thing: last, inside every commit that moves cited lines.
+3. **Execution profile, pushes.** U7 and U1 are never said to be pushed. Push each alone and read it green before U2, so U2's run carries the gate change alone. U2 uses none of U1's seeds; the order stands only because U6 needs both.
+4. **KTD9, the size table.** The tall edge is 1440×841 at `REAL_DPR`. The table covers the two-pane laptop sizes only (`REAL`, `TIER`, `LENOVO_FULL`, `SHOWCASE`, the tall edge); the phone sizes carry no density tier. U2 adds the table and U4 rewires the loops to it.
+5. **U7, the shared home.** The name ceiling gets a new module of its own in `src/shared` (`incomeBounds.ts` is the precedent for the layer, but its subject is income).
+6. **Problem Frame, the spending range.** The gate's plants spend $5,000 to $8,500 a month (`surplus` and `surplustypical` $5,000, `budget` $5,470, `borderline` $5,970, `offtracktypical` $8,500), not $6,000 to $8,000. Every one still prints five characters, so the finding stands.
+7. **KTD7, the minimalist's flip.** The correction's dissent carries a third trigger: the entry also goes "if the seat council rules before this build is pushed".
+8. **U6, the member rows.** U1 picks each closed-axis member in the widest plant's own paragraph; U6's rows read the members on other seeds (the state clauses on `pa`, `nc`, `fl`, `elsewhere`, with entered extras). So the stop condition on a picked member compares different paragraphs. A row read on ubuntu is a ranking check, not the pick itself.
+9. **U1, the registration sites.** The Pennsylvania room plant is a "not sure" seed with one changed field, so it joins `devSeeds.test.ts`'s `TYPICAL` list (its codec round-trip and staleness-clock arms). The registry-iterating suites the dossier names (`memoryModel.test.ts`, `workingYearQuote.test.ts`, `intakeMap.test.ts`) pass the new seeds unchanged but run once more per seed.
+10. **U6, the single-rung reads.** The ruling and the stop condition need only both rungs on, on A's widest and the Pennsylvania room plant. The single-rung reads and the `surplustypical` reads serve only the unpredicted amendment path.
+11. **U6 and U3, proof on a thrown-away tool.** The measuring describe's own planted faults (the tier planted at 731, the constant divided by ten, the post-removal baseline) run on code U4 deletes, and U3 and U4 both run the entry-deletion fault. The computed-value check on the injected rules is the one that earns its place (A2).
+12. **U5, the overflow-wrap entry.** It should say why it was ordered (a figure at the engine's cap is one unbreakable 14-glyph token) and that Briggsy's ceiling puts that trigger beyond the promise, so it reads no more urgent than the truth.
+13. **U5, prescription (4).** Add the members and the acceptance test to it; never rewrite it. It carries Briggsy's own words ("I don't think RightCapital has this challenge…") and the first ruling's seat constraints (a DOM move, the same seat on every two-pane frame, one mount, `aria-describedby` kept, his ruling from 1440×731 previews).
+14. **Goal Capsule, the ACA instant.** Everything must be pushed before 2026-12-12 00:00 UTC, U5's docs commit included: after the instant its CI reds at `verify:aca`, and the Definition of Done needs CI green at the head.

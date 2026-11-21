@@ -2721,7 +2721,7 @@ In the committed frame, taxable income is $0 in every window year at $0–$5k of
       - contract #4 (`plans/4-recommendation.md:47`);
       - plan 4's Unit 15 text (`:159`, `:172`: "the budget's essentials lines … are the floor");
       - `model.ts:1081` ("the Tier-1 floor statistic" as filed; re-worded 2026-10-12 to "the essentials-floor statistic: reported … never ranked").
-    - The shipped Tier 1 reads full-track `survivalFraction` (`evaluate.ts:117`; no solver file reads `distribution.floor`). That is what R21's own same-metric clause requires, since the headline reads full-track (`confidence.ts:154-155`; `model.ts:1098-1104`). The U9a council ruled the same way (`docs/council-log.md:57`).
+    - The shipped Tier 1 reads full-track `survivalFraction` (`evaluate.ts:117`; no solver file reads `distribution.floor`). That is what R21's own same-metric clause requires, since the headline reads full-track (`confidence.ts:154-155`; `model.ts:1098-1104`). The U9a council ruled the same way (`docs/council-log.md:58`).
     - Without a budget the two coincide. On `budget` they crown different candidates, and which essentials reading applies decides the direction.
   - **What survived refutation.**
     - Every count, gap, z, membership set and overlap above, reproduced cell for cell by three refuters' own harnesses. Two full 61-candidate A sweeps reproduced each other exactly.

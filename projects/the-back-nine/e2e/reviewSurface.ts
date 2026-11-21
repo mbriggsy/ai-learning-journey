@@ -30,6 +30,45 @@ export const TIER = { width: 1280, height: 800 }
  *  every density rung's tall side is pinned. A TEST arm, not any screen of his: 1871×917 was the
  *  Dell's screen, and his Lenovo's full screen (1440×900 @ 2) also leaves the short tier off. */
 export const SHOWCASE = { width: 1871, height: 917 }
+/** His Lenovo's FULL screen: 1440×900 CSS px @ DPR 2 (`REAL_DPR`), the window `REAL` grows to with the
+ *  browser's chrome gone. Above the short density tier, so it renders the tall rhythm. Its law is the
+ *  degrade contract `REAL` carries, never `SHOWCASE`'s full fit (council `wf_9c0bb7ea-938`, 2026-11-21:
+ *  its full-fit distance printed, each frame asserted there only after both platforms have read it). */
+export const LENOVO_FULL = { width: 1440, height: 900 }
+/** The TALL EDGE: the first height above the short density tier (`--bp-laptop-short` + 1), at his width
+ *  and DPR. Printed on the tall frames, NEVER asserted (council `wf_9c0bb7ea-938`: `?vault=yearsurplus`'s
+ *  caveat at 841.5 against an 841 px window passes the walk's half-pixel slack by 0.0 px, which is noise,
+ *  not a pass). scripts/__tests__/breakpoint-mirrors.test.ts binds it to the token. */
+export const TALL_EDGE = { width: 1440, height: 841 }
+
+/** A two-pane laptop size the fit gate measures. */
+export type LaptopSizeName = 'REAL' | 'TIER' | 'LENOVO_FULL' | 'SHOWCASE' | 'TALL_EDGE'
+export type LaptopSize = {
+  readonly viewport: { readonly width: number; readonly height: number }
+  readonly deviceScaleFactor: number
+  /** Which side of `--bp-laptop-short` the height falls on: `short` at or under it, `tall` above. */
+  readonly density: 'short' | 'tall'
+  /** What a frame is held to at this size. `degrade`: everything protected inside the frame, the doors
+   *  (and an arm's named sanctioned tail) may sit below it. `full`: everything inside, the doors
+   *  included. `print`: measured and printed, never asserted. */
+  readonly law: 'degrade' | 'full' | 'print'
+}
+/**
+ * THE SIZE TABLE (the frames-outside plan's KTD9): every two-pane laptop size, by name, with its viewport,
+ * its DPR, its density tier and its law. A fit loop reads its tier and its law from here, never from a
+ * literal at the call site; the doors an arm sanctions, a held frame's status and a record plant's standing
+ * line stay per frame, at the call site. The phone sizes carry no density tier and are not in it.
+ * scripts/__tests__/breakpoint-mirrors.test.ts binds every row's density to `--bp-laptop-short` and every
+ * width to the two-pane seam. Why `SHOWCASE` and `LENOVO_FULL` carry different laws is said once, in
+ * e2e/vertical-fit.spec.ts's header.
+ */
+export const LAPTOP_SIZES: { readonly [K in LaptopSizeName]: LaptopSize } = {
+  REAL: { viewport: REAL, deviceScaleFactor: REAL_DPR, density: 'short', law: 'degrade' },
+  TIER: { viewport: TIER, deviceScaleFactor: 1, density: 'short', law: 'degrade' },
+  LENOVO_FULL: { viewport: LENOVO_FULL, deviceScaleFactor: REAL_DPR, density: 'tall', law: 'degrade' },
+  SHOWCASE: { viewport: SHOWCASE, deviceScaleFactor: 1, density: 'tall', law: 'full' },
+  TALL_EDGE: { viewport: TALL_EDGE, deviceScaleFactor: REAL_DPR, density: 'tall', law: 'print' },
+}
 /** The two-pane breakpoint in REM, mirroring `--bp-laptop` in src/ui/styles/tokens.css (@media
  *  cannot read a custom property, so every @media rule re-states it as a literal too).
  *  scripts/__tests__/breakpoint-mirrors.test.ts pins THIS constant and every CSS/matchMedia mirror

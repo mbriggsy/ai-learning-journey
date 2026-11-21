@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
-import { BP_LAPTOP_REM, BROWSER_DEFAULT_PX, FLOOR, REAL } from '../../e2e/reviewSurface'
+import { BP_LAPTOP_REM, BROWSER_DEFAULT_PX, FLOOR, LAPTOP_SIZES, REAL, TALL_EDGE } from '../../e2e/reviewSurface'
 
 /*
  * scripts/__tests__/breakpoint-mirrors.test.ts — the `--bp-laptop` SOURCE-BIND.
@@ -360,5 +360,59 @@ describe('the short laptop tier prelude', () => {
       `[bp-laptop] an @media prelude uses range syntax. Write the width as \`(min-width: ${TOKEN_REM}rem)\` and ` +
         `the height as the tier's \`(max-height: …px)\`, so the seam and the tier stay bound to their tokens.`,
     ).toEqual([])
+  })
+})
+
+/*
+ * THE SIZE TABLE (the frames-outside plan's KTD9, 2026-11-21). The short tier's boundary lives only in
+ * tokens.css, yet e2e/reviewSurface.ts's `LAPTOP_SIZES` types each laptop size's density tier, and the fit
+ * arms read the tier they assert from that table. Nothing tied the two: move the boundary and a `short` row
+ * would hold a frame the CSS renders tall (or the reverse) while the gate stayed green. So every row's tier
+ * is the side of `--bp-laptop-short` its height falls on, read from the token; the tall edge is the first
+ * height above it; and every row is a two-pane width at the default root (the table is the two-pane laptop
+ * sizes only, and each arm still asserts the rendered tier at run time: insight 125).
+ */
+describe('the laptop size table', () => {
+  const boundary = declaredBpLaptopShortPx()
+  const rows = Object.entries(LAPTOP_SIZES)
+
+  it('the tall edge is the first height above the short tier: --bp-laptop-short + 1', () => {
+    expect(
+      TALL_EDGE.height,
+      `[size table] TALL_EDGE is ${TALL_EDGE.width}×${TALL_EDGE.height} while ${rel(TOKENS_PATH)} declares ` +
+        `--bp-laptop-short: ${boundary}px. The tall edge is the boundary plus one, the first frame the tall rhythm ` +
+        `renders; move the two together.`,
+    ).toBe(boundary + 1)
+  })
+
+  it("every row's density tier is the side of --bp-laptop-short its height falls on, at a two-pane width", () => {
+    expect(rows.length, '[size table] LAPTOP_SIZES is empty, so the arms below would pass vacuously').toBeGreaterThan(0)
+    const wrong = rows.filter(([, s]) => s.density !== (s.viewport.height <= boundary ? 'short' : 'tall'))
+    expect(
+      wrong.map(([name, s]) => `${name} ${s.viewport.width}×${s.viewport.height} is typed ${s.density}`),
+      `[size table] a row's density tier disagrees with --bp-laptop-short: ${boundary}px (at or under it is short, ` +
+        `above it tall). The arms read their tier from this table, so a wrong row asserts the other tier's law.`,
+    ).toEqual([])
+    // The named sides, so a row flipped together with its height still reds where the plan put it.
+    expect([LAPTOP_SIZES.REAL.density, LAPTOP_SIZES.TIER.density], '[size table] REAL and TIER sit at or under the boundary').toEqual(['short', 'short'])
+    expect(
+      [LAPTOP_SIZES.LENOVO_FULL.density, LAPTOP_SIZES.SHOWCASE.density, LAPTOP_SIZES.TALL_EDGE.density],
+      '[size table] LENOVO_FULL, SHOWCASE and the tall edge sit above the boundary',
+    ).toEqual(['tall', 'tall', 'tall'])
+    const narrow = rows.filter(([, s]) => s.viewport.width < TOKEN_REM * CSS_INITIAL_FONT_PX)
+    expect(
+      narrow.map(([name, s]) => `${name} ${s.viewport.width}×${s.viewport.height}`),
+      `[size table] a row sits below the two-pane seam (${TOKEN_REM}rem × ${CSS_INITIAL_FONT_PX}px), where no laptop ` +
+        `law applies: the table holds the two-pane laptop sizes only.`,
+    ).toEqual([])
+  })
+
+  it('the laws the councils ruled: SHOWCASE full fit, LENOVO_FULL the degrade contract, the tall edge printed only', () => {
+    // Council wf_448928ea-280 (a door past 917 still fails) and its correction wf_9c0bb7ea-938 (the 900 arm
+    // holds the degrade contract; no assertion at 841).
+    expect(
+      Object.fromEntries(rows.map(([name, s]) => [name, s.law])),
+      '[size table] a size carries a law its ruling did not give it',
+    ).toEqual({ REAL: 'degrade', TIER: 'degrade', LENOVO_FULL: 'degrade', SHOWCASE: 'full', TALL_EDGE: 'print' })
   })
 })

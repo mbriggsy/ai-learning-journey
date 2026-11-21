@@ -63,6 +63,14 @@ import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
  *  - The short-laptop DENSITY tier (≥68rem ∧ ≤840px) steps the frame down on the tier law's ladder
  *    (its one home: tokens.css `--bp-laptop-short`); `assertDensityTier` pins every rung on both
  *    sides of the boundary, and the 917 showcase keeps the generous rhythm.
+ *  - TWO LAWS ABOVE THE SHORT TIER (e2e/reviewSurface.ts's `LAPTOP_SIZES` gives each size its law).
+ *    `SHOWCASE` (1871×917) holds the FULL fit, doors included, and `LENOVO_FULL` (his whole screen,
+ *    1440×900 @ 2) holds the degrade contract his 731 px window holds, though both render the same tall
+ *    frame. `SHOWCASE` is a test arm, no screen of his, kept as the full fit's guard on the door row
+ *    itself: a door past 917 still fails (council `wf_448928ea-280`). `LENOVO_FULL` is a window he
+ *    really reads, where the promise is the one `REAL` makes: nothing protected below the fold, the
+ *    doors one flick away (council `wf_9c0bb7ea-938`, its full-fit distance printed). The tall edge
+ *    (`TALL_EDGE`, 1440×841) is printed and never asserted.
  *  - The two-pane honesty floor (absorbed from the parked D2d e2e): at 1088px (68rem exactly) the
  *    band's percentile labels — the color-blind reader's honesty channel — must still render
  *    (the ≤260px container query must NOT fire at the tightest in-range pane width).
@@ -161,9 +169,17 @@ async function assertNoDateReading(page: Page): Promise<void> {
 const SPINE_VERDICT = 'h2.cs-word'
 const DATE_VERDICT = 'h2.fod-headline'
 
+/** One measured element: its tag, id and classes, and its box's bottom in CSS px, unrounded (R11). */
+type Measured = { readonly desc: string; readonly bottom: number }
+
 type FrameReport = {
   readonly counted: number
-  readonly offenders: ReadonlyArray<{ readonly desc: string; readonly bottom: number }>
+  readonly offenders: ReadonlyArray<Measured>
+  /** The counted element whose box ends lowest, inside the fold or not (null only on a walk that counted
+   *  nothing): the full-fit distance a held print names whether or not anything sits below the fold. On a
+   *  tie the LAST in document order wins, so the content is named rather than the wrappers that end with it
+   *  (at SHOWCASE the hero, the section and the reveal all end at the last door's bottom). */
+  readonly lowest: Measured | null
 }
 
 /** The UNPROTECTED affordances an arm may sanction as below-fold casualties, BEYOND the always-
@@ -184,7 +200,15 @@ type SanctionedDoors = {
  * below-fold casualty, and its ANCESTOR chain (reveal → hero → main → …) is excluded with it —
  * an ancestor's bottom is driven by the row it contains, so counting it would re-ban the one
  * overflow the contract sanctions. Everything else — the disclaimer above all — must fit.
- * With `excludeQuietRow: false` (the showcase arm) even the doors must land in-frame.
+ * With `excludeQuietRow: false` (the showcase arm) even the doors must land in-frame, and the walk
+ * measures CONTENT (the frames-outside plan's KTD8): it skips exactly two layout ancestors by identity,
+ * `main.result` and `#root`, because `main.result`'s box ends at its own bottom padding below the doors
+ * (`.result` in result.css: 40 px at the tall rhythm, never trimmed) and `#root` wraps it, and measures
+ * every element inside them. `#root` has no padding of its own, so its content box would still count
+ * `main.result`'s. Every door's own box stays measured, so a door past the fold still reds.
+ *
+ * Every bottom is kept UNROUNDED at the source (R11): a whole-pixel round here once printed the held
+ * SHOWCASE frames' offenders as 937 and 944. A print formats it; nothing rounds it before a comparison.
  *
  * `counted` guards the walk itself: a blank/error page yields near-zero rendered elements and
  * MUST fail the companion floor, never pass an empty-offender check (insight 029).
@@ -208,11 +232,19 @@ async function frameReport(
     const record = document.querySelector('.rec-record')
     const caveat = holdTheCaveat ? document.querySelector('footer.disclaimer.disclaimer--in-frame') : null
     if (holdTheCaveat && caveat === null) throw new Error('frameReport: the held caveat is not on the page')
+    // THE CONTENT WALK (KTD8): on the full-fit path only, the two layout ancestors whose boxes end at
+    // `main.result`'s bottom padding. On the sanctioned path both already leave with the quiet row's
+    // ancestor chain.
+    const layoutAncestors: ReadonlyArray<Element | null> = excludeQuiet
+      ? []
+      : [document.querySelector('main.result'), document.getElementById('root')]
     const offenders: Array<{ desc: string; bottom: number }> = []
+    let lowest: { desc: string; bottom: number } | null = null
     let counted = 0
     for (const el of Array.from(document.querySelectorAll('body *'))) {
       // The held caveat's subtree only (U5's stop path): its bottom is the caller's printed reading.
       if (caveat !== null && caveat.contains(el)) continue
+      if (layoutAncestors.includes(el)) continue
       if (excludeQuiet && quiet !== null && (quiet.contains(el) || el.contains(quiet))) continue
       // The backup door is an UNPROTECTED durability affordance, DOM-ordered BELOW the disclaimer
       // (Result.tsx). On the tallest composite frame (an all-65+ writable stale return) it is a
@@ -235,15 +267,19 @@ async function frameReport(
       const r = el.getBoundingClientRect()
       if (r.width <= 1 || r.height <= 1) continue // sr-only 1px clips, hairlines
       counted++
-      if (r.bottom > vh + 0.5) {
+      const past = r.bottom > vh + 0.5
+      if (past || lowest === null || r.bottom >= lowest.bottom) {
+        // Named by tag, id and classes: `#root` has no class, and a bare `div` would hide which element it was.
         const cls = el.getAttribute('class')
-        offenders.push({
-          desc: `${el.tagName.toLowerCase()}${cls !== null && cls !== '' ? `.${cls.split(/\s+/).join('.')}` : ''}`,
-          bottom: Math.round(r.bottom),
-        })
+        const measured = {
+          desc: `${el.tagName.toLowerCase()}${el.id !== '' ? `#${el.id}` : ''}${cls !== null && cls !== '' ? `.${cls.split(/\s+/).join('.')}` : ''}`,
+          bottom: r.bottom,
+        }
+        if (past) offenders.push(measured)
+        if (lowest === null || r.bottom >= lowest.bottom) lowest = measured
       }
     }
-    return { counted, offenders }
+    return { counted, offenders, lowest }
   }, {
     excludeQuiet: excludeQuietRow,
     excludeBackup: excludeBackupDoor,
@@ -271,6 +307,40 @@ async function assertFrameFits(
   ).toEqual([])
 }
 
+/** One bottom a held print names: `label`, and optionally the element it was read on. */
+type HeldReading = { readonly label: string; readonly bottom: number; readonly on?: string }
+
+/**
+ * THE HELD PRINT (the frames-outside plan's U2, R11): the one line a held frame prints and annotates BEFORE its
+ * assertions run (measure, then assert: insight 120), shared by {@link assertFrameFitsHoldingCaveat} and
+ * {@link assertFullFitHeld}. Each bottom prints to one decimal (the record's grain, never a whole-pixel round) with
+ * its side of the fold under the walk's own half-pixel slack. The line carries the ATTEMPT (Playwright's retry
+ * index), so a retried arm's lines tell themselves apart under one tag: read the final attempt only, and attempts
+ * that print different numbers are an unknown reading, which keeps the frame held. Never a ceiling on a printed
+ * number (insight 065).
+ */
+function printHeld(
+  page: Page,
+  tag: 'held caveat' | 'held full fit',
+  frame: string,
+  readings: ReadonlyArray<HeldReading>,
+  council: string,
+  tail = '',
+): void {
+  const vh = page.viewportSize()?.height
+  expect(vh, 'the arm runs at a fixed viewport').toBeDefined()
+  const worded = readings.map(
+    (r) =>
+      `${r.label}=${r.bottom.toFixed(1)} (${
+        r.bottom > vh! + 0.5 ? `${(r.bottom - vh!).toFixed(1)} px past the fold` : 'inside the fold'
+      })${r.on === undefined ? '' : ` on ${r.on}`}`,
+  )
+  const held = tag === 'held caveat' ? 'its assertion' : 'its full fit'
+  const line = `${frame} ${String(vh)}px frame attempt=${test.info().retry}: ${worded.join(', ')}${tail} — ${held} HELD for ${council}`
+  console.log(`[${tag}] ${line}`)
+  test.info().annotations.push({ type: `${tag} (RECORDED — a council owed)`, description: line })
+}
+
 /**
  * A COUNCIL'S STOP PATH (the one-frame composites plan's U6 step 4; since rung 3 landed, the frames still outside
  * after it, `FRAMES_OUTSIDE_COUNCIL`): a frame whose PROTECTED R13 caveat the ladder could not bring inside the
@@ -291,13 +361,7 @@ async function assertFrameFitsHoldingCaveat(
   const caveatBottom = await page
     .locator('footer.disclaimer.disclaimer--in-frame')
     .evaluate((el) => el.getBoundingClientRect().bottom)
-  const vh = page.viewportSize()?.height
-  expect(vh, 'the arm runs at a fixed viewport').toBeDefined()
-  const line = `${frame} ${String(vh)}px frame: caveat bottom=${caveatBottom.toFixed(1)} (${
-    caveatBottom > vh! + 0.5 ? `${(caveatBottom - vh!).toFixed(1)} px past the fold` : 'inside the fold'
-  }) — its assertion HELD for ${council}`
-  console.log(`[held caveat] ${line}`)
-  test.info().annotations.push({ type: 'held caveat (RECORDED — a council owed)', description: line })
+  printHeld(page, 'held caveat', frame, [{ label: 'caveat bottom', bottom: caveatBottom }], council)
   const report = await frameReport(page, true, sanctioned, true)
   expect(report.counted, 'frame walk counted too few elements — page did not render').toBeGreaterThan(WALK_FLOOR)
   expect(report.offenders, 'elements other than the held caveat end below the sanctioned frame').toEqual([])
@@ -306,22 +370,19 @@ async function assertFrameFitsHoldingCaveat(
 /**
  * The SHOWCASE twin of {@link assertFrameFitsHoldingCaveat}, for a frame held by a council: above the short tier no
  * rung applies, and the showcase's FULL fit (doors included, `assertFrameFits(page, false)`) is the law there. The
- * full fit's offenders are PRINTED and annotated first (measure, then assert: insight 120), then the laptop law is
- * asserted in full (every element but the doors' row and its ancestors inside the frame, the caveat included). Never
- * a ceiling on the printed numbers (insight 065). The council's ruling build replaces this call with
- * `assertFrameFits(page, false)`.
+ * full fit is PRINTED and annotated first ({@link printHeld}): the doors' bottom and the lowest content bottom the
+ * content walk reads (KTD8), whether or not anything sits below the fold, then every element below it. Then the
+ * laptop law is asserted in full (every element but the doors' row and its ancestors inside the frame, the caveat
+ * included). The council's ruling build replaces this call with `assertFrameFits(page, false)`.
  */
 async function assertFullFitHeld(page: Page, frame: string, council: string): Promise<void> {
   const full = await frameReport(page, false)
-  const vh = page.viewportSize()?.height
-  expect(vh, 'the arm runs at a fixed viewport').toBeDefined()
-  const line = `${frame} ${String(vh)}px frame, FULL fit: ${
-    full.offenders.length === 0
-      ? 'no element below the fold'
-      : full.offenders.map((o) => `${o.desc} bottom=${o.bottom.toFixed(1)}`).join(', ')
-  } — its full fit HELD for ${council}`
-  console.log(`[held full fit] ${line}`)
-  test.info().annotations.push({ type: 'held full fit (RECORDED — a council owed)', description: line })
+  const doorsBottom = await page.locator('.result-quiet-row').evaluate((el) => el.getBoundingClientRect().bottom)
+  const readings: HeldReading[] = [{ label: 'doors bottom', bottom: doorsBottom }]
+  if (full.lowest !== null) readings.push({ label: 'lowest content bottom', bottom: full.lowest.bottom, on: full.lowest.desc })
+  const below = full.offenders.length === 0 ? 'none' : full.offenders.map((o) => `${o.desc} bottom=${o.bottom.toFixed(1)}`).join(', ')
+  printHeld(page, 'held full fit', frame, readings, council, `; below the fold: ${below}`)
+  expect(full.counted, 'the full-fit walk counted too few elements — page did not render').toBeGreaterThan(WALK_FLOOR)
   await assertFrameFits(page, true)
 }
 
@@ -1903,7 +1964,7 @@ for (const { seed } of SPINE_SEEDS) {
       const report = await frameReport(page, true)
       console.log(
         `[20px-root fit] seed=${seed} ${REAL.width}x${REAL.height} root=${at16}→${at20}px: counted=${report.counted} offenders=${
-          report.offenders.length === 0 ? 'none' : report.offenders.map((o) => `${o.desc}@${o.bottom}`).join(', ')
+          report.offenders.length === 0 ? 'none' : report.offenders.map((o) => `${o.desc}@${o.bottom.toFixed(1)}`).join(', ')
         }`,
       )
       // RECORDED, NOT ASSERTED — the fork is filed (see the block comment above). The walk floor
@@ -1917,7 +1978,7 @@ for (const { seed } of SPINE_SEEDS) {
         // regime. (A `> 16` pin alone would let a 17 px emulation file itself as "20 px".)
         type: '20px-root one-frame law (RECORDED — fork owed)',
         description: `root ${at16}px → ${at20}px at ${REAL.width}×${REAL.height}: ${report.offenders.length} element(s) past the ${REAL.height}px fold: ${
-          report.offenders.map((o) => `${o.desc}@${o.bottom}`).join(', ') || 'none'
+          report.offenders.map((o) => `${o.desc}@${o.bottom.toFixed(1)}`).join(', ') || 'none'
         }`,
       })
       await cdp.detach()
@@ -1938,7 +1999,7 @@ for (const { seed } of SPINE_SEEDS) {
         const report = await frameReport(page, true)
         console.log(
           `[24px-root instrument] seed=${seed} ${vp.width}x${vp.height} root=${at16}→${at24}px: counted=${report.counted} belowFold=${report.offenders.length} caveatBottom=${
-            report.offenders.find((o) => o.desc.includes('disclaimer'))?.bottom ?? 'in-frame'
+            report.offenders.find((o) => o.desc.includes('disclaimer'))?.bottom.toFixed(1) ?? 'in-frame'
           }`,
         )
         await assertCaveatOrderAndReach(page, SPINE_VERDICT)
@@ -2642,10 +2703,12 @@ test.describe(`the yearly returns — the gate + the echoed frame, rung 3 on its
 // `surplustypical`, the reassuring room frame ("More than covered", 743.1 px on Windows), and
 // `pafailingtypical`, Pennsylvania's already-failing household answering "not sure" (736.0 px): no echo, so the
 // ruled key cannot reach it, and nothing stable separates it from `failingtypical`, which fits. Each prints its
-// caveat's bottom and holds every other line to the frame (`assertFrameFitsHoldingCaveat`). Both also break the
-// SHOWCASE's full fit, where no rung applies: their doors end inside 917 px (904.4 / 897.3) but `main.result`'s
-// bottom padding ends at 937 (measured on Windows, b9-8), so that arm prints the full fit's offenders and asserts
-// the laptop law (`assertFullFitHeld`). Both fit at TIER in full. A room or trim clause is sized a beat after the final; the arms
+// caveat's bottom and holds every other line to the frame (`assertFrameFitsHoldingCaveat`). Both also broke the
+// SHOWCASE's full fit, where no rung applies, but only through the gate's own walk: their doors end inside 917 px
+// (904.4 / 897.3, Windows, b9-8) while `main.result`'s bottom padding, then counted as content, ended at 937. The
+// walk measures content since the frames-outside plan's U2 (`frameReport`, KTD8), and the SHOWCASE arm stays
+// held until both platforms have read its content walk: it prints the doors' bottom and the lowest content bottom
+// and asserts the laptop law (`assertFullFitHeld`). Both fit at TIER in full. A room or trim clause is sized a beat after the final; the arms
 // measure right after it, as the spine matrix does (the reserve holds the sized height: the plants' probe read
 // FIRST equal to SETTLED on every frame).
 const RUNG3_FRESH = [

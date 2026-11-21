@@ -1107,9 +1107,9 @@ const notSureExtras = (people: number): NonNullable<ScenarioDraft['medicareExtra
 const paTypicalExtras: ScenarioDraft = { ...paAffirmation, medicareExtrasByPerson: notSureExtras(paAffirmation.people.length) }
 
 /**
- * `?seed=failingtypical` (the one-frame composites plan's U2, KTD5): `failing` (the off-track household,
+ * `?seed=failingtypical` (the one-frame composites plan's U2, KTD5): `failing` (the already-failing household,
  * "Already short") with both people answering "not sure" on Medicare extras. `failing` itself carries no
- * extras answer at all; this seed gives it the intake's typical answer, the base of the off-track
+ * extras answer at all; this seed gives it the intake's typical answer, the base of the already-failing
  * yearly-return plant (its caveat measured at 744.3 px with the typical residual). The answer only.
  */
 const failingTypicalExtras: ScenarioDraft = { ...retiredFailing, medicareExtrasByPerson: notSureExtras(retiredFailing.people.length) }
@@ -2434,7 +2434,7 @@ export const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
   // from its first New Year after saving; `recpa` declares none and is viewed on `GATE_DAY`.
   //  · `yearpa`: Pennsylvania answering "not sure" on Medicare extras, at its yearly return (the R13
   //    caveat's tallest measured frame on a borderline household).
-  //  · `yearfailing`: the off-track household answering "not sure", at its yearly return.
+  //  · `yearfailing`: the already-failing household answering "not sure", at its yearly return.
   //  · `yearrec`: the entered-extras spine household at its yearly return with a saved recommendation
   //    (his likeliest return: one cause on the card, `rules-changed`).
   //  · `recpa`: Pennsylvania "not sure" with a saved recommendation that holds, fresh.

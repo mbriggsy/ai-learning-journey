@@ -51,7 +51,7 @@ A second problem surfaced while planning. The gate reads the wall clock (the reg
 
 **The plants**
 
-- R3. The gate carries the tallest measured real frames as committed plants: Pennsylvania with "not sure" extras, fresh and at its yearly return; an off-track household with "not sure" extras at its yearly return; the entered-extras household at its yearly return with a saved record (his likeliest return); and Pennsylvania "not sure" with a saved record, fresh and at its yearly return.
+- R3. The gate carries the tallest measured real frames as committed plants: Pennsylvania with "not sure" extras, fresh and at its yearly return; an already-failing household with "not sure" extras at its yearly return; the entered-extras household at its yearly return with a saved record (his likeliest return); and Pennsylvania "not sure" with a saved record, fresh and at its yearly return.
 - R4. Every plant is a household the app could really hold: the answers the intake writes, a save date the calendar allows, and a record minted through the real mint under the rulebooks of its save. Each is proven by an engine-acceptance pin, and each record by its exact cause list.
 
 **Measurement and the law**
@@ -212,7 +212,7 @@ The plant catalog. The Windows numbers come from the temporary plants, with stri
 
 ### U2. The two "not sure" seeds
 
-**Goal:** Pennsylvania and the off-track household answer "not sure" on Medicare extras, the way the intake writes it (KTD5).
+**Goal:** Pennsylvania and the already-failing household answer "not sure" on Medicare extras, the way the intake writes it (KTD5).
 
 **Requirements:** R3, R4.
 
@@ -311,7 +311,7 @@ The plant catalog. The Windows numbers come from the temporary plants, with stri
 4. Run `pnpm verify:fit` alone.
 5. Push it alone and re-read the probe lines on Linux.
 
-The precedent's Windows deltas are the starting estimates: rung 2a −8.8 px, rung 2b −2.7 px, rung 3 −11.2 px (Appendix). Each later rung is re-measured on top of the earlier ones. The Windows estimates already put the off-track yearly return at 732.9 after rung 2b, so expect rung 3, and with it KTD7's council stop on its key, unless Linux measures it inside. A caveat that the band column holds (A5) also stops for the council: no left-column rung moves it.
+The precedent's Windows deltas are the starting estimates: rung 2a −8.8 px, rung 2b −2.7 px, rung 3 −11.2 px (Appendix). Each later rung is re-measured on top of the earlier ones. The Windows estimates already put the already-failing yearly return at 732.9 after rung 2b, so expect rung 3, and with it KTD7's council stop on its key, unless Linux measures it inside. A caveat that the band column holds (A5) also stops for the council: no left-column rung moves it.
 
 **Execution note:** the rule decides, not the estimate. A rung that does not move the Linux number did nothing (insight 075).
 

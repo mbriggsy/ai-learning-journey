@@ -2451,7 +2451,7 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
 // residual (no standalone note), the survivor card inline, the gate's affirm at 391 px.
 //
 // U5'S STOP PATH (`yearfailing`): rungs 2a (L3) and 2b (L4) brought `yearpa` from 737.3 to 725.8 px, but
-// the off-track household's caveat still ends at 732.9 on both platforms, and rung 3 (the borrowed
+// the already-failing household's caveat still ends at 732.9 on both platforms, and rung 3 (the borrowed
 // `--text-sm`) has no stable class to key on (the register's composites entry, prescription (3)). So its
 // caveat assertion is HELD: the arm prints the caveat's bottom and asserts everything else
 // (`assertFrameFitsHoldingCaveat`), and the council's ruling build lands rung 3 on its key and restores
@@ -2462,7 +2462,7 @@ test.describe(`the yearly returns (?vault=yearpa / ?vault=yearfailing) — the g
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   for (const { key, what, held } of [
     { key: 'yearpa', what: 'Pennsylvania answering "not sure", a year on', held: null },
-    { key: 'yearfailing', what: 'the off-track household answering "not sure", a year on', held: RUNG3_KEY_COUNCIL },
+    { key: 'yearfailing', what: 'the already-failing household answering "not sure", a year on', held: RUNG3_KEY_COUNCIL },
   ] as const) {
     test(`?vault=${key} — ${what}: the decision pair in frame; the echoed result ${held === null ? 'holds the one-frame law' : 'holds every line but its caveat, which is printed (U5’s stop path)'}`, async ({ page }) => {
       await pinPlantDay(page, key)

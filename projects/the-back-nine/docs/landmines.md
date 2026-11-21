@@ -58,6 +58,12 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
+- **(b9-5, 11-20) `TaskStop` on a background `pnpm dev` kills the `pnpm` wrapper and leaves Vite's `node` child serving the
+  port** (seen on 4197: still 200 after the stop). Before reading a port as free, probe it (`curl --max-time 5`), find the
+  listener (`Get-NetTCPConnection -LocalPort <port> -State Listen`), confirm its command line is your Vite
+  (`Get-CimInstance Win32_Process -Filter 'ProcessId=<pid>'`), then `Stop-Process` it. A second Vite on the same project
+  shares `node_modules/.vite` with a fit run's server: stop probe servers before a gate run.
+
 - **(b9-1, 11-20) A gate that times out in page setup or teardown with no assertion line can be the laptop asleep, not a
   regression.** The re-point's U2 builder saw `verify:fit` go 188/192: four arms timed out at 180 s, none on an assertion.
   The Windows System log showed Kernel-Power 506 ("entering Modern Standby, Reason: Idle Timeout") and 507 (the power

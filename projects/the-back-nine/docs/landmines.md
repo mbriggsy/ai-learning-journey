@@ -332,20 +332,28 @@ tests
 
 ## The fit gate and e2e
 
-- **(b9-3, 11-21) The widest plants' arms (the frames-outside plan's U6):** `?seed=failingwidest`'s closed frame shows none
-  of its monthly figures (the relief combination folds the survivor card, and the rethink clause quotes no figure), so its
-  widest-string check has the residual's 20-character name alone; `?seed=surpluswidest` shows "40,000", "30,000",
-  "22,830" and, while pending, the reserve's "120,000". A room arm's pending read (KTD6) can miss: on `surpluswidest`'s
-  scratch twin the spend lane settled before `gotoSeedFinal` returned, its `settleLayout` included. Read the first frame
-  right after `SETTLED_RESULT` attaches, or accept "unknown". A second tab opened read-only (another tab holds the writer)
-  shows the re-entry gate's "Continue to your answer", never "still about right" (`gotoVaultFinal` waits for the latter).
-- **(b9-4, 11-21) The pending room read (the frames-outside plan's KTD6) cannot be a check after `gotoSeedFinal`,** which
-  ends in `settleLayout`: the spend-lane arm's check (`e2e/vertical-fit.spec.ts:4659`) holds only because `surplus` solves in
-  about 5 s. Arm an init script before navigation, the `probeComputingFrame` pattern (`e2e/vertical-fit.spec.ts:2088`), that
-  on every animation frame where `main.result[data-answer-tier="final"]` carries no `data-answer-refiguring` and
-  `.cs-magnitude[data-spend="pending"]` holds `.cs-magnitude__reserve` (`src/ui/ConfidenceStatement.tsx:450`,
-  `aria-hidden`) keeps the latest caveat bottom, the reserve's text and whether any animation is running. No such frame,
-  or only frames with an animation running, is "unknown".
+- **(b9-5, 11-21) Any `-g "<seed>"` filter now also collects the measuring describe's arms** (the frames-outside plan's U6,
+  `41b58e17`): their titles carry the seed (`?seed=pafailingtypical REAL: printed, never asserted`, its LENOVO_FULL row, the
+  injected rows). Count them in every planted fault's prediction (U3's entry faults, U4's); `-g "measuring describe"`
+  collects all 45 alone. They assert identity and tier, never a fit or a leading, so a stylesheet fault reds none of them.
+- **(b9-5, 11-21) The pending room read (KTD6) is BUILT, and U4's permanent widest arms still need it.** `installMeasure`,
+  armed before navigation by `armMeasure` (the `probeComputingFrame` pattern; a check after `gotoSeedFinal` misses it, since
+  that ends in `settleLayout`), keeps the latest frame where the answer stands final with no run in flight and
+  `.cs-magnitude[data-spend="pending"]` holds the reserve, its fonts loaded and nothing that can move a box animating (an
+  opacity or color fade cannot, so the clause's own swap fade voids no frame). It caught every room and trim frame's
+  pending state on both platforms at run M1. U4 deletes the measuring describe, but A's widest's reserved figure is read
+  only while pending: keep `installMeasure`, `armMeasure`, `readMeasure*`, `assertMeasureTier` and `assertWidestStrings`
+  with the permanent arms, and delete every helper that loses its last caller (lint's `no-unused-vars` reds `e2e/`).
+- **(b9-5, 11-21) `SHORT_TIER_QUERY` derives its boundary from `TALL_EDGE.height - 1`:** a planted fault on the `TALL_EDGE`
+  constant moves the query too, so every REAL arm reads "not short" and reds (U6's first planting: 42 red where 28 were
+  predicted). Plant a size's height in its `LAPTOP_SIZES` viewport entry, never the shared constant.
+- **The re-entry gate is two columns at his 1440×731 window too** (68rem), and nothing pins its story column's fold, so its
+  coda below the fold is a walk read, never a gate red; any fix is static (KD2's Fit). U2 pinned the story column's 20 px
+  gap, not its bottom. (Moved from TODO.md's landmines block, b9-5.)
+- **(b9-3, 11-21) A second tab opened read-only** (another tab holds the writer) shows the re-entry gate's "Continue to your
+  answer", never "still about right", so `gotoVaultFinal` cannot drive the read-only member; nor can two pages of one
+  browser context measure a writer frame each (the second is read-only): give each load its own context, as U6's
+  injected arms do.
 - **(b9-4, 11-21) A planted fault on the doors row also reds `div.result-hero`, `section.confidence` and
   `div.confidence-reveal`** under the content walk: they carry no padding and end flush with the last door (measured at
   SHOWCASE, `5d3c7d81`'s message), so they are content. Predict them in every door fault.

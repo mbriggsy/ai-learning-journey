@@ -1,5 +1,5 @@
 /**
- * THE NAME CEILING: the most characters a person's name may have when it is typed.
+ * THE NAME CEILING: the most characters a person's name may have when it is typed (UTF-16 code units, as maxLength counts).
  *
  * Briggsy's design-ceiling ruling, 2026-11-21 (the register's composites entry, "RULED by Briggsy
  * 2026-11-21"; the frames-outside plan's KTD12, `docs/plans/features/frames-outside-widest-member-build-spec.md`).

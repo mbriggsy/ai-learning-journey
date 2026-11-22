@@ -2104,7 +2104,7 @@ for (const { seed } of SPINE_SEEDS) {
       await assertOneVisibleDisclaimer(page, 'laptop')
       const report = await frameReport(page, true)
       console.log(
-        `[20px-root fit] seed=${seed} ${REAL.width}x${REAL.height} root=${at16}→${at20}px: counted=${report.counted} offenders=${
+        `[20px-root fit] seed=${seed} ${REAL.width}x${REAL.height} attempt=${test.info().retry} root=${at16}→${at20}px: counted=${report.counted} offenders=${
           report.offenders.length === 0 ? 'none' : report.offenders.map((o) => `${o.desc}@${o.bottom.toFixed(1)}`).join(', ')
         }`,
       )
@@ -2139,7 +2139,7 @@ for (const { seed } of SPINE_SEEDS) {
         // INSTRUMENT, not oracle: the one-frame magnitude on the stacked tier, recorded for the log.
         const report = await frameReport(page, true)
         console.log(
-          `[24px-root instrument] seed=${seed} ${vp.width}x${vp.height} root=${at16}→${at24}px: counted=${report.counted} belowFold=${report.offenders.length} caveatBottom=${
+          `[24px-root instrument] seed=${seed} ${vp.width}x${vp.height} attempt=${test.info().retry} root=${at16}→${at24}px: counted=${report.counted} belowFold=${report.offenders.length} caveatBottom=${
             report.offenders.find((o) => o.desc.includes('disclaimer'))?.bottom.toFixed(1) ?? 'in-frame'
           }`,
         )
@@ -2167,7 +2167,7 @@ for (const vp of [REAL, TIER] as const) {
       await assertOneVisibleDisclaimer(page, 'narrow')
       const report = await frameReport(page, true)
       console.log(
-        `[24px-root instrument] seed=dip ${vp.width}x${vp.height} root=${at16}→${at24}px: counted=${report.counted} belowFold=${report.offenders.length}`,
+        `[24px-root instrument] seed=dip ${vp.width}x${vp.height} attempt=${test.info().retry} root=${at16}→${at24}px: counted=${report.counted} belowFold=${report.offenders.length}`,
       )
       await assertCaveatOrderAndReach(page, DATE_VERDICT)
       await cdp.detach()
@@ -2711,9 +2711,9 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // REAL sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law); read after
     // the fit. The echo-gap pins above own this frame's W4 row-gaps, so the helper skips them here.
     await assertDensityTier(page, 'short', { skipNoteGaps: true, echo: true })
-    // L3's TALL side (the one-frame composites plan's U5, the W5 precedent): no other arm renders the echo
-    // above the short tier, so without this read an echo rule written outside the tier would change the 917
-    // SHOWCASE while every arm stayed green. The same frame, widened to SHOWCASE, must read every rung dark,
+    // L3's TALL side (the one-frame composites plan's U5, the W5 precedent): the only arm that reads an echo frame
+    // at SHOWCASE (the yearly loop reads its echo frames at 1440×900 since the frames-outside U4), so an echo rule
+    // written outside the tier would change the 917 SHOWCASE unseen without it. The same frame, widened to SHOWCASE, must read every rung dark,
     // L3's included. A computed-style read only, so the resize needs no fresh load.
     await page.setViewportSize(SHOWCASE)
     await settleLayout(page)
@@ -4370,9 +4370,9 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     await assertOneVisibleDisclaimer(page, 'laptop')
     await assertDensityTier(page, 'short', { record: true })
 
-    // (4) W5's TALL side (the 1440×731 re-point's review, 2026-11-20): no other arm renders a record
-    // card above the short tier, so without this read a W5 rule written outside the tier would change
-    // the 917 SHOWCASE card while every arm stayed green (R4). The same frame, widened to SHOWCASE,
+    // (4) W5's TALL side (the 1440×731 re-point's review, 2026-11-20): the only arm that reads a record card
+    // at SHOWCASE (the record loop reads its plants at 1440×900 since the frames-outside U4), so a W5 rule
+    // written outside the tier would change the 917 SHOWCASE card unseen without it (R4). The same frame, widened to SHOWCASE,
     // must read every rung dark, the card's own included. A computed-style read only, so the resize
     // needs no fresh load.
     await page.setViewportSize(SHOWCASE)
@@ -4478,11 +4478,11 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
         const c = card.getBoundingClientRect()
         const s = standing.getBoundingClientRect()
         return {
-          discBottom: Math.round(d.bottom),
-          cardTop: Math.round(c.top),
-          cardBottom: Math.round(c.bottom),
-          cardHeight: Math.round(c.height),
-          standingBottom: Math.round(s.bottom),
+          discBottom: d.bottom,
+          cardTop: c.top,
+          cardBottom: c.bottom,
+          cardHeight: c.height,
+          standingBottom: s.bottom,
           standingText: (standing.textContent ?? '').trim(),
           // Node.DOCUMENT_POSITION_FOLLOWING — the card comes AFTER the caveat in the DOM, so
           // focus order matches the visual order the pixels below assert.
@@ -4491,27 +4491,27 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
         }
       })
       console.log(
-        `[U17 record return] ?vault=${plant} ${real.width}x${real.height}: ` +
-          `disclaimer bottom=${geometry.discBottom} (frame=${geometry.vh}, headroom=${geometry.vh - geometry.discBottom}) · ` +
-          `card h=${geometry.cardHeight} top=${geometry.cardTop} bottom=${geometry.cardBottom} · ` +
-          `standing bottom=${geometry.standingBottom} (slack=${geometry.vh - geometry.standingBottom})`,
+        `[U17 record return] ?vault=${plant} ${real.width}x${real.height} attempt=${test.info().retry}: ` +
+          `disclaimer bottom=${geometry.discBottom.toFixed(1)} (frame=${geometry.vh}, headroom=${(geometry.vh - geometry.discBottom).toFixed(1)}) · ` +
+          `card h=${geometry.cardHeight.toFixed(1)} top=${geometry.cardTop.toFixed(1)} bottom=${geometry.cardBottom.toFixed(1)} · ` +
+          `standing bottom=${geometry.standingBottom.toFixed(1)} (slack=${(geometry.vh - geometry.standingBottom).toFixed(1)})`,
       )
 
       // (1) THE LAW: the protected caveat is IN FRAME. This is the assertion the filed annotation
       // stated and could not meet; it is met now.
       expect(
         geometry.discBottom,
-        `the protected R13 disclaimer ends at ${geometry.discBottom}px, past the ${real.height}px frame`,
-      ).toBeLessThanOrEqual(real.height)
+        `the protected R13 disclaimer ends at ${geometry.discBottom.toFixed(1)}px, past the ${real.height}px frame`,
+      ).toBeLessThanOrEqual(real.height + 0.5)
 
       // (2) THE RULING: the card is BELOW the caveat — in the pixels AND in the DOM. Either check
       // alone is escapable (an explicit grid row survives a DOM re-hoist; a DOM order survives a
       // CSS re-seat), and the pair is precisely the no-CSS-only-reorder law the doors already obey.
       expect(
         geometry.cardTop,
-        `the card starts at ${geometry.cardTop}px, above the caveat's ${geometry.discBottom}px bottom — ` +
+        `the card starts at ${geometry.cardTop.toFixed(1)}px, above the caveat's ${geometry.discBottom.toFixed(1)}px bottom — ` +
           `it must never share or precede the protected row`,
-      ).toBeGreaterThanOrEqual(geometry.discBottom)
+      ).toBeGreaterThanOrEqual(geometry.discBottom - 0.5)
       expect(
         geometry.cardFollowsInDom,
         'the card must FOLLOW the in-frame disclaimer in document order — a CSS-only reorder breaks ' +
@@ -4535,9 +4535,9 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
       if (standing === 'assert') {
         expect(
           geometry.standingBottom,
-          `the card's standing line ends at ${geometry.standingBottom}px, past the ${real.height}px frame — ` +
+          `the card's standing line ends at ${geometry.standingBottom.toFixed(1)}px, past the ${real.height}px frame — ` +
             `the meaning-bearing sentence must never be the scroll casualty (line: "${geometry.standingText}")`,
-        ).toBeLessThanOrEqual(real.height)
+        ).toBeLessThanOrEqual(real.height + 0.5)
       }
 
       // (3) THE SANCTION IS NARROW (burned/070 — a sweep needs a guard, and an exclusion that
@@ -5046,8 +5046,10 @@ function installMeasure(init: MeasureInit): void {
       direction: magnitude.getAttribute('data-direction'),
       spend: magnitude.getAttribute('data-spend'),
       lines: { magnitude: linesOf(magnitude), reserve: linesOf(reserve), residual: linesOf(residual), context: linesOf(context) },
+      // 'folded' means the fold is CLOSED: `card` skips everything inside the fold, so an open fold reads 'none' and
+      // reds the identity check of a plant built to fold (the review of the build: the bare-fold test let it pass).
       survivor:
-        reveal.querySelector('details.survivor-fold') !== null ? 'folded' : basis !== null ? 'inline' : 'none',
+        reveal.querySelector('details.survivor-fold:not([open])') !== null ? 'folded' : basis !== null ? 'inline' : 'none',
       relief: reveal.querySelector('.floor-readout') !== null,
       typical: reveal.querySelectorAll('.cs-medicare-residual--typical').length,
       echo: reveal.querySelectorAll('.cs-staleness-note').length,
@@ -5245,6 +5247,9 @@ function assertWidestIdentity(frame: string, r: MeasureRead, facts: WidestFacts)
   expect(r.echo, `${frame}: a fresh frame carries no staleness echo`).toBe(0)
   expect(r.state, `${frame}: the residual's state clause`).toBe('PA')
   expect(r.form, `${frame}: the typical residual names one person`).toBe('one')
+  // The reserved save box is the save-box axis's widest member (KTD1, KTD4): a frame without it reads shorter than its
+  // class, so a widest reading taken without it would under-read the seat's acceptance test.
+  expect(r.save, `${frame}: the reserved save box renders`).not.toBeNull()
 }
 
 /**
@@ -5319,11 +5324,12 @@ for (const size of ['REAL', 'LENOVO_FULL', 'SHOWCASE'] as const) {
 // state clause. Run M1 (44963702523) read only its caveat past his fold at REAL (763.9 on Windows and ubuntu alike, both
 // room states; 744.8 with both room rungs injected), so it takes the held-caveat shape there: the caveat printed, every
 // other line held to the frame. It read 833.2 at LENOVO_FULL, SHOWCASE and the tall edge alike, on both platforms (run
-// M1); it prints once more at the tall edge, never asserted.
-test.describe(`?seed=pasurplustypical — the Pennsylvania room plant (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, then the tall edge printed)`, () => {
+// M1), so his whole screen asserts the degrade contract on it (KTD10: a frame read inside on both platforms asserts; the
+// review of the build found this arm printing only); it prints once more at the tall edge, never asserted.
+test.describe(`?seed=pasurplustypical — the Pennsylvania room plant (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, then ${LAPTOP_SIZES.LENOVO_FULL.viewport.width}×${LAPTOP_SIZES.LENOVO_FULL.viewport.height} asserted and the tall edge printed)`, () => {
   const s = LAPTOP_SIZES.REAL
   test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
-  test('?seed=pasurplustypical REAL: every line but its caveat fits (held for the seat; the caveat printed); the tall edge printed', async ({ page }) => {
+  test('?seed=pasurplustypical REAL: every line but its caveat fits (held for the seat; the caveat printed); his whole screen asserted; the tall edge printed', async ({ page }) => {
     const frame = '?seed=pasurplustypical'
     await gotoSeedFinal(page, 'pasurplustypical')
     await assertResolvedSpine(page)
@@ -5340,6 +5346,16 @@ test.describe(`?seed=pasurplustypical — the Pennsylvania room plant (${REAL.wi
     await assertSurvivorBasis(page, 'inline')
     await assertNoteLeading(page, s.density)
     await assertDensityTier(page, s.density, { leading: 'snug' })
+
+    // HIS WHOLE SCREEN: the same frame resized, held to the degrade contract (the doors its sanctioned casualty), every
+    // rung's tall side read (above the tier every cell reads body).
+    const tall = LAPTOP_SIZES.LENOVO_FULL
+    await page.setViewportSize(tall.viewport)
+    await settleLayout(page)
+    await assertSizeTier(page, 'LENOVO_FULL')
+    await assertFrameAtSize(page, 'LENOVO_FULL', frame)
+    await assertNoteLeading(page, tall.density)
+    await assertDensityTier(page, tall.density, { leading: 'snug' })
     await printTallEdge(page, frame)
   })
 })

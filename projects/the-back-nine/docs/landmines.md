@@ -338,17 +338,23 @@ tests
   arm over a FRESH `rethink` frame with the typical residual passes `leading: 'tight'` (B's entry tightens it), or it reds
   on "the leading expectation must match the frame" even at SHOWCASE; a direction with no row reds on the direction check.
   A table fault reds on that match line, a stylesheet fault on the ratio line: read which one a kill names (U3's F5a/F5b).
-- **(b9-7, 11-21) Every fit-law arm reads its size from `LAPTOP_SIZES` and calls `assertSizeTier` first** (the
-  frames-outside plan's U4): the window and DPR the table gives, the short-tier query, and `.result`'s 32 / 40 px padding,
+- **(b9-7, 11-21; scope corrected b9-8) The four frame families, the widest arms and the Pennsylvania room plant read
+  their size from `LAPTOP_SIZES` and call `assertSizeTier` first** (the frames-outside plan's U4; the other fit arms,
+  `elsewhere`, `healthnc`, `?vault=stale`, `statestale`, the affordance posture, the re-figuring window and the spend
+  lane, still call `assertFrameFits` on `REAL` / `TIER` directly, so a fault planted in a `LAPTOP_SIZES` entry never
+  reaches them: count only the rewired arms in its prediction): the window and DPR the table gives, the short-tier query, and `.result`'s 32 / 40 px padding,
   then `assertFrameAtSize`, which looks the size's law up (`full` at SHOWCASE, `degrade` elsewhere, the full-fit distance
   printed at LENOVO_FULL, `print` throws). A new arm at a new size takes both, and its describe title from `sizeTitle`. The
   yearly-return and record arms reach LENOVO_FULL by a RESIZE after their REAL read, so a fault planted at LENOVO_FULL kills
   them only after their REAL half passes; the two held yearly frames and every record plant then print at the tall edge
   (`printTallEdge`), whose bottom past the fold by under the walk's half-pixel slack prints as such, never "inside".
-- **(b9-7, 11-21) SHOWCASE (1871×917 @ 1) is NOT the frame LENOVO_FULL (1440×900 @ 2) renders:** the plan's A6 holds for
-  width, not DPR. U4's one-time probe (record folder `b9-7-u4`) read the doors up to 8.5 px LOWER at SHOWCASE on the spine
-  and `failingentered` frames (`budget` 856.7 vs 848.2, `health` 814.3 vs 805.8); only the frames M1 read at every tall
-  size match. Read SHOWCASE at SHOWCASE before predicting there. And `main.result`'s box ends at the viewport (917.0)
+- **(b9-7, 11-21; cause corrected b9-8 by the build's review) A frame SHORTER than the window reads lower at SHOWCASE
+  (1871×917) than at LENOVO_FULL (1440×900):** `.result` is `flex: 1; justify-content: center` inside `#root`'s
+  `min-height: 100svh` (`result.css`, `app.css`), so it centers a short frame, `(H − 80 − C) / 2` lower in a taller
+  window. U4's probe (record folder `b9-7-u4`) read the doors up to 8.5 px lower at SHOWCASE (`budget` 856.7 vs 848.2,
+  `health` 814.3 vs 805.8), and every pair matches that formula to 0.1 px; U4 had called it DPR, and the plan's A6 holds
+  as written (a frame taller than both reads the same). Read SHOWCASE at SHOWCASE before predicting there, or derive it
+  from the content height. And `main.result`'s box ends at the viewport (917.0)
   whenever its content is shorter, so a fault that counts it reds only past doors + 40 px: the near miss is `failing` /
   `failingtypical` / `offtracktypical` at 876.7 + 40 = 916.7, 0.3 px inside.
 - **(b9-8, 11-21) The full-fit walk measures content, never layout padding** (the frames-outside plan's KTD8, U2

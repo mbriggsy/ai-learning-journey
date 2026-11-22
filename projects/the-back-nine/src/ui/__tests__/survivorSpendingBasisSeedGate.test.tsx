@@ -7,10 +7,10 @@
  * exactly "This assumes about $[survivor] a month of spending on your own (today: $[couple] together)."
  *
  * THE CENSUS (read): the card renders only on the SPINE route (`answerView.ts` carries `survivorReading`
- * on the spine view only; the date route's working member means no card), so its universe is the 18
- * spine dev seeds plus the nine aged vault plants built on them (`?vault=stale` / `statestale` / `rec` /
- * `recold`, and the composites plan's U3 five: `yearpa` / `yearfailing` / `yearrec` / `recpa` /
- * `yearparec`), each doctored exactly as `plantDevVault` doctors it. The census arm below fails if a new
+ * on the spine view only; the date route's working member means no card), so its universe is every
+ * spine dev seed plus every aged vault plant built on one (the census arm below reads both off `DEV_SEEDS`
+ * and `AGED_PLANTS` and pins the spine count; no count is re-typed here), each doctored exactly as
+ * `plantDevVault` doctors it. The census arm below fails if a new
  * spine seed or a new spine-based vault plant (read off `AGED_PLANTS`) lands without a row here — no
  * silent no-op (burned/070).
  *

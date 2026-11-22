@@ -1210,8 +1210,8 @@ function widestNameAloneOnTypical(d: ScenarioDraft): Pick<ScenarioDraft, 'people
 }
 
 /** One stream per person, paid until that person's death (`survivorPct` 0), so the income step-down at the first death
- *  is the stream itself: the only way a step-down reaches six characters (a step-down resting on Social Security alone
- *  stays at five, because the benefit base is capped, `pia-over-ceiling`). TAX-FREE (a non-qualified annuity whose whole
+ *  is the stream itself, six characters (Social Security alone reaches six only with both benefit bases above about
+ *  $96,700 a year, near the `pia-over-ceiling` cap, and claims at 70: the delayed credits). TAX-FREE (a non-qualified annuity whose whole
  *  payment is return of basis): a retired year's income above spending is dropped while its tax is paid from savings
  *  (the register's Tier 1 *Money coming in beyond what the household spends is thrown away…*), so a taxable stream drains
  *  the portfolio of a household it more than covers, and neither plant below would reach its class. */

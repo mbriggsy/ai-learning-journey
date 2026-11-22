@@ -824,6 +824,9 @@ chair; chair from a digest script, never the raw result, and expect the window t
   MBytes and the commit charge, never `FreePhysicalMemory` alone (it leaves out the standby cache). The harness says
   not to restart a reaped command unasked; Briggsy restarts it. The reaper stays off when Claude Code starts with
   `CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1` in its environment.
+  **Seen again (b9-8, 11-21):** the orphaned `pnpm test` ran on beside the resumed chain's own, both wrote one log
+  (it showed 461 tests) and the orphan exited 1 into the summary. Before resuming, find and kill the orphan tree as
+  above, give each rerun its own log file, and rerun the suite alone for its count.
 - **(b9-2, 11-20) A teammate's final report arrives TRUNCATED past a few thousand characters** ("[result truncated — ask
   the agent for the rest via SendMessage]", twice in one session): ask it to resend the rest in numbered parts, and never
   act on the half that arrived. A helper a teammate spawns hands back to the ORCHESTRATOR when its spawner sits idle

@@ -5386,6 +5386,13 @@ test.describe(`?seed=pasurplustypical — the Pennsylvania room plant (${REAL.wi
 //  · `?vault=yearpasurplus`: the Pennsylvania room frame a year on (about 781.6);
 //  · the survivor fold the household OPENS, on `?seed=budget` (about 838 at REAL and TIER, about 955 at 1440×900) and on
 //    `?seed=failingwidest` (about 894 at REAL): a question before it is a member.
+// And the review's remaining derived members (b9-1, the same register prescription; each base's docblock carries its read):
+//  · `?seed=pabudgetone`: `budget` in Pennsylvania with the one-person name (derived about 747.8);
+//  · `?seed=paone` (`patypical` with it, derived about 729.0; its verdict reads "On track", not "On the line", the direction
+//    unchanged), `?vault=yearpaone` and `?vault=yearparecone` a year on (about 746.6 each, the record card's standing line
+//    about 808.6, printed as its own line);
+//  · `?vault=yearpafailingone`: `yearpafailing` with it (about 743.3 on Windows, 764.1 on CI's ubuntu);
+//  · the opened fold on A's relief combination, `?seed=surpluswidestrelief` (derived about 908 opened at REAL).
 // Each prints on both platforms and asserts no fit (a frame read on one platform never asserts). The plants print through
 // the widest arms' machinery, both room states at REAL and the settled frame resized to LENOVO_FULL, each asserting only
 // that its frame is the one it names, after its lines print. The opened fold prints the frame closed, then open, asserting
@@ -5396,10 +5403,12 @@ type DerivedFacts = {
   readonly route: 'seed' | 'vault'
   readonly key: string
   readonly word: string
-  readonly direction: 'room' | 'rethink' | 'trim'
+  readonly direction: 'room' | 'rethink' | 'trim' | 'on-the-line'
   readonly survivor: 'inline' | 'folded'
   readonly echo: 0 | 1
   readonly form: 'one' | 'both'
+  /** A yearly return with a saved recommendation: its record card's standing line prints on its own line. */
+  readonly record?: true
 }
 
 const DERIVED_MEMBERS: ReadonlyArray<DerivedFacts> = [
@@ -5408,7 +5417,44 @@ const DERIVED_MEMBERS: ReadonlyArray<DerivedFacts> = [
   { route: 'vault', key: 'yearsurpluswidest', word: copy.outcomeOverFunded, direction: 'room', survivor: 'inline', echo: 1, form: 'one' },
   { route: 'vault', key: 'yearfailingwidest', word: copy.outcomeAlreadyFailing, direction: 'rethink', survivor: 'folded', echo: 1, form: 'one' },
   { route: 'vault', key: 'yearpasurplus', word: copy.outcomeOverFunded, direction: 'room', survivor: 'inline', echo: 1, form: 'both' },
+  { route: 'seed', key: 'pabudgetone', word: copy.outcomeBorderline, direction: 'on-the-line', survivor: 'folded', echo: 0, form: 'one' },
+  { route: 'seed', key: 'paone', word: copy.outcomeOnTrack, direction: 'on-the-line', survivor: 'inline', echo: 0, form: 'one' },
+  { route: 'vault', key: 'yearpaone', word: copy.outcomeOnTrack, direction: 'on-the-line', survivor: 'inline', echo: 1, form: 'one' },
+  { route: 'vault', key: 'yearparecone', word: copy.outcomeOnTrack, direction: 'on-the-line', survivor: 'inline', echo: 1, form: 'one', record: true },
+  { route: 'vault', key: 'yearpafailingone', word: copy.outcomeAlreadyFailing, direction: 'rethink', survivor: 'inline', echo: 1, form: 'one' },
 ]
+
+/** A record-bearing member's card, read in one evaluation (viewport-relative, the page scrolled to its top): its face,
+ *  its causes, its top and its standing line's bottom. Printed, never asserted beyond the face and causes. */
+async function readRecordCard(page: Page): Promise<{ face: string | null; causes: string[]; top: number; standing: number }> {
+  await page.evaluate(() => window.scrollTo(0, 0))
+  return page.evaluate(() => {
+    const card = document.querySelector('.rec-record')
+    const standing = document.querySelector('.rec-record__standing')
+    if (card === null || standing === null) throw new Error('[derived member] the record card is not on the page')
+    return {
+      face: standing.getAttribute('data-standing'),
+      causes: Array.from(card.querySelectorAll('.rec-record__causes li')).map((li) => (li.textContent ?? '').trim()),
+      top: card.getBoundingClientRect().top,
+      standing: standing.getBoundingClientRect().bottom,
+    }
+  })
+}
+
+function printRecordCard(frame: string, size: WidestSizeName, c: Awaited<ReturnType<typeof readRecordCard>>): void {
+  const line =
+    `${frame} ${size} record attempt=${test.info().retry}: card top=${c.top.toFixed(1)} standing bottom=${c.standing.toFixed(1)} ` +
+    `face=${c.face ?? '-'} causes=${c.causes.length}`
+  console.log(`[${MEASURE_KIND.derived.tag}] ${line}`)
+  test.info().annotations.push({ type: MEASURE_KIND.derived.annotation, description: line })
+}
+
+function assertRecordIdentity(frame: string, c: Awaited<ReturnType<typeof readRecordCard>>): void {
+  expect(c.face, `${frame}: the card reads "no longer holds"`).toBe('superseded')
+  expect(c.causes, `${frame}: one cause, the rulebooks (doctorYearlyReturnRecord proves it at plant time)`).toEqual([
+    copy.recommendRecordSupersededRules,
+  ])
+}
 
 function assertDerivedIdentity(frame: string, r: MeasureRead, f: DerivedFacts): void {
   expect(r.word, `${frame}: the verdict`).toBe(f.word)
@@ -5439,6 +5485,8 @@ test.describe(`the review's derived members (${REAL.width}×${REAL.height} @ ${R
       const walk = await measureWalk(page)
       printPending(frame, 'REAL', st, 'derived')
       printMeasure(frame, 'REAL', 'settled', settled, walk, '', 'derived')
+      const card = facts.record === true ? await readRecordCard(page) : null
+      if (card !== null) printRecordCard(frame, 'REAL', card)
 
       // HIS WHOLE SCREEN: the settled frame resized (a fresh load would re-walk a vault's gate).
       await page.setViewportSize(LAPTOP_SIZES.LENOVO_FULL.viewport)
@@ -5447,8 +5495,12 @@ test.describe(`the review's derived members (${REAL.width}×${REAL.height} @ ${R
       const tall = await readMeasure(page)
       const tallWalk = await measureWalk(page)
       printMeasure(frame, 'LENOVO_FULL', 'settled', tall, tallWalk, '', 'derived')
+      const tallCard = facts.record === true ? await readRecordCard(page) : null
+      if (tallCard !== null) printRecordCard(frame, 'LENOVO_FULL', tallCard)
 
       // After the lines, so the numbers print either way.
+      if (card !== null) assertRecordIdentity(frame, card)
+      if (tallCard !== null) assertRecordIdentity(`${frame} LENOVO_FULL`, tallCard)
       assertMeasureRead(frame, settled, walk)
       assertDerivedIdentity(frame, settled, facts)
       if (st.pending !== null) {
@@ -5506,11 +5558,17 @@ for (const size of ['REAL', 'TIER', 'LENOVO_FULL', 'SHOWCASE'] as const) {
   const s = LAPTOP_SIZES[size]
   test.describe(`the opened survivor fold at ${size} (${s.viewport.width}×${s.viewport.height} @ ${s.deviceScaleFactor}dpr) — printed, never asserted`, () => {
     test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
-    for (const key of size === 'REAL' ? (['budget', 'failingwidest'] as const) : (['budget'] as const)) {
+    // b9-1: A's relief combination (`surpluswidestrelief`) joins at REAL, round 3's derived about 908 opened.
+    for (const key of size === 'REAL' ? (['budget', 'failingwidest', 'surpluswidestrelief'] as const) : (['budget'] as const)) {
       test(`?seed=${key} ${size}: the frame closed, then the fold opened, printed; the fold's state asserted, never the fit`, async ({ page }) => {
         await gotoSeedFinal(page, key)
         await assertResolvedSpine(page)
         await assertSizeTier(page, size)
+        // A room clause is read once it has left `pending` (its sized form), as the widest arms read their settled state.
+        await page.waitForFunction(() => document.querySelector('.cs-magnitude')?.getAttribute('data-spend') !== 'pending', null, {
+          timeout: FINAL_TIER_MS,
+        })
+        await settleLayout(page)
         await printOpenedFold(page, `?seed=${key}`, size)
       })
     }

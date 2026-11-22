@@ -74,6 +74,9 @@ const PLANTS = {
   yearsurpluswidest: ['surpluswidest', doctorYearlyReturn],
   yearfailingwidest: ['failingwidest', doctorYearlyReturn],
   yearpasurplus: ['pasurplustypical', doctorYearlyReturn],
+  yearpaone: ['paone', doctorYearlyReturn],
+  yearparecone: ['paone', doctorYearlyReturnRecord],
+  yearpafailingone: ['pafailingone', doctorYearlyReturn],
 } as const satisfies Record<string, readonly [DevSeedKey, (s: CurrentScenario, today: number) => CurrentScenario]>
 
 const plantDraft = (key: keyof typeof PLANTS): ScenarioDraft => {
@@ -146,6 +149,15 @@ const ROWS: readonly {
   // 120,000 + 809,910 = 929,910 → $77,492.50 → "77,490" (the $10 step rounds 7,749.25 steps down); couple 1,199,880
   // → $99,990.
   { key: 'failingwidest', draft: () => DEV_SEEDS.failingwidest, annual: { survivor: 929_910, couple: 1_199_880 }, rendered: line('77,490', '99,990') },
+  // `surpluswidestrelief` (b9-1, A's relief combination) — itemized the same way: housing 120,000 sticky, travel
+  // 360,000 discretionary (480,000 less the housing), no M: 120,000 + 0.75 × 360,000 = 120,000 + 270,000 = 390,000 →
+  // $32,500 a month; couple 480,000 → $40,000.
+  { key: 'surpluswidestrelief', draft: () => DEV_SEEDS.surpluswidestrelief, annual: { survivor: 390_000, couple: 40_000 * 12 }, rendered: line('32,500', '40,000') },
+  // b9-1, the review's remaining derived members' bases: neither the state, a name nor the extras answer is a spending
+  // input, so each keeps its base's basis (`budget`'s, `patypical`'s, `pafailingtypical`'s rows).
+  { key: 'pabudgetone', draft: () => DEV_SEEDS.pabudgetone, annual: { survivor: 57_500, couple: 65_600 }, rendered: line('4,790', '5,470') },
+  { key: 'paone', draft: () => DEV_SEEDS.paone, annual: { survivor: 58_500, couple: 78_000 }, rendered: line('4,880', '6,500') },
+  { key: 'pafailingone', draft: () => DEV_SEEDS.pafailingone, annual: { survivor: 6_000 * 12, couple: 96_000 }, rendered: line('6,000', '8,000') },
   // The itemized household — sticky 33,200 (survivor-fixed: housing 18,000 + utilities 4,800 + other 4,400 =
   // 27,200 typed, plus the injected $6,000 OOP medical), scalable essentials 14,400 (food 9,600 +
   // transportation 4,800), discretionary 18,000: 33,200 + 0.75 × 14,400 + 0.75 × 18,000 = 33,200 + 10,800 + 13,500 =
@@ -194,6 +206,14 @@ const ROWS: readonly {
   { key: 'vault:yearsurpluswidest', draft: () => plantDraft('yearsurpluswidest'), annual: { survivor: 30_000 * 12, couple: 40_000 * 12 }, rendered: line('30,000', '40,000') },
   { key: 'vault:yearfailingwidest', draft: () => plantDraft('yearfailingwidest'), annual: { survivor: 929_910, couple: 1_199_880 }, rendered: line('77,490', '99,990') },
   { key: 'vault:yearpasurplus', draft: () => plantDraft('yearpasurplus'), annual: { survivor: 45_000, couple: 60_000 }, rendered: line('3,750', '5,000') },
+  // b9-1: the review's remaining derived members a year on, the same doctors, each its base's S.
+  ...(['yearpaone', 'yearparecone'] as const).map((key) => ({
+    key: `vault:${key}`,
+    draft: () => plantDraft(key),
+    annual: { survivor: 58_500, couple: 78_000 },
+    rendered: line('4,880', '6,500'),
+  })),
+  { key: 'vault:yearpafailingone', draft: () => plantDraft('yearpafailingone'), annual: { survivor: 6_000 * 12, couple: 96_000 }, rendered: line('6,000', '8,000') },
 ]
 
 const spineParams = (d: ScenarioDraft, key: string): SimulationParams => {
@@ -219,7 +239,7 @@ describe('the survivor card’s spending-basis line on every household that rend
   it('the census: the rows are exactly the spine dev seeds and the spine vault plants — a new one of either must add its row', () => {
     const spineSeeds = (Object.keys(DEV_SEEDS) as DevSeedKey[]).filter((k) => buildSpineParams(DEV_SEEDS[k]) !== null)
     expect(ROWS.filter((r) => !r.key.startsWith('vault:')).map((r) => r.key).sort()).toEqual([...spineSeeds].sort())
-    expect(spineSeeds).toHaveLength(26)
+    expect(spineSeeds).toHaveLength(30)
     // Every registered plant over a spine base renders the card, so each needs a row, doctored as the
     // registry doctors it: read off `AGED_PLANTS`, never re-typed, so a new spine plant reds here.
     const spinePlants = Object.entries(AGED_PLANTS).filter(([, p]) => p !== undefined && spineSeeds.includes(p.base))

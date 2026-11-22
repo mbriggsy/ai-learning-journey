@@ -1294,6 +1294,62 @@ const paOffTrackOne: ScenarioDraft = {
   ...widestNameAloneOnTypical(offTrackTypicalExtras),
 }
 
+// THE REVIEW'S REMAINING DERIVED MEMBERS (b9-1, 2026-11-22). Rounds 1 and 2 of the frames-outside build's review derived
+// them by U1's 20.8 px a residual line, never read; the register's composites entry, prescription (4), owes each planted
+// and read before the record card's seat council sits. Each is its base with the one-person typical sentence naming a
+// 20-character name ({@link widestNameAloneOnTypical}), in Pennsylvania. Every verdict below was read through the real
+// engine before it was typed, and is pinned as found in `devSeeds.test.ts`.
+
+/**
+ * `?seed=pabudgetone`: `budget` (the relief spine household: an essentials budget over a borderline full spend, so the
+ * essentials card shows and the survivor card folds) in Pennsylvania with the one-person name. Still "On the line" over
+ * a "More than covered" floor, the direction `on-the-line` and the relief shown, as `budget` (PA taxes neither this
+ * all-65+ household's IRA draw nor its Social Security). Derived about 747.8 px at REAL (left-bound by about 170 px).
+ * Changed from `budget`: the state, person 0's name and the extras answers (`budget` answers none, which funds the
+ * typical figure for both; here person 0 says "not sure" and person 1 affirms $0).
+ */
+const paBudgetOne: ScenarioDraft = {
+  ...retiredBudget,
+  retirementState: 'PA',
+  ...widestNameAloneOnTypical(retiredBudget),
+}
+
+/**
+ * `?seed=paone`: `patypical` with the one-person name, the base of `?vault=yearpaone` and `?vault=yearparecone`
+ * ({@link AGED_PLANTS}). ⚑ FOUND (b9-1): affirming person 1's extras at $0 lifts this household from "On the line" to
+ * "On track" (one person's typical figure less to fund); the direction stays `on-the-line`, so it is still `yearpa`'s
+ * class (the frames-outside plan's classes key on the direction and the residual's form, R4 to R6) with a shorter verdict
+ * word. The review's derivation ("about 729.0" fresh, "about 746.6" a year on) assumed only the residual moved; the arms
+ * read whether the verdict's word moves the frame. Changed from `patypical`: person 0's name and the extras answers.
+ */
+const paOne: ScenarioDraft = { ...paTypicalExtras, ...widestNameAloneOnTypical(paTypicalExtras) }
+
+/**
+ * `?seed=pafailingone`: `pafailingtypical` with the one-person name, the base of `?vault=yearpafailingone`. Still
+ * "Already short", its direction `rethink`. Its fresh frame is not a member (B's widest, `failingwidest`, carries this
+ * residual with the relief combination and six-character figures), so only its yearly return is printed: derived about
+ * 743.3 px on Windows and 764.1 on CI's ubuntu (rung 3's step-down re-wraps there). Changed from `pafailingtypical`:
+ * person 0's name and the extras answers.
+ */
+const paFailingOne: ScenarioDraft = { ...paFailingTypicalExtras, ...widestNameAloneOnTypical(paFailingTypicalExtras) }
+
+/**
+ * `?seed=surpluswidestrelief`: A's RELIEF combination, `surpluswidest` with U1's essentials budget ($120,000 a year of
+ * essentials under two $250,000 tax-free streams, the rest travel), so the essentials card shows and the survivor card
+ * folds. U1 read it closed at 775.7 px against the inline combination's 784.7, which made the inline A's widest. The
+ * budget turns the headline "On track" over a "More than covered" floor, the direction still `room` (pinned as found).
+ * Planted for the survivor fold a household OPENS (round 3 of the build's review: derived about 908 px opened at REAL,
+ * above A's inline 784.7), and as A's sibling combination for the seat's acceptance test. Changed from `surpluswidest`:
+ * the budget alone (its lines sum to the spend; no medical figure, so the reconciliation holds).
+ */
+const surplusWidestRelief: ScenarioDraft = {
+  ...surplusWidest,
+  budget: [
+    bline('housing', 'Mortgage & taxes', 120_000, 'essentials'),
+    bline('travel', 'Travel', 40_000 * 12 - 120_000, 'discretionary'),
+  ],
+}
+
 /**
  * THE FL $0-CONSTITUTIONAL AFFIRMATION — `retiredOnTrack`'s couple in Florida. FL is a sourced
  * constitutional $0 (Fla. Const. Art. VII § 5(a)): every decumulation dollar incurs $0 state tax,
@@ -1834,6 +1890,10 @@ export const DEV_SEEDS = {
   failingwidest: failingWidest,
   surpluswidest: surplusWidest,
   paofftrackone: paOffTrackOne,
+  pabudgetone: paBudgetOne,
+  paone: paOne,
+  pafailingone: paFailingOne,
+  surpluswidestrelief: surplusWidestRelief,
   buckets: multiBucketWitness,
   steer: noPretaxSteer,
   nc: ncAffirmation,
@@ -2652,6 +2712,13 @@ export const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
   yearsurpluswidest: { base: 'surpluswidest', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
   yearfailingwidest: { base: 'failingwidest', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
   yearpasurplus: { base: 'pasurplustypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
+  // b9-1: the review's remaining derived members a year on (the bases' docblocks above carry each reading):
+  //  · `yearpaone`: `yearpa` with the one-person name (derived about 746.6; its base reads "On track", not "On the line").
+  //  · `yearparecone`: `yearparec` with it (derived about 746.6, its record card's standing line about 808.6).
+  //  · `yearpafailingone`: `yearpafailing` with it (derived about 743.3 on Windows, 764.1 on CI's ubuntu).
+  yearpaone: { base: 'paone', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
+  yearparecone: { base: 'paone', doctor: doctorYearlyReturnRecord, viewDay: RETURN_DAY },
+  yearpafailingone: { base: 'pafailingone', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
 }
 
 async function runPlantDevVault(key: string): Promise<PlantResult> {

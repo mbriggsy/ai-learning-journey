@@ -2118,7 +2118,7 @@ for (const { seed } of SPINE_SEEDS) {
         // owed fork gets decided from, and "the 20 px arm" is a label — the measured root is the
         // regime. (A `> 16` pin alone would let a 17 px emulation file itself as "20 px".)
         type: '20px-root one-frame law (RECORDED — fork owed)',
-        description: `root ${at16}px → ${at20}px at ${REAL.width}×${REAL.height}: ${report.offenders.length} element(s) past the ${REAL.height}px fold: ${
+        description: `root ${at16}px → ${at20}px at ${REAL.width}×${REAL.height} attempt=${test.info().retry}: ${report.offenders.length} element(s) past the ${REAL.height}px fold: ${
           report.offenders.map((o) => `${o.desc}@${o.bottom.toFixed(1)}`).join(', ') || 'none'
         }`,
       })
@@ -2711,10 +2711,10 @@ test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo
     // REAL sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law); read after
     // the fit. The echo-gap pins above own this frame's W4 row-gaps, so the helper skips them here.
     await assertDensityTier(page, 'short', { skipNoteGaps: true, echo: true })
-    // L3's TALL side (the one-frame composites plan's U5, the W5 precedent): the only arm that reads an echo frame
-    // at SHOWCASE (the yearly loop reads its echo frames at 1440×900 since the frames-outside U4), so an echo rule
-    // written outside the tier would change the 917 SHOWCASE unseen without it. The same frame, widened to SHOWCASE, must read every rung dark,
-    // L3's included. A computed-style read only, so the resize needs no fresh load.
+    // L3's TALL side (the one-frame composites plan's U5, the W5 precedent): one of two arms that read an echo frame at
+    // SHOWCASE (the other is `?vault=yearfailing`'s rung-3 arm); since the frames-outside U4 the yearly loop also reads its echo frames'
+    // rungs at 1440×900, where an echo rule outside the tier applies too (no new @media prelude is legal): a second guard, kept for 917.
+    // The same frame, widened to SHOWCASE, must read every rung dark, L3's included. A computed-style read only, so the resize needs no fresh load.
     await page.setViewportSize(SHOWCASE)
     await settleLayout(page)
     await assertDensityTier(page, 'tall', { skipNoteGaps: true, echo: true })
@@ -4370,11 +4370,11 @@ test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) —
     await assertOneVisibleDisclaimer(page, 'laptop')
     await assertDensityTier(page, 'short', { record: true })
 
-    // (4) W5's TALL side (the 1440×731 re-point's review, 2026-11-20): the only arm that reads a record card
-    // at SHOWCASE (the record loop reads its plants at 1440×900 since the frames-outside U4), so a W5 rule
-    // written outside the tier would change the 917 SHOWCASE card unseen without it (R4). The same frame, widened to SHOWCASE,
-    // must read every rung dark, the card's own included. A computed-style read only, so the resize
-    // needs no fresh load.
+    // (4) W5's TALL side (the 1440×731 re-point's review, 2026-11-20): the only arm that reads a record card at
+    // SHOWCASE. Since the frames-outside U4 the record loop also reads W5's tall side at 1440×900 on every record plant,
+    // `?vault=rec` included, and a W5 rule written outside the tier applies there too (no new @media prelude is legal),
+    // so this read is a second guard, kept for the 917 card itself (R4). The same frame, widened to SHOWCASE, must read
+    // every rung dark, the card's own included. A computed-style read only, so the resize needs no fresh load.
     await page.setViewportSize(SHOWCASE)
     await settleLayout(page)
     await assertDensityTier(page, 'tall', { record: true })
@@ -5247,8 +5247,8 @@ function assertWidestIdentity(frame: string, r: MeasureRead, facts: WidestFacts)
   expect(r.echo, `${frame}: a fresh frame carries no staleness echo`).toBe(0)
   expect(r.state, `${frame}: the residual's state clause`).toBe('PA')
   expect(r.form, `${frame}: the typical residual names one person`).toBe('one')
-  // The reserved save box is the save-box axis's widest member (KTD1, KTD4): a frame without it reads shorter than its
-  // class, so a widest reading taken without it would under-read the seat's acceptance test.
+  // The reserved box: on a `?seed=` frame the only other face is the unsaveable 'none', which reads shorter (KTD4). Two taller save-box members
+  // are not planted here, the read-only face (a second tab's banner: +7.6 px on all four widest, U1) and the failed state (KTD1): prescription (4) carries both.
   expect(r.save, `${frame}: the reserved save box renders`).not.toBeNull()
 }
 

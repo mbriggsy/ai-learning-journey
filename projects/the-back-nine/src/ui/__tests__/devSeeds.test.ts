@@ -248,7 +248,9 @@ describe('the "not sure" Medicare-extras seeds (the composites plan\'s U2, and t
  * ceiling reds the width pins.
  */
 describe("the widest plants (the frames-outside plan's U1)", () => {
-  const PLANTS = ['failingwidest', 'surpluswidest', 'pasurplustypical'] as const
+  // `paofftrackone` (round 2 of the frames-outside build's review): the off-track class at its widest closed-axis members,
+  // at today's figures, held to the same legality.
+  const PLANTS = ['failingwidest', 'surpluswidest', 'pasurplustypical', 'paofftrackone'] as const
   const WIDEST = ['failingwidest', 'surpluswidest'] as const
 
   /** KTD2's named touched set: per person the retirement age, claim age, birth year and benefit base; the survivor
@@ -391,6 +393,7 @@ describe("the widest plants (the frames-outside plan's U1)", () => {
     const cases = [
       ['failingwidest', 'pafailingtypical', ['people', 'medicareExtrasByPerson', 'enteredAccounts', 'incomeStreams', 'budget', 'annualSpendingReal']],
       ['surpluswidest', 'pasurplustypical', ['people', 'medicareExtrasByPerson', 'incomeStreams', 'annualSpendingReal']],
+      ['paofftrackone', 'offtracktypical', ['retirementState', 'people', 'medicareExtrasByPerson']],
     ] as const
     for (const [key, base, named] of cases) {
       const plant: Record<string, unknown> = { ...DEV_SEEDS[key] }
@@ -406,6 +409,17 @@ describe("the widest plants (the frames-outside plan's U1)", () => {
     // B's one account: its balance only (its kind and blend kept, so the doors stay the class's own).
     const balanceless = (d: ScenarioDraft) => d.enteredAccounts.map(({ valueToday: _v, ...rest }) => rest)
     expect(balanceless(DEV_SEEDS.failingwidest)).toEqual(balanceless(DEV_SEEDS.pafailingtypical))
+  })
+
+  it("'paofftrackone' through the real engine, pinned as found: off-track, its clause a trim, one person at the name ceiling alone on typical", () => {
+    const d = DEV_SEEDS.paofftrackone
+    const wire = run(d)
+    expect({ state: wire.headline.outcomeState, direction: wire.dollar.direction }, 'off-track in Pennsylvania, as offtracktypical').toEqual({
+      state: 'off-track',
+      direction: 'trim',
+    })
+    expect(d.people[0]?.name?.length, 'person 0 named at the name ceiling').toBe(NAME_CEILING)
+    expect(d.medicareExtrasByPerson?.map((e) => e.kind), 'person 0 alone on "not sure", person 1 affirmed $0').toEqual(['typical', 'none'])
   })
 
   it("each widest plant's one name is exactly the name ceiling, and the residual's one typical sentence names it", () => {
@@ -1723,7 +1737,11 @@ describe('the record-bearing plants (the remembered recommendation the fit gate 
 // ===========================================================================
 describe('the yearly-return and Pennsylvania record plants (the one-frame composites plan\'s U3)', () => {
   // The rung-3 key council's four yearly returns (`wf_540221e4-42d`) ride every yearly-return arm too.
-  const YEARLY = ['yearpa', 'yearfailing', 'yearrec', 'yearparec', 'yearsurplus', 'yearofftrack', 'yearpafailing', 'yearfailingentered'] as const
+  // Round 2 of the frames-outside build's review: its four derived members' yearly returns ride every arm too.
+  const YEARLY = [
+    'yearpa', 'yearfailing', 'yearrec', 'yearparec', 'yearsurplus', 'yearofftrack', 'yearpafailing', 'yearfailingentered',
+    'yearpaofftrackone', 'yearsurpluswidest', 'yearfailingwidest', 'yearpasurplus',
+  ] as const
   const RECORDS = ['yearrec', 'yearparec'] as const
   type U3Key = (typeof YEARLY)[number] | 'recpa'
   const NOTHING_STALE = { costStale: false, leftOverStale: false } as const
@@ -1766,6 +1784,10 @@ describe('the yearly-return and Pennsylvania record plants (the one-frame compos
     expect(AGED_PLANTS.yearofftrack).toEqual({ base: 'offtracktypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
     expect(AGED_PLANTS.yearpafailing).toEqual({ base: 'pafailingtypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
     expect(AGED_PLANTS.yearfailingentered).toEqual({ base: 'failingentered', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
+    expect(AGED_PLANTS.yearpaofftrackone).toEqual({ base: 'paofftrackone', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
+    expect(AGED_PLANTS.yearsurpluswidest).toEqual({ base: 'surpluswidest', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
+    expect(AGED_PLANTS.yearfailingwidest).toEqual({ base: 'failingwidest', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
+    expect(AGED_PLANTS.yearpasurplus).toEqual({ base: 'pasurplustypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
   })
 
   for (const key of YEARLY) {
@@ -1855,6 +1877,10 @@ describe('the yearly-return and Pennsylvania record plants (the one-frame compos
         yearofftrack: 'off-track',
         yearpafailing: 'already-failing',
         yearfailingentered: 'already-failing',
+        yearpaofftrackone: 'off-track',
+        yearsurpluswidest: 'over-funded',
+        yearfailingwidest: 'already-failing',
+        yearpasurplus: 'over-funded',
       }
       expect(found).toBe(AS_FOUND[key])
     })
@@ -2283,7 +2309,8 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     const plants = Object.entries(AGED_PLANTS)
     expect(plants.map(([k]) => k).sort()).toEqual([
       'datearrived', 'datestale', 'rec', 'recold', 'recpa', 'stale', 'statestale', 'wyclock',
-      'yearfailing', 'yearfailingentered', 'yearofftrack', 'yearpa', 'yearpafailing', 'yearparec', 'yearrec', 'yearsurplus',
+      'yearfailing', 'yearfailingentered', 'yearfailingwidest', 'yearofftrack', 'yearpa', 'yearpafailing', 'yearpaofftrackone',
+      'yearparec', 'yearpasurplus', 'yearrec', 'yearsurplus', 'yearsurpluswidest',
     ])
     for (const [key, plant] of plants) {
       const built = scenarioFromDraft(DEV_SEEDS[plant!.base])

@@ -1279,6 +1279,22 @@ const surplusWidest: ScenarioDraft = {
 }
 
 /**
+ * `?seed=paofftrackone` (the off-track class at its widest closed-axis members, at today's figures; round 2 of the
+ * frames-outside build's review, the register's six-character entry's first prescription): `offtracktypical` in
+ * Pennsylvania with the one-person typical sentence naming a 20-character name ({@link widestNameAloneOnTypical}), so
+ * the residual runs 8 lines against `offtracktypical`'s 6 (derived about 756.9 px at REAL, no leading entry reaching a
+ * fresh `trim` frame). Person 1's affirmed $0 drops one person's typical extras, and Pennsylvania taxes neither this
+ * all-65+ household's IRA draw nor its Social Security, so it stays off-track: pinned as found in `devSeeds.test.ts`.
+ * Changed from `offtracktypical`: the state, person 0's name and the extras answers. Its yearly return:
+ * `yearpaofftrackone` ({@link AGED_PLANTS}).
+ */
+const paOffTrackOne: ScenarioDraft = {
+  ...offTrackTypicalExtras,
+  retirementState: 'PA',
+  ...widestNameAloneOnTypical(offTrackTypicalExtras),
+}
+
+/**
  * THE FL $0-CONSTITUTIONAL AFFIRMATION — `retiredOnTrack`'s couple in Florida. FL is a sourced
  * constitutional $0 (Fla. Const. Art. VII § 5(a)): every decumulation dollar incurs $0 state tax,
  * so the affirmation "no state income tax — nothing to add" ships as an HONEST fact (FL's presence
@@ -1817,6 +1833,7 @@ export const DEV_SEEDS = {
   pasurplustypical: paSurplusTypicalExtras,
   failingwidest: failingWidest,
   surpluswidest: surplusWidest,
+  paofftrackone: paOffTrackOne,
   buckets: multiBucketWitness,
   steer: noPretaxSteer,
   nc: ncAffirmation,
@@ -2625,6 +2642,16 @@ export const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
   yearofftrack: { base: 'offtracktypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
   yearpafailing: { base: 'pafailingtypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
   yearfailingentered: { base: 'failingentered', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
+  // Round 2 of the frames-outside build's review: the derived members the seat council needs read before it sits (the
+  // register's composites entry, prescription (4)), each a yearly return over its base (above):
+  //  · `yearpaofftrackone`: the off-track class at its widest closed-axis members, a year on (derived about 764.1).
+  //  · `yearsurpluswidest`: A's widest a year on, class C at its widest (derived about 802.4).
+  //  · `yearfailingwidest`: B's widest a year on, the relief face with the echo (never derived).
+  //  · `yearpasurplus`: the Pennsylvania room frame a year on (derived about 781.6; the first ruling's (3) ordered it).
+  yearpaofftrackone: { base: 'paofftrackone', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
+  yearsurpluswidest: { base: 'surpluswidest', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
+  yearfailingwidest: { base: 'failingwidest', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
+  yearpasurplus: { base: 'pasurplustypical', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
 }
 
 async function runPlantDevVault(key: string): Promise<PlantResult> {

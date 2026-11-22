@@ -5167,7 +5167,22 @@ async function measureWalk(page: Page): Promise<MeasureWalk> {
 
 const fixed = (n: number | null, digits: number): string => (n === null ? '-' : n.toFixed(digits))
 
-function printMeasure(frame: string, size: WidestSizeName, state: string, r: MeasureRead, walk: MeasureWalk | null, tail = ''): void {
+/** What a printed reading is: a widest plant (the seat's acceptance test) or a derived member (rounds 2 and 3 of the
+ *  build's review: owed before the seat sits). The tag opens each log line and names its annotation. */
+const MEASURE_KIND = {
+  widest: { tag: 'widest plant', annotation: "widest plant (RECORDED: the seat's acceptance test)" },
+  derived: { tag: 'derived member', annotation: 'derived member (RECORDED: owed before the seat sits)' },
+} as const
+
+function printMeasure(
+  frame: string,
+  size: WidestSizeName,
+  state: string,
+  r: MeasureRead,
+  walk: MeasureWalk | null,
+  tail = '',
+  kind: keyof typeof MEASURE_KIND = 'widest',
+): void {
   const listed = (list: ReadonlyArray<Measured>): string =>
     list.length === 0 ? 'none' : list.map((o) => `${o.desc}@${o.bottom.toFixed(1)}`).join(',')
   const walked =
@@ -5184,24 +5199,24 @@ function printMeasure(frame: string, size: WidestSizeName, state: string, r: Mea
     `direction=${r.direction ?? '-'} spend=${r.spend ?? '-'} survivor=${r.survivor} relief=${r.relief ? 1 : 0} ` +
     `typical=${r.typical} echo=${r.echo} residual form=${r.form}/${r.state} ` +
     `name=${r.name === null ? '-' : String(r.name.length)}${walked}${tail}`
-  console.log(`[widest plant] ${line}`)
-  test.info().annotations.push({ type: "widest plant (RECORDED: the seat's acceptance test)", description: line })
+  console.log(`[${MEASURE_KIND[kind].tag}] ${line}`)
+  test.info().annotations.push({ type: MEASURE_KIND[kind].annotation, description: line })
 }
 
 /** The pending line (KTD6): the reading, `none` where the lane never touched the clause, or UNKNOWN. */
-function printPending(frame: string, size: WidestSizeName, st: MeasureState): void {
+function printPending(frame: string, size: WidestSizeName, st: MeasureState, kind: keyof typeof MEASURE_KIND = 'widest'): void {
   const seen = st.spends.length === 0 ? '-' : st.spends.join('>')
   const frames = ` seen=${seen} pending frames=${st.pendingFrames} still=${st.stillFrames}`
   const error = st.error === null ? '' : ` error=${st.error}`
   if (st.pending !== null) {
-    printMeasure(frame, size, 'pending', st.pending, null, `${frames}${error}`)
+    printMeasure(frame, size, 'pending', st.pending, null, `${frames}${error}`, kind)
     return
   }
   const lane = st.spends.includes('pending') || st.spends.includes('sized')
   const motion =
     st.moving === null ? '' : `; the last pending frame, mid-motion and never a reading: caveat=${st.moving.caveat.toFixed(1)}`
   console.log(
-    `[widest plant] ${frame} ${size} pending attempt=${test.info().retry}: ${
+    `[${MEASURE_KIND[kind].tag}] ${frame} ${size} pending attempt=${test.info().retry}: ${
       lane ? 'UNKNOWN (the lane ran and no still pending frame was caught' : 'none (the lane never touched the clause'
     }${motion})${frames}${error}`,
   )
@@ -5359,6 +5374,148 @@ test.describe(`?seed=pasurplustypical — the Pennsylvania room plant (${REAL.wi
     await printTallEdge(page, frame)
   })
 })
+
+// ── THE REVIEW'S DERIVED MEMBERS AND THE OPENED FOLD — printed, never asserted (rounds 2 and 3 of the frames-outside
+// build's whole-file review, b9-9; record: the composites README folder's b9-8-review/) ─────────────────────────────
+// The review derived, by arithmetic only, frames the record card's seat council needs read before it sits (the register's
+// composites entry, prescription (4)):
+//  · `?seed=paofftrackone` and `?vault=yearpaofftrackone`: the off-track class at its widest closed-axis members, fresh
+//    and a year on (derived about 756.9 and 764.1);
+//  · `?vault=yearsurpluswidest`: A's widest a year on, class C at its widest (about 802.4);
+//  · `?vault=yearfailingwidest`: B's widest a year on (never derived);
+//  · `?vault=yearpasurplus`: the Pennsylvania room frame a year on (about 781.6);
+//  · the survivor fold the household OPENS, on `?seed=budget` (about 838 at REAL and TIER, about 955 at 1440×900) and on
+//    `?seed=failingwidest` (about 894 at REAL): a question before it is a member.
+// Each prints on both platforms and asserts no fit (a frame read on one platform never asserts). The plants print through
+// the widest arms' machinery, both room states at REAL and the settled frame resized to LENOVO_FULL, each asserting only
+// that its frame is the one it names, after its lines print. The opened fold prints the frame closed, then open, asserting
+// only the fold's state. Their readings decide each frame's arm afterwards: held for the seat, asserted, or a member.
+
+/** What a derived member's frame must be, pinned as the unit arms found its verdict (`devSeeds.test.ts`). */
+type DerivedFacts = {
+  readonly route: 'seed' | 'vault'
+  readonly key: string
+  readonly word: string
+  readonly direction: 'room' | 'rethink' | 'trim'
+  readonly survivor: 'inline' | 'folded'
+  readonly echo: 0 | 1
+  readonly form: 'one' | 'both'
+}
+
+const DERIVED_MEMBERS: ReadonlyArray<DerivedFacts> = [
+  { route: 'seed', key: 'paofftrackone', word: copy.outcomeOffTrack, direction: 'trim', survivor: 'inline', echo: 0, form: 'one' },
+  { route: 'vault', key: 'yearpaofftrackone', word: copy.outcomeOffTrack, direction: 'trim', survivor: 'inline', echo: 1, form: 'one' },
+  { route: 'vault', key: 'yearsurpluswidest', word: copy.outcomeOverFunded, direction: 'room', survivor: 'inline', echo: 1, form: 'one' },
+  { route: 'vault', key: 'yearfailingwidest', word: copy.outcomeAlreadyFailing, direction: 'rethink', survivor: 'folded', echo: 1, form: 'one' },
+  { route: 'vault', key: 'yearpasurplus', word: copy.outcomeOverFunded, direction: 'room', survivor: 'inline', echo: 1, form: 'both' },
+]
+
+function assertDerivedIdentity(frame: string, r: MeasureRead, f: DerivedFacts): void {
+  expect(r.word, `${frame}: the verdict`).toBe(f.word)
+  expect(r.direction, `${frame}: the shown direction`).toBe(f.direction)
+  expect(r.survivor, `${frame}: the survivor face (folded means a CLOSED fold)`).toBe(f.survivor)
+  expect(r.relief, `${frame}: the floor relief shows exactly where the card folds`).toBe(f.survivor === 'folded')
+  expect(r.typical, `${frame}: the typical residual`).toBe(1)
+  expect(r.echo, `${frame}: the staleness echo`).toBe(f.echo)
+  expect(r.state, `${frame}: the residual's state clause`).toBe('PA')
+  expect(r.form, `${frame}: the residual's form`).toBe(f.form)
+  if (f.form === 'one') expect(r.name?.length, `${frame}: the residual names one person at the name ceiling`).toBe(NAME_CEILING)
+  expect(r.save, `${frame}: the save box renders`).not.toBeNull()
+}
+
+test.describe(`the review's derived members (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr in both room states, then ${LAPTOP_SIZES.LENOVO_FULL.viewport.width}×${LAPTOP_SIZES.LENOVO_FULL.viewport.height}) — printed, never asserted`, () => {
+  const s = LAPTOP_SIZES.REAL
+  test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
+  for (const facts of DERIVED_MEMBERS) {
+    const frame = `?${facts.route}=${facts.key}`
+    test(`${frame}: printed at REAL in both room states and at his whole screen, its identity asserted, never its fit`, async ({ page }) => {
+      await armMeasure(page)
+      if (facts.route === 'seed') await gotoSeedFinal(page, facts.key)
+      else await gotoVaultFinal(page, facts.key)
+      await assertResolvedSpine(page)
+      await assertSizeTier(page, 'REAL')
+      const settled = await readMeasureSettled(page)
+      const st = await readMeasureState(page)
+      const walk = await measureWalk(page)
+      printPending(frame, 'REAL', st, 'derived')
+      printMeasure(frame, 'REAL', 'settled', settled, walk, '', 'derived')
+
+      // HIS WHOLE SCREEN: the settled frame resized (a fresh load would re-walk a vault's gate).
+      await page.setViewportSize(LAPTOP_SIZES.LENOVO_FULL.viewport)
+      await settleLayout(page)
+      await assertSizeTier(page, 'LENOVO_FULL')
+      const tall = await readMeasure(page)
+      const tallWalk = await measureWalk(page)
+      printMeasure(frame, 'LENOVO_FULL', 'settled', tall, tallWalk, '', 'derived')
+
+      // After the lines, so the numbers print either way.
+      assertMeasureRead(frame, settled, walk)
+      assertDerivedIdentity(frame, settled, facts)
+      if (st.pending !== null) {
+        assertMeasureRead(`${frame} pending`, st.pending, null)
+        assertDerivedIdentity(`${frame} pending`, st.pending, facts)
+      }
+      assertMeasureRead(`${frame} LENOVO_FULL`, tall, tallWalk)
+      assertDerivedIdentity(`${frame} LENOVO_FULL`, tall, facts)
+    })
+  }
+})
+
+/** The frame's protected bottoms, read in one evaluation (viewport-relative, the page scrolled to its top). */
+async function foldFrame(page: Page): Promise<{ caveat: number; save: number | null; band: number; doors: number }> {
+  await page.evaluate(() => window.scrollTo(0, 0))
+  return page.evaluate(() => {
+    const bottom = (sel: string): number => {
+      const el = document.querySelector(sel)
+      if (el === null) throw new Error(`[opened fold] ${sel} is not on the page`)
+      return el.getBoundingClientRect().bottom
+    }
+    const save = document.querySelector('.confidence-reveal[data-twopane] .result-save-slot')
+    return {
+      caveat: bottom('footer.disclaimer.disclaimer--in-frame'),
+      save: save === null ? null : save.getBoundingClientRect().bottom,
+      band: bottom('.confidence-reveal[data-twopane] > .cs-band'),
+      doors: bottom('.result-quiet-row'),
+    }
+  })
+}
+
+/** Round 3's question, measured: the frame with its survivor fold closed, then opened by a click on its summary (the
+ *  household's one act), printed on one line; only the fold's state and the frame's walk floor are asserted. */
+async function printOpenedFold(page: Page, frame: string, size: keyof typeof LAPTOP_SIZES): Promise<void> {
+  const fold = page.locator('details.survivor-fold')
+  await expect(fold, `${frame}: the survivor card is folded (the floor relief holds the inline slot)`).toHaveCount(1)
+  expect(await fold.evaluate((el) => (el as HTMLDetailsElement).open), `${frame}: the fold starts closed`).toBe(false)
+  const closed = await foldFrame(page)
+  await page.locator('.survivor-fold__summary').click()
+  expect(await fold.evaluate((el) => (el as HTMLDetailsElement).open), `${frame}: the click opened the fold`).toBe(true)
+  await settleLayout(page)
+  const opened = await foldFrame(page)
+  const walk = await frameReport(page, true)
+  const f = (n: number | null): string => (n === null ? '-' : n.toFixed(1))
+  const line =
+    `${frame} ${size} attempt=${test.info().retry}: closed caveat=${f(closed.caveat)} save=${f(closed.save)} band=${f(closed.band)} · ` +
+    `opened caveat=${f(opened.caveat)} save=${f(opened.save)} band=${f(opened.band)} doors=${f(opened.doors)} ` +
+    `degrade=${walk.offenders.length === 0 ? 'none' : walk.offenders.map((o) => `${o.desc}@${o.bottom.toFixed(1)}`).join(',')}`
+  console.log(`[opened fold] ${line}`)
+  test.info().annotations.push({ type: 'opened fold (RECORDED: a question before it is a member)', description: line })
+  expect(walk.counted, `${frame}: the walk counted too few elements`).toBeGreaterThan(WALK_FLOOR)
+}
+
+for (const size of ['REAL', 'TIER', 'LENOVO_FULL', 'SHOWCASE'] as const) {
+  const s = LAPTOP_SIZES[size]
+  test.describe(`the opened survivor fold at ${size} (${s.viewport.width}×${s.viewport.height} @ ${s.deviceScaleFactor}dpr) — printed, never asserted`, () => {
+    test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
+    for (const key of size === 'REAL' ? (['budget', 'failingwidest'] as const) : (['budget'] as const)) {
+      test(`?seed=${key} ${size}: the frame closed, then the fold opened, printed; the fold's state asserted, never the fit`, async ({ page }) => {
+        await gotoSeedFinal(page, key)
+        await assertResolvedSpine(page)
+        await assertSizeTier(page, size)
+        await printOpenedFold(page, `?seed=${key}`, size)
+      })
+    }
+  })
+}
 
 // ── the pay check: its two intake steps, its panel row and its standing line (U8) ───────────────
 //

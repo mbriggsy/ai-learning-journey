@@ -95,6 +95,12 @@ CLAUDE.md). If the team ever gets renamed, re-read it from `/rosters` + `/users`
   changing on the page, never by "the click was dispatched".
 - **Out of IR:** click his IR square, then the `BN Empty` row that appears and reads `valid` (it only appears when
   the roster has room). IR straight to a starter slot reads `invalid`: bench him first, then swap (11-11, Tate).
+- **An empty STARTER slot counts as room for that `BN Empty` row** (measured 2026-11-22, under the lock): with all
+  six BN rows full and the DEF slot `Empty` (BAL dropped), clicking Hockenson's IR square produced a seventh `BN
+  Empty` row reading `valid`, and he moved there (`reserve` → `null` on `/rosters`). So a drop of a STARTER clears an
+  ineligible IR man just as a bench drop does. Two ineligible men cost two drops of any kind, not two bench drops.
+- **Moving an Out starter INTO IR** (Maye, QB slot → IR, 11-22, after the lock cleared): click his slot square; BOTH
+  `IR Empty` rows read `valid` when both are open, so pick the first rather than demanding exactly one.
 
 ### Add / drop a FREE AGENT — `/players`
 

@@ -674,6 +674,11 @@ CLOSES the comment ("held is not defined") — describe it in words
 - **(2026-09-10)** a bare token's
 nearest preceding named citation is the WRONG file 70 times in 287 (the sentence names another file in prose) — attribution
 is a guess a verifier must check, never a fact
+- **(b9-9, 11-22) A comment that grows by a few lines moves dozens of citations in unrelated docs:** six extra lines
+  across three comments in `e2e/vertical-fit.spec.ts` and `src/ui/devSeeds.ts` queued 54 re-anchors across about 20
+  plans. Reflow an edited comment to its old line count when the fix is wording only; a real new line (a register
+  sub-bullet, a new arm) re-anchors with `pnpm doc:reanchor HEAD --apply`, then each move spot-checked to the same
+  content. Never re-run `--apply` after it ran: the dry run then re-diffs against HEAD and lists the same moves again.
 
 ## Copy and copyGuard
 
@@ -827,6 +832,11 @@ chair; chair from a digest script, never the raw result, and expect the window t
   **Seen again (b9-8, 11-21):** the orphaned `pnpm test` ran on beside the resumed chain's own, both wrote one log
   (it showed 461 tests) and the orphan exited 1 into the summary. Before resuming, find and kill the orphan tree as
   above, give each rerun its own log file, and rerun the suite alone for its count.
+  **Seen again (b9-9, 11-22):** a serial gate chain left running in the background while the session sat idle was
+  reaped at its last gate, `pnpm test`, nine gates green before it; its vitest tree (one parent, ten workers) ran on.
+  `taskkill /T /F /PID <the vitest.mjs node>` cleared it (free memory 3.9 → 6.0 GB). The notice says not to restart
+  the reaped command unasked: name the gates it finished, and lean on an earlier green run of the same code if one
+  exists, said so in the commit.
 - **(b9-2, 11-20) A teammate's final report arrives TRUNCATED past a few thousand characters** ("[result truncated — ask
   the agent for the rest via SendMessage]", twice in one session): ask it to resend the rest in numbered parts, and never
   act on the half that arrived. A helper a teammate spawns hands back to the ORCHESTRATOR when its spawner sits idle
@@ -887,6 +897,10 @@ chair; chair from a digest script, never the raw result, and expect the window t
 - **(b9-9/b9-10, 11-13) A probe runs from the project dir** (`pnpm exec tsx --tsconfig ./tsconfig.json <probe>.mts`, absolute `file:///`
   imports of the modules) so the `@intake` / `@ui` aliases resolve; print a composer on every witness BEFORE typing a
   by-hand pin (U3's probe, `u3-probe.mts`, is the one to extend).
+- **(b9-9, 11-22) A record folder's prints extract is not every print:** `b9-7-u4/u4-*-prints.txt` left out the
+  `[U17 record return] … 1440x731` lines U4's tree printed, and round 1 of the frames-outside review wrote "U4 printed
+  no REAL reading of an asserting arm" from it. Grep the CI run's own log (`gh run view <id> --log`) before claiming
+  what a run did or did not print; save a new extract with every tag the spec prints.
 
 ## Engine and tax math
 

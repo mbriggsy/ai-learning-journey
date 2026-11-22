@@ -705,11 +705,18 @@ type DensityRows = {
    *  row-gaps themselves (statestale's pin is W4's; stale's 2px is written by round 5 AND W4, so it
    *  kills neither alone: see its comment), so the helper leaves them alone there. */
   readonly skipNoteGaps?: boolean
-  /** The staleness echo (`.cs-staleness-note`) is on the frame: inside the short tier L3 steps the survivor
-   *  statements' leading to tight there. The helper reads the frame's own echo and requires this flag to
-   *  match it, so an echo arm can never read the snug band by forgetting the flag (the composites plan's
-   *  U5, KTD7). */
+  /** The staleness echo (`.cs-staleness-note`) is on the frame: inside the short tier the echo entry (L3) steps
+   *  the survivor statements' leading to tight there, whatever the direction (`SURVIVOR_LEADING`'s echo cells).
+   *  The helper reads the frame's own echo and requires this flag to match it, so an echo arm can never read
+   *  the snug band by forgetting the flag (the composites plan's U5, KTD7). */
   readonly echo?: boolean
+  /** The survivor statements' leading the arm expects inside the short tier (the frames-outside plan's KTD11).
+   *  Left out, it follows `echo` (every echo frame reads tight), so only a FRESH frame B's entry reaches passes
+   *  `'tight'`: the shown direction `rethink` with the typical Medicare residual. The helper looks the leading up
+   *  from the frame's own markers (`SURVIVOR_LEADING`) and requires the arm's expectation to match it on both
+   *  sides of the tier (the `register` pattern), so an arm can never read the snug band on a frame the entry
+   *  tightens, and an entry that tightens off its key reds every arm whose frame lacks it. */
+  readonly leading?: 'tight' | 'snug'
   /** Rung 3's key is on the frame (council wf_540221e4-42d): the SHOWN direction is `rethink` or `trim`
    *  (`.cs-magnitude[data-direction]`), the staleness echo shows and the typical Medicare residual runs.
    *  Inside the short tier the survivor context and its inner step-down then borrow the eyebrow's register;
@@ -738,7 +745,9 @@ type DensityRows = {
  *     honesty floor's input), its pull's margin 12 → 8, its legend's margin 16 → 8 and gap 8 → 4;
  *   - L1, the survivor eyebrow, context and step-down leading body 1.55 → snug 1.4;
  *   - L3 (the one-frame composites plan's rung 2a), on a frame with the staleness echo, the same three
- *     statements one step further, → tight 1.3 (`rows.echo`, checked against the frame's own echo);
+ *     statements one step further, → tight 1.3, and B's entry (the frames-outside plan's KTD7), the same step
+ *     on a `rethink` frame with the typical Medicare residual: both read from `SURVIVOR_LEADING` by the
+ *     frame's own markers, the arm's expectation (`rows.echo`, `rows.leading`) checked against it;
  *   - L4 (rung 2b), the staleness echo's own line body 1.55 → snug 1.4;
  *   - RUNG 3 (council wf_540221e4-42d), on a frame carrying its key (`rows.register`, checked against the
  *     frame's own markers), the survivor context and the step-down inside it body → the card's own eyebrow
@@ -746,6 +755,19 @@ type DensityRows = {
  *     and the floor relief's trim note (`.floor-readout .survivor__stepdown`) body always. "Body" is the px
  *     of a CSSOM probe set to var(--text-base) inside the reveal, never a typed number.
  *  L2 (the Medicare pair and the state note) is `assertNoteLeading`'s, on both tiers. */
+const SURVIVOR_LEADING = {
+  // KTD11 (the frames-outside plan), written here independently of survivor.css's selectors: the survivor
+  // statements' leading inside the short tier, one row per direction the magnitude clause stamps, each cell
+  // read from the frame's own echo and typical-residual markers. The echo entry (L3) tightens every echo frame;
+  // B's entry (KTD7) tightens a `rethink` frame whose Medicare residual is the typical form; every other short
+  // frame reads snug (L1). Above the tier every cell reads body. The helper's allowed directions are this
+  // table's keys, so a direction with no row reds at run time.
+  rethink: ({ echo, typical }) => (echo || typical ? 'tight' : 'snug'),
+  trim: ({ echo }) => (echo ? 'tight' : 'snug'),
+  room: ({ echo }) => (echo ? 'tight' : 'snug'),
+  'on-the-line': ({ echo }) => (echo ? 'tight' : 'snug'),
+} as const satisfies Record<string, (frame: { readonly echo: boolean; readonly typical: boolean }) => 'tight' | 'snug'>
+
 async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: DensityRows = {}): Promise<void> {
   const short = tier === 'short'
   const read = await page.evaluate(() => {
@@ -822,19 +844,28 @@ async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: Densi
   const exact = (actual: string | null | undefined, onShort: string, onTall: string, what: string): void => {
     expect(actual, `${what} ${at}`).toBe(short ? onShort : onTall)
   }
-  // The survivor statements' leading: tight on a short echo frame (L3), snug on any other short frame
-  // (L1), body above the tier.
-  const tightEcho = short && rows.echo === true
+  expect(read.stamped, 'no two-pane reveal is stamped — the density read would be vacuous (insight 029)').toBe(true)
+  expect(read.echo, `the echo flag must match the frame: the staleness echo is ${read.echo ? 'ON' : 'OFF'} here`).toBe(rows.echo === true)
+  // The survivor statements' leading (KTD11): the frame's own markers pick its row in `SURVIVOR_LEADING`, and the
+  // arm's expectation must match them on both sides of the tier. Inside the short tier the cell reads tight (L3,
+  // B's entry) or snug (L1); above it, body.
+  const directions: readonly string[] = Object.keys(SURVIVOR_LEADING)
+  expect(directions, 'the magnitude clause stamps its shown direction (the leading table and rung 3 read it)').toContain(read.direction)
+  const marked = SURVIVOR_LEADING[read.direction as keyof typeof SURVIVOR_LEADING]({ echo: read.echo, typical: read.typical })
+  const expected = rows.leading ?? (rows.echo === true ? 'tight' : 'snug')
+  expect(
+    marked,
+    `the leading expectation must match the frame: direction ${read.direction}, echo ${read.echo}, typical ${read.typical} → ${marked}, the arm expects ${expected}`,
+  ).toBe(expected)
+  const tight = short && marked === 'tight'
   const leading = (ratios: readonly number[], what: string): void => {
-    const name = tightEcho ? 'L3 on the echo frame: --leading-tight ~1.3' : short ? '--leading-snug ~1.4' : 'body ~1.55'
+    const name = tight ? '--leading-tight ~1.3 (L3 on an echo frame, or B\'s entry)' : short ? '--leading-snug ~1.4' : 'body ~1.55'
     for (const r of ratios) {
-      const [lo, hi] = tightEcho ? [1.25, 1.35] : short ? [1.35, 1.45] : [1.5, 1.6]
+      const [lo, hi] = tight ? [1.25, 1.35] : short ? [1.35, 1.45] : [1.5, 1.6]
       expect(r, `${what} leading ${at}: ${name}`).toBeGreaterThan(lo)
       expect(r, `${what} leading ${at}: ${name}`).toBeLessThan(hi)
     }
   }
-  expect(read.stamped, 'no two-pane reveal is stamped — the density read would be vacuous (insight 029)').toBe(true)
-  expect(read.echo, `the echo flag must match the frame: the staleness echo is ${read.echo ? 'ON' : 'OFF'} here`).toBe(rows.echo === true)
   // L4 — the echo's own line: snug inside the short tier, body above it
   if (rows.echo === true) {
     expect(read.stalenessLeading.length, 'the echo frame carries exactly one staleness line — L4 would read nothing').toBe(1)
@@ -894,7 +925,7 @@ async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: Densi
   }
   // RUNG 3 — the borrowed register, keyed to the frame's own markers (the ruling, written here independently of
   // survivor.css's selectors): the shown direction is `rethink` or `trim`, the echo shows, the typical residual runs.
-  expect(['trim', 'room', 'on-the-line', 'rethink'], 'the magnitude clause stamps its shown direction (rung 3 reads it)').toContain(read.direction)
+  // The direction was checked against the leading table's keys above.
   const key = (read.direction === 'rethink' || read.direction === 'trim') && read.echo && read.typical
   expect(key, `rung 3's key must match the frame: direction ${read.direction}, echo ${read.echo}, typical ${read.typical}`).toBe(rows.register === true)
   const borrow = short && key
@@ -2685,8 +2716,9 @@ test.describe(`the yearly returns — the gate + the echoed frame, rung 3 on its
       if (held === null) await assertFrameFits(page, true, { backupDoor: true })
       else await assertFrameFitsHoldingCaveat(page, `?vault=${key} ${REAL.width}x${REAL.height}`, { backupDoor: true }, held)
       await assertSurvivorBasis(page, 'inline')
-      // REAL sits inside the short tier; the echo flag is checked against the frame's own echo (L3 and L4), and
-      // the register flag against the frame's own rung-3 key.
+      // REAL sits inside the short tier. The echo flag is checked against the frame's own echo (L4, and the echo
+      // cells of the leading table, which read tight on every echo frame: L3, and on `yearfailing` and
+      // `yearpafailing` B's entry too, at the same value), and the register flag against the frame's own rung-3 key.
       await assertNoteLeading(page, 'short')
       await assertDensityTier(page, 'short', { echo: true, register })
     })
@@ -2711,10 +2743,18 @@ test.describe(`the yearly returns — the gate + the echoed frame, rung 3 on its
 // alone fits, 715.3 px), and the council's plants: `failingentered` (entered extras) and `offtracktypical` (the
 // off-track trim frame, "not sure"). Each holds the one-frame law at REAL, TIER and SHOWCASE.
 //
-// Two fresh frames sit outside his 731 px fold at REAL and are a NEW STOP (`FRAMES_OUTSIDE_COUNCIL`):
+// B'S ENTRY (the frames-outside plan's KTD7, survivor.css): the three `rethink` frames with the typical residual
+// (`failing`, `failingtypical`, `pafailingtypical`) read the survivor statements at tight leading inside the
+// short tier, and body above it; `failingentered` (no typical residual) and the other two stay snug. The
+// `leading` column is each arm's expectation, checked against the frame's own markers (`SURVIVOR_LEADING`).
+// Measured on Windows at REAL: `pafailingtypical`'s caveat 736.0 → 727.3 px (CI's ubuntu reading owed to the
+// entry's own run, run M2); its REAL arm stays held until the frames-outside plan's U4 reads both platforms.
+//
+// Two fresh frames sat outside his 731 px fold at REAL and are a NEW STOP (`FRAMES_OUTSIDE_COUNCIL`):
 // `surplustypical`, the reassuring room frame ("More than covered", 743.1 px on Windows), and
-// `pafailingtypical`, Pennsylvania's already-failing household answering "not sure" (736.0 px): no echo, so the
-// ruled key cannot reach it, and nothing stable separates it from `failingtypical`, which fits. Each prints its
+// `pafailingtypical`, Pennsylvania's already-failing household answering "not sure" (736.0 px before B's entry):
+// no echo, so rung 3's key cannot reach it, and nothing stable separates it from `failingtypical`, which fits, so
+// B's entry tightens both. Each prints its
 // caveat's bottom and holds every other line to the frame (`assertFrameFitsHoldingCaveat`). Both also broke the
 // SHOWCASE's full fit, where no rung applies, but only through the gate's own walk: their doors end inside 917 px
 // (904.4 / 897.3, Windows, b9-8) while `main.result`'s bottom padding, then counted as content, ended at 937. The
@@ -2724,19 +2764,19 @@ test.describe(`the yearly returns — the gate + the echoed frame, rung 3 on its
 // measure right after it, as the spine matrix does (the reserve holds the sized height: the plants' probe read
 // FIRST equal to SETTLED on every frame).
 const RUNG3_FRESH = [
-  { seed: 'failing', word: copy.outcomeAlreadyFailing, typical: 1, newStop: false },
-  { seed: 'failingtypical', word: copy.outcomeAlreadyFailing, typical: 1, newStop: false },
-  { seed: 'failingentered', word: copy.outcomeAlreadyFailing, typical: 0, newStop: false },
-  { seed: 'offtracktypical', word: copy.outcomeOffTrack, typical: 1, newStop: false },
-  { seed: 'pafailingtypical', word: copy.outcomeAlreadyFailing, typical: 1, newStop: true },
-  { seed: 'surplustypical', word: copy.outcomeOverFunded, typical: 1, newStop: true },
+  { seed: 'failing', word: copy.outcomeAlreadyFailing, typical: 1, newStop: false, leading: 'tight' },
+  { seed: 'failingtypical', word: copy.outcomeAlreadyFailing, typical: 1, newStop: false, leading: 'tight' },
+  { seed: 'failingentered', word: copy.outcomeAlreadyFailing, typical: 0, newStop: false, leading: 'snug' },
+  { seed: 'offtracktypical', word: copy.outcomeOffTrack, typical: 1, newStop: false, leading: 'snug' },
+  { seed: 'pafailingtypical', word: copy.outcomeAlreadyFailing, typical: 1, newStop: true, leading: 'tight' },
+  { seed: 'surplustypical', word: copy.outcomeOverFunded, typical: 1, newStop: true, leading: 'snug' },
 ] as const
 
 for (const size of ['REAL', 'TIER', 'SHOWCASE'] as const) {
   test.describe(`rung 3's fresh frames at ${size} — no echo, so the survivor context stays body`, () => {
     if (size === 'REAL') test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
     else test.use({ viewport: size === 'TIER' ? TIER : SHOWCASE })
-    for (const { seed, word, typical, newStop } of RUNG3_FRESH) {
+    for (const { seed, word, typical, newStop, leading } of RUNG3_FRESH) {
       const held = newStop && size !== 'TIER'
       const law =
         size === 'REAL'
@@ -2763,7 +2803,7 @@ for (const size of ['REAL', 'TIER', 'SHOWCASE'] as const) {
         await assertSurvivorBasis(page, 'inline')
         const tier = size === 'SHOWCASE' ? 'tall' : 'short'
         await assertNoteLeading(page, tier)
-        await assertDensityTier(page, tier)
+        await assertDensityTier(page, tier, { leading })
       })
     }
   })

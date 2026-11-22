@@ -211,8 +211,9 @@
      fold's inner body (this selector out-ranks `.survivor-fold > .survivor` above, so it reaches it);
      the stack gap takes --space-1 too.
    - LEADING: the eyebrow, the context paragraph and the floor relief's step-down go body 1.55 →
-     --leading-snug 1.4. No line break moves (line counts measured equal before and after). On a frame
-     with the staleness echo they go one step further, to --leading-tight 1.3 (L3, below).
+     --leading-snug 1.4. No line break moves (line counts measured equal before and after). Two classes
+     of frame go one step further, to --leading-tight 1.3: a frame with the staleness echo (L3, below),
+     and an "Already short" frame whose Medicare residual is the typical form (B's entry, below).
    Measured in real Chromium at 1440×731 @ 2 (the 1440×731 re-point, 2026-11-20): the whitespace pays
    32 px on budget's two cards and 20 px on a one-card frame, the leading 10 to 13 px. History: the
    first whitespace step (2026-10-14, b9-toronto1) paid for the survivor's spending-basis line at the
@@ -232,15 +233,40 @@
     line-height: var(--leading-snug);
   }
   /* L3 (the one-frame composites plan's rung 2a, KTD7): on a frame that carries the staleness echo, the
-     same three statements take the ladder's next leading step, snug 1.4 → --leading-tight 1.3. Echo-scoped,
-     never tier-wide: the echo is the class that carries the breach (a yearly return puts the R13 caveat
-     past 731 px: 737.3 on `?vault=yearpa`, 744.3 on `yearfailing`, measured equal on Windows and CI), and
-     from New Year every real return carries it, so `?vault=stale`, `statestale` and `yearrec` take it too
-     and every return reads with one rhythm, while the fresh frames he has seen stay unchanged. The :has()
-     out-ranks L1 above (0,4,0 over 0,3,0), so it wins whatever the load order. */
+     same three statements take the ladder's next leading step, snug 1.4 → --leading-tight 1.3. Scoped to
+     a class of frame, never tier-wide: the echo is a class that carries the breach (a yearly return puts
+     the R13 caveat past 731 px: 737.3 on `?vault=yearpa`, 744.3 on `yearfailing`, measured equal on
+     Windows and CI), and from New Year every real return carries it, so `?vault=stale`, `statestale` and
+     `yearrec` take it too and every return reads with one rhythm. A fresh frame stays snug unless B's
+     entry, below, names its class. The :has() out-ranks L1 above (0,4,0 over 0,3,0), so it wins whatever
+     the load order. */
   .confidence-reveal[data-twopane]:has(.cs-staleness-note) .survivor__eyebrow,
   .confidence-reveal[data-twopane]:has(.cs-staleness-note) .survivor__context,
   .confidence-reveal[data-twopane]:has(.cs-staleness-note) .survivor__stepdown {
+    line-height: var(--leading-tight);
+  }
+  /* B's ENTRY (the frames-outside plan's KTD7; council wf_448928ea-280 as corrected by wf_9c0bb7ea-938,
+     2026-11-21, the composites entry's prescription (3)): the same leading step as L3, keyed to class B, a
+     frame whose SHOWN direction is `rethink` ("Already short", `.cs-magnitude`'s data-direction) and whose
+     Medicare residual is the typical form (the household answered "not sure"). No echo term and no state
+     marker: a state key would re-type the priced roster in CSS. It newly tightens the fresh `?seed=failing`,
+     `failingtypical` and `pafailingtypical` and B's widest plant, `failingwidest`; on `?vault=yearfailing`
+     and `yearpafailing` L3 already sets the same value, so it changes nothing there. It is a rung-2
+     (leading) entry, never rung 3: rung 3's key and its no-widening law (tokens.css) are untouched, and B
+     never takes the borrowed size. The bare step-down selector, as L1 and L3 use, so on a folded frame it
+     reaches the floor relief's trim note too. KEPT ONLY ON ITS TEST: `?seed=pafailingtypical` inside 731 px
+     on Windows AND CI's ubuntu, read from this tree. Measured on Windows at 1440×731 @ 2, no line break
+     moved: `pafailingtypical` 736.0 → 727.3 px; `failingwidest` 775.7 → 768.9 px, still outside, so it
+     joins the seat question on its own reading. CI's ubuntu reading is owed to the commit's own run (run
+     M2). PROVISIONAL: the record card's seat build re-measures it
+     and removes it if the seat makes it unnecessary, and Briggsy's read of the tighter paragraph (walk 10)
+     can revert it. Out-ranks L1 (0,6,0 over 0,3,0). */
+  .confidence-reveal[data-twopane]:has(.cs-magnitude[data-direction='rethink']):has(.cs-medicare-residual--typical)
+    .survivor__eyebrow,
+  .confidence-reveal[data-twopane]:has(.cs-magnitude[data-direction='rethink']):has(.cs-medicare-residual--typical)
+    .survivor__context,
+  .confidence-reveal[data-twopane]:has(.cs-magnitude[data-direction='rethink']):has(.cs-medicare-residual--typical)
+    .survivor__stepdown {
     line-height: var(--leading-tight);
   }
   /* RUNG 3 (council wf_540221e4-42d, 2026-11-20; the tier's law and its selector-list growth law live in

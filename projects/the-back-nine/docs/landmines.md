@@ -351,6 +351,12 @@ tests
   size match. Read SHOWCASE at SHOWCASE before predicting there. And `main.result`'s box ends at the viewport (917.0)
   whenever its content is shorter, so a fault that counts it reds only past doors + 40 px: the near miss is `failing` /
   `failingtypical` / `offtracktypical` at 876.7 + 40 = 916.7, 0.3 px inside.
+- **(b9-8, 11-21) The full-fit walk measures content, never layout padding** (the frames-outside plan's KTD8, U2
+  `5d3c7d81`): on the full path (the quiet row not excluded) `frameReport` skips `main.result` and `#root` by identity
+  (`layoutAncestors`) and measures every element inside them, each door's own box included. So `.result`'s tall-tier
+  padding never counts, a door whose own box ends past the fold still reds, and the padding is never trimmed to fit. A
+  new wrapper between `#root` and the doors that carries block padding would count again: add it to the skip only by a
+  ruling, and prove the walk still bites with a door fault sized to the fold (U2's plant; U4's F1 is the skip removed).
 - **(b9-7, 11-21) The widest plants' printing arms keep the pending room read (KTD6)**, titled `?seed=failingwidest …` /
   `?seed=surpluswidest …`, so a `-g "failing"` or `-g "surplus"` filter collects them: count them in a fault's prediction.
   They assert identity, tier and the widest strings, never a fit or a leading, so a stylesheet fault reds none of them.
@@ -934,6 +940,13 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
   progress dots with no test name: parse by its tag, and keep only an arm's final attempt (a retried arm prints twice).
   Never add `list` to that config: it changes the line format any log reader parses. (`playwright.fit-rv.config.ts`
   already lists `list`; leave it.)
+
+- **(b9-8, 11-21) A measuring commit measures only if every CI step before `verify:fit` is green.** The verify job
+  runs `verify:aca` first and `verify:fit` last, and no step runs after a failed one, so a red lint, a red unit test or a
+  stale ACA record leaves the run with no fit log at all: it measured nothing (the frames-outside plan's stop
+  condition). Run CI's own list locally, serially, in CI's order before pushing a commit whose run is evidence, then read
+  the fit log by tag, final attempt only. Once `aca-last-verified.json` passes its `nextDue`, every pushed run measures
+  nothing until the re-verify lands (its `howToClear`, never a date bump).
 
 - **(b9-3, 11-04) Two commits pushed at once run CI only on the head.** A prerequisite fix committed first keeps each tree
   honest, but only the head's run is read; say so in the report.

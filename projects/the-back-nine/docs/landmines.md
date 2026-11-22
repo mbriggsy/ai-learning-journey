@@ -338,21 +338,25 @@ tests
   arm over a FRESH `rethink` frame with the typical residual passes `leading: 'tight'` (B's entry tightens it), or it reds
   on "the leading expectation must match the frame" even at SHOWCASE; a direction with no row reds on the direction check.
   A table fault reds on that match line, a stylesheet fault on the ratio line: read which one a kill names (U3's F5a/F5b).
-- **(b9-5, 11-21) Any `-g "<seed>"` filter now also collects the measuring describe's arms** (the frames-outside plan's U6,
-  `41b58e17`): their titles carry the seed (`?seed=pafailingtypical REAL: printed, never asserted`, its LENOVO_FULL row, the
-  injected rows). Count them in every planted fault's prediction (U3's entry faults, U4's); `-g "measuring describe"`
-  collects all 45 alone. They assert identity and tier, never a fit or a leading, so a stylesheet fault reds none of them.
-- **(b9-5, 11-21) The pending room read (KTD6) is BUILT, and U4's permanent widest arms still need it.** `installMeasure`,
-  armed before navigation by `armMeasure` (the `probeComputingFrame` pattern; a check after `gotoSeedFinal` misses it, since
-  that ends in `settleLayout`), keeps the latest frame where the answer stands final with no run in flight and
-  `.cs-magnitude[data-spend="pending"]` holds the reserve, its fonts loaded and nothing that can move a box animating (an
-  opacity or color fade cannot, so the clause's own swap fade voids no frame). It caught every room and trim frame's
-  pending state on both platforms at run M1. U4 deletes the measuring describe, but A's widest's reserved figure is read
-  only while pending: keep `installMeasure`, `armMeasure`, `readMeasure*`, `assertMeasureTier` and `assertWidestStrings`
-  with the permanent arms, and delete every helper that loses its last caller (lint's `no-unused-vars` reds `e2e/`).
+- **(b9-7, 11-21) Every fit-law arm reads its size from `LAPTOP_SIZES` and calls `assertSizeTier` first** (the
+  frames-outside plan's U4): the window and DPR the table gives, the short-tier query, and `.result`'s 32 / 40 px padding,
+  then `assertFrameAtSize`, which looks the size's law up (`full` at SHOWCASE, `degrade` elsewhere, the full-fit distance
+  printed at LENOVO_FULL, `print` throws). A new arm at a new size takes both, and its describe title from `sizeTitle`. The
+  yearly-return and record arms reach LENOVO_FULL by a RESIZE after their REAL read, so a fault planted at LENOVO_FULL kills
+  them only after their REAL half passes; the two held yearly frames and every record plant then print at the tall edge
+  (`printTallEdge`), whose bottom past the fold by under the walk's half-pixel slack prints as such, never "inside".
+- **(b9-7, 11-21) The widest plants' printing arms keep the pending room read (KTD6)**, titled `?seed=failingwidest …` /
+  `?seed=surpluswidest …`, so a `-g "failing"` or `-g "surplus"` filter collects them: count them in a fault's prediction.
+  They assert identity, tier and the widest strings, never a fit or a leading, so a stylesheet fault reds none of them.
+  `installMeasure`, armed before navigation by `armMeasure` (the `probeComputingFrame` pattern; a check after
+  `gotoSeedFinal` misses it, since that ends in `settleLayout`), keeps the latest frame where the answer stands final with
+  no run in flight and `.cs-magnitude[data-spend="pending"]` holds the reserve, its fonts loaded and nothing that can move a
+  box animating (an opacity or color fade cannot, so the clause's own swap fade voids no frame). A's reserved figure is
+  read only while pending; a lane with no still pending frame prints UNKNOWN.
 - **(b9-5, 11-21) `SHORT_TIER_QUERY` derives its boundary from `TALL_EDGE.height - 1`:** a planted fault on the `TALL_EDGE`
-  constant moves the query too, so every REAL arm reads "not short" and reds (U6's first planting: 42 red where 28 were
-  predicted). Plant a size's height in its `LAPTOP_SIZES` viewport entry, never the shared constant.
+  constant moves the query too, so every arm that calls `assertSizeTier` at REAL or TIER reads "not short" and reds (U6's
+  first planting: 42 red where 28 were predicted). Plant a size's height in its `LAPTOP_SIZES` viewport entry, never the
+  shared constant.
 - **The re-entry gate is two columns at his 1440×731 window too** (68rem), and nothing pins its story column's fold, so its
   coda below the fold is a walk read, never a gate red; any fix is static (KD2's Fit). U2 pinned the story column's 20 px
   gap, not its bottom. (Moved from TODO.md's landmines block, b9-5.)
@@ -366,13 +370,14 @@ tests
 - **(b9-3, 11-21) A scratch vitest probe's `console.log` printed nothing** in `pnpm vitest run <file>`'s output here; write a
   probe's readings to a file in the scratchpad (`appendFileSync`).
 
-- **(b9-8, 11-21) Six arms are HELD, and nothing forces them back** (grep `FRAMES_OUTSIDE_COUNCIL`): `?vault=yearsurplus`, `?vault=yearpafailing` (b9-9: outside on ubuntu only)
-  and `?seed=surplustypical` / `?seed=pafailingtypical` at REAL print the caveat's bottom (`assertFrameFitsHoldingCaveat`),
-  and the two fresh seeds at SHOWCASE print the full fit's offenders (`assertFullFitHeld`); each stays green whatever it
-  reads. The frames-outside council's build swaps each back to `assertFrameFits` and deletes the constant. The record
-  loop's `standing: 'print'` rows (`yearrec`, `recpa`, `yearparec`) turn `'assert'` only with the card seat's ruling. A `-g`
-  filter on `playwright.fit.config.ts` also collects `e2e/chart-text.spec.ts` (`?vault=stale)` matches six of its titles):
-  count those arms in a mutant's predicted set.
+- **(b9-8, 11-21; re-pointed b9-7) Four arms are HELD at REAL, and nothing forces them back** (grep `SEAT_COUNCIL`, the
+  record card's seat council since the frames-outside plan's U4): `?vault=yearsurplus`, `?vault=yearpafailing` (outside
+  on ubuntu only), `?seed=surplustypical` and `?seed=pasurplustypical` print the caveat's bottom
+  (`assertFrameFitsHoldingCaveat`) and stay green whatever it reads; the widest plants print and assert identity only.
+  The seat's ruling build swaps each back to `assertFrameAtSize` and deletes the constant. The record loop's `standing:
+  'print'` rows (`yearrec`, `recpa`, `yearparec`) turn `'assert'` only with the card seat's ruling, at REAL and LENOVO_FULL
+  alike. A `-g` filter on `playwright.fit.config.ts` also collects `e2e/chart-text.spec.ts` (`?vault=stale)` matches six of
+  its titles): count those arms in a mutant's predicted set.
 - **(b9-9, 11-21) A re-sized paragraph's number is Windows-only until a CI run that carries the change reads it:** the
   plants read Windows = ubuntu to 0.1 px at body size, yet rung 3's borrowed size put `?vault=yearpafailing` at 722.5 on
   Windows and 743 on ubuntu (run 44872977380, red): Linux's slightly wider glyph advances pushed the step-down's last two
@@ -466,12 +471,12 @@ tests
   (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry-run output>` — SAFE / CARRIED / FRESH), hand-check each FRESH one
   and each REVIEW line (a citation inside a modified hunk is never moved), and move the second number of a comma pair by hand
   (the tool moves only the first).
-- **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:1192-1202`
+- **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:1293-1303`
   excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1062-1064`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:4277-4279`, measured at the Dell's 1536×791 @ 2.5), a once-measured
+  measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:4392-4394`, measured at the Dell's 1536×791 @ 2.5), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
-  arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:56-57`) — no date frame has ever been fit-measured either.
+  arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:52-53`) — no date frame has ever been fit-measured either.
 - **(2026-09-27, b9-11)** the ONE width seam: a new `@media (min-width: …rem)` fails `breakpoint-mirrors.test.ts` unless it mirrors `--bp-laptop` (68rem) — a new tier is a product decision
 - **(2026-09-26)** the spend lane lands a beat AFTER `data-answer-tier="final"`: a capture must wait out `.cs-magnitude[data-spend="pending"]` (the Caddie walk does since `2f43761f`), while a fit arm measuring right after `final` is measuring the RESERVED pending box — both states are laws
 - **(2026-09-23 evening)** a held look spec's style-tag lift must be REMOVED before the next dialog opens (a leaked `max-height:none` made the Roth frame an uncapped sheet no reader sees)

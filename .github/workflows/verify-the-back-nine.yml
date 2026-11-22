@@ -1,11 +1,13 @@
 name: Verify The Back Nine
 
 # Unlike verify-ai-journey-stats.yml (build-only), the-back-nine's engine + crypto
-# ARE the product, so CI runs the FULL gate — eleven scripts across two parallel jobs:
+# ARE the product, so CI runs the FULL gate — eleven scripts across four parallel jobs:
 # `verify` — ACA re-verify, state-tax re-verify, lint (layer boundaries + engine
-# purity), typecheck, doc-stats, tests, build, the initial-JS byte budget, the
-# real-Chromium CSP enforcement walk and the real-Chromium vertical-fit + chart-text +
-# phone intake-fold gates (one harness, playwright.fit.config.ts);
+# purity), typecheck, doc-stats, build, the initial-JS byte budget and the real-Chromium
+# CSP enforcement walk (the quick checks, ~3 min);
+# `verify-unit` — the vitest suite;
+# `verify-fit` — the real-Chromium vertical-fit + chart-text + phone intake-fold gates (one
+# harness, playwright.fit.config.ts; the critical path, ~26 min);
 # `verify-rv-chart-text` — the RecommendationViz chart-text gate on its own serialized
 # solve harness (three arms, each a full-precision solve on the worker pool — the
 # whole step ran 5.4 min on CI at 53f1ae71, run 37166135388; 4.9–9.1 min across the
@@ -71,9 +73,9 @@ jobs:
       # commit adding 2 test arms without touching README/roadmap went GREEN through this workflow:
       # the law says every stat surface updates in ONE pass, and the gate enforcing it was the one
       # gate CI never ran. `vitest list` only enumerates (it does not execute), so this is cheap and
-      # belongs here, ahead of the slow suite, to fail fast.
+      # belongs in this quick job; since the 2026-11-22 split its red no longer stops the suite or the
+      # fit gate, which run in their own jobs.
       - run: pnpm verify:doc-stats
-      - run: pnpm test
       - run: pnpm build
       # Needs dist/ — runs after build.
       - run: pnpm verify:bundle
@@ -88,15 +90,7 @@ jobs:
       # and firefox is still untested.
       - run: pnpm exec playwright install --with-deps chromium webkit
       - run: pnpm verify:csp
-      # The real-browser VERTICAL-FIT gate (council 2026-07-08): the one-frame fit law
-      # (--laptop-fit-height) + the date-route order contract, plus the chart-text gate (2026-09-05)
-      # and the phone intake-fold gate (2026-09-08), driven through `pnpm dev` on its own harness
-      # (playwright.fit.config.ts) — the ?seed= routes it measures are DCE'd out of dist/, so it
-      # cannot ride the CSP harness above. Needs no dist; chromium is already installed.
-      - run: pnpm verify:fit
-      # Surface the HTML report (+ traces) when verify:csp or verify:fit fails, so a CI-only failure is
-      # debuggable — both harnesses write the default playwright-report/, and a red stops the job, so
-      # the report is the failing gate's.
+      # Surface the HTML report (+ traces) when verify:csp fails, so a CI-only failure is debuggable.
       - if: failure()
         uses: actions/upload-artifact@v7
         with:
@@ -104,13 +98,68 @@ jobs:
           path: projects/the-back-nine/playwright-report/
           retention-days: 14
 
-  # The RecommendationViz chart-text gate — its OWN job, in parallel with `verify`: the one chart
+  # THE SPLIT (Briggsy, 2026-11-22: "approved", the CI-frequency chat; the project CLAUDE.md's Test cadence).
+  # These ran as ONE chain inside `verify` until then, verify:fit last, so any earlier red (a doc
+  # number, a stale ACA record) stopped the job before the fit gate printed a single frame, and every
+  # local session re-ran the whole list before each push to be sure the CI run would measure. As
+  # their own jobs a cheap red no longer hides the fit readings, and the run's wall clock is the fit
+  # job's alone (the suite's ~10 min now runs beside it).
+  verify-unit:
+    runs-on: ${{ inputs.runner || 'ubuntu-26.04' }}
+    defaults:
+      run:
+        working-directory: projects/the-back-nine
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: projects/the-back-nine/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  verify-fit:
+    runs-on: ${{ inputs.runner || 'ubuntu-26.04' }}
+    defaults:
+      run:
+        working-directory: projects/the-back-nine
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: projects/the-back-nine/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      # The real-browser VERTICAL-FIT gate (council 2026-07-08): the one-frame fit law
+      # (--laptop-fit-height) + the date-route order contract, plus the chart-text gate (2026-09-05)
+      # and the phone intake-fold gate (2026-09-08), driven through `pnpm dev` on its own harness
+      # (playwright.fit.config.ts) — the ?seed= routes it measures are DCE'd out of dist/, so it
+      # cannot ride the CSP harness. Needs no dist/, and Chromium alone.
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm verify:fit
+      # Its own report artifact (a distinct name — two jobs uploading `playwright-report` collide).
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-fit
+          path: projects/the-back-nine/playwright-report/
+          retention-days: 14
+
+  # The RecommendationViz chart-text gate — its OWN job, in parallel with the others: the one chart
   # that exists only after a full-precision (16k-path) worker solve, three arms (the whole step ran
   # 5.4 min on CI with the worker pool, at 53f1ae71, run 37166135388; 4.9–9.1 min across the green
   # pooled runs 2026-10-04 → 2026-10-16, runs 38693180201 / 37221659495),
   # SERIALIZED (`workers: 1`, playwright.fit-rv.config.ts) so each solve gets the whole runner.
   # Beside verify:fit's date-seed finals it would starve them of cores (the reason it is not in that
-  # harness); appended to the job above it would double its wall-clock. Needs no dist/ — it drives
+  # harness); appended to `verify-fit` it would double that job's wall-clock. Needs no dist/ — it drives
   # `pnpm dev`'s `?seed=surplus` route on its own port (4192), so it installs and boots on its own.
   verify-rv-chart-text:
     runs-on: ${{ inputs.runner || 'ubuntu-26.04' }}

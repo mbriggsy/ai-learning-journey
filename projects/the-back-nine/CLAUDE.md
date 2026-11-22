@@ -45,6 +45,24 @@ Precedence on conflict: the **roadmap's You-Are-Here table** wins on build statu
 | `pnpm caddie:walk` | The Caddie capture harness (`playwright.caddie.config.ts` → `e2e/caddie-walk.spec.ts`, port 4195) — driven by the `caddie` skill, not a CI gate |
 | `pnpm doc:reanchor` | Re-anchors line-numbered doc citations from a git diff (`scripts/reanchor-citations.mjs`) — a MUTATION tool that rewrites docs, not a check and not a CI gate; `verify:doc-stats` arm 4 is the gate it serves |
 
+## Test cadence (Briggsy, 2026-11-22: "approved")
+
+**CI is the one full check; the laptop never repeats it as a routine.** Every push to main runs all eleven gates on
+ubuntu in four parallel jobs (`.github/workflows/verify-the-back-nine.yml`): `verify` (the quick checks, build, bundle,
+CSP), `verify-unit`, `verify-fit` and `verify-rv-chart-text`. A cheap red no longer stops the fit readings. Why: on
+2026-11-22 the local whole-list run cost about 16 minutes per commit, CI then repeated it exactly, and in three months
+of CI reds no whole-list rerun caught a product bug the targeted runs missed (the facts: the commit that added this section).
+- **Before a push:** `pnpm typecheck`, `pnpm lint`, `pnpm verify:doc-stats` when a doc, a test count or a citation
+  moved, and the unit test files the change reaches (`pnpm vitest run <files>`). Never the whole CI list as a habit.
+- **`verify:fit` locally only for Windows readings** (planting or measuring a frame: CI gives only ubuntu's), and then
+  only the arms being measured (`-g`), alone on a quiet tree. A change that moves a slot's text runs the arms that read
+  that slot (`docs/landmines.md`, the fit gate's slot bullet), never the whole harness.
+- **Planted faults (mutants) only when building a NEW kind of check** (a new assertion family or gate), not every unit.
+- **A CI red is fixed in the next commit.** Nothing deploys from main, so a red main harms no one; read the run by
+  full sha at each start, as before.
+- Still open, his to rule: docs-only pushes running only `verify:doc-stats`, and the 300 KiB bundle limit against his
+  "download size doesn't matter" ruling. Unruled, both stay as they are.
+
 ## Layers & import boundaries (ESLint-enforced)
 
 `engine · crypto · store · intake · budget · viz · ui · shared` (path aliases `@engine/*` … `@shared/*`).

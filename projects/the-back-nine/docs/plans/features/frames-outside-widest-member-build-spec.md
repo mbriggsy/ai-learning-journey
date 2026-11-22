@@ -261,7 +261,7 @@ Two go to Briggsy's digest in U5, each a ⚑, neither waited on:
 
 | risk | mitigation |
 |---|---|
-| A pushed commit reds before `verify:fit` and prints nothing | every pushed commit runs CI's own list locally, in CI's order, serially; any commit that adds or removes a unit test updates the test count in `README.md` and `docs/roadmap.md` in that commit; the re-anchor runs once, last, inside each commit (Verification Contract) |
+| A pushed commit reds before `verify:fit` and prints nothing (ENDED 2026-11-22: CI's fit gate runs in its own job, so no earlier red can stop it) | ~~every pushed commit runs CI's own list locally, in CI's order, serially~~ (superseded by the project CLAUDE.md's *Test cadence*); any commit that adds or removes a unit test updates the test count in `README.md` and `docs/roadmap.md` in that commit; the re-anchor runs once, last, inside each commit (Verification Contract) |
 | A new seed reds a hand-listed census | U1 names each: the survivor-basis seed gate's rows and its hard count, and the engine-acceptance sweep. Every other suite that loops the seeds passes them unchanged (checked against the tree) |
 | The content walk hides a real overflow | U2's planted fault, sized to the fold: every asserting `SHOWCASE` arm must red on a door element |
 | The 900 arm's sanctioned doors hide a caveat past the fold | U4's planted fault, injected in the `LENOVO_FULL` arms only |
@@ -533,12 +533,12 @@ Two go to Briggsy's digest in U5, each a ⚑, neither waited on:
 
 | check | command | when |
 |---|---|---|
-| CI's own list, in its order, serially | `pnpm verify:aca`, `pnpm verify:state-tax`, `pnpm lint`, `pnpm typecheck`, `pnpm verify:doc-stats`, `pnpm test`, `pnpm build`, `pnpm verify:bundle`, `pnpm verify:csp`, `pnpm verify:fit` | before every push |
+| ~~CI's own list, in its order, serially~~ — SUPERSEDED 2026-11-22 by the project CLAUDE.md's *Test cadence* (Briggsy: "approved"; CI split into parallel jobs, so a cheap red no longer hides the fit readings; this row was the pilot's, never a ruling) | `pnpm verify:aca`, `pnpm verify:state-tax`, `pnpm lint`, `pnpm typecheck`, `pnpm verify:doc-stats`, `pnpm test`, `pnpm build`, `pnpm verify:bundle`, `pnpm verify:csp`, `pnpm verify:fit` | ~~before every push~~ |
 | the test count | `README.md` and `docs/roadmap.md`, read from `pnpm verify:doc-stats` | in every commit that adds or removes a unit test, KTD7's revert included |
 | e2e types | each edited spec through a scratch tsconfig (`e2e/` is outside `pnpm typecheck`; filter the known `Node.remove` errors) | U2, U6, U3, U4 |
 | fit gate | `pnpm verify:fit`, alone on an idle machine, never beside another suite, a planted fault or an edit to `src` | U2, U6, U3, U4 |
 | citations | `pnpm doc:reanchor` once per pushed commit, last, never while a planted fault is live; then restore the frozen records it moves | every commit that moves lines in a cited file |
-| CI's verify job | the run for the full sha, by run id | every push; runs M1 and M2 read from the verify log, by tag, final attempt only |
+| CI's verify job (its `verify-fit` job since the 2026-11-22 split) | the run for the full sha, by run id | every push; runs M1 and M2 read from the verify log, by tag, final attempt only |
 | CI's recommendation-chart job | the same sha's `verify-rv-chart-text` result | for "CI green" on every push; not needed to read M1 or M2 |
 
 ---

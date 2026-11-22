@@ -402,7 +402,7 @@ tests
   words onto a third line. A frame inside by less than one wrap line (20.8 px at `--text-sm`) can flip. Read the fit log of
   the run that carries a size, leading or wrap change before restoring an assertion or writing "Linux" in a doc (the
   register said "Linux: rung 3's CI logs" before that run finished). The ubuntu wraps are readable without Linux: `gh run
-  download <id> -n playwright-report`, unzip `data/*.zip` (the retry's trace), and read `screencast/`'s last frame.
+  download <id> -n playwright-report-fit` (`playwright-report` before the 2026-11-22 split), unzip `data/*.zip` (the retry's trace), and read `screencast/`'s last frame.
 - **(b9-8, 11-21) `assertDensityTier` reads rung 3 on every arm that calls it:** it derives the frame's key from its own
   markers (the shown direction `rethink` or `trim` on `.cs-magnitude[data-direction]`, the echo, the typical residual) and
   requires the arm's `register` flag to match, as `echo` does. A new arm over a key frame passes `register: true` (it
@@ -956,7 +956,7 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## CI
 
-- **(b9-3, 11-20) Test stdout reaches the `verify` job's log through a reporter nobody configured.**
+- **(b9-3, 11-20) Test stdout reaches the `verify-fit` job's log (the `verify` job's until the 2026-11-22 split) through a reporter nobody configured.**
   `playwright.fit.config.ts` lists `[['github'], ['html']]` on CI. The github reporter prints no test output
   (`printsToStdio()` is false), so Playwright prepends a `DotReporter` on CI, and that is what writes each arm's
   `console.log` lines (`[route fit]`, `[U17 record return]`, `[20px-root fit]`) into the log. Each line is glued after the
@@ -964,12 +964,14 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
   Never add `list` to that config: it changes the line format any log reader parses. (`playwright.fit-rv.config.ts`
   already lists `list`; leave it.)
 
-- **(b9-8, 11-21) A measuring commit measures only if every CI step before `verify:fit` is green.** The verify job
-  runs `verify:aca` first and `verify:fit` last, and no step runs after a failed one, so a red lint, a red unit test or a
-  stale ACA record leaves the run with no fit log at all: it measured nothing (the frames-outside plan's stop
-  condition). Run CI's own list locally, serially, in CI's order before pushing a commit whose run is evidence, then read
-  the fit log by tag, final attempt only. Once `aca-last-verified.json` passes its `nextDue`, every pushed run measures
-  nothing until the re-verify lands (its `howToClear`, never a date bump).
+- **(b9-1, 11-22; replaces b9-8's "a measuring commit measures only if every CI step before `verify:fit` is green")
+  The fit gate runs in its own CI job, `verify-fit`, beside `verify` (the quick checks), `verify-unit` and
+  `verify-rv-chart-text`.** Until the split a red lint, unit test, doc number or stale ACA record stopped the one chain
+  before `verify:fit` and the run measured nothing, which is why sessions ran CI's whole list locally before every push.
+  Now a cheap red leaves the fit readings intact: read them from the `verify-fit` job's log by tag, final attempt only,
+  whatever the other jobs say. A red arm inside `verify-fit` stops nothing either: Playwright runs every arm, then fails
+  the step, so the other arms' prints survive it. The local cadence is the project
+  CLAUDE.md's *Test cadence* (Briggsy, 2026-11-22).
 
 - **(b9-3, 11-04) Two commits pushed at once run CI only on the head.** A prerequisite fix committed first keeps each tree
   honest, but only the head's run is read; say so in the report.

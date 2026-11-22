@@ -332,6 +332,12 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-6, 11-21) `assertDensityTier` looks the survivor leading up in `SURVIVOR_LEADING`** (the frames-outside plan's
+  KTD11, `be870c9c`), one row per direction, each cell read from the frame's own echo and typical-residual markers, and
+  requires the arm's expectation to match on BOTH sides of the tier: `rows.leading`, which defaults from `rows.echo`. A new
+  arm over a FRESH `rethink` frame with the typical residual passes `leading: 'tight'` (B's entry tightens it), or it reds
+  on "the leading expectation must match the frame" even at SHOWCASE; a direction with no row reds on the direction check.
+  A table fault reds on that match line, a stylesheet fault on the ratio line: read which one a kill names (U3's F5a/F5b).
 - **(b9-5, 11-21) Any `-g "<seed>"` filter now also collects the measuring describe's arms** (the frames-outside plan's U6,
   `41b58e17`): their titles carry the seed (`?seed=pafailingtypical REAL: printed, never asserted`, its LENOVO_FULL row, the
   injected rows). Count them in every planted fault's prediction (U3's entry faults, U4's); `-g "measuring describe"`
@@ -545,6 +551,10 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 
 ## Citations and the doc gates
 
+- **(b9-6, 11-21) TODO.md's start-of-file section runs at its 60,000-character cap** (59,993 at b9-5's close): a line added
+  above the first `## ` heading reds `verify:doc-stats`'s TODO arm AND its unit twin (`verify-doc-stats.test.ts`, "the REAL
+  TODO.md holds the shape"), so the full suite reds too. Pay for an addition in the same edit by moving a finished record
+  out (git holds it), never by cutting a live prescription; measure with the arm before the CI list, not after.
 - **(b9-6, 11-20) `pnpm doc:reanchor` moves frozen records unless they are restored or marked**: in four runs of the
   composites build it moved the held quote `e2e/held/fit-24px-measurements.md` and walked insight 136's two named
   historical citations (across sessions, `devSeeds.ts` 1079 → 1115 and `vertical-fit.spec.ts` 396-406 → 424-434) while

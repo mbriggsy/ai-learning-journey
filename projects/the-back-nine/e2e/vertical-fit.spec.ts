@@ -2747,8 +2747,8 @@ test.describe(`the yearly returns — the gate + the echoed frame, rung 3 on its
 // (`failing`, `failingtypical`, `pafailingtypical`) read the survivor statements at tight leading inside the
 // short tier, and body above it; `failingentered` (no typical residual) and the other two stay snug. The
 // `leading` column is each arm's expectation, checked against the frame's own markers (`SURVIVOR_LEADING`).
-// Measured on Windows at REAL: `pafailingtypical`'s caveat 736.0 → 727.3 px (CI's ubuntu reading owed to the
-// entry's own run, run M2); its REAL arm stays held until the frames-outside plan's U4 reads both platforms.
+// Measured at REAL: `pafailingtypical`'s caveat 736.0 → 727.3 px on Windows and on ubuntu alike (CI run
+// 44970351069); its REAL arm stays held until the frames-outside plan's U4 restores it.
 //
 // Two fresh frames sat outside his 731 px fold at REAL and are a NEW STOP (`FRAMES_OUTSIDE_COUNCIL`):
 // `surplustypical`, the reassuring room frame ("More than covered", 743.1 px on Windows), and

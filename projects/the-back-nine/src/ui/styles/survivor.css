@@ -255,10 +255,10 @@
      (leading) entry, never rung 3: rung 3's key and its no-widening law (tokens.css) are untouched, and B
      never takes the borrowed size. The bare step-down selector, as L1 and L3 use, so on a folded frame it
      reaches the floor relief's trim note too. KEPT ONLY ON ITS TEST: `?seed=pafailingtypical` inside 731 px
-     on Windows AND CI's ubuntu, read from this tree. Measured on Windows at 1440×731 @ 2, no line break
-     moved: `pafailingtypical` 736.0 → 727.3 px; `failingwidest` 775.7 → 768.9 px, still outside, so it
-     joins the seat question on its own reading. CI's ubuntu reading is owed to the commit's own run (run
-     M2). PROVISIONAL: the record card's seat build re-measures it
+     on Windows AND CI's ubuntu, read from this tree. Measured at 1440×731 @ 2, no line break moved, the same
+     on Windows and on ubuntu (CI run 44970351069, the entry's own commit): `pafailingtypical` 736.0 → 727.3
+     px, so the test holds and the entry stays; `failingwidest` 775.7 → 768.9 px, still outside, so it joins
+     the seat question on its own reading. PROVISIONAL: the record card's seat build re-measures it
      and removes it if the seat makes it unnecessary, and Briggsy's read of the tighter paragraph (walk 10)
      can revert it. Out-ranks L1 (0,6,0 over 0,3,0). */
   .confidence-reveal[data-twopane]:has(.cs-magnitude[data-direction='rethink']):has(.cs-medicare-residual--typical)

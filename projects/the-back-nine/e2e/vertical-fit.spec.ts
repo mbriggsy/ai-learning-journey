@@ -5318,8 +5318,8 @@ for (const size of ['REAL', 'LENOVO_FULL', 'SHOWCASE'] as const) {
 // `?seed=pasurplustypical` is `surplustypical` in Pennsylvania at today's figures (U1): class A's frame with the longest
 // state clause. Run M1 (44963702523) read only its caveat past his fold at REAL (763.9 on Windows and ubuntu alike, both
 // room states; 744.8 with both room rungs injected), so it takes the held-caveat shape there: the caveat printed, every
-// other line held to the frame. At every tall size it read 833.2 (A6: every width from 1280 to 1871 renders the same
-// capped frame); it prints once more at the tall edge, never asserted.
+// other line held to the frame. It read 833.2 at LENOVO_FULL, SHOWCASE and the tall edge alike, on both platforms (run
+// M1); it prints once more at the tall edge, never asserted.
 test.describe(`?seed=pasurplustypical — the Pennsylvania room plant (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, then the tall edge printed)`, () => {
   const s = LAPTOP_SIZES.REAL
   test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })

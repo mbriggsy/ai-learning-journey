@@ -345,6 +345,12 @@ tests
   yearly-return and record arms reach LENOVO_FULL by a RESIZE after their REAL read, so a fault planted at LENOVO_FULL kills
   them only after their REAL half passes; the two held yearly frames and every record plant then print at the tall edge
   (`printTallEdge`), whose bottom past the fold by under the walk's half-pixel slack prints as such, never "inside".
+- **(b9-7, 11-21) SHOWCASE (1871×917 @ 1) is NOT the frame LENOVO_FULL (1440×900 @ 2) renders:** the plan's A6 holds for
+  width, not DPR. U4's one-time probe (record folder `b9-7-u4`) read the doors up to 8.5 px LOWER at SHOWCASE on the spine
+  and `failingentered` frames (`budget` 856.7 vs 848.2, `health` 814.3 vs 805.8); only the frames M1 read at every tall
+  size match. Read SHOWCASE at SHOWCASE before predicting there. And `main.result`'s box ends at the viewport (917.0)
+  whenever its content is shorter, so a fault that counts it reds only past doors + 40 px: the near miss is `failing` /
+  `failingtypical` / `offtracktypical` at 876.7 + 40 = 916.7, 0.3 px inside.
 - **(b9-7, 11-21) The widest plants' printing arms keep the pending room read (KTD6)**, titled `?seed=failingwidest …` /
   `?seed=surpluswidest …`, so a `-g "failing"` or `-g "surplus"` filter collects them: count them in a fault's prediction.
   They assert identity, tier and the widest strings, never a fit or a leading, so a stylesheet fault reds none of them.

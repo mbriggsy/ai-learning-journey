@@ -1,7 +1,7 @@
 ---
 title: "RightCapital against The Back Nine: the feature map"
 doc-type: plan
-status: map, waiting on Briggsy's order
+status: ruled 2026-11-22 (the flow and the order); building in that order
 created: 2026-11-22
 ---
 
@@ -40,12 +40,12 @@ odds for a retired one), then one recommendation (withdrawal order plus Roth con
 for those two levers only. An assumptions panel shows what the answer used. There is no workspace and no year-by-year
 view.
 
-## The flow question (his call)
+## The flow (ruled 2026-11-22)
 
-RightCapital's flow is a workspace. B9's is a calm answer with a recommendation under it. `docs/product.md` rules the
+RightCapital's flow is a workspace. B9's is a calm answer with a recommendation under it. `docs/product.md` ruled the
 second ("one answer, then one recommendation — not a dashboard") and the mandate asks for the first.
 
-**Recommendation:** keep B9's setup as the profile entry. It asks the same things RightCapital's six steps ask, one
+**Briggsy picked the workspace home (2026-11-22), as recommended:** keep B9's setup as the profile entry. It asks the same things RightCapital's six steps ask, one
 question at a time. After setup, the home becomes a RightCapital-style workspace: a facts page, the analysis (current vs
 proposed with action items), the year-by-year table, then tax, Social Security, health and stress tabs. B9's calm answer
 and its recommendation become the analysis tab's headline. Nothing B9 computes today is lost.
@@ -141,7 +141,7 @@ assistant); account linking and price feeds (R36); budgeting and transaction tra
 business planning; stock plans; insurance-needs analysis; estate flowcharts and trusts; the debt-payoff tool. B9's
 "leave more" goal already reads what heirs keep after tax.
 
-## Recommended order
+## The order (ruled 2026-11-22: this one, as recommended)
 
 1. **The year-by-year table** (U2–U7). It is "the amount you need to pull from each source", and every later row shows on it.
 2. **The workspace, with what-ifs on every input, kept by name** (U14–U16), and the flow question answered.
@@ -157,11 +157,12 @@ business planning; stock plans; insurance-needs analysis; estate flowcharts and 
 12. **Pay that changes** (raises, part-time years), **long-term care cost**, then QCD, NIIT, AMT and itemized deductions, each
     only where it moves his numbers.
 
-## Owed once he rules
+## After the ruling
 
-- The flow ruling goes into `docs/product.md` §1 and §7's scope boundaries. Per insight 018, grep for the old premise's
-  words, not R-numbers ("not a dashboard", "one answer, then one recommendation", "chapter two", "second room"), and fix
-  every doc that rests on them.
+- Done 2026-11-22: the flow ruling sits in `docs/product.md` (the flag under its opening, the calm test, §5, the scope
+  boundaries), the design skill's tone law and the project `CLAUDE.md`. A grep for the old premise's words ("not a
+  dashboard", "one answer, then one recommendation", "second room") found the rest in dated records (built act plans,
+  closed register entries, the cold-read log), which stay as written.
 - `docs/roadmap.md` gains the mandate's act, and its You-Are-Here table gains rows as units land.
 - Each gap is built in his order, opened with `/brief <that gap>`. Where a workbench unit covers it, that unit's plan is the
   starting point. Re-check the unit against this map first (insight 041: a plan step written before a decision is a guess).

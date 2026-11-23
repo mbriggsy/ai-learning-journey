@@ -11,7 +11,7 @@ This skill carries the project-specific design rules that the general design ski
 
 ## Tone law (the one-paragraph version)
 
-This is a calm, plain-language financial co-pilot a spouse with no finance background can read — never a dashboard, never a casino. Confidence is graded and honest ("7 of 10"), precision is humane (`~$X`), and nothing animates to *excite*. When a general design skill pushes "bold / striking / unforgettable," this project's answer is: distinctive through restraint and typography, not intensity. The N=1 cold-read judges tone; the rules below are correctness.
+This is a calm, plain-language financial co-pilot a spouse with no finance background can read — never a casino. (Since Briggsy's 2026-11-22 flow ruling the home is a RightCapital-style workspace with tabs, tables and comparisons, `docs/plans/rightcapital-map.md`. "Never a dashboard" now means no dashboard theatrics: no tickers, no alarm walls, no count-ups. It never means no tables.) Confidence is graded and honest ("7 of 10"), precision is humane (`~$X`), and nothing animates to *excite*. When a general design skill pushes "bold / striking / unforgettable," this project's answer is: distinctive through restraint and typography, not intensity. The N=1 cold-read judges tone; the rules below are correctness.
 
 ## Data visualization + color-blind-safe rules (U6/U7)
 

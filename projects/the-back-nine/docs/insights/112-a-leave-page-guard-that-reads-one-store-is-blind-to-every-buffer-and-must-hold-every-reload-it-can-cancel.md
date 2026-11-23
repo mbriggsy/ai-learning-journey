@@ -3,7 +3,7 @@ title: A leave-page guard that reads one store is blind to every buffer typed wo
 date: 2026-09-03
 phase: Post-Act-4 — the 2026-08-20 intake-walk findings (the intake beforeunload guard, ranked item 3)
 modules: [src/ui/IntakeApp.tsx, src/ui/unloadGuard.ts, src/ui/resultSave.ts, src/ui/UpdateToast.tsx, src/ui/updateGate.ts, src/intake/unsavedBuffer.ts, src/intake/AccountEntry.tsx, src/intake/OtherIncomeEntry.tsx, src/intake/BudgetBuilder.tsx, src/intake/RothLever.tsx]
-tags: [beforeunload, unsaved-work, atomic-form, hold-counter, skipWaiting, pwa-update, version-skew, ultramode-review, derived-not-tracked, insight-058, insight-020]
+tags: [beforeunload, unsaved-work, atomic-form, hold-counter, skipWaiting, pwa-update, version-skew, ultramode-review, derived-not-tracked, insight-058, insight-020, phase-switch, popstate, history-back, pushstate-leftover]
 ---
 
 ## Problem
@@ -58,3 +58,14 @@ two channels (`returnValue = ''` alone sets `defaultPrevented`), so pin `prevent
   `grep useState` in every component that calls an `onSave`/`onApply` prop.
 - Every new `beforeunload`: route it through `useUnloadGuard`, never a bare `addEventListener` (020).
 - The single-pick sheets, if his eye rules a lost preview pick is work: flip it in `unsavedBuffer.ts`.
+
+## Extended (2026-11-23, U6's review): a phase switch and a history Back or Forward unmount typed work with no dialog
+
+`beforeunload` covers an UNLOAD only. Two other exits drop a typed buffer silently, because neither can be cancelled
+and neither fires it: a same-page phase switch (the workbench room's door unmounting `Result`, whose budget sheet keeps
+its typed lines after Cancel, `BudgetBuilder.tsx`), and a history Back or Forward whose popstate unmounts the screen
+holding the buffer (a Forward onto the room's entry did the same). Keep, backup and the re-walk predate the room and
+drop it too (the register, Tier 2). **Rule: every phase change off a screen that can hold a buffer asks in the app
+first (`unsavedBuffersHeld()`), and a popstate that would unmount one re-pushes or undoes.** Corollary from the same
+review: a `pushState` route turns a leftover entry of its own kind plain before it pushes (a reload keeps
+`history.state`), or the first Back is swallowed; the suite's `beforeEach` history reset had hidden it.

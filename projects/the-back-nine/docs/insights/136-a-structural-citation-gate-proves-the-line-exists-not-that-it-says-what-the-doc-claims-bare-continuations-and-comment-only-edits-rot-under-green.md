@@ -3,7 +3,7 @@ title: A structural citation gate proves the cited LINE exists, not that it says
 date: 2026-09-25
 phase: post-Act-4 hardening (the 2026-09-24/25 doc audit)
 modules: [scripts/verify-doc-stats.ts, scripts/reanchor-citations.mjs, docs/**]
-tags: [doc-stats, citations, re-anchor, semantic-vs-structural, gates-that-dont-bite, doc-audit]
+tags: [doc-stats, citations, re-anchor, semantic-vs-structural, gates-that-dont-bite, doc-audit, pure-shift, wrong-before-the-edit]
 ---
 
 ## Problem
@@ -38,3 +38,11 @@ A structural gate's green means "no gross rot", never "current". When the semant
   match. The scripts (`pair-check.mjs`, `crossline-sweep.mjs`, `citation-content-verdicts.workflow.js`,
   `apply-verdicts.cjs`) sit outside the repo in the session memory folder `b9-reanchor-verification-tools/`; they belong
   beside the register's Tier 4 re-anchor entry.
+
+## Extended (2026-11-22, the frames-outside plan's U1): a pure-shift re-anchor carries an already-wrong citation forward
+
+A re-anchor checker that passes every move as a "pure shift" (the old line and the new line hold the same text)
+proves the move, never the citation: U1's run passed all 52 moves, and the pair-check's base/tree pairs showed four of
+them wrong BEFORE the edit (TODO's three `Result.tsx:459-461`, meaning the date-route correction then at 465-467; a
+plan's `:640-643`, meaning `answerTier`). A shift keeps a wrong number wrong at its new address. Judge each pair by
+whether the old line is the thing the sentence names, and fix a wrong one by content, not by the shift.

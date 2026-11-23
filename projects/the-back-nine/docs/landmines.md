@@ -330,6 +330,11 @@ even when one exists; the plain `/` route is the Unlock check.
 tests
 - **(b9-2, 11-14) The crown test runs two date searches** (~40 s in `workingYearCredit.test.ts`, timeout 240 s): run the suite pinned and alone, never raise the timeout. The crowned seed's provisional crown sits on the bar (margin 0): if walk 8 shows another offset, the test reds first; read its log before the line.
 
+- **(b9-3, 11-22) `resultDisclaimer.test.tsx` fakes a resolved answer**: it mocks `resolvedFocusKey` to a planted key over the
+  pristine idle snapshot, so `elevated` stays `fallback` and no hero renders. A test that needs a real state through `Result`
+  (the seat plan's U1 matrix: spine and date with and without a band, compute-error, fallback, computing) must plant the views
+  itself. `computing` is `Result`'s prop (IntakeApp's), never derived from the snapshot.
+
 ## The fit gate and e2e
 
 - **(b9-6, 11-21) `assertDensityTier` looks the survivor leading up in `SURVIVOR_LEADING`** (the frames-outside plan's

@@ -77,6 +77,7 @@ const PLANTS = {
   yearpaone: ['paone', doctorYearlyReturn],
   yearparecone: ['paone', doctorYearlyReturnRecord],
   yearpafailingone: ['pafailingone', doctorYearlyReturn],
+  recbudget: ['budget', doctorRecordHolds],
 } as const satisfies Record<string, readonly [DevSeedKey, (s: CurrentScenario, today: number) => CurrentScenario]>
 
 const plantDraft = (key: keyof typeof PLANTS): ScenarioDraft => {
@@ -214,6 +215,9 @@ const ROWS: readonly {
     rendered: line('4,880', '6,500'),
   })),
   { key: 'vault:yearpafailingone', draft: () => plantDraft('yearpafailingone'), annual: { survivor: 6_000 * 12, couple: 96_000 }, rendered: line('6,000', '8,000') },
+  // The record card's seat plan's U11: `recbudget`'s doctor adds a goal and a record, never a spending input, so it keeps
+  // `budget`'s itemized basis (the row derived above: 57,500 → "4,790"; 65,600 → "5,470").
+  { key: 'vault:recbudget', draft: () => plantDraft('recbudget'), annual: { survivor: 57_500, couple: 65_600 }, rendered: line('4,790', '5,470') },
 ]
 
 const spineParams = (d: ScenarioDraft, key: string): SimulationParams => {

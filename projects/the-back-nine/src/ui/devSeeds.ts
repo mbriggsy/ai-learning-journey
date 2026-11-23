@@ -2719,6 +2719,11 @@ export const AGED_PLANTS: Readonly<Partial<Record<string, AgedPlant>>> = {
   yearpaone: { base: 'paone', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
   yearparecone: { base: 'paone', doctor: doctorYearlyReturnRecord, viewDay: RETURN_DAY },
   yearpafailingone: { base: 'pafailingone', doctor: doctorYearlyReturn, viewDay: RETURN_DAY },
+  // The record card's seat plan's U11 (KTD11) — `recbudget`: the household the recommendation exists for, `budget`'s
+  // itemized couple with a saved recommendation that still holds, fresh (the `recpa` shape, viewed on `GATE_DAY`). Every
+  // other record plant sits on a household with no budget, so no frame showed the relief line, the survivor fold behind
+  // it and the record card together; this one does. Its first readings are the seat plan's variant describe's.
+  recbudget: { base: 'budget', doctor: doctorRecordHolds },
 }
 
 async function runPlantDevVault(key: string): Promise<PlantResult> {

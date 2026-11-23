@@ -1787,7 +1787,9 @@ describe('the yearly-return and Pennsylvania record plants (the one-frame compos
     'yearpaone', 'yearparecone', 'yearpafailingone',
   ] as const
   const RECORDS = ['yearrec', 'yearparec', 'yearparecone'] as const
-  type U3Key = (typeof YEARLY)[number] | 'recpa'
+  // `recbudget` (the record card's seat plan's U11) is `recpa`'s shape over the budget household: every fresh-record arm
+  // here reads it too.
+  type U3Key = (typeof YEARLY)[number] | 'recpa' | 'recbudget'
   const NOTHING_STALE = { costStale: false, leftOverStale: false } as const
   const NO_SENTENCES = { costStale: null, leftOverStale: null, typedBelow: null } as const
 
@@ -1835,6 +1837,7 @@ describe('the yearly-return and Pennsylvania record plants (the one-frame compos
     expect(AGED_PLANTS.yearpaone).toEqual({ base: 'paone', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
     expect(AGED_PLANTS.yearparecone).toEqual({ base: 'paone', doctor: doctorYearlyReturnRecord, viewDay: RETURN_DAY })
     expect(AGED_PLANTS.yearpafailingone).toEqual({ base: 'pafailingone', doctor: doctorYearlyReturn, viewDay: RETURN_DAY })
+    expect(AGED_PLANTS.recbudget, 'a fresh record plant is viewed on GATE_DAY: it declares no day').toEqual({ base: 'budget', doctor: doctorRecordHolds })
   })
 
   for (const key of YEARLY) {
@@ -1898,7 +1901,7 @@ describe('the yearly-return and Pennsylvania record plants (the one-frame compos
     })
   }
 
-  for (const key of [...YEARLY, 'recpa'] as const) {
+  for (const key of [...YEARLY, 'recpa', 'recbudget'] as const) {
     it(`'${key}' is ENGINE-ACCEPTED and resolves to its base's own verdict (insight 085), pinned as found`, () => {
       const { draft, entry } = planted(key)
       const verdictOf = (d: ScenarioDraft, label: string): string => {
@@ -1919,6 +1922,7 @@ describe('the yearly-return and Pennsylvania record plants (the one-frame compos
         yearfailing: 'already-failing',
         yearrec: 'on-track',
         recpa: 'borderline',
+        recbudget: 'borderline',
         yearparec: 'borderline',
         yearsurplus: 'over-funded',
         yearofftrack: 'off-track',
@@ -1997,6 +2001,45 @@ describe('the yearly-return and Pennsylvania record plants (the one-frame compos
 
   it("'recpa''s gate is silent: a fresh save under fresh stamps, viewed on the day it was saved", () => {
     const { view } = planted('recpa')
+    expect(view.noteLines, 'no staleness line').toEqual([])
+    expect(view.elapsedLine).toBeNull()
+  })
+
+  // The record card's seat plan's U11 (KTD11): the budget household's record, held on the gate's day.
+  it("'recbudget' — the budget household's record still holds on the gate's day: every conjunct passes, no cause", () => {
+    const { scenario, draft, today } = planted('recbudget')
+    expect(today).toBe(GATE_DAY)
+    const record = scenario.savedRecommendation
+    if (record === undefined) throw new Error('recbudget carries no record')
+    const request = buildSolveRequest(draft, today)
+    if (typeof request === 'string') throw new Error(`recbudget: no solve run builds (${request})`)
+    const freshFingerprint = solverRunFingerprint(request.base, request.candidates, request.ranking, {
+      seedA: request.seedA,
+      tieTolerance: request.tieTolerance,
+    })
+    expect(record.fingerprint, 'the record names this very household’s run').toBe(freshFingerprint)
+    const status = deriveSavedRecommendationStatus({ record, scenario, freshFingerprint, todayEpochDay: today, exposure: exposureForDraft(draft) })
+    expect(status.causes).toEqual([])
+    expect(status.current).toBe(true)
+    expect(scenario.chosenGoal, 'a record exists only beside a picked goal').toBe('leave-more')
+  })
+
+  it("'recbudget' carries the budget, and its reading earns the relief line with the survivor statement folded behind it (the frame no other record plant reaches)", () => {
+    const { draft } = planted('recbudget')
+    expect(draft.budget, 'the itemized budget rides the save').toEqual(DEV_SEEDS.budget.budget)
+    const params = buildSpineParams(draft)
+    if (params === null) throw new Error('recbudget: not a spine household')
+    // The app's spine run carries the survivor phase (the worker's options; the census's pipeline).
+    const wire = runEngine(params, draft.seed!, { bandFan: true, survivorConditioned: true, healthReadout: true })
+    if (wire.kind !== 'resolved') throw new Error(`recbudget: the run did not resolve: ${wire.kind}`)
+    // The hero folds the survivor statement exactly when the relief line holds the one inline count
+    // (`ConfidenceStatement`: `relief ? <details> : inline`), so both halves are the fold's condition.
+    expect(floorRelief(wire.headline, wire.floorReading, 0), 'the relief line renders').not.toBeNull()
+    expect(wire.survivorReading, 'the survivor statement renders, so it folds behind the relief line').toBeDefined()
+  }, 60_000)
+
+  it("'recbudget''s gate is silent: a fresh save under fresh stamps, viewed on the day it was saved", () => {
+    const { view } = planted('recbudget')
     expect(view.noteLines, 'no staleness line').toEqual([])
     expect(view.elapsedLine).toBeNull()
   })
@@ -2358,7 +2401,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
   it('every aged plant built through its OWN doctor reads not stale — its W rides the save untouched', () => {
     const plants = Object.entries(AGED_PLANTS)
     expect(plants.map(([k]) => k).sort()).toEqual([
-      'datearrived', 'datestale', 'rec', 'recold', 'recpa', 'stale', 'statestale', 'wyclock',
+      'datearrived', 'datestale', 'rec', 'recbudget', 'recold', 'recpa', 'stale', 'statestale', 'wyclock',
       'yearfailing', 'yearfailingentered', 'yearfailingwidest', 'yearofftrack', 'yearpa', 'yearpafailing', 'yearpafailingone',
       'yearpaofftrackone', 'yearpaone', 'yearparec', 'yearparecone', 'yearpasurplus', 'yearrec', 'yearsurplus', 'yearsurpluswidest',
     ])

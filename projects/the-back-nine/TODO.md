@@ -768,7 +768,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     (same bytes, `backup.ts:84-93`). No build ever wrote either. *(Re-scoped 2026-10-31, b9-3: this bullet
     said a future v4 would push today's v3 vaults into that arm. The schema-v4 bump did not: version 3
     relabels to 4 at decode, a label-only step — `docs/architecture.md` §7.3.)* · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
-    caller is the dev seed planter, `devSeeds.ts:2766` — eight test/e2e files also call it).
+    caller is the dev seed planter, `devSeeds.ts:2771` — eight test/e2e files also call it).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 9 — the aged note, the v2→v3 ladder, the leaves-out section) — its 2026-09-04 re-verify clause, still live:** Aged-window disclosure note (S; the ranking fork stays yours, three arms with corrected costs, due
     before 2027-01-01) · migration ladder scaffold (S; the honest legacy state names NO remedy — the
     backup carries the same bytes) · HSA-forfeit + LTC "What this leaves out" section (M; pilot per the

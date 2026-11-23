@@ -34,6 +34,8 @@ interface BoundaryProps {
   readonly retried: boolean
   readonly onRetry: () => void
   readonly onBack: () => void
+  /** Told once per failure, so the slot can stop sharing a lazy that rejected. */
+  readonly onCaught: () => void
 }
 
 class RoomBoundary extends Component<BoundaryProps, { readonly failed: boolean }> {
@@ -41,6 +43,10 @@ class RoomBoundary extends Component<BoundaryProps, { readonly failed: boolean }
 
   static getDerivedStateFromError(): { failed: boolean } {
     return { failed: true }
+  }
+
+  override componentDidCatch(): void {
+    this.props.onCaught()
   }
 
   override render() {
@@ -93,7 +99,17 @@ export function RoomSlot({
     setLoad((s) => ({ attempt: s.attempt + 1, Room: next }))
   }
   return (
-    <RoomBoundary key={attempt} retried={attempt > 0} onRetry={retry} onBack={room.onBack}>
+    <RoomBoundary
+      key={attempt}
+      retried={attempt > 0}
+      onRetry={retry}
+      onBack={room.onBack}
+      // A household that goes back without retrying gets a fresh load on its next visit, never the
+      // rejection the shared lazy would otherwise keep for the whole session.
+      onCaught={() => {
+        if (load === loadRoom) sharedRoom = lazy(loadRoom)
+      }}
+    >
       <Suspense fallback={null}>
         <Room {...room} />
       </Suspense>

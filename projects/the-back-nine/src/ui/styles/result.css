@@ -176,6 +176,29 @@
   display: contents;
 }
 
+/* The workbench door's ask (Act 5, U6): shown only after the door was pressed over an entry still open on
+   the answer. A full-width block under the doors, the words first, the safe choice (stay) as the primary. */
+.result-door-ask {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  flex-basis: 100%;
+  width: 100%;
+  max-width: var(--measure);
+  margin-inline: auto;
+}
+
+.result-door-ask__text {
+  flex-basis: 100%;
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink);
+  text-align: center;
+  margin: 0;
+}
+
 @media (min-width: 68rem) {
   /* Laptop vertical budget (Briggsy 2026-07-02 — "the answer should FULLY fit"): a resolved
      two-pane answer + the disclaimer must land inside a --laptop-fit-height (his window's height —

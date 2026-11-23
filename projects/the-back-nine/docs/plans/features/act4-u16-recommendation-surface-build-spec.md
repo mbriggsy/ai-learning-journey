@@ -38,7 +38,7 @@ below is a corollary.
 1. No U16 code re-derives a decision from displayed seed-B figures (render-the-flag + planted-fail guards, burned/070).
 2. The interactive tier reduces SEARCH precision only — grades + every displayed figure ALWAYS at `solverMinBPaths`; never down-sampled.
 3. The A↔B residual is NEVER a rendered number. Name the baseline, never the residual.
-4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:717` stamps the attribute from the DATE-search tier alone — `answerTier` at `:700-703`, the `DateSearchTier` the committed headline or date answer carries).
+4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:733` stamps the attribute from the DATE-search tier alone — `answerTier` at `:700-703`, the `DateSearchTier` the committed headline or date answer carries).
 5. No inert lying affordance: the save gesture was **ABSENT in U16** — a reserved layout slot only (§S4). U17 §S5 landed the gesture and the v3 write together (2026-07-26/27) into that same reservation, so the slot is live today and the wall did its job: no inert Save ever rendered.
 6. A withheld reason renders TRUE and humane, never laundered, never color/opacity-only; unclassified **fails CLOSED**.
 
@@ -199,7 +199,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   affordance's own posture. Both walk seeds measured IN-FRAME. Spine content is never pushed below
   the fold to keep the invitation.
 - **The affordance is offered on the all-retired route only** (a recorded v1 deviation):
-  `solveInvitable` guards `!isDateRoute(snapshot.draft)` (`Result.tsx:466`), because the
+  `solveInvitable` guards `!isDateRoute(snapshot.draft)` (`Result.tsx:471`), because the
   working/date-route base is the crowned date offset — a follow-up increment. Both fit-gate
   affordance seeds are all-retired, so the measured posture is unregressed.
 - **GoalPicker** (`src/intake/GoalPicker.tsx`) renders INSIDE the `ControlSheet` scaffold
@@ -291,7 +291,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:4630`).
+  to none (`copy.ts:4633`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional

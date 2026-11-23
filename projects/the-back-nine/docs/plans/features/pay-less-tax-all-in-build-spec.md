@@ -109,7 +109,7 @@ Result: the all-in vector equals the tax vector element by element, and its mean
   - the stamp is global, so leave-more records re-stale too. That over-re-run is accepted under the file's when-in-doubt rule.
 - Re-pin `pricingVersion.test.ts:150-174` to `{ solverCodeVersion: 10, newestRepriceRow: 7 }`, and retitle it "v8, v9 and v10 were ranking logic only". (Then; the 2026-10-09 survivor-medical lean, a scored pricing change, re-pinned it to `{ solverCodeVersion: 11, newestRepriceRow: 11 }`, and since the 2026-10-27 RIB-LIM order — scored, no ledger row — it reads `{ solverCodeVersion: 12, newestRepriceRow: 11 }`.)
 - **No ledger row** (`pricingVersion.ts:46-53`): no figure from a saved household's spine recompute moves. `FIRST_UNAMBIGUOUS_SAVE_DAY` stays put.
-- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:2173`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:2176`, mapped from the cause at `Result.tsx:90`). That sentence is true. Records persist no dollar figure (`model.ts:2417-2479`).
+- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:2173`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:2176`, mapped from the cause at `Result.tsx:95`). That sentence is true. Records persist no dollar figure (`model.ts:2417-2479`).
 - **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:273` RECOMMENDATION_GOALS, the codec needVocab gate (`:2311`) and the fingerprint canon (`solverRunFingerprint.ts:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
 - **v10 collision:** `council-log.md`'s 2026-10-04 *Adoption of the roster-recall fix* row and `backlog.md:1145-1154` earmark v10 for the unmerged gap-fill (`b9-v10-gapfill-wip`). Note in the register's recall entry: "v10 = the all-in objective; a revived gap-fill re-measures on all-in and takes a later version." The council rows stay as records.
 
@@ -130,12 +130,12 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `solve.ts:214-224, :385-390` (deltaSkew wording).
 - `stateTaxDisclosure.ts:151-155`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:100` and `:720`.
-- `copy.ts:2295` comment and `:4661`.
+- `copy.ts:2295` comment and `:4664`.
 - the `recommendationView.test.ts:596` comment.
 
 The viz suppression off leave-more stays correct, because all-in is still lower-is-better.
 
-**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:4570-4571`, read), `goalPayLessTaxGloss` (`:2302`), `recDiscNiit` (`:2473-2474`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3170-3189`) only under a "$X less" hero.
+**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:4573-4574`, read), `goalPayLessTaxGloss` (`:2302`), `recDiscNiit` (`:2473-2474`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3170-3189`) only under a "$X less" hero.
 
 **Calibration:**
 - Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:44, :58, :72` (map).
@@ -330,7 +330,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 
 *The packet as sent (the options he chose among):*
 
-**Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:148-309` + `HEDGE_TOKENS` (`copy.ts:2629-2641`); the suite runs on whatever he picks.
+**Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:148-309` + `HEDGE_TOKENS` (`copy.ts:2632-2644`); the suite runs on whatever he picks.
 - A hedge ("about" / "could"); `recDelta*` and `recDisc*` are require-hedge swept (`copyGuard.ts:124-128`).
 - No superlative, no clause-leading directive verb (`:262`), no "pays off" or "better off" (`:251-252`), no em-dash apposition on the figure.
 - The hero stays one line (`recommendationView.ts:172-174`) and keeps "than today’s plan" (the userBaseline seam, `copy.ts:2337-2344`).

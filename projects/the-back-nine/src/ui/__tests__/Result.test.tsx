@@ -148,3 +148,30 @@ describe('Result — the re-offer backup door (U8-tail: quiet, subordinate, pres
     expect(screen.queryByRole('button', { name: copy.backupDoorCta })).toBeNull()
   })
 })
+
+describe('Result — the workbench room’s door (Act 5, U6)', () => {
+  it('is the last quiet door, present only with the prop, and withheld while computing', () => {
+    const onOpen = vi.fn()
+    const { unmount } = render(<Result onReview={vi.fn()} save={{ kind: 'clean' }} workbench={{ onOpen }} computing={false} />)
+    const doors = document.querySelectorAll('.result-quiet-row button')
+    expect(doors[doors.length - 1]).toHaveTextContent(copy.workbenchDoorCta)
+    fireEvent.click(screen.getByRole('button', { name: copy.workbenchDoorCta }))
+    expect(onOpen).toHaveBeenCalledTimes(1)
+    unmount()
+    render(<Result onReview={vi.fn()} save={{ kind: 'clean' }} workbench={{ onOpen }} computing />)
+    expect(screen.queryByRole('button', { name: copy.workbenchDoorCta })).toBeNull()
+  })
+
+  it('draws its ask when pressed over an open entry: the words as an alert, Stay and Open wired', () => {
+    const onGo = vi.fn()
+    const onStay = vi.fn()
+    render(
+      <Result onReview={vi.fn()} save={{ kind: 'clean' }} workbench={{ onOpen: vi.fn(), ask: { onGo, onStay } }} computing={false} />,
+    )
+    expect(screen.getByRole('alert')).toHaveTextContent(copy.workbenchDoorAsk)
+    fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveStay }))
+    fireEvent.click(screen.getByRole('button', { name: copy.workbenchDoorAskGo }))
+    expect(onStay).toHaveBeenCalledTimes(1)
+    expect(onGo).toHaveBeenCalledTimes(1)
+  })
+})

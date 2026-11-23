@@ -372,7 +372,7 @@ Where each frame's pixels come from (measured, Windows; the full stacks are in t
 
 **Files:**
 - `docs/glossary.md` (the Caddie entry), `docs/roadmap.md` (the Validation-gates "Vertical fit + chart text" row), `docs/landmines.md` (the "manual 1536×791 measure" line; new entries: the amended tier law's home, and how test stdout reaches CI's verify log on green runs: the github reporter prints none (`printsToStdio()` is false), so Playwright prepends a `DotReporter` on CI, and that is what writes it; never add `list` to `playwright.fit.config.ts`, which would change the line format a log reader parses), `docs/architecture.md` (§12's one-frame-law bullet: the 20 px fork's premise at 1440 and its re-recorded numbers)
-- `docs/backlog.md` (the LIVE lines the Appendix lists, the 20 px fork's numbers among them; on the open 20 px fork's register entry (`docs/backlog.md:4169-4170`), a note beside its rejection reason (2), "the only levers are barred by the whitespace-only law", that KTD4 amended that law; new entries: the record card's reach check, the yearly-return composite ⚑, the view-only and failed-save frames)
+- `docs/backlog.md` (the LIVE lines the Appendix lists, the 20 px fork's numbers among them; on the open 20 px fork's register entry (`docs/backlog.md:4178-4179`), a note beside its rejection reason (2), "the only levers are barred by the whitespace-only law", that KTD4 amended that law; new entries: the record card's reach check, the yearly-return composite ⚑, the view-only and failed-save frames)
 - `docs/insights/082-when-whitespace-reservoirs-hit-floor-the-next-fit-rung-is-the-subordinate-disclosure-type-register.md` (a dated correction: the R13 disclaimer has worn `--text-xs` since 2026-06-14, so round 4's register was borrowed from the frame's other `--text-sm` subordinates, the survivor eyebrow, the save hint and the band legend; the rung's honesty stands, its attribution was wrong)
 - `docs/plans/5-workbench-plan.md` and `docs/plans/features/working-year-surplus-build-spec.md` (their forward 1536×791 arms)
 - `TODO.md`, in order:
@@ -646,7 +646,7 @@ Each entry below states 1536×791, 2.5 DPR or the 800 px law as a live instructi
 - `e2e/held/council-24px-shots.spec.ts:88`: "this 1536 window renders the STACKED tier".
 - `src/ui/styles/tokens.css:135-205`: `--laptop-fit-height` and `--bp-laptop-short` with their docblocks.
 - `src/ui/styles/app.css:37-44`, `src/ui/styles/app.css:68`: the "800px" law and the "1536 px laptop" example.
-- `src/ui/styles/result.css:180-184`: the "800px" law.
+- `src/ui/styles/result.css:203-207`: the "800px" law.
 - `src/ui/styles/confidence.css:253`, `src/ui/styles/confidence.css:260`: the "--laptop-fit-height" and "800px" law notes.
 - `src/ui/copy.ts:2193-2197`: the standing line's length note ("774px with 17px of frame left").
 - The Caddie: the skill's frontmatter description and its crop, DPR and full-frame lines; the taste corpus's Layout & density heading; the reader-panel prompt line in `.claude/workflows/caddie.js` and `.claude/workflows/caddie-ab.js`.

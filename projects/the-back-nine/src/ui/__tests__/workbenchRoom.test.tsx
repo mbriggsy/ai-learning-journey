@@ -20,7 +20,7 @@ vi.mock('../Result', () => ({
     workbench,
   }: {
     save: { kind: string; onKeep?: () => void }
-    workbench?: { onOpen: () => void }
+    workbench?: { onOpen: () => void; ask?: { onGo: () => void; onStay: () => void } }
   }) => (
     <div data-save-kind={save.kind}>
       result stub
@@ -28,6 +28,16 @@ vi.mock('../Result', () => ({
         <button type="button" onClick={workbench.onOpen}>
           workbench-door-stub
         </button>
+      )}
+      {workbench?.ask && (
+        <>
+          <button type="button" onClick={workbench.ask.onStay}>
+            door-ask-stay-stub
+          </button>
+          <button type="button" onClick={workbench.ask.onGo}>
+            door-ask-go-stub
+          </button>
+        </>
       )}
     </div>
   ),
@@ -101,6 +111,24 @@ async function backAndSettle(go: () => void = () => window.history.back()) {
   })
 }
 const pressBack = () => backAndSettle()
+/** A real Forward; `undone` waits for the second popstate the app's own `history.back()` fires when it undoes it. */
+async function pressForward(undone = false) {
+  await act(async () => {
+    const pops = new Promise<void>((resolve) => {
+      let left = undone ? 2 : 1
+      const on = () => {
+        left -= 1
+        if (left === 0) {
+          window.removeEventListener('popstate', on)
+          resolve()
+        }
+      }
+      window.addEventListener('popstate', on)
+    })
+    window.history.forward()
+    await pops
+  })
+}
 
 beforeEach(() => {
   plant.answer = RESOLVED
@@ -117,6 +145,34 @@ describe('the workbench door', () => {
     plant.answer = RESOLVED
     await landHydrated()
     expect(screen.getByRole('button', { name: 'workbench-door-stub' })).toBeInTheDocument()
+  })
+
+  it('is absent while the answer can’t be saved (the save control’s other half of the rule)', async () => {
+    await landHydrated()
+    expect(screen.getByRole('button', { name: 'workbench-door-stub' })).toBeInTheDocument()
+    act(() => appModel.update((d) => ({ ...d, people: [{ ...d.people[0], birthYear: undefined }, d.people[1]] })))
+    expect(screen.getByText('result stub')).toHaveAttribute('data-save-kind', 'none')
+    expect(screen.queryByRole('button', { name: 'workbench-door-stub' })).toBeNull()
+  })
+
+  it('pressed over an entry still open on the answer, asks there first: Stay keeps the answer, Open drops it', async () => {
+    await landHydrated()
+    const before = window.history.length
+    const release = holdUnsavedBuffer()
+    try {
+      fireEvent.click(screen.getByRole('button', { name: 'workbench-door-stub' }))
+      expect(roomHeading()).toBeNull()
+      expect(window.history.length).toBe(before)
+      fireEvent.click(screen.getByRole('button', { name: 'door-ask-stay-stub' }))
+      expect(screen.queryByRole('button', { name: 'door-ask-stay-stub' })).toBeNull()
+      expect(screen.getByText('result stub')).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole('button', { name: 'workbench-door-stub' }))
+      fireEvent.click(screen.getByRole('button', { name: 'door-ask-go-stub' }))
+      expect(await screen.findByRole('heading', { name: copy.workbenchHeading })).toBeInTheDocument()
+    } finally {
+      release()
+    }
   })
 })
 
@@ -135,6 +191,34 @@ describe('the workbench room', () => {
     await pressBack()
     expect(roomHeading()).toBeNull()
     expect(await screen.findByText('result stub')).toHaveAttribute('data-save-kind', 'clean')
+  })
+
+  it('Forward onto its entry re-enters the room; with an entry open on the answer the Forward is undone', async () => {
+    await landHydrated()
+    await enterRoom()
+    await pressBack()
+    await pressForward()
+    expect(roomHeading()).toBeInTheDocument()
+
+    await pressBack()
+    const release = holdUnsavedBuffer()
+    try {
+      await pressForward(true)
+      expect(roomHeading()).toBeNull()
+      expect(screen.getByText('result stub')).toBeInTheDocument()
+      expect(window.history.state).toBeNull()
+    } finally {
+      release()
+    }
+  })
+
+  it('a room entry left under the answer (a reload in the room) never swallows the first Back', async () => {
+    window.history.replaceState({ b9: 'room' }, '')
+    await landHydrated()
+    await enterRoom()
+    await pressBack()
+    expect(roomHeading()).toBeNull()
+    expect(screen.getByText('result stub')).toBeInTheDocument()
   })
 
   it('its own back button is the same history Back', async () => {

@@ -2546,6 +2546,9 @@ export const copy = {
   workbenchLeaveAsk: 'You started an entry here that isn’t added yet. Going back drops it.',
   workbenchLeaveGo: 'Go back and drop it',
   workbenchLeaveStay: 'Stay here',
+  // The door pressed over an entry still open on the answer (a budget sheet's typed lines survive its Cancel).
+  workbenchDoorAsk: 'You started an entry on this page that isn’t added yet. Opening the year-by-year page drops it.',
+  workbenchDoorAskGo: 'Open it and drop the entry',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.

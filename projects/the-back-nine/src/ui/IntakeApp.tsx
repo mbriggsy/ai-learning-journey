@@ -304,10 +304,25 @@ export default function IntakeApp({
   doorOpenRef.current = doorOpen
   // Set by the ask's "go back" so the Back it sends passes the check that raised the ask.
   const leavingRef = useRef(false)
-  const openRoom = useCallback(() => {
+  // The door's own ask: the room replaces the answer, and the answer's open entries (a budget sheet's
+  // typed lines live there even after Cancel, holding the leave guard) unmount with it. The browser's
+  // leave-page dialog never fires for a same-page switch, so the door asks first (insight 112).
+  const [doorAsk, setDoorAsk] = useState(false)
+  const enterRoom = useCallback(() => {
+    // A room entry left under us (a reload in the room keeps its history state; a Forward pressed while a
+    // ceremony or the intake ran) would swallow the first Back from the room: turn it plain before pushing.
+    if (isRoomEntry(window.history.state)) window.history.replaceState(null, '')
     window.history.pushState(ROOM_ENTRY, '')
+    setDoorAsk(false)
     setPhase('room')
   }, [])
+  const openRoom = useCallback(() => {
+    if (unsavedBuffersHeld() > 0) {
+      setDoorAsk(true)
+      return
+    }
+    enterRoom()
+  }, [enterRoom])
   const leaveRoom = useCallback(() => window.history.back(), [])
   useEffect(() => {
     const onPop = (e: PopStateEvent) => {
@@ -333,11 +348,12 @@ export default function IntakeApp({
         if (!onRoomEntry) window.history.pushState(ROOM_ENTRY, '')
         return
       }
-      // A Forward press back onto the room's entry: the room again where the door would open, else
-      // the entry is turned into a plain one, so it never leaves a Back that does nothing.
+      // A Forward press back onto the room's entry: the room again where the door would open and no
+      // entry is open on the answer (a Forward can't be cancelled either, and the room would unmount
+      // that entry with no dialog); otherwise the Forward is undone, which leaves no dead Back behind.
       if (p === 'result' && onRoomEntry) {
-        if (doorOpenRef.current) setPhase('room')
-        else window.history.replaceState(null, '')
+        if (doorOpenRef.current && unsavedBuffersHeld() === 0) setPhase('room')
+        else window.history.back()
       }
     }
     window.addEventListener('popstate', onPop)
@@ -987,7 +1003,16 @@ export default function IntakeApp({
         }
         // Act 5, U6 — the workbench room's door, under the save control's rule (`doorOpen` above;
         // Result also withholds its whole actions row while computing).
-        workbench={doorOpen ? { onOpen: openRoom } : undefined}
+        // The door's ask stands only while an entry is still open (`buffersHeld`, read live): applying
+        // or clearing the entry takes the ask down with it, so it can never offer to drop nothing.
+        workbench={
+          doorOpen
+            ? {
+                onOpen: openRoom,
+                ask: doorAsk && buffersHeld > 0 ? { onGo: enterRoom, onStay: () => setDoorAsk(false) } : undefined,
+              }
+            : undefined
+        }
         // U17 §S5 — THE STRATEGY SLOT. The view is DERIVED every frame from the seven operands, never
         // tracked: there is no success parameter in `deriveRecommendationSave`, so the only route to a
         // "saved" claim runs through the record the disk actually carries. `status` rides

@@ -58,7 +58,12 @@ export type { ResultSaveProp }
 /** The workbench room's DOOR (Act 5, U6). IntakeApp passes it only while the answer is saveable — the
  *  rule the save control uses for an unresolved answer — and it rides the actions row, so it is
  *  withheld while computing too. A read-only tab still gets it (the room withholds its own writes). */
-export type ResultWorkbenchProp = { readonly onOpen: () => void }
+export type ResultWorkbenchProp = {
+  readonly onOpen: () => void
+  /** Present while the door was pressed over an entry still open on this screen (the room would unmount it
+   *  with no browser dialog): the door asks here first. */
+  readonly ask?: { readonly onGo: () => void; readonly onStay: () => void }
+}
 
 /** The re-offer backup DOOR (U8-tail) — present ONLY on a returning, WRITABLE session with no
  *  backup-note on record (IntakeApp owns that gating; this screen is dumb wiring). A quiet,
@@ -688,6 +693,17 @@ export function Result({
           <button type="button" className="btn-quiet" data-door="workbench" onClick={workbench.onOpen}>
             {copy.workbenchDoorCta}
           </button>
+        )}
+        {workbench?.ask !== undefined && (
+          <div className="result-door-ask" role="alert">
+            <p className="result-door-ask__text">{copy.workbenchDoorAsk}</p>
+            <button type="button" className="btn-primary" onClick={workbench.ask.onStay}>
+              {copy.workbenchLeaveStay}
+            </button>
+            <button type="button" className="btn-quiet" onClick={workbench.ask.onGo}>
+              {copy.workbenchDoorAskGo}
+            </button>
+          </div>
         )}
       </div>
     </div>

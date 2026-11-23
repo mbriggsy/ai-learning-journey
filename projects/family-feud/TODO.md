@@ -10,12 +10,17 @@
 
 **We are PoppaBriggsy, roster 3, *Saquon Deez Nuts*. `briggsy007` is HUNTER** (CLAUDE.md landmine).
 
-- 🚨 **WEEK 12, Wed 11-25 ~06:00 ET: check Maye's Sleeper tag** (he's in IR since 11-22, fractured fibula). An Out tag
-  can revert at the early-Wednesday rollover; if it's no longer Out/IR, the IR lock silently blocks every lineup swap
-  before Thursday (Swift and Goff CHI@DET 1:00, Mahomes KC@BUF 8:20). Fix: drop the CHI DEF (week-11 rental) and move
-  Maye IR → BN. Roster after 11-22: Mahomes, Goff · Taylor, Brown, Swift, Stevenson · London, Collins, Flowers, Tate,
-  Deebo · Fannin, Hockenson · Shrader · CHI, JAX (JAX is week 12's DEF, home vs TEN) · IR Maye. Week 12 QB is a real
-  Goff-vs-Mahomes call: run `external_projections.py --week 12`. Trade deadline closed at the end of MNF 11-23.
+- 🚨 **WEEK 12 STARTS EARLY (ESPN schedule, pulled 11-23).** Wed 11-25 8:00 PM GB@LAR (none of ours; Ryan's GB guys) ·
+  **Thu 11-26 1:00 PM CHI@DET: Swift, Goff, CHI DEF** · Thu 4:30 PHI@DAL (Birds, Thanksgiving) · **Thu 8:20 KC@BUF:
+  Mahomes** · Fri 11-27 3:00 DEN@PIT (none of ours) · everyone else Sun/Mon. **So the week-12 lineup is due Thu 12:55 PM.**
+  - **Wed 11-25 ~06:00 ET: check Maye's Sleeper tag** (in IR since 11-22, fractured fibula). An Out tag can revert at the
+    early-Wednesday rollover; if it's no longer Out/IR, the IR lock silently blocks every lineup swap. Fix: drop the CHI
+    DEF (week-11 rental; @DET Thursday, Sleeper 6.6) and move Maye IR → BN. Either way CHI comes out of DEF for JAX
+    (home vs TEN Sunday, Sleeper 9.9) — CHI's DEF slot locks at Thu 1:00, so that swap is due by Thu 12:55 too.
+  - **QB: Goff (1:00) vs Mahomes (8:20) must be decided by Thu 12:55** — once Goff's game starts, he can't come in.
+    Run `external_projections.py --week 12` Wednesday.
+  - Roster after 11-22: Mahomes, Goff · Taylor, Brown, Swift, Stevenson · London, Collins, Flowers, Tate, Deebo ·
+    Fannin, Hockenson · Shrader · CHI, JAX · IR Maye. Trade deadline closed at the end of MNF 11-23.
 
 - 🚨 **NEW LAPTOP (2026-11-19): NONE of the four scheduled tasks exist here** (`Get-ScheduledTask` showed no Family Feud task), and the
   Dell is dead, so nothing has run since Mon 11-16 night. **Install them when Briggsy says go ("not just yet, we will shortly",

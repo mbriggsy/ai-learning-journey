@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-22, b9-7):** THE MANDATE (Briggsy, 2026-11-22; memory `project-b9-mandate-replicate-rightcapital`): replicate RightCapital for him alone, all its features and its flow, to get confidence in his own plan; the bar is "Briggsy good" (no slop, no pointless tests or process; the global CLAUDE.md). The map is `docs/plans/rightcapital-map.md`, ruled 2026-11-22 (the workspace home; the map's order): each gap in that order, opened with `/brief <that gap>`. Gap 1 (the year-by-year table) is workbench U2–U8, statuses in the roadmap's mandate table. Next: U4's slice 2, its two measurements on every seed and its decision record (U4's Approach; the close block's landmines). Then U5 (the run lanes), U6, U7 and U8, each opened with `/brief <that unit's topic>`; then `/distill` (past 10). Parked (b9-5's call under the mandate, the register's composites entry, prescription (4)): the record card's seat. The D7 queue and the tiered lists below are pre-mandate: judge each against the mandate when it is reached.
+▶ **START HERE (2026-11-22, b9-8):** THE MANDATE (Briggsy, 2026-11-22; memory `project-b9-mandate-replicate-rightcapital`): replicate RightCapital for him alone, all its features and its flow, to get confidence in his own plan; the bar is "Briggsy good" (no slop, no pointless tests or process; the global CLAUDE.md). The map is `docs/plans/rightcapital-map.md`, ruled 2026-11-22 (the workspace home; the map's order): each gap in that order, opened with `/brief <that gap>`. Gap 1 (the year-by-year table) is workbench U2–U8, statuses in the roadmap's mandate table. Next: U6 (the room and its door), then U7 (the table; its words are bound by `docs/decisions/workbench-one-future.md` §5) and U8, each opened with `/brief <that unit's topic>`; then `/distill` (past 10). Parked (b9-5's call under the mandate, the register's composites entry, prescription (4)): the record card's seat. The D7 queue and the tiered lists below are pre-mandate: judge each against the mandate when it is reached.
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** Its plan, `docs/plans/features/working-year-surplus-build-spec.md`, is checked as a whole; its
@@ -801,7 +801,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     fork (register *The app on someone else's device*) · no single-person household (a solo friend is withheld forever or must invent a spouse)
     · **no document a friend reads** — the in-app honest-limits total is two sentences, and the app tells
     them to "validate with a professional" while handing that professional nothing readable · ✅ the solve
-    lane's EDIT-TIME cancel shipped 2026-09-03 (`engineClient.ts:278 createResettableEngine` +
+    lane's EDIT-TIME cancel shipped 2026-09-03 (`engineClient.ts:279 createResettableEngine` +
     `memoryModel.ts:907-910`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
     freezes the tab for the whole solve and says nothing — its `reset` is a documented no-op
     (`engineClient.ts:51-63`; the old `:55` anchor named nothing about freezing).

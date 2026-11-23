@@ -106,8 +106,9 @@ export interface EngineClient {
  *  it; `dispatchSpend` catches it into the figure-less idle, committed only while its epoch guard
  *  stands; `dispatchSolve` is held by the epoch the kill advanced first); `controlPreview`
  *  deliberately does — a reset-killed preview takes its calm error arm, because mapping it to
- *  'stale' would strand an open sheet on pending, and the sheet re-idles on its next open. A new
- *  consumer must decide, never assume. */
+ *  'stale' would strand an open sheet on pending, and the sheet re-idles on its next open. The
+ *  workbench's lanes (`runLanes.ts`) re-send their newest request: the run is still on screen. A
+ *  new consumer must decide, never assume. */
 export class EngineResetError extends Error {
   constructor() {
     super('engine reset: the in-flight call was superseded by a draft edit')

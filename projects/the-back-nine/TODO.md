@@ -937,20 +937,6 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 (`git show 89b4fa58:projects/the-back-nine/TODO.md`), where the full original stands. A line marked *Correct* or
 *Extend* amends that insight instead of adding a new one.
 
-- *Extend 120 (b9-7, 2026-11-20, the composites' U6): a held assertion inside a many-assertion arm holds ONLY that assertion.* `test.fail()` would turn every other assertion in `yearfailing`'s arm into an expected failure; `assertFrameFitsHoldingCaveat` prints the caveat's bottom first and walks the frame with the caveat's own SUBTREE skipped (never its ancestors), so the rest still reds. The price is the lost forcing function (nothing reds when the fix lands), paid by a named constant the fix's build greps (`RUNG3_KEY_COUNCIL`). Also: a council's red team found the worst reach (a reassuring fresh frame at 743.1 px) that no opener looked at, and the plant reproduced its DOM-graft figure through the engine; plant before restoring a held assertion.
-- *New (b9-6, 2026-11-20, the composites build): a line-map re-anchor tool rewrites history unless every dated number is frozen.* Insight 136, itself the record of citation rot, had its two named citations walked by runs across sessions (`devSeeds.ts` 1079 → 1115, `vertical-fit.spec.ts` 396-406 → 424-434) while its bare ones stayed put, so its own "drifted six lines" story stopped adding up; the held measurement record `e2e/held/fit-24px-measurements.md` was moved the same way. Restored to the text each was written with and frozen with the tool's "(then)" marker (`8e204deb`). The same session's positional pair-check (465 tokens across 215 docs, base against head through the composed line maps) found six bare citations in a plan brief already wrong at base: partly moved lines rot a little more on every run. A dated record's numbers are history: freeze them at writing, never let a mover touch them.
-- *New (b9-6, 2026-11-20): a page-level arm cannot see a store-order fault that never crosses a task.* W9-R7's U5 plant M6
-  dropped the re-figuring flag one notify ahead of the spine commit: React painted both notifies of that task as one frame, so
-  every fit arm stayed green, and so did the store suite, whose frames tests drove the date route only. The same plant with a
-  60 ms task gap redded the live arm alone. Pin store ordering at the subscriber, once per commit branch (`e95c17db`); a page
-  arm owns only what crosses a frame.
-- *New (b9-6, 2026-11-20): a held-run preview turns a one-run window into a measurable frame.* `src/ui/preview/RefiguringPreview.tsx`
-  wraps the one engine handle the store calls at run time and arms on the first final-tier commit, so an edit's run never lands
-  and the REAL page stands in the window as long as an arm needs (b9-5's live numbers reproduced to the tenth). It beats a
-  component preview whenever the law spans surfaces the component doesn't own: the fold ran to `Result.tsx`'s R13 disclaimer.
-- *Extend 126 (b9-6, 2026-11-20): a mutant runner's "landed" check compares bytes to the planted text.* An anchor that is a
-  prefix of its own replacement passes an "anchor gone" check falsely (U5's M6, first run), and a CRLF file (`confidence.css`)
-  takes its anchors in CRLF: msys `sed -n` hides the `\r` (it showed none), so read bytes with node or `git ls-files --eol`.
 - *New (b9-5, 2026-11-20): a transient line on a fold-law frame overlays the frame's padding instead of taking a row.* W9-R7's
   re-figuring line and the date's provisional tag come and go with the engine; in the flow they would push the spine's
   protected disclaimer past the fold for a run (R5) and drop the date hero at every final. Positioned absolute above the

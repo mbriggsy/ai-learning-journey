@@ -3,7 +3,7 @@ title: A structural citation gate proves the cited LINE exists, not that it says
 date: 2026-09-25
 phase: post-Act-4 hardening (the 2026-09-24/25 doc audit)
 modules: [scripts/verify-doc-stats.ts, scripts/reanchor-citations.mjs, docs/**]
-tags: [doc-stats, citations, re-anchor, semantic-vs-structural, gates-that-dont-bite, doc-audit, pure-shift, wrong-before-the-edit]
+tags: [doc-stats, citations, re-anchor, semantic-vs-structural, gates-that-dont-bite, doc-audit, pure-shift, wrong-before-the-edit, frozen-dated-number, then-marker, history-rewrite]
 ---
 
 ## Problem
@@ -46,3 +46,11 @@ proves the move, never the citation: U1's run passed all 52 moves, and the pair-
 them wrong BEFORE the edit (TODO's three `Result.tsx:459-461`, meaning the date-route correction then at 465-467; a
 plan's `:640-643`, meaning `answerTier`). A shift keeps a wrong number wrong at its new address. Judge each pair by
 whether the old line is the thing the sentence names, and fix a wrong one by content, not by the shift.
+
+## Extended (2026-11-20, the composites build): a line-map re-anchor rewrites history unless every dated number is frozen
+
+This insight's own named citations were walked by re-anchor runs across sessions (`devSeeds.ts` 1079 → 1115,
+`vertical-fit.spec.ts` 396-406 → 424-434) while its bare ones stayed put, so its "drifted six lines" story stopped
+adding up; the held measurement record `e2e/held/fit-24px-measurements.md` moved the same way. Both were restored to
+the text each was written with and frozen with the tool's "(then)" marker (`8e204deb`). A dated record's numbers are
+history: freeze them when written, and never let a move tool touch them.

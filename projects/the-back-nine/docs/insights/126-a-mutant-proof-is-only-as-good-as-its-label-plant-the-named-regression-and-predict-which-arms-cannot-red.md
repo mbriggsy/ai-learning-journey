@@ -3,7 +3,7 @@ title: A mutant proof is only as good as its LABEL — the recorded "tier-keyed 
 date: 2026-09-10
 phase: Post-Act-4 (the gap to a friend betting real money) — the council build's adversarial review
 modules: [e2e/vertical-fit.spec.ts, src/ui/styles/app.css, docs/council-log.md, TODO.md]
-tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz, kill-line, spy-leak, restoreAllMocks, afterEach, input-device, hit-testing, prediction-correction, shared-constant, derived-constant, kill-set-larger-than-predicted]
+tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz, kill-line, spy-leak, restoreAllMocks, afterEach, input-device, hit-testing, prediction-correction, shared-constant, derived-constant, kill-set-larger-than-predicted, landed-check, prefix-anchor, crlf-anchor]
 ---
 
 ## Problem
@@ -83,3 +83,9 @@ short-tier query is built from `TALL_EDGE.height - 1`, so the plant moved the qu
 predicted, every REAL arm among them. Planted in the size table's viewport entries, it red exactly the 28. Before
 planting on a shared constant, grep what reads it; a kill set larger than predicted is a mislabelled plant until shown
 otherwise (`41b58e17`).
+
+## Extended (2026-11-20, W9-R7's U5): a runner's "landed" check must compare the planted bytes, and read them as bytes
+
+An anchor that is a prefix of its own replacement passes an "anchor gone" check falsely (U5's M6, first run): check
+that the planted TEXT is present, not that the anchor is absent. And a CRLF file (`confidence.css`) takes its anchors in
+CRLF; msys `sed -n` hides the `\r`, so read bytes with node or `git ls-files --eol`.

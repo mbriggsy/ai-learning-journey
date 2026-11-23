@@ -3,7 +3,7 @@ title: test.fail() is the declared expected failure that reds the run the day th
 date: 2026-09-05
 phase: Act 4 hardening (the chart-text gate)
 modules: [e2e/chart-text.spec.ts, playwright.fit.config.ts, e2e/reviewSurface.ts]
-tags: [playwright, test-fail, expected-failure, known-defect, gate-hygiene, timeout, forcing-function]
+tags: [playwright, test-fail, expected-failure, known-defect, gate-hygiene, timeout, forcing-function, held-assertion, subtree-skip, many-assertion-arm]
 ---
 
 ## Problem
@@ -27,3 +27,12 @@ A known, held defect belongs in the gate as a DECLARED expected failure, not as 
 - Any oracle whose remedy is a design fork waiting on a human read.
 - Instrument arms that exist to produce numbers: annotate first, assert last.
 - Per-test budgets in a suite where one test renders a CPU-bound solve twice.
+
+## Extended (2026-11-20, the composites' U6): a held assertion inside a many-assertion arm holds ONLY that assertion
+
+`test.fail()` turns every assertion in the arm into an expected failure, so on `yearfailing`'s many-assertion arm it
+would have hidden every other law. `assertFrameFitsHoldingCaveat` prints the held caveat's bottom first and walks the
+frame with the caveat's own SUBTREE skipped (never its ancestors), so everything else still reds. The price is the lost
+forcing function (nothing reds when the fix lands), paid with a named constant the fix's build greps
+(`RUNG3_KEY_COUNCIL`). And plant before restoring a held assertion: a council's red team found the worst reach (a
+reassuring fresh frame at 743.1 px) that no opener had looked at.

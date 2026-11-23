@@ -121,8 +121,8 @@ describe('WorkbenchRoom — the table’s three states', () => {
     await settleAll('error')
     expect(screen.getByRole('alert')).toHaveTextContent(copy.workbenchTableError)
     expect(screen.queryByRole('table')).toBeNull()
-    const backs = screen.getAllByRole('button', { name: copy.workbenchBack })
-    fireEvent.click(backs[backs.length - 1]!)
+    // The room's own Back is the one way back: the error state adds no second button of the same name.
+    fireEvent.click(screen.getByRole('button', { name: copy.workbenchBack }))
     expect(onBack).toHaveBeenCalled()
   })
 })

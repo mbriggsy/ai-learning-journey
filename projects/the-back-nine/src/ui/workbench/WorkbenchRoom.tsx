@@ -236,7 +236,7 @@ export default function WorkbenchRoom({
           </ul>
         </div>
       )}
-      <YearTable state={state} onBack={onBack} />
+      <YearTable state={state} />
     </main>
   )
 }

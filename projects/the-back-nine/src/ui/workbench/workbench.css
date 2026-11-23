@@ -149,7 +149,7 @@
   width: 100%;
 }
 
-@media (min-width: 64.0625rem) {
+@media (min-width: 68rem) {
   .wb-about {
     grid-template-columns: minmax(0, 52rem) minmax(0, 1fr);
   }
@@ -358,14 +358,10 @@
   color: var(--ink);
 }
 
-/* His laptop and wider: figures at the reading size, and the header holds under the pinned answer. */
-@media (min-width: 88rem) {
-  .wb-table {
-    font-size: var(--text-sm);
-  }
-}
-
-@media (min-width: 64.0625rem) {
+/* The project's one width seam (`--bp-laptop`, 68rem; `scripts/__tests__/breakpoint-mirrors.test.ts`): at a laptop the
+   header holds under the pinned answer; below it the table scrolls inside its own frame. The figures stay at
+   `--text-xs` at every width: a larger tier would be a second seam, and the widest household fits 1280 at this size. */
+@media (min-width: 68rem) {
   .wb-table thead {
     position: sticky;
     top: var(--wb-pin-h, 0px);
@@ -374,7 +370,7 @@
 }
 
 /* Phones and narrow windows: the table scrolls inside its own frame, the year column held in place. */
-@media (max-width: 64rem) {
+@media not (min-width: 68rem) {
   .wb-table-wrap {
     overflow-x: auto;
   }

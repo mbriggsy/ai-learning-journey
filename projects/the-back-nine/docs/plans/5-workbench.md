@@ -9,6 +9,8 @@ created: 2026-11-09
 
 **Status: SCOPING. Nothing here is planned or built.** Briggsy ruled the direction in conversation on 2026-11-09. This brief records what he ruled, what is in and out, and the design calls the plan must settle. Build status lives in the roadmap's [You-Are-Here table](../roadmap.md#the-you-are-here-table), which does not carry this act yet; the amendments this act owes the canonical docs are listed at the end and are NOT made.
 
+> ⚑ **Widened 2026-11-22** by [rightcapital-map.md](rightcapital-map.md): the mandate is now RightCapital's whole feature set and flow, not a workbench room beside B9. The map names the rows this brief's pieces cover.
+
 **This repo is public.** The household's real holdings, balances and family facts are never written here. Answers of that kind stay in the conversation; this brief records only the product calls they settle.
 
 ## What he asked for

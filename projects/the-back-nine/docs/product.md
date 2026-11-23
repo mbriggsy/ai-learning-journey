@@ -10,6 +10,8 @@ sources: [docs/research/engine-validation-and-tax.md, docs/research/pre65-health
 
 A **personal** retirement / tax-strategy co-pilot for one married couple: Briggsy's. A friend using it is a remote outside chance, never a design driver (his correction, 2026-10-21). Never sold. This doc is the single home for the *why* and the *what*: the thesis, the product model, the locked decisions, the lever set, the carried landmines, and the full requirements ledger (R1–R40).
 
+> ⚑ **The mandate changed, 2026-11-22 (Briggsy):** "I want to replicate RightCapital. Period. For me. Just me. All of their features, their flow." What RightCapital does, what B9 has and the gaps are in [plans/rightcapital-map.md](plans/rightcapital-map.md). That mandate re-opens this doc's "one answer, then one recommendation — not a dashboard" thesis, the scope boundaries in §7 and the chapter-two list in §5. Each is rewritten once he rules the map's flow question. Until then, read every scope line below against the map.
+
 Precedence runs through three docs: **this one carries the *why* and the *what*; [docs/roadmap.md](roadmap.md)'s [You-Are-Here table](roadmap.md#the-you-are-here-table) carries the build *status*; [docs/architecture.md](architecture.md) carries the engine invariants and wins on any conflict over one.** Because the tool is personal — never sold, no compensation, no holding-out — there is no regulatory net to lean on; the binding constraint is **honesty + engine validation**, and that constraint is *stricter* for it, not looser.
 
 ## 1. What this is

@@ -13,6 +13,7 @@ This folder is the project's documentation. For the overview — what The Back N
 |---|---|
 | The why, the what, and the full requirements ledger | [product.md](product.md) |
 | Where the build stands — the four acts and the per-unit status table | [roadmap.md](roadmap.md) |
+| The mandate since 2026-11-22: RightCapital's features against B9's, and the gaps in his order | [plans/rightcapital-map.md](plans/rightcapital-map.md) |
 | Everything still open — the full tiered register behind `TODO.md`'s ranked queue | [backlog.md](backlog.md) |
 | How the engine works, and the invariants nobody may break | [architecture.md](architecture.md) |
 | The per-act build plans | [plans/1-engine.md](plans/1-engine.md) · [2-first-answer.md](plans/2-first-answer.md) · [3-controls.md](plans/3-controls.md) · [4-recommendation.md](plans/4-recommendation.md) — and the per-unit **build specs** (the executable shape of U7's survivor readout, U13–U17 and the later engine units, most of them council-ratified; the index says where the other units' shapes live) in [plans/features/](plans/features/README.md) |

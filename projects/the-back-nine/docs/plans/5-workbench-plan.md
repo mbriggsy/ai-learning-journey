@@ -15,6 +15,8 @@ receipt: "planned, deepened and checked, 1 P0/P1 open"
 
 This plan turns the scoping brief, [5-workbench.md](5-workbench.md), into buildable units. The brief holds Briggsy's rulings in his own words; where this plan and the brief disagree on what he asked for, the brief wins. Build status lives in the roadmap's You-Are-Here table, never here.
 
+> ⚑ **Widened 2026-11-22** by [rightcapital-map.md](rightcapital-map.md): the mandate is now RightCapital's whole feature set and flow. These units stay the build pieces for the map rows that name them, and are built in his order of the map's gaps. Re-check each unit against the map before building it, because it was written for a room beside B9, not for the workspace the map recommends.
+
 **This repo is public.** The household's real holdings, balances and family facts are never written in this plan, its tests, its fixtures or its commits. Every example below is made up.
 
 **Code is cited by file and symbol, without line numbers, on purpose.** Another build is moving the same files, and `verify:doc-stats` gates every line-numbered citation in `docs/`.

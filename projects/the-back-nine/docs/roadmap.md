@@ -12,6 +12,8 @@ This is the single maintained source of build-truth for the repo. The four acts 
 
 The *why* and the *what* live in [docs/product.md](product.md). How the engine holds the cardinal rule — and the load-bearing invariants — live once in [docs/architecture.md](architecture.md). This doc is the map between them: which requirement landed in which unit, what is shipped, and what is next.
 
+> ⚑ **The mandate changed, 2026-11-22:** replicate RightCapital's features and flow, for Briggsy alone. The next work is the gaps in [plans/rightcapital-map.md](plans/rightcapital-map.md), built in his order. The act and its rows join the table below as units land.
+
 > The volatile next-action queue lives in `TODO.md`, and the full open register in [`backlog.md`](backlog.md) — neither here. This doc moves at the speed of *units shipping*; `TODO.md` moves at the speed of *sessions*.
 
 ## The four acts

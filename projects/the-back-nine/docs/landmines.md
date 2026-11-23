@@ -537,6 +537,13 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   and read the count line, never the exit code.
 - **(b9-9/b9-10, 11-13) W's block has no spaces between its parts in `textContent`**: an e2e compare reads `innerText`; a unit test
   compares `notePartsText(parts)`.
+- **(b9-3, 11-22) The seat variants (`?seat=`, dev only, from the seat plan's U4 until its U9) key every rule on
+  `main.result[data-seat]` and move the caveat into a col-2 pane** (`docs/plans/features/record-card-seat-build-spec.md`,
+  KTD3, KTD4, KTD6): every `> .cs-band` child read, in CSS and in `e2e/vertical-fit.spec.ts`, stops matching under a variant,
+  so a variant arm reads the band by a descendant selector. A plain `main.result[data-seat] …` rule (0,5,1) loses to today's
+  beat and record `:has()` seat rules (the beat-plus-record tail rules in `confidence.css` reach (0,7,0)), so a variant
+  silently keeps today's rows on those frames: repeat the `:has()` chain and probe the computed row (insight 075). And a
+  `seat=` left in a harness URL measures a variant, never today.
 
 ## The mutation harness
 

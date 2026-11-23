@@ -648,7 +648,7 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 
 - **(b9-10, 10-22) `pnpm doc:reanchor` skips `index.ts` too** (two are tracked: `src/engine/constants/index.ts` and
   `src/engine/reference/solver-cases/index.ts`), the ambiguous-basename class. Run `git grep -n "index\.ts:[0-9]"` and fix
-  by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:441-444`,
+  by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:479-482`,
   and pair-check's DOCHUNK section caught it. It also never moves a doc's citations INTO ITSELF, and neither tool flagged
   it: two new register entries shifted `docs/backlog.md:1975`, `:2261`, `:2336` (cited from inside the register) by +36.
   After any edit that adds lines to a doc, run `git grep -n "<doc>:[0-9]"` across the repo, the doc itself included, and
@@ -657,7 +657,7 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 - **(b9-9, 10-21) The re-anchor after an engine edit.** `pnpm doc:reanchor HEAD` (dry run) then `--apply` made 148 edits, including
   dated logs and insights (the precedent `b4bbbd3e` accepted the same). Then: hand-fix each REVIEW token by content
   (a reworded cited line); run `pair-check.mjs` + `crossline-sweep.mjs` + `content-check.mjs` from the tools folder.
-  `pair-check` flags a HISTORICAL token as MISMATCH (TODO's "`model.ts`'s `:668` … had been stale") — a recorded
+  `pair-check` flags a HISTORICAL token as MISMATCH (TODO's "`model.ts`'s `:687` … had been stale") — a recorded
   number stays. `crossline-sweep` found two bare `:151-152` docstring tokens the tool cannot see (fixed by hand).
 
 - **(b9-9, 10-21) A plan doc under `docs/` must carry no line-numbered code citation and no count:** `verify:doc-stats` scans every

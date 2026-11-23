@@ -16,7 +16,7 @@
  */
 import { mulberry32, standardNormal, simpleReturnFromNormal, toLogMoments } from '@engine/rng'
 import { runDecumulation, type PortfolioState, type DecumulationResult } from '@engine/decumulation'
-import { sampleCouplePath, type LongevityPerson } from '@engine/longevity'
+import { middleLifespanScores, sampleCouplePath, type LongevityPerson } from '@engine/longevity'
 import {
   runTaxAwareDecumulation,
   type HealthYearSink,
@@ -49,6 +49,7 @@ import {
   type HealthReadout,
   type HealthReadoutYear,
   type IncomeParams,
+  type NamedFuture,
   type PersonInputs,
   type SimulationParams,
   type SurvivorConditioned,
@@ -110,6 +111,43 @@ export function buildDraws(
     longevityU.push(row)
   }
   return { stockZ, bondZ, longevityU }
+}
+
+/**
+ * The R19 gate for a {@link NamedFuture} (workbench plan U2): the run must be one path, every score
+ * finite (checked first, insight 010), then each market leg exactly `maxHorizonYears` long and the
+ * lifespan scores one per person, each in [0, 1]. Returns the named reason, or null when valid.
+ */
+export function validateNamedFuture(future: NamedFuture, params: SimulationParams): string | null {
+  if (params.paths !== 1) return `a named future runs one path (paths = ${params.paths})`
+  for (const [name, scores] of [
+    ['stockZ', future.stockZ],
+    ['bondZ', future.bondZ],
+    ['longevityU', future.longevityU],
+  ] as const) {
+    if (!Array.isArray(scores)) return `namedFuture.${name} must be an array`
+    if (!scores.every((z) => typeof z === 'number' && Number.isFinite(z))) return `namedFuture.${name} holds a non-finite score`
+  }
+  const horizon = params.maxHorizonYears
+  if (future.stockZ.length !== horizon) return `namedFuture.stockZ has ${future.stockZ.length} years (the run has ${horizon})`
+  if (future.bondZ.length !== horizon) return `namedFuture.bondZ has ${future.bondZ.length} years (the run has ${horizon})`
+  if (future.longevityU.length !== params.people.length) {
+    return `namedFuture.longevityU has ${future.longevityU.length} scores (the run has ${params.people.length} people)`
+  }
+  if (!future.longevityU.every((u) => u >= 0 && u <= 1)) return 'namedFuture.longevityU holds a score outside 0 to 1'
+  return null
+}
+
+/**
+ * The steady future (workbench plan KTD2 + KTD4): every market score 0, so each asset earns its
+ * middle return every year, and the couple's middle lifespans from {@link middleLifespanScores}.
+ */
+export function steadyFuture(params: Pick<SimulationParams, 'maxHorizonYears' | 'people'>): NamedFuture {
+  return {
+    stockZ: new Array<number>(params.maxHorizonYears).fill(0),
+    bondZ: new Array<number>(params.maxHorizonYears).fill(0),
+    longevityU: middleLifespanScores(params.people.map((p) => ({ sex: p.sex, currentAge: p.currentAge }))),
+  }
 }
 
 /** A resolved simulation: the full distribution (with the tax-aware solver surfaces when
@@ -1672,6 +1710,12 @@ export function simulate(
      *  from product code — a shape test pins the only non-test consumers; dimensions are
      *  fail-loud-guarded (a mismatched matrix would read as silent NaN paths). */
     readonly _injectedDraws?: Draws
+    /** The year-by-year table's run (workbench plan U2, KTD1): one future whose market scores and
+     *  lifespan scores the caller names ({@link NamedFuture}; {@link steadyFuture} builds the steady
+     *  one), run as the single path of a `paths === 1` run through the whole shipped machinery.
+     *  Gated by {@link validateNamedFuture} (a bad one is the calm indeterminate with its reason) and
+     *  exclusive with `_injectedDraws`. ABSENT ⇒ every run is byte-identical to the run without it. */
+    readonly namedFuture?: NamedFuture
     /** PROBE-ONLY (the pay check's observation hook, KTD7 / KTD20 — `taxOverlay`'s
      *  {@link WorkingYearProbe}): forwarded into EVERY tax-aware pass of every path (both tracks of a
      *  budget run), so a test or a measurement script can watch each clamped year's floor preparation,
@@ -1710,7 +1754,17 @@ export function simulate(
       )
     }
   }
-  const draws = injected ?? buildDraws(seed, paths, maxHorizon, people.length)
+  const named = options?.namedFuture
+  if (named !== undefined) {
+    if (injected !== undefined) return { indeterminate: true, reason: 'namedFuture and _injectedDraws cannot ride together' }
+    const badFuture = validateNamedFuture(named, params)
+    if (badFuture !== null) return { indeterminate: true, reason: badFuture }
+  }
+  const draws =
+    injected ??
+    (named !== undefined
+      ? { stockZ: [named.stockZ], bondZ: [named.bondZ], longevityU: [named.longevityU] }
+      : buildDraws(seed, paths, maxHorizon, people.length))
 
   // Log-space moments + the Cholesky factor, computed once.
   const logStock = toLogMoments(market.stock.mean, market.stock.stdDev)

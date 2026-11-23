@@ -70,7 +70,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   council `wf_7eb3303c-7f3`, built `c1ada867` — its blank is no longer one-directional: it
   disables the HSA cap AND the budgetless survivor lean, the most pessimistic reading for an HSA
   household and the less cautious for a budgetless couple without an HSA;
-  `src/shared/model.ts:1840-1849`). Nothing is pre-selected, so the MA plurality actively lands
+  `src/shared/model.ts:1859-1868`). Nothing is pre-selected, so the MA plurality actively lands
   on $0. An AFFIRMED $0 is honest; a SILENT $0 is the sin.
 
 ## F2 — anchor + provenance
@@ -90,7 +90,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   adopted the old figure. No official national Medigap average exists to pin to; the constant's
   `pinTo` says so explicitly rather than naming a source that isn't published.
 - **Per-person explicit persisted provenance stamp.** `MedicareExtrasEntryV3`
-  (`src/shared/model.ts:2459`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
+  (`src/shared/model.ts:2478`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
   'unanswered'` — with `adoptionVintage` recording the era adopted, keyed to the SAVED era and
   never re-derived from `value == current-typical` (the `src/shared/appDefaults.ts:8-15`
   saved-era inversion trap). `'unanswered'` is the honest persisted hole: it funds the typical
@@ -148,7 +148,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   edited to accommodate the vector: a superset, not a perturbation.
 - The vector is validated like its per-person siblings: `validateParams` rejects a negative
   entry (the insight-046 netted-away optimistic class), a NaN entry, and a length mismatch
-  (`src/engine/simulate.ts:1047-1050`), and the overlay's direct callers get their own up-front
+  (`src/engine/simulate.ts:1085-1088`), and the overlay's direct callers get their own up-front
   length backstop (`src/engine/taxOverlay.ts:2167-2171`) so a short vector on a two-person
   household throws rather than under-charging.
 - Extras are **real-flat**, and deliberately NOT ridden on the Part B trend: Medigap/Part D plan

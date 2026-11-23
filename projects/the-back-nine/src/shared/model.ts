@@ -655,6 +655,25 @@ export interface CompiledBudget {
 }
 
 // ---------------------------------------------------------------------------
+// One named future (the year-by-year table's run — docs/plans/rightcapital-map.md, workbench plan
+// U2, KTD1/KTD2/KTD4).
+// ---------------------------------------------------------------------------
+
+/** One future named by the caller, run by `simulate` as its single path through the whole shipped
+ *  machinery (transform, decumulation, overlays): the same scores `buildDraws` draws for one path.
+ *  `stockZ` / `bondZ` are standard-normal market scores per sim-year, the bond leg's BEFORE the
+ *  correlation mix (length = the run's `maxHorizonYears`); `longevityU` is one lifespan score per
+ *  person in [0, 1], aligned to `people` (`sampleDeathYearOffset`'s u: small = long life). Steady is
+ *  every market score 0: the engine's own transform turns 0 into each asset's middle return, so no
+ *  return is typed anywhere (KTD2). Validated by `validateNamedFuture` (finiteness first, then
+ *  lengths); a run with it requires `paths === 1`. */
+export interface NamedFuture {
+  readonly stockZ: readonly number[]
+  readonly bondZ: readonly number[]
+  readonly longevityU: readonly number[]
+}
+
+// ---------------------------------------------------------------------------
 // Engine parameters (the injected, pure input to `simulate`).
 // ---------------------------------------------------------------------------
 

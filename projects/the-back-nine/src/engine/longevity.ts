@@ -73,6 +73,44 @@ export function sampleDeathYearOffset(person: LongevityPerson, u: number): numbe
   return SURVIVAL_MAX_AGE - person.currentAge
 }
 
+/**
+ * The lifespan scores of the year-by-year table's one future (workbench plan KTD4): each person's
+ * own middle year for the first death, and the couple's middle last year for the survivor.
+ *
+ * - One person: u = ½, that person's own middle year (`sampleDeathYearOffset(p, ½)`).
+ * - Two people: the person whose own middle year is LATER is the survivor (a tie goes to the first
+ *   person, as {@link sampleCouplePath} breaks it); the other dies at their own middle year (u = ½).
+ *   The survivor lives to the first year the couple's last-survivor curve
+ *   ({@link coupleSurvivalToYear}) falls to ½ or below, so the table never ends while one of them is
+ *   more likely alive than not. Their score is that year's own conditional survival, which
+ *   {@link sampleDeathYearOffset} inverts back to exactly that year (checked, fail-loud).
+ *
+ * Pure: no entropy, a function of sex and age alone.
+ */
+export function middleLifespanScores(people: readonly LongevityPerson[]): number[] {
+  if (people.length > 2) throw new Error(`[middleLifespanScores] supports one or two people (got ${people.length})`)
+  const [a, b] = people
+  if (a === undefined) return []
+  if (b === undefined) return [0.5]
+  const survivorIndex = sampleDeathYearOffset(b, 0.5) > sampleDeathYearOffset(a, 0.5) ? 1 : 0
+  const survivor = survivorIndex === 0 ? a : b
+  const cap = SURVIVAL_MAX_AGE - survivor.currentAge
+  let lastYear = cap
+  for (let y = 1; y < cap; y++) {
+    if (coupleSurvivalToYear(a, b, y) <= 0.5) {
+      lastYear = y
+      break
+    }
+  }
+  const survivorU = survivalToYear(survivor, lastYear)
+  if (sampleDeathYearOffset(survivor, survivorU) !== lastYear) {
+    throw new Error(
+      `[middleLifespanScores] the survivor's score ${survivorU} does not invert to the couple's middle last year ${lastYear}`,
+    )
+  }
+  return survivorIndex === 0 ? [survivorU, 0.5] : [0.5, survivorU]
+}
+
 /** Per-path longevity outcome — retains survivor identity. */
 export interface CouplePathLongevity {
   /** Death-year offset (years from now) for each person, index-aligned to the input. */

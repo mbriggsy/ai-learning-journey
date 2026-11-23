@@ -113,7 +113,7 @@
  *
  * WHAT THE WITHDRAWN HEURISTIC WOULD HAVE SHIPPED — a SILENT STALE, built while fixing an
  * over-alarm. It bucketed `irmaa-freeze` to the aggregate because `irmaaTopTierFrozenThrough`
- * has no engine reader. But `irmaa.value` IS engine-read (simulate.ts:1243; solveAnchor.ts:222,231;
+ * has no engine reader. But `irmaa.value` IS engine-read (simulate.ts:1281; solveAnchor.ts:222,231;
  * taxOverlay.ts:2015; healthOverlay.ts:638 — `boundPartBPricingSchedule`, where the tier ladder's Part D
  * add-ons feed `buildPartBPricingSchedule`), and
  * `consumedConstants.ts:116` puts the ENTIRE `health.` family in the consumed set on
@@ -205,7 +205,7 @@ export type HealthcareFamily = 'aca' | 'medicare'
  *     make the "every read is unpriced" silence arm vacuously true and quietly kill a clock.
  *
  * THE SOURCE FOR EACH ROW:
- *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2702` as "the coverage year
+ *   · `coverage-year` — `COVERAGE_YEAR` is documented at `model.ts:2721` as "the coverage year
  *     the ACA/IRMAA tables are keyed to", so it dates BOTH families and names each one the run
  *     priced. It is the ONLY marker for every annually-re-indexed health figure that carries no
  *     stamp of its own (the four interior IRMAA thresholds, the ACA applicable-percentage bands,

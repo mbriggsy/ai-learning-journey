@@ -10,6 +10,13 @@
 
 **We are PoppaBriggsy, roster 3, *Saquon Deez Nuts*. `briggsy007` is HUNTER** (CLAUDE.md landmine).
 
+- 🚨 **WEEK 12, Wed 11-25 ~06:00 ET: check Maye's Sleeper tag** (he's in IR since 11-22, fractured fibula). An Out tag
+  can revert at the early-Wednesday rollover; if it's no longer Out/IR, the IR lock silently blocks every lineup swap
+  before Thursday (Swift and Goff CHI@DET 1:00, Mahomes KC@BUF 8:20). Fix: drop the CHI DEF (week-11 rental) and move
+  Maye IR → BN. Roster after 11-22: Mahomes, Goff · Taylor, Brown, Swift, Stevenson · London, Collins, Flowers, Tate,
+  Deebo · Fannin, Hockenson · Shrader · CHI, JAX (JAX is week 12's DEF, home vs TEN) · IR Maye. Week 12 QB is a real
+  Goff-vs-Mahomes call: run `external_projections.py --week 12`. Trade deadline closed at the end of MNF 11-23.
+
 - 🚨 **NEW LAPTOP (2026-11-19): NONE of the four scheduled tasks exist here** (`Get-ScheduledTask` showed no Family Feud task), and the
   Dell is dead, so nothing has run since Mon 11-16 night. **Install them when Briggsy says go ("not just yet, we will shortly",
   11-19), and before Sat 11-21 20:00 (game day's first check).** In order: (1) bring back the three Dell files never committed: `DRAFT_ALERTS.md`,

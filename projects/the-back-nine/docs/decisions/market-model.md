@@ -28,7 +28,7 @@ Each path-year's market return is drawn from a **parameterized lognormal**, **in
 1. `buildDraws` generates a matrix of standard normals from one seeded `mulberry32` stream — stateless Box-Muller, two uniforms per normal, in a **dimension-only order** so two parameter sets under one seed consume byte-identical draws (the CRN substrate; `simulate.ts:83`, `rng.ts:46`). The only stochastic draws are **stock, bond, and longevity** — there is no third market factor (`simulate.ts:90-108`).
 2. The user's **simple-space, real** moments `(mean, stdDev)` per asset convert to the exact `(μ, σ)` of the underlying normal via `toLogMoments`, **with the `−σ²/2` volatility drag** (`rng.ts:73`).
 3. Each year: `simpleR = exp(μ + σ·z) − 1` (`simpleReturnFromNormal`, `rng.ts:82`) — a lognormal one-plus-return by construction.
-4. Stock and bond are coupled by a **single Cholesky step**: `zb = ρ·zs + √(1−ρ²)·zbRaw` (`simulate.ts:1958`). One shared `(stock, bond)` draw per path-year drives every bucket; buckets differ only in tax treatment (the no-asset-location invariant).
+4. Stock and bond are coupled by a **single Cholesky step**: `zb = ρ·zs + √(1−ρ²)·zbRaw` (`simulate.ts:1968`). One shared `(stock, bond)` draw per path-year drives every bucket; buckets differ only in tax treatment (the no-asset-location invariant).
 
 Two moment sets exist (`methodology.ts`): `validationMarket` (Ibbotson SBBI, calibrates the Mode-B band only) and `productionMarket` (Pfau/Kitces high-CAPE, the conservative real-user default, ~3–3.5% safe band). Both are **REAL, simple-space**; both are fully user-overridable — the engine injects nothing.
 

@@ -554,7 +554,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `tsc` until written) · `recommendationView.ts:344-348` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:163` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:2851-2853`) covers only `keyof CurrentScenario`;
+   the compile tie.** `_V3FieldsCover` (`model.ts:2852-2854`) covers only `keyof CurrentScenario`;
    `checkStateTaxVintageV3` (`scenarioCodec.ts:584-589`) is hand-written and compels no `needString`. Safe
    because `scenarioCodec.ts:825-826` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
@@ -617,7 +617,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
      put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:2781-2782` sets
-     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2207` `terminalHsaReal = 0` →
+     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2217` `terminalHsaReal = 0` →
      `objectiveHeadline.ts:62` bequest contribution **$0**. On the exact path the sentence names, the HSA
      adds nothing to the leave-more dollar the reader sees. **The sentence must say the balance is DROPPED.**
      ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:912-915` (which says
@@ -779,7 +779,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
-    PRESCRIBED: `model.ts:1791-1793` mints synthetic entered accounts from the old aggregates "so the ladder
+    PRESCRIBED: `model.ts:1792-1794` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:232 rewriteModel`, pinned `db.test.ts:180`); today's
     ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1059-1066`, the v1/v2 arms), and a v1 vault survives
     every store seam on real IndexedDB (`e2e/vaultHarness.ts:21-22`) to die only at `IntakeApp.tsx:595`.
@@ -858,9 +858,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:2797` (swept), and
+    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:2798` (swept), and
     Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
-    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2338-2360`) has no seed
+    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2339-2361`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
     the U17 record stores the seed — and was swept 2026-09-25 (the register bullet is closed with it).
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
@@ -903,7 +903,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
     into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
     FIRST ENGINE RUN, `plans/2-first-answer.md:57`) with no test that would catch it. His ruling, framed as
-    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2797` and
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2798` and
     `plans/4-recommendation.md:283`.
 
 ---

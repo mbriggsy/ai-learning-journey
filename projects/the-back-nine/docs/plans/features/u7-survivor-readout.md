@@ -18,7 +18,7 @@ spending-basis line added on Briggsy's 2026-10-14 ruling.
 ## 1 · The gap this unit closed (confirmed 2026-06-24, re-confirmed first-hand 2026-06-27)
 
 Before e1 the engine emitted no survivor-specific distribution. `Distribution` carried only the JOINT
-`survivalFraction = survivors / paths` (`simulate.ts:2337`) — a path "survives" iff its portfolio
+`survivalFraction = survivors / paths` (`simulate.ts:2347`) — a path "survives" iff its portfolio
 never depleted (`depletionYear === NEVER_DEPLETED`). That single number cannot separate "the plan held
 while both were alive" from "the plan carried the SURVIVOR through widowhood." `bandFan.cohortFraction`
 is household *existence* (≥1 alive), not survivor *survival* — it cannot substitute.

@@ -1722,6 +1722,10 @@ export function simulate(
      *  own year loop. Rides only a `namedFuture` run that carries the tax overlay (refused by name
      *  otherwise, the calm indeterminate). A pure observation: every other field is byte-identical. */
     readonly ledgerRows?: boolean
+    /** Which pass the ledger rows record (workbench plan KTD9): the full-spending pass (default) or
+     *  the essentials-floor pass. 'floor' needs the budget construct, and is refused by name without
+     *  one: a table that says it shows essentials-only spending must be the floor pass. */
+    readonly ledgerTrack?: 'full' | 'floor'
     /** PROBE-ONLY (the pay check's observation hook, KTD7 / KTD20 — `taxOverlay`'s
      *  {@link WorkingYearProbe}): forwarded into EVERY tax-aware pass of every path (both tracks of a
      *  budget run), so a test or a measurement script can watch each clamped year's floor preparation,
@@ -1769,7 +1773,13 @@ export function simulate(
   const wantLedger = options?.ledgerRows === true
   if (wantLedger && named === undefined) return { indeterminate: true, reason: 'ledgerRows rides only a named-future run' }
   if (wantLedger && params.overlay === undefined) return { indeterminate: true, reason: 'ledgerRows needs the tax overlay' }
+  const ledgerFloor = options?.ledgerTrack === 'floor'
+  if (wantLedger && ledgerFloor && params.budget === undefined) {
+    return { indeterminate: true, reason: "ledgerTrack 'floor' needs the budget construct" }
+  }
   const ledgerRows: LedgerYearRow[] | undefined = wantLedger ? [] : undefined
+  const fullLedger = ledgerFloor ? undefined : ledgerRows
+  const floorLedger = ledgerFloor ? ledgerRows : undefined
   const draws =
     injected ??
     (named !== undefined
@@ -2120,7 +2130,7 @@ export function simulate(
             ...taxInputs,
             ...(fullSink ? { balancesOut: fullSink } : {}),
             ...(healthSink ? { healthOut: healthSink } : {}),
-            ...(ledgerRows ? { ledgerOut: ledgerRows } : {}),
+            ...(fullLedger ? { ledgerOut: fullLedger } : {}),
           },
           params.drawdownOrder,
         )
@@ -2138,7 +2148,7 @@ export function simulate(
             params.stockWeight,
             params.drawdownPolicy,
             overlayConfig,
-            { ...taxInputs, ...(floorSink ? { balancesOut: floorSink } : {}) },
+            { ...taxInputs, ...(floorSink ? { balancesOut: floorSink } : {}), ...(floorLedger ? { ledgerOut: floorLedger } : {}) },
             params.drawdownOrder,
           )
         }

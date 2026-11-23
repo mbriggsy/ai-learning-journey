@@ -95,8 +95,8 @@ The MEASURED probe substituted its vector before `adoptObservedOutcome`. The gra
 Result: the all-in vector equals the tax vector element by element, and its mean, SE, grade diffs and headline are bit-identical. The goldens and the two healthcare-OFF pay-less-tax oracle cases cannot move: `caseConstantRate.ts:149` and `caseNoChange.ts:56`, and `healthcareEnabled` appears only in caseAcaCliff (map).
 
 **D6 Finiteness seam.**
-- Add `!Number.isFinite(taxRes.totalNetPremiumReal) || !Number.isFinite(taxRes.totalMedicareCostReal)` to `simulate.ts:2180-2194` (read: today it checks terminal, tax, basis and buckets only).
-- *Chair's pick:* the full arm ONLY. `floorTaxRes` has the same type (`simulate.ts:2106`, read), but no ranked statistic reads the floor arm's premium. The existing floor clause checks terminal + tax for the same reason.
+- Add `!Number.isFinite(taxRes.totalNetPremiumReal) || !Number.isFinite(taxRes.totalMedicareCostReal)` to `simulate.ts:2190-2204` (read: today it checks terminal, tax, basis and buckets only).
+- *Chair's pick:* the full arm ONLY. `floorTaxRes` has the same type (`simulate.ts:2116`, read), but no ranked statistic reads the floor arm's premium. The existing floor clause checks terminal + tax for the same reason.
 - It is throw-or-nothing, so no value moves. A non-finite value then takes the typed infeasible route instead of throwing in `mean` and aborting the batch.
 - ⚑ SKEPTIC: D6 lands in the SAME Phase A commit as the D2 field (the new `mean` throw path must never exist without its seam). In principle it can mark a previously scored candidate infeasible (`solverCodeVersion.ts:12-21`: bump on anything that can move a ranking); in practice it is measure-zero (the premium sits inside `grossWithdrawal`, so an overflow hits `terminalReal` first). The Phase A commit and the VERSION 10 block both say so: unreachable in practice, landed before the bump.
 
@@ -109,8 +109,8 @@ Result: the all-in vector equals the tax vector element by element, and its mean
   - the stamp is global, so leave-more records re-stale too. That over-re-run is accepted under the file's when-in-doubt rule.
 - Re-pin `pricingVersion.test.ts:150-174` to `{ solverCodeVersion: 10, newestRepriceRow: 7 }`, and retitle it "v8, v9 and v10 were ranking logic only". (Then; the 2026-10-09 survivor-medical lean, a scored pricing change, re-pinned it to `{ solverCodeVersion: 11, newestRepriceRow: 11 }`, and since the 2026-10-27 RIB-LIM order — scored, no ledger row — it reads `{ solverCodeVersion: 12, newestRepriceRow: 11 }`.)
 - **No ledger row** (`pricingVersion.ts:46-53`): no figure from a saved household's spine recompute moves. `FIRST_UNAMBIGUOUS_SAVE_DAY` stays put.
-- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:2173`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:2176`, mapped from the cause at `Result.tsx:94`). That sentence is true. Records persist no dollar figure (`model.ts:2338-2400`).
-- **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:273` RECOMMENDATION_GOALS, the codec needVocab gate (`:2232`) and the fingerprint canon (`solverRunFingerprint.ts:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
+- **No `FINGERPRINT_SCHEMA` bump and no objective tag** (`solverRunFingerprint.ts:63-65`). Either would add a false 'inputs-changed' cause, which renders "Your numbers have changed since then." (`copy.ts:2173`). Saved records must report ONE cause, 'solver-changed', which renders "The way strategies are worked out has changed since then." (the string is at `copy.ts:2176`, mapped from the cause at `Result.tsx:94`). That sentence is true. Records persist no dollar figure (`model.ts:2339-2401`).
+- **Persisted id `'pay-less-tax'` stays.** It lives in `model.ts:273` RECOMMENDATION_GOALS, the codec needVocab gate (`:2233`) and the fingerprint canon (`solverRunFingerprint.ts:121`). Renaming it is a one-way door: memories dropped, plus a false 'inputs-changed'.
 - **v10 collision:** `council-log.md`'s 2026-10-04 *Adoption of the roster-recall fix* row and `backlog.md:1145-1154` earmark v10 for the unmerged gap-fill (`b9-v10-gapfill-wip`). Note in the register's recall entry: "v10 = the all-in objective; a revived gap-fill re-measures on all-in and takes a later version." The council rows stay as records.
 
 ## 2. Every site
@@ -121,7 +121,7 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `objective.ts`: site 2.
 - `select.ts`: site 4.
 - `gradeCalibration.ts`: site 5.
-- `simulate.ts:2180-2194`: D6.
+- `simulate.ts:2190-2204`: D6.
 - `solverCodeVersion.ts`: D8.
 - NEW `reference/solver-cases/caseAllInAcaTrap.ts` plus its `index.ts` entry (§5.1).
 

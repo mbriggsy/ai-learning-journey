@@ -1192,7 +1192,8 @@ export interface Distribution {
    *  not caller-opt-in). */
   readonly floor?: FloorTrack
   /** The year-by-year table's ledger rows (workbench plan U3), present only when a named-future run
-   *  asked for them (`simulate`'s `ledgerRows` option); the full-spending pass. */
+   *  asked for them (`simulate`'s `ledgerRows` option); the pass its `ledgerTrack` named (full
+   *  spending by default, or the essentials floor). */
   readonly ledgerRows?: readonly LedgerYearRow[]
 }
 

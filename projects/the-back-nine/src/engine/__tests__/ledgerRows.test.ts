@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest'
 import type { LedgerYearRow, PersonInputs, SimulationParams } from '@shared/model'
 import { simulate, steadyFuture } from '@engine/simulate'
+import { compileBudget } from '@budget/budgetToSpending'
 
 const person = (sex: PersonInputs['sex'], currentAge: number): PersonInputs => ({
   sex,
@@ -142,6 +143,55 @@ describe('a future that runs out of money', () => {
     const ranOut = dist.depletionYears[0]!
     expect(ranOut).toBeGreaterThan(0)
     expect(dist.ledgerRows!.map((r) => r.t)).toEqual(Array.from({ length: ranOut }, (_, t) => t))
+  })
+})
+
+describe('the floor pass', () => {
+  /** $40,000 of essentials and $30,000 of travel: the full plan runs out, the essentials hold. */
+  const budgeted = (): SimulationParams => {
+    const base = world({ spend: 70_000 })
+    const budget = compileBudget(
+      [
+        { category: 'food', label: 'Living', annualAmountReal: 40_000, tier: 'essentials', startYear: 0 },
+        { category: 'travel', label: 'Travel', annualAmountReal: 30_000, tier: 'discretionary', startYear: 0 },
+      ],
+      undefined,
+      base.maxHorizonYears,
+    )
+    return { ...base, budget }
+  }
+
+  it('records the essentials floor when named, pinned to the run’s own floor outputs', () => {
+    const params = budgeted()
+    const out = simulate(params, 11, {
+      namedFuture: steadyFuture(params),
+      ledgerRows: true,
+      ledgerTrack: 'floor',
+      bandFan: true,
+      bandFanTrack: 'floor',
+    })
+    if (out.indeterminate || out.infeasible) throw new Error(JSON.stringify(out))
+    const { depletionYears, floor, bandFan, ledgerRows } = out.distribution
+    expect(depletionYears[0]).toBeGreaterThan(0) // the full plan runs out
+    expect(floor!.depletionYears[0]).toBe(-1) // the essentials never do
+    expect(ledgerRows).toHaveLength(bandFan!.byYear.length - 1) // one row per year the floor fan carries
+    ledgerRows!.forEach((r, k) => {
+      const close = r.end.taxable + r.end.pretax + r.end.roth + r.end.hsa
+      expect(Math.abs(close - bandFan!.byYear[k + 1]!.p50)).toBeLessThan(GRAIN)
+    })
+  })
+
+  it('records the full pass by default, which stops at its own run-out year', () => {
+    const params = budgeted()
+    const out = simulate(params, 11, { namedFuture: steadyFuture(params), ledgerRows: true })
+    if (out.indeterminate || out.infeasible) throw new Error(JSON.stringify(out))
+    expect(out.distribution.ledgerRows).toHaveLength(out.distribution.depletionYears[0]!)
+  })
+
+  it('is refused without a budget', () => {
+    const params = world()
+    const out = simulate(params, 11, { namedFuture: steadyFuture(params), ledgerRows: true, ledgerTrack: 'floor' })
+    expect(out.indeterminate && out.reason).toMatch(/'floor' needs the budget construct/)
   })
 })
 

@@ -3,7 +3,7 @@ title: A screenshot proves ONE column — a per-width seat is governed by the WI
 date: 2026-09-06
 phase: Post-Act-4 (the gap to a friend betting real money) — the council-held 320 shape, ruled by his eye and built the same day
 modules: [src/viz/chartText.tsx, src/viz/ConfidenceBand.tsx, src/viz/OddsLadder.tsx, e2e/chart-text.spec.ts, docs/caddie/cold-read-log.md]
-tags: [cold-read, screenshot-evidence, per-width-seat, measured-catalog, chart-text, oracle-vs-eye, arithmetic-check, the-room-is-not-the-ink, css-outlives-string, nowrap, inline-block, width-gate, overflow-wrap-anywhere, mid-word-break, caption-clipped, squeezed-table]
+tags: [cold-read, screenshot-evidence, per-width-seat, measured-catalog, chart-text, oracle-vs-eye, arithmetic-check, the-room-is-not-the-ink, css-outlives-string, nowrap, inline-block, width-gate, overflow-wrap-anywhere, mid-word-break, caption-clipped, squeezed-table, coupled-axes, whole-combinations, text-swap, unreachable-member]
 ---
 
 ## Problem
@@ -76,3 +76,17 @@ a squeezed layout by measuring its widest member AND looking at it at the squeez
 table's narrowest width (a frame squeezed in-page) against the room, not "it fit": the honest whole-word fix needed
 a 12 px gutter in place of 16 px to keep 81 px of room (9 px without it, and less beside a classic scrollbar). The same
 look later caught U7's review's phone finding: row sentences in a cell as wide as the table, cut the same way.
+
+## Extended (2026-11-21, the frames-outside build): read the catalog whole, combinations included, and cheaply
+
+Two refinements of "measure the catalog". **Axes can be coupled:** the frames-outside check's adversary found the
+essentials-relief face missing from the widest-member table, and the rules reader found it coupled to the room clause
+(a budget stops the spend lane, `memoryModel.ts`'s `dispatchSpend` guard, so a room frame with the relief face shows
+the figure-less clause, never the pending reserve, and the relief face folds the survivor card shut). Taking each
+axis's widest member alone would have planted a household no one can reach: read whole combinations through the
+rules that join them. **A member assumed unreachable is tried through the engine before it is skipped:** the plan said
+the room class could never show the essentials card; one engine twin showed an essentials budget turns the full
+reading On track and earns it. **A closed axis can be read without a seed per member:** swap the node's text for the
+shipped composer's string in the real frame (`composeVerdictMedicareResidual`, `slots.verdictRoom*` written into
+`.cs-medicare-residual` / `.cs-magnitude`), 13 members in two page loads, and prove the swap once against a real
+render (736.05 px swapped and rendered on one plant, 763.94 and 763.94 on the other).

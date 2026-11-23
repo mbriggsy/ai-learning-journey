@@ -3,7 +3,7 @@ title: A mutant proof is only as good as its LABEL — the recorded "tier-keyed 
 date: 2026-09-10
 phase: Post-Act-4 (the gap to a friend betting real money) — the council build's adversarial review
 modules: [e2e/vertical-fit.spec.ts, src/ui/styles/app.css, docs/council-log.md, TODO.md]
-tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz, kill-line, spy-leak, restoreAllMocks, afterEach, input-device, hit-testing, prediction-correction]
+tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz, kill-line, spy-leak, restoreAllMocks, afterEach, input-device, hit-testing, prediction-correction, shared-constant, derived-constant, kill-set-larger-than-predicted]
 ---
 
 ## Problem
@@ -75,3 +75,11 @@ The h2 cure's mutant pass (b9-1: 13 unit mutants, 5 of them also run against the
 - **For an input-event mutant, which arms can go red depends on the device, and on whether the target MOVES or is DELETED.** v1 predicted that M2 (release at pointerup) would turn all six arms red. Before the run, the tests lens flagged the two mouse tall arms (confidence 50). Chromium hit-tests a mouse release once, so pointerup, mouseup and the click share a target. A label that only MOVED after pointerup still gets its click, so those arms likely stay green. Touch taps can go red, because their blur comes after the finger lifts. So can the Keep door on either device: it is DELETED, and React drops a click on a node it has let go of. Observed: exactly the two touch tall arms and both Keep arms. The same pre-run pass added K-panel to M6's predicted set, and that was observed too.
 
 All 13 unit kill sets matched their predictions exactly, every kill on the test's own assertion. Predict the set, then read each kill's line against what the plant changed. A kill in the right test for the wrong reason means the harness, not the code, decided it.
+
+## Extended (2026-11-21, the composites' U6): plant where the regression is named, never on a constant others derive from
+
+U6's fault "each 900 and tall-edge arm runs at 731" was first planted on the `LENOVO_FULL` / `TALL_EDGE` constants. The
+short-tier query is built from `TALL_EDGE.height - 1`, so the plant moved the query too: 42 arms red where 28 were
+predicted, every REAL arm among them. Planted in the size table's viewport entries, it red exactly the 28. Before
+planting on a shared constant, grep what reads it; a kill set larger than predicted is a mislabelled plant until shown
+otherwise (`41b58e17`).

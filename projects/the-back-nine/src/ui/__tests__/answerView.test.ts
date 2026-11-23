@@ -556,6 +556,18 @@ describe('selectElevatedAnswer — W9-R7: the eyebrow flags ride presence-keyed 
     expect(settled).not.toHaveProperty('provisional')
   })
 
+  it('the spine reading carries the answer’s input key (the record card’s seat plan, KTD2): the fold’s open state is keyed to it; provisional and final share it, and the date view carries none', () => {
+    const keyed = (a: ModelAnswer, inputKey: string): ModelAnswer =>
+      a.kind === 'headline' || a.kind === 'date' ? { ...a, inputKey } : a
+    expect(spineView(snap(keyed(headlineAnswer('on-track'), 'key-a'), retired)).inputKey).toBe('key-a')
+    // The byte-identical provisional → final step keeps the key, so an opened fold survives it.
+    const provisional = spineView(snap(atTier(keyed(headlineAnswer('on-track'), 'key-a'), 'provisional'), retired))
+    expect(provisional.inputKey).toBe('key-a')
+    // Over a re-figuring the shown answer's key rides unchanged beside the flag (the fold closes on the flag).
+    expect(spineView(flagged(snap(keyed(headlineAnswer('on-track'), 'key-a'), retired))).inputKey).toBe('key-a')
+    expect(dateView(snap(datesAnswer(), working))).not.toHaveProperty('inputKey')
+  })
+
   it('the flag over a keyless arm drives no words here: the incomplete fallback and the retry view are unchanged', () => {
     expect(selectElevatedAnswer(flagged(snap({ kind: 'inputs-incomplete' }, working)), noop)).toEqual({ kind: 'fallback' })
     const err = selectElevatedAnswer(flagged(snap({ kind: 'compute-error', reason: 'x' }, working)), noop)

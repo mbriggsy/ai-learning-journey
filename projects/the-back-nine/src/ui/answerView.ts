@@ -286,6 +286,10 @@ export function selectElevatedAnswer(
           ...(answer.result.floorReading ? { floorReading: answer.result.floorReading } : {}),
           // The re-figuring line (the module note); never the provisional tag on the spine.
           ...(snapshot.refiguring ? { refiguring: true as const } : {}),
+          // The answer's input key, which the folded survivor statement's open state is keyed to (the record
+          // card's seat plan, KTD2). The spine's provisional and final share it (`runKey` leaves the tier out),
+          // so an opened fold survives that byte-identical step; an edit's answer carries a new one.
+          inputKey: answer.inputKey,
         },
       }
     }

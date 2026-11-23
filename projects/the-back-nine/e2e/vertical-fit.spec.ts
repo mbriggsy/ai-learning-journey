@@ -27,6 +27,7 @@ import {
   refiguringLog,
   rewalkSeedTo,
   settleLayout,
+  type RefiguringReading,
 } from './reviewSurface'
 // THE SHIPPED CATALOG, never re-typed here (the `e2e/caddie-walk.spec.ts:25` precedent). Every
 // string this spec injects or reads back is the one the app ships: a spec-local literal would pin a
@@ -5532,8 +5533,42 @@ async function foldFrame(page: Page): Promise<{ caveat: number; save: number | n
   })
 }
 
+/** The opened fold's ORDER (the record card's seat plan, U2, R7): the fold sits last among the statements, so opened
+ *  it follows the whole Medicare pair, and the summary and the pair all sit above the doors, in the DOM and on screen
+ *  (page coordinates). Every fold frame this arm reads carries the pair (an all-65+ household with the relief line),
+ *  so a frame without it fails loudly rather than passing an order check over nothing. */
+async function foldOrder(page: Page): Promise<{
+  readonly foldAfterPair: boolean
+  readonly aboveDoorsInDom: boolean
+  readonly summary: number
+  readonly residual: number
+  readonly doorsTop: number
+}> {
+  return page.evaluate(() => {
+    const one = (sel: string): Element => {
+      const all = document.querySelectorAll(sel)
+      if (all.length !== 1) throw new Error(`[opened fold order] ${sel}: ${all.length} on the page, want exactly 1`)
+      return all[0]!
+    }
+    const follows = (a: Element, b: Element): boolean => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+    const summary = one('details.survivor-fold > summary')
+    const note = one('.cs-medicare-note')
+    const residual = one('.cs-medicare-residual')
+    const doors = one('.result-quiet-row')
+    return {
+      foldAfterPair: follows(note, summary) && follows(residual, summary),
+      aboveDoorsInDom: follows(summary, doors) && follows(note, doors) && follows(residual, doors),
+      summary: summary.getBoundingClientRect().bottom + window.scrollY,
+      residual: residual.getBoundingClientRect().bottom + window.scrollY,
+      doorsTop: doors.getBoundingClientRect().top + window.scrollY,
+    }
+  })
+}
+
 /** Round 3's question, measured: the frame with its survivor fold closed, then opened by a click on its summary (the
- *  household's one act), printed on one line; only the fold's state and the frame's walk floor are asserted. */
+ *  household's one act), printed on one line; only the fold's state, its order (U2: last among the statements, the
+ *  summary and the Medicare pair above the doors) and the frame's walk floor are asserted, never the fit: an opened
+ *  fold becomes a sanctioned scroll only with the caveat in the chart column (the seat plan's Key Decisions). */
 async function printOpenedFold(page: Page, frame: string, size: keyof typeof LAPTOP_SIZES): Promise<void> {
   const fold = page.locator('details.survivor-fold')
   await expect(fold, `${frame}: the survivor card is folded (the floor relief holds the inline slot)`).toHaveCount(1)
@@ -5551,7 +5586,17 @@ async function printOpenedFold(page: Page, frame: string, size: keyof typeof LAP
     `degrade=${walk.offenders.length === 0 ? 'none' : walk.offenders.map((o) => `${o.desc}@${o.bottom.toFixed(1)}`).join(',')}`
   console.log(`[opened fold] ${line}`)
   test.info().annotations.push({ type: 'opened fold (RECORDED: a question before it is a member)', description: line })
+  const order = await foldOrder(page)
+  const orderLine =
+    `${frame} ${size} attempt=${test.info().retry}: fold-after-pair=${order.foldAfterPair} above-doors-in-dom=${order.aboveDoorsInDom} ` +
+    `summary=${order.summary.toFixed(1)} residual=${order.residual.toFixed(1)} doors-top=${order.doorsTop.toFixed(1)}`
+  console.log(`[opened fold order] ${orderLine}`)
+  // After the lines, so the numbers print either way.
   expect(walk.counted, `${frame}: the walk counted too few elements`).toBeGreaterThan(WALK_FLOOR)
+  expect(order.foldAfterPair, `${frame}: the fold sits before the Medicare pair (R7 puts it last among the statements)`).toBe(true)
+  expect(order.aboveDoorsInDom, `${frame}: the summary or the Medicare pair comes after the doors in the DOM`).toBe(true)
+  expect(order.summary, `${frame}: the opened fold's summary ends below the doors' top`).toBeLessThanOrEqual(order.doorsTop + 0.5)
+  expect(order.residual, `${frame}: the Medicare residual ends below the doors' top`).toBeLessThanOrEqual(order.doorsTop + 0.5)
 }
 
 for (const size of ['REAL', 'TIER', 'LENOVO_FULL', 'SHOWCASE'] as const) {
@@ -5574,6 +5619,161 @@ for (const size of ['REAL', 'TIER', 'LENOVO_FULL', 'SHOWCASE'] as const) {
     }
   })
 }
+
+// ── the survivor fold closes at the edit (the record card's seat plan, U2, R7 and KTD2) ─────────
+// An opened fold closes when the household's next edit starts a new figure, in that edit's own render: never seconds
+// later when the figure lands (it would collapse 125 to 132 px above "Save changes" under the reader's pointer, insight
+// 035) and never re-opened on its own. `ConfidenceStatement.test.tsx` pins the render-phase form per commit (its
+// layout-effect probe); these two real-browser arms carry what the household can see, on the real store and sheets:
+//  - THE RE-CLOSE, live on `?seed=budget`: the fold opened, a budget edit applied through the sheet, and a watch on
+//    every mutation of `main.result` (a COPY of `armRefiguringWatch`, e2e/reviewSurface.ts, with the fold's `open`
+//    added; the shared watch stays as the Caddie walk uses it) must read the fold closed at its first reading with the
+//    flag up, and never open after it. The flag is waited for as a presence (insight 070), then the settled page.
+//    Planted faults (b9-5, U2): a close that waits for the figure to land (C3's rejected design) reds it, the fold
+//    read open with the flag up for ~150 ms; a close made in a useEffect cannot, because React 19.2 lands it in the
+//    same flush as the edit's commit, before any observer or paint, so no frame shows it (the unit probe reds it).
+//  - THE HELD WINDOW, on `?preview=refiguring&seed=budget` (every run after the first final held, so the window
+//    stands still): a fold opened INSIDE the window is opened for the incoming figure, so it stays open across the
+//    window's re-renders, and a second panel edit (a new draft; neither the shown key nor the flag moves) closes it
+//    with the window still held. The re-key when a held figure lands is a jsdom scenario: no held figure ever lands.
+
+/** One reading of the fold watch: the re-figuring watch's three facts plus the fold's `open` (`null` while no fold). */
+type FoldWatchReading = RefiguringReading & { readonly fold: boolean | null }
+
+/** `armRefiguringWatch`'s copy with the survivor fold's `open` in what it watches (above). Armed on a settled page. */
+async function armFoldWatch(page: Page): Promise<void> {
+  await expect(page.locator(SETTLED_RESULT), 'an earlier edit’s run never settled').toBeAttached({ timeout: FINAL_TIER_MS })
+  await page.evaluate(() => {
+    const w = window as unknown as { __foldWatch?: FoldWatchReading[]; __foldWatchObserver?: MutationObserver }
+    w.__foldWatchObserver?.disconnect()
+    const t0 = performance.now()
+    const log: FoldWatchReading[] = []
+    w.__foldWatch = log
+    const read = (): void => {
+      const m = document.querySelector('main.result')
+      const h = document.querySelector('main.result h2')
+      const f = document.querySelector<HTMLDetailsElement>('details.survivor-fold')
+      const next: FoldWatchReading = {
+        t: Math.round(performance.now() - t0),
+        refiguring: m === null ? null : m.hasAttribute('data-answer-refiguring'),
+        tier: m === null ? null : m.getAttribute('data-answer-tier'),
+        verdict: h === null ? '' : `${h.textContent ?? ''} | ${h.nextElementSibling?.textContent ?? ''}`,
+        fold: f === null ? null : f.open,
+      }
+      const last = log[log.length - 1]
+      if (
+        last === undefined ||
+        last.refiguring !== next.refiguring ||
+        last.tier !== next.tier ||
+        last.verdict !== next.verdict ||
+        last.fold !== next.fold
+      ) {
+        log.push(next)
+      }
+    }
+    read()
+    if (log[0]!.verdict === '') throw new Error('the fold watch found no verdict heading on the Result')
+    const observer = new MutationObserver(read)
+    w.__foldWatchObserver = observer
+    observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['data-answer-refiguring', 'data-answer-tier', 'open'],
+    })
+  })
+}
+
+async function foldWatchLog(page: Page): Promise<readonly FoldWatchReading[]> {
+  return page.evaluate(() => (window as unknown as { __foldWatch?: FoldWatchReading[] }).__foldWatch ?? [])
+}
+
+test.describe(`the survivor fold closes at the edit (?seed=budget, ${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+  test('opened, then a budget edit applied through the sheet: the fold reads closed at the first reading with the flag up, and never open after it', async ({ page }) => {
+    await gotoSeedFinal(page, 'budget')
+    await assertResolvedSpine(page)
+    const fold = page.locator('details.survivor-fold')
+    await expect(fold, '`budget` folds its survivor card (the floor relief holds the inline slot)').toHaveCount(1)
+    await page.locator('.survivor-fold__summary').click()
+    await expect(fold).toHaveAttribute('open', '')
+    await armFoldWatch(page)
+    await page.getByRole('button', { name: copy.budgetEditCta }).click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    const amount = dialog.getByLabel(copy.budgetAmountLabel).first()
+    const now = Number((await amount.inputValue()).replace(/[^0-9]/g, ''))
+    expect(now, 'the budget’s first line carries an amount').toBeGreaterThan(0)
+    // A real engine input: the first line $1,000 a year higher, so the Apply dispatches a run on new inputs.
+    await amount.click()
+    await amount.press('ControlOrMeta+a')
+    await amount.pressSequentially(String(now + 1_000))
+    await amount.press('Tab')
+    await dialog.getByRole('button', { name: copy.budgetApply }).click()
+    await expect(dialog).toBeHidden()
+    await expect
+      .poll(async () => (await foldWatchLog(page)).some((r) => r.refiguring === true), {
+        message: 'the Apply dispatched no run on new inputs (data-answer-refiguring never appeared)',
+        timeout: 30_000,
+      })
+      .toBe(true)
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+    const log = await foldWatchLog(page)
+    const story = log.map((r) => `${r.t}ms ${String(r.refiguring)}/${String(r.tier)} fold=${String(r.fold)}`).join(' · ')
+    console.log(`[fold re-close] ${story}`)
+    expect(log[0]!.refiguring, `the watch was armed on a page already re-figuring: ${story}`).toBe(false)
+    expect(log[0]!.fold, `the fold was not open when the watch was armed: ${story}`).toBe(true)
+    const rose = log.findIndex((r) => r.refiguring === true)
+    expect(rose, `the flag never rose: ${story}`).toBeGreaterThan(0)
+    for (const r of log.slice(0, rose)) {
+      expect(r.fold, `the fold closed before the edit started a new figure (the sheet opening, or its typing): ${story}`).toBe(true)
+    }
+    expect(log[rose]!.fold, `at the first reading with the flag up the fold still read open: the close came after the edit's own render: ${story}`).toBe(false)
+    expect(log.slice(rose).every((r) => r.fold !== true), `the fold was open again after the edit: ${story}`).toBe(true)
+    expect(log.slice(rose).some((r) => r.refiguring === false), `the flag never cleared, so no new figure landed: ${story}`).toBe(true)
+  })
+})
+
+test.describe(`the survivor fold inside the held window (?preview=refiguring&seed=budget, ${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+  test('opened inside the window it stays open across re-renders, and a second panel edit closes it with the window still held', async ({ page }) => {
+    await enterHeldWindow(page, REFIG_ROUTES.spine)
+    const fold = page.locator('details.survivor-fold')
+    await expect(fold, '`budget` folds its survivor card').toHaveCount(1)
+    const isOpen = (): Promise<boolean> => fold.evaluate((el) => (el as HTMLDetailsElement).open)
+    expect(await isOpen(), 'the fold starts closed in the window').toBe(false)
+    await page.locator('.survivor-fold__summary').click()
+    await expect(fold).toHaveAttribute('open', '')
+    // Two re-renders inside the window: the panel opened (Result's sheet state, the hero's sheetOpen), then closed.
+    // Had the open been dropped from the state, the element and the state would disagree, invisibly until the next
+    // edit's close, which would then never reach the element: the second edit below is that check.
+    const door = page.locator('[data-door="assumptions"]')
+    const dialog = page.getByRole('dialog')
+    const closeDialog = async (): Promise<void> => {
+      await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
+      await expect(dialog).toBeHidden()
+    }
+    await door.click()
+    await expect(dialog).toBeVisible()
+    expect(await isOpen(), 'the panel opening inside the window closed the fold').toBe(true)
+    await closeDialog()
+    expect(await isOpen(), 'the panel closing inside the window closed the fold').toBe(true)
+    await expectStillHeld(page)
+    // The second edit: a new draft while the first edit's run is still held.
+    await door.click()
+    await expect(dialog).toBeVisible()
+    const field = dialog.getByLabel(copy.assumptionSurvivorRatioLabel)
+    const share = (await field.inputValue()).replace(/[^0-9]/g, '')
+    await field.fill(share === '70' ? '65' : '70')
+    await field.press('Tab')
+    expect(await isOpen(), 'the second edit left the fold open').toBe(false)
+    await expectStillHeld(page)
+    await closeDialog()
+    expect(await isOpen(), 'the fold re-opened when the panel closed').toBe(false)
+    await expectStillHeld(page)
+  })
+})
 
 // ── the pay check: its two intake steps, its panel row and its standing line (U8) ───────────────
 //

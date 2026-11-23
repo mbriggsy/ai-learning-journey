@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { ConfidenceStatement } from '../ConfidenceStatement'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { useLayoutEffect } from 'react'
+import { ConfidenceStatement, type ConfidenceStatementView } from '../ConfidenceStatement'
 import { copy, slots } from '../copy'
 import { READING_FIXTURES, SURVIVOR_FIXTURES } from '../preview/fixtures'
 import { deriveSpineBandAnnotations } from '../bandAnnotations'
@@ -11,7 +12,7 @@ import { simulate } from '@engine/simulate'
 import { summarize } from '@engine/confidence'
 import { productionMarket } from '@engine/reference/methodology'
 import type { OutcomeState, SimulationParams } from '@shared/model'
-import type { StickyDisplay } from '@store/memoryModel'
+import type { ScenarioDraft, StickyDisplay } from '@store/memoryModel'
 
 /*
  * The U7 verdict-first surface. The colorblind law is the spine of these assertions: the verdict
@@ -861,5 +862,206 @@ describe('ConfidenceStatement — W9-R7: the re-figuring tell (KTD6)', () => {
     expect(container.querySelector('.cs-word__text')).toBe(word)
     expect(screen.getByRole('dialog')).toBe(dialog)
     expect(document.activeElement).toBe(focused)
+  })
+})
+
+/*
+ * The record card's seat plan, U2 (`docs/plans/features/record-card-seat-build-spec.md`, R7 and KTD2): the folded
+ * survivor statement sits LAST among the statements, and an opened fold closes when the household's next edit
+ * starts a new figure: in that edit's own render, never when the figure lands, and never re-opened on its own.
+ * The probe below reads the fold in a layout effect, which runs after each commit and before any passive effect,
+ * so a close made in an effect (the edit's commit carrying the fold open) is caught here. Only here: React 19.2
+ * lands such an effect's close in the same flush as an edit's commit, before any observer or paint, so the real
+ * browser arm cannot see it (U2's planted fault M1, b9-5); that arm (`e2e/vertical-fit.spec.ts`'s re-close) catches a
+ * close that waits for the figure to land (M2). jsdom queues `<details>`' toggle event on a 0 ms timer, as a browser
+ * queues it as a task, so `openFold` lets that timer run inside act.
+ */
+describe('the survivor fold, moved last and closed at the edit (the record card’s seat plan, U2)', () => {
+  const floorReading = { xOfTen: { value: 10, marginToEdge: 0.05 }, outcomeState: 'on-track' as const, stateMarginToEdge: 0.05 }
+  type Reading = Extract<ConfidenceStatementView, { kind: 'reading' }>
+  const reading = (over: Partial<Reading> = {}): Reading => ({
+    kind: 'reading',
+    ...READING_FIXTURES['borderline'],
+    floorReading,
+    survivorReading: SURVIVOR_FIXTURES['on-track'],
+    ...over,
+  })
+  // Drafts are compared by identity only (the store replaces the object on every edit).
+  const D1 = { tag: 'draft-1' } as unknown as ScenarioDraft
+  const D2 = { tag: 'draft-2' } as unknown as ScenarioDraft
+
+  type ProbeRead = { readonly refiguring: boolean; readonly open: boolean | null }
+  function FoldProbe({ log }: { readonly log: ProbeRead[] }) {
+    useLayoutEffect(() => {
+      const fold = document.querySelector<HTMLDetailsElement>('details.survivor-fold')
+      log.push({ refiguring: document.querySelector('.cs-refiguring') !== null, open: fold === null ? null : fold.open })
+    })
+    return null
+  }
+  const ui = (view: ConfidenceStatementView, log: ProbeRead[], liveDraft: ScenarioDraft | undefined = D1) => (
+    <>
+      <ConfidenceStatement view={view} liveDraft={liveDraft} />
+      <FoldProbe log={log} />
+    </>
+  )
+  const foldOf = (c: HTMLElement): HTMLDetailsElement => {
+    const fold = c.querySelector<HTMLDetailsElement>('details.survivor-fold')
+    if (fold === null) throw new Error('no folded survivor statement on the page')
+    return fold
+  }
+  async function openFold(c: HTMLElement): Promise<HTMLDetailsElement> {
+    const fold = foldOf(c)
+    fireEvent.click(fold.querySelector('summary')!)
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0))
+    })
+    expect(fold.open, 'the summary click opened the fold').toBe(true)
+    return fold
+  }
+  const follows = (a: Element, b: Element): boolean => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+
+  it('a relief reading: the fold follows the Medicare residual and the staleness echo, and, where the residual is withheld, the state note', () => {
+    const priced = render(<ConfidenceStatement view={reading()} medicarePricedNote stalenessNote />)
+    const fold = foldOf(priced.container)
+    for (const sel of ['.floor-readout', '.cs-medicare-note', '.cs-medicare-residual', '.cs-staleness-note']) {
+      const el = priced.container.querySelector(sel)
+      expect(el, `${sel} renders on this frame`).not.toBeNull()
+      expect(follows(el!, fold), `the fold follows ${sel}`).toBe(true)
+    }
+    // Last among the statements: nothing in the statements follows it.
+    expect(fold.parentElement!.lastElementChild).toBe(fold)
+    priced.unmount()
+    const standalone = render(<ConfidenceStatement view={reading()} stalenessNote />)
+    const note = standalone.container.querySelector('.cs-state-note')
+    expect(note, 'the standalone state note renders where the residual is withheld').not.toBeNull()
+    expect(follows(note!, foldOf(standalone.container))).toBe(true)
+    expect(follows(standalone.container.querySelector('.cs-staleness-note')!, foldOf(standalone.container))).toBe(true)
+  })
+
+  it('a reading without relief: the inline survivor statement keeps its slot, before the Medicare pair', () => {
+    const { container } = render(
+      <ConfidenceStatement view={reading({ ...READING_FIXTURES['on-track'], floorReading: undefined })} medicarePricedNote />,
+    )
+    expect(container.querySelector('details.survivor-fold')).toBeNull()
+    const inline = container.querySelector('.survivor')
+    expect(inline).not.toBeNull()
+    expect(follows(inline!, container.querySelector('.cs-medicare-note')!)).toBe(true)
+  })
+
+  it('opened, then re-rendered with the same key and no re-figuring: it stays open; the byte-identical final under the same key keeps it open too', async () => {
+    const log: ProbeRead[] = []
+    const { container, rerender } = render(ui(reading({ inputKey: 'A' }), log))
+    const fold = await openFold(container)
+    rerender(ui(reading({ inputKey: 'A' }), log))
+    expect(fold.open).toBe(true)
+    // The spine's final commits a NEW answer object under the same key (runKey leaves the tier out).
+    rerender(ui(reading({ ...READING_FIXTURES['borderline'], headline: { ...READING_FIXTURES['borderline'].headline }, inputKey: 'A' }), log))
+    expect(foldOf(container)).toBe(fold)
+    expect(fold.open).toBe(true)
+  })
+
+  it('opened, then a re-figuring starts: closed in that same render, on the same summary node, which keeps focus', async () => {
+    const log: ProbeRead[] = []
+    const { container, rerender } = render(ui(reading({ inputKey: 'A' }), log))
+    const fold = await openFold(container)
+    const summary = fold.querySelector('summary')!
+    summary.focus()
+    expect(document.activeElement).toBe(summary)
+    rerender(ui(reading({ inputKey: 'A', refiguring: true }), log))
+    const during = log.filter((r) => r.refiguring)
+    expect(during.length, 'the probe read the re-figuring commit').toBeGreaterThan(0)
+    expect(during.every((r) => r.open === false), `a commit showed the fold open with the re-figuring line up: ${JSON.stringify(log)}`).toBe(true)
+    expect(foldOf(container)).toBe(fold)
+    expect(fold.querySelector('summary')).toBe(summary)
+    expect(document.activeElement).toBe(summary)
+  })
+
+  it('opened at key A, an edit to B, then a revert to A: it stays closed (nothing kept to re-open it)', async () => {
+    const log: ProbeRead[] = []
+    const { container, rerender } = render(ui(reading({ inputKey: 'A' }), log))
+    const fold = await openFold(container)
+    rerender(ui(reading({ inputKey: 'A', refiguring: true }), log, D2))
+    expect(fold.open).toBe(false)
+    rerender(ui(reading({ inputKey: 'B' }), log, D2))
+    expect(fold.open).toBe(false)
+    const D3 = { tag: 'draft-3' } as unknown as ScenarioDraft
+    rerender(ui(reading({ inputKey: 'B', refiguring: true }), log, D3))
+    rerender(ui(reading({ inputKey: 'A' }), log, D3))
+    expect(foldOf(container)).toBe(fold)
+    expect(fold.open).toBe(false)
+  })
+
+  it('opened, a compute-error unmounts it, then a retry on the same inputs: it renders closed', async () => {
+    const log: ProbeRead[] = []
+    const { container, rerender } = render(ui(reading({ inputKey: 'A' }), log))
+    await openFold(container)
+    rerender(ui({ kind: 'compute-error', onRetry: () => undefined }, log))
+    expect(container.querySelector('details.survivor-fold')).toBeNull()
+    rerender(ui(reading({ inputKey: 'A' }), log))
+    expect(foldOf(container).open).toBe(false)
+  })
+
+  it('a pending view after an opened fold clears what it was opened under', async () => {
+    const log: ProbeRead[] = []
+    const { container, rerender } = render(ui(reading({ inputKey: 'A' }), log))
+    await openFold(container)
+    rerender(ui({ kind: 'pending' }, log))
+    rerender(ui(reading({ inputKey: 'A' }), log))
+    expect(foldOf(container).open).toBe(false)
+  })
+
+  it('opened while a re-figuring is under way: it stays open, and when the incoming figure lands it is still open, now keyed to that figure', async () => {
+    const log: ProbeRead[] = []
+    const { container, rerender } = render(ui(reading({ inputKey: 'A', refiguring: true }), log, D2))
+    const fold = await openFold(container)
+    rerender(ui(reading({ inputKey: 'A', refiguring: true }), log, D2))
+    expect(fold.open, 'a re-render inside the window keeps the element and the state agreed: open').toBe(true)
+    rerender(ui(reading({ inputKey: 'B' }), log, D2))
+    expect(fold.open, 'the figure landed with the draft unchanged').toBe(true)
+    // Keyed to B now: B's own next edit closes it.
+    const D3 = { tag: 'draft-3' } as unknown as ScenarioDraft
+    rerender(ui(reading({ inputKey: 'B', refiguring: true }), log, D3))
+    expect(fold.open).toBe(false)
+  })
+
+  it('opened while a re-figuring is under way, then a second edit before the figure lands: closed in that render, and still closed when the second figure lands', async () => {
+    const log: ProbeRead[] = []
+    const { container, rerender } = render(ui(reading({ inputKey: 'A', refiguring: true }), log, D1))
+    const fold = await openFold(container)
+    log.length = 0
+    rerender(ui(reading({ inputKey: 'A', refiguring: true }), log, D2))
+    expect(log.length, 'the probe read the second edit’s commit').toBeGreaterThan(0)
+    expect(log.every((r) => r.open === false), `a commit showed the fold open after the second edit: ${JSON.stringify(log)}`).toBe(true)
+    rerender(ui(reading({ inputKey: 'C' }), log, D2))
+    expect(fold.open).toBe(false)
+  })
+
+  it('the summary closes it as before, and the toggle that follows a close this render made writes closed onto closed', async () => {
+    const log: ProbeRead[] = []
+    const { container, rerender } = render(ui(reading({ inputKey: 'A' }), log))
+    const fold = await openFold(container)
+    fireEvent.click(fold.querySelector('summary')!)
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0))
+    })
+    expect(fold.open).toBe(false)
+    rerender(ui(reading({ inputKey: 'A' }), log))
+    expect(fold.open, 'nothing re-opened it').toBe(false)
+    // An edit's close, then its queued toggle event: still closed, and a later same-key render keeps it so.
+    await openFold(container)
+    rerender(ui(reading({ inputKey: 'A', refiguring: true }), log, D2))
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0))
+    })
+    rerender(ui(reading({ inputKey: 'A' }), log, D2))
+    expect(fold.open).toBe(false)
+  })
+
+  it('a reading with no key (a fixture): the fold stays uncontrolled, and the summary click opens it as before', () => {
+    const { container } = render(<ConfidenceStatement view={reading()} />)
+    const fold = foldOf(container)
+    expect(fold.open).toBe(false)
+    fireEvent.click(fold.querySelector('summary')!)
+    expect(fold.open).toBe(true)
   })
 })

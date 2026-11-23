@@ -34,7 +34,7 @@
  * U7 copyGuard); every numeral enters through a typed slot. CSP-clean: all styling is class-driven
  * (confidence.css), never an inline style attribute.
  */
-import { useEffect, useId, useMemo, useRef, type ReactNode } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode, type SyntheticEvent } from 'react'
 import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { VerdictIcon } from './verdictSignal'
@@ -58,7 +58,7 @@ import {
 import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import type { BandPlanClockAnchor } from './bandAnnotations'
 import type { BandFan, DollarAdjustment, Headline, SurvivorReading } from '@shared/model'
-import type { SpendAnswer, StickyDisplay } from '@store/memoryModel'
+import type { ScenarioDraft, SpendAnswer, StickyDisplay } from '@store/memoryModel'
 import './styles/confidence.css'
 
 /** What the surface shows. `reading` covers all six engine states (it reads `outcomeState`);
@@ -106,6 +106,12 @@ export type ConfidenceStatementView =
        *  insight 045). The floorRelief gate decides whether it earns the subordinate relief line;
        *  the value-equal degenerate collapses to the single-metric statement verbatim. */
       readonly floorReading?: Headline
+      /** The committed answer's input key (`ModelAnswer.inputKey`), threaded by answerView: the identity
+       *  the folded survivor statement's open state is keyed to (the record card's seat plan, KTD2; see
+       *  {@link foldAfterRender}). Presence-keyed: every store answer carries one; the preview harness's
+       *  fixtures and the component tests' fixtures do not, and a keyless reading leaves the fold
+       *  uncontrolled, as it was before the key existed. */
+      readonly inputKey?: string
     }
   | { readonly kind: 'pending' }
   | { readonly kind: 'compute-error'; readonly onRetry: () => void }
@@ -173,6 +179,53 @@ export interface ConfidenceStatementProps {
    *  beside its premise line + this RENDERED control (insight 100) — absent while the plan
    *  clock is positive, the fan WITHDRAWS ENTIRELY. Fresh sessions ignore it. */
   readonly onReconfirm?: () => void
+  /** The live draft (Result's `snapshot.draft`), read for its IDENTITY only: the store replaces the
+   *  draft object on every edit, so a changed reference means the household edited again. The folded
+   *  survivor statement reads it while a re-figuring is under way, when the shown answer's key cannot
+   *  move (KTD2 rule 3, {@link foldAfterRender}). Absent (the preview harness, the component tests) ⇒
+   *  no second edit is ever seen. */
+  readonly liveDraft?: ScenarioDraft
+}
+
+/**
+ * The folded survivor statement's opened state (the record card's seat plan, KTD2): opened under the shown
+ * answer's key, or opened while a re-figuring was already under way, for the figure on its way, beside the
+ * live draft of that moment. `null` is closed. The fold is OPEN exactly while this is non-null after
+ * {@link foldAfterRender}.
+ */
+type FoldOpened =
+  | { readonly kind: 'shown'; readonly key: string }
+  | { readonly kind: 'incoming'; readonly draft: ScenarioDraft | undefined }
+
+/**
+ * THE FOLD'S RENDER-PHASE RESET (KTD2 rule 2 and rule 3): what the stored opened state becomes in this render.
+ * An opened fold closes the moment the household's next edit starts a new figure, never seconds later when that
+ * figure lands, and never re-opens on its own:
+ *  - opened on a shown answer: it stays open while that answer is shown and no re-figuring has started; a
+ *    re-figuring (the edit's own render: the store raises the flag before its run's first await) or a moved key
+ *    closes it, and nothing is kept, so a revert to the old key finds it closed;
+ *  - opened while a re-figuring was under way: it is open for the incoming figure. A changed draft (a second edit
+ *    in the same window, which moves neither the shown key nor the flag) closes it; the figure landing (the flag
+ *    down) with the draft unchanged re-keys it to the answer now shown;
+ *  - a pending or compute-error view, or a reading with no key, keeps nothing.
+ * Worked out during render with no remount (focus stays on the summary) and no effect: an effect runs after the
+ * commit, so the edit's commit would carry the fold open and collapse it in a second one (insight 035's moved press,
+ * were that second commit ever painted). React 19.2 happens to land such an effect's close in the same flush as an
+ * edit's commit, before any paint (measured b9-5, 2026-11-22: the seat plan's U2), but nothing promises that ordering;
+ * the render-phase form needs no promise. `ConfidenceStatement.test.tsx`'s per-commit probe pins it.
+ */
+function foldAfterRender(
+  opened: FoldOpened | null,
+  key: string | undefined,
+  refiguring: boolean,
+  liveDraft: ScenarioDraft | undefined,
+): FoldOpened | null {
+  if (opened === null || key === undefined) return null
+  if (opened.kind === 'incoming') {
+    if (opened.draft !== liveDraft) return null
+    return refiguring ? opened : { kind: 'shown', key }
+  }
+  return refiguring || opened.key !== key ? null : opened
 }
 
 /** The indeterminate placeholder band — a wide low-emphasis envelope (no median, no precise band)
@@ -196,7 +249,7 @@ function buildPlaceholderBand(annotations: readonly XAnnotation[]): Indeterminat
   }
 }
 
-export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, statePricedNote, stalenessNote = false, sheetOpen = false, savedAnchor, agedBalancesYear, onReconfirm }: ConfidenceStatementProps) {
+export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePricedNote = false, medicareExtrasTypicalNote, statePricedNote, stalenessNote = false, sheetOpen = false, savedAnchor, agedBalancesYear, onReconfirm, liveDraft }: ConfidenceStatementProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
   // Announce on the FIRST landing only (the undefined→defined edge) — the shared once-per-landing
   // contract (mirrors FuckOffDate). The spine's two recomputes are byte-identical, so its key never
@@ -216,6 +269,21 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
   // description, so a reader who jumps to the verdict hears it before the caveat.
   const refiguring = view.kind === 'reading' && view.refiguring === true
   const refiguringId = useId()
+
+  // THE SURVIVOR FOLD'S OPEN STATE (the record card's seat plan, KTD2): derived during render from what it was
+  // opened under (`foldAfterRender`, the reset; the `assumptionsSeat` reset in Result.tsx is its precedent),
+  // so the household's next edit closes it in that edit's own render. A keyless reading (a fixture) leaves the
+  // fold uncontrolled. The native toggle handler only records the element's OWN state, never a flip of the
+  // stored one, so the asynchronous `toggle` that follows a close this render made writes closed onto closed.
+  const foldKey = view.kind === 'reading' ? view.inputKey : undefined
+  const [foldOpened, setFoldOpened] = useState<FoldOpened | null>(null)
+  const fold = foldAfterRender(foldOpened, foldKey, refiguring, liveDraft)
+  if (fold !== foldOpened) setFoldOpened(fold)
+  const onFoldToggle = (e: SyntheticEvent<HTMLDetailsElement>) => {
+    if (foldKey === undefined) return
+    if (!e.currentTarget.open) setFoldOpened(null)
+    else setFoldOpened(refiguring ? { kind: 'incoming', draft: liveDraft } : { kind: 'shown', key: foldKey })
+  }
 
   // ── U12 C2 — the sticky sentence + the verdict crossfade ────────────────────────────────────
   // WHAT THE SENTENCE SHOWS: the sticky DISPLAY triple when one rides the view (production — the
@@ -485,43 +553,26 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
             would mint an implicit third row). Inside, in order:
             (1) the U9b essentials-relief line (present iff the floorRelief gate earns it — the
                 value-equal degenerate renders the single-metric statement VERBATIM);
-            (2) the "as the survivor" statement — INLINE exactly as shipped when it is the only
-                subordinate face, FOLDED behind a calm <details> when the floor relief already
-                holds the one inline X-of-10 slot (build-gate 7: at most ONE subordinate count on
-                the first frame; R4 — the fold is the seam the cold-read can flip). Both render
-                below the band so the scrub tap-targets never move (insight 035); absence renders
-                nothing (insight 044);
+            (2) the "as the survivor" statement INLINE, exactly as shipped, when it is the only
+                subordinate face (no relief line);
             (3) the priced-Medicare pair, or — where the residual is withheld — the STANDALONE state
                 clause (Card 4, 2026-09-11): one of the two ALWAYS renders (composeVerdictStateNote
                 is null exactly when the residual carries the clause), so the wrapper mounts on
                 every worded verdict — unconditionally, which is why it is no longer gated;
-            (4) the staleness echo. */}
+            (4) the staleness echo;
+            (5) the "as the survivor" statement FOLDED behind a calm <details>, when the floor relief
+                already holds the one inline X-of-10 slot (build-gate 7: at most ONE subordinate count
+                on the first frame; R4 — the fold is the seam the cold-read can flip). LAST, after the
+                Medicare pair, the state note and the echo (the record card's seat plan, R7): an opened
+                fold grows downward from the foot of the statements, so it can never leave "Part B and
+                the surcharge are in these numbers" in frame with the residual that bounds it pushed
+                below the fold. Its open state is controlled (`fold` above): it closes at the next edit.
+            The survivor statement renders below the band in both forms, so the scrub tap-targets never
+            move (insight 035); absence renders nothing (insight 044). */}
         {
           <div className="reveal__subordinates">
             {relief && <TwoTierHeadline relief={relief} />}
-            {view.survivorReading &&
-              (relief ? (
-                <details className="survivor-fold">
-                  <summary className="survivor-fold__summary">
-                    <span className="survivor__eyebrow">{copy.survivorReadoutEyebrow}</span>
-                    <span className="survivor-fold__verdict">
-                      {survivorWord && (
-                        <>
-                          <VerdictIcon
-                            state={view.survivorReading.outcomeState}
-                            className="survivor__glyph"
-                          />
-                          <span className="survivor__word">{survivorWord}</span>
-                        </>
-                      )}
-                      <span className="survivor-fold__chevron" aria-hidden="true" />
-                    </span>
-                  </summary>
-                  <SurvivorReadout reading={view.survivorReading} foldBody />
-                </details>
-              ) : (
-                <SurvivorReadout reading={view.survivorReading} />
-              ))}
+            {view.survivorReading && !relief && <SurvivorReadout reading={view.survivorReading} />}
             {/* P3·U11 follow-up — the priced-Medicare disclosure (the Medicare-pricing unit): the
                 all-65+ household reaches no Healthcare door, so these TWO lines are its only Medicare
                 honesty surface — the affirmation that base Part B + the income surcharge ARE in the
@@ -556,6 +607,27 @@ export function ConfidenceStatement({ view, focusSignal, actionsSlot, medicarePr
                 the verdict. Plain text in the a11y tree; its OWN class — the fit gate pins
                 .cs-medicare-note per-seed, so this note must never alias it. */}
             {stalenessNote && <p className="cs-staleness-note">{copy.stalenessHeroNote}</p>}
+            {view.survivorReading && relief && (
+              <details
+                className="survivor-fold"
+                open={foldKey === undefined ? undefined : fold !== null}
+                onToggle={foldKey === undefined ? undefined : onFoldToggle}
+              >
+                <summary className="survivor-fold__summary">
+                  <span className="survivor__eyebrow">{copy.survivorReadoutEyebrow}</span>
+                  <span className="survivor-fold__verdict">
+                    {survivorWord && (
+                      <>
+                        <VerdictIcon state={view.survivorReading.outcomeState} className="survivor__glyph" />
+                        <span className="survivor__word">{survivorWord}</span>
+                      </>
+                    )}
+                    <span className="survivor-fold__chevron" aria-hidden="true" />
+                  </span>
+                </summary>
+                <SurvivorReadout reading={view.survivorReading} foldBody />
+              </details>
+            )}
           </div>
         }
         {/* The completion actions, seated in the left reading column on two-pane (display:contents in

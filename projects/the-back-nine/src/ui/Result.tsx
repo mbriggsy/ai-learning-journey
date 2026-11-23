@@ -820,6 +820,7 @@ export function Result({
             savedAnchor={dateAnchor}
             agedBalancesYear={agedBalancesYear}
             onReconfirm={onReview}
+            liveDraft={snapshot.draft}
           />
         )}
         {elevated.kind === 'fallback' && (

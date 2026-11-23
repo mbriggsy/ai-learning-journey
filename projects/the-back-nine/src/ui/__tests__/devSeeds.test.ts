@@ -51,6 +51,7 @@ import { draftFromScenario } from '../draftFromScenario'
 import { floorRelief } from '../twoTier'
 import { composeDateSplit } from '../dateSplit'
 import {
+  accountSources,
   buildDateInput,
   buildSpineParams,
   dateStatePriced,
@@ -87,6 +88,10 @@ import {
 } from '@engine/dateSearch'
 import type { WorkingYearCashLines } from '@engine/taxOverlay'
 import { workingYearBottomLine } from '@engine/workingYearLedger'
+import type { DateSearchOutcome } from '@shared/model'
+import type { ModelAnswer } from '@store/memoryModel'
+import { tableRunFor } from '../workbench/tableRun'
+import { composeYearTable } from '../workbench/yearTableChrome'
 import {
   councilBudgetHousehold,
   TM_NEAR_IRMAA_LINE,
@@ -2386,7 +2391,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       'datesavedfourbuckets', 'datesavedmoved', 'datesavedrisen', 'datesavedrisenlater', 'datesavedrisenshort', 'datesavedstale', 'datesavedtyped',
       'datesavedtypedcrowned', 'datesavedtypedmoved', 'datesavedtypednearline', 'datesavedtypedpension', 'datesavedtypedsticky', 'dateshort',
       'datesolo',
-      'datesplit', 'dip',
+      'datesplit', 'dip', 'tablewidest',
     ])
   })
 
@@ -2505,9 +2510,9 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     // later-left-over witness (U15), build 2's three saved witnesses (U9), U11's risen twin and its two (ae) arms
     // (short at the quote, a later year short at the quote), U11 walk 6's retype (R1: a typed W, fresh), the
     // four-bucket twin (council (6)), the retype after a move (the walk-6 round review's pair), the whole-window
-    // rebuild's two (the pension household and the crowned one) and the tax rider's two walk-8 twins (the near-line
-    // household and the all-sticky one) included.
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(24)
+    // rebuild's two (the pension household and the crowned one), the tax rider's two walk-8 twins (the near-line
+    // household and the all-sticky one) and the year-by-year table's widest household (the workbench's U7) included.
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(25)
   })
 
   // The whole-window rebuild's every-year field (KTD1) on two witnesses the typed-below line reads. A (`datesavedtyped`):
@@ -2564,7 +2569,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
       swept++
     }
-    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty-four above)').toBe(24)
+    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty-five above)').toBe(25)
   })
 
   // Build 2's U9 (KTD14): the three saved witnesses, each minted through the shipped write. Every figure typed by
@@ -2982,5 +2987,46 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(() => doctorWorkingYearsStaleVault(plain.scenario, TODAY)).toThrow(/W-carrying/)
     expect(agedWorkingYearsVintage('working-years-2026a')).toBe('working-years-2025a')
     expect(() => agedWorkingYearsVintage('wy-2026')).toThrow(/unrecognised/)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// THE YEAR-BY-YEAR TABLE'S WIDEST HOUSEHOLD (the workbench plan's U7, slice 3): `tablewidest` exists so the fit gate
+// judges the table on the household where every column prints (insight 123). Pinned here: its widest facts, and,
+// through the real engine at its crowned stop (6 years out, 2032, read in real Chromium on 2026-11-23), every column
+// the table can draw and balances at seven digits. The fit gate's own arm re-reads the columns at the live crown.
+// ---------------------------------------------------------------------------
+describe('the year-by-year table’s widest household (the workbench’s U7)', () => {
+  const d = DEV_SEEDS.tablewidest
+
+  it('carries the widest facts: both names at the name ceiling, spending inside the design ceiling, every source kind', () => {
+    expect(d.people.map((p) => p.name?.length)).toEqual([NAME_CEILING, NAME_CEILING])
+    expect(d.annualSpendingReal! / 12).toBeLessThan(SPENDING_CEILING_PER_MONTH)
+    const s = accountSources(d)
+    expect(s.pretaxByPerson.map((p) => p.length > 0), 'a pre-tax source for each person').toEqual([true, true])
+    expect([s.roth, s.taxable, s.hsa].map((src) => src.length > 0), 'Roth, taxable and HSA sources').toEqual([true, true, true])
+    expect(d.workingYearLeftOver?.kind, 'year 0’s left over kept, so the from-pay column holds all three lines').toBe('saved')
+  })
+
+  it('at its crowned stop, the steady future prints every column the table can draw, its largest figure at seven digits', () => {
+    const outcome = {
+      kind: 'dates',
+      tier: 'final',
+      windowTopYears: DATE_OFFSET_WINDOW_TOP,
+      seed: 1,
+      band: { offsetYears: 6, track: 'lifestyle' },
+    } as unknown as DateSearchOutcome
+    const run = tableRunFor({ kind: 'date', tier: 'final', draft: d, outcome, inputKey: 'k' } as unknown as ModelAnswer)
+    if (run.kind !== 'run' || run.views.steady.kind !== 'run') throw new Error(`[test setup] tablewidest: no steady run (${run.kind})`)
+    const { params, seed, options } = run.views.steady.request
+    const out = simulate(params, seed, options)
+    const rows = out.indeterminate || out.infeasible ? [] : (out.distribution.ledgerRows ?? [])
+    const table = composeYearTable({ rows, meta: run.meta, view: 'steady' })
+    expect(table.columns.map((c) => c.id)).toEqual([
+      'person-0', 'person-1', 'social-security', 'spending', 'income-tax', 'pay-check', 'from-pay', 'health',
+      'pretax-moves', 'taxable', 'pretax-0', 'pretax-1', 'roth', 'hsa',
+    ])
+    const largest = Math.max(...table.rows.flatMap((r) => r.cells.flat()).map((f) => f?.dollars ?? 0))
+    expect(String(largest), 'balances at seven digits, inside the design ceiling').toHaveLength(7)
   })
 })

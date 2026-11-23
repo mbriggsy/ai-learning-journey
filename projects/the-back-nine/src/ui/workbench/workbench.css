@@ -221,10 +221,10 @@
   color: var(--ink);
 }
 
+/* The table's name, above its frame (`YearTable.tsx`), so it wraps to the page and is never cut where the table
+   scrolls inside its frame. */
 .wb-table__caption {
-  caption-side: top;
-  text-align: left;
-  padding-bottom: var(--space-3);
+  margin: 0;
   font-size: var(--text-sm);
   color: var(--ink-muted);
 }
@@ -233,9 +233,12 @@
   background: var(--paper);
 }
 
+/* The gutter: figures sit right-aligned, so what parts two columns is the room LEFT of each box (12 px), with none on
+   its right; the year column starts flush with the caption. At 1280 the widest household's table holds whole-word
+   headers this way (a 16 px gutter left it 9 px of room, and less beside a classic scrollbar). */
 .wb-th {
   background: var(--paper);
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-1) 0 var(--space-1) var(--space-3);
   text-align: right;
   vertical-align: bottom;
   font-weight: var(--weight-semibold);
@@ -251,11 +254,12 @@
 
 .wb-th--year {
   text-align: left;
+  padding-left: 0;
 }
 
+/* A header breaks between words, never inside one ("Christop / her" read as two words). */
 .wb-th__name {
   display: block;
-  overflow-wrap: anywhere;
 }
 
 .wb-th__lines {
@@ -265,8 +269,19 @@
   white-space: nowrap;
 }
 
+/* The year column's "Sam / Alex": it may break between people, never inside a name (`YearTable.tsx`'s `People`). */
+.wb-th__people {
+  display: block;
+  font-weight: var(--weight-body);
+  color: var(--ink-muted);
+}
+
+.wb-th__person {
+  white-space: nowrap;
+}
+
 .wb-td {
-  padding: var(--space-2);
+  padding: var(--space-2) 0 var(--space-2) var(--space-3);
   text-align: right;
   vertical-align: top;
   border-top: 1px solid var(--line-soft);
@@ -284,6 +299,7 @@
 
 .wb-td--year {
   text-align: left;
+  padding-left: 0;
   font-weight: var(--weight-body);
 }
 
@@ -301,7 +317,7 @@
 }
 
 .wb-notes td {
-  padding: 0 var(--space-2) var(--space-2);
+  padding: 0 0 var(--space-2);
 }
 
 .wb-note {
@@ -314,7 +330,7 @@
 
 /* The rough view's first steady year: a dashed rule and words, never a color change. */
 .wb-divider td {
-  padding: var(--space-3) var(--space-2) var(--space-2);
+  padding: var(--space-3) 0 var(--space-2);
   border-top: 1px dashed var(--line-control);
   font-size: var(--text-xs);
   color: var(--ink);

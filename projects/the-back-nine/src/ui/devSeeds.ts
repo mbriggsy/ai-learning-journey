@@ -1865,6 +1865,76 @@ const dateSavedTypedStickyWitness: ScenarioDraft = ((): ScenarioDraft => {
   return writeEnteredWorkingYearCost(withSavedLeftOver({ ...confirmed, workingYearLeftOver: undefined }), 90_000, 'year')
 })()
 
+/**
+ * THE YEAR-BY-YEAR TABLE'S WIDEST HOUSEHOLD — `?seed=tablewidest` (the workbench plan's U7, slice 3; insight 123: judge
+ * a fit on the widest member, never one seed's frame). The table keeps a column for each person, each savings source and
+ * each moving line, and drops one with nothing in any year of its future, so its widest household is one where every
+ * column prints (fourteen beside the year): both people paid, one with other income (Jacqueline's rental); a 401(k) each
+ * with deposits and a match, a Roth IRA, a brokerage account and an HSA, the last two taking deposits too; work stopping
+ * before 65, so the marketplace plan, Medicare and Medicare extras (both "not sure") each print a premium; year 0's left
+ * over kept, "All of it" (`withSavedLeftOver`), so the from-pay column holds all three lines. Two lines never print, a
+ * Roth deposit and a conversion: neither can widen its column (each column's longest label and largest figure print
+ * without them). Its balances reach seven digits and never eight, its spending ($19,000 a month) and its income sit
+ * inside his design ceiling ({@link SPENDING_CEILING_PER_MONTH}), and both names sit at the name ceiling
+ * (`NAME_CEILING`), real-looking (his ruling on the frames-outside plan's A7). Read in real Chromium on 2026-11-23: the
+ * date crowns about 6 years out (2032, about 9 of 10), so work stops at 62 and 60. At $22,000 a month it crowned at the
+ * window's edge, 10 years out, past Christopher's 65. No other seed holds this set: `datesavedfourbuckets` has one pay
+ * and no deposit outside the 401(k). W is minted on its own final draft, then the left over is answered on it.
+ */
+const tableWidest: ScenarioDraft = withSavedLeftOver(
+  withConfirmedW({
+    people: [
+      {
+        name: WIDEST_NAME,
+        sex: 'male',
+        birthYear: 1970,
+        currentAge: 56,
+        workStatus: 'working',
+        earnedIncomeReal: 262_000,
+        pia: 41_000,
+        socialSecurityClaimAge: 67,
+      },
+      {
+        name: 'Jacqueline Pemberton',
+        sex: 'female',
+        birthYear: 1972,
+        currentAge: 54,
+        workStatus: 'working',
+        earnedIncomeReal: 188_000,
+        pia: 35_000,
+        socialSecurityClaimAge: 67,
+      },
+    ],
+    enteredAccounts: [
+      { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 1_850_000, annualContribution: 22_000, employerMatchAnnual: 9_400 },
+      { ownerIndex: 1, kind: '401k', ticker: 'VFIFX', valueToday: 1_260_000, annualContribution: 19_000, employerMatchAnnual: 6_800 },
+      { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 415_000 },
+      { ownerIndex: 0, kind: 'brokerage', ticker: 'VTI', valueToday: 1_140_000, basis: 690_000, annualContribution: 12_000 },
+      { ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: 96_000, annualContribution: 6_200, hsaEmployerAnnual: 1_200 },
+    ],
+    incomeStreams: [
+      { ownerIndex: 1, type: 'rental', annualRealToday: 26_400, startAge: 50, colaMode: 'real-flat', survivorPct: 1 },
+    ],
+    tickerClassifications: {},
+    health: {
+      enrolledPremiumMonthlyToday: 1_840,
+      slcspMonthlyToday: 1_710,
+      // The brokerage account's dividends while they work: Christopher's, entered, so the run prices them there.
+      workingYearInvestmentByPerson: [21_000, 0],
+    },
+    medicareExtrasByPerson: notSureExtras(2),
+    annualSpendingReal: 228_000,
+    spendEntryPeriod: 'month',
+    survivorSpendingRatio: 0.75,
+    drawdownPolicy: 'proportional',
+    filing: 'mfj',
+    startCalendarYear: SEED_BUILD_YEAR,
+    taxVintage: 'OBBBA-2025',
+    appDefaultVersion: 'p2-dev-seed',
+    seed: DEV_CRN_SEED,
+  }),
+)
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -1935,6 +2005,8 @@ export const DEV_SEEDS = {
   // all-sticky budget (the closing part's whole-gap form).
   datesavedtypednearline: dateSavedTypedNearLineWitness,
   datesavedtypedsticky: dateSavedTypedStickyWitness,
+  // The workbench's U7 slice 3: the year-by-year table's widest household, every column and line printing.
+  tablewidest: tableWidest,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

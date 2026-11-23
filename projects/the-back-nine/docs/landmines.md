@@ -350,6 +350,12 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-1, 11-23) The fit harness's Chromium has no classic scrollbar** (`clientWidth` reads the whole 1280), while a
+  headed Chrome here shows a 15 px one, so a sideways margin read under the harness overstates a real window's by 15 px.
+  Read a table's real margin as its narrowest width (the phone arm's `tableWidth`, or the frame squeezed in-page) against
+  the frame less 15. The widest household's table: 1,143 px narrowest against 1,224 under the harness (1,209 headed).
+- **(b9-1, 11-23) The room's arms (`?seed=tablewidest`) assert every column first** (`expectEveryColumn`): a seed
+  whose crown drifts to today, or loses an account, would drop columns and make every width law vacuous.
 - **(b9-6, 11-21) `assertDensityTier` looks the survivor leading up in `SURVIVOR_LEADING`** (the frames-outside plan's
   KTD11, `be870c9c`), one row per direction, each cell read from the frame's own echo and typical-residual markers, and
   requires the arm's expectation to match on BOTH sides of the tier: `rows.leading`, which defaults from `rows.echo`. A new
@@ -507,12 +513,12 @@ tests
   (`b9-phaseb-review\b9-5-mutants\classify-reanchor.mjs <dry-run output>` — SAFE / CARRIED / FRESH), hand-check each FRESH one
   and each REVIEW line (a citation inside a modified hunk is never moved), and move the second number of a comma pair by hand
   (the tool moves only the first).
-- **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:1294-1304`
+- **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts:1295-1305`
   excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1064-1066`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
-  measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:4393-4395`, measured at the Dell's 1536×791 @ 2.5), a once-measured
+  measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts:4394-4396`, measured at the Dell's 1536×791 @ 2.5), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
-  arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:53-54`) — no date frame has ever been fit-measured either.
+  arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:54-55`) — no date frame has ever been fit-measured either.
 - **(2026-09-27, b9-11)** the ONE width seam: a new `@media (min-width: …rem)` fails `breakpoint-mirrors.test.ts` unless it mirrors `--bp-laptop` (68rem) — a new tier is a product decision
 - **(2026-09-26)** the spend lane lands a beat AFTER `data-answer-tier="final"`: a capture must wait out `.cs-magnitude[data-spend="pending"]` (the Caddie walk does since `2f43761f`), while a fit arm measuring right after `final` is measuring the RESERVED pending box — both states are laws
 - **(2026-09-23 evening)** a held look spec's style-tag lift must be REMOVED before the next dialog opens (a leaked `max-height:none` made the Roth frame an uncapped sheet no reader sees)
@@ -1016,6 +1022,13 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## UI and product
 
+- **(b9-1, 11-23) `overflow-wrap: anywhere` in a table cell lowers the cell's narrowest width to one letter**, so an
+  auto-layout table squeezed toward its narrowest breaks headers mid-word ("Christop / her", "Spendin / g"); every
+  width check passes it. The year-by-year table's headers break between words only (`workbench.css`), and a long
+  name line breaks only between people (`YearTable.tsx`'s `People`). Look at a squeezed table, never only its widths.
+- **(b9-1, 11-23) A `<caption>` is as wide as its table:** where the table scrolls inside a frame (the phone), the
+  caption scrolls with it and is cut at the frame's edge. The year-by-year table names itself with a paragraph above
+  its frame and `aria-labelledby`.
 - **(b9-9, 11-23) A module shared by the intake chunk and a lazy chunk must not import a stylesheet the intake chunk already
   loads**: Rolldown moves the sheet into a new shared chunk, which can move its place in the cascade the fit gate reads
   (`src/ui/SaveSlot.tsx`'s import of `result.css` did, caught by reading `dist/assets`). Leave the import with its first owner

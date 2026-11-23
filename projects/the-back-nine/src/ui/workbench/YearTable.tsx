@@ -11,7 +11,7 @@
  * income", "Put in / Taken out / Left"). A put-in figure wears "+", a taken-out one "−": the direction never rests on
  * color. "~" marks the tool's projection; year 0's entered pay, other income and spending print without it.
  */
-import { Fragment } from 'react'
+import { Fragment, useId } from 'react'
 import { copy } from '../copy'
 import type { ComposedTable, TableFigure, TableGroup, TableLine } from './yearTableChrome'
 
@@ -57,6 +57,23 @@ function Box({ lines }: { readonly lines: readonly TableLine[] }) {
   )
 }
 
+/** Whose age is which, in the year column's header: "Sam / Alex". Each name stays whole and carries the slash after it,
+ *  so the line can break only between people: two names at the name ceiling on one unbreakable line held the year
+ *  column at 261 px (1280 px scrolled sideways, and the phone's held year column took most of its frame). */
+function People({ labels }: { readonly labels: readonly string[] }) {
+  const slash = AGE_SEPARATOR.trimEnd()
+  return (
+    <span className="wb-th__people">
+      {labels.map((label, i) => (
+        <Fragment key={i}>
+          {i > 0 && ' '}
+          <span className="wb-th__person">{i < labels.length - 1 ? `${label}${slash}` : label}</span>
+        </Fragment>
+      ))}
+    </span>
+  )
+}
+
 /** Each run of same-group columns, for the header's first row. */
 function groupRuns(table: ComposedTable): { readonly group: TableGroup; readonly span: number }[] {
   const runs: { group: TableGroup; span: number }[] = []
@@ -70,71 +87,78 @@ function groupRuns(table: ComposedTable): { readonly group: TableGroup; readonly
 
 function Table({ table, updating }: { readonly table: ComposedTable; readonly updating: boolean }) {
   const width = table.columns.length + 1
+  // The table's name sits above its frame, never in it: a `<caption>` is as wide as the table, so on a phone, where the
+  // table scrolls inside its frame, the sentence ran past the frame's edge and was cut.
+  const captionId = useId()
   return (
-    <div className={updating ? 'wb-table-wrap wb-table-wrap--updating' : 'wb-table-wrap'}>
-      <table className="wb-table" aria-busy={updating || undefined}>
-        <caption className="wb-table__caption">{copy.workbenchTableCaption}</caption>
-        <thead>
-          <tr className="wb-table__groups">
-            <th scope="col" className="wb-th wb-th--year" rowSpan={2}>
-              <span className="wb-th__name">{copy.workbenchColYear}</span>
-              <span className="wb-th__lines">{copy.workbenchColAges}</span>
-              <span className="wb-th__lines">{table.ageLabels.join(AGE_SEPARATOR)}</span>
-            </th>
-            {groupRuns(table).map((run, i) => (
-              <th key={i} scope="colgroup" colSpan={run.span} className="wb-th wb-th--group">
-                {GROUP_LABEL[run.group]}
+    <>
+      <p id={captionId} className="wb-table__caption">
+        {copy.workbenchTableCaption}
+      </p>
+      <div className={updating ? 'wb-table-wrap wb-table-wrap--updating' : 'wb-table-wrap'}>
+        <table className="wb-table" aria-labelledby={captionId} aria-busy={updating || undefined}>
+          <thead>
+            <tr className="wb-table__groups">
+              <th scope="col" className="wb-th wb-th--year" rowSpan={2}>
+                <span className="wb-th__name">{copy.workbenchColYear}</span>
+                <span className="wb-th__lines">{copy.workbenchColAges}</span>
+                <People labels={table.ageLabels} />
               </th>
-            ))}
-          </tr>
-          <tr>
-            {table.columns.map((c) => (
-              <th key={c.id} scope="col" className="wb-th" data-col={c.id}>
-                <span className="wb-th__name">{c.header}</span>
-                {c.lineLabels.map((l, i) => (
-                  <span key={i} className="wb-th__lines">
-                    {l}
-                  </span>
-                ))}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {table.rows.map((row) => (
-            <Fragment key={row.t}>
-              {row.steadyFrom !== undefined && (
-                <tr className="wb-divider">
-                  <td colSpan={width}>{row.steadyFrom}</td>
-                </tr>
-              )}
-              <tr className={row.notes.length > 0 ? 'wb-row wb-row--noted' : 'wb-row'} data-year={row.year}>
-                <th scope="row" className="wb-td wb-td--year">
-                  <span className="wb-line wb-year">{row.year}</span>
-                  <span className="wb-line wb-ages">{row.ages.map((a) => (a === null ? GONE : String(a))).join(AGE_SEPARATOR)}</span>
+              {groupRuns(table).map((run, i) => (
+                <th key={i} scope="colgroup" colSpan={run.span} className="wb-th wb-th--group">
+                  {GROUP_LABEL[run.group]}
                 </th>
-                {row.cells.map((lines, i) => (
-                  <td key={table.columns[i]!.id} className="wb-td">
-                    <Box lines={lines} />
-                  </td>
-                ))}
-              </tr>
-              {row.notes.length > 0 && (
-                <tr className="wb-notes">
-                  <td colSpan={width}>
-                    {row.notes.map((n, i) => (
-                      <p key={i} className="wb-note">
-                        {n}
-                      </p>
-                    ))}
-                  </td>
+              ))}
+            </tr>
+            <tr>
+              {table.columns.map((c) => (
+                <th key={c.id} scope="col" className="wb-th" data-col={c.id}>
+                  <span className="wb-th__name">{c.header}</span>
+                  {c.lineLabels.map((l, i) => (
+                    <span key={i} className="wb-th__lines">
+                      {l}
+                    </span>
+                  ))}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {table.rows.map((row) => (
+              <Fragment key={row.t}>
+                {row.steadyFrom !== undefined && (
+                  <tr className="wb-divider">
+                    <td colSpan={width}>{row.steadyFrom}</td>
+                  </tr>
+                )}
+                <tr className={row.notes.length > 0 ? 'wb-row wb-row--noted' : 'wb-row'} data-year={row.year}>
+                  <th scope="row" className="wb-td wb-td--year">
+                    <span className="wb-line wb-year">{row.year}</span>
+                    <span className="wb-line wb-ages">{row.ages.map((a) => (a === null ? GONE : String(a))).join(AGE_SEPARATOR)}</span>
+                  </th>
+                  {row.cells.map((lines, i) => (
+                    <td key={table.columns[i]!.id} className="wb-td">
+                      <Box lines={lines} />
+                    </td>
+                  ))}
                 </tr>
-              )}
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                {row.notes.length > 0 && (
+                  <tr className="wb-notes">
+                    <td colSpan={width}>
+                      {row.notes.map((n, i) => (
+                        <p key={i} className="wb-note">
+                          {n}
+                        </p>
+                      ))}
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }
 

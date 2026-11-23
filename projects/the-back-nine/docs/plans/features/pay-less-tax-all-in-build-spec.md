@@ -299,7 +299,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 
 **5.3 hl50: the register's "~$50k-spend witness household".** It is OWED by the RULED block; case vi is the chair's addition.
 - `retiredHealth` at `annualSpendingReal` 50,000 (`devSeeds.ts:835-898`, map), constructed in the test.
-- Keep it OUT of DEV_SEEDS: membership enrolls it in every DEV_SEEDS loop and in Caddie (`devSeeds.test.ts:506-540`). Adding it is HIS call.
+- Keep it OUT of DEV_SEEDS: membership enrolls it in every DEV_SEEDS loop and in Caddie (`devSeeds.test.ts:511-545`). Adding it is HIS call.
 - Roster: {the user baseline, pre-tax-first:0, bracket-fill:0}, at 16,000 paths on BOTH live seeds (12245589 / −1438857764), then `selectRecommendation`.
 - The expected crown is bracket-fill:0, taken from an INDEPENDENT ranker: direct `simulate(applyCandidate)` plus the test's own tier-1/tier-2 sort over the three summed vectors (register method b).
 - Assert:
@@ -356,7 +356,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 **Label "Pay less tax": lean KEEP (HIS call).**
 - His ruling covered the objective and the hero, not the D1/R21 vocabulary.
 - A lost PTC is a shadow tax (`pre65-healthcare.md:76`).
-- Five regex selectors pin it: `e2e/csp.spec.ts:341` (CI), `caddie-walk.spec.ts:1088/755`, `held/solve-timing.spec.ts:51`, `recommendInvite.test.tsx:127/145/213`.
+- Five regex selectors pin it: `e2e/csp.spec.ts:343` (CI), `caddie-walk.spec.ts:1088/755`, `held/solve-timing.spec.ts:51`, `recommendInvite.test.tsx:127/145/213`.
 
 **`recDiscNiit`** renders on BOTH goals. "Your federal income tax" is already wrong on NC/PA/FL.
 - Draft (HIS): "A federal surtax on higher investment income isn’t counted here, and it could apply."
@@ -404,7 +404,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 4. `pnpm verify:doc-stats`: test count, register count and arm-4 citations after reanchor.
 5. `pnpm build`
 6. `pnpm verify:bundle`: ≤ 300 KiB.
-7. `pnpm verify:csp`: the label regex at `csp.spec.ts:341` must still match, and this arm runs a pay-less-tax solve.
+7. `pnpm verify:csp`: the label regex at `csp.spec.ts:343` must still match, and this arm runs a pay-less-tax solve.
 8. `pnpm verify:fit`: GoalPicker gloss wrap at 390 px and at his 1536×791.
 9. `pnpm verify:fit:rv`: a FULL run. The RV gate drives leave-more, and the rewritten NIIT and state-tax disclosures render there.
 10. **Caddie read of the re-worded hero.** No automated fit or text gate covers the pay-less-tax committed surface.

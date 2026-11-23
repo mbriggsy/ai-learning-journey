@@ -35,6 +35,7 @@ import {
 // box would escape the gate silently (U17 §S5 step 14).
 import { copy, slots, staticDisclosures, workingCostExtras, type TypedBelowAmount } from '../src/ui/copy'
 import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
+import { roughWindow, ROUGH_WINDOW_YEARS } from '../src/engine/reference/roughSequence'
 import { PER_MONTH_DISPLAY_STEP, formatPerMonth } from '../src/ui/money'
 import { reserveClauseFor } from '../src/ui/verdictSentence'
 
@@ -6620,3 +6621,179 @@ for (const arm of KEEP_TAP_ARMS) {
     })
   })
 }
+
+// ---------------------------------------------------------------------------
+// THE WORKBENCH ROOM'S YEAR-BY-YEAR TABLE (the workbench plan's U7, slice 3; insight 123: judge a fit on the widest
+// member, never one seed's frame). `?seed=tablewidest` is the table's widest household: every column the table can
+// draw prints (fourteen beside the year), at seven-digit balances, under two 20-character names. The laws:
+//  - At a laptop (his 1440×731 @2 window and the 1280×800 tier, each view) nothing scrolls sideways: not the page,
+//    and not the table's own frame, which carries no scroller at a laptop (`workbench.css`), so an overflow there
+//    would hang a column past the page's edge.
+//  - On the phone the page never scrolls sideways: the table scrolls inside its own frame there, by design.
+//  - The "Rough market" switch stays put from the room's first frame through the rows landing (the pinned answer's
+//    box is reserved, insights 035 and 065): an in-page frame recorder armed before the door press reads it, with
+//    the worker's messages held 400 ms so the loading frame is on screen for many frames. The press is an in-page
+//    `click()` from the page's top, so no scroll moves a rect the walk compares.
+// ---------------------------------------------------------------------------
+
+const TABLE_WIDEST = 'tablewidest'
+/** Every column the table can draw for two people, in its reading order (`yearTableChrome.ts`'s `columnSpecs`). */
+const TABLE_COLUMNS = [
+  'person-0', 'person-1', 'social-security', 'spending', 'income-tax', 'pay-check', 'from-pay', 'health',
+  'pretax-moves', 'taxable', 'pretax-0', 'pretax-1', 'roth', 'hsa',
+]
+const ROUGH_YEARS = (() => {
+  const start = roughWindow().startYear
+  return { start, end: start + ROUGH_WINDOW_YEARS - 1 }
+})()
+const VIEW_WORDS = {
+  steady: { label: copy.workbenchViewSteady, what: copy.workbenchSteadyWhat },
+  rough: { label: copy.workbenchViewRough, what: slots.workbenchRoughWhat(ROUGH_YEARS.start, ROUGH_YEARS.end, ROUGH_WINDOW_YEARS) },
+} as const
+
+/** The settled answer, then the room through its door, pressed in-page from the page's top. */
+async function enterRoomFromTop(page: Page): Promise<void> {
+  await gotoSeedFinal(page, TABLE_WIDEST)
+  const door = page.locator('.result-quiet-row [data-door="workbench"]')
+  await expect(door, 'the room door never mounted on the settled answer').toBeAttached()
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await door.evaluate((el) => (el as HTMLButtonElement).click())
+  await expect(page.locator('.wb-table'), 'the table never landed').toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('.wb-table-wrap--updating')).toHaveCount(0)
+}
+
+/** Switch the view, wait for its own words over its own rows, and settle. */
+async function showView(page: Page, view: keyof typeof VIEW_WORDS): Promise<void> {
+  const words = VIEW_WORDS[view]
+  await page.locator('.wb-view label.segment', { hasText: words.label }).click()
+  await expect(page.locator('.wb-about__line').first(), `the ${view} view's words`).toHaveText(words.what)
+  await expect(page.locator('.wb-table-wrap--updating')).toHaveCount(0)
+  await settleLayout(page)
+}
+
+/** The widths the table's laws read: the page's, its frame's, the table's own, and the frame's overflow. */
+async function tableWidths(page: Page) {
+  return page.evaluate(() => {
+    const doc = document.scrollingElement ?? document.documentElement
+    const wrap = document.querySelector('.wb-table-wrap')
+    const table = document.querySelector('.wb-table')
+    if (wrap === null || table === null) throw new Error('no table on the page')
+    const cols = [...document.querySelectorAll('.wb-table th[data-col]')].map((th) => ({
+      id: th.getAttribute('data-col') ?? '',
+      w: Math.round(th.getBoundingClientRect().width * 10) / 10,
+    }))
+    const year = document.querySelector('.wb-th--year')?.getBoundingClientRect().width ?? 0
+    return {
+      pageScroll: doc.scrollWidth,
+      pageClient: doc.clientWidth,
+      wrapScroll: wrap.scrollWidth,
+      wrapClient: wrap.clientWidth,
+      wrapOverflowX: getComputedStyle(wrap).overflowX,
+      tableWidth: Math.round(table.getBoundingClientRect().width * 10) / 10,
+      yearWidth: Math.round(year * 10) / 10,
+      cols,
+    }
+  })
+}
+
+/** The household is still the widest: every column the table can draw is on screen. A seed that drifted (a crown at
+ *  today, a dropped account) would make every width law below vacuous. */
+async function expectEveryColumn(page: Page): Promise<void> {
+  const ids = await page.locator('.wb-table th[data-col]').evaluateAll((ths) => ths.map((th) => th.getAttribute('data-col')))
+  expect(ids, 'the widest household prints every column the table can draw').toEqual(TABLE_COLUMNS)
+}
+
+test.describe('the workbench room’s year-by-year table on its widest household (U7)', () => {
+  for (const size of ['REAL', 'TIER'] as const) {
+    test.describe(sizeTitle(size), () => {
+      const s = LAPTOP_SIZES[size]
+      test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
+
+      test(`?seed=${TABLE_WIDEST}: neither view scrolls sideways, on the page or inside the table's frame`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 60_000)
+        await enterRoomFromTop(page)
+        await expectEveryColumn(page)
+        for (const view of ['steady', 'rough'] as const) {
+          await showView(page, view)
+          const w = await tableWidths(page)
+          console.log(`[wb-table ${size} ${view}] ${JSON.stringify(w)}`)
+          expect(w.wrapOverflowX, 'at a laptop the table has no scroller of its own to hide a column under').toBe('visible')
+          expect(w.wrapScroll, `${view}: the table runs past its frame`).toBeLessThanOrEqual(w.wrapClient)
+          expect(w.pageScroll, `${view}: the page scrolls sideways`).toBeLessThanOrEqual(w.pageClient)
+        }
+      })
+    })
+  }
+
+  test.describe(`on the phone (${PHONE.width}×${PHONE.height})`, () => {
+    test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
+
+    test(`?seed=${TABLE_WIDEST}: the page never scrolls sideways; the table scrolls inside its own frame`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 60_000)
+      await enterRoomFromTop(page)
+      await expectEveryColumn(page)
+      for (const view of ['steady', 'rough'] as const) {
+        await showView(page, view)
+        const w = await tableWidths(page)
+        console.log(`[wb-table PHONE ${view}] ${JSON.stringify(w)}`)
+        expect(w.wrapOverflowX, 'on the phone the table scrolls in its own frame').toBe('auto')
+        expect(w.pageScroll, `${view}: the page scrolls sideways`).toBeLessThanOrEqual(w.pageClient)
+      }
+    })
+  })
+
+  test.describe(sizeTitle('REAL'), () => {
+    test.use({ viewport: LAPTOP_SIZES.REAL.viewport, deviceScaleFactor: LAPTOP_SIZES.REAL.deviceScaleFactor })
+
+    test(`?seed=${TABLE_WIDEST}: the "Rough market" switch never moves while the rows land`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 60_000)
+      await gotoSeedFinal(page, TABLE_WIDEST)
+      const door = page.locator('.result-quiet-row [data-door="workbench"]')
+      await expect(door, 'the room door never mounted on the settled answer').toBeAttached()
+      await page.evaluate(() => window.scrollTo(0, 0))
+      // The answer is settled, so from here the engine worker hears only the room's two table runs. Each one-path run
+      // otherwise lands within a frame of the room mounting (read: 0 or 1 frames before the rows), and the walk would
+      // compare nothing: every message to the worker is held 400 ms, so the loading frame paints for many frames.
+      await page.evaluate(() => {
+        const send = Worker.prototype.postMessage
+        Worker.prototype.postMessage = function (this: Worker, ...args: unknown[]) {
+          setTimeout(() => Reflect.apply(send, this, args), 400)
+        } as typeof send
+      })
+      // Armed before the press: every frame from the switch's first paint, until thirty frames after the rows land.
+      await page.evaluate((label) => {
+        type Frame = { readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly table: boolean }
+        const log: Frame[] = []
+        ;(window as unknown as { __wbWalk: Frame[] }).__wbWalk = log
+        let after = 0
+        const tick = () => {
+          const seg = [...document.querySelectorAll('.wb-view label.segment')].find((el) => el.textContent?.trim() === label)
+          if (seg !== undefined) {
+            const r = seg.getBoundingClientRect()
+            const table = document.querySelector('.wb-table') !== null
+            log.push({ x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height, table })
+            if (table) after++
+          }
+          if (after < 30) requestAnimationFrame(tick)
+        }
+        requestAnimationFrame(tick)
+      }, copy.workbenchViewRough)
+      await door.evaluate((el) => (el as HTMLButtonElement).click())
+      await expect(page.locator('.wb-table'), 'the table never landed').toBeVisible({ timeout: 30_000 })
+      await expect.poll(() => page.evaluate(() => (window as unknown as { __wbWalk: { table: boolean }[] }).__wbWalk.filter((f) => f.table).length)).toBeGreaterThanOrEqual(30)
+      const frames = await page.evaluate(
+        () => (window as unknown as { __wbWalk: { x: number; y: number; w: number; h: number; table: boolean }[] }).__wbWalk,
+      )
+      const before = frames.filter((f) => !f.table)
+      console.log(`[wb-table switch walk] frames=${frames.length} beforeRows=${before.length} first=${JSON.stringify(frames[0])} last=${JSON.stringify(frames.at(-1))}`)
+      expect(before.length, 'the switch painted before the rows landed: otherwise the walk compares nothing').toBeGreaterThan(0)
+      const first = frames[0]!
+      for (const f of frames) {
+        expect(Math.abs(f.x - first.x), 'the switch moved sideways').toBeLessThanOrEqual(0.5)
+        expect(Math.abs(f.y - first.y), 'the switch moved up or down').toBeLessThanOrEqual(0.5)
+        expect(Math.abs(f.w - first.w)).toBeLessThanOrEqual(0.5)
+        expect(Math.abs(f.h - first.h)).toBeLessThanOrEqual(0.5)
+      }
+    })
+  })
+})

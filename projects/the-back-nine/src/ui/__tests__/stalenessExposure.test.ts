@@ -297,6 +297,8 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
     // The tax rider build's walk-8 twins: the near-line household and C on an all-sticky budget.
     'datesavedtypednearline',
     'datesavedtypedsticky',
+    // The workbench's U7: the year-by-year table's widest household.
+    'tablewidest',
   ] as const
   const withoutW = (d: ScenarioDraft): ScenarioDraft => {
     const { workingYearCost: _w, ...rest } = d

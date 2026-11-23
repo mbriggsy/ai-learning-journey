@@ -1,5 +1,7 @@
 import { test, expect, type Page } from '@playwright/test'
 import { SETTLED_RESULT } from './reviewSurface'
+import { copy, slots } from '../src/ui/copy'
+import { roughWindow, ROUGH_WINDOW_YEARS } from '../src/engine/reference/roughSequence'
 
 /**
  * Proves a REAL browser enforces the strict CSP shipped in `vercel.json` — the in-memory decrypted
@@ -358,8 +360,9 @@ test.describe('CSP — real browser enforcement', () => {
   test('the workbench room loads under the enforced CSP — no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 5, U6 (workbench plan U6's verification): the room's lazy chunk and its styles load through the
     // real door on the served build. ANY violation reds (not a directive subset), and so does any request
-    // that leaves the build's own origin: the act adds no network call. U7 extends this arm to the steady
-    // and rough views, and U15 to one what-if.
+    // that leaves the build's own origin: the act adds no network call. U7's table runs both views on the
+    // build's own engine worker, each one short run: the steady view lands first, then a press shows the
+    // rough one, each read by its own words over its own rows. U15 extends the arm to one what-if.
     test.setTimeout(180_000)
     await installCollector(page)
     const outside: string[] = []
@@ -375,6 +378,17 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(page.getByRole('heading', { name: 'Your plan, year by year' })).toBeVisible({ timeout: 30_000 })
     await expect(page.getByRole('button', { name: 'Back to your answer' })).toBeVisible()
     expect(await page.evaluate(() => history.state)).toEqual({ b9: 'room' })
+
+    const firstLine = page.locator('.wb-about__line').first()
+    await expect(page.locator('.wb-table'), 'the steady view’s rows never landed').toBeVisible({ timeout: 60_000 })
+    await expect(firstLine, 'the steady view’s words').toHaveText(copy.workbenchSteadyWhat)
+    await page.locator('.wb-view label.segment', { hasText: copy.workbenchViewRough }).click()
+    const roughStart = roughWindow().startYear
+    await expect(firstLine, 'the rough view’s words').toHaveText(
+      slots.workbenchRoughWhat(roughStart, roughStart + ROUGH_WINDOW_YEARS - 1, ROUGH_WINDOW_YEARS),
+    )
+    await expect(page.locator('.wb-table'), 'the rough view’s rows').toBeVisible()
+    await expect(page.locator('.wb-table-wrap--updating')).toHaveCount(0)
 
     // The way back: the browser's own Back lands on the answer.
     await page.goBack()

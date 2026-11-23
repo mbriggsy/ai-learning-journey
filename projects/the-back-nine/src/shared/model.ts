@@ -673,6 +673,53 @@ export interface NamedFuture {
   readonly longevityU: readonly number[]
 }
 
+/** One ledger's dollars at a row's edge (real $). */
+export interface LedgerBalances {
+  readonly taxable: number
+  readonly pretax: number
+  readonly roth: number
+  readonly hsa: number
+}
+
+/** One funded year of the year-by-year table, recorded by the tax overlay's own year loop (workbench
+ *  plan U3, KTD5–KTD6; slice 1: the ledgers). Indexed by sim-year `t` (calendar year
+ *  `startCalendarYear + t`, insight 134): every flow happened during year t, `start` is year t's
+ *  opening and `end` its close. Each ledger reconciles by the loop's own arithmetic:
+ *    taxable_end = (start − draw + rmdToTaxable) × growthScale + contribution + leftOverCredit
+ *    pretax_end  = (start − conversion − draw − rmdToTaxable) × growthScale + contribution
+ *    roth_end    = (start + conversion − draw) × growthScale + contribution
+ *    hsa_end     = (start − hsaSpend) × growthScale + contribution
+ *  (`growthScale` is 0 on the loop's knife-edge branch, where the year closes on its inflows alone).
+ *  A year the portfolio could not fund records no row. */
+export interface LedgerYearRow {
+  readonly t: number
+  readonly start: LedgerBalances
+  /** Each person's own pre-tax balance at the opening, after any first-death rollover that year;
+   *  present only when the run keeps a per-person pre-tax ledger. */
+  readonly pretaxStartByPerson?: readonly number[]
+  /** Pre-tax moved to Roth (the year's clamped conversion). */
+  readonly conversion: number
+  /** The year's required withdrawal from pre-tax (the household total). */
+  readonly rmd: number
+  /** What each general ledger paid toward the year's grossed-up need. */
+  readonly draw: { readonly taxable: number; readonly pretax: number; readonly roth: number }
+  /** The HSA's qualified medical spend. */
+  readonly hsaSpend: number
+  /** The part of the required withdrawal beyond the year's pre-tax draw, moved to taxable. */
+  readonly rmdToTaxable: number
+  /** Deposits landed at year end, per ledger (the household's and the employer's). */
+  readonly contribution: LedgerBalances
+  /** Build 2's left-over credit to taxable (0 when none). */
+  readonly leftOverCredit: number
+  /** The one shared growth factor the year applied to every ledger's after-withdrawal balance. */
+  readonly growthScale: number
+  readonly end: LedgerBalances
+  /** Each person's own pre-tax balance at the close; present with `pretaxStartByPerson`. */
+  readonly pretaxEndByPerson?: readonly number[]
+  /** Income tax the portfolio paid in the year (federal and state as the overlay solves them). */
+  readonly taxPaid: number
+}
+
 // ---------------------------------------------------------------------------
 // Engine parameters (the injected, pure input to `simulate`).
 // ---------------------------------------------------------------------------
@@ -917,7 +964,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2804`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2827`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
 }
@@ -1144,6 +1191,9 @@ export interface Distribution {
    *  byte-identity pattern does NOT apply (a genuine second compute, param-driven,
    *  not caller-opt-in). */
   readonly floor?: FloorTrack
+  /** The year-by-year table's ledger rows (workbench plan U3), present only when a named-future run
+   *  asked for them (`simulate`'s `ledgerRows` option); the full-spending pass. */
+  readonly ledgerRows?: readonly LedgerYearRow[]
 }
 
 /** The resolved engine output. */

@@ -49,6 +49,7 @@ import {
   type HealthReadout,
   type HealthReadoutYear,
   type IncomeParams,
+  type LedgerYearRow,
   type NamedFuture,
   type PersonInputs,
   type SimulationParams,
@@ -1716,6 +1717,11 @@ export function simulate(
      *  Gated by {@link validateNamedFuture} (a bad one is the calm indeterminate with its reason) and
      *  exclusive with `_injectedDraws`. ABSENT ⇒ every run is byte-identical to the run without it. */
     readonly namedFuture?: NamedFuture
+    /** The year-by-year table's ledger rows (workbench plan U3): `distribution.ledgerRows`, one
+     *  {@link LedgerYearRow} per funded year of the full-spending pass, recorded by the tax overlay's
+     *  own year loop. Rides only a `namedFuture` run that carries the tax overlay (refused by name
+     *  otherwise, the calm indeterminate). A pure observation: every other field is byte-identical. */
+    readonly ledgerRows?: boolean
     /** PROBE-ONLY (the pay check's observation hook, KTD7 / KTD20 — `taxOverlay`'s
      *  {@link WorkingYearProbe}): forwarded into EVERY tax-aware pass of every path (both tracks of a
      *  budget run), so a test or a measurement script can watch each clamped year's floor preparation,
@@ -1760,6 +1766,10 @@ export function simulate(
     const badFuture = validateNamedFuture(named, params)
     if (badFuture !== null) return { indeterminate: true, reason: badFuture }
   }
+  const wantLedger = options?.ledgerRows === true
+  if (wantLedger && named === undefined) return { indeterminate: true, reason: 'ledgerRows rides only a named-future run' }
+  if (wantLedger && params.overlay === undefined) return { indeterminate: true, reason: 'ledgerRows needs the tax overlay' }
+  const ledgerRows: LedgerYearRow[] | undefined = wantLedger ? [] : undefined
   const draws =
     injected ??
     (named !== undefined
@@ -2106,7 +2116,12 @@ export function simulate(
           // U6/U7 band fan + U11 health readout: spread each sink ONLY when observing (absent ⇒
           // the byte-identical pre-sink taxInputs — presence-keyed, reduce-to-spine). The health
           // sink rides the FULL pass only (the user's intended spending).
-          { ...taxInputs, ...(fullSink ? { balancesOut: fullSink } : {}), ...(healthSink ? { healthOut: healthSink } : {}) },
+          {
+            ...taxInputs,
+            ...(fullSink ? { balancesOut: fullSink } : {}),
+            ...(healthSink ? { healthOut: healthSink } : {}),
+            ...(ledgerRows ? { ledgerOut: ledgerRows } : {}),
+          },
           params.drawdownOrder,
         )
         // P3·U9 — the floor pass: identical inputs, the essentials-only withdrawals. Runs
@@ -2332,6 +2347,8 @@ export function simulate(
       ...(healthAgg ? { healthReadout: buildHealthReadout(healthAgg, paths) } : {}),
       // The survivor-conditioned surface rides iff opted in AND ≥1 survivor phase occurred (U7 e1).
       ...(survivorConditioned ? { survivorConditioned } : {}),
+      // The year-by-year table's ledger rows ride iff a named-future run asked (U3; observed).
+      ...(ledgerRows ? { ledgerRows } : {}),
       // P3·U9 — the essentials-floor track rides iff the budget construct did (param-driven,
       // a genuine second pass; see the FloorTrack contract in model.ts).
       ...(floorDepletionYears

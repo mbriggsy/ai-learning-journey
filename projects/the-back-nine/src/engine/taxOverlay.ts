@@ -121,7 +121,16 @@ import { solveAcaFundedGross, fplForHousehold, medicareAnnualCharge, acaMagi, ir
 import { payrollTaxForYear, type PayrollTaxYear } from '@engine/payrollTax'
 import { workingYearBottomLine, workingYearCredit } from '@engine/moneyGrain'
 import { ENGINE_MAX_DOLLAR } from '@engine/engineDomain'
-import { NEVER_DEPLETED, isRetirementState, type DepletionYear, type DrawdownPolicy, type FilingStatus, type RetirementState } from '@shared/model'
+import {
+  NEVER_DEPLETED,
+  isRetirementState,
+  type DepletionYear,
+  type DrawdownPolicy,
+  type FilingStatus,
+  type LedgerBalances,
+  type LedgerYearRow,
+  type RetirementState,
+} from '@shared/model'
 
 // Filing status is shared model vocabulary (the persisted scenario speaks it too). Re-exported
 // here so existing `@engine/taxOverlay` importers keep their path.
@@ -451,6 +460,11 @@ export interface TaxYearInputs {
    *  sibling rule), so each array's length ≤ the funded-year count and the arrays stay index-
    *  aligned with each other. A PURE OBSERVATION — byte-identical with or without the sink. */
   healthOut?: HealthYearSink
+  /** The year-by-year table's sink (workbench plan U3, KTD5): one {@link LedgerYearRow} per FUNDED
+   *  year, pushed at the end of the year's body once the ledgers are re-derived (a year the portfolio
+   *  could not fund records nothing, the healthOut rule). A PURE OBSERVATION: byte-identical with or
+   *  without it. */
+  ledgerOut?: LedgerYearRow[]
 }
 
 /** The per-year healthcare observation arrays (P3·U11 — parallel, index-aligned, one entry per
@@ -1795,6 +1809,7 @@ export function runTaxAwareDecumulation(
     _workingYearProbe: probe,
     balancesOut,
     healthOut,
+    ledgerOut,
   } = taxInputs
 
   // Healthcare requires tax (U3 · M3 Slice 4): the ACA PTC keys off ACA-MAGI, which this engine
@@ -2340,6 +2355,14 @@ export function runTaxAwareDecumulation(
     // post-growth state (at t = 0, the initial balance) — exactly the RMD's basis. The per-person
     // path sums each living spouse's own-age forced distribution (M6b·B); the aggregate path keys
     // the single pool off the resolved holder (M6a). Both feed the gross-up as one total `rmd`.
+    // The year-by-year sink's opening (U3): taken here, after any first-death rollover above and
+    // before the year moves a dollar. Observation only (`undefined` unless the sink rides).
+    const ledgerStart: LedgerBalances | undefined = ledgerOut
+      ? { taxable: buckets.taxable, pretax: buckets.pretax, roth: buckets.roth, hsa: buckets.hsa ?? 0 }
+      : undefined
+    const ledgerPretaxStart = ledgerOut && pretaxLedger ? [...pretaxLedger] : undefined
+    let ledgerScale = 0
+    let ledgerRmdToTaxable = 0
     let rmd: number
     if (pretaxLedger && alive && household) {
       perRmd = perPersonRmd(pretaxLedger, people, alive, household.startCalendarYear, config.rmdEnabled, t)
@@ -2871,6 +2894,10 @@ export function runTaxAwareDecumulation(
       }
       const taxablePost = drawPool.taxable - alloc.taxable + forcedExcess
       const rothPost = drawPool.roth - alloc.roth
+      if (ledgerOut) {
+        ledgerScale = scale
+        ledgerRmdToTaxable = forcedExcess
+      }
 
       // Taxable basis (M5): the draw removes basis pro-rata to the taxable value; the RMD-relocated
       // dollars enter at FULL basis (already ordinary-taxed → after-tax money). Basis is NOT scaled by
@@ -2925,6 +2952,27 @@ export function runTaxAwareDecumulation(
             ? { taxable: creditThisYear, pretax: 0, roth: 0, hsa: 0 }
             : EMPTY_BUCKETS
           : { taxable: creditThisYear > 0 ? cTaxable + creditThisYear : cTaxable, pretax: cPretaxTotal, roth: cRoth, hsa: cHsa }
+    }
+
+    // The year-by-year sink (U3): the funded year's row, read off the loop's own locals once the
+    // ledgers are re-derived. Observation only.
+    if (ledgerOut && ledgerStart) {
+      ledgerOut.push({
+        t,
+        start: ledgerStart,
+        ...(ledgerPretaxStart ? { pretaxStartByPerson: ledgerPretaxStart } : {}),
+        conversion,
+        rmd,
+        draw: { taxable: alloc.taxable, pretax: alloc.pretax, roth: alloc.roth },
+        hsaSpend: hsaSpendThisYear,
+        rmdToTaxable: ledgerRmdToTaxable,
+        contribution: { taxable: cTaxable, pretax: cPretaxTotal, roth: cRoth, hsa: cHsa },
+        leftOverCredit: creditThisYear,
+        growthScale: ledgerScale,
+        end: { taxable: buckets.taxable, pretax: buckets.pretax, roth: buckets.roth, hsa: buckets.hsa ?? 0 },
+        ...(pretaxLedger && ledgerPretaxStart ? { pretaxEndByPerson: [...pretaxLedger] } : {}),
+        taxPaid: taxPaidThisYear,
+      })
     }
   }
 

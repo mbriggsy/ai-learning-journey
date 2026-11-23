@@ -3,7 +3,7 @@ title: Splitting a copy key into predicate-gated variants orphans every renderer
 date: 2026-07-16
 phase: the state-carrying seed increment (post state-tax unit)
 modules: [src/intake/questions.tsx, src/intake/AssumptionPanel.tsx, src/intake/intakeMap.ts, src/ui/copy.ts]
-tags: [copy-keys, split-variants, spendHelp, consumer-sweep, insight-080, false-claim, calm-but-wrong]
+tags: [copy-keys, split-variants, spendHelp, consumer-sweep, insight-080, false-claim, calm-but-wrong, key-removal, e2e-outside-typecheck]
 ---
 
 ## Problem
@@ -50,3 +50,10 @@ Any `copy.ts` key gaining a `*StatePriced` / `*Retired` / route-variant twin (gr
 before splitting); enum widenings where old members keep compiling; feature flags whose OFF
 branch remains valid; the four monolithic strings S5.2 split (their other renderers were swept
 — spendHelp's panel twin was the miss); any design-token rename that aliases the old token.
+
+## Extended (removal-side twin): a retired copy key that a Playwright spec still reads passes typecheck
+
+`e2e/` is outside `tsconfig.json`'s include (src, `scripts/**/*.ts`, `vite.config.ts`; insight 128), so a spec that
+still reads a removed key passes `pnpm typecheck` and fails only in Playwright. Any round that removes or renames a
+copy key greps `e2e/` (and `scripts/`) for it before the push; U7's review fixes (2026-11-23) retired
+`workbenchLineTaxOnPay` and `workbenchPayCheckNote` and the grep found only a comment.

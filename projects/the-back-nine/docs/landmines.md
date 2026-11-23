@@ -280,6 +280,10 @@ even when one exists; the plain `/` route is the Unlock check.
 
 ## The unit test suite
 
+- **A `// @ts-expect-error` arm in a vitest file still RUNS:** the directive silences tsc, not execution (a
+  three-argument call threw at runtime once the methodology selector indexed the act's Record). Put compile-only arms
+  inside a function that is never called: `const _compileOnly = () => {...}; void _compileOnly`
+  (`workingYearTaxDisclosure.test.ts`).
 - **(b9-6, 11-15) A gate-off witness derived from `stillWorking` must lower the retired Sam's `retirementAge` to at or below his `currentAge`**: left at 58, a Sam of 55 to 57 reads as still working, and Alex's possible death opens the survivor gate (`SURVIVOR_GATE_WITNESSES`, `src/intake/__tests__/typedBelowWitnesses.ts`).
 - **(b9-6, 11-15) The typed-below window read's `unknown` arm is unreachable by any draft** (its docblock in `src/intake/workingYearLeftOver.ts`; a horizon at the window top reads `null`): never write a test that demands it.
 - **(b9-5, 11-15) Claude Code reaps a heavy BACKGROUND shell when the machine runs low on memory while the session
@@ -849,6 +853,9 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Council
 
+- **(b9-1, 11-19) Ask a council seat for words in its reply or a file, never "in your deliberation text":** five of nine
+  opening seats died on a `reasoning_extraction` safeguard flag. A resume kept the clerk (same prompt, cached) and
+  rewrote only the brief's tail for every later seat; the chair's file became the spec's verbatim source.
 - **(b9-1, 11-19) Never ask a council seat to put its words "in your deliberation text" or "in your reasoning".** The walk-9
   form council's brief asked the chair and every seat for exact words there; five of nine opening seats (architect,
   minimalist, craftsman, advocate, design-engineer) died at once on an API `invalid_request`, "Opus 5.5's safeguards

@@ -266,6 +266,14 @@ even when one exists; the plain `/` route is the Unlock check.
 - **(b9-9/b9-10, 11-13) A scripted multi-line replace fails on the CRLF files** (`devSeeds.ts`, `devSeeds.test.ts`, `copyGuard.test.ts`):
   use the Edit tool; count line endings with `node`.
 
+- **`src/ui/__tests__/copyGuard.test.ts` is a CRLF file in an LF tree, and `sed -i` rewrites it to LF:** a one-line `sed` turned
+  a 35-line change into a 4,863-line diff (b9-10, 2026-11-23). Edit it with the Edit tool, or `unix2dos -q` it after; check
+  `git diff --stat` before staging.
+- **Two names one letter-case apart collide on Windows:** `yearTable.ts` beside `YearTable.tsx` made `./YearTable` resolve to the
+  wrong file (TS1261). The table's composer is `yearTableChrome.ts` (the `*Chrome.ts` pattern) for that reason.
+- **Vite's watcher can miss a second write to a file landing milliseconds after the first:** a `sed` then a heredoc append to
+  `workbench.css` served the first write only, reload after reload. `touch` the file and it serves the whole thing (b9-10).
+
 ## The unit test suite
 
 - **(b9-6, 11-15) A gate-off witness derived from `stillWorking` must lower the retired Sam's `retirementAge` to at or below his `currentAge`**: left at 58, a Sam of 55 to 57 reads as still working, and Alex's possible death opens the survivor gate (`SURVIVOR_GATE_WITNESSES`, `src/intake/__tests__/typedBelowWitnesses.ts`).

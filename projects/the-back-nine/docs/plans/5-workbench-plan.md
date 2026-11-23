@@ -471,6 +471,7 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
 
 #### U8. The facts page
 
+- **Carried in from U7's review (2026-11-23, b9-1).** (1) The pinned-answer-landing walk (U7's test scenario, unreachable until an edit can refigure the pin): an edit in the room must HOLD its run (insight 155: the engine-handle hold of `src/ui/preview/RefiguringPreview.tsx`, or the in-page `Worker.prototype.postMessage` hold of the switch walk in `e2e/vertical-fit.spec.ts`), then a frame recorder proves the pinned box's reserve moves no tap target. (2) The room's updating and refiguring words go through the room's announcer (`useSaveAnnouncer`'s pattern in `WorkbenchRoom.tsx`), and `aria-busy` comes off the loading div (`YearTable.tsx`'s `wb-state--loading`).
 - **Goal.** Everything the household told the tool is on one page, and any line can be edited there.
 - **Requirements.** R14, R15.
 - **Dependencies.** U6.

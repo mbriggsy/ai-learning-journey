@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-23, b9-10):** THE MANDATE (Briggsy, 2026-11-22; memory `project-b9-mandate-replicate-rightcapital`): replicate RightCapital for him alone, all its features and its flow, to get confidence in his own plan; the bar is "Briggsy good" (no slop, no pointless tests or process; the global CLAUDE.md). The map is `docs/plans/rightcapital-map.md`, ruled 2026-11-22 (the workspace home; the map's order): each gap in that order, opened with `/brief <that gap>`. Gap 1 (the year-by-year table) is workbench U2–U8, statuses in the roadmap's mandate table. Next: U7 slice 3 (plant the widest source set as a seed, then the fit arms and the `verify:csp` room arm's two views; its prescription is the close block's slice-3 line), then U7's whole-file review with an adversary and every finding verified, then U8 (the facts page), opened with `/brief <its topic>`, then `/distill` (past 10). Parked (b9-5's call under the mandate, the register's composites entry, prescription (4)): the record card's seat. The D7 queue and the tiered lists below are pre-mandate: judge each against the mandate when it is reached.
+▶ **START HERE (2026-11-23, b9-1):** THE MANDATE (Briggsy, 2026-11-22; memory `project-b9-mandate-replicate-rightcapital`): replicate RightCapital for him alone, all its features and its flow, to get confidence in his own plan; the bar is "Briggsy good" (no slop, no pointless tests or process; the global CLAUDE.md). The map is `docs/plans/rightcapital-map.md`, ruled 2026-11-22 (the workspace home; the map's order): each gap in that order, opened with `/brief <that gap>`. Gap 1 (the year-by-year table) is workbench U2–U8, statuses in the roadmap's mandate table; U7 is done. Next: U8 (the facts page), opened with `/brief <its topic>`, with the plan's U8 *Carried in* line; then U8's whole-file review with an adversary and every finding verified; then `/distill` (174 entries owed). Parked (b9-5's call under the mandate, the register's composites entry, prescription (4)): the record card's seat. The D7 queue and the tiered lists below are pre-mandate: judge each against the mandate when it is reached.
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** Its plan, `docs/plans/features/working-year-surplus-build-spec.md`, is checked as a whole; its
@@ -243,15 +243,17 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-23 (b9-10: U7 slice 2 built; b9-9's state lines cut, its digest kept below):**
+**SESSION 2026-11-23 (b9-1: U7 finished; digest below):**
 
 State at close:
-- U7 slice 2 `6a75d3ba`: its CI unit red (two files) and `4a5bfd4d`'s cap red are fixed in the commits after it.
-- **Check at start:** b9-10's last commit's CI runs (`gh run list --commit <full sha>`). `pnpm verify:aca` goes stale ~2026-12-12.
-- **U7 slice 3:** its prescription (plant the widest source set as a seed, the fit arms, the CSP arm's two views) is the plan's U7 *Slices* note (`docs/plans/5-workbench-plan.md`).
+- U7 done (`55f09a79`, `acae326a`); its record is the plan's U7 *Slices* note.
+- **Check at start:** `gh run view 45283162808` (`acae326a`: unit green at close, fit and RV running), and the docs-only commits' quick job (`gh run list --commit <full sha>`); `pnpm verify:aca` goes stale ~2026-12-12.
+- **U8 carries two items from U7's review:** the plan's U8 *Carried in* line (`docs/plans/5-workbench-plan.md`).
 - **For Briggsy's digest (walk 10's card, if it runs):**
+  - NEW (b9-1): the table fits the widest household (two 20-character names, every account kind) at 1440, 1280 and on a phone; fixed: 1280 scrolled sideways, headers broke mid-word, the phone cut sentences. Pilot calls: names wrap between people; a 12 px column gap.
+  - NEW (b9-1): its words match its numbers (the pay check's "Income tax" and its footnote by your state; why a left over isn't kept; the unpriced-state line), all flagged drafts. Filed, your call later: at a 20 px browser font the widest table spills sideways at 1440 (the register, Tier 2).
   - NEW (b9-10): the year-by-year table is in (a row a year; a rough-market switch; the answer pinned above). Pilot calls to read: three-line boxes, one "Pre-tax moves" column, a repeated sentence said once. Words (`workbench*`) are flagged drafts.
-  - NEW (b9-9): the year-by-year page has its door, "See your plan year by year", last among the answer's quiet doors; the page holds only "Back to your answer", its heading and your save control until the table lands (U7). Its words (`copy.ts`'s `workbench*`) are the pilot's drafts, shipped flagged. A press on the door with an entry still open on the answer (a budget sheet's typed lines survive its Cancel) asks first.
+  - NEW (b9-9): the room's door ("See your plan year by year") sits last among the answer's quiet doors and asks first when an entry is open on the answer. Flagged drafts.
   - NEW (b9-8, correcting b9-7's): the rough market, 1966–1995, is history’s worst 30-year start with half in stocks; in your plan’s own market 1937 is a little worse at 40–50% stocks (3.10% against 3.21% a year), so the table calls 1966 history’s worst, never your plan’s. The steady view is not your range’s middle: on a 60%-stock plan it ends about 16% below it, nearly all stocks up to 9% above.
   - NEW (b9-5): an opened survivor card no longer pushes "what still isn't priced" below your window: the card sits last among the statements now, and it closes on your next edit.
   - NEW (b9-4): `?vault=recbudget` plants a budget household with a saved strategy that holds; today "this can be wrong" sits in your window there (about 696) and the card starts at the fold.

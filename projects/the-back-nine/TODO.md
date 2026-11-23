@@ -521,7 +521,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:1186`, `:1191, :1205, :1207, :1215, :1217` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1365`, `:1371`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1357-1359`). Unfiled: `shadowRateHeadroom` (`copy.ts:4297`)
+   (gated on `statePriced` alone — `copy.ts:1357-1359`). Unfiled: `shadowRateHeadroom` (`copy.ts:4309`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -591,7 +591,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `sanity.ts:67-92`). ⚑ **Size is M, not S, and a ceiling is the wrong instrument:** a 10× slip on
      $500k is $5M — a perfectly coherent household, so no threshold catches it. The shape that works is
      **one confirm on the household TOTAL** at the accounts step (the figure the engine actually consumes),
-     reusing the running total already rendered at `copy.ts:2803` / `questions.tsx:1107-1109`.
+     reusing the running total already rendered at `copy.ts:2815` / `questions.tsx:1107-1109`.
      ⚑ **"Briggsy sets the number" is the WRONG ask — there IS no honest number** (every total is
      coherent, so any threshold is the guessed plausibility band burned/062 bans). The only rule that
      invents nothing is an **unconditional** one-tap confirm for any household with ≥1 account. That is a
@@ -679,23 +679,23 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    inversion and a $0 collapse). **No seed produces a `custom` winner**, so that branch would ship
    unwitnessable — mint the seed first or leave it.
 
-8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:620` gates
-   `RecommendationSurface` off for the date route entirely and `Result.tsx:483` gates the invite door. The
+8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:553` gates
+   `RecommendationSurface` off for the date route entirely and `Result.tsx:467` gates the invite door. The
    `blocked{spine-unready}` note that would explain it lives *inside* the gated-off component, so a working
-   couple sees the date answer and **zero words** about strategy. `Result.tsx:467-469`'s comment now records the
+   couple sees the date answer and **zero words** about strategy. `Result.tsx:451-453`'s comment now records the
    opposite (corrected 2026-09-04): the builder's `spine-unready` refusal does NOT cover the date route, so no note is minted there at all.
    ⚑ **THE FILED "CHEAP INTERIM" IS WRONG — do not execute it.** Dropping the `!isDateRoute` gate at
-   `Result.tsx:620` alone renders an **empty `<div>`**, not the refusal: the note is not reachable on that path. And
+   `Result.tsx:553` alone renders an **empty `<div>`**, not the refusal: the note is not reachable on that path. And
    reusing `recommendSpineUnreadyNote` would tell a household with a **complete** answer that its answer is
    incomplete — a new false claim, worse than the silence. The honest interim is a **route-true one-liner**
    admitting the v1 limit in its own words, seated and re-measured under `verify:fit` (~89px headroom).
    **Briggsy blesses the words.** Full parity stays council-sized — the crowned offset lives in the
    committed answer, not the draft, and anchoring candidates at a future retirement year is a real ranking
    question.
-   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:620` (surface) and `:483` (the invite conjunct; door
-   `Result.tsx:692-700`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:296`). Strike
+   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:553` (surface) and `:467` (the invite conjunct; door
+   `Result.tsx:625-633`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:394`). Strike
    "~89px headroom" — that is the SPINE idle frame's figure; the date arms of `verify:fit` assert ORDER + REACHABILITY only — never fit
-   (spec header `vertical-fit.spec.ts:53-54`). `Result.tsx:467-469`'s "covers the date route honestly" comment was FALSE (never
+   (spec header `vertical-fit.spec.ts:53-54`). `Result.tsx:451-453`'s "covers the date route honestly" comment was FALSE (never
    minted there; a route-flip render is dropped) — swept 2026-09-04. A crowned-offset params builder ALREADY
    exists (`buildControlPreviewParams`, `intakeMap.ts:1227-1236`), so parity's base shape is not from zero.
    Build shape: the ⚑ Folded 2026-09-06 block directly below.
@@ -703,7 +703,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (anchor on WORK STATUS, never "a date ahead of you"); the one token yours: does it promise parity.
    ⚑ **2026-09-04:** the framings are no-date · now (today/arrived) · past · future (`heroLead`,
    `FuckOffDate.tsx:236-260`; the split household's floor line has its own six arms, `:267-296`). Seat =
-   the else-arm of the `Result.tsx:620` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
+   the else-arm of the `Result.tsx:553` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
    the non-answer strip on an inputs-incomplete date frame); CSS in `fuckOffDate.css` — NOT
    `confidence.css`, the date grid is its own (`:250-266`) and its first free cell is r3c1 above the
    protected disclaimer; the key lands in verdict scope through the `fuckoff` substring net
@@ -711,7 +711,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    only (only `dip` + `datenc` carry the exhaustive doors-last sweep) — add a presence pin to the `?seed=dip`
    describe and measure the vertical cost by hand. The line must also be true on the route-FLIP frame: a
    committed rec whose spouse un-retires lands `stale` (not `blocked`) and the gate drops the stale card's
-   own re-open door with it. `Result.tsx:467-469`'s "covers the date route honestly" comment was FALSE —
+   own re-open door with it. `Result.tsx:451-453`'s "covers the date route honestly" comment was FALSE —
    swept 2026-09-04.
 
 9. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
@@ -759,9 +759,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     household (up to **14** steps — 8 unconditional + 6 gated, `questions.tsx:1383-1408`) if the
     reader confirms the dialog, because nothing is written until Save (the D1 law; a plaintext
     draft outside the vault is a security-posture ruling, never a build) · the
-    `schemaVersion` migration ladder **does not exist as code for versions 1 and 2** — `IntakeApp.tsx:595`
+    `schemaVersion` migration ladder **does not exist as code for versions 1 and 2** — `IntakeApp.tsx:694`
     refuses anything but the current version, so a v1/v2 plan decodes ok, then meets "That didn't work. Try
-    again." over a reload that cannot succeed (`IntakeApp.tsx:735-752`), and its backups fail identically
+    again." over a reload that cannot succeed (`IntakeApp.tsx:834-851`), and its backups fail identically
     (same bytes, `backup.ts:84-93`). No build ever wrote either. *(Re-scoped 2026-10-31, b9-3: this bullet
     said a future v4 would push today's v3 vaults into that arm. The schema-v4 bump did not: version 3
     relabels to 4 at decode, a label-only step — `docs/architecture.md` §7.3.)* · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
@@ -774,14 +774,14 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:4201-4203` under the NUMBER AGREEMENT post-mortem at `copy.ts:4187`, covered by `copyGuard.test.ts:1086`):
+    `copy.ts:4213-4215` under the NUMBER AGREEMENT post-mortem at `copy.ts:4199`, covered by `copyGuard.test.ts:1086`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
     PRESCRIBED: `model.ts:1870-1872` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:232 rewriteModel`, pinned `db.test.ts:180`); today's
     ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1059-1066`, the v1/v2 arms), and a v1 vault survives
-    every store seam on real IndexedDB (`e2e/vaultHarness.ts:21-22`) to die only at `IntakeApp.tsx:595`.
+    every store seam on real IndexedDB (`e2e/vaultHarness.ts:21-22`) to die only at `IntakeApp.tsx:694`.
     Two new defects ride with it: `session.ts:464-468` claims the writer and UNLOCKS before the version is
     judged (the recovery path claims unconditionally, `:539`), and `backup.ts:209-213` LANDS a legacy backup
     on a clean device and only then dead-ends. Size M–L, not S. His word narrows to the TERMINAL arm's
@@ -875,7 +875,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:4615` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:4627` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -891,7 +891,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:4663`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:4675`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test

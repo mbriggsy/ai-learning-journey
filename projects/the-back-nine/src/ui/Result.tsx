@@ -13,10 +13,9 @@
  * the hero room to breathe and seats the quiet return. The hero heading takes focus once on landing
  * (resolvedFocusKey → the surface's focusSignal), the magic-moment announce.
  */
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
 import { acaPricedForRun, buildControlPreviewParams, healthcarePriced, isDateRoute, medicareExtrasDisclosureView, missingRequiredFacts, pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
-import { useLiveAnnouncer } from '@intake/a11y'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
 import { SequencingControl } from '@intake/SequencingControl'
 import { RothLever } from '@intake/RothLever'
@@ -51,18 +50,15 @@ import { FuckOffDate, W_STALE_CAUSE, type StandingNoteCause } from './FuckOffDat
 import { plainNote, withoutDoor, type NoteParts } from './noteParts'
 import { ConfidenceStatement } from './ConfidenceStatement'
 import { caveatSeat, selectElevatedAnswer, resolvedFocusKey } from './answerView'
-import type { ResaveCopyKey } from './unlockCopy'
+import { SaveSlot, useSaveAnnouncer, type ResultSaveProp } from './SaveSlot'
 import './styles/result.css'
 
-/** The save slot's view + handlers — IntakeApp derives the view (resultSave.ts, the tested
- *  machine) and attaches the callbacks; this screen is dumb wiring over the six states. */
-export type ResultSaveProp =
-  | { readonly kind: 'none' }
-  | { readonly kind: 'first'; readonly onKeep: () => void }
-  | { readonly kind: 'clean' }
-  | { readonly kind: 'dirty'; readonly onSave: () => void }
-  | { readonly kind: 'saving' }
-  | { readonly kind: 'failed'; readonly errorKey: ResaveCopyKey; readonly onRetry: () => void }
+export type { ResultSaveProp }
+
+/** The workbench room's DOOR (Act 5, U6). IntakeApp passes it only while the answer is saveable — the
+ *  rule the save control uses for an unresolved answer — and it rides the actions row, so it is
+ *  withheld while computing too. A read-only tab still gets it (the room withholds its own writes). */
+export type ResultWorkbenchProp = { readonly onOpen: () => void }
 
 /** The re-offer backup DOOR (U8-tail) — present ONLY on a returning, WRITABLE session with no
  *  backup-note on record (IntakeApp owns that gating; this screen is dumb wiring). A quiet,
@@ -104,6 +100,7 @@ export function Result({
   onReview,
   save,
   backup,
+  workbench,
   recSave,
   recordCard,
   computing = false,
@@ -123,6 +120,8 @@ export function Result({
    *  undefined ⇒ no door. Withheld with the whole actions row while computing (an affordance
    *  we don't want used on a non-answer shouldn't exist — the same rule as the quiet doors). */
   readonly backup?: ResultBackupProp
+  /** Act 5, U6 — the workbench room's door. Present ⇒ the last quiet door; undefined ⇒ none. */
+  readonly workbench?: ResultWorkbenchProp
   /** P3·U13 — TRUE when any staleness clock fired at unlock (IntakeApp's re-entry gate
    *  derived it from the RAW vault stamps): both heroes wear the standing "figured fresh
    *  under today's rules" line WITH the verdict. Session-lifetime (drift doesn't un-happen
@@ -158,24 +157,9 @@ export function Result({
   // its tag, on a first reveal and after an edit (W9-R7); a retry never passes through one.
   const retry = useCallback(() => void appModel.recompute('final'), [])
 
-  // The save slot's TRANSITION announcements (ultramode 2026-07-02). The slot swaps whole nodes
-  // per state, so a `role='status'` that mounts already-populated may never announce (burned/045),
-  // and the success badge is plain text — a screen-reader re-save was silent on both the start and
-  // the landing of a durability transition. This persistent, always-mounted polite region (empty
-  // until spoken into, clear-after-announce) owns both: →saving announces the pending line, and
-  // saving→clean announces the badge. The FAILED arm stays with its own role='alert' (an alert
-  // announces on insertion by design — routing it here too would double-speak it). Edit-back
-  // clean (failed→clean with no save) is deliberately silent: no durability event occurred.
-  // (The shared useLiveAnnouncer() hook — one callback-ref-bound live-region idiom, insight 060.)
-  const announcer = useLiveAnnouncer()
-  const prevSaveKind = useRef(save.kind)
-  useEffect(() => {
-    const prev = prevSaveKind.current
-    prevSaveKind.current = save.kind
-    if (save.kind === prev) return
-    if (save.kind === 'saving') announcer.announce(copy.resavePending)
-    else if (save.kind === 'clean' && prev === 'saving') announcer.announce(copy.savedBadge)
-  }, [save.kind, announcer])
+  // The save slot's TRANSITION announcements — one persistent, always-mounted polite region (the
+  // `role="status"` node at the top of <main>), shared with the workbench room (SaveSlot.tsx).
+  const announcer = useSaveAnnouncer(save.kind)
 
   // P3·U13 — the wall-time anchor (presentation arithmetic ONLY — never written back into
   // the draft; the round-trip guard). The plan clock is 0 for every same-year session; it goes
@@ -558,58 +542,7 @@ export function Result({
         Review button below must never shift under a pointer when a click swaps CTA→pending→
         badge). 'none' renders no slot at all: no claim about a disk state that can't be
         compared, and no reserved emptiness on the never-saveable answer. */}
-      {save.kind !== 'none' && (
-        <div className="result-save-slot">
-          {save.kind === 'first' && (
-            <div className="result-keep">
-              <button type="button" className="btn-primary" onClick={save.onKeep}>
-                {copy.saveCta}
-              </button>
-              <p className="result-keep__hint">{copy.saveCtaHint}</p>
-            </div>
-          )}
-          {save.kind === 'dirty' && (
-            <div className="result-keep">
-              <button type="button" className="btn-primary" onClick={save.onSave}>
-                {copy.resaveCta}
-              </button>
-              <p className="result-keep__hint">{copy.resaveHint}</p>
-            </div>
-          )}
-          {save.kind === 'saving' && (
-            // Announced by the persistent region above (a status inserted already-populated may
-            // not fire, burned/045) — this node is the VISIBLE pending line only.
-            <p className="result-save-pending">{copy.resavePending}</p>
-          )}
-          {save.kind === 'failed' && (
-            <div className="result-keep">
-              <p className="result-save-error" role="alert">
-                {copy[save.errorKey]}
-              </p>
-              {save.errorKey === 'saveErrorReadOnly' ? (
-                // The read-only refusal is NON-transient: `secondTab` is captured once at unlock
-                // and never re-probed, so a retry deterministically re-refuses — the primary
-                // action must match the copy's own instruction (RELOAD), never a "Try again"
-                // that can't succeed (the RestoreFlow vault-exists arm's law; ultramode
-                // 2026-07-02 — 7 lenses converged on this exact lying-remedy shape).
-                <button type="button" className="btn-primary" onClick={() => window.location.reload()}>
-                  {copy.restoreRetry}
-                </button>
-              ) : (
-                <button type="button" className="btn-primary" onClick={save.onRetry}>
-                  {copy.exportRetry}
-                </button>
-              )}
-            </div>
-          )}
-          {save.kind === 'clean' && (
-            <p className="result-saved">
-              <span className="result-saved__mark" aria-hidden="true" />
-              {copy.savedBadge}
-            </p>
-          )}
-        </div>
-      )}
+      <SaveSlot save={save} />
       {/* §S2 — the recommend-second beat's surface (the second magic moment): the PENDING tell, the
           committed grade lockup + RecommendationViz, and the held/stale/steer notes. DOM-ordered
           directly UNDER the save slot — the recommend-SECOND beat sits ABOVE the in-frame disclaimer
@@ -746,6 +679,14 @@ export function Result({
             }}
           >
             {copy.assumptionDoorCta}
+          </button>
+        )}
+        {/* Act 5, U6: the workbench room's door, LAST in the doors — reached on purpose, after the
+            answer (R1). Present only while the answer is saveable (IntakeApp's gate), and absent
+            while computing with the rest of this row. It opens a page, not a sheet. */}
+        {workbench !== undefined && (
+          <button type="button" className="btn-quiet" data-door="workbench" onClick={workbench.onOpen}>
+            {copy.workbenchDoorCta}
           </button>
         )}
       </div>

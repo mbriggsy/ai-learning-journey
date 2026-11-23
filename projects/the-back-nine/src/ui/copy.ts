@@ -2115,7 +2115,7 @@ export const copy = {
   recommendSaveSavedBadge: 'Saved to this device — your plan and this strategy read',
   // THE REFUSALS. None carries a retry control: the mint is deterministic, so a retry re-fails
   // identically, and an affordance that cannot succeed is the lying-remedy shape
-  // (Result.tsx:579-587). Each says what did NOT happen, in the reader's frame.
+  // (SaveSlot.tsx:77-95). Each says what did NOT happen, in the reader's frame.
   recommendSaveRefusalRecordInvalidHeading: 'This strategy read couldn’t be kept',
   recommendSaveRefusalRecordInvalidBody:
     'We couldn’t build a record of it, so nothing reached this device — your plan here is exactly as you left it. The answer above is still current.',
@@ -2534,6 +2534,18 @@ export const copy = {
   // The runner-up's one-tap-down toggle label (R23: retained + reachable). NOT control-scoped (a
   // disclosure TOGGLE, never a plan-moving claim — the claim itself is `recRunnerUpWhy`, hedged).
   recSeeRunnerUp: 'How the runner-up compared',
+  // --- The workbench room (Act 5, U6): the door on the answer's quiet row, the room's own chrome, its load
+  // failure and its leave-with-an-open-entry ask. The pilot's drafts, shipped flagged for Briggsy's cold read. ---
+  workbenchDoorCta: 'See your plan year by year',
+  workbenchHeading: 'Your plan, year by year',
+  workbenchBack: 'Back to your answer',
+  workbenchLoadFailed: 'The year-by-year page didn’t load. Your plan and your answers are untouched.',
+  // After a retry has failed too: some browsers keep a failed load for the whole visit, so only a reload fetches it again.
+  workbenchLoadFailedAgain:
+    'It still didn’t load. Reloading the page fetches it fresh; if you have changes you haven’t saved, the browser asks first.',
+  workbenchLeaveAsk: 'You started an entry here that isn’t added yet. Going back drops it.',
+  workbenchLeaveGo: 'Go back and drop it',
+  workbenchLeaveStay: 'Stay here',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.

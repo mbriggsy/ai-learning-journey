@@ -437,6 +437,7 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
   - The door is absent while the answer is unresolved.
   - In a read-only tab the room renders and no control that writes is present.
 - **Verification.** `pnpm verify:csp` gains an arm on the served build that enters the room and fails on any CSP violation and on any request outside the build's own chunks and workers; a planted inline style and a planted fetch each turn it red. U7 extends it to the steady and rough views, and U15 to one what-if.
+- **As built (2026-11-23, b9-9).** The room is `src/ui/workbench/WorkbenchRoom.tsx` (lazy) behind `RoomSlot.tsx` (eager, its own boundary); the save control is `src/ui/SaveSlot.tsx`, now shared by the answer and the room, and it imports no stylesheet (`result.css` stays Result's, so the cascade the fit gate reads is unmoved). The door is the last quiet door (`data-door="workbench"`; the Caddie door walk skips it, since it opens a page). The history is one bare `{ b9: 'room' }` entry; a Forward press onto it re-enters the room where the door would open. The Back-with-an-open-entry ask reads `unsavedBuffersHeld()` and is pinned by a test that raises a hold; nothing in the room holds one until U8's editors. The room holds no table yet: U7 puts it under the heading. `src/ui/devSeeds.ts` and `src/ui/unloadGuard.ts` were not touched; the room opens from any seed's answer.
 
 #### U7. The year-by-year table
 

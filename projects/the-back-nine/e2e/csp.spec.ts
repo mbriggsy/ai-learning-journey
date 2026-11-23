@@ -14,6 +14,8 @@ import { SETTLED_RESULT } from './reviewSurface'
  * make the blocked assertion vacuous.
  */
 const CONTROL_ORIGIN = 'http://127.0.0.1:4181'
+/** The ENFORCED origin — the config's `baseURL`, where the build's own chunks and workers are served. */
+const ENFORCED_ORIGIN = 'http://127.0.0.1:4180'
 
 interface CspViolation {
   readonly violatedDirective: string
@@ -351,5 +353,35 @@ test.describe('CSP — real browser enforcement', () => {
 
     const v = await violations(page)
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
+  })
+
+  test('the workbench room loads under the enforced CSP — no violation, and no request outside the build’s own files', async ({ page }) => {
+    // Act 5, U6 (workbench plan U6's verification): the room's lazy chunk and its styles load through the
+    // real door on the served build. ANY violation reds (not a directive subset), and so does any request
+    // that leaves the build's own origin: the act adds no network call. U7 extends this arm to the steady
+    // and rough views, and U15 to one what-if.
+    test.setTimeout(180_000)
+    await installCollector(page)
+    const outside: string[] = []
+    page.on('request', (r) => {
+      const url = new URL(r.url())
+      if (url.protocol === 'data:' || url.protocol === 'blob:') return
+      if (url.origin !== ENFORCED_ORIGIN) outside.push(r.url())
+    })
+    await driveIntakeToResult(page)
+    const door = page.locator('.result-quiet-row [data-door="workbench"]')
+    await expect(door, 'the workbench door never mounted on the resolved answer').toBeVisible({ timeout: 120_000 })
+    await door.click()
+    await expect(page.getByRole('heading', { name: 'Your plan, year by year' })).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByRole('button', { name: 'Back to your answer' })).toBeVisible()
+    expect(await page.evaluate(() => history.state)).toEqual({ b9: 'room' })
+
+    // The way back: the browser's own Back lands on the answer.
+    await page.goBack()
+    await expect(page.locator('main.result')).toBeVisible()
+    await expect(door).toBeVisible()
+
+    expect(await violations(page)).toEqual([])
+    expect(outside, 'a request left the build’s own origin').toEqual([])
   })
 })

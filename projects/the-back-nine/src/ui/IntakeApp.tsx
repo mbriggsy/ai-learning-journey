@@ -25,7 +25,16 @@ import { Result } from './Result'
 import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
 import { draftFromScenario } from './draftFromScenario'
 import { deriveRecommendationSave, type RecommendationSaveRefusal } from './recommendationSaveView'
-import { agedBalancesYearFor, deriveResultSave, persistSeedFor, type PersistState, unsavedWorkPending } from './resultSave'
+import {
+  agedBalancesYearFor,
+  deriveResultSave,
+  persistSeedFor,
+  type PersistState,
+  type ResultSaveView,
+  unsavedWorkPending,
+} from './resultSave'
+import type { ResultSaveProp } from './SaveSlot'
+import { RoomSlot } from './workbench/RoomSlot'
 import { describeSaveFailure } from './unlockCopy'
 import { useUnloadGuard } from './unloadGuard'
 import { PendingPanel } from './PendingPanel'
@@ -49,6 +58,12 @@ const BackupStep = lazy(() => import('./BackupStep').then((m) => ({ default: m.B
  *  with no touches and no provenance?" asked through the rule's OWN predicate (sanity.ts
  *  `spend-period-unconfirmed`), never a re-typed copy of its ambiguity math. */
 const PERIOD_PROBE_TOUCHED: ReadonlySet<FieldPath> = new Set(['annualSpendingReal'])
+
+/** The workbench room's one history entry (Act 5, U6; KTD31): a bare marker. No plan data rides in the
+ *  history entry or the address. */
+const ROOM_ENTRY = { b9: 'room' } as const
+const isRoomEntry = (state: unknown): boolean =>
+  typeof state === 'object' && state !== null && (state as { readonly b9?: unknown }).b9 === 'room'
 
 /**
  * U17 §S5 — WHAT THE TAP CARRIES, and why it is two values and not zero.
@@ -102,8 +117,14 @@ export default function IntakeApp({
   readOnly?: boolean
 }) {
   const [phase, setPhase] = useState<
-    'restoring' | 'reentry' | 'intake' | 'result' | 'save' | 'restore-failed' | 'backup'
+    'restoring' | 'reentry' | 'intake' | 'result' | 'room' | 'save' | 'restore-failed' | 'backup'
   >(hydrateFromVault ? 'restoring' : 'intake')
+  // Act 5, U6 — where the save and backup ceremonies return to: the screen that opened them (the
+  // answer, or the workbench room). Set at every entrance, read at every exit.
+  const [ceremonyOrigin, setCeremonyOrigin] = useState<'result' | 'room'>('result')
+  // A Back press held over an entry still open in the room (it can't be cancelled, so the room's
+  // history entry went back on and the room asks first).
+  const [leaveAsk, setLeaveAsk] = useState(false)
   // P3·U13 — the re-entry gate's composed state, set ONCE by the hydrate effect from the
   // RAW-decoded model (council constraint (a): staleness reads the vault's own stamps,
   // never the draft a later re-save would have re-stamped). `rulesMoved` outlives the gate —
@@ -245,6 +266,83 @@ export default function IntakeApp({
     unsavedWorkPending(persist, saveReady, draftKey !== draftIdentityKey(baselineRef.current)) ||
     buffersHeld > 0
   useUnloadGuard(guarding)
+
+  // 'idle'/'pending' = NOTHING has ever resolved (the "Working it out…" window; `pending`
+  // never recurs after a first resolve — memoryModel holds the last answer visible). Result
+  // withholds its whole actions row there: an affordance we don't want used during the
+  // crunch shouldn't exist (Briggsy, 2026-07-02). A compute-error is NOT computing — the
+  // actions row (Review = fix the inputs) is that failure's remedy.
+  // ⚠️ `idle` IS TWO STATES, AND ONLY ONE IS THE CRUNCH (2026-09-03 — the 2026-08-20 intake walk's
+  // completed-intake dead end). Idle with NOTHING missing is the one-frame window between
+  // setPhase('result') and recompute's synchronous `pending` flip — still the crunch, and this
+  // keeps that frame byte-identical for every seed route, vault return and fit-gate arm. Idle WITH
+  // a missing required fact is a TERMINAL non-answer: memoryModel's recompute returns WITHOUT
+  // dispatching pre-first-resolve when a builder nulls, so nothing is ever "worked out" — and
+  // treating it as computing withheld the whole actions row, including the plan-ratified escape
+  // hatch (3-controls.md:251 "reachable even while the answer is indeterminate"), over a strip
+  // saying "Still needed: …" with NO door to supply it and nothing persisted. The 2026-07-02
+  // ruling's rationale (the crunch + the remedy carve-out) is honored; its letter ("idle") is
+  // read as the crunch it meant. Flagged for Briggsy's audit at product cadence, not parked.
+  const computing =
+    snapshot.answer.kind === 'pending' || (snapshot.answer.kind === 'idle' && missing.length === 0)
+
+  // ── Act 5, U6 — THE WORKBENCH ROOM'S HISTORY (KTD31) ─────────────────────────────────────────
+  // The room is a phase of this app, never an App route (a route would unmount this subtree and
+  // with it the draft's save state, the unsaved mark and the leave guard). Entering pushes ONE
+  // history entry, a bare marker; the browser's Back pops it and this listener returns to the
+  // answer. The room's own back button calls `history.back()`, so the two are one path.
+  // The door follows the save control's rule for an unresolved answer: withheld while computing
+  // and while the answer can't be saved (`deriveResultSave`'s `none`). A read-only tab still gets
+  // it — the room withholds its own writes.
+  const doorOpen = !computing && saveReady.ready
+  // The listener is mounted once, so it reads the live values through refs.
+  const phaseRef = useRef(phase)
+  phaseRef.current = phase
+  const originRef = useRef(ceremonyOrigin)
+  originRef.current = ceremonyOrigin
+  const doorOpenRef = useRef(doorOpen)
+  doorOpenRef.current = doorOpen
+  // Set by the ask's "go back" so the Back it sends passes the check that raised the ask.
+  const leavingRef = useRef(false)
+  const openRoom = useCallback(() => {
+    window.history.pushState(ROOM_ENTRY, '')
+    setPhase('room')
+  }, [])
+  const leaveRoom = useCallback(() => window.history.back(), [])
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      const onRoomEntry = isRoomEntry(e.state)
+      const p = phaseRef.current
+      if (p === 'room') {
+        if (onRoomEntry) return
+        // A Back press can't be cancelled. With an entry still open (the buffers the leave guard
+        // reads, insight 112), put the room's entry back and ask in the room first.
+        if (!leavingRef.current && unsavedBuffersHeld() > 0) {
+          window.history.pushState(ROOM_ENTRY, '')
+          setLeaveAsk(true)
+          return
+        }
+        leavingRef.current = false
+        setLeaveAsk(false)
+        setPhase('result')
+        return
+      }
+      // A ceremony the room opened: a Back press mid-ceremony is absorbed (the entry goes back on),
+      // so it can never strand the ceremony or tear the room's entry out from under it.
+      if ((p === 'save' || p === 'backup') && originRef.current === 'room') {
+        if (!onRoomEntry) window.history.pushState(ROOM_ENTRY, '')
+        return
+      }
+      // A Forward press back onto the room's entry: the room again where the door would open, else
+      // the entry is turned into a plain one, so it never leaves a Back that does nothing.
+      if (p === 'result' && onRoomEntry) {
+        if (doorOpenRef.current) setPhase('room')
+        else window.history.replaceState(null, '')
+      }
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
   /**
    * U17 §S5 — THE REMEMBERED RECOMMENDATION'S TRICHOTOMY, DERIVED ONCE PER FRAME.
    *
@@ -525,6 +623,7 @@ export default function IntakeApp({
       // this gesture's own awaits must route to the update write, not a second ceremony.
       if (persistRef.current.kind === 'unsaved') {
         setRecSaveCeremony(true)
+        setCeremonyOrigin('result')
         setPhase('save')
         return
       }
@@ -784,7 +883,7 @@ export default function IntakeApp({
                 return withoutRecord
               })
             }
-            setPhase('result')
+            setPhase(ceremonyOrigin)
           }}
           // Record what the ceremony COMMITTED the instant it commits — the same render-captured
           // scenario passed as its prop (the save phase renders no edit surface, so it cannot have
@@ -802,7 +901,7 @@ export default function IntakeApp({
               setRecSaveCeremony(false)
               setRecSaveLanded(true)
             }
-            setPhase('result')
+            setPhase(ceremonyOrigin)
           }}
         />
       </Suspense>
@@ -818,52 +917,77 @@ export default function IntakeApp({
         <BackupStep
           onFinish={() => {
             setNeedsBackup(false)
-            setPhase('result')
+            setPhase(ceremonyOrigin)
           }}
           // The quiet escape: declining records nothing and keeps the door offered (needsBackup
           // stays true) — an invited offer is never a trap (ultramode 2026-07-03).
-          onCancel={() => setPhase('result')}
+          onCancel={() => setPhase(ceremonyOrigin)}
         />
       </Suspense>
     )
   }
 
+  // The one save machine's view, wired for the screen showing it: both the answer and the room draw
+  // their save control from it, and a first save opened from either returns to it.
+  const saveProp = (view: ResultSaveView, from: 'result' | 'room'): ResultSaveProp =>
+    view.kind === 'first'
+      ? {
+          kind: 'first',
+          onKeep: () => {
+            setCeremonyOrigin(from)
+            setPhase('save')
+          },
+        }
+      : view.kind === 'dirty'
+        ? { kind: 'dirty', onSave: () => void saveNow() }
+        : view.kind === 'failed'
+          ? { ...view, onRetry: () => void saveNow() }
+          : view
+
+  if (phase === 'room') {
+    return (
+      <RoomSlot
+        room={{
+          save: saveProp(deriveResultSave(persist, saveReady, readOnly), 'room'),
+          onBack: leaveRoom,
+          leaveAsk: leaveAsk
+            ? {
+                onGo: () => {
+                  leavingRef.current = true
+                  setLeaveAsk(false)
+                  window.history.back()
+                },
+                onStay: () => setLeaveAsk(false),
+              }
+            : undefined,
+        }}
+      />
+    )
+  }
+
   if (phase === 'result' || phase === 'save') {
     const view = deriveResultSave(persist, saveReady, readOnly)
-    // 'idle'/'pending' = NOTHING has ever resolved (the "Working it out…" window; `pending`
-    // never recurs after a first resolve — memoryModel holds the last answer visible). Result
-    // withholds its whole actions row there: an affordance we don't want used during the
-    // crunch shouldn't exist (Briggsy, 2026-07-02). A compute-error is NOT computing — the
-    // actions row (Review = fix the inputs) is that failure's remedy.
-    // ⚠️ `idle` IS TWO STATES, AND ONLY ONE IS THE CRUNCH (2026-09-03 — the 2026-08-20 intake walk's
-    // completed-intake dead end). Idle with NOTHING missing is the one-frame window between
-    // setPhase('result') and recompute's synchronous `pending` flip — still the crunch, and this
-    // keeps that frame byte-identical for every seed route, vault return and fit-gate arm. Idle WITH
-    // a missing required fact is a TERMINAL non-answer: memoryModel's recompute returns WITHOUT
-    // dispatching pre-first-resolve when a builder nulls, so nothing is ever "worked out" — and
-    // treating it as computing withheld the whole actions row, including the plan-ratified escape
-    // hatch (3-controls.md:251 "reachable even while the answer is indeterminate"), over a strip
-    // saying "Still needed: …" with NO door to supply it and nothing persisted. The 2026-07-02
-    // ruling's rationale (the crunch + the remedy carve-out) is honored; its letter ("idle") is
-    // read as the crunch it meant. Flagged for Briggsy's audit at product cadence, not parked.
-    const computing =
-      snapshot.answer.kind === 'pending' || (snapshot.answer.kind === 'idle' && missing.length === 0)
+    // `computing` (above) is the crunch rule the whole actions row follows, the room's door included.
     return (
       <Result
         onReview={review}
         computing={computing}
-        save={
-          view.kind === 'first'
-            ? { kind: 'first', onKeep: () => setPhase('save') }
-            : view.kind === 'dirty'
-              ? { kind: 'dirty', onSave: () => void saveNow() }
-              : view.kind === 'failed'
-                ? { ...view, onRetry: () => void saveNow() }
-                : view
-        }
+        save={saveProp(view, 'result')}
         // The re-offer backup door — present only when the hydrate armed it (writable + no note on
         // record). Tapping opens the 'backup' phase; the door dissolves once the ceremony records.
-        backup={needsBackup ? { onSave: () => setPhase('backup') } : undefined}
+        backup={
+          needsBackup
+            ? {
+                onSave: () => {
+                  setCeremonyOrigin('result')
+                  setPhase('backup')
+                },
+              }
+            : undefined
+        }
+        // Act 5, U6 — the workbench room's door, under the save control's rule (`doorOpen` above;
+        // Result also withholds its whole actions row while computing).
+        workbench={doorOpen ? { onOpen: openRoom } : undefined}
         // U17 §S5 — THE STRATEGY SLOT. The view is DERIVED every frame from the seven operands, never
         // tracked: there is no success parameter in `deriveRecommendationSave`, so the only route to a
         // "saved" claim runs through the record the disk actually carries. `status` rides

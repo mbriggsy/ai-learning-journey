@@ -200,7 +200,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   "premiums" line traces literally true post-flip, the sole latent nit being the rare purchased
   Part A, which is consistently carved out.
 
-## F5 — disclosure routing (HARD LOCK — red-team Attack 1; healthSheetChrome.ts:677-686 + Result.tsx:265-269)
+## F5 — disclosure routing (HARD LOCK — red-team Attack 1; healthSheetChrome.ts:677-686 + Result.tsx:249-253)
 
 - The extras affirmative + per-person adopted-typical provenance + the bi-directional disclosure
   needed a **RENDERED HOME for BOTH populations**, because `showMedicarePricedNote`
@@ -211,7 +211,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
     names extra coverage alongside Part B and its surcharge, and an on-typical household gets a
     per-person bi-directional sentence appended INSIDE the residual paragraph via
     `composeMedicareExtrasTypicalNote` (`src/ui/healthSheetChrome.ts:704`), wired at
-    `src/ui/Result.tsx:270-288`. Appended, not a new frame row — the one-frame fit law's tallest
+    `src/ui/Result.tsx:254-272`. Appended, not a new frame row — the one-frame fit law's tallest
     composite.
   - **Population B (near-65 date route / the Healthcare door):** the door sheet carries its OWN
     legible extras block — never buried in the six-item run-on — from
@@ -247,7 +247,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 - **verify:fit arms re-pinned WITHOUT assuming monotone shrink** — the omission axis shrank but
   the real-flat clause broadened. The fit spec now pins non-typical extras arms explicitly
   (`e2e/vertical-fit.spec.ts:1726-1727` — the priced-state faces, all non-typical; `:3017-3019` — the statestale non-typical echo frame; re-anchored 2026-09-10, both prior numbers had landed on unrelated lines), and the CSP intake walk learned the fork step
-  (`e2e/csp.spec.ts:135`, the one integration gap `503213f4` left, fixed in `e921f2bb`).
+  (`e2e/csp.spec.ts:137`, the one integration gap `503213f4` left, fixed in `e921f2bb`).
 - **Color-blind-safe encoding** on adopted-vs-entered / typical-vs-your-bill / priced-vs-residual:
   every distinction is carried in words, never a hue. Each door fact line states its provenance in
   prose ("the figure you entered" / "as you answered" / "a typical figure … not an actual bill"),

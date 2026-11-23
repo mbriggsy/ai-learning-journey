@@ -1,0 +1,68 @@
+/*
+ * src/ui/workbench/workbench.css — the workbench room's frame (Act 5, U6).
+ *
+ * Tokens only (CSP `style-src 'self'`: no inline styles). A plain column at the wide frame: the way
+ * back, the heading, the plan's save control; U7's table joins under the heading. Calm, no theatrics.
+ */
+
+.workbench {
+  box-sizing: border-box;
+  flex: 1;
+  width: 100%;
+  max-width: var(--content-wide);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+  padding: var(--space-6) var(--gutter) var(--space-9);
+}
+
+.workbench__bar {
+  display: flex;
+  width: 100%;
+}
+
+.workbench__heading {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  font-weight: var(--weight-display);
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+  margin: 0;
+}
+
+/* The ask a Back press raises over an open entry: text first, the safe choice (stay) as the primary. */
+.workbench__ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: var(--measure);
+  padding: var(--space-4);
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-md);
+}
+
+.workbench__ask-text,
+.workbench__failed-note {
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink);
+  margin: 0;
+}
+
+.workbench__ask-actions,
+.workbench__failed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.workbench__failed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: var(--measure);
+}

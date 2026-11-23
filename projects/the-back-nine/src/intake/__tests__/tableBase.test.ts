@@ -90,7 +90,7 @@ describe('buildTableBase — the run the table shows (KTD9)', () => {
 
   it('a lifestyle date: the candidate at the BAND’s offset, the full pass', () => {
     const base = buildTableBase(WORKING, outcomeOf(dated(2), dated(4), { offsetYears: 4, track: 'lifestyle' }))
-    expect(base).toMatchObject({ kind: 'run', route: 'dated', track: 'full' })
+    expect(base).toMatchObject({ kind: 'run', route: 'dated', track: 'full', stopOffsetYears: 4 })
     expect(base.kind === 'run' && base.params).toEqual(buildCandidateParams(input, 4, DATE_SEARCH_PATHS.final))
   })
 
@@ -102,7 +102,7 @@ describe('buildTableBase — the run the table shows (KTD9)', () => {
 
   it('no date on either track: the window top, the full pass', () => {
     const base = buildTableBase(WORKING, outcomeOf(noDate, noDate))
-    expect(base).toMatchObject({ kind: 'run', route: 'no-date', track: 'full' })
+    expect(base).toMatchObject({ kind: 'run', route: 'no-date', track: 'full', stopOffsetYears: DATE_OFFSET_WINDOW_TOP })
     expect(base.kind === 'run' && base.params).toEqual(
       buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS.final),
     )

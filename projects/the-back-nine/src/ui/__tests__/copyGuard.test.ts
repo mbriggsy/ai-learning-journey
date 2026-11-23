@@ -7,6 +7,7 @@ import {
   isControlKey,
   DIRECTIVE_VERBS,
   SURVIVAL_CLAIMS,
+  ONE_FUTURE_BANNED,
   type CopyGate,
 } from '../copyGuard'
 import { HAWK_BAN, LEFT_OVER_LEAN_BAN } from './hawkBan'
@@ -1065,7 +1066,41 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     assumptionWorkingCostEntered: slots.assumptionWorkingCostEntered('90,000'),
     assumptionWorkingCostKept: slots.assumptionWorkingCostKept('84,000'),
     assumptionWorkingCostStale: slots.assumptionWorkingCostStale('84,000'),
+    // The year-by-year table (Act 5, U7).
+    workbenchRoughWhat: slots.workbenchRoughWhat(1966, 1995, 30),
+    workbenchLivesOne: slots.workbenchLivesOne('you', true, 'your', 88),
+    workbenchLivesTwo: slots.workbenchLivesTwo('Sam', false, 'Sam’s', 84, 'Alex', 92),
+    workbenchStopsIn: slots.workbenchStopsIn(2031),
+    workbenchFloorTrack: slots.workbenchFloorTrack(),
+    workbenchNoDate: slots.workbenchNoDate(2041),
+    workbenchAged: slots.workbenchAged(2026),
+    workbenchSourcePretaxOf: slots.workbenchSourcePretaxOf('your spouse'),
+    workbenchAccountOf: slots.workbenchAccountOf('Sam’s', '401(k)'),
+    workbenchRolledIn: slots.workbenchRolledIn(2049, 'Sam’s Traditional IRA'),
+    workbenchRowRmdMoved: slots.workbenchRowRmdMoved('4,210'),
+    workbenchRowNotKeptRetired: slots.workbenchRowNotKeptRetired('12,000'),
+    workbenchRowNotKeptNoCredit: slots.workbenchRowNotKeptNoCredit('16,985'),
+    workbenchRowNotKeptAboveCap: slots.workbenchRowNotKeptAboveCap('3,000'),
+    workbenchRowNotKeptAfterDeath: slots.workbenchRowNotKeptAfterDeath('9,400'),
+    workbenchRowSurvivor: slots.workbenchRowSurvivor('Alex', false),
+    workbenchRowRolledOver: slots.workbenchRowRolledOver('Sam’s', 'yours'),
+    workbenchRoughSteadyFrom: slots.workbenchRoughSteadyFrom(1995),
+    workbenchNoteThrough: slots.workbenchNoteThrough(slots.workbenchRowNotKeptNoCredit('16,985'), 2034),
   }
+
+  it('the year-by-year table never calls its one future typical, average, expected or median (U7; the one-future record §5.1)', () => {
+    const workbench = [
+      ...entries.filter(([key]) => key.startsWith('workbench')).map(([key, text]) => [key, text] as const),
+      ...Object.entries(SLOT_RENDER).filter(([key]) => key.startsWith('workbench')),
+    ]
+    expect(workbench.length).toBeGreaterThan(40)
+    for (const [key, text] of workbench) {
+      for (const re of ONE_FUTURE_BANNED) expect(re.test(text), `${key}: "${text}"`).toBe(false)
+    }
+    // The rule bites: a planted heading that calls the steady future typical fails it.
+    expect(ONE_FUTURE_BANNED.some((re) => re.test('One future, in a typical market'))).toBe(true)
+    expect(ONE_FUTURE_BANNED.some((re) => re.test('the middle of the range'))).toBe(true)
+  })
 
   it('every U10 delta-readout slot WEARS a hedge (the control readouts are slot-composed, so the require-hedge sweep must reach the rendered samples here)', () => {
     const deltaSlots = [

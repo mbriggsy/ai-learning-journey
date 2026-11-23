@@ -335,6 +335,17 @@ export const SURVIVAL_CLAIMS: readonly RegExp[] = [
   /\b(less risky|riskier)\b/i,
 ]
 
+/** The year-by-year table's one future (workbench plan R7, U7; `docs/decisions/workbench-one-future.md` §5.1): the
+ *  steady future is never typical, average, expected or median, and never placed in the middle of the range (the
+ *  record measured it is not). Swept over every `workbench*` string and slot render by the copyGuard test. */
+export const ONE_FUTURE_BANNED: readonly RegExp[] = [
+  /\btypical(ly)?\b/i,
+  /\baverage(s|d)?\b/i,
+  /\bexpected\b/i,
+  /\bmedian\b/i,
+  /\bmiddle of (the|your) range\b/i,
+]
+
 /** Compile one {@link HEDGE_TOKENS} entry into a case-insensitive matcher (mirrors the ban
  *  lexicons). Word-boundary-guard each edge that is a letter/digit — so "can" doesn't match inside
  *  "cannot", and "of 10" doesn't match inside "of 100" — but leave a glyph edge (the "~" precision

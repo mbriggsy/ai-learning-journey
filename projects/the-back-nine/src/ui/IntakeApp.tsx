@@ -966,6 +966,8 @@ export default function IntakeApp({
         room={{
           save: saveProp(deriveResultSave(persist, saveReady, readOnly), 'room'),
           onBack: leaveRoom,
+          // The committed answer the year-by-year table is built on and pinned beside (U7).
+          snapshot,
           leaveAsk: leaveAsk
             ? {
                 onGo: () => {

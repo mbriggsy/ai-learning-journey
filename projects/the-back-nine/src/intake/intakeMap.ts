@@ -1300,6 +1300,9 @@ export type TableBase =
       readonly track: 'full' | 'floor'
       readonly route: 'spine' | 'dated' | 'no-date'
       readonly sources: AccountSources
+      /** The date route only: the offset the candidate was built at (the band's, or the window top), so the
+       *  table's heading names the stop year from this builder's own number, never a second derivation. */
+      readonly stopOffsetYears?: number
     }
   | {
       readonly kind: 'withheld'
@@ -1316,9 +1319,17 @@ export function buildTableBase(d: ScenarioDraft, outcome: DateSearchOutcome | un
     params: SimulationParams,
     track: 'full' | 'floor',
     route: 'spine' | 'dated' | 'no-date',
+    stopOffsetYears?: number,
   ): TableBase =>
     params.overlay?.taxEnabled === true
-      ? { kind: 'run', params, track, route, sources: accountSources(d) }
+      ? {
+          kind: 'run',
+          params,
+          track,
+          route,
+          sources: accountSources(d),
+          ...(stopOffsetYears !== undefined ? { stopOffsetYears } : {}),
+        }
       : { kind: 'withheld', reason: 'no-ledger' }
   if (!isDateRoute(d)) {
     const spine = buildSpineParams(d)
@@ -1328,11 +1339,17 @@ export function buildTableBase(d: ScenarioDraft, outcome: DateSearchOutcome | un
   if (input === null) return { kind: 'withheld', reason: 'no-run' }
   if (outcome?.kind !== 'dates') return { kind: 'withheld', reason: 'no-date-answer' }
   if (outcome.band !== undefined) {
-    const params = buildCandidateParams(input, outcome.band.offsetYears, DATE_SEARCH_PATHS.final)
-    return withLedger(params, outcome.band.track === 'floor' ? 'floor' : 'full', 'dated')
+    const offset = outcome.band.offsetYears
+    const params = buildCandidateParams(input, offset, DATE_SEARCH_PATHS.final)
+    return withLedger(params, outcome.band.track === 'floor' ? 'floor' : 'full', 'dated', offset)
   }
   if (trackDated(outcome.lifestyle) || trackDated(outcome.floor)) return { kind: 'withheld', reason: 'band-missing' }
-  return withLedger(buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS.final), 'full', 'no-date')
+  return withLedger(
+    buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS.final),
+    'full',
+    'no-date',
+    DATE_OFFSET_WINDOW_TOP,
+  )
 }
 
 /** The date route builder — `ParamsBuilders.buildDateInput`. The engine owns

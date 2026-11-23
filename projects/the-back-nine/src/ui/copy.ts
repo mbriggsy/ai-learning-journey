@@ -2549,6 +2549,79 @@ export const copy = {
   // The door pressed over an entry still open on the answer (a budget sheet's typed lines survive its Cancel).
   workbenchDoorAsk: 'You started an entry on this page that isn’t added yet. Opening the year-by-year page drops it.',
   workbenchDoorAskGo: 'Open it and drop the entry',
+  // --- The year-by-year table (Act 5, U7). The pilot's drafts, shipped flagged for Briggsy's cold read. The heading
+  // is bound by `docs/decisions/workbench-one-future.md` §5: steady is never typical, average, expected or median, nor
+  // placed in the middle of the range (copyGuard's ONE_FUTURE_BANNED sweeps every workbench string), and the rough
+  // view is history's worst start for a retiree with half in stocks, at the plan's market level, never "the worst"
+  // and never a floor. ---
+  // The answer pinned beside the table (R9): the many-futures answer, the store's own.
+  workbenchPinnedLabel: 'Your answer, read across many futures',
+  workbenchPinnedWorking: 'Working out your answer…',
+  workbenchPinnedRefiguring: 'Being worked out again for your latest change.',
+  workbenchPinnedNone: 'Your answer isn’t ready, so this table waits for it.',
+  workbenchViewLegend: 'This future’s market',
+  workbenchViewSteady: 'Steady market',
+  workbenchViewRough: 'Rough market',
+  workbenchSteadyWhat:
+    'One future, in a steady market: stocks and bonds each earn the same return every year. It is one future among many, never a forecast; the answer pinned here reads all of them.',
+  workbenchTableCaption: 'Your plan in this future, a row per year, in today’s dollars',
+  workbenchApproxNote: 'A figure marked ~ is worked out by the tool. This year’s pay and spending show as you entered them.',
+  workbenchMatchNote: 'What’s put into each account includes any employer match.',
+  workbenchPayCheckNote:
+    'In a working year, the tax on pay is in the pay check column; the income tax column holds only what your savings’ own income adds.',
+  workbenchNoSpendingNote: 'A working year whose cost you haven’t given shows no spending.',
+  // The two stopgap lines (KTD32 and the kinds U10 and U13 add); each comes out with its build.
+  workbenchYieldAllYears:
+    'The tool leaves out the interest and dividends your taxable savings earn each year: they aren’t in any year’s income or tax here, and in real life they are taxed every year.',
+  workbenchYieldAfterWork:
+    'Once work stops, the tool leaves out the interest and dividends your taxable savings earn each year: they aren’t in those years’ income or tax here, and in real life they are taxed every year. While you work, the investment income you entered is counted.',
+  workbenchKindsMissing: 'Bank accounts and inherited IRAs aren’t in this table yet: the tool doesn’t take either kind so far.',
+  workbenchGroupIn: 'Coming in',
+  workbenchGroupOut: 'Going out',
+  workbenchGroupSavings: 'Your savings',
+  workbenchColYear: 'Year',
+  workbenchColAges: 'Ages',
+  workbenchLinePay: 'Pay',
+  workbenchLineOther: 'Other income',
+  workbenchColSocialSecurity: 'Social Security',
+  workbenchColSpending: 'Spending',
+  workbenchColIncomeTax: 'Income tax',
+  workbenchColPayCheck: 'Pay check',
+  workbenchLineTaxOnPay: 'Tax on pay',
+  workbenchLinePayroll: 'Payroll tax',
+  workbenchColFromPay: 'From pay',
+  workbenchLineIntoSavings: 'Into savings',
+  workbenchLineLeftOver: 'Left over',
+  workbenchLineKeptInTaxable: 'Kept in taxable',
+  workbenchColHealth: 'Health premiums',
+  workbenchLineMarketplace: 'Marketplace plan',
+  workbenchLineMedicare: 'Medicare',
+  workbenchLineMedicareExtras: 'Medicare extras',
+  workbenchColPretaxMoves: 'Pre-tax moves',
+  workbenchLineRequired: 'Required',
+  workbenchLineToRoth: 'To Roth',
+  workbenchSourceTaxable: 'Taxable',
+  workbenchSourcePretax: 'Pre-tax',
+  workbenchSourceRoth: 'Roth',
+  workbenchSourceHsa: 'HSA',
+  workbenchLinePutIn: 'Put in',
+  workbenchLineTakenOut: 'Taken out',
+  workbenchLineSpent: 'Spent',
+  workbenchLineLeft: 'Left',
+  workbenchSourcesHeading: 'What each savings column holds',
+  workbenchSourceNoAccount: 'no account entered; money the plan moves here',
+  // A row's sentences (R13's flags and the plan's two known omissions).
+  workbenchRowRanOut: 'The money runs out this year in this future.',
+  workbenchRowEarlyDraw:
+    'This year takes money from a pre-tax account at 59 or younger. The tool charges no early-withdrawal penalty on it; a real withdrawal that young can owe one.',
+  // The table's three states, and why it is held back.
+  workbenchTableLoading: 'Working out your plan year by year…',
+  workbenchTableUpdating: 'Updating: these rows are from before your latest change.',
+  workbenchTableError: 'The year-by-year table couldn’t be worked out. Your plan and your answer are untouched.',
+  workbenchWithheldNoRun: 'The table needs the same facts your answer does. Your answer names any that are missing.',
+  workbenchWithheldNoDate: 'The table waits for your answer’s dates.',
+  workbenchWithheldBand: 'Your answer has a date but not the run behind it, so this table can’t be shown for it.',
+  workbenchWithheldNoLedger: 'Your plan has no savings, income or premiums for a year-by-year table to follow.',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -4862,4 +4935,48 @@ export const slots = {
    *  second clock read. R3 keeps the card to existence + age + standing, so this is the only figure
    *  it ever speaks. */
   recommendRecordSavedIn: (year: number): string => `Saved in ${year}.`,
+  // --- The year-by-year table (Act 5, U7): the heading's dated words, the savings key and a row's sentences. The
+  // pilot's drafts, shipped flagged. A person rides as their mid-sentence name (`you` / `your spouse` when none was
+  // entered) with `you` set for the first person's fallback, so a verb agrees ("you live", "Sam lives"); a possessive
+  // rides whole ("Sam’s", "your", "your spouse’s"). Every figure is pre-formatted on the table's one grain. ---
+  /** The rough view's market, bound by the decision record's §5.2 and §5.4: history's worst start for a retiree with
+   *  half in stocks, at the plan's own market level, never "the worst" and never a floor, and steady after its run. */
+  workbenchRoughWhat: (startYear: number, endYear: number, years: number): string =>
+    `One future, in a rough market: the market runs as history did from ${startYear} to ${endYear}, the worst ${years}-year start for a retiree with half in stocks, scaled to your plan’s own market. Markets can do worse. After those ${years} years it is steady.`,
+  workbenchLivesOne: (mid: string, you: boolean, possessive: string, age: number): string =>
+    `In both markets, ${mid} ${you ? 'live' : 'lives'} to ${age}, the age about half of people of ${possessive} age and sex reach.`,
+  workbenchLivesTwo: (
+    firstMid: string,
+    firstYou: boolean,
+    firstPossessive: string,
+    firstAge: number,
+    survivorMid: string,
+    survivorAge: number,
+  ): string =>
+    `In both markets, ${firstMid} ${firstYou ? 'live' : 'lives'} to ${firstAge}, the age about half of people of ${firstPossessive} age and sex reach, and ${survivorMid} to ${survivorAge}, the age by which the chance that either of you is still alive falls to about a half.`,
+  workbenchStopsIn: (year: number): string => `In this table, work stops in ${year}, the year your answer’s date gives.`,
+  workbenchFloorTrack: (): string => 'It shows essentials-only spending: your answer’s date is figured on that level.',
+  workbenchNoDate: (year: number): string =>
+    `Your answer found no date in its window, so this table has work stopping in ${year}, the window’s last year.`,
+  workbenchAged: (year: number): string => `Row one is ${year}, the year this plan was built; its balances are as of then.`,
+  workbenchSourcePretaxOf: (mid: string): string => `Pre-tax, ${mid}`,
+  workbenchAccountOf: (possessive: string, kind: string): string => `${possessive} ${kind}`,
+  workbenchRolledIn: (year: number, accounts: string): string => `from ${year}, also ${accounts}, rolled in`,
+  workbenchRowRmdMoved: (amount: string): string =>
+    `~$${amount} of the required withdrawal was more than this year needed, so it moved to taxable.`,
+  workbenchRowNotKeptRetired: (amount: string): string =>
+    `~$${amount} more came in than this year’s spending. The tool doesn’t keep it: it isn’t saved or grown here.`,
+  workbenchRowNotKeptNoCredit: (amount: string): string =>
+    `~$${amount} was left over from pay. Your answer on the left over doesn’t count it as saved, so the tool doesn’t keep it.`,
+  workbenchRowNotKeptAboveCap: (amount: string): string =>
+    `~$${amount} of the left over is above what you said goes into savings each year, so the tool doesn’t keep it.`,
+  workbenchRowNotKeptAfterDeath: (amount: string): string =>
+    `~$${amount} was left over from pay. After a death the tool counts none of the left over as saved, so it doesn’t keep it.`,
+  workbenchRowSurvivor: (mid: string, you: boolean): string =>
+    you ? 'From this year, you on your own.' : `From this year, ${mid} on their own.`,
+  workbenchRowRolledOver: (fromPossessive: string, toPronoun: string): string =>
+    `${upperFirst(fromPossessive)} pre-tax savings are ${toPronoun} from this year.`,
+  workbenchRoughSteadyFrom: (endYear: number): string => `From here the market is steady: history’s run ends with ${endYear}.`,
+  /** A sentence that holds the same in a run of years is said once, on the run's first year. */
+  workbenchNoteThrough: (note: string, lastYear: number): string => `${note} The same each year through ${lastYear}.`,
 } as const

@@ -66,3 +66,334 @@
   gap: var(--space-5);
   max-width: var(--measure);
 }
+
+/* ── The year-by-year table (U7) ────────────────────────────────────────────────────────────────────
+ * The room widens past the answer's frame for the table (a workspace, not a column); its prose stays at
+ * reading width. The widest household's thirty-odd figures a year fit in up to three-line boxes, so no
+ * laptop size scrolls sideways; under 64rem the table scrolls inside its own frame with the year column
+ * held. Direction reads by sign and words, never by color; "~" and line labels sit in the muted ink. */
+
+.workbench {
+  max-width: 90rem;
+}
+
+.workbench__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4) var(--space-7);
+  width: 100%;
+}
+
+.wb-pin-seat {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-7);
+  width: 100%;
+  background: var(--paper);
+  padding-block: var(--space-2);
+}
+
+.wb-pin {
+  flex: 1 1 28rem;
+  max-width: 48rem;
+  border-left: 3px solid var(--line-control);
+  padding-left: var(--space-4);
+}
+
+/* The real lines and the box's tallest form share one grid cell: the box holds the taller of the two. */
+.wb-pin__stack {
+  display: grid;
+}
+
+.wb-pin__real,
+.wb-pin__ghost {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.wb-pin__ghost {
+  visibility: hidden;
+}
+
+.wb-pin__label,
+.wb-pin__second,
+.wb-pin__status {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--ink-muted);
+}
+
+.wb-pin__lead {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: var(--leading-snug);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+/* What this future is (left) and the stopgap lines (right) sit side by side on a wide screen. */
+.wb-about {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3) var(--space-8);
+  width: 100%;
+}
+
+@media (min-width: 64.0625rem) {
+  .wb-about {
+    grid-template-columns: minmax(0, 52rem) minmax(0, 1fr);
+  }
+}
+
+.wb-about__what {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.wb-about__line {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink);
+}
+
+.wb-stopgaps {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.wb-stopgaps__line,
+.wb-foot,
+.wb-key__entry {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--ink-muted);
+}
+
+.wb-foot {
+  margin: 0;
+  max-width: 48rem;
+}
+
+.wb-table-region {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.wb-updating {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+
+.wb-table-wrap {
+  width: 100%;
+}
+
+/* Updating: the rows stay, dimmed and ringed by a dashed rule beside the words above them. */
+.wb-table-wrap--updating {
+  opacity: 0.55;
+  outline: 1px dashed var(--line-control);
+  outline-offset: var(--space-2);
+}
+
+.wb-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-xs);
+  color: var(--ink);
+}
+
+.wb-table__caption {
+  caption-side: top;
+  text-align: left;
+  padding-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+.wb-table thead {
+  background: var(--paper);
+}
+
+.wb-th {
+  background: var(--paper);
+  padding: var(--space-1) var(--space-2);
+  text-align: right;
+  vertical-align: bottom;
+  font-weight: var(--weight-semibold);
+  border-bottom: 1px solid var(--line-control);
+}
+
+.wb-th--group {
+  text-align: left;
+  font-weight: var(--weight-semibold);
+  color: var(--ink-muted);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.wb-th--year {
+  text-align: left;
+}
+
+.wb-th__name {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.wb-th__lines {
+  display: block;
+  font-weight: var(--weight-body);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.wb-td {
+  padding: var(--space-2);
+  text-align: right;
+  vertical-align: top;
+  border-top: 1px solid var(--line-soft);
+}
+
+.wb-row:first-child .wb-td {
+  border-top: 0;
+}
+
+.wb-line {
+  display: block;
+  white-space: nowrap;
+  line-height: var(--leading-snug);
+}
+
+.wb-td--year {
+  text-align: left;
+  font-weight: var(--weight-body);
+}
+
+.wb-year {
+  font-weight: var(--weight-semibold);
+}
+
+.wb-ages,
+.wb-fig__approx {
+  color: var(--ink-muted);
+}
+
+.wb-fig__sign {
+  padding-right: 0.1em;
+}
+
+.wb-notes td {
+  padding: 0 var(--space-2) var(--space-2);
+}
+
+.wb-note {
+  margin: 0;
+  max-width: 48rem;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--ink-muted);
+}
+
+/* The rough view's first steady year: a dashed rule and words, never a color change. */
+.wb-divider td {
+  padding: var(--space-3) var(--space-2) var(--space-2);
+  border-top: 1px dashed var(--line-control);
+  font-size: var(--text-xs);
+  color: var(--ink);
+}
+
+.wb-key__heading {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+.wb-key__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.wb-key__label {
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+/* First load, error and held back: a reserved frame, so the table landing moves nothing above it. */
+.wb-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-block-size: 12rem;
+  max-width: 48rem;
+}
+
+.wb-state__words {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink);
+}
+
+/* His laptop and wider: figures at the reading size, and the header holds under the pinned answer. */
+@media (min-width: 88rem) {
+  .wb-table {
+    font-size: var(--text-sm);
+  }
+}
+
+@media (min-width: 64.0625rem) {
+  .wb-table thead {
+    position: sticky;
+    top: var(--wb-pin-h, 0px);
+    z-index: 2;
+  }
+}
+
+/* Phones and narrow windows: the table scrolls inside its own frame, the year column held in place. */
+@media (max-width: 64rem) {
+  .wb-table-wrap {
+    overflow-x: auto;
+  }
+
+  .wb-th--year,
+  .wb-td--year {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--paper);
+  }
+
+  .wb-pin-seat {
+    position: static;
+  }
+}
+
+/* The market switch: the shared segmented control, its labels kept on one line with room either side. */
+.wb-view .segment {
+  padding-inline: var(--space-4);
+  white-space: nowrap;
+}

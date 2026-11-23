@@ -3,7 +3,7 @@ title: A process rule the pilot writes into a plan is not a ruling, and nothing 
 date: 2026-11-22
 phase: The RightCapital mandate (the test-cadence ruling, 2026-11-22)
 modules: [docs/plans/, CLAUDE.md, .github/workflows/]
-tags: [process, rulings, who-ruled, habit, test-cadence, ci, plan-rules, provenance, briggsy-good]
+tags: [process, rulings, who-ruled, habit, test-cadence, ci, plan-rules, provenance, briggsy-good, owner-call, design-ceiling, open-question, plain-numbers]
 ---
 
 ## Problem
@@ -38,3 +38,14 @@ pilot-written rule is a default the pilot may change, and the cheapest fix is of
 - A skill or CLAUDE.md line whose "why" is gone: our setup is ours to fix in the same pass (memory
   `feedback-our-setup-is-ours`); only his dated rulings need his say.
 - A council's process recommendation folded into a plan without his ruling.
+
+## Extended (2026-11-21, the frames-outside plan): the other direction, his calls written in as the pilot's
+
+The same confusion runs both ways. **A decision that is his, folded as "the pilot's reading, not waited on":** the
+plan's check returned two of Briggsy's calls (does the design ceiling cover the income step-down; which 20-character
+name the gate measures), and both went in as pilot readings; two of three blind readers graded the plan `misleads`.
+His answer then gated the unit that leaned on it, and one question dialog got both answers in minutes. **A product
+bound ruled by councils before anyone asked whose household it was for:** two councils set a fit bound at the
+engine's largest number; he overrode it in one message ("we don't need to solve for extremes"), once the absurd member
+was in front of him in plain numbers ($83 billion a month). A reading that changes a class's axis, or a bound on what
+the app must hold, is a question for him, never an assumption, and it goes to him in plain numbers.

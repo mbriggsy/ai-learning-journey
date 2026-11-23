@@ -359,6 +359,11 @@ tests
   Read a table's real margin as its narrowest width (the phone arm's `tableWidth`, or the frame squeezed in-page) against
   the frame less 15. The widest household's table: 1,143 px narrowest on Windows and 1,133 on CI's ubuntu (run
   45274348572: ubuntu reads this table NARROWER), against 1,224 under the harness (1,209 headed).
+- **(b9-1/b9-2, 11-21) A dev seed that cannot be saved renders no save box, so it is never its class's tallest frame:**
+  `deriveResultSave` returns none for a blank spouse name, and the left column loses the save slot above the caveat;
+  a widest plant must be saveable. But "none" also renders on a READ-ONLY session (its branch comes before `!ready`),
+  which mounts the in-flow View-only banner above the frame (about 85 px against the slot's 84 px reserve), so a frame
+  with no save box can be TALLER there.
 - **(b9-1, 11-23) The room's arms (`?seed=tablewidest`) assert every column first** (`expectEveryColumn`): a seed
   whose crown drifts to today, or loses an account, would drop columns and make every width law vacuous.
 - **(b9-6, 11-21) `assertDensityTier` looks the survivor leading up in `SURVIVOR_LEADING`** (the frames-outside plan's

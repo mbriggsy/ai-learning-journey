@@ -128,7 +128,8 @@ import {
   type DrawdownPolicy,
   type FilingStatus,
   type LedgerBalances,
-  type LedgerYearRow,
+  type LedgerLoopRow,
+  type LedgerWorkingYear,
   type RetirementState,
 } from '@shared/model'
 
@@ -460,11 +461,11 @@ export interface TaxYearInputs {
    *  sibling rule), so each array's length ≤ the funded-year count and the arrays stay index-
    *  aligned with each other. A PURE OBSERVATION — byte-identical with or without the sink. */
   healthOut?: HealthYearSink
-  /** The year-by-year table's sink (workbench plan U3, KTD5): one {@link LedgerYearRow} per FUNDED
-   *  year, pushed at the end of the year's body once the ledgers are re-derived (a year the portfolio
-   *  could not fund records nothing, the healthOut rule). A PURE OBSERVATION: byte-identical with or
-   *  without it. */
-  ledgerOut?: LedgerYearRow[]
+  /** The year-by-year table's sink (workbench plan U3, KTD5): one {@link LedgerLoopRow} per funded
+   *  year, pushed at the end of the year's body once the ledgers are re-derived, then one flagged row
+   *  for the year the money runs out (`ranOut`). Needs tax on (it throws otherwise). A PURE
+   *  OBSERVATION: byte-identical with or without it. */
+  ledgerOut?: LedgerLoopRow[]
 }
 
 /** The per-year healthcare observation arrays (P3·U11 — parallel, index-aligned, one entry per
@@ -1020,22 +1021,42 @@ function advancePerPersonLedger(
   allocPretax: number,
   scale: number,
 ): number {
-  const convertible = ledger.map((p, i) => Math.max(0, p - (perRmd[i] ?? 0)))
-  const totalConvertible = convertible.reduce((a, b) => a + b, 0)
-  const drawPretax = ledger.map(
-    (p, i) => p - (totalConvertible > 0 ? conversion * (convertible[i]! / totalConvertible) : 0),
-  )
-  const totalDraw = drawPretax.reduce((a, b) => a + b, 0)
+  const { drawPretax, spendDraw } = splitPerPersonPretax(ledger, perRmd, conversion, allocPretax)
   let forcedExcessTotal = 0
   for (let i = 0; i < ledger.length; i++) {
     const dp = drawPretax[i]!
-    const ap = totalDraw > 0 ? allocPretax * (dp / totalDraw) : 0
+    const ap = spendDraw[i]!
     const fe = Math.min(Math.max(0, (perRmd[i] ?? 0) - ap), dp - ap)
     forcedExcessTotal += fe
     ledger[i] = (dp - ap - fe) * scale
   }
   return forcedExcessTotal
 }
+
+/**
+ * The per-person split of a year's pre-tax movements, the one home {@link advancePerPersonLedger} and the
+ * year-by-year sink both read: each person's draw-time balance after their share of the conversion (by
+ * CONVERTIBLE room, `pretax − rmd`) and their share of the spending pre-tax draw (by that balance).
+ */
+function splitPerPersonPretax(
+  ledger: readonly number[],
+  perRmd: readonly number[],
+  conversion: number,
+  allocPretax: number,
+): { readonly drawPretax: number[]; readonly spendDraw: number[] } {
+  const convertible = ledger.map((p, i) => Math.max(0, p - (perRmd[i] ?? 0)))
+  const totalConvertible = convertible.reduce((a, b) => a + b, 0)
+  const drawPretax = ledger.map(
+    (p, i) => p - (totalConvertible > 0 ? conversion * (convertible[i]! / totalConvertible) : 0),
+  )
+  const totalDraw = drawPretax.reduce((a, b) => a + b, 0)
+  const spendDraw = drawPretax.map((dp) => (totalDraw > 0 ? allocPretax * (dp / totalDraw) : 0))
+  return { drawPretax, spendDraw }
+}
+
+/** IRC §72(t)(2)(A)(i): a distribution on or after the day a person reaches 59½ owes no early-withdrawal
+ *  additional tax. The engine's ages are whole years, so a whole age of 59 or less sits under it. */
+const PENALTY_FREE_AGE = 59.5
 
 // =========================================================================
 // The gross-up fixed point (M3)
@@ -1822,6 +1843,10 @@ export function runTaxAwareDecumulation(
       '[taxOverlay] healthcareEnabled requires taxEnabled — the ACA PTC is MAGI-driven and MAGI comes from the tax solver',
     )
   }
+  // The year-by-year sink reads the year's filing status and tax, which exist only with tax on.
+  if (ledgerOut && !config.taxEnabled) {
+    throw new Error('[taxOverlay] the ledger sink (ledgerOut) requires taxEnabled — its rows read the year’s filing status and tax')
+  }
 
   // The state-tax unit's overlay fail-loud backstop (the "BOTH validateParams AND the overlay
   // backstop" discipline). validateParams shields `simulate`; THIS protects a direct P3/P4 caller.
@@ -2363,6 +2388,9 @@ export function runTaxAwareDecumulation(
     const ledgerPretaxStart = ledgerOut && pretaxLedger ? [...pretaxLedger] : undefined
     let ledgerScale = 0
     let ledgerRmdToTaxable = 0
+    let ledgerAcaIncome: number | undefined
+    let ledgerIrmaaIncome: number | undefined
+    let ledgerWorkingYear: LedgerWorkingYear | undefined
     let rmd: number
     if (pretaxLedger && alive && household) {
       perRmd = perPersonRmd(pretaxLedger, people, alive, household.startCalendarYear, config.rmdEnabled, t)
@@ -2617,6 +2645,19 @@ export function runTaxAwareDecumulation(
         const lines = workingYearCashLines(checkTerms, workingYear.floor)
         probe?.checkComposed?.(t, workingYear.floor, lines)
         checkShortfallThisYear = lines.shortfall
+        if (ledgerOut) {
+          ledgerWorkingYear = {
+            pay: lines.pay,
+            socialSecurity: lines.socialSecurity,
+            otherIncome: lines.ongoingIncome,
+            payrollTax: lines.payroll.total,
+            taxOnOutsideIncome: lines.taxOnOutsideIncome,
+            ownDeposits: lines.ownDeposits,
+            workingYearCost: lines.workingYearCost,
+            leftOver: lines.cash,
+            shortfall: lines.shortfall,
+          }
+        }
         // Build 2 (R8): the saved left over credits the smallest of the year's cash, that cash on the printed
         // grain, year 0's printed Left over on this path and the stored figure — in a year everyone is alive
         // (KTD5), skipped at or below 0 (a short year credits nothing; its shortfall, recorded just above, is
@@ -2709,6 +2750,8 @@ export function runTaxAwareDecumulation(
         irmaaMagiThisYear = irmaaMagi(magiComponentsThisYear)
         ssBenefitThisYear = magiComponentsThisYear.ssBenefitFull
       }
+      // The year-by-year sink's ACA income: the cliff's own reading, only in a year the ACA is priced.
+      if (ledgerOut && acaPricedThisYear) ledgerAcaIncome = acaMagi(magiComponentsThisYear)
       // Record this year's IRMAA-MAGI — ONE post-branch write covering BOTH recording sites (C3
       // §3b), only when healthcare is on (acaTable !== undefined; a healthcare-off tax-only year
       // keeps the history empty — no IRMAA, reduce-to-spine untouched). The working-year override
@@ -2736,6 +2779,8 @@ export function runTaxAwareDecumulation(
           (irmaaMagiOverride[t] ?? 0) + irmaaMagi(magiComponentsThisYear) + (ongoingTaxableIrmaaOnly[t] ?? 0)
         irmaaMagiHistory[t] = recordedIrmaaMagi
         probe?.irmaaMagiRecorded?.(t, recordedIrmaaMagi)
+        // The year-by-year sink's IRMAA income is this recorded figure, the one the bill reads (KTD7).
+        if (ledgerOut) ledgerIrmaaIncome = recordedIrmaaMagi
       }
       // The year's federal tax, read off the converged identities (U3 · M6 — the lifetime-tax
       // surface): the gross funds EXACTLY fundingNet + netAcaPremium + tax in both branches (the ACA
@@ -2764,6 +2809,54 @@ export function runTaxAwareDecumulation(
       probe?.checkDrawn?.(t, { shortfall: checkShortfallThisYear, fundingNet: fundingNetThisYear, grossWithdrawal, pretaxDrawn: alloc.pretax, hsaSpend: hsaSpendThisYear })
     }
 
+    // The year-by-year sink (U3): the year's row, read off the loop's own locals. Built only when the sink
+    // rides; called at the year's end once the ledgers are re-derived, or at a run-out break (`ranOut`,
+    // after the ledgers are emptied: the deposits and the credit are forfeited, the close is zero). Each
+    // person's share of the pre-tax draw is the split the ledger advance itself takes, read before it runs.
+    const ledgerPretaxDraw =
+      ledgerOut && pretaxLedger && perRmd ? splitPerPersonPretax(pretaxLedger, perRmd, conversion, alloc.pretax).spendDraw : undefined
+    const recordLedgerRow =
+      ledgerOut && ledgerStart && regime && household
+        ? (ranOut: boolean): void => {
+            const aliveNow = alive ?? aliveCanonical(people, householdYears, t)
+            const startYear = household.startCalendarYear
+            const earlyPretaxDraw = ledgerPretaxDraw
+              ? ledgerPretaxDraw.some((d, i) => d > 0 && people[i] !== undefined && ageInSimYear(people[i], startYear, t) < PENALTY_FREE_AGE)
+              : alloc.pretax > 0 && regime.rmdOwner !== undefined && ageInSimYear(regime.rmdOwner, startYear, t) < PENALTY_FREE_AGE
+            ledgerOut.push({
+              t,
+              start: ledgerStart,
+              ...(ledgerPretaxStart ? { pretaxStartByPerson: ledgerPretaxStart } : {}),
+              conversion,
+              rmd,
+              draw: { taxable: alloc.taxable, pretax: alloc.pretax, roth: alloc.roth },
+              ...(ledgerPretaxDraw ? { pretaxDrawByPerson: ledgerPretaxDraw } : {}),
+              hsaSpend: hsaSpendThisYear,
+              rmdToTaxable: ledgerRmdToTaxable,
+              contribution: ranOut ? { taxable: 0, pretax: 0, roth: 0, hsa: 0 } : { taxable: cTaxable, pretax: cPretaxTotal, roth: cRoth, hsa: cHsa },
+              leftOverCredit: ranOut ? 0 : creditThisYear,
+              growthScale: ledgerScale,
+              end: { taxable: buckets.taxable, pretax: buckets.pretax, roth: buckets.roth, hsa: buckets.hsa ?? 0 },
+              ...(pretaxLedger && ledgerPretaxStart ? { pretaxEndByPerson: [...pretaxLedger] } : {}),
+              taxPaid: taxPaidThisYear,
+              premiums: {
+                acaNet: acaNetPremiumThisYear,
+                medicare: medicareCostThisYear,
+                irmaaSurcharge: irmaaSurchargeThisYear,
+                medicareExtras: medicareExtrasThisYear,
+              },
+              ...(ledgerAcaIncome !== undefined ? { acaIncome: ledgerAcaIncome } : {}),
+              ...(ledgerIrmaaIncome !== undefined ? { irmaaIncome: ledgerIrmaaIncome } : {}),
+              filing: regime.filing,
+              alive: aliveNow,
+              rolledOver: aliveNow.includes(false) && aliveNow.includes(true),
+              ...(ledgerWorkingYear ? { workingYear: ledgerWorkingYear } : {}),
+              earlyPretaxDraw,
+              ranOut,
+            })
+          }
+        : undefined
+
     // GENERAL-DEPLETION (U3 · M5): with a live HSA the authoritative total (which `stepYear`'s own
     // depletion predicate reads) includes MEDICAL-EARMARKED dollars a spending withdrawal may not
     // touch — so a year whose gross need exceeds the GENERAL-drawable pool is unfundable even while
@@ -2783,6 +2876,7 @@ export function runTaxAwareDecumulation(
       basis = 0
       if (pretaxLedger) pretaxLedger.fill(0)
       depletionYear = t
+      recordLedgerRow?.(true)
       break
     }
 
@@ -2811,6 +2905,7 @@ export function runTaxAwareDecumulation(
       basis = 0
       if (pretaxLedger) pretaxLedger.fill(0)
       depletionYear = t
+      recordLedgerRow?.(true)
       break
     }
 
@@ -2954,26 +3049,8 @@ export function runTaxAwareDecumulation(
           : { taxable: creditThisYear > 0 ? cTaxable + creditThisYear : cTaxable, pretax: cPretaxTotal, roth: cRoth, hsa: cHsa }
     }
 
-    // The year-by-year sink (U3): the funded year's row, read off the loop's own locals once the
-    // ledgers are re-derived. Observation only.
-    if (ledgerOut && ledgerStart) {
-      ledgerOut.push({
-        t,
-        start: ledgerStart,
-        ...(ledgerPretaxStart ? { pretaxStartByPerson: ledgerPretaxStart } : {}),
-        conversion,
-        rmd,
-        draw: { taxable: alloc.taxable, pretax: alloc.pretax, roth: alloc.roth },
-        hsaSpend: hsaSpendThisYear,
-        rmdToTaxable: ledgerRmdToTaxable,
-        contribution: { taxable: cTaxable, pretax: cPretaxTotal, roth: cRoth, hsa: cHsa },
-        leftOverCredit: creditThisYear,
-        growthScale: ledgerScale,
-        end: { taxable: buckets.taxable, pretax: buckets.pretax, roth: buckets.roth, hsa: buckets.hsa ?? 0 },
-        ...(pretaxLedger && ledgerPretaxStart ? { pretaxEndByPerson: [...pretaxLedger] } : {}),
-        taxPaid: taxPaidThisYear,
-      })
-    }
+    // The year-by-year sink (U3): the funded year's row, once the ledgers are re-derived.
+    recordLedgerRow?.(false)
   }
 
   return {

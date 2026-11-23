@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-22, b9-6):** THE MANDATE CHANGED (Briggsy, 2026-11-22; memory `project-b9-mandate-replicate-rightcapital`): replicate RightCapital for him alone, all its features and its flow, to get confidence in his own plan; the bar is "Briggsy good" (no slop, no pointless tests or process; the global CLAUDE.md). The map is `docs/plans/rightcapital-map.md`; he ruled it 2026-11-22 (the workspace home; the map's order). Next: each gap in that order, opened with `/brief <that gap>`. Gap 1, the year-by-year table, is workbench U2–U7: U2 and U3's slice 1 (the ledgers) shipped 2026-11-22; next is U3's slice 2, the rest of the plan's U3 (the roadmap's mandate table names it). Then `/distill` (past 10). Parked (b9-5's call under the mandate, the register's composites entry, prescription (4)): the record card's seat after U2 (U3 and the ruled lead seat). The D7 queue and the tiered lists below are pre-mandate: judge each against the mandate when it is reached.
+▶ **START HERE (2026-11-22, b9-6):** THE MANDATE CHANGED (Briggsy, 2026-11-22; memory `project-b9-mandate-replicate-rightcapital`): replicate RightCapital for him alone, all its features and its flow, to get confidence in his own plan; the bar is "Briggsy good" (no slop, no pointless tests or process; the global CLAUDE.md). The map is `docs/plans/rightcapital-map.md`; he ruled it 2026-11-22 (the workspace home; the map's order). Next: each gap in that order, opened with `/brief <that gap>`. Gap 1, the year-by-year table, is workbench U2–U7: U2 and U3 shipped 2026-11-22 (U3 in two slices, b9-6 and b9-7); next is U4, the rough sequence and two measurements (the roadmap's mandate table names it). Then `/distill` (past 10). Parked (b9-5's call under the mandate, the register's composites entry, prescription (4)): the record card's seat after U2 (U3 and the ruled lead seat). The D7 queue and the tiered lists below are pre-mandate: judge each against the mandate when it is reached.
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** Its plan, `docs/plans/features/working-year-surplus-build-spec.md`, is checked as a whole; its
@@ -455,7 +455,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    eats the full premium. The token has an ACA **legislative freshness** clause and **no ACA pricing-mode
    clause**.
    ⚑ **Audit corrections 2026-08-02 — three anchors were wrong and the fix shape is NOT Part B's:**
-   (a) `healthOverlay.ts:305` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:2543` plus `taxOverlay.ts:2685-2692`
+   (a) `healthOverlay.ts:305` is a **closing brace**, not a consumer; the real seam is `taxOverlay.ts:2571` plus `taxOverlay.ts:2726-2733`
    → `healthOverlay.ts:279`. (b) `copy.ts:1253` (`healthFactMedicare`) is a Medicare eyebrow; the strings that claim
    the coupling is priced are **`copy.ts:1214-1217`**. (c) the excess-APTC field moved to
    `aca-last-verified.json:43` (was `:21`) and `scripts/verify-aca-status.ts:40-103` declares and REQUIRES the key
@@ -464,7 +464,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    engine, which is why the oracle token can witness it. The ACA escalator lives in **intake**
    (`intakeMap.ts:358-378`), which the engine cannot import — so an `ACA_PRICING_MODE` flag bolted onto
    intakeMap would be the exact lying-mirror `oracleToken.ts:114-122` warns about. The honest fix moves the
-   schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:2038`).
+   schedule build to an engine-owned `buildAcaPricingSchedule` beside `partBPricingByT` (`taxOverlay.ts:2063`).
    ⚑ **Re-tag: BLOCKED ON RESEARCH.** No sourced ACA cost-trend primary exists in the repo, so a solver
    block would hold for months over the whole pre-65 population.
    ⚑ **2026-08-03 double-blind — the pricing defect is REAL and confirmed; the near-term copy move as filed
@@ -534,13 +534,13 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    used to cite — the NC certification block — **is retired**; (b) the withhold machinery gates `solve()`
    ONLY, so a withhold-only fix still ships a **state-blind headline / fuck-off date**.
    ⚑ **2026-08-03 double-blind — diagnosis CONFIRMED, and the "cheap partial" is not cheap and not sound.**
-   Pricing is membership-keyed at `taxOverlay.ts:1671`; `PRICED_STATES` is `constants/stateTax.ts:50`; the
+   Pricing is membership-keyed at `taxOverlay.ts:1692`; `PRICED_STATES` is `constants/stateTax.ts:50`; the
    flip is pinned live at `optimalityOracle.test.ts:295-306` (NC crowns the 12%-top anchor, the state-absent
    twin the 22%-top). Correction (a) is **half-stale** — the `state-certification-pending` WithheldReason
    (`oracleToken.ts:48`), its humane string (`recommendationView.ts:364-365`) and the whole *held* card
    still ship and are tested; only the **live trigger** is gone, so a new arm is an addition, not a build.
    Correction (b) is **confirmed exact**: `mintOracleToken` has one live call site (`solveEntry.ts:232`),
-   reached only via `engineApi.runSolve`; `engineApi.run` (`engineProtocol.ts:423` — headline/confidence)
+   reached only via `engineApi.runSolve`; `engineApi.run` (`engineProtocol.ts:433` — headline/confidence)
    and `runDateSearch` (`:458` — the date) mint **no token**.
    ⚑ **The no-income-tax premise is FALSE for 5 of the 8, and it adds 7, not 8** — the register entry
    *Unpriced states — a confident winner computed with zero state income tax* carries the state-by-state negative.
@@ -552,12 +552,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    `tsc` until written) · `recommendationView.ts:344-348` · the intake picker **4 → 11 vertical arms**
    against `verify:fit`. Engine cost is genuinely near-zero (`stateTax.ts:163` structural early return).
    ⚑ **The filed "every saved vault decodes Corrupt" blocker is FALSE — do not act on it, and do NOT loosen
-   the compile tie.** `_V3FieldsCover` (`model.ts:2852-2854`) covers only `keyof CurrentScenario`;
+   the compile tie.** `_V3FieldsCover` (`model.ts:2930-2932`) covers only `keyof CurrentScenario`;
    `checkStateTaxVintageV3` (`scenarioCodec.ts:584-589`) is hand-written and compels no `needString`. Safe
    because `scenarioCodec.ts:825-826` gates `retirementState` via `needVocab(STATE_ROSTER)`, so no
    pre-widening vault can *be* a household in a newly-priced state. The prescribed remedy — loosening
    `stateTax.ts:429-433` — would **re-open the exact hole that tie was minted to close** (`:424-428`).
-   ⚑ **His call, sharpened:** does the refusal reach the **headline + date** (`engineProtocol.ts:423`/`:460`)
+   ⚑ **His call, sharpened:** does the refusal reach the **headline + date** (`engineProtocol.ts:433`/`:480`)
    or stop at the strategy? Gating only `solve()` leaves a state-blind first answer for everyone off the
    roster; gating all three blanks the product's magic moment for **~86% of US households**. Widening to the
    no-tax seven moves coverage ~14% → ~27%, of which **Texas alone is two-thirds** — so *which of your
@@ -574,7 +574,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`stateTaxDisclosure.ts:86`, home #6) renders it STANDALONE (`.cs-state-note`) on both routes wherever the
    residual is withheld, so EVERY verdict — pre-65 and health-door included, the fuck-off-date audience —
    reads exactly one state clause, priced or unpriced; scope the roster fork against disclosure-everywhere,
-   never against a silent pre-65 cohort. A THIRD token-less lane exists: `runTwoArm` (`engineProtocol.ts:476`, the U10 control
+   never against a silent pre-65 cohort. A THIRD token-less lane exists: `runTwoArm` (`engineProtocol.ts:486`, the U10 control
    preview), gated by copy only. Anchors: `stateStep` `questions.tsx:597`, `fields: []` at `:604`, the
    retired twin `:593`.
 
@@ -614,12 +614,12 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      and the fit gate's panel arm (`vertical-fit.spec.ts:2523-2552`) asserts only that the dialog box fits
      **and** `scrollHeight > clientHeight` — content growth makes the second assertion *more* true.
      ⚑ **The drafted HSA sentence would have DENIED the very forfeit it discloses — do not ship "stays
-     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:2781-2782` sets
-     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2217` `terminalHsaReal = 0` →
+     put" / "simply sits."** The balance is not parked, it is **destroyed**: `taxOverlay.ts:2874-2875` sets
+     `buckets = EMPTY_BUCKETS` (hsa: 0) → `simulate.ts:2332` `terminalHsaReal = 0` →
      `objectiveHeadline.ts:62` bequest contribution **$0**. On the exact path the sentence names, the HSA
      adds nothing to the leave-more dollar the reader sees. **The sentence must say the balance is DROPPED.**
      ⚑ **Sweep BOTH stale comments in the same commit** — `healthOverlay.ts:912-915` (which says
-     fix-or-it-re-rots) **and** `taxOverlay.ts:2772-2774`, which still calls post-65 HSA-as-ordinary-income
+     fix-or-it-re-rots) **and** `taxOverlay.ts:2865-2867`, which still calls post-65 HSA-as-ordinary-income
      *"a DISCLOSED non-feature, the survivor-SS class"* — the same false claim, in the file that **owns** the
      mechanism.
      ⚑ **The genuine ruling here is scope, not wording** (tone is Caddie-chair under the batched-oracle law):
@@ -633,7 +633,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `:851`, footer `:857`, the disclosures map `:533-565`; the `assumption*` prefix law is
      `copy.ts:1507-1518` (keys `:1519-1800`); the panel fit arm is `vertical-fit.spec.ts:2523-2552`;
      `sheetShell.css:34-35`/`:94`; the overlays are `src/engine/healthOverlay.ts:911-915` and
-     `src/engine/taxOverlay.ts:2771-2774` (there is no `overlays/` dir). NIIT's two homes confirmed
+     `src/engine/taxOverlay.ts:2864-2867` (there is no `overlays/` dir). NIIT's two homes confirmed
      (`recommendationView.ts:101` unconditional; `copy.ts:1364-1365`) — the scope fork is self-resolving:
      HSA + LTC only. TRAP 1 — `Row` REQUIRES a `seat` from the CLOSED 22-member `AssumptionSeat` union
      (`AssumptionPanel.tsx:146`, `assumptionRegistry.ts:43-68`): a leaves-out row is a hand-rolled
@@ -641,7 +641,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      TRAP 2 — a heading literally "What this leaves out" that names two items is ITSELF a completeness claim
      the constants falsify (`health.ts:72/:112/:120/:135/:319` declare four more OUT-but-disclosed facts) —
      scope the heading or name them. TRAP 3 — the HSA sentence must be true across ALL THREE zeroing
-     branches (`taxOverlay.ts:2780-2786`, `:2809-2814`, `:2949-2954`): on each, EVERY bucket is zeroed
+     branches (`taxOverlay.ts:2873-2880`, `:2903-2909`, `:3044-3049`): on each, EVERY bucket is zeroed
      because the path DEPLETED, so a bequest-framed sentence ("dropped from what's left to your heirs")
      names a state the engine cannot reach; the honest harm is that the plan is COUNTED AS HAVING RUN OUT
      while HSA dollars remain unspent (understated survival), because HSA outflow is qualified-medical-only
@@ -777,7 +777,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
-    PRESCRIBED: `model.ts:1792-1794` mints synthetic entered accounts from the old aggregates "so the ladder
+    PRESCRIBED: `model.ts:1870-1872` mints synthetic entered accounts from the old aggregates "so the ladder
     stays total"; the write primitive exists (`db.ts:232 rewriteModel`, pinned `db.test.ts:180`); today's
     ladder is decode-and-return with NO migrate step (`scenarioCodec.ts:1059-1066`, the v1/v2 arms), and a v1 vault survives
     every store seam on real IndexedDB (`e2e/vaultHarness.ts:21-22`) to die only at `IntakeApp.tsx:595`.
@@ -856,9 +856,9 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     riders, the open copy obligations, the deferred richer market draw, and the `dateinvert` (c) mint —
     its own session, a size-L parameter hunt.
     ⚑ **2026-09-04:** two bullets were half-dead and are closed — the `partBTrendVintage` "no exposure gate"
-    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:2798` (swept), and
+    clause was swept in `staleness.ts:747-750` but still lived verbatim at `model.ts:2876` (swept), and
     Plan 4's "the record carries `seedA`/`seedB`" (`plans/4-recommendation.md:283`) had outlived its own
-    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2339-2361`) has no seed
+    "kill BEFORE S5 mints" deadline — the shipped `SavedRecommendationV3` (`model.ts:2417-2439`) has no seed
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
     the U17 record stores the seed — and was swept 2026-09-25 (the register bullet is closed with it).
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
@@ -901,7 +901,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     flag) and BOTH candidate fixes cost something — "mint through `update()`" turns a deferred false-arm
     into an immediate one; an eager mint in `createMemoryModel` breaks the WRITTEN contract #1b (mint at the
     FIRST ENGINE RUN, `plans/2-first-answer.md:57`) with no test that would catch it. His ruling, framed as
-    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2798` and
+    those two arms. Two half-swept false comments closed 2026-09-04: `model.ts:2876` and
     `plans/4-recommendation.md:283`.
 
 ---

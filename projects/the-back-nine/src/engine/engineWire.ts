@@ -7,7 +7,7 @@
  * a future main-thread import can never silently drag the engine across the worker line.
  */
 import type { SpendSolveOutcome } from '@engine/spendSolve'
-import type { BandFan, DateSearchOutcome, Distribution, DollarAdjustment, Headline, HealthReadout, SimulationResult, SurvivorConditioned, SurvivorReading, TwoArmOutcome } from '@shared/model'
+import type { BandFan, DateSearchOutcome, Distribution, DollarAdjustment, Headline, HealthReadout, LedgerYearRow, SimulationResult, SurvivorConditioned, SurvivorReading, TwoArmOutcome } from '@shared/model'
 // TYPE-ONLY (erased at compile — no runtime edge, so the MC engine + the solver stay OUT of the main
 // bundle). The solve payload's value model lives with the
 // solver (solve.ts / solveEntry.ts); this module owns only the WIRE variant + the main-thread unpack.
@@ -62,6 +62,10 @@ export interface ResolvedWire {
   /** The U7 "as the survivor" reading (result-level; what `SurvivorReadout` renders). Present iff
    *  `survivorConditioned` is — the model's stated iff, preserved across the wire. Compact clone. */
   readonly survivorReading?: SurvivorReading
+  /** The year-by-year table's rows (workbench plan U3) — present iff a named-future run asked (`run`'s
+   *  `ledgerRows` option). One future's years of plain data: structured clone, NOT a transferable buffer
+   *  (absent from the transfer list). Every figure finite. */
+  readonly ledgerRows?: readonly LedgerYearRow[]
   /** P3·U9 — the essentials-floor track in wire form. Present iff the run carried a budget
    *  construct (param-driven, mirroring the value model's presence key). `depletionYears`
    *  is a paths-length Int32Array (carries the −1 NEVER_DEPLETED sentinel) and JOINS the
@@ -130,6 +134,8 @@ export function fromWire(wire: EngineWire): EngineResult {
         // across; pass it through presence-keyed, preserving the model's survivorReading ⟹
         // survivorConditioned iff on the reconstructed object (mirrors bandFan / taxAware).
         ...(wire.survivorConditioned ? { survivorConditioned: wire.survivorConditioned } : {}),
+        // The year-by-year table's rows are plain data — clone delivered them; pass through presence-keyed.
+        ...(wire.ledgerRows ? { ledgerRows: wire.ledgerRows } : {}),
         // P3·U9 — the floor track widens back to the value model (Int32Array → number[]),
         // exactly like the full track's depletionYears above.
         ...(wire.floor

@@ -34,6 +34,7 @@ import { totalAcrossBuckets } from '@engine/sequencing'
 import { householdBenefits, type BenefitPerson } from '@engine/socialSecurityBenefit'
 import { bothAliveYearBenefit, survivorYearBenefit, type PersonOffsets } from '@engine/benefitYear'
 import { ENGINE_MAX_DOLLAR, ENGINE_MAX_HORIZON_YEARS, ENGINE_MAX_MOMENT } from '@engine/engineDomain'
+import { workingYearBottomLine } from '@engine/moneyGrain'
 import { irmaa } from '@engine/constants'
 import { isPricedState, earliestPricedRateYear } from '@engine/constants/stateTax'
 import {
@@ -49,6 +50,7 @@ import {
   type HealthReadout,
   type HealthReadoutYear,
   type IncomeParams,
+  type LedgerLoopRow,
   type LedgerYearRow,
   type NamedFuture,
   type PersonInputs,
@@ -223,6 +225,10 @@ export function ongoingIncomeForYear(
   t: number,
   income: IncomeParams,
   deathOffsets: readonly number[],
+  /** The year-by-year table's per-person split (workbench plan U3), filled when passed: each owner's own
+   *  stream while alive, a dead owner's survivor variant credited to the first living person. Arrays
+   *  must arrive zeroed and person-aligned. */
+  byPerson?: { readonly gross: number[]; readonly taxable: number[] },
 ): { readonly gross: number; readonly taxable: number } {
   const leaves = income.incomeByPerson
   // Is ANY person other than a given dead owner still alive? (The SURVIVOR-continuation gate: a
@@ -230,7 +236,13 @@ export function ongoingIncomeForYear(
   // once per year, not per owner — a household scalar, but the OWNER's own death (below) is what
   // selects FULL vs SURVIVOR/0, so the per-owner gate is preserved (KTD-7).
   let aliveCount = 0
-  for (let i = 0; i < deathOffsets.length; i++) if (t < (deathOffsets[i] ?? 0)) aliveCount++
+  let firstAlive = -1
+  for (let i = 0; i < deathOffsets.length; i++) {
+    if (t < (deathOffsets[i] ?? 0)) {
+      aliveCount++
+      if (firstAlive < 0) firstAlive = i
+    }
+  }
   let gross = 0
   let taxable = 0
   for (let i = 0; i < leaves.length; i++) {
@@ -239,16 +251,40 @@ export function ongoingIncomeForYear(
     const ownerAlive = t < (deathOffsets[i] ?? 0)
     if (ownerAlive) {
       // FULL — the owner is alive and collecting their own stream.
-      gross += leaf.grossFull?.[t] ?? 0
-      taxable += leaf.taxableFull?.[t] ?? 0
+      const g = leaf.grossFull?.[t] ?? 0
+      const x = leaf.taxableFull?.[t] ?? 0
+      gross += g
+      taxable += x
+      if (byPerson) {
+        byPerson.gross[i]! += g
+        byPerson.taxable[i]! += x
+      }
     } else if (aliveCount >= 1) {
       // The owner has died but ≥1 spouse remains: the per-stream SURVIVOR variant (KTD-4). Both
       // dead ⇒ this branch is skipped ⇒ $0 (the survivor both-dead floor).
-      gross += leaf.grossSurvivor?.[t] ?? 0
-      taxable += leaf.taxableSurvivor?.[t] ?? 0
+      const g = leaf.grossSurvivor?.[t] ?? 0
+      const x = leaf.taxableSurvivor?.[t] ?? 0
+      gross += g
+      taxable += x
+      if (byPerson) {
+        byPerson.gross[firstAlive]! += g
+        byPerson.taxable[firstAlive]! += x
+      }
     }
   }
   return { gross, taxable }
+}
+
+/** One year's income by person for the year-by-year table (workbench plan U3), filled by
+ *  {@link cashTermsForYear} from its own per-person terms when its caller passes one. Person-aligned. */
+export interface YearIncomeByPerson {
+  /** Gross pay (alive and still working). */
+  readonly pay: number[]
+  /** The part of pay in the year's tax base (pay less the person's own pre-tax deferral, in a clamped
+   *  working year; 0 in any other year, where the run taxes no pay). */
+  readonly payTaxable: number[]
+  readonly otherGross: number[]
+  readonly otherTaxable: number[]
 }
 
 /**
@@ -439,6 +475,9 @@ export function cashTermsForYear(
   deathOffsets: readonly number[],
   higherClaimOffset: number,
   schedule?: EarningsTestSchedule,
+  /** The year-by-year table's per-person income (workbench plan U3): when passed, it is reset and filled
+   *  from this call's own per-person terms. Observation only: no returned figure reads it. */
+  incomeOut?: YearIncomeByPerson,
 ): {
   readonly net: number
   /** P3·U9 — the FLOOR (essentials-only) track's portfolio-funded withdrawal, through the
@@ -458,6 +497,9 @@ export function cashTermsForYear(
    *  income nets against it or the working-year clamp zeroes the draw. Pure observation; consumed by
    *  {@link survivorSpendingBasis} (the survivor card's basis line), never by the decumulation. */
   readonly spendingReal: number
+  /** The year's essentials-only spend, the one `netFloor` is computed from (equals `spendingReal`
+   *  without a budget). Pure observation, read by the year-by-year table's floor pass. */
+  readonly essentialsSpendingReal: number
   /** The working-year tax floor (2026-10-20): the year's OUTSIDE income when the §7 clamp fires —
    *  B = Σ over the LIVING workers of max(0, `earnedIncomeReal_i` − that person's own pre-tax deferral
    *  this year, read BEFORE the employer match merges in) + the clamped ongoing taxable (KTD2/KTD4),
@@ -521,6 +563,12 @@ export function cashTermsForYear(
     essentialsSpending = spending
   }
 
+  if (incomeOut) {
+    for (const xs of [incomeOut.pay, incomeOut.payTaxable, incomeOut.otherGross, incomeOut.otherTaxable]) {
+      xs.length = offsets.length
+      xs.fill(0)
+    }
+  }
   let earned = 0
   let ss = 0
   let livingWorker = false
@@ -532,6 +580,7 @@ export function cashTermsForYear(
     if (alive && t < o.retire) {
       earned += o.earnedIncomeReal
       livingWorker = true
+      if (incomeOut) incomeOut.pay[i] = o.earnedIncomeReal
     }
     if (allAlive && alive) {
       // Own benefit once claimed + the Method-C spousal excess once both spouses have filed — the
@@ -581,7 +630,10 @@ export function cashTermsForYear(
   // work stops. The select runs only when the income construct is present (presence-keyed — an
   // income-absent run never calls it, so reduce-to-spine is byte-identical by construction).
   const income = params.overlay?.income
-  const sel = income !== undefined ? ongoingIncomeForYear(t, income, deathOffsets) : { gross: 0, taxable: 0 }
+  const sel =
+    income !== undefined
+      ? ongoingIncomeForYear(t, income, deathOffsets, incomeOut ? { gross: incomeOut.otherGross, taxable: incomeOut.otherTaxable } : undefined)
+      : { gross: 0, taxable: 0 }
 
   const accumulating = params.overlay?.accumulation !== undefined
   // The clamp single-sources the working-year regime (C2 §7): a living worker on the accumulation
@@ -621,7 +673,9 @@ export function cashTermsForYear(
       const o = offsets[i]
       if (o === undefined) continue
       if (t < (deathOffsets[i] ?? 0) && t < o.retire) {
-        taxablePay += Math.max(0, o.earnedIncomeReal - (deferrals?.[i]?.pretax?.[t] ?? 0))
+        const personTaxablePay = Math.max(0, o.earnedIncomeReal - (deferrals?.[i]?.pretax?.[t] ?? 0))
+        taxablePay += personTaxablePay
+        if (incomeOut) incomeOut.payTaxable[i] = personTaxablePay
         investmentIncome += investment?.[i] ?? 0
         if (wagesByPerson !== undefined) wagesByPerson[i] = o.earnedIncomeReal
       }
@@ -653,8 +707,46 @@ export function cashTermsForYear(
     // `spending` the `net` above was computed from, exposed unchanged (an observation: no arithmetic
     // added to the hot path, so every existing output is byte-identical).
     spendingReal: spending,
+    essentialsSpendingReal: essentialsSpending,
     workingYearOutside,
     workingYearCheck,
+  }
+}
+
+/** One year's cash as `simulate`'s assembly saw it, kept for the year-by-year table (workbench plan U3). */
+interface LedgerYearCash {
+  readonly income: YearIncomeByPerson
+  readonly ss: number
+  /** earned + other gross + SS: the call's own `nonPortfolioIncomeReal`. */
+  readonly nonPortfolio: number
+  readonly spendFull: number
+  readonly spendFloor: number
+  /** The §7 clamp fired: a working year the run holds to salary. */
+  readonly clamped: boolean
+}
+
+/**
+ * One year of the year-by-year table: the loop's row joined, by its `t`, to that year's cash from the call
+ * that set the year's net (insight 081). Spending is the recorded pass's (the floor's essentials on the
+ * floor pass); a clamped working year shows what it costs (W) where the household gave it. Income not
+ * kept (R13): a retired year's income past its spending, or a working year's left over past its credit,
+ * both on the printed grain where the credit is (insight 146).
+ */
+function ledgerYearRow(row: LedgerLoopRow, cash: LedgerYearCash, floorPass: boolean): LedgerYearRow {
+  const trackSpend = floorPass ? cash.spendFloor : cash.spendFull
+  const spending = cash.clamped ? row.workingYear?.workingYearCost : trackSpend
+  let incomeNotKept: number
+  if (!cash.clamped) incomeNotKept = Math.max(0, cash.nonPortfolio - trackSpend)
+  else if (row.workingYear === undefined) incomeNotKept = 0
+  else incomeNotKept = Math.max(0, workingYearBottomLine(Math.max(0, row.workingYear.leftOver)) - workingYearBottomLine(row.leftOverCredit))
+  return {
+    ...row,
+    payByPerson: cash.income.pay,
+    payTaxableByPerson: cash.income.payTaxable,
+    otherIncomeByPerson: cash.income.otherGross.map((gross, i) => ({ gross, taxable: cash.income.otherTaxable[i] ?? 0 })),
+    socialSecurity: cash.ss,
+    ...(spending !== undefined ? { spending } : {}),
+    incomeNotKept,
   }
 }
 
@@ -1772,14 +1864,18 @@ export function simulate(
   }
   const wantLedger = options?.ledgerRows === true
   if (wantLedger && named === undefined) return { indeterminate: true, reason: 'ledgerRows rides only a named-future run' }
-  if (wantLedger && params.overlay === undefined) return { indeterminate: true, reason: 'ledgerRows needs the tax overlay' }
+  if (wantLedger && params.overlay?.taxEnabled !== true) return { indeterminate: true, reason: 'ledgerRows needs the tax overlay' }
   const ledgerFloor = options?.ledgerTrack === 'floor'
   if (wantLedger && ledgerFloor && params.budget === undefined) {
     return { indeterminate: true, reason: "ledgerTrack 'floor' needs the budget construct" }
   }
+  // The loop records its rows into `ledgerLoopRows`; each joins its year's cash (`ledgerCash`, from the
+  // call that set the year's net) into `ledgerRows` once the pass returns. One path, so one of each.
   const ledgerRows: LedgerYearRow[] | undefined = wantLedger ? [] : undefined
-  const fullLedger = ledgerFloor ? undefined : ledgerRows
-  const floorLedger = ledgerFloor ? ledgerRows : undefined
+  const ledgerLoopRows: LedgerLoopRow[] | undefined = wantLedger ? [] : undefined
+  const ledgerCash: LedgerYearCash[] = []
+  const fullLedger = ledgerFloor ? undefined : ledgerLoopRows
+  const floorLedger = ledgerFloor ? ledgerLoopRows : undefined
   const draws =
     injected ??
     (named !== undefined
@@ -1968,7 +2064,18 @@ export function simulate(
       const zb = rho * zs + sqrt1mRho2 * zbRaw
       realStock.push(simpleReturnFromNormal(logStock, zs))
       realBond.push(simpleReturnFromNormal(logBond, zb))
-      const cash = cashTermsForYear(t, params, offsets, deathOffsets, higherClaimOffset, schedule)
+      const incomeOut: YearIncomeByPerson | undefined = wantLedger ? { pay: [], payTaxable: [], otherGross: [], otherTaxable: [] } : undefined
+      const cash = cashTermsForYear(t, params, offsets, deathOffsets, higherClaimOffset, schedule, incomeOut)
+      if (incomeOut) {
+        ledgerCash[t] = {
+          income: incomeOut,
+          ss: cash.ss,
+          nonPortfolio: cash.nonPortfolioIncomeReal,
+          spendFull: cash.spendingReal,
+          spendFloor: cash.essentialsSpendingReal,
+          clamped: cash.workingYearOutside !== undefined,
+        }
+      }
       withdrawals.push(cash.net)
       if (withdrawalsFloor) withdrawalsFloor.push(cash.netFloor)
       if (overlay) {
@@ -2171,6 +2278,14 @@ export function simulate(
       }
       res = taxRes
       floorRes = floorTaxRes
+      // The year-by-year table (U3): each loop row joins its own year's cash, by `t`.
+      if (ledgerRows && ledgerLoopRows) {
+        for (const row of ledgerLoopRows) {
+          const yearCash = ledgerCash[row.t]
+          if (yearCash === undefined) throw new Error(`[simulate] the ledger row for year ${row.t} has no cash record — a defect`)
+          ledgerRows.push(ledgerYearRow(row, yearCash, ledgerFloor))
+        }
+      }
       // The per-path FINITENESS SEAM (M6 review — the consequence half of the two-layer
       // domain rule; the ENGINE_MAX_* gate is the cause half). The gate bounds every real
       // input, but float overflow remains constructible in the measure-zero stochastic

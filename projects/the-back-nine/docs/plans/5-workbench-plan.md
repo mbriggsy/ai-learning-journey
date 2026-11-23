@@ -386,6 +386,7 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
   - One table-driven test sets each flag on its own case and leaves it unset on a twin: a retired surplus, a working year whose left-over is not credited, a credit year above the cap, a year after a death, and a required withdrawal above the year's need.
   - On a fixture where the full pass runs out of money and the floor pass does not, the floor rows are pinned to the run's own floor outputs: each year's total equals the band fan run on the floor track, the run-out flag matches the floor's depletion, and each row's spending is the floor spend.
 - **Verification.** A mutation pass on the sink's writes: each planted wrong field turns a test red.
+- **As built (2026-11-22, b9-6 and b9-7, two slices).** The income the bracket top reads is not recorded here: U22 records it beside its room from the map's own reader, so the row carries the ACA and IRMAA incomes only. The run-out year records its own row with the flag set. The required withdrawal moved to taxable is its amount on the row (above 0 is the flag). The mutation pass ran on slice 1 (one planted fault); slice 2 ran none, under the test cadence ruled the same day (planted faults only for a new kind of check), and leans on independent producers instead: the pay check's probe, the billed IRMAA figure, the health readout and hand-derived figures.
 
 #### U4. The rough sequence and two measurements
 
@@ -732,7 +733,7 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
 - **Requirements.** R12.
 - **Dependencies.** U7, U13 and U23 (KTD32).
 - **Files.** `src/ui/workbench/`, `src/engine/taxOverlay.ts` (the sink's fields), `src/engine/magiLandscape.ts` (read), `src/ui/copy.ts`.
-- **Approach.** Do not start until U23 has landed (KTD32). The room for each line is recorded in the year loop from the map's own readers, in that year's frame, and the table prints it. There is no single "nearest line" figure. A room prints rounded down and the income against its line rounds up (R11). A room is the line minus that line's recorded income, exact as a gap in that income, and its words never offer it as an amount to add or convert (R12).
+- **Approach.** Do not start until U23 has landed (KTD32). The room for each line is recorded in the year loop from the map's own readers, in that year's frame, and the table prints it. The income the bracket top reads lands on the sink's row here too (U3 left it to this unit, 2026-11-22). There is no single "nearest line" figure. A room prints rounded down and the income against its line rounds up (R11). A room is the line minus that line's recorded income, exact as a gap in that income, and its words never offer it as an amount to add or convert (R12).
 - **Test scenarios.**
   - Each room equals the line minus the recorded income for that line in that year, on a fixture whose income varies by year.
   - On a fixture in Social Security's taxable band, the room's words name it as a gap in that line's income, and no cell or sentence offers it as an amount to add.

@@ -681,17 +681,41 @@ export interface LedgerBalances {
   readonly hsa: number
 }
 
-/** One funded year of the year-by-year table, recorded by the tax overlay's own year loop (workbench
- *  plan U3, KTD5–KTD6; slice 1: the ledgers). Indexed by sim-year `t` (calendar year
- *  `startCalendarYear + t`, insight 134): every flow happened during year t, `start` is year t's
- *  opening and `end` its close. Each ledger reconciles by the loop's own arithmetic:
+/** A working year's own cash lines, as the pay check composed them (`taxOverlay.workingYearCashLines`, the
+ *  lines the money picture reads; workbench plan KTD8): the tax on pay rides here, never in `taxPaid`. */
+export interface LedgerWorkingYear {
+  /** Σ the living workers' gross pay. */
+  readonly pay: number
+  /** The year's Social Security as paid. */
+  readonly socialSecurity: number
+  /** The other-income gross (pensions, rentals and the like). */
+  readonly otherIncome: number
+  /** The federal payroll tax on the year's pay. */
+  readonly payrollTax: number
+  /** The income tax the outside income carries by itself, federal and state. */
+  readonly taxOnOutsideIncome: number
+  /** The household's own deposits (the employer's match is not the household's money). */
+  readonly ownDeposits: number
+  /** What the working year costs (W, survivor-adjusted). */
+  readonly workingYearCost: number
+  /** Money in less money out: negative when the year runs short. */
+  readonly leftOver: number
+  /** max(0, −leftOver): drawn from savings on top of the year's need. */
+  readonly shortfall: number
+}
+
+/** What the tax overlay's own year loop records for one year of the year-by-year table (workbench plan U3,
+ *  KTD5–KTD8). Indexed by sim-year `t` (calendar year `startCalendarYear + t`, insight 134): every flow
+ *  happened during year t, `start` is year t's opening and `end` its close. In a funded year each ledger
+ *  reconciles by the loop's own arithmetic:
  *    taxable_end = (start − draw + rmdToTaxable) × growthScale + contribution + leftOverCredit
  *    pretax_end  = (start − conversion − draw − rmdToTaxable) × growthScale + contribution
  *    roth_end    = (start + conversion − draw) × growthScale + contribution
  *    hsa_end     = (start − hsaSpend) × growthScale + contribution
  *  (`growthScale` is 0 on the loop's knife-edge branch, where the year closes on its inflows alone).
- *  A year the portfolio could not fund records no row. */
-export interface LedgerYearRow {
+ *  The year the money runs out records one last row with `ranOut` set: its flows are what the year
+ *  asked for, its deposits and credit are forfeited, its close is zero, and it does not reconcile. */
+export interface LedgerLoopRow {
   readonly t: number
   readonly start: LedgerBalances
   /** Each person's own pre-tax balance at the opening, after any first-death rollover that year;
@@ -703,9 +727,13 @@ export interface LedgerYearRow {
   readonly rmd: number
   /** What each general ledger paid toward the year's grossed-up need. */
   readonly draw: { readonly taxable: number; readonly pretax: number; readonly roth: number }
+  /** Each person's share of the pre-tax draw (the loop's own split, by draw-time balance); present with
+   *  `pretaxStartByPerson`. */
+  readonly pretaxDrawByPerson?: readonly number[]
   /** The HSA's qualified medical spend. */
   readonly hsaSpend: number
-  /** The part of the required withdrawal beyond the year's pre-tax draw, moved to taxable. */
+  /** The part of the required withdrawal beyond the year's pre-tax draw, moved to taxable. Above 0 it is
+   *  one of R13's four flags: a required withdrawal larger than the year's need, kept as a transfer. */
   readonly rmdToTaxable: number
   /** Deposits landed at year end, per ledger (the household's and the employer's). */
   readonly contribution: LedgerBalances
@@ -716,8 +744,58 @@ export interface LedgerYearRow {
   readonly end: LedgerBalances
   /** Each person's own pre-tax balance at the close; present with `pretaxStartByPerson`. */
   readonly pretaxEndByPerson?: readonly number[]
-  /** Income tax the portfolio paid in the year (federal and state as the overlay solves them). */
+  /** Income tax the portfolio paid in the year (federal and state as the overlay solves them). In a
+   *  working year this is only what the portfolio's own income adds; the tax on pay is in `workingYear`. */
   readonly taxPaid: number
+  /** The health premiums the year priced (0 where none): the ACA premium after its credit, the Medicare
+   *  bill (base Part B plus the IRMAA surcharge, `irmaaSurcharge` of it the surcharge) and the entered
+   *  Part D / Medigap / Medicare Advantage premiums. */
+  readonly premiums: {
+    readonly acaNet: number
+    readonly medicare: number
+    readonly irmaaSurcharge: number
+    readonly medicareExtras: number
+  }
+  /** The income the ACA cliff reads (ACA-MAGI), present only in a year the overlay priced the ACA. */
+  readonly acaIncome?: number
+  /** The income IRMAA reads: the figure the overlay recorded for the bill two years on (KTD7), present
+   *  whenever healthcare is priced. The income the bracket top reads lands with U22's rooms. */
+  readonly irmaaIncome?: number
+  readonly filing: FilingStatus
+  /** Who is alive in the year, aligned to the run's people. */
+  readonly alive: readonly boolean[]
+  /** A first death has happened and a survivor remains: from this year the deceased's pre-tax money,
+   *  if any, is the survivor's (the first-death rollover). */
+  readonly rolledOver: boolean
+  /** The pay check's lines, present in a working year the household priced (W). */
+  readonly workingYear?: LedgerWorkingYear
+  /** A pre-tax draw from a ledger whose owner's whole age that year is 59 or less (60 is the first age
+   *  left unflagged). The run charges no early-withdrawal penalty on it. */
+  readonly earlyPretaxDraw: boolean
+  /** The money ran out in this year (the run's last row). */
+  readonly ranOut: boolean
+}
+
+/** One year of the year-by-year table: the loop's row plus the year's cash, from `simulate`'s own cash
+ *  assembly for that year (the call that set the year's net; insight 081). The engine sums income streams
+ *  before the loop, so streams are named by person, never one by one. */
+export interface LedgerYearRow extends LedgerLoopRow {
+  /** Each person's gross pay (alive and still working). */
+  readonly payByPerson: readonly number[]
+  /** The part of each person's pay in the year's tax base: pay less their own pre-tax deferral. Pay is
+   *  taxed only in a working year the run holds to salary; a retired person has none. */
+  readonly payTaxableByPerson: readonly number[]
+  /** Each person's other income, gross and taxable. A dead owner's survivor stream is the survivor's. */
+  readonly otherIncomeByPerson: readonly { readonly gross: number; readonly taxable: number }[]
+  /** Social Security paid to the household: the one paid figure the year's tax and cash read. */
+  readonly socialSecurity: number
+  /** The year's spending on the recorded pass: the essentials floor's on the floor pass. A working year
+   *  shows what it costs (W), and leaves this out where the household gave none. */
+  readonly spending?: number
+  /** Income above spending that the tool does not keep (R13), 0 where none: a retired year's income
+   *  past its spending, or a working year's left over past its credit, on the printed grain (no saved
+   *  answer, the part above the credit's cap, any year after a death). */
+  readonly incomeNotKept: number
 }
 
 // ---------------------------------------------------------------------------
@@ -964,7 +1042,7 @@ export interface TaxAwareDistribution {
    *  concentrates in the pre-65 ACA years and may barely move the portfolio median. */
   readonly lifetimeNetPremiumReal: readonly number[]
   /** Σ Medicare cost actually paid across the path's funded years (real $; base Part B + IRMAA +
-   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2827`; P3·U11), an
+   *  the Part D / Medigap / MA extras, per enrolled person — `taxOverlay.ts:2922`; P3·U11), an
    *  addend of the pay-less-tax all-in cost. Same accrual rule as its siblings. */
   readonly lifetimeMedicareCostReal: readonly number[]
 }

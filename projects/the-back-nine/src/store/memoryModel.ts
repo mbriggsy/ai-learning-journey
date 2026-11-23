@@ -29,7 +29,7 @@
  *      asked for, records with it the draft it was figured from, and raises
  *      `refiguring` while a run on different inputs is in flight (see `recompute`).
  *
- * THE DATE-ROUTE EPOCH ORDER (C3 forward item (b), engineProtocol.ts:103-111):
+ * THE DATE-ROUTE EPOCH ORDER (C3 forward item (b), engineProtocol.ts:113-121):
  * result-discard alone cannot stop a sweep already running worker-side — the
  * dispatcher calls `engine.setLatestEpoch(epoch)` BEFORE
  * `engine.runDateSearch(..., epoch)` (same MessagePort ⇒ FIFO ⇒ the commit

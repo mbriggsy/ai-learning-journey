@@ -16,7 +16,7 @@ import { summarize } from '@engine/confidence'
 import { runDateSearch as sweepDateSearch, type DateSearchInput } from '@engine/dateSearch'
 import { runTwoArm } from '@engine/roth'
 import { solveSpend } from '@engine/spendSolve'
-import type { DateSearchTier, SimulationParams, TwoArmControl } from '@shared/model'
+import type { DateSearchTier, NamedFuture, SimulationParams, TwoArmControl } from '@shared/model'
 import type { DateSearchWire, EngineWire, SolveArmWire, SolveWire, SpendSolveWire, TwoArmWire } from '@engine/engineWire'
 import { solveWithMint, solveWithMintSteps, type SolvePayload, type SolveRequest } from '@engine/solver/solveEntry'
 import type { SolveArm } from '@engine/solver/solve'
@@ -27,17 +27,24 @@ import { poolEvaluator, PoolTransportError, type PoolLane, type TaskReply } from
 export type { ResolvedWire, EngineWire, EngineResult, DateSearchWire, DateSearchResult, TwoArmWire, TwoArmResult, SolveWire, SolveResultView, SpendSolveWire } from '@engine/engineWire'
 export { fromWire, dateSearchFromWire, twoArmFromWire, solveFromWire } from '@engine/engineWire'
 
+/** What a `run` may opt into: the observation surfaces, and the year-by-year table's one named future with
+ *  its ledger rows (workbench plan U2–U3; `simulate`'s options of the same names). */
+export interface RunOptions {
+  readonly bandFan?: boolean
+  readonly survivorConditioned?: boolean
+  readonly healthReadout?: boolean
+  readonly namedFuture?: NamedFuture
+  readonly ledgerRows?: boolean
+  readonly ledgerTrack?: 'full' | 'floor'
+}
+
 /**
  * Run the engine and PACK the result into wire form. Total: any unexpected throw is
  * caught and returned as `calm-error` (the worker never dies). The typed INFEASIBLE
  * sentinel (M6) is dispatched BEFORE summarize — it has no distribution to read and is
  * not the indeterminate input-failure (summarize's parameter type excludes it).
  */
-export function runEngine(
-  params: SimulationParams,
-  seed: number,
-  options?: { readonly bandFan?: boolean; readonly survivorConditioned?: boolean; readonly healthReadout?: boolean },
-): EngineWire {
+export function runEngine(params: SimulationParams, seed: number, options?: RunOptions): EngineWire {
   try {
     const out = simulate(params, seed, options)
     if (out.infeasible) return { kind: 'infeasible', reason: out.reason, pathIndex: out.pathIndex }
@@ -81,6 +88,9 @@ export function runEngine(
       // resolved wire by STRUCTURED CLONE and must NEVER join the `run` transfer list below.
       ...(result.distribution.survivorConditioned ? { survivorConditioned: result.distribution.survivorConditioned } : {}),
       ...(result.survivorReading ? { survivorReading: result.survivorReading } : {}),
+      // The year-by-year table's rows (workbench plan U3) — present iff a named-future run asked. One
+      // row per year of one future: STRUCTURED CLONE, never the transfer list (the bandFan discipline).
+      ...(result.distribution.ledgerRows ? { ledgerRows: result.distribution.ledgerRows } : {}),
       // P3·U9 — the floor track (param-driven presence): the paths-length depletion array
       // packs as a transferable Int32Array (its buffer joins the enumerated transfer list
       // in `run` below); the verdict rides by clone beside the survivor reading.
@@ -420,7 +430,7 @@ export const engineApi = {
   /** Run a simulation and return the reading, transferring the big buffers. `options.bandFan`
    *  opts the single spine headline run into the per-year percentile fan (U6/U7 band INPUT) —
    *  it rides the resolved wire by structured clone (not a transferable). */
-  run(params: SimulationParams, seed: number, options?: { readonly bandFan?: boolean; readonly survivorConditioned?: boolean; readonly healthReadout?: boolean }): EngineWire {
+  run(params: SimulationParams, seed: number, options?: RunOptions): EngineWire {
     const wire = runEngine(params, seed, options)
     if (wire.kind === 'resolved') {
       // Transfer (detach) the big buffers — the worker keeps none for reuse and allocates

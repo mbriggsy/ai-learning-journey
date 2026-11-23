@@ -35,6 +35,8 @@
 import {
   expandRothConversion,
   type AccountKind,
+  type DateSearchOutcome,
+  type DateTrackOutcome,
   type EnteredAccount,
   type PersonInputs,
   type SimulationParams,
@@ -91,6 +93,51 @@ export const KIND_TO_BUCKET: Readonly<Record<AccountKind, Bucket>> = {
   brokerage: 'taxable',
   hsa: 'hsa',
 }
+
+/** One entered account inside an engine ledger: its place in the draft's account list, its kind, its owner
+ *  and its balance. Accounts carry no name, so the year-by-year table names each by its owner and kind. */
+export interface SourceAccount {
+  readonly index: number
+  readonly kind: AccountKind
+  readonly ownerIndex: number
+  readonly valueToday: number
+}
+
+/**
+ * The engine's ledgers and the entered accounts inside each (workbench plan U7, KTD6, R6) — the ONE grouping.
+ * `buildOverlay`'s ledger balances are summed from it, and the year-by-year table names each source's accounts
+ * from the same call, captured with the run it describes (never from the live draft), so the table's "this source
+ * holds these accounts" can never disagree with the balance the engine opened that ledger at (insight 081).
+ * Each list keeps the draft's account order: the sums below add in exactly the order they always did.
+ */
+export interface AccountSources {
+  readonly taxable: readonly SourceAccount[]
+  readonly roth: readonly SourceAccount[]
+  readonly hsa: readonly SourceAccount[]
+  /** Every pre-tax account, the household's one pre-tax total. */
+  readonly pretax: readonly SourceAccount[]
+  /** Each person's own pre-tax accounts, in the people's order — the per-person ledgers the run keeps. */
+  readonly pretaxByPerson: readonly (readonly SourceAccount[])[]
+}
+
+export function accountSources(d: ScenarioDraft): AccountSources {
+  const pick = (keep: (a: EnteredAccount) => boolean): SourceAccount[] =>
+    d.enteredAccounts.flatMap((a, index) =>
+      keep(a) ? [{ index, kind: a.kind, ownerIndex: a.ownerIndex, valueToday: a.valueToday }] : [],
+    )
+  const inBucket = (bucket: Bucket) => (a: EnteredAccount) => KIND_TO_BUCKET[a.kind] === bucket
+  return {
+    taxable: pick(inBucket('taxable')),
+    roth: pick(inBucket('roth')),
+    hsa: pick(inBucket('hsa')),
+    pretax: pick(inBucket('pretax')),
+    pretaxByPerson: d.people.map((_, i) => pick((a) => a.ownerIndex === i && inBucket('pretax')(a))),
+  }
+}
+
+/** A source's opening balance: its accounts summed in the draft's order, from 0. */
+export const sourceBalance = (accounts: readonly SourceAccount[]): number =>
+  accounts.reduce((s, a) => s + a.valueToday, 0)
 
 // ---------------------------------------------------------------------------
 // the missing-required-facts surface (the placeholder's naming source)
@@ -638,20 +685,15 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
   )
     return undefined
 
-  const bucketSum = (bucket: Bucket) =>
-    accounts.reduce((s, a) => (KIND_TO_BUCKET[a.kind] === bucket ? s + a.valueToday : s), 0)
-  const pretaxByPerson = d.people.map((_, i) =>
-    accounts.reduce(
-      (s, a) => (a.ownerIndex === i && KIND_TO_BUCKET[a.kind] === 'pretax' ? s + a.valueToday : s),
-      0,
-    ),
-  )
-  const taxable = bucketSum('taxable')
+  // The ledger balances, summed from the ONE grouping the year-by-year table names its sources from.
+  const sources = accountSources(d)
+  const pretaxByPerson = sources.pretaxByPerson.map(sourceBalance)
+  const taxable = sourceBalance(sources.taxable)
   const basis = accounts.reduce(
     (s, a) => (a.kind === 'brokerage' ? s + (a.basis ?? 0) : s),
     0,
   )
-  const hsa = bucketSum('hsa')
+  const hsa = sourceBalance(sources.hsa)
   const hsaAccounts = accounts.filter((a) => a.kind === 'hsa')
   const hsaOwnerIndex = hsaAccounts.length > 0 ? hsaAccounts[0]!.ownerIndex : undefined
 
@@ -711,8 +753,8 @@ function buildOverlay(d: ScenarioDraft, horizonYears: number): OverlayParams | u
     startCalendarYear: d.startCalendarYear,
     buckets: {
       taxable,
-      pretax: bucketSum('pretax'),
-      roth: bucketSum('roth'),
+      pretax: sourceBalance(sources.pretax),
+      roth: sourceBalance(sources.roth),
       ...(hsa > 0 ? { hsa } : {}),
     },
     pretaxByPerson,
@@ -1233,6 +1275,64 @@ export function buildControlPreviewParams(
   const input = buildDateInput(d)
   if (input === null) return null
   return buildCandidateParams(input, crownedOffsetYears, DATE_SEARCH_PATHS.provisional)
+}
+
+/**
+ * The year-by-year table's base run (workbench plan KTD9): the run whose one named future the table shows, and the
+ * spending pass its ledger rows record.
+ *
+ *  - All retired: the spine params, the full pass.
+ *  - Working, with the committed date answer's band: the candidate at the BAND's own offset, on the band's own track
+ *    (`DateBand.track`, the engine's published decision — never re-derived; the floor track records the essentials
+ *    floor's pass, and the table's heading says so). Never the result screen's lifestyle-only offset.
+ *  - Working, neither track dated: the candidate at the window top on the full pass, the run the money picture already
+ *    reads; the heading says no date was found in the window.
+ *  - Working, a track dated but no band: withheld, and the table says so.
+ *
+ * `outcome` is the store's COMMITTED date answer for this very draft (the caller's contract: the table is requested on
+ * each committed date answer, never on the edit, KTD9). The account grouping is captured here, with the run, so the
+ * table names each source's accounts from the compile that opened its ledgers, never from the live draft.
+ */
+export type TableBase =
+  | {
+      readonly kind: 'run'
+      readonly params: SimulationParams
+      readonly track: 'full' | 'floor'
+      readonly route: 'spine' | 'dated' | 'no-date'
+      readonly sources: AccountSources
+    }
+  | {
+      readonly kind: 'withheld'
+      /** `no-run`: the draft builds no run. `no-date-answer`: the date route has no committed date search yet.
+       *  `band-missing`: a track is dated and the run carried no band. `no-ledger`: the run has no tax overlay (no
+       *  accounts, no premium and no income), so the engine keeps no yearly ledger to show. */
+      readonly reason: 'no-run' | 'no-date-answer' | 'band-missing' | 'no-ledger'
+    }
+
+const trackDated = (t: DateTrackOutcome): boolean => t.kind === 'confirmed-date' || t.kind === 'window-edge-unconfirmed'
+
+export function buildTableBase(d: ScenarioDraft, outcome: DateSearchOutcome | undefined): TableBase {
+  const withLedger = (
+    params: SimulationParams,
+    track: 'full' | 'floor',
+    route: 'spine' | 'dated' | 'no-date',
+  ): TableBase =>
+    params.overlay?.taxEnabled === true
+      ? { kind: 'run', params, track, route, sources: accountSources(d) }
+      : { kind: 'withheld', reason: 'no-ledger' }
+  if (!isDateRoute(d)) {
+    const spine = buildSpineParams(d)
+    return spine === null ? { kind: 'withheld', reason: 'no-run' } : withLedger(spine, 'full', 'spine')
+  }
+  const input = buildDateInput(d)
+  if (input === null) return { kind: 'withheld', reason: 'no-run' }
+  if (outcome?.kind !== 'dates') return { kind: 'withheld', reason: 'no-date-answer' }
+  if (outcome.band !== undefined) {
+    const params = buildCandidateParams(input, outcome.band.offsetYears, DATE_SEARCH_PATHS.final)
+    return withLedger(params, outcome.band.track === 'floor' ? 'floor' : 'full', 'dated')
+  }
+  if (trackDated(outcome.lifestyle) || trackDated(outcome.floor)) return { kind: 'withheld', reason: 'band-missing' }
+  return withLedger(buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS.final), 'full', 'no-date')
 }
 
 /** The date route builder — `ParamsBuilders.buildDateInput`. The engine owns

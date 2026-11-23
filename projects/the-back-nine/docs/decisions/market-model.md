@@ -4,7 +4,7 @@ doc-type: decision
 status: ratified
 created: 2026-06-30
 derives-from: [docs/product.md, docs/architecture.md]
-sources: [src/engine/rng.ts, src/engine/simulate.ts, src/engine/confidence.ts, src/engine/reference/methodology.ts, src/engine/historical.ts, src/engine/__tests__/simulate.test.ts, src/engine/validation/blockBootstrap.ts, src/engine/validation/nearTieInversion.ts, scripts/stress-near-tie-inversion.ts]
+sources: [src/engine/rng.ts, src/engine/simulate.ts, src/engine/confidence.ts, src/engine/reference/methodology.ts, src/engine/historical.ts, src/engine/__tests__/simulate.test.ts, src/engine/validation/blockBootstrap.ts, src/engine/validation/nearTieInversion.ts, scripts/stress-near-tie-inversion.ts, src/engine/reference/roughSequence.ts]
 ---
 
 # The market-return model
@@ -31,6 +31,8 @@ Each path-year's market return is drawn from a **parameterized lognormal**, **in
 4. Stock and bond are coupled by a **single Cholesky step**: `zb = ρ·zs + √(1−ρ²)·zbRaw` (`simulate.ts:2064`). One shared `(stock, bond)` draw per path-year drives every bucket; buckets differ only in tax treatment (the no-asset-location invariant).
 
 Two moment sets exist (`methodology.ts`): `validationMarket` (Ibbotson SBBI, calibrates the Mode-B band only) and `productionMarket` (Pfau/Kitces high-CAPE, the conservative real-user default, ~3–3.5% safe band). Both are **REAL, simple-space**; both are fully user-overridable — the engine injects nothing.
+
+> **Dated note (2026-11-22, the workbench plan's U4; [workbench-one-future.md](workbench-one-future.md)).** One historical window now runs on a product path. The year-by-year table's rough view feeds the Shiller series' 1966–1995 window, each year's stock and bond log real return standardized against the series' own averages and swings (`shillerJointZSeries`), through step 3's transform as ONE named future (`roughFuture`, `src/engine/reference/roughSequence.ts`). It is never the draw: the many-futures answer still draws every year independently, as above, and the steady and rough views are single named runs beside it. The window is one US survivor history, so §4's caveat applies to it: "history's worst 30-year start" is the worst start in the record of the luckiest major market, not a floor on how bad a market can be.
 
 ---
 

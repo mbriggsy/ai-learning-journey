@@ -24,6 +24,8 @@ A second jsdom gap showed up first. The hook's first draft skipped any press wit
 ## Fix
 
 - The release is `window.addEventListener('click', release)`: the bubble phase, never `true`. `pointerup` never releases, because on touch the blur has not happened yet. It only arms a 500 ms fallback for a press that never clicks.
+
+  > **Out of date (corrected 2026-11-22):** since `a9cacf22` (build 2's go-live) the click listener is still the bubble phase, but it releases one task later (`releaseAfterTask`), the later-task release this insight's Key Insight names for a label's forwarded click. The current release lives in `src/intake/gestureHold.ts`'s `press` handler and the file's header.
 - The unit file pins the phase structurally. H2d spies on `window.addEventListener` and asserts the click listener is not a capture listener. H9 checks that each listener is removed with its own capture flag. The behavior is gated in a real browser: the two Keep-door arms tap by coordinate through `page.mouse` / `page.touchscreen`, which send trusted input, and M3 turns exactly those two red. (Separately, `b9-h2-cure\tapProbe3.mts` measured the hold itself: the door lost 4 of 4 taps with no hold and keeps 4 of 4 with it, on his 1536×791 window and his 448×891 phone.)
 - No `isPrimary` filter. The press filter is `e.button !== 0` (the left button, a finger or a pen tip), and a scripted event's default of 0 passes it. A second press during a hold keeps the first press's value anyway. With the guard gone, 2 of 15 tests stayed red. Both came from the test's own focus set-up, which fired fake focus events instead of moving focus, and were fixed in the test.
 

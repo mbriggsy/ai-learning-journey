@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { COHORT_FADE, truncateFanAtThinCohort } from '@viz/bandGeometry'
-import { selectElevatedAnswer, resolvedFocusKey } from '../answerView'
+import { caveatSeat, selectElevatedAnswer, resolvedFocusKey } from '../answerView'
 import { copy } from '../copy'
 import { READING_FIXTURES, SURVIVOR_FIXTURES } from '../preview/fixtures'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
@@ -560,5 +560,59 @@ describe('selectElevatedAnswer — W9-R7: the eyebrow flags ride presence-keyed 
     expect(selectElevatedAnswer(flagged(snap({ kind: 'inputs-incomplete' }, working)), noop)).toEqual({ kind: 'fallback' })
     const err = selectElevatedAnswer(flagged(snap({ kind: 'compute-error', reason: 'x' }, working)), noop)
     expect(err).toEqual({ kind: 'date', view: { kind: 'compute-error', onRetry: noop } })
+  })
+})
+
+/**
+ * THE CAVEAT'S SEAT, as a pure table (the record card's seat plan, KTD1): every reachable state, built through
+ * `selectElevatedAnswer` from a planted snapshot, maps to one place. `computing` is IntakeApp's (`pending`, or
+ * idle with nothing missing), so it is true on exactly those rows. Today's seat has two places, and the band
+ * never moves the caveat (the plan's R6): a band-less reading keeps the actions node like every other frame.
+ */
+describe('caveatSeat — where the R13 caveat sits, one decision for every reachable state', () => {
+  const zeroFan: BandFan = {
+    byYear: [
+      { yearsFromNow: 0, p10: 0, p25: 0, p50: 0, p75: 0, p90: 0, cohortFraction: 1 },
+      { yearsFromNow: 1, p10: 0, p25: 0, p50: 0, p75: 0, p90: 0, cohortFraction: 1 },
+    ],
+  }
+  const inputFailure: ModelAnswer = { kind: 'date', outcome: { kind: 'input-failure', reason: 'x' }, tier: 'final', ...PLANTED }
+  type Row = readonly [name: string, snapshot: MemoryModelSnapshot, computing: boolean, seat: ReturnType<typeof caveatSeat>]
+  const rows: readonly Row[] = [
+    ['spine reading with a band', snap(headlineAnswer('on-track'), retiredWithAges), false, { caveat: 'actions', inLead: true, band: true }],
+    ['spine reading on a $0 portfolio (the screen drops the band)', snap(headlineAnswer('on-track', zeroFan), retiredWithAges), false, { caveat: 'actions', inLead: true, band: false }],
+    ['spine indeterminate headline (the fallback strip)', snap(headlineAnswer('indeterminate', undefined), retired), false, { caveat: 'actions', inLead: false, band: false }],
+    ['spine compute-error', snap({ kind: 'compute-error', reason: 'x' }, retired), false, { caveat: 'actions', inLead: false, band: false }],
+    ['spine inputs-incomplete (the fallback strip)', snap({ kind: 'inputs-incomplete' }, retired), false, { caveat: 'actions', inLead: false, band: false }],
+    ['spine pending (computing)', snap({ kind: 'pending' }, retired), true, { caveat: 'none', inLead: false, band: false }],
+    ['date crowned with a band', snap(datesAnswer(confirmedAt(6), dateBandTo(40, 6)), workingWithAges), false, { caveat: 'actions', inLead: true, band: true }],
+    ['date no-date answer (no band)', snap(datesAnswer(DATE_FIXTURES.noDate), working), false, { caveat: 'actions', inLead: true, band: false }],
+    ['date input-failure (the fallback strip)', snap(inputFailure, working), false, { caveat: 'actions', inLead: false, band: false }],
+    ['date compute-error', snap({ kind: 'compute-error', reason: 'x' }, working), false, { caveat: 'actions', inLead: false, band: false }],
+    ['date inputs-incomplete (the fallback strip)', snap({ kind: 'inputs-incomplete' }, working), false, { caveat: 'actions', inLead: false, band: false }],
+    ['date pending (computing)', snap({ kind: 'pending' }, working), true, { caveat: 'none', inLead: false, band: false }],
+    ['idle with a fact still missing (a terminal non-answer, not computing)', snap({ kind: 'idle' }, retired), false, { caveat: 'actions', inLead: false, band: false }],
+    ['idle with nothing missing (the one-frame crunch, computing)', snap({ kind: 'idle' }, DEV_SEEDS.retired), true, { caveat: 'none', inLead: false, band: false }],
+  ]
+
+  for (const [name, snapshot, computing, seat] of rows) {
+    it(`${name} → ${seat.caveat}${seat.inLead ? ', seated in the hero' : ''}${seat.band ? ', band drawn' : ''}`, () => {
+      const elevated = selectElevatedAnswer(snapshot, noop)
+      expect(caveatSeat(elevated, computing)).toEqual(seat)
+      // The actions node seats in the hero exactly where the landing announce keys (one derivation, never two).
+      expect(seat.inLead).toBe(resolvedFocusKey(elevated) !== undefined)
+    })
+  }
+
+  it('the table covers every answer kind the store commits — a new kind fails to compile here until it joins the table', () => {
+    const kinds: Record<ModelAnswer['kind'], true> = {
+      idle: true,
+      pending: true,
+      headline: true,
+      date: true,
+      'inputs-incomplete': true,
+      'compute-error': true,
+    }
+    expect(new Set(rows.map(([, s]) => s.answer.kind))).toEqual(new Set(Object.keys(kinds)))
   })
 })

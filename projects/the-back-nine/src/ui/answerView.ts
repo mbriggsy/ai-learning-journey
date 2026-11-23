@@ -316,3 +316,45 @@ export function resolvedFocusKey(elevated: ElevatedAnswer): string | undefined {
   }
   return undefined
 }
+
+/**
+ * Where the R13 caveat's in-frame copy sits on the Result, decided once (the record card's seat plan,
+ * `docs/plans/features/record-card-seat-build-spec.md`, KTD1). Result reads it once and drives every
+ * consumer from it: the in-frame mount, and `main.result`'s `data-inframe-disclaimer`, behind which
+ * app.css hides the page-trailing copy. Before this they were two expressions of one condition kept
+ * equal by hand, and a frame where the two disagree shows the caveat twice or not at all
+ * (`Disclaimer.tsx`'s two-mount contract).
+ */
+export interface CaveatSeat {
+  /** `'actions'`: inside the actions node, on every frame that is not computing: a resolved reading on
+   *  either route, the band-less readings (the spine's $0 portfolio, the date route's no-date answer),
+   *  a compute-error and the fallback strip. On a frame the hero does not seat, the node renders after
+   *  the hero, where it always has: a failure frame never gains the caveat above its save slot (the
+   *  plan's C2). `'none'`: while computing, when the actions row is withheld and the trailing copy stands. */
+  readonly caveat: 'actions' | 'none'
+  /** The hero seats the actions node in its reading column: exactly the resolved readings
+   *  {@link resolvedFocusKey} keys. Every other frame renders the node after the hero. */
+  readonly inLead: boolean
+  /** The answer draws a band: the spine reading's fan or the crowned date's, as its producer screened it
+   *  ({@link spineBand}, {@link dateBand}: absent on a $0 portfolio and on a no-date answer). Today's
+   *  seat puts the caveat in the actions node with or without one; the seat variants key their col-2
+   *  pane on it. It equals the hero's own drawn band on every frame Result mounts, on two premises the
+   *  matrix in `resultDisclaimer.test.tsx` pins: Result always passes `onReconfirm`, so neither hero's
+   *  `agedFanBlocked` withdraws an aged fan; and an indeterminate headline routes to the fallback,
+   *  never to a hero. */
+  readonly band: boolean
+}
+
+/**
+ * @param computing Result's prop (IntakeApp derives it: `pending`, or idle with nothing missing),
+ *   never re-derived from the snapshot here.
+ */
+export function caveatSeat(elevated: ElevatedAnswer, computing: boolean): CaveatSeat {
+  return {
+    caveat: computing ? 'none' : 'actions',
+    inLead: resolvedFocusKey(elevated) !== undefined,
+    band:
+      (elevated.kind === 'spine' && elevated.view.kind === 'reading' && elevated.view.band !== undefined) ||
+      (elevated.kind === 'date' && elevated.view.kind === 'dates' && elevated.view.band !== undefined),
+  }
+}

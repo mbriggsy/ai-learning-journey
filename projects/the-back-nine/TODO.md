@@ -682,23 +682,23 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    inversion and a $0 collapse). **No seed produces a `custom` winner**, so that branch would ship
    unwitnessable — mint the seed first or leave it.
 
-8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:618` gates
-   `RecommendationSurface` off for the date route entirely and `Result.tsx:481` gates the invite door. The
+8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:620` gates
+   `RecommendationSurface` off for the date route entirely and `Result.tsx:483` gates the invite door. The
    `blocked{spine-unready}` note that would explain it lives *inside* the gated-off component, so a working
-   couple sees the date answer and **zero words** about strategy. `Result.tsx:454-456`'s comment now records the
+   couple sees the date answer and **zero words** about strategy. `Result.tsx:467-469`'s comment now records the
    opposite (corrected 2026-09-04): the builder's `spine-unready` refusal does NOT cover the date route, so no note is minted there at all.
    ⚑ **THE FILED "CHEAP INTERIM" IS WRONG — do not execute it.** Dropping the `!isDateRoute` gate at
-   `Result.tsx:618` alone renders an **empty `<div>`**, not the refusal: the note is not reachable on that path. And
+   `Result.tsx:620` alone renders an **empty `<div>`**, not the refusal: the note is not reachable on that path. And
    reusing `recommendSpineUnreadyNote` would tell a household with a **complete** answer that its answer is
    incomplete — a new false claim, worse than the silence. The honest interim is a **route-true one-liner**
    admitting the v1 limit in its own words, seated and re-measured under `verify:fit` (~89px headroom).
    **Briggsy blesses the words.** Full parity stays council-sized — the crowned offset lives in the
    committed answer, not the draft, and anchoring candidates at a future retirement year is a real ranking
    question.
-   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:618` (surface) and `:481` (the invite conjunct; door
-   `Result.tsx:690-698`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:296`). Strike
+   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:620` (surface) and `:483` (the invite conjunct; door
+   `Result.tsx:692-700`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:296`). Strike
    "~89px headroom" — that is the SPINE idle frame's figure; the date arms of `verify:fit` assert ORDER + REACHABILITY only — never fit
-   (spec header `vertical-fit.spec.ts:52-53`). `Result.tsx:454-456`'s "covers the date route honestly" comment was FALSE (never
+   (spec header `vertical-fit.spec.ts:52-53`). `Result.tsx:467-469`'s "covers the date route honestly" comment was FALSE (never
    minted there; a route-flip render is dropped) — swept 2026-09-04. A crowned-offset params builder ALREADY
    exists (`buildControlPreviewParams`, `intakeMap.ts:1227-1236`), so parity's base shape is not from zero.
    Build shape: the ⚑ Folded 2026-09-06 block directly below.
@@ -706,7 +706,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (anchor on WORK STATUS, never "a date ahead of you"); the one token yours: does it promise parity.
    ⚑ **2026-09-04:** the framings are no-date · now (today/arrived) · past · future (`heroLead`,
    `FuckOffDate.tsx:236-260`; the split household's floor line has its own six arms, `:267-296`). Seat =
-   the else-arm of the `Result.tsx:618` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
+   the else-arm of the `Result.tsx:620` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
    the non-answer strip on an inputs-incomplete date frame); CSS in `fuckOffDate.css` — NOT
    `confidence.css`, the date grid is its own (`:250-266`) and its first free cell is r3c1 above the
    protected disclaimer; the key lands in verdict scope through the `fuckoff` substring net
@@ -714,7 +714,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    only (only `dip` + `datenc` carry the exhaustive doors-last sweep) — add a presence pin to the `?seed=dip`
    describe and measure the vertical cost by hand. The line must also be true on the route-FLIP frame: a
    committed rec whose spouse un-retires lands `stale` (not `blocked`) and the gate drops the stale card's
-   own re-open door with it. `Result.tsx:454-456`'s "covers the date route honestly" comment was FALSE —
+   own re-open door with it. `Result.tsx:467-469`'s "covers the date route honestly" comment was FALSE —
    swept 2026-09-04.
 
 9. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**

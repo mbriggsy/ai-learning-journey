@@ -50,7 +50,7 @@ import { Disclaimer } from './Disclaimer'
 import { FuckOffDate, W_STALE_CAUSE, type StandingNoteCause } from './FuckOffDate'
 import { plainNote, withoutDoor, type NoteParts } from './noteParts'
 import { ConfidenceStatement } from './ConfidenceStatement'
-import { selectElevatedAnswer, resolvedFocusKey } from './answerView'
+import { caveatSeat, selectElevatedAnswer, resolvedFocusKey } from './answerView'
 import type { ResaveCopyKey } from './unlockCopy'
 import './styles/result.css'
 
@@ -452,8 +452,10 @@ export function Result({
   // two-pane grid tucks them under the words instead of stranding them centered below both panes
   // — the scroll + dead-lower-left fix, Briggsy 2026-07-02); on the fallback/pending answer (no
   // two-pane) they render below as before. Withheld entirely while computing (the actions act on
-  // an answer that isn't there yet).
-  const seatInLead = focusKey !== undefined && (elevated.kind === 'date' || elevated.kind === 'spine')
+  // an answer that isn't there yet). The same one decision places the R13 caveat (`caveatSeat`,
+  // answerView.ts): its mount below and `data-inframe-disclaimer` read this value, never their own
+  // copy of the condition.
+  const seating = caveatSeat(elevated, computing)
 
   // §S2 — the recommend-second invited affordance is offered only when the solve is INVITABLE: no
   // beat yet (idle), or a goal-unset precondition that steers to the picker. A builder-refusal block
@@ -651,8 +653,8 @@ export function Result({
           phone's only caveat AFTER the doors, the inversion this mount exists to prevent); app.css
           hides the trailing mount behind main.result's data-inframe-disclaimer attribute (same
           words, one visible mount, Disclaimer.tsx has the contract). On the scrolling tiers the law
-          is ORDER + REACHABILITY, gated in e2e/vertical-fit.spec.ts. */}
-      <Disclaimer inFrame />
+          is ORDER + REACHABILITY, gated in e2e/vertical-fit.spec.ts. Its place is `seating.caveat`. */}
+      {seating.caveat === 'actions' && <Disclaimer inFrame />}
       {/* THE REMEMBERED-RECORD CARD — DOM-ordered BELOW the disclaimer, joining the doors as a
           sanctioned below-fold casualty (Briggsy's ruling, 2026-07-26, on measured numbers).
           It began life inside RecommendationSurface, above this line, and MEASURED at his real
@@ -760,17 +762,17 @@ export function Result({
       : undefined
 
   return (
-    // data-inframe-disclaimer mirrors the actions row EXACTLY (withheld while computing): app.css
-    // hides the page-trailing disclaimer behind it at EVERY width (tier-independent since
-    // 2026-09-10), so a frame with no visible disclaimer is unrepresentable — the trailing mount
-    // stands whenever the in-frame one is out.
+    // data-inframe-disclaimer reads the caveat's one seat (`seating.caveat`, the in-frame mount's own
+    // condition; withheld while computing): app.css hides the page-trailing disclaimer behind it at
+    // EVERY width (tier-independent since 2026-09-10), so a frame with no visible disclaimer is
+    // unrepresentable — the trailing mount stands whenever the in-frame one is out.
     // data-answer-refiguring (W9-R7, KTD9) mirrors the store's flag PRESENCE-keyed (absent when off,
     // the data-answer-tier precedent): a run on inputs different from the shown answer's is in flight.
     // A settled page is `data-answer-tier="final"` with this attribute absent — the harnesses' signal,
     // since a final-tier wait alone passes inside the window (the old answer still says final).
     <main
       className="result"
-      data-inframe-disclaimer={computing ? undefined : true}
+      data-inframe-disclaimer={seating.caveat === 'none' ? undefined : true}
       data-answer-tier={answerTier}
       data-answer-refiguring={snapshot.refiguring ? true : undefined}
     >
@@ -780,7 +782,7 @@ export function Result({
           <FuckOffDate
             view={elevated.view}
             focusSignal={focusKey}
-            actionsSlot={seatInLead ? actionsNode : undefined}
+            actionsSlot={seating.inLead ? actionsNode : undefined}
             medicarePricedNote={heroMedicarePricedNote}
             medicareExtrasTypicalNote={medicareExtrasTypicalNote}
             statePricedNote={heroStatePricedNote}
@@ -809,7 +811,7 @@ export function Result({
           <ConfidenceStatement
             view={elevated.view}
             focusSignal={focusKey}
-            actionsSlot={seatInLead ? actionsNode : undefined}
+            actionsSlot={seating.inLead ? actionsNode : undefined}
             medicarePricedNote={heroMedicarePricedNote}
             medicareExtrasTypicalNote={medicareExtrasTypicalNote}
             statePricedNote={heroStatePricedNote}
@@ -824,7 +826,7 @@ export function Result({
           <AnswerStrip snapshot={snapshot} missing={missing} onRetry={retry} />
         )}
       </div>
-      {!seatInLead && actionsNode}
+      {!seating.inLead && actionsNode}
       <BudgetBuilder
         open={budgetOpen}
         draft={snapshot.draft}

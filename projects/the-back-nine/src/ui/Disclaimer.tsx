@@ -34,6 +34,8 @@ export function verdictDescribedBy(leadId?: string): string {
  * any laptop whose reader raised the browser font past 68rem's reach — the caveat was
  * the page's last element, AFTER the doors: the inversion this component exists to
  * prevent.) Both mounts read the SAME staticDisclosures strings — the words can never fork.
+ * Where the in-frame mount sits, and whether it renders at all, is decided once, by `caveatSeat`
+ * in answerView.ts: Result reads that one value for both the mount and the attribute.
  */
 export function Disclaimer({ inFrame = false }: { readonly inFrame?: boolean }) {
   return (

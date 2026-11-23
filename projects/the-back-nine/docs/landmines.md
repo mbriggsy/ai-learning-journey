@@ -333,7 +333,8 @@ tests
 - **(b9-3, 11-22) `resultDisclaimer.test.tsx` fakes a resolved answer**: it mocks `resolvedFocusKey` to a planted key over the
   pristine idle snapshot, so `elevated` stays `fallback` and no hero renders. A test that needs a real state through `Result`
   (the seat plan's U1 matrix: spine and date with and without a band, compute-error, fallback, computing) must plant the views
-  itself. `computing` is `Result`'s prop (IntakeApp's), never derived from the snapshot.
+  itself. `computing` is `Result`'s prop (IntakeApp's), never derived from the snapshot. (b9-4) U1's describe in that file does
+  it (`43d64103`): its `plant` replaces `appModel.getSnapshot` with a real answer under the real routing; reuse it.
 
 ## The fit gate and e2e
 

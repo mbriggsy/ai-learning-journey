@@ -6629,11 +6629,16 @@ for (const arm of KEEP_TAP_ARMS) {
 //  - At a laptop (his 1440×731 @2 window and the 1280×800 tier, each view) nothing scrolls sideways: not the page,
 //    and not the table's own frame, which carries no scroller at a laptop (`workbench.css`), so an overflow there
 //    would hang a column past the page's edge.
-//  - On the phone the page never scrolls sideways: the table scrolls inside its own frame there, by design.
-//  - The "Rough market" switch stays put from the room's first frame through the rows landing (the pinned answer's
-//    box is reserved, insights 035 and 065): an in-page frame recorder armed before the door press reads it, with
-//    the worker's messages held 400 ms so the loading frame is on screen for many frames. The press is an in-page
-//    `click()` from the page's top, so no scroll moves a rect the walk compares.
+//  - On the phone the page never scrolls sideways: the table scrolls inside its own frame there, by design. Each row's
+//    sentences and the rough view's divider read whole inside that frame, at its start and scrolled to its end (they
+//    sit in a cell as wide as the table, so unheld they ran past the frame's edge and were cut: the U7 review).
+//  - The rows landing move no tap target: the "Rough market" switch stays put from the room's first frame through the
+//    rows landing (insight 035). An in-page frame recorder armed before the door press reads it, with the worker's
+//    messages held 400 ms so the loading frame is on screen for many frames. The press is an in-page `click()` from
+//    the page's top, so no scroll moves a rect the walk compares. What this walk does NOT prove: the pinned answer's
+//    reserved box (insights 035, 065). The room opens on a settled answer and nothing in it can re-figure that answer
+//    before U8's editors, so the pinned box never changes while this walk records; the walk where the pinned answer
+//    lands after the table (the plan's U7 scenario) belongs to U8.
 // ---------------------------------------------------------------------------
 
 const TABLE_WIDEST = 'tablewidest'
@@ -6696,6 +6701,32 @@ async function tableWidths(page: Page) {
   })
 }
 
+/** Each row sentence and the rough view's divider, with the frame scrolled to its start or its end: how far its text
+ *  runs past the frame's left and right edges (`workbench.css` holds each to the frame's left edge and wraps it at the
+ *  frame's own width below the seam). */
+async function sentencesInFrame(page: Page, at: 'start' | 'end') {
+  await page.locator('.wb-table-wrap').evaluate((wrap, to) => {
+    wrap.scrollLeft = to === 'start' ? 0 : wrap.scrollWidth
+  }, at)
+  await page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
+  return page.evaluate(() => {
+    const wrap = document.querySelector('.wb-table-wrap')
+    if (wrap === null) throw new Error('no table frame')
+    const frame = wrap.getBoundingClientRect()
+    return [...document.querySelectorAll('.wb-note, .wb-divider__words')].map((el) => {
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      const r = range.getBoundingClientRect()
+      return {
+        text: (el.textContent ?? '').slice(0, 48),
+        divider: el.classList.contains('wb-divider__words'),
+        pastLeft: frame.left - r.left,
+        pastRight: r.right - frame.right,
+      }
+    })
+  })
+}
+
 /** The household is still the widest: every column the table can draw is on screen. A seed that drifted (a crown at
  *  today, a dropped account) would make every width law below vacuous. */
 async function expectEveryColumn(page: Page): Promise<void> {
@@ -6728,7 +6759,7 @@ test.describe('the workbench room’s year-by-year table on its widest household
   test.describe(`on the phone (${PHONE.width}×${PHONE.height})`, () => {
     test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
 
-    test(`?seed=${TABLE_WIDEST}: the page never scrolls sideways; the table scrolls inside its own frame`, async ({ page }) => {
+    test(`?seed=${TABLE_WIDEST}: the page never scrolls sideways; the table scrolls inside its own frame; its sentences read whole`, async ({ page }) => {
       test.setTimeout(FINAL_TIER_MS + 60_000)
       await enterRoomFromTop(page)
       await expectEveryColumn(page)
@@ -6738,6 +6769,19 @@ test.describe('the workbench room’s year-by-year table on its widest household
         console.log(`[wb-table PHONE ${view}] ${JSON.stringify(w)}`)
         expect(w.wrapOverflowX, 'on the phone the table scrolls in its own frame').toBe('auto')
         expect(w.pageScroll, `${view}: the page scrolls sideways`).toBeLessThanOrEqual(w.pageClient)
+        for (const at of ['start', 'end'] as const) {
+          const sentences = await sentencesInFrame(page, at)
+          console.log(`[wb-table PHONE ${view} sentences at ${at}] ${JSON.stringify(sentences)}`)
+          expect(sentences.length, `${view}: the widest household's rows carry sentences, or this law reads nothing`).toBeGreaterThan(0)
+          if (view === 'rough') expect(sentences.some((s) => s.divider), 'the rough view draws its steady-from divider').toBe(true)
+          for (const s of sentences) {
+            expect(s.pastLeft, `${view}, frame at its ${at}: "${s.text}" starts past the frame's left edge`).toBeLessThanOrEqual(0.5)
+            expect(s.pastRight, `${view}, frame at its ${at}: "${s.text}" runs past the frame's right edge`).toBeLessThanOrEqual(0.5)
+          }
+        }
+        await page.locator('.wb-table-wrap').evaluate((wrap) => {
+          wrap.scrollLeft = 0
+        })
       }
     })
   })
@@ -6745,7 +6789,9 @@ test.describe('the workbench room’s year-by-year table on its widest household
   test.describe(sizeTitle('REAL'), () => {
     test.use({ viewport: LAPTOP_SIZES.REAL.viewport, deviceScaleFactor: LAPTOP_SIZES.REAL.deviceScaleFactor })
 
-    test(`?seed=${TABLE_WIDEST}: the "Rough market" switch never moves while the rows land`, async ({ page }) => {
+    // Proves the rows landing move no tap target, and only that: the answer is settled before the door press, so the
+    // pinned answer never changes here (its own landing walk is U8's; the block comment above).
+    test(`?seed=${TABLE_WIDEST}: the rows landing move no tap target (the "Rough market" switch stays put)`, async ({ page }) => {
       test.setTimeout(FINAL_TIER_MS + 60_000)
       await gotoSeedFinal(page, TABLE_WIDEST)
       const door = page.locator('.result-quiet-row [data-door="workbench"]')

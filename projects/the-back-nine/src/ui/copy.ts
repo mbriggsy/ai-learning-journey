@@ -2567,8 +2567,21 @@ export const copy = {
   workbenchTableCaption: 'Your plan in this future, a row per year, in today’s dollars',
   workbenchApproxNote: 'A figure marked ~ is worked out by the tool. This year’s pay and spending show as you entered them.',
   workbenchMatchNote: 'What’s put into each account includes any employer match.',
-  workbenchPayCheckNote:
-    'In a working year, the tax on pay is in the pay check column; the income tax column holds only what your savings’ own income adds.',
+  // The pay check's income tax line holds the tax on everything that comes in outside savings, not only pay (the U7
+  // review's W1), named by the run's state reading as the money picture names its own tax line ("federal" or "federal
+  // and state", `workingLedgerIncomeTaxFederal…`). Where the W step asked the household to ADD its state's tax on pay
+  // to W (unpriced, or PA), a second sentence says where that tax went: W is what a working year's Spending shows.
+  workbenchPayCheckNoteFederal:
+    'In a working year, the pay check’s income tax is the federal income tax on your pay, Social Security, other income and any investment income you entered. The income tax column holds only what drawing on your savings adds, money moved to Roth included.',
+  workbenchPayCheckNoteFederalState:
+    'In a working year, the pay check’s income tax is the federal and state income tax on your pay, Social Security, other income and any investment income you entered. The income tax column holds only what drawing on your savings adds, money moved to Roth included.',
+  workbenchPayCheckStateInW:
+    'If your state taxes pay, that tax isn’t in the pay check’s income tax: it belongs in your figure for a working year, which shows under Spending.',
+  workbenchPayCheckStatePayInW:
+    'Your state’s tax on pay isn’t in the pay check’s income tax: it belongs in your figure for a working year, which shows under Spending.',
+  // "Required" sits in Pre-tax moves beside Put in and To Roth, but it is not a move of its own (the U7 review's W7).
+  workbenchRequiredNote:
+    'Required is the least that must come out of pre-tax savings in a year. It’s paid through what’s taken out, not on top of it; any part the year doesn’t need moves to taxable, and the row says so.',
   workbenchNoSpendingNote: 'A working year whose cost you haven’t given shows no spending.',
   // The two stopgap lines (KTD32 and the kinds U10 and U13 add); each comes out with its build.
   workbenchYieldAllYears:
@@ -2587,7 +2600,9 @@ export const copy = {
   workbenchColSpending: 'Spending',
   workbenchColIncomeTax: 'Income tax',
   workbenchColPayCheck: 'Pay check',
-  workbenchLineTaxOnPay: 'Tax on pay',
+  // As short as the "Tax on pay" it replaced (a header line never wraps, and the widest household has about 80 px to
+  // spare at 1280); what it holds, by the run's state reading, is the footnote's (`workbenchPayCheckNote…`).
+  workbenchLinePayIncomeTax: 'Income tax',
   workbenchLinePayroll: 'Payroll tax',
   workbenchColFromPay: 'From pay',
   workbenchLineIntoSavings: 'Into savings',
@@ -2621,7 +2636,10 @@ export const copy = {
   workbenchWithheldNoRun: 'The table needs the same facts your answer does. Your answer names any that are missing.',
   workbenchWithheldNoDate: 'The table waits for your answer’s dates.',
   workbenchWithheldBand: 'Your answer has a date but not the run behind it, so this table can’t be shown for it.',
-  workbenchWithheldNoLedger: 'Your plan has no savings, income or premiums for a year-by-year table to follow.',
+  // `buildOverlay`'s own condition: no account, no pension or other income stream, no health premium entered. Social
+  // Security is not among them, so the words never say the plan has no income (the U7 review's W10).
+  workbenchWithheldNoLedger:
+    'Your plan has no savings, no pension or other income, and no health premium entered, so there’s no year-by-year table to follow.',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -4955,7 +4973,9 @@ export const slots = {
   ): string =>
     `In both markets, ${firstMid} ${firstYou ? 'live' : 'lives'} to ${firstAge}, the age about half of people of ${firstPossessive} age and sex reach, and ${survivorMid} to ${survivorAge}, the age by which the chance that either of you is still alive falls to about a half.`,
   workbenchStopsIn: (year: number): string => `In this table, work stops in ${year}, the year your answer’s date gives.`,
-  workbenchFloorTrack: (): string => 'It shows essentials-only spending: your answer’s date is figured on that level.',
+  // Only once work stops: a working year's Spending is the household's figure for a working year, on either track
+  // (the U7 review's W5).
+  workbenchFloorTrack: (): string => 'Once work stops, this table shows essentials-only spending: your answer’s date is figured on that level.',
   workbenchNoDate: (year: number): string =>
     `Your answer found no date in its window, so this table has work stopping in ${year}, the window’s last year.`,
   workbenchAged: (year: number): string => `Row one is ${year}, the year this plan was built; its balances are as of then.`,
@@ -4966,10 +4986,19 @@ export const slots = {
     `~$${amount} of the required withdrawal was more than this year needed, so it moved to taxable.`,
   workbenchRowNotKeptRetired: (amount: string): string =>
     `~$${amount} more came in than this year’s spending. The tool doesn’t keep it: it isn’t saved or grown here.`,
+  // A working year's left over the tool doesn't keep, said by why (the U7 review's W3, W4): the household's answer
+  // (spent, or not sure), no answer yet or a first year with none to ask about, a figure for a working year gone out
+  // of date, or the cap that binds (the figure they said, or their first working year's left over when it is smaller).
   workbenchRowNotKeptNoCredit: (amount: string): string =>
     `~$${amount} was left over from pay. Your answer on the left over doesn’t count it as saved, so the tool doesn’t keep it.`,
+  workbenchRowNotKeptUnsaid: (amount: string): string =>
+    `~$${amount} was left over from pay. The tool keeps a left over only when your first working year has one and you say it’s saved, so it doesn’t keep this.`,
+  workbenchRowNotKeptWaiting: (amount: string): string =>
+    `~$${amount} was left over from pay. The tool doesn’t keep any left over while your figure for a working year is out of date.`,
   workbenchRowNotKeptAboveCap: (amount: string): string =>
     `~$${amount} of the left over is above what you said goes into savings each year, so the tool doesn’t keep it.`,
+  workbenchRowNotKeptAboveFirstYear: (amount: string): string =>
+    `~$${amount} of the left over is above what your first working year has left over, the most the tool keeps in a year, so it doesn’t keep it.`,
   workbenchRowNotKeptAfterDeath: (amount: string): string =>
     `~$${amount} was left over from pay. After a death the tool counts none of the left over as saved, so it doesn’t keep it.`,
   workbenchRowSurvivor: (mid: string, you: boolean): string =>

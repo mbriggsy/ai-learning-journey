@@ -3,12 +3,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import WorkbenchRoom, { type TableLanes } from '../WorkbenchRoom'
+import { tableRunFor } from '../tableRun'
+import { composeYearTable, formatTableDollars } from '../yearTableChrome'
 import { simulate } from '@engine/simulate'
+import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS } from '@engine/dateSearch'
+import { buildDateInput } from '@intake/intakeMap'
 import { DEV_SEEDS } from '../../devSeeds'
 import { copy, slots } from '../../copy'
 import type { EngineRunRequest, LaneResult } from '@store/runLanes'
-import type { MemoryModelSnapshot, ModelAnswer } from '@store/memoryModel'
-import type { SimulationResult } from '@shared/model'
+import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/memoryModel'
+import type { DateSearchOutcome, DateTrackOutcome, SimulationResult } from '@shared/model'
 
 /**
  * The room's year-by-year table (workbench plan U7): its three named states (first load, updating, error), the
@@ -80,12 +84,27 @@ describe('WorkbenchRoom — the table’s three states', () => {
 
   it('the switch shows the rough market’s words and rows with no new run', async () => {
     const { lanes, lane, settleAll } = heldLanes()
-    renderRoom(snapshotWith(finalAnswer()), lanes)
+    const { container } = renderRoom(snapshotWith(finalAnswer()), lanes)
     await settleAll('run')
+    const lastRow = () => [...container.querySelectorAll('tr[data-year]')].at(-1)?.textContent ?? ''
+    const steadyRow = lastRow()
     fireEvent.click(screen.getByLabelText(copy.workbenchViewRough))
     expect(screen.getByText(/One future, in a rough market: the market runs as history did from 1966 to 1995/)).toBeInTheDocument()
     expect(screen.getByRole('table')).toBeInTheDocument()
     expect(lane.request).toHaveBeenCalledTimes(2)
+    // The rows are the rough run's own, not the steady rows under the rough words (the U7 review's T1): the last
+    // year's figures move with the market, and each one the rough run's own row prints is on screen.
+    const roughRow = lastRow()
+    expect(roughRow).not.toBe(steadyRow)
+    const run = tableRunFor(finalAnswer())
+    if (run.kind !== 'run' || run.views.rough.kind !== 'run') throw new Error('[test setup] no rough run')
+    const ask = run.views.rough.request
+    const out = simulate(ask.params, ask.seed, ask.options)
+    const rows = out.indeterminate || out.infeasible ? [] : (out.distribution.ledgerRows ?? [])
+    const own = composeYearTable({ rows, meta: run.meta, view: 'rough', roughEndYear: 1995 }).rows.at(-1)!
+    const printed = own.cells.flat().flatMap((f) => (f === null ? [] : [formatTableDollars(f.value)]))
+    expect(printed.length).toBeGreaterThan(0)
+    for (const figure of printed) expect(roughRow).toContain(figure)
   })
 
   it('updating: a newer answer keeps the prior rows on screen, marked in words and busy, until its rows land', async () => {
@@ -146,5 +165,112 @@ describe('WorkbenchRoom — the answer the table waits on', () => {
     renderRoom(snapshotWith(finalAnswer()), lanes, BUILD_YEAR + 1)
     await settleAll('run')
     expect(screen.getByText(slots.workbenchAged(BUILD_YEAR))).toBeInTheDocument()
+  })
+
+  it('where the run prices no state income tax the heading says so, in the hero’s words; a priced state drops the line (W6)', async () => {
+    const unpriced = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), unpriced.lanes)
+    await unpriced.settleAll('run')
+    expect(screen.getByText(copy.verdictStateUnpricedNote)).toBeInTheDocument()
+    cleanup()
+    const priced = heldLanes()
+    const nc = DEV_SEEDS.nc
+    renderRoom(
+      { ...snapshotWith(finalAnswer()), draft: nc, answer: { ...(finalAnswer() as object), draft: nc } as ModelAnswer },
+      priced.lanes,
+    )
+    await priced.settleAll('run')
+    expect(screen.getByRole('table')).toBeInTheDocument()
+    expect(screen.queryByText(copy.verdictStateUnpricedNote)).toBeNull()
+  })
+})
+
+// --- the date route: the heading's stop words and the run the table is built on ---
+
+const WORKING = DEV_SEEDS.date
+const noDate: DateTrackOutcome = { kind: 'no-date-in-window', nonMonotoneOffsets: [], curve: [] }
+const dateAnswer = (
+  draft: ScenarioDraft,
+  band: { readonly offsetYears: number; readonly track: 'lifestyle' | 'floor' } | undefined,
+  tier: 'final' | 'provisional' = 'final',
+  inputKey = 'k1',
+): ModelAnswer =>
+  ({
+    kind: 'date',
+    tier,
+    draft,
+    inputKey,
+    outcome: {
+      kind: 'dates',
+      tier,
+      floor: noDate,
+      lifestyle: noDate,
+      windowTopYears: DATE_OFFSET_WINDOW_TOP,
+      seed: 1,
+      ...(band !== undefined ? { band } : {}),
+    } as unknown as DateSearchOutcome,
+  }) as unknown as ModelAnswer
+const dateSnapshot = (draft: ScenarioDraft, answer: ModelAnswer, refiguring = false): MemoryModelSnapshot => ({
+  ...snapshotWith(answer, refiguring),
+  draft,
+})
+
+describe('WorkbenchRoom — the date route', () => {
+  it('a working household whose search crowned no date: the window top’s year, and the heading says no date was found (T4)', async () => {
+    const { lanes, lane, settleAll } = heldLanes()
+    renderRoom(dateSnapshot(WORKING, dateAnswer(WORKING, undefined)), lanes)
+    expect(lane.request.mock.calls[0]![0].params).toEqual({
+      ...buildCandidateParams(buildDateInput(WORKING)!, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS.final),
+      paths: 1,
+    })
+    await settleAll('run')
+    const topYear = WORKING.startCalendarYear + DATE_OFFSET_WINDOW_TOP
+    expect(screen.getByText(slots.workbenchNoDate(topYear))).toBeInTheDocument()
+    expect(screen.queryByText(slots.workbenchStopsIn(topYear))).toBeNull()
+  })
+
+  it('its dated twin names the band’s year as the answer’s date, and never says no date was found (T4)', async () => {
+    const { lanes, settleAll } = heldLanes()
+    renderRoom(dateSnapshot(WORKING, dateAnswer(WORKING, { offsetYears: 4, track: 'lifestyle' })), lanes)
+    await settleAll('run')
+    const year = WORKING.startCalendarYear + 4
+    expect(screen.getByText(slots.workbenchStopsIn(year))).toBeInTheDocument()
+    expect(screen.queryByText(slots.workbenchNoDate(year))).toBeNull()
+    expect(screen.queryByText(slots.workbenchFloorTrack())).toBeNull()
+  })
+
+  it('a floor-only date: both views record the essentials pass and the heading says so (T3)', async () => {
+    const draft = DEV_SEEDS.datemixed
+    const { lanes, lane, settleAll } = heldLanes()
+    renderRoom(dateSnapshot(draft, dateAnswer(draft, { offsetYears: 7, track: 'floor' })), lanes)
+    expect(lane.request.mock.calls.map(([req]) => req.options?.ledgerTrack)).toEqual(['floor', 'floor'])
+    await settleAll('run')
+    expect(screen.getByText(slots.workbenchFloorTrack())).toBeInTheDocument()
+  })
+
+  it('an edit during a pending date search never shows new facts at the old date’s offset (T5)', async () => {
+    // The store keeps the last committed answer (on draft A, its band at offset 4) while the edit (draft B) is
+    // re-figured: the table is built from the answer's own draft, never the live one.
+    const edited: ScenarioDraft = { ...WORKING, annualSpendingReal: WORKING.annualSpendingReal! + 12_000 }
+    const committed = dateAnswer(WORKING, { offsetYears: 4, track: 'lifestyle' })
+    const { lanes, lane, settleAll } = heldLanes()
+    const view = renderRoom(dateSnapshot(edited, committed, true), lanes)
+    const atOffset = (d: ScenarioDraft) => ({ ...buildCandidateParams(buildDateInput(d)!, 4, DATE_SEARCH_PATHS.final), paths: 1 })
+    expect(atOffset(edited), '[test setup] the edit moves the run').not.toEqual(atOffset(WORKING))
+    for (const [req] of lane.request.mock.calls) expect(req.params).toEqual(atOffset(WORKING))
+    await settleAll('run')
+    // The edit's provisional answer lands: no run is asked for it, and the rows on screen stay, marked as updating.
+    view.rerender(
+      <WorkbenchRoom
+        save={{ kind: 'none' }}
+        onBack={vi.fn()}
+        snapshot={dateSnapshot(edited, dateAnswer(edited, { offsetYears: 5, track: 'lifestyle' }, 'provisional', 'k2'))}
+        lanes={lanes}
+        wallCalendarYear={BUILD_YEAR}
+      />,
+    )
+    expect(lane.request).toHaveBeenCalledTimes(2)
+    expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true')
+    expect(screen.getByText(copy.workbenchTableUpdating)).toBeInTheDocument()
   })
 })

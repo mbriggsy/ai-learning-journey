@@ -45,12 +45,24 @@ function Figure({ f }: { readonly f: TableFigure }) {
   )
 }
 
-function Box({ lines }: { readonly lines: readonly TableLine[] }) {
+function LabelledFigure({ f, label }: { readonly f: TableFigure; readonly label: string | undefined }) {
+  return (
+    <>
+      {label !== undefined && label !== '' && <span className="sr-only">{`${label}${KEY_SEPARATOR}`}</span>}
+      <Figure f={f} />
+    </>
+  )
+}
+
+/** A box's lines. A sighted reader names each figure by its place under the header's line names; a screen reader
+ *  hears no place, and a blank line is silent, so each figure carries its line's name in hidden text ("Medicare:
+ *  ~7,568" where the marketplace line above it is blank). A one-line column's header names its one figure. */
+function Box({ lines, labels }: { readonly lines: readonly TableLine[]; readonly labels: readonly string[] }) {
   return (
     <>
       {lines.map((line, i) => (
         <span key={i} className="wb-line">
-          {line === null ? ' ' : <Figure f={line} />}
+          {line === null ? ' ' : <LabelledFigure f={line} label={labels[i]} />}
         </span>
       ))}
     </>
@@ -126,9 +138,13 @@ function Table({ table, updating }: { readonly table: ComposedTable; readonly up
           <tbody>
             {table.rows.map((row) => (
               <Fragment key={row.t}>
+                {/* A row's sentences sit in a block of their own inside the full-width cell, so on the phone, where the
+                    table scrolls in its frame, each block holds to the frame's edge and wraps at its width (workbench.css). */}
                 {row.steadyFrom !== undefined && (
                   <tr className="wb-divider">
-                    <td colSpan={width}>{row.steadyFrom}</td>
+                    <td colSpan={width}>
+                      <p className="wb-divider__words">{row.steadyFrom}</p>
+                    </td>
                   </tr>
                 )}
                 <tr className={row.notes.length > 0 ? 'wb-row wb-row--noted' : 'wb-row'} data-year={row.year}>
@@ -138,7 +154,7 @@ function Table({ table, updating }: { readonly table: ComposedTable; readonly up
                   </th>
                   {row.cells.map((lines, i) => (
                     <td key={table.columns[i]!.id} className="wb-td">
-                      <Box lines={lines} />
+                      <Box lines={lines} labels={table.columns[i]!.lineLabels} />
                     </td>
                   ))}
                 </tr>

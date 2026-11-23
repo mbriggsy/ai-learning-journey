@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { composeYearTable, formatTableDollars, lifespansLine, yieldLine, type ComposedTable } from '../yearTableChrome'
 import { tableRunFor, type TableMeta, type TablePerson } from '../tableRun'
 import { simulate } from '@engine/simulate'
+import { DATE_OFFSET_WINDOW_TOP } from '@engine/dateSearch'
 import { DEV_SEEDS } from '../../devSeeds'
 import { copy, slots } from '../../copy'
 import type { LedgerYearRow } from '@shared/model'
@@ -43,7 +44,10 @@ const META: TableMeta = {
   route: 'spine',
   startCalendarYear: 2026,
   people: [person('Sam', 60, 84), person('Alex', 58, 92)],
-  investmentEntered: false,
+  investmentByPerson: [],
+  stateTaxReading: 'agi-derived',
+  statePriced: true,
+  leftOverState: 'spent',
 }
 
 /** A row whose every money field holds its own distinct, non-zero, whole-dollar value (so a swap of any two shows). */
@@ -142,6 +146,28 @@ describe('composeYearTable — every figure is one field of the row (R5)', () =>
     })
   })
 
+  it('each column’s header is the one the reader sees over those fields: a swap of the two people’s headers reds it', () => {
+    // The oracle is typed by hand (the U7 review's T6): the values above are tied to a column id, and the id is tied
+    // to the words over it here, so Sam’s pay can never print under "Alex" with every value test still green.
+    const headers: Record<string, string> = {
+      'person-0': 'Sam',
+      'person-1': 'Alex',
+      'social-security': copy.workbenchColSocialSecurity,
+      spending: copy.workbenchColSpending,
+      'income-tax': copy.workbenchColIncomeTax,
+      'pay-check': copy.workbenchColPayCheck,
+      'from-pay': copy.workbenchColFromPay,
+      health: copy.workbenchColHealth,
+      'pretax-moves': copy.workbenchColPretaxMoves,
+      taxable: copy.workbenchSourceTaxable,
+      'pretax-0': 'Pre-tax, Sam',
+      'pretax-1': 'Pre-tax, Alex',
+      roth: copy.workbenchSourceRoth,
+      hsa: copy.workbenchSourceHsa,
+    }
+    expect(Object.fromEntries(table.columns.map((c) => [c.id, c.header]))).toEqual(headers)
+  })
+
   it('no figure is worked out: every printed value is a number the row itself carries', () => {
     const carried = new Set(rows.flatMap((r) => [...leaves(r)]))
     for (const f of figuresOf(table)) expect(carried.has(f.value), `${f.value}`).toBe(true)
@@ -166,6 +192,21 @@ describe('composeYearTable — every figure is one field of the row (R5)', () =>
     expect(at(0, 'income-tax')[0]?.approx).toBe(true)
     expect(at(1, 'person-0').map((f) => f?.approx)).toEqual([true, true])
     expect(at(1, 'spending')[0]?.approx).toBe(true)
+  })
+
+  it('on the floor pass, year 0’s spending prints exactly in a working year (the household’s figure) and wears "~" after work (the tool’s essentials)', () => {
+    // The U7 review's W5: a working year's Spending is W on either pass, so a floor-pass table must not mark the
+    // household's own figure as the tool's; the essentials of a year without work are the tool's own figure.
+    const floor = { ...META, track: 'floor' as const }
+    const spending0 = (r: LedgerYearRow) => {
+      const t = composeYearTable({ rows: [r], meta: floor, view: 'steady' })
+      return t.rows[0]!.cells[t.columns.findIndex((c) => c.id === 'spending')]![0]
+    }
+    expect(spending0(distinctRow(0))?.approx, 'a working year 0').toBe(false)
+    expect(spending0(distinctRow(0, { workingYear: undefined }))?.approx, 'a year 0 without work').toBe(true)
+    // …and the full pass's year 0 is the household's own spending, working or not.
+    const full0 = composeYearTable({ rows: [distinctRow(0, { workingYear: undefined })], meta: META, view: 'steady' })
+    expect(full0.rows[0]!.cells[full0.columns.findIndex((c) => c.id === 'spending')]![0]?.approx).toBe(false)
   })
 
   it('direction never rests on color: put in wears "+", taken out "−", a short year’s left over "−"', () => {
@@ -202,8 +243,38 @@ describe('composeYearTable — what a year holds decides the columns', () => {
     expect(ids).not.toContain('from-pay')
     expect(table.columns.find((c) => c.id === 'health')!.lineLabels).toEqual([copy.workbenchLineMedicare])
     expect(table.columns.find((c) => c.id === 'taxable')!.lineLabels).toEqual([copy.workbenchLineTakenOut, copy.workbenchLineLeft])
-    // No put-in anywhere, so no match note; the pay-check note goes with its column.
-    expect(table.notes).toEqual([copy.workbenchApproxNote])
+    // No put-in anywhere, so no match note; the pay-check note goes with its column; the Required line shows, so its
+    // note says it is paid through what's taken out.
+    expect(table.notes).toEqual([copy.workbenchApproxNote, copy.workbenchRequiredNote])
+    // A future with no required withdrawal in any year drops the line, and its note with it.
+    const noRmd = composeYearTable({ rows: [{ ...quiet, rmd: 0 }], meta: META, view: 'steady' })
+    expect(noRmd.columns.find((c) => c.id === 'pretax-moves')!.lineLabels).not.toContain(copy.workbenchLineRequired)
+    expect(noRmd.notes).toEqual([copy.workbenchApproxNote])
+  })
+
+  it('the pay check’s income tax says what it holds by the run’s state reading, and where a state’s tax on pay went instead', () => {
+    // The U7 review's W1: the line holds the tax on everything that comes in outside savings, federal, plus the
+    // state's where the run charges it; where the W step asked for the state's tax on pay inside W (an unpriced state,
+    // or PA), the notes say it sits under Spending, never in this line. The label stays as short as before.
+    const notesAt = (stateTaxReading: TableMeta['stateTaxReading']) =>
+      composeYearTable({ rows: [distinctRow(0)], meta: { ...META, stateTaxReading }, view: 'steady' }).notes
+    expect(notesAt('agi-derived')).toContain(copy.workbenchPayCheckNoteFederalState)
+    expect(notesAt('none')).toContain(copy.workbenchPayCheckNoteFederal)
+    expect(notesAt('class-based')).toEqual(
+      expect.arrayContaining([copy.workbenchPayCheckNoteFederalState, copy.workbenchPayCheckStatePayInW]),
+    )
+    expect(notesAt('unpriced')).toEqual(expect.arrayContaining([copy.workbenchPayCheckNoteFederal, copy.workbenchPayCheckStateInW]))
+    for (const reading of ['agi-derived', 'none'] as const) {
+      expect(notesAt(reading)).not.toContain(copy.workbenchPayCheckStateInW)
+      expect(notesAt(reading)).not.toContain(copy.workbenchPayCheckStatePayInW)
+    }
+    // No note claims the line is only the tax on pay (the old words), and the line is named as an income tax.
+    for (const reading of ['agi-derived', 'class-based', 'none', 'unpriced'] as const) {
+      for (const n of notesAt(reading)) expect(n).not.toMatch(/the tax on pay is in the pay check column/)
+    }
+    const payCheck = composeYearTable({ rows: [distinctRow(0)], meta: META, view: 'steady' }).columns.find((c) => c.id === 'pay-check')!
+    expect(payCheck.lineLabels).toEqual([copy.workbenchLinePayIncomeTax, copy.workbenchLinePayroll])
+    expect(copy.workbenchLinePayIncomeTax.length, 'a header line never wraps: as short as "Tax on pay"').toBeLessThanOrEqual('Tax on pay'.length)
   })
 
   it('a zero flow prints nothing (no misleading zero); a zero balance prints 0', () => {
@@ -227,8 +298,44 @@ describe('composeYearTable — a flagged year says why (R13)', () => {
     expect(notesFor({ earlyPretaxDraw: true })).toEqual([copy.workbenchRowEarlyDraw])
     expect(notesFor({ rmdToTaxable: 4_210.2 })).toEqual([slots.workbenchRowRmdMoved('4,210')])
     expect(notesFor({ workingYear: undefined, incomeNotKept: 12_000 })).toEqual([slots.workbenchRowNotKeptRetired('12,000')])
-    expect(notesFor({ incomeNotKept: 3_000 })).toEqual([slots.workbenchRowNotKeptAboveCap('3,000')])
     expect(notesFor({ incomeNotKept: 3_000, leftOverCredit: 0 })).toEqual([slots.workbenchRowNotKeptNoCredit('3,000')])
+  })
+
+  it('a left over kept only in part names the cap that binds: the figure the household said, or a smaller first working year', () => {
+    // The U7 review's W4: the credit is the smaller of the carried figure and this path's first-year left over
+    // (`workingYearCredit`); a credit equal to the carried figure is that figure binding.
+    const notesWith = (leftOverSaved: number | undefined, leftOverCredit: number) =>
+      composeYearTable({
+        rows: [distinctRow(0, { incomeNotKept: 2_000, leftOverCredit })],
+        meta: { ...META, leftOverState: 'saved-moved', ...(leftOverSaved !== undefined ? { leftOverSaved } : {}) },
+        view: 'steady',
+      }).rows[0]!.notes
+    expect(notesWith(25_000, 25_000), 'the figure they said binds').toEqual([slots.workbenchRowNotKeptAboveCap('2,000')])
+    expect(notesWith(30_000, 25_000), 'their first working year’s left over is smaller').toEqual([
+      slots.workbenchRowNotKeptAboveFirstYear('2,000'),
+    ])
+  })
+
+  it('a working year’s left over credited nothing says why by the household’s real left-over answer', () => {
+    // The U7 review's W3: "your answer doesn't count it as saved" only where the answer says so (spent, not sure);
+    // no answer yet, or no first-year left over to ask about, a figure for a working year gone out of date, and a saved
+    // answer whose first working year (on this path) has none each say their own reason.
+    const said = (leftOverState: TableMeta['leftOverState']) =>
+      composeYearTable({
+        rows: [distinctRow(0, { incomeNotKept: 3_000, leftOverCredit: 0 })],
+        meta: { ...META, leftOverState },
+        view: 'steady',
+      }).rows[0]!.notes
+    expect(said('spent')).toEqual([slots.workbenchRowNotKeptNoCredit('3,000')])
+    expect(said('not-sure')).toEqual([slots.workbenchRowNotKeptNoCredit('3,000')])
+    expect(said('absent')).toEqual([slots.workbenchRowNotKeptUnsaid('3,000')])
+    expect(said('not-asked')).toEqual([slots.workbenchRowNotKeptUnsaid('3,000')])
+    expect(said('waiting-on-w')).toEqual([slots.workbenchRowNotKeptWaiting('3,000')])
+    expect(said('saved')).toEqual([slots.workbenchRowNotKeptAboveFirstYear('3,000')])
+    // Only the spent and not-sure answers are ever told their answer doesn't count the money as saved.
+    for (const state of ['absent', 'not-asked', 'waiting-on-w', 'saved', 'saved-moved'] as const) {
+      expect(said(state).join(' '), state).not.toMatch(/Your answer on the left over/)
+    }
   })
 
   it('the first year after a death names the survivor and the pre-tax money that is theirs now', () => {
@@ -299,13 +406,22 @@ describe('the yield stopgap (KTD32) and the lifespans line (KTD4)', () => {
     expect(yieldLine(META, [rmdOnly])).toBe(copy.workbenchYieldAllYears)
   })
 
-  it('with investment income entered, working years are priced: taxable money only while working shows no line', () => {
-    const meta = { ...META, investmentEntered: true }
+  it('with investment income in the run, working years are priced: taxable money only while working shows no line', () => {
+    const meta = { ...META, investmentByPerson: [12_000, 0] }
     const working = distinctRow(0)
     const retiredEmpty = distinctRow(1, { ...noTaxable, payByPerson: [0, 0] })
     expect(yieldLine(meta, [working, retiredEmpty])).toBeNull()
     const retiredHolding = distinctRow(1, { payByPerson: [0, 0] })
     expect(yieldLine(meta, [working, retiredHolding])).toBe(copy.workbenchYieldAfterWork)
+  })
+
+  it('a year is priced only where someone paid that year carries investment income in the run', () => {
+    // The engine adds a person's figure only in a year that person works: a year where only the person with none
+    // works prices no yield, so its taxable money shows the line.
+    const meta = { ...META, investmentByPerson: [12_000, 0] }
+    const onlyTheOtherWorks = distinctRow(0, { payByPerson: [0, 90_000] })
+    expect(yieldLine(meta, [onlyTheOtherWorks])).toBe(copy.workbenchYieldAfterWork)
+    expect(yieldLine(meta, [distinctRow(0, { payByPerson: [80_000, 0] })])).toBeNull()
   })
 
   it('names the first to die at their own age and the survivor at the couple’s last year; one person alone', () => {
@@ -340,6 +456,47 @@ describe('the table on a real run (the engine’s own rows through the composer)
       }
     })
   }
+
+  it('a floor-pass date: both views record the essentials pass, the lifestyle twin the full pass, and a working year 0’s spending prints exactly', () => {
+    // The U7 review's T3: the floor pass on each request (the band's own track) was untested end to end.
+    // `datemixed`: the essentials floor dates (7 years out), the full lifestyle doesn't.
+    const draft = DEV_SEEDS.datemixed
+    const at = (track: 'floor' | 'lifestyle') =>
+      tableRunFor({
+        kind: 'date',
+        tier: 'final',
+        draft,
+        outcome: { kind: 'dates', tier: 'final', windowTopYears: DATE_OFFSET_WINDOW_TOP, seed: 1, band: { offsetYears: 7, track } },
+        inputKey: 'k',
+      } as unknown as ModelAnswer)
+    const floor = at('floor')
+    const lifestyle = at('lifestyle')
+    if (floor.kind !== 'run' || lifestyle.kind !== 'run') throw new Error('[test setup] datemixed: no table run')
+    expect(floor.meta.track).toBe('floor')
+    for (const view of ['steady', 'rough'] as const) {
+      const f = floor.views[view]
+      const l = lifestyle.views[view]
+      if (f.kind !== 'run' || l.kind !== 'run') throw new Error(`[test setup] datemixed ${view}: refused`)
+      expect(f.request.options?.ledgerTrack, `${view}: the floor pass`).toBe('floor')
+      expect(l.request.options?.ledgerTrack, `${view}: the lifestyle twin records the full pass`).toBeUndefined()
+    }
+    const ask = floor.views.steady
+    if (ask.kind !== 'run') return
+    const out = simulate(ask.request.params, ask.request.seed, ask.request.options)
+    const rows = out.indeterminate || out.infeasible ? [] : (out.distribution.ledgerRows ?? [])
+    expect(rows.length).toBeGreaterThan(10)
+    const table = composeYearTable({ rows, meta: floor.meta, view: 'steady' })
+    const spending = table.columns.findIndex((c) => c.id === 'spending')
+    expect(rows[0]!.workingYear, 'year 0 is a working year').toBeDefined()
+    expect(table.rows[0]!.cells[spending]![0], 'year 0’s spending is the household’s own figure for a working year').toMatchObject({
+      value: rows[0]!.workingYear!.workingYearCost,
+      approx: false,
+    })
+    // After work stops the floor pass's essentials are the tool's figure: "~".
+    const afterWork = table.rows.findIndex((_, k) => rows[k]!.workingYear === undefined)
+    expect(afterWork).toBeGreaterThan(0)
+    expect(table.rows[afterWork]!.cells[spending]![0]?.approx).toBe(true)
+  })
 
   it('a figure prints on the engine’s grain: the cent snap, then whole dollars', () => {
     expect(formatTableDollars(1_234.999)).toBe('1,235')

@@ -100,7 +100,15 @@ function headingLines(meta: TableMeta, rows: readonly LedgerYearRow[], view: Tab
     meta.track === 'floor' ? slots.workbenchFloorTrack() : '',
     wallCalendarYear > meta.startCalendarYear ? slots.workbenchAged(meta.startCalendarYear) : '',
   ].filter((s) => s !== '')
-  const stopgaps = [yieldLine(meta, rows), copy.workbenchKindsMissing, copy.recDiscNiit].filter((s): s is string => s !== null)
+  // The known omissions that move a printed figure: where the run prices no state income tax, the hero's own unpriced
+  // line (`verdictStateUnpricedNote`; every figured surface carries one state clause, `stateTaxDisclosure.ts`), and
+  // the surtax line, verbatim.
+  const stopgaps = [
+    yieldLine(meta, rows),
+    meta.statePriced ? null : copy.verdictStateUnpricedNote,
+    copy.workbenchKindsMissing,
+    copy.recDiscNiit,
+  ].filter((s): s is string => s !== null)
   return { what, stopgaps }
 }
 

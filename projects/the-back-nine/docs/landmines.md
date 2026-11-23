@@ -353,7 +353,8 @@ tests
 - **(b9-1, 11-23) The fit harness's Chromium has no classic scrollbar** (`clientWidth` reads the whole 1280), while a
   headed Chrome here shows a 15 px one, so a sideways margin read under the harness overstates a real window's by 15 px.
   Read a table's real margin as its narrowest width (the phone arm's `tableWidth`, or the frame squeezed in-page) against
-  the frame less 15. The widest household's table: 1,143 px narrowest against 1,224 under the harness (1,209 headed).
+  the frame less 15. The widest household's table: 1,143 px narrowest on Windows and 1,133 on CI's ubuntu (run
+  45274348572: ubuntu reads this table NARROWER), against 1,224 under the harness (1,209 headed).
 - **(b9-1, 11-23) The room's arms (`?seed=tablewidest`) assert every column first** (`expectEveryColumn`): a seed
   whose crown drifts to today, or loses an account, would drop columns and make every width law vacuous.
 - **(b9-6, 11-21) `assertDensityTier` looks the survivor leading up in `SURVIVOR_LEADING`** (the frames-outside plan's

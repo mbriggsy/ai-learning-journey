@@ -291,7 +291,10 @@
   border-top: 0;
 }
 
+/* Positioned so a figure's hidden line name (`.sr-only`, `YearTable.tsx`'s `LabelledFigure`) is held inside its box:
+   an absolute box placed against the page would escape the phone's scrolling frame and widen the page. */
 .wb-line {
+  position: relative;
   display: block;
   white-space: nowrap;
   line-height: var(--leading-snug);
@@ -334,6 +337,10 @@
   border-top: 1px dashed var(--line-control);
   font-size: var(--text-xs);
   color: var(--ink);
+}
+
+.wb-divider__words {
+  margin: 0;
 }
 
 .wb-key__heading {
@@ -385,10 +392,21 @@
   }
 }
 
-/* Phones and narrow windows: the table scrolls inside its own frame, the year column held in place. */
+/* Phones and narrow windows: the table scrolls inside its own frame, the year column held in place. A row's sentences
+   and the rough view's divider sit in a cell as wide as the whole table, so each holds to the frame's left edge and
+   wraps at the frame's own width (`100cqi`: the frame is their size container), read whole wherever the frame is
+   scrolled; the caption, cut the same way, moved above the frame (slice 3). */
 @media not (min-width: 68rem) {
   .wb-table-wrap {
     overflow-x: auto;
+    container-type: inline-size;
+  }
+
+  .wb-note,
+  .wb-divider__words {
+    position: sticky;
+    left: 0;
+    max-width: min(48rem, 100cqi);
   }
 
   .wb-th--year,

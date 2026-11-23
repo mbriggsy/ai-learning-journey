@@ -14,13 +14,16 @@
  * account grouping (`base.sources`) and the people's names ride with the request, captured from the same draft that
  * compiled the run (insight 081): the composer never reads the live draft.
  */
-import { buildTableBase, type AccountSources } from '@intake/intakeMap'
+import { buildTableBase, workingYearLeftOverShownState, type AccountSources } from '@intake/intakeMap'
+import { workingYearStateTaxReading } from '@intake/workingYearQuote'
+import type { LeftOverShownState } from '@intake/workingYearLeftOverState'
 import { steadyFuture } from '@engine/simulate'
 import { roughFuture } from '@engine/reference/roughSequence'
 import { sampleDeathYearOffset } from '@engine/longevity'
+import { isPricedState } from '@engine/constants/stateTax'
 import type { EngineRunRequest } from '@store/runLanes'
 import type { ModelAnswer } from '@store/memoryModel'
-import type { NamedFuture } from '@shared/model'
+import type { NamedFuture, WorkingYearStateTaxReading } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { LongevityPerson } from '@engine/longevity'
 import { copy } from '../copy'
@@ -54,9 +57,23 @@ export interface TableMeta {
   readonly people: readonly TablePerson[]
   /** The date route: the calendar year work stops in this table's run. */
   readonly stopYear?: number
-  /** The household entered investment income for its working years, so the engine prices it there (KTD32's line
-   *  then covers only the years after work stops). */
-  readonly investmentEntered: boolean
+  /** Each person's working-year investment income as THIS run carries it (the run's own params: the date route only,
+   *  working members only, `buildDateInput`), else empty. The engine prices a person's figure only in a year they work,
+   *  so KTD32's yield line covers every other year. Never the draft's raw field: a member switched to retired keeps a
+   *  stale figure there that the run never prices (the U7 review's RUN-1). */
+  readonly investmentByPerson: readonly number[]
+  /** The W step's state-tax reading (`workingYearStateTaxReading`, the money picture's own): what the pay check's
+   *  income tax holds, and whether the state's tax on pay sits in the household's figure for a working year. */
+  readonly stateTaxReading: WorkingYearStateTaxReading
+  /** Whether this run prices the household's state income tax (its own overlay's state, roster-filtered): where it
+   *  doesn't, no income tax figure here holds a state tax, and the heading says so. */
+  readonly statePriced: boolean
+  /** Build 2's left-over shown state for the answer's draft (the one draft-level read): why a working year's left
+   *  over the run credits nothing is not kept. */
+  readonly leftOverState: LeftOverShownState
+  /** The saved left over this run carries (its own params; absent where nothing is carried): the stored half of the
+   *  credit's cap, so a row can name the cap that binds. */
+  readonly leftOverSaved?: number
 }
 
 /** One view's request, or the rough market's refusal by name (a market whose correlation is not 0). */
@@ -122,6 +139,9 @@ export function tableRunFor(answer: ModelAnswer): TableRun {
     ...(base.track === 'floor' ? { ledgerTrack: 'floor' as const } : {}),
   })
   const ages = lastAges(steady, params.people)
+  const accumulation = params.overlay?.accumulation
+  const state = params.overlay?.retirementState
+  const saved = accumulation?.workingYearLeftOverSavedReal
   return {
     kind: 'run',
     key: answerKey(answer),
@@ -132,7 +152,11 @@ export function tableRunFor(answer: ModelAnswer): TableRun {
       startCalendarYear: draft.startCalendarYear,
       people: params.people.map((p, i) => tablePerson(draft, i, p.currentAge, ages[i] ?? p.currentAge)),
       ...(base.stopOffsetYears !== undefined ? { stopYear: draft.startCalendarYear + base.stopOffsetYears } : {}),
-      investmentEntered: (draft.health?.workingYearInvestmentByPerson ?? []).some((x) => (x ?? 0) > 0),
+      investmentByPerson: accumulation?.workingYearInvestmentByPerson ?? [],
+      stateTaxReading: workingYearStateTaxReading(draft),
+      statePriced: state !== undefined && isPricedState(state),
+      leftOverState: workingYearLeftOverShownState(draft),
+      ...(saved !== undefined ? { leftOverSaved: saved } : {}),
     },
     views: {
       steady: { kind: 'run', request: { params, seed: TABLE_SEED, options: options(steady) } },

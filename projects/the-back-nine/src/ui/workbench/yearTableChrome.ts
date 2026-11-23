@@ -9,8 +9,12 @@
  *    where the engine keeps a figure per person or per premium, the table shows each one on its own line. A test
  *    collects every number the row carries and fails on any figure that is not one of them.
  *  - The grain (R11, insight 146): every figure prints in whole dollars from the engine's own money grain
- *    (`workingYearBottomLine`: the cent snap, then the dollar on the gloomy side). A projected figure wears "~"; year
- *    0's entered facts (each person's pay and other income, and the full pass's spending) print exactly.
+ *    (`workingYearBottomLine`: the cent snap, a half-cent tie toward −∞, then the whole dollar toward −∞), unsigned.
+ *    Every field here is read as it is signed on the row, so a positive flow, balance or cost prints rounded DOWN, as
+ *    the plan's U7 brief directs (R11's direction, `formatActionableDollar`): a cost can read up to 99¢ under its
+ *    field; only a signed short year's left over rounds away from zero, the gloomy side. A projected figure wears "~";
+ *    year 0's entered facts (each person's pay and other income, and the spending the household gave for that year)
+ *    print exactly.
  *  - The row's clock (KTD5, insight 134): row t is calendar year `startCalendarYear + t`; its flows are that year's
  *    and its balances that year's close.
  *  - Accounts are named from `meta.sources`, the grouping captured with the run, never from the live draft (insights
@@ -24,10 +28,11 @@
  */
 import { workingYearBottomLine } from '@engine/moneyGrain'
 import { ROUGH_WINDOW_YEARS } from '@engine/reference/roughSequence'
-import type { LedgerYearRow, AccountKind } from '@shared/model'
+import type { LedgerYearRow, AccountKind, WorkingYearStateTaxReading } from '@shared/model'
 import type { SourceAccount } from '@intake/intakeMap'
+import type { LeftOverShownState } from '@intake/workingYearLeftOverState'
 import { kindLabel } from '@intake/AccountEntry'
-import { copy, slots } from '../copy'
+import { copy, slots, type CopyKey } from '../copy'
 import type { TableMeta, TablePerson, TableView } from './tableRun'
 
 /** One printed figure: the field's own value, and how it prints. */
@@ -89,8 +94,8 @@ interface LineSpec {
   readonly label: string
   readonly read: (r: LedgerYearRow) => number | undefined
   readonly sign: '+' | '−' | 'signed' | ''
-  /** Year 0's value is a fact the household entered: it prints exactly. */
-  readonly enteredInYear0?: boolean
+  /** Year 0's value is a fact the household entered: it prints exactly. A predicate where that depends on the row. */
+  readonly enteredInYear0?: boolean | ((r: LedgerYearRow) => boolean)
   /** A balance: a zero prints, and the line stays when every year holds zero. */
   readonly balance?: boolean
 }
@@ -123,7 +128,8 @@ function figureOf(spec: LineSpec, r: LedgerYearRow): TableLine {
   const dollars = tableDollars(v)
   if (dollars === 0 && spec.balance !== true) return null
   const sign = spec.sign === 'signed' ? (workingYearBottomLine(v) < 0 ? '−' : '') : spec.sign
-  return { value: v, dollars, approx: !(r.t === 0 && spec.enteredInYear0 === true), sign }
+  const entered = typeof spec.enteredInYear0 === 'function' ? spec.enteredInYear0(r) : spec.enteredInYear0 === true
+  return { value: v, dollars, approx: !(r.t === 0 && entered), sign }
 }
 
 const accountName = (meta: TableMeta, a: SourceAccount): string =>
@@ -151,7 +157,9 @@ function columnSpecs(meta: TableMeta, rows: readonly LedgerYearRow[]): ColumnSpe
     group: 'out',
     header: copy.workbenchColSpending,
     always: true,
-    lines: [{ label: '', read: (r) => r.spending, sign: '', enteredInYear0: meta.track === 'full' }],
+    // Year 0's spending is the household's own figure on the full pass, and in a working year on either pass (the
+    // engine prints W there, `simulate.ts`'s ledger row); the floor pass's essentials after work are the tool's.
+    lines: [{ label: '', read: (r) => r.spending, sign: '', enteredInYear0: (r) => meta.track === 'full' || r.workingYear !== undefined }],
   })
   specs.push({ id: 'income-tax', group: 'out', header: copy.workbenchColIncomeTax, always: true, lines: [{ label: '', read: (r) => r.taxPaid, sign: '' }] })
   specs.push({
@@ -159,7 +167,7 @@ function columnSpecs(meta: TableMeta, rows: readonly LedgerYearRow[]): ColumnSpe
     group: 'out',
     header: copy.workbenchColPayCheck,
     lines: [
-      { label: copy.workbenchLineTaxOnPay, read: (r) => r.workingYear?.taxOnOutsideIncome, sign: '' },
+      { label: copy.workbenchLinePayIncomeTax, read: (r) => r.workingYear?.taxOnOutsideIncome, sign: '' },
       { label: copy.workbenchLinePayroll, read: (r) => r.workingYear?.payrollTax, sign: '' },
     ],
   })
@@ -265,6 +273,19 @@ function keptLines(spec: ColumnSpec, rows: readonly LedgerYearRow[]): LineSpec[]
   return spec.lines.filter((l) => moving.includes(l) || balances.includes(l))
 }
 
+/** Why a working year's left over, everyone alive, is credited nothing, by build 2's shown state for the answer's
+ *  draft (exhaustive, insight 147). Only the two saved states carry a figure into the run; there a zero credit means
+ *  this path's first working year has no left over, so the cap is that year's (nothing). */
+const NOT_KEPT_NO_CREDIT: Readonly<Record<LeftOverShownState, (amount: string) => string>> = {
+  'not-asked': slots.workbenchRowNotKeptUnsaid,
+  absent: slots.workbenchRowNotKeptUnsaid,
+  'waiting-on-w': slots.workbenchRowNotKeptWaiting,
+  spent: slots.workbenchRowNotKeptNoCredit,
+  'not-sure': slots.workbenchRowNotKeptNoCredit,
+  saved: slots.workbenchRowNotKeptAboveFirstYear,
+  'saved-moved': slots.workbenchRowNotKeptAboveFirstYear,
+}
+
 /** A row's sentences, in reading order. */
 function rowNotes(meta: TableMeta, r: LedgerYearRow, prev: LedgerYearRow | undefined): string[] {
   const notes: string[] = []
@@ -285,8 +306,16 @@ function rowNotes(meta: TableMeta, r: LedgerYearRow, prev: LedgerYearRow | undef
     const amount = formatTableDollars(r.incomeNotKept)
     if (r.workingYear === undefined) notes.push(slots.workbenchRowNotKeptRetired(amount))
     else if (r.alive.some((a) => !a)) notes.push(slots.workbenchRowNotKeptAfterDeath(amount))
-    else if (nonZero(r.leftOverCredit)) notes.push(slots.workbenchRowNotKeptAboveCap(amount))
-    else notes.push(slots.workbenchRowNotKeptNoCredit(amount))
+    // Part is credited, so the credit's cap binds (`workingYearCredit`, moneyGrain.ts): the smaller of the figure the
+    // household said and the first working year's left over on this path. Both are whole dollars, so a credit equal
+    // to the carried figure is that figure binding (a tie names it too: it is what they said).
+    else if (nonZero(r.leftOverCredit)) {
+      notes.push(
+        r.leftOverCredit === meta.leftOverSaved
+          ? slots.workbenchRowNotKeptAboveCap(amount)
+          : slots.workbenchRowNotKeptAboveFirstYear(amount),
+      )
+    } else notes.push(NOT_KEPT_NO_CREDIT[meta.leftOverState](amount))
   }
   if (r.earlyPretaxDraw) notes.push(copy.workbenchRowEarlyDraw)
   if (r.ranOut) notes.push(copy.workbenchRowRanOut)
@@ -336,6 +365,17 @@ function sourceKey(meta: TableMeta, columns: readonly TableColumn[], rows: reado
   return entries
 }
 
+/** What the pay check's income tax line holds, by the W step's state reading (the money picture reads the same one,
+ *  `WorkingYearLedger.tsx`'s tax line): the federal tax on what comes in outside savings, plus the state's where the
+ *  run charges one (NC on all of it; PA on all but pay), and, where the W step asked the household to add its state's
+ *  tax on pay to W (an unpriced state, or PA), where that tax sits instead. Exhaustive (insight 147). */
+const PAY_CHECK_NOTES: Readonly<Record<WorkingYearStateTaxReading, readonly CopyKey[]>> = {
+  'agi-derived': ['workbenchPayCheckNoteFederalState'],
+  'class-based': ['workbenchPayCheckNoteFederalState', 'workbenchPayCheckStatePayInW'],
+  none: ['workbenchPayCheckNoteFederal'],
+  unpriced: ['workbenchPayCheckNoteFederal', 'workbenchPayCheckStateInW'],
+}
+
 /** The table for one future's rows. */
 export function composeYearTable(input: {
   readonly rows: readonly LedgerYearRow[]
@@ -370,23 +410,26 @@ export function composeYearTable(input: {
   }))
   const has = (id: string) => columns.some((c) => c.id === id)
   const anyPutIn = columns.some((c) => c.group === 'savings' && c.lineLabels.includes(copy.workbenchLinePutIn))
+  const requiredShows = columns.some((c) => c.id === 'pretax-moves' && c.lineLabels.includes(copy.workbenchLineRequired))
   const footNotes = [
     copy.workbenchApproxNote,
     ...(anyPutIn ? [copy.workbenchMatchNote] : []),
-    ...(has('pay-check') ? [copy.workbenchPayCheckNote] : []),
+    ...(has('pay-check') ? PAY_CHECK_NOTES[meta.stateTaxReading].map((k) => copy[k]) : []),
+    ...(requiredShows ? [copy.workbenchRequiredNote] : []),
     ...(rows.some((r) => r.spending === undefined) ? [copy.workbenchNoSpendingNote] : []),
   ]
   return { columns, rows: tableRows, notes: footNotes, sourceKey: sourceKey(meta, columns, rows), ageLabels: meta.people.map((p) => p.label) }
 }
 
 /** KTD32's stopgap: does a year the engine prices no yield in hold taxable money (entered, or built by the run)?
- *  Those years are every year, or, where the household entered working-year investment income, the years with no
- *  pay. Returns which line to show, or null. */
+ *  The engine prices a person's working-year investment income (as the run carries it, `meta.investmentByPerson`)
+ *  only in a year that person works, read here as a year they are paid; every other year is unpriced. Returns which
+ *  line to show, or null. */
 export function yieldLine(meta: TableMeta, rows: readonly LedgerYearRow[]): string | null {
-  const unpriced = (r: LedgerYearRow) => !meta.investmentEntered || r.payByPerson.every((p) => p === 0)
+  const priced = (r: LedgerYearRow) => r.payByPerson.some((p, i) => p > 0 && (meta.investmentByPerson[i] ?? 0) > 0)
   const holdsTaxable = (r: LedgerYearRow) => nonZero(r.start.taxable) || nonZero(r.end.taxable)
-  if (!rows.some((r) => unpriced(r) && holdsTaxable(r))) return null
-  return meta.investmentEntered ? copy.workbenchYieldAfterWork : copy.workbenchYieldAllYears
+  if (!rows.some((r) => !priced(r) && holdsTaxable(r))) return null
+  return meta.investmentByPerson.some((x) => x > 0) ? copy.workbenchYieldAfterWork : copy.workbenchYieldAllYears
 }
 
 /** The heading's lifespans sentence (KTD4: the first death at that person's own middle year, the survivor to the

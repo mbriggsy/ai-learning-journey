@@ -58,6 +58,10 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
+- **(b9-10, 11-23) A gate piped to `grep` in a `&&` chain never stops the chain:** the pipe's status is `grep`'s, so
+  `pnpm verify:doc-stats 2>&1 | grep … ; git commit … && git push` pushed `4a5bfd4d` over the TODO's cap. Capture the
+  gate's own exit (`cmd > out 2>&1; rc=$?`) and commit only on 0. The same blindness: a background command ending in
+  `echo` reports exit 0 whatever ran before it; read the log's own exit line.
 - **(b9-7, 11-20) `src/ui/devSeeds.ts` and `src/ui/__tests__/devSeeds.test.ts` are CRLF** (`git ls-files --eol`: `i/crlf w/crlf`),
   while `e2e/vertical-fit.spec.ts` and the docs are LF: an edit script's anchors must match each file's own line ends, or
   find nothing (the composites plan's U2 line said LF until `aa22ac78`). Read `git ls-files --eol <path>` before a scripted edit.

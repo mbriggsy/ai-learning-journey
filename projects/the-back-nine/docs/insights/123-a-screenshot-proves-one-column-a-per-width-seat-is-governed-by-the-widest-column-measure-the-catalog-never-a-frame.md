@@ -3,7 +3,7 @@ title: A screenshot proves ONE column — a per-width seat is governed by the WI
 date: 2026-09-06
 phase: Post-Act-4 (the gap to a friend betting real money) — the council-held 320 shape, ruled by his eye and built the same day
 modules: [src/viz/chartText.tsx, src/viz/ConfidenceBand.tsx, src/viz/OddsLadder.tsx, e2e/chart-text.spec.ts, docs/caddie/cold-read-log.md]
-tags: [cold-read, screenshot-evidence, per-width-seat, measured-catalog, chart-text, oracle-vs-eye, arithmetic-check, the-room-is-not-the-ink, css-outlives-string, nowrap, inline-block]
+tags: [cold-read, screenshot-evidence, per-width-seat, measured-catalog, chart-text, oracle-vs-eye, arithmetic-check, the-room-is-not-the-ink, css-outlives-string, nowrap, inline-block, width-gate, overflow-wrap-anywhere, mid-word-break, caption-clipped, squeezed-table]
 ---
 
 ## Problem
@@ -60,3 +60,19 @@ never reaches / structurally impossible" sentence in a report or a doc comment.
 60-character fact off a 390 px phone (b9-3). A per-width rule is governed by the catalog's widest instance TODAY, not
 by the string it was written for: when copy changes, re-measure every CSS rule keyed to its old shape. An
 atomic-when-it-fits unit is `display: inline-block; max-inline-size: 100%` (`intake.css`), never `nowrap`.
+
+## Extended (2026-11-23, the workbench's U7 slice 3) — the converse: a width gate on the widest member proves widths, never words
+
+The year-by-year table's fit arms were built the way this insight says: plant the widest household
+(`?seed=tablewidest`, every column, two 20-character names), measure the page and the frame at 1280 and 1440, both
+views. The first run caught a real overflow (the year column's two names on one `nowrap` line, 261 px: 1280 scrolled
+sideways by 47 px). After the fix every width law passed, and a screenshot at 1280 then showed what no width can
+see: headers broken mid-word ("Christop / her", "Spendin / g", "Securit / y"), because `overflow-wrap: anywhere` lets
+an auto-layout table shrink a column below its longest word, and the phone's caption cut off at the frame's edge,
+because a `<caption>` is as wide as the scrolling table. Both read as broken; both were green.
+
+**The lesson, both halves together:** a frame proves one column (this insight), and a width proves no word. Judge
+a squeezed layout by measuring its widest member AND looking at it at the squeeze, and measure the real margin as the
+table's narrowest width (a frame squeezed in-page) against the room, not "it fit": the honest whole-word fix needed
+a 12 px gutter in place of 16 px to keep 81 px of room (9 px without it, and less beside a classic scrollbar). The same
+look later caught U7's review's phone finding: row sentences in a cell as wide as the table, cut the same way.

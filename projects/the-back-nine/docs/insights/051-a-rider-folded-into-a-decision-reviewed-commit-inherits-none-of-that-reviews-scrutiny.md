@@ -3,7 +3,7 @@ title: A rider folded into a decision-reviewed commit inherits none of that revi
 date: 2026-07-01
 phase: P2 (U8 follow-up — the first ultramode CODE review of the colaPct ceiling, insight 050)
 modules: [src/intake/OtherIncomeEntry.tsx, src/intake/__tests__/otherIncomeEntry.test.tsx, src/shared/scenarioCodec.ts, src/intake/fields.tsx, src/intake/FieldError.tsx]
-tags: [code-review, decision-review-vs-code-review, rider, a11y, aria-describedby, regression-test, dangling-reference, color-blind, fix-is-a-hypothesis, ultramode-review]
+tags: [code-review, decision-review-vs-code-review, rider, a11y, aria-describedby, regression-test, dangling-reference, color-blind, fix-is-a-hypothesis, ultramode-review, suggested-fix, review-fix-unreviewed, adversary-judges-claim-not-fix]
 ---
 
 ## Problem
@@ -70,3 +70,15 @@ ultramode review found everything real here.
   not transfer to the actual wiring (a two-id describedby). Verify against source before pasting.
 - The [[035]] a11y-craft family (reserve the live region's box) and [[020]] (one of N equivalent gates
   protects none of the others — now closed structurally for the COLA band).
+
+## Extended (2026-11-23): a review's suggested fix is a rider on its finding, and the adversary that confirmed the finding never reviewed the fix
+
+Two cases, one rule. On the seat plan (b9-3, 2026-11-22) a document reviewer's true finding came with a suggested
+record-loop row; the pilot applied the row unchecked, and it became the plan's only blocking fault (the loop asserts
+an inline survivor card on every row, and the seed it named folds that card), caught later by two blind readers. On
+U7's whole-file review (`wf_2117e8fd-2b7`, b9-1) the adversary CONFIRMED a finding that the table's grain floors cost
+lines, with a fix to round them the gloomy way; the builder was told "the review can be wrong in a detail, and the
+code wins", read the plan's R11 and insight 146, and found the floor is the intended grain: the fix would have broken
+it, and only the module's comment was wrong. **A verifier judges the finding's claim, never its fix: apply a
+suggested fix only after checking it against the code and the rule it touches, the same as the finding.** It is
+playbook insight 029's rule (blind readers earn their seat) from the other side: the readers caught the unreviewed fix.

@@ -335,6 +335,10 @@ tests
   (the seat plan's U1 matrix: spine and date with and without a band, compute-error, fallback, computing) must plant the views
   itself. `computing` is `Result`'s prop (IntakeApp's), never derived from the snapshot. (b9-4) U1's describe in that file does
   it (`43d64103`): its `plant` replaces `appModel.getSnapshot` with a real answer under the real routing; reuse it.
+- **(b9-9, 11-23) jsdom delivers `popstate` a few tasks after `history.back()` / `forward()`**: an `await setTimeout(0)` after
+  the call reads the phase BEFORE the event lands, and the late event then lands inside the next step (it left the room a
+  test meant to stay in). Await the event itself (`backAndSettle` / `pressForward` in `src/ui/__tests__/workbenchRoom.test.tsx`).
+  A `beforeEach` that resets `history.state` hides a stale-entry bug, so the leftover-entry arm there sets one on purpose.
 
 ## The fit gate and e2e
 
@@ -1004,6 +1008,10 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## UI and product
 
+- **(b9-9, 11-23) A module shared by the intake chunk and a lazy chunk must not import a stylesheet the intake chunk already
+  loads**: Rolldown moves the sheet into a new shared chunk, which can move its place in the cascade the fit gate reads
+  (`src/ui/SaveSlot.tsx`'s import of `result.css` did, caught by reading `dist/assets`). Leave the import with its first owner
+  (`Result.tsx`) and check `dist/assets/*.css` after adding a lazy chunk.
 - **(b9-5, 11-19; moved from TODO by b9-6) Never compare drafts to find "different inputs".** Every blur commits and mints a new
   draft even when nothing changed, the first run's seed mint swaps the draft object, and `draftIdentityKey` carries fields the
   engine never reads. Key the BUILT engine input (`memoryModel.ts`'s `runKey`, W9-R7's KTD2). And an e2e wait reads

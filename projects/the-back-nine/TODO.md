@@ -950,17 +950,6 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
   Vite's allow list there, so text only; delete the junction ALONE before the copy). It overturned a literal reading: the
   card's '"this answer" on … step 14' named a NOUN problem on two hosts, since step 14 had only ever said "Your answer".
   Before rebuilding a lost finding, re-capture the walked tree; never fix the card's quoted string alone.
-- *New (b9-1, 2026-11-19): a tool a gate names must live where the backups reach.* The Dell's death took every tool and
-  record in the session folder (the sweep, the idcheck, the re-anchor classifier the gates' step 3 names, every walk panel's
-  `CHAIR-NOTES.md`, the line probe), because the config backup covers `~/.claude`'s allowlist, not session folders. The
-  TODO kept pointing at them. A tool a gate or a START HERE step names belongs in the repo (or the backed-up config); a
-  record a later step reads belongs in the repo the day it is made.
-- *New (b9-2, 2026-11-20): a one-composer copy unit fits a fresh builder's window; the orchestrator's window is for the
-  unanchored review, the gates and the commit.* The walk-9 spec's U2 (34 files; a 3,069-line test file of hand-typed pins)
-  would have crossed b9-2's wrap line mid-build. One builder agent at xhigh, its brief carrying every design reading the
-  orchestrator had settled, built it with two helpers; a separate reviewer given the code and the spec, never the builder's
-  conclusions, found no blocker and 7 fixes; every chair prediction matched. The session also put a gate's new tool in the
-  unbacked session folder before the b9-1 entry below caught it: read this list before placing a tool.
 - *New (b9-1, 2026-11-19): ask a council seat for words in its reply or a file, never "in your deliberation text".* Five of
   nine opening seats died on a `reasoning_extraction` safeguard flag; a resume kept the clerk (same prompt, cached) and
   rewrote only the brief's tail for every later seat, and the chair's file became the spec's verbatim source.

@@ -243,14 +243,12 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-22 (b9-5: the seat's U2 built, the two ruled CI builds landed, the seat parked under the new mandate; b9-4's block pruned):**
+**SESSION 2026-11-22 (b9-6: the RightCapital map written and ruled; gap 1’s U2, U3 slice 1 and its floor pass built; b9-5’s block pruned):**
 
 State at close:
-- U2 `521387d2` and the CI builds `3cf4b833`, both pushed. `pnpm typecheck`, `pnpm lint`, `pnpm verify:doc-stats` exit 0.
-- **Check at start:** run 45101212962 (`521387d2b8c1f636645854acc077ebb14e603cd0`, U2): green, and its fit log's `[opened fold]` closed readings must read `budget` 706.2, `failingwidest` 768.9, `surpluswidestrelief` 775.7, with the `[opened fold order]` lines printed; runs 45102847312 and 45102847301 (`3cf4b833d20b3313cb236663a3b08e667580b594`, the first run of the two-workflow split): both green, the suite run carrying unit, fit and rv; `pnpm verify:aca` (stale ~2026-12-12 00:00 UTC).
-- **CI since `3cf4b833`:** a push that changes only Markdown runs the quick job alone (`.github/workflows/verify-the-back-nine.yml`); unit, fit and rv run in `.github/workflows/verify-the-back-nine-suite.yml`. A docs-only close commit has no suite run: read the last code commit's. The 300 KiB bundle limit is gone (ten gates).
-- **Owed to Briggsy:** the project CLAUDE.md's `## The bar` section still reads "NASA standard — quality is the deliverable, not completion", against his "Briggsy good" ruling in the global CLAUDE.md. Left for his nod: the ask reached b9-5 through another session.
-- **Landmines for the map (the next step):** RightCapital's own site may be bot-walled: ask Briggsy, never work around it (memory `feedback-ask-briggsy-when-sites-block`); search through gemini-grounding or `curl -sL --max-time 15`, never WebFetch; their features and flow, our own words, screens and code (memory `project-back-nine-workbench-direction`: what he already ruled in and out, no back office, no bank linkage).
+- The map `c1750c0a` and its rulings `c350c7cf` (the workspace home; the map’s order); U2 `a9aa22c8`; U3 slice 1 `8cf5a0d2`; the floor pass `4d978c13`; all pushed. `pnpm typecheck`, `pnpm lint` and `pnpm verify:doc-stats` exit 0, and the unit files the engine change reaches are green (`namedFuture`, `ledgerRows`, `taxOverlay`, `simulate`, `healthReadout`, `bandFan`, `budgetTwoTrack`, `workingYearCredit`, `longevity`, `blockBootstrap`, `importCycles`, `worker`).
+- **Check at start:** the suite runs on `a9aa22c86`, `8cf5a0d26` and `4d978c130`, read by full sha (`git rev-parse`): green, unit carrying the 33 new tests (engine-only: no fit slot moved); `pnpm verify:aca` (stale ~2026-12-12 00:00 UTC).
+- **Landmines for U3’s slice 2:** (1) a year’s pay, other income and Social Security are assembled in `simulate`’s per-path loop (`cashTermsForYear`, `ssBenefits`, `ongoingIncomeForYear`), not in the overlay: record them there by `t`, from the same call that sets the year’s net, never re-derived (insight 081), and line them up with the overlay’s rows by `t`; (2) IRMAA’s income in a row is the recorded figure the bill reads, never the component `healthOut.irmaaMagi` pushes (KTD7, insight 143); (3) a funded row’s `t` is the sim-year its flows happened in (calendar `startCalendarYear + t`, insight 134), so a flag such as the 59½ one reads the owner’s age that year.
 - **For Briggsy's digest (walk 10's card, if it runs):**
   - NEW (b9-5): an opened survivor card no longer pushes "what still isn't priced" below your window: the card sits last among the statements now, and it closes on your next edit.
   - NEW (b9-4): `?vault=recbudget` plants a budget household with a saved strategy that holds; today "this can be wrong" sits in your window there (about 696) and the card starts at the fold.
@@ -274,7 +272,7 @@ State at close:
     - The restatement predicates apply on EVERY line, one-run lines included. A non-twin one-run opener reads "Each working year you’re both alive, the answer at your spending would add at most …".
     - T's twin also requires the close's difference to be one figure. That is unreachable on every witness: the review proved it.
 
-Handed to b9-6.
+Handed to b9-7.
 
 **Walk 10's targets, at `REAL` (1440×731 @ 2):** the changed strings (the walk-9 spec's Units line: seats on T, CR and PN for F3, the phone seat, wide-PN and the listener on PN for F2, every flip tested); W9-R7's window frames (the phone after Close, the laptop beside the open panel); the re-point's frames `seed:budget`, `vault:stale`, `vault:statestale`, `seed:surplus`, `vault:rec`, `vault:recold`, `vault:datesavedfourbuckets`; the composites plan's plants, asserted in the gate since U6 (`4d5384fc`): `seed:patypical`, `vault:yearpa`, `vault:yearfailing`, `vault:yearrec`, `vault:recpa`, `vault:yearparec`, the yearly ones at `RETURN_DAY` through the Caddie harness's pin; and rung 3's plants (`e49e352f`, `fe1c7f16`): `seed:failing`, `seed:failingtypical`, `seed:failingentered`, `seed:offtracktypical`, `vault:yearpafailing`, `vault:yearofftrack`, `vault:yearfailingentered`, with the held four (`seed:surplustypical`, `seed:pasurplustypical`, `vault:yearsurplus`, `vault:yearpafailing` on ubuntu) and the widest plants (`seed:failingwidest`, `seed:surpluswidest`) read as the seat council's evidence if it has not ruled.
 

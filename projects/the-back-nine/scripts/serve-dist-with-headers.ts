@@ -12,7 +12,7 @@
  * (a broken injector would silently pass on :4180 alone — the false-pass trap).
  *
  * Driven by `playwright.config.ts`'s `webServer` (which manages its lifecycle — no orphan). It serves
- * the EXISTING `dist/`; it does not build (mirrors `verify:bundle`'s convention — CI builds first).
+ * the EXISTING `dist/`; it does not build (CI builds first).
  * Fails loud before listening if `dist/`, `dist/index.html`, or the CSP entry is missing — never let
  * the security suite run against a broken/no-CSP harness and silently pass.
  */

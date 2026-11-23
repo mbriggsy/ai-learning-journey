@@ -41,8 +41,10 @@ const CLI = join(ROOT, 'node_modules', '@playwright', 'test', 'cli.js')
 /** Playwright's default config file when `playwright test` is run bare (the CLI resolves
  *  `playwright.config.{ts,js,mts,mjs,cts,cjs}` from the cwd; this repo carries the `.ts` one). */
 const DEFAULT_CONFIG = 'playwright.config.ts'
-/** The monorepo-root workflow that runs this project's gates (the roles' single source). */
+/** The monorepo-root workflows that run this project's gates (the roles' single source): the quick job, and since
+ *  2026-11-22 the suite, fit and RecommendationViz jobs in their own file (docs-only pushes skip that one). */
 const WORKFLOW = resolve(ROOT, '..', '..', '.github', 'workflows', 'verify-the-back-nine.yml')
+const SUITE_WORKFLOW = resolve(ROOT, '..', '..', '.github', 'workflows', 'verify-the-back-nine-suite.yml')
 
 const toPosix = (p: string): string => p.replace(/\\/g, '/')
 
@@ -81,7 +83,7 @@ function ciGateConfigs(): string[] {
   const scripts = (
     JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf-8')) as { scripts: Record<string, string> }
   ).scripts
-  const yml = readFileSync(WORKFLOW, 'utf-8')
+  const yml = [WORKFLOW, SUITE_WORKFLOW].map((w) => readFileSync(w, 'utf-8')).join('\n')
   const blockScalar = /^\s*(?:-\s*)?run:\s*[|>]/m.exec(yml)
   if (blockScalar !== null) {
     throw new Error(
@@ -212,6 +214,7 @@ describe('the Playwright harnesses partition e2e/ — one owner per spec, no ins
     // arm below would classify EVERY config as on-demand and the held rule would pass for nothing —
     // and a gate resolved to a path the collector never runs is the same hole by another route.
     expect(existsSync(WORKFLOW), `CI workflow not found at ${WORKFLOW}`).toBe(true)
+    expect(existsSync(SUITE_WORKFLOW), `CI workflow not found at ${SUITE_WORKFLOW}`).toBe(true)
     const gates = ciGateConfigs()
     expect(gates, `no CI gate resolved from ${WORKFLOW} + package.json scripts`).toContain(DEFAULT_CONFIG)
     const known = new Set(configFiles())

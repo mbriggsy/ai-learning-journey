@@ -31,7 +31,7 @@
  * floor-passing credentials, so the asymmetry loses nothing.
  *
  * zxcvbn-ts is loaded via dynamic import: its dictionaries are heavy and the floor only
- * runs at passphrase-set — they must never ride the entry chunk (the ≤300 KiB budget).
+ * runs at passphrase-set — they must never ride the entry chunk (first-load JS stays small).
  */
 
 export const PBKDF2_ITERATIONS = 600_000

@@ -92,8 +92,7 @@ import { shouldCommitSolve } from '@engine/solver/cancel'
 // U16 §S1 — the solve-run FINGERPRINT (invalidation SOURCE-BINDS to this pure identity, never a
 // bespoke epoch mirror — the forked-seam trap). A runtime import of one pure leaf function: it
 // reaches only `solverCandidateId` + a self-contained canonical serializer (candidates.ts's heavy
-// magiLandscape/taxCore imports are unreachable from that path — tree-shaken; verify:bundle guards
-// the budget). The store computes BOTH the dispatched run's identity AND the fresh-vs-committed diff
+// magiLandscape/taxCore imports are unreachable from that path — tree-shaken). The store computes BOTH the dispatched run's identity AND the fresh-vs-committed diff
 // with this one function, so the comparison is apples-to-apples.
 import { solverRunFingerprint, type SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 // The display-geometry constants the sticky gates read — the engine's OWN exported values

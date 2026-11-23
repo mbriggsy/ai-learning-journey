@@ -55,7 +55,7 @@
  * the engine on the main thread so the first answer still renders. The fallback
  * shim DYNAMICALLY imports `engineProtocol` (import-safe outside a worker by
  * design) so the ~90 KiB engine stays out of the entry chunk unless the
- * fallback actually fires — `verify:bundle` guards the budget. The
+ * fallback actually fires. The
  * `runningInWorker` flag is set HERE at construction (never inside src/engine);
  * its downstream consumers (defer-recompute-past-paint, disable live recompute)
  * are the P2/P3 surfaces via `memoryModel`. The fallback's `reset` is a no-op:

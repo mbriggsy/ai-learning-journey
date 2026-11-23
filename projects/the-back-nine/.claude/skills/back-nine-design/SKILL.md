@@ -137,4 +137,4 @@ The shipped policy (verified in `vercel.json`) is `style-src 'self'` with **no `
 
 - **Prefer CSS custom properties set via stylesheet-driven classes over per-element inline `style={{…}}`** for anything dynamic.
 - **motion@12 layout-animation features inject a `<style>` element.** When animation lands using those features, either avoid them or supply a per-response nonce to both `style-src` and `<MotionConfig nonce>` (CLAUDE.md "CSP forward landmines").
-- **Self-host all fonts** — `connect-src 'self'`/`style-src 'self'` forbid a font CDN — and count them against the **300 KiB entry-JS byte budget** (`pnpm verify:bundle`).
+- **Self-host all fonts** — `connect-src 'self'`/`style-src 'self'` forbid a font CDN.

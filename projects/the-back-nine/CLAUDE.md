@@ -35,7 +35,6 @@ Precedence on conflict: the **roadmap's You-Are-Here table** wins on build statu
 | `pnpm test` | Vitest (`vitest run`) |
 | `pnpm test:watch` | Vitest watch mode |
 | `pnpm lint` | ESLint (layer boundaries + engine purity) |
-| `pnpm verify:bundle` | Initial-JS **byte budget** sentinel (≤ 300 KiB entry JS) |
 | `pnpm verify:aca` | ACA enhanced-subsidy **re-verify** gate (fails if `aca-last-verified.json` is stale/unconfirmed) |
 | `pnpm verify:state-tax` | State-income-tax **re-verify** gate for the priced roster {NC, PA, FL} (mirrors `verify:aca`; all three sit on the same **annual** drift cadence but each on its **own** `nextDue` — the gate judges every record separately, so it reds in two waves and the roster's real deadline is the earliest of the three; NC's ~Aug-2026 rate-certification checkpoint was retired 2026-08-02 by S.L. 2026-41 § 44.1(a)) |
 | `pnpm verify:csp` | Real-Chromium **CSP enforcement** gate (`e2e/csp.spec.ts` serves `dist/` through `vercel.json`'s headers — a blocked inline script, a blocked cross-origin fetch and a blocked cross-origin image beacon, each with a no-CSP control arm; the engine worker's round trip through the real intake; and, since 2026-10-03 (`225d8da4`), a pooled solve's coordinator + eval workers constructing violation-free under `worker-src 'self'`) — plus, since 2026-09-08, a second `webkit` Playwright project that greps `@cross-browser` and re-runs the two `e2e/vault.spec.ts` arms under WebKit (`scripts/__tests__/playwright-projects.test.ts` pins the project to the tag so it can never collect zero tests and stay green). This harness collects `e2e/**` by a `testIgnore` DENYLIST, so an unlisted spec lands here by default — since 2026-09-11 `scripts/__tests__/playwright-harness-partition.test.ts` runs every config's real collector and proves each `e2e/**` spec is claimed by exactly ONE harness and nothing under `e2e/held/` by a CI gate |
@@ -47,9 +46,10 @@ Precedence on conflict: the **roadmap's You-Are-Here table** wins on build statu
 
 ## Test cadence (Briggsy, 2026-11-22: "approved")
 
-**CI is the one full check; the laptop never repeats it as a routine.** Every push to main runs all eleven gates on
-ubuntu in four parallel jobs (`.github/workflows/verify-the-back-nine.yml`): `verify` (the quick checks, build, bundle,
-CSP), `verify-unit`, `verify-fit` and `verify-rv-chart-text`. A cheap red no longer stops the fit readings. Why: on
+**CI is the one full check; the laptop never repeats it as a routine.** All ten gates run on ubuntu in four parallel jobs
+across two workflows: `verify` (the quick checks, build, CSP; `.github/workflows/verify-the-back-nine.yml`) on every
+push to main, and `verify-unit`, `verify-fit` and `verify-rv-chart-text` (`.github/workflows/verify-the-back-nine-suite.yml`)
+on every push that changes more than Markdown. A cheap red no longer stops the fit readings. Why: on
 2026-11-22 the local whole-list run cost about 16 minutes per commit, CI then repeated it exactly, and in three months
 of CI reds no whole-list rerun caught a product bug the targeted runs missed (the facts: the commit that added this section).
 - **Before a push:** `pnpm typecheck`, `pnpm lint`, `pnpm verify:doc-stats` when a doc, a test count or a citation
@@ -60,8 +60,9 @@ of CI reds no whole-list rerun caught a product bug the targeted runs missed (th
 - **Planted faults (mutants) only when building a NEW kind of check** (a new assertion family or gate), not every unit.
 - **A CI red is fixed in the next commit.** Nothing deploys from main, so a red main harms no one; read the run by
   full sha at each start, as before.
-- Still open, his to rule: docs-only pushes running only `verify:doc-stats`, and the 300 KiB bundle limit against his
-  "download size doesn't matter" ruling. Unruled, both stay as they are.
+- **A docs-only push runs the quick job alone** (Briggsy, 2026-11-22: "1 - totally"), so it has no suite or fit run:
+  read those on the session's last code commit. The 300 KiB bundle limit is gone (his ruling the same night: "it's me.
+  I'm the customer of this app that runs locally").
 
 ## Layers & import boundaries (ESLint-enforced)
 

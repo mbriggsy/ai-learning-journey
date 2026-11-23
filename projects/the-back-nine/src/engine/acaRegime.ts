@@ -9,7 +9,7 @@
  *    decides the ACA disclosures — the same question, so the same rule, never two copies to drift.
  *
  * A LEAF on purpose: a type-only import, no runtime dependency, so the intake layer reaches it without
- * pulling the overlay machinery into the main bundle (`verify:bundle`).
+ * pulling the overlay machinery into the main bundle.
  *
  * EXACT, NOT APPROXIMATE. The regime flag picks WHICH applicable-% table `taxOverlay.ts`'s `acaTable`
  * holds, and the table's CONTENTS are read in exactly two places there, both behind a finite POSITIVE

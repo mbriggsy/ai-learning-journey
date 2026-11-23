@@ -1,13 +1,12 @@
 /**
  * The entry-chunk guard — a build-time refusal of any module that must never ship in the INITIAL JS: the entry
- * chunk plus every chunk it imports statically, the same set `verify:bundle` weighs (the entry `<script>` and its
- * `modulepreload` links). Wired into `vite build` from `vite.config.ts`; it never runs in dev or under vitest.
+ * chunk plus every chunk it imports statically (the entry `<script>` and its `modulepreload` links). Wired into `vite build` from `vite.config.ts`; it never runs in dev or under vitest.
  *
- * WHY A GUARD AND NOT ONLY THE BUDGET. The byte budget catches what is too BIG; this catches what is in the WRONG
- * PLACE, and names it. The copy catalog is the case: every lazy surface imports `copy.ts`, so an entry-graph module
+ * WHY A GUARD. The byte budget (`verify:bundle`, 300 KiB) caught what was too BIG until Briggsy retired it on
+ * 2026-11-22 ("I'm the customer of this app that runs locally"); this catches what is in the WRONG PLACE, and names it. The copy catalog is the case: every lazy surface imports `copy.ts`, so an entry-graph module
  * importing it too is the natural slip, and it drags ~100 KB of strings back into the first-load JS at once — the
  * CI red that split the catalog (run 42666885195; the register's *The whole copy catalog ships in the entry JS…*).
- * The budget would catch that slip only as a bare byte count, and only while its headroom stays smaller than the
+ * The budget caught that slip only as a bare byte count, and only while its headroom stayed smaller than the
  * catalog. This fails `pnpm build` with the module, the chunk and the fix.
  *
  * NEVER VACUOUS. It refuses a bundle with no entry chunk (it would check nothing), and a forbidden module found in

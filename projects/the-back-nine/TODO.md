@@ -803,7 +803,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     · **no document a friend reads** — the in-app honest-limits total is two sentences, and the app tells
     them to "validate with a professional" while handing that professional nothing readable · ✅ the solve
     lane's EDIT-TIME cancel shipped 2026-09-03 (`engineClient.ts:278 createResettableEngine` +
-    `memoryModel.ts:908-911`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
+    `memoryModel.ts:907-910`); what remains is the interactive tier and the MAIN-THREAD FALLBACK, which still
     freezes the tab for the whole solve and says nothing — its `reset` is a documented no-op
     (`engineClient.ts:51-63`; the old `:55` anchor named nothing about freezing).
     ⚑ **Folded 2026-09-06 from the superseded b9-3 plan (its item 8 — icons · WebKit arm · enlarged-text arm) — its 2026-09-04 re-verify clause, still live:** ✅ PWA icons DONE 2026-09-08 (his eye audits the silhouette sheet — path in the register's device entry) · ✅ WebKit e2e
@@ -818,7 +818,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     SVG glyph vocabulary (GradeSignal / verdictSignal / BandLegend) is the silhouette source; CSP already
     allows `img-src 'self'`. WEBKIT: `playwright install webkit` IS required (the on-disk `webkit-2272` is a
     stale revision — `@playwright/test` 1.60.0 needs 2287, launch fails today) + `webkit` on
-    `verify-the-back-nine.yml:91` (the `verify` job's install — NOT the Chromium-only `:146` and `:180` twins in the
+    `verify-the-back-nine.yml:84` (the `verify` job's install — NOT the Chromium-only `verify-the-back-nine-suite.yml:88` and `:120` twins in the
     `verify-fit` and `verify-rv-chart-text` jobs); scope at TEST level — `vault.spec.ts:70` (trust loop) + `:121`
     (second-tab read-only), never the whole file: the KDF spike `:145-176` asserts a Chromium-only
     thread-pool fact; the arm RECORDS the storage capability triple and asserts only Web Locks — WebKit exposes NO
@@ -864,10 +864,10 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     field (struck in the plan). ⚑ (b)'s SOURCE twin outlived that close — `heldOutSeed.ts:13-14` still said
     the U17 record stores the seed — and was swept 2026-09-25 (the register bullet is closed with it).
     ✅ **NC's RETIRED CERTIFICATION CHECKPOINT — SWEPT 2026-08-14.** Six shipped surfaces (not the
-    five filed; `CLAUDE.md:38` turned up in the sweep) still asserted the dead ~Aug-2026 event in
+    five filed; `CLAUDE.md:39` turned up in the sweep) still asserted the dead ~Aug-2026 event in
     PRESENT tense after S.L. 2026-41 struck every trigger row FY2025-26 → FY2032-33 on 2026-08-02:
-    `scripts/verify-state-tax.ts` header + its `nextDue` doc comment · `verify-the-back-nine.yml:66-68`
-    · project `CLAUDE.md:38` · and two in the engine — `constants/types.ts` and
+    `scripts/verify-state-tax.ts` header + its `nextDue` doc comment · `verify-the-back-nine.yml:61-63`
+    · project `CLAUDE.md:39` · and two in the engine — `constants/types.ts` and
     `validation/oracleToken.ts`. All now name it as RETIRED, in past tense, and the two engine
     docblocks additionally record that **`certification-pinnable` currently fires for NOBODY** — the
     kind survives only because the machinery is generic and the next directional state re-arms it,
@@ -920,11 +920,10 @@ schedule the July pass, or the first thing that tells you is a blocked build.
   NOT inside `projects/the-back-nine/`, which is why grepping the project dir "proves" there is no CI
   and has now produced a false claim twice. It triggers on push to `main` + PR on paths
   `projects/the-back-nine/**` (plus the workflow file itself), and by hand via `workflow_dispatch`, whose
-  `runner` choice (added `2766a852`) dry-runs a candidate image before the pin moves. It runs TWO parallel
-  jobs, both PINNED to `ubuntu-26.04`, never `ubuntu-latest` (`d878e4c3`): `verify`, in order —
-  `verify:aca` · `verify:state-tax` · `lint` · `typecheck` · `verify:doc-stats` · `test` · `build` ·
-  `verify:bundle` · `verify:csp` · `verify:fit` — and `verify-rv-chart-text`, which runs `verify:fit:rv` alone
-  (three serialized arms, each a full-precision solve, since 2026-09-07; 5.4 min for the whole step on the first `SOLVER_CODE_VERSION` 9 run (`53f1ae71`, run 37166135388) and 4.9–9.1 min across the green runs since (runs 38693180201 / 37221659495), against 36.0 min before the solve-time levers, run 37144203722, and 9.8 min after them on the single worker, run 37157413217). **All eleven.** `vercel.json` carries no
+  `runner` choice (added `2766a852`) dry-runs a candidate image before the pin moves. Since 2026-11-22 it runs
+  four parallel jobs across two workflows (the project CLAUDE.md's Test cadence names them; the suite workflow skips a
+  Markdown-only push), all PINNED to `ubuntu-26.04`, never `ubuntu-latest` (`d878e4c3`); `verify-rv-chart-text` runs `verify:fit:rv` alone
+  (three serialized arms, each a full-precision solve, since 2026-09-07; 5.4 min for the whole step on the first `SOLVER_CODE_VERSION` 9 run (`53f1ae71`, run 37166135388) and 4.9–9.1 min across the green runs since (runs 38693180201 / 37221659495), against 36.0 min before the solve-time levers, run 37144203722, and 9.8 min after them on the single worker, run 37157413217). **All ten** (the byte budget `verify:bundle` retired 2026-11-22). `vercel.json` carries no
   `buildCommand`, so a deploy still runs the default build with no gate — CI is the gate, Vercel is not.
 
 ---

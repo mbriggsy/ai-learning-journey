@@ -23,8 +23,8 @@ import type { UnlockCopyKey } from './unlockCopy'
  * PLANTS an encrypted vault from that seed and drops onto the unlock screen with the passphrase
  * pre-filled — so decrypt-on-return is one click, no re-driving the intake + Save ceremony.
  *
- * THE SPLIT: the intake subtree (and its engine tables) is a lazy chunk so the entry JS stays inside
- * the 300 KiB budget; it warms during the cold-start / probe read so Begin/Unlock never visibly wait.
+ * THE SPLIT: the intake subtree (and its engine tables) is a lazy chunk so the entry JS stays small;
+ * it warms during the cold-start / probe read so Begin/Unlock never visibly wait.
  * The Suspense fallback is deliberately EMPTY — the warm chunk makes it a sub-frame flash at worst.
  */
 /**

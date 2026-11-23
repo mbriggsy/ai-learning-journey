@@ -9,7 +9,7 @@
 import type { SpendSolveOutcome } from '@engine/spendSolve'
 import type { BandFan, DateSearchOutcome, Distribution, DollarAdjustment, Headline, HealthReadout, SimulationResult, SurvivorConditioned, SurvivorReading, TwoArmOutcome } from '@shared/model'
 // TYPE-ONLY (erased at compile — no runtime edge, so the MC engine + the solver stay OUT of the main
-// bundle; `verify:bundle` guards the real import graph). The solve payload's value model lives with the
+// bundle). The solve payload's value model lives with the
 // solver (solve.ts / solveEntry.ts); this module owns only the WIRE variant + the main-thread unpack.
 import type { SolveArm, SolveRecommendation } from '@engine/solver/solve'
 import type { SolvePayload } from '@engine/solver/solveEntry'

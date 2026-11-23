@@ -15,7 +15,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "verify:bundle": "tsx scripts/verify-prod-bundle.ts",
     "verify:aca": "tsx scripts/verify-aca-status.ts",
     "verify:state-tax": "tsx scripts/verify-state-tax.ts",
     "verify:csp": "playwright test",

@@ -7,7 +7,7 @@
  * WHY IT IS ITS OWN FILE. `copy.ts` is ~100 KB of minified strings, and every module the entry graph imports ships in
  * the first-load JS. While the entry imported `copy.ts`, every feature's words were first-load bytes, though all but
  * these were read only behind the lazy `IntakeApp` / `RecoveryFlow` / `RestoreFlow` boundary — and the initial JS
- * crossed `verify:bundle`'s 300 KiB budget (CI run 42666885195; the register's *The whole copy catalog ships in the
+ * crossed the 300 KiB byte budget then gating it (`verify:bundle`, retired 2026-11-22; CI run 42666885195; the register's *The whole copy catalog ships in the
  * entry JS…*). Now the entry graph imports THIS file only, and `copy.ts` rides the lazy chunks.
  *
  * ONE CATALOG STILL. `copy.ts` composes this slice into `copy` (spread last, so a key typed in both fails to compile),

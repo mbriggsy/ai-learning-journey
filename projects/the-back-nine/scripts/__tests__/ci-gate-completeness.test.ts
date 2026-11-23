@@ -31,12 +31,23 @@ import { join, resolve } from 'node:path'
  * green. So the `on:` block is read too (push to main + pull_request, each path-filtered to this
  * project), and a trigger shape it cannot read (a flow `on:`, `tags:`, `types:`, a `-ignore`
  * filter, a negated path) THROWS for the same reason.
+ *
+ * TWO workflows since 2026-11-22 (Briggsy: docs-only pushes run only the quick job): the quick
+ * `verify` job in verify-the-back-nine.yml fires on every push that touches the project, Markdown
+ * included, so verify:doc-stats reads every doc change; the suite, fit and RecommendationViz jobs in
+ * verify-the-back-nine-suite.yml skip a push that changes only Markdown, through ONE negated path,
+ * `DOCS_ONLY_SKIP`. That is the only negation either file may carry: any other still throws, and the
+ * quick file may carry none. Every gate is credited from the two files together.
  */
 
 const ROOT = process.cwd()
-/** The monorepo-root workflow that runs this project's gates (the same resolution as the partition test). */
-const WORKFLOW = resolve(ROOT, '..', '..', '.github', 'workflows', 'verify-the-back-nine.yml')
+const WORKFLOW_DIR = resolve(ROOT, '..', '..', '.github', 'workflows')
+/** The monorepo-root workflows that run this project's gates (the same resolution as the partition test). */
+const WORKFLOW = resolve(WORKFLOW_DIR, 'verify-the-back-nine.yml')
+const SUITE_WORKFLOW = resolve(WORKFLOW_DIR, 'verify-the-back-nine-suite.yml')
 const PROJECT_DIR = 'projects/the-back-nine'
+/** The suite workflow's one negated path: a push that changes only this project's Markdown skips it. */
+const DOCS_ONLY_SKIP = `!${PROJECT_DIR}/**/*.md`
 
 /** package.json scripts that are deliberately NOT CI gates. Each carries its reason. Keep this short:
  *  any script NOT named here must be run by the workflow. */
@@ -197,6 +208,19 @@ function audit(yml: string, scripts: Record<string, string>): Audit {
   return out
 }
 
+/** The two workflows' audits as one: a gate is credited when either file runs it. */
+function auditAll(ymls: readonly string[], scripts: Record<string, string>): Audit {
+  const out: Audit = { ran: new Map(), unknown: [], narrowed: [], guarded: [] }
+  for (const yml of ymls) {
+    const a = audit(yml, scripts)
+    for (const [s, where] of a.ran) out.ran.set(s, [...(out.ran.get(s) ?? []), ...where])
+    out.unknown.push(...a.unknown)
+    out.narrowed.push(...a.narrowed)
+    out.guarded.push(...a.guarded)
+  }
+  return out
+}
+
 /** Every package script that is neither credited as run by CI nor exempted. */
 const unwired = (scripts: Record<string, string>, a: Audit): string[] =>
   Object.keys(scripts).filter((s) => !Object.hasOwn(NON_GATE_SCRIPTS, s) && !a.ran.has(s)).sort()
@@ -272,8 +296,9 @@ function readTriggers(yml: string): Map<string, Trigger> {
 
 const PROJECT_GLOB = `${PROJECT_DIR}/**`
 
-/** What stops the gates firing on a push to main or on a PR that touches this project (empty = none). */
-function triggerHoles(yml: string): string[] {
+/** What stops the gates firing on a push to main or on a PR that touches this project (empty = none).
+ *  `allowedNegations`: the negated paths this file may carry (the suite's `DOCS_ONLY_SKIP`); any other throws. */
+function triggerHoles(yml: string, allowedNegations: readonly string[] = []): string[] {
   const on = readTriggers(yml)
   const holes: string[] = []
   for (const name of ['push', 'pull_request'] as const) {
@@ -282,7 +307,7 @@ function triggerHoles(yml: string): string[] {
       holes.push(`no \`${name}\` trigger: the gates never run on ${name === 'push' ? 'a push to main' : 'a pull request'}`)
       continue
     }
-    const negated = [...(t.branches ?? []), ...(t.paths ?? [])].filter((v) => v.startsWith('!'))
+    const negated = [...(t.branches ?? []), ...(t.paths ?? [])].filter((v) => v.startsWith('!') && !allowedNegations.includes(v))
     if (negated.length > 0) throw new Error(`[ci gates] \`${name}\` carries a negated filter (${negated.join(', ')}); extend triggerHoles() to read it`)
     // push pins main by name (the spelling the workflow uses); a PR fires for main unless a base-branch filter drops it.
     const firesForMain = name === 'push' ? (t.branches ?? []).includes('main') : t.branches === null || t.branches.includes('main')
@@ -300,19 +325,22 @@ function mutate(yml: string, from: RegExp, to: (...groups: string[]) => string):
   return yml.replace(from, (...m: string[]) => to(...m))
 }
 
-describe('CI gate completeness: package.json gates vs the workflow that runs them', () => {
+describe('CI gate completeness: package.json gates vs the workflows that run them', () => {
   const yml = existsSync(WORKFLOW) ? readFileSync(WORKFLOW, 'utf-8') : ''
+  const suite = existsSync(SUITE_WORKFLOW) ? readFileSync(SUITE_WORKFLOW, 'utf-8') : ''
   const scripts = readScripts()
 
-  it('reads the workflow: every run step resolves, and none is unknown, narrowed or guarded', () => {
-    expect(existsSync(WORKFLOW), `CI workflow not found at ${WORKFLOW}`).toBe(true)
-    const steps = readRunSteps(yml)
-    // Non-vacuity: the structural walk must attribute EVERY valued `run:` line in the raw text to a
-    // step. A walk that lost a job or a steps list would green every arm below on a shrunken set.
-    const rawRunLines = yml.split(/\r?\n/).filter((l) => /^\s*(?:-\s*)?run:\s*[^\s#]/.test(l)).length
-    expect(rawRunLines, 'no valued `run:` line in the workflow at all').toBeGreaterThan(0)
-    expect(steps.length, 'the step walk attributed fewer run steps than the text carries').toBe(rawRunLines)
-    const a = audit(yml, scripts)
+  it('reads both workflows: every run step resolves, and none is unknown, narrowed or guarded', () => {
+    for (const [path, text] of [[WORKFLOW, yml], [SUITE_WORKFLOW, suite]] as const) {
+      expect(existsSync(path), `CI workflow not found at ${path}`).toBe(true)
+      const steps = readRunSteps(text)
+      // Non-vacuity: the structural walk must attribute EVERY valued `run:` line in the raw text to a
+      // step. A walk that lost a job or a steps list would green every arm below on a shrunken set.
+      const rawRunLines = text.split(/\r?\n/).filter((l) => /^\s*(?:-\s*)?run:\s*[^\s#]/.test(l)).length
+      expect(rawRunLines, `no valued \`run:\` line in ${path} at all`).toBeGreaterThan(0)
+      expect(steps.length, `the step walk attributed fewer run steps than ${path} carries`).toBe(rawRunLines)
+    }
+    const a = auditAll([yml, suite], scripts)
     expect(a.unknown, 'a `pnpm <x>` step names no package.json script (renamed or deleted?)').toEqual([])
     expect(a.narrowed, 'a script step carries arguments; they may narrow the gate').toEqual([])
     expect(a.guarded, 'a script step is conditional or soft-failing; a skip is not a pass').toEqual([])
@@ -320,21 +348,24 @@ describe('CI gate completeness: package.json gates vs the workflow that runs the
   })
 
   it('every package.json script is run by CI, or exempted by name with a reason', () => {
-    const a = audit(yml, scripts)
+    const a = auditAll([yml, suite], scripts)
     const missing = unwired(scripts, a)
     expect(
       missing,
       `package.json script(s) that CI never runs: ${missing.join(', ')}. A gate CI does not run is not a ` +
-        `gate. Wire each into ${WORKFLOW} as \`- run: pnpm <name>\`, or, if it is genuinely not a check, ` +
-        'add it to NON_GATE_SCRIPTS with a one-line reason.',
+        `gate. Wire each into ${WORKFLOW} or ${SUITE_WORKFLOW} as \`- run: pnpm <name>\`, or, if it is genuinely ` +
+        'not a check, add it to NON_GATE_SCRIPTS with a one-line reason.',
     ).toEqual([])
     const exemptButRun = Object.keys(NON_GATE_SCRIPTS).filter((s) => a.ran.has(s))
     expect(exemptButRun, 'an exempted script IS run by CI, so the exemption is false; delete it').toEqual([])
   })
 
-  it('the gates are triggered: a push to main and every pull request that touches this project', () => {
+  it('the gates are triggered: a push to main and every pull request that touches this project; a docs-only push runs the quick job alone', () => {
     // Non-vacuity is built in: a read that lost `push` or `pull_request` reports it as a hole.
     expect(triggerHoles(yml), 'a gate CI is never triggered to run is not a gate').toEqual([])
+    expect(triggerHoles(suite, [DOCS_ONLY_SKIP]), 'a gate CI is never triggered to run is not a gate').toEqual([])
+    // The quick job reads every doc change: verify:doc-stats runs there, and that file skips nothing.
+    expect(audit(yml, scripts).ran.has('verify:doc-stats'), 'verify:doc-stats left the quick workflow, so a docs-only push checks nothing').toBe(true)
   })
 
   it('the exemption list names only live, non-gate scripts', () => {
@@ -346,29 +377,32 @@ describe('CI gate completeness: package.json gates vs the workflow that runs the
     expect(unreasoned, 'an exemption without a real reason').toEqual([])
   })
 
-  it('goes red on each hole it exists for (mutants of the real workflow, planted in memory)', () => {
+  it('goes red on each hole it exists for (mutants of the real workflows, planted in memory)', () => {
     const lf = yml.replace(/\r\n/g, '\n')
-    const baseline = audit(lf, scripts)
+    const lfSuite = suite.replace(/\r\n/g, '\n')
+    const baseline = auditAll([lf, lfSuite], scripts)
     expect(unwired(scripts, baseline), 'the baseline must be green before the mutants mean anything').toEqual([])
 
-    // A gate step deleted.
-    const noFit = mutate(lf, /^ *- run: pnpm verify:fit\n/m, () => '')
-    expect(unwired(scripts, audit(noFit, scripts))).toEqual(['verify:fit'])
+    // A gate step deleted, from either file.
+    const noFit = mutate(lfSuite, /^ *- run: pnpm verify:fit\n/m, () => '')
+    expect(unwired(scripts, auditAll([lf, noFit], scripts))).toEqual(['verify:fit'])
+    const noLint = mutate(lf, /^ *- run: pnpm lint\n/m, () => '')
+    expect(unwired(scripts, auditAll([noLint, lfSuite], scripts))).toEqual(['lint'])
     // A new script nobody classified: fail-loud, never green by default.
     expect(unwired({ ...scripts, storybook: 'storybook dev' }, baseline)).toEqual(['storybook'])
     // A step naming a script that does not exist.
-    expect(audit(mutate(lf, /pnpm verify:bundle$/m, () => 'pnpm verify:bundel'), scripts).unknown).toHaveLength(1)
+    expect(audit(mutate(lf, /pnpm verify:csp$/m, () => 'pnpm verify:cps'), scripts).unknown).toHaveLength(1)
     // A narrowed gate step.
-    expect(audit(mutate(lf, /pnpm test$/m, () => 'pnpm test -- --shard=1/2'), scripts).narrowed).toHaveLength(1)
+    expect(audit(mutate(lfSuite, /pnpm test$/m, () => 'pnpm test -- --shard=1/2'), scripts).narrowed).toHaveLength(1)
     // A soft-failing gate step.
     const soft = mutate(lf, /^( *)- run: pnpm lint$/m, (_m, ind) => `${ind}- run: pnpm lint\n${ind}  continue-on-error: true`)
     expect(audit(soft, scripts).guarded).toEqual([expect.stringContaining('pnpm lint')])
-    expect(unwired(scripts, audit(soft, scripts))).toEqual(['lint'])
+    expect(unwired(scripts, auditAll([soft, lfSuite], scripts))).toEqual(['lint'])
     // The same skip / soft failure behind a QUOTED key is still never a credited pass.
     for (const plant of ['"if": false', "'continue-on-error': true"]) {
       const quoted = mutate(lf, /^( *)- run: pnpm lint$/m, (_m, ind) => `${ind}- run: pnpm lint\n${ind}  ${plant}`)
       expect(audit(quoted, scripts).guarded, plant).toEqual([expect.stringContaining('pnpm lint')])
-      expect(unwired(scripts, audit(quoted, scripts)), plant).toEqual(['lint'])
+      expect(unwired(scripts, auditAll([quoted, lfSuite], scripts)), plant).toEqual(['lint'])
     }
     // Any OTHER quoted key inside a step throws: a quoted `"run":` would hide the step from the walk.
     expect(() => audit(mutate(lf, /- run: pnpm typecheck$/m, () => '- "run": pnpm typecheck'), scripts)).toThrow(/quoted key inside a step/)
@@ -376,6 +410,7 @@ describe('CI gate completeness: package.json gates vs the workflow that runs the
     expect(() => audit(mutate(lf, /- run: pnpm typecheck$/m, () => '- run: |\n          pnpm typecheck'), scripts)).toThrow(/block-scalar/)
     expect(() => audit(mutate(lf, /- run: pnpm build$/m, () => '- run: npm run build'), scripts)).toThrow(/not a pnpm command/)
     expect(() => audit(mutate(lf, /^ {2}verify:\n/m, () => '  verify:\n    if: false\n'), scripts)).toThrow(/job- or workflow-level/)
+    expect(() => audit(mutate(lfSuite, /^ {2}verify-fit:\n/m, () => '  verify-fit:\n    if: false\n'), scripts)).toThrow(/job- or workflow-level/)
     // A job's `defaults.run` moved off this project, in ANY key quoting: the quoted spelling sits outside
     // every step, so only the working-directory read itself can catch it. A quoted CORRECT value stays green.
     const verifyDefaults = /^( {2}verify:\n {4}runs-on: .*\n {4}defaults:\n {6}run:\n {8})working-directory: projects\/the-back-nine$/m
@@ -383,10 +418,12 @@ describe('CI gate completeness: package.json gates vs the workflow that runs the
       const moved = mutate(lf, verifyDefaults, (_m, head) => `${head}${key}: projects/elsewhere`)
       expect(() => audit(moved, scripts), key).toThrow(/sets working-directory to "projects\/elsewhere"/)
     }
-    expect(unwired(scripts, audit(mutate(lf, verifyDefaults, (_m, head) => `${head}"working-directory": "projects/the-back-nine"`), scripts))).toEqual([])
+    const quotedRight = mutate(lf, verifyDefaults, (_m, head) => `${head}"working-directory": "projects/the-back-nine"`)
+    expect(unwired(scripts, auditAll([quotedRight, lfSuite], scripts))).toEqual([])
 
     // Triggers: every step arm above stays green on each of these, so each needs its own red.
     expect(triggerHoles(lf), 'the trigger baseline must be green before the mutants mean anything').toEqual([])
+    expect(triggerHoles(lfSuite, [DOCS_ONLY_SKIP]), 'the suite trigger baseline must be green too').toEqual([])
     const noPush = mutate(lf, /^ {2}push:\n(?: {4}.*\n)+/m, () => '')
     expect(triggerHoles(noPush)).toEqual([expect.stringContaining('no `push` trigger')])
     const dispatchOnly = mutate(lf, /^on:\n(?: {2}.*\n)+/m, () => 'on:\n  workflow_dispatch: {}\n')
@@ -399,5 +436,9 @@ describe('CI gate completeness: package.json gates vs the workflow that runs the
     expect(() => triggerHoles(mutate(lf, /^( {4})branches: \[main\]$/m, (_m, ind) => `${ind}branches: [main]\n${ind}tags: ['v*']`))).toThrow(/cannot read/)
     expect(() => triggerHoles(mutate(lf, /^( {2}pull_request:\n {4}paths:\n)/m, (_m, head) => `${head}      - '!projects/the-back-nine/docs/**'\n`))).toThrow(/negated filter/)
     expect(() => triggerHoles(mutate(lf, /^on:\n(?: {2}.*\n)+/m, () => 'on: [push, pull_request]\n'))).toThrow(/not a block mapping/)
+    // The docs-only skip: the quick file may carry no negation, not even the suite's one, and the suite may
+    // carry that one and no other (a skip of `src/` would let a code push run no suite at all).
+    expect(() => triggerHoles(mutate(lf, /^( {2}pull_request:\n {4}paths:\n)/m, (_m, head) => `${head}      - '${DOCS_ONLY_SKIP}'\n`))).toThrow(/negated filter/)
+    expect(() => triggerHoles(mutate(lfSuite, /^( {2}pull_request:\n {4}paths:\n)/m, (_m, head) => `${head}      - '!projects/the-back-nine/src/**'\n`), [DOCS_ONLY_SKIP])).toThrow(/negated filter/)
   })
 })

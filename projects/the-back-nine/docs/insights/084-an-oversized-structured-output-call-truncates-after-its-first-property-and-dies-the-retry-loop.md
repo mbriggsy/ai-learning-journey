@@ -3,7 +3,7 @@ title: An oversized StructuredOutput call truncates after its first property —
 date: 2026-07-15
 phase: the state-tax engine unit (pre-build council)
 modules: [.claude/workflows/council.js, .claude/workflows/caddie.js]
-tags: [workflow, structured-output, schema, truncation, retry, council, multi-agent, size-law]
+tags: [workflow, structured-output, schema, truncation, retry, council, multi-agent, size-law, teammate, idle-notification, sendmessage, report-file]
 ---
 
 ## Problem
@@ -66,3 +66,14 @@ maxLengths, required-field-first — ran clean. The stronger form of the law: th
 the enforcement layer and the prompt is only advisory — cap array sizes and field lengths so
 that a maximal legal payload still fits under the truncation threshold, and order the one
 required field first so a truncated call fails loud on content, not on a missing property.
+
+## Extended (2026-11-23): the teammate channel truncates too — name a report file in every brief
+
+An agent-team teammate's final report over about 2,000 characters arrives cut off in its idle notification
+("[result truncated — ask the agent for the rest via SendMessage]"). Walk 3 lost 9 of its 11 seats' reports that way.
+b9-5's cure held through walks 4 and 5 (33 seats, none lost): each brief names an output file the seat writes its full
+report to and caps the reply at 80 words, and the chair reads the files. U8's build and review (b9-2) skipped the
+cure: of eight agents (the builder twice, three review lenses, three adversaries), six reports arrived cut off and each
+cost a resend round trip, and two arrived whole only because they were short. Same law as the StructuredOutput case
+above: the channel has a size cap the agent cannot see, so the brief must route anything long to a file. Put the file
+path and the reply cap in every brief that asks for a report longer than a paragraph.

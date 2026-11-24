@@ -619,6 +619,14 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 
 ## Citations and the doc gates
 
+- **(b9-2, 11-23) After `pnpm doc:reanchor <base> --apply`, never run it against the same base again**: it reads the
+  already-moved numbers as the base's and shifts each a second time (U8: 514 bogus moves and 38 bogus review items in the dry
+  run that followed). For the real review list after an apply, run the tool's logic over the base's own text of each citing
+  file, or re-anchor from a fresh base. The apply also moved insight 136's frozen historical citation, put back by hand.
+- **(moved from TODO's distill list, b9-2, 11-23) `pnpm doc:reanchor` gives a bare `:N` to a file name only when that name
+  ends within 60 characters before it on the same line** (`LAST_FILE`, `[^\n]{0,60}$`, `scripts/reanchor-citations.mjs`).
+  Farther tokens are skipped silently and reported as "0 for hand review". On a long multi-citation line, re-check every
+  far bare token by content after each run.
 - **(b9-1, 11-22; moved from TODO.md's review's gates, step 3) The re-anchor procedure for a commit that moves cited lines:** `pnpm doc:reanchor <base>` dry into a file, every move checked by CONTENT with `node scripts/check-reanchor-moves.mjs <dry file> <base>` from the project dir, BEFORE the apply (b9-2's, replacing the Dell's classifier: HEAD's line at the old number must equal the tree's at the new; a range spanning edited code and every SKIPPED line are checked by hand, and the REVIEW lines read one by one), then `--apply` once; restore `e2e/held/fit-24px-measurements.md` from HEAD and refuse the moves of the quoted examples in `docs/landmines.md` (the "two new register entries shifted `docs/backlog.md:1975`…" lines) and in this bullet, and restore `docs/council-log.md` and insight 136 from HEAD (a commit that adds a council-log row saves its edited file before the apply and puts it back after: the old rows' citations are frozen); then the positional pair-check, `node scripts/check-citation-pairs.mjs <base> <each moved code file>`, every line it prints judged (a frozen record stays; a missed bare token is fixed by content). The tool reads only files inside the project: a cited file outside it (`.github/workflows/verify-the-back-nine.yml`) is re-pointed by hand, by content (b9-1 met five).
 
 - **(b9-6, 11-21) TODO.md's start-of-file section runs at its 60,000-character cap** (59,993 at b9-5's close): a line added

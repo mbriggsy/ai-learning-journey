@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-23, b9-2):** THE MANDATE (Briggsy, 2026-11-22; memory `project-b9-mandate-replicate-rightcapital`): replicate RightCapital for him alone, all its features and its flow, to get confidence in his own plan; the bar is "Briggsy good" (no slop, no pointless tests or process; the global CLAUDE.md). The map is `docs/plans/rightcapital-map.md`, ruled 2026-11-22 (the workspace home; the map's order): each gap in that order, opened with `/brief <that gap>`. Gap 1 (workbench U2–U8) is done; statuses in the roadmap's mandate table. Next (`/distill` cleared by b9-3, 2026-11-23): gap 2 (the workspace with kept what-ifs), opened with `/brief <gap 2>`: re-check workbench U14–U16 against the map first (insight 041); U15 needs U9 (schema version 6), which the plan puts after build 2's close, so settling that order is gap 2's first step; then its build units, each opened with `/brief <that unit's topic>`; then the whole-file review with an adversary and every finding verified; then `/distill`. Owed to Briggsy: his cold read of the facts page's words. Parked (b9-5's call under the mandate, the register's composites entry, prescription (4)): the record card's seat. The D7 queue and the tiered lists below are pre-mandate: judge each against the mandate when it is reached.
+▶ **START HERE (2026-11-23, b9-2):** THE MANDATE (Briggsy, 2026-11-22; memory `project-b9-mandate-replicate-rightcapital`): replicate RightCapital for him alone, all its features and its flow, to get confidence in his own plan; the bar is "Briggsy good" (no slop, no pointless tests or process; the global CLAUDE.md). The map is `docs/plans/rightcapital-map.md`, ruled 2026-11-22 (the workspace home; the map's order): each gap in that order, opened with `/brief <that gap>`. Gap 1 (workbench U2–U8) is done; statuses in the roadmap's mandate table. Next (`/distill` cleared by b9-3, 2026-11-23): gap 2 (the workspace with kept what-ifs), re-checked against the map and its order settled by b9-3's commit 0 (the plan's 2026-11-23 amendment; the Act 5 block below has the order: U9 slim version 6, the floor raise, U14, U15, U16, U25); then its build units, each opened with `/brief <that unit's topic>`; then the whole-file review with an adversary and every finding verified; then `/distill`. Owed to Briggsy: his cold read of the facts page's words. Parked (b9-5's call under the mandate, the register's composites entry, prescription (4)): the record card's seat. The D7 queue and the tiered lists below are pre-mandate: judge each against the mandate when it is reached.
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** Its plan, `docs/plans/features/working-year-surplus-build-spec.md`, is checked as a whole; its
@@ -180,45 +180,30 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
    After the build: the whole-file review, with an adversary and every finding verified; then `/distill`. The record (brief,
    seven research dossiers, three deepen artifacts, the doc-review's `RESOLVED.md`) is in
    `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\`.
-2. **Then Act 5, the workbench, with the yield build inside it.** His go, 2026-11-11: next after build 2, ahead of the rest
-   of the D7 queue (`docs/plans/5-workbench-plan.md`, Key Decisions). It builds or touches *An inherited IRA has no account
-   kind…*, *The taxable account's yield never reaches a year's tax base…*, *Money the household says is in cash is grown
-   and swung like bonds* and *The detail-door era — nowhere to see how a number was reached*. Its plan is planned,
-   deepened and checked (`f32f8ea2`), not yet read. In this order, before any of its units lands (U24's first step too;
-   the register correction below is the one exception):
-   1. **Settle round 3's 15 open findings in the plan, in one commit that names each id, and set the plan's `receipt:`
-      line to "planned, deepened and checked".** Round 3 confirmed 13 and left 2 untraced (c3-coherence-2, c3-reach-3):
-      trace those two against the code before folding them. All 15 sit only in `f32f8ea2`'s commit message, the P1
-      among them (an inherited excess moved to taxable is an outside inflow, not today's required-withdrawal
-      relocation), and the receipt says "1 P0/P1 open" with no pointer. Each finding's full text is in the check's run
-      record, `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-playbook\d932aa6a-37fb-41bf-85f0-fe5c8f97616e\workflows\wf_058ffbec-d5f.json`
-      (one line of JSON: pull `result.findings` with a script). Fold each from its `verdict.fix`, never the seat's own
-      `suggested_fix`: where `verdict.fix.action` is `hand-verify` (the P1 among them), most verifiers judged the seat's
-      fix wrong and gave better ones. The record's plan line numbers run one below today's (`f32f8ea2` added the
-      `receipt:` line). That message's "U12" is Act 5's U12, never build 2's U12 above, and "U12's build starts by
-      settling these" is too late: some reach units that land before it (c3-coherence-2 adds KTD25's asked figures to
-      U13's list, stored facts that schema version 6 must hold, and U9 builds version 6 before U12; three are U23's,
-      whose council starts in Phase 1).
-   2. **Then the three blind readers.** Copy `C:\Users\brigg\ai-learning-journey\playbook\plan-readers.workflow.js` into
-      the session's scratchpad and launch it as `C:\Users\brigg\ai-learning-journey\playbook\how-to\plan-step.md` says:
-      `request` copied word for word from the `request` in the run record's `script` string (its `LAUNCH_ARGS`),
-      `plan.path` the plan's absolute path, `plan.lastLine` its last line with text after step 1's commit, and no
-      `brief` (the planner's brief sat in a scratchpad that is gone). Check each fault against the code, fix in the plan
-      the real ones a builder would hit, list the minor ones there unfolded (`playbook/how-to/plan-step.md`), and name
-      the fixes in the commit; that commit's message and the plan's `receipt:` line then both
-      say "planned, deepened, checked and read". The build starts only once the plan's history shows that.
-   - **OQ6 goes to Briggsy before U14** (should a working household's what-if show a date?), in a Back Nine session, as he
-     asked on 2026-11-12: "let's save that when we're in a dedicated b9 session".
+2. **Then Act 5, the workbench, with the yield build inside it.** His go, 2026-11-11 (`docs/plans/5-workbench-plan.md`,
+   Key Decisions); since 2026-11-22 its units are built in the map's order. It builds or touches *An inherited IRA has no
+   account kind…*, *The taxable account's yield never reaches a year's tax base…*, *Money the household says is in cash is
+   grown and swung like bonds* and *The detail-door era — nowhere to see how a number was reached*. Amended for gap 2 on
+   2026-11-23 (b9-3, the pilot's calls; the plan's top flag lists each change).
+   - **Gap 2's order:** the amendment (commit 0), U9 (slim schema version 6), the version floor raised to 6 in the next
+     commit, U14, U15, U16, then U25 (the workspace home); then the whole-file review and `/distill`. No round-3 settling
+     and no blind-reader pass gate gap 2: of round 3's 15 open findings only c3-adv-hidden-work-4 touches it, folded into
+     U15. OQ6 is decided (the pilot's call, 2026-11-23): a working household's what-if shows no date.
+   - **Round 3's other 14, the receipt's open P1 (c3-adv-hidden-work-2) among them, are gap 3's, U22's and U23's:**
+     settle them in the plan when gap 3 opens, from each finding's `verdict.fix`. The run record
+     (`wf_058ffbec-d5f.json`) is not on this laptop (searched 2026-11-23), so only `f32f8ea2`'s one-line summaries are
+     left: trace each against the code. Two were never traced: c3-coherence-2, c3-reach-3.
    - **OQ2 rides build 2's (m) above** ("savings" means three things: where bank cash belongs). Build 2's U12 only files
-     (m), so nothing in build 2 calls that council: ask for it in Act 5's Phase 1, as the plan's Sequencing says, with
-     KTD26 in front of it, since its ruling can move KTD26's fold, not only the labels. U10's bank kind waits for it;
-     how bank cash grows stays the cash entry's own council (KTD26).
-   - **U24's first step (his real plan's home) may land before build 2 closes,** once 1 and 2 are done; the rest of the
-     act waits for build 2's close (its U12, review and `/distill`; the plan's Sequencing).
+     (m), so nothing in build 2 calls that council: ask for it before U10's bank kind (gap 11), with KTD26 in front of
+     it, since its ruling can move KTD26's fold, not only the labels. How bank cash grows stays the cash entry's own
+     council (KTD26).
+   - **Build 2's close gates only U24's second step** (the door and the first promotion for real use), which lands before
+     his first real save; U24's first step can land any time. Never run build 2's whole-file review in a parallel session
+     with U9's codec commit (the same two files).
+   - **U23 (the yearly yield) lands before gap 6:** U22 depends on it, and KTD32 holds U19's ACA and IRMAA lines.
    - **The register's yield entry is the one piece of Act 5 that lands early.** Build 2's U12 register pass (c) adds to
      *The taxable account's yield never reaches a year's tax base…*: make the correction Act 5's U1 owns in that same
-     pass, before build 2 closes and before 1 and 2 above, since D7 already owes it (U1 then checks it against the read
-     plan). Prescription (2) waits on "his off-course discussion", and the WITHDRAWN-sentence bullet calls that discussion
+     pass, before build 2 closes, since D7 already owes it (U1 then checks it against the plan). Prescription (2) waits on "his off-course discussion", and the WITHDRAWN-sentence bullet calls that discussion
      "owed before the queue resumes". D7 (2026-10-21) closed it: a gap is a build, and a note is only its stopgap. His
      2026-11-11 go put the build inside this act (the plan's KTD32 and U23), with U7's stopgap line until U23 lands.
      Rewrite both spots, the owner line's own label "(the model — chapter two)" (leave its quote of the council's ruling,

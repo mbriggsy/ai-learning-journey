@@ -22,7 +22,7 @@ facts stay out of this file.
 
 This map widens [5-workbench.md](5-workbench.md) and [5-workbench-plan.md](5-workbench-plan.md). Those two scoped a
 workbench room beside B9. The mandate makes RightCapital's whole feature set and flow the target. Their units remain the
-build pieces for the rows they cover (named below), and none of them is built.
+build pieces for the rows they cover (named below). Gap 1's units (U2–U8) are built; the rest are not.
 
 ## How each one flows
 
@@ -124,7 +124,7 @@ Sizes are rough: S is about a session, M a few, L a week of sessions.
 
 | RightCapital | B9 today | Status |
 |---|---|---|
-| A market drop now or at retirement, lower returns, higher inflation, higher taxes, a Social Security cut, a longer life; one at a time and combined, odds re-run | None in the app. A historical replay exists in the engine for validation only (`historical.ts`) | Gap: M (U4 starts it) |
+| A market drop now or at retirement, lower returns, higher inflation, higher taxes, a Social Security cut, a longer life; one at a time and combined, odds re-run | None in the app. A historical replay exists in the engine for validation only (`historical.ts`) | Gap: M (U4 starts it). For gap 8's `/brief` (2026-11-23): a fixed shock in year k applied to every path, such as a drop at retirement, uses no draw, since [architecture.md](../architecture.md) §3 allows a fixed tilt on the one shared draw; the workbench plan's KTD30 ("a fall in a later year would need a draw of its own") holds only for a fall in a random year |
 
 ### 7. Investments
 
@@ -144,7 +144,7 @@ business planning; stock plans; insurance-needs analysis; estate flowcharts and 
 ## The order (ruled 2026-11-22: this one, as recommended)
 
 1. **The year-by-year table** (U2–U7). It is "the amount you need to pull from each source", and every later row shows on it.
-2. **The workspace, with what-ifs on every input, kept by name** (U14–U16), and the flow question answered.
+2. **The workspace, with what-ifs on every input, kept by name** (U14–U16), and the flow question answered. Since the plan's 2026-11-23 amendment: U9 (a slim schema version 6), then U14–U16, then U25 (the workspace home).
 3. **The inherited-IRA account kind** (U11–U13). Tier 0: one entered as a traditional IRA reads rosy three ways today.
 4. **Repeating expenses, a per-line inflation rate, a fixed payment that ends** (U18 plus the register's mortgage entry).
 5. **One-time money in** (inheritance, home sale).
@@ -166,3 +166,6 @@ business planning; stock plans; insurance-needs analysis; estate flowcharts and 
 - `docs/roadmap.md` gains the mandate's act, and its You-Are-Here table gains rows as units land.
 - Each gap is built in his order, opened with `/brief <that gap>`. Where a workbench unit covers it, that unit's plan is the
   starting point. Re-check the unit against this map first (insight 041: a plan step written before a decision is a guess).
+- The yearly yield build (workbench U23) has no gap of its own in the order above. It must land before gap 6, because U22
+  depends on it and the workbench plan's KTD32 holds U19's ACA and IRMAA lines until it lands (the pilot's call, b9-3,
+  2026-11-23).

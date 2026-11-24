@@ -995,6 +995,19 @@ reachability.
   the clone's printed count reads (the sticky triple exists so a re-figure never flickers the printed count; the what-if
   compares readings, which wants raw on both sides), record the ruling here, and add a test that feeds one snapshot with
   a held `displayed` triple and proves every count on Probability and Snapshot reads the same number.
+  **RULED (2026-11-24, b9-5, the pilot's call): RAW, everywhere the clone prints a count.** Snapshot's ring and stat
+  rings, Probability's two rings, the intro sentence (`composeVerdictReading` fed the raw headline's triple, the shape
+  `resolveStickyDisplay(null, headline, dollar)` returns), the difference line, and the gear drawer's assumption echo
+  (`AssumptionPanel.tsx`'s `displayed` reads become the raw triple, with its `worsened` flag comparing raw counts), and
+  the interim Tax Strategies tab's lead gate (`Result.tsx`'s `snapshot.displayed` membership test). Why raw: an empty
+  what-if returns the plan's own bytes (U14), so a sticky "Your plan" beside it would print two counts for one unchanged
+  plan, and with a lever pulled it would make the lever read one count better than it is at an edge, the rosy direction
+  for a what-if (insight 072's hold keeps the LOWER plan count). What raw costs: the anti-flicker hold only ever held a
+  one-step RISE landing exactly on an edge, the raw count is the engine's own quantized headline (cross-engine robust),
+  and the tray no longer recomputes per keystroke (explicit Refresh). The working route is unchanged (the seam never
+  applied to `date`). The store's sticky seam (`resolveStickyDisplay`, `snapshot.displayed`) keeps its tests and has no
+  printed reader after RC4; RC21 deletes it with them. The test: one snapshot whose `displayed` holds 8 over a raw 9
+  renders 9 in every count on Snapshot, Probability and the drawer's echo.
 - **Highcharts' own words.** Its built-in accessibility sentences (`lang`, such as "Combination chart with 5 data
   series", which also counts the fan's two hidden word series) do not come from `copy.ts` yet (decision 11): the
   screen's composer supplies `lang` and the point-description formatter.
@@ -1918,6 +1931,8 @@ as the odds)? Is colour the only signal anywhere? Does any old honesty line lack
   `theme.css`), and delete the token-name collision test (nothing left to collide with); delete the interim banner and
   every interim-tab path; delete `vertical-fit.spec.ts` if empty; drop the old fonts' arms from
   `design-tokens.spec.ts`.
+- Delete the store's sticky display seam (`resolveStickyDisplay`, `HEADLINE_STICKY_EPS`, `snapshot.displayed` and its
+  capture in `commit()`) with its tests, once no reader is left (RC4's raw ruling took the last printed one).
 - Re-point the Caddie capture harness's targets to the new screens.
 - Docs: the roadmap's Act 6 rows closed; `docs/product.md`'s flow sections read the clone; `docs/architecture.md` §12
   final; `back-nine-design` final pass; the project `CLAUDE.md`'s commands table (the gates' descriptions name the new

@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * src/viz/recommendationViz.css — the recommend-second two-arm comparison (Act-4 · U16 §S3b).
  * Static classes only (style-src 'self' — no inline styles); the series COLORS arrive as SVG
  * presentation attributes from palette.ts, so this file owns the NON-COLOR channels only: the
@@ -86,4 +86,5 @@
   stroke: var(--ink);
   stroke-width: 1.25;
   vector-effect: non-scaling-stroke;
+}
 }

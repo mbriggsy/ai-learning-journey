@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * src/viz/band.css — layout + STATIC token colors for the ConfidenceBand, its drawer, and the
  * enlarge modal. Loaded by the components.
  *
@@ -394,4 +394,5 @@
   .band-modal__close {
     transition: none;
   }
+}
 }

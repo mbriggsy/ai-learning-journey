@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * src/ui/styles/recommendation.css — Act-4 · U16 the recommend-second beat's surface styles.
  *
  * §S2 ships the PENDING tell's layout only. §S3 EXTENDS this file for the committed grade lockup +
@@ -565,4 +565,5 @@
   font-size: var(--text-xs);
   color: var(--ink-muted);
   text-wrap: pretty;
+}
 }

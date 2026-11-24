@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * Base element layer — the quiet defaults every surface inherits.
  * Reads ONLY tokens.css var()s (the canonical-source rule); components add their own
  * stylesheets on top. No utility framework — this product's CSS stays small and intentional.
@@ -226,4 +226,5 @@ h4[tabindex='-1']:focus-visible {
   .cs-refiguring {
     animation: none;
   }
+}
 }

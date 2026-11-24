@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * App-shell surfaces that live OUTSIDE the intake column (src/ui). The intake owns its own
  * layout (src/intake/intake.css); this is the quiet frame around it. Reads tokens.css var()s
  * only (the canonical-source rule) — no raw values.
@@ -243,4 +243,5 @@ main.result[data-inframe-disclaimer] ~ .disclaimer {
     transform: none;
     transition: opacity var(--dur-fast) ease;
   }
+}
 }

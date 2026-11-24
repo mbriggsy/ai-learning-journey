@@ -2,13 +2,15 @@ import { defineConfig, configDefaults } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import basicSsl from '@vitejs/plugin-basic-ssl'
+import tailwindcss from '@tailwindcss/vite'
 import { entryChunkGuard } from './scripts/entryChunkGuard'
+import { join } from 'node:path'
 
 // Vite 8 / Rolldown convention (mirrors projects/burned): `rolldownOptions`, not
 // `rollupOptions`; `resolve.tsconfigPaths` (native, no vite-tsconfig-paths plugin);
-// `import.meta.dirname`. Single-entry SPA, so no explicit build.input is needed —
-// the engine worker emits as its own hashed chunk via `new URL(...)` in
-// src/store/engineClient.ts and is precached through the globPatterns below.
+// `import.meta.dirname`. Two HTML entries (build.rolldownOptions.input below): the app, and Act 6's stack
+// probe (kit-probe.html, deleted at RC19). The engine worker emits as its own hashed chunk via `new URL(...)`
+// in src/store/engineClient.ts and is precached through the globPatterns below.
 export default defineConfig(({ mode }) => ({
   plugins: [
     // `pnpm dev:phone` only (mode 'phone'): self-signed HTTPS so a PHONE on the LAN
@@ -21,6 +23,9 @@ export default defineConfig(({ mode }) => ({
     // every other mode byte-identical.
     ...(mode === 'phone' ? [basicSsl()] : []),
     react(),
+    // Tailwind v4 (Act 6): compiles src/ui/styles/theme.css to static CSS at build time (CSP clean). Its preflight is
+    // NOT imported; theme.css carries a copy scoped under .rc-root and names its own sources (plan 6, section 2.1).
+    tailwindcss(),
     // `vite build` only: refuses a module that must never ship in the first-load JS (the copy catalog — the
     // entry graph reads `src/ui/entryCopy.ts` instead). Names the module and the fix; scripts/entryChunkGuard.ts.
     entryChunkGuard(),
@@ -77,6 +82,12 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     tsconfigPaths: true,
   },
+  // Dev only: Highcharts' ES modules are served as they are, never pre-bundled. Pre-bundled, the accessibility module
+  // and the Highcharts master landed in separate dependency chunks that import each other, and the probe died in
+  // `pnpm dev` with "Class extends value undefined" while the production build ran clean (measured 2026-11-24, RC1).
+  optimizeDeps: {
+    exclude: ['highcharts', '@highcharts/react'],
+  },
   server: {
     host: true,
   },
@@ -87,6 +98,12 @@ export default defineConfig(({ mode }) => ({
     // no inline) would block, breaking the app on Vercel as well as locally.
     // This is what makes the CSP achievable without 'unsafe-inline'.
     modulePreload: { polyfill: false },
+    rolldownOptions: {
+      input: {
+        main: join(import.meta.dirname, 'index.html'),
+        kitProbe: join(import.meta.dirname, 'kit-probe.html'),
+      },
+    },
   },
   test: {
     // Vitest owns the co-located unit/integration suite (`*.test.ts`). The browser

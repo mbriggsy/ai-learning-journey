@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * src/intake/assumptions.css — the AssumptionPanel's CONTENT styles (P3·U12 · C1).
  *
  * Shell geometry (backdrop, stage, chrome-less scroll + shadow cue, the 50rem laptop stage)
@@ -157,4 +157,5 @@
   flex-wrap: wrap;
   gap: var(--space-3);
   align-items: center;
+}
 }

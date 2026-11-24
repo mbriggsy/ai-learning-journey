@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Act 6's stack probe (plan docs/plans/6-rightcapital-ui-plan.md, section 2.3): a second build entry, served in
+         dist/ so `pnpm verify:csp` opens every new library under the real header. No app code path links here, and it
+         is deleted at RC19. -->
+    <title>Kit probe</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- The kit's portal host: Base UI's popups portal here, so the scoped preflight under .rc-root reaches them. -->
+    <div id="rc-portal" class="rc-root"></div>
+    <!-- External module entry only — no inline scripts (CSP: script-src 'self'). -->
+    <script type="module" src="/src/kit-probe.tsx"></script>
+  </body>
+</html>

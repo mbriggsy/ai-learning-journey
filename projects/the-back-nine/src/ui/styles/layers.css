@@ -1,0 +1,8 @@
+/*
+ * The cascade-layer order for Act 6 (plan docs/plans/6-rightcapital-ui-plan.md, section 2.1 decision 2). Imported FIRST
+ * by every entry (src/main.tsx, src/kit-probe.tsx), so this statement fixes the order before any layer block is seen.
+ * A later layer beats an earlier one whatever the specificity: every old stylesheet sits in `legacy` (each file's rules
+ * wrapped in `@layer legacy`), so the new kit, chart and utility layers win where they reach, and the old surfaces
+ * keep their own order inside `legacy` untouched. RC21 deletes the legacy layer.
+ */
+@layer legacy, theme, base, kit, charts, utilities;

@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * Intake flow styles — the Clubhouse Ledger applied to the front door.
  * Reads ONLY tokens.css var()s (the canonical-source rule — the no-hex shape
  * test covers this file). Composition over chrome: one calm column, cardless;
@@ -949,4 +949,5 @@
 .wy-row--stack .wy-row__value {
   text-align: start;
   white-space: normal;
+}
 }

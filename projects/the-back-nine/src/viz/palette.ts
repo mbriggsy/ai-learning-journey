@@ -123,3 +123,127 @@ export const BAND_L_OUTER = 0.82
 export const BAND_FILL_INNER_P = 0.46
 /** Ramp position for the outer p10–p90 fill (lighter / lower-emphasis). */
 export const BAND_FILL_OUTER_P = 0.84
+
+// ── Act 6: RightCapital's categorical series and the clone's band (plan 6-rightcapital-ui-plan.md, 2.1 decision 4) ──
+// Typed ONCE here. `src/viz/charts/seriesVars.ts` writes RC_SERIES onto the root as `--highcharts-color-N` through the
+// CSSOM at start-up, which is how Highcharts' styled mode (and `chartTheme.css`) reads them; no stylesheet re-types a
+// series hex. The Okabe–Ito exports above stay for the old charts and go with the last of them (RC10).
+//
+// Meanings kept from RightCapital (ref 3.2): green = the what-if or recommendation, blue = the plan it is compared
+// against; orange = tax-deferred or withdrawals; red = expenses or a shortfall. Colour is never the only signal: every
+// side-by-side pairing carries a second cue (line style, hatch, printed value, end label), and RC_PAIRS below lists
+// each pairing with its verdict, checked by `src/viz/__tests__/colorblind.test.tsx`.
+
+/** RightCapital's hues by name (ref 3.2), plus the 22% bracket line's darker stroke (plan 2.2). */
+export const RC_HUES = {
+  blue: '#5070e6',
+  green: '#56a58c',
+  orange: '#f09e36',
+  lightGreen: '#8ed88e',
+  sky: '#53c0f1',
+  red: '#e95b67',
+  indigo: '#5a58bc',
+  orchid: '#b971c6',
+  purple: '#8466c5',
+  deepIndigo: '#3d3baa',
+  sand: '#e1bd74',
+  teal: '#25a88b',
+  salmon: '#e0897f',
+  /** The 22% bracket line's stroke: sand itself is 1.79:1 on white, this is 3.56:1 (plan 2.2). Not a series slot. */
+  sandInk: '#a8822f',
+} as const
+
+export type RcHue = keyof typeof RC_HUES
+
+/** RightCapital's categorical order (ref 3.2): index N is Highcharts' colour index N (`.highcharts-color-N`), assigned
+ *  in this fixed order, never cycled. */
+export const RC_SERIES = [
+  RC_HUES.blue,
+  RC_HUES.green,
+  RC_HUES.orange,
+  RC_HUES.lightGreen,
+  RC_HUES.sky,
+  RC_HUES.red,
+  RC_HUES.indigo,
+  RC_HUES.orchid,
+  RC_HUES.purple,
+  RC_HUES.deepIndigo,
+  RC_HUES.sand,
+  RC_HUES.teal,
+  RC_HUES.salmon,
+] as const
+
+/**
+ * Every pairing of two hues that sits side by side anywhere in the clone, with its verdict (plan 2.2):
+ *   - `floor`: the pair clears CVD_MIN_OKLAB with normal vision and under all three simulations;
+ *   - `cue`: the pair does not, and the named second cue carries it (the chart that draws it must draw that cue);
+ *   - `apart`: the two never share a chart.
+ * Measured with culori 4.0.2 (oklab, full severity) on 2026-11-24; the test re-measures every row.
+ */
+export type RcPairVerdict =
+  | { readonly kind: 'floor' }
+  | { readonly kind: 'cue'; readonly cue: string }
+  | { readonly kind: 'apart' }
+
+export interface RcPair {
+  readonly a: RcHue
+  readonly b: RcHue
+  readonly where: string
+  readonly verdict: RcPairVerdict
+}
+
+export const RC_PAIRS: readonly RcPair[] = [
+  { a: 'blue', b: 'green', where: 'your plan against the what-if or recommendation', verdict: { kind: 'floor' } },
+  { a: 'orange', b: 'green', where: 'pre-tax against Roth in a stack', verdict: { kind: 'floor' } },
+  { a: 'orange', b: 'red', where: 'the 24% and 32% bracket lines', verdict: { kind: 'floor' } },
+  { a: 'blue', b: 'red', where: 'taxable against expenses', verdict: { kind: 'floor' } },
+  { a: 'indigo', b: 'orange', where: 'Social Security against withdrawals', verdict: { kind: 'floor' } },
+  { a: 'blue', b: 'orange', where: 'taxable against pre-tax in a stack', verdict: { kind: 'floor' } },
+  { a: 'blue', b: 'sky', where: 'taxable against HSA in a stack', verdict: { kind: 'floor' } },
+  { a: 'sky', b: 'green', where: 'HSA against Roth in a stack', verdict: { kind: 'floor' } },
+  { a: 'sandInk', b: 'orange', where: 'the 22% and 24% bracket lines, the 22% drawn in its ink', verdict: { kind: 'floor' } },
+  {
+    a: 'green',
+    b: 'red',
+    where: 'assets against debts',
+    verdict: { kind: 'cue', cue: 'debts sit below the zero line or in their own bar, in parentheses, named on the axis' },
+  },
+  {
+    a: 'lightGreen',
+    b: 'sand',
+    where: 'series slots 3 and 10',
+    verdict: { kind: 'cue', cue: 'a printed name on each segment; never side by side unlabelled' },
+  },
+  {
+    a: 'sand',
+    b: 'orange',
+    where: 'a sand fill beside an orange one',
+    verdict: { kind: 'cue', cue: 'a dash pattern of its own and an end label on each line' },
+  },
+  {
+    a: 'blue',
+    b: 'purple',
+    where: 'Federal against Local tax',
+    verdict: { kind: 'cue', cue: 'a printed name and value on each segment' },
+  },
+  {
+    a: 'indigo',
+    b: 'purple',
+    where: 'the stress test Baseline and Combined bars',
+    verdict: { kind: 'cue', cue: 'the stress name under each bar and its count printed on top; Baseline outlined, Combined hatched' },
+  },
+  { a: 'green', b: 'teal', where: 'series slots 1 and 11', verdict: { kind: 'apart' } },
+]
+
+/**
+ * The clone's confidence band (ref 3.3; plan 2.2): B9's lightness law (the L stops above, ordered by luminance) at
+ * RightCapital's hue, about 272. Chroma is 0.085, under the 0.095 cap: at hue 272 the cap's outer stop (L 0.82) falls
+ * outside sRGB and clamps (the widest chroma that keeps the whole L range in gamut there is 0.0895, measured with culori
+ * on 2026-11-24). The old band keeps BAND_HUE until RC10.
+ */
+export const RC_BAND = {
+  hue: 272,
+  chroma: 0.085,
+  lMedian: BAND_L_MEDIAN,
+  lOuter: BAND_L_OUTER,
+} as const

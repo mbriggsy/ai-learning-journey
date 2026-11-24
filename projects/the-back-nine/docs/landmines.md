@@ -1158,6 +1158,17 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## UI and product
 
+- **(b9-4, 11-24) Highcharts' accessibility module must be imported AFTER `@highcharts/react`** (or after `highcharts`
+  itself). Imported first, it reads the namespace's `Chart`, `Series` and `Legend` before the master fills them, and the
+  built page dies with "Cannot read properties of undefined (reading 'prototype')". And under `pnpm dev`, Vite's
+  dependency pre-bundler split the module and the master into chunks that import each other ("Class extends value
+  undefined") while `pnpm build` ran clean: `vite.config.ts` excludes both packages from `optimizeDeps`. A green build is
+  not a green dev server for Highcharts; load a chart page under `pnpm dev` before trusting it (RC1, `src/kit-probe.tsx`).
+- **(b9-4, 11-24) A Tailwind utility beats every old stylesheet.** The old sheets sit in `@layer legacy`, the lowest
+  layer, and Tailwind's utilities in the highest, so an old element whose class shares a utility's name (`table`,
+  `hidden`, `flex`) would silently change. `theme.css` imports the utilities with `source(none)` and lists each new
+  folder with `@source`; never switch automatic detection back on before RC21, and add each new kit or screen folder
+  to that list when its first file lands. A utility named in a probe's comment still ships to the main app's CSS.
 - **(b9-1, 11-23) `overflow-wrap: anywhere` in a table cell lowers the cell's narrowest width to one letter**, so an
   auto-layout table squeezed toward its narrowest breaks headers mid-word ("Christop / her", "Spendin / g"); every
   width check passes it. The year-by-year table's headers break between words only (`workbench.css`), and a long

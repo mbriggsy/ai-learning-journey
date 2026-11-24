@@ -8,18 +8,18 @@ import {
   filterDeficiencyDeuter,
   filterDeficiencyProt,
   filterDeficiencyTrit,
-  differenceEuclidean,
+  differenceEuclidean, displayable,
 } from 'culori'
 import { describe, expect, it } from 'vitest'
 import {
-  BAND_FILL_INNER_P,
-  BAND_FILL_OUTER_P,
+  BAND_FILL_INNER_P, BAND_L_MEDIAN, BAND_L_OUTER,
+  BAND_FILL_OUTER_P, RC_BAND, RC_HUES, RC_PAIRS, type RcPair,
   CVD_METRIC,
   CVD_MIN_OKLAB,
   OKABE_ITO,
   SERIES,
 } from '../palette'
-import { bandStopCss } from '../scale'
+import { bandStopCss, rcBandStopCss } from '../scale'
 import { GRADE_GLYPH, VERDICT_GLYPH, type VerdictGlyph } from '../../ui/glyphs'
 
 /**
@@ -359,5 +359,102 @@ describe('CVD self-test — the state-signal glyphs are pairwise-DISTINCT silhou
     expect(glyphSignature(aliased)).toBe(glyphSignature(source))
     // …and a genuinely different form does NOT collapse (the probe is not trivially-equal either).
     expect(glyphSignature(GRADE_GLYPH.confident)).not.toBe(glyphSignature(GRADE_GLYPH['coin-flip']))
+  })
+})
+
+// ─── Act 6: RightCapital's series pairs and the clone's band (plan 6-rightcapital-ui-plan.md, 2.2) ──────────────────
+// Every pairing that sits side by side anywhere in the clone is listed once in palette.ts's RC_PAIRS with its verdict:
+// `floor` (clears the 0.10 oklab floor with normal vision AND under all three simulations), `cue` (does not, and a named
+// second cue carries it), or `apart` (the two never share a chart). Each row is re-measured here, so a pair moved to
+// `floor` that merges, or a `cue` row that names no cue, reds.
+
+const NORMAL_AND_SIMS = [['normal', (c: ReturnType<typeof mustParse>) => c], ...SIMS] as const
+
+/** The weakest separation of a pair across normal vision and the three simulations, with the view that binds. */
+function weakest(a: string, b: string): { readonly d: number; readonly view: string } {
+  const pa = mustParse(a)
+  const pb = mustParse(b)
+  return NORMAL_AND_SIMS.map(([view, sim]) => ({ view, d: distOklab(sim(pa), sim(pb)) })).reduce((m, x) => (x.d < m.d ? x : m))
+}
+
+/** Every `floor` row that merges somewhere, named; the real list and the planted row go through the same check. */
+function floorFailures(pairs: readonly RcPair[]): string[] {
+  return pairs
+    .filter((p) => p.verdict.kind === 'floor')
+    .map((p) => ({ p, w: weakest(RC_HUES[p.a], RC_HUES[p.b]) }))
+    .filter(({ w }) => w.d < CVD_MIN_OKLAB)
+    .map(({ p, w }) => `${p.a} vs ${p.b} (${p.where}): ${w.d.toFixed(3)} under ${w.view}`)
+}
+
+describe('CVD self-test — the clone’s side-by-side pairs (RC_PAIRS)', () => {
+  it('every floor pair clears the 0.10 floor with normal vision and under all three simulations', () => {
+    expect(floorFailures(RC_PAIRS)).toEqual([])
+  })
+
+  it.each(RC_PAIRS.filter((p) => p.verdict.kind === 'cue').map((p) => [`${p.a} vs ${p.b}`, p] as const))(
+    'the cue pair %s names its second cue and really needs it (it merges somewhere)',
+    (_label, pair) => {
+      expect(pair.verdict.kind === 'cue' && pair.verdict.cue.trim().length > 0, 'a cue row names its cue').toBe(true)
+      expect(weakest(RC_HUES[pair.a], RC_HUES[pair.b]).d, 'a pair that clears the floor is a floor row').toBeLessThan(CVD_MIN_OKLAB)
+    },
+  )
+
+  it('green and teal never share a chart: listed apart, and they do merge (0.011 under protanopia, measured)', () => {
+    const apart = RC_PAIRS.filter((p) => p.verdict.kind === 'apart')
+    expect(apart.map((p) => [p.a, p.b])).toEqual([['green', 'teal']])
+    expect(weakest(RC_HUES.green, RC_HUES.teal).d).toBeLessThan(CVD_MIN_OKLAB)
+  })
+
+  it('PLANTED: a merging pair entered as floor with no cue FAILS the same check (the gate is not vacuous)', () => {
+    const planted: RcPair = { a: 'lightGreen', b: 'sand', where: 'planted', verdict: { kind: 'floor' } }
+    expect(floorFailures([planted])).toHaveLength(1)
+  })
+
+  it('the 22% bracket line is drawn in sand-ink: it clears the floor against the 24% orange where sand itself does not', () => {
+    expect(weakest(RC_HUES.sandInk, RC_HUES.orange).d).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
+    expect(weakest(RC_HUES.sand, RC_HUES.orange).d).toBeLessThan(CVD_MIN_OKLAB)
+  })
+})
+
+// The clone's page surface, source-bound to theme.css's --color-bg (never re-typed).
+function readThemeToken(name: string): string {
+  const here = dirname(fileURLToPath(import.meta.url))
+  const css = readFileSync(join(here, '..', '..', 'ui', 'styles', 'theme.css'), 'utf8')
+  const m = css.match(new RegExp(`${name}:\\s*(#[0-9a-fA-F]{6})\\b`))
+  if (m === null) throw new Error(`${name} not found in theme.css — the CVD probe cannot run`)
+  return m[1]!
+}
+
+describe('CVD self-test — the clone’s band (RC_BAND: B9’s lightness law at hue about 272)', () => {
+  const P = Array.from({ length: 21 }, (_, i) => i / 20)
+  const css = P.map((p) => rcBandStopCss(p))
+  const stops = css.map(hexOf)
+  const BG = readThemeToken('--color-bg')
+
+  it('sits at RightCapital’s hue (about 272) on B9’s lightness stops', () => {
+    expect(RC_BAND.hue).toBeGreaterThanOrEqual(268)
+    expect(RC_BAND.hue).toBeLessThanOrEqual(276)
+    expect([RC_BAND.lMedian, RC_BAND.lOuter]).toEqual([BAND_L_MEDIAN, BAND_L_OUTER])
+  })
+
+  it('every stop is inside sRGB (no clamped stop, so no clamped hue)', () => {
+    for (const c of css) expect(displayable(mustParse(c)), c).toBe(true)
+  })
+
+  it('is MONOTONIC in luminance from median to tail', () => {
+    const ys = stops.map(wcagY)
+    for (let i = 1; i < ys.length; i++) expect(ys[i]!).toBeGreaterThan(ys[i - 1]!)
+  })
+
+  it('is a single-hue ramp (rendered hue spread under 4°)', () => {
+    const toOklch = converter('oklch')
+    const hues = stops.map((h) => toOklch(mustParse(h)).h ?? 0)
+    expect(Math.max(...hues) - Math.min(...hues)).toBeLessThan(4)
+  })
+
+  it('the lightest stop stays clearly visible on the white page under every CVD sim', () => {
+    const lightest = stops[stops.length - 1]!
+    expect(Math.abs(wcagY(lightest) - wcagY(BG))).toBeGreaterThanOrEqual(0.1)
+    expect(minCvdDistance(lightest, BG)).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
   })
 })

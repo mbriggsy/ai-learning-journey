@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * src/ui/preview/preview.css — DEV-ONLY layout for the U7 preview harness (never ships; the
  * ?preview route is dead-code-eliminated from production). Reads tokens.css var()s only. The cases
  * sit in plain bordered wells so the ConfidenceStatement surface — not the chrome — is what reads.
@@ -65,4 +65,5 @@
 
 .preview__block-title {
   font-size: var(--text-lg);
+}
 }

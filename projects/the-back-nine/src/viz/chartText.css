@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * src/viz/chartText.css — THE CHART TEXT LAYER (council wf_ecbe0ab2-7bb, 2026-09-05: "SVG draws,
  * HTML writes"). Every word and numeral a chart shows is HTML positioned OVER (or in flow BELOW)
  * the chart's <svg>; the svg keeps paths, rules, dots and marks only.
@@ -321,4 +321,5 @@
   height: calc(var(--ct-tail-base) + var(--ct-row, 0) * (var(--ct-row-h) + var(--ct-row-gap)));
   border-left: 1px dashed var(--line-control);
   transform: translateX(-0.5px);
+}
 }

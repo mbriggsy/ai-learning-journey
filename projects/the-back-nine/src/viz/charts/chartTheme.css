@@ -1,0 +1,129 @@
+/*
+ * src/viz/charts/chartTheme.css: B9's chart CSS for Highcharts' styled mode (plan 6-rightcapital-ui-plan.md, 2.1
+ * decisions 6, 7 and 9; ref 3.7).
+ *
+ * `highcharts.css` comes in INSIDE the `charts` layer. It declares no layer of its own, and unlayered CSS beats every
+ * layered rule, so a plain import would beat this file and strip the hatch (colour would become the only signal). This
+ * file follows it in the same layer, so its rules win on order where the specificity is equal.
+ *
+ * Var-only (no colour literal): the series hues arrive as `--highcharts-color-N` from `src/viz/palette.ts` through the
+ * CSSOM (`seriesVars.ts`), the chrome from `theme.css`'s role tokens.
+ */
+@import 'highcharts/css/highcharts.css' layer(charts);
+
+@layer charts {
+  /* `highcharts.css` sets `color-scheme: light dark` here and paints its neutrals as light-dark() pairs; a colour
+     scheme on the shell root would not reach inside the chart. No dark mode (ref 3.7). */
+  .highcharts-container {
+    color-scheme: light;
+    font-family: var(--font-ui);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Figtree's default digits are proportional: every number in a chart is tabular, SVG text included. */
+  .highcharts-root text,
+  .highcharts-axis-labels,
+  .highcharts-data-label,
+  .highcharts-tooltip {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* RightCapital's categorical order has 13 slots; `highcharts.css` paints 0 to 9. */
+  .highcharts-color-10 {
+    fill: var(--highcharts-color-10);
+    stroke: var(--highcharts-color-10);
+  }
+  .highcharts-color-11 {
+    fill: var(--highcharts-color-11);
+    stroke: var(--highcharts-color-11);
+  }
+  .highcharts-color-12 {
+    fill: var(--highcharts-color-12);
+    stroke: var(--highcharts-color-12);
+  }
+
+  /* Text: titles plum, labels stone-600, axis labels 12 px (ref 3.5; muted text is stone-600 per plan 2.2). */
+  .highcharts-title {
+    fill: var(--color-plum);
+    font-size: var(--text-chart-title);
+  }
+  .highcharts-axis-labels text,
+  .highcharts-axis-title {
+    fill: var(--color-stone-600);
+    font-size: var(--text-axis);
+  }
+  .highcharts-legend-item text {
+    fill: var(--color-stone-600);
+    font-size: var(--text-label);
+  }
+  .highcharts-data-label text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+  }
+
+  /* Gridlines: faint horizontal only, no chart border (ref 3.7). */
+  .highcharts-grid-line {
+    stroke: var(--color-stone-200);
+  }
+  .highcharts-xaxis-grid .highcharts-grid-line {
+    stroke-width: 0;
+  }
+  .highcharts-axis-line,
+  .highcharts-tick {
+    stroke: var(--color-stone-300);
+  }
+
+  /* Tooltip: white, a hairline edge, a soft shadow (ref 3.6). */
+  .highcharts-tooltip-box {
+    fill: var(--color-bg);
+    stroke: var(--color-stone-300);
+  }
+  .highcharts-tooltip text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+  }
+
+  /* The credit stays (the Personal Use licence asks for it at all times), small and quiet. */
+  .highcharts-credits {
+    fill: var(--color-stone-600);
+    font-size: var(--text-axis);
+  }
+
+  /* ── The patterns (src/viz/charts/patterns.ts): the ink takes `--b9-pattern-ink`, which a chart sets to the
+     patterned series' own colour; the ground is the chart surface. ── */
+  .b9-pattern-ground {
+    fill: var(--color-bg);
+  }
+  .b9-pattern-ink {
+    fill: none;
+    stroke: var(--b9-pattern-ink, var(--color-stone-600));
+    stroke-width: 1.5;
+  }
+  .b9-pattern--dots .b9-pattern-ink {
+    fill: var(--b9-pattern-ink, var(--color-stone-600));
+    stroke: none;
+  }
+
+  /* A series given `className: 'b9-hatch'` (or dots, lines, cross) fills from its pattern, and so does its legend
+     symbol, so the second cue reaches the legend too. */
+  .b9-hatch .highcharts-point,
+  .b9-hatch .highcharts-area,
+  .highcharts-legend-item.b9-hatch .highcharts-point {
+    fill: url(#b9-hatch);
+  }
+  .b9-dots .highcharts-point,
+  .b9-dots .highcharts-area,
+  .highcharts-legend-item.b9-dots .highcharts-point {
+    fill: url(#b9-dots);
+  }
+  .b9-lines .highcharts-point,
+  .b9-lines .highcharts-area,
+  .highcharts-legend-item.b9-lines .highcharts-point {
+    fill: url(#b9-lines);
+  }
+  .b9-cross .highcharts-point,
+  .b9-cross .highcharts-area,
+  .highcharts-legend-item.b9-cross .highcharts-point {
+    fill: url(#b9-cross);
+  }
+}

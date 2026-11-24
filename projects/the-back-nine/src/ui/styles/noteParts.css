@@ -1,4 +1,4 @@
-/* A standing note drawn as a block (`NotePartsBlock`; council `wf_22858e04-f7a`, U11 walk 6), in one of two lists: W's
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /* A standing note drawn as a block (`NotePartsBlock`; council `wf_22858e04-f7a`, U11 walk 6), in one of two lists: W's
    stale line's segments (a `<dl>`, the Result's door its last part) or the typed-below line's runs (an `<ol>` and its
    closing paragraph; the walk-8 form council `wf_98d8bc0e-e0a`, KD7 and KD8). The parts are told apart by their own
    line, the space above, the body face's semibold and one size step — never color, never a rule (the reader is
@@ -84,4 +84,5 @@ div.note-parts {
   min-height: var(--tap-min);
   margin-block-start: var(--space-2);
   text-align: start;
+}
 }

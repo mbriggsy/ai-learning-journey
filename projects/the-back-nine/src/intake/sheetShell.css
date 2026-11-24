@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * src/intake/sheetShell.css — the ONE sheet-shell grammar (backdrop + stage + scroll cue) that
  * every Result-side sheet rides: the control-sheet family (sequencing / Roth / Healthcare) AND
  * the budget builder's sheet variant. Extracted 2026-07-03 after the budget sheet was left
@@ -95,4 +95,5 @@
     border-radius: var(--radius-lg);
     padding: var(--space-7) var(--space-6);
   }
+}
 }

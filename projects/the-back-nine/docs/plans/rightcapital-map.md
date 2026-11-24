@@ -12,7 +12,11 @@ their flow. I'm not selling it. I'm not sharing it. I just want to get confidenc
 
 This map lists what RightCapital does, what B9 does today, and the gap between them. The yardstick for every row: does
 RightCapital do it, and does his plan need it. He orders the gaps; each one is then built in his order. Same jobs, our own
-code, screens and words: nothing is copied from RightCapital's screens, names or text.
+code, screens and words: nothing is copied from RightCapital's screens, names or text. ⚑ *Superseded for the screens on
+2026-11-24 (Briggsy's turnaround ruling): the UI is now a RightCapital clone, its screens, layout, navigation, flow and
+chart types copied on purpose; their logo, name, artwork and text are still never lifted, and the code and words stay
+ours. The build is Act 6, [6-rightcapital-ui-plan.md](6-rightcapital-ui-plan.md); this map's gaps still land in its
+order, each as its RightCapital screen.*
 
 **Sources.** RightCapital: its help center and product pages, read through search on 2026-11-22 (help.rightcapital.com's
 data-entry, retirement analysis, cash flow, tax strategies, Social Security, health care and stress test articles). Those

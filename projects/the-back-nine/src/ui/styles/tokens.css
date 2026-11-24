@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * The Clubhouse Ledger — the canonical UI token sheet (design direction ratified 2026-06-11).
  *
  * A beautifully set book about your money, read in late-afternoon light: warm paper,
@@ -233,4 +233,5 @@
   --z-thread: 10; /* the quiet progress thread */
   --z-toast: 100; /* update toast */
   --z-overlay: 200; /* portaled overlays (always portal — transform-ancestor trap, burned/013) */
+}
 }

@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * src/ui/styles/result.css — D2 the landed magic-moment frame.
  *
  * A calm, centered stage for the elevated lead surface (FuckOffDate / ConfidenceStatement) once
@@ -300,4 +300,5 @@
   .result {
     padding-block: var(--space-7);
   }
+}
 }

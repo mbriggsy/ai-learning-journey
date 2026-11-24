@@ -425,4 +425,152 @@ test.describe('CSP — real browser enforcement', () => {
     expect(await violations(page)).toEqual([])
     expect(outside, 'a request left the build’s own origin').toEqual([])
   })
+
+  /**
+   * Act 6 · RC1 (plan docs/plans/6-rightcapital-ui-plan.md, section 2.3): the new stack under the real header, before any
+   * screen is built. The probe page (`kit-probe.html`, a second build entry) mounts Base UI (Dialog as the drawer,
+   * Select, ScrollArea, Toast, Slider) under `CSPProvider disableStyleElements`, a TanStack table, a lucide icon and a
+   * Highcharts chart in styled mode with the accessibility module and the shared pattern defs. Each one is opened and
+   * used; ANY violation reds (the library that injected a `<style>` or a style attribute is the one being opened), and
+   * so does any request off the build's origin. The fallbacks a red points at: React Aria (components), Recharts
+   * (charts). The same arm reads the cascade the colour-blind cue rests on: the hatched series and its legend symbol
+   * fill from `url("#b9-hatch")`, and series 0 fills with palette.ts's own hex, so neither `highcharts.css` nor
+   * Highcharts' default palette won.
+   */
+  test('the kit probe: every new library opened under the enforced CSP — no violation, no request off the origin, the chart cascade intact', async ({ page }) => {
+    test.setTimeout(90_000)
+    await installCollector(page)
+    const outside: string[] = []
+    page.on('request', (r) => {
+      const url = new URL(r.url())
+      if (url.protocol === 'data:' || url.protocol === 'blob:') return
+      if (url.origin !== ENFORCED_ORIGIN) outside.push(r.url())
+    })
+    const response = await page.goto('/kit-probe.html')
+    // The probe was served the strict policy (a harness that dropped it would make every assertion below vacuous).
+    const csp = response?.headers()['content-security-policy'] ?? ''
+    expect(csp, 'the probe page was served without the strict CSP').toContain("style-src 'self'")
+    expect(csp).not.toContain("'unsafe-inline'")
+    await expect(page.getByRole('heading', { name: 'Kit probe' })).toBeVisible()
+
+    // Dialog, shaped as the right drawer: open, read, close.
+    await page.getByRole('button', { name: 'Open the drawer' }).click()
+    const drawer = page.getByRole('dialog', { name: 'Drawer' })
+    await expect(drawer).toBeVisible()
+    await expect(drawer.locator('xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " rc-root ")]')).toHaveCount(1)
+    await drawer.getByRole('button', { name: 'Cancel' }).click()
+    await expect(drawer).toHaveCount(0)
+
+    // Select: open the list, pick the second item.
+    await page.getByRole('combobox').click()
+    await expect(page.getByRole('listbox')).toBeVisible()
+    await page.getByRole('option', { name: 'Years' }).click()
+    await expect(page.getByRole('listbox')).toHaveCount(0)
+    await expect(page.getByRole('combobox')).toContainText('Years')
+
+    // Slider: one key press moves it.
+    const thumb = page.getByRole('slider')
+    const before = await thumb.getAttribute('aria-valuenow')
+    await thumb.focus()
+    await thumb.press('ArrowRight')
+    await expect(thumb).not.toHaveAttribute('aria-valuenow', before ?? '')
+
+    // Toast: shown.
+    await page.getByRole('button', { name: 'Show a toast' }).click()
+    await expect(page.getByText('Your plan is saved on this device.')).toBeVisible()
+
+    // ScrollArea: it scrolls, and its native scrollbar is hidden by OUR rule (Base UI's own <style> is switched off).
+    const viewport = page.locator('[data-probe="scroll-viewport"]')
+    const scroll = await viewport.evaluate((el) => {
+      el.scrollTop = 60
+      return { top: el.scrollTop, cls: el.classList.contains('base-ui-disable-scrollbar'), sw: getComputedStyle(el).scrollbarWidth }
+    })
+    expect(scroll.top, 'the scroll area did not scroll').toBeGreaterThan(0)
+    expect(scroll.cls, 'Base UI no longer tags its viewport with base-ui-disable-scrollbar').toBe(true)
+    expect(scroll.sw, 'theme.css’s .base-ui-disable-scrollbar rule did not apply').toBe('none')
+
+    // The TanStack table: a grouped header (two header rows) over four body rows.
+    const table = page.locator('[data-probe="table"]')
+    await expect(table.locator('thead tr')).toHaveCount(2)
+    await expect(table.locator('thead tr').first().locator('th', { hasText: 'Income' })).toHaveAttribute('colspan', '2')
+    await expect(table.locator('tbody tr')).toHaveCount(4)
+
+    // The chart: drawn, with the accessibility module's hidden screen-reader region and the credit.
+    const chart = page.locator('.highcharts-container')
+    await expect(chart.locator('.highcharts-series.highcharts-series-1 .highcharts-point')).toHaveCount(4)
+    await expect(page.locator('[id^="highcharts-screen-reader-region-before-"]'), 'the accessibility module drew no screen-reader region').toBeAttached()
+    await expect(page.locator('.highcharts-a11y-proxy-group-legend .highcharts-a11y-proxy-element'), 'no keyboard proxy for each legend item').toHaveCount(2)
+    await expect(chart.locator('.highcharts-credits')).toHaveText('Highcharts.com')
+
+    // Hover a point until its tooltip shows.
+    await chart.locator('.highcharts-series.highcharts-series-0 .highcharts-point').nth(2).hover()
+    await expect(chart.locator('.highcharts-tooltip')).toBeVisible()
+    await expect(chart.locator('.highcharts-tooltip')).toContainText('Solid series')
+
+    // Click a legend item to hide its series, then again to show it.
+    const legendItem = chart.locator('.highcharts-legend-item.highcharts-series-1')
+    await legendItem.click()
+    await expect(legendItem).toHaveClass(/highcharts-legend-item-hidden/)
+    await legendItem.click()
+    await expect(legendItem).not.toHaveClass(/highcharts-legend-item-hidden/)
+
+    // The cascade (a new kind of check): the colour-blind second cue survives highcharts.css and the default palette.
+    const fills = await page.evaluate(() => {
+      const fill = (sel: string) => {
+        const el = document.querySelector(sel)
+        return el ? getComputedStyle(el).fill : 'MISSING'
+      }
+      return {
+        hatched: fill('.highcharts-series.highcharts-series-1 .highcharts-point'),
+        hatchedLegend: fill('.highcharts-legend-item.highcharts-series-1 .highcharts-point'),
+        solid: fill('.highcharts-series.highcharts-series-0 .highcharts-point'),
+        root: getComputedStyle(document.documentElement).getPropertyValue('--highcharts-color-0').trim(),
+        pattern: document.querySelectorAll('pattern#b9-hatch').length,
+      }
+    })
+    // Imported here, not at the top, so the lines this file's other arms are cited by keep their numbers.
+    const { RC_SERIES } = await import('../src/viz/palette')
+    const hex = RC_SERIES[0]
+    const rgb = `rgb(${parseInt(hex.slice(1, 3), 16)}, ${parseInt(hex.slice(3, 5), 16)}, ${parseInt(hex.slice(5, 7), 16)})`
+    expect(fills.pattern, 'the shared defs built no #b9-hatch pattern into the chart').toBeGreaterThan(0)
+    expect(fills.hatched, 'the hatched series lost its pattern fill').toBe('url("#b9-hatch")')
+    expect(fills.hatchedLegend, 'the hatched series’ legend symbol lost its pattern fill').toBe('url("#b9-hatch")')
+    expect(fills.root, 'the CSSOM write of --highcharts-color-0 did not land').toBe(hex)
+    expect(fills.solid, 'series 0 is not painted from palette.ts (highcharts.css or its default palette won)').toBe(rgb)
+
+    // Nothing injected a <style> element, and nothing was blocked along the way.
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'a library injected a <style> element').toBe(0)
+    expect(await violations(page)).toEqual([])
+    expect(outside, 'a request left the build’s own origin').toEqual([])
+  })
+
+  /** The probe arm's own control (insight 016): on the probe page, a planted `<style>` is BLOCKED on the enforced origin
+   *  and APPLIES on the no-CSP control origin, so "no violation" above is a real reading, never a deaf collector. */
+  test('the kit probe: a planted <style> is blocked under the CSP (style-src) …', async ({ page }) => {
+    await installCollector(page)
+    await page.goto('/kit-probe.html')
+    await expect(page.getByRole('heading', { name: 'Kit probe' })).toBeVisible()
+    expect(await plantStyle(page), 'the planted <style> applied under the enforced CSP').toBe(false)
+    expect((await violations(page)).some((x) => x.violatedDirective.startsWith('style-src'))).toBe(true)
+  })
+
+  test('CONTROL: … and the same planted <style> applies on the kit probe when no CSP is served', async ({ page }) => {
+    await installCollector(page)
+    await page.goto(`${CONTROL_ORIGIN}/kit-probe.html`)
+    await expect(page.getByRole('heading', { name: 'Kit probe' })).toBeVisible()
+    expect(await plantStyle(page), 'the planted <style> did not apply with no CSP — the plant is broken').toBe(true)
+    expect(await violations(page)).toHaveLength(0)
+  })
 })
+
+/** Appends a `<style>` that would give the probe's heading a 7 px outline; true when the rule took effect. */
+async function plantStyle(page: Page): Promise<boolean> {
+  return page.evaluate(async () => {
+    const s = document.createElement('style')
+    s.textContent = 'h1 { outline: 7px solid currentcolor !important; }'
+    document.head.appendChild(s)
+    await new Promise((r) => requestAnimationFrame(() => r(null)))
+    const h1 = document.querySelector('h1')
+    return h1 !== null && getComputedStyle(h1).outlineWidth === '7px'
+  })
+}

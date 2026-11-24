@@ -304,6 +304,28 @@ through `pnpm dlx` to copy components, never a dependency; `clsx` and `tailwind-
    reads a raw value (a ceiling column announced as "10"). *(the pilot's call, 2026-11-24, b9-3 (Briggsy pre-approved
    all changes))*
 
+**Amendments made while building RC1 (2026-11-24, b9-4).**
+- **shadcn's CLI copy moves to RC2, the kit.** RC1's probe exercises Base UI's own primitives (a Dialog shaped as the
+  right drawer, Select, ScrollArea, Toast, Slider) styled with Tailwind utilities; shadcn's copied components are
+  Tailwind-classed wrappers over the same primitives, and `shadcn init` rewrites config files, so it belongs with the
+  kit. `clsx` and `tailwind-merge` come in with RC1. *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all
+  changes))*
+- **The clone's band uses chroma 0.085, not 0.095.** Measured with culori: at hue 272 the 0.095 cap's outer stop (L 0.82)
+  falls outside sRGB and clamps; 0.0895 is the widest chroma that keeps the whole lightness range in gamut there.
+  `RC_BAND` in `palette.ts` keeps B9's L stops at hue 272; the colour-blind test checks every stop is in gamut.
+  *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **Compact mode (ref 3.6) moves to RC2 with the shell it sizes.** The reference's `max-height: 800px` query would be a
+  second short tier, which `scripts/__tests__/breakpoint-mirrors.test.ts` refuses (one tier: `--bp-laptop-short`'s
+  `(min-width: 68rem) and (max-height: 840px)`); RC2 sizes the shell under that tier or rules a new one. *(the pilot's
+  call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **Tailwind names its sources.** `theme.css` imports the utilities with `source(none)` and lists each new file or
+  folder with `@source` (RC1: the probe), so an old component's class that shares a utility's name (`table`, `hidden`,
+  `sr-only`) never picks one up; each new kit or screen folder is added there when its first file lands. *(the pilot's
+  call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **Every font-load arm reads the font set's loaded entries**, with a fake family as the control: `document.fonts.check`
+  answers true for a family that does not exist (insight 116), so the old faces' arm moved off it too. *(the pilot's
+  call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+
 ### 2.2 The token sheet (`src/ui/styles/theme.css`), with the critique's contrast fixes
 
 The chrome tokens, type scale, radii and spacing are ref 3.1, 3.5 and 3.6, under role names (decision 3). These pairs
@@ -687,6 +709,18 @@ and the chart-text audit rewrite (section 5). `docs/architecture.md` §12 is rew
 at real pixel size (no 560-unit viewBox), so its SVG text renders at the size the chart CSS sets in rem; the new law is
 "chart text in rem through the chart CSS, `useHTML` off, every required label present, visible and unclipped,
 `allowOverlap` where a value is a cue".
+
+**Owed from RC1 (2026-11-24, b9-4; both read off the probe's screenshots, neither gated yet).**
+- **Hovering one series fades the others' printed values to near-invisible.** Highcharts' default inactive state drops
+  every other series to about 20% opacity while a point is hovered, data labels included, which breaks decision 7
+  ("printed values never hide"). `src/viz/charts/defaults.ts` sets `plotOptions.series.states.inactive` so the other
+  series and their labels stay legible (off, or an opacity the chart-text audit passes), and the rewritten
+  `chartTextAudit.ts` reads each required label with a point of ANOTHER series hovered.
+- **Every pattern draws in one ink per chart.** `patterns.ts`'s `defs` paint from one `--b9-pattern-ink` set on the
+  chart's container, so two patterned series in one chart (pre-tax hatched beside Roth dotted, ref 3.2) would lose their
+  colour difference and keep only the pattern. Give each pattern kind its own ink variable (or one pattern per series
+  slot), and add a cascade arm that two patterned series in one chart compute different stroke colours.
+*(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
 
 **Files.** `src/ui/screens/dashboard/Snapshot.tsx`, `snapshotView.ts`; `src/ui/ringReading.ts`;
 `src/ui/workbench/whatIfRun.ts` (`planReadingFor` exported); `src/ui/kit/Ring.tsx`, `TickDial.tsx`, `Caveat.tsx`;

@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * U8 first-Save ceremony styles. Calm trust handoff — not a dashboard, not an alarm.
  * Tokens-only (CSP `style-src 'self'`, no inline styles); motion via @starting-style +
  * transition (motion@12 is quarantined to src/viz); reduced-motion keeps the final state
@@ -437,4 +437,5 @@
   .reentry-confirm > .save-actions {
     margin-block-start: var(--space-2);
   }
+}
 }

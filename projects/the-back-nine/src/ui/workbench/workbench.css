@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * src/ui/workbench/workbench.css — the workbench room's frame (Act 5, U6).
  *
  * Tokens only (CSP `style-src 'self'`: no inline styles). A plain column at the wide frame: the way
@@ -1314,4 +1314,5 @@
   .wb-pair-wrap {
     display: none;
   }
+}
 }

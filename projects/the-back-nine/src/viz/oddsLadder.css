@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * src/viz/oddsLadder.css — layout + STATIC token colors for the D2c OddsLadder.
  *
  * CSP DISCIPLINE (style-src 'self', no 'unsafe-inline'): all styling lives in stylesheets (classes),
@@ -224,3 +224,4 @@
    viewBox, so below a width the labels were hidden rather than shrunk further; it never fired on a
    shipping arm and dropping the odds axis is a content loss. HTML text does not scale; nothing is
    left to drop. */
+}

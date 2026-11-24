@@ -1,4 +1,4 @@
-/*
+@layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
  * src/ui/styles/survivor.css — the U7 survivor readout (the quieter SECOND statement, Clubhouse
  * Ledger). Reads ONLY tokens.css var()s (the canonical-source rule). CSP-clean: class-driven, never
  * an inline style attribute.
@@ -310,4 +310,5 @@
   .survivor-fold__summary .survivor__eyebrow {
     transition: none;
   }
+}
 }

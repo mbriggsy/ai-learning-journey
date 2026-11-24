@@ -9,7 +9,7 @@
  * burned insight 010); an in-range p is then clamped to [0, 1].
  */
 
-import { BAND_CHROMA, BAND_HUE, BAND_L_MEDIAN, BAND_L_OUTER } from './palette'
+import { BAND_CHROMA, BAND_HUE, BAND_L_MEDIAN, BAND_L_OUTER, RC_BAND } from './palette'
 
 export interface BandStop {
   /** oklch lightness ∈ [BAND_L_MEDIAN, BAND_L_OUTER]. */
@@ -43,6 +43,19 @@ export function bandStopAt(p: number): BandStop {
 export function bandStopCss(p: number): string {
   const s = bandStopAt(p)
   return `oklch(${round4(s.l)} ${round4(s.c)} ${round4(s.h)})`
+}
+
+/**
+ * The clone's band stop at position p (Act 6, `RC_BAND` in palette.ts): the same lightness law as `bandStopCss`, at
+ * RightCapital's hue and an in-gamut chroma. The old band keeps `bandStopCss` until RC10.
+ */
+export function rcBandStopCss(p: number): string {
+  if (!Number.isFinite(p)) {
+    throw new RangeError(`rcBandStopCss: p must be finite, got ${p}`)
+  }
+  const t = p < 0 ? 0 : p > 1 ? 1 : p
+  const l = RC_BAND.lMedian + t * (RC_BAND.lOuter - RC_BAND.lMedian)
+  return `oklch(${round4(l)} ${round4(RC_BAND.chroma)} ${round4(RC_BAND.hue)})`
 }
 
 const round4 = (n: number): number => Math.round(n * 1e4) / 1e4

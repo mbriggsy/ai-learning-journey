@@ -1,11 +1,14 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 
 /**
  * Design-token REALITY proofs (real Chromium, real built dist/, real enforced CSP from
  * scripts/serve-dist-with-headers.ts — the same harness as csp.spec.ts):
  *
  *  1. Both self-hosted variable fonts actually LOAD under `font-src 'self'` — a CSP or
- *     bundling regression here would silently ship the Georgia/system fallback.
+ *     bundling regression here would silently ship the Georgia/system fallback. Read from the
+ *     font set's FontFace entries (`status === 'loaded'`), with a fake family as the control;
+ *     never `document.fonts.check`, which is true for a family that does not exist (insight 116).
+ *     Act 6's Figtree gets the same two arms on the kit probe page (its own describe below).
  *  2. THE FIGURE LAW: digits in the body face render at equal advance widths under the
  *     app's inherited `font-variant-numeric: tabular-nums` (base.css), so an in-place
  *     recompute can never jitter a dollar figure horizontally. A font silently lacking
@@ -20,33 +23,95 @@ import { test, expect } from '@playwright/test'
  * strict style-src 'self' policy permits — never injected <style> or style attributes.
  */
 
+/** A family no stylesheet declares: the control that proves `loadedFamilies` can read false. */
+const FAKE_FAMILY = 'No Such Family B9'
+
+/**
+ * Asks the page to load each family (400 weight, the face covering a space), waits for the font set, and reads
+ * whether a FontFace of that family now reports `status === 'loaded'`. Never `document.fonts.check`, which answers
+ * true for a family nobody declared (insight 116).
+ */
+async function loadedFamilies(page: Page, families: readonly string[]): Promise<Record<string, boolean>> {
+  return page.evaluate(async (names) => {
+    await Promise.all(names.map((n) => document.fonts.load(`400 32px "${n}"`).catch(() => [])))
+    await document.fonts.ready
+    const faces = [...document.fonts]
+    const bare = (f: string) => f.replace(/^["']|["']$/g, '')
+    return Object.fromEntries(names.map((n) => [n, faces.some((f) => bare(f.family) === n && f.status === 'loaded')]))
+  }, families)
+}
+
+/** Digit-string widths in `family` at 32 px, tabular and proportional (the figure law's measurement). */
+async function digitWidths(page: Page, family: string) {
+  return page.evaluate(async (fam) => {
+    const probe = (text: string, variant: string) => {
+      const el = document.createElement('span')
+      el.textContent = text
+      el.style.fontFamily = `"${fam}"`
+      el.style.fontSize = '32px'
+      el.style.fontVariantNumeric = variant
+      el.style.position = 'absolute'
+      el.style.visibility = 'hidden'
+      el.style.whiteSpace = 'pre'
+      document.body.appendChild(el)
+      return el
+    }
+    const tab1 = probe('1111111111', 'tabular-nums lining-nums')
+    const tab9 = probe('9999999999', 'tabular-nums lining-nums')
+    const prop1 = probe('1111111111', 'proportional-nums lining-nums')
+    const prop9 = probe('9999999999', 'proportional-nums lining-nums')
+    await document.fonts.load(`400 32px "${fam}"`)
+    await document.fonts.ready
+    return {
+      tab1: tab1.getBoundingClientRect().width,
+      tab9: tab9.getBoundingClientRect().width,
+      prop1: prop1.getBoundingClientRect().width,
+      prop9: prop9.getBoundingClientRect().width,
+    }
+  }, family)
+}
+
+/**
+ * Act 6 · RC1 (plan docs/plans/6-rightcapital-ui-plan.md, section 2.3): Figtree, the clone's one face, self-hosted from
+ * `@fontsource-variable/figtree`. In RC1 only the kit probe page loads it, so these arms read `kit-probe.html` on the
+ * same enforced origin. Its default digits are proportional (ref 3.5), so the figure law is the tabular pair below with
+ * its proportional control, exactly as for the body face above.
+ */
+test.describe('design tokens — Figtree (the kit probe)', () => {
+  test('Figtree loads under the enforced CSP (and the check can fail: a fake family reads unloaded)', async ({ page }) => {
+    await page.goto('/kit-probe.html')
+    const loaded = await loadedFamilies(page, ['Figtree Variable', FAKE_FAMILY])
+    expect(loaded['Figtree Variable'], 'Figtree Variable failed to load — the clone’s face falling back').toBe(true)
+    expect(loaded[FAKE_FAMILY], 'a family that does not exist read as loaded — the check is deaf').toBe(false)
+  })
+
+  test('Figtree’s digits are tabular under tabular-nums (and the probe can fail: proportional-nums changes widths)', async ({ page }) => {
+    await page.goto('/kit-probe.html')
+    const w = await digitWidths(page, 'Figtree Variable')
+    expect(Math.abs(w.tab1 - w.tab9), `tabular widths differ: ${JSON.stringify(w)}`).toBeLessThan(0.5)
+    expect(
+      Math.abs(w.prop1 - w.prop9),
+      `proportional-nums did not change Figtree’s digit widths — tnum/pnum may be missing from the shipped file: ${JSON.stringify(w)}`,
+    ).toBeGreaterThan(0.5)
+    // The kit root inherits tabular-nums (theme.css's scoped base), so a number on a new screen is tabular by default.
+    const inherited = await page.locator('main.rc-root').evaluate((el) => getComputedStyle(el).fontVariantNumeric)
+    expect(inherited).toContain('tabular-nums')
+  })
+})
+
 test.describe('design tokens — fonts + the figure law', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
   })
 
-  test('both self-hosted variable fonts load under the enforced CSP', async ({ page }) => {
-    const loaded = await page.evaluate(async () => {
-      // Force both families regardless of what the current App body happens to render.
-      const force = (family: string) => {
-        const el = document.createElement('span')
-        el.textContent = 'Aa 0123456789'
-        el.style.fontFamily = family
-        el.style.position = 'absolute'
-        el.style.visibility = 'hidden'
-        document.body.appendChild(el)
-        return el
-      }
-      force('"Fraunces Variable"')
-      force('"Source Sans 3 Variable"')
-      await document.fonts.ready
-      return {
-        fraunces: document.fonts.check('600 32px "Fraunces Variable"'),
-        sourceSans: document.fonts.check('400 17px "Source Sans 3 Variable"'),
-      }
-    })
-    expect(loaded.fraunces, 'Fraunces Variable failed to load — display face falling back').toBe(true)
-    expect(loaded.sourceSans, 'Source Sans 3 Variable failed to load — body face falling back').toBe(true)
+  test('both self-hosted variable fonts load under the enforced CSP (and the check can fail: a fake family reads unloaded)', async ({ page }) => {
+    // `document.fonts.check(...)` answers true for a family that does not exist at all (insight 116), so it proves
+    // nothing. The proof is a FontFace entry of the family whose status is 'loaded', after asking for it; the fake
+    // family is the control that shows the reading can come back false.
+    const loaded = await loadedFamilies(page, ['Fraunces Variable', 'Source Sans 3 Variable', FAKE_FAMILY])
+    expect(loaded['Fraunces Variable'], 'Fraunces Variable failed to load — display face falling back').toBe(true)
+    expect(loaded['Source Sans 3 Variable'], 'Source Sans 3 Variable failed to load — body face falling back').toBe(true)
+    expect(loaded[FAKE_FAMILY], 'a family that does not exist read as loaded — the check is deaf').toBe(false)
   })
 
   test('digits are tabular in the body face (and the probe can fail: proportional-nums changes widths)', async ({

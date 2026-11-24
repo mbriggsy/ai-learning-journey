@@ -228,13 +228,14 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-24 (b9-3: the turnaround; gap 2's U9, U14 and U15, and Act 6's RC0, built):**
+**SESSION 2026-11-24 (b9-4: Act 6's RC1, RC2 (kit and shell) and RC3 (Snapshot), built):**
 
 State at close:
-- Schema version 6 is live (U9, `5953cca9`; the floor raised in `0c2e8fe3`). The what-if runner (U14, `00d8192a`) and the lever rail (U15, `7f8fccba`) are built; their logic carries into Act 6's tray (RC4). RC0 (the logic pulled out of the `.tsx` files) is built. CI green through U15; the whole unit suite green locally on RC0.
-- **Check at start:** `gh run list --commit <RC0's full sha>` (its suite). The security-review plugin's sign-in failed 2026-11-24 (HTTP 401, `~/.claude/security/log.txt`), so the commits from `f7ac7ae0` on went unreviewed until Briggsy signs it back in. `pnpm verify:aca` goes stale ~2026-12-12. U14's timing was borderline (dip's 16,000-path median 2,056 ms on a loaded machine): re-time on a quiet machine with `e2e/held/whatif-timing.spec.ts` (its header has the command); if it reads clearly over 2 s, the plan's U14 branch flips to a plan-base lane.
-- Open from U15, for Act 6: Back over an unkept what-if drops it silently (RC5's leave ask); the budget, claim age and deposits keep two doors, the rail and their old sheet, until RC13.
-- For Briggsy, when he wakes: the research reference and the Act 6 plan; the first screens he will see are RC2 (the shell) and RC3 (Snapshot).
+- RC1 `6ded3110`, RC2a `06e19238`, RC2b `65021841`, RC3 `2266e758`, each pushed; CI green on all four jobs through RC2b. Each unit was built by a fresh builder and re-checked by the orchestrator (typecheck, lint, build, the reached and path-reading tests, `verify:csp`, the unit's fit arms, `verify:doc-stats`, all exit 0 on RC3's tree).
+- **Check at start:** `gh run list --commit 2266e758ab0298ac23183c867c327cdc22bd87ee` (RC3's runs, started at close). The security-review plugin's sign-in failed 2026-11-24 (HTTP 401, `~/.claude/security/log.txt`): every commit from `f7ac7ae0` on is unreviewed until Briggsy signs it back in. `pnpm verify:aca` goes stale ~2026-12-12. U14's timing was borderline (dip's 16,000-path median 2,056 ms on a loaded machine): re-time on a quiet machine with `e2e/held/whatif-timing.spec.ts`; clearly over 2 s flips the plan's U14 branch to a plan-base lane.
+- **Landmines for RC4** (all in the plan's RC4 section or `docs/landmines.md`): rule raw vs sticky for the printed count before building (the plan's "Owed from RC3"); a source-bind test reads its file by path, so find the reached tests by `readFileSync` mentions of each changed file as well as by import; look at the builder's screenshots yourself before committing (three of three units shipped a defect only the eye caught); a stopped background CSP server keeps 4180 and 4181 (`netstat -ano`, `Stop-Process`).
+- Open for Act 6: Back over an unkept what-if drops it silently (RC5's leave ask), and so do Keep and Back up from the lock menu; the budget, claim age and deposits keep two doors until RC13.
+- For Briggsy: the screens so far are in `temp/rc-shots/RC2/` (the shell) and `temp/rc-shots/RC3/` (Snapshot), at 1440x731 and 390x844.
 
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.

@@ -878,6 +878,12 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Claude Code, workflows and sessions
 
+- **(moved from TODO's distill list, b9-2, 11-23) A Workflow run's `.output` file is one JSON object** (`summary`,
+  `agentCount`, `logs`, `result`; `result` holds the script's return value), and the journal has one `result` line per
+  agent. Parse it and read `.result` through a node summarizer that writes a scratch file and prints only what you need
+  (the refuter survivors); slicing the text from the first `[` grabs `logs: []` instead. Printed raw (400 KB for 103
+  agents), with the go-live's whole diffs, it spent b9-5's window.
+
 
 - **(b9-4, 11-21) Claude Code's background-shell memory reaper can stop a long gate chain mid-run, and it leaves the
   chain's children running.** A backgrounded run of CI's list was stopped during `pnpm test` with "critically low on

@@ -3,7 +3,7 @@ title: The tests a change reaches are the ones a search finds, not the ones you 
 date: 2026-11-23
 phase: The RightCapital mandate, gap 1 (the workbench's year-by-year table, U7)
 modules: [src/ui/workbench/, src/ui/devSeeds.ts, src/ui/__tests__/, scripts/__tests__/breakpoint-mirrors.test.ts]
-tags: [test-cadence, reached-tests, partial-run, ci-red, grep-the-tests, sweep-tests, hand-pinned-list, guard-tests, breakpoint-mirrors, dev-seeds]
+tags: [test-cadence, reached-tests, partial-run, ci-red, grep-the-tests, sweep-tests, hand-pinned-list, guard-tests, breakpoint-mirrors, dev-seeds, source-bind, readFileSync, moved-code, regex-pin]
 ---
 
 ## Problem
@@ -48,3 +48,14 @@ an older twin test) are found by searching for what the change adds, not for wha
 - A new engine field on a shared row type: every fixture builder that constructs that type literally.
 - A new route or phase: every test that enumerates phases or history states.
 - The doc gates: a test count or a moved line is read by `verify:doc-stats`, which no unit file names.
+
+## Extended (2026-11-23): a source-bind test reads a file by NAME, so a moved call reds it, and a moved derivation can leave it green on the wrong file
+
+Some tests pin code by reading a source file and matching a regex (`readFileSync` of the caller). U13's first pass ran
+only the touched suites and missed `src/ui/__tests__/stalenessExposure.test.ts` failing: it pins IntakeApp's
+`deriveStaleness(...)` call shape by regex (insight 108: green-when-filtered is not green). U8 (b9-2) hit the other
+direction: the Roth lever's live Medicare derivation moved from `Result.tsx` into `src/ui/editorSheets.tsx`, and
+`resultControlDoors.test.tsx`'s pin still read `Result.tsx`, which kept other `spineMedicarePriced(` lines, so reverting
+the moved line to the old age predicate stayed green (U8's review, lens A). Before changing a call's shape or moving
+code, grep the tests for `readFileSync` of the file it lives in and for the function's name inside a regex; when code
+moves, move its pin with it and keep the pin's negative arm over both files.

@@ -3,7 +3,7 @@ title: Parallel agents in ONE working tree couple through the tree itself — vi
 date: 2026-07-12
 phase: Act 3 follow-up (the ask-for-Medicare-extras unit — the parallel seed-tuner, session 2026-07-11; reconstructed from the tuner transcript at the closeout review)
 modules: [e2e, ui, process]
-tags: [parallel-agents, shared-working-tree, scratch-fixtures, vitest-globs, eol, crlf, coordination, decide-before-dispatch, seed-tuning]
+tags: [parallel-agents, shared-working-tree, scratch-fixtures, vitest-globs, eol, crlf, coordination, decide-before-dispatch, seed-tuning, hmr-reload, test-results, dev-server]
 ---
 
 ## Problem
@@ -68,3 +68,12 @@ fixtures, probes) either an isolated tree or a hygiene clause with a join-point 
 (The review-fleet scratch-file sweep in memory `review-workflow-agents-leave-scratch-files` is
 this lesson's earlier sibling; the seed-tuner adds the collected-by-DESIGN probe and the
 EOL channel.)
+
+## Extended (2026-11-23): two more channels through the tree, the dev server's HMR and the shared test-results folder
+
+`pnpm verify:fit` is served by `pnpm dev` (`playwright.fit.config.ts`'s web server, port 4190), so a `src` edit by ANY
+session triggers a hot reload that falsely fails a waiting arm (final-tier timeouts, a vanished
+`[data-caddie-scroller]`, b9-5's lanes). And every Playwright run cleans the one shared `test-results/`, so two runs
+side by side delete each other's traces. Both couple sessions that never touch the same file. Run e2e gates on a quiet
+tree (or a no-HMR server with its own scratch `cacheDir`), one harness at a time (`docs/landmines.md`, the fit gate's
+section).

@@ -126,8 +126,10 @@ export type TypedBelowWitness = keyof typeof TYPED_BELOW_WITNESSES
 function councilBudget(total: number, stickyFraction: number): BudgetLineItem[] {
   const housing = Math.round(total * stickyFraction)
   return [
-    ...(stickyFraction > 0 ? [{ label: 'Housing', category: 'housing', tier: 'essentials', annualAmountReal: housing, startYear: 0 } as const] : []),
-    ...(stickyFraction < 1 ? [{ label: 'Food', category: 'food', tier: 'essentials', annualAmountReal: total - housing, startYear: 0 } as const] : []),
+    // Each line carries the dev seeds' literal id for its category (schema version 6), so `datesavedtypedsticky` stays
+    // equal to `councilBudgetHousehold(1)`.
+    ...(stickyFraction > 0 ? [{ id: 'line-housing', label: 'Housing', category: 'housing', tier: 'essentials', annualAmountReal: housing, startYear: 0 } as const] : []),
+    ...(stickyFraction < 1 ? [{ id: 'line-food', label: 'Food', category: 'food', tier: 'essentials', annualAmountReal: total - housing, startYear: 0 } as const] : []),
   ]
 }
 

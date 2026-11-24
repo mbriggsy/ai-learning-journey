@@ -47,6 +47,7 @@ import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import { buildSolveRequest } from '@intake/solveDispatch'
 import { recommendationView } from '@ui/recommendationView'
 import { scenarioFromDraft, currentEpochDay } from '@ui/scenarioFromDraft'
+import { draftFromScenario } from '@ui/draftFromScenario'
 import { exposureForDraft } from '@ui/stalenessExposure'
 import { DEV_SEEDS } from '@ui/devSeeds'
 import type { ScenarioDraft } from '../memoryModel'
@@ -451,6 +452,69 @@ describe('the mint — the fingerprint slot carries the RUN IDENTITY, proven aga
     })
     expect(status.causes).toEqual(['inputs-changed'])
     expect(status.current).toBe(false)
+  })
+})
+
+// ---- schema version 6: the winner's Roth plan, and a record that outlives the open-time id mint ----
+
+describe('the mint — the WINNER’s Roth conversion plan rides the record (schema version 6, the workbench plan’s U9)', () => {
+  const plan = (annualAmountReal: number, startYearOffset: number, years: number) => ({ annualAmountReal, startYearOffset, years })
+  /** The active recommendation with each arm converting its OWN distinct plan. */
+  const threePlans = (): SolveRecommendation => {
+    const base = activeRec()
+    return activeRec({
+      winner: { ...base.winner, conversion: plan(40_000, 1, 5) },
+      runnerUp: { ...base.runnerUp!, conversion: plan(20_000, 0, 3) },
+      noActionBaseline: { ...base.noActionBaseline, conversion: plan(10_000, 2, 8) },
+    })
+  }
+
+  it('winner, runner-up and baseline carry three different plans: the record holds the WINNER’s, window included', () => {
+    const record = minted(threePlans())
+    expect(record.action.rothConversion).toEqual({ kind: 'plan', plan: plan(40_000, 1, 5) })
+  })
+
+  it('a crown that converts nothing mints the EXPLICIT none — never an absent key, which on a record means "minted before version 6"', () => {
+    const record = minted(activeRec())
+    expect(activeRec().winner.conversion, '[non-vacuity] the fixture winner converts nothing').toBeNull()
+    expect(record.action.rothConversion).toEqual({ kind: 'none' })
+    expect(Object.hasOwn(record.action, 'rothConversion')).toBe(true)
+  })
+
+  it('both round-trip through the codec on a real save, nothing dropped', () => {
+    for (const payload of [threePlans(), activeRec()]) {
+      const record = minted(payload)
+      const s: CurrentScenario = { ...freshSave(), savedRecommendation: record }
+      const decoded = decodeScenario(encodeScenario(s))
+      expect(decoded).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
+    }
+  })
+
+  it('a record minted on a version-5 plan (no ids) still reads CURRENT once the plan reopens under version 6 with freshly minted ids', () => {
+    // A made-up version-5 household: the solvable seed with its account ids stripped, saved, relabeled 5.
+    const v5Draft: ScenarioDraft = { ...solvableDraft(), enteredAccounts: solvableDraft().enteredAccounts.map(({ id: _id, ...a }) => a) }
+    const minted = mintSavedRecommendation(activeRec({ solverCodeVersion: SOLVER_CODE_VERSION }), realFingerprint(v5Draft), false, TODAY)
+    if (!minted.ok) throw new Error(minted.detail)
+    // A version-5 build's mint wrote no Roth plan (and a label-5 record carrying one drops at decode), so strip it.
+    const { rothConversion: _roth, ...v5Action } = minted.record.action
+    const v5Record = { ...minted.record, action: v5Action }
+    const disk = JSON.parse(new TextDecoder().decode(encodeScenario({ ...freshSave(v5Draft), savedRecommendation: v5Record }))) as Record<string, unknown>
+    disk.schemaVersion = 5
+    const decoded = decodeScenario(new TextEncoder().encode(JSON.stringify(disk)))
+    if (!decoded.ok || decoded.scenario.schemaVersion !== CURRENT_SCHEMA_VERSION) throw new Error('the version-5 plan must open')
+    const hydrated = draftFromScenario(decoded.scenario)
+    if (!hydrated.ok) throw new Error(hydrated.detail)
+    expect(hydrated.draft.enteredAccounts.every((a) => a.id !== undefined), '[non-vacuity] the open minted ids').toBe(true)
+    expect(decoded.scenario.savedRecommendation, '[non-vacuity] the record opened whole').toEqual(v5Record)
+    const status = deriveSavedRecommendationStatus({
+      record: decoded.scenario.savedRecommendation!,
+      scenario: decoded.scenario,
+      freshFingerprint: realFingerprint(hydrated.draft),
+      todayEpochDay: TODAY,
+      exposure: exposureForDraft(hydrated.draft),
+    })
+    expect(status.causes).toEqual([])
+    expect(status.current).toBe(true)
   })
 })
 

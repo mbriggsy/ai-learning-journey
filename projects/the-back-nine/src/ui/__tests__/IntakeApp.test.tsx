@@ -120,7 +120,8 @@ import { copy, slots } from '../copy'
 import { readyToApplyUpdate } from '../updateGate'
 import { holdUnsavedBuffer } from '@intake/unsavedBuffer'
 import type { ScenarioDraft } from '@store/memoryModel'
-import { CURRENT_SCHEMA_VERSION, type CurrentScenario } from '@shared/model'
+import { CURRENT_SCHEMA_VERSION, scenarioIdentityKey, type CurrentScenario } from '@shared/model'
+import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
 
 // A complete, persistable household — the same fixture the seeds prove against the real engine.
 const ready = scenarioFromDraft(DEV_SEEDS.retired)
@@ -143,8 +144,8 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-describe('IntakeApp — the hydrate gate admits exactly the current version (the schema-v4 and schema-v5 bumps)', () => {
-  // A version-3 or version-4 plan never reaches the gate as 3 or 4 (the codec relabels each at unlock),
+describe('IntakeApp — the hydrate gate admits exactly the current version (the schema-v4, -v5 and -v6 bumps)', () => {
+  // A version-3, -4 or -5 plan never reaches the gate as 3, 4 or 5 (the codec relabels each at unlock),
   // so what the gate refuses is null and the version-1/2 ladder members, which the codec decodes as-is. The CURRENT
   // model hydrating is every other hydrate test in this file (the fixture is a fresh mint).
   // Only the RELABELED arms can see the gate's version clause: the current two-person plan carrying
@@ -168,6 +169,8 @@ describe('IntakeApp — the hydrate gate admits exactly the current version (the
     ['the current plan labeled 3', { ...ready.scenario, schemaVersion: 3 }],
     // The schema-v5 bump's arm: the two-person plan, no answer, labeled 4 — only the version clause refuses it.
     ['the current plan labeled 4', { ...ready.scenario, schemaVersion: 4 }],
+    // The schema-v6 bump's arm: the same plan labeled 5 (the codec relabels a real one; the gate still refuses it).
+    ['the current plan labeled 5', { ...ready.scenario, schemaVersion: 5 }],
     ['no model at all', null],
   ])('%s is refused to the restore-failed face — never hydrated, never computed', async (_label, model) => {
     const current = h.model
@@ -780,6 +783,42 @@ describe('IntakeApp — the unsaved-work guard (beforeunload warns, never persis
     expect(wouldWarn()).toBe(false) // nothing applied, nothing moved
     await act(async () => appModel.update(bump))
     expect(wouldWarn()).toBe(true)
+  })
+
+  // The workbench plan's U9: the open-time id mint lands BEFORE the unsaved-changes baseline (the persist seed and the
+  // live draft both come from `draftFromScenario`'s output), so a plan saved before version 6 — no id anywhere —
+  // opens SAVED. The version-5 plan is made up: the budget seed's save with its ids stripped, read through the codec
+  // at label 5, exactly what `currentModel()` hands back for one.
+  it('a VERSION-5 plan (no ids) opened through the real hydrate chain reads saved — no unsaved mark, the leave guard down, two encodes equal — and its draft carries an id on every account and line', async () => {
+    const seeded = scenarioFromDraft(DEV_SEEDS.budget)
+    if (!seeded.ready) throw new Error('[test setup] the budget seed must save')
+    const disk = JSON.parse(new TextDecoder().decode(encodeScenario({
+      ...seeded.scenario,
+      enteredAccounts: seeded.scenario.enteredAccounts.map(({ id: _id, ...a }) => a),
+      budget: seeded.scenario.budget!.map(({ id: _id, ...l }) => l),
+    }))) as Record<string, unknown>
+    disk.schemaVersion = 5
+    const decoded = decodeScenario(new TextEncoder().encode(JSON.stringify(disk)))
+    if (!decoded.ok || decoded.scenario.schemaVersion !== CURRENT_SCHEMA_VERSION) throw new Error('[test setup] the version-5 plan must open')
+    expect(decoded.scenario.enteredAccounts.every((a) => a.id === undefined), '[non-vacuity] the opened model has no ids').toBe(true)
+    const current = h.model
+    h.model = decoded.scenario
+    try {
+      render(<IntakeApp hydrateFromVault />)
+      await affirmGate()
+      const stub = await screen.findByText('result stub')
+      expect(stub).toHaveAttribute('data-save-kind', 'clean')
+      expect(wouldWarn()).toBe(false)
+      const draft = appModel.getSnapshot().draft
+      expect(draft.enteredAccounts.map((a) => a.id)).toEqual(draft.enteredAccounts.map((_, i) => `account-${i}`))
+      expect(draft.budget!.map((l) => l.id)).toEqual(draft.budget!.map((_, i) => `line-${i}`))
+      const [one, two] = [scenarioFromDraft(draft), scenarioFromDraft(draft)]
+      if (!one.ready || !two.ready) throw new Error('the opened draft must save')
+      expect(scenarioIdentityKey(one.scenario)).toBe(scenarioIdentityKey(two.scenario))
+      expect(Array.from(encodeScenario(one.scenario))).toEqual(Array.from(encodeScenario(two.scenario)))
+    } finally {
+      h.model = current
+    }
   })
 
   it('an OPEN ENTRY BUFFER arms the guard over a saved-and-clean vault — the draft compare alone cannot see it (the unit review’s hole)', async () => {

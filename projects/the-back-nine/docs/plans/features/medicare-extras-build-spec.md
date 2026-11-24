@@ -70,7 +70,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   council `wf_7eb3303c-7f3`, built `c1ada867` — its blank is no longer one-directional: it
   disables the HSA cap AND the budgetless survivor lean, the most pessimistic reading for an HSA
   household and the less cautious for a budgetless couple without an HSA;
-  `src/shared/model.ts:1988-1997`). Nothing is pre-selected, so the MA plurality actively lands
+  `src/shared/model.ts:2008-2017`). Nothing is pre-selected, so the MA plurality actively lands
   on $0. An AFFIRMED $0 is honest; a SILENT $0 is the sin.
 
 ## F2 — anchor + provenance
@@ -90,7 +90,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   adopted the old figure. No official national Medigap average exists to pin to; the constant's
   `pinTo` says so explicitly rather than naming a source that isn't published.
 - **Per-person explicit persisted provenance stamp.** `MedicareExtrasEntryV3`
-  (`src/shared/model.ts:2607`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
+  (`src/shared/model.ts:2642`) discriminates on `kind` — `'none' | 'entered' | 'typical' |
   'unanswered'` — with `adoptionVintage` recording the era adopted, keyed to the SAVED era and
   never re-derived from `value == current-typical` (the `src/shared/appDefaults.ts:8-15`
   saved-era inversion trap). `'unanswered'` is the honest persisted hole: it funds the typical
@@ -235,8 +235,8 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
 
 ## Ship gates (all met at close)
 
-- **Codec.** The persisted per-person entry is range-gated in `src/shared/scenarioCodec.ts:787-816`:
-  the `'entered'` dollar runs `needFinite` → `needNonNegativeDollar` (`scenarioCodec.ts:412`,
+- **Codec.** The persisted per-person entry is range-gated in `src/shared/scenarioCodec.ts:998-1027`:
+  the `'entered'` dollar runs `needFinite` → `needNonNegativeDollar` (`scenarioCodec.ts:455`,
   throws `Corrupt`) — deliberately NOT the siblings' `optFinite` / finite-only
   `checkFiniteArray`, because a negative extras premium inside the funding sum is the insight-046
   optimistic class the engine cannot backstop. Both biconditionals are enforced in both
@@ -259,7 +259,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   `src/engine/taxOverlay.ts:2205-2206`.
 - **Dev-seed drift recorded before any re-tune.** The flagship `retiredOnTrack` seed carries the
   mixed-provenance showcase — one entered dollar, one affirmed MA-$0
-  (`src/ui/devSeeds.ts:185-186`) — and the `borderline` / `?seed=dip` seeds were re-probed under
+  (`src/ui/devSeeds.ts:186-187`) — and the `borderline` / `?seed=dip` seeds were re-probed under
   the extras engine on 2026-07-11 and again through the U14 S0 typical refresh.
 - The unit landed as ONE feature commit (`503213f4`, the ACA-sheet real-flat gap kept to its own
   touch, never a rider), then the integration fix `e921f2bb`, the ultramode fold `019f5334`, and

@@ -212,6 +212,10 @@ export const DRAFT_DISPOSITIONS: Record<keyof ScenarioDraft, AssumptionDispositi
     kind: 'internal',
     why: 'A MEMORY of a past recommendation, not an assumption behind the current answer: nothing in the projection reads it, so no R7 row could honestly say “this is what we assumed.” It is minted once by the explicit save gesture (U17·S5) and is never user-settable — an editable row would let a household hand-edit what the solver is recorded as having said, the one thing that must stay a faithful record. Its rendering home is the record card on the recommendation surface (which also owns the staleness trichotomy that decides whether it may be re-presented as current); the honest edit is re-solving and re-saving, never a knob.',
   },
+  keptWhatIfs: {
+    kind: 'internal',
+    why: 'The workbench’s kept what-ifs (schema version 6): alternatives the household is trying BESIDE the plan, never an assumption behind the current answer — each runs on a copy of the draft (workbench plan KTD10), so nothing in the plan’s own projection reads them and no R7 row could honestly say “this is what we assumed.” Their door is the workbench’s saved list (U16), where Keep and Apply live, never the assumption panel.',
+  },
 }
 
 /** One non-draft methodology constant’s disclosure row: where it renders (`seat`), what the

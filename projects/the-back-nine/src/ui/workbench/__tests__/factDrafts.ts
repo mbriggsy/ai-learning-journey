@@ -30,13 +30,14 @@ export const FULL: ScenarioDraft = {
       socialSecurityClaimAge: 67,
     },
   ],
+  // Every account carries its stable id (schema version 6), which the page never prints (`ACCOUNT_FACTS.id`).
   enteredAccounts: [
     // A fund the table knows: its mix is the table's (a hand-entered mix on a ticker'd account is never read).
-    { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 900_000, annualContribution: 20_000, employerMatchAnnual: 8_000 },
+    { id: 'acct-401k', ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 900_000, annualContribution: 20_000, employerMatchAnnual: 8_000 },
     // A ticker the table lacks, its mix answered by the household (`tickerClassifications`).
-    { ownerIndex: 1, kind: 'traditional-ira', ticker: 'ZZQQX', valueToday: 150_000 },
-    { ownerIndex: 1, kind: 'brokerage', manualBlend: { kind: 'exact', stockPct: 70, bondPct: 30, cashPct: 0 }, valueToday: 300_000, basis: 200_000 },
-    { ownerIndex: 0, kind: 'hsa', manualBlend: { kind: 'simple', choice: 'cash' }, valueToday: 20_000, annualContribution: 4_000, hsaEmployerAnnual: 1_000 },
+    { id: 'acct-ira', ownerIndex: 1, kind: 'traditional-ira', ticker: 'ZZQQX', valueToday: 150_000 },
+    { id: 'acct-brokerage', ownerIndex: 1, kind: 'brokerage', manualBlend: { kind: 'exact', stockPct: 70, bondPct: 30, cashPct: 0 }, valueToday: 300_000, basis: 200_000 },
+    { id: 'acct-hsa', ownerIndex: 0, kind: 'hsa', manualBlend: { kind: 'simple', choice: 'cash' }, valueToday: 20_000, annualContribution: 4_000, hsaEmployerAnnual: 1_000 },
   ],
   incomeStreams: [
     {
@@ -93,12 +94,25 @@ export const FULL: ScenarioDraft = {
   chosenGoal: 'leave-more',
   heirBracket: 0.24,
   workingYearLeftOver: { kind: 'saved', quotedReal: 10_000 },
+  // Kept what-ifs (schema version 6): choices beside the plan, never facts — the page shows none of them.
+  keptWhatIfs: [
+    {
+      id: 'wi-later',
+      name: 'Stop later, spend less on trips',
+      levers: [
+        { kind: 'stop-year', calendarYear: Y + 6 },
+        { kind: 'deposits', accountId: 'acct-401k', annualContribution: 23_000 },
+        { kind: 'spending', op: 'remove', lineId: 'line-travel' },
+      ],
+    },
+  ],
 }
 
+// Each line carries its stable id (schema version 6), which the page never prints.
 export const BUDGET: readonly BudgetLineItem[] = [
-  { category: 'housing', label: 'Mortgage & taxes', annualAmountReal: 30_000, tier: 'essentials', startYear: 0 },
-  { category: 'food', label: '', annualAmountReal: 12_000, tier: 'essentials', startYear: 0, endYear: 19 },
-  { category: 'travel', label: 'See the kids', annualAmountReal: 15_000, tier: 'discretionary', startYear: 2, endYear: 9 },
+  { id: 'line-housing', category: 'housing', label: 'Mortgage & taxes', annualAmountReal: 30_000, tier: 'essentials', startYear: 0 },
+  { id: 'line-food', category: 'food', label: '', annualAmountReal: 12_000, tier: 'essentials', startYear: 0, endYear: 19 },
+  { id: 'line-travel', category: 'travel', label: 'See the kids', annualAmountReal: 15_000, tier: 'discretionary', startYear: 2, endYear: 9 },
 ]
 
 /** The same household with a budget governing: the spending total follows the budget (and its period is inert). */

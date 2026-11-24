@@ -44,10 +44,14 @@ import {
   SAVED_AT_EPOCH_DAY_MAX,
   SAVED_AT_EPOCH_DAY_MIN,
   SCENARIO_V3_FIELDS,
+  ROTH_CONVERSION_CHOICE_KINDS,
+  WHAT_IF_LEVER_KINDS,
+  WHAT_IF_SPENDING_OPS,
   type SavedRecommendationV3,
   type Scenario,
   type ScenarioV2,
   type CurrentScenario,
+  type WhatIfLeverV6,
   type WorkingYearCostV3,
   type WorkingYearLeftOverV5,
 } from '../model'
@@ -162,6 +166,53 @@ const CURRENT: CurrentScenario = {
 const LEFT_OVER_SAVED: WorkingYearLeftOverV5 = { kind: 'saved', quotedReal: 16_985 }
 const WITH_LEFT_OVER: CurrentScenario = { ...CURRENT, workingYearLeftOver: LEFT_OVER_SAVED }
 
+/** Every version-6 lever kind in one bundle (the workbench plan's U9), each spending op among them, every target
+ *  distinct. Made up, like every fixture here. */
+const EVERY_LEVER: readonly WhatIfLeverV6[] = [
+  { kind: 'stop-year', calendarYear: 2031 },
+  { kind: 'spending', op: 'replace', line: { id: 'line-home', category: 'housing', label: 'Home', annualAmountReal: 30_000, tier: 'essentials', startYear: 0 } },
+  { kind: 'spending', op: 'remove', lineId: 'line-food' },
+  { kind: 'spending', op: 'add', line: { id: 'line-trips', category: 'travel', label: 'Trips', annualAmountReal: 9_000, tier: 'discretionary', startYear: 2, endYear: 6 } },
+  { kind: 'deposits', accountId: 'acct-401k', annualContribution: 30_000, employerMatchAnnual: 10_000 },
+  { kind: 'deposits', accountId: 'acct-hsa', annualContribution: 2_000, hsaEmployerAnnual: 500 },
+  { kind: 'mix', stockPct: 50, bondPct: 40, cashPct: 10 },
+  { kind: 'roth', conversion: { kind: 'plan', plan: { annualAmountReal: 25_000, startYearOffset: 1, years: 4 } } },
+  { kind: 'withdrawal-order', policy: 'custom', drawdownOrder: ['roth', 'taxable', 'pretax'] },
+  { kind: 'claim-age', personIndex: 0, claimAge: 70 },
+  { kind: 'claim-age', personIndex: 1, claimAge: 68 },
+  { kind: 'aca-subsidy', enhanced: false },
+]
+
+/** The version-6 shapes on one plan: an id on every account and line, and the kept what-ifs — every lever kind, the
+ *  one-figure total with the other arms of the choice-shaped kinds, and an empty bundle. Used at labels below 6 only to
+ *  prove the refusal (as `WITH_LEFT_OVER` is at 3 and 4). */
+const WITH_V6: CurrentScenario = {
+  ...CURRENT,
+  enteredAccounts: [
+    { id: 'acct-brokerage', ...CURRENT.enteredAccounts[0]! },
+    { id: 'acct-401k', ...CURRENT.enteredAccounts[1]! },
+    { id: 'acct-hsa', ...CURRENT.enteredAccounts[2]! },
+  ],
+  budget: [
+    { id: 'line-home', category: 'housing', label: 'Home', annualAmountReal: 24_000, tier: 'essentials', startYear: 0 },
+    { id: 'line-food', category: 'food', label: '', annualAmountReal: 12_000, tier: 'essentials', startYear: 0, endYear: 19 },
+  ],
+  keptWhatIfs: [
+    { id: 'wi-every', name: 'Every lever', levers: EVERY_LEVER },
+    {
+      id: 'wi-total',
+      name: 'Spend less, convert nothing',
+      levers: [
+        { kind: 'spending', op: 'total', annualSpendingReal: 80_000 },
+        { kind: 'roth', conversion: { kind: 'none' } },
+        { kind: 'withdrawal-order', policy: 'bracket-fill' },
+        { kind: 'aca-subsidy', enhanced: true },
+      ],
+    },
+    { id: 'wi-empty', name: 'The plan itself', levers: [] },
+  ],
+}
+
 /** Encode, surgically mutate the JSON, return the re-encoded bytes. */
 function mutated(base: Scenario | ScenarioV2 | CurrentScenario, mutate: (obj: Obj) => void): Uint8Array {
   const obj = JSON.parse(new TextDecoder().decode(encodeScenario(base))) as Obj
@@ -271,7 +322,7 @@ const wShape = (plan: Obj): string | null => {
   return w === undefined ? null : 'keptOverQuoteReal' in w ? 'entered-kept' : (w.kind as string)
 }
 
-describe('versions 3 and 4 relabel to their successors; the ladder stays honest for the next bump (the schema-v4 and schema-v5 bumps)', () => {
+describe('versions 3 to 5 relabel to their successors; the ladder stays honest for the next bump (the schema-v4, -v5 and -v6 bumps)', () => {
   it('a version-3 plan decodes as the CURRENT plan: the label moves to its successor, every other field is its current twin’s', () => {
     const fromThree = decodeScenario(asVersion(CURRENT, 3))
     expect(fromThree).toEqual(decodeScenario(encodeScenario(CURRENT)))
@@ -343,9 +394,10 @@ describe('versions 3 and 4 relabel to their successors; the ladder stays honest 
     expect({ ...decoded.scenario, schemaVersion: 4 }).toEqual(onDisk)
   })
 
-  it('the maximal version-4 plan holds every top-level field this build knows except the version-5 answer — a sample of the surface a version-4 build could write, never the §7.3 rule', () => {
+  it('the maximal version-4 plan holds every top-level field this build knows except those a later version added (the version-5 answer, the version-6 kept what-ifs) — a sample of the surface a version-4 build could write, never the §7.3 rule', () => {
     const onDisk = JSON.parse(new TextDecoder().decode(frozenBytes('scenario-v4-maximal.json'))) as Obj
-    expect(Object.keys(onDisk).sort()).toEqual(SCENARIO_V3_FIELDS.filter((k) => k !== 'workingYearLeftOver').sort())
+    const laterFields: readonly string[] = ['workingYearLeftOver', 'keptWhatIfs']
+    expect(Object.keys(onDisk).sort()).toEqual(SCENARIO_V3_FIELDS.filter((k) => !laterFields.includes(k)).sort())
     const arms = (onDisk.incomeStreams as Obj[]).map((x) => `${String(x.type)}${x.type === 'annuity' ? (x.qualified === true ? '-q' : '-nq') : ''}`)
     expect(arms.sort(), 'every income-stream arm').toEqual(['alimony', 'annuity-nq', 'annuity-q', 'other', 'pension', 'rental'])
     expect(new Set((onDisk.enteredAccounts as Obj[]).map((a) => a.kind)), 'every account kind').toEqual(new Set(ACCOUNT_KINDS))
@@ -361,11 +413,21 @@ describe('versions 3 and 4 relabel to their successors; the ladder stays honest 
   // then fails its own round trip, so the suites that mint a save at load red whole, IntakeApp's among them (its
   // labeled-4 hydrate-gate arm never runs). Since U10 (FLOOR = 5) the floor test reds too, on its own message, and
   // under a WHOLE revert of the bump (`git revert a9cacf22`, which takes this pin with it) it is the one red left.
-  it('THE ABSOLUTE PIN AT 5: a plan labeled with the literal 5 decodes as version 5 (the schema-v5 bump’s one typed literal here — every derived pin moves with the constant, so a reverted constant reds this pin)', () => {
+  it('THE ABSOLUTE PIN AT 5: a plan labeled with the literal 5 decodes as the current version — a version-5 save opens in this build and in every later one (the schema-v5 bump’s typed literal; it stays)', () => {
     const decoded = decodeScenario(asVersion(WITH_LEFT_OVER, 5))
     expect(decoded.ok, 'a version-5 save must open in this build and in every later one').toBe(true)
     if (!decoded.ok) return
-    expect(decoded.scenario.schemaVersion).toBe(5)
+    expect(decoded.scenario.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
+    expect(decoded.droppedAtoms).toEqual([])
+  })
+
+  // The schema-v6 bump's own literal. Under a reverted constant (5) every save fails its round trip and the floor
+  // test reds on its own message once U9's follow-up commit raises FLOOR to 6.
+  it('THE ABSOLUTE PIN AT 6: a plan labeled with the literal 6 decodes as version 6 (the schema-v6 bump’s one typed literal here — every derived pin moves with the constant, so a reverted constant reds this pin)', () => {
+    const decoded = decodeScenario(asVersion(WITH_V6, 6))
+    expect(decoded.ok, 'a version-6 save must open in this build and in every later one').toBe(true)
+    if (!decoded.ok) return
+    expect(decoded.scenario.schemaVersion).toBe(6)
     expect(decoded.droppedAtoms).toEqual([])
   })
 
@@ -418,7 +480,7 @@ describe('versions 3 and 4 relabel to their successors; the ladder stays honest 
     expect(start, '[test setup] decodeScenario is in the codec').toBeGreaterThan(-1)
     const body = source.slice(start, source.indexOf('\n}\n', start))
     const steps = [...body.matchAll(/if \(version === (\d+)\) \{([\s\S]*?)\n {4}\}/g)].filter(([, , block]) => block!.includes('version ='))
-    expect(steps.map(([, n]) => Number(n)), 'the label-only steps, in ladder order').toEqual([3, 4])
+    expect(steps.map(([, n]) => Number(n)), 'the label-only steps, in ladder order').toEqual([3, 4, 5])
     for (const [, n, block] of steps) {
       const next = Number(n) + 1
       expect([...block!.matchAll(/parsed\.schemaVersion = ([^\n]+)/g)].map((m) => m[1]!.trim()), `step ${n}: the label it writes`).toEqual([String(next)])
@@ -467,11 +529,15 @@ describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), h
     INCOME_TYPES: ['pension', 'rental', 'alimony', 'annuity', 'other'],
     MEDICARE_EXTRAS_KINDS: ['none', 'entered', 'typical', 'unanswered'],
     RECOMMENDATION_GOALS: ['leave-more', 'pay-less-tax'],
+    // The schema-v6 bump's three new vocabularies — recorded in the bump's own commit (rule (c)'s bump covers them).
+    ROTH_CONVERSION_CHOICE_KINDS: ['none', 'plan'],
     SAVED_RECOMMENDATION_GRADES: ['just-do-it', 'coin-flip'],
     SEXES: ['male', 'female'],
     SPEND_ENTRY_PERIODS: ['month', 'year'],
     STATE_ROSTER: ['NC', 'PA', 'FL', 'SC', 'GA', 'DE', 'elsewhere'],
     TICKER_CLASSIFICATION_CHOICES: ['stocks', 'bonds', 'cash'],
+    WHAT_IF_LEVER_KINDS: ['stop-year', 'spending', 'deposits', 'mix', 'roth', 'withdrawal-order', 'claim-age', 'aca-subsidy'],
+    WHAT_IF_SPENDING_OPS: ['add', 'replace', 'remove', 'total'],
     WORK_STATUSES: ['working', 'retired'],
     WORKING_YEAR_COST_KINDS: ['confirmed', 'entered'],
     // Build 2's left-over answer — recorded in the schema-v5 bump's own commit (the bump §7.3 rule (a) owes).
@@ -506,11 +572,14 @@ describe('the schema surface — docs/architecture.md §7.3 rules (b) and (c), h
     INCOME_TYPES,
     MEDICARE_EXTRAS_KINDS,
     RECOMMENDATION_GOALS,
+    ROTH_CONVERSION_CHOICE_KINDS,
     SAVED_RECOMMENDATION_GRADES,
     SEXES,
     SPEND_ENTRY_PERIODS,
     STATE_ROSTER,
     TICKER_CLASSIFICATION_CHOICES,
+    WHAT_IF_LEVER_KINDS,
+    WHAT_IF_SPENDING_OPS,
     WORK_STATUSES,
     WORKING_YEAR_COST_KINDS,
     WORKING_YEAR_LEFT_OVER_KINDS,
@@ -1534,8 +1603,8 @@ describe('the current shape — the v3 field set (U8, the first v3 writer), writ
 
   it('a NON-Corrupt throw from INSIDE a validator ESCAPES decodeScenario — a programming defect is never laundered into a calm dropped atom', () => {
     // THE TWO RE-THROWS THIS COVERS, and they CHAIN, so one arm holds both:
-    //   `scenarioCodec.ts:1021`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
-    //   `scenarioCodec.ts:1099`  `throw e`                              (decodeScenario's outer catch)
+    //   `scenarioCodec.ts:1248`  `if (!(e instanceof Corrupt)) throw e`  (the record's try/catch)
+    //   `scenarioCodec.ts:1367`  `throw e`                              (decodeScenario's outer catch)
     // Both were UNEXERCISED. They were filed as "correct-by-inspection but SEAM-LESS" on the
     // reasoning that decodeScenario builds its input from `JSON.parse` — data properties only,
     // no getters — and that no validator here recurses or calls a method on an unchecked value.
@@ -1813,5 +1882,220 @@ describe('the current shape — the v3 field set (U8, the first v3 writer), writ
       ;(o.people as Obj[])[0]!.nickname = 'P'
     }))
     expect(decoded.ok).toBe(true)
+  })
+})
+
+/** The decode of `bytes`, which must be a refusal: its detail (a refusal by any other reason fails here). */
+function refusalOf(bytes: Uint8Array): string {
+  const d = decodeScenario(bytes)
+  if (d.ok || d.reason !== 'corrupt') throw new Error(`expected a corrupt refusal, got ${JSON.stringify(d).slice(0, 200)}`)
+  return d.detail
+}
+
+/** Edit kept what-if `k`'s lever `l` on `WITH_V6`'s bytes. */
+const editLever = (k: number, l: number, edit: (lever: Obj) => void): Uint8Array =>
+  mutated(WITH_V6, (o) => edit(((o.keptWhatIfs as Obj[])[k]!.levers as Obj[])[l]!))
+
+/** A complete record carrying `rothConversion` on its action (absent when undefined). Made up. */
+const recordWith = (rothConversion: unknown): SavedRecommendationV3 => ({
+  mintedAt: 20_500,
+  fingerprint: 'solver-run-fp/v2:{"goal"=s"leave-more"}',
+  solverCodeVersion: 1,
+  goal: 'leave-more',
+  action: {
+    candidateId: 'grid:taxable-first:25000',
+    policy: 'taxable-first',
+    ...(rothConversion !== undefined ? { rothConversion } : {}),
+  } as SavedRecommendationV3['action'],
+  verdict: { grade: 'just-do-it', subTenthCollapse: false, noChange: false, surplusRegime: false, noDollarRegister: false },
+  era: {
+    appDefaultVersion: 'defaults-2026-06',
+    taxVintageDetail: { taxYear: 2026, legalBasis: 'OBBBA' },
+    dateVintage: { contributionYear: 2026, blendSnapshotAsOf: '2026-01-01' },
+    stateTaxVintage: { ncProfile: '{"nc":1}', paProfile: '{"pa":1}', flProfile: '{"fl":0}' },
+    healthcareVintage: {
+      coverageYear: 2026,
+      acaStatus: 'reverted',
+      acaVerifiedOn: '2026-07-01',
+      fplGuidelineYear: 2025,
+      irmaaTopTierFrozenThrough: 2028,
+      partBStandardMonthly: 206.5,
+    },
+  },
+})
+
+describe('schema version 6 — ids, the kept what-ifs and the record’s Roth plan (the workbench plan’s U9, KTD16, KTD18)', () => {
+  it('a plan holding every lever kind, every spending op and both Roth choices round-trips byte for byte, nothing dropped', () => {
+    const levers = WITH_V6.keptWhatIfs!.flatMap((k) => k.levers)
+    expect([...new Set(levers.map((l) => l.kind))].sort(), '[non-vacuity] every lever kind is held').toEqual([...WHAT_IF_LEVER_KINDS].sort())
+    const ops = new Set(levers.flatMap((l) => (l.kind === 'spending' ? [l.op] : [])))
+    expect([...ops].sort(), '[non-vacuity] every spending op is held').toEqual([...WHAT_IF_SPENDING_OPS].sort())
+    const choices = new Set(levers.flatMap((l) => (l.kind === 'roth' ? [l.conversion.kind] : [])))
+    expect([...choices].sort(), '[non-vacuity] both Roth choices are held').toEqual([...ROTH_CONVERSION_CHOICE_KINDS].sort())
+    const bytes = encodeScenario(WITH_V6)
+    const decoded = decodeScenario(bytes)
+    expect(decoded).toEqual({ ok: true, scenario: WITH_V6, droppedAtoms: [] })
+    if (decoded.ok) expect(Array.from(encodeScenario(decoded.scenario))).toEqual(Array.from(bytes))
+  })
+
+  it('an unknown lever kind is refused, naming the lever', () => {
+    expect(refusalOf(editLever(0, 0, (l) => { l.kind = 'retire-early' }))).toContain('keptWhatIfs[0].levers[0].kind')
+  })
+
+  it('a duplicate kept-what-if id is refused; the same lists under distinct ids open', () => {
+    expect(refusalOf(mutated(WITH_V6, (o) => { (o.keptWhatIfs as Obj[])[1]!.id = 'wi-every' }))).toContain('keptWhatIfs[1].id')
+    expect(decodeScenario(encodeScenario(WITH_V6)).ok).toBe(true)
+  })
+
+  it('a second lever of one kind on one target is refused, each case alone; the same kind on another target opens', () => {
+    const add = (lever: Obj): Uint8Array =>
+      mutated(WITH_V6, (o) => { ((o.keptWhatIfs as Obj[])[0]!.levers as Obj[]).push(lever) })
+    const second: ReadonlyArray<readonly [string, Obj]> = [
+      ['a second stop year', { kind: 'stop-year', calendarYear: 2033 }],
+      ['a second deposit on one account', { kind: 'deposits', accountId: 'acct-401k', annualContribution: 5_000 }],
+      ['a second claim age for one person', { kind: 'claim-age', personIndex: 0, claimAge: 66 }],
+      ['a remove of a line the bundle replaces', { kind: 'spending', op: 'remove', lineId: 'line-home' }],
+      ['a second mix', { kind: 'mix', stockPct: 100, bondPct: 0, cashPct: 0 }],
+      ['a second Roth plan', { kind: 'roth', conversion: { kind: 'none' } }],
+      ['a second withdrawal order', { kind: 'withdrawal-order', policy: 'taxable-first' }],
+      ['a second ACA regime', { kind: 'aca-subsidy', enhanced: true }],
+    ]
+    for (const [label, lever] of second) expect(refusalOf(add(lever)), label).toContain('one lever per kind and target')
+    // The twins: the same kinds on targets the bundle does not hold yet.
+    expect(decodeScenario(add({ kind: 'deposits', accountId: 'acct-brokerage', annualContribution: 5_000 })).ok).toBe(true)
+    expect(decodeScenario(add({ kind: 'spending', op: 'remove', lineId: 'line-gone' })).ok).toBe(true)
+  })
+
+  it('a spending total beside a line lever is refused (the line lever re-reconciles the total it would set); the total alone opens', () => {
+    const both = mutated(WITH_V6, (o) => {
+      ((o.keptWhatIfs as Obj[])[1]!.levers as Obj[]).push({ kind: 'spending', op: 'remove', lineId: 'line-food' })
+    })
+    expect(refusalOf(both)).toContain('a spending total beside a line lever')
+  })
+
+  it('a mix whose three figures miss 100 is refused, and so is a negative figure; typed percentages that sum to 100 open', () => {
+    expect(refusalOf(editLever(0, 6, (l) => Object.assign(l, { stockPct: 50, bondPct: 40, cashPct: 9 }))), '99').toContain('must sum to 100')
+    expect(refusalOf(editLever(0, 6, (l) => Object.assign(l, { stockPct: 50, bondPct: 40, cashPct: 11 }))), '101').toContain('must sum to 100')
+    expect(refusalOf(editLever(0, 6, (l) => Object.assign(l, { stockPct: 110, bondPct: -10, cashPct: 0 })))).toContain('bondPct')
+    expect(decodeScenario(editLever(0, 6, (l) => Object.assign(l, { stockPct: 33.3, bondPct: 33.3, cashPct: 33.4 }))).ok).toBe(true)
+    expect(decodeScenario(editLever(0, 6, (l) => Object.assign(l, { stockPct: 10.1, bondPct: 20.2, cashPct: 69.7 }))).ok).toBe(true)
+  })
+
+  it('each lever’s own fields are checked, each refusal by its one fault (the plan they ride opens without it)', () => {
+    const faults: ReadonlyArray<readonly [string, number, number, (l: Obj) => void, string]> = [
+      ['a fractional stop year', 0, 0, (l) => { l.calendarYear = 2031.5 }, 'calendarYear'],
+      ['an added line with no id', 0, 3, (l) => { delete (l.line as Obj).id }, 'line.id'],
+      ['an added line with a negative amount', 0, 3, (l) => { (l.line as Obj).annualAmountReal = -1 }, 'annualAmountReal'],
+      ['a remove carrying a line', 0, 2, (l) => { l.line = { id: 'line-food' } }, 'line'],
+      ['a remove with an empty id', 0, 2, (l) => { l.lineId = '' }, 'lineId'],
+      ['a negative deposit', 0, 4, (l) => { l.annualContribution = -5 }, 'annualContribution'],
+      ['a deposit override over the ceiling', 0, 4, (l) => { l.employerMatchAnnual = MAX_REAL_DOLLAR * 2 }, 'employerMatchAnnual'],
+      ['a deposit with no account id', 0, 4, (l) => { delete l.accountId }, 'accountId'],
+      ['a zero Roth plan (no conversion is the explicit none)', 0, 7, (l) => { ((l.conversion as Obj).plan as Obj).annualAmountReal = 0 }, 'annualAmountReal'],
+      ['an unknown Roth choice', 0, 7, (l) => { (l.conversion as Obj).kind = 'line' }, 'conversion.kind'],
+      ['a custom order with no order', 0, 8, (l) => { delete l.drawdownOrder }, 'drawdownOrder'],
+      ['a claim age for a person not in the plan', 0, 9, (l) => { l.personIndex = 2 }, 'personIndex'],
+      ['a null claim age', 0, 10, (l) => { l.claimAge = null }, 'claimAge'],
+      ['an ACA regime that is not a boolean', 0, 11, (l) => { l.enhanced = 'off' }, 'enhanced'],
+      ['a none Roth choice carrying a plan', 1, 1, (l) => { (l.conversion as Obj).plan = { annualAmountReal: 1, startYearOffset: 0, years: 1 } }, 'conversion.plan'],
+      ['an order riding a named policy', 1, 2, (l) => { l.drawdownOrder = ['roth', 'taxable', 'pretax'] }, 'drawdownOrder'],
+      ['a total that is not a number', 1, 0, (l) => { l.annualSpendingReal = 'lots' }, 'annualSpendingReal'],
+      ['a total carrying a line id', 1, 0, (l) => { l.lineId = 'line-home' }, 'lineId'],
+    ]
+    expect(decodeScenario(encodeScenario(WITH_V6)).ok, 'the base plan opens').toBe(true)
+    for (const [label, k, l, edit, field] of faults) expect(refusalOf(editLever(k, l, edit)), label).toContain(field)
+  })
+
+  it('a kept what-if needs an id, a name and a lever list', () => {
+    const cases: ReadonlyArray<readonly [string, (k: Obj) => void, string]> = [
+      ['no id', (k) => { delete k.id }, 'keptWhatIfs[0].id'],
+      ['an empty id', (k) => { k.id = '' }, 'keptWhatIfs[0].id'],
+      ['no name', (k) => { delete k.name }, 'keptWhatIfs[0].name'],
+      ['no levers', (k) => { delete k.levers }, 'keptWhatIfs[0].levers'],
+    ]
+    for (const [label, edit, field] of cases) {
+      expect(refusalOf(mutated(WITH_V6, (o) => edit((o.keptWhatIfs as Obj[])[0]!))), label).toContain(field)
+    }
+    expect(refusalOf(mutated(WITH_V6, (o) => { o.keptWhatIfs = { 'wi-every': true } }))).toContain('keptWhatIfs')
+  })
+
+  it('a lever naming an account or line the plan no longer holds still opens — what a dangling target means is the apply arm’s call, never a “damaged” plan', () => {
+    const gone = mutated(WITH_V6, (o) => {
+      o.enteredAccounts = (o.enteredAccounts as Obj[]).filter((a) => a.id !== 'acct-401k')
+      o.budget = (o.budget as Obj[]).filter((b) => b.id !== 'line-food')
+    })
+    expect(decodeScenario(gone).ok).toBe(true)
+  })
+
+  it('ids are non-empty strings, unique within their kind; two lines with identical facts under distinct ids open; an id may repeat across kinds', () => {
+    const accounts = (o: Obj) => o.enteredAccounts as Obj[]
+    const lines = (o: Obj) => o.budget as Obj[]
+    expect(refusalOf(mutated(WITH_V6, (o) => { accounts(o)[2]!.id = 'acct-401k' }))).toContain('enteredAccounts[2].id')
+    expect(refusalOf(mutated(WITH_V6, (o) => { lines(o)[1]!.id = 'line-home' }))).toContain('budget[1].id')
+    expect(refusalOf(mutated(WITH_V6, (o) => { accounts(o)[0]!.id = '' }))).toContain('enteredAccounts[0].id')
+    expect(refusalOf(mutated(WITH_V6, (o) => { lines(o)[0]!.id = 7 }))).toContain('budget[0].id')
+    expect(decodeScenario(mutated(WITH_V6, (o) => { lines(o)[1] = { ...lines(o)[0]!, id: 'line-home-2' } })).ok, 'identical facts, distinct ids').toBe(true)
+    expect(decodeScenario(mutated(WITH_V6, (o) => { lines(o)[0]!.id = 'acct-401k' })).ok, 'unique within its kind only').toBe(true)
+    // A version-6 plan may lack ids (a path that never minted one): absent passes, as at version 5.
+    expect(decodeScenario(mutated(WITH_V6, (o) => { delete accounts(o)[0]!.id; delete lines(o)[0]!.id })).ok).toBe(true)
+  })
+
+  it('the saved recommendation’s Roth plan: the plan and the explicit none round-trip; a malformed one drops the record (the tolerated atom), never the plan', () => {
+    for (const choice of [{ kind: 'plan', plan: { annualAmountReal: 25_000, startYearOffset: 0, years: 5 } }, { kind: 'none' }]) {
+      const s: CurrentScenario = { ...WITH_V6, savedRecommendation: recordWith(choice) }
+      expect(decodeScenario(encodeScenario(s)), choice.kind).toEqual({ ok: true, scenario: s, droppedAtoms: [] })
+    }
+    const bad = decodeScenario(
+      encodeScenario({ ...WITH_V6, savedRecommendation: recordWith({ kind: 'plan', plan: { annualAmountReal: 0, startYearOffset: 0, years: 5 } }) }),
+    )
+    expect(bad.ok).toBe(true)
+    if (!bad.ok) return
+    expect(bad.droppedAtoms).toHaveLength(1)
+    expect(bad.droppedAtoms[0]).toContain('action.rothConversion')
+    expect(bad.scenario).toEqual(WITH_V6)
+  })
+
+  it('a plan whose DISK label is 3, 4 or 5 and that carries an id or the kept what-ifs is refused as a writer bug naming the field — its version-6 twin opens, so the version clause alone refuses it (insight 152)', () => {
+    const [brokerage, plan401k, hsa] = CURRENT.enteredAccounts
+    const cases: ReadonlyArray<readonly [CurrentScenario, string]> = [
+      [{ ...CURRENT, enteredAccounts: [brokerage!, { id: 'acct-401k', ...plan401k! }, hsa!] }, 'enteredAccounts[1].id'],
+      [{ ...CURRENT, budget: [{ id: 'line-home', category: 'housing', label: '', annualAmountReal: 1, tier: 'essentials', startYear: 0 }] }, 'budget[0].id'],
+      [{ ...CURRENT, keptWhatIfs: [] }, 'scenario.keptWhatIfs'],
+    ]
+    for (const [plan, field] of cases) {
+      expect(decodeScenario(encodeScenario(plan)).ok, `${field}: the version-6 twin opens`).toBe(true)
+      for (const label of [3, 4, 5]) {
+        expect(decodeScenario(asVersion(plan, label)), `${field} labeled ${label}`).toEqual({
+          ok: false,
+          reason: 'corrupt',
+          detail: `${field}: a plan saved as version ${label} cannot carry it — no build that writes version ${label} writes it (writer bug)`,
+        })
+      }
+    }
+  })
+
+  it('a plan labeled 5 whose saved recommendation carries the Roth plan opens with the RECORD dropped and reported (a memory never makes the plan unopenable); its version-6 twin keeps the record', () => {
+    const carrying: CurrentScenario = { ...CURRENT, savedRecommendation: recordWith({ kind: 'none' }) }
+    expect(decodeScenario(encodeScenario(carrying)), 'the version-6 twin keeps it').toEqual({ ok: true, scenario: carrying, droppedAtoms: [] })
+    const atFive = decodeScenario(asVersion(carrying, 5))
+    expect(atFive.ok).toBe(true)
+    if (!atFive.ok) return
+    expect(atFive.droppedAtoms).toEqual([
+      'savedRecommendation: scenario.savedRecommendation.action.rothConversion: a record saved as version 5 cannot carry it — no build that writes version 5 writes it (writer bug)',
+    ])
+    expect('savedRecommendation' in atFive.scenario).toBe(false)
+    // The control: the same record without the version-6 key, labeled 5, opens whole.
+    const plain: CurrentScenario = { ...CURRENT, savedRecommendation: recordWith(undefined) }
+    expect(decodeScenario(asVersion(plain, 5))).toEqual({ ok: true, scenario: plain, droppedAtoms: [] })
+  })
+
+  it('the 5 → 6 step MINTS NOTHING: a version-5 plan with no ids decodes with no id anywhere and no new key (ids are minted where a draft enters, never in the codec)', () => {
+    const atFive: CurrentScenario = { ...CURRENT, budget: [{ category: 'housing', label: '', annualAmountReal: 1, tier: 'essentials', startYear: 0 }] }
+    const decoded = decodeScenario(asVersion(atFive, 5))
+    expect(decoded).toEqual({ ok: true, scenario: atFive, droppedAtoms: [] })
+    if (!decoded.ok || decoded.scenario.schemaVersion !== CURRENT_SCHEMA_VERSION) return
+    expect(decoded.scenario.enteredAccounts.every((a) => !('id' in a))).toBe(true)
+    expect(decoded.scenario.budget!.every((l) => !('id' in l))).toBe(true)
+    expect('keptWhatIfs' in decoded.scenario).toBe(false)
   })
 })

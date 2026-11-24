@@ -660,3 +660,67 @@ describe('AccountEntry — the open-buffer hold (the unsaved-work guard’s seco
     expect(unsavedBuffersHeld()).toBe(0) // Cancel / Add / a crash all leave the same way
   })
 })
+
+describe('AccountEntry — the stable id (schema version 6, the workbench plan’s U9)', () => {
+  it('Add mints a fresh random id, never one an account, a line or a kept what-if holds or names', () => {
+    const m = modelWith({})
+    m.update((d) => ({
+      ...d,
+      enteredAccounts: [{ id: 'acct-held', ownerIndex: 1, kind: 'roth-ira', valueToday: 5_000 }],
+      budget: [{ id: 'line-held', category: 'food', label: '', annualAmountReal: 1_000, tier: 'essentials', startYear: 0 }],
+      keptWhatIfs: [{ id: 'wi-held', name: 'n', levers: [{ kind: 'deposits', accountId: 'acct-named', annualContribution: 1 }] }],
+    }))
+    const { onSave } = renderEntry(m)
+    fireEvent.click(screen.getByLabelText(copy.kindBrokerage))
+    setMoney(copy.accountValueLabel, '40000')
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    const id = (onSave.mock.calls[0]![0] as { id?: string }).id
+    expect(id).toMatch(/^[0-9a-f]{24}$/)
+    expect(['acct-held', 'line-held', 'wi-held', 'acct-named']).not.toContain(id)
+  })
+
+  it('editing a committed account’s balance keeps its id — the form rebuilds the account, and carries the id across', () => {
+    const m = modelWith({})
+    const initial = { id: 'acct-kept', ownerIndex: 0, kind: 'brokerage', valueToday: 100_000, basis: 60_000 } as const
+    const onSave = vi.fn()
+    render(<AccountEntry draft={m.getSnapshot().draft} initial={initial} onSave={onSave} onCancel={() => {}} />)
+    setMoney(copy.accountValueLabel, '120000')
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(onSave.mock.calls[0]![0]).toEqual({ ...initial, valueToday: 120_000 })
+  })
+
+  it('through the real accounts step: add, edit, add, remove the first, add — every account keeps its id through the edit, and the ids stay unique', () => {
+    const m = modelWith({})
+    function Harness() {
+      const snap = useSyncExternalStore(m.subscribe, m.getSnapshot)
+      const steps = useMemo(() => intakeSteps(snap.draft), [snap.draft])
+      return <IntakeFlow steps={steps} model={m} />
+    }
+    render(<Harness />)
+    while (screen.getByRole('heading', { level: 2 }).textContent !== copy.qAccountsHeading) {
+      fireEvent.click(screen.getByRole('button', { name: copy.flowNext }))
+    }
+    const add = (kindLabel: string, value: string) => {
+      fireEvent.click(screen.getByRole('button', { name: copy.addAccount }))
+      fireEvent.click(screen.getByLabelText(kindLabel))
+      setMoney(copy.accountValueLabel, value)
+      fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    }
+    const ids = () => m.getSnapshot().draft.enteredAccounts.map((a) => a.id)
+    add(copy.kindRothIra, '250000')
+    const [first] = ids()
+    fireEvent.click(screen.getAllByRole('button', { name: copy.accountEdit })[0]!)
+    setMoney(copy.accountValueLabel, '260000')
+    fireEvent.click(screen.getByRole('button', { name: copy.accountSave }))
+    expect(m.getSnapshot().draft.enteredAccounts[0]).toMatchObject({ id: first, valueToday: 260_000 })
+    add(copy.kindBrokerage, '50000')
+    fireEvent.click(screen.getAllByRole('button', { name: copy.accountRemove })[0]!)
+    fireEvent.click(screen.getByRole('button', { name: copy.accountRemoveConfirm }))
+    add(copy.kindBrokerage, '50000') // two accounts with identical facts
+    const after = ids()
+    expect(after).toHaveLength(2)
+    expect(after.every((id) => typeof id === 'string' && id.length > 0)).toBe(true)
+    expect(new Set(after).size).toBe(2)
+    expect(after).not.toContain(first)
+  })
+})

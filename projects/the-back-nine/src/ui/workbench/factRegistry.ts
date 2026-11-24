@@ -94,6 +94,8 @@ export const DRAFT_FACTS: Record<keyof ScenarioDraft, FactDisposition> = {
   // An order over no entered account has no door (the answer's own door rule: no hollow door).
   drawdownPolicy: shown('sequencing', 'none'),
   drawdownOrder: shown('sequencing', 'none'),
+  // A budget line's own `id` (schema version 6) is not a fact either: the tool mints it so a kept what-if can
+  // name the line. The page prints each line's category, amount, tier and window, never its id.
   budget: shown('budget'),
   rothConversion: shown('roth', 'none'),
   enhancedSubsidies: shown('subsidy-regime'),
@@ -114,6 +116,9 @@ export const DRAFT_FACTS: Record<keyof ScenarioDraft, FactDisposition> = {
   stateTaxVintage: notAFact('The state-tax tables’ vintage, stamped at save.'),
   savedRecommendation: notAFact(
     'A memory of a past recommendation, minted by its save gesture: a record of what the tool said, never an answer the household gives.',
+  ),
+  keptWhatIfs: notAFact(
+    'Choices the household is trying beside the plan, kept in the workbench: what-ifs, never facts the plan runs on.',
   ),
 }
 
@@ -140,6 +145,7 @@ export const HEALTH_FACTS: Record<keyof HealthDraft, FactDisposition> = {
 }
 
 export const ACCOUNT_FACTS: Record<keyof EnteredAccount, FactDisposition> = {
+  id: notAFact('A stable id the tool mints so a kept what-if can name the account; never something the household told it.'),
   ownerIndex: shown('accounts'),
   kind: shown('accounts'),
   valueToday: shown('accounts'),

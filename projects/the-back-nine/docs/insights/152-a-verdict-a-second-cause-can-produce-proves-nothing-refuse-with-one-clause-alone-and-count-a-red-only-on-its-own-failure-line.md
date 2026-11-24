@@ -36,7 +36,7 @@ something other than what they were meant to prove.
 
 The same flaw three times: each result had a second way to happen.
 
-1. The version-1 fixture has ONE person. `draftFromScenario.ts:49` refuses any plan without exactly two people, and
+1. The version-1 fixture has ONE person. `draftFromScenario.ts:60` refuses any plan without exactly two people, and
    that refusal shows the same restore-failed screen. With the version clause gone, the people-count check still
    refused both version-1 arms, and null still met its own `model === null` clause. No arm was refused by the version
    clause alone. Null cannot pin its own clause either: delete `model === null ||` and `model.schemaVersion` throws on
@@ -49,7 +49,7 @@ The same flaw three times: each result had a second way to happen.
    tests looked isolated, but the channel does not live in the database. The next test's `firstSave` heard the stranded
    session and refused with "open-in-another-tab" (`session.ts:342`). The baseline ran 383 green: the leak shows only
    once a test fails before its lock, which is exactly when the reds need reading.
-3. The codec judges "newer" on the label stored on disk, before any version step runs (`scenarioCodec.ts:1051`; the
+3. The codec judges "newer" on the label stored on disk, before any version step runs (`scenarioCodec.ts:1291`; the
    plan's own U2 step 2 puts it there). With the constant at 3, a fresh save's 3 is not newer (3 > 3 is false). The
    version-3 step relabels it to 4, no step takes 4, and it falls through to corrupt (`:1036`). The plan's mutant
    sentence assumed the relabel ran before the newer check, which its own design step says it does not.

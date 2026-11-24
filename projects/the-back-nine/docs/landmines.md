@@ -723,7 +723,7 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 - **(b9-9, 10-21) The re-anchor after an engine edit.** `pnpm doc:reanchor HEAD` (dry run) then `--apply` made 148 edits, including
   dated logs and insights (the precedent `b4bbbd3e` accepted the same). Then: hand-fix each REVIEW token by content
   (a reworded cited line); run `pair-check.mjs` + `crossline-sweep.mjs` + `content-check.mjs` from the tools folder.
-  `pair-check` flags a HISTORICAL token as MISMATCH (TODO's "`model.ts`'s `:734` … had been stale") — a recorded
+  `pair-check` flags a HISTORICAL token as MISMATCH (TODO's "`model.ts`'s `:741` … had been stale") — a recorded
   number stays. `crossline-sweep` found two bare `:151-152` docstring tokens the tool cannot see (fixed by hand).
 
 - **(b9-9, 10-21) A plan doc under `docs/` must carry no line-numbered code citation and no count:** `verify:doc-stats` scans every

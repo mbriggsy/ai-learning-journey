@@ -13,7 +13,7 @@ import { copy, slots } from '../../copy'
 import { DEV_SEEDS } from '../../devSeeds'
 import { FactsPage } from '../FactsPage'
 import { composeFacts, type FactStop } from '../factsChrome'
-import { DRAFT_FACTS, shownFacts, type StepSectionId } from '../factRegistry'
+import { ACCOUNT_FACTS, DRAFT_FACTS, shownFacts, type StepSectionId } from '../factRegistry'
 import { FULL, GOVERNED } from './factDrafts'
 
 /**
@@ -80,13 +80,34 @@ describe('the facts page’s field walk (R14, R15)', () => {
   })
 
   it('a field argued away is never stamped, and every argued field says why in one line', () => {
-    for (const [key, d] of Object.entries(DRAFT_FACTS)) {
+    for (const [key, d] of [...Object.entries(DRAFT_FACTS), ...Object.entries(ACCOUNT_FACTS).map(([k, v]) => [`account.${k}`, v] as const)]) {
       if (d.kind !== 'not-a-fact') continue
       expect(d.why.length, key).toBeGreaterThan(20)
       expect(d.why.includes('\n'), key).toBe(false)
     }
-    const seen = stampsOf(FULL)
-    for (const key of ['seed', 'savedAt', 'filing', 'startCalendarYear', 'savedRecommendation']) expect(seen.has(key), key).toBe(false)
+    // The non-facts: the stamps, the record, and schema version 6's ids and kept what-ifs (the workbench plan's U9) —
+    // FULL and GOVERNED carry an id on every account and line and a kept what-if, so the page had each to print.
+    const nonFacts = [
+      'seed', 'savedAt', 'filing', 'startCalendarYear', 'savedRecommendation', 'taxVintage', 'appDefaultVersion',
+      'healthcareVintage', 'taxVintageDetail', 'dateVintage', 'stateTaxVintage', 'keptWhatIfs', 'account.id',
+    ]
+    expect(FULL.keptWhatIfs?.length, '[non-vacuity] the made-up household keeps a what-if').toBeGreaterThan(0)
+    expect(GOVERNED.budget?.every((l) => l.id !== undefined), '[non-vacuity] every line carries an id').toBe(true)
+    for (const draft of [FULL, GOVERNED]) {
+      const seen = stampsOf(draft)
+      for (const key of nonFacts) expect(seen.has(key), key).toBe(false)
+    }
+    // …and no id or kept what-if name reaches a printed value.
+    const values = [FULL, GOVERNED].flatMap((draft) =>
+      composeFacts({
+        draft,
+        stepIds: intakeSteps(draft).map((s) => s.id),
+        anchor: planClockAnchor(draft.startCalendarYear, draft.startCalendarYear),
+      }).flatMap((s) => s.groups.flatMap((g) => g.lines.map((l) => `${l.label} ${l.value}`))),
+    )
+    for (const id of ['acct-401k', 'acct-hsa', 'line-food', 'line-travel', 'wi-later', 'Stop later']) {
+      expect(values.some((v) => v.includes(id)), id).toBe(false)
+    }
   })
 
   it('a fact reads exactly: no value on the page wears "~" or "about" (R11), the tool’s own extras figure included', () => {

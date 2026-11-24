@@ -2742,8 +2742,8 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     expect(rest, 'otherwise it is `datesavedrisenlater`').toEqual(baseRest)
     expect(enteredAccounts.slice(0, baseAccounts.length), 'its base’s two accounts, first and unchanged').toEqual(baseAccounts)
     expect(enteredAccounts.slice(baseAccounts.length)).toEqual([
-      { ownerIndex: 0, kind: 'brokerage', ticker: 'VTI', valueToday: 60_000, basis: 45_000 },
-      { ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: 18_000 },
+      { id: 'acct-0-brokerage', ownerIndex: 0, kind: 'brokerage', ticker: 'VTI', valueToday: 60_000, basis: 45_000 },
+      { id: 'acct-1-hsa', ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: 18_000 },
     ])
     expect(workingYearLeftOverShownState(d)).toBe('waiting-on-w')
     expect(workingYearLeftOverLive(d)).toBe(26_985)
@@ -3028,5 +3028,29 @@ describe('the year-by-year table’s widest household (the workbench’s U7)', (
     ])
     const largest = Math.max(...table.rows.flatMap((r) => r.cells.flat()).map((f) => f?.dollars ?? 0))
     expect(String(largest), 'balances at seven digits, inside the design ceiling').toHaveLength(7)
+  })
+})
+
+/**
+ * THE SEEDS' LITERAL IDS (schema version 6, the workbench plan's U9): every seed carries a typed id on every account
+ * and budget line, unique within its plan, so the open-time mint never runs on a seed — a seed saved, then opened,
+ * keeps the very ids it was typed with (a seed route and a vault return of the same plan agree).
+ */
+describe('the seeds carry literal stable ids (schema version 6)', () => {
+  it.each(Object.keys(DEV_SEEDS) as (keyof typeof DEV_SEEDS)[])('%s: an id on every account and line, unique within its kind, and the open-time mint leaves them as typed', (key) => {
+    const d = DEV_SEEDS[key]
+    for (const [what, ids] of [
+      ['account', d.enteredAccounts.map((a) => a.id)],
+      ['line', (d.budget ?? []).map((l) => l.id)],
+    ] as const) {
+      expect(ids.every((id) => typeof id === 'string' && id.length > 0), `${key}: every ${what} carries an id`).toBe(true)
+      expect(new Set(ids).size, `${key}: ${what} ids are unique`).toBe(ids.length)
+    }
+    const saved = scenarioFromDraft(d)
+    if (!saved.ready) throw new Error(`${key}: ${saved.detail}`)
+    const reopened = draftFromScenario(saved.scenario)
+    if (!reopened.ok) throw new Error(reopened.detail)
+    expect(reopened.draft.enteredAccounts.map((a) => a.id), key).toEqual(d.enteredAccounts.map((a) => a.id))
+    expect((reopened.draft.budget ?? []).map((l) => l.id), key).toEqual((d.budget ?? []).map((l) => l.id))
   })
 })

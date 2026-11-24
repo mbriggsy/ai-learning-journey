@@ -3,6 +3,7 @@ import { copy, type CopyKey, type SlottedErrorKey, type SlottedErrorParams } fro
 import type { AccountKind, EnteredAccount, TickerClassification } from '@shared/model'
 import { ACCOUNT_KINDS } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
+import { freshStableId, idsInUse } from '@shared/stableIds'
 import { CurrencyField, SegmentedControl } from './fields'
 import { FieldError } from './FieldError'
 import { focusHeading } from './a11y'
@@ -198,6 +199,16 @@ export function AccountEntry({ draft, initial, onSave, onCancel }: AccountEntryP
     return {
       ok: true,
       account: {
+        // THE ID RIDES THROUGH THE REBUILD (schema version 6): this form rebuilds the account from its
+        // fields, so an edit carries the committed account's id across by hand — dropping it would
+        // silently orphan every kept what-if's deposits lever that names this account. A new account
+        // (Add) mints a random id no live account or line holds and no kept what-if names. An edit
+        // never mints: ids enter a draft only at its open (`draftFromScenario`) and at an Add.
+        ...(initial === undefined
+          ? { id: freshStableId(idsInUse(draft)) }
+          : initial.id !== undefined
+            ? { id: initial.id }
+            : {}),
         ownerIndex: form.ownerIndex,
         kind: form.kind,
         valueToday: form.valueToday,

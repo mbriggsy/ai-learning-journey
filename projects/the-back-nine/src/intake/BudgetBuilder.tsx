@@ -52,6 +52,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { copy, slots } from '@ui/copy'
 import type { BudgetLineItem as BudgetLine } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
+import { freshStableId, idsInUse } from '@shared/stableIds'
 import { budgetGoverns, isRampedBudget, validateBudgetItems, isActiveAt } from '@budget/budgetModel'
 import { anchorTarget } from '@budget/budgetToSpending'
 import { useLiveAnnouncer, focusHeading } from './a11y'
@@ -84,8 +85,10 @@ export const medicalExceedsTotal = (spendTotal: number, oopMedical: number): boo
   oopMedical > spendTotal
 
 /** A fresh line: `other` + essentials (the neutral unclassified pick — errs STICKY, insight 055's
- *  conservative direction) with NO amount (NaN blocks Apply until typed — never a silent 0). */
-const freshLine = (): BudgetLine => ({
+ *  conservative direction) with NO amount (NaN blocks Apply until typed — never a silent 0), under the
+ *  stable id its Add minted (schema version 6). */
+const freshLine = (id: string): BudgetLine => ({
+  id,
   category: 'other',
   label: '',
   annualAmountReal: Number.NaN,
@@ -248,7 +251,15 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
   }
   const addLine = () => {
     markDirty()
-    setRows((prev) => [...prev, { id: nextIdRef.current++, item: freshLine() }])
+    setRows((prev) => {
+      // THE ADD'S STABLE ID (schema version 6) — persisted, unlike the row key above: random, and never
+      // one the plan's accounts, its lines or its kept what-ifs hold or name, nor one a staged row holds
+      // (staged lines are the lines Apply will write). Every edit below carries it (`setRow` and
+      // `setRowEnd` spread the line), so it outlives the edit.
+      const taken = idsInUse(draft)
+      for (const r of prev) if (r.item.id !== undefined) taken.add(r.item.id)
+      return [...prev, { id: nextIdRef.current++, item: freshLine(freshStableId(taken)) }]
+    })
   }
   const removeRow = (id: number) => {
     markDirty()

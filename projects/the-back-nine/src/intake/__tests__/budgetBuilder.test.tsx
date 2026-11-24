@@ -349,8 +349,9 @@ describe('BudgetBuilder — the blocked Apply (aria-disabled + the announced rea
     expect(applyBtn()).toHaveAttribute('aria-disabled', 'false')
     fireEvent.click(applyBtn())
     expect(onApply).toHaveBeenCalledTimes(1)
+    // The fresh line carries the stable id its Add minted (schema version 6; random, so matched by shape).
     expect(onApply.mock.calls[0]![0]).toEqual([
-      { category: 'other', label: '', annualAmountReal: 12_000, tier: 'essentials', startYear: 0 },
+      { id: expect.stringMatching(/^[0-9a-f]{24}$/), category: 'other', label: '', annualAmountReal: 12_000, tier: 'essentials', startYear: 0 },
     ])
   })
 })
@@ -516,6 +517,44 @@ describe('BudgetBuilder — Apply payload fidelity', () => {
     const items = onApply.mock.calls[0]![0] as readonly BudgetLineItem[]
     expect(items.map((i) => i.label)).toEqual(['Groceries', 'Gifts'])
     expect(items.map((i) => i.annualAmountReal)).toEqual([18_000, 3_000])
+  })
+})
+
+describe('BudgetBuilder — the stable line id (schema version 6, the workbench plan’s U9)', () => {
+  it('Add mints a fresh id on each new line — two lines with identical facts get two ids — never one the plan holds or names', () => {
+    const onApply = vi.fn()
+    const governing = draftWith((d) => ({
+      ...d,
+      enteredAccounts: [{ id: 'acct-held', ownerIndex: 0, kind: 'roth-ira', valueToday: 1_000 }],
+      budget: [line({ id: 'line-held' })],
+      keptWhatIfs: [{ id: 'wi-held', name: 'n', levers: [{ kind: 'spending', op: 'remove', lineId: 'line-named' }] }],
+      annualSpendingReal: 30_000,
+    }))
+    render(<Host draft={governing} onApply={onApply} />)
+    fireEvent.click(addBtn())
+    fireEvent.click(addBtn())
+    const amounts = screen.getAllByLabelText(copy.budgetAmountLabel)
+    commitField(amounts[1]!, '1,000')
+    commitField(amounts[2]!, '1,000')
+    fireEvent.click(applyBtn())
+    const items = onApply.mock.calls[0]![0] as readonly BudgetLineItem[]
+    expect(items).toHaveLength(3)
+    expect(items[0]!.id).toBe('line-held')
+    const [a, b] = [items[1]!.id, items[2]!.id]
+    expect(a).toMatch(/^[0-9a-f]{24}$/)
+    expect(b).toMatch(/^[0-9a-f]{24}$/)
+    expect(a).not.toBe(b)
+    for (const held of ['acct-held', 'line-held', 'wi-held', 'line-named']) expect([a, b]).not.toContain(held)
+  })
+
+  it('an edit keeps a line’s id — the amount, and the window end that rebuilds the line — and Apply writes it unchanged', () => {
+    const onApply = vi.fn()
+    const governing = draftWith((d) => ({ ...d, budget: [line({ id: 'line-kept', endYear: 12 })], annualSpendingReal: 30_000 }))
+    render(<Host draft={governing} onApply={onApply} />)
+    commitField(screen.getByLabelText(copy.budgetAmountLabel), '45,000')
+    commitField(screen.getByLabelText(copy.budgetWindowThroughLabel), '')
+    fireEvent.click(applyBtn())
+    expect(onApply.mock.calls[0]![0]).toEqual([line({ id: 'line-kept', annualAmountReal: 45_000 })])
   })
 })
 

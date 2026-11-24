@@ -12,9 +12,9 @@
  * SEMANTICS (ranges, sums, age ordering) and remains in the path of every decoded
  * scenario before an answer renders — the codec never re-implements a domain rule,
  * so the two gates cannot disagree. It moves no field, and it changes the parsed object in
- * exactly two ways: it relabels a version-3 or version-4 plan (the steps below), and it deletes a
+ * exactly two ways: it relabels a version-3, -4 or -5 plan (the steps below), and it deletes a
  * savedRecommendation that fails its checks — the one tolerated atom, reported on
- * `droppedAtoms` (the bottom of `checkV3Fields`). Anything else it returns is the disk's.
+ * `droppedAtoms` (the bottom of `checkV3Fields`, and the 5 → 6 step). Anything else it returns is the disk's.
  *
  * VERSION LADDER: `schemaVersion` is judged BEFORE any other field (the migration
  * enabler). An integer above {@link CURRENT_SCHEMA_VERSION} surfaces the calm "saved by a
@@ -34,8 +34,16 @@
  *     whose disk label is 3 or 4 and that carries the answer: no build that writes those labels
  *     writes it, so it is a writer bug, named. Then it relabels to its LITERAL successor, 5, and
  *     reads version 4 forever, for the reasons above.
+ *   · 5 is a LABEL-ONLY step too (the schema-v6 bump, the workbench plan's KTD16): version 6 adds
+ *     three OPTIONAL shapes — a stable id on each entered account and budget line, the kept what-ifs
+ *     list, and the saved recommendation's Roth plan — which no build writing 3 to 5 writes, so a
+ *     relabeled older plan lacks keys its type already calls optional, and the step MINTS NOTHING (ids
+ *     are minted where a draft enters, `draftFromScenario`). It refuses first a plan whose disk label
+ *     is 3 to 5 and that carries an id or the list (a writer bug, named), and drops a record carrying
+ *     the Roth plan under such a label (the record's own tolerated path). Then it relabels to its
+ *     LITERAL successor, 6, and reads version 5 forever.
  *   · {@link CURRENT_SCHEMA_VERSION} runs the field checks (`checkV3Fields` — they name the v3
- *     field GENERATION, which versions 4 and 5 carry, plus version 5's one added field).
+ *     field GENERATION, which versions 4 to 6 carry, plus the fields versions 5 and 6 added).
  * A non-integer version, or one below 1, is corruption, not a branch.
  *
  * TOLERANT READER: unknown extra fields pass through untouched — the additive-within-
@@ -56,6 +64,7 @@ import {
   INCOME_TYPES,
   MEDICARE_EXTRAS_KINDS,
   RECOMMENDATION_GOALS,
+  ROTH_CONVERSION_CHOICE_KINDS,
   SAVED_AT_EPOCH_DAY_MAX,
   SAVED_AT_EPOCH_DAY_MIN,
   SAVED_RECOMMENDATION_GRADES,
@@ -63,6 +72,8 @@ import {
   SPEND_ENTRY_PERIODS,
   STATE_ROSTER,
   TICKER_CLASSIFICATION_CHOICES,
+  WHAT_IF_LEVER_KINDS,
+  WHAT_IF_SPENDING_OPS,
   WORK_STATUSES,
   WORKING_YEAR_COST_KINDS,
   WORKING_YEAR_LEFT_OVER_KINDS,
@@ -72,6 +83,8 @@ import {
   type Scenario,
   type ScenarioV2,
   type CurrentScenario,
+  type WhatIfLeverKind,
+  type WhatIfSpendingOp,
 } from './model'
 import { COLA_PCT_MAX, COLA_PCT_MIN, colaRateInRange } from './incomeBounds'
 
@@ -314,8 +327,8 @@ function checkV2Fields(o: Obj): void {
   needString(o, 'appDefaultVersion', 'scenario')
 }
 
-// --- v3 (the current field set — first written at P2·U8 as version 3; written as version 4 since
-// the schema-v4 bump, a label-only change, so these checks judge both) ---------------------------
+// --- v3 (the current field set — first written at P2·U8 as version 3; written as version 4, 5 and 6
+// since the schema-v4, -v5 and -v6 bumps, each label-only, so these checks judge them all) --------
 // The account-level intake truth. SEPARATE validators from the v1/v2 arm (the field shapes differ —
 // the live `pia`/`birthYear` person, entered accounts, two discriminated unions); the legacy
 // `checkPerson` is NEVER reused or mutated (plan §10). Same finiteness-first / vocab discipline.
@@ -379,10 +392,40 @@ function checkTickerClassification(v: unknown, path: string): void {
   }
 }
 
+/** A stable id (schema version 6): a non-empty string. Returns it. */
+function needId(o: Obj, field: string, path: string): string {
+  needString(o, field, path)
+  const id = o[field] as string
+  if (id.length === 0) throw new Corrupt(`${path}.${field}: expected a non-empty id`)
+  return id
+}
+
+/** Ids are unique within their kind (schema version 6): two accounts, or two budget lines, sharing an
+ *  id would let one kept what-if's lever name two entries at once. An absent id is skipped — a
+ *  version-5 plan relabeled to 6 carries none until `draftFromScenario` mints them at open. */
+function needUniqueIds(entries: readonly unknown[], path: string): void {
+  const seen = new Set<string>()
+  entries.forEach((e, i) => {
+    const id = (e as Obj).id
+    if (id === undefined) return
+    if (seen.has(id as string)) {
+      throw new Corrupt(`${path}[${i}].id: "${String(id)}" is already another entry's id (ids are unique within their kind)`)
+    }
+    seen.add(id as string)
+  })
+}
+
 /** One {@link EnteredAccount} — the entered truth (R35/R36). `ownerIndex` must index into people
- *  (a dangling owner is a fold-time crash); `manualBlend`, when present, is the ticker union. */
+ *  (a dangling owner is a fold-time crash); `manualBlend`, when present, is the ticker union.
+ *  `id` (schema version 6, optional): a non-empty string, unique among the accounts (checked by the
+ *  caller). §7.3, from a version-5 copy's side: (a) no — no params builder reads an id, so the answer
+ *  never moves; (b) no — a version-5 codec passes an unknown key nested in an account; (c) YES — a
+ *  version-5 copy's account editor rebuilds the account from its form without the id, and its Add mints
+ *  none, so one save there strips the target a kept what-if's deposits lever names. That is the bump's
+ *  own case: version 6, which such a copy refuses calmly. */
 function checkEnteredAccount(v: unknown, peopleCount: number, path: string): void {
   needObject(v, path)
+  if (v.id !== undefined) needId(v, 'id', path)
   needInteger(v, 'ownerIndex', path)
   const owner = v.ownerIndex as number
   if (owner < 0 || owner >= peopleCount) {
@@ -473,9 +516,14 @@ function checkIncomeStreamV3(v: unknown, peopleCount: number, path: string): voi
  *  two-gate rule assigns to the codec (the sole restore gate for values multiplied/summed
  *  away before the engine). The WINDOW relation is structural (the ownerIndex-bounds
  *  precedent): a reversed window has no meaning any layer can compute on. `endYear`
- *  ABSENT = lifelong (DND-009 — a null/Infinity in the slot is corruption, never coerced). */
+ *  ABSENT = lifelong (DND-009 — a null/Infinity in the slot is corruption, never coerced).
+ *  `id` (schema version 6, optional): a non-empty string, unique among the plan's lines (checked by
+ *  the caller). §7.3, from a version-5 copy's side: (a) no — the budget compile reads no id; (b) no —
+ *  an unknown key nested in a line passes; (c) partly — a version-5 budget editor carries a line's
+ *  unknown keys through an edit, but its Add mints a line with none. It rides the account id's bump. */
 function checkBudgetLineItemV3(v: unknown, path: string): void {
   needObject(v, path)
+  if (v.id !== undefined) needId(v, 'id', path)
   needVocab(v, 'category', BUDGET_CATEGORIES, path)
   needString(v, 'label', path)
   needFinite(v, 'annualAmountReal', path)
@@ -536,6 +584,158 @@ function checkDrawdownOrderV3(v: unknown, path: string): void {
   if (new Set(v).size !== DRAWDOWN_ORDER_KEYS.length) {
     throw new Corrupt(`${path}: each bucket must appear exactly once`)
   }
+}
+
+// --- schema version 6: the kept what-ifs and the Roth choice (the workbench plan's KTD16, KTD18) ------
+
+/** The other arms' fields, refused (the extras biconditional idiom): no writer emits them. */
+function refuseFields(o: Obj, fields: readonly string[], path: string, why: string): void {
+  for (const f of fields) {
+    if (o[f] !== undefined) throw new Corrupt(`${path}.${f}: ${why} (writer bug)`)
+  }
+}
+
+/** A Roth conversion choice ({@link RothConversionChoiceV6}): the plan itself — the plan field's own
+ *  check, amount > 0 included, since "converts nothing" is the explicit none, never a zero plan — or
+ *  `none`, which carries no plan (both directions). */
+function checkRothConversionChoiceV6(v: unknown, path: string): void {
+  needObject(v, path)
+  needVocab(v, 'kind', ROTH_CONVERSION_CHOICE_KINDS, path)
+  if (v.kind === 'plan') checkRothConversionPlanV3(v.plan, `${path}.plan`)
+  else refuseFields(v, ['plan'], path, "only meaningful when kind is 'plan'")
+}
+
+/** The tolerance a mix's three figures may miss 100 by: the intake's own allocation rule
+ *  (`classifyLegs`, `src/intake/AllocationEntry.tsx`, refuses a sum at least 0.001 away), re-declared
+ *  because `src/shared` may not import intake. Typed percentages like 33.3 / 33.3 / 33.4 do not always
+ *  sum to exactly 100 in floating point. */
+const MIX_SUM_TOLERANCE = 0.001
+
+/** One spending op's arm: checks the op's own fields, refuses the others', returns the lever's target. */
+function spendingLineTarget(v: Obj, path: string): string {
+  refuseFields(v, ['lineId', 'annualSpendingReal'], path, 'a line lever carries its whole line, whose id is the target')
+  checkBudgetLineItemV3(v.line, `${path}.line`)
+  // Required here, unlike on a plan line: an added line lands in the plan with the id it was kept under.
+  return `line:${needId(v.line as Obj, 'id', `${path}.line`)}`
+}
+const SPENDING_OP_ARMS: Record<WhatIfSpendingOp, (v: Obj, path: string) => string> = {
+  add: spendingLineTarget,
+  replace: spendingLineTarget,
+  remove: (v, p) => {
+    refuseFields(v, ['line', 'annualSpendingReal'], p, 'a remove names its line by lineId alone')
+    return `line:${needId(v, 'lineId', p)}`
+  },
+  // The plan's own `annualSpendingReal` check: finite, and the engine's gate judges the range (the total
+  // reaches it raw, through the plan's own builders).
+  total: (v, p) => {
+    refuseFields(v, ['line', 'lineId'], p, 'a total carries the one figure alone')
+    needFinite(v, 'annualSpendingReal', p)
+    return 'total'
+  },
+}
+
+/**
+ * Each lever kind's arm (the table in model.ts, `WhatIfLeverFieldsV6`): checks that kind's fields and
+ * returns the lever's TARGET, so a bundle holding two levers of one kind on one target is refused by
+ * the caller. An exhaustive Record (insight 147): a kind added to the vocabulary fails to compile here.
+ * No arm checks that a target still exists in the plan — a kept what-if may outlive the account or line
+ * it names (deleted after the keep), and refusing it here would call a good plan "damaged" after an
+ * ordinary edit; what a dangling target means is the apply arm's call (U14).
+ */
+type LeverArm = (v: Obj, path: string, peopleCount: number) => string
+const LEVER_ARMS: Record<WhatIfLeverKind, LeverArm> = {
+  // A calendar year (the bundle's one calendar value, KTD18); each run refuses one outside the date
+  // window by name, so the codec checks the shape.
+  'stop-year': (v, p) => {
+    needInteger(v, 'calendarYear', p)
+    return 'household'
+  },
+  spending: (v, p) => {
+    needVocab(v, 'op', WHAT_IF_SPENDING_OPS, p)
+    return SPENDING_OP_ARMS[v.op as WhatIfSpendingOp](v, p)
+  },
+  // The account dollars' own gate (finite, ≥ 0, ≤ the ceiling — insight 046): a deposit is summed away
+  // into a contribution stream before the engine sees it. The employer overrides are optional, absent
+  // meaning the plan's own fact.
+  deposits: (v, p) => {
+    const accountId = needId(v, 'accountId', p)
+    needFinite(v, 'annualContribution', p)
+    needNonNegativeDollar(v, 'annualContribution', p)
+    for (const field of ['employerMatchAnnual', 'hsaEmployerAnnual'] as const) {
+      if (v[field] !== undefined) {
+        needFinite(v, field, p)
+        needNonNegativeDollar(v, field, p)
+      }
+    }
+    return `account:${accountId}`
+  },
+  // Its own rule (KTD16), stricter than an account mix's positive-sum check: each a finite percentage
+  // ≥ 0, the three summing to 100.
+  mix: (v, p) => {
+    let sum = 0
+    for (const field of ['stockPct', 'bondPct', 'cashPct'] as const) {
+      needFinite(v, field, p)
+      const pct = v[field] as number
+      if (pct < 0) throw new Corrupt(`${p}.${field}: expected a percentage ≥ 0`)
+      sum += pct
+    }
+    if (Math.abs(sum - 100) >= MIX_SUM_TOLERANCE) {
+      throw new Corrupt(`${p}: the stock, bond and cash percentages must sum to 100 (got ${sum})`)
+    }
+    return 'household'
+  },
+  roth: (v, p) => {
+    checkRothConversionChoiceV6(v.conversion, `${p}.conversion`)
+    return 'household'
+  },
+  // The plan's own biconditional (custom ⟺ an order), both directions.
+  'withdrawal-order': (v, p) => {
+    needVocab(v, 'policy', DRAWDOWN_POLICIES, p)
+    if (v.policy === 'custom') checkDrawdownOrderV3(v.drawdownOrder, `${p}.drawdownOrder`)
+    else refuseFields(v, ['drawdownOrder'], p, "only meaningful when policy is 'custom' (it would not govern)")
+    return 'household'
+  },
+  // An index into people (a dangling person is a crash at apply), and the plan's own claim-age check
+  // (finite; the engine's gate judges the range — the age reaches it raw on the copy's person).
+  'claim-age': (v, p, peopleCount) => {
+    needInteger(v, 'personIndex', p)
+    const person = v.personIndex as number
+    if (person < 0 || person >= peopleCount) {
+      throw new Corrupt(`${p}.personIndex: expected an index into people [0, ${peopleCount})`)
+    }
+    needFinite(v, 'claimAge', p)
+    return `person:${person}`
+  },
+  'aca-subsidy': (v, p) => {
+    needBoolean(v, 'enhanced', p)
+    return 'household'
+  },
+}
+
+/** One kept what-if ({@link KeptWhatIfV6}): a non-empty id (returned, for the caller's uniqueness
+ *  check), a name, and its bundle — every lever of a known kind, at most one per kind and target, and
+ *  never a total beside a line lever (each line lever re-reconciles the very total a total lever sets,
+ *  so the pair is two levers on one figure). An empty bundle passes: it is the plan itself. */
+function checkKeptWhatIfV6(v: unknown, peopleCount: number, path: string): string {
+  needObject(v, path)
+  const id = needId(v, 'id', path)
+  needString(v, 'name', path)
+  needArray(v.levers, `${path}.levers`)
+  const targets = new Set<string>()
+  v.levers.forEach((lever, i) => {
+    const p = `${path}.levers[${i}]`
+    needObject(lever, p)
+    needVocab(lever, 'kind', WHAT_IF_LEVER_KINDS, p)
+    const kind = lever.kind as WhatIfLeverKind
+    const target = `${kind} ${LEVER_ARMS[kind](lever, p, peopleCount)}`
+    if (targets.has(target)) throw new Corrupt(`${p}: a second ${kind} lever on the same target (one lever per kind and target)`)
+    targets.add(target)
+  })
+  const lineLever = [...targets].some((t) => t.startsWith('spending line:'))
+  if (targets.has('spending total') && lineLever) {
+    throw new Corrupt(`${path}.levers: a spending total beside a line lever (the line lever re-reconciles the total it would set)`)
+  }
+  return id
 }
 
 // --- the vintage-stamp validators (ONE home each) --------------------------------------------
@@ -656,6 +856,15 @@ function checkSavedRecommendationV3(v: unknown, path: string): void {
     }
     checkDrawdownOrderV3(action.drawdownOrder, `${actionPath}.drawdownOrder`)
   }
+  // Schema version 6: the winner's Roth plan, so the rail can run the recommendation (R22). OPTIONAL —
+  // a record minted before version 6 lacks it, and absence means "not recorded", never "converts
+  // nothing" (that is the explicit none). §7.3, from a version-5 copy's side: (a) no — no version-5
+  // reader re-enacts a conversion from the record (its one reader compares `candidateId`); (b) no — an
+  // unknown action key passes; (c) no — the record rides `...draft`, minted once. Additive alone; it
+  // rides the ids' bump. (Under a disk label below 6 the 5 → 6 step drops the record before this runs.)
+  if (action.rothConversion !== undefined) {
+    checkRothConversionChoiceV6(action.rothConversion, `${actionPath}.rothConversion`)
+  }
 
   const verdictPath = `${path}.verdict`
   const verdict = v.verdict
@@ -734,6 +943,7 @@ function checkV3Fields(o: Obj): string[] {
   const peopleCount = o.people.length
   needArray(o.enteredAccounts, 'scenario.enteredAccounts')
   o.enteredAccounts.forEach((a, i) => checkEnteredAccount(a, peopleCount, `enteredAccounts[${i}]`))
+  needUniqueIds(o.enteredAccounts, 'enteredAccounts')
   needObject(o.tickerClassifications, 'scenario.tickerClassifications')
   for (const [k, val] of Object.entries(o.tickerClassifications)) {
     checkTickerClassification(val, `tickerClassifications.${k}`)
@@ -759,6 +969,7 @@ function checkV3Fields(o: Obj): string[] {
   if (o.budget !== undefined) {
     needArray(o.budget, 'scenario.budget')
     o.budget.forEach((b, i) => checkBudgetLineItemV3(b, `budget[${i}]`))
+    needUniqueIds(o.budget, 'budget')
   }
   // P3·U10 — the Roth-conversion lever (additive-optional, same precedent).
   if (o.rothConversion !== undefined) {
@@ -975,6 +1186,22 @@ function checkV3Fields(o: Obj): string[] {
       throw new Corrupt(`${p}.quotedReal: only meaningful when kind is 'saved' (writer bug)`)
     }
   }
+  // The kept what-ifs (schema version 6; the workbench plan's KTD16, KTD18), optional, ABSENT meaning
+  // none kept. Every kept what-if passes `checkKeptWhatIfV6`, and no two share an id. Loud, like every
+  // field but the record: a kept what-if is the household's own work, never a disposable memory.
+  // §7.3, from a version-5 copy's side: (a) no — the plan's own answer never reads them (a what-if runs
+  // on a copy, KTD10); (b) no — an unknown top-level key passes the tolerant reader; (c) a version-5
+  // copy carries the list through `...draft` untouched, but its levers name account and line ids that
+  // copy does not keep (the account check above), so the ids' bump covers them.
+  if (o.keptWhatIfs !== undefined) {
+    needArray(o.keptWhatIfs, 'scenario.keptWhatIfs')
+    const ids = new Set<string>()
+    o.keptWhatIfs.forEach((k, i) => {
+      const id = checkKeptWhatIfV6(k, peopleCount, `keptWhatIfs[${i}]`)
+      if (ids.has(id)) throw new Corrupt(`keptWhatIfs[${i}].id: "${id}" is already another kept what-if's id`)
+      ids.add(id)
+    })
+  }
   // ─────────────────────────────────────────────────────────────────────────────────────────
   // Act-4 · U17 — the saved-recommendation record: THE FIRST AND ONLY TOLERATED DROP IN THIS
   // CODEC, a DELIBERATE, spec-named divergence from the file's loud-over-silent discipline
@@ -1026,6 +1253,19 @@ function checkV3Fields(o: Obj): string[] {
   return droppedAtoms
 }
 
+/** The path of the first plan-level field only version 6 writes (an account's or a line's id, the kept
+ *  what-ifs list) — `undefined` when the plan carries none. Read by the 5 → 6 step BEFORE any field is
+ *  checked, so every access is guarded; the arms judge the shapes afterwards. */
+function versionSixFieldIn(o: Obj): string | undefined {
+  if (o.keptWhatIfs !== undefined) return 'scenario.keptWhatIfs'
+  const firstWithId = (list: unknown, path: string): string | undefined => {
+    if (!Array.isArray(list)) return undefined
+    const i = list.findIndex((e) => isObj(e) && e.id !== undefined)
+    return i === -1 ? undefined : `${path}[${i}].id`
+  }
+  return firstWithId(o.enteredAccounts, 'enteredAccounts') ?? firstWithId(o.budget, 'budget')
+}
+
 /**
  * Decode + structurally validate plaintext vault/export bytes. Never throws on bad DATA:
  * every data failure is a typed result the store maps to its calm states ("data damaged" /
@@ -1053,6 +1293,8 @@ export function decodeScenario(bytes: Uint8Array): ScenarioDecode {
   // The version each step hands on. A label-only step moves it (and the parsed object's own label)
   // to its literal successor; the next arm then judges it exactly as if the disk had said so.
   let version = onDisk
+  // A record the 5 → 6 step drops (the record's own tolerated path), reported ahead of the field checks'.
+  const stepDrops: string[] = []
   try {
     // The legacy ladders carry no tolerated atom — every field is fatal-or-fine, so their
     // `droppedAtoms` is the EMPTY LIST (the absence, spelled; never `undefined`).
@@ -1090,8 +1332,34 @@ export function decodeScenario(bytes: Uint8Array): ScenarioDecode {
       parsed.schemaVersion = 5
       version = 5
     }
+    // 5 → 6, LABEL ONLY (the schema-v6 bump, the workbench plan's KTD16, U9): version 6 adds three
+    // OPTIONAL shapes — a stable id on each entered account and budget line, the kept what-ifs list, and
+    // the saved recommendation's Roth plan — so a version-5 plan is a version-6 plan with those keys
+    // absent, and the step MINTS NOTHING (ids are minted where a draft enters, `draftFromScenario`).
+    // Before the relabel, a plan whose DISK label is 3 to 5 and that carries an id or the list is
+    // refused: no build writing those labels writes either, so it is a writer bug, named (§7.3). A
+    // record carrying the Roth plan under such a label drops instead, through the record's own
+    // tolerated path (a memory never makes the plan unopenable). The LITERAL successor again, never
+    // `CURRENT_SCHEMA_VERSION` (the 3 → 4 note above). Read forever.
+    if (version === 5) {
+      const newer = versionSixFieldIn(parsed)
+      if (newer !== undefined) {
+        throw new Corrupt(
+          `${newer}: a plan saved as version ${onDisk} cannot carry it — no build that writes version ${onDisk} writes it (writer bug)`,
+        )
+      }
+      const record = parsed.savedRecommendation
+      if (isObj(record) && isObj(record.action) && record.action.rothConversion !== undefined) {
+        delete parsed.savedRecommendation
+        stepDrops.push(
+          `savedRecommendation: scenario.savedRecommendation.action.rothConversion: a record saved as version ${onDisk} cannot carry it — no build that writes version ${onDisk} writes it (writer bug)`,
+        )
+      }
+      parsed.schemaVersion = 6
+      version = 6
+    }
     if (version === CURRENT_SCHEMA_VERSION) {
-      const droppedAtoms = checkV3Fields(parsed)
+      const droppedAtoms = [...stepDrops, ...checkV3Fields(parsed)]
       return { ok: true, scenario: parsed as unknown as CurrentScenario, droppedAtoms }
     }
   } catch (e) {

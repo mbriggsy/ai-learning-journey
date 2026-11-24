@@ -119,6 +119,13 @@ export function mintSavedRecommendation(
       // BICONDITIONAL half #1, present-iff-present: the arm carries the order iff it is 'custom'.
       // A 'custom' winner that arrived without one is refused below, never handed a default order.
       ...(payload.winner.drawdownOrder !== undefined ? { drawdownOrder: payload.winner.drawdownOrder } : {}),
+      // Schema version 6: the WINNER's whole conversion plan (window included — `candidateId` embeds the
+      // amount alone), so the rail can run the recommendation (R22). A crown that converts nothing
+      // (`conversion: null`, the conversion-0 arm) mints the EXPLICIT none, never an absent key: absence
+      // on a record means "minted before version 6", not "converts nothing". The winner's, never the
+      // runner-up's or the baseline's (all three carry one).
+      rothConversion:
+        payload.winner.conversion === null ? { kind: 'none' } : { kind: 'plan', plan: payload.winner.conversion },
     },
     verdict: {
       // BICONDITIONAL half #2 — ONE spread, so the pair can only ever land TOGETHER or not at all.

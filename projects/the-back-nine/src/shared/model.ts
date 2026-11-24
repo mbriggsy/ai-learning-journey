@@ -11,8 +11,8 @@
  * engine's core contract + a minimal plaintext `Scenario`. U2/U3 extend `Scenario`
  * with per-person account buckets + birth years (the schemaVersion-2 field shape);
  * U4 wraps it in the persisted record types + owns the `schemaVersion` DECODE ladder
- * (branch per version, refuse newer, no field migration — the two steps are the schema-v4 and
- * schema-v5 bumps' label-only relabels, 3 → 4 → 5). Those extensions are additive — the fields here are written from v1.
+ * (branch per version, refuse newer, no field migration — the three steps are the schema-v4,
+ * schema-v5 and schema-v6 bumps' label-only relabels, 3 → 4 → 5 → 6). Those extensions are additive — the fields here are written from v1.
  */
 
 // ---------------------------------------------------------------------------
@@ -613,6 +613,13 @@ export type BudgetTier = (typeof BUDGET_TIERS)[number]
  *  never `null`/`Infinity` — DND/009: a null in a number slot is named corruption).
  *  Forward-looking planning input, never expense tracking. */
 export interface BudgetLineItem {
+  /** The line's stable id (schema version 6, the workbench plan's KTD16): what a kept what-if's
+   *  spending lever names it by. Optional — a version-5 plan relabeled to 6 is honest without one —
+   *  and minted only where a draft enters without one (`draftFromScenario`, deterministic; the budget
+   *  editor's Add, random; both in `src/shared/stableIds.ts`), carried through every edit. Never read
+   *  by a params builder or the budget compile: an id reaching the engine would move every solver
+   *  fingerprint. Unique among the plan's lines (codec-enforced). */
+  readonly id?: string
   readonly category: BudgetCategory
   /** The user's own name for the line ("Groceries", "See the grandkids"). Display-only. */
   readonly label: string
@@ -1834,20 +1841,25 @@ export interface ScenarioV2 {
 // captures: per-person identity + work-status, the user's actual account list, the
 // ticker-keyed manual classifications, and the household health-cost entry.
 //
-// ONE FIELD GENERATION, THREE LABELS. The schema-v4 bump (2026-10-31, Briggsy's OK on the
+// ONE FIELD GENERATION, FOUR LABELS. The schema-v4 bump (2026-10-31, Briggsy's OK on the
 // register entry *A copy of the app built before the pay check opens a plan carrying W…*)
 // relabeled this shape 4, so a copy built before it refuses a plan carrying W calmly ("saved
 // by a newer version") instead of running it without the pay check. The schema-v5 bump
 // (build 2's go-live, `docs/plans/features/working-year-surplus-build-spec.md` KTD6) adds ONE
-// optional field, the left-over answer (`workingYearLeftOver`), and relabels the shape 5
-// ({@link CURRENT_SCHEMA_VERSION}): a version-4 copy ignoring a "saved" answer would drop a
-// left over the version-5 copy credits (§7.3's rule (a)), so it must refuse the plan. Versions
-// 3 and 4 carry every field version 5 requires and never the new one; the codec relabels
-// 3 → 4 → 5 at decode, forever (`scenarioCodec.ts`). The sub-types keep their `V3` names
-// (`PersonInputsV3`, `SavedRecommendationV3`, `WorkingYearCostV3`, the `*VintageV3` stamps,
+// optional field, the left-over answer (`workingYearLeftOver`), and relabels the shape 5: a
+// version-4 copy ignoring a "saved" answer would drop a left over the version-5 copy credits
+// (§7.3's rule (a)), so it must refuse the plan. The schema-v6 bump (the workbench plan's KTD16,
+// U9 — gap 2's saved shapes) adds three OPTIONAL shapes and relabels the shape 6
+// ({@link CURRENT_SCHEMA_VERSION}): a stable id on each entered account and budget line, the kept
+// what-ifs list (`keptWhatIfs`), and the saved recommendation's Roth conversion plan. A version-5
+// copy's account editor rebuilds an account without its id and its Add mints none, so one save
+// there would strip the targets every kept what-if names (§7.3's rule (c)) — it must refuse the
+// plan. Versions 3 to 5 carry every field version 6 requires and never the new ones; the codec
+// relabels 3 → 4 → 5 → 6 at decode, forever (`scenarioCodec.ts`). The sub-types keep their `V3`
+// names (`PersonInputsV3`, `SavedRecommendationV3`, `WorkingYearCostV3`, the `*VintageV3` stamps,
 // `SCENARIO_V3_FIELDS`, the codec's `checkV3Fields`): they name this field GENERATION, which
-// versions 4 and 5 carry; the one field version 5 added is named for its version
-// ({@link WorkingYearLeftOverV5}). When a future field must bump the version:
+// versions 4 to 6 carry; a shape a later version added is named for its version
+// ({@link WorkingYearLeftOverV5}, {@link KeptWhatIfV6}). When a future field must bump the version:
 // `docs/architecture.md` §7.3.
 //
 // What follows is the shape's history as first written (dated, kept as written):
@@ -1920,6 +1932,14 @@ export type AccountKind = (typeof ACCOUNT_KINDS)[number]
 /** One account as the user entered it (R35/R36 — user-entered values, no live
  *  lookup). The model stores the ENTERED truth; every aggregate is derived. */
 export interface EnteredAccount {
+  /** The account's stable id (schema version 6, the workbench plan's KTD16): what a kept what-if's
+   *  deposits lever names it by. Optional — a version-5 plan relabeled to 6 is honest without one —
+   *  and minted only where a draft enters without one (`draftFromScenario`, deterministic; the account
+   *  editor's Add, random; both in `src/shared/stableIds.ts`), carried through every edit (the account
+   *  editor rebuilds the account from its form, so it carries the id across by hand). Never read by a
+   *  params builder: an id reaching the engine would move every solver fingerprint. Unique among the
+   *  plan's accounts (codec-enforced). */
+  readonly id?: string
   /** Index into `people` — whose account this is (drives the per-person bucket
    *  fold, HSA ownership, and the per-owner contribution streams). */
   readonly ownerIndex: number
@@ -2138,9 +2158,9 @@ export type IncomeStream = {
  * The version every save writes — the ONE home of the current `schemaVersion` (the schema-v4
  * plan's KTD1). The mint (`scenarioFromDraft`), the codec's top arm and its "newer" threshold,
  * and the hydrate gate (`IntakeApp`) all read it; no production file re-types it, except the
- * codec's label-only steps (3 → 4 and 4 → 5), each of which names its LITERAL successor (a step
- * that jumps to "current" would carry an old plan past whatever step a later bump adds), and its
- * refusal of a version-3 or version-4 plan carrying the version-5 answer. Declared here, above the type
+ * codec's label-only steps (3 → 4, 4 → 5 and 5 → 6), each of which names its LITERAL successor (a
+ * step that jumps to "current" would carry an old plan past whatever step a later bump adds), and
+ * their refusals of an older-labeled plan carrying a field only a later version writes. Declared here, above the type
  * it discriminates, as {@link BACKUP_FORMAT_VERSION} is: `model.ts` is the only home without an
  * import cycle.
  *
@@ -2149,11 +2169,12 @@ export type IncomeStream = {
  * this constant after a real save — roll forward (`docs/architecture.md` §7.3). Each bump raises
  * the version-floor test in its own follow-up commit.
  */
-export const CURRENT_SCHEMA_VERSION = 5
+export const CURRENT_SCHEMA_VERSION = 6
 
 /** The current plaintext scenario: the account-level intake truth, written as
- *  {@link CURRENT_SCHEMA_VERSION} (versions 3 and 4 carry the same fields less the optional
- *  left-over answer, and relabel at decode).
+ *  {@link CURRENT_SCHEMA_VERSION} (versions 3 to 5 carry the same fields less the optional ones a
+ *  later version added — the left-over answer at 5; the ids, the kept what-ifs and the record's
+ *  Roth plan at 6 — and relabel at decode).
  *  See the section comment above for the label history, the define-now/write-at-U8 contract
  *  and the deliberate fidelity-over-duplication shape change vs v2. */
 export interface CurrentScenario {
@@ -2360,6 +2381,16 @@ export interface CurrentScenario {
    *  `medicareExtrasByPerson` reasoning; `src/shared/model.ts`'s W comment ruled "build 2's
    *  surplus answer gets its own top-level key"). */
   readonly workingYearLeftOver?: WorkingYearLeftOverV5
+  /** The workbench's kept what-ifs (schema version 6; the workbench plan's KTD16, KTD18): each a stable
+   *  id, a name and a bundle of lever values. OPTIONAL, and ABSENT means none kept (never an empty
+   *  default written in). A USER FACT carried through `...draft` at Save, never stamped fresh; the plan's
+   *  own answer never reads it (a what-if runs on a COPY of the draft, KTD10), so no params builder may
+   *  touch it. Its levers name accounts and lines by id and may outlive what they name (an account
+   *  deleted after the keep): the codec checks each lever's shape, never that its target still exists
+   *  — that is the apply arm's question (U14), and a decode refusal there would call a good plan
+   *  "damaged" after an ordinary edit. TOP-LEVEL, so the R7 registry and the facts registry each place
+   *  it by compile. */
+  readonly keptWhatIfs?: readonly KeptWhatIfV6[]
   /** Act-4 · U17 — the SAVED RECOMMENDATION record (the spec's Q5 payload). ADDITIVE-OPTIONAL
    *  within schemaVersion 3 (the chosenGoal/rothConversion/savedAt tolerant-reader precedent —
    *  a pre-U17 vault lacks the field and decodes unchanged; NO schemaVersion bump). ABSENCE IS
@@ -2440,7 +2471,7 @@ export interface SavedRecommendationV3 {
    *  2026-09-03 edit-time kill the pending arm does too; produced by the private `fingerprintOf` at
    *  `:698`) — the identity of the run this record actually describes — and NEVER from a fresh
    *  recompute taken at save time. The trichotomy's `freshFingerprint` is the OTHER operand,
-   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:842`): what the draft WOULD solve
+   *  `MemoryModel.currentDraftFingerprint()` (`memoryModel.ts:846`): what the draft WOULD solve
    *  now. The two are equal at the mint and diverge afterwards, and that divergence IS the mechanism
    *  — so minting from the fresh side instead would stamp the record with inputs the recommendation
    *  was never computed against, which on a stale draft is a calm-but-wrong memory rather than a
@@ -2469,15 +2500,13 @@ export interface SavedRecommendationV3 {
 
 /** WHAT WAS RECOMMENDED — the crowned arm, flattened.
  *
- *  NO `conversion` FIELD. ⚠️ The original rationale — "`SolveArm.conversion` is ALWAYS NULL in
- *  the live sequencing-only ranking, conversions WITHHELD as `withheldConversionLevers`" — EXPIRED
- *  2026-07-19, when Part B went `'trended'` and the trend clause cleared: conversion candidates rank
- *  live now (solve.ts:14-16, :118-120), so a crowned arm CAN carry a real `RothConversionPlan`. This
- *  record keeps only what `candidateId` embeds — the conversion's `annualAmountReal`, inside an id
- *  that is OPAQUE and never parsed (below) — and does NOT persist the plan's `startYearOffset` /
- *  `years` window. Nothing re-enacts a conversion from this record today — its one reader,
- *  `recommendationSaveView.ts`, only compares `candidateId` to the live winner's id — so the
- *  window need not persist; a reader that re-enacts from the record extends it additively. */
+ *  THE CONVERSION RIDES SINCE SCHEMA VERSION 6 (`rothConversion`, the workbench plan's KTD16): the
+ *  rail runs the recommendation as a what-if (R22), so the record must carry the whole plan the
+ *  winner converts, window included — `candidateId` embeds only the amount, inside an id that is
+ *  OPAQUE and never parsed (below). Conversion candidates rank live since 2026-07-19 (Part B went
+ *  `'trended'`), so a crowned arm CAN carry a real `RothConversionPlan`; a crown that converts nothing
+ *  carries the explicit none, never an absent key. A record minted before version 6 lacks the field
+ *  (absent = not recorded, never "converts nothing"). */
 export interface SavedRecommendationActionV3 {
   /** The `solverCandidateId` of the winning arm — OPAQUE, never parsed into its parts (the
    *  engine owns that grammar; a shared-side parser would be a second producer to drift). */
@@ -2487,6 +2516,12 @@ export interface SavedRecommendationActionV3 {
    *  directions (the {@link CurrentScenario.drawdownOrder} precedent): a 'custom' action with no
    *  order names nothing, and an order riding a named policy would silently NOT govern. */
   readonly drawdownOrder?: readonly DrawdownOrderKey[]
+  /** The winner's Roth conversion plan, copied off the committed solve's winning arm
+   *  (`savedRecommendationMint.ts`): the plan itself, or the explicit none when the crown converts
+   *  nothing. OPTIONAL only because a record minted before schema version 6 lacks it; every mint since
+   *  writes it. A version-6 field: a record whose plan carries a lower label and this key drops at
+   *  decode (no build writing that label writes it). */
+  readonly rothConversion?: RothConversionChoiceV6
 }
 
 /**
@@ -2696,6 +2731,113 @@ export type WorkingYearLeftOverV5 =
   | { readonly kind: 'spent' }
   | { readonly kind: 'not-sure' }
 
+// ---------------------------------------------------------------------------
+// Schema version 6 — gap 2's saved shapes (the workbench plan `docs/plans/5-workbench-plan.md`,
+// KTD16 and KTD18, U9). Written once, here; U14 writes the apply arms against these types. Every
+// vocabulary below binds from the first real save (§7.3's newer reader's half: never lose a value).
+// ---------------------------------------------------------------------------
+
+/** A Roth conversion choice: the plan itself, or the explicit none. One shape for the saved
+ *  recommendation's action and for the Roth lever, so U19's convert-to-a-line mode is one change to
+ *  {@link RothConversionPlan} for both (KTD16). `none` is a real answer ("converts nothing"), never the
+ *  absence of one; the plan arm carries a meaningful plan (amount > 0 — the codec's plan check). */
+export const ROTH_CONVERSION_CHOICE_KINDS = ['none', 'plan'] as const
+export type RothConversionChoiceKind = (typeof ROTH_CONVERSION_CHOICE_KINDS)[number]
+export type RothConversionChoiceV6 =
+  | { readonly kind: 'none' }
+  | { readonly kind: 'plan'; readonly plan: RothConversionPlan }
+
+/** The eight lever kinds a kept what-if can hold (KTD15, KTD16): the choices still open. A CLOSED
+ *  vocabulary — every home that chooses by kind is an exhaustive `Record<WhatIfLeverKind, …>`
+ *  (insight 147), so a kind added later fails to compile in each one. */
+export const WHAT_IF_LEVER_KINDS = [
+  'stop-year',
+  'spending',
+  'deposits',
+  'mix',
+  'roth',
+  'withdrawal-order',
+  'claim-age',
+  'aca-subsidy',
+] as const
+export type WhatIfLeverKind = (typeof WHAT_IF_LEVER_KINDS)[number]
+
+/** What a spending lever does: add, replace or remove one whole budget line (by its id), or set the
+ *  one-figure total of a household with no itemized budget. */
+export const WHAT_IF_SPENDING_OPS = ['add', 'replace', 'remove', 'total'] as const
+export type WhatIfSpendingOp = (typeof WHAT_IF_SPENDING_OPS)[number]
+
+/** A budget line inside a spending lever: `BudgetLineItem`'s own shape, years counted from the stop
+ *  exactly as the plan's lines are (KTD18), so Apply writes it unchanged — which is why its id is
+ *  required here (an added line lands in the plan with the id it was kept under). */
+export type WhatIfBudgetLineV6 = BudgetLineItem & { readonly id: string }
+
+/** The withdrawal-order lever: the policy, plus the custom order when (and only when) it is custom. */
+export type WhatIfWithdrawalOrderV6 =
+  | { readonly policy: Exclude<DrawdownPolicy, 'custom'> }
+  | { readonly policy: 'custom'; readonly drawdownOrder: readonly DrawdownOrderKey[] }
+
+/**
+ * THE ONE TABLE — what each lever kind carries beside its `kind` (KTD16's vocabulary). A mapped type
+ * over {@link WhatIfLeverKind}, tied both ways below, so a kind missing here fails to compile.
+ *  - `stop-year`: the household's one stop year, as a CALENDAR year (the one calendar value in a
+ *    bundle; each run turns it into the date search's offset, the year less `startCalendarYear`, and
+ *    refuses one outside the date window — KTD15). Every still-working person stops then.
+ *  - `spending`: one lever per target line — add or replace a whole line ({@link WhatIfBudgetLineV6}),
+ *    remove one by `lineId`, or the one-figure `total` for a household with no itemized budget. A line
+ *    lever re-reconciles the copy's total through the plan's own budget writer (`commitBudgetPatch`).
+ *  - `deposits`: per account, by `accountId`, the yearly deposit. The employer match and the employer
+ *    HSA dollar are optional OVERRIDES, absent meaning the plan's own fact, so a kept what-if never
+ *    freezes an employer figure the household later edits. No left-over field: money no longer
+ *    deposited counts as spent (reads low, never rosy); "freed deposits saved" is a filed D7 build.
+ *  - `mix`: the household's one stock / bond / cash split, in percent (each ≥ 0, the three summing to
+ *    100 — the codec's own rule, stricter than an account mix's positive-sum check). Kept and compared,
+ *    never applied (KTD15).
+ *  - `roth`: the Roth plan, or the explicit none ({@link RothConversionChoiceV6}).
+ *  - `withdrawal-order`: {@link WhatIfWithdrawalOrderV6}.
+ *  - `claim-age`: one lever per person not yet claimed, by `personIndex` into `people`.
+ *  - `aca-subsidy`: the enhanced-subsidy regime, on or off (`enhanced`) — both are real what-ifs,
+ *    unlike the plan's presence-keyed `enhancedSubsidies: true`.
+ */
+export interface WhatIfLeverFieldsV6 {
+  readonly 'stop-year': { readonly calendarYear: number }
+  readonly spending:
+    | { readonly op: 'add' | 'replace'; readonly line: WhatIfBudgetLineV6 }
+    | { readonly op: 'remove'; readonly lineId: string }
+    | { readonly op: 'total'; readonly annualSpendingReal: number }
+  readonly deposits: {
+    readonly accountId: string
+    readonly annualContribution: number
+    readonly employerMatchAnnual?: number
+    readonly hsaEmployerAnnual?: number
+  }
+  readonly mix: { readonly stockPct: number; readonly bondPct: number; readonly cashPct: number }
+  readonly roth: { readonly conversion: RothConversionChoiceV6 }
+  readonly 'withdrawal-order': WhatIfWithdrawalOrderV6
+  readonly 'claim-age': { readonly personIndex: number; readonly claimAge: number }
+  readonly 'aca-subsidy': { readonly enhanced: boolean }
+}
+
+// Compile-time: the table's keys ARE the kind vocabulary (both directions) — a kind added to the array
+// without a row here, or a row with no kind, fails to compile.
+type _LeverTableCovers = keyof WhatIfLeverFieldsV6 extends WhatIfLeverKind ? true : never
+type _LeverKindsCovered = WhatIfLeverKind extends keyof WhatIfLeverFieldsV6 ? true : never
+const _leverTableExhaustive: _LeverTableCovers & _LeverKindsCovered = true
+void _leverTableExhaustive
+
+/** One lever: its `kind` and that kind's fields, a closed discriminated union built from the table. */
+export type WhatIfLeverV6 = {
+  [K in WhatIfLeverKind]: { readonly kind: K } & WhatIfLeverFieldsV6[K]
+}[WhatIfLeverKind]
+
+/** One kept what-if (KTD18): a stable id, the household's name for it, and its bundle — at most one
+ *  lever per kind and target (codec-enforced). Its levers point at accounts and lines by id. */
+export interface KeptWhatIfV6 {
+  readonly id: string
+  readonly name: string
+  readonly levers: readonly WhatIfLeverV6[]
+}
+
 /** The persisted structured tax vintage (P3·U13 → the controls-surface clock). Keyed on the
  *  two things a real statutory/table change moves: the table year and the legal-basis
  *  sentence (verbatim from the canonical entry — any wording change is a vintage bump, the
@@ -2883,9 +3025,10 @@ export interface HealthcareVintageV3 {
 /** The exhaustive v3 field set — U8's `checkV3Fields` checklist (burned/063: the
  *  codec arm iterates THIS list, so a field added to the interface cannot
  *  silently skip validation — it fails the compile-time tie below first).
- *  Version 5 carries exactly this set; versions 3 and 4 carry it less `workingYearLeftOver`, the one
- *  optional field the schema-v5 bump added (its step is label-only for that reason: a relabeled
- *  older plan lacks a key its type already calls optional). A new TOP-LEVEL field must join this
+ *  Version 6 carries exactly this set; version 5 carries it less `keptWhatIfs`, the one top-level
+ *  field the schema-v6 bump added, and versions 3 and 4 less `workingYearLeftOver` too, the one the
+ *  schema-v5 bump added (each step is label-only for that reason: a relabeled older plan lacks a key
+ *  its type already calls optional). A new TOP-LEVEL field must join this
  *  list to compile, and whether it also BUMPS {@link CURRENT_SCHEMA_VERSION} is decided by the rule
  *  in `docs/architecture.md` §7.3 (would an older copy that ignores it answer differently, refuse
  *  one of its values, or drop it on save?). A new VALUE in a vocabulary the codec checks, or a new
@@ -2923,6 +3066,7 @@ export const SCENARIO_V3_FIELDS = [
   'heirBracket',
   'workingYearCost',
   'workingYearLeftOver',
+  'keptWhatIfs',
   'savedRecommendation',
 ] as const
 
@@ -2933,10 +3077,10 @@ const _v3FieldsExhaustive: _V3FieldsCover & _V3KeysCovered = true
 void _v3FieldsExhaustive
 
 /** The union of the scenario shapes a decode can RETURN. The current shape joined at P2·U8 (its
- *  codec arm + first writer), labeled 3 until the schema-v4 bump and 4 until the schema-v5 bump; it
- *  now carries {@link CURRENT_SCHEMA_VERSION}, and a version-3 or version-4 plan never appears here —
- *  the codec relabels each to its successor before returning, so 3 and 4 are in no type and every
- *  `=== 3` or `=== 4` comparison is a compile error. v1/v2 remain only as legacy decode-ladder members, decoded as-is (no
+ *  codec arm + first writer), labeled 3 until the schema-v4 bump, 4 until the schema-v5 bump and 5
+ *  until the schema-v6 bump; it now carries {@link CURRENT_SCHEMA_VERSION}, and a version-3, -4 or -5
+ *  plan never appears here — the codec relabels each to its successor before returning, so 3 to 5 are
+ *  in no type and every `=== 3`, `=== 4` or `=== 5` comparison is a compile error. v1/v2 remain only as legacy decode-ladder members, decoded as-is (no
  *  up-convert), which the hydrate gate refuses. Anything above the current version surfaces the
  *  calm "saved by a newer version" state, never a mis-parse. */
 export type AnyScenario = Scenario | ScenarioV2 | CurrentScenario

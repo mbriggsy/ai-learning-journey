@@ -7,7 +7,7 @@
  * the reload path can `appModel.update(() => hydrated.draft)` and recompute — exactly mirroring the
  * `?seed` hydration (IntakeApp), never a field-mapping layer that could drift from the codec.
  *
- * WHY IT'S ALMOST A CLEAN STRIP, PROVEN BY THE COMPILE. `memoryModel.ts:235-239` asserts, at
+ * WHY IT'S ALMOST A CLEAN STRIP, PROVEN BY THE COMPILE. `memoryModel.ts:239-243` asserts, at
  * type-check time, that `keyof ScenarioDraft ⊆ keyof CurrentScenario` AND `keyof CurrentScenario ⊆ keyof
  * ScenarioDraft ∪ {schemaVersion}` — i.e. a `CurrentScenario` IS a `ScenarioDraft` plus the
  * `schemaVersion` discriminant. So the field SET is a shallow strip of that one key; every other
@@ -17,7 +17,7 @@
  *
  * THE ONE ARITY GAP (why this returns a RESULT, not a bare draft). The draft types `people` as a
  * strict two-tuple (the married-couple model; single-user is deferred — TODO), but the codec only
- * gates `people.length >= 1` (scenarioCodec.ts:304 — it also validates the legacy v1/v2 degenerate
+ * gates `people.length >= 1` (scenarioCodec.ts:317 — it also validates the legacy v1/v2 degenerate
  * case). A vault WE wrote is always two-person (scenarioFromDraft encodes a two-tuple, GCM-
  * authenticated on disk), so the failure arm is defensive: a `!== 2` scenario is an unsupported shape
  * we refuse to silently coerce into the two-tuple (that would be the calm-but-wrong sin — dropping or
@@ -31,9 +31,19 @@
  * untested. Fork D's reload-determinism (force the FINAL tier, never replay a persisted provisional
  * band) rides ON TOP of this: this seam proves the INPUT is identical; the engine's own determinism
  * (`simulate.test.ts`) proves the OUTPUT is.
+ *
+ * THE ONE OPEN-TIME MINT (schema version 6, the workbench plan's U9). A plan saved before version 6
+ * carries no id on its accounts and budget lines; this seam gives each one missing its DETERMINISTIC id
+ * (`withMissingIds`, `src/shared/stableIds.ts` — kind and position at open), so two opens of one plan
+ * agree. It runs HERE, before anything compares the draft for unsaved changes: the re-entry chain
+ * (`IntakeApp`) builds BOTH the live draft and the persist seed from this function's output, so a
+ * freshly opened version-5 plan reads as saved, and the round-trip guard above holds for every plan
+ * that already carries its ids. Ids never reach the engine (no params builder reads one), so the
+ * minted draft builds byte-identical params and the same solver fingerprint as the plan without them.
  */
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
 import type { CurrentScenario } from '@shared/model'
+import { withMissingIds } from '@shared/stableIds'
 
 export type HydratedDraft =
   | { readonly ok: true; readonly draft: ScenarioDraft }
@@ -44,7 +54,8 @@ export type HydratedDraft =
 
 /** The decoded persisted scenario → the in-memory draft the result screen recomputes from. A strip of
  *  the `schemaVersion` discriminant (the ONLY key a `CurrentScenario` carries that the draft does not —
- *  memoryModel.ts:231-239) plus the two-person arity narrowing the codec's `>= 1` array can't prove. */
+ *  memoryModel.ts:235-243) plus the two-person arity narrowing the codec's `>= 1` array can't prove,
+ *  with an id minted on every account and budget line that lacks one (the open-time mint, above). */
 export function draftFromScenario(scenario: CurrentScenario): HydratedDraft {
   if (scenario.people.length !== 2) {
     return {
@@ -53,7 +64,7 @@ export function draftFromScenario(scenario: CurrentScenario): HydratedDraft {
       detail: `expected exactly 2 people, got ${scenario.people.length}`,
     }
   }
-  const { schemaVersion: _schemaVersion, people, ...rest } = scenario
+  const { schemaVersion: _schemaVersion, people, ...rest } = withMissingIds(scenario)
   // length === 2 established above; the non-null assertions are that invariant, not a guess (each
   // concrete PersonInputsV3 is a valid PersonDraft = Partial<PersonInputsV3>).
   const pair: readonly [PersonDraft, PersonDraft] = [people[0]!, people[1]!]

@@ -646,7 +646,7 @@ describe('single-active-writer (BroadcastChannel second-tab detection)', () => {
   })
 })
 
-describe('the schema-v4 and schema-v5 bumps — a newer plan is refused before anything is installed; a version-3 or version-4 plan opens as the current one, and the disk keeps what it holds', () => {
+describe('the schema-v4, -v5 and -v6 bumps — a newer plan is refused before anything is installed; an older plan opens as the current one, and the disk keeps what it holds', () => {
   const NEWER = CURRENT_SCHEMA_VERSION + 1
   const newerModel = (): Scenario => ({ ...MODEL, schemaVersion: NEWER }) as unknown as Scenario
   /** A REAL older save, frozen from the build that wrote it (the codec suite's fixtures: the schema-v4
@@ -765,7 +765,7 @@ describe('the schema-v4 and schema-v5 bumps — a newer plan is refused before a
     await session.lock()
   })
 
-  it('THE UNANSWERED BYTES: a version-4 date plan through the real hydrate path (unlock → draftFromScenario → scenarioFromDraft → save) writes version 5 with NO left-over key — never a default reply (build 2’s R1, KTD6)', async () => {
+  it('THE UNANSWERED BYTES: a version-4 date plan through the real hydrate path (unlock → draftFromScenario → scenarioFromDraft → save) writes the current version with NO left-over key — never a default reply (build 2’s R1, KTD6)', async () => {
     const db = await vaultHolding(frozen('scenario-v4-date.json'))
     const session = createSession(db)
     expect((await session.unlock(PASSPHRASE)).ok).toBe(true)
@@ -797,10 +797,55 @@ describe('the schema-v4 and schema-v5 bumps — a newer plan is refused before a
     if (!minted.ready) throw new Error(minted.detail)
     expect((await session.save(minted.scenario)).ok).toBe(true)
     const raw = await diskPlaintext(db, PASSPHRASE)
-    // The typed literal, read raw (insight 151): the bytes a version-5 build writes.
-    expect(raw.schemaVersion).toBe(5)
+    // The typed literal, read raw (insight 151): the bytes a version-6 build writes (5 until the schema-v6 bump).
+    expect(raw.schemaVersion).toBe(6)
     expect(raw.schemaVersion).toBe(CURRENT_SCHEMA_VERSION)
     expect('workingYearLeftOver' in raw, 'an unanswered plan is written with no answer key').toBe(false)
+    await session.lock()
+  })
+
+  // The workbench plan's U9: the schema-v6 bump's own bytes. The version-5 plan is MADE UP (a dev seed's save with its
+  // ids stripped, written at label 5 — firstSave encodes it as given), never a real plan.
+  it('THE VERSION-6 BYTES: a version-5 plan through the real path (unlock → draftFromScenario → scenarioFromDraft → save), read raw, holds label 6, an id on every account and budget line, and NO other new key', async () => {
+    const seeded = scenarioFromDraft(DEV_SEEDS.budget)
+    if (!seeded.ready) throw new Error(seeded.detail)
+    const v5 = {
+      ...seeded.scenario,
+      schemaVersion: 5,
+      enteredAccounts: seeded.scenario.enteredAccounts.map(({ id: _id, ...a }) => a),
+      budget: seeded.scenario.budget!.map(({ id: _id, ...l }) => l),
+    } as unknown as AnyScenario
+    const db = await vaultHolding(v5)
+    expect(await diskLabel(db, PASSPHRASE), 'the vault really holds a version-5 plan').toBe(5)
+    const session = createSession(db)
+    expect((await session.unlock(PASSPHRASE)).ok).toBe(true)
+    const model = session.currentModel()
+    if (model === null || model.schemaVersion !== CURRENT_SCHEMA_VERSION) throw new Error('unlocked without a current model')
+    const hydrated = draftFromScenario(model)
+    if (!hydrated.ok) throw new Error(hydrated.detail)
+    const minted = scenarioFromDraft(hydrated.draft)
+    if (!minted.ready) throw new Error(minted.detail)
+    expect((await session.save(minted.scenario)).ok).toBe(true)
+    const raw = await diskPlaintext(db, PASSPHRASE)
+    const before = v5 as unknown as Record<string, unknown>
+    // The typed literal, read raw (insight 151).
+    expect(raw.schemaVersion).toBe(6)
+    // An id on every account and line — and each entry is otherwise the version-5 entry, key for key.
+    const rawAccounts = raw.enteredAccounts as Record<string, unknown>[]
+    const rawLines = raw.budget as Record<string, unknown>[]
+    const oldAccounts = before.enteredAccounts as Record<string, unknown>[]
+    const oldLines = before.budget as Record<string, unknown>[]
+    expect(rawAccounts.length, '[non-vacuity] accounts').toBeGreaterThan(1)
+    expect(rawLines.length, '[non-vacuity] budget lines').toBeGreaterThan(1)
+    for (const [entries, olds] of [[rawAccounts, oldAccounts], [rawLines, oldLines]] as const) {
+      entries.forEach((e, i) => {
+        expect(typeof e.id === 'string' && e.id.length > 0, `entry ${i} carries an id`).toBe(true)
+        expect(Object.keys(e).sort()).toEqual([...Object.keys(olds[i]!), 'id'].sort())
+      })
+    }
+    // No other new key: the top-level keys are the version-5 plan's own (the stamps re-mint in place, never a new key).
+    expect(Object.keys(raw).sort()).toEqual(Object.keys(before).sort())
+    expect('keptWhatIfs' in raw, 'the open writes no kept what-ifs').toBe(false)
     await session.lock()
   })
 })

@@ -171,6 +171,7 @@ const retiredOnTrack: ScenarioDraft = {
   ],
   enteredAccounts: [
     {
+      id: 'acct-0-traditional-ira',
       ownerIndex: 0,
       kind: 'traditional-ira',
       valueToday: 1_120_000,
@@ -228,6 +229,7 @@ const stillWorking: ScenarioDraft = {
   ],
   enteredAccounts: [
     {
+      id: 'acct-0-401k',
       ownerIndex: 0,
       kind: '401k',
       ticker: 'VTI',
@@ -235,7 +237,7 @@ const stillWorking: ScenarioDraft = {
       annualContribution: 20_000,
       employerMatchAnnual: 8_000,
     },
-    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 200_000 },
+    { id: 'acct-1-roth-ira', ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 200_000 },
   ],
   incomeStreams: [],
   tickerClassifications: {},
@@ -310,12 +312,14 @@ const retiredBorderline: ScenarioDraft = {
   ],
   enteredAccounts: [
     {
+      id: 'acct-0-traditional-ira',
       ownerIndex: 0,
       kind: 'traditional-ira',
       valueToday: 800_000,
       manualBlend: { kind: 'exact', stockPct: 55, bondPct: 35, cashPct: 10 },
     },
     {
+      id: 'acct-1-roth-ira',
       ownerIndex: 1,
       kind: 'roth-ira',
       valueToday: 70_000,
@@ -377,12 +381,14 @@ const stillWorkingBorderline: ScenarioDraft = {
   ],
   enteredAccounts: [
     {
+      id: 'acct-0-traditional-ira',
       ownerIndex: 0,
       kind: 'traditional-ira',
       valueToday: 800_000,
       manualBlend: { kind: 'exact', stockPct: 65, bondPct: 30, cashPct: 5 },
     },
     {
+      id: 'acct-1-roth-ira',
       ownerIndex: 1,
       kind: 'roth-ira',
       valueToday: 140_000,
@@ -447,6 +453,7 @@ const retiredFailing: ScenarioDraft = {
   ],
   enteredAccounts: [
     {
+      id: 'acct-0-traditional-ira',
       ownerIndex: 0,
       kind: 'traditional-ira',
       valueToday: 60_000,
@@ -467,13 +474,16 @@ const retiredFailing: ScenarioDraft = {
   seed: DEV_CRN_SEED,
 }
 
-/** One U9b budget line (labels read in the builder sheet — the cold-read wants real rows). */
+/** One U9b budget line (labels read in the builder sheet — the cold-read wants real rows). Its literal
+ *  id (schema version 6) is `line-<category>`: every budget in this file holds one line per category, so
+ *  it is unique within its plan — and a second line of one category would fail the codec's uniqueness
+ *  check, which `devSeeds.test.ts`'s every-seed-saves arm runs. */
 const bline = (
   category: BudgetLineItem['category'],
   label: string,
   annualAmountReal: number,
   tier: BudgetLineItem['tier'],
-): BudgetLineItem => ({ category, label, annualAmountReal, tier, startYear: 0 })
+): BudgetLineItem => ({ id: `line-${category}`, category, label, annualAmountReal, tier, startYear: 0 })
 
 /**
  * The TWO-TIER RELIEF spine household (U9b Q2 — the relief-with-honesty cold-read):
@@ -712,8 +722,8 @@ const dateDipSeed: ScenarioDraft = {
     },
   ],
   enteredAccounts: [
-    { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 700_000, annualContribution: 8_000, employerMatchAnnual: 4_000 },
-    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 299_000 },
+    { id: 'acct-0-401k', ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 700_000, annualContribution: 8_000, employerMatchAnnual: 4_000 },
+    { id: 'acct-1-roth-ira', ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 299_000 },
   ],
   incomeStreams: [],
   tickerClassifications: {},
@@ -725,7 +735,7 @@ const dateDipSeed: ScenarioDraft = {
   budget: [
     bline('housing', 'Home', 20_000, 'essentials'),
     bline('food', 'Living', 16_000, 'essentials'),
-    { category: 'travel', label: 'Go-go years', annualAmountReal: 42_000, tier: 'discretionary', startYear: 0, endYear: 3 },
+    { id: 'line-travel', category: 'travel', label: 'Go-go years', annualAmountReal: 42_000, tier: 'discretionary', startYear: 0, endYear: 3 },
   ],
   annualSpendingReal: 78_000,
   spendEntryPeriod: 'year',
@@ -786,6 +796,7 @@ const customOrderSeed: ScenarioDraft = {
   ],
   enteredAccounts: [
     {
+      id: 'acct-0-traditional-ira',
       ownerIndex: 0,
       kind: 'traditional-ira',
       // NOT $750k — that exact value is the top IRMAA MFJ MAGI threshold (a canonical
@@ -794,6 +805,7 @@ const customOrderSeed: ScenarioDraft = {
       manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
     },
     {
+      id: 'acct-0-brokerage',
       ownerIndex: 0,
       kind: 'brokerage',
       valueToday: 300_000,
@@ -801,6 +813,7 @@ const customOrderSeed: ScenarioDraft = {
       manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
     },
     {
+      id: 'acct-1-roth-ira',
       ownerIndex: 1,
       kind: 'roth-ira',
       valueToday: 200_000,
@@ -859,6 +872,7 @@ const retiredHealth: ScenarioDraft = {
   ],
   enteredAccounts: [
     {
+      id: 'acct-0-brokerage',
       ownerIndex: 0,
       kind: 'brokerage',
       valueToday: 900_000,
@@ -866,12 +880,14 @@ const retiredHealth: ScenarioDraft = {
       manualBlend: { kind: 'exact', stockPct: 60, bondPct: 35, cashPct: 5 },
     },
     {
+      id: 'acct-0-traditional-ira',
       ownerIndex: 0,
       kind: 'traditional-ira',
       valueToday: 900_000,
       manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
     },
     {
+      id: 'acct-1-roth-ira',
       ownerIndex: 1,
       kind: 'roth-ira',
       valueToday: 150_000,
@@ -936,6 +952,7 @@ const stillWorkingAllMedicare: ScenarioDraft = {
   ],
   enteredAccounts: [
     {
+      id: 'acct-0-401k',
       ownerIndex: 0,
       kind: '401k',
       ticker: 'VTI',
@@ -943,7 +960,7 @@ const stillWorkingAllMedicare: ScenarioDraft = {
       annualContribution: 20_000,
       employerMatchAnnual: 8_000,
     },
-    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 250_000 },
+    { id: 'acct-1-roth-ira', ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 250_000 },
   ],
   incomeStreams: [],
   tickerClassifications: {},
@@ -1015,6 +1032,7 @@ const multiBucketWitness: ScenarioDraft = {
   ...retiredOnTrack,
   enteredAccounts: [
     {
+      id: 'acct-0-traditional-ira',
       ownerIndex: 0,
       kind: 'traditional-ira',
       valueToday: 700_000,
@@ -1023,6 +1041,7 @@ const multiBucketWitness: ScenarioDraft = {
     {
       // A real embedded gain ($150k over basis) — without it the taxable bucket is a cash-equivalent
       // and the ordering question loses its tax teeth.
+      id: 'acct-1-brokerage',
       ownerIndex: 1,
       kind: 'brokerage',
       valueToday: 450_000,
@@ -1030,6 +1049,7 @@ const multiBucketWitness: ScenarioDraft = {
       manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
     },
     {
+      id: 'acct-0-roth-ira',
       ownerIndex: 0,
       kind: 'roth-ira',
       valueToday: 200_000,
@@ -1055,12 +1075,14 @@ const noPretaxSteer: ScenarioDraft = {
   ...retiredOnTrack,
   enteredAccounts: [
     {
+      id: 'acct-0-roth-ira',
       ownerIndex: 0,
       kind: 'roth-ira',
       valueToday: 480_000,
       manualBlend: { kind: 'exact', stockPct: 60, bondPct: 30, cashPct: 10 },
     },
     {
+      id: 'acct-1-brokerage',
       ownerIndex: 1,
       kind: 'brokerage',
       valueToday: 575_000,
@@ -1553,8 +1575,8 @@ const dateShortWitness: ScenarioDraft = {
     },
   ],
   enteredAccounts: [
-    { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 700_000, annualContribution: 3_000 },
-    { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 250_000 },
+    { id: 'acct-0-401k', ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 700_000, annualContribution: 3_000 },
+    { id: 'acct-1-roth-ira', ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 250_000 },
   ],
   incomeStreams: [],
   tickerClassifications: {},
@@ -1764,8 +1786,8 @@ const dateSavedFourBucketsWitness: ScenarioDraft = {
   ...dateSavedRisenLaterWitness,
   enteredAccounts: [
     ...dateSavedRisenLaterWitness.enteredAccounts,
-    { ownerIndex: 0, kind: 'brokerage', ticker: 'VTI', valueToday: 60_000, basis: 45_000 },
-    { ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: 18_000 },
+    { id: 'acct-0-brokerage', ownerIndex: 0, kind: 'brokerage', ticker: 'VTI', valueToday: 60_000, basis: 45_000 },
+    { id: 'acct-1-hsa', ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: 18_000 },
   ],
 }
 
@@ -1855,6 +1877,7 @@ const dateSavedTypedNearLineWitness: ScenarioDraft = {
 const dateSavedTypedStickyWitness: ScenarioDraft = ((): ScenarioDraft => {
   const c = dateSavedRisenLaterWitness
   const housing: BudgetLineItem = {
+    id: 'line-housing',
     label: 'Housing',
     category: 'housing',
     tier: 'essentials',
@@ -1906,11 +1929,11 @@ const tableWidest: ScenarioDraft = withSavedLeftOver(
       },
     ],
     enteredAccounts: [
-      { ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 1_850_000, annualContribution: 22_000, employerMatchAnnual: 9_400 },
-      { ownerIndex: 1, kind: '401k', ticker: 'VFIFX', valueToday: 1_260_000, annualContribution: 19_000, employerMatchAnnual: 6_800 },
-      { ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 415_000 },
-      { ownerIndex: 0, kind: 'brokerage', ticker: 'VTI', valueToday: 1_140_000, basis: 690_000, annualContribution: 12_000 },
-      { ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: 96_000, annualContribution: 6_200, hsaEmployerAnnual: 1_200 },
+      { id: 'acct-0-401k', ownerIndex: 0, kind: '401k', ticker: 'VTI', valueToday: 1_850_000, annualContribution: 22_000, employerMatchAnnual: 9_400 },
+      { id: 'acct-1-401k', ownerIndex: 1, kind: '401k', ticker: 'VFIFX', valueToday: 1_260_000, annualContribution: 19_000, employerMatchAnnual: 6_800 },
+      { id: 'acct-1-roth-ira', ownerIndex: 1, kind: 'roth-ira', ticker: 'VFIFX', valueToday: 415_000 },
+      { id: 'acct-0-brokerage', ownerIndex: 0, kind: 'brokerage', ticker: 'VTI', valueToday: 1_140_000, basis: 690_000, annualContribution: 12_000 },
+      { id: 'acct-1-hsa', ownerIndex: 1, kind: 'hsa', ticker: 'VTI', valueToday: 96_000, annualContribution: 6_200, hsaEmployerAnnual: 1_200 },
     ],
     incomeStreams: [
       { ownerIndex: 1, type: 'rental', annualRealToday: 26_400, startAge: 50, colaMode: 'real-flat', survivorPct: 1 },
@@ -2377,8 +2400,8 @@ const RECORD_AGED_DAYS = 400
  *  and the doctor PROVES the divergence rather than assuming it. */
 const RECORD_SPEND_EDIT = 6_000
 
-/** One displayed arm of the dev fixture's ranking. The mint reads `id` and `policy` and NOTHING
- *  else from an arm, so the sample is left genuinely EMPTY and its scalars zero — an obviously
+/** One displayed arm of the dev fixture's ranking. The mint reads `id`, `policy`, the order and the
+ *  conversion (here none) and NOTHING else from an arm, so the sample is left genuinely EMPTY and its scalars zero — an obviously
  *  un-sampled stub, never a plausible-looking fan a reader could mistake for a real distribution
  *  (burned/062's refuse-rather-than-default posture applied to a fixture). */
 function devSolveArm(id: string, policy: SolveArm['policy']): SolveArm {

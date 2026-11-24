@@ -76,6 +76,10 @@ export function scenarioFromDraft(draft: ScenarioDraft): SaveReady {
   // `savedAt` is the one WALL-TIME stamp: consumers judging identity (the dirty compare,
   // the round-trip guard) go through `scenarioIdentity` — comparing raw output of this
   // function across days would read an untouched session as permanently dirty.
+  // Schema version 6's ids (on accounts and budget lines) and kept what-ifs ride `...draft` as
+  // user facts, written as they are: this mint never mints, fills or re-stamps one (an id minted
+  // per encode would read an untouched plan as unsaved — insight 073). Ids enter a draft only at
+  // `draftFromScenario` (deterministic) and at an editor's Add (random), `src/shared/stableIds.ts`.
   const candidate = {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     ...draft,

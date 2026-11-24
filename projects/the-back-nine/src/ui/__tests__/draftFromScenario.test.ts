@@ -25,7 +25,20 @@ import { taxVintageStamp } from '@engine/constants/tax'
 import { stateTaxVintageStamp } from '@engine/constants/stateTax'
 import { dateVintageStamp } from '@engine/constants'
 import { CURRENT_APP_DEFAULT_VERSION } from '@shared/appDefaults'
-import { scenarioIdentity, type DrawdownOrderKey, type RothConversionPlan, type CurrentScenario } from '@shared/model'
+import {
+  CURRENT_SCHEMA_VERSION,
+  scenarioIdentity,
+  scenarioIdentityKey,
+  type DrawdownOrderKey,
+  type KeptWhatIfV6,
+  type RothConversionPlan,
+  type CurrentScenario,
+} from '@shared/model'
+import { decodeScenario, encodeScenario } from '@shared/scenarioCodec'
+import { buildDateInput, buildSpineParams } from '@intake/intakeMap'
+import { buildSolveRequest } from '@intake/solveDispatch'
+import { solverRunFingerprint } from '@engine/validation/solverRunFingerprint'
+import type { ScenarioDraft } from '@store/memoryModel'
 
 /** Every dev seed that is genuinely save-ready → its real, complete CurrentScenario. */
 const readyScenarios: ReadonlyArray<readonly [DevSeedKey, CurrentScenario]> = (
@@ -554,5 +567,122 @@ describe('scenarioFromDraft — a dropped atom on the WRITE side is a MINTER DEF
     // THE MUTANT THIS KILLS: the first-cut refusal coming back. Any `ready: false` gated on the
     // drop re-introduces the silent `{kind:'none'}` dead-end.
     expect(src, 'a dropped atom never refuses the whole save').not.toMatch(/droppedAtoms\.length\s*>\s*0/)
+  })
+})
+
+/**
+ * SCHEMA VERSION 6 — THE OPEN-TIME MINT (the workbench plan's U9). A plan saved before version 6 carries no id on
+ * its accounts and lines; `draftFromScenario` mints a deterministic one on each, before anything compares the draft.
+ * These arms prove the mint is invisible to everything that judges the plan: the engine's params, the solver's run
+ * fingerprint (so a saved recommendation still reads current), and the save-state compare. The version-5 plans are
+ * MADE UP — a dev seed's own save with its ids stripped, read back through the codec at label 5 — never a real plan.
+ */
+describe('draftFromScenario — the schema-v6 open-time mint (U9)', () => {
+  /** A made-up version-5 plan from a dev seed: its save, every id stripped, through the codec at label 5 (the
+   *  plan a version-5 build would have written, as this build reads it). */
+  const openedVersion5 = (key: DevSeedKey, edit: (s: CurrentScenario) => CurrentScenario = (s) => s): CurrentScenario => {
+    const saved = readyScenarios.find(([k]) => k === key)?.[1]
+    if (saved === undefined) throw new Error(`[test setup] ${key} must be save-ready`)
+    const stripped = edit({
+      ...saved,
+      enteredAccounts: saved.enteredAccounts.map(({ id: _id, ...a }) => a),
+      ...(saved.budget !== undefined ? { budget: saved.budget.map(({ id: _id, ...l }) => l) } : {}),
+    })
+    const obj = JSON.parse(new TextDecoder().decode(encodeScenario(stripped))) as Record<string, unknown>
+    obj.schemaVersion = 5
+    const decoded = decodeScenario(new TextEncoder().encode(JSON.stringify(obj)))
+    if (!decoded.ok || decoded.scenario.schemaVersion !== CURRENT_SCHEMA_VERSION) throw new Error(`[test setup] ${key} at label 5 must open`)
+    return decoded.scenario
+  }
+  /** The draft a version-5 build hydrated: the strip with NO mint (what the engine was fed before this build). */
+  const unminted = (s: CurrentScenario): ScenarioDraft => {
+    const { schemaVersion: _v, people, ...rest } = s
+    return { ...rest, people: [people[0]!, people[1]!] }
+  }
+  const hydrate = (s: CurrentScenario): ScenarioDraft => {
+    const h = draftFromScenario(s)
+    if (!h.ok) throw new Error(h.detail)
+    return h.draft
+  }
+  const fingerprintOf = (d: ScenarioDraft): string => {
+    const request = buildSolveRequest(d, currentEpochDay())
+    if (typeof request === 'string') throw new Error(`[test setup] the household must build a solve run (${request})`)
+    return solverRunFingerprint(request.base, request.candidates, request.ranking, { seedA: request.seedA, tieTolerance: request.tieTolerance })
+  }
+
+  it('[non-vacuity] the made-up version-5 plans carry no id, and the hydrated drafts carry one on every account and budget line', () => {
+    for (const key of ['budget', 'datesplit'] as const) {
+      const v5 = openedVersion5(key)
+      expect(v5.enteredAccounts.length, key).toBeGreaterThan(1)
+      expect(v5.budget?.length, key).toBeGreaterThan(1)
+      expect([...v5.enteredAccounts, ...v5.budget!].every((e) => e.id === undefined), key).toBe(true)
+      const d = hydrate(v5)
+      expect(d.enteredAccounts.map((a) => a.id), key).toEqual(d.enteredAccounts.map((_, i) => `account-${i}`))
+      expect(d.budget!.map((l) => l.id), key).toEqual(d.budget!.map((_, i) => `line-${i}`))
+    }
+  })
+
+  it('A VERSION-5 PLAN OPENS UNDER VERSION 6 WITH THE SAME ANSWER, BYTE FOR BYTE: the minted draft builds the very params the unminted one does (spine and date routes), and the very params its own seed (literal ids) does', () => {
+    const spine = openedVersion5('budget')
+    expect(JSON.stringify(buildSpineParams(hydrate(spine)))).toBe(JSON.stringify(buildSpineParams(unminted(spine))))
+    expect(JSON.stringify(buildSpineParams(hydrate(spine)))).toBe(JSON.stringify(buildSpineParams(DEV_SEEDS.budget)))
+    expect(buildSpineParams(hydrate(spine)), '[non-vacuity] the spine route builds').not.toBeNull()
+    const dated = openedVersion5('datesplit')
+    expect(JSON.stringify(buildDateInput(hydrate(dated)))).toBe(JSON.stringify(buildDateInput(unminted(dated))))
+    expect(JSON.stringify(buildDateInput(hydrate(dated)))).toBe(JSON.stringify(buildDateInput(DEV_SEEDS.datesplit)))
+    expect(buildDateInput(hydrate(dated)), '[non-vacuity] the date route builds').not.toBeNull()
+  })
+
+  it('…and the same solver run fingerprint, so a recommendation saved before version 6 still reads current after the mint', () => {
+    const v5 = openedVersion5('budget', (s) => ({ ...s, chosenGoal: 'leave-more' }))
+    expect(fingerprintOf(hydrate(v5))).toBe(fingerprintOf(unminted(v5)))
+    // Ids of any spelling: the seed's literal ids fingerprint the same as the minted ones.
+    expect(fingerprintOf(hydrate(v5))).toBe(fingerprintOf({ ...DEV_SEEDS.budget, chosenGoal: 'leave-more' }))
+  })
+
+  it('two opens of one plan mint the same ids, and the minted draft re-saves to bytes that reopen unchanged (no second mint)', () => {
+    const v5 = openedVersion5('datesplit')
+    const first = hydrate(v5)
+    expect(hydrate(v5)).toEqual(first)
+    const saved = scenarioFromDraft(first)
+    if (!saved.ready) throw new Error(saved.detail)
+    expect(hydrate(saved.scenario)).toEqual(first)
+  })
+
+  it('a freshly opened version-5 plan reads SAVED: the persist seed and the live answer IntakeApp builds from the one hydrated draft compare clean', () => {
+    const v5 = openedVersion5('budget')
+    const draft = hydrate(v5)
+    const normalized = scenarioFromDraft(draft)
+    const live = scenarioFromDraft(draft)
+    if (!normalized.ready || !live.ready) throw new Error('[test setup] must save')
+    expect(deriveResultSave({ kind: 'saved', scenario: persistSeedFor(normalized.scenario, v5.savedAt) }, live)).toEqual({ kind: 'clean' })
+    // Two encodes of the opened plan are equal (insight 073's day-blind compare: through the identity key).
+    expect(scenarioIdentityKey(normalized.scenario)).toBe(scenarioIdentityKey(live.scenario))
+  })
+
+  it('two saves a day apart of an untouched plan holding kept what-ifs compare equal through scenarioIdentity, and the list rides the hydrate → re-encode round trip byte for byte', () => {
+    const date = readyScenarios.find(([k]) => k === 'date')![1]
+    const kept: readonly KeptWhatIfV6[] = [
+      {
+        id: 'wi-later',
+        name: 'Stop a year later, save more',
+        levers: [
+          { kind: 'stop-year', calendarYear: date.startCalendarYear + 6 },
+          { kind: 'deposits', accountId: date.enteredAccounts[0]!.id!, annualContribution: 24_000 },
+          { kind: 'roth', conversion: { kind: 'none' } },
+        ],
+      },
+    ]
+    const disk: CurrentScenario = { ...date, keptWhatIfs: kept, savedAt: currentEpochDay() - 1 }
+    const draft = hydrate(disk)
+    expect(draft.keptWhatIfs).toEqual(kept)
+    const resaved = scenarioFromDraft(draft)
+    if (!resaved.ready) throw new Error(resaved.detail)
+    expect(resaved.scenario.keptWhatIfs).toEqual(kept)
+    expect(scenarioIdentity(resaved.scenario)).toEqual(scenarioIdentity(disk))
+    expect(scenarioIdentityKey(resaved.scenario)).toBe(scenarioIdentityKey(disk))
+    expect(resaved.scenario.savedAt, 'the wall-time stamp did move').not.toBe(disk.savedAt)
+    // …and the kept what-ifs never reach the engine either.
+    expect(JSON.stringify(buildDateInput(draft))).toBe(JSON.stringify(buildDateInput(hydrate(date))))
   })
 })

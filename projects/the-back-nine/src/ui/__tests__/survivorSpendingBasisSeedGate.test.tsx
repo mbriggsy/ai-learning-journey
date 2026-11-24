@@ -2,7 +2,7 @@
 /**
  * THE SURVIVOR CARD'S SPENDING-BASIS LINE on every household that renders the card, through the REAL
  * pipeline — buildSpineParams → runEngine with the app's own options → a structured clone (the worker
- * boundary) → fromWire → SurvivorReadout. The register's Tier 1 *The survivor card's "still covers you"
+ * boundary) → fromWire → `spendingBasisLine` (since Act 6 · RC4, Probability's survivor row; the card left with the answer page). The register's Tier 1 *The survivor card's "still covers you"
  * never says what spending it assumes…*, RULED 2026-10-14 (b9-toronto1, "All three recs"): ONE line,
  * exactly "This assumes about $[survivor] a month of spending on your own (today: $[couple] together)."
  *
@@ -23,7 +23,7 @@
  */
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render } from '@testing-library/react'
+import { cleanup } from '@testing-library/react'
 import { isRampedBudget } from '@budget/budgetModel'
 import { buildSpineParams } from '@intake/intakeMap'
 import { runEngine } from '@engine/engineProtocol'
@@ -47,7 +47,7 @@ import {
 } from '../devSeeds'
 import { scenarioFromDraft } from '../scenarioFromDraft'
 import { draftFromScenario } from '../draftFromScenario'
-import { SurvivorReadout } from '../SurvivorReadout'
+import { spendingBasisLine } from '../survivorLines'
 
 afterEach(cleanup)
 
@@ -269,13 +269,9 @@ describe('the survivor card’s spending-basis line on every household that rend
         coupleMonthlyReal: row.annual.couple / 12,
         steady: true, // no card-bearing household is ramped (pinned above) — every one renders the line
       })
-      for (const foldBody of [false, true]) {
-        const { container, unmount } = render(<SurvivorReadout reading={reading} foldBody={foldBody} />)
-        const basis = container.querySelector('.survivor__basis')
-        expect(basis, `${row.key} foldBody=${String(foldBody)}`).not.toBeNull()
-        expect(basis!.textContent).toBe(row.rendered)
-        unmount()
-      }
+      // Since Act 6 · RC4 the survivor row on Probability reads its basis line from this one producer (the old card
+      // went with the answer page): the line it prints is the line pinned here.
+      expect(spendingBasisLine(reading.spendingBasis), row.key).toBe(row.rendered)
     })
   }
 })

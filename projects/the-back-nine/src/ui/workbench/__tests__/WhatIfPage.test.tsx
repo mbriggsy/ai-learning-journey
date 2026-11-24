@@ -113,7 +113,7 @@ function dated(draft: ScenarioDraft, offset: number, inputKey = 'k1'): ModelAnsw
     seed: SEED,
     lifestyle: trackOf(curveOf(0.8)),
     floor: trackOf(curveOf(0.9)),
-    band: { offsetYears: offset, track: 'lifestyle' },
+    band: { offsetYears: offset, track: 'lifestyle', fan: { byYear: [] } },
   } as unknown as DateSearchOutcome
   return { kind: 'date', tier: 'final', draft, outcome, inputKey } as ModelAnswer
 }

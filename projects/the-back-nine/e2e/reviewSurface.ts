@@ -273,12 +273,14 @@ export async function armRefiguringWatch(page: Page): Promise<void> {
     w.__refiguring = log
     const read = (): void => {
       const m = document.querySelector('main.result')
-      const h = document.querySelector('main.result h2')
+      // The answer's own sentence: Probability's intro lead since RC4 (the old answer page's verdict heading before it).
+      const lead = document.querySelector('main.result [data-intro-lead]')
+      const h = lead ?? document.querySelector('main.result h2')
       const next: RefiguringReading = {
         t: Math.round(performance.now() - t0),
         refiguring: m === null ? null : m.hasAttribute('data-answer-refiguring'),
         tier: m === null ? null : m.getAttribute('data-answer-tier'),
-        verdict: h === null ? '' : `${h.textContent ?? ''} | ${h.nextElementSibling?.textContent ?? ''}`,
+        verdict: h === null ? '' : lead !== null ? (lead.textContent ?? '') : `${h.textContent ?? ''} | ${h.nextElementSibling?.textContent ?? ''}`,
       }
       const last = log[log.length - 1]
       if (last === undefined || last.refiguring !== next.refiguring || last.tier !== next.tier || last.verdict !== next.verdict) {
@@ -352,13 +354,13 @@ export async function gotoVaultFinal(page: Page, key: string): Promise<void> {
 
 /**
  * Re-walk a dev seed's intake to the step headed `heading` — the ONE route into the intake flow with
- * a real household behind it. `?seed=` applies a complete draft and lands on the result (there are no
- * steps to advance there); the AssumptionPanel's re-walk door remounts the flow at index 0 over that
- * draft, which is what a returning reader does. Lives HERE because two specs drive it (intake-fold's
+ * a real household behind it. `?seed=` applies a complete draft and lands on the home (there are no
+ * steps to advance there); the AssumptionPanel's re-walk door (behind the gear since Act 6 · RC4) remounts
+ * the flow at index 0 over that draft, which is what a returning reader does. Lives HERE because two specs drive it (intake-fold's
  * own spec-local copy predates it, and vertical-fit's pay-check arms need it) and a spec cannot import
  * another spec.
  *
- * The anchor is the Assumptions door itself, never `SETTLED_RESULT`: the refusal witness
+ * The anchor is the gear itself, never `SETTLED_RESULT`: the refusal witness
  * (`datesolo`) never stamps a tier. For a buildable seed pass `final: true` so the final-tier recompute
  * commits BEFORE the walk starts (it would otherwise land mid-walk). Advances are IN-PAGE clicks on
  * the step's primary button (no Playwright auto-scroll), and a step that will not advance fails loud
@@ -374,8 +376,9 @@ export async function rewalkSeedTo(
   if (opts.final === true) {
     await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
   }
-  const door = page.locator('[data-door="assumptions"]')
-  await expect(door, `?seed=${seed}: no Assumptions door — the result never offered the re-walk`).toBeVisible({
+  // Since Act 6 · RC4 the seed lands on the shell (the home), and the gear opens the assumption panel.
+  const door = page.locator('[data-gear]')
+  await expect(door, `?seed=${seed}: no gear — the home never offered the re-walk's panel`).toBeVisible({
     timeout: FINAL_TIER_MS,
   })
   await door.click()

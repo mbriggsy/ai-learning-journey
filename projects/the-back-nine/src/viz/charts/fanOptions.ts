@@ -23,6 +23,7 @@ import type { BandFan, BandFanYear } from '@shared/model'
 import { buildYTicks, niceLattice, type XAnnotation } from '../bandData'
 import { BAND_FILL_INNER_P, BAND_FILL_OUTER_P } from '../palette'
 import { rcBandStopCss } from '../scale'
+import { chartWordsOptions, type ChartWords } from './chartA11y'
 
 /** Every word, figure and age the fan prints, built by the screen's composer through `copy.ts`. */
 export interface FanLabels {
@@ -37,6 +38,9 @@ export interface FanLabels {
   readonly xAxisTitle: string
   /** The chart's screen-reader description. */
   readonly description: string
+  /** Highcharts' own spoken words (the chart's name, the credit, the legend's), so none of its built-in English
+   *  sentences reach a screen reader (`chartA11y.ts`; the description above rides in as `words.description`). */
+  readonly words: Omit<ChartWords, 'description'>
   /** The y axis's tick labels for a lattice ceiling (one unit per lattice). */
   readonly axisDollar: (ceiling: number) => (dollars: number) => string
   /** One projected figure, unhedged (the slots add the `~`). */
@@ -181,11 +185,13 @@ export function fanOptions({ fan, moments, labels, height }: FanInput): Options 
     if (y === undefined) return ''
     return labels.point(labels.agesAt(x), labels.figure(y.p10), labels.figure(y.p50), labels.figure(y.p90))
   }
+  const spoken = chartWordsOptions({ ...labels.words, description: labels.description })
   return {
     chart: { height, spacingTop: 12 },
     title: { text: undefined },
+    lang: spoken.lang,
     accessibility: {
-      description: labels.description,
+      ...spoken.accessibility,
       point: { descriptionFormatter: (point) => pointWords(Number(point.x)) },
     },
     legend: { enabled: true, align: 'center', verticalAlign: 'bottom' },

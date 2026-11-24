@@ -30,6 +30,7 @@ const labels: FanLabels = {
   yAxisTitle: 'y',
   xAxisTitle: 'x',
   description: 'd',
+  words: { title: 'T', credits: 'C {creditsStr}', end: 'E', legend: 'L', legendItem: 'S {itemName}' },
   axisDollar: () => (d) => `$${d}`,
   figure: (d) => `$${d}`,
   ageAt: (t) => 63 + t,
@@ -126,5 +127,17 @@ describe('fanOptions', () => {
     const lines = (o.xAxis as { plotLines: { value: number; label: { text: string; y: number } }[] }).plotLines
     expect(lines.map((l) => l.label.text)).toEqual(['Today', 'Work stops'])
     expect(lines[0]!.label.y).not.toBe(lines[1]!.label.y)
+  })
+
+  it('Highcharts’ own spoken words are the composer’s: the chart’s name, the credit, the legend; no type sentence', () => {
+    const o = fanOptions({ fan: FAN, moments: [], labels, height: 300 })
+    const a11y = (o.lang as { accessibility: Record<string, unknown> }).accessibility
+    expect(a11y.defaultChartTitle).toBe('T')
+    expect(a11y.credits).toBe('C {creditsStr}')
+    expect((a11y.chartTypes as Record<string, string>).combinationChart).toBe('')
+    const access = o.accessibility as { description: string; screenReaderSection: { beforeChartFormat: string }; point: unknown }
+    expect(access.description).toBe('d')
+    expect(access.screenReaderSection.beforeChartFormat).not.toContain('typeDescription')
+    expect(access.point).toBeDefined()
   })
 })

@@ -983,7 +983,10 @@ to the file that now makes each call (section 1.4).
 
 **Fit decision.** One frame at REAL in compact mode for both routes with the tray closed (title, intro, the panel,
 the R13 line, the handle); with the tray open the page scrolls. At a 20 px browser default and at the phone: order and
-reachability.
+reachability. Whenever the StaleBanner holds lines (an aged vault return, a pay-check standing line), every shell page
+may scroll: its arm asserts the order (the banner's lines first, the R13 caveat last), exactly one visible caveat and
+that the caveat is reachable; with no banner lines the one-frame law holds as before. *(the pilot's call, 2026-11-24,
+b9-5)*
 
 **Owed from RC3 (2026-11-24, b9-4).**
 - **One count per screen: decide raw or sticky, then make every printed count read it.** The old answer page prints
@@ -1191,6 +1194,12 @@ moments; the working route shows its stop marker and the stopgap line and no run
 **Verification.** CI fit on `retired`, `dip`, `?vault=stale`, `?vault=datestale`: one frame at REAL; every band word,
 tick and moment label passes the audit at REAL and PHONE and at a 20 px default. Local look.
 
+**Owed from RC4 (2026-11-24, b9-5).** RC4 deleted the old band with the answer page, so section 5.2's "the honesty
+floor and legend ported to Confidence" has no live arm to port: the two retired with their surface (`e2e/vertical-fit.spec.ts`
+lines 2018 and 2038 at `95c715e1`, "the honesty floor — 68rem exactly" and "the band legend"). Rebuild their laws here
+on Confidence from that text: every band word and the legend in frame and legible at the 68rem floor, and the legend
+naming each range the fan draws. *(the pilot's call, 2026-11-24, b9-5)*
+
 **Milestone 1** closes here (section 7).
 
 ### RC8: Tax → Tax Strategies
@@ -1304,6 +1313,13 @@ no record): the Winner card in the first frame at REAL; the record card's faces;
 and reachability. `dip` is the working-route arm: the stopgap line in the first frame, no solve driven. **`e2e/chart-text-rv.spec.ts` is rewritten here, not retired**: on its own serialized
 harness (`playwright.fit-rv.config.ts`, its CI job) after a full-precision solve, the Summary bars' printed values and
 the Winner card's hero pass the audit at PHONE and REAL. CI CSP: the shell arm opens Strategies. Local look.
+
+**Owed from RC4 (2026-11-24, b9-5).** "Keep" on an unsaved solve has never been pressed in a real browser: it needs a
+committed full-precision solve, and no `?vault=` plant carries one (RC4 pressed "Try it in the plan" through
+`?vault=rec`). This unit's arms drive the solve on `surplus` and press Keep, then assert the record card's HOLDS face.
+RC4 re-pointed the steer-note, pending-frame and record-card arms to the interim Tax Strategies tab
+(`e2e/rc-screens.spec.ts`, "RC4 re-pointed" and "RC4 ported · the vault returns"); this unit ports them onto the clone's
+Strategies screen. *(the pilot's call, 2026-11-24, b9-5)*
 
 ### RC9: Retirement → Social Security
 

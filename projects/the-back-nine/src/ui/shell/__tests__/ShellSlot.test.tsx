@@ -12,8 +12,8 @@ import { pinnedLines } from '../../workbench/pinnedLines'
 /**
  * The shell's loader (Act 6 · RC2, the room's `RoomSlot` pattern kept; KTD31, insights 053 and 054): a failed chunk load
  * shows its own retry inside the intake app, the retry loads the shell with no page reload, and only a failure after a
- * retry offers the reload. On every failure the answer stays readable (U25's rule): its lead on the failure page, and
- * "Back to your answer" to the whole of it.
+ * retry offers the reload. On every failure the answer stays readable (U25's rule): its lead on the failure page. Since
+ * Act 6 · RC4 the shell is the home, so no answer page stands behind it and the failure page offers no way back to one.
  */
 
 afterEach(cleanup)
@@ -54,12 +54,12 @@ const chunkMiss = () => Promise.reject(new TypeError('Failed to fetch dynamicall
 vi.spyOn(console, 'error').mockImplementation(() => {})
 
 describe('ShellSlot — the shell loads on demand behind its own boundary', () => {
-  it('a failed load shows the retry, the answer’s lead and the way back; the retry loads the shell with no reload', async () => {
+  it('a failed load shows the retry and the answer’s lead, and no way back to an answer page; the retry loads the shell with no reload', async () => {
     const load = vi.fn().mockImplementationOnce(chunkMiss).mockImplementation(realShell)
     render(<ShellSlot shell={shell()} load={load} />)
     expect(await screen.findByText(copy.workbenchLoadFailed)).toBeInTheDocument()
     expect(screen.getByText(pinnedLines(SNAPSHOT, draft.startCalendarYear).lead)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: copy.workbenchBack })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: copy.workbenchBack }), 'the home has no answer page behind it').toBeNull()
     expect(screen.queryByRole('button', { name: copy.restoreRetry })).toBeNull()
     expect(document.querySelector('main.result'), 'the failure page is never the settle hook').toBeNull()
 
@@ -71,17 +71,14 @@ describe('ShellSlot — the shell loads on demand behind its own boundary', () =
     expect(load).toHaveBeenCalledTimes(2)
   })
 
-  it('a failure after a retry offers the reload and still reads the answer; Back to your answer leaves', async () => {
-    const onHome = vi.fn()
+  it('a failure after a retry offers the reload and still reads the answer', async () => {
     const load = vi.fn().mockImplementation(chunkMiss)
-    render(<ShellSlot shell={shell(onHome)} load={load} />)
+    render(<ShellSlot shell={shell()} load={load} />)
     fireEvent.click(await screen.findByRole('button', { name: copy.exportRetry }))
     expect(await screen.findByText(copy.workbenchLoadFailedAgain)).toBeInTheDocument()
     expect(screen.getByText(pinnedLines(SNAPSHOT, draft.startCalendarYear).lead)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: copy.restoreRetry })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: copy.exportRetry })).toBeNull()
-
-    fireEvent.click(screen.getByRole('button', { name: copy.workbenchBack }))
-    expect(onHome).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('button', { name: copy.workbenchBack })).toBeNull()
   })
 })

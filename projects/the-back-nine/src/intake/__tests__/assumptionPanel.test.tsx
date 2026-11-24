@@ -162,6 +162,22 @@ const shown = (xOfTen: number, over: Partial<StickyDisplay> = {}): StickyDisplay
   ...over,
 })
 
+/** A committed spine answer whose RAW headline and dollar read the given triple (Act 6 · RC4's ruling: the echo reads
+ *  the raw triple, `rawDisplayed`, never the sticky `displayed`). */
+const raw = (xOfTen: number, over: Partial<StickyDisplay> = {}, draft: ScenarioDraft = mixedDraft): MemoryModelSnapshot['answer'] => {
+  const t = shown(xOfTen, over)
+  return {
+    kind: 'headline',
+    tier: 'final',
+    draft,
+    inputKey: 'test',
+    result: {
+      headline: { xOfTen: { value: t.xOfTen, marginToEdge: 0.1 }, outcomeState: t.outcomeState, stateMarginToEdge: 0.1 },
+      dollar: { direction: t.direction, spendPerMonthReal: t.spendPerMonthReal },
+    } as unknown as SimulationResult,
+  }
+}
+
 const snap = (draft: ScenarioDraft, over: Partial<MemoryModelSnapshot> = {}): MemoryModelSnapshot => ({
   draft,
   answer: { kind: 'idle' },
@@ -553,26 +569,18 @@ describe('OOP medical', () => {
   })
 })
 
-// ─── the echo (displayed-not-raw + the two-class transition line) ────────────────────────
+// ─── the echo (RAW, since Act 6 · RC4's ruling + the two-class transition line) ───────────
 
 describe('the live answer echo', () => {
-  it('reads the STICKY triple, never the raw result (divergent-fake pin: raw 8, displayed 7)', () => {
-    const rawResult = { headline: { xOfTen: { value: 8 } } } as unknown as SimulationResult
-    renderPanel({
-      snapshot: snap(mixedDraft, {
-        answer: { kind: 'headline', result: rawResult, tier: 'final', draft: mixedDraft, inputKey: 'test' },
-        displayed: shown(7),
-      }),
-    })
-    expect(screen.getByText(`${copy.outcomeOnTrack} — ${slots.xOfTen(7)}`)).toBeInTheDocument()
-    expect(screen.queryByText(new RegExp(`8 of 10`))).toBeNull()
+  it('reads the RAW triple, never the sticky one (Act 6 · RC4’s ruling; divergent-fake pin: raw 8, displayed 7)', () => {
+    renderPanel({ snapshot: snap(mixedDraft, { answer: raw(8), displayed: shown(7) }) })
+    expect(screen.getByText(`${copy.outcomeOnTrack} — ${slots.xOfTen(8)}`)).toBeInTheDocument()
+    expect(screen.queryByText(new RegExp(`7 of 10`))).toBeNull()
   })
 
   it('the over-funded ceiling reads through the SHARED composer — "better than 9 in 10", never "9 of 10" (U12 ultramode: the echo had diverged from the hero)', () => {
     renderPanel({
-      snapshot: snap(mixedDraft, {
-        displayed: shown(9, { outcomeState: 'over-funded' }),
-      }),
+      snapshot: snap(mixedDraft, { answer: raw(9, { outcomeState: 'over-funded' }) }),
     })
     expect(
       screen.getByText(`${copy.outcomeOverFunded} — ${slots.xOfTenAtCeiling()}`),
@@ -581,13 +589,13 @@ describe('the live answer echo', () => {
   })
 
   it('the truer-picture line renders on a baseline-WORSE landing only (both arms + unchanged)', () => {
-    const base = renderPanel({ snapshot: snap(mixedDraft, { displayed: shown(7) }) })
+    const base = renderPanel({ snapshot: snap(mixedDraft, { answer: raw(7) }) })
     expect(screen.queryByText(copy.assumptionTruerPicture)).toBeNull() // at open: nothing
-    base.rerender(<AssumptionPanel {...base.props} snapshot={snap(mixedDraft, { displayed: shown(6) })} />)
+    base.rerender(<AssumptionPanel {...base.props} snapshot={snap(mixedDraft, { answer: raw(6) })} />)
     expect(screen.getByText(copy.assumptionTruerPicture)).toBeInTheDocument() // worse than open
-    base.rerender(<AssumptionPanel {...base.props} snapshot={snap(mixedDraft, { displayed: shown(8) })} />)
+    base.rerender(<AssumptionPanel {...base.props} snapshot={snap(mixedDraft, { answer: raw(8) })} />)
     expect(screen.queryByText(copy.assumptionTruerPicture)).toBeNull() // improved — calm
-    base.rerender(<AssumptionPanel {...base.props} snapshot={snap(mixedDraft, { displayed: shown(7) })} />)
+    base.rerender(<AssumptionPanel {...base.props} snapshot={snap(mixedDraft, { answer: raw(7) })} />)
     expect(screen.queryByText(copy.assumptionTruerPicture)).toBeNull() // back to baseline — calm
   })
 
@@ -2011,23 +2019,16 @@ describe('the working-year methodology row reads exactly one left-over line, its
 
 describe('the live answer echo — W9-R7: re-figuring', () => {
   const echo = (): HTMLElement => document.querySelector('.ap-echo') as HTMLElement
-  const spineAnswer = {
-    kind: 'headline' as const,
-    result: { headline: { xOfTen: { value: 6 }, outcomeState: 'on-track' } } as unknown as SimulationResult,
-    tier: 'final' as const,
-    draft: mixedDraft,
-    inputKey: 'test',
-  }
 
   it('the spine: the line takes the held verdict readout’s place (word, count, clause and the truer-picture line all describe the old answer) — inside the same status box', () => {
-    const r = renderPanel({ snapshot: snap(mixedDraft, { answer: spineAnswer, displayed: shown(7) }) })
+    const r = renderPanel({ snapshot: snap(mixedDraft, { answer: raw(7) }) })
     expect(within(echo()).getByText(`${copy.outcomeOnTrack} — ${slots.xOfTen(7)}`)).toBeInTheDocument()
     // a WORSE landing would show the truer-picture line; under the flag nothing of the old answer stays
-    r.rerender(<AssumptionPanel {...r.props} snapshot={snap(mixedDraft, { answer: spineAnswer, displayed: shown(6), refiguring: true })} />)
+    r.rerender(<AssumptionPanel {...r.props} snapshot={snap(mixedDraft, { answer: raw(6), refiguring: true })} />)
     expect(echo()).toHaveAttribute('role', 'status')
     expect(echo().textContent).toBe(copy.assumptionEchoRefiguring)
     // the new answer commits (the flag drops in the same frame): the readout is back
-    r.rerender(<AssumptionPanel {...r.props} snapshot={snap(mixedDraft, { answer: spineAnswer, displayed: shown(6) })} />)
+    r.rerender(<AssumptionPanel {...r.props} snapshot={snap(mixedDraft, { answer: raw(6) })} />)
     expect(within(echo()).getByText(`${copy.outcomeOnTrack} — ${slots.xOfTen(6)}`)).toBeInTheDocument()
     expect(within(echo()).getByText(copy.assumptionTruerPicture)).toBeInTheDocument()
   })

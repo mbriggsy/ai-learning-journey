@@ -532,6 +532,19 @@ export interface StickyDisplay {
 
 export const HEADLINE_STICKY_EPS = SURVIVAL_GRID
 
+/**
+ * THE RAW DISPLAY TRIPLE (Act 6 · RC4's ruling, 2026-11-24: RAW everywhere the clone prints a count). The triple the
+ * sticky seam would adopt with no history (`resolveStickyDisplay(null, …)`), so every count the clone prints reads the
+ * engine's own quantized headline: present exactly where `displayed` is (a complete, non-indeterminate spine answer),
+ * null everywhere else. The sticky seam (`displayed`) keeps its tests and has no printed reader after RC4.
+ */
+export function rawDisplayed(answer: ModelAnswer): StickyDisplay | null {
+  if (answer.kind !== 'headline' || answer.result.headline.outcomeState === 'indeterminate') return null
+  // A result carries its dollar on every real run; one built without it (a test's hand-built answer) composes no sentence.
+  if (answer.result.dollar === undefined) return null
+  return resolveStickyDisplay(null, answer.result.headline, answer.result.dollar)
+}
+
 /** The pure hysteresis rule (insight 048 — the decision is an exported, planted-fail-
  *  tested seam; commit() keeps only the wiring). Given the previous displayed triple and
  *  the new raw reading, decide what the sentence shows. */

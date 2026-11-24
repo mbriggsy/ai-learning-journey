@@ -15,9 +15,18 @@ import { copy } from '../copy'
 export const MODULE_ORDER = ['dashboard', 'investment', 'retirement', 'tax', 'profile'] as const
 export type ModuleId = (typeof MODULE_ORDER)[number]
 
-/** The screens the shell can draw. RC3's Snapshot is the first rebuilt screen; RC2's three are the workbench room's
- *  pages, riding as interim tabs in their old look until their units rebuild them (RC4, RC6, RC13). */
-export type ScreenId = 'snapshot' | 'interim-whatif' | 'interim-table' | 'interim-facts'
+/** The screens the shell can draw. RC3's Snapshot and RC4's Probability are rebuilt; the rest ride as interim tabs in
+ *  their old look until their units rebuild them: the workbench room's What if (RC4b's tray), table (RC6) and facts
+ *  page (RC13), and, since RC4 made the shell the home, what was left of the old answer page: the recommendation
+ *  surface under Tax → Tax Strategies (RC8) and the health sheet under Retirement → Health Care (RC10). */
+export type ScreenId =
+  | 'snapshot'
+  | 'probability'
+  | 'interim-whatif'
+  | 'interim-table'
+  | 'interim-facts'
+  | 'interim-strategies'
+  | 'interim-health'
 
 export interface RouteRow {
   readonly module: ModuleId
@@ -41,6 +50,7 @@ export interface Route {
 export const MODULE_LABELS: Readonly<Partial<Record<ModuleId, string>>> = {
   dashboard: copy.shellModuleDashboard,
   retirement: copy.shellModuleRetirement,
+  tax: copy.shellModuleTax,
   profile: copy.shellModuleProfile,
 }
 
@@ -51,20 +61,38 @@ export const ROUTE_ROWS: readonly RouteRow[] = [
     module: 'retirement',
     page: 'analysis',
     pageLabel: copy.shellPageAnalysis,
+    tab: 'probability',
+    tabLabel: copy.probabilityTab,
+    screen: 'probability',
+    title: copy.analysisTitle,
+  },
+  {
+    module: 'retirement',
+    page: 'analysis',
+    pageLabel: copy.shellPageAnalysis,
     tab: 'what-if',
     tabLabel: copy.workbenchPageWhatIf,
     screen: 'interim-whatif',
     title: copy.workbenchPageWhatIf,
   },
+  { module: 'retirement', page: 'health-care', pageLabel: copy.shellPageHealthCare, screen: 'interim-health', title: copy.shellPageHealthCare },
   { module: 'retirement', page: 'cash-flows', pageLabel: copy.shellPageCashFlows, screen: 'interim-table', title: copy.workbenchPageTable },
+  { module: 'tax', page: 'strategies', pageLabel: copy.shellPageTaxStrategies, screen: 'interim-strategies', title: copy.shellPageTaxStrategies },
   { module: 'profile', page: 'facts', pageLabel: copy.workbenchPageFacts, screen: 'interim-facts', title: copy.workbenchPageFacts },
 ]
 
-/** Where the answer page's door lands: Dashboard → Snapshot, the home (RC3; RC2 landed on the year-by-year table). */
+/** The home: setup's end, a reopened vault and every dev seed land on Dashboard → Snapshot (RC4; RC3's door landed here). */
 export const LANDING: Route = { module: 'dashboard', page: 'snapshot' }
 
 export const routeEquals = (a: Route, b: Route): boolean => a.module === b.module && a.page === b.page && a.tab === b.tab
 const sameRoute = routeEquals
+
+/** The route of the first row showing `screen` (every screen has exactly one row). */
+export function routeOfScreen(screen: ScreenId, rows: readonly RouteRow[] = ROUTE_ROWS): Route {
+  const row = rows.find((r) => r.screen === screen)
+  if (row === undefined) throw new Error(`routes: no row shows ${screen}`)
+  return routeOf(row)
+}
 
 /** The route a row is. */
 export const routeOf = (row: RouteRow): Route => (row.tab === undefined ? { module: row.module, page: row.page } : { module: row.module, page: row.page, tab: row.tab })

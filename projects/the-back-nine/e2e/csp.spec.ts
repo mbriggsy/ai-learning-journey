@@ -175,35 +175,19 @@ test.describe('CSP — real browser enforcement', () => {
     // buffer into the answer strip.
     await installCollector(page)
     await driveIntakeToResult(page)
-    const tick = page.locator('figure.band-figure .band-tick').first()
-    await expect(tick, 'the Result rendered no band y-tick — retarget this probe at whichever chart the Result carries').toBeAttached({ timeout: 90_000 })
-    // Quiescence only, not a dependency: the fonts.ready one-shot re-runs layoutCollisions, which
-    // writes --ct-row / --ct-rows / --ct-dy / data-ct-hidden — a transform (--ct-dy), visibility
-    // (data-ct-hidden) and the annotation block's top/height (--ct-row / --ct-rows) — never `left`;
-    // and the band tick passes no `collide`, so it is not a [data-ct-item] and that pass cannot touch
-    // it at all. The two operands below are read in ONE synchronous evaluate, so the ratio holds
-    // mid-swap regardless.
-    await page.evaluate(() => document.fonts.ready)
-    const placed = await tick.evaluate((el) => {
-      const cs = getComputedStyle(el)
-      // offsetParent is .ct-layer (position:absolute, inset:0 — chartText.css): the containing block
-      // the `calc(var(--fx) * 100%)` percentage resolves against. By DEFINITION the containing block,
-      // never a by-name `closest('.ct-layer')` guess — and null-tolerant, so the authored message
-      // below prints instead of a TypeError past both diagnostics.
-      const parent = (el as HTMLElement).offsetParent as HTMLElement | null
-      return { fx: cs.getPropertyValue('--fx').trim(), left: parseFloat(cs.left), layerW: parent ? parent.getBoundingClientRect().width : -1 }
-    })
-    expect(placed.fx, 'the chart text layer wrote no --fx under the enforced CSP').not.toBe('')
-    expect(placed.layerW, 'the tick has no offsetParent box — a display:none ancestor, or .ct-layer lost position:absolute').toBeGreaterThan(0)
-    // The used `left` IS the resolved calc: the CSSOM custom property landed on a real chart under the
-    // real headers. Assert the RESOLUTION, never the on-screen edge — a y-tick is anchor="end"
-    // (ConfidenceBand.tsx TICK_FX + chartText.css .ct-text--end), so its left edge legitimately sits
-    // outside the host box on a narrow arm (the register's chart-text residual (g)). An edge bound
-    // would false-red.
-    expect(
-      Math.abs(placed.left - parseFloat(placed.fx) * placed.layerW),
-      'the CSSOM --fx did not resolve into a position on a real chart under the enforced headers',
-    ).toBeLessThan(1.5)
+    // Act 6 · RC4: the walk lands on the home (Dashboard → Snapshot), whose fan is the real chart under the real
+    // headers: Highcharts in styled mode, its fills reaching it through the CSSOM (`--b9-fan-outer`, written once at
+    // start-up), never a runtime <style>. The old band's chart-text layer left with the answer page.
+    await expect(page.getByRole('heading', { level: 1, name: copy.shellPageSnapshot })).toBeVisible({ timeout: 90_000 })
+    const outer = page.locator('[data-card="fan"] [data-chart="fan"] .b9-fan-outer .highcharts-area').first()
+    await expect(outer, 'the home drew no fan — retarget this probe at whichever chart the home carries').toBeAttached({ timeout: 90_000 })
+    const painted = await outer.evaluate((el) => ({
+      fill: getComputedStyle(el).fill,
+      written: document.documentElement.style.getPropertyValue('--b9-fan-outer').trim(),
+    }))
+    expect(painted.written, 'the CSSOM write never landed on the root under the enforced CSP').not.toBe('')
+    expect(painted.fill, 'the fan’s outer range painted nothing: the CSSOM custom property did not reach the chart').not.toMatch(/^(none|rgba\(0, 0, 0, 0\))$/)
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'a chart injected a <style> element').toBe(0)
 
     // No worker-src/script-src/style-src violation anywhere along the real path — the chart render
     // above included.
@@ -226,6 +210,8 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(page.locator(SETTLED_RESULT), 'no final-tier verdict — the invite cannot mount').toBeAttached({ timeout: 120_000 })
     expect(page.workers(), 'before the solve: the spine worker alone').toHaveLength(1)
 
+    // Act 6 · RC4: the recommend-second invite lives on Tax → Tax Strategies (the interim tab until RC8).
+    await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
     const invite = page.locator('.result-recommend-invite')
     await expect(invite, 'the recommend-second invite never mounted').toBeVisible({ timeout: 60_000 })
     await invite.click()
@@ -247,15 +233,16 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
-    // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15): the shell's lazy
-    // chunk and its styles load through the answer page's real door on the served build, and every interim tab is
+  test('the shell loads under the enforced CSP: the home, Probability, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+    // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
+    // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
+    // served build, Probability draws its rings and its two balance bars (Highcharts again), and every interim tab is
     // visited. ANY violation reds (not a directive subset), and so does any request that leaves the build's own origin:
     // the act adds no network call. The table runs both views on the build's own engine worker, each one short run: the
     // steady view lands first, then a press shows the rough one, each read by its own words over its own rows. The facts
     // page opens and closes one step sheet; the What if page runs one what-if; the lock menu (a portaled Base UI menu)
-    // opens and closes; at a phone width the menu (a portaled Base UI dialog that animates) moves the page. The way back
-    // is the wordmark, which asks first over the unkept what-if.
+    // opens and closes; at a phone width the menu (a portaled Base UI dialog that animates) moves the page. The way home
+    // is the wordmark.
     test.setTimeout(180_000)
     await installCollector(page)
     const outside: string[] = []
@@ -265,12 +252,10 @@ test.describe('CSP — real browser enforcement', () => {
       if (url.origin !== ENFORCED_ORIGIN) outside.push(r.url())
     })
     await driveIntakeToResult(page)
-    const door = page.locator('.result-quiet-row [data-door="workbench"]')
-    await expect(door, 'the door never mounted on the resolved answer').toBeVisible({ timeout: 120_000 })
-    await door.click()
-    // Act 6 · RC3: the door lands on Dashboard → Snapshot, the app's first Highcharts chart under the real header (the
-    // fan, its lazy chunk, highcharts-more and the accessibility module, its styled-mode CSS and its hover tooltip).
-    await expect(page.getByRole('heading', { level: 1, name: copy.shellPageSnapshot })).toBeVisible({ timeout: 30_000 })
+    // Act 6 · RC4: the walk's end lands on the home, Dashboard → Snapshot (no answer page, no door), the app's first
+    // Highcharts chart under the real header (the fan, its lazy chunk, highcharts-more and the accessibility module, its
+    // styled-mode CSS and its hover tooltip).
+    await expect(page.getByRole('heading', { level: 1, name: copy.shellPageSnapshot })).toBeVisible({ timeout: 120_000 })
     expect(await page.evaluate(() => history.state)).toEqual({ b9: 'workspace', n: 1 })
     expect(new URL(page.url()).hash).toBe('#/dashboard/snapshot')
     await expect(page.locator('main.result'), 'exactly one main.result in the shell').toHaveCount(1)
@@ -284,8 +269,24 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(fan.locator('.highcharts-tooltip'), 'the fan’s tooltip never showed').toBeVisible()
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the fan injected a <style> element').toBe(0)
     await page.mouse.move(0, 0)
-    // On to the year-by-year table (Retirement → Cash Flows), as before RC3.
+    // Retirement → Analysis → Probability (RC4): the two rings and the two balance bars (each its own Highcharts chart)
+    // once the settled answer's what-if side reads the plan itself; the left picker (a portaled Base UI select) opened
+    // and closed.
     await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleRetirement, exact: true }).click()
+    await expect(page.getByRole('heading', { level: 1, name: copy.analysisTitle })).toBeVisible({ timeout: 30_000 })
+    expect(new URL(page.url()).hash).toBe('#/retirement/analysis/probability')
+    await expect(page.locator('[data-ring-half="compared"]'), 'the plan’s ring never drew').toBeVisible({ timeout: 60_000 })
+    // The walk's household reads off track with a $0 middle balance, so its bars give way to their words (the bar charts'
+    // own CSP proof is the kit probe's Highcharts arm and the home's fan above); either way, one of the two stands.
+    await expect(page.locator('[data-bar="compared"] .highcharts-series-group, [data-bar-none]').first(), 'neither the bar nor its words').toBeAttached({
+      timeout: 60_000,
+    })
+    await page.locator('[data-half="alternative"]').getByRole('combobox').click()
+    await expect(page.getByRole('listbox'), 'the picker never opened').toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('listbox')).toHaveCount(0)
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Probability injected a <style> element').toBe(0)
+    // On to the year-by-year table (Retirement → Cash Flows), as before RC3.
     await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageCashFlows, exact: true }).click()
     await expect(page.getByRole('heading', { name: copy.workbenchPageTable })).toBeVisible({ timeout: 30_000 })
     await expect(page.getByText(copy.shellInterimBanner, { exact: true })).toBeVisible()
@@ -322,6 +323,7 @@ test.describe('CSP — real browser enforcement', () => {
     // The What if page (Retirement → Analysis): one what-if, run on the build's own engine worker (its many-futures run
     // and both named futures). Spending is offered to every household: its first figure committed $1,000 lower with Enter.
     await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleRetirement, exact: true }).click()
+    await page.getByRole('tab', { name: copy.workbenchPageWhatIf, exact: true }).click()
     await expect(page.locator('main.result[data-shell-screen="interim-whatif"]')).toBeAttached()
     await page.locator('.wb-lever[data-lever="spending"] > summary').click()
     const spend = page.locator('.wb-lever[data-lever="spending"] input[inputmode="decimal"]').first()
@@ -343,12 +345,10 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(menu).toHaveCount(0)
     await expect(page.locator('main.result[data-shell-screen="interim-table"]')).toBeAttached()
 
-    // The way back: the wordmark asks first over the unkept what-if; Go back lands on the answer.
+    // The way home: the wordmark goes to Snapshot (a page move, so the unkept what-if survives and nothing is asked).
     await page.getByRole('link', { name: copy.shellHomeLabel }).click()
-    await expect(page.getByText(copy.shellLeaveWhatIf, { exact: true }), 'the wordmark left an unkept what-if without asking').toBeVisible()
-    await page.getByRole('button', { name: copy.workbenchLeaveGo, exact: true }).click()
-    await expect(page.locator('main.result.result-page')).toBeVisible()
-    await expect(door).toBeVisible()
+    await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached({ timeout: 30_000 })
+    await expect(page.getByText(copy.shellLeaveWhatIf, { exact: true })).toHaveCount(0)
 
     expect(await violations(page)).toEqual([])
     expect(outside, 'a request left the build’s own origin').toEqual([])

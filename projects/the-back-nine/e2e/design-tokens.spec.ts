@@ -89,13 +89,11 @@ test.describe('design tokens — Figtree (the kit probe and the main app)', () =
 
   test('the main app loads Figtree too: inside the shell the wordmark computes in it, and the font set holds a loaded entry (a fake family reads unloaded)', async ({ page }) => {
     // Act 6 · RC2: the shell is the first `.rc-root` surface in the main app, so the main entry (`src/main.tsx`) imports
-    // the face, not only the probe. Entered as a user would: the real intake, then the answer page's door.
+    // the face, not only the probe. Entered as a user would: the real intake, whose end lands on the shell (the home
+    // since RC4).
     test.setTimeout(180_000)
     await driveIntakeToResult(page)
-    const door = page.locator('.result-quiet-row [data-door="workbench"]')
-    await expect(door).toBeVisible({ timeout: 120_000 })
-    await door.click()
-    await expect(page.locator('main.result[data-shell-screen]')).toBeAttached({ timeout: 30_000 })
+    await expect(page.locator('main.result[data-shell-screen]')).toBeAttached({ timeout: 120_000 })
     const word = page.getByRole('link', { name: copy.shellHomeLabel }).getByText(copy.appTitle, { exact: true })
     await expect(word, 'the wordmark’s words are drawn at this width').toBeVisible()
     const family = await word.evaluate((el) => getComputedStyle(el).fontFamily.replace(/["']/g, ''))

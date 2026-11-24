@@ -283,7 +283,7 @@ Heavy runs go one at a time and unpinned (`docs/landmines.md`, "THE LENOVO"). Be
 - R5's "does not pulse under reduced motion" and "never rests on color alone" have no named test; U4's design checklist covers them.
 - The tail-less headlines need variants of `slots.noDateInWindow` and `slots.dateFloorNotWithin`.
 - The flag over `inputs-incomplete` and `compute-error` drives only the attribute; no surface renders a line there.
-- `resultDisclaimer.test.tsx:133-139` greps both heroes' source; U4's hero edits must keep what it greps.
+- `resultDisclaimer.test.tsx line 133-139 at 95c715e19` greps both heroes' source; U4's hero edits must keep what it greps.
 - A spine A→B→A while A's spend solve is pending: B's dispatch may cancel that solve; the clause falls back to figure-less, never wrong.
 - The key omits the seed, which never changes after it is minted.
 - On the date route neither the line nor R9's tag has reserved space; the route scrolls, and walk 10 reads it.

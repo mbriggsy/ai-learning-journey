@@ -29,7 +29,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { SegmentedControl } from '@intake/fields'
 import { intakeSteps } from '@intake/questions'
-import { missingRequiredFacts } from '@intake/intakeMap'
+import { healthcarePriced, missingRequiredFacts } from '@intake/intakeMap'
 import { engineRunLane, type EngineRunRequest, type Lane } from '@store/runLanes'
 import { roughWindow, ROUGH_WINDOW_YEARS } from '@engine/reference/roughSequence'
 import type { MemoryModel, MemoryModelSnapshot } from '@store/memoryModel'
@@ -54,11 +54,18 @@ import { useWhatIf, type RailRecommendation } from '../workbench/useWhatIf'
 import type { WhatIfSlotLanes } from '../workbench/whatIfRun'
 import type { RecommendationSaveProp } from '../RecommendationSurface'
 import { currentEpochDay } from '../scenarioFromDraft'
+import { epochDayToCalendarYear } from '@store/staleness'
+import { composeAnswerNotes } from '../answerNotes'
+import { Result } from '../Result'
 import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
+import { Analysis } from '../screens/retirement/Analysis'
+import { landingPick, probabilityView, type LeftPick, type ProbabilityChart } from '../screens/retirement/probabilityView'
 import { InterimPage } from './InterimPage'
 import { composeLockMenu, type LockMenuAction } from './lockMenu'
-import { navModules, routeEquals, routeHash, rowFor, ROUTE_ROWS, type Route } from './routes'
+import { composeStaleLines } from './staleLines'
+import { StaleBannerStack } from './StaleBannerStack'
+import { navModules, routeEquals, routeHash, routeOfScreen, rowFor, ROUTE_ROWS, type Route, type ScreenId } from './routes'
 import { TopBar } from './TopBar'
 
 export type TableLanes = Readonly<Record<TableView, Lane<EngineRunRequest, SimulationResult>>>
@@ -76,11 +83,21 @@ export interface ShellProps {
   readonly save: ResultSaveProp
   /** Present where a vault exists and the tab can write: the lock menu's Back up opens the existing backup step. */
   readonly onBackup?: () => void
+  /** The re-offer: a returning, writable session with no backup file on record (IntakeApp's `needsBackup`). The lock
+   *  menu says so beside its Back up (the old answer page's backup door, RC4). */
+  readonly backupOffered?: boolean
+  /** The assumption panel's guided re-walk: back to the walk-through with every answer kept (IntakeApp asks first over
+   *  anything the leave would drop). */
+  readonly onReview?: () => void
+  /** P3·U13 — a staleness clock fired at unlock: the StaleBanner carries the "figured fresh under today's rules" note. */
+  readonly stalenessNote?: boolean
+  /** Build 2's clause host (`composeReentry`, session-lifetime): a moved left over rides the rules note as a clause. */
+  readonly leftOverClauseHost?: boolean
   /** The page shown (IntakeApp holds it and mirrors it to the hash). */
   readonly route: Route
   /** Move to a page (IntakeApp pushes its history entry). */
   readonly onNavigate: (route: Route) => void
-  /** The wordmark: back to the answer page. */
+  /** The wordmark: back to the home (Snapshot), asking first over an open drawer's edit. */
   readonly onHome: () => void
   /** Present while a leave is held over work it would drop (a Back press can't be cancelled, so IntakeApp put the
    *  shell's entry back and asks here first). */
@@ -232,6 +249,10 @@ function LeaveAsk({ ask, overSheet, fallback }: { readonly ask: ShellLeaveAsk; r
 export default function Shell({
   save,
   onBackup,
+  backupOffered = false,
+  onReview,
+  stalenessNote = false,
+  leftOverClauseHost = false,
   route,
   onNavigate,
   onHome,
@@ -241,7 +262,7 @@ export default function Shell({
   model = appModel,
   readOnly = false,
   lanes: lanesProp,
-  wallCalendarYear = new Date().getFullYear(),
+  wallCalendarYear = epochDayToCalendarYear(currentEpochDay()),
   recommendation,
   whatIfLanes,
   recSave,
@@ -272,7 +293,7 @@ export default function Shell({
   }, [routeKey])
 
   // ── The lock menu: the one save machine's view, its actions wired to the handlers IntakeApp attached ──────────────
-  const lock = composeLockMenu({ save, readOnly, canBackUp: onBackup !== undefined })
+  const lock = composeLockMenu({ save, readOnly, canBackUp: onBackup !== undefined, backupOffered })
   const onLockAction = (action: LockMenuAction) => {
     if (action === 'keep' && save.kind === 'first') save.onKeep()
     else if (action === 'save' && save.kind === 'dirty') save.onSave()
@@ -378,8 +399,9 @@ export default function Shell({
     missing,
     savedAnchor: anchor,
     restoreFallback,
-    // No collections door here: the facts page has its own Accounts and Other income doors, and the panel's "Edit in
-    // the walk-through" would name a walk the shell never leaves for (the U8 review's A4).
+    // The panel's guided re-walk (the old answer page's Review, RC4): the shell is the home now, so the walk-through is
+    // left for from here. No separate collections door: the facts page has its own Accounts and Other income doors.
+    ...(onReview !== undefined ? { onReview } : {}),
   })
   const sheetDoors: Readonly<Record<SheetDoor, () => void>> = {
     budget: editors.openBudget,
@@ -446,12 +468,51 @@ export default function Shell({
         : null,
     [screen, snapshot, wallCalendarYear, readOnly, retryAnswer, steady, agedBalancesYear, recSave?.view, recordCard, todayEpochDay],
   )
-  const doorTo = (screenId: 'interim-whatif' | 'interim-table' | 'interim-facts') => {
-    const row = ROUTE_ROWS.find((r) => r.screen === screenId)!
-    const to: Route = row.tab === undefined ? { module: row.module, page: row.page } : { module: row.module, page: row.page, tab: row.tab }
+  const doorTo = (screenId: ScreenId) => {
+    const to = routeOfScreen(screenId)
     return { href: routeHash(to), onOpen: () => onNavigate(to) }
   }
-  const snapshotDoors: SnapshotDoors = { analysis: doorTo('interim-whatif'), cashFlows: doorTo('interim-table'), facts: doorTo('interim-facts') }
+
+  // ── Retirement → Analysis → Probability (RC4) ─────────────────────────────────────────────────────────────────────
+  // The left picker is the one what-if's mode: "New what-if" is the household's own bundle, "Recommended" the saved
+  // record's own action (`useWhatIf` runs it only while the record is current). On the page's first showing in a
+  // session the pick lands on Recommended where a current record can run (plan RC4, "Default on landing"); after that
+  // the household's own choice stands, on this page and the What if page alike (one what-if).
+  const [chart, setChart] = useState<ProbabilityChart>('rings')
+  const landedOnProbability = useRef(false)
+  useEffect(() => {
+    if (screen !== 'probability' || landedOnProbability.current) return
+    landedOnProbability.current = true
+    if (landingPick(snapshot.draft, recordCard) === 'recommended') whatIf.setMode('recommendation')
+  }, [screen, snapshot.draft, recordCard, whatIf])
+  const onPick = useCallback((pick: LeftPick) => whatIf.setMode(pick === 'recommended' ? 'recommendation' : 'own'), [whatIf])
+  const notes = useMemo(
+    () => composeAnswerNotes(snapshot, { readOnly, stalenessNote, leftOverClauseHost, agedBalancesYear, wallCalendarYear }),
+    [snapshot, readOnly, stalenessNote, leftOverClauseHost, agedBalancesYear, wallCalendarYear],
+  )
+  const prob = useMemo(
+    () =>
+      screen === 'probability'
+        ? probabilityView({
+            snapshot,
+            wallCalendarYear,
+            readOnly,
+            onRetry: retryAnswer,
+            notes,
+            whatIf: { pick: whatIf.mode === 'recommendation' ? 'recommended' : 'new', bundle: whatIf.shown, view: whatIf.view },
+            ...(recordCard !== undefined ? { record: recordCard } : {}),
+            chart,
+          })
+        : null,
+    [screen, snapshot, wallCalendarYear, readOnly, retryAnswer, notes, whatIf.mode, whatIf.shown, whatIf.view, recordCard, chart],
+  )
+
+  // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
+  const figured = screen === 'snapshot' || screen === 'probability'
+  const staleLines = useMemo(() => (figured ? composeStaleLines(notes, !readOnly && onReview !== undefined) : []), [figured, notes, readOnly, onReview])
+
+  const snapshotDoors: SnapshotDoors = { analysis: doorTo('probability'), cashFlows: doorTo('interim-table'), facts: doorTo('interim-facts') }
+  const strategiesDoor = doorTo('interim-strategies')
   const recView = snap?.rec.view
   const solve = snapshot.solve
   const onKeep =
@@ -461,9 +522,14 @@ export default function Shell({
           return () => recSave.onSave(ticket)
         })()
       : undefined
-  const onTry = snapshotDoors.analysis!.onOpen
+  // Try it in the plan: the Analysis page with the recommendation on the left side (the tray's Apply, RC4b, writes it).
+  const onTry = () => {
+    whatIf.setMode('recommendation')
+    landedOnProbability.current = true
+    snapshotDoors.analysis!.onOpen()
+  }
   // A keep that lands while Snapshot shows speaks once through the shell's one live region (the durability event,
-  // `RecommendationSaveProp.landed`), and is acknowledged so the answer page never repeats it later.
+  // `RecommendationSaveProp.landed`), and is acknowledged so it never repeats later.
   const landed = screen === 'snapshot' && recSave?.landed === true
   const onAnnounced = recSave?.onAnnounced
   useEffect(() => {
@@ -493,6 +559,13 @@ export default function Shell({
     </div>
   )
 
+  // The interim pages that show the market switch: the table and the What if page (the paired rows read its market).
+  const showsMarket = screen === 'interim-table' || screen === 'interim-whatif'
+  const leave = leaveAsk !== undefined ? <LeaveAsk ask={leaveAsk} overSheet={anySheetOpen} fallback={() => headingRef.current} /> : null
+  const staleBanner = (
+    <StaleBannerStack lines={staleLines} onOpenSeat={(seat) => editors.openAssumptions(seat)} {...(onReview !== undefined && !readOnly ? { onReconfirm: onReview } : {})} />
+  )
+
   return (
     <>
       <TopBar
@@ -503,6 +576,7 @@ export default function Shell({
         onHome={onHome}
         lock={lock}
         onLockAction={onLockAction}
+        onGear={() => editors.openAssumptions()}
       />
       <SubNav
         label={copy.shellPagesLabel}
@@ -515,12 +589,12 @@ export default function Shell({
         className="hidden wide:block"
       />
       <main
-        className={screen === 'snapshot' ? 'result flex flex-1 flex-col bg-bg pb-10' : 'result flex flex-1 flex-col pb-10'}
+        className={figured ? 'result flex flex-1 flex-col bg-bg pb-10' : 'result flex flex-1 flex-col pb-10'}
         data-shell-screen={screen}
         data-answer-tier={answerTier}
         data-answer-refiguring={snapshot.refiguring ? true : undefined}
         // A figured page carries its own R13 caveat inside its frame, so app.css hides App.tsx's trailing mount (plan 4.0).
-        data-inframe-disclaimer={screen === 'snapshot' ? true : undefined}
+        data-inframe-disclaimer={figured ? true : undefined}
       >
         <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
         {/* A failed save speaks on insertion (the save slot's alert arm); its sentence is also first in the lock menu. */}
@@ -531,66 +605,99 @@ export default function Shell({
         ) : null}
         {snap !== null ? (
           <>
-            {leaveAsk !== undefined && <LeaveAsk ask={leaveAsk} overSheet={anySheetOpen} fallback={() => headingRef.current} />}
-            <Snapshot view={snap} headingRef={headingRef} doors={snapshotDoors} onHome={onHome} onTry={onTry} {...(onKeep !== undefined ? { onKeep } : {})} />
+            {leave}
+            {staleBanner}
+            <Snapshot view={snap} headingRef={headingRef} doors={snapshotDoors} strategies={strategiesDoor} onTry={onTry} {...(onKeep !== undefined ? { onKeep } : {})} />
+          </>
+        ) : prob !== null ? (
+          <>
+            {leave}
+            {staleBanner}
+            <Analysis
+              view={prob}
+              headingRef={headingRef}
+              onPick={onPick}
+              onChart={setChart}
+              strategies={strategiesDoor}
+              whatIfTab={doorTo('interim-whatif')}
+            />
           </>
         ) : (
-        <InterimPage
-          title={row.title}
-          headingRef={headingRef}
-          snapshot={snapshot}
-          wallCalendarYear={wallCalendarYear}
-          above={
-            <>
-              {leaveAsk !== undefined && <LeaveAsk ask={leaveAsk} overSheet={anySheetOpen} fallback={() => headingRef.current} />}
-              {screen !== 'interim-facts' && marketSwitch}
-            </>
-          }
-        >
-          {screen === 'interim-table' && (
-            <div className="wb-panel">
-              {heading !== null && (
-                <div className="wb-about">
-                  <div className="wb-about__what">
-                    {heading.what.map((line) => (
-                      <p key={line} className="wb-about__line">
-                        {line}
-                      </p>
-                    ))}
+          <InterimPage
+            title={row.title}
+            headingRef={headingRef}
+            snapshot={snapshot}
+            wallCalendarYear={wallCalendarYear}
+            above={
+              <>
+                {leave}
+                {showsMarket && marketSwitch}
+              </>
+            }
+          >
+            {screen === 'interim-table' && (
+              <div className="wb-panel">
+                {heading !== null && (
+                  <div className="wb-about">
+                    <div className="wb-about__what">
+                      {heading.what.map((line) => (
+                        <p key={line} className="wb-about__line">
+                          {line}
+                        </p>
+                      ))}
+                    </div>
+                    <ul className="wb-stopgaps">
+                      {heading.stopgaps.map((line) => (
+                        <li key={line} className="wb-stopgaps__line">
+                          {line}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <ul className="wb-stopgaps">
-                    {heading.stopgaps.map((line) => (
-                      <li key={line} className="wb-stopgaps__line">
-                        {line}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <YearTable state={state} />
-            </div>
-          )}
-          {screen === 'interim-facts' && (
-            <div className="wb-panel">
-              <FactsPage sections={sections} onTry={tryLever} {...(readOnly ? {} : { onOpen: openDoor })} />
-            </div>
-          )}
-          {screen === 'interim-whatif' && (
-            <div className="wb-panel">
-              <WhatIfPage
-                whatIf={whatIf}
-                snapshot={snapshot}
-                planRows={results}
-                view={view}
-                readOnly={readOnly}
-                wallCalendarYear={wallCalendarYear}
-                announce={announce}
-                {...(recommendation !== undefined ? { recommendation } : {})}
-                {...(focusLever !== undefined ? { focusLever } : {})}
-              />
-            </div>
-          )}
-        </InterimPage>
+                )}
+                <YearTable state={state} />
+              </div>
+            )}
+            {screen === 'interim-facts' && (
+              <div className="wb-panel">
+                <FactsPage sections={sections} onTry={tryLever} {...(readOnly ? {} : { onOpen: openDoor })} />
+              </div>
+            )}
+            {screen === 'interim-whatif' && (
+              <div className="wb-panel">
+                <WhatIfPage
+                  whatIf={whatIf}
+                  snapshot={snapshot}
+                  planRows={results}
+                  view={view}
+                  readOnly={readOnly}
+                  wallCalendarYear={wallCalendarYear}
+                  announce={announce}
+                  {...(recommendation !== undefined ? { recommendation } : {})}
+                  {...(focusLever !== undefined ? { focusLever } : {})}
+                />
+              </div>
+            )}
+            {screen === 'interim-strategies' && (
+              <div className="wb-panel">
+                <Result {...(recSave !== undefined ? { recSave } : {})} {...(recordCard !== undefined ? { recordCard } : {})} />
+              </div>
+            )}
+            {screen === 'interim-health' && (
+              <div className="wb-panel" data-health-interim="">
+                {healthcarePriced(draft) ? (
+                  <>
+                    <p className="wb-about__line">{copy.healthInterimIntro}</p>
+                    <button type="button" className="btn-quiet" data-door="health" onClick={editors.openHealth}>
+                      {draft.enhancedSubsidies === true ? copy.leverHealthDoorEditCta : copy.leverHealthDoorCta}
+                    </button>
+                  </>
+                ) : (
+                  <p className="wb-about__line">{copy.healthInterimNone}</p>
+                )}
+              </div>
+            )}
+          </InterimPage>
         )}
         {!readOnly && (
           <>

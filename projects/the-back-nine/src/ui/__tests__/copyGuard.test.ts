@@ -1158,6 +1158,22 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     snapshotFanTipRange: slots.snapshotFanTipRange('$400k', '$2.1mm'),
     snapshotFanTipMedian: slots.snapshotFanTipMedian('$1.2mm'),
     snapshotFanPoint: slots.snapshotFanPoint('Ages 70 and 68', '$400k', '$1.2mm', '$2.1mm'),
+    probabilitySurvivorRow: slots.probabilitySurvivorRow('7 of 10'),
+    probabilityEssentialsRow: slots.probabilityEssentialsRow('better than 9 in 10'),
+    probabilityDifference: slots.probabilityDifference('7 of 10', '8 of 10', 'new what-if'),
+    probabilityBarFigure: slots.probabilityBarFigure('$2.1mm'),
+    probabilityBarPoint: slots.probabilityBarPoint('Your plan', '~$2.1mm'),
+    oddsYearTick: slots.oddsYearTick(2031),
+    oddsCeilingLines: slots.oddsCeilingLines().join(' '),
+    staleAgedBalances: slots.staleAgedBalances(2025),
+    probabilityDateOdds: slots.probabilityDateOdds('about 9 of 10 odds'),
+    oddsInline: slots.oddsInline(['Your date', '9 of 10']),
+    oddsPoint: [
+      slots.oddsPoint(2031, 'Your odds', '9 of 10', 'crown', false),
+      slots.oddsPoint(2029, 'Odds on just the essentials', '9 of 10', 'dip', false),
+      slots.oddsPoint(2033, 'Your odds', 'better than 9 in 10', 'clears', true),
+      slots.oddsPoint(2027, 'Your odds', '6 of 10', 'below', false),
+    ].join(' '),
   }
 
   it('the year-by-year table never calls its one future typical, average, expected or median (U7; the one-future record §5.1)', () => {

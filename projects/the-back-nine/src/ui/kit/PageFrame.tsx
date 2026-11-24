@@ -14,7 +14,7 @@
  *
  * The frame's root carries `.rc-root` (the scoped preflight). Every word is a prop.
  */
-import type { ReactNode } from 'react'
+import type { ReactNode, Ref } from 'react'
 import { Menu } from '@base-ui/react/menu'
 import { Check, ChevronDown } from 'lucide-react'
 import { cn } from './cn'
@@ -38,6 +38,8 @@ export interface PageFrameHandle {
 
 export interface PageFrameProps<Id extends string> {
   readonly title: string
+  /** The title's ref: the shell moves focus to a page's heading on arrival (it announces the page). */
+  readonly headingRef?: Ref<HTMLHeadingElement>
   readonly intro?: ReactNode
   readonly headAction?: ReactNode
   readonly tabs?: PageFrameTabs<Id>
@@ -63,6 +65,7 @@ export interface PageFrameProps<Id extends string> {
 
 export function PageFrame<Id extends string>({
   title,
+  headingRef,
   intro,
   headAction,
   tabs,
@@ -121,7 +124,9 @@ export function PageFrame<Id extends string>({
     <div className={cn('rc-root mx-auto flex w-full max-w-[90rem] flex-col px-4 py-6 wide:px-10 wide:py-10 compact:py-5', className)}>
       <header className="mb-6 flex flex-col gap-4 wide:flex-row wide:items-start wide:justify-between compact:mb-3">
         <div className="flex min-w-0 flex-col gap-2 compact:gap-1">
-          <h1 className="text-page-title font-regular text-plum compact:text-step-title">{title}</h1>
+          <h1 ref={headingRef} tabIndex={-1} className="text-page-title font-regular text-plum outline-none compact:text-step-title">
+            {title}
+          </h1>
           {intro !== undefined ? <div className="max-w-[72rem] text-intro text-stone-600">{intro}</div> : null}
         </div>
         {headAction !== undefined ? <div className="shrink-0">{headAction}</div> : null}

@@ -32,8 +32,14 @@ export interface RingProps {
   readonly className?: string
 }
 
+/** A centre longer than a count ("9 of 10", seven characters) is words: the over-funded ceiling's "better than 9 in
+ *  10". At the count's size those wrapped to three lines and, with the caption under them, spilled past the ring
+ *  (measured on `?seed=surplus`, Snapshot and Probability, 2026-11-24), so words take the caption's size, bolded. */
+export const RING_WORDY_CHARS = 7
+
 export function Ring({ value, centre, caption, className }: RingProps) {
   const id = svgId(useId(), 'b9-ring')
+  const wordy = typeof centre === 'string' && centre.length > RING_WORDY_CHARS
   const c = RING_BOX / 2
   return (
     <div className={cn('relative size-46 shrink-0 compact:size-40', className)}>
@@ -61,7 +67,12 @@ export function Ring({ value, centre, caption, className }: RingProps) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-5 text-center text-balance">
         {centre !== undefined ? (
-          <span className="text-ring font-semibold text-stone-900 tabular-nums compact:text-ring-compact">{centre}</span>
+          <span
+            className={cn('font-semibold text-stone-900 tabular-nums', wordy ? 'text-intro' : 'text-ring compact:text-ring-compact')}
+            data-ring-centre={wordy ? 'words' : 'count'}
+          >
+            {centre}
+          </span>
         ) : null}
         {caption !== undefined ? <span className="text-intro text-plum">{caption}</span> : null}
       </div>

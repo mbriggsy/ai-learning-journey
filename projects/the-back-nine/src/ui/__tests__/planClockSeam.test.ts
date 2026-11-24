@@ -167,6 +167,13 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     )
     expect(src, 'Result takes the anchor the composer minted').toMatch(/const dateAnchor = notes\.planClock\b/)
     expect(src, 'Result keeps no mint of its own').not.toMatch(/planClockAnchor\(/)
+    // Since RC4 the shell hosts the figured pages: it hands the composer the chain's year too, and keeps no mint.
+    const shell = read('../shell/Shell.tsx')
+    expect(shell, 'the shell reads the wall year through the ONE local-calendar chain').toMatch(
+      /wallCalendarYear = epochDayToCalendarYear\(currentEpochDay\(\)\)/,
+    )
+    expect(shell, 'the shell hands the composer that year').toMatch(/composeAnswerNotes\(snapshot, \{[^}]*wallCalendarYear[^}]*\}\)/)
+    expect(shell, 'the shell keeps no plan-clock subtraction of its own').not.toMatch(/-\s*(?:[\w$.]+\.)?startCalendarYear/)
     // The member path must be admitted or the negative can never fire: the code spells it
     // `snapshot.draft.startCalendarYear` and carries NO bare identifier — the U17 §S0 refactor
     // deleted the local binding this regex was originally shaped against (`102416af^` had
@@ -206,13 +213,16 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     expect((src.match(/new Date\(\)/g) ?? []).length, 'exactly ONE clock read in this module').toBe(1)
   })
 
-  it('the BAND/HERO crown-arrived withdraw consumes the SAME export — never its own compare', () => {
-    const src = read('../FuckOffDate.tsx')
+  it('the crown-arrived withdraw consumes the SAME export — never its own compare', () => {
+    // RE-BOUND AT ACT 6's RC4 (the source-bind moves with the call): the date hero and its ladder left with the old
+    // answer page; the Odds by stop year chart (`probabilityView.ts`'s `oddsChartView`) withdraws the crown's word on
+    // a passed crown through the same predicate.
+    const src = read('../screens/retirement/probabilityView.ts')
     expect(src, 'the predicate is imported from the ladder module, not re-declared').toMatch(
       /import \{[^}]*offsetHasPassed[^}]*\} from '@viz\/curveMarks'/,
     )
     expect(src, 'the withdraw calls the predicate').toMatch(
-      /offsetHasPassed\(heroTrack\.offsetYears, yearsSinceBuilt\)/,
+      /offsetHasPassed\(hero\.offsetYears, planClockYears\)/,
     )
     // The exact shipped drift this kills: `heroTrack.offsetYears < elapsedYears`, re-typed
     // beside a ladder that had already been given the guard (insight 099).

@@ -4,43 +4,21 @@ import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 
 /**
- * The shell and its door, through IntakeApp's REAL phase machine and the browser's REAL history (Act 6 · RC2; plan 6,
- * section 3.1 "Routing"; the workbench room's U6 tests, carried over). Result is stubbed to a props echo (the save
- * slot's kind, the door), SaveFlow to its two callbacks; the shell itself is the real lazy module. The store's answer
- * resolves only through the worker, so it is planted by wrapping `getSnapshot` (the draft stays real).
+ * The shell AS THE HOME, through IntakeApp's REAL phase machine and the browser's REAL history (Act 6 · RC4; plan 6,
+ * section 3.1 "Routing" and "How the shell arrives"; RC2's door tests, re-pointed when the door and the answer page
+ * went). Setup's end, a reopened vault and every dev seed land on Dashboard → Snapshot; the landing REPLACES the
+ * document's entry with the first page's, so no answer page sits beneath it. SaveFlow is stubbed to its two callbacks;
+ * the shell itself is the real lazy module. The store's answer resolves only through the worker, so it is planted by
+ * wrapping `getSnapshot` (the draft stays real).
+ *
+ * What a Back press from the FIRST page does is the browser's (it leaves the app, and the leave dialog stands over
+ * unsaved work and an unkept what-if: `IntakeApp.test.tsx`'s unsaved-work guard arms); jsdom cannot traverse out of
+ * its document, so no arm here presses it.
  */
 
 const h = vi.hoisted(() => ({ model: null as unknown }))
 vi.mock('../vaultSession', () => ({
   getVaultSession: async () => ({ currentModel: () => h.model, hasBackupRecord: async () => true }),
-}))
-vi.mock('../Result', () => ({
-  Result: ({
-    save,
-    workbench,
-  }: {
-    save: { kind: string; onKeep?: () => void }
-    workbench?: { onOpen: () => void; ask?: { onGo: () => void; onStay: () => void } }
-  }) => (
-    <div data-save-kind={save.kind}>
-      result stub
-      {workbench && (
-        <button type="button" onClick={workbench.onOpen}>
-          workbench-door-stub
-        </button>
-      )}
-      {workbench?.ask && (
-        <>
-          <button type="button" onClick={workbench.ask.onStay}>
-            door-ask-stay-stub
-          </button>
-          <button type="button" onClick={workbench.ask.onGo}>
-            door-ask-go-stub
-          </button>
-        </>
-      )}
-    </div>
-  ),
 }))
 vi.mock('../SaveFlow', () => ({
   SaveFlow: ({ onCommitted, onComplete }: { onCommitted: () => void; onComplete: () => void }) => (
@@ -86,22 +64,17 @@ vi.spyOn(appModel, 'getSnapshot').mockImplementation((): MemoryModelSnapshot => 
   return cached.snap
 })
 
-/** The shell is up: its page's heading (since RC3 the door lands on Dashboard → Snapshot). */
 const shellUp = () => document.querySelector('main.result[data-shell-screen]') !== null
 const screenShown = () => document.querySelector('main.result')?.getAttribute('data-shell-screen') ?? null
 const saveState = () => document.querySelector('[data-save-state]')?.getAttribute('data-save-state') ?? null
+const snapshotHeading = () => screen.findByRole('heading', { level: 1, name: copy.shellPageSnapshot }, { timeout: 15_000 })
 
-/** A saved household, past the re-entry gate, on its answer. */
+/** A saved household, past the re-entry gate, on the home. */
 async function landHydrated(readOnly = false) {
   render(<IntakeApp hydrateFromVault readOnly={readOnly} />)
   const name = readOnly ? copy.reentryContinueCta : copy.reentryAffirmCta
   fireEvent.click(await screen.findByRole('button', { name }))
-  return screen.findByText('result stub')
-}
-
-async function enterShell() {
-  fireEvent.click(screen.getByRole('button', { name: 'workbench-door-stub' }))
-  await screen.findByRole('heading', { level: 1, name: copy.shellPageSnapshot }, { timeout: 15_000 })
+  return snapshotHeading()
 }
 
 /** A real history Back — sent by `go` — through jsdom's real traversal, settled on the popstate it fires. */
@@ -113,33 +86,22 @@ async function backAndSettle(go: () => void = () => window.history.back()) {
   })
 }
 const pressBack = () => backAndSettle()
-/** A real Forward; `undone` waits for the second popstate the app's own `history.back()` fires when it undoes it. */
-async function pressForward(undone = false) {
+async function pressForward() {
   await act(async () => {
-    const pops = new Promise<void>((resolve) => {
-      let left = undone ? 2 : 1
-      const on = () => {
-        left -= 1
-        if (left === 0) {
-          window.removeEventListener('popstate', on)
-          resolve()
-        }
-      }
-      window.addEventListener('popstate', on)
-    })
+    const popped = new Promise((r) => window.addEventListener('popstate', r, { once: true }))
     window.history.forward()
-    await pops
+    await popped
   })
 }
 
 const modulesNav = () => screen.getAllByRole('navigation', { name: copy.shellModulesLabel })[0]!
-const pagesNav = () => screen.getByRole('navigation', { name: copy.shellPagesLabel })
 const goToFacts = () => fireEvent.click(within(modulesNav()).getByRole('link', { name: copy.shellModuleProfile }))
+/** Retirement → Analysis (the module's first page: Probability). */
+const goToAnalysis = () => fireEvent.click(within(modulesNav()).getByRole('link', { name: copy.shellModuleRetirement }))
+/** The interim What if page: Analysis's folder tab, until RC4b's tray. */
 const goToWhatIf = () => {
-  const retirement = within(modulesNav()).getByRole('link', { name: copy.shellModuleRetirement })
-  // The module's word lands on its first page, Analysis; from inside the module, its sub-nav word.
-  if (retirement.getAttribute('aria-current') !== 'page') fireEvent.click(retirement)
-  else fireEvent.click(within(pagesNav()).getByRole('link', { name: copy.shellPageAnalysis }))
+  goToAnalysis()
+  fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageWhatIf }))
 }
 
 /** Open the lock menu and press one of its items. */
@@ -154,67 +116,36 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-describe('the door', () => {
-  it('is absent while the answer is unresolved, and offered once it resolves', async () => {
-    plant.answer = { kind: 'pending' }
-    await landHydrated()
-    expect(screen.queryByRole('button', { name: 'workbench-door-stub' })).toBeNull()
-    cleanup()
-    plant.answer = RESOLVED
-    await landHydrated()
-    expect(screen.getByRole('button', { name: 'workbench-door-stub' })).toBeInTheDocument()
-  })
-
-  it('is absent while the answer can’t be saved (the save control’s other half of the rule)', async () => {
-    await landHydrated()
-    expect(screen.getByRole('button', { name: 'workbench-door-stub' })).toBeInTheDocument()
-    act(() => appModel.update((d) => ({ ...d, people: [{ ...d.people[0], birthYear: undefined }, d.people[1]] })))
-    expect(screen.getByText('result stub')).toHaveAttribute('data-save-kind', 'none')
-    expect(screen.queryByRole('button', { name: 'workbench-door-stub' })).toBeNull()
-  })
-
-  it('pressed over an entry still open on the answer, asks there first: Stay keeps the answer, Open drops it', async () => {
-    await landHydrated()
+describe('the home', () => {
+  it('a reopened vault lands on Snapshot: the landing REPLACES the document’s entry (no answer page beneath), its hash the page’s, no plan data', async () => {
     const before = window.history.length
-    const release = holdUnsavedBuffer()
-    try {
-      fireEvent.click(screen.getByRole('button', { name: 'workbench-door-stub' }))
-      expect(shellUp()).toBe(false)
-      expect(window.history.length).toBe(before)
-      fireEvent.click(screen.getByRole('button', { name: 'door-ask-stay-stub' }))
-      expect(screen.queryByRole('button', { name: 'door-ask-stay-stub' })).toBeNull()
-      expect(screen.getByText('result stub')).toBeInTheDocument()
+    await landHydrated()
+    expect(window.history.length, 'no entry pushed: nothing sits beneath the home').toBe(before)
+    expect(window.history.state).toEqual({ b9: 'workspace', n: 1 })
+    expect(window.location.search).toBe('')
+    expect(window.location.hash).toBe('#/dashboard/snapshot')
+    expect(saveState()).toBe('clean')
+    expect(screen.queryByText(copy.workbenchDoorCta), 'no door: the shell is the home').toBeNull()
+  })
 
-      fireEvent.click(screen.getByRole('button', { name: 'workbench-door-stub' }))
-      fireEvent.click(screen.getByRole('button', { name: 'door-ask-go-stub' }))
-      expect(await screen.findByRole('heading', { level: 1, name: copy.shellPageSnapshot }, { timeout: 15_000 })).toBeInTheDocument()
-    } finally {
-      release()
-    }
+  it('a dev seed lands on Snapshot too, never an answer page', async () => {
+    render(<IntakeApp seed="retired" />)
+    await snapshotHeading()
+    expect(screenShown()).toBe('snapshot')
+    expect(window.history.state).toEqual({ b9: 'workspace', n: 1 })
+  })
+
+  it('a page address left from an earlier load (a reload in the shell) is dropped: the landing names the home', async () => {
+    window.history.replaceState({ b9: 'workspace', n: 3 }, '', '/#/profile/facts')
+    await landHydrated()
+    expect(window.location.hash).toBe('#/dashboard/snapshot')
+    expect(window.history.state).toEqual({ b9: 'workspace', n: 1 })
   })
 })
 
 describe('the shell’s history', () => {
-  it('entering pushes ONE entry carrying no plan data, its hash the page’s; Back lands on the answer, still shown', async () => {
-    await landHydrated()
-    const before = window.history.length
-    await enterShell()
-    expect(window.history.length).toBe(before + 1)
-    expect(window.history.state).toEqual({ b9: 'workspace', n: 1 })
-    expect(window.location.search).toBe('')
-    expect(window.location.hash).toBe('#/dashboard/snapshot')
-    // The saved plan's state on the bar, from the one save machine.
-    expect(saveState()).toBe('clean')
-
-    await pressBack()
-    expect(shellUp()).toBe(false)
-    expect(await screen.findByText('result stub')).toHaveAttribute('data-save-kind', 'clean')
-    expect(window.location.hash).toBe('')
-  })
-
   it('each page is an entry: Back moves to the previous page, Forward to the next; the hash names the page and nothing more', async () => {
     await landHydrated()
-    await enterShell()
     goToFacts()
     expect(screenShown()).toBe('interim-facts')
     expect(window.location.hash).toBe('#/profile/facts')
@@ -233,54 +164,21 @@ describe('the shell’s history', () => {
     expect(screenShown()).toBe('interim-facts')
   })
 
-  it('Forward onto its entry re-enters the shell; with an entry open on the answer the Forward is undone', async () => {
+  it('the wordmark goes straight home to Snapshot from any page, as one history move', async () => {
     await landHydrated()
-    await enterShell()
-    await pressBack()
-    await pressForward()
-    expect(shellUp()).toBe(true)
-
-    await pressBack()
-    const release = holdUnsavedBuffer()
-    try {
-      await pressForward(true)
-      expect(shellUp()).toBe(false)
-      expect(screen.getByText('result stub')).toBeInTheDocument()
-      expect(window.history.state).toBeNull()
-    } finally {
-      release()
-    }
-  })
-
-  it('a shell entry left under the answer (a reload in the shell) never swallows the first Back', async () => {
-    window.history.replaceState({ b9: 'workspace', n: 3 }, '', '/#/profile/facts')
-    await landHydrated()
-    // The stale page address is dropped on landing: the answer's address names no page.
-    expect(window.location.hash).toBe('')
-    await enterShell()
-    await pressBack()
-    expect(shellUp()).toBe(false)
-    expect(screen.getByText('result stub')).toBeInTheDocument()
-  })
-
-  it('the wordmark goes straight back to the answer from any page, as one history move', async () => {
-    await landHydrated()
-    await enterShell()
     goToFacts()
-    goToWhatIf()
+    goToAnalysis()
+    expect(screenShown()).toBe('probability')
     await backAndSettle(() => fireEvent.click(screen.getByRole('link', { name: copy.shellHomeLabel })))
-    expect(shellUp()).toBe(false)
-    expect(screen.getByText('result stub')).toBeInTheDocument()
-    expect(window.history.state).toBeNull()
+    expect(screenShown()).toBe('snapshot')
+    expect(window.history.state).toEqual({ b9: 'workspace', n: 1 })
   })
 
-  it('Back with an open drawer holding an edit asks first, between pages and out of the shell; Stay keeps it; Go back leaves', async () => {
+  it('Back with an open drawer holding an edit asks first between pages; Stay keeps it; Go back leaves', async () => {
     await landHydrated()
-    await enterShell()
     goToFacts()
     const release = holdUnsavedBuffer()
     try {
-      // Between pages: still on the facts page, its entry back on, the ask raised.
       await pressBack()
       expect(screenShown()).toBe('interim-facts')
       expect(window.history.state).toEqual({ b9: 'workspace', n: 2 })
@@ -293,15 +191,6 @@ describe('the shell’s history', () => {
       await pressBack()
       await backAndSettle(() => fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveGo })))
       expect(screenShown()).toBe('snapshot')
-
-      // Out of the shell: the same ask, the same Go back.
-      await pressBack()
-      expect(shellUp()).toBe(true)
-      expect(window.history.state).toEqual({ b9: 'workspace', n: 1 })
-      expect(screen.getByText(copy.workbenchLeaveAsk)).toBeInTheDocument()
-      await backAndSettle(() => fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveGo })))
-      expect(shellUp()).toBe(false)
-      expect(screen.getByText('result stub')).toBeInTheDocument()
     } finally {
       release()
     }
@@ -309,7 +198,6 @@ describe('the shell’s history', () => {
 
   it('Back with nothing open moves to the previous page, no ask', async () => {
     await landHydrated()
-    await enterShell()
     goToFacts()
     await pressBack()
     expect(screen.queryByText(copy.workbenchLeaveAsk)).toBeNull()
@@ -317,10 +205,9 @@ describe('the shell’s history', () => {
   })
 
   it('Save from the shell’s lock menu returns to the same page, and a Back during that ceremony is absorbed', async () => {
-    // A fresh, never-saved household: the dev seed lands it on its answer with the first-save control.
+    // A fresh, never-saved household: the dev seed lands it on the home with the first-save control.
     render(<IntakeApp seed="retired" />)
-    await screen.findByText('result stub')
-    await enterShell()
+    await snapshotHeading()
     goToFacts()
     expect(saveState()).toBe('first')
     await lockChoose(copy.saveCta)
@@ -338,7 +225,6 @@ describe('the shell’s history', () => {
 
   it('a read-only tab gets the shell, with no control that writes', async () => {
     await landHydrated(true)
-    await enterShell()
     expect(saveState()).toBe('view-only')
     fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${copy.lockMenuLabel}`) }))
     expect(await screen.findByText(copy.saveErrorReadOnly)).toBeInTheDocument()
@@ -369,7 +255,6 @@ describe('the facts page through the real phase machine (U8)', () => {
 
   it('an edit marks the saved plan unsaved, and the lock menu offers its save', async () => {
     await landHydrated()
-    await enterShell()
     expect(saveState()).toBe('clean')
     const sheet = editAName('Robin')
     fireEvent.click(within(sheet).getByRole('button', { name: copy.workbenchFactsDone }))
@@ -382,10 +267,8 @@ describe('the facts page through the real phase machine (U8)', () => {
 
   it('a real Back press with an open step sheet that moved the draft asks first, over the sheet; Stay keeps it open; Go back leaves, keeping the finished edit', async () => {
     await landHydrated()
-    await enterShell()
     editAName('Jordan')
     await pressBack()
-    // Still on the facts page, its entry back on, the ask raised over the open sheet, where it can be read and pressed.
     expect(screenShown()).toBe('interim-facts')
     expect(window.history.state).toEqual({ b9: 'workspace', n: 2 })
     const ask = screen.getByRole('alertdialog', { name: copy.workbenchLeaveAsk })
@@ -444,32 +327,32 @@ describe('an unkept what-if (plan 6, section 3.1)', () => {
     await waitFor(() => expect(spending.querySelector('.wb-lever__mark:not(.wb-lever__mark--off)')).not.toBeNull())
   }
 
-  it('Back out of the shell asks first and names the what-if; moving between pages keeps it and asks nothing', async () => {
+  it('moving between pages keeps it and asks nothing; the wordmark (a page move home) asks nothing either', async () => {
     await landHydrated()
-    await enterShell()
     await holdAWhatIf()
-    // Between pages the what-if survives: no ask.
     await pressBack()
     expect(screen.queryByText(copy.shellLeaveWhatIf)).toBeNull()
-    expect(screenShown()).toBe('snapshot')
-    // Out of the shell: the ask, in the what-if's own words (never the open entry's).
-    await pressBack()
     expect(shellUp()).toBe(true)
-    expect(screen.getByText(copy.shellLeaveWhatIf)).toBeInTheDocument()
-    expect(screen.queryByText(copy.workbenchLeaveAsk)).toBeNull()
-    await backAndSettle(() => fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveGo })))
-    expect(shellUp()).toBe(false)
-    expect(screen.getByText('result stub')).toBeInTheDocument()
+    goToFacts()
+    await backAndSettle(() => fireEvent.click(screen.getByRole('link', { name: copy.shellHomeLabel })))
+    expect(screen.queryByText(copy.shellLeaveWhatIf)).toBeNull()
+    expect(screenShown()).toBe('snapshot')
   })
 
-  it('the wordmark asks first too, and Stay keeps the shell', async () => {
+  it('the re-walk (the gear’s panel) asks first and names the what-if: Stay keeps the shell, Go back leaves for the walk', async () => {
     await landHydrated()
-    await enterShell()
     await holdAWhatIf()
-    fireEvent.click(screen.getByRole('link', { name: copy.shellHomeLabel }))
-    expect(screen.getByText(copy.shellLeaveWhatIf)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
+    fireEvent.click(await screen.findByRole('button', { name: copy.assumptionRewalkCta }))
+    expect(await screen.findByText(copy.shellLeaveWhatIf)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveStay }))
     expect(shellUp()).toBe(true)
     expect(screenShown()).toBe('interim-whatif')
+
+    fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
+    fireEvent.click(await screen.findByRole('button', { name: copy.assumptionRewalkCta }))
+    fireEvent.click(await screen.findByRole('button', { name: copy.workbenchLeaveGo }))
+    await waitFor(() => expect(shellUp()).toBe(false))
+    expect(window.location.hash, 'the walk-through’s address names no page').toBe('')
   })
 })

@@ -243,7 +243,7 @@ const SOLVE_WIRE: SolveWire = {
 }
 
 /**
- * Drive the REAL app to the frame the law is about: an all-retired household on the result screen with a
+ * Drive the REAL app to the frame the law is about: an all-retired household on the Tax Strategies tab with a
  * COMMITTED recommendation on the surface and an offered save control.
  *
  * `?seed=` is the mount path (it runs IntakeApp's own apply → result → provisional → final chain, so no
@@ -260,6 +260,13 @@ async function landCommittedRecommendation(): Promise<ReturnType<typeof render>>
   await act(async () => {
     await appModel.dispatchSolve()
   })
+  // Since Act 6 · RC4 the shell is the home: the recommendation's save control lives on Tax → Tax Strategies (the
+  // interim tab), reached by its real nav link once the shell's lazy chunk lands.
+  const tax = await screen.findByRole('link', { name: copy.shellModuleTax }, { timeout: 15_000 })
+  await act(async () => {
+    fireEvent.click(tax)
+  })
+  await settle()
   return view
 }
 

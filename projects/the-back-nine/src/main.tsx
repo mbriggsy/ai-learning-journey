@@ -29,22 +29,14 @@ for (const [name, value] of fanBandVars()) document.documentElement.style.setPro
 const rootEl = document.getElementById('root')
 if (!rootEl) throw new Error('Root element #root not found')
 
-// DEV-only preview harnesses, reached at `?preview` (the U7 confidence surfaces), `?preview=date`
-// (the D2 fuck-off-date surface) and `?preview=refiguring&seed=<key>` (W9-R7's re-figuring window:
+// DEV-only preview harness, reached at `?preview=refiguring&seed=<key>` (W9-R7's re-figuring window:
 // the real app on the seed, every run after its first final held — the module's docblock says why).
+// The old heroes' previews (`?preview`, `?preview=date`) left with the heroes at Act 6's RC4.
 // `import.meta.env.DEV` is a static `false` in the production build, so this whole branch — and the
-// dynamic imports it gates — is dead-code-eliminated: the harnesses never ship and never count
-// against the entry-JS budget.
+// dynamic import it gates — is dead-code-eliminated: the harness never ships.
 const search = import.meta.env.DEV ? new URLSearchParams(window.location.search) : null
 const previewParam = search?.get('preview') ?? null
-const Preview =
-  previewParam === null
-    ? null
-    : previewParam === 'date' || previewParam === 'd2'
-      ? lazy(() => import('@ui/preview/DatePreview'))
-      : previewParam === 'refiguring'
-        ? lazy(() => import('@ui/preview/RefiguringPreview'))
-        : lazy(() => import('@ui/preview/U7Preview'))
+const Preview = previewParam === 'refiguring' ? lazy(() => import('@ui/preview/RefiguringPreview')) : null
 
 // DEV-only intake seed (`?seed=<key>`) — jumps the REAL product path straight to a
 // worded result without hand-driving the intake (devSeeds.ts). Same DEV gate, so it

@@ -1,12 +1,12 @@
 import { expect, type Page } from '@playwright/test'
-import { FINAL_TIER_MS, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, gotoSeedFinal, settleLayout, test } from '../reviewSurface'
+import { FINAL_TIER_MS, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, gotoSeedFinal, gotoVaultFinal, settleLayout, test } from '../reviewSurface'
 import { copy } from '../../src/ui/copy'
 
 /**
  * e2e/held/rc-look.spec.ts: an INSTRUMENT, never a gate (Act 6's "Local look", plan docs/plans/6-rightcapital-ui-plan.md
  * sections 4.0 and 7.1 point 4). For each unit it captures every finished screen at his window (1440×731 @2) and a phone
- * (390×844 @3), for a retired seed (`retired`) and a working one (`date`; `RC_SEEDS=retired,dip` names others), entered through the answer page's door as a
- * user would, and audits each frame:
+ * (390×844 @3), for a retired seed (`retired`) and a working one (`date`; `RC_SEEDS=retired,dip` names others), entered as a
+ * user lands (since RC4 the seed's settled answer lands on the home), and audits each frame:
  *  - the page never scrolls sideways;
  *  - no text is clipped (an element whose content is wider or taller than a box that hides its overflow; an ellipsis
  *    counts as clipped, since the kit never cuts text to fit);
@@ -23,8 +23,11 @@ const OUT = `temp/rc-shots/${UNIT}` // resolved from the run's working directory
 const SEEDS = (process.env.RC_SEEDS ?? 'retired,date').split(',')
 const SCREENS = [
   { id: 'snapshot', screen: 'snapshot', module: copy.shellModuleDashboard, page: copy.shellPageSnapshot },
+  { id: 'probability', screen: 'probability', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis },
+  { id: 'what-if', screen: 'interim-whatif', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis, tab: copy.workbenchPageWhatIf },
+  { id: 'health-care', screen: 'interim-health', module: copy.shellModuleRetirement, page: copy.shellPageHealthCare },
   { id: 'cash-flows', screen: 'interim-table', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows },
-  { id: 'what-if', screen: 'interim-whatif', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis },
+  { id: 'tax-strategies', screen: 'interim-strategies', module: copy.shellModuleTax, page: copy.shellPageTaxStrategies },
   { id: 'facts', screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts },
 ] as const
 
@@ -78,9 +81,17 @@ async function audit(page: Page): Promise<Audit> {
 
 async function enterShell(page: Page, seed: string): Promise<void> {
   await gotoSeedFinal(page, seed)
-  await page.locator('.result-quiet-row [data-door="workbench"]').click()
   await expect(page.locator('main.result[data-shell-screen]')).toBeAttached({ timeout: 30_000 })
   await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+}
+
+/** Probability's charts settled: the plan's ring, and on the retired route both balance bars drawn and morphed. */
+async function settleProbability(page: Page): Promise<void> {
+  await expect(page.locator('[data-ring-half="compared"]')).toBeVisible({ timeout: 60_000 })
+  if ((await page.locator('[data-probability="headline"]').count()) > 0) {
+    await expect(page.locator('[data-bar="compared"] .highcharts-series-group')).toBeAttached({ timeout: 60_000 })
+  }
+  await page.waitForTimeout(800)
 }
 
 async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: boolean): Promise<void> {
@@ -94,7 +105,9 @@ async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: b
     const pageLink = page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: target.page, exact: true })
     if ((await pageLink.getAttribute('aria-current')) !== 'page') await pageLink.click()
   }
+  if ('tab' in target) await page.getByRole('tab', { name: target.tab, exact: true }).click()
   await expect(page.locator(`main.result[data-shell-screen="${target.screen}"]`)).toBeAttached()
+  if (target.screen === 'probability') await settleProbability(page)
   if (target.screen === 'snapshot') {
     // The fan's lazy chunk and its 250 ms morph (a seed with no band draws words instead).
     await expect(page.locator('[data-card="fan"] [data-chart="fan"] .highcharts-series-group, [data-card="fan"] p').first()).toBeAttached({ timeout: 30_000 })
@@ -124,6 +137,18 @@ for (const size of SIZES) {
           await page.screenshot({ path: `${OUT}/${target.id}-${seed}-${size.tag}.png` })
           await page.screenshot({ path: `${OUT}/${target.id}-${seed}-${size.tag}-full.png`, fullPage: true })
         }
+        // Probability's second chart, Odds by stop year (the working route only): the chart title's menu.
+        await showScreen(page, SCREENS[1], size.phone)
+        if ((await page.locator('[data-probability="date"]').count()) > 0) {
+          await page.getByRole('button', { name: copy.probabilityChartRings }).click()
+          await page.getByRole('menuitemradio', { name: copy.probabilityChartOdds }).click()
+          await expect(page.locator('[data-chart="odds"] .highcharts-series-group')).toBeAttached({ timeout: 30_000 })
+          await page.waitForTimeout(800)
+          await settleLayout(page)
+          findings['odds'] = await audit(page)
+          await page.screenshot({ path: `${OUT}/odds-${seed}-${size.tag}.png` })
+          await page.screenshot({ path: `${OUT}/odds-${seed}-${size.tag}-full.png`, fullPage: true })
+        }
         if (size.phone) {
           await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
           const sheet = page.getByRole('dialog', { name: copy.shellMenuTitle })
@@ -152,5 +177,28 @@ for (const size of SIZES) {
         }
       })
     }
+  })
+}
+
+// The interim Tax Strategies tab over a vault plant carrying a saved recommendation (`?vault=rec`): the record card in its
+// old look (RC4's "Interim homes"), at both sizes, and Snapshot's Recommendations card over the same record.
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, the saved recommendation at ${size.tag}`, () => {
+    test.use(size.use)
+    test('?vault=rec: the interim Tax Strategies tab, and the home’s Recommendations card', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 120_000)
+      await gotoVaultFinal(page, 'rec')
+      await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached({ timeout: 30_000 })
+      await page.locator('[data-card="recommendations"]').scrollIntoViewIfNeeded()
+      await settleLayout(page)
+      await page.screenshot({ path: `${OUT}/snapshot-rec-${size.tag}-full.png`, fullPage: true })
+      await showScreen(page, SCREENS[5], size.phone)
+      const a = await audit(page)
+      await page.screenshot({ path: `${OUT}/tax-strategies-rec-${size.tag}.png` })
+      await page.screenshot({ path: `${OUT}/tax-strategies-rec-${size.tag}-full.png`, fullPage: true })
+      console.log(`[rc-look ${UNIT} rec ${size.tag}] ${JSON.stringify(a)}`)
+      expect.soft(a.sideways, 'sideways scroll').toBeLessThanOrEqual(0)
+      expect.soft(a.tiny, 'text under 12 px').toEqual([])
+    })
   })
 }

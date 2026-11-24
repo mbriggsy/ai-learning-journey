@@ -3,7 +3,8 @@
  * The room sentence's `within-a-step` form on the shipped `steer` seed, through the REAL pipeline
  * (the register's Tier 0 *The room sentence says there is room to spend more when the spend lane
  * found there is not…*): buildSpineParams → the engine's own run → the spend solve → the ONE gate →
- * the hero AND the assumptions echo, both rendered.
+ * Probability's key-metric column (since Act 6 · RC4, the confidence statement's home: `probabilityView.ts`) AND the
+ * assumptions echo, rendered.
  *
  * `steer` enters $6,500 a month and reads on track with room; the spend lane RUNS both sides of the
  * next $100 step and finds it fails (a refuter's probe, 2026-09-26: $6,550 reads room, $6,600 on the
@@ -20,13 +21,13 @@ import { runEngine } from '@engine/engineProtocol'
 import { solveSpend } from '@engine/spendSolve'
 import { simulate } from '@engine/simulate'
 import { summarize } from '@engine/confidence'
-import { ConfidenceStatement } from '@ui/ConfidenceStatement'
 import { AssumptionPanel } from '@intake/AssumptionPanel'
-import { READING_FIXTURES } from '@ui/preview/fixtures'
 import { planClockAnchor } from '@ui/bandAnnotations'
+import { composeAnswerNotes } from '@ui/answerNotes'
+import { probabilityView } from '@ui/screens/retirement/probabilityView'
 import { composeVerdictReading, spendClauseFor, type VerdictDisplay } from '@ui/verdictSentence'
 import { slots } from '@ui/copy'
-import type { SpendAnswer } from '@store/memoryModel'
+import type { MemoryModelSnapshot, SpendAnswer } from '@store/memoryModel'
 
 afterEach(cleanup)
 
@@ -61,19 +62,34 @@ describe('the room sentence on `steer` — the lane found no room to quote, and 
     expect(outcome).toMatchObject({ kind: 'unsized', reason: 'within-a-step' })
   }, 300_000)
 
-  it('the hero AND the echo render the within-a-step form — never "room to spend more", never "doesn’t work out how much more"', async () => {
+  it('Probability AND the echo render the within-a-step form — never "room to spend more", never "doesn’t work out how much more"', async () => {
     const { draft, wire, result, spend, display } = await steerRun()
     expect(result.headline.outcomeState).toBe(wire.headline.outcomeState) // the two views of one run agree
     const clause = composeVerdictReading(display, spendClauseFor(spend, display, wire.headline.outcomeState))!.clause
     expect(clause).toBe(slots.verdictRoomWithinStep('6,500'))
 
-    const hero = render(
-      <ConfidenceStatement view={{ kind: 'reading', ...READING_FIXTURES['on-track'], headline: wire.headline, dollar: wire.dollar, spend }} />,
-    )
-    const magnitude = hero.container.querySelector('.cs-magnitude')!
-    expect(magnitude.textContent).toBe(slots.verdictRoomWithinStep('6,500'))
-    expect(magnitude.textContent).not.toMatch(/room/i)
-    hero.unmount()
+    const shown: MemoryModelSnapshot = {
+      draft,
+      answer: { kind: 'headline', result, tier: 'final', draft, inputKey: 'test' },
+      displayed: display,
+      solve: { kind: 'idle' },
+      spend,
+      refiguring: false,
+      runningInWorker: true,
+    }
+    const page = probabilityView({
+      snapshot: shown,
+      wallCalendarYear: draft.startCalendarYear,
+      readOnly: false,
+      onRetry: vi.fn(),
+      notes: composeAnswerNotes(shown, { readOnly: false, stalenessNote: false, leftOverClauseHost: false, wallCalendarYear: draft.startCalendarYear }),
+      whatIf: { pick: 'new', bundle: [], view: null },
+      chart: 'rings',
+    })
+    if (page.kind !== 'reading') throw new Error(`steer: Probability shows ${page.kind}`)
+    // The statement's clause is the key-metric column's first line.
+    expect(page.metrics.lines[0]).toBe(slots.verdictRoomWithinStep('6,500'))
+    expect(page.metrics.lines[0]).not.toMatch(/room/i)
 
     const echo = render(
       <AssumptionPanel

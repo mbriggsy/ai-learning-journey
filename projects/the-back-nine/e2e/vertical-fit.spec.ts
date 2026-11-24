@@ -1,1129 +1,38 @@
-import { expect, type Page, type Locator, type BrowserContext, type CDPSession } from '@playwright/test'
-import {
-  test,
-  pinPlantDay,
-  pinnedDay,
-  pinnedYear,
-  REAL,
-  REAL_DPR,
-  TIER,
-  SHOWCASE,
-  TALL_EDGE,
-  LAPTOP_SIZES,
-  type LaptopSizeName,
-  BP_LAPTOP_REM,
-  FLOOR,
-  PHONE,
-  PHONE_DPR,
-  FINAL_TIER_MS,
-  NAME_CEILING,
-  SPENDING_CEILING_PER_MONTH,
-  SETTLED_RESULT,
-  advanceIntakeTo,
-  armRefiguringWatch,
-  expectRefiguringSeen,
-  gotoSeedFinal,
-  gotoVaultFinal,
-  refiguringLog,
-  rewalkSeedTo,
-  settleLayout,
-  type RefiguringReading,
-} from './reviewSurface'
+import { expect, type Locator, type Page } from '@playwright/test'
+import { test, REAL, REAL_DPR, LAPTOP_SIZES, type LaptopSizeName, PHONE, PHONE_DPR, FINAL_TIER_MS, SETTLED_RESULT, advanceIntakeTo, gotoSeedFinal, rewalkSeedTo, settleLayout } from './reviewSurface'
 // THE SHIPPED CATALOG, never re-typed here (the `e2e/caddie-walk.spec.ts:25` precedent). Every
 // string this spec injects or reads back is the one the app ships: a spec-local literal would pin a
 // reservation, a clause list or a heading against a fiction, and a re-word that overflowed the real
 // box would escape the gate silently (U17 §S5 step 14).
-import { copy, slots, staticDisclosures, workingCostExtras, type TypedBelowAmount } from '../src/ui/copy'
-import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
+import { copy, slots, workingCostExtras, type TypedBelowAmount } from '../src/ui/copy'
 import { roughWindow, ROUGH_WINDOW_YEARS } from '../src/engine/reference/roughSequence'
-import { PER_MONTH_DISPLAY_STEP, formatPerMonth } from '../src/ui/money'
-import { reserveClauseFor } from '../src/ui/verdictSentence'
 
 /**
- * The real-browser VERTICAL-FIT gate (council 2026-07-08, wf_a2d93977-960 — run via
- * `pnpm verify:fit`, harness in playwright.fit.config.ts).
+ * THE VERTICAL-FIT GATE'S SURVIVING ARMS (verify:fit; `playwright.fit.config.ts`). Act 6 · RC4 made the shell the home
+ * and deleted the old answer page, so this file's answer-page arms left with it (plan docs/plans/6-rightcapital-ui-plan.md,
+ * section 5.2): its honesty laws were PORTED to `e2e/rc-screens.spec.ts` on Probability and the home (the state clauses,
+ * the date route's words, the re-figuring line over the old answer, the R13 caveat's one visible mount in frame at REAL
+ * and its order and reach at the phone and at a 20 px default, the computing frame, the spend lane's landing that moves
+ * nothing, the vault returns' gate and their echoed answer, the Odds by stop year chart's aged plant) or are held by the
+ * unit suite (the standing line's words and its door's seat: `src/ui/shell/__tests__/staleBanner.test.tsx`; the survivor
+ * row and its basis: `probabilityView.test.ts`, `survivorSpendingBasisSeedGate.test.tsx`); its layout arms (the old
+ * two-pane's one-frame fit, the recommend-second posture and its seats, the record card's rows, the survivor fold, the
+ * band's honesty floor and legend, the widest plants' printed frames) RETIRED with the surface (5.2: an old-layout arm
+ * retires; RC7 rebuilds the band's honesty floor and legend on Confidence, RC8 the recommendation's arms on Tax
+ * Strategies).
  *
- * THE FRAME CONTRACT it pins (tokens.css `--laptop-fit-height` carries the law):
- *  - A resolved two-pane answer fits ONE laptop frame; the quiet doors (`.result-quiet-row`) are
- *    the sanctioned below-fold casualty, and — on the tallest composite frame only (an all-65+
- *    writable stale return) — the UNPROTECTED backup door (`.result-backup-door`, DOM-ordered
- *    below the disclaimer, 2026-07-10) degrades with them. The verdict, the priced-Medicare
- *    disclosure lines (affirmation + narrowed residual), the band, and the R13 disclaimer are
- *    PROTECTED (the Honesty-Hawk veto: a reassuring verdict in-frame with "this can be wrong"
- *    scrolled out of sight is the calm-but-wrong sin).
- *  - The DATE route scrolls BY DESIGN (both graphs stacked — content-necessary, Briggsy-accepted
- *    2026-07-08); its honesty contract is ORDER: graphs → in-frame disclaimer → doors, doors last.
- *  - TWO disclaimer mounts, exactly ONE visible — and the swap is keyed to the VERDICT, never to
- *    the tier (council 2026-09-10, wf_d2b1d05a-001). Wherever a committed verdict renders the
- *    in-frame mount, at EVERY width, `main.result[data-inframe-disclaimer]` hides the trailing
- *    one; while COMPUTING the in-frame mount is withheld with the actions row and the trailing
- *    mount stands. A zero-disclaimer frame and a doubled frame are both unrepresentable.
- *    (Until 2026-09-10 both CSS rules lived inside the 68rem query, so below the breakpoint the
- *    in-frame mount was display:none and the trailing footer — the page's LAST element, after the
- *    doors — was the phone's only caveat: the reader met the exits before "this can be wrong".)
- *  - THE SCROLLING TIERS' LAW, which replaces the one-frame promise wherever it cannot be kept —
- *    the phone, any width the reader's browser default makes sub-68rem (in a media query `rem`
- *    reads the BROWSER default, so a 24 px root makes 68rem 1632 px and his 1440 laptop a stacked
- *    device), and the DATE route at every width. It is ORDER + REACHABILITY: the caveat sits
- *    ABOVE the quiet doors in RENDERED GEOMETRY, the doors are LAST, the caveat can be brought
- *    fully into view by a DOCUMENT scroll (never scrollIntoView — a reader's wheel cannot scroll
- *    an overflow:hidden ancestor), and the route's hero verdict NAMES the caveat in
- *    `aria-describedby`. No fit claim is made on any scrolling tier; the one-frame law binds the
- *    ≥68rem two-pane tier only.
- *  - The short-laptop DENSITY tier (≥68rem ∧ ≤840px) steps the frame down on the tier law's ladder
- *    (its one home: tokens.css `--bp-laptop-short`); `assertDensityTier` pins every rung on both
- *    sides of the boundary, and the 917 showcase keeps the generous rhythm.
- *  - TWO LAWS ABOVE THE SHORT TIER (e2e/reviewSurface.ts's `LAPTOP_SIZES` gives each size its law).
- *    `SHOWCASE` (1871×917) holds the FULL fit, doors included, and `LENOVO_FULL` (his whole screen,
- *    1440×900 @ 2) holds the degrade contract his 731 px window holds, though both render the same tall
- *    frame. `SHOWCASE` is a test arm, no screen of his, kept as the full fit's guard on the door row
- *    itself: a door past 917 still fails (council `wf_448928ea-280`). `LENOVO_FULL` is a window he
- *    really reads, where the promise is the one `REAL` makes: nothing protected below the fold, the
- *    doors one flick away (council `wf_9c0bb7ea-938`, its full-fit distance printed). The tall edge
- *    (`TALL_EDGE`, 1440×841) is printed and never asserted.
- *  - The two-pane honesty floor (absorbed from the parked D2d e2e): at 1088px (68rem exactly) the
- *    band's percentile labels — the color-blind reader's honesty channel — must still render
- *    (the ≤260px container query must NOT fire at the tightest in-range pane width).
- *  - The AGED date route (?vault=datestale, council 2026-07-10): the hero's "about N years out"
- *    and the ladder crown's "Stopping in N years" speak ONE clock (pinned structurally — an
- *    engine re-grade may move N, the equality may not), the aged-balances caveat rides the
- *    ladder, and the order contract holds on the aged frame too.
- *
- * Enforcement is REAL-BROWSER on the DEV server: vertical fit is reflow-dominated (line wraps,
- * door wrap-count, the survivor face) — a token-sum arithmetic gate would go green while the
- * frame overflows — and the `?seed=` routes this drives are DCE'd out of dist/.
- *
- * EVERY measurement waits for the SETTLED result (`SETTLED_RESULT`, e2e/reviewSurface.ts: the
- * `data-answer-tier="final"` stamp — memoryModel records which recompute tier COMMITTED the rendered
- * answer; Result.tsx mirrors it — with `data-answer-refiguring` absent, no run on newer inputs in
- * flight): the provisional→final sharpen re-keys the band axis and can re-wrap lines, and since W9-R7
- * the date hero wears the provisional tag until the final lands — measuring the provisional frame
- * would pin the frame the user does NOT end up reading. (The gate's OWN adversarial review killed
- * this spec's first draft here: it waited on `.fod-provisional` / `.cs-provisional` reaching count 0
- * — classes the result hero did not render then, a wait that passed vacuously at first paint. The
- * stamp is a real synchronization; the spine's two tiers merely HAPPEN to be byte-identical because
- * the spine run ignores the tier.) The one frame measured INSIDE the re-figuring window is the
- * re-figuring block's, on a preview that holds the window open (its header says why).
- *
- * Falsifiability (insight 016): each assertion here was proven RED against a planted violation
- * before this gate shipped — the mutation ledger lives in the gate's landing commit message.
+ * What stays binds surfaces that still live: the assumption panel's vertical extent (until RC18), the walk's W step and
+ * money picture and the panel's left-over seat with their coordinate taps (until RC13 ports them to the drawers), the
+ * year-by-year table (until RC6) and the facts page (until RC13). Each enters as a reader does on the home: the seed's
+ * settled answer lands on the shell, the gear opens the panel, the module words move between pages.
  */
 
-// The viewport constants (REAL/TIER/SHOWCASE/FLOOR/PHONE) and the settle recipe live in
-// e2e/reviewSurface.ts — the ONE canonical home, shared with the Caddie cold-read walk.
-
-/** The FIVE spine seeds the frame contract walks — the council's three plus `nc`, the NC priced
- *  face, and `patypical`, Pennsylvania answering "not sure" (each one's rationale sits on its entry
- *  below). The priced-Medicare disclosure
- *  lines (`.cs-medicare-note` affirmation + `.cs-medicare-residual`) are per-seed HONEST, not
- *  blanket: they render only for an all-65+ household with NO ACA door (showMedicarePricedNote,
- *  keyed off the run's pricing facts never ages — insight 080) — `retired` (66/65) and `budget`
- *  (68/70) carry them; `health` (61/59, the ACA-priced household) must NOT (it reaches the
- *  Healthcare door, whose sheet carries the residual — one honest home per fact). */
-// `stateNote` (Card 4, the four-faces Caddie walk 2026-09-11): the STANDALONE state clause
-// (`.cs-state-note`) renders exactly where the residual does NOT — the household whose residual is
-// withheld (health) reads its state clause standalone; the residual-bearing frames (budget / retired /
-// nc) read it INSIDE the residual and must render no standalone note (never twice).
-// `survivor` (the spending-basis line, ruled 2026-10-14): `budget`'s floor relief holds the inline slot, so
-// its survivor card is FOLDED; every other spine seed carries the card inline.
-const SPINE_SEEDS = [
-  { seed: 'budget', medicareNote: true, stateNote: false, survivor: 'folded' },
-  { seed: 'retired', medicareNote: true, stateNote: false, survivor: 'inline' },
-  { seed: 'health', medicareNote: false, stateNote: true, survivor: 'inline' },
-  // The NC priced face (the state-carrying seed increment): a `retired` (retiredOnTrack) clone in
-  // North Carolina. The NC flat-tax drag pushed the state-absent twin's on-track DOWN across the band
-  // edge to BORDERLINE until S.L. 2026-41's rate cut was pinned (2026-08-02): NC lands ON-TRACK beside
-  // its twin now, so this face no longer proves the borderline two-pane (word + ruin-tail band) holds
-  // the one-frame law on a PRICED-STATE household. Its state clause is OUTCOME-independent
-  // (statePricedNote = pricedStateForRun off the built params, never the verdict), so the affirmation
-  // shape is unchanged by the pin; the clause TEXT is pinned by the `?seed=nc` arm below, never here.
-  { seed: 'nc', medicareNote: true, stateNote: false, survivor: 'inline' },
-  // The tallest FRESH frame (the one-frame composites plan's U6): Pennsylvania's longest priced clause over
-  // the "not sure" Medicare-extras answer, `{ kind: 'typical' }` per person as the intake writes it (KTD5),
-  // whose typical residual runs two lines longer than the entered one. Its presence fields are U4's probe
-  // readings, read on CI's Linux and on Windows alike (`4625f077`), never guessed: the Medicare pair on, the
-  // state clause inside the residual (no standalone note), the survivor card inline.
-  { seed: 'patypical', medicareNote: true, stateNote: false, survivor: 'inline' },
-] as const
-
-/** The spine presence companions (insight 029 — geometry over an unresolved/blank page passes
- *  vacuously): the two-pane must be STAMPED, the band panel drawn, the doors offered. */
-async function assertResolvedSpine(page: Page): Promise<void> {
-  await expect(page.locator('.confidence-reveal[data-twopane]')).toBeVisible()
-  await expect(page.locator('.cs-band .band-drawer')).toBeVisible()
-  expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
-}
-
-/** The DATE route's presence companions — the same law as assertResolvedSpine for the other hero:
- *  the date reveal stamped, BOTH graphs drawn (the fan band + the odds ladder), the doors offered. */
-async function assertResolvedDate(page: Page): Promise<void> {
-  await expect(page.locator('.fod-reveal[data-twopane]')).toBeVisible()
-  await expect(page.locator('.fod-band')).toBeVisible()
-  await expect(page.locator('.fod-ladder')).toBeVisible()
-  expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
-}
-
-/** The date route's resolved NO-DATE reading (`data-framing="no-date"`): the worded how-close line rides and no
- *  ladder is plotted (the Hawk veto, `FuckOffDate.tsx`), and the doors render. The U11 walk's (ae): the risen
- *  family's stale arms crown no date (U11 measured `datesavedrisen`'s: none at the final tier), so the dated
- *  helper above would wait for a band and a ladder that reading never draws. */
-async function assertNoDateReading(page: Page): Promise<void> {
-  await expect(page.locator('.fod-reveal[data-framing="no-date"]')).toBeVisible()
-  await expect(page.locator('.fod-ladder'), 'a no-date hero plots no ladder').toHaveCount(0)
-  expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
-}
-
-/** The two routes' hero headings — the elements that must NAME the R13 caveat in
- *  `aria-describedby` (council 2026-09-10 clause 3). Named once so an arm can never be added
- *  with the link half silently switched off. */
-const SPINE_VERDICT = 'h2.cs-word'
-const DATE_VERDICT = 'h2.fod-headline'
-
-/** One measured element: its tag, id and classes, and its box's bottom in CSS px, unrounded (R11). */
-type Measured = { readonly desc: string; readonly bottom: number }
-
-type FrameReport = {
-  readonly counted: number
-  readonly offenders: ReadonlyArray<Measured>
-  /** The counted element whose box ends lowest, inside the fold or not (null only on a walk that counted
-   *  nothing): the full-fit distance a held print names whether or not anything sits below the fold. On a
-   *  tie the LAST in document order wins, so the content is named rather than the wrappers that end with it
-   *  (at SHOWCASE the hero, the section and the reveal all end at the last door's bottom). */
-  readonly lowest: Measured | null
-}
-
-/** The UNPROTECTED affordances an arm may sanction as below-fold casualties, BEYOND the always-
- *  sanctioned quiet-door row. Named rather than positional: `(page, true, true, true)` reads as
- *  nothing, and each flag has to be justified at its call site — the default is that everything
- *  fits. */
-type SanctionedDoors = {
-  /** `.result-backup-door` — the off-device-copy offer (2026-07-10). */
-  readonly backupDoor?: boolean
-  /** `.rec-record` — the remembered-record card (2026-07-26, Briggsy's placement ruling). */
-  readonly recordCard?: boolean
-}
-
-/**
- * Walk every rendered element and report the ones whose box ends below the viewport.
- *
- * `excludeQuietRow` (the laptop arms): the `.result-quiet-row` SUBTREE is the sanctioned
- * below-fold casualty, and its ANCESTOR chain (reveal → hero → main → …) is excluded with it —
- * an ancestor's bottom is driven by the row it contains, so counting it would re-ban the one
- * overflow the contract sanctions. Everything else — the disclaimer above all — must fit.
- * With `excludeQuietRow: false` (the showcase arm) even the doors must land in-frame, and the walk
- * measures CONTENT (the frames-outside plan's KTD8): it skips exactly two layout ancestors by identity,
- * `main.result` and `#root`, because `main.result`'s box ends at its own bottom padding below the doors
- * (`.result` in result.css: 40 px at the tall rhythm, never trimmed) and `#root` wraps it, and measures
- * every element inside them. `#root` has no padding of its own, so its content box would still count
- * `main.result`'s. Every door's own box stays measured, so a door past the fold still reds.
- *
- * Every bottom is kept UNROUNDED at the source (R11): a whole-pixel round here once printed the held
- * SHOWCASE frames' offenders as 937 and 944. A print formats it; nothing rounds it before a comparison.
- *
- * `counted` guards the walk itself: a blank/error page yields near-zero rendered elements and
- * MUST fail the companion floor, never pass an empty-offender check (insight 029).
- *
- * `holdCaveat` is NOT a sanction and never rides `SanctionedDoors` (the caveat is PROTECTED): it is U5's
- * stop path only (`assertFrameFitsHoldingCaveat`), and it skips the in-frame caveat's own SUBTREE, never
- * its ancestors, so an ancestor or a sibling past the fold still reds.
- */
-async function frameReport(
-  page: Page,
-  excludeQuietRow: boolean,
-  sanctioned: SanctionedDoors = {},
-  holdCaveat = false,
-): Promise<FrameReport> {
-  const excludeBackupDoor = sanctioned.backupDoor === true
-  const excludeRecordCard = sanctioned.recordCard === true
-  return page.evaluate(({ excludeQuiet, excludeBackup, excludeRecord, holdTheCaveat }) => {
-    const vh = window.innerHeight
-    const quiet = document.querySelector('.result-quiet-row')
-    const backup = document.querySelector('.result-backup-door')
-    const record = document.querySelector('.rec-record')
-    const caveat = holdTheCaveat ? document.querySelector('footer.disclaimer.disclaimer--in-frame') : null
-    if (holdTheCaveat && caveat === null) throw new Error('frameReport: the held caveat is not on the page')
-    // THE CONTENT WALK (KTD8): on the full-fit path only, the two layout ancestors whose boxes end at
-    // `main.result`'s bottom padding. On the sanctioned path both already leave with the quiet row's
-    // ancestor chain.
-    const layoutAncestors: ReadonlyArray<Element | null> = excludeQuiet
-      ? []
-      : [document.querySelector('main.result'), document.getElementById('root')]
-    const offenders: Array<{ desc: string; bottom: number }> = []
-    let lowest: { desc: string; bottom: number } | null = null
-    let counted = 0
-    for (const el of Array.from(document.querySelectorAll('body *'))) {
-      // The held caveat's subtree only (U5's stop path): its bottom is the caller's printed reading.
-      if (caveat !== null && caveat.contains(el)) continue
-      if (layoutAncestors.includes(el)) continue
-      if (excludeQuiet && quiet !== null && (quiet.contains(el) || el.contains(quiet))) continue
-      // The backup door is an UNPROTECTED durability affordance, DOM-ordered BELOW the disclaimer
-      // (Result.tsx). On the tallest composite frame (an all-65+ writable stale return) it is a
-      // sanctioned below-fold casualty, so its subtree AND its ancestor chain are excluded (an
-      // ancestor's bottom is driven by the door it contains — the quiet-row precedent). The
-      // PROTECTED disclaimer is a SIBLING <footer>, never an ancestor of the door, so it stays
-      // measured — this arm still fails if the caveat itself breaches the fold.
-      if (excludeBackup && backup !== null && (backup.contains(el) || el.contains(backup))) continue
-      // The remembered-record card joined that same degradable tail on 2026-07-26 (Briggsy's
-      // ruling, on the numbers the KNOWN-BREACH arm below used to file): it is DOM-ordered under
-      // the disclaimer and seats one row above the backup door, so it degrades with the doors
-      // instead of pushing the protected caveat off the frame. Excluded on exactly the same terms
-      // — subtree AND ancestor chain — and, like the door, only where an arm names it.
-      if (excludeRecord && record !== null && (record.contains(el) || el.contains(record))) continue
-      const style = window.getComputedStyle(el)
-      if (style.display === 'none' || style.visibility === 'hidden') continue
-      // Viewport-anchored chrome (the update toast) sits outside document flow — not a fit fact.
-      if (style.position === 'fixed') continue
-      if (el.getClientRects().length === 0) continue // display:contents wrappers render no box
-      const r = el.getBoundingClientRect()
-      if (r.width <= 1 || r.height <= 1) continue // sr-only 1px clips, hairlines
-      counted++
-      const past = r.bottom > vh + 0.5
-      if (past || lowest === null || r.bottom >= lowest.bottom) {
-        // Named by tag, id and classes: `#root` has no class, and a bare `div` would hide which element it was.
-        const cls = el.getAttribute('class')
-        const measured = {
-          desc: `${el.tagName.toLowerCase()}${el.id !== '' ? `#${el.id}` : ''}${cls !== null && cls !== '' ? `.${cls.split(/\s+/).join('.')}` : ''}`,
-          bottom: r.bottom,
-        }
-        if (past) offenders.push(measured)
-        if (lowest === null || r.bottom >= lowest.bottom) lowest = measured
-      }
-    }
-    return { counted, offenders, lowest }
-  }, {
-    excludeQuiet: excludeQuietRow,
-    excludeBackup: excludeBackupDoor,
-    excludeRecord: excludeRecordCard,
-    holdTheCaveat: holdCaveat,
-  })
-}
-
-/** A resolved two-pane answer renders hundreds of elements; a walk that counted fewer than this
- *  measured a broken page, not the frame. */
-const WALK_FLOOR = 60
-
-async function assertFrameFits(
-  page: Page,
-  excludeQuietRow: boolean,
-  sanctioned: SanctionedDoors = {},
-): Promise<void> {
-  const report = await frameReport(page, excludeQuietRow, sanctioned)
-  expect(report.counted, 'frame walk counted too few elements — page did not render').toBeGreaterThan(
-    WALK_FLOOR,
-  )
-  expect(
-    report.offenders,
-    `elements end below the ${excludeQuietRow ? 'sanctioned' : 'FULL-fit'} frame`,
-  ).toEqual([])
-}
-
-/** One bottom a printed reading names: `label`, and optionally the element it was read on. */
-type PrintedReading = { readonly label: string; readonly bottom: number; readonly on?: string }
-
-/**
- * THE GATE'S PRINTED READINGS (the frames-outside plan's U2 and U4, R11): one line, printed and annotated BEFORE the
- * arm's assertions run (measure, then assert: insight 120), shared by the held caveat
- * ({@link assertFrameFitsHoldingCaveat}), the full-fit distance on his whole screen ({@link printFullFitDistance}) and
- * the tall edge ({@link printTallEdge}). Each bottom prints to one decimal (the record's grain, never a whole-pixel
- * round) with its side of the fold, and a bottom past the fold by no more than the walk's own half-pixel slack says so
- * rather than reading "inside" (the tall edge's `?vault=yearsurplus` sits there: 841.5 against 841). The line carries
- * the ATTEMPT (Playwright's retry index), so a retried arm's lines tell themselves apart under one tag: read the final
- * attempt only, and attempts that print different numbers are an unknown reading, which keeps a held frame held.
- * Never a ceiling on a printed number (insight 065).
- */
-function printReading(
-  page: Page,
-  tag: 'held caveat' | 'full-fit distance' | 'tall edge',
-  frame: string,
-  readings: ReadonlyArray<PrintedReading>,
-  what: string,
-  tail = '',
-): void {
-  const vh = page.viewportSize()?.height
-  expect(vh, 'the arm runs at a fixed viewport').toBeDefined()
-  const worded = readings.map((r) => {
-    const past = r.bottom - vh!
-    const side =
-      past > 0.5
-        ? `${past.toFixed(1)} px past the fold`
-        : past > 0
-          ? `${past.toFixed(1)} px past the fold, inside the walk's half-pixel slack`
-          : 'inside the fold'
-    return `${r.label}=${r.bottom.toFixed(1)} (${side})${r.on === undefined ? '' : ` on ${r.on}`}`
-  })
-  const line = `${frame} ${String(vh)}px frame attempt=${test.info().retry}: ${worded.join(', ')}${tail} — ${what}`
-  console.log(`[${tag}] ${line}`)
-  test.info().annotations.push({ type: `${tag} (RECORDED)`, description: line })
-}
-
-/**
- * THE SEAT'S HOLD (the one-frame composites plan's U6 step 4; since the frames-outside plan's U4, the frames still
- * outside, `SEAT_COUNCIL`): a frame whose PROTECTED R13 caveat no allowed rung brings inside the fold, held until the
- * record card's seat council has ruled. Its caveat's bottom is PRINTED and annotated first (measure, then assert:
- * insight 120), and every OTHER element is held to the frame exactly as `assertFrameFits` holds it, the caveat's own
- * subtree alone skipped (`frameReport`'s `holdCaveat`). It is the 20 px arm's record-only precedent, quoted: "never a
- * `test.fail()`. Until the fork is decided this arm RECORDS ... The assertion returns with the fork's ruling." A
- * `test.fail()` would swallow every other assertion in the arm as "expected", and a ceiling on the printed number would
- * be a chosen margin (insight 065). The seat's ruling build replaces this call with {@link assertFrameAtSize}.
- */
-async function assertFrameFitsHoldingCaveat(
-  page: Page,
-  frame: string,
-  sanctioned: SanctionedDoors,
-  council: string,
-): Promise<void> {
-  const caveatBottom = await page
-    .locator('footer.disclaimer.disclaimer--in-frame')
-    .evaluate((el) => el.getBoundingClientRect().bottom)
-  printReading(page, 'held caveat', frame, [{ label: 'caveat bottom', bottom: caveatBottom }], `its assertion HELD for ${council}`)
-  const report = await frameReport(page, true, sanctioned, true)
-  expect(report.counted, 'frame walk counted too few elements — page did not render').toBeGreaterThan(WALK_FLOOR)
-  expect(report.offenders, 'elements other than the held caveat end below the sanctioned frame').toEqual([])
-}
-
-/** An arm's frame and the size it reads, as every printed line names them: `?seed=retired 1440x900`. */
-function frameAt(frame: string, size: LaptopSizeName): string {
-  const { width, height } = LAPTOP_SIZES[size].viewport
-  return `${frame} ${width}x${height}`
-}
-
-/** The doors row's bottom, the content walk's lowest box, and how many boxes end below the fold: the full fit, read. */
-async function readFullFit(page: Page): Promise<{ readonly readings: PrintedReading[]; readonly below: number }> {
-  const full = await frameReport(page, false)
-  expect(full.counted, 'the content walk counted too few elements — page did not render').toBeGreaterThan(WALK_FLOOR)
-  const doorsBottom = await page.locator('.result-quiet-row').evaluate((el) => el.getBoundingClientRect().bottom)
-  const readings: PrintedReading[] = [{ label: 'doors bottom', bottom: doorsBottom }]
-  if (full.lowest !== null) readings.push({ label: 'lowest content bottom', bottom: full.lowest.bottom, on: full.lowest.desc })
-  return { readings, below: full.offenders.length }
-}
-
-/**
- * THE FULL-FIT DISTANCE on his whole screen (R9, council `wf_9c0bb7ea-938`): `LENOVO_FULL` holds the degrade contract,
- * so the doors may sit below its fold, and how far they sit is printed, never asserted. Read by the content walk (KTD8):
- * the doors row's bottom, the lowest content box, and how many boxes end below the fold.
- */
-async function printFullFitDistance(page: Page, frame: string): Promise<void> {
-  const { readings, below } = await readFullFit(page)
-  printReading(page, 'full-fit distance', frame, readings, 'printed; the degrade contract is asserted', `; ${below} boxes below the fold`)
-}
-
-/**
- * THE TALL EDGE (R10; the frames-outside plan's U4 step 5): the first height above the short density tier, at his width
- * and DPR, read on the tall frames by a resize and PRINTED, NEVER ASSERTED. Not a promise any window of his makes, and
- * a fit read there is noise: the walk forgives half a pixel, so `?vault=yearsurplus`'s caveat at 841.5 against the 841 px
- * window would pass by 0.0 px. It prints the caveat's bottom, every protected box past the fold under the degrade walk
- * (the doors and the arm's sanctioned tail excluded), and the full fit. Leaves the page at the tall edge.
- */
-async function printTallEdge(page: Page, frame: string, sanctioned: SanctionedDoors = {}): Promise<void> {
-  await page.setViewportSize(LAPTOP_SIZES.TALL_EDGE.viewport)
-  await settleLayout(page)
-  await assertSizeTier(page, 'TALL_EDGE')
-  const caveatBottom = await page
-    .locator('footer.disclaimer.disclaimer--in-frame')
-    .evaluate((el) => el.getBoundingClientRect().bottom)
-  const degrade = await frameReport(page, true, sanctioned)
-  expect(degrade.counted, 'the degrade walk counted too few elements — page did not render').toBeGreaterThan(WALK_FLOOR)
-  const { readings, below } = await readFullFit(page)
-  const protectedPast =
-    degrade.offenders.length === 0 ? 'none' : degrade.offenders.map((o) => `${o.desc} bottom=${o.bottom.toFixed(1)}`).join(', ')
-  printReading(
-    page,
-    'tall edge',
-    frameAt(frame, 'TALL_EDGE'),
-    [{ label: 'caveat bottom', bottom: caveatBottom }, ...readings],
-    "printed, never asserted (the walk's half-pixel slack would pass the worst frame by 0.0 px)",
-    `; protected boxes past the fold: ${protectedPast}; ${below} boxes below the fold`,
-  )
-}
-
-/** The short density tier's query, built from the two bound constants (the two-pane seam, and the tall edge, which the
- *  breakpoint mirrors bind to `--bp-laptop-short` + 1), never a typed boundary. */
-const SHORT_TIER_QUERY = `(min-width: ${BP_LAPTOP_REM}rem) and (max-height: ${TALL_EDGE.height - 1}px)`
-
-/**
- * The tier a size promises, read off the RENDERED page before the arm asserts or prints anything (insight 125; the
- * frames-outside plan's KTD9): the two-pane grid ({@link assertTier}), the window and DPR the size table gives, the short
- * density tier's query, and the one rendered fact that query switches on every frame (`.result`'s block padding: 32 px
- * short, 40 px tall, {@link assertDensityTier}'s first rung).
- */
-async function assertSizeTier(page: Page, size: LaptopSizeName): Promise<void> {
-  const s = LAPTOP_SIZES[size]
-  await assertTier(page, 'laptop')
-  const read = await page.evaluate((query) => {
-    const main = document.querySelector('main.result')
-    if (main === null) throw new Error('assertSizeTier: main.result is not on the page')
-    return {
-      window: { width: window.innerWidth, height: window.innerHeight, dpr: window.devicePixelRatio },
-      short: window.matchMedia(query).matches,
-      padding: getComputedStyle(main).paddingBlockStart,
-    }
-  }, SHORT_TIER_QUERY)
-  expect(read.window, `${size}: the window and DPR the size table gives`).toEqual({
-    width: s.viewport.width,
-    height: s.viewport.height,
-    dpr: s.deviceScaleFactor,
-  })
-  expect(read.short, `${size}: the short density tier is ${s.density === 'short' ? 'on' : 'off'} at this size`).toBe(
-    s.density === 'short',
-  )
-  expect(read.padding, `${size}: .result's block padding, the ${s.density} rhythm's`).toBe(
-    s.density === 'short' ? '32px' : '40px',
-  )
-}
-
-/**
- * THE LAW A SIZE CARRIES (the frames-outside plan's KTD9 and KTD10), read from `LAPTOP_SIZES`, never typed at the call
- * site: `full` (`SHOWCASE`) asserts the full fit, doors included, and sanctions nothing; `degrade` (`REAL`, `TIER`,
- * `LENOVO_FULL`) asserts everything but the doors row and the arm's named sanctioned tail, and on a tall size (his whole
- * screen) prints the full-fit distance first; `print` (the tall edge) is never asserted, so it throws
- * ({@link printTallEdge} reads it). A frame held for the seat calls {@link assertFrameFitsHoldingCaveat} instead.
- */
-async function assertFrameAtSize(page: Page, size: LaptopSizeName, frame: string, sanctioned: SanctionedDoors = {}): Promise<void> {
-  const s = LAPTOP_SIZES[size]
-  if (s.law === 'print') throw new Error(`${frame}: ${size} is printed, never asserted (printTallEdge)`)
-  if (s.law === 'full') {
-    expect(sanctioned, `${frame}: the full fit sanctions nothing below the fold`).toEqual({})
-    await assertFrameFits(page, false)
-    return
-  }
-  if (s.density === 'tall') await printFullFitDistance(page, frameAt(frame, size))
-  await assertFrameFits(page, true, sanctioned)
-}
-
-/** The layout TIER the page actually rendered — read from the breakpoint itself, never inferred
- *  from the viewport width: in a media query `rem` reads the BROWSER DEFAULT font, so a 24 px
- *  default makes `68rem` 1632 px and his 1440-wide laptop a sub-68rem device (council 2026-09-10).
- *  The literal mirrors tokens.css's --bp-laptop (a source-bind test pins every mirror). */
-async function assertTier(page: Page, tier: 'laptop' | 'narrow'): Promise<void> {
-  const observed = await page.evaluate(() => {
-    // (1) the QUERY the CSS is written against.
-    const query = window.matchMedia('(min-width: 68rem)').matches
-    // (2) what the page ACTUALLY LAID OUT. `[data-twopane]` is stamped whenever a band resolved —
-    // at EVERY width (ConfidenceStatement.tsx / FuckOffDate.tsx), so its mere presence is NOT the
-    // tier. The two-pane grid is what the 68rem query turns on: confidence.css :245 /
-    // fuckOffDate.css :235 give the stamped reveal `display: grid` with TWO columns inside the
-    // query and nothing outside it, so the reveal's RESOLVED column count is the rendered tier.
-    // A media-query answer that disagreed with the pixels (a breakpoint mirror drifting, a
-    // `display` override) would go unseen if the arm only re-computed the query.
-    const reveal = document.querySelector('.confidence-reveal[data-twopane], .fod-reveal[data-twopane]')
-    const columns =
-      reveal === null
-        ? null
-        : getComputedStyle(reveal)
-            .gridTemplateColumns.split(/\s+/)
-            .filter((t) => t !== '' && t !== 'none').length
-    return { query, columns, stamped: reveal !== null }
-  })
-  expect(
-    observed.stamped,
-    'no resolved reveal is stamped [data-twopane] — the tier read would be over a page that never rendered an answer (insight 029)',
-  ).toBe(true)
-  expect(
-    observed.query,
-    `the 68rem query says ${observed.query ? 'two-pane' : 'stacked'}, the arm expected ${tier}`,
-  ).toBe(tier === 'laptop')
-  // Laptop: EXACTLY the two panes. Narrow: fewer than two — the single column can be `display:
-  // grid` with one track or no grid at all (`grid-template-columns: none` ⇒ 0 tracks), and which
-  // one is chrome, not law; "not two panes" is the tier fact.
-  if (tier === 'laptop') {
-    expect(
-      observed.columns,
-      `the RENDERED tier disagrees with the query: the stamped reveal resolved ${String(observed.columns)} grid column(s), the arm expected two panes`,
-    ).toBe(2)
-  } else {
-    expect(
-      observed.columns,
-      `the RENDERED tier disagrees with the query: the stamped reveal resolved ${String(observed.columns)} grid column(s) — the arm expected the stacked single column`,
-    ).toBeLessThan(2)
-  }
-}
-
-/** BOTH R13 mounts must exist (the two-mount contract), and exactly ONE is visible — the in-frame
- *  mount on every committed verdict, at every width (council 2026-09-10; until then the in-frame
- *  mount was dark below 68rem and the TRAILING footer, after the doors, was the phone's only
- *  caveat). A zero-disclaimer frame and a doubled frame are equally unrepresentable. The tier is
- *  asserted SEPARATELY (assertTier) — the two stopped implying each other on 2026-09-10. */
-async function assertOneVisibleDisclaimer(page: Page, tier: 'laptop' | 'narrow'): Promise<void> {
-  await assertTier(page, tier)
-  const inFrame = page.locator('footer.disclaimer.disclaimer--in-frame')
-  const trailing = page.locator('footer.disclaimer:not(.disclaimer--in-frame)')
-  await expect(inFrame, 'the in-frame R13 mount (Result.tsx) is missing').toHaveCount(1)
-  await expect(trailing, 'the page-trailing R13 mount (App.tsx) is missing').toHaveCount(1)
-  await expect(inFrame, 'the in-frame caveat must be visible on a committed verdict').toBeVisible()
-  await expect(trailing, 'the trailing mount must hide behind data-inframe-disclaimer').toBeHidden()
-}
-
-/** …the same two R13 mounts, one visible, on the date route's NO-DATE reading (the U11 walk's (ae)). No band
- *  resolves there, so the reveal is never stamped `[data-twopane]` and the tier read above has nothing to read;
- *  the answer's non-vacuity is `assertNoDateReading`'s visible no-date reveal instead (insight 029). */
-async function assertOneVisibleDisclaimerNoDate(page: Page): Promise<void> {
-  const inFrame = page.locator('footer.disclaimer.disclaimer--in-frame')
-  const trailing = page.locator('footer.disclaimer:not(.disclaimer--in-frame)')
-  await expect(inFrame, 'the in-frame R13 mount (Result.tsx) is missing').toHaveCount(1)
-  await expect(trailing, 'the page-trailing R13 mount (App.tsx) is missing').toHaveCount(1)
-  await expect(inFrame, 'the in-frame caveat must be visible on a committed verdict').toBeVisible()
-  await expect(trailing, 'the trailing mount must hide behind data-inframe-disclaimer').toBeHidden()
-}
-
-/** THE ONE "doors last" WALK, shared by every arm that claims it (the date route's two ORDER
- *  blocks and the scrolling tiers' law below). Until 2026-09-10 two walks carrying the same name
- *  applied different filters: the date blocks skipped `display:none` / `visibility:hidden` /
- *  `position:fixed` chrome and hairlines, the new scrolling walk skipped none of them — so "the
- *  doors are last" meant two different things in one file. It means this:
- *
- *  Every element in `scope` that RENDERS A BOX A READER CAN SEE — excluding the doors row itself,
- *  every ancestor that encloses it (a wrapper legitimately ends where its last child, the doors,
- *  ends), sr-only clips, viewport-anchored chrome (the update toast: not a flow fact) and
- *  hairlines — reports its bottom; the tallest wins. `counted` guards the walk against vacuity
- *  (insight 029): a blank or error page yields near-zero boxes and must never read as "nothing
- *  trails the doors".
- */
-async function doorsLastWalk(
-  page: Page,
-  scope: 'body' | 'main.result' = 'body',
-): Promise<{ readonly maxOtherBottom: number; readonly desc: string; readonly counted: number }> {
-  return page.evaluate((sel) => {
-    const doorsEl = document.querySelector('.result-quiet-row')
-    let max = -Infinity
-    let desc = 'nothing'
-    let counted = 0
-    for (const el of Array.from(document.querySelectorAll<HTMLElement>(`${sel} *`))) {
-      if (doorsEl !== null && (doorsEl.contains(el) || el.contains(doorsEl))) continue
-      if (el.closest('.sr-only') !== null) continue
-      const style = window.getComputedStyle(el)
-      if (style.display === 'none' || style.visibility === 'hidden' || style.position === 'fixed')
-        continue
-      if (el.getClientRects().length === 0) continue // display:contents wrappers render no box
-      const r = el.getBoundingClientRect()
-      if (r.width <= 1 || r.height <= 1) continue // sr-only 1px clips, hairlines
-      counted++
-      if (r.bottom > max) {
-        max = r.bottom
-        const cls = el.getAttribute('class')
-        desc = `${el.tagName.toLowerCase()}${cls !== null && cls !== '' ? `.${cls.split(/\s+/)[0]}` : ''}`
-      }
-    }
-    return { maxOtherBottom: max, desc, counted }
-  }, scope)
-}
-
-/** A scrolling-tier answer renders dozens of boxes outside the doors row; a walk that counted
- *  fewer than this measured a broken page, not the order. */
-const DOORS_WALK_FLOOR = 20
-/** …and the date route's NO-DATE reading (the U11 walk's (ae)), which draws no band and no ladder: measured 14 boxes
- *  at Briggsy's window and 12 on the phone (the headline, the how-close line, the notes, the save card, the caveat).
- *  A blank or error page still counts near zero. */
-const NO_DATE_DOORS_WALK_FLOOR = 10
-
-/** THE SCROLLING TIERS' HONESTY LAW — ORDER + REACHABILITY (council 2026-09-10, wf_d2b1d05a-001;
- *  the Hawk's scoped veto). A tier that scrolls by design (the phone; any width the reader's font
- *  makes sub-68rem; the DATE route at EVERY width — both graphs stacked) cannot promise one frame,
- *  so it promises: (1) ORDER — the caveat sits ABOVE the quiet doors in rendered geometry (not
- *  merely DOM order — a grid seat or a CSS reorder could invert the pixels), and the doors are the
- *  LAST thing in the answer: no visible box outside the doors row ends below the doors row's top;
- *  (2) REACHABILITY — the caveat can be brought fully into the viewport by scrolling (order alone
- *  would pass a caveat trapped inside an overflow:hidden ancestor). No proximity ratio: the Hawk
- *  withdrew his own 1.0 × innerHeight bound as a chosen number (insight 065) — the distance is
- *  RECORDED by the caller, never asserted. (3) THE VERDICT NAMES THE CAVEAT: the route's hero
- *  heading — `h2.cs-word` on the spine, `h2.fod-headline` on the date route — carries an
- *  `aria-describedby` that RESOLVES to the in-frame mount's id.
- *
- *  `verdictSelector` is the hero heading itself, never a boolean: `assertCaveatOrderAndReach(page,
- *  false)` was a pre-built silencer (a route with no link could be added by passing `false`, and
- *  the review found exactly that hole waiting on the date route). A caller that genuinely has no
- *  hero heading passes `null` and has to justify it at the call site.
- */
-async function assertCaveatOrderAndReach(page: Page, verdictSelector: string | null, walkFloor = DOORS_WALK_FLOOR): Promise<void> {
-  const caveat = page.locator('footer.disclaimer.disclaimer--in-frame')
-  const doors = page.locator('.result-quiet-row')
-  await expect(caveat).toBeVisible()
-  await expect(doors).toHaveCount(1)
-  // VACUITY (insight 029): the ORDER half compares against the doors row's top, and the row is
-  // `display: contents` in single column — its own rect is all zeros, so its geometry is the union
-  // of its rendered children. A row that offered NO door would leave that top at Infinity and both
-  // ORDER expectations would pass no matter where the caveat sat. Pin the doors here, inside the
-  // helper, so no future caller can reach the ORDER law over a row with nothing in it.
-  expect(
-    await page.locator('.result-quiet-row button').count(),
-    'the quiet-door row offers fewer than two doors — the ORDER law would be vacuous',
-  ).toBeGreaterThanOrEqual(2)
-  const geometry = await page.evaluate(() => {
-    const c = document.querySelector('footer.disclaimer.disclaimer--in-frame')!.getBoundingClientRect()
-    const doorsEl = document.querySelector('.result-quiet-row')!
-    // The doors row is `display: contents` in single column (its own rect is all zeros), so its
-    // geometry is the union of its RENDERED descendants — the doors themselves.
-    let dTop = Infinity
-    let boxed = 0
-    for (const el of doorsEl.querySelectorAll<HTMLElement>('*')) {
-      const r = el.getBoundingClientRect()
-      if (r.height > 0) boxed++
-      if (r.height > 0 && r.top < dTop) dTop = r.top
-    }
-    const scrollY = window.scrollY
-    return {
-      boxed,
-      caveatBottom: c.bottom + scrollY,
-      doorsTop: dTop + scrollY,
-      caveatHeight: c.height,
-      innerHeight: window.innerHeight,
-      scrollY,
-    }
-  })
-  if (geometry.boxed === 0) {
-    throw new Error(
-      'the quiet-door row rendered no boxed child — the doors row has no top, so both ORDER ' +
-        'assertions would be vacuous (insight 029). Fix the arm or the surface, not this check.',
-    )
-  }
-  expect(
-    geometry.caveatBottom,
-    `ORDER: the caveat (bottom ${geometry.caveatBottom.toFixed(1)}) must sit above the quiet doors (top ${geometry.doorsTop.toFixed(1)})`,
-  ).toBeLessThanOrEqual(geometry.doorsTop + 1)
-  // Doors LAST — the ONE shared walk (the same filters the date route's two ORDER blocks apply).
-  const trailing = await doorsLastWalk(page, 'body')
-  expect(
-    trailing.counted,
-    'the doors-last walk counted too few boxes — the page did not render (insight 029)',
-  ).toBeGreaterThan(walkFloor)
-  expect(
-    trailing.maxOtherBottom + geometry.scrollY,
-    `ORDER: the doors must be LAST — ${trailing.desc} ends below the doors row's top`,
-  ).toBeLessThanOrEqual(geometry.doorsTop + 1)
-  expect(geometry.caveatHeight, 'REACH: the caveat is taller than the viewport').toBeLessThanOrEqual(
-    geometry.innerHeight,
-  )
-  // REACH: scroll the DOCUMENT (never scrollIntoView — that scrolls an overflow:hidden ancestor
-  // programmatically, which a reader's wheel cannot; the M4 mutant proved it passes a clipped
-  // caveat) to the caveat's own top, re-measure, and HIT-TEST TWO points: the upper half AND a
-  // point 4 px above its BOTTOM edge. One centre point passes an ancestor clip that eats only the
-  // caveat's last lines — and the last line is the "validate this with a professional" directive,
-  // the half of R13 that tells the reader what to do.
-  const reached = await page.evaluate(() => {
-    const el = document.querySelector<HTMLElement>('footer.disclaimer.disclaimer--in-frame')!
-    const docTop = el.getBoundingClientRect().top + window.scrollY
-    window.scrollTo({ top: Math.max(0, docTop - 4), behavior: 'instant' as ScrollBehavior })
-    const r = el.getBoundingClientRect()
-    const describe = (n: Element | null): string =>
-      n === null ? 'nothing' : `${n.tagName.toLowerCase()}.${String((n as HTMLElement).className).split(' ')[0]}`
-    const x = r.left + r.width / 2
-    const upper = document.elementFromPoint(x, r.top + Math.min(r.height / 2, window.innerHeight / 2))
-    const nearBottom = document.elementFromPoint(x, r.bottom - 4)
-    return {
-      top: r.top,
-      bottom: r.bottom,
-      innerHeight: window.innerHeight,
-      upperIsCaveat: upper !== null && (upper === el || el.contains(upper)),
-      upperDesc: describe(upper),
-      bottomIsCaveat: nearBottom !== null && (nearBottom === el || el.contains(nearBottom)),
-      bottomDesc: describe(nearBottom),
-      scrolledTo: window.scrollY,
-    }
-  })
-  expect(reached.top, 'REACH: after scrolling the document to it the caveat starts above the window').toBeGreaterThanOrEqual(-1)
-  expect(reached.bottom, 'REACH: after scrolling the document to it the caveat ends below the window').toBeLessThanOrEqual(
-    reached.innerHeight + 1,
-  )
-  expect(
-    reached.upperIsCaveat,
-    `REACH: the point in the caveat's upper half hits ${reached.upperDesc}, not the caveat — an ancestor clips it (document scrolled to ${reached.scrolledTo})`,
-  ).toBe(true)
-  expect(
-    reached.bottomIsCaveat,
-    `REACH: the point 4px above the caveat's BOTTOM edge hits ${reached.bottomDesc}, not the caveat — an ancestor clips its last lines, the validate directive among them (document scrolled to ${reached.scrolledTo})`,
-  ).toBe(true)
-  if (verdictSelector !== null) {
-    const link = await page.locator(verdictSelector).getAttribute('aria-describedby')
-    const caveatId = await caveat.getAttribute('id')
-    // NON-NULL FIRST (insight 029): `null === null` would certify a hero that names nothing
-    // against a mount that has no id — an equality over a structurally-absent surface.
-    expect(link, `the verdict (${verdictSelector}) carries no aria-describedby at all`).not.toBeNull()
-    expect(caveatId, 'the in-frame caveat mount carries no id to be named').not.toBeNull()
-    expect(link, `the verdict (${verdictSelector}) must name the caveat in aria-describedby`).toBe(caveatId)
-    // …and the reference RESOLVES: an id that names no element is a dangling description.
-    await expect(
-      page.locator(`#${String(caveatId)}`),
-      'the aria-describedby target resolves to no element',
-    ).toHaveCount(1)
-  }
-  await page.evaluate(() => window.scrollTo(0, 0))
-}
-
-/** The reader's browser default font, raised through CDP `Page.setFontSizes` (Chromium-only — this
- *  harness's one project). Falsifiability (insight 016): the root px is pinned to have RISEN before
- *  any geometry is read, so a silently-ignored, renamed or reshaped CDP call reds instead of
- *  measuring the 16 px frame. ORDER matters: the emulation is per-target, so it is sent on the
- *  cheap bare `/` navigation and the seed route is navigated AFTER it. */
-async function raiseDefaultFont(
-  page: Page,
-  context: BrowserContext,
-  px: number,
-): Promise<{ at16: number; cdp: CDPSession }> {
-  await page.goto('/')
-  const at16 = await rootFontPx(page)
-  const cdp = await context.newCDPSession(page)
-  await cdp.send('Page.setFontSizes', { fontSizes: { standard: px, fixed: px } })
-  // The root measured HERE, on the bare `/`, is not the pin: the emulation is per-target and the
-  // seed route is navigated after it, so the only measurement that proves the arm read a raised
-  // page is one taken on the page the arm measures — assertRootRose, at the call site.
-  return { at16, cdp }
-}
-
-/** The CURRENT page's root font size in px. */
-function rootFontPx(page: Page): Promise<number> {
-  return page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize))
-}
-
-/** Falsifiability for the CDP emulation (insight 016), measured on the page the arm is about to
- *  read: the root must have RISEN above the browser default, so a silently-ignored, renamed or
- *  reshaped `Page.setFontSizes` reds instead of quietly measuring the 16 px frame. Returns the
- *  raised value so the caller can log or annotate the exact root it measured — the 20 px arm's
- *  annotation is the artifact the owed fork gets decided from, and a bare "> 16" in the log
- *  names no regime. (Every caller used to re-type these three lines; one home now.) */
-async function assertRootRose(page: Page, at16: number): Promise<number> {
-  const raised = await rootFontPx(page)
-  expect(raised, `Page.setFontSizes never took (root ${at16}px → ${raised}px)`).toBeGreaterThan(at16)
-  return raised
-}
-
-/** The rows `assertDensityTier` reads only where the calling arm has already asserted the fact that
- *  puts them on the frame (insight 029: a row the frame must carry fails loudly when it is missing). */
-type DensityRows = {
-  /** `budget`: the floor relief holds the inline slot, so the survivor card is FOLDED (SPINE_SEEDS):
-   *  the relief card with its step-down, the closed fold's row and summary, and the fold's inner body. */
-  readonly fold?: boolean
-  /** The remembered-record card (the arm asserted it on the frame). */
-  readonly record?: boolean
-  /** `?vault=stale` / `?vault=statestale`: those arms read the note frames' grid and subordinates
-   *  row-gaps themselves (statestale's pin is W4's; stale's 2px is written by round 5 AND W4, so it
-   *  kills neither alone: see its comment), so the helper leaves them alone there. */
-  readonly skipNoteGaps?: boolean
-  /** The staleness echo (`.cs-staleness-note`) is on the frame: inside the short tier the echo entry (L3) steps
-   *  the survivor statements' leading to tight there, whatever the direction (`SURVIVOR_LEADING`'s echo cells).
-   *  The helper reads the frame's own echo and requires this flag to match it, so an echo arm can never read
-   *  the snug band by forgetting the flag (the composites plan's U5, KTD7). */
-  readonly echo?: boolean
-  /** The survivor statements' leading the arm expects inside the short tier (the frames-outside plan's KTD11).
-   *  Left out, it follows `echo` (every echo frame reads tight), so only a FRESH frame B's entry reaches passes
-   *  `'tight'`: the shown direction `rethink` with the typical Medicare residual. The helper looks the leading up
-   *  from the frame's own markers (`SURVIVOR_LEADING`) and requires the arm's expectation to match it on both
-   *  sides of the tier (the `register` pattern), so an arm can never read the snug band on a frame the entry
-   *  tightens, and an entry that tightens off its key reds every arm whose frame lacks it. */
-  readonly leading?: 'tight' | 'snug'
-  /** Rung 3's key is on the frame (council wf_540221e4-42d): the SHOWN direction is `rethink` or `trim`
-   *  (`.cs-magnitude[data-direction]`), the staleness echo shows and the typical Medicare residual runs.
-   *  Inside the short tier the survivor context and its inner step-down then borrow the eyebrow's register;
-   *  above it they stay body. The helper derives the key from the frame's own markers and requires this flag
-   *  to match it, the `echo` pattern, so an arm can never pass a borrowing frame by forgetting the flag, and
-   *  a rule that borrowed off its key reds every arm whose frame lacks it. */
-  readonly register?: boolean
-}
-
-/** The short-laptop density tier, read on BOTH sides of its boundary: the spec's ONE home for the values
- *  every rung sets (the tier's LAW lives once, in tokens.css `--bp-laptop-short`'s docblock: whitespace,
- *  then leading, then a borrowed register; never the hero, never a new size). 'short' is ≥68rem ∧ ≤840px
- *  (REAL and TIER), 'tall' the showcase above it, where every rule is dark. Deleting a rung's rule reds
- *  HERE on every platform (insight 075: the fold arms alone red only where the platform's text metrics
- *  run out of slack). Gaps and paddings read exact strings (`rowGap`, never the `gap` shorthand); leading
- *  reads ratio bands. The rungs (the 1440×731 re-point plan's names), each as its tall → short value:
- *   - .result padding-block 40 → 32 (2026-07-08), outside the ladder since (it holds the eyebrow slot);
- *   - W1, the survivor cards' top padding 24 → 4 (the relief card and the inline card; the closed fold's
- *     row and the fold's inner body 12 → 4, read open or closed: a computed length);
- *   - W2, the survivor stack gap 12 → 4, in the open card and the fold's summary alike;
- *   - W3, the in-frame caveat's top padding 8 → 4;
- *   - W4, the note frames' grid and subordinates row-gaps → 2 (the typical frames carry 2 on both sides
- *     since round 5; the non-typical ones 4 above the tier);
- *   - W5, the record card's padding-block 12 → 8 and gap 8 → 4;
- *   - W7, the band drawer's block padding 20/24 → 16/16 (the inline 24 never moves: it is the two-pane
- *     honesty floor's input), its pull's margin 12 → 8, its legend's margin 16 → 8 and gap 8 → 4;
- *   - L1, the survivor eyebrow, context and step-down leading body 1.55 → snug 1.4;
- *   - L3 (the one-frame composites plan's rung 2a), on a frame with the staleness echo, the same three
- *     statements one step further, → tight 1.3, and B's entry (the frames-outside plan's KTD7), the same step
- *     on a `rethink` frame with the typical Medicare residual: both read from `SURVIVOR_LEADING` by the
- *     frame's own markers, the arm's expectation (`rows.echo`, `rows.leading`) checked against it;
- *   - L4 (rung 2b), the staleness echo's own line body 1.55 → snug 1.4;
- *   - RUNG 3 (council wf_540221e4-42d), on a frame carrying its key (`rows.register`, checked against the
- *     frame's own markers), the survivor context and the step-down inside it body → the card's own eyebrow
- *     size (--text-sm, borrowed). Read on EVERY frame: body wherever the key is absent or the tier is off,
- *     and the floor relief's trim note (`.floor-readout .survivor__stepdown`) body always. "Body" is the px
- *     of a CSSOM probe set to var(--text-base) inside the reveal, never a typed number.
- *  L2 (the Medicare pair and the state note) is `assertNoteLeading`'s, on both tiers. */
-const SURVIVOR_LEADING = {
-  // KTD11 (the frames-outside plan), written here independently of survivor.css's selectors: the survivor
-  // statements' leading inside the short tier, one row per direction the magnitude clause stamps, each cell
-  // read from the frame's own echo and typical-residual markers. The echo entry (L3) tightens every echo frame;
-  // B's entry (KTD7) tightens a `rethink` frame whose Medicare residual is the typical form; every other short
-  // frame reads snug (L1). Above the tier every cell reads body. The helper's allowed directions are this
-  // table's keys, so a direction with no row reds at run time.
-  rethink: ({ echo, typical }) => (echo || typical ? 'tight' : 'snug'),
-  trim: ({ echo }) => (echo ? 'tight' : 'snug'),
-  room: ({ echo }) => (echo ? 'tight' : 'snug'),
-  'on-the-line': ({ echo }) => (echo ? 'tight' : 'snug'),
-} as const satisfies Record<string, (frame: { readonly echo: boolean; readonly typical: boolean }) => 'tight' | 'snug'>
-
-async function assertDensityTier(page: Page, tier: 'short' | 'tall', rows: DensityRows = {}): Promise<void> {
-  const short = tier === 'short'
-  const read = await page.evaluate(() => {
-    const reveal = document.querySelector('.confidence-reveal[data-twopane]')
-    const within = (sel: string): Element[] => (reveal === null ? [] : Array.from(reveal.querySelectorAll(sel)))
-    const style = (el: Element | null | undefined) => (el === null || el === undefined ? null : getComputedStyle(el))
-    const ratio = (el: Element): number => {
-      const s = getComputedStyle(el)
-      return parseFloat(s.lineHeight) / parseFloat(s.fontSize)
-    }
-    const has = (sel: string): boolean => reveal !== null && reveal.querySelector(sel) !== null
-    const survivors = within('.survivor')
-    const cards = survivors.filter((el) => el.closest('.survivor-fold') === null)
-    const drawer = document.querySelector('.cs-band .band-drawer')
-    const subordinates = reveal?.querySelector(':scope > .reveal__subordinates')
-    const record = style(reveal?.querySelector('.rec-record'))
-    return {
-      stamped: reveal !== null,
-      resultPaddingTop: style(document.querySelector('main.result'))?.paddingBlockStart ?? null,
-      cardPaddingTop: cards.map((el) => getComputedStyle(el).paddingTop),
-      foldBodyPaddingTop: survivors.filter((el) => el.closest('.survivor-fold') !== null).map((el) => getComputedStyle(el).paddingTop),
-      foldPaddingTop: within('.survivor-fold').map((el) => getComputedStyle(el).paddingTop),
-      foldSummaryGap: within('.survivor-fold__summary').map((el) => getComputedStyle(el).rowGap),
-      revealGap: within('.survivor-reveal').map((el) => getComputedStyle(el).rowGap),
-      eyebrowLeading: within('.survivor__eyebrow').map(ratio),
-      // the cards' own context and step-down (the folded card's body is read for padding only: it is
-      // not rendered while the fold is closed)
-      contextLeading: cards.flatMap((el) => Array.from(el.querySelectorAll('.survivor__context'))).map(ratio),
-      stepdownLeading: cards.flatMap((el) => Array.from(el.querySelectorAll('.survivor__stepdown'))).map(ratio),
-      reliefStepdowns: within('.floor-readout .survivor__stepdown').length,
-      caveatPaddingTop: style(document.querySelector('footer.disclaimer.disclaimer--in-frame'))?.paddingTop ?? null,
-      drawer:
-        drawer === null
-          ? null
-          : {
-              top: getComputedStyle(drawer).paddingTop,
-              bottom: getComputedStyle(drawer).paddingBottom,
-              left: getComputedStyle(drawer).paddingLeft,
-              right: getComputedStyle(drawer).paddingRight,
-              pull: style(drawer.querySelector('.band-drawer__pull'))?.marginBottom ?? null,
-              legendTop: style(drawer.querySelector('.band-legend'))?.marginTop ?? null,
-              legendGap: style(drawer.querySelector('.band-legend'))?.rowGap ?? null,
-            },
-      noteFrame: has('.cs-medicare-note, .cs-state-note, .cs-staleness-note'),
-      echo: has('.cs-staleness-note'),
-      stalenessLeading: within('.cs-staleness-note').map(ratio),
-      typical: has('.cs-medicare-residual--typical'),
-      gridRowGap: style(reveal)?.rowGap ?? null,
-      subordinatesRowGap: style(subordinates)?.rowGap ?? null,
-      record: record === null ? null : { top: record.paddingTop, bottom: record.paddingBottom, gap: record.rowGap },
-      // RUNG 3: the shown direction (the key's first marker), each inline card's context and inner step-down
-      // beside its own eyebrow, the floor relief's trim notes, and body (a CSSOM probe at var(--text-base),
-      // appended inside the reveal so it reads the same root and viewport, then removed).
-      direction: reveal?.querySelector('.cs-magnitude')?.getAttribute('data-direction') ?? null,
-      register: cards.map((card) => ({
-        eyebrow: parseFloat(getComputedStyle(card.querySelector('.survivor__eyebrow') ?? card).fontSize),
-        hasEyebrow: card.querySelector('.survivor__eyebrow') !== null,
-        context: Array.from(card.querySelectorAll('.survivor__context')).map((el) => parseFloat(getComputedStyle(el).fontSize)),
-        stepdown: Array.from(card.querySelectorAll('.survivor__context .survivor__stepdown')).map((el) => parseFloat(getComputedStyle(el).fontSize)),
-      })),
-      trimNotes: within('.floor-readout .survivor__stepdown').map((el) => parseFloat(getComputedStyle(el).fontSize)),
-      body: (() => {
-        if (reveal === null) return null
-        const probe = document.createElement('span')
-        probe.style.fontSize = 'var(--text-base)'
-        reveal.appendChild(probe)
-        const px = parseFloat(getComputedStyle(probe).fontSize)
-        probe.remove()
-        return px
-      })(),
-    }
-  })
-  const at = `(density tier ${short ? 'ON' : 'OFF'})`
-  const exact = (actual: string | null | undefined, onShort: string, onTall: string, what: string): void => {
-    expect(actual, `${what} ${at}`).toBe(short ? onShort : onTall)
-  }
-  expect(read.stamped, 'no two-pane reveal is stamped — the density read would be vacuous (insight 029)').toBe(true)
-  expect(read.echo, `the echo flag must match the frame: the staleness echo is ${read.echo ? 'ON' : 'OFF'} here`).toBe(rows.echo === true)
-  // The survivor statements' leading (KTD11): the frame's own markers pick its row in `SURVIVOR_LEADING`, and the
-  // arm's expectation must match them on both sides of the tier. Inside the short tier the cell reads tight (L3,
-  // B's entry) or snug (L1); above it, body.
-  const directions: readonly string[] = Object.keys(SURVIVOR_LEADING)
-  expect(directions, 'the magnitude clause stamps its shown direction (the leading table and rung 3 read it)').toContain(read.direction)
-  const marked = SURVIVOR_LEADING[read.direction as keyof typeof SURVIVOR_LEADING]({ echo: read.echo, typical: read.typical })
-  const expected = rows.leading ?? (rows.echo === true ? 'tight' : 'snug')
-  expect(
-    marked,
-    `the leading expectation must match the frame: direction ${read.direction}, echo ${read.echo}, typical ${read.typical} → ${marked}, the arm expects ${expected}`,
-  ).toBe(expected)
-  const tight = short && marked === 'tight'
-  const leading = (ratios: readonly number[], what: string): void => {
-    const name = tight ? '--leading-tight ~1.3 (L3 on an echo frame, or B\'s entry)' : short ? '--leading-snug ~1.4' : 'body ~1.55'
-    for (const r of ratios) {
-      const [lo, hi] = tight ? [1.25, 1.35] : short ? [1.35, 1.45] : [1.5, 1.6]
-      expect(r, `${what} leading ${at}: ${name}`).toBeGreaterThan(lo)
-      expect(r, `${what} leading ${at}: ${name}`).toBeLessThan(hi)
-    }
-  }
-  // L4 — the echo's own line: snug inside the short tier, body above it
-  if (rows.echo === true) {
-    expect(read.stalenessLeading.length, 'the echo frame carries exactly one staleness line — L4 would read nothing').toBe(1)
-    for (const r of read.stalenessLeading) {
-      const [lo, hi] = short ? [1.35, 1.45] : [1.5, 1.6]
-      const name = short ? 'L4: --leading-snug ~1.4' : 'body ~1.55'
-      expect(r, `the staleness echo's leading ${at}: ${name}`).toBeGreaterThan(lo)
-      expect(r, `the staleness echo's leading ${at}: ${name}`).toBeLessThan(hi)
-    }
-  }
-  exact(read.resultPaddingTop, '32px', '40px', '.result padding-block-start')
-  // W1 / W2 / L1 — the survivor cards (every spine frame carries at least one)
-  expect(read.cardPaddingTop.length, 'the frame carries no survivor card — W1 would read nothing').toBeGreaterThan(0)
-  for (const p of read.cardPaddingTop) exact(p, '4px', '24px', 'W1: the survivor card padding-top')
-  expect(read.revealGap.length, 'the frame carries no survivor stack — W2 would read nothing').toBeGreaterThan(0)
-  for (const g of read.revealGap) exact(g, '4px', '12px', 'W2: the survivor stack row-gap')
-  expect(read.eyebrowLeading.length, 'the frame carries no survivor eyebrow — L1 would read nothing').toBeGreaterThan(0)
-  leading(read.eyebrowLeading, 'L1: the survivor eyebrow')
-  leading(read.stepdownLeading, 'L1: the survivor step-down')
-  if (rows.fold === true) {
-    expect(read.foldPaddingTop.length, 'the folded frame carries no survivor fold').toBe(1)
-    exact(read.foldPaddingTop[0], '4px', '12px', 'W1: the closed fold row padding-top')
-    expect(read.foldSummaryGap.length, 'the folded frame carries no fold summary').toBe(1)
-    exact(read.foldSummaryGap[0], '4px', '12px', 'W2: the fold summary row-gap')
-    expect(read.foldBodyPaddingTop.length, 'the folded frame carries no inner survivor body').toBe(1)
-    exact(read.foldBodyPaddingTop[0], '4px', '12px', "W1: the fold's inner body padding-top")
-    expect(read.reliefStepdowns, "the floor relief's step-down must render on the folded frame").toBeGreaterThan(0)
-    expect(read.eyebrowLeading.length, 'the folded frame carries BOTH eyebrows (the relief card and the fold summary)').toBe(2)
-  } else {
-    expect(read.contextLeading.length, 'the inline survivor card carries no context paragraph').toBeGreaterThan(0)
-    leading(read.contextLeading, 'L1: the survivor context')
-  }
-  // W3 — the in-frame caveat
-  exact(read.caveatPaddingTop, '4px', '8px', 'W3: the in-frame caveat padding-top')
-  // W7 — the band drawer
-  expect(read.drawer, 'the band drawer is not on the frame').not.toBeNull()
-  exact(read.drawer!.top, '16px', '20px', 'W7: the drawer padding-top')
-  exact(read.drawer!.bottom, '16px', '24px', 'W7: the drawer padding-bottom')
-  exact(read.drawer!.left, '24px', '24px', "W7: the drawer's inline padding (the honesty floor's input)")
-  exact(read.drawer!.right, '24px', '24px', "W7: the drawer's inline padding (the honesty floor's input)")
-  exact(read.drawer!.pull, '8px', '12px', "W7: the drawer pull's margin-bottom")
-  exact(read.drawer!.legendTop, '8px', '16px', "W7: the drawer legend's margin-top")
-  exact(read.drawer!.legendGap, '4px', '8px', "W7: the drawer legend's row-gap")
-  // W4 — the note frames' grid and subordinates row-gaps
-  if (rows.skipNoteGaps !== true) {
-    expect(read.noteFrame, 'W4 reads a note frame (a Medicare pair, a state note or the staleness echo), and this frame carries none').toBe(true)
-    const tall = read.typical ? '2px' : '4px'
-    exact(read.gridRowGap, '2px', tall, `W4: the ${read.typical ? 'ON-typical' : 'non-typical'} note frame's grid row-gap`)
-    exact(read.subordinatesRowGap, '2px', tall, `W4: the ${read.typical ? 'ON-typical' : 'non-typical'} note frame's subordinates row-gap`)
-  }
-  // W5 — the record card
-  if (rows.record === true) {
-    expect(read.record, 'the record card is not on the frame').not.toBeNull()
-    exact(read.record!.top, '8px', '12px', 'W5: the record card padding-top')
-    exact(read.record!.bottom, '8px', '12px', 'W5: the record card padding-bottom')
-    exact(read.record!.gap, '4px', '8px', 'W5: the record card row-gap')
-  }
-  // RUNG 3 — the borrowed register, keyed to the frame's own markers (the ruling, written here independently of
-  // survivor.css's selectors): the shown direction is `rethink` or `trim`, the echo shows, the typical residual runs.
-  // The direction was checked against the leading table's keys above.
-  const key = (read.direction === 'rethink' || read.direction === 'trim') && read.echo && read.typical
-  expect(key, `rung 3's key must match the frame: direction ${read.direction}, echo ${read.echo}, typical ${read.typical}`).toBe(rows.register === true)
-  const borrow = short && key
-  expect(read.body, 'the body-size probe read nothing').not.toBeNull()
-  const body = read.body!
-  let contextsRead = 0
-  for (const card of read.register) {
-    for (const px of [...card.context, ...card.stepdown]) {
-      contextsRead += 1
-      if (borrow) {
-        expect(card.hasEyebrow, 'a borrowing card carries the eyebrow it borrows from').toBe(true)
-        expect(px, `rung 3 ${at}: the survivor context borrows its own eyebrow's register`).toBe(card.eyebrow)
-        expect(px, `rung 3 ${at}: the borrowed register is smaller than body`).toBeLessThan(body)
-      } else {
-        expect(px, `rung 3 ${at}${key ? ' (the key holds, the tier is off)' : ' (no key on this frame)'}: the survivor context stays body`).toBe(body)
-      }
-    }
-  }
-  if (rows.fold !== true) expect(contextsRead, 'the inline survivor card carries no context paragraph — rung 3 would read nothing').toBeGreaterThan(0)
-  // The trim note's presence on the folded frame is asserted above (W1's relief check), so this never reads nothing there.
-  for (const px of read.trimNotes) expect(px, `rung 3 ${at}: the floor relief's trim note keeps body size`).toBe(body)
-}
-
-async function assertMedicareNote(page: Page, expected: boolean): Promise<void> {
-  // The priced-Medicare disclosure is TWO lines that ship together (hard constraint 2): the
-  // affirmation (.cs-medicare-note) + the narrowed residual (.cs-medicare-residual).
-  const affirm = page.locator('.cs-medicare-note')
-  const residual = page.locator('.cs-medicare-residual')
-  if (expected) {
-    await expect(affirm, 'the priced-Medicare affirmation must render').toBeVisible()
-    await expect(residual, 'the narrowed residual must render WITH the affirmation').toBeVisible()
-  } else {
-    await expect(affirm, 'a door household carries no hero-level Medicare lines').toHaveCount(0)
-    await expect(residual, 'a door household carries no hero-level Medicare lines').toHaveCount(0)
-  }
-}
-
-/** Card 4 — the STANDALONE state clause renders exactly where the residual does not (never twice).
- *  Presence is the whole pin: the words are the composer's, unit-pinned in stateTaxDisclosure.test;
- *  the matrix (route × cohort × pricing) is pinned in ConfidenceStatement.test + FuckOffDate.test. */
-async function assertStateNote(page: Page, expected: boolean): Promise<void> {
-  const note = page.locator('.cs-state-note')
-  if (expected) {
-    await expect(note, 'a household whose residual is withheld reads its state clause standalone').toHaveCount(1)
-    await expect(note).toBeVisible()
-  } else {
-    await expect(note, 'a residual-bearing frame carries its state clause INSIDE the residual — no standalone note').toHaveCount(0)
-  }
-}
-
-/** The survivor card's spending-basis line (Briggsy's sentence, ruled 2026-10-14) — its presence companion
- *  (insight 029): jsdom loads no stylesheet and a missing line only makes the fit EASIER, so a CSS rule that
- *  hid it would pass every other gate. The words are the catalog slot's own (`slots.verdictSurvivorSpendBasis`,
- *  figures wildcarded — the per-seed figures are pinned once, in survivorSpendingBasisSeedGate.test.tsx).
- *  'inline': the card is on the frame, so the line is visible. 'folded' (`budget` — the floor relief holds
- *  the inline slot): the line is in the closed fold, hidden until it opens; this opens the fold, so call it
- *  AFTER the frame is measured. */
-async function assertSurvivorBasis(page: Page, placement: 'inline' | 'folded'): Promise<void> {
-  const FIGURE = '\u0000'
-  const shape = new RegExp(
-    '^' +
-      slots
-        .verdictSurvivorSpendBasis(FIGURE, FIGURE)
-        .replace(/[.*+?^${}()|[\]\\]/g, (ch) => '\\' + ch)
-        .split(FIGURE)
-        .join('[1-9][0-9,]*') +
-      '$',
-  )
-  const line = page.locator('.survivor__basis')
-  await expect(line, 'the survivor card carries exactly ONE spending-basis line').toHaveCount(1)
-  if (placement === 'folded') {
-    await expect(line, 'the folded card keeps the line inside the closed fold').toBeHidden()
-    await page.locator('.survivor-fold__summary').click()
-  }
-  await expect(line, 'the spending-basis line must be VISIBLE on the card (never hidden by a stylesheet)').toBeVisible()
-  await expect(line, 'the line reads the ruled sentence, with two real figures').toHaveText(shape)
-}
-
-/** The Medicare pair's and the standalone state note's LEADING, on both sides of the density tier. The
- *  Linux wrap-drift reservoir (CI 2026-07-11, run 29170580301) paid for the magnitude-honest residual in
- *  leading (body 1.55 → snug 1.4, round 2); ROUND 5 stepped the ON-TYPICAL frames (the appended
- *  bi-directional typical sentence: the modifier class) on to --leading-tight (~1.3) at every two-pane
- *  height; the 1440×731 re-point's L2 (2026-11-20) brings every other note frame to tight INSIDE the short
- *  tier. So: 'short' (REAL, TIER) reads tight on every note; 'tall' (the showcase) reads tight on a typical
- *  frame and snug on the rest, so round 2's rule keeps a reader. Pinned by computed style, so deleting a
- *  rule goes red on EVERY platform (insight 075's standing encoding), never only under ubuntu's taller text
- *  metrics. Every note the frame carries is read; a frame that carries none fails loudly (insight 029). */
-async function assertNoteLeading(page: Page, tier: 'short' | 'tall'): Promise<void> {
-  const notes = await page.evaluate(() => {
-    const typical = document.querySelector('.cs-medicare-residual--typical') !== null
-    return Array.from(document.querySelectorAll('.cs-medicare-note, .cs-medicare-residual, .cs-state-note')).map((el) => {
-      const cs = getComputedStyle(el)
-      return { cls: el.className, ratio: parseFloat(cs.lineHeight) / parseFloat(cs.fontSize), typical }
-    })
-  })
-  expect(notes.length, 'the frame carries no Medicare pair or state note — the leading read would be vacuous').toBeGreaterThan(0)
-  for (const n of notes) {
-    if (tier === 'short' || n.typical) {
-      const why = tier === 'short' ? 'inside the short tier every note rides --leading-tight (~1.3), L2' : 'the ON-TYPICAL pair rides --leading-tight (~1.3), round 5'
-      expect(n.ratio, `.${n.cls}: ${why}`).toBeGreaterThan(1.25)
-      expect(n.ratio, `.${n.cls}: ${why}`).toBeLessThan(1.35)
-    } else {
-      expect(n.ratio, `.${n.cls}: above the short tier the note rides --leading-snug (~1.4), round 2`).toBeGreaterThan(1.35)
-      expect(n.ratio, `.${n.cls}: above the short tier the note rides --leading-snug (~1.4), round 2`).toBeLessThan(1.45)
-    }
-  }
+/** The home's presence companion (insight 029 — geometry over an unresolved or blank page passes vacuously): the seed
+ *  landed on the shell's Snapshot with its ring card reading, and the gear (the panel's door since RC4) is offered. */
+async function assertResolvedHome(page: Page): Promise<void> {
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached()
+  await expect(page.locator('[data-ring-reading]')).toBeVisible()
+  await expect(page.locator('[data-gear]')).toBeVisible()
 }
 
 /** Each laptop size's describe title, in the words its arms have always carried (a title is how a `-g` filter finds
@@ -1144,1375 +53,6 @@ function sizeTitle(size: LaptopSizeName): string {
   }
 }
 
-// ── the spine frame matrix: {budget, retired, health, nc, patypical} × {REAL, TIER, LENOVO_FULL, SHOWCASE} ──
-// Each size's tier and law come from `LAPTOP_SIZES` (the frames-outside plan's KTD9): REAL and TIER sit inside the short
-// density tier under the degrade contract; LENOVO_FULL (his whole screen, 1440×900 @ 2) renders the tall rhythm under the
-// same contract, its full-fit distance printed; SHOWCASE (1871×917, no screen of his) holds the full fit, doors included.
-// LENOVO_FULL joined with the frames-outside plan's U4, on run M1's reading (44963702523): every spine caveat inside 900 on
-// Windows and ubuntu alike (`budget` 800.2, `retired` 751.1, `health` 709.8, `nc` 751.1, `patypical` 777.4), and no
-// protected box past the fold.
-const SPINE_SIZES = ['REAL', 'TIER', 'LENOVO_FULL', 'SHOWCASE'] as const
-
-for (const { seed, medicareNote, stateNote, survivor } of SPINE_SEEDS) {
-  test.describe(`?seed=${seed} — the one-frame fit law`, () => {
-    for (const size of SPINE_SIZES) {
-      const s = LAPTOP_SIZES[size]
-      test.describe(sizeTitle(size), () => {
-        test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
-        const law =
-          s.law === 'full'
-            ? 'FULL fit (doors included) and the density tier stays off'
-            : s.density === 'tall'
-              ? 'everything but the doors fits one frame, the full-fit distance printed, and the density tier stays off'
-              : 'everything but the doors fits one frame'
-        test(`${seed}: ${law}`, async ({ page }) => {
-          await gotoSeedFinal(page, seed)
-          await assertResolvedSpine(page)
-          await assertSizeTier(page, size)
-          if (size === 'REAL') {
-            await assertMedicareNote(page, medicareNote)
-            await assertStateNote(page, stateNote)
-          }
-          await assertOneVisibleDisclaimer(page, 'laptop')
-          await assertFrameAtSize(page, size, `?seed=${seed}`)
-          if (size === 'REAL') await assertSurvivorBasis(page, survivor) // after the frame: the folded arm opens the fold
-          // The density pins read AFTER the fit (a deleted rung reds on its own line with the fold check already passed)
-          // and after the fold opens: the short side at REAL and TIER (tokens.css --bp-laptop-short carries the tier's
-          // law), every rung's tall side at LENOVO_FULL and SHOWCASE.
-          if (medicareNote || stateNote) await assertNoteLeading(page, s.density)
-          await assertDensityTier(page, s.density, { fold: survivor === 'folded' })
-        })
-      })
-    }
-  })
-}
-
-// ── U16 §S2: the recommend-second INVITED AFFORDANCE — measured posture ───────────────────────
-// The affordance (`.result-recommend-invite`) joins the doors DOM region as the FIRST quiet-row door
-// (so it degrades below-fold LAST among the doors). Its fit posture is MEASURED, not decreed
-// (the advocate's ratified priority): (1) spine content protected in-frame > (2) affordance in-frame
-// > (3) affordance a doors casualty. Because it lives INSIDE `.result-quiet-row` — the sanctioned
-// below-fold exclusion — spine content is STRUCTURALLY protected (posture 1) whatever the affordance's
-// own posture; this arm proves that invariant AND records where the affordance itself lands at each
-// walk tier. (The DATE-route "doors last" order contract needs no new arm: the affordance is a
-// quiet-row child, so the existing dip/datenc order checks — which exclude the quiet-row subtree —
-// already cover it.) The affordance opens the GoalPicker and dispatches the solve (U16 §S3 shipped
-// 2026-07-22); its PRESENCE + posture (what this arm measures) needs no solve, so this arm never waits on one.
-
-const AFFORDANCE_SEEDS = ['retired', 'nc'] as const
-
-for (const seed of AFFORDANCE_SEEDS) {
-  for (const vp of [REAL, TIER] as const) {
-    const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
-    test.describe(`?seed=${seed} — the recommend-second affordance posture (${vp.width}×${vp.height})`, () => {
-      test.use({ viewport: vp, ...scale })
-      test(`${seed}: the affordance is the FIRST quiet-row door; spine content stays frame-protected`, async ({
-        page,
-      }) => {
-        await gotoSeedFinal(page, seed)
-        await assertResolvedSpine(page)
-        // Offered, rendered STATICALLY (no badge/pulse/scroll-entrance — R11), and it is the FIRST
-        // door (degrades below-fold LAST among the doors).
-        const affordance = page.locator('.result-recommend-invite')
-        await expect(affordance, 'the recommend-second affordance must be offered').toBeVisible()
-        await expect(
-          page.locator('.result-quiet-row > button').first(),
-          'the affordance is the first quiet-row door (degrades last)',
-        ).toHaveClass(/result-recommend-invite/)
-        // POSTURE (1) — spine content protected: the frame fits with the quiet row (the affordance's
-        // home) excluded. The affordance itself MAY be a below-fold doors casualty; the spine cannot.
-        await assertFrameFits(page, true)
-        // Record the measured posture (in-frame vs below-fold) — the spec's measured-not-decreed law.
-        const box = await affordance.boundingBox()
-        expect(box, 'the affordance reported no box').not.toBeNull()
-        const bottom = Math.round(box!.y + box!.height)
-        const inFrame = bottom <= vp.height + 0.5
-        console.log(
-          `[U16 affordance posture] seed=${seed} ${vp.width}x${vp.height}: bottom=${bottom} viewport=${vp.height} → ${inFrame ? 'IN-FRAME (posture 2)' : 'below-fold doors casualty (posture 3)'}`,
-        )
-      })
-    })
-  }
-}
-
-// ── The STEER-NOTE frame (the steer-seed increment, 2026-07-23) — the sanctioned-scroll ORDER
-// contract under the no-pretax refusal. The refusal is SYNCHRONOUS (no worker wait), so the frame
-// is fit-tractable — but it is a BEAT-CARRYING frame, and the F-A design (confidence.css r5)
-// RECORDS that beat frames scroll by design (the surface takes a full-width row; the disclaimer +
-// tail step down — 'steer' is enumerated in that ruling). So this arm pins what the frame OWES,
-// the date-route order-contract idiom, not the idle one-frame law: (1) the NOTE — the response to
-// the user's own goal pick — fully IN-FRAME (a refusal the user must scroll to find is a silent
-// dead-end; the A/B walk measured the first three-line draft at surface-bottom 776 and the
-// tightened note at 751 — the tighter TRUE sentence bought the headroom, insight 097); (2) the
-// order holds: note → disclaimer → doors, doors last; (3) nothing breathes and the invite retires.
-for (const vp of [REAL, TIER] as const) {
-  const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
-  test.describe(`?seed=steer — the no-pretax steer-note frame (${vp.width}×${vp.height})`, () => {
-    test.use({ viewport: vp, ...scale })
-    test('the goal pick lands the calm steer note IN-FRAME; the beat-frame order contract holds', async ({
-      page,
-    }) => {
-      await gotoSeedFinal(page, 'steer')
-      await assertResolvedSpine(page)
-      await page.locator('.result-recommend-invite').click()
-      const dialog = page.getByRole('dialog')
-      const radio = dialog.getByRole('radio', { name: /Leave more behind/ })
-      // NATIVE click — the sr-only radio trap (layout-independent, still bubbles to React's root).
-      await radio.evaluate((el) => (el as HTMLInputElement).click())
-      await expect(radio).toBeChecked()
-      await dialog.getByRole('button', { name: 'See the strategy', exact: true }).click()
-      await expect(dialog).toBeHidden()
-      // The refusal is synchronous: the note renders, nothing breathes, the invite retires.
-      const note = page.locator('.rec-note--no-pretax')
-      await expect(note, 'the steer note must render (never a silent dead-end)').toBeVisible()
-      await expect(page.locator('.solve-pending')).toHaveCount(0)
-      await expect(page.locator('.result-recommend-invite')).toHaveCount(0)
-      // (1) The note — the answer to the user's own action — fully IN-FRAME, no scroll to find it.
-      const noteBox = await note.boundingBox()
-      expect(noteBox, 'the steer note reported no box').not.toBeNull()
-      expect(
-        Math.round(noteBox!.y + noteBox!.height),
-        'the refusal must be visible where the door was — never below the fold',
-      ).toBeLessThanOrEqual(vp.height)
-      // (2) The beat-frame ORDER contract (the date-route idiom): note → disclaimer → doors last.
-      const disclaimer = page.locator('.disclaimer--in-frame')
-      const dBox = await disclaimer.boundingBox()
-      const qBox = await page.locator('.result-quiet-row').boundingBox()
-      expect(dBox, 'the in-frame disclaimer mount must exist').not.toBeNull()
-      expect(qBox, 'the quiet row must exist').not.toBeNull()
-      expect(dBox!.y, 'the disclaimer sits BELOW the note').toBeGreaterThan(noteBox!.y + noteBox!.height - 1)
-      expect(qBox!.y, 'the doors sit BELOW the disclaimer — doors always last').toBeGreaterThan(dBox!.y + dBox!.height - 1)
-    })
-  })
-}
-
-// ── U16 §S2/§S3: the recommend-second PENDING frame + the recorded S2→S3 CLS alignment ─────────
-// THE LIVE DISPATCH SEAM (the recorded blocker, now closed by this fleet): a real GoalPicker pick
-// drives the affordance → GoalPicker → the SOLVE, so the pending tell renders — `idle` no longer
-// dead-ends. This arm PROVES the organic dispatch fires (the whole point of the fleet) and pins the
-// S2→S3 CLS seam.
-//
-// WHY THE COMMITTED / HELD RENDERS ARE NOT MEASURED HERE (recorded, 2026-07-22): a live solve on the
-// DEV server runs FULL PRECISION (16k paths through the mint's oracle gate + search + grade) — MEASURED
-// on this reference machine at 80s (nc → held, which short-circuited at the mint until the 2026-08-02
-// rate pin — that floor is GONE, nc COMMITS now) to 200s+ (surplus → recommended), FAR past this
-// harness's per-test budget (120 s then, 180 s now). The fit gate is built for the fast SPINE tier
-// (`data-answer-tier="final"`, seconds), NOT the solve channel (no live path-count seam — S5 deferred,
-// wall #2 fixes every displayed figure at `solverMinBPaths`). So the committed / held OUTCOMES are engine-proven where
-// tractable — solveDispatch.test.ts drives the REAL builder → REAL engine at the fast test counts
-// (nc → recommended since the rate pin, fl → recommended) — and their RENDER SHAPES in
-// RecommendationSurface.test.tsx; this real-browser arm owns the two facts only Chromium can settle: the pending
-// tell's live presence, and the CLS alignment of the reserved well to the real committed grade lockup.
-//
-// THE CLS ALIGNMENT (measured, no solve): the committed `.rec-grade` lockup is injected into the live
-// `.recommendation-surface` (real CSS, real fonts, real wrap at the `--measure` reading width) and
-// measured — the pending placeholder's reserved well must ALIGN to it (`.solve-pending-panel`
-// min-height 7rem ≈ the ~110px lockup, MEASURED here 2026-07-22), so the committed beat lands in place,
-// not shoved (the recorded S2→S3 CLS seam). The grade WORD holds ONE line (the CLS law). Planted-mutant
-// killer (b): dropping the pending well's min-height collapses it below the lockup and the committed
-// beat jumps on land — the `panelWell ≥ lockup` band goes RED.
-
-/** Reach the pending tell organically: affordance → GoalPicker → confirm the goal → the solve
- *  dispatches (the store sets `pending` synchronously before awaiting the worker). */
-async function dispatchToPending(page: Page): Promise<void> {
-  await page.locator('.result-recommend-invite').click()
-  await expect(page.getByRole('dialog'), 'the GoalPicker must open before the solve').toBeVisible()
-  await page.locator('input[name="recommendation-goal"][value="leave-more"]').check()
-  await page.getByRole('dialog').getByRole('button', { name: 'See the strategy' }).click()
-}
-
-const PENDING_SEEDS = ['surplus', 'nc'] as const
-
-for (const seed of PENDING_SEEDS) {
-  for (const vp of [REAL, TIER] as const) {
-    const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
-    test.describe(`?seed=${seed} — the recommend-second pending frame + CLS alignment (${vp.width}×${vp.height})`, () => {
-      test.use({ viewport: vp, ...scale })
-      test(`${seed}: the goal pick drives the pending tell; its well aligns to the committed grade lockup`, async ({
-        page,
-      }) => {
-        await gotoSeedFinal(page, seed)
-        await assertResolvedSpine(page) // the spine stands before the pick
-
-        await dispatchToPending(page)
-
-        // THE PENDING TELL renders — the dispatch fired (idle no longer dead-ends). One recognizable
-        // working tell: the `.solve-pending` label under `aria-busy`, placeholder-SHAPED (not a spinner).
-        const panel = page.locator('.solve-pending-panel')
-        await expect(panel, 'the pending tell must render — the live dispatch fired').toBeVisible()
-        await expect(panel).toHaveAttribute('aria-busy', /.*/)
-        await expect(page.locator('.solve-pending')).toBeVisible()
-
-        // The spine is UNPERTURBED by the pick (posture 1 — spine content protected): the two-pane
-        // verdict + band still stand (the solve is a SEPARATE channel; it never touches the first beat).
-        await assertResolvedSpine(page)
-
-        // The thinking-breathe (the ONE working-tell family) runs on the label — an INFINITE
-        // opacity animation (base.css), unless reduced motion drops it (then the label alone stands).
-        const motion = await page.evaluate(() => {
-          const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-          const label = document.querySelector('.solve-pending')
-          const anims = label
-            ? label.getAnimations().map((a) => ({
-                name: (a as CSSAnimation).animationName,
-                infinite: a.effect?.getTiming().iterations === Infinity,
-                running: a.playState === 'running',
-              }))
-            : []
-          return { reduce, anims }
-        })
-        if (!motion.reduce) {
-          expect(
-            motion.anims.some((a) => a.name === 'thinking-breathe' && a.infinite && a.running),
-            'the pending tell must carry the shared infinite thinking-breathe (not a second working tell)',
-          ).toBe(true)
-        }
-
-        // THE S2→S3 CLS ALIGNMENT: inject the real committed grade lockup (no solve — a live solve was
-        // 80–200s+ single-worker, recorded 2026-07-22 above; the pool cut it to ~30 s on his laptop's
-        // dev server (caddie-walk.spec.ts, 2026-10-03), but a 4-core runner pools at P = 2 and is
-        // unmeasured), measure it under the real CSS at this tier, and pin that the pending well ALIGNS
-        // to it and the grade word holds ONE line.
-        const cls = await page.locator('.recommendation-surface').evaluate((surface) => {
-          const panelEl = document.querySelector('.solve-pending-panel') as HTMLElement | null
-          const panelWell = panelEl ? panelEl.getBoundingClientRect().height : 0
-          const el = document.createElement('div')
-          el.className = 'rec-committed'
-          // The real RecommendedBeat grade-lockup DOM (the no-note core the pending well aligns to):
-          // the glyph+word head + the two-line delta-as-hero comparative.
-          el.innerHTML =
-            '<div class="rec-grade" role="group">' +
-            '<p class="rec-grade__head"><svg class="rec-grade__glyph" width="22" height="22" viewBox="0 0 22 22"></svg>' +
-            '<span class="rec-grade__word">A confident lean</span></p>' +
-            '<p class="rec-grade__hero">This keeps about $128,000 more for the two of you to pass on than staying on your current plan.</p>' +
-            '</div>'
-          surface.appendChild(el)
-          const word = el.querySelector('.rec-grade__word') as HTMLElement
-          const wordLineHeight = parseFloat(getComputedStyle(word).lineHeight)
-          const lockup = Math.round((el.querySelector('.rec-grade') as HTMLElement).getBoundingClientRect().height)
-          const wordOneLine = word.getBoundingClientRect().height <= wordLineHeight * 1.4
-          el.remove()
-          return { panelWell: Math.round(panelWell), lockup, wordOneLine }
-        })
-
-        // The grade word (the longest confident/coin-flip word) holds ONE line at this laptop tier — the
-        // CLS law (the lockup never wraps the word beside its glyph).
-        expect(cls.wordOneLine, 'the grade word must hold one line at this tier (the CLS law)').toBe(true)
-
-        // ALIGNMENT (mutant killer b): the reserved pending well is at least the committed grade
-        // lockup's height, so the committed beat lands in place. Dropping the min-height collapses the
-        // well to the bare label and the committed lockup jumps on land — this lower bound goes RED.
-        expect(
-          cls.panelWell,
-          `the pending well (${cls.panelWell}px) collapsed below the committed grade lockup (${cls.lockup}px) — the committed beat would jump on land (CLS)`,
-        ).toBeGreaterThanOrEqual(cls.lockup - 8)
-        // …and not grossly OVER-reserved (a large empty well breathing over the whole solve).
-        expect(
-          cls.panelWell,
-          `the pending well (${cls.panelWell}px) over-reserves vs the committed lockup (${cls.lockup}px)`,
-        ).toBeLessThanOrEqual(cls.lockup + 44)
-
-        // POSTURE (measured, not decreed — the S2 law): record where the pending well lands at this tier
-        // (in-frame vs a below-fold doors-region casualty), like the affordance-posture arm.
-        const posture = await panel.evaluate((el) => {
-          const b = el.getBoundingClientRect()
-          return { bottom: Math.round(b.bottom), inFrame: b.bottom <= window.innerHeight + 0.5 }
-        })
-        console.log(
-          `[U16 pending posture] seed=${seed} ${vp.width}x${vp.height}: well=${cls.panelWell}px lockup=${cls.lockup}px bottom=${posture.bottom} → ${posture.inFrame ? 'IN-FRAME' : 'below-fold (doors-region casualty)'}`,
-        )
-      })
-    })
-  }
-}
-
-// ── U16 F-A: the recommend-second surface fills the right rail (the dead-rail fix) ────────────
-// THE DEAD RAIL (refuter-confirmed): the committed recommend-second beat rendered in a 576px LEFT
-// rail beside ~950px of blank right pane — the spine band ends ~615px, and the whole rail below it
-// was dead while the tall committed beat stacked down the left. The fix seats the surface as a
-// FULL-WIDTH row BELOW the two panes (confidence.css, keyed on the surface carrying a beat so the
-// IDLE frame stays byte-identical — the matrix arms above prove that), and the committed viz
-// continues the band down into that rail at the SAME x + width.
-//
-// Like the CLS arm above, a LIVE committed solve measured 80–200s+ on the single worker (2026-07-22,
-// past this harness's budget; ~30 s on his laptop on the 2026-10-03 worker pool at v8, unmeasured under
-// this parallel harness and on CI's P = 2), so this
-// INJECTS the real committed DOM (grade lockup + the fixed-dimension viz box + the text rest) into
-// the live `.recommendation-surface` — the viz box's PRESENCE is exactly what the shipped CSS keys
-// the inner two-pane on (`.rec-committed:has(> .rec-viz-box)`) — and measures where the real CSS
-// seats it. Two seeds: `retired` (tall verdict column) and `health` (SHORT verdict column, where a
-// naive full-width span at the slack row would paint the viz OVER the band — the collision this
-// placement structurally avoids). Planted-mutant killers: reverting the surface span
-// (`.recommendation-surface` back to `grid-column: 1`) reds assertion (1); reverting the inner
-// two-pane (`.rec-committed` back to the --measure single column) reds assertion (3).
-const DEAD_RAIL_SEEDS = ['retired', 'health'] as const
-
-for (const seed of DEAD_RAIL_SEEDS) {
-  for (const vp of [REAL, TIER] as const) {
-    const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
-    test.describe(`?seed=${seed} — the recommend-second surface fills the right rail (${vp.width}×${vp.height})`, () => {
-      test.use({ viewport: vp, ...scale })
-      test(`${seed}: the committed beat spans full width with the viz seated under the band, never over it`, async ({
-        page,
-      }) => {
-        await gotoSeedFinal(page, seed)
-        await assertResolvedSpine(page)
-        const geom = await page.locator('.recommendation-surface').evaluate((surface) => {
-          // The real committed DOM (RecommendationSurface.tsx → RecommendedBeat): the grade lockup,
-          // the fixed-dimension viz box (its placeholder holds the RV_VIEW aspect), and the text
-          // rest wrapper. Injected (no live solve — 80–200s+ single-worker per the 2026-07-22 record,
-          // ~30 s pooled at v8 on his laptop, unmeasured at a runner's P = 2) exactly as the CLS arm
-          // injects its grade lockup; the viz box's presence triggers the inner two-pane.
-          //
-          // ⚠️ IT MODELS THE COLUMN STRUCTURE, NOT THE COPY. This arm asserts where the two columns
-          // START AND END — the inner text is a stand-in and has drifted from the catalog (the shipped
-          // nameplate is "Compared with your plan today"), which costs nothing because no assertion
-          // below reads it. Children that cannot move a column boundary are therefore deliberately NOT
-          // injected here, including the 2026-08-05 winning-plan card: it is a flow child of `__rest`
-          // with no width of its own. The SAVE-SLOT arm below is the one that must stay content-true —
-          // it measures heights — and it carries the card, sourced from `copy` like everything else.
-          const el = document.createElement('section')
-          el.className = 'rec-committed'
-          el.innerHTML =
-            '<div class="rec-grade" role="group"><p class="rec-grade__head">' +
-            '<svg class="rec-grade__glyph" width="22" height="22" viewBox="0 0 22 22"></svg>' +
-            '<span class="rec-grade__word">A confident lean</span></p>' +
-            '<p class="rec-grade__hero">This keeps about $128,000 more for the two of you to pass on than staying on your current plan.</p></div>' +
-            '<div class="rec-viz-box"><div class="rec-viz-box__placeholder" aria-hidden="true"></div></div>' +
-            '<div class="rec-committed__rest"><p class="rec-baseline">Compared with keeping your current plan</p>' +
-            '<p class="rec-limits">Validate big, irreversible moves with a professional.</p></div>'
-          surface.appendChild(el)
-          const rect = (node: Element | null) => {
-            if (node === null) return null
-            const r = node.getBoundingClientRect()
-            return { left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), bottom: Math.round(r.bottom), width: Math.round(r.width) }
-          }
-          const out = {
-            surface: rect(surface)!,
-            viz: rect(el.querySelector('.rec-viz-box'))!,
-            grade: rect(el.querySelector('.rec-grade'))!,
-            band: rect(document.querySelector('.cs-band'))!,
-            reveal: rect(document.querySelector('.confidence-reveal[data-twopane]'))!,
-          }
-          el.remove()
-          return out
-        })
-        // (1) FULL-WIDTH — the surface LEAVES the left column: its right edge reaches the reveal's
-        // right edge (not the ~576px left rail). MUTANT (revert the span → grid-column: 1): the
-        // right edge pins back at the left column (~784px) and this goes RED.
-        expect(
-          geom.surface.right,
-          `the committed surface stayed in the left rail (right=${geom.surface.right}, reveal right=${geom.reveal.right}) — the dead rail is back`,
-        ).toBeGreaterThanOrEqual(geom.reveal.right - 2)
-        // (2) the grade lockup stays at the comfortable reading measure (never stretched wall-wide).
-        expect(
-          geom.grade.width,
-          `the grade lockup stretched past the reading measure (width=${geom.grade.width})`,
-        ).toBeLessThanOrEqual(600)
-        // (3) RIGHT RAIL — the viz seats in the right pane, aligned with the band's own left edge (its
-        // vertical continuation). MUTANT (revert the inner two-pane): the viz collapses into the left
-        // column (~208px) and this goes RED.
-        expect(
-          geom.viz.left,
-          `the viz did not reach the right rail (viz left=${geom.viz.left}, band left=${geom.band.left}) — the right pane is still dead below the fan`,
-        ).toBeGreaterThanOrEqual(geom.band.left - 4)
-        expect(geom.viz.width, `the viz has no breathing width in the rail (width=${geom.viz.width})`).toBeGreaterThan(300)
-        // (4) NO COLLISION — the viz seats BELOW the band's render bottom, never painted over the fan
-        // (the short-`health` verdict column is the structural test: its slack row ends exactly at the
-        // band bottom, so the full-width row below it clears the fan).
-        expect(
-          geom.viz.top,
-          `the viz overlaps the band (viz top=${geom.viz.top}, band bottom=${geom.band.bottom}) — the recommendation paints over the fan`,
-        ).toBeGreaterThanOrEqual(geom.band.bottom - 1)
-      })
-    })
-  }
-}
-
-// ── U17 §S5: the SAVE SLOT's reservation, MEASURED (the CLS law) ──────────────────────────────
-// WHAT THIS REPLACES. U16 reserved `.rec-save-slot` at 2.75rem and S5 re-sized it to 8rem BY
-// ARITHMETIC off the type scale — recommendation.css says so in its own comment ("this figure is
-// reasoned from the type scale, not observed"). The only guard until now was a `min-height` lower
-// bound, which is UNFALSIFIABLE: `min-block-size` never clips, so "the box is at least its content"
-// is true by construction whatever the content does. The falsifiable law is EQUALITY — every arm the
-// slot can swap to must land in a box of the SAME height, because the swap happens under the
-// household's pointer with the R13 disclaimer and the quiet doors directly beneath it (insight 035:
-// a collapsing box yanks them up mid-gesture). An arm that OVERFLOWS the reservation grows the box
-// and breaks the equality; an arm that under-fills it does not (the floor holds) — so this measures
-// the one direction that can actually move.
-//
-// EVERY STRING COMES FROM THE SHIPPED CATALOG (`copy`), never re-typed here. A spec-local literal
-// would pin the reservation against a fiction: re-word the ceremony hint one line longer and the
-// gate would stay green while the real control overflowed. `e2e/caddie-walk.spec.ts:25` is the
-// precedent for importing src into an e2e spec.
-//
-// INJECTED, not solved: a live committed solve was 80–200s single-worker (recorded 2026-07-22
-// above); the pool measured ~30 s at v8 on his laptop's dev server (caddie-walk.spec.ts, 2026-10-03)
-// and is unmeasured at a 4-core runner's P = 2, so it stays out of this harness's budget. The
-// injected DOM is the verbatim `RecommendationSurface.tsx` render for each arm.
-//
-// WHAT THE MEASUREMENT FOUND, AND WHY THE PHONE IS NOT IN THE LOOP (recorded 2026-07-26, first real
-// browser run of this arm — the reservation had never been observed, only derived):
-//   1536×791 · 1280×800 · 1088×800 — reserved 128px, offer content 101.59px, ceremony hint TWO
-//     lines. The shipped arithmetic (recommendation.css: "3 × 24.8 = 74px … total 126.4px") is
-//     WRONG in the safe direction: the hint holds two lines at every laptop tier, so the box
-//     OVER-reserves by 26.41px. Harmless to the fold (the slot exists only on the committed beat,
-//     and that frame is a full-width r5 row that scrolls by design — the PROTECTED idle frames
-//     render no slot at all), but the figure in that comment is not what the browser does.
-//   390×844 — reserved 128px, offer content 146.13px, ceremony hint FOUR lines. The box GREW to
-//     146.13px, so the tap offer→saving collapsed it back to 128px and everything below it rose
-//     18.13px mid-gesture: a live CLS defect, and the equality this arm exists to enforce was FALSE
-//     on the phone. The phone was deliberately held OUT of the loop rather than pinned green against
-//     that wrong behaviour (an arm that pins a defect is the defect's second copy) or left red.
-//
-// ✓ THE PHONE IS IN THE LOOP AS OF 2026-07-27 — the defect is fixed, so the arm can hold it honestly.
-// `recommendation.css` now reserves PER TIER (10rem base / 8rem at the 68rem laptop seam), sized off
-// a re-measurement across the sub-laptop range: 390×844 is the governing width at 146.13px of offer
-// content, and 320×844 is slightly SHORTER (145.25px — the hint is 4L at both, and the one-line arms
-// rewrap at 320), so narrower is not monotonically taller. The hint was NOT trimmed: content never
-// yields to layout. This loop is what keeps that true — a reword that outgrows 10rem reds here.
-const SAVE_SLOT_SEEDS = ['retired'] as const
-
-for (const seed of SAVE_SLOT_SEEDS) {
-  for (const vp of [REAL, TIER, FLOOR, PHONE] as const) {
-    const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
-    test.describe(`?seed=${seed} — the save slot's reservation holds every arm (${vp.width}×${vp.height})`, () => {
-      test.use({ viewport: vp, ...scale })
-      test(`${seed}: empty, offer, saving and saved all land in the SAME box (no mid-gesture collapse)`, async ({
-        page,
-      }) => {
-        await gotoSeedFinal(page, seed)
-        await assertResolvedSpine(page)
-
-        // RENAMED from `slots` 2026-08-05: the winning-plan card's conversion line comes from the
-        // copy-catalog `slots` import, and a local `const slots` puts that import in the temporal dead
-        // zone for this whole block — the catalog could not be read at all while the shadow stood.
-        const slotBoxes = await page.locator('.recommendation-surface').evaluate((surface, text) => {
-          // The real committed beat (RecommendedBeat) — the grade lockup, the fixed-dimension viz
-          // box (whose PRESENCE is what the shipped CSS keys the inner two-pane on), and the text
-          // rest that OWNS the save slot. The aside is a SIBLING of the beat, exactly as the
-          // surface renders it.
-          const beat = document.createElement('section')
-          beat.className = 'rec-committed'
-          beat.innerHTML =
-            '<div class="rec-grade" role="group"><p class="rec-grade__head">' +
-            '<svg class="rec-grade__glyph" width="22" height="22" viewBox="0 0 22 22"></svg>' +
-            '<span class="rec-grade__word">A confident lean</span></p>' +
-            '<p class="rec-grade__hero">This keeps about $128,000 more for the two of you to pass on than staying on your current plan.</p></div>' +
-            '<div class="rec-viz-box"><div class="rec-viz-box__placeholder" aria-hidden="true"></div></div>' +
-            '<div class="rec-committed__rest">' +
-            '<p class="rec-baseline">Compared with keeping your current plan</p>' +
-            // The winning-plan card (2026-08-05) — a real child of `__rest` on every ACTIVE beat, so it
-            // rides above the slot here too. Its content comes from the catalog like everything else;
-            // the conversion line is the shipped slot rendered with the widest live figure shape.
-            '<div class="rec-action">' +
-            `<p class="rec-action__heading">${text.actionHeading}</p>` +
-            '<dl class="rec-action__list">' +
-            `<dt class="rec-action__term">${text.actionOrder}</dt>` +
-            `<dd class="rec-action__value">${text.orderLabel}<span class="rec-action__gloss">${text.orderGloss}</span></dd>` +
-            `<dt class="rec-action__term">${text.actionConversion}</dt>` +
-            `<dd class="rec-action__value">${text.conversionLine} <span class="rec-action__gloss">${text.conversionNote}</span></dd>` +
-            '</dl></div>' +
-            `<p class="rec-limits">${text.limits}</p>` +
-            `<button type="button" class="btn-quiet rec-repick">${text.repick}</button>` +
-            '<div class="rec-slot-host"></div>' +
-            '</div>'
-          surface.appendChild(beat)
-          const host = beat.querySelector('.rec-slot-host') as HTMLElement
-
-          // The four arms, verbatim from `SaveSlot` (RecommendationSurface.tsx). The OFFER arm uses
-          // the CEREMONY hint — the longer of the two routes, and the one every dev seed, the
-          // Caddie walk and this gate actually reach (no vault ⇒ route 'ceremony').
-          const arms: Record<string, string> = {
-            empty: '<div class="rec-save-slot" aria-hidden="true"></div>',
-            offer:
-              '<div class="rec-save-slot">' +
-              `<button type="button" class="btn-quiet rec-save__cta">${text.cta}</button>` +
-              `<p class="rec-save__hint">${text.hintCeremony}</p></div>`,
-            saving: `<div class="rec-save-slot"><p class="rec-save__pending">${text.pending}</p></div>`,
-            saved:
-              '<div class="rec-save-slot"><p class="rec-save__badge">' +
-              `<span class="rec-save__mark" aria-hidden="true"></span>${text.badge}</p></div>`,
-          }
-          const out: Record<string, { box: number; content: number; hintLines: number }> = {}
-          for (const [name, html] of Object.entries(arms)) {
-            host.innerHTML = html
-            const slot = host.querySelector('.rec-save-slot') as HTMLElement
-            const box = slot.getBoundingClientRect().height
-            // The CONTENT extent (first child's top → last child's bottom): what the box would be
-            // WITHOUT the reservation. Reported so an overflow names its own margin.
-            const kids = Array.from(slot.children) as HTMLElement[]
-            const content =
-              kids.length === 0
-                ? 0
-                : kids[kids.length - 1]!.getBoundingClientRect().bottom - kids[0]!.getBoundingClientRect().top
-            const hint = slot.querySelector('.rec-save__hint') as HTMLElement | null
-            const hintLines =
-              hint === null
-                ? 0
-                : Math.round(hint.getBoundingClientRect().height / parseFloat(getComputedStyle(hint).lineHeight))
-            out[name] = { box: Math.round(box * 100) / 100, content: Math.round(content * 100) / 100, hintLines }
-          }
-          const reserved = parseFloat(getComputedStyle(host.querySelector('.rec-save-slot')!).minBlockSize)
-          beat.remove()
-          return { arms: out, reserved: Math.round(reserved * 100) / 100 }
-        }, {
-          limits: staticDisclosures.honestLimitsValidate,
-          repick: copy.recommendRepickCta,
-          cta: copy.recommendSaveCta,
-          hintCeremony: copy.recommendSaveHintCeremony,
-          pending: copy.recommendSavePending,
-          badge: copy.recommendSaveSavedBadge,
-          actionHeading: copy.recommendActionHeading,
-          actionOrder: copy.recommendActionOrderLabel,
-          actionConversion: copy.recommendActionConversionLabel,
-          // `bracket-fill` is the LONGEST shipped gloss by a wide margin and is a live crown on the
-          // core seed, so the card is measured at its tallest real content, never a friendly one.
-          orderLabel: copy.leverPolicyBracketFill,
-          orderGloss: copy.leverPolicyBracketFillHelp,
-          // The PASSED arm and the replacement clause together — the card's tallest producible content,
-          // not its friendliest. The passed arm is two sentences (the aged vault, which is the ordinary
-          // returning household), and the note only renders when both plans convert.
-          conversionLine: slots.rothPlanRanked('72,000', 9, 2026, true),
-          conversionNote: slots.rothPlanReplaces('20,450'),
-        })
-
-        const a = slotBoxes.arms
-        const report =
-          `reserved=${slotBoxes.reserved}px · ` +
-          Object.entries(a)
-            .map(([k, v]) => `${k}: box=${v.box} content=${v.content}${v.hintLines > 0 ? ` hint=${v.hintLines}L` : ''}`)
-            .join(' · ')
-        console.log(`[U17 save-slot reservation] seed=${seed} ${vp.width}x${vp.height}: ${report}`)
-
-        // NON-VACUITY (insight 029): a reservation of zero would make every equality below pass over
-        // four collapsed boxes.
-        expect(slotBoxes.reserved, 'the slot must carry a real reservation').toBeGreaterThan(0)
-        expect(a.empty!.box, 'the empty reservation must be the reservation').toBe(slotBoxes.reserved)
-
-        // (1) THE CLS LAW — the populated OFFER arm lands in the SAME box as the empty reservation.
-        // This is the assertion the old `min-height ≥ content` lower bound could not make: it goes
-        // RED both ways — delete the min-block-size (recommendation.css) and `empty` collapses; grow
-        // the hint past the reservation and `offer` swells.
-        expect(
-          a.offer!.box,
-          `the OFFER arm does not fit its reservation — content ${a.offer!.content}px (CTA + a ` +
-            `${a.offer!.hintLines}-line ceremony hint) in a ${slotBoxes.reserved}px box, so the box grew to ` +
-            `${a.offer!.box}px and the tap will shift everything below it (insight 035). Content is ` +
-            `never trimmed to fit — raise the reservation.`,
-        ).toBe(a.empty!.box)
-
-        // (2) …and so do the two one-line arms the tap swaps THROUGH. These under-fill, so they are
-        // held by the floor — the assertion is that the floor is still there for them.
-        expect(a.saving!.box, 'the pending line must not collapse the box mid-write').toBe(a.empty!.box)
-        expect(a.saved!.box, 'the saved badge must not collapse the box after the write').toBe(a.empty!.box)
-
-        // The reservation is honest about WHY it is that tall: the offer arm really is the governing
-        // one (a reservation sized for a one-line arm would be a coincidence, not a design).
-        expect(
-          a.offer!.content,
-          'the OFFER arm must be the tallest — it is what the reservation is sized for',
-        ).toBeGreaterThan(Math.max(a.saving!.content, a.saved!.content))
-      })
-    })
-  }
-}
-
-// ── the priced-state faces (the state-tax unit / the state-carrying seed increment) ───────────
-// Each priced seed is a retiredOnTrack clone carrying ONE `retirementState`, so the all-65+
-// medicarePricedNote block renders with the household's state clause SWAPPED into the narrowed
-// residual (composeVerdictMedicareResidual, stateTaxDisclosure.ts). The SPINE matrix above already
-// pins nc's FRAME across three viewports; these bespoke arms add what the matrix never reads — the
-// rendered residual TEXT — and carry pa/fl at BOTH laptop tiers (pa is the LONGEST clause variant,
-// the wrap-risk arm). All are non-typical (retiredOnTrack's mixed-provenance extras — one entered,
-// one MA-$0), so the pair rides --leading-snug above the short tier and --leading-tight inside it
-// (L2, the 1440×731 re-point); both callers' windows sit inside it, so both read tight.
-
-/** The priced-state spine face: pin the one-frame law PLUS the rendered state clause the matrix never reads, at a size
- *  whose tier and law the size table gives: REAL and TIER inside the short density tier, LENOVO_FULL (his whole screen)
- *  above it, under the degrade contract with its full-fit distance printed (the frames-outside plan's U4, on run M1's
- *  reading 44963702523: `pa` 762.3, `fl` 751.1 inside 900 on Windows and ubuntu alike). */
-async function assertPricedSpineFrame(page: Page, seed: string, clausePins: readonly string[], size: 'REAL' | 'TIER' | 'LENOVO_FULL'): Promise<void> {
-  const s = LAPTOP_SIZES[size]
-  await gotoSeedFinal(page, seed)
-  await assertResolvedSpine(page)
-  await assertSizeTier(page, size)
-  await assertMedicareNote(page, true)
-  await assertOneVisibleDisclaimer(page, 'laptop')
-  for (const pin of clausePins) {
-    await expect(
-      page.locator('.cs-medicare-residual'),
-      `the narrowed residual must carry the state clause: "${pin}"`,
-    ).toContainText(pin)
-  }
-  await assertFrameAtSize(page, size, `?seed=${seed}`)
-  await assertSurvivorBasis(page, 'inline')
-  // after the fit, so a deleted rung reds on its own line with the fold check already passed
-  await assertNoteLeading(page, s.density)
-  await assertDensityTier(page, s.density)
-}
-
-// nc: the residual-TEXT pin at the REAL tier (the matrix proves the frame; this proves the clause
-// survives onto the hero — a BORDERLINE one until the 2026-08-02 rate pin — the exact insight-033
-// question this increment exists to answer: the affirm+residual set is outcome-scoped in copy but
-// outcome-INDEPENDENT in gating, so a band-crossing verdict would still name the state — no priced-state seed crosses the band today).
-test.describe(`?seed=nc — the NC state clause on the priced residual (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('the hero still names North Carolina (on-track since the 2026-08-02 rate pin; it read borderline at mint); the unpriced monolith clause is gone', async ({ page }) => {
-    await gotoSeedFinal(page, 'nc')
-    await assertResolvedSpine(page)
-    await assertMedicareNote(page, true)
-    const residual = page.locator('.cs-medicare-residual')
-    await expect(residual, 'the NC affirmation must swap into the residual').toContainText(
-      'Your North Carolina state income tax is already counted in this answer, on top of your spending',
-    )
-    // The unpriced monolith's distinctive aside DIES for a priced household (the swap, not an append).
-    await expect(residual, 'the unpriced clause must not survive on a priced household').not.toContainText(
-      'a real yearly bill',
-    )
-  })
-})
-
-test.describe('?seed=pa — the LONGEST priced clause (the wrap-risk arm) + one-frame fit', () => {
-  // Pennsylvania exempts most retirement income, so the clause carries the extra "usually a small
-  // piece …" qualifier — the longest state variant, where a wrap would breach the fold first.
-  const PA_PINS = ['Pennsylvania', 'Pennsylvania leaves most retirement income untaxed'] as const
-  for (const size of ['REAL', 'TIER', 'LENOVO_FULL'] as const) {
-    const s = LAPTOP_SIZES[size]
-    test.describe(sizeTitle(size), () => {
-      test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
-      test('pa: everything but the doors fits; the residual names Pennsylvania (untaxed)', async ({ page }) => {
-        await assertPricedSpineFrame(page, 'pa', PA_PINS, size)
-      })
-    })
-  }
-})
-
-test.describe('?seed=fl — the constitutional-$0 priced clause + one-frame fit', () => {
-  const FL_PINS = ['Florida has no state income tax'] as const
-  for (const size of ['REAL', 'TIER', 'LENOVO_FULL'] as const) {
-    const s = LAPTOP_SIZES[size]
-    test.describe(sizeTitle(size), () => {
-      test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
-      test('fl: everything but the doors fits; the residual names the Florida $0 fact', async ({ page }) => {
-        await assertPricedSpineFrame(page, 'fl', FL_PINS, size)
-      })
-    })
-  }
-})
-
-// elsewhere: the ANSWERED-but-unpriced face (the cards' noted coverage gap — 'elsewhere' is an
-// explicit roster member, NOT in PRICED_STATES, so the run reduces byte-identically to the
-// state-absent twin and the residual reads the shipped monolith VERBATIM, no state named).
-test.describe(`?seed=elsewhere — the answered-but-unpriced monolith, no state clause (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('the residual reads the shipped monolith with NO built state affirmation', async ({ page }) => {
-    await gotoSeedFinal(page, 'elsewhere')
-    await assertResolvedSpine(page)
-    await assertMedicareNote(page, true)
-    const residual = page.locator('.cs-medicare-residual')
-    // The monolith's distinctive state SENTENCE — the unpriced words a priced household drops.
-    await expect(residual, 'the unpriced monolith clause must render verbatim').toContainText(
-      'a real yearly bill',
-    )
-    // No BUILT state affirmation leaks onto the unpriced household (roster membership, not truthiness).
-    await expect(residual, 'no NC affirmation on an unpriced household').not.toContainText('North Carolina')
-    await expect(residual, 'no PA affirmation on an unpriced household').not.toContainText('Pennsylvania')
-    await expect(residual, 'no FL affirmation on an unpriced household').not.toContainText('Florida')
-    await assertFrameFits(page, true)
-    await assertSurvivorBasis(page, 'inline')
-  })
-})
-
-// healthnc: THE PRICED PRE-65 WITNESS (Card 4, the four-faces Caddie walk 2026-09-11) — the `health`
-// household (61/59, the ACA door) in North Carolina. The residual is structurally WITHHELD here
-// (showMedicarePricedNote: a pre-65 member reaches the Healthcare door), and the residual carried the
-// verdict's ONLY state clause — so until Card 4 this household's verdict said nothing about state tax
-// while its run priced NC. The clause now arrives by the standalone note: NAMES the state, ships with
-// its narrowing tail (never affirm-alone), exactly ONE clause on the page, and the frame still fits.
-test.describe(`?seed=healthnc — the priced pre-65 household's standalone state clause (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('no residual, ONE standalone clause naming North Carolina, and the frame fits', async ({ page }) => {
-    await gotoSeedFinal(page, 'healthnc')
-    await assertResolvedSpine(page)
-    await assertMedicareNote(page, false)
-    await assertStateNote(page, true)
-    const note = page.locator('.cs-state-note')
-    await expect(note, 'the priced arm names the state').toContainText('North Carolina')
-    // The tail is pinned by its CATALOG constant, not a lexeme: the string is the pilot's draft
-    // routed to Briggsy's words, and his swap must not red a gate whose law (never affirm-alone)
-    // still holds. An emptied constant would make the pin vacuous, so its non-emptiness is asserted.
-    expect(copy.verdictStatePricedDoorTail.trim().length, 'an empty tail IS affirm-alone').toBeGreaterThan(0)
-    await expect(note, 'the priced arm ships WITH its narrowing tail — never affirm-alone').toContainText(copy.verdictStatePricedDoorTail)
-    await expect(note, 'the unpriced words die for a priced household').not.toContainText('isn’t priced yet')
-    // Exactly ONE state clause on the whole rendered verdict (the matrix law, in the real DOM).
-    const clauses = await page
-      .locator('main.result')
-      .evaluate((el) => (el.textContent ?? '').match(/isn’t priced yet|is already counted in this answer|no state income tax/g)?.length ?? 0)
-    expect(clauses, 'one state clause on the verdict — never zero, never two').toBe(1)
-    await assertOneVisibleDisclaimer(page, 'laptop')
-    await assertFrameFits(page, true)
-    await assertSurvivorBasis(page, 'inline')
-  })
-})
-
-// ── the date route (?seed=dip): scrolls BY DESIGN — its contract is ORDER ─────────────────────
-
-test.describe(`?seed=dip — the date route's order contract (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('graphs → in-frame disclaimer → quiet doors, doors last', async ({ page }) => {
-    await gotoSeedFinal(page, 'dip')
-    // Presence companions: the two-pane stamped, BOTH graphs drawn (the fan band + the odds
-    // ladder — the U10 hard-gate surface), the doors offered.
-    await expect(page.locator('.fod-reveal[data-twopane]')).toBeVisible()
-    // Card 4: a pre-65 (stateless) date household's residual is withheld, so its state clause
-    // arrives by the STANDALONE note in the .fod-note register — the walk's seed-date landing
-    // rendered zero state clauses before this fix.
-    const stateNote = page.locator('.fod-note.cs-state-note')
-    await expect(stateNote, 'the unpriced state clause renders standalone on the date claim').toHaveCount(1)
-    await expect(stateNote).toContainText('isn’t priced yet')
-    await expect(page.locator('.fod-band')).toBeVisible()
-    await expect(page.locator('.fod-ladder')).toBeVisible()
-    expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
-    await assertOneVisibleDisclaimer(page, 'laptop')
-
-    const box = async (selector: string) => {
-      const b = await page.locator(selector).boundingBox()
-      expect(b, `${selector} must render with a real box`).not.toBeNull()
-      return b as NonNullable<typeof b>
-    }
-    const graphs = await box('.fod-graphs')
-    const disclaimer = await box('footer.disclaimer.disclaimer--in-frame')
-    const doors = await box('.result-quiet-row')
-
-    // ORDER (the Hawk's contract): any overflow pushes the DOORS past the fold, never the
-    // honesty caveat — so the caveat sits fully below the graphs, and the doors below it.
-    expect(disclaimer.y, 'the R13 disclaimer must sit BELOW both graphs').toBeGreaterThanOrEqual(
-      graphs.y + graphs.height - 0.5,
-    )
-    expect(doors.y, 'the quiet doors must sit BELOW the R13 disclaimer').toBeGreaterThanOrEqual(
-      disclaimer.y + disclaimer.height - 0.5,
-    )
-
-    // Doors LAST: no rendered content element may end below the doors row.
-    // THE ONE shared walk (doorsLastWalk) — the same law the scrolling tiers' helper applies.
-    const trailing = await doorsLastWalk(page, 'body')
-    expect(
-      trailing.counted,
-      'the doors-last walk counted too few boxes — the page did not render (insight 029)',
-    ).toBeGreaterThan(DOORS_WALK_FLOOR)
-    expect(
-      trailing.maxOtherBottom,
-      `content renders BELOW the quiet doors — doors must be last (${trailing.desc})`,
-    ).toBeLessThanOrEqual(doors.y + doors.height + 0.5)
-  })
-})
-
-// ── the all-65+ still-working date route (?seed=date65): priced Medicare, no false "unpriced" ──
-// The insight-080 fix, live on the date route: dateSearch.ts:261 forces healthcareEnabled true on
-// every candidate, so a still-working all-65+ household PRICES Medicare even with no ACA door. The
-// retired age-predicate called this exact household "Medicare not priced" over numbers Medicare had
-// already moved; the surface now names it PRICED (affirmation + narrowed residual, shipped together)
-// and never a false unpriced claim. The date route scrolls by design, so this arm pins the ORDER
-// contract plus the priced-in naming, never a full one-frame fit.
-
-test.describe(`?seed=date65 — priced Medicare on the date route, no false "unpriced" note (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('the date surface names Medicare priced (affirmation + residual) and holds graphs → disclaimer → doors', async ({ page }) => {
-    await gotoSeedFinal(page, 'date65')
-    // Presence companions (insight 029): the date hero two-pane stamped, BOTH graphs drawn, doors offered.
-    await expect(page.locator('.fod-reveal[data-twopane]')).toBeVisible()
-    await expect(page.locator('.fod-band')).toBeVisible()
-    await expect(page.locator('.fod-ladder')).toBeVisible()
-    expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
-    await assertOneVisibleDisclaimer(page, 'laptop')
-
-    // Medicare is named PRICED, never falsely "unpriced" — the affirmation and the narrowed residual
-    // both render on the date surface (distinctive substrings of verdictMedicarePriced / Residual).
-    await expect(
-      page.getByText('are already counted in this answer, on top of your spending'),
-      'the priced-Medicare affirmation must render on the date route',
-    ).toBeVisible()
-    await expect(
-      page.getByText('could run higher than shown'),
-      'the narrowed residual must ship WITH the affirmation',
-    ).toBeVisible()
-
-    // ORDER (the date route's honesty contract): graphs → in-frame disclaimer → doors, doors last.
-    const box = async (selector: string) => {
-      const b = await page.locator(selector).boundingBox()
-      expect(b, `${selector} must render with a real box`).not.toBeNull()
-      return b as NonNullable<typeof b>
-    }
-    const graphs = await box('.fod-graphs')
-    const disclaimer = await box('footer.disclaimer.disclaimer--in-frame')
-    const doors = await box('.result-quiet-row')
-    expect(disclaimer.y, 'the R13 disclaimer must sit BELOW both graphs').toBeGreaterThanOrEqual(
-      graphs.y + graphs.height - 0.5,
-    )
-    expect(doors.y, 'the quiet doors must sit BELOW the R13 disclaimer').toBeGreaterThanOrEqual(
-      disclaimer.y + disclaimer.height - 0.5,
-    )
-  })
-})
-
-// ── the date-route NC witness (?seed=datenc — the second producer, insight 080) ───────────────
-// datenc = stillWorkingAllMedicare (the date65 shape) in North Carolina. The date route rides its
-// OWN state producer (dateStatePriced, off buildDateInput's overlay — NOT the spine's), so a
-// roster-gate regression on the date route surfaces HERE. Same honesty contract as date65: the
-// route scrolls by design, so this arm pins the NC clause on the residual + the ORDER contract
-// (graphs → in-frame disclaimer → doors LAST, the dip block's stronger check), never a full fit.
-
-test.describe(`?seed=datenc — the NC clause on the date residual + the order contract (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('the date hero names North Carolina; graphs → in-frame disclaimer → doors last', async ({ page }) => {
-    await gotoSeedFinal(page, 'datenc')
-    // Presence companions (insight 029): the date hero two-pane stamped, BOTH graphs drawn, doors offered.
-    await expect(page.locator('.fod-reveal[data-twopane]')).toBeVisible()
-    await expect(page.locator('.fod-band')).toBeVisible()
-    await expect(page.locator('.fod-ladder')).toBeVisible()
-    expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
-    await assertOneVisibleDisclaimer(page, 'laptop')
-
-    // The NC affirmation rides the date residual (the .fod-note render block; the second producer's
-    // live witness — a date-route roster regression would drop or mis-name this clause).
-    await expect(
-      page.getByText('Your North Carolina state income tax is already counted in this answer, on top of your spending'),
-      'the NC state clause must render on the date residual',
-    ).toBeVisible()
-    // Card 4: the residual carries the clause on this all-65+ household — no standalone note (never twice).
-    await expect(page.locator('.cs-state-note'), 'the residual-bearing date frame renders no standalone note').toHaveCount(0)
-
-    // ORDER (the date route's honesty contract): graphs → in-frame disclaimer → doors, doors last.
-    const box = async (selector: string) => {
-      const b = await page.locator(selector).boundingBox()
-      expect(b, `${selector} must render with a real box`).not.toBeNull()
-      return b as NonNullable<typeof b>
-    }
-    const graphs = await box('.fod-graphs')
-    const disclaimer = await box('footer.disclaimer.disclaimer--in-frame')
-    const doors = await box('.result-quiet-row')
-    expect(disclaimer.y, 'the R13 disclaimer must sit BELOW both graphs').toBeGreaterThanOrEqual(
-      graphs.y + graphs.height - 0.5,
-    )
-    expect(doors.y, 'the quiet doors must sit BELOW the R13 disclaimer').toBeGreaterThanOrEqual(
-      disclaimer.y + disclaimer.height - 0.5,
-    )
-
-    // Doors LAST (the dip block's stronger check): no content element ends below the doors row.
-    // THE ONE shared walk (doorsLastWalk) — the same law the scrolling tiers' helper applies.
-    const trailing = await doorsLastWalk(page, 'body')
-    expect(
-      trailing.counted,
-      'the doors-last walk counted too few boxes — the page did not render (insight 029)',
-    ).toBeGreaterThan(DOORS_WALK_FLOOR)
-    expect(
-      trailing.maxOtherBottom,
-      `content renders BELOW the quiet doors — doors must be last (${trailing.desc})`,
-    ).toBeLessThanOrEqual(doors.y + doors.height + 0.5)
-  })
-})
-
-// ── the two-pane honesty floor (absorbs the parked D2d e2e) ───────────────────────────────────
-
-test.describe(`the honesty floor — 68rem exactly (${FLOOR.width}×${FLOOR.height})`, () => {
-  test.use({ viewport: FLOOR })
-  test('the band keeps its dollar ticks at the tightest in-range pane', async ({ page }) => {
-    await gotoSeedFinal(page, 'retired')
-    await assertResolvedSpine(page)
-    // The y-tick dollars are the color-blind reader's position→dollar decoder (the never-color-alone
-    // law; O3 permits no SR substitute). They are HTML in the chart text layer since 2026-09-05 —
-    // never scaled, never dropped — so PRESENCE + visibility is the contract here; the rendered size,
-    // containment and non-overlap are chart-text.spec.ts's gate on every arm.
-    const labels = page.locator('.cs-band .band-tick')
-    expect(await labels.count(), 'the band rendered no dollar ticks at all').toBeGreaterThan(0)
-    await expect(labels.first()).toBeVisible()
-    await expect(page.locator('.cs-band .band-tick--floor'), 'the $0 anchor — design-law §3’s honesty proof — must render').toHaveText('$0')
-    // The 3 legend rows ride the same floor (band shape alone must never carry the encoding).
-    await expect(page.locator('.cs-band .band-legend__row')).toHaveCount(3)
-  })
-})
-
-// ── the legend contract at the showcase width ─────────────────────────────────────────────────
-
-test.describe(`the band legend (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('exactly 3 legend rows render with the spine band', async ({ page }) => {
-    await gotoSeedFinal(page, 'retired')
-    await assertResolvedSpine(page)
-    const rows = page.locator('.cs-band .band-legend__row')
-    await expect(rows).toHaveCount(3)
-    for (const row of await rows.all()) await expect(row).toBeVisible()
-  })
-})
-
-// ── the scrolling tiers: ORDER + REACHABILITY, never one frame (council 2026-09-10) ──────────
-// The phone at the reader's default font, and the laptop at a raised default (68rem reads the
-// BROWSER default, so at 24 px both 1440 and 1280 render the stacked tier). Until 2026-09-10 the
-// phone arm asserted the trailing mount visible and the in-frame mount dark — certifying the
-// inversion (caveat AFTER the doors, on the phone since July) as the contract. Now: tier asserted
-// first, one visible mount (the in-frame one), the caveat above the doors, the doors last, the
-// caveat reachable by scroll, the verdict naming the caveat. No fit assertion on any scrolling tier.
-
-test.describe(`the phone tier (${PHONE.width}×${PHONE.height}) — ORDER + REACHABILITY at the default font`, () => {
-  test.use({ viewport: PHONE })
-  test('retired: one visible caveat, above the doors, doors last, reachable', async ({ page }) => {
-    await gotoSeedFinal(page, 'retired')
-    await assertResolvedSpine(page)
-    await assertOneVisibleDisclaimer(page, 'narrow')
-    await assertCaveatOrderAndReach(page, SPINE_VERDICT)
-  })
-
-  // THE DATE ROUTE ON THE PHONE. The spine arm above proves the law for `h2.cs-word`; this route
-  // has its OWN hero (`h2.fod-headline`), its own two-graph column, and its own render block —
-  // and it is the route that scrolls at EVERY width, so a caveat that fell below the doors here
-  // would be the inversion the council killed, live on the one surface guaranteed to scroll.
-  test('dip (the date route): one visible caveat, above the doors, doors last, reachable', async ({ page }) => {
-    await gotoSeedFinal(page, 'dip')
-    await assertResolvedDate(page)
-    await assertOneVisibleDisclaimer(page, 'narrow')
-    await assertCaveatOrderAndReach(page, DATE_VERDICT)
-  })
-})
-
-// ── the reader's raised default font (CDP Page.setFontSizes) — the two regimes ─────────────────
-// (a) 20 px: Chrome's one-click "Large". 68rem is 1360 px there, so his 1440 laptop STAYS two-pane
-//     with 1.25× rem ink against the same 731 px budget — the binding case (the two-pane tier holds
-//     every root up to 21.2 px on his window: 1440 / 68). FIRST MEASURED 2026-09-10 on the Dell's
-//     1536×791 @ 2.5: budget / retired / nc RED the one-frame law — the save slot ended at 806–871 px
-//     and the PROTECTED in-frame caveat at 877–936 px against 791 (86–145 px past the fold); health
-//     fit. RE-RECORDED 2026-11-20 at REAL 1440×731 @ 2 (the re-point, with the short tier's density
-//     rungs in place): budget's caveat ends at 878 px (its CTA at 777, the save slot at 818),
-//     retired's and nc's at 804 px (the save slot at 743) — 73–147 px past the 731 px fold; health
-//     still fits (offenders=none). That is the PRODUCT finding the council
-//     pre-registered as a NEW FORK (register: "The app on someone else's device"), never a density
-//     regime (rejected on mechanics) and never a `test.fail()`. Until the fork is decided this arm
-//     RECORDS: it pins the root rose, the tier is two-pane, one caveat is visible, and logs the
-//     walk — it does NOT assert the fit (a red gate would stall every other arm behind a product
-//     decision that is Briggsy's). The assertion returns with the fork's ruling.
-// (b) 24 px: 68rem is 1632 px, so 1440 and 1280 both render the stacked tier — the scrolling law.
-//     The 2026-09-08 measurement asserted the one-frame law on this tier and red all eight arms
-//     against the trailing footer; the magnitude is still RECORDED here (frameReport, non-asserting)
-//     so the instrument survives, but the assertion is ORDER + REACHABILITY.
-// The 16 px control for both families is the spine matrix above (the same seeds, the same walk).
-for (const { seed } of SPINE_SEEDS) {
-  test.describe(`?seed=${seed} — the one-frame law at a 20 px default (${REAL.width}×${REAL.height}, two-pane)`, () => {
-    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-    test(`${seed}: everything but the doors fits one frame at a 20 px root`, async ({ page, context }) => {
-      const { at16, cdp } = await raiseDefaultFont(page, context, 20)
-      await gotoSeedFinal(page, seed)
-      const at20 = await assertRootRose(page, at16)
-      await assertResolvedSpine(page)
-      await assertOneVisibleDisclaimer(page, 'laptop')
-      const report = await frameReport(page, true)
-      console.log(
-        `[20px-root fit] seed=${seed} ${REAL.width}x${REAL.height} attempt=${test.info().retry} root=${at16}→${at20}px: counted=${report.counted} offenders=${
-          report.offenders.length === 0 ? 'none' : report.offenders.map((o) => `${o.desc}@${o.bottom.toFixed(1)}`).join(', ')
-        }`,
-      )
-      // RECORDED, NOT ASSERTED — the fork is filed (see the block comment above). The walk floor
-      // still guards vacuity: a page that did not render cannot pass as "measured".
-      expect(report.counted, 'frame walk counted too few elements — page did not render').toBeGreaterThan(
-        WALK_FLOOR,
-      )
-      test.info().annotations.push({
-        // The ROOT is named in the annotation, not only in the log: this artifact is what the
-        // owed fork gets decided from, and "the 20 px arm" is a label — the measured root is the
-        // regime. (A `> 16` pin alone would let a 17 px emulation file itself as "20 px".)
-        type: '20px-root one-frame law (RECORDED — fork owed)',
-        description: `root ${at16}px → ${at20}px at ${REAL.width}×${REAL.height} attempt=${test.info().retry}: ${report.offenders.length} element(s) past the ${REAL.height}px fold: ${
-          report.offenders.map((o) => `${o.desc}@${o.bottom.toFixed(1)}`).join(', ') || 'none'
-        }`,
-      })
-      await cdp.detach()
-    })
-  })
-
-  for (const vp of [REAL, TIER] as const) {
-    const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
-    test.describe(`?seed=${seed} — ORDER + REACHABILITY at a 24 px default (${vp.width}×${vp.height}, stacked)`, () => {
-      test.use({ viewport: vp, ...scale })
-      test(`${seed}: the caveat above the doors, doors last, reachable — no fit claim`, async ({ page, context }) => {
-        const { at16, cdp } = await raiseDefaultFont(page, context, 24)
-        await gotoSeedFinal(page, seed)
-        const at24 = await assertRootRose(page, at16)
-        await assertResolvedSpine(page)
-        await assertOneVisibleDisclaimer(page, 'narrow')
-        // INSTRUMENT, not oracle: the one-frame magnitude on the stacked tier, recorded for the log.
-        const report = await frameReport(page, true)
-        console.log(
-          `[24px-root instrument] seed=${seed} ${vp.width}x${vp.height} attempt=${test.info().retry} root=${at16}→${at24}px: counted=${report.counted} belowFold=${report.offenders.length} caveatBottom=${
-            report.offenders.find((o) => o.desc.includes('disclaimer'))?.bottom.toFixed(1) ?? 'in-frame'
-          }`,
-        )
-        await assertCaveatOrderAndReach(page, SPINE_VERDICT)
-        await cdp.detach()
-      })
-    })
-  }
-}
-
-// THE DATE ROUTE AT A 24 px DEFAULT — the same two widths as the spine family. The spine arms
-// above prove the law on the confidence hero; this route reaches the stacked tier by TWO
-// independent paths (its own single-column chrome, and the 68rem query the raised root moves),
-// carries its own grid (fuckOffDate.css) and its own hero heading. A regression that re-seated
-// the caveat below the doors in fuckOffDate.css alone would pass every spine arm in this file.
-for (const vp of [REAL, TIER] as const) {
-  const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
-  test.describe(`?seed=dip — ORDER + REACHABILITY at a 24 px default (${vp.width}×${vp.height}, stacked)`, () => {
-    test.use({ viewport: vp, ...scale })
-    test('dip: the caveat above the doors, doors last, reachable — no fit claim', async ({ page, context }) => {
-      const { at16, cdp } = await raiseDefaultFont(page, context, 24)
-      await gotoSeedFinal(page, 'dip')
-      const at24 = await assertRootRose(page, at16)
-      await assertResolvedDate(page)
-      await assertOneVisibleDisclaimer(page, 'narrow')
-      const report = await frameReport(page, true)
-      console.log(
-        `[24px-root instrument] seed=dip ${vp.width}x${vp.height} attempt=${test.info().retry} root=${at16}→${at24}px: counted=${report.counted} belowFold=${report.offenders.length}`,
-      )
-      await assertCaveatOrderAndReach(page, DATE_VERDICT)
-      await cdp.detach()
-    })
-  })
-}
-
-test.describe(`reduced motion — the 24 px scrolling law holds without the entrance choreography (${REAL.width}×${REAL.height})`, () => {
-  // `page.emulateMedia`, NOT `test.use({ reducedMotion })`: under this harness the context option
-  // measured `matchMedia('(prefers-reduced-motion: reduce)')` FALSE (2026-09-26, the spend-lane arm's
-  // diagnostic) — this arm's premise was silently unmet. The premise is now ASSERTED, never assumed.
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('retired: the caveat above the doors, doors last, reachable', async ({ page, context }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' })
-    const { at16, cdp } = await raiseDefaultFont(page, context, 24)
-    await gotoSeedFinal(page, 'retired')
-    expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches), 'the reduced-motion premise').toBe(true)
-    await assertRootRose(page, at16)
-    await assertResolvedSpine(page)
-    await assertOneVisibleDisclaimer(page, 'narrow')
-    await assertCaveatOrderAndReach(page, SPINE_VERDICT)
-    await cdp.detach()
-  })
-})
-
-// ── THE COMPUTING FRAME: exactly ONE caveat while the answer is still being worked out ────────
-// app.css's swap rule is `main.result[data-inframe-disclaimer] ~ .disclaimer { display: none }`.
-// The ATTRIBUTE QUALIFIER is the whole safety property: Result.tsx withholds the in-frame mount
-// with the entire actions row while computing and stamps the attribute in the same breath, so a
-// computing frame carries NO attribute and the page-trailing mount must stand. Drop the qualifier
-// to a bare `main.result ~ .disclaimer` and the crunch window renders ZERO caveats — "Working it
-// out…" with nothing on the page saying the answer can be wrong — and every arm in this file
-// still passes, because every other arm measures a COMMITTED verdict where both spellings agree.
-// Nothing in any browser test saw this until now (the review's one P1).
-//
-// The probe is installed BEFORE navigation and fires on the first frame `main.result` exists, so
-// the window is caught deterministically instead of raced: a date seed's crunch is long (~60 s to
-// final) but the provisional lands much sooner, and a `waitFor` would be a coin flip.
-type ComputingProbe = {
-  readonly stamped: boolean
-  readonly inFrameCount: number
-  readonly trailingCount: number
-  readonly trailingVisible: number
-  readonly inFrameVisible: number
-}
-
-async function probeComputingFrame(page: Page, seed: string): Promise<ComputingProbe> {
-  await page.addInitScript(() => {
-    const store = window as unknown as { __r13Probe?: unknown }
-    const shown = (el: Element): boolean => {
-      const s = getComputedStyle(el)
-      return s.display !== 'none' && s.visibility !== 'hidden'
-    }
-    const capture = (): boolean => {
-      const main = document.querySelector('main.result')
-      if (main === null) return false
-      const inFrame = Array.from(document.querySelectorAll('footer.disclaimer.disclaimer--in-frame'))
-      const trailing = Array.from(
-        document.querySelectorAll('footer.disclaimer:not(.disclaimer--in-frame)'),
-      )
-      store.__r13Probe = {
-        stamped: main.hasAttribute('data-inframe-disclaimer'),
-        inFrameCount: inFrame.length,
-        trailingCount: trailing.length,
-        trailingVisible: trailing.filter(shown).length,
-        inFrameVisible: inFrame.filter(shown).length,
-      }
-      return true
-    }
-    const obs = new MutationObserver(() => {
-      if (capture()) obs.disconnect()
-    })
-    const start = (): void => {
-      if (!capture()) obs.observe(document.documentElement, { subtree: true, childList: true })
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start)
-    else start()
-  })
-  await page.goto(`/?seed=${seed}`)
-  const handle = await page.waitForFunction(
-    () => (window as unknown as { __r13Probe?: ComputingProbe }).__r13Probe ?? null,
-    undefined,
-    { timeout: 30_000 },
-  )
-  return (await handle.jsonValue()) as ComputingProbe
-}
-
-function assertComputingFrameHasExactlyOneCaveat(probe: ComputingProbe): void {
-  // The frame we caught IS the crunch: no attribute, no in-frame mount. (If a future change
-  // stamped the attribute at first paint this reds here rather than certifying the wrong frame.)
-  expect(probe.stamped, 'the first main.result frame already carried data-inframe-disclaimer — this is not the computing window').toBe(false)
-  expect(probe.inFrameCount, 'the in-frame mount must be WITHHELD with the actions row while computing').toBe(0)
-  // …and the caveat the reader can actually see is the page-trailing one, standing alone.
-  expect(probe.trailingCount, 'the page-trailing R13 mount (App.tsx) is missing').toBe(1)
-  expect(
-    probe.trailingVisible,
-    'ZERO caveats while computing — the trailing mount is hidden and no in-frame mount exists. app.css’s swap must be qualified by data-inframe-disclaimer.',
-  ).toBe(1)
-  expect(probe.inFrameVisible + probe.trailingVisible, 'exactly ONE caveat is visible while computing').toBe(1)
-}
-
-for (const vp of [PHONE, REAL] as const) {
-  const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
-  test.describe(`the COMPUTING frame at ${vp.width}×${vp.height} — one caveat stands during the crunch`, () => {
-    test.use({ viewport: vp, ...scale })
-    test('dip: no data-inframe-disclaimer, no in-frame mount, the trailing caveat visible', async ({ page }) => {
-      assertComputingFrameHasExactlyOneCaveat(await probeComputingFrame(page, 'dip'))
-    })
-  })
-}
-
-// ── W9-R7: the re-figuring window (`docs/plans/features/answered-draft-build-spec.md`, U5) ─────────
-// After an edit on the answer page the store holds the shown answer while a run on the new inputs is in
-// flight, and the page says so (U4): a line in the hero's eyebrow slot, a clause on the date band's caption,
-// one line in the panel echo. Two kinds of arm:
-//  - THE FRAME, on `?preview=refiguring&seed=<key>` (src/ui/preview/RefiguringPreview.tsx): the real app on
-//    the seed with every run after its first final held, so the window's frame stands still to be measured.
-//    Live it lasts one run (the `retired` edit below cleared in ~120 ms on the Lenovo; a date provisional
-//    ~2 s), too short to measure without racing it. The spine arms prove R5's fold at the two-pane tier: the
-//    line is ONE line inside the frame and above the verdict, the verdict and the R13 disclaimer stand where
-//    they stood before the edit (the slot overlays `.result`'s top padding there, b9-5's landmine), and the
-//    whole frame still fits. The date arms prove the line and the caption's clause render and overlap
-//    nothing. The phone arms prove the in-flow slot keeps its order (above the hero, over nothing); the hero
-//    moving down there is walk 10's read (U4's watch item (h)), never a law here.
-//  - THE SIGNAL, live on `?seed=retired`: a spending edit in the panel raises `data-answer-refiguring`, and it
-//    clears in the same commit that puts up the edit's own answer — the shared watch (`armRefiguringWatch`)
-//    seeing a SPINE panel edit, which dispatches the final tier alone (its tier never leaves "final").
-
-/** A box the re-figuring arms read: viewport-relative edges, its height, and whether it is one line box
- *  (no taller than one and a half of its own computed line-height). */
-type RefigBox = { readonly top: number; readonly bottom: number; readonly height: number; readonly oneLine: boolean }
-
-async function refigBoxes(page: Page, sels: Readonly<Record<string, string>>): Promise<Readonly<Record<string, RefigBox | null>>> {
-  return page.evaluate((s) => {
-    const out: Record<string, RefigBox | null> = {}
-    for (const [k, sel] of Object.entries(s)) {
-      const el = document.querySelector(sel)
-      if (el === null) {
-        out[k] = null
-        continue
-      }
-      const r = el.getBoundingClientRect()
-      const lh = parseFloat(getComputedStyle(el).lineHeight)
-      out[k] = { top: r.top, bottom: r.bottom, height: r.height, oneLine: Number.isFinite(lh) && r.height <= lh * 1.5 }
-    }
-    return out
-  }, sels)
-}
-
-function refigPresent(box: RefigBox | null | undefined, what: string): RefigBox {
-  expect(box, `${what} is not on the page`).toBeTruthy()
-  return box!
-}
-
-/** One route's reading of the held window: the hero's line and heading, the heading's other reading box
- *  (the spine's verdict lockup, the date's headline itself), the line's words. */
-const REFIG_ROUTES = {
-  spine: { seed: 'budget', line: '.cs-refiguring', heading: SPINE_VERDICT, anchor: '.cs-verdict', words: copy.answerRefiguringVerdict },
-  date: { seed: 'date', line: '.fod-refiguring', heading: DATE_VERDICT, anchor: DATE_VERDICT, words: copy.answerRefiguringDate },
-} as const
-
-const REFIG_FRAME = {
-  disclaimer: 'footer.disclaimer.disclaimer--in-frame',
-  drawer: '.fod-band .band-drawer',
-  caption: '.fod-band__tracknote',
-  echo: '[role="dialog"] .ap-echo',
-} as const
-
-/**
- * Drive the preview into the held window and settle it: the settled landing (its boxes read), the panel
- * opened (the echo's box read), one engine-input edit — the survivor spending share, 75 ↔ 70 — with the flag
- * SEEN (a presence the edit's dispatch mints, never an absence), the echo read again, the panel closed, and
- * the page settled with the flag still up. The caller reads the window's boxes, then `expectStillHeld`.
- */
-async function enterHeldWindow(
-  page: Page,
-  route: (typeof REFIG_ROUTES)[keyof typeof REFIG_ROUTES],
-): Promise<{
-  readonly before: Readonly<Record<string, RefigBox | null>>
-  readonly captionBefore: string | null
-  readonly echoBefore: RefigBox
-  readonly echoAfter: RefigBox
-  readonly echoText: string | null
-}> {
-  await page.goto(`/?preview=refiguring&seed=${route.seed}`)
-  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
-  await settleLayout(page)
-  await expect(page.locator(route.line), 'a settled landing shows no re-figuring line').toHaveCount(0)
-  const before = await refigBoxes(page, { anchor: route.anchor, ...REFIG_FRAME })
-  // Read only where it renders: a locator action on an absent node waits out the test's whole budget.
-  const caption = page.locator(REFIG_FRAME.caption)
-  const captionBefore = (await caption.count()) > 0 ? await caption.textContent() : null
-  await page.locator('[data-door="assumptions"]').click()
-  const dialog = page.getByRole('dialog')
-  await expect(dialog).toBeVisible()
-  await settleLayout(page)
-  const echoBefore = refigPresent((await refigBoxes(page, { echo: REFIG_FRAME.echo })).echo, 'the panel echo')
-  const field = dialog.getByLabel(copy.assumptionSurvivorRatioLabel)
-  const now = (await field.inputValue()).replace(/[^0-9]/g, '')
-  await field.fill(now === '70' ? '65' : '70')
-  await field.press('Tab')
-  await expect(page.locator('main.result[data-answer-refiguring]'), 'the edit raised no re-figuring flag').toBeAttached({ timeout: 30_000 })
-  await settleLayout(page)
-  const echoAfter = refigPresent((await refigBoxes(page, { echo: REFIG_FRAME.echo })).echo, 'the panel echo')
-  const echoText = await dialog.locator('.ap-echo').textContent()
-  await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
-  await expect(dialog).toBeHidden()
-  await settleLayout(page)
-  return { before, captionBefore, echoBefore, echoAfter, echoText }
-}
-
-/** Read AFTER the window's boxes: the flag still stands and the shown answer is still the old final, so every
- *  box was read inside the window (the flag cannot fall and rise again without another edit). */
-async function expectStillHeld(page: Page): Promise<void> {
-  await expect(page.locator('main.result[data-answer-refiguring][data-answer-tier="final"]'), 'the preview let the window close before the read').toHaveCount(1)
-}
-
-/** The line names itself first in the heading's description, the R13 caveat after it (U4, KTD6). */
-async function expectHeadingDescribedByLine(page: Page, route: (typeof REFIG_ROUTES)[keyof typeof REFIG_ROUTES]): Promise<void> {
-  const lineId = await page.locator(route.line).getAttribute('id')
-  const caveatId = await page.locator(REFIG_FRAME.disclaimer).getAttribute('id')
-  expect(lineId, 'the re-figuring line carries no id to be named').toBeTruthy()
-  expect(caveatId, 'the in-frame caveat carries no id to be named').toBeTruthy()
-  await expect(page.locator(route.heading)).toHaveAttribute('aria-describedby', `${String(lineId)} ${String(caveatId)}`)
-}
-
-for (const vp of [REAL, TIER] as const) {
-  const scale = vp === REAL ? { deviceScaleFactor: REAL_DPR } : {}
-  test.describe(`the re-figuring window, held (${vp.width}×${vp.height}, two-pane)`, () => {
-    test.use({ viewport: vp, ...scale })
-
-    test('spine (?seed=budget): the line is one line above the verdict, and the verdict and the R13 disclaimer do not move', async ({ page }) => {
-      const route = REFIG_ROUTES.spine
-      const { before, echoBefore, echoAfter, echoText } = await enterHeldWindow(page, route)
-      await assertOneVisibleDisclaimer(page, 'laptop')
-      await expect(page.locator(route.line)).toHaveText(route.words)
-      await expect(page.locator(route.line)).toBeVisible()
-      const after = await refigBoxes(page, { line: route.line, anchor: route.anchor, disclaimer: REFIG_FRAME.disclaimer })
-      const line = refigPresent(after.line, 'the re-figuring line')
-      const verdict = refigPresent(after.anchor, 'the verdict lockup')
-      const caveat = refigPresent(after.disclaimer, 'the in-frame R13 disclaimer')
-      const verdictBefore = refigPresent(before.anchor, 'the settled verdict lockup')
-      const caveatBefore = refigPresent(before.disclaimer, 'the settled R13 disclaimer')
-      expect(line.oneLine, `the line wraps (${line.height.toFixed(1)} px): its slot holds one line`).toBe(true)
-      expect(line.top, 'the line climbs above the page top').toBeGreaterThanOrEqual(0)
-      expect(line.bottom, 'the line overlaps the verdict').toBeLessThanOrEqual(verdict.top + 0.5)
-      expect(Math.abs(verdict.top - verdictBefore.top), `the verdict moved ${(verdict.top - verdictBefore.top).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
-      expect(Math.abs(caveat.top - caveatBefore.top), `the R13 disclaimer moved ${(caveat.top - caveatBefore.top).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
-      expect(caveat.bottom, 'the R13 disclaimer left the frame').toBeLessThanOrEqual(vp.height)
-      await assertFrameFits(page, true)
-      await expectHeadingDescribedByLine(page, route)
-      expect(echoText, 'the panel echo says the answer is being figured again').toBe(copy.assumptionEchoRefiguring)
-      expect(Math.abs(echoAfter.height - echoBefore.height), `the echo's reserved box changed height (${echoBefore.height.toFixed(1)} → ${echoAfter.height.toFixed(1)} px)`).toBeLessThanOrEqual(0.5)
-      await expectStillHeld(page)
-    })
-
-    test('date (?seed=date): the line sits above the headline, and the caption adds its clause over nothing', async ({ page }) => {
-      const route = REFIG_ROUTES.date
-      const { before, captionBefore, echoText } = await enterHeldWindow(page, route)
-      await assertResolvedDate(page)
-      await assertTier(page, 'laptop')
-      await expect(page.locator(route.line)).toHaveText(route.words)
-      await expect(page.locator(route.line)).toBeVisible()
-      expect(captionBefore, 'the settled band carries no caption').toBeTruthy()
-      await expect(page.locator(REFIG_FRAME.caption)).toHaveText(`${String(captionBefore)} ${copy.answerRefiguringCaption}`)
-      const after = await refigBoxes(page, { line: route.line, anchor: route.anchor, drawer: REFIG_FRAME.drawer, caption: REFIG_FRAME.caption })
-      const line = refigPresent(after.line, 'the re-figuring line')
-      const headline = refigPresent(after.anchor, 'the headline')
-      const headlineBefore = refigPresent(before.anchor, 'the settled headline')
-      const drawer = refigPresent(after.drawer, 'the band')
-      const caption = refigPresent(after.caption, 'the band caption')
-      expect(line.oneLine, `the line wraps (${line.height.toFixed(1)} px): its slot holds one line`).toBe(true)
-      expect(line.top, 'the line climbs above the page top').toBeGreaterThanOrEqual(0)
-      expect(line.bottom, 'the line overlaps the headline').toBeLessThanOrEqual(headline.top + 0.5)
-      expect(Math.abs(headline.top - headlineBefore.top), `the headline moved ${(headline.top - headlineBefore.top).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
-      expect(caption.top, 'the caption overlaps the band').toBeGreaterThanOrEqual(drawer.bottom - 0.5)
-      await expectHeadingDescribedByLine(page, route)
-      expect(echoText, 'the panel echo says the answer is being figured again').toBe(copy.assumptionEchoRefiguring)
-      await expectStillHeld(page)
-    })
-  })
-}
-
-test.describe(`the re-figuring window, held (phone ${PHONE.width}×${PHONE.height}, stacked)`, () => {
-  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
-  for (const key of ['spine', 'date'] as const) {
-    test(`${key} (?seed=${REFIG_ROUTES[key].seed}): the line sits in the flow above the hero, over nothing`, async ({ page }) => {
-      const route = REFIG_ROUTES[key]
-      await enterHeldWindow(page, route)
-      await assertTier(page, 'narrow')
-      await expect(page.locator(route.line)).toHaveText(route.words)
-      await expect(page.locator(route.line)).toBeVisible()
-      const after = await refigBoxes(page, { line: route.line, anchor: route.anchor })
-      const line = refigPresent(after.line, 'the re-figuring line')
-      const hero = refigPresent(after.anchor, key === 'spine' ? 'the verdict lockup' : 'the headline')
-      expect(line.top, 'the line climbs above the page top').toBeGreaterThanOrEqual(0)
-      expect(line.bottom, 'the line overlaps the hero below it').toBeLessThanOrEqual(hero.top + 0.5)
-      await expectHeadingDescribedByLine(page, route)
-      await expectStillHeld(page)
-    })
-  }
-})
-
-test.describe(`the re-figuring signal, live (?seed=retired, ${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('a panel spending edit raises data-answer-refiguring over the old verdict, and it clears in the commit that puts up the new one', async ({ page }) => {
-    await gotoSeedFinal(page, 'retired')
-    await assertResolvedSpine(page)
-    await page.locator('[data-door="assumptions"]').click()
-    const dialog = page.getByRole('dialog')
-    await expect(dialog).toBeVisible()
-    const field = dialog.getByLabel(copy.spendLabel, { exact: true })
-    await expect(field, '`retired` enters its $78,000 a year by the month').toHaveValue('6,500')
-    await armRefiguringWatch(page)
-    // $9,500 a month ($114,000 a year) takes `retired` from on track to off track (measured 2026-11-20), so the
-    // verdict's own words move in the commit that clears the flag. A raise that left them still would leave
-    // that commit unseen: the arm then fails below, and wants a larger raise, never a weaker check.
-    await field.click()
-    await field.press('ControlOrMeta+a')
-    await field.pressSequentially('9500')
-    await field.blur()
-    await expect(field).toHaveValue('9,500')
-    await expectRefiguringSeen(page, 'the live re-figuring arm')
-    await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
-    await expect(dialog).toBeHidden()
-    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
-    const log = await refiguringLog(page)
-    const first = log[0]
-    expect(first, 'the watch read nothing').toBeTruthy()
-    expect(first!.refiguring, 'the watch was armed on a page already re-figuring').toBe(false)
-    const rose = log.findIndex((r) => r.refiguring === true)
-    const fell = log.findIndex((r, i) => i > rose && r.refiguring === false)
-    const story = log.map((r) => `${r.t}ms ${String(r.refiguring)}/${String(r.tier)} "${r.verdict}"`).join(' · ')
-    expect(rose, `the flag never rose: ${story}`).toBeGreaterThan(0)
-    expect(fell, `the flag never cleared: ${story}`).toBeGreaterThan(rose)
-    for (const r of log.slice(rose, fell)) {
-      expect(r.verdict, `while the flag stood the hero showed an answer other than the one from before the edit: ${story}`).toBe(first!.verdict)
-    }
-    expect(log[fell]!.verdict, `the flag cleared with the old verdict still up, so no new answer committed there: ${story}`).not.toBe(first!.verdict)
-    expect(log[fell]!.tier, `a spine panel edit dispatches the final tier alone: ${story}`).toBe('final')
-    expect(log.slice(fell).every((r) => r.refiguring === false), `the flag rose again with no second edit: ${story}`).toBe(true)
-  })
-})
 
 // ── U12: the AssumptionPanel's OWN vertical extent (the F4 council mandate) ───────────────────
 // "Door count stays 5" proves the RESULT frame fits; it says nothing about the panel. The full
@@ -2525,8 +65,8 @@ test.describe(`the assumption panel's vertical extent (${REAL.width}×${REAL.hei
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
   test('the open panel is fully inside the viewport; its content scrolls internally', async ({ page }) => {
     await gotoSeedFinal(page, 'retired')
-    await assertResolvedSpine(page)
-    await page.getByRole('button', { name: 'The assumptions behind this' }).click()
+    await assertResolvedHome(page)
+    await page.locator('[data-gear]').click()
     const dialog = page.getByRole('dialog')
     await expect(dialog).toBeVisible()
     // Let the enter transition settle before measuring (transform/opacity only, ~200ms).
@@ -2551,546 +91,1170 @@ test.describe(`the assumption panel's vertical extent (${REAL.width}×${REAL.hei
     ).toBeGreaterThan(scroll.clientHeight)
   })
 })
+/** The typed-below line's runs (the whole-window rebuild, `docs/plans/features/typed-below-whole-window-rebuild-spec.md`
+ *  KTD6/KTD7, in the walk-9 form council's form, `docs/plans/features/typed-below-walk9-form-build-spec.md`): each working
+ *  year this answer's credit beside the credit the answer at today's quote would give, the years grouped into runs, every
+ *  figure the engine's own on the seed (U3's witness table, the research record's `witnesses.md`). The line opens on the
+ *  counts sentence (no lean in it now), then the moved clause where the host carries it, then the lean as its own
+ *  sentence naming the quote in dollars, then the cap sentence (no dollars of the quote, no floor aside). Inside a list a
+ *  credit run is TWO paragraphs (its two beats share the first, then the close) and a short run three (the walk-9 form
+ *  council's call (1b)); every run's label is its years and ", while you’re still working" (the old "If you’re still
+ *  working in …" label is retired on this line); a run's figure follows the one amount rule (one value "$X a year", two
+ *  groups each beside its own years, never the old "$X to $Y" range). Every word TYPED BY HAND from the composer's
+ *  output (the U2 probe, `probe.out.txt`), never composed from a slot, so a plant in the copy reds the gate too. A run's
+ *  words in the order a block draws them, as `innerText` reads them: its label (the run's first `<p>`), then its
+ *  paragraphs (one `<p>` each). Every seed and vault this spec walks is `date`'s couple (Alex 58, working; Sam 60,
+ *  retired), so the engine can draw a working year with Sam dead and Alex still working (2032–2035, Sam's 66 on), and
+ *  the survivor-path build's gate is on (`docs/plans/features/typed-below-survivor-path-build-spec.md`, KTD3/KTD7): the
+ *  one-run close, the scoped lead and the short kinds' year subject carry "you’re both alive", and the survivor part
+ *  closes every line. `noun` — "This" on the Result, "Your" on the gate (KD9). */
+type TypedBelowNoun = 'This' | 'Your'
+/** The rider (the walk-9 form council's words: "except for any difference …"), and the gloss its first use on a line
+ *  carries inside its period, after a comma, no brackets (KD3, reworded). */
+const TB_RIDER = ', except for any difference between the two answers in income tax and Medicare’s income surcharge'
+const TB_GLOSS = ', the extra Medicare premium you pay when your income two years before was high'
 
-// ── U13: the vault-return frames (?vault=stale — the ultramode J3 arm) ────────────────────────
-// Every `?seed=` arm above BYPASSES the re-entry gate (a seed mounts straight into the result
-// with stalenessNote=false), so before this arm NO gate ever measured (a) the gate surface
-// itself or (b) the result frame carrying the extra `.cs-staleness-note` line — the aged-vault
-// return is a reachable PRODUCTION frame rendering strictly MORE content than any `?seed` frame,
-// exactly where an extra line could push the PROTECTED R13 disclaimer below the fold. The
-// `?vault=stale` plant (devSeeds) is the one live drive: it writes the aged vault, strips its own
-// param, and lands on the unlock screen with the dev passphrase PRE-FILLED.
 
-test.describe(`the vault return (?vault=stale) — the gate + the staleness-echo frame (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('the gate offers its decision pair in-frame with the aged-vault disclosures; the echoed result frame holds the one-frame law', async ({ page }) => {
-    await page.goto('/?vault=stale')
-    const unlock = page.getByRole('button', { name: 'Open my plan' })
-    await expect(unlock, 'the stale plant did not land on the unlock screen').toBeVisible({
-      timeout: 30_000,
-    })
-    await unlock.click()
-
-    // THE GATE FRAME: the balance confirm + the fired clocks render BEFORE any verdict, and
-    // the decision pair must sit in the first frame (the gate is the reveal's front door —
-    // a below-fold affirm strands the survivor at a dead-looking screen).
-    const affirm = page.getByRole('button', { name: /still about right/i })
-    await expect(affirm).toBeVisible({ timeout: 30_000 })
-    await page.evaluate(() => document.fonts.ready)
-    await page.evaluate(() => window.scrollTo(0, 0))
-    const affirmBox = await affirm.boundingBox()
-    expect(affirmBox, 'the affirm CTA reported no box').not.toBeNull()
-    expect(
-      affirmBox!.y + affirmBox!.height,
-      'the affirm CTA sits below the first frame at the real window',
-    ).toBeLessThanOrEqual(REAL.height)
-    // The aged vault's own disclosures rendered (the frame under test is not vacuous —
-    // insight 029), and the ~760-day-old savedAt → the two-year elapsed line (coherent with the
-    // seed's -2 startCalendarYear — a real save mints both together).
-    //
-    // U17 §S4 RE-DERIVED THIS COUNT FROM WHAT THE SURFACE HONESTLY SHOWS — 3 → 2, never relaxed
-    // to make a run pass. The plant moves four stamps: taxVintageDetail, coverageYear,
-    // partBStandardMonthly and blendSnapshotAsOf. Under the exposure three-way this household
-    // (all-65+ ⇒ Medicare-only, one manual-blend account ⇒ no dated ticker row, both retired ⇒ no
-    // contribution stream) gets exactly two lines:
-    //   · the federal tax line NAMED (their run builds an overlay ⇒ `taxEnabled` ⇒ the `tax.`
-    //     family is consumed);
-    //   · ONE Medicare cost line NAMED, carrying BOTH `part-b` and the Medicare half of
-    //     `coverage-year` (which dates the ACA/IRMAA tables — they price the IRMAA ladder and
-    //     zero marketplace years, so the marketplace line must stay dark).
-    // The blend re-date reaches NO line at all: `resolveBlend` never consults the dated table for
-    // a manual-blend account, so "we can't tell whether it touches your numbers" would be false —
-    // we can. The old "fund data we read your accounts against" line is likewise gone.
-    // PLUS the engine-pricing ledger's lines (the engine-domain council, 2026-09-27): the plant saves
-    // ~760 days back (the LOCAL epoch-day, the plant's own basis), so every `reprice` row shipped
-    // after that save speaks ONE method line (tax + Medicare here), and the full doctor strips the
-    // extras marker, so the Medicare-spending re-confirm always asks — never "rules", never on the echo.
-    // The count is derived in a unit arm — `devSeeds.test.ts` "'stale' composes EXACTLY the
-    // lines…" — so a re-bucketing fails there first, in a second, not here in ninety; the ledger term
-    // below is that arm's own oracle, so neither pin drifts with the calendar.
-    // The plant's today is the pinned day (the gate's calendar, `e2e/reviewSurface.ts`), never Node's clock.
-    const plantSavedAt = pinnedDay(page) - 760
-    const methodLine = ENGINE_PRICING_LEDGER.some(
-      (r) => r.kind === 'reprice' && r.sinceEpochDay > plantSavedAt && r.families.some((fam) => fam === 'tax' || fam === 'medicare'),
-    )
-      ? 1
-      : 0
-    await expect(page.locator('.reentry-notes p')).toHaveCount(2 + methodLine + 1)
-    await expect(page.getByText(copy.stalenessReconfirmMedicareSpending)).toBeVisible()
-    await expect(page.getByText('Medicare cost figures have been updated')).toBeVisible()
-    await expect(
-      page.getByText('Marketplace health-plan rules have been updated'),
-      'they price zero marketplace years — the ACA line must be dark',
-    ).toHaveCount(0)
-    await expect(
-      page.getByText('Reference data this tool reads has been updated since your save'),
-      'the nameless aggregate must be dark — the blend re-date is provably inert here',
-    ).toHaveCount(0)
-    await expect(page.getByText('You saved this about 2 years ago.')).toBeVisible()
-
-    // Affirm → the gate releases the held recompute pair; wait out the FINAL tier like every
-    // other arm, then settle animations before measuring (the gotoSeedFinal discipline).
-    await affirm.click()
-    await expect(page.locator(SETTLED_RESULT)).toBeAttached({
-      timeout: FINAL_TIER_MS,
-    })
-    await page.evaluate(() => document.fonts.ready)
-    await page.waitForFunction(() =>
-      document.getAnimations().every((a) => {
-        const timing = a.effect?.getTiming()
-        return timing?.iterations === Infinity || a.playState !== 'running'
-      }),
-    )
-    await page.evaluate(
-      () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
-    )
-    await page.evaluate(() => window.scrollTo(0, 0))
-
-    await assertResolvedSpine(page)
-    // The frame under measure IS the echoed one — the standing staleness line is visible
-    // (rules moved: the federal tax vintage + the Medicare cost figures, all EXPOSURE-PROVEN for
-    // this household) with the R13 disclaimer still in-frame beside it.
-    await expect(page.locator('.cs-staleness-note')).toBeVisible()
-    // U17 §S2 — the aged band ships ONLY beside its premise + the RENDERED re-confirm control
-    // (insight 100; the no-premise ⇒ no-fan law is structural in the component, and this arm
-    // pins the pair VISIBLE inside the measured frame — the fold-legality half). The elapsed
-    // segment's demotion mask rides the same clock (the honored hawk veto: drawn-as-history,
-    // never clipped, never full-strength).
-    await expect(page.locator('.band-premise')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Re-confirm your numbers' })).toBeVisible()
-    await expect(page.locator('.band-elapsed-dim')).toBeAttached()
-    // THE ECHO WHITESPACE BUDGET IS APPLIED, not just survived (insight 075 — the standing
-    // encoding of the measured-delta rule; U13 post-fold review advisory 6): the only other
-    // guard on the `:has(.cs-staleness-note)` step-down is assertFrameFits GEOMETRY, which a
-    // deleted :has() rule can survive on Windows text metrics while red on CI (the exact 075
-    // loop). Pin the COMPUTED styles. TWO RULES WRITE THIS 2px AT REAL (the 1440×731 re-point's
-    // review, 2026-11-20): round 5's on-typical step (2px at every two-pane height) and W4 (2px on
-    // every note frame inside the short tier). Deleting either one alone leaves 2px here, so this pin
-    // kills neither rule by itself: round 5 is killed by the spine matrix's tall read on the
-    // on-typical `budget` at SHOWCASE, W4 by the spine arms' short reads. It still reds if both
-    // go, or if the echo frame stops being a two-pane grid with a 2px rhythm.
-    const echoGaps = await page
-      .locator('.confidence-reveal[data-twopane]')
-      .evaluate((reveal) => ({
-        rowGap: getComputedStyle(reveal).rowGap,
-        // row-gap is the operative axis on the column-flex subordinates (and dodges the
-        // gap-shorthand serialization question entirely).
-        subordinatesRowGap: getComputedStyle(reveal.querySelector('.reveal__subordinates')!).rowGap,
-      }))
-    // ROUND 5: the stale vault is an ON-TYPICAL frame (doctorStaleVault strips the fork —
-    // the recompute funds typical-both), so its chain gaps ride the 2px typical tier, and W4 agrees.
-    expect(echoGaps.rowGap, 'the ON-TYPICAL note-frame row-gap is 2px (round 5, and W4 inside the short tier)').toBe('2px')
-    expect(
-      echoGaps.subordinatesRowGap,
-      'the ON-TYPICAL subordinates row-gap is 2px (round 5, and W4 inside the short tier)',
-    ).toBe('2px')
-    await assertOneVisibleDisclaimer(page, 'laptop')
-
-    // THE FOLD-PRIORITY FIX (the Medicare-pricing unit, 2026-07-10 — the pulled-forward TODO-7 /
-    // Caddie-#3 inversion): this all-65+ writable stale return is the tallest composite frame —
-    // it carries the priced-Medicare pair AND the staleness echo AND the backup door together.
-    // Prove the frame is NOT vacuous (the priced-Medicare affirmation renders) and that the
-    // UNPROTECTED backup door is DOM- + visually BELOW the PROTECTED disclaimer, so any overflow
-    // sacrifices the door before the caveat (the Hawk's veto).
-    await expect(page.locator('.cs-medicare-note')).toBeVisible()
-    const foldOrder = await page.evaluate(() => {
-      const disc = document.querySelector('footer.disclaimer.disclaimer--in-frame')
-      const door = document.querySelector('.result-backup-door')
-      if (disc === null || door === null) return null
-      return { discBottom: disc.getBoundingClientRect().bottom, doorTop: door.getBoundingClientRect().top }
-    })
-    expect(foldOrder, 'the disclaimer and the backup door must both render on this frame').not.toBeNull()
-    expect(
-      foldOrder!.doorTop,
-      'the backup door must sit BELOW the R13 disclaimer (the caveat wins the fold)',
-    ).toBeGreaterThanOrEqual(foldOrder!.discBottom - 0.5)
-
-    // The backup door is the sanctioned below-fold casualty on THIS composite frame (decision (b) —
-    // it stays measured on every other arm; here it may degrade past the fold). The disclaimer is a
-    // sibling <footer>, so it stays measured — the arm still fails if the caveat itself breaches.
-    await assertFrameFits(page, true, { backupDoor: true })
-    await assertSurvivorBasis(page, 'inline')
-    // REAL sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law); read after
-    // the fit. The echo-gap pins above own this frame's W4 row-gaps, so the helper skips them here.
-    await assertDensityTier(page, 'short', { skipNoteGaps: true, echo: true })
-    // L3's TALL side (the one-frame composites plan's U5, the W5 precedent): one of two arms that read an echo frame at
-    // SHOWCASE (the other is `?vault=yearfailing`'s rung-3 arm); since the frames-outside U4 the yearly loop also reads its echo frames'
-    // rungs at 1440×900, where an echo rule outside the tier applies too (no new @media prelude is legal): a second guard, kept for 917.
-    // The same frame, widened to SHOWCASE, must read every rung dark, L3's included. A computed-style read only, so the resize needs no fresh load.
-    await page.setViewportSize(SHOWCASE)
-    await settleLayout(page)
-    await assertDensityTier(page, 'tall', { skipNoteGaps: true, echo: true })
-  })
-})
-
-// ── the YEARLY RETURNS (the one-frame composites plan's U6, and the rung-3 key council's plants) ──────
-// The tallest real echo frames: a household's plan saved on `GATE_DAY` and opened a calendar year later under
-// the previous year's tax and Medicare rulebooks (`doctorYearlyReturn`, `src/ui/devSeeds.ts`; each plant viewed
-// at its declared `RETURN_DAY` through `pinPlantDay`), most answering "not sure" on Medicare extras (the
-// typical residual, two lines longer than the entered one). From New Year every real return is this frame, so
-// each is held to the `?vault=stale` arm's law: the gate's decision pair in the first frame, then the echoed
-// result inside the fold, the backup door its one sanctioned casualty. Every presence field is a probe reading
-// (U4's `4625f077` and the council's plants, `e49e352f`): the Medicare pair on, the state clause inside the
-// residual (no standalone note), the survivor card inline, the gate's affirm at 391 px.
+// ── the pay check: its two intake steps, its panel row and its standing line (U8) ───────────────
 //
-// RUNG 3 (council wf_540221e4-42d) borrows the eyebrow's register for the survivor context on the frames
-// carrying its key (`register`): the shown direction `rethink` or `trim`, the echo and the typical residual.
-// Rung 2b → rung 3: `yearfailing` 732.9 → 701.7, `yearofftrack` 732.9 → 722.5, `yearfailingentered` (no typical
-// residual) stays body at 692.4; `yearpafailing` 753.7 → 722.5 on Windows but 743 on CI's ubuntu (run 44872977380).
-//
-// THE FRAMES STILL OUTSIDE AT REAL GO TO THE SEAT (`SEAT_COUNCIL`): `yearsurplus` ("More than covered" answering "not
-// sure", 760.8 px; no direction the key reads) and `yearpafailing` on ubuntu (743.3 px: its step-down re-wraps to three
-// lines at the borrowed size there; 722.5 on Windows). The rung-3 ruling made them a new stop, and the frames-outside
-// council's correction sent every frame still outside to one seat question. So their caveat assertions are HELD at
-// REAL: each arm prints the caveat's bottom and asserts everything else (`assertFrameFitsHoldingCaveat`); the seat's
-// ruling build restores `assertFrameAtSize` here.
-//
-// HIS WHOLE SCREEN (the frames-outside plan's U4, KTD9): each arm then resizes the same frame to LENOVO_FULL (1440×900
-// @ 2, the `?vault=stale` arm's resize idiom) and holds it to the degrade contract there, the backup door its sanctioned
-// casualty, the full-fit distance printed. Run M1 (44963702523) read every caveat inside 900 on Windows and ubuntu alike:
-// `yearpa` 806.5, `yearfailing` 813.6, `yearpafailing` 834.4, `yearofftrack` 813.6, `yearfailingentered` 797.1,
-// `yearsurplus` 841.5, the doors past the fold on every one (`yearsurplus` 1010.3). The two tall echo frames still outside
-// at REAL print once more at the tall edge (`printTallEdge`), never asserted.
-const SEAT_COUNCIL =
-  "the record card's seat council: ONE seat question for every frame still outside his 731 px fold after the frames-outside build, its acceptance test the widest plants' arms (the composites entry's prescription (4))"
+// THE INTAKE STEP CONTRACT (defined here, 2026-10-30 — the one-frame law above is a RESULT-frame law,
+// and the intake scrolls by design: a step's help and the money picture run long on a phone). What a
+// scrolling step owes the reader instead:
+//   (a) its question lands in the first frame — the step heading ends above the fold;
+//   (b) nothing inside the flow spills sideways — every rendered box inside `.intake-shell` sits within
+//       the viewport's width, and the document never scrolls sideways;
+//   (c) every figure in the money picture reads WHOLE — no `.wy-row__value` clipped by its row;
+//   (d) Continue is in the document below the content, never overlapped by it.
+// The walk is SCOPED to `.intake-shell`: the App's trailing disclaimer sits below the 100svh shell by
+// design, and a `body *` walk would read it as an offender on every intake frame.
+// PHONE runs under the intake precedent's FULL mobile emulation (`e2e/intake-fold.spec.ts`), never the
+// bare-viewport phone the result arms above use: the intake is what a reader types into on a phone.
 
-test.describe(`the yearly returns — the gate + the echoed frame, rung 3 on its key (${REAL.width}×${REAL.height}, then ${LAPTOP_SIZES.LENOVO_FULL.viewport.width}×${LAPTOP_SIZES.LENOVO_FULL.viewport.height})`, () => {
-  test.use({ viewport: LAPTOP_SIZES.REAL.viewport, deviceScaleFactor: LAPTOP_SIZES.REAL.deviceScaleFactor })
-  for (const { key, what, word, typical, register, held, tallEdge } of [
-    { key: 'yearpa', what: 'Pennsylvania answering "not sure", a year on', word: copy.outcomeBorderline, typical: 1, register: false, held: null, tallEdge: false },
-    { key: 'yearfailing', what: 'the already-failing household answering "not sure", a year on', word: copy.outcomeAlreadyFailing, typical: 1, register: true, held: null, tallEdge: false },
-    { key: 'yearpafailing', what: 'Pennsylvania already short, "not sure", a year on', word: copy.outcomeAlreadyFailing, typical: 1, register: true, held: SEAT_COUNCIL, tallEdge: true },
-    { key: 'yearofftrack', what: 'the off-track household answering "not sure", a year on', word: copy.outcomeOffTrack, typical: 1, register: true, held: null, tallEdge: false },
-    { key: 'yearfailingentered', what: 'the already-failing household with entered extras, a year on', word: copy.outcomeAlreadyFailing, typical: 0, register: false, held: null, tallEdge: false },
-    { key: 'yearsurplus', what: 'the reassuring room frame answering "not sure", a year on', word: copy.outcomeOverFunded, typical: 1, register: false, held: SEAT_COUNCIL, tallEdge: true },
-  ] as const) {
-    test(`?vault=${key} — ${what}: the decision pair in frame; the echoed result ${held === null ? 'holds the one-frame law' : 'holds every line but its caveat, which is printed (held for the seat)'}; his whole screen holds the degrade contract`, async ({ page }) => {
-      await pinPlantDay(page, key)
-      await page.goto(`/?vault=${key}`)
-      const unlock = page.getByRole('button', { name: 'Open my plan' })
-      await expect(unlock, `?vault=${key}: the plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
-      await unlock.click()
+/** The rendered boxes inside a scope that spill past the viewport's right edge (or its left), the
+ *  document's sideways scroll, and how many boxes the walk counted (insight 029: a blank page must
+ *  fail the floor, never pass an empty-offender check). */
+async function sidewaysReport(
+  page: Page,
+  scope: string,
+): Promise<{ readonly counted: number; readonly offenders: readonly string[]; readonly docOverflow: number }> {
+  return page.evaluate((sel) => {
+    const vw = document.documentElement.clientWidth
+    const offenders: string[] = []
+    let counted = 0
+    for (const el of Array.from(document.querySelectorAll<HTMLElement>(`${sel} *`))) {
+      if (el.closest('.sr-only') !== null) continue
+      const style = window.getComputedStyle(el)
+      if (style.display === 'none' || style.visibility === 'hidden' || style.position === 'fixed') continue
+      if (el.getClientRects().length === 0) continue
+      const r = el.getBoundingClientRect()
+      if (r.width <= 1 || r.height <= 1) continue
+      counted++
+      if (r.right > vw + 0.5 || r.left < -0.5) {
+        const cls = el.getAttribute('class')
+        offenders.push(`${el.tagName.toLowerCase()}${cls !== null && cls !== '' ? `.${cls.split(/\s+/)[0]}` : ''} [${Math.round(r.left)}, ${Math.round(r.right)}] of ${vw}`)
+      }
+    }
+    const docOverflow = document.documentElement.scrollWidth - document.documentElement.clientWidth
+    return { counted, offenders, docOverflow }
+  }, scope)
+}
 
-      // THE GATE FRAME: the decision pair in the first frame, beside exactly the notes the household earns.
-      const affirm = page.getByRole('button', { name: /still about right/i })
-      await expect(affirm).toBeVisible({ timeout: 30_000 })
-      await page.evaluate(() => document.fonts.ready)
-      await page.evaluate(() => window.scrollTo(0, 0))
-      const affirmBox = await affirm.boundingBox()
-      expect(affirmBox, 'the affirm CTA reported no box').not.toBeNull()
-      expect(affirmBox!.y + affirmBox!.height, 'the affirm CTA sits below the first frame at the real window').toBeLessThanOrEqual(
-        LAPTOP_SIZES.REAL.viewport.height,
-      )
-      // The two clocks the doctor fires, in the composer's order, and nothing else. The count is derived in
-      // the unit arms (`devSeeds.test.ts`: "…saves on the gate's day at its yearly return, so the gate speaks
-      // no engine-pricing line (derived from the ledger)" and "…gate speaks exactly the tax and Medicare
-      // lines…"): the doctor's floor puts the save on `GATE_DAY`, the day after the newest ledger row, so no
-      // method line, nameless twin or extras re-confirm can speak beside them (the answer keeps its vintage).
-      await expect(page.locator('.reentry-notes p')).toHaveText([copy.stalenessTax, copy.stalenessMedicare])
-      await expect(page.getByText(slots.reentryElapsedYears(1)), 'the elapsed line reads a year').toBeVisible()
+/** Every money-picture figure that does not fit its own box (its text clipped or spilling), and how many
+ *  figures the walk read — (c)'s own non-vacuity count (insight 029; the whole-file review, H-D10): an
+ *  offender list alone is empty when the selector matches NOTHING, so a renamed `.wy-row__value` would
+ *  have passed every arm as "every figure whole". */
+async function clippedFigures(
+  page: Page,
+  scope: string,
+): Promise<{ readonly counted: number; readonly offenders: readonly string[] }> {
+  return page.evaluate((sel) => {
+    const offenders: string[] = []
+    const figures = Array.from(document.querySelectorAll<HTMLElement>(`${sel} .wy-row__value`))
+    for (const el of figures) {
+      if (el.scrollWidth > el.clientWidth + 1) offenders.push(`${el.textContent ?? ''} (${el.scrollWidth} > ${el.clientWidth})`)
+      const row = el.closest('.wy-rows')
+      if (row !== null) {
+        const r = el.getBoundingClientRect()
+        const box = row.getBoundingClientRect()
+        if (r.right > box.right + 0.5 || r.left < box.left - 0.5) offenders.push(`${el.textContent ?? ''} outside its group`)
+      }
+    }
+    return { counted: figures.length, offenders }
+  }, scope)
+}
 
-      // Affirm → the held recompute pair; the FINAL tier, then a settled layout (the gotoSeedFinal discipline).
-      await affirm.click()
-      await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
-      await settleLayout(page)
+/** The figures a money picture of `date`'s household must show (`?seed=datecoststale` once re-answered,
+ *  walk and panel alike; `?seed=datesaved`, walk and panel, whose "All of it" moves no year-0 line — the
+ *  credit lands at the year's end, KTD12): year 0's nonzero lines from the U10 hand derivation
+ *  (`b9-u10-tools/year0check`, every rate from its primary) — pay $150,000, payroll tax $11,475, the tax on
+ *  outside income $17,540, deposits $20,000, W — and the bottom line, which every picture carries
+ *  (`WorkingYearLedger.tsx` draws any other line only above $0; no Social Security, no other income, nobody
+ *  on Medicare yet). Later years only add to it. Build 2's left-over question below the picture adds none:
+ *  its year-0 figure is a sentence (`.left-over__figure`), never a `.wy-row__value`, so its own arms read
+ *  it by text. */
+const DATE_PICTURE_FIGURES = 6
 
-      await assertResolvedSpine(page)
-      await assertSizeTier(page, 'REAL')
-      // The frame under measure IS the echoed one, carrying the aged band beside its premise and the rendered
-      // re-confirm control (U17 §S2, the `?vault=stale` arm's pins: the fold-legality half).
-      await expect(page.locator('.cs-staleness-note')).toBeVisible()
-      await expect(page.locator('.band-premise')).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Re-confirm your numbers' })).toBeVisible()
-      await expect(page.locator(SPINE_VERDICT), `?vault=${key}: the verdict the plant is built to show`).toHaveText(word)
-      await assertMedicareNote(page, true)
-      await expect(
-        page.locator('.cs-medicare-residual--typical'),
-        typical === 1 ? 'the "not sure" answer funds the typical residual' : 'the entered answer carries no typical residual',
-      ).toHaveCount(typical)
-      await assertStateNote(page, false)
-      await assertOneVisibleDisclaimer(page, 'laptop')
+/** (a)–(d) on the step the page stands on. `minBoxes` is the arm's own non-vacuity floor; `minFigures`
+ *  is (c)'s — the money-picture figures the frame must read before "none clipped" means anything. `0`
+ *  only on a frame that carries no picture (the W step; the unknown face), where (c) has nothing to read. */
+async function assertIntakeStepHolds(page: Page, where: string, minBoxes: number, minFigures: number): Promise<void> {
+  await settleLayout(page)
+  const heading = await page.locator('.step-heading').boundingBox()
+  expect(heading, `${where}: the step heading must render`).not.toBeNull()
+  const innerHeight = await page.evaluate(() => window.innerHeight)
+  expect(heading!.y + heading!.height, `${where}: the question is below the first frame`).toBeLessThanOrEqual(innerHeight)
+  const sideways = await sidewaysReport(page, '.intake-shell')
+  expect(sideways.counted, `${where}: the walk counted too few boxes — the step did not render`).toBeGreaterThan(minBoxes)
+  expect(sideways.offenders, `${where}: boxes spill past the viewport's sides`).toEqual([])
+  expect(sideways.docOverflow, `${where}: the document scrolls sideways`).toBeLessThanOrEqual(0)
+  const figures = await clippedFigures(page, '.intake-shell')
+  expect(figures.counted, `${where}: the walk read too few money-picture figures — (c) would pass on nothing`).toBeGreaterThanOrEqual(
+    minFigures,
+  )
+  expect(figures.offenders, `${where}: a money-picture figure is clipped`).toEqual([])
+  const body = await page.locator('.step-body').boundingBox()
+  const nav = await page.locator('.intake-nav').boundingBox()
+  expect(body !== null && nav !== null, `${where}: the step body and its nav must render`).toBe(true)
+  expect(nav!.y, `${where}: Continue overlaps the step's content`).toBeGreaterThanOrEqual(body!.y + body!.height - 0.5)
+}
 
-      // The UNPROTECTED backup door sits BELOW the PROTECTED caveat, so any overflow sacrifices it first.
-      const foldOrder = await page.evaluate(() => {
-        const disc = document.querySelector('footer.disclaimer.disclaimer--in-frame')
-        const door = document.querySelector('.result-backup-door')
-        if (disc === null || door === null) return null
-        return { discBottom: disc.getBoundingClientRect().bottom, doorTop: door.getBoundingClientRect().top }
-      })
-      expect(foldOrder, 'the disclaimer and the backup door must both render on this frame').not.toBeNull()
-      expect(foldOrder!.doorTop, 'the backup door must sit BELOW the R13 disclaimer (the caveat wins the fold)').toBeGreaterThanOrEqual(
-        foldOrder!.discBottom - 0.5,
-      )
+/** Build 2's left-over seat in the open assumptions panel — its own row BELOW the W row (KTD8). */
+const LEFT_OVER_SEAT = '[role="dialog"] [data-assumption-seat="working-year-left-over"]'
 
-      const frame = `?vault=${key}`
-      if (held === null) await assertFrameAtSize(page, 'REAL', frame, { backupDoor: true })
-      else await assertFrameFitsHoldingCaveat(page, frameAt(frame, 'REAL'), { backupDoor: true }, held)
-      await assertSurvivorBasis(page, 'inline')
-      // REAL sits inside the short tier. The echo flag is checked against the frame's own echo (L4, and the echo
-      // cells of the leading table, which read tight on every echo frame: L3, and on `yearfailing` and
-      // `yearpafailing` B's entry too, at the same value), and the register flag against the frame's own rung-3 key.
-      await assertNoteLeading(page, LAPTOP_SIZES.REAL.density)
-      await assertDensityTier(page, LAPTOP_SIZES.REAL.density, { echo: true, register })
+/** The seat's face once its replies show (R5, R6): exactly the three replies under the static legend, `checked`
+ *  the one reply checked (or none), the year-0 figure line, and the one line below the group — every string the
+ *  shipped one, every count exact, so a seat that rendered nothing (or rendered its replies elsewhere) reds.
+ *  Then nothing in the seat spills sideways, over a counted floor. The caller has scrolled the seat in. */
+async function assertLeftOverSeatFace(
+  page: Page,
+  where: string,
+  face: { readonly checked: string | null; readonly figure: string; readonly line: string },
+): Promise<void> {
+  const seat = page.locator(LEFT_OVER_SEAT)
+  await expect(seat, `${where}: the left-over seat renders once`).toHaveCount(1)
+  await expect(seat.locator('.ap-row__name')).toHaveText(copy.assumptionWorkingCostLeftOverName)
+  const group = seat.getByRole('group', { name: copy.workingLedgerLeftOverLegend })
+  await expect(group).toHaveCount(1)
+  await expect(group.getByRole('radio'), `${where}: exactly the three replies, in the group`).toHaveCount(3)
+  await expect(seat.getByRole('radio'), `${where}: no reply outside the group`).toHaveCount(3)
+  await expect(seat.getByRole('radio', { checked: true }), `${where}: the checked reply`).toHaveCount(face.checked === null ? 0 : 1)
+  if (face.checked !== null) await expect(group.getByRole('radio', { name: face.checked, exact: true })).toBeChecked()
+  await expect(seat.locator('.left-over__figure'), `${where}: the year-0 figure line`).toHaveText(face.figure)
+  await expect(seat.locator('.left-over__line'), `${where}: the line below the group`).toHaveText(face.line)
+  const sideways = await sidewaysReport(page, LEFT_OVER_SEAT)
+  // The boxes inside the seat's row (the walk reads its descendants): its name, the question's root, the
+  // figure and check lines, the fieldset, its legend and the legend's text, the track, three replies, and the
+  // line below — 12, measured at both sizes (the radios themselves are `.sr-only`, which the walk skips).
+  expect(sideways.counted, `${where}: the walk counted too few boxes — the seat did not render`).toBeGreaterThanOrEqual(12)
+  expect(sideways.offenders, `${where}: the seat spills past the viewport`).toEqual([])
+  expect(sideways.docOverflow, `${where}: the document scrolls sideways`).toBeLessThanOrEqual(0)
+}
 
-      // HIS WHOLE SCREEN: the same frame resized (a fresh load would re-walk the gate), held to the degrade contract with
-      // the backup door its sanctioned casualty, every rung's tall side read (rung 3's key still holds there and borrows
-      // nothing; the echo cells still read tight in the table, and above the tier every cell reads body).
-      await page.setViewportSize(LAPTOP_SIZES.LENOVO_FULL.viewport)
-      await settleLayout(page)
-      await assertSizeTier(page, 'LENOVO_FULL')
-      await assertFrameAtSize(page, 'LENOVO_FULL', frame, { backupDoor: true })
-      await assertNoteLeading(page, LAPTOP_SIZES.LENOVO_FULL.density)
-      await assertDensityTier(page, LAPTOP_SIZES.LENOVO_FULL.density, { echo: true, register })
-      if (tallEdge) await printTallEdge(page, frame, { backupDoor: true })
-    })
-  }
-
-  // Rung 3's tall side (the ruling's pins): the same key frame above the short tier borrows nothing. A computed-style
-  // read only, so the widening needs no fresh load (the `?vault=stale` arm's SHOWCASE idiom).
-  test(`?vault=yearfailing — rung 3's key holds, and above the short tier the survivor context stays body`, async ({ page }) => {
-    await gotoVaultFinal(page, 'yearfailing')
-    await assertResolvedSpine(page)
-    await assertDensityTier(page, 'short', { echo: true, register: true })
-    await page.setViewportSize(SHOWCASE)
-    await settleLayout(page)
-    await assertTier(page, 'laptop')
-    await assertDensityTier(page, 'tall', { echo: true, register: true })
-  })
-})
-
-// ── RUNG 3'S FRESH FRAMES (council wf_540221e4-42d; its plants, `e49e352f`) ─────────────────────────────────
-// The ruling's body-size pins on FRESH frames (no staleness echo, so rung 3's key is absent and the survivor
-// context stays body): `?seed=failing` and `failingtypical`, the already-failing household (its `rethink` clause
-// alone fits, 715.3 px), and the council's plants: `failingentered` (entered extras) and `offtracktypical` (the
-// off-track trim frame, "not sure"). Each holds the one-frame law at REAL, TIER, LENOVO_FULL and SHOWCASE.
-//
-// B'S ENTRY (the frames-outside plan's KTD7, survivor.css): the three `rethink` frames with the typical residual
-// (`failing`, `failingtypical`, `pafailingtypical`) read the survivor statements at tight leading inside the
-// short tier, and body above it; `failingentered` (no typical residual) and the other two stay snug. The
-// `leading` column is each arm's expectation, checked against the frame's own markers (`SURVIVOR_LEADING`).
-// Measured at REAL: `pafailingtypical`'s caveat 736.0 → 727.3 px on Windows and on ubuntu alike (CI run
-// 44970351069), so its REAL arm asserts the fit as a labelled reading (the frames-outside plan's U4): inside by 3.7 px,
-// less than one line, the reading of the tree that carries the entry; a later change to the frame is re-read on both
-// platforms before it is trusted.
-//
-// ONE FRESH FRAME STAYS OUTSIDE HIS 731 PX FOLD AT REAL, HELD FOR THE SEAT (`SEAT_COUNCIL`): `surplustypical`, the
-// reassuring room frame ("More than covered", 743.1 px on Windows and ubuntu alike, run M1 44963702523, both room
-// states). No allowed rung reaches it (class A: no room rule, the frames-outside council's ruling), so its arm prints
-// its caveat's bottom and holds every other line to the frame (`assertFrameFitsHoldingCaveat`). It fits at TIER, at his
-// whole screen (812.4) and at SHOWCASE in full: both SHOWCASE breaches the gate once printed were its own walk counting
-// `main.result`'s bottom padding (KTD8, the frames-outside plan's U2), and run M1 read both frames' content walks inside
-// 917 on both platforms (`pafailingtypical` doors 897.3, `surplustypical` 904.4), so both assert the full fit again.
-// LENOVO_FULL (his whole screen) asserts the degrade contract on all six, its full-fit distance printed (run M1: every
-// caveat inside 900 on both platforms, `surplustypical`'s doors at 904.4 its sanctioned casualty). A room or trim clause
-// is sized a beat after the final; the arms measure right after it, as the spine matrix does (the reserve holds the
-// sized height: run M1 read pending equal to settled on every room and trim frame).
-const RUNG3_FRESH = [
-  { seed: 'failing', word: copy.outcomeAlreadyFailing, typical: 1, heldAtReal: false, leading: 'tight' },
-  { seed: 'failingtypical', word: copy.outcomeAlreadyFailing, typical: 1, heldAtReal: false, leading: 'tight' },
-  { seed: 'failingentered', word: copy.outcomeAlreadyFailing, typical: 0, heldAtReal: false, leading: 'snug' },
-  { seed: 'offtracktypical', word: copy.outcomeOffTrack, typical: 1, heldAtReal: false, leading: 'snug' },
-  { seed: 'pafailingtypical', word: copy.outcomeAlreadyFailing, typical: 1, heldAtReal: false, leading: 'tight' },
-  { seed: 'surplustypical', word: copy.outcomeOverFunded, typical: 1, heldAtReal: true, leading: 'snug' },
+const PAY_CHECK_VIEWPORTS = [
+  { name: `${REAL.width}×${REAL.height}`, use: { viewport: REAL, deviceScaleFactor: REAL_DPR } },
+  { name: `phone ${PHONE.width}×${PHONE.height}`, use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true } },
 ] as const
 
-for (const size of ['REAL', 'TIER', 'LENOVO_FULL', 'SHOWCASE'] as const) {
-  const s = LAPTOP_SIZES[size]
-  test.describe(`rung 3's fresh frames at ${size} — no echo, so the survivor context stays body`, () => {
-    test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
-    for (const { seed, word, typical, heldAtReal, leading } of RUNG3_FRESH) {
-      const held = heldAtReal && size === 'REAL'
-      const law = held
-        ? 'every line but its caveat fits (held for the seat; the caveat printed)'
-        : s.law === 'full'
-          ? 'FULL fit, doors included'
-          : s.density === 'tall'
-            ? 'everything but the doors fits one frame, the full-fit distance printed'
-            : 'everything but the doors fits one frame'
-      test(`?seed=${seed} ${size}: ${law}`, async ({ page }) => {
-        await gotoSeedFinal(page, seed)
-        await assertResolvedSpine(page)
-        await assertSizeTier(page, size)
-        await expect(page.locator(SPINE_VERDICT), `?seed=${seed}: the verdict the seed is built to show`).toHaveText(word)
-        await assertMedicareNote(page, true)
-        await expect(page.locator('.cs-medicare-residual--typical'), `?seed=${seed}: the typical residual`).toHaveCount(typical)
-        await expect(page.locator('.cs-staleness-note'), `?seed=${seed}: a fresh frame carries no echo`).toHaveCount(0)
-        await assertStateNote(page, false)
-        await assertOneVisibleDisclaimer(page, 'laptop')
-        if (held) await assertFrameFitsHoldingCaveat(page, frameAt(`?seed=${seed}`, size), {}, SEAT_COUNCIL)
-        else await assertFrameAtSize(page, size, `?seed=${seed}`)
-        await assertSurvivorBasis(page, 'inline')
-        await assertNoteLeading(page, s.density)
-        await assertDensityTier(page, s.density, { leading })
+for (const vp of PAY_CHECK_VIEWPORTS) {
+  test.describe(`the pay check’s W step and money picture (${vp.name})`, () => {
+    test.use(vp.use)
+
+    test('?seed=datecoststale: the stale face, the blocked Continue, the figure option, then the answered picture', async ({ page }) => {
+      await rewalkSeedTo(page, 'datecoststale', copy.qWorkingCostHeading, { final: true })
+      // The stale face: the calm note before any tap, no answer checked, no alert.
+      await expect(page.getByRole('note')).toContainText(slots.workingCostStaleQuote('84,000', '78,000'))
+      await expect(page.getByRole('alert')).toHaveCount(0)
+      await assertIntakeStepHolds(page, 'W step, stale', 25, 0)
+      // A blocked Continue: the gate's message under the fork, the fork marked invalid.
+      await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
+      await expect(page.getByRole('alert')).toContainText(copy.errWorkingCostUnanswered)
+      await expect(page.locator('fieldset[role="radiogroup"]')).toHaveAttribute('aria-invalid', 'true')
+      await assertIntakeStepHolds(page, 'W step, blocked', 25, 0)
+      // The figure option open: the field and its period control in one slot.
+      await page.getByRole('radio', { name: copy.workingCostDifferent }).evaluate((el) => (el as HTMLInputElement).click())
+      // By role and EXACT name: a bare getByLabel matches by substring, and the fork's legend ("Is that about
+      // what a year costs while you’re working?") contains the field's own label.
+      await expect(page.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })).toBeVisible()
+      await expect(page.getByRole('radio', { name: copy.periodMonth })).toBeChecked()
+      await assertIntakeStepHolds(page, 'W step, figure open', 30, 0)
+      // Re-answer "yes" and walk on to the picture of the answered household.
+      await page.getByRole('radio', { name: copy.workingCostYes }).evaluate((el) => (el as HTMLInputElement).click())
+      await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
+      await expect(page.locator('.step-heading')).toHaveText(copy.qWorkingLedgerHeading)
+      await expect(page.locator('.wy-row--bottom')).toContainText(copy.workingLedgerLeftOver)
+      await assertIntakeStepHolds(page, 'money picture, datecoststale', 40, DATE_PICTURE_FIGURES)
+      // Build 2's question now renders below this picture (W fresh again, nothing answered), so (d) above is
+      // the walk's real fit read of the UNANSWERED face — counted, or (d) would pass on the picture alone if
+      // the question vanished. Its figure by hand: `date`'s $16,985 with W re-answered at the $78,000 quote,
+      // $6,000 less going out (W comes off the bottom line dollar for dollar; nothing else in year 0 reads
+      // the spending) — $22,985. Nothing checked (R1), and the unanswered line below the group.
+      const question = page.locator('.intake-shell .step-body .left-over')
+      await expect(question, 'the left-over question renders once, inside the step').toHaveCount(1)
+      const replies = question.getByRole('group', { name: copy.workingLedgerLeftOverLegend }).getByRole('radio')
+      await expect(replies, 'exactly the three replies, in the group').toHaveCount(3)
+      await expect(question.getByRole('radio', { checked: true }), 'an unanswered question checks no reply').toHaveCount(0)
+      await expect(question.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigure('22,985'))
+      await expect(question.locator('.left-over__line')).toHaveText(slots.workingLedgerLeftOverAbsentLine('22,985'))
+    })
+
+    test('?seed=datesaved: the left-over question below the whole picture — three replies, "All of it" checked at its figure', async ({ page }) => {
+      await rewalkSeedTo(page, 'datesaved', copy.qWorkingLedgerHeading, { final: true })
+      await expect(page.locator('.wy-row--bottom')).toContainText(copy.workingLedgerLeftOver)
+      // (a)–(d) with the question in the step: its replies and lines are inside `.step-body`, so (d) reads
+      // Continue below the question, never only below the picture.
+      await assertIntakeStepHolds(page, 'money picture, datesaved', 50, DATE_PICTURE_FIGURES)
+      // THE NON-VACUITY COUNT (U9: "the fit arms count the three radios and the figure line, so an empty pass
+      // reds"), scoped to the question's own root, never the page: a page-wide count would pass on replies
+      // rendered anywhere, and a vanished question would leave (a)–(d) green on the picture alone.
+      const question = page.locator('.intake-shell .step-body .left-over')
+      await expect(question, 'the left-over question renders once, inside the step').toHaveCount(1)
+      const group = question.getByRole('group', { name: copy.workingLedgerLeftOverLegend })
+      await expect(group).toHaveCount(1)
+      // Three in the question's own group, and no other reply anywhere in its root.
+      await expect(group.getByRole('radio'), 'exactly the three replies, in the group').toHaveCount(3)
+      await expect(question.getByRole('radio'), 'no reply outside the group').toHaveCount(3)
+      await expect(question.getByRole('radio', { checked: true }), 'exactly one reply checked').toHaveCount(1)
+      await expect(group.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })).toBeChecked()
+      // The figure line, and the saved line below the group, in `date`'s hand-derived $16,985 (the unlock
+      // block's derivation above): the stored answer and the live figure agree, so the plain "saved" line.
+      await expect(question.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigure('16,985'))
+      await expect(question.locator('.left-over__line')).toHaveText(slots.workingLedgerLeftOverSavedLine('16,985'))
+      // Below the WHOLE picture (KTD8: never inside it), in geometry as well as DOM order.
+      const placed = await page.evaluate(() => {
+        const ledger = document.querySelector('.intake-shell .wy-ledger')
+        const q = document.querySelector('.intake-shell .left-over')
+        if (ledger === null || q === null) return null
+        return {
+          outside: !ledger.contains(q),
+          ledgerBottom: ledger.getBoundingClientRect().bottom,
+          questionTop: q.getBoundingClientRect().top,
+        }
       })
+      expect(placed, 'the picture and the question both render').not.toBeNull()
+      expect(placed!.outside, 'the question is never inside the picture').toBe(true)
+      expect(placed!.questionTop, 'the question starts below the whole picture').toBeGreaterThanOrEqual(placed!.ledgerBottom - 0.5)
+    })
+
+    test('?seed=dateshort: the picture at its fullest — held-back Social Security, Medicare from savings, every later year short', async ({ page }) => {
+      await rewalkSeedTo(page, 'dateshort', copy.qWorkingLedgerHeading, { final: true })
+      await expect(page.locator('.wy-row--bottom')).toContainText(copy.workingLedgerShort)
+      // The held-back words are the shipped slot's, never re-typed (the header's catalog law; the whole-file
+      // review, H-D11). $2,760 is U10's hand derivation (`b9-u10-tools/year0check`, typed from the primary):
+      // Alex's $30,000 of pay less the 2026 lower exempt amount (`earningsTestExemptAmounts`), $1 held back
+      // for every $2 above it. Year 0 is not her full-retirement-age year, so the plain sentence, never the
+      // "at most" one.
+      await expect(page.locator('.wy-ledger')).toContainText(slots.workingLedgerSsHeldBack('2,760'))
+      await expect(page.getByRole('heading', { level: 3, name: copy.workingLedgerAlsoFromSavings })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 3, name: copy.workingLedgerLaterHeading })).toBeVisible()
+      await expect(page.locator('[role="alert"], .wy-ledger [aria-live]')).toHaveCount(0)
+      // (c)'s floor, by hand from the same derivation: pay $30,000 and Social Security $27,960 coming in;
+      // payroll tax $2,295, deposits $3,000 and W going out (its tax on outside income is $0, so no line);
+      // the bottom line; and at least one line under each of the two headings just seen (a group draws its
+      // heading only over a line) — 8.
+      await assertIntakeStepHolds(page, 'money picture, dateshort', 60, 8)
+    })
+
+    test('?seed=datesolo: the refusal witness walks every step, and its picture step reads one calm line', async ({ page }) => {
+      await rewalkSeedTo(page, 'datesolo', copy.qWorkingLedgerHeading)
+      // Nothing the household can enter draws a picture (no "yet"), and the step points at the answer
+      // strip, which names the blocker ONCE on the screen (rulings 36; b9-3's C13 dropped the "yet").
+      const face = page.locator('.wy-ledger--unknown')
+      await expect(face).toContainText(copy.workingLedgerUnknownLeadFinal)
+      await expect(face).not.toContainText(copy.workingLedgerUnknownLead)
+      await expect(face).toContainText(copy.workingLedgerUnknownSeeStrip)
+      await expect(page.locator('.answer-strip')).toContainText(copy.employerCoverageUnpriced)
+      expect(
+        await page.evaluate((needle) => document.body.innerText.split(needle).length - 1, copy.employerCoverageUnpriced),
+        'the blocker is named once on the screen, in the strip',
+      ).toBe(1)
+      await expect(page.locator('.intake-shell dl')).toHaveCount(0)
+      await assertIntakeStepHolds(page, 'money picture, unknown', 10, 0)
+    })
+  })
+
+  test.describe(`the pay check’s standing line and panel row on ?seed=datecoststale (${vp.name})`, () => {
+    test.use(vp.use)
+
+    test('the line sits in the lead after the other notes, above the graphs, doors last; its door opens the panel at the W row', async ({ page }) => {
+      await gotoSeedFinal(page, 'datecoststale')
+      await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached()
+      const line = page.locator('[data-stale-banner] p.cs-paycheck-note')
+      await expect(line, 'the standing line renders in the lead').toHaveCount(1)
+      await expect(line).toContainText(copy.stalenessPayCheckNote)
+      await assertStandingInBanner(page, line, vp.use.viewport.width === PHONE.width)
+      // The door: the panel opens AT the W row — its name focused, the row inside the dialog, nothing
+      // spilling sideways — and a "yes" there draws the picture under h4 legends, every figure whole.
+      await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
+      const dialog = page.getByRole('dialog')
+      await expect(dialog).toBeVisible()
+      await page.waitForTimeout(400)
+      const focusedName = await page.evaluate(() => document.activeElement?.textContent ?? '')
+      expect(focusedName).toBe(copy.assumptionWorkingCostName)
+      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+      const dialogBox = await dialog.boundingBox()
+      const nameBox = await row.locator('.ap-row__name').boundingBox()
+      expect(dialogBox !== null && nameBox !== null).toBe(true)
+      expect(nameBox!.y, 'the W row’s name is scrolled into the dialog').toBeGreaterThanOrEqual(dialogBox!.y - 0.5)
+      expect(nameBox!.y + nameBox!.height).toBeLessThanOrEqual(dialogBox!.y + dialogBox!.height + 0.5)
+      await expect(row.getByRole('note')).toContainText(slots.workingCostStaleQuote('84,000', '78,000'))
+      await row.getByRole('radio', { name: copy.workingCostYes }).evaluate((el) => (el as HTMLInputElement).click())
+      await expect(row.getByRole('heading', { level: 4, name: copy.workingLedgerComingIn })).toBeVisible({ timeout: 30_000 })
+      await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
+      await settleLayout(page)
+      const sideways = await sidewaysReport(page, '[role="dialog"] [data-assumption-seat="working-year-cost"]')
+      expect(sideways.counted).toBeGreaterThan(30)
+      expect(sideways.offenders, 'the W row spills past the viewport').toEqual([])
+      const panelFigures = await clippedFigures(page, '[role="dialog"]')
+      expect(panelFigures.counted, 'the panel picture read too few figures — "none clipped" would pass on nothing').toBeGreaterThanOrEqual(
+        DATE_PICTURE_FIGURES,
+      )
+      expect(panelFigures.offenders, 'a panel money-picture figure is clipped').toEqual([])
+    })
+  })
+
+  // ── the U11 walk's (ae): the risen family's longest words on the W surfaces and the Result. The W step's note and
+  //    the panel's W row carry the year-level lean and never a figure at the quote (the fork's description: the
+  //    red team's attack 4); the standing line carries the five-sentence later-short line. Fix the layout, never
+  //    cut the content. ──
+  test.describe(`the risen family’s stale words on ?seed=datesavedrisenlater (${vp.name})`, () => {
+    test.use(vp.use)
+
+    test('the W step’s stale face holds with the year-level lean, and no figure at the quote', async ({ page }) => {
+      await rewalkSeedTo(page, 'datesavedrisenlater', copy.qWorkingCostHeading, { final: true })
+      const note = page.getByRole('note')
+      await expect(note).toContainText(
+        `${slots.workingCostStaleQuote('84,000', '105,000')} ${slots.workingCostStaleLeftOverYearsCheaper('84,000')}`,
+      )
+      await expect(note, 'no whole-answer lean on a "saved" note').not.toContainText(slots.workingCostStaleLeansBetter('84,000'))
+      await expect(note, 'no figure at the quote in the fork’s description').not.toContainText('5,985')
+      await assertIntakeStepHolds(page, 'W step, stale, saved', 25, 0)
+    })
+
+    test('the standing line carries the whole later-short line in place; its door opens a W row whose note holds the lean, nothing sideways', async ({ page }) => {
+      await gotoSeedFinal(page, 'datesavedrisenlater')
+      await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached()
+      // A "saved" answer waiting on W: the slot is W's block (`div.note-parts`, council `wf_22858e04-f7a`), still the
+      // lead's direct child in the same `.fod-note` register; its words read across the dt/dd as `innerText`.
+      const line = page.locator('[data-stale-banner] div.note-parts.cs-paycheck-note')
+      await expect(line, 'the standing line renders in the lead').toHaveCount(1)
+      await assertStandingBlock(line, 'datesavedrisenlater', `${copy.stalenessPayCheckNote} ${RISEN_LATER_LINE}`, risenResultDoor('105,000'))
+      await assertStandingInBanner(page, line, vp.use.viewport.width === PHONE.width)
+      // Below the quote the door says "update" (council `wf_7fa86902-35c`): the W row offers no Keep door there.
+      await page.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate }).click()
+      const dialog = page.getByRole('dialog')
+      await expect(dialog).toBeVisible()
+      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+      await expect(row.getByRole('note')).toContainText(slots.workingCostStaleLeftOverYearsCheaper('84,000'))
+      await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
+      await settleLayout(page)
+      const sideways = await sidewaysReport(page, '[role="dialog"] [data-assumption-seat="working-year-cost"]')
+      expect(sideways.counted, 'the W row rendered').toBeGreaterThan(10)
+      expect(sideways.offenders, 'the W row spills past the viewport').toEqual([])
+    })
+  })
+
+  // ── the whole-window rebuild's five-span line in the Result's standing slot (walk 8's first added target;
+  //    `datesavedtypedpension`): no typed-below seed had a placement arm. An ordered list of five labelled runs under the
+  //    cap sentence and the scoped lead, then the survivor part's paragraph (the walk-8 form council's KD7 and KD8), with
+  //    no door of its own, its button its last child; the lead's last note and before the graphs (the no-date reading
+  //    draws no band, so at PHONE no first graph to sit above), doors last. The date route scrolls, so no one-frame
+  //    claim: whether five runs read as a wall is walk 9's read. ──
+  test.describe(`the typed-below line’s five spans on ?seed=datesavedtypedpension (${vp.name})`, () => {
+    test.use(vp.use)
+
+    test('the block sits in the lead after the other notes, above the graphs, doors last; five labelled spans, its button last', async ({ page }) => {
+      await gotoSeedFinal(page, 'datesavedtypedpension')
+      await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached()
+      const line = page.locator('[data-stale-banner] div.note-parts.cs-paycheck-note')
+      await expect(line, 'the typed-below block renders in the lead').toHaveCount(1)
+      await assertDoorlessStandingBlock(
+        line,
+        'datesavedtypedpension',
+        typedPensionLine('This', TYPED_MOVED_CLAUSE),
+        TYPED_PENSION_RUNS,
+        copy.stalenessPayCheckCtaUpdate,
+      )
+      // ONE CAUSE, ONE LINE: the moved line's own lead never shares the slot this line holds.
+      await expect(line).not.toContainText(copy.stalenessLeftOverNote)
+      await assertStandingInBanner(page, line, vp.use.viewport.width === PHONE.width)
+    })
+  })
+
+  test.describe(`build 2’s left-over seat in the panel (${vp.name})`, () => {
+    test.use(vp.use)
+
+    test('?seed=datesaved: the panel seat below the W row — three replies, "All of it" checked at its figure, nothing sideways', async ({ page }) => {
+      await gotoSeedFinal(page, 'datesaved')
+      await assertResolvedHome(page)
+      await page.locator('[data-gear]').click()
+      const dialog = page.getByRole('dialog')
+      await expect(dialog).toBeVisible()
+      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+      const seat = page.locator(LEFT_OVER_SEAT)
+      await expect(seat).toHaveCount(1)
+      // Its OWN row, after the W row's, never a control inside it (KTD8) — and the W row holds no reply.
+      const order = await page.evaluate((sel) => {
+        const w = document.querySelector('[role="dialog"] [data-assumption-seat="working-year-cost"]')
+        const s = document.querySelector(sel)
+        return w !== null && s !== null && !w.contains(s) && (w.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+      }, LEFT_OVER_SEAT)
+      expect(order, 'the seat is its own row after the W row').toBe(true)
+      await expect(row.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })).toHaveCount(0)
+      await seat.evaluate((el) => el.scrollIntoView({ block: 'start' }))
+      await settleLayout(page)
+      await assertLeftOverSeatFace(page, 'datesaved’s seat', {
+        checked: copy.workingLedgerLeftOverSaved,
+        figure: slots.workingLedgerLeftOverFigure('16,985'),
+        line: slots.workingLedgerLeftOverSavedLine('16,985'),
+      })
+      // The W row above draws the same household's picture, every figure whole (the shared memo's draft).
+      const panelFigures = await clippedFigures(page, '[role="dialog"]')
+      expect(panelFigures.counted, 'the panel picture read too few figures — "none clipped" would pass on nothing').toBeGreaterThanOrEqual(
+        DATE_PICTURE_FIGURES,
+      )
+      expect(panelFigures.offenders, 'a panel money-picture figure is clipped').toEqual([])
+    })
+
+    test('?seed=date: "All of it" tapped by coordinate right after typing W stores the figure on screen at the press', async ({ page }) => {
+      await gotoSeedFinal(page, 'date')
+      await page.locator('[data-gear]').click()
+      const dialog = page.getByRole('dialog')
+      await expect(dialog).toBeVisible()
+      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+      const seat = page.locator(LEFT_OVER_SEAT)
+      const saved = seat.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })
+      await expect(seat.getByRole('radio')).toHaveCount(3)
+      await expect(saved, '`date` is unanswered').not.toBeChecked()
+      await expect(seat.locator('.left-over__line')).toHaveText(slots.workingLedgerLeftOverAbsentLine('16,985'))
+      // "A different figure": the panel never clears a confirmed W (KTD4), so nothing moves yet.
+      await row.getByRole('radio', { name: copy.workingCostDifferent }).evaluate((el) => (el as HTMLInputElement).click())
+      const input = row.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
+      await expect(input).toBeVisible()
+      await expect(row.getByRole('radio', { name: copy.periodMonth }), 'the untapped unit is a month (KTD17)').toBeChecked()
+      await input.scrollIntoViewIfNeeded()
+      await input.click()
+      await page.keyboard.press('Control+A')
+      await page.keyboard.type('6000')
+      const label = seat.locator('label.segment').filter({ hasText: copy.workingLedgerLeftOverSaved })
+      await expect(label).toHaveCount(1)
+      await label.scrollIntoViewIfNeeded()
+      await page.waitForTimeout(300)
+      await expect(input, 'the figure still has focus — the press is what blurs it').toBeFocused()
+      // What the seat SHOWS at the press, read off the screen — and it is `date`'s own $16,985 (the typed
+      // digits have not committed: the figure commits on blur).
+      const shownAtPress = await seat.locator('.left-over__figure').textContent()
+      expect(shownAtPress, 'the seat shows the old figure until the press').toBe(slots.workingLedgerLeftOverFigure('16,985'))
+      const box = await label.boundingBox()
+      expect(box).not.toBeNull()
+      const x = box!.x + box!.width / 2
+      const y = box!.y + box!.height / 2
+      // The hit-test at the point the tap will use (insight 119: what the input path hits).
+      const onLabel = await label.evaluate((el, [px, py]) => {
+        const hit = document.elementFromPoint(px, py)
+        return hit !== null && el.contains(hit)
+      }, [x, y] as const)
+      expect(onLabel, `the tap point is not on "${copy.workingLedgerLeftOverSaved}"`).toBe(true)
+      if (vp.use.viewport.width === PHONE.width) {
+        await page.touchscreen.tap(x, y)
+      } else {
+        await page.mouse.move(x, y)
+        await page.mouse.down()
+        await page.waitForTimeout(80) // a human press lasts tens of milliseconds
+        await page.mouse.up()
+      }
+      await expect(saved, 'the tap on "All of it" was lost').toBeChecked()
+      // The press's blur committed the typed figure, and the hold let go: the W row and the seat's figure now
+      // draw the live draft. The typed $72,000 sits below `date`'s $84,000 of spending, so the figure names it
+      // (U11 walk 7's R2).
+      await expect(row.locator('.ap-row__value')).toHaveText(slots.assumptionWorkingCostEntered('72,000'))
+      await expect(seat.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigureAt('72,000', '28,985'))
+      // THE GATE: what was STORED is the figure on screen at the press. The moved line names the stored figure
+      // as the one chosen against — never the plain saved line at the live figure — and the typed figure the live one
+      // rests on (R2).
+      await expect(seat.locator('.left-over__line'), 'the stored figure is not the one on screen at the press').toHaveText(
+        slots.workingLedgerLeftOverRoseLineAt('72,000', '16,985', '28,985'),
+      )
+      // …and below it, the typed-below line's runs (the whole-window rebuild, KTD6 host 3): ONE `same` run, a plain
+      // paragraph in the sheet. The sheet has no counts sentence (the W row above carries its "can look better" half), so
+      // its paragraph opens on the bare lean naming the quote's dollars (the walk-9 form council's call (2): "A working
+      // year almost always costs at least your spending of $84,000 a year."). The stored $16,985 caps both this answer and
+      // the answer at the $84,000 spending in every working year, so they add the same (KTD3), the figure stated (W8-R5
+      // (a)). Year 0 at the spending leaves the stored $16,985 itself, so no cap sentence is drawn, and the run's first
+      // sentence says "the answer at your spending" with no dollars and no floor aside (the lean said both). The only
+      // real-browser witness of the seat's line. `date`'s couple opens the survivor gate (the runs' docblock), so the one
+      // run opens "Each working year you’re both alive," and the survivor part's two sentences close the same paragraph:
+      // by hand, the default 0.75 survivor ratio of each W, $72,000 × 0.75 = $54,000 at the typed figure and $84,000 × 0.75
+      // = $63,000 at the spending, so at most $9,000 a year less. Typed by hand from the probe (`date6000Month`; the sheet
+      // names "this answer": the walk-8 form council's KD9).
+      const sameRun = (noun: TypedBelowNoun): string =>
+        [
+          'Each working year you’re both alive, the answer at your spending would add at most $16,985 a year.',
+          `${noun} answer adds at most $16,985 a year to your savings.`,
+          `At your spending, that’s the same in your savings${TB_RIDER}${TB_GLOSS}.`,
+          'In a working year with only one of you alive, that year’s costs count as $54,000 at your figure of $72,000 a year and $63,000 at your spending of $84,000 a year.',
+          `At your spending, that’s at most $9,000 a year less in your savings${TB_RIDER}.`,
+        ].join(' ')
+      await expect(seat.locator('p.left-over__at-quote')).toHaveText(
+        `A working year almost always costs at least your spending of $84,000 a year. ${sameRun('This')}`,
+      )
+      // A second reader of the stored answer, off the panel: the standing slot (the StaleBanner above the home since
+      // Act 6 · RC4) names the same two. The typed
+      // $72,000 sits below `date`'s $84,000 of spending, so R1's typed-below line holds the slot (U11 walk 6,
+      // `3000a04c`) and carries the moved figures as its clause right after its counts sentence (`TypedBelowHost`: no
+      // rules line hosts the clause here), naming the typed $72,000 its $28,985 rests on (the walk-6 round review's pair),
+      // then the lean in its own sentence naming the $84,000 (the walk-9 form council's call (2)), then the one `same` run
+      // and the survivor part. Stored from the live render, the clause would be absent and the run would read $28,985
+      // against the quote answer's $16,985; a lost tap would leave the counts sentence alone.
+      await page.keyboard.press('Escape')
+      await expect(dialog).toHaveCount(0)
+      const standing = page.locator('[data-stale-banner] p.cs-paycheck-note')
+      await expect(standing).toContainText(
+        [
+          'This answer counts a working year at your own figure of $72,000 a year, below your spending of $84,000 a year.',
+          'You said all the money left over in a working year goes into your savings, when your first working year had $16,985 left over.',
+          'At your figure of $72,000 a year, it has $28,985 left over now.',
+          'So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
+          'A working year almost always costs at least your spending of $84,000 a year, so this answer can look better than it really is.',
+          sameRun('This'),
+        ].join(' '),
+        { timeout: FINAL_TIER_MS },
+      )
+      // ONE CAUSE, ONE LINE: the moved line's own lead never shares the slot this line holds.
+      await expect(standing).not.toContainText(copy.stalenessLeftOverNote)
+    })
+  })
+}
+
+// ── the W period tap under its own blur-commit, on a screen taller than his (the h2 cure) ────────
+// The register's Tier 0 "On a screen taller than his laptop's, a tap on "Each month" right after typing
+// the working-year figure can miss…", cured by `src/intake/gestureHold.ts`. The figure commits on blur,
+// and the press on "Each month" is what blurs it; the commit un-stales W, so the content above the
+// control changes between the press and the release (the walk's stale note unmounts; the panel's money
+// picture mounts above the question). Chromium's scroll anchoring moved the scroller back on every
+// screen of his then (the Dell's 1536×791 and 1536×960 full screen, a 448×891 phone: 19 of 19 coordinate
+// taps landed, b9-10's `tapProbe2.mts`; his Lenovo's 1440×731 window and 1440×900 screen, 2026-11-19, are
+// shorter than both miss geometries and were not re-probed), so these arms run where it cannot: a 1536×1300 window (mouse) and a 1024×1366 touch
+// screen, which missed 4 of 4 before the hold — a monthly 7,000 left as $7,000 a YEAR, unasked.
+// A REAL coordinate tap (a press, 80 ms, the release — or a touch tap), never `.click()` / `check()`: those
+// re-resolve the target between the halves, which is the race itself. Each arm's non-vacuity floor is the
+// geometry the hold must survive, read before the tap — content ABOVE the change on screen, so the node
+// scroll anchoring picks sits above it and the control below it moves: the walk's whole stale note on
+// screen with the page above it; the panel's row value line (the picture mounts right under it) on
+// screen. The panel arms run 100 px taller than the probe's screens: there the question's whole face
+// sits between the value line and the control, and at 1300 / 1366 px the probe had 28 px of slack —
+// one more wrapped help line on another rasterizer (insight 118) would leave no reachable geometry.
+const TALL_MOUSE = { deviceScaleFactor: 1.5 } as const
+const TALL_TOUCH = { deviceScaleFactor: 2, isMobile: true, hasTouch: true } as const
+const TALL_TAP_ARMS = [
+  { host: 'walk', name: '1536×1300 window, mouse', touch: false, use: { viewport: { width: 1536, height: 1300 }, ...TALL_MOUSE } },
+  { host: 'walk', name: '1024×1366 touch screen', touch: true, use: { viewport: { width: 1024, height: 1366 }, ...TALL_TOUCH } },
+  { host: 'panel', name: '1536×1400 window, mouse', touch: false, use: { viewport: { width: 1536, height: 1400 }, ...TALL_MOUSE } },
+  { host: 'panel', name: '1024×1466 touch screen', touch: true, use: { viewport: { width: 1024, height: 1466 }, ...TALL_TOUCH } },
+] as const
+
+/** `datecoststale` with its W kept through the Keep door as an entered $84,000 a year in the panel, then
+ *  staled on the reading by a move to PA — the probe's set-up, through the panel the result's standing
+ *  line opens. Since build 2's U5 (`d4227774`) the Keep stamps the figure with the quote its note showed
+ *  ($78,000), so the note reads "You kept", never "You entered" (KTD10), and a kept figure above today's
+ *  quote stales on the state alone, exactly as the typed figure this set-up first held. */
+async function staleEnteredWInPanel(page: Page) {
+  await gotoSeedFinal(page, 'datecoststale')
+  await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
+  await row.getByRole('button', { name: slots.workingCostKeepYearly('84,000') }).click()
+  await expect(row.getByRole('note'), 'the kept figure is fresh').toHaveCount(0)
+  await dialog
+    .locator('[data-assumption-seat="retirement-state"]')
+    .getByRole('radio', { name: /Pennsylvania/ })
+    .first()
+    .evaluate((el) => (el as HTMLInputElement).click())
+  await expect(row.getByRole('note'), 'the move to PA stales the kept figure').toContainText(
+    slots.workingCostStaleStateKept('84,000'),
+  )
+  return { dialog, row }
+}
+
+for (const { host, ...vp } of TALL_TAP_ARMS) {
+  test.describe(`the W period tap right after typing (${host}, ${vp.name})`, () => {
+    test.use(vp.use)
+
+    test('"Each month" tapped by coordinate lands: the note above it stands until the click, and 7,000 is a month', async ({ page }) => {
+      const { dialog } = await staleEnteredWInPanel(page)
+      if (host === 'walk') {
+        await dialog.getByRole('button', { name: copy.assumptionRewalkCta }).click()
+        await advanceIntakeTo(page, copy.qWorkingCostHeading, `${host} ${vp.name}`)
+      }
+      const face = host === 'walk' ? page.locator('.intake-shell .working-cost') : dialog.locator('[data-assumption-seat="working-year-cost"] .working-cost')
+      await expect(face.getByRole('note')).toContainText(slots.workingCostStaleStateKept('84,000'))
+      const month = face.getByRole('radio', { name: copy.periodMonth })
+      await expect(month, 'the held figure’s own unit, a year, is the one checked').not.toBeChecked()
+      const input = face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
+      await input.scrollIntoViewIfNeeded()
+      await input.click()
+      await page.keyboard.press('Control+A')
+      await page.keyboard.type('7000')
+      // The low geometry (the probe's): scroll, keeping the figure's focus, until the label's bottom sits
+      // `margin` px above the scroller's visible bottom — the most content above it on screen — at the
+      // smallest margin whose centre point still hits the label. Then read the floor.
+      const label = face.locator('label.segment').filter({ hasText: copy.periodMonth })
+      let geometry: {
+        readonly hitsLabel: boolean
+        readonly scrollTop: number
+        readonly docScroll: boolean
+        readonly noteHeight: number
+        readonly noteTopPx: number | null
+        readonly noteBottomGapPx: number | null
+        readonly rowValueVisiblePx: number | null
+      } | null = null
+      for (const margin of [16, 72, 128, 184, 240]) {
+        geometry = await label.evaluate((el, m) => {
+          let sc: Element | null = el.parentElement
+          while (sc !== null && !(sc.scrollHeight > sc.clientHeight && /auto|scroll/.test(getComputedStyle(sc).overflowY))) sc = sc.parentElement
+          const scroller = sc ?? document.scrollingElement!
+          const visTop = sc === null ? 0 : sc.getBoundingClientRect().top
+          const visBottom = sc === null ? window.innerHeight : sc.getBoundingClientRect().bottom
+          scroller.scrollTop += el.getBoundingClientRect().bottom - (visBottom - m)
+          const r = el.getBoundingClientRect()
+          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+          const note = el.closest('.working-cost')?.querySelector('[role="note"]') ?? null
+          const rowValue = el.closest('[data-assumption-seat]')?.querySelector('.ap-row__value') ?? null
+          const rv = rowValue === null ? null : rowValue.getBoundingClientRect()
+          const nr = note === null ? null : note.getBoundingClientRect()
+          return {
+            hitsLabel: hit !== null && el.contains(hit),
+            scrollTop: Math.round(scroller.scrollTop),
+            docScroll: sc === null,
+            noteHeight: nr === null ? 0 : Math.round(nr.height),
+            // The note's top below the visible top (content above it on screen), and its bottom above
+            // the visible bottom — negative on either when it is cut off.
+            noteTopPx: nr === null ? null : Math.round(nr.top - visTop),
+            noteBottomGapPx: nr === null ? null : Math.round(visBottom - nr.bottom),
+            rowValueVisiblePx: rv === null ? null : Math.round(Math.min(rv.bottom, visBottom) - Math.max(rv.top, visTop)),
+          }
+        }, margin)
+        if (geometry.hitsLabel) break
+      }
+      expect(geometry?.hitsLabel, `${host}: no margin puts the tap point on "${copy.periodMonth}" (${JSON.stringify(geometry)})`).toBe(true)
+      // THE FLOOR — the geometry scroll anchoring cannot cure, or the arm proves nothing about the hold.
+      if (host === 'walk') {
+        expect(geometry!.docScroll, 'the walk scrolls the document').toBe(true)
+        expect(geometry!.noteHeight, 'the stale note renders above the figure').toBeGreaterThan(0)
+        // The whole note on screen with the page above it: the anchor is picked above the note, so its
+        // unmount moves everything under it (b9-10's misses: the label moved the full note height at a
+        // scroll of 33 px and 0). A note cut off at the top would hand anchoring a node below the change.
+        expect(geometry!.noteTopPx ?? -1, `walk: the note’s top is cut off (${JSON.stringify(geometry)})`).toBeGreaterThan(0)
+        expect(geometry!.noteBottomGapPx ?? -1, `walk: the note’s bottom is off screen (${JSON.stringify(geometry)})`).toBeGreaterThan(0)
+      } else {
+        expect(geometry!.rowValueVisiblePx ?? 0, `panel: the W row’s value line is off screen (${JSON.stringify(geometry)}) — anchoring would hold the question`).toBeGreaterThan(0)
+      }
+      await page.waitForTimeout(300)
+      await expect(input, 'the figure still has focus — the press is what blurs it').toBeFocused()
+      const box = await label.boundingBox()
+      expect(box).not.toBeNull()
+      const x = box!.x + box!.width / 2
+      const y = box!.y + box!.height / 2
+      // The hit-test again, at the point the tap will use (insight 119: what the input path hits).
+      const onLabel = await label.evaluate((el, [px, py]) => {
+        const hit = document.elementFromPoint(px, py)
+        return hit !== null && el.contains(hit)
+      }, [x, y] as const)
+      expect(onLabel, `${host}: the tap point is not on "${copy.periodMonth}"`).toBe(true)
+      if (vp.touch) {
+        await page.touchscreen.tap(x, y)
+      } else {
+        await page.mouse.move(x, y)
+        await page.mouse.down()
+        await page.waitForTimeout(80) // a human press lasts tens of milliseconds
+        await page.mouse.up()
+      }
+      console.log(`[h2 tap] ${host} ${vp.name}: ${JSON.stringify(geometry)}`)
+      await expect(month, `${host}: the tap on "${copy.periodMonth}" was lost`).toBeChecked()
+      await expect(face.getByRole('note'), 'the commit landed and the hold let go').toHaveCount(0)
+      await expect(input).toHaveValue('7,000')
+      if (host === 'panel') {
+        await expect(dialog.locator('[data-assumption-seat="working-year-cost"] .ap-row__value')).toHaveText(
+          slots.assumptionWorkingCostEntered('84,000'),
+        )
+      }
+    })
+  })
+}
+
+// The same gesture on the note's OWN door, on his own two kinds of screen: type a figure, then tap "Keep
+// $84,000 a year". The press blurs the figure and its commit un-stales W, so before the hold the note —
+// and the door with it — unmounted between the press and the release on EVERY screen (scroll anchoring
+// cannot keep a control that is gone): 4 of 4 lost on his 1536×791 window and his 448×891 phone, walk
+// and panel (b9-1, `b9-h2-cure\tapProbe3.mts`, `before-keep.jsonl`), leaving $7,000 a year, the note gone
+// as a keep would leave it, and focus on the page. Held, the door stays under the release, and it keeps
+// the figure it NAMES. These two arms are also the only REAL-BROWSER gate that the hold lets go AFTER the
+// app's own click handlers (a capture-phase release detaches the held door before React dispatches its
+// click, which jsdom's synchronous dispatch cannot show — the unit file pins the phase structurally), and
+// K-panel is the panel row's hold's only gate at his own laptop's size (mutant-measured, b9-1). The mouse
+// tall arms cannot red a release on pointerup (Chromium hit-tests a mouse release once, so pointerup,
+// mouseup and click share a target); the touch arms and these two can, and do.
+const KEEP_TAP_ARMS = [
+  { host: 'panel', name: `${REAL.width}×${REAL.height}, mouse`, touch: false, use: { viewport: REAL, deviceScaleFactor: REAL_DPR } },
+  {
+    host: 'walk',
+    name: `phone ${PHONE.width}×${PHONE.height}, touch`,
+    touch: true,
+    use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true },
+  },
+] as const
+
+for (const arm of KEEP_TAP_ARMS) {
+  test.describe(`the W note’s Keep door tapped right after typing (${arm.host}, ${arm.name})`, () => {
+    test.use(arm.use)
+
+    test('"Keep $84,000 a year" tapped by coordinate keeps $84,000 — the figure it names — and focus lands on the answer', async ({ page }) => {
+      const { dialog } = await staleEnteredWInPanel(page)
+      if (arm.host === 'walk') {
+        await dialog.getByRole('button', { name: copy.assumptionRewalkCta }).click()
+        await advanceIntakeTo(page, copy.qWorkingCostHeading, `keep ${arm.name}`)
+      }
+      const face =
+        arm.host === 'walk' ? page.locator('.intake-shell .working-cost') : dialog.locator('[data-assumption-seat="working-year-cost"] .working-cost')
+      const input = face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
+      await input.scrollIntoViewIfNeeded()
+      await input.click()
+      await page.keyboard.press('Control+A')
+      await page.keyboard.type('7000')
+      const door = face.getByRole('button', { name: slots.workingCostKeepYearly('84,000') })
+      await door.scrollIntoViewIfNeeded()
+      await page.waitForTimeout(300)
+      await expect(input, 'the figure still has focus — the press is what blurs it').toBeFocused()
+      const box = await door.boundingBox()
+      expect(box).not.toBeNull()
+      const x = box!.x + box!.width / 2
+      const y = box!.y + box!.height / 2
+      // The floor: the tap point is ON the door (insight 119: a centre point, never an edge).
+      const onDoor = await door.evaluate((el, [px, py]) => {
+        const hit = document.elementFromPoint(px, py)
+        return hit !== null && el.contains(hit)
+      }, [x, y] as const)
+      expect(onDoor, 'the tap point does not hit the Keep door').toBe(true)
+      if (arm.touch) {
+        await page.touchscreen.tap(x, y)
+      } else {
+        await page.mouse.move(x, y)
+        await page.mouse.down()
+        await page.waitForTimeout(80)
+        await page.mouse.up()
+      }
+      await expect(face.getByRole('note'), 'the keep landed and the hold let go').toHaveCount(0)
+      await expect(input, `${arm.host}: the door kept the typed digits, not the figure it names`).toHaveValue('84,000')
+      await expect(face.getByRole('radio', { name: copy.periodYear })).toBeChecked()
+      const focused = await page.evaluate(() => {
+        const a = document.activeElement
+        return a instanceof HTMLInputElement && a.type === 'radio' && a.checked
+      })
+      expect(focused, 'focus never falls to the page: it lands on the answer that now stands').toBe(true)
+      if (arm.host === 'panel') {
+        // The door keeps the HELD answer, a kept figure, and a Keep carries its stamp (KTD10): typing
+        // digits and then keeping must never launder it into a typed figure that no quote can stale.
+        await expect(dialog.locator('[data-assumption-seat="working-year-cost"] .ap-row__value')).toHaveText(
+          slots.assumptionWorkingCostKept('84,000'),
+        )
+      }
+    })
+  })
+}
+
+// ---------------------------------------------------------------------------
+// THE YEAR-BY-YEAR TABLE (the workbench plan's U7, slice 3; insight 123: judge a fit on the widest member, never one
+// seed's frame). Since Act 6 · RC2 the table rides inside the shell as the interim Retirement → Cash Flows tab, where the
+// answer page's door lands; these arms re-pointed there unchanged (plan 6, section 5.2: RC6 ports them to Cash Flows). `?seed=tablewidest` is the table's widest household: every column the table can
+// draw prints (fourteen beside the year), at seven-digit balances, under two 20-character names. The laws:
+//  - At a laptop (his 1440×731 @2 window and the 1280×800 tier, each view) nothing scrolls sideways: not the page,
+//    and not the table's own frame, which carries no scroller at a laptop (`workbench.css`), so an overflow there
+//    would hang a column past the page's edge.
+//  - On the phone the page never scrolls sideways: the table scrolls inside its own frame there, by design. Each row's
+//    sentences and the rough view's divider read whole inside that frame, at its start and scrolled to its end (they
+//    sit in a cell as wide as the table, so unheld they ran past the frame's edge and were cut: the U7 review).
+//  - The rows landing move no tap target: the "Rough market" switch stays put from the room's first frame through the
+//    rows landing (insight 035). An in-page frame recorder armed before the door press reads it, with the worker's
+//    messages held 400 ms so the loading frame is on screen for many frames. The press is an in-page `click()` from
+//    the page's top, so no scroll moves a rect the walk compares. What this walk does NOT prove: the pinned answer's
+//    reserved box (insights 035, 065). The room opens on a settled answer and nothing in it can re-figure that answer
+//    before U8's editors, so the pinned box never changes while this walk records; the walk where the pinned answer
+//    lands after the table (the plan's U7 scenario) belongs to U8.
+// ---------------------------------------------------------------------------
+
+const TABLE_WIDEST = 'tablewidest'
+/** Every column the table can draw for two people, in its reading order (`yearTableChrome.ts`'s `columnSpecs`). */
+const TABLE_COLUMNS = [
+  'person-0', 'person-1', 'social-security', 'spending', 'income-tax', 'pay-check', 'from-pay', 'health',
+  'pretax-moves', 'taxable', 'pretax-0', 'pretax-1', 'roth', 'hsa',
+]
+const ROUGH_YEARS = (() => {
+  const start = roughWindow().startYear
+  return { start, end: start + ROUGH_WINDOW_YEARS - 1 }
+})()
+const VIEW_WORDS = {
+  steady: { label: copy.workbenchViewSteady, what: copy.workbenchSteadyWhat },
+  rough: { label: copy.workbenchViewRough, what: slots.workbenchRoughWhat(ROUGH_YEARS.start, ROUGH_YEARS.end, ROUGH_WINDOW_YEARS) },
+} as const
+
+/** The settled answer on the home, then Retirement → Cash Flows by the module and page words, pressed in-page from the
+ *  page's top (since RC4 the seed lands on the shell; the phone reaches the page through its menu). */
+async function showTablePage(page: Page): Promise<void> {
+  const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
+  if (await modules.isVisible()) {
+    await modules.getByRole('link', { name: copy.shellModuleRetirement, exact: true }).click()
+    await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageCashFlows, exact: true }).click()
+  } else {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: copy.shellPageCashFlows, exact: true }).click()
+    await expect(page.getByRole('dialog', { name: copy.shellMenuTitle })).toHaveCount(0)
+  }
+  await expect(page.locator('main.result[data-shell-screen="interim-table"]')).toBeAttached()
+}
+
+async function enterRoomFromTop(page: Page): Promise<void> {
+  await gotoSeedFinal(page, TABLE_WIDEST)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await showTablePage(page)
+  await expect(page.locator('.wb-table'), 'the table never landed').toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('.wb-table-wrap--updating')).toHaveCount(0)
+}
+
+/** Switch the view, wait for its own words over its own rows, and settle. */
+async function showView(page: Page, view: keyof typeof VIEW_WORDS): Promise<void> {
+  const words = VIEW_WORDS[view]
+  await page.locator('.wb-view label.segment', { hasText: words.label }).click()
+  await expect(page.locator('.wb-about__line').first(), `the ${view} view's words`).toHaveText(words.what)
+  await expect(page.locator('.wb-table-wrap--updating')).toHaveCount(0)
+  await settleLayout(page)
+}
+
+/** The widths the table's laws read: the page's, its frame's, the table's own, and the frame's overflow. */
+async function tableWidths(page: Page) {
+  return page.evaluate(() => {
+    const doc = document.scrollingElement ?? document.documentElement
+    const wrap = document.querySelector('.wb-table-wrap')
+    const table = document.querySelector('.wb-table')
+    if (wrap === null || table === null) throw new Error('no table on the page')
+    const cols = [...document.querySelectorAll('.wb-table th[data-col]')].map((th) => ({
+      id: th.getAttribute('data-col') ?? '',
+      w: Math.round(th.getBoundingClientRect().width * 10) / 10,
+    }))
+    const year = document.querySelector('.wb-th--year')?.getBoundingClientRect().width ?? 0
+    return {
+      pageScroll: doc.scrollWidth,
+      pageClient: doc.clientWidth,
+      wrapScroll: wrap.scrollWidth,
+      wrapClient: wrap.clientWidth,
+      wrapOverflowX: getComputedStyle(wrap).overflowX,
+      tableWidth: Math.round(table.getBoundingClientRect().width * 10) / 10,
+      yearWidth: Math.round(year * 10) / 10,
+      cols,
     }
   })
 }
 
-// ── the state-tax staleness return (?vault=statestale — the state-carrying seed increment) ────
-// The state-tax analog of ?vault=stale, on the LIGHT doctor (F2 supersession, 2026-07-15): the
-// NC-priced spine household saved ~150d ago with startCalendarYear UNTOUCHED (2026) and the tax /
-// healthcare / blend stamps FRESH — ONLY the state profile diverged. So the re-entry gate fires the
-// stalenessStateTax clock in ISOLATION (an NC rate step must never read as a federal / healthcare /
-// blend change), and — unlike the full doctor that stranded a 2024 anchor below simulate.ts's
-// priced-state lower bound (R19 calm indeterminate) — the affirm recompute resolves a REAL verdict
-// (borderline at mint; on-track since the 2026-08-02 rate pin) whose residual names North Carolina. This
-// is the only live route to the stalenessStateTax note AND to the state clause on a writable stale return.
-
-test.describe(`the state-tax staleness return (?vault=statestale) — the isolated clock + the NC-clause echo frame (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('the gate fires the state-tax clock in isolation, decision pair in-frame; the echoed hero names NC and holds the one-frame law', async ({ page }) => {
-    await page.goto('/?vault=statestale')
-    const unlock = page.getByRole('button', { name: 'Open my plan' })
-    await expect(unlock, 'the statestale plant did not land on the unlock screen').toBeVisible({
-      timeout: 30_000,
+/** Each row sentence and the rough view's divider, with the frame scrolled to its start or its end: how far its text
+ *  runs past the frame's left and right edges (`workbench.css` holds each to the frame's left edge and wraps it at the
+ *  frame's own width below the seam). */
+async function sentencesInFrame(page: Page, at: 'start' | 'end') {
+  await page.locator('.wb-table-wrap').evaluate((wrap, to) => {
+    wrap.scrollLeft = to === 'start' ? 0 : wrap.scrollWidth
+  }, at)
+  await page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
+  return page.evaluate(() => {
+    const wrap = document.querySelector('.wb-table-wrap')
+    if (wrap === null) throw new Error('no table frame')
+    const frame = wrap.getBoundingClientRect()
+    return [...document.querySelectorAll('.wb-note, .wb-divider__words')].map((el) => {
+      const range = document.createRange()
+      range.selectNodeContents(el)
+      const r = range.getBoundingClientRect()
+      return {
+        text: (el.textContent ?? '').slice(0, 48),
+        divider: el.classList.contains('wb-divider__words'),
+        pastLeft: frame.left - r.left,
+        pastRight: r.right - frame.right,
+      }
     })
-    await unlock.click()
+  })
+}
 
-    // THE GATE FRAME: the decision pair sits in the first frame (a below-fold affirm strands the
-    // survivor at a dead-looking screen).
-    const affirm = page.getByRole('button', { name: /still about right/i })
-    await expect(affirm).toBeVisible({ timeout: 30_000 })
-    await page.evaluate(() => document.fonts.ready)
-    await page.evaluate(() => window.scrollTo(0, 0))
-    const affirmBox = await affirm.boundingBox()
-    expect(affirmBox, 'the affirm CTA reported no box').not.toBeNull()
-    expect(
-      affirmBox!.y + affirmBox!.height,
-      'the affirm CTA sits below the first frame at the real window',
-    ).toBeLessThanOrEqual(REAL.height)
+/** The household is still the widest: every column the table can draw is on screen. A seed that drifted (a crown at
+ *  today, a dropped account) would make every width law below vacuous. */
+async function expectEveryColumn(page: Page): Promise<void> {
+  const ids = await page.locator('.wb-table th[data-col]').evaluateAll((ths) => ths.map((th) => th.getAttribute('data-col')))
+  expect(ids, 'the widest household prints every column the table can draw').toEqual(TABLE_COLUMNS)
+}
 
-    // THE ISOLATION (the light doctor's design): EXACTLY ONE reentry note fires — the state-tax
-    // clock — with the sibling clocks (federal tax / healthcare / blend) quiet. The count is the
-    // airtight isolation proof (the federal-tax note's wording is a case-insensitive substring of
-    // the state note, so isolation is asserted by count, not by a fragile federal-tax negative).
-    const notes = page.locator('.reentry-notes p')
-    await expect(notes, 'the state-tax clock fires in ISOLATION — exactly one reentry note').toHaveCount(1)
-    await expect(notes, 'the one fired note is the state-tax clock, by name').toContainText(
-      'State tax rules have been updated since your save',
-    )
-    // The distinctively-worded sibling lines are demonstrably dark (belt-and-suspenders on the
-    // count): neither healthcare family nor the nameless aggregate fires on a stamps-fresh save.
-    // (U17 §S4 re-pointed these from the retired `stalenessHealthcare` / `stalenessBlendSpine`
-    // keys — insight 086: a negative aimed at a deleted string is vacuously green forever.)
-    await expect(
-      page.getByText('Marketplace health-plan rules have been updated'),
-      'the ACA family must be dark (stamp fresh)',
-    ).toHaveCount(0)
-    await expect(
-      page.getByText('Medicare cost figures have been updated'),
-      'the Medicare family must be dark (stamp fresh)',
-    ).toHaveCount(0)
-    await expect(
-      page.getByText('Reference data this tool reads has been updated since your save'),
-      'the nameless aggregate must be dark (no unattributable clock fired)',
-    ).toHaveCount(0)
-    // At ~150d elapsed no "You saved this … ago" line renders (O6 floor-rounding — verified live),
-    // so none is pinned; the isolated state note is the whole gate disclosure.
+test.describe('the year-by-year table (the shell’s Cash Flows tab) on its widest household (U7)', () => {
+  for (const size of ['REAL', 'TIER'] as const) {
+    test.describe(sizeTitle(size), () => {
+      const s = LAPTOP_SIZES[size]
+      test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
 
-    // Affirm → the held recompute pair; wait the FINAL tier, then settle (the gotoSeedFinal discipline).
-    await affirm.click()
-    await expect(page.locator(SETTLED_RESULT)).toBeAttached({
-      timeout: FINAL_TIER_MS,
+      test(`?seed=${TABLE_WIDEST}: neither view scrolls sideways, on the page or inside the table's frame`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 60_000)
+        await enterRoomFromTop(page)
+        await expectEveryColumn(page)
+        for (const view of ['steady', 'rough'] as const) {
+          await showView(page, view)
+          const w = await tableWidths(page)
+          console.log(`[wb-table ${size} ${view}] ${JSON.stringify(w)}`)
+          expect(w.wrapOverflowX, 'at a laptop the table has no scroller of its own to hide a column under').toBe('visible')
+          expect(w.wrapScroll, `${view}: the table runs past its frame`).toBeLessThanOrEqual(w.wrapClient)
+          expect(w.pageScroll, `${view}: the page scrolls sideways`).toBeLessThanOrEqual(w.pageClient)
+        }
+      })
     })
-    await page.evaluate(() => document.fonts.ready)
-    await page.waitForFunction(() =>
-      document.getAnimations().every((a) => {
-        const timing = a.effect?.getTiming()
-        return timing?.iterations === Infinity || a.playState !== 'running'
-      }),
-    )
-    await page.evaluate(
-      () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
-    )
-    await page.evaluate(() => window.scrollTo(0, 0))
+  }
 
-    await assertResolvedSpine(page)
-    // The echoed frame carries the standing staleness line AND — the state-tax unit's whole point —
-    // the priced residual names North Carolina on the writable stale return, not only on fresh ?seed=nc.
-    await expect(page.locator('.cs-staleness-note')).toBeVisible()
-    await expect(
-      page.locator('.cs-medicare-residual'),
-      'the NC state clause must ride the echoed hero',
-    ).toContainText('Your North Carolina state income tax is already counted in this answer, on top of your spending')
+  test.describe(`on the phone (${PHONE.width}×${PHONE.height})`, () => {
+    test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
 
-    // THE ECHO WHITESPACE BUDGET (insight 075) — pinned by COMPUTED style so a deleted
-    // `:has(.cs-staleness-note)` rule goes red on EVERY platform, never only under CI's taller
-    // metrics. UNLIKE ?vault=stale (on-typical — the full doctor strips the extras fork, so its
-    // gaps step to the 2px round-5 tier at every two-pane height): the LIGHT doctor KEEPS the base's
-    // mixed-provenance extras, so statestale is a NON-typical staleness-echo frame — the round-3
-    // --space-1 (4px) tier above the short density tier, stepped to 2px inside it by W4 (the
-    // 1440×731 re-point, confidence.css's short-tier block). REAL sits inside the short tier.
-    const echoGaps = await page
-      .locator('.confidence-reveal[data-twopane]')
-      .evaluate((reveal) => ({
-        rowGap: getComputedStyle(reveal).rowGap,
-        subordinatesRowGap: getComputedStyle(reveal.querySelector('.reveal__subordinates')!).rowGap,
-      }))
-    expect(echoGaps.rowGap, 'the NON-typical note-frame row-gap steps to 2px inside the short tier (W4)').toBe('2px')
-    expect(
-      echoGaps.subordinatesRowGap,
-      'the NON-typical subordinates row-gap steps to 2px inside the short tier (W4)',
-    ).toBe('2px')
-    await assertOneVisibleDisclaimer(page, 'laptop')
-
-    // The all-65+ writable stale return is a tall composite (priced-Medicare pair + staleness echo +
-    // backup door). Prove non-vacuous (the priced-Medicare affirmation renders) and that the
-    // UNPROTECTED backup door is DOM- + visually BELOW the PROTECTED disclaimer (the Hawk's veto).
-    await expect(page.locator('.cs-medicare-note')).toBeVisible()
-    const foldOrder = await page.evaluate(() => {
-      const disc = document.querySelector('footer.disclaimer.disclaimer--in-frame')
-      const door = document.querySelector('.result-backup-door')
-      if (disc === null || door === null) return null
-      return { discBottom: disc.getBoundingClientRect().bottom, doorTop: door.getBoundingClientRect().top }
+    test(`?seed=${TABLE_WIDEST}: the page never scrolls sideways; the table scrolls inside its own frame; its sentences read whole`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 60_000)
+      await enterRoomFromTop(page)
+      await expectEveryColumn(page)
+      for (const view of ['steady', 'rough'] as const) {
+        await showView(page, view)
+        const w = await tableWidths(page)
+        console.log(`[wb-table PHONE ${view}] ${JSON.stringify(w)}`)
+        expect(w.wrapOverflowX, 'on the phone the table scrolls in its own frame').toBe('auto')
+        expect(w.pageScroll, `${view}: the page scrolls sideways`).toBeLessThanOrEqual(w.pageClient)
+        for (const at of ['start', 'end'] as const) {
+          const sentences = await sentencesInFrame(page, at)
+          console.log(`[wb-table PHONE ${view} sentences at ${at}] ${JSON.stringify(sentences)}`)
+          expect(sentences.length, `${view}: the widest household's rows carry sentences, or this law reads nothing`).toBeGreaterThan(0)
+          if (view === 'rough') expect(sentences.some((s) => s.divider), 'the rough view draws its steady-from divider').toBe(true)
+          for (const s of sentences) {
+            expect(s.pastLeft, `${view}, frame at its ${at}: "${s.text}" starts past the frame's left edge`).toBeLessThanOrEqual(0.5)
+            expect(s.pastRight, `${view}, frame at its ${at}: "${s.text}" runs past the frame's right edge`).toBeLessThanOrEqual(0.5)
+          }
+        }
+        await page.locator('.wb-table-wrap').evaluate((wrap) => {
+          wrap.scrollLeft = 0
+        })
+      }
     })
-    expect(foldOrder, 'the disclaimer and the backup door must both render on this frame').not.toBeNull()
-    expect(
-      foldOrder!.doorTop,
-      'the backup door must sit BELOW the R13 disclaimer (the caveat wins the fold)',
-    ).toBeGreaterThanOrEqual(foldOrder!.discBottom - 0.5)
+  })
 
-    // The backup door is the sanctioned below-fold casualty on THIS composite frame (the disclaimer
-    // is a sibling <footer>, so it stays measured — the arm still fails if the caveat itself breaches).
-    await assertFrameFits(page, true, { backupDoor: true })
-    await assertSurvivorBasis(page, 'inline')
-    // REAL sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law); read after
-    // the fit. The echo-gap pins above own this frame's W4 row-gaps, so the helper skips them here.
-    await assertDensityTier(page, 'short', { skipNoteGaps: true, echo: true })
+  test.describe(sizeTitle('REAL'), () => {
+    test.use({ viewport: LAPTOP_SIZES.REAL.viewport, deviceScaleFactor: LAPTOP_SIZES.REAL.deviceScaleFactor })
+
+    // Proves the rows landing move no tap target, and only that. Since RC4 the shell is the home and asks its table runs
+    // the moment the final answer lands, whichever page shows, so the walk opens the Cash Flows page BEFORE the final:
+    // every message to the engine worker is held 400 ms from the first load, so the table's runs land at least 400 ms
+    // after the answer settles and the loading frame paints for many frames. The walk logs only frames on the SETTLED
+    // answer (the pinned answer's own landing is the facts page's walk, below), from the settle until thirty frames after
+    // the rows land.
+    test(`?seed=${TABLE_WIDEST}: the rows landing move no tap target (the "Rough market" switch stays put)`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS * 2 + 60_000)
+      await page.addInitScript(() => {
+        const send = Worker.prototype.postMessage
+        Worker.prototype.postMessage = function (this: Worker, ...args: unknown[]) {
+          setTimeout(() => Reflect.apply(send, this, args), 400)
+        } as typeof send
+      })
+      await page.goto(`/?seed=${TABLE_WIDEST}`)
+      await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the seed never landed on the home').toBeAttached({ timeout: FINAL_TIER_MS })
+      await page.evaluate(() => window.scrollTo(0, 0))
+      // Armed before the page move: every frame on the settled answer from the switch's first paint, until thirty frames
+      // after the rows land.
+      await page.evaluate((label) => {
+        type Frame = { readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly table: boolean }
+        const log: Frame[] = []
+        ;(window as unknown as { __wbWalk: Frame[] }).__wbWalk = log
+        let after = 0
+        const tick = () => {
+          const seg = [...document.querySelectorAll('.wb-view label.segment')].find((el) => el.textContent?.trim() === label)
+          const settled = document.querySelector('main.result[data-answer-tier="final"]:not([data-answer-refiguring])') !== null
+          if (seg !== undefined && settled) {
+            const r = seg.getBoundingClientRect()
+            const table = document.querySelector('.wb-table') !== null
+            log.push({ x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height, table })
+            if (table) after++
+          }
+          if (after < 30) requestAnimationFrame(tick)
+        }
+        requestAnimationFrame(tick)
+      }, copy.workbenchViewRough)
+      await showTablePage(page)
+      await expect(page.locator('.wb-table'), 'the table never landed').toBeVisible({ timeout: FINAL_TIER_MS })
+      await expect.poll(() => page.evaluate(() => (window as unknown as { __wbWalk: { table: boolean }[] }).__wbWalk.filter((f) => f.table).length)).toBeGreaterThanOrEqual(30)
+      const frames = await page.evaluate(
+        () => (window as unknown as { __wbWalk: { x: number; y: number; w: number; h: number; table: boolean }[] }).__wbWalk,
+      )
+      const before = frames.filter((f) => !f.table)
+      console.log(`[wb-table switch walk] frames=${frames.length} beforeRows=${before.length} first=${JSON.stringify(frames[0])} last=${JSON.stringify(frames.at(-1))}`)
+      expect(before.length, 'the switch painted before the rows landed: otherwise the walk compares nothing').toBeGreaterThan(0)
+      const first = frames[0]!
+      for (const f of frames) {
+        expect(Math.abs(f.x - first.x), 'the switch moved sideways').toBeLessThanOrEqual(0.5)
+        expect(Math.abs(f.y - first.y), 'the switch moved up or down').toBeLessThanOrEqual(0.5)
+        expect(Math.abs(f.w - first.w)).toBeLessThanOrEqual(0.5)
+        expect(Math.abs(f.h - first.h)).toBeLessThanOrEqual(0.5)
+      }
+    })
   })
 })
 
-// ── the pay check's unlock lines (?vault=wyclock · ?vault=datecoststale — U10; build 2's two witnesses) ──
-// `wyclock` is `date` saved under the PREVIOUS working-years vintage (the light doctor), so the
-// working-years clock fires; `datecoststale` is the stale-W witness planted as a vault, so KTD21's line
-// fires (an input re-confirm, never a rules line) — since b9-7 the W step's own stale sentence framed by
-// the gate's lead ($84,000 said yes to, $78,000 now), never the figure-less fallback.
-// Build 2 (R12) adds two answer lines, each on an undoctored seed planted as a vault: `datesavedstale` is
-// `datecoststale` with "All of it" stored at $16,985 before the spending moved, so W's own line carries the
-// clause naming in dollars what is not added while W is stale; `datesavedmoved` stored $16,985 and then got a
-// raise, so W stays fresh and the moved line speaks alone ($16,985 answered at, $27,537 now). Each must be
-// the gate's ONLY note, by name, with the decision pair in the first frame — the `statestale` isolation law
-// — and its sibling negative is aimed at a live key (insight 086). The affirm lands the date route's
-// resolved reading, whose standing slot (`.cs-paycheck-note`) speaks the same cause's line, or nothing; the
-// date route scrolls by design, so past the gate the arm pins the order contract (the `datestale`
-// precedent), never a full one-frame fit.
-//
-// The figures: $84,000 / $78,000 are `datecoststale`'s quotes (its W confirmed at `date`'s spending, then the
-// spending lowered); $16,985 is `date`'s year-0 Left over, hand-derived (`workingYearCredit.test.ts`: pay
-// 150,000 − payroll tax 11,475 − tax on outside income 17,540 − deposits 20,000 − W 84,000), which a stale W
-// still prints (R4: the engine runs on the last W given); $27,537 is `datesavedmoved`'s after its raise to
-// $165,000, hand-derived from the primaries by the build-2 record's `year0check.mts` (pay 165,000 − payroll
-// 12,622.50 − tax 20,840 − deposits 20,000 − W 84,000 = 27,537.50, a surplus rounding down).
-//
-// THE FORM (council `wf_22858e04-f7a`, U11 walk 6's fix round): a note with parts is a BLOCK — `div.note-parts`, the
-// opening as a `<p>`, then a `<dl>` of `div>dt+dd` (labels with no colon of their own), and on the Result only the door
-// as the last dt/dd (its lead `<p>`, the cost `<ul>`, its tail `<p>`, then the button). Its `textContent` has no space
-// between a dt and its dd, so every joined compare below reads `innerText` (`useInnerText`: a newline between blocks,
-// which the matcher's whitespace normalization reads as one space). A note with no parts stays its old single `<p>`.
-// THE GATE'S DOOR left the notes: `section.reentry-door`, the next element sibling of `.save-actions`, drawn only where
-// the tab can save — its heading, then one `<p>`: the scope sentence (the affirm button's description) and the route.
-//
-// STILL OWED (the council asked for it; no seed or vault carries four buckets): a read-back arm on a four-bucket
-// household, where the balances' read-back is tallest and the door below the buttons has the least room in frame.
+// ---------------------------------------------------------------------------
+// THE ANSWER LANDING AFTER A FACTS-PAGE EDIT (the workbench plan's U8, carried in from U7's review; insights
+// 035, 065, 155). The room's facts page can now re-figure the pinned answer: an edit in a step's sheet commits, the
+// store works the answer out again (provisional, then final on the date route), and the pinned box's words change
+// twice, the provisional tag's line coming and going between. Its hidden copy reserves the box's tallest form, now
+// over the forms the next answer can take on its route (`pinnedLines.ts`'s `reserveForms`; since Act 6 · RC2 the box is
+// the interim pages' intro line, `src/ui/shell/InterimPage.tsx`, and the facts page the interim Profile tab); a new lead longer than
+// the reserve is the risk this walk reads: every frame from the sheet's close until thirty frames after the new answer
+// lands is held to the page as it stood before the door opened, and the two tap targets under the pinned box (the facts
+// page's tab and the first group's door) must not have moved on the page; the walk also proves the lead changed.
+// Two sizes: his laptop window, where the seat pins and the market switch beside the answer sets the row's height, and
+// the phone, where nothing beside the answer absorbs a taller box (the arm whose first run found the defect's twin at
+// the laptop: a lead wrapped at the page's reading measure moved the page switch 16 px). The engine's messages are held
+// 400 ms each (wrapped after the answer settles, the switch walk's hold above), so the refiguring frames paint for many
+// frames; the recorder notes each frame's refiguring flag, so the walk proves it saw the answer being worked out again
+// before it landed. Rects are page-relative (the switch walk's), so the focus going back to the door scrolls nothing
+// the walk compares.
+// ---------------------------------------------------------------------------
+
+const LANDING_SEED = 'date'
+
+/** The shell's Profile tab: the top bar's module word at a laptop, the phone menu's page on the phone. */
+async function showFactsPage(page: Page): Promise<void> {
+  const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
+  if (await modules.isVisible()) await modules.getByRole('link', { name: copy.shellModuleProfile, exact: true }).click()
+  else {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: copy.workbenchPageFacts, exact: true }).click()
+    await expect(page.getByRole('dialog', { name: copy.shellMenuTitle })).toHaveCount(0)
+  }
+  await expect(page.locator('main.result[data-shell-screen="interim-facts"]')).toBeAttached()
+}
+
+const LANDING_SIZES = [
+  { title: sizeTitle('REAL'), use: { viewport: LAPTOP_SIZES.REAL.viewport, deviceScaleFactor: LAPTOP_SIZES.REAL.deviceScaleFactor } },
+  { title: `on the phone (${PHONE.width}×${PHONE.height})`, use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true } },
+] as const
+
+test.describe('the facts page (the shell’s Profile tab, U8)', () => {
+  for (const size of LANDING_SIZES) test.describe(size.title, () => {
+    test.use(size.use)
+
+    test(`?seed=${LANDING_SEED}: the pinned answer landing after a facts-page edit moves no tap target`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS * 2 + 60_000)
+      await gotoSeedFinal(page, LANDING_SEED)
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await showFactsPage(page)
+      // THE BASELINE, taken before the door opens (the U8 review's C6): the page as it stood on the settled answer, so a
+      // box that grows the moment the edit starts being worked out, and stays grown, still reds. The door is scrolled
+      // into view first, as the press would, so the baseline and every frame share one scroll (the seat pins at a
+      // laptop, where a scroll moves its page-relative place).
+      const spendingDoor = page.getByRole('button', { name: slots.workbenchFactsEditName(copy.workbenchFactsSpending), exact: true })
+      await settleLayout(page) // (it pins the scroll to the top, so the door is scrolled in after it)
+      await spendingDoor.scrollIntoViewIfNeeded()
+      const baseline = await page.evaluate(() => {
+        const rect = (el: Element | null) => {
+          if (el === null) return null
+          const r = el.getBoundingClientRect()
+          return { x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height }
+        }
+        return {
+          intro: rect(document.querySelector('.wb-facts__intro')),
+          door: rect(document.querySelector('.wb-facts__section [data-fact-open]')),
+        }
+      })
+      await spendingDoor.click()
+      const sheet = page.getByRole('dialog', { name: copy.workbenchFactsSpending, exact: true })
+      const field = sheet.getByLabel(copy.spendLabel, { exact: true })
+      await expect(field).toHaveValue('7,000')
+      // Focus first: the field swaps its shown figure for the raw one on focus, so a fill that focuses would land
+      // after that swap and add to it.
+      await field.click()
+      await field.fill('7,600')
+      await field.blur()
+      await expect(field, 'the new spending committed').toHaveValue('7,600')
+      // From here the engine hears only this edit's recompute: every message to the worker is held 400 ms.
+      await page.evaluate(() => {
+        const send = Worker.prototype.postMessage
+        Worker.prototype.postMessage = function (this: Worker, ...args: unknown[]) {
+          setTimeout(() => Reflect.apply(send, this, args), 400)
+        } as typeof send
+      })
+      // Armed before Done: every frame from the sheet's close until thirty frames after the new answer lands.
+      await page.evaluate(() => {
+        type Rect = { readonly x: number; readonly y: number; readonly w: number; readonly h: number }
+        type Frame = { readonly intro: Rect | null; readonly door: Rect | null; readonly refiguring: boolean; readonly landed: boolean; readonly lead: string }
+        const log: Frame[] = []
+        ;(window as unknown as { __wbLanding: Frame[] }).__wbLanding = log
+        const rect = (el: Element | null): Rect | null => {
+          if (el === null) return null
+          const r = el.getBoundingClientRect()
+          return { x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height }
+        }
+        let sawRefiguring = false
+        let after = 0
+        const tick = () => {
+          const room = document.querySelector('main.result')
+          const sheetOpen = document.querySelector('.control-sheet') !== null
+          const refiguring = room?.hasAttribute('data-answer-refiguring') ?? false
+          if (refiguring) sawRefiguring = true
+          const landed = sawRefiguring && !refiguring && room?.getAttribute('data-answer-tier') === 'final'
+          if (!sheetOpen) {
+            log.push({
+              intro: rect(document.querySelector('.wb-facts__intro')),
+              door: rect(document.querySelector('.wb-facts__section [data-fact-open]')),
+              refiguring,
+              landed,
+              lead: document.querySelector('.wb-pin__real .wb-pin__lead')?.textContent ?? '',
+            })
+            if (landed) after++
+          }
+          if (after < 30) requestAnimationFrame(tick)
+        }
+        requestAnimationFrame(tick)
+      })
+      await sheet.getByRole('button', { name: copy.workbenchFactsDone }).click()
+      await expect
+        .poll(() => page.evaluate(() => (window as unknown as { __wbLanding: { landed: boolean }[] }).__wbLanding.filter((f) => f.landed).length), {
+          timeout: FINAL_TIER_MS,
+        })
+        .toBeGreaterThanOrEqual(30)
+      const frames = await page.evaluate(
+        () =>
+          (window as unknown as {
+            __wbLanding: { intro: { x: number; y: number; w: number; h: number } | null; door: { x: number; y: number; w: number; h: number } | null; refiguring: boolean; landed: boolean; lead: string }[]
+          }).__wbLanding,
+      )
+      const before = frames.filter((f) => !f.landed)
+      const refiguring = frames.filter((f) => f.refiguring)
+      const leads = [...new Set(frames.map((f) => f.lead))]
+      console.log(
+        `[wb-facts landing walk] frames=${frames.length} beforeLanding=${before.length} refiguring=${refiguring.length} leads=${JSON.stringify(leads)} first=${JSON.stringify(frames[0])} last=${JSON.stringify(frames.at(-1))}`,
+      )
+      expect(before.length, 'frames painted before the new answer landed: otherwise the walk compares nothing').toBeGreaterThan(0)
+      expect(refiguring.length, 'the pinned answer was seen being worked out again before it landed').toBeGreaterThan(0)
+      expect(leads.length, 'the pinned answer’s words changed: otherwise no new lead was laid out').toBeGreaterThanOrEqual(2)
+      expect(baseline.intro, 'the facts page’s intro, the first thing under the answer’s box, is on screen').not.toBeNull()
+      expect(baseline.door, 'the first group’s door is on screen').not.toBeNull()
+      for (const f of frames) {
+        for (const key of ['intro', 'door'] as const) {
+          const a = baseline[key]!
+          const b = f[key]
+          expect(b, `${key} left the page`).not.toBeNull()
+          expect(Math.abs(b!.x - a.x), `the ${key} moved sideways`).toBeLessThanOrEqual(0.5)
+          expect(Math.abs(b!.y - a.y), `the ${key} moved up or down`).toBeLessThanOrEqual(0.5)
+          expect(Math.abs(b!.w - a.w)).toBeLessThanOrEqual(0.5)
+          expect(Math.abs(b!.h - a.h)).toBeLessThanOrEqual(0.5)
+        }
+      }
+    })
+  })
+})
+
+// ── The pay check's unlock lines and its standing line (HEAD :3094-:3999 at 95c715e19, restored in RC4a and
+// re-pointed: the gate is `ReEntry.tsx`, kept; the standing line rides the StaleBanner above the home since RC4; its
+// door opens the gear drawer's W row). ───────────────────────────────────────────────────────────────────────────
 const STALE_W_QUOTE = slots.workingCostStaleQuote('84,000', '78,000')
 /** The Result door's cost list: the W help's own items. No seed here carries a budget or a priced state, so the
  *  state-tax item rides after the local-tax one. */
@@ -3274,11 +1438,6 @@ const FOUR_BUCKET_READBACK = [
  *  the survivor-path build's gate is on (`docs/plans/features/typed-below-survivor-path-build-spec.md`, KTD3/KTD7): the
  *  one-run close, the scoped lead and the short kinds' year subject carry "you’re both alive", and the survivor part
  *  closes every line. `noun` — "This" on the Result, "Your" on the gate (KD9). */
-type TypedBelowNoun = 'This' | 'Your'
-/** The rider (the walk-9 form council's words: "except for any difference …"), and the gloss its first use on a line
- *  carries inside its period, after a comma, no brackets (KD3, reworded). */
-const TB_RIDER = ', except for any difference between the two answers in income tax and Medicare’s income surcharge'
-const TB_GLOSS = ', the extra Medicare premium you pay when your income two years before was high'
 /** The counts sentence, naming the host's answer (KD9), at the typed $84,000 — no lean in it now (call (2)). */
 const tbCounts = (noun: TypedBelowNoun, quote: string): string =>
   `${noun} answer counts a working year at your own figure of $84,000 a year, below your spending of $${quote} a year.`
@@ -3689,7 +1848,10 @@ async function assertTypedBelowParts(block: Locator, who: string, runShapes: rea
     for (const t of tops.slice(1)) expect(t, `${who}: a run's paragraphs stand --space-2 apart`).toBeCloseTo(css.space2, 2)
   })
   expect(css.closingTop, `${who}: the survivor part stands --space-5 off the runs' list`).toBeCloseTo(css.space5, 2)
-  expect(css.labelNumeric, `${who}: the label keeps the figure law's lining numerals`).toMatch(/\blining-nums\b/)
+  // The figure law of the label's own surface: the gate (the old face, `ReEntry.tsx`) keeps lining numerals; inside the
+  // clone's `.rc-root` (the StaleBanner) Act 6's law is Figtree with `tabular-nums` on every number, lining by design.
+  const gate = who.includes('(gate)')
+  expect(css.labelNumeric, `${who}: the label keeps its surface's figure law`).toMatch(gate ? /lining-nums/ : /tabular-nums/)
   expect(css.labelNumeric, `${who}: …and its tabular ones`).toMatch(/\btabular-nums\b/)
 }
 
@@ -3826,6 +1988,33 @@ async function assertGateDensity(page: Page, who: string): Promise<void> {
   expect(read.storyRowGap, `${who}: the story column's gap is never W6's (--space-5)`).toBe('20px')
 }
 
+/** The standing line's seat since RC4: the StaleBanner above the home (it left the old answer page's lead). It sits in
+ *  the banner stack after the other stale lines (the old "the lead's last note"), the stack above the page's heading,
+ *  and the home's one R13 caveat is reachable below it. While the StaleBanner holds lines, any shell page may scroll:
+ *  order, one visible caveat and reach, never the one-frame law (plan 6, RC4's fit decision: the pilot's call,
+ *  2026-11-24, b9-5; measured: `?vault=datesavedrisen`'s caveat at 1302 px, the door's cost list in the banner). */
+async function assertStandingInBanner(page: Page, line: Locator, phone: boolean): Promise<void> {
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the standing line rides the home').toBeAttached()
+  await expect(line).toBeVisible()
+  const order = await page.evaluate(() => {
+    const banners = Array.from(document.querySelectorAll('[data-stale-banner]'))
+    const pay = document.querySelector('[data-stale-banner] .cs-paycheck-note')
+    const own = pay?.closest('[data-stale-banner]') ?? null
+    const heading = document.querySelector('main.result h1')
+    return {
+      last: own !== null && banners[banners.length - 1] === own,
+      aboveHeading: own !== null && heading !== null && own.getBoundingClientRect().bottom <= heading.getBoundingClientRect().top + 0.5,
+    }
+  })
+  expect(order.last, 'the standing line is the banner stack’s last line').toBe(true)
+  expect(order.aboveHeading, 'the banner stack sits above the page’s heading').toBe(true)
+  const caveat = page.locator('main.result [data-caveat]')
+  await expect(caveat, 'the home’s one R13 caveat').toHaveCount(1)
+  expect(phone ? 'phone' : 'laptop').toBeTruthy()
+  await caveat.scrollIntoViewIfNeeded()
+  await expect(caveat, 'the R13 caveat is reachable').toBeInViewport()
+}
+
 for (const u of PAY_CHECK_UNLOCKS) {
   test.describe(`the pay check’s unlock line (?vault=${u.key}) — one note, the decision pair in frame (${REAL.width}×${REAL.height})`, () => {
     test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
@@ -3927,13 +2116,9 @@ for (const u of PAY_CHECK_UNLOCKS) {
       await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
       await settleLayout(page)
       await page.evaluate(() => window.scrollTo(0, 0))
-      await (u.dated ? assertResolvedDate(page) : assertNoDateReading(page))
-      await (u.dated ? assertOneVisibleDisclaimer(page, 'laptop') : assertOneVisibleDisclaimerNoDate(page))
-      // The stale answer survives the save: the result keeps its standing line (R4 — the engine still
-      // runs on the last figure given), in the gate's own cause; a moved left over keeps its own (R12). The
-      // fresh-vintage answer on `wyclock` carries none. The gate's door section never rides the Result.
+      await expect(page.locator('main.result[data-shell-screen="snapshot"]'), `${u.key}: the affirm lands on the home`).toBeAttached()
       await expect(page.locator('section.reentry-door')).toHaveCount(0)
-      const standing = page.locator('.cs-paycheck-note')
+      const standing = page.locator('[data-stale-banner] .cs-paycheck-note')
       await expect(standing).toHaveCount(u.standing === null ? 0 : 1)
       if (u.standing !== null) {
         if (u.resultDoor !== null) {
@@ -3944,21 +2129,20 @@ for (const u of PAY_CHECK_UNLOCKS) {
           await expect(standing, `${u.key}: the standing slot speaks the gate’s cause`).toContainText(u.standing)
         }
       }
-      const doors = await page.locator('.result-quiet-row').boundingBox()
-      expect(doors, 'the quiet doors render').not.toBeNull()
-      const trailing = await doorsLastWalk(page, 'body')
-      expect(trailing.counted).toBeGreaterThan(u.dated ? DOORS_WALK_FLOOR : NO_DATE_DOORS_WALK_FLOOR)
-      expect(trailing.maxOtherBottom, `content renders BELOW the quiet doors (${trailing.desc})`).toBeLessThanOrEqual(
-        doors!.y + doors!.height + 0.5,
-      )
+      const caveat = page.locator('main.result [data-caveat]')
+      await expect(caveat, `${u.key}: the home’s one R13 caveat`).toHaveCount(1)
+      if (u.standing === null) {
+        const caveatBox = (await caveat.boundingBox())!
+        expect(caveatBox.y + caveatBox.height, `${u.key}: the home’s R13 caveat stays in the first frame`).toBeLessThanOrEqual(REAL.height)
+      } else {
+        // A standing line in the StaleBanner: order and reach (the pilot's call, 2026-11-24, b9-5; `assertStandingInBanner`).
+        await caveat.scrollIntoViewIfNeeded()
+        await expect(caveat, `${u.key}: the home’s R13 caveat is reachable`).toBeInViewport()
+        await page.evaluate(() => window.scrollTo(0, 0))
+      }
 
-      // THE ROUTE'S END (council `wf_22858e04-f7a` (6)): the gate's route sends the household to this door, and the door
-      // opens the panel at the W row, where the choices the route promises must be tappable: "Yes" always (every arm
-      // here has a quote), and Keep exactly where the held figure sits above it (ruling 34: never below). The council
-      // claims "route in frame", never "Yes in frame", so the reader's own scroll in the sheet is allowed; a clip or a
-      // cover is not.
       if (u.sheet !== null) {
-        await expect(standing.getByRole('button', { name: u.sheet.cta, exact: true }), `${u.key}: the Result's W door`).toHaveCount(1)
+        await expect(standing.getByRole('button', { name: u.sheet.cta, exact: true }), `${u.key}: the standing line's W door`).toHaveCount(1)
         await standing.getByRole('button', { name: u.sheet.cta, exact: true }).click()
         const dialog = page.getByRole('dialog')
         await expect(dialog).toBeVisible()
@@ -3997,3008 +2181,3 @@ for (const u of PAY_CHECK_UNLOCKS) {
 // 8 years … your date"). The DATE route scrolls by design, so this arm pins the ORDER contract
 // plus the aged surface's own honesty composition, never a full one-frame fit.
 
-test.describe(`the aged date return (?vault=datestale) — one clock across hero and ladder (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('the hero count and the ladder crown speak the same years-from-today; the aged-balances caveat rides the ladder; order holds', async ({ page }) => {
-    await page.goto('/?vault=datestale')
-    const unlock = page.getByRole('button', { name: 'Open my plan' })
-    await expect(unlock, 'the datestale plant did not land on the unlock screen').toBeVisible({
-      timeout: 30_000,
-    })
-    await unlock.click()
-
-    // The gate's decision pair sits in the first frame on the DATE route's gate too.
-    const affirm = page.getByRole('button', { name: /still about right/i })
-    await expect(affirm).toBeVisible({ timeout: 30_000 })
-    await page.evaluate(() => document.fonts.ready)
-    await page.evaluate(() => window.scrollTo(0, 0))
-    const affirmBox = await affirm.boundingBox()
-    expect(affirmBox, 'the affirm CTA reported no box').not.toBeNull()
-    expect(
-      affirmBox!.y + affirmBox!.height,
-      'the affirm CTA sits below the first frame at the real window',
-    ).toBeLessThanOrEqual(REAL.height)
-    await affirm.click()
-
-    await expect(page.locator(SETTLED_RESULT)).toBeAttached({
-      timeout: FINAL_TIER_MS,
-    })
-    await page.evaluate(() => document.fonts.ready)
-    await page.waitForFunction(() =>
-      document.getAnimations().every((a) => {
-        const timing = a.effect?.getTiming()
-        return timing?.iterations === Infinity || a.playState !== 'running'
-      }),
-    )
-    await page.evaluate(
-      () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
-    )
-    await page.evaluate(() => window.scrollTo(0, 0))
-
-    // Presence companions (insight 029): the two-pane stamped, BOTH graphs drawn, the floor's
-    // ARRIVED line rendered (the aged split really landed — not a fresh page passing vacuously),
-    // the doors offered.
-    await expect(page.locator('.fod-reveal[data-twopane]')).toBeVisible()
-    await expect(page.locator('.fod-band')).toBeVisible()
-    await expect(page.locator('.fod-ladder')).toBeVisible()
-    await expect(page.getByText(/penciled as covered/)).toBeVisible()
-    // U17 §S2 — the DATE route's aged band carries the same premise + rendered re-confirm pair
-    // and the elapsed-segment demotion (one law, both routes).
-    await expect(page.locator('.band-premise')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Re-confirm your numbers' })).toBeVisible()
-    await expect(page.locator('.band-elapsed-dim')).toBeAttached()
-    expect(await page.locator('.result-quiet-row button').count()).toBeGreaterThanOrEqual(2)
-    await assertOneVisibleDisclaimer(page, 'laptop')
-
-    // THE ONE-CLOCK PIN — the exact Caddie-flagged contradiction, pinned STRUCTURALLY (an
-    // engine re-grade may move N; hero-N must equal crown-N forever): the hero's "about N
-    // years out" and the crown aria's "Stopping in N years" read one number.
-    const heroText = await page.locator('.fod-headline').innerText()
-    const heroN = heroText.match(/about (a|\d+) years? out/)
-    expect(heroN, `the hero does not carry the anchored count: "${heroText}"`).not.toBeNull()
-    const crownAria = await page
-      .locator('.fod-ladder [aria-label*="your date"]')
-      .first()
-      .getAttribute('aria-label')
-    expect(crownAria, 'the ladder crown aria is missing').not.toBeNull()
-    const crownN = crownAria!.match(/^Stopping (today|in (a|\d+) years?)/)
-    expect(crownN, `the crown aria does not open with a stopping count: "${crownAria}"`).not.toBeNull()
-    const heroCount = heroN![1] === 'a' ? 1 : Number(heroN![1])
-    const crownCount = crownN![1] === 'today' ? 0 : crownN![2] === 'a' ? 1 : Number(crownN![2])
-    expect(
-      crownCount,
-      `two time bases on one screen: the hero says ${heroCount} years out, the ladder crown says ${crownCount} (aria: "${crownAria}")`,
-    ).toBe(heroCount)
-
-    // THE AGED-BALANCES CAVEAT (council 2026-07-10, the pulled-forward facet c) rides the ladder.
-    await expect(
-      page.getByText('They also read from your account balances as you entered them in'),
-    ).toBeVisible()
-
-    // ORDER (the date route's honesty contract): graphs → in-frame disclaimer → doors, doors last.
-    const box = async (selector: string) => {
-      const b = await page.locator(selector).boundingBox()
-      expect(b, `${selector} must render with a real box`).not.toBeNull()
-      return b as NonNullable<typeof b>
-    }
-    const graphs = await box('.fod-graphs')
-    const disclaimer = await box('footer.disclaimer.disclaimer--in-frame')
-    const doors = await box('.result-quiet-row')
-    expect(disclaimer.y, 'the R13 disclaimer must sit BELOW both graphs').toBeGreaterThanOrEqual(
-      graphs.y + graphs.height - 0.5,
-    )
-    expect(doors.y, 'the quiet doors must sit BELOW the R13 disclaimer').toBeGreaterThanOrEqual(
-      disclaimer.y + disclaimer.height - 0.5,
-    )
-  })
-})
-
-// ── U17 §S6: the ARRIVED vault return (?vault=datearrived) — the aged band's X-AXIS, and the
-// silence where a marker used to be ───────────────────────────────────────────────────────────
-// TWO THINGS HAD NO REAL-BROWSER WITNESS BEFORE THIS PLANT EXISTED.
-//
-// (1) THE AGED BAND'S YEAR-0 LABEL. U17 §S0 renamed it `bandClockBuiltLabel` — the band had been
-// calling the BUILD year "Your save", false for any re-saver and contradicted by the fresh "Saved
-// to this device" badge on the same screen. That rename shipped with unit arms only: no e2e arm
-// asserts the aged axis at all, so a regression to the fresh "Today" endpoint on an aged plan —
-// the exact class §S0 fixed — would draw in a real browser with a green suite.
-//
-// (2) THE WITHDRAWN WORK-STOPS MARKER. §S2.1's honored hawk veto: a crowned offset the plan clock
-// has PASSED withdraws AT THE ARRAY, so no future-tense named marker can ever render left of
-// Today. On `?vault=datestale` the crown sits BEYOND the elapsed window, so the marker renders and
-// the withdrawal never fires. THIS is the first live surface where it does — which makes the arm
-// below the only structural guard on a silence that is otherwise indistinguishable, in a
-// screenshot, from a marker someone forgot to draw. (Whether that silence READS honest or missing
-// is Briggsy's parked tone call; this arm only holds the mechanism still while he rules.)
-test.describe(`the arrived date return (?vault=datearrived) — the aged x-axis + the withdrawn marker (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('the year-0 endpoint names the BUILD year, wall-time Today is marked, and no named marker renders left of Today', async ({
-    page,
-  }) => {
-    await page.goto('/?vault=datearrived')
-    const unlock = page.getByRole('button', { name: 'Open my plan' })
-    await expect(unlock, 'the datearrived plant did not land on the unlock screen').toBeVisible({
-      timeout: 30_000,
-    })
-    await unlock.click()
-
-    const affirm = page.getByRole('button', { name: /still about right/i })
-    await expect(affirm).toBeVisible({ timeout: 30_000 })
-    await affirm.click()
-
-    await expect(page.locator(SETTLED_RESULT)).toBeAttached({
-      timeout: FINAL_TIER_MS,
-    })
-    await page.evaluate(() => document.fonts.ready)
-    await page.waitForFunction(() =>
-      document.getAnimations().every((a) => {
-        const timing = a.effect?.getTiming()
-        return timing?.iterations === Infinity || a.playState !== 'running'
-      }),
-    )
-    await page.evaluate(
-      () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))),
-    )
-    await page.evaluate(() => window.scrollTo(0, 0))
-
-    // PRESENCE COMPANIONS (insight 029) — a fresh page, or a plant that quietly stopped arriving,
-    // would pass every absence assertion below vacuously. The hero sentence is the discriminator:
-    // it is the §S2.5 STRICTLY-PAST arm, and it exists on no other live route.
-    await expect(page.locator('.fod-reveal[data-twopane]')).toBeVisible()
-    await expect(page.locator('.fod-band')).toBeVisible()
-    await expect(page.getByText(/that year has already come and gone/)).toBeVisible()
-    await expect(page.locator('.band-premise')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Re-confirm your numbers' })).toBeVisible()
-    await expect(page.locator('.band-elapsed-dim')).toBeAttached()
-
-    // THE X-AXIS. Read the band's own named labels rather than a screenshot: `Plan built` is the
-    // aged year-0 endpoint, and `Today` is the wall-time marker §S2 places at x = years-elapsed.
-    // Both must be present — asserting only the first would pass on a band that lost its wall
-    // clock entirely, which is the two-time-bases defect in its other direction.
-    // The named moments are the annotation block's NAME lines (HTML, chart text layer, 2026-09-05);
-    // an interim age tick renders an EMPTY name, so the empty strings are filtered, not counted.
-    const strongLabels = (await page.locator('.fod-band .band-annotation__name').allTextContents()).filter((t) => t !== '')
-    expect(
-      strongLabels,
-      `the aged band must name the BUILD year at year 0, never "Today" (U17 §S0). Labels: ${JSON.stringify(strongLabels)}`,
-    ).toContain('Plan built')
-    expect(
-      strongLabels,
-      `the aged band must still mark WALL-TIME today. Labels: ${JSON.stringify(strongLabels)}`,
-    ).toContain('Today')
-
-    // THE SILENCE (§S2.1). The crowned offset is behind the wall clock here, so NEITHER named
-    // work-stops label may render — not the plain one, not the split one. Both are checked because
-    // the split arm picks between them at the array, and pinning one leaves the other free.
-    expect(
-      strongLabels,
-      `no future-tense marker may render left of Today. Labels: ${JSON.stringify(strongLabels)}`,
-    ).not.toContain('Work stops')
-    expect(
-      strongLabels,
-      `nor the split variant. Labels: ${JSON.stringify(strongLabels)}`,
-    ).not.toContain('Essentials date')
-
-    await assertOneVisibleDisclaimer(page, 'laptop')
-
-    // ORDER (the date route's honesty contract): graphs → in-frame disclaimer → doors, doors last.
-    const box = async (selector: string) => {
-      const b = await page.locator(selector).boundingBox()
-      expect(b, `${selector} must render with a real box`).not.toBeNull()
-      return b as NonNullable<typeof b>
-    }
-    const graphs = await box('.fod-graphs')
-    const disclaimer = await box('footer.disclaimer.disclaimer--in-frame')
-    const doors = await box('.result-quiet-row')
-    expect(disclaimer.y, 'the R13 disclaimer must sit BELOW both graphs').toBeGreaterThanOrEqual(
-      graphs.y + graphs.height - 0.5,
-    )
-    expect(doors.y, 'the quiet doors must sit BELOW the R13 disclaimer').toBeGreaterThanOrEqual(
-      disclaimer.y + disclaimer.height - 0.5,
-    )
-  })
-})
-
-// ── U17 §S5: the RECORD-BEARING vault return (?vault=rec) — the card on a PROTECTED idle frame ──
-//
-// THE BLIND SPOT THIS CLOSES. Every arm above mounts `{kind:'unsaved'}` — a `?seed=` route has no
-// vault, and `IntakeApp`'s recordCard memo reads the DISK, never the draft — so until the record
-// plants landed (devSeeds.ts, this same step) no frame in this gate carried the one piece of new
-// content S5 drops onto a protected frame. And it IS protected: a returning household lands `idle`,
-// which is a fast one-frame fit frame, NOT one of the beat frames that scroll by design.
-//
-// THE STRUCTURAL RISK IS THE GRID SEAT, not the card's own height. confidence.css excludes
-// `.rec-aside` from the two-pane beat switch (`:has(.recommendation-surface > :not(.sr-only)
-// :not(.rec-aside))`) precisely so the instantly-painted memory card cannot flip the surface out of
-// its r4 idle seat and step the PROTECTED in-frame disclaimer, the backup door and the quiet row
-// each down one row on the first screen a returning household sees. Drop `:not(.rec-aside)` from
-// that selector and the surface takes r5 / the disclaimer r6 — which is exactly what the computed-
-// row assertions below read.
-//
-// THE RECORD-FREE REFERENCE IS MEASURED IN THE SAME RUN, never hand-typed: after measuring the
-// vault frame this test navigates to `?seed=retired` — the SAME household, the same idle solve
-// state, no vault and therefore no card — and requires the two computed rows to be IDENTICAL. So
-// "unchanged from the record-free return" is a comparison, not a remembered constant.
-
-test.describe(`the record-bearing vault returns (?vault=rec / ?vault=recold) — the memory card on the protected idle frame (${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('the card paints its HOLDS face and leaves the spine above it byte-identical (surface r4, caveat r5)', async ({
-    page,
-  }) => {
-    const seats = async () =>
-      page.evaluate(() => {
-        const cs = (sel: string) => {
-          const el = document.querySelector(sel)
-          if (el === null) return null
-          const s = getComputedStyle(el)
-          const r = el.getBoundingClientRect()
-          return {
-            row: s.gridRowStart,
-            column: s.gridColumnStart,
-            top: Math.round(r.top),
-            bottom: Math.round(r.bottom),
-            height: Math.round(r.height),
-          }
-        }
-        // The caveat's distance from the hero's top, from UNROUNDED rects (only a difference of two of
-        // these is ever rounded — the twin check below says why).
-        const hero = document.querySelector('.confidence-reveal[data-twopane] > .reveal__lead')
-        const caveat = document.querySelector('footer.disclaimer.disclaimer--in-frame')
-        return {
-          surface: cs('.recommendation-surface'),
-          disclaimer: cs('footer.disclaimer.disclaimer--in-frame'),
-          card: cs('.rec-record'),
-          caveatFromHero:
-            hero === null || caveat === null ? null : caveat.getBoundingClientRect().bottom - hero.getBoundingClientRect().top,
-        }
-      })
-
-    // (0) THE RECORD-FREE REFERENCE, captured FIRST in this same run and same browser: the identical
-    // household with no vault (and therefore no card). Every "unchanged" claim below is a comparison
-    // against these numbers, never a remembered constant.
-    await gotoSeedFinal(page, 'retired')
-    await assertResolvedSpine(page)
-    await expect(page.locator('.rec-record'), 'a no-vault route has no record to remember').toHaveCount(0)
-    const recordFree = await seats()
-
-    await page.goto('/?vault=rec')
-    const unlock = page.getByRole('button', { name: 'Open my plan' })
-    await expect(unlock, 'the rec plant did not land on the unlock screen').toBeVisible({ timeout: 30_000 })
-    await unlock.click()
-
-    // The re-entry gate is UNCONDITIONAL on every return (ReEntry.tsx) — but this plant ages NO
-    // vintage, so it must arrive with the clock lines DARK: the record card has to be readable in
-    // isolation, not beside a staleness echo it did not cause.
-    const affirm = page.getByRole('button', { name: /still about right/i })
-    await expect(affirm).toBeVisible({ timeout: 30_000 })
-    await expect(page.locator('.reentry-notes p'), 'the rec plant ages no stamp — no clock may fire').toHaveCount(0)
-    await affirm.click()
-
-    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
-    await settleLayout(page)
-    await assertResolvedSpine(page)
-
-    // (1) THE CARD IS REALLY THERE, and it is the HOLDS face — the standing this plant produces is
-    // derived from the real trichotomy in `devSeeds.test.ts` ("'rec' — the memory STILL HOLDS"), so
-    // this arm reads what that unit proved rather than re-deriving it. Every string is the shipped
-    // catalog's (imported at the top), never re-typed.
-    const card = page.locator('.rec-record')
-    await expect(card, 'the remembered-record card must paint on the vault-return idle frame').toBeVisible()
-    // …and it is OUTSIDE the surface's aside now (Briggsy's 2026-07-26 placement ruling): the aside
-    // keeps the refusal alone. A card that crept back inside would re-acquire the fold breach the
-    // arm below retired, so pin the seam here rather than only in the unit suite.
-    await expect(
-      page.locator('.rec-aside .rec-record'),
-      'the card must NOT be inside the surface aside — that seat breaches the protected caveat',
-    ).toHaveCount(0)
-    await expect(card.locator('.rec-note__head')).toHaveText(copy.recommendRecordHeading)
-    const standing = card.locator('.rec-record__standing')
-    await expect(standing).toHaveAttribute('data-standing', 'holds')
-    await expect(standing).toContainText(copy.recommendRecordHolds)
-    // The re-open control and its COST line ship as one unit (a control that hides a multi-minute
-    // re-solve is an invitation the household cannot price).
-    await expect(card.getByRole('button', { name: copy.recommendRecordReopenCta })).toBeVisible()
-    await expect(card.locator('.rec-record__cost')).toHaveText(copy.recommendRecordReopenCost)
-    // …and the doors-region invite is GONE (Result.tsx drops the idle disjunct when a record card is
-    // on screen): two controls opening the same GoalPicker on one frame is the duplication the F-B
-    // chair fix retired.
-    await expect(
-      page.locator('.result-recommend-invite'),
-      'the card carries the re-open — a second door-row invite would be the retired duplication',
-    ).toHaveCount(0)
-
-    const withCard = await seats()
-    expect(withCard.surface, 'the surface must be on the page').not.toBeNull()
-    expect(withCard.disclaimer, 'the in-frame disclaimer must be on the page').not.toBeNull()
-    expect(withCard.card, 'the card must have a box to measure').not.toBeNull()
-    expect(withCard.caveatFromHero, 'the hero and the caveat must both be on the record-bearing frame').not.toBeNull()
-    expect(recordFree.caveatFromHero, 'the hero and the caveat must both be on the record-free frame').not.toBeNull()
-    const fromHero = Math.round(withCard.caveatFromHero! - recordFree.caveatFromHero!)
-    console.log(
-      `[U17 record return] ?vault=rec ${REAL.width}x${REAL.height}: ` +
-        `card h=${withCard.card!.height} bottom=${withCard.card!.bottom} · ` +
-        `surface r${withCard.surface!.row}c${withCard.surface!.column} h=${withCard.surface!.height} ` +
-        `(record-free r${recordFree.surface!.row}c${recordFree.surface!.column} h=${recordFree.surface!.height}) · ` +
-        `disclaimer r${withCard.disclaimer!.row} bottom=${withCard.disclaimer!.bottom} ` +
-        `(record-free r${recordFree.disclaimer!.row} bottom=${recordFree.disclaimer!.bottom}) · ` +
-        `Δfold=${withCard.disclaimer!.bottom - recordFree.disclaimer!.bottom}px · ` +
-        `Δcaveat-from-hero=${fromHero}px · frame=${REAL.height}px`,
-    )
-
-    // (2) THE GRID SEAT — the surface stays in the r4 idle slack of the LEFT column and the
-    // PROTECTED disclaimer stays on r5, IDENTICAL to the record-free reference: everything the
-    // household reads BEFORE the caveat is byte-identical with or without a memory, and the card
-    // is purely additive below it. MUTANT (seat the card at `grid-row: 4` — the seat it shipped
-    // from, inside the idle slack): the r4 row grows by the card's full height and the disclaimer
-    // steps down with it, so the bottoms diverge and the fold arm below reads RED at 857px.
-    expect(withCard.surface!.row, 'the surface must keep the r4 idle slack seat').toBe(recordFree.surface!.row)
-    expect(withCard.surface!.column, 'the idle seat is the LEFT column, never the full-width beat row').toBe(
-      recordFree.surface!.column,
-    )
-    expect(
-      withCard.disclaimer!.row,
-      'a returning household WITH a memory must read the same frame as one without',
-    ).toBe(recordFree.disclaimer!.row)
-    // …and the reference really is the shipped idle seat, so the equalities above cannot both drift.
-    expect(recordFree.surface!.row).toBe('4')
-    expect(recordFree.disclaimer!.row).toBe('5')
-    // THE SPINE ABOVE THE CAVEAT IS UNMOVED IN PIXELS, not just in row numbers (the row equality
-    // alone would survive a re-sized track) — measured as the caveat's distance from the HERO'S TOP,
-    // never as two absolute bottoms (the 1440×731 re-point plan's KTD9). `.result` centres any frame
-    // shorter than the viewport, and the record-free twin is the shorter frame here (the vault's carries
-    // the card and the backup door below the caveat), so wherever the twin fits the viewport it centres
-    // and an absolute comparison reads the centring offset instead of the card (about 11px at the old 1536×791
-    // once the re-point's density rungs land). The claim is that the card is purely ADDITIVE below the
-    // caveat, and the caveat's distance from the hero's top carries it whole. Both distances come from
-    // unrounded rects and only their difference is rounded: the two caveats already sit 0.8px apart
-    // (the twin's save slot holds the 84.8px CTA where the vault's holds the 84px saved badge), and
-    // rounding each distance first could add up to another pixel. A rounded difference of at most 1 absorbs
-    // that (it admits an unrounded Δ from −1.5 up to, not including, +1.5 px; the measured Δ is −0.8), nothing more —
-    // the breach this replaced was 67px, and the card seated back in grid row 4 moves the caveat ~150px.
-    expect(
-      Math.abs(fromHero),
-      `the caveat moved ${fromHero}px relative to the hero between the record-free and record-bearing ` +
-        `frames — the card must be purely additive BELOW it`,
-    ).toBeLessThanOrEqual(1)
-    // The card's own seat: the row DIRECTLY below the protected caveat, in the LEFT reading column
-    // (confidence.css pins it — auto-placement would drop it into the dead right rail, and would
-    // move it to the left column only when the household happens to have no backup door).
-    expect(withCard.card!.row, 'the card seats on the row below the caveat').toBe('6')
-    expect(withCard.card!.column, 'the card reads in the LEFT column with the other doors').toBe('1')
-
-    // (3) The two-mount contract and the density tier are unmoved by the card; REAL sits inside the
-    // short tier (tokens.css --bp-laptop-short carries the tier's law), and the card's own rung (W5)
-    // reads with the rest.
-    await assertOneVisibleDisclaimer(page, 'laptop')
-    await assertDensityTier(page, 'short', { record: true })
-
-    // (4) W5's TALL side (the 1440×731 re-point's review, 2026-11-20): the only arm that reads a record card at
-    // SHOWCASE. Since the frames-outside U4 the record loop also reads W5's tall side at 1440×900 on every record plant,
-    // `?vault=rec` included, and a W5 rule written outside the tier applies there too (no new @media prelude is legal),
-    // so this read is a second guard, kept for the 917 card itself (R4). The same frame, widened to SHOWCASE, must read
-    // every rung dark, the card's own included. A computed-style read only, so the resize needs no fresh load.
-    await page.setViewportSize(SHOWCASE)
-    await settleLayout(page)
-    await assertDensityTier(page, 'tall', { record: true })
-  })
-
-  /**
-   * THE ONE-FRAME FIT LAW ON THE RECORD-BEARING FRAME — the Honesty-Hawk veto case, RESOLVED
-   * 2026-07-26 and asserted here positively on BOTH standings.
-   *
-   * WHAT WAS FILED (measured 1536×791 @ 2.5 DPR, the first run that ever rendered a saved record):
-   * the card shipped inside the surface's r4 idle slack, and that slack carries ZERO free space on
-   * this frame (the verdict column and the band end together, so the `1fr` row distributes
-   * nothing). The PROTECTED in-frame R13 disclaimer therefore moved down by the card's FULL height
-   * — 702 → 858px with the 156px `holds` card, 702 → 952px with the 251px two-clause `superseded`
-   * one, against 89px of headroom. A 67–161px breach: a reassuring frame with "this can be wrong"
-   * scrolled out of sight. Not fixable by trimming (content never yields to layout — no honest
-   * version of heading + standing + the priced re-open fits 89px), so it was filed as a PLACEMENT
-   * decision for the pilot.
-   *
-   * THE RULING (Briggsy, on those numbers): the card moves BELOW the disclaimer, into the doors
-   * region — already the only sanctioned below-fold casualty under this law. Result.tsx renders it
-   * after `<Disclaimer inFrame/>`; confidence.css seats it on the row directly beneath the caveat
-   * in the left reading column, stepping the backup door and the quiet row one row down. Content
-   * was never trimmed; every word survives, one flick away.
-   *
-   * RE-MEASURED THE SAME DAY, same viewport, after the move: the disclaimer's bottom is 701px on
-   * BOTH plants — 90px inside the frame and within 1px of the record-free twin (`?seed=retired`,
-   * 702px), i.e. the card is purely additive below the caveat. The card itself runs 705 → 862px
-   * (`rec`) and 705 → 956px (`recold`): below the fold BY DESIGN, sanctioned exactly as the doors
-   * are, and its top edge is on screen so the scroll is invited rather than hidden.
-   *
-   * THE `test.fail()` ANNOTATION THIS REPLACES was written to fail the day the placement was fixed
-   * — forcing its own removal instead of letting a repaired frame quietly re-acquire an unenforced
-   * law. It did its job. What is left is the law itself, falsifiable two ways (both watched RED
-   * 2026-07-26 before this landed): seat the card back at `grid-row: 4` and the fold assertion
-   * reads 857px; re-hoist it above `<Disclaimer inFrame/>` in Result.tsx and the document-order
-   * assertion fails while the pixels stay put — which is exactly the CSS-only reorder (WCAG 2.4.3)
-   * that a geometry-only gate would wave through.
-   *
-   * THE COMPOSITES' RECORD PLANTS (the one-frame composites plan's U6, KTD8): `yearrec` (the entered-extras
-   * household at its yearly return), `recpa` (Pennsylvania answering "not sure", fresh, a record that holds)
-   * and `yearparec` (the two together, a year on) join this loop at their declared days. Each asserts its
-   * caveat inside the frame, its card below the caveat in pixels and in the DOM, and its card's face and
-   * causes, the plant's own (a yearly-return record reads the one rulebook clause, `doctorYearlyReturnRecord`
-   * proves `['rules-changed']` at plant time). Its standing line is PRINTED, never asserted, until the card's
-   * seat is ruled (the composites entry's prescription (4): every measured record frame puts it past 731,
-   * 754.5 / 769.4 / 799.3 px on U4's table, and the ladder is exhausted). That is the 20 px arm's record-only
-   * precedent, quoted: "never a `test.fail()`. Until the fork is decided this arm RECORDS ... The assertion
-   * returns with the fork's ruling." The seat's ruling build turns `standing: 'print'` into `'assert'`.
-   *
-   * HIS WHOLE SCREEN (the frames-outside plan's U4, KTD9): each arm then resizes the same frame to LENOVO_FULL
-   * (1440×900 @ 2) and holds it there to the degrade contract with the backup door and the card sanctioned, the
-   * card below the caveat in pixels, the standing line as at REAL (asserted on `rec` and `recold`, printed on the
-   * rest), the full-fit distance printed. Run M1 (44963702523) read, on Windows and ubuntu alike, every caveat
-   * inside 900 (`rec` and `recold` 737.3, `yearrec` 769.2, `recpa` 776.6, `yearparec` 806.5) and every standing line
-   * too (809.4, 809.4, 841.3, 846.6, 876.5). Every record plant is a tall frame, so each prints once more at the
-   * tall edge (`printTallEdge`), never asserted.
-   */
-  for (const { plant, face, causes, echo, standing } of [
-    { plant: 'rec', face: 'HOLDS', causes: [], echo: false, standing: 'assert' },
-    // The superseded face is the tall one — two cause clauses plus the mint year. If the law holds
-    // here it holds on every standing the producer can emit (the recold arm below measures the
-    // three-clause producible maximum on the same frame).
-    {
-      plant: 'recold',
-      face: 'SUPERSEDED',
-      causes: [copy.recommendRecordSupersededInputs, copy.recommendRecordSupersededSolver],
-      echo: false,
-      standing: 'assert',
-    },
-    { plant: 'yearrec', face: 'SUPERSEDED', causes: [copy.recommendRecordSupersededRules], echo: true, standing: 'print' },
-    { plant: 'recpa', face: 'HOLDS', causes: [], echo: false, standing: 'print' },
-    { plant: 'yearparec', face: 'SUPERSEDED', causes: [copy.recommendRecordSupersededRules], echo: true, standing: 'print' },
-  ] as const) {
-    test(`?vault=${plant} — the ${face} card reads BELOW the PROTECTED R13 disclaimer, which keeps the frame${
-      standing === 'print' ? ' (its standing line RECORDED: the seat is owed)' : ''
-    }; his whole screen holds the degrade contract`, async ({ page }) => {
-      const frame = `?vault=${plant}`
-      const real = LAPTOP_SIZES.REAL.viewport
-      // Pinned to the plant's declared day (`RETURN_DAY` for a yearly return; `GATE_DAY` for the rest).
-      await gotoVaultFinal(page, plant)
-      // NON-VACUITY (insight 029): every claim below is about a frame that carries the card, so a
-      // frame that quietly stopped rendering one must fail here, never pass an empty walk.
-      await expect(page.locator('.rec-record'), 'the frame under measure must carry the card').toBeVisible()
-      await assertSizeTier(page, 'REAL')
-      // The card's face and its causes, the plant's own, in the producer's order (the face's lead sentence
-      // never the other face's: the superseded card reading "holds" would be the calm-but-wrong direction).
-      const standingLine = page.locator('.rec-record__standing')
-      await expect(standingLine).toHaveAttribute('data-standing', face === 'HOLDS' ? 'holds' : 'superseded')
-      await expect(standingLine).toContainText(face === 'HOLDS' ? copy.recommendRecordHolds : copy.recommendRecordSuperseded)
-      const causeLines = page.locator('.rec-record__causes li')
-      await expect(causeLines, `the ${face} card's cause count`).toHaveCount(causes.length)
-      if (causes.length > 0) await expect(causeLines).toHaveText([...causes])
-      await expect(page.locator('.cs-staleness-note'), `?vault=${plant}: the staleness echo`).toHaveCount(echo ? 1 : 0)
-
-      const geometry = await page.evaluate(() => {
-        const disc = document.querySelector('footer.disclaimer.disclaimer--in-frame')!
-        const card = document.querySelector('.rec-record')!
-        const standing = document.querySelector('.rec-record__standing')!
-        const d = disc.getBoundingClientRect()
-        const c = card.getBoundingClientRect()
-        const s = standing.getBoundingClientRect()
-        return {
-          discBottom: d.bottom,
-          cardTop: c.top,
-          cardBottom: c.bottom,
-          cardHeight: c.height,
-          standingBottom: s.bottom,
-          standingText: (standing.textContent ?? '').trim(),
-          // Node.DOCUMENT_POSITION_FOLLOWING — the card comes AFTER the caveat in the DOM, so
-          // focus order matches the visual order the pixels below assert.
-          cardFollowsInDom: (disc.compareDocumentPosition(card) & 4) !== 0,
-          vh: window.innerHeight,
-        }
-      })
-      console.log(
-        `[U17 record return] ?vault=${plant} ${real.width}x${real.height} attempt=${test.info().retry}: ` +
-          `disclaimer bottom=${geometry.discBottom.toFixed(1)} (frame=${geometry.vh}, headroom=${(geometry.vh - geometry.discBottom).toFixed(1)}) · ` +
-          `card h=${geometry.cardHeight.toFixed(1)} top=${geometry.cardTop.toFixed(1)} bottom=${geometry.cardBottom.toFixed(1)} · ` +
-          `standing bottom=${geometry.standingBottom.toFixed(1)} (slack=${(geometry.vh - geometry.standingBottom).toFixed(1)})`,
-      )
-
-      // (1) THE LAW: the protected caveat is IN FRAME. This is the assertion the filed annotation
-      // stated and could not meet; it is met now.
-      expect(
-        geometry.discBottom,
-        `the protected R13 disclaimer ends at ${geometry.discBottom.toFixed(1)}px, past the ${real.height}px frame`,
-      ).toBeLessThanOrEqual(real.height + 0.5)
-
-      // (2) THE RULING: the card is BELOW the caveat — in the pixels AND in the DOM. Either check
-      // alone is escapable (an explicit grid row survives a DOM re-hoist; a DOM order survives a
-      // CSS re-seat), and the pair is precisely the no-CSS-only-reorder law the doors already obey.
-      expect(
-        geometry.cardTop,
-        `the card starts at ${geometry.cardTop.toFixed(1)}px, above the caveat's ${geometry.discBottom.toFixed(1)}px bottom — ` +
-          `it must never share or precede the protected row`,
-      ).toBeGreaterThanOrEqual(geometry.discBottom - 0.5)
-      expect(
-        geometry.cardFollowsInDom,
-        'the card must FOLLOW the in-frame disclaimer in document order — a CSS-only reorder breaks ' +
-          'focus order (WCAG 2.4.3) even while the pixels look right',
-      ).toBe(true)
-
-      // (2b) THE STANDING LINE KEEPS THE FRAME — the one part of the card that is NOT a sanctioned
-      // below-fold casualty. The cause clauses may scroll (they are the detail); the lead sentence is
-      // the card's whole MEANING, and on the superseded face it is the only thing telling a household
-      // still executing the saved conversions that the advice itself may no longer fit. If it wraps
-      // out of frame, the card degrades to a heading over nothing — strictly worse than the defect the
-      // wording fixes, and invisible to every jsdom arm because it is a pure reflow outcome.
-      //
-      // The bound is TIGHT BY CONSTRUCTION (24px of slack at 1440×731 @ 2, under the ~28px a second line
-      // costs), so this is a live constraint on the copy rather than a formality: it is what makes the
-      // LENGTH note on `recommendRecordSuperseded` in src/ui/copy.ts enforceable instead of advisory.
-      // Text is captured so a red names the sentence that outgrew the slack.
-      //
-      // On the composites' record plants (`standing: 'print'`) the standing bottom is the `[U17 record return]`
-      // line's reading above, RECORDED until the card's seat is ruled (this loop's docblock says why).
-      if (standing === 'assert') {
-        expect(
-          geometry.standingBottom,
-          `the card's standing line ends at ${geometry.standingBottom.toFixed(1)}px, past the ${real.height}px frame — ` +
-            `the meaning-bearing sentence must never be the scroll casualty (line: "${geometry.standingText}")`,
-        ).toBeLessThanOrEqual(real.height + 0.5)
-      }
-
-      // (3) THE SANCTION IS NARROW (burned/070 — a sweep needs a guard, and an exclusion that
-      // quietly swallowed a neighbour would be the defect's next home). `recordCard` skips the
-      // card's SUBTREE *and*, like the quiet row and the backup door before it, its ANCESTOR chain
-      // — an ancestor's bottom is driven by the box it contains. That ancestor arm is the blind
-      // spot: it is only honest while every ancestor it hides was already sanctioned by the
-      // always-excluded quiet row. Checked structurally by containment, never by class-name
-      // spelling, so a rename cannot turn the guard vacuous.
-      const overBroad = await page.evaluate(() => {
-        const quiet = document.querySelector('.result-quiet-row')
-        const backup = document.querySelector('.result-backup-door')
-        const record = document.querySelector('.rec-record')!
-        const extra: string[] = []
-        for (const el of Array.from(document.querySelectorAll('body *'))) {
-          if (el === record || !el.contains(record)) continue // subtree + non-ancestors: not the risk
-          const alreadySanctioned =
-            (quiet !== null && (quiet.contains(el) || el.contains(quiet))) ||
-            (backup !== null && (backup.contains(el) || el.contains(backup)))
-          if (alreadySanctioned) continue
-          const cls = el.getAttribute('class')
-          extra.push(`${el.tagName.toLowerCase()}${cls !== null && cls !== '' ? `.${cls.split(/\s+/).join('.')}` : ''}`)
-        }
-        return extra
-      })
-      expect(
-        overBroad,
-        'sanctioning the record card must not newly blind the walk to any ancestor the doors had not ' +
-          'already sanctioned — the card would be hiding an overflow that is not its own',
-      ).toEqual([])
-      // The backup door is the sanctioned casualty on a writable return (the ?vault=stale
-      // precedent) and the card joins it; the caveat is a sibling <footer>, never an ancestor of
-      // either, so it stays measured — this still fails if the caveat itself breaches.
-      await assertFrameAtSize(page, 'REAL', frame, { backupDoor: true, recordCard: true })
-      await assertSurvivorBasis(page, 'inline')
-      // The card's own rung (W5) on BOTH faces, read after the fit and the standing line passed; REAL
-      // sits inside the short tier (tokens.css --bp-laptop-short carries the tier's law). A yearly return
-      // carries the staleness echo, so its survivor statements read L3's tight leading (`echo`).
-      await assertDensityTier(page, LAPTOP_SIZES.REAL.density, { record: true, echo })
-
-      // (4) BELOW THE FOLD IS NOT LOST: the card is one flick away with its re-open control and the
-      // cost line that prices it intact. A door the household cannot reach would be a worse answer
-      // than the breach.
-      const card = page.locator('.rec-record')
-      await card.scrollIntoViewIfNeeded()
-      const reopen = card.getByRole('button', { name: copy.recommendRecordReopenCta })
-      await expect(reopen, 'the re-open control must be reachable by scrolling').toBeInViewport()
-      await expect(reopen).toBeEnabled()
-      await expect(card.locator('.rec-record__cost')).toHaveText(copy.recommendRecordReopenCost)
-
-      // (5) HIS WHOLE SCREEN (this loop's docblock): the same frame resized (the settle puts the scroll back at the top),
-      // the card still below the caveat in the pixels, the standing line as at REAL, then the degrade contract with the
-      // backup door and the card sanctioned, the full-fit distance printed, and every rung's tall side.
-      const tallSize = LAPTOP_SIZES.LENOVO_FULL
-      await page.setViewportSize(tallSize.viewport)
-      await settleLayout(page)
-      await assertSizeTier(page, 'LENOVO_FULL')
-      const tall = await page.evaluate(() => ({
-        discBottom: document.querySelector('footer.disclaimer.disclaimer--in-frame')!.getBoundingClientRect().bottom,
-        cardTop: document.querySelector('.rec-record')!.getBoundingClientRect().top,
-        standingBottom: document.querySelector('.rec-record__standing')!.getBoundingClientRect().bottom,
-      }))
-      console.log(
-        `[record return] ${frameAt(frame, 'LENOVO_FULL')} attempt=${test.info().retry}: disclaimer bottom=${tall.discBottom.toFixed(1)} · ` +
-          `card top=${tall.cardTop.toFixed(1)} · standing bottom=${tall.standingBottom.toFixed(1)} (${standing === 'assert' ? 'asserted' : 'printed: the seat is owed'})`,
-      )
-      expect(
-        tall.cardTop,
-        `${frameAt(frame, 'LENOVO_FULL')}: the card starts at ${tall.cardTop.toFixed(1)}px, above the caveat's ${tall.discBottom.toFixed(1)}px bottom`,
-      ).toBeGreaterThanOrEqual(tall.discBottom - 0.5)
-      if (standing === 'assert') {
-        expect(
-          tall.standingBottom,
-          `${frameAt(frame, 'LENOVO_FULL')}: the card's standing line ends past the ${tallSize.viewport.height}px frame`,
-        ).toBeLessThanOrEqual(tallSize.viewport.height + 0.5)
-      }
-      await assertFrameAtSize(page, 'LENOVO_FULL', frame, { backupDoor: true, recordCard: true })
-      await assertDensityTier(page, tallSize.density, { record: true, echo })
-      await printTallEdge(page, frame, { backupDoor: true, recordCard: true })
-    })
-  }
-
-  /**
-   * THE CARD'S SEAT WHEN A BEAT IS ALSO ON SCREEN — the state the household reaches by tapping the
-   * card's OWN re-open control, and the one this harness cannot drive: a live solve was 80–200s
-   * single-worker (recorded 2026-07-22 above) and, pooled, is still unmeasured at a runner's P = 2;
-   * no fit budget carries it. So the beat is INJECTED, exactly as the recold arm injects its third
-   * cause clause onto the real card — confidence.css's switch keys on the surface having any direct
-   * child that is neither `.sr-only` nor `.rec-aside`, so one appended child reaches the real rule.
-   *
-   * WHY THIS ARM EXISTS: the beat switch and the record seat each step the degradable tail down one
-   * row, and CSS cannot add — the combination needs its own `:has():has()` rules at a specificity
-   * above both. Get that wrong and two elements share a grid cell and paint on top of each other.
-   * Without this arm that branch ships ungated, which is precisely the unenforced law the retired
-   * `test.fail()` annotation was written to prevent.
-   */
-  test('a BEAT beside the record steps the whole tail down one more row, with no two elements sharing a cell', async ({
-    page,
-  }) => {
-    await page.goto('/?vault=rec')
-    const unlock = page.getByRole('button', { name: 'Open my plan' })
-    await expect(unlock, 'the rec plant did not land on the unlock screen').toBeVisible({ timeout: 30_000 })
-    await unlock.click()
-    const affirm = page.getByRole('button', { name: /still about right/i })
-    await expect(affirm).toBeVisible({ timeout: 30_000 })
-    await affirm.click()
-    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
-    await settleLayout(page)
-
-    const rows = async () =>
-      page.evaluate(() => {
-        const row = (sel: string) => {
-          const el = document.querySelector(sel)
-          return el === null ? null : getComputedStyle(el).gridRowStart
-        }
-        return {
-          surface: row('.recommendation-surface'),
-          disclaimer: row('footer.disclaimer.disclaimer--in-frame'),
-          record: row('.rec-record'),
-          backupDoor: row('.result-backup-door'),
-          quietRow: row('.result-quiet-row'),
-        }
-      })
-
-    // (1) THE SHIPPED IDLE RETURN — the baseline the two arms above measure in pixels, read here as
-    // rows so the step below is a delta against a witnessed state rather than a remembered one.
-    expect(await rows(), 'the idle vault return seats caveat → card → backup door → quiet row').toEqual({
-      surface: '4',
-      disclaimer: '5',
-      record: '6',
-      backupDoor: '7',
-      quietRow: '8',
-    })
-
-    // (2) THE BEAT LANDS. Everything below the two panes steps down exactly one row, DOM order intact.
-    const beatChild = await page.evaluate(() => {
-      const surface = document.querySelector('.recommendation-surface')!
-      const beat = document.createElement('div')
-      beat.className = 'rec-committed'
-      beat.textContent = 'injected beat'
-      surface.appendChild(beat)
-      return surface.children.length
-    })
-    expect(beatChild, 'the injected beat must really be a child of the surface').toBeGreaterThan(1)
-    await settleLayout(page)
-    expect(
-      await rows(),
-      'with a beat AND a record every row steps once more — a missing `:has():has()` rule collides two of them',
-    ).toEqual({
-      surface: '5',
-      disclaimer: '6',
-      record: '7',
-      backupDoor: '8',
-      quietRow: '9',
-    })
-    // No two of them share a cell (the collision this arm exists to catch reads as a duplicate row).
-    const seated = Object.values(await rows())
-    expect(new Set(seated).size, 'every element must own its own grid row').toBe(seated.length)
-
-    // (3) THE CONTROL ARM (burned/070 — the step must be caused by the RECORD, not by the beat
-    // alone): drop the card and the tail returns to the pre-2026-07-26 beat numbers exactly. Without
-    // this, a rule that shifted the tail unconditionally would read green above.
-    await page.evaluate(() => document.querySelector('.rec-record')!.remove())
-    await settleLayout(page)
-    expect(
-      await rows(),
-      'a beat WITHOUT a record must read the numbers it read before the card existed',
-    ).toEqual({
-      surface: '5',
-      disclaimer: '6',
-      record: null,
-      backupDoor: '7',
-      quietRow: '8',
-    })
-  })
-
-  /**
-   * THE SUPERSEDED FACE (`?vault=recold`) — the card's OTHER standing, and the only live route to
-   * its cause LIST. Insight 101 is binding: a warning that names one cause when two hold describes
-   * its poster child, not the predicate's whole extension — and until this plant existed no
-   * rendered frame carried more than zero clauses. The plant's two causes ('inputs-changed' +
-   * 'solver-changed') and their declaration order are derived from the real trichotomy in
-   * `devSeeds.test.ts`; this arm reads what that unit proved.
-   *
-   * IT ALSO CARRIES THE WORST-CASE HEIGHT MEASUREMENT. That number sized the placement ruling above
-   * and it still earns its keep: the card is now the LAST thing between the protected caveat and the
-   * doors, so its producible maximum is what the tail below the fold has to absorb. The PRODUCIBLE
-   * maximum is THREE clauses, not four: `inputs-changed` and `inputs-unavailable` are the two arms
-   * of one conjunct (`savedRecommendation.ts` pushes one or the other, never both), so a four-clause
-   * card is unreachable and measuring one would be reserving against a fiction. The third clause is
-   * injected from the shipped catalog onto the REAL card, in the same run, so the number is measured
-   * rather than estimated.
-   */
-  test('the superseded face names EVERY cause it has, in the producer’s order, with the mint year — and reports the worst-case card height', async ({
-    page,
-  }) => {
-    await page.goto('/?vault=recold')
-    const unlock = page.getByRole('button', { name: 'Open my plan' })
-    await expect(unlock, 'the recold plant did not land on the unlock screen').toBeVisible({ timeout: 30_000 })
-    await unlock.click()
-    const affirm = page.getByRole('button', { name: /still about right/i })
-    await expect(affirm).toBeVisible({ timeout: 30_000 })
-    await affirm.click()
-    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
-    await settleLayout(page)
-    await assertResolvedSpine(page)
-
-    const card = page.locator('.rec-record')
-    await expect(card).toBeVisible()
-    const standing = card.locator('.rec-record__standing')
-    await expect(standing).toHaveAttribute('data-standing', 'superseded')
-    // The LEAD sentence, which must stand on its own even with zero clauses beneath it — never the
-    // holds sentence, which would be the calm-but-wrong direction.
-    await expect(standing).toContainText(copy.recommendRecordSuperseded)
-    await expect(standing).not.toContainText(copy.recommendRecordHolds)
-    // BOTH clauses, in the producer's declaration order (inputs → solver → rules).
-    await expect(card.locator('.rec-record__causes li')).toHaveText([
-      copy.recommendRecordSupersededInputs,
-      copy.recommendRecordSupersededSolver,
-    ])
-    // The rulebook clause is DARK — this plant's era is fresh, so naming it would be a cause the
-    // trichotomy never found (the arm that proves the list is the store's, not a fixed set).
-    await expect(card).not.toContainText(copy.recommendRecordSupersededRules)
-
-    // THE MINT YEAR: this plant's record is ~400 days old, so the age clause renders rather than
-    // suppressing. Bound to the catalog's own slot (never a re-typed sentence) and to a year that
-    // is genuinely in the past.
-    const savedIn = card.locator('p.rec-note__line')
-    await expect(savedIn).toHaveCount(1)
-    const savedInText = (await savedIn.textContent()) ?? ''
-    const year = Number(/(\d{4})/.exec(savedInText)?.[1])
-    expect(Number.isFinite(year), `the age clause must name a year — got "${savedInText}"`).toBe(true)
-    expect(savedInText, 'the sentence is the shipped slot, not a re-typed one').toBe(
-      slots.recommendRecordSavedIn(year),
-    )
-    expect(year, 'a record minted THIS calendar year suppresses the clause instead').toBeLessThan(
-      pinnedYear(page),
-    )
-
-    // THE WORST CASE, measured on the real card: add the one clause the producer could still emit
-    // beside these two (the rulebook one), from the catalog. The protected caveat's bottom is read
-    // in the SAME frame as the injected clause — the card seats below it now, so a tallest-possible
-    // card must move the caveat by nothing at all. If some future seat ever re-coupled them, this
-    // reads it directly rather than inferring it from a row number.
-    const worst = await card.evaluate((el, rulesClause) => {
-      const disc = () =>
-        Math.round(
-          document
-            .querySelector('footer.disclaimer.disclaimer--in-frame')!
-            .getBoundingClientRect().bottom,
-        )
-      const two = Math.round(el.getBoundingClientRect().height)
-      const discTwo = disc()
-      const list = el.querySelector('.rec-record__causes')!
-      const li = document.createElement('li')
-      li.className = 'rec-note__line'
-      li.textContent = rulesClause
-      list.appendChild(li)
-      const three = Math.round(el.getBoundingClientRect().height)
-      const discThree = disc()
-      li.remove()
-      return { two, three, discTwo, discThree }
-    }, copy.recommendRecordSupersededRules)
-    console.log(
-      `[U17 record return] ?vault=recold ${REAL.width}x${REAL.height}: superseded card h=${worst.two} ` +
-        `(producible worst case, 3 clauses: ${worst.three}) · disclaimer bottom=${worst.discTwo} ` +
-        `(worst case: ${worst.discThree}) · frame=${REAL.height}px`,
-    )
-    // Non-vacuity: the injected clause really did grow the card, so `three` is a measurement.
-    expect(worst.three, 'a third clause must make the card taller').toBeGreaterThan(worst.two)
-    // …and growing it moved the PROTECTED caveat not one pixel, on either count.
-    expect(worst.discThree, 'the tallest producible card must not move the protected caveat').toBe(
-      worst.discTwo,
-    )
-    expect(
-      worst.discThree,
-      `the caveat ends at ${worst.discThree}px on the worst-case card, past the ${REAL.height}px frame`,
-    ).toBeLessThanOrEqual(REAL.height)
-    // The surface keeps its r4 idle seat on this face too, and the card keeps the row below the
-    // caveat: the placement is standing-independent, not tuned to the short card.
-    const rows = await page.evaluate(() => ({
-      surface: getComputedStyle(document.querySelector('.recommendation-surface')!).gridRowStart,
-      card: getComputedStyle(document.querySelector('.rec-record')!).gridRowStart,
-    }))
-    expect(rows.surface, 'the superseded card must keep the r4 idle seat as well').toBe('4')
-    expect(rows.card, 'the superseded card seats on the row below the caveat, like the holds face').toBe('6')
-  })
-})
-
-// ── THE SPEND LANE (council wf_faa1af2d-052, 2026-09-26) ───────────────────────────────────────────
-// The verdict clause's REAL figure lands a beat after the final answer (spendSolve.ts on its own
-// worker lane). While it is in flight the clause RESERVES the widest sized sentence's height (insight
-// 035), so the band never jumps when the figure lands; both the pending and the sized frames must hold
-// the one-frame law at the laptop; the swap honours reduced motion. `surplus` is the room seed (~5 s).
-async function spendLaneBandDelta(page: Page): Promise<{ pendingTop: number; sizedTop: number }> {
-  await gotoSeedFinal(page, 'surplus')
-  await assertResolvedSpine(page)
-  const clause = page.locator('.cs-magnitude')
-  // the PENDING frame must be OBSERVED — a solve that landed before this read would make the delta vacuous
-  await expect(clause, 'the clause must be caught pending (else the band-delta arm proves nothing)').toHaveAttribute('data-spend', 'pending')
-  const pendingTop = (await page.locator('.cs-band').boundingBox())!.y
-  await expect(clause).toHaveAttribute('data-spend', 'sized', { timeout: 90_000 })
-  await settleLayout(page)
-  const sizedTop = (await page.locator('.cs-band').boundingBox())!.y
-  await expect(clause).toContainText('Above that, it starts to sit close to the line.')
-  return { pendingTop, sizedTop }
-}
-
-test.describe('the spend lane — the solved figure lands without moving anything', () => {
-  test.describe(`at Briggsy's real window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
-    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-    test('surplus: the pending frame fits, the band holds still as the figure lands, the sized frame fits', async ({ page }) => {
-      await gotoSeedFinal(page, 'surplus')
-      await assertResolvedSpine(page)
-      await expect(page.locator('.cs-magnitude')).toHaveAttribute('data-spend', 'pending')
-      await assertFrameFits(page, true) // the RESERVED (pending) frame
-      await expect(page.locator('.cs-magnitude')).toHaveAttribute('data-spend', 'sized', { timeout: 90_000 })
-      await settleLayout(page)
-      await assertFrameFits(page, true) // the sized frame
-      await assertSurvivorBasis(page, 'inline')
-    })
-  })
-  test.describe(`on the phone (${PHONE.width}×${PHONE.height})`, () => {
-    test.use({ viewport: PHONE })
-    test('surplus: the band below the clause does not move when the figure lands (reserve ≥ the sized clause)', async ({ page }) => {
-      const { pendingTop, sizedTop } = await spendLaneBandDelta(page)
-      expect(Math.abs(sizedTop - pendingTop), `band moved ${sizedTop - pendingTop}px as the figure landed`).toBeLessThanOrEqual(0.5)
-    })
-  })
-  test.describe('under prefers-reduced-motion', () => {
-    test.use({ viewport: PHONE })
-    test('surplus: the figure lands with NO transition on the swapped clause', async ({ page }) => {
-      await page.emulateMedia({ reducedMotion: 'reduce' }) // test.use({ reducedMotion }) did not apply here — see the 24 px arm
-      await spendLaneBandDelta(page)
-      const diag = await page.locator('.cs-magnitude').evaluate((el) => ({ swapped: el.classList.contains('cs-swap'), reduce: matchMedia('(prefers-reduced-motion: reduce)').matches, td: getComputedStyle(el).transitionDuration }))
-      expect(diag.reduce, 'the reduced-motion premise').toBe(true)
-      expect(diag.swapped, 'the clause must have SWAPPED (else no transition is vacuous)').toBe(true)
-      const transition = diag.td
-      expect(transition.split(',').every((d) => parseFloat(d) === 0), `transition-duration ${transition}`).toBe(true)
-    })
-  })
-})
-
-// ── THE WIDEST PLANTS — the seat's ACCEPTANCE TEST, printed in both room states, never asserted (the frames-outside plan's
-// U4 step 6, KTD10) ─────────────────────────────────────────────────────────────────────────────────────────────────
-// Each class still outside has a widest household under the design ceiling (KTD1 to KTD4: minted through the real
-// producers and proven legal in `src/ui/devSeeds.ts`, U1): B's, `?seed=failingwidest` (already short, the relief
-// combination), and A's, `?seed=surpluswidest` (more than covered, the inline combination), each in Pennsylvania with one
-// person named at the name ceiling alone on typical extras. Both put the caveat below his 731 px fold on Windows and ubuntu
-// alike: `failingwidest` 768.9 (run M2, 44970351069, B's entry on), `surpluswidest` 784.7 in both room states (765.6 with
-// both room rungs injected; run M1, 44963702523). So neither class is met (R3), and both go to `SEAT_COUNCIL` as its
-// acceptance test: a seat is in when these two read 731 or under on both platforms, in both room states. Until then each
-// arm asserts only that its frame is the one it names (the tier its size promises, the verdict, the direction, the
-// residual's form and state, and the widest strings the ceiling derives, never the seed's own figures) and prints one log
-// line per state:
-//   [widest plant] <frame> <size> <state> attempt=<n>: caveat=<px> save=<px> band=<px> doors=<px> lines magnitude=<n>
-//   reserve=<n> residual=<n> context=<n> word="<verdict>" direction=<d> spend=<s> survivor=<face> relief=<0|1>
-//   typical=<0|1> echo=<0|1> residual form=<one|both|none>/<state> name=<chars> degrade=<offenders> full=<lowest
-//   content bottom> [full offenders=<…>]
-// `save` is the save slot's bottom, the left column's end above the full-width caveat row; `band` the band's; `doors` the
-// quiet row's. A line count is the node's height over its own line-height, two decimals. `degrade` names every element
-// past the fold under the degrade law (the doors excluded, the caveat included); `full` the lowest content bottom the
-// content walk reads (KTD8), and on a tall size every element below the fold. Read the FINAL attempt only: attempts that
-// print different numbers are an unknown reading, and an unknown is not a pass.
-//
-// THE TWO ROOM STATES (KTD6): a room clause is sized a beat after the final, and the gate measures right after the final,
-// so the reserved (pending) box is a law state. A check after `gotoSeedFinal` can miss it (its settle can outlast the
-// spend lane: b9-3 missed it on A's widest), so an init script armed BEFORE navigation (the `probeComputingFrame` pattern)
-// reads every animation frame where `main.result` stands final with no run in flight and `.cs-magnitude[data-spend=
-// "pending"]` holds the reserve, and keeps the latest such frame whose fonts are loaded and on which nothing that can move
-// a box is animating (an opacity or color fade cannot). That frame is the pending reading. A lane that ran with no such
-// frame caught is UNKNOWN, never a guess; the latest frame caught mid-motion is printed beside it as a diagnostic, never a
-// reading. A clause the lane never touched has no pending state (`none`: B's rethink clause). The settled reading follows
-// once `data-spend` leaves `pending`; the frame's reading is the taller of the two.
-
-/** The sizes a widest plant prints at (the plan's A8). */
-type WidestSizeName = 'REAL' | 'LENOVO_FULL' | 'SHOWCASE'
-
-/** Every `$` figure in a text, in order, without its `$`. */
-function dollarFigures(text: string | null): string[] {
-  return text === null ? [] : Array.from(text.matchAll(/\$([\d,]+)/g), (m) => m[1]!)
-}
-
-/** The design ceiling's widest shown widths, derived through the shipped formatters, never typed (KTD3, KTD12): every
- *  monthly figure under the ceiling prints at most this many characters (tabular numerals), and the room clause's
- *  reserved sentence quotes the room cap over the widest spend. A widest arm compares its page with these and with
- *  `NAME_CEILING`, never with its own seed's figures. */
-const WIDEST_MONTHLY_CHARS = formatPerMonth(SPENDING_CEILING_PER_MONTH - PER_MONTH_DISPLAY_STEP).length
-const WIDEST_RESERVE_CHARS = ((): number => {
-  const clause = reserveClauseFor({
-    outcomeState: 'over-funded',
-    xOfTen: 9,
-    spendPerMonthReal: SPENDING_CEILING_PER_MONTH - PER_MONTH_DISPLAY_STEP,
-    direction: 'room',
-  })
-  const figure = dollarFigures(clause)[1]
-  if (figure === undefined) throw new Error(`[widest plant] no room figure in the reserved sentence: ${String(clause)}`)
-  return figure.length
-})()
-
-/** What the init script needs in the page: the markers the residual's form is read by, cut in Node from the shipped
- *  slots (a spec never re-types a string). */
-type MeasureInit = {
-  /** The one-person typical sentence's words after the name, up to its figure (`slots.medicareExtrasTypicalOne`). */
-  readonly oneMarker: string
-  /** The both-people sentence's opening, up to its figure (`slots.medicareExtrasTypicalBoth`). */
-  readonly bothMarker: string
-  /** Each priced state's residual clause, the shipped `copy`. */
-  readonly states: { readonly PA: string; readonly NC: string; readonly FL: string }
-}
-
-function measureInit(): MeasureInit {
-  const one = slots.medicareExtrasTypicalOne('\u0000', '\u0001')
-  const both = slots.medicareExtrasTypicalBoth('\u0001')
-  return {
-    oneMarker: one.slice(one.indexOf('\u0000') + 1, one.indexOf('\u0001')),
-    bothMarker: both.slice(0, both.indexOf('\u0001')),
-    states: { PA: copy.verdictResidualStatePA, NC: copy.verdictResidualStateNC, FL: copy.verdictResidualStateFL },
-  }
-}
-
-/** One reading of a frame, taken in ONE evaluation (the pending capture and the settled read share it). */
-type MeasureRead = {
-  readonly caveat: number
-  readonly save: number | null
-  readonly band: number
-  readonly doors: number
-  readonly word: string
-  readonly direction: string | null
-  readonly spend: string | null
-  readonly lines: {
-    readonly magnitude: number | null
-    readonly reserve: number | null
-    readonly residual: number | null
-    readonly context: number | null
-  }
-  readonly survivor: 'inline' | 'folded' | 'none'
-  readonly relief: boolean
-  readonly typical: number
-  readonly echo: number
-  readonly form: 'one' | 'both' | 'none'
-  readonly state: 'PA' | 'NC' | 'FL' | 'none'
-  readonly name: string | null
-  readonly texts: {
-    readonly clause: string
-    readonly reserve: string | null
-    readonly basis: string | null
-    readonly stepdown: string | null
-  }
-}
-
-/** The pending capture's record (KTD6). */
-type MeasureState = {
-  /** The latest pending frame with its fonts loaded and nothing that can move a box animating: the pending reading. */
-  pending: MeasureRead | null
-  /** The latest pending frame caught mid-motion: a diagnostic, never a reading. */
-  moving: MeasureRead | null
-  pendingFrames: number
-  stillFrames: number
-  /** Each `data-spend` value the clause showed on a final, settled-tier answer, in order. */
-  spends: string[]
-  error: string | null
-}
-
-type MeasureWindow = { __fitMeasure?: { readonly read: () => MeasureRead; readonly state: MeasureState } }
-
-/**
- * The widest arms' init script (runs as each document starts, before any page script): it installs the one reading
- * function and starts the pending capture (KTD6). Self-contained, because Playwright serializes it into the page.
- */
-function installMeasure(init: MeasureInit): void {
-  const bottomOf = (sel: string): number => {
-    const el = document.querySelector(sel)
-    if (el === null) throw new Error(`[widest plant] ${sel} is not on the page`)
-    return el.getBoundingClientRect().bottom
-  }
-  const linesOf = (el: Element | null | undefined): number | null => {
-    if (el === null || el === undefined) return null
-    const height = el.getBoundingClientRect().height
-    return height === 0 ? null : height / parseFloat(getComputedStyle(el).lineHeight)
-  }
-  const read = (): MeasureRead => {
-    const reveal = document.querySelector('.confidence-reveal[data-twopane]')
-    if (reveal === null) throw new Error('[widest plant] no two-pane reveal is stamped')
-    const magnitude = reveal.querySelector('.cs-magnitude')
-    if (magnitude === null) throw new Error('[widest plant] .cs-magnitude is not on the page')
-    const reserve = magnitude.querySelector('.cs-magnitude__reserve')
-    const shown = reserve === null ? magnitude : magnitude.querySelector('.cs-magnitude__line:not(.cs-magnitude__reserve)')
-    const residual = reveal.querySelector('.cs-medicare-residual')
-    const residualText = residual === null ? '' : (residual.textContent ?? '')
-    const card =
-      Array.from(reveal.querySelectorAll('.survivor')).find(
-        (el) => !el.classList.contains('floor-readout') && el.closest('.survivor-fold') === null,
-      ) ?? null
-    const context = card === null ? null : card.querySelector('.survivor__context')
-    const basis = card === null ? null : card.querySelector('.survivor__basis')
-    const save = reveal.querySelector('.result-save-slot')
-    const oneAt = residualText.indexOf(init.oneMarker)
-    const sentenceEnd = oneAt < 0 ? -1 : residualText.lastIndexOf('. ', oneAt)
-    return {
-      caveat: bottomOf('footer.disclaimer.disclaimer--in-frame'),
-      save: save === null ? null : save.getBoundingClientRect().bottom,
-      band: bottomOf('.confidence-reveal[data-twopane] > .cs-band'),
-      doors: bottomOf('.result-quiet-row'),
-      word: (reveal.querySelector('h2.cs-word')?.textContent ?? '').trim(),
-      direction: magnitude.getAttribute('data-direction'),
-      spend: magnitude.getAttribute('data-spend'),
-      lines: { magnitude: linesOf(magnitude), reserve: linesOf(reserve), residual: linesOf(residual), context: linesOf(context) },
-      // 'folded' means the fold is CLOSED: `card` skips everything inside the fold, so an open fold reads 'none' and
-      // reds the identity check of a plant built to fold (the review of the build: the bare-fold test let it pass).
-      survivor:
-        reveal.querySelector('details.survivor-fold:not([open])') !== null ? 'folded' : basis !== null ? 'inline' : 'none',
-      relief: reveal.querySelector('.floor-readout') !== null,
-      typical: reveal.querySelectorAll('.cs-medicare-residual--typical').length,
-      echo: reveal.querySelectorAll('.cs-staleness-note').length,
-      form: oneAt >= 0 ? 'one' : residualText.includes(init.bothMarker) ? 'both' : 'none',
-      state: residualText.includes(init.states.PA)
-        ? 'PA'
-        : residualText.includes(init.states.NC)
-          ? 'NC'
-          : residualText.includes(init.states.FL)
-            ? 'FL'
-            : 'none',
-      name: oneAt < 0 ? null : residualText.slice(sentenceEnd < 0 ? 0 : sentenceEnd + 2, oneAt),
-      texts: {
-        clause: (shown?.textContent ?? '').trim(),
-        reserve: reserve === null ? null : (reserve.textContent ?? '').trim(),
-        basis: basis === null ? null : (basis.textContent ?? ''),
-        stepdown: context?.querySelector('.survivor__stepdown')?.textContent ?? null,
-      },
-    }
-  }
-  // A property a fade animates cannot move a box; anything else running (a transform, a size) can.
-  const still = new Set([
-    'offset',
-    'computedOffset',
-    'easing',
-    'composite',
-    'opacity',
-    'color',
-    'backgroundColor',
-    'borderTopColor',
-    'borderRightColor',
-    'borderBottomColor',
-    'borderLeftColor',
-    'outlineColor',
-    'textDecorationColor',
-    'fill',
-    'stroke',
-  ])
-  const moving = (): boolean =>
-    document.getAnimations().some((a) => {
-      if (a.playState !== 'running' || a.effect === null) return false
-      if (a.effect.getTiming().iterations === Infinity) return false
-      const frames = a.effect instanceof KeyframeEffect ? a.effect.getKeyframes() : []
-      return frames.length === 0 || frames.some((k) => Object.keys(k).some((p) => !still.has(p)))
-    })
-  const state: MeasureState = { pending: null, moving: null, pendingFrames: 0, stillFrames: 0, spends: [], error: null }
-  const tick = (): void => {
-    try {
-      const main = document.querySelector('main.result')
-      const magnitude = document.querySelector('.confidence-reveal[data-twopane] .cs-magnitude')
-      if (
-        main !== null &&
-        magnitude !== null &&
-        main.getAttribute('data-answer-tier') === 'final' &&
-        !main.hasAttribute('data-answer-refiguring')
-      ) {
-        const spend = magnitude.getAttribute('data-spend') ?? 'absent'
-        if (state.spends[state.spends.length - 1] !== spend) state.spends.push(spend)
-        if (spend === 'pending' && magnitude.querySelector('.cs-magnitude__reserve') !== null) {
-          state.pendingFrames += 1
-          const r = read()
-          if (document.fonts.status === 'loaded' && !moving()) {
-            state.pending = r
-            state.stillFrames += 1
-          } else state.moving = r
-        }
-      }
-    } catch (e) {
-      state.error = String(e)
-    }
-    // The window is over once the clause has left `pending` after showing it; until then every frame is read.
-    const seen = state.spends
-    if (!(seen.includes('pending') && seen[seen.length - 1] !== 'pending')) requestAnimationFrame(tick)
-  }
-  requestAnimationFrame(tick)
-  ;(window as unknown as MeasureWindow).__fitMeasure = { read, state }
-}
-
-/** Arm the widest arms' init script on a page, BEFORE it navigates. */
-async function armMeasure(page: Page): Promise<void> {
-  await page.addInitScript(installMeasure, measureInit())
-}
-
-async function readMeasure(page: Page): Promise<MeasureRead> {
-  return page.evaluate(() => {
-    const m = (window as unknown as MeasureWindow).__fitMeasure
-    if (m === undefined) throw new Error('[widest plant] the init script was never armed on this page')
-    return m.read()
-  })
-}
-
-/** The settled reading: once the clause has left `pending`, on a settled layout. */
-async function readMeasureSettled(page: Page): Promise<MeasureRead> {
-  await page.waitForFunction(() => document.querySelector('.cs-magnitude')?.getAttribute('data-spend') !== 'pending', null, {
-    timeout: FINAL_TIER_MS,
-  })
-  await settleLayout(page)
-  return readMeasure(page)
-}
-
-async function readMeasureState(page: Page): Promise<MeasureState> {
-  return page.evaluate(() => {
-    const m = (window as unknown as MeasureWindow).__fitMeasure
-    if (m === undefined) throw new Error('[widest plant] the init script was never armed on this page')
-    return m.state
-  })
-}
-
-/** Both walks of a settled frame: the degrade law's (the doors excluded) and the content walk (KTD8). */
-type MeasureWalk = { readonly degrade: FrameReport; readonly full: FrameReport }
-
-async function measureWalk(page: Page): Promise<MeasureWalk> {
-  return { degrade: await frameReport(page, true), full: await frameReport(page, false) }
-}
-
-const fixed = (n: number | null, digits: number): string => (n === null ? '-' : n.toFixed(digits))
-
-/** What a printed reading is: a widest plant (the seat's acceptance test) or a derived member (rounds 2 and 3 of the
- *  build's review: owed before the seat sits). The tag opens each log line and names its annotation. */
-const MEASURE_KIND = {
-  widest: { tag: 'widest plant', annotation: "widest plant (RECORDED: the seat's acceptance test)" },
-  derived: { tag: 'derived member', annotation: 'derived member (RECORDED: owed before the seat sits)' },
-} as const
-
-function printMeasure(
-  frame: string,
-  size: WidestSizeName,
-  state: string,
-  r: MeasureRead,
-  walk: MeasureWalk | null,
-  tail = '',
-  kind: keyof typeof MEASURE_KIND = 'widest',
-): void {
-  const listed = (list: ReadonlyArray<Measured>): string =>
-    list.length === 0 ? 'none' : list.map((o) => `${o.desc}@${o.bottom.toFixed(1)}`).join(',')
-  const walked =
-    walk === null
-      ? ' walks=not read in this state'
-      : ` degrade=${listed(walk.degrade.offenders)} full=${
-          walk.full.lowest === null ? '-' : `${walk.full.lowest.bottom.toFixed(1)} on ${walk.full.lowest.desc}`
-        }${LAPTOP_SIZES[size].density === 'tall' ? ` full offenders=${listed(walk.full.offenders)}` : ''}`
-  const line =
-    `${frame} ${size} ${state} attempt=${test.info().retry}: caveat=${r.caveat.toFixed(1)} ` +
-    `save=${fixed(r.save, 1)} band=${r.band.toFixed(1)} doors=${r.doors.toFixed(1)} ` +
-    `lines magnitude=${fixed(r.lines.magnitude, 2)} reserve=${fixed(r.lines.reserve, 2)} ` +
-    `residual=${fixed(r.lines.residual, 2)} context=${fixed(r.lines.context, 2)} word="${r.word}" ` +
-    `direction=${r.direction ?? '-'} spend=${r.spend ?? '-'} survivor=${r.survivor} relief=${r.relief ? 1 : 0} ` +
-    `typical=${r.typical} echo=${r.echo} residual form=${r.form}/${r.state} ` +
-    `name=${r.name === null ? '-' : String(r.name.length)}${walked}${tail}`
-  console.log(`[${MEASURE_KIND[kind].tag}] ${line}`)
-  test.info().annotations.push({ type: MEASURE_KIND[kind].annotation, description: line })
-}
-
-/** The pending line (KTD6): the reading, `none` where the lane never touched the clause, or UNKNOWN. */
-function printPending(frame: string, size: WidestSizeName, st: MeasureState, kind: keyof typeof MEASURE_KIND = 'widest'): void {
-  const seen = st.spends.length === 0 ? '-' : st.spends.join('>')
-  const frames = ` seen=${seen} pending frames=${st.pendingFrames} still=${st.stillFrames}`
-  const error = st.error === null ? '' : ` error=${st.error}`
-  if (st.pending !== null) {
-    printMeasure(frame, size, 'pending', st.pending, null, `${frames}${error}`, kind)
-    return
-  }
-  const lane = st.spends.includes('pending') || st.spends.includes('sized')
-  const motion =
-    st.moving === null ? '' : `; the last pending frame, mid-motion and never a reading: caveat=${st.moving.caveat.toFixed(1)}`
-  console.log(
-    `[${MEASURE_KIND[kind].tag}] ${frame} ${size} pending attempt=${test.info().retry}: ${
-      lane ? 'UNKNOWN (the lane ran and no still pending frame was caught' : 'none (the lane never touched the clause'
-    }${motion})${frames}${error}`,
-  )
-}
-
-/** A reading must be a number everywhere it is not legitimately absent, and its walks must have walked a page. */
-function assertMeasureRead(frame: string, r: MeasureRead, walk: MeasureWalk | null): void {
-  const values: ReadonlyArray<readonly [string, number | null]> = [
-    ['caveat', r.caveat],
-    ['band', r.band],
-    ['doors', r.doors],
-    ['save', r.save],
-    ['magnitude lines', r.lines.magnitude],
-    ['reserve lines', r.lines.reserve],
-    ['residual lines', r.lines.residual],
-    ['context lines', r.lines.context],
-  ]
-  expect(r.lines.magnitude, `[widest plant] ${frame}: the magnitude clause renders no box`).not.toBeNull()
-  for (const [what, v] of values) {
-    if (v !== null) expect(Number.isFinite(v), `[widest plant] ${frame}: ${what} is not a number`).toBe(true)
-  }
-  if (walk !== null) {
-    expect(walk.degrade.counted, `[widest plant] ${frame}: the degrade walk counted too few elements`).toBeGreaterThan(WALK_FLOOR)
-    expect(walk.full.counted, `[widest plant] ${frame}: the content walk counted too few elements`).toBeGreaterThan(WALK_FLOOR)
-  }
-}
-
-/** What a widest plant's frame must be, from its seed's docblock and its unit pins (`devSeeds.test.ts`, U1): each class's
- *  direction and verdict, its combination (B the relief face over the closed fold, A the inline card), and the residual
- *  both carry (Pennsylvania, one person named alone on typical extras, no echo on a fresh frame). */
-type WidestFacts = {
-  readonly direction: 'room' | 'rethink'
-  readonly word: string
-  readonly survivor: 'inline' | 'folded'
-  readonly widest: 'A' | 'B'
-}
-
-function assertWidestIdentity(frame: string, r: MeasureRead, facts: WidestFacts): void {
-  expect(r.direction, `${frame}: the shown direction`).toBe(facts.direction)
-  expect(r.word, `${frame}: the verdict`).toBe(facts.word)
-  expect(r.survivor, `${frame}: the survivor face`).toBe(facts.survivor)
-  expect(r.typical, `${frame}: the typical residual`).toBe(1)
-  expect(r.echo, `${frame}: a fresh frame carries no staleness echo`).toBe(0)
-  expect(r.state, `${frame}: the residual's state clause`).toBe('PA')
-  expect(r.form, `${frame}: the typical residual names one person`).toBe('one')
-  // The reserved box: on a `?seed=` frame the only other face is the unsaveable 'none', which reads shorter (KTD4). Two taller save-box members
-  // are not planted here, the read-only face (a second tab's banner: +7.6 px on all four widest, U1) and the failed state (KTD1): prescription (4) carries both.
-  expect(r.save, `${frame}: the reserved save box renders`).not.toBeNull()
-}
-
-/**
- * A widest plant's page at the widths the design ceiling derives, never its own seed's figures, and only the strings
- * its combination shows. Both name one person at the name ceiling in the residual. B carries the relief combination:
- * the closed fold hides the survivor's spending and the step-down, and the rethink clause quotes no figure. A carries
- * the inline one: the entered spend in the clause and the basis, the survivor's spending and the step-down at the widest
- * monthly width, the settled room figure no wider than the reserve's, and the reserved sentence's figure at the
- * reserve's width, read from the reserve node's text (`aria-hidden`, so a visible-text locator cannot see it; text is no
- * geometry, so a frame caught mid-motion serves).
- */
-function assertWidestStrings(frame: string, settled: MeasureRead, pending: MeasureRead | null, widest: 'A' | 'B'): void {
-  expect(settled.name?.length, `${frame}: the residual names one person at the name ceiling's width`).toBe(NAME_CEILING)
-  if (widest === 'B') {
-    expect(settled.texts.basis, `${frame}: the closed fold hides the survivor's spending`).toBeNull()
-    expect(settled.texts.stepdown, `${frame}: the closed fold hides the step-down`).toBeNull()
-    expect(dollarFigures(settled.texts.clause), `${frame}: the rethink clause quotes no figure`).toEqual([])
-    return
-  }
-  const [spend, room] = dollarFigures(settled.texts.clause)
-  const monthly = [spend, ...dollarFigures(settled.texts.basis), ...dollarFigures(settled.texts.stepdown)]
-  expect(
-    monthly.map((s) => s?.length),
-    `${frame}: the entered spend, the survivor's spending, the spend again and the step-down, each at the widest monthly width`,
-  ).toEqual([WIDEST_MONTHLY_CHARS, WIDEST_MONTHLY_CHARS, WIDEST_MONTHLY_CHARS, WIDEST_MONTHLY_CHARS])
-  expect(room, `${frame}: the settled clause quotes a room figure`).toBeDefined()
-  expect(room!.length, `${frame}: the settled room figure is no wider than the reserve's`).toBeLessThanOrEqual(WIDEST_RESERVE_CHARS)
-  expect(pending, `${frame}: no pending frame was caught, so the reserved sentence was never read`).not.toBeNull()
-  expect(
-    dollarFigures(pending!.texts.reserve).map((s) => s.length),
-    `${frame}: the reserved sentence's spend and room figure, read from the reserve node's text`,
-  ).toEqual([WIDEST_MONTHLY_CHARS, WIDEST_RESERVE_CHARS])
-}
-
-const WIDEST_FACTS = {
-  failingwidest: { direction: 'rethink', word: copy.outcomeAlreadyFailing, survivor: 'folded', widest: 'B' },
-  surpluswidest: { direction: 'room', word: copy.outcomeOverFunded, survivor: 'inline', widest: 'A' },
-} as const satisfies Readonly<Record<string, WidestFacts>>
-
-for (const size of ['REAL', 'LENOVO_FULL', 'SHOWCASE'] as const) {
-  const s = LAPTOP_SIZES[size]
-  test.describe(`the widest plants at ${size} (${s.viewport.width}×${s.viewport.height} @ ${s.deviceScaleFactor}dpr) — the seat's acceptance test, printed`, () => {
-    test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
-    for (const key of ['failingwidest', 'surpluswidest'] as const) {
-      test(`?seed=${key} ${size}: printed in both room states, its identity and widest strings asserted, never its fit`, async ({ page }) => {
-        const frame = `?seed=${key}`
-        const facts: WidestFacts = WIDEST_FACTS[key]
-        await armMeasure(page)
-        await gotoSeedFinal(page, key)
-        await assertResolvedSpine(page)
-        await assertSizeTier(page, size)
-        const settled = await readMeasureSettled(page)
-        const st = await readMeasureState(page)
-        const walk = await measureWalk(page)
-        printPending(frame, size, st)
-        printMeasure(frame, size, 'settled', settled, walk)
-        // After the lines, so the numbers print either way.
-        assertMeasureRead(frame, settled, walk)
-        assertWidestIdentity(frame, settled, facts)
-        if (st.pending !== null) {
-          assertMeasureRead(`${frame} pending`, st.pending, null)
-          assertWidestIdentity(`${frame} pending`, st.pending, facts)
-        }
-        assertWidestStrings(frame, settled, st.pending ?? st.moving, facts.widest)
-      })
-    }
-  })
-}
-
-// ── THE PENNSYLVANIA ROOM PLANT — held at REAL for the seat, printed at the tall edge (the frames-outside plan's U4 step 6)
-// `?seed=pasurplustypical` is `surplustypical` in Pennsylvania at today's figures (U1): class A's frame with the longest
-// state clause. Run M1 (44963702523) read only its caveat past his fold at REAL (763.9 on Windows and ubuntu alike, both
-// room states; 744.8 with both room rungs injected), so it takes the held-caveat shape there: the caveat printed, every
-// other line held to the frame. It read 833.2 at LENOVO_FULL, SHOWCASE and the tall edge alike, on both platforms (run
-// M1), so his whole screen asserts the degrade contract on it (KTD10: a frame read inside on both platforms asserts; the
-// review of the build found this arm printing only); it prints once more at the tall edge, never asserted.
-test.describe(`?seed=pasurplustypical — the Pennsylvania room plant (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, then ${LAPTOP_SIZES.LENOVO_FULL.viewport.width}×${LAPTOP_SIZES.LENOVO_FULL.viewport.height} asserted and the tall edge printed)`, () => {
-  const s = LAPTOP_SIZES.REAL
-  test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
-  test('?seed=pasurplustypical REAL: every line but its caveat fits (held for the seat; the caveat printed); his whole screen asserted; the tall edge printed', async ({ page }) => {
-    const frame = '?seed=pasurplustypical'
-    await gotoSeedFinal(page, 'pasurplustypical')
-    await assertResolvedSpine(page)
-    await assertSizeTier(page, 'REAL')
-    await expect(page.locator(SPINE_VERDICT), `${frame}: the verdict the plant is built to show`).toHaveText(copy.outcomeOverFunded)
-    await expect(page.locator('.cs-magnitude'), `${frame}: the room clause`).toHaveAttribute('data-direction', 'room')
-    await assertMedicareNote(page, true)
-    await expect(page.locator('.cs-medicare-residual--typical'), `${frame}: the typical residual`).toHaveCount(1)
-    await expect(page.locator('.cs-medicare-residual'), `${frame}: the residual names Pennsylvania`).toContainText(copy.verdictResidualStatePA)
-    await expect(page.locator('.cs-staleness-note'), `${frame}: a fresh frame carries no echo`).toHaveCount(0)
-    await assertStateNote(page, false)
-    await assertOneVisibleDisclaimer(page, 'laptop')
-    await assertFrameFitsHoldingCaveat(page, frameAt(frame, 'REAL'), {}, SEAT_COUNCIL)
-    await assertSurvivorBasis(page, 'inline')
-    await assertNoteLeading(page, s.density)
-    await assertDensityTier(page, s.density, { leading: 'snug' })
-
-    // HIS WHOLE SCREEN: the same frame resized, held to the degrade contract (the doors its sanctioned casualty), every
-    // rung's tall side read (above the tier every cell reads body).
-    const tall = LAPTOP_SIZES.LENOVO_FULL
-    await page.setViewportSize(tall.viewport)
-    await settleLayout(page)
-    await assertSizeTier(page, 'LENOVO_FULL')
-    await assertFrameAtSize(page, 'LENOVO_FULL', frame)
-    await assertNoteLeading(page, tall.density)
-    await assertDensityTier(page, tall.density, { leading: 'snug' })
-    await printTallEdge(page, frame)
-  })
-})
-
-// ── THE REVIEW'S DERIVED MEMBERS AND THE OPENED FOLD — printed, never asserted (rounds 2 and 3 of the frames-outside
-// build's whole-file review, b9-9; record: the composites README folder's b9-8-review/) ─────────────────────────────
-// The review derived, by arithmetic only, frames the record card's seat council needs read before it sits (the register's
-// composites entry, prescription (4)):
-//  · `?seed=paofftrackone` and `?vault=yearpaofftrackone`: the off-track class at its widest closed-axis members, fresh
-//    and a year on (derived about 756.9 and 764.1);
-//  · `?vault=yearsurpluswidest`: A's widest a year on, class C at its widest (about 802.4);
-//  · `?vault=yearfailingwidest`: B's widest a year on (never derived);
-//  · `?vault=yearpasurplus`: the Pennsylvania room frame a year on (about 781.6);
-//  · the survivor fold the household OPENS, on `?seed=budget` (about 838 at REAL and TIER, about 955 at 1440×900) and on
-//    `?seed=failingwidest` (about 894 at REAL): a question before it is a member.
-// And the review's remaining derived members (b9-1, the same register prescription; each base's docblock carries its read):
-//  · `?seed=pabudgetone`: `budget` in Pennsylvania with the one-person name (derived about 747.8);
-//  · `?seed=paone` (`patypical` with it, derived about 729.0; its verdict reads "On track", not "On the line", the direction
-//    unchanged), `?vault=yearpaone` and `?vault=yearparecone` a year on (about 746.6 each, the record card's standing line
-//    about 808.6, printed as its own line);
-//  · `?vault=yearpafailingone`: `yearpafailing` with it (about 743.3 on Windows, 764.1 on CI's ubuntu);
-//  · the opened fold on A's relief combination, `?seed=surpluswidestrelief` (derived about 908 opened at REAL).
-// Each prints on both platforms and asserts no fit (a frame read on one platform never asserts). The plants print through
-// the widest arms' machinery, both room states at REAL and the settled frame resized to LENOVO_FULL, each asserting only
-// that its frame is the one it names, after its lines print. The opened fold prints the frame closed, then open, asserting
-// only the fold's state. Their readings decide each frame's arm afterwards: held for the seat, asserted, or a member.
-
-/** What a derived member's frame must be, pinned as the unit arms found its verdict (`devSeeds.test.ts`). */
-type DerivedFacts = {
-  readonly route: 'seed' | 'vault'
-  readonly key: string
-  readonly word: string
-  readonly direction: 'room' | 'rethink' | 'trim' | 'on-the-line'
-  readonly survivor: 'inline' | 'folded'
-  readonly echo: 0 | 1
-  readonly form: 'one' | 'both'
-  /** A yearly return with a saved recommendation: its record card's standing line prints on its own line. */
-  readonly record?: true
-}
-
-const DERIVED_MEMBERS: ReadonlyArray<DerivedFacts> = [
-  { route: 'seed', key: 'paofftrackone', word: copy.outcomeOffTrack, direction: 'trim', survivor: 'inline', echo: 0, form: 'one' },
-  { route: 'vault', key: 'yearpaofftrackone', word: copy.outcomeOffTrack, direction: 'trim', survivor: 'inline', echo: 1, form: 'one' },
-  { route: 'vault', key: 'yearsurpluswidest', word: copy.outcomeOverFunded, direction: 'room', survivor: 'inline', echo: 1, form: 'one' },
-  { route: 'vault', key: 'yearfailingwidest', word: copy.outcomeAlreadyFailing, direction: 'rethink', survivor: 'folded', echo: 1, form: 'one' },
-  { route: 'vault', key: 'yearpasurplus', word: copy.outcomeOverFunded, direction: 'room', survivor: 'inline', echo: 1, form: 'both' },
-  { route: 'seed', key: 'pabudgetone', word: copy.outcomeBorderline, direction: 'on-the-line', survivor: 'folded', echo: 0, form: 'one' },
-  { route: 'seed', key: 'paone', word: copy.outcomeOnTrack, direction: 'on-the-line', survivor: 'inline', echo: 0, form: 'one' },
-  { route: 'vault', key: 'yearpaone', word: copy.outcomeOnTrack, direction: 'on-the-line', survivor: 'inline', echo: 1, form: 'one' },
-  { route: 'vault', key: 'yearparecone', word: copy.outcomeOnTrack, direction: 'on-the-line', survivor: 'inline', echo: 1, form: 'one', record: true },
-  { route: 'vault', key: 'yearpafailingone', word: copy.outcomeAlreadyFailing, direction: 'rethink', survivor: 'inline', echo: 1, form: 'one' },
-]
-
-/** A record-bearing member's card, read in one evaluation (viewport-relative, the page scrolled to its top): its face,
- *  its causes, its top and its standing line's bottom. Printed, never asserted beyond the face and causes. */
-async function readRecordCard(page: Page): Promise<{ face: string | null; causes: string[]; top: number; standing: number }> {
-  await page.evaluate(() => window.scrollTo(0, 0))
-  return page.evaluate(() => {
-    const card = document.querySelector('.rec-record')
-    const standing = document.querySelector('.rec-record__standing')
-    if (card === null || standing === null) throw new Error('[derived member] the record card is not on the page')
-    return {
-      face: standing.getAttribute('data-standing'),
-      causes: Array.from(card.querySelectorAll('.rec-record__causes li')).map((li) => (li.textContent ?? '').trim()),
-      top: card.getBoundingClientRect().top,
-      standing: standing.getBoundingClientRect().bottom,
-    }
-  })
-}
-
-function printRecordCard(frame: string, size: WidestSizeName, c: Awaited<ReturnType<typeof readRecordCard>>): void {
-  const line =
-    `${frame} ${size} record attempt=${test.info().retry}: card top=${c.top.toFixed(1)} standing bottom=${c.standing.toFixed(1)} ` +
-    `face=${c.face ?? '-'} causes=${c.causes.length}`
-  console.log(`[${MEASURE_KIND.derived.tag}] ${line}`)
-  test.info().annotations.push({ type: MEASURE_KIND.derived.annotation, description: line })
-}
-
-function assertRecordIdentity(frame: string, c: Awaited<ReturnType<typeof readRecordCard>>): void {
-  expect(c.face, `${frame}: the card reads "no longer holds"`).toBe('superseded')
-  expect(c.causes, `${frame}: one cause, the rulebooks (doctorYearlyReturnRecord proves it at plant time)`).toEqual([
-    copy.recommendRecordSupersededRules,
-  ])
-}
-
-function assertDerivedIdentity(frame: string, r: MeasureRead, f: DerivedFacts): void {
-  expect(r.word, `${frame}: the verdict`).toBe(f.word)
-  expect(r.direction, `${frame}: the shown direction`).toBe(f.direction)
-  expect(r.survivor, `${frame}: the survivor face (folded means a CLOSED fold)`).toBe(f.survivor)
-  expect(r.relief, `${frame}: the floor relief shows exactly where the card folds`).toBe(f.survivor === 'folded')
-  expect(r.typical, `${frame}: the typical residual`).toBe(1)
-  expect(r.echo, `${frame}: the staleness echo`).toBe(f.echo)
-  expect(r.state, `${frame}: the residual's state clause`).toBe('PA')
-  expect(r.form, `${frame}: the residual's form`).toBe(f.form)
-  if (f.form === 'one') expect(r.name?.length, `${frame}: the residual names one person at the name ceiling`).toBe(NAME_CEILING)
-  expect(r.save, `${frame}: the save box renders`).not.toBeNull()
-}
-
-test.describe(`the review's derived members (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr in both room states, then ${LAPTOP_SIZES.LENOVO_FULL.viewport.width}×${LAPTOP_SIZES.LENOVO_FULL.viewport.height}) — printed, never asserted`, () => {
-  const s = LAPTOP_SIZES.REAL
-  test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
-  for (const facts of DERIVED_MEMBERS) {
-    const frame = `?${facts.route}=${facts.key}`
-    test(`${frame}: printed at REAL in both room states and at his whole screen, its identity asserted, never its fit`, async ({ page }) => {
-      await armMeasure(page)
-      if (facts.route === 'seed') await gotoSeedFinal(page, facts.key)
-      else await gotoVaultFinal(page, facts.key)
-      await assertResolvedSpine(page)
-      await assertSizeTier(page, 'REAL')
-      const settled = await readMeasureSettled(page)
-      const st = await readMeasureState(page)
-      const walk = await measureWalk(page)
-      printPending(frame, 'REAL', st, 'derived')
-      printMeasure(frame, 'REAL', 'settled', settled, walk, '', 'derived')
-      const card = facts.record === true ? await readRecordCard(page) : null
-      if (card !== null) printRecordCard(frame, 'REAL', card)
-
-      // HIS WHOLE SCREEN: the settled frame resized (a fresh load would re-walk a vault's gate).
-      await page.setViewportSize(LAPTOP_SIZES.LENOVO_FULL.viewport)
-      await settleLayout(page)
-      await assertSizeTier(page, 'LENOVO_FULL')
-      const tall = await readMeasure(page)
-      const tallWalk = await measureWalk(page)
-      printMeasure(frame, 'LENOVO_FULL', 'settled', tall, tallWalk, '', 'derived')
-      const tallCard = facts.record === true ? await readRecordCard(page) : null
-      if (tallCard !== null) printRecordCard(frame, 'LENOVO_FULL', tallCard)
-
-      // After the lines, so the numbers print either way.
-      if (card !== null) assertRecordIdentity(frame, card)
-      if (tallCard !== null) assertRecordIdentity(`${frame} LENOVO_FULL`, tallCard)
-      assertMeasureRead(frame, settled, walk)
-      assertDerivedIdentity(frame, settled, facts)
-      if (st.pending !== null) {
-        assertMeasureRead(`${frame} pending`, st.pending, null)
-        assertDerivedIdentity(`${frame} pending`, st.pending, facts)
-      }
-      assertMeasureRead(`${frame} LENOVO_FULL`, tall, tallWalk)
-      assertDerivedIdentity(`${frame} LENOVO_FULL`, tall, facts)
-    })
-  }
-})
-
-/** The frame's protected bottoms, read in one evaluation (viewport-relative, the page scrolled to its top). */
-async function foldFrame(page: Page): Promise<{ caveat: number; save: number | null; band: number; doors: number }> {
-  await page.evaluate(() => window.scrollTo(0, 0))
-  return page.evaluate(() => {
-    const bottom = (sel: string): number => {
-      const el = document.querySelector(sel)
-      if (el === null) throw new Error(`[opened fold] ${sel} is not on the page`)
-      return el.getBoundingClientRect().bottom
-    }
-    const save = document.querySelector('.confidence-reveal[data-twopane] .result-save-slot')
-    return {
-      caveat: bottom('footer.disclaimer.disclaimer--in-frame'),
-      save: save === null ? null : save.getBoundingClientRect().bottom,
-      band: bottom('.confidence-reveal[data-twopane] > .cs-band'),
-      doors: bottom('.result-quiet-row'),
-    }
-  })
-}
-
-/** The opened fold's ORDER (the record card's seat plan, U2, R7): the fold sits last among the statements, so opened
- *  it follows the whole Medicare pair, and the summary and the pair all sit above the doors, in the DOM and on screen
- *  (page coordinates). Every fold frame this arm reads carries the pair (an all-65+ household with the relief line),
- *  so a frame without it fails loudly rather than passing an order check over nothing. */
-async function foldOrder(page: Page): Promise<{
-  readonly foldAfterPair: boolean
-  readonly aboveDoorsInDom: boolean
-  readonly summary: number
-  readonly residual: number
-  readonly doorsTop: number
-}> {
-  return page.evaluate(() => {
-    const one = (sel: string): Element => {
-      const all = document.querySelectorAll(sel)
-      if (all.length !== 1) throw new Error(`[opened fold order] ${sel}: ${all.length} on the page, want exactly 1`)
-      return all[0]!
-    }
-    const follows = (a: Element, b: Element): boolean => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
-    const summary = one('details.survivor-fold > summary')
-    const note = one('.cs-medicare-note')
-    const residual = one('.cs-medicare-residual')
-    const doors = one('.result-quiet-row')
-    return {
-      foldAfterPair: follows(note, summary) && follows(residual, summary),
-      aboveDoorsInDom: follows(summary, doors) && follows(note, doors) && follows(residual, doors),
-      summary: summary.getBoundingClientRect().bottom + window.scrollY,
-      residual: residual.getBoundingClientRect().bottom + window.scrollY,
-      doorsTop: doors.getBoundingClientRect().top + window.scrollY,
-    }
-  })
-}
-
-/** Round 3's question, measured: the frame with its survivor fold closed, then opened by a click on its summary (the
- *  household's one act), printed on one line; only the fold's state, its order (U2: last among the statements, the
- *  summary and the Medicare pair above the doors) and the frame's walk floor are asserted, never the fit: an opened
- *  fold becomes a sanctioned scroll only with the caveat in the chart column (the seat plan's Key Decisions). */
-async function printOpenedFold(page: Page, frame: string, size: keyof typeof LAPTOP_SIZES): Promise<void> {
-  const fold = page.locator('details.survivor-fold')
-  await expect(fold, `${frame}: the survivor card is folded (the floor relief holds the inline slot)`).toHaveCount(1)
-  expect(await fold.evaluate((el) => (el as HTMLDetailsElement).open), `${frame}: the fold starts closed`).toBe(false)
-  const closed = await foldFrame(page)
-  await page.locator('.survivor-fold__summary').click()
-  expect(await fold.evaluate((el) => (el as HTMLDetailsElement).open), `${frame}: the click opened the fold`).toBe(true)
-  await settleLayout(page)
-  const opened = await foldFrame(page)
-  const walk = await frameReport(page, true)
-  const f = (n: number | null): string => (n === null ? '-' : n.toFixed(1))
-  const line =
-    `${frame} ${size} attempt=${test.info().retry}: closed caveat=${f(closed.caveat)} save=${f(closed.save)} band=${f(closed.band)} · ` +
-    `opened caveat=${f(opened.caveat)} save=${f(opened.save)} band=${f(opened.band)} doors=${f(opened.doors)} ` +
-    `degrade=${walk.offenders.length === 0 ? 'none' : walk.offenders.map((o) => `${o.desc}@${o.bottom.toFixed(1)}`).join(',')}`
-  console.log(`[opened fold] ${line}`)
-  test.info().annotations.push({ type: 'opened fold (RECORDED: a question before it is a member)', description: line })
-  const order = await foldOrder(page)
-  const orderLine =
-    `${frame} ${size} attempt=${test.info().retry}: fold-after-pair=${order.foldAfterPair} above-doors-in-dom=${order.aboveDoorsInDom} ` +
-    `summary=${order.summary.toFixed(1)} residual=${order.residual.toFixed(1)} doors-top=${order.doorsTop.toFixed(1)}`
-  console.log(`[opened fold order] ${orderLine}`)
-  // After the lines, so the numbers print either way.
-  expect(walk.counted, `${frame}: the walk counted too few elements`).toBeGreaterThan(WALK_FLOOR)
-  expect(order.foldAfterPair, `${frame}: the fold sits before the Medicare pair (R7 puts it last among the statements)`).toBe(true)
-  expect(order.aboveDoorsInDom, `${frame}: the summary or the Medicare pair comes after the doors in the DOM`).toBe(true)
-  expect(order.summary, `${frame}: the opened fold's summary ends below the doors' top`).toBeLessThanOrEqual(order.doorsTop + 0.5)
-  expect(order.residual, `${frame}: the Medicare residual ends below the doors' top`).toBeLessThanOrEqual(order.doorsTop + 0.5)
-}
-
-for (const size of ['REAL', 'TIER', 'LENOVO_FULL', 'SHOWCASE'] as const) {
-  const s = LAPTOP_SIZES[size]
-  test.describe(`the opened survivor fold at ${size} (${s.viewport.width}×${s.viewport.height} @ ${s.deviceScaleFactor}dpr) — printed, never asserted`, () => {
-    test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
-    // b9-1: A's relief combination (`surpluswidestrelief`) joins at REAL, round 3's derived about 908 opened.
-    for (const key of size === 'REAL' ? (['budget', 'failingwidest', 'surpluswidestrelief'] as const) : (['budget'] as const)) {
-      test(`?seed=${key} ${size}: the frame closed, then the fold opened, printed; the fold's state asserted, never the fit`, async ({ page }) => {
-        await gotoSeedFinal(page, key)
-        await assertResolvedSpine(page)
-        await assertSizeTier(page, size)
-        // A room clause is read once it has left `pending` (its sized form), as the widest arms read their settled state.
-        await page.waitForFunction(() => document.querySelector('.cs-magnitude')?.getAttribute('data-spend') !== 'pending', null, {
-          timeout: FINAL_TIER_MS,
-        })
-        await settleLayout(page)
-        await printOpenedFold(page, `?seed=${key}`, size)
-      })
-    }
-  })
-}
-
-// ── the survivor fold closes at the edit (the record card's seat plan, U2, R7 and KTD2) ─────────
-// An opened fold closes when the household's next edit starts a new figure, in that edit's own render: never seconds
-// later when the figure lands (it would collapse 125 to 132 px above "Save changes" under the reader's pointer, insight
-// 035) and never re-opened on its own. `ConfidenceStatement.test.tsx` pins the render-phase form per commit (its
-// layout-effect probe); these two real-browser arms carry what the household can see, on the real store and sheets:
-//  - THE RE-CLOSE, live on `?seed=budget`: the fold opened, a budget edit applied through the sheet, and a watch on
-//    every mutation of `main.result` (a COPY of `armRefiguringWatch`, e2e/reviewSurface.ts, with the fold's `open`
-//    added; the shared watch stays as the Caddie walk uses it) must read the fold closed at its first reading with the
-//    flag up, and never open after it. The flag is waited for as a presence (insight 070), then the settled page.
-//    Planted faults (b9-5, U2): a close that waits for the figure to land (C3's rejected design) reds it, the fold
-//    read open with the flag up for ~150 ms; a close made in a useEffect cannot, because React 19.2 lands it in the
-//    same flush as the edit's commit, before any observer or paint, so no frame shows it (the unit probe reds it).
-//  - THE HELD WINDOW, on `?preview=refiguring&seed=budget` (every run after the first final held, so the window
-//    stands still): a fold opened INSIDE the window is opened for the incoming figure, so it stays open across the
-//    window's re-renders, and a second panel edit (a new draft; neither the shown key nor the flag moves) closes it
-//    with the window still held. The re-key when a held figure lands is a jsdom scenario: no held figure ever lands.
-
-/** One reading of the fold watch: the re-figuring watch's three facts plus the fold's `open` (`null` while no fold). */
-type FoldWatchReading = RefiguringReading & { readonly fold: boolean | null }
-
-/** `armRefiguringWatch`'s copy with the survivor fold's `open` in what it watches (above). Armed on a settled page. */
-async function armFoldWatch(page: Page): Promise<void> {
-  await expect(page.locator(SETTLED_RESULT), 'an earlier edit’s run never settled').toBeAttached({ timeout: FINAL_TIER_MS })
-  await page.evaluate(() => {
-    const w = window as unknown as { __foldWatch?: FoldWatchReading[]; __foldWatchObserver?: MutationObserver }
-    w.__foldWatchObserver?.disconnect()
-    const t0 = performance.now()
-    const log: FoldWatchReading[] = []
-    w.__foldWatch = log
-    const read = (): void => {
-      const m = document.querySelector('main.result')
-      const h = document.querySelector('main.result h2')
-      const f = document.querySelector<HTMLDetailsElement>('details.survivor-fold')
-      const next: FoldWatchReading = {
-        t: Math.round(performance.now() - t0),
-        refiguring: m === null ? null : m.hasAttribute('data-answer-refiguring'),
-        tier: m === null ? null : m.getAttribute('data-answer-tier'),
-        verdict: h === null ? '' : `${h.textContent ?? ''} | ${h.nextElementSibling?.textContent ?? ''}`,
-        fold: f === null ? null : f.open,
-      }
-      const last = log[log.length - 1]
-      if (
-        last === undefined ||
-        last.refiguring !== next.refiguring ||
-        last.tier !== next.tier ||
-        last.verdict !== next.verdict ||
-        last.fold !== next.fold
-      ) {
-        log.push(next)
-      }
-    }
-    read()
-    if (log[0]!.verdict === '') throw new Error('the fold watch found no verdict heading on the Result')
-    const observer = new MutationObserver(read)
-    w.__foldWatchObserver = observer
-    observer.observe(document.body, {
-      subtree: true,
-      childList: true,
-      characterData: true,
-      attributes: true,
-      attributeFilter: ['data-answer-refiguring', 'data-answer-tier', 'open'],
-    })
-  })
-}
-
-async function foldWatchLog(page: Page): Promise<readonly FoldWatchReading[]> {
-  return page.evaluate(() => (window as unknown as { __foldWatch?: FoldWatchReading[] }).__foldWatch ?? [])
-}
-
-test.describe(`the survivor fold closes at the edit (?seed=budget, ${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('opened, then a budget edit applied through the sheet: the fold reads closed at the first reading with the flag up, and never open after it', async ({ page }) => {
-    await gotoSeedFinal(page, 'budget')
-    await assertResolvedSpine(page)
-    const fold = page.locator('details.survivor-fold')
-    await expect(fold, '`budget` folds its survivor card (the floor relief holds the inline slot)').toHaveCount(1)
-    await page.locator('.survivor-fold__summary').click()
-    await expect(fold).toHaveAttribute('open', '')
-    await armFoldWatch(page)
-    await page.getByRole('button', { name: copy.budgetEditCta }).click()
-    const dialog = page.getByRole('dialog')
-    await expect(dialog).toBeVisible()
-    const amount = dialog.getByLabel(copy.budgetAmountLabel).first()
-    const now = Number((await amount.inputValue()).replace(/[^0-9]/g, ''))
-    expect(now, 'the budget’s first line carries an amount').toBeGreaterThan(0)
-    // A real engine input: the first line $1,000 a year higher, so the Apply dispatches a run on new inputs.
-    await amount.click()
-    await amount.press('ControlOrMeta+a')
-    await amount.pressSequentially(String(now + 1_000))
-    await amount.press('Tab')
-    await dialog.getByRole('button', { name: copy.budgetApply }).click()
-    await expect(dialog).toBeHidden()
-    await expect
-      .poll(async () => (await foldWatchLog(page)).some((r) => r.refiguring === true), {
-        message: 'the Apply dispatched no run on new inputs (data-answer-refiguring never appeared)',
-        timeout: 30_000,
-      })
-      .toBe(true)
-    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
-    const log = await foldWatchLog(page)
-    const story = log.map((r) => `${r.t}ms ${String(r.refiguring)}/${String(r.tier)} fold=${String(r.fold)}`).join(' · ')
-    console.log(`[fold re-close] ${story}`)
-    expect(log[0]!.refiguring, `the watch was armed on a page already re-figuring: ${story}`).toBe(false)
-    expect(log[0]!.fold, `the fold was not open when the watch was armed: ${story}`).toBe(true)
-    const rose = log.findIndex((r) => r.refiguring === true)
-    expect(rose, `the flag never rose: ${story}`).toBeGreaterThan(0)
-    for (const r of log.slice(0, rose)) {
-      expect(r.fold, `the fold closed before the edit started a new figure (the sheet opening, or its typing): ${story}`).toBe(true)
-    }
-    expect(log[rose]!.fold, `at the first reading with the flag up the fold still read open: the close came after the edit's own render: ${story}`).toBe(false)
-    expect(log.slice(rose).every((r) => r.fold !== true), `the fold was open again after the edit: ${story}`).toBe(true)
-    expect(log.slice(rose).some((r) => r.refiguring === false), `the flag never cleared, so no new figure landed: ${story}`).toBe(true)
-  })
-})
-
-test.describe(`the survivor fold inside the held window (?preview=refiguring&seed=budget, ${REAL.width}×${REAL.height})`, () => {
-  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
-  test('opened inside the window it stays open across re-renders, and a second panel edit closes it with the window still held', async ({ page }) => {
-    await enterHeldWindow(page, REFIG_ROUTES.spine)
-    const fold = page.locator('details.survivor-fold')
-    await expect(fold, '`budget` folds its survivor card').toHaveCount(1)
-    const isOpen = (): Promise<boolean> => fold.evaluate((el) => (el as HTMLDetailsElement).open)
-    expect(await isOpen(), 'the fold starts closed in the window').toBe(false)
-    await page.locator('.survivor-fold__summary').click()
-    await expect(fold).toHaveAttribute('open', '')
-    // Two re-renders inside the window: the panel opened (Result's sheet state, the hero's sheetOpen), then closed.
-    // Had the open been dropped from the state, the element and the state would disagree, invisibly until the next
-    // edit's close, which would then never reach the element: the second edit below is that check.
-    const door = page.locator('[data-door="assumptions"]')
-    const dialog = page.getByRole('dialog')
-    const closeDialog = async (): Promise<void> => {
-      await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
-      await expect(dialog).toBeHidden()
-    }
-    await door.click()
-    await expect(dialog).toBeVisible()
-    expect(await isOpen(), 'the panel opening inside the window closed the fold').toBe(true)
-    await closeDialog()
-    expect(await isOpen(), 'the panel closing inside the window closed the fold').toBe(true)
-    await expectStillHeld(page)
-    // The second edit: a new draft while the first edit's run is still held.
-    await door.click()
-    await expect(dialog).toBeVisible()
-    const field = dialog.getByLabel(copy.assumptionSurvivorRatioLabel)
-    const share = (await field.inputValue()).replace(/[^0-9]/g, '')
-    await field.fill(share === '70' ? '65' : '70')
-    await field.press('Tab')
-    expect(await isOpen(), 'the second edit left the fold open').toBe(false)
-    await expectStillHeld(page)
-    await closeDialog()
-    expect(await isOpen(), 'the fold re-opened when the panel closed').toBe(false)
-    await expectStillHeld(page)
-  })
-})
-
-// ── the pay check: its two intake steps, its panel row and its standing line (U8) ───────────────
-//
-// THE INTAKE STEP CONTRACT (defined here, 2026-10-30 — the one-frame law above is a RESULT-frame law,
-// and the intake scrolls by design: a step's help and the money picture run long on a phone). What a
-// scrolling step owes the reader instead:
-//   (a) its question lands in the first frame — the step heading ends above the fold;
-//   (b) nothing inside the flow spills sideways — every rendered box inside `.intake-shell` sits within
-//       the viewport's width, and the document never scrolls sideways;
-//   (c) every figure in the money picture reads WHOLE — no `.wy-row__value` clipped by its row;
-//   (d) Continue is in the document below the content, never overlapped by it.
-// The walk is SCOPED to `.intake-shell`: the App's trailing disclaimer sits below the 100svh shell by
-// design, and a `body *` walk would read it as an offender on every intake frame.
-// PHONE runs under the intake precedent's FULL mobile emulation (`e2e/intake-fold.spec.ts`), never the
-// bare-viewport phone the result arms above use: the intake is what a reader types into on a phone.
-
-/** The rendered boxes inside a scope that spill past the viewport's right edge (or its left), the
- *  document's sideways scroll, and how many boxes the walk counted (insight 029: a blank page must
- *  fail the floor, never pass an empty-offender check). */
-async function sidewaysReport(
-  page: Page,
-  scope: string,
-): Promise<{ readonly counted: number; readonly offenders: readonly string[]; readonly docOverflow: number }> {
-  return page.evaluate((sel) => {
-    const vw = document.documentElement.clientWidth
-    const offenders: string[] = []
-    let counted = 0
-    for (const el of Array.from(document.querySelectorAll<HTMLElement>(`${sel} *`))) {
-      if (el.closest('.sr-only') !== null) continue
-      const style = window.getComputedStyle(el)
-      if (style.display === 'none' || style.visibility === 'hidden' || style.position === 'fixed') continue
-      if (el.getClientRects().length === 0) continue
-      const r = el.getBoundingClientRect()
-      if (r.width <= 1 || r.height <= 1) continue
-      counted++
-      if (r.right > vw + 0.5 || r.left < -0.5) {
-        const cls = el.getAttribute('class')
-        offenders.push(`${el.tagName.toLowerCase()}${cls !== null && cls !== '' ? `.${cls.split(/\s+/)[0]}` : ''} [${Math.round(r.left)}, ${Math.round(r.right)}] of ${vw}`)
-      }
-    }
-    const docOverflow = document.documentElement.scrollWidth - document.documentElement.clientWidth
-    return { counted, offenders, docOverflow }
-  }, scope)
-}
-
-/** Every money-picture figure that does not fit its own box (its text clipped or spilling), and how many
- *  figures the walk read — (c)'s own non-vacuity count (insight 029; the whole-file review, H-D10): an
- *  offender list alone is empty when the selector matches NOTHING, so a renamed `.wy-row__value` would
- *  have passed every arm as "every figure whole". */
-async function clippedFigures(
-  page: Page,
-  scope: string,
-): Promise<{ readonly counted: number; readonly offenders: readonly string[] }> {
-  return page.evaluate((sel) => {
-    const offenders: string[] = []
-    const figures = Array.from(document.querySelectorAll<HTMLElement>(`${sel} .wy-row__value`))
-    for (const el of figures) {
-      if (el.scrollWidth > el.clientWidth + 1) offenders.push(`${el.textContent ?? ''} (${el.scrollWidth} > ${el.clientWidth})`)
-      const row = el.closest('.wy-rows')
-      if (row !== null) {
-        const r = el.getBoundingClientRect()
-        const box = row.getBoundingClientRect()
-        if (r.right > box.right + 0.5 || r.left < box.left - 0.5) offenders.push(`${el.textContent ?? ''} outside its group`)
-      }
-    }
-    return { counted: figures.length, offenders }
-  }, scope)
-}
-
-/** The figures a money picture of `date`'s household must show (`?seed=datecoststale` once re-answered,
- *  walk and panel alike; `?seed=datesaved`, walk and panel, whose "All of it" moves no year-0 line — the
- *  credit lands at the year's end, KTD12): year 0's nonzero lines from the U10 hand derivation
- *  (`b9-u10-tools/year0check`, every rate from its primary) — pay $150,000, payroll tax $11,475, the tax on
- *  outside income $17,540, deposits $20,000, W — and the bottom line, which every picture carries
- *  (`WorkingYearLedger.tsx` draws any other line only above $0; no Social Security, no other income, nobody
- *  on Medicare yet). Later years only add to it. Build 2's left-over question below the picture adds none:
- *  its year-0 figure is a sentence (`.left-over__figure`), never a `.wy-row__value`, so its own arms read
- *  it by text. */
-const DATE_PICTURE_FIGURES = 6
-
-/** (a)–(d) on the step the page stands on. `minBoxes` is the arm's own non-vacuity floor; `minFigures`
- *  is (c)'s — the money-picture figures the frame must read before "none clipped" means anything. `0`
- *  only on a frame that carries no picture (the W step; the unknown face), where (c) has nothing to read. */
-async function assertIntakeStepHolds(page: Page, where: string, minBoxes: number, minFigures: number): Promise<void> {
-  await settleLayout(page)
-  const heading = await page.locator('.step-heading').boundingBox()
-  expect(heading, `${where}: the step heading must render`).not.toBeNull()
-  const innerHeight = await page.evaluate(() => window.innerHeight)
-  expect(heading!.y + heading!.height, `${where}: the question is below the first frame`).toBeLessThanOrEqual(innerHeight)
-  const sideways = await sidewaysReport(page, '.intake-shell')
-  expect(sideways.counted, `${where}: the walk counted too few boxes — the step did not render`).toBeGreaterThan(minBoxes)
-  expect(sideways.offenders, `${where}: boxes spill past the viewport's sides`).toEqual([])
-  expect(sideways.docOverflow, `${where}: the document scrolls sideways`).toBeLessThanOrEqual(0)
-  const figures = await clippedFigures(page, '.intake-shell')
-  expect(figures.counted, `${where}: the walk read too few money-picture figures — (c) would pass on nothing`).toBeGreaterThanOrEqual(
-    minFigures,
-  )
-  expect(figures.offenders, `${where}: a money-picture figure is clipped`).toEqual([])
-  const body = await page.locator('.step-body').boundingBox()
-  const nav = await page.locator('.intake-nav').boundingBox()
-  expect(body !== null && nav !== null, `${where}: the step body and its nav must render`).toBe(true)
-  expect(nav!.y, `${where}: Continue overlaps the step's content`).toBeGreaterThanOrEqual(body!.y + body!.height - 0.5)
-}
-
-/** The Result's standing slot, placed (`.fod-note.cs-paycheck-note` — a `<p>`, or W's block `div.note-parts` for a
- *  "saved" answer waiting on W: the pay check's KTD21 line, and build 2's
- *  moved left over in the same slot, keyed by cause — R12): the lead's LAST note and before the graphs in DOM
- *  order (at REAL the graphs sit BESIDE the lead, so "above" is DOM order there); at PHONE above the first
- *  graph in geometry, with the caveat's order and reach; at REAL one visible disclaimer and the doors last.
- *  The caller has pinned the line's count and words; this reads only where it sits. `dated: false` — the no-date
- *  reading draws no band, so at PHONE there is no first graph to sit above (DOM order and the caveat still bind). */
-async function assertStandingLinePlaced(page: Page, line: Locator, phone: boolean, dated = true): Promise<void> {
-  const order = await page.evaluate(() => {
-    const lead = document.querySelector('.fod-reveal .reveal__lead')
-    const notes = lead === null ? [] : Array.from(lead.querySelectorAll(':scope > .fod-note'))
-    const pay = document.querySelector('.cs-paycheck-note')
-    const graphs = document.querySelector('.fod-graphs')
-    return {
-      last: notes.length > 0 && notes[notes.length - 1] === pay,
-      beforeGraphs: pay !== null && graphs !== null && (pay.compareDocumentPosition(graphs) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0,
-    }
-  })
-  expect(order.last, 'the line is the lead’s last note').toBe(true)
-  expect(order.beforeGraphs, 'the line comes before the graphs').toBe(true)
-  if (phone) {
-    // At PHONE `.fod-graphs` is display:contents (no box), so the first graph is the geometry.
-    if (dated) {
-      const lineBox = await line.boundingBox()
-      const band = await page.locator('.fod-band').boundingBox()
-      expect(lineBox !== null && band !== null).toBe(true)
-      expect(lineBox!.y + lineBox!.height, 'the line sits above the first graph').toBeLessThanOrEqual(band!.y + 0.5)
-    }
-    await (dated ? assertOneVisibleDisclaimer(page, 'narrow') : assertOneVisibleDisclaimerNoDate(page))
-    await assertCaveatOrderAndReach(page, DATE_VERDICT, dated ? DOORS_WALK_FLOOR : NO_DATE_DOORS_WALK_FLOOR)
-  } else {
-    await (dated ? assertOneVisibleDisclaimer(page, 'laptop') : assertOneVisibleDisclaimerNoDate(page))
-    const doors = await page.locator('.result-quiet-row').boundingBox()
-    expect(doors, 'the quiet doors render').not.toBeNull()
-    const trailing = await doorsLastWalk(page, 'body')
-    expect(trailing.counted).toBeGreaterThan(dated ? DOORS_WALK_FLOOR : NO_DATE_DOORS_WALK_FLOOR)
-    expect(trailing.maxOtherBottom, `content renders BELOW the quiet doors (${trailing.desc})`).toBeLessThanOrEqual(
-      doors!.y + doors!.height + 0.5,
-    )
-  }
-}
-
-/** Build 2's left-over seat in the open assumptions panel — its own row BELOW the W row (KTD8). */
-const LEFT_OVER_SEAT = '[role="dialog"] [data-assumption-seat="working-year-left-over"]'
-
-/** The seat's face once its replies show (R5, R6): exactly the three replies under the static legend, `checked`
- *  the one reply checked (or none), the year-0 figure line, and the one line below the group — every string the
- *  shipped one, every count exact, so a seat that rendered nothing (or rendered its replies elsewhere) reds.
- *  Then nothing in the seat spills sideways, over a counted floor. The caller has scrolled the seat in. */
-async function assertLeftOverSeatFace(
-  page: Page,
-  where: string,
-  face: { readonly checked: string | null; readonly figure: string; readonly line: string },
-): Promise<void> {
-  const seat = page.locator(LEFT_OVER_SEAT)
-  await expect(seat, `${where}: the left-over seat renders once`).toHaveCount(1)
-  await expect(seat.locator('.ap-row__name')).toHaveText(copy.assumptionWorkingCostLeftOverName)
-  const group = seat.getByRole('group', { name: copy.workingLedgerLeftOverLegend })
-  await expect(group).toHaveCount(1)
-  await expect(group.getByRole('radio'), `${where}: exactly the three replies, in the group`).toHaveCount(3)
-  await expect(seat.getByRole('radio'), `${where}: no reply outside the group`).toHaveCount(3)
-  await expect(seat.getByRole('radio', { checked: true }), `${where}: the checked reply`).toHaveCount(face.checked === null ? 0 : 1)
-  if (face.checked !== null) await expect(group.getByRole('radio', { name: face.checked, exact: true })).toBeChecked()
-  await expect(seat.locator('.left-over__figure'), `${where}: the year-0 figure line`).toHaveText(face.figure)
-  await expect(seat.locator('.left-over__line'), `${where}: the line below the group`).toHaveText(face.line)
-  const sideways = await sidewaysReport(page, LEFT_OVER_SEAT)
-  // The boxes inside the seat's row (the walk reads its descendants): its name, the question's root, the
-  // figure and check lines, the fieldset, its legend and the legend's text, the track, three replies, and the
-  // line below — 12, measured at both sizes (the radios themselves are `.sr-only`, which the walk skips).
-  expect(sideways.counted, `${where}: the walk counted too few boxes — the seat did not render`).toBeGreaterThanOrEqual(12)
-  expect(sideways.offenders, `${where}: the seat spills past the viewport`).toEqual([])
-  expect(sideways.docOverflow, `${where}: the document scrolls sideways`).toBeLessThanOrEqual(0)
-}
-
-const PAY_CHECK_VIEWPORTS = [
-  { name: `${REAL.width}×${REAL.height}`, use: { viewport: REAL, deviceScaleFactor: REAL_DPR } },
-  { name: `phone ${PHONE.width}×${PHONE.height}`, use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true } },
-] as const
-
-for (const vp of PAY_CHECK_VIEWPORTS) {
-  test.describe(`the pay check’s W step and money picture (${vp.name})`, () => {
-    test.use(vp.use)
-
-    test('?seed=datecoststale: the stale face, the blocked Continue, the figure option, then the answered picture', async ({ page }) => {
-      await rewalkSeedTo(page, 'datecoststale', copy.qWorkingCostHeading, { final: true })
-      // The stale face: the calm note before any tap, no answer checked, no alert.
-      await expect(page.getByRole('note')).toContainText(slots.workingCostStaleQuote('84,000', '78,000'))
-      await expect(page.getByRole('alert')).toHaveCount(0)
-      await assertIntakeStepHolds(page, 'W step, stale', 25, 0)
-      // A blocked Continue: the gate's message under the fork, the fork marked invalid.
-      await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
-      await expect(page.getByRole('alert')).toContainText(copy.errWorkingCostUnanswered)
-      await expect(page.locator('fieldset[role="radiogroup"]')).toHaveAttribute('aria-invalid', 'true')
-      await assertIntakeStepHolds(page, 'W step, blocked', 25, 0)
-      // The figure option open: the field and its period control in one slot.
-      await page.getByRole('radio', { name: copy.workingCostDifferent }).evaluate((el) => (el as HTMLInputElement).click())
-      // By role and EXACT name: a bare getByLabel matches by substring, and the fork's legend ("Is that about
-      // what a year costs while you’re working?") contains the field's own label.
-      await expect(page.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })).toBeVisible()
-      await expect(page.getByRole('radio', { name: copy.periodMonth })).toBeChecked()
-      await assertIntakeStepHolds(page, 'W step, figure open', 30, 0)
-      // Re-answer "yes" and walk on to the picture of the answered household.
-      await page.getByRole('radio', { name: copy.workingCostYes }).evaluate((el) => (el as HTMLInputElement).click())
-      await page.evaluate(() => document.querySelector<HTMLButtonElement>('.intake-nav .btn-primary')?.click())
-      await expect(page.locator('.step-heading')).toHaveText(copy.qWorkingLedgerHeading)
-      await expect(page.locator('.wy-row--bottom')).toContainText(copy.workingLedgerLeftOver)
-      await assertIntakeStepHolds(page, 'money picture, datecoststale', 40, DATE_PICTURE_FIGURES)
-      // Build 2's question now renders below this picture (W fresh again, nothing answered), so (d) above is
-      // the walk's real fit read of the UNANSWERED face — counted, or (d) would pass on the picture alone if
-      // the question vanished. Its figure by hand: `date`'s $16,985 with W re-answered at the $78,000 quote,
-      // $6,000 less going out (W comes off the bottom line dollar for dollar; nothing else in year 0 reads
-      // the spending) — $22,985. Nothing checked (R1), and the unanswered line below the group.
-      const question = page.locator('.intake-shell .step-body .left-over')
-      await expect(question, 'the left-over question renders once, inside the step').toHaveCount(1)
-      const replies = question.getByRole('group', { name: copy.workingLedgerLeftOverLegend }).getByRole('radio')
-      await expect(replies, 'exactly the three replies, in the group').toHaveCount(3)
-      await expect(question.getByRole('radio', { checked: true }), 'an unanswered question checks no reply').toHaveCount(0)
-      await expect(question.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigure('22,985'))
-      await expect(question.locator('.left-over__line')).toHaveText(slots.workingLedgerLeftOverAbsentLine('22,985'))
-    })
-
-    test('?seed=datesaved: the left-over question below the whole picture — three replies, "All of it" checked at its figure', async ({ page }) => {
-      await rewalkSeedTo(page, 'datesaved', copy.qWorkingLedgerHeading, { final: true })
-      await expect(page.locator('.wy-row--bottom')).toContainText(copy.workingLedgerLeftOver)
-      // (a)–(d) with the question in the step: its replies and lines are inside `.step-body`, so (d) reads
-      // Continue below the question, never only below the picture.
-      await assertIntakeStepHolds(page, 'money picture, datesaved', 50, DATE_PICTURE_FIGURES)
-      // THE NON-VACUITY COUNT (U9: "the fit arms count the three radios and the figure line, so an empty pass
-      // reds"), scoped to the question's own root, never the page: a page-wide count would pass on replies
-      // rendered anywhere, and a vanished question would leave (a)–(d) green on the picture alone.
-      const question = page.locator('.intake-shell .step-body .left-over')
-      await expect(question, 'the left-over question renders once, inside the step').toHaveCount(1)
-      const group = question.getByRole('group', { name: copy.workingLedgerLeftOverLegend })
-      await expect(group).toHaveCount(1)
-      // Three in the question's own group, and no other reply anywhere in its root.
-      await expect(group.getByRole('radio'), 'exactly the three replies, in the group').toHaveCount(3)
-      await expect(question.getByRole('radio'), 'no reply outside the group').toHaveCount(3)
-      await expect(question.getByRole('radio', { checked: true }), 'exactly one reply checked').toHaveCount(1)
-      await expect(group.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })).toBeChecked()
-      // The figure line, and the saved line below the group, in `date`'s hand-derived $16,985 (the unlock
-      // block's derivation above): the stored answer and the live figure agree, so the plain "saved" line.
-      await expect(question.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigure('16,985'))
-      await expect(question.locator('.left-over__line')).toHaveText(slots.workingLedgerLeftOverSavedLine('16,985'))
-      // Below the WHOLE picture (KTD8: never inside it), in geometry as well as DOM order.
-      const placed = await page.evaluate(() => {
-        const ledger = document.querySelector('.intake-shell .wy-ledger')
-        const q = document.querySelector('.intake-shell .left-over')
-        if (ledger === null || q === null) return null
-        return {
-          outside: !ledger.contains(q),
-          ledgerBottom: ledger.getBoundingClientRect().bottom,
-          questionTop: q.getBoundingClientRect().top,
-        }
-      })
-      expect(placed, 'the picture and the question both render').not.toBeNull()
-      expect(placed!.outside, 'the question is never inside the picture').toBe(true)
-      expect(placed!.questionTop, 'the question starts below the whole picture').toBeGreaterThanOrEqual(placed!.ledgerBottom - 0.5)
-    })
-
-    test('?seed=dateshort: the picture at its fullest — held-back Social Security, Medicare from savings, every later year short', async ({ page }) => {
-      await rewalkSeedTo(page, 'dateshort', copy.qWorkingLedgerHeading, { final: true })
-      await expect(page.locator('.wy-row--bottom')).toContainText(copy.workingLedgerShort)
-      // The held-back words are the shipped slot's, never re-typed (the header's catalog law; the whole-file
-      // review, H-D11). $2,760 is U10's hand derivation (`b9-u10-tools/year0check`, typed from the primary):
-      // Alex's $30,000 of pay less the 2026 lower exempt amount (`earningsTestExemptAmounts`), $1 held back
-      // for every $2 above it. Year 0 is not her full-retirement-age year, so the plain sentence, never the
-      // "at most" one.
-      await expect(page.locator('.wy-ledger')).toContainText(slots.workingLedgerSsHeldBack('2,760'))
-      await expect(page.getByRole('heading', { level: 3, name: copy.workingLedgerAlsoFromSavings })).toBeVisible()
-      await expect(page.getByRole('heading', { level: 3, name: copy.workingLedgerLaterHeading })).toBeVisible()
-      await expect(page.locator('[role="alert"], .wy-ledger [aria-live]')).toHaveCount(0)
-      // (c)'s floor, by hand from the same derivation: pay $30,000 and Social Security $27,960 coming in;
-      // payroll tax $2,295, deposits $3,000 and W going out (its tax on outside income is $0, so no line);
-      // the bottom line; and at least one line under each of the two headings just seen (a group draws its
-      // heading only over a line) — 8.
-      await assertIntakeStepHolds(page, 'money picture, dateshort', 60, 8)
-    })
-
-    test('?seed=datesolo: the refusal witness walks every step, and its picture step reads one calm line', async ({ page }) => {
-      await rewalkSeedTo(page, 'datesolo', copy.qWorkingLedgerHeading)
-      // Nothing the household can enter draws a picture (no "yet"), and the step points at the answer
-      // strip, which names the blocker ONCE on the screen (rulings 36; b9-3's C13 dropped the "yet").
-      const face = page.locator('.wy-ledger--unknown')
-      await expect(face).toContainText(copy.workingLedgerUnknownLeadFinal)
-      await expect(face).not.toContainText(copy.workingLedgerUnknownLead)
-      await expect(face).toContainText(copy.workingLedgerUnknownSeeStrip)
-      await expect(page.locator('.answer-strip')).toContainText(copy.employerCoverageUnpriced)
-      expect(
-        await page.evaluate((needle) => document.body.innerText.split(needle).length - 1, copy.employerCoverageUnpriced),
-        'the blocker is named once on the screen, in the strip',
-      ).toBe(1)
-      await expect(page.locator('.intake-shell dl')).toHaveCount(0)
-      await assertIntakeStepHolds(page, 'money picture, unknown', 10, 0)
-    })
-  })
-
-  test.describe(`the pay check’s standing line and panel row on ?seed=datecoststale (${vp.name})`, () => {
-    test.use(vp.use)
-
-    test('the line sits in the lead after the other notes, above the graphs, doors last; its door opens the panel at the W row', async ({ page }) => {
-      await gotoSeedFinal(page, 'datecoststale')
-      await assertResolvedDate(page)
-      const line = page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')
-      await expect(line, 'the standing line renders in the lead').toHaveCount(1)
-      await expect(line).toContainText(copy.stalenessPayCheckNote)
-      await assertStandingLinePlaced(page, line, vp.use.viewport.width === PHONE.width)
-      // The door: the panel opens AT the W row — its name focused, the row inside the dialog, nothing
-      // spilling sideways — and a "yes" there draws the picture under h4 legends, every figure whole.
-      await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
-      const dialog = page.getByRole('dialog')
-      await expect(dialog).toBeVisible()
-      await page.waitForTimeout(400)
-      const focusedName = await page.evaluate(() => document.activeElement?.textContent ?? '')
-      expect(focusedName).toBe(copy.assumptionWorkingCostName)
-      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-      const dialogBox = await dialog.boundingBox()
-      const nameBox = await row.locator('.ap-row__name').boundingBox()
-      expect(dialogBox !== null && nameBox !== null).toBe(true)
-      expect(nameBox!.y, 'the W row’s name is scrolled into the dialog').toBeGreaterThanOrEqual(dialogBox!.y - 0.5)
-      expect(nameBox!.y + nameBox!.height).toBeLessThanOrEqual(dialogBox!.y + dialogBox!.height + 0.5)
-      await expect(row.getByRole('note')).toContainText(slots.workingCostStaleQuote('84,000', '78,000'))
-      await row.getByRole('radio', { name: copy.workingCostYes }).evaluate((el) => (el as HTMLInputElement).click())
-      await expect(row.getByRole('heading', { level: 4, name: copy.workingLedgerComingIn })).toBeVisible({ timeout: 30_000 })
-      await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
-      await settleLayout(page)
-      const sideways = await sidewaysReport(page, '[role="dialog"] [data-assumption-seat="working-year-cost"]')
-      expect(sideways.counted).toBeGreaterThan(30)
-      expect(sideways.offenders, 'the W row spills past the viewport').toEqual([])
-      const panelFigures = await clippedFigures(page, '[role="dialog"]')
-      expect(panelFigures.counted, 'the panel picture read too few figures — "none clipped" would pass on nothing').toBeGreaterThanOrEqual(
-        DATE_PICTURE_FIGURES,
-      )
-      expect(panelFigures.offenders, 'a panel money-picture figure is clipped').toEqual([])
-    })
-  })
-
-  // ── the U11 walk's (ae): the risen family's longest words on the W surfaces and the Result. The W step's note and
-  //    the panel's W row carry the year-level lean and never a figure at the quote (the fork's description: the
-  //    red team's attack 4); the standing line carries the five-sentence later-short line. Fix the layout, never
-  //    cut the content. ──
-  test.describe(`the risen family’s stale words on ?seed=datesavedrisenlater (${vp.name})`, () => {
-    test.use(vp.use)
-
-    test('the W step’s stale face holds with the year-level lean, and no figure at the quote', async ({ page }) => {
-      await rewalkSeedTo(page, 'datesavedrisenlater', copy.qWorkingCostHeading, { final: true })
-      const note = page.getByRole('note')
-      await expect(note).toContainText(
-        `${slots.workingCostStaleQuote('84,000', '105,000')} ${slots.workingCostStaleLeftOverYearsCheaper('84,000')}`,
-      )
-      await expect(note, 'no whole-answer lean on a "saved" note').not.toContainText(slots.workingCostStaleLeansBetter('84,000'))
-      await expect(note, 'no figure at the quote in the fork’s description').not.toContainText('5,985')
-      await assertIntakeStepHolds(page, 'W step, stale, saved', 25, 0)
-    })
-
-    test('the standing line carries the whole later-short line in place; its door opens a W row whose note holds the lean, nothing sideways', async ({ page }) => {
-      await gotoSeedFinal(page, 'datesavedrisenlater')
-      await assertNoDateReading(page)
-      // A "saved" answer waiting on W: the slot is W's block (`div.note-parts`, council `wf_22858e04-f7a`), still the
-      // lead's direct child in the same `.fod-note` register; its words read across the dt/dd as `innerText`.
-      const line = page.locator('.fod-reveal .reveal__lead > div.note-parts.fod-note.cs-paycheck-note')
-      await expect(line, 'the standing line renders in the lead').toHaveCount(1)
-      await assertStandingBlock(line, 'datesavedrisenlater', `${copy.stalenessPayCheckNote} ${RISEN_LATER_LINE}`, risenResultDoor('105,000'))
-      await assertStandingLinePlaced(page, line, vp.use.viewport.width === PHONE.width, false)
-      // Below the quote the door says "update" (council `wf_7fa86902-35c`): the W row offers no Keep door there.
-      await page.getByRole('button', { name: copy.stalenessPayCheckCtaUpdate }).click()
-      const dialog = page.getByRole('dialog')
-      await expect(dialog).toBeVisible()
-      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-      await expect(row.getByRole('note')).toContainText(slots.workingCostStaleLeftOverYearsCheaper('84,000'))
-      await row.evaluate((el) => el.scrollIntoView({ block: 'start' }))
-      await settleLayout(page)
-      const sideways = await sidewaysReport(page, '[role="dialog"] [data-assumption-seat="working-year-cost"]')
-      expect(sideways.counted, 'the W row rendered').toBeGreaterThan(10)
-      expect(sideways.offenders, 'the W row spills past the viewport').toEqual([])
-    })
-  })
-
-  // ── the whole-window rebuild's five-span line in the Result's standing slot (walk 8's first added target;
-  //    `datesavedtypedpension`): no typed-below seed had a placement arm. An ordered list of five labelled runs under the
-  //    cap sentence and the scoped lead, then the survivor part's paragraph (the walk-8 form council's KD7 and KD8), with
-  //    no door of its own, its button its last child; the lead's last note and before the graphs (the no-date reading
-  //    draws no band, so at PHONE no first graph to sit above), doors last. The date route scrolls, so no one-frame
-  //    claim: whether five runs read as a wall is walk 9's read. ──
-  test.describe(`the typed-below line’s five spans on ?seed=datesavedtypedpension (${vp.name})`, () => {
-    test.use(vp.use)
-
-    test('the block sits in the lead after the other notes, above the graphs, doors last; five labelled spans, its button last', async ({ page }) => {
-      await gotoSeedFinal(page, 'datesavedtypedpension')
-      await assertNoDateReading(page)
-      const line = page.locator('.fod-reveal .reveal__lead > div.note-parts.fod-note.cs-paycheck-note')
-      await expect(line, 'the typed-below block renders in the lead').toHaveCount(1)
-      await assertDoorlessStandingBlock(
-        line,
-        'datesavedtypedpension',
-        typedPensionLine('This', TYPED_MOVED_CLAUSE),
-        TYPED_PENSION_RUNS,
-        copy.stalenessPayCheckCtaUpdate,
-      )
-      // ONE CAUSE, ONE LINE: the moved line's own lead never shares the slot this line holds.
-      await expect(line).not.toContainText(copy.stalenessLeftOverNote)
-      await assertStandingLinePlaced(page, line, vp.use.viewport.width === PHONE.width, false)
-    })
-  })
-
-  // ── build 2's left-over question in the panel and on the Result (U7, U14, U9) ───────────────────
-  // The seat is its own row below the W row (KTD8), drawn with the W row from ONE gesture hold
-  // (`WorkingYearRows`, `gestureHold.ts`'s two-element arm). The figures are hand-derived in the unlock block
-  // above: `date`'s $16,985; `datesavedmoved`'s $27,537 after its raise.
-  test.describe(`build 2’s left-over seat and its moved line (${vp.name})`, () => {
-    test.use(vp.use)
-
-    test('?seed=datesaved: the panel seat below the W row — three replies, "All of it" checked at its figure, nothing sideways', async ({ page }) => {
-      await gotoSeedFinal(page, 'datesaved')
-      await assertResolvedDate(page)
-      await page.locator('[data-door="assumptions"]').click()
-      const dialog = page.getByRole('dialog')
-      await expect(dialog).toBeVisible()
-      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-      const seat = page.locator(LEFT_OVER_SEAT)
-      await expect(seat).toHaveCount(1)
-      // Its OWN row, after the W row's, never a control inside it (KTD8) — and the W row holds no reply.
-      const order = await page.evaluate((sel) => {
-        const w = document.querySelector('[role="dialog"] [data-assumption-seat="working-year-cost"]')
-        const s = document.querySelector(sel)
-        return w !== null && s !== null && !w.contains(s) && (w.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
-      }, LEFT_OVER_SEAT)
-      expect(order, 'the seat is its own row after the W row').toBe(true)
-      await expect(row.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })).toHaveCount(0)
-      await seat.evaluate((el) => el.scrollIntoView({ block: 'start' }))
-      await settleLayout(page)
-      await assertLeftOverSeatFace(page, 'datesaved’s seat', {
-        checked: copy.workingLedgerLeftOverSaved,
-        figure: slots.workingLedgerLeftOverFigure('16,985'),
-        line: slots.workingLedgerLeftOverSavedLine('16,985'),
-      })
-      // The W row above draws the same household's picture, every figure whole (the shared memo's draft).
-      const panelFigures = await clippedFigures(page, '[role="dialog"]')
-      expect(panelFigures.counted, 'the panel picture read too few figures — "none clipped" would pass on nothing').toBeGreaterThanOrEqual(
-        DATE_PICTURE_FIGURES,
-      )
-      expect(panelFigures.offenders, 'a panel money-picture figure is clipped').toEqual([])
-    })
-
-    test('?seed=datesavedmoved: the moved line takes the standing slot, W’s line absent; its door lands on the seat’s name', async ({ page }) => {
-      await gotoSeedFinal(page, 'datesavedmoved')
-      await assertResolvedDate(page)
-      const line = page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')
-      await expect(line, 'the moved line renders in the lead').toHaveCount(1)
-      await expect(line).toContainText(`${copy.stalenessLeftOverNote} ${LEFT_OVER_MOVED_SENTENCE}`)
-      // ONE CAUSE, ONE LINE (U14): W is fresh here, so W's lead is nowhere on the page — a negative aimed at
-      // the slot's other live cause (insight 086).
-      await expect(line).not.toContainText(copy.stalenessPayCheckNote)
-      await expect(page.getByText(copy.stalenessPayCheckNote)).toHaveCount(0)
-      await assertStandingLinePlaced(page, line, vp.use.viewport.width === PHONE.width)
-      // The door: the panel opens AT the left-over seat — its name focused and inside the dialog — showing the
-      // moved line below the group, "All of it" still checked.
-      await line.getByRole('button', { name: copy.stalenessLeftOverCta }).click()
-      const dialog = page.getByRole('dialog')
-      await expect(dialog).toBeVisible()
-      // A condition wait, never a fixed sleep: focus lands (the sheet's h2 first, then the seat's name, in one
-      // commit's effects), the sheet's entrance finishes (the box reads below are of the settled sheet), and
-      // focus is STILL on the name once it has — a later steal would red here.
-      const focusedText = () => page.evaluate(() => document.activeElement?.textContent ?? '')
-      await expect.poll(focusedText, { message: 'the door lands on the seat’s name' }).toBe(copy.assumptionWorkingCostLeftOverName)
-      await page.waitForFunction(() =>
-        document.getAnimations().every((a) => a.effect?.getTiming().iterations === Infinity || a.playState !== 'running'),
-      )
-      expect(await focusedText(), 'focus stays on the seat’s name once the sheet settles').toBe(copy.assumptionWorkingCostLeftOverName)
-      const seat = page.locator(LEFT_OVER_SEAT)
-      const dialogBox = await dialog.boundingBox()
-      const nameBox = await seat.locator('.ap-row__name').boundingBox()
-      expect(dialogBox !== null && nameBox !== null).toBe(true)
-      expect(nameBox!.y, 'the seat’s name is scrolled into the dialog').toBeGreaterThanOrEqual(dialogBox!.y - 0.5)
-      expect(nameBox!.y + nameBox!.height).toBeLessThanOrEqual(dialogBox!.y + dialogBox!.height + 0.5)
-      await seat.evaluate((el) => el.scrollIntoView({ block: 'start' }))
-      await settleLayout(page)
-      await assertLeftOverSeatFace(page, 'datesavedmoved’s seat', {
-        checked: copy.workingLedgerLeftOverSaved,
-        figure: slots.workingLedgerLeftOverFigure('27,537'),
-        line: slots.workingLedgerLeftOverRoseLine('16,985', '27,537'),
-      })
-    })
-
-    // THE COORDINATE TAP — the only real-browser gate for the label-forwarded click (insight 149;
-    // `gestureHold.ts`'s header). The press on "All of it" blurs a typed W figure, and that commit changes the
-    // live year-0 Left over while the held seat still shows the old one. A label's own click reaches the
-    // window's bubble listener before the label forwards a second click to its radio, so a release in that
-    // listener would re-render first and the forwarded click would act from the LIVE render — store a figure
-    // the household never saw. jsdom cannot show it (its synchronous dispatch runs the forwarded click inside
-    // the same act). So: `date` unanswered, W confirmed at $84,000 (the seat shows $16,985); "a different
-    // figure", then 6,000 a month typed (under the period rule's 8,000 floor, so no unit prompt), which is
-    // $72,000 a year and a live Left over of $28,985 (W comes off the bottom line dollar for dollar, and
-    // nothing else in year 0 reads W: $16,985 + $12,000); then, focus still in the figure, a REAL tap on "All
-    // of it" at its centre (a press, 80 ms, the release — or a touch tap), never `.click()` / `check()`. The
-    // stored figure must be the one on screen at the press, $16,985: the seat then reads "moved" from $16,985
-    // to $28,985. Stored from the live render, it would read the plain saved line at $28,985; a lost tap
-    // leaves nothing checked and the absent line.
-    test('?seed=date: "All of it" tapped by coordinate right after typing W stores the figure on screen at the press', async ({ page }) => {
-      await gotoSeedFinal(page, 'date')
-      await page.locator('[data-door="assumptions"]').click()
-      const dialog = page.getByRole('dialog')
-      await expect(dialog).toBeVisible()
-      const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-      const seat = page.locator(LEFT_OVER_SEAT)
-      const saved = seat.getByRole('radio', { name: copy.workingLedgerLeftOverSaved, exact: true })
-      await expect(seat.getByRole('radio')).toHaveCount(3)
-      await expect(saved, '`date` is unanswered').not.toBeChecked()
-      await expect(seat.locator('.left-over__line')).toHaveText(slots.workingLedgerLeftOverAbsentLine('16,985'))
-      // "A different figure": the panel never clears a confirmed W (KTD4), so nothing moves yet.
-      await row.getByRole('radio', { name: copy.workingCostDifferent }).evaluate((el) => (el as HTMLInputElement).click())
-      const input = row.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
-      await expect(input).toBeVisible()
-      await expect(row.getByRole('radio', { name: copy.periodMonth }), 'the untapped unit is a month (KTD17)').toBeChecked()
-      await input.scrollIntoViewIfNeeded()
-      await input.click()
-      await page.keyboard.press('Control+A')
-      await page.keyboard.type('6000')
-      const label = seat.locator('label.segment').filter({ hasText: copy.workingLedgerLeftOverSaved })
-      await expect(label).toHaveCount(1)
-      await label.scrollIntoViewIfNeeded()
-      await page.waitForTimeout(300)
-      await expect(input, 'the figure still has focus — the press is what blurs it').toBeFocused()
-      // What the seat SHOWS at the press, read off the screen — and it is `date`'s own $16,985 (the typed
-      // digits have not committed: the figure commits on blur).
-      const shownAtPress = await seat.locator('.left-over__figure').textContent()
-      expect(shownAtPress, 'the seat shows the old figure until the press').toBe(slots.workingLedgerLeftOverFigure('16,985'))
-      const box = await label.boundingBox()
-      expect(box).not.toBeNull()
-      const x = box!.x + box!.width / 2
-      const y = box!.y + box!.height / 2
-      // The hit-test at the point the tap will use (insight 119: what the input path hits).
-      const onLabel = await label.evaluate((el, [px, py]) => {
-        const hit = document.elementFromPoint(px, py)
-        return hit !== null && el.contains(hit)
-      }, [x, y] as const)
-      expect(onLabel, `the tap point is not on "${copy.workingLedgerLeftOverSaved}"`).toBe(true)
-      if (vp.use.viewport.width === PHONE.width) {
-        await page.touchscreen.tap(x, y)
-      } else {
-        await page.mouse.move(x, y)
-        await page.mouse.down()
-        await page.waitForTimeout(80) // a human press lasts tens of milliseconds
-        await page.mouse.up()
-      }
-      await expect(saved, 'the tap on "All of it" was lost').toBeChecked()
-      // The press's blur committed the typed figure, and the hold let go: the W row and the seat's figure now
-      // draw the live draft. The typed $72,000 sits below `date`'s $84,000 of spending, so the figure names it
-      // (U11 walk 7's R2).
-      await expect(row.locator('.ap-row__value')).toHaveText(slots.assumptionWorkingCostEntered('72,000'))
-      await expect(seat.locator('.left-over__figure')).toHaveText(slots.workingLedgerLeftOverFigureAt('72,000', '28,985'))
-      // THE GATE: what was STORED is the figure on screen at the press. The moved line names the stored figure
-      // as the one chosen against — never the plain saved line at the live figure — and the typed figure the live one
-      // rests on (R2).
-      await expect(seat.locator('.left-over__line'), 'the stored figure is not the one on screen at the press').toHaveText(
-        slots.workingLedgerLeftOverRoseLineAt('72,000', '16,985', '28,985'),
-      )
-      // …and below it, the typed-below line's runs (the whole-window rebuild, KTD6 host 3): ONE `same` run, a plain
-      // paragraph in the sheet. The sheet has no counts sentence (the W row above carries its "can look better" half), so
-      // its paragraph opens on the bare lean naming the quote's dollars (the walk-9 form council's call (2): "A working
-      // year almost always costs at least your spending of $84,000 a year."). The stored $16,985 caps both this answer and
-      // the answer at the $84,000 spending in every working year, so they add the same (KTD3), the figure stated (W8-R5
-      // (a)). Year 0 at the spending leaves the stored $16,985 itself, so no cap sentence is drawn, and the run's first
-      // sentence says "the answer at your spending" with no dollars and no floor aside (the lean said both). The only
-      // real-browser witness of the seat's line. `date`'s couple opens the survivor gate (the runs' docblock), so the one
-      // run opens "Each working year you’re both alive," and the survivor part's two sentences close the same paragraph:
-      // by hand, the default 0.75 survivor ratio of each W, $72,000 × 0.75 = $54,000 at the typed figure and $84,000 × 0.75
-      // = $63,000 at the spending, so at most $9,000 a year less. Typed by hand from the probe (`date6000Month`; the sheet
-      // names "this answer": the walk-8 form council's KD9).
-      const sameRun = (noun: TypedBelowNoun): string =>
-        [
-          'Each working year you’re both alive, the answer at your spending would add at most $16,985 a year.',
-          `${noun} answer adds at most $16,985 a year to your savings.`,
-          `At your spending, that’s the same in your savings${TB_RIDER}${TB_GLOSS}.`,
-          'In a working year with only one of you alive, that year’s costs count as $54,000 at your figure of $72,000 a year and $63,000 at your spending of $84,000 a year.',
-          `At your spending, that’s at most $9,000 a year less in your savings${TB_RIDER}.`,
-        ].join(' ')
-      await expect(seat.locator('p.left-over__at-quote')).toHaveText(
-        `A working year almost always costs at least your spending of $84,000 a year. ${sameRun('This')}`,
-      )
-      // A second reader of the stored answer, off the panel: the Result's standing slot names the same two. The typed
-      // $72,000 sits below `date`'s $84,000 of spending, so R1's typed-below line holds the slot (U11 walk 6,
-      // `3000a04c`) and carries the moved figures as its clause right after its counts sentence (`TypedBelowHost`: no
-      // rules line hosts the clause here), naming the typed $72,000 its $28,985 rests on (the walk-6 round review's pair),
-      // then the lean in its own sentence naming the $84,000 (the walk-9 form council's call (2)), then the one `same` run
-      // and the survivor part. Stored from the live render, the clause would be absent and the run would read $28,985
-      // against the quote answer's $16,985; a lost tap would leave the counts sentence alone.
-      await page.keyboard.press('Escape')
-      await expect(dialog).toHaveCount(0)
-      const standing = page.locator('.fod-reveal .reveal__lead > p.fod-note.cs-paycheck-note')
-      await expect(standing).toContainText(
-        [
-          'This answer counts a working year at your own figure of $72,000 a year, below your spending of $84,000 a year.',
-          'You said all the money left over in a working year goes into your savings, when your first working year had $16,985 left over.',
-          'At your figure of $72,000 a year, it has $28,985 left over now.',
-          'So each working year adds at most $16,985 of its left over to your savings, the smaller of the two.',
-          'A working year almost always costs at least your spending of $84,000 a year, so this answer can look better than it really is.',
-          sameRun('This'),
-        ].join(' '),
-        { timeout: FINAL_TIER_MS },
-      )
-      // ONE CAUSE, ONE LINE: the moved line's own lead never shares the slot this line holds.
-      await expect(standing).not.toContainText(copy.stalenessLeftOverNote)
-    })
-  })
-}
-
-// ── the W period tap under its own blur-commit, on a screen taller than his (the h2 cure) ────────
-// The register's Tier 0 "On a screen taller than his laptop's, a tap on "Each month" right after typing
-// the working-year figure can miss…", cured by `src/intake/gestureHold.ts`. The figure commits on blur,
-// and the press on "Each month" is what blurs it; the commit un-stales W, so the content above the
-// control changes between the press and the release (the walk's stale note unmounts; the panel's money
-// picture mounts above the question). Chromium's scroll anchoring moved the scroller back on every
-// screen of his then (the Dell's 1536×791 and 1536×960 full screen, a 448×891 phone: 19 of 19 coordinate
-// taps landed, b9-10's `tapProbe2.mts`; his Lenovo's 1440×731 window and 1440×900 screen, 2026-11-19, are
-// shorter than both miss geometries and were not re-probed), so these arms run where it cannot: a 1536×1300 window (mouse) and a 1024×1366 touch
-// screen, which missed 4 of 4 before the hold — a monthly 7,000 left as $7,000 a YEAR, unasked.
-// A REAL coordinate tap (a press, 80 ms, the release — or a touch tap), never `.click()` / `check()`: those
-// re-resolve the target between the halves, which is the race itself. Each arm's non-vacuity floor is the
-// geometry the hold must survive, read before the tap — content ABOVE the change on screen, so the node
-// scroll anchoring picks sits above it and the control below it moves: the walk's whole stale note on
-// screen with the page above it; the panel's row value line (the picture mounts right under it) on
-// screen. The panel arms run 100 px taller than the probe's screens: there the question's whole face
-// sits between the value line and the control, and at 1300 / 1366 px the probe had 28 px of slack —
-// one more wrapped help line on another rasterizer (insight 118) would leave no reachable geometry.
-const TALL_MOUSE = { deviceScaleFactor: 1.5 } as const
-const TALL_TOUCH = { deviceScaleFactor: 2, isMobile: true, hasTouch: true } as const
-const TALL_TAP_ARMS = [
-  { host: 'walk', name: '1536×1300 window, mouse', touch: false, use: { viewport: { width: 1536, height: 1300 }, ...TALL_MOUSE } },
-  { host: 'walk', name: '1024×1366 touch screen', touch: true, use: { viewport: { width: 1024, height: 1366 }, ...TALL_TOUCH } },
-  { host: 'panel', name: '1536×1400 window, mouse', touch: false, use: { viewport: { width: 1536, height: 1400 }, ...TALL_MOUSE } },
-  { host: 'panel', name: '1024×1466 touch screen', touch: true, use: { viewport: { width: 1024, height: 1466 }, ...TALL_TOUCH } },
-] as const
-
-/** `datecoststale` with its W kept through the Keep door as an entered $84,000 a year in the panel, then
- *  staled on the reading by a move to PA — the probe's set-up, through the panel the result's standing
- *  line opens. Since build 2's U5 (`d4227774`) the Keep stamps the figure with the quote its note showed
- *  ($78,000), so the note reads "You kept", never "You entered" (KTD10), and a kept figure above today's
- *  quote stales on the state alone, exactly as the typed figure this set-up first held. */
-async function staleEnteredWInPanel(page: Page) {
-  await gotoSeedFinal(page, 'datecoststale')
-  await page.getByRole('button', { name: copy.stalenessPayCheckCta }).click()
-  const dialog = page.getByRole('dialog')
-  await expect(dialog).toBeVisible()
-  const row = dialog.locator('[data-assumption-seat="working-year-cost"]')
-  await row.getByRole('button', { name: slots.workingCostKeepYearly('84,000') }).click()
-  await expect(row.getByRole('note'), 'the kept figure is fresh').toHaveCount(0)
-  await dialog
-    .locator('[data-assumption-seat="retirement-state"]')
-    .getByRole('radio', { name: /Pennsylvania/ })
-    .first()
-    .evaluate((el) => (el as HTMLInputElement).click())
-  await expect(row.getByRole('note'), 'the move to PA stales the kept figure').toContainText(
-    slots.workingCostStaleStateKept('84,000'),
-  )
-  return { dialog, row }
-}
-
-for (const { host, ...vp } of TALL_TAP_ARMS) {
-  test.describe(`the W period tap right after typing (${host}, ${vp.name})`, () => {
-    test.use(vp.use)
-
-    test('"Each month" tapped by coordinate lands: the note above it stands until the click, and 7,000 is a month', async ({ page }) => {
-      const { dialog } = await staleEnteredWInPanel(page)
-      if (host === 'walk') {
-        await dialog.getByRole('button', { name: copy.assumptionRewalkCta }).click()
-        await advanceIntakeTo(page, copy.qWorkingCostHeading, `${host} ${vp.name}`)
-      }
-      const face = host === 'walk' ? page.locator('.intake-shell .working-cost') : dialog.locator('[data-assumption-seat="working-year-cost"] .working-cost')
-      await expect(face.getByRole('note')).toContainText(slots.workingCostStaleStateKept('84,000'))
-      const month = face.getByRole('radio', { name: copy.periodMonth })
-      await expect(month, 'the held figure’s own unit, a year, is the one checked').not.toBeChecked()
-      const input = face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
-      await input.scrollIntoViewIfNeeded()
-      await input.click()
-      await page.keyboard.press('Control+A')
-      await page.keyboard.type('7000')
-      // The low geometry (the probe's): scroll, keeping the figure's focus, until the label's bottom sits
-      // `margin` px above the scroller's visible bottom — the most content above it on screen — at the
-      // smallest margin whose centre point still hits the label. Then read the floor.
-      const label = face.locator('label.segment').filter({ hasText: copy.periodMonth })
-      let geometry: {
-        readonly hitsLabel: boolean
-        readonly scrollTop: number
-        readonly docScroll: boolean
-        readonly noteHeight: number
-        readonly noteTopPx: number | null
-        readonly noteBottomGapPx: number | null
-        readonly rowValueVisiblePx: number | null
-      } | null = null
-      for (const margin of [16, 72, 128, 184, 240]) {
-        geometry = await label.evaluate((el, m) => {
-          let sc: Element | null = el.parentElement
-          while (sc !== null && !(sc.scrollHeight > sc.clientHeight && /auto|scroll/.test(getComputedStyle(sc).overflowY))) sc = sc.parentElement
-          const scroller = sc ?? document.scrollingElement!
-          const visTop = sc === null ? 0 : sc.getBoundingClientRect().top
-          const visBottom = sc === null ? window.innerHeight : sc.getBoundingClientRect().bottom
-          scroller.scrollTop += el.getBoundingClientRect().bottom - (visBottom - m)
-          const r = el.getBoundingClientRect()
-          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
-          const note = el.closest('.working-cost')?.querySelector('[role="note"]') ?? null
-          const rowValue = el.closest('[data-assumption-seat]')?.querySelector('.ap-row__value') ?? null
-          const rv = rowValue === null ? null : rowValue.getBoundingClientRect()
-          const nr = note === null ? null : note.getBoundingClientRect()
-          return {
-            hitsLabel: hit !== null && el.contains(hit),
-            scrollTop: Math.round(scroller.scrollTop),
-            docScroll: sc === null,
-            noteHeight: nr === null ? 0 : Math.round(nr.height),
-            // The note's top below the visible top (content above it on screen), and its bottom above
-            // the visible bottom — negative on either when it is cut off.
-            noteTopPx: nr === null ? null : Math.round(nr.top - visTop),
-            noteBottomGapPx: nr === null ? null : Math.round(visBottom - nr.bottom),
-            rowValueVisiblePx: rv === null ? null : Math.round(Math.min(rv.bottom, visBottom) - Math.max(rv.top, visTop)),
-          }
-        }, margin)
-        if (geometry.hitsLabel) break
-      }
-      expect(geometry?.hitsLabel, `${host}: no margin puts the tap point on "${copy.periodMonth}" (${JSON.stringify(geometry)})`).toBe(true)
-      // THE FLOOR — the geometry scroll anchoring cannot cure, or the arm proves nothing about the hold.
-      if (host === 'walk') {
-        expect(geometry!.docScroll, 'the walk scrolls the document').toBe(true)
-        expect(geometry!.noteHeight, 'the stale note renders above the figure').toBeGreaterThan(0)
-        // The whole note on screen with the page above it: the anchor is picked above the note, so its
-        // unmount moves everything under it (b9-10's misses: the label moved the full note height at a
-        // scroll of 33 px and 0). A note cut off at the top would hand anchoring a node below the change.
-        expect(geometry!.noteTopPx ?? -1, `walk: the note’s top is cut off (${JSON.stringify(geometry)})`).toBeGreaterThan(0)
-        expect(geometry!.noteBottomGapPx ?? -1, `walk: the note’s bottom is off screen (${JSON.stringify(geometry)})`).toBeGreaterThan(0)
-      } else {
-        expect(geometry!.rowValueVisiblePx ?? 0, `panel: the W row’s value line is off screen (${JSON.stringify(geometry)}) — anchoring would hold the question`).toBeGreaterThan(0)
-      }
-      await page.waitForTimeout(300)
-      await expect(input, 'the figure still has focus — the press is what blurs it').toBeFocused()
-      const box = await label.boundingBox()
-      expect(box).not.toBeNull()
-      const x = box!.x + box!.width / 2
-      const y = box!.y + box!.height / 2
-      // The hit-test again, at the point the tap will use (insight 119: what the input path hits).
-      const onLabel = await label.evaluate((el, [px, py]) => {
-        const hit = document.elementFromPoint(px, py)
-        return hit !== null && el.contains(hit)
-      }, [x, y] as const)
-      expect(onLabel, `${host}: the tap point is not on "${copy.periodMonth}"`).toBe(true)
-      if (vp.touch) {
-        await page.touchscreen.tap(x, y)
-      } else {
-        await page.mouse.move(x, y)
-        await page.mouse.down()
-        await page.waitForTimeout(80) // a human press lasts tens of milliseconds
-        await page.mouse.up()
-      }
-      console.log(`[h2 tap] ${host} ${vp.name}: ${JSON.stringify(geometry)}`)
-      await expect(month, `${host}: the tap on "${copy.periodMonth}" was lost`).toBeChecked()
-      await expect(face.getByRole('note'), 'the commit landed and the hold let go').toHaveCount(0)
-      await expect(input).toHaveValue('7,000')
-      if (host === 'panel') {
-        await expect(dialog.locator('[data-assumption-seat="working-year-cost"] .ap-row__value')).toHaveText(
-          slots.assumptionWorkingCostEntered('84,000'),
-        )
-      }
-    })
-  })
-}
-
-// The same gesture on the note's OWN door, on his own two kinds of screen: type a figure, then tap "Keep
-// $84,000 a year". The press blurs the figure and its commit un-stales W, so before the hold the note —
-// and the door with it — unmounted between the press and the release on EVERY screen (scroll anchoring
-// cannot keep a control that is gone): 4 of 4 lost on his 1536×791 window and his 448×891 phone, walk
-// and panel (b9-1, `b9-h2-cure\tapProbe3.mts`, `before-keep.jsonl`), leaving $7,000 a year, the note gone
-// as a keep would leave it, and focus on the page. Held, the door stays under the release, and it keeps
-// the figure it NAMES. These two arms are also the only REAL-BROWSER gate that the hold lets go AFTER the
-// app's own click handlers (a capture-phase release detaches the held door before React dispatches its
-// click, which jsdom's synchronous dispatch cannot show — the unit file pins the phase structurally), and
-// K-panel is the panel row's hold's only gate at his own laptop's size (mutant-measured, b9-1). The mouse
-// tall arms cannot red a release on pointerup (Chromium hit-tests a mouse release once, so pointerup,
-// mouseup and click share a target); the touch arms and these two can, and do.
-const KEEP_TAP_ARMS = [
-  { host: 'panel', name: `${REAL.width}×${REAL.height}, mouse`, touch: false, use: { viewport: REAL, deviceScaleFactor: REAL_DPR } },
-  {
-    host: 'walk',
-    name: `phone ${PHONE.width}×${PHONE.height}, touch`,
-    touch: true,
-    use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true },
-  },
-] as const
-
-for (const arm of KEEP_TAP_ARMS) {
-  test.describe(`the W note’s Keep door tapped right after typing (${arm.host}, ${arm.name})`, () => {
-    test.use(arm.use)
-
-    test('"Keep $84,000 a year" tapped by coordinate keeps $84,000 — the figure it names — and focus lands on the answer', async ({ page }) => {
-      const { dialog } = await staleEnteredWInPanel(page)
-      if (arm.host === 'walk') {
-        await dialog.getByRole('button', { name: copy.assumptionRewalkCta }).click()
-        await advanceIntakeTo(page, copy.qWorkingCostHeading, `keep ${arm.name}`)
-      }
-      const face =
-        arm.host === 'walk' ? page.locator('.intake-shell .working-cost') : dialog.locator('[data-assumption-seat="working-year-cost"] .working-cost')
-      const input = face.getByRole('textbox', { name: copy.workingCostAmountLabel, exact: true })
-      await input.scrollIntoViewIfNeeded()
-      await input.click()
-      await page.keyboard.press('Control+A')
-      await page.keyboard.type('7000')
-      const door = face.getByRole('button', { name: slots.workingCostKeepYearly('84,000') })
-      await door.scrollIntoViewIfNeeded()
-      await page.waitForTimeout(300)
-      await expect(input, 'the figure still has focus — the press is what blurs it').toBeFocused()
-      const box = await door.boundingBox()
-      expect(box).not.toBeNull()
-      const x = box!.x + box!.width / 2
-      const y = box!.y + box!.height / 2
-      // The floor: the tap point is ON the door (insight 119: a centre point, never an edge).
-      const onDoor = await door.evaluate((el, [px, py]) => {
-        const hit = document.elementFromPoint(px, py)
-        return hit !== null && el.contains(hit)
-      }, [x, y] as const)
-      expect(onDoor, 'the tap point does not hit the Keep door').toBe(true)
-      if (arm.touch) {
-        await page.touchscreen.tap(x, y)
-      } else {
-        await page.mouse.move(x, y)
-        await page.mouse.down()
-        await page.waitForTimeout(80)
-        await page.mouse.up()
-      }
-      await expect(face.getByRole('note'), 'the keep landed and the hold let go').toHaveCount(0)
-      await expect(input, `${arm.host}: the door kept the typed digits, not the figure it names`).toHaveValue('84,000')
-      await expect(face.getByRole('radio', { name: copy.periodYear })).toBeChecked()
-      const focused = await page.evaluate(() => {
-        const a = document.activeElement
-        return a instanceof HTMLInputElement && a.type === 'radio' && a.checked
-      })
-      expect(focused, 'focus never falls to the page: it lands on the answer that now stands').toBe(true)
-      if (arm.host === 'panel') {
-        // The door keeps the HELD answer, a kept figure, and a Keep carries its stamp (KTD10): typing
-        // digits and then keeping must never launder it into a typed figure that no quote can stale.
-        await expect(dialog.locator('[data-assumption-seat="working-year-cost"] .ap-row__value')).toHaveText(
-          slots.assumptionWorkingCostKept('84,000'),
-        )
-      }
-    })
-  })
-}
-
-// ---------------------------------------------------------------------------
-// THE YEAR-BY-YEAR TABLE (the workbench plan's U7, slice 3; insight 123: judge a fit on the widest member, never one
-// seed's frame). Since Act 6 · RC2 the table rides inside the shell as the interim Retirement → Cash Flows tab, where the
-// answer page's door lands; these arms re-pointed there unchanged (plan 6, section 5.2: RC6 ports them to Cash Flows). `?seed=tablewidest` is the table's widest household: every column the table can
-// draw prints (fourteen beside the year), at seven-digit balances, under two 20-character names. The laws:
-//  - At a laptop (his 1440×731 @2 window and the 1280×800 tier, each view) nothing scrolls sideways: not the page,
-//    and not the table's own frame, which carries no scroller at a laptop (`workbench.css`), so an overflow there
-//    would hang a column past the page's edge.
-//  - On the phone the page never scrolls sideways: the table scrolls inside its own frame there, by design. Each row's
-//    sentences and the rough view's divider read whole inside that frame, at its start and scrolled to its end (they
-//    sit in a cell as wide as the table, so unheld they ran past the frame's edge and were cut: the U7 review).
-//  - The rows landing move no tap target: the "Rough market" switch stays put from the room's first frame through the
-//    rows landing (insight 035). An in-page frame recorder armed before the door press reads it, with the worker's
-//    messages held 400 ms so the loading frame is on screen for many frames. The press is an in-page `click()` from
-//    the page's top, so no scroll moves a rect the walk compares. What this walk does NOT prove: the pinned answer's
-//    reserved box (insights 035, 065). The room opens on a settled answer and nothing in it can re-figure that answer
-//    before U8's editors, so the pinned box never changes while this walk records; the walk where the pinned answer
-//    lands after the table (the plan's U7 scenario) belongs to U8.
-// ---------------------------------------------------------------------------
-
-const TABLE_WIDEST = 'tablewidest'
-/** Every column the table can draw for two people, in its reading order (`yearTableChrome.ts`'s `columnSpecs`). */
-const TABLE_COLUMNS = [
-  'person-0', 'person-1', 'social-security', 'spending', 'income-tax', 'pay-check', 'from-pay', 'health',
-  'pretax-moves', 'taxable', 'pretax-0', 'pretax-1', 'roth', 'hsa',
-]
-const ROUGH_YEARS = (() => {
-  const start = roughWindow().startYear
-  return { start, end: start + ROUGH_WINDOW_YEARS - 1 }
-})()
-const VIEW_WORDS = {
-  steady: { label: copy.workbenchViewSteady, what: copy.workbenchSteadyWhat },
-  rough: { label: copy.workbenchViewRough, what: slots.workbenchRoughWhat(ROUGH_YEARS.start, ROUGH_YEARS.end, ROUGH_WINDOW_YEARS) },
-} as const
-
-/** The settled answer, then the shell through the answer page's door (it lands on the table), pressed in-page from the
- *  page's top. */
-async function enterRoomFromTop(page: Page): Promise<void> {
-  await gotoSeedFinal(page, TABLE_WIDEST)
-  const door = page.locator('.result-quiet-row [data-door="workbench"]')
-  await expect(door, 'the door never mounted on the settled answer').toBeAttached()
-  await page.evaluate(() => window.scrollTo(0, 0))
-  await door.evaluate((el) => (el as HTMLButtonElement).click())
-  await expect(page.locator('.wb-table'), 'the table never landed').toBeVisible({ timeout: 30_000 })
-  await expect(page.locator('.wb-table-wrap--updating')).toHaveCount(0)
-}
-
-/** Switch the view, wait for its own words over its own rows, and settle. */
-async function showView(page: Page, view: keyof typeof VIEW_WORDS): Promise<void> {
-  const words = VIEW_WORDS[view]
-  await page.locator('.wb-view label.segment', { hasText: words.label }).click()
-  await expect(page.locator('.wb-about__line').first(), `the ${view} view's words`).toHaveText(words.what)
-  await expect(page.locator('.wb-table-wrap--updating')).toHaveCount(0)
-  await settleLayout(page)
-}
-
-/** The widths the table's laws read: the page's, its frame's, the table's own, and the frame's overflow. */
-async function tableWidths(page: Page) {
-  return page.evaluate(() => {
-    const doc = document.scrollingElement ?? document.documentElement
-    const wrap = document.querySelector('.wb-table-wrap')
-    const table = document.querySelector('.wb-table')
-    if (wrap === null || table === null) throw new Error('no table on the page')
-    const cols = [...document.querySelectorAll('.wb-table th[data-col]')].map((th) => ({
-      id: th.getAttribute('data-col') ?? '',
-      w: Math.round(th.getBoundingClientRect().width * 10) / 10,
-    }))
-    const year = document.querySelector('.wb-th--year')?.getBoundingClientRect().width ?? 0
-    return {
-      pageScroll: doc.scrollWidth,
-      pageClient: doc.clientWidth,
-      wrapScroll: wrap.scrollWidth,
-      wrapClient: wrap.clientWidth,
-      wrapOverflowX: getComputedStyle(wrap).overflowX,
-      tableWidth: Math.round(table.getBoundingClientRect().width * 10) / 10,
-      yearWidth: Math.round(year * 10) / 10,
-      cols,
-    }
-  })
-}
-
-/** Each row sentence and the rough view's divider, with the frame scrolled to its start or its end: how far its text
- *  runs past the frame's left and right edges (`workbench.css` holds each to the frame's left edge and wraps it at the
- *  frame's own width below the seam). */
-async function sentencesInFrame(page: Page, at: 'start' | 'end') {
-  await page.locator('.wb-table-wrap').evaluate((wrap, to) => {
-    wrap.scrollLeft = to === 'start' ? 0 : wrap.scrollWidth
-  }, at)
-  await page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))))
-  return page.evaluate(() => {
-    const wrap = document.querySelector('.wb-table-wrap')
-    if (wrap === null) throw new Error('no table frame')
-    const frame = wrap.getBoundingClientRect()
-    return [...document.querySelectorAll('.wb-note, .wb-divider__words')].map((el) => {
-      const range = document.createRange()
-      range.selectNodeContents(el)
-      const r = range.getBoundingClientRect()
-      return {
-        text: (el.textContent ?? '').slice(0, 48),
-        divider: el.classList.contains('wb-divider__words'),
-        pastLeft: frame.left - r.left,
-        pastRight: r.right - frame.right,
-      }
-    })
-  })
-}
-
-/** The household is still the widest: every column the table can draw is on screen. A seed that drifted (a crown at
- *  today, a dropped account) would make every width law below vacuous. */
-async function expectEveryColumn(page: Page): Promise<void> {
-  const ids = await page.locator('.wb-table th[data-col]').evaluateAll((ths) => ths.map((th) => th.getAttribute('data-col')))
-  expect(ids, 'the widest household prints every column the table can draw').toEqual(TABLE_COLUMNS)
-}
-
-test.describe('the year-by-year table (the shell’s Cash Flows tab) on its widest household (U7)', () => {
-  for (const size of ['REAL', 'TIER'] as const) {
-    test.describe(sizeTitle(size), () => {
-      const s = LAPTOP_SIZES[size]
-      test.use({ viewport: s.viewport, deviceScaleFactor: s.deviceScaleFactor })
-
-      test(`?seed=${TABLE_WIDEST}: neither view scrolls sideways, on the page or inside the table's frame`, async ({ page }) => {
-        test.setTimeout(FINAL_TIER_MS + 60_000)
-        await enterRoomFromTop(page)
-        await expectEveryColumn(page)
-        for (const view of ['steady', 'rough'] as const) {
-          await showView(page, view)
-          const w = await tableWidths(page)
-          console.log(`[wb-table ${size} ${view}] ${JSON.stringify(w)}`)
-          expect(w.wrapOverflowX, 'at a laptop the table has no scroller of its own to hide a column under').toBe('visible')
-          expect(w.wrapScroll, `${view}: the table runs past its frame`).toBeLessThanOrEqual(w.wrapClient)
-          expect(w.pageScroll, `${view}: the page scrolls sideways`).toBeLessThanOrEqual(w.pageClient)
-        }
-      })
-    })
-  }
-
-  test.describe(`on the phone (${PHONE.width}×${PHONE.height})`, () => {
-    test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
-
-    test(`?seed=${TABLE_WIDEST}: the page never scrolls sideways; the table scrolls inside its own frame; its sentences read whole`, async ({ page }) => {
-      test.setTimeout(FINAL_TIER_MS + 60_000)
-      await enterRoomFromTop(page)
-      await expectEveryColumn(page)
-      for (const view of ['steady', 'rough'] as const) {
-        await showView(page, view)
-        const w = await tableWidths(page)
-        console.log(`[wb-table PHONE ${view}] ${JSON.stringify(w)}`)
-        expect(w.wrapOverflowX, 'on the phone the table scrolls in its own frame').toBe('auto')
-        expect(w.pageScroll, `${view}: the page scrolls sideways`).toBeLessThanOrEqual(w.pageClient)
-        for (const at of ['start', 'end'] as const) {
-          const sentences = await sentencesInFrame(page, at)
-          console.log(`[wb-table PHONE ${view} sentences at ${at}] ${JSON.stringify(sentences)}`)
-          expect(sentences.length, `${view}: the widest household's rows carry sentences, or this law reads nothing`).toBeGreaterThan(0)
-          if (view === 'rough') expect(sentences.some((s) => s.divider), 'the rough view draws its steady-from divider').toBe(true)
-          for (const s of sentences) {
-            expect(s.pastLeft, `${view}, frame at its ${at}: "${s.text}" starts past the frame's left edge`).toBeLessThanOrEqual(0.5)
-            expect(s.pastRight, `${view}, frame at its ${at}: "${s.text}" runs past the frame's right edge`).toBeLessThanOrEqual(0.5)
-          }
-        }
-        await page.locator('.wb-table-wrap').evaluate((wrap) => {
-          wrap.scrollLeft = 0
-        })
-      }
-    })
-  })
-
-  test.describe(sizeTitle('REAL'), () => {
-    test.use({ viewport: LAPTOP_SIZES.REAL.viewport, deviceScaleFactor: LAPTOP_SIZES.REAL.deviceScaleFactor })
-
-    // Proves the rows landing move no tap target, and only that: the answer is settled before the door press, so the
-    // pinned answer never changes here (its own landing walk is U8's; the block comment above).
-    test(`?seed=${TABLE_WIDEST}: the rows landing move no tap target (the "Rough market" switch stays put)`, async ({ page }) => {
-      test.setTimeout(FINAL_TIER_MS + 60_000)
-      await gotoSeedFinal(page, TABLE_WIDEST)
-      const door = page.locator('.result-quiet-row [data-door="workbench"]')
-      await expect(door, 'the door never mounted on the settled answer').toBeAttached()
-      await page.evaluate(() => window.scrollTo(0, 0))
-      // The answer is settled, so from here the engine worker hears only the room's two table runs. Each one-path run
-      // otherwise lands within a frame of the room mounting (read: 0 or 1 frames before the rows), and the walk would
-      // compare nothing: every message to the worker is held 400 ms, so the loading frame paints for many frames.
-      await page.evaluate(() => {
-        const send = Worker.prototype.postMessage
-        Worker.prototype.postMessage = function (this: Worker, ...args: unknown[]) {
-          setTimeout(() => Reflect.apply(send, this, args), 400)
-        } as typeof send
-      })
-      // Armed before the press: every frame from the switch's first paint, until thirty frames after the rows land.
-      await page.evaluate((label) => {
-        type Frame = { readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly table: boolean }
-        const log: Frame[] = []
-        ;(window as unknown as { __wbWalk: Frame[] }).__wbWalk = log
-        let after = 0
-        const tick = () => {
-          const seg = [...document.querySelectorAll('.wb-view label.segment')].find((el) => el.textContent?.trim() === label)
-          if (seg !== undefined) {
-            const r = seg.getBoundingClientRect()
-            const table = document.querySelector('.wb-table') !== null
-            log.push({ x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height, table })
-            if (table) after++
-          }
-          if (after < 30) requestAnimationFrame(tick)
-        }
-        requestAnimationFrame(tick)
-      }, copy.workbenchViewRough)
-      await door.evaluate((el) => (el as HTMLButtonElement).click())
-      await expect(page.locator('.wb-table'), 'the table never landed').toBeVisible({ timeout: 30_000 })
-      await expect.poll(() => page.evaluate(() => (window as unknown as { __wbWalk: { table: boolean }[] }).__wbWalk.filter((f) => f.table).length)).toBeGreaterThanOrEqual(30)
-      const frames = await page.evaluate(
-        () => (window as unknown as { __wbWalk: { x: number; y: number; w: number; h: number; table: boolean }[] }).__wbWalk,
-      )
-      const before = frames.filter((f) => !f.table)
-      console.log(`[wb-table switch walk] frames=${frames.length} beforeRows=${before.length} first=${JSON.stringify(frames[0])} last=${JSON.stringify(frames.at(-1))}`)
-      expect(before.length, 'the switch painted before the rows landed: otherwise the walk compares nothing').toBeGreaterThan(0)
-      const first = frames[0]!
-      for (const f of frames) {
-        expect(Math.abs(f.x - first.x), 'the switch moved sideways').toBeLessThanOrEqual(0.5)
-        expect(Math.abs(f.y - first.y), 'the switch moved up or down').toBeLessThanOrEqual(0.5)
-        expect(Math.abs(f.w - first.w)).toBeLessThanOrEqual(0.5)
-        expect(Math.abs(f.h - first.h)).toBeLessThanOrEqual(0.5)
-      }
-    })
-  })
-})
-
-// ---------------------------------------------------------------------------
-// THE ANSWER LANDING AFTER A FACTS-PAGE EDIT (the workbench plan's U8, carried in from U7's review; insights
-// 035, 065, 155). The room's facts page can now re-figure the pinned answer: an edit in a step's sheet commits, the
-// store works the answer out again (provisional, then final on the date route), and the pinned box's words change
-// twice, the provisional tag's line coming and going between. Its hidden copy reserves the box's tallest form, now
-// over the forms the next answer can take on its route (`pinnedLines.ts`'s `reserveForms`; since Act 6 · RC2 the box is
-// the interim pages' intro line, `src/ui/shell/InterimPage.tsx`, and the facts page the interim Profile tab); a new lead longer than
-// the reserve is the risk this walk reads: every frame from the sheet's close until thirty frames after the new answer
-// lands is held to the page as it stood before the door opened, and the two tap targets under the pinned box (the facts
-// page's tab and the first group's door) must not have moved on the page; the walk also proves the lead changed.
-// Two sizes: his laptop window, where the seat pins and the market switch beside the answer sets the row's height, and
-// the phone, where nothing beside the answer absorbs a taller box (the arm whose first run found the defect's twin at
-// the laptop: a lead wrapped at the page's reading measure moved the page switch 16 px). The engine's messages are held
-// 400 ms each (wrapped after the answer settles, the switch walk's hold above), so the refiguring frames paint for many
-// frames; the recorder notes each frame's refiguring flag, so the walk proves it saw the answer being worked out again
-// before it landed. Rects are page-relative (the switch walk's), so the focus going back to the door scrolls nothing
-// the walk compares.
-// ---------------------------------------------------------------------------
-
-const LANDING_SEED = 'date'
-
-/** The shell's Profile tab: the top bar's module word at a laptop, the phone menu's page on the phone. */
-async function showFactsPage(page: Page): Promise<void> {
-  const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
-  if (await modules.isVisible()) await modules.getByRole('link', { name: copy.shellModuleProfile, exact: true }).click()
-  else {
-    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
-    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: copy.workbenchPageFacts, exact: true }).click()
-    await expect(page.getByRole('dialog', { name: copy.shellMenuTitle })).toHaveCount(0)
-  }
-  await expect(page.locator('main.result[data-shell-screen="interim-facts"]')).toBeAttached()
-}
-
-const LANDING_SIZES = [
-  { title: sizeTitle('REAL'), use: { viewport: LAPTOP_SIZES.REAL.viewport, deviceScaleFactor: LAPTOP_SIZES.REAL.deviceScaleFactor } },
-  { title: `on the phone (${PHONE.width}×${PHONE.height})`, use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true } },
-] as const
-
-test.describe('the facts page (the shell’s Profile tab, U8)', () => {
-  for (const size of LANDING_SIZES) test.describe(size.title, () => {
-    test.use(size.use)
-
-    test(`?seed=${LANDING_SEED}: the pinned answer landing after a facts-page edit moves no tap target`, async ({ page }) => {
-      test.setTimeout(FINAL_TIER_MS * 2 + 60_000)
-      await gotoSeedFinal(page, LANDING_SEED)
-      const door = page.locator('.result-quiet-row [data-door="workbench"]')
-      await expect(door, 'the door never mounted on the settled answer').toBeAttached()
-      await page.evaluate(() => window.scrollTo(0, 0))
-      await door.evaluate((el) => (el as HTMLButtonElement).click())
-      await expect(page.locator('.wb-table'), 'the table never landed').toBeVisible({ timeout: 30_000 })
-      await showFactsPage(page)
-      // THE BASELINE, taken before the door opens (the U8 review's C6): the page as it stood on the settled answer, so a
-      // box that grows the moment the edit starts being worked out, and stays grown, still reds. The door is scrolled
-      // into view first, as the press would, so the baseline and every frame share one scroll (the seat pins at a
-      // laptop, where a scroll moves its page-relative place).
-      const spendingDoor = page.getByRole('button', { name: slots.workbenchFactsEditName(copy.workbenchFactsSpending), exact: true })
-      await settleLayout(page) // (it pins the scroll to the top, so the door is scrolled in after it)
-      await spendingDoor.scrollIntoViewIfNeeded()
-      const baseline = await page.evaluate(() => {
-        const rect = (el: Element | null) => {
-          if (el === null) return null
-          const r = el.getBoundingClientRect()
-          return { x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height }
-        }
-        return {
-          intro: rect(document.querySelector('.wb-facts__intro')),
-          door: rect(document.querySelector('.wb-facts__section [data-fact-open]')),
-        }
-      })
-      await spendingDoor.click()
-      const sheet = page.getByRole('dialog', { name: copy.workbenchFactsSpending, exact: true })
-      const field = sheet.getByLabel(copy.spendLabel, { exact: true })
-      await expect(field).toHaveValue('7,000')
-      // Focus first: the field swaps its shown figure for the raw one on focus, so a fill that focuses would land
-      // after that swap and add to it.
-      await field.click()
-      await field.fill('7,600')
-      await field.blur()
-      await expect(field, 'the new spending committed').toHaveValue('7,600')
-      // From here the engine hears only this edit's recompute: every message to the worker is held 400 ms.
-      await page.evaluate(() => {
-        const send = Worker.prototype.postMessage
-        Worker.prototype.postMessage = function (this: Worker, ...args: unknown[]) {
-          setTimeout(() => Reflect.apply(send, this, args), 400)
-        } as typeof send
-      })
-      // Armed before Done: every frame from the sheet's close until thirty frames after the new answer lands.
-      await page.evaluate(() => {
-        type Rect = { readonly x: number; readonly y: number; readonly w: number; readonly h: number }
-        type Frame = { readonly intro: Rect | null; readonly door: Rect | null; readonly refiguring: boolean; readonly landed: boolean; readonly lead: string }
-        const log: Frame[] = []
-        ;(window as unknown as { __wbLanding: Frame[] }).__wbLanding = log
-        const rect = (el: Element | null): Rect | null => {
-          if (el === null) return null
-          const r = el.getBoundingClientRect()
-          return { x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height }
-        }
-        let sawRefiguring = false
-        let after = 0
-        const tick = () => {
-          const room = document.querySelector('main.result')
-          const sheetOpen = document.querySelector('.control-sheet') !== null
-          const refiguring = room?.hasAttribute('data-answer-refiguring') ?? false
-          if (refiguring) sawRefiguring = true
-          const landed = sawRefiguring && !refiguring && room?.getAttribute('data-answer-tier') === 'final'
-          if (!sheetOpen) {
-            log.push({
-              intro: rect(document.querySelector('.wb-facts__intro')),
-              door: rect(document.querySelector('.wb-facts__section [data-fact-open]')),
-              refiguring,
-              landed,
-              lead: document.querySelector('.wb-pin__real .wb-pin__lead')?.textContent ?? '',
-            })
-            if (landed) after++
-          }
-          if (after < 30) requestAnimationFrame(tick)
-        }
-        requestAnimationFrame(tick)
-      })
-      await sheet.getByRole('button', { name: copy.workbenchFactsDone }).click()
-      await expect
-        .poll(() => page.evaluate(() => (window as unknown as { __wbLanding: { landed: boolean }[] }).__wbLanding.filter((f) => f.landed).length), {
-          timeout: FINAL_TIER_MS,
-        })
-        .toBeGreaterThanOrEqual(30)
-      const frames = await page.evaluate(
-        () =>
-          (window as unknown as {
-            __wbLanding: { intro: { x: number; y: number; w: number; h: number } | null; door: { x: number; y: number; w: number; h: number } | null; refiguring: boolean; landed: boolean; lead: string }[]
-          }).__wbLanding,
-      )
-      const before = frames.filter((f) => !f.landed)
-      const refiguring = frames.filter((f) => f.refiguring)
-      const leads = [...new Set(frames.map((f) => f.lead))]
-      console.log(
-        `[wb-facts landing walk] frames=${frames.length} beforeLanding=${before.length} refiguring=${refiguring.length} leads=${JSON.stringify(leads)} first=${JSON.stringify(frames[0])} last=${JSON.stringify(frames.at(-1))}`,
-      )
-      expect(before.length, 'frames painted before the new answer landed: otherwise the walk compares nothing').toBeGreaterThan(0)
-      expect(refiguring.length, 'the pinned answer was seen being worked out again before it landed').toBeGreaterThan(0)
-      expect(leads.length, 'the pinned answer’s words changed: otherwise no new lead was laid out').toBeGreaterThanOrEqual(2)
-      expect(baseline.intro, 'the facts page’s intro, the first thing under the answer’s box, is on screen').not.toBeNull()
-      expect(baseline.door, 'the first group’s door is on screen').not.toBeNull()
-      for (const f of frames) {
-        for (const key of ['intro', 'door'] as const) {
-          const a = baseline[key]!
-          const b = f[key]
-          expect(b, `${key} left the page`).not.toBeNull()
-          expect(Math.abs(b!.x - a.x), `the ${key} moved sideways`).toBeLessThanOrEqual(0.5)
-          expect(Math.abs(b!.y - a.y), `the ${key} moved up or down`).toBeLessThanOrEqual(0.5)
-          expect(Math.abs(b!.w - a.w)).toBeLessThanOrEqual(0.5)
-          expect(Math.abs(b!.h - a.h)).toBeLessThanOrEqual(0.5)
-        }
-      }
-    })
-  })
-})

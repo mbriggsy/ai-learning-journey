@@ -75,15 +75,15 @@ async function audit(page: Page): Promise<Audit> {
 
 async function openWhatIf(page: Page, seed: string) {
   await gotoSeedFinal(page, seed)
-  await page.locator('[data-door="workbench"]').click()
-  await expect(page.locator('.wb-table')).toBeVisible({ timeout: 60_000 })
-  // Since Act 6 · RC2 the What if page is the shell's Retirement → Analysis tab: the sub-nav at a laptop, the menu on a phone.
-  const pages = page.getByRole('navigation', { name: copy.shellPagesLabel })
-  if (await pages.isVisible()) await pages.getByRole('link', { name: copy.shellPageAnalysis, exact: true }).click()
+  // Since Act 6 · RC4 the seed lands on the home and the What if page is Analysis's interim folder tab: Retirement (the
+  // module word at a laptop, the menu's Analysis on a phone), then the tab.
+  const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
+  if (await modules.isVisible()) await modules.getByRole('link', { name: copy.shellModuleRetirement, exact: true }).click()
   else {
     await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
     await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: copy.shellPageAnalysis, exact: true }).click()
   }
+  await page.getByRole('tab', { name: copy.workbenchPageWhatIf, exact: true }).click()
   await expect(page.locator('.wb-whatif')).toBeVisible()
 }
 

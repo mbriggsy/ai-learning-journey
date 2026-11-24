@@ -57,7 +57,7 @@ Before this stage the "has this offset already passed?" test was **re-typed** in
 `heroTrack.offsetYears < elapsedYears` in `FuckOffDate.tsx`. Neither compare exists any more. S0.1 exported
 **one** predicate, strict `planOffset < elapsed` — `offsetHasPassed`, defined once at `curveMarks.ts:107` —
 and every arrived question in the codebase now calls it: the ladder filter (`curveMarks.ts:143`), the hero
-crown-arrived withdraw and the floor arm (`dateHero.ts:37`, `:72`, `FuckOffDate.tsx:333`), the band's Roth row
+crown-arrived withdraw and the floor arm (`dateHero.ts:37`, `:72`, `FuckOffDate.tsx line 333 at 95c715e19`), the band's Roth row
 (`bandAnnotations.ts:133`), the work-stops withdraw (`bandAnnotations.ts:341`), `dateTradeoff.ts:53`'s
 offer filter — **a third re-typing this spec had not enumerated**, found at build — and §S1's write-side
 refusal (`RothLever.tsx:49`).
@@ -67,7 +67,7 @@ refusal (`RothLever.tsx:49`).
   `:272`). A re-typed inline compare in any consumer fails the test. This is the structural kill of the
   drift that caused the defect.
 - The existing strict-`<` boundary behavior was already pinned on both sides
-  (`FuckOffDate.test.tsx:205-210` withdraw, `:212-216` `crown == elapsed` keeps the crown). **Those two
+  (`FuckOffDate.test.tsx line 205-210 at 95c715e19` withdraw, FuckOffDate.test.tsx line 212-216 at 95c715e19 `crown == elapsed` keeps the crown). **Those two
   tests stayed green byte-for-byte** — the predicate extraction was a refactor at that seam, not a
   behavior change.
 
@@ -76,7 +76,7 @@ refusal (`RothLever.tsx:49`).
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:633`, never re-anchored, survives every re-save). Four separate comments already forbade
 attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:4741`,
-`FuckOffDate.tsx:112`) — and the band's `'saved'` label did exactly that.
+`FuckOffDate.tsx line 112 at 95c715e19`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
   consumer comment prosed to *"since you built this plan."* The name now carries the contract at every
@@ -190,7 +190,7 @@ literal tense regexes pin it now. Three mutants red → reverted.
    Today's own column — wall-Today already marks it, and two named markers would stack. The fresh
    derivation is byte-identical to pre-U17.
 2. **The elapsed fan segment is de-emphasised by a STATIC mask** — `ElapsedDimGroup`, a second static
-   luminance mask NESTED inside the cohort-fade group (`ConfidenceBand.tsx:404`, `:442`), composing
+   luminance mask NESTED inside the cohort-fade group (`ConfidenceBand.tsx line 404 at 95c715e19`, ConfidenceBand.tsx line 442 at 95c715e19), composing
    multiplicatively. **Never a re-trimmed `d`**, which would break the morph and the vertex-snapped scrub;
    the fresh DOM renders NO wrapper at all. **Non-colour channel PLUS a11y text** (colour is never the
    only signal). The pure stops live beside their cohort sibling — `elapsedFadeStops` and
@@ -202,10 +202,10 @@ literal tense regexes pin it now. Three mutants red → reverted.
 4. **The aged fan ships ONLY with** (a) an adjacent **premise line** naming the balance vintage and (b) a
    **RENDERED re-confirm control** (insight 100 — a copy promise is a UI contract). The residual is
    disclosed as **UNDETERMINED, never "conservative."** Both ship as `.band-premise` (`result.css:252`,
-   one family home) under BOTH routes' band panes — `ConfidenceStatement.tsx:481-488` and
-   `FuckOffDate.tsx:494-509`; the OLD-SAVE arm names the `agedBalancesYearFor` vintage and the re-saver
+   one family home) under BOTH routes' band panes — `ConfidenceStatement.tsx line 481-488 at 95c715e19` and
+   `FuckOffDate.tsx line 494-509 at 95c715e19`; the OLD-SAVE arm names the `agedBalancesYearFor` vintage and the re-saver
    reads the build-anchor arm. **No premise line ⇒ no aged fan, and that law is STRUCTURAL:** the resolved
-   memo withdraws the aged fan when no `onReconfirm` route exists (`ConfidenceStatement.tsx:313`, and its
+   memo withdraws the aged fan when no `onReconfirm` route exists (`ConfidenceStatement.tsx line 313 at 95c715e19`, and its
    twin in `FuckOffDate`), so an aged projection with an unstated premise is unrepresentable. `onReconfirm`
    routes to the guided re-walk (`onReview`).
 5. **On a split, the crown names WHICH date** at the marker — `bandClockWorkStopsSplitLabel`,
@@ -510,7 +510,7 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
 - **Owed from the walk, and not filed until 2026-09-25 (from the 2026-09-24 doc audit):** the arrived-walk's state-tax blindness. `?vault=datearrived` is stateless by construction (`doctorArrivedVault` refuses a priced-state base, `devSeeds.ts:2314-2321`), so no walk has read the arrived face on a priced state. It is carried in `docs/backlog.md` under "The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed".
 - **The aged band's x-axis has its first real-browser arm.** Before S6 no fit arm asserted it — the aged
   axis appeared nowhere in `e2e/`, so §S0's rename had shipped on unit arms alone. `?vault=datearrived` is
-  now driven at `e2e/vertical-fit.spec.ts:3779-3987`, asserting that the year-0 endpoint names the BUILD
+  now driven at `e2e/vertical-fit.spec.ts line 3779-3987 at 95c715e19`, asserting that the year-0 endpoint names the BUILD
   year (`'Plan built'`, `:2220-2224`) and that no named marker renders left of Today — neither the plain
   label nor the split one, since the array picks between them (`:2230-2240`). Both are mutation-proven, and
   the withdrawal mutant draws

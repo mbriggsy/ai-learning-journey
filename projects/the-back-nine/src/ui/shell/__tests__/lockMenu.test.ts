@@ -81,4 +81,15 @@ describe('lockMenu — each save state', () => {
   it('only a failure is an alert', () => {
     for (const save of VIEWS) expect(composeLockMenu({ save, readOnly: false, canBackUp: false }).alert, save.kind).toBe(save.kind === 'failed')
   })
+
+  it('the backup re-offer (RC4, the old answer page’s door): its lead rides only beside its Back up', () => {
+    const offered = composeLockMenu({ save: { kind: 'clean' }, readOnly: false, canBackUp: true, backupOffered: true })
+    expect(offered.sentence).toBe(`${copy.savedBadge} ${copy.backupDoorLead}`)
+    expect(offered.items.map((i) => i.action)).toEqual(['backup'])
+    // No Back up (no vault, or a read-only tab): no lead promising one.
+    expect(composeLockMenu({ save: { kind: 'clean' }, readOnly: false, canBackUp: false, backupOffered: true }).sentence).toBe(copy.savedBadge)
+    expect(composeLockMenu({ save: { kind: 'clean' }, readOnly: true, canBackUp: true, backupOffered: true }).sentence).toBe(copy.saveErrorReadOnly)
+    // Not offered: the plain sentence.
+    expect(composeLockMenu({ save: { kind: 'clean' }, readOnly: false, canBackUp: true }).sentence).toBe(copy.savedBadge)
+  })
 })

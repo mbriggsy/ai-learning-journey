@@ -131,8 +131,10 @@ vi.mock('../SaveFlow', () => ({
   ),
 }))
 
-/** The intake questions, reduced to the terminal advance — it drives IntakeApp's REAL `complete()`. */
-vi.mock('@intake/flow', () => ({
+/** The intake questions, reduced to the terminal advance — it drives IntakeApp's REAL `complete()`. The rest of the
+ *  module stays real: the shell (the home since Act 6 · RC4) hosts the facts page's step sheet, which reads it. */
+vi.mock('@intake/flow', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@intake/flow')>()),
   IntakeFlow: ({ onComplete }: { onComplete?: () => void }) => (
     <div>
       flow stub
@@ -357,7 +359,17 @@ const savedBadge = () => document.querySelector('.rec-save__badge')
 const pendingLine = () => document.querySelector('.rec-save__pending')
 const draftRecord = (): SavedRecommendationV3 | undefined => realGetSnapshot().draft.savedRecommendation
 
-/** A FRESH, never-saved household on the result phase (persist `{kind:'unsaved'}` — every dev seed,
+/** Since Act 6 · RC4 the completion lands on the shell (the home): the recommendation's save control lives on the
+ *  interim Tax Strategies tab, reached by its real nav link once the shell's lazy chunk lands. */
+async function toStrategies() {
+  const tax = await screen.findByRole('link', { name: copy.shellModuleTax }, { timeout: 15_000 })
+  await act(async () => {
+    fireEvent.click(tax)
+  })
+  await act(async () => {})
+}
+
+/** A FRESH, never-saved household on the Tax Strategies tab (persist `{kind:'unsaved'}` — every dev seed,
  *  the Caddie walk and the fit gate). The flow stub's terminal advance runs the REAL `complete()`. */
 async function mountFresh(solve: SolveAnswer = committedOn(), draft: ScenarioDraft = LIVE_DRAFT) {
   appModel.update(() => draft)
@@ -366,6 +378,7 @@ async function mountFresh(solve: SolveAnswer = committedOn(), draft: ScenarioDra
   await act(async () => {
     fireEvent.click(screen.getByRole('button', { name: 'complete-stub' }))
   })
+  await toStrategies()
 }
 
 /** A RETURNING household over a real vault: the hydrate effect decodes the model, seeds `persist`
@@ -376,6 +389,7 @@ async function mountReturning(model: CurrentScenario, solve: SolveAnswer = commi
   render(<IntakeApp hydrateFromVault />)
   fireEvent.click(await screen.findByRole('button', { name: copy.reentryAffirmCta }))
   await act(async () => {})
+  await toStrategies()
 }
 
 /** Tap the save control and let the gesture run to its end (the awaits are the DB open, the write,
@@ -693,8 +707,11 @@ describe('the save gesture — a FAILED write claims nothing (the operand is the
     expect(refusalCard(), 'the failed write is reported').not.toBeNull()
 
     h.saveResult = { ok: true }
+    // Since Act 6 · RC4 the plan's own save (and its retry) lives in the shell's lock menu (the one save machine).
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${copy.lockMenuLabel}`) }))
+    const retry = await screen.findByRole('menuitem', { name: copy.exportRetry })
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: copy.exportRetry }))
+      fireEvent.click(retry)
     })
     await act(async () => {})
 

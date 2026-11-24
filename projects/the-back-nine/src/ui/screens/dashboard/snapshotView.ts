@@ -216,6 +216,12 @@ function investedView(draft: MemoryModelSnapshot['draft'], agedBalancesYear: num
   }
 }
 
+/** Highcharts' own spoken words for a chart named `title` (`src/viz/charts/chartA11y.ts`): every chart's screen-reader
+ *  region speaks the composer's words, never the module's built-in English. */
+export function chartWords(title: string): { readonly title: string; readonly credits: string; readonly end: string; readonly legend: string; readonly legendItem: string } {
+  return { title, credits: copy.chartCredits, end: copy.chartEnd, legend: copy.chartLegend, legendItem: copy.chartLegendItem }
+}
+
 // ── The fan ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /** One labels object per answered draft and ages, so a recompute that changes nothing about the fan hands the chart
@@ -244,6 +250,7 @@ function composeFanLabels(draft: MemoryModelSnapshot['draft'], ageA: number, age
     yAxisTitle: copy.bandYAxis,
     xAxisTitle: name === '' ? copy.snapshotFanAgeAxisYou : slots.snapshotFanAgeAxis(name),
     description: copy.snapshotFanDescription,
+    words: chartWords(copy.snapshotFanTitle),
     axisDollar: mmAxisFormatterFor,
     figure: formatMmDollar,
     ageAt: (t) => Math.round(ageA + t),

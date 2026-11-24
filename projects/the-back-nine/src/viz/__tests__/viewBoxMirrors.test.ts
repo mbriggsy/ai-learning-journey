@@ -67,13 +67,8 @@ describe('the chart viewBoxes and their CSS / prose mirrors are one declaration 
     for (const p of prose) expect(p, `twoFutures.css: a prose mirror reads ${p[0]}×${p[1]} beside TF_VIEW ${tf[0]}×${tf[1]}`).toEqual(tf)
   })
 
-  it('the band: VIEWBOX and the prose mirror in band.css (the enlarge cap derives from it)', () => {
-    const css = read('src/viz/band.css')
-    const band = [VIEWBOX.width, VIEWBOX.height] as const
-    const prose = ratioPairs(css).filter((p) => p[0] === band[0])
-    expect(prose.length, 'band.css: no ratio pair found — the "560:380" enlarge-cap comment moved; re-point this bind').toBeGreaterThan(0)
-    for (const p of prose) expect(p, `band.css: a prose mirror reads ${p[0]}:${p[1]} beside VIEWBOX ${band[0]}×${band[1]}`).toEqual(band)
-  })
+  // The band's arm (VIEWBOX against band.css's prose mirror) retired with band.css at Act 6's RC4: the old band and its
+  // enlarge modal left with the answer page; VIEWBOX stays in bandGeometry.ts for the charts that still read it.
 
   it('the three families are distinct declarations, not one copied number (non-vacuity)', () => {
     // A bind that passed because every chart happened to share one ratio would prove nothing about

@@ -377,3 +377,20 @@
     display: none;
   }
 }
+
+/* The standing line's labelled parts inside the clone (RC4: the pay check's line rides the StaleBanner). The legacy
+   note-parts rules (`noteParts.css`) lose their paragraph and label margins to the scoped preflight above and set the
+   label in the old body face beside Figtree text, so the clone restates their laws here: the label in its text's face,
+   its own line with space above, and a run's paragraphs --space-2 apart. */
+@layer kit {
+  .rc-root .note-parts__label {
+    margin: var(--space-3) 0 var(--space-1);
+    font-family: inherit;
+  }
+  .rc-root .note-parts__run > .note-parts__para + .note-parts__para {
+    margin-block-start: var(--space-2);
+  }
+  .rc-root .note-parts__closing {
+    margin: var(--space-5) 0 0;
+  }
+}

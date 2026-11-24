@@ -1,605 +1,134 @@
 /*
- * src/ui/Result.tsx — D2 the landed magic moment (the result screen).
+ * src/ui/Result.tsx — the INTERIM recommendation tab, Tax → Tax Strategies (Act 6 · RC4; plan
+ * docs/plans/6-rightcapital-ui-plan.md, RC4 "Interim homes" and section 3.1). RC4 made the shell the home and deleted
+ * the answer half of this file (the date hero, the confidence statement, the save slot, the band and the ladder: their
+ * jobs moved to Snapshot and Probability). What is left is the recommend-second beat in its old look, until RC8
+ * rebuilds it as Tax Strategies: the invite, the goal picker, the committed beat (`RecommendationSurface`) and the
+ * remembered-record card.
  *
- * On intake completion the quiet provisional AnswerStrip gives way to the ELEVATED state-adaptive
- * lead: the {@link FuckOffDate} hero for a still-working household, the {@link ConfidenceStatement}
- * for an all-retired one ({@link selectElevatedAnswer} owns the routing — the choice is the answer the
- * engine already crowned, never a re-derivation). The U12 Assumptions door (the Review door's old
- * seat) opens the {@link AssumptionPanel}; the guided re-walk back to intake lives INSIDE it, with
- * every answer preserved (the draft lives in the one `appModel`; nothing is persisted — U8 owns Save).
+ * It renders a `<div class="result-page">` with NO tier attributes (the shell's one `main.result` carries them, plan
+ * 3.1's settle hook: two would make `SETTLED_RESULT` a strict-mode error) and no disclaimer of its own (an interim tab's
+ * old component renders none; the shell's R13 mount covers the page, plan 4.0). On the working route, where the solve
+ * does not run, it shows RC8's working-route line and nothing else.
  *
- * CALM RENDERING (back-nine-design §3): the figures are STATIC and each surface owns its own
- * @starting-style reveal + reduced-motion fallback; this container adds NO theatrics — it only gives
- * the hero room to breathe and seats the quiet return. The hero heading takes focus once on landing
- * (resolvedFocusKey → the surface's focusSignal), the magic-moment announce.
+ * §S2 — THE GOAL PICKER'S LEAD IS VERDICT-GATED, now on the RAW triple (Act 6 · RC4's ruling: raw everywhere the clone
+ * prints a count): "with the basics covered" is false on the cohort the door still opens the picker for, so the lead
+ * shows only on a positive list of outcome states read from `rawDisplayed` (never `snapshot.displayed`). 'borderline'
+ * is deliberately IN (the Caddie's 2026-07-23 U16 walk cleared it). A new OutcomeState falls to silence.
  */
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
-import { AnswerStrip } from '@intake/AnswerStrip'
-import { healthcarePriced, isDateRoute, missingRequiredFacts, spineMedicarePriced } from '@intake/intakeMap'
-import { useEditorSheets } from './editorSheets'
-import { budgetGoverns } from '@budget/budgetModel'
-import { epochDayToCalendarYear } from '@store/staleness'
-import { composeAnswerNotes } from './answerNotes'
-import type { SavedRecommendationStatus } from '@store/savedRecommendation'
-import { currentEpochDay } from './scenarioFromDraft'
-import type { RecommendationGoal, SavedRecommendationV3 } from '@shared/model'
+import { isDateRoute, pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
 import { GoalPicker } from '@intake/GoalPicker'
+import { epochDayToCalendarYear } from '@store/staleness'
+import { rawDisplayed } from '@store/memoryModel'
+import type { SavedRecommendationStatus } from '@store/savedRecommendation'
+import type { RecommendationGoal, SavedRecommendationV3 } from '@shared/model'
+import { currentEpochDay } from './scenarioFromDraft'
 import { RecommendationSurface, SavedRecordCard, type RecommendationSaveProp } from './RecommendationSurface'
 import { savedRecordCardView } from './recommendationSaveView'
 import { SAVED_RECORD_COPY } from './savedRecordCopy'
 import { copy } from './copy'
 import { appModel } from './appModel'
-import { Disclaimer } from './Disclaimer'
-import { FuckOffDate } from './FuckOffDate'
-import { ConfidenceStatement } from './ConfidenceStatement'
-import { caveatSeat, selectElevatedAnswer, resolvedFocusKey } from './answerView'
-import { SaveSlot } from './SaveSlot'
-import { useSaveAnnouncer, type ResultSaveProp } from './saveAnnouncer'
+import { composeAnswerNotes } from './answerNotes'
+import { resolvedFocusKey, selectElevatedAnswer } from './answerView'
 import './styles/result.css'
 
-/** The workbench room's DOOR (Act 5, U6). IntakeApp passes it only while the answer is saveable — the
- *  rule the save control uses for an unresolved answer — and it rides the actions row, so it is
- *  withheld while computing too. A read-only tab still gets it (the room withholds its own writes). */
-export type ResultWorkbenchProp = {
-  readonly onOpen: () => void
-  /** Present while the door was pressed over an entry still open on this screen (the room would unmount it
-   *  with no browser dialog): the door asks here first. */
-  readonly ask?: { readonly onGo: () => void; readonly onStay: () => void }
-}
-
-/** The re-offer backup DOOR (U8-tail) — present ONLY on a returning, WRITABLE session with no
- *  backup-note on record (IntakeApp owns that gating; this screen is dumb wiring). A quiet,
- *  subordinate line + CTA that opens the export step; absent (undefined) ⇒ no door at all. */
-export type ResultBackupProp = { readonly onSave: () => void }
-
-/** U17 §S5 — THE RAW PAIR the store's trichotomy produced, never a composed view. This screen alone
- *  owns `solveInvitable` and `isDateRoute`, so it alone can mint the card's label, its cost line and
- *  its onClick TOGETHER — a view composed upstream would arrive beside a wiring decision made here
- *  and could ship a dead door (or an unreachable arm). */
+/** U17 §S5 — THE RAW PAIR the store's trichotomy produced, never a composed view. This tab alone owns `solveInvitable`
+ *  and `isDateRoute`, so it alone can mint the card's label, its cost line and its onClick TOGETHER. */
 export type RecommendationRecordProp = {
   readonly status: SavedRecommendationStatus
   readonly record: SavedRecommendationV3
 }
 
+/** The goal picker's lead premise: a positive list of outcome states, read from the RAW triple (the module note). */
+export function goalLeadPremiseHolds(answer: Parameters<typeof rawDisplayed>[0]): boolean {
+  const raw = rawDisplayed(answer)
+  return raw !== null && (raw.outcomeState === 'on-track' || raw.outcomeState === 'over-funded' || raw.outcomeState === 'borderline')
+}
+
 export function Result({
-  onReview,
-  save,
-  backup,
-  workbench,
   recSave,
   recordCard,
-  computing = false,
-  stalenessNote = false,
-  leftOverClauseHost = false,
-  agedBalancesYear,
-  readOnly = false,
 }: {
-  readonly onReview: () => void
-  readonly save: ResultSaveProp
   /** U17 §S5 — the strategy slot's derived view + the gesture (IntakeApp owns both machines). */
   readonly recSave?: RecommendationSaveProp
-  /** U17 §S5 — the DISK's remembered recommendation + the store's re-entry trichotomy over it, or
-   *  undefined when there is no record to judge (or the route cannot answer honestly). */
+  /** U17 §S5 — the DISK's remembered recommendation + the store's re-entry trichotomy over it. */
   readonly recordCard?: RecommendationRecordProp
-  /** The re-offer backup door (U8-tail). Present ⇒ render the quiet subordinate line + CTA;
-   *  undefined ⇒ no door. Withheld with the whole actions row while computing (an affordance
-   *  we don't want used on a non-answer shouldn't exist — the same rule as the quiet doors). */
-  readonly backup?: ResultBackupProp
-  /** Act 5, U6 — the workbench room's door. Present ⇒ the last quiet door; undefined ⇒ none. */
-  readonly workbench?: ResultWorkbenchProp
-  /** P3·U13 — TRUE when any staleness clock fired at unlock (IntakeApp's re-entry gate
-   *  derived it from the RAW vault stamps): both heroes wear the standing "figured fresh
-   *  under today's rules" line WITH the verdict. Session-lifetime (drift doesn't un-happen
-   *  by re-saving mid-session). Default false. */
-  readonly stalenessNote?: boolean
-  /** Build 2's clause host (R12), from `composeReentry` at unlock and session-lifetime like `stalenessNote`: a
-   *  tax, state-tax or working-years line fired, so a moved left over rides the hero's rules note as a clause
-   *  and the standing slot says nothing of it (one cause, one line). Default false. */
-  readonly leftOverClauseHost?: boolean
-  /** The aged-balances clause's honest year (review 2026-07-10): present ⇔ the rendered
-   *  answer still matches an on-disk save whose `savedAt` year is at least one calendar
-   *  year old (IntakeApp derives it via `agedBalancesYearFor` — the persist machine's own
-   *  saved scenario, so an edit or a re-save suppresses it structurally). Named by the
-   *  date route's ladder caveat; absent ⇒ no clause. */
-  readonly agedBalancesYear?: number
-  /** True while NOTHING has ever resolved (answer 'idle'/'pending' — the "Working it out…"
-   *  window). The whole actions row is withheld: the actions act on an answer that isn't
-   *  there yet, and an affordance we don't want used shouldn't exist (Briggsy, 2026-07-02).
-   *  The edit path is epoch-SAFE during a compute (memoryModel discards stale resolves), so
-   *  this is a calm-affordance rule, not a data guard. `pending` is pre-first-resolve ONLY —
-   *  the background final sharpen never re-hides the row — and a compute-error shows it
-   *  (editing inputs is that failure's remedy). */
-  readonly computing?: boolean
-  /** The unlock's read-only arm (a second tab holds the plan): nothing edited here can be kept, so a
-   *  door that exists only to edit (the pay check's KTD21 line) is withheld — the fact is still said.
-   *  Default false (every fresh session, and the preview/test mounts). */
-  readonly readOnly?: boolean
 }) {
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
-  const missing = useMemo(() => missingRequiredFacts(snapshot.draft), [snapshot.draft])
-  // Retry re-runs the FINAL tier alone, one run with no quick reading first (a provisional re-fire would
-  // mint a higher epoch and supersede the final). The date hero does show a provisional-tier answer, under
-  // its tag, on a first reveal and after an edit (W9-R7); a retry never passes through one.
   const retry = useCallback(() => void appModel.recompute('final'), [])
-
-  // The save slot's TRANSITION announcements — one persistent, always-mounted polite region (the
-  // `role="status"` node at the top of <main>), shared with the workbench room (SaveSlot.tsx).
-  const announcer = useSaveAnnouncer(save.kind)
-
-  // P3·U13 — the wall-time anchor (presentation arithmetic ONLY — never written back into
-  // the draft; the round-trip guard). The plan clock is 0 for every same-year session; it goes
-  // positive only when a plan BUILT in an earlier calendar year is re-opened: the date hero
-  // then re-derives its "~N years out" from TODAY while the calendar label holds, and the
-  // BAND's x-axis re-bases (year 0 = "Plan built", wall "Today" at x = the plan clock — the
-  // one-screen-one-time-base law, threaded through selectElevatedAnswer). The year is read
-  // through the ONE local-calendar chain (currentEpochDay → epochDayToCalendarYear — the same
-  // basis staleness compares and startCalendarYear was minted in), never a second ad-hoc
-  // clock read (ultramode 2026-07-09, the basis catch). It is read once per built plan, as the
-  // anchor's own memo read it before Act 6's RC0 moved the mint into `composeAnswerNotes`.
-  //
-  // IT MEASURES THE BUILD, NOT THE SAVE (U17 §S0.2). `startCalendarYear` is written once when
-  // the plan is built and survives every re-save, so this is "years since you built this plan"
-  // — never "years since your save". The SAVE's own vintage rides `savedAt` on its own rail
-  // (agedBalancesYearFor, threaded by IntakeApp); the two diverge for any re-saver, and the
-  // aged band used to speak the wrong one. Math.max(0, …) clamps a device clock that reads
-  // BEHIND the build year to the fresh identity — no re-base at all, never a negative x.
+  // The plan clock (U17 §S0.2: years since the plan was BUILT): the wall year through the ONE local-calendar chain,
+  // the anchor from the notes composer's one mint (never a second subtraction here).
   const wallCalendarYear = useMemo(() => epochDayToCalendarYear(currentEpochDay()), [snapshot.draft.startCalendarYear])
-  // Every note the hero receives — the plan clock, the state and Medicare notes, the staleness clause, the ONE standing
-  // line — from the one pure composer (`answerNotes.ts`, which holds their laws: each reads the ANSWERED draft, KTD5,
-  // and a read-only tab gets the standing line without its door).
   const notes = useMemo(
-    () => composeAnswerNotes(snapshot, { readOnly, stalenessNote, leftOverClauseHost, agedBalancesYear, wallCalendarYear }),
-    [snapshot, readOnly, stalenessNote, leftOverClauseHost, agedBalancesYear, wallCalendarYear],
+    () => composeAnswerNotes(snapshot, { readOnly: false, stalenessNote: false, leftOverClauseHost: false, wallCalendarYear }),
+    [snapshot, wallCalendarYear],
   )
   const dateAnchor = notes.planClock
-
-  const elevated = selectElevatedAnswer(snapshot, retry, dateAnchor)
-  const focusKey = resolvedFocusKey(elevated)
-
-  // U9b — the ONE deepening door (council 2026-07-02, Q1/R8): a quiet affordance on the landed
-  // answer opens the budget-builder sheet; a governing budget re-words the same door. Offered only
-  // on a RESOLVED reading (focusKey is defined exactly then) — the budget deepens an answer, and
-  // an affordance we don't want used on a non-answer shouldn't exist.
-  const governs = budgetGoverns(snapshot.draft.budget)
-
-  // P3·U10 — the two control doors (R9/R11: quiet, invited, never a badge). GATING LAW:
-  //  - sequencing: a resolved reading + ≥1 entered account (an order over zero accounts is inert);
-  //  - the Roth door: a resolved reading + CATEGORICAL facts only — filing status, never a
-  //    personalized bracket/balance computation (plan §U10 teaser law; the $0-pre-tax case gets
-  //    the lever's own calm closed face, so even that read stays out of the door predicate).
-  // The lever sheets, the AssumptionPanel and their writes live in ONE shared home (`editorSheets.tsx`, Act 5
-  // U8), which the workbench room's facts page calls too. Where the assumptions panel lands when it opens: the
-  // W row when the pay check's stale line opened it, the left-over seat when build 2's moved line did, nowhere
-  // special from the plain door (the hook drops the seat on every close).
-  // U12 ultramode — `restoreToAssumptionsDoor` is every sheet's close-time focus fallback for the via-panel
-  // route (the panel's Edit row unmounts with the panel, so the sheet's captured owner is disconnected by close
-  // time — without a fallback focus strands on <body>). The Assumptions door is the honest landmark: it is the
-  // surface the user came through, and it stays reachable in every post-resolve state (the hatch gate below).
-  // Re-queried at close, because the dead-end repair remounts the actions row while the panel is open.
-  const restoreToAssumptionsDoor = useCallback(
-    () => document.querySelector<HTMLElement>('[data-door="assumptions"]'),
-    [],
-  )
-  const editors = useEditorSheets({
-    model: appModel,
-    snapshot,
-    missing,
-    savedAnchor: dateAnchor,
-    restoreFallback: restoreToAssumptionsDoor,
-    onReview,
-  })
-  // The standing answer line (`notes.standing`): its door opens the panel at that cause's seat, and exists only
-  // where the tab can save (a read-only tab reads the fact alone: the composer drops the seat and the parts' `door`).
-  const standing = notes.standing
-  const payCheckNote =
-    standing === undefined
-      ? undefined
-      : standing.seat === undefined
-        ? { cause: standing.cause, parts: standing.parts }
-        : { cause: standing.cause, parts: standing.parts, onOpen: () => editors.openAssumptions(standing.seat) }
-  // Act-4 · U16 §S2 — the recommend-second GOAL choice (the picker precedes the solve). The affordance
-  // opens it; a confirmed pick writes `chosenGoal` and dispatches the solve.
+  const focusKey = resolvedFocusKey(selectElevatedAnswer(snapshot, retry, dateAnchor))
   const [goalOpen, setGoalOpen] = useState(false)
-  const rothApplied = snapshot.draft.rothConversion
-  // P3·U11 — the Healthcare door's domain (categorical, fact-presence only) is the ENGINE's own
-  // priced-healthcare gate (healthcarePriced — single-sourced with buildOverlay; council
-  // 2026-07-03: no hollow door).
-  const healthPriced = healthcarePriced(snapshot.draft)
-  // The state-tax unit (S5) — "which PRICED state did THIS run price?", read route-aware off the
-  // route's OWN built-params overlay decision (never draft.retirementState — insight 081; never a
-  // bare isDateRoute disjunct — insight 080). undefined for not-priced / 'elsewhere' / unbuilt /
-  // the degenerate-overlay household. Threaded to every disclosure home (the verdict's residual or
-  // standalone state note names the state; the Roth lever + Healthcare sheet drop the state-tax
-  // omission, and the sheet's conversion tile adds the state's tax to its cents; the RECOMMENDATION
-  // surface drops its state-tax scope note, `recDiscStateTax`), each gating on `!== undefined`.
-  // The live read is the editor sheets' own (one computation, `editorSheets.tsx`).
-  const statePricedNote = editors.statePricedNote
-  // …and its HERO twin, read off the answered draft, is `notes.statePricedNote` (KTD5: two values — the sheets and the
-  // recommendation surface describe what they will run next, the hero what it ran).
-  // The pay-less-tax ALL-IN hero's scope (build spec D7): did the SOLVE's built overlay price
-  // healthcare? Deliberately NOT the sheets' `medicarePriced` (`editorSheets.tsx`) — that one ORs the date route in (structurally
-  // priced there), while the solve never runs on the date route (`spine-unready`) and its base is
-  // exactly `buildSpineParams`' output, so the spine read alone is the solve's own predicate.
+  // The state the NEXT solve prices, off the live draft (KTD5: the recommendation surface describes what it will run).
+  const pricedState = useMemo(() => pricedStateForRun(snapshot.draft), [snapshot.draft])
+  // The pay-less-tax ALL-IN hero's scope (build spec D7): the solve's base is `buildSpineParams`, so the spine read is
+  // the solve's own predicate.
   const solveHealthcarePriced = useMemo(() => spineMedicarePriced(snapshot.draft), [snapshot.draft])
-  const enhancedApplied = snapshot.draft.enhancedSubsidies === true
-  // U12 ultramode — the modal-ownership signal: `sheetOpen` to both heroes (suppress the landing focus grab +
-  // the sharpen announce while a sheet/panel owns focus and AT — an in-panel edit can demote → re-resolve →
-  // REMOUNT a hero behind the open aria-modal). The fallback half is `restoreToAssumptionsDoor` above.
-  const sheetOpen = editors.sheetOpen || goalOpen
+  const restoreToHeading = useCallback(() => document.querySelector<HTMLElement>('main.result h2[tabindex="-1"]'), [])
 
-  // U12 — the Assumptions door's gate (F4: it takes the Review door's quiet-row seat; count
-  // stays 5). THIS DOOR GATES DIFFERENTLY FROM ITS SIBLINGS, deliberately (3-controls.md:243):
-  // every other door gates on `focusKey` and so VANISHES exactly while the answer is
-  // indeterminate / inputs-incomplete — but the escape hatch is the way BACK from those
-  // states, so it must stay reachable there: a resolved reading (focusKey), the store's
-  // post-first-resolve `inputs-incomplete` demotion, the post-first-resolve fallback arms
-  // (a date input-failure / an indeterminate headline — the strip is showing, the hero fell
-  // back), AND compute-error (its comment above names editing inputs as the remedy — a
-  // remedy needs its door; the old Review button was unconditional here), AND the pre-first-
-  // resolve idle frame with a missing required fact (the completed-intake dead end — see the arm
-  // below). While computing — `pending`, or idle with NOTHING missing (IntakeApp's `computing`) —
-  // it is withheld with the whole row, the existing law.
-  const hatchReachable =
-    focusKey !== undefined ||
-    snapshot.answer.kind === 'inputs-incomplete' ||
-    // The completed-intake dead end (2026-09-03): pre-first-resolve, a missing required fact
-    // leaves the answer idle FOREVER (no dispatch) — the strip names the fact, and this panel's
-    // rows are the only way to supply it. Idle with nothing missing stays withheld (the crunch).
-    (snapshot.answer.kind === 'idle' && missing.length > 0) ||
-    snapshot.answer.kind === 'compute-error' ||
-    (elevated.kind === 'fallback' &&
-      (snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date'))
-
-  // The completion actions (save slot + the ONE budget door + the quiet return), built once.
-  // On a RESOLVED date/spine answer they are SEATED in the surface's left reading column (the
-  // two-pane grid tucks them under the words instead of stranding them centered below both panes
-  // — the scroll + dead-lower-left fix, Briggsy 2026-07-02); on the fallback/pending answer (no
-  // two-pane) they render below as before. Withheld entirely while computing (the actions act on
-  // an answer that isn't there yet). The same one decision places the R13 caveat (`caveatSeat`,
-  // answerView.ts): its mount below and `data-inframe-disclaimer` read this value, never their own
-  // copy of the condition.
-  const seating = caveatSeat(elevated, computing)
-
-  // §S2 — the recommend-second invited affordance is offered only when the solve is INVITABLE: no
-  // beat yet (idle), or a goal-unset precondition that steers to the picker. A builder-refusal block
-  // (no-pretax / spine-unready) and the pending/committed/stale beats own their own renders (S3).
-  // Never on a non-answer (the affordance is gated by focusKey with the doors below). `solve` is the
-  // tier-less solve channel. U16 §S1 — the ALL-RETIRED (spine) route only in v1: the live solve base
-  // is `buildSpineParams` (retirement params), and a still-working household's honest base is the
-  // CROWNED date, whose offset this dispatch does not yet thread — so the working-route
-  // recommend-second is a follow-up increment. ⚠️ The builder's `spine-unready` refusal does NOT
-  // cover the date route (corrected 2026-09-04): no control on that route can open the GoalPicker,
-  // so the refusal is never minted there, and a non-idle body the store still holds after a route
-  // flip is DROPPED by the gate below — the date route is silent on strategy today (register:
-  // "Date-route recommend-second parity"). Both fit-gate affordance seeds (`retired`, `nc`) are
-  // all-retired, so this gate does not regress the measured posture.
-  const solve = snapshot.solve
-  // The invite door is INVITABLE whenever a first-or-fresh solve is the honest next step: no beat yet
-  // (idle), a goal-unset precondition (steer to the picker), OR a `compute-error` channel (a worker
-  // death) whose note PROMISES the user they can re-open, so the control that fulfils that promise must
-  // return. F-B (U16 chair fix): the `stale` channel is DROPPED from this predicate — it now carries its
-  // OWN re-open control INSIDE the stale card (RecommendationSurface), so the promise and its action
-  // share ONE home; a second door-row invite would be a SECOND control for the same promise. The four
-  // non-invite doors (budget · sequencing · roth · health · assumptions) are unaffected (they gate on
-  // focusKey). The dispatch paths stay two — this invite door and the committed/stale re-pick door
-  // (both open the GoalPicker). A builder-refusal `blocked` (no-pretax / spine-unready) deliberately
-  // does NOT invite — the gap is never the goal, so its own calm named-reason note carries the steer
-  // (§Q5, F3; the steer-seed increment split the reasons).
-  //
-  // U17 §S5 — THE SAME F-B MOVE, FOR THE RETURNING HOUSEHOLD. A vault return lands `idle` WITH a
-  // record on disk, and the record card carries its OWN re-open control (label + cost line + onClick
-  // minted as one below) — so an un-amended `idle` disjunct would put TWO controls opening the same
-  // GoalPicker on that one frame, which is exactly the duplication the stale chair fix retired. With
-  // NO record the predicate is byte-identical to today, so every dev seed, the doors-order contract
-  // and the measured idle frames are untouched.
-  const solveInvitable =
-    !isDateRoute(snapshot.draft) &&
-    ((solve.kind === 'idle' && recordCard === undefined) ||
-      solve.kind === 'compute-error' ||
-      (solve.kind === 'blocked' && solve.gap === 'goal-unset'))
-
-  // §S2 — THE GOAL PICKER'S LEAD IS VERDICT-GATED. "With the basics covered" is false on the cohort
-  // the door still opens the picker for. Gated on the sticky DISPLAY triple the verdict sentence
-  // itself renders from (the U12 C2 raw/sticky split in answerView's `headline` arm), never the raw
-  // headline — a hysteresis frame must not show the lead over a failing sentence. A POSITIVE list: a
-  // new OutcomeState falls to silence rather than inheriting the claim. 'borderline' ("On the line")
-  // is deliberately IN — the Caddie killed the "basics covered" premise tension on that verdict with
-  // receipts (docs/caddie/cold-read-log.md, the 2026-07-23 U16 recommend-second walk, Card 1
-  // `solve:nc`); this closes the already-failing hole it left open and must not re-litigate the
-  // cleared arm. This expression evaluates on EVERY render, indeterminate frames included; there it
-  // is `snapshot.displayed === null` that silences the lead, not the door — `displayed` is non-null
-  // exactly on a non-indeterminate spine verdict (the Phase B commit-coherence invariant answerView
-  // trusts), and null on the date route / error / inputs-incomplete too (memoryModel's `commit`
-  // re-resolves it on every commit; the rule is stated on `MemoryModelSnapshot.displayed`). EVERY
-  // route into the picker is covered by construction — there is ONE <GoalPicker> element and the
-  // gate rides its prop, never a door's own condition. Which matters, because the routes in are
-  // FOUR: the quiet-row invite (focusKey-gated, `solveInvitable`), the record card's `onReopen`
-  // minted below, and the stale + committed beats' re-picks (`onRepick` into RecommendationSurface)
-  // — the last three ride the solve/record channels, NOT `focusKey`.
-  const goalLeadPremiseHolds =
-    snapshot.displayed !== null &&
-    (snapshot.displayed.outcomeState === 'on-track' ||
-      snapshot.displayed.outcomeState === 'over-funded' ||
-      snapshot.displayed.outcomeState === 'borderline')
-
-  // THE CARD AND ITS DOOR, MINTED IN ONE EXPRESSION — the fork the F-B chair fix closed: label, cost
-  // line and onClick are inseparable, and the surface's dead-button law (no handler ⇒ no control)
-  // makes divergence unrepresentable.
-  //
-  // THE RE-OPEN WIRES ON THE POSITIVE `idle` PREDICATE, not on `!solveInvitable`. `pending`, and both
-  // builder-refusal `blocked` gaps, are frames this screen deliberately refuses to invite on (see the
-  // gate above) and where `pickGoal` → `dispatchSolve` deterministically re-refuses — a door there
-  // would promise a re-solve the dispatch cannot deliver. `stale` is excluded for the opposite
-  // reason: it already carries the stale card's own re-open, and a second door beside it is the
-  // duplication F-B retired. `todayEpochDay` rides the ONE local-calendar chain this file already
-  // reads (currentEpochDay → epochDayToCalendarYear), never a second ad-hoc clock.
-  const card =
-    recordCard === undefined
-      ? undefined
-      : {
-          view: savedRecordCardView(
-            recordCard.status,
-            recordCard.record,
-            currentEpochDay(),
-            SAVED_RECORD_COPY,
-          ),
-          onReopen: solve.kind === 'idle' ? () => setGoalOpen(true) : undefined,
-        }
-  // A CONFIRMED goal pick: write `chosenGoal`, close the picker, dispatch the solve. A re-pick writes
-  // the new goal and re-dispatches — the store's invalidateStaleSolve + the solve request-epoch carry
-  // the visible re-solve. NO auto-save: `chosenGoal` rides the draft in-session (the explicit-resave
-  // ceremony persists it, like every model field — §S1). Mirrors the sheets' update→close→recompute.
+  // A CONFIRMED goal pick: write `chosenGoal`, close the picker, dispatch the solve (no auto-save: §S1).
   const pickGoal = useCallback((goal: RecommendationGoal) => {
     appModel.update((d) => ({ ...d, chosenGoal: goal }))
     setGoalOpen(false)
     void appModel.dispatchSolve()
   }, [])
 
-  const actionsNode = computing ? null : (
-    <div className="result-actions">
-      {/* The save slot: one reserved box across all five populated states (insight 035 — the
-        Review button below must never shift under a pointer when a click swaps CTA→pending→
-        badge). 'none' renders no slot at all: no claim about a disk state that can't be
-        compared, and no reserved emptiness on the never-saveable answer. */}
-      <SaveSlot save={save} />
-      {/* §S2 — the recommend-second beat's surface (the second magic moment): the PENDING tell, the
-          committed grade lockup + RecommendationViz, and the held/stale/steer notes. DOM-ordered
-          directly UNDER the save slot — the recommend-SECOND beat sits ABOVE the in-frame disclaimer
-          + the quiet doors, so focus order matches its visual row (F-A the dead-rail fix: at the
-          laptop two-pane it leaves the left column for a FULL-WIDTH row below the two panes, the viz
-          continuing the band down into the once-blank right rail — confidence.css owns the placement,
-          keyed on the surface carrying a real beat so the IDLE frame is byte-identical). Renders
-          0-height (just its live region) until the solve is invited, so it never perturbs the idle
-          fit frame. The invited AFFORDANCE lives in the quiet row below (a calm door); this region
-          carries the response. §S4: the committed beat's RE-PICK door reopens the GoalPicker (the
-          standing goal pre-selected); `pickGoal` re-dispatches — the visible re-solve. ROUTE-GATED on
-          the SAME !isDateRoute predicate the invite uses (§S1: the v1 recommend-second is
-          all-retired-route only — the working-route base is the crowned date this dispatch does not
-          yet thread; the date route never renders the surface, so the "doors last" order contract is
-          untouched): after a committed/stale beat, a route flip (a spouse un-retires) must not strand
-          an orphaned rec note inside the date hero. Idle renders nothing here anyway; the gate drops
-          the non-idle body the store still holds. A flip back re-mounts the surface + invite. */}
-      {!isDateRoute(snapshot.draft) && (
-        <RecommendationSurface
-          solve={snapshot.solve}
-          pricedState={statePricedNote}
-          // The solve's BUILT healthcare pricing (build spec D7): the solve's base IS `buildSpineParams`
-          // (solveDispatch.ts), and this surface mounts only off the date route, so the spine read IS
-          // `base.overlay.healthcareEnabled`. Picks the pay-less-tax hero's all-in vs tax-only arm.
-          healthcarePriced={solveHealthcarePriced}
-          // The SAME anchor the band annotations and the record card read — minted once above, passed
-          // by reference. The winning-plan card's conversion start speaks `startCalendarYear + offset`
-          // off it; drop this prop and the card silently stops rendering (never a wrong year).
-          planClock={dateAnchor}
-          onRepick={() => setGoalOpen(true)}
-          recSave={recSave}
-        />
-      )}
-      {/* The IN-FRAME R13 disclaimer (council 2026-07-08, "buttons drop below" — Briggsy's fork
-          call): DOM-ordered ABOVE the backup door AND the quiet doors (the Medicare-pricing unit's
-          fold-priority fix, 2026-07-10 — the pulled-forward TODO-7 / Caddie-#3 inversion): every
-          UNPROTECTED affordance below it degrades past the fold FIRST, so the protected honesty
-          caveat wins the frame (the Hawk's veto; the trailing App mount is the structural first
-          casualty). Visible at EVERY width whenever a verdict has committed (council 2026-09-10,
-          wf_d2b1d05a-001 — until then it was display:none below the laptop two-pane, which left the
-          phone's only caveat AFTER the doors, the inversion this mount exists to prevent); app.css
-          hides the trailing mount behind main.result's data-inframe-disclaimer attribute (same
-          words, one visible mount, Disclaimer.tsx has the contract). On the scrolling tiers the law
-          is ORDER + REACHABILITY, gated in e2e/vertical-fit.spec.ts. Its place is `seating.caveat`. */}
-      {seating.caveat === 'actions' && <Disclaimer inFrame />}
-      {/* THE REMEMBERED-RECORD CARD — DOM-ordered BELOW the disclaimer, joining the doors as a
-          sanctioned below-fold casualty (Briggsy's ruling, 2026-07-26, on measured numbers).
-          It began life inside RecommendationSurface, above this line, and MEASURED at his real
-          1536×791 it pushed the protected R13 disclaimer from 702px to 858px (holds, 156px card) and
-          to 952px (superseded with two causes, 251px) — a 67-161px breach of the one-frame fit law,
-          against an idle frame carrying only 89px of headroom. No honest version of the card fits
-          that seat, so this was a PLACEMENT decision and never a trim: every word survives.
-          It sits here for the same reason the backup door does — unprotected affordances degrade
-          past the fold FIRST so the protected honesty caveat wins the frame (the Hawk's veto). Focus
-          order matches visual order; no CSS-only reorder. DOM ORDER ALONE DOES NOT PIN THE PIXELS at
-          the laptop two-pane: the actions chain is `display: contents` there, so this card is a grid
-          item and confidence.css must seat it (`.rec-record`, the row directly under the caveat).
-          Auto-placed it would take the dead RIGHT rail instead — verify:fit's `?vault=rec` /
-          `?vault=recold` arms assert both the document order and the seat. The date route is already excluded at the
-          producer (IntakeApp's `recordCard` memo returns undefined on `isDateRoute`), so this needs
-          no route gate of its own — a crowned-date surface can never carry a record. */}
-      {card !== undefined && <SavedRecordCard card={card} />}
-      {/* The re-offer backup door (U8-tail): a QUIET, subordinate durability affordance — the plan
-          is already saved to this device (the slot above says so); this only offers the off-device
-          second copy when none is on record. Reads under the verdict, never a primary CTA, never
-          color-only. DOM-ordered BELOW the disclaimer (2026-07-10): it is unprotected, so on the
-          tallest composite frame (an all-65+ writable stale return, where the priced-Medicare pair
-          + the staleness echo + this door together overrun the fold) it degrades below the fold
-          before the disclaimer does — focus order matches visual order, no CSS-only reorder
-          (WCAG 2.4.3). A normal vault frame with slack keeps it in-frame. */}
-      {backup !== undefined && (
-        <div className="result-backup-door">
-          <p className="result-backup-door__lead">{copy.backupDoorLead}</p>
-          <button type="button" className="btn-quiet" onClick={backup.onSave}>
-            {copy.backupDoorCta}
+  if (isDateRoute(snapshot.draft)) {
+    return (
+      <div className="result-page" data-strategies="working-route">
+        <p className="rec-note">{copy.strategiesInterimWorkingRoute}</p>
+      </div>
+    )
+  }
+
+  const solve = snapshot.solve
+  // The invite: a first-or-fresh solve is the honest next step (no beat yet with no record on disk, a worker death, or
+  // a goal-unset precondition); the stale and record cards carry their own re-open controls (F-B).
+  const solveInvitable =
+    (solve.kind === 'idle' && recordCard === undefined) || solve.kind === 'compute-error' || (solve.kind === 'blocked' && solve.gap === 'goal-unset')
+  // THE CARD AND ITS DOOR, MINTED IN ONE EXPRESSION (the F-B chair fix): the re-open wires on the positive `idle`.
+  const card =
+    recordCard === undefined
+      ? undefined
+      : {
+          view: savedRecordCardView(recordCard.status, recordCard.record, currentEpochDay(), SAVED_RECORD_COPY),
+          onReopen: solve.kind === 'idle' ? () => setGoalOpen(true) : undefined,
+        }
+
+  return (
+    <div className="result-page" data-strategies="">
+      {focusKey !== undefined && solveInvitable && (
+        <div className="result-quiet-row">
+          <button type="button" className="btn-quiet result-recommend-invite" onClick={() => setGoalOpen(true)}>
+            {copy.recommendInviteCta}
           </button>
         </div>
       )}
-      {/* The quiet doors: the sanctioned below-fold flex (the --laptop-fit-height degrade
-          contract, tokens.css). display:contents in single column — the stack renders exactly as
-          before; at the laptop two-pane the whole actions chain unwraps (display:contents) and
-          this row seats as the grid's LAST full-width row, below both panes and below the
-          in-frame disclaimer — one flick away, never crowding the answer. */}
-      <div className="result-quiet-row">
-        {/* §S2 — the invited recommend-second affordance: FIRST in the doors DOM order (so it degrades
-            below-fold LAST among the doors), rendered STATICALLY — no scroll-entrance / Intersection
-            Observer / badge / pulse (R11: invited, never engagement bait; R12: no imperative). A real
-            calm door (btn-quiet, ≥24px, visible non-color focus ring, the --dur-press resting press);
-            activating it opens the GoalPicker FIRST (the goal precedes the solve). */}
-        {focusKey !== undefined && solveInvitable && (
-          <button
-            type="button"
-            className="btn-quiet result-recommend-invite"
-            onClick={() => setGoalOpen(true)}
-          >
-            {copy.recommendInviteCta}
-          </button>
-        )}
-        {focusKey !== undefined && (
-          <button type="button" className="btn-quiet" onClick={editors.openBudget}>
-            {governs ? copy.budgetEditCta : copy.budgetCta}
-          </button>
-        )}
-        {focusKey !== undefined && snapshot.draft.enteredAccounts.length > 0 && (
-          <button type="button" className="btn-quiet" onClick={editors.openSequencing}>
-            {snapshot.draft.drawdownPolicy === 'proportional'
-              ? copy.leverSequencingCta
-              : copy.leverSequencingEditCta}
-          </button>
-        )}
-        {focusKey !== undefined && snapshot.draft.filing === 'mfj' && (
-          <button type="button" className="btn-quiet" onClick={editors.openRoth}>
-            {rothApplied === undefined ? copy.leverRothDoorCta : copy.leverRothDoorEditCta}
-          </button>
-        )}
-        {focusKey !== undefined && healthPriced && (
-          <button type="button" className="btn-quiet" onClick={editors.openHealth}>
-            {enhancedApplied ? copy.leverHealthDoorEditCta : copy.leverHealthDoorCta}
-          </button>
-        )}
-        {/* U12 (F4): the Assumptions door in the Review door's old seat — door count stays 5,
-            the quiet row stays the grid's LAST full-width row (the vertical-fit contract is
-            untouched). Gated by `hatchReachable`, NOT bare focusKey — see the gate above for
-            why this one door must survive indeterminate/incomplete. The guided re-walk
-            (`onReview`) now lives INSIDE the panel. */}
-        {hatchReachable && (
-          <button
-            type="button"
-            className="btn-quiet"
-            data-door="assumptions"
-            onClick={() => editors.openAssumptions()}
-          >
-            {copy.assumptionDoorCta}
-          </button>
-        )}
-        {/* Act 5, U6: the workbench room's door, LAST in the doors — reached on purpose, after the
-            answer (R1). Present only while the answer is saveable (IntakeApp's gate), and absent
-            while computing with the rest of this row. It opens a page, not a sheet. */}
-        {workbench !== undefined && (
-          <button type="button" className="btn-quiet" data-door="workbench" onClick={workbench.onOpen}>
-            {copy.workbenchDoorCta}
-          </button>
-        )}
-        {workbench?.ask !== undefined && (
-          <div className="result-door-ask" role="alert">
-            <p className="result-door-ask__text">{copy.workbenchDoorAsk}</p>
-            <button type="button" className="btn-primary" onClick={workbench.ask.onStay}>
-              {copy.workbenchLeaveStay}
-            </button>
-            <button type="button" className="btn-quiet" onClick={workbench.ask.onGo}>
-              {copy.workbenchDoorAskGo}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-
-  // The committed answer's recompute tier, mirrored below as `data-answer-tier` — the vertical-fit
-  // gate's REAL final-tier synchronization (e2e/vertical-fit.spec.ts waits for "final" before any
-  // measurement; a class-absence wait was proven vacuous by the gate's adversarial review). Absent
-  // until a verdict has committed — exactly when there is no frame worth measuring.
-  const answerTier =
-    snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date'
-      ? snapshot.answer.tier
-      : undefined
-
-  return (
-    // data-inframe-disclaimer reads the caveat's one seat (`seating.caveat`, the in-frame mount's own
-    // condition; withheld while computing): app.css hides the page-trailing disclaimer behind it at
-    // EVERY width (tier-independent since 2026-09-10), so a frame with no visible disclaimer is
-    // unrepresentable — the trailing mount stands whenever the in-frame one is out.
-    // data-answer-refiguring (W9-R7, KTD9) mirrors the store's flag PRESENCE-keyed (absent when off,
-    // the data-answer-tier precedent): a run on inputs different from the shown answer's is in flight.
-    // A settled page is `data-answer-tier="final"` with this attribute absent — the harnesses' signal,
-    // since a final-tier wait alone passes inside the window (the old answer still says final).
-    <main
-      className="result result-page"
-      data-inframe-disclaimer={seating.caveat === 'none' ? undefined : true}
-      data-answer-tier={answerTier}
-      data-answer-refiguring={snapshot.refiguring ? true : undefined}
-    >
-      <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
-      <div className="result-hero">
-        {elevated.kind === 'date' && (
-          <FuckOffDate
-            view={elevated.view}
-            focusSignal={focusKey}
-            actionsSlot={seating.inLead ? actionsNode : undefined}
-            medicarePricedNote={notes.medicarePricedNote}
-            medicareExtrasTypicalNote={notes.medicareExtrasTypicalNote}
-            statePricedNote={notes.statePricedNote}
-            stalenessNote={notes.stalenessNote}
-            stalenessClause={notes.stalenessClause}
-            dateAnchor={dateAnchor}
-            agedBalancesYear={notes.agedBalancesYear}
-            sheetOpen={sheetOpen}
-            onReconfirm={onReview}
-            payCheckNote={payCheckNote}
-          />
-        )}
-        {elevated.kind === 'spine' && (
-          <ConfidenceStatement
-            view={elevated.view}
-            focusSignal={focusKey}
-            actionsSlot={seating.inLead ? actionsNode : undefined}
-            medicarePricedNote={notes.medicarePricedNote}
-            medicareExtrasTypicalNote={notes.medicareExtrasTypicalNote}
-            statePricedNote={notes.statePricedNote}
-            stalenessNote={notes.stalenessNote}
-            sheetOpen={sheetOpen}
-            savedAnchor={dateAnchor}
-            agedBalancesYear={notes.agedBalancesYear}
-            onReconfirm={onReview}
-            liveDraft={snapshot.draft}
-          />
-        )}
-        {elevated.kind === 'fallback' && (
-          <AnswerStrip snapshot={snapshot} missing={missing} onRetry={retry} />
-        )}
-      </div>
-      {!seating.inLead && actionsNode}
-      {/* The lever sheets and the AssumptionPanel (U12: the panel mounts at RESULT level, outside the hero
-          swap — it exists over the fallback strip too, so the escape hatch stays real exactly where the hero
-          has fallen back to incomplete), from their one shared home (`editorSheets.tsx`). */}
-      {editors.node}
-      {/* §S2 — the GoalPicker: the Tier-2 goal choice that PRECEDES the solve. Reuses the ControlSheet
-          focus contract verbatim; a confirmed pick writes `chosenGoal` + dispatches. The via-panel
-          focus fallback is the honest Assumptions landmark (the invite trigger unmounts once the beat
-          leaves the invitable state). */}
+      <RecommendationSurface
+        solve={solve}
+        pricedState={pricedState}
+        healthcarePriced={solveHealthcarePriced}
+        planClock={dateAnchor}
+        onRepick={() => setGoalOpen(true)}
+        recSave={recSave}
+      />
+      {card !== undefined && <SavedRecordCard card={card} />}
       <GoalPicker
         open={goalOpen}
         current={snapshot.draft.chosenGoal}
         onPick={pickGoal}
         onClose={() => setGoalOpen(false)}
-        basicsCovered={goalLeadPremiseHolds}
-        restoreFallback={restoreToAssumptionsDoor}
+        basicsCovered={goalLeadPremiseHolds(snapshot.answer)}
+        restoreFallback={restoreToHeading}
       />
-    </main>
+    </div>
   )
 }

@@ -5,14 +5,15 @@
  * The module you are in sits on a `--stone-200` block the full height of the bar that joins the sub-nav below, so it
  * reads as a tab; its words are also heavier and it carries `aria-current` (never colour alone: the block is near
  * white). At the right, the lock menu: the plan's save state in words beside the lock, and what that state allows
- * (`lockMenu.ts`). The gear is left out until it opens something (RC18's settings).
+ * (`lockMenu.ts`), and the gear, which since RC4 opens the assumptions behind the plan in the old panel (RC18 rebuilds it
+ * as Settings); its word sits beside it on a laptop and its name is its accessible label everywhere.
  *
  * Below the 48rem phone tier the modules leave the bar for the phone menu (`PhoneMenu.tsx`). The bar's height is a floor,
  * never a cap: two long names wrap (and break inside a word only when a word alone is wider than their room) and the bar
  * grows, so no name is ever cut and the controls at the right never leave the window.
  */
 import { Menu } from '@base-ui/react/menu'
-import { ChevronDown, Lock } from 'lucide-react'
+import { ChevronDown, Lock, Settings } from 'lucide-react'
 import { cn, isPlainClick } from '../kit'
 import { copy } from '../copy'
 import type { LockMenuAction, LockMenuView } from './lockMenu'
@@ -27,6 +28,8 @@ export interface TopBarProps {
   readonly onHome: () => void
   readonly lock: LockMenuView
   readonly onLockAction: (action: LockMenuAction) => void
+  /** The gear: today it opens the assumptions behind the plan (the old panel, until RC18's settings). Absent: no gear. */
+  readonly onGear?: () => void
 }
 
 /** A word that keeps its heavier width reserved, so the active module's weight never moves its neighbours. */
@@ -89,7 +92,7 @@ function LockMenu({ lock, onAction }: { readonly lock: LockMenuView; readonly on
   )
 }
 
-export function TopBar({ names, modules, route, onNavigate, onHome, lock, onLockAction }: TopBarProps) {
+export function TopBar({ names, modules, route, onNavigate, onHome, lock, onLockAction, onGear }: TopBarProps) {
   return (
     <header className="rc-root w-full bg-bg">
       <div className="mx-auto flex min-h-12.5 max-w-[90rem] items-stretch gap-4 px-4 wide:gap-6 wide:px-10 compact:min-h-12">
@@ -148,6 +151,18 @@ export function TopBar({ names, modules, route, onNavigate, onHome, lock, onLock
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-2 wide:ml-2">
           <LockMenu lock={lock} onAction={onLockAction} />
+          {onGear !== undefined ? (
+            <button
+              type="button"
+              onClick={onGear}
+              aria-label={copy.shellGearLabel}
+              data-gear=""
+              className="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-control border border-transparent px-2 text-label text-stone-900 hover:border-stone-300"
+            >
+              <Settings size={18} strokeWidth={1.5} aria-hidden="true" className="text-plum" />
+              <span className="hidden whitespace-nowrap laptop:inline">{copy.shellGear}</span>
+            </button>
+          ) : null}
           <PhoneMenu modules={modules} route={route} onNavigate={onNavigate} />
         </div>
       </div>

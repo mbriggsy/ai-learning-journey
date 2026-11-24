@@ -1,0 +1,497 @@
+import { describe, expect, it } from 'vitest'
+import { runEngine } from '@engine/engineProtocol'
+import { fromWire } from '@engine/engineWire'
+import { DATE_OFFSET_WINDOW_TOP } from '@engine/dateSearch'
+import { buildSpineParams } from '@intake/intakeMap'
+import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
+import type { SavedRecommendationStatus } from '@store/savedRecommendation'
+import type { DateOffsetReading, DateSearchOutcome, DateTrackOutcome, Headline, SavedRecommendationV3, SimulationResult } from '@shared/model'
+import { BAR_RUNG } from '@viz/curveMarks'
+import { composeAnswerNotes } from '../../../answerNotes'
+import { copy, slots } from '../../../copy'
+import { DEV_SEEDS } from '../../../devSeeds'
+import { recommendationBundle } from '../../../workbench/railChrome'
+import type { WhatIfReading, WhatIfSlotView } from '../../../workbench/whatIfRun'
+import { snapshotView } from '../../dashboard/snapshotView'
+import { landingPick, probabilityView, recommendedOffer, shareRowNotes, type HalfView, type ProbabilityInput, type ProbabilityView } from '../probabilityView'
+
+/**
+ * Probability's composer (Act 6 · RC4, the plan's RC4 test scenarios that belong to the page): every honesty law of the
+ * two halves, the intro, the key-metric column, the states and the Odds by stop year chart is decided here and read by
+ * `Probability.tsx` (insight 048). The retired route reads a REAL engine run of the `retired` seed (never a typed
+ * reading); the working route's curves are hand-built so each law is pinned on the curve it names.
+ */
+
+const RETIRED = DEV_SEEDS.retired
+const DIP = DEV_SEEDS.dip
+
+function realRun(draft: ScenarioDraft): SimulationResult {
+  const params = buildSpineParams(draft)
+  if (params === null) throw new Error('no spine params')
+  const decoded = fromWire(runEngine(params, draft.seed!, { bandFan: true, survivorConditioned: true }))
+  if (!decoded.ok) throw new Error(decoded.reason)
+  return decoded.result
+}
+const RETIRED_RUN = realRun(RETIRED)
+
+const headlineAnswer = (draft: ScenarioDraft, result: SimulationResult): ModelAnswer =>
+  ({ kind: 'headline', tier: 'final', draft, inputKey: 'k1', result }) as unknown as ModelAnswer
+
+const snap = (draft: ScenarioDraft, answer: ModelAnswer, over: Partial<MemoryModelSnapshot> = {}): MemoryModelSnapshot => ({
+  draft,
+  answer,
+  displayed: null,
+  solve: { kind: 'idle' },
+  spend: { kind: 'idle' },
+  refiguring: false,
+  runningInWorker: false,
+  ...over,
+})
+
+const reading = (offsetYears: number, qlb: number): DateOffsetReading => ({ offsetYears, survivalFraction: qlb, quantizedLowerBound: qlb, clears: qlb >= 0.85 })
+/** A curve over offsets 0..n-1 from the given quantized lower bounds. */
+const curveOf = (qlbs: readonly number[]): DateOffsetReading[] => qlbs.map((q, i) => reading(i, q))
+
+// A dipped curve: offset 2 clears then 3 dips below the line, the durable date is 5; offsets 8 to 10 read at the ceiling,
+// so the TALLEST column (10, at the ceiling) is not the crown.
+const DIP_CURVE = curveOf([0.5, 0.7, 0.88, 0.8, 0.84, 0.86, 0.9, 0.92, 0.96, 0.97, 0.97])
+const confirmed = (curve: DateOffsetReading[], offsetYears: number, dips: readonly number[] = []): DateTrackOutcome => ({
+  kind: 'confirmed-date',
+  offsetYears,
+  grade: { quantizedLowerBound: curve[offsetYears]!.quantizedLowerBound, survivalFraction: curve[offsetYears]!.quantizedLowerBound, marginAboveBar: 0.01 },
+  nonMonotoneOffsets: dips,
+  curve,
+})
+const LIFESTYLE = confirmed(DIP_CURVE, 5, [2])
+
+const dateAnswer = (
+  draft: ScenarioDraft,
+  floor: DateTrackOutcome,
+  lifestyle: DateTrackOutcome,
+  band: { offsetYears: number; track: 'floor' | 'lifestyle' } | undefined,
+  tier: 'final' | 'provisional' = 'final',
+): ModelAnswer =>
+  ({
+    kind: 'date',
+    tier,
+    draft,
+    inputKey: 'k1',
+    outcome: {
+      kind: 'dates',
+      tier,
+      floor,
+      lifestyle,
+      windowTopYears: DATE_OFFSET_WINDOW_TOP,
+      seed: 1,
+      ...(band !== undefined ? { band: { ...band, fan: { byYear: [] }, outcomeState: 'on-track' } } : {}),
+    } as unknown as DateSearchOutcome,
+  }) as unknown as ModelAnswer
+
+function input(snapshot: MemoryModelSnapshot, over: Partial<ProbabilityInput> = {}): ProbabilityInput {
+  const wallCalendarYear = snapshot.draft.startCalendarYear
+  return {
+    snapshot,
+    wallCalendarYear,
+    readOnly: false,
+    onRetry: () => {},
+    notes: composeAnswerNotes(snapshot, { readOnly: false, stalenessNote: false, leftOverClauseHost: false, wallCalendarYear }),
+    whatIf: { pick: 'new', bundle: [], view: null },
+    chart: 'rings',
+    ...over,
+  }
+}
+
+const reads = (v: ProbabilityView) => {
+  if (v.kind !== 'reading') throw new Error(`[test] ${v.kind}`)
+  return v
+}
+const ringCentre = (h: { ring: { kind: string; face?: { centre?: string } } }): string | undefined => (h.ring.kind === 'face' ? h.ring.face?.centre : undefined)
+
+/** A ready what-if slot view for one reading (and the spine's extras). */
+const readyView = (whatIf: WhatIfReading, plan: WhatIfReading, extras?: object): WhatIfSlotView => ({
+  kind: 'shown',
+  many: { kind: 'ready', value: { plan, whatIf, ...(extras !== undefined ? { extras } : {}) }, answerKey: 'a', updating: false },
+  steady: { kind: 'loading' },
+  rough: { kind: 'loading' },
+})
+
+const headline = (n: number, state: Headline['outcomeState'] = 'on-track'): Headline => ({ outcomeState: state, xOfTen: { value: n, marginToEdge: 0.1 }, stateMarginToEdge: 0.1 })
+const SPEND_LEVER = [{ kind: 'spending', op: 'total', annualSpendingReal: 80_000 }] as unknown as ProbabilityInput['whatIf']['bundle']
+
+describe('RAW, everywhere the clone prints a count (RC4’s ruling): a held sticky triple never prints', () => {
+  it('one snapshot whose `displayed` holds 8 over a raw 9 prints 9 on Snapshot’s ring and every Probability count', () => {
+    const answer = headlineAnswer(RETIRED, { ...RETIRED_RUN, headline: headline(9) })
+    const held: StickyDisplay = { xOfTen: 8, outcomeState: 'on-track', spendPerMonthReal: RETIRED_RUN.dollar.spendPerMonthReal, direction: RETIRED_RUN.dollar.direction }
+    const s = snap(RETIRED, answer, { displayed: held })
+    const nine = slots.xOfTen(9)
+    const eight = slots.xOfTen(8)
+    // Snapshot's ring.
+    const home = snapshotView({ snapshot: s, wallCalendarYear: RETIRED.startCalendarYear, readOnly: false, onRetry: () => {}, steady: { kind: 'waiting' }, recommendation: { solve: s.solve, save: { kind: 'none' }, todayEpochDay: 20_000 } })
+    expect(home.ring.view.kind === 'reading' && home.ring.view.face.centre).toBe(nine)
+    // Probability: both rings (the empty what-if reads the plan), the intro sentence, the difference line.
+    const v = reads(probabilityView(input(s)))
+    expect(ringCentre(v.halves.compared)).toBe(nine)
+    expect(ringCentre(v.halves.alternative)).toBe(nine)
+    expect(v.intro.lead).toContain(nine)
+    const printed = JSON.stringify(v)
+    expect(printed).not.toContain(eight)
+    // With a lever pulled whose run reads 9 as well, the difference line speaks the raw 9 on both sides.
+    const pulled = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: readyView({ kind: 'headline', headline: headline(9) }, { kind: 'headline', headline: headline(9) }) } })))
+    expect(pulled.metrics.difference).toBe(slots.workbenchRailEven(nine))
+  })
+})
+
+describe('Probability, the retired route (`retired`, a real engine run)', () => {
+  const s = snap(RETIRED, headlineAnswer(RETIRED, RETIRED_RUN))
+  const v = reads(probabilityView(input(s)))
+
+  it('the right ring reads the headline, its count through the X-of-10 slots', () => {
+    const h = RETIRED_RUN.headline
+    expect(ringCentre(v.halves.compared)).toBe(h.outcomeState === 'over-funded' ? slots.xOfTenAtCeiling() : slots.xOfTen(h.xOfTen.value))
+    expect(v.halves.compared.title).toBe(copy.probabilityPlanTitle)
+  })
+
+  it('the survivor row appears exactly when the run carries a survivor reading, with its spending basis', () => {
+    const sr = RETIRED_RUN.survivorReading
+    const row = v.halves.compared.rows.find((r) => r.text.startsWith(slots.probabilitySurvivorRow('').trim()))
+    expect(row !== undefined).toBe(sr !== undefined)
+    // Without a survivor reading, no survivor row.
+    const { survivorReading: _gone, ...noSurvivor } = RETIRED_RUN
+    const bare = reads(probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, noSurvivor as SimulationResult)))))
+    expect(bare.halves.compared.rows.some((r) => r.text.startsWith('As the survivor'))).toBe(false)
+  })
+
+  it('the essentials row appears only when the floor reading differs from the headline (the relief gate)', () => {
+    const same = reads(probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, { ...RETIRED_RUN, floorReading: RETIRED_RUN.headline })))))
+    expect(same.halves.compared.rows.some((r) => r.text.startsWith('Essentials only'))).toBe(false)
+    const differs = reads(probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, { ...RETIRED_RUN, headline: headline(6, 'borderline'), floorReading: headline(9) })))))
+    expect(differs.halves.compared.rows.map((r) => r.text)).toContain(slots.probabilityEssentialsRow(slots.xOfTen(9)))
+  })
+
+  it('the bar’s median equals the median of terminalValuesReal, and its label says “when the second of you dies”', () => {
+    const sorted = [...RETIRED_RUN.distribution.terminalValuesReal].sort((a, b) => a - b)
+    const n = sorted.length
+    const median = n % 2 === 1 ? sorted[(n - 1) / 2]! : (sorted[n / 2 - 1]! + sorted[n / 2]!) / 2
+    expect(v.halves.compared.barMedian).toBe(median)
+    expect(v.bars).toBeDefined()
+    expect(v.bars!.label).toContain('when the second of you dies')
+    expect(v.bars!.caption).toContain('when the second of you dies')
+    expect(JSON.stringify(v)).not.toMatch(/ending assets/i)
+    // The empty what-if is the plan itself: its bar reads the plan's median, on one shared scale.
+    expect(v.halves.alternative.barMedian).toBe(median)
+    expect(v.bars!.lattice.ceiling).toBeGreaterThanOrEqual(median)
+  })
+
+  it('every median at $0 (half or more of the futures use their savings up first): words in the bars’ place, never a silent gap', () => {
+    const spent = { ...RETIRED_RUN, distribution: { ...RETIRED_RUN.distribution, terminalValuesReal: [0, 0, 0, 5] } }
+    const w = reads(probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, spent)))))
+    expect(w.bars).toBeUndefined()
+    expect(w.barsNone).toBe(copy.probabilityBarNone)
+    expect(w.halves.compared.barMedian).toBe(0)
+  })
+
+  it('no lever pulled: the left half reads the plan’s own reading, and the line beside the halves says “No changes yet”', () => {
+    expect(v.halves.alternative.status, 'said once, in the key-metric column').toBeUndefined()
+    expect(v.halves.alternative.ring).toEqual(v.halves.compared.ring)
+    expect(v.metrics.difference).toBe(copy.probabilityNoChanges)
+    expect(v.halves.alternative.title).toBe(copy.probabilityPickNew)
+  })
+
+  it('the intro is the confidence statement, and the key-metric column carries its spend clause', () => {
+    const h = RETIRED_RUN.headline
+    expect(v.intro.lead).toContain(copy.confidenceCoverageCaption)
+    expect(v.intro.lead).toContain(h.outcomeState === 'over-funded' ? slots.xOfTenAtCeiling() : slots.xOfTen(h.xOfTen.value))
+    expect(v.metrics.lines.length).toBeGreaterThan(0)
+    expect(v.charts.map((c) => c.id)).toEqual(['rings'])
+    expect(v.odds).toBeUndefined()
+  })
+
+  it('the difference line speaks the two printed counts and nothing else', () => {
+    const plan: WhatIfReading = { kind: 'headline', headline: headline(7) }
+    const w = reads(
+      probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, { ...RETIRED_RUN, headline: headline(7) })), { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: readyView({ kind: 'headline', headline: headline(8) }, plan) } })),
+    )
+    expect(w.metrics.difference).toBe(slots.probabilityDifference(slots.xOfTen(7), slots.xOfTen(8), copy.probabilityPickNew.toLowerCase()))
+    expect(ringCentre(w.halves.alternative)).toBe(slots.xOfTen(8))
+  })
+
+  it('a what-if in flight with no figure shows the working words; with an older figure it fades under Loading and keeps it', () => {
+    const pending = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: null } })))
+    expect(pending.halves.alternative.status).toBe(copy.workbenchRailWorking)
+    expect(pending.metrics.difference).toBeNull()
+    const older: WhatIfSlotView = {
+      kind: 'shown',
+      many: { kind: 'ready', value: { plan: { kind: 'headline', headline: headline(7) }, whatIf: { kind: 'headline', headline: headline(6) } }, answerKey: 'old', updating: true },
+      steady: { kind: 'loading' },
+      rough: { kind: 'loading' },
+    }
+    const veiled = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: older } })))
+    expect(veiled.halves.alternative.loading).toBe(true)
+    expect(ringCentre(veiled.halves.alternative)).toBe(slots.xOfTen(6))
+  })
+
+  it('a refused what-if says why by name, and runs nothing', () => {
+    const refused = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: { kind: 'refused', refusal: { kind: 'no-seed' } } } })))
+    expect(refused.halves.alternative.status).toBeDefined()
+    expect(refused.halves.alternative.ring.kind).toBe('empty')
+  })
+})
+
+describe('Probability, the working route (hand-built curves on `dip`)', () => {
+  const answer = dateAnswer(DIP, LIFESTYLE, LIFESTYLE, { offsetYears: 5, track: 'lifestyle' })
+  const s = snap(DIP, answer)
+  const v = reads(probabilityView(input(s)))
+
+  it('the right ring equals round(quantizedLowerBound·10) of the committed curve at the base offset, captioned with its year', () => {
+    const expected = Math.round(DIP_CURVE[5]!.quantizedLowerBound * 10)
+    expect(ringCentre(v.halves.compared)).toBe(slots.xOfTen(expected))
+    const ring = v.halves.compared.ring
+    expect(ring.kind === 'face' && ring.face.caption).toBe(slots.snapshotRingStopIn(DIP.startCalendarYear + 5))
+  })
+
+  it('no bar on either half, and the survivor stopgap line on both', () => {
+    expect(v.bars).toBeUndefined()
+    expect(v.halves.compared.barMedian).toBeUndefined()
+    expect(v.halves.compared.stopgap).toBe(copy.probabilitySurvivorStopgap)
+    expect(v.halves.alternative.stopgap).toBe(copy.probabilitySurvivorStopgap)
+    expect(v.halves.compared.rows).toEqual([])
+  })
+
+  it('a stop-year what-if’s ring names its own year', () => {
+    const plan: WhatIfReading = { kind: 'offset', reading: DIP_CURVE[5]! }
+    const w = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: readyView({ kind: 'offset', reading: DIP_CURVE[8]! }, plan) } })))
+    const ring = w.halves.alternative.ring
+    expect(ring.kind === 'face' && ring.face.caption).toBe(slots.snapshotRingStopIn(DIP.startCalendarYear + 8))
+    expect(ringCentre(w.halves.alternative)).toBe(slots.xOfTenAtCeiling())
+  })
+
+  it('the intro is the hero date sentence; the dip note rides it; Recommended is never offered here', () => {
+    expect(v.intro.lines).toContain(copy.dateNonMonotoneNote)
+    expect(v.picker.items.map((i) => i.value)).toEqual(['new'])
+    expect(v.charts.map((c) => c.id)).toEqual(['rings', 'odds'])
+  })
+
+  it('a provisional answer wears the provisional tag; a re-figuring one the re-figuring line over the old answer', () => {
+    const prov = reads(probabilityView(input(snap(DIP, dateAnswer(DIP, LIFESTYLE, LIFESTYLE, { offsetYears: 5, track: 'lifestyle' }, 'provisional')))))
+    expect(prov.intro.eyebrow).toBe(copy.answerProvisionalTag)
+    const refig = reads(probabilityView(input(snap(DIP, answer, { refiguring: true }))))
+    expect(refig.intro.eyebrow).toBe(copy.answerRefiguringDate)
+    expect(ringCentre(refig.halves.compared)).toBe(ringCentre(v.halves.compared))
+  })
+
+  it('a what-if waiting on the final tier says so (U14 runs what-ifs at the final tier only)', () => {
+    const prov = snap(DIP, dateAnswer(DIP, LIFESTYLE, LIFESTYLE, { offsetYears: 5, track: 'lifestyle' }, 'provisional'))
+    const w = reads(probabilityView(input(prov, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: null } })))
+    expect(w.halves.alternative.status).toBe(copy.probabilityWaitingFinal)
+  })
+
+  it('the window-edge tell rides the intro on a window-edge date', () => {
+    const edge: DateTrackOutcome = {
+      kind: 'window-edge-unconfirmed',
+      offsetYears: 10,
+      grade: { quantizedLowerBound: 0.97, survivalFraction: 0.97, marginAboveBar: 0.12 },
+      nonMonotoneOffsets: [],
+      curve: DIP_CURVE,
+    }
+    const e = reads(probabilityView(input(snap(DIP, dateAnswer(DIP, edge, edge, { offsetYears: 10, track: 'lifestyle' })))))
+    expect(e.intro.lines).toContain(copy.dateWindowEdgeNote)
+  })
+})
+
+describe('Probability, a floor-dated household (`datemixed`): both rings read the floor curve', () => {
+  it('the plan’s ring reads the floor track at the band’s offset, never the lifestyle curve', () => {
+    const floorCurve = curveOf([0.6, 0.86, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9])
+    const lifeCurve = curveOf([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.8, 0.8])
+    const floor = confirmed(floorCurve, 1)
+    const life: DateTrackOutcome = { kind: 'no-date-in-window', nonMonotoneOffsets: [], curve: lifeCurve }
+    const d = DEV_SEEDS.datemixed
+    const v = reads(probabilityView(input(snap(d, dateAnswer(d, floor, life, { offsetYears: 1, track: 'floor' })))))
+    expect(ringCentre(v.halves.compared)).toBe(slots.xOfTen(Math.round(floorCurve[1]!.quantizedLowerBound * 10)))
+    // The empty what-if reads the plan: the floor curve too.
+    expect(ringCentre(v.halves.alternative)).toBe(ringCentre(v.halves.compared))
+  })
+})
+
+describe('Odds by stop year: the four honesty rules, and the lines under the chart', () => {
+  const s = snap(DIP, dateAnswer(DIP, LIFESTYLE, LIFESTYLE, { offsetYears: 5, track: 'lifestyle' }))
+  const odds = reads(probabilityView(input(s, { chart: 'odds' }))).odds!
+  const hero = odds.series[0]!
+
+  it('the on-track line is drawn at BAR_RUNG (8.5), so clearing reads by position', () => {
+    expect(odds.barRung).toBe(BAR_RUNG)
+    expect(BAR_RUNG).toBe(8.5)
+    for (const c of hero.columns) expect(c.rung >= 9).toBe(c.clears)
+  })
+
+  it('the crown sits on the durable date, never the tallest column', () => {
+    const crowned = hero.columns.filter((c) => c.isCrown)
+    expect(crowned.map((c) => c.year)).toEqual([DIP.startCalendarYear + 5])
+    const tallest = Math.max(...hero.columns.map((c) => c.rung))
+    expect(crowned[0]!.rung).toBeLessThan(tallest)
+    expect(crowned[0]!.lines[0]).toBe(copy.ladderCrownLabel)
+    expect(crowned[0]!.inline).toBe(slots.oddsInline([copy.ladderCrownLabel, slots.xOfTen(crowned[0]!.rung)]))
+  })
+
+  it('a dipped year wears its “doesn’t hold” word', () => {
+    const dipped = hero.columns.find((c) => c.year === DIP.startCalendarYear + 2)!
+    expect(dipped.isDip).toBe(true)
+    expect(dipped.lines).toEqual([slots.xOfTen(dipped.rung), copy.oddsDipWord])
+    expect(dipped.inline).toBe(slots.oddsInline([slots.xOfTen(dipped.rung), copy.oddsDipWord]))
+  })
+
+  it('a column at the ceiling prints “better than 9 in 10”, never “10 of 10”', () => {
+    const ceiling = hero.columns.filter((c) => c.rung >= 10)
+    expect(ceiling.length).toBeGreaterThan(0)
+    // The ceiling's words, over two lines, read whole as "better than 9 in 10".
+    for (const c of ceiling) expect(c.lines.slice(-2).join(' ')).toBe(slots.xOfTenAtCeiling())
+    for (const c of ceiling) expect(c.inline.endsWith(slots.xOfTenAtCeiling())).toBe(true)
+    expect(JSON.stringify(odds.series)).not.toContain('10 of 10')
+    expect(odds.labels.yTick(10)).not.toBe('10 of 10')
+  })
+
+  it('a no-date track draws no crown, and the curve’s explanation stands under it', () => {
+    const none: DateTrackOutcome = { kind: 'no-date-in-window', nonMonotoneOffsets: [], curve: curveOf([0.5, 0.6, 0.7, 0.8, 0.82, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]) }
+    const o = reads(probabilityView(input(snap(DIP, dateAnswer(DIP, none, none, undefined)), { chart: 'odds' }))).odds!
+    expect(o.series.flatMap((x) => x.columns).some((c) => c.isCrown)).toBe(false)
+    expect(o.notes).toContain(slots.noDateHowClose(slots.xOfTen(8)))
+  })
+
+  it('a provisional curve wears the provisional tag', () => {
+    const o = reads(probabilityView(input(snap(DIP, dateAnswer(DIP, LIFESTYLE, LIFESTYLE, { offsetYears: 5, track: 'lifestyle' }, 'provisional')), { chart: 'odds' }))).odds!
+    expect(o.tag).toBe(copy.answerProvisionalTag)
+  })
+
+  it('on an aged plan no passed stop year is plotted', () => {
+    const aged = input(s, { chart: 'odds', wallCalendarYear: DIP.startCalendarYear + 3 })
+    const o = reads(probabilityView({ ...aged, notes: composeAnswerNotes(s, { readOnly: false, stalenessNote: false, leftOverClauseHost: false, wallCalendarYear: DIP.startCalendarYear + 3, agedBalancesYear: DIP.startCalendarYear }) })).odds!
+    const years = o.series[0]!.columns.map((c) => c.year)
+    expect(Math.min(...years)).toBe(DIP.startCalendarYear + 3)
+    expect(o.notes).toContain(slots.ladderCaveatAgedBalances(DIP.startCalendarYear))
+  })
+
+  it('a split household draws the essentials track beside it, hatched and named, every bar printing its count', () => {
+    const floorCurve = curveOf([0.86, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9])
+    const floor = confirmed(floorCurve, 0)
+    const o = reads(probabilityView(input(snap(DIP, dateAnswer(DIP, floor, LIFESTYLE, { offsetYears: 5, track: 'lifestyle' })), { chart: 'odds' }))).odds!
+    expect(o.series.map((x) => [x.id, x.hatched])).toEqual([
+      ['hero', false],
+      ['floor', true],
+    ])
+    for (const c of o.series[1]!.columns) expect(c.lines.length).toBeGreaterThan(0)
+    expect(o.series[1]!.name).toBe(copy.oddsSeriesFloor)
+    expect(o.series[1]!.columns.some((c) => c.isCrown)).toBe(false)
+  })
+
+  it('the retired route offers no Odds by stop year', () => {
+    const r = reads(probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, RETIRED_RUN)), { chart: 'odds' })))
+    expect(r.chart).toBe('rings')
+    expect(r.odds).toBeUndefined()
+  })
+})
+
+describe('The rows’ second lines: said once when both halves carry the same ones', () => {
+  const half = (side: 'alternative' | 'compared', notes: readonly string[][]): HalfView =>
+    ({ side, title: side, ring: { kind: 'empty', caption: '' }, loading: false, rows: notes.map((n, i) => ({ text: `row ${i}`, notes: n })) }) as unknown as HalfView
+  it('the same lines on both halves: one shared list, the halves keep their rows’ headlines only', () => {
+    const s = shareRowNotes(half('alternative', [['a'], ['b']]), half('compared', [['a'], ['b']]))
+    expect(s.sharedNotes).toEqual(['a', 'b'])
+    expect(s.halves.alternative.rows.map((r) => [r.text, r.notes])).toEqual([['row 0', []], ['row 1', []]])
+    expect(s.halves.compared.rows.map((r) => r.notes)).toEqual([[], []])
+  })
+  it('a lever that changes a line (the what-if’s own spending): each half keeps its own', () => {
+    const s = shareRowNotes(half('alternative', [['a, spending changed'], ['b']]), half('compared', [['a'], ['b']]))
+    expect(s.sharedNotes).toBeUndefined()
+    expect(s.halves.alternative.rows[0]!.notes).toEqual(['a, spending changed'])
+  })
+  it('a half with no rows (still figuring): nothing is shared', () => {
+    expect(shareRowNotes(half('alternative', []), half('compared', [['a']])).sharedNotes).toBeUndefined()
+  })
+})
+
+describe('The Recommended pick: the record’s own action, only while current', () => {
+  const current: SavedRecommendationStatus = { current: true } as unknown as SavedRecommendationStatus
+  const stale: SavedRecommendationStatus = { current: false } as unknown as SavedRecommendationStatus
+  const v6 = {
+    action: { policy: 'proportional', rothConversion: { kind: 'none' } },
+  } as unknown as SavedRecommendationV3
+  const v5 = { action: { policy: 'proportional' } } as unknown as SavedRecommendationV3
+
+  it('a current, runnable record is offered and is the landing pick; it runs the record’s own bundle', () => {
+    expect(recommendedOffer(RETIRED, { record: v6, status: current })).toEqual({ kind: 'runnable', bundle: recommendationBundle(v6) })
+    expect(landingPick(RETIRED, { record: v6, status: current })).toBe('recommended')
+    const s = snap(RETIRED, headlineAnswer(RETIRED, RETIRED_RUN))
+    const v = reads(probabilityView(input(s, { record: { record: v6, status: current }, whatIf: { pick: 'recommended', bundle: recommendationBundle(v6)!, view: null } })))
+    expect(v.picker.items.map((i) => i.value)).toEqual(['new', 'recommended'])
+    expect(v.picker.value).toBe('recommended')
+    expect(v.halves.alternative.title).toBe(copy.probabilityPickRecommended)
+  })
+
+  it('a stale record, or one saved before version 6, shows words, names the page with its door, and runs nothing', () => {
+    const s = snap(RETIRED, headlineAnswer(RETIRED, RETIRED_RUN))
+    const st = reads(probabilityView(input(s, { record: { record: v6, status: stale } })))
+    expect(st.recordNote).toEqual({ words: copy.workbenchRailRecStale, door: 'tax-strategies' })
+    expect(st.picker.items.map((i) => i.value)).toEqual(['new'])
+    const old = reads(probabilityView(input(s, { record: { record: v5, status: current } })))
+    expect(old.recordNote?.words).toBe(copy.workbenchRailRecOld)
+    expect(landingPick(RETIRED, { record: v5, status: current })).toBe('new')
+    // A pick of Recommended with no runnable record falls back to the new what-if (never a runtime null).
+    const fallback = reads(probabilityView(input(s, { record: { record: v6, status: stale }, whatIf: { pick: 'recommended', bundle: [], view: null } })))
+    expect(fallback.picker.value).toBe('new')
+  })
+
+  it('on the working route neither picker offers Recommended, whatever the disk holds', () => {
+    expect(recommendedOffer(DIP, { record: v6, status: current })).toEqual({ kind: 'none' })
+  })
+})
+
+describe('The answer states', () => {
+  it('pending gives the computing frame and no number; compute-error the retry; the fallback names what it waits for', () => {
+    const pending = probabilityView(input(snap(RETIRED, { kind: 'pending' } as unknown as ModelAnswer)))
+    expect(pending.kind).toBe('pending')
+    expect(JSON.stringify(pending)).not.toMatch(/of 10/)
+    const err = probabilityView(input(snap(RETIRED, { kind: 'compute-error' } as unknown as ModelAnswer)))
+    expect(err.kind).toBe('compute-error')
+    const cleared: ScenarioDraft = { ...RETIRED, annualSpendingReal: undefined } as ScenarioDraft
+    const fb = probabilityView(input(snap(cleared, { kind: 'inputs-incomplete' } as unknown as ModelAnswer)))
+    expect(fb.kind).toBe('fallback')
+    if (fb.kind === 'fallback') expect(fb.lines.length + fb.lead.length).toBeGreaterThan(0)
+  })
+
+  it('an already-failing headline prints 0 and an empty arc; the ceiling prints “better than 9 in 10”', () => {
+    const failing = reads(probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, { ...RETIRED_RUN, headline: headline(0, 'already-failing') })))))
+    const ring = failing.halves.compared.ring
+    expect(ring.kind === 'face' && ring.face.arc).toBe(0)
+    expect(ringCentre(failing.halves.compared)).toBe(slots.xOfTen(0))
+    const ceil = reads(probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, { ...RETIRED_RUN, headline: headline(9, 'over-funded') })))))
+    expect(ringCentre(ceil.halves.compared)).toBe(slots.xOfTenAtCeiling())
+  })
+
+  it('every state carries the R13 caveat lines', () => {
+    for (const v of [
+      probabilityView(input(snap(RETIRED, { kind: 'pending' } as unknown as ModelAnswer))),
+      probabilityView(input(snap(RETIRED, headlineAnswer(RETIRED, RETIRED_RUN)))),
+    ]) {
+      expect(v.caveat.length).toBe(2)
+    }
+  })
+})
+
+describe('The state clause names the state the run priced', () => {
+  for (const [seed, words] of [
+    ['nc', 'North Carolina'],
+    ['pa', 'Pennsylvania'],
+    ['fl', 'Florida'],
+  ] as const) {
+    it(`${seed}: the key-metric column names ${words}`, () => {
+      const d = DEV_SEEDS[seed]
+      const v = reads(probabilityView(input(snap(d, headlineAnswer(d, realRun(d))))))
+      expect([...v.metrics.lines, ...v.footnotes].join(' ')).toContain(words)
+    })
+  }
+
+  it('elsewhere: the unpriced monolith', () => {
+    const d = DEV_SEEDS.elsewhere
+    const v = reads(probabilityView(input(snap(d, headlineAnswer(d, realRun(d))))))
+    expect([...v.metrics.lines, ...v.footnotes].join(' ')).toContain(copy.verdictStateUnpricedNote)
+  })
+})

@@ -347,7 +347,7 @@ describe('Shell — the settle hook every harness waits on (plan 3.1)', () => {
   it('every interim page wears the banner, outside any `.rc-root`, and its page sits outside one too', () => {
     const { lanes } = heldLanes()
     renderRoom(snapshotWith(finalAnswer()), lanes)
-    for (const page of ['table', 'whatif', 'facts'] as const) {
+    for (const page of ['table', 'whatif', 'facts', 'strategies', 'health'] as const) {
       showPage(page)
       expect(screen.getAllByText(copy.shellInterimBanner)).toHaveLength(1)
       const interim = document.querySelector('.shell-interim')!
@@ -364,7 +364,14 @@ describe('Shell — the phone menu (plan 3.1, "The phone shape")', () => {
     fireEvent.click(button)
     const sheet = await screen.findByRole('dialog', { name: copy.shellMenuTitle })
     const links = within(sheet).getAllByRole('link').map((a) => a.textContent)
-    expect(links).toEqual([copy.shellPageSnapshot, copy.shellPageAnalysis, copy.shellPageCashFlows, copy.workbenchPageFacts])
+    expect(links).toEqual([
+      copy.shellPageSnapshot,
+      copy.shellPageAnalysis,
+      copy.shellPageHealthCare,
+      copy.shellPageCashFlows,
+      copy.shellPageTaxStrategies,
+      copy.workbenchPageFacts,
+    ])
     expect(within(sheet).getByRole('heading', { name: copy.shellModuleDashboard })).toBeInTheDocument()
     expect(within(sheet).getByRole('heading', { name: copy.shellModuleRetirement })).toBeInTheDocument()
     expect(within(sheet).getByRole('heading', { name: copy.shellModuleProfile })).toBeInTheDocument()
@@ -375,5 +382,44 @@ describe('Shell — the phone menu (plan 3.1, "The phone shape")', () => {
     // Focus back on the button is read in a real browser (`e2e/rc-screens.spec.ts`'s phone arm): Base UI hands it back
     // after the sheet's exit, whose timing jsdom (no layout, no animations) does not keep, so a read here flakes
     // (insight 071: a real browser's teardown order is the authority).
+  })
+})
+
+describe('Shell — RC4: the home’s new pages and the gear', () => {
+  it('Retirement → Analysis → Probability: the page, its folder tabs, and its R13 caveat in frame (the trailing mount hidden)', () => {
+    const { lanes } = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), lanes)
+    showPage('probability')
+    const main = document.querySelector('main.result')!
+    expect(main).toHaveAttribute('data-shell-screen', 'probability')
+    expect(main).toHaveAttribute('data-inframe-disclaimer')
+    expect(screen.getByRole('heading', { level: 1, name: copy.analysisTitle })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: copy.probabilityTab })).toHaveAttribute('aria-selected', 'true')
+    expect(main.querySelectorAll('[data-caveat]')).toHaveLength(1)
+    // The two halves: the alternative on the left, the plan on the right, each named.
+    expect(main.querySelector('[data-half="alternative"]')).not.toBeNull()
+    expect(main.querySelector('[data-half="compared"]')).not.toBeNull()
+  })
+
+  it('the interim Tax Strategies and Health Care pages: the banner, no in-frame caveat (the trailing mount stands), one main.result', () => {
+    const { lanes } = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), lanes)
+    for (const page of ['strategies', 'health'] as const) {
+      showPage(page)
+      const main = document.querySelector('main.result')!
+      expect(main).toHaveAttribute('data-shell-screen', page === 'strategies' ? 'interim-strategies' : 'interim-health')
+      expect(main).not.toHaveAttribute('data-inframe-disclaimer')
+      expect(document.querySelectorAll('main')).toHaveLength(1)
+      expect(screen.getAllByText(copy.shellInterimBanner)).toHaveLength(1)
+    }
+    showPage('strategies')
+    expect(document.querySelector('main.result .result-page')).not.toBeNull()
+  })
+
+  it('the gear opens the assumptions panel (the old answer page’s Assumptions door), on every page', async () => {
+    const { lanes } = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), lanes)
+    fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
+    expect(await screen.findByRole('heading', { name: copy.assumptionTitle })).toBeInTheDocument()
   })
 })

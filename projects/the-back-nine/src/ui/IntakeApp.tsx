@@ -21,7 +21,6 @@ import { deriveSavedRecommendationStatus, type SavedRecommendationStatus } from 
 import { mintSavedRecommendation } from '@store/savedRecommendationMint'
 import { CURRENT_SCHEMA_VERSION, type SavedRecommendationV3 } from '@shared/model'
 import { appModel } from './appModel'
-import { Result } from './Result'
 import { scenarioFromDraft, currentEpochDay } from './scenarioFromDraft'
 import { draftFromScenario } from './draftFromScenario'
 import { deriveRecommendationSave, type RecommendationSaveRefusal } from './recommendationSaveView'
@@ -126,16 +125,17 @@ export default function IntakeApp({
    *  tab — session.save would refuse), so this is threaded into deriveResultSave. */
   readOnly?: boolean
 }) {
-  const [phase, setPhase] = useState<
-    'restoring' | 'reentry' | 'intake' | 'result' | 'workspace' | 'save' | 'restore-failed' | 'backup'
-  >(hydrateFromVault ? 'restoring' : 'intake')
-  // Act 5, U6 — where the save and backup ceremonies return to: the screen that opened them (the
-  // answer, or the shell). Set at every entrance, read at every exit.
-  const [ceremonyOrigin, setCeremonyOrigin] = useState<'result' | 'workspace'>('result')
+  // Act 6 · RC4 — the shell is the home: setup's end, a reopened vault and every dev seed land in the
+  // `workspace` phase on Snapshot. The old answer page's `result` phase is gone; the save and backup
+  // ceremonies return to the shell.
+  const [phase, setPhase] = useState<'restoring' | 'reentry' | 'intake' | 'workspace' | 'save' | 'restore-failed' | 'backup'>(
+    hydrateFromVault ? 'restoring' : 'intake',
+  )
   // Act 6 · RC2 — a leave held over work it would drop (a Back press can't be cancelled, so the shell's
-  // entry went back on and the shell asks first; the wordmark asks before it goes). `lines` say what
-  // the leave drops; `go` is how the household's "Go back" leaves: one entry back, or to the answer.
-  const [leaveAsk, setLeaveAsk] = useState<{ readonly lines: readonly string[]; readonly go: 'back' | 'home' } | null>(null)
+  // entry went back on and the shell asks first; the wordmark and the re-walk ask before they go). `lines`
+  // say what the leave drops; `go` is how the household's "Go back" leaves: one entry back, home to the
+  // first page, or out to the walk-through.
+  const [leaveAsk, setLeaveAsk] = useState<{ readonly lines: readonly string[]; readonly go: 'back' | 'home' | 'review' } | null>(null)
   // The shell's page (KTD31: route state lives here, in the app that stays mounted), mirrored to the hash.
   const [route, setRoute] = useState<Route>(LANDING)
   // Whether the shell's what-if holds a change the plan doesn't: unkept work a leave or a reload would drop.
@@ -284,41 +284,17 @@ export default function IntakeApp({
     whatIfHeld
   useUnloadGuard(guarding)
 
-  // 'idle'/'pending' = NOTHING has ever resolved (the "Working it out…" window; `pending`
-  // never recurs after a first resolve — memoryModel holds the last answer visible). Result
-  // withholds its whole actions row there: an affordance we don't want used during the
-  // crunch shouldn't exist (Briggsy, 2026-07-02). A compute-error is NOT computing — the
-  // actions row (Review = fix the inputs) is that failure's remedy.
-  // ⚠️ `idle` IS TWO STATES, AND ONLY ONE IS THE CRUNCH (2026-09-03 — the 2026-08-20 intake walk's
-  // completed-intake dead end). Idle with NOTHING missing is the one-frame window between
-  // setPhase('result') and recompute's synchronous `pending` flip — still the crunch, and this
-  // keeps that frame byte-identical for every seed route, vault return and fit-gate arm. Idle WITH
-  // a missing required fact is a TERMINAL non-answer: memoryModel's recompute returns WITHOUT
-  // dispatching pre-first-resolve when a builder nulls, so nothing is ever "worked out" — and
-  // treating it as computing withheld the whole actions row, including the plan-ratified escape
-  // hatch (3-controls.md:251 "reachable even while the answer is indeterminate"), over a strip
-  // saying "Still needed: …" with NO door to supply it and nothing persisted. The 2026-07-02
-  // ruling's rationale (the crunch + the remedy carve-out) is honored; its letter ("idle") is
-  // read as the crunch it meant. Flagged for Briggsy's audit at product cadence, not parked.
-  const computing =
-    snapshot.answer.kind === 'pending' || (snapshot.answer.kind === 'idle' && missing.length === 0)
-
-  // ── Act 6 · RC2 — THE SHELL'S HISTORY (KTD31; plan 6, section 3.1 "Routing") ──────────────────────────
+  // ── Act 6 · RC2/RC4 — THE SHELL'S HISTORY (KTD31; plan 6, section 3.1 "Routing") ──────────────────────
   // The shell is a phase of this app, never an App route (a route would unmount this subtree and with it
   // the draft's save state, the unsaved mark and the leave guard). No router library: the page is state
   // here, mirrored to the address's hash, one history entry per page (`WorkspaceEntry`), so Back and
-  // Forward move between pages and this listener restores the page. Leaving the shell's entries returns
-  // to the answer. The door follows the save control's rule for an unresolved answer: withheld while
-  // computing and while the answer can't be saved (`deriveResultSave`'s `none`). A read-only tab still
-  // gets it — the shell withholds its own writes.
-  const doorOpen = !computing && saveReady.ready
+  // Forward move between pages and this listener restores the page. Since RC4 the shell is the HOME:
+  // landing REPLACES the document's own entry with the first page's (`n: 1`), so there is no answer page
+  // beneath it, and a Back press from the first page leaves the app the way any page does (the browser's
+  // leave dialog stands over unsaved work and an unkept what-if, `useUnloadGuard`).
   // The listener is mounted once, so it reads the live values through refs.
   const phaseRef = useRef(phase)
   phaseRef.current = phase
-  const originRef = useRef(ceremonyOrigin)
-  originRef.current = ceremonyOrigin
-  const doorOpenRef = useRef(doorOpen)
-  doorOpenRef.current = doorOpen
   const routeRef = useRef(route)
   routeRef.current = route
   // The shown page's entry's place in this visit (`WorkspaceEntry.n`).
@@ -328,8 +304,7 @@ export default function IntakeApp({
     whatIfHeldRef.current = held
     setWhatIfHeldState(held)
   }, [])
-  // Set by the ask's "Go back" (or a wordmark with nothing to drop) so the move it sends passes the check
-  // that raised the ask: one entry back, or all the way to the answer.
+  // Set by the ask's "Go back" (or the wordmark) so the move it sends passes the check that raised the ask.
   const leavingRef = useRef<'back' | 'home' | null>(null)
   // What a leave would drop, one sentence each: an open entry (the buffers the leave guard reads, insight
   // 112: an open drawer's edit), and, where the leave goes past the shell, an unkept what-if.
@@ -340,28 +315,15 @@ export default function IntakeApp({
     ],
     [],
   )
-  // The door's own ask: the shell replaces the answer, and the answer's open entries (a budget sheet's
-  // typed lines live there even after Cancel, holding the leave guard) unmount with it. The browser's
-  // leave-page dialog never fires for a same-page switch, so the door asks first (insight 112).
-  const [doorAsk, setDoorAsk] = useState(false)
+  /** Land on the home: the document's own entry becomes the first page's (no answer page beneath it). */
   const enterWorkspace = useCallback(() => {
-    // A shell entry or page address left under us (a reload in the shell keeps both; a Forward pressed while
-    // a ceremony or the intake ran) would swallow the first Back from the shell: turn it plain before pushing.
-    if (isWorkspaceEntry(window.history.state) || window.location.hash !== '') window.history.replaceState(null, '', plainUrl())
     depthRef.current = 1
-    window.history.pushState({ b9: 'workspace', n: 1 } satisfies WorkspaceEntry, '', plainUrl() + routeHash(LANDING))
+    window.history.replaceState({ b9: 'workspace', n: 1 } satisfies WorkspaceEntry, '', plainUrl() + routeHash(LANDING))
     routeRef.current = LANDING
     setRoute(LANDING)
-    setDoorAsk(false)
+    setLeaveAsk(null)
     setPhase('workspace')
   }, [])
-  const openWorkspace = useCallback(() => {
-    if (unsavedBuffersHeld() > 0) {
-      setDoorAsk(true)
-      return
-    }
-    enterWorkspace()
-  }, [enterWorkspace])
   /** A page of the shell: one new history entry, its hash the page's. */
   const navigate = useCallback((to: Route) => {
     if (routeEquals(to, routeRef.current)) return
@@ -371,21 +333,43 @@ export default function IntakeApp({
     routeRef.current = to
     setRoute(to)
   }, [])
-  /** Straight back to the answer: every page entry of this visit at once. */
+  /** Straight back to the home: every later page entry of this visit at once (the first entry is the home). */
   const leaveHome = useCallback(() => {
+    const back = depthRef.current - 1
+    if (back <= 0) {
+      if (!routeEquals(routeRef.current, LANDING)) navigate(LANDING)
+      return
+    }
     leavingRef.current = 'home'
-    window.history.go(-Math.max(1, depthRef.current))
-  }, [])
-  /** The wordmark: back to the answer, asking first over anything the leave would drop. */
+    window.history.go(-back)
+  }, [navigate])
+  /** The wordmark: home to Snapshot, asking first over an open drawer's edit (the what-if survives a page move). */
   const goHome = useCallback(() => {
-    const lines = leaveLines(true)
+    const lines = leaveLines(false)
     if (lines.length > 0) {
       setLeaveAsk({ lines, go: 'home' })
       return
     }
     leaveHome()
   }, [leaveLines, leaveHome])
-  // A page address left from an earlier load (a reload in the shell) names a page the answer isn't: plain.
+  /** Out to the walk-through (the assumption panel's guided re-walk): the shell unmounts, so its open entries and
+   *  the what-if go with it. The address drops its page; the walk's terminal advance lands on the home again. */
+  const leaveForReview = useCallback(() => {
+    setLeaveAsk(null)
+    window.history.replaceState(null, '', plainUrl())
+    depthRef.current = 0
+    setPhase('intake')
+  }, [])
+  /** The re-walk asks first over anything the shell's unmount would drop (insight 112: every way out holds). */
+  const reviewFromShell = useCallback(() => {
+    const lines = leaveLines(true)
+    if (lines.length > 0) {
+      setLeaveAsk({ lines, go: 'review' })
+      return
+    }
+    leaveForReview()
+  }, [leaveLines, leaveForReview])
+  // A page address left from an earlier load (a reload in the shell) names a page nothing has landed on yet: plain.
   useEffect(() => {
     if (parseHash(window.location.hash) !== null) window.history.replaceState(null, '', plainUrl())
   }, [])
@@ -400,34 +384,22 @@ export default function IntakeApp({
       const onShell = entry !== null || addressed !== null
       const p = phaseRef.current
       if (p === 'workspace') {
-        if (onShell) {
-          // The wordmark's leave landed short of the answer (a Forward-raised ask's entry sits out of order): on.
-          if (leavingRef.current === 'home' && entry !== null) {
-            window.history.go(-entry.n)
-            return
-          }
-          const to = addressed ?? LANDING
-          const n = entry?.n ?? depthRef.current + 1
-          if (entry === null) window.history.replaceState({ b9: 'workspace', n } satisfies WorkspaceEntry, '')
-          // A move between pages drops nothing but an open drawer's edit: with one open, ask first.
-          if (leavingRef.current === null && !routeEquals(to, routeRef.current)) {
-            const lines = leaveLines(false)
-            if (lines.length > 0) {
-              restoreShownEntry()
-              setLeaveAsk({ lines, go: 'back' })
-              return
-            }
-          }
-          leavingRef.current = null
-          depthRef.current = n
-          setLeaveAsk(null)
-          routeRef.current = to
-          setRoute(to)
+        if (!onShell) {
+          // An entry beneath the home that is not a page of ours (left by an earlier load): the home stands; pass on.
+          window.history.back()
           return
         }
-        // Past the shell's first page: back to the answer, asking first over anything that drops.
-        if (leavingRef.current === null) {
-          const lines = leaveLines(true)
+        // The wordmark's leave landed short of the home (a Forward-raised ask's entry sits out of order): on.
+        if (leavingRef.current === 'home' && entry !== null && entry.n > 1) {
+          window.history.go(-(entry.n - 1))
+          return
+        }
+        const to = addressed ?? LANDING
+        const n = entry?.n ?? depthRef.current + 1
+        if (entry === null) window.history.replaceState({ b9: 'workspace', n } satisfies WorkspaceEntry, '')
+        // A move between pages drops nothing but an open drawer's edit: with one open, ask first.
+        if (leavingRef.current === null && !routeEquals(to, routeRef.current)) {
+          const lines = leaveLines(false)
           if (lines.length > 0) {
             restoreShownEntry()
             setLeaveAsk({ lines, go: 'back' })
@@ -435,30 +407,17 @@ export default function IntakeApp({
           }
         }
         leavingRef.current = null
-        depthRef.current = 0
+        depthRef.current = n
         setLeaveAsk(null)
-        setPhase('result')
+        routeRef.current = to
+        setRoute(to)
         return
       }
       // A ceremony the shell opened: a Back press mid-ceremony is absorbed (the shown page's entry goes back
       // on), so it can never strand the ceremony or tear the shell's entry out from under it.
-      if ((p === 'save' || p === 'backup') && originRef.current === 'workspace') {
+      if (p === 'save' || p === 'backup') {
         const onShown = entry !== null && entry.n === depthRef.current && addressed !== null && routeEquals(addressed, routeRef.current)
         if (!onShown) restoreShownEntry()
-        return
-      }
-      // A Forward press back onto a shell entry: the shell again where the door would open and no entry is
-      // open on the answer (a Forward can't be cancelled either, and the shell would unmount that entry with
-      // no dialog); otherwise the Forward is undone, which leaves no dead Back behind.
-      if (p === 'result' && onShell) {
-        if (doorOpenRef.current && unsavedBuffersHeld() === 0) {
-          const to = addressed ?? LANDING
-          depthRef.current = entry?.n ?? 1
-          if (entry === null) window.history.replaceState({ b9: 'workspace', n: depthRef.current } satisfies WorkspaceEntry, '')
-          routeRef.current = to
-          setRoute(to)
-          setPhase('workspace')
-        } else window.history.back()
       }
     }
     window.addEventListener('popstate', onPop)
@@ -510,7 +469,7 @@ export default function IntakeApp({
     // enumeration → canon serialize) PLUS `exposureForDraft`'s nine params producers on every single
     // keystroke-committed edit of the intake — for a card that cannot render until `result`.
     // The shell's What if page runs the record as a what-if too (the workbench plan's R22, U15).
-    if (phase !== 'result' && phase !== 'workspace') return undefined
+    if (phase !== 'workspace') return undefined
     if (persist.kind === 'unsaved') return undefined
     const record = persist.scenario.savedRecommendation
     if (record === undefined) return undefined
@@ -549,10 +508,11 @@ export default function IntakeApp({
   // newer recompute superseded before it settled (an edit on the Result during the reveal) sends NO
   // final — the newer edit's own pair sharpens the household's latest inputs.
   const revealAndSharpen = useCallback(async () => {
-    setPhase('result')
+    // Act 6 · RC4: the reveal lands on the home (Snapshot), never an answer page.
+    enterWorkspace()
     if (!(await appModel.recompute('provisional'))) return
     await appModel.recompute('final')
-  }, [])
+  }, [enterWorkspace])
   const complete = useCallback(async () => {
     // The narrow period disarm's probe — the store's CURRENT draft, never the render closure
     // (insight 036: a commit-on-blur and the terminal Continue can share a task). If the
@@ -568,7 +528,6 @@ export default function IntakeApp({
     }
     await revealAndSharpen()
   }, [revealAndSharpen])
-  const review = useCallback(() => setPhase('intake'), [])
 
   // The PROPER edit-and-re-save (retires the U8-review ② interim sticky-`saved`): a same-session
   // edit re-saves through the writable()-gated `session.save()` UPDATE path — the keys are
@@ -641,7 +600,7 @@ export default function IntakeApp({
    * (DND 009).
    */
   const saveRecommendation = useCallback(
-    async (ticket: RecommendationSaveTicket, from: 'result' | 'workspace' = 'result'): Promise<void> => {
+    async (ticket: RecommendationSaveTicket): Promise<void> => {
       // (1) THE SYNCHRONOUS GUARDS. Each returns SILENTLY, and that is honest rather than a missing
       // outcome (insight 100): nothing was minted, nothing was written, and nothing was promised
       // that these states break. A read-only tab derives no CTA at all (the standing View-only
@@ -745,8 +704,7 @@ export default function IntakeApp({
       // this gesture's own awaits must route to the update write, not a second ceremony.
       if (persistRef.current.kind === 'unsaved') {
         setRecSaveCeremony(true)
-        // The ceremony returns to the screen the gesture was made on (the answer page, or Snapshot since Act 6 · RC3).
-        setCeremonyOrigin(from)
+        // The ceremony returns to the shell, where the gesture was made (Act 6 · RC4: the shell is the home).
         setPhase('save')
         return
       }
@@ -1006,7 +964,7 @@ export default function IntakeApp({
                 return withoutRecord
               })
             }
-            setPhase(ceremonyOrigin)
+            setPhase('workspace')
           }}
           // Record what the ceremony COMMITTED the instant it commits — the same render-captured
           // scenario passed as its prop (the save phase renders no edit surface, so it cannot have
@@ -1024,7 +982,7 @@ export default function IntakeApp({
               setRecSaveCeremony(false)
               setRecSaveLanded(true)
             }
-            setPhase(ceremonyOrigin)
+            setPhase('workspace')
           }}
         />
       </Suspense>
@@ -1040,63 +998,60 @@ export default function IntakeApp({
         <BackupStep
           onFinish={() => {
             setNeedsBackup(false)
-            setPhase(ceremonyOrigin)
+            setPhase('workspace')
           }}
           // The quiet escape: declining records nothing and keeps the door offered (needsBackup
           // stays true) — an invited offer is never a trap (ultramode 2026-07-03).
-          onCancel={() => setPhase(ceremonyOrigin)}
+          onCancel={() => setPhase('workspace')}
         />
       </Suspense>
     )
   }
 
-  // The one save machine's view, wired for the screen showing it: both the answer and the shell draw
-  // their save control from it, and a first save opened from either returns to it.
-  const saveProp = (view: ResultSaveView, from: 'result' | 'workspace'): ResultSaveProp =>
+  // The one save machine's view, wired for the shell: its lock menu draws the save control from it, and a first save
+  // opened there returns to it.
+  const saveProp = (view: ResultSaveView): ResultSaveProp =>
     view.kind === 'first'
-      ? {
-          kind: 'first',
-          onKeep: () => {
-            setCeremonyOrigin(from)
-            setPhase('save')
-          },
-        }
+      ? { kind: 'first', onKeep: () => setPhase('save') }
       : view.kind === 'dirty'
         ? { kind: 'dirty', onSave: () => void saveNow() }
         : view.kind === 'failed'
           ? { ...view, onRetry: () => void saveNow() }
           : view
 
-  if (phase === 'workspace') {
+  // The shell (Act 6 · RC4: the home). A `save` phase whose plan can't be saved falls back to it.
+  if (phase === 'workspace' || phase === 'save') {
+    const view = deriveResultSave(persist, saveReady, readOnly)
+    const aged = agedBalancesYearFor(persist, view, currentEpochDay())
     return (
       <ShellSlot
         shell={{
-          save: saveProp(deriveResultSave(persist, saveReady, readOnly), 'workspace'),
+          save: saveProp(view),
           // The lock menu's Back up: the existing backup step, wherever a vault exists in this session and the tab
           // can write (a read-only tab writes nothing, not even a backup note).
-          ...(persist.kind !== 'unsaved' && !readOnly
-            ? {
-                onBackup: () => {
-                  setCeremonyOrigin('workspace')
-                  setPhase('backup')
-                },
-              }
-            : {}),
+          ...(persist.kind !== 'unsaved' && !readOnly ? { onBackup: () => setPhase('backup') } : {}),
+          // The re-offer (U8-tail, the old answer page's backup door): a writable return with no backup note.
+          backupOffered: needsBackup,
           route,
           onNavigate: navigate,
           onHome: goHome,
           onWhatIfHeld,
-          // The committed answer the year-by-year table is built on and the intro reads (U7), and the draft the
-          // facts page reads (U8).
+          // The assumption panel's guided re-walk (the old answer page's Review): out to the walk-through.
+          onReview: reviewFromShell,
+          // The committed answer every page reads, and the draft the facts page reads (U8).
           snapshot,
           // A read-only tab's facts page draws no door (U8): `save.kind` can't carry it (`none` is also a plan
           // that can't be saved yet).
           readOnly,
-          // The saved recommendation's row on the rail (R22): the DISK's record and the store's trichotomy, as the answer
-          // reads them; the rail runs it only while current.
+          // P3·U13 — the standing staleness note (session-lifetime once the gate derived it; RULES-moved only), and build
+          // 2's clause host, decided once by `composeReentry`. The StaleBanner carries both (RC4).
+          stalenessNote: reentry?.rulesMoved === true,
+          leftOverClauseHost: reentry?.view.leftOverClauseHost === true,
+          // The saved recommendation's side on Probability and the What if page (R22): the DISK's record and the
+          // store's trichotomy; it runs only while current.
           ...(recordCard !== undefined ? { recommendation: { record: recordCard.record, current: recordCard.status.current } } : {}),
-          // Snapshot's Recommendations card (Act 6 · RC3): the same strategy-slot machine and gesture the answer page
-          // reads, the disk's record with the store's verdict, and the aged-balances year, each from its one producer.
+          // U17 §S5 — THE STRATEGY SLOT, derived every frame from its operands, never tracked (the only route to a
+          // "saved" claim runs through the record the disk actually carries). `landed` is the durability EVENT.
           recSave: {
             view: deriveRecommendationSave({
               persist,
@@ -1107,23 +1062,26 @@ export default function IntakeApp({
               inFlight: recSaveInFlight,
               refusal: recSaveRefusalStanding,
             }),
-            onSave: (ticket) => void saveRecommendation(ticket, 'workspace'),
+            onSave: (ticket) => void saveRecommendation(ticket),
             landed: recSaveLanded,
             onAnnounced: () => setRecSaveLanded(false),
           },
           ...(recordCard !== undefined ? { recordCard } : {}),
-          ...(() => {
-            const aged = agedBalancesYearFor(persist, deriveResultSave(persist, saveReady, readOnly), currentEpochDay())
-            return aged !== undefined ? { agedBalancesYear: aged } : {}
-          })(),
+          // The aged-balances clause's honest year (review 2026-07-10): from the persist machine's OWN saved scenario.
+          ...(aged !== undefined ? { agedBalancesYear: aged } : {}),
           ...(leaveAsk !== null
             ? {
                 leaveAsk: {
                   lines: leaveAsk.lines,
                   onGo: () => {
+                    const go = leaveAsk.go
                     setLeaveAsk(null)
-                    if (leaveAsk.go === 'home') {
+                    if (go === 'home') {
                       leaveHome()
+                      return
+                    }
+                    if (go === 'review') {
+                      leaveForReview()
                       return
                     }
                     leavingRef.current = 'back'
@@ -1134,79 +1092,6 @@ export default function IntakeApp({
               }
             : {}),
         }}
-      />
-    )
-  }
-
-  if (phase === 'result' || phase === 'save') {
-    const view = deriveResultSave(persist, saveReady, readOnly)
-    // `computing` (above) is the crunch rule the whole actions row follows, the shell's door included.
-    return (
-      <Result
-        onReview={review}
-        computing={computing}
-        save={saveProp(view, 'result')}
-        // The re-offer backup door — present only when the hydrate armed it (writable + no note on
-        // record). Tapping opens the 'backup' phase; the door dissolves once the ceremony records.
-        backup={
-          needsBackup
-            ? {
-                onSave: () => {
-                  setCeremonyOrigin('result')
-                  setPhase('backup')
-                },
-              }
-            : undefined
-        }
-        // Act 5, U6 — the door (since Act 6 · RC2, into the shell), under the save control's rule (`doorOpen` above;
-        // Result also withholds its whole actions row while computing).
-        // The door's ask stands only while an entry is still open (`buffersHeld`, read live): applying
-        // or clearing the entry takes the ask down with it, so it can never offer to drop nothing.
-        workbench={
-          doorOpen
-            ? {
-                onOpen: openWorkspace,
-                ask: doorAsk && buffersHeld > 0 ? { onGo: enterWorkspace, onStay: () => setDoorAsk(false) } : undefined,
-              }
-            : undefined
-        }
-        // U17 §S5 — THE STRATEGY SLOT. The view is DERIVED every frame from the seven operands, never
-        // tracked: there is no success parameter in `deriveRecommendationSave`, so the only route to a
-        // "saved" claim runs through the record the disk actually carries. `status` rides
-        // `recordCard?.status` — the SAME trichotomy the card reads, so the slot and the card can never
-        // disagree about one record. `landed` is the durability EVENT (the ceremony unmounts this whole
-        // subtree, so the surface cannot observe the transition it must announce); acknowledging it
-        // clears the flag, never the badge — the badge is disk-derived.
-        recSave={{
-          view: deriveRecommendationSave({
-            persist,
-            solve: snapshot.solve,
-            ready: saveReady,
-            readOnly,
-            status: recordCard?.status,
-            inFlight: recSaveInFlight,
-            refusal: recSaveRefusalStanding,
-          }),
-          onSave: (ticket) => void saveRecommendation(ticket),
-          landed: recSaveLanded,
-          onAnnounced: () => setRecSaveLanded(false),
-        }}
-        // The DISK's remembered recommendation + the store's verdict on it. Result composes the card
-        // (it alone owns the invite predicate that decides whether a re-open door may exist at all).
-        recordCard={recordCard}
-        // P3·U13 — the standing hero staleness echo (session-lifetime once the gate derived
-        // it). RULES-moved only — the gate's budget re-confirm lines never claim "rules changed".
-        stalenessNote={reentry?.rulesMoved === true}
-        // Build 2's clause host, decided once by `composeReentry`: a fired tax, state-tax or working-years
-        // line carries a moved left over on the hero's rules note, so the Result speaks it there, once.
-        leftOverClauseHost={reentry?.view.leftOverClauseHost === true}
-        // The aged-balances clause's honest year (review 2026-07-10): from the persist
-        // machine's OWN saved scenario — a re-save or an in-session edit suppresses it
-        // through the machine's state, never a second bookkeeping (resultSave.ts doc).
-        agedBalancesYear={agedBalancesYearFor(persist, view, currentEpochDay())}
-        // The pay check's KTD21 standing line offers its door into the panel only where an edit can
-        // be kept: a second tab is read-only (the unlock's `readOnly`), so it reads the fact alone.
-        readOnly={readOnly}
       />
     )
   }

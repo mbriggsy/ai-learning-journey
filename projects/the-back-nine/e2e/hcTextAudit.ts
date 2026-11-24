@@ -131,13 +131,10 @@ export function assertHcText(a: HcAudit, floor: number, required: HcRequired, la
 /** The fan on Snapshot, and its card. */
 export const FAN = ['[data-card="fan"] [data-chart="fan"]', '[data-card="fan"]'] as const
 
-/** The settled answer for a seed, then Snapshot through the answer page's door, the fan drawn and settled. */
+/** The settled answer for a seed, which lands on Snapshot (the home since Act 6 · RC4), the fan drawn and settled. */
 export async function enterSnapshot(page: Page, seed: string): Promise<void> {
   await gotoSeedFinal(page, seed)
-  const door = page.locator('.result-quiet-row [data-door="workbench"]')
-  await expect(door, 'the door never mounted on the settled answer').toBeVisible()
-  await door.click()
-  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the door never landed on Snapshot').toBeAttached({ timeout: 30_000 })
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the seed never landed on Snapshot').toBeAttached({ timeout: 30_000 })
   await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
   await settleFan(page)
 }
@@ -182,4 +179,68 @@ export async function hoverMedian(page: Page): Promise<void> {
   await page.mouse.move(at.x, at.y, { steps: 8 })
   await expect(page.locator(`${FAN[0]} .highcharts-tooltip`), 'the hover raised no tooltip').toBeVisible()
   await page.waitForTimeout(300)
+}
+
+// ── The marks audit (a bar or column chart's printed counts against its marks) ─────────────────────────────────────
+
+type Box = { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number }
+
+export type HcMarks = {
+  /** The part of the chart a reader can see: its frame's box, cut to the page's width. */
+  readonly frame: Box
+  /** Every drawn bar or column (the invisible label spacers excluded), named by its series and its own sentence. */
+  readonly marks: readonly { readonly who: string; readonly series: string; readonly box: Box }[]
+  /** Every printed data label, with the series that prints it. */
+  readonly labels: readonly { readonly text: string; readonly series: string; readonly box: Box }[]
+  /** Every plot line (the on-track line). */
+  readonly lines: readonly Box[]
+}
+
+/**
+ * Reads the marks of the chart inside `chartSelector` against the frame `frameSelector` (Act 6 · RC4, the odds chart's
+ * two defects: counts printed over the neighbouring hatched column at his window, and years and the legend cut off
+ * inside a phone frame narrower than the chart, both green on the text audit). `ignore` names series drawn as nothing
+ * (the odds chart's label spacers).
+ */
+export async function hcMarks(page: Page, chartSelector: string, frameSelector: string, ignore = ''): Promise<HcMarks> {
+  return page.evaluate(
+    ({ sel, frameSel, ignoreSel }) => {
+      const chart = document.querySelector(sel)
+      if (!chart) throw new Error(`hc-marks: no chart matches ${sel}`)
+      const frameEl = chart.closest(frameSel)
+      if (!frameEl) throw new Error(`hc-marks: ${sel} has no ancestor matching ${frameSel}`)
+      const rect = (r: DOMRect) => ({ left: r.left, right: r.right, top: r.top, bottom: r.bottom })
+      const f = frameEl.getBoundingClientRect()
+      const frame = { left: Math.max(0, f.left), right: Math.min(document.documentElement.clientWidth, f.right), top: f.top, bottom: f.bottom }
+      const seriesOf = (el: Element) => /highcharts-series-(\d+)/.exec(el.closest('[class*="highcharts-series-"]')?.getAttribute('class') ?? '')?.[1] ?? '?'
+      const skip = (el: Element) => ignoreSel !== '' && el.closest(ignoreSel) !== null
+      const marks = [...chart.querySelectorAll('.highcharts-series .highcharts-point')]
+        .filter((el) => !skip(el))
+        .map((el) => ({ who: (el.getAttribute('aria-label') ?? '').slice(0, 60), series: seriesOf(el), box: rect(el.getBoundingClientRect()) }))
+        .filter((m) => m.box.right - m.box.left > 0.5 && m.box.bottom - m.box.top > 0.5)
+      const labels = [...chart.querySelectorAll('.highcharts-data-label text')]
+        .map((el) => ({ text: (el.textContent ?? '').trim(), series: seriesOf(el), box: rect(el.getBoundingClientRect()) }))
+        .filter((l) => l.text !== '')
+      const lines = [...chart.querySelectorAll('.highcharts-plot-line')].map((el) => rect(el.getBoundingClientRect()))
+      return { frame, marks, labels, lines }
+    },
+    { sel: chartSelector, frameSel: frameSelector, ignoreSel: ignore },
+  ) as Promise<HcMarks>
+}
+
+const MARK_TOL = 0.5
+
+/** Every failure of the marks oracles, worded so a plant can name the one it trips. Empty means the chart passes. */
+export function hcMarkFailures(m: HcMarks): string[] {
+  const out: string[] = []
+  const inside = (b: Box) => b.left >= m.frame.left - MARK_TOL && b.right <= m.frame.right + MARK_TOL && b.top >= m.frame.top - MARK_TOL && b.bottom <= m.frame.bottom + MARK_TOL
+  const meet = (a: Box, b: Box) => a.left < b.right - MARK_TOL && b.left < a.right - MARK_TOL && a.top < b.bottom - MARK_TOL && b.top < a.bottom - MARK_TOL
+  for (const k of m.marks) if (!inside(k.box)) out.push(`outside: the mark "${k.who}" leaves the visible frame`)
+  for (const l of m.labels) {
+    if (!inside(l.box)) out.push(`outside: data-label "${l.text}" leaves the visible frame`)
+    for (const k of m.marks) if (meet(l.box, k.box)) out.push(`overlap: data-label "${l.text}" overlaps the mark "${k.who}" (series ${k.series})`)
+    for (const line of m.lines) if (meet(l.box, line)) out.push(`overlap: data-label "${l.text}" crosses a plot line`)
+  }
+  m.labels.forEach((a, i) => m.labels.slice(i + 1).forEach((b) => meet(a.box, b.box) && out.push(`overlap: data-labels "${a.text}" and "${b.text}" overlap`)))
+  return out
 }

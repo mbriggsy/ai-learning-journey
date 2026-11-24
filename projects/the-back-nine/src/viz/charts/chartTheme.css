@@ -209,4 +209,50 @@
   .highcharts-crosshair {
     stroke: var(--color-stone-300);
   }
+
+  /* ── Probability (RC4). The balance bar: the alternative green and solid, the plan it is compared against blue and
+     hatched (plan 4.0's colour roles, the hatch the second cue), its figure printed above in stone-900. ── */
+  /* On every bar chart, not only the hatched one: a page holds several charts and `url(#b9-hatch)` resolves to the FIRST
+     pattern with that id in the document, which may sit in the alternative's chart (measured: the compared bar's hatch
+     drew in the fallback grey). */
+  .b9-bar,
+  .b9-odds {
+    --b9-ink-hatch: var(--highcharts-color-0);
+  }
+  .b9-bar-compared .highcharts-point,
+  .b9-odds .b9-hatch .highcharts-point {
+    stroke: var(--highcharts-color-0);
+    stroke-width: 1.5;
+  }
+  .b9-bar .highcharts-data-label text,
+  .b9-odds .highcharts-data-label text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+    font-weight: 600;
+  }
+  /* ── Odds by stop year (RC4): a year below the on-track line, and a dipped year, are quieter (their true height
+     kept); a dipped year is also outlined dashed; the crowned year is outlined heavy, beside its word. The line is a
+     solid ink rule, never a hue. ── */
+  .b9-odds .b9-odds-below,
+  .b9-odds .b9-odds-dip {
+    fill-opacity: 0.45;
+  }
+  .b9-odds .b9-odds-dip {
+    stroke: var(--color-stone-900);
+    stroke-width: 1.5;
+    stroke-dasharray: 3 2;
+  }
+  .b9-odds .b9-odds-crown {
+    stroke: var(--color-stone-900);
+    stroke-width: 2.5;
+  }
+  .b9-odds-bar {
+    stroke: var(--color-stone-900);
+    stroke-width: 2;
+  }
+  /* The labels' spacers: drawn as nothing, they only carry each bar's words out to the labels' column. */
+  .b9-odds .b9-odds-spacer .highcharts-point {
+    fill: none;
+    stroke: none;
+  }
 }

@@ -11,7 +11,8 @@
  * Some browsers also keep a failed module load for the whole visit (whatwg/html#10327), so after a retry has failed
  * too the remedy becomes a page reload, the one action that can succeed there (insight 054). The reload sits behind
  * IntakeApp's leave guard, which asks first when anything is unsaved. On every failure the answer stays readable: its
- * lead is printed on the failure page itself, and "Back to your answer" returns to the whole of it (U25's rule).
+ * lead is printed on the failure page itself (U25's rule). Since RC4 the shell is the home, so there is no answer page
+ * behind it to go back to: the failure page offers the retry (then the reload) alone.
  *
  * This file rides the intake chunk: no stylesheet import (the shell's `workbench.css` rides the lazy chunk, and a sheet
  * shared with the intake chunk would move its place in the cascade: the UI landmines). Its failure page is drawn with
@@ -38,7 +39,6 @@ interface BoundaryProps {
   /** True once a retry has been tried: the remedy becomes a reload. */
   readonly retried: boolean
   readonly onRetry: () => void
-  readonly onBack: () => void
   /** Told once per failure, so the slot can stop sharing a lazy that rejected. */
   readonly onCaught: () => void
   readonly snapshot: MemoryModelSnapshot
@@ -58,7 +58,7 @@ class ShellBoundary extends Component<BoundaryProps, { readonly failed: boolean 
 
   override render() {
     if (!this.state.failed) return this.props.children
-    const { retried, onRetry, onBack, snapshot, wallCalendarYear } = this.props
+    const { retried, onRetry, snapshot, wallCalendarYear } = this.props
     const answer = pinnedLines(snapshot, wallCalendarYear)
     return (
       <main className="rc-root mx-auto flex w-full max-w-[48rem] flex-1 flex-col gap-6 px-4 py-10" data-shell-failed="">
@@ -78,9 +78,6 @@ class ShellBoundary extends Component<BoundaryProps, { readonly failed: boolean 
           ) : (
             <Button onClick={onRetry}>{copy.exportRetry}</Button>
           )}
-          <Button variant="neutral" onClick={onBack}>
-            {copy.workbenchBack}
-          </Button>
         </div>
       </main>
     )
@@ -111,11 +108,10 @@ export function ShellSlot({
       key={attempt}
       retried={attempt > 0}
       onRetry={retry}
-      onBack={shell.onHome}
       snapshot={shell.snapshot}
       wallCalendarYear={shell.wallCalendarYear ?? new Date().getFullYear()}
-      // A household that goes back without retrying gets a fresh load on its next visit, never the rejection the
-      // shared lazy would otherwise keep for the whole session.
+      // The next mount (after a ceremony, or a re-walk) gets a fresh load, never the rejection the shared lazy would
+      // otherwise keep for the whole session.
       onCaught={() => {
         if (load === loadShell) sharedShell = lazy(loadShell)
       }}

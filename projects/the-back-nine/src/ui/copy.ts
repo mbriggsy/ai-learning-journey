@@ -2551,13 +2551,10 @@ export const copy = {
     'You have something open here. Going back closes it: changes you finished stay in your plan, and an entry not yet added is dropped.',
   workbenchLeaveGo: 'Go back',
   workbenchLeaveStay: 'Stay here',
-  // The door pressed over an entry still open on the answer (a budget sheet's typed lines survive its Cancel).
-  workbenchDoorAsk: 'You started an entry on this page that isn’t added yet. Opening your plan’s pages drops it.',
-  workbenchDoorAskGo: 'Open it and drop the entry',
   // --- Act 6 · RC2, the shell (plan docs/plans/6-rightcapital-ui-plan.md, section 3.1): the top bar, the pages, the
   // phone's menu, the lock menu (the one save machine's states, `src/ui/shell/lockMenu.ts`) and the interim banner. ---
   shellMark: 'B9',
-  shellHomeLabel: 'The Back Nine: back to your answer',
+  shellHomeLabel: 'The Back Nine: back to Snapshot',
   shellModulesLabel: 'Sections',
   shellPagesLabel: 'Pages in this section',
   shellModuleRetirement: 'Retirement',
@@ -2621,12 +2618,69 @@ export const copy = {
   snapshotFanWaiting: 'The range waits for your answer.',
   snapshotRecTitle: 'Recommendations',
   snapshotRecNone: 'No recommendation yet.',
-  snapshotRecFindOne: 'Find one on your answer page',
+  snapshotRecFindOne: 'Find one on the Tax Strategies page',
   snapshotRecKeep: 'Keep this recommendation',
   snapshotRecTry: 'Try it in the plan',
   snapshotRecWorkingRoute:
     'Strategy recommendations come later for a plan with working years still ahead; this page will show one once they do.',
   snapshotRecSuperseded: 'No longer current',
+  // --- Act 6 · RC4, Retirement → Analysis → Probability (plan docs/plans/6-rightcapital-ui-plan.md, RC4;
+  // `probabilityView.ts`). Every count rides the X-of-10 slots; every projected figure wears `~`. The shell is the home
+  // from this unit, so the old answer page's words that named it now name the page that holds each thing. ---
+  // Highcharts' own spoken words, in our words (`src/viz/charts/chartA11y.ts`). `{creditsStr}` and `{itemName}` are
+  // Highcharts' placeholders, filled in by the chart.
+  chartCredits: 'Chart drawn with {creditsStr}',
+  chartEnd: 'End of the chart.',
+  chartLegend: 'Chart key',
+  chartLegendItem: 'Show or hide {itemName}',
+  shellModuleTax: 'Tax',
+  shellPageTaxStrategies: 'Tax Strategies',
+  shellPageHealthCare: 'Health Care',
+  // The gear (RC18's settings later): today it opens the assumptions behind the plan, in the old panel.
+  shellGear: 'Assumptions',
+  shellGearLabel: 'The assumptions behind your plan',
+  analysisTitle: 'Retirement Analysis',
+  analysisTabsLabel: 'Ways to read your plan',
+  probabilityTab: 'Probability',
+  probabilityChartRings: 'Your odds, side by side',
+  probabilityChartOdds: 'Odds by stop year',
+  probabilityChartMenu: 'Choose the chart',
+  probabilityPickerLabel: 'What to set beside your plan',
+  probabilityPickNew: 'New what-if',
+  probabilityPickRecommended: 'Recommended',
+  probabilityPlanTitle: 'Your plan',
+  probabilityVs: 'vs',
+  probabilityNoChanges: 'No changes yet: this side reads your plan as it stands.',
+  probabilityWaitingFinal: 'This side waits until your answer’s final reading lands.',
+  probabilityLoading: 'Loading…',
+  probabilitySurvivorStopgap: 'The survivor reading shows once everyone has stopped working.',
+  probabilityBarLabel: 'Savings left when the second of you dies, in the middle future',
+  probabilityBarNote: 'Or at the plan’s last year, if that comes first. In today’s dollars.',
+  // Both medians are $0: half or more of the futures have used up their savings by then, so there is no bar to draw.
+  probabilityBarNone:
+    'In the middle future, the savings are used up before the second of you dies, so there is no balance to show.',
+  probabilityBarDescription:
+    'Each side’s savings when the second of you dies, or at the plan’s last year if that comes first, in the middle future, in today’s dollars.',
+  probabilityTodaysDollars: 'Today’s dollars',
+  probabilityRecWorkingRoute: 'A recommended strategy isn’t worked out yet for a plan with working years still ahead.',
+  probabilityOpenStrategies: 'Open the Tax Strategies page',
+  probabilityOpenWhatIf: 'Open the What if page',
+  oddsChartDescription:
+    'The odds of staying work-optional for each year you could stop working, each read against the on-track line.',
+  oddsAxisYear: 'Year you stop working',
+  oddsSeriesHero: 'Odds with your full spending',
+  oddsSeriesFloor: 'Odds on just the essentials',
+  oddsSeriesSingle: 'Your odds',
+  oddsDipWord: 'doesn’t hold',
+  // A chart whose picture failed to load (its own boundary, `ChartBoundary.tsx`): the page's words stand without it.
+  chartLoadFailed: 'This chart didn’t load. The figures in words on this page still stand.',
+  // The interim Health Care page (until RC10): the old health-cost sheet, behind its door.
+  healthInterimIntro: 'Your health costs before Medicare, and the marketplace subsidy rules your plan uses, live in this sheet until this page is rebuilt.',
+  healthInterimNone:
+    'The health-cost sheet covers marketplace coverage before Medicare. Your plan has no one under 65 with a marketplace quote, so there’s nothing for it to show.',
+  // The interim Tax Strategies page on the working route (until RC8): the recommendation isn't worked out there yet.
+  strategiesInterimWorkingRoute:
+    'Strategy recommendations come later for a plan with working years still ahead; this page will show one once they do.',
   // --- The year-by-year table (Act 5, U7). The pilot's drafts, shipped flagged for Briggsy's cold read. The heading
   // is bound by `docs/decisions/workbench-one-future.md` §5: steady is never typical, average, expected or median, nor
   // placed in the middle of the range (copyGuard's ONE_FUTURE_BANNED sweeps every workbench string), and the rough
@@ -2855,9 +2909,9 @@ export const copy = {
   workbenchRailRecLeave: 'Back to my own changes',
   workbenchRailRecShowing: 'Showing the saved recommendation beside your plan. It can’t be changed here.',
   workbenchRailRecStale:
-    'Your plan or the rules have changed since this recommendation was saved, so it isn’t tried here. A fresh one can be found on your answer’s page.',
+    'Your plan or the rules have changed since this recommendation was saved, so it isn’t tried here. A fresh one can be found on the Tax Strategies page.',
   workbenchRailRecOld:
-    'This recommendation was saved before the tool kept its Roth conversion plan, so it can’t be tried here as it was recommended. A fresh one can be found on your answer’s page.',
+    'This recommendation was saved before the tool kept its Roth conversion plan, so it can’t be tried here as it was recommended. A fresh one can be found on the Tax Strategies page.',
   workbenchRailRecRothNone: 'none',
   // Refusals, by name.
   workbenchRailRefusedDuplicate: 'This what-if changes one thing twice, so it isn’t run.',
@@ -5367,4 +5421,43 @@ export const slots = {
   /** The screen reader's sentence for one year of the fan. */
   snapshotFanPoint: (ages: string, low: string, median: string, high: string): string =>
     `${ages}: the most likely path ~${median}; eight in ten futures between ~${low} and ~${high}.`,
+  // --- Act 6 · RC4, Probability (`probabilityView.ts`) and the Odds by stop year chart ---
+  /** The survivor row under a ring: the count through the X-of-10 slots. */
+  probabilitySurvivorRow: (count: string): string => `As the survivor: ${count}`,
+  /** The essentials row under a ring. */
+  probabilityEssentialsRow: (count: string): string => `Essentials only: ${count}`,
+  /** The difference line: the two printed counts and nothing else. */
+  probabilityDifference: (plan: string, alternative: string, alternativeName: string): string =>
+    `Your plan reads ${plan}; ${alternativeName} reads ${alternative}.`,
+  /** The balance bar's printed figure (a projected figure: `~`). */
+  probabilityBarFigure: (figure: string): string => `~${figure}`,
+  /** The screen reader's sentence for one side's bar. */
+  probabilityBarPoint: (side: string, figure: string): string => `${side}: about ${figure}.`,
+  /** The Odds by stop year chart's x-axis tick: the calendar year. */
+  oddsYearTick: (year: number): string => `${year}`,
+  /** A bar's printed words on one line (a wide chart): the crown's word, the count, the dip's word. */
+  oddsInline: (parts: readonly string[]): string => parts.join(' · '),
+  /** The ceiling's words over a column, over two lines: the same words as `xOfTenAtCeiling`, broken before the count. */
+  oddsCeilingLines: (): readonly string[] => {
+    const at = XOFTEN_CEILING.lastIndexOf(' 9 ')
+    return at < 0 ? [XOFTEN_CEILING] : [XOFTEN_CEILING.slice(0, at), XOFTEN_CEILING.slice(at + 1)]
+  },
+  /** The key-metric column's line for the date's own odds (the odds clause, `dateOddsText`, given its subject). */
+  probabilityDateOdds: (odds: string): string => `Stopping then: ${odds}.`,
+  /** The StaleBanner's aged-balances line (`agedBalancesYearFor`): the save's own year, never the build year. */
+  staleAgedBalances: (savedCalendarYear: number): string =>
+    `These answers read your account balances as you entered them in ${savedCalendarYear}; what you hold now may differ.`,
+  /** A column's screen-reader sentence and tooltip: the year, the series, the count and its state. */
+  oddsPoint: (year: number, series: string, count: string, state: 'crown' | 'dip' | 'clears' | 'below', atCeiling: boolean): string => {
+    const odds = atCeiling ? count : `about ${count}`
+    const tail =
+      state === 'crown'
+        ? ' — your date, the first year the odds clear the line and stay above it for every later year'
+        : state === 'dip'
+          ? ' at first — but the odds slip below the line in the years after, so it doesn’t last'
+          : state === 'clears'
+            ? ' — clears the line'
+            : ' — below the line'
+    return `Stopping in ${year}, ${series.toLowerCase()}: ${odds}${tail}.`
+  },
 } as const

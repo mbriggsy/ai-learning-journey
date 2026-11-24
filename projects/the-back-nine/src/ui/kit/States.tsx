@@ -37,10 +37,11 @@ export function StaleBanner({ message, action, className }: StaleBannerProps) {
         className,
       )}
     >
-      <p className="flex min-w-0 flex-1 items-start gap-2 text-body text-stone-900">
+      {/* A div, not a p: a message may be a block of its own (a list of labelled parts), and a p may hold no block. */}
+      <div className="flex min-w-0 flex-1 items-start gap-2 text-body text-stone-900">
         <History size={20} strokeWidth={1.5} aria-hidden="true" className="mt-0.5 shrink-0 text-plum" />
-        <span>{message}</span>
-      </p>
+        <div className="min-w-0">{message}</div>
+      </div>
       {action !== undefined ? (
         <Button variant="secondary" size="sm" onClick={action.onSelect} className="self-start wide:self-center">
           {action.label}

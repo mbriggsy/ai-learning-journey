@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent, within } from '@testing-library/react'
-import type { MemoryModelSnapshot, StickyDisplay } from '@store/memoryModel'
+import type { MemoryModelSnapshot, ModelAnswer, StickyDisplay } from '@store/memoryModel'
 import { OUTCOME_STATES, RECOMMENDATION_GOALS, type OutcomeState } from '@shared/model'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -19,8 +19,8 @@ import { resolve } from 'node:path'
  *
  * THE CLAIM: `copy.goalPickerIntro` — "With the basics covered, pick the one thing your plan should
  * lean toward." — is FALSE on a household the strategy door still opens the picker for ("Already
- * short — 0 of 10"). The lead is gated on the sticky DISPLAY triple the verdict sentence itself
- * renders from, as a POSITIVE list, and it is OMITTED rather than reworded when the premise fails —
+ * short — 0 of 10"). The lead is gated on the RAW triple (`rawDisplayed`; Act 6 · RC4's ruling: raw
+ * everywhere the clone prints a count, so the gate reads the count the pages print), as a POSITIVE list, and it is OMITTED rather than reworded when the premise fails —
  * the failing-cohort words are Briggsy's and are not authored yet (docs/backlog.md, "The goal picker
  * tells an already-failing household \"with the basics covered\"").
  *
@@ -31,13 +31,13 @@ import { resolve } from 'node:path'
  * THE TWO PLANTS, and why each is the honest one:
  *  - `resolvedFocusKey` is module-mocked (the recommendInvite.test.tsx precedent) so the invite door
  *    is offered without standing up the engine worker;
- *  - `appModel.getSnapshot` is wrapped around the REAL store to inject the `displayed` triple a
- *    committed spine verdict would have resolved. Nothing else is faked — the door, the picker, and
+ *  - `appModel.getSnapshot` is wrapped around the REAL store to inject a committed spine answer (and,
+ *    in one arm, a sticky `displayed` triple held over it, which must never decide the gate). Nothing else is faked — the door, the picker, and
  *    the gate expression under test are all the shipped ones. The wrapper MEMOIZES: `useSyncExternalStore`
  *    requires a stable snapshot identity between changes, and a fresh object per call re-renders forever.
  */
 
-const planted = vi.hoisted(() => ({ displayed: null as StickyDisplay | null }))
+const planted = vi.hoisted(() => ({ displayed: null as StickyDisplay | null, answer: null as ModelAnswer | null }))
 
 vi.mock('../answerView', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../answerView')>()
@@ -48,16 +48,18 @@ vi.mock('../appModel', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../appModel')>()
   let lastRaw: MemoryModelSnapshot | undefined
   let lastDisplayed: StickyDisplay | null | undefined
+  let lastAnswer: ModelAnswer | null | undefined
   let cached: MemoryModelSnapshot | undefined
   return {
     appModel: {
       ...actual.appModel,
       getSnapshot: (): MemoryModelSnapshot => {
         const raw = actual.appModel.getSnapshot()
-        if (cached === undefined || raw !== lastRaw || planted.displayed !== lastDisplayed) {
+        if (cached === undefined || raw !== lastRaw || planted.displayed !== lastDisplayed || planted.answer !== lastAnswer) {
           lastRaw = raw
           lastDisplayed = planted.displayed
-          cached = { ...raw, displayed: planted.displayed }
+          lastAnswer = planted.answer
+          cached = { ...raw, displayed: planted.displayed, ...(planted.answer !== null ? { answer: planted.answer } : {}) }
         }
         return cached
       },
@@ -82,6 +84,7 @@ vi.stubGlobal(
 
 import { Result } from '../Result'
 import { resolvedFocusKey } from '../answerView'
+import { DEV_SEEDS } from '../devSeeds'
 import { copy } from '../copy'
 
 const mockFocusKey = vi.mocked(resolvedFocusKey)
@@ -90,11 +93,26 @@ afterEach(() => {
   cleanup()
   document.documentElement.classList.remove('control-sheet-open')
   planted.displayed = null
+  planted.answer = null
   mockFocusKey.mockReset()
 })
 
-/** A committed spine verdict in DISPLAY form — only `outcomeState` is read by the gate; the rest is
- *  the triple's real shape (the sentence's count + the clause's spend and direction), never a partial cast. */
+/** A committed spine answer whose RAW headline reads `outcomeState` (the gate reads `rawDisplayed` of it). */
+const answerFor = (outcomeState: OutcomeState): ModelAnswer =>
+  ({
+    kind: 'headline',
+    tier: 'final',
+    // A real all-retired draft: the tab composes the answer's notes off the answered draft (the plan clock's one mint).
+    draft: DEV_SEEDS.retired,
+    inputKey: 'k',
+    result: {
+      headline: { outcomeState, xOfTen: { value: 7, marginToEdge: 0.1 }, stateMarginToEdge: 0.1 },
+      dollar: { direction: 'on-the-line', spendPerMonthReal: 6_500 },
+      distribution: {},
+      seed: 1,
+    },
+  }) as unknown as ModelAnswer
+/** A sticky DISPLAY triple — planted over a raw answer to prove it never decides the gate. */
 const displayFor = (outcomeState: OutcomeState): StickyDisplay => ({
   xOfTen: 7,
   outcomeState,
@@ -105,7 +123,7 @@ const displayFor = (outcomeState: OutcomeState): StickyDisplay => ({
 /** Open the picker through the SHIPPED door: the quiet-row invite, on a resolved reading. */
 const openPicker = () => {
   mockFocusKey.mockReturnValue('planted-focus-key')
-  render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+  render(<Result />)
   fireEvent.click(screen.getByRole('button', { name: copy.recommendInviteCta }))
   return within(screen.getByRole('dialog'))
 }
@@ -124,7 +142,7 @@ const LEAD_STATES: readonly (readonly [OutcomeState, boolean])[] = [
 describe('the goal picker’s lead is verdict-gated at the wiring', () => {
   for (const [outcomeState, leads] of LEAD_STATES) {
     it(`${leads ? 'renders' : 'omits'} the lead on a '${outcomeState}' verdict`, () => {
-      planted.displayed = displayFor(outcomeState)
+      planted.answer = answerFor(outcomeState)
       const dialog = openPicker()
       if (leads) expect(dialog.getByText(copy.goalPickerIntro)).toBeInTheDocument()
       else {
@@ -148,9 +166,16 @@ describe('the goal picker’s lead is verdict-gated at the wiring', () => {
     })
   }
 
+  it('RAW decides it: a sticky on-track triple held over a raw off-track answer leaves the lead silent', () => {
+    planted.answer = answerFor('off-track')
+    planted.displayed = displayFor('on-track')
+    const dialog = openPicker()
+    expect(dialog.queryByText(copy.goalPickerIntro)).not.toBeInTheDocument()
+  })
+
   it('omits the lead when NO spine verdict stands — and the dialog is still fully usable', () => {
-    // `displayed` is null on the indeterminate frame and on the date route / error /
-    // inputs-incomplete alike, which is what silences the lead there rather than the door.
+    // The raw triple is null on the indeterminate frame and on the date route / error / inputs-incomplete alike,
+    // which is what silences the lead there rather than the door.
     planted.displayed = null
     const dialog = openPicker()
     expect(dialog.queryByText(copy.goalPickerIntro)).not.toBeInTheDocument()

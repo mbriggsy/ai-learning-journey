@@ -15,10 +15,10 @@ const row = (r: Partial<RouteRow> & Pick<RouteRow, 'module' | 'page'>): RouteRow
 })
 
 describe('routes — no dead tabs', () => {
-  it('only modules with a screen show, in RightCapital’s order; RC3 draws Dashboard, Retirement and Profile', () => {
-    expect(navModules().map((m) => m.id)).toEqual(['dashboard', 'retirement', 'profile'])
+  it('only modules with a screen show, in RightCapital’s order; RC4 draws Dashboard, Retirement, Tax and Profile', () => {
+    expect(navModules().map((m) => m.id)).toEqual(['dashboard', 'retirement', 'tax', 'profile'])
     expect(navModules().find((m) => m.id === 'dashboard')!.pages.map((p) => p.id)).toEqual(['snapshot'])
-    expect(navModules().find((m) => m.id === 'retirement')!.pages.map((p) => p.id)).toEqual(['analysis', 'cash-flows'])
+    expect(navModules().find((m) => m.id === 'retirement')!.pages.map((p) => p.id)).toEqual(['analysis', 'health-care', 'cash-flows'])
     // Every module with a screen has its word.
     for (const m of navModules()) expect(MODULE_LABELS[m.id]).toBe(m.label)
   })
@@ -53,10 +53,11 @@ describe('routes — the hash', () => {
   })
 
   it('an unknown page or tab lands on its module’s first page; a known page with no tab on its first tab', () => {
-    expect(parseHash('#/retirement/stress-test')).toEqual({ module: 'retirement', page: 'analysis', tab: 'what-if' })
-    expect(parseHash('#/retirement/analysis')).toEqual({ module: 'retirement', page: 'analysis', tab: 'what-if' })
-    expect(parseHash('#/retirement/analysis/probability')).toEqual({ module: 'retirement', page: 'analysis', tab: 'what-if' })
-    expect(parseHash('#/retirement')).toEqual({ module: 'retirement', page: 'analysis', tab: 'what-if' })
+    expect(parseHash('#/retirement/stress-test')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
+    expect(parseHash('#/retirement/analysis')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
+    expect(parseHash('#/retirement/analysis/confidence')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
+    expect(parseHash('#/retirement/analysis/what-if')).toEqual({ module: 'retirement', page: 'analysis', tab: 'what-if' })
+    expect(parseHash('#/retirement')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     expect(parseHash('#/profile/net-worth')).toEqual({ module: 'profile', page: 'facts' })
     expect(parseHash('#/retirement/cash-flows/extra/parts')).toEqual({ module: 'retirement', page: 'cash-flows' })
   })
@@ -64,7 +65,7 @@ describe('routes — the hash', () => {
   it('a hash naming no module with a screen is not a shell address', () => {
     expect(parseHash('')).toBeNull()
     expect(parseHash('#')).toBeNull()
-    expect(parseHash('#/tax/strategies')).toBeNull()
+    expect(parseHash('#/estate/plan')).toBeNull()
     expect(parseHash('#section-2')).toBeNull()
   })
 

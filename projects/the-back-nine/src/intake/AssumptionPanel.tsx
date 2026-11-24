@@ -36,7 +36,7 @@
  * BudgetBuilder inline variant's edits-survive precedent).
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react'
-import type { MemoryModelSnapshot, ScenarioDraft, StickyDisplay } from '@store/memoryModel'
+import { rawDisplayed, type MemoryModelSnapshot, type ScenarioDraft, type StickyDisplay } from '@store/memoryModel'
 import { copy, slots, type CopyKey } from '@ui/copy'
 import { rothPlanStartFor, type BandPlanClockAnchor } from '@ui/bandAnnotations'
 import { composeVerdictReading, spendClauseFor } from '@ui/verdictSentence'
@@ -108,8 +108,8 @@ const HEIR_BRACKET_OPTIONS: readonly { readonly value: string; readonly label: s
 
 export interface AssumptionPanelProps {
   readonly open: boolean
-  /** The LIVE model snapshot (Result re-renders this panel on every store notify) — the echo
-   *  reads `snapshot.displayed` (the sticky triple), NEVER the raw result. */
+  /** The LIVE model snapshot (the host re-renders this panel on every store notify) — the echo reads the RAW triple
+   *  (`rawDisplayed`, Act 6 · RC4's ruling: raw everywhere the clone prints a count), never the sticky `displayed`. */
   readonly snapshot: MemoryModelSnapshot
   /** The still-missing required facts (Result's memo) — the echo's incomplete arm names them. */
   readonly missing: readonly MissingFact[]
@@ -429,7 +429,10 @@ export function AssumptionPanel({
   const editCollections = onEditCollections ?? onReview
   // Stable, so the W row's announce effect never re-runs on a mere re-render.
   const announce = useCallback((text: string) => announcerRef.current?.announce(text), [])
-  const { draft, answer, displayed, spend, refiguring } = snapshot
+  const { draft, answer, spend, refiguring } = snapshot
+  // THE RAW TRIPLE (Act 6 · RC4's ruling, 2026-11-24): every count the clone prints reads the engine's own quantized
+  // headline, so the echo prints the count the rings and the Probability page print (one count per screen, insight 072).
+  const displayed = rawDisplayed(answer)
   const governs = budgetGoverns(draft.budget)
   const dateRoute = isDateRoute(draft)
   // U17 §S1 — the Roth row's start in CALENDAR terms, derived ONCE through the shared producer
@@ -588,8 +591,8 @@ export function AssumptionPanel({
   }
 
   // ── the echo (the live answer readout + the two-class transition line) ────────────────
-  // Reads `displayed` — the STICKY triple — never the raw result (the sentence the user saw
-  // is the sentence the echo continues; the band and drill-downs read raw elsewhere). The
+  // Reads `displayed` — the RAW triple since Act 6 · RC4's ruling (the sentence the user saw on every clone page is
+  // the raw one, so the echo continues it). The
   // word/count/clause come from the ONE shared composer (verdictSentence.ts) — the hero
   // renders the same seam, so echo and hero can never diverge (U12 ultramode: the hand-rolled
   // copy here had already diverged on the over-funded ceiling reading).

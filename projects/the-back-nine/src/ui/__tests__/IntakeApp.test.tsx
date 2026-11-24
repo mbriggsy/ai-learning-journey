@@ -8,8 +8,8 @@ import { act, cleanup, render, screen, fireEvent } from '@testing-library/react'
  * resultSave.test.ts pins `deriveResultSave(…, readOnly)` at the leaf, and App.test.tsx pins the
  * router's `entry.notice → readOnly` derivation against a props-echo stub — but nothing proved
  * IntakeApp actually FORWARDS its readOnly prop into the derivation (dropping the 3rd argument at
- * the call site left the whole suite green — ultramode 2026-07-03). Result is stubbed to an echo
- * of `save.kind` AND the new `backup` door prop (insight 066 — echo the props asserted, never a
+ * the call site left the whole suite green — ultramode 2026-07-03). The shell's slot (the home since Act 6 · RC4) is
+ * stubbed to an echo of `save.kind` AND the backup re-offer (insight 066 — echo the props asserted, never a
  * swallowing marker); the vault session and the engine recompute are faked so the hydrate path runs
  * REAL (currentModel → draftFromScenario → scenarioFromDraft → deriveResultSave, plus the U8-tail
  * hasBackupRecord check) without the engine graph. BackupStep is stubbed to a Finish button so the
@@ -20,43 +20,40 @@ const h = vi.hoisted(() => ({ model: null as unknown, hasBackup: false }))
 vi.mock('../vaultSession', () => ({
   getVaultSession: async () => ({ currentModel: () => h.model, hasBackupRecord: async () => h.hasBackup }),
 }))
-vi.mock('../Result', () => ({
-  Result: ({
-    save,
-    backup,
-    onReview,
-    stalenessNote = false,
-    leftOverClauseHost = false,
-    computing,
-    readOnly = false,
+// Since Act 6 · RC4 the shell is the home (the old answer page and its `result` phase are gone): the shell's slot is
+// stubbed to an echo of the props IntakeApp hands it, the same props the Result stub echoed before (insight 066).
+vi.mock('../shell/ShellSlot', () => ({
+  ShellSlot: ({
+    shell,
   }: {
-    save: { kind: string; onKeep?: () => void }
-    backup?: { onSave: () => void }
-    onReview: () => void
-    stalenessNote?: boolean
-    leftOverClauseHost?: boolean
-    computing?: boolean
-    readOnly?: boolean
+    shell: {
+      save: { kind: string; onKeep?: () => void }
+      onBackup?: () => void
+      backupOffered?: boolean
+      onReview?: () => void
+      stalenessNote?: boolean
+      leftOverClauseHost?: boolean
+      readOnly?: boolean
+    }
   }) => (
     <div
-      data-save-kind={save.kind}
-      data-backup={backup ? 'offered' : 'none'}
-      data-staleness={String(stalenessNote)}
-      data-left-over-host={String(leftOverClauseHost)}
-      data-computing={String(computing)}
-      data-read-only={String(readOnly)}
+      data-save-kind={shell.save.kind}
+      data-backup={shell.backupOffered === true && shell.onBackup !== undefined ? 'offered' : 'none'}
+      data-staleness={String(shell.stalenessNote ?? false)}
+      data-left-over-host={String(shell.leftOverClauseHost ?? false)}
+      data-read-only={String(shell.readOnly ?? false)}
     >
       result stub
-      <button type="button" onClick={onReview}>
+      <button type="button" onClick={shell.onReview}>
         review-stub
       </button>
-      {save.kind === 'first' && (
-        <button type="button" onClick={save.onKeep}>
+      {shell.save.kind === 'first' && (
+        <button type="button" onClick={shell.save.onKeep}>
           keep-stub
         </button>
       )}
-      {backup && (
-        <button type="button" onClick={backup.onSave}>
+      {shell.backupOffered === true && shell.onBackup !== undefined && (
+        <button type="button" onClick={shell.onBackup}>
           save-backup-stub
         </button>
       )}
@@ -682,11 +679,12 @@ describe('IntakeApp — the completed-intake period disarm (the council-ratified
 })
 
 describe('IntakeApp — the completed-intake dead end (2026-08-20 walk finding 1, build half)', () => {
-  // The recompute is mocked (nothing ever resolves), so the answer stays `idle` after completion —
-  // which is exactly the two-faced frame under test: idle WITH a missing required fact is a terminal
-  // non-answer and must NOT read as computing (the actions row + the escape hatch render); idle with
-  // NOTHING missing is the crunch window and must (the row stays withheld, byte-identical).
-  it('a completed intake with ONE gated fact blank (the retiree’s stop-age) is NOT computing — the row and its door render over the "Still needed" strip', async () => {
+  // The recompute is mocked (nothing ever resolves), so the answer stays `idle` after completion. Until Act 6 · RC4 the
+  // answer page withheld its actions row while "computing" and the dead end (idle WITH a missing required fact) had to
+  // keep the escape hatch; since RC4 the completion lands on the shell, whose way back to the walk (the gear's panel and
+  // its re-walk) is never withheld, so both frames land with the re-walk door (the figured pages name what they wait
+  // for: `probabilityView.test.ts`, `snapshotView.test.ts`).
+  it('a completed intake with ONE gated fact blank (the retiree’s stop-age) lands on the shell with its re-walk door', async () => {
     const [you, spouse] = DEV_SEEDS.retired.people
     appModel.update(() => ({
       ...DEV_SEEDS.retired,
@@ -694,16 +692,17 @@ describe('IntakeApp — the completed-intake dead end (2026-08-20 walk finding 1
     }))
     render(<IntakeApp />)
     fireEvent.click(screen.getByRole('button', { name: 'complete-stub' }))
-    const stub = await screen.findByText('result stub')
-    expect(stub).toHaveAttribute('data-computing', 'false')
+    await screen.findByText('result stub')
+    fireEvent.click(screen.getByRole('button', { name: 'review-stub' }))
+    expect(screen.getByText('flow stub'), 'the re-walk door reaches the walk').toBeInTheDocument()
   })
 
-  it('a completed intake with NOTHING missing and nothing yet resolved IS computing — the crunch frame is untouched (kills the "always false" mutant)', async () => {
+  it('a completed intake with NOTHING missing and nothing yet resolved lands on the shell too (the crunch withholds no door)', async () => {
     appModel.update(() => DEV_SEEDS.retired)
     render(<IntakeApp />)
     fireEvent.click(screen.getByRole('button', { name: 'complete-stub' }))
-    const stub = await screen.findByText('result stub')
-    expect(stub).toHaveAttribute('data-computing', 'true')
+    await screen.findByText('result stub')
+    expect(screen.getByRole('button', { name: 'review-stub' })).toBeInTheDocument()
   })
 })
 

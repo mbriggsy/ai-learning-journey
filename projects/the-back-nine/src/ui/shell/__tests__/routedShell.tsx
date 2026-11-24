@@ -23,7 +23,10 @@ export function RoutedShell({ initialRoute = { module: 'retirement', page: 'cash
 
 export const PAGES = {
   snapshot: { module: 'dashboard', page: 'snapshot' },
+  probability: { module: 'retirement', page: 'analysis', tab: 'probability' },
   whatif: { module: 'retirement', page: 'analysis', tab: 'what-if' },
+  health: { module: 'retirement', page: 'health-care' },
+  strategies: { module: 'tax', page: 'strategies' },
   table: { module: 'retirement', page: 'cash-flows' },
   facts: { module: 'profile', page: 'facts' },
 } as const satisfies Record<string, Route>
@@ -37,9 +40,20 @@ export function showPage(page: keyof typeof PAGES): void {
     fireEvent.click(within(modulesNav()).getByRole('link', { name: copy.shellModuleProfile }))
     return
   }
+  if (page === 'strategies') {
+    fireEvent.click(within(modulesNav()).getByRole('link', { name: copy.shellModuleTax }))
+    return
+  }
+  if (page === 'snapshot') {
+    fireEvent.click(within(modulesNav()).getByRole('link', { name: copy.shellModuleDashboard }))
+    return
+  }
   const retirement = within(modulesNav()).getByRole('link', { name: copy.shellModuleRetirement })
   if (retirement.getAttribute('aria-current') !== 'page') fireEvent.click(retirement)
-  fireEvent.click(within(pagesNav()).getByRole('link', { name: page === 'table' ? copy.shellPageCashFlows : copy.shellPageAnalysis }))
+  const word = page === 'table' ? copy.shellPageCashFlows : page === 'health' ? copy.shellPageHealthCare : copy.shellPageAnalysis
+  fireEvent.click(within(pagesNav()).getByRole('link', { name: word }))
+  // The What if page is Analysis's interim folder tab (until RC4b's tray): open it from the Probability page.
+  if (page === 'whatif') fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageWhatIf }))
 }
 
 /** The page shown, by the screen the shell's `main.result` names. */

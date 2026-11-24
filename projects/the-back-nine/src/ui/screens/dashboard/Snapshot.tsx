@@ -11,10 +11,11 @@
  */
 import { lazy, Suspense, type Ref } from 'react'
 import { ArrowUpRight } from 'lucide-react'
-import { Button, Card, Caveat, Ring, TickDial } from '../../kit'
+import { Button, Card, Caveat, Ring, TickDial, cn } from '../../kit'
 import { verdictDescribedBy } from '../../disclaimerId'
 import { copy } from '../../copy'
 import type { SnapshotView, StatFigure } from './snapshotView'
+import { ChartBoundary } from '../ChartBoundary'
 
 /** Where each card's "open" link goes, wired by the shell (absent: no link). */
 export interface SnapshotDoors {
@@ -27,8 +28,8 @@ export interface SnapshotProps {
   readonly view: SnapshotView
   readonly headingRef: Ref<HTMLHeadingElement>
   readonly doors: SnapshotDoors
-  /** The answer page, where a recommendation is found today (the shell's wordmark move). */
-  readonly onHome: () => void
+  /** The Tax Strategies page, where a recommendation is found (the interim tab until RC8). */
+  readonly strategies: { readonly href: string; readonly onOpen: () => void }
   /** Keep this recommendation (present only where the view offers it). */
   readonly onKeep?: () => void
   /** Try it in the plan: the Analysis page with the recommendation (present only where the view offers it). */
@@ -70,7 +71,7 @@ function Stat({ stat, words }: { readonly stat: StatFigure; readonly words?: str
   )
 }
 
-export function Snapshot({ view, headingRef, doors, onHome, onKeep, onTry }: SnapshotProps) {
+export function Snapshot({ view, headingRef, doors, strategies, onKeep, onTry }: SnapshotProps) {
   const { ring, stats, invested, fan, rec } = view
   const r = ring.view
   return (
@@ -87,7 +88,18 @@ export function Snapshot({ view, headingRef, doors, onHome, onKeep, onTry }: Sna
           <div className="flex flex-col items-center gap-4 text-center" data-ring-card="">
             {r.kind === 'reading' || r.kind === 'no-reading' ? (
               <>
-                {r.eyebrow !== undefined ? <p className="text-label text-stone-600">{r.eyebrow}</p> : null}
+                {/* The re-figuring line (else the provisional tag). Past the phone tier its box is always held at the
+                    longer of the two routes' re-figuring lines, so the ring and the R13 caveat never move when it shows
+                    or clears; on the phone it joins the flow only while it speaks. */}
+                <p className={cn('text-label text-stone-600', r.eyebrow !== undefined ? 'grid' : 'hidden wide:grid')} data-ring-eyebrow="">
+                  <span className="col-start-1 row-start-1">{r.eyebrow ?? ''}</span>
+                  <span aria-hidden="true" className="invisible col-start-1 row-start-1 hidden wide:block">
+                    {copy.answerRefiguringVerdict}
+                  </span>
+                  <span aria-hidden="true" className="invisible col-start-1 row-start-1 hidden wide:block">
+                    {copy.answerRefiguringDate}
+                  </span>
+                </p>
                 {r.lead !== undefined ? <p className="text-intro text-stone-900">{r.lead}</p> : null}
                 <div role="group" aria-label={ring.title} aria-describedby={verdictDescribedBy()} data-ring-reading="">
                   <Ring
@@ -152,9 +164,11 @@ export function Snapshot({ view, headingRef, doors, onHome, onKeep, onTry }: Sna
           {fan.view.kind === 'chart' ? <p className="text-label text-stone-600">{fan.valuesLine}</p> : null}
           {fan.view.kind === 'chart' ? (
             <div className="min-w-0" data-fan="">
-              <Suspense fallback={<div className="h-75" aria-hidden="true" />}>
-                <FanChart fan={fan.view.fan} moments={fan.view.moments} labels={fan.view.labels} height={FAN_HEIGHT} />
-              </Suspense>
+              <ChartBoundary fallback={<p className="py-8 text-body text-stone-600">{copy.chartLoadFailed}</p>}>
+                <Suspense fallback={<div className="h-75" aria-hidden="true" />}>
+                  <FanChart fan={fan.view.fan} moments={fan.view.moments} labels={fan.view.labels} height={FAN_HEIGHT} />
+                </Suspense>
+              </ChartBoundary>
             </div>
           ) : (
             <p className="py-8 text-body text-stone-600">{fan.view.words}</p>
@@ -162,7 +176,7 @@ export function Snapshot({ view, headingRef, doors, onHome, onKeep, onTry }: Sna
         </Card>
 
         <Card title={rec.title} className="laptop:col-span-2" name="recommendations">
-          <RecBody view={rec.view} onHome={onHome} {...(onKeep !== undefined ? { onKeep } : {})} {...(onTry !== undefined ? { onTry } : {})} />
+          <RecBody view={rec.view} strategies={strategies} {...(onKeep !== undefined ? { onKeep } : {})} {...(onTry !== undefined ? { onTry } : {})} />
         </Card>
       </div>
     </div>
@@ -172,12 +186,12 @@ export function Snapshot({ view, headingRef, doors, onHome, onKeep, onTry }: Sna
 
 function RecBody({
   view,
-  onHome,
+  strategies,
   onKeep,
   onTry,
 }: {
   readonly view: SnapshotView['rec']['view']
-  readonly onHome: () => void
+  readonly strategies: { readonly href: string; readonly onOpen: () => void }
   readonly onKeep?: () => void
   readonly onTry?: () => void
 }) {
@@ -190,9 +204,7 @@ function RecBody({
       return (
         <div className="flex flex-col items-start gap-3">
           <p className="text-body text-stone-900">{view.words}</p>
-          <Button variant="secondary" size="sm" onClick={onHome}>
-            {view.findOne}
-          </Button>
+          <OpenLink door={strategies} words={view.findOne} />
         </div>
       )
     case 'stale':

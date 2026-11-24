@@ -1,12 +1,14 @@
 import { expect, type Page } from '@playwright/test'
-import { FINAL_TIER_MS, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, gotoSeedFinal, settleLayout, test } from './reviewSurface'
-import { copy } from '../src/ui/copy'
-import { FAN, assertHcText, enterSnapshot, hcAudit, hcFloorPx, hoverMedian } from './hcTextAudit'
+import { FINAL_TIER_MS, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, armRefiguringWatch, expectRefiguringSeen, gotoSeedFinal, gotoVaultFinal, pinPlantDay, pinnedDay, pinnedYear, refiguringLog, settleLayout, test } from './reviewSurface'
+import { copy, slots } from '../src/ui/copy'
+import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
+import { FAN, assertHcText, enterSnapshot, hcAudit, hcFloorPx, hcMarkFailures, hcMarks, hcTextFailures, hoverMedian } from './hcTextAudit'
 
 /**
  * Act 6's screens, one unit's arms at a time (plan docs/plans/6-rightcapital-ui-plan.md, sections 4.0 and 5.2), on the
  * fit harness (`playwright.fit.config.ts`; `playwright.config.ts` denies it, `scripts/__tests__/playwright-harness-partition.test.ts`
- * proves one owner). Every arm enters as a user would: the dev seed's settled answer, then the answer page's door.
+ * proves one owner). Every arm enters as a user would: since RC4 the dev seed's settled answer lands on the home
+ * (Dashboard → Snapshot), and the module and page words move between pages.
  *
  * RC2, the shell (section 3.1's Verification):
  *  - at his window (1440×731 @2, compact mode) the top bar is 48 px and the sub-nav 40 px; every interim page is
@@ -25,17 +27,14 @@ import { FAN, assertHcText, enterSnapshot, hcAudit, hcFloorPx, hoverMedian } fro
 const SEED = 'retired'
 const PAGES = [
   { screen: 'interim-table', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows, hash: '#/retirement/cash-flows' },
-  { screen: 'interim-whatif', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis, hash: '#/retirement/analysis/what-if' },
+  { screen: 'interim-whatif', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis, hash: '#/retirement/analysis/what-if', tab: copy.workbenchPageWhatIf },
   { screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts, hash: '#/profile/facts' },
 ] as const
 
-/** The settled answer, then the shell through the answer page's door; since RC3 it lands on Dashboard → Snapshot. */
+/** The settled answer, which lands on the home, Dashboard → Snapshot (RC4: the shell is the home, no door). */
 async function enterShell(page: Page): Promise<void> {
   await gotoSeedFinal(page, SEED)
-  const door = page.locator('.result-quiet-row [data-door="workbench"]')
-  await expect(door, 'the door never mounted on the settled answer').toBeVisible()
-  await door.click()
-  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the door never opened the shell on Snapshot').toBeAttached({ timeout: 30_000 })
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the seed never landed on Snapshot').toBeAttached({ timeout: 30_000 })
   await expect(page.locator(SETTLED_RESULT), 'the shell carries the settle hook').toBeAttached({ timeout: FINAL_TIER_MS })
 }
 
@@ -47,6 +46,8 @@ async function showPage(page: Page, target: (typeof PAGES)[number]): Promise<voi
   const subNav = page.getByRole('navigation', { name: copy.shellPagesLabel })
   const pageLink = subNav.getByRole('link', { name: target.page, exact: true })
   if ((await pageLink.getAttribute('aria-current')) !== 'page') await pageLink.click()
+  // The What if page is Analysis's interim folder tab (until RC4b's tray).
+  if ('tab' in target) await page.getByRole('tab', { name: target.tab, exact: true }).click()
   await expect(page.locator(`main.result[data-shell-screen="${target.screen}"]`)).toBeAttached()
 }
 
@@ -166,13 +167,16 @@ test.describe(`RC2 · the shell on the phone (${PHONE.width}×${PHONE.height} @ 
       expect(await sheet.getByRole('link').allTextContents(), 'the menu holds every page, in the nav’s order').toEqual([
         copy.shellPageSnapshot,
         copy.shellPageAnalysis,
+        copy.shellPageHealthCare,
         copy.shellPageCashFlows,
+        copy.shellPageTaxStrategies,
         copy.workbenchPageFacts,
       ])
       await sheet.getByRole('link', { name: target.page, exact: true }).click()
       await expect(sheet, 'the menu closes on the choice').toHaveCount(0)
-      await expect(page.locator(`main.result[data-shell-screen="${target.screen}"]`)).toBeAttached()
       await expect(menuButton, 'focus returns to the menu button').toBeFocused()
+      if ('tab' in target) await page.getByRole('tab', { name: target.tab, exact: true }).click()
+      await expect(page.locator(`main.result[data-shell-screen="${target.screen}"]`)).toBeAttached()
       await settleLayout(page)
       const widths = await page.evaluate(() => {
         const doc = document.scrollingElement ?? document.documentElement
@@ -288,4 +292,968 @@ test.describe(`RC3 · Snapshot on the phone (${PHONE.width}×${PHONE.height} @ $
       assertHcText(await hcAudit(page, ...FAN), floor, FAN_REQUIRED, `${seed} PHONE fan`)
     })
   }
+})
+
+// ── RC4 · the shell as the home, and Retirement → Analysis → Probability (plan 6, RC4's Verification and test scenarios;
+// section 5.2's ports from `e2e/vertical-fit.spec.ts` and `e2e/chart-text.spec.ts`) ─────────────────────────────────
+// - a seed's settled answer lands on Snapshot (no answer page, no door), the landing REPLACING the document's entry;
+// - Probability at his window in compact mode on every named seed: one frame from the top bar to the R13 caveat (title,
+//   intro, the panel, the caveat in frame, plan RC4's fit decision with no tray yet), exactly one visible R13 caveat, the
+//   state clause naming the state the run priced (North Carolina, Pennsylvania, Florida's $0, the unpriced monolith), the
+//   working route's survivor stopgap and no balance bar, the retired route's bar labelled "when the second of you dies"
+//   with its text passing the Highcharts audit; no sideways scroll;
+// - Odds by stop year on `dip` (laptop and phone): exactly one crowned year wearing its word, no "10 of 10" anywhere, the
+//   on-track line's word, the text audit (the phone's frame scrolls inside itself, never the page); on `?vault=datearrived`
+//   no year before the wall year is plotted;
+// - at the phone and at a 20 px browser default: the intro, the halves, then the caveat, in order and reachable;
+// - the saved recommendation (`?vault=rec`): Snapshot's "Try it in the plan" opens Probability with Recommended on the
+//   left; the interim Tax Strategies tab carries the record card.
+const RC4_FRAME_SEEDS = [
+  { seed: 'retired', route: 'headline', state: null },
+  // The split households: an essentials row under each ring (measured: before the halves shared their rows' second
+  // lines, `budget`'s caveat sat at 767 px).
+  { seed: 'budget', route: 'headline', state: null },
+  { seed: 'patypical', route: 'headline', state: 'Pennsylvania' },
+  { seed: 'nc', route: 'headline', state: 'North Carolina' },
+  { seed: 'pa', route: 'headline', state: 'Pennsylvania' },
+  { seed: 'fl', route: 'headline', state: 'Florida' },
+  { seed: 'elsewhere', route: 'headline', state: copy.verdictStateUnpricedNote },
+  { seed: 'dip', route: 'date', state: null },
+  { seed: 'datenc', route: 'date', state: 'North Carolina' },
+  { seed: 'date65', route: 'date', state: null },
+  { seed: 'datemixed', route: 'date', state: null },
+] as const
+
+/** A seed's settled answer, then Retirement → Analysis → Probability (the module word at a laptop, the menu on a
+ *  phone), its charts drawn and settled. */
+async function enterProbability(page: Page, seed: string): Promise<void> {
+  await gotoSeedFinal(page, seed)
+  await toProbability(page, seed)
+}
+
+/** From the home, Retirement → Analysis → Probability, its charts drawn and settled. */
+async function toProbability(page: Page, seed: string): Promise<void> {
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), `${seed}: the seed never landed on the home`).toBeAttached({ timeout: 30_000 })
+  const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
+  if (await modules.isVisible()) await modules.getByRole('link', { name: copy.shellModuleRetirement, exact: true }).click()
+  else {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: copy.shellPageAnalysis, exact: true }).click()
+    await expect(page.getByRole('dialog', { name: copy.shellMenuTitle })).toHaveCount(0)
+  }
+  await expect(page.locator('main.result[data-shell-screen="probability"]')).toBeAttached()
+  await expect(page.locator('[data-ring-half="compared"]'), `${seed}: the plan’s ring never drew`).toBeVisible({ timeout: 60_000 })
+  if ((await page.locator('[data-probability="headline"]').count()) > 0) {
+    // The bar, or on a $0 middle balance the words in its place.
+    await expect(page.locator('[data-bar="compared"] .highcharts-series-group, [data-bar-none]').first(), `${seed}: the plan’s bar never drew`).toBeAttached({ timeout: 60_000 })
+  }
+  await page.waitForTimeout(800)
+  await settleLayout(page)
+}
+
+/** Open the Odds by stop year chart through the chart title's menu. */
+async function openOdds(page: Page): Promise<void> {
+  await page.getByRole('button', { name: copy.probabilityChartRings }).click()
+  await page.getByRole('menuitemradio', { name: copy.probabilityChartOdds }).click()
+  await expect(page.locator('[data-chart="odds"] .highcharts-series-group'), 'the odds chart never drew').toBeAttached({ timeout: 30_000 })
+  await page.waitForTimeout(800)
+  await settleLayout(page)
+}
+
+/** The odds chart's marks: every drawn bar prints its own count (one label per bar), and no mark oracle fails: every bar
+ *  and every label inside the frame a reader sees, no label over any bar, the on-track line or another label. */
+async function assertOddsMarks(page: Page, label: string): Promise<void> {
+  const m = await hcMarks(page, '[data-chart="odds"]', '[data-odds-frame]', '.b9-odds-spacer')
+  expect(m.marks.length, `${label}: the chart drew its bars`).toBeGreaterThan(0)
+  expect(m.labels.length, `${label}: every bar prints its count`).toBe(m.marks.length)
+  expect(hcMarkFailures(m), `${label}: the chart’s marks`).toEqual([])
+}
+
+/** Every printed word of the odds chart, read off its SVG. */
+const oddsWords = (page: Page) => page.locator('[data-chart="odds"] svg text').allTextContents()
+
+test.describe(`RC4 · the home and Probability at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+
+  test('?seed=retired: the settled answer lands on Snapshot, the document’s entry replaced, no answer page and no door', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 60_000)
+    await gotoSeedFinal(page, 'retired')
+    await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached()
+    expect(await page.evaluate(() => history.state)).toEqual({ b9: 'workspace', n: 1 })
+    expect(new URL(page.url()).hash).toBe('#/dashboard/snapshot')
+    await expect(page.locator('.result-page'), 'no old answer page anywhere').toHaveCount(0)
+    await expect(page.getByRole('button', { name: copy.workbenchDoorCta })).toHaveCount(0)
+    await expect(page.locator('main.result'), 'exactly one main.result').toHaveCount(1)
+  })
+
+  for (const { seed, route, state } of RC4_FRAME_SEEDS) {
+    test(`?seed=${seed}: Probability holds one frame from the top bar to the R13 caveat; one caveat; ${state === null ? 'its route’s rows' : 'the state clause'}`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterProbability(page, seed)
+      await expect(page.getByRole('heading', { level: 1, name: copy.analysisTitle })).toBeVisible()
+      await expect(page.locator(`[data-probability="${route}"]`), `${seed}: the ${route} route`).toBeAttached()
+      await expect(page.locator('[data-intro-lead]'), `${seed}: the answer’s lead`).not.toHaveText('')
+      await assertOneVisibleCaveat(page, REAL.height)
+      const frame = await page.evaluate(() => ({
+        scrollY: window.scrollY,
+        halves: Math.max(...[...document.querySelectorAll('[data-half]')].map((el) => el.getBoundingClientRect().bottom)),
+        metrics: document.querySelector('[data-metrics]')!.getBoundingClientRect().bottom,
+      }))
+      expect(frame.scrollY).toBe(0)
+      expect(frame.halves, `${seed}: the halves in the first frame`).toBeLessThanOrEqual(REAL.height)
+      expect(frame.metrics, `${seed}: the key-metric column in the first frame`).toBeLessThanOrEqual(REAL.height)
+      await noSidewaysScroll(page, `${seed} REAL Probability`)
+      const words = await page.locator('main.result').innerText()
+      expect(words, `${seed}: never "10 of 10"`).not.toContain('10 of 10')
+      if (state !== null) await expect(page.locator('[data-metrics], [data-footnote]').filter({ hasText: state }).first(), `${seed}: the state clause`).toBeVisible()
+      if (route === 'date') {
+        await expect(page.locator('[data-survivor-stopgap]'), `${seed}: the survivor stopgap on both halves`).toHaveCount(2)
+        await expect(page.locator('[data-bar]'), `${seed}: no balance bar on the working route`).toHaveCount(0)
+      } else {
+        await expect(page.locator('[data-bar-label]'), `${seed}: the bar named for what it holds`).toContainText('when the second of you dies')
+        // The survivor row (HEAD's survivor-row arms, plan 5.2's RC4 port list): every retired frame seed is a couple
+        // with a survivor reading, so both halves print it; its absence where the reading is absent is the composer's
+        // unit arm (`probabilityView.test.ts`).
+        for (const side of ['alternative', 'compared'] as const) {
+          await expect(page.locator(`[data-half="${side}"] [data-reading-row]`).first(), `${seed}: the ${side} half’s survivor row`).toContainText(slots.probabilitySurvivorRow(''))
+        }
+        const floor = await hcFloorPx(page)
+        assertHcText(await hcAudit(page, '[data-bar="compared"] [data-chart="bar-compared"]', '[data-half="compared"]'), floor, { texts: [], counts: { 'data-label': 1, 'axis-label': 2 } }, `${seed} REAL bar`)
+      }
+    })
+  }
+
+  test('?seed=dip: Odds by stop year — one crowned year wearing its word, the on-track line’s word, no "10 of 10", the text audit', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await enterProbability(page, 'dip')
+    await openOdds(page)
+    await expect(page.locator('[data-chart="odds"] .b9-odds-crown'), 'exactly one crowned year').toHaveCount(1)
+    const words = await oddsWords(page)
+    expect(words.join(' '), 'the crown’s word').toContain(copy.ladderCrownLabel)
+    expect(words.join(' '), 'the on-track line’s word').toContain(copy.ladderBarLabel)
+    expect(words.join(' '), 'never "10 of 10"').not.toContain('10 of 10')
+    const floor = await hcFloorPx(page)
+    assertHcText(await hcAudit(page, '[data-chart="odds"]', '[data-odds-chart]'), floor, { texts: [copy.ladderBarLabel], counts: { 'data-label': 3, 'axis-label': 4, 'legend-item': 2 } }, 'dip REAL odds')
+    await assertOddsMarks(page, 'dip REAL odds')
+    await assertOneVisibleCaveat(page, null)
+  })
+
+  // The marks oracles are a new kind of check, so each one is planted once and must go red with its own message: a
+  // count printed over the neighbouring hatched bar (the 2026-11-24 defect at his window), and the marks and labels
+  // pushed past the frame a reader sees (the phone defect: years and labels cut off inside a narrower frame).
+  test('?seed=dip: the odds marks audit bites — a label over a neighbouring bar, and marks past the visible frame, each go red', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await enterProbability(page, 'dip')
+    await openOdds(page)
+    const read = async () => hcMarkFailures(await hcMarks(page, '[data-chart="odds"]', '[data-odds-frame]', '.b9-odds-spacer'))
+    expect(await read(), 'the unplanted chart passes').toEqual([])
+    // Plant 1: move the first count onto the first hatched bar.
+    await page.evaluate(() => {
+      const label = document.querySelector<SVGGElement>('[data-chart="odds"] .highcharts-data-label')!
+      const bar = document.querySelector('[data-chart="odds"] .b9-hatch .highcharts-point')!
+      const l = label.getBoundingClientRect()
+      const b = bar.getBoundingClientRect()
+      label.dataset.planted = label.getAttribute('transform') ?? ''
+      const m = /translate\(([-\d.]+),\s*([-\d.]+)\)/.exec(label.dataset.planted)
+      const [x, y] = m === null ? [0, 0] : [Number(m[1]), Number(m[2])]
+      label.setAttribute('transform', `translate(${x + (b.left - l.left) + 4},${y + (b.top - l.top)})`)
+    })
+    const one = await read()
+    expect(one.some((f) => f.startsWith('overlap: data-label')), `plant 1 (a count over a bar) is caught: ${JSON.stringify(one)}`).toBe(true)
+    await page.evaluate(() => {
+      const label = document.querySelector<SVGGElement>('[data-chart="odds"] .highcharts-data-label')!
+      label.setAttribute('transform', label.dataset.planted ?? '')
+    })
+    expect(await read(), 'plant 1 undone').toEqual([])
+    // Plant 2: the bars and their labels pushed past the frame's right edge.
+    await page.evaluate(() => {
+      for (const g of document.querySelectorAll<SVGGElement>('[data-chart="odds"] .highcharts-series-group, [data-chart="odds"] .highcharts-data-labels')) g.style.transform = 'translateX(2000px)'
+    })
+    const two = await read()
+    expect(two.some((f) => f.startsWith('outside: the mark')), `plant 2 (a mark past the frame) is caught: ${JSON.stringify(two.slice(0, 3))}`).toBe(true)
+    expect(two.some((f) => f.startsWith('outside: data-label')), `plant 2 (a label past the frame) is caught`).toBe(true)
+  })
+
+  test('?vault=datearrived: Odds by stop year plots no stop year that has already passed', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await gotoVaultFinal(page, 'datearrived')
+    await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleRetirement, exact: true }).click()
+    await expect(page.locator('main.result[data-shell-screen="probability"]')).toBeAttached()
+    await openOdds(page)
+    const ticks = (await page.locator('[data-chart="odds"] .highcharts-xaxis-labels text').allTextContents()).map(Number).filter(Number.isFinite)
+    expect(ticks.length, 'the odds chart printed its years').toBeGreaterThan(0)
+    expect(Math.min(...ticks), 'no passed stop year is plotted').toBeGreaterThanOrEqual(pinnedYear(page))
+  })
+
+  test('?vault=rec: Snapshot’s "Try it in the plan" opens Probability with Recommended on the left; the interim Tax Strategies tab carries the record card', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await gotoVaultFinal(page, 'rec')
+    await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached({ timeout: 30_000 })
+    const tryIt = page.locator('[data-card="recommendations"]').getByRole('button', { name: copy.snapshotRecTry })
+    await expect(tryIt, 'the saved record offers Try it in the plan').toBeVisible({ timeout: 30_000 })
+    await tryIt.click()
+    await expect(page.locator('main.result[data-shell-screen="probability"]')).toBeAttached()
+    await expect(page.locator('[data-half="alternative"]'), 'the left half names the recommendation').toHaveAttribute('aria-label', copy.probabilityPickRecommended)
+    await expect(page.locator('[data-half="alternative"] [data-ring-half]'), 'the recommendation’s side drew its ring').toBeVisible({ timeout: 60_000 })
+    await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
+    await expect(page.locator('main.result[data-shell-screen="interim-strategies"] .rec-record'), 'the record card on the interim tab').toBeVisible()
+  })
+})
+
+test.describe(`RC4 · Probability on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
+  for (const seed of ['retired', 'dip'] as const) {
+    test(`?seed=${seed}: the intro, the halves, then one R13 caveat, in order and reachable; no sideways scroll`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterProbability(page, seed)
+      const order = await page.evaluate(() => {
+        const top = (sel: string) => document.querySelector(sel)!.getBoundingClientRect().top + window.scrollY
+        return { intro: top('[data-analysis-intro]'), halves: top('[data-half="alternative"]'), caveat: top('main.result [data-caveat]') }
+      })
+      expect(order.intro).toBeLessThan(order.halves)
+      expect(order.halves).toBeLessThan(order.caveat)
+      await page.locator('main.result [data-caveat]').scrollIntoViewIfNeeded()
+      await assertOneVisibleCaveat(page, null)
+      await noSidewaysScroll(page, `${seed} PHONE Probability`)
+    })
+  }
+
+  test('?seed=dip: Odds by stop year on the phone — every stop year, every count whole, the legend; nothing past the frame; no sideways scroll', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await enterProbability(page, 'dip')
+    await openOdds(page)
+    await noSidewaysScroll(page, 'dip PHONE odds')
+    const floor = await hcFloorPx(page)
+    // Every oracle, none set aside: inside the chart, its card and the page, shown and unshrunk.
+    const failures = hcTextFailures(await hcAudit(page, '[data-chart="odds"]', '[data-odds-chart]'), floor, { texts: [copy.ladderBarLabel], counts: { 'data-label': 3, 'legend-item': 2 } })
+    expect(failures, 'dip PHONE odds: the chart’s text').toEqual([])
+    await assertOddsMarks(page, 'dip PHONE odds')
+  })
+})
+
+test.describe(`RC4 · Probability at a 20 px browser default (${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+  for (const seed of ['retired', 'dip'] as const) {
+    test(`?seed=${seed}: the intro, the halves, then one R13 caveat, in order and reachable; no sideways scroll`, async ({ page, context }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      const cdp = await context.newCDPSession(page)
+      await cdp.send('Page.setFontSizes', { fontSizes: { standard: 20, fixed: 20 } })
+      await enterProbability(page, seed)
+      const order = await page.evaluate(() => {
+        const top = (sel: string) => document.querySelector(sel)!.getBoundingClientRect().top + window.scrollY
+        return { intro: top('[data-analysis-intro]'), halves: top('[data-half="alternative"]'), caveat: top('main.result [data-caveat]') }
+      })
+      expect(order.intro).toBeLessThan(order.halves)
+      expect(order.halves).toBeLessThan(order.caveat)
+      await page.locator('main.result [data-caveat]').scrollIntoViewIfNeeded()
+      await assertOneVisibleCaveat(page, null)
+      await noSidewaysScroll(page, `${seed} 20px Probability`)
+    })
+  }
+})
+
+// ── RC4 ported from e2e/vertical-fit.spec.ts (plan 6, section 5.2: an honesty law is PORTED with its surface) ─────────
+// Each arm keeps the old arm's LAW and reads it on the new screen; the old layout (the two panes, the doors, the seats)
+// went with the answer page. HEAD's arm is named above each block, at 95c715e19
+// (`git show 95c715e19:projects/the-back-nine/e2e/vertical-fit.spec.ts`).
+
+/** The date route's order on Probability: the hero, then the intro's lines in the composer's order, then the halves,
+ *  then the R13 caveat LAST (nothing drawn in the page below it), the caveat below both the halves and the key-metric
+ *  column. Returns the intro's lines, in order. */
+async function assertDateRouteOrder(page: Page, who: string): Promise<string[]> {
+  await expect(page.locator('[data-probability="date"]'), `${who}: the date route`).toBeAttached()
+  await expect(page.locator('[data-ring-half="compared"]'), `${who}: the plan’s ring drew`).toBeVisible()
+  const read = await page.evaluate(() => {
+    const box = (sel: string) => {
+      const el = document.querySelector(sel)
+      if (el === null) return null
+      const r = el.getBoundingClientRect()
+      return { top: r.top, bottom: r.bottom }
+    }
+    const caveat = document.querySelector('main.result [data-caveat]')
+    const caveatBottom = caveat?.getBoundingClientRect().bottom ?? NaN
+    // Caveat last: every drawn element of the page ends at or above the caveat's bottom (its own subtree and its
+    // ancestors aside): the old doors-last walk's law, with the caveat now the page's last line.
+    let below = ''
+    for (const el of document.querySelectorAll('main.result *')) {
+      if (caveat === null || el === caveat || caveat.contains(el) || el.contains(caveat)) continue
+      const r = el.getBoundingClientRect()
+      // Drawn: a real box (a screen-reader-only region, 1 px and clipped, draws nothing).
+      if (r.width <= 1 || r.height <= 1 || getComputedStyle(el).visibility === 'hidden') continue
+      if (r.bottom > caveatBottom + 0.5 && below === '') below = `${el.tagName.toLowerCase()}.${(el.getAttribute('class') ?? '').slice(0, 40)} ends at ${r.bottom.toFixed(1)}`
+    }
+    return {
+      lead: box('[data-intro-lead]'),
+      lines: [...document.querySelectorAll('[data-analysis-intro] p:not([data-intro-eyebrow])')].map((p) => (p.textContent ?? '').trim()),
+      halves: box('[data-half="compared"]'),
+      metrics: box('[data-metrics]'),
+      caveat: box('main.result [data-caveat]'),
+      below,
+    }
+  })
+  expect(read.lead && read.halves && read.metrics && read.caveat, `${who}: the hero, the halves, the metrics and the caveat all drew`).toBeTruthy()
+  expect(read.halves!.top, `${who}: the halves sit below the hero`).toBeGreaterThanOrEqual(read.lead!.bottom - 0.5)
+  expect(read.caveat!.top, `${who}: the R13 caveat sits below the halves`).toBeGreaterThanOrEqual(read.halves!.bottom - 0.5)
+  expect(read.caveat!.top, `${who}: the R13 caveat sits below the key-metric column`).toBeGreaterThanOrEqual(read.metrics!.bottom - 0.5)
+  expect(read.below, `${who}: nothing is drawn below the R13 caveat`).toBe('')
+  await assertOneVisibleCaveat(page, null)
+  return read.lines
+}
+
+// HEAD :1861 (dip), :1919 (date65), :1966 (datenc): the date route's order contract and its state and Medicare lines.
+test.describe(`RC4 ported · the date route’s order contract on Probability (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+
+  test('?seed=dip: the hero, the essentials line, then the dip line, in order; the unpriced state clause once; the caveat last', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await enterProbability(page, 'dip')
+    const lines = await assertDateRouteOrder(page, 'dip')
+    const essentials = lines.findIndex((l) => /essentials/i.test(l))
+    const dip = lines.indexOf(copy.dateNonMonotoneNote)
+    expect(essentials, `dip: the essentials line is in the intro (${JSON.stringify(lines)})`).toBeGreaterThanOrEqual(0)
+    expect(dip, `dip: the dip line follows the essentials line (${JSON.stringify(lines)})`).toBeGreaterThan(essentials)
+    await expect(page.locator('main.result').getByText(copy.verdictStateUnpricedNote, { exact: true }), 'dip: the unpriced state clause, exactly once').toHaveCount(1)
+  })
+
+  test('?seed=date65: Medicare is named priced (the affirmation and its residual); the caveat last', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await enterProbability(page, 'date65')
+    await assertDateRouteOrder(page, 'date65')
+    await expect(page.getByText('are already counted in this answer, on top of your spending').first(), 'date65: the priced-Medicare affirmation').toBeVisible()
+    await expect(page.getByText('could run higher than shown').first(), 'date65: the narrowed residual ships WITH the affirmation').toBeVisible()
+  })
+
+  test('?seed=datenc: North Carolina named on the residual, once, never beside the unpriced clause; the caveat last', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await enterProbability(page, 'datenc')
+    await assertDateRouteOrder(page, 'datenc')
+    const nc = page.locator('main.result').getByText('Your North Carolina state income tax is already counted in this answer, on top of your spending')
+    await expect(nc, 'datenc: the NC clause, exactly once').toHaveCount(1)
+    await expect(nc).toBeVisible()
+    await expect(page.locator('main.result').getByText(copy.verdictStateUnpricedNote, { exact: true }), 'datenc: never the unpriced clause beside it').toHaveCount(0)
+  })
+})
+
+// HEAD :2276: the computing frame. One R13 caveat stands during the crunch: from the first frame a page shows until the
+// final answer settles, every animation frame shows exactly one visible caveat (the in-frame one or App.tsx's trailing
+// one, never both, never none).
+for (const vp of [PHONE, REAL] as const) {
+  test.describe(`RC4 ported · the computing window at ${vp.width}×${vp.height} — one caveat stands during the crunch`, () => {
+    test.use({ viewport: vp, deviceScaleFactor: vp === REAL ? REAL_DPR : PHONE_DPR })
+    test('?seed=dip: every frame from the first page to the settled answer shows exactly one R13 caveat', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 60_000)
+      await page.addInitScript(() => {
+        type Reading = { t: number; n: number; screen: string }
+        const w = window as unknown as { __caveats: Reading[] }
+        w.__caveats = []
+        const t0 = performance.now()
+        const tick = () => {
+          const main = document.querySelector('main.result')
+          if (main !== null) {
+            const n = [...document.querySelectorAll('footer.disclaimer, [data-caveat]')].filter(
+              (el) => getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden' && (el as HTMLElement).getClientRects().length > 0,
+            ).length
+            const last = w.__caveats[w.__caveats.length - 1]
+            const screen = main.getAttribute('data-shell-screen') ?? 'none'
+            if (last === undefined || last.n !== n || last.screen !== screen) w.__caveats.push({ t: Math.round(performance.now() - t0), n, screen })
+          }
+          requestAnimationFrame(tick)
+        }
+        requestAnimationFrame(tick)
+      })
+      await page.goto('/?seed=dip')
+      await expect(page.locator(SETTLED_RESULT), 'the seed never settled').toBeAttached({ timeout: FINAL_TIER_MS })
+      await page.waitForTimeout(500)
+      const log = await page.evaluate(() => (window as unknown as { __caveats: { t: number; n: number; screen: string }[] }).__caveats)
+      expect(log.length, 'the watch saw no page frame at all').toBeGreaterThan(0)
+      const story = log.map((r) => `${r.t}ms ${r.screen}:${r.n}`).join(' · ')
+      expect(log.every((r) => r.n === 1), `a frame showed other than one caveat: ${story}`).toBe(true)
+    })
+  })
+}
+
+// HEAD :2401 / :2456 / :2476: the re-figuring line over the old answer, held and live. While a run on an edit is in
+// flight the page keeps the answer from before the edit and says so: the line on Probability (the intro's eyebrow; past
+// the phone tier it rides the folder tabs' row), the panel echo's words, and on the odds chart its tag. Held through
+// `?preview=refiguring` (the real app with every run after the first final held, `src/ui/preview/RefiguringPreview.tsx`),
+// because live the window lasts one run.
+
+type Edges = { readonly top: number; readonly bottom: number; readonly height: number; readonly oneLine: boolean } | null
+
+/** The visible element's edges (the first visible match), and whether it is one line box. */
+async function visibleEdges(page: Page, sel: string): Promise<Edges> {
+  return page.evaluate((s) => {
+    const el = [...document.querySelectorAll<HTMLElement>(s)].find((e) => e.getClientRects().length > 0 && getComputedStyle(e).display !== 'none')
+    if (el === undefined) return null
+    const r = el.getBoundingClientRect()
+    const lh = parseFloat(getComputedStyle(el).lineHeight)
+    return { top: r.top, bottom: r.bottom, height: r.height, oneLine: Number.isFinite(lh) && r.height <= lh * 1.5 }
+  }, sel)
+}
+
+/** The preview on `seed`, settled, then Probability; one engine-input edit through the gear's drawer (the survivor's
+ *  spending share), the flag SEEN, the echo read before and after, the drawer closed. Returns the boxes read before. */
+async function enterHeldWindow(page: Page, seed: string) {
+  await page.goto(`/?preview=refiguring&seed=${seed}`)
+  await expect(page.locator(SETTLED_RESULT), `${seed}: the preview never settled`).toBeAttached({ timeout: FINAL_TIER_MS })
+  await toProbability(page, seed)
+  await expect(page.locator('[data-intro-eyebrow]').filter({ visible: true }), 'a settled landing shows no re-figuring line').toHaveCount(0)
+  const before = { lead: await visibleEdges(page, '[data-intro-lead]'), caveat: await visibleEdges(page, 'main.result [data-caveat]') }
+  await page.locator('[data-gear]').click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await settleLayout(page)
+  const echoBefore = await visibleEdges(page, '[role="dialog"] .ap-echo')
+  const field = dialog.getByLabel(copy.assumptionSurvivorRatioLabel)
+  const now = (await field.inputValue()).replace(/[^0-9]/g, '')
+  await field.fill(now === '70' ? '65' : '70')
+  await field.press('Tab')
+  await expect(page.locator('main.result[data-answer-refiguring]'), 'the edit raised no re-figuring flag').toBeAttached({ timeout: 30_000 })
+  await settleLayout(page)
+  const echoAfter = await visibleEdges(page, '[role="dialog"] .ap-echo')
+  const echoText = await dialog.locator('.ap-echo').textContent()
+  await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
+  await expect(dialog).toBeHidden()
+  await settleLayout(page)
+  return { before, echoBefore, echoAfter, echoText }
+}
+
+/** Read after the window's boxes: the flag still stands over the old final, so every box was read inside the window. */
+async function expectStillHeld(page: Page): Promise<void> {
+  await expect(page.locator('main.result[data-answer-refiguring][data-answer-tier="final"]'), 'the preview let the window close before the read').toHaveCount(1)
+}
+
+test.describe(`RC4 ported · the re-figuring window, held (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+
+  test('spine (?seed=budget): the line on one line, in frame; the answer and the R13 caveat do not move; the echo says so in its own box', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    const { before, echoBefore, echoAfter, echoText } = await enterHeldWindow(page, 'budget')
+    const line = page.locator('[data-intro-eyebrow]').filter({ visible: true })
+    await expect(line, 'one visible re-figuring line').toHaveCount(1)
+    await expect(line).toHaveText(copy.answerRefiguringVerdict)
+    const edges = (await visibleEdges(page, '[data-intro-eyebrow]'))!
+    const lead = (await visibleEdges(page, '[data-intro-lead]'))!
+    const caveat = (await visibleEdges(page, 'main.result [data-caveat]'))!
+    expect(edges.oneLine, `the line wraps (${edges.height.toFixed(1)} px)`).toBe(true)
+    expect(edges.top, 'the line climbs above the page top').toBeGreaterThanOrEqual(0)
+    expect(edges.bottom, 'the line leaves the first frame').toBeLessThanOrEqual(REAL.height)
+    expect(Math.abs(lead.top - before.lead!.top), `the answer moved ${(lead.top - before.lead!.top).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
+    expect(Math.abs(caveat.top - before.caveat!.top), `the R13 caveat moved ${(caveat.top - before.caveat!.top).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
+    expect(caveat.bottom, 'the R13 caveat left the frame').toBeLessThanOrEqual(REAL.height)
+    await assertOneVisibleCaveat(page, REAL.height)
+    expect(echoText, 'the drawer’s echo says the answer is being figured again').toBe(copy.assumptionEchoRefiguring)
+    expect(Math.abs(echoAfter!.height - echoBefore!.height), 'the echo’s reserved box changed height').toBeLessThanOrEqual(0.5)
+    await expectStillHeld(page)
+  })
+
+  test('date (?seed=date): the date’s own line, in frame; the answer does not move; the odds chart wears the caption’s clause', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    const { before, echoText } = await enterHeldWindow(page, 'date')
+    const line = page.locator('[data-intro-eyebrow]').filter({ visible: true })
+    await expect(line).toHaveText(copy.answerRefiguringDate)
+    const edges = (await visibleEdges(page, '[data-intro-eyebrow]'))!
+    const lead = (await visibleEdges(page, '[data-intro-lead]'))!
+    expect(edges.oneLine, `the line wraps (${edges.height.toFixed(1)} px)`).toBe(true)
+    expect(edges.bottom, 'the line leaves the first frame').toBeLessThanOrEqual(REAL.height)
+    expect(Math.abs(lead.top - before.lead!.top), `the answer moved ${(lead.top - before.lead!.top).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
+    expect(echoText).toBe(copy.assumptionEchoRefiguring)
+    await openOdds(page)
+    await expect(page.locator('[data-odds-chart]').getByText(copy.answerRefiguringCaption, { exact: true }), 'the odds chart says its figures predate the change').toBeVisible()
+    await expectStillHeld(page)
+  })
+})
+
+test.describe(`RC4 ported · the re-figuring window, held (phone ${PHONE.width}×${PHONE.height})`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
+  for (const { seed, words } of [
+    { seed: 'budget', words: copy.answerRefiguringVerdict },
+    { seed: 'date', words: copy.answerRefiguringDate },
+  ] as const) {
+    test(`?seed=${seed}: the line sits in the flow above the answer it qualifies, over nothing`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterHeldWindow(page, seed)
+      const line = page.locator('[data-intro-eyebrow]').filter({ visible: true })
+      await expect(line).toHaveText(words)
+      const edges = (await visibleEdges(page, '[data-intro-eyebrow]'))!
+      const lead = (await visibleEdges(page, '[data-intro-lead]'))!
+      expect(edges.top, 'the line climbs above the page top').toBeGreaterThanOrEqual(0)
+      expect(edges.bottom, 'the line overlaps the answer below it').toBeLessThanOrEqual(lead.top + 0.5)
+      await expectStillHeld(page)
+    })
+  }
+})
+
+test.describe(`RC4 ported · the re-figuring signal, live (?seed=retired, ${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+  test('a spending edit in the gear’s drawer raises data-answer-refiguring over the old answer, and it clears in the commit that puts up the new one', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS * 2 + 60_000)
+    await enterProbability(page, 'retired')
+    await page.locator('[data-gear]').click()
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    const field = dialog.getByLabel(copy.spendLabel, { exact: true })
+    await expect(field, '`retired` enters its $78,000 a year by the month').toHaveValue('6,500')
+    await armRefiguringWatch(page)
+    // $9,500 a month takes `retired` from on track to off track (measured 2026-11-20), so the answer's own words move in
+    // the commit that clears the flag; a raise that left them still would leave that commit unseen.
+    await field.click()
+    await field.press('ControlOrMeta+a')
+    await field.pressSequentially('9500')
+    await field.blur()
+    await expect(field).toHaveValue('9,500')
+    await expectRefiguringSeen(page, 'the live re-figuring arm')
+    await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
+    await expect(dialog).toBeHidden()
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+    const log = await refiguringLog(page)
+    const first = log[0]
+    expect(first, 'the watch read nothing').toBeTruthy()
+    expect(first!.refiguring, 'the watch was armed on a page already re-figuring').toBe(false)
+    const rose = log.findIndex((r) => r.refiguring === true)
+    const fell = log.findIndex((r, i) => i > rose && r.refiguring === false)
+    const story = log.map((r) => `${r.t}ms ${String(r.refiguring)}/${String(r.tier)} "${r.verdict}"`).join(' · ')
+    expect(rose, `the flag never rose: ${story}`).toBeGreaterThan(0)
+    expect(fell, `the flag never cleared: ${story}`).toBeGreaterThan(rose)
+    for (const r of log.slice(rose, fell)) expect(r.verdict, `while the flag stood the page showed another answer: ${story}`).toBe(first!.verdict)
+    expect(log[fell]!.verdict, `the flag cleared with the old answer still up: ${story}`).not.toBe(first!.verdict)
+    expect(log.slice(fell).every((r) => r.refiguring === false), `the flag rose again with no second edit: ${story}`).toBe(true)
+  })
+})
+
+// HEAD :2564 / :2757 / :2939 / :4000 / :4223 / :4736: the vault returns. Every `?seed=` arm bypasses the re-entry gate,
+// so these are the arms that measure it: the gate (`ReEntry.tsx`, kept) offers its decision pair inside the first frame
+// with the plant's own disclosures, by name; the affirm lands the echoed answer on the home, whose staleness note rides
+// the StaleBanner while the R13 caveat stays in the first frame, on Snapshot and on Probability. The old echo frame's
+// layout (its gaps, its backup door below the caveat, its density tiers) went with the answer page; the backup re-offer
+// is the lock menu's now.
+
+const GATE_AFFIRM = /still about right/i
+
+/** The plant, unlocked, to its gate: the decision pair's affirm inside the first frame. Returns the affirm. */
+async function unlockToGate(page: Page, key: string) {
+  await page.goto(`/?vault=${key}`)
+  const unlock = page.getByRole('button', { name: 'Open my plan' })
+  await expect(unlock, `?vault=${key}: the plant did not land on the unlock screen`).toBeVisible({ timeout: 30_000 })
+  await unlock.click()
+  const affirm = page.getByRole('button', { name: GATE_AFFIRM })
+  await expect(affirm).toBeVisible({ timeout: 30_000 })
+  await page.evaluate(() => document.fonts.ready)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  const box = await affirm.boundingBox()
+  expect(box, 'the affirm reported no box').not.toBeNull()
+  expect(box!.y + box!.height, `?vault=${key}: the affirm sits below the first frame`).toBeLessThanOrEqual(page.viewportSize()!.height)
+  return affirm
+}
+
+/**
+ * Probability on an aged return may scroll (plan 6, RC4's fit decision: the pilot's call, 2026-11-24, b9-5): the
+ * StaleBanner's lines stand above the page (132 px with their gaps on `?vault=yearpa`; measured, the caveat at 740 to
+ * 853 px). The law there is the ORDER (the banner's lines, the answer, the halves, the R13 caveat last), exactly one
+ * visible caveat, and the caveat reachable. Snapshot keeps the one-frame law on the aged return (569 to 658 px).
+ */
+async function assertAgedReturnOrder(page: Page, who: string): Promise<void> {
+  const read = await page.evaluate(() => {
+    const box = (sel: string) => {
+      const els = [...document.querySelectorAll(sel)]
+      if (els.length === 0) return null
+      const rs = els.map((e) => e.getBoundingClientRect())
+      return { top: Math.min(...rs.map((r) => r.top)), bottom: Math.max(...rs.map((r) => r.bottom)) }
+    }
+    const caveat = document.querySelector('main.result [data-caveat]')
+    const caveatBottom = caveat?.getBoundingClientRect().bottom ?? NaN
+    let below = ''
+    for (const el of document.querySelectorAll('main.result *')) {
+      if (caveat === null || el === caveat || caveat.contains(el) || el.contains(caveat)) continue
+      const r = el.getBoundingClientRect()
+      // Drawn: a real box (a screen-reader-only region, 1 px and clipped, draws nothing).
+      if (r.width <= 1 || r.height <= 1 || getComputedStyle(el).visibility === 'hidden') continue
+      if (r.bottom > caveatBottom + 0.5 && below === '') below = `${el.tagName.toLowerCase()}.${(el.getAttribute('class') ?? '').slice(0, 60)} ends at ${r.bottom.toFixed(1)} (caveat ${caveatBottom.toFixed(1)})`
+    }
+    return { banner: box('[data-stale-banner]'), lead: box('[data-intro-lead]'), halves: box('[data-half]'), caveat: box('main.result [data-caveat]'), below }
+  })
+  expect(read.banner && read.lead && read.halves && read.caveat, `${who}: the banner, the answer, the halves and the caveat all drew`).toBeTruthy()
+  expect(read.lead!.top, `${who}: the answer sits below the StaleBanner’s lines`).toBeGreaterThanOrEqual(read.banner!.bottom - 0.5)
+  expect(read.halves!.top, `${who}: the halves sit below the answer`).toBeGreaterThanOrEqual(read.lead!.bottom - 0.5)
+  expect(read.caveat!.top, `${who}: the R13 caveat sits below the halves`).toBeGreaterThanOrEqual(read.halves!.bottom - 0.5)
+  expect(read.below, `${who}: nothing is drawn below the R13 caveat`).toBe('')
+  await assertOneVisibleCaveat(page, null)
+  const caveat = page.locator('main.result [data-caveat]')
+  await caveat.scrollIntoViewIfNeeded()
+  await expect(caveat, `${who}: the R13 caveat is reachable`).toBeInViewport()
+}
+
+/** The affirm pressed: the echoed answer settles on the home; its staleness note (when the plant fires a clock) rides
+ *  the StaleBanner, and one R13 caveat stands in the first frame on Snapshot, then on Probability (where a banner
+ *  stands, Probability's law is the aged return's order and reach, above). */
+async function affirmToEchoedHome(page: Page, key: string, affirm: ReturnType<Page['getByRole']>, staleness: boolean): Promise<void> {
+  await affirm.click()
+  await expect(page.locator(SETTLED_RESULT), `?vault=${key}: the echoed answer never settled`).toBeAttached({ timeout: FINAL_TIER_MS })
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), `?vault=${key}: the affirm lands on the home`).toBeAttached()
+  await settleLayout(page)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await expect(page.locator('.cs-staleness-note'), `?vault=${key}: the staleness note`).toHaveCount(staleness ? 1 : 0)
+  if (staleness) await expect(page.locator('.cs-staleness-note')).toBeVisible()
+  const banners = (await page.locator('[data-stale-banner]').count()) > 0
+  await assertOneVisibleCaveat(page, REAL.height)
+  await toProbability(page, key)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  if (banners) await assertAgedReturnOrder(page, `?vault=${key} Probability`)
+  else await assertOneVisibleCaveat(page, REAL.height)
+}
+
+const MEDICARE_PRICED = 'are already counted in this answer, on top of your spending'
+const TYPICAL_EXTRAS = 'Extra coverage here is a typical figure'
+
+test.describe(`RC4 ported · the vault returns: the gate, then the echoed answer on the home (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+
+  test('?vault=stale: the decision pair in frame with the aged vault’s own lines, by name; the echo keeps its staleness note and the caveat in frame', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    const affirm = await unlockToGate(page, 'stale')
+    // The count is the plant's, derived in `devSeeds.test.ts` ("'stale' composes EXACTLY the lines…"): the federal tax
+    // line and one Medicare line, the engine-pricing ledger's method line when a reprice row shipped after the save,
+    // and the Medicare-spending re-confirm. The plant's today is the pinned day, never Node's clock.
+    const plantSavedAt = pinnedDay(page) - 760
+    const methodLine = ENGINE_PRICING_LEDGER.some((r) => r.kind === 'reprice' && r.sinceEpochDay > plantSavedAt && r.families.some((f) => f === 'tax' || f === 'medicare')) ? 1 : 0
+    await expect(page.locator('.reentry-notes p')).toHaveCount(2 + methodLine + 1)
+    await expect(page.getByText(copy.stalenessReconfirmMedicareSpending)).toBeVisible()
+    await expect(page.getByText('Medicare cost figures have been updated')).toBeVisible()
+    await expect(page.getByText('Marketplace health-plan rules have been updated'), 'no marketplace years: the ACA line stays dark').toHaveCount(0)
+    await expect(page.getByText('Reference data this tool reads has been updated since your save'), 'the nameless aggregate stays dark').toHaveCount(0)
+    await expect(page.getByText('You saved this about 2 years ago.')).toBeVisible()
+    await affirmToEchoedHome(page, 'stale', affirm, true)
+    await expect(page.getByText(MEDICARE_PRICED).first(), 'the echo names Medicare priced').toBeVisible()
+  })
+
+  for (const { key, word, typical } of [
+    { key: 'yearpa', word: copy.outcomeBorderline, typical: 1 },
+    { key: 'yearfailing', word: copy.outcomeAlreadyFailing, typical: 1 },
+    { key: 'yearpafailing', word: copy.outcomeAlreadyFailing, typical: 1 },
+    { key: 'yearofftrack', word: copy.outcomeOffTrack, typical: 1 },
+    { key: 'yearfailingentered', word: copy.outcomeAlreadyFailing, typical: 0 },
+    { key: 'yearsurplus', word: copy.outcomeOverFunded, typical: 1 },
+  ] as const) {
+    test(`?vault=${key} (a year on): the tax and Medicare lines, the year’s elapsed line, the pair in frame; the echo reads “${word}” with the caveat in frame`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 120_000)
+      await pinPlantDay(page, key)
+      const affirm = await unlockToGate(page, key)
+      await expect(page.locator('.reentry-notes p')).toHaveText([copy.stalenessTax, copy.stalenessMedicare])
+      await expect(page.getByText(slots.reentryElapsedYears(1)), 'the elapsed line reads a year').toBeVisible()
+      await affirmToEchoedHome(page, key, affirm, true)
+      await expect(page.locator('[data-intro-lead]'), `?vault=${key}: the answer the plant is built to show`).toContainText(word)
+      await expect(page.getByText(MEDICARE_PRICED).first(), `?vault=${key}: Medicare named priced`).toBeVisible()
+      await expect(
+        page.locator('main.result').getByText(TYPICAL_EXTRAS),
+        typical === 1 ? 'the "not sure" answer funds the typical extras line' : 'the entered extras carry no typical line',
+      ).toHaveCount(typical)
+    })
+  }
+
+  test('?vault=statestale: the state-tax clock alone, by name, the pair in frame; the echo names North Carolina with the caveat in frame', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    const affirm = await unlockToGate(page, 'statestale')
+    const notes = page.locator('.reentry-notes p')
+    await expect(notes, 'the state-tax clock fires alone').toHaveCount(1)
+    await expect(notes).toContainText('State tax rules have been updated since your save')
+    await expect(page.getByText('Marketplace health-plan rules have been updated'), 'the ACA family stays dark').toHaveCount(0)
+    await expect(page.getByText('Medicare cost figures have been updated'), 'the Medicare family stays dark').toHaveCount(0)
+    await expect(page.getByText('Reference data this tool reads has been updated since your save'), 'the nameless aggregate stays dark').toHaveCount(0)
+    await affirmToEchoedHome(page, 'statestale', affirm, true)
+    await expect(page.locator('main.result').getByText(/North Carolina/).first(), 'the echo names North Carolina').toBeVisible()
+  })
+
+  test('?vault=datestale: the pair in frame; the echo’s hero and the odds chart’s crowned year speak one year, and the aged-balances line rides the chart', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    const affirm = await unlockToGate(page, 'datestale')
+    await affirmToEchoedHome(page, 'datestale', affirm, true)
+    const hero = (await page.locator('[data-intro-lead]').innerText()).trim()
+    const heroYear = /around (\d{4})/.exec(hero)?.[1]
+    expect(heroYear, `the hero names no year: "${hero}"`).toBeTruthy()
+    await openOdds(page)
+    const crown = await page.locator('[data-chart="odds"] .b9-odds-crown').first().getAttribute('aria-label')
+    const crownYear = /Stopping in (\d{4})/.exec(crown ?? '')?.[1]
+    expect(crownYear, `the crowned bar names no year: "${crown}"`).toBeTruthy()
+    expect(crownYear, `two years on one screen: the hero says ${heroYear}, the crowned bar says ${crownYear}`).toBe(heroYear)
+    await expect(page.locator('[data-odds-chart]').getByText('They also read from your account balances as you entered them in'), 'the aged-balances line rides the chart').toBeVisible()
+  })
+
+  test('?vault=rec: no clock fires; the interim Tax Strategies tab paints the record’s HOLDS face with its re-open control and its cost', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    const affirm = await unlockToGate(page, 'rec')
+    await expect(page.locator('.reentry-notes p'), 'the rec plant ages no stamp: no clock fires').toHaveCount(0)
+    await affirmToEchoedHome(page, 'rec', affirm, false)
+    await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
+    const card = page.locator('main.result[data-shell-screen="interim-strategies"] .rec-record')
+    await expect(card, 'the remembered record paints on the Tax Strategies tab').toBeVisible()
+    await expect(card.locator('.rec-note__head')).toHaveText(copy.recommendRecordHeading)
+    const standing = card.locator('.rec-record__standing')
+    await expect(standing).toHaveAttribute('data-standing', 'holds')
+    await expect(standing).toContainText(copy.recommendRecordHolds)
+    await expect(card.getByRole('button', { name: copy.recommendRecordReopenCta })).toBeVisible()
+    await expect(card.locator('.rec-record__cost')).toHaveText(copy.recommendRecordReopenCost)
+  })
+
+  test('?vault=recold: the SUPERSEDED face names every cause it has, in the producer’s order, and its mint year; the rules clause stays dark', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    const affirm = await unlockToGate(page, 'recold')
+    await affirmToEchoedHome(page, 'recold', affirm, false)
+    await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
+    const card = page.locator('main.result[data-shell-screen="interim-strategies"] .rec-record')
+    await expect(card).toBeVisible()
+    const standing = card.locator('.rec-record__standing')
+    await expect(standing).toHaveAttribute('data-standing', 'superseded')
+    await expect(standing).toContainText(copy.recommendRecordSuperseded)
+    await expect(standing).not.toContainText(copy.recommendRecordHolds)
+    await expect(card.locator('.rec-record__causes li')).toHaveText([copy.recommendRecordSupersededInputs, copy.recommendRecordSupersededSolver])
+    await expect(card).not.toContainText(copy.recommendRecordSupersededRules)
+    const savedIn = card.locator('p.rec-note__line')
+    await expect(savedIn).toHaveCount(1)
+    const savedInText = (await savedIn.textContent()) ?? ''
+    const year = Number(/(\d{4})/.exec(savedInText)?.[1])
+    expect(Number.isFinite(year), `the age clause names no year: "${savedInText}"`).toBe(true)
+    expect(savedInText, 'the shipped slot, never a re-typed sentence').toBe(slots.recommendRecordSavedIn(year))
+    expect(year, 'a record minted this calendar year suppresses the clause instead').toBeLessThan(pinnedYear(page))
+  })
+})
+
+// HEAD :4851: the spend lane. The solved figure lands in the key-metric column's first line, and nothing below it moves:
+// the clause's cell holds its widest form hidden while the figure is pending (`clauseReserve`), so the difference line,
+// the halves and the R13 caveat stand still as it lands, at his window and on the phone; under reduced motion the swap
+// carries no transition.
+
+type SpendRead = { readonly spend: string | null; readonly difference: number; readonly halves: number; readonly caveat: number; readonly caveatBottom: number }
+
+async function spendRead(page: Page): Promise<SpendRead> {
+  return page.evaluate(() => {
+    const top = (sel: string) => document.querySelector(sel)?.getBoundingClientRect().top ?? NaN
+    return {
+      spend: document.querySelector('[data-metrics] [data-spend]')?.getAttribute('data-spend') ?? null,
+      difference: top('[data-difference]'),
+      halves: top('[data-half="compared"]'),
+      caveat: top('main.result [data-caveat]'),
+      caveatBottom: document.querySelector('main.result [data-caveat]')?.getBoundingClientRect().bottom ?? NaN,
+    }
+  })
+}
+
+/** `surplus` on Probability caught with its figure pending, then landed: both reads. The page moves to Probability
+ *  before the final answer, and every message to an engine worker is held 1.5 s (the spend solve starts on the final
+ *  and could otherwise land before the settled frame is read: measured, it raced the read on two runs of three), so
+ *  the pending read is the settled answer's own first frame. */
+async function spendLanding(page: Page): Promise<{ pending: SpendRead; sized: SpendRead }> {
+  await page.addInitScript(() => {
+    const send = Worker.prototype.postMessage
+    Worker.prototype.postMessage = function (this: Worker, ...args: unknown[]) {
+      setTimeout(() => Reflect.apply(send, this, args), 1500)
+    } as typeof send
+  })
+  await page.goto('/?seed=surplus')
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'surplus never landed on the home').toBeAttached({ timeout: FINAL_TIER_MS })
+  const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
+  if (await modules.isVisible()) await modules.getByRole('link', { name: copy.shellModuleRetirement, exact: true }).click()
+  else {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: copy.shellPageAnalysis, exact: true }).click()
+  }
+  await expect(page.locator('main.result[data-shell-screen="probability"]')).toBeAttached()
+  await expect(page.locator(SETTLED_RESULT), 'surplus never settled').toBeAttached({ timeout: FINAL_TIER_MS })
+  await page.evaluate(() => window.scrollTo(0, 0))
+  const pending = await spendRead(page)
+  expect(pending.spend, 'the clause must be caught pending (else the arm proves nothing)').toBe('pending')
+  await expect(page.locator('[data-metrics] [data-spend]'), 'the figure never landed').toHaveAttribute('data-spend', 'sized', { timeout: 90_000 })
+  await settleLayout(page)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await expect(page.locator('[data-metrics] [data-spend]')).toContainText('Above that, it starts to sit close to the line.')
+  return { pending, sized: await spendRead(page) }
+}
+
+function expectNothingMoved({ pending, sized }: { pending: SpendRead; sized: SpendRead }, who: string): void {
+  for (const k of ['difference', 'halves', 'caveat'] as const) {
+    expect(Math.abs(sized[k] - pending[k]), `${who}: the ${k} moved ${(sized[k] - pending[k]).toFixed(1)} px as the figure landed`).toBeLessThanOrEqual(0.5)
+  }
+}
+
+test.describe('RC4 ported · the spend lane — the solved figure lands without moving anything', () => {
+  test.describe(`at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+    test('?seed=surplus: the pending frame fits, nothing moves as the figure lands, the sized frame fits', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 150_000)
+      const reads = await spendLanding(page)
+      expect(reads.pending.caveatBottom, 'the pending frame’s caveat leaves the first frame').toBeLessThanOrEqual(REAL.height)
+      expectNothingMoved(reads, 'REAL')
+      expect(reads.sized.caveatBottom, 'the sized frame’s caveat leaves the first frame').toBeLessThanOrEqual(REAL.height)
+      await assertOneVisibleCaveat(page, REAL.height)
+    })
+  })
+  test.describe(`on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
+    test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR })
+    test('?seed=surplus: nothing below the clause moves as the figure lands (the reserve holds the sized clause)', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 150_000)
+      expectNothingMoved(await spendLanding(page), 'PHONE')
+    })
+  })
+  test.describe('under prefers-reduced-motion', () => {
+    test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'reduce' })
+    test('?seed=surplus: the figure lands with no transition on the swapped clause', async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 150_000)
+      await spendLanding(page)
+      const durations = await page.evaluate(() =>
+        [...document.querySelectorAll('[data-metrics] [data-spend], [data-metrics] [data-spend] *')].flatMap((el) => getComputedStyle(el).transitionDuration.split(',').map((d) => d.trim())),
+      )
+      expect(durations.every((d) => d === '0s'), `a transition runs on the clause: ${JSON.stringify(durations)}`).toBe(true)
+    })
+  })
+})
+
+// HEAD :1250 / :1329: the recommend-second surface's steer note and pending frame, RE-POINTED to the interim Tax →
+// Tax Strategies tab, where `Result.tsx` still renders that surface until RC8. Their laws stand: the goal pick on a
+// household with no pre-tax savings lands a calm steer note, never a silent dead end; the pick's live dispatch shows the
+// pending tell with the shared breathe, and its well holds the committed grade lockup's height so the landing does not
+// jump. The posture and right-rail arms (:1207 / :1453) measured the old answer page's layout and retire.
+
+/** The interim Tax Strategies tab, from the home. */
+async function toStrategies(page: Page): Promise<void> {
+  await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
+  await expect(page.locator('main.result[data-shell-screen="interim-strategies"]')).toBeAttached()
+  await settleLayout(page)
+}
+
+/** The invite → the goal picker → "Leave more behind" → See the strategy: the solve dispatches. */
+async function pickLeaveMore(page: Page): Promise<void> {
+  await page.locator('.result-recommend-invite').click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog, 'the goal picker opens before the solve').toBeVisible()
+  const radio = dialog.getByRole('radio', { name: /Leave more behind/ })
+  await radio.evaluate((el) => (el as HTMLInputElement).click())
+  await expect(radio).toBeChecked()
+  await dialog.getByRole('button', { name: 'See the strategy', exact: true }).click()
+  await expect(dialog).toBeHidden()
+}
+
+test.describe(`RC4 re-pointed · the recommend-second surface on the interim Tax Strategies tab (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+
+  test('?seed=steer: the goal pick lands the calm steer note (never a silent dead end), no pending tell, the invite gone, the R13 caveat below it', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await gotoSeedFinal(page, 'steer')
+    await toStrategies(page)
+    await pickLeaveMore(page)
+    const note = page.locator('.rec-note--no-pretax')
+    await expect(note, 'the steer note renders').toBeVisible()
+    await expect(page.locator('.solve-pending')).toHaveCount(0)
+    await expect(page.locator('.result-recommend-invite')).toHaveCount(0)
+    const noteBox = (await note.boundingBox())!
+    const caveat = page.locator('footer.disclaimer')
+    await expect(caveat, 'the interim page’s one R13 caveat').toBeVisible()
+    expect((await caveat.boundingBox())!.y, 'the R13 caveat sits below the note').toBeGreaterThan(noteBox.y + noteBox.height - 1)
+  })
+
+  for (const seed of ['surplus', 'nc'] as const) {
+    test(`?seed=${seed}: the goal pick drives the pending tell with the shared breathe; its well holds the committed grade lockup’s height`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await gotoSeedFinal(page, seed)
+      await toStrategies(page)
+      await pickLeaveMore(page)
+      const panel = page.locator('.solve-pending-panel')
+      await expect(panel, 'the pending tell renders: the live dispatch fired').toBeVisible()
+      await expect(panel).toHaveAttribute('aria-busy', /.*/)
+      await expect(page.locator('.solve-pending')).toBeVisible()
+      const motion = await page.evaluate(() => {
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        const label = document.querySelector('.solve-pending')
+        const anims = label === null ? [] : label.getAnimations().map((a) => ({ name: (a as CSSAnimation).animationName, infinite: a.effect?.getTiming().iterations === Infinity, running: a.playState === 'running' }))
+        return { reduce, anims }
+      })
+      if (!motion.reduce) {
+        expect(motion.anims.some((a) => a.name === 'thinking-breathe' && a.infinite && a.running), 'the pending tell carries the shared infinite thinking-breathe').toBe(true)
+      }
+      // The committed grade lockup planted beside the well, measured, removed: the well must hold its height.
+      const cls = await page.locator('.recommendation-surface').evaluate((surface) => {
+        const panelEl = document.querySelector('.solve-pending-panel') as HTMLElement | null
+        const panelWell = panelEl ? panelEl.getBoundingClientRect().height : 0
+        const el = document.createElement('div')
+        el.className = 'rec-committed'
+        el.innerHTML =
+          '<div class="rec-grade" role="group">' +
+          '<p class="rec-grade__head"><svg class="rec-grade__glyph" width="22" height="22" viewBox="0 0 22 22"></svg>' +
+          '<span class="rec-grade__word">A confident lean</span></p>' +
+          '<p class="rec-grade__hero">This keeps about $128,000 more for the two of you to pass on than staying on your current plan.</p>' +
+          '</div>'
+        surface.appendChild(el)
+        const word = el.querySelector('.rec-grade__word') as HTMLElement
+        const wordLineHeight = parseFloat(getComputedStyle(word).lineHeight)
+        const lockup = Math.round((el.querySelector('.rec-grade') as HTMLElement).getBoundingClientRect().height)
+        const wordOneLine = word.getBoundingClientRect().height <= wordLineHeight * 1.4
+        el.remove()
+        return { panelWell: Math.round(panelWell), lockup, wordOneLine }
+      })
+      expect(cls.wordOneLine, 'the grade word holds one line').toBe(true)
+      expect(cls.panelWell, `the pending well (${cls.panelWell}px) collapsed below the committed lockup (${cls.lockup}px): the landing would jump`).toBeGreaterThanOrEqual(cls.lockup - 8)
+      expect(cls.panelWell, `the pending well (${cls.panelWell}px) over-reserves against the committed lockup (${cls.lockup}px)`).toBeLessThanOrEqual(cls.lockup + 44)
+    })
+  }
+})
+
+// The home says so too: while a run on an edit is in flight, Snapshot's ring card carries the same re-figuring line as
+// Probability (`copy.answerRefiguringVerdict` / `answerRefiguringDate`, through `ringReading.ts`), and past the phone
+// tier its box is held, so the ring and the R13 caveat do not move when it shows or clears. Held through the preview.
+
+/** The preview on `seed`, settled on the home; one engine-input edit through the gear's drawer, the flag seen, the
+ *  drawer closed. Returns the ring's and the caveat's tops read before the edit. */
+async function enterHeldHome(page: Page, seed: string): Promise<{ ring: number; caveat: number }> {
+  await page.goto(`/?preview=refiguring&seed=${seed}`)
+  await expect(page.locator(SETTLED_RESULT), `${seed}: the preview never settled`).toBeAttached({ timeout: FINAL_TIER_MS })
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached()
+  await settleLayout(page)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await expect(page.locator('[data-ring-eyebrow] > span:not([aria-hidden])'), 'a settled home shows no re-figuring line').toHaveText('')
+  const top = async (sel: string) => (await page.locator(sel).first().boundingBox())!.y
+  const before = { ring: await top('[data-ring-reading]'), caveat: await top('main.result [data-caveat]') }
+  await page.locator('[data-gear]').click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  const field = dialog.getByLabel(copy.assumptionSurvivorRatioLabel)
+  const now = (await field.inputValue()).replace(/[^0-9]/g, '')
+  await field.fill(now === '70' ? '65' : '70')
+  await field.press('Tab')
+  await expect(page.locator('main.result[data-answer-refiguring]'), 'the edit raised no re-figuring flag').toBeAttached({ timeout: 30_000 })
+  await dialog.getByRole('button', { name: /^(Close|Cancel)$/ }).first().click()
+  await expect(dialog).toBeHidden()
+  await settleLayout(page)
+  await page.evaluate(() => window.scrollTo(0, 0))
+  return before
+}
+
+test.describe(`RC4 · Snapshot’s re-figuring line, held (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+  test('?seed=budget: the ring card says the answer is being figured again; the ring and the R13 caveat do not move; the caveat stays in frame', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    const before = await enterHeldHome(page, 'budget')
+    const line = page.locator('[data-ring-eyebrow] > span:not([aria-hidden])')
+    await expect(line, 'the ring card’s re-figuring line').toHaveText(copy.answerRefiguringVerdict)
+    await expect(line).toBeVisible()
+    const ring = (await page.locator('[data-ring-reading]').boundingBox())!
+    const caveat = (await page.locator('main.result [data-caveat]').boundingBox())!
+    expect((await line.boundingBox())!.y + (await line.boundingBox())!.height, 'the line sits above the ring').toBeLessThanOrEqual(ring.y + 0.5)
+    expect(Math.abs(ring.y - before.ring), `the ring moved ${(ring.y - before.ring).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
+    expect(Math.abs(caveat.y - before.caveat), `the R13 caveat moved ${(caveat.y - before.caveat).toFixed(1)} px`).toBeLessThanOrEqual(0.5)
+    await assertOneVisibleCaveat(page, REAL.height)
+    await expectStillHeld(page)
+  })
+})
+
+test.describe(`RC4 · Snapshot’s re-figuring line, held (phone ${PHONE.width}×${PHONE.height})`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
+  test('?seed=budget: the ring card says so, in the flow above the ring, over nothing', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await enterHeldHome(page, 'budget')
+    const line = page.locator('[data-ring-eyebrow] > span:not([aria-hidden])')
+    await expect(line).toHaveText(copy.answerRefiguringVerdict)
+    await expect(line).toBeVisible()
+    const lb = (await line.boundingBox())!
+    const ring = (await page.locator('[data-ring-reading]').boundingBox())!
+    expect(lb.y + lb.height, 'the line overlaps the ring below it').toBeLessThanOrEqual(ring.y + 0.5)
+    await expectStillHeld(page)
+  })
 })

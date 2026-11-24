@@ -68,7 +68,7 @@ afterEach(() => {
 })
 
 const renderResult = (recordCard?: RecommendationRecordProp) =>
-  render(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} recordCard={recordCard} />)
+  render(<Result recordCard={recordCard} />)
 const plantResolved = () => mockFocusKey.mockReturnValue('planted-focus-key')
 const invite = () => screen.queryByRole('button', { name: copy.recommendInviteCta })
 /** F-B — the STALE card's IN-CARD re-open control (its own control home; the door-row invite is retired
@@ -227,7 +227,7 @@ describe('the recommend-second RE-invite (F2 stale/compute-error) + the date-rou
     expect(staleReopen(), 'and no in-card re-open control on the date route').toBeNull()
     // Flip back to the all-retired (spine) route: the stale card + its in-card re-open control return.
     plantSnapshot(staleSolve, /* dateRoute */ false)
-    rerender(<Result onReview={vi.fn()} save={{ kind: 'none' }} computing={false} />)
+    rerender(<Result />)
     expect(container.querySelector('.rec-note--stale'), 'the stale card renders on the spine route').not.toBeNull()
     expect(staleReopen(), 'the in-card re-open control returns').toBeInTheDocument()
     void spy
@@ -419,11 +419,8 @@ const heldSolve: SolveAnswer = {
   fingerprint: 'solver-run-fp/v2:{held}' as SolverRunFingerprint,
 }
 
-const recordCardNode = (container: HTMLElement) => container.querySelector('main.result .rec-record')
-/** The PROTECTED node, queried exactly as `resultDisclaimer.test.tsx` queries it (the Hawk order
- *  contract's own selector — so this arm and that file can never diverge on what they are protecting). */
-const inFrameDisclaimer = (container: HTMLElement) =>
-  container.querySelector('main.result .disclaimer--in-frame')
+// Since Act 6 · RC4 the tab is a `div.result-page` inside the shell (the shell owns the one `main.result`).
+const recordCardNode = (container: HTMLElement) => container.querySelector('.result-page .rec-record')
 
 describe('U17 §S5 — WHERE the remembered-record card renders (the placement ruling)', () => {
   it('it paints on the returning household’s FIRST screen — an IDLE solve, with no beat at all', () => {
@@ -470,27 +467,7 @@ describe('U17 §S5 — WHERE the remembered-record card renders (the placement r
     ).toBe(true)
   })
 
-  it('THE RULING: the card renders AFTER the protected in-frame R13 disclaimer (the Hawk’s fold priority)', () => {
-    plantResolved()
-    appModel.update(completeRetired)
-    const { container } = renderResult(savedRecord())
-    const disclaimer = inFrameDisclaimer(container)
-    const record = recordCardNode(container)
-    // Non-vacuity (burned/070): an order assertion over a missing node is green by accident.
-    expect(disclaimer, 'the protected caveat is on this frame').not.toBeNull()
-    expect(record, 'and so is the card whose seat the ruling decided').not.toBeNull()
-    // FOLLOWING = the argument comes AFTER the receiver (resultDisclaimer.test.tsx's idiom).
-    expect(
-      Boolean(disclaimer!.compareDocumentPosition(record!) & Node.DOCUMENT_POSITION_FOLLOWING),
-      'a re-hoist above the disclaimer silently re-breaches a Hawk-vetoed protection',
-    ).toBe(true)
-    // The SAME claim as an index over ONE ordered sweep of both selectors — document order, both
-    // nodes, exactly once each, so neither a second mount nor a vanished one can leave this green.
-    const seats = [
-      ...container.querySelectorAll('main.result .disclaimer--in-frame, main.result .rec-record'),
-    ]
-    expect(seats, 'exactly the two nodes under judgment, each mounted once').toHaveLength(2)
-    expect(seats[0], 'the protected caveat wins the frame').toBe(disclaimer)
-    expect(seats[1], 'the card degrades past the fold before the caveat does').toBe(record)
-  })
+  // THE RULING's arm (the card after the old answer page's in-frame R13 disclaimer, its fold priority) retired with
+  // that page at Act 6's RC4: the interim tab renders no disclaimer of its own (the shell's caveat covers the page), and
+  // RC8 rebuilds the card's seat on Tax Strategies.
 })

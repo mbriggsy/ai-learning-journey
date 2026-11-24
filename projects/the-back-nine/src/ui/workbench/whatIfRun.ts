@@ -43,6 +43,7 @@ import {
   type LedgerYearRow,
   type SimulationParams,
   type SimulationResult,
+  type SurvivorReading,
   type WhatIfLeverV6,
 } from '@shared/model'
 import { answerKey, tableRequestsOn, type TableMeta, type TableRun, type TableView, type ViewRequest } from './tableRun'
@@ -134,6 +135,40 @@ export function planReadingFor(answer: ModelAnswer): WhatIfReading | null {
 }
 
 /**
+ * THE RETIRED ROUTE'S EXTRA READINGS (Act 6 · RC4, Probability's halves): beside the count, a spine run carries the
+ * survivor reading (present iff the run opted into the survivor surface and a survivor phase occurred), the essentials
+ * reading (present iff a budget rode the run) and the balance each future ends on (`terminalValuesReal`: the balance
+ * when the second of you dies, capped at the plan's last year). Carried verbatim, never re-derived (insight 045); the
+ * median is the one figure computed here, the plain middle of the sorted futures.
+ */
+export interface HeadlineExtras {
+  readonly survivorReading?: SurvivorReading
+  readonly floorReading?: Headline
+  /** The median of `distribution.terminalValuesReal`, in today's dollars; absent on an empty sample. */
+  readonly terminalMedianReal?: number
+}
+
+/** The middle of a sample (the mean of the two middle values on an even count); undefined on an empty one. */
+export function medianOf(values: readonly number[]): number | undefined {
+  if (values.length === 0) return undefined
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2
+}
+
+/** The extras a spine run's result carries (the plan's from its committed answer; the what-if's from its own run). */
+export function headlineExtras(result: SimulationResult): HeadlineExtras {
+  // A result with no sample (a test's hand-built answer) has no median: absent, never a guessed figure.
+  const sample = result.distribution?.terminalValuesReal
+  const median = Array.isArray(sample) ? medianOf(sample) : undefined
+  return {
+    ...(result.survivorReading !== undefined ? { survivorReading: result.survivorReading } : {}),
+    ...(result.floorReading !== undefined ? { floorReading: result.floorReading } : {}),
+    ...(median !== undefined ? { terminalMedianReal: median } : {}),
+  }
+}
+
+/**
  * The what-if's many-futures reading from its run, in the plan's statistic: the spine's headline; or, on the date route,
  * the §3c reading of the plan's track (the floor pass's survival on the floor track) at the what-if's offset.
  */
@@ -186,7 +221,9 @@ export function whatIfRunFor(answer: ModelAnswer, liveSeed: number | undefined, 
     bundleKey,
     track: base.track,
     plan: plan.reading,
-    many: { params: base.params, seed: liveSeed },
+    // The spine's run asks for the survivor surface too (a parallel observed surface: it perturbs no draw, so the count
+    // is byte-identical to the run without it), so the what-if half reads its survivor row as the plan's half does.
+    many: { params: base.params, seed: liveSeed, ...(base.stopOffsetYears === undefined ? { options: { survivorConditioned: true } } : {}) },
     ...(base.stopOffsetYears !== undefined ? { offsetYears: base.stopOffsetYears } : {}),
     meta,
     views,
@@ -208,6 +245,8 @@ interface Tagged {
 export interface ReadingPair {
   readonly plan: WhatIfReading
   readonly whatIf: WhatIfReading
+  /** The what-if run's extra readings on the spine (absent on the date route). */
+  readonly extras?: HeadlineExtras
 }
 
 /** The what-if's rows for one view, with the meta of the compile that produced them. */
@@ -259,7 +298,13 @@ export function createWhatIfSlot(lanes: WhatIfSlotLanes = { many: engineRunLane(
       void lanes.many.request(run.many).then((res: LaneResult<SimulationResult>) => {
         if (res.kind === 'superseded') return
         const whatIf = res.kind === 'ok' ? whatIfReading(res.value, run.track, run.offsetYears) : null
-        set({ many: whatIf === null ? { ...tag, kind: 'error' } : { ...tag, kind: 'ok', value: { plan: run.plan, whatIf } } })
+        const extras = res.kind === 'ok' && run.offsetYears === undefined ? headlineExtras(res.value) : undefined
+        set({
+          many:
+            whatIf === null
+              ? { ...tag, kind: 'error' }
+              : { ...tag, kind: 'ok', value: { plan: run.plan, whatIf, ...(extras !== undefined ? { extras } : {}) } },
+        })
       })
       for (const v of ['steady', 'rough'] as const) {
         const deliver = (part: Part<WhatIfRows>) => set(v === 'steady' ? { steady: part } : { rough: part })

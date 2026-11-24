@@ -109,8 +109,8 @@ export async function driveIntakeToResult(page: Page): Promise<void> {
   // R40's opt-in other-income loop is the LAST intake step on THIS walk's all-retired route
   // (src/intake/questions.tsx pushes `otherIncomeStep` after the accounts step, with `fields: []`,
   // so nothing blocks the advance; the pay check's two steps follow it only on the date route) —
-  // one more Continue completes the intake (flow.tsx onComplete → IntakeApp `complete` →
-  // setPhase('result')) and lands the Result, so a REAL chart's text layer is proven under the REAL
+  // one more Continue completes the intake (flow.tsx onComplete → IntakeApp `complete` → the shell, the
+  // home since Act 6 · RC4) and lands Dashboard → Snapshot, so a REAL chart is proven under the REAL
   // enforced headers. The fit harness structurally cannot do this: `?seed=` is DCE'd out of dist/
   // (playwright.config.ts), and design-tokens.spec.ts's CSSOM proof is a synthetic node, not a chart.
   await next()

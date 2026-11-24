@@ -14,7 +14,9 @@
  *   can save here: a retry would re-refuse, insight 054);
  * - read-only (a second tab holds the plan): the reason, and no Save, no Back up (plan 4.0's read-only rule);
  * - not saveable (an answer missing facts): the reason, and no Save.
- * Lock itself is left out: the app has no in-session lock today, and a dead control is never drawn.
+ * Lock itself is left out: the app has no in-session lock today, and a dead control is never drawn. Since RC4 the menu is
+ * also the old answer page's backup door: on a returning, writable session with no backup file on record its sentence
+ * says so beside Back up.
  */
 import { copy } from '../copy'
 import type { ResultSaveView } from '../resultSave'
@@ -43,10 +45,15 @@ export interface LockMenuInput {
   readonly readOnly: boolean
   /** A vault exists in this session and the tab can write: the existing backup step can run. */
   readonly canBackUp: boolean
+  /** The re-offer (RC4, the old answer page's backup door): a returning, writable session with no backup file on record.
+   *  The menu says so after the state's sentence, beside its Back up. */
+  readonly backupOffered?: boolean
 }
 
-export function composeLockMenu({ save, readOnly, canBackUp }: LockMenuInput): LockMenuView {
+export function composeLockMenu({ save, readOnly, canBackUp, backupOffered = false }: LockMenuInput): LockMenuView {
   const backup: readonly LockMenuItem[] = canBackUp && !readOnly ? [{ action: 'backup', label: copy.backupDoorCta }] : []
+  // The re-offer's lead rides only where its Back up does (a promise with its door, insight 100).
+  const offered = (sentence: string): string => (backupOffered && backup.length > 0 ? `${sentence} ${copy.backupDoorLead}` : sentence)
   // A read-only tab derives `none` (resultSave.ts), the same as an answer that can't be saved: the reason differs.
   if (readOnly) return { state: 'view-only', word: copy.lockWordViewOnly, sentence: copy.saveErrorReadOnly, alert: false, items: [] }
   switch (save.kind) {
@@ -55,9 +62,9 @@ export function composeLockMenu({ save, readOnly, canBackUp }: LockMenuInput): L
     case 'first':
       return { state: 'first', word: copy.lockWordNotSaved, sentence: copy.saveCtaHint, alert: false, items: [{ action: 'keep', label: copy.saveCta }] }
     case 'clean':
-      return { state: 'clean', word: copy.lockWordSaved, sentence: copy.savedBadge, alert: false, items: backup }
+      return { state: 'clean', word: copy.lockWordSaved, sentence: offered(copy.savedBadge), alert: false, items: backup }
     case 'dirty':
-      return { state: 'dirty', word: copy.lockWordUnsaved, sentence: copy.resaveHint, alert: false, items: [{ action: 'save', label: copy.resaveCta }, ...backup] }
+      return { state: 'dirty', word: copy.lockWordUnsaved, sentence: offered(copy.resaveHint), alert: false, items: [{ action: 'save', label: copy.resaveCta }, ...backup] }
     case 'saving':
       return { state: 'saving', word: copy.lockWordSaving, sentence: copy.resavePending, alert: false, items: [] }
     case 'failed':

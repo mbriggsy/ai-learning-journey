@@ -3,7 +3,7 @@ title: Two defects that only the un-filtered run and the real frame could see
 date: 2026-08-05
 phase: Act 4 — the recommendation surface
 modules: [src/ui/__tests__/devSeeds.test.ts, src/ui/money.ts, src/ui/copy.ts]
-tags: [vitest-timeout, test-isolation, formatter, rounding, real-frame-verification, false-green]
+tags: [vitest-timeout, test-isolation, formatter, rounding, real-frame-verification, false-green, gated-surface, gate-list, doc-stats]
 ---
 
 ## Problem
@@ -63,3 +63,11 @@ as the author of the assertions.
 - Copy on the same card: the first heading, "How this plan gets there", also survived every green test
   and died on the real frame — "there" has no referent, and the anaphora it leaned on was broken by the
   nameplate sitting between the hero and the card.
+
+## Extended (2026-11-23): a fix pass that touches a gated surface owes that surface's gate, not only the unit tests
+
+A green unit suite says nothing about `verify:fit`, `verify:doc-stats` or `verify:csp` (b9-5's and b9-6's closes).
+U8 (b9-2) repeated it from the other side: the orchestrator's gate list for the builder's fix round named typecheck,
+lint, the reached unit files, the fit and CSP arms and the build, but not `verify:doc-stats`; the fixes moved cited
+lines in four files, and that gate (with its unit twin) was the one that went red. Derive the gate list from what the
+change touches (a moved cited line owes the citation arm; a moved count owes the count arm), never from habit.

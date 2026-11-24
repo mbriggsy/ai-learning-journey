@@ -14,6 +14,9 @@ were dropped then, and the contradictions the move met were reconciled in place 
 
 ## Git and the shared tree
 
+- **(moved from TODO's distill list, b9-2, 11-23) Count from the run's own record before typing a number into a commit
+  message**: `31e018d5` said "29 refuters over 37 candidate moves" from memory when the run had 38 over 42, and a pushed
+  message never changes, so the fix took a follow-up commit.
 - **(b9-4, 11-13) `git add -- <a path already staged as deleted>` fails the whole add** ("pathspec did not match"):
   stage the paths that exist, then `git commit -- <every path>`, the deleted one included.
 - **(b9-4, 11-08) Other sessions commit to the monorepo during a long run.** A tool that stamps `git HEAD` in its record

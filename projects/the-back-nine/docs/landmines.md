@@ -121,7 +121,8 @@ working tree untouched; `fsck` proves nothing else was hit.
   pinned took 802 s (b9-6: 290 s), seven heavy engine tests timed out, and `verify:fit` timed out 12 final-tier waits. Every one
   passed alone (`playwright test --last-failed`, then `--workers=1`; each vitest file on its own). Under load the P-cores read
   about 100-120 % of base clock against 179 % idle. Before calling a red real, rerun the timed-out tests alone; an assertion is
-  a finding, a timeout on this machine is not yet one.
+  a finding, a timeout on this machine is not yet one. Never raise a timeout for it: "same tree, slower machine" is the
+  machine until the timed-out tests pass alone.
 - **(b9-1, 11-08) Another session's work shares the CPU:** the Feud session's `te_replay.py` searches each held a core through
   b9-1's first suite, and an orphaned `python.exe -` from a dead 10-30 session had held one for 9 days (killed with his OK, by
   `taskkill /PID`). Check `Get-CimInstance Win32_Process` for busy python before a heavy local gate.
@@ -294,6 +295,12 @@ even when one exists; the plain `/` route is the Unlock check.
   three-argument call threw at runtime once the methodology selector indexed the act's Record). Put compile-only arms
   inside a function that is never called: `const _compileOnly = () => {...}; void _compileOnly`
   (`workingYearTaxDisclosure.test.ts`).
+- **(moved from TODO's distill list, b9-3, 11-23) A fixture guarded by a RANGE keyed to the old ceiling (`< 350_000`)
+  keeps passing after the band narrows.** Guard the band's PROPERTY instead (each spouse's senior bonus still live),
+  never a hand-typed bound.
+- **(moved from TODO's distill list, b9-3, 11-23) Pin the element under test by its own class, never by a container's
+  absence**: a test asserting "no `.subordinates` wrapper" as a proxy for "no relief line" false-failed the moment the
+  wrapper hosted a second child (2026-09-11).
 - **(b9-6, 11-15) A gate-off witness derived from `stillWorking` must lower the retired Sam's `retirementAge` to at or below his `currentAge`**: left at 58, a Sam of 55 to 57 reads as still working, and Alex's possible death opens the survivor gate (`SURVIVOR_GATE_WITNESSES`, `src/intake/__tests__/typedBelowWitnesses.ts`).
 - **(b9-6, 11-15) The typed-below window read's `unknown` arm is unreachable by any draft** (its docblock in `src/intake/workingYearLeftOver.ts`; a horizon at the window top reads `null`): never write a test that demands it.
 - **(b9-5, 11-15) Claude Code reaps a heavy BACKGROUND shell when the machine runs low on memory while the session
@@ -380,6 +387,10 @@ tests
   with no save box can be TALLER there.
 - **(b9-1, 11-23) The room's arms (`?seed=tablewidest`) assert every column first** (`expectEveryColumn`): a seed
   whose crown drifts to today, or loses an account, would drop columns and make every width law vacuous.
+- **(moved from TODO's distill list, b9-3, 11-23) Measure a non-vacuity control in the app's own stylesheet, never
+  assume the browser default**: the fit gate's "a bare `ol` has a margin" control (the re-point's U2) redded on all
+  four arms because `src/ui/styles/base.css`'s `* { margin: 0 }` zeroes every element's margin; the marker and indent
+  controls held. Read the control once in place before pinning its premise.
 - **(b9-6, 11-21) `assertDensityTier` looks the survivor leading up in `SURVIVOR_LEADING`** (the frames-outside plan's
   KTD11, `be870c9c`), one row per direction, each cell read from the frame's own echo and typical-residual markers, and
   requires the arm's expectation to match on BOTH sides of the tier: `rows.leading`, which defaults from `rows.echo`. A new
@@ -553,7 +564,10 @@ figure.band-figure": the band had not mounted when the audit ran); both pass in 
 (4.9 m locally). Never run vitest / doc-stats / a build beside a browser gate; a red under your own load is not a finding, and the
 idle rerun is the proof
 - **(2026-09-08)** `settleLayout` ENDS in `scrollTo(0,0)` — a gate whose subject is the scroll position must not call it before
-measuring (the first mutant went green for exactly that)
+measuring (the first mutant went green for exactly that). A planning probe whose settle ends there measures a page position,
+not what an arm sees after a gesture (b9-1, the re-point: the steer note read 755.25 px in the probe and 593.25 in the arm's
+viewport, which the goal pick had scrolled 162 px): replicate the arm's own measurement point, and check a "new red" against a
+real gate run before planning a fix for it
 - **(2026-09-08)** a Playwright `.click()` scrolls its target into view — use an
 in-page `button.click()` when the offset is the subject
 - **(2026-09-08)** Playwright's 390×844 mobile emulation
@@ -633,6 +647,8 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   already-moved numbers as the base's and shifts each a second time (U8: 514 bogus moves and 38 bogus review items in the dry
   run that followed). For the real review list after an apply, run the tool's logic over the base's own text of each citing
   file, or re-anchor from a fresh base. The apply also moved insight 136's frozen historical citation, put back by hand.
+- **(moved from TODO's distill list, b9-3, 11-23) A unit ID in prose collides across plans**: build 2's plan's own U13
+  and build 1's "U13 working-years clock" sat in one sentence. Cite a foreign unit with its home ("build 1's U13").
 - **(moved from TODO's distill list, b9-2, 11-23) `pnpm doc:reanchor` gives a bare `:N` to a file name only when that name
   ends within 60 characters before it on the same line** (`LAST_FILE`, `[^\n]{0,60}$`, `scripts/reanchor-citations.mjs`).
   Farther tokens are skipped silently and reported as "0 for hand review". On a long multi-citation line, re-check every
@@ -825,6 +841,10 @@ is a guess a verifier must check, never a fact
   hunter priced it from the $1,100 after-work reference quote. Check the seed's own fields before a refuter carries a figure.
 - **(b9-5, 11-09) Seats that write their reports to files never truncate** (walk 4: 16 seats, none lost; walk 5: 17, none
   lost): each brief names its output file, asks for a reply of 80 words or fewer, and the chair reads the files.
+- **(moved from TODO's distill list, b9-3, 11-23) Probe cold seats only after their first answers lock**: walk 3 sent its
+  four questions to the first looks and the spouse by follow-up message, after each had written an unprimed read
+  (`docs/caddie/cold-read-log.md`, walk 3's card), so what they noticed alone stayed apart from what the questions
+  showed them (no seat read a paycheck in either pass; the "which way?" gap showed in both).
 - **(b9-4, 11-09) Two refuters' fixes can contradict each other:** R4 offered "settling on $105,000" for "checking your figure at" while
   R3 had just ruled "settle on" a bargaining word; walk 4's N3 offered "Check your figure" as the button where walk 3 had
   burned "check" as "look". Cross-read every refuter's fix, and the ruling it lands under, before adopting any one.
@@ -879,6 +899,11 @@ chair; chair from a digest script, never the raw result, and expect the window t
   roughly linear in roster size, a cap and a coverage goal can be incompatible by arithmetic. The v10 ruling's +33% cap
   admitted only ~7 grid amounts beside `retired`'s 22, knowable before the council sat (`buildSolveRequest` over
   `DEV_SEEDS`, distinct grid amounts per seed).
+- **(moved from TODO's distill list, b9-3, 11-23) A flip condition copied into a digest loses its conjuncts**: the
+  rider council's chair wrote its flip as two conditions ("not including" read as "ignores", WHILE "plus" after "less"
+  reads as widening the lean); the plan, the council-log row and the register each kept only the first, so walk 8
+  "met" a flip whose second half no walk had tested, and the next council re-derived it from the machine-local journal.
+  Record a flip in the chair's own words, every conjunct, and cite where those words live in the repo.
 - **(b9-1, 11-19) Ask a council seat for words in its reply or a file, never "in your deliberation text":** five of nine
   opening seats died on a `reasoning_extraction` safeguard flag. A resume kept the clerk (same prompt, cached) and
   rewrote only the brief's tail for every later seat; the chair's file became the spec's verbatim source.
@@ -934,7 +959,20 @@ chair; chair from a digest script, never the raw result, and expect the window t
   system message, or a skill he invoked): a squeaky handoff or a TODO line is not it. The council and the three blind
   plan readers are Workflows, so a session without it cannot run them; ask at the session's start. A review round can
   still run as Agent seats (`BRIEF.md` + `VERIFY.md` in `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus\u11-wholewindow\review-r3\` are the shape: briefs as files,
-  replies as JSON under a cap, three refuters each judging every finding).
+  replies as JSON under a cap, three refuters each judging every finding). That round (b9-5: five finders, one
+  failure-mode angle each, and three refuters) cost about 2.8M helper tokens and about 40% of the window with its fix
+  commit. A refuter severity split over one fact is a claim question (what the sentence asserts): settle it by the
+  plan's own rule for that sentence, never by the vote.
+- **(moved from TODO's distill list, b9-3, 11-23) A file:line another agent hands over is a claim about a tree that
+  keeps moving**, whether a scout's, a council's "verified in source", a skeptic's or a digest's: re-open each line
+  before it enters the register or a build, and builders re-derive anchors. Two of a chair's anchors were a different
+  comment (2026-09-24); a council cited a file its API had since replaced (2026-09-13); a three-day-old digest's
+  anchors were stale on every item (2026-09-08). A verifier that trusts a skeptic's line number is as wrong as one
+  that trusts the verifier's.
+- **(moved from TODO's distill list, b9-3, 11-23) Read the tree, not the editor, after a helper's edits**: the TypeScript
+  diagnostics delivered after a builder subagent's run named seven calls to a renamed helper and an unused new one,
+  while the file held neither; they were mid-edit snapshots. A typecheck of the file as it stands and a grep settle
+  each in one call. Never act on a diagnostic about a file another agent was editing until the tree confirms it.
 - **(b9-4, 11-15) A helper can go idle on a progress line and never send its result.** The U4 pins helper's last word
   was "waiting on the final combined run"; no run existed, and the main loop reported it as live for about 16 hours.
   An idle row with no result is no running job: read `Get-CimInstance Win32_Process` for the command line, then run the
@@ -983,6 +1021,23 @@ chair; chair from a digest script, never the raw result, and expect the window t
   `process.env.NODE_ENV` for its consumer** and throws "process is not defined" in the page unless `define` sets it to
   'production'. `page.addScriptTag({ content })` RESOLVES even when the script throws, so assert the global
   (`typeof window.X`) with the `pageerror` text (`e2e/held/solve-phase-profile.spec.ts`).
+- **(moved from TODO's distill list, b9-3, 11-23) A UI cost timed in node is not the app's cost**: the spend solve read
+  27 s / 13 s under node, 5.1 s / 2.4 s in laptop Chromium and 4.7 s / 2.8 s on his phone, the same figures to the
+  dollar, and a council row nearly ruled on node's number (the engine runs about 2.5× slower in vitest/node than in
+  Chrome). Time any UI claim in a browser.
+- **(moved from TODO's distill list, b9-3, 11-23) An instrument that writes into the DOM its own MutationObserver watches
+  re-fires itself forever** and freezes the main thread it is measuring (the first phone-profile cut). Poll instead, and
+  prove any instrument on laptop Chromium before running it on the phone.
+- **(moved from TODO's distill list, b9-3, 11-23) Give every measuring tool one shared household builder**: U11's four
+  parallel lanes all imported one module (`u11drafts.mts`, then, in the session folder the Dell took): the W keys as the
+  old tool selects them, "saved" minted through the shipped write, the stale pairs behind a fail-loud state check. No two
+  tools could disagree about which household they ran, so the reviewers attacked the tools, not the households. Keep
+  the builder in the repo (insight 156).
+- **(moved from TODO's distill list, b9-3, 11-23) Probe only what no log already measures**: the re-point's 18-arm
+  pre-flip ubuntu probe shrank to the four spine frames ubuntu had never logged, because the record card and the gates
+  are top-aligned and the layout is width-invariant from about 1031 px up, so their existing `[U17 record return]` /
+  `[route fit]` lines at the old window already were the new window's readings. The four-frame read matched Windows and
+  the flip went green first time. Grep the logs for a reading before building a probe for it.
 - (migrated from TODO's standing block by b9-5, 11-20) **The Dell's session-folder tools are gone** (2026-11-19): every walk panel's `CHAIR-NOTES.md`, the line probe, the sweep, the idcheck, the re-anchor classifier (replaced 2026-11-20 by `scripts/check-reanchor-moves.mjs`, in the repo, gate step 3), the tier-sweep and plan-reader folders. Each card in `docs/caddie/cold-read-log.md`, the register and the specs are what remain. A line probe is quick to rebuild from the composer over `DEV_SEEDS` (`file:///` imports, `pnpm exec tsx`); KD10's test is the count of record, and the witnesses' figures are pinned in `workingYearLeftOver.test.ts`. A walk's lost record can be rebuilt from a frozen `git archive` of the walked commit with `node_modules` junctioned in (b9-3 did it for walk 9's lows).
 
 - **(b9-2, 11-16) A year's portfolio income tax is `grossWithdrawal − fundingNet` only in a clamped working year**, which
@@ -1100,6 +1155,11 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 - **(b9-1, 11-23) A `<caption>` is as wide as its table:** where the table scrolls inside a frame (the phone), the
   caption scrolls with it and is cut at the frame's edge. The year-by-year table names itself with a paragraph above
   its frame and `aria-labelledby`.
+- **(moved from TODO's distill list, b9-3, 11-23) A `<br>` inside a paragraph needs a space before it**: `textContent`
+  joins "…you.<br>This answer now:" with no space, so a React key, a screen reader and every `toContainText` read a
+  different string from the one the composer joined. Walk 5's `NotePartsBody` (then; the notes now draw
+  `NotePartsBlock`'s list) drew `' '` then `<br>`, the space never painted. `Disclaimer.tsx`'s footer still joins its
+  two lines with a bare `<br />` (its `textContent` reads "advice.Validate", 11-23).
 - **(b9-9, 11-23) A module shared by the intake chunk and a lazy chunk must not import a stylesheet the intake chunk already
   loads**: Rolldown moves the sheet into a new shared chunk, which can move its place in the cascade the fit gate reads
   (`src/ui/SaveSlot.tsx`'s import of `result.css` did, caught by reading `dist/assets`). Leave the import with its first owner
@@ -1149,6 +1209,10 @@ rasterizer SILENTLY
   2-of-5, 1-of-5 clean). Drifted anchors, mechanisms the code does not have, edits that would write NEW
   false claims. **Open every cited line before executing; budget as if it were unwritten.** A prescription
   never inherits the trust of the correct diagnosis above it.
+- **(moved from TODO's distill list, b9-3, 11-23) An absence claim needs a whole-tree search, never one directory
+  listing**: the 2026-09-06 truth pass marked `BudgetBuilder.tsx`, `BudgetLineItem.tsx`, `SequencingControl.tsx` and
+  `HealthcareSheet.tsx` "AS BUILT: never created" after an `ls src/ui`, but all four live in `src/intake/`. Run
+  `git ls-files | grep <Name>` before writing "never built".
 - **(2026-10-30, b9-3)** a prop added to a
 component's TYPE but not to its destructure silently resolves to any same-named module binding (`describedBy` in `fields.tsx`);
 a `(s): s is string` filter guard then hides it from tsc — destructure first, and name a new prop so it cannot collide.

@@ -3,7 +3,7 @@ title: A verdict that names WHICH source feeds a composite surface must re-key E
 date: 2026-07-02
 phase: P3·U9
 modules: [src/engine, src/viz]
-tags: [dateSearch, DateBand, bandFanTrack, floor-track, composite-surface, coherence, calm-but-wrong]
+tags: [dateSearch, DateBand, bandFanTrack, floor-track, composite-surface, coherence, calm-but-wrong, equality-arm, answered-draft, live-draft, describer, result-hero]
 ---
 
 ## Problem
@@ -58,3 +58,27 @@ another).
   the survivor readout's xOfTen vs its step-down dollar (both survivor-conditioned).
 - U9b's two-tier headline: each tier's word + count + magnitude must all read that
   tier's own engine-tagged reading — never a word from one tier over the other's count.
+
+## Extended (2026-11-23): one equality arm guards every describer of the surface, where one arm per site misses most
+
+W9-R7's U3 (b9-4) had the same problem one layer up. The Result's hero is described by many separate pieces: the date,
+the tag, the Medicare note, the moved lines. Each must read the draft the answer was computed on, not the live draft
+the household has since edited. The first tests checked those pieces one site at a time, and they missed six of eleven
+planted faults.
+
+The arm that worked compares the whole surface. Render the hero answered at A with the live state moved to B, and
+require it to equal the hero settled at A. Beside it, a control: the hero settled at B differs. That arm, plus one case
+where the left over moves, caught every planted fault but one. (The one it missed is insight 029's 2026-11-23 case: a
+term that read the same in both drafts.)
+
+Two traps came up while building it:
+
+- **A region that also holds controls must be captured without them.** `.result-hero` also contains the actions row,
+  which changes for its own reasons, so the comparison reads the hero with that row taken out.
+- **A describer that falls back to the live state when nothing is answered lets a test take the live path without
+  noticing.** A test that sets up a view without an answer went through the live draft and passed. When nothing is
+  answered, describe nothing (`answeredDraft` is null in `Result.tsx`).
+
+The lesson: when many describers must agree on one source, a single equality over the whole surface catches what a
+list of per-site checks forgets. It needs its control arm (the two states really differ) and an honest "nothing
+answered" path.

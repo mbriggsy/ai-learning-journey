@@ -3,7 +3,7 @@ title: "Comprehension holes are a defect class tests cannot see — only a cold 
 date: 2026-07-03
 phase: Act 3 (the levers)
 modules: []
-tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+tags: [comprehension, cold-read, copy-law, microcopy, referent, unquoted-quantity, mechanism-frame, healthcare-sheet, fleet-audit, test-first, mutant-pass, review-before-mutants, pinned-words]
 ---
 
 # Comprehension holes are a defect class tests cannot see — only a cold reader finds them
@@ -59,3 +59,12 @@ Copy that references what it doesn't quote, derives what it doesn't attribute, o
 mechanism's language is a **defect**, not a style choice — and no oracle in the repo can catch
 it. Budget a live cold read for every new user-facing surface as a *gate*, not a courtesy; run
 the law-rubric audit (finders + render-context refuters) before spending the human read.
+
+## Extended (2026-11-23): a test-first round pins its words exactly as written, so review it before its mutant pass
+
+U11 walk 5's fix round (b9-8, `ec3514a7`) was built test-first and went green. An adversarial review with refuters, run
+before the commit, still found eleven real findings: among them a P0, an unscoped lean the project's own guard
+forbids, and a ramp-law violation, all in sentences the new tests pinned exactly as written. Test-first makes this
+insight's blind spot worse, not better: the test is written from the same draft as the sentence, so it pins the
+defect. A mutant pass proves the tests bite; only a reader of the arms proves the words are true. Order the round
+review first, then the mutants, then the commit.

@@ -3,7 +3,7 @@ title: An absence-wait cannot synchronize — it is green BOTH before and after 
 date: 2026-07-08
 phase: P3 (Act 3 — the vertical-fit gate)
 modules: [e2e, src/store, src/ui]
-tags: [e2e, playwright, synchronization, vacuous-wait, provisional-final, tier, adversarial-review, falsifiability]
+tags: [e2e, playwright, synchronization, vacuous-wait, provisional-final, tier, adversarial-review, falsifiability, held-answer, refiguring-flag, data-answer-refiguring, armRefiguringWatch, edit-run]
 ---
 
 ## Problem
@@ -60,3 +60,23 @@ Library (`waitForElementToBeRemoved` on an element that never mounted); polling 
 wait for a flag to clear rather than a completion token to appear; the insight-016/029 family
 (vacuous assertions) extended to the SYNCHRONIZATION layer; any e2e whose per-test runtime
 does not change when the awaited backend tier/job is made dramatically slower.
+
+## Extended (2026-11-23): a held answer says "final" through the edit, so the tier is no signal at all
+
+The tier stamp this insight's Fix waits on is a presence the producer writes, and it is still not enough once an answer
+stands. `src/store/memoryModel.ts` keeps the shown answer on screen while an edit's run is in flight, and that old
+answer still says "final". A panel edit that writes twice fires `recomputeBoth` twice. Each dispatch cancels the
+other's provisional, only the last final commits, and the tier never leaves "final". In walk 1's branch B the date hero
+moved to "No fuck-off date" while every read of the tier said "final". So a final-tier wait after an edit passes inside
+the window and measures the answer from before the edit.
+
+The Caddie walk's first fix waited on a settled frame BEFORE the edit, then on a tier change or the hero's words
+moving. That watch can never fire for an edit whose run leaves the words the same. W9-R7's U5 replaced it with a
+presence that only the awaited event creates: the store raises `data-answer-refiguring` the moment a run on newer
+inputs is dispatched, and clears it when the first answer at those inputs commits. `armRefiguringWatch`
+(`e2e/reviewSurface.ts`) is armed on a settled page before the edit, records the attribute APPEARING, and only then
+waits for the settle. The Caddie walk and the fit gate's live arm share it.
+
+The lesson: after an edit, "settled" is an absence (no run in flight), and an absence is green before the run is
+dispatched too. Wait first for the mark that the edit's own run started, then for the settle. And check that the
+signal moves on every route: here the tier stays put on a spine edit, while the flag rises on both routes.

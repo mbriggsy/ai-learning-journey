@@ -3,7 +3,7 @@ title: An equality assertion on a structurally-zero surface discriminates nothin
 date: 2026-06-10
 phase: P1·U3·M6 (the per-path taxAware collection + boundary review)
 modules: [src/engine/simulate.ts, src/engine/__tests__/simulate.test.ts]
-tags: [mutation-survival, vacuous-assertion, presence-companion, test-design, taxAware, collection-wiring, identity-assertion, probe-argument]
+tags: [mutation-survival, vacuous-assertion, presence-companion, test-design, taxAware, collection-wiring, identity-assertion, probe-argument, re-pin-vacuity, rounding-order-witness, exactly-one-side, equality-arm-term, parent-assertion]
 ---
 
 ## Problem
@@ -61,3 +61,31 @@ survived its test, because the test checked the object the probe was passed — 
 composition used the copy. An identity assertion on a probe's argument says nothing about what the code READ. Pin it
 by a value only the right object carries (an NC household through the loop, a later calendar year), the same
 non-default-value rule as above, applied to identity instead of equality.
+
+## Extended (2026-11-23): a witness goes blind when its two sides stop differing, and a re-pin can make that happen
+
+The rule above, "drive the surface to a value that differs", also has to hold for every term an equality compares, for
+every pattern a both-sides check reads, and after every change to the figures a fixture sits on. Four cases:
+
+- **A price fix killed a rounding-order witness.** The chrome arm pinned that the two-of-you figure is formatted once,
+  not built as 2 × the rounded one-person figure. At the bill-year prices, both seeds rounded to the same number either
+  way, so after the re-pin the arm could no longer tell the two orders apart. After any re-pin, plant each
+  rounding-order mutant again. If one survives, rebuild the witness on a fixture where the two roundings differ (an
+  aged 2024 start did).
+- **A "never both sides" check never saw one kind of sentence.** The typed-below density law required that no sentence
+  carry both a typed figure and a quote figure. Its typed side matched only "your figure of $". The credit kinds' first
+  sentence ("This answer adds at most $X") matched neither side, so a quote figure planted there passed (round 2 of the
+  whole-window rebuild's review, `6b63c697`). The check now requires EXACTLY one side on every sentence that carries a
+  figure, and a test proves every cell (kind × quote × one-year form) is reached.
+- **One term of an equality arm read the same in both drafts.** W9-R7's equality arm (insight 056's 2026-11-23
+  extension) renders the surface answered at A with the live state moved to B, and requires it to equal the surface
+  settled at A. The hero Medicare note's `medicarePriced` read true in BOTH drafts of every case, because every case
+  kept a member working, so a planted read of the live draft for that term failed nothing. `2d0de57a` added a case
+  where the edit flips that term alone: both members retire on Social Security only, with no accounts, so the builder
+  makes no overlay. The case also asserts the sentence it guards, present at A and absent at B. If a seed change ever
+  stops moving it, the test fails instead of going quietly blind. The plant now fails exactly one test in 5,347, on its
+  own equality line. For an equality arm over N terms, find a case where each term differs between the two sides.
+- **A child assertion that implies the parent hides a mutant on the parent** (b9-2's seat arm, 2026-10-19). The parent
+  was checked only through a sibling assertion that implied it, so a mutant on the parent survived wherever that
+  sibling's fixtures did not reach. Assert each parent directly. (The other half of that arm's lesson, varying the
+  incidental property every fixture shares, is insight 140's.)

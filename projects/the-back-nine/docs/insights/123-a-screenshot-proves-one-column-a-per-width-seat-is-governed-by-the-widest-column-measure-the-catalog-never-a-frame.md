@@ -3,7 +3,7 @@ title: A screenshot proves ONE column — a per-width seat is governed by the WI
 date: 2026-09-06
 phase: Post-Act-4 (the gap to a friend betting real money) — the council-held 320 shape, ruled by his eye and built the same day
 modules: [src/viz/chartText.tsx, src/viz/ConfidenceBand.tsx, src/viz/OddsLadder.tsx, e2e/chart-text.spec.ts, docs/caddie/cold-read-log.md]
-tags: [cold-read, screenshot-evidence, per-width-seat, measured-catalog, chart-text, oracle-vs-eye, arithmetic-check, the-room-is-not-the-ink, css-outlives-string, nowrap, inline-block, width-gate, overflow-wrap-anywhere, mid-word-break, caption-clipped, squeezed-table, coupled-axes, whole-combinations, text-swap, unreachable-member]
+tags: [cold-read, screenshot-evidence, per-width-seat, measured-catalog, chart-text, oracle-vs-eye, arithmetic-check, the-room-is-not-the-ink, css-outlives-string, nowrap, inline-block, width-gate, overflow-wrap-anywhere, mid-word-break, caption-clipped, squeezed-table, coupled-axes, whole-combinations, text-swap, unreachable-member, plant-set, worst-product, single-axis-scaling, plant-first, household-acts, disclosure-state, wrong-axis, dpr, centering]
 ---
 
 ## Problem
@@ -90,3 +90,38 @@ reading On track and earns it. **A closed axis can be read without a seed per me
 shipped composer's string in the real frame (`composeVerdictMedicareResidual`, `slots.verdictRoom*` written into
 `.cs-medicare-residual` / `.cs-magnitude`), 13 members in two page loads, and prove the swap once against a real
 render (736.05 px swapped and rendered on one plant, 763.94 and 763.94 on the other).
+
+## Extended (2026-11-23, the one-frame composites and frames-outside builds): the catalog has more axes than the seed set, and a gap needs its axis derived
+
+The fit law's catalog kept turning out larger than the plants that were supposed to represent it.
+
+- **The plant set held one base seed's answers, not the tallest frames real households reach (b9-3, 2026-11-20).**
+  Every priced and record plant spread `retired`'s ENTERED Medicare extras, so the "not sure" residual (two lines
+  longer, +41.6 px), the yearly return's echo, Pennsylvania's longer clause and the record card were never planted
+  together. The re-point's U3 read "no rung needed" off that set and passed; real composites breach 731 by 6 to 68 px
+  (the register's Tier 0 *The tallest real composites…*). Before calling a law's arms complete, list the content
+  dimensions that lengthen the frame and plant their worst product.
+- **Scaling one input holds every other axis at its base's member (b9-8, the frames-outside review).** U1's 24
+  six-character twins scaled dollars only, kept each base's state clause and residual form, and read "all inside"; by
+  U1's own member table (20.8 px a residual line) an off-track Pennsylvania household no seed carried reads about
+  736. Round 1's fix repeated it, filing that household with both members on "not sure" (757 with one named alone) and
+  leaving class C's widest out (802). Vary every closed axis, or say the reading is width only.
+- **Read the plants before restoring an assertion (b9-8, rung 3's build).** The rung-3 council ruled its key on the
+  frames it knew. Its red team's "plant first" order, run on real engine seeds, found two frames no dossier had: the
+  off-track return (`yearofftrack`, 732.9 px, the `trim` direction, which needed its own selector entry to reach 722.5)
+  and a fresh Pennsylvania already-failing frame (`pafailingtypical`, 736.0, with no echo and no class to key on, so a
+  new stop). Restoring `yearfailing`'s assertion first would have turned the gate green over both. A council's key is
+  only as good as the catalog it was read against (verdict state × extras form × state × clock).
+- **The household's own acts are frame states (b9-9, round 3).** A survivor fold the household opens (one click, in the
+  left column's flow, unkeyed, so it stays open through later answers) put "this can be wrong" 132 px further down on
+  `budget` (706.2 to 838.3 px), and the one arm that opened it did so after its fit, to read a line's text. List every
+  state a household can put a frame in (a fold, a panel, a second tab, a failed save), not only the states a seed lands
+  on; an arm that opens a disclosure re-reads the fit or names why the opened frame is outside the law.
+- **A gap read off two sizes that differ in more than one axis gets named by the wrong axis (b9-8, the review's F5).**
+  The frames-outside U4 called SHOWCASE's lower doors (1871×917 @1 against LENOVO_FULL's 1440×900 @2) a DPR effect.
+  The two sizes also differ in width and height, and `.result` centers a frame shorter than the window: every probe pair
+  matched (H − 80 − C) / 2 to 0.1 px. The wrong cause reached a landmine, the plan's As built note and two register
+  entries in a day. Derive a gap from the layout before naming the axis that caused it.
+
+**What the five add:** the catalog is the product of every axis that changes the frame, including the household's own
+acts and the window's every dimension, and a reading taken by moving one axis speaks for that axis alone.

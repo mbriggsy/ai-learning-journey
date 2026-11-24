@@ -3,7 +3,7 @@ title: "A modeling lean that reaches BOTH arms of a comparison has no net direct
 date: 2026-09-23
 phase: Act 4 hardening (the assumptions row's "never oversold" — Card 7 of the 2026-09-13 sibling-sheets walk)
 modules: [src/ui/copy.ts, src/engine/healthOverlay.ts, src/engine/roth.ts, src/engine/taxOverlay.ts, src/ui/__tests__/conversionTaxDisclosure.test.ts]
-tags: [calm-but-wrong, disclosure, direction-honesty, two-arm-comparison, roth-conversion, irmaa, part-d, hold, copy-law, review-fleet, re-anchor, conditional-verb, can-reads-as-is, measured-direction]
+tags: [calm-but-wrong, disclosure, direction-honesty, two-arm-comparison, roth-conversion, irmaa, part-d, hold, copy-law, review-fleet, re-anchor, conditional-verb, can-reads-as-is, measured-direction, lean-per-arm, either-way, tier-lift, difference-bound, death-path, sequencing, taxable-first, typed-below]
 ---
 
 ## Problem
@@ -70,3 +70,32 @@ is bigger alone.
 **Rule:** a direction claim on a household's own surface is a claim about THAT household. Say it where it is
 measured; where it cannot be measured, say it only on the side whose over-read errs safe. The conditional verb keeps
 a sentence true of the mechanism, which is not the reader's question.
+
+## Extended (2026-11-23): a lean or a direction holds only on the arm, the household, the order and the paths it was measured on
+
+Four later cases push this insight's "which arm?" one level further each time:
+
+- **A lean is per arm, never per sentence (b9-1, the typed-below note).** "This answer can look better" was true for
+  every arm its prescription imagined and false on one it did not: a "saved" answer waiting on W. The cure is
+  structural: route every new lean through the one predicate the other leans already ride (`savedWaitingOnW` in
+  `src/intake/workingYearLeftOver.ts`), so a new sentence cannot pick its own arms.
+- **An "either way" signs the answer only across households, never inside one (the 2026-10-31 tier sweep).** An
+  "either way" lifts a register entry's tier when it signs the answer the household acts on across households (*The
+  first answer assumes money comes out of every account in proportion…*). Two opposite effects inside one household,
+  with the net unsigned, hold the entry (*The investment mix is frozen at today's blend for life…*). The rule is
+  binding in the register's header (its tier-sweep paragraph); it is this insight's net-direction test applied to
+  tiering.
+- **A bound proved on each run is not a bound on the DIFFERENCE between two runs (the typed-below rebuild's review,
+  round 2, finding #1; council `wf_dfb7949b-4a7`).** The plan rejected a death-frame sentence because "the at-most pair
+  is true on a death path". That holds for each answer's credit (a death credits 0) and fails for their difference:
+  nothing is credited, the survivor rule holds W, and the quote's draw runs deeper. On C at $90,000 under an
+  all-sticky $105,000 budget, "at most $10,000 a year more" stood against the engine's $13,609 on 58 of 4,000 passes
+  in 2032. Check a comparison's premise on the paths where each side's rule changes, not on each side alone.
+- **A measured direction holds only for the withdrawal order and rows it was measured on (b9-6).** A register entry
+  said the rider's gap runs one way ("Never the other way"). Round 3 had measured it at default sequencing, and its
+  own taxable-first output already held a year running the other way (TM 2035: the typed answer $87.47 more), unread
+  until a planner's spec-flow pass. Write a measured direction with its sequencing and its rows, and grep the
+  measurement's own outputs for the sign before stating it.
+
+The Refinement above said "say a direction where it is measured for THIS household". These cases add the rest of
+the address: this arm, this household, this withdrawal order, and every path where one side's rule changes.

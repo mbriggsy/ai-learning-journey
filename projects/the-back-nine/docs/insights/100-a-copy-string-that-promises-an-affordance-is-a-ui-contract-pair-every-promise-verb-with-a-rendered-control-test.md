@@ -3,7 +3,7 @@ title: A copy string that promises an affordance is a UI contract — pair every
 date: 2026-07-22
 phase: U16 recommendation surface (ultramode fold)
 modules: [src/ui/Result.tsx, src/ui/RecommendationSurface.tsx, src/ui/copy.ts]
-tags: [copy-contract, affordance, stranded-state, stale, compute-error, blocked, dead-end, calm-but-wrong, hint-rewording, control-routing]
+tags: [copy-contract, affordance, stranded-state, stale, compute-error, blocked, dead-end, calm-but-wrong, hint-rewording, control-routing, door-render-condition, act-name, gate-message, read-only-host, both-or-neither, structural-conjunction]
 ---
 
 ## Problem
@@ -59,3 +59,24 @@ Three rewordings of one pointer on the W step's stale face failed the same seat 
 chair read where each control leads: both reach W. A hint that names a fix is a promise about a control, so the
 wording question was really a routing question. When one rewording fails, trace the controls before drafting the
 next (b9-7).
+
+## Extended (2026-11-23): make the conjunction structural — build the words that name a door from the door's own render condition
+
+Build 2's working-year step turned this insight's per-state test into code structure, because a test per state kept
+missing states. Words that name a door must come from the same condition that draws the door, or they promise a door
+the face does not draw. Three cures, all in `src/intake/workingYearQuote.ts` and `workingYearLeftOver.ts`:
+
+- **Derive the gate's message from the core that draws the door** (`workingYearCostGateMessage` /
+  `workingYearCostKeepLabel`, b9-1's fix round). "Answer it above" over an already-answered face was insight 109's
+  wrong-frame defect again; a message read off the door's own core can only name what is drawn.
+- **Key the act's name to the door's predicate.** "Confirm or change" cured "checking = looking" but named a Keep door
+  three households lack, and pointed at a retype that clears the warning (b9-7). `workingYearCostAct` now reads
+  `heldYesBelowQuote`, the predicate the Keep door rides ("update" where the held figure is below today's quote,
+  "confirm or change" otherwise). Inverting it redded the households with no "saved" answer too, because every stale
+  W's door rides that predicate.
+- **Compose the button-naming lead with the door, never inside the line** (`workingYearCostStaleDoor`, b9-6). The line
+  also prints on a read-only tab, where no door is drawn. A lead carried inside the line would name buttons that tab
+  cannot reach, so the host prints the lead and the door together, or neither.
+
+Walk 5 still found "the gate names buttons it doesn't draw", so the structure does not retire this insight's test
+sweep. What it changes is the default: a new host starts right by construction instead of by audit.

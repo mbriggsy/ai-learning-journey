@@ -3,7 +3,7 @@ title: A refusal arm's copy must describe the predicate's whole extension — ne
 date: 2026-07-23
 phase: The median-advantage + typed-refusal steer increment (review wf_6f89fe6f-35a)
 modules: [src/ui/copy.ts, src/intake/solveDispatch.ts, src/engine/solver/candidates.ts]
-tags: [copy-contract, refusal-arm, predicate-extension, calm-but-wrong, no-pretax, superset, stopgap-help, household-shapes, ruled-words, render-sites]
+tags: [copy-contract, refusal-arm, predicate-extension, calm-but-wrong, no-pretax, superset, stopgap-help, household-shapes, ruled-words, render-sites, conditional-sentence, judging-side, time-axis, dated-figure, when-you-answered, decider-input, narrowest-witness]
 ---
 
 ## Problem
@@ -69,3 +69,25 @@ through a workflow before the first edit, and the trace found two routes where t
 plan ("starting now") and the wide gap ("add none"). The same law as this insight's: copy describes every household
 its predicate reaches, so trace each render site of a ruled string before changing it, and bring a route that
 falsifies it back to him with the measured case.
+
+## Extended (2026-11-23): the law holds on the JUDGING side, across TIME, and for a decider's INPUT
+
+Three cases from U11's walks on the working-year left-over question, each the extension law applied somewhere new:
+
+- **Judge a conditional sentence over the extension it states, never at the one point on screen (b9-3, walk 2).** "Any
+  working year your pay doesn't cover" is empty for `datesavedrisen` at $90,000, so the walk-2 chair first called the
+  counterweight vacuous. The refuter caught that "a check at $90,000 or more" spans every figure at or above the
+  spending, which includes the figures where it bites. The same reading kept the non-saved "can look better" honest:
+  across that whole range it only adds cost. A reviewer who judges a conditional at the screen's one value makes this
+  insight's authoring error in reverse.
+- **A fix that dates a stored figure must hold for every household and every LATER answer (walk 2; walk 5's round).**
+  "The $16,985 left over at $84,000" was false for the later couple, whose left over at $84,000 is now $26,985. The
+  same wording came back in walk 5's round and was false after a later "Yes" at another figure. "When you answered"
+  is true in every case. Date a stored figure by when it was answered, never by the figure held today: the extension
+  runs across time as well as across households.
+- **A decider keyed on one answer leaves every other answer reading the old promise (the walk-6 round review).** R3's
+  sheet half (`865e7426`) keyed B's "no until" words on `workingYearCheckAtQuote`, which reads a "saved" answer only.
+  An unanswered, spent or not-sure B kept "Until then, no money left over is added", though on B no honest update
+  brings the money back under any answer. Three of four review lenses found it; `360bea64` keyed the words on the
+  predicate's real input (year 0 at the quote). The sentence's extension is every answer the household can hold, so
+  the decider must read the quantity that sets the truth, never the narrowest witness that happens to carry it.

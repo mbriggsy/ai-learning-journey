@@ -3,7 +3,7 @@ title: A filed prescription does not inherit the trust of its diagnosis — audi
 date: 2026-07-27
 phase: U17 — the S5 residue sweep (the pre-work before S6)
 modules: [TODO.md, src/ui/styles/recommendation.css, src/ui/__tests__/recommendationSaveGesture.test.tsx, src/ui/devSeeds.ts, .claude/workflows/caddie.js]
-tags: [process, queue, prescriptions, verification, mobile-first, mutation-testing, dev-seeds, insight-017, entry-premise, impossible-household, prescription-vs-negative]
+tags: [process, queue, prescriptions, verification, mobile-first, mutation-testing, dev-seeds, insight-017, entry-premise, impossible-household, prescription-vs-negative, walk-refuter, retired-wordings, copyguard, plan-r-lines, x_t, the-pair, comparison-metric]
 ---
 
 ## Problem
@@ -99,3 +99,26 @@ A register entry can carry a prescription that breaks the binding NEGATIVE writt
 the working-year tax as tax(W + X) − tax(W), which charges $0 where Social Security alone is taxable; that broke the
 entry's own NEGATIVE, and the plan's KTD1 added the T(0, ss) term before building. Before building a filed
 prescription, run its formula through every case the entry's own NEGATIVE names.
+
+## Extended (2026-11-23): a walk refuter's prescription is checked against the target's plan, the retired words and the comparison the defect was found with
+
+Three build 2 walk fixes. Each diagnosis was right and each prescription broke something the refuter never read:
+- **The target's own plan.** Walk 8's W8-R10 put dollars and a lean on the methodology row. Build 2's R14 holds that
+  row static (no dollars, no direction word), because the row reads the live draft far above the seat (insight 035).
+  The clash was resolved in the spec's "As built" and flagged for the walk (b9-4, U4). Before building a card's fix,
+  grep the target row's or slot's plan for its R-lines and NEGATIVEs.
+- **The retired words.** Walk 7's R1 refuter checked its sentence against every line on TM's screens and handed over
+  "Your answer takes none of those shortfalls", a phrase council `wf_7fa86902-35c` had struck two walks earlier.
+  copyGuard's retired-wordings sweep caught it only at build (b9-6, `d4c38295`, built instead in B's ruled clause). A
+  refuter checks its fix against the page, not against the rulings that shaped the page. The chair's verify step owes a
+  pass over the retired-wordings list before a refuter's words become a fix (`docs/landmines.md`, Copy and copyGuard).
+- **The comparison the defect was found with.** Walk 6 measured the retype as this answer's credit against the honest
+  answer's credit (the pair: $16,985 against $10,985, every year). The walk-7 round review's prescription silently
+  switched to x_t (the credit minus the print at the quote), which matches the pair only in year 0, because the
+  honest answer stays capped at its own year-0 print while pay rises. Four seats, three refuters and the plan's own
+  research inherited it. Only council `wf_f74697d1-f2e`'s red team re-read the comparison: on A, $6,000 in 2033–2034
+  where x_t said nothing; on TM, $11,000 where x_t said $762 (the typed-below rebuild spec's KD1).
+
+**Rule:** before building a reviewer's or refuter's prescription, check it against three things it may not have read:
+the target's plan (its R-lines and NEGATIVEs), the words a ruling retired, and the comparison the original
+measurement made, written beside the new formula to confirm they are the same quantity.

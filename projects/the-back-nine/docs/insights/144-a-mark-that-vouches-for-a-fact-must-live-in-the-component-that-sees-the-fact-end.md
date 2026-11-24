@@ -3,7 +3,7 @@ title: "A mark that vouches for a fact must live in the component that sees the 
 date: 2026-10-31
 phase: the pay check's whole-file review (Phase C, b9-9) — ruling 38; Phase B's review (b9-3) — `discardOnBack`
 modules: [src/intake/WorkingCostQuestion.tsx, src/intake/questions.tsx, src/intake/flow.tsx, src/intake/sanity.ts, src/intake/AssumptionPanel.tsx]
-tags: [state-ownership, lifecycle, provenance, disarm, touched, period-rule, gated-step, back-exit, mount, single-home]
+tags: [state-ownership, lifecycle, provenance, disarm, touched, period-rule, gated-step, back-exit, mount, single-home, unit-tap, convert-vs-reread, keep-stamp, round-trip, reversible-control]
 ---
 
 ## Problem
@@ -52,3 +52,20 @@ the panel's doors) before trusting the one with the gate.
 - [[112]] — a leave-page guard reading one store; the same enumerate-every-buffer move for exits.
 - [[058]] — an invariant with many writers is not closed by fencing one; here the writers were hosts.
 - [[022]] — provenance is per figure; a figure's provenance dies with the figure.
+
+## Extended (2026-11-23): who gave the digits decides what a unit tap does, and a mark must survive the control's round trip
+
+Two more ways to the same wrong figure, both on the W row's period control.
+
+**A unit tap on a figure the household never typed must convert, not re-read.** The period control repairs a 12× typo
+by re-reading the digits on screen in the new unit: right when the household typed them. On a KEPT $84,000 (digits the
+tool put there) the same re-read made it $1,008,000, and the result read as fresh, so the stale gate let it through
+(the pay check's fix round, b9-1). The source of the digits on screen decides which part a unit tap keeps: typed digits
+keep their digits, a kept or quoted figure keeps its dollars.
+
+**A mark's fate rule must survive the control's round trip, not one tap.** U5's KTD10 dropped the Keep stamp on a period
+change ("taken over a different figure"), and every test tapped once. "Each month" then "each year" restored the same
+$84,000 unstamped, so a stale kept figure came back as typed, fresh forever, with no digit typed. Four of five U5 review
+lenses found it (b9-2). For a reversible control beside a provenance mark, test the round trip: the mark comes back with
+the figure. [[058]]'s 2026-11-23 extension has the sibling: every writer that rebuilds the object a stamp rides on can
+drop the stamp.

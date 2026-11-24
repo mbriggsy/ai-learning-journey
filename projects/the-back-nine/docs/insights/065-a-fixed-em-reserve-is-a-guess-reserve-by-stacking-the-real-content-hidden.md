@@ -3,7 +3,7 @@ title: "A fixed em-reserve is a guess that drifts — reserve layout by stacking
 date: 2026-07-03
 phase: Act 3 (the levers)
 modules: []
-tags: [reserve, layout-shift, hidden-stack, known-alternatives, next-state-forms, pinned-answer]
+tags: [reserve, layout-shift, hidden-stack, known-alternatives, next-state-forms, pinned-answer, transient-line, overlay-padding, fold-law, absolute-position, provisional-tag]
 ---
 
 # A fixed em-reserve is a guess that drifts — reserve layout by stacking the REAL content hidden
@@ -32,3 +32,16 @@ no-date one, which wrapped and pushed the page switch down 16 px at 1440. The hi
 second line the next answer can take (`reserveForms`, including the aged-plan forms the review found missing). A
 reserve for a box that changes on an event must enumerate the states the event can produce; reserving what is on
 screen protects only against changes that cannot happen.
+
+## Extended (2026-11-23, b9-5's W9-R7): on a fold-law frame, a transient line can overlay the padding instead of taking a row
+
+Two lines come and go with the engine on the Result: W9-R7's re-figuring line and the date's provisional tag. On the
+one-frame (fold-law) frame neither a row of their own nor a reserved row was affordable: in the flow they would push
+the spine's protected disclaimer past the fold for the length of a run (R5), and a reserve would cost the date hero its
+place at every final. Positioned absolute above the two-pane lead (`bottom: 100%`, inside `.result`'s 32 px short-tier
+padding), they take no row at all: verdict-to-disclaimer stays 671.1 px with and without them at 1440, 1536 and 1280,
+and the date headline sits on its settled pixel through the provisional (`c644ec2f`). The overlay has two limits, and
+they are part of the lesson: it holds one line only (a wrap climbs above the page top), and only on the two-pane tier
+(on the scrolling tiers a raised root font would push an overlay off the page, so the slot stays in the flow there).
+When the frame cannot spare a row, look for space the layout already reserves (padding, a gutter) and state the
+conditions under which the overlay still fits.

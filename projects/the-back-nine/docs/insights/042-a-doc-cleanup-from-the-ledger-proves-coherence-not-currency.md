@@ -3,7 +3,7 @@ title: A doc cleanup re-authored "from the ledger" proves coherence, not currenc
 date: 2026-06-19
 phase: P2 (Act 2 — Where You Stand)
 modules: [README.md, docs/roadmap.md, scripts/verify-doc-stats.ts]
-tags: [docs, drift, test-count, single-source, verify-gate, coherence-vs-currency, cold-read, summary-surface, spec-drift, reachability-claim, filing-list, verify-against-code]
+tags: [docs, drift, test-count, single-source, verify-gate, coherence-vs-currency, cold-read, summary-surface, spec-drift, reachability-claim, filing-list, verify-against-code, comment-paraphrase, record-folder, inherited-conclusion]
 ---
 
 ## Problem
@@ -46,3 +46,21 @@ headings, before any lane filed.
 **Rules:** a docs unit budgets draft → verify against the code → fix → verify the fix. A spec sentence about
 reachability ("only X reaches Y") is a claim about every caller: when a carriage rule changes, grep the plan for
 "only … reach". A plan's filing list is checked against the register's bodies before anything is filed.
+
+## Extended (2026-11-23): the same inheritance runs through code comments and record folders
+
+**A code comment that paraphrases the plan inherits the plan's mechanism, right or wrong.** Build 2's KTD4 said "a
+half-cent tie can print a cent above the float", and the sentence went into `taxOverlay.ts`, though the rounding leaf
+it cites rounds a tie down. Seven Phase A review lenses caught it in the code (b9-1). Fixing the comment alone would
+have left the plan to re-seed it into U12, so the plan was fixed too. This is [[087]]'s comment channel, with [[146]]'s
+grain.
+
+**A docs unit drafted from the record folder inherits the record's conclusions, wrong ones included.** The
+frames-outside build's U5 (b9-8) copied b9-7's cause for SHOWCASE's lower doors (DPR; the real cause is `.result`
+centering a short frame, [[123]]'s extension on a gap named by the wrong axis) and widened U1's four-frame read-only reading into "every frame
+it lowers is already outside or routed". The review's docs lens and three verifiers caught both, plus the unit's own
+"worst tall frame" claim (the widest plants read 857.9 and 854.0 px, not 841.5).
+
+**The rule, all three channels:** a spec, a plan's KTD and a record folder are each a draft of the truth. A doc or a
+comment written from one is verified against the code and the measurements before it ships, and a wrong sentence is
+fixed at its source as well as at the copy.

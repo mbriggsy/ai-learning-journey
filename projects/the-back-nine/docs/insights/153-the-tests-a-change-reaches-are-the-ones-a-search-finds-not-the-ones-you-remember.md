@@ -3,7 +3,7 @@ title: The tests a change reaches are the ones a search finds, not the ones you 
 date: 2026-11-23
 phase: The RightCapital mandate, gap 1 (the workbench's year-by-year table, U7)
 modules: [src/ui/workbench/, src/ui/devSeeds.ts, src/ui/__tests__/, scripts/__tests__/breakpoint-mirrors.test.ts]
-tags: [test-cadence, reached-tests, partial-run, ci-red, grep-the-tests, sweep-tests, hand-pinned-list, guard-tests, breakpoint-mirrors, dev-seeds, source-bind, readFileSync, moved-code, regex-pin]
+tags: [test-cadence, reached-tests, partial-run, ci-red, grep-the-tests, sweep-tests, hand-pinned-list, guard-tests, breakpoint-mirrors, dev-seeds, source-bind, readFileSync, moved-code, regex-pin, slot-change, e2e-outside-tsconfig, coordinate-tap-arm, parallel-lanes, grep-by-field]
 ---
 
 ## Problem
@@ -59,3 +59,21 @@ direction: the Roth lever's live Medicare derivation moved from `Result.tsx` int
 the moved line to the old age predicate stayed green (U8's review, lens A). Before changing a call's shape or moving
 code, grep the tests for `readFileSync` of the file it lives in and for the function's name inside a regex; when code
 moves, move its pin with it and keep the pin's negative arm over both files.
+
+## Extended (2026-11-23): a changed slot reds e2e arms no unit run reaches, and a lane sees only its own files
+
+Three more ways the reached tests were wider than the list that was run.
+
+- **A slot that changes what it says fails the arms that read it.** R1 (`3000a04c`) let the typed-below line take the
+  Result's standing slot. The coordinate-tap fit arm (`?seed=date`, $72,000 typed under $84,000) still expected the
+  line it displaced. Eight unlock arms ran green locally, and CI's full `verify:fit` failed that arm at both sizes
+  (`9e9fec73` fixed it). Commit 2 of walk 7's round did it again: it changed the seat's figure and moved lines on
+  typed-below drafts, the unit suite passed, and the same arm failed on both viewports in CI. The e2e specs sit outside
+  the tsconfig, so neither typecheck nor a unit run sees them. Grep `e2e/` for every slot a change touches, whether
+  removed, retyped or with new output, and run each arm whose draft reaches the new condition. (`docs/landmines.md`,
+  the fit gate's slot bullet, carries the practice.)
+- **Parallel lanes that each run their own files miss a test that reads the shape they changed.** In the walk-8 form
+  spec's U2 (b9-3, `81f42077`, the typed-below line's year-paired ranges), three lanes went green on their own files. Only the full suite caught
+  `src/engine/__tests__/typedBelowTaxRider.test.ts`, which asserted the near-line household's single 2029–2032 span,
+  a span the new pairing split now cuts in two. Brief each lane with every consumer of the shape it changes, found by
+  grepping the field (`.spans`), not the file name. Run the whole suite once before calling a composer change green.

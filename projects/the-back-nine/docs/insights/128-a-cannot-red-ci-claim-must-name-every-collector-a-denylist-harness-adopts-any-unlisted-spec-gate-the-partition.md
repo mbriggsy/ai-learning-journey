@@ -3,7 +3,7 @@ title: A "can never red CI" claim must name EVERY collector — a denylist harne
 date: 2026-09-11
 phase: Post-Act-4 (the gap to a friend betting real money) — the morning after the 24 px council build
 modules: [playwright.config.ts, e2e/held/council-24px-shots.spec.ts, e2e/held/shots.config.ts, scripts/__tests__/playwright-harness-partition.test.ts]
-tags: [ci-red, playwright, testIgnore, denylist, harness-partition, held-instrument, claim-vs-tree, local-gate-set, exit-code, coverage-claim, tripwire, schema-surface-pin, recorded-set, overclaim, rule-from-examples, source-read, schema-version]
+tags: [ci-red, playwright, testIgnore, denylist, harness-partition, held-instrument, claim-vs-tree, local-gate-set, exit-code, coverage-claim, tripwire, schema-surface-pin, recorded-set, overclaim, rule-from-examples, source-read, schema-version, empty-collection, compile-error, per-source-non-empty, union-of-collectors, calendar-guard]
 ---
 
 ## Problem
@@ -102,3 +102,25 @@ The fix (`bb26cbca`):
 - The classes no tripwire sees are named as the author's call, judged by hand: a loosened refusal other than a vocabulary, and a key nested in a sub-object.
 
 **What this adds:** write a tripwire's coverage as the set it records, and check that set against the HARM, not against the rule's wording. A rule written from its examples and a pin built to the same wording agree with each other and miss the same cases, so "catches rule X" survives every consistency read. Say what the pin records, take that list from the code it guards wherever you can, and name the rest as calls made by hand.
+
+## Extended (2026-11-23): a guard that reads a union of collectors passes over a config that collects nothing
+
+The partition test above already requires every config to claim at least one spec. A guard built later on the same
+collector forgot that rule. The composites plan's U1 (b9-5, `78925edb`) added a guard in
+`scripts/__tests__/playwright-harness-partition.test.ts`: every spec the fit, fit-rv and Caddie harnesses collect must
+take `test` from `e2e/reviewSurface.ts` (the gate's calendar). Its first form read the three configs' collected specs as
+ONE set.
+
+Its mutant pass planted a fault meant to break one spec's import. The plant was mislabelled: it added a duplicate
+`test` import, which is a compile error. A spec that fails to compile empties its WHOLE config's collection, so the fit
+config collected nothing. The guard saw only the other two configs' specs and went green, while the partition arm went
+red ("collects ZERO specs"). The fix checks each config on its own: each must collect at least one spec before its
+specs join the set.
+
+Two lessons:
+
+- **To a collector, a compile error looks like an empty set, and an empty set satisfies every "for all" check.** Any
+  guard that loops over what a collector returns must assert non-empty for each source, never only for the total.
+- **A plant that does not do what its label says still pays off, if you read the mismatch.** The kill set did not match
+  the prediction for "this spec's import is wrong". Reading why, instead of re-planting until it matched, found the
+  hole. This is insight 126's "plant exactly what you name" from the other side.

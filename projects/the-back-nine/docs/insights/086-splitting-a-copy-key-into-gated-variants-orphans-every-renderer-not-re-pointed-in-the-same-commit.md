@@ -3,7 +3,7 @@ title: Splitting a copy key into predicate-gated variants orphans every renderer
 date: 2026-07-16
 phase: the state-carrying seed increment (post state-tax unit)
 modules: [src/intake/questions.tsx, src/intake/AssumptionPanel.tsx, src/intake/intakeMap.ts, src/ui/copy.ts]
-tags: [copy-keys, split-variants, spendHelp, consumer-sweep, insight-080, false-claim, calm-but-wrong, key-removal, e2e-outside-typecheck]
+tags: [copy-keys, split-variants, spendHelp, consumer-sweep, insight-080, false-claim, calm-but-wrong, key-removal, e2e-outside-typecheck, copyGuard, phrase-keyed-sweep, shared-phrase, sentence-frame, rider]
 ---
 
 ## Problem
@@ -57,3 +57,17 @@ branch remains valid; the four monolithic strings S5.2 split (their other render
 still reads a removed key passes `pnpm typecheck` and fails only in Playwright. Any round that removes or renames a
 copy key greps `e2e/` (and `scripts/`) for it before the push; U7's review fixes (2026-11-23) retired
 `workbenchLineTaxOnPay` and `workbenchPayCheckNote` and the grep found only a comment.
+
+## Extended (2026-11-23): the guard-side twin — a sweep keyed on a phrase one kind owned goes blind when the phrase spreads
+
+The same move in reverse breaks a GUARD rather than a renderer. copyGuard's "the coda is swept" count found the
+typed-below line's coda by matching "plus any income tax on it", which only the coda said. The tax rider build put
+one shared rider on every comparison, and the count's key, retyped to the new rider, matched every reading through
+the spans too. It kept counting and stayed green, but it was no longer counting the coda: the mutant pass's R3 (the old
+rider planted back on the coda) left it green. b9-2 (`024b77cb`) keyed the count on the coda's own sentence frame
+("…than it would at your … a year, …", which no span says) and planted the kind's old words to prove the count
+still sees it.
+
+A guard that finds a sentence kind by a phrase is a renderer of that kind's identity. When a phrase moves from one
+kind to many (a shared rider, a shared lead, a retyped label), re-key every guard that used it on something only
+that kind still says, and plant the kind's old words to prove the key bites.

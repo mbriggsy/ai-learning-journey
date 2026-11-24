@@ -3,7 +3,7 @@ title: A doctored dev fixture must survive the same fail-loud gates as an organi
 date: 2026-07-16
 phase: the state-carrying seed increment (post state-tax unit)
 modules: [src/ui/devSeeds.ts, src/engine/simulate.ts, src/ui/__tests__/devSeeds.test.ts]
-tags: [dev-seeds, aged-vault, doctorStaleVault, validateParams, priced-state, R19, fail-loud, fixtures]
+tags: [dev-seeds, aged-vault, doctorStaleVault, validateParams, priced-state, R19, fail-loud, fixtures, derived-witness, age-keyed-fields, retirementAge, survivor-gate]
 ---
 
 ## Problem
@@ -57,3 +57,15 @@ Any fixture factory that back-dates persisted payloads (migration test corpora, 
 tenants, replay archives); any dev/test writer of a shape the engine validates (`?seed=` drafts
 already have this via the auto-iterated validator arm — the doctors were the unpinned writer);
 future aged plants for units whose fields ship later than the plant's fabricated save date.
+
+## Extended (2026-11-23): a witness derived by changing only ages keeps the fields whose meaning depends on age
+
+A fixture can be wrong without any gate failing, when the engine accepts it as a different household. The survivor
+plan (b9-3) built its gate-off witnesses from `stillWorking` by changing only ages: a retired Sam aged 55 to 57. Those
+witnesses kept the seed's `retirementAge` of 58, so the engine would read Sam as still working, and Alex's possible
+death would open the very gate the witnesses existed to keep shut. The plan's builder reader caught it before a line
+was built (`wf_a95a1029-7d8`).
+
+The lesson: when deriving a witness from a seed, list every field whose meaning depends on age (the age a member stops
+working, birth year, claim age) and restate each one. Then confirm the witness is the household its name says, by
+reading the gate or state it is meant to land in, before relying on its result.

@@ -3,7 +3,7 @@ title: A live-updating region above interactive content shifts tap targets mid-g
 date: 2026-06-11
 phase: P2 (D1 — the account-level intake)
 modules: [intake]
-tags: [layout-shift, tap-target, race, answer-strip, e2e, playwright, mobile, calm-ui, scroll-anchoring, overflow-anchor, chromium, coordinate-tap, probe-geometry, tall-screen, blur-commit, gesture-hold, control-inside-the-change, keep-door, pay-check]
+tags: [layout-shift, tap-target, race, answer-strip, e2e, playwright, mobile, calm-ui, scroll-anchoring, overflow-anchor, chromium, coordinate-tap, probe-geometry, tall-screen, blur-commit, gesture-hold, control-inside-the-change, keep-door, pay-check, disclosure-close, survivor-fold, refiguring, async-answer, own-action]
 ---
 
 ## Problem
@@ -58,3 +58,14 @@ The note's own "Keep $84,000 a year" button lives INSIDE the note, so the same p
 A reserved box could not cure this, because the content has to change. So the cure holds it in time instead: `useGestureHold` (`src/intake/gestureHold.ts`) keeps the face drawing what it showed at the press until that press's click. A held button must act on what it shows. The door writes the $84,000 it names, because the live figure was already the blur's $7,000. That one value is an exception to insight 036's rule that a click handler reads the live state; everything else, including whether the door is offered, still reads live. After the cure, the four missed taps land 4 of 4 and the door keeps 4 of 4. Anchoring kept every tap on his screens before the hold existed, so never switch it off (`overflow-anchor: none`) above such a face.
 
 The lesson: when the platform already corrects a failure on most screens, a clean probe shows only that the correction worked where you looked. Pinning the target low was not enough: all 11 low taps on the shorter screens landed. Work out from how the correction works where it cannot reach (here, something above the change on screen with the target, which took a tall screen) and measure there. Write the geometry beside each verdict, and make it the test's floor, checked before the tap. The four tall `verify:fit` arms do this, and the panel arms run 100 px taller because the probe's screens left only 28 px of slack. And ask first whether the target can sit inside what changes: a correction that moves things cannot save a thing that is removed.
+
+## Extended (2026-11-23, the seat's plan): close a disclosure at the household's own action, never when the async answer lands
+
+The record card's seat council (`wf_2976a19c-c00`) ruled that an opened survivor fold "re-closes when a new FINAL answer
+lands". That would collapse about 125 to 132 px of opened fold seconds after a sheet's Apply, directly above the save
+slot's "Save changes", where the household's next tap is aimed: the same mid-gesture shift this insight is about, timed
+by the engine instead of a blur. It also misfires on identity, because the spine commits a byte-identical provisional and
+final under one `inputKey`. The plan (b9-2, C3 and KTD2) closes the fold when `refiguring` turns on, which lands in the
+same render as the edit (`recompute` notifies before its first `await`), so the fold closes as a direct result of the
+household's own act. Keys that fail: the view object, the answer object, and a key never cleared. A layout change that
+follows an async result arrives while the household's hand is moving; tie it to the household's action instead.

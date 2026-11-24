@@ -3,7 +3,7 @@ title: A fail-loud guard gated on its FIRST consumer silently fails to protect t
 date: 2026-06-10
 phase: P1·U3·M5 (the HSA spend-side)
 modules: [src/engine/taxOverlay.ts]
-tags: [fail-loud, guard, reference-identity, householdYears, hsa-owner, R19, both-layers]
+tags: [fail-loud, guard, reference-identity, householdYears, hsa-owner, R19, both-layers, transposition, named-object, positional-parameters, assignable-types, seam]
 ---
 
 ## Problem
@@ -52,3 +52,13 @@ Any cached/derived value gated on one feature flag and later read by a second fe
 `bracketFillCeilings` sibling found in the same review (frontline-gated only — the overlay
 consumer had no backstop); auth middleware applied per-route instead of per-resource;
 schema validators attached to one entry point of a multi-entry store.
+
+## Extended (2026-11-23): a structural rule stops at the seam it was written for
+
+The same blind spot, for a type-level rule. Build 2's KTD9 made `deriveStaleness`'s working-year input a named object,
+so its two facts could never be swapped. U13's first cut (b9-3) then gave `composeReentry` two adjacent nullable sentence
+parameters, and one sentence type is assignable to the other, so a swapped pair compiled clean and would have dropped
+the W sentence for its fallback. The review's adversary found it. The cure applied the rule one seam down:
+`composeReentry` takes one required named object (`ReentryAnswerSentences` in `src/ui/reentryChrome.ts`, every field
+required, never optional with a default). A no-transposition rule protects a pair of values, not a function: apply it
+at every seam the same pair crosses.

@@ -3,7 +3,7 @@ title: Single-sourcing by re-deriving a producer's INPUTS forks at its first ear
 date: 2026-07-10
 phase: Act 3 follow-up (the Medicare pricing unit — ultramode fold, wf_f185192f-11c)
 modules: [ui, intake]
-tags: [single-source, producer, early-return, disclosure, proxy, mutant, vacuous-witness, source-bind, medicare]
+tags: [single-source, producer, early-return, disclosure, proxy, mutant, vacuous-witness, source-bind, medicare, counterfactual-run, producer-write, weakmap-memo, two-lists, host-list, clause-host, core-carries-decision]
 ---
 
 ## Problem
@@ -59,3 +59,27 @@ defect. Plant the mutant first; a witness that never went red proves nothing.
   (structurally-zero assertions); 032 (the source-bind mechanism); 048 (undrivable render paths).
 - Any test harness whose mocks make a surface unconditionally absent: an absence assertion there
   is green under every defect — pair it with a planted-red proof or move the pin to a drivable seam.
+
+## Extended (2026-11-23): build 2's three cases (a counterfactual run, a list two hosts test against, a host nobody listed)
+
+The rule held three more times in build 2's copy, each in a new shape.
+
+- **A counterfactual run is read through the producer's own write.** The check sentence's figure at the quote is the
+  money picture of `writeConfirmedWorkingYearCost(d)`, the "Yes" tap's own write (`src/intake/workingYearQuote.ts`). A
+  re-derived S − (quote − W) would drift from R8's cap. The cost: the re-confirmed draft is a fresh object, so the
+  picture's own memo misses on every render, and `checkAtQuoteMemo` (a WeakMap keyed on the SOURCE draft, in
+  `src/intake/workingYearLeftOver.ts`) carries it.
+- **Two lists for one test drift.** Keep's condition on the W row (`workingYearCostKeepCondition`) tested a typed
+  figure against a list of costs with no state income tax, while the Result door's list under the same $6,000 test had
+  it, so a Pennsylvania household following the W row kept a figure about $4,600 too low (every working year $2,100
+  cheaper). Two review lenses found it independently (L1-4, L3-1), refuter-measured; `360bea64` made the two lists one
+  function (`workingCostHelpCountItems` in `src/ui/copy.ts`).
+- **A fix that names its hosts misses the host nobody listed.** The walk-6 round review prescribed the moved left over's
+  pair fix for two hosts (the Result's slot clause and the gate's moved line). The same words also ride a fired rules
+  line as its clause (`leftOverClauseHost` on the Result, `composeReentry`'s clause host on the gate), and R1's refuter
+  had called that host clean from the typed line alone. b9-5 (`5f96411d`) put the basis on the core every host already
+  reads (`WorkingYearLeftOverMoved.typedBelow`, the typed-below line's own predicate), so all three followed with no call
+  site changed; mutants P1 to P4 proved it.
+
+**What the three add:** a host list in a prescription is a claim, and so is "these two lists say the same thing". Put
+the decision, and the list a test reads, in the one core every host reads; then a host nobody named still follows.

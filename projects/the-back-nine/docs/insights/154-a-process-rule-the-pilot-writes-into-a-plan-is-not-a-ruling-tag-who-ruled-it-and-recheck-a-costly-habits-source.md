@@ -3,7 +3,7 @@ title: A process rule the pilot writes into a plan is not a ruling, and nothing 
 date: 2026-11-22
 phase: The RightCapital mandate (the test-cadence ruling, 2026-11-22)
 modules: [docs/plans/, CLAUDE.md, .github/workflows/]
-tags: [process, rulings, who-ruled, habit, test-cadence, ci, plan-rules, provenance, briggsy-good, owner-call, design-ceiling, open-question, plain-numbers]
+tags: [process, rulings, who-ruled, habit, test-cadence, ci, plan-rules, provenance, briggsy-good, owner-call, design-ceiling, open-question, plain-numbers, ruling-scope, refuter-split, queue-approval, tier-sweep]
 ---
 
 ## Problem
@@ -49,3 +49,11 @@ bound ruled by councils before anyone asked whose household it was for:** two co
 engine's largest number; he overrode it in one message ("we don't need to solve for extremes"), once the absurd member
 was in front of him in plain numbers ($83 billion a month). A reading that changes a class's axis, or a bound on what
 the app must hold, is a question for him, never an assumption, and it goes to him in plain numbers.
+
+## Extended (2026-11-23): refuters who split on whether a ruling exists have found a call that is still his
+
+In the 2026-10-31 register-wide tier sweep, two refuters judging the same entries split on authority, not on facts.
+One read D7 plus his "yep, seems right" on the queue as ruling the entries' dependents; the other read a queue approval
+as ruling the ORDER only. Neither side could be proven from the record, because the record never said. Asked in plain
+words, he ruled in one answer and both entries moved. When readers disagree about whether a ruling covers a case, that
+disagreement is the finding: the call is still his, so ask; never pick the side that lets the work go on.

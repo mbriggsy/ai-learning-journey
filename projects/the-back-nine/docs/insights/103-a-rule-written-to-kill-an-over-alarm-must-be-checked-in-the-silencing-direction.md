@@ -3,7 +3,7 @@ title: A rule written to kill an over-alarm must be checked in the silencing dir
 date: 2026-07-25
 phase: Act-4 · U17 S4 (the exposure-gated action-warning register)
 modules: [src/store/staleness.ts, src/ui/stalenessExposure.ts, src/intake/intakeMap.ts]
-tags: [alarm-when-fine, silent-stale, exposure-gate, vintage-stamp, producers-output, calm-but-wrong, pilot-ruling, new-control, both-directions, keep-door]
+tags: [alarm-when-fine, silent-stale, exposure-gate, vintage-stamp, producers-output, calm-but-wrong, pilot-ruling, new-control, both-directions, keep-door, harmless-misread, refuter, literal-act, retype, scope-clause, rosy-over-confusing, park-the-words]
 ---
 
 ## Problem
@@ -89,3 +89,19 @@ visible action, opened its mirror: a one-tap keep BELOW today's spending where s
 (the door shows only at or above the quote) came from the second panel's first-look seat, not the chair. A control is
 a rule a reader applies: re-read every new control in BOTH directions of the quantity it moves, the same way this
 insight checks a suppression rule in its silencing direction.
+
+## Extended (2026-11-23): a "harmless" rating and a scope clause each have a rosy direction too
+
+Two copy cases where the cure for one problem was judged only in its own direction:
+
+- **A refuter's "it's the household's own number (D7)" can hide the rosy path (b9-5, 2026-11-09).** N3's refuter
+  rated typing $84,000 by hand into W as harmless: the household gave the number, so the tool uses it. The council's
+  red team traced what that retype does in the code: it clears the stale line for good and credits the whole
+  $16,985 (filed Tier 0, the register's retype entry). "Harmless" is a claim in the silencing direction. Before
+  rating a misread harmless, trace what the reader's literal act does in the code.
+- **A scope clause added to cure one misread can mint a rosier one (b9-10, 2026-09-27).** "On your drug plan" was
+  added to stop one misreading of the Part D surcharge, and read as escaping the charge on a $0 plan. Allow one
+  refinement, then park the words, with every draft, as the brief for whoever takes it next. Rosy outranks confusing:
+  revert to the confusing-but-not-rosy wording rather than ship the rosier cure.
+
+Both are this insight's move: when a fix quiets one reading, construct the worst reading it newly allows.

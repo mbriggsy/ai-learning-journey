@@ -3,7 +3,7 @@ title: A reconciliation invariant with MANY input-writers isn't closed by fencin
 date: 2026-07-02
 phase: P3·U9b (the budget UI ultramode review)
 modules: [src/intake/questions.tsx, src/budget/budgetToSpending.ts, src/store/memoryModel.ts]
-tags: [reconciliation-invariant, second-writer, calm-but-wrong, ultramode-review, whole-file-review, insight-020-shape, build-gate-1]
+tags: [reconciliation-invariant, second-writer, calm-but-wrong, ultramode-review, whole-file-review, insight-020-shape, build-gate-1, staleness-stamp, object-rebuild, keep-door, re-mint]
 ---
 
 ## Problem
@@ -54,3 +54,13 @@ code is UNCHANGED by the feature — only its relationship to the new invariant 
 - U10's conversion/sequencing levers if they add a second input to any reconciled display scalar.
 - The reverse: adding an input to an existing invariant (U9a's M injection) silently promotes every
   pre-existing editor of that input into a writer that now must reconcile.
+
+## Extended (2026-11-23): a stamp riding an object is undone by every writer that rebuilds the object
+
+The same enumeration applies to a mark, not only an equality. The pay check's Keep fix stamped a kept W figure so it
+could go stale when its quote moved. The fix's first draft still let the Keep door offer Keep on a stale kept figure,
+and one tap re-minted the answer object without the stamp, so the staleness vanished (two deepen lenses found it
+independently, `wf_a6429110-d52`). A stamp lives on the object it rides, so every writer that rebuilds that object is a
+writer of the stamp. Audit them all, plus the door's own visibility rule (whether the door that rebuilds the object
+should be offered at all in that state). The period control's round trip ([[144]]'s 2026-11-23 extension) is the same
+hole through a different writer.

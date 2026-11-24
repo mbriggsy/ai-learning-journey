@@ -3,7 +3,7 @@ title: A gate reading a render-closure snapshot validates one commit stale when 
 date: 2026-06-11
 phase: P2 (D1 — the account-level intake)
 modules: [intake, store]
-tags: [react, stale-closure, blur, validation, race, useSyncExternalStore, event-order, gesture-hold, held-display, gate-inputs, keep-door, ruling-34, calm-but-wrong, payload-vs-permission]
+tags: [react, stale-closure, blur, validation, race, useSyncExternalStore, event-order, gesture-hold, held-display, gate-inputs, keep-door, ruling-34, calm-but-wrong, payload-vs-permission, docblock-claim, partial-hold, lost-tap]
 ---
 
 ## Problem
@@ -66,3 +66,17 @@ The press that blurred spending is the same press the hold exists for. So "hold 
 Pinned by unit test P5 ("a commit from ANOTHER row under the same press re-gates the door at once: spending raised past $84,000, the keep is withheld"). Mutant M8 (the note holds the whole draft again) turns exactly P5 red (`b9-h2-cure\PREDICTIONS.md`).
 
 The law is this insight's, seen from the other side. A hold is a render snapshot on purpose. Hold what the screen draws, and inside a region that holds a control, hold only the value that region's own commit writes. The control acts on the value it NAMES. Whether it may act is judged on that value against the LIVE rest of the state. Hold everything only where nothing can be pressed. (Insight 072's law, that a display hold may never show the rosier side, is the sibling: a hold must never be the way a rosier answer gets through.)
+
+## Extended (2026-11-23): a hold's docblock must name what the hold does NOT cover
+
+Build 2's go-live held the left-over seat and the money picture above it under the seat's own press, and its docblock
+said the seat "cannot move under its own press". That was false. The W question sits between the held picture and the
+seat, and it drew from the live draft: a seat press whose blur committed a W below the out-of-pocket medical figure, or
+a refused figure, mounted a note or an error above the seat, and the seat moved under the finger. Three review lenses
+found it independently, and jsdom measured the mounts. The press is lost, never misdirected (the write re-checks R5's
+gate), so it is a lost tap, not a wrong figure; the fix is filed for build 2's U12 in `TODO.md` as (g): draw that note
+off the held face and hold its figure errors until the hold lets go, gated by an e2e coordinate tap.
+
+The lesson is about the claim, not the hold. A hold covers part of a column, and its docblock reads as a guarantee
+for the whole column. When a hold covers part of a column, list every live part between the held content and the held
+control, and write the docblock as what is held plus what is not.

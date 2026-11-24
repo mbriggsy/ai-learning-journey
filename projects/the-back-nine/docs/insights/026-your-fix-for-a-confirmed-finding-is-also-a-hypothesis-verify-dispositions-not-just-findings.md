@@ -3,7 +3,7 @@ title: Your FIX for a confirmed finding is also a hypothesis — adversarial ver
 date: 2026-06-10
 phase: P1 (C3 — the date-search boundary review)
 modules: [engine/simulate, engine/dateSearch, workflow/review-cadence]
-tags: [review-cadence, adversarial-verify, dispositions, fix-direction, over-rejection, insight-005]
+tags: [review-cadence, adversarial-verify, dispositions, fix-direction, over-rejection, insight-005, expected-text-update, predict-the-words, keep-stamp, laundering-path]
 ---
 
 ## Problem
@@ -53,3 +53,16 @@ shoehorned into one of the wrong buckets.
 - Any "decide-then-execute" fork where the main loop picks among reviewer-proposed
   fixes — the pick itself is the highest-leverage thing to refute.
 - Plan-amendment dispositions (document vs fix vs reject) after doc reviews.
+
+## Extended (2026-11-23): an expected-text update after a behavior change is a fix, so predict its words first
+
+When a behavior change forces a test's expected words to change, the new expected text is a disposition too, and
+"just update the expected text" is where a defect hides. In build 2's U13 (b9-3), the re-entry gate's Keep arm had to
+change its row. The words were predicted before the run: "the figure you kept". Had the run printed "your own figure",
+that would have meant typing a figure and then pressing Keep strips the keep stamp. A stale kept figure would then come
+back as a typed one, fresh forever, and the stale check would never fire again. The prediction made that a red
+instead of a quiet re-pin.
+
+The lesson: before running a test whose expected text a change forces to move, write down every word the new run
+should print, and say what each different word would mean. Read the run against the prediction. A mismatch is a
+finding, not a fixture to update.

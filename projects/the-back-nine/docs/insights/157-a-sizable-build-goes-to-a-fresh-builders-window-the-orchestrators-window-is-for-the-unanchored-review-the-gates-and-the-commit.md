@@ -3,7 +3,7 @@ title: A sizable build goes to a fresh builder's window; the orchestrator's wind
 date: 2026-11-23
 phase: Build 2's walk-9 spec (b9-2, 2026-11-20) and the workbench's U7 review fixes (b9-1, 2026-11-23)
 modules: [docs/plans/, src/ui/workbench/]
-tags: [context-window, builder-agent, orchestrator, delegation, review-fixes, verify-dont-trust, window-budget, handoff]
+tags: [context-window, builder-agent, orchestrator, delegation, review-fixes, verify-dont-trust, window-budget, handoff, parallel-forks, file-ownership, fork-brief]
 ---
 
 ## Problem
@@ -39,3 +39,14 @@ A builder's "all green" is a report, never a gate result, until the orchestrator
 - Coupled fixes across the same files: one builder, sequential, never parallel builders on one tree (they leave
   cross-file fallout each flags and neither fixes).
 - Any new assertion a builder wrote but never ran: plant one fault before trusting it.
+
+## Extended (2026-11-23): parallel builders work when each owns a file list and none runs a shared gate
+
+The "never parallel builders on one tree" line above holds for fixes coupled across the same files. Work that splits
+cleanly by file can go wide. For the typed-below rebuild's commit 3 (b9-1, `c8fd5bc8`, 45 files), the parent kept `src` and
+every gate, and four forks each owned an explicit file list (the unit tests, copyGuard, the e2e specs, the docs) and
+were forbidden the suite, `verify:fit` and the sweep while siblings ran. They built the tests, specs and docs in about
+20 minutes without one conflict, and the parent's window held near 43% through the build. A fork inherits the whole
+context, so its brief names only its files and the pilot's calls. The split is by file ownership, and the shared gates
+stay with the orchestrator ([[083]]: agents in one tree couple through the tree, so a gate run by one lane reads
+another lane's half-written files).

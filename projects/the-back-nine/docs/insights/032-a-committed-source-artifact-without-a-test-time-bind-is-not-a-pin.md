@@ -3,7 +3,7 @@ title: A committed source artifact without a test-time bind is not a pin — int
 date: 2026-06-11
 phase: P1-exit pin pass
 modules: [engine/reference/mortality, engine/reference/damodaranSeries, engine/__tests__]
-tags: [insight-021, full-vector-pin, source-bind, mutation-survival, transcribed-data, adversary]
+tags: [insight-021, full-vector-pin, source-bind, mutation-survival, transcribed-data, adversary, probe-constant, self-compare, computed-not-typed, runDateSearch]
 ---
 
 ## Problem
@@ -52,3 +52,17 @@ future per-birth-year mortality re-derivation, any WASM-era re-generation of
 vendored series, and constants transcribed from PDFs (the JLLS grid's
 cross-table identities are a strong bind; weaker tables should get the
 re-derivation form).
+
+## Extended (2026-11-23): a figure copied in from a probe outside the repo is compared with itself
+
+The same rule holds for a single figure. The typed-below rebuild's crowned household (`CROWNED_401K`,
+`src/intake/__tests__/typedBelowWitnesses.ts`) is TM's seed with Alex's 401(k) raised so the date route crowns a stop
+inside the window. Its test first carried "crown 7", a number an out-of-repo probe had printed, typed into the test and
+then compared with the same typed constant, so it pinned nothing. Its comment said a unit test runs no date search, and
+that was false: `src/ui/__tests__/devSeeds.test.ts` already calls `runDateSearch`. Review round 1 found both (#2 and #8,
+b9-1). The test now runs the date search on both tiers, asserts the crown it gets back, and builds the candidate from
+the offset the final tier RETURNED (`src/engine/__tests__/workingYearCredit.test.ts`), so a crown that moves takes the
+check with it.
+
+The lesson: before typing a figure that a test could compute, search the sibling tests for one that already computes
+it. A typed number from a probe is a transcription, and a transcription with no bind to its source is not a pin.

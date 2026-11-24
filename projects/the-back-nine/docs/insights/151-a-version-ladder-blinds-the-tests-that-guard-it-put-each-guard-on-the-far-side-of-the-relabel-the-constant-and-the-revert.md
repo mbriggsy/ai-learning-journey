@@ -3,7 +3,7 @@ title: "A schema version ladder blinds the tests that guard it: once the codec r
 date: 2026-10-31
 phase: the schema-v4 bump — b9-2 plan (KTD1–KTD8), b9-3 build (`c2864eb9`, `9b0ef9db`), b9-4 whole-file review `wf_edc27bef-48a` and mutant pass (`bb26cbca`, `1fb8b25e`)
 modules: [src/shared/scenarioCodec.ts, src/shared/model.ts, src/ui/scenarioFromDraft.ts, src/shared/__tests__/scenarioCodec.test.ts, src/shared/__tests__/schemaVersionFloor.test.ts, src/shared/__tests__/fixtures/scenario-v3-date-prew.json, src/shared/__tests__/fixtures/scenario-v3-date-postw.json, src/ui/__tests__/scenarioFromDraft.test.ts, src/store/__tests__/session.test.ts, src/store/__tests__/backup.test.ts, src/ui/__tests__/IntakeApp.test.tsx, docs/architecture.md]
-tags: [schema-version, version-ladder, relabel, migration, one-way-door, git-revert, revert-guard, version-floor, module-namespace, frozen-fixture, DND-012, old-build-oracle, raw-bytes, vacuous-test, equivalent-mutant, typecheck-guard, derived-pin, older-reader, newer-reader, tolerant-reader, persisted-schema, codec]
+tags: [schema-version, version-ladder, relabel, migration, one-way-door, git-revert, revert-guard, version-floor, module-namespace, frozen-fixture, DND-012, old-build-oracle, raw-bytes, vacuous-test, equivalent-mutant, typecheck-guard, derived-pin, older-reader, newer-reader, tolerant-reader, persisted-schema, codec, real-revert-plant, revert-conflict, floor-proof]
 ---
 
 ## Problem
@@ -61,3 +61,24 @@ Sometimes nothing can stand on the far side: a step naming "current" while the s
 - [[076]] — a check strengthened downstream narrows a promise upstream. Here the promise is "reads version 3 forever".
 - [[126]] — write each mutant's kill set before the run. M7 and M8 were predicted equivalent, so their 0 reds read as known limits, not as passes.
 - [[148]] — the frozen `git archive` copy, here pointed at old builds instead of HEAD.
+
+## Extended (2026-11-23): plant the revert itself, not only its shape
+
+M16 above planted a revert's SHAPE: the constant deleted by hand. The next bump's floor proof went one step further, and
+the extra step was the one that counted. When U10 (b9-4, 2026-11-08) raised `FLOOR` to 5 in its own commit after build
+2's go-live (`a9cacf22`, schema version 5), its predictions were written first and two plants were run:
+
+- **The constant planted back to 4.** It failed the tests that read the constant plus the floor test, which failed on
+  its own line. This proves the floor test reads the constant. It does not prove the test survives the event it exists
+  for.
+- **A whole `git revert` of the go-live, resolved, run in a copy.** The floor test was the only failure in 4,758 tests.
+  This proves the guard outlives the revert, because it sits in a later commit, names no symbol the revert deletes, and
+  fails on its own message.
+
+The real revert also showed something no hand-made plant could: `git revert a9cacf22` now stops on a conflict in
+`scenarioCodec.test.ts`, because U10's corrected note sits inside a go-live hunk. Anyone who needs to undo the bump
+will meet that conflict first.
+
+The lesson: a guard that exists for an event is proven by running that event. When the event is a revert, run the real
+revert in a copy, resolve it, and read which tests fail. A plant of its shape shows the guard's logic. Only the real
+revert shows that the guard is still in the tree afterwards, and what else the revert drags along.

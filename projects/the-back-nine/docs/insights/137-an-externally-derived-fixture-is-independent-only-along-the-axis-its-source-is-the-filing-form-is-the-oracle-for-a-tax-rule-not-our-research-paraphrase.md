@@ -3,7 +3,7 @@ title: "An 'externally derived' fixture is independent only along the axis its S
 date: 2026-09-25
 phase: Act 4 hardening (the frozen-nominal Tier 0 — the senior bonus's per-person phase-out, found by that build's statute check)
 modules: [src/engine/taxCore.ts, src/engine/constants/tax.ts, src/engine/__tests__/taxOverlay.test.ts, src/engine/__tests__/magiLandscape.test.ts, src/engine/constants/__tests__/constants.shape.test.ts, docs/research/engine-validation-and-tax.md]
-tags: [dnd-012, externally-derived, fixtures, oracle-independence, primary-source, irs-forms, senior-bonus, obbba, phase-out, calm-but-wrong, rosy-direction, landmine-comments, no-oracle-claim, poms-underline, self-referential-oracle, ties]
+tags: [dnd-012, externally-derived, fixtures, oracle-independence, primary-source, irs-forms, senior-bonus, obbba, phase-out, calm-but-wrong, rosy-direction, landmine-comments, no-oracle-claim, poms-underline, self-referential-oracle, ties, publisher, one-witness, library-of-congress, aca, presentment, corroboration]
 ---
 
 ## Problem
@@ -79,3 +79,12 @@ against the primary before it becomes a pin.
   rule: say what it pins (the composition) and pin the rest by hand goldens. And count a chart row "reached" only on
   strictly ordered amounts — a $0 PIA ties all three, so it reaches every row and proves none. Both were
   mutant-proven.
+
+## Extended (2026-11-23): count independence by publisher, never by URL
+
+The same "one witness counted twice" error, for a law's status rather than a rule. The 2026-11-12 ACA laws check
+called the empty presentment feed "corroborated" by govinfo's BILLSTATUS. Its refuter showed both are Library of
+Congress data with the same one-day lag, so they were one witness. The gap stayed open until three independent
+publishers closed it: the House Clerk, the Senate vote menu and whitehouse.gov (`wf_d2a279ae-84b`; the record's
+`nothingEnactedChain`). Two URLs from one provider share that provider's errors and its lag, so count sources by who
+publishes the data, not by how many addresses serve it.

@@ -3,7 +3,7 @@ title: "A ratified MECHANISM is still a premise: the primary's own table outrank
 date: 2026-07-19
 phase: Act 4 (solver & recommendation)
 modules: []
-tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+tags: [council, ratified-mechanism, premise, primary-source, part-d, irmaa, formula-reset, verbatim-table, probe-at-quoted-figure, clerk, proxy]
 ---
 
 # 098 — A ratified MECHANISM is still a premise: the primary's own table outranks the council's guessed scaling (and only per-figure verbatim consumption survives a formula reset)
@@ -55,3 +55,11 @@ only the guessed mechanics moved.
 **Also applies to:** any constants family where a council/plan names a derivation shape before
 the primary is fully transcribed; tax provisions with scheduled formula changes (the IRMAA
 top-tier 2028 re-index; bracket-methodology changes); any "scale the old table forward" refresh.
+
+## Extended (2026-11-23): a council's own figure is a premise too, so probe the engine at the quoted figure
+
+The same law reaches past a source's structure to a council's working numbers. In the 2026-09-26 trim clause's
+council, a proxy figure read as honest to all eight machine seats; the clerk's first engine run at the quoted figure
+showed it off by about 2×. Every seat had argued the clause's words from a number nobody had run. A council can settle
+the words; only the engine can settle the figure they describe. Run the engine at the figure a draft quotes before the
+words are debated ([[163]] makes the same point for a walk seat's or an adversary's figure).

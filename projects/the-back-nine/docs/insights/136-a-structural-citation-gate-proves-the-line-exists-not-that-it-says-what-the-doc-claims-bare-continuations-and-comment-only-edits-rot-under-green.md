@@ -3,7 +3,7 @@ title: A structural citation gate proves the cited LINE exists, not that it says
 date: 2026-09-25
 phase: post-Act-4 hardening (the 2026-09-24/25 doc audit)
 modules: [scripts/verify-doc-stats.ts, scripts/reanchor-citations.mjs, docs/**]
-tags: [doc-stats, citations, re-anchor, semantic-vs-structural, gates-that-dont-bite, doc-audit, pure-shift, wrong-before-the-edit, frozen-dated-number, then-marker, history-rewrite]
+tags: [doc-stats, citations, re-anchor, semantic-vs-structural, gates-that-dont-bite, doc-audit, pure-shift, wrong-before-the-edit, frozen-dated-number, then-marker, history-rewrite, range-diff-at-anchor-commit, bare-token-attribution, quoted-number, tier-reference, register-move, tierrefs]
 ---
 
 ## Problem
@@ -54,3 +54,33 @@ This insight's own named citations were walked by re-anchor runs across sessions
 adding up; the held measurement record `e2e/held/fit-24px-measurements.md` moved the same way. Both were restored to
 the text each was written with and frozen with the tool's "(then)" marker (`8e204deb`). A dated record's numbers are
 history: freeze them when written, and never let a move tool touch them.
+
+## Extended (2026-11-23): the reader and the tool each guess in a known way, and a prose reference has no gate at all
+
+The Key Insight above makes the reader the semantic gate. Four later cases show how that reader, the re-anchor tool and
+the gate each go wrong, and one kind of reference nothing checks.
+
+- **A content-only read passes drift when today's lines still sound right.** In the anchor re-verification (`61c57ff5`),
+  six "correct" verdicts in one batch were wrong. The cited range still read plausibly, but it was no longer the thing
+  the sentence meant. The skeptic who caught them diffed each cited range against the tree at the last re-anchor
+  commit. If a range was a clean unit of code then (a whole function, a whole block) and starts or ends mid-construct
+  now, it has drifted, however well it reads.
+- **Attributing a bare token to the nearest file name is a guess.** In the 2026-09-10 fleet, the nearest earlier named
+  citation on the same line was the WRONG file for 70 of 287 bare tokens, because the sentence named another file in
+  prose between them. `scripts/reanchor-citations.mjs` (its `LAST_FILE`) and doc-stats arm 4 both attribute this way,
+  so a verifier has to check each bare token's file, not take it from the tool.
+- **The tool reads a quoted historical number as a live citation.** b9-10's `pnpm doc:reanchor d5c549d7` proposed moving
+  a TODO line number that `docs/landmines.md` quotes as a past example, by +5, because TODO.md had changed between the
+  base and the tree. The dry run caught it, classified by the cited content, and the file was restored from HEAD. It
+  happened again at b9-4's U2 (`5d3c7d81`): a two-line TODO deletion shifted the same quoted number on apply, and it was
+  reverted by hand. In the same run, `scripts/check-citation-pairs.mjs` skipped TODO.md entirely because its line count
+  had changed ("pair by hand"). That hid five bare tokens the tool had missed on one TODO line, and arm 4 flagged only
+  the one that landed on a blank line. Take the re-anchor base AFTER any doc-only commit, freeze quoted numbers with
+  "(then)", and pair a skipped file by hand.
+- **A prose reference to a register entry ("Tier N *Title*") goes stale on every move, and no gate sees it.** The
+  2026-10-31 tier sweep moved entries between tiers and left 11 live references naming the old tier, across the
+  register, `docs/architecture.md` and `docs/roadmap.md`. Arm 4 checks line numbers only. A scan written in the sweep's
+  session folder (`tierrefs.mjs`) found them, and `docs/landmines.md` (Citations and the doc gates) now says to run it
+  after any register move. That tool never moved into the repo, which insight 156 says it must before a step can rely
+  on it. A reference is a claim with two halves wherever it points, a line or a register title, and each half needs its
+  own check.

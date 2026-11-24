@@ -3,7 +3,7 @@ title: A NEW fail-loud guard deep in the engine retroactively narrows the upstre
 date: 2026-07-09
 phase: P3 (Act 3 · the senior-bonus sunset unit)
 modules: [engine/taxCore, engine/simulate]
-tags: [fail-loud, R19, validateParams, guard, contract, admission-predicate, sunset, review-fold]
+tags: [fail-loud, R19, validateParams, guard, contract, admission-predicate, sunset, review-fold, ui-seam, bare-catch, restore-failed, lockout, unreachable-by-construction]
 ---
 
 ## Problem
@@ -52,3 +52,15 @@ rework STRENGTHENED a downstream check and the upstream promise lagged.
   store-side refusal needs the codec swept.
 - The worker boundary: a new throw in `engineProtocol.run`'s callees vs the
   wire-level validation.
+
+## Extended (2026-11-23): in a UI seam, ask where the throw lands
+
+The same contract question at the UI layer, where there is no calm-refusal gate to sweep. U13 (b9-3) gave
+`composeReentry` a fail-loud throw for a wiring fault: the stored report says the left over moved, but no sentence was
+passed for it. Traced, that throw lands in `IntakeApp`'s bare catch, which shows the restore-failed face, and since the
+gate runs on every reload, a household hitting it would be locked out of its own plan. The plan's defence, "the pair
+cannot disagree while the caller is honest", was discipline, not structure. Obligation (f) made it structure: the
+caller computes the moved fact once (`leftOverMoved`, from the one hydrated draft) and both the report's fact and the
+gate's sentence read that one value, so the throw is unreachable by construction. Before adding a fail-loud throw in a
+UI seam, follow it to the catch that receives it and name what the household sees; if that is a lockout, make the
+disagreement impossible rather than loud.

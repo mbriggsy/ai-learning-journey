@@ -3,7 +3,7 @@ title: A guard shipped on the sibling path indicts the unguarded primary — and
 date: 2026-07-22
 phase: U16 recommendation surface (ultramode fold)
 modules: [src/ui/recommendationView.ts, src/ui/money.ts]
-tags: [held-out-split, seed-B, inversion, guard-asymmetry, sibling-sweep, display-gate, calm-but-wrong]
+tags: [held-out-split, seed-B, inversion, guard-asymmetry, sibling-sweep, display-gate, calm-but-wrong, component-family, aria-disabled, aria-describedby, blocked-apply, state-style]
 ---
 
 ## Problem
@@ -52,3 +52,14 @@ Any A-decides/B-displays surface (every future solver render); the fan/band rend
 if a derived caption ever claims a direction; any place a `format*` result is
 asserted positive by the surrounding copy — the "$0 more" class recurs wherever a
 gate checks the model and the copy shows the formatter.
+
+## Extended (2026-11-23): a style aimed at a component family must key on the rendered reason
+
+The display-gate rule holds for a look as much as for a figure. A blocked-Apply look (the primary button styled as
+"cannot commit") was written for the control sheets that block Apply for a stated reason, and aimed at the whole family
+by `aria-disabled` alone. Two members arrive disabled for a different reason: `HealthcareSheet` opens with the picked
+option equal to the applied one, and `RothLever` opens on an empty plan. Both got a loud "cannot commit" with no
+sentence beside it, which is worse than a quiet disabled button. The look now keys on the rendered reason: the selector
+requires `aria-describedby` as well (`.control-sheet__actions .btn-primary[aria-disabled='true'][aria-describedby]` in
+`src/intake/controls.css`, whose comment reads "the look is earned by the words"). Key a family-wide state style on the
+fact the user is being told, never on a state flag members reach for different reasons.

@@ -3,7 +3,7 @@ title: A byte-identity guard over a SUM passes any reallocation — a CRN law mu
 date: 2026-07-18
 phase: Act 4 · the U14 ultramode-review fold
 modules: [src/engine/validation/rankingStability.ts]
-tags: [crn, byte-identity, conservation, presence-companion, insight-029, perturbation, solver, producer-omission-oracle, converse-pin]
+tags: [crn, byte-identity, conservation, presence-companion, insight-029, perturbation, solver, producer-omission-oracle, converse-pin, multi-site-write, destination-delta, zero-delta, asset-location, working-year-credit]
 ---
 
 ## Problem
@@ -62,3 +62,11 @@ checked every year the money picture named against the run, and could not see a 
 cross-check over only what a producer chose to report cannot catch what it left out. The converse pin — every year
 the RUN itself finds short is named (`devSeeds.test.ts`, "the producer-omission oracle") — closes it. For every
 "what we report is right" check, add "everything that should be reported is".
+
+## Extended (2026-11-23): a multi-site write tested only on its authoritative total passes with half its sites missing
+
+Build 2's working-year credit writes to several places in a year: the total moves through `stepYear`, and the credit
+also folds into a bucket and its cost basis. A test that reads only the total stays green with the bucket fold or the
+basis line dropped, and the miss shows up later as a quietly wrong asset location. Assert each destination's delta,
+and the zero deltas beside it (the buckets the credit must not touch). It is this insight's conservation trap at a
+write site: the total is the sum the corruption conserves.

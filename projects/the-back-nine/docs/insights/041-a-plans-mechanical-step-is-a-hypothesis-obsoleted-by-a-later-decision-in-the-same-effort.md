@@ -3,7 +3,7 @@ title: A plan's own mechanical step can be obsoleted by a decision made LATER in
 date: 2026-06-18
 phase: P2 (the doc-restructure close — M6 step 4/5)
 modules: [src/shared/model.ts, src/store/db.ts, docs/roadmap.md]
-tags: [doc-reconciliation, plan-staleness, ground-truth-first, restructure, blast-radius, deferred-obligation, code-comments, supersession, precedence]
+tags: [doc-reconciliation, plan-staleness, ground-truth-first, restructure, blast-radius, deferred-obligation, code-comments, supersession, precedence, constraint-reason, static-legend, mechanical-limit]
 ---
 
 ## Problem
@@ -28,3 +28,12 @@ A plan's mechanical-looking step is still a hypothesis — re-verify it against 
 - A premise-phrase grep for a superseded decision (018's method) must sweep CODE comments, not just docs — the doc-only sweep is *why* the siblings survived.
 - Any migration/refactor checklist that outlives a mid-effort design pivot: a "rename X→Y everywhere" item authored before Y's scheme was finalized.
 - Sibling: [[025]] (a plan's test scenario is a hypothesis), [[037]] (the orchestrator's own finding is a hypothesis) — the "a plan's X is a hypothesis, verify before acting" family.
+
+## Extended (2026-11-23): a constraint binds by its reason, not its wording
+
+Walk 5's round (b9-8) wanted the W fork's question to name the figure "Yes" sets, and build 2's KTD17 said the legend
+was "static". It read like a design rule. The pay check's deepen had recorded the reason, and the reason was mechanical:
+`SegmentedControl` took only a catalog key for its legend. One optional prop removed it (the `legend` string beside
+`legendKey` in `src/intake/fields.tsx`, fed by `slots.workingCostLegendFigure`), and the question now names the figure.
+Before obeying a constraint a plan states, find why it exists. A limit of today's component is a build item; only a
+reason about the household binds. See also [[164]] (a plan fails on what its sentences imply).

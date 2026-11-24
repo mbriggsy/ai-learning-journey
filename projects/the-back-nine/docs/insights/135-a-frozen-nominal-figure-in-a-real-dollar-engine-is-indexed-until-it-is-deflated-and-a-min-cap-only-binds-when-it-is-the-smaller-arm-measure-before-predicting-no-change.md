@@ -3,7 +3,7 @@ title: "A frozen NOMINAL figure in a REAL-dollar engine is INDEXED until it is d
 date: 2026-09-24
 phase: Act 4 hardening (the Social Security-thresholds Tier 0 — filed by a scout, built the same day)
 modules: [src/engine/priceIndex.ts, src/engine/taxCore.ts, src/engine/taxOverlay.ts, src/engine/magiLandscape.ts, src/engine/constants/tax.ts, src/engine/__tests__/ssThresholdDeflation.test.ts, src/ui/devSeeds.ts]
-tags: [real-vs-nominal, frozen-thresholds, social-security, section-86, price-index, cpi, calm-but-wrong, rosy-direction, measure-first, min-cap, dev-seeds, re-tune-precedent]
+tags: [real-vs-nominal, frozen-thresholds, social-security, section-86, price-index, cpi, calm-but-wrong, rosy-direction, measure-first, min-cap, dev-seeds, re-tune-precedent, mutant-prediction, kill-set, binding-arm, witness]
 ---
 
 ## Problem
@@ -83,3 +83,12 @@ figures other pins quote (the IRA moves the verdict; spending would move the hea
   tiers 1–4 still run one CPI year low (insight 138, register open). *(Fixed 2026-09-27, `252b88da`: tiers 1–4 now
   carry the growth from their base August (August of the pinned schedule's bill year − 1, `schedule.billYear − 1`)
   through the unclamped `priceIndex.cpiGrowth`, so they no longer run a CPI year low — insight 138; register CLOSED.)*
+
+## Extended (2026-11-23): a mutant's prediction on one term of a `min` must read, per witness, which term binds there
+
+The binding-arm question decides kill sets too. In the typed-below rebuild's U3 (b9-10), mutant M6 moved this
+answer's cap to year 0 at the QUOTE. It was predicted red on the whole household and silent on the drift household,
+and it was the reverse. On the whole household the stored $16,985 binds, below the quote's year-0 $20,985, so moving
+the year-0 term changed nothing. On the drift household the stored $26,985 sits above the quote's $20,985, so the
+moved term bound there and the arm redded. Before predicting which arms a plant on one term of a `min` or `max` reds,
+write down each witness's two arms and which one is smaller there.

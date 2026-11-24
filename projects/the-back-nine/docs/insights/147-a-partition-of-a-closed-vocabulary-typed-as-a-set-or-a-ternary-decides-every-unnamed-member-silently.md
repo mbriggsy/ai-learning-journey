@@ -3,7 +3,7 @@ title: "A partition of a closed vocabulary typed as a Set or a ternary decides e
 date: 2026-10-31
 phase: the pay check's whole-file review (Phase C, b9-9) — advisory a3, findings c6 / c7, rulings 41 and 42
 modules: [src/ui/assumptionRegistry.ts, src/intake/WorkingYearLedger.tsx]
-tags: [typescript, exhaustive, record, partition, vocabulary, set-membership, ternary, default-arm, copy-selection, compile-time]
+tags: [typescript, exhaustive, record, partition, vocabulary, set-membership, ternary, default-arm, copy-selection, compile-time, sign-partition, tie, zero, percentile, fan-place, slotOf, stop-line]
 ---
 
 ## Problem
@@ -46,3 +46,19 @@ source text lists fewer members than the type has.
   orphan a compile error.
 - [[081]] — a mirror that re-derives a producer's inputs forks at its first early return; two hand-typed partitions
   of one vocabulary are two mirrors.
+
+## Extended (2026-11-23): a numeric comparison is a closed vocabulary too, and its unnamed member is the tie
+
+The same silent decision happens with no type in sight, wherever code sorts a number into words by its sign or its
+place:
+- **Signs.** A working year's figure is short, exactly zero, or left over. Year 0 at exactly $0 is neither short nor
+  left over, and folding it into `firstShort` printed "comes up $0 short" (mutant E6, `workingYearLeftOver.ts`). The
+  partition had three members and the code named two. ([[146]]'s zero grain decides what "exactly zero" means.)
+- **Places against a fan.** The first run of `scripts/measure-one-future.ts` (b9-8, U4's measurement) printed 141 stop
+  lines saying the rough future sat above the middle line. Every one was $0 against a band whose percentiles were all
+  $0 (the futures out of money), placed "over p90" by strict less-than slots. A total equal to a percentile sits at
+  it, and a year where the run and the middle line are both $0 is counted apart (`slotOf`, `tiedAtZero`).
+
+**Rule:** when a comparison turns a number into words, list its members, the tie and the zero included, and put the
+tie rule in the slot function itself, never in the reader. Before believing a stop line or a printed place, read the
+numbers it was computed from.

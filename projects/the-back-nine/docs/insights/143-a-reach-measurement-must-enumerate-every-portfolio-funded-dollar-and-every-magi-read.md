@@ -3,7 +3,7 @@ title: "A reach measurement must enumerate EVERY portfolio-funded dollar and EVE
 date: 2026-10-21
 phase: the working-year tax floor (B) — U4, the measurement (b9-6)
 modules: [src/engine/simulate.ts, src/engine/taxOverlay.ts, src/engine/healthOverlay.ts, docs/plans/features/working-year-tax-floor-build-spec.md]
-tags: [reach, measurement, enumerate, channels, irmaa, medicare, social-security, working-year-clamp, register-claim, prediction, changed-function-domain, outputs-vs-function]
+tags: [reach, measurement, enumerate, channels, irmaa, medicare, social-security, working-year-clamp, register-claim, prediction, changed-function-domain, outputs-vs-function, additive-sum, irmaa-magi-history, fundingNet, gross-vs-net, hsa, stop-condition, proof-households]
 ---
 
 ## Problem
@@ -59,3 +59,25 @@ Two later cases, one level down from this insight's consumers:
 **Rule:** before predicting where a result goes, ask which inputs the new mechanism can touch at all; then enumerate
 the changed function's own domain (every seed, every drawable branch), never infer reach from whom the change is
 "for", and keep "the function moved" apart from "an output moved".
+
+## Extended (2026-11-23): a channel is closed only when every term of its sum is read, and a proof's households must carry every channel it names
+
+Three cases from build 2's typed-below line:
+- **One term of an additive sum read, the others skipped.** The survivor council's angle (1) cleared IRMAA because the
+  working-year MAGI override is the same for both answers. But the IRMAA-MAGI history write is additive: it records
+  the override plus the MAGI the computed gross-up adds (`taxOverlay.ts`, `irmaaMagiHistory`), and that second term
+  differs between answers. The plan's spec-flow pass caught it (b9-3). The coda held for a different reason: no living
+  member is Medicare-enrolled in a survivor working year. The all-alive half went to the register.
+- **Equal net is not equal gross.** Two answers' draws can match on `fundingNet` (draws net of income tax) while their
+  income tax differs. The account mix that earlier credits and shortfalls left behind prices a later year's tax on the
+  same draw: the quote's run pays more tax on the Medicare premium, about $76–$182 a year on TM and $1,639 under
+  taxable-first. The survivor proof and round 3's sweeps all read `fundingNet` and saw a residual of $0; only a
+  per-year tax compare found it (b9-5, round 3's T).
+- **An identity proved on households that lack a channel proves nothing about that channel.** U1's `fundingNet`
+  identity held on 17 runs, none with an HSA, and would have redded on the first one: the HSA pays the surcharge
+  outside `fundingNet`. The council's red team rated it low. The chair made it blocking, because the plan's own stop
+  condition named an HSA that no run could trigger: a stop no run can trigger is no stop.
+
+**Rule:** before calling a channel closed, read every term of the sum that feeds it, not the one the two answers share.
+Name the gross, the net and the tax when one engine output stands in for a lean. And give every channel a proof's stop
+condition names at least one run that carries it.

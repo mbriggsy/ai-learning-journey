@@ -3,7 +3,7 @@ title: "Measure a change BEFORE making it, on a frozen `git archive` HEAD copy t
 date: 2026-10-31
 phase: the pay check's Phase C — U10's seed measurement (b9-6), the whole-file review's fix lanes (b9-9); the A6 byte-identity proof (b9-14)
 modules: [src/ui/devSeeds.ts, src/intake/workingYearQuote.ts]
-tags: [measurement, method, frozen-copy, git-archive, byte-identity, before-after, fix-lanes, parallel-agents, merge-file, junction]
+tags: [measurement, method, frozen-copy, git-archive, byte-identity, before-after, fix-lanes, parallel-agents, merge-file, junction, pure-refactor, verbatim-copy-in-test, seeded-sweep]
 ---
 
 ## Problem
@@ -49,6 +49,13 @@ writes beside its spec but runs with the copy as `cwd` needs the spec path ABSOL
 - (moved from TODO's distill list, b9-2, 11-23) A HEAD-vs-tree differential through `git stash push -- src` leaves
   UNTRACKED files in place, so it is sound only while HEAD's code imports none of them; the roster-measurement recipe
   and the solve-time identity anchor both relied on it. The `git archive` frozen HEAD copy above has no such gap.
+
+- (moved from TODO's distill list, b9-3, 11-23) **A pure refactor proves itself with a frozen copy INSIDE the test.** The
+  pay check's A2 extracted engine code with no change in behavior meant. Its arm keeps a verbatim copy of the replaced
+  code in the test file and sweeps it against the new code over a seeded population of households. Order matters:
+  green on the untouched engine first (the copy really is the old code), then green after the extraction (the new code
+  matches it), then planted mutants on the new code must fail (the sweep can see a difference). It is this insight's
+  frozen copy at function size, kept in the repo, so later edits keep being checked against it.
 
 - Every seed re-measure (the next build's crowns), every "byte-identical when OFF" claim, every mutant run.
 - [[083]] — the coupling this avoids; [[095]] — a probe must run the shipped decision path, which the runtime mint is.

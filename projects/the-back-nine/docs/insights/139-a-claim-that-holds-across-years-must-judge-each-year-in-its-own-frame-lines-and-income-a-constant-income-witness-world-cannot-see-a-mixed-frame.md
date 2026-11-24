@@ -3,7 +3,7 @@ title: "A claim that holds ACROSS years must judge each year in that year's OWN 
 date: 2026-09-28
 phase: Act 4 hardening (the year-0 IRMAA anchors, SOLVER_CODE_VERSION 8 — b344f591..65213d00; caught by council wf_71f675da-8cf's red team before commit)
 modules: [src/engine/solver/candidates.ts, src/engine/solver/solveAnchor.ts, src/engine/solver/__tests__/candidates.test.ts, src/engine/solver/__tests__/solveAnchor.test.ts]
-tags: [frame, cross-year, window, skeleton, witness-world, irmaa, social-security, oracle-independence, red-team, calm-but-wrong]
+tags: [frame, cross-year, window, skeleton, witness-world, irmaa, social-security, oracle-independence, red-team, calm-but-wrong, copy-across-years, short-years, every-year-row, omission, straddle, event-years, unlisted-year, drift-year, money-picture, typed-below]
 ---
 
 ## Problem
@@ -59,3 +59,31 @@ dime-floor (POMS RS 00615.101) — a $20,000 PIA is $19,999.20 a year; the engin
   133 is the two-arm lean.)
 - Any cross-year aggregate built from a year-0 "skeleton" (headroom, room sentences, step cards): re-read which year each
   term belongs to whenever the claim widens from one year to many.
+
+## Extended (2026-11-23): a SENTENCE across years has the same law — check what the answer does in every year it covers
+
+U11's walk-7 round (the typed-below line, where a household's typed working-year figure sits below today's spending)
+hit this insight four times in copy rather than in a solver:
+
+- **Take a short-years sentence's figures from a rule the engine keeps, and pin the rule where it can be seen (b9-6,
+  walk 7's R1, `d4c38295`).** W comes off each working year's cash dollar for dollar, so a year's cash at the typed
+  figure is its cash at the quote plus the gap, and the credit is min(that, the cap). b9-6 pinned that identity on
+  TM's four shared rows ($21,000 each) before composing R1's sentence from the run's shortfalls.
+- **"True in every case" can still be calm-but-wrong by omission (the round review's RF-B).** For the case the rule
+  cannot cover (a year short at the typed figure too), R1 used a fallback: "those years cost $G less each, so … takes
+  less". Every word holds. But on a run that straddles the gap, the years whose shortfall is below $G take nothing
+  from savings and ADD a credit, and the sentence never says so (C typed at $101,000: $348 in 2031–2032). Checking
+  that the verb holds is not enough: check what the answer does in each year the sentence covers.
+- **A figure sized for one year must be checked in every year it recurs (walk 7's R4).** R4's refuter scoped "That
+  year, this answer adds $6,000 your pay doesn't really leave over" to 2026 for exactness, knowing the cap binds every
+  year. The round review's whole-window probe found the same over-credit in later years. (Its own figures were read
+  on the wrong metric, the credit minus the print at the quote; council `wf_f74697d1-f2e` re-measured on the pair the
+  defect was found with: $6,000 a year on A in 2033–2034 as well, where that probe had shown nothing.) Print every
+  year's row at both figures before scoping a figure to one year.
+- **A ledger that lists only its event years cannot stand in for every year (the round review's RF-A).** The money
+  picture names a later year only on an event or when it comes up short. A drift year (an income stream that does not
+  inflate) that stays positive is unlisted and prints differently from the listed year before it. "An unlisted year
+  carries the last listed row" held on every seed and failed on the first drift household.
+
+The common thread is this insight's: a claim about a window is a claim about each year in it, and a witness set
+whose years all behave alike (whole-dollar, no straddle, no drift) cannot show a year that does not.

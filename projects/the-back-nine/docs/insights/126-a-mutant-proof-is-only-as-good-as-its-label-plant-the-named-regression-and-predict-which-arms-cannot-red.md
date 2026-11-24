@@ -3,7 +3,7 @@ title: A mutant proof is only as good as its LABEL — the recorded "tier-keyed 
 date: 2026-09-10
 phase: Post-Act-4 (the gap to a friend betting real money) — the council build's adversarial review
 modules: [e2e/vertical-fit.spec.ts, src/ui/styles/app.css, docs/council-log.md, TODO.md]
-tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz, kill-line, spy-leak, restoreAllMocks, afterEach, input-device, hit-testing, prediction-correction, shared-constant, derived-constant, kill-set-larger-than-predicted, landed-check, prefix-anchor, crlf-anchor]
+tags: [mutant-proof, mutation-testing, planted-fail, arm-topology, oracle-lens, record-truth, adversarial-review, gate-by-exit-code, equivalent-mutant, aimed-fuzz, kill-line, spy-leak, restoreAllMocks, afterEach, input-device, hit-testing, prediction-correction, shared-constant, derived-constant, kill-set-larger-than-predicted, landed-check, prefix-anchor, crlf-anchor, vitest-json-timeout, STACK_TRACE_ERROR, discriminates-by-claim, predictor-gaps, spelling-variants, range-syntax, borrowed-size-reading]
 ---
 
 ## Problem
@@ -69,7 +69,7 @@ output, not only the money.
 
 ## Extended (2026-10-31, the h2 gesture hold) — read the LINE each kill reds on against what the plant changed, and count the input device in the arm topology
 
-The h2 cure's mutant pass (b9-1: 13 unit mutants, 5 of them also run against the e2e arms; `b9-h2-cure\PREDICTIONS.md`, `mutants-*-results.json`) wrote each kill set down before the run. Its runner keeps each failure's own first line, so a timeout can never pass as a kill. That came from the tests lens's find: a runner that keeps only the failing titles cannot tell a timeout from a kill. Reading those lines paid off twice.
+The h2 cure's mutant pass (b9-1: 13 unit mutants, 5 of them also run against the e2e arms; `b9-h2-cure\PREDICTIONS.md`, `mutants-*-results.json`) wrote each kill set down before the run. Its runner keeps each failure's own first line, so a timeout can be told apart from a kill, as long as the report names the timeout (Vitest's JSON report does not: see the 2026-11-23 correction below). That came from the tests lens's find: a runner that keeps only the failing titles cannot tell a timeout from a kill. Reading those lines paid off twice.
 
 - **A kill for the wrong reason is a finding.** Under M3 (the click release moved to the capture phase), H9 ("unmounting mid-hold leaves nothing listening") went red as predicted. But its line named the `pointerup` listener ("pointerup (capture true) is still listened"), and M3 changes only the `click` listener. A bisect found the cause. H2d, the phase test, goes red first under M3. Its failing `expect` threw before its own `add.mockRestore()`, so its spy was still wrapping `window.addEventListener` when H9 ran. A spy restored at the end of a test body leaks whenever that test fails, which is exactly when a mutant runs. Fix: `vi.restoreAllMocks()` in `afterEach`. On the re-run, H9 goes red on "click (capture true) is still listened". A count-only check (2 red) passes with the leak still in the file. (The results file on disk keeps the first run's `pointerup` line; the re-run is recorded in PREDICTIONS.md's Observed section.)
 - **For an input-event mutant, which arms can go red depends on the device, and on whether the target MOVES or is DELETED.** v1 predicted that M2 (release at pointerup) would turn all six arms red. Before the run, the tests lens flagged the two mouse tall arms (confidence 50). Chromium hit-tests a mouse release once, so pointerup, mouseup and the click share a target. A label that only MOVED after pointerup still gets its click, so those arms likely stay green. Touch taps can go red, because their blur comes after the finger lifts. So can the Keep door on either device: it is DELETED, and React drops a click on a node it has let go of. Observed: exactly the two touch tall arms and both Keep arms. The same pre-run pass added K-panel to M6's predicted set, and that was observed too.
@@ -89,3 +89,39 @@ otherwise (`41b58e17`).
 An anchor that is a prefix of its own replacement passes an "anchor gone" check falsely (U5's M6, first run): check
 that the planted TEXT is present, not that the anchor is absent. And a CRLF file (`confidence.css`) takes its anchors in
 CRLF; msys `sed -n` hides the `\r`, so read bytes with node or `git ls-files --eol`.
+
+## Corrected (2026-11-23): Vitest's JSON report does not say "timed out"
+
+The 2026-10-31 section said a runner that keeps each failure's first line means "a timeout can never pass as a kill".
+That holds only when the report names the timeout. Vitest 4.1.8's JSON report (the version this repo runs) writes a
+timed-out test as `Error: STACK_TRACE_ERROR`, with no "timed out" anywhere. b9-4 checked this for U10's mutant runner
+with a test that has a 200 ms timeout and sleeps 3 s. A runner reading those lines would count that timeout as a kill.
+The rule now: treat a `STACK_TRACE_ERROR` line as a possible timeout, and re-run that file alone under the same plant
+before giving a verdict. A kill counts only on the test's own assertion. This is insight 120's rule (a timeout is never
+the expected failure) applied to a mutant runner.
+
+## Extended (2026-11-23): the prediction is evidence only once a plant runs, and it should ask for gaps
+
+Three cases from build 2's go-live (`a9cacf22`) and the composites work.
+
+- **A builder's "discriminates by" column is a claim.** The go-live's builders filled in, for each new arm, what it
+  "discriminates by". Separate verifiers, one per lane, planted faults in a scratch copy. Arms the builders had called
+  discriminating stayed green under three plants: replies put in a different order, the required check without its
+  marker, and the release moved back into the click listener (the label-wrapped radio's arm). The only evidence that
+  an arm can fail is a plant that makes it fail.
+- **Ask predictors for gaps, not only kill sets.** Before the go-live's mutant pass, four read-only readers each
+  predicted kill sets for 15 plants. While doing it, they found two rules that no test held: the codec's
+  literal-successor rule was protected only by a comment, and IntakeApp's gate call had no test. Both got an arm before
+  the run. Predicting a kill set means asking which test would catch the fault, and sometimes the answer is none.
+- **A guard that matches one line and one spelling is easy to get around.** In round 1 of the composites work, the
+  short-tier prelude guard in `scripts/__tests__/breakpoint-mirrors.test.ts` looked for `@media` and `max-height` on
+  the same line. Round 2's adversary got three past it with every arm green: range syntax (`height <= 840px`), a
+  prelude wrapped onto two lines, and an inverted `min-height` block. The guard now reads each prelude whole, with
+  comments blanked and the prelude joined across lines, and checks every way of writing the feature. Each spelling is
+  planted to prove it. When a guard matches text, list the other ways to write the same thing, and plant each one.
+- **Read a prediction's numbers at the size the fault runs at.** The frames-outside plan's U4 (b9-7) took F1's
+  predicted SHOWCASE kills from the LENOVO_FULL reading, assuming every tall size draws the same frame. A temporary
+  probe found SHOWCASE (1871×917 @ 1) drew the spine doors up to 8.5 px lower than LENOVO_FULL (1440×900 @ 2), and
+  `main.result`'s min-height made the near miss 916.7 px, not 916.5. The kill set still held, but only because the
+  margin was big enough. The cause was `.result` centering a short frame, not the pixel ratio. A number borrowed from
+  another size is a guess.

@@ -3,7 +3,7 @@ title: The orchestrator's own "pre-verified" finding is still a hypothesis — a
 date: 2026-06-14
 phase: P2 (D1 — the account-level intake; ultramode review)
 modules: [intake, store, engine]
-tags: [review, adversarial-verify, over-confidence, source-trace, false-confidence, data-contract, magi, withheld-hypothesis, coverage-measure]
+tags: [review, adversarial-verify, over-confidence, source-trace, false-confidence, data-contract, magi, withheld-hypothesis, coverage-measure, council, land-now, chaired-verdict, trace-before-build]
 ---
 
 ## Problem
@@ -68,3 +68,13 @@ before owed some" gate — see [[102]]'s extension) and kept it out of every pro
 independently (`wf_b97c0055-346`). A hypothesis handed to a reviewer comes back confirmed, not tested; held back, it
 becomes a free measure of the fan-out's own coverage — if the lenses reach your suspicion unaided, their silence
 elsewhere means more. Write the suspicion down before launch, withhold it, then check whether the review found it.
+
+## Extended (2026-11-23): a council's "land now" list is a set of hypotheses too; trace each item in the code before building it
+
+The seat's plan (b9-2) met the same trap at a council's output. Council `wf_2976a19c-c00` put the record card's row
+under the save slot on its land-now list, "it fixes the affirmative-alone frame on today's seat too", while its own
+"yours to close" line left the seat open. But today's caveat is a full-width row after the slack, so that row paints
+the card above the caveat (a CSS-only reorder) and repeats July's 702 → 858 px breach. The council's reason held only
+for the survivor fold. Two researchers found it independently, and the plan carries it as C1. A chaired verdict feels
+verified the way a self-found finding does. Trace each item it says to execute now against the code it would change,
+and check it against the verdict's own open items, before building it.

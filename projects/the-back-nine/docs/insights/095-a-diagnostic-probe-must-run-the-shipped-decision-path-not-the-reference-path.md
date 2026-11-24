@@ -3,7 +3,7 @@ title: A diagnostic probe computed on the REFERENCE path annotates a crown the u
 date: 2026-07-19
 phase: Act 4 · U15 (solver core, ultramode fold)
 modules: [engine/validation, engine/solver]
-tags: [named-driver, sensitivity-probe, shrinkage, oracle-vs-production, two-authorities]
+tags: [named-driver, sensitivity-probe, shrinkage, oracle-vs-production, two-authorities, proof-tool, compare-tool, key-set, identity-proof, stream11]
 ---
 
 ## Problem
@@ -51,3 +51,13 @@ catches a wrong ANNOTATION unless a test pins the two authorities together.
   shipped one.
 - The grade axis: `gradeSolveRecommendation` grades winner-vs-runner-up AS SELECTED —
   any future grade recomputed from the raw ranking would drift the same way.
+
+## Extended (2026-11-23): the same check for an identity proof's compare tool: read its inputs and its key set before naming it
+
+The typed-below rebuild's plan named `stream11-compare.mjs` as U2's credit proof. That tool checks one `stream11`
+record against `stream.mts`'s frozen HEAD record (13 keys from 2026-11-01, none with a saved answer or a typed figure
+below spending), so pointed at the rebuild it would have passed without ever comparing the typed-below seeds. Two
+blind readers caught it, and a new diff of the two `stream11` records' `creditComposed` fingerprints, key by key, was
+written for it (b9-9; the rebuild spec's KTD8 records why). This is this insight's law for a proof tool instead of a
+probe: a proof only proves something if it compares the two records the proof will actually have, over the keys the
+claim names. Before naming a tool as a proof, read which records it loads and which keys it compares.

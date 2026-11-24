@@ -94,7 +94,9 @@ describe('the facts page — its pages and its doors', () => {
     openRoomOn(FULL, { readOnly: true })
     expect(screen.getByRole('heading', { name: copy.workbenchFactsSocialSecurity })).toBeInTheDocument()
     expect(screen.getByText(copy.workbenchFactsReadOnly)).toBeInTheDocument()
-    expect(screen.queryAllByRole('button').map((b) => b.textContent)).toEqual([copy.workbenchBack])
+    // The one other kind of button is a lever's link to the What if page (U15): it moves to a page and writes nothing,
+    // and a read-only tab may try a what-if (it cannot apply one there).
+    expect(screen.queryAllByRole('button').map((b) => b.textContent).filter((t) => t !== copy.workbenchFactsTry)).toEqual([copy.workbenchBack])
   })
 
   it('a writable tab draws one door per step group, each named for its group', () => {
@@ -198,11 +200,19 @@ describe('the step sheet — the walk’s own step, over the plan', () => {
   })
 })
 
-describe('the lever lines — each opens its own editor (until U15)', () => {
+describe('the lever lines — since U15 the order, the Roth plan and the regime link to the What if page; the budget keeps its sheet', () => {
+  it('the withdrawal order, the Roth plan and the subsidy regime draw no Edit door, only a link to the What if page', () => {
+    openRoomOn(GOVERNED)
+    for (const name of [copy.assumptionDrawdownName, copy.assumptionRothName, copy.assumptionRegimeName]) {
+      expect(screen.queryByRole('button', { name: slots.workbenchFactsEditName(name) }), name).toBeNull()
+    }
+    expect(screen.getByRole('button', { name: slots.workbenchFactsTryName(copy.assumptionDrawdownName) })).toBeInTheDocument()
+    // The budget's lines link to the rail AND keep their sheet: the rail changes a line's amount and kind, adds and
+    // takes out lines; the sheet also edits a line's years and category (the report's two-door note).
+    expect(screen.getByRole('button', { name: slots.workbenchFactsTryName(copy.workbenchFactBudget) })).toBeInTheDocument()
+  })
+
   const cases: readonly { readonly door: string; readonly opens: () => HTMLElement }[] = [
-    { door: copy.assumptionDrawdownName, opens: () => screen.getByRole('dialog', { name: copy.leverSequencingTitle }) },
-    { door: copy.assumptionRothName, opens: () => screen.getByRole('dialog', { name: copy.leverRothTitle }) },
-    { door: copy.assumptionRegimeName, opens: () => screen.getByRole('dialog', { name: copy.leverHealthTitle }) },
     { door: copy.workbenchFactBudget, opens: () => screen.getByRole('heading', { name: copy.budgetSheetTitle }) },
     // While a budget governs, the spending total's door is the budget too, as the panel's governed row routes.
     { door: copy.workbenchFactsSpending, opens: () => screen.getByRole('heading', { name: copy.budgetSheetTitle }) },

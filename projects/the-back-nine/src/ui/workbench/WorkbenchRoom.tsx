@@ -18,10 +18,16 @@
  * as updating; the heading's words always come with the rows they describe. The runs live in the room,
  * not the table, so they keep running on each committed answer whichever page shows.
  *
- * THE FACTS PAGE'S DOORS (U8): a step's group opens that step's own body in a sheet (`StepSheet`); a lever's
- * line opens its own sheet, from the one home of the lever sheets and their writes (`editorSheets.tsx`, which
- * Result calls too). An edit redraws the pinned answer and the table through the store, and the plan reads
- * unsaved through the one save machine. A read-only tab gets the page with no door.
+ * THE FACTS PAGE'S DOORS (U8): a step's group opens that step's own body in a sheet (`StepSheet`); the budget and
+ * the panel's seats open their own sheets, from the one home of the lever sheets and their writes (`editorSheets.tsx`,
+ * which Result calls too). An edit redraws the pinned answer and the table through the store, and the plan reads
+ * unsaved through the one save machine. A read-only tab gets the page with no door. Since U15 each lever's line also
+ * links to the What if page, and the withdrawal order, the Roth plan and the subsidy regime open no editor here.
+ *
+ * THE WHAT IF PAGE (U15, `WhatIfPage.tsx`): the lever rail beside the plan. The room holds its one what-if
+ * (`useWhatIf`: the slot, made once, and the bundle), so a what-if and its runs survive a page switch, and the page
+ * pairs the what-if's rows with the table lanes' own plan rows. The market switch belongs to the table and the What if
+ * page alike: the paired rows read the same market the table does (R8).
  *
  * THE ROOM'S ONE LIVE REGION: the save slot's transitions, and the room's own refiguring and updating words, are
  * spoken through one persistent polite region, on transitions only (the visual lines carry no role of their own,
@@ -48,12 +54,15 @@ import { composeFacts, stepSectionTitle, type FactStop } from './factsChrome'
 import type { FactDoorId, StepSectionId } from './factRegistry'
 import { tableRunFor, type TableMeta, type TableRun, type TableView } from './tableRun'
 import { composeYearTable, lifespansLine, yieldLine } from './yearTableChrome'
+import { useWhatIf, WhatIfPage, type RailRecommendation } from './WhatIfPage'
+import type { WhatIfSlotLanes } from './whatIfRun'
+import type { WhatIfLeverKind } from '@shared/model'
 import './workbench.css'
 
 export type TableLanes = Readonly<Record<TableView, Lane<EngineRunRequest, SimulationResult>>>
 
-/** The room's two pages. */
-export type RoomPage = 'table' | 'facts'
+/** The room's three pages. */
+export type RoomPage = 'table' | 'facts' | 'whatif'
 
 export interface WorkbenchRoomProps {
   /** The plan's save control, derived by IntakeApp from the one save machine. A read-only tab gets
@@ -77,6 +86,11 @@ export interface WorkbenchRoomProps {
   readonly lanes?: TableLanes
   /** Today's calendar year (the plan's clock: an aged plan names its build year). Default: the device clock. */
   readonly wallCalendarYear?: number
+  /** The saved recommendation as the rail runs it (R22): the record on disk and whether the store reads it as current.
+   *  Absent where there is none (or the household is on the date route, where none can be re-presented). */
+  readonly recommendation?: RailRecommendation
+  /** The what-if slot's three lanes; tests hand in their own. Default: three lanes on the app's one engine. */
+  readonly whatIfLanes?: WhatIfSlotLanes
 }
 
 /** One view's newest delivered result, and the answer it belongs to. */
@@ -219,13 +233,23 @@ export default function WorkbenchRoom({
   readOnly = false,
   lanes: lanesProp,
   wallCalendarYear = new Date().getFullYear(),
+  recommendation,
+  whatIfLanes,
 }: WorkbenchRoomProps) {
   const announcer = useSaveAnnouncer(save.kind)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const roomRef = useRef<HTMLElement>(null)
   const pinRef = useRef<HTMLDivElement>(null)
   const factsPanelRef = useRef<HTMLDivElement>(null)
-  const ids = { tabs: useId(), tablePanel: useId(), factsPanel: useId(), tableTab: useId(), factsTab: useId() }
+  const ids = {
+    tabs: useId(),
+    tablePanel: useId(),
+    factsPanel: useId(),
+    whatIfPanel: useId(),
+    tableTab: useId(),
+    factsTab: useId(),
+    whatIfTab: useId(),
+  }
   // Focus to the room's heading on arrival (the project's step-change pattern): it announces the page
   // and brings its top into view, since the door sits below the answer's fold.
   useEffect(() => {
@@ -372,8 +396,17 @@ export default function WorkbenchRoom({
     else setOpenStepId(door as StepSectionId)
   }
 
+  // ── The What if page (U15): the room's one what-if, kept across page switches ──────────────────────────────
+  const whatIf = useWhatIf({ snapshot, model, ...(whatIfLanes !== undefined ? { lanes: whatIfLanes } : {}), ...(recommendation !== undefined ? { recommendation } : {}) })
+  const [focusLever, setFocusLever] = useState<{ readonly kind: WhatIfLeverKind; readonly n: number } | undefined>(undefined)
+  const tryLever = (kind: WhatIfLeverKind) => {
+    switchPage('whatif')
+    setFocusLever((f) => ({ kind, n: (f?.n ?? 0) + 1 }))
+  }
+  const announce = useCallback((text: string) => announcer.announce(text), [announcer])
+
   // ── The page switch: a real tab pattern (arrow keys, Home and End move and show; no history entry) ─────
-  const pages: readonly RoomPage[] = ['table', 'facts']
+  const pages: readonly RoomPage[] = ['table', 'facts', 'whatif']
   const tabRefs = useRef<Partial<Record<RoomPage, HTMLButtonElement | null>>>({})
   const onTabKey = (e: KeyboardEvent<HTMLButtonElement>) => {
     const at = pages.indexOf(page)
@@ -395,7 +428,7 @@ export default function WorkbenchRoom({
       return
     }
     if (typeof window.matchMedia !== 'function' || !window.matchMedia('(min-width: 68rem)').matches) return
-    const panel = document.getElementById(page === 'table' ? ids.tablePanel : ids.factsPanel)
+    const panel = document.getElementById(page === 'table' ? ids.tablePanel : page === 'facts' ? ids.factsPanel : ids.whatIfPanel)
     const seat = pinRef.current
     if (panel === null || seat === null) return
     const under = seat.getBoundingClientRect().bottom
@@ -461,8 +494,9 @@ export default function WorkbenchRoom({
         <div className="wb-pages" role="tablist" aria-label={copy.workbenchPagesLabel} id={ids.tabs}>
           {tab('table', copy.workbenchPageTable, ids.tableTab, ids.tablePanel)}
           {tab('facts', copy.workbenchPageFacts, ids.factsTab, ids.factsPanel)}
+          {tab('whatif', copy.workbenchPageWhatIf, ids.whatIfTab, ids.whatIfPanel)}
         </div>
-        <div className="wb-view" inert={page !== 'table'} aria-hidden={page !== 'table' ? true : undefined}>
+        <div className="wb-view" inert={page === 'facts'} aria-hidden={page === 'facts' ? true : undefined}>
           <SegmentedControl<TableView>
             legendKey="workbenchViewLegend"
             name="wb-view"
@@ -507,7 +541,22 @@ export default function WorkbenchRoom({
         tabIndex={-1}
         ref={factsPanelRef}
       >
-        {page === 'facts' && <FactsPage sections={sections} {...(readOnly ? {} : { onOpen: openDoor })} />}
+        {page === 'facts' && <FactsPage sections={sections} onTry={tryLever} {...(readOnly ? {} : { onOpen: openDoor })} />}
+      </div>
+      <div className="wb-panel" role="tabpanel" id={ids.whatIfPanel} aria-labelledby={ids.whatIfTab} hidden={page !== 'whatif'}>
+        {page === 'whatif' && (
+          <WhatIfPage
+            whatIf={whatIf}
+            snapshot={snapshot}
+            planRows={results}
+            view={view}
+            readOnly={readOnly}
+            wallCalendarYear={wallCalendarYear}
+            announce={announce}
+            {...(recommendation !== undefined ? { recommendation } : {})}
+            {...(focusLever !== undefined ? { focusLever } : {})}
+          />
+        )}
       </div>
       {!readOnly && (
         <>

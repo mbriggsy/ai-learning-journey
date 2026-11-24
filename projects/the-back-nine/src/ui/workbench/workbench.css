@@ -732,3 +732,586 @@
   background: var(--paper);
   box-shadow: 0 12px 32px rgb(11 24 19 / 0.22);
 }
+
+/* ── The facts page's links to the What if page (U15) ───────────────────────────────────────────────────────────── */
+.wb-facts__doors {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0 var(--space-4);
+}
+
+/* ── The What if page (U15): the lever rail beside the plan ────────────────────────────────────────────────────────
+ * One column on a phone (the rail, the two readings, Apply, then the paired years); at a laptop the rail takes a narrow
+ * left column and the readings, Apply and the paired years the rest. A run is told apart by its name in words, a solid
+ * or dashed rule and position, never by colour. Nothing animates but a lever's chevron turning as it opens. */
+.wb-whatif {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+}
+
+.wb-whatif__intro {
+  margin: 0;
+  max-width: 48rem;
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+}
+
+.wb-whatif__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-7);
+  width: 100%;
+}
+
+@media (min-width: 68rem) {
+  .wb-whatif__grid {
+    grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-8);
+  }
+}
+
+.wb-whatif__result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.wb-rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.wb-rail__heading,
+.wb-readings__heading,
+.wb-rec__title {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+}
+
+.wb-rail__waiting {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+/* The saved recommendation's row: a quiet bordered note above the levers. */
+.wb-rec {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+}
+
+.wb-rec__words {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--ink);
+}
+
+.wb-rec .btn-quiet {
+  padding-inline: 0;
+  align-self: flex-start;
+}
+
+/* A lever: a hairline, its name and its "Changed" word, then (open) the plan's value, the control and its way back. */
+.wb-levers {
+  display: flex;
+  flex-direction: column;
+}
+
+.wb-lever {
+  border-top: 1px solid var(--line-soft);
+}
+
+.wb-lever:last-child {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.wb-lever__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  padding-block: var(--space-2);
+  list-style: none;
+  cursor: pointer;
+  font-size: var(--text-base);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+}
+
+.wb-lever__summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The chevron: a shape that turns as the lever opens (its open state is the turn and the body, never a colour). */
+.wb-lever__summary::before {
+  content: '';
+  flex: none;
+  width: 0.45em;
+  height: 0.45em;
+  margin-inline: 0.15em 0.1em;
+  border-right: 2px solid var(--ink-muted);
+  border-bottom: 2px solid var(--ink-muted);
+  transform: rotate(-45deg);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.wb-lever[open] > .wb-lever__summary::before {
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb-lever__summary::before {
+    transition: none;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wb-lever__summary:hover .wb-lever__title {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+}
+
+.wb-lever__summary:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.wb-lever__title {
+  flex: 1;
+  min-width: 0;
+}
+
+/* "Changed": a word in a hairline frame. Hidden, it keeps its width, so the title never re-wraps on a commit. */
+.wb-lever__mark {
+  flex: none;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--line-control);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.wb-lever__mark--off {
+  visibility: hidden;
+}
+
+.wb-lever__body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+  padding: var(--space-1) 0 var(--space-5) calc(0.7em + var(--space-3));
+}
+
+.wb-lever__plan,
+.wb-lever__words,
+.wb-lever__note {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+}
+
+.wb-lever__plan {
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.wb-lever__words {
+  color: var(--ink);
+}
+
+.wb-lever__note {
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+
+.wb-lever__back,
+.wb-lever__remove,
+.wb-lever__add-go {
+  align-self: flex-start;
+  padding-inline: 0;
+}
+
+.wb-lever__back--off {
+  visibility: hidden;
+}
+
+.wb-lever__lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.wb-lever__line,
+.wb-lever__add {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.wb-lever__line + .wb-lever__line {
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--line-soft);
+}
+
+.wb-lever__add {
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--line-soft);
+}
+
+.wb-lever__line-name {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+/* Two or three short figures share a row (a window's years, the mix's three parts), each keeping its label. */
+.wb-lever__window,
+.wb-lever__mix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: var(--space-3);
+}
+
+.wb-lever__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.wb-rail-field {
+  margin: 0;
+}
+
+.wb-rail-field .field-input {
+  font-variant-numeric: tabular-nums;
+}
+
+.wb-lever__policies {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.wb-lever__policy {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-height: var(--tap-min);
+  cursor: pointer;
+}
+
+.wb-lever__policy input {
+  flex: none;
+  margin-top: 0.2em;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.wb-lever__policy-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.wb-lever__policy-label {
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+
+.wb-lever__policy[data-picked] .wb-lever__policy-label {
+  font-weight: var(--weight-semibold);
+}
+
+.wb-lever__policy-help {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--ink-muted);
+}
+
+.wb-lever__order {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.wb-lever__order-row {
+  font-size: var(--text-sm);
+}
+
+.wb-lever__order-row > * {
+  vertical-align: middle;
+}
+
+.wb-lever__order-moves {
+  display: inline-flex;
+  gap: var(--space-2);
+  margin-left: var(--space-3);
+}
+
+.wb-lever__move {
+  min-width: var(--tap-min);
+  padding-inline: 0;
+  text-decoration: none;
+}
+
+.wb-lever__move[aria-disabled='true'] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* The two readings, side by side at every width: each under its run's name, the plan's ruled solid, the what-if's
+   dashed (the same name-and-line pairing the table's headers carry). Each holds its lines' room, so a count landing
+   moves nothing below it. */
+.wb-readings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.wb-readings__pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.wb-reading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-4);
+  border-left: 3px solid var(--line-control);
+  min-block-size: 5.5rem;
+}
+
+.wb-reading + .wb-reading {
+  border-left-style: dashed;
+}
+
+.wb-reading__label,
+.wb-reading__note {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--ink-muted);
+}
+
+.wb-reading__count {
+  margin: 0;
+  min-block-size: calc(var(--text-lg) * var(--leading-tight));
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.wb-readings__line-cell {
+  display: grid;
+}
+
+.wb-readings__line-cell > * {
+  grid-area: 1 / 1;
+}
+
+.wb-readings__line {
+  margin: 0;
+  max-width: 48rem;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--ink);
+}
+
+.wb-readings__line--reserve {
+  visibility: hidden;
+}
+
+/* Apply, with what it says under it (never above: a reason arriving never moves the button). Withheld, the plate goes
+   to paper with a dashed hairline and muted ink, and points at its sentence: fill, border and ink, never hue. */
+.wb-apply {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.wb-apply .btn-primary.wb-apply__go {
+  width: auto;
+  min-width: 14rem;
+  padding-inline: var(--space-6);
+}
+
+.wb-apply .btn-primary.wb-apply__go[aria-disabled='true'] {
+  opacity: 1;
+  background: transparent;
+  color: var(--ink-muted);
+  border: 1px dashed var(--line-control);
+}
+
+.wb-apply__words {
+  margin: 0;
+  max-width: 48rem;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--ink);
+}
+
+/* The paired years. A laptop reads one table (the what-if's figure beside the plan's, under real headers); a phone
+   reads one block per year (the plan's figure over the what-if's, each with its run's name). Only one form shows at a
+   width; the other is out of the page and out of the accessibility tree. */
+.wb-pair-region {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+}
+
+.wb-pair-state {
+  min-block-size: 8rem;
+}
+
+.wb-pair-wrap {
+  width: 100%;
+}
+
+/* Past the columns the room's column holds, the frame scrolls sideways (WhatIfPage's PAIR_FIT_COLUMNS). */
+.wb-pair-wrap--wide {
+  overflow-x: auto;
+}
+
+/* Each year: the plan's row over the what-if's, one hairline above the pair and none inside it, so the two figures of
+   a column read as one pair, digit under digit. The run's name leads each row; the what-if's wears a dashed underline,
+   the readings' dashed rule. */
+.wb-pair .wb-td {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wb-pair__what-if .wb-td {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.wb-pair__year:first-of-type .wb-pair__plan .wb-td {
+  border-top: 0;
+}
+
+.wb-pair .wb-td--year {
+  vertical-align: top;
+}
+
+.wb-pair .wb-pair__run,
+.wb-pair .wb-pair__run-head {
+  text-align: left;
+  font-weight: var(--weight-body);
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.wb-pair__run--what-if {
+  text-decoration: underline dashed var(--line-control);
+  text-underline-offset: 0.3em;
+}
+
+.wb-fig--none {
+  color: var(--ink-muted);
+}
+
+.wb-pair-blocks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.wb-pair-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+  border-top: 1px solid var(--line-soft);
+}
+
+.wb-pair-block__year {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.wb-pair-block__list {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: var(--space-3) var(--space-5);
+}
+
+.wb-pair-block__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.wb-pair-block__col {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+
+.wb-pair-block__fig {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.wb-pair-block__run {
+  color: var(--ink-muted);
+}
+
+@media (min-width: 68rem) {
+  .wb-pair-blocks {
+    display: none;
+  }
+}
+
+@media not (min-width: 68rem) {
+  .wb-pair-wrap {
+    display: none;
+  }
+}

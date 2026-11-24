@@ -404,7 +404,8 @@ export default function IntakeApp({
     // a full `currentDraftFingerprint()` (buildSolveRequest → buildSpineParams → candidate
     // enumeration → canon serialize) PLUS `exposureForDraft`'s nine params producers on every single
     // keystroke-committed edit of the intake — for a card that cannot render until `result`.
-    if (phase !== 'result') return undefined
+    // The room's What if page runs the record as a what-if too (the workbench plan's R22, U15).
+    if (phase !== 'result' && phase !== 'room') return undefined
     if (persist.kind === 'unsaved') return undefined
     const record = persist.scenario.savedRecommendation
     if (record === undefined) return undefined
@@ -972,6 +973,9 @@ export default function IntakeApp({
           // A read-only tab's facts page draws no door (U8): `save.kind` can't carry it (`none` is also a plan
           // that can't be saved yet).
           readOnly,
+          // The saved recommendation's row on the rail (R22): the DISK's record and the store's trichotomy, as the answer
+          // reads them; the rail runs it only while current.
+          ...(recordCard !== undefined ? { recommendation: { record: recordCard.record, current: recordCard.status.current } } : {}),
           leaveAsk: leaveAsk
             ? {
                 onGo: () => {

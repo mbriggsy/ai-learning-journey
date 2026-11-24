@@ -91,14 +91,15 @@ export const DRAFT_FACTS: Record<keyof ScenarioDraft, FactDisposition> = {
   spendEntryPeriod: shown('spend'),
   survivorSpendingRatio: shown('survivor-ratio'),
   heirBracket: shown('heir-bracket'),
-  // An order over no entered account has no door (the answer's own door rule: no hollow door).
-  drawdownPolicy: shown('sequencing', 'none'),
-  drawdownOrder: shown('sequencing', 'none'),
+  // Since U15 the withdrawal order, the Roth plan and the subsidy regime open no editor on the facts page: each line
+  // links to the What if page, where the lever is tried and applied (U8's lever doors, swapped).
+  drawdownPolicy: shown('none'),
+  drawdownOrder: shown('none'),
   // A budget line's own `id` (schema version 6) is not a fact either: the tool mints it so a kept what-if can
   // name the line. The page prints each line's category, amount, tier and window, never its id.
   budget: shown('budget'),
-  rothConversion: shown('roth', 'none'),
-  enhancedSubsidies: shown('subsidy-regime'),
+  rothConversion: shown('none'),
+  enhancedSubsidies: shown('none'),
   medicareExtrasByPerson: shown('medicare-extras', 'extras-panel'),
   retirementState: shown('retirement-state'),
   workingYearCost: shown('working-cost'),
@@ -131,7 +132,8 @@ export const PERSON_FACTS: Record<keyof PersonDraft, FactDisposition> = {
   retirementAge: shown('work'),
   earnedIncomeReal: shown('income'),
   pia: shown('social-security'),
-  // A claim age not yet reached is a lever (KTD15); until U15 its door is the Social Security step's.
+  // A claim age not yet reached is a lever (KTD15): its door stays the Social Security step's (the step holds the benefit
+  // too), and since U15 the line also links to the What if page.
   socialSecurityClaimAge: shown('social-security'),
 }
 

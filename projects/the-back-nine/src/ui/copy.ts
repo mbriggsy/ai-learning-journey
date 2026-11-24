@@ -2706,6 +2706,118 @@ export const copy = {
   // The two choices listed with no door (KTD15): why there is none.
   workbenchFactStopNote: 'Your answer sets this, so it moves when your facts or choices do.',
   workbenchFactGoalNote: 'Chosen on your answer’s page, beside the recommendation.',
+  // A lever's line on the facts page links to the What if page (U15): it opens no editor there.
+  workbenchFactsTry: 'Try a change',
+  // --- The lever rail (Act 5, U15): the What if page. A what-if is a copy of the plan with some choices changed; it
+  // reads beside the plan on the same futures. The words speak each run's count under its own name and never say a
+  // change helps or costs (R20). The pilot's drafts, shipped flagged for Briggsy's read. ---
+  workbenchPageWhatIf: 'What if',
+  workbenchRailIntro:
+    'Try changes on a copy of your plan and see it beside your plan, on the same futures. Nothing here changes your plan until you apply it, and nothing is kept until you save your plan.',
+  workbenchRailLeversHeading: 'Changes to try',
+  workbenchRailChanged: 'Changed',
+  workbenchRailBack: 'Back to the plan',
+  workbenchRailPlanLabel: 'Your plan',
+  workbenchRailWhatIfLabel: 'This what-if',
+  workbenchRailReadingsHeading: 'Your plan beside this what-if',
+  workbenchRailEmptyReading: 'No change yet. Change something under “Changes to try” and it shows here.',
+  workbenchRailWorking: 'Working this out…',
+  workbenchRailError: 'This what-if couldn’t be worked out. Your plan is untouched.',
+  workbenchRailUpdating: 'Updating: this is from before your latest change.',
+  workbenchRailNoCount: 'No reading: a fact it needs is missing.',
+  workbenchRailFloorUnread:
+    'Your answer’s date is figured on essentials-only spending, and this what-if changes only extra lines, so its odds can’t move from your plan’s.',
+  workbenchRailPlanValueNone: 'Your plan: none',
+  // The stop year.
+  workbenchRailStopTitle: 'When work stops',
+  workbenchRailStopLabel: 'The year work stops',
+  workbenchRailStopNote: 'A stop year can be tried here but not applied: your plan’s stop year is your answer’s date, which the tool works out.',
+  // Spending.
+  workbenchRailSpendTitle: 'Spending',
+  workbenchRailSpendTotalLabel: 'Spending, dollars a year',
+  workbenchRailSpendUnnamed: 'A budget line saved before lines had their own mark can’t be changed here.',
+  workbenchRailAddLine: 'Add a line',
+  workbenchRailAddLineGo: 'Add this line',
+  workbenchRailAddLineNeeds: 'A new line needs its dollars a year and a first year.',
+  workbenchRailLineOut: 'Taken out in this what-if.',
+  workbenchRailLineNew: 'Added in this what-if.',
+  // Deposits.
+  workbenchRailDepositsTitle: 'Yearly deposits',
+  workbenchRailDepositsSpent: 'Money no longer deposited counts as spent in this what-if, not saved.',
+  workbenchRailEmployerLabel: 'The employer’s yearly deposit at this amount',
+  workbenchRailEmployerWaiting: 'This change waits for the employer’s figure at the lower deposit.',
+  // The mix.
+  workbenchRailMixTitle: 'How your savings are invested',
+  workbenchRailMixStocks: 'Stocks, %',
+  workbenchRailMixBonds: 'Bonds, %',
+  workbenchRailMixCash: 'Cash, %',
+  workbenchRailMixNote:
+    'A mix can be tried here but not applied: each account’s own mix is set on your facts page, and your plan runs on their blend.',
+  // Roth conversions.
+  workbenchRailRothTitle: 'Roth conversions',
+  workbenchRailRothLegend: 'Moving pre-tax money to Roth',
+  workbenchRailRothNone: 'None',
+  workbenchRailRothAmount: 'A set amount each year',
+  // Withdrawal order.
+  workbenchRailOrderTitle: 'Withdrawal order',
+  // Social Security.
+  workbenchRailClaimTitle: 'When Social Security starts',
+  // The marketplace regime.
+  workbenchRailAcaTitle: 'Help with marketplace premiums',
+  // Apply.
+  workbenchRailApply: 'Apply to my plan',
+  workbenchRailApplyEmpty: 'Nothing to apply yet.',
+  workbenchRailApplyWaiting: 'Apply waits until this what-if is worked out on your latest answer.',
+  workbenchRailApplyDone: 'Applied. Your plan now holds these changes. Save your plan to keep them.',
+  workbenchRailApplyWithheldStop:
+    'Apply waits: this what-if holds a stop year, which can be tried here but not applied. Put the stop year back to the plan and the rest applies exactly as compared.',
+  workbenchRailApplyWithheldMix:
+    'Apply waits: this what-if holds a mix, which can be tried here but not applied. Put the mix back to the plan and the rest applies exactly as compared.',
+  workbenchRailApplyWithheldBoth:
+    'Apply waits: this what-if holds a stop year and a mix, which can be tried here but not applied. Put both back to the plan and the rest applies exactly as compared.',
+  workbenchRailApplyLeftOver:
+    'Applying this moves your spending, so your figure for a working year stays as you gave it and needs confirming again. Until you confirm it, your answer counts none of the left over from pay as saved, so it can read lower than this comparison.',
+  workbenchRailApplyReadOnly: 'This tab can try changes but not apply them.',
+  // The saved recommendation's row (R22).
+  workbenchRailRecTitle: 'The saved recommendation',
+  workbenchRailRecTry: 'Try the saved recommendation',
+  workbenchRailRecLeave: 'Back to my own changes',
+  workbenchRailRecShowing: 'Showing the saved recommendation beside your plan. It can’t be changed here.',
+  workbenchRailRecStale:
+    'Your plan or the rules have changed since this recommendation was saved, so it isn’t tried here. A fresh one can be found on your answer’s page.',
+  workbenchRailRecOld:
+    'This recommendation was saved before the tool kept its Roth conversion plan, so it can’t be tried here as it was recommended. A fresh one can be found on your answer’s page.',
+  workbenchRailRecRothNone: 'none',
+  // Refusals, by name.
+  workbenchRailRefusedDuplicate: 'This what-if changes one thing twice, so it isn’t run.',
+  workbenchRailRefusedAllRetired: 'Everyone has stopped work, so there is no stop year to change.',
+  workbenchRailRefusedLineGone: 'A spending line this what-if changes is no longer in your plan, so it isn’t run.',
+  workbenchRailRefusedLineThere: 'A line this what-if adds is already in your plan, so it isn’t run.',
+  workbenchRailRefusedNoBudget: 'Your plan has no budget lines, so a line can’t be added or changed here; the one spending figure can.',
+  workbenchRailRefusedTotalOnBudget: 'Your plan’s spending is set by its budget lines, so the one figure can’t be changed here; the lines can.',
+  workbenchRailRefusedBudgetDropped:
+    'This what-if takes out every budget line, which the tool can’t run. Keep at least one line in it.',
+  workbenchRailRefusedAccountGone: 'An account this what-if changes is no longer in your plan, so it isn’t run.',
+  workbenchRailRefusedOwnerRetired: 'Deposits are changed only for someone still working, so this what-if isn’t run.',
+  workbenchRailRefusedEmployerField: 'An employer figure doesn’t apply to that account, so this what-if isn’t run.',
+  workbenchRailRefusedOverLimit:
+    'These deposits go over the yearly limit for one person’s accounts together, so the tool would trim them. Lower one of them to try it.',
+  workbenchRailRefusedPersonGone: 'A person this what-if changes is no longer in your plan, so it isn’t run.',
+  workbenchRailRefusedClaimed: 'Social Security has already started for them, so its age can’t be changed.',
+  workbenchRailRefusedClaimPast: 'That age has already passed, so Social Security can’t start then.',
+  workbenchRailRefusedNoSeed: 'This what-if waits for your answer’s first run.',
+  workbenchRailRefusedFutures: 'This what-if couldn’t be read on the same futures as your plan, so no comparison is shown.',
+  // The paired form.
+  workbenchPairCaptionSteady: 'Your plan and this what-if in one future, a steady market, a row per year, in today’s dollars',
+  workbenchPairCaptionRough: 'Your plan and this what-if in one future, a rough market, a row per year, in today’s dollars',
+  workbenchPairLoading: 'Working out this what-if year by year…',
+  workbenchPairEmpty: 'Change something under “Changes to try” to see it here, year by year, beside your plan.',
+  workbenchPairError: 'This what-if’s year-by-year rows couldn’t be worked out. Your plan is untouched.',
+  workbenchPairToRoth: 'Moved to Roth',
+  workbenchPairRequired: 'Required withdrawal',
+  workbenchPairEndTotal: 'All savings at year’s end',
+  workbenchPairYear: 'Year',
+  workbenchPairRun: 'Your plan or this what-if',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -4582,7 +4694,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2115` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2144` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5124,4 +5236,47 @@ export const slots = {
   workbenchFactStopYear: (year: number): string => `${year}, the year your answer’s date gives`,
   workbenchFactStopNoDate: (year: number): string =>
     `${year}: your answer found no date in its window, so the table uses the window’s last year`,
+  /** A facts-page line's link to the What if page (U15), named for the line it tries: "Try a change to Withdrawal order". */
+  workbenchFactsTryName: (label: string): string => `Try a change to ${label.charAt(0).toLowerCase()}${label.slice(1)} on the What if page`,
+  // --- The lever rail (Act 5, U15). The pilot's drafts, shipped flagged. Each count rides whole from its one producer
+  // (`verdictReadingText`, `dateOddsText`); a run's name rides whole ("Your plan", "This what-if"). ---
+  /** Equal counts: the even line (R20). */
+  workbenchRailEven: (reading: string): string => `Both read ${reading}.`,
+  /** OQ6: the odds name the stop year they read. The plan reads its answer's date… */
+  workbenchRailStopsPlan: (year: number): string => `If work stops in ${year}, your answer’s date`,
+  /** …or, with no date in the window, the window's last year, said as the table's heading says it. */
+  workbenchRailStopsPlanNoDate: (year: number): string =>
+    `If work stops in ${year}: your answer found no date in its window, so this reads its last year`,
+  workbenchRailStopsWhatIf: (year: number): string => `If work stops in ${year}`,
+  /** The stop-year lever's sentence (KTD15): two earners stop together, flagged for Briggsy's read. */
+  workbenchRailStopBoth: (year: number): string => `In this what-if, both of you stop work in ${year}.`,
+  workbenchRailStopOne: (mid: string, you: boolean, year: number): string =>
+    `In this what-if, ${mid} ${you ? 'stop' : 'stops'} work in ${year}.`,
+  workbenchRailStopOption: (year: number, plan: boolean): string => (plan ? `${year}, your plan` : String(year)),
+  /** A lever's plan value, exact (R11). */
+  workbenchRailPlanValue: (value: string): string => `Your plan: ${value}`,
+  workbenchRailPerYear: (amount: string): string => `$${amount} a year`,
+  /** A lever's own "Back to the plan", named for what it puts back. */
+  workbenchRailBackName: (what: string): string => `Put ${what} back to the plan`,
+  workbenchRailLineAmount: (name: string): string => `${name}, dollars a year`,
+  workbenchRailLineTier: (name: string): string => `${name}: essential or extra`,
+  workbenchRailLineRemove: (name: string): string => `Take ${name} out`,
+  workbenchRailDepositLabel: (account: string): string => `Into ${account}, dollars a year`,
+  workbenchRailEmployerPlan: (amount: string): string => `In your plan the employer puts in $${amount} a year.`,
+  workbenchRailMixPlan: (pct: string): string => `Your plan’s accounts together hold about ${pct}% stocks.`,
+  workbenchRailMixSum: (total: string): string => `The three add to ${total}%; they need to add to 100%.`,
+  workbenchRailRothStartPast: (year: number): string => `The first year can’t be before ${year}.`,
+  workbenchRailClaimLabel: (possessive: string): string => `${possessive.charAt(0).toUpperCase()}${possessive.slice(1)} age when it starts`,
+  workbenchRailClaimRange: (from: number): string => `An age from ${from} to 70.`,
+  /** The recommendation's own action, in words (R22). */
+  workbenchRailRecAction: (order: string, roth: string): string => `Withdrawal order: ${order}. Roth conversions: ${roth}.`,
+  workbenchRailRefusedStopWindow: (first: number, last: number): string =>
+    `That stop year is outside the years your answer looks across, ${first} to ${last}.`,
+  // The paired form.
+  workbenchPairPay: (label: string): string => `Pay, ${label}`,
+  workbenchPairPutIn: (source: string): string => `${source}, put in`,
+  workbenchPairTakenFrom: (source: string): string => `${source}, taken out`,
+  workbenchPairRanOut: (run: string, year: number): string => `${run}: the money runs out in ${year} in this future.`,
+  /** KTD32's stopgap on the paired form, named for the run whose taxable ledger holds money (round 3's c3-adv-hidden-work-4). */
+  workbenchPairYield: (run: string, line: string): string => `${run}: ${line}`,
 } as const

@@ -402,6 +402,21 @@ test.describe('CSP — real browser enforcement', () => {
     await sheet.getByRole('button', { name: copy.workbenchFactsDone, exact: true }).click()
     await expect(sheet, 'the step sheet never closed').toHaveCount(0)
 
+    // U15: one what-if on the What if page, run on the build's own engine worker (its many-futures run and both named
+    // futures), under the same law. Spending is offered to every household: its first figure (the one total, or the
+    // first budget line) committed $1,000 lower with Enter. Nothing is applied, so the way back below is unchanged.
+    await page.getByRole('tab', { name: copy.workbenchPageWhatIf }).click()
+    await page.locator('.wb-lever[data-lever="spending"] > summary').click()
+    const spend = page.locator('.wb-lever[data-lever="spending"] input[inputmode="decimal"]').first()
+    const planSpend = Number((await spend.inputValue()).replace(/[^0-9]/g, ''))
+    expect(planSpend, '[test setup] the spending figure reads').toBeGreaterThan(1_000)
+    await spend.fill(String(planSpend - 1_000))
+    await spend.press('Enter')
+    await expect(page.locator('.wb-pair'), 'the what-if’s paired years never landed').toBeVisible({ timeout: 60_000 })
+    await expect(page.locator('.wb-reading').nth(1).locator('.wb-reading__count'), 'the what-if’s reading never landed').not.toHaveText('', {
+      timeout: 60_000,
+    })
+
     // The way back: the browser's own Back lands on the answer.
     await page.goBack()
     await expect(page.locator('main.result')).toBeVisible()

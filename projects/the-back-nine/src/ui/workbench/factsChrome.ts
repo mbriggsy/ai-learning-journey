@@ -38,6 +38,7 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import type {
   DrawdownOrderKey,
   EnteredAccount,
+  WhatIfLeverKind,
   IncomeStream,
   IncomeType,
   RetirementState,
@@ -48,6 +49,7 @@ import { formatBracketPercent } from '../money'
 import { rothPlanStartFor, type BandPlanClockAnchor } from '../bandAnnotations'
 import { leftOverLineKey } from '../assumptionRegistry'
 import { tablePerson } from './tableRun'
+import { railOffers } from './railChrome'
 import type { FactDoorId, FactStamp, StepSectionId } from './factRegistry'
 
 export interface FactLine {
@@ -58,6 +60,9 @@ export interface FactLine {
   /** The choices section's lines carry their own door (a step section's lines share the section's); `'none'`
    *  where the line has no editor here (the answer's door rule, or a value set elsewhere). */
   readonly door?: FactDoorId
+  /** A lever's line links to the What if page, where the choice can be tried (U15): it opens no editor. Present only
+   *  where the rail offers that lever. */
+  readonly tryOn?: WhatIfLeverKind
   /** A quiet line under the value (why a choice has no door). */
   readonly note?: string
   /** The other notes this line can carry: drawn hidden in the note's cell, so a change of note never moves the page. */
@@ -70,6 +75,8 @@ export interface FactGroup {
   readonly headingFacts?: readonly FactStamp[]
   /** A group behind one door of its own (the budget's lines, in the choices). */
   readonly door?: FactDoorId
+  /** The group's link to the What if page (the budget's lines: spending is a lever, U15). */
+  readonly tryOn?: WhatIfLeverKind
   readonly lines: readonly FactLine[]
   /** A quiet line under the group's lines (what the budget's year numbers count from). */
   readonly note?: string
@@ -80,6 +87,10 @@ export interface FactSection {
   readonly title: string
   /** The section's one door, or null where each line carries its own (the choices). */
   readonly door: FactDoorId | null
+  /** A step section holding a lever links to the What if page from its head, beside its door (U15): the spending, a
+   *  claim age not yet in effect, a working owner's deposits. In the head, so the link adds no row: the sections flow in
+   *  columns, and a taller column moved the Spending section between columns after an edit (the U8 landing walk). */
+  readonly tryOn?: { readonly lever: WhatIfLeverKind; readonly name: string }
   readonly groups: readonly FactGroup[]
   /** Words in place of lines, where the list is empty ("No accounts yet."). */
   readonly empty?: string
@@ -373,6 +384,8 @@ const STEP_SECTIONS: Readonly<Record<StepSectionId, StepComposer>> = {
   'social-security': (d) => ({
     title: copy.workbenchFactsSocialSecurity,
     door: 'social-security',
+    // A claim age not yet reached is a lever (KTD15): tried on the What if page (U15).
+    ...(railOffers(d, undefined).claims.length > 0 ? { tryOn: { lever: 'claim-age' as const, name: copy.workbenchRailClaimTitle } } : {}),
     groups: PEOPLE.map((i) => {
       const p = d.people[i]
       return {
@@ -426,6 +439,8 @@ const STEP_SECTIONS: Readonly<Record<StepSectionId, StepComposer>> = {
       // While a budget governs, the spending total's one door is the budget, as the panel's governed row routes
       // (its own step face is then read-only, with a steer into the same builder).
       door: governs ? 'budget' : 'spend',
+      // Spending is a lever (KTD15): tried on the What if page (U15).
+      tryOn: { lever: 'spending', name: copy.workbenchRailSpendTitle },
       groups: [
         {
           lines: [
@@ -523,6 +538,8 @@ const STEP_SECTIONS: Readonly<Record<StepSectionId, StepComposer>> = {
       title: copy.workbenchFactsAccounts,
       door: 'accounts',
       groups: d.enteredAccounts.map((a) => accountGroup(d, a)),
+      // A working owner's deposit is a lever (KTD15): the same rail link the Roth plan gets (the plan's U15).
+      ...(railOffers(d, undefined).deposits.length > 0 ? { tryOn: { lever: 'deposits' as const, name: copy.workbenchRailDepositsTitle } } : {}),
       ...(d.enteredAccounts.length === 0
         ? { empty: copy.accountsEmpty }
         : { foot: { text: slots.workbenchFactAccountsTotal(money(total)), facts: [] } }),
@@ -572,6 +589,9 @@ function budgetWhen(start: number, end: number | undefined, anchorYear: number |
 
 function choicesSection(d: ScenarioDraft, anchor: BandPlanClockAnchor, stop: FactStop | undefined): FactSection {
   const lines: FactLine[] = []
+  // Since U15 the levers here open no editor: each links to the What if page, where it is tried beside the plan and
+  // applied from there (U8's lever doors, swapped; R15's one door). The panel's own via-sheet rows still open the sheets.
+  const offers = railOffers(d, stop?.year)
   const order = d.drawdownOrder
   lines.push({
     label: copy.assumptionDrawdownName,
@@ -580,7 +600,8 @@ function choicesSection(d: ScenarioDraft, anchor: BandPlanClockAnchor, stop: Fac
         ? slots.workbenchFactOrder(order.map((k) => copy[BUCKET_LABEL[k]]))
         : copy[POLICY_LABEL[d.drawdownPolicy]],
     facts: ['drawdownPolicy', 'drawdownOrder'],
-    door: d.enteredAccounts.length > 0 ? 'sequencing' : 'none',
+    door: 'none',
+    ...(offers.order !== undefined ? { tryOn: 'withdrawal-order' as const } : {}),
   })
   const roth = d.rothConversion
   const rothStart = roth === undefined ? undefined : rothPlanStartFor(anchor, roth.startYearOffset)
@@ -591,7 +612,8 @@ function choicesSection(d: ScenarioDraft, anchor: BandPlanClockAnchor, stop: Fac
         ? copy.assumptionNoneApplied
         : slots.workbenchFactRoth(money(roth.annualAmountReal), rothStart.year, rothStart.passed, roth.years),
     facts: ['rothConversion'],
-    door: d.filing === 'mfj' ? 'roth' : 'none',
+    door: 'none',
+    ...(offers.roth !== undefined ? { tryOn: 'roth' as const } : {}),
   })
   const budgetLines: FactLine[] = []
   const budgetAnchor = !isDateRoute(d) ? d.startCalendarYear : stop?.route === 'dated' ? stop.year : undefined
@@ -614,7 +636,8 @@ function choicesSection(d: ScenarioDraft, anchor: BandPlanClockAnchor, stop: Fac
       label: copy.assumptionRegimeName,
       value: d.enhancedSubsidies === true ? copy.leverHealthRegimeEnhanced : copy.leverHealthRegimeReverted,
       facts: ['enhancedSubsidies'],
-      door: 'subsidy-regime',
+      door: 'none',
+      ...(offers.aca !== undefined ? { tryOn: 'aca-subsidy' as const } : {}),
     })
   }
   lines.push({
@@ -662,6 +685,7 @@ function choicesSection(d: ScenarioDraft, anchor: BandPlanClockAnchor, stop: Fac
             : slots.workbenchFactStopYear(stop.year),
       facts: [],
       door: 'none',
+      ...(offers.stop !== undefined ? { tryOn: 'stop-year' as const } : {}),
       note: stop.marked ? copy.workbenchPinnedRefiguring : copy.workbenchFactStopNote,
       noteReserve: [copy.workbenchFactStopNote, copy.workbenchPinnedRefiguring],
     })
@@ -673,6 +697,7 @@ function choicesSection(d: ScenarioDraft, anchor: BandPlanClockAnchor, stop: Fac
     groups.push({
       heading: copy.workbenchFactBudget,
       door: 'budget',
+      tryOn: 'spending',
       lines: budgetLines,
       ...(budgetAnchor === undefined ? { note: copy.workbenchFactBudgetYearZero } : {}),
     })

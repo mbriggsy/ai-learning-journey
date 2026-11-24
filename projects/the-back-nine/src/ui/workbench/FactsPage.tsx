@@ -9,6 +9,7 @@
  */
 import { useId } from 'react'
 import { copy, slots } from '../copy'
+import type { WhatIfLeverKind } from '@shared/model'
 import type { FactDoorId } from './factRegistry'
 import type { FactGroup, FactLine, FactSection } from './factsChrome'
 
@@ -16,6 +17,18 @@ export interface FactsPageProps {
   readonly sections: readonly FactSection[]
   /** Open a door. Absent ⇒ a read-only tab: no door is drawn. */
   readonly onOpen?: (door: FactDoorId) => void
+  /** Go to the What if page at a lever (U15). It writes nothing, so a read-only tab keeps it. Absent ⇒ no link. */
+  readonly onTry?: (lever: WhatIfLeverKind) => void
+}
+
+/** A lever's link to the What if page, named for the line it tries. It opens no editor (U15). */
+function Try({ lever, name, onTry }: { readonly lever: WhatIfLeverKind | undefined; readonly name: string; readonly onTry: FactsPageProps['onTry'] }) {
+  if (lever === undefined || onTry === undefined) return null
+  return (
+    <button type="button" className="btn-quiet wb-facts__edit wb-facts__try" aria-label={slots.workbenchFactsTryName(name)} data-fact-try={lever} onClick={() => onTry(lever)}>
+      {copy.workbenchFactsTry}
+    </button>
+  )
 }
 
 /** A door, named for what it opens. `'none'` draws nothing (a value with no editor here). */
@@ -34,7 +47,7 @@ function Door({ door, name, onOpen }: { readonly door: FactDoorId; readonly name
   )
 }
 
-function Line({ line, onOpen }: { readonly line: FactLine; readonly onOpen: FactsPageProps['onOpen'] }) {
+function Line({ line, onOpen, onTry }: { readonly line: FactLine; readonly onOpen: FactsPageProps['onOpen']; readonly onTry: FactsPageProps['onTry'] }) {
   return (
     <div
       className="wb-facts__line"
@@ -56,12 +69,13 @@ function Line({ line, onOpen }: { readonly line: FactLine; readonly onOpen: Fact
           </span>
         )}
         {line.door !== undefined && <Door door={line.door} name={line.label} onOpen={onOpen} />}
+        <Try lever={line.tryOn} name={line.label} onTry={onTry} />
       </dd>
     </div>
   )
 }
 
-function Group({ group, onOpen }: { readonly group: FactGroup; readonly onOpen: FactsPageProps['onOpen'] }) {
+function Group({ group, onOpen, onTry }: { readonly group: FactGroup; readonly onOpen: FactsPageProps['onOpen']; readonly onTry: FactsPageProps['onTry'] }) {
   return (
     <div className="wb-facts__group" data-fact-door={group.door}>
       {group.heading !== undefined && (
@@ -69,12 +83,15 @@ function Group({ group, onOpen }: { readonly group: FactGroup; readonly onOpen: 
           <h4 className="wb-facts__group-heading" data-fact={group.headingFacts?.join(' ')}>
             {group.heading}
           </h4>
-          {group.door !== undefined && <Door door={group.door} name={group.heading} onOpen={onOpen} />}
+          <span className="wb-facts__doors">
+            {group.door !== undefined && <Door door={group.door} name={group.heading} onOpen={onOpen} />}
+            <Try lever={group.tryOn} name={group.heading} onTry={onTry} />
+          </span>
         </div>
       )}
       <dl className="wb-facts__lines">
         {group.lines.map((line, i) => (
-          <Line key={i} line={line} onOpen={onOpen} />
+          <Line key={i} line={line} onOpen={onOpen} onTry={onTry} />
         ))}
       </dl>
       {group.note !== undefined && <p className="wb-facts__foot">{group.note}</p>}
@@ -82,7 +99,7 @@ function Group({ group, onOpen }: { readonly group: FactGroup; readonly onOpen: 
   )
 }
 
-function Section({ section, onOpen }: { readonly section: FactSection; readonly onOpen: FactsPageProps['onOpen'] }) {
+function Section({ section, onOpen, onTry }: { readonly section: FactSection; readonly onOpen: FactsPageProps['onOpen']; readonly onTry: FactsPageProps['onTry'] }) {
   const titleId = useId()
   return (
     <section
@@ -95,24 +112,27 @@ function Section({ section, onOpen }: { readonly section: FactSection; readonly 
         <h3 id={titleId} className="wb-facts__title">
           {section.title}
         </h3>
-        {section.door !== null && <Door door={section.door} name={section.title} onOpen={onOpen} />}
+        <span className="wb-facts__doors">
+          {section.door !== null && <Door door={section.door} name={section.title} onOpen={onOpen} />}
+          {section.tryOn !== undefined && <Try lever={section.tryOn.lever} name={section.tryOn.name} onTry={onTry} />}
+        </span>
       </div>
       {section.empty !== undefined && <p className="wb-facts__empty">{section.empty}</p>}
       {section.groups.map((group, i) => (
-        <Group key={i} group={group} onOpen={onOpen} />
+        <Group key={i} group={group} onOpen={onOpen} onTry={onTry} />
       ))}
       {section.foot !== undefined && <p className="wb-facts__foot">{section.foot.text}</p>}
     </section>
   )
 }
 
-export function FactsPage({ sections, onOpen }: FactsPageProps) {
+export function FactsPage({ sections, onOpen, onTry }: FactsPageProps) {
   return (
     <div className="wb-facts">
       <p className="wb-facts__intro">{onOpen === undefined ? copy.workbenchFactsReadOnly : copy.workbenchFactsIntro}</p>
       <div className="wb-facts__sections">
         {sections.map((section) => (
-          <Section key={section.id} section={section} onOpen={onOpen} />
+          <Section key={section.id} section={section} onOpen={onOpen} onTry={onTry} />
         ))}
       </div>
     </div>

@@ -282,7 +282,12 @@ describe('the workbench room', () => {
     // The facts page too (U8): every fact, and no door into any of them.
     fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageFacts }))
     expect(screen.getByRole('heading', { name: copy.workbenchFactsSocialSecurity })).toBeInTheDocument()
-    expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual([copy.workbenchBack])
+    // A lever's link to the What if page (U15) moves to a page and writes nothing; it is the one other button.
+    expect(screen.getAllByRole('button').map((b) => b.textContent).filter((t) => t !== copy.workbenchFactsTry)).toEqual([copy.workbenchBack])
+    // The What if page (U15): a read-only tab can try a change and draws no Apply.
+    fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageWhatIf }))
+    expect(screen.queryByRole('button', { name: copy.workbenchRailApply })).toBeNull()
+    expect(screen.getByText(copy.workbenchRailApplyReadOnly)).toBeInTheDocument()
   })
 })
 

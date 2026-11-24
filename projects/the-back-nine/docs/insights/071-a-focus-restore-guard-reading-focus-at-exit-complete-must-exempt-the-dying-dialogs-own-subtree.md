@@ -3,7 +3,7 @@ title: A modal-close focus-restore guard that reads focus position at exit-compl
 date: 2026-07-09
 phase: P3·U12 (the AssumptionPanel — the sheet→sheet routing guard)
 modules: [src/intake/controlSheet.tsx]
-tags: [focus-management, modal, onExitComplete, animate-presence, jsdom-vs-browser, live-walk, a11y, regression, sheet-family]
+tags: [focus-management, modal, onExitComplete, animate-presence, jsdom-vs-browser, live-walk, a11y, regression, sheet-family, exit-animation, late-blur-commit, edit-ending, commit-focused]
 ---
 
 ## Problem
@@ -57,3 +57,16 @@ already exists; the cost is one `page.evaluate`).
   locks counting open modals, body-class cleanup, `aria-hidden` siblings) — the dying instance
   must never count itself.
 - The BandEnlargeModal if it ever gains routing into a sheet.
+
+## Extended (2026-11-23): the dying subtree still WRITES, after the close handler has run
+
+U8's step sheet (`src/ui/workbench/StepSheet.tsx`, on `ControlSheet`) ran its "the edit has ended" logic (compare the
+draft, recompute) when the sheet closed. `AnimatePresence` keeps the body mounted through its exit, and the focus
+restore at exit-complete moves focus out of a field still inside it, so a typed-but-unblurred figure's commit-on-blur
+write landed about 200 ms AFTER the ending: the draft held $7,500, the answer stayed figured on $6,000, nothing
+recomputed, and Save would have kept the mismatch (U8's review, lens A, reproduced in jsdom; every sheet test had
+called `fireEvent.blur` before closing, so none saw it). The cure commits the focused field first in Done and in
+dismiss (`commitFocused`), and makes the body's writes no-ops once its ending ran. The lesson beside this insight's:
+a teardown callback sees a subtree that is still attached, and that subtree can still change state. Any "this
+session is over" logic must first flush what the dying subtree still holds (a focused field, a pending debounce),
+and a test that closes a sheet must close it the way a person does (Escape with focus still in the field).

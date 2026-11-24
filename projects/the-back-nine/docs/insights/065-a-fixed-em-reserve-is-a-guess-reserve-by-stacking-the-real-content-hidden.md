@@ -3,7 +3,7 @@ title: "A fixed em-reserve is a guess that drifts — reserve layout by stacking
 date: 2026-07-03
 phase: Act 3 (the levers)
 modules: []
-tags: []  # backfilled 2026-09-06 (doc audit) — tag by hand when next touched
+tags: [reserve, layout-shift, hidden-stack, known-alternatives, next-state-forms, pinned-answer]
 ---
 
 # A fixed em-reserve is a guess that drifts — reserve layout by stacking the REAL content hidden
@@ -22,3 +22,13 @@ When a box must never change size across a set of KNOWN alternatives, don't esti
 
 ## Also Applies To
 Any swap-on-hover/scrub readout (the band's box reserved differently — audit it under long locale strings); tab panels sized to the tallest tab; toggle button labels ("Save"/"Saving…") that shift width — same pattern with one row.
+
+## Extended (2026-11-23): the known alternatives are the forms the NEXT state can take, not the current one
+
+The workbench's pinned answer (`src/ui/workbench/PinnedAnswer.tsx`) stacked its real lines over a hidden copy of the
+current lead, so its box held the current answer's height and grew when the next answer took a longer form: U8's
+landing walk (the run held in-page, every frame compared) caught a dated lead ("about 9 years out") becoming the
+no-date one, which wrapped and pushed the page switch down 16 px at 1440. The hidden copy now stacks every lead and
+second line the next answer can take (`reserveForms`, including the aged-plan forms the review found missing). A
+reserve for a box that changes on an event must enumerate the states the event can produce; reserving what is on
+screen protects only against changes that cannot happen.

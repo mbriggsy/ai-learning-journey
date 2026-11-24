@@ -3,7 +3,7 @@ title: A producer's-output predicate must read the producer of the run the surfa
 date: 2026-07-17
 phase: Act 3 (oracle lane — the O16 reconciliation pass, the ultramode fold's P1)
 modules: [intake/intakeMap, ui/Result, engine/dateSearch]
-tags: [producer-output, insight-081, predicate, date-route, window-gating, disclosure, preview, input-vs-output-surface, draft-reading, scope-label, per-reading]
+tags: [producer-output, insight-081, predicate, date-route, window-gating, disclosure, preview, input-vs-output-surface, draft-reading, scope-label, per-reading, read-back, facts-page, stored-vs-used, ignored-field]
 ---
 
 ## Problem
@@ -72,3 +72,17 @@ Two Phase B cases sharpen which producer a surface must read:
   rule (point at W only where the slice is $0) was wrong for PA, whose run prices its tax on investment income and
   leaves its tax on pay to W. A real-seed arm per reading (NC / PA / unpriced / FL) caught it before landing. Key the
   words to what the producer did, per reading — never to one inferred proxy ([[147]] types that partition).
+
+## Extended (2026-11-23): a read-back of the inputs is an output surface wherever the engine ignores or overrides a stored field
+
+U8's facts page lists everything the household told the tool, so it was built as an input surface reading the draft.
+Its review (lens B, each case probed against `intakeMap`'s built params) found five lines that printed what was
+STORED, not what the run USES: build 2's left-over reply printed as "All of it goes into savings" while its shown
+state was `waiting-on-w` and the engine carried nothing; contributions printed for an owner the work step had since
+flipped to retired (the builder drops them, `isWorkingOwner`); an account's hand-entered mix printed where a ticker
+decides the blend (`resolveBlend` reads the fund table first, now `blendSourceOf`); a governed spending total printed
+flat over a ramped budget; budget years printed "into retirement" where the all-retired route's year 0 is the plan's
+first year. A draft field the household gave is a fact only while the run reads it as given. Where any gate, override
+or anchor sits between the stored field and the run (a status flip, a shown state, a precedence order, a ramp, a
+route's year 0), the read-back prints the producer's reading, or it says what the household typed as if the plan used
+it. Before printing a stored field, find every place the builder can ignore it, replace it or re-anchor it.

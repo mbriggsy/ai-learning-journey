@@ -61,6 +61,10 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
+- **(b9-4, 11-24) Stopping a background `pnpm exec tsx scripts/serve-dist-with-headers.ts` stops pnpm, not the server:**
+  its `node` child keeps ports 4180 and 4181, and the next `pnpm verify:csp` silently REUSES it (`reuseExistingServer`
+  off CI), serving whatever `dist/` it was started on. After stopping one, check `netstat -ano` for the ports and
+  `Stop-Process` the listed PID; rebuild before a gate run only with the ports free.
 - **(b9-10, 11-23) A gate piped to `grep` in a `&&` chain never stops the chain:** the pipe's status is `grep`'s, so
   `pnpm verify:doc-stats 2>&1 | grep … ; git commit … && git push` pushed `4a5bfd4d` over the TODO's cap. Capture the
   gate's own exit (`cmd > out 2>&1; rc=$?`) and commit only on 0. The same blindness: a background command ending in
@@ -1164,11 +1168,18 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
   dependency pre-bundler split the module and the master into chunks that import each other ("Class extends value
   undefined") while `pnpm build` ran clean: `vite.config.ts` excludes both packages from `optimizeDeps`. A green build is
   not a green dev server for Highcharts; load a chart page under `pnpm dev` before trusting it (RC1, `src/kit-probe.tsx`).
+  And the editor's language server (the global TypeScript 6) flags `installChartDefaults(Highcharts, …)` in
+  `src/kit-probe.tsx` as a type mismatch between two copies of Highcharts' types (`highcharts.src` against `highcharts`);
+  the project's pinned TypeScript 5.9 does not, and `pnpm typecheck` is the gate. Expect it to turn real on the day the
+  project moves to TypeScript 6.
 - **(b9-4, 11-24) A Tailwind utility beats every old stylesheet.** The old sheets sit in `@layer legacy`, the lowest
   layer, and Tailwind's utilities in the highest, so an old element whose class shares a utility's name (`table`,
   `hidden`, `flex`) would silently change. `theme.css` imports the utilities with `source(none)` and lists each new
   folder with `@source`; never switch automatic detection back on before RC21, and add each new kit or screen folder
   to that list when its first file lands. A utility named in a probe's comment still ships to the main app's CSS.
+  Checked when the kit landed (RC2a): of the utility names the build now carries, the only one an old surface uses as a
+  class is `sr-only` (the intake's live regions and legends), and Tailwind's rule matches `base.css`'s `.sr-only` in
+  effect; re-check with a scan of the built utilities against old class names when a new kit folder is added.
 - **(b9-1, 11-23) `overflow-wrap: anywhere` in a table cell lowers the cell's narrowest width to one letter**, so an
   auto-layout table squeezed toward its narrowest breaks headers mid-word ("Christop / her", "Spendin / g"); every
   width check passes it. The year-by-year table's headers break between words only (`workbench.css`), and a long

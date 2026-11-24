@@ -429,6 +429,35 @@ footer), `StaleBanner`, `EmptyState` (a bold centred sentence saying what the sc
 `LoadingVeil` (the old chart at 40% opacity with "Loading…" over the number), `Ring` and `TickDial` (section 4.0).
 Icons: `lucide-react` at 1.5 px stroke, always beside a word (ref 3.8).
 
+**Amendments made while building RC2's kit (2026-11-24, b9-4).**
+- **RC2 is built in two halves.** RC2a is the kit alone (`src/ui/kit/`, the phone tier, the `compact:` variant, the
+  probe page rendering the kit, the breakpoint arm); RC2b is the shell, the routing, `IntakeApp`'s `workspace` phase and
+  the room's deletion. Each half is its own commit. *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all
+  changes))*
+- **shadcn's CLI ran in a scratch project, never in the repo.** `shadcn@4.23.0 add` (the `base-nova` style, Base UI)
+  copied button, input, select, slider, switch, checkbox, tabs, sheet, dropdown-menu, tooltip, scroll-area, table and
+  card there; it wanted the npm package `cn` (it could not resolve a `utils` alias), `class-variance-authority`, and its
+  global theme sheet with the `tw-animate-css` classes. None of that came in: the components were rewritten into
+  `src/ui/kit/` on the role tokens, with the kit's own `cn` (`src/ui/kit/cn.ts`, tailwind-merge told the role scales,
+  so `text-page-title` and `text-plum` no longer read as one kind) and plain variant maps instead of `cva`.
+  `components.json` at the project root points a future `shadcn add` at `src/ui/kit` and `src/ui/styles/theme.css`;
+  run it in a scratch copy the same way. *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **The phone tier is `--breakpoint-wide: 48rem` in `theme.css`** (Tailwind's `wide:` variant, past the phone), with
+  `--breakpoint-laptop: 68rem` (`laptop:`, the existing seam) beside it; compact mode is a `compact:` variant written
+  once in `theme.css` on the existing short tier's exact prelude. The tray is the one kit part that changes WHAT it
+  renders at the phone tier (a panel under the frame, a full-height sheet on the phone), through `useWide`'s
+  `matchMedia('(min-width: 48rem)')`. *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **The ring's centre words are 36 px (30 in compact mode), not the reference's 56 px.** B9's words ("7 of 10",
+  "better than 9 in 10") are longer than RightCapital's "98%"; at 56 px "7 of 10" broke over two lines and touched the
+  stroke on the probe. The ring stays about 184 px (160 compact) with an 8 px stroke. *(the pilot's call, 2026-11-24,
+  b9-4 (Briggsy pre-approved all changes))*
+- **The intro line is never clamped to one line in compact mode.** Cutting the answer sentence would cut content (the
+  content-over-looks rule); each screen writes an intro that fits one line at his window, and the fit arms see it.
+  *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **Icons sit beside a word, the download button too** (ref 3.8 over ref 2.0's icon-only square): the table's download
+  is the outlined blue button with its icon and its word. *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all
+  changes))*
+
 **The shell** (`src/ui/shell/`):
 - **Top bar**: the B9 wordmark (ours), the two names stacked, the module words in RightCapital's order (Dashboard,
   Investment, Retirement, Tax, Profile), each shown only when at least one of its pages exists; the active module's

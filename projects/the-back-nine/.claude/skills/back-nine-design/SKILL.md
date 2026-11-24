@@ -20,6 +20,15 @@ B9's UI becomes a RightCapital clone: its screens, layout, navigation, flow, cha
 - **One face: Figtree** (`@fontsource-variable/figtree`, self-hosted), `tabular-nums` on every number, chart CSS included (Figtree's default digits are proportional). Fraunces, Source Sans 3 and the cream paper (`--paper`) are the old surfaces' and leave with them at RC21; no new surface uses them. The page is white (`--color-bg`).
 - **The browser surfaces are part of the design**, inside `.rc-root`: the selection colour (blue tint, stone-900 text), the caret (blue-ink), scrollbars (stone-300 thumb on a clear track), focus rings (a 2 px blue-ink ring on every focused control; the 1 px stone-300 input edge stays), and tabular numerals. `theme.css`'s scoped base sets each one.
 - **Charts are Highcharts in styled mode** from one shared default (`src/viz/charts/defaults.ts`): `useHTML` off, the credit on, data labels allowed to overlap (a printed value that is a second cue never hides), a 250 ms ease-out morph and none under reduced motion. Colour-blind patterns (hatch, dots, lines, cross) come from shared `defs` (`src/viz/charts/patterns.ts`) and `chartTheme.css` (`fill: url(#b9-hatch)` on the series AND its legend symbol), never from the pattern-fill module (styled mode ignores it).
+- **Screens are built from the kit, `src/ui/kit/`** (RC2, `index.ts` lists the parts). Its laws: every word is a prop (no
+  kit file imports `copy.ts`; the screen passes its words); every Base UI popup puts `.rc-root` on its `Portal`'s
+  `className`, so the scoped preflight and the browser surfaces reach it; the active tab, page or item carries an
+  underline, an open edge, a weight or a mark beside any colour, and the tray's changed value carries medium weight and
+  a 2 px left bar; layouts read the tiers as `wide:` (past the 48rem phone tier), `laptop:` (the 68rem seam) and
+  `compact:` (the one short tier), never a new literal width or height; no text is ever cut to fit (no `truncate`,
+  `line-clamp` or ellipsis: a label, title or shown choice wraps, and its box grows with `min-h-*`, never a fixed
+  `h-*`), and a look audit counts an ellipsis as clipped. A new kit part gets a visit in `e2e/csp.spec.ts`'s kit probe
+  arm if it portals or animates.
 - **The CSP rules for the stack:** Base UI only under `<CSPProvider disableStyleElements>`; never shadcn's `chart` or `sonner`; never motion's `popLayout` or layout animations; no runtime `<style>` from anything. `pnpm verify:csp`'s kit probe arm is the proof (`docs/architecture.md` §10).
 
 ## Tone law (the one-paragraph version)

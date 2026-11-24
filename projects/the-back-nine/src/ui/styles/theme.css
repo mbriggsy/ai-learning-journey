@@ -23,6 +23,7 @@
 @import 'tailwindcss/utilities.css' layer(utilities) source(none);
 
 @source '../../kit-probe.tsx';
+@source '../kit';
 
 @theme static {
   --*: initial;
@@ -58,6 +59,7 @@
   --font-ui: 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
   --font-weight-light: 300;
   --font-weight-regular: 400;
+  --font-weight-medium: 500; /* the tray's changed value (its second cue beside the blue) */
   --font-weight-semibold: 600;
   --tracking-nav: 0.01em;
   --text-page-title: 2.5rem;
@@ -70,12 +72,19 @@
   --text-metric--line-height: 1.2;
   --text-metric-words: 1.375rem;
   --text-metric-words--line-height: 1.3;
-  --text-ring: 3.5rem;
-  --text-ring--line-height: 1;
+  /* The ring's centre: B9's words ("7 of 10", "better than 9 in 10") are longer than the reference's "98%", so the
+     reference's 56 px would break "7 of 10" over two lines inside a 184 px ring; 36 px (30 in compact mode) keeps it
+     on one line and lets the ceiling words wrap inside the circle (seen on the kit probe, 2026-11-24). */
+  --text-ring: 2.25rem;
+  --text-ring--line-height: 1.1;
+  --text-ring-compact: 1.875rem;
+  --text-ring-compact--line-height: 1.1;
   --text-intro: 1.125rem;
   --text-intro--line-height: 1.5;
   --text-nav: 1rem;
   --text-nav--line-height: 1.5;
+  --text-subnav: 1.125rem;
+  --text-subnav--line-height: 1.5;
   --text-body: 1rem;
   --text-body--line-height: 1.5;
   --text-label: 0.875rem;
@@ -97,11 +106,25 @@
 
   /* ── Motion: the drawer and tray ride Base UI's CSS transitions (plan 2.1 decision 8) ── */
   --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1); /* the drawer and the tray sheet: quick out, long settle */
+
+  /* ── Breakpoints (plan 3.1): rem, so a raised browser font picks the tier. `wide:` is past the phone shape
+     (the phone tier, the one new tier RC2 adds); `laptop:` is `--bp-laptop`'s two-pane seam in tokens.css, where
+     the panel's 70/30 chart and key-metric split starts. scripts/__tests__/breakpoint-mirrors.test.ts reads both
+     names and holds every rem width in the tree to a declared tier. ── */
+  --breakpoint-wide: 48rem;
+  --breakpoint-laptop: 68rem;
 }
 
-/* Compact mode (ref 3.6, the shell's tighter frame at his 1440 by 731 window) is RC2's, with the shell it sizes: the
-   project has ONE short tier, `--bp-laptop-short`'s `(min-width: 68rem) and (max-height: 840px)` in tokens.css
-   (scripts/__tests__/breakpoint-mirrors.test.ts), and the reference's 800 px would be a second one. */
+/* Compact mode (ref 3.6, plan 3.1): the shell's tighter frame at his 1440 by 731 window, on the project's ONE short
+   tier (`--bp-laptop-short` in tokens.css). The prelude is exactly that tier's; a second height is refused by
+   scripts/__tests__/breakpoint-mirrors.test.ts. Used as `compact:` (the page title at 32 px, the panel's padding at
+   32 px, the ring at 160 px). */
+@custom-variant compact {
+  @media (min-width: 68rem) and (max-height: 840px) {
+    @slot;
+  }
+}
 
 /*
  * Tailwind's preflight, copied and scoped under `:where(.rc-root)` (zero added specificity). Copied from

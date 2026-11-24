@@ -16,13 +16,17 @@ import { BP_LAPTOP_REM, BROWSER_DEFAULT_PX, FLOOR, LAPTOP_SIZES, REAL, TALL_EDGE
  *   moving the token would leave every mirror silently pointing at the OLD seam — the fit gate would
  *   then measure a viewport the CSS no longer two-panes, and stay green while proving nothing.
  *
- * So: every width breakpoint anywhere in the swept trees must BE that one seam. That is the reason
+ * So: every width breakpoint anywhere in the swept trees must BE a declared tier. That is the reason
  * the equality below is deliberately total rather than an allowlist — a genuinely new tier is a
  * product decision, and the way to add one is to come here and say so, not to slip a second literal
- * past a guard. What is checked, exactly:
+ * past a guard. Act 6's RC2 added the one new tier that way (plan 6-rightcapital-ui-plan.md, section
+ * 3.1, "Breakpoints"): the phone shape below `--breakpoint-wide` (48rem) in `src/ui/styles/theme.css`,
+ * read below BY NAME. What is checked, exactly:
  *
  *   (a) REM — every `(min-width: <N>rem)` and `(max-width: <N>rem)` in `src/**\/*.{css,ts,tsx}`,
- *       `e2e/**\/*.ts` and `scripts/**\/*.ts` must equal the token. Comments are scanned too, ON
+ *       `e2e/**\/*.ts` and `scripts/**\/*.ts` must equal a declared tier (the `--bp-laptop` seam or
+ *       the phone tier), and every Tailwind `--breakpoint-*` in theme.css must too (Tailwind writes
+ *       its own `@media` for each one at build time, so the token IS the breakpoint). Comments are scanned too, ON
  *       PURPOSE: a stale "68rem" in prose beside a moved token is exactly the kind of quiet lie this
  *       file exists to stop. A `max-width` COMPLEMENT counts: a max-width written a hundredth of a
  *       rem below the seam is a re-typed derivative that drifts on its own once the token moves, and
@@ -151,6 +155,35 @@ function declaredBpLaptopRem(): number {
 
 const TOKEN_REM = declaredBpLaptopRem()
 
+/** Act 6's token sheet: the phone tier and Tailwind's `--breakpoint-*` names live here (plan 6, section 3.1). */
+const THEME_PATH = join(ROOT, 'src', 'ui', 'styles', 'theme.css')
+
+/** Every `--breakpoint-<name>: <N>rem;` in theme.css, comments stripped (a quoted old value never counts). */
+function themeBreakpoints(): ReadonlyMap<string, number> {
+  const theme = withoutComments(readFileSync(THEME_PATH, 'utf-8'))
+  return new Map([...theme.matchAll(/(--breakpoint-[a-z0-9-]+):\s*([0-9]+(?:\.[0-9]+)?)rem\s*;/g)].map((m) => [m[1]!, Number.parseFloat(m[2]!)]))
+}
+
+/** The phone tier, read BY NAME (the arm's own route for a new tier): absent is a loud failure, never a skip. */
+function declaredPhoneTierRem(): number {
+  const v = themeBreakpoints().get('--breakpoint-wide')
+  if (v === undefined) {
+    throw new Error(
+      `[phone tier] no \`--breakpoint-wide: <N>rem;\` in ${rel(THEME_PATH)} — the phone shape's tier has no source ` +
+        `of truth, so the kit's phone layouts and their mirrors are unanchored.`,
+    )
+  }
+  return v
+}
+
+const PHONE_REM = declaredPhoneTierRem()
+
+/** The declared tiers, by where each is declared: the ONLY widths a rem breakpoint may name. */
+const TIERS: ReadonlyMap<number, string> = new Map([
+  [TOKEN_REM, `--bp-laptop in ${rel(TOKENS_PATH)}`],
+  [PHONE_REM, `--breakpoint-wide (the phone tier) in ${rel(THEME_PATH)}`],
+])
+
 const SRC_FILES = filesUnder(join(ROOT, 'src'), (n) => /\.(css|ts|tsx)$/.test(n))
 const REM_SCOPE = [
   ...SRC_FILES,
@@ -187,18 +220,30 @@ describe('--bp-laptop source-bind', () => {
     ).toBeGreaterThan(0)
   })
 
-  it('every rem width breakpoint equals the token — this project has ONE seam', () => {
-    const wrong = REM_BREAKPOINTS.filter((b) => b.value !== TOKEN_REM)
+  it('every rem width breakpoint equals a declared tier — the seam or the phone tier, nothing else', () => {
+    const wrong = REM_BREAKPOINTS.filter((b) => !TIERS.has(b.value))
     expect(
       wrong.map(at),
-      `[bp-laptop] a rem width breakpoint disagrees with \`--bp-laptop: ${TOKEN_REM}rem\` in ` +
-        `${rel(TOKENS_PATH)}. @media cannot read a custom property, so these literals ARE the ` +
+      `[bp-laptop] a rem width breakpoint is not a declared tier (${[...TIERS].map(([v, w]) => `${v}rem, ${w}`).join('; ')}). ` +
+        `@media cannot read a custom property, so these literals ARE the ` +
         `contract. If it is a MIRROR, fix it (or move the token and every mirror together). If it is ` +
-        `a max-width COMPLEMENT of the seam, do not re-type a derivative that drifts on its own — ` +
-        `write \`not (min-width: ${TOKEN_REM}rem)\`, or use the token value itself. If it is a ` +
-        `genuinely NEW tier, that is a product decision: add it here deliberately, never by ` +
+        `a max-width COMPLEMENT of a tier, do not re-type a derivative that drifts on its own — ` +
+        `write \`not (min-width: ${TOKEN_REM}rem)\`, or use the tier's value itself. If it is a ` +
+        `genuinely NEW tier, that is a product decision: declare it by name here deliberately, never by ` +
         `loosening this arm.`,
     ).toEqual([])
+  })
+
+  it("every Tailwind --breakpoint-* in theme.css equals a declared tier (Tailwind writes each one's @media itself)", () => {
+    const breakpoints = themeBreakpoints()
+    expect(breakpoints.size, `[bp-laptop] ${rel(THEME_PATH)} declares no --breakpoint-* at all: the read broke`).toBeGreaterThan(0)
+    const wrong = [...breakpoints].filter(([, v]) => !TIERS.has(v))
+    expect(
+      wrong.map(([name, v]) => `${name}: ${v}rem`),
+      `[bp-laptop] a Tailwind breakpoint in ${rel(THEME_PATH)} is not a declared tier. Its variant (\`wide:\`, ` +
+        `\`laptop:\`) would split the layout at a width no fit arm measures; use a declared tier's value.`,
+    ).toEqual([])
+    expect(breakpoints.get('--breakpoint-laptop'), '[bp-laptop] `laptop:` must be the --bp-laptop seam').toBe(TOKEN_REM)
   })
 
   it('no px or em width breakpoint under src/** — the seam is rem (council 2026-09-10)', () => {

@@ -428,17 +428,20 @@ test.describe('CSP — real browser enforcement', () => {
 
   /**
    * Act 6 · RC1 (plan docs/plans/6-rightcapital-ui-plan.md, section 2.3): the new stack under the real header, before any
-   * screen is built. The probe page (`kit-probe.html`, a second build entry) mounts Base UI (Dialog as the drawer,
-   * Select, ScrollArea, Toast, Slider) under `CSPProvider disableStyleElements`, a TanStack table, a lucide icon and a
-   * Highcharts chart in styled mode with the accessibility module and the shared pattern defs. Each one is opened and
-   * used; ANY violation reds (the library that injected a `<style>` or a style attribute is the one being opened), and
-   * so does any request off the build's origin. The fallbacks a red points at: React Aria (components), Recharts
-   * (charts). The same arm reads the cascade the colour-blind cue rests on: the hatched series and its legend symbol
-   * fill from `url("#b9-hatch")`, and series 0 fills with palette.ts's own hex, so neither `highcharts.css` nor
-   * Highcharts' default palette won.
+   * screen is built; from RC2 (section 3.1) the probe page (`kit-probe.html`, a second build entry) wears the KIT
+   * (`src/ui/kit`) under `CSPProvider disableStyleElements`, and this arm opens every kit part that portals or animates:
+   * the drawer (with its record steps, Escape, and focus back on its opener, the one real-browser read of insight 071),
+   * the Add menu and a flyout, the picker, the chart title's menu, the folder tabs, the tooltip, the toast, the switch,
+   * the checkbox, and the Action Items tray (a panel on the laptop, a full-height sheet on the phone); plus the slider,
+   * the scroll area, the TanStack data table and the Highcharts chart in styled mode with the accessibility module and
+   * the shared pattern defs. ANY violation reds (the part that injected a `<style>` or a style attribute is the one
+   * being opened), and so does any request off the build's origin. The fallbacks a red points at: React Aria
+   * (components), Recharts (charts). The same arm reads the cascade the colour-blind cue rests on: the hatched series and
+   * its legend symbol fill from `url("#b9-hatch")`, and series 0 fills with palette.ts's own hex, so neither
+   * `highcharts.css` nor Highcharts' default palette won.
    */
-  test('the kit probe: every new library opened under the enforced CSP — no violation, no request off the origin, the chart cascade intact', async ({ page }) => {
-    test.setTimeout(90_000)
+  test('the kit probe: every kit part opened under the enforced CSP — no violation, no request off the origin, the chart cascade intact', async ({ page }) => {
+    test.setTimeout(120_000)
     await installCollector(page)
     const outside: string[] = []
     page.on('request', (r) => {
@@ -453,17 +456,30 @@ test.describe('CSP — real browser enforcement', () => {
     expect(csp).not.toContain("'unsafe-inline'")
     await expect(page.getByRole('heading', { name: 'Kit probe' })).toBeVisible()
 
-    // Dialog, shaped as the right drawer: open, read, close.
-    await page.getByRole('button', { name: 'Open the drawer' }).click()
-    const drawer = page.getByRole('dialog', { name: 'Drawer' })
+    const insideRcRoot = 'xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " rc-root ")]'
+
+    // The drawer (a Base UI Dialog docked right): open, step a record, close on Escape with focus back on its opener
+    // (insight 071: jsdom's teardown order is not the browser's, so this is the real read), then again through Cancel.
+    const opener = page.getByRole('button', { name: 'Open the drawer' })
+    await opener.click()
+    const drawer = page.getByRole('dialog', { name: 'Salary' })
     await expect(drawer).toBeVisible()
-    await expect(drawer.locator('xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " rc-root ")]')).toHaveCount(1)
+    await expect(drawer.locator(insideRcRoot)).toHaveCount(1)
+    await expect(drawer.getByRole('button', { name: 'Delete' })).toBeVisible()
+    await drawer.getByRole('button', { name: 'The next record' }).click()
+    await expect(drawer.locator('[data-probe="record"]')).toHaveText('Record 2 of 3')
+    await page.keyboard.press('Escape')
+    await expect(drawer).toHaveCount(0)
+    await expect(opener, 'focus did not return to the drawer’s opener').toBeFocused()
+    await opener.click()
+    await expect(drawer).toBeVisible()
     await drawer.getByRole('button', { name: 'Cancel' }).click()
     await expect(drawer).toHaveCount(0)
 
     // Select: open the list, pick the second item.
     await page.getByRole('combobox').click()
     await expect(page.getByRole('listbox')).toBeVisible()
+    await expect(page.getByRole('listbox').locator(insideRcRoot)).toHaveCount(1)
     await page.getByRole('option', { name: 'Years' }).click()
     await expect(page.getByRole('listbox')).toHaveCount(0)
     await expect(page.getByRole('combobox')).toContainText('Years')
@@ -475,12 +491,74 @@ test.describe('CSP — real browser enforcement', () => {
     await thumb.press('ArrowRight')
     await expect(thumb).not.toHaveAttribute('aria-valuenow', before ?? '')
 
-    // Toast: shown.
+    // Toast: shown, then dismissed.
     await page.getByRole('button', { name: 'Show a toast' }).click()
     await expect(page.getByText('Your plan is saved on this device.')).toBeVisible()
+    // Base UI hides a toast's close from the accessibility tree until the stack is hovered or focused (it expands).
+    await page.getByText('Your plan is saved on this device.').hover()
+    await page.getByRole('button', { name: 'Dismiss' }).click()
+    await expect(page.getByText('Your plan is saved on this device.')).toHaveCount(0)
+
+    // The Add menu: the blue panel, a flyout, a pick that closes both.
+    await page.getByRole('button', { name: 'Add', exact: true }).click()
+    const addMenu = page.getByRole('menu').first()
+    await expect(addMenu).toBeVisible()
+    await expect(addMenu.locator(insideRcRoot)).toHaveCount(1)
+    await page.getByRole('menuitem', { name: 'Property' }).click()
+    await expect(page.getByRole('menuitem', { name: 'Rental property' })).toBeVisible()
+    await page.getByRole('menuitem', { name: 'Rental property' }).click()
+    await expect(page.getByRole('menu')).toHaveCount(0)
+    await expect(page.locator('[data-probe="added"]')).toHaveText('Added: Rental property')
+
+    // The chart title's menu, the folder tabs, the switch, the checkbox.
+    await page.getByRole('button', { name: 'Savings over time' }).click()
+    await page.getByRole('menuitemradio', { name: 'Income sources' }).click()
+    await expect(page.getByRole('menu')).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Income sources' })).toBeVisible()
+    await page.getByRole('tab', { name: 'Confidence' }).click()
+    await expect(page.getByRole('tab', { name: 'Confidence' })).toHaveAttribute('aria-selected', 'true')
+    await page.getByRole('tab', { name: 'Probability' }).click()
+    const future = page.getByRole('switch', { name: 'Future dollars' })
+    await future.click()
+    await expect(future).toHaveAttribute('aria-checked', 'true')
+    const joint = page.getByRole('checkbox', { name: 'Held jointly' })
+    await joint.click()
+    await expect(joint).toHaveAttribute('aria-checked', 'false')
+
+    // The tooltip: hovered, its words shown in an .rc-root portal.
+    await page.getByRole('button', { name: 'About the annual increase' }).hover()
+    const tip = page.getByText('How much the figure grows each year.')
+    await expect(tip).toBeVisible()
+    await expect(tip.locator(insideRcRoot)).toHaveCount(1)
+    await page.mouse.move(0, 0)
+    await expect(tip).toHaveCount(0)
+
+    // The Action Items tray on the laptop: the handle opens it under the panel; a changed figure wears its mark.
+    const handle = page.getByRole('button', { name: 'Action items' })
+    await handle.click()
+    await expect(handle).toHaveAttribute('aria-expanded', 'true')
+    const tray = page.locator('[data-tray]')
+    await expect(tray).toBeVisible()
+    await expect(tray.getByText('Monthly spending in retirement').first()).toBeVisible()
+    const spend = tray.getByLabel('Monthly spending in retirement')
+    await spend.fill('5,000')
+    await spend.press('Enter')
+    await expect(spend.locator('xpath=..')).toHaveAttribute('data-changed', 'true')
+    await handle.click()
+    await expect(tray).toHaveCount(0)
+
+    // …and on the phone, a full-height sheet with its own close.
+    await page.setViewportSize({ width: 390, height: 844 })
+    await handle.click()
+    const sheet = page.getByRole('dialog', { name: 'Action items' })
+    await expect(sheet).toBeVisible()
+    await sheet.getByRole('button', { name: 'Close the action items' }).click()
+    await expect(sheet).toHaveCount(0)
+    await expect(handle).toHaveAttribute('aria-expanded', 'false')
+    await page.setViewportSize({ width: 1280, height: 720 })
 
     // ScrollArea: it scrolls, and its native scrollbar is hidden by OUR rule (Base UI's own <style> is switched off).
-    const viewport = page.locator('[data-probe="scroll-viewport"]')
+    const viewport = page.locator('[aria-label="Probe lines"]')
     const scroll = await viewport.evaluate((el) => {
       el.scrollTop = 60
       return { top: el.scrollTop, cls: el.classList.contains('base-ui-disable-scrollbar'), sw: getComputedStyle(el).scrollbarWidth }
@@ -489,11 +567,12 @@ test.describe('CSP — real browser enforcement', () => {
     expect(scroll.cls, 'Base UI no longer tags its viewport with base-ui-disable-scrollbar').toBe(true)
     expect(scroll.sw, 'theme.css’s .base-ui-disable-scrollbar rule did not apply').toBe('none')
 
-    // The TanStack table: a grouped header (two header rows) over four body rows.
-    const table = page.locator('[data-probe="table"]')
+    // The kit's TanStack table: a grouped header (two header rows) over four body rows, a negative in parentheses.
+    const table = page.locator('[data-probe="table"] table')
     await expect(table.locator('thead tr')).toHaveCount(2)
     await expect(table.locator('thead tr').first().locator('th', { hasText: 'Income' })).toHaveAttribute('colspan', '2')
     await expect(table.locator('tbody tr')).toHaveCount(4)
+    await expect(table.locator('tbody tr').first().locator('td').last()).toHaveText('(36,000)')
 
     // The chart: drawn, with the accessibility module's hidden screen-reader region and the credit.
     const chart = page.locator('.highcharts-container')

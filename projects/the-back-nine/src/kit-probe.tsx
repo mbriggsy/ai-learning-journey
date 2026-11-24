@@ -1,265 +1,110 @@
 /*
- * src/kit-probe.tsx: Act 6's stack probe (plan docs/plans/6-rightcapital-ui-plan.md, section 2.3). A second build entry
- * (`kit-probe.html`), so the production `dist/` holds it and no app code path does. It mounts every new library once
- * under the real CSP header: a Base UI Dialog shaped as the right drawer, a Select, a ScrollArea, a Toast and a Slider,
- * all under `CSPProvider disableStyleElements`; a TanStack table with a grouped header; a lucide icon; and a Highcharts
- * chart in styled mode from the shared default, with the accessibility module, the shared `defs` patterns and the
- * credit on. `e2e/csp.spec.ts` drives each one (and `e2e/design-tokens.spec.ts` reads Figtree here). Deleted at RC19,
- * when every piece renders in a real screen a CSP arm visits.
+ * src/kit-probe.tsx: Act 6's kit probe (plan docs/plans/6-rightcapital-ui-plan.md, sections 2.3 and 3.1). A second build
+ * entry (`kit-probe.html`), so the production `dist/` holds it and no app code path does. RC1 mounted each new library
+ * once under the real CSP header; from RC2 it renders the KIT (`src/ui/kit`) as a page would use it: the sub-nav, a
+ * page frame with folder tabs, a chart title menu, a picker, the ring, a Highcharts chart in styled mode (the shared
+ * default, the accessibility module, the `defs` patterns, the credit), the key-metric column with a stat dial and the
+ * loading veil, the switch, the caveat line, the ACTION ITEMS handle and its tray; then the rest of the kit: every
+ * button, the Add menu with its flyouts, the drawer, an info tooltip, a toast, a scroll area, the data table, the cards,
+ * the stale banner and the empty state. `e2e/csp.spec.ts` opens each part that portals or animates under the enforced
+ * header, and `e2e/design-tokens.spec.ts` reads Figtree here. Deleted at RC19, when every piece renders in a real
+ * screen a CSP arm visits.
  *
  * Its words are literals local to the probe (never `copy.ts`, which the entry-chunk guard refuses in any entry's first
- * load; plan 2.1 decision 10). Its chart data are throwaway figures.
+ * load; plan 2.1 decision 10). Every figure on it is a throwaway: no household's numbers.
  */
 import './ui/styles/layers.css'
 import '@fontsource-variable/figtree/index.css'
 import './ui/styles/theme.css'
 import './viz/charts/chartTheme.css'
-import { StrictMode, useMemo, useState } from 'react'
+import { StrictMode, useId, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { CSPProvider } from '@base-ui/react/csp-provider'
-import { Dialog } from '@base-ui/react/dialog'
-import { ScrollArea } from '@base-ui/react/scroll-area'
-import { Select } from '@base-ui/react/select'
-import { Slider } from '@base-ui/react/slider'
-import { Toast } from '@base-ui/react/toast'
 import { Chart, Highcharts, type ChartOptions } from '@highcharts/react'
 // After the Highcharts master above: the module composes onto the namespace's Chart, Series and Legend, which the
 // master fills in when it evaluates (imported first, it reads them undefined and the page dies).
 import 'highcharts/es-modules/masters/modules/accessibility.src.js'
-import { createColumnHelper, tableFeatures, useTable } from '@tanstack/react-table'
-import { ChevronDown, X } from 'lucide-react'
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { Banknote, Landmark, PiggyBank } from 'lucide-react'
+import {
+  AddMenu,
+  Button,
+  BUTTON_VARIANTS,
+  Card,
+  Caveat,
+  ChartTitle,
+  Checkbox,
+  DataTable,
+  Drawer,
+  DrawerFields,
+  EmptyState,
+  InfoTip,
+  LoadingVeil,
+  MoneyInput,
+  PageFrame,
+  PercentInput,
+  ProfileCard,
+  Ring,
+  ScrollArea,
+  Select,
+  Slider,
+  StaleBanner,
+  SubNav,
+  Switch,
+  TickDial,
+  ToastProvider,
+  Tray,
+  TrayColumn,
+  TrayFooter,
+  TrayRow,
+  TraySection,
+  useToast,
+  type DataTableColumn,
+} from '@ui/kit'
 import { installChartDefaults } from '@viz/charts/defaults'
 import { applySeriesVars } from '@viz/charts/seriesVars'
-
-/** shadcn's `cn` (clsx + tailwind-merge); the kit's own copy lands in RC2. */
-const cn = (...inputs: ClassValue[]): string => twMerge(clsx(inputs))
 
 applySeriesVars(document.documentElement.style)
 installChartDefaults(Highcharts, window.matchMedia('(prefers-reduced-motion: reduce)').matches)
 
-const portalHost = document.getElementById('rc-portal')
+// ── The page's own state, so each control visibly does something ──
+type Axis = 'ages' | 'years'
+const AXES = [
+  { value: 'ages', label: 'Ages' },
+  { value: 'years', label: 'Years' },
+] as const
 
-const button = cn(
-  'inline-flex h-9 items-center gap-2 rounded-control border border-stone-300 bg-bg px-4 text-body text-stone-900',
-  'hover:bg-stone-100',
-)
-const primary = cn(button, 'border-blue-ink bg-blue-ink text-bg hover:bg-blue-ink')
+type Tab = 'probability' | 'confidence' | 'comparisons'
+const TABS = [
+  { id: 'probability', label: 'Probability' },
+  { id: 'confidence', label: 'Confidence' },
+  { id: 'comparisons', label: 'Comparisons' },
+] as const
 
-// ── The drawer (a Base UI Dialog shaped as RightCapital's right-side drawer) ──
-function ProbeDrawer() {
-  return (
-    <Dialog.Root>
-      <Dialog.Trigger className={primary}>Open the drawer</Dialog.Trigger>
-      <Dialog.Portal container={portalHost}>
-        <Dialog.Backdrop className="fixed inset-0 bg-stone-900/30 transition-opacity duration-250 data-ending-style:opacity-0 data-starting-style:opacity-0" />
-        <Dialog.Popup
-          className={cn(
-            'fixed top-0 right-0 flex h-full w-[min(30rem,100vw)] flex-col bg-bg shadow-drawer',
-            'transition-transform duration-250 ease-settle data-ending-style:translate-x-full data-starting-style:translate-x-full',
-          )}
-        >
-          <div className="flex items-center justify-between bg-plum px-6 py-4 text-bg">
-            <Dialog.Title className="text-chart-title">Drawer</Dialog.Title>
-            <Dialog.Close className="rounded-control p-1" aria-label="Close the drawer">
-              <X size={20} strokeWidth={1.5} aria-hidden="true" />
-            </Dialog.Close>
-          </div>
-          <Dialog.Description className="p-6 text-intro text-stone-600">
-            A right-side drawer: every fact is edited in one of these.
-          </Dialog.Description>
-          <div className="mt-auto flex justify-end gap-3 bg-stone-200 px-6 py-4">
-            <Dialog.Close className={button}>Cancel</Dialog.Close>
-            <Dialog.Close className={primary}>Save</Dialog.Close>
-          </div>
-        </Dialog.Popup>
-      </Dialog.Portal>
-    </Dialog.Root>
-  )
-}
+type ChartId = 'savings' | 'income'
+const CHARTS = [
+  { id: 'savings', label: 'Savings over time' },
+  { id: 'income', label: 'Income sources' },
+] as const
 
-// ── A Select ──
-const UNITS = [
-  { label: 'Ages', value: 'ages' },
-  { label: 'Years', value: 'years' },
-]
+type Page = 'analysis' | 'stress' | 'social' | 'health' | 'cash'
+const PAGES = [
+  { id: 'analysis', label: 'Analysis', href: '#analysis' },
+  { id: 'stress', label: 'Stress Test', href: '#stress' },
+  { id: 'social', label: 'Social Security', href: '#social' },
+  { id: 'health', label: 'Health Care', href: '#health' },
+  { id: 'cash', label: 'Cash Flows', href: '#cash' },
+] as const
 
-function ProbeSelect() {
-  return (
-    <Select.Root items={UNITS} defaultValue="ages">
-      <Select.Label className="text-label text-stone-600">Axis</Select.Label>
-      <Select.Trigger className={cn(button, 'min-w-40 justify-between')}>
-        <Select.Value />
-        <Select.Icon>
-          <ChevronDown size={16} strokeWidth={1.5} aria-hidden="true" />
-        </Select.Icon>
-      </Select.Trigger>
-      <Select.Portal container={portalHost}>
-        <Select.Positioner sideOffset={4} className="z-10">
-          <Select.Popup className="rounded-control border border-stone-300 bg-bg py-1 shadow-menu">
-            <Select.List>
-              {UNITS.map(({ label, value }) => (
-                <Select.Item
-                  key={value}
-                  value={value}
-                  className="cursor-default px-4 py-2 text-body data-highlighted:bg-stone-100"
-                >
-                  <Select.ItemText>{label}</Select.ItemText>
-                </Select.Item>
-              ))}
-            </Select.List>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Portal>
-    </Select.Root>
-  )
-}
+type Order = 'pro-rata' | 'taxable-first'
+const ORDERS = [
+  { value: 'pro-rata', label: 'A share from each' },
+  { value: 'taxable-first', label: 'Taxable first' },
+] as const
 
-// ── A ScrollArea ──
-const LINES = Array.from({ length: 24 }, (_, i) => `Line ${i + 1}`)
-
-function ProbeScrollArea() {
-  return (
-    <ScrollArea.Root className="relative h-32 w-64 border border-stone-300">
-      <ScrollArea.Viewport className="h-full" data-probe="scroll-viewport">
-        <ScrollArea.Content>
-          <ul className="p-3 text-body">
-            {LINES.map((line) => (
-              <li key={line}>{line}</li>
-            ))}
-          </ul>
-        </ScrollArea.Content>
-      </ScrollArea.Viewport>
-      <ScrollArea.Scrollbar className="m-1 flex w-1.5 justify-center rounded-control bg-stone-200">
-        <ScrollArea.Thumb className="w-full rounded-control bg-stone-400" />
-      </ScrollArea.Scrollbar>
-    </ScrollArea.Root>
-  )
-}
-
-// ── A Toast ──
-function ToastButton() {
-  const toasts = Toast.useToastManager()
-  return (
-    <button type="button" className={button} onClick={() => toasts.add({ title: 'Saved', description: 'Your plan is saved on this device.' })}>
-      Show a toast
-    </button>
-  )
-}
-
-function ToastList() {
-  const { toasts } = Toast.useToastManager()
-  return toasts.map((toast) => (
-    <Toast.Root
-      key={toast.id}
-      toast={toast}
-      className="rounded-control border border-stone-300 bg-bg p-4 shadow-menu transition-opacity duration-250 data-ending-style:opacity-0 data-starting-style:opacity-0"
-    >
-      <Toast.Title className="text-body font-semibold" />
-      <Toast.Description className="text-label text-stone-600" />
-      <Toast.Close className="mt-2 text-label text-blue-ink underline">Dismiss</Toast.Close>
-    </Toast.Root>
-  ))
-}
-
-// ── A Slider ──
-function ProbeSlider() {
-  const [value, setValue] = useState(50)
-  return (
-    <Slider.Root value={value} onValueChange={(v) => setValue(Array.isArray(v) ? (v[0] ?? 0) : v)} className="w-64">
-      <Slider.Label className="text-label text-stone-600">Spending change</Slider.Label>
-      <Slider.Value className="ml-2 text-label text-stone-900" />
-      <Slider.Control className="flex h-6 items-center">
-        <Slider.Track className="h-1 w-full rounded-control bg-stone-300">
-          <Slider.Indicator className="rounded-control bg-blue" />
-          <Slider.Thumb className="size-4 rounded-full border-2 border-bg bg-blue shadow-tooltip" />
-        </Slider.Track>
-      </Slider.Control>
-    </Slider.Root>
-  )
-}
-
-// ── A TanStack table with a grouped header ──
-interface ProbeRow {
-  readonly year: number
-  readonly age: number
-  readonly socialSecurity: number
-  readonly pension: number
-  readonly living: number
-  readonly tax: number
-}
-
-const ROWS: readonly ProbeRow[] = [
-  { year: 2031, age: 66, socialSecurity: 31_000, pension: 9_000, living: 70_000, tax: 6_000 },
-  { year: 2032, age: 67, socialSecurity: 31_500, pension: 9_000, living: 71_000, tax: 6_100 },
-  { year: 2033, age: 68, socialSecurity: 32_000, pension: 9_000, living: 72_500, tax: 6_300 },
-  { year: 2034, age: 69, socialSecurity: 32_500, pension: 9_000, living: 74_000, tax: 6_400 },
-]
-
-const features = tableFeatures({})
-const helper = createColumnHelper<typeof features, ProbeRow>()
-const whole = (n: number): string => n.toLocaleString('en-US')
-const columns = helper.columns([
-  helper.accessor('year', { header: 'Year' }),
-  helper.accessor('age', { header: 'Age' }),
-  helper.group({
-    id: 'income',
-    header: 'Income',
-    columns: helper.columns([
-      helper.accessor('socialSecurity', { header: 'Social Security', cell: (c) => whole(c.getValue()) }),
-      helper.accessor('pension', { header: 'Pension', cell: (c) => whole(c.getValue()) }),
-    ]),
-  }),
-  helper.group({
-    id: 'spending',
-    header: 'Spending',
-    columns: helper.columns([
-      helper.accessor('living', { header: 'Living', cell: (c) => whole(c.getValue()) }),
-      helper.accessor('tax', { header: 'Tax', cell: (c) => whole(c.getValue()) }),
-    ]),
-  }),
-])
-
-function ProbeTable() {
-  const data = useMemo(() => [...ROWS], [])
-  const table = useTable({ features, columns, data })
-  return (
-    <table className="border-t-2 border-plum text-body" data-probe="table">
-      <thead>
-        {table.getHeaderGroups().map((group) => (
-          <tr key={group.id}>
-            {group.headers.map((header) => (
-              <th
-                key={header.id}
-                colSpan={header.colSpan}
-                className="border-b border-stone-300 bg-stone-200 px-3 py-2 text-left text-label font-regular text-stone-600"
-              >
-                {header.isPlaceholder ? null : <table.FlexRender header={header} />}
-              </th>
-            ))}
-          </tr>
-        ))}
-      </thead>
-      <tbody>
-        {table.getRowModel().rows.map((row) => (
-          <tr key={row.id} className="even:bg-stone-50">
-            {row.getAllCells().map((cell) => (
-              <td key={cell.id} className="px-3 py-2 text-right">
-                <table.FlexRender cell={cell} />
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )
-}
-
-// ── A Highcharts chart in styled mode ──
+// ── A Highcharts chart in styled mode (RC1's cascade check reads it) ──
 const CHART: ChartOptions = {
-  chart: { type: 'column', height: 320 },
-  title: { text: 'Probe chart' },
+  chart: { type: 'column', height: 300 },
+  title: { text: undefined },
   xAxis: { categories: ['2031', '2032', '2033', '2034'] },
   yAxis: { title: { text: 'Dollars' }, min: 0 },
   plotOptions: { column: { dataLabels: { enabled: true } } },
@@ -275,33 +120,347 @@ function ProbeChart() {
   return <Chart options={CHART} containerProps={{ className: '[--b9-pattern-ink:var(--highcharts-color-1)]' }} />
 }
 
-function KitProbe() {
+// ── The data table: lead Year and Age, two groups, a drill header, a negative ──
+interface ProbeRow {
+  readonly year: number
+  readonly ages: string
+  readonly socialSecurity: number
+  readonly pension: number
+  readonly living: number
+  readonly tax: number
+}
+
+const ROWS: readonly ProbeRow[] = [
+  { year: 2031, ages: '66/64', socialSecurity: 31_000, pension: 9_000, living: 70_000, tax: 6_000 },
+  { year: 2032, ages: '67/65', socialSecurity: 31_500, pension: 9_000, living: 71_000, tax: 6_100 },
+  { year: 2033, ages: '68/66', socialSecurity: 32_000, pension: 9_000, living: 72_500, tax: 6_300 },
+  { year: 2034, ages: '69/67', socialSecurity: 32_500, pension: 9_000, living: 74_000, tax: 6_400 },
+]
+
+const TABLE_COLUMNS: readonly DataTableColumn<ProbeRow>[] = [
+  { id: 'year', header: 'Year', value: (r) => String(r.year), lead: true },
+  { id: 'ages', header: 'Age', value: (r) => r.ages, lead: true },
+  {
+    id: 'income',
+    header: 'Income',
+    columns: [
+      { id: 'socialSecurity', header: 'Social Security', value: (r) => r.socialSecurity, numeric: true, onDrill: () => {} },
+      { id: 'pension', header: 'Pension', value: (r) => r.pension, numeric: true },
+    ],
+  },
+  {
+    id: 'spending',
+    header: 'Spending',
+    columns: [
+      { id: 'living', header: 'Living expenses', value: (r) => r.living, numeric: true },
+      { id: 'tax', header: 'Income tax', value: (r) => r.tax, numeric: true },
+    ],
+  },
+  { id: 'net', header: 'Net flow', value: (r) => r.socialSecurity + r.pension - r.living - r.tax, numeric: true },
+]
+
+function ToastButton() {
+  const toast = useToast()
   return (
-    <CSPProvider disableStyleElements>
-      <Toast.Provider>
-        <main className="rc-root min-h-screen bg-bg p-panel">
-          <h1 className="mb-6 text-page-title text-plum">Kit probe</h1>
-          <div className="flex flex-wrap items-start gap-gap">
-            <ProbeDrawer />
-            <ProbeSelect />
+    <Button variant="neutral" onClick={() => toast.show({ title: 'Saved', description: 'Your plan is saved on this device.' })}>
+      Show a toast
+    </Button>
+  )
+}
+
+const LINES = Array.from({ length: 24 }, (_, i) => `Line ${i + 1}`)
+
+function KitProbe() {
+  const trayId = useId()
+  const tableHeading = useId()
+  const [page, setPage] = useState<Page>('analysis')
+  const [tab, setTab] = useState<Tab>('probability')
+  const [chart, setChart] = useState<ChartId>('savings')
+  const [axis, setAxis] = useState<Axis>('ages')
+  const [spend, setSpend] = useState(50)
+  const [future, setFuture] = useState(false)
+  const [trayOpen, setTrayOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [stopYear, setStopYear] = useState(2031)
+  const [monthly, setMonthly] = useState<number | undefined>(6_500)
+  const [growth, setGrowth] = useState<number | undefined>(0.025)
+  const [order, setOrder] = useState<Order>('pro-rata')
+  const [salary, setSalary] = useState<number | undefined>(80_000)
+  const [raise, setRaise] = useState<number | undefined>(0.03)
+  const [record, setRecord] = useState(1)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [joint, setJoint] = useState(true)
+  const [added, setAdded] = useState('Nothing added yet')
+
+  return (
+    <ToastProvider dismissLabel="Dismiss">
+      <main className="rc-root min-h-screen bg-bg">
+        <SubNav label="Retirement pages" items={PAGES} activeId={page} onSelect={setPage} />
+        <PageFrame
+          title="Kit probe"
+          intro="A throwaway page that wears every part of the kit under the real header."
+          headAction={
+            <AddMenu
+              label="Add"
+              items={[
+                { id: 'bank', label: 'Bank', onSelect: () => setAdded('Added: Bank') },
+                { id: 'investment', label: 'Investment', onSelect: () => setAdded('Added: Investment') },
+                {
+                  id: 'property',
+                  label: 'Property',
+                  items: [
+                    { id: 'home', label: 'Primary home', onSelect: () => setAdded('Added: Primary home') },
+                    { id: 'rental', label: 'Rental property', onSelect: () => setAdded('Added: Rental property') },
+                  ],
+                },
+                {
+                  id: 'insurance',
+                  label: 'Insurance',
+                  items: [
+                    { id: 'term', label: 'Term life', onSelect: () => setAdded('Added: Term life') },
+                    { id: 'whole', label: 'Whole life', onSelect: () => setAdded('Added: Whole life') },
+                  ],
+                },
+              ]}
+            />
+          }
+          tabs={{ label: 'Analysis views', items: TABS, value: tab, onValueChange: setTab }}
+          valuesNote="Values in today's dollars, rounded"
+          chartTitle={<ChartTitle items={CHARTS} value={chart} onValueChange={setChart} />}
+          pickers={<Select label="Axis" hideLabel items={AXES} value={axis} onValueChange={setAxis} />}
+          chart={
+            <div className="flex flex-col items-center gap-8 wide:flex-row">
+              <Ring value={7} centre="7 of 10" caption="On track" />
+              <div className="w-full min-w-0 flex-1">
+                <ProbeChart />
+              </div>
+            </div>
+          }
+          metrics={
+            <>
+              <div className="flex flex-col text-metric-words text-plum">
+                <span>This plan leaves about</span>
+                <LoadingVeil loading={loading} label="Loading…">
+                  <span className="text-metric text-stone-900">~$412,000</span>
+                </LoadingVeil>
+                <span>at the end</span>
+              </div>
+              <div className="flex justify-center">
+                <TickDial value="~4.1%" caption="Withdrawal rate" />
+              </div>
+              <div className="flex justify-center">
+                <Button variant="secondary" size="sm" onClick={() => setLoading((l) => !l)}>
+                  {loading ? 'Show the figure' : 'Show the loading veil'}
+                </Button>
+              </div>
+            </>
+          }
+          panelFooter={<Switch label="Future dollars" checked={future} onCheckedChange={setFuture} />}
+          caveat={
+            <Caveat
+              lines={[
+                'These are throwaway figures on a test page, not a plan.',
+                'Nothing here is advice about any real money.',
+              ]}
+            />
+          }
+          handle={{ label: 'Action items', open: trayOpen, onOpenChange: setTrayOpen, controls: trayId }}
+          tray={
+            <Tray
+              id={trayId}
+              open={trayOpen}
+              onOpenChange={setTrayOpen}
+              title="Action items"
+              closeLabel="Close the action items"
+              footer={
+                <TrayFooter
+                  reset={{ label: 'Reset', onSelect: () => setMonthly(6_500) }}
+                  edit={{ label: 'Edit', onSelect: () => {} }}
+                  refresh={{ label: 'Refresh', onSelect: () => {} }}
+                />
+              }
+            >
+              <TrayColumn editedLabel="This what-if" comparedLabel="Your plan">
+                <TraySection title="Financial goals">
+                  <TrayRow
+                    label="Stop working in"
+                    control={
+                      <>
+                        <Slider label="Stop working in" value={stopYear} min={2028} max={2036} onValueChange={setStopYear} />
+                        <span className="w-14 text-body tabular-nums">{stopYear}</span>
+                      </>
+                    }
+                    compared="2031"
+                  />
+                </TraySection>
+                <TraySection title="Expenses">
+                  <TrayRow
+                    label="Monthly spending in retirement"
+                    control={
+                      <MoneyInput
+                        label="Monthly spending in retirement"
+                        hideLabel
+                        value={monthly}
+                        onCommit={setMonthly}
+                        changed={monthly !== 6_500}
+                        invalidMessage="Type a dollar figure, like 6,500."
+                        className="w-40"
+                      />
+                    }
+                    compared="$6,500"
+                  />
+                  <TrayRow
+                    label="A new car fund"
+                    added="Added in this what-if"
+                    control={<MoneyInput label="A new car fund" hideLabel value={20_000} invalidMessage="Type a dollar figure." className="w-40" />}
+                    compared="None"
+                  />
+                </TraySection>
+              </TrayColumn>
+              <TrayColumn editedLabel="This what-if" comparedLabel="Your plan">
+                <TraySection title="Strategies">
+                  <TrayRow
+                    label="Withdrawal order"
+                    control={<Select label="Withdrawal order" hideLabel items={ORDERS} value={order} onValueChange={setOrder} changed={order !== 'pro-rata'} />}
+                    compared="A share from each"
+                  />
+                  <TrayRow
+                    label="Yearly growth of spending"
+                    control={
+                      <PercentInput
+                        label="Yearly growth of spending"
+                        hideLabel
+                        value={growth}
+                        onCommit={setGrowth}
+                        invalidMessage="Type a percent, like 2.5."
+                        className="w-28"
+                      />
+                    }
+                    compared="2.5%"
+                  />
+                </TraySection>
+              </TrayColumn>
+            </Tray>
+          }
+        />
+
+        {/* The rest of the kit, on one more frame. */}
+        <section className="mx-auto flex w-full max-w-[90rem] flex-col gap-10 px-4 pb-16 wide:px-10">
+          <StaleBanner
+            message="Your spending changed after this result was made, on a throwaway date. The figures above are from before."
+            action={{ label: 'Refresh', onSelect: () => {} }}
+          />
+
+          <div className="flex flex-wrap items-center gap-3">
+            {BUTTON_VARIANTS.map((variant) => (
+              <Button key={variant} variant={variant}>
+                {`A ${variant} button`}
+              </Button>
+            ))}
+            <Button opensMenu>Add an account</Button>
+          </div>
+
+          <div className="flex flex-wrap items-start gap-6">
+            <Drawer
+              open={drawerOpen}
+              onOpenChange={setDrawerOpen}
+              trigger={<Button>Open the drawer</Button>}
+              title="Salary"
+              icon={<Banknote strokeWidth={1.5} aria-hidden="true" />}
+              closeLabel="Close the drawer"
+              previous={{ label: 'The previous record', onSelect: () => setRecord((r) => r - 1) }}
+              next={{ label: 'The next record', onSelect: () => setRecord((r) => r + 1) }}
+              cancelLabel="Cancel"
+              saveLabel="Save"
+              onSave={() => {}}
+              deleteLabel="Delete"
+              onDelete={() => {}}
+            >
+              <DrawerFields>
+                <MoneyInput label="Yearly pay" value={salary} onCommit={setSalary} invalidMessage="Type a dollar figure, like 80,000." />
+                <PercentInput label="Yearly raise" value={raise} onCommit={setRaise} invalidMessage="Type a percent, like 3." />
+                <div className="flex flex-col gap-1">
+                  <span className="flex items-center gap-1 text-body text-stone-900">
+                    Pay stops
+                    <InfoTip label="About when pay stops" content="The year the last paycheck lands." />
+                  </span>
+                  <span className="flex h-10 items-center rounded-control border border-stone-300 bg-stone-200 px-3 text-body">2031</span>
+                </div>
+                <p className="text-body text-stone-600" data-probe="record">{`Record ${record} of 3`}</p>
+              </DrawerFields>
+            </Drawer>
             <ToastButton />
-            <ProbeSlider />
+            <Checkbox label="Held jointly" checked={joint} onCheckedChange={setJoint} />
+            <span className="flex items-center gap-1 text-body text-stone-900">
+              Annual increase
+              <InfoTip label="About the annual increase" content="How much the figure grows each year." />
+            </span>
+            <p className="text-body text-stone-600" data-probe="added">
+              {added}
+            </p>
           </div>
-          <div className="mt-6 flex flex-wrap items-start gap-gap">
-            <ProbeScrollArea />
-            <ProbeTable />
+
+          <div className="flex flex-wrap items-start gap-6">
+            <div className="w-64">
+              <Slider label="Spending change" value={spend} min={0} max={100} onValueChange={setSpend} className="w-64" />
+              <p className="text-label text-stone-600">{`Spending change: ${spend}`}</p>
+            </div>
+            <ScrollArea label="Probe lines" className="h-32 w-64 border border-stone-300">
+              <ul className="p-3 text-body">
+                {LINES.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            </ScrollArea>
           </div>
-          <div className="mt-6 max-w-[48rem]">
-            <ProbeChart />
+
+          <div className="flex flex-col gap-3" data-probe="table">
+            <h2 id={tableHeading} className="text-chart-title text-plum">
+              Summary
+            </h2>
+            <DataTable
+              labelledBy={tableHeading}
+              columns={TABLE_COLUMNS}
+              rows={ROWS}
+              rowKey={(r) => String(r.year)}
+              download={{ label: 'Download', onDownload: () => {} }}
+            />
           </div>
-        </main>
-        <Toast.Portal container={portalHost}>
-          <Toast.Viewport className="fixed right-4 bottom-4 flex w-80 flex-col gap-2">
-            <ToastList />
-          </Toast.Viewport>
-        </Toast.Portal>
-      </Toast.Provider>
-    </CSPProvider>
+
+          <div className="grid grid-cols-1 gap-6 laptop:grid-cols-3">
+            <Card title="Probability of success">
+              <div className="flex justify-center">
+                <Ring value={0} centre="0 of 10" caption="Already short" />
+              </div>
+            </Card>
+            <Card title="Withdrawal rate">
+              <div className="flex justify-center">
+                <TickDial value="~4.1%" caption="In the first retired year" />
+              </div>
+            </Card>
+            <Card title="No reading yet">
+              <div className="flex justify-center">
+                <Ring value={undefined} caption="Waiting for your accounts" />
+              </div>
+            </Card>
+          </div>
+
+          <div className="flex flex-wrap gap-6">
+            <ProfileCard kind="Salary" icon={<Banknote strokeWidth={1.5} />} name="Pat's salary" rows={[{ label: 'Yearly pay', value: '$80,000' }]} onOpen={() => {}} />
+            <ProfileCard kind="Salary" icon={<Banknote strokeWidth={1.5} />} name="Sam's salary" rows={[{ label: 'Yearly pay', value: '$60,000' }]} selected onOpen={() => {}} />
+            <ProfileCard kind="Pension" icon={<Landmark strokeWidth={1.5} />} name="Sam's pension" rows={[{ label: 'Yearly amount', value: '$9,000' }]} dimmed onOpen={() => {}} />
+            <ProfileCard kind="Savings" icon={<PiggyBank strokeWidth={1.5} />} name="Pat's 401(k)" dimmed onOpen={() => {}} />
+          </div>
+
+          <section className="border border-stone-300">
+            <EmptyState
+              sentence="This page waits for one account with a balance before it can figure anything."
+              action={{ label: 'Add an account', onSelect: () => {} }}
+            />
+          </section>
+        </section>
+      </main>
+    </ToastProvider>
   )
 }
 
@@ -309,6 +468,9 @@ const rootEl = document.getElementById('root')
 if (!rootEl) throw new Error('Root element #root not found')
 createRoot(rootEl).render(
   <StrictMode>
-    <KitProbe />
+    {/* Base UI renders no <style> element under this (its two scrollbar rules live in theme.css); plan 2.1 decision 1. */}
+    <CSPProvider disableStyleElements>
+      <KitProbe />
+    </CSPProvider>
   </StrictMode>,
 )

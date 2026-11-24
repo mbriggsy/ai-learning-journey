@@ -283,6 +283,13 @@ even when one exists; the plain `/` route is the Unlock check.
 
 ## The unit test suite
 
+- **(moved from TODO's distill list, b9-2, 11-23) A prop added to a component's TYPE but not to its destructure silently
+  resolves to any same-named module binding** (`describedBy` in `src/intake/fields.tsx` is a module function), and a
+  `(s): s is string` filter guard then hides it from tsc. Destructure first, and name new props so they cannot collide
+  (the prop became `describedByIds`).
+- **(moved from TODO's distill list, b9-2, 11-23) A fake transport lane must `structuredClone` its REPLY like the real
+  wire**, or the candidate re-attach path is never exercised; a pooled differential must tally lanes (at least 2 used), or
+  a silent one-lane fallback passes as a pool.
 - **A `// @ts-expect-error` arm in a vitest file still RUNS:** the directive silences tsc, not execution (a
   three-argument call threw at runtime once the methodology selector indexed the act's Record). Put compile-only arms
   inside a function that is never called: `const _compileOnly = () => {...}; void _compileOnly`
@@ -963,6 +970,10 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Probes and measurement
 
+- **(moved from TODO's distill list, b9-2, 11-23) Compute the closed form before searching for a plant**: `room`
+  implies joint survival ≥ 0.90 with the survivor subset ≈ every path, so `survivor-short` was unreachable, and 612
+  engine runs only confirmed one line of arithmetic (the user memory `feedback-compute-the-closed-form-before-simulating`;
+  this line is its home in the repo).
 - **(moved from TODO's distill list, b9-2, 11-23) Trust a two-point cost model (fixed + slope × roster) only after it
   predicts a held-out third point** (the solve-cost fit landed within 1–4%), then compute any closed form from it.
 - **(moved from TODO's distill list, b9-2, 11-23) Playwright's default headless browser is the chromium headless SHELL,

@@ -881,6 +881,13 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Claude Code, workflows and sessions
 
+- **(moved from TODO's distill list, b9-2, 11-23) What a session's activities cost of the 1M window:** a plan cycle
+  (/brief, a research fan-out, the plan, a 9-agent deepen, a 5-agent doc review) ~55% with no code; plan, deepen, a
+  4-persona review and a 21-agent council ~50%; one walked copy build (pre-trace, build, whole-file review, two Caddie
+  walks, 103 panel agents) ~48%; a 9-agent verify fan-out to ~47%. U8 (b9-2: /brief, a delegated build and fix round,
+  three review lenses and three adversaries, the docs and four distill commits) reached ~49%. Plan and build in
+  separate sessions; budget one walked or reviewed build per session plus its records.
+
 - **(moved from TODO's distill list, b9-2, 11-23) A Workflow run's `.output` file is one JSON object** (`summary`,
   `agentCount`, `logs`, `result`; `result` holds the script's return value), and the journal has one `result` line per
   agent. Parse it and read `.result` through a node summarizer that writes a scratch file and prints only what you need

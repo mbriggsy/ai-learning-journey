@@ -1903,7 +1903,7 @@ RightCapital's order so any of them could slot back in.
 1. **The builder.** A fresh builder subagent per unit (`model: 'opus'`, `effort: 'high'`: a builder working from a
    finished plan with an xhigh review behind it, per the project's effort rule). Its inputs: this plan's unit, section
    4.0, section 5's rows for its surfaces, the reference sections and screenshots the unit names, `docs/landmines.md`'s
-   UI, fit-gate and copy sections, and Briggsy's latest typed message. It loads `back-nine-design` (as updated by RC1)
+   UI, fit-gate, copy and Windows-and-the-shell sections (line endings bit RC4a), and Briggsy's latest typed message. It loads `back-nine-design` (as updated by RC1)
    for every unit, `dataviz` for any chart, `emil-design-eng` for the drawer, the tray and chart motion. Not
    `frontend-design` (the screenshots outrank it), not impeccable (not installed, ref 7). It writes the code and its
    tests, ports or retires the arms per section 5, runs the look instrument, and reports what it changed, what it
@@ -1911,8 +1911,10 @@ RightCapital's order so any of them could slot back in.
 2. **The orchestrator** (the session: b9-3, then b9-4 onward) re-runs, on a quiet tree: `pnpm typecheck`, `pnpm lint`,
    the unit test files the change reaches (`pnpm vitest run <files>`), the unit's new `rc-screens.spec.ts` arms once
    with `-g` on the fit harness, `pnpm verify:csp` locally for RC1, RC2 and RC19 (their result gates the next unit),
-   `pnpm verify:doc-stats` when a doc, a test count or a citation moved, and the look instrument. It reads the builder's
-   screenshots itself before committing.
+   `pnpm verify:doc-stats` when a doc, a test count or a citation moved, and the look instrument; plus every spec that greps
+   to a moved or deleted surface's copy keys or selectors, and the line-ending check (`docs/landmines.md`, Windows and the
+   shell). It reads the builder's screenshots itself before committing. *(the pilot's call, 2026-11-24, b9-5: RC4a's CI
+   reds and its CRLF files)*
 3. **Commit and push** at the unit's end (or at each green commit inside an L unit): `git commit -- <paths>` (never
    `-a`), a message `feat(ui): Act 6 RC<n> -- …` listing the ported and retired arms and the pilot's calls. CI runs the
    full list; a CI red is fixed in the next commit; each session start reads the last code commit's runs by full sha.

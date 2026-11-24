@@ -61,6 +61,12 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
+- **(b9-5, 11-24) A builder's scripted rewrite turns LF files into CRLF:** RC4a's builder edited through Python scripts
+  (text mode on Windows writes `\n` as `\r\n`), and 42 changed files plus 7 new ones came back CRLF, so each diffed
+  whole; the 7 new ones were committed that way (`7f56682e`, put back to LF in `10da60f2`). Before every commit:
+  `git ls-files --eol -m . | awk '$1=="i/lf" && $2=="w/crlf"'` must print nothing, and each untracked file is read as
+  BYTES (node: `readFileSync(p).includes(13)`), never `grep $'\r'` (it misreads here, below). Normalize with a node
+  script that replaces `\r\n`; a builder's brief names this section.
 - **(b9-4, 11-24) Stopping a background `pnpm exec tsx scripts/serve-dist-with-headers.ts` stops pnpm, not the server:**
   its `node` child keeps ports 4180 and 4181, and the next `pnpm verify:csp` silently REUSES it (`reuseExistingServer`
   off CI), serving whatever `dist/` it was started on. After stopping one, check `netstat -ano` for the ports and
@@ -380,6 +386,15 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-5, 11-24) When a surface moves, specs you did not open still drive it:** RC4a deleted the answer page and ran the
+  arms it knew; CI then redded `e2e/intake-fold.spec.ts` (its re-walk pressed the old page's `copy.assumptionDoorCta`)
+  and `e2e/chart-text-rv.spec.ts` (it waited for the recommend invite there). `pnpm typecheck` never sees `e2e/`, and a
+  spec naming a copy key that still exists compiles anyway. Grep `e2e/` (held instruments too) for every copy key and
+  selector of each moved or deleted surface, and run every spec that matches.
+- **(b9-5, 11-24) A builder trimming a big spec retires honesty arms it owes a port:** RC4a's first cut took
+  `vertical-fit.spec.ts` from 7,000 lines to 1,150 and dropped the vault-return gates, the date order contract, the
+  spend lane and more, all on plan 5.2's port list, and the ports then caught four real defects. Diff HEAD's
+  `test.describe` titles against the new arms and the plan's list before accepting any retirement.
 - **(b9-5, 11-24) Playwright's `click()` waits for "enabled", and `aria-disabled="true"` reads as disabled**: a withheld
   Apply (`aria-disabled`, kept pressable so a blur-then-press never loses the figure, insight 149) times the click out.
   Press it with `{ force: true }` when the arm means to prove a withheld press writes nothing. And Probability's tray,
@@ -1173,6 +1188,11 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## UI and product
 
+- **(b9-5, 11-24) Two Highcharts charts that must compare need one scale, and a live chart drops a new scale on update:**
+  Probability's two balance bars each scaled to their own top, so ~$1.1mm and ~$675k drew the same height (calm-but-wrong);
+  then passing one shared lattice still failed, because Highcharts ignored the new `yAxis` max and ticks applied as an update.
+  `BalanceBar` keys its chart on the lattice so a new scale builds a fresh chart; `balanceBarOptions.test.ts` and the
+  drawn-height ratio check in `e2e/rc-screens.spec.ts` pin it. Any later side-by-side charts (RC6 onward) take the same seam.
 - **(b9-5, 11-24) A door inside a closing `ControlSheet` that focuses something outside every sheet loses the focus**: the
   sheet's exit hands focus back to its own opener once the exit ends (`controlSheet.tsx`'s restore spares only a
   `.control-sheet` or `.budget-sheet`), so the assumption panel's withdrawal-order row focused the tray's row and the

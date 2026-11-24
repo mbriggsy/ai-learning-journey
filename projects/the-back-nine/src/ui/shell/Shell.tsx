@@ -26,6 +26,12 @@
  * Retirement → Cash Flows (`YearTable.tsx`) and Profile → Your facts (`FactsPage.tsx`); the old What if page left with
  * RC4b, its levers now Probability's Action Items tray (`ActionItemsTray.tsx`). A facts-page "Try a change" and the
  * assumption panel's withdrawal-order and Roth rows open the tray at the lever's row.
+ *
+ * THE TWO-UP AND THE PLAN LIST (RC5): Probability's right side runs on its own slot (`useSlotRun`, made once here), so any
+ * two of your plan, the kept what-ifs, Recommended and the new what-if sit side by side. The pencil beside the right
+ * picker opens the plan list drawer (`PlanListDrawer.tsx`); its writes go to IntakeApp's `onWriteKept`, the plan's one
+ * save path. Its typed name box lives here, so closing the drawer or moving page keeps it, and it holds like an unkept
+ * what-if (a leave past the shell asks first). Opening another what-if on the left over an unkept one asks first.
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { SegmentedControl } from '@intake/fields'
@@ -34,7 +40,8 @@ import { healthcarePriced, missingRequiredFacts } from '@intake/intakeMap'
 import { engineRunLane, type EngineRunRequest, type Lane } from '@store/runLanes'
 import { roughWindow, ROUGH_WINDOW_YEARS } from '@engine/reference/roughSequence'
 import type { MemoryModel, MemoryModelSnapshot } from '@store/memoryModel'
-import type { LedgerYearRow, SavedRecommendationV3, SimulationResult, WhatIfLeverKind, WhatIfLeverV6 } from '@shared/model'
+import type { KeptWhatIfV6, LedgerYearRow, SavedRecommendationV3, SimulationResult, WhatIfLeverKind, WhatIfLeverV6 } from '@shared/model'
+import { freshStableId, idsInUse } from '@shared/stableIds'
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import { SubNav } from '../kit'
 import { copy, slots } from '../copy'
@@ -50,9 +57,9 @@ import { composeFacts, stepSectionTitle, type FactStop } from '../workbench/fact
 import type { FactDoorId, StepSectionId } from '../workbench/factRegistry'
 import { tableRunFor, type TableMeta, type TableRun, type TableView } from '../workbench/tableRun'
 import { composeYearTable, lifespansLine, yieldLine } from '../workbench/yearTableChrome'
-import { useWhatIf, type RailRecommendation } from '../workbench/useWhatIf'
+import { useSlotRun, useWhatIf, type RailRecommendation } from '../workbench/useWhatIf'
 import { whatIfRunFor, type WhatIfSlotLanes } from '../workbench/whatIfRun'
-import { policyWords, railOffers, rothWords } from '../workbench/railChrome'
+import { policyWords, railOffers, recommendationBundle, rothWords } from '../workbench/railChrome'
 import type { RecommendationSaveProp } from '../RecommendationSurface'
 import { currentEpochDay } from '../scenarioFromDraft'
 import { epochDayToCalendarYear } from '@store/staleness'
@@ -62,7 +69,9 @@ import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { Analysis } from '../screens/retirement/Analysis'
 import { ActionItemsTray, type TrayFocus } from '../screens/retirement/ActionItemsTray'
-import { landingPick, probabilityView, type LeftPick, type ProbabilityChart } from '../screens/retirement/probabilityView'
+import { keptIdOf, landingPick, probabilityView, type LeftPick, type ProbabilityChart, type RightPick } from '../screens/retirement/probabilityView'
+import { PlanListDrawer, type NameBox } from '../screens/retirement/PlanListDrawer'
+import { copyEdit, deleteEdit, keepEdit, listWrites, nameError, orderEdit, outcomeWords, planListView, renameEdit, type KeptEdit, type KeptWriteOutcome } from '../screens/retirement/planListView'
 import { InterimPage } from './InterimPage'
 import { composeLockMenu, type LockMenuAction } from './lockMenu'
 import { composeStaleLines } from './staleLines'
@@ -78,6 +87,8 @@ export interface ShellLeaveAsk {
   readonly lines: readonly string[]
   readonly onGo: () => void
   readonly onStay: () => void
+  /** The go choice's words, where the leave is not a Back ("Go on", "Open the other one"). */
+  readonly goLabel?: string
 }
 
 export interface ShellProps {
@@ -120,6 +131,15 @@ export interface ShellProps {
   readonly recordCard?: { readonly record: SavedRecommendationV3; readonly status: SavedRecommendationStatus }
   /** The aged-balances clause's year (IntakeApp's `agedBalancesYearFor`), for the Invested accounts card. */
   readonly agedBalancesYear?: number
+  /** The plan list's one write (RC5): IntakeApp applies the edit to the store's CURRENT list and writes it through the
+   *  plan's one save path (KTD19); a Keep with no vault opens the save ceremony (`keep`: the kept id to reopen after). */
+  readonly onWriteKept?: (edit: KeptEdit, keep?: string) => Promise<KeptWriteOutcome>
+  /** A kept what-if to reopen on the left as the shell mounts (Keep just kept it through the save ceremony). */
+  readonly resumeKept?: string
+  /** Told once the shell has read `resumeKept`. */
+  readonly onResumed?: () => void
+  /** The right side's lanes (tests only; made once with its slot otherwise). */
+  readonly compareLanes?: WhatIfSlotLanes
 }
 
 /** One view's newest delivered result, and the answer it belongs to. */
@@ -221,7 +241,7 @@ function LeaveAsk({ ask, overSheet, fallback }: { readonly ask: ShellLeaveAsk; r
           {copy.workbenchLeaveStay}
         </button>
         <button type="button" className="btn-quiet" ref={goRef} onClick={ask.onGo}>
-          {copy.workbenchLeaveGo}
+          {ask.goLabel ?? copy.workbenchLeaveGo}
         </button>
       </div>
     </div>
@@ -270,6 +290,10 @@ export default function Shell({
   recSave,
   recordCard,
   agedBalancesYear,
+  onWriteKept,
+  resumeKept,
+  onResumed,
+  compareLanes,
 }: ShellProps) {
   const announcer = useSaveAnnouncer(save.kind)
   const headingRef = useRef<HTMLHeadingElement>(null)
@@ -441,12 +465,44 @@ export default function Shell({
   }
 
   // ── The one what-if (U14, U15; the tray's since RC4b), kept across page switches ─────────────────────────────────
-  const whatIf = useWhatIf({ snapshot, model, ...(whatIfLanes !== undefined ? { lanes: whatIfLanes } : {}), ...(recommendation !== undefined ? { recommendation } : {}) })
+  const kept: readonly KeptWhatIfV6[] = snapshot.draft.keptWhatIfs ?? []
+  // The kept what-if Keep just kept through the save ceremony, reopened on the left as the shell mounts again.
+  const [initialKept] = useState(() => (resumeKept === undefined ? undefined : kept.find((k) => k.id === resumeKept)))
+  useEffect(() => {
+    if (resumeKept !== undefined) onResumed?.()
+    // Mount only: the shell reads it once.
+  }, [])
+  const whatIf = useWhatIf({
+    snapshot,
+    model,
+    ...(whatIfLanes !== undefined ? { lanes: whatIfLanes } : {}),
+    ...(recommendation !== undefined ? { recommendation } : {}),
+    ...(initialKept !== undefined ? { initialKept } : {}),
+  })
+  // ── The right side (RC5's two-up): your plan by default, or a kept what-if or the recommendation on its own slot ──
+  const [rightPickState, setRightPick] = useState<RightPick>('plan')
+  const rightKept = (() => {
+    const id = keptIdOf(rightPickState)
+    return id === undefined ? undefined : kept.find((k) => k.id === id)
+  })()
+  const rightRec = useMemo(() => (recommendation !== undefined && recommendation.current ? recommendationBundle(recommendation.record) : null), [recommendation])
+  // A pick that can no longer be made (a deleted kept what-if, a record no longer current) reads your plan.
+  const rightPick: RightPick = rightPickState === 'recommended' ? (rightRec !== null ? 'recommended' : 'plan') : rightKept !== undefined ? rightPickState : 'plan'
+  const rightBundle = useMemo((): readonly WhatIfLeverV6[] => (rightPick === 'recommended' && rightRec !== null ? rightRec : (rightKept?.levers ?? [])), [rightPick, rightRec, rightKept])
+  const right = useSlotRun({ snapshot, ...(compareLanes !== undefined ? { lanes: compareLanes } : {}), shown: rightBundle, tag: rightPick })
+  // ── The plan list drawer (RC5): open or shut, the typed name box (kept here, so a close or a page move drops nothing)
+  // and what its last write said.
+  const [planListOpen, setPlanListOpen] = useState(false)
+  const [nameBox, setNameBox] = useState<NameBox | null>(null)
+  const [planListSaid, setPlanListSaid] = useState<string | null>(null)
+  const boxHeld = nameBox !== null && nameBox.text.trim() !== nameBox.seed.trim()
+  // An ask the page raises itself (opening another what-if over an unkept one), beside IntakeApp's leave asks.
+  const [pageAsk, setPageAsk] = useState<ShellLeaveAsk | null>(null)
   // A what-if holding a change the plan doesn't, or a tray edit not yet run, is unkept work: IntakeApp asks before a
   // leave drops it, and holds the browser's own leave dialog over it (insight 112: every way out holds). Told to
   // IntakeApp, never put in the open entries' count: the entries' ask says "changes you finished stay in your plan",
   // which a what-if is not. A lowered deposit waiting for the employer's figure is a tray edit too.
-  const whatIfHeld = whatIf.held || trayAwaiting.size > 0
+  const whatIfHeld = whatIf.held || trayAwaiting.size > 0 || boxHeld
   useEffect(() => {
     onWhatIfHeld?.(whatIfHeld)
   }, [whatIfHeld, onWhatIfHeld])
@@ -507,7 +563,40 @@ export default function Shell({
     landedOnProbability.current = true
     if (landingPick(snapshot.draft, recordCard) === 'recommended') whatIf.setMode('recommendation')
   }, [screen, snapshot.draft, recordCard, whatIf])
-  const onPick = useCallback((pick: LeftPick) => whatIf.setMode(pick === 'recommended' ? 'recommendation' : 'own'), [whatIf])
+  /** The left picker (RC5): the recommendation is a mode (nothing dropped); a kept what-if or a new one REPLACES the
+   *  working bundle, so over an unkept one it asks first. The same pick again returns to it. */
+  const onPick = useCallback(
+    (pick: LeftPick) => {
+      if (pick === 'recommended') {
+        whatIf.setMode('recommendation')
+        return
+      }
+      const id = keptIdOf(pick)
+      const target = id === undefined ? undefined : kept.find((k) => k.id === id)
+      if (id !== undefined && target === undefined) return
+      const already = id === undefined ? whatIf.source.kind === 'new' : whatIf.source.kind === 'kept' && whatIf.source.id === id
+      if (already) {
+        whatIf.setMode('own')
+        return
+      }
+      const go = () => {
+        setPageAsk(null)
+        if (target !== undefined) {
+          whatIf.openKept(target)
+          // One thing per side: the right side leaves the kept what-if the left now shows.
+          if (rightPick === `kept:${target.id}`) setRightPick('plan')
+        } else whatIf.openNew()
+        if (trayAwaiting.size > 0) setTrayAwaiting(new Map())
+      }
+      if (whatIf.held || trayAwaiting.size > 0) {
+        setPageAsk({ lines: [copy.probabilityOpenDropsAsk], goLabel: copy.probabilityOpenGo, onGo: go, onStay: () => setPageAsk(null) })
+        return
+      }
+      go()
+    },
+    [whatIf, kept, rightPick, trayAwaiting],
+  )
+  const onPickCompared = useCallback((pick: RightPick) => setRightPick(pick), [])
   const notes = useMemo(
     () => composeAnswerNotes(snapshot, { readOnly, stalenessNote, leftOverClauseHost, agedBalancesYear, wallCalendarYear }),
     [snapshot, readOnly, stalenessNote, leftOverClauseHost, agedBalancesYear, wallCalendarYear],
@@ -521,12 +610,19 @@ export default function Shell({
             readOnly,
             onRetry: retryAnswer,
             notes,
-            whatIf: { pick: whatIf.mode === 'recommendation' ? 'recommended' : 'new', bundle: whatIf.shown, view: whatIf.view, landed: whatIf.landed },
+            whatIf: {
+              pick: whatIf.mode === 'recommendation' ? 'recommended' : whatIf.source.kind === 'kept' ? `kept:${whatIf.source.id}` : 'new',
+              bundle: whatIf.shown,
+              view: whatIf.view,
+              landed: whatIf.landed,
+              changed: whatIf.changedFromKept,
+            },
+            compared: { pick: rightPick, bundle: rightBundle, view: right.view, landed: right.landed },
             ...(recordCard !== undefined ? { record: recordCard } : {}),
             chart,
           })
         : null,
-    [screen, snapshot, wallCalendarYear, readOnly, retryAnswer, notes, whatIf.mode, whatIf.shown, whatIf.view, whatIf.landed, recordCard, chart],
+    [screen, snapshot, wallCalendarYear, readOnly, retryAnswer, notes, whatIf.mode, whatIf.source, whatIf.shown, whatIf.view, whatIf.landed, whatIf.changedFromKept, rightPick, rightBundle, right.view, right.landed, recordCard, chart],
   )
 
   // ── The Action Items tray (RC4b): what it offers is read off the COMMITTED answer's draft, with the plan's stop year as
@@ -567,7 +663,7 @@ export default function Shell({
         whatIf={whatIf}
         draft={committedAnswer.draft}
         offers={offers}
-        editedLabel={whatIf.mode === 'recommendation' ? copy.probabilityPickRecommended : copy.probabilityPickNew}
+        editedLabel={prob?.kind === 'reading' ? prob.halves.alternative.title : copy.probabilityPickNew}
         anchor={anchor}
         {...(crownedOffset !== undefined ? { crownedOffset } : {})}
         wallCalendarYear={wallCalendarYear}
@@ -637,7 +733,77 @@ export default function Shell({
 
   // The interim page that shows the market switch: the table.
   const showsMarket = screen === 'interim-table'
-  const leave = leaveAsk !== undefined ? <LeaveAsk ask={leaveAsk} overSheet={anySheetOpen} fallback={() => headingRef.current} /> : null
+  const shownAsk = leaveAsk ?? pageAsk ?? undefined
+  const leave = shownAsk !== undefined ? <LeaveAsk key={shownAsk.lines.join(' ')} ask={shownAsk} overSheet={anySheetOpen} fallback={() => headingRef.current} /> : null
+
+  // ── The plan list drawer's view and its writes (RC5) ──
+  const writes = listWrites(save.kind, readOnly)
+  const planList =
+    screen === 'probability'
+      ? planListView({
+          writes,
+          recommendation: whatIf.mode === 'recommendation',
+          source: whatIf.source,
+          own: whatIf.own,
+          pending: whatIf.pending,
+          kept,
+          recommendedOffered: rightRec !== null,
+          ...(whatIf.mode === 'own' && whatIf.source.kind === 'kept' ? { leftKept: whatIf.source.id } : {}),
+          ...(rightKept !== undefined ? { rightKept: rightKept.id } : {}),
+        })
+      : null
+  const writeKept = async (edit: KeptEdit, keep?: string): Promise<KeptWriteOutcome | null> => {
+    if (onWriteKept === undefined) return null
+    const outcome = await onWriteKept(edit, keep)
+    setPlanListSaid(outcomeWords(outcome))
+    return outcome
+  }
+  const confirmName = (box: NameBox) => {
+    if (box.kind === 'rename') {
+      void writeKept(renameEdit(box.id, box.text)).then((o) => {
+        if (o !== null && o.kind !== 'refused') setNameBox(null)
+      })
+      return
+    }
+    const levers = whatIf.own
+    const id = box.replaces ?? freshStableId(idsInUse(snapshot.draft))
+    const name = box.text.trim()
+    void writeKept(keepEdit(id, name, levers, box.replaces !== undefined), id).then((o) => {
+      if (o === null || o.kind === 'refused' || o.kind === 'ceremony') return
+      whatIf.markKept(id)
+      setNameBox(null)
+      if (o.kind !== 'failed') {
+        const words = slots.planListKept(name)
+        setPlanListSaid(words)
+        announcer.announce(words)
+      }
+    })
+  }
+  const planListDrawer =
+    planList !== null ? (
+      <PlanListDrawer
+        open={planListOpen}
+        onOpenChange={setPlanListOpen}
+        view={planList}
+        box={writes.kind === 'open' ? nameBox : null}
+        onBox={setNameBox}
+        validate={(text, exceptId) => nameError(text, kept, exceptId)}
+        onOpenLeft={(id) => {
+          setPlanListOpen(false)
+          onPick(`kept:${id}`)
+        }}
+        onConfirm={confirmName}
+        onCopy={(id) => void writeKept(copyEdit(id))}
+        onDelete={(id) => void writeKept(deleteEdit(id))}
+        onOrder={(ids, movedId) => {
+          const name = kept.find((k) => k.id === movedId)?.name
+          void writeKept(orderEdit(ids)).then((o) => {
+            if (o !== null && o.kind !== 'refused' && name !== undefined) announcer.announce(slots.planListMoved(name, ids.indexOf(movedId) + 1))
+          })
+        }}
+        said={planListSaid}
+      />
+    ) : null
   const staleBanner = (
     <StaleBannerStack lines={staleLines} onOpenSeat={(seat) => editors.openAssumptions(seat)} {...(onReview !== undefined && !readOnly ? { onReconfirm: onReview } : {})} />
   )
@@ -693,11 +859,17 @@ export default function Shell({
               view={prob}
               headingRef={headingRef}
               onPick={onPick}
+              onPickCompared={onPickCompared}
+              onOpenPlanList={() => {
+                setPlanListSaid(null)
+                setPlanListOpen(true)
+              }}
               onChart={setChart}
               strategies={strategiesDoor}
               handle={{ label: copy.trayHandle, open: trayOpen, onOpenChange: setTrayOpen, controls: trayId }}
               {...(tray !== undefined ? { tray } : {})}
             />
+            {planListDrawer}
           </>
         ) : (
           <InterimPage

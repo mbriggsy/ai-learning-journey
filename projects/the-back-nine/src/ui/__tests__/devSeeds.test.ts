@@ -2391,7 +2391,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       'datesavedfourbuckets', 'datesavedmoved', 'datesavedrisen', 'datesavedrisenlater', 'datesavedrisenshort', 'datesavedstale', 'datesavedtyped',
       'datesavedtypedcrowned', 'datesavedtypedmoved', 'datesavedtypednearline', 'datesavedtypedpension', 'datesavedtypedsticky', 'dateshort',
       'datesolo',
-      'datesplit', 'dip', 'tablewidest',
+      'datesplit', 'dip', 'dipkept', 'tablewidest',
     ])
   })
 
@@ -2512,7 +2512,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
     // four-bucket twin (council (6)), the retype after a move (the walk-6 round review's pair), the whole-window
     // rebuild's two (the pension household and the crowned one), the tax rider's two walk-8 twins (the near-line
     // household and the all-sticky one) and the year-by-year table's widest household (the workbench's U7) included.
-    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(25)
+    expect(swept, 'the sweep reached every buildable W-carrying seed').toBe(26)
   })
 
   // The whole-window rebuild's every-year field (KTD1) on two witnesses the typed-below line reads. A (`datesavedtyped`):
@@ -2569,7 +2569,7 @@ describe('the pay check’s W on the seeds (U8, U10, U13)', () => {
       if (key === 'dateshort') expect(credits.every((c) => c === 0), 'dateshort: short in year 0, so nothing in any year').toBe(true)
       swept++
     }
-    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty-five above)').toBe(25)
+    expect(swept, 'the sweep reached every buildable W-carrying seed (the twenty-six above)').toBe(26)
   })
 
   // Build 2's U9 (KTD14): the three saved witnesses, each minted through the shipped write. Every figure typed by

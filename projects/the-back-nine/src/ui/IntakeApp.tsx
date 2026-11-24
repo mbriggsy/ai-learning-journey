@@ -6,6 +6,9 @@ import { isDateRoute, missingRequiredFacts } from '@intake/intakeMap'
 import { validateDraft, type FieldPath } from '@intake/sanity'
 import { subscribeUnsavedBuffers, unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import { isWorkingYearCostStale } from '@intake/workingYearQuote'
+import { withKeptWhatIfs } from '@intake/whatIf'
+import { canonicalIdentityToken } from '@shared/model'
+import { idsInUse } from '@shared/stableIds'
 import {
   workingYearCostStaleDoor,
   workingYearCostStaleLine,
@@ -34,6 +37,7 @@ import {
 } from './resultSave'
 import type { ResultSaveProp } from './saveAnnouncer'
 import { ShellSlot } from './shell/ShellSlot'
+import type { KeptEdit, KeptWriteOutcome } from './screens/retirement/planListView'
 import { LANDING, parseHash, routeEquals, routeHash, type Route } from './shell/routes'
 import { describeSaveFailure } from './unlockCopy'
 import { useUnloadGuard } from './unloadGuard'
@@ -135,7 +139,14 @@ export default function IntakeApp({
   // entry went back on and the shell asks first; the wordmark and the re-walk ask before they go). `lines`
   // say what the leave drops; `go` is how the household's "Go back" leaves: one entry back, home to the
   // first page, or out to the walk-through.
-  const [leaveAsk, setLeaveAsk] = useState<{ readonly lines: readonly string[]; readonly go: 'back' | 'home' | 'review' } | null>(null)
+  const [leaveAsk, setLeaveAsk] = useState<{
+    readonly lines: readonly string[]
+    readonly go: 'back' | 'home' | 'review' | 'save' | 'backup'
+    readonly goLabel?: string
+  } | null>(null)
+  // Act 6 · RC5 — a kept what-if Keep sent through the save ceremony (no vault yet): the shell reopens it on the left
+  // when it mounts again, so the what-if the household kept is the one on screen after the ceremony.
+  const [resumeKept, setResumeKept] = useState<string | undefined>(undefined)
   // The shell's page (KTD31: route state lives here, in the app that stays mounted), mirrored to the hash.
   const [route, setRoute] = useState<Route>(LANDING)
   // Whether the shell's what-if holds a change the plan doesn't: unkept work a leave or a reload would drop.
@@ -218,7 +229,13 @@ export default function IntakeApp({
   // gate). It disambiguates the ceremony's TWO entrances: the plan rail's own "Keep this plan"
   // minted no record, so its cancel must restore nothing and its completion must announce no
   // saved recommendation.
-  const [recSaveCeremony, setRecSaveCeremony] = useState(false)
+  const [recSaveCeremony, setRecSaveCeremonyState] = useState(false)
+  // The flag as just set, for a handler that runs before the re-render (the ask's Stay, a cancel).
+  const recSaveCeremonyRef = useRef(false)
+  const setRecSaveCeremony = useCallback((on: boolean) => {
+    recSaveCeremonyRef.current = on
+    setRecSaveCeremonyState(on)
+  }, [])
   // THE DURABILITY EVENT — "a write carrying this record reached disk" — carried as a flag the
   // surface consumes and acknowledges, NOT as a view transition. The ceremony route unmounts this
   // whole subtree (the `phase === 'save'` branch returns before Result renders), so a consumer
@@ -359,6 +376,32 @@ export default function IntakeApp({
     window.history.replaceState(null, '', plainUrl())
     depthRef.current = 0
     setPhase('intake')
+  }, [])
+  /** The ceremony's cancel (and its ask's Stay) puts back the record the recommendation's gesture minted for it. */
+  const restoreRecMint = useCallback(() => {
+    if (!recSaveCeremonyRef.current) return
+    const prev = recSavePrevRecord.current
+    recSavePrevRecord.current = undefined
+    recSaveCeremonyRef.current = false
+    setRecSaveCeremony(false)
+    appModel.update((d) => {
+      if (prev !== undefined) return { ...d, savedRecommendation: prev }
+      const { savedRecommendation: _minted, ...withoutRecord } = d
+      return withoutRecord
+    })
+  }, [])
+  /** The lock menu's save and backup steps unmount the shell (RC5, found at RC4b's close: they dropped an unkept
+   *  what-if silently): over an open entry or an unkept what-if they ask first, in the ceremony's own words. */
+  const toCeremony = useCallback((go: 'save' | 'backup') => {
+    const lines = [
+      ...(unsavedBuffersHeld() > 0 ? [copy.shellCeremonyOpenEntry] : []),
+      ...(whatIfHeldRef.current ? [copy.shellCeremonyWhatIf] : []),
+    ]
+    if (lines.length > 0) {
+      setLeaveAsk({ lines, go, goLabel: copy.shellCeremonyGo })
+      return
+    }
+    setPhase(go)
   }, [])
   /** The re-walk asks first over anything the shell's unmount would drop (insight 112: every way out holds). */
   const reviewFromShell = useCallback(() => {
@@ -586,6 +629,39 @@ export default function IntakeApp({
   }, [])
 
   /**
+   * Act 6 · RC5 — THE PLAN LIST'S ONE WRITE (KTD19): Keep, rename, copy, delete and reorder all land here. The edit is
+   * applied to the store's CURRENT list at the press (insight 036), never a render's; it writes only on a clean draft (an
+   * unsaved fact edit would otherwise ride a keep to disk unasked: the page says why instead, and the vault is
+   * unchanged), probes the round trip first (the list must reach the disk whole), then goes through the plan's one
+   * save (`saveNow`). With no vault yet, the list goes on the unsaved plan, and a Keep opens the save ceremony, which
+   * saves the plan with it (the kept what-if then reopens on the left, `resumeKept`).
+   */
+  const writeKept = useCallback(
+    async (edit: KeptEdit, keep?: string): Promise<KeptWriteOutcome> => {
+      if (readOnly) return { kind: 'refused', reason: 'read-only' }
+      const s = appModel.getSnapshot()
+      const view = deriveResultSave(persistRef.current, scenarioFromDraft(s.draft), readOnly)
+      if (view.kind !== 'first' && view.kind !== 'clean') return { kind: 'refused', reason: view.kind }
+      const next = edit(s.draft.keptWhatIfs ?? [], idsInUse(s.draft))
+      if (next === null) return { kind: 'refused', reason: 'stale' }
+      const probe = scenarioFromDraft(withKeptWhatIfs(s.draft, next))
+      if (!probe.ready || probe.droppedAtoms.length > 0 || canonicalIdentityToken(probe.scenario.keptWhatIfs ?? []) !== canonicalIdentityToken(next)) {
+        return { kind: 'refused', reason: 'invalid' }
+      }
+      appModel.update((d) => withKeptWhatIfs(d, next))
+      if (view.kind === 'first') {
+        if (keep === undefined) return { kind: 'draft' }
+        setResumeKept(keep)
+        setPhase('save')
+        return { kind: 'ceremony' }
+      }
+      const written = await saveNow()
+      return written.ok ? { kind: 'saved' } : { kind: 'failed' }
+    },
+    [readOnly, saveNow],
+  )
+
+  /**
    * U17 §S5 — THE SAVE GESTURE FOR THE RECOMMENDATION ON SCREEN.
    *
    * THE ORDER IS THE WHOLE DESIGN: the mint is PROBED AND REFUSED BEFORE THE STORE IS TOUCHED, and
@@ -704,8 +780,9 @@ export default function IntakeApp({
       // this gesture's own awaits must route to the update write, not a second ceremony.
       if (persistRef.current.kind === 'unsaved') {
         setRecSaveCeremony(true)
-        // The ceremony returns to the shell, where the gesture was made (Act 6 · RC4: the shell is the home).
-        setPhase('save')
+        // The ceremony returns to the shell, where the gesture was made (Act 6 · RC4: the shell is the home). Over an
+        // unkept what-if or an open entry it asks first, as the lock menu's Keep does (RC5); Stay restores the record.
+        toCeremony('save')
         return
       }
       // A VAULT EXISTS ⇒ the update write. Clearing the refusal in the SAME state update that sets
@@ -728,7 +805,7 @@ export default function IntakeApp({
       // record, and `saveNow`'s {ok:true} arm clears this refusal when it lands.
       setRecSaveRefusal({ reason: 'write', draft: appModel.getSnapshot().draft })
     },
-    [readOnly, persist, recSaveInFlight, saveNow],
+    [readOnly, persist, recSaveInFlight, saveNow, setRecSaveCeremony, toCeremony],
   )
 
   // DEV-only `?seed=<key>`: apply a COMPLETE fixture to the in-memory appModel and
@@ -954,16 +1031,7 @@ export default function IntakeApp({
             // would erase a record the household saved earlier and never touched today. Gated on
             // `recSaveCeremony` because the plan rail's own "Keep this plan" enters this same
             // ceremony having minted nothing — it must not perturb the draft at all.
-            if (recSaveCeremony) {
-              const prev = recSavePrevRecord.current
-              recSavePrevRecord.current = undefined
-              setRecSaveCeremony(false)
-              appModel.update((d) => {
-                if (prev !== undefined) return { ...d, savedRecommendation: prev }
-                const { savedRecommendation: _minted, ...withoutRecord } = d
-                return withoutRecord
-              })
-            }
+            restoreRecMint()
             setPhase('workspace')
           }}
           // Record what the ceremony COMMITTED the instant it commits — the same render-captured
@@ -1012,7 +1080,7 @@ export default function IntakeApp({
   // opened there returns to it.
   const saveProp = (view: ResultSaveView): ResultSaveProp =>
     view.kind === 'first'
-      ? { kind: 'first', onKeep: () => setPhase('save') }
+      ? { kind: 'first', onKeep: () => toCeremony('save') }
       : view.kind === 'dirty'
         ? { kind: 'dirty', onSave: () => void saveNow() }
         : view.kind === 'failed'
@@ -1029,13 +1097,16 @@ export default function IntakeApp({
           save: saveProp(view),
           // The lock menu's Back up: the existing backup step, wherever a vault exists in this session and the tab
           // can write (a read-only tab writes nothing, not even a backup note).
-          ...(persist.kind !== 'unsaved' && !readOnly ? { onBackup: () => setPhase('backup') } : {}),
+          ...(persist.kind !== 'unsaved' && !readOnly ? { onBackup: () => toCeremony('backup') } : {}),
           // The re-offer (U8-tail, the old answer page's backup door): a writable return with no backup note.
           backupOffered: needsBackup,
           route,
           onNavigate: navigate,
           onHome: goHome,
           onWhatIfHeld,
+          // The plan list's one write (RC5), and the kept what-if a Keep sent through the save ceremony.
+          onWriteKept: writeKept,
+          ...(resumeKept !== undefined ? { resumeKept, onResumed: () => setResumeKept(undefined) } : {}),
           // The assumption panel's guided re-walk (the old answer page's Review): out to the walk-through.
           onReview: reviewFromShell,
           // The committed answer every page reads, and the draft the facts page reads (U8).
@@ -1073,9 +1144,14 @@ export default function IntakeApp({
             ? {
                 leaveAsk: {
                   lines: leaveAsk.lines,
+                  ...(leaveAsk.goLabel !== undefined ? { goLabel: leaveAsk.goLabel } : {}),
                   onGo: () => {
                     const go = leaveAsk.go
                     setLeaveAsk(null)
+                    if (go === 'save' || go === 'backup') {
+                      setPhase(go)
+                      return
+                    }
                     if (go === 'home') {
                       leaveHome()
                       return
@@ -1087,7 +1163,11 @@ export default function IntakeApp({
                     leavingRef.current = 'back'
                     window.history.back()
                   },
-                  onStay: () => setLeaveAsk(null),
+                  onStay: () => {
+                    // A recommendation's keep that asked before its ceremony: Stay puts the minted record back.
+                    if (leaveAsk.go === 'save') restoreRecMint()
+                    setLeaveAsk(null)
+                  },
                 },
               }
             : {}),

@@ -532,7 +532,7 @@ const retiredBudget: ScenarioDraft = {
  * lifestyle at 8", labelled Engine-proven, and both figures were wrong):**
  *   provisional (2,000 paths) — floor **2** `confirmed-date` · lifestyle **10** `window-edge-unconfirmed`
  *   final       (16,000 paths) — floor **2** `confirmed-date` · lifestyle **9** `confirmed-date`
- * The LIVE surface runs `final` (`IntakeApp.tsx:449`, `recompute.ts:12`/`:18`), so the shipped hero is
+ * The LIVE surface runs `final` (`IntakeApp.tsx:492`, `recompute.ts:12`/`:21`), so the shipped hero is
  * the 9 — and it is a CONFIRMED date, i.e. the band owes no edge hedge there. The 10 is real but is a
  * provisional-tier reading, and it is `window-edge-unconfirmed`: during entry the hedge RENDERS and
  * then WITHDRAWS when final lands. That transient has never been cold-read.
@@ -1958,6 +1958,31 @@ const tableWidest: ScenarioDraft = withSavedLeftOver(
   }),
 )
 
+/**
+ * Act 6 · RC5 — the plan list's plants: a household holding kept what-ifs, retired (`retiredkept`) and working
+ * (`dipkept`), for the plan list drawer's fit arms, its look shots and the kept what-ifs' vault round trip
+ * (`?vault=retiredkept`). Each lever is written from the base seed's own figures, never typed beside it: the working
+ * household's kept stop year is its plan's start year plus an offset (insight 166: a typed calendar year is a wall-clock
+ * read). `dipkept`'s last kept what-if points at an account no longer in the plan, so it says so and runs nothing
+ * (insight 102).
+ */
+const retiredKept: ScenarioDraft = {
+  ...retiredOnTrack,
+  keptWhatIfs: [
+    { id: 'kept-spend-less', name: 'Spend a little less', levers: [{ kind: 'spending', op: 'total', annualSpendingReal: (retiredOnTrack.annualSpendingReal ?? 0) - 8_000 }] },
+    { id: 'kept-pretax-first', name: 'Pre-tax savings first', levers: [{ kind: 'withdrawal-order', policy: 'pre-tax-first' }] },
+    { id: 'kept-calmer-mix', name: 'A calmer mix', levers: [{ kind: 'mix', stockPct: 40, bondPct: 50, cashPct: 10 }] },
+  ],
+}
+const dipKept: ScenarioDraft = {
+  ...withConfirmedW(dateDipSeed),
+  keptWhatIfs: [
+    { id: 'kept-stop-later', name: 'Stop a year later', levers: [{ kind: 'stop-year', calendarYear: dateDipSeed.startCalendarYear + 6 }] },
+    { id: 'kept-pretax-first', name: 'Pre-tax savings first', levers: [{ kind: 'withdrawal-order', policy: 'pre-tax-first' }] },
+    { id: 'kept-old-account', name: 'Save into the old account', levers: [{ kind: 'deposits', accountId: 'account-no-longer-held', annualContribution: 6_000 }] },
+  ],
+}
+
 /** The seed registry — `?seed=<key>` selects one. */
 export const DEV_SEEDS = {
   retired: retiredOnTrack,
@@ -2030,6 +2055,9 @@ export const DEV_SEEDS = {
   datesavedtypedsticky: dateSavedTypedStickyWitness,
   // The workbench's U7 slice 3: the year-by-year table's widest household, every column and line printing.
   tablewidest: tableWidest,
+  // Act 6 · RC5: the plan list's plants (kept what-ifs, retired and working).
+  retiredkept: retiredKept,
+  dipkept: dipKept,
 } satisfies Record<string, ScenarioDraft>
 
 export type DevSeedKey = keyof typeof DEV_SEEDS

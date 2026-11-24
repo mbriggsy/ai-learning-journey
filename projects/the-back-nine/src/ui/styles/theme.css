@@ -394,3 +394,25 @@
     margin: var(--space-5) 0 0;
   }
 }
+
+/* The plan list's row actions (RC5; ref 2.8: "hover a row for + Copy"): Copy, Rename and Delete fade out only past the
+   phone tier and where the pointer hovers; there they show on hover and whenever focus is inside the row (a keyboard
+   reaches them by Tab: they are never removed, only faded). On a phone they always show. A 150 ms fade, none under
+   reduced motion (an opacity change only, never a move). */
+@layer kit {
+  .rc-root [data-row-actions] {
+    @variant wide {
+      @media (hover: hover) and (pointer: fine) {
+        opacity: 0;
+        transition: opacity 150ms ease;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+  .rc-root [data-kept-row]:hover [data-row-actions],
+  .rc-root [data-kept-row]:focus-within [data-row-actions] {
+    opacity: 1;
+  }
+}

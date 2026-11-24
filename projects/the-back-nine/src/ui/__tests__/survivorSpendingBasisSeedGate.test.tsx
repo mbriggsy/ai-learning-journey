@@ -105,8 +105,9 @@ const ROWS: readonly {
 }[] = [
   // The retired family — S $78,000, r 0.75, no M, no budget: 0.75 × 78,000 = 58,500 → $4,875.00 → "4,880".
   // `patypical` (the composites plan's U2) answers "not sure" on Medicare extras: the extras fund through the
-  // engine's costs, never the spending basis, so its row is `pa`'s.
-  ...(['retired', 'buckets', 'steer', 'nc', 'pa', 'patypical', 'fl', 'elsewhere'] as const).map((key) => ({
+  // engine's costs, never the spending basis, so its row is `pa`'s. `retiredkept` (Act 6 · RC5) is `retired` holding kept
+  // what-ifs, which are never an engine input, so its row is `retired`'s.
+  ...(['retired', 'retiredkept', 'buckets', 'steer', 'nc', 'pa', 'patypical', 'fl', 'elsewhere'] as const).map((key) => ({
     key,
     draft: () => DEV_SEEDS[key],
     annual: { survivor: 58_500, couple: 78_000 },
@@ -243,7 +244,7 @@ describe('the survivor card’s spending-basis line on every household that rend
   it('the census: the rows are exactly the spine dev seeds and the spine vault plants — a new one of either must add its row', () => {
     const spineSeeds = (Object.keys(DEV_SEEDS) as DevSeedKey[]).filter((k) => buildSpineParams(DEV_SEEDS[k]) !== null)
     expect(ROWS.filter((r) => !r.key.startsWith('vault:')).map((r) => r.key).sort()).toEqual([...spineSeeds].sort())
-    expect(spineSeeds).toHaveLength(30)
+    expect(spineSeeds).toHaveLength(31)
     // Every registered plant over a spine base renders the card, so each needs a row, doctored as the
     // registry doctors it: read off `AGED_PLANTS`, never re-typed, so a new spine plant reds here.
     const spinePlants = Object.entries(AGED_PLANTS).filter(([, p]) => p !== undefined && spineSeeds.includes(p.base))

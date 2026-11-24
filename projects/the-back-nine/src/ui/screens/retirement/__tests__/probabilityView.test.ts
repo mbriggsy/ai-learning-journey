@@ -499,3 +499,58 @@ describe('The state clause names the state the run priced', () => {
     expect([...v.metrics.lines, ...v.footnotes].join(' ')).toContain(copy.verdictStateUnpricedNote)
   })
 })
+
+describe('RC5: the two-up over kept what-ifs', () => {
+  const KEPT = [
+    { id: 'a', name: 'Spend less', levers: SPEND_LEVER },
+    { id: 'b', name: 'Move', levers: [{ kind: 'withdrawal-order', policy: 'pre-tax-first' }] },
+  ] as unknown as NonNullable<ScenarioDraft['keptWhatIfs']>
+  const draft: ScenarioDraft = { ...RETIRED, keptWhatIfs: KEPT }
+  const s = snap(draft, headlineAnswer(draft, RETIRED_RUN))
+
+  it('both pickers offer the kept what-ifs; neither offers the one the other side shows', () => {
+    const v = reads(probabilityView(input(s, { whatIf: { pick: 'kept:a', bundle: SPEND_LEVER, view: null }, compared: { pick: 'kept:b', bundle: KEPT[1]!.levers, view: null } })))
+    expect(v.picker.items.map((i) => i.label)).toEqual([copy.probabilityPickNew, 'Spend less'])
+    expect(v.comparedPicker.items.map((i) => i.label)).toEqual([copy.probabilityPlanTitle, 'Move'])
+    expect(v.halves.alternative.title).toBe('Spend less')
+    expect(v.halves.compared.title).toBe('Move')
+  })
+
+  it('two kept what-ifs, neither your plan: each half its own reading, both named in the difference line', () => {
+    const left = readyView({ kind: 'headline', headline: headline(6) }, { kind: 'headline', headline: headline(7) })
+    const right = readyView({ kind: 'headline', headline: headline(8) }, { kind: 'headline', headline: headline(7) })
+    const v = reads(probabilityView(input(s, { whatIf: { pick: 'kept:a', bundle: SPEND_LEVER, view: left }, compared: { pick: 'kept:b', bundle: KEPT[1]!.levers, view: right } })))
+    expect(ringCentre(v.halves.alternative)).toBe(slots.xOfTen(6))
+    expect(ringCentre(v.halves.compared)).toBe(slots.xOfTen(8))
+    const text = (n: number) => JSON.stringify(v.metrics.difference).includes(slots.xOfTen(n))
+    expect(v.metrics.difference?.startsWith('Move reads')).toBe(true)
+    expect(v.metrics.difference).toContain('Spend less reads')
+    expect(text(6) && text(8)).toBe(true)
+    expect(v.metrics.differenceReserve.length, 'the reserve holds the widest form for these two names').toBeGreaterThanOrEqual(v.metrics.difference!.length)
+  })
+
+  it('a reopened kept what-if, edited, is named "changed, not kept" on its half and in its picker', () => {
+    const v = reads(probabilityView(input(s, { whatIf: { pick: 'kept:a', bundle: [], view: null, changed: true } })))
+    expect(v.halves.alternative.title).toBe(slots.probabilityKeptChanged('Spend less'))
+    expect(v.picker.items.find((i) => i.value === 'kept:a')?.label).toBe(slots.probabilityKeptChanged('Spend less'))
+  })
+
+  it('a pick that can no longer be made (its kept what-if deleted) reads the default: your plan, the new what-if', () => {
+    const v = reads(probabilityView(input(s, { whatIf: { pick: 'kept:gone', bundle: [], view: null }, compared: { pick: 'kept:gone', bundle: [], view: null } })))
+    expect(v.picker.value).toBe('new')
+    expect(v.comparedPicker.value).toBe('plan')
+    expect(v.halves.compared.title).toBe(copy.probabilityPlanTitle)
+  })
+
+  it('a refused kept what-if on the right says why in words and prints no count', () => {
+    const v = reads(probabilityView(input(s, { compared: { pick: 'kept:b', bundle: KEPT[1]!.levers, view: { kind: 'refused', refusal: { kind: 'account-gone', accountId: 'x' } } } })))
+    expect(v.halves.compared.status).toBe(copy.workbenchRailRefusedAccountGone)
+    expect(v.halves.compared.ring.kind).toBe('empty')
+  })
+
+  it('a read-only view composes alike: the panel carries no write action (the list’s writes are the drawer’s)', () => {
+    const a = probabilityView(input(s, { readOnly: true, compared: { pick: 'kept:b', bundle: KEPT[1]!.levers, view: null } }))
+    const b = probabilityView(input(s, { readOnly: false, compared: { pick: 'kept:b', bundle: KEPT[1]!.levers, view: null } }))
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b))
+  })
+})

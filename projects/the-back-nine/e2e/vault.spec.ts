@@ -11,7 +11,7 @@
  * The store/crypto source is bundled at spec time with vite's JS API — no separate
  * build artifact to go stale, no new dependency.
  *
- * CROSS-BROWSER SCOPE — and its honest boundary. The two `@cross-browser`-tagged arms below
+ * CROSS-BROWSER SCOPE — and its honest boundary. The three `@cross-browser`-tagged arms below
  * ALSO run under WebKit (playwright.config.ts's second project greps for that tag); the KDF
  * spike stays Chromium-only, because its recorded verdict is about Chromium's WebCrypto
  * thread pool. What the WebKit arms prove: the IndexedDB / Web Locks / BroadcastChannel paths
@@ -23,7 +23,7 @@ import { expect, test } from '@playwright/test'
 import { resolve } from 'node:path'
 import { build } from 'vite'
 
-import type { KdfSpikeReport, RecomputeSpikeReport, TrustLoopReport } from './vaultHarness'
+import type { KdfSpikeReport, KeptRoundTripReport, RecomputeSpikeReport, TrustLoopReport } from './vaultHarness'
 
 const CONTROL_ORIGIN = 'http://127.0.0.1:4181'
 const ROOT = resolve(import.meta.dirname, '..')
@@ -34,7 +34,9 @@ test.beforeAll(async () => {
   const result = await build({
     configFile: false,
     logLevel: 'silent',
-    resolve: { alias: { '@shared': resolve(ROOT, 'src/shared'), '@engine': resolve(ROOT, 'src/engine') } },
+    // The kept what-ifs' round trip (Act 6 · RC5) reads the app's own hydrate and re-encode and a dev seed, so the
+    // harness resolves every layer alias the app does.
+    resolve: { alias: Object.fromEntries(['shared', 'engine', 'store', 'intake', 'budget', 'viz', 'crypto', 'ui'].map((l) => ['@' + l, resolve(ROOT, 'src/' + l)])) },
     build: {
       write: false,
       minify: false,
@@ -63,6 +65,7 @@ declare global {
       releaseActiveWriter(): Promise<{ ok: boolean }>
       kdfSpike(): Promise<KdfSpikeReport>
       recomputeSpike(): Promise<RecomputeSpikeReport>
+      runKeptRoundTrip(): Promise<KeptRoundTripReport>
     }
   }
 }
@@ -140,6 +143,18 @@ test('a REAL second tab unlocking an active vault is read-only and its write is 
   const second = await page2.evaluate(() => window.VaultHarness.unlockFromSecondTab())
   expect(second.ok).toBe(true)
   expect(second.readOnly).toBe(false)
+})
+
+test('a plan holding kept what-ifs, saved days ago, survives an unlock, the app’s own re-encode, a save and a reopen with the same bytes (Act 6 · RC5)', { tag: '@cross-browser' }, async ({ page }) => {
+  await page.goto(CONTROL_ORIGIN)
+  await page.addScriptTag({ content: harnessBundle })
+  const r = await page.evaluate(() => window.VaultHarness.runKeptRoundTrip())
+  expect(r.keptCount, '[test setup] the plant holds kept what-ifs').toBeGreaterThan(1)
+  expect([r.firstSaveOk, r.unlockOk, r.resaveOk, r.reopenOk]).toEqual([true, true, true, true])
+  expect(r.afterUnlock, 'the unlock reads the kept what-ifs byte for byte').toBe(r.planted)
+  expect(r.afterReopen, 'a re-save and a reopen leave them byte for byte').toBe(r.planted)
+  expect(r.identityEqual, 'the whole plan reads the same on the identity compare (insight 073)').toBe(true)
+  expect(r.stampMoved, 'the fixture really was aged and the re-save really wrote').toBe(true)
 })
 
 test('the KDF-location spike: measure whether PBKDF2-600k blocks the Chromium main thread', async ({

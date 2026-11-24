@@ -299,6 +299,9 @@ describe('exposureForDraft — the working-year tax floor’s reach (ledger v12)
     'datesavedtypedsticky',
     // The workbench's U7: the year-by-year table's widest household.
     'tablewidest',
+    // Act 6 · RC5: `dip` holding kept what-ifs (the plan list's plant). Kept what-ifs are never an engine input, so it is
+    // `dip`'s own household, read through the W branch like the rest here.
+    'dipkept',
   ] as const
   const withoutW = (d: ScenarioDraft): ScenarioDraft => {
     const { workingYearCost: _w, ...rest } = d

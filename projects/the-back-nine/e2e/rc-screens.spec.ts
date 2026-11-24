@@ -2,6 +2,7 @@ import { expect, type Page } from '@playwright/test'
 import { FINAL_TIER_MS, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, armRefiguringWatch, expectRefiguringSeen, gotoSeedFinal, gotoVaultFinal, pinPlantDay, pinnedDay, pinnedYear, refiguringLog, settleLayout, test } from './reviewSurface'
 import { copy, slots } from '../src/ui/copy'
 import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
+import { DEV_VAULT_PASSPHRASE as DEV_PASSPHRASE } from '../src/ui/devSeeds'
 import { FAN, assertHcText, enterSnapshot, hcAudit, hcFloorPx, hcMarkFailures, hcMarks, hcTextFailures, hoverMedian } from './hcTextAudit'
 
 /**
@@ -1461,4 +1462,206 @@ test.describe(`RC4 · Snapshot’s re-figuring line, held (phone ${PHONE.width}�
     expect(lb.y + lb.height, 'the line overlaps the ring below it').toBeLessThanOrEqual(ring.y + 0.5)
     await expectStillHeld(page)
   })
+})
+
+// ── RC5 · the plan list and kept what-ifs (plan 6, RC5: its Verification and Test scenarios) ───────────────────────────
+// - at his window: the pencil beside the right picker opens the plan list as a right drawer, your plan pinned on top and
+//   the kept what-ifs below by name, each with its handle and (on hover) Copy, Rename and Delete; nothing in it scrolls
+//   sideways or is cut; closed again, Probability still holds one frame to the ACTION ITEMS handle;
+// - on the phone: the same list is a full-screen sheet, its rows and its Done reachable, no sideways scroll;
+// - the two-up: two kept what-ifs, neither your plan, side by side, each with its own reading on one balance scale, both
+//   named in the difference line;
+// - a plan holding kept what-ifs survives a save and a reopen through the real path: a rename written from the drawer
+//   on a planted vault, the page reloaded and the vault unlocked again, reads back in the list's own order;
+// - with no vault, Keep opens the save ceremony and the kept what-if is on the left when the household comes back;
+// - the lock menu's Keep over an unkept what-if asks first (found at RC4b's close: it dropped the what-if silently).
+
+const planList = (page: Page) => page.getByRole('dialog', { name: copy.planListTitle })
+
+async function openPlanList(page: Page): Promise<void> {
+  await page.getByRole('button', { name: copy.planListOpenLabel }).click()
+  await expect(planList(page)).toBeVisible()
+  // The drawer slides in on a 300 ms transition: measure it at rest.
+  await expect.poll(() => planList(page).evaluate((el) => Math.round(el.getBoundingClientRect().right))).toBe(page.viewportSize()!.width)
+  await settleLayout(page)
+}
+
+/** Pick a choice in one of Probability's two pickers (by the picker's name). */
+async function pickIn(page: Page, picker: string, option: string): Promise<void> {
+  await page.getByRole('combobox', { name: picker }).click()
+  await page.getByRole('option', { name: option, exact: true }).click()
+  // The list closes on a short transition: never let a second picker's list meet this one's.
+  await expect(page.getByRole('listbox')).toHaveCount(0)
+}
+
+/** Nothing in the drawer is cut or scrolls sideways. */
+async function assertDrawerWhole(page: Page, who: string): Promise<void> {
+  const r = await planList(page).evaluate((el) => {
+    const body = el.querySelector('.overflow-y-auto') as HTMLElement
+    const cut = [...el.querySelectorAll('*')].filter((n) => {
+      const cs = getComputedStyle(n)
+      return cs.textOverflow === 'ellipsis' || ((cs.overflowX === 'hidden' || cs.overflowX === 'clip') && n.scrollWidth > n.clientWidth + 1)
+    }).length
+    return { scroll: body.scrollWidth, client: body.clientWidth, cut }
+  })
+  expect(r.scroll, `${who}: the list scrolls sideways`).toBeLessThanOrEqual(r.client)
+  expect(r.cut, `${who}: text cut inside the list`).toBe(0)
+}
+
+test.describe(`RC5 · the plan list at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+
+  for (const seed of ['retiredkept', 'dipkept'] as const) {
+    test(`?seed=${seed}: the pencil opens the plan list as a right drawer, pinned plan first, each kept what-if with its handle and its hover actions; closed, Probability still holds one frame`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterProbability(page, seed)
+      await openPlanList(page)
+      const box = (await planList(page).boundingBox())!
+      expect(box.x, 'a right drawer, not a full-width sheet').toBeGreaterThan(REAL.width * 0.3)
+      expect(box.height).toBeGreaterThanOrEqual(REAL.height - 1)
+      await expect(planList(page).locator('[data-plan-list-pinned] li').first()).toHaveText(copy.probabilityPlanTitle)
+      const rows = planList(page).locator('[data-kept-row]')
+      await expect(rows).toHaveCount(3)
+      for (let i = 0; i < 3; i++) await expect(rows.nth(i).locator('[data-kept-handle]'), 'each row’s handle').toBeVisible()
+      // The row's actions: faded until hovered (a pointer that hovers), shown on hover, in reach of the keyboard.
+      const actions = rows.first().locator('[data-row-actions]')
+      expect(await actions.evaluate((el) => getComputedStyle(el).opacity), 'unhovered, the actions are faded').toBe('0')
+      await rows.first().hover()
+      await expect.poll(() => actions.evaluate((el) => getComputedStyle(el).opacity)).toBe('1')
+      for (const word of [copy.planListCopy, copy.planListRename, copy.planListDelete]) await expect(actions.getByRole('button', { name: word })).toBeVisible()
+      await assertDrawerWhole(page, `${seed} REAL plan list`)
+      // Every row in the first frame of the drawer, and its Done.
+      const bottoms = await rows.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().bottom))
+      expect(Math.max(...bottoms)).toBeLessThanOrEqual(REAL.height)
+      await expect(planList(page).getByRole('button', { name: copy.planListDone })).toBeInViewport()
+      await planList(page).getByRole('button', { name: copy.planListDone }).click()
+      await expect(planList(page)).toHaveCount(0)
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await settleLayout(page)
+      const handle = await page.evaluate(() => document.querySelector('[aria-controls="b9-action-items"]')!.getBoundingClientRect().bottom)
+      expect(handle, `${seed}: the ACTION ITEMS handle in the first frame with the right picker and its pencil`).toBeLessThanOrEqual(REAL.height)
+      await assertOneVisibleCaveat(page, REAL.height)
+      await noSidewaysScroll(page, `${seed} REAL Probability with the plan list closed`)
+    })
+  }
+
+  test('?seed=retiredkept: two kept what-ifs side by side, neither your plan, each with its own reading on one balance scale, both named in the difference line', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 150_000)
+    await enterProbability(page, 'retiredkept')
+    await pickIn(page, copy.probabilityComparedLabel, 'Spend a little less')
+    await pickIn(page, copy.probabilityPickerLabel, 'Pre-tax savings first')
+    await expect(page.locator('[data-half="compared"]')).toHaveAttribute('aria-label', 'Spend a little less')
+    await expect(page.locator('[data-half="alternative"]')).toHaveAttribute('aria-label', 'Pre-tax savings first')
+    for (const side of ['alternative', 'compared'] as const) {
+      await expect(page.locator(`[data-half="${side}"] [data-ring-centre]`), `the ${side} side’s own reading`).toBeVisible({ timeout: 120_000 })
+      await expect(page.locator(`[data-half="${side}"] [aria-busy="true"]`)).toHaveCount(0, { timeout: 120_000 })
+      await expect(page.locator(`[data-bar="${side}"] .highcharts-point`).first()).toBeAttached({ timeout: 60_000 })
+    }
+    await page.waitForTimeout(800)
+    await settleLayout(page)
+    await expect(page.locator('[data-difference]')).toContainText('Spend a little less reads')
+    await expect(page.locator('[data-difference]')).toContainText('Pre-tax savings first reads')
+    await assertBarsOnOneScale(page, 'retiredkept, two kept what-ifs')
+    await assertOneVisibleCaveat(page, REAL.height)
+  })
+
+  test('?seed=dipkept: a kept what-if whose account is gone says so on its side and prints no count', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await enterProbability(page, 'dipkept')
+    await pickIn(page, copy.probabilityComparedLabel, 'Save into the old account')
+    await expect(page.locator('[data-half="compared"] [data-half-status]')).toHaveText(copy.workbenchRailRefusedAccountGone)
+    await expect(page.locator('[data-half="compared"] [data-ring-centre]')).toHaveCount(0)
+  })
+
+  test('?vault=retiredkept: a rename written from the plan list survives a reload and an unlock through the real path, in the list’s own order', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS * 2 + 90_000)
+    await gotoVaultFinal(page, 'retiredkept')
+    await toProbability(page, 'retiredkept')
+    await openPlanList(page)
+    const second = planList(page).locator('[data-kept-row]').nth(1)
+    await second.hover()
+    await second.getByRole('button', { name: copy.planListRename }).click()
+    const name = planList(page).locator('[data-kept-name]')
+    await name.fill('Pre-tax first, renamed')
+    await name.press('Enter')
+    await expect(second.getByRole('button', { name: slots.planListOpenRow('Pre-tax first, renamed') })).toBeVisible()
+    // The drawer is modal (the page behind it is out of the accessibility tree): the lock's own state attribute.
+    await expect(page.locator('[data-save-state]'), 'the plan reads saved after the write').toHaveAttribute('data-save-state', 'clean')
+    // Through the real path: reload (the plant param is gone), the real vault's unlock, its re-entry gate.
+    await page.reload()
+    await page.getByLabel('Passphrase', { exact: true }).fill(DEV_PASSPHRASE)
+    await page.getByRole('button', { name: 'Open my plan' }).click()
+    await page.getByRole('button', { name: /still about right/i }).click()
+    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+    await toProbability(page, 'retiredkept')
+    await openPlanList(page)
+    await expect(planList(page).locator('[data-kept-open] [data-kept-label]')).toHaveText(['Spend a little less', 'Pre-tax first, renamed', 'A calmer mix'])
+  })
+
+  test('?seed=retired (no vault): Keep opens the save ceremony; back from it, the kept what-if is listed and open on the left', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 150_000)
+    await openTrayOn(page, 'retired')
+    const spend = tray(page).locator('[data-tray-row="spending:total"] input').first()
+    const plan = Number((await spend.inputValue()).replace(/[^0-9]/g, ''))
+    await spend.fill(String(plan - 6_000))
+    await spend.press('Enter')
+    await tray(page).locator('[data-tray-refresh]').click()
+    await expect(page.locator('[data-half="alternative"] [aria-busy="true"]')).toHaveCount(0, { timeout: 120_000 })
+    await trayHandle(page).click()
+    await openPlanList(page)
+    await expect(planList(page).locator('[data-plan-list-ceremony]')).toHaveText(copy.planListFirstNote)
+    await planList(page).getByRole('button', { name: copy.planListKeep }).click()
+    await planList(page).getByLabel(copy.planListNameLabel).fill('Six thousand less')
+    await planList(page).getByRole('button', { name: copy.planListNameConfirm }).click()
+    await expect(page.getByRole('heading', { name: copy.saveHeading }), 'the save ceremony opened').toBeVisible({ timeout: 30_000 })
+    await page.getByRole('button', { name: copy.flowBack }).first().click()
+    await expect(page.locator('main.result[data-shell-screen="probability"]')).toBeAttached({ timeout: 30_000 })
+    await expect(page.locator('[data-half="alternative"]'), 'the kept what-if is open on the left').toHaveAttribute('aria-label', 'Six thousand less')
+    await openPlanList(page)
+    await expect(planList(page).locator('[data-kept-open] [data-kept-label]')).toHaveText(['Six thousand less'])
+  })
+
+  test('?seed=retired (no vault): the lock menu’s Keep over an unkept what-if asks first; Stay keeps the what-if', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await openTrayOn(page, 'retired')
+    const spend = tray(page).locator('[data-tray-row="spending:total"] input').first()
+    const plan = Number((await spend.inputValue()).replace(/[^0-9]/g, ''))
+    await spend.fill(String(plan - 6_000))
+    await spend.press('Enter')
+    await trayHandle(page).click()
+    await page.getByRole('button', { name: new RegExp(`^${copy.lockMenuLabel}`) }).click()
+    await page.getByRole('menuitem', { name: copy.saveCta }).click()
+    await expect(page.getByText(copy.shellCeremonyWhatIf), 'the ask names the what-if it would drop').toBeVisible()
+    await expect(page.getByRole('heading', { name: copy.saveHeading }), 'nothing left yet').toHaveCount(0)
+    await page.getByRole('button', { name: copy.workbenchLeaveStay }).click()
+    await expect(page.getByText(copy.shellCeremonyWhatIf)).toHaveCount(0)
+    await trayHandle(page).click()
+    await expect(tray(page).locator('[data-tray-row="spending:total"] [data-changed]'), 'Stay keeps the edit').toHaveCount(1)
+  })
+})
+
+test.describe(`RC5 · the plan list on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
+  for (const seed of ['retiredkept', 'dipkept'] as const) {
+    test(`?seed=${seed}: the plan list is a full-screen sheet; every row's actions shown without hover; Done reachable; no sideways scroll`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterProbability(page, seed)
+      await page.getByRole('button', { name: copy.planListOpenLabel }).scrollIntoViewIfNeeded()
+      await page.getByRole('button', { name: copy.planListOpenLabel }).click()
+      await expect(planList(page)).toBeVisible()
+      await expect.poll(() => planList(page).evaluate((el) => { const r = el.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width)] })).toEqual([0, 0, PHONE.width])
+      await settleLayout(page)
+      const rows = planList(page).locator('[data-kept-row]')
+      await expect(rows).toHaveCount(3)
+      // No hover on a touch screen: the actions are shown, never faded.
+      expect(await rows.first().locator('[data-row-actions]').evaluate((el) => getComputedStyle(el).opacity)).toBe('1')
+      await assertDrawerWhole(page, `${seed} PHONE plan list`)
+      const done = planList(page).getByRole('button', { name: copy.planListDone })
+      await done.scrollIntoViewIfNeeded()
+      await expect(done).toBeInViewport()
+      await noSidewaysScroll(page, `${seed} PHONE plan list`)
+      await done.click()
+      await expect(planList(page)).toHaveCount(0)
+    })
+  }
 })

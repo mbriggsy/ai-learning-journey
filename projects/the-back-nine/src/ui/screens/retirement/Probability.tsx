@@ -14,11 +14,11 @@
  * never evaluate it.
  */
 import { lazy, Suspense, useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, SquarePen } from 'lucide-react'
 import { Button, ChartTitle, LoadingVeil, Ring, Select } from '../../kit'
 import { verdictDescribedBy } from '../../disclaimerId'
 import { copy, slots } from '../../copy'
-import type { BarsView, HalfView, LeftPick, ProbabilityChart, ProbabilityView } from './probabilityView'
+import type { BarsView, HalfView, LeftPick, ProbabilityChart, ProbabilityView, RightPick } from './probabilityView'
 import { ChartBoundary } from '../ChartBoundary'
 
 const BalanceBar = lazy(() => import('@viz/charts/BalanceBar').then((m) => ({ default: m.BalanceBar })))
@@ -31,6 +31,10 @@ export type ReadingView = Extract<ProbabilityView, { kind: 'reading' }>
 export interface ProbabilityPanelProps {
   readonly view: ReadingView
   readonly onPick: (pick: LeftPick) => void
+  /** The right picker (RC5's two-up). */
+  readonly onPickCompared: (pick: RightPick) => void
+  /** The pencil beside the right picker: the plan list drawer. */
+  readonly onOpenPlanList: () => void
   readonly onChart: (chart: ProbabilityChart) => void
   /** The door the record note's words name (the Tax Strategies page). */
   readonly strategies: { readonly href: string; readonly onOpen: () => void }
@@ -200,7 +204,7 @@ function Metrics({ view, seat, captionRef, metricsRef }: { readonly view: Readin
       <p className="grid text-body font-semibold text-stone-900" data-difference="">
         <span className="col-start-1 row-start-1">{m.difference ?? ''}</span>
         <span aria-hidden="true" className="invisible col-start-1 row-start-1">
-          {slots.probabilityDifference(slots.xOfTenAtCeiling(), slots.xOfTenAtCeiling(), copy.probabilityPickRecommended.toLowerCase())}
+          {m.differenceReserve}
         </span>
       </p>
       {rest.map((line) => (
@@ -237,7 +241,7 @@ function OpenLink({ door, words }: { readonly door: { readonly href: string; rea
 }
 
 /** The panel's body for a reading. */
-export function ProbabilityPanel({ view, onPick, onChart, strategies }: ProbabilityPanelProps) {
+export function ProbabilityPanel({ view, onPick, onPickCompared, onOpenPlanList, onChart, strategies }: ProbabilityPanelProps) {
   const { alternative, compared } = view.halves
   const picker = (
     <Select<LeftPick>
@@ -249,7 +253,29 @@ export function ProbabilityPanel({ view, onPick, onChart, strategies }: Probabil
       className="w-56"
     />
   )
-  const planName = <h3 className="pb-2 text-chart-title text-plum">{view.planTitle}</h3>
+  // The right half's picker and, beside it, the pencil that opens the plan list (ref 2.7, `FRAME_plan-picker-dropdown-
+  // above-gauge.png`): an icon with its word (never an icon alone), its full name for a screen reader.
+  const comparedPicker = (
+    <div className="flex flex-wrap items-end justify-center gap-2">
+      <Select<RightPick>
+        label={view.comparedPicker.label}
+        hideLabel
+        items={view.comparedPicker.items}
+        value={view.comparedPicker.value}
+        onValueChange={onPickCompared}
+        className="w-56"
+      />
+      <Button
+        variant="quiet"
+        icon={<SquarePen size={18} strokeWidth={1.5} aria-hidden="true" />}
+        aria-label={copy.planListOpenLabel}
+        onClick={onOpenPlanList}
+        data-plan-list-open=""
+      >
+        {copy.planListOpenWord}
+      </Button>
+    </div>
+  )
   const gridRef = useRef<HTMLDivElement>(null)
   const leftRef = useRef<HTMLDivElement>(null)
   const metricsRef = useRef<HTMLDivElement>(null)
@@ -285,7 +311,7 @@ export function ProbabilityPanel({ view, onPick, onChart, strategies }: Probabil
           <div ref={leftRef} className="flex flex-col gap-3 compact:gap-2">
             <div className="grid grid-cols-1 gap-8 wide:grid-cols-2">
               <Half half={alternative} bars={view.bars} header={picker} />
-              <Half half={compared} bars={view.bars} header={planName} />
+              <Half half={compared} bars={view.bars} header={comparedPicker} />
             </div>
             {view.sharedNotes !== undefined ? (
               <div className="flex flex-col gap-0.5 text-center" data-shared-notes="">

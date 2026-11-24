@@ -2648,6 +2648,57 @@ export const copy = {
   trayCancel: 'Cancel',
   trayLineTitle: 'A spending line in this what-if',
   trayLineDelete: 'Take it out',
+  // --- Act 6 · RC5, the plan list and kept what-ifs (`planListView.ts`, `PlanListDrawer.tsx`) and the two pickers ---
+  /** The right picker's name (read by a screen reader; the picker sits over the right half). */
+  probabilityComparedLabel: 'What to compare it with',
+  /** The pencil beside the right picker: its visible word, and its full name. */
+  planListOpenWord: 'Edit',
+  planListOpenLabel: 'Edit your list of kept what-ifs',
+  planListTitle: 'Your kept what-ifs',
+  planListClose: 'Close the list',
+  planListDone: 'Done',
+  planListEmpty:
+    'No what-ifs kept yet. Change something in Action items, press Refresh, then keep it here under a name of its own.',
+  planListKeep: 'Keep this what-if',
+  planListNameLabel: 'Name for this what-if',
+  planListNameConfirm: 'Keep',
+  planListRenameConfirm: 'Save the name',
+  /** A row's mark when a picker shows it now. */
+  planListShownLeft: 'on the left now',
+  planListShownRight: 'on the right now',
+  planListNameCancel: 'Cancel',
+  planListNameEmpty: 'A name is needed to keep it.',
+  planListNameTaken: 'Another kept what-if already has that name.',
+  planListCopy: 'Copy',
+  planListRename: 'Rename',
+  planListDelete: 'Delete',
+  planListDeleteGo: 'Delete it',
+  planListDeleteStay: 'Keep it',
+  planListWritesDirty:
+    'Keeping, renaming or moving a what-if saves your plan, and your plan has changes you haven’t saved. Save them first from the lock menu at the top.',
+  planListWritesSaving: 'Your plan is saving. This list can be changed once that’s done.',
+  planListWritesFailed: 'Your last save didn’t finish. Try it again from the lock menu at the top before changing this list.',
+  planListWritesNone: 'Your plan can’t be saved yet (an answer is still missing), so a what-if can’t be kept yet.',
+  planListFirstNote: 'Your plan isn’t saved on this device yet. Keeping a what-if opens the steps that save it.',
+  planListFirstListNote:
+    'Your plan isn’t saved on this device yet. These what-ifs are saved with it; keeping another opens the steps that save it.',
+  planListKeepEmpty: 'Nothing to keep yet: this what-if changes nothing in your plan.',
+  planListKeepRefreshFirst: 'Press Refresh in Action items first: the changes there aren’t worked out yet.',
+  planListKeepRecommended:
+    'A saved recommendation lives on the Tax Strategies page. Pick New what-if on the left to keep one of your own.',
+  planListSaveFailed: 'The list changed in your plan, but saving didn’t finish. The lock menu at the top has Try again.',
+  planListRefused: 'That change couldn’t be made: the list moved on before it landed. Your saved plan is as it was.',
+  /** A reopened kept what-if, edited and not kept again (the left half's note). */
+  probabilityKeptChangedNote: 'Changed since it was kept. Keeping it again from the list replaces the kept one.',
+  /** Opening another what-if on the left over an unkept one (the ask's words and its go). */
+  probabilityOpenDropsAsk: 'Your what-if isn’t kept. Opening another one drops it; your plan stays as it is.',
+  probabilityOpenGo: 'Open the other one',
+  /** The lock menu's save or backup steps over an unkept what-if or an open entry (the shell unmounts for them). */
+  shellCeremonyWhatIf:
+    'Your what-if isn’t kept. Saving or backing up opens its own steps, which drops the what-if; your plan stays as it is. To hold on to it, keep it first from the list beside Your plan.',
+  shellCeremonyOpenEntry:
+    'You have something open here. Going on closes it: changes you finished stay in your plan, and an entry not yet added is dropped.',
+  shellCeremonyGo: 'Go on',
   oddsChartDescription:
     'The odds of staying work-optional for each year you could stop working, each read against the on-track line.',
   oddsAxisYear: 'Year you stop working',
@@ -4549,7 +4600,7 @@ export const slots = {
    *  the lane quotes no more — and the shipped fallback invited more spending to exactly the household
    *  the survivor law protects. Claims no room. PILOT DRAFT — the words are Briggsy's. */
   verdictRoomSurvivorShort: (spendFormatted: string): string =>
-    `At $${spendFormatted} a month, this plan would not read on track for one of you on your own. So this answer doesn’t suggest spending more.`,
+    `At $${spendFormatted} a month, your plan would not read on track for one of you on your own. So this answer doesn’t suggest spending more.`,
   /** 'room' SIZED by the spend solve (spendSolve.ts): F is the $100-grid EDGE the engine still reads as
    *  on track with room — a run AT F passed and a run a step above FAILED (both run; the highest passing
    *  spend under the pre-scan's monotonicity check, which refuses a non-monotone scan). The edge
@@ -4557,7 +4608,7 @@ export const slots = {
    *  phrase ("held every year in today's dollars") was CUT on Briggsy's ruling, 2026-09-26 ("too
    *  wordy"; he also declined the two-word "every year") — never re-add it without his read. */
   verdictRoomSized: (spendFormatted: string, solvedFormatted: string): string =>
-    `There looks to be room to spend more than $${spendFormatted} a month. At about $${solvedFormatted} a month, this plan would still read on track. Above that, it starts to sit close to the line.`,
+    `There looks to be room to spend more than $${spendFormatted} a month. At about $${solvedFormatted} a month, your plan would still read on track. Above that, it starts to sit close to the line.`,
   /** direction 'trim' — off-track. FIGURE-LESS since 2026-09-25 (council wf_8c2ece49-79a, Tier 0): the
    *  engine's trim magnitude is a coarse proxy (`confidence.ts` `buildDollar`: −spend × the gap below
    *  on-track), never a solve — and on the `retired` worsened frame it was WRONG by ~2×: it quoted
@@ -4590,9 +4641,11 @@ export const slots = {
    *  is the calm-but-wrong sin (R25). First-draft string — exact word-pick is the N=1 cold-read's call
    *  (`?seed=failing`). catastrophe-gated via copyGuard `isMortalityKey`. */
   verdictRethinkClause: (): string =>
-    `As it stands, this plan runs short from the start — closing that gap takes more than trimming the budget.`,
-  /** direction 'on-the-line' — borderline (or on-track with a rough downside); no figure. */
-  verdictHoldClause: (): string => `It sits close to the line — small changes tip it either way.`,
+    `As it stands, your plan runs short from the start — closing that gap takes more than trimming the budget.`,
+  /** direction 'on-the-line' — borderline (or on-track with a rough downside); no figure. Every verdict clause names
+   *  "your plan", never "it" or "this plan": since Act 6 · RC5 Probability can show two kept what-ifs side by side with
+   *  neither half your plan, and the clause (always the plan's own reading) sits beside them (insight 160). */
+  verdictHoldClause: (): string => `Your plan sits close to the line — small changes tip it either way.`,
   /** The survivor income step-down, told as a plain $ drop (R17/R40) — the PRE-TAX monthly
    *  non-portfolio income that ends at the first death (one Social Security benefit + any of the
    *  deceased's ongoing/earned income). The MFJ→single bracket shift is flagged SEPARATELY (its
@@ -4781,7 +4834,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2154` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2165` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5397,6 +5450,22 @@ export const slots = {
   /** The difference line: the two printed counts and nothing else. */
   probabilityDifference: (plan: string, alternative: string, alternativeName: string): string =>
     `Your plan reads ${plan}; ${alternativeName} reads ${alternative}.`,
+  /** The difference line when the right side is not your plan: each side named, the two printed counts and nothing else. */
+  probabilityDifferenceBetween: (comparedName: string, compared: string, alternativeName: string, alternative: string): string =>
+    `${comparedName} reads ${compared}; ${alternativeName} reads ${alternative}.`,
+  /** A reopened kept what-if after an edit: its name, marked as not kept (the half's title and the picker's choice). */
+  probabilityKeptChanged: (name: string): string => `${name} (changed, not kept)`,
+  /** The plan list (RC5): a copy's name, numbered past the first copy. */
+  planListCopyName: (name: string, n: number): string => (n <= 1 ? `Copy of ${name}` : `Copy of ${name} (${n})`),
+  planListNameLong: (max: number): string => `That name is too long: up to ${max} letters.`,
+  planListKeepAlready: (name: string): string => `This what-if is kept as ${name}.`,
+  planListKept: (name: string): string => `Kept as ${name}.`,
+  planListDeleteAsk: (name: string): string => `Delete ${name}? It leaves your saved list; your plan itself stays as it is.`,
+  /** A row's drag handle: its name, and the keys that move it. */
+  planListMove: (name: string): string => `Move ${name}: up or down arrow`,
+  planListMoved: (name: string, place: number): string => `${name} moved to place ${place}.`,
+  planListOpenRow: (name: string): string => `Open ${name} on the left`,
+  planListRowActions: (name: string): string => `${name}: copy, rename or delete`,
   /** The balance bar's printed figure (a projected figure: `~`). */
   probabilityBarFigure: (figure: string): string => `~${figure}`,
   /** The screen reader's sentence for one side's bar. */

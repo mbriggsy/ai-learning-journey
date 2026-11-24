@@ -70,8 +70,15 @@ import { chartWords } from '../dashboard/snapshotView'
 
 // ── Inputs ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-/** What the left picker shows: the new what-if (the tray's working bundle) or the saved recommendation. */
-export type LeftPick = 'new' | 'recommended'
+/** What the left picker shows: the new what-if (the tray's working bundle), a kept what-if reopened in the tray (by id,
+ *  RC5), or the saved recommendation. */
+export type LeftPick = 'new' | 'recommended' | `kept:${string}`
+
+/** What the right picker shows (RC5's two-up): your plan, a kept what-if (by id), or the saved recommendation. */
+export type RightPick = 'plan' | 'recommended' | `kept:${string}`
+
+/** A kept what-if's id from a pick, or undefined. */
+export const keptIdOf = (pick: string): string | undefined => (pick.startsWith('kept:') ? pick.slice('kept:'.length) : undefined)
 
 /** Which chart the panel draws (the title's menu; "Odds by stop year" on the working route only). */
 export type ProbabilityChart = 'rings' | 'odds'
@@ -86,6 +93,16 @@ export interface ProbabilityWhatIf {
   /** The newest figure the left half showed in this pick (`useWhatIf`'s `landed`): held under "Loading…" while a run is
    *  in flight. */
   readonly landed?: LandedFigure | null
+  /** A reopened kept what-if, edited since it was kept (RC5): its name is marked "changed, not kept". */
+  readonly changed?: boolean
+}
+
+/** The right side (RC5): absent means your plan. */
+export interface ProbabilityCompared {
+  readonly pick: RightPick
+  readonly bundle: readonly WhatIfLeverV6[]
+  readonly view: WhatIfSlotView | null
+  readonly landed?: LandedFigure | null
 }
 
 export interface ProbabilityInput {
@@ -96,6 +113,7 @@ export interface ProbabilityInput {
   /** Every note the answer carries (`composeAnswerNotes`): the state, Medicare and extras lines read from it. */
   readonly notes: AnswerNotes
   readonly whatIf: ProbabilityWhatIf
+  readonly compared?: ProbabilityCompared
   /** The DISK's remembered recommendation and the store's verdict on it (IntakeApp's `recordCard`). */
   readonly record?: { readonly record: SavedRecommendationV3; readonly status: SavedRecommendationStatus }
   readonly chart: ProbabilityChart
@@ -160,12 +178,14 @@ export interface MetricsView {
   readonly spend?: 'pending' | 'sized' | 'unsized'
   /** The difference line (or "No changes yet"), in its own slot so a reading landing moves nothing below it. */
   readonly difference: string | null
+  /** The difference line's widest form for the two names on show (held hidden in its cell). */
+  readonly differenceReserve: string
 }
 
-export interface PickerView {
+export interface PickerView<Pick extends string = LeftPick> {
   readonly label: string
-  readonly items: readonly { readonly value: LeftPick; readonly label: string }[]
-  readonly value: LeftPick
+  readonly items: readonly { readonly value: Pick; readonly label: string }[]
+  readonly value: Pick
 }
 
 export interface OddsChartView {
@@ -192,6 +212,8 @@ export type ProbabilityView =
       readonly route: 'headline' | 'date'
       readonly intro: IntroView
       readonly picker: PickerView
+      /** The right side's picker (RC5): your plan, each kept what-if, Recommended. */
+      readonly comparedPicker: PickerView<RightPick>
       readonly planTitle: string
       readonly vs: string
       /** Words in place of the Recommended pick (a stale record, one saved before version 6, the working route), with
@@ -310,12 +332,13 @@ type AltState =
   | { readonly kind: 'words'; readonly words: string }
   | { readonly kind: 'ready'; readonly reading: WhatIfReading; readonly extras?: HeadlineExtras; readonly updating: boolean }
 
-/** The alternative's state from the slot (the What if page's own reading of it, `WhatIfPage.tsx`'s `readingState`). */
-function altState(input: ProbabilityInput): AltState {
-  const { whatIf, snapshot } = input
-  if (whatIf.bundle.length === 0) return { kind: 'empty' }
+/** A side's state from its slot (the What if page's own reading of it, `WhatIfPage.tsx`'s `readingState`). A kept
+ *  what-if whose lever no longer applies (a line, account or person gone, everyone now retired) is the slot's refusal:
+ *  its words, and nothing run (insight 102: never the pointer dropped and the rest run). */
+function sideState(side: { readonly bundle: readonly WhatIfLeverV6[]; readonly view: WhatIfSlotView | null }, snapshot: MemoryModelSnapshot): AltState {
+  if (side.bundle.length === 0) return { kind: 'empty' }
   const a = snapshot.answer
-  const v = whatIf.view
+  const v = side.view
   if (v === null) return a.kind === 'date' && a.tier !== 'final' ? { kind: 'waiting' } : { kind: 'pending' }
   if (v.kind === 'refused') return { kind: 'words', words: refusalWords(v.refusal, snapshot.draft.startCalendarYear) }
   if (v.kind === 'withheld') return { kind: 'words', words: WITHHELD_WORDS[v.reason] }
@@ -353,13 +376,33 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
   const planClockYears = notes.planClock.yearsSincePlanBuilt
   const plan = planReadingFor(answer)
   const offer = recommendedOffer(snapshot.draft, record)
-  const pick: LeftPick = whatIf.pick === 'recommended' && offer.kind === 'runnable' ? 'recommended' : 'new'
-  const altName = pick === 'recommended' ? copy.probabilityPickRecommended : copy.probabilityPickNew
-  const alt = altState(input)
+  const kept = snapshot.draft.keptWhatIfs ?? []
+  const keptName = (pick: string): string | undefined => {
+    const id = keptIdOf(pick)
+    return id === undefined ? undefined : kept.find((k) => k.id === id)?.name
+  }
+  // A pick the household can no longer make (a record gone stale, a kept what-if deleted) falls back to the default.
+  const leftKeptName = keptName(whatIf.pick)
+  const pick: LeftPick =
+    whatIf.pick === 'recommended' ? (offer.kind === 'runnable' ? 'recommended' : 'new') : leftKeptName !== undefined ? whatIf.pick : 'new'
+  const altName =
+    pick === 'recommended'
+      ? copy.probabilityPickRecommended
+      : leftKeptName !== undefined
+        ? whatIf.changed === true
+          ? slots.probabilityKeptChanged(leftKeptName)
+          : leftKeptName
+        : copy.probabilityPickNew
+  const alt = sideState(whatIf, snapshot)
+  const right = input.compared
+  const rightKeptName = right === undefined ? undefined : keptName(right.pick)
+  const rightPick: RightPick =
+    right === undefined ? 'plan' : right.pick === 'recommended' ? (offer.kind === 'runnable' ? 'recommended' : 'plan') : rightKeptName !== undefined ? right.pick : 'plan'
+  const rightName = rightPick === 'recommended' ? copy.probabilityPickRecommended : (rightKeptName ?? copy.probabilityPlanTitle)
 
-  // ── The right half: the plan's own reading ──
+  // ── Your plan's own reading (the right half's by default; the left half's while its bundle is empty) ──
   const planExtras = answer.kind === 'headline' ? headlineExtras(answer.result) : undefined
-  const compared: HalfView = {
+  const planHalf: HalfView = {
     side: 'compared',
     title: copy.probabilityPlanTitle,
     ring: ringOf(plan, startCalendarYear),
@@ -369,22 +412,20 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
     ...(planExtras?.terminalMedianReal !== undefined ? { barMedian: planExtras.terminalMedianReal } : {}),
   }
 
-  // ── The left half: the alternative ──
-  const alternative = ((): HalfView => {
-    const base = { side: 'alternative' as const, title: altName, ...(answer.kind === 'date' ? { stopgap: copy.probabilitySurvivorStopgap } : {}) }
-    switch (alt.kind) {
+  /** One side's half from its run's state (the same rules on both sides: RC5's two-up). */
+  const sideHalf = (side: HalfView['side'], title: string, state: AltState, landed: LandedFigure | null | undefined): HalfView => {
+    const base = { side, title, ...(answer.kind === 'date' ? { stopgap: copy.probabilitySurvivorStopgap } : {}) }
+    const asPlan = { ring: planHalf.ring, rows: planHalf.rows, ...(planHalf.barMedian !== undefined ? { barMedian: planHalf.barMedian } : {}) }
+    switch (state.kind) {
       case 'empty':
-        // The empty bundle IS the plan (U14): the plan's own reading, said to be unchanged.
-        // Its words, "No changes yet", are the key-metric column's difference line beside the two halves (one line, said once).
-        return { ...base, ring: compared.ring, loading: false, rows: compared.rows, ...(compared.barMedian !== undefined ? { barMedian: compared.barMedian } : {}) }
+        // The empty bundle IS the plan (U14): the plan's own reading. Beside your plan its words, "No changes yet", are
+        // the key-metric column's difference line (one line, said once); beside anything else the half says so itself.
+        return { ...base, ...asPlan, loading: false, ...(rightPick !== 'plan' ? { status: copy.probabilityNoChanges } : {}) }
       case 'waiting':
         return { ...base, ring: { kind: 'empty', caption: copy.probabilityLoading }, loading: false, status: copy.probabilityWaitingFinal, rows: [] }
       case 'pending': {
         // The newest figure this side showed stays put, faded under "Loading…" (ref 2.7's refresh state).
-        const landed = whatIf.landed
-        if (landed?.kind === 'plan') {
-          return { ...base, ring: compared.ring, loading: true, rows: compared.rows, ...(compared.barMedian !== undefined ? { barMedian: compared.barMedian } : {}) }
-        }
+        if (landed?.kind === 'plan') return { ...base, ...asPlan, loading: true }
         if (landed?.kind === 'reading') {
           const extras = landed.pair.extras
           const rows = landed.pair.whatIf.kind === 'headline' && extras !== undefined ? headlineRows(landed.pair.whatIf.headline, extras, planClockYears) : []
@@ -401,33 +442,55 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
       case 'error':
         return { ...base, ring: { kind: 'empty', caption: copy.snapshotRingNoReading }, loading: false, status: copy.workbenchRailError, rows: [] }
       case 'words':
-        return { ...base, ring: { kind: 'empty', caption: copy.snapshotRingNoReading }, loading: false, status: alt.words, rows: [] }
+        return { ...base, ring: { kind: 'empty', caption: copy.snapshotRingNoReading }, loading: false, status: state.words, rows: [] }
       case 'ready': {
-        const rows = alt.reading.kind === 'headline' && alt.extras !== undefined ? headlineRows(alt.reading.headline, alt.extras, planClockYears) : []
+        const rows = state.reading.kind === 'headline' && state.extras !== undefined ? headlineRows(state.reading.headline, state.extras, planClockYears) : []
         return {
           ...base,
-          ring: ringOf(alt.reading, startCalendarYear),
-          loading: alt.updating,
+          ring: ringOf(state.reading, startCalendarYear),
+          loading: state.updating,
           rows,
-          ...(alt.updating ? { status: copy.workbenchRailUpdating } : {}),
-          ...(alt.extras?.terminalMedianReal !== undefined ? { barMedian: alt.extras.terminalMedianReal } : {}),
+          ...(state.updating ? { status: copy.workbenchRailUpdating } : {}),
+          ...(state.extras?.terminalMedianReal !== undefined ? { barMedian: state.extras.terminalMedianReal } : {}),
         }
       }
     }
-  })()
+  }
+
+  // ── The right half: your plan, or a kept what-if or the recommendation on its own slot ──
+  const rightState: AltState | null = rightPick === 'plan' || right === undefined ? null : sideState(right, snapshot)
+  const compared: HalfView = rightState === null ? planHalf : sideHalf('compared', rightName, rightState, right?.landed)
+  // ── The left half: the alternative ──
+  const alternative = sideHalf('alternative', altName, alt, whatIf.landed)
 
   // ── The difference line: the two PRINTED counts, and nothing else (insight 099) ──
+  // A side's printed reading: the plan's own for an empty bundle, the run's once it lands current, else none yet.
+  const printed = (state: AltState | null): WhatIfReading | null | undefined =>
+    state === null || state.kind === 'empty' ? plan : state.kind === 'ready' && !state.updating ? state.reading : undefined
+  // A built-in side's name reads in lower case inside the sentence; a kept what-if's name as the household typed it.
+  const inSentence = (name: string, builtIn: boolean): string => (builtIn ? name.toLowerCase() : name)
+  const altInSentence = inSentence(altName, leftKeptName === undefined)
+  const leftReading = alt.kind === 'empty' ? plan : printed(alt)
+  const rightReading = printed(rightState)
   const difference = ((): string | null => {
-    if (alt.kind === 'empty') return copy.probabilityNoChanges
-    if (alt.kind !== 'ready' || alt.updating || plan === null) return null
-    const planText = readingText(plan)
-    const altText = readingText(alt.reading)
-    if (planText === null || altText === null) return null
-    const a = readingCount(plan)
-    const b = readingCount(alt.reading)
-    if (a !== null && b !== null && a.n === b.n && a.ceiling === b.ceiling) return slots.workbenchRailEven(planText)
-    return slots.probabilityDifference(planText, altText, altName.toLowerCase())
+    if (alt.kind === 'empty' && rightPick === 'plan') return copy.probabilityNoChanges
+    if (leftReading === undefined || leftReading === null || rightReading === undefined || rightReading === null) return null
+    const rightText = readingText(rightReading)
+    const leftText = readingText(leftReading)
+    if (rightText === null || leftText === null) return null
+    const a = readingCount(rightReading)
+    const b = readingCount(leftReading)
+    if (a !== null && b !== null && a.n === b.n && a.ceiling === b.ceiling) return slots.workbenchRailEven(rightText)
+    if (rightPick === 'plan') return slots.probabilityDifference(rightText, leftText, altInSentence)
+    // The left side's empty bundle is your plan itself: named so.
+    const leftName = alt.kind === 'empty' ? copy.probabilityPlanTitle.toLowerCase() : altInSentence
+    return slots.probabilityDifferenceBetween(rightName, rightText, leftName, leftText)
   })()
+  const ceiling = slots.xOfTenAtCeiling()
+  const differenceReserve =
+    rightPick === 'plan'
+      ? slots.probabilityDifference(ceiling, ceiling, altInSentence)
+      : slots.probabilityDifferenceBetween(rightName, ceiling, alt.kind === 'empty' ? copy.probabilityPlanTitle.toLowerCase() : altInSentence, ceiling)
 
   // ── The bars: the retired route only, one shared scale ──
   const bars = ((): BarsView | undefined => {
@@ -515,9 +578,19 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
   if (notes.medicarePriced !== null) footnotes.push(notes.medicarePriced.residual)
   if (notes.medicarePricedNote && notes.medicareExtrasTypicalNote !== undefined) footnotes.push(notes.medicareExtrasTypicalNote)
 
-  // ── The pickers ──
-  const items: { value: LeftPick; label: string }[] = [{ value: 'new', label: copy.probabilityPickNew }]
-  if (offer.kind === 'runnable') items.push({ value: 'recommended', label: copy.probabilityPickRecommended })
+  // ── The pickers (RC5): the left offers the new what-if, each kept what-if and Recommended; the right your plan, each
+  // kept what-if and Recommended. Neither offers the kept what-if (or the recommendation) the other side shows, so the
+  // two-up never sets one thing beside itself. ──
+  const rightKeptId = keptIdOf(rightPick)
+  const leftKeptId = keptIdOf(pick)
+  const keptItems = (other: string | undefined, current: string | undefined): { value: `kept:${string}`; label: string }[] =>
+    kept
+      .filter((k) => k.id !== other)
+      .map((k) => ({ value: `kept:${k.id}` as const, label: k.id === current && whatIf.changed === true && current === leftKeptId ? slots.probabilityKeptChanged(k.name) : k.name }))
+  const items: { value: LeftPick; label: string }[] = [{ value: 'new', label: copy.probabilityPickNew }, ...keptItems(rightKeptId, leftKeptId)]
+  if (offer.kind === 'runnable' && rightPick !== 'recommended') items.push({ value: 'recommended', label: copy.probabilityPickRecommended })
+  const rightItems: { value: RightPick; label: string }[] = [{ value: 'plan', label: copy.probabilityPlanTitle }, ...keptItems(leftKeptId, rightKeptId)]
+  if (offer.kind === 'runnable' && pick !== 'recommended') rightItems.push({ value: 'recommended', label: copy.probabilityPickRecommended })
   const recordNote = offer.kind === 'words' ? { words: offer.words, door: 'tax-strategies' as const } : undefined
 
   // ── The charts: Odds by stop year on the working route ──
@@ -531,13 +604,14 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
     route: answer.kind,
     intro,
     picker: { label: copy.probabilityPickerLabel, items, value: pick },
+    comparedPicker: { label: copy.probabilityComparedLabel, items: rightItems, value: rightPick },
     planTitle: copy.probabilityPlanTitle,
     vs: copy.probabilityVs,
     ...(recordNote !== undefined ? { recordNote } : {}),
     ...shared,
     ...(bars !== undefined ? { bars } : {}),
     ...(answer.kind === 'headline' && bars === undefined && compared.barMedian !== undefined ? { barsNone: copy.probabilityBarNone } : {}),
-    metrics: { lines: metricLines, ...(clauseReserve !== undefined ? { clauseReserve } : {}), ...(spendState !== undefined ? { spend: spendState } : {}), difference },
+    metrics: { lines: metricLines, ...(clauseReserve !== undefined ? { clauseReserve } : {}), ...(spendState !== undefined ? { spend: spendState } : {}), difference, differenceReserve },
     footnotes,
     charts,
     chart,

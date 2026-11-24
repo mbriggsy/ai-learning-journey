@@ -1102,6 +1102,22 @@ what-ifs compared left against right, neither being your plan, each with its own
 (`e2e/vault.spec.ts` gains the arm). CI fit: the plan list drawer at REAL and as a full-screen sheet on PHONE. Local
 look.
 
+**Settled in the build (2026-11-24, b9-6).** Rename, Copy, Delete and reorder write through Keep's one save path and
+only on a clean plan (KTD19 is one rule for the whole list); with no vault they change only the unsaved plan, and Keep
+opens the save ceremony. A cancelled ceremony leaves the kept what-if on the unsaved plan, open on the left, and the
+drawer says the plan is not saved (dropping it would be the silent loss this unit removes). The lock menu's Keep and
+Back up, and the recommendation's no-vault Keep on Snapshot, ask first over an unkept what-if (b9-4 found them dropping
+it; Stay puts the minted record back). "Keep this what-if" lives in the drawer, as RightCapital's flow has it. The
+recommendation is not keepable as a what-if (Tax Strategies already remembers it); Recommended is pinned only when a
+recommendation is on offer (the working route runs none). Names are trimmed, required, at most 60 characters and unique
+regardless of case; a copy is "Copy of …", numbered from the second, placed after its original. Neither picker offers
+what the other side shows. A typed name box holds the leave ask (insight 112). Row actions always show on a phone and
+fade in on hover or focus past it. Every verdict clause names "your plan", never "it" or "this plan": two kept
+what-ifs can now fill both halves, and the clause beside them is always the plan's own reading (insight 160).
+Untested by choice: a pointer drag (the keyboard reorder is tested and writes the same order) and a completed
+ceremony after Keep in a browser (the cancel path is driven; completion saves the draft that already holds the list).
+*(the pilot's call, 2026-11-24, b9-6)*
+
 ### RC6: Retirement → Cash Flows: Summary and Accounts
 
 **Clones.** Ref 2.16. Screens: `rc-cashflow-tax/help-retirement-cash-flows-summary-tab-cash-flows-51.png`,

@@ -16,7 +16,10 @@ import { validationMarket } from '../src/engine/reference/methodology'
 import { DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS, buildCandidateParams, type DateSearchInput } from '../src/engine/dateSearch'
 import { personOffsetsFor } from '../src/engine/simulate'
 import { earningsTestSchedule } from '../src/engine/earningsTest'
-import type { OverlayParams, PersonInputs, Scenario, SimulationParams } from '../src/shared/model'
+import { scenarioIdentityKey, type CurrentScenario, type OverlayParams, type PersonInputs, type Scenario, type SimulationParams } from '../src/shared/model'
+import { DEV_SEEDS } from '../src/ui/devSeeds'
+import { draftFromScenario } from '../src/ui/draftFromScenario'
+import { currentEpochDay, scenarioFromDraft } from '../src/ui/scenarioFromDraft'
 
 const MODEL: Scenario = {
   schemaVersion: 1,
@@ -357,5 +360,59 @@ export async function recomputeSpike(): Promise<RecomputeSpikeReport> {
       everyCandidateCarriesW: candidates.every((c) => c.overlay?.accumulation?.workingYearCostReal === PROFILE_INPUT_W.workingYearCostReal),
       topCandidateWithheldReal: topSchedule.tested ? topSchedule.withheld.reduce((a, b) => a + b, 0) : 0,
     },
+  }
+}
+
+export interface KeptRoundTripReport {
+  readonly firstSaveOk: boolean
+  readonly unlockOk: boolean
+  readonly resaveOk: boolean
+  readonly reopenOk: boolean
+  /** The kept what-ifs' bytes as planted, after the unlock, and after a re-save and a second reopen. */
+  readonly planted: string
+  readonly afterUnlock: string
+  readonly afterReopen: string
+  /** The whole plan reads the same on the identity compare (the wall-clock stamp aside: insight 073). */
+  readonly identityEqual: boolean
+  /** The re-save wrote today's stamp over the aged one (the fixture really was aged, and the save really wrote). */
+  readonly stampMoved: boolean
+  readonly keptCount: number
+}
+
+/** Act 6 · RC5: a plan holding kept what-ifs, saved AGE_DAYS ago (time never passes inside a run, so the age is written
+ *  into the fixture), opened, run through the app's own hydrate and re-encode, saved again and reopened, on REAL
+ *  IndexedDB: the list's bytes never move. */
+export async function runKeptRoundTrip(): Promise<KeptRoundTripReport> {
+  const AGE_DAYS = 40
+  const db = await openVaultDb()
+  await clearVault(db)
+  const ready = scenarioFromDraft(DEV_SEEDS.retiredkept)
+  if (!ready.ready) throw new Error('harness: the kept seed does not save')
+  const aged: CurrentScenario = { ...ready.scenario, savedAt: currentEpochDay() - AGE_DAYS }
+  const session = createSession(db)
+  const saved = await session.firstSave(aged, await floor(PASSPHRASE), await floor(RECOVERY_PASSPHRASE))
+  await session.lock()
+  const unlocked = await session.unlock(PASSPHRASE)
+  const opened = session.currentModel() as CurrentScenario | null
+  const hydrated = opened === null ? null : draftFromScenario(opened)
+  const again = hydrated !== null && hydrated.ok ? scenarioFromDraft(hydrated.draft) : null
+  const resave = again !== null && again.ready ? await session.save(again.scenario) : { ok: false as const }
+  await session.lock()
+  const reopened = createSession(db)
+  const second = await reopened.unlock(PASSPHRASE)
+  const back = reopened.currentModel() as CurrentScenario | null
+  await reopened.lock()
+  await clearVault(db)
+  return {
+    firstSaveOk: saved.ok,
+    unlockOk: unlocked.ok,
+    resaveOk: resave.ok,
+    reopenOk: second.ok,
+    planted: JSON.stringify(aged.keptWhatIfs),
+    afterUnlock: JSON.stringify(opened?.keptWhatIfs),
+    afterReopen: JSON.stringify(back?.keptWhatIfs),
+    identityEqual: back !== null && scenarioIdentityKey(back) === scenarioIdentityKey(aged),
+    stampMoved: back !== null && back.savedAt !== aged.savedAt,
+    keptCount: aged.keptWhatIfs?.length ?? 0,
   }
 }

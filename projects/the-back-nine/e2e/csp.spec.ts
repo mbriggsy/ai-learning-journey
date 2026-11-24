@@ -287,6 +287,13 @@ test.describe('CSP — real browser enforcement', () => {
     await page.keyboard.press('Escape')
     await expect(page.getByRole('listbox')).toHaveCount(0)
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Probability injected a <style> element').toBe(0)
+    // The plan list drawer (RC5): the pencil beside the right picker opens it; Done closes it.
+    await page.getByRole('button', { name: copy.planListOpenLabel }).click()
+    const planList = page.getByRole('dialog', { name: copy.planListTitle })
+    await expect(planList, 'the plan list never opened').toBeVisible()
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the plan list injected a <style> element').toBe(0)
+    await planList.getByRole('button', { name: copy.planListDone }).click()
+    await expect(planList).toHaveCount(0)
     // On to the year-by-year table (Retirement → Cash Flows), as before RC3.
     await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageCashFlows, exact: true }).click()
     await expect(page.getByRole('heading', { name: copy.workbenchPageTable })).toBeVisible({ timeout: 30_000 })

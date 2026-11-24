@@ -40,6 +40,7 @@ import type {
   DrawdownOrderKey,
   DrawdownPolicy,
   EnteredAccount,
+  KeptWhatIfV6,
   RothConversionPlan,
   WhatIfLeverKind,
   WhatIfLeverV6,
@@ -88,6 +89,14 @@ export function withRothConversion(d: ScenarioDraft, plan: RothConversionPlan | 
 export function withEnhancedSubsidies(d: ScenarioDraft, enhanced: boolean): ScenarioDraft {
   const { enhancedSubsidies: _regime, ...rest } = d
   return enhanced ? { ...rest, enhancedSubsidies: true } : rest
+}
+
+/** The kept what-ifs list (Act 6 · RC5, the plan list): set it, or strip the KEY when empty (absence ≡ none kept, the
+ *  codec's own reading; never `[]` beside an absent list, which would read as an edit to the disk compare). */
+export function withKeptWhatIfs(d: ScenarioDraft, list: readonly KeptWhatIfV6[]): ScenarioDraft {
+  if (list.length > 0) return { ...d, keptWhatIfs: list }
+  const { keptWhatIfs: _list, ...rest } = d
+  return rest
 }
 
 // ---------------------------------------------------------------------------

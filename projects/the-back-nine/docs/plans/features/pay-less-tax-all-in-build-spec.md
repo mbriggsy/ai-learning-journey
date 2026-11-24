@@ -130,12 +130,12 @@ Result: the all-in vector equals the tax vector element by element, and its mean
 - `solve.ts:214-224, :385-390` (deltaSkew wording).
 - `stateTaxDisclosure.ts:151-155`: the priced-state layer reaches the hero through the tax addend; the logic is unchanged.
 - `recommendationView.ts:99` and `:719`.
-- `copy.ts:2251` comment and `:4853`.
+- `copy.ts:2251` comment and `:4906`.
 - the `recommendationView.test.ts:596` comment.
 
 The viz suppression off leave-more stays correct, because all-in is still lower-is-better.
 
-**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:4762-4763`, read), `goalPayLessTaxGloss` (`:2258`), `recDiscNiit` (`:2429-2430`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3170-3189`) only under a "$X less" hero.
+**Copy (HIS, §6):** `recDeltaPayLessTax` (`copy.ts:4815-4816`, read), `goalPayLessTaxGloss` (`:2258`), `recDiscNiit` (`:2429-2430`), `recDiscStateTax` (`:2060-2061`), the optional new `recDisc*`, and `recDeltaTypical*` (`:3170-3189`) only under a "$X less" hero.
 
 **Calibration:**
 - Add "an objective-statistic change" to the RE-MEASURE triggers at `fallback.ts:44, :58, :72` (map).
@@ -330,7 +330,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 
 *The packet as sent (the options he chose among):*
 
-**Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:148-309` + `HEDGE_TOKENS` (`copy.ts:2668-2841`); the suite runs on whatever he picks.
+**Constraints the drafts meet.** This was a hand-lint against `copyGuard.ts:148-309` + `HEDGE_TOKENS` (`copy.ts:2719-2892`); the suite runs on whatever he picks.
 - A hedge ("about" / "could"); `recDelta*` and `recDisc*` are require-hedge swept (`copyGuard.ts:124-128`).
 - No superlative, no clause-leading directive verb (`:262`), no "pays off" or "better off" (`:251-252`), no em-dash apposition on the figure.
 - The hero stays one line (`recommendationView.ts:171-173`) and keeps "than today’s plan" (the userBaseline seam, `copy.ts:2293-2300`).
@@ -356,7 +356,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 **Label "Pay less tax": lean KEEP (HIS call).**
 - His ruling covered the objective and the hero, not the D1/R21 vocabulary.
 - A lost PTC is a shadow tax (`pre65-healthcare.md:76`).
-- Five regex selectors pin it: `e2e/csp.spec.ts:373` (CI), `caddie-walk.spec.ts:1088/755`, `held/solve-timing.spec.ts:51`, `recommendInvite.test.tsx:127/145/213`.
+- Five regex selectors pin it: `e2e/csp.spec.ts:380` (CI), `caddie-walk.spec.ts:1088/755`, `held/solve-timing.spec.ts:51`, `recommendInvite.test.tsx:127/145/213`.
 
 **`recDiscNiit`** renders on BOTH goals. "Your federal income tax" is already wrong on NC/PA/FL.
 - Draft (HIS): "A federal surtax on higher investment income isn’t counted here, and it could apply."
@@ -404,7 +404,7 @@ Today's objective crowns $100k. All-in crowns $84k, by about $28k.
 4. `pnpm verify:doc-stats`: test count, register count and arm-4 citations after reanchor.
 5. `pnpm build`
 6. `pnpm verify:bundle`: ≤ 300 KiB.
-7. `pnpm verify:csp`: the label regex at `csp.spec.ts:373` must still match, and this arm runs a pay-less-tax solve.
+7. `pnpm verify:csp`: the label regex at `csp.spec.ts:380` must still match, and this arm runs a pay-less-tax solve.
 8. `pnpm verify:fit`: GoalPicker gloss wrap at 390 px and at his 1536×791.
 9. `pnpm verify:fit:rv`: a FULL run. The RV gate drives leave-more, and the rewritten NIIT and state-tax disclosures render there.
 10. **Caddie read of the re-worded hero.** No automated fit or text gate covers the pay-less-tax committed surface.

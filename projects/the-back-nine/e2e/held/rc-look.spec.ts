@@ -252,3 +252,138 @@ for (const size of SIZES) {
     })
   })
 }
+
+// RC5: the plan list and kept what-ifs, on a retired and a working household holding three kept what-ifs each
+// (`retiredkept`, `dipkept`) and on their bases with none (`retired`, `dip`): the list empty and full, a row's actions
+// on hover, a rename in progress, the inline Keep box, the two pickers open, and a two-up of two kept what-ifs.
+const KEPT_LOOK = [
+  { seed: 'retiredkept', empty: 'retired', right: 'Spend a little less', left: 'Pre-tax savings first' },
+  { seed: 'dipkept', empty: 'dip', right: 'Stop a year later', left: 'Pre-tax savings first' },
+] as const
+
+async function shot(page: Page, findings: Record<string, Audit>, id: string, seed: string, tag: string): Promise<void> {
+  await settleLayout(page)
+  findings[id] = await audit(page)
+  await page.screenshot({ path: `${OUT}/${id}-${seed}-${tag}.png` })
+}
+
+async function openList(page: Page): Promise<void> {
+  const pencil = page.getByRole('button', { name: copy.planListOpenLabel })
+  await pencil.scrollIntoViewIfNeeded()
+  await pencil.click()
+  const list = page.getByRole('dialog', { name: copy.planListTitle })
+  await expect(list).toBeVisible()
+  await page.waitForTimeout(500)
+}
+
+async function closeList(page: Page): Promise<void> {
+  await page.getByRole('dialog', { name: copy.planListTitle }).getByRole('button', { name: copy.planListDone }).click()
+  await expect(page.getByRole('dialog', { name: copy.planListTitle })).toHaveCount(0)
+}
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, the plan list at ${size.tag}`, () => {
+    test.use(size.use)
+    for (const k of KEPT_LOOK) {
+      test(`?seed=${k.empty}: the plan list with nothing kept`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 60_000)
+        const findings: Record<string, Audit> = {}
+        await enterShell(page, k.empty)
+        await showScreen(page, SCREENS[1], size.phone)
+        await openList(page)
+        await shot(page, findings, 'plan-list-empty', k.empty, size.tag)
+        const a = findings['plan-list-empty']!
+        expect.soft(a.sideways, 'sideways scroll').toBeLessThanOrEqual(0)
+        expect.soft(a.clipped, 'clipped text').toEqual([])
+        expect.soft(a.overlaps, 'overlapping controls').toEqual([])
+        expect.soft(a.tiny, 'text under 12 px').toEqual([])
+      })
+      test(`?seed=${k.seed}: the plan list full, a row's actions, a rename, the Keep box, the pickers, a two-up`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS * 2 + 180_000)
+        const findings: Record<string, Audit> = {}
+        // One page load per test: a second load in one test loses the phone's touch emulation (`(hover: hover)` then
+        // reads true and the row actions read as a laptop's, faded until hovered). The empty list has its own test above.
+        await enterShell(page, k.seed)
+        await showScreen(page, SCREENS[1], size.phone)
+        for (const [id, name] of [['pickers-left', copy.probabilityPickerLabel], ['pickers-right', copy.probabilityComparedLabel]] as const) {
+          const picker = page.getByRole('combobox', { name })
+          await picker.scrollIntoViewIfNeeded()
+          await picker.click()
+          await expect(page.getByRole('listbox')).toBeVisible()
+          await page.waitForTimeout(300)
+          await shot(page, findings, id, k.seed, size.tag)
+          await page.keyboard.press('Escape')
+          await expect(page.getByRole('listbox')).toHaveCount(0)
+        }
+        // The two-up: a kept what-if on each side.
+        for (const [name, option] of [[copy.probabilityComparedLabel, k.right], [copy.probabilityPickerLabel, k.left]] as const) {
+          await page.getByRole('combobox', { name }).click()
+          await page.getByRole('option', { name: option, exact: true }).click()
+          await expect(page.getByRole('listbox')).toHaveCount(0)
+        }
+        for (const side of ['alternative', 'compared'] as const) {
+          await expect(page.locator(`[data-half="${side}"] [aria-busy="true"]`)).toHaveCount(0, { timeout: 120_000 })
+          // Landed: a count in the ring, or words that are not the run's own "working" line (a refusal, the waiting line).
+          await expect
+            .poll(() => page.locator(`[data-half="${side}"]`).evaluate((el, working) => el.querySelector('[data-ring-centre]') !== null || [...el.querySelectorAll('[data-half-status]')].some((n) => n.textContent !== working), copy.workbenchRailWorking), { timeout: 240_000 })
+            .toBe(true)
+        }
+        await page.waitForTimeout(1_000)
+        await page.evaluate(() => window.scrollTo(0, 0))
+        await shot(page, findings, 'two-up', k.seed, size.tag)
+        await page.screenshot({ path: `${OUT}/two-up-${k.seed}-${size.tag}-full.png`, fullPage: true })
+        // The list: full, then a row's actions (hovered at the laptop; always shown on the phone).
+        await openList(page)
+        await shot(page, findings, 'plan-list', k.seed, size.tag)
+        const list = page.getByRole('dialog', { name: copy.planListTitle })
+        const row = list.locator('[data-kept-row]').first()
+        if (!size.phone) await row.hover()
+        await page.waitForTimeout(300)
+        await shot(page, findings, 'plan-list-hover', k.seed, size.tag)
+        // A rename in progress.
+        const second = list.locator('[data-kept-row]').nth(1)
+        if (!size.phone) await second.hover()
+        await second.getByRole('button', { name: copy.planListRename }).click()
+        await list.locator('[data-kept-name]').fill('Pre-tax first, then')
+        await shot(page, findings, 'plan-list-rename', k.seed, size.tag)
+        await list.getByRole('button', { name: copy.planListNameCancel }).click()
+        await closeList(page)
+        // The Keep box: a new what-if (one row changed and refreshed), then Keep in the list.
+        await page.getByRole('combobox', { name: copy.probabilityPickerLabel }).click()
+        await page.getByRole('option', { name: copy.probabilityPickNew, exact: true }).click()
+        await expect(page.getByRole('listbox')).toHaveCount(0)
+        const handle = page.getByRole('button', { name: copy.trayHandle, exact: true })
+        await handle.scrollIntoViewIfNeeded()
+        await handle.click()
+        const tray = page.locator('#b9-action-items')
+        await expect(tray).toBeVisible()
+        const stop = tray.locator('[data-tray-row="stop-year"] input[inputmode="numeric"]')
+        if ((await stop.count()) > 0) {
+          await stop.fill(String(Number(await stop.inputValue()) + 2))
+          await stop.press('Enter')
+        } else {
+          const spend = tray.locator('[data-tray-row="spending:total"] input').first()
+          await spend.fill(String(Number((await spend.inputValue()).replace(/[^0-9]/g, '')) - 10_000))
+          await spend.press('Enter')
+        }
+        await tray.getByRole('button', { name: copy.trayRefresh, exact: true }).click()
+        await expect(page.locator('[data-half="alternative"] [aria-busy="true"]')).toHaveCount(0, { timeout: 120_000 })
+        if (size.phone) {
+          await page.keyboard.press('Escape')
+          await expect(tray).toHaveCount(0)
+        }
+        await openList(page)
+        await list.getByRole('button', { name: copy.planListKeep }).click()
+        await list.getByLabel(copy.planListNameLabel).fill('Lean years')
+        await shot(page, findings, 'plan-list-keep', k.seed, size.tag)
+        console.log(`[rc-look ${UNIT} plan list ${k.seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        for (const [id, a] of Object.entries(findings)) {
+          expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+          expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+          expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+          expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+        }
+      })
+    }
+  })
+}

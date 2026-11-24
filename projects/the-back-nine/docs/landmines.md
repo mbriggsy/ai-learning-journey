@@ -864,6 +864,14 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Council
 
+- **(moved from TODO's distill list, b9-2, 11-23) A council's draft of LOCKED text needs a seat that refutes the
+  TEXT, not only the decision**: the D1 amendment draft (council 2026-10-12, `docs/council-log.md` row 19) stated the
+  lower-bound relation backwards, and five of six elders first drafted the false "floor ≥ full" lemma; only the red team
+  and the refuter caught either.
+- **(moved from TODO's distill list, b9-2, 11-23) Count the roster before a council rules on a cost cap**: where cost is
+  roughly linear in roster size, a cap and a coverage goal can be incompatible by arithmetic. The v10 ruling's +33% cap
+  admitted only ~7 grid amounts beside `retired`'s 22, knowable before the council sat (`buildSolveRequest` over
+  `DEV_SEEDS`, distinct grid amounts per seed).
 - **(b9-1, 11-19) Ask a council seat for words in its reply or a file, never "in your deliberation text":** five of nine
   opening seats died on a `reasoning_extraction` safeguard flag. A resume kept the clerk (same prompt, cached) and
   rewrote only the brief's tail for every later seat; the chair's file became the spec's verbatim source.
@@ -955,6 +963,15 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Probes and measurement
 
+- **(moved from TODO's distill list, b9-2, 11-23) Trust a two-point cost model (fixed + slope × roster) only after it
+  predicts a held-out third point** (the solve-cost fit landed within 1–4%), then compute any closed form from it.
+- **(moved from TODO's distill list, b9-2, 11-23) Playwright's default headless browser is the chromium headless SHELL,
+  not Chrome**: a timing instrument meant to match his browser sets `channel: 'chrome'` (new headless on the installed
+  Chrome, `e2e/held/solve-timing.config.ts`); a figure measured on the shell is another browser's.
+- **(moved from TODO's distill list, b9-2, 11-23) A Vite library-mode (IIFE) harness bundle leaves
+  `process.env.NODE_ENV` for its consumer** and throws "process is not defined" in the page unless `define` sets it to
+  'production'. `page.addScriptTag({ content })` RESOLVES even when the script throws, so assert the global
+  (`typeof window.X`) with the `pageerror` text (`e2e/held/solve-phase-profile.spec.ts`).
 - (migrated from TODO's standing block by b9-5, 11-20) **The Dell's session-folder tools are gone** (2026-11-19): every walk panel's `CHAIR-NOTES.md`, the line probe, the sweep, the idcheck, the re-anchor classifier (replaced 2026-11-20 by `scripts/check-reanchor-moves.mjs`, in the repo, gate step 3), the tier-sweep and plan-reader folders. Each card in `docs/caddie/cold-read-log.md`, the register and the specs are what remain. A line probe is quick to rebuild from the composer over `DEV_SEEDS` (`file:///` imports, `pnpm exec tsx`); KD10's test is the count of record, and the witnesses' figures are pinned in `workingYearLeftOver.test.ts`. A walk's lost record can be rebuilt from a frozen `git archive` of the walked commit with `node_modules` junctioned in (b9-3 did it for walk 9's lows).
 
 - **(b9-2, 11-16) A year's portfolio income tax is `grossWithdrawal − fundingNet` only in a clamped working year**, which

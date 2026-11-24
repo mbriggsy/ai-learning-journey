@@ -46,6 +46,10 @@ writes beside its spec but runs with the copy as `cwd` needs the spec path ABSOL
 
 ## Also Applies To
 
+- (moved from TODO's distill list, b9-2, 11-23) A HEAD-vs-tree differential through `git stash push -- src` leaves
+  UNTRACKED files in place, so it is sound only while HEAD's code imports none of them; the roster-measurement recipe
+  and the solve-time identity anchor both relied on it. The `git archive` frozen HEAD copy above has no such gap.
+
 - Every seed re-measure (the next build's crowns), every "byte-identical when OFF" claim, every mutant run.
 - [[083]] — the coupling this avoids; [[095]] — a probe must run the shipped decision path, which the runtime mint is.
 - [[135]] — write the prediction down before measuring; the frozen BEFORE is where it gets checked.

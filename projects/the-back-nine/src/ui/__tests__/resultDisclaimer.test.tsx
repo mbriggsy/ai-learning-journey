@@ -104,6 +104,10 @@ describe('the in-frame R13 disclaimer (the Hawk order contract)', () => {
     const disclaimer = inFrameDisclaimer(container)!
     expect(disclaimer.textContent).toContain(staticDisclosures.honestLimitsScope)
     expect(disclaimer.textContent).toContain(staticDisclosures.honestLimitsValidate)
+    // The line break keeps a space before it, or the two sentences run together in textContent.
+    expect(disclaimer.textContent).toContain(
+      `${staticDisclosures.honestLimitsScope} ${staticDisclosures.honestLimitsValidate}`,
+    )
   })
 
   it('data-inframe-disclaimer mirrors the mount EXACTLY — both present on a resolved answer', () => {

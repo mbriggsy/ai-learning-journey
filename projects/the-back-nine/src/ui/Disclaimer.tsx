@@ -45,6 +45,9 @@ export function Disclaimer({ inFrame = false }: { readonly inFrame?: boolean }) 
     >
       <p>
         {staticDisclosures.honestLimitsScope}
+        {/* The space is never painted (it ends the line); it keeps the two sentences apart in
+            textContent, so a screen reader and every text read see "advice. Validate". */}
+        {' '}
         <br />
         {staticDisclosures.honestLimitsValidate}
       </p>

@@ -40,13 +40,14 @@ export function balanceBarOptions(input: BalanceBarInput): Options {
   const tickLabel = new Map(ticks.map((t) => [t.dollars, t.label]))
   const spoken = chartWordsOptions({ ...words, description })
   return {
-    chart: { type: 'column', height, spacingTop: 24 },
+    // The credit sits in its own band under the axis (the narrow chart printed "$0" into "Highcharts.com" at its foot).
+    chart: { type: 'column', height, spacingTop: 24, spacingBottom: 24 },
     title: { text: undefined },
     lang: spoken.lang,
     accessibility: { ...spoken.accessibility, point: { descriptionFormatter: () => point } },
     legend: { enabled: false },
     tooltip: { enabled: false },
-    credits: { enabled: true, position: { align: 'right', x: -4, y: -4 } },
+    credits: { enabled: true, position: { align: 'right', verticalAlign: 'bottom', x: -4, y: -2 } },
     xAxis: { type: 'linear', min: -0.5, max: 0.5, tickPositions: [], labels: { enabled: false }, lineWidth: 1 },
     yAxis: {
       type: 'linear',

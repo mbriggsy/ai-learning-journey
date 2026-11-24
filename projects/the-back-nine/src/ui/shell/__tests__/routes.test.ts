@@ -49,14 +49,15 @@ describe('routes — the hash', () => {
       expect(parseHash(routeHash(route))).toEqual(route)
       expect(rowFor(route)).toBe(r)
     }
-    expect(routeHash({ module: 'retirement', page: 'analysis', tab: 'what-if' })).toBe('#/retirement/analysis/what-if')
+    expect(routeHash({ module: 'retirement', page: 'analysis', tab: 'probability' })).toBe('#/retirement/analysis/probability')
   })
 
   it('an unknown page or tab lands on its module’s first page; a known page with no tab on its first tab', () => {
     expect(parseHash('#/retirement/stress-test')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     expect(parseHash('#/retirement/analysis')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     expect(parseHash('#/retirement/analysis/confidence')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
-    expect(parseHash('#/retirement/analysis/what-if')).toEqual({ module: 'retirement', page: 'analysis', tab: 'what-if' })
+    // The interim What if tab left with RC4b (its levers are Probability's Action Items tray): its old address lands on Probability.
+    expect(parseHash('#/retirement/analysis/what-if')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     expect(parseHash('#/retirement')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     expect(parseHash('#/profile/net-worth')).toEqual({ module: 'profile', page: 'facts' })
     expect(parseHash('#/retirement/cash-flows/extra/parts')).toEqual({ module: 'retirement', page: 'cash-flows' })

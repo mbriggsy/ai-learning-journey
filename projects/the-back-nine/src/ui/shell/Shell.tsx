@@ -16,15 +16,16 @@
  * WHAT IT MAKES ONCE (moved from the workbench room, so runs survive a page switch): the year-by-year table's steady
  * and rough lanes and their runs on each FINAL committed answer (KTD9, KTD13: built from the answer's own draft,
  * `tableRunFor`; until the newest answer's rows land, the rows on screen stay, marked as updating), the one what-if
- * (`useWhatIf`: its slot and bundle), the facts page's doors (a step's group opens that step's body in a sheet,
+ * (`useWhatIf`: its slot, its committed and pending bundles, and the Action Items tray's open state and hidden rows,
+ * so a page move drops none of them), the facts page's doors (a step's group opens that step's body in a sheet,
  * `StepSheet`; the budget and the panel's seats open their own sheets from `editorSheets.tsx`), the leave ask, and
  * the one live region (the save's transitions, the answer being worked out again, the table updating, the new answer's
  * words; spoken on transitions only).
  *
- * THE INTERIM TABS: the room's three pages ride in their current look (`InterimPage.tsx`, outside any `.rc-root`):
- * Retirement → Analysis → What if (`WhatIfPage.tsx`), Retirement → Cash Flows (`YearTable.tsx`) and Profile → Your
- * facts (`FactsPage.tsx`). The market switch belongs to the table and the What if page alike: the paired rows read the
- * market the table does (R8).
+ * THE INTERIM TABS: the room's pages ride in their current look (`InterimPage.tsx`, outside any `.rc-root`):
+ * Retirement → Cash Flows (`YearTable.tsx`) and Profile → Your facts (`FactsPage.tsx`); the old What if page left with
+ * RC4b, its levers now Probability's Action Items tray (`ActionItemsTray.tsx`). A facts-page "Try a change" and the
+ * assumption panel's withdrawal-order and Roth rows open the tray at the lever's row.
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { SegmentedControl } from '@intake/fields'
@@ -33,7 +34,7 @@ import { healthcarePriced, missingRequiredFacts } from '@intake/intakeMap'
 import { engineRunLane, type EngineRunRequest, type Lane } from '@store/runLanes'
 import { roughWindow, ROUGH_WINDOW_YEARS } from '@engine/reference/roughSequence'
 import type { MemoryModel, MemoryModelSnapshot } from '@store/memoryModel'
-import type { LedgerYearRow, SavedRecommendationV3, SimulationResult, WhatIfLeverKind } from '@shared/model'
+import type { LedgerYearRow, SavedRecommendationV3, SimulationResult, WhatIfLeverKind, WhatIfLeverV6 } from '@shared/model'
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import { SubNav } from '../kit'
 import { copy, slots } from '../copy'
@@ -49,9 +50,9 @@ import { composeFacts, stepSectionTitle, type FactStop } from '../workbench/fact
 import type { FactDoorId, StepSectionId } from '../workbench/factRegistry'
 import { tableRunFor, type TableMeta, type TableRun, type TableView } from '../workbench/tableRun'
 import { composeYearTable, lifespansLine, yieldLine } from '../workbench/yearTableChrome'
-import { WhatIfPage } from '../workbench/WhatIfPage'
 import { useWhatIf, type RailRecommendation } from '../workbench/useWhatIf'
-import type { WhatIfSlotLanes } from '../workbench/whatIfRun'
+import { whatIfRunFor, type WhatIfSlotLanes } from '../workbench/whatIfRun'
+import { policyWords, railOffers, rothWords } from '../workbench/railChrome'
 import type { RecommendationSaveProp } from '../RecommendationSurface'
 import { currentEpochDay } from '../scenarioFromDraft'
 import { epochDayToCalendarYear } from '@store/staleness'
@@ -60,6 +61,7 @@ import { Result } from '../Result'
 import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { Analysis } from '../screens/retirement/Analysis'
+import { ActionItemsTray, type TrayFocus } from '../screens/retirement/ActionItemsTray'
 import { landingPick, probabilityView, type LeftPick, type ProbabilityChart } from '../screens/retirement/probabilityView'
 import { InterimPage } from './InterimPage'
 import { composeLockMenu, type LockMenuAction } from './lockMenu'
@@ -393,20 +395,39 @@ export default function Shell({
   if (openStepId !== null && openStep === null) setOpenStepId(null)
   const openStepTitle = useMemo(() => (openStepId === null ? '' : stepSectionTitle(openStepId, draft)), [openStepId, draft])
 
+  // ── The Action Items tray's state (RC4b): open or shut, the rows the Edit drawer hid, the lowered deposits waiting for
+  // the employer's figure, and the row a door asked for. Held here, so a page move keeps every one of them.
+  const [trayOpen, setTrayOpen] = useState(false)
+  const [trayHidden, setTrayHidden] = useState<ReadonlySet<string>>(() => new Set())
+  const [trayAwaiting, setTrayAwaiting] = useState<ReadonlyMap<string, number>>(() => new Map())
+  const [trayFocus, setTrayFocus] = useState<TrayFocus | undefined>(undefined)
+  /** A door into a lever (a facts-page "Try a change", the panel's withdrawal-order and Roth rows): Probability with the
+   *  tray open at that lever's row, the row shown again if the Edit drawer hid it. */
+  const tryLever = useCallback(
+    (kind: WhatIfLeverKind) => {
+      onNavigate(routeOfScreen('probability'))
+      setTrayOpen(true)
+      const mine = (id: string) => id === kind || id.startsWith(`${kind}:`)
+      setTrayHidden((h) => ([...h].some(mine) ? new Set([...h].filter((id) => !mine(id))) : h))
+      setTrayFocus((f) => ({ lever: kind, n: (f?.n ?? 0) + 1 }))
+    },
+    [onNavigate],
+  )
+
   const editors = useEditorSheets({
     model,
     snapshot,
     missing,
     savedAnchor: anchor,
     restoreFallback,
+    onOpenSequencing: () => tryLever('withdrawal-order'),
+    onOpenRoth: () => tryLever('roth'),
     // The panel's guided re-walk (the old answer page's Review, RC4): the shell is the home now, so the walk-through is
     // left for from here. No separate collections door: the facts page has its own Accounts and Other income doors.
     ...(onReview !== undefined ? { onReview } : {}),
   })
   const sheetDoors: Readonly<Record<SheetDoor, () => void>> = {
     budget: editors.openBudget,
-    sequencing: editors.openSequencing,
-    roth: editors.openRoth,
     'subsidy-regime': editors.openHealth,
     'survivor-ratio': () => editors.openAssumptions('survivor-ratio'),
     'heir-bracket': () => editors.openAssumptions('heir-bracket'),
@@ -419,21 +440,22 @@ export default function Shell({
     else setOpenStepId(door as StepSectionId)
   }
 
-  // ── The What if page (U15): the one what-if, kept across page switches ─────────────────────────────────────────
+  // ── The one what-if (U14, U15; the tray's since RC4b), kept across page switches ─────────────────────────────────
   const whatIf = useWhatIf({ snapshot, model, ...(whatIfLanes !== undefined ? { lanes: whatIfLanes } : {}), ...(recommendation !== undefined ? { recommendation } : {}) })
-  // A what-if holding a change the plan doesn't is unkept work: IntakeApp asks before a leave drops it, and holds the
-  // browser's own leave dialog over it (insight 112: every way out holds). Told to IntakeApp, never put in the open
-  // entries' count: the entries' ask says "changes you finished stay in your plan", which a what-if is not.
-  const whatIfHeld = whatIf.own.length > 0
+  // A what-if holding a change the plan doesn't, or a tray edit not yet run, is unkept work: IntakeApp asks before a
+  // leave drops it, and holds the browser's own leave dialog over it (insight 112: every way out holds). Told to
+  // IntakeApp, never put in the open entries' count: the entries' ask says "changes you finished stay in your plan",
+  // which a what-if is not. A lowered deposit waiting for the employer's figure is a tray edit too.
+  const whatIfHeld = whatIf.held || trayAwaiting.size > 0
   useEffect(() => {
     onWhatIfHeld?.(whatIfHeld)
   }, [whatIfHeld, onWhatIfHeld])
   useEffect(() => () => onWhatIfHeld?.(false), [onWhatIfHeld])
-  const [focusLever, setFocusLever] = useState<{ readonly kind: WhatIfLeverKind; readonly n: number } | undefined>(undefined)
-  const whatIfRoute = ROUTE_ROWS.find((r) => r.screen === 'interim-whatif')!
-  const tryLever = (kind: WhatIfLeverKind) => {
-    onNavigate({ module: whatIfRoute.module, page: whatIfRoute.page, ...(whatIfRoute.tab !== undefined ? { tab: whatIfRoute.tab } : {}) })
-    setFocusLever((f) => ({ kind, n: (f?.n ?? 0) + 1 }))
+  // Apply and Reset start the tray's fields again from the plan: a lowered deposit's wait goes with them.
+  const [trayEpoch, setTrayEpoch] = useState(whatIf.epoch)
+  if (trayEpoch !== whatIf.epoch) {
+    setTrayEpoch(whatIf.epoch)
+    if (trayAwaiting.size > 0) setTrayAwaiting(new Map())
   }
   const announce = useCallback((text: string) => announcer.announce(text), [announcer])
 
@@ -499,13 +521,67 @@ export default function Shell({
             readOnly,
             onRetry: retryAnswer,
             notes,
-            whatIf: { pick: whatIf.mode === 'recommendation' ? 'recommended' : 'new', bundle: whatIf.shown, view: whatIf.view },
+            whatIf: { pick: whatIf.mode === 'recommendation' ? 'recommended' : 'new', bundle: whatIf.shown, view: whatIf.view, landed: whatIf.landed },
             ...(recordCard !== undefined ? { record: recordCard } : {}),
             chart,
           })
         : null,
-    [screen, snapshot, wallCalendarYear, readOnly, retryAnswer, notes, whatIf.mode, whatIf.shown, whatIf.view, recordCard, chart],
+    [screen, snapshot, wallCalendarYear, readOnly, retryAnswer, notes, whatIf.mode, whatIf.shown, whatIf.view, whatIf.landed, recordCard, chart],
   )
+
+  // ── The Action Items tray (RC4b): what it offers is read off the COMMITTED answer's draft, with the plan's stop year as
+  // the plan's own run carries it (insight 132), as U15's rail read them.
+  const committedAnswer = snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date' ? snapshot.answer : null
+  const planMeta = useMemo(() => {
+    if (screen !== 'probability') return undefined
+    const r = whatIfRunFor(snapshot.answer, snapshot.draft.seed, [] as readonly WhatIfLeverV6[])
+    return r.kind === 'run' ? r.meta : undefined
+  }, [screen, snapshot.answer, snapshot.draft.seed])
+  const offers = useMemo(
+    () => (screen === 'probability' && committedAnswer !== null ? railOffers(committedAnswer.draft, planMeta?.stopYear) : null),
+    [screen, committedAnswer, planMeta?.stopYear],
+  )
+  const whatIfMany = whatIf.view?.kind === 'shown' ? whatIf.view.many : undefined
+  const whatIfCurrent = whatIfMany?.kind === 'ready' && !whatIfMany.updating && !snapshot.refiguring
+  const recWords =
+    whatIf.mode === 'recommendation' && recommendation !== undefined && committedAnswer !== null
+      ? slots.workbenchRailRecAction(
+          policyWords(recommendation.record.action.policy, recommendation.record.action.drawdownOrder),
+          recommendation.record.action.rothConversion?.kind === 'plan'
+            ? rothWords(recommendation.record.action.rothConversion.plan, committedAnswer.draft.startCalendarYear, anchor)
+            : copy.workbenchRailRecRothNone,
+        )
+      : undefined
+  // The date route's crowned lifestyle offset: the run the Roth row's notes describe (the Roth sheet's own read).
+  const crownedOffset =
+    committedAnswer?.kind === 'date' && committedAnswer.outcome.kind === 'dates' && 'offsetYears' in committedAnswer.outcome.lifestyle
+      ? committedAnswer.outcome.lifestyle.offsetYears
+      : undefined
+  const trayId = 'b9-action-items'
+  const tray =
+    offers !== null && committedAnswer !== null ? (
+      <ActionItemsTray
+        id={trayId}
+        open={trayOpen}
+        onOpenChange={setTrayOpen}
+        whatIf={whatIf}
+        draft={committedAnswer.draft}
+        offers={offers}
+        editedLabel={whatIf.mode === 'recommendation' ? copy.probabilityPickRecommended : copy.probabilityPickNew}
+        anchor={anchor}
+        {...(crownedOffset !== undefined ? { crownedOffset } : {})}
+        wallCalendarYear={wallCalendarYear}
+        readOnly={readOnly}
+        current={whatIfCurrent}
+        {...(recWords !== undefined ? { recommendation: recWords } : {})}
+        hidden={trayHidden}
+        onHidden={setTrayHidden}
+        awaiting={trayAwaiting}
+        onAwaiting={setTrayAwaiting}
+        {...(trayFocus !== undefined ? { focus: trayFocus } : {})}
+        announce={announce}
+      />
+    ) : undefined
 
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
   const figured = screen === 'snapshot' || screen === 'probability'
@@ -559,8 +635,8 @@ export default function Shell({
     </div>
   )
 
-  // The interim pages that show the market switch: the table and the What if page (the paired rows read its market).
-  const showsMarket = screen === 'interim-table' || screen === 'interim-whatif'
+  // The interim page that shows the market switch: the table.
+  const showsMarket = screen === 'interim-table'
   const leave = leaveAsk !== undefined ? <LeaveAsk ask={leaveAsk} overSheet={anySheetOpen} fallback={() => headingRef.current} /> : null
   const staleBanner = (
     <StaleBannerStack lines={staleLines} onOpenSeat={(seat) => editors.openAssumptions(seat)} {...(onReview !== undefined && !readOnly ? { onReconfirm: onReview } : {})} />
@@ -619,7 +695,8 @@ export default function Shell({
               onPick={onPick}
               onChart={setChart}
               strategies={strategiesDoor}
-              whatIfTab={doorTo('interim-whatif')}
+              handle={{ label: copy.trayHandle, open: trayOpen, onOpenChange: setTrayOpen, controls: trayId }}
+              {...(tray !== undefined ? { tray } : {})}
             />
           </>
         ) : (
@@ -661,21 +738,6 @@ export default function Shell({
             {screen === 'interim-facts' && (
               <div className="wb-panel">
                 <FactsPage sections={sections} onTry={tryLever} {...(readOnly ? {} : { onOpen: openDoor })} />
-              </div>
-            )}
-            {screen === 'interim-whatif' && (
-              <div className="wb-panel">
-                <WhatIfPage
-                  whatIf={whatIf}
-                  snapshot={snapshot}
-                  planRows={results}
-                  view={view}
-                  readOnly={readOnly}
-                  wallCalendarYear={wallCalendarYear}
-                  announce={announce}
-                  {...(recommendation !== undefined ? { recommendation } : {})}
-                  {...(focusLever !== undefined ? { focusLever } : {})}
-                />
               </div>
             )}
             {screen === 'interim-strategies' && (

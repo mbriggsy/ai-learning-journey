@@ -233,14 +233,15 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: the home, Probability, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
     // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
     // served build, Probability draws its rings and its two balance bars (Highcharts again), and every interim tab is
     // visited. ANY violation reds (not a directive subset), and so does any request that leaves the build's own origin:
     // the act adds no network call. The table runs both views on the build's own engine worker, each one short run: the
     // steady view lands first, then a press shows the rough one, each read by its own words over its own rows. The facts
-    // page opens and closes one step sheet; the What if page runs one what-if; the lock menu (a portaled Base UI menu)
+    // page opens and closes one step sheet; Probability's Action Items tray (RC4b: a Base UI collapsible, its Edit drawer a
+    // portaled dialog) runs one what-if through its Refresh; the lock menu (a portaled Base UI menu)
     // opens and closes; at a phone width the menu (a portaled Base UI dialog that animates) moves the page. The way home
     // is the wordmark.
     test.setTimeout(180_000)
@@ -320,21 +321,35 @@ test.describe('CSP — real browser enforcement', () => {
     await sheet.getByRole('button', { name: copy.workbenchFactsDone, exact: true }).click()
     await expect(sheet, 'the step sheet never closed').toHaveCount(0)
 
-    // The What if page (Retirement → Analysis): one what-if, run on the build's own engine worker (its many-futures run
-    // and both named futures). Spending is offered to every household: its first figure committed $1,000 lower with Enter.
+    // Probability's Action Items tray (Retirement → Analysis, RC4b): one what-if, run on the build's own engine worker (its
+    // many-futures run and both named futures) by the tray's Refresh. Spending is offered to every household: its first
+    // figure set $1,000 lower with Enter (pending, marked), then Refresh, then the difference line speaks the two counts.
+    // The Edit drawer (a portaled, animated dialog) opens and closes.
     await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleRetirement, exact: true }).click()
-    await page.getByRole('tab', { name: copy.workbenchPageWhatIf, exact: true }).click()
-    await expect(page.locator('main.result[data-shell-screen="interim-whatif"]')).toBeAttached()
-    await page.locator('.wb-lever[data-lever="spending"] > summary').click()
-    const spend = page.locator('.wb-lever[data-lever="spending"] input[inputmode="decimal"]').first()
+    await expect(page.locator('main.result[data-shell-screen="probability"]')).toBeAttached()
+    await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+    const tray = page.locator('#b9-action-items')
+    await expect(tray, 'the tray never opened').toBeVisible()
+    const spend = tray.locator('[data-tray-group="spending"] input[inputmode="decimal"]').first()
     const planSpend = Number((await spend.inputValue()).replace(/[^0-9]/g, ''))
     expect(planSpend, '[test setup] the spending figure reads').toBeGreaterThan(1_000)
     await spend.fill(String(planSpend - 1_000))
     await spend.press('Enter')
-    await expect(page.locator('.wb-pair'), 'the what-if’s paired years never landed').toBeVisible({ timeout: 60_000 })
-    await expect(page.locator('.wb-reading').nth(1).locator('.wb-reading__count'), 'the what-if’s reading never landed').not.toHaveText('', {
-      timeout: 60_000,
-    })
+    await expect(tray.locator('[data-changed]').first(), 'the edit waits in the tray, marked').toBeVisible()
+    await tray.locator('[data-tray-refresh]').click()
+    await expect
+      .poll(async () => ((await page.locator('[data-difference] span').first().textContent()) ?? '').trim(), { message: 'the what-if’s difference line never spoke', timeout: 60_000 })
+      .not.toMatch(new RegExp(`^$|^${copy.probabilityNoChanges.slice(0, 20)}`))
+    await expect(page.locator('[data-half="alternative"] [aria-busy="true"]'), 'the what-if’s run never settled').toHaveCount(0, { timeout: 60_000 })
+    await tray.getByRole('button', { name: copy.trayEdit, exact: true }).click()
+    const edit = page.getByRole('dialog', { name: copy.trayEditTitle })
+    await expect(edit, 'the Edit drawer never opened').toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(edit).toHaveCount(0)
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the tray injected a <style> element').toBe(0)
+    // Shut again by its handle (open, it would become the phone's full-height sheet when the window narrows below).
+    await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+    await expect(tray, 'the tray never shut').toBeHidden()
 
     // At a phone width the menu (a portaled, animated dialog) reaches the table page and closes on the choice.
     await page.setViewportSize({ width: 390, height: 844 })

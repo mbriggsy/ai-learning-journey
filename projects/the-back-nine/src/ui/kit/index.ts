@@ -17,7 +17,7 @@ export { DataTable, type DataColumn, type DataColumnGroup, type DataTableColumn,
 export { Drawer, DrawerFields, type DrawerProps, type DrawerStep } from './Drawer'
 export { FolderTabs, PANEL_CLASSES, type FolderTab, type FolderTabsProps } from './FolderTabs'
 export { tableNumber } from './format'
-export { MoneyInput, PercentInput, type MoneyInputProps, type PercentInputProps } from './NumberInputs'
+export { MoneyInput, PercentInput, WholeInput, type MoneyInputProps, type PercentInputProps, type WholeInputProps } from './NumberInputs'
 export { ChartTitle, PageFrame, PickerPair, type ChartTitleProps, type PageFrameHandle, type PageFrameProps, type PageFrameTabs } from './PageFrame'
 export { Ring, ringArcLength, RING_CIRCUMFERENCE, RING_RADIUS, type RingProps } from './Ring'
 export { ScrollArea, type ScrollAreaProps } from './ScrollArea'

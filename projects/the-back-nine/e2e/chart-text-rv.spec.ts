@@ -1,6 +1,7 @@
 import { expect, type Page } from '@playwright/test'
 import { test, REAL, REAL_DPR, FLOOR, PHONE, PHONE_DPR, gotoSeedFinal, settleLayout } from './reviewSurface'
 import { type Audit, floorPx, audit, assertChartText } from './chartTextAudit'
+import { copy } from '../src/ui/copy'
 
 /**
  * The RECOMMENDATIONVIZ chart-text gate (`verify:fit:rv`, playwright.fit-rv.config.ts) — the fourth
@@ -73,6 +74,17 @@ const ARMS = [
 /** Drive `?seed=surplus` to its RECOMMENDED lockup with the real chart on screen. */
 async function gotoCommittedLockup(page: Page): Promise<void> {
   await gotoSeedFinal(page, 'surplus')
+  // Act 6 · RC4: the seed lands on the home, and the recommend-second invite lives on Tax → Tax Strategies (the interim
+  // tab until RC8): the laptop's module word, or the phone's menu.
+  const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
+  if (await modules.isVisible()) await modules.getByRole('link', { name: copy.shellModuleTax, exact: true }).click()
+  else {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    const menu = page.getByRole('dialog', { name: copy.shellMenuTitle })
+    await menu.getByRole('link', { name: copy.shellPageTaxStrategies, exact: true }).click()
+    await expect(menu).toHaveCount(0)
+  }
+  await expect(page.locator('main.result[data-shell-screen="interim-strategies"]'), 'the Tax Strategies tab never showed').toBeAttached()
   const invite = page.locator('.result-recommend-invite')
   await expect(invite, '?seed=surplus: the recommend-second invite never mounted').toBeVisible()
   await invite.click()

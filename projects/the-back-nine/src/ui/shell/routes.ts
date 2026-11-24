@@ -6,7 +6,7 @@
  * Each row of {@link ROUTE_ROWS} is one screen that exists; a module, page or tab shows only when a row names it, so
  * no nav word ever leads to nothing. Each screen unit adds its rows here.
  *
- * The route is mirrored to the address's hash (`#/retirement/analysis/what-if`) by IntakeApp. The hash names the page
+ * The route is mirrored to the address's hash (`#/retirement/analysis/probability`) by IntakeApp. The hash names the page
  * and nothing else: no plan data ever rides in it.
  */
 import { copy } from '../copy'
@@ -15,14 +15,13 @@ import { copy } from '../copy'
 export const MODULE_ORDER = ['dashboard', 'investment', 'retirement', 'tax', 'profile'] as const
 export type ModuleId = (typeof MODULE_ORDER)[number]
 
-/** The screens the shell can draw. RC3's Snapshot and RC4's Probability are rebuilt; the rest ride as interim tabs in
- *  their old look until their units rebuild them: the workbench room's What if (RC4b's tray), table (RC6) and facts
- *  page (RC13), and, since RC4 made the shell the home, what was left of the old answer page: the recommendation
+/** The screens the shell can draw. RC3's Snapshot and RC4's Probability (with its Action Items tray, RC4b) are rebuilt;
+ *  the rest ride as interim tabs in their old look until their units rebuild them: the workbench room's table (RC6) and
+ *  facts page (RC13), and, since RC4 made the shell the home, what was left of the old answer page: the recommendation
  *  surface under Tax → Tax Strategies (RC8) and the health sheet under Retirement → Health Care (RC10). */
 export type ScreenId =
   | 'snapshot'
   | 'probability'
-  | 'interim-whatif'
   | 'interim-table'
   | 'interim-facts'
   | 'interim-strategies'
@@ -65,15 +64,6 @@ export const ROUTE_ROWS: readonly RouteRow[] = [
     tabLabel: copy.probabilityTab,
     screen: 'probability',
     title: copy.analysisTitle,
-  },
-  {
-    module: 'retirement',
-    page: 'analysis',
-    pageLabel: copy.shellPageAnalysis,
-    tab: 'what-if',
-    tabLabel: copy.workbenchPageWhatIf,
-    screen: 'interim-whatif',
-    title: copy.workbenchPageWhatIf,
   },
   { module: 'retirement', page: 'health-care', pageLabel: copy.shellPageHealthCare, screen: 'interim-health', title: copy.shellPageHealthCare },
   { module: 'retirement', page: 'cash-flows', pageLabel: copy.shellPageCashFlows, screen: 'interim-table', title: copy.workbenchPageTable },

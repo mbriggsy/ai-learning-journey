@@ -398,10 +398,14 @@ describe('The rows’ second lines: said once when both halves carry the same on
     expect(s.halves.alternative.rows.map((r) => [r.text, r.notes])).toEqual([['row 0', []], ['row 1', []]])
     expect(s.halves.compared.rows.map((r) => r.notes)).toEqual([[], []])
   })
-  it('a lever that changes a line (the what-if’s own spending): each half keeps its own', () => {
+  it('a lever that changes a line (the what-if’s own spending): each half keeps its own changed line, the rest stays shared', () => {
     const s = shareRowNotes(half('alternative', [['a, spending changed'], ['b']]), half('compared', [['a'], ['b']]))
-    expect(s.sharedNotes).toBeUndefined()
-    expect(s.halves.alternative.rows[0]!.notes).toEqual(['a, spending changed'])
+    expect(s.sharedNotes).toEqual(['b'])
+    expect(s.halves.alternative.rows.map((r) => r.notes)).toEqual([['a, spending changed'], []])
+    expect(s.halves.compared.rows.map((r) => r.notes)).toEqual([['a'], []])
+  })
+  it('no line in common: nothing is shared', () => {
+    expect(shareRowNotes(half('alternative', [['x']]), half('compared', [['y']])).sharedNotes).toBeUndefined()
   })
   it('a half with no rows (still figuring): nothing is shared', () => {
     expect(shareRowNotes(half('alternative', []), half('compared', [['a']])).sharedNotes).toBeUndefined()

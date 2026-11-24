@@ -44,12 +44,11 @@ export type StepSectionId =
   | 'working-ledger'
 
 /** Every door a fact can sit behind: a step's own body, a lever's own sheet (`editorSheets.tsx`), the
- *  AssumptionPanel at a knob's seat, or none (a value the answer or another page sets). */
+ *  AssumptionPanel at a knob's seat, or none (a value the answer or another page sets). The withdrawal order and the
+ *  Roth plan have no sheet of their own since Act 6 · RC4b: they are tried in Probability's Action Items tray. */
 export type FactDoorId =
   | StepSectionId
   | 'budget'
-  | 'sequencing'
-  | 'roth'
   | 'subsidy-regime'
   | 'survivor-ratio'
   | 'heir-bracket'
@@ -92,7 +91,7 @@ export const DRAFT_FACTS: Record<keyof ScenarioDraft, FactDisposition> = {
   survivorSpendingRatio: shown('survivor-ratio'),
   heirBracket: shown('heir-bracket'),
   // Since U15 the withdrawal order, the Roth plan and the subsidy regime open no editor on the facts page: each line
-  // links to the What if page, where the lever is tried and applied (U8's lever doors, swapped).
+  // links to the lever's row in Probability's Action Items tray (RC4b), where it is tried and applied.
   drawdownPolicy: shown('none'),
   drawdownOrder: shown('none'),
   // A budget line's own `id` (schema version 6) is not a fact either: the tool mints it so a kept what-if can
@@ -133,7 +132,7 @@ export const PERSON_FACTS: Record<keyof PersonDraft, FactDisposition> = {
   earnedIncomeReal: shown('income'),
   pia: shown('social-security'),
   // A claim age not yet reached is a lever (KTD15): its door stays the Social Security step's (the step holds the benefit
-  // too), and since U15 the line also links to the What if page.
+  // too), and since U15 the line also links to the lever's row in the Action Items tray.
   socialSecurityClaimAge: shown('social-security'),
 }
 

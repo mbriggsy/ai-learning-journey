@@ -380,6 +380,11 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-5, 11-24) Playwright's `click()` waits for "enabled", and `aria-disabled="true"` reads as disabled**: a withheld
+  Apply (`aria-disabled`, kept pressable so a blur-then-press never loses the figure, insight 149) times the click out.
+  Press it with `{ force: true }` when the arm means to prove a withheld press writes nothing. And Probability's tray,
+  left open on a wide window, becomes the phone's full-height modal sheet when the viewport narrows (`useWide`): an arm
+  that shrinks the window shuts the tray first, or every control behind the sheet is unreachable.
 - **(b9-4, 11-24) The first fit run after the shell's new imports redded every arm the same way:** after the door press
   the address carried the shell's hash but the answer page was back on screen. A rerun on the same tree passed, and so
   did a run on a dev server with an empty dependency cache; the likely cause is Vite discovering a dependency the main
@@ -560,7 +565,7 @@ tests
   and each REVIEW line (a citation inside a modified hunk is never moved), and move the second number of a comma pair by hand
   (the tool moves only the first).
 - **`verify:fit` does NOT measure the recommendation surface** (`e2e/vertical-fit.spec.ts line 1295-1305 at 95c715e19`
-  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1064-1066`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:49-52`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
+  excludes the committed + held renders — the exclusion dates from 2026-07-22, before the worker pool, when a dev-server solve ran 80–200 s+ against the then-120 s per-test budget (now 180 s, `playwright.fit.config.ts:61`); on the pool a dev-server `solve:nc` / `solve:surplus` takes ~30 s at the laptop (`e2e/caddie-walk.spec.ts:1064-1066`), and on CI's 4-vCPU runner (pool P = 2) the RV gate's `?seed=surplus` pending-to-lockup wait — measured on the v9 build, its per-arm figures in `COMMITTED_LOCKUP_MS`'s docblock (`e2e/chart-text-rv.spec.ts:50-53`, `12e40395`) — has run with its worst arm close to this harness's 180 s per-test budget, but the fit arms still inject the committed lockup and never wait for a committed solve). So *"seat it and re-measure
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
   measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts line 4394-4396 at 95c715e19`, measured at the Dell's 1536×791 @ 2.5), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
@@ -745,7 +750,7 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
 - **(2026-10-03 late, b9-5)** `pnpm doc:reanchor <BASE>` a SECOND time after `--apply` re-proposes the applied shifts (it diffs against BASE) — never apply twice; and it shifted a bare `:725` following `taxOverlay.ts:673` (then UNCHANGED — both are 2026-10-03's numbering; the register's *`tax.rmdStartAge` vs 26 CFR 1.401(a)(9)-2(b)(2)* entry carries the live pair, and `ee62a839`'s run moved only the named one here, to 677) by `solveAnchor.ts`'s diff ("bare, after solveAnchor.ts") — read every bare continuation's governing file before trusting the shift (a fourth blind class beside the register's Tier 4 two) (filed in the register 2026-10-03)
 - **(2026-09-27, b9-sotd)** `pnpm doc:reanchor` skips self-citations and ambiguous basenames (the Tier 4 entry) — in a parallel fix pass a number into ANOTHER file is its HEAD number, a self-citation the post-edit one, then the tool ONCE, LAST
 - **(2026-09-27, b9-sotd)** a code-driven DELTA doc audit found 105 stale claims 21 h after a full audit and hours after a 100-agent review that restored five — after an engine-meaning commit batch, run one (`4c6b3e4f`'s message is the recipe).
-- **(2026-09-26, b9-8)** the citation re-anchor is `pnpm doc:reanchor <BASE>` — this session re-invented it in scratchpad scripts (verified byte-identical, but the tool owns bare continuations and freezes); a bare `:NNN` on the line AFTER its governing `file.ts:` is invisible to a line-scoped remap (`model.ts`'s `:658` into `fingerprintOf` had been stale since before this session) [2026-09-26 delta doc audit: one more class the tool never re-anchors — a file's citations of ITSELF (`base === selfBase`, `scripts/reanchor-citations.mjs:82` / `:102`; `intakeMap.ts`'s four self-citations rotted +26 in `e04823a4`) — grep that class by hand after `--apply`]
+- **(2026-09-26, b9-8)** the citation re-anchor is `pnpm doc:reanchor <BASE>` — this session re-invented it in scratchpad scripts (verified byte-identical, but the tool owns bare continuations and freezes); a bare `:NNN` on the line AFTER its governing `file.ts:` is invisible to a line-scoped remap (`model.ts`'s `:658` into `fingerprintOf` had been stale since before this session) [2026-09-26 delta doc audit: one more class the tool never re-anchors — a file's citations of ITSELF (`base === selfBase`, `scripts/reanchor-citations.mjs:83` / `:103`; `intakeMap.ts`'s four self-citations rotted +26 in `e04823a4`) — grep that class by hand after `--apply`]
 - **(2026-09-25 late)** `pnpm doc:reanchor` SKIPS an ambiguous basename (`stateTax.ts` exists in `src/engine/` AND `src/engine/constants/`) — list every `stateTax.ts:N` citation, read the HEAD line it names, locate that content on the tree, and hand-fix AFTER the tool's `--apply`
 - **(2026-09-25)** a finder lane briefed "Location A = the correct version; otherFile = the wrong one" files `file` = the CORRECT side — group fixes by `otherFile` for that lane or the wrong owner gets the finding
 - **(2026-09-25)** a link scanner that walks `[text](target)` with a simple regex mis-calls insights 046 / 050 / 095 orphans (nested parentheses in the link TEXT) — they are indexed; check the README before believing an orphan list
@@ -1168,6 +1173,10 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## UI and product
 
+- **(b9-5, 11-24) A door inside a closing `ControlSheet` that focuses something outside every sheet loses the focus**: the
+  sheet's exit hands focus back to its own opener once the exit ends (`controlSheet.tsx`'s restore spares only a
+  `.control-sheet` or `.budget-sheet`), so the assumption panel's withdrawal-order row focused the tray's row and the
+  gear button took it back. `ActionItemsTray.tsx` focuses only once no sheet has been attached for three frames.
 - **(b9-4, 11-24) The legacy layer's bare element rules reach inside `.rc-root` unless something resets them.** The
   preflight copy in `theme.css` resets margins, padding, borders and heading size and weight, not `base.css`'s heading
   face, leading, tracking and colour, `p`'s reading measure or `small`'s colour: the shell's phone menu drew its headings

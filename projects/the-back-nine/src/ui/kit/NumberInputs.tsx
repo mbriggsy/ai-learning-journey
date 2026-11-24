@@ -43,10 +43,14 @@ interface Affix {
   readonly format: (value: number | undefined) => string
   readonly prefix?: string
   readonly suffix?: string
+  readonly inputMode?: 'decimal' | 'numeric'
 }
 
 const MONEY: Affix = { parse: parseMoney, format: formatMoney, prefix: '$' }
 const PERCENT: Affix = { parse: parsePercent, format: formatPercent, suffix: '%' }
+/** A whole number (a year, an age, a count, a whole percent): digits only, never a sign, a decimal or a group comma. */
+const parseWhole = (text: string): number | undefined => (/^\s*\d{1,6}\s*$/.test(text) ? Number(text.trim()) : undefined)
+const WHOLE: Affix = { parse: parseWhole, format: (v) => (v === undefined ? '' : String(v)), inputMode: 'numeric' }
 
 function NumberInput({
   affix,
@@ -113,7 +117,7 @@ function NumberInput({
         <input
           id={inputId}
           type="text"
-          inputMode="decimal"
+          inputMode={affix.inputMode ?? 'decimal'}
           autoComplete="off"
           enterKeyHint="done"
           spellCheck={false}
@@ -162,4 +166,14 @@ export function MoneyInput(props: MoneyInputProps) {
 /** A percent: `%` on the right, the figure right-aligned, parsed by `parsePercent` into a fraction. */
 export function PercentInput(props: PercentInputProps) {
   return <NumberInput affix={PERCENT} {...props} />
+}
+
+export type WholeInputProps = NumberInputProps & {
+  /** A unit drawn inside the box on the right ("%"), read with the label. */
+  readonly suffix?: string
+}
+
+/** A whole number (a year, an age, a count): `inputmode="numeric"`, digits only (the tray's year and age boxes, ref 2.8). */
+export function WholeInput({ suffix, ...props }: WholeInputProps) {
+  return <NumberInput affix={suffix === undefined ? WHOLE : { ...WHOLE, suffix }} {...props} />
 }

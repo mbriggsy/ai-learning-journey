@@ -154,7 +154,9 @@ async function rewalkFromDateSolo(page: Page): Promise<void> {
     'datesolo did not land on the withheld hero — the seed or the refusal route moved',
   ).toBeVisible({ timeout: 60_000 })
   await settleLayout(page)
-  await page.getByRole('button', { name: copy.assumptionDoorCta }).click()
+  // Act 6 · RC4: the answer page and its assumptions door are gone; the panel opens from the shell's gear (its name
+  // holds at every width, the icon alone on the phone), and its re-walk leaves the shell for the walk-through.
+  await page.getByRole('button', { name: copy.shellGearLabel, exact: true }).click()
   await page.getByRole('button', { name: copy.assumptionRewalkCta }).click()
   await expect(page.locator('.intake-shell')).toBeVisible({ timeout: 30_000 })
   await settleLayout(page)

@@ -39,7 +39,7 @@ export function Tray({ id, open, onOpenChange, title, closeLabel, children, foot
   const wide = useWide()
   const content = (
     <>
-      <div className="flex flex-col gap-8 laptop:grid laptop:grid-cols-2 laptop:gap-10">{children}</div>
+      <div className="flex flex-col gap-8 laptop:grid laptop:grid-cols-2 laptop:gap-8">{children}</div>
       {footer !== undefined ? <div className="mt-8">{footer}</div> : null}
     </>
   )
@@ -55,7 +55,7 @@ export function Tray({ id, open, onOpenChange, title, closeLabel, children, foot
             'data-starting-style:h-0 data-ending-style:h-0 motion-reduce:transition-none',
           )}
         >
-          <div className="px-8 py-10 laptop:px-14">{content}</div>
+          <div className="px-8 py-8 laptop:px-10">{content}</div>
         </Collapsible.Panel>
       </Collapsible.Root>
     )
@@ -99,7 +99,7 @@ export interface TrayColumnProps {
 /** One column group: the two plans' names over a thin rule, then its sections. Rows line up on a shared grid. */
 export function TrayColumn({ editedLabel, comparedLabel, children }: TrayColumnProps) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_minmax(5rem,auto)] content-start gap-x-6 wide:grid-cols-[minmax(7rem,1fr)_auto_minmax(6rem,auto)]">
+    <div className="grid grid-cols-[minmax(0,1fr)_minmax(5rem,auto)] content-start gap-x-6 wide:grid-cols-[minmax(6rem,1fr)_auto_minmax(5rem,11rem)] wide:gap-x-4">
       <div className="col-span-full grid grid-cols-subgrid border-b border-stone-300 pb-3 text-body text-stone-900">
         <span aria-hidden="true" className="hidden wide:block" />
         <span className="text-center">{editedLabel}</span>
@@ -120,19 +120,31 @@ export function TraySection({ title, children }: { readonly title: string; reado
 }
 
 export interface TrayRowProps {
-  readonly label: string
+  /** The row's name (a link, on a row added only in this what-if). */
+  readonly label: ReactNode
   /** The edited side's control: a slider and a box, or a picker. */
   readonly control: ReactNode
   /** The compared plan's value, as plain text. */
   readonly compared: ReactNode
   /** Set on a row added only in this what-if: the words a screen reader reads for its green "+" dot. */
   readonly added?: string
+  /** A sub-row (indented a step further). */
+  readonly indent?: boolean
+  /** The row's id and its group, stamped as `data-tray-row` and `data-tray-group` (a screen's hooks for focus and
+   *  tests). */
+  readonly rowId?: string
+  readonly group?: string
+  /** Lines under the row, at the full width of its control and compared value. */
+  readonly notes?: ReactNode
+  /** The row's own way back to the compared plan's value, drawn under that value (a pulled row's undo), so the control
+   *  cell keeps its width for the controls. */
+  readonly back?: ReactNode
 }
 
-export function TrayRow({ label, control, compared, added }: TrayRowProps) {
+export function TrayRow({ label, control, compared, added, indent = false, rowId, group, notes, back }: TrayRowProps) {
   return (
-    <div className="col-span-full grid min-h-11 grid-cols-subgrid items-center gap-y-1 py-1.5">
-      <span className="col-span-full flex min-w-0 items-center gap-2 pl-0 text-body text-stone-900 wide:col-span-1 wide:pl-4">
+    <div className="col-span-full grid min-h-11 grid-cols-subgrid items-center gap-y-1 py-1.5" data-tray-row={rowId} data-tray-group={group}>
+      <span className={cn('col-span-full flex min-w-0 items-center gap-2 text-body text-stone-900 wide:col-span-1', indent ? 'pl-4 wide:pl-8' : 'pl-0 wide:pl-4')}>
         {added !== undefined ? (
           <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-green text-stone-900">
             <Plus size={12} strokeWidth={2.5} aria-hidden="true" />
@@ -142,8 +154,16 @@ export function TrayRow({ label, control, compared, added }: TrayRowProps) {
         {/* Wraps, never truncates: a cut label hides content (the content-over-looks law). */}
         <span className="min-w-0 break-words">{label}</span>
       </span>
-      <div className="flex min-w-0 items-center gap-3">{control}</div>
-      <span className="text-right text-body text-stone-900 tabular-nums">{compared}</span>
+      <div className="flex min-w-0 flex-wrap items-center gap-3">{control}</div>
+      {back === undefined ? (
+        <span className="text-right text-body text-stone-900 tabular-nums">{compared}</span>
+      ) : (
+        <span className="flex flex-col items-end text-right text-body text-stone-900 tabular-nums">
+          {compared}
+          {back}
+        </span>
+      )}
+      {notes !== undefined ? <div className={cn('col-span-full flex flex-col gap-1 text-label text-stone-600', indent ? 'pl-4 wide:pl-8' : 'wide:pl-4')}>{notes}</div> : null}
     </div>
   )
 }

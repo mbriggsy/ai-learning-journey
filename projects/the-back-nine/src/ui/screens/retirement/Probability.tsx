@@ -13,7 +13,7 @@
  * The balance bar and the odds chart ride Highcharts' lazy chunk (Snapshot's rule): jsdom and the shell's other pages
  * never evaluate it.
  */
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 import { Button, ChartTitle, LoadingVeil, Ring, Select } from '../../kit'
 import { verdictDescribedBy } from '../../disclaimerId'
@@ -68,8 +68,8 @@ function Bar({ bars, half }: { readonly bars: BarsView | undefined; readonly hal
 function Half({ half, bars, header }: { readonly half: HalfView; readonly bars: BarsView | undefined; readonly header: React.ReactNode }) {
   const ring = half.ring
   return (
-    <section className="flex min-w-0 flex-col items-center gap-3 text-center" data-half={half.side} aria-label={half.title}>
-      <div className="flex min-h-12 w-full items-end justify-center">{header}</div>
+    <section className="flex min-w-0 flex-col items-center gap-3 text-center compact:gap-2" data-half={half.side} aria-label={half.title}>
+      <div className="flex min-h-12 w-full items-end justify-center compact:min-h-10">{header}</div>
       <LoadingVeil loading={half.loading} label={copy.probabilityLoading}>
         <div className="flex flex-wrap items-center justify-center gap-6">
           <div
@@ -95,7 +95,8 @@ function Half({ half, bars, header }: { readonly half: HalfView; readonly bars: 
       {half.rows.length > 0 ? (
         // The rows as one block: their headlines read as one list (a split household's two rows, a gap apart, ran the
         // R13 caveat past his window).
-        <div className="flex flex-col gap-1">
+        // A run in flight fades them with the ring (ref 2.7's refresh state): the numbers stay put until the new reading.
+        <div className={half.loading ? 'flex flex-col gap-1 opacity-40 transition-opacity duration-200 ease-settle' : 'flex flex-col gap-1 transition-opacity duration-200 ease-settle'}>
           {half.rows.map((row) => (
             <div key={row.text} className="flex flex-col gap-0.5" data-reading-row="">
               <p className="text-body text-stone-900">{row.text}</p>
@@ -117,11 +118,70 @@ function Half({ half, bars, header }: { readonly half: HalfView; readonly bars: 
   )
 }
 
-function Metrics({ view }: { readonly view: ReadingView }) {
+type CaptionSeat = 'halves' | 'metrics'
+
+/**
+ * Where the bars' caption sits at the laptop's two columns: under the halves it labels, unless the key-metric column has
+ * the room and the halves' column does not (RC4b's landed fit: a landed what-if whose survivor line differs from the
+ * plan's keeps a line in each half at half width, and `budget`'s halves then ran its handle 35 px past his window, while
+ * `patypical`'s long state clause leaves the key-metric column the taller one). Measured before paint, so the page is
+ * never drawn with the caption in the wrong seat; below the laptop seam the columns stack and it stays with the halves.
+ * Layout only: the words, and their place in the reading order straight after the halves, never change.
+ */
+function useCaptionSeat(grid: RefObject<HTMLDivElement | null>, left: RefObject<HTMLDivElement | null>, right: RefObject<HTMLDivElement | null>, caption: RefObject<HTMLParagraphElement | null>): CaptionSeat {
+  const [seat, setSeat] = useState<CaptionSeat>('halves')
+  useLayoutEffect(() => {
+    const g = grid.current
+    const l = left.current
+    const r = right.current
+    const c = caption.current
+    if (g === null || l === null || r === null || c === null) return
+    if (getComputedStyle(g).display !== 'grid') {
+      if (seat !== 'halves') setSeat('halves')
+      return
+    }
+    const gap = 8
+    const capH = c.offsetHeight + gap
+    // The caption's height in the other seat: its lines scale with the width it is given there.
+    const otherW = seat === 'halves' ? r.clientWidth : l.clientWidth
+    const capOther = otherW > 0 ? Math.ceil((capH * c.offsetWidth) / otherW) : capH
+    const leftBare = l.offsetHeight - (seat === 'halves' ? capH : 0)
+    const rightBare = r.offsetHeight - (seat === 'metrics' ? capH : 0)
+    const underHalves = Math.max(leftBare + (seat === 'halves' ? capH : capOther), rightBare)
+    const inMetrics = Math.max(leftBare, rightBare + (seat === 'metrics' ? capH : capOther))
+    // A margin either way, so two estimates a pixel apart never trade the seat back and forth.
+    const next: CaptionSeat = seat === 'halves' ? (inMetrics + 8 < underHalves ? 'metrics' : 'halves') : underHalves + 8 < inMetrics ? 'halves' : 'metrics'
+    if (next !== seat) setSeat(next)
+  })
+  return seat
+}
+
+function BarsCaption({ view, captionRef, className }: { readonly view: ReadingView; readonly captionRef: RefObject<HTMLParagraphElement | null>; readonly className: string }) {
+  if (view.bars !== undefined) {
+    return (
+      <p ref={captionRef} className={className} data-bar-label="">
+        {view.bars.caption}
+      </p>
+    )
+  }
+  if (view.barsNone !== undefined) {
+    return (
+      <p ref={captionRef} className={className} data-bar-label="" data-bar-none="">
+        {view.barsNone}
+      </p>
+    )
+  }
+  return null
+}
+
+function Metrics({ view, seat, captionRef, metricsRef }: { readonly view: ReadingView; readonly seat: CaptionSeat; readonly captionRef: RefObject<HTMLParagraphElement | null>; readonly metricsRef: RefObject<HTMLDivElement | null> }) {
   const m = view.metrics
   const [first, ...rest] = m.lines
   return (
-    <div className="flex flex-col gap-3 text-left" data-metrics="">
+    <div ref={metricsRef} className="flex flex-col gap-3 text-left compact:gap-2" data-metrics="">
+      {/* What the bars hold, when the halves keep lines of their own (`barsCaptionSeat`): first in the reading order,
+          straight after the halves it labels on the phone, drawn last in the laptop's column. */}
+      {seat === 'metrics' ? <BarsCaption view={view} captionRef={captionRef} className="text-left text-label text-stone-600 laptop:order-last" /> : null}
       {first !== undefined ? (
         m.clauseReserve === undefined ? (
           <p className="text-body text-stone-900" data-spend={m.spend}>
@@ -190,8 +250,13 @@ export function ProbabilityPanel({ view, onPick, onChart, strategies }: Probabil
     />
   )
   const planName = <h3 className="pb-2 text-chart-title text-plum">{view.planTitle}</h3>
+  const gridRef = useRef<HTMLDivElement>(null)
+  const leftRef = useRef<HTMLDivElement>(null)
+  const metricsRef = useRef<HTMLDivElement>(null)
+  const captionRef = useRef<HTMLParagraphElement>(null)
+  const seat = useCaptionSeat(gridRef, leftRef, metricsRef, captionRef)
   return (
-    <div className="flex flex-col gap-4" data-probability={view.route}>
+    <div className="flex flex-col gap-4 compact:gap-3" data-probability={view.route}>
       {view.charts.length > 1 ? (
         <div className="flex justify-center">
           <ChartTitle items={view.charts} value={view.chart} onValueChange={onChart} />
@@ -216,8 +281,8 @@ export function ProbabilityPanel({ view, onPick, onChart, strategies }: Probabil
           ))}
         </div>
       ) : (
-        <div className="flex flex-col gap-8 laptop:grid laptop:grid-cols-[3fr_2fr] laptop:items-start">
-          <div className="flex flex-col gap-3">
+        <div ref={gridRef} className="flex flex-col gap-8 laptop:grid laptop:grid-cols-[3fr_2fr] laptop:items-start">
+          <div ref={leftRef} className="flex flex-col gap-3 compact:gap-2">
             <div className="grid grid-cols-1 gap-8 wide:grid-cols-2">
               <Half half={alternative} bars={view.bars} header={picker} />
               <Half half={compared} bars={view.bars} header={planName} />
@@ -231,18 +296,10 @@ export function ProbabilityPanel({ view, onPick, onChart, strategies }: Probabil
                 ))}
               </div>
             ) : null}
-            {/* What the bars hold, under the halves they label. */}
-            {view.bars !== undefined ? (
-              <p className="text-center text-label text-stone-600" data-bar-label="">
-                {view.bars.caption}
-              </p>
-            ) : view.barsNone !== undefined ? (
-              <p className="text-center text-label text-stone-600" data-bar-label="" data-bar-none="">
-                {view.barsNone}
-              </p>
-            ) : null}
+            {/* What the bars hold, under the halves they label (while every second line is said once there). */}
+            {seat === 'halves' ? <BarsCaption view={view} captionRef={captionRef} className="text-center text-label text-stone-600" /> : null}
           </div>
-          <Metrics view={view} />
+          <Metrics view={view} seat={seat} captionRef={captionRef} metricsRef={metricsRef} />
         </div>
       )}
       {view.recordNote !== undefined ? (

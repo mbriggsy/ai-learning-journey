@@ -1,12 +1,13 @@
 /*
  * src/ui/editorSheets.tsx — the ONE home of the plan's lever sheets and their writes (Act 5, U8).
  *
- * The budget builder, the withdrawal-order and Roth sheets, the healthcare sheet and the AssumptionPanel each
- * write the draft through one write (an atomic reconciliation patch, a biconditional pair, a single-key fence:
+ * The budget builder, the healthcare sheet and the AssumptionPanel each write the draft through one write (an atomic reconciliation patch, a biconditional pair, a single-key fence:
  * insight 058), then recompute. They used to be hosted by Result alone. The workbench room's facts page opens the
  * same sheets, so the hosting moved here and both screens call it, and an edit made from the room is the same edit
  * made from the answer. The lever sheets' writes themselves live in `src/intake/whatIf.ts` (U14), shared with the
- * what-if's `applyBundle` and U15's Apply, so Apply writes exactly what was compared.
+ * what-if's `applyBundle` and U15's Apply, so Apply writes exactly what was compared. The withdrawal-order and Roth
+ * sheets left with Act 6 · RC4b: both levers are tried in Probability's Action Items tray and written by its Apply, so
+ * the AssumptionPanel's rows for them open the tray at that row (`onOpenSequencing`, `onOpenRoth`, the host's).
  *
  * What moved with them: the open state, the sheets' JSX and writes, the preview runner (`runPreview`, params
  * from the CURRENT draft at each call), the notes the sheets read (`medicarePricedNote`, `statePricedNote`,
@@ -21,25 +22,15 @@
  *    commits and the workbench's step sheet run it. The route is read AFTER the edit lands.
  */
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
-import {
-  acaPricedForRun,
-  buildControlPreviewParams,
-  healthcarePriced,
-  isDateRoute,
-  pricedStateForRun,
-  spineMedicarePriced,
-} from '@intake/intakeMap'
+import { buildControlPreviewParams, pricedStateForRun } from '@intake/intakeMap'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
-import { SequencingControl } from '@intake/SequencingControl'
-import { RothLever } from '@intake/RothLever'
 import { HealthcareSheet } from '@intake/HealthcareSheet'
 import { AssumptionPanel } from '@intake/AssumptionPanel'
 import type { MissingFact } from '@intake/intakeMap'
-import { withBudgetItems, withDrawdownPolicy, withEnhancedSubsidies, withoutBudget, withRothConversion } from '@intake/whatIf'
+import { withBudgetItems, withEnhancedSubsidies, withoutBudget } from '@intake/whatIf'
 import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
 import type { MemoryModel, MemoryModelSnapshot, ScenarioDraft } from '@store/memoryModel'
 import type { TwoArmControl } from '@shared/model'
-import { showMedicarePricedNote } from './healthSheetChrome'
 import type { BandPlanClockAnchor } from './bandAnnotations'
 import type { AssumptionLandingSeat } from './assumptionRegistry'
 import { currentEpochDay } from './scenarioFromDraft'
@@ -59,12 +50,13 @@ export interface EditorSheetsArgs {
   readonly onReview?: () => void
   /** The panel's collections row, where it differs from the re-walk. Absent ⇒ `onReview`. */
   readonly onEditCollections?: () => void
+  /** The panel's withdrawal-order and Roth rows: the host opens the Action Items tray at that row (RC4b). */
+  readonly onOpenSequencing: () => void
+  readonly onOpenRoth: () => void
 }
 
 export interface EditorSheets {
   readonly openBudget: () => void
-  readonly openSequencing: () => void
-  readonly openRoth: () => void
   readonly openHealth: () => void
   /** Open the AssumptionPanel, landing at `seat` when given (`AssumptionLandingSeat`). */
   readonly openAssumptions: (seat?: AssumptionLandingSeat) => void
@@ -73,7 +65,7 @@ export interface EditorSheets {
   /** "Which PRICED state will the next run price?" — off the LIVE draft, route-aware (the sheets and the
    *  recommendation surface describe what they will run next; KTD5). */
   readonly statePricedNote: ReturnType<typeof pricedStateForRun>
-  /** The five sheets, to render once in the host. */
+  /** The three sheets, to render once in the host. */
   readonly node: ReactNode
 }
 
@@ -85,10 +77,10 @@ export function useEditorSheets({
   restoreFallback,
   onReview,
   onEditCollections,
+  onOpenSequencing,
+  onOpenRoth,
 }: EditorSheetsArgs): EditorSheets {
   const [budgetOpen, setBudgetOpen] = useState(false)
-  const [sequencingOpen, setSequencingOpen] = useState(false)
-  const [rothOpen, setRothOpen] = useState(false)
   const [healthOpen, setHealthOpen] = useState(false)
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
   // Where the assumptions panel lands when it opens. Dropped the moment the panel closes, on EVERY close and
@@ -97,13 +89,6 @@ export function useEditorSheets({
   if (!assumptionsOpen && assumptionsSeat !== undefined) setAssumptionsSeat(undefined)
 
   const { draft } = snapshot
-  // P3·U11 — the Healthcare door's domain is the ENGINE's own priced-healthcare gate (single-sourced with
-  // buildOverlay; council 2026-07-03: no hollow door).
-  const healthPriced = healthcarePriced(draft)
-  // "Was Medicare priced in this run?", route-aware and read off the BUILT params' own overlay decision (insight
-  // 080). Spine: the headline builder's own output. Date route: every candidate prices healthcare structurally.
-  const medicarePriced = useMemo(() => isDateRoute(draft) || spineMedicarePriced(draft), [draft])
-  const medicarePricedNote = showMedicarePricedNote({ medicarePriced, reachesHealthDoor: healthPriced })
   // The state-tax unit (S5): which PRICED state the next run prices, off the route's own built overlay.
   const statePricedNote = useMemo(() => pricedStateForRun(snapshot.draft), [snapshot.draft])
   // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
@@ -116,9 +101,6 @@ export function useEditorSheets({
     'offsetYears' in snapshot.answer.outcome.lifestyle
       ? snapshot.answer.outcome.lifestyle.offsetYears
       : undefined
-  // O16 — does the run the Roth PREVIEW describes price the ACA discount? Read off the exact builder the
-  // preview executes (insight 080/081).
-  const acaPricedNote = useMemo(() => acaPricedForRun(snapshot.draft, crownedOffset), [snapshot.draft, crownedOffset])
   // The preview runner the sheets inject: params from the CURRENT draft (composed per call), the household's
   // one CRN seed, latest-wins.
   const runPreview = useCallback(
@@ -141,7 +123,7 @@ export function useEditorSheets({
     [model],
   )
 
-  const sheetOpen = budgetOpen || sequencingOpen || rothOpen || healthOpen || assumptionsOpen
+  const sheetOpen = budgetOpen || healthOpen || assumptionsOpen
   const openAssumptions = useCallback((seat?: AssumptionLandingSeat) => {
     setAssumptionsSeat(seat)
     setAssumptionsOpen(true)
@@ -168,46 +150,6 @@ export function useEditorSheets({
         }}
         onClose={() => setBudgetOpen(false)}
         restoreFallback={restoreFallback}
-      />
-      <SequencingControl
-        open={sequencingOpen}
-        draft={draft}
-        preview={runPreview}
-        previewBlocking={!previewRunsInWorker()}
-        restoreFallback={restoreFallback}
-        savedAnchor={savedAnchor}
-        onApply={(policy, order) => {
-          // ONE atomic write maintains the 'custom'⟺order biconditional (the codec re-proves it at Save;
-          // validateParams re-proves it at every run — the two-gate rule's write half).
-          model.update((d) => withDrawdownPolicy(d, policy, order))
-          setSequencingOpen(false)
-          both()
-        }}
-        onClose={() => setSequencingOpen(false)}
-      />
-      <RothLever
-        open={rothOpen}
-        draft={draft}
-        preview={runPreview}
-        previewBlocking={!previewRunsInWorker()}
-        medicarePricedNote={medicarePricedNote}
-        statePricedNote={statePricedNote}
-        acaPricedNote={acaPricedNote}
-        restoreFallback={restoreFallback}
-        savedAnchor={savedAnchor}
-        onApply={(plan) => {
-          model.update((d) => withRothConversion(d, plan))
-          setRothOpen(false)
-          both()
-        }}
-        onRemove={() => {
-          // Strip the KEY (absence ≡ no conversions ≡ reduce-to-spine — never an undefined-valued slot a JSON
-          // write would null, DND/009).
-          model.update((d) => withRothConversion(d, undefined))
-          setRothOpen(false)
-          both()
-        }}
-        onClose={() => setRothOpen(false)}
       />
       <HealthcareSheet
         open={healthOpen}
@@ -241,11 +183,11 @@ export function useEditorSheets({
         }}
         onOpenSequencing={() => {
           setAssumptionsOpen(false)
-          setSequencingOpen(true)
+          onOpenSequencing()
         }}
         onOpenRoth={() => {
           setAssumptionsOpen(false)
-          setRothOpen(true)
+          onOpenRoth()
         }}
         onOpenHealth={() => {
           setAssumptionsOpen(false)
@@ -276,8 +218,6 @@ export function useEditorSheets({
 
   return {
     openBudget: useCallback(() => setBudgetOpen(true), []),
-    openSequencing: useCallback(() => setSequencingOpen(true), []),
-    openRoth: useCallback(() => setRothOpen(true), []),
     openHealth: useCallback(() => setHealthOpen(true), []),
     openAssumptions,
     sheetOpen,

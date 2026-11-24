@@ -287,16 +287,13 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
       'the panel reads the raw offset EXACTLY once — at the producer call; never handed to the echo, never re-summed',
     ).toBe(1)
 
-    const lever = read('../../intake/RothLever.tsx')
-    expect(lever, 'the sheet echo derives through the producer').toMatch(
-      /rothPlanStartFor\(savedAnchor, candidate\.startYearOffset\)/,
-    )
-    expect(lever, 'the applied re-seed maps offset → year through the SAME producer').toMatch(
-      /rothPlanStartFor\(savedAnchor, applied\.startYearOffset\)\.year/,
-    )
-    expect(lever, 'the write-side past refusal rides the §S0.1 predicate').toMatch(
-      /offsetHasPassed\(p\.startYear - anchor\.startCalendarYear, anchor\.yearsSincePlanBuilt\)/,
-    )
+    // RE-BOUND IN ACT 6's RC4b (the bind moves with the call): the Roth sheet (`RothLever.tsx`) left; the write side
+    // that refuses a passed first year is now the Action Items tray's Roth row (`trayView.ts`'s `rothCommit`), which
+    // turns the typed calendar year into the offset once and asks the ONE producer whether it has passed.
+    const tray = read('../screens/retirement/trayView.ts')
+    expect(tray, 'the tray’s past refusal rides the producer, so the §S0.1 predicate').toMatch(/rothPlanStartFor\(anchor, startYearOffset\)\.passed/)
+    expect(tray, 'the tray never re-types a compare against the plan clock').not.toMatch(/yearsSincePlanBuilt/)
+    expect((tray.match(/startYearOffset = fields\.startYear! - draftStartCalendarYear/g) ?? []).length, 'the year → offset turn happens once').toBe(1)
   })
 
   it('the two consumers AGREE at the boundary by construction (the behavioral half of the bind)', () => {

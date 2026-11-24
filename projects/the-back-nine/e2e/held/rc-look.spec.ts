@@ -12,7 +12,8 @@ import { copy } from '../../src/ui/copy'
  *    counts as clipped, since the kit never cuts text to fit);
  *  - no two visible controls overlap;
  *  - no text under 12 CSS px.
- * The phone's menu is captured open too. Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * The phone's menu is captured open too, and since RC4b Probability's Action Items tray: open with one changed row, after
+ * its Refresh (Apply's words on the working seed, a stop year pulled), and its Edit drawer. Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -24,7 +25,6 @@ const SEEDS = (process.env.RC_SEEDS ?? 'retired,date').split(',')
 const SCREENS = [
   { id: 'snapshot', screen: 'snapshot', module: copy.shellModuleDashboard, page: copy.shellPageSnapshot },
   { id: 'probability', screen: 'probability', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis },
-  { id: 'what-if', screen: 'interim-whatif', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis, tab: copy.workbenchPageWhatIf },
   { id: 'health-care', screen: 'interim-health', module: copy.shellModuleRetirement, page: copy.shellPageHealthCare },
   { id: 'cash-flows', screen: 'interim-table', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows },
   { id: 'tax-strategies', screen: 'interim-strategies', module: copy.shellModuleTax, page: copy.shellPageTaxStrategies },
@@ -44,6 +44,8 @@ async function audit(page: Page): Promise<Audit> {
     const shown = (el: Element) => {
       if (el.closest('details:not([open])') !== null && el.closest('summary') === null) return false
       if (el.closest('[aria-hidden="true"], .sr-only, .highcharts-visually-hidden, [inert]') !== null) return false
+      // A visually hidden form control (Base UI's select and slider inputs, clipped to nothing for assistive tech).
+      if (getComputedStyle(el).clipPath === 'inset(50%)') return false
       const r = el.getBoundingClientRect()
       const cs = getComputedStyle(el)
       return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' && cs.opacity !== '0'
@@ -105,7 +107,6 @@ async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: b
     const pageLink = page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: target.page, exact: true })
     if ((await pageLink.getAttribute('aria-current')) !== 'page') await pageLink.click()
   }
-  if ('tab' in target) await page.getByRole('tab', { name: target.tab, exact: true }).click()
   await expect(page.locator(`main.result[data-shell-screen="${target.screen}"]`)).toBeAttached()
   if (target.screen === 'probability') await settleProbability(page)
   if (target.screen === 'snapshot') {
@@ -136,6 +137,55 @@ for (const size of SIZES) {
           findings[target.id] = a
           await page.screenshot({ path: `${OUT}/${target.id}-${seed}-${size.tag}.png` })
           await page.screenshot({ path: `${OUT}/${target.id}-${seed}-${size.tag}-full.png`, fullPage: true })
+        }
+        // The Action Items tray (RC4b): open, one row changed (the working seed's stop year two years on; a retired seed's
+        // spending $10,000 lower), then refreshed, then its Edit drawer.
+        await showScreen(page, SCREENS[1], size.phone)
+        if ((await page.locator('[data-probability]').count()) > 0 && (await page.locator('[data-probability="pending"], [data-probability="fallback"], [data-probability="error"]').count()) === 0) {
+          await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+          const tray = page.locator('#b9-action-items')
+          await expect(tray).toBeVisible()
+          await page.waitForTimeout(400)
+          const stop = tray.locator('[data-tray-row="stop-year"] input[inputmode="numeric"]')
+          if ((await stop.count()) > 0) {
+            const year = Number(await stop.inputValue())
+            await stop.fill(String(year + 2))
+            await stop.press('Enter')
+          } else {
+            const spend = tray.locator('[data-tray-row="spending:total"] input').first()
+            if ((await spend.count()) > 0) {
+              const v = Number((await spend.inputValue()).replace(/[^0-9]/g, ''))
+              await spend.fill(String(v - 10_000))
+              await spend.press('Enter')
+            }
+          }
+          const changed = tray.locator('[data-changed]').first()
+          if ((await changed.count()) > 0) await changed.scrollIntoViewIfNeeded()
+          await settleLayout(page)
+          findings['tray'] = await audit(page)
+          await page.screenshot({ path: `${OUT}/tray-${seed}-${size.tag}.png` })
+          await page.screenshot({ path: `${OUT}/tray-${seed}-${size.tag}-full.png`, fullPage: true })
+          await tray.getByRole('button', { name: copy.trayRefresh, exact: true }).click()
+          await expect(page.locator('[data-half="alternative"] [aria-busy="true"]')).toHaveCount(0, { timeout: 90_000 })
+          await page.waitForTimeout(800)
+          await tray.locator('[data-tray-words]').scrollIntoViewIfNeeded()
+          await settleLayout(page)
+          findings['tray-refreshed'] = await audit(page)
+          await page.screenshot({ path: `${OUT}/tray-refreshed-${seed}-${size.tag}.png` })
+          await page.screenshot({ path: `${OUT}/tray-refreshed-${seed}-${size.tag}-full.png`, fullPage: true })
+          await tray.getByRole('button', { name: copy.trayEdit, exact: true }).click()
+          const edit = page.getByRole('dialog', { name: copy.trayEditTitle })
+          await expect(edit).toBeVisible()
+          await page.waitForTimeout(500)
+          await settleLayout(page)
+          findings['tray-edit'] = await audit(page)
+          await page.screenshot({ path: `${OUT}/tray-edit-${seed}-${size.tag}.png` })
+          await page.keyboard.press('Escape')
+          await expect(edit).toHaveCount(0)
+          if (size.phone) {
+            await page.keyboard.press('Escape')
+            await expect(tray).toHaveCount(0)
+          }
         }
         // Probability's second chart, Odds by stop year (the working route only): the chart title's menu.
         await showScreen(page, SCREENS[1], size.phone)
@@ -192,7 +242,7 @@ for (const size of SIZES) {
       await page.locator('[data-card="recommendations"]').scrollIntoViewIfNeeded()
       await settleLayout(page)
       await page.screenshot({ path: `${OUT}/snapshot-rec-${size.tag}-full.png`, fullPage: true })
-      await showScreen(page, SCREENS[5], size.phone)
+      await showScreen(page, SCREENS[4], size.phone)
       const a = await audit(page)
       await page.screenshot({ path: `${OUT}/tax-strategies-rec-${size.tag}.png` })
       await page.screenshot({ path: `${OUT}/tax-strategies-rec-${size.tag}-full.png`, fullPage: true })

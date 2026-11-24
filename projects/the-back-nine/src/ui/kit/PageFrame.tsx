@@ -63,6 +63,10 @@ export interface PageFrameProps<Id extends string> {
   readonly className?: string
 }
 
+/** A panel that carries the handle sits a step tighter in compact mode, so the one frame at his window reaches the
+ *  handle (the handle's upper half, about 18 px, still clears the panel's 24 px bottom padding). */
+const HANDLED_PANEL = 'compact:pt-6 compact:pb-6'
+
 export function PageFrame<Id extends string>({
   title,
   headingRef,
@@ -98,10 +102,11 @@ export function PageFrame<Id extends string>({
       ) : null}
       {children}
       {panelFooter !== undefined ? <div className="mt-4 flex justify-end">{panelFooter}</div> : null}
-      {caveat !== undefined ? <div className="mt-6">{caveat}</div> : null}
+      {caveat !== undefined ? <div className="mt-6 compact:mt-3">{caveat}</div> : null}
       {handle !== undefined ? (
         <>
-          <span aria-hidden="true" className="block h-6" />
+          {/* The panel's own bottom padding seats the handle's upper half (RC4b's fit: one frame at his window down to
+              the handle, so no spacer of its own). */}
           <button
             type="button"
             aria-expanded={handle.open}
@@ -109,7 +114,7 @@ export function PageFrame<Id extends string>({
             onClick={() => handle.onOpenChange(!handle.open)}
             className={cn(
               'absolute bottom-0 left-1/2 z-[1] -translate-x-1/2 translate-y-1/2 cursor-pointer',
-              'border border-b-6 border-stone-300 border-b-blue bg-bg px-8 pt-2 pb-1.5',
+              'border border-b-6 border-stone-300 border-b-blue bg-bg px-8 pt-2 pb-1.5 compact:pt-1.5 compact:pb-1',
               'text-label tracking-nav whitespace-nowrap text-blue-ink uppercase hover:bg-blue-tint',
             )}
           >
@@ -132,7 +137,14 @@ export function PageFrame<Id extends string>({
         {headAction !== undefined ? <div className="shrink-0">{headAction}</div> : null}
       </header>
       {tabs !== undefined ? (
-        <FolderTabs label={tabs.label} items={tabs.items} value={tabs.value} onValueChange={tabs.onValueChange} note={valuesNote}>
+        <FolderTabs
+          label={tabs.label}
+          items={tabs.items}
+          value={tabs.value}
+          onValueChange={tabs.onValueChange}
+          note={valuesNote}
+          {...(handle !== undefined ? { panelClassName: HANDLED_PANEL } : {})}
+        >
           {body}
         </FolderTabs>
       ) : (

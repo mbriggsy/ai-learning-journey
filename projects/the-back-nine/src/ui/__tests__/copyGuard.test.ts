@@ -1135,7 +1135,6 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workbenchRailBackName: slots.workbenchRailBackName('Spending'),
     workbenchRailLineAmount: slots.workbenchRailLineAmount('Groceries'),
     workbenchRailLineTier: slots.workbenchRailLineTier('Groceries'),
-    workbenchRailLineRemove: slots.workbenchRailLineRemove('Groceries'),
     workbenchRailDepositLabel: slots.workbenchRailDepositLabel('Sam’s 401(k)'),
     workbenchRailEmployerPlan: slots.workbenchRailEmployerPlan('4,000'),
     workbenchRailMixPlan: slots.workbenchRailMixPlan('62'),
@@ -1168,6 +1167,9 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     staleAgedBalances: slots.staleAgedBalances(2025),
     probabilityDateOdds: slots.probabilityDateOdds('about 9 of 10 odds'),
     oddsInline: slots.oddsInline(['Your date', '9 of 10']),
+    trayDollars: slots.trayDollars('12,000'),
+    trayAge: slots.trayAge(67),
+    trayMixPlan: slots.trayMixPlan('60'),
     oddsPoint: [
       slots.oddsPoint(2031, 'Your odds', '9 of 10', 'crown', false),
       slots.oddsPoint(2029, 'Odds on just the essentials', '9 of 10', 'dip', false),
@@ -2268,7 +2270,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   //     UNIVERSAL gates still cover every assumption* string via the catalog enumeration above. ---
   it('U12: assumption* chrome is exempt from the verdict + control sweeps (deliberate, pinned)', () => {
     for (const k of [
-      'assumptionDoorCta', 'assumptionTitle', 'assumptionMarketName', 'assumptionMarketFloorNote',
+      'assumptionTitle', 'assumptionMarketName', 'assumptionMarketFloorNote',
       'assumptionLongevityValue', 'assumptionConversionTaxValue', 'assumptionTruerPicture',
     ]) {
       expect(isVerdictKey(k), `${k} must NOT be verdict-swept (factual numerals are legitimate)`).toBe(false)

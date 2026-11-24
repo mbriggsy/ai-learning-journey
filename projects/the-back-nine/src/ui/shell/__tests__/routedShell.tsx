@@ -24,7 +24,6 @@ export function RoutedShell({ initialRoute = { module: 'retirement', page: 'cash
 export const PAGES = {
   snapshot: { module: 'dashboard', page: 'snapshot' },
   probability: { module: 'retirement', page: 'analysis', tab: 'probability' },
-  whatif: { module: 'retirement', page: 'analysis', tab: 'what-if' },
   health: { module: 'retirement', page: 'health-care' },
   strategies: { module: 'tax', page: 'strategies' },
   table: { module: 'retirement', page: 'cash-flows' },
@@ -52,8 +51,6 @@ export function showPage(page: keyof typeof PAGES): void {
   if (retirement.getAttribute('aria-current') !== 'page') fireEvent.click(retirement)
   const word = page === 'table' ? copy.shellPageCashFlows : page === 'health' ? copy.shellPageHealthCare : copy.shellPageAnalysis
   fireEvent.click(within(pagesNav()).getByRole('link', { name: word }))
-  // The What if page is Analysis's interim folder tab (until RC4b's tray): open it from the Probability page.
-  if (page === 'whatif') fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageWhatIf }))
 }
 
 /** The page shown, by the screen the shell's `main.result` names. */

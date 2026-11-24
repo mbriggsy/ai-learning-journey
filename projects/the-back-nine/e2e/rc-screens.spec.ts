@@ -27,7 +27,6 @@ import { FAN, assertHcText, enterSnapshot, hcAudit, hcFloorPx, hcMarkFailures, h
 const SEED = 'retired'
 const PAGES = [
   { screen: 'interim-table', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows, hash: '#/retirement/cash-flows' },
-  { screen: 'interim-whatif', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis, hash: '#/retirement/analysis/what-if', tab: copy.workbenchPageWhatIf },
   { screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts, hash: '#/profile/facts' },
 ] as const
 
@@ -46,8 +45,6 @@ async function showPage(page: Page, target: (typeof PAGES)[number]): Promise<voi
   const subNav = page.getByRole('navigation', { name: copy.shellPagesLabel })
   const pageLink = subNav.getByRole('link', { name: target.page, exact: true })
   if ((await pageLink.getAttribute('aria-current')) !== 'page') await pageLink.click()
-  // The What if page is Analysis's interim folder tab (until RC4b's tray).
-  if ('tab' in target) await page.getByRole('tab', { name: target.tab, exact: true }).click()
   await expect(page.locator(`main.result[data-shell-screen="${target.screen}"]`)).toBeAttached()
 }
 
@@ -121,7 +118,7 @@ test.describe(`RC2 · the shell at his window (${REAL.width}×${REAL.height} @ $
   test(`?seed=${SEED}: Back with an open drawer holding an edit asks first, in the app; Stay keeps the drawer and the edit`, async ({ page }) => {
     test.setTimeout(FINAL_TIER_MS + 60_000)
     await enterShell(page)
-    await showPage(page, PAGES[2])
+    await showPage(page, PAGES[1])
     await page.getByRole('button', { name: 'Edit the two of you', exact: true }).click()
     const sheet = page.getByRole('dialog', { name: copy.workbenchFactsPeople, exact: true })
     await expect(sheet, 'the step sheet never opened').toBeVisible()
@@ -152,7 +149,7 @@ test.describe(`RC2 · the shell on the phone (${PHONE.width}×${PHONE.height} @ 
     await expect(page.getByRole('navigation', { name: copy.shellModulesLabel }), 'the modules leave the bar on the phone').toBeHidden()
     await expect(page.getByRole('navigation', { name: copy.shellPagesLabel }), 'the sub-nav leaves for the menu on the phone').toBeHidden()
     const menuButton = page.getByRole('button', { name: copy.shellMenuOpen, exact: true })
-    for (const target of [PAGES[1], PAGES[2], PAGES[0]]) {
+    for (const target of [PAGES[1], PAGES[0]]) {
       await menuButton.click()
       const sheet = page.getByRole('dialog', { name: copy.shellMenuTitle })
       await expect(sheet, 'the menu never opened').toBeVisible()
@@ -175,7 +172,6 @@ test.describe(`RC2 · the shell on the phone (${PHONE.width}×${PHONE.height} @ 
       await sheet.getByRole('link', { name: target.page, exact: true }).click()
       await expect(sheet, 'the menu closes on the choice').toHaveCount(0)
       await expect(menuButton, 'focus returns to the menu button').toBeFocused()
-      if ('tab' in target) await page.getByRole('tab', { name: target.tab, exact: true }).click()
       await expect(page.locator(`main.result[data-shell-screen="${target.screen}"]`)).toBeAttached()
       await settleLayout(page)
       const widths = await page.evaluate(() => {
@@ -387,7 +383,7 @@ test.describe(`RC4 · the home and Probability at his window (${REAL.width}×${R
   })
 
   for (const { seed, route, state } of RC4_FRAME_SEEDS) {
-    test(`?seed=${seed}: Probability holds one frame from the top bar to the R13 caveat; one caveat; ${state === null ? 'its route’s rows' : 'the state clause'}`, async ({ page }) => {
+    test(`?seed=${seed}: Probability holds one frame from the top bar to the ACTION ITEMS handle (the tray closed); one caveat; ${state === null ? 'its route’s rows' : 'the state clause'}`, async ({ page }) => {
       test.setTimeout(FINAL_TIER_MS + 90_000)
       await enterProbability(page, seed)
       await expect(page.getByRole('heading', { level: 1, name: copy.analysisTitle })).toBeVisible()
@@ -398,8 +394,12 @@ test.describe(`RC4 · the home and Probability at his window (${REAL.width}×${R
         scrollY: window.scrollY,
         halves: Math.max(...[...document.querySelectorAll('[data-half]')].map((el) => el.getBoundingClientRect().bottom)),
         metrics: document.querySelector('[data-metrics]')!.getBoundingClientRect().bottom,
+        handle: document.querySelector('[aria-controls="b9-action-items"]')?.getBoundingClientRect().bottom ?? Number.POSITIVE_INFINITY,
+        trayShut: document.querySelector('#b9-action-items') === null,
       }))
       expect(frame.scrollY).toBe(0)
+      expect(frame.trayShut, `${seed}: the tray lands closed`).toBe(true)
+      expect(frame.handle, `${seed}: the ACTION ITEMS handle in the first frame`).toBeLessThanOrEqual(REAL.height)
       expect(frame.halves, `${seed}: the halves in the first frame`).toBeLessThanOrEqual(REAL.height)
       expect(frame.metrics, `${seed}: the key-metric column in the first frame`).toBeLessThanOrEqual(REAL.height)
       await noSidewaysScroll(page, `${seed} REAL Probability`)
@@ -552,6 +552,205 @@ test.describe(`RC4 · Probability at a 20 px browser default (${REAL.width}×${R
   }
 })
 
+// ── RC4b · the Action Items tray (plan 6, RC4, "The Action Items tray"; its Verification and Test scenarios) ──────────
+// - at his window on `retired`: one row changed carries its three cues (blue-ink words, medium weight, a 2 px left bar)
+//   and its own way back; nothing runs until Refresh; Refresh fades the left half under "Loading…" with its numbers kept,
+//   and the landing reading moves no tap target (Refresh, Apply, the picker);
+// - on `dip`: a stop year pulled and refreshed withholds Apply with its reason, Apply then writing nothing;
+// - on the phone: the tray is a full-height sheet whose rows and footer are reachable, with no sideways scroll;
+// - a real Back press past the first page with an unkept what-if open asks first (the browser's leave dialog: insight
+//   112), and a page move keeps the what-if and asks nothing.
+
+const tray = (page: Page) => page.locator('#b9-action-items')
+const trayHandle = (page: Page) => page.getByRole('button', { name: copy.trayHandle, exact: true })
+
+async function openTrayOn(page: Page, seed: string): Promise<void> {
+  await enterProbability(page, seed)
+  await trayHandle(page).click()
+  await expect(tray(page), 'the tray never opened').toBeVisible()
+  await page.waitForTimeout(400)
+}
+
+/** A tap target's place: in the window for the tray's own buttons (where the finger is), in the page for the left
+ *  picker above (the tray open, the page scrolls, and the browser's scroll anchoring keeps the tray still when the
+ *  halves above it change height), each rounded to the whole pixel. */
+const boxOf = async (page: Page, sel: string, inPage: boolean) =>
+  page.locator(sel).first().evaluate((el, doc) => {
+    const r = el.getBoundingClientRect()
+    return { x: Math.round(r.x), y: Math.round(r.y + (doc ? window.scrollY : 0)) }
+  }, inPage)
+
+/** A printed bar figure ("~$1.1mm", "~$675k") in dollars. */
+function figureDollars(text: string): number {
+  const m = /\$([\d.]+)\s*(mm|k)?/.exec(text)
+  if (m === null) throw new Error(`[test setup] no figure in "${text}"`)
+  return Number(m[1]) * (m[2] === 'mm' ? 1_000_000 : m[2] === 'k' ? 1_000 : 1)
+}
+
+/** The two balance bars on ONE scale (plan RC4: "The two halves share one y-scale"): the same tick words at the same
+ *  heights on both charts, and the bars' drawn heights in the ratio of their printed figures (within the figures'
+ *  rounding, a few px). Each chart scaled to its own top would draw a $675k bar as tall as a $1.1mm one. */
+async function assertBarsOnOneScale(page: Page, who: string): Promise<void> {
+  const r = await page.evaluate(() => {
+    const read = (side: string) => {
+      const host = document.querySelector(`[data-bar="${side}"]`)
+      if (host === null) return null
+      const point = host.querySelector('.highcharts-point')?.getBoundingClientRect()
+      const ticks = [...host.querySelectorAll('.highcharts-yaxis-labels text')].map((t) => ({ w: t.textContent ?? '', y: Math.round(t.getBoundingClientRect().top) }))
+      return { h: point?.height ?? 0, ticks, fig: host.querySelector('.highcharts-data-label text')?.textContent ?? '' }
+    }
+    return { alt: read('alternative'), cmp: read('compared') }
+  })
+  expect(r.alt && r.cmp, `${who}: both bars drew`).toBeTruthy()
+  const { alt, cmp } = r as { alt: NonNullable<typeof r.alt>; cmp: NonNullable<typeof r.cmp> }
+  expect(alt.ticks.length, `${who}: the axis prints its ticks (more than "$0")`).toBeGreaterThanOrEqual(3)
+  expect(alt.ticks.map((t) => t.w), `${who}: both bars print the same ticks`).toEqual(cmp.ticks.map((t) => t.w))
+  alt.ticks.forEach((t, i) => expect(Math.abs(t.y - cmp.ticks[i]!.y), `${who}: tick "${t.w}" at one height on both`).toBeLessThanOrEqual(1))
+  const want = alt.h * (figureDollars(cmp.fig) / figureDollars(alt.fig))
+  expect(Math.abs(cmp.h - want), `${who}: the bars’ heights (${alt.h.toFixed(1)}, ${cmp.h.toFixed(1)}) in the ratio of ${alt.fig} to ${cmp.fig}`).toBeLessThanOrEqual(5)
+}
+
+test.describe(`RC4b · the Action Items tray at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+
+  test('?seed=retired: a changed row wears three cues; nothing runs until Refresh; the run fades the left half with its numbers kept; the landing moves no tap target', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 150_000)
+    await openTrayOn(page, 'retired')
+    const before = await page.locator('[data-half="alternative"] [data-ring-centre]').textContent()
+    const spend = tray(page).locator('[data-tray-row="spending:total"] input').first()
+    const plan = Number((await spend.inputValue()).replace(/[^0-9]/g, ''))
+    expect(plan, '[test setup] the plan’s spending reads').toBeGreaterThan(20_000)
+    await spend.fill(String(plan - 20_000))
+    await spend.press('Enter')
+    const box = tray(page).locator('[data-tray-row="spending:total"] [data-changed]')
+    await expect(box, 'the changed value is marked').toHaveCount(1)
+    const cues = await box.evaluate((el) => {
+      const cs = getComputedStyle(el)
+      const ink = getComputedStyle(document.documentElement).getPropertyValue('--color-blue-ink').trim()
+      return { weight: cs.fontWeight, bar: cs.borderLeftWidth, color: cs.color, ink }
+    })
+    expect(cues.weight, 'medium weight').toBe('500')
+    expect(cues.bar, 'a 2 px left bar').toBe('2px')
+    expect(cues.ink, '[test setup] the blue-ink token reads').not.toBe('')
+    await expect(tray(page).getByRole('button', { name: slots.workbenchRailBackName(copy.workbenchRailSpendTitle) }), 'the row’s own way back').toBeVisible()
+    // Nothing runs before Refresh: the left half still reads the plan, and is not loading.
+    await expect(page.locator('[data-half="alternative"] [data-ring-centre]')).toHaveText(before ?? '')
+    await expect(page.locator('[data-half="alternative"] [aria-busy="true"]')).toHaveCount(0)
+    await expect(tray(page).getByText(copy.trayPending, { exact: true })).toBeVisible()
+    const targets = ['[data-tray-refresh]', `#b9-action-items button:has-text("${copy.workbenchRailApply}")`, '[data-half="alternative"] [role="combobox"]']
+    await tray(page).locator('[data-tray-refresh]').click()
+    // In flight: the half keeps its number, faded under "Loading…".
+    await expect(page.locator('[data-half="alternative"] [aria-busy="true"]'), 'the run fades the left half').toHaveCount(1)
+    await expect(page.locator('[data-half="alternative"] [data-ring-centre]'), 'its numbers stay put').toHaveText(before ?? '')
+    const inFlight = await Promise.all(targets.map((t, i) => boxOf(page, t, i === 2)))
+    await expect(page.locator('[data-half="alternative"] [aria-busy="true"]'), 'the reading never landed').toHaveCount(0, { timeout: 120_000 })
+    await page.waitForTimeout(600)
+    const landed = await Promise.all(targets.map((t, i) => boxOf(page, t, i === 2)))
+    expect(landed, 'the landing reading moves no tap target (Refresh, Apply, the picker)').toEqual(inFlight)
+    await expect(page.locator('[data-difference]'), 'the difference line speaks the two counts').not.toHaveText('')
+    await assertBarsOnOneScale(page, 'retired, the what-if landed')
+    await noSidewaysScroll(page, 'retired REAL tray')
+  })
+
+  // The landed what-if's fit (plan RC4's fit decision holds in every state the page reaches, not only the empty
+  // what-if): on `budget`, the tightest seed, a what-if that moves the survivor's spending line keeps a line in each half,
+  // and the page must still hold one frame down to the handle with the tray shut again.
+  test('?seed=budget: a landed what-if that changes the survivor line still holds one frame to the ACTION ITEMS handle, the tray shut', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 150_000)
+    await openTrayOn(page, 'budget')
+    const line = tray(page).locator('[data-tray-group="spending"] input[inputmode="decimal"]').first()
+    await line.fill('1000')
+    await line.press('Enter')
+    await tray(page).locator('[data-tray-refresh]').click()
+    await expect(page.locator('[data-half="alternative"] [aria-busy="true"]'), 'the reading never landed').toHaveCount(0, { timeout: 120_000 })
+    await trayHandle(page).click()
+    await expect(tray(page)).toHaveCount(0)
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.waitForTimeout(600)
+    await settleLayout(page)
+    // Non-vacuity: the landed state keeps a second line in a half (it is the state that grows the halves).
+    expect(await page.locator('[data-half] [data-reading-row] p.text-label').count(), 'the landed what-if keeps no line of its own: the arm measures nothing new').toBeGreaterThan(0)
+    const frame = await page.evaluate(() => ({
+      scrollY: window.scrollY,
+      handle: document.querySelector('[aria-controls="b9-action-items"]')!.getBoundingClientRect().bottom,
+    }))
+    expect(frame.scrollY).toBe(0)
+    expect(frame.handle, 'budget landed: the ACTION ITEMS handle in the first frame').toBeLessThanOrEqual(REAL.height)
+    await assertOneVisibleCaveat(page, REAL.height)
+    await assertBarsOnOneScale(page, 'budget, the what-if landed')
+  })
+
+  test('?seed=dip: a stop year pulled and refreshed withholds Apply with its reason; a press writes nothing', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 150_000)
+    await openTrayOn(page, 'dip')
+    const stop = tray(page).locator('[data-tray-row="stop-year"] input[inputmode="numeric"]')
+    const year = Number(await stop.inputValue())
+    await stop.fill(String(year + 2))
+    await stop.press('Enter')
+    await tray(page).locator('[data-tray-refresh]').click()
+    await expect(page.locator('[data-half="alternative"] [aria-busy="true"]'), 'the stop-year run never landed').toHaveCount(0, { timeout: 120_000 })
+    const apply = tray(page).getByRole('button', { name: copy.workbenchRailApply, exact: true })
+    await expect(apply).toHaveAttribute('aria-disabled', 'true')
+    await expect(tray(page).locator('[data-tray-words]')).toHaveText(copy.workbenchRailApplyWithheldStop)
+    await apply.click({ force: true }) // aria-disabled: Playwright waits for "enabled", the press itself must still land
+    await expect(tray(page).locator('[data-tray-words]'), 'a withheld press says why again and writes nothing').toHaveText(copy.workbenchRailApplyWithheldStop)
+    await expect(page.locator('[data-half="alternative"]'), 'the left ring names its own stop year').toContainText(String(year + 2))
+  })
+
+  test('?seed=retired: a real Back press past the first page with an unkept what-if asks first; a page move keeps it and asks nothing', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    await openTrayOn(page, 'retired')
+    const spend = tray(page).locator('[data-tray-row="spending:total"] input').first()
+    const plan = Number((await spend.inputValue()).replace(/[^0-9]/g, ''))
+    await spend.fill(String(plan - 5_000))
+    await spend.press('Enter')
+    const asked: string[] = []
+    page.on('dialog', (d) => {
+      asked.push(d.type())
+      void d.dismiss()
+    })
+    // A page move (Probability back to the home) drops nothing: no ask, and the edit is still there on return.
+    await page.goBack()
+    await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached()
+    await expect(page.getByText(copy.shellLeaveWhatIf, { exact: true })).toHaveCount(0)
+    expect(asked, 'a page move asks nothing').toEqual([])
+    // Back from the first page leaves the app: the browser's own leave dialog stands over the unkept what-if.
+    await page.goBack({ timeout: 5_000 }).catch(() => null)
+    await expect.poll(() => asked, { timeout: 10_000 }).toEqual(['beforeunload'])
+    await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'Stay keeps the app').toBeAttached()
+    await page.goForward()
+    await expect(page.locator('main.result[data-shell-screen="probability"]')).toBeAttached()
+    await trayHandle(page).click()
+    await expect(tray(page).locator('[data-tray-row="spending:total"] [data-changed]'), 'the edit survived the page move').toHaveCount(1)
+  })
+})
+
+test.describe(`RC4b · the Action Items tray on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
+  for (const seed of ['retired', 'dip'] as const) {
+    test(`?seed=${seed}: the tray is a full-height sheet; its first row and its footer are reachable; no sideways scroll`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterProbability(page, seed)
+      await trayHandle(page).scrollIntoViewIfNeeded()
+      await trayHandle(page).click()
+      const sheet = page.getByRole('dialog', { name: copy.trayHandle })
+      await expect(sheet).toBeVisible()
+      await expect.poll(() => sheet.evaluate((el) => Math.round(el.getBoundingClientRect().top))).toBe(0)
+      await expect(sheet.locator('[data-tray-row]').first()).toBeVisible()
+      await sheet.locator('[data-tray-refresh]').scrollIntoViewIfNeeded()
+      await expect(sheet.locator('[data-tray-refresh]')).toBeVisible()
+      const wide = await sheet.evaluate((el) => {
+        const body = el.querySelector('.overflow-y-auto') as HTMLElement
+        return { scroll: body.scrollWidth, client: body.clientWidth }
+      })
+      expect(wide.scroll, `${seed}: the sheet scrolls sideways`).toBeLessThanOrEqual(wide.client)
+      await noSidewaysScroll(page, `${seed} PHONE tray`)
+      await sheet.getByRole('button', { name: copy.trayClose }).click()
+      await expect(sheet).toHaveCount(0)
+    })
+  }
+})
+
 // ── RC4 ported from e2e/vertical-fit.spec.ts (plan 6, section 5.2: an honesty law is PORTED with its surface) ─────────
 // Each arm keeps the old arm's LAW and reads it on the new screen; the old layout (the two panes, the doors, the seats)
 // went with the answer page. HEAD's arm is named above each block, at 95c715e19
@@ -577,6 +776,9 @@ async function assertDateRouteOrder(page: Page, who: string): Promise<string[]> 
     let below = ''
     for (const el of document.querySelectorAll('main.result *')) {
       if (caveat === null || el === caveat || caveat.contains(el) || el.contains(caveat)) continue
+      // The ACTION ITEMS handle (RC4b) is the panel's last mark, centred on its bottom edge below the caveat, with the
+      // empty spacer that seats it: the plan's order is the panel, the caveat, then the handle.
+      if (el.closest('[aria-controls="b9-action-items"]') !== null || (el.getAttribute('aria-hidden') === 'true' && (el.textContent ?? '') === '' && el.children.length === 0)) continue
       const r = el.getBoundingClientRect()
       // Drawn: a real box (a screen-reader-only region, 1 px and clipped, draws nothing).
       if (r.width <= 1 || r.height <= 1 || getComputedStyle(el).visibility === 'hidden') continue
@@ -865,6 +1067,9 @@ async function assertAgedReturnOrder(page: Page, who: string): Promise<void> {
     let below = ''
     for (const el of document.querySelectorAll('main.result *')) {
       if (caveat === null || el === caveat || caveat.contains(el) || el.contains(caveat)) continue
+      // The ACTION ITEMS handle (RC4b) is the panel's last mark, centred on its bottom edge below the caveat, with the
+      // empty spacer that seats it: the plan's order is the panel, the caveat, then the handle.
+      if (el.closest('[aria-controls="b9-action-items"]') !== null || (el.getAttribute('aria-hidden') === 'true' && (el.textContent ?? '') === '' && el.children.length === 0)) continue
       const r = el.getBoundingClientRect()
       // Drawn: a real box (a screen-reader-only region, 1 px and clipped, draws nothing).
       if (r.width <= 1 || r.height <= 1 || getComputedStyle(el).visibility === 'hidden') continue

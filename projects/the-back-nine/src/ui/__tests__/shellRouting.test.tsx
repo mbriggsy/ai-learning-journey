@@ -98,10 +98,10 @@ const modulesNav = () => screen.getAllByRole('navigation', { name: copy.shellMod
 const goToFacts = () => fireEvent.click(within(modulesNav()).getByRole('link', { name: copy.shellModuleProfile }))
 /** Retirement → Analysis (the module's first page: Probability). */
 const goToAnalysis = () => fireEvent.click(within(modulesNav()).getByRole('link', { name: copy.shellModuleRetirement }))
-/** The interim What if page: Analysis's folder tab, until RC4b's tray. */
-const goToWhatIf = () => {
+/** Probability's Action Items tray (RC4b): Retirement → Analysis, then the handle. */
+const openTray = () => {
   goToAnalysis()
-  fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageWhatIf }))
+  fireEvent.click(screen.getByRole('button', { name: copy.trayHandle }))
 }
 
 /** Open the lock menu and press one of its items. */
@@ -234,10 +234,8 @@ describe('the shell’s history', () => {
     goToFacts()
     expect(screen.getByRole('heading', { name: copy.workbenchFactsSocialSecurity })).toBeInTheDocument()
     expect(screen.queryAllByRole('button', { name: new RegExp(`^${copy.workbenchFactsEdit}`) })).toEqual([])
-    // The What if page: a read-only tab can try a change and draws no Apply.
-    goToWhatIf()
-    expect(screen.queryByRole('button', { name: copy.workbenchRailApply })).toBeNull()
-    expect(screen.getByText(copy.workbenchRailApplyReadOnly)).toBeInTheDocument()
+    // The Action Items tray's read-only face (no Apply, Refresh still runs) is `ActionItemsTray.test.tsx`'s: this
+    // planted answer is a compute error, which offers no tray at all.
   })
 })
 
@@ -315,16 +313,15 @@ describe('an unkept what-if (plan 6, section 3.1)', () => {
     } as unknown as ModelAnswer
   })
 
-  /** Commit a what-if spending figure on the What if page: the what-if now holds a change the plan doesn't. */
+  /** Type a what-if spending figure in the Action Items tray, never refreshed: the tray now holds an edit the plan
+   *  doesn't (a pending edit is typed work too, plan RC4's leave ask). */
   async function holdAWhatIf() {
-    goToWhatIf()
-    const spending = document.querySelector<HTMLDetailsElement>('.wb-lever[data-lever="spending"]')!
-    spending.open = true
-    const field = within(spending).getByLabelText(copy.workbenchRailSpendTotalLabel)
+    openTray()
+    const field = await screen.findByLabelText(copy.workbenchRailSpendTotalLabel)
     act(() => field.focus())
     fireEvent.change(field, { target: { value: '60,000' } })
     act(() => field.blur())
-    await waitFor(() => expect(spending.querySelector('.wb-lever__mark:not(.wb-lever__mark--off)')).not.toBeNull())
+    await waitFor(() => expect(field.closest('[data-changed]')).not.toBeNull())
   }
 
   it('moving between pages keeps it and asks nothing; the wordmark (a page move home) asks nothing either', async () => {
@@ -347,12 +344,22 @@ describe('an unkept what-if (plan 6, section 3.1)', () => {
     expect(await screen.findByText(copy.shellLeaveWhatIf)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveStay }))
     expect(shellUp()).toBe(true)
-    expect(screenShown()).toBe('interim-whatif')
+    expect(screenShown()).toBe('probability')
 
     fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
     fireEvent.click(await screen.findByRole('button', { name: copy.assumptionRewalkCta }))
     fireEvent.click(await screen.findByRole('button', { name: copy.workbenchLeaveGo }))
     await waitFor(() => expect(shellUp()).toBe(false))
     expect(window.location.hash, 'the walk-through’s address names no page').toBe('')
+  })
+
+  it('Reset gives the edit back to the plan: the re-walk then asks nothing', async () => {
+    await landHydrated()
+    await holdAWhatIf()
+    fireEvent.click(screen.getByRole('button', { name: copy.trayReset }))
+    fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
+    fireEvent.click(await screen.findByRole('button', { name: copy.assumptionRewalkCta }))
+    await waitFor(() => expect(shellUp()).toBe(false))
+    expect(screen.queryByText(copy.shellLeaveWhatIf)).toBeNull()
   })
 })

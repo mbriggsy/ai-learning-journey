@@ -32,8 +32,12 @@
  * (until the final tier lands), its refusal or withheld words, its error, and a what-if in flight (the half fades under
  * "Loading…" with its numbers kept, where it has numbers to keep).
  *
- * READ-ONLY: the page carries no write action in RC4a (Apply and Keep arrive with the tray, RC4b and RC5), so a read-only
- * view and a writable one compose alike; `readOnly` is taken so the tray's commit has its seam.
+ * A RUN IN FLIGHT (RC4b's explicit Refresh): the left half keeps the newest figure it showed in this pick (`landed`, the
+ * plan's own or a reading that landed current) faded under "Loading…", so its numbers stay put until the new reading
+ * lands; with nothing landed yet it says it is working.
+ *
+ * READ-ONLY: the panel itself carries no write action (Apply is the tray's, `trayView.ts`, which hides it on a read-only
+ * tab), so a read-only view and a writable one compose alike.
  */
 import type { MemoryModelSnapshot } from '@store/memoryModel'
 import { rawDisplayed } from '@store/memoryModel'
@@ -61,6 +65,7 @@ import { composeVerdictReading, reserveClauseFor, spendClauseFor, verdictReading
 import { readingCount, readingText, recommendationBundle, refusalWords } from '../../workbench/railChrome'
 import type { TableRun } from '../../workbench/tableRun'
 import { headlineExtras, planReadingFor, type HeadlineExtras, type WhatIfReading, type WhatIfSlotView } from '../../workbench/whatIfRun'
+import type { LandedFigure } from '../../workbench/useWhatIf'
 import { chartWords } from '../dashboard/snapshotView'
 
 // ── Inputs ────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -78,6 +83,9 @@ export interface ProbabilityWhatIf {
   readonly bundle: readonly WhatIfLeverV6[]
   /** The slot's view for that bundle (`useWhatIf`'s `view`; null while no run is asked or its first state is pending). */
   readonly view: WhatIfSlotView | null
+  /** The newest figure the left half showed in this pick (`useWhatIf`'s `landed`): held under "Loading…" while a run is
+   *  in flight. */
+  readonly landed?: LandedFigure | null
 }
 
 export interface ProbabilityInput {
@@ -248,16 +256,21 @@ export function landingPick(draft: MemoryModelSnapshot['draft'], record: Probabi
   return recommendedOffer(draft, record).kind === 'runnable' ? 'recommended' : 'new'
 }
 
-/** The halves, with their rows' second lines said once when both halves carry the same rows with the same lines. */
+/** The halves, with each second line both halves carry (on the same row) said once, under both, at the full width of the
+ *  two; a line only one half carries (a lever changed it: the what-if's own spending basis) stays in its half. Line by
+ *  line, never all or none: a landed what-if that moves one line leaves the others shared, so its landing grows the
+ *  halves by that line alone (RC4b's landed fit: all-or-none un-shared every line and ran `budget`'s handle 35 px past
+ *  his window). */
 export function shareRowNotes(alternative: HalfView, compared: HalfView): { halves: { alternative: HalfView; compared: HalfView }; sharedNotes?: readonly string[] } {
-  const same =
-    alternative.rows.length > 0 &&
-    alternative.rows.length === compared.rows.length &&
-    alternative.rows.every((r, i) => JSON.stringify(r.notes) === JSON.stringify(compared.rows[i]!.notes))
-  const notes = alternative.rows.flatMap((r) => r.notes)
-  if (!same || notes.length === 0) return { halves: { alternative, compared } }
-  const bare = (h: HalfView): HalfView => ({ ...h, rows: h.rows.map((r) => ({ ...r, notes: [] })) })
-  return { halves: { alternative: bare(alternative), compared: bare(compared) }, sharedNotes: notes }
+  const shared: string[] = []
+  alternative.rows.forEach((row, i) => {
+    const other = compared.rows[i]
+    if (other === undefined) return
+    for (const n of row.notes) if (other.notes.includes(n) && !shared.includes(n)) shared.push(n)
+  })
+  if (shared.length === 0) return { halves: { alternative, compared } }
+  const strip = (h: HalfView): HalfView => ({ ...h, rows: h.rows.map((r) => ({ ...r, notes: r.notes.filter((n) => !shared.includes(n)) })) })
+  return { halves: { alternative: strip(alternative), compared: strip(compared) }, sharedNotes: shared }
 }
 
 // ── The halves ──────────────────────────────────────────────────────────────────────────────────────────────────
@@ -366,8 +379,25 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
         return { ...base, ring: compared.ring, loading: false, rows: compared.rows, ...(compared.barMedian !== undefined ? { barMedian: compared.barMedian } : {}) }
       case 'waiting':
         return { ...base, ring: { kind: 'empty', caption: copy.probabilityLoading }, loading: false, status: copy.probabilityWaitingFinal, rows: [] }
-      case 'pending':
+      case 'pending': {
+        // The newest figure this side showed stays put, faded under "Loading…" (ref 2.7's refresh state).
+        const landed = whatIf.landed
+        if (landed?.kind === 'plan') {
+          return { ...base, ring: compared.ring, loading: true, rows: compared.rows, ...(compared.barMedian !== undefined ? { barMedian: compared.barMedian } : {}) }
+        }
+        if (landed?.kind === 'reading') {
+          const extras = landed.pair.extras
+          const rows = landed.pair.whatIf.kind === 'headline' && extras !== undefined ? headlineRows(landed.pair.whatIf.headline, extras, planClockYears) : []
+          return {
+            ...base,
+            ring: ringOf(landed.pair.whatIf, startCalendarYear),
+            loading: true,
+            rows,
+            ...(extras?.terminalMedianReal !== undefined ? { barMedian: extras.terminalMedianReal } : {}),
+          }
+        }
         return { ...base, ring: { kind: 'empty', caption: copy.probabilityLoading }, loading: false, status: copy.workbenchRailWorking, rows: [] }
+      }
       case 'error':
         return { ...base, ring: { kind: 'empty', caption: copy.snapshotRingNoReading }, loading: false, status: copy.workbenchRailError, rows: [] }
       case 'words':
@@ -419,6 +449,8 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
       figures: { ...(alt !== undefined ? { alternative: alt } : {}), ...(cmp !== undefined ? { compared: cmp } : {}) },
     }
   })()
+
+  const shared = shareRowNotes(alternative, compared)
 
   // ── The intro and the key-metric column, per route ──
   let intro: IntroView
@@ -502,7 +534,7 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
     planTitle: copy.probabilityPlanTitle,
     vs: copy.probabilityVs,
     ...(recordNote !== undefined ? { recordNote } : {}),
-    ...shareRowNotes(alternative, compared),
+    ...shared,
     ...(bars !== undefined ? { bars } : {}),
     ...(answer.kind === 'headline' && bars === undefined && compared.barMedian !== undefined ? { barsNone: copy.probabilityBarNone } : {}),
     metrics: { lines: metricLines, ...(clauseReserve !== undefined ? { clauseReserve } : {}), ...(spendState !== undefined ? { spend: spendState } : {}), difference },

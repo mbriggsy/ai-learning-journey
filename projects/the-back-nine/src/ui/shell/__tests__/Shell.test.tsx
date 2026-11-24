@@ -333,7 +333,7 @@ describe('Shell — the settle hook every harness waits on (plan 3.1)', () => {
     view.rerender(shellOver(snapshotWith(finalAnswer(), true), lanes))
     expect(mains()[0]).toHaveAttribute('data-answer-tier', 'final')
     expect(mains()[0]).toHaveAttribute('data-answer-refiguring')
-    for (const page of ['whatif', 'facts', 'table'] as const) {
+    for (const page of ['probability', 'facts', 'table'] as const) {
       showPage(page)
       expect(mains(), `${page}: exactly one main.result`).toHaveLength(1)
       expect(mains()[0]).toHaveAttribute('data-answer-refiguring')
@@ -347,7 +347,7 @@ describe('Shell — the settle hook every harness waits on (plan 3.1)', () => {
   it('every interim page wears the banner, outside any `.rc-root`, and its page sits outside one too', () => {
     const { lanes } = heldLanes()
     renderRoom(snapshotWith(finalAnswer()), lanes)
-    for (const page of ['table', 'whatif', 'facts', 'strategies', 'health'] as const) {
+    for (const page of ['table', 'facts', 'strategies', 'health'] as const) {
       showPage(page)
       expect(screen.getAllByText(copy.shellInterimBanner)).toHaveLength(1)
       const interim = document.querySelector('.shell-interim')!

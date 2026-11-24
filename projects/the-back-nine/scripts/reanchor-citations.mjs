@@ -62,7 +62,8 @@ const BARE = /(^|[^\w/.:-])(`?)(:)(\d+)(?:([-–]:?)(\d+))?(`?)(?![\d-])/g
 // The nearest file name before a bare token on the same line (within 60 chars): `x.ts:12`, or `` `x.ts` ``.
 const LAST_FILE = new RegExp(`([\\w.-]+\\.${EXT})(?::\\d+(?:-\\d+)?)?\`?[^\\n]{0,60}$`)
 
-const scan = tracked.filter((t) => /\.(md|ts|tsx|css|mjs|js|json|yml|yaml)$/.test(t) && !t.includes('node_modules'))
+// A tracked file the tree has deleted (a unit's deletions, not yet committed) has nothing to rewrite.
+const scan = tracked.filter((t) => /\.(md|ts|tsx|css|mjs|js|json|yml|yaml)$/.test(t) && !t.includes('node_modules') && fs.existsSync(t))
 let edits = 0
 const review = []
 for (const file of scan) {

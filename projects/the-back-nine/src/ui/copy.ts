@@ -1104,9 +1104,6 @@ export const copy = {
   // The sequencing door + sheet chrome.
   leverSequencingCta: 'Change your withdrawal order',
   leverSequencingEditCta: 'Revisit your withdrawal order',
-  leverSequencingTitle: 'Which account pays first?',
-  leverSequencingIntro:
-    'Each year’s spending has to come out of your accounts in some order — and the order changes what you pay in tax along the way. Pick one and compare it against the neutral default.',
   leverPolicyProportional: 'A little from each',
   leverPolicyProportionalHelp: 'Draws from every account in proportion to its balance — the neutral default.',
   leverPolicyTaxableFirst: 'Brokerage first',
@@ -1120,17 +1117,6 @@ export const copy = {
     'Pulls from pre-tax only while that money is cheap to take — up to the next tax bracket, stopping before a jump in your health-insurance costs or in Medicare’s premiums — then draws tax-free for the rest of the year.',
   leverPolicyCustom: 'My own order',
   leverPolicyCustomHelp: 'Put the three accounts in exactly the order you want them spent.',
-  leverPolicyCurrentTag: '— your current order',
-  // Card 14(b) — the em-dash tag grammar (`.control-policy__tag` / `.control-order__tag`) on a row whose
-  // named account the household has not entered. Two sites, one key: the committed-but-unheld policy row
-  // (the only absent-account policy still offered) and the custom-order editor's unheld bucket row; in
-  // both the adjacent label supplies the noun ("Brokerage first — your current order — no account
-  // entered", "Brokerage — no account entered"). It states what the PLAN holds, never what the bucket
-  // will hold: "nothing to spend down" / "this does nothing for you" would be calm-but-wrong past the
-  // first RMD forced-excess year, which rebuilds a taxable bucket the household started without.
-  // `lever*` is NOT in CONTROL_KEY_PREFIXES (which carries `sequencing`, not `lever`), so require-hedge
-  // does not bite and the line needs no modal.
-  leverNoAccountTag: '— no account entered',
   leverOrderMoveUp: 'Move up',
   leverOrderMoveDown: 'Move down',
   leverOrderUpGlyph: '↑',
@@ -1138,41 +1124,18 @@ export const copy = {
   leverOrderBucketTaxable: 'Brokerage',
   leverOrderBucketPretax: 'Pre-tax',
   leverOrderBucketRoth: 'Roth',
-  leverSequencingApply: 'Use this order',
   // The Roth teaser + lever chrome. The DOOR is categorical (gated on filing status + a resolved
   // answer only — never a personalized computation; test-pinned) and quiet (R11 — invited, never
   // a nagging badge); the general-fact teaser line opens the sheet itself.
   leverRothDoorCta: 'Try a Roth conversion',
   leverRothDoorEditCta: 'Revisit your Roth conversion',
-  leverRothTitle: 'Try a Roth conversion',
-  leverRothIntro:
-    'A conversion moves money from your pre-tax account into your Roth on purpose — you pay the tax now, and what’s inside grows tax-free afterward. Set an amount and a window; both futures update.',
   leverRothAmountLabel: 'Amount, dollars a year',
   // U17 §S1: the start field asks for the CALENDAR YEAR — the old "how many years from now"
   // wore wall-time words over a plan-time value, so a returning user's "start in 2 years" could
   // write a plan year already gone. The commit converts year → offset against the plan's build
   // year (rothConversion stays sim-year-0-indexed on disk — no persisted re-base, hawk veto).
   leverRothStartLabel: 'Starting in which year',
-  leverRothStartHelp: 'The calendar year the conversions begin — this year or later.',
   leverRothYearsLabel: 'For how many years',
-  leverRothApply: 'Add this to my plan',
-  leverRothRemove: 'Take the conversion back out',
-  // THE BLOCKED APPLY SAYS WHY (2026-09-13 — the register entry "The two sibling sheets' blocked Apply",
-  // filed by the Card 14 review). RothLever's primary is blocked on ARRIVAL (no amount yet) and whenever a
-  // field is cleared; until this card it wore save.css's opacity mute — tint alone, no signal for a
-  // colour-blind reader — rendered no reason at rest, and its blocked press spoke `leverPreviewPending`
-  // while the preview effect had WITHDRAWN to idle: an AT user told a computation was in flight that was
-  // not. One sentence per empty field, naming the FIRST one in field order (`rothPlanMissingField`), rendered
-  // at rest as the `.control-sheet__blocked` span and spoken on the press through the SAME key (the Card 14a
-  // shape — the seen word and the spoken word cannot drift). Each states the DIALOG's precondition, never the
-  // household's finances. "Set" leads every one: on FIELD_OP_ALLOWLIST, so the clause-initial imperative is
-  // legal; `lever*` rides the three universal gates only (no false certainty, no advice verb, no survival claim). The typed-past
-  // face re-speaks its own FieldError and the applied-passed face its own note — neither needs a key here.
-  leverRothApplyNeedsAmount: 'Set a yearly amount to add this to your plan.',
-  leverRothApplyNeedsStart: 'Set the starting year to add this to your plan.',
-  leverRothApplyNeedsYears: 'Set how many years to add this to your plan.',
-  leverRothClosedNothing:
-    'There’s nothing in a pre-tax account to convert, so this what-if doesn’t apply to you.',
   leverPreviewPending: 'Working out both futures…',
   leverPreviewError:
     'That comparison didn’t come together. Adjust a field — or close and reopen — to try again.',
@@ -1200,16 +1163,9 @@ export const copy = {
   leverNoWorkerNote:
     'On this device the comparison computes when you finish a field — it can take a moment.',
   leverCancel: 'Close',
-  // Two-futures CHART CHROME (tfChart* — deliberately OUTSIDE the require-hedge sweep, like
-  // ladder chrome: an end-of-line series label is identity, not a plan-moving claim).
-  tfChartRothWith: 'With the conversion',
-  tfChartRothWithout: 'Today’s plan',
-  // When a conversion is ALREADY applied, "Today's plan" would mislabel the stripped baseline
-  // (today's plan HAS the conversion) — the honest name for the without-arm is the negation.
-  tfChartRothWithoutApplied: 'Without the conversion',
   // Plan-moving READOUTS (require-hedge-swept; the numbers arrive via slots below).
-  rothTeaserLead:
-    'Couples who file jointly often have a lower-tax window before required withdrawals begin. Some fill it with small Roth conversions, a little at a time.',
+  // The funding note: back since Act 6 · RC4b under the Action Items tray's Roth row (it left with the Roth sheet and
+  // was ported with its surface, plan 5.2).
   rothFundingNote:
     'We assume the conversion’s tax comes out of your withdrawals in the same order as everything else. Paying it from taxable savings instead could make converting look a little better than shown.',
   rothOmissionsNote:
@@ -1247,8 +1203,6 @@ export const copy = {
     'Not counted here: the net-investment-income tax and differences in plan cost-sharing — each could move this picture. The income-based discount itself is already in these numbers, including what a conversion does to it.',
   twoFuturesCaption:
     'How the middle-of-the-road path could run with and without the change, in today’s dollars.',
-  sequencingBaselineNote:
-    'The comparison holds everything else still — same markets, same spending — so the gap you see is the order itself, not luck. It can read small; small and real beats big and imagined.',
 
   // --- P3·U11 — the Healthcare sheet. Chrome rides lever*/tfChart* (hedge-exempt, the prefix
   // law above); plan-moving READOUTS ride the four U11 control prefixes (shadowRate* /
@@ -1544,9 +1498,8 @@ export const copy = {
   // precedent); the three universal gates (false-certainty / advice-verb / survival-claim) still cover every string.
   // Keys containing 'survivor' stay survivor-scoped (catastrophe-gated) by the substring net,
   // and `assumptionTruerPicture` joins isMortalityKey BY NAME (it renders at the worst
-  // moment). FIRST-DRAFT craftsman's-lead wording throughout — the door CTA, the market-floor
-  // line, and the truer-picture line are N=1 cold-read subjects (the Act-3 exit condition). ---
-  assumptionDoorCta: 'The assumptions behind this',
+  // moment). FIRST-DRAFT craftsman's-lead wording throughout — the market-floor line and the
+  // truer-picture line are N=1 cold-read subjects (the Act-3 exit condition). ---
   assumptionTitle: 'The assumptions behind this answer',
   assumptionIntro:
     'Everything the answer leans on, in one place — yours to check, most of it yours to change. Edits land as you leave each field.',
@@ -2664,7 +2617,37 @@ export const copy = {
   probabilityTodaysDollars: 'Today’s dollars',
   probabilityRecWorkingRoute: 'A recommended strategy isn’t worked out yet for a plan with working years still ahead.',
   probabilityOpenStrategies: 'Open the Tax Strategies page',
-  probabilityOpenWhatIf: 'Open the What if page',
+  // --- Act 6 · RC4b, the Action Items tray (`trayView.ts`, `ActionItemsTray.tsx`) ---
+  trayHandle: 'Action items',
+  trayClose: 'Close the action items',
+  traySectionGoals: 'Financial goals',
+  traySectionSavings: 'Savings',
+  traySectionExpenses: 'Expenses',
+  traySectionStrategies: 'Strategies',
+  traySocialSecurity: 'Social Security',
+  trayReset: 'Reset',
+  trayEdit: 'Edit',
+  trayRefresh: 'Refresh',
+  /** A pulled row's own way back, short so the row's name keeps its room; its full name is `workbenchRailBackName`. */
+  trayBack: 'Undo',
+  /** A budget line's picker: its kind, or taken out of this what-if. */
+  trayLineOut: 'Taken out',
+  trayPending: 'Your changes show once you press Refresh.',
+  trayApplyRefreshFirst: 'Apply waits for Refresh: the changes in the action items aren’t worked out yet.',
+  trayInvalidWhole: 'That didn’t read as a whole number, like 2031.',
+  trayRothNeedsAmount: 'Roth conversions wait for a yearly amount.',
+  trayRothNeedsStart: 'Roth conversions wait for a first year.',
+  trayRothNeedsYears: 'Roth conversions wait for how many years.',
+  trayEditTitle: 'Add or remove action items',
+  trayEditSections: 'The rows to show',
+  trayEditSelectAll: 'Select all',
+  trayEditHideNote: 'A row you hide goes back to your plan’s own figure at the next Refresh.',
+  trayEditAddNew: 'Add new items',
+  trayEditAddLine: 'A spending line',
+  traySave: 'Save',
+  trayCancel: 'Cancel',
+  trayLineTitle: 'A spending line in this what-if',
+  trayLineDelete: 'Take it out',
   oddsChartDescription:
     'The odds of staying work-optional for each year you could stop working, each read against the on-track line.',
   oddsAxisYear: 'Year you stop working',
@@ -2831,20 +2814,13 @@ export const copy = {
   // The two choices listed with no door (KTD15): why there is none.
   workbenchFactStopNote: 'Your answer sets this, so it moves when your facts or choices do.',
   workbenchFactGoalNote: 'Chosen on your answer’s page, beside the recommendation.',
-  // A lever's line on the facts page links to the What if page (U15): it opens no editor there.
+  // A lever's line on the facts page links to its row in Probability's Action Items tray (RC4b): it opens no editor there.
   workbenchFactsTry: 'Try a change',
-  // --- The lever rail (Act 5, U15): the What if page. A what-if is a copy of the plan with some choices changed; it
+  // --- The lever rail (Act 5, U15; since Act 6 · RC4b the Action Items tray reads these words). A what-if is a copy of the plan with some choices changed; it
   // reads beside the plan on the same futures. The words speak each run's count under its own name and never say a
   // change helps or costs (R20). The pilot's drafts, shipped flagged for Briggsy's read. ---
-  workbenchPageWhatIf: 'What if',
-  workbenchRailIntro:
-    'Try changes on a copy of your plan and see it beside your plan, on the same futures. Nothing here changes your plan until you apply it, and nothing is kept until you save your plan.',
-  workbenchRailLeversHeading: 'Changes to try',
-  workbenchRailChanged: 'Changed',
-  workbenchRailBack: 'Back to the plan',
   workbenchRailPlanLabel: 'Your plan',
   workbenchRailWhatIfLabel: 'This what-if',
-  workbenchRailReadingsHeading: 'Your plan beside this what-if',
   workbenchRailEmptyReading: 'No change yet. Change something under “Changes to try” and it shows here.',
   workbenchRailWorking: 'Working this out…',
   workbenchRailError: 'This what-if couldn’t be worked out. Your plan is untouched.',
@@ -2854,17 +2830,13 @@ export const copy = {
     'Your answer’s date is figured on essentials-only spending, and this what-if changes only extra lines, so its odds can’t move from your plan’s.',
   workbenchRailPlanValueNone: 'Your plan: none',
   // The stop year.
-  workbenchRailStopTitle: 'When work stops',
   workbenchRailStopLabel: 'The year work stops',
   workbenchRailStopNote: 'A stop year can be tried here but not applied: your plan’s stop year is your answer’s date, which the tool works out.',
   // Spending.
   workbenchRailSpendTitle: 'Spending',
   workbenchRailSpendTotalLabel: 'Spending, dollars a year',
   workbenchRailSpendUnnamed: 'A budget line saved before lines had their own mark can’t be changed here.',
-  workbenchRailAddLine: 'Add a line',
-  workbenchRailAddLineGo: 'Add this line',
   workbenchRailAddLineNeeds: 'A new line needs its dollars a year and a first year.',
-  workbenchRailLineOut: 'Taken out in this what-if.',
   workbenchRailLineNew: 'Added in this what-if.',
   // Deposits.
   workbenchRailDepositsTitle: 'Yearly deposits',
@@ -2880,7 +2852,6 @@ export const copy = {
     'A mix can be tried here but not applied: each account’s own mix is set on your facts page, and your plan runs on their blend.',
   // Roth conversions.
   workbenchRailRothTitle: 'Roth conversions',
-  workbenchRailRothLegend: 'Moving pre-tax money to Roth',
   workbenchRailRothNone: 'None',
   workbenchRailRothAmount: 'A set amount each year',
   // Withdrawal order.
@@ -2904,8 +2875,6 @@ export const copy = {
     'Applying this moves your spending, so your figure for a working year stays as you gave it and needs confirming again. Until you confirm it, your answer counts none of the left over from pay as saved, so it can read lower than this comparison.',
   workbenchRailApplyReadOnly: 'This tab can try changes but not apply them.',
   // The saved recommendation's row (R22).
-  workbenchRailRecTitle: 'The saved recommendation',
-  workbenchRailRecTry: 'Try the saved recommendation',
   workbenchRailRecLeave: 'Back to my own changes',
   workbenchRailRecShowing: 'Showing the saved recommendation beside your plan. It can’t be changed here.',
   workbenchRailRecStale:
@@ -2933,16 +2902,9 @@ export const copy = {
   workbenchRailRefusedNoSeed: 'This what-if waits for your answer’s first run.',
   workbenchRailRefusedFutures: 'This what-if couldn’t be read on the same futures as your plan, so no comparison is shown.',
   // The paired form.
-  workbenchPairCaptionSteady: 'Your plan and this what-if in one future, a steady market, a row per year, in today’s dollars',
-  workbenchPairCaptionRough: 'Your plan and this what-if in one future, a rough market, a row per year, in today’s dollars',
-  workbenchPairLoading: 'Working out this what-if year by year…',
-  workbenchPairEmpty: 'Change something under “Changes to try” to see it here, year by year, beside your plan.',
-  workbenchPairError: 'This what-if’s year-by-year rows couldn’t be worked out. Your plan is untouched.',
   workbenchPairToRoth: 'Moved to Roth',
   workbenchPairRequired: 'Required withdrawal',
   workbenchPairEndTotal: 'All savings at year’s end',
-  workbenchPairYear: 'Year',
-  workbenchPairRun: 'Your plan or this what-if',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -4819,7 +4781,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2152` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2154` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5361,8 +5323,15 @@ export const slots = {
   workbenchFactStopYear: (year: number): string => `${year}, the year your answer’s date gives`,
   workbenchFactStopNoDate: (year: number): string =>
     `${year}: your answer found no date in its window, so the table uses the window’s last year`,
-  /** A facts-page line's link to the What if page (U15), named for the line it tries: "Try a change to Withdrawal order". */
-  workbenchFactsTryName: (label: string): string => `Try a change to ${label.charAt(0).toLowerCase()}${label.slice(1)} on the What if page`,
+  /** A facts-page line's link to the action items on Retirement Analysis (RC4b's tray), named for the line it tries. */
+  workbenchFactsTryName: (label: string): string =>
+    `Try a change to ${label.charAt(0).toLowerCase()}${label.slice(1)} in the action items`,
+  /** The tray's compared value for a figure the household entered (exact, a fact). */
+  trayDollars: (amount: string): string => `$${amount}`,
+  /** The tray's compared value for a claim age. */
+  trayAge: (age: number): string => `Age ${age}`,
+  /** The tray's compared value for the plan's stock share. */
+  trayMixPlan: (pct: string): string => `About ${pct}% stocks`,
   // --- The lever rail (Act 5, U15). The pilot's drafts, shipped flagged. Each count rides whole from its one producer
   // (`verdictReadingText`, `dateOddsText`); a run's name rides whole ("Your plan", "This what-if"). ---
   /** Equal counts: the even line (R20). */
@@ -5385,7 +5354,6 @@ export const slots = {
   workbenchRailBackName: (what: string): string => `Put ${what} back to the plan`,
   workbenchRailLineAmount: (name: string): string => `${name}, dollars a year`,
   workbenchRailLineTier: (name: string): string => `${name}: essential or extra`,
-  workbenchRailLineRemove: (name: string): string => `Take ${name} out`,
   workbenchRailDepositLabel: (account: string): string => `Into ${account}, dollars a year`,
   workbenchRailEmployerPlan: (amount: string): string => `In your plan the employer puts in $${amount} a year.`,
   workbenchRailMixPlan: (pct: string): string => `Your plan’s accounts together hold about ${pct}% stocks.`,

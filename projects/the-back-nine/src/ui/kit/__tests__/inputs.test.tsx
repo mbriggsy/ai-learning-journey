@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { Button, BUTTON_VARIANTS } from '../Button'
 import { Checkbox } from '../Checkbox'
 import { Switch } from '../Switch'
-import { MoneyInput, PercentInput } from '../NumberInputs'
+import { MoneyInput, PercentInput, WholeInput } from '../NumberInputs'
 
 /**
  * The kit's button variants and its two figure boxes. The boxes parse and format through `src/intake/moneyFormat.ts`
@@ -157,6 +157,29 @@ describe('PercentInput', () => {
     await user.tab()
     expect(onCommit).toHaveBeenCalledWith(0.025)
     expect(box).toHaveValue('2.5')
+  })
+})
+
+describe('WholeInput (the tray’s year and age boxes, RC4b)', () => {
+  it('a whole number commits; a decimal, a sign or words commit nothing and keep what was typed, with the words tied to the box', async () => {
+    const onCommit = vi.fn()
+    const user = userEvent.setup()
+    render(<WholeInput label="Year work stops" value={2031} onCommit={onCommit} invalidMessage="A whole number." />)
+    const box = screen.getByLabelText('Year work stops')
+    expect(box).toHaveAttribute('inputmode', 'numeric')
+    for (const bad of ['2031.5', '-3', 'soon']) {
+      await user.clear(box)
+      await user.type(box, bad)
+      await user.tab()
+      expect(onCommit, bad).not.toHaveBeenCalled()
+      expect(box).toHaveValue(bad)
+      expect(box).toHaveAttribute('aria-invalid', 'true')
+      expect(screen.getByRole('alert')).toHaveTextContent('A whole number.')
+    }
+    await user.clear(box)
+    await user.type(box, '2033')
+    await user.tab()
+    expect(onCommit).toHaveBeenCalledWith(2033)
   })
 })
 

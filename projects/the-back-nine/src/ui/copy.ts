@@ -2730,7 +2730,6 @@ export const copy = {
   workbenchViewRough: 'Rough market',
   workbenchSteadyWhat:
     'One future, in a steady market: stocks and bonds each earn the same return every year. It is one future among many, never a forecast; the answer pinned here reads all of them.',
-  workbenchTableCaption: 'Your plan in this future, a row per year, in today’s dollars',
   workbenchApproxNote: 'A figure marked ~ is worked out by the tool. This year’s pay and spending show as you entered them.',
   workbenchMatchNote: 'What’s put into each account includes any employer match.',
   // The pay check's income tax line holds the tax on everything that comes in outside savings, not only pay (the U7
@@ -2755,11 +2754,7 @@ export const copy = {
   workbenchYieldAfterWork:
     'Once work stops, the tool leaves out the interest and dividends your taxable savings earn each year: they aren’t in those years’ income or tax here, and in real life they are taxed every year. While you work, the investment income you entered is counted.',
   workbenchKindsMissing: 'Bank accounts and inherited IRAs aren’t in this table yet: the tool doesn’t take either kind so far.',
-  workbenchGroupIn: 'Coming in',
-  workbenchGroupOut: 'Going out',
-  workbenchGroupSavings: 'Your savings',
   workbenchColYear: 'Year',
-  workbenchColAges: 'Ages',
   workbenchLinePay: 'Pay',
   workbenchLineOther: 'Other income',
   workbenchColSocialSecurity: 'Social Security',
@@ -2806,10 +2801,45 @@ export const copy = {
   // Security is not among them, so the words never say the plan has no income (the U7 review's W10).
   workbenchWithheldNoLedger:
     'Your plan has no savings, no pension or other income, and no health premium entered, so there’s no year-by-year table to follow.',
+  // --- Retirement → Cash Flows (Act 6 · RC6): RightCapital's year table, its folder tabs, its selects and its drills.
+  // Every figure is one field of the run's row; no total of B9's own making is printed (the pilot's call, b9-6). ---
+  cashFlowsTabsLabel: 'Cash flow tables',
+  cashFlowsTabSummary: 'Summary',
+  cashFlowsTabAccounts: 'Accounts',
+  cashFlowsPlanLabel: 'Plan shown',
+  cashFlowsPickPaired: 'Your plan beside the what-if',
+  cashFlowsDownload: 'Download',
+  cashFlowsDownloadLabel: 'Download this table as a spreadsheet file (CSV)',
+  cashFlowsBreadcrumbLabel: 'Where you are in the table',
+  cashFlowsBandIn: 'Cash inflows',
+  cashFlowsBandOut: 'Cash outflows',
+  cashFlowsBandOwn: 'Also in this plan',
+  cashFlowsGroupIncome: 'Income inflows',
+  cashFlowsGroupDistribution: 'Planned distribution',
+  cashFlowsGroupExpenses: 'Expenses',
+  cashFlowsGroupSaving: 'Planned saving',
+  cashFlowsColAge: 'Age',
+  cashFlowsColRun: 'Plan',
+  cashFlowsColHsaSpent: 'HSA, spent on care',
+  cashFlowsColPayIncomeTax: 'Pay check’s income tax',
+  cashFlowsColRmdMoved: 'Required, moved to taxable',
+  cashFlowsColIrmaa: 'Income surcharge, part of Medicare',
+  cashFlowsColNotKept: 'Income not kept',
+  cashFlowsColShortYear: 'Short year',
+  cashFlowsShortYear: 'Runs out',
+  cashFlowsColTotal: 'Total',
+  cashFlowsAccountsLabel: 'Accounts table',
+  cashFlowsAccountsEnd: 'Ending balance by account',
+  cashFlowsAccountsDeposits: 'Additions to accounts',
+  cashFlowsAccountsWithdrawals: 'Withdrawals from accounts',
+  cashFlowsAccountsRmd: 'Required withdrawals',
+  cashFlowsAccountsConversions: 'Roth conversions',
+  cashFlowsYearNotesHeading: 'Notes by year',
+  cashFlowsEndTotalNote: 'Total is the tool’s own sum of the year-end balances shown beside it.',
+  cashFlowsPairedNote: 'Each year shows your plan’s row over the what-if’s, each named. The what-if is the one open on Analysis.',
   // --- The facts page (Act 5, U8): everything the household told the tool, by the walk's own steps, each group
   // with one door into that step's own body. Facts read exactly (R11): no "~" and no "about" on a figure the
   // household gave. The pilot's drafts, shipped flagged for Briggsy's cold read. ---
-  workbenchPageTable: 'The year-by-year table',
   workbenchPageFacts: 'Your facts',
   workbenchFactsIntro:
     'Everything you told the tool, grouped the way you answered it. Edit a group and your answer and the table follow. Nothing is kept until you save your plan.',
@@ -3645,7 +3675,7 @@ export const slots = {
    *
    *  ⚠️ DO NOT "FIX" THIS BY DROPPING THE TODAY TICK. That inverts the contradiction into the
    *  defect U13/§S0 already fixed — `bandAnnotations.ts:51-56` records it live from the first
-   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:4165-4168` (the `?vault=datearrived` arm — "must still
+   *  `?vault=datestale` walk, and `e2e/vertical-fit.spec.ts:3927-3930` (the `?vault=datearrived` arm — "must still
    *  mark WALL-TIME today") forbids a band that loses its wall clock BY NAME. The tick is right; the sentence was wrong. */
   bandAgedPremiseFresh: (buildYear: number): string =>
     `This range runs from ${buildYear}, when the plan was built — the years since are modeled, not records. What you actually hold today is undetermined until you re-confirm.`,
@@ -4834,7 +4864,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2165` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2170` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5328,6 +5358,12 @@ export const slots = {
   workbenchRoughSteadyFrom: (endYear: number): string => `From here the market is steady: history’s run ends with ${endYear}.`,
   /** A sentence that holds the same in a run of years is said once, on the run's first year. */
   workbenchNoteThrough: (note: string, lastYear: number): string => `${note} The same each year through ${lastYear}.`,
+  // --- Retirement → Cash Flows (Act 6 · RC6) ---
+  cashFlowsOther: (label: string): string => `Other income, ${label}`,
+  cashFlowsPayTaxed: (label: string): string => `Pay counted for tax, ${label}`,
+  cashFlowsOtherTaxed: (label: string): string => `Other income counted for tax, ${label}`,
+  cashFlowsAgesKey: (labels: readonly string[]): string => `Age shows ${labels.join(' / ')}.`,
+  cashFlowsYearNote: (year: number, note: string): string => `${year}: ${note}`,
   // --- The facts page (Act 5, U8): a fact reads exactly, as given (R11): every figure here is the household's own,
   // pre-formatted whole dollars, never "~" or "about". The pilot's drafts, shipped flagged. ---
   /** A group's one door, named for the group it opens (its visible text is "Edit"): "Edit spending", "Edit Social

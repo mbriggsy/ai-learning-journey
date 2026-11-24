@@ -13,7 +13,7 @@
  * a sibling before `App.tsx`'s trailing disclaimer, as `Result.tsx`'s is (app.css's R13 swap reads that order); no
  * interim page stamps `data-inframe-disclaimer`, so the trailing mount stays the one disclaimer here.
  *
- * WHAT IT MAKES ONCE (moved from the workbench room, so runs survive a page switch): the year-by-year table's steady
+ * WHAT IT MAKES ONCE (moved from the workbench room, so runs survive a page switch): Cash Flows' steady
  * and rough lanes and their runs on each FINAL committed answer (KTD9, KTD13: built from the answer's own draft,
  * `tableRunFor`; until the newest answer's rows land, the rows on screen stay, marked as updating), the one what-if
  * (`useWhatIf`: its slot, its committed and pending bundles, and the Action Items tray's open state and hidden rows,
@@ -22,8 +22,13 @@
  * the one live region (the save's transitions, the answer being worked out again, the table updating, the new answer's
  * words; spoken on transitions only).
  *
+ * RETIREMENT → CASH FLOWS (RC6, `CashFlows.tsx` over `cashFlowsView.ts`): your plan's rows from the runs above; a
+ * picked what-if's from the slot that already runs it (the left half's or the right's on Analysis), else from the page's
+ * own slot, which runs only while the page shows; your plan beside the what-if open on Analysis pairs the left half's
+ * rows with your plan's (U15's paired form). Its folder tab, drill, table and pick are held here, so a page move keeps them.
+ *
  * THE INTERIM TABS: the room's pages ride in their current look (`InterimPage.tsx`, outside any `.rc-root`):
- * Retirement → Cash Flows (`YearTable.tsx`) and Profile → Your facts (`FactsPage.tsx`); the old What if page left with
+ * Profile → Your facts (`FactsPage.tsx`); the old What if page left with
  * RC4b, its levers now Probability's Action Items tray (`ActionItemsTray.tsx`). A facts-page "Try a change" and the
  * assumption panel's withdrawal-order and Roth rows open the tray at the lever's row.
  *
@@ -34,7 +39,6 @@
  * what-if (a leave past the shell asks first). Opening another what-if on the left over an unkept one asks first.
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { SegmentedControl } from '@intake/fields'
 import { intakeSteps } from '@intake/questions'
 import { healthcarePriced, missingRequiredFacts } from '@intake/intakeMap'
 import { engineRunLane, type EngineRunRequest, type Lane } from '@store/runLanes'
@@ -49,17 +53,20 @@ import { appModel } from '../appModel'
 import { planClockAnchor } from '../bandAnnotations'
 import { useEditorSheets } from '../editorSheets'
 import { useSaveAnnouncer, type ResultSaveProp } from '../saveAnnouncer'
-import { pinnedLines } from '../workbench/pinnedLines'
-import { YearTable, type YearTableState } from '../workbench/YearTable'
+import { pinnedLines, reserveForms } from '../workbench/pinnedLines'
 import { FactsPage } from '../workbench/FactsPage'
 import { StepSheet } from '../workbench/StepSheet'
 import { composeFacts, stepSectionTitle, type FactStop } from '../workbench/factsChrome'
 import type { FactDoorId, StepSectionId } from '../workbench/factRegistry'
 import { tableRunFor, type TableMeta, type TableRun, type TableView } from '../workbench/tableRun'
-import { composeYearTable, lifespansLine, yieldLine } from '../workbench/yearTableChrome'
-import { useSlotRun, useWhatIf, type RailRecommendation } from '../workbench/useWhatIf'
-import { whatIfRunFor, type WhatIfSlotLanes } from '../workbench/whatIfRun'
-import { policyWords, railOffers, recommendationBundle, rothWords } from '../workbench/railChrome'
+import { sourceKept, useSlotRun, useWhatIf, type RailRecommendation } from '../workbench/useWhatIf'
+import { whatIfRunFor, type WhatIfSlotLanes, type WhatIfSlotView } from '../workbench/whatIfRun'
+import { pairedColumnsFor, policyWords, railOffers, recommendationBundle, refusalWords, rothWords } from '../workbench/railChrome'
+import { composeVerdictStateNote } from '../stateTaxDisclosure'
+import { staticDisclosures } from '../entryCopy'
+import { canonicalIdentityToken } from '@shared/model'
+import { CashFlows, type PinnedIntroWords } from '../screens/retirement/CashFlows'
+import { cashFlowsView, planSelect, type AccountsTable, type CashFlowsPick, type CashFlowsTab, type RunRows, type SummaryDrill } from '../screens/retirement/cashFlowsView'
 import type { RecommendationSaveProp } from '../RecommendationSurface'
 import { currentEpochDay } from '../scenarioFromDraft'
 import { epochDayToCalendarYear } from '@store/staleness'
@@ -164,43 +171,31 @@ const WITHHELD_WORDS: Readonly<Record<Extract<TableRun, { kind: 'withheld' }>['r
   'no-ledger': copy.workbenchWithheldNoLedger,
 }
 
-/** The table's state for one view, from the store's answer and that view's newest result. */
-function tableState(run: TableRun, result: ViewResult | undefined, view: TableView, refiguring: boolean): YearTableState {
+/** Your plan's rows in one future, from the store's answer and that future's newest result. Until the newest answer's
+ *  rows land, the rows on screen stay, marked as updating (KTD9, KTD13). */
+function planRows(run: TableRun, result: ViewResult | undefined, refiguring: boolean): RunRows {
   if (run.kind === 'answer-error') return { kind: 'error' }
   if (run.kind === 'withheld') return { kind: 'withheld', words: WITHHELD_WORDS[run.reason] }
   const current = run.kind === 'run' ? run.key : null
   if (result === undefined) return { kind: 'loading' }
   if (result.kind === 'error') return result.key === current ? { kind: 'error' } : { kind: 'loading' }
-  const table = composeYearTable({
-    rows: result.rows,
-    meta: result.meta,
-    view,
-    ...(view === 'rough' ? { roughEndYear: roughWindowYears().end } : {}),
-  })
-  return { kind: 'ready', table, updating: result.key !== current || refiguring }
+  return { kind: 'ready', rows: result.rows, meta: result.meta, updating: result.key !== current || refiguring, answerKey: result.key }
 }
 
-/** The words above the table: what this future is, whose lifespans, when work stops, and the stopgaps. */
-function headingLines(meta: TableMeta, rows: readonly LedgerYearRow[], view: TableView, wallCalendarYear: number) {
-  const { start, end } = roughWindowYears()
-  const what = [
-    view === 'steady' ? copy.workbenchSteadyWhat : slots.workbenchRoughWhat(start, end, ROUGH_WINDOW_YEARS),
-    lifespansLine(meta.people),
-    meta.route === 'dated' && meta.stopYear !== undefined ? slots.workbenchStopsIn(meta.stopYear) : '',
-    meta.route === 'no-date' && meta.stopYear !== undefined ? slots.workbenchNoDate(meta.stopYear) : '',
-    meta.track === 'floor' ? slots.workbenchFloorTrack() : '',
-    wallCalendarYear > meta.startCalendarYear ? slots.workbenchAged(meta.startCalendarYear) : '',
-  ].filter((s) => s !== '')
-  // The known omissions that move a printed figure: where the run prices no state income tax, the hero's own unpriced
-  // line (every figured surface carries one state clause, `stateTaxDisclosure.ts`), and the surtax line, verbatim.
-  const stopgaps = [
-    yieldLine(meta, rows),
-    meta.statePriced ? null : copy.verdictStateUnpricedNote,
-    copy.workbenchKindsMissing,
-    copy.recDiscNiit,
-  ].filter((s): s is string => s !== null)
-  return { what, stopgaps }
+/** A what-if slot's rows in one future (the slot's one-key rule, `whatIfSlotView`). */
+function slotRows(v: WhatIfSlotView | null, future: TableView, startCalendarYear: number, refiguring: boolean): RunRows {
+  if (v === null) return { kind: 'loading' }
+  if (v.kind === 'refused') return { kind: 'withheld', words: refusalWords(v.refusal, startCalendarYear) }
+  if (v.kind === 'withheld') return { kind: 'withheld', words: WITHHELD_WORDS[v.reason] }
+  if (v.kind === 'answer-error') return { kind: 'error' }
+  const part = v[future]
+  if (part.kind === 'loading') return { kind: 'loading' }
+  if (part.kind === 'error') return { kind: 'error' }
+  return { kind: 'ready', rows: part.value.rows, meta: part.value.meta, updating: part.updating || refiguring, answerKey: part.answerKey }
 }
+
+/** Cash Flows' R13 caveat, inside its panel (plan 4.0), as Probability's and Snapshot's. */
+const CASH_FLOWS_CAVEAT = [staticDisclosures.honestLimitsScope, staticDisclosures.honestLimitsValidate] as const
 
 /** The lever doors and the panel seats a facts-page door opens (every non-step door, exhaustive). */
 type SheetDoor = Exclude<FactDoorId, StepSectionId>
@@ -359,20 +354,6 @@ export default function Shell({
     // One request pair per committed answer: `runKey` names it, and `run` is that answer's.
   }, [runKey, lanes])
 
-  const result = results[view]
-  const state = tableState(run, result, view, snapshot.refiguring)
-  const heading = state.kind === 'ready' && result?.kind === 'rows' ? headingLines(result.meta, result.rows, view, wallCalendarYear) : null
-
-  // THE SHELL'S WORDS, ON TRANSITIONS ONLY: the answer being worked out again, else the shown table updating.
-  const status = snapshot.refiguring ? 'refiguring' : screen === 'interim-table' && state.kind === 'ready' && state.updating ? 'updating' : 'idle'
-  const prevStatus = useRef(status)
-  useEffect(() => {
-    const prev = prevStatus.current
-    prevStatus.current = status
-    if (status === prev) return
-    if (status === 'refiguring') announcer.announce(copy.workbenchPinnedRefiguring)
-    else if (status === 'updating') announcer.announce(copy.workbenchTableUpdating)
-  }, [status, announcer])
   // The new answer's words, spoken when they change and the answer is not being worked out again (the date route's
   // final lands with no refiguring edge, so the lead's text is the key; the U8 review's C12).
   const lead = pinnedLines(snapshot, wallCalendarYear).lead
@@ -625,6 +606,92 @@ export default function Shell({
     [screen, snapshot, wallCalendarYear, readOnly, retryAnswer, notes, whatIf.mode, whatIf.source, whatIf.shown, whatIf.view, whatIf.landed, whatIf.changedFromKept, rightPick, rightBundle, right.view, right.landed, recordCard, chart],
   )
 
+  // ── Retirement → Cash Flows (RC6): its tab, drill, table and pick held here, so a page move keeps them ─────────────
+  const cfAnswer = snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date' ? snapshot.answer : null
+  const [cfTab, setCfTab] = useState<CashFlowsTab>('summary')
+  const [cfDrill, setCfDrill] = useState<SummaryDrill | null>(null)
+  const [cfAccounts, setCfAccounts] = useState<AccountsTable>('end')
+  const [cfPickState, setCfPick] = useState<CashFlowsPick>('plan')
+  const leftKept = sourceKept(whatIf.source, kept)
+  const leftName =
+    whatIf.mode === 'recommendation'
+      ? copy.probabilityPickRecommended
+      : leftKept !== undefined
+        ? whatIf.changedFromKept
+          ? slots.probabilityKeptChanged(leftKept.name)
+          : leftKept.name
+        : copy.probabilityPickNew
+  // The plan select (plan RC6): your plan; the working what-if where it holds a change no kept one names (a reopened
+  // kept what-if, unchanged, is offered by its name); each kept what-if; Recommended where a current record can run; and
+  // your plan beside the what-if open on Analysis (U15's paired form), where one is open.
+  const cfOffers = {
+    working: whatIf.own.length > 0 && (whatIf.source.kind === 'new' || whatIf.changedFromKept) ? (leftKept !== undefined ? slots.probabilityKeptChanged(leftKept.name) : copy.probabilityPickNew) : null,
+    kept: kept.map((k) => ({ id: k.id, name: k.name })),
+    recommended: rightRec !== null,
+    paired: whatIf.shown.length > 0 ? leftName : null,
+  }
+  const cfPick = planSelect(cfOffers, cfPickState).value
+  const cfKept = (() => {
+    const id = keptIdOf(cfPick)
+    return id === undefined ? undefined : kept.find((k) => k.id === id)
+  })()
+  const cfBundle = useMemo(
+    (): readonly WhatIfLeverV6[] => (cfPick === 'new' ? whatIf.own : cfPick === 'recommended' ? (rightRec ?? []) : (cfKept?.levers ?? [])),
+    [cfPick, whatIf.own, rightRec, cfKept],
+  )
+  const cfKey = canonicalIdentityToken(cfBundle)
+  // A run already made on Analysis is read from its slot (the left half's, or the right's); only a pick neither side
+  // shows runs on the page's own slot, and only while the page shows.
+  const cfShares = cfBundle.length === 0 ? null : cfKey === whatIf.shownKey ? whatIf.view : cfKey === canonicalIdentityToken(rightBundle) ? right.view : undefined
+  const cfOwn = useSlotRun({ snapshot, shown: screen === 'cash-flows' && cfShares === undefined ? cfBundle : [], tag: 'cash-flows' })
+  const cfView = useMemo(() => {
+    if (screen !== 'cash-flows') return null
+    const startCalendarYear = cfAnswer?.draft.startCalendarYear ?? snapshot.draft.startCalendarYear
+    const otherView = cfPick === 'paired' ? whatIf.view : cfShares === undefined ? cfOwn.view : cfShares
+    const otherName = cfPick === 'paired' ? leftName : cfPick === 'new' ? (cfOffers.working ?? copy.probabilityPickNew) : cfPick === 'recommended' ? copy.probabilityPickRecommended : (cfKept?.name ?? leftName)
+    const years = roughWindowYears()
+    return cashFlowsView({
+      tab: cfTab,
+      drill: cfDrill,
+      accounts: cfAccounts,
+      future: view,
+      pick: cfPick,
+      offers: cfOffers,
+      plan: planRows(run, results[view], snapshot.refiguring),
+      ...(cfPick !== 'plan' ? { other: slotRows(otherView, view, startCalendarYear, snapshot.refiguring), otherName } : {}),
+      ...(cfPick === 'paired' && cfAnswer !== null ? { pairedColumns: pairedColumnsFor(whatIf.shown, cfAnswer.draft) } : {}),
+      roughYears: { ...years, years: ROUGH_WINDOW_YEARS },
+      wallCalendarYear,
+      stateClause: cfAnswer !== null ? composeVerdictStateNote(notes.statePricedNote, false) : null,
+    })
+    // `cfOffers`, `leftName` and `cfKept` are derived each render from the keys listed.
+  }, [screen, cfTab, cfDrill, cfAccounts, view, cfPick, run, results, snapshot.refiguring, snapshot.draft.startCalendarYear, cfAnswer, whatIf.view, whatIf.shown, whatIf.own, whatIf.source, whatIf.mode, whatIf.changedFromKept, cfShares, cfOwn.view, kept, rightRec, wallCalendarYear, notes.statePricedNote])
+  const cfIntro = useMemo((): PinnedIntroWords | null => {
+    if (screen !== 'cash-flows') return null
+    const lines = pinnedLines(snapshot, wallCalendarYear)
+    const reserve = reserveForms(snapshot, wallCalendarYear)
+    return {
+      label: copy.workbenchPinnedLabel,
+      ...(lines.status !== undefined ? { status: lines.status } : {}),
+      lead: lines.lead,
+      ...(lines.second !== undefined ? { second: lines.second } : {}),
+      reserveStatuses: [copy.workbenchPinnedRefiguring, copy.answerProvisionalTag],
+      reserveLeads: reserve.leads,
+      reserveSeconds: snapshot.answer.kind === 'date' ? reserve.seconds : [],
+    }
+  }, [screen, snapshot, wallCalendarYear])
+
+  // THE SHELL'S WORDS, ON TRANSITIONS ONLY: the answer being worked out again, else the shown table updating.
+  const status = snapshot.refiguring ? 'refiguring' : cfView?.updating != null ? 'updating' : 'idle'
+  const prevStatus = useRef(status)
+  useEffect(() => {
+    const prev = prevStatus.current
+    prevStatus.current = status
+    if (status === prev) return
+    if (status === 'refiguring') announcer.announce(copy.workbenchPinnedRefiguring)
+    else if (status === 'updating') announcer.announce(copy.workbenchTableUpdating)
+  }, [status, announcer])
+
   // ── The Action Items tray (RC4b): what it offers is read off the COMMITTED answer's draft, with the plan's stop year as
   // the plan's own run carries it (insight 132), as U15's rail read them.
   const committedAnswer = snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date' ? snapshot.answer : null
@@ -680,10 +747,10 @@ export default function Shell({
     ) : undefined
 
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
-  const figured = screen === 'snapshot' || screen === 'probability'
+  const figured = screen === 'snapshot' || screen === 'probability' || screen === 'cash-flows'
   const staleLines = useMemo(() => (figured ? composeStaleLines(notes, !readOnly && onReview !== undefined) : []), [figured, notes, readOnly, onReview])
 
-  const snapshotDoors: SnapshotDoors = { analysis: doorTo('probability'), cashFlows: doorTo('interim-table'), facts: doorTo('interim-facts') }
+  const snapshotDoors: SnapshotDoors = { analysis: doorTo('probability'), cashFlows: doorTo('cash-flows'), facts: doorTo('interim-facts') }
   const strategiesDoor = doorTo('interim-strategies')
   const recView = snap?.rec.view
   const solve = snapshot.solve
@@ -716,23 +783,6 @@ export default function Shell({
   const answerTier = snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date' ? snapshot.answer.tier : undefined
   const names = draft.people.map((p) => (p.name ?? '').trim()).filter((n) => n !== '')
 
-  const marketSwitch = (
-    <div className="wb-view">
-      <SegmentedControl<TableView>
-        legendKey="workbenchViewLegend"
-        name="wb-view"
-        value={view}
-        onChange={setView}
-        options={[
-          { value: 'steady', label: copy.workbenchViewSteady },
-          { value: 'rough', label: copy.workbenchViewRough },
-        ]}
-      />
-    </div>
-  )
-
-  // The interim page that shows the market switch: the table.
-  const showsMarket = screen === 'interim-table'
   const shownAsk = leaveAsk ?? pageAsk ?? undefined
   const leave = shownAsk !== undefined ? <LeaveAsk key={shownAsk.lines.join(' ')} ask={shownAsk} overSheet={anySheetOpen} fallback={() => headingRef.current} /> : null
 
@@ -871,42 +921,32 @@ export default function Shell({
             />
             {planListDrawer}
           </>
+        ) : cfView !== null && cfIntro !== null ? (
+          <>
+            {leave}
+            <CashFlows
+              view={cfView}
+              headingRef={headingRef}
+              intro={cfIntro}
+              caveat={CASH_FLOWS_CAVEAT}
+              onTab={(tab) => {
+                setCfTab(tab)
+                setCfDrill(null)
+              }}
+              onDrill={setCfDrill}
+              onAccounts={setCfAccounts}
+              onFuture={setView}
+              onPick={setCfPick}
+            />
+          </>
         ) : (
           <InterimPage
             title={row.title}
             headingRef={headingRef}
             snapshot={snapshot}
             wallCalendarYear={wallCalendarYear}
-            above={
-              <>
-                {leave}
-                {showsMarket && marketSwitch}
-              </>
-            }
+            above={leave}
           >
-            {screen === 'interim-table' && (
-              <div className="wb-panel">
-                {heading !== null && (
-                  <div className="wb-about">
-                    <div className="wb-about__what">
-                      {heading.what.map((line) => (
-                        <p key={line} className="wb-about__line">
-                          {line}
-                        </p>
-                      ))}
-                    </div>
-                    <ul className="wb-stopgaps">
-                      {heading.stopgaps.map((line) => (
-                        <li key={line} className="wb-stopgaps__line">
-                          {line}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <YearTable state={state} />
-              </div>
-            )}
             {screen === 'interim-facts' && (
               <div className="wb-panel">
                 <FactsPage sections={sections} onTry={tryLever} {...(readOnly ? {} : { onOpen: openDoor })} />

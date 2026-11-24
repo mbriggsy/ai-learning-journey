@@ -15,14 +15,14 @@ import { copy } from '../copy'
 export const MODULE_ORDER = ['dashboard', 'investment', 'retirement', 'tax', 'profile'] as const
 export type ModuleId = (typeof MODULE_ORDER)[number]
 
-/** The screens the shell can draw. RC3's Snapshot and RC4's Probability (with its Action Items tray, RC4b) are rebuilt;
- *  the rest ride as interim tabs in their old look until their units rebuild them: the workbench room's table (RC6) and
- *  facts page (RC13), and, since RC4 made the shell the home, what was left of the old answer page: the recommendation
+/** The screens the shell can draw. RC3's Snapshot, RC4's Probability (with its Action Items tray, RC4b) and RC6's Cash
+ *  Flows (its Summary and Accounts folder tabs are the page's own state, not routes) are rebuilt; the rest ride as
+ *  interim tabs in their old look until their units rebuild them: the workbench room's facts page (RC13), and, since RC4 made the shell the home, what was left of the old answer page: the recommendation
  *  surface under Tax → Tax Strategies (RC8) and the health sheet under Retirement → Health Care (RC10). */
 export type ScreenId =
   | 'snapshot'
   | 'probability'
-  | 'interim-table'
+  | 'cash-flows'
   | 'interim-facts'
   | 'interim-strategies'
   | 'interim-health'
@@ -66,7 +66,7 @@ export const ROUTE_ROWS: readonly RouteRow[] = [
     title: copy.analysisTitle,
   },
   { module: 'retirement', page: 'health-care', pageLabel: copy.shellPageHealthCare, screen: 'interim-health', title: copy.shellPageHealthCare },
-  { module: 'retirement', page: 'cash-flows', pageLabel: copy.shellPageCashFlows, screen: 'interim-table', title: copy.workbenchPageTable },
+  { module: 'retirement', page: 'cash-flows', pageLabel: copy.shellPageCashFlows, screen: 'cash-flows', title: copy.shellPageCashFlows },
   { module: 'tax', page: 'strategies', pageLabel: copy.shellPageTaxStrategies, screen: 'interim-strategies', title: copy.shellPageTaxStrategies },
   { module: 'profile', page: 'facts', pageLabel: copy.workbenchPageFacts, screen: 'interim-facts', title: copy.workbenchPageFacts },
 ]

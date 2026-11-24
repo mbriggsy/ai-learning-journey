@@ -1089,6 +1089,11 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workbenchRowRolledOver: slots.workbenchRowRolledOver('Sam’s', 'yours'),
     workbenchRoughSteadyFrom: slots.workbenchRoughSteadyFrom(1995),
     workbenchNoteThrough: slots.workbenchNoteThrough(slots.workbenchRowNotKeptNoCredit('16,985'), 2034),
+    cashFlowsOther: slots.cashFlowsOther('Sam'),
+    cashFlowsPayTaxed: slots.cashFlowsPayTaxed('Sam'),
+    cashFlowsOtherTaxed: slots.cashFlowsOtherTaxed('Your spouse'),
+    cashFlowsAgesKey: slots.cashFlowsAgesKey(['Sam', 'Alex']),
+    cashFlowsYearNote: slots.cashFlowsYearNote(2031, copy.workbenchRowRanOut),
     // The facts page (Act 5, U8).
     workbenchFactsEditName: slots.workbenchFactsEditName('Social Security'),
     workbenchFactDollars: slots.workbenchFactDollars('88,000'),

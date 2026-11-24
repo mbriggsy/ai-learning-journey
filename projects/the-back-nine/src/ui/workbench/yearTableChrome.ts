@@ -122,14 +122,22 @@ export function formatTableDollars(value: number): string {
 
 const nonZero = (x: number | undefined): x is number => x !== undefined && tableDollars(x) !== 0
 
+/** How one field of one row prints (the table's grain, "~" and the direction mark), or null where nothing moved. The
+ *  one figure rule every view of the rows shares: this table's boxes and Cash Flows' columns (Act 6 · RC6). */
+export function tableFigure(
+  value: number | undefined,
+  how: { readonly sign: '+' | '−' | 'signed' | ''; readonly entered: boolean; readonly balance?: boolean; readonly t: number },
+): TableLine {
+  if (value === undefined) return null
+  const dollars = tableDollars(value)
+  if (dollars === 0 && how.balance !== true) return null
+  const sign = how.sign === 'signed' ? (workingYearBottomLine(value) < 0 ? '−' : '') : how.sign
+  return { value, dollars, approx: !(how.t === 0 && how.entered), sign }
+}
+
 function figureOf(spec: LineSpec, r: LedgerYearRow): TableLine {
-  const v = spec.read(r)
-  if (v === undefined) return null
-  const dollars = tableDollars(v)
-  if (dollars === 0 && spec.balance !== true) return null
-  const sign = spec.sign === 'signed' ? (workingYearBottomLine(v) < 0 ? '−' : '') : spec.sign
   const entered = typeof spec.enteredInYear0 === 'function' ? spec.enteredInYear0(r) : spec.enteredInYear0 === true
-  return { value: v, dollars, approx: !(r.t === 0 && entered), sign }
+  return tableFigure(spec.read(r), { sign: spec.sign, entered, ...(spec.balance === true ? { balance: true } : {}), t: r.t })
 }
 
 const accountName = (meta: TableMeta, a: SourceAccount): string =>

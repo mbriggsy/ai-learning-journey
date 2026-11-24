@@ -416,8 +416,10 @@ tests
   a widest plant must be saveable. But "none" also renders on a READ-ONLY session (its branch comes before `!ready`),
   which mounts the in-flow View-only banner above the frame (about 85 px against the slot's 84 px reserve), so a frame
   with no save box can be TALLER there.
-- **(b9-1, 11-23) The room's arms (`?seed=tablewidest`) assert every column first** (`expectEveryColumn`): a seed
-  whose crown drifts to today, or loses an account, would drop columns and make every width law vacuous.
+- **(b9-1, 11-23) The table's arms (`?seed=tablewidest`) assert its columns first** (since RC6, `TABLE_WIDEST_COLUMNS`
+  in `e2e/rc-screens.spec.ts`): a seed whose crown drifts to today, or loses an account, would drop columns and make
+  every width law vacuous. The seed was planted for the old table's boxes, so five Summary columns it never fills are
+  read by `cashFlowsView.test.ts` alone; a width question about those five needs a wider plant first.
 - **(moved from TODO's distill list, b9-3, 11-23) Measure a non-vacuity control in the app's own stylesheet, never
   assume the browser default**: the fit gate's "a bare `ol` has a margin" control (the re-point's U2) redded on all
   four arms because `src/ui/styles/base.css`'s `* { margin: 0 }` zeroes every element's margin; the marker and indent
@@ -584,7 +586,7 @@ tests
   under `verify:fit`"* is **unexecutable** for anything in `.rec-committed__rest`; it needs a MANUAL
   measure at `REAL`, his window, 1440×731 @ 2 (1536×791 @ 2.5 until the 2026-11-20 re-point). And the *"~89px headroom"* number is the SPINE idle frame (`vertical-fit.spec.ts line 4394-4396 at 95c715e19`, measured at the Dell's 1536×791 @ 2.5), a once-measured
   prose figure the spec never asserts — **never budget a different surface against it.** The DATE route's
-  arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:54-55`) — no date frame has ever been fit-measured either.
+  arms assert ORDER + REACHABILITY only (spec header `vertical-fit.spec.ts:53-54`) — no date frame has ever been fit-measured either.
 - **(2026-09-27, b9-11)** the ONE width seam: a new `@media (min-width: …rem)` fails `breakpoint-mirrors.test.ts` unless it mirrors `--bp-laptop` (68rem) — a new tier is a product decision
 - **(2026-09-26)** the spend lane lands a beat AFTER `data-answer-tier="final"`: a capture must wait out `.cs-magnitude[data-spend="pending"]` (the Caddie walk does since `2f43761f`), while a fit arm measuring right after `final` is measuring the RESERVED pending box — both states are laws
 - **(2026-09-23 evening)** a held look spec's style-tag lift must be REMOVED before the next dialog opens (a leaked `max-height:none` made the Roth frame an uncapped sheet no reader sees)
@@ -1226,8 +1228,8 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
   effect; re-check with a scan of the built utilities against old class names when a new kit folder is added.
 - **(b9-1, 11-23) `overflow-wrap: anywhere` in a table cell lowers the cell's narrowest width to one letter**, so an
   auto-layout table squeezed toward its narrowest breaks headers mid-word ("Christop / her", "Spendin / g"); every
-  width check passes it. The year-by-year table's headers break between words only (`workbench.css`), and a long
-  name line breaks only between people (`YearTable.tsx`'s `People`). Look at a squeezed table, never only its widths.
+  width check passes it. Cash Flows' headers (the kit's `DataTable`) break between words only, and no header carries
+  the people's names (`Age shows A / B.` rides the lines under the table). Look at a squeezed table, never only its widths.
 - **(b9-1, 11-23) A `<caption>` is as wide as its table:** where the table scrolls inside a frame (the phone), the
   caption scrolls with it and is cut at the frame's edge. The year-by-year table names itself with a paragraph above
   its frame and `aria-labelledby`.

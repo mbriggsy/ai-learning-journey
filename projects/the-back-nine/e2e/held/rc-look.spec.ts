@@ -26,7 +26,7 @@ const SCREENS = [
   { id: 'snapshot', screen: 'snapshot', module: copy.shellModuleDashboard, page: copy.shellPageSnapshot },
   { id: 'probability', screen: 'probability', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis },
   { id: 'health-care', screen: 'interim-health', module: copy.shellModuleRetirement, page: copy.shellPageHealthCare },
-  { id: 'cash-flows', screen: 'interim-table', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows },
+  { id: 'cash-flows', screen: 'cash-flows', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows },
   { id: 'tax-strategies', screen: 'interim-strategies', module: copy.shellModuleTax, page: copy.shellPageTaxStrategies },
   { id: 'facts', screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts },
 ] as const
@@ -114,7 +114,7 @@ async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: b
     await expect(page.locator('[data-card="fan"] [data-chart="fan"] .highcharts-series-group, [data-card="fan"] p').first()).toBeAttached({ timeout: 30_000 })
     await page.waitForTimeout(600)
   }
-  if (target.screen === 'interim-table') await expect(page.locator('.wb-table, .wb-state:not(.wb-state--loading)').first()).toBeVisible({ timeout: 60_000 })
+  if (target.screen === 'cash-flows') await expect(page.locator('[data-table-frame], [data-cash-flows-state][role="alert"]').first()).toBeVisible({ timeout: 60_000 })
   await settleLayout(page)
 }
 
@@ -377,6 +377,84 @@ for (const size of SIZES) {
         await list.getByLabel(copy.planListNameLabel).fill('Lean years')
         await shot(page, findings, 'plan-list-keep', k.seed, size.tag)
         console.log(`[rc-look ${UNIT} plan list ${k.seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        for (const [id, a] of Object.entries(findings)) {
+          expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+          expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+          expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+          expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+        }
+      })
+    }
+  })
+}
+
+// RC6: Retirement → Cash Flows, on a retired and a working household holding kept what-ifs (`retiredkept`, `dipkept`),
+// and the table's widest household (`tablewidest`): the Summary, a drill open with its breadcrumb, the Accounts tab with
+// its table switcher open, the Rough future, a kept what-if picked, and your plan beside the what-if open on Analysis.
+const CASH_FLOWS = SCREENS[3]
+
+async function pickOn(page: Page, label: string, option: string): Promise<void> {
+  await page.getByRole('combobox', { name: label }).click()
+  await page.getByRole('option', { name: option, exact: true }).click()
+  await expect(page.getByRole('listbox')).toHaveCount(0)
+}
+
+async function tableLanded(page: Page): Promise<void> {
+  await expect(page.locator('[data-table-frame]')).toBeVisible({ timeout: 90_000 })
+  await expect(page.locator('[data-table-frame][data-busy]')).toHaveCount(0, { timeout: 90_000 })
+}
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, Cash Flows at ${size.tag}`, () => {
+    test.use(size.use)
+    for (const k of [...KEPT_LOOK, { seed: 'tablewidest', left: null }] as const) {
+      test(`?seed=${k.seed}: Cash Flows — Summary, a drill, Accounts, Rough, a kept what-if, your plan beside the what-if`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 240_000)
+        await enterShell(page, k.seed)
+        const findings: Record<string, Audit> = {}
+        await showScreen(page, CASH_FLOWS, size.phone)
+        await tableLanded(page)
+        await shot(page, findings, 'cash-flows-summary', k.seed, size.tag)
+        await page.screenshot({ path: `${OUT}/cash-flows-summary-${k.seed}-${size.tag}-full.png`, fullPage: true })
+        if (k.left === null) {
+          // The widest household, scrolled to the frame's end on the phone (the lead columns held).
+          await page.locator('[data-table-frame]').evaluate((f) => (f.scrollLeft = f.scrollWidth))
+          await shot(page, findings, 'cash-flows-summary-end', k.seed, size.tag)
+          await page.locator('[data-table-frame]').evaluate((f) => (f.scrollLeft = 0))
+        }
+        const drill = page.locator('[data-table-frame] thead button').first()
+        if ((await drill.count()) > 0) {
+          await drill.click()
+          await shot(page, findings, 'cash-flows-drill', k.seed, size.tag)
+          await page.locator('[data-cash-flows-title] button').first().click()
+        }
+        await pickOn(page, copy.workbenchViewLegend, copy.workbenchViewRough)
+        await tableLanded(page)
+        await shot(page, findings, 'cash-flows-rough', k.seed, size.tag)
+        await pickOn(page, copy.workbenchViewLegend, copy.workbenchViewSteady)
+        await page.getByRole('tab', { name: copy.cashFlowsTabAccounts }).click()
+        await tableLanded(page)
+        await shot(page, findings, 'cash-flows-accounts', k.seed, size.tag)
+        await page.getByRole('combobox', { name: copy.cashFlowsAccountsLabel }).click()
+        await expect(page.getByRole('listbox')).toBeVisible()
+        await page.waitForTimeout(300)
+        await page.screenshot({ path: `${OUT}/cash-flows-accounts-switcher-${k.seed}-${size.tag}.png` })
+        await page.keyboard.press('Escape')
+        await page.getByRole('tab', { name: copy.cashFlowsTabSummary }).click()
+        if (k.left !== null) {
+          await pickOn(page, copy.cashFlowsPlanLabel, k.right)
+          await tableLanded(page)
+          await shot(page, findings, 'cash-flows-kept', k.seed, size.tag)
+          // Your plan beside the what-if open on Analysis: open a kept what-if on the left there, then pick the pair.
+          await showScreen(page, SCREENS[1], size.phone)
+          await pickOn(page, copy.probabilityPickerLabel, k.left)
+          await showScreen(page, CASH_FLOWS, size.phone)
+          await pickOn(page, copy.cashFlowsPlanLabel, copy.cashFlowsPickPaired)
+          await tableLanded(page)
+          await shot(page, findings, 'cash-flows-paired', k.seed, size.tag)
+          await page.screenshot({ path: `${OUT}/cash-flows-paired-${k.seed}-${size.tag}-full.png`, fullPage: true })
+        }
+        console.log(`[rc-look ${UNIT} cash flows ${k.seed} ${size.tag}] ${JSON.stringify(findings)}`)
         for (const [id, a] of Object.entries(findings)) {
           expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
           expect.soft(a.clipped, `${id}: clipped text`).toEqual([])

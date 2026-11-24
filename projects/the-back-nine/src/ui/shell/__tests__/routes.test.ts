@@ -9,7 +9,7 @@ import { LANDING, MODULE_LABELS, MODULE_ORDER, navModules, parseHash, routeHash,
 
 const row = (r: Partial<RouteRow> & Pick<RouteRow, 'module' | 'page'>): RouteRow => ({
   pageLabel: r.page,
-  screen: 'interim-table',
+  screen: 'cash-flows',
   title: r.page,
   ...r,
 })

@@ -1175,6 +1175,28 @@ cells.
 **Verification.** CI fit on `tablewidest`, `retired` and `dip`: no sideways page scroll at REAL and PHONE; the table
 scrolls in its frame; the rows landing move no tap target. Local look.
 
+**Settled in the build (2026-11-24, b9-6).** No total column: the column list's "Total inflows" and "Total outflows"
+(and RightCapital's summed Income Inflows, Planned Distribution and Planned Saving cells) wait. A sum over one row is
+allowed (the table runs one path per view, so it is arithmetic over that row's own cells, not the median-stack class
+the one-field law guards), but the totals ship only where inflows − outflows − income not kept balances, and measured
+over every seed in both views (2,648 rows) it misses on 229: by the employer match inside the put-ins and by a short
+year's unmet need, neither of which has a row field. The register's *Cash Flows can't print RightCapital's Total
+inflows and Total outflows…* carries the two fields and the identity test. Each of those RightCapital
+columns is a header over its one-field columns, drawn underlined where its drill holds more than the top shows (the top
+shows the group's main fields; the drill every field: the pre-tax draw by person, the required withdrawal and its move
+to taxable, the premiums, the taxed parts of pay and other income, the from-pay lines). The one sum printed is the
+Accounts ending balance's Total, the engine's own `totalAcrossBuckets`, said so under the table (the paired form's
+year-end total is U15's same exception). No "+" or "−" rides a figure: each column names its direction in words
+("Taxable, taken out", "Roth, put in"), and beside "~" the mark read as a minus over a positive draw; a short left over
+prints in parentheses (4.0). The pay check's income tax is headed "Pay check’s income tax", never a second "Income tax".
+The folder tabs are the page's own state, not routes (the hash stays `#/retirement/cash-flows`); the tab, drill, table
+and pick survive a page move. The working what-if is offered where it holds a change no kept one names; "Your plan
+beside the what-if" sets your plan beside the what-if open on Analysis's left, and a picked run already made there is
+read from that side's slot (only a pick neither side shows runs on the page's own slot, and only while the page shows).
+The rows' sentences moved out of the grid into "Notes by year" under it (with the rough view's steady-from line), so the
+old arm reading them inside the frame retired. A drill swaps the table with no motion and puts focus on the panel title.
+*(the pilot's call, 2026-11-24, b9-6)*
+
 ### RC7: Retirement → Analysis → Confidence
 
 **Clones.** Ref 2.9. Screens: `rc-analysis/confidence-tab-retirement-analysis__cleanshot-2024-07-29-at-10-17-02-2x.png`,

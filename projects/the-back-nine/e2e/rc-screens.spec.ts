@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { expect, type Page } from '@playwright/test'
 import { FINAL_TIER_MS, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, armRefiguringWatch, expectRefiguringSeen, gotoSeedFinal, gotoVaultFinal, pinPlantDay, pinnedDay, pinnedYear, refiguringLog, settleLayout, test } from './reviewSurface'
 import { copy, slots } from '../src/ui/copy'
@@ -26,10 +27,9 @@ import { FAN, assertHcText, enterSnapshot, hcAudit, hcFloorPx, hcMarkFailures, h
  */
 
 const SEED = 'retired'
-const PAGES = [
-  { screen: 'interim-table', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows, hash: '#/retirement/cash-flows' },
-  { screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts, hash: '#/profile/facts' },
-] as const
+/** The interim pages (outside any `.rc-root`), and RC6's Cash Flows, the menu's other walk target. */
+const PAGES = [{ screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts, hash: '#/profile/facts' }] as const
+const CASH_FLOWS = { screen: 'cash-flows', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows, hash: '#/retirement/cash-flows' } as const
 
 /** The settled answer, which lands on the home, Dashboard → Snapshot (RC4: the shell is the home, no door). */
 async function enterShell(page: Page): Promise<void> {
@@ -39,7 +39,7 @@ async function enterShell(page: Page): Promise<void> {
 }
 
 /** Move to a page by the laptop's nav: the module's word in the top bar, then the page's word in the sub-nav. */
-async function showPage(page: Page, target: (typeof PAGES)[number]): Promise<void> {
+async function showPage(page: Page, target: { readonly screen: string; readonly module: string; readonly page: string }): Promise<void> {
   const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
   const moduleLink = modules.getByRole('link', { name: target.module, exact: true })
   if ((await moduleLink.getAttribute('aria-current')) !== 'page') await moduleLink.click()
@@ -101,25 +101,26 @@ test.describe(`RC2 · the shell at his window (${REAL.width}×${REAL.height} @ $
       await expect(page.locator('main.result .shell-interim__title'), `${target.screen}: the page's heading`).toBeVisible()
     }
 
-    // THE PREFLIGHT SCOPE: the table page's header cells keep their legacy padding (`workbench.css`'s `.wb-th`, 12 px at
-    // the left), and the interim container keeps its own top padding (20 px). A scoped preflight that reached the
-    // container (`.rc-root` on it, or a scope widened past `.rc-root`) zeroes both.
+    // THE PREFLIGHT SCOPE: the facts page's sections keep their legacy padding (`workbench.css`'s `.wb-facts__section`;
+    // the table page's header cell carried this arm until RC6 rebuilt Cash Flows), and the interim container keeps its
+    // own top padding (20 px). A scoped preflight that reached the container (`.rc-root` on it, or a scope widened past
+    // `.rc-root`) zeroes both.
     await showPage(page, PAGES[0])
-    await expect(page.locator('.wb-table'), 'the table’s rows never landed').toBeVisible({ timeout: 60_000 })
+    await expect(page.locator('.wb-facts__section').first(), 'the facts page never drew').toBeVisible({ timeout: 60_000 })
     const legacy = await page.evaluate(() => ({
-      th: getComputedStyle(document.querySelector('.wb-table th.wb-th[data-col]')!).paddingLeft,
+      th: getComputedStyle(document.querySelector('.wb-facts__section')!).paddingTop,
       container: getComputedStyle(document.querySelector('.shell-interim')!).paddingTop,
       insideRcRoot: document.querySelector('.shell-interim')!.closest('.rc-root') !== null,
     }))
     expect(legacy.insideRcRoot, 'the interim container sits outside every .rc-root').toBe(false)
-    expect(legacy.th, 'a legacy header cell’s padding survives inside the shell').toBe('12px')
+    expect(legacy.th, 'a legacy section’s padding survives inside the shell').toBe('12px')
     expect(legacy.container, 'the interim container’s legacy padding survives').toBe('20px')
   })
 
   test(`?seed=${SEED}: Back with an open drawer holding an edit asks first, in the app; Stay keeps the drawer and the edit`, async ({ page }) => {
     test.setTimeout(FINAL_TIER_MS + 60_000)
     await enterShell(page)
-    await showPage(page, PAGES[1])
+    await showPage(page, PAGES[0])
     await page.getByRole('button', { name: 'Edit the two of you', exact: true }).click()
     const sheet = page.getByRole('dialog', { name: copy.workbenchFactsPeople, exact: true })
     await expect(sheet, 'the step sheet never opened').toBeVisible()
@@ -150,7 +151,7 @@ test.describe(`RC2 · the shell on the phone (${PHONE.width}×${PHONE.height} @ 
     await expect(page.getByRole('navigation', { name: copy.shellModulesLabel }), 'the modules leave the bar on the phone').toBeHidden()
     await expect(page.getByRole('navigation', { name: copy.shellPagesLabel }), 'the sub-nav leaves for the menu on the phone').toBeHidden()
     const menuButton = page.getByRole('button', { name: copy.shellMenuOpen, exact: true })
-    for (const target of [PAGES[1], PAGES[0]]) {
+    for (const target of [PAGES[0], CASH_FLOWS]) {
       await menuButton.click()
       const sheet = page.getByRole('dialog', { name: copy.shellMenuTitle })
       await expect(sheet, 'the menu never opened').toBeVisible()
@@ -1664,4 +1665,271 @@ test.describe(`RC5 · the plan list on the phone (${PHONE.width}×${PHONE.height
       await expect(planList(page)).toHaveCount(0)
     })
   }
+})
+
+// ── RC6 · Retirement → Cash Flows (plan 6, RC6's Verification; plan 5.2: the year table's arms ported from
+// `vertical-fit.spec.ts`). On `tablewidest` (the widest household: every column the table can draw, seven-digit
+// balances, two 20-character names), `retired` and `dip`, at his window and on the phone:
+//  - the page never scrolls sideways; the table scrolls inside its own frame (`tablewidest` on the phone proves the frame
+//    really scrolls, or the law reads nothing), with Year and Age held at the frame's left edge scrolled to its end;
+//  - at his window the first frame holds the title, the selects and the table's header rows;
+//  - Income tax is a plain header (never a drill), and on `dip` payroll tax is its own column;
+//  - a drill and its breadcrumb round-trip, back to the same headers;
+//  - the Steady/Rough switch moves neither select;
+//  - exactly one visible R13 caveat (the panel's; App.tsx's trailing mount hidden).
+// Retired from the old table's arms: "no scroller at a laptop" (the plan's fit decision: a scrolling table at any size),
+// and "each row's sentences read whole inside the frame" (the sentences left the table for the "Notes by year" list
+// under it, so nothing of theirs sits in the scrolling frame). Ported: no sideways page scroll, the frame scrolling on
+// the phone, and the rows landing moving no tap target (below).
+// ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+const RC6_SEEDS = ['tablewidest', 'retired', 'dip'] as const
+/** The Summary columns the widest seed draws (`cashFlowsView.ts`'s `summarySpecs`). It was planted for the old table's boxes,
+ *  so five top columns it never fills (the first person's other income, Roth put in, the conversion, income not kept, a short year)
+ *  are read by the composer's own tests, not here: this pin catches the seed drifting narrower. */
+const TABLE_WIDEST_COLUMNS: readonly string[] = [
+  'year', 'age', 'pay-0', 'pay-1', 'social-security', 'other-1', 'draw-taxable', 'draw-pretax', 'draw-roth', 'hsa-spend',
+  'spending', 'income-tax', 'tax-on-pay', 'payroll', 'put-in-taxable', 'put-in-pretax', 'put-in-hsa',
+]
+const cfFrame = (page: Page) => page.locator('[data-table-frame]')
+const cfSelect = (page: Page, name: string) => page.locator('[data-cash-flows-controls]').getByRole('combobox', { name })
+const ANALYSIS = { screen: 'probability', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis, hash: '#/retirement/analysis/probability' } as const
+
+async function cfLanded(page: Page): Promise<void> {
+  await expect(cfFrame(page), 'the table never landed').toBeVisible({ timeout: FINAL_TIER_MS })
+  await expect(page.locator('[data-table-frame][data-busy]')).toHaveCount(0, { timeout: FINAL_TIER_MS })
+  await settleLayout(page)
+}
+
+async function toCashFlows(page: Page, seed: string, phone: boolean): Promise<void> {
+  await gotoSeedFinal(page, seed)
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]')).toBeAttached({ timeout: 30_000 })
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+  if (phone) {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: copy.shellPageCashFlows, exact: true }).click()
+    await expect(page.getByRole('dialog', { name: copy.shellMenuTitle })).toHaveCount(0)
+  } else await showPage(page, CASH_FLOWS)
+  await expect(page.locator('main.result[data-shell-screen="cash-flows"]')).toBeAttached()
+  await cfLanded(page)
+}
+
+async function pickCf(page: Page, name: string, option: string): Promise<void> {
+  await cfSelect(page, name).click()
+  await page.getByRole('option', { name: option, exact: true }).click()
+  await expect(page.getByRole('listbox')).toHaveCount(0)
+}
+
+/** The frame's widths and its lead columns' left edges, at its start and scrolled to its end. */
+async function frameReading(page: Page) {
+  return cfFrame(page).evaluate(async (frame) => {
+    const raf = () => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
+    const leads = () =>
+      [...frame.querySelectorAll('tbody tr:first-child > :nth-child(-n+2)')].map((c) => Math.round((c.getBoundingClientRect().left - frame.getBoundingClientRect().left) * 10) / 10)
+    frame.scrollLeft = 0
+    await raf()
+    const atStart = leads()
+    frame.scrollLeft = frame.scrollWidth
+    await raf()
+    const atEnd = leads()
+    const scrolled = frame.scrollLeft
+    frame.scrollLeft = 0
+    await raf()
+    return { overflowX: getComputedStyle(frame).overflowX, scroll: frame.scrollWidth, client: frame.clientWidth, scrolled, atStart, atEnd }
+  })
+}
+
+const selectBoxes = (page: Page) =>
+  page.locator('[data-cash-flows-controls] [role="combobox"]').evaluateAll((els) =>
+    els.map((el) => {
+      const r = el.getBoundingClientRect()
+      return [Math.round(r.x * 10) / 10, Math.round((r.y + window.scrollY) * 10) / 10, Math.round(r.width * 10) / 10]
+    }),
+  )
+
+for (const size of [
+  { title: `at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, use: { viewport: REAL, deviceScaleFactor: REAL_DPR }, phone: false },
+  { title: `on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true }, phone: true },
+] as const) {
+  test.describe(`RC6 · Cash Flows ${size.title}`, () => {
+    test.use(size.use)
+    for (const seed of RC6_SEEDS) {
+      test(`?seed=${seed}: no sideways page scroll; the table scrolls in its own frame, Year and Age held; one caveat; Income tax no drill; a drill round-trips; the market switch moves no select`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 120_000)
+        await toCashFlows(page, seed, size.phone)
+        await noSidewaysScroll(page, `${seed} Summary`)
+        // The widest household is still the widest: every Summary column the table can draw is on screen (a seed whose
+        // crown drifts to today, or that loses an account, would drop columns and leave every width law vacuous).
+        const cols = await cfFrame(page).locator('thead th[data-col]').evaluateAll((ths) => ths.map((th) => th.getAttribute('data-col')))
+        console.log(`[rc6 ${seed} columns] ${JSON.stringify(cols)}`)
+        if (seed === 'tablewidest') expect(cols, 'the widest household prints every Summary column').toEqual(TABLE_WIDEST_COLUMNS)
+        const f = await frameReading(page)
+        console.log(`[rc6 ${seed} ${size.phone ? 'PHONE' : 'REAL'}] ${JSON.stringify(f)}`)
+        expect(f.overflowX, 'the table scrolls inside its own frame').toBe('auto')
+        if (seed === 'tablewidest' && size.phone) expect(f.scroll, 'the widest household’s table outgrows the phone’s frame, so the law reads something').toBeGreaterThan(f.client)
+        if (f.scrolled > 0) expect(f.atEnd, 'Year and Age stay at the frame’s left edge scrolled to its end').toEqual(f.atStart)
+        await assertOneVisibleCaveat(page, null)
+        if (!size.phone) {
+          // The first frame holds the title, the selects and the table's header rows.
+          const head = await page.evaluate(() => ({
+            title: document.querySelector('main.result h1')!.getBoundingClientRect().bottom,
+            selects: Math.max(...[...document.querySelectorAll('[data-cash-flows-controls] [role="combobox"]')].map((el) => el.getBoundingClientRect().bottom)),
+            thead: document.querySelector('[data-table-frame] thead')!.getBoundingClientRect().bottom,
+          }))
+          console.log(`[rc6 ${seed} REAL first frame] ${JSON.stringify(head)}`)
+          expect(Math.max(head.title, head.selects, head.thead), `${seed}: the header rows sit in the first frame`).toBeLessThanOrEqual(REAL.height)
+        }
+        await expect(cfFrame(page).getByRole('columnheader', { name: copy.workbenchColIncomeTax, exact: true })).toBeVisible()
+        await expect(cfFrame(page).getByRole('button', { name: copy.workbenchColIncomeTax, exact: true }), 'Income tax is never a drill').toHaveCount(0)
+        if (seed === 'dip') await expect(cfFrame(page).getByRole('columnheader', { name: copy.workbenchLinePayroll, exact: true }), 'payroll tax, its own column').toBeAttached()
+        // A drill and its breadcrumb round-trip.
+        const headers = () => cfFrame(page).locator('thead th[data-col]').allTextContents()
+        const before = await headers()
+        const drill = cfFrame(page).locator('thead button').first()
+        const drillName = (await drill.textContent()) ?? ''
+        await drill.click()
+        await expect(page.locator('[data-cash-flows-title]')).toHaveText(`${copy.cashFlowsTabSummary}/${drillName}`)
+        await expect(page.locator('[data-cash-flows-title]')).toBeFocused()
+        await noSidewaysScroll(page, `${seed} drill ${drillName}`)
+        await page.locator('[data-cash-flows-title]').getByRole('button', { name: copy.cashFlowsTabSummary }).click()
+        await expect(page.locator('[data-cash-flows-title]')).toHaveText(copy.cashFlowsTabSummary)
+        expect(await headers()).toEqual(before)
+        // Steady and Rough switch without moving either select.
+        const at = await selectBoxes(page)
+        await pickCf(page, copy.workbenchViewLegend, copy.workbenchViewRough)
+        await cfLanded(page)
+        expect(await selectBoxes(page), 'the switch moved a select').toEqual(at)
+        await noSidewaysScroll(page, `${seed} Rough`)
+        // The Accounts tab: its table switcher, and still no sideways page scroll.
+        await page.getByRole('tab', { name: copy.cashFlowsTabAccounts }).click()
+        await cfLanded(page)
+        await expect(page.getByRole('combobox', { name: copy.cashFlowsAccountsLabel })).toBeVisible()
+        await noSidewaysScroll(page, `${seed} Accounts`)
+      })
+    }
+  })
+}
+
+test.describe(`RC6 · Cash Flows: the rows landing move no tap target (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+
+  // Ported from the old table's switch walk (insight 035): the page is opened BEFORE the final answer's table runs land
+  // (every message to the engine worker held 400 ms from the first load), and an in-page recorder logs the future
+  // select's page-relative box on every frame on the settled answer, from its first paint until thirty frames after the
+  // rows land. The presses are the top bar's and the sub-nav's, at the page's top, so no scroll moves a rect the walk compares.
+  test('?seed=tablewidest: the future select stays put from its first paint through the rows landing', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS * 2 + 60_000)
+    await page.addInitScript(() => {
+      const send = Worker.prototype.postMessage
+      Worker.prototype.postMessage = function (this: Worker, ...args: unknown[]) {
+        setTimeout(() => Reflect.apply(send, this, args), 400)
+      } as typeof send
+    })
+    await page.goto('/?seed=tablewidest')
+    await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the seed never landed on the home').toBeAttached({ timeout: FINAL_TIER_MS })
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.evaluate(() => {
+      type Frame = { readonly x: number; readonly y: number; readonly w: number; readonly h: number; readonly table: boolean }
+      const log: Frame[] = []
+      ;(window as unknown as { __cfWalk: Frame[] }).__cfWalk = log
+      let after = 0
+      const tick = () => {
+        const select = document.querySelector('[data-cash-flows-controls] [role="combobox"]')
+        const settled = document.querySelector('main.result[data-answer-tier="final"]:not([data-answer-refiguring])') !== null
+        if (select !== null && settled) {
+          const r = select.getBoundingClientRect()
+          const table = document.querySelector('[data-table-frame]:not([data-busy])') !== null
+          log.push({ x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height, table })
+          if (table) after++
+        }
+        if (after < 30) requestAnimationFrame(tick)
+      }
+      requestAnimationFrame(tick)
+    })
+    // The nav at the page's top: its presses scroll nothing the walk compares.
+    await showPage(page, CASH_FLOWS)
+    await expect(page.locator('main.result[data-shell-screen="cash-flows"]')).toBeAttached()
+    await expect(cfFrame(page), 'the table never landed').toBeVisible({ timeout: FINAL_TIER_MS })
+    await expect
+      .poll(() => page.evaluate(() => (window as unknown as { __cfWalk: { table: boolean }[] }).__cfWalk.filter((f) => f.table).length), { timeout: FINAL_TIER_MS })
+      .toBeGreaterThanOrEqual(30)
+    const frames = await page.evaluate(() => (window as unknown as { __cfWalk: { x: number; y: number; w: number; h: number; table: boolean }[] }).__cfWalk)
+    const before = frames.filter((f) => !f.table)
+    console.log(`[rc6 switch walk] frames=${frames.length} beforeRows=${before.length} first=${JSON.stringify(frames[0])} last=${JSON.stringify(frames.at(-1))}`)
+    expect(before.length, 'the select painted before the rows landed: otherwise the walk compares nothing').toBeGreaterThan(0)
+    const first = frames[0]!
+    for (const f of frames) {
+      expect(Math.abs(f.x - first.x), 'the select moved sideways').toBeLessThanOrEqual(0.5)
+      expect(Math.abs(f.y - first.y), 'the select moved up or down').toBeLessThanOrEqual(0.5)
+      expect(Math.abs(f.w - first.w)).toBeLessThanOrEqual(0.5)
+      expect(Math.abs(f.h - first.h)).toBeLessThanOrEqual(0.5)
+    }
+  })
+})
+
+test.describe(`RC6 · Cash Flows: the plan select, the paired form and the CSV (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, acceptDownloads: true })
+
+  test('?seed=retiredkept: a kept what-if’s own rows; your plan beside the what-if open on Analysis, every year your plan’s row over the what-if’s, each named; the CSV holds exactly the shown cells', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    await toCashFlows(page, 'retiredkept', false)
+    const planRow = await cfFrame(page).locator('tbody tr').nth(5).textContent()
+    await pickCf(page, copy.cashFlowsPlanLabel, 'Spend a little less')
+    await cfLanded(page)
+    expect(await cfFrame(page).locator('tbody tr').nth(5).textContent(), 'the kept what-if’s own rows').not.toBe(planRow)
+    // Open a kept what-if on Analysis's left, then set it beside your plan here.
+    await showPage(page, ANALYSIS)
+    await page.getByRole('combobox', { name: copy.probabilityPickerLabel }).click()
+    await page.getByRole('option', { name: 'Pre-tax savings first', exact: true }).click()
+    await expect(page.getByRole('listbox')).toHaveCount(0)
+    await showPage(page, CASH_FLOWS)
+    await pickCf(page, copy.cashFlowsPlanLabel, copy.cashFlowsPickPaired)
+    await cfLanded(page)
+    const groups = await cfFrame(page)
+      .locator('tbody[data-row-group]')
+      .evaluateAll((bodies) =>
+        bodies.map((b) => ({
+          year: b.querySelector('th[scope="rowgroup"]')?.textContent ?? '',
+          span: b.querySelector('th[scope="rowgroup"]')?.getAttribute('rowspan') ?? '',
+          runs: [...b.querySelectorAll('th[scope="row"]')].map((th) => th.textContent),
+        })),
+      )
+    expect(groups.length, 'a group per year').toBeGreaterThan(10)
+    for (const g of groups) {
+      expect(g.runs, `${g.year}: your plan’s row over the what-if’s, each named`).toEqual([copy.workbenchRailPlanLabel, 'Pre-tax savings first'])
+      expect(g.span).toBe('2')
+    }
+    // The CSV: exactly the cells shown (header rows first; a spanned year on each of its rows), read off the real file.
+    const shown = await cfFrame(page).evaluate((frame) => {
+      const head = [...frame.querySelectorAll('thead tr')].map((tr) =>
+        [...tr.querySelectorAll('th')].flatMap((th) => [th.textContent ?? '', ...Array.from({ length: Number(th.getAttribute('colspan') ?? '1') - 1 }, () => '')]),
+      )
+      const body = [...frame.querySelectorAll('tbody')].flatMap((tb) => {
+        const year = tb.querySelector('th[scope="rowgroup"]')?.textContent ?? null
+        return [...tb.querySelectorAll('tr')].map((tr) => {
+          const cells = [...tr.querySelectorAll('th, td')].map((c) => c.textContent ?? '')
+          return year !== null && tr.querySelector('th[scope="rowgroup"]') === null ? [year, ...cells] : cells
+        })
+      })
+      return [...head, ...body]
+    })
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: copy.cashFlowsDownloadLabel }).click()])
+    const bytes = readFileSync((await download.path())!)
+    expect([...bytes.subarray(0, 3)], 'a byte-order mark first').toEqual([0xef, 0xbb, 0xbf])
+    const parse = (line: string): string[] => {
+      const out = ['']
+      let q = false
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i]!
+        if (ch === '"' && q && line[i + 1] === '"') {
+          out[out.length - 1] += '"'
+          i++
+        } else if (ch === '"') q = !q
+        else if (ch === ',' && !q) out.push('')
+        else out[out.length - 1] += ch
+      }
+      return out
+    }
+    expect(bytes.subarray(3).toString('utf8').split('\r\n').map(parse), 'the CSV is the shown cells').toEqual(shown)
+  })
 })

@@ -81,7 +81,7 @@ describe('the facts page — its pages and its doors', () => {
     expect(shownScreen()).toBe('interim-facts')
     expect(screen.getByRole('heading', { name: copy.workbenchFactsSpending })).toBeInTheDocument()
     showPage('table')
-    expect(shownScreen()).toBe('interim-table')
+    expect(shownScreen()).toBe('cash-flows')
     expect(screen.queryByRole('heading', { name: copy.workbenchFactsSpending })).toBeNull()
     // The table's runs belong to the shell, not the page: one pair for the one committed answer, whichever page shows.
     expect(lane.request).toHaveBeenCalledTimes(2)

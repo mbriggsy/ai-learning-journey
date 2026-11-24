@@ -6,7 +6,8 @@ import type { TableLanes } from '../Shell'
 import { RoutedShell, showPage } from './routedShell'
 import { tableRunFor } from '../../workbench/tableRun'
 import { pinnedLines } from '../../workbench/pinnedLines'
-import { composeYearTable, formatTableDollars } from '../../workbench/yearTableChrome'
+import { formatTableDollars, tableDollars } from '../../workbench/yearTableChrome'
+import userEvent from '@testing-library/user-event'
 import { simulate } from '@engine/simulate'
 import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS } from '@engine/dateSearch'
 import { buildDateInput } from '@intake/intakeMap'
@@ -17,9 +18,8 @@ import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/mem
 import type { DateSearchOutcome, DateTrackOutcome, SimulationResult } from '@shared/model'
 
 /**
- * The shell's Cash Flows page, the room's year-by-year table riding as an interim tab (Act 6 · RC2; workbench plan U7):
- * its three named states (first load, updating, error), the withheld words, the steady/rough switch, and the heading's
- * words, with the lanes faked so each state is held; and the settle hook every harness waits on (`main.result`).
+ * The shell's Retirement → Cash Flows page (Act 6 · RC6, over the workbench plan U7's runs): its three named states
+ * (first load, updating, error), the withheld words, the steady/rough select, and the words around the table, with the lanes faked so each state is held; and the settle hook every harness waits on (`main.result`).
  */
 
 afterEach(cleanup)
@@ -90,27 +90,31 @@ describe('Shell — the table’s three states', () => {
     expect(screen.getByRole('rowheader', { name: new RegExp(`^${BUILD_YEAR}`) })).toBeInTheDocument()
   })
 
-  it('the switch shows the rough market’s words and rows with no new run', async () => {
+  it('the future select shows the rough market’s words and rows with no new run', async () => {
+    const user = userEvent.setup()
     const { lanes, lane, settleAll } = heldLanes()
     const { container } = renderRoom(snapshotWith(finalAnswer()), lanes)
     await settleAll('run')
-    const lastRow = () => [...container.querySelectorAll('tr[data-year]')].at(-1)?.textContent ?? ''
+    const lastRow = () => [...container.querySelectorAll('table tbody tr')].at(-1)?.textContent ?? ''
     const steadyRow = lastRow()
-    fireEvent.click(screen.getByLabelText(copy.workbenchViewRough))
+    await user.click(screen.getByRole('combobox', { name: copy.workbenchViewLegend }))
+    await user.click(await screen.findByRole('option', { name: copy.workbenchViewRough }))
     expect(screen.getByText(/One future, in a rough market: the market runs as history did from 1966 to 1995/)).toBeInTheDocument()
     expect(screen.getByRole('table')).toBeInTheDocument()
     expect(lane.request).toHaveBeenCalledTimes(2)
     // The rows are the rough run's own, not the steady rows under the rough words (the U7 review's T1): the last
-    // year's figures move with the market, and each one the rough run's own row prints is on screen.
+    // year's figures move with the market, and each one-field figure the Summary shows from the rough run's own last row
+    // is on screen.
     const roughRow = lastRow()
     expect(roughRow).not.toBe(steadyRow)
     const run = tableRunFor(finalAnswer())
     if (run.kind !== 'run' || run.views.rough.kind !== 'run') throw new Error('[test setup] no rough run')
     const ask = run.views.rough.request
     const out = simulate(ask.params, ask.seed, ask.options)
-    const rows = out.indeterminate || out.infeasible ? [] : (out.distribution.ledgerRows ?? [])
-    const own = composeYearTable({ rows, meta: run.meta, view: 'rough', roughEndYear: 1995 }).rows.at(-1)!
-    const printed = own.cells.flat().flatMap((f) => (f === null ? [] : [formatTableDollars(f.value)]))
+    const own = (out.indeterminate || out.infeasible ? [] : (out.distribution.ledgerRows ?? [])).at(-1)!
+    const printed = [own.spending ?? 0, own.taxPaid, own.socialSecurity, own.draw.taxable, own.draw.pretax, own.draw.roth]
+      .filter((v) => tableDollars(v) !== 0)
+      .map(formatTableDollars)
     expect(printed.length).toBeGreaterThan(0)
     for (const figure of printed) expect(roughRow).toContain(figure)
   })
@@ -122,10 +126,10 @@ describe('Shell — the table’s three states', () => {
     view.rerender(
       shellOver(snapshotWith(finalAnswer('k2')), lanes),
     )
-    expect(screen.getByText(copy.workbenchTableUpdating, { selector: '.wb-updating' })).toBeInTheDocument()
+    expect(screen.getByText(copy.workbenchTableUpdating, { selector: '[data-cash-flows-updating]' })).toBeInTheDocument()
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true')
     await settleAll('run')
-    expect(screen.queryByText(copy.workbenchTableUpdating, { selector: '.wb-updating' })).toBeNull()
+    expect(screen.queryByText(copy.workbenchTableUpdating, { selector: '[data-cash-flows-updating]' })).toBeNull()
     expect(screen.getByRole('table')).not.toHaveAttribute('aria-busy')
   })
 
@@ -136,9 +140,9 @@ describe('Shell — the table’s three states', () => {
     view.rerender(
       shellOver(snapshotWith(finalAnswer(), true), lanes),
     )
-    expect(screen.getByText(copy.workbenchTableUpdating, { selector: '.wb-updating' })).toBeInTheDocument()
+    expect(screen.getByText(copy.workbenchTableUpdating, { selector: '[data-cash-flows-updating]' })).toBeInTheDocument()
     // The pinned box's label line says the answer is being worked out again.
-    expect(screen.getByText(copy.workbenchPinnedRefiguring, { selector: '.wb-pin__status' })).toBeInTheDocument()
+    expect(screen.getByText(copy.workbenchPinnedRefiguring, { selector: '[data-pinned-status]' })).toBeInTheDocument()
   })
 
   it('error: one calm sentence, no rows, no retry; the wordmark is the way back', async () => {
@@ -273,7 +277,7 @@ describe('Shell — the date route', () => {
     )
     expect(lane.request).toHaveBeenCalledTimes(2)
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true')
-    expect(screen.getByText(copy.workbenchTableUpdating, { selector: '.wb-updating' })).toBeInTheDocument()
+    expect(screen.getByText(copy.workbenchTableUpdating, { selector: '[data-cash-flows-updating]' })).toBeInTheDocument()
   })
 })
 
@@ -333,7 +337,7 @@ describe('Shell — the settle hook every harness waits on (plan 3.1)', () => {
     view.rerender(shellOver(snapshotWith(finalAnswer(), true), lanes))
     expect(mains()[0]).toHaveAttribute('data-answer-tier', 'final')
     expect(mains()[0]).toHaveAttribute('data-answer-refiguring')
-    for (const page of ['probability', 'facts', 'table'] as const) {
+    for (const page of ['probability', 'table', 'facts'] as const) {
       showPage(page)
       expect(mains(), `${page}: exactly one main.result`).toHaveLength(1)
       expect(mains()[0]).toHaveAttribute('data-answer-refiguring')
@@ -347,12 +351,80 @@ describe('Shell — the settle hook every harness waits on (plan 3.1)', () => {
   it('every interim page wears the banner, outside any `.rc-root`, and its page sits outside one too', () => {
     const { lanes } = heldLanes()
     renderRoom(snapshotWith(finalAnswer()), lanes)
-    for (const page of ['table', 'facts', 'strategies', 'health'] as const) {
+    for (const page of ['facts', 'strategies', 'health'] as const) {
       showPage(page)
       expect(screen.getAllByText(copy.shellInterimBanner)).toHaveLength(1)
       const interim = document.querySelector('.shell-interim')!
       expect(interim.closest('.rc-root'), `${page}: the interim container sits outside the scoped preflight`).toBeNull()
     }
+  })
+})
+
+describe('Shell — RC6: Retirement → Cash Flows', () => {
+  it('a figured page: no interim banner, one in-frame R13 caveat (the trailing mount hidden), Summary and Accounts tabs', async () => {
+    const { lanes, settleAll } = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), lanes)
+    await settleAll('run')
+    const main = document.querySelector('main.result')!
+    expect(main).toHaveAttribute('data-shell-screen', 'cash-flows')
+    expect(main).toHaveAttribute('data-inframe-disclaimer')
+    expect(main.querySelectorAll('[data-caveat]')).toHaveLength(1)
+    expect(screen.queryByText(copy.shellInterimBanner)).toBeNull()
+    expect(screen.getByRole('heading', { level: 1, name: copy.shellPageCashFlows })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: copy.cashFlowsTabSummary })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tab', { name: copy.cashFlowsTabAccounts })).toBeInTheDocument()
+    // Income tax is a plain header, never a drill.
+    expect(screen.queryByRole('button', { name: copy.workbenchColIncomeTax })).toBeNull()
+    expect(screen.getByRole('columnheader', { name: copy.workbenchColIncomeTax })).toBeInTheDocument()
+  })
+
+  it('a drill and its breadcrumb round-trip: the underlined header opens its columns under "Summary / Expenses", and Summary goes back', async () => {
+    const { lanes, settleAll } = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), lanes)
+    await settleAll('run')
+    const title = () => document.querySelector('[data-cash-flows-title]')!
+    expect(title().textContent).toBe(copy.cashFlowsTabSummary)
+    const before = screen.getAllByRole('columnheader').map((h) => h.textContent)
+    fireEvent.click(screen.getByRole('button', { name: copy.cashFlowsGroupExpenses }))
+    expect(title().textContent).toBe(`${copy.cashFlowsTabSummary}/${copy.cashFlowsGroupExpenses}`)
+    expect(title()).toHaveFocus()
+    expect(screen.getByRole('columnheader', { name: copy.workbenchLineMedicare })).toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: copy.workbenchColIncomeTax })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: copy.cashFlowsTabSummary }))
+    expect(title().textContent).toBe(copy.cashFlowsTabSummary)
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(before)
+  })
+
+  it('the download hands the browser a CSV of the shown cells, built in the page (no request)', async () => {
+    const { lanes, settleAll } = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), lanes)
+    await settleAll('run')
+    const blobs: Blob[] = []
+    const create = vi.fn((b: Blob) => {
+      blobs.push(b)
+      return 'blob:cash-flows'
+    })
+    const revoke = vi.fn()
+    Object.assign(URL, { createObjectURL: create, revokeObjectURL: revoke })
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    fireEvent.click(screen.getByRole('button', { name: copy.cashFlowsDownloadLabel }))
+    expect(click).toHaveBeenCalledTimes(1)
+    const text = await blobs[0]!.text()
+    const firstRow = [...document.querySelectorAll('table tbody tr')][0]!
+    const cells = [...firstRow.querySelectorAll('th, td')].map((c) => c.textContent ?? '')
+    // `Blob.text()` decodes with the mark stripped, so the mark is read off the bytes.
+    expect([...new Uint8Array(await blobs[0]!.arrayBuffer()).slice(0, 3)], 'a byte-order mark first').toEqual([0xef, 0xbb, 0xbf])
+    const csvRow = text.split('\r\n').find((l) => l.startsWith(cells[0]!))!
+    // Split on the commas outside quotes (a figure's grouping commas sit inside them).
+    const fields: string[] = ['']
+    let quoted = false
+    for (const ch of csvRow) {
+      if (ch === '"') quoted = !quoted
+      else if (ch === ',' && !quoted) fields.push('')
+      else fields[fields.length - 1] += ch
+    }
+    expect(fields).toEqual(cells)
+    click.mockRestore()
   })
 })
 

@@ -239,7 +239,8 @@ test.describe('CSP — real browser enforcement', () => {
     // served build, Probability draws its rings and its two balance bars (Highcharts again), and every interim tab is
     // visited. ANY violation reds (not a directive subset), and so does any request that leaves the build's own origin:
     // the act adds no network call. The table runs both views on the build's own engine worker, each one short run: the
-    // steady view lands first, then a press shows the rough one, each read by its own words over its own rows. The facts
+    // steady view lands first, then the future select shows the rough one, each read by its own words over its own rows; a
+    // drill opens and goes back, the CSV downloads (a blob built in the page), and the Accounts tab opens. The facts
     // page opens and closes one step sheet; Probability's Action Items tray (RC4b: a Base UI collapsible, its Edit drawer a
     // portaled dialog) runs one what-if through its Refresh; the lock menu (a portaled Base UI menu)
     // opens and closes; at a phone width the menu (a portaled Base UI dialog that animates) moves the page. The way home
@@ -294,22 +295,32 @@ test.describe('CSP — real browser enforcement', () => {
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the plan list injected a <style> element').toBe(0)
     await planList.getByRole('button', { name: copy.planListDone }).click()
     await expect(planList).toHaveCount(0)
-    // On to the year-by-year table (Retirement → Cash Flows), as before RC3.
+    // On to Retirement → Cash Flows (RC6: the kit's DataTable, its Selects, a drill, the Accounts tab, and the CSV handed
+    // to the browser as a file built in the page, a blob, with no request).
     await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageCashFlows, exact: true }).click()
-    await expect(page.getByRole('heading', { name: copy.workbenchPageTable })).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByText(copy.shellInterimBanner, { exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: copy.shellPageCashFlows })).toBeVisible({ timeout: 30_000 })
     expect(new URL(page.url()).hash).toBe('#/retirement/cash-flows')
 
-    const firstLine = page.locator('.wb-about__line').first()
-    await expect(page.locator('.wb-table'), 'the steady view’s rows never landed').toBeVisible({ timeout: 60_000 })
+    const firstLine = page.locator('[data-cash-flows-lines] p').first()
+    const frame = page.locator('[data-table-frame]')
+    await expect(frame, 'the steady view’s rows never landed').toBeVisible({ timeout: 60_000 })
     await expect(firstLine, 'the steady view’s words').toHaveText(copy.workbenchSteadyWhat)
-    await page.locator('.wb-view label.segment', { hasText: copy.workbenchViewRough }).click()
+    await page.locator('[data-cash-flows-controls]').getByRole('combobox', { name: copy.workbenchViewLegend }).click()
+    await page.getByRole('option', { name: copy.workbenchViewRough, exact: true }).click()
     const roughStart = roughWindow().startYear
     await expect(firstLine, 'the rough view’s words').toHaveText(
       slots.workbenchRoughWhat(roughStart, roughStart + ROUGH_WINDOW_YEARS - 1, ROUGH_WINDOW_YEARS),
     )
-    await expect(page.locator('.wb-table'), 'the rough view’s rows').toBeVisible()
-    await expect(page.locator('.wb-table-wrap--updating')).toHaveCount(0)
+    await expect(frame, 'the rough view’s rows').toBeVisible()
+    await expect(page.locator('[data-table-frame][data-busy]')).toHaveCount(0)
+    await frame.locator('thead button').first().click()
+    await expect(page.locator('[data-cash-flows-title]')).toContainText('/')
+    await page.locator('[data-cash-flows-title]').getByRole('button', { name: copy.cashFlowsTabSummary }).click()
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: copy.cashFlowsDownloadLabel }).click()])
+    expect(download.suggestedFilename(), 'the CSV arrives as a file').toMatch(/^cash-flows-.*\.csv$/)
+    await page.getByRole('tab', { name: copy.cashFlowsTabAccounts }).click()
+    await expect(page.getByRole('combobox', { name: copy.cashFlowsAccountsLabel })).toBeVisible()
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Cash Flows injected a <style> element').toBe(0)
 
     // The lock menu: a portaled menu, opened and closed by Escape.
     await page.getByRole('button', { name: new RegExp(`^${copy.lockMenuLabel}`) }).click()
@@ -358,14 +369,14 @@ test.describe('CSP — real browser enforcement', () => {
     await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
     await expect(tray, 'the tray never shut').toBeHidden()
 
-    // At a phone width the menu (a portaled, animated dialog) reaches the table page and closes on the choice.
+    // At a phone width the menu (a portaled, animated dialog) reaches Cash Flows and closes on the choice.
     await page.setViewportSize({ width: 390, height: 844 })
     await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
     const menu = page.getByRole('dialog', { name: copy.shellMenuTitle })
     await expect(menu, 'the phone menu never opened').toBeVisible()
     await menu.getByRole('link', { name: copy.shellPageCashFlows, exact: true }).click()
     await expect(menu).toHaveCount(0)
-    await expect(page.locator('main.result[data-shell-screen="interim-table"]')).toBeAttached()
+    await expect(page.locator('main.result[data-shell-screen="cash-flows"]')).toBeAttached()
 
     // The way home: the wordmark goes to Snapshot (a page move, so the unkept what-if survives and nothing is asked).
     await page.getByRole('link', { name: copy.shellHomeLabel }).click()

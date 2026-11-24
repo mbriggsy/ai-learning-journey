@@ -1,8 +1,8 @@
 /*
  * src/ui/workbench/railChrome.ts — the lever rail's composer (workbench plan U15; R16 to R20, R22, KTD12, KTD14,
  * KTD15). PURE: the committed answer's draft, a bundle and the runs' results in; what the rail offers, the two readings'
- * words, the paired year rows and Apply's state out. The page component (`WhatIfPage.tsx`) renders only what this
- * returns.
+ * words, the paired year rows and Apply's state out. Since RC4b the Action Items tray (`ActionItemsTray.tsx`) reads its
+ * offers and words here, and since RC6 Cash Flows' "Your plan beside the what-if" renders `composePaired`.
  *
  * THE LAWS IT KEEPS
  *  - What the rail offers is read off the COMMITTED answer's draft (`answer.draft`), the draft every what-if is applied
@@ -495,9 +495,14 @@ export function composePaired(input: {
   readonly columns: readonly PairedColumnId[]
   readonly plan: { readonly rows: readonly LedgerYearRow[]; readonly meta: TableMeta }
   readonly whatIf: { readonly rows: readonly LedgerYearRow[]; readonly meta: TableMeta }
+  /** Each run's name in its sentences (Cash Flows names the what-if it shows: "New what-if", a kept name,
+   *  "Recommended"); the rail's own two labels by default. */
+  readonly names?: { readonly plan: string; readonly whatIf: string }
 }): PairedTable {
   const { plan, whatIf } = input
   const meta = plan.meta
+  const planName = input.names?.plan ?? copy.workbenchRailPlanLabel
+  const whatIfName = input.names?.whatIf ?? copy.workbenchRailWhatIfLabel
   const byT = (rows: readonly LedgerYearRow[]) => new Map(rows.map((r) => [r.t, r]))
   const planByT = byT(plan.rows)
   const whatIfByT = byT(whatIf.rows)
@@ -507,8 +512,8 @@ export function composePaired(input: {
     const w = whatIfByT.get(t)
     const year = meta.startCalendarYear + t
     const notes = [
-      ...(p?.ranOut === true ? [slots.workbenchPairRanOut(copy.workbenchRailPlanLabel, year)] : []),
-      ...(w?.ranOut === true ? [slots.workbenchPairRanOut(copy.workbenchRailWhatIfLabel, year)] : []),
+      ...(p?.ranOut === true ? [slots.workbenchPairRanOut(planName, year)] : []),
+      ...(w?.ranOut === true ? [slots.workbenchPairRanOut(whatIfName, year)] : []),
     ]
     return {
       t,
@@ -526,8 +531,8 @@ export function composePaired(input: {
   const kept = input.columns.filter((_, i) => keep[i])
   const keptRows = rows.map((r) => ({ ...r, cells: r.cells.filter((_, i) => keep[i]) }))
   const yieldLines = [
-    [copy.workbenchRailPlanLabel, yieldLine(plan.meta, plan.rows)] as const,
-    [copy.workbenchRailWhatIfLabel, yieldLine(whatIf.meta, whatIf.rows)] as const,
+    [planName, yieldLine(plan.meta, plan.rows)] as const,
+    [whatIfName, yieldLine(whatIf.meta, whatIf.rows)] as const,
   ].flatMap(([run, line]) => (line === null ? [] : [slots.workbenchPairYield(run, line)]))
   return { columns: kept.map((id) => ({ id, header: COLUMN_READS[id].header(meta) })), rows: keptRows, yieldLines }
 }

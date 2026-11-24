@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-23, b9-1):** THE MANDATE (Briggsy, 2026-11-22; memory `project-b9-mandate-replicate-rightcapital`): replicate RightCapital for him alone, all its features and its flow, to get confidence in his own plan; the bar is "Briggsy good" (no slop, no pointless tests or process; the global CLAUDE.md). The map is `docs/plans/rightcapital-map.md`, ruled 2026-11-22 (the workspace home; the map's order): each gap in that order, opened with `/brief <that gap>`. Gap 1 (the year-by-year table) is workbench U2–U8, statuses in the roadmap's mandate table; U7 is done. Next: U8 (the facts page), opened with `/brief <its topic>`, with the plan's U8 *Carried in* line; then U8's whole-file review with an adversary and every finding verified; then `/distill` (174 entries owed). Parked (b9-5's call under the mandate, the register's composites entry, prescription (4)): the record card's seat. The D7 queue and the tiered lists below are pre-mandate: judge each against the mandate when it is reached.
+▶ **START HERE (2026-11-23, b9-2):** THE MANDATE (Briggsy, 2026-11-22; memory `project-b9-mandate-replicate-rightcapital`): replicate RightCapital for him alone, all its features and its flow, to get confidence in his own plan; the bar is "Briggsy good" (no slop, no pointless tests or process; the global CLAUDE.md). The map is `docs/plans/rightcapital-map.md`, ruled 2026-11-22 (the workspace home; the map's order): each gap in that order, opened with `/brief <that gap>`. Gap 1 (workbench U2–U8) is done; statuses in the roadmap's mandate table. Next: `/distill` (151 entries owed); then gap 2 (the workspace with kept what-ifs), opened with `/brief <gap 2>`: re-check workbench U14–U16 against the map first (insight 041); U15 needs U9 (schema version 6), which the plan puts after build 2's close, so settling that order is gap 2's first step; then its build units, each opened with `/brief <that unit's topic>`; then the whole-file review with an adversary and every finding verified; then `/distill`. Owed to Briggsy: his cold read of the facts page's words. Parked (b9-5's call under the mandate, the register's composites entry, prescription (4)): the record card's seat. The D7 queue and the tiered lists below are pre-mandate: judge each against the mandate when it is reached.
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** Its plan, `docs/plans/features/working-year-surplus-build-spec.md`, is checked as a whole; its
@@ -243,13 +243,13 @@ register header's sweep paragraph) bind the next tier sweep. Next, in order:
 **Nothing parks.** Every new string is drafted and ships flagged; the saved shapes are the pilot's until Briggsy saves his first
 real plan.
 
-**SESSION 2026-11-23 (b9-1: U7 finished; digest below):**
+**SESSION 2026-11-23 (b9-2: U8 finished; digest below):**
 
 State at close:
-- U7 done (`55f09a79`, `acae326a`); its record is the plan's U7 *Slices* note.
-- **Check at start:** `gh run view 45283162808` (`acae326a`: unit green at close, fit and RV running), and the docs-only commits' quick job (`gh run list --commit <full sha>`); `pnpm verify:aca` goes stale ~2026-12-12.
-- **U8 carries two items from U7's review:** the plan's U8 *Carried in* line (`docs/plans/5-workbench-plan.md`).
+- U8 done (`d22b1867`); its record is the plan's U8 *As built* note and the roadmap's U8 row. `/distill` cleared 23 list entries (`5c140ccd` to `8baf7648`).
+- **Check at start:** `gh run view 45308495699` (`d22b1867`'s suite: RV green at close, unit and fit running; its quick job, 45308495690, green), and the docs-only commits' quick job (`gh run list --commit <full sha>`, `8baf7648` the last); `pnpm verify:aca` goes stale ~2026-12-12.
 - **For Briggsy's digest (walk 10's card, if it runs):**
+  - NEW (b9-2): the room has a second page, "Your facts": everything you told the tool, grouped the way the walk asked it, each figure exact, each group's Edit opening the walk's own step for it; your choices (withdrawal order, Roth plan, budget, subsidy rules, survivor share, heir bracket) open the sheets the answer already uses; the answer stays pinned above both pages and stays put when it refigures. Every word on it is a flagged draft for your read (the group names, "the tool's own figure, not one you gave", the year-0 note, "Social Security started"). Filed, your call later: on the phone a work edit that flips you between working and retired resizes the pinned answer (the register, Tier 2).
   - NEW (b9-1): the table fits the widest household (two 20-character names, every account kind) at 1440, 1280 and on a phone; fixed: 1280 scrolled sideways, headers broke mid-word, the phone cut sentences. Pilot calls: names wrap between people; a 12 px column gap.
   - NEW (b9-1): its words match its numbers (the pay check's "Income tax" and its footnote by your state; why a left over isn't kept; the unpriced-state line), all flagged drafts. Filed, your call later: at a 20 px browser font the widest table spills sideways at 1440 (the register, Tier 2).
   - NEW (b9-10): the year-by-year table is in (a row a year; a rough-market switch; the answer pinned above). Pilot calls to read: three-line boxes, one "Pre-tax moves" column, a repeated sentence said once. Words (`workbench*`) are flagged drafts.
@@ -277,7 +277,7 @@ State at close:
     - The restatement predicates apply on EVERY line, one-run lines included. A non-twin one-run opener reads "Each working year you’re both alive, the answer at your spending would add at most …".
     - T's twin also requires the close's difference to be one figure. That is unreachable on every witness: the review proved it.
 
-Handed to b9-10.
+Handed to b9-3.
 
 **Walk 10's targets, at `REAL` (1440×731 @ 2):** the changed strings (the walk-9 spec's Units line: seats on T, CR and PN for F3, the phone seat, wide-PN and the listener on PN for F2, every flip tested); W9-R7's window frames (the phone after Close, the laptop beside the open panel); the re-point's frames `seed:budget`, `vault:stale`, `vault:statestale`, `seed:surplus`, `vault:rec`, `vault:recold`, `vault:datesavedfourbuckets`; the composites plan's plants, asserted in the gate since U6 (`4d5384fc`): `seed:patypical`, `vault:yearpa`, `vault:yearfailing`, `vault:yearrec`, `vault:recpa`, `vault:yearparec`, the yearly ones at `RETURN_DAY` through the Caddie harness's pin; and rung 3's plants (`e49e352f`, `fe1c7f16`): `seed:failing`, `seed:failingtypical`, `seed:failingentered`, `seed:offtracktypical`, `vault:yearpafailing`, `vault:yearofftrack`, `vault:yearfailingentered`, with the held four (`seed:surplustypical`, `seed:pasurplustypical`, `vault:yearsurplus`, `vault:yearpafailing` on ubuntu) and the widest plants (`seed:failingwidest`, `seed:surpluswidest`) read as the seat council's evidence if it has not ruled.
 
@@ -304,13 +304,6 @@ Handed to b9-10.
 **⚑ RULED by Briggsy 2026-11-09 (b9-8): the verb is "update" ("ok update it is")** on A, B and C; S keeps "confirm or
 change". Never re-propose "check", and never swap the verb in `WORKING_COST_ACT_COPY` on the old council's flip condition.
 The 2026-11-19 "Yes, tag it" ruling (never re-ask) lives in the register's W9-R7 entry.
-
-**The review's gates** (each fix commit, as its plan's Verification Contract scopes them; each heavy run alone, in sequence, UNPINNED on the Lenovo; `<B>` is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus`, which since the Dell died holds only `tools\run-pinned.cmd`):
-1. Before the first edit: `git rev-parse HEAD`, the re-anchor base.
-2. After the last edit: `pnpm typecheck`, `pnpm lint`, and every edited e2e spec through a scratch tsconfig (landmine below).
-3. The re-anchor procedure (`docs/landmines.md`, *Citations and the doc gates*, its b9-1 bullet), then the reached test files (CI runs the full suite), then `pnpm verify:doc-stats` (retype the count in `README.md` and `docs/roadmap.md`), its exit code read from a file, never through a pipe.
-4. `verify:fit` only for Windows readings, and only the arms the commit measures or whose slot it moved (`-g`); never the whole harness or CI's whole list as a routine: CI runs every gate on every push (the project CLAUDE.md's *Test cadence*, ruled 2026-11-22).
-5. The sweep and the per-key idcheck, only where a plan's Verification Contract calls them (a unit that touches `src/engine` or `intakeMap`): both lived in `<B>\tools\` and died with the Dell; rebuild them before such a unit. The walk-9 spec's units touch neither.
 
 **LANDMINES (the composite build, round 3, walk 10, U12):** before a fix commit, read `docs/landmines.md`'s The fit gate and e2e, The mutation harness, Copy and copyGuard, Windows and the shell, Probes and measurement, and Citations and the doc gates (every commit that runs `pnpm doc:reanchor` follows the review's gates step 3 below).
 
@@ -912,6 +905,13 @@ schedule the July pass, or the first thing that tells you is a blocked build.
 ---
 
 ## Standing cadences
+
+**The review's gates** (each fix commit, as its plan's Verification Contract scopes them; each heavy run alone, in sequence, UNPINNED on the Lenovo; `<B>` is `C:\Users\brigg\.claude\projects\C--Users-brigg-ai-learning-journey-projects-the-back-nine\b9-build2-surplus`, which since the Dell died holds only `tools\run-pinned.cmd`):
+1. Before the first edit: `git rev-parse HEAD`, the re-anchor base.
+2. After the last edit: `pnpm typecheck`, `pnpm lint`, and every edited e2e spec through a scratch tsconfig (landmine below).
+3. The re-anchor procedure (`docs/landmines.md`, *Citations and the doc gates*, its b9-1 bullet), then the reached test files (CI runs the full suite), then `pnpm verify:doc-stats` (retype the count in `README.md` and `docs/roadmap.md`), its exit code read from a file, never through a pipe.
+4. `verify:fit` only for Windows readings, and only the arms the commit measures or whose slot it moved (`-g`); never the whole harness or CI's whole list as a routine: CI runs every gate on every push (the project CLAUDE.md's *Test cadence*, ruled 2026-11-22).
+5. The sweep and the per-key idcheck, only where a plan's Verification Contract calls them (a unit that touches `src/engine` or `intakeMap`): both lived in `<B>\tools\` and died with the Dell; rebuild them before such a unit. The walk-9 spec's units touch neither.
 
 - `/ultramode-code-review` at every unit boundary; the **four-skill UI loadout** before ANY user-facing
   surface (CLAUDE.md "UI design skills").

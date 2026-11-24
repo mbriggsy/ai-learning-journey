@@ -20,6 +20,14 @@
   padding: var(--space-5) var(--gutter) var(--space-6);
 }
 
+/* The old answer page's frame on the interim Tax Strategies tab (`Result.tsx`): this column already pads by the gutter,
+ * so the frame's own inline gutter doubled it (32 px a side on a phone). The recommendation chart, tuned on a 358 px
+ * phone box (`RecommendationViz.tsx`), got 326, and its 24-character bar label broke to three lines over the delta
+ * figure on CI's fonts (run 45477118575, PHONE). RC8 rebuilds the tab. */
+.shell-interim .result-page {
+  padding-inline: 0;
+}
+
 .shell-interim__title {
   font-family: var(--font-display);
   font-optical-sizing: auto;

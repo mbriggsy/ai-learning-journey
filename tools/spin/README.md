@@ -23,6 +23,14 @@ Folder: C:\Users\brigg\ai-learning-journey\projects\the-back-nine
 
 The third number is how many tabs, not the last number. `spin b9 10 10` gives b9-10 through b9-19.
 
+## Ask Claude to run it
+
+You don't have to be at the laptop. Tell any open Claude session something like "add 3 more b9s," either in its terminal or from your phone through Remote Control. Claude checks which sessions are open, runs `spin` from the project's folder and tells you the names it opened.
+
+- **Ask a session that isn't in the chain.** Don't ask the one doing the work. A session waiting for its handoff could do it, but that would use up some of the context it's saving for its turn.
+- **The new sessions show up on your phone** within seconds, because Remote Control starts with every session (`remoteControlAtStartup` in `~\.claude\settings.json`). Tested 2026-11-24 on a session `spin` opened.
+- **The laptop has to be awake.** Plugged in, it stays up. On battery it goes to sleep and everything freezes.
+
 ## What you get
 
 - Each tab runs Windows PowerShell with `claude --name b9-N` in the folder you ran `spin` from. When you `/exit` Claude, the tab stays open at a PowerShell prompt.

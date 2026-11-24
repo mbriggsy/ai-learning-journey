@@ -3,7 +3,7 @@ title: A filed prescription does not inherit the trust of its diagnosis — audi
 date: 2026-07-27
 phase: U17 — the S5 residue sweep (the pre-work before S6)
 modules: [TODO.md, src/ui/styles/recommendation.css, src/ui/__tests__/recommendationSaveGesture.test.tsx, src/ui/devSeeds.ts, .claude/workflows/caddie.js]
-tags: [process, queue, prescriptions, verification, mobile-first, mutation-testing, dev-seeds, insight-017, entry-premise, impossible-household]
+tags: [process, queue, prescriptions, verification, mobile-first, mutation-testing, dev-seeds, insight-017, entry-premise, impossible-household, prescription-vs-negative]
 ---
 
 ## Problem
@@ -92,3 +92,10 @@ The Tier 1 premium entry assumed a marketplace spouse beside a worker — a hous
 (`employerCoverageUnpriced`). The real shape, her share of the plan at work inside an ENTERED W, changed the remedy
 from an engine step to words. A diagnosis inherits no more trust than its prescription does: before measuring an
 entry's size, check the household it describes can exist in the code.
+
+## Extended (2026-11-23, moved from TODO's distill list): check a prescription's formula against its own entry's NEGATIVE
+
+A register entry can carry a prescription that breaks the binding NEGATIVE written beside it. Build 2's (B) prescribed
+the working-year tax as tax(W + X) − tax(W), which charges $0 where Social Security alone is taxable; that broke the
+entry's own NEGATIVE, and the plan's KTD1 added the T(0, ss) term before building. Before building a filed
+prescription, run its formula through every case the entry's own NEGATIVE names.

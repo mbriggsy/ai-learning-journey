@@ -3,7 +3,7 @@ title: A refusal arm's copy must describe the predicate's whole extension — ne
 date: 2026-07-23
 phase: The median-advantage + typed-refusal steer increment (review wf_6f89fe6f-35a)
 modules: [src/ui/copy.ts, src/intake/solveDispatch.ts, src/engine/solver/candidates.ts]
-tags: [copy-contract, refusal-arm, predicate-extension, calm-but-wrong, no-pretax, superset, stopgap-help, household-shapes]
+tags: [copy-contract, refusal-arm, predicate-extension, calm-but-wrong, no-pretax, superset, stopgap-help, household-shapes, ruled-words, render-sites]
 ---
 
 ## Problem
@@ -61,3 +61,11 @@ count "health premiums before anyone's Medicare starts" — right for its poster
 worker's plan), and it told `dateshort` (one spouse already on Medicare, one working) to count no premium at all. And
 "leave out Medicare premiums" turned a register gap (no sentence covers it) into an instruction that hides the cost.
 Walk a help sentence against each seed's household shape before shipping it (b9-3's Caddie card).
+
+## Extended (2026-11-23, moved from TODO's distill list): a ruled word change can be false on a route its ruling never saw
+
+A word Briggsy rules is ruled for the screens he saw. b9-1 (2026-10-16) traced every render site of a ruled string
+through a workflow before the first edit, and the trace found two routes where the new words were false: the aged
+plan ("starting now") and the wide gap ("add none"). The same law as this insight's: copy describes every household
+its predicate reaches, so trace each render site of a ruled string before changing it, and bring a route that
+falsifies it back to him with the measured case.

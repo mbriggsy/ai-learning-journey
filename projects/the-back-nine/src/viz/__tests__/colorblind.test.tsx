@@ -458,3 +458,36 @@ describe('CVD self-test — the clone’s band (RC_BAND: B9’s lightness law at
     expect(minCvdDistance(lightest, BG)).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
   })
 })
+
+// ─── THE CLONE'S MEDIAN LINE OVER ITS OWN BAND (Act 6 · RC3; insight 038) ──────────────────────────────────────────
+// The fan's median is a solid line drawn OVER both ranges, which share one hue: a line in the band's own hue is
+// swallowed by it under CVD (insight 038's blue-on-blue). The line's stroke is SOURCE-BOUND to the rule that paints it
+// (`chartTheme.css`'s `.b9-fan-median .highcharts-graph`) and to the token sheet that names its value; it must clear
+// the 0.10 floor against EVERY RC_BAND stop under all three simulations (the line can sit over any stop as the fan
+// moves). The planted arm draws the same line in the band's darkest stop and in the series blue: each fails somewhere.
+function fanMedianStroke(): string {
+  const here = dirname(fileURLToPath(import.meta.url))
+  const css = readFileSync(join(here, '..', 'charts', 'chartTheme.css'), 'utf8')
+  const m = css.match(/\.b9-fan-median \.highcharts-graph[^{]*\{[^}]*stroke:\s*var\((--[\w-]+)\)/)
+  if (m === null) throw new Error('chartTheme.css paints no stroke var on .b9-fan-median — the composite cannot run')
+  return readThemeToken(m[1]!)
+}
+
+describe('CVD self-test — the clone’s median line over every band stop (insight 038)', () => {
+  const P = Array.from({ length: 21 }, (_, i) => i / 20)
+  const stops = P.map((p) => hexOf(rcBandStopCss(p)))
+  const line = fanMedianStroke()
+
+  it('the median line clears the 0.10 floor against EVERY RC_BAND stop, with normal vision and under all three sims', () => {
+    const worst = Math.min(...stops.map((s) => Math.min(distOklab(mustParse(line), mustParse(s)), minCvdDistance(line, s))))
+    // Measured 2026-11-24 (RC3): stone-900 #1c1917 against the band's darkest stop (L 0.42) is the binding pair.
+    expect(worst).toBeGreaterThanOrEqual(CVD_MIN_OKLAB)
+  })
+
+  it('PLANTED: the same line in the band’s own darkest stop, or in the series blue, fails the floor somewhere', () => {
+    for (const wrong of [stops[0]!, RC_HUES.blue]) {
+      const worst = Math.min(...stops.map((s) => minCvdDistance(wrong, s)))
+      expect(worst).toBeLessThan(CVD_MIN_OKLAB)
+    }
+  })
+})

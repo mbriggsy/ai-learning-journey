@@ -25,8 +25,9 @@ import { currentEpochDay } from './scenarioFromDraft'
 import type { RecommendationGoal, SavedRecommendationV3 } from '@shared/model'
 import { GoalPicker } from '@intake/GoalPicker'
 import { RecommendationSurface, SavedRecordCard, type RecommendationSaveProp } from './RecommendationSurface'
-import { savedRecordCardView, type SavedRecordCopy } from './recommendationSaveView'
-import { copy, slots } from './copy'
+import { savedRecordCardView } from './recommendationSaveView'
+import { SAVED_RECORD_COPY } from './savedRecordCopy'
+import { copy } from './copy'
 import { appModel } from './appModel'
 import { Disclaimer } from './Disclaimer'
 import { FuckOffDate } from './FuckOffDate'
@@ -58,28 +59,6 @@ export type ResultBackupProp = { readonly onSave: () => void }
 export type RecommendationRecordProp = {
   readonly status: SavedRecommendationStatus
   readonly record: SavedRecommendationV3
-}
-
-/**
- * The record card's copy, assembled ONCE at module scope from the swept catalog.
- *
- * `savedRecordCardView` takes its strings as a parameter rather than reading `copy.ts` (its own
- * header explains why), and the cause map is typed `Record<SavedRecommendationSupersededCause,
- * string>` — EXHAUSTIVE, so the day the store adds a fifth supersession cause THIS literal fails to
- * compile (TS2741) instead of the composer silently emitting a card with a missing clause.
- */
-const SAVED_RECORD_COPY: SavedRecordCopy = {
-  heading: copy.recommendRecordHeading,
-  stillHolds: copy.recommendRecordHolds,
-  causes: {
-    'inputs-changed': copy.recommendRecordSupersededInputs,
-    'inputs-unavailable': copy.recommendRecordSupersededUnavailable,
-    'solver-changed': copy.recommendRecordSupersededSolver,
-    'rules-changed': copy.recommendRecordSupersededRules,
-  },
-  savedIn: slots.recommendRecordSavedIn,
-  reopenLabel: copy.recommendRecordReopenCta,
-  reopenCostLine: copy.recommendRecordReopenCost,
 }
 
 export function Result({

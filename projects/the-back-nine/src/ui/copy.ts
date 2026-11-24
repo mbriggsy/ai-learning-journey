@@ -2539,7 +2539,7 @@ export const copy = {
   recSeeRunnerUp: 'How the runner-up compared',
   // --- The workbench room (Act 5, U6): the door on the answer's quiet row, the room's own chrome, its load
   // failure and its leave-with-an-open-entry ask. The pilot's drafts, shipped flagged for Briggsy's cold read. ---
-  workbenchDoorCta: 'See your plan year by year',
+  workbenchDoorCta: 'See your plan’s pages',
   workbenchBack: 'Back to your answer',
   workbenchLoadFailed: 'These pages didn’t load. Your plan and your answers are untouched.',
   // After a retry has failed too: some browsers keep a failed load for the whole visit, so only a reload fetches it again.
@@ -2552,7 +2552,7 @@ export const copy = {
   workbenchLeaveGo: 'Go back',
   workbenchLeaveStay: 'Stay here',
   // The door pressed over an entry still open on the answer (a budget sheet's typed lines survive its Cancel).
-  workbenchDoorAsk: 'You started an entry on this page that isn’t added yet. Opening the year-by-year page drops it.',
+  workbenchDoorAsk: 'You started an entry on this page that isn’t added yet. Opening your plan’s pages drops it.',
   workbenchDoorAskGo: 'Open it and drop the entry',
   // --- Act 6 · RC2, the shell (plan docs/plans/6-rightcapital-ui-plan.md, section 3.1): the top bar, the pages, the
   // phone's menu, the lock menu (the one save machine's states, `src/ui/shell/lockMenu.ts`) and the interim banner. ---
@@ -2580,6 +2580,53 @@ export const copy = {
   lockWordSaving: 'Saving…',
   lockWordViewOnly: 'View only',
   lockNoneNote: 'Some answers are missing, so this plan can’t be saved yet.',
+  // --- Act 6 · RC3, Dashboard → Snapshot (plan docs/plans/6-rightcapital-ui-plan.md, RC3): the home's cards. Every
+  // count rides the X-of-10 slots (`ringReading.ts`); every projected figure wears `~` through the slots below. ---
+  shellModuleDashboard: 'Dashboard',
+  shellPageSnapshot: 'Snapshot',
+  snapshotRingTitle: 'Your plan across many futures',
+  // The ring's caption where the reading carries no outcome word (a what-if or answer the engine could not grade).
+  snapshotRingNoReading: 'Not enough to read yet',
+  snapshotRingOpen: 'Open the Analysis page',
+  snapshotStatRateShort: 'Withdrawal rate',
+  snapshotStatRateLabel: 'Withdrawal rate in your first retired year, in the steady future',
+  snapshotStatTaxShort: 'Income tax',
+  snapshotStatTaxRetiredLabel: 'Lifetime income tax, in the steady future',
+  snapshotStatTaxWorkingLabel: 'Income tax after you stop working, in the steady future',
+  snapshotStatWaiting: 'Being worked out from the steady future…',
+  snapshotStatError: 'The steady future couldn’t be worked out, so these figures wait.',
+  snapshotStatNoRate: 'No invested money at the start of that year, so there’s no rate to show.',
+  snapshotStatOpen: 'Open the Cash Flows page',
+  snapshotInvestedTitle: 'Invested accounts',
+  snapshotInvestedTaxable: 'Taxable',
+  snapshotInvestedPretax: 'Pre-tax',
+  snapshotInvestedRoth: 'Roth',
+  snapshotInvestedHsa: 'HSA',
+  snapshotInvestedTotal: 'Total',
+  snapshotInvestedAsEntered: 'Balances as you entered them.',
+  snapshotInvestedStopgap: 'B9 doesn’t ask about your home, debts or bank accounts yet.',
+  snapshotInvestedOpen: 'Open your facts',
+  snapshotFanTitle: 'Your savings across many futures',
+  snapshotFanOuter: 'Eight in ten futures',
+  snapshotFanInner: 'The middle half of futures',
+  snapshotFanMedian: 'The most likely path',
+  // The words printed INSIDE each range (short, so they fit a phone's plot); the legend carries the full names above.
+  snapshotFanOuterWords: 'Eight in ten',
+  snapshotFanInnerWords: 'Middle half',
+  snapshotFanDescription:
+    'Your savings in today’s dollars, year by year: the most likely path, the middle half of futures, and the range eight in ten futures fall inside.',
+  snapshotFanNone: 'There’s no range to draw: your plan holds no invested money to chart.',
+  snapshotFanAgeAxisYou: 'Age',
+  snapshotFanNoDate: 'Your answer has no date yet, so there’s no range to draw.',
+  snapshotFanWaiting: 'The range waits for your answer.',
+  snapshotRecTitle: 'Recommendations',
+  snapshotRecNone: 'No recommendation yet.',
+  snapshotRecFindOne: 'Find one on your answer page',
+  snapshotRecKeep: 'Keep this recommendation',
+  snapshotRecTry: 'Try it in the plan',
+  snapshotRecWorkingRoute:
+    'Strategy recommendations come later for a plan with working years still ahead; this page will show one once they do.',
+  snapshotRecSuperseded: 'No longer current',
   // --- The year-by-year table (Act 5, U7). The pilot's drafts, shipped flagged for Briggsy's cold read. The heading
   // is bound by `docs/decisions/workbench-one-future.md` §5: steady is never typical, average, expected or median, nor
   // placed in the middle of the range (copyGuard's ONE_FUTURE_BANNED sweeps every workbench string), and the rough
@@ -4718,7 +4765,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2144` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2152` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5303,4 +5350,21 @@ export const slots = {
   workbenchPairRanOut: (run: string, year: number): string => `${run}: the money runs out in ${year} in this future.`,
   /** KTD32's stopgap on the paired form, named for the run whose taxable ledger holds money (round 3's c3-adv-hidden-work-4). */
   workbenchPairYield: (run: string, line: string): string => `${run}: ${line}`,
+  // --- Act 6 · RC3, Snapshot (`snapshotView.ts`, `ringReading.ts`) ---
+  /** The ring's caption on the date route: the stop year the reading is taken at. */
+  snapshotRingStopIn: (year: number): string => `if you stop in ${year}`,
+  /** The Invested accounts card's premise on a plan saved in an earlier year (`agedBalancesYearFor`). */
+  snapshotInvestedAsEnteredIn: (year: number): string => `Balances as you entered them in ${year}; what you hold now may differ.`,
+  /** A projected figure on a card or in a chart's tooltip: the `~` hedge on a pre-formatted figure. */
+  snapshotApprox: (figure: string): string => `~${figure}`,
+  /** The withdrawal rate, one decimal, hedged. */
+  snapshotRate: (percent: number): string => `~${percent.toFixed(1)}%`,
+  /** The fan's x axis: whose age the ticks name. */
+  snapshotFanAgeAxis: (name: string): string => `${name}’s age`,
+  /** The fan's tooltip lines (both ages, the eight-in-ten range, the most likely path). */
+  snapshotFanTipRange: (low: string, high: string): string => `Eight in ten futures: ~${low} to ~${high}`,
+  snapshotFanTipMedian: (median: string): string => `The most likely path: ~${median}`,
+  /** The screen reader's sentence for one year of the fan. */
+  snapshotFanPoint: (ages: string, low: string, median: string, high: string): string =>
+    `${ages}: the most likely path ~${median}; eight in ten futures between ~${low} and ~${high}.`,
 } as const

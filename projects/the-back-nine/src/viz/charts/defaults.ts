@@ -7,7 +7,8 @@
  * - No HTML text: `useHTML` stays off for titles, legends, tooltips, axis labels and data labels (an HTML tooltip once
  *   broke `style-src 'self'`, Highcharts issue 7633, and HTML text escapes the chart CSS).
  * - The credit stays on (the Personal Use licence asks for it at all times); `chartTheme.css` sets it small.
- * - Printed values never hide: data labels may overlap, so a value that is a second cue is never dropped silently.
+ * - Printed values never hide: data labels may overlap, so a value that is a second cue is never dropped silently, and
+ *   hovering one series never fades the others (the inactive state is off; `chartTheme.css` holds it for the labels).
  * - Motion: a short ease-out morph (250 ms), none under `prefers-reduced-motion`; numbers never count up.
  * - Words: none here. Each chart's options builder takes its words, `lang` strings and the accessibility module's
  *   point descriptions from its screen's composer (decision 11), so no built-in sentence bypasses `copy.ts`.
@@ -47,6 +48,9 @@ export function chartDefaults(reducedMotion: boolean): Options {
       series: {
         animation,
         dataLabels: { useHTML: false, allowOverlap: true },
+        // Hovering one series never fades another or its printed values (decision 7, owed from RC1): Highcharts'
+        // inactive state drops every other series to about 20% opacity, data labels included.
+        states: { inactive: { enabled: false } },
       },
     },
   }

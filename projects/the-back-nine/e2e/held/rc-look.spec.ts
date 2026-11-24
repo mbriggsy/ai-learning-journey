@@ -5,7 +5,7 @@ import { copy } from '../../src/ui/copy'
 /**
  * e2e/held/rc-look.spec.ts: an INSTRUMENT, never a gate (Act 6's "Local look", plan docs/plans/6-rightcapital-ui-plan.md
  * sections 4.0 and 7.1 point 4). For each unit it captures every finished screen at his window (1440×731 @2) and a phone
- * (390×844 @3), for a retired seed (`retired`) and a working one (`date`), entered through the answer page's door as a
+ * (390×844 @3), for a retired seed (`retired`) and a working one (`date`; `RC_SEEDS=retired,dip` names others), entered through the answer page's door as a
  * user would, and audits each frame:
  *  - the page never scrolls sideways;
  *  - no text is clipped (an element whose content is wider or taller than a box that hides its overflow; an ellipsis
@@ -20,8 +20,9 @@ import { copy } from '../../src/ui/copy'
 
 const UNIT = process.env.RC_UNIT ?? 'RC2'
 const OUT = `temp/rc-shots/${UNIT}` // resolved from the run's working directory, the project root
-const SEEDS = ['retired', 'date'] as const
+const SEEDS = (process.env.RC_SEEDS ?? 'retired,date').split(',')
 const SCREENS = [
+  { id: 'snapshot', screen: 'snapshot', module: copy.shellModuleDashboard, page: copy.shellPageSnapshot },
   { id: 'cash-flows', screen: 'interim-table', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows },
   { id: 'what-if', screen: 'interim-whatif', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis },
   { id: 'facts', screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts },
@@ -39,7 +40,7 @@ async function audit(page: Page): Promise<Audit> {
     const doc = document.documentElement
     const shown = (el: Element) => {
       if (el.closest('details:not([open])') !== null && el.closest('summary') === null) return false
-      if (el.closest('[aria-hidden="true"], .sr-only, [inert]') !== null) return false
+      if (el.closest('[aria-hidden="true"], .sr-only, .highcharts-visually-hidden, [inert]') !== null) return false
       const r = el.getBoundingClientRect()
       const cs = getComputedStyle(el)
       return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.display !== 'none' && cs.opacity !== '0'
@@ -94,6 +95,11 @@ async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: b
     if ((await pageLink.getAttribute('aria-current')) !== 'page') await pageLink.click()
   }
   await expect(page.locator(`main.result[data-shell-screen="${target.screen}"]`)).toBeAttached()
+  if (target.screen === 'snapshot') {
+    // The fan's lazy chunk and its 250 ms morph (a seed with no band draws words instead).
+    await expect(page.locator('[data-card="fan"] [data-chart="fan"] .highcharts-series-group, [data-card="fan"] p').first()).toBeAttached({ timeout: 30_000 })
+    await page.waitForTimeout(600)
+  }
   if (target.screen === 'interim-table') await expect(page.locator('.wb-table, .wb-state:not(.wb-state--loading)').first()).toBeVisible({ timeout: 60_000 })
   await settleLayout(page)
 }

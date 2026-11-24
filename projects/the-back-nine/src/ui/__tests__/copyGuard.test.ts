@@ -1150,6 +1150,14 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workbenchPairTakenFrom: slots.workbenchPairTakenFrom('Taxable'),
     workbenchPairRanOut: slots.workbenchPairRanOut('This what-if', 2049),
     workbenchPairYield: slots.workbenchPairYield('Your plan', 'The tool leaves yearly interest and dividends out.'),
+    snapshotRingStopIn: slots.snapshotRingStopIn(2031),
+    snapshotInvestedAsEnteredIn: slots.snapshotInvestedAsEnteredIn(2025),
+    snapshotApprox: slots.snapshotApprox('$312k'),
+    snapshotRate: slots.snapshotRate(4.12),
+    snapshotFanAgeAxis: slots.snapshotFanAgeAxis('Alex'),
+    snapshotFanTipRange: slots.snapshotFanTipRange('$400k', '$2.1mm'),
+    snapshotFanTipMedian: slots.snapshotFanTipMedian('$1.2mm'),
+    snapshotFanPoint: slots.snapshotFanPoint('Ages 70 and 68', '$400k', '$1.2mm', '$2.1mm'),
   }
 
   it('the year-by-year table never calls its one future typical, average, expected or median (U7; the one-future record §5.1)', () => {

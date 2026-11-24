@@ -6,7 +6,7 @@
 import { useState } from 'react'
 import { fireEvent, screen, within } from '@testing-library/react'
 import Shell, { type ShellProps } from '../Shell'
-import { LANDING, type Route } from '../routes'
+import type { Route } from '../routes'
 import { copy } from '../../copy'
 
 export type RoutedShellProps = Omit<ShellProps, 'route' | 'onNavigate' | 'onHome'> & {
@@ -14,12 +14,15 @@ export type RoutedShellProps = Omit<ShellProps, 'route' | 'onNavigate' | 'onHome
   readonly onHome?: () => void
 }
 
-export function RoutedShell({ initialRoute = LANDING, onHome = () => {}, ...props }: RoutedShellProps) {
+// The table page by default: the render tests below this host were written against it (RC2's landing); Snapshot's
+// arms name their own route.
+export function RoutedShell({ initialRoute = { module: 'retirement', page: 'cash-flows' }, onHome = () => {}, ...props }: RoutedShellProps) {
   const [route, setRoute] = useState<Route>(initialRoute)
   return <Shell {...props} route={route} onNavigate={setRoute} onHome={onHome} />
 }
 
 export const PAGES = {
+  snapshot: { module: 'dashboard', page: 'snapshot' },
   whatif: { module: 'retirement', page: 'analysis', tab: 'what-if' },
   table: { module: 'retirement', page: 'cash-flows' },
   facts: { module: 'profile', page: 'facts' },

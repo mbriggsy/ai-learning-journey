@@ -15,9 +15,9 @@ import { copy } from '../copy'
 export const MODULE_ORDER = ['dashboard', 'investment', 'retirement', 'tax', 'profile'] as const
 export type ModuleId = (typeof MODULE_ORDER)[number]
 
-/** The screens the shell can draw. RC2's three are the workbench room's pages, riding as interim tabs in their old
- *  look until their units rebuild them (RC4, RC6, RC13). */
-export type ScreenId = 'interim-whatif' | 'interim-table' | 'interim-facts'
+/** The screens the shell can draw. RC3's Snapshot is the first rebuilt screen; RC2's three are the workbench room's
+ *  pages, riding as interim tabs in their old look until their units rebuild them (RC4, RC6, RC13). */
+export type ScreenId = 'snapshot' | 'interim-whatif' | 'interim-table' | 'interim-facts'
 
 export interface RouteRow {
   readonly module: ModuleId
@@ -39,12 +39,14 @@ export interface Route {
 
 /** The words for each module a row can name. A module with a row and no word here is a test failure. */
 export const MODULE_LABELS: Readonly<Partial<Record<ModuleId, string>>> = {
+  dashboard: copy.shellModuleDashboard,
   retirement: copy.shellModuleRetirement,
   profile: copy.shellModuleProfile,
 }
 
 /** Every screen that exists, each module's pages in RightCapital's order (ref 1.2). */
 export const ROUTE_ROWS: readonly RouteRow[] = [
+  { module: 'dashboard', page: 'snapshot', pageLabel: copy.shellPageSnapshot, screen: 'snapshot', title: copy.shellPageSnapshot },
   {
     module: 'retirement',
     page: 'analysis',
@@ -58,9 +60,8 @@ export const ROUTE_ROWS: readonly RouteRow[] = [
   { module: 'profile', page: 'facts', pageLabel: copy.workbenchPageFacts, screen: 'interim-facts', title: copy.workbenchPageFacts },
 ]
 
-/** Where the answer page's door lands: the year-by-year table, as the room's door did ("See your plan year by year").
- *  RC3 moves it to Dashboard → Snapshot. */
-export const LANDING: Route = { module: 'retirement', page: 'cash-flows' }
+/** Where the answer page's door lands: Dashboard → Snapshot, the home (RC3; RC2 landed on the year-by-year table). */
+export const LANDING: Route = { module: 'dashboard', page: 'snapshot' }
 
 export const routeEquals = (a: Route, b: Route): boolean => a.module === b.module && a.page === b.page && a.tab === b.tab
 const sameRoute = routeEquals

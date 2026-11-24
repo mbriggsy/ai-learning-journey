@@ -15,8 +15,9 @@ const row = (r: Partial<RouteRow> & Pick<RouteRow, 'module' | 'page'>): RouteRow
 })
 
 describe('routes — no dead tabs', () => {
-  it('only modules with a screen show, in RightCapital’s order; RC2 draws Retirement and Profile', () => {
-    expect(navModules().map((m) => m.id)).toEqual(['retirement', 'profile'])
+  it('only modules with a screen show, in RightCapital’s order; RC3 draws Dashboard, Retirement and Profile', () => {
+    expect(navModules().map((m) => m.id)).toEqual(['dashboard', 'retirement', 'profile'])
+    expect(navModules().find((m) => m.id === 'dashboard')!.pages.map((p) => p.id)).toEqual(['snapshot'])
     expect(navModules().find((m) => m.id === 'retirement')!.pages.map((p) => p.id)).toEqual(['analysis', 'cash-flows'])
     // Every module with a screen has its word.
     for (const m of navModules()) expect(MODULE_LABELS[m.id]).toBe(m.label)
@@ -70,5 +71,11 @@ describe('routes — the hash', () => {
   it('a hash names the page and nothing else: no figure, no name, no plan data', () => {
     for (const r of ROUTE_ROWS) expect(routeHash(routeOf(r))).toMatch(/^#\/[a-z-]+\/[a-z-]+(\/[a-z-]+)?$/)
     expect(parseHash(routeHash(LANDING))).toEqual(LANDING)
+  })
+
+  it('the door lands on Dashboard → Snapshot (RC3)', () => {
+    expect(LANDING).toEqual({ module: 'dashboard', page: 'snapshot' })
+    expect(rowFor(LANDING)!.screen).toBe('snapshot')
+    expect(parseHash('#/dashboard')).toEqual(LANDING)
   })
 })

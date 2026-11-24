@@ -641,7 +641,7 @@ export default function IntakeApp({
    * (DND 009).
    */
   const saveRecommendation = useCallback(
-    async (ticket: RecommendationSaveTicket): Promise<void> => {
+    async (ticket: RecommendationSaveTicket, from: 'result' | 'workspace' = 'result'): Promise<void> => {
       // (1) THE SYNCHRONOUS GUARDS. Each returns SILENTLY, and that is honest rather than a missing
       // outcome (insight 100): nothing was minted, nothing was written, and nothing was promised
       // that these states break. A read-only tab derives no CTA at all (the standing View-only
@@ -745,7 +745,8 @@ export default function IntakeApp({
       // this gesture's own awaits must route to the update write, not a second ceremony.
       if (persistRef.current.kind === 'unsaved') {
         setRecSaveCeremony(true)
-        setCeremonyOrigin('result')
+        // The ceremony returns to the screen the gesture was made on (the answer page, or Snapshot since Act 6 · RC3).
+        setCeremonyOrigin(from)
         setPhase('save')
         return
       }
@@ -1094,6 +1095,27 @@ export default function IntakeApp({
           // The saved recommendation's row on the rail (R22): the DISK's record and the store's trichotomy, as the answer
           // reads them; the rail runs it only while current.
           ...(recordCard !== undefined ? { recommendation: { record: recordCard.record, current: recordCard.status.current } } : {}),
+          // Snapshot's Recommendations card (Act 6 · RC3): the same strategy-slot machine and gesture the answer page
+          // reads, the disk's record with the store's verdict, and the aged-balances year, each from its one producer.
+          recSave: {
+            view: deriveRecommendationSave({
+              persist,
+              solve: snapshot.solve,
+              ready: saveReady,
+              readOnly,
+              status: recordCard?.status,
+              inFlight: recSaveInFlight,
+              refusal: recSaveRefusalStanding,
+            }),
+            onSave: (ticket) => void saveRecommendation(ticket, 'workspace'),
+            landed: recSaveLanded,
+            onAnnounced: () => setRecSaveLanded(false),
+          },
+          ...(recordCard !== undefined ? { recordCard } : {}),
+          ...(() => {
+            const aged = agedBalancesYearFor(persist, deriveResultSave(persist, saveReady, readOnly), currentEpochDay())
+            return aged !== undefined ? { agedBalancesYear: aged } : {}
+          })(),
           ...(leaveAsk !== null
             ? {
                 leaveAsk: {

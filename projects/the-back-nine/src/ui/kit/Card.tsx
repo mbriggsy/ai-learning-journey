@@ -20,14 +20,16 @@ export interface CardProps {
   readonly action?: ReactNode
   readonly children: ReactNode
   readonly className?: string
+  /** A name for the card, stamped as `data-card` (the e2e arms and the look instrument find a card by it). */
+  readonly name?: string
 }
 
-export function Card({ title, headingLevel = 2, action, children, className }: CardProps) {
+export function Card({ title, headingLevel = 2, action, children, className, name }: CardProps) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3'
   return (
-    <section className={cn('flex flex-col gap-4 rounded-card border border-stone-300 bg-bg p-6', className)}>
+    <section data-card={name} className={cn('flex flex-col gap-4 rounded-card border border-stone-300 bg-bg p-6', className)}>
       {title !== undefined || action !== undefined ? (
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
           {title !== undefined ? <Heading className="text-chart-title font-semibold text-stone-900">{title}</Heading> : <span />}
           {action}
         </div>

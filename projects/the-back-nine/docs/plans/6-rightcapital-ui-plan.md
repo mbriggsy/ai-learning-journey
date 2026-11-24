@@ -819,6 +819,49 @@ holds the title, the ring card and the stat rings; the fan's band words and tick
 the phone stacks one column in order; one visible R13 disclaimer. CI CSP: the shell arm opens Snapshot (the first
 Highcharts chart under the real header). Local look: screenshots.
 
+**Amendments made while building RC3 (2026-11-24, b9-4).**
+- **"After you stop working" is the run's own bound.** A working year the household priced no pay check for carries no
+  `workingYear` on its ledger row, so "the rows with no `workingYear`" alone would count it; the retired rows are the
+  rows with no `workingYear` AND at or past the run's stop offset (`TableMeta.stopYear` less its build year), and the
+  withdrawal rate reads the first of them (`retiredRows`, `steadyStats` in `snapshotView.ts`). *(the pilot's call,
+  2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **The stat dials print a short caption; the full label sits under the dial.** "Income tax after you stop working, in
+  the steady future" does not fit a 144 px dial; the dial says "Withdrawal rate" or "Income tax" and the line under it
+  carries the population and "in the steady future". The tax figure is abbreviated in RightCapital's `k`/`mm`
+  (`formatMmDollar` in `money.ts`, "~$312k"), the rate to one decimal ("~4.1%"). *(the pilot's call, 2026-11-24, b9-4
+  (Briggsy pre-approved all changes))*
+- **The R13 caveat sits in the ring card**, the answer's own card, at its foot: inside the first frame at his window on
+  every seed, and named by the ring's reading through `verdictDescribedBy`. *(the pilot's call, 2026-11-24, b9-4
+  (Briggsy pre-approved all changes))*
+- **The ring reads the raw headline through `planReadingFor`**, never the answer page's sticky display triple: one plan
+  reading for every ring (4.0). Near a band edge the old answer page's sentence may read one count apart until RC4
+  deletes it. The ceiling arc is 9 of 10 ("full less one"). *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved
+  all changes))*
+- **No dead links until their screens exist.** "No recommendation yet" links to the answer page, where the
+  recommendation is found today (Tax Strategies is RC8's); "Try it in the plan" opens the interim What if page, whose
+  rail runs the saved record, until RC4's tray. A keep made on Snapshot returns from the save ceremony to Snapshot. The
+  record card's words moved out of `Result.tsx` to `src/ui/savedRecordCopy.ts` so both cards read one literal.
+  *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **The fan.** The median is drawn in `--color-stone-900` (insight 038, measured: its weakest distance to any `RC_BAND`
+  stop is 0.203, tritanopia, against the 0.10 floor; the band's own darkest stop as a line measures 0.001 and the series
+  blue 0.038). Each range's words sit where that range is widest in the middle stretch of the fan; the named moments'
+  labels stagger over two rows at the foot of the plot (the ranges' words sit in the upper strips; short words, "Eight in
+  ten" and "Middle half", so they fit a phone's plot, the legend naming each in full). The y axis draws no title: a
+  rotated title outgrew the phone's plot at a 20 px default (the audit caught it clipped), so the card prints "Savings, in
+  today’s dollars" over the chart. The options are keyed on the fan's content, so an unrelated re-render never restarts
+  the morph or drops a hover. Highcharts rides a lazy chunk (`Snapshot.tsx`), so the shell's other pages
+  and jsdom never evaluate it. **Owed to RC4:** Highcharts' global `lang` strings (the accessibility module's built-in
+  sentences) are still Highcharts' own; the fan's description, tooltip and per-point sentences are the composer's.
+  *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **The clone's chart floor is `--text-axis` (12 px), not the old charts' `--text-xs` (13 px).** Ref 3.5 sets axis labels
+  at 12 px and 4.0's look audit floors text at 12 CSS px; insight 115's floor was `--text-xs` because the old charts
+  borrowed it. The audit reads `--text-axis` from the live sheet (`hcFloorPx`), at the leaf. The first audit run also
+  caught the band words at 0 opacity (Highcharts defers data labels until the morph ends), so the words are shown with
+  their ranges (`defer: false`). *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **The Highcharts audit is a new file, `e2e/hcTextAudit.ts`,** beside `chartTextAudit.ts` (whose functions still run on
+  the old answer page's charts); its failures come back as worded lines so each plant asserts its own. The door's words
+  became "See your plan’s pages". *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+
 ### RC4: Retirement → Analysis → Probability, with the Action Items tray
 
 **Clones.** Ref 2.7 and 2.8. Screens: `rc-analysis/probability-tab-retirement-analysis__cleanshot-2024-07-26-at-17-10-07-2x.png`,
@@ -941,6 +984,23 @@ to the file that now makes each call (section 1.4).
 **Fit decision.** One frame at REAL in compact mode for both routes with the tray closed (title, intro, the panel,
 the R13 line, the handle); with the tray open the page scrolls. At a 20 px browser default and at the phone: order and
 reachability.
+
+**Owed from RC3 (2026-11-24, b9-4).**
+- **One count per screen: decide raw or sticky, then make every printed count read it.** The old answer page prints
+  its "X of 10" from the sticky display triple (`snapshot.displayed`, U12 C2's "one honest raw record, one sticky
+  sentence": the count is held through a recompute that moves the raw reading inside the hysteresis band), while
+  RC3's ring reads the raw headline through `planReadingFor`. Both are honest, but after such a recompute the two pages
+  can print counts one apart, until this unit deletes the old page. Probability puts the ring, the answer sentence
+  (`verdictSentence.ts`) and the what-if's "Your plan" side on one screen, so it must print ONE count: rule which source
+  the clone's printed count reads (the sticky triple exists so a re-figure never flickers the printed count; the what-if
+  compares readings, which wants raw on both sides), record the ruling here, and add a test that feeds one snapshot with
+  a held `displayed` triple and proves every count on Probability and Snapshot reads the same number.
+- **Highcharts' own words.** Its built-in accessibility sentences (`lang`, such as "Combination chart with 5 data
+  series", which also counts the fan's two hidden word series) do not come from `copy.ts` yet (decision 11): the
+  screen's composer supplies `lang` and the point-description formatter.
+- **Keep and Try it in the plan were never pressed in a real browser** (no seed carries a committed solve or a saved
+  record); RC4's arms press both through a `?vault=` plant with a saved recommendation.
+*(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
 
 **Files.** `src/ui/screens/retirement/Analysis.tsx`, `Probability.tsx`, `probabilityView.ts` (pure: both routes,
 both halves, the states, the disclosures), `ActionItemsTray.tsx`, `trayView.ts` (pure: `railOffers` to the two

@@ -86,7 +86,7 @@ vi.spyOn(appModel, 'getSnapshot').mockImplementation((): MemoryModelSnapshot => 
   return cached.snap
 })
 
-/** The shell is up: its page's heading (the door lands on the year-by-year table). */
+/** The shell is up: its page's heading (since RC3 the door lands on Dashboard → Snapshot). */
 const shellUp = () => document.querySelector('main.result[data-shell-screen]') !== null
 const screenShown = () => document.querySelector('main.result')?.getAttribute('data-shell-screen') ?? null
 const saveState = () => document.querySelector('[data-save-state]')?.getAttribute('data-save-state') ?? null
@@ -101,7 +101,7 @@ async function landHydrated(readOnly = false) {
 
 async function enterShell() {
   fireEvent.click(screen.getByRole('button', { name: 'workbench-door-stub' }))
-  await screen.findByRole('heading', { name: copy.workbenchPageTable }, { timeout: 15_000 })
+  await screen.findByRole('heading', { level: 1, name: copy.shellPageSnapshot }, { timeout: 15_000 })
 }
 
 /** A real history Back — sent by `go` — through jsdom's real traversal, settled on the popstate it fires. */
@@ -187,7 +187,7 @@ describe('the door', () => {
 
       fireEvent.click(screen.getByRole('button', { name: 'workbench-door-stub' }))
       fireEvent.click(screen.getByRole('button', { name: 'door-ask-go-stub' }))
-      expect(await screen.findByRole('heading', { name: copy.workbenchPageTable }, { timeout: 15_000 })).toBeInTheDocument()
+      expect(await screen.findByRole('heading', { level: 1, name: copy.shellPageSnapshot }, { timeout: 15_000 })).toBeInTheDocument()
     } finally {
       release()
     }
@@ -202,7 +202,7 @@ describe('the shell’s history', () => {
     expect(window.history.length).toBe(before + 1)
     expect(window.history.state).toEqual({ b9: 'workspace', n: 1 })
     expect(window.location.search).toBe('')
-    expect(window.location.hash).toBe('#/retirement/cash-flows')
+    expect(window.location.hash).toBe('#/dashboard/snapshot')
     // The saved plan's state on the bar, from the one save machine.
     expect(saveState()).toBe('clean')
 
@@ -227,8 +227,8 @@ describe('the shell’s history', () => {
     }
 
     await pressBack()
-    expect(screenShown()).toBe('interim-table')
-    expect(window.location.hash).toBe('#/retirement/cash-flows')
+    expect(screenShown()).toBe('snapshot')
+    expect(window.location.hash).toBe('#/dashboard/snapshot')
     await pressForward()
     expect(screenShown()).toBe('interim-facts')
   })
@@ -292,7 +292,7 @@ describe('the shell’s history', () => {
 
       await pressBack()
       await backAndSettle(() => fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveGo })))
-      expect(screenShown()).toBe('interim-table')
+      expect(screenShown()).toBe('snapshot')
 
       // Out of the shell: the same ask, the same Go back.
       await pressBack()
@@ -313,7 +313,7 @@ describe('the shell’s history', () => {
     goToFacts()
     await pressBack()
     expect(screen.queryByText(copy.workbenchLeaveAsk)).toBeNull()
-    expect(screenShown()).toBe('interim-table')
+    expect(screenShown()).toBe('snapshot')
   })
 
   it('Save from the shell’s lock menu returns to the same page, and a Back during that ceremony is absorbed', async () => {
@@ -414,7 +414,7 @@ describe('the facts page through the real phase machine (U8)', () => {
     await pressBack()
     const again = screen.getByRole('alertdialog', { name: copy.workbenchLeaveAsk })
     await backAndSettle(() => fireEvent.click(within(again).getByRole('button', { name: copy.workbenchLeaveGo })))
-    expect(screenShown()).toBe('interim-table')
+    expect(screenShown()).toBe('snapshot')
     expect(appModel.getSnapshot().draft.people[0].name).toBe('Jordan')
   })
 })
@@ -451,7 +451,7 @@ describe('an unkept what-if (plan 6, section 3.1)', () => {
     // Between pages the what-if survives: no ask.
     await pressBack()
     expect(screen.queryByText(copy.shellLeaveWhatIf)).toBeNull()
-    expect(screenShown()).toBe('interim-table')
+    expect(screenShown()).toBe('snapshot')
     // Out of the shell: the ask, in the what-if's own words (never the open entry's).
     await pressBack()
     expect(shellUp()).toBe(true)

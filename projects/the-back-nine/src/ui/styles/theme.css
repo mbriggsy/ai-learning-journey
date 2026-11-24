@@ -25,6 +25,7 @@
 @source '../../kit-probe.tsx';
 @source '../kit';
 @source '../shell';
+@source '../screens';
 
 @theme static {
   --*: initial;

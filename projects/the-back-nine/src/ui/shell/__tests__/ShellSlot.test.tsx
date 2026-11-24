@@ -66,7 +66,7 @@ describe('ShellSlot — the shell loads on demand behind its own boundary', () =
     fireEvent.click(screen.getByRole('button', { name: copy.exportRetry }))
     // The shell itself, in the same mounted tree: a fresh import, never a page reload. A real import of the shell's
     // whole module graph (the table's engine pieces ride it): give it time to transform.
-    expect(await screen.findByRole('heading', { name: copy.workbenchPageTable }, { timeout: 15_000 })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: copy.shellPageSnapshot }, { timeout: 15_000 })).toBeInTheDocument()
     expect(screen.queryByText(copy.workbenchLoadFailed)).toBeNull()
     expect(load).toHaveBeenCalledTimes(2)
   })

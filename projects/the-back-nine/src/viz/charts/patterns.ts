@@ -5,8 +5,9 @@
  * and referenced from `chartTheme.css` (`fill: url(#b9-hatch)`) on the series and on its legend symbol.
  *
  * Each pattern is a ground tile plus its ink; both are classed, never coloured here, so `chartTheme.css` paints them:
- * the ink from `--b9-pattern-ink` (a chart sets it to the patterned series' own colour), the ground from the chart
- * surface. Highcharts' AST allows no `patternTransform`, so the diagonals are drawn as diagonal paths in the tile.
+ * each KIND's ink from its own variable (`--b9-ink-hatch`, `--b9-ink-dots`, `--b9-ink-lines`, `--b9-ink-cross`, falling
+ * back to `--b9-pattern-ink`), which a chart sets on its container to the patterned series' own colour, so two patterned
+ * series in one chart keep their colour difference (RC3); the ground from the chart surface. Highcharts' AST allows no `patternTransform`, so the diagonals are drawn as diagonal paths in the tile.
  * Kinds and uses (ref 3.2): `b9-hatch` (diagonal) the compared plan's bars and pre-tax; `b9-dots` Roth; `b9-lines`
  * (horizontal) HSA; `b9-cross` a shortfall and the stress test's Combined bar.
  */

@@ -108,16 +108,18 @@ const CHART: ChartOptions = {
   xAxis: { categories: ['2031', '2032', '2033', '2034'] },
   yAxis: { title: { text: 'Dollars' }, min: 0 },
   plotOptions: { column: { dataLabels: { enabled: true } } },
-  accessibility: { description: 'Two throwaway series, one solid and one hatched, over four years.' },
+  accessibility: { description: 'Three throwaway series, one solid, one hatched and one dotted, over four years.' },
   series: [
     { type: 'column', name: 'Solid series', data: [40, 42, 45, 47] },
     { type: 'column', name: 'Hatched series', className: 'b9-hatch', data: [38, 41, 44, 48] },
+    // RC3 (owed from RC1): a second patterned series in the same chart, so the cascade arm reads two inks.
+    { type: 'column', name: 'Dotted series', className: 'b9-dots', data: [30, 33, 35, 39] },
   ],
 }
 
 function ProbeChart() {
-  // The hatch's ink is the hatched series' own colour (slot 1).
-  return <Chart options={CHART} containerProps={{ className: '[--b9-pattern-ink:var(--highcharts-color-1)]' }} />
+  // Each pattern kind's ink is its own series' colour: the hatch slot 1's, the dots slot 2's (chartTheme.css).
+  return <Chart options={CHART} containerProps={{ className: '[--b9-ink-hatch:var(--highcharts-color-1)] [--b9-ink-dots:var(--highcharts-color-2)]' }} />
 }
 
 // ── The data table: lead Year and Age, two groups, a drill header, a negative ──

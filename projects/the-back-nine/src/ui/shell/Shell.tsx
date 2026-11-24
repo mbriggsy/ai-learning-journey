@@ -33,7 +33,8 @@ import { missingRequiredFacts } from '@intake/intakeMap'
 import { engineRunLane, type EngineRunRequest, type Lane } from '@store/runLanes'
 import { roughWindow, ROUGH_WINDOW_YEARS } from '@engine/reference/roughSequence'
 import type { MemoryModel, MemoryModelSnapshot } from '@store/memoryModel'
-import type { LedgerYearRow, SimulationResult, WhatIfLeverKind } from '@shared/model'
+import type { LedgerYearRow, SavedRecommendationV3, SimulationResult, WhatIfLeverKind } from '@shared/model'
+import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import { SubNav } from '../kit'
 import { copy, slots } from '../copy'
 import { appModel } from '../appModel'
@@ -51,6 +52,10 @@ import { composeYearTable, lifespansLine, yieldLine } from '../workbench/yearTab
 import { WhatIfPage } from '../workbench/WhatIfPage'
 import { useWhatIf, type RailRecommendation } from '../workbench/useWhatIf'
 import type { WhatIfSlotLanes } from '../workbench/whatIfRun'
+import type { RecommendationSaveProp } from '../RecommendationSurface'
+import { currentEpochDay } from '../scenarioFromDraft'
+import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
+import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { InterimPage } from './InterimPage'
 import { composeLockMenu, type LockMenuAction } from './lockMenu'
 import { navModules, routeEquals, routeHash, rowFor, ROUTE_ROWS, type Route } from './routes'
@@ -90,6 +95,12 @@ export interface ShellProps {
   readonly wallCalendarYear?: number
   readonly recommendation?: RailRecommendation
   readonly whatIfLanes?: WhatIfSlotLanes
+  /** Snapshot's Recommendations card: the strategy slot's save state and its gesture (IntakeApp owns both machines,
+   *  as on the answer page), and the DISK's remembered record with the store's verdict on it. */
+  readonly recSave?: RecommendationSaveProp
+  readonly recordCard?: { readonly record: SavedRecommendationV3; readonly status: SavedRecommendationStatus }
+  /** The aged-balances clause's year (IntakeApp's `agedBalancesYearFor`), for the Invested accounts card. */
+  readonly agedBalancesYear?: number
 }
 
 /** One view's newest delivered result, and the answer it belongs to. */
@@ -233,6 +244,9 @@ export default function Shell({
   wallCalendarYear = new Date().getFullYear(),
   recommendation,
   whatIfLanes,
+  recSave,
+  recordCard,
+  agedBalancesYear,
 }: ShellProps) {
   const announcer = useSaveAnnouncer(save.kind)
   const headingRef = useRef<HTMLHeadingElement>(null)
@@ -401,6 +415,63 @@ export default function Shell({
   }
   const announce = useCallback((text: string) => announcer.announce(text), [announcer])
 
+  // ── Snapshot (RC3): the home, composed once per change by its pure composer ──────────────────────────────────────
+  // The steady future's rows for the SHOWN answer: rows asked under an older answer's key never stand for this one.
+  const steady = useMemo((): SteadyRows => {
+    if (run.kind === 'answer-error') return { kind: 'error' }
+    if (run.kind === 'withheld') return { kind: 'withheld', words: WITHHELD_WORDS[run.reason] }
+    const r = results.steady
+    if (r === undefined || r.key !== runKey) return { kind: 'waiting' }
+    return r.kind === 'error' ? { kind: 'error' } : { kind: 'rows', rows: r.rows, meta: r.meta }
+  }, [run, runKey, results.steady])
+  const retryAnswer = useCallback(() => void model.recompute('final'), [model])
+  const todayEpochDay = useMemo(() => currentEpochDay(), [])
+  const snap = useMemo(
+    () =>
+      screen === 'snapshot'
+        ? snapshotView({
+            snapshot,
+            wallCalendarYear,
+            readOnly,
+            onRetry: retryAnswer,
+            steady,
+            ...(agedBalancesYear !== undefined ? { agedBalancesYear } : {}),
+            recommendation: {
+              solve: snapshot.solve,
+              save: recSave?.view ?? { kind: 'none' },
+              ...(recordCard !== undefined ? { record: recordCard } : {}),
+              todayEpochDay,
+            },
+          })
+        : null,
+    [screen, snapshot, wallCalendarYear, readOnly, retryAnswer, steady, agedBalancesYear, recSave?.view, recordCard, todayEpochDay],
+  )
+  const doorTo = (screenId: 'interim-whatif' | 'interim-table' | 'interim-facts') => {
+    const row = ROUTE_ROWS.find((r) => r.screen === screenId)!
+    const to: Route = row.tab === undefined ? { module: row.module, page: row.page } : { module: row.module, page: row.page, tab: row.tab }
+    return { href: routeHash(to), onOpen: () => onNavigate(to) }
+  }
+  const snapshotDoors: SnapshotDoors = { analysis: doorTo('interim-whatif'), cashFlows: doorTo('interim-table'), facts: doorTo('interim-facts') }
+  const recView = snap?.rec.view
+  const solve = snapshot.solve
+  const onKeep =
+    recView?.kind === 'recommended' && recView.keep !== undefined && solve.kind === 'committed' && recSave !== undefined
+      ? (() => {
+          const ticket = { fingerprint: solve.fingerprint, noDollarRegister: recView.keep.noDollarRegister }
+          return () => recSave.onSave(ticket)
+        })()
+      : undefined
+  const onTry = snapshotDoors.analysis!.onOpen
+  // A keep that lands while Snapshot shows speaks once through the shell's one live region (the durability event,
+  // `RecommendationSaveProp.landed`), and is acknowledged so the answer page never repeats it later.
+  const landed = screen === 'snapshot' && recSave?.landed === true
+  const onAnnounced = recSave?.onAnnounced
+  useEffect(() => {
+    if (!landed) return
+    announcer.announce(copy.recommendSaveSavedBadge)
+    onAnnounced?.()
+  }, [landed, onAnnounced, announcer])
+
   const anySheetOpen = editors.sheetOpen || openStep !== null
   // The committed answer's tier and the store's refiguring flag, mirrored as Result mirrors them: the harnesses'
   // signal that an edit's answer has landed (`SETTLED_RESULT`).
@@ -444,10 +515,12 @@ export default function Shell({
         className="hidden wide:block"
       />
       <main
-        className="result flex flex-1 flex-col pb-10"
+        className={screen === 'snapshot' ? 'result flex flex-1 flex-col bg-bg pb-10' : 'result flex flex-1 flex-col pb-10'}
         data-shell-screen={screen}
         data-answer-tier={answerTier}
         data-answer-refiguring={snapshot.refiguring ? true : undefined}
+        // A figured page carries its own R13 caveat inside its frame, so app.css hides App.tsx's trailing mount (plan 4.0).
+        data-inframe-disclaimer={screen === 'snapshot' ? true : undefined}
       >
         <div ref={announcer.ref} className="sr-only" role="status" aria-live="polite" aria-atomic="true" />
         {/* A failed save speaks on insertion (the save slot's alert arm); its sentence is also first in the lock menu. */}
@@ -456,6 +529,12 @@ export default function Shell({
             {lock.sentence}
           </p>
         ) : null}
+        {snap !== null ? (
+          <>
+            {leaveAsk !== undefined && <LeaveAsk ask={leaveAsk} overSheet={anySheetOpen} fallback={() => headingRef.current} />}
+            <Snapshot view={snap} headingRef={headingRef} doors={snapshotDoors} onHome={onHome} onTry={onTry} {...(onKeep !== undefined ? { onKeep } : {})} />
+          </>
+        ) : (
         <InterimPage
           title={row.title}
           headingRef={headingRef}
@@ -512,6 +591,7 @@ export default function Shell({
             </div>
           )}
         </InterimPage>
+        )}
         {!readOnly && (
           <>
             <StepSheet model={model} step={openStep} title={openStepTitle} onClose={() => setOpenStepId(null)} restoreFallback={restoreFallback} />

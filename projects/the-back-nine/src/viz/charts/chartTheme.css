@@ -89,8 +89,12 @@
     font-size: var(--text-axis);
   }
 
-  /* ── The patterns (src/viz/charts/patterns.ts): the ink takes `--b9-pattern-ink`, which a chart sets to the
-     patterned series' own colour; the ground is the chart surface. ── */
+  /* ── The patterns (src/viz/charts/patterns.ts): EACH KIND HAS ITS OWN INK (RC3, owed from RC1), so two patterned
+     series in one chart (pre-tax hatched beside Roth dotted, ref 3.2) keep their colour difference as well as their
+     pattern. A chart sets `--b9-ink-hatch`, `--b9-ink-dots`, `--b9-ink-lines` or `--b9-ink-cross` on its container to
+     the patterned series' own colour; `--b9-pattern-ink` stays the shared fallback. The pattern resolves its paint
+     from its own place in the chart's SVG, so the variables go on the container, never on the series. The ground is
+     the chart surface. ── */
   .b9-pattern-ground {
     fill: var(--color-bg);
   }
@@ -99,8 +103,17 @@
     stroke: var(--b9-pattern-ink, var(--color-stone-600));
     stroke-width: 1.5;
   }
+  .b9-pattern--hatch .b9-pattern-ink {
+    stroke: var(--b9-ink-hatch, var(--b9-pattern-ink, var(--color-stone-600)));
+  }
+  .b9-pattern--lines .b9-pattern-ink {
+    stroke: var(--b9-ink-lines, var(--b9-pattern-ink, var(--color-stone-600)));
+  }
+  .b9-pattern--cross .b9-pattern-ink {
+    stroke: var(--b9-ink-cross, var(--b9-pattern-ink, var(--color-stone-600)));
+  }
   .b9-pattern--dots .b9-pattern-ink {
-    fill: var(--b9-pattern-ink, var(--color-stone-600));
+    fill: var(--b9-ink-dots, var(--b9-pattern-ink, var(--color-stone-600)));
     stroke: none;
   }
 
@@ -125,5 +138,75 @@
   .b9-cross .highcharts-area,
   .highcharts-legend-item.b9-cross .highcharts-point {
     fill: url(#b9-cross);
+  }
+
+  /* ── Printed values never hide (decision 7, owed from RC1): hovering one series must not fade another's printed
+     values. `defaults.ts` turns the inactive state off; this holds it for the data labels too, whose group carries
+     the series' state class in styled mode. ── */
+  .highcharts-series-inactive,
+  .highcharts-data-labels.highcharts-series-inactive {
+    opacity: 1;
+  }
+
+  /* ── The projection fan (src/viz/charts/fanOptions.ts; ref 3.3): one hue ordered by lightness, the inner range
+     darker than the outer (`--b9-fan-outer`, `--b9-fan-inner`, written once at start-up from `RC_BAND`), the median a
+     solid ink line over both (insight 038: a band-hued line is swallowed by its band under CVD), each range's words
+     printed inside it, the named moments as thin labelled rules. ── */
+  .b9-fan-outer .highcharts-area,
+  .highcharts-legend-item.b9-fan-outer .highcharts-point,
+  .highcharts-legend-item.b9-fan-outer .highcharts-graph {
+    fill: var(--b9-fan-outer);
+    fill-opacity: 1;
+  }
+  .b9-fan-inner .highcharts-area,
+  .highcharts-legend-item.b9-fan-inner .highcharts-point,
+  .highcharts-legend-item.b9-fan-inner .highcharts-graph {
+    fill: var(--b9-fan-inner);
+    fill-opacity: 1;
+  }
+  .b9-fan-outer .highcharts-graph,
+  .b9-fan-inner .highcharts-graph {
+    stroke: none;
+  }
+  .b9-fan-outer.highcharts-legend-item .highcharts-graph,
+  .b9-fan-inner.highcharts-legend-item .highcharts-graph {
+    stroke: none;
+  }
+  .b9-fan-median .highcharts-graph,
+  .highcharts-legend-item.b9-fan-median .highcharts-graph {
+    stroke: var(--color-stone-900);
+    stroke-width: 2;
+  }
+  /* The hovered year's marks: ink dots on a white ring, never the categorical slot colours the series' index would
+     give them (green means the alternative being looked at, plan 4.0). */
+  .b9-fan-outer .highcharts-point,
+  .b9-fan-inner .highcharts-point,
+  .b9-fan-median .highcharts-point {
+    fill: var(--color-stone-900);
+    stroke: var(--color-bg);
+    stroke-width: 1;
+  }
+  .b9-fan-outer .highcharts-halo,
+  .b9-fan-inner .highcharts-halo,
+  .b9-fan-median .highcharts-halo {
+    fill: var(--color-stone-900);
+    fill-opacity: 0.12;
+  }
+  .b9-fan-word .highcharts-data-label text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+    font-weight: 600;
+  }
+  .b9-fan-moment {
+    stroke: var(--color-stone-600);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+  }
+  .highcharts-plot-line-label {
+    fill: var(--color-stone-900);
+    font-size: var(--text-axis);
+  }
+  .highcharts-crosshair {
+    stroke: var(--color-stone-300);
   }
 }

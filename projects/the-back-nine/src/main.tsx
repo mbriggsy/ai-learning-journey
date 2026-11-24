@@ -18,10 +18,13 @@ import { createRoot } from 'react-dom/client'
 import { CSPProvider } from '@base-ui/react/csp-provider'
 import { App } from '@ui/App'
 import { applySeriesVars } from '@viz/charts/seriesVars'
+import { fanBandVars } from '@viz/charts/fanOptions'
 
 // The chart series colours, once, through the CSSOM (`style-src 'self'` allows it; a runtime <style> it would not):
 // `--highcharts-color-N` on the root's own style beats every stylesheet, so Highcharts' default palette never shows.
 applySeriesVars(document.documentElement.style)
+// …and the fan's two fills (`RC_BAND` at its two stops), the same way.
+for (const [name, value] of fanBandVars()) document.documentElement.style.setProperty(name, value)
 
 const rootEl = document.getElementById('root')
 if (!rootEl) throw new Error('Root element #root not found')

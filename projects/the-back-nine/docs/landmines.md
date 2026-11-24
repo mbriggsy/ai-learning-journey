@@ -385,6 +385,7 @@ tests
   did a run on a dev server with an empty dependency cache; the likely cause is Vite discovering a dependency the main
   graph had never reached (Base UI's dialog and menu, first reached through the shell) and reloading the page. CI starts
   cold and scans first. Read a same-shaped red locally as that before hunting a bug: rerun once on the now-warm server.
+  CI's first fit run on the shell (`65021841`, run 45378402113) passed cold, so it has not reproduced there.
 - **(b9-1, 11-23) The fit harness's Chromium has no classic scrollbar** (`clientWidth` reads the whole 1280), while a
   headed Chrome here shows a 15 px one, so a sideways margin read under the harness overstates a real window's by 15 px.
   Read a table's real margin as its narrowest width (the phone arm's `tableWidth`, or the frame squeezed in-page) against

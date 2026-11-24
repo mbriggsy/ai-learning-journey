@@ -222,3 +222,16 @@ export function axisDollarFormatterFor(ceiling: number): (dollars: number) => st
     return `$${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`
   }
 }
+
+/** Act 6's millions (plan 4.0, "Figures"; ref 3.5: RightCapital writes a million as "mm"): the axis dialect above, its
+ *  `M` written `mm` ("$2.5mm", "$500k"). One value at a time, for a figure printed in a sentence, a tile or a tooltip;
+ *  the `$` is the formatter's, the `~` hedge the copy slot's. */
+export function formatMmDollar(dollars: number): string {
+  return formatAxisDollar(dollars).replace(/M$/, 'mm')
+}
+
+/** The same `mm` dialect for one axis lattice (`axisDollarFormatterFor`'s one-unit-per-lattice law). */
+export function mmAxisFormatterFor(ceiling: number): (dollars: number) => string {
+  const f = axisDollarFormatterFor(ceiling)
+  return (dollars: number): string => f(dollars).replace(/M$/, 'mm')
+}

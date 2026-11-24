@@ -268,11 +268,28 @@ test.describe('CSP — real browser enforcement', () => {
     const door = page.locator('.result-quiet-row [data-door="workbench"]')
     await expect(door, 'the door never mounted on the resolved answer').toBeVisible({ timeout: 120_000 })
     await door.click()
+    // Act 6 · RC3: the door lands on Dashboard → Snapshot, the app's first Highcharts chart under the real header (the
+    // fan, its lazy chunk, highcharts-more and the accessibility module, its styled-mode CSS and its hover tooltip).
+    await expect(page.getByRole('heading', { level: 1, name: copy.shellPageSnapshot })).toBeVisible({ timeout: 30_000 })
+    expect(await page.evaluate(() => history.state)).toEqual({ b9: 'workspace', n: 1 })
+    expect(new URL(page.url()).hash).toBe('#/dashboard/snapshot')
+    await expect(page.locator('main.result'), 'exactly one main.result in the shell').toHaveCount(1)
+    const fan = page.locator('[data-card="fan"] [data-chart="fan"]')
+    await expect(fan.locator('.highcharts-series-group'), 'the fan never drew under the CSP').toBeAttached({ timeout: 60_000 })
+    await expect(fan.locator('.highcharts-data-label text', { hasText: copy.snapshotFanOuterWords }), 'the fan’s band words').toBeAttached()
+    await fan.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+    const plot = (await fan.locator('.highcharts-plot-background').boundingBox())!
+    await page.mouse.move(plot.x + plot.width * 0.45, plot.y + plot.height / 2)
+    await page.mouse.move(plot.x + plot.width / 2, plot.y + plot.height / 2, { steps: 5 })
+    await expect(fan.locator('.highcharts-tooltip'), 'the fan’s tooltip never showed').toBeVisible()
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the fan injected a <style> element').toBe(0)
+    await page.mouse.move(0, 0)
+    // On to the year-by-year table (Retirement → Cash Flows), as before RC3.
+    await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleRetirement, exact: true }).click()
+    await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageCashFlows, exact: true }).click()
     await expect(page.getByRole('heading', { name: copy.workbenchPageTable })).toBeVisible({ timeout: 30_000 })
     await expect(page.getByText(copy.shellInterimBanner, { exact: true })).toBeVisible()
-    expect(await page.evaluate(() => history.state)).toEqual({ b9: 'workspace', n: 1 })
     expect(new URL(page.url()).hash).toBe('#/retirement/cash-flows')
-    await expect(page.locator('main.result'), 'exactly one main.result in the shell').toHaveCount(1)
 
     const firstLine = page.locator('.wb-about__line').first()
     await expect(page.locator('.wb-table'), 'the steady view’s rows never landed').toBeVisible({ timeout: 60_000 })
@@ -489,7 +506,7 @@ test.describe('CSP — real browser enforcement', () => {
     const chart = page.locator('.highcharts-container')
     await expect(chart.locator('.highcharts-series.highcharts-series-1 .highcharts-point')).toHaveCount(4)
     await expect(page.locator('[id^="highcharts-screen-reader-region-before-"]'), 'the accessibility module drew no screen-reader region').toBeAttached()
-    await expect(page.locator('.highcharts-a11y-proxy-group-legend .highcharts-a11y-proxy-element'), 'no keyboard proxy for each legend item').toHaveCount(2)
+    await expect(page.locator('.highcharts-a11y-proxy-group-legend .highcharts-a11y-proxy-element'), 'no keyboard proxy for each legend item').toHaveCount(3)
     await expect(chart.locator('.highcharts-credits')).toHaveText('Highcharts.com')
 
     // Hover a point until its tooltip shows.
@@ -516,6 +533,16 @@ test.describe('CSP — real browser enforcement', () => {
         solid: fill('.highcharts-series.highcharts-series-0 .highcharts-point'),
         root: getComputedStyle(document.documentElement).getPropertyValue('--highcharts-color-0').trim(),
         pattern: document.querySelectorAll('pattern#b9-hatch').length,
+        // RC3 (owed from RC1): each pattern kind's own ink, so two patterned series keep their colour difference.
+        hatchInk: (() => {
+          const el = document.querySelector('pattern#b9-hatch .b9-pattern-ink')
+          return el ? getComputedStyle(el).stroke : 'MISSING'
+        })(),
+        dotsInk: (() => {
+          const el = document.querySelector('pattern#b9-dots .b9-pattern-ink')
+          return el ? getComputedStyle(el).fill : 'MISSING'
+        })(),
+        dotted: fill('.highcharts-series.highcharts-series-2 .highcharts-point'),
       }
     })
     // Imported here, not at the top, so the lines this file's other arms are cited by keep their numbers.
@@ -527,6 +554,12 @@ test.describe('CSP — real browser enforcement', () => {
     expect(fills.hatchedLegend, 'the hatched series’ legend symbol lost its pattern fill').toBe('url("#b9-hatch")')
     expect(fills.root, 'the CSSOM write of --highcharts-color-0 did not land').toBe(hex)
     expect(fills.solid, 'series 0 is not painted from palette.ts (highcharts.css or its default palette won)').toBe(rgb)
+    // Two patterned series in one chart: each pattern's ink computes its own series' colour, never one shared ink.
+    const rgbOf = (h: string) => `rgb(${parseInt(h.slice(1, 3), 16)}, ${parseInt(h.slice(3, 5), 16)}, ${parseInt(h.slice(5, 7), 16)})`
+    expect(fills.dotted, 'the dotted series lost its pattern fill').toBe('url("#b9-dots")')
+    expect(fills.hatchInk, 'the hatch’s ink is not its series’ colour (slot 1)').toBe(rgbOf(RC_SERIES[1]))
+    expect(fills.dotsInk, 'the dots’ ink is not its series’ colour (slot 2)').toBe(rgbOf(RC_SERIES[2]))
+    expect(fills.hatchInk, 'two patterned series in one chart share one ink').not.toBe(fills.dotsInk)
 
     // Nothing injected a <style> element, and nothing was blocked along the way.
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'a library injected a <style> element').toBe(0)

@@ -119,6 +119,21 @@ function planReading(
 }
 
 /**
+ * THE ONE PLAN READING (Act 6, plan 4.0 "One plan reading"): the plan's own many-futures reading for the ring on
+ * Snapshot and the right half of Probability, from the same composer the what-if compares against, so two derivations
+ * of one reading never exist. All retired: the committed headline. Working: the committed curve's entry at the offset
+ * `buildTableBase` decides (the band's, on the band's track; with no date, the full track at the window's top). `null`
+ * where the answer carries no reading (not resolved, no date search yet, or a base the table builder withholds).
+ */
+export function planReadingFor(answer: ModelAnswer): WhatIfReading | null {
+  if (answer.kind === 'headline') return { kind: 'headline', headline: answer.result.headline }
+  if (answer.kind !== 'date') return null
+  const base = buildTableBase(answer.draft, answer.outcome)
+  if (base.kind !== 'run') return null
+  return planReading(answer, base)?.reading ?? null
+}
+
+/**
  * The what-if's many-futures reading from its run, in the plan's statistic: the spine's headline; or, on the date route,
  * the §3c reading of the plan's track (the floor pass's survival on the floor track) at the what-if's offset.
  */

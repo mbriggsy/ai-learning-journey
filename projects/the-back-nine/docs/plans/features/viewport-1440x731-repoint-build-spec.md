@@ -372,7 +372,7 @@ Where each frame's pixels come from (measured, Windows; the full stacks are in t
 
 **Files:**
 - `docs/glossary.md` (the Caddie entry), `docs/roadmap.md` (the Validation-gates "Vertical fit + chart text" row), `docs/landmines.md` (the "manual 1536×791 measure" line; new entries: the amended tier law's home, and how test stdout reaches CI's verify log on green runs: the github reporter prints none (`printsToStdio()` is false), so Playwright prepends a `DotReporter` on CI, and that is what writes it; never add `list` to `playwright.fit.config.ts`, which would change the line format a log reader parses), `docs/architecture.md` (§12's one-frame-law bullet: the 20 px fork's premise at 1440 and its re-recorded numbers)
-- `docs/backlog.md` (the LIVE lines the Appendix lists, the 20 px fork's numbers among them; on the open 20 px fork's register entry (`docs/backlog.md:4191-4192`), a note beside its rejection reason (2), "the only levers are barred by the whitespace-only law", that KTD4 amended that law; new entries: the record card's reach check, the yearly-return composite ⚑, the view-only and failed-save frames)
+- `docs/backlog.md` (the LIVE lines the Appendix lists, the 20 px fork's numbers among them; on the open 20 px fork's register entry (`docs/backlog.md:4248-4249`), a note beside its rejection reason (2), "the only levers are barred by the whitespace-only law", that KTD4 amended that law; new entries: the record card's reach check, the yearly-return composite ⚑, the view-only and failed-save frames)
 - `docs/insights/082-when-whitespace-reservoirs-hit-floor-the-next-fit-rung-is-the-subordinate-disclosure-type-register.md` (a dated correction: the R13 disclaimer has worn `--text-xs` since 2026-06-14, so round 4's register was borrowed from the frame's other `--text-sm` subordinates, the survivor eyebrow, the save hint and the band legend; the rung's honesty stands, its attribution was wrong)
 - `docs/plans/5-workbench-plan.md` and `docs/plans/features/working-year-surplus-build-spec.md` (their forward 1536×791 arms)
 - `TODO.md`, in order:
@@ -641,7 +641,7 @@ Each entry below states 1536×791, 2.5 DPR or the 800 px law as a live instructi
 - `e2e/vertical-fit.spec.ts:2079-2096`: the 20 px docblock's premise ("the 1536 laptop STAYS two-pane", "≤ 22.6 px"); its numbers are re-recorded.
 - `e2e/vertical-fit.spec.ts:4530-4533`: the record arm's "TIGHT BY CONSTRUCTION (~10px at 1536×791)" note and its stale pointer to the copy length note.
 - `e2e/vertical-fit.spec.ts:1137`, `e2e/vertical-fit.spec.ts:1782`, `e2e/vertical-fit.spec.ts:1795`: the "at the fit-law tier floor" describe titles.
-- `e2e/chart-text.spec.ts:24`, `e2e/chart-text.spec.ts:822`, `e2e/chart-text.spec.ts:1287`, `e2e/chart-text.spec.ts:1749`: the header's "REAL 1536 @2.5", "from 320 to 1536", the hard-typed "1536 → 320" log string, and the 537.9 px modal-figure note.
+- `e2e/chart-text.spec.ts:26`, `e2e/chart-text.spec.ts:824`, `e2e/chart-text.spec.ts:1289`, `e2e/chart-text.spec.ts:1803`: the header's "REAL 1536 @2.5", "from 320 to 1536", the hard-typed "1536 → 320" log string, and the 537.9 px modal-figure note.
 - `e2e/caddie-walk.spec.ts:37`: the "1536px long edge" comment.
 - `e2e/held/council-24px-shots.spec.ts:88`: "this 1536 window renders the STACKED tier".
 - `src/ui/styles/tokens.css:135-205`: `--laptop-fit-height` and `--bp-laptop-short` with their docblocks.

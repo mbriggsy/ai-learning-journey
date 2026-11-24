@@ -447,8 +447,13 @@ describe('U17 §S5 — no render, mount, recompute, solve commit or draft edit e
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/^\s*\/\/.*$/gm, '')
     expect(src.match(/mintSavedRecommendation\(/g) ?? [], 'the mint has exactly one caller').toHaveLength(1)
-    expect(src.match(/saveRecommendation\(/g) ?? [], 'the gesture has exactly one caller').toHaveLength(1)
-    // And that one caller is the user's TAP — the Result prop, never an effect.
+    // The gesture has one caller per TAP surface (Act 6 RC3 added Snapshot's Keep beside the answer page's), and every
+    // one of them is an `onSave` tap prop, never an effect: a call planted anywhere else is not in the tap list, so the
+    // two counts part. Only the first argument and an optional return place may follow the ticket.
+    const calls = src.match(/saveRecommendation\(/g) ?? []
+    const tapCalls = src.match(/onSave: \(ticket\) => void saveRecommendation\(ticket(?:, '[a-z-]+')?\)/g) ?? []
+    expect(calls.length, 'the gesture has at least one caller').toBeGreaterThan(0)
+    expect(tapCalls, 'every caller of the gesture is a tap prop (onSave), never an effect').toHaveLength(calls.length)
     expect(src).toContain('onSave: (ticket) => void saveRecommendation(ticket)')
     // The mint's single call site sits INSIDE the gesture, not above it in something that merely happens
     // to be the file's only other caller.

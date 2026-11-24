@@ -1,6 +1,8 @@
 import { expect, type BrowserContext, type Page } from '@playwright/test'
 import { test, REAL, REAL_DPR, FLOOR, PHONE, PHONE_DPR, PHONE_LS, FINAL_TIER_MS, SETTLED_RESULT, gotoSeedFinal, gotoVaultFinal, settleLayout } from './reviewSurface'
 import { type Audit, type Rect, TOL, floorPx, audit, assertChartText } from './chartTextAudit'
+import { FAN, enterSnapshot, hcAudit, hcFloorPx, hcTextFailures, hoverMedian, type HcAudit } from './hcTextAudit'
+import { copy } from '../src/ui/copy'
 /* The band's scrub SNAPS to one of LATTICE_POINTS columns, so the readout's whole placement state
  * space is finite — the sweep below walks EVERY column rather than sampling a few (importing from
  * ../src is this directory's precedent: caddie-walk.spec.ts reads the copy catalog the same way). */
@@ -1428,22 +1430,27 @@ test.describe('chart text — the readout oracles bite in the PLOT seat (planted
 test.describe('chart text — follows the reader’s browser font size', () => {
   test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
 
-  test('at a 20px default the smallest chart text is LARGER than at 16px (the svg era shrank it)', async ({ page, context }) => {
-    await gotoSeedFinal(page, 'retired')
-    const at16 = await audit(page, ...BAND)
-    const visible16 = at16.nodes.filter((n) => !n.hidden && n.text !== '')
-    // non-vacuity: `Math.min()` of nothing is Infinity, and Infinity > Infinity is false — an empty
-    // layer would fail this test for the wrong reason instead of naming the vacuity.
-    expect(visible16.length, 'no chart text to measure — the reader-font oracle is vacuous').toBeGreaterThan(0)
-    const min16 = Math.min(...visible16.map((n) => n.minFontPx))
-    await raiseRootFont(page, context)
-    const at20 = await audit(page, ...BAND)
-    const visible20 = at20.nodes.filter((n) => !n.hidden && n.text !== '')
-    expect(visible20.length, 'no chart text to measure at 20px — the reader-font oracle is vacuous').toBeGreaterThan(0)
-    const min20 = Math.min(...visible20.map((n) => n.minFontPx))
-    expect(min20, `chart text did not follow the reader's font: ${min16}px @16 → ${min20}px @20`).toBeGreaterThan(min16)
-    // and it still holds every other contract at the larger size
-    assertChartText(at20, await floorPx(page), 'PHONE band @20px root')
+  // Act 6 · RC3 (plan 6, section 5.2): RE-POINTED from the old band to Snapshot's Highcharts fan. Highcharts draws its
+  // words at the size the chart CSS sets in rem (`chartTheme.css`, `docs/architecture.md` §12), so a reader's larger
+  // browser font must reach the fan's every label: the smallest one grows, and every required label still passes.
+  test('at a 20px default the fan’s smallest chart text is LARGER than at 16px, and every required label still passes', async ({ page, context }) => {
+    test.setTimeout(2 * FINAL_TIER_MS + 60_000)
+    await enterSnapshot(page, 'retired')
+    await page.locator(FAN[1]).scrollIntoViewIfNeeded()
+    const at16 = await hcAudit(page, ...FAN)
+    const live16 = at16.labels.filter((l) => l.text !== '')
+    // non-vacuity: `Math.min()` of nothing is Infinity — an empty chart would fail for the wrong reason.
+    expect(live16.length, 'no chart text to measure — the reader-font oracle is vacuous').toBeGreaterThan(0)
+    const min16 = Math.min(...live16.map((l) => l.minFontPx))
+    await setRootFont20(page, context)
+    await enterSnapshot(page, 'retired')
+    await page.locator(FAN[1]).scrollIntoViewIfNeeded()
+    const at20 = await hcAudit(page, ...FAN)
+    const live20 = at20.labels.filter((l) => l.text !== '')
+    expect(live20.length, 'no chart text to measure at 20px — the reader-font oracle is vacuous').toBeGreaterThan(0)
+    const min20 = Math.min(...live20.map((l) => l.minFontPx))
+    expect(min20, `the fan's text did not follow the reader's font: ${min16}px @16 → ${min20}px @20`).toBeGreaterThan(min16)
+    expect(hcTextFailures(at20, await hcFloorPx(page), FAN_REQUIRED), 'PHONE fan @20px root').toEqual([])
   })
 
   test('the scrub readout at a 20px root: the seat follows the reader’s font, and the ink stays inside it', async ({ page, context }) => {
@@ -1623,24 +1630,71 @@ function report(measurement: string): void {
 test.describe('chart text — reduced motion changes nothing', () => {
   test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
 
-  test('the same text nodes, same words, same sizes under prefers-reduced-motion', async ({ page }) => {
-    await gotoSeedFinal(page, 'datemixed')
-    const motion = await audit(page, ...BAND)
+  // Act 6 · RC3: RE-POINTED from the old band to Snapshot's fan (plan 6, section 5.2). The final state is identical with
+  // motion on or off (back-nine-design section 3): the 250 ms morph carries no information of its own.
+  test('the fan’s text: the same labels, same words, same sizes under prefers-reduced-motion', async ({ page }) => {
+    test.setTimeout(2 * FINAL_TIER_MS + 60_000)
+    await enterSnapshot(page, 'datemixed')
+    const motion = await hcAudit(page, ...FAN)
     await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.reload()
-    await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
-    await settleLayout(page)
-    const reduced = await audit(page, ...BAND)
-    const shape = (a: Audit) => a.nodes.map((n) => `${n.text}|${n.fontPx}|${n.hidden}`)
-    // non-vacuity + discrimination (insight 029: an equality on a structurally empty surface
-    // discriminates nothing) — both sides carry nodes, and a one-px change on one side is SEEN.
+    await enterSnapshot(page, 'datemixed')
+    const reduced = await hcAudit(page, ...FAN)
+    const shape = (a: HcAudit) => a.labels.map((l) => `${l.kind}|${l.text}|${l.minFontPx}|${l.visibility}`)
+    // non-vacuity + discrimination (insight 029): both sides carry labels, and a one-px change on one side is SEEN.
     expect(shape(motion).length, 'nothing to compare — the reduced-motion oracle is vacuous').toBeGreaterThan(0)
     expect(shape(reduced).length, 'nothing to compare — the reduced-motion oracle is vacuous').toBeGreaterThan(0)
     expect(
-      shape({ ...reduced, nodes: reduced.nodes.map((n, i) => (i === 0 ? { ...n, fontPx: n.fontPx + 1 } : n)) }),
+      shape({ ...reduced, labels: reduced.labels.map((l, i) => (i === 0 ? { ...l, minFontPx: l.minFontPx + 1 } : l)) }),
       'shape() does not discriminate',
     ).not.toEqual(shape(motion))
     expect(shape(reduced)).toEqual(shape(motion))
+  })
+})
+
+// ── Act 6 · RC3: the Highcharts text audit's planted-fail controls (a new kind of check) ─────────────────────────────
+// `e2e/hcTextAudit.ts` reads a Highcharts chart's SVG words (`docs/architecture.md` §12). Each oracle gets a plant on
+// the real fan, and each plant must produce ITS OWN failure line: a band word hidden (the collision handling's
+// `visibility`), a band word faded (the inactive state's opacity, decision 7), an axis label pushed out of the chart
+// (clipped), and an axis label shrunk under the floor; plus the missing-label oracle. The clean fan passes first, with
+// the median hovered too, so every red below is the plant's.
+const FAN_REQUIRED = {
+  texts: [copy.snapshotFanOuterWords, copy.snapshotFanInnerWords, copy.snapshotFanOuter, copy.snapshotFanInner, copy.snapshotFanMedian],
+  counts: { 'data-label': 2, 'legend-item': 3, 'axis-label': 4, 'plot-line-label': 2 },
+} as const
+
+test.describe('chart text — the Highcharts audit bites (planted-fail controls)', () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+
+  test('a hidden, a faded, a clipped and a shrunk label each produce their own failure; a missing word is named', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 60_000)
+    await enterSnapshot(page, 'retired')
+    await page.locator(FAN[1]).scrollIntoViewIfNeeded()
+    await settleLayout(page)
+    const floor = await hcFloorPx(page)
+    const clean = await hcAudit(page, ...FAN)
+    expect(hcTextFailures(clean, floor, FAN_REQUIRED), 'the clean fan').toEqual([])
+    await hoverMedian(page)
+    expect(hcTextFailures(await hcAudit(page, ...FAN), floor, FAN_REQUIRED), 'the clean fan, the median hovered').toEqual([])
+    await page.mouse.move(0, 0)
+
+    const word = `${FAN[0]} .highcharts-data-label text`
+    const yLabel = `${FAN[0]} .highcharts-yaxis-labels text`
+    const plant = async (sel: string, prop: string, value: string): Promise<string[]> => {
+      await page.locator(sel).first().evaluate((el, [p, v]) => (el as SVGElement).style.setProperty(p!, v!), [prop, value])
+      const out = hcTextFailures(await hcAudit(page, ...FAN), floor, FAN_REQUIRED)
+      await page.locator(sel).first().evaluate((el, p) => (el as SVGElement).style.removeProperty(p), prop)
+      return out
+    }
+    // Each plant reds with its own oracle's line, and the restore leaves the fan clean again.
+    expect((await plant(word, 'visibility', 'hidden')).some((f) => /^hidden: data-label .* is hidden/.test(f)), 'a hidden band word').toBe(true)
+    expect((await plant(word, 'opacity', '0.2')).some((f) => /^hidden: data-label .* faded to 0\.20/.test(f)), 'a faded band word').toBe(true)
+    expect((await plant(yLabel, 'transform', 'translate(-2000px, 0)')).some((f) => /^clipped: axis-label .* leaves the chart/.test(f)), 'a clipped tick').toBe(true)
+    expect((await plant(yLabel, 'font-size', '8px')).some((f) => /^shrunk: axis-label .* renders at 8px/.test(f)), 'a shrunk tick').toBe(true)
+    expect(hcTextFailures(await hcAudit(page, ...FAN), floor, FAN_REQUIRED), 'the restored fan').toEqual([])
+    expect(
+      hcTextFailures(await hcAudit(page, ...FAN), floor, { ...FAN_REQUIRED, texts: [...FAN_REQUIRED.texts, 'A WORD NO CHART PRINTS'] }),
+      'a required word that is not printed',
+    ).toContain('missing: "A WORD NO CHART PRINTS" is not printed')
   })
 })
 

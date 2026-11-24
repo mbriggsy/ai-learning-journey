@@ -25,7 +25,7 @@ about markets, lifespans and future law. A gap is a build item, never a note wri
 in words he reads without a PhD, and show the household how we got to the answer, in their own numbers. The queue below is
 ranked under that rule.
 
-▶ **START HERE (2026-11-24, b9-4):** THE TURNAROUND (Briggsy, 2026-11-24; memory `project-b9-mandate-replicate-rightcapital`): B9's UI becomes a RightCapital clone (screens, layout, navigation, flow, chart types; never its logo, name or artwork); the engine, store, vault and intake mapping stay; every change is pre-approved, and nothing waits on him. Build sheet `docs/research/rightcapital-ui-reference.md`; plan `docs/plans/6-rightcapital-ui-plan.md` (RC0 to RC2 built; first read RC2b's CI by full sha: its fit job settles the shell's Linux numbers and the cold-start red in `docs/landmines.md`). Next: RC3 (Dashboard → Snapshot), opened with `/brief <RC3: Snapshot, the ring, the first Highcharts chart>`; it owes RC1's two chart fixes (its "Owed from RC1") and RC2's amendments in plan §3.1 bind it. Then the units in the plan's order, each by a fresh builder, the orchestrator re-running typecheck, lint, the reached tests and the browser checks (1440x731 @2 and a phone width) before each commit; at each milestone, the whole-file review with an adversary, then `/distill` (5 owed). Gap 2 folds into Act 6 (U16 is RC5; U25 is RC2 and RC4). The D7 queue and the tiered lists below are pre-turnaround: judge each against the clone when reached.
+▶ **START HERE (2026-11-24, b9-4):** THE TURNAROUND (Briggsy, 2026-11-24; memory `project-b9-mandate-replicate-rightcapital`): B9's UI becomes a RightCapital clone (screens, layout, navigation, flow, chart types; never its logo, name or artwork); the engine, store, vault and intake mapping stay; every change is pre-approved, and nothing waits on him. Build sheet `docs/research/rightcapital-ui-reference.md`; plan `docs/plans/6-rightcapital-ui-plan.md` (RC0 to RC3 built; first read RC3's CI by full sha). Next: RC4 (Probability and the Action Items tray), opened with `/brief <RC4: Probability, the tray, the shell as home>`; it owes RC3's three items (its "Owed from RC3": one count per screen, raw or sticky, ruled first). Then the units in the plan's order, each by a fresh builder, the orchestrator re-running typecheck, lint, the reached tests and the browser checks (1440x731 @2 and a phone width) before each commit; at each milestone, the whole-file review with an adversary, then `/distill` (5 owed). Gap 2 folds into Act 6 (U16 is RC5; U25 is RC2 and RC4). The D7 queue and the tiered lists below are pre-turnaround: judge each against the clone when reached.
 U10's Caddie card stays HARD-FLAG on its two builds (filed Tier 0). The register-wide tier sweep's readings (the
 register header's sweep paragraph) bind the next tier sweep. Next, in order:
 1. **Build 2, the surplus question.** Its plan, `docs/plans/features/working-year-surplus-build-spec.md`, is checked as a whole; its
@@ -453,7 +453,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:1189`, `:1194, :1208, :1210, :1218, :1220` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1368`, `:1374`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1360-1362`). Unfiled: `shadowRateHeadroom` (`copy.ts:4492`)
+   (gated on `statePriced` alone — `copy.ts:1360-1362`). Unfiled: `shadowRateHeadroom` (`copy.ts:4539`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -523,7 +523,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `sanity.ts:67-92`). ⚑ **Size is M, not S, and a ceiling is the wrong instrument:** a 10× slip on
      $500k is $5M — a perfectly coherent household, so no threshold catches it. The shape that works is
      **one confirm on the household TOTAL** at the accounts step (the figure the engine actually consumes),
-     reusing the running total already rendered at `copy.ts:2996` / `questions.tsx:1066-1068`.
+     reusing the running total already rendered at `copy.ts:3043` / `questions.tsx:1066-1068`.
      ⚑ **"Briggsy sets the number" is the WRONG ask — there IS no honest number** (every total is
      coherent, so any threshold is the guessed plausibility band burned/062 bans). The only rule that
      invents nothing is an **unconditional** one-tap confirm for any household with ≥1 account. That is a
@@ -611,23 +611,23 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    inversion and a $0 collapse). **No seed produces a `custom` winner**, so that branch would ship
    unwitnessable — mint the seed first or leave it.
 
-8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:393` gates
-   `RecommendationSurface` off for the date route entirely and `Result.tsx:317` gates the invite door. The
+8. **The whole still-working audience gets no strategy — silently.** `Result.tsx:372` gates
+   `RecommendationSurface` off for the date route entirely and `Result.tsx:296` gates the invite door. The
    `blocked{spine-unready}` note that would explain it lives *inside* the gated-off component, so a working
-   couple sees the date answer and **zero words** about strategy. `Result.tsx:291-293`'s comment now records the
+   couple sees the date answer and **zero words** about strategy. `Result.tsx:270-272`'s comment now records the
    opposite (corrected 2026-09-04): the builder's `spine-unready` refusal does NOT cover the date route, so no note is minted there at all.
    ⚑ **THE FILED "CHEAP INTERIM" IS WRONG — do not execute it.** Dropping the `!isDateRoute` gate at
-   `Result.tsx:403` alone renders an **empty `<div>`**, not the refusal: the note is not reachable on that path. And
+   `Result.tsx:382` alone renders an **empty `<div>`**, not the refusal: the note is not reachable on that path. And
    reusing `recommendSpineUnreadyNote` would tell a household with a **complete** answer that its answer is
    incomplete — a new false claim, worse than the silence. The honest interim is a **route-true one-liner**
    admitting the v1 limit in its own words, seated and re-measured under `verify:fit` (~89px headroom).
    **Briggsy blesses the words.** Full parity stays council-sized — the crowned offset lives in the
    committed answer, not the draft, and anchoring candidates at a future retirement year is a real ranking
    question.
-   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:403` (surface) and `:317` (the invite conjunct; door
-   `Result.tsx:475-482`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:411`). Strike
+   ⚑ **2026-09-04 anchors:** the gates are `Result.tsx:382` (surface) and `:296` (the invite conjunct; door
+   `Result.tsx:454-461`); a THIRD exclusion kills the record card at its producer (`IntakeApp.tsx:411`). Strike
    "~89px headroom" — that is the SPINE idle frame's figure; the date arms of `verify:fit` assert ORDER + REACHABILITY only — never fit
-   (spec header `vertical-fit.spec.ts:54-55`). `Result.tsx:291-293`'s "covers the date route honestly" comment was FALSE (never
+   (spec header `vertical-fit.spec.ts:54-55`). `Result.tsx:270-272`'s "covers the date route honestly" comment was FALSE (never
    minted there; a route-flip render is dropped) — swept 2026-09-04. A crowned-offset params builder ALREADY
    exists (`buildControlPreviewParams`, `intakeMap.ts:1288-1297`), so parity's base shape is not from zero.
    Build shape: the ⚑ Folded 2026-09-06 block directly below.
@@ -635,7 +635,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (anchor on WORK STATUS, never "a date ahead of you"); the one token yours: does it promise parity.
    ⚑ **2026-09-04:** the framings are no-date · now (today/arrived) · past · future (`heroLead`,
    `dateHero.ts:20-42`; the split household's floor line has its own six arms, `:49-79`). Seat =
-   the else-arm of the `Result.tsx:393` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
+   the else-arm of the `Result.tsx:372` gate, gated ALSO on `focusKey !== undefined` (else it prints beside
    the non-answer strip on an inputs-incomplete date frame); CSS in `fuckOffDate.css` — NOT
    `confidence.css`, the date grid is its own (`:250-266`) and its first free cell is r3c1 above the
    protected disclaimer; the key lands in verdict scope through the `fuckoff` substring net
@@ -643,7 +643,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    only (only `dip` + `datenc` carry the exhaustive doors-last sweep) — add a presence pin to the `?seed=dip`
    describe and measure the vertical cost by hand. The line must also be true on the route-FLIP frame: a
    committed rec whose spouse un-retires lands `stale` (not `blocked`) and the gate drops the stale card's
-   own re-open door with it. `Result.tsx:291-293`'s "covers the date route honestly" comment was FALSE —
+   own re-open door with it. `Result.tsx:270-272`'s "covers the date route honestly" comment was FALSE —
    swept 2026-09-04.
 
 9. **A modest-pre-tax household is refused a withdrawal-order answer the engine could compute.**
@@ -693,7 +693,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     draft outside the vault is a security-posture ruling, never a build) · the
     `schemaVersion` migration ladder **does not exist as code for versions 1 and 2** — `IntakeApp.tsx:711`
     refuses anything but the current version, so a v1/v2 plan decodes ok, then meets "That didn't work. Try
-    again." over a reload that cannot succeed (`IntakeApp.tsx:851-868`), and its backups fail identically
+    again." over a reload that cannot succeed (`IntakeApp.tsx:852-869`), and its backups fail identically
     (same bytes, `backup.ts:84-93`). No build ever wrote either. *(Re-scoped 2026-10-31, b9-3: this bullet
     said a future v4 would push today's v3 vaults into that arm. The schema-v4 bump did not: version 3
     relabels to 4 at decode, a label-only step — `docs/architecture.md` §7.3.)* · there is **no way to delete the vault** (`clearVault` exists; its only PRODUCTION
@@ -706,7 +706,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:4396-4398` under the NUMBER AGREEMENT post-mortem at `copy.ts:4382`, covered by `copyGuard.test.ts:1086`):
+    `copy.ts:4443-4445` under the NUMBER AGREEMENT post-mortem at `copy.ts:4429`, covered by `copyGuard.test.ts:1086`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
@@ -807,7 +807,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:4810` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:4857` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -823,7 +823,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:4858`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:4905`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test
@@ -877,6 +877,8 @@ line keeps the facts `/distill` needs; its source line is in this file as it sto
 - *New (b9-3, 2026-11-24, the clone research): to clone a UI, pull real screenshots and look at each one, and read the target's shipped artifacts before choosing tools.* 334 screenshots viewed one by one (`wf_feb3b7ac-8cb`); the tooling lane read RightCapital's own shipped CSS and HTML and found its stack (Tailwind v4, Highcharts styled mode), which became B9's.
 - *New (b9-3, 2026-11-24, the Act 6 plan's attack): a screen planned from one route's data offers a button the other route's engine path refuses.* Tax Strategies would have offered Solve to a working household, whose `buildSolveRequest` returns spine-unready, and the shipped words for that block are false there (`wf_39bcaf0e-ff2`). Trace each screen's engine call on both routes.
 - *Extend 136 (b9-3, RC0): the re-anchor tool binds a bare `:N` to the FIRST file named within 60 characters before it, not the nearest, and it cannot follow a citation across files after an extraction.* The helper read each file's HEAD text in a scratch copy to rebuild the review list; doc-stats catches only a citation landing out of range or on a blank line.
+- *Extend 153 (b9-4, 2026-11-24, RC3): a source-bind test reads its file by PATH, so an import search never finds it.* RC3's builder ran the 31 test files that import what it changed and missed `recSaveNoAutoWrite.test.tsx`, which `readFileSync`s `IntakeApp.tsx` to count the save gesture's callers; the orchestrator's run caught it. Find the reached tests by import AND by a `readFileSync`/path mention of each changed file's name (23 such tests for RC3).
+- *New (b9-4, 2026-11-24, RC1 to RC3): look at the builder's screenshots yourself; three of three units shipped a defect only the eye caught.* RC1's hover fade hid printed values, RC2a's tray label was cut to an ellipsis (its own look audit exempted ellipsis), RC2b's phone menu rendered in the old serif because Figtree was never loaded and the old heading rules leaked. Every check was green on each.
 - *Extend 154 (b9-3, 2026-11-23): a plan's "put to Briggsy" and a harness's "start it again only when asked" are not his rulings.* Both pulled the pilot into asking him; his answer: "You're smarter than me, you make the call." (memory `feedback-act-on-confident-resolutions`).
 
 ## Driving the app

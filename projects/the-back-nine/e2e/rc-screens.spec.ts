@@ -1,6 +1,7 @@
 import { expect, type Page } from '@playwright/test'
 import { FINAL_TIER_MS, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, gotoSeedFinal, settleLayout, test } from './reviewSurface'
 import { copy } from '../src/ui/copy'
+import { FAN, assertHcText, enterSnapshot, hcAudit, hcFloorPx, hoverMedian } from './hcTextAudit'
 
 /**
  * Act 6's screens, one unit's arms at a time (plan docs/plans/6-rightcapital-ui-plan.md, sections 4.0 and 5.2), on the
@@ -28,13 +29,13 @@ const PAGES = [
   { screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts, hash: '#/profile/facts' },
 ] as const
 
-/** The settled answer, then the shell through the answer page's door; it lands on the year-by-year table. */
+/** The settled answer, then the shell through the answer page's door; since RC3 it lands on Dashboard → Snapshot. */
 async function enterShell(page: Page): Promise<void> {
   await gotoSeedFinal(page, SEED)
   const door = page.locator('.result-quiet-row [data-door="workbench"]')
   await expect(door, 'the door never mounted on the settled answer').toBeVisible()
   await door.click()
-  await expect(page.locator('main.result[data-shell-screen="interim-table"]'), 'the door never opened the shell').toBeAttached({ timeout: 30_000 })
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the door never opened the shell on Snapshot').toBeAttached({ timeout: 30_000 })
   await expect(page.locator(SETTLED_RESULT), 'the shell carries the settle hook').toBeAttached({ timeout: FINAL_TIER_MS })
 }
 
@@ -87,6 +88,7 @@ test.describe(`RC2 · the shell at his window (${REAL.width}×${REAL.height} @ $
     expect(wordmark.family, 'the top bar renders in Figtree').toMatch(/^Figtree Variable(,|$)/)
     const names = await faceOf(page, 'header.rc-root p[data-shell-names]')
     expect(names.maxWidth, 'a p inside .rc-root carries no legacy reading measure').toBe('none')
+    await showPage(page, PAGES[0])
     const banner = await faceOf(page, 'p[data-interim-banner]')
     expect(banner.family, 'the interim banner renders in Figtree').toMatch(/^Figtree Variable(,|$)/)
     expect(banner.maxWidth, 'the banner carries no legacy reading measure').toBe('none')
@@ -162,6 +164,7 @@ test.describe(`RC2 · the shell on the phone (${PHONE.width}×${PHONE.height} @ 
         expect(face.color, `the menu heading "${face.text}" never wears the legacy brand colour`).not.toBe(LEGACY_BRAND)
       }
       expect(await sheet.getByRole('link').allTextContents(), 'the menu holds every page, in the nav’s order').toEqual([
+        copy.shellPageSnapshot,
         copy.shellPageAnalysis,
         copy.shellPageCashFlows,
         copy.workbenchPageFacts,
@@ -179,4 +182,110 @@ test.describe(`RC2 · the shell on the phone (${PHONE.width}×${PHONE.height} @ 
       await expect(page.locator('main.result'), `${target.screen}: exactly one main.result`).toHaveCount(1)
     }
   })
+})
+
+// ── RC3 · Dashboard → Snapshot (plan 6, RC3's Verification) ──────────────────────────────────────────────────────────
+// On `retired` (the spine), `dip` and `datemixed` (the date route; `datemixed` the densest named moments): Snapshot is a
+// scrolling page whose first frame at his window holds the title, the ring card and the stat rings; exactly one R13
+// disclaimer is visible, in frame at REAL (the ring card's caveat; App.tsx's trailing mount hidden behind
+// `data-inframe-disclaimer`); the fan's band words, ticks, named moments and legend pass the Highcharts text audit
+// (`e2e/hcTextAudit.ts`) at REAL and PHONE, read again with the median hovered at REAL; on the phone the cards stack in
+// one column in their order; no page scrolls sideways.
+const RC3_SEEDS = ['retired', 'dip', 'datemixed'] as const
+const CARD_ORDER = ['ring', 'stats', 'invested', 'fan', 'recommendations'] as const
+
+/** The fan's required words: the two ranges' words printed inside them, every legend item, and at least the axis
+ *  ticks and named moments every household's fan carries. */
+const FAN_REQUIRED = {
+  texts: [copy.snapshotFanOuterWords, copy.snapshotFanInnerWords, copy.snapshotFanOuter, copy.snapshotFanInner, copy.snapshotFanMedian],
+  counts: { 'data-label': 2, 'legend-item': 3, 'axis-label': 4, 'plot-line-label': 2 },
+} as const
+
+async function assertOneVisibleCaveat(page: Page, inFrameHeight: number | null): Promise<void> {
+  const caveat = page.locator('main.result[data-inframe-disclaimer] [data-caveat]')
+  await expect(caveat, 'Snapshot’s in-frame caveat').toHaveCount(1)
+  await expect(caveat).toBeVisible()
+  await expect(page.locator('footer.disclaimer'), 'App.tsx’s trailing mount is hidden behind data-inframe-disclaimer').toBeHidden()
+  const visible = await page.evaluate(
+    () => [...document.querySelectorAll('footer.disclaimer, [data-caveat]')].filter((el) => getComputedStyle(el).display !== 'none' && (el as HTMLElement).getClientRects().length > 0).length,
+  )
+  expect(visible, 'exactly one visible R13 disclaimer').toBe(1)
+  if (inFrameHeight !== null) {
+    const box = (await caveat.boundingBox())!
+    expect(box.y + box.height, 'the caveat sits inside the first frame').toBeLessThanOrEqual(inFrameHeight)
+  }
+}
+
+async function noSidewaysScroll(page: Page, who: string): Promise<void> {
+  const w = await page.evaluate(() => {
+    const doc = document.scrollingElement ?? document.documentElement
+    return { scroll: doc.scrollWidth, client: doc.clientWidth }
+  })
+  expect(w.scroll, `${who}: the page scrolls sideways`).toBeLessThanOrEqual(w.client)
+}
+
+test.describe(`RC3 · Snapshot at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+  for (const seed of RC3_SEEDS) {
+    test(`?seed=${seed}: the first frame holds the title, the ring card and the stat rings; one R13 caveat in frame; the fan's text passes the audit`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterSnapshot(page, seed)
+      await expect(page.locator('main.result'), 'exactly one main.result').toHaveCount(1)
+      await expect(page.getByRole('heading', { level: 1, name: copy.shellPageSnapshot })).toBeVisible()
+      await expect(page.locator('[data-ring-reading]'), `${seed}: the ring card shows no reading`).toBeVisible()
+      // The stat rings land from the steady future's run: a hedged figure in each dial.
+      await expect(page.locator('[data-stat]').first(), `${seed}: the stat figure never landed`).toContainText('~', { timeout: 60_000 })
+      await settleLayout(page)
+      const frame = await page.evaluate(() => {
+        const bottom = (sel: string) => document.querySelector(sel)!.getBoundingClientRect().bottom
+        return {
+          title: bottom('main.result h1'),
+          ring: bottom('[data-card="ring"]'),
+          stats: Math.max(...[...document.querySelectorAll('[data-stat]')].map((el) => el.getBoundingClientRect().bottom)),
+          scrollY: window.scrollY,
+        }
+      })
+      expect(frame.scrollY).toBe(0)
+      expect(frame.title, `${seed}: the title in the first frame`).toBeLessThanOrEqual(REAL.height)
+      expect(frame.ring, `${seed}: the ring card in the first frame`).toBeLessThanOrEqual(REAL.height)
+      expect(frame.stats, `${seed}: the stat rings in the first frame`).toBeLessThanOrEqual(REAL.height)
+      await assertOneVisibleCaveat(page, REAL.height)
+      await noSidewaysScroll(page, `${seed} REAL`)
+      await page.locator(FAN[1]).scrollIntoViewIfNeeded()
+      await settleLayout(page)
+      const floor = await hcFloorPx(page)
+      assertHcText(await hcAudit(page, ...FAN), floor, FAN_REQUIRED, `${seed} REAL fan`)
+      // Decision 7: hovering a point of ANOTHER series fades no printed value.
+      await hoverMedian(page)
+      assertHcText(await hcAudit(page, ...FAN), floor, FAN_REQUIRED, `${seed} REAL fan, the median hovered`)
+    })
+  }
+})
+
+test.describe(`RC3 · Snapshot on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
+  for (const seed of RC3_SEEDS) {
+    test(`?seed=${seed}: one column in order, one R13 caveat, no sideways scroll; the fan's text passes the audit`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterSnapshot(page, seed)
+      const boxes = await page.evaluate(
+        (order) =>
+          order.map((name) => {
+            const r = document.querySelector(`[data-card="${name}"]`)!.getBoundingClientRect()
+            return { name, left: Math.round(r.left), top: r.top, bottom: r.bottom }
+          }),
+        [...CARD_ORDER],
+      )
+      for (let i = 1; i < boxes.length; i++) {
+        expect(boxes[i]!.top, `${seed}: ${boxes[i]!.name} sits below ${boxes[i - 1]!.name}`).toBeGreaterThanOrEqual(boxes[i - 1]!.bottom)
+        expect(boxes[i]!.left, `${seed}: ${boxes[i]!.name} shares the one column`).toBe(boxes[0]!.left)
+      }
+      await assertOneVisibleCaveat(page, null)
+      await noSidewaysScroll(page, `${seed} PHONE`)
+      await page.locator(FAN[1]).scrollIntoViewIfNeeded()
+      await settleLayout(page)
+      const floor = await hcFloorPx(page)
+      assertHcText(await hcAudit(page, ...FAN), floor, FAN_REQUIRED, `${seed} PHONE fan`)
+    })
+  }
 })

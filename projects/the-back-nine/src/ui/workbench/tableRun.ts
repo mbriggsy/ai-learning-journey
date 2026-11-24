@@ -12,9 +12,10 @@
  * (`steadyFuture`, `roughFuture`), each a one-path run of U2's named future with U3's ledger rows on the base's own
  * spending pass. They are cheap (one path), so both run up front and the view switch is one tap with no wait. The
  * account grouping (`base.sources`) and the people's names ride with the request, captured from the same draft that
- * compiled the run (insight 081): the composer never reads the live draft.
+ * compiled the run (insight 081): the composer never reads the live draft. A what-if's rows (U14, `whatIfRun.ts`) come
+ * from the same core ({@link tableRequestsOn}), so the plan's rows and the what-if's are built by one piece of code.
  */
-import { buildTableBase, workingYearLeftOverShownState, type AccountSources } from '@intake/intakeMap'
+import { buildTableBase, workingYearLeftOverShownState, type AccountSources, type TableBase } from '@intake/intakeMap'
 import { workingYearStateTaxReading } from '@intake/workingYearQuote'
 import type { LeftOverShownState } from '@intake/workingYearLeftOverState'
 import { steadyFuture } from '@engine/simulate'
@@ -110,8 +111,9 @@ export function tablePerson(draft: ScenarioDraft, i: number, currentAge: number,
     : { label: copy.personSpouse, mid: 'your spouse', possessive: 'your spouse’s', pronoun: 'your spouse’s', you: false, currentAge, lastAge }
 }
 
-/** The committed answer's key: one per figured answer and tier. */
-function answerKey(answer: Extract<ModelAnswer, { kind: 'headline' | 'date' }>): string {
+/** The committed answer's key: one per figured answer and tier. The what-if's runs (U14, `whatIfRun.ts`) key on the
+ *  same string, so a plan cell and a what-if cell pair only on one answer. */
+export function answerKey(answer: Extract<ModelAnswer, { kind: 'headline' | 'date' }>): string {
   return `${answer.kind}:${answer.tier}:${answer.inputKey}`
 }
 
@@ -130,6 +132,19 @@ export function tableRunFor(answer: ModelAnswer): TableRun {
   const draft = answer.draft
   const base = buildTableBase(draft, answer.kind === 'date' ? answer.outcome : undefined)
   if (base.kind === 'withheld') return { kind: 'withheld', reason: base.reason }
+  return { kind: 'run', key: answerKey(answer), ...tableRequestsOn(draft, base, workingYearLeftOverShownState(draft)) }
+}
+
+/**
+ * THE CORE the plan's table and a what-if's rows share (U14): a table base → the meta and the two views' requests.
+ * `draft` is the one the base was compiled from (the plan's answer draft, or a what-if's copy); `leftOverState` is the
+ * left-over state whose credit the run carries (a what-if carries the PLAN's credit, so it passes the plan's state).
+ */
+export function tableRequestsOn(
+  draft: ScenarioDraft,
+  base: Extract<TableBase, { kind: 'run' }>,
+  leftOverState: LeftOverShownState,
+): { readonly meta: TableMeta; readonly views: Readonly<Record<TableView, ViewRequest>> } {
   const params = { ...base.params, paths: 1 }
   const steady = steadyFuture(params)
   const rough = roughFuture(params)
@@ -143,8 +158,6 @@ export function tableRunFor(answer: ModelAnswer): TableRun {
   const state = params.overlay?.retirementState
   const saved = accumulation?.workingYearLeftOverSavedReal
   return {
-    kind: 'run',
-    key: answerKey(answer),
     meta: {
       sources: base.sources,
       track: base.track,
@@ -155,7 +168,7 @@ export function tableRunFor(answer: ModelAnswer): TableRun {
       investmentByPerson: accumulation?.workingYearInvestmentByPerson ?? [],
       stateTaxReading: workingYearStateTaxReading(draft),
       statePriced: state !== undefined && isPricedState(state),
-      leftOverState: workingYearLeftOverShownState(draft),
+      leftOverState,
       ...(saved !== undefined ? { leftOverSaved: saved } : {}),
     },
     views: {

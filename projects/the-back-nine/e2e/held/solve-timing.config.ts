@@ -1,11 +1,11 @@
 import { defineConfig } from '@playwright/test'
 
 /**
- * The HELD harness for the three built-app solve instruments (`solve-timing.spec.ts`,
- * `solve-phase-profile.spec.ts`, `solve-pool.spec.ts`, beside this file) — INSTRUMENTS, never gates.
+ * The HELD harness for the four built-app instruments (`solve-timing.spec.ts`, `solve-phase-profile.spec.ts`,
+ * `solve-pool.spec.ts` and `whatif-timing.spec.ts`, beside this file) — INSTRUMENTS, never gates.
  * Their own config because they are the held specs that measure the BUILT app: `shots.config.ts`
  * reuses the fit harness's dev server, and a dev build is exactly what these instruments exist not to
- * time (`shots.config.ts` ignores all three, so each harness claims each spec once —
+ * time (`shots.config.ts` ignores all four, so each harness claims each spec once —
  * scripts/__tests__/playwright-harness-partition.test.ts).
  *
  * The server is `scripts/serve-dist-with-headers.ts` (`vercel.json`'s exact headers on :4180, the same
@@ -18,8 +18,9 @@ import { defineConfig } from '@playwright/test'
  */
 export default defineConfig({
   testDir: '.',
-  // The instruments of the BUILT app: the wall-clock timing, the phase-split profile, the worker pool.
-  testMatch: ['**/solve-timing.spec.ts', '**/solve-phase-profile.spec.ts', '**/solve-pool.spec.ts'],
+  // The instruments of the BUILT app: the wall-clock timing, the phase-split profile, the worker pool, and the
+  // workbench's what-if run timing (U14).
+  testMatch: ['**/solve-timing.spec.ts', '**/solve-phase-profile.spec.ts', '**/solve-pool.spec.ts', '**/whatif-timing.spec.ts'],
   fullyParallel: false,
   workers: 1, // ONE solve at a time — a second one beside it halves the cores it sees
   retries: 0, // a retried timing is a different measurement; a failure is read, never re-rolled

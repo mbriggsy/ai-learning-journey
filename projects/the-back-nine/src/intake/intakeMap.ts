@@ -1297,6 +1297,27 @@ export function buildControlPreviewParams(
 }
 
 /**
+ * A what-if's left-over credit: the PLAN's own (`carriedWorkingYearLeftOver` on the plan's committed draft), carried
+ * into the copy's build, never one re-judged on the copy (the workbench plan's U14 left-over rule). A spending lever
+ * moves the working-year quote on the copy alone, so a confirmed W reads stale there and a re-judgment would drop the
+ * credit, mixing the spending effect with a phantom loss. Never rosy: `workingYearCredit` caps the credit at the
+ * what-if run's own year-0 print and that year's cash. `fromPlan` undefined: the plan carries none, so neither does
+ * the what-if. Passed by a what-if's build only (`buildTableBase`'s `whatIf`); absent, a builder judges its own draft.
+ */
+export interface PlanLeftOver {
+  readonly fromPlan: number | undefined
+}
+
+/** The date input a build compiles from: `buildDateInput`, or, for a what-if's copy, the same input carrying the
+ *  plan's own left-over figure in place of the copy's own judgment (`PlanLeftOver`). */
+function dateInputFor(d: ScenarioDraft, leftOver: PlanLeftOver | undefined): DateSearchInput | null {
+  if (leftOver === undefined) return buildDateInput(d)
+  const input = buildDateInputBeforeLeftOver(d)
+  if (input === null) return null
+  return leftOver.fromPlan === undefined ? input : { ...input, workingYearLeftOverSavedReal: leftOver.fromPlan }
+}
+
+/**
  * The year-by-year table's base run (workbench plan KTD9): the run whose one named future the table shows, and the
  * spending pass its ledger rows record.
  *
@@ -1311,7 +1332,17 @@ export function buildControlPreviewParams(
  * `outcome` is the store's COMMITTED date answer for this very draft (the caller's contract: the table is requested on
  * each committed date answer, never on the edit, KTD9). The account grouping is captured here, with the run, so the
  * table names each source's accounts from the compile that opened its ledgers, never from the live draft.
+ *
+ * A what-if's rows (U14) pass `whatIf`: `d` is then the what-if's copy and `outcome` the PLAN's committed answer, so
+ * the track and the route stay the plan's; the candidate is built at the stop-year lever's offset when the bundle holds
+ * one (else the plan's own), carrying the plan's left-over credit (`PlanLeftOver`).
  */
+export interface TableBaseWhatIf {
+  /** The stop-year lever's offset; absent ⇒ the plan's own (the band's, or the window top). */
+  readonly offsetYears?: number
+  readonly leftOver: PlanLeftOver
+}
+
 export type TableBase =
   | {
       readonly kind: 'run'
@@ -1333,7 +1364,7 @@ export type TableBase =
 
 const trackDated = (t: DateTrackOutcome): boolean => t.kind === 'confirmed-date' || t.kind === 'window-edge-unconfirmed'
 
-export function buildTableBase(d: ScenarioDraft, outcome: DateSearchOutcome | undefined): TableBase {
+export function buildTableBase(d: ScenarioDraft, outcome: DateSearchOutcome | undefined, whatIf?: TableBaseWhatIf): TableBase {
   const withLedger = (
     params: SimulationParams,
     track: 'full' | 'floor',
@@ -1354,21 +1385,17 @@ export function buildTableBase(d: ScenarioDraft, outcome: DateSearchOutcome | un
     const spine = buildSpineParams(d)
     return spine === null ? { kind: 'withheld', reason: 'no-run' } : withLedger(spine, 'full', 'spine')
   }
-  const input = buildDateInput(d)
+  const input = dateInputFor(d, whatIf?.leftOver)
   if (input === null) return { kind: 'withheld', reason: 'no-run' }
   if (outcome?.kind !== 'dates') return { kind: 'withheld', reason: 'no-date-answer' }
   if (outcome.band !== undefined) {
-    const offset = outcome.band.offsetYears
+    const offset = whatIf?.offsetYears ?? outcome.band.offsetYears
     const params = buildCandidateParams(input, offset, DATE_SEARCH_PATHS.final)
     return withLedger(params, outcome.band.track === 'floor' ? 'floor' : 'full', 'dated', offset)
   }
   if (trackDated(outcome.lifestyle) || trackDated(outcome.floor)) return { kind: 'withheld', reason: 'band-missing' }
-  return withLedger(
-    buildCandidateParams(input, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS.final),
-    'full',
-    'no-date',
-    DATE_OFFSET_WINDOW_TOP,
-  )
+  const offset = whatIf?.offsetYears ?? DATE_OFFSET_WINDOW_TOP
+  return withLedger(buildCandidateParams(input, offset, DATE_SEARCH_PATHS.final), 'full', 'no-date', offset)
 }
 
 /** The date route builder — `ParamsBuilders.buildDateInput`. The engine owns

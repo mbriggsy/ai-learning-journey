@@ -1580,7 +1580,7 @@ describe('the stale aged plant (the re-entry gate notes, exposure-gated)', () =>
   // its SPINE sibling, which rides the very doctor that caused that bug, never did. Its only
   // witnesses were a ~90-second Chromium fit arm (`vertical-fit.spec.ts` drives `?vault=stale`
   // through a real unlock and asserts a resolved spine) and a DIFFERENT plant's date-route arm over
-  // a DIFFERENT base — `retired` is all-retired and `dateSearch.ts:581` refuses such a household
+  // a DIFFERENT base — `retired` is all-retired and `dateSearch.ts:590` refuses such a household
   // outright, so no date-route arm can ever cover it. This is the insight-051 tell: the plant
   // shipped its fit pin before it had a unit source. Now a doctored shape the engine would refuse
   // fails HERE, in under a second.

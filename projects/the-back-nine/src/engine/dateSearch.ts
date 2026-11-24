@@ -437,6 +437,31 @@ export interface OffsetSurvival {
 }
 
 /**
+ * ONE offset's reading under the §3c rule: the survival fraction, its quantized one-sided lower confidence bound
+ * (`p̂ − z·SE`, SE = √(p̂(1−p̂)/paths)), and whether that bound clears the bar. The one producer of a per-offset
+ * reading: {@link decideTrack} maps every curve entry through it, and the workbench's what-if (U14) reads its own run
+ * through it, so a what-if's odds and the committed curve's are one statistic. `paths` is the count the fraction was
+ * sampled at (see decideTrack's coupling note).
+ */
+export function offsetReading(c: OffsetSurvival, paths: number): DateOffsetReading {
+  const p = c.survivalFraction
+  // Finiteness FIRST (insight 010): a NaN survival would sail through the ≥-bar compare
+  // as a silent FAIL — a wrongly-pessimistic curve is still a wrong curve; fail loud.
+  if (!Number.isFinite(p) || p < 0 || p > 1) {
+    throw new Error(`[dateSearch] survivalFraction must be finite in [0, 1] (got ${p} at Y=${c.offsetYears})`)
+  }
+  const se = Math.sqrt((p * (1 - p)) / paths)
+  const lower = Math.max(0, p - DATE_SEARCH_Z * se)
+  const quantizedLowerBound = quantizeSurvival(lower)
+  return {
+    offsetYears: c.offsetYears,
+    survivalFraction: p,
+    quantizedLowerBound,
+    clears: quantizedLowerBound >= BANDS.onTrack,
+  }
+}
+
+/**
  * The §3c decision rule, pure and sweep-independent: derive each offset's quantized
  * one-sided lower confidence bound, crown the start of the LONGEST CLEARING SUFFIX (the
  * earliest offset that clears AND keeps clearing through the window top — it exists iff the
@@ -475,23 +500,7 @@ export function decideTrack(curve: readonly OffsetSurvival[], paths: number): Da
       )
     }
   })
-  const readings: DateOffsetReading[] = curve.map((c) => {
-    const p = c.survivalFraction
-    // Finiteness FIRST (insight 010): a NaN survival would sail through the ≥-bar compare
-    // as a silent FAIL — a wrongly-pessimistic curve is still a wrong curve; fail loud.
-    if (!Number.isFinite(p) || p < 0 || p > 1) {
-      throw new Error(`[dateSearch] survivalFraction must be finite in [0, 1] (got ${p} at Y=${c.offsetYears})`)
-    }
-    const se = Math.sqrt((p * (1 - p)) / paths)
-    const lower = Math.max(0, p - DATE_SEARCH_Z * se)
-    const quantizedLowerBound = quantizeSurvival(lower)
-    return {
-      offsetYears: c.offsetYears,
-      survivalFraction: p,
-      quantizedLowerBound,
-      clears: quantizedLowerBound >= BANDS.onTrack,
-    }
-  })
+  const readings: DateOffsetReading[] = curve.map((c) => offsetReading(c, paths))
 
   // The candidate = the start of the longest clearing suffix (exists iff the top clears).
   const topIdx = readings.length - 1
@@ -712,7 +721,7 @@ export async function runDateSearch(
   // this flip repairs.
   //
   // THE INVARIANT HOLDS ON BOTH ARMS, and it is a proof rather than an assertion: a crowned reading
-  // satisfies `clears: quantizedLowerBound >= BANDS.onTrack` (:300); `lower <= p` since
+  // satisfies `clears: quantizedLowerBound >= BANDS.onTrack` (`offsetReading`); `lower <= p` since
   // DATE_SEARCH_Z > 0 and se >= 0; `quantizeSurvival` is monotone non-decreasing; and the band's
   // state comes from `buildHeadline` reading the SAME statistic through the SAME quantizer against
   // the SAME `BANDS.onTrack` reference. So `outcomeState` stays in {on-track, over-funded} —

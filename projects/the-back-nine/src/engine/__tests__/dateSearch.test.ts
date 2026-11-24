@@ -24,6 +24,7 @@ import {
   DATE_SEARCH_Z,
   buildCandidateParams,
   decideTrack,
+  offsetReading,
   runDateSearch,
   workingYearTaxReach,
   workingYearTaxReachOfRun,
@@ -224,6 +225,20 @@ describe('decideTrack — the quantized-lower-bound earliest-holds-and-keeps-hol
     expect(() => decideTrack(reBased, FINAL)).toThrow(/dense contiguous/i)
     expect(() => decideTrack([{ offsetYears: 0.5, survivalFraction: HI }], FINAL)).toThrow(/dense contiguous/i)
     expect(() => decideTrack([{ offsetYears: Number.NaN, survivalFraction: HI }], FINAL)).toThrow(/dense contiguous/i)
+  })
+
+  it('every curve entry is `offsetReading`’s, the one per-offset producer the workbench’s what-if reads its run through (U14)', () => {
+    const raw = curveOf([LO, LO, LO, HI, HI, LO, HI, HI, HI, HI, HI])
+    const out = decideTrack(raw, FINAL)
+    expect(out.curve).toEqual(raw.map((c) => offsetReading(c, FINAL)))
+    // The statistic itself, derived by hand: p − z·√(p(1−p)/n), floored at 0, then quantized.
+    const p = 0.9
+    expect(offsetReading({ offsetYears: 4, survivalFraction: p }, FINAL)).toEqual({
+      offsetYears: 4,
+      survivalFraction: p,
+      quantizedLowerBound: quantizeSurvival(Math.max(0, p - DATE_SEARCH_Z * Math.sqrt((p * (1 - p)) / FINAL))),
+      clears: quantizeSurvival(Math.max(0, p - DATE_SEARCH_Z * Math.sqrt((p * (1 - p)) / FINAL))) >= BANDS.onTrack,
+    })
   })
 })
 

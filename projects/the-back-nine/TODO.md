@@ -636,7 +636,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      section ships — rewrite the whole `:900-909`). Caddie walk before "shipped".
 
    ⚑ **CLOSED AS PHANTOM — the date-route ACA clock does NOT over-alarm.** The date route simulates all 11
-   offsets (`dateSearch.ts:617/450/457`) and candidate Y=0 carries the base ACA stream **ungated**
+   offsets (`dateSearch.ts:626/450/457`) and candidate Y=0 carries the base ACA stream **ungated**
    (`healthcareStreams.ts:181` → `windowStart = 0`, so the window gate is a pass-through). So
    `exposure.aca === 'priced'` *proves* the ACA tables were consumed — the clock is load-bearing, not
    spurious. ✅ **THE TRAP IS DELETED 2026-08-02.** `stalenessExposure.ts` no longer prescribes

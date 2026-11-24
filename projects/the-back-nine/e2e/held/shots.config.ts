@@ -1,8 +1,8 @@
 import fitConfig from '../../playwright.fit.config'
 
 /**
- * The dev-server HELD harness for `e2e/held/*.spec.ts` — INSTRUMENTS, never gates — except the three
- * instruments of the BUILT app (solve-timing, solve-phase-profile, solve-pool), which
+ * The dev-server HELD harness for `e2e/held/*.spec.ts` — INSTRUMENTS, never gates — except the four
+ * instruments of the BUILT app (solve-timing, solve-phase-profile, solve-pool, whatif-timing), which
  * `solve-timing.config.ts` owns (`testIgnore` below).
  *
  * `playwright.fit.config.ts` lists its three gate specs by name in `testMatch`, so nothing under
@@ -23,8 +23,8 @@ export default {
   // held specs sit beside this config, and the dev server must still boot from the repo root.
   testDir: '.',
   testMatch: ['**/*.spec.ts'],
-  // The solve-timing, solve-phase-profile and solve-pool instruments measure the BUILT app on their own harness
+  // The solve-timing, solve-phase-profile, solve-pool and whatif-timing instruments measure the BUILT app on their own harness
   // (solve-timing.config.ts) — against this dev server they would time the build they exist not to time.
-  testIgnore: ['**/solve-timing.spec.ts', '**/solve-phase-profile.spec.ts', '**/solve-pool.spec.ts'],
+  testIgnore: ['**/solve-timing.spec.ts', '**/solve-phase-profile.spec.ts', '**/solve-pool.spec.ts', '**/whatif-timing.spec.ts'],
   webServer: { ...fitConfig.webServer, cwd: '../..' },
 }

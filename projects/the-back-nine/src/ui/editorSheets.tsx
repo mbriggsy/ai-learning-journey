@@ -2,10 +2,11 @@
  * src/ui/editorSheets.tsx — the ONE home of the plan's lever sheets and their writes (Act 5, U8).
  *
  * The budget builder, the withdrawal-order and Roth sheets, the healthcare sheet and the AssumptionPanel each
- * write the draft through one inline write (an atomic reconciliation patch, a biconditional pair, a single-key
- * fence: insight 058), then recompute. They used to be hosted by Result alone. The workbench room's facts page
- * opens the same sheets, so the hosting moved here and both screens call it: every write path lives once (U15's
- * Apply will reuse it), and an edit made from the room is the same edit made from the answer.
+ * write the draft through one write (an atomic reconciliation patch, a biconditional pair, a single-key fence:
+ * insight 058), then recompute. They used to be hosted by Result alone. The workbench room's facts page opens the
+ * same sheets, so the hosting moved here and both screens call it, and an edit made from the room is the same edit
+ * made from the answer. The lever sheets' writes themselves live in `src/intake/whatIf.ts` (U14), shared with the
+ * what-if's `applyBundle` and U15's Apply, so Apply writes exactly what was compared.
  *
  * What moved with them: the open state, the sheets' JSX and writes, the preview runner (`runPreview`, params
  * from the CURRENT draft at each call), the notes the sheets read (`medicarePricedNote`, `statePricedNote`,
@@ -34,7 +35,7 @@ import { RothLever } from '@intake/RothLever'
 import { HealthcareSheet } from '@intake/HealthcareSheet'
 import { AssumptionPanel } from '@intake/AssumptionPanel'
 import type { MissingFact } from '@intake/intakeMap'
-import { commitBudgetPatch } from '@budget/budgetToSpending'
+import { withBudgetItems, withDrawdownPolicy, withEnhancedSubsidies, withoutBudget, withRothConversion } from '@intake/whatIf'
 import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
 import type { MemoryModel, MemoryModelSnapshot, ScenarioDraft } from '@store/memoryModel'
 import type { TwoArmControl } from '@shared/model'
@@ -167,14 +168,14 @@ export function useEditorSheets({
         onApply={(items) => {
           // The atomic reconciliation patch — the OOP figure reads the store's CURRENT draft inside the update
           // (insight 036), never a render-captured copy.
-          model.update((d) => ({ ...d, ...commitBudgetPatch(items, d.health.oopMedicalAnnual) }))
+          model.update((d) => withBudgetItems(d, items))
           setBudgetOpen(false)
           both()
         }}
         onEscape={() => {
           // Back to a single number: budget → strictly-undefined; the scalar keeps its last reconciled value
           // (build-gate 2 — never `budget: []`).
-          model.update((d) => ({ ...d, budget: undefined }))
+          model.update(withoutBudget)
           setBudgetOpen(false)
           both()
         }}
@@ -191,10 +192,7 @@ export function useEditorSheets({
         onApply={(policy, order) => {
           // ONE atomic write maintains the 'custom'⟺order biconditional (the codec re-proves it at Save;
           // validateParams re-proves it at every run — the two-gate rule's write half).
-          model.update((d) => {
-            const { drawdownOrder: _order, ...rest } = d
-            return { ...rest, drawdownPolicy: policy, ...(order !== undefined ? { drawdownOrder: order } : {}) }
-          })
+          model.update((d) => withDrawdownPolicy(d, policy, order))
           setSequencingOpen(false)
           both()
         }}
@@ -211,17 +209,14 @@ export function useEditorSheets({
         restoreFallback={restoreFallback}
         savedAnchor={savedAnchor}
         onApply={(plan) => {
-          model.update((d) => ({ ...d, rothConversion: plan }))
+          model.update((d) => withRothConversion(d, plan))
           setRothOpen(false)
           both()
         }}
         onRemove={() => {
           // Strip the KEY (absence ≡ no conversions ≡ reduce-to-spine — never an undefined-valued slot a JSON
           // write would null, DND/009).
-          model.update((d) => {
-            const { rothConversion: _plan, ...rest } = d
-            return rest
-          })
+          model.update((d) => withRothConversion(d, undefined))
           setRothOpen(false)
           both()
         }}
@@ -240,10 +235,7 @@ export function useEditorSheets({
         onApply={(enhanced) => {
           // THE SINGLE-KEY WRITE FENCE (insight 058): exactly one key moves — set the literal `true`, or STRIP
           // the key entirely (absence ≡ the statutory reverted regime — never `false`, DND/009).
-          model.update((d) => {
-            const { enhancedSubsidies: _regime, ...rest } = d
-            return enhanced ? { ...rest, enhancedSubsidies: true } : rest
-          })
+          model.update((d) => withEnhancedSubsidies(d, enhanced))
           setHealthOpen(false)
           both()
         }}

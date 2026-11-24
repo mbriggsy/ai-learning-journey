@@ -3,7 +3,13 @@
   Opens a run of numbered Claude Code sessions as tabs in one Windows Terminal window.
 
 .DESCRIPTION
-  spin <prefix> <start> <count>
+  spin <prefix>                   one more: the next number after the highest open <prefix> session
+  spin <prefix> -Count <n>        n more, numbered the same way
+  spin <prefix> <start> [count]   exactly <prefix>-<start> onward (count defaults to 1)
+
+  "Open" means a live Claude session with that name right now, read from each session's
+  status file (~\.claude\sessions\<pid>.json, `name` field). Closed sessions don't count, so
+  with none open it starts at 1, the way each new run of a chain starts over.
 
   Each tab opens Windows PowerShell in the folder you ran spin from and runs
   `claude --name <prefix>-<n>`. That's the same as opening a tab, cd-ing there and typing it.
@@ -26,6 +32,10 @@
   spin b9 10 9
   Opens 9 tabs, b9-10 through b9-18.
 
+.EXAMPLE
+  spin b9
+  With b9-1 through b9-14 open, opens b9-15.
+
 .NOTES
   Typed as `spin` from any shell through %USERPROFILE%\.local\bin\spin.cmd, which is a
   copy of tools\spin\spin.cmd. Windows PowerShell's script policy here is the default
@@ -34,8 +44,8 @@
 #>
 param(
     [Parameter(Mandatory, Position = 0)] [string] $Prefix,
-    [Parameter(Mandatory, Position = 1)] [ValidateRange(0, 9999)] [int] $Start,
-    [Parameter(Mandatory, Position = 2)] [ValidateRange(1, 20)] [int] $Count
+    [Parameter(Position = 1)] [ValidateRange(1, 9999)] [int] $Start,
+    [Parameter(Position = 2)] [ValidateRange(1, 20)] [int] $Count = 1
 )
 
 $ErrorActionPreference = 'Stop'
@@ -49,6 +59,21 @@ if ($name0 -notmatch '^[a-z][a-z0-9-]*$') {
 $dir = (Get-Location).ProviderPath.TrimEnd('\')
 if ($dir -eq $HOME.TrimEnd('\')) {
     throw "You're in your home folder. cd into the project first (The Back Nine: cd ~\ai-learning-journey\projects\the-back-nine), then run spin again."
+}
+
+if (-not $PSBoundParameters.ContainsKey('Start')) {
+    # Next after the highest OPEN session with this prefix. Status files are rewritten as
+    # sessions change state, so one read mid-write is skipped instead of stopping the run.
+    $pattern = '^' + [regex]::Escape($name0) + '-(\d+)$'
+    $highest = 0
+    foreach ($f in Get-ChildItem "$HOME\.claude\sessions\*.json" -ErrorAction SilentlyContinue) {
+        try { $s = Get-Content $f.FullName -Raw | ConvertFrom-Json } catch { continue }
+        if ($s.name -match $pattern -and (Get-Process -Id $s.pid -ErrorAction SilentlyContinue)) {
+            $highest = [Math]::Max($highest, [int]$Matches[1])
+        }
+    }
+    $Start = $highest + 1
+    Write-Host "Highest open $name0 session: $(if ($highest) { "$name0-$highest" } else { 'none' })"
 }
 
 $last = $Start + $Count - 1

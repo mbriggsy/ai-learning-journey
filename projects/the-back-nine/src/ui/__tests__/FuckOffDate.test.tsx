@@ -2,13 +2,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { FuckOffDate, W_STALE_CAUSE } from '../FuckOffDate'
+import { FuckOffDate } from '../FuckOffDate'
+import { W_STALE_CAUSE } from '../answerNotes'
 import { plainNote } from '../noteParts'
 import { copy, slots } from '../copy'
 import { dateOddsText } from '../dateOdds'
 import { deriveDateBandAnnotations } from '../bandAnnotations'
 import { DATE_FIXTURES, DATE_WINDOW_TOP } from '../preview/dateFixtures'
-import { IN_FRAME_DISCLAIMER_ID } from '../Disclaimer'
+import { IN_FRAME_DISCLAIMER_ID } from '../disclaimerId'
 import type { DateBand } from '@shared/model'
 
 /*

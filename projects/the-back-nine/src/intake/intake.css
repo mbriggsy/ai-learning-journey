@@ -505,7 +505,7 @@
  * first; the nav returns with the list.
  *
  * BOTH editor roots, never just the account one. `.income-entry` is a DISTINCT class token
- * (src/intake/OtherIncomeEntry.tsx:307) — the shared `.account-entry-actions` inside it does not
+ * (src/intake/OtherIncomeEntry.tsx:283) — the shared `.account-entry-actions` inside it does not
  * make the selector match — and the other-income step has `fields: []`, so a live Continue over an
  * open income editor always advances: into the pay check's W step on the date route, or through the
  * flow's terminal `onComplete()` on the all-retired route, where it is the LAST step. Either way the

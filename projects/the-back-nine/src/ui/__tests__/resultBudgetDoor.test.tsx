@@ -6,7 +6,7 @@ import { Result } from '../Result'
 import { appModel } from '../appModel'
 import { resolvedFocusKey } from '../answerView'
 import { copy, slots } from '@ui/copy'
-import { formatMoney } from '@intake/fields'
+import { formatMoney } from '@intake/moneyFormat'
 import type { BudgetLineItem } from '@shared/model'
 
 /**

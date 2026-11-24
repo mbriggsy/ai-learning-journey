@@ -15,22 +15,11 @@
  */
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
-import { healthcarePriced, isDateRoute, medicareExtrasDisclosureView, missingRequiredFacts, pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
-import type { AssumptionLandingSeat } from './assumptionRegistry'
+import { healthcarePriced, isDateRoute, missingRequiredFacts, spineMedicarePriced } from '@intake/intakeMap'
 import { useEditorSheets } from './editorSheets'
-import {
-  workingYearCostStaleDoor,
-  workingYearCostStaleLine,
-  workingYearCostTypedBelowLine,
-  workingYearLeftOverMoved,
-  workingYearLeftOverMovedClause,
-  workingYearLeftOverMovedText,
-} from '@intake/workingYearLeftOver'
-import { composeMedicareExtrasTypicalNote, showMedicarePricedNote } from './healthSheetChrome'
 import { budgetGoverns } from '@budget/budgetModel'
 import { epochDayToCalendarYear } from '@store/staleness'
-import { planClockAnchor } from './bandAnnotations'
-import type { ScenarioDraft } from '@store/memoryModel'
+import { composeAnswerNotes } from './answerNotes'
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import { currentEpochDay } from './scenarioFromDraft'
 import type { RecommendationGoal, SavedRecommendationV3 } from '@shared/model'
@@ -40,14 +29,12 @@ import { savedRecordCardView, type SavedRecordCopy } from './recommendationSaveV
 import { copy, slots } from './copy'
 import { appModel } from './appModel'
 import { Disclaimer } from './Disclaimer'
-import { FuckOffDate, W_STALE_CAUSE, type StandingNoteCause } from './FuckOffDate'
-import { plainNote, withoutDoor, type NoteParts } from './noteParts'
+import { FuckOffDate } from './FuckOffDate'
 import { ConfidenceStatement } from './ConfidenceStatement'
 import { caveatSeat, selectElevatedAnswer, resolvedFocusKey } from './answerView'
-import { SaveSlot, useSaveAnnouncer, type ResultSaveProp } from './SaveSlot'
+import { SaveSlot } from './SaveSlot'
+import { useSaveAnnouncer, type ResultSaveProp } from './saveAnnouncer'
 import './styles/result.css'
-
-export type { ResultSaveProp }
 
 /** The workbench room's DOOR (Act 5, U6). IntakeApp passes it only while the answer is saveable — the
  *  rule the save control uses for an unresolved answer — and it rides the actions row, so it is
@@ -168,7 +155,8 @@ export function Result({
   // one-screen-one-time-base law, threaded through selectElevatedAnswer). The year is read
   // through the ONE local-calendar chain (currentEpochDay → epochDayToCalendarYear — the same
   // basis staleness compares and startCalendarYear was minted in), never a second ad-hoc
-  // clock read (ultramode 2026-07-09, the basis catch).
+  // clock read (ultramode 2026-07-09, the basis catch). It is read once per built plan, as the
+  // anchor's own memo read it before Act 6's RC0 moved the mint into `composeAnswerNotes`.
   //
   // IT MEASURES THE BUILD, NOT THE SAVE (U17 §S0.2). `startCalendarYear` is written once when
   // the plan is built and survives every re-save, so this is "years since you built this plan"
@@ -176,11 +164,15 @@ export function Result({
   // (agedBalancesYearFor, threaded by IntakeApp); the two diverge for any re-saver, and the
   // aged band used to speak the wrong one. Math.max(0, …) clamps a device clock that reads
   // BEHIND the build year to the fresh identity — no re-base at all, never a negative x.
-  const dateAnchor = useMemo(
-    () =>
-      planClockAnchor(snapshot.draft.startCalendarYear, epochDayToCalendarYear(currentEpochDay())),
-    [snapshot.draft.startCalendarYear],
+  const wallCalendarYear = useMemo(() => epochDayToCalendarYear(currentEpochDay()), [snapshot.draft.startCalendarYear])
+  // Every note the hero receives — the plan clock, the state and Medicare notes, the staleness clause, the ONE standing
+  // line — from the one pure composer (`answerNotes.ts`, which holds their laws: each reads the ANSWERED draft, KTD5,
+  // and a read-only tab gets the standing line without its door).
+  const notes = useMemo(
+    () => composeAnswerNotes(snapshot, { readOnly, stalenessNote, leftOverClauseHost, agedBalancesYear, wallCalendarYear }),
+    [snapshot, readOnly, stalenessNote, leftOverClauseHost, agedBalancesYear, wallCalendarYear],
   )
+  const dateAnchor = notes.planClock
 
   const elevated = selectElevatedAnswer(snapshot, retry, dateAnchor)
   const focusKey = resolvedFocusKey(elevated)
@@ -217,18 +209,15 @@ export function Result({
     restoreFallback: restoreToAssumptionsDoor,
     onReview,
   })
-  // The standing answer line for one cause: its door opens the panel at that cause's seat, and exists only
-  // where the tab can save (a read-only tab reads the fact alone). The parts' `door` — what is said beside the door (for
-  // W, the Result's door from `workingYearCostStaleDoor`: its last dt/dd, council `wf_22858e04-f7a`) — rides only with the
-  // door, so a read-only tab is never told buttons to press (`withoutDoor`).
-  const standingNote = (cause: StandingNoteCause, parts: NoteParts, seat: AssumptionLandingSeat) =>
-    readOnly
-      ? { cause, parts: withoutDoor(parts) }
-      : {
-          cause,
-          parts,
-          onOpen: () => editors.openAssumptions(seat),
-        }
+  // The standing answer line (`notes.standing`): its door opens the panel at that cause's seat, and exists only
+  // where the tab can save (a read-only tab reads the fact alone: the composer drops the seat and the parts' `door`).
+  const standing = notes.standing
+  const payCheckNote =
+    standing === undefined
+      ? undefined
+      : standing.seat === undefined
+        ? { cause: standing.cause, parts: standing.parts }
+        : { cause: standing.cause, parts: standing.parts, onOpen: () => editors.openAssumptions(standing.seat) }
   // Act-4 · U16 §S2 — the recommend-second GOAL choice (the picker precedes the solve). The affordance
   // opens it; a confirmed pick writes `chosenGoal` and dispatches the solve.
   const [goalOpen, setGoalOpen] = useState(false)
@@ -237,43 +226,6 @@ export function Result({
   // priced-healthcare gate (healthcarePriced — single-sourced with buildOverlay; council
   // 2026-07-03: no hollow door).
   const healthPriced = healthcarePriced(snapshot.draft)
-  // W9-R7 (KTD5) — THE ANSWERED DRAFT: the draft the SHOWN answer was figured from. Every hero sentence below
-  // that describes the shown answer reads it (its Medicare and state notes, the moved left over, W's stale line
-  // and its door's words, the typed-below line); every control and every sheet reads the live draft. With no
-  // resolved answer on screen it is null and the hero describes nothing (neither hero renders a note outside a
-  // resolved view), so no test can reach a note through the live draft by planting a view without an answer.
-  const answeredDraft: ScenarioDraft | null =
-    snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date' ? snapshot.answer.draft : null
-  // P3·U11 follow-up (the post-65 Medicare pricing unit, 2026-07-10) — "was Medicare priced in this
-  // run?", route-aware and read off the BUILT params' own overlay decision, never ages and never a
-  // re-derivation of the builder's inputs (insight 080; the ultramode fold's sharpening: the age
-  // predicate diverged from the run at buildOverlay's degenerate early-return — the SS-only
-  // $0-portfolio all-65+ household built NO overlay yet read "priced" from its ages). Spine:
-  // `spineMedicarePriced` = the headline builder's own output. Date route: dateSearch.ts:261 forces
-  // healthcareEnabled true on every candidate, so Medicare is priced structurally. The household
-  // with a priced run but NO Healthcare door (all-65+ — healthcarePriced needs a pre-65 member)
-  // wears the "Medicare is priced in" affirmation + the narrowed residual.
-  // The HERO's note, off the answered draft whole (the door's reach included: the hero's note describes the
-  // run it shows; the Roth lever keeps the live note, in `editorSheets.tsx`, since it describes the run it will
-  // preview — KTD5).
-  const heroMedicarePricedNote = useMemo(
-    () =>
-      answeredDraft !== null &&
-      showMedicarePricedNote({
-        medicarePriced: isDateRoute(answeredDraft) || spineMedicarePriced(answeredDraft),
-        reachesHealthDoor: healthcarePriced(answeredDraft),
-      }),
-    [answeredDraft],
-  )
-  // The ask-for-Medicare-extras on-typical appendix (F5, population A): per-person BUILT
-  // dollars + draft provenance + the name fallback (medicareExtrasDisclosureView — the ONE
-  // assembly both F5 homes consume, insight 081), composed to the ONE bi-directional
-  // sentence appended inside the residual paragraph. `undefined` for entered/affirmed
-  // households and non-priced runs.
-  const medicareExtrasTypicalNote = useMemo(
-    () => (answeredDraft === null ? undefined : composeMedicareExtrasTypicalNote(medicareExtrasDisclosureView(answeredDraft))),
-    [answeredDraft],
-  )
   // The state-tax unit (S5) — "which PRICED state did THIS run price?", read route-aware off the
   // route's OWN built-params overlay decision (never draft.retirementState — insight 081; never a
   // bare isDateRoute disjunct — insight 080). undefined for not-priced / 'elsewhere' / unbuilt /
@@ -283,54 +235,8 @@ export function Result({
   // surface drops its state-tax scope note, `recDiscStateTax`), each gating on `!== undefined`.
   // The live read is the editor sheets' own (one computation, `editorSheets.tsx`).
   const statePricedNote = editors.statePricedNote
-  // …and its HERO twin, read off the answered draft (KTD5: two values — the sheets and the recommendation surface
-  // describe what they will run next, the hero what it ran).
-  const heroStatePricedNote = useMemo(
-    () => (answeredDraft === null ? undefined : pricedStateForRun(answeredDraft)),
-    [answeredDraft],
-  )
-  // The pay check's KTD21 standing line: the household's W no longer matches the spending or state
-  // it was given against, and the date still runs on that last figure (R4). The ONE stale predicate
-  // (`workingYearQuote.ts`), read off the draft — the same answer the walk's gate and the panel's
-  // row read. Its door opens the panel at the W row, and exists only where the tab can save. W's ONE stale line
-  // (`workingYearCostStaleLine`): build 2 adds the clause for a "saved" answer waiting on W (R12), and, where the
-  // spending rose, what a check at the quote adds (the U11 walk's (ae); memoized on the draft, as the line is here).
-  // W9-R7 (KTD5): the line, its choice of note and its door's words all describe the shown answer, so they read the
-  // answered draft; only the door's open action is live (it opens the panel, which reads the live draft). Choosing
-  // from the live draft split the slot: a W fixed in the panel made the note vanish while the date still ran on the
-  // old figure (spec-flow I1).
-  const payCheckStaleText = useMemo(
-    () => (answeredDraft === null ? null : workingYearCostStaleLine(answeredDraft)),
-    [answeredDraft],
-  )
-  // …and its door (council `wf_7fa86902-35c`): the act, which picks the cause and so the door's words
-  // (`W_STALE_CAUSE`), and what the Result says beside it (U11 walk 5's (bj), (bk)).
-  const payCheckStaleDoor = useMemo(
-    () => (answeredDraft === null ? null : workingYearCostStaleDoor(answeredDraft)),
-    [answeredDraft],
-  )
-  // Build 2's moved left over (R12), read LIVE off the draft through the one moved core. Where a tax, state-tax
-  // or working-years line fired at unlock (`leftOverClauseHost`, decided once by `composeReentry` and kept for
-  // the session, whether or not the left over had moved then), the two figures ride the hero's rules note,
-  // with no door of their own (the Assumptions door still reaches the seat); otherwise they take the standing
-  // slot (never both — a moved left over needs a fresh W, so the W line never shares it either), whose door
-  // opens the left-over seat.
-  const leftOverMoved = useMemo(
-    () => (answeredDraft === null ? null : workingYearLeftOverMoved(answeredDraft)),
-    [answeredDraft],
-  )
-  // U11 walk 6's R1: a fresh TYPED W below today's quote, which W's stale line never reaches (a typed figure is never
-  // staled on a quote, KTD10) — its own line in the same slot, read LIVE off the draft like the two above. It can never
-  // share the slot with W stale (that needs a stale W; this, a fresh one), so W stale goes first only as the order the
-  // three are written in. Where the left over has ALSO moved and no rules line hosts that clause, this line takes the
-  // slot and carries the moved figures as its clause, since it names the credited figure too (`TypedBelowHost`).
-  const typedBelowLine = useMemo(
-    () =>
-      answeredDraft === null
-        ? null
-        : workingYearCostTypedBelowLine(answeredDraft, { kind: 'result', carriesMoved: !leftOverClauseHost }),
-    [answeredDraft, leftOverClauseHost],
-  )
+  // …and its HERO twin, read off the answered draft, is `notes.statePricedNote` (KTD5: two values — the sheets and the
+  // recommendation surface describe what they will run next, the hero what it ran).
   // The pay-less-tax ALL-IN hero's scope (build spec D7): did the SOLVE's built overlay price
   // healthcare? Deliberately NOT the sheets' `medicarePriced` (`editorSheets.tsx`) — that one ORs the date route in (structurally
   // priced there), while the solve never runs on the date route (`spine-unready`) and its base is
@@ -666,28 +572,16 @@ export function Result({
             view={elevated.view}
             focusSignal={focusKey}
             actionsSlot={seating.inLead ? actionsNode : undefined}
-            medicarePricedNote={heroMedicarePricedNote}
-            medicareExtrasTypicalNote={medicareExtrasTypicalNote}
-            statePricedNote={heroStatePricedNote}
-            stalenessNote={stalenessNote}
-            stalenessClause={
-              stalenessNote && leftOverClauseHost && leftOverMoved !== null
-                ? workingYearLeftOverMovedClause(leftOverMoved)
-                : undefined
-            }
+            medicarePricedNote={notes.medicarePricedNote}
+            medicareExtrasTypicalNote={notes.medicareExtrasTypicalNote}
+            statePricedNote={notes.statePricedNote}
+            stalenessNote={notes.stalenessNote}
+            stalenessClause={notes.stalenessClause}
             dateAnchor={dateAnchor}
-            agedBalancesYear={agedBalancesYear}
+            agedBalancesYear={notes.agedBalancesYear}
             sheetOpen={sheetOpen}
             onReconfirm={onReview}
-            payCheckNote={
-              payCheckStaleText !== null && payCheckStaleDoor !== null
-                ? standingNote(W_STALE_CAUSE[payCheckStaleDoor.act], { ...payCheckStaleText, door: payCheckStaleDoor.result }, 'working-year-cost')
-                : typedBelowLine !== null
-                  ? standingNote('w-typed-below', typedBelowLine, 'working-year-cost')
-                  : leftOverMoved !== null && !leftOverClauseHost
-                    ? standingNote('left-over-moved', plainNote(workingYearLeftOverMovedText(leftOverMoved)), 'working-year-left-over')
-                    : undefined
-            }
+            payCheckNote={payCheckNote}
           />
         )}
         {elevated.kind === 'spine' && (
@@ -695,13 +589,13 @@ export function Result({
             view={elevated.view}
             focusSignal={focusKey}
             actionsSlot={seating.inLead ? actionsNode : undefined}
-            medicarePricedNote={heroMedicarePricedNote}
-            medicareExtrasTypicalNote={medicareExtrasTypicalNote}
-            statePricedNote={heroStatePricedNote}
-            stalenessNote={stalenessNote}
+            medicarePricedNote={notes.medicarePricedNote}
+            medicareExtrasTypicalNote={notes.medicareExtrasTypicalNote}
+            statePricedNote={notes.statePricedNote}
+            stalenessNote={notes.stalenessNote}
             sheetOpen={sheetOpen}
             savedAnchor={dateAnchor}
-            agedBalancesYear={agedBalancesYear}
+            agedBalancesYear={notes.agedBalancesYear}
             onReconfirm={onReview}
             liveDraft={snapshot.draft}
           />

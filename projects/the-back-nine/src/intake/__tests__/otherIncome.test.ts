@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import type { IncomeStream } from '@shared/model'
-import { compileIncomeStreams, effectiveTaxableFraction } from '../otherIncome'
+import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
+import type { EngineClient } from '@store/engineClient'
+import { slots } from '@ui/copy'
+import { compileIncomeStreams, effectiveTaxableFraction, survivorNoteFor } from '../otherIncome'
 
 /**
  * R40 Unit 2 — `compileIncomeStreams` correctness, GOLDEN-GATED (KTD-5 / DND-012).
@@ -246,5 +249,72 @@ describe('effectiveTaxableFraction (R40 U2 · KTD-6)', () => {
     expect(effectiveTaxableFraction({ ownerIndex: 0, type: 'alimony', executedAfter2018: false, annualRealToday: 1, startAge: 60, colaMode: 'real-flat', survivorPct: 0 })).toBe(1)
     expect(effectiveTaxableFraction({ ownerIndex: 0, type: 'annuity', qualified: true, annualRealToday: 1, startAge: 60, colaMode: 'real-flat', survivorPct: 0 })).toBe(1)
     expect(effectiveTaxableFraction({ ownerIndex: 0, type: 'annuity', qualified: false, exclusionFraction: 0.4, annualRealToday: 1, startAge: 60, colaMode: 'real-flat', survivorPct: 0 })).toBeCloseTo(0.6, 12)
+  })
+})
+
+// The widow's-picture wording, moved out of `otherIncomeEntry.test.tsx` with `survivorNoteFor` by Act 6's RC0, unchanged
+// (`nullClient` and `modelWithPeople` are that file's fixtures, copied).
+const nullClient: EngineClient = {
+  runningInWorker: true,
+  reset: () => {},
+  engine: {
+    ping: async () => 'pong' as const,
+    run: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+    setLatestEpoch: async () => {},
+    runDateSearch: async () => ({ kind: 'date-search', outcome: { kind: 'cancelled' } }) as const,
+    runTwoArm: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+    runSpendSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+    setLatestSpendEpoch: async () => {},
+    runSolve: async () => ({ kind: 'calm-error', reason: 'unused' }) as const,
+  },
+}
+
+/** Two named people, both 65, one already-retired (so currentAge is present —
+ *  the already-receiving anchor needs it). */
+function modelWithPeople(): MemoryModel {
+  const m = createMemoryModel({
+    client: nullClient,
+    builders: { buildSpineParams: () => null, buildDateInput: () => null },
+    mintSeed: () => 1,
+    startCalendarYear: 2026,
+  })
+  m.update((d) => ({
+    ...d,
+    people: [
+      { name: 'Jim', workStatus: 'retired', currentAge: 66, birthYear: 1960, retirementAge: 64 },
+      { name: 'Jane', workStatus: 'retired', currentAge: 65, birthYear: 1961, retirementAge: 63 },
+    ],
+  }))
+  return m
+}
+
+describe('survivorNoteFor — the widow’s-picture wording (golden-pinned, amount-free)', () => {
+  const draft = (): ScenarioDraft => {
+    const m = modelWithPeople()
+    return m.getSnapshot().draft
+  }
+
+  it('alimony (0%) → "ends if {owner} passes"', () => {
+    const s: IncomeStream = { ownerIndex: 0, type: 'alimony', executedAfter2018: true, annualRealToday: 18_000, startAge: 66, colaMode: 'nominal-flat', survivorPct: 0 }
+    expect(survivorNoteFor(draft(), s)).toBe('This ends if Jim passes.')
+  })
+
+  it('100% → "would keep all of this"', () => {
+    const s: IncomeStream = { ownerIndex: 1, type: 'rental', annualRealToday: 18_000, startAge: 64, colaMode: 'real-flat', survivorPct: 1 }
+    expect(survivorNoteFor(draft(), s)).toBe('Jim would keep all of this if Jane passes.')
+  })
+
+  it('a partial share → "would keep N%" (the rounded percent, never a raw fraction)', () => {
+    const s: IncomeStream = { ownerIndex: 1, type: 'pension', annualRealToday: 30_000, startAge: 65, colaMode: 'real-flat', survivorPct: 0.5 }
+    expect(survivorNoteFor(draft(), s)).toBe('Jim would keep 50% of this if Jane passes.')
+  })
+
+  it('an OUT-OF-RANGE input (>1) renders the documented clamp — the DISPLAY backstop behaves intentionally, not by accident', () => {
+    // The form gate (the in-form RANGE gate above) is the PRIMARY defense — a >1
+    // survivorPct can never commit. This pins the slot's defense-in-depth behavior
+    // for a value that could only arrive via a corrupt restore: it collapses to the
+    // calm "all of this" note (the >=100% branch), NOT a nonsensical "150%" string.
+    // Pinning it makes the chosen behavior a DECISION, not an oversight.
+    expect(slots.incomeSurvivorNote('Jim', 'Jane', 1.5)).toBe('Jim would keep all of this if Jane passes.')
   })
 })

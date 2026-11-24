@@ -2,7 +2,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render } from '@testing-library/react'
-import { VerdictIcon, VERDICT_GLYPH, type VerdictGlyph } from '../verdictSignal'
+import { VerdictIcon } from '../verdictSignal'
+import { VERDICT_GLYPH, type VerdictGlyph } from '../glyphs'
 import { OUTCOME_STATES, type OutcomeState } from '@shared/model'
 
 afterEach(cleanup)

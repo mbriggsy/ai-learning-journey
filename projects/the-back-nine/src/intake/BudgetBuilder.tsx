@@ -56,9 +56,10 @@ import { freshStableId, idsInUse } from '@shared/stableIds'
 import { budgetGoverns, isRampedBudget, validateBudgetItems, isActiveAt } from '@budget/budgetModel'
 import { anchorTarget } from '@budget/budgetToSpending'
 import { useLiveAnnouncer, focusHeading } from './a11y'
-import { formatMoney } from './fields'
+import { formatMoney } from './moneyFormat'
 import { isDateRoute } from './intakeMap'
 import { BudgetLineItem } from './BudgetLineItem'
+import { medicalExceedsTotal } from './budgetChecks'
 import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
 import './sheetShell.css'
 import './budget.css'
@@ -73,16 +74,6 @@ const FOCUSABLE = [
   'select:not([disabled])',
   '[tabindex]:not([tabindex="-1"])',
 ].join(',')
-
-/** The reconciliation readout's M>S honesty fork (F10; insight 048 — the decision is a pure
- *  exported helper): when the OOP-medical floor M ALONE exceeds the total S the answer uses,
- *  the lines-target line would read "about $0 a year goes into the lines below" beside
- *  "about $M carried automatically" — internally contradictory — so the readout swaps in the
- *  honest exceeds line instead. STRICTLY M > S: at M === S a $0 lines-target is the TRUTH
- *  (every non-medical dollar is zero), not a contradiction. The engine-side anchor stays
- *  anchorTarget = max(0, S − M) — this fork is presentation-only. */
-export const medicalExceedsTotal = (spendTotal: number, oopMedical: number): boolean =>
-  oopMedical > spendTotal
 
 /** A fresh line: `other` + essentials (the neutral unclassified pick — errs STICKY, insight 055's
  *  conservative direction) with NO amount (NaN blocks Apply until typed — never a silent 0), under the

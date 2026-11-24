@@ -2,7 +2,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render } from '@testing-library/react'
-import { RecommendationViz, type RecommendationVizLabels } from '../RecommendationViz'
+import { RecommendationViz } from '../RecommendationViz'
+import type { RecommendationVizLabels } from '../recommendationVizData'
 
 /*
  * RecommendationViz — the recommend-second two-arm comparison (U16 §S3b). The battery pins the

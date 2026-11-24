@@ -29,12 +29,13 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ControlSheet } from '@intake/controlSheet'
-import { continueCheck, discardRefusedOnLeave, useStepApi, type StepDef } from '@intake/flow'
+import { useStepApi } from '@intake/flow'
+import { continueCheck, discardRefusedOnLeave, type StepDef } from '@intake/stepChecks'
 import { useUnsavedBufferHold } from '@intake/unsavedBuffer'
 import type { Announcer } from '@intake/a11y'
 import type { FieldPath } from '@intake/sanity'
 import { draftIdentityKey, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
-import { recomputeAfterEdit } from '../editorSheets'
+import { recomputeAfterEdit } from '../recompute'
 import { copy } from '../copy'
 
 /** The sheet's provenance: post-answer, like the AssumptionPanel's. */

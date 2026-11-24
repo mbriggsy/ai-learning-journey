@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { VIEWBOX } from '../bandGeometry'
-import { TF_VIEW } from '../TwoFutures'
+import { TF_VIEW } from '../twoFuturesData'
 
 /*
  * src/viz/__tests__/viewBoxMirrors.test.ts — the chart viewBox SOURCE-BIND (the 2026-09-13 council on

@@ -32,10 +32,9 @@ import type { SolveRecommendation } from '@engine/solver/solve'
 import type { SolvePayload, SolveTokenWithheld, SolveUnwitnessable } from '@engine/solver/solveEntry'
 import { assertObjectiveMatchesHeadline } from '@engine/solver/objectiveHeadline'
 import type { SolveAnswer, SolvePreconditionGap } from '@store/memoryModel'
-import { twoFuturesCeiling } from '@viz/TwoFutures'
-import type { RecommendationVizLabels } from '@viz/RecommendationViz'
-import type { ConfidenceStatementView } from './ConfidenceStatement'
-import type { GradeSignalState } from './GradeSignal'
+import { twoFuturesCeiling } from '@viz/twoFuturesData'
+import type { RecommendationVizLabels } from '@viz/recommendationVizData'
+import type { ConfidenceStatementView } from './answerView'
 import { copy, slots, type CopyKey } from './copy'
 import {
   formatAbsoluteDollar,
@@ -716,7 +715,7 @@ function recommendedView(payload: SolveRecommendation, opts: RecommendationViewO
     //
     // AND LEAVE-MORE ONLY (2026-09-08). THE GRAMMAR IS WEALTH-SHAPED, so it cannot carry a lower-is-better
     // statistic: the chart puts direction on which bar is LONGER (`RecommendationVizLabels.deltaLabel`,
-    // RecommendationViz.tsx:48-49) and the aria sentence says an arm "lands near about $X" (recDeltaVizAria).
+    // recommendationVizData.ts:9-10) and the aria sentence says an arm "lands near about $X" (recDeltaVizAria).
     // On `pay-less-tax` the plotted headline is mean lifetime ALL-IN cost (income tax + health-insurance
     // premiums, Briggsy's 2026-10-05 ruling) — LOWER is better (`goalHeadlineStatistic`, objective.ts) —
     // and `winnerDisplaysAhead` above orients the winner to the SMALLER figure, so the recommended arm
@@ -926,3 +925,9 @@ function withheldConversionView(
   }
   return { reasons, coupling: copy.recHoldCoupling }
 }
+
+// Moved out of `GradeSignal.tsx` by Act 6's RC0, unchanged.
+
+/** The three grade signal states. `confident`/`coin-flip` are the two engine grades; `ungraded` is the
+ *  honest could-not-grade state (a one-arm set / the B-floor unmet) — its own distinct silhouette. */
+export type GradeSignalState = 'confident' | 'coin-flip' | 'ungraded'

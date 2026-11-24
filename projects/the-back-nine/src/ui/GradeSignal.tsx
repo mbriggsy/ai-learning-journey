@@ -19,25 +19,8 @@
  * STRING-FREE: no user-facing copy lives here; the accessible `label`, when needed, arrives as a prop
  * (routed through copy.ts), never an inline literal.
  */
-import type { VerdictGlyph } from './verdictSignal'
-
-/** The three grade signal states. `confident`/`coin-flip` are the two engine grades; `ungraded` is the
- *  honest could-not-grade state (a one-arm set / the B-floor unmet) — its own distinct silhouette. */
-export type GradeSignalState = 'confident' | 'coin-flip' | 'ungraded'
-
-/**
- * The three glyphs — a COHERENT set read as "how sure is this call":
- *   confident  a forward double-chevron — a clear lean toward one path
- *   coin-flip  a coin on its divide — it could land either way
- *   ungraded   an ellipsis — we couldn't say how close this call is
- * Each is a distinct overall FORM so the silhouettes survive the color-blind read (drawn on a 24×24
- * grid, `currentColor` ink, round caps/joins). The cold-read is the final silhouette oracle.
- */
-export const GRADE_GLYPH: Record<GradeSignalState, VerdictGlyph> = {
-  confident: { paths: ['M6 5 L13 12 L6 19', 'M13 5 L20 12 L13 19'] },
-  'coin-flip': { paths: ['M12 4 A8 8 0 1 1 12 20 A8 8 0 1 1 12 4', 'M4 12 h16'] },
-  ungraded: { paths: [], dots: [[6, 12], [12, 12], [18, 12]] },
-} as const
+import type { GradeSignalState } from './recommendationView'
+import { GRADE_GLYPH } from './glyphs'
 
 export interface GradeSignalProps {
   readonly state: GradeSignalState

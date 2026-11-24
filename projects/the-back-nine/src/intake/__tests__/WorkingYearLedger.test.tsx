@@ -6,10 +6,10 @@ import type { WorkingYearHeldBackRaise, WorkingYearLedger, WorkingYearLedgerLate
 import type { ScenarioDraft } from '@store/memoryModel'
 import { copy, slots } from '@ui/copy'
 import { DEV_SEEDS } from '@ui/devSeeds'
-import { WorkingYearLedgerPicture, WorkingYearLedgerUnknown, laterLines } from '../WorkingYearLedger'
+import { WorkingYearLedgerPicture, WorkingYearLedgerUnknown } from '../WorkingYearLedger'
 import { workingYearLedgerForRun } from '../intakeMap'
 import { confirmedWorkingYearCost } from '../workingYearQuote'
-import { formatMoney } from '../fields'
+import { formatMoney } from '../moneyFormat'
 
 /**
  * The money picture's face (`docs/plans/features/working-year-pay-check-build-spec.md` R16, KTD12, U8) over
@@ -376,29 +376,6 @@ describe('the money picture — later working years (KTD12)', () => {
     expect(screen.getByText(copy.workingLedgerEventSeniorBonusEnds)).toBeInTheDocument()
     expect(screen.getByText(copy.workingLedgerEventEarningsTest)).toBeInTheDocument()
     expect(screen.getByText(copy.workingLedgerLaterAtMost)).toBeInTheDocument()
-  })
-
-  it('laterLines: a stillShort year joins the line before it only when CONSECUTIVE and short', () => {
-    const lines = laterLines([
-      later(1, -5, [{ code: 'claim', person: 0 }]),
-      later(2, -5, [{ code: 'stillShort' }]),
-      later(4, 7, [{ code: 'turns65', person: 1 }]),
-      later(5, -1, [{ code: 'erosion' }]),
-      later(6, -2, [{ code: 'stillShort' }]),
-      // Never after a year that was not short, and never across a gap (the producer emits neither; the
-      // join rule still holds on its own).
-      later(7, 3, [{ code: 'turns65', person: 0 }]),
-      later(8, -2, [{ code: 'stillShort' }]),
-      later(10, -2, [{ code: 'stillShort' }]),
-    ])
-    expect(lines.map((l) => (l.kind === 'year' ? `y${l.year.yearsIn}` : `r${l.years.map((y) => y.yearsIn).join('-')}`))).toEqual([
-      'r1-2',
-      'y4',
-      'r5-6',
-      'y7',
-      'r8',
-      'r10',
-    ])
   })
 
   it('a named later year at exactly $0 reads left over $0, never short', () => {

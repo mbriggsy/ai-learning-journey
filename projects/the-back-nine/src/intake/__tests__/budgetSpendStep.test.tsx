@@ -8,7 +8,7 @@ import { IntakeFlow } from '../flow'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import { copy, slots } from '@ui/copy'
-import { formatMoney } from '../fields'
+import { formatMoney } from '../moneyFormat'
 import type { BudgetLineItem } from '@shared/model'
 
 /**

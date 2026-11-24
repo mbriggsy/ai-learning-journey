@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { COHORT_FADE, truncateFanAtThinCohort } from '@viz/bandGeometry'
+import { COHORT_FADE, truncateFanAtThinCohort } from '@viz/cohort'
 import { caveatSeat, selectElevatedAnswer, resolvedFocusKey } from '../answerView'
 import { copy } from '../copy'
 import { READING_FIXTURES, SURVIVOR_FIXTURES } from '../preview/fixtures'

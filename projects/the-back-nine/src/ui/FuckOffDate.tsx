@@ -54,80 +54,29 @@
  * copy.ts (copyGuard-gated); every numeral through a typed slot. CSP-clean: class-driven.
  */
 import { useEffect, useId, useMemo, useRef, type ReactNode } from 'react'
-import { WORKING_COST_ACT_COPY, copy, slots, type CopyKey, type WorkingCostAct } from './copy'
+import { WORKING_COST_ACT_COPY, copy, slots, type CopyKey } from './copy'
 import { dateOddsText } from './dateOdds'
 import { dateTradeoffPoint } from './dateTradeoff'
-import { composeDateSplit, type DateSplitView } from './dateSplit'
+import { composeDateSplit } from './dateSplit'
 import { composeVerdictMedicareResidual, composeVerdictStateNote } from './stateTaxDisclosure'
-import { verdictDescribedBy } from './Disclaimer'
+import { verdictDescribedBy } from './disclaimerId'
+import type { FuckOffDateView } from './answerView'
+import type { StandingNoteCause } from './answerNotes'
+import { floorLineText, heroLead } from './dateHero'
 import type { PricedState } from '@engine/constants/stateTax'
 import { focusHeading, useLiveAnnouncer } from '@intake/a11y'
 import { ConfidenceBandPanel } from '@viz/ConfidenceBandPanel'
 import { OddsLadder } from '@viz/OddsLadder'
 import { agedLadderMarks, curveMarks, offsetHasPassed } from '@viz/curveMarks'
-import { resolveBandData, type XAnnotation } from '@viz/bandData'
+import { resolveBandData } from '@viz/bandData'
 import type { BandPlanClockAnchor } from './bandAnnotations'
 import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import { LADDER_LABELS } from './oddsLadderChrome'
 import { axisDollarFormatterFor, formatAbsoluteDollar, formatAxisDollar } from './money'
-import type { DateBand, DateTrackOutcome } from '@shared/model'
+import type { DateBand } from '@shared/model'
 import { isPlainNote, type NoteParts } from './noteParts'
 import { NotePartsBlock } from './NotePartsBlock'
 import './styles/fuckOffDate.css'
-
-/** What the surface shows. `dates` carries BOTH independent tracks (U9b — the pure composeDateSplit
- *  decides one-date vs split; the value-coincident degenerate renders the single composition
- *  verbatim). `pending` / `compute-error` mirror the ConfidenceStatement non-answer modes. */
-export type FuckOffDateView =
-  | {
-      readonly kind: 'dates'
-      /** The essentials-floor track (the band's crown + the focus key — the load-bearing
-       *  survival claim). */
-      readonly floor: DateTrackOutcome
-      /** The full-lifestyle track — the track the work-optional claim attaches to. */
-      readonly lifestyle: DateTrackOutcome
-      /** The window top this run evaluated — the no-date answer names its own window. */
-      readonly windowTopYears: number
-      /** The shown answer is the 2,000-path provisional tier and no re-figuring is under way: the date
-       *  renders under the provisional tag until its final lands (W9-R7, KTD8 — answerView's module note). */
-      readonly provisional?: boolean
-      /** W9-R7 (KTD6): a run on inputs different from the shown answer's is in flight, so the eyebrow
-       *  slot says the shown answer is from before the latest change (the date words over a date, the
-       *  verdict words over a no-date answer), the band caption adds that the change isn't in its
-       *  figures yet, and the no-date lines drop their entered-so-far tail. Presence-keyed: absent when off. */
-      readonly refiguring?: true
-      /** The crowned date's projection band — FLOOR-crowned, present iff the floor crowned
-       *  (engine-owned iff; a floor-no-date run has none). When present, the "show me the
-       *  range" drawer mounts under the worded answer. */
-      readonly band?: DateBand
-      /** Household-clock x-axis markers (Today / work stops / plan horizon) for the band — the date
-       *  route's deriver carries the FUTURE work-stops marker at the band's OWN crowned offset. */
-      readonly bandAnnotations?: readonly XAnnotation[]
-      /** Maps a lattice year to the household ages string for the band's hover/scrub readout (the same
-       *  slot the annotations use). Absent ⇒ the readout omits its ages line. */
-      readonly bandAges?: (yearsFromNow: number) => string
-      /** THE TWO SPENDING LEVELS THIS HOUSEHOLD'S SPLIT COMES FROM (council 2026-07-30).
-       *
-       *  Why it exists: a two-date household has two dates BECAUSE it has two spend levels, and
-       *  before this the surface showed the two dates, two sets of odds and a balance picture while
-       *  never naming either figure — every dollar on the landing was a portfolio BALANCE. A reader
-       *  could see that the answers differed and had no way to see what made them differ. (Found by
-       *  Briggsy on the real surface, 2026-07-30: "I need to see what my essential spend looks like
-       *  along with what my desired spend looks like.")
-       *
-       *  Both are FIRST-YEAR (retirement-year 0) totals in today's dollars, derived through
-       *  `budgetYearZeroEssentialsTotal` / `budgetYearZeroFullTotal` — the compiled routing, never a
-       *  line-sum (which omits the injected OOP medical and mis-tiers). Absent when the household
-       *  never built a budget: there is no second level to name, and the copy that would quote it
-       *  must not render rather than invent one. */
-      readonly spendLevels?: { readonly essentials: number; readonly full: number }
-      /** W8-R7 (`docs/plans/features/typed-below-walk8-form-build-spec.md`, U3): the figure the run counts a working
-       *  year at, beside today's quote, where the two print differently (`workingYearFigureBesideQuote`); absent where
-       *  they print alike or the run carries no W. The full-budget caption names both. */
-      readonly workingYearFigure?: { readonly figure: string; readonly quote: string; readonly last: boolean }
-    }
-  | { readonly kind: 'pending' }
-  | { readonly kind: 'compute-error'; readonly onRetry: () => void }
 
 export interface FuckOffDateProps {
   readonly view: FuckOffDateView
@@ -210,18 +159,6 @@ export interface FuckOffDateProps {
   readonly stalenessClause?: string
 }
 
-/** The standing answer line's causes (`payCheckNote`): W stale, split by the act its door names; a fresh TYPED W below
- *  today's quote (U11 walk 6's R1, `workingYearCostTypedBelowLine`: it can never share the slot with W stale, which needs
- *  a stale W, and it carries a moved left over's figures as its clause); and the moved left over. */
-export type StandingNoteCause = 'w-stale-update' | 'w-stale-confirm-or-change' | 'w-typed-below' | 'left-over-moved'
-
-/** W stale's cause for each act (`workingYearQuote.workingYearCostAct`, council `wf_7fa86902-35c`), exhaustive: the
- *  Result picks the cause with the helper, never a free door label. */
-export const W_STALE_CAUSE: Readonly<Record<WorkingCostAct, StandingNoteCause>> = {
-  update: 'w-stale-update',
-  confirmOrChange: 'w-stale-confirm-or-change',
-}
-
 /** Each cause's lead and door label, exhaustive (insight 147): W's line never borrows the left over's words,
  *  nor the reverse, and its door is the act's own (`WORKING_COST_ACT_COPY`, the one home of the act's words). The
  *  typed-below line has no digit-free lead: its first sentence names the answer and both figures itself
@@ -238,74 +175,6 @@ const STANDING_NOTE_COPY: Readonly<Record<StandingNoteCause, { readonly lead: Co
 function standingOpening(cause: StandingNoteCause, opening: string): string {
   const lead = STANDING_NOTE_COPY[cause].lead
   return lead === null ? opening : `${copy[lead]} ${opening}`
-}
-
-/** The hero claim's heading text — shared by the render and the polite sharpen announce, so what
- *  is spoken is exactly what is shown. With an anchor (P3·U13): the calendar label is the
- *  wall-time-STABLE claim (startCalendarYear + offset — byte-identical however old the plan)
- *  and the relative count re-derives from today (offset − years since the plan was BUILT). The
- *  engine's own offset is NEVER mutated — this is presentation arithmetic only. `refiguring`
- *  (W9-R7, KTD6): the no-date claim drops its entered-so-far tail, which the re-figuring line
- *  above it makes false. */
-export function heroLead(
-  hero: DateTrackOutcome,
-  windowTopYears: number,
-  anchor?: BandPlanClockAnchor,
-  refiguring = false,
-): string {
-  if (hero.kind === 'no-date-in-window') {
-    return refiguring ? slots.noDateInWindowRefiguring(windowTopYears) : slots.noDateInWindow(windowTopYears)
-  }
-  if (hero.offsetYears === 0) return copy.dateFreeToday
-  if (anchor === undefined) return slots.dateInYears(hero.offsetYears)
-  const calendarYear = anchor.startCalendarYear + hero.offsetYears
-  // U17 §S2.5 — the STRICT three-way split (the de-mudded arrived idiom): strictly-past speaks
-  // "come and gone", exactly-this-year speaks "about now" (agreeing with the ladder's "stopping
-  // today" crown at the same boundary), future speaks the anchored count. The old non-strict
-  // `<= 0` collapsed the first two into one "about now" sentence — false for a genuinely passed
-  // year. The past test is the §S0.1 predicate, never a re-typed compare.
-  if (offsetHasPassed(hero.offsetYears, anchor.yearsSincePlanBuilt)) {
-    return slots.dateInYearsPast(calendarYear)
-  }
-  if (hero.offsetYears === anchor.yearsSincePlanBuilt) return slots.dateInYearsNow(calendarYear)
-  return slots.dateInYearsAnchored(hero.offsetYears - anchor.yearsSincePlanBuilt, calendarYear)
-}
-
-/** The subordinate essentials line (split only) — the floor's claim in its own register.
- *  Anchored EXACTLY like `heroLead` (ultramode 2026-07-09): both lines share one screen, so
- *  an aged plan must never show a wall-time-corrected hero beside a floor replaying its
- *  build-day count — two time bases can even invert the true floor<lifestyle ordering.
- *  Exported for the anchor battery (the heroLead precedent). `refiguring`: heroLead's tail rule. */
-export function floorLineText(
-  split: Extract<DateSplitView, { kind: 'split' }>,
-  windowTopYears: number,
-  anchor?: BandPlanClockAnchor,
-  refiguring = false,
-): string {
-  const fl = split.floor
-  if (fl.kind === 'not-within-window') {
-    // Lifestyle no-date too ⇒ the quiet severity disclosure ("either" — the hero line above
-    // already names the window); lifestyle dated ⇒ the extreme-inversion statement of fact
-    // (the inversion note carries the why). Both name their own years (audit 2026-07-03).
-    if (split.lifestyle.kind === 'no-date-in-window') return slots.dateFloorNotWithinEither(windowTopYears)
-    return refiguring ? slots.dateFloorNotWithinRefiguring(windowTopYears) : slots.dateFloorNotWithin(windowTopYears)
-  }
-  const odds = dateOddsText(fl.quantizedLowerBound)
-  // Offset 0 mirrors heroLead's free-today precedence: "covered from today" holds under any
-  // anchor (covered from the plan's own start ⇒ still covered now — no arithmetic to do).
-  if (anchor === undefined || fl.offsetYears === 0) {
-    return slots.dateFloorCovered(fl.offsetYears, odds, fl.unconfirmed)
-  }
-  const calendarYear = anchor.startCalendarYear + fl.offsetYears
-  // U17 §S2.5 — the same strict three-way split as heroLead (one idiom, each line naming its
-  // own date); the past test is the §S0.1 predicate.
-  if (offsetHasPassed(fl.offsetYears, anchor.yearsSincePlanBuilt)) {
-    return slots.dateFloorCoveredPast(calendarYear, odds, fl.unconfirmed)
-  }
-  if (fl.offsetYears === anchor.yearsSincePlanBuilt) {
-    return slots.dateFloorCoveredNow(calendarYear, odds, fl.unconfirmed)
-  }
-  return slots.dateFloorCoveredAnchored(fl.offsetYears - anchor.yearsSincePlanBuilt, calendarYear, odds, fl.unconfirmed)
 }
 
 /** The band's track note: the world the range prices, named by the band's OWN track (never split-ness —

@@ -56,7 +56,8 @@ import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { VerdictIcon } from './verdictSignal'
 import { formatPerMonth } from './money'
-import type { SurvivorReading, SurvivorSpendingBasis } from '@shared/model'
+import type { SurvivorReading } from '@shared/model'
+import { spendingBasisLine } from './survivorLines'
 import './styles/survivor.css'
 
 export interface SurvivorReadoutProps {
@@ -71,17 +72,6 @@ export interface SurvivorReadoutProps {
    *  label the section directly instead (the a11y name survives; every word renders once). The
    *  spending-basis line renders in BOTH variants (it qualifies the count, which the body carries). */
   readonly foldBody?: boolean
-}
-
-/** The basis line's text, or null when it must not render (absent / not steady / non-finite / either figure "$0"). */
-function spendingBasisLine(basis: SurvivorSpendingBasis | undefined): string | null {
-  if (basis === undefined || basis.steady !== true) return null
-  const { survivorMonthlyReal, coupleMonthlyReal } = basis
-  if (!Number.isFinite(survivorMonthlyReal) || !Number.isFinite(coupleMonthlyReal)) return null
-  const survivor = formatPerMonth(survivorMonthlyReal)
-  const couple = formatPerMonth(coupleMonthlyReal)
-  if (survivor === '0' || couple === '0') return null
-  return slots.verdictSurvivorSpendBasis(survivor, couple)
 }
 
 export function SurvivorReadout({ reading, foldBody = false }: SurvivorReadoutProps) {

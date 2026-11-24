@@ -30,6 +30,7 @@ import type { DateTrackOutcome } from '@shared/model'
  *     deliberately, for save-moment coherence), so the divergence could never surface. That is
  *     insight 073's class exactly: a fixture that moves two clocks in lockstep cannot witness a
  *     bug that lives in their difference. The RE-SAVER arm below is the witness it lacked.
+ *     (Since Act 6's RC0 the Result's mint lives in `answerNotes.ts`'s `composeAnswerNotes`; the RESULT arm binds both.)
  */
 
 // ── the seam's own re-saver fixture: fresh save, OLD plan ────────────────────────────────────
@@ -140,28 +141,43 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     expect(filterLine, 'never a re-typed inline compare').not.toMatch(/planOffsetYears\s*[<>]=?/)
   })
 
-  it('RESULT consumes the ONE mint — the component never re-types the plan-clock arithmetic', () => {
+  it('RESULT consumes the ONE mint — through the notes composer, which mints it; neither re-types the plan-clock arithmetic', () => {
     // THE MUTANT THIS KILLS, verbatim from the U17 §S0 verifier: `... - startCalendarYear + 3`
     // planted in the component left 1096 tests green, because the seam test had copied the
     // arithmetic instead of binding to it. Calling `planClockAnchor` from this file is only half
-    // the fix — it proves the FUNCTION is right, never that the COMPONENT still calls it. This
+    // the fix — it proves the FUNCTION is right, never that the CALLER still calls it. This
     // arm is the other half.
+    //
+    // RE-BOUND IN ACT 6's RC0 (the source-bind moves with the call, never dies with the file): the mint moved
+    // out of `Result.tsx` into `composeAnswerNotes` (`answerNotes.ts`), which takes the wall year from its
+    // caller; `Result.tsx` reads that year through the ONE local-calendar chain and takes the anchor from the
+    // composer. So the bind is three-sided: the composer mints with the build year and the wall year it is
+    // handed; Result hands it the chain's year and keeps no mint of its own; neither re-types a subtraction.
+    // (`answerNotes.test.ts` pins the composer's anchor behaviourally, a plan built in 2024 opened in 2026.)
+    const notes = read('../answerNotes.ts')
+    expect(notes, 'the mint is imported, not re-declared').toMatch(
+      /import \{ planClockAnchor, type BandPlanClockAnchor \} from '\.\/bandAnnotations'/,
+    )
+    expect(notes, 'the anchor is minted by the shared producer, off the build year and the handed wall year').toMatch(
+      /planClockAnchor\(\s*snapshot\.draft\.startCalendarYear,\s*wallCalendarYear,?\s*\)/,
+    )
     const src = read('../Result.tsx')
-    expect(src, 'the mint is imported, not re-declared').toMatch(
-      /import \{ planClockAnchor \} from '\.\/bandAnnotations'/,
+    expect(src, 'Result reads the wall year through the ONE local-calendar chain').toMatch(
+      /const wallCalendarYear = useMemo\(\(\) => epochDayToCalendarYear\(currentEpochDay\(\)\), \[snapshot\.draft\.startCalendarYear\]\)/,
     )
-    expect(src, 'the anchor is minted by the shared producer').toMatch(
-      /planClockAnchor\(\s*snapshot\.draft\.startCalendarYear,\s*epochDayToCalendarYear\(currentEpochDay\(\)\),?\s*\)/,
-    )
-    // The member path must be admitted or the negative can never fire: `Result.tsx` spells it
-    // `snapshot.draft.startCalendarYear` (:177/:178) and carries NO bare identifier in code —
-    // the U17 §S0 refactor deleted the local binding this regex was originally shaped against
-    // (`102416af^` had `const startCalendarYear = snapshot.draft.startCalendarYear`). So the
-    // realistic mutant, `… - snapshot.draft.startCalendarYear + 3`, walked straight past it.
+    expect(src, 'Result takes the anchor the composer minted').toMatch(/const dateAnchor = notes\.planClock\b/)
+    expect(src, 'Result keeps no mint of its own').not.toMatch(/planClockAnchor\(/)
+    // The member path must be admitted or the negative can never fire: the code spells it
+    // `snapshot.draft.startCalendarYear` and carries NO bare identifier — the U17 §S0 refactor
+    // deleted the local binding this regex was originally shaped against (`102416af^` had
+    // `const startCalendarYear = snapshot.draft.startCalendarYear`). So the realistic mutant,
+    // `… - snapshot.draft.startCalendarYear + 3`, walked straight past it.
     // Same discipline as the clock arm below, which tolerates its own intervening paren.
-    expect(src, 'never a re-typed subtraction against the build year').not.toMatch(
-      /-\s*(?:[\w$.]+\.)?startCalendarYear/,
-    )
+    for (const [file, text] of [['answerNotes.ts', notes], ['Result.tsx', src]] as const) {
+      expect(text, `${file}: never a re-typed subtraction against the build year`).not.toMatch(
+        /-\s*(?:[\w$.]+\.)?startCalendarYear/,
+      )
+    }
   })
 
   it('the CLOCK ITSELF is LOCAL-calendar — the getTimezoneOffset term IS the invariant, and only a source-bind can hold it', () => {
@@ -253,7 +269,7 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
     // the `)` of `formatMoney(...)`, which is argument ONE, so arguments 2+ — exactly where a
     // raw offset or a re-typed year sum would be handed in — were unreachable by it. An
     // occurrence count over the same source is both simpler and stronger: the panel reads the
-    // raw offset EXACTLY once, at the producer call (`AssumptionPanel.tsx:472`), so any second
+    // raw offset EXACTLY once, at the producer call (`AssumptionPanel.tsx:437`), so any second
     // read — handed to the echo, or re-summed against the anchor — reds regardless of argument
     // position or nesting depth.
     expect(
@@ -275,7 +291,7 @@ describe('U17 §S0.1 — ONE exported arrived predicate, consumed (never re-type
 
   it('the two consumers AGREE at the boundary by construction (the behavioral half of the bind)', () => {
     // Same track, same clock: at crown == plan clock the ladder keeps a mark at display 0 AND
-    // the withdraw predicate reads false — the pair that `FuckOffDate.test.tsx:211-215` pins on
+    // the withdraw predicate reads false — the pair that `FuckOffDate.test.tsx:212-216` pins on
     // the rendered surface, asserted here at the seam so a future split is caught upstream.
     const track: DateTrackOutcome = {
       kind: 'confirmed-date',
@@ -306,7 +322,7 @@ describe('U17 §S6 — the aged premise and the Today tick must not contradict e
    * against it.
    *
    * WHY THIS ARM HAD TO BE WRITTEN RATHER THAN ASSUMED: every existing consumer renders THROUGH the
-   * slot — `FuckOffDate.test.tsx:330,336`, `ConfidenceStatement.test.tsx:742,735`,
+   * slot — `FuckOffDate.test.tsx:331,336`, `ConfidenceStatement.test.tsx:743,735`,
    * `copyGuard.test.ts:749-750` all call `slots.bandAgedPremise*(...)` and compare to its own
    * output. They follow ANY reword silently, in both directions. Without the arm below, the §S6 fix
    * passes green and so does a future revert of it — the wording would be pinned by nothing at all.

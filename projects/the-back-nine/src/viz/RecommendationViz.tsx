@@ -36,25 +36,10 @@
 import { useRef } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { SERIES } from './palette'
-import { twoFuturesCeiling } from './TwoFutures'
+import { twoFuturesCeiling } from './twoFuturesData'
+import type { RecommendationVizLabels } from './recommendationVizData'
 import { ChartText, ChartTextHost, ChartTextLayer, useCollisionLayout } from './chartText'
 import './recommendationViz.css'
-
-export interface RecommendationVizLabels {
-  /** Direct end-of-bar label for the recommended (with) arm. */
-  readonly withLabel: string
-  /** Direct end-of-bar label for the baseline (without) arm — "your plan today". */
-  readonly withoutLabel: string
-  /** The delta-magnitude HERO label (pre-formatted "$48,000"); the direction is carried by the copy
-   *  above the chart + which bar is longer, never by this label's sign. */
-  readonly deltaLabel: string
-  /** The $0 floor label (pre-formatted "$0"). */
-  readonly floorLabel: string
-  /** The axis ceiling label (pre-formatted "~$820k"). */
-  readonly axisMaxLabel: string
-  /** The whole figure's accessible sentence (role="img" — both magnitudes AND the delta, A2 AT-parity). */
-  readonly ariaSummary: string
-}
 
 const RV_VIEW = { w: 560, h: 210 } as const
 /** `right` is the end-label column (192 units; was 168): at a 358px phone box the 24-character

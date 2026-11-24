@@ -2,7 +2,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, fireEvent, waitFor } from '@testing-library/react'
-import { ConfidenceBandPanel, type BandPanelChrome } from '../ConfidenceBandPanel'
+import { ConfidenceBandPanel } from '../ConfidenceBandPanel'
+import type { BandPanelChrome } from '../bandData'
 import { LATTICE_POINTS, type BandLabels, type BandSample, type ResolvedBandData } from '../bandData'
 
 // jsdom has no matchMedia — the panel mounts BOTH the inline band and the modal, each reading

@@ -41,7 +41,7 @@ import type { CatalogMessage, SlottedErrorParams } from '@ui/copy'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { AccountKind } from '@shared/model'
 import { colaRateInRange } from '@shared/incomeBounds'
-import { formatMoney } from './fields'
+import { formatMoney } from './moneyFormat'
 import {
   annualAdditions415c2026,
   catchUpForAge,

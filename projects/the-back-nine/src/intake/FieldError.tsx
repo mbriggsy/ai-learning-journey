@@ -1,4 +1,5 @@
-import { copy, slots, type CatalogMessage } from '@ui/copy'
+import type { CatalogMessage } from '@ui/copy'
+import { fieldErrorId, fieldErrorText } from './fieldErrors'
 
 /**
  * The R19 calm error grammar — one shared presentation for every inline
@@ -18,23 +19,6 @@ import { copy, slots, type CatalogMessage } from '@ui/copy'
  * {@link fieldErrorText} — a pure exported helper (insight 048), the ONE
  * message-text decision for every consumer (component and test harness alike).
  */
-export const fieldErrorId = (field: string): string =>
-  `err-${field.replace(/[^a-zA-Z0-9-]/g, '-')}`
-
-/** The one message-text decision: params ⇒ the slot template, else the catalog string. The W step gate's
- *  two stale-figure messages carry their own params (copy's `CatalogMessage` block; the U11 walk's (ad)). */
-export const fieldErrorText = (m: CatalogMessage): string => {
-  if (m.params === undefined) return copy[m.messageKey]
-  switch (m.messageKey) {
-    case 'errWorkingCostStaleBelowQuote':
-      return slots.errWorkingCostStaleBelowQuote(m.params.heldFormatted, m.params.quoteFormatted)
-    case 'errWorkingCostStaleKeep':
-      return slots.errWorkingCostStaleKeep(m.params.keepLabel)
-    default:
-      return slots[m.messageKey](m.params.limitFormatted)
-  }
-}
-
 export type FieldErrorProps = { readonly field: string } & CatalogMessage
 
 export function FieldError(props: FieldErrorProps) {

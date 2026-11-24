@@ -2,14 +2,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { RothLever, rothPlanMissingField } from '../RothLever'
+import { RothLever } from '../RothLever'
 import { unsavedBuffersHeld } from '../unsavedBuffer'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import type { ControlPreview } from '@store/controlPreview'
 import { copy, slots } from '@ui/copy'
 import { planClockAnchor } from '@ui/bandAnnotations'
-import { fieldErrorText } from '../FieldError'
+import { fieldErrorText } from '../fieldErrors'
 import type { EnteredAccount, OutcomeState, TwoArmControl } from '@shared/model'
 
 /**
@@ -248,21 +248,6 @@ describe('RothLever — previewing a committed plan', () => {
     fireEvent.click(apply)
     expect(onApply).toHaveBeenCalledTimes(1)
     expect(onApply).toHaveBeenCalledWith({ annualAmountReal: 40_000, startYearOffset: 1, years: 10 })
-  })
-
-  it('rothPlanMissingField — the ONE field-order decision the reason and complete() share', () => {
-    expect(rothPlanMissingField({})).toBe('amount')
-    expect(rothPlanMissingField({ startYear: 2027, years: 5 })).toBe('amount')
-    expect(rothPlanMissingField({ amount: 0, startYear: 2027, years: 5 })).toBe('amount') // $0 is not an amount
-    expect(rothPlanMissingField({ amount: Number.NaN, startYear: 2027, years: 5 })).toBe('amount')
-    expect(rothPlanMissingField({ amount: 40_000, years: 5 })).toBe('start')
-    expect(rothPlanMissingField({ amount: 40_000, startYear: 2027.5, years: 5 })).toBe('start')
-    expect(rothPlanMissingField({ amount: 40_000, startYear: 2027 })).toBe('years')
-    expect(rothPlanMissingField({ amount: 40_000, startYear: 2027, years: 0 })).toBe('years')
-    expect(rothPlanMissingField({ amount: 40_000, startYear: 2027, years: 5 })).toBeNull()
-    // A PASSED start is not a missing field — that face renders its own refusal / note, so the
-    // field-order decision stays silent on it (the priority chain in RothLever decides).
-    expect(rothPlanMissingField({ amount: 40_000, startYear: 1999, years: 5 })).toBeNull()
   })
 
   it('the no-anchor face (preview returns null) shows the calm no-date line', () => {

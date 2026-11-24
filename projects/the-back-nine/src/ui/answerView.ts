@@ -18,12 +18,21 @@
  * makes `fallback` near-unreachable on the result screen; it is the honest defensive arm, not a state
  * the finished household is expected to land in.
  */
-import type { MemoryModelSnapshot } from '@store/memoryModel'
+import type { MemoryModelSnapshot, SpendAnswer, StickyDisplay } from '@store/memoryModel'
 import { isDateRoute } from '@intake/intakeMap'
 import { workingYearFigureBesideQuote, type WorkingYearFigureBesideQuote } from '@intake/workingYearLeftOver'
-import type { BandFan, DateBand, DateSearchOutcome, SimulationResult } from '@shared/model'
+import type {
+  BandFan,
+  DateBand,
+  DateSearchOutcome,
+  DateTrackOutcome,
+  DollarAdjustment,
+  Headline,
+  SimulationResult,
+  SurvivorReading,
+} from '@shared/model'
 import type { XAnnotation } from '@viz/bandData'
-import { truncateFanAtThinCohort } from '@viz/bandGeometry'
+import { truncateFanAtThinCohort } from '@viz/cohort'
 import {
   deriveBandAgesAt,
   deriveDateBandAnnotations,
@@ -34,8 +43,6 @@ import { budgetGoverns } from '@budget/budgetModel'
 import { budgetYearZeroEssentialsTotal, budgetYearZeroFullTotal } from '@budget/budgetToSpending'
 // (`composeDateSplit` is deliberately NOT imported here any more — the 2026-07-30 flip removed this
 //  module's last re-derivation of which track the band draws; it reads `band.track` from the engine.)
-import type { FuckOffDateView } from './FuckOffDate'
-import type { ConfidenceStatementView } from './ConfidenceStatement'
 
 /** Which elevated lead renders, and the view it is handed. `fallback` ⇒ render the quiet AnswerStrip
  *  (defensive incomplete/hold arm — see the module note). */
@@ -362,3 +369,116 @@ export function caveatSeat(elevated: ElevatedAnswer, computing: boolean): Caveat
       (elevated.kind === 'date' && elevated.view.kind === 'dates' && elevated.view.band !== undefined),
   }
 }
+
+// ---------------------------------------------------------------------------
+// The two heroes' view types (moved out of `FuckOffDate.tsx` and `ConfidenceStatement.tsx` by Act 6's RC0, unchanged)
+// ---------------------------------------------------------------------------
+
+/** What the surface shows. `dates` carries BOTH independent tracks (U9b — the pure composeDateSplit
+ *  decides one-date vs split; the value-coincident degenerate renders the single composition
+ *  verbatim). `pending` / `compute-error` mirror the ConfidenceStatement non-answer modes. */
+export type FuckOffDateView =
+  | {
+      readonly kind: 'dates'
+      /** The essentials-floor track (the band's crown + the focus key — the load-bearing
+       *  survival claim). */
+      readonly floor: DateTrackOutcome
+      /** The full-lifestyle track — the track the work-optional claim attaches to. */
+      readonly lifestyle: DateTrackOutcome
+      /** The window top this run evaluated — the no-date answer names its own window. */
+      readonly windowTopYears: number
+      /** The shown answer is the 2,000-path provisional tier and no re-figuring is under way: the date
+       *  renders under the provisional tag until its final lands (W9-R7, KTD8 — answerView's module note). */
+      readonly provisional?: boolean
+      /** W9-R7 (KTD6): a run on inputs different from the shown answer's is in flight, so the eyebrow
+       *  slot says the shown answer is from before the latest change (the date words over a date, the
+       *  verdict words over a no-date answer), the band caption adds that the change isn't in its
+       *  figures yet, and the no-date lines drop their entered-so-far tail. Presence-keyed: absent when off. */
+      readonly refiguring?: true
+      /** The crowned date's projection band — FLOOR-crowned, present iff the floor crowned
+       *  (engine-owned iff; a floor-no-date run has none). When present, the "show me the
+       *  range" drawer mounts under the worded answer. */
+      readonly band?: DateBand
+      /** Household-clock x-axis markers (Today / work stops / plan horizon) for the band — the date
+       *  route's deriver carries the FUTURE work-stops marker at the band's OWN crowned offset. */
+      readonly bandAnnotations?: readonly XAnnotation[]
+      /** Maps a lattice year to the household ages string for the band's hover/scrub readout (the same
+       *  slot the annotations use). Absent ⇒ the readout omits its ages line. */
+      readonly bandAges?: (yearsFromNow: number) => string
+      /** THE TWO SPENDING LEVELS THIS HOUSEHOLD'S SPLIT COMES FROM (council 2026-07-30).
+       *
+       *  Why it exists: a two-date household has two dates BECAUSE it has two spend levels, and
+       *  before this the surface showed the two dates, two sets of odds and a balance picture while
+       *  never naming either figure — every dollar on the landing was a portfolio BALANCE. A reader
+       *  could see that the answers differed and had no way to see what made them differ. (Found by
+       *  Briggsy on the real surface, 2026-07-30: "I need to see what my essential spend looks like
+       *  along with what my desired spend looks like.")
+       *
+       *  Both are FIRST-YEAR (retirement-year 0) totals in today's dollars, derived through
+       *  `budgetYearZeroEssentialsTotal` / `budgetYearZeroFullTotal` — the compiled routing, never a
+       *  line-sum (which omits the injected OOP medical and mis-tiers). Absent when the household
+       *  never built a budget: there is no second level to name, and the copy that would quote it
+       *  must not render rather than invent one. */
+      readonly spendLevels?: { readonly essentials: number; readonly full: number }
+      /** W8-R7 (`docs/plans/features/typed-below-walk8-form-build-spec.md`, U3): the figure the run counts a working
+       *  year at, beside today's quote, where the two print differently (`workingYearFigureBesideQuote`); absent where
+       *  they print alike or the run carries no W. The full-budget caption names both. */
+      readonly workingYearFigure?: { readonly figure: string; readonly quote: string; readonly last: boolean }
+    }
+  | { readonly kind: 'pending' }
+  | { readonly kind: 'compute-error'; readonly onRetry: () => void }
+
+/** What the surface shows. `reading` covers all six engine states (it reads `outcomeState`);
+ *  `pending` and `compute-error` are the NON-verdict modes (the band is simply not mounted). */
+export type ConfidenceStatementView =
+  | {
+      readonly kind: 'reading'
+      readonly headline: Headline
+      readonly dollar: DollarAdjustment
+      /** U12 C2 — the sticky-resolved DISPLAY triple (memoryModel's hysteresis seam, threaded by
+       *  answerView from the same commit as the answer). When present, the SENTENCE — glyph +
+       *  verdict word + "X of 10" + the $/mo clause — renders from it; the band and every
+       *  drill-down (survivor, floor relief, scrub, AT range) keep reading the RAW
+       *  `headline`/`dollar` above (one honest raw record, one sticky sentence). Absent (the
+       *  preview harness, displayed-less fixtures) ⇒ the sentence reads the raw result directly. */
+      readonly displayed?: StickyDisplay
+      /** The spend lane (memoryModel `SpendAnswer`) — the REAL figure for the magnitude clause. It
+       *  rides the sentence only through `spendClauseFor`'s gate (shown state ≡ raw state, same
+       *  direction); absent ⇒ the figure-less clause. */
+      readonly spend?: SpendAnswer
+      /** The engine's per-year fan, opt-in. When present (and the state is a real verdict), the
+       *  "show me the range" drawer mounts. Absent ⇒ no drawer (the verdict still stands). */
+      readonly band?: BandFan
+      /** Household-clock x-axis markers (Today / retirement / horizon) for the band; without them
+       *  the band's x-axis reads bare. Applied to the resolved band AND the indeterminate placeholder. */
+      readonly bandAnnotations?: readonly XAnnotation[]
+      /** Maps a lattice year to the household ages string for the band's hover/scrub readout (the same
+       *  slot the annotations use). Absent ⇒ the readout omits its ages line. */
+      readonly bandAges?: (yearsFromNow: number) => string
+      /** Renders the PROVISIONAL eyebrow — a reading taken before the account set is complete is a
+       *  labeled provisional update, never a final answer (back-nine-design intake §progressive).
+       *  The result hero never sets it: the spine's two tiers are byte-identical (answerView's note). */
+      readonly provisional?: boolean
+      /** W9-R7 (KTD6): a run on inputs different from the shown answer's is in flight, so the eyebrow
+       *  slot says the shown verdict is from before the latest change. Presence-keyed: absent when off.
+       *  At the two-pane tier the line OVERLAYS the frame's top padding (confidence.css), so it never
+       *  moves the verdict's one-frame fold (R5). */
+      readonly refiguring?: true
+      /** The U7 "as the survivor" reading — the quieter second statement. Present iff the spine run
+       *  carried a survivor phase (the parent, answerView, decides); when present, SurvivorReadout
+       *  mounts below the band. Spine-only: the date route renders a timing claim, not a joint verdict. */
+      readonly survivorReading?: SurvivorReading
+      /** The U9b essentials-floor verdict — a PARALLEL engine-tagged Headline, present iff a budget
+       *  rode the run (carried VERBATIM from SimulationResult.floorReading, never re-derived —
+       *  insight 045). The floorRelief gate decides whether it earns the subordinate relief line;
+       *  the value-equal degenerate collapses to the single-metric statement verbatim. */
+      readonly floorReading?: Headline
+      /** The committed answer's input key (`ModelAnswer.inputKey`), threaded by answerView: the identity
+       *  the folded survivor statement's open state is keyed to (the record card's seat plan, KTD2; see
+       *  {@link foldAfterRender}). Presence-keyed: every store answer carries one; the preview harness's
+       *  fixtures and the component tests' fixtures do not, and a keyless reading leaves the fold
+       *  uncontrolled, as it was before the key existed. */
+      readonly inputKey?: string
+    }
+  | { readonly kind: 'pending' }
+  | { readonly kind: 'compute-error'; readonly onRetry: () => void }

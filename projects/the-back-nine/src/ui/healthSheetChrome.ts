@@ -45,7 +45,7 @@ import {
   acaEnhancedSubsidyStatus,
   irmaa,
 } from '@engine/constants/health'
-import { COHORT_FADE } from '@viz/bandGeometry'
+import { COHORT_FADE } from '@viz/cohort'
 import { copy, slots } from './copy'
 import { composeTwoFutures, type TwoFuturesView } from './twoFuturesChrome'
 import type { BandPlanClockAnchor } from './bandAnnotations'

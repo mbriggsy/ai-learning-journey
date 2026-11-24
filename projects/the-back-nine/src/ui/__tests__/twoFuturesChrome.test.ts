@@ -3,8 +3,8 @@ import { composeTwoFutures, deriveTwoFuturesXTicks } from '../twoFuturesChrome'
 import { deriveDecadeAgeTicks } from '../bandAnnotations'
 import { copy, slots } from '../copy'
 import { formatAxisDollar } from '../money'
-import { twoFuturesCeiling } from '@viz/TwoFutures'
-import { COHORT_FADE } from '@viz/bandGeometry'
+import { twoFuturesCeiling } from '@viz/twoFuturesData'
+import { COHORT_FADE } from '@viz/cohort'
 import type { BandFan, Headline, OutcomeState, SurvivorReading, TwoArmOutcome, TwoArmReading } from '@shared/model'
 
 /**

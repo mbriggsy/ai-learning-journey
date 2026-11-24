@@ -51,7 +51,7 @@ import {
   type WorkingCostAct,
 } from '@ui/copy'
 import { plainNote, type GateDoor, type NoteDoor, type NoteParts, type NoteSegment } from '@ui/noteParts'
-import { formatMoney, formatMoneyPair } from './fields'
+import { formatMoney, formatMoneyPair } from './moneyFormat'
 import {
   buildDateInput,
   carriedWorkingYearLeftOver,

@@ -4,22 +4,21 @@ import { planClockAnchor } from '@ui/bandAnnotations'
 import { currentEpochDay } from '@ui/scenarioFromDraft'
 import { epochDayToCalendarYear } from '@store/staleness'
 import type { PersonDraft, ScenarioDraft } from '@store/memoryModel'
-import type { MedicareExtrasEntryV3, RetirementState, WorkStatus } from '@shared/model'
+import type { RetirementState, WorkStatus } from '@shared/model'
 import { fraMonthsForBirthYear } from '@engine/constants/socialSecurity'
 import { medicareExtrasTypical, medicareExtrasTypicalMonthly } from '@engine/constants/health'
-import { budgetGoverns, isActiveAt, isRampedBudget } from '@budget/budgetModel'
+import { budgetGoverns, isActiveAt } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal, commitBudgetPatch } from '@budget/budgetToSpending'
 import { focusHeading } from './a11y'
 import {
-  anyPre65OrUnknown,
-  anyRetiredPre65WhileAnotherWorks,
   isDateRoute,
   oopHelpKeyFor,
   spendHelpKeyFor,
   workingYearLedgerForRun,
 } from './intakeMap'
-import { BudgetBuilder, medicalExceedsTotal } from './BudgetBuilder'
-import { CurrencyField, IntegerField, NameField, SegmentedControl, formatMoney, type SegmentOption } from './fields'
+import { BudgetBuilder } from './BudgetBuilder'
+import { CurrencyField, IntegerField, NameField, SegmentedControl, type SegmentOption } from './fields'
+import { formatMoney } from './moneyFormat'
 import { FieldError } from './FieldError'
 import {
   accountField,
@@ -34,12 +33,22 @@ import { WorkingCostQuestion } from './WorkingCostQuestion'
 import { WorkingYearLedgerPicture, WorkingYearLedgerUnknown } from './WorkingYearLedger'
 import { WorkingYearLeftOverQuestion } from './WorkingYearLeftOverQuestion'
 import { writeClearedWorkingYearCost } from './workingYearQuote'
-import { AccountEntry, kindLabel } from './AccountEntry'
-import { OtherIncomeEntry, incomeTypeLabel, survivorNoteFor } from './OtherIncomeEntry'
+import { AccountEntry } from './AccountEntry'
+import { kindLabel } from './accountKinds'
+import { OtherIncomeEntry } from './OtherIncomeEntry'
+import { incomeTypeLabel, survivorNoteFor } from './otherIncome'
 import { ExternalLink } from './ExternalLink'
 import { EXTERNAL_LINKS } from './links'
 import { OOP_MEDICAL_TYPICAL_HOUSEHOLD } from './referenceData'
-import type { StepApi, StepDef } from './flow'
+import type { StepApi, StepDef } from './stepChecks'
+import type { StepSectionId } from '@ui/workbench/factRegistry'
+import {
+  governedSpendNotes,
+  intakeStepIds,
+  oopExceedsBudgetlessSpend,
+  writeMedicareExtras,
+  writeWorkingYearInvestment,
+} from './steps'
 
 /**
  * The household PREAMBLE (D1): everything asked BEFORE the account loop, so
@@ -362,13 +371,6 @@ const ssStep: StepDef = {
  *  the ONLY edit path is the steer into the builder. The input node is ABSENT, not disabled —
  *  an affordance that cannot change the outcome should not exist (insight 054). A rejected
  *  alternative, the proportional rescale, would forge an allocation the user never chose. */
-/** The notes a governing budget's spending total carries, wherever it is shown (the spend step's governed face, the
- *  panel's governed row, the workbench's facts page): the year-0 figure is an anchor, not every year's spending, when
- *  lines start later or end (`isRampedBudget`; the budget model's own anchor note). ONE home (the U8 review's F4). */
-export function governedSpendNotes(budget: Parameters<typeof isRampedBudget>[0]): readonly string[] {
-  return isRampedBudget(budget) ? [copy.budgetAnchorRampNote] : []
-}
-
 function SpendGovernedFace({
   api,
   onOpen,
@@ -749,19 +751,6 @@ const oopStep: StepDef = {
   ),
 }
 
-/** THE BUDGETLESS M > S FORK (council 2026-10-08, B2 — pure + exported per insight 048): the
- *  household ENTERED an out-of-pocket figure above its whole spending figure, with NO budget
- *  governing (a budget has its own F10 line, `BudgetBuilder`'s `medicalExceedsTotal` readout, so
- *  this never doubles it). STRICTLY M > S through the SAME comparison the builder uses — at M = S
- *  the figures agree (everything is medical), no contradiction. A blank on either side never fires
- *  (nothing entered, nothing to contradict). Presentation only: the engine clamps m = min(M, S)
- *  and never refuses (`simulate.ts` `budgetlessSurvivorSpending`). */
-export function oopExceedsBudgetlessSpend(d: ScenarioDraft): boolean {
-  const S = d.annualSpendingReal
-  const M = d.health.oopMedicalAnnual
-  return !budgetGoverns(d.budget) && S !== undefined && M !== undefined && medicalExceedsTotal(S, M)
-}
-
 /** The calm, non-blocking M > S note — ONE face for the intake's OOP step and the AssumptionPanel's
  *  OOP row (the two input surfaces over the same fact agree by construction). Renders NOTHING
  *  otherwise: both hosts are flex columns with a gap, so an always-mounted empty wrapper would move
@@ -774,24 +763,6 @@ export function OopExceedsSpendNote({ draft }: { readonly draft: ScenarioDraft }
       {slots.oopExceedsSpend(formatMoney(draft.health.oopMedicalAnnual), formatMoney(draft.annualSpendingReal))}
     </p>
   )
-}
-
-/** Write person `i`'s working-year investment income, force-zeroing any RETIRED member's slot
- *  (the inapplicable-question zeroing — a retiree has no working-year count, and the persisted
- *  v3 array must be hole-free). The engine override is `earnedIncomeReal + this`, derived at the
- *  intake→engine boundary (`intakeMap.buildDateInput`) — the salary is never re-asked.
- *  EXPORTED for the U12 AssumptionPanel — the ONE write shape for this fact (insight 058:
- *  a duplicated writer is exactly how a hole-bearing array would ship). */
-export function writeWorkingYearInvestment(d: ScenarioDraft, i: 0 | 1, v: number | undefined): ScenarioDraft {
-  const next: (number | undefined)[] = [
-    d.health.workingYearInvestmentByPerson?.[0],
-    d.health.workingYearInvestmentByPerson?.[1],
-  ]
-  next[i] = v
-  for (const j of [0, 1] as const) {
-    if (d.people[j].workStatus === 'retired') next[j] = 0
-  }
-  return { ...d, health: { ...d.health, workingYearInvestmentByPerson: next } }
 }
 
 // C3 → Option B (simplified): Medicare's working-year income = the salary already entered
@@ -822,28 +793,6 @@ const workIncomeStep: StepDef = {
       <p className="field-help">{copy.workIncomeDisclosure}</p>
     </>
   ),
-}
-
-/** Write person `i`'s Medicare-extras fork answer — the ONE write shape for this fact
- *  (insight 058; EXPORTED for the AssumptionPanel seat). Always emits a COMPLETE two-entry
- *  array (`'unanswered'` fills the untouched slot — the honest persisted hole, never a
- *  fabricated 'typical' adoption); when BOTH slots read unanswered the field is STRIPPED
- *  entirely (absence = never engaged — the strip-the-key discipline). */
-export function writeMedicareExtras(
-  d: ScenarioDraft,
-  i: 0 | 1,
-  entry: MedicareExtrasEntryV3 | undefined,
-): ScenarioDraft {
-  const next: [MedicareExtrasEntryV3, MedicareExtrasEntryV3] = [
-    d.medicareExtrasByPerson?.[0] ?? { kind: 'unanswered' },
-    d.medicareExtrasByPerson?.[1] ?? { kind: 'unanswered' },
-  ]
-  next[i] = entry ?? { kind: 'unanswered' }
-  if (next.every((e) => e.kind === 'unanswered')) {
-    const { medicareExtrasByPerson: _stripped, ...rest } = d
-    return rest
-  }
-  return { ...d, medicareExtrasByPerson: next }
 }
 
 /** One person's payment fork (F1 — the ask-for-Medicare-extras unit). Three legible arms,
@@ -1383,37 +1332,28 @@ const workingLedgerStep: StepDef = {
 // the conditional sequence
 // ---------------------------------------------------------------------------
 
-const anyNearMedicare = (d: ScenarioDraft): boolean =>
-  d.people.some((p) => p.currentAge !== undefined && p.currentAge >= 64)
-
-/** The full intake sequence for the current draft state: the household
- *  preamble (spend + ACA inputs BEFORE the loop — first-acceptance
- *  reachability), then the variable-length account loop, then the opt-in
- *  other-income loop, and — on the date route — the pay check's two steps. */
+/** The full intake sequence for the current draft state: the step ids in order (`intakeStepIds`,
+ *  `steps.ts`, the sequence's one home), each mapped to its step body. The retirement-state step's
+ *  body follows the route (`isDateRoute`): the present-tense heading for an all-retired household. */
 export function intakeSteps(draft: ScenarioDraft): readonly StepDef[] {
-  // "Anyone still working" is the date route's own predicate (`isDateRoute`), read here for every
-  // working-only step — one predicate, never a private copy of it (insight 081).
   const working = isDateRoute(draft)
-  const steps: StepDef[] = [namesStep, workStep]
-  if (working) steps.push(incomeStep)
-  // The retirement-state step lands UNCONDITIONALLY, right BEFORE spend — the placement is
-  // load-bearing (S5's spendHelp branches on the answered state; a step after spend would leave
-  // spendHelp generic).
-  steps.push(ssStep, working ? stateStep : stateStepRetired, spendStep)
-  if (anyPre65OrUnknown(draft)) steps.push(healthQuoteStep)
-  // Straight after the quote it qualifies: the quote says what pre-65 coverage COSTS, this says
-  // WHO is paying it during the working years. Gated on the exported predicate, never re-derived.
-  if (anyRetiredPre65WhileAnotherWorks(draft)) steps.push(employerCoverageStep)
-  steps.push(oopStep)
-  if (working) steps.push(workIncomeStep)
-  if (anyNearMedicare(draft)) steps.push(irmaaSeedStep, medicareExtrasStep)
-  steps.push(accountsStep(draft))
-  // R40 — the opt-in other-income loop (off the 5-minute guided path; a household with no
-  // pension/rental/annuity/alimony simply advances past it). The LAST step on the all-retired route.
-  steps.push(otherIncomeStep)
-  // The pay check (U8, KTD17): on the date route, W and then the money picture close the walk —
-  // after every input the quote and the picture read. The picture's Continue is the flow's terminal
-  // `onComplete()`. No draft gate on either, so the count never moves while the household answers.
-  if (working) steps.push(workingCostStep, workingLedgerStep)
-  return steps
+  const bodies: Readonly<Record<StepSectionId, StepDef>> = {
+    names: namesStep,
+    work: workStep,
+    income: incomeStep,
+    'social-security': ssStep,
+    'retirement-state': working ? stateStep : stateStepRetired,
+    spend: spendStep,
+    'health-quote': healthQuoteStep,
+    'employer-coverage': employerCoverageStep,
+    'oop-medical': oopStep,
+    'working-income': workIncomeStep,
+    'irmaa-seed': irmaaSeedStep,
+    'medicare-extras': medicareExtrasStep,
+    accounts: accountsStep(draft),
+    'other-income': otherIncomeStep,
+    'working-cost': workingCostStep,
+    'working-ledger': workingLedgerStep,
+  }
+  return intakeStepIds(draft).map((id) => bodies[id])
 }

@@ -10,7 +10,7 @@
  *
  * WHY IT'S LOAD-BEARING (the SOLE defense). A `colaMode:'fixed-pct'` stream compiles to a
  * deterministic, SEEDLESS per-year overlay `annualRealToday * ((1+colaPct)/(1+inflationMean))^t`
- * (src/intake/otherIncome.ts:51-56). Because it lifts every Monte-Carlo path's income floor
+ * (src/intake/otherIncome.ts:53-58). Because it lifts every Monte-Carlo path's income floor
  * IDENTICALLY, the confidence fan is structurally BLIND to an over-optimistic in-range COLA — it
  * narrows toward success, never widens to flag it. So this range gate is the ONLY thing standing
  * between a mis-entered 30%/yr (~$689M/yr by year 40, under the engine's $1e12 finiteness cap) and a
@@ -30,7 +30,7 @@ export interface CitedBound {
 
 /**
  * Max sustained fixed-pct nominal COLA. WRITTEN AS THE LITERAL `0.05` so `parsePercent('5') === 0.05`
- * exactly (fields.tsx:198, `5/100` is the same IEEE-754 double as the literal) — a real 5% annuity
+ * exactly (moneyFormat.ts:50, `5/100` is the same IEEE-754 double as the literal) — a real 5% annuity
  * rider clears the INCLUSIVE `<= 0.05` with zero float risk, so 0.05's false-reject set is empty.
  */
 export const COLA_PCT_MAX: CitedBound = {

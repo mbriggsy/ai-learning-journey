@@ -265,14 +265,18 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
     // note-iff-prop pins — so THIS pin closes the one remaining link: Result's derivation line.
     // A revert to the age predicate (the exact shipped defect) goes red here (proven 2026-07-10).
     // Since Act 5's U8 the lever's live derivation lives in the shared editor-sheets module (Result calls it), and
-    // Result keeps the hero's twin over the answered draft: both files are read.
+    // since Act 6's RC0 the hero's twin over the answered draft lives in the notes composer (`answerNotes.ts`, which
+    // Result calls): both producers are read, and Result too, which must never grow a third.
     const src = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
+    const notes = readFileSync(resolve(__dirname, '../answerNotes.ts'), 'utf8')
     const sheets = readFileSync(resolve(__dirname, '../editorSheets.tsx'), 'utf8')
-    expect(src, 'the hero’s disclosure derivation reads the built params').toMatch(/spineMedicarePriced\(/)
+    expect(notes, 'the hero’s disclosure derivation reads the built params').toMatch(
+      /medicarePriced: isDateRoute\(answeredDraft\) \|\| spineMedicarePriced\(answeredDraft\)/,
+    )
     expect(sheets, 'the lever’s disclosure derivation reads the built params').toMatch(
       /const medicarePriced = useMemo\(\(\) => isDateRoute\(draft\) \|\| spineMedicarePriced\(draft\)/,
     )
-    for (const [file, text] of [['Result.tsx', src], ['editorSheets.tsx', sheets]] as const) {
+    for (const [file, text] of [['Result.tsx', src], ['answerNotes.ts', notes], ['editorSheets.tsx', sheets]] as const) {
       expect(text, `the age predicate must never re-enter ${file} (insight 080)`).not.toMatch(/medicareOnlyPriced/)
     }
   })
@@ -296,6 +300,15 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
     // …and Result reads that one computation, never a copy of its own (the recommendation surface's note).
     const result = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
     expect(result, 'Result passes the editor sheets’ state read through').toMatch(/const statePricedNote = editors\.statePricedNote/)
+    // The HERO's twin (KTD5: what the shown run priced) is the notes composer's, off the answered draft through the same
+    // producer, under the same two negatives (Act 6's RC0 moved it out of Result).
+    const notes = readFileSync(resolve(__dirname, '../answerNotes.ts'), 'utf8')
+    expect(notes, 'the hero’s state derivation reads the producer output').toMatch(
+      /const statePricedNote = answeredDraft === null \? undefined : pricedStateForRun\(answeredDraft\)/,
+    )
+    const heroLine = notes.split('\n').find((l) => l.includes('const statePricedNote =')) ?? ''
+    expect(heroLine, 'never re-derives from draft.retirementState').not.toMatch(/draft\.retirementState/)
+    expect(heroLine, 'never a bare isDateRoute disjunct for state (insight 080)').not.toMatch(/isDateRoute/)
   })
 
   it('Result derives the ACA-priced disclosure from the PREVIEW producer (acaPricedForRun over the crowned offset) AND threads it to the Roth lever — the O16 source-bind (insight 080/081)', () => {

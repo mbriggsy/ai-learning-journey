@@ -33,7 +33,8 @@ import type { ScenarioDraft } from '@store/memoryModel'
 import { slots } from '@ui/copy'
 import { NotePartsBlock } from '@ui/NotePartsBlock'
 import { isPlainNote } from '@ui/noteParts'
-import { SegmentedControl, formatMoney } from './fields'
+import { SegmentedControl } from './fields'
+import { formatMoney } from './moneyFormat'
 import { workingYearLeftOverDepositsLive, workingYearLeftOverLive, workingYearLeftOverShownState } from './intakeMap'
 import {
   workingYearLeftOverAtQuoteLine,

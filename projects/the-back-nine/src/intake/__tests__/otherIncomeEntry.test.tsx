@@ -3,12 +3,12 @@ import { useMemo, useSyncExternalStore } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
-import { OtherIncomeEntry, survivorNoteFor } from '../OtherIncomeEntry'
+import { OtherIncomeEntry } from '../OtherIncomeEntry'
 import { unsavedBuffersHeld } from '../unsavedBuffer'
 import { IntakeFlow } from '../flow'
 import { intakeSteps } from '../questions'
 import { compileIncomeStreams } from '../otherIncome'
-import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
+import { createMemoryModel, type MemoryModel } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import type { IncomeStream } from '@shared/model'
 import { copy, slots } from '@ui/copy'
@@ -574,37 +574,6 @@ describe('the other-income loop — widow’s-numbers summary + the not-saved af
     fireEvent.click(screen.getByRole('button', { name: copy.otherIncomeRemoveConfirm }))
     expect(m.getSnapshot().draft.incomeStreams).toHaveLength(0)
     expect(screen.getByText(copy.otherIncomeEmpty)).toBeInTheDocument()
-  })
-})
-
-describe('survivorNoteFor — the widow’s-picture wording (golden-pinned, amount-free)', () => {
-  const draft = (): ScenarioDraft => {
-    const m = modelWithPeople()
-    return m.getSnapshot().draft
-  }
-
-  it('alimony (0%) → "ends if {owner} passes"', () => {
-    const s: IncomeStream = { ownerIndex: 0, type: 'alimony', executedAfter2018: true, annualRealToday: 18_000, startAge: 66, colaMode: 'nominal-flat', survivorPct: 0 }
-    expect(survivorNoteFor(draft(), s)).toBe('This ends if Jim passes.')
-  })
-
-  it('100% → "would keep all of this"', () => {
-    const s: IncomeStream = { ownerIndex: 1, type: 'rental', annualRealToday: 18_000, startAge: 64, colaMode: 'real-flat', survivorPct: 1 }
-    expect(survivorNoteFor(draft(), s)).toBe('Jim would keep all of this if Jane passes.')
-  })
-
-  it('a partial share → "would keep N%" (the rounded percent, never a raw fraction)', () => {
-    const s: IncomeStream = { ownerIndex: 1, type: 'pension', annualRealToday: 30_000, startAge: 65, colaMode: 'real-flat', survivorPct: 0.5 }
-    expect(survivorNoteFor(draft(), s)).toBe('Jim would keep 50% of this if Jane passes.')
-  })
-
-  it('an OUT-OF-RANGE input (>1) renders the documented clamp — the DISPLAY backstop behaves intentionally, not by accident', () => {
-    // The form gate (the in-form RANGE gate above) is the PRIMARY defense — a >1
-    // survivorPct can never commit. This pins the slot's defense-in-depth behavior
-    // for a value that could only arrive via a corrupt restore: it collapses to the
-    // calm "all of this" note (the >=100% branch), NOT a nonsensical "150%" string.
-    // Pinning it makes the chosen behavior a DECISION, not an oversight.
-    expect(slots.incomeSurvivorNote('Jim', 'Jane', 1.5)).toBe('Jim would keep all of this if Jane passes.')
   })
 })
 

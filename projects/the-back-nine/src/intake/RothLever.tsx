@@ -32,17 +32,12 @@ import { offsetHasPassed } from '@viz/curveMarks'
 import type { Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
 import { ControlPreviewReadout, useControlPreview } from './controlPreview'
-import { CurrencyField, IntegerField, formatMoney } from './fields'
-import { FieldError, fieldErrorId, fieldErrorText } from './FieldError'
+import { CurrencyField, IntegerField } from './fields'
+import { formatMoney } from './moneyFormat'
+import { FieldError } from './FieldError'
+import { fieldErrorId, fieldErrorText } from './fieldErrors'
 import { draftPretaxTotal, medicareOnlyPriced } from './intakeMap'
-/** The draft plan mid-entry: fields optional until committed (the intake hole-tolerance rule).
- *  `startYear` is the CALENDAR year as typed (U17 §S1) — the commit converts it to the
- *  sim-year-0 offset the engine prices; the calendar never persists (no persisted re-base). */
-interface PlanDraft {
-  readonly amount?: number
-  readonly startYear?: number
-  readonly years?: number
-}
+import { rothPlanMissingField, type PlanDraft } from './rothPlan'
 /** U17 §S1 — a start year already behind the wall clock REFUSES (the same strict arrived
  *  predicate the ladder/band consume, §S0.1: `year < wall` ⇔ `offset < yearsSincePlanBuilt`;
  *  it also covers a year before the build year, where the offset itself goes negative). The
@@ -58,18 +53,6 @@ const seedPlan = (applied: RothConversionPlan | undefined, anchor: BandPlanClock
   applied === undefined
     ? { startYear: anchor.startCalendarYear + anchor.yearsSincePlanBuilt, years: 5 }
     : { amount: applied.annualAmountReal, startYear: rothPlanStartFor(anchor, applied.startYearOffset).year, years: applied.years }
-/** The three field arms of a complete plan, ONE predicate each — `complete()` and the blocked
- *  Apply's reason (`rothPlanMissingField`) read the same three, so the sentence that names an
- *  empty field can never disagree with the candidate that refuses it. */
-const amountSet = (p: PlanDraft): boolean => p.amount !== undefined && Number.isFinite(p.amount) && p.amount > 0
-const startSet = (p: PlanDraft): boolean => p.startYear !== undefined && Number.isInteger(p.startYear)
-const yearsSet = (p: PlanDraft): boolean => p.years !== undefined && Number.isInteger(p.years) && p.years >= 1
-/** The FIRST field, in field order, that keeps the plan from completing — the one the blocked
- *  Apply's reason names (2026-09-13). `null` when every field arm holds; a PASSED start is not a
- *  missing field (it has its own two faces — the typed refusal and the applied note). Exported
- *  for the unit battery. */
-export const rothPlanMissingField = (p: PlanDraft): 'amount' | 'start' | 'years' | null =>
-  !amountSet(p) ? 'amount' : !startSet(p) ? 'start' : !yearsSet(p) ? 'years' : null
 /** The blocked Apply's sentence per missing field — catalog keys, read through `copy[...]`. */
 const ROTH_MISSING_REASON = {
   amount: 'leverRothApplyNeedsAmount',
@@ -167,7 +150,7 @@ export function RothLever({ open, draft, preview, previewBlocking = false, onApp
   // panel stated that same plan as live fact one door over (S6 cold read, Card 3). The applied
   // plan's own start year is the discriminator, derived through the ONE producer — never re-typed.
   //
-  // ⚠️ `planClockSeam.test.ts:268-270` source-binds THIS line's exact text —
+  // ⚠️ `planClockSeam.test.ts:284-286` source-binds THIS line's exact text —
   // `rothPlanStartFor(savedAnchor, applied.startYearOffset).year`. The open-edge re-seed does NOT
   // carry the pin: `seedPlan` (above) spells it `rothPlanStartFor(anchor, …)` against its own
   // parameter name, which the `savedAnchor` regex cannot match (the 2026-09-13 review caught this

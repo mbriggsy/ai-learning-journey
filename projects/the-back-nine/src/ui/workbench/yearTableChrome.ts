@@ -31,7 +31,7 @@ import { ROUGH_WINDOW_YEARS } from '@engine/reference/roughSequence'
 import type { LedgerYearRow, AccountKind, WorkingYearStateTaxReading } from '@shared/model'
 import type { SourceAccount } from '@intake/intakeMap'
 import type { LeftOverShownState } from '@intake/workingYearLeftOverState'
-import { kindLabel } from '@intake/AccountEntry'
+import { kindLabel } from '@intake/accountKinds'
 import { copy, slots, type CopyKey } from '../copy'
 import type { TableMeta, TablePerson, TableView } from './tableRun'
 

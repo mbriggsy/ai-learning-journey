@@ -47,7 +47,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { OKABE_ITO } from './palette'
-import { agedLadderMarks, curveMarks, type CurveMark } from './curveMarks'
+import { agedLadderMarks, curveMarks, type CurveMark, type OddsLadderLabels } from './curveMarks'
 import type { DateTrackOutcome } from '@shared/model'
 import {
   PLOT,
@@ -200,26 +200,6 @@ function useCrownSeat(
     // the caller names what moves the ink (the composed words) in `deps`
   }, [hostRef, probeRef, rung, ...deps])
   return seat
-}
-
-/** The copy the ladder renders — all injected by @ui (oddsLadderChrome) from copy.ts. The renderer
- *  formats nothing itself: the odds clamp ("better than 9 in 10") and the calm voice live in copy. */
-export interface OddsLadderLabels {
-  /** Accessible caption for the whole figure (role="img"). */
-  readonly caption: string
-  /** A rung → its spoken "X of 10" odds (slots.xOfTen, with the never-"10 of 10" ceiling clamp). */
-  readonly formatOdds: (rung: number) => string
-  /** A household-clock offset → its x-axis tick label (e.g. "today", "6"). */
-  readonly formatOffset: (offsetYears: number) => string
-  /** The x-axis caption (e.g. "years from now you stop"). */
-  readonly xAxisLabel: string
-  /** The on-track bar's label (e.g. "on track") — a quiet y-axis-margin anchor beside its bar. */
-  readonly barLabel: string
-  /** The crown's direct tell (e.g. "your date"). */
-  readonly crownLabel: string
-  /** A mark → its full worded reading (offset + odds + clears/dips/crown), built in copy. ONE
-   *  sentence, TWO channels: the per-dot aria-label AND the hover/scrub readout line. */
-  readonly describeMark: (mark: CurveMark) => string
 }
 
 export interface OddsLadderProps {

@@ -10,7 +10,7 @@
  */
 import { copy, slots } from './copy'
 import type { CurveMark } from '@viz/curveMarks'
-import type { OddsLadderLabels } from '@viz/OddsLadder'
+import type { OddsLadderLabels } from '@viz/curveMarks'
 
 /** The non-color reading of a mark (drives the a11y sentence) — crown > dip > clears > below. */
 function markState(m: CurveMark): 'crown' | 'dip' | 'clears' | 'below' {

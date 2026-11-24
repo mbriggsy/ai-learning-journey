@@ -1638,11 +1638,11 @@ export const copy = {
   //
   // ⚠️ THE TOGGLE SETS THE ENTRY UNIT TOO, AND THE OLD SENTENCE HID IT (fixed 2026-08-03).
   // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
-  // (`spendDisplayed`, AssumptionPanel.tsx:654-659), so the reader watches the number move while
+  // (`spendDisplayed`, AssumptionPanel.tsx:619-624), so the reader watches the number move while
   // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:930-940, the `entered * 12` arm at :937) then multiplies by 12
+  // commit (AssumptionPanel.tsx:895-905, the `entered * 12` arm at :902) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
-  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:554) hard-disarms
+  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:519) hard-disarms
   // `spend-period-unconfirmed` (sanity.ts:392-415, the disarm read at :403) on this surface, and
   // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:92) regardless — so the rule could not have
   // caught it even armed. The replacement must therefore say BOTH halves — the money is
@@ -2118,7 +2118,7 @@ export const copy = {
   recommendSaveSavedBadge: 'Saved to this device — your plan and this strategy read',
   // THE REFUSALS. None carries a retry control: the mint is deterministic, so a retry re-fails
   // identically, and an affordance that cannot succeed is the lying-remedy shape
-  // (SaveSlot.tsx:77-95). Each says what did NOT happen, in the reader's frame.
+  // (SaveSlot.tsx:44-62). Each says what did NOT happen, in the reader's frame.
   recommendSaveRefusalRecordInvalidHeading: 'This strategy read couldn’t be kept',
   recommendSaveRefusalRecordInvalidBody:
     'We couldn’t build a record of it, so nothing reached this device — your plan here is exactly as you left it. The answer above is still current.',
@@ -4677,7 +4677,7 @@ export const slots = {
    *  WHY IT CANNOT SAY "under way": `startYearPassed` proves only that the START is behind the wall
    *  clock — a 4-year schedule begun in 2024 is FINISHED by 2029, and "already under way" would be
    *  false there. Every clause here is true whether the schedule is running or complete; deciding
-   *  what a mid-flight start MEANS to the engine is the re-anchoring fork FILED at RothLever.tsx:50-51,
+   *  what a mid-flight start MEANS to the engine is the re-anchoring fork FILED at RothLever.tsx:45-46,
    *  and this copy deliberately does not pre-empt it.
    *
    *  IT PROMISES ONLY WHAT EXISTS (insight 100). Apply is genuinely unreachable here — `complete()`

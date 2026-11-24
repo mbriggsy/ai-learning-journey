@@ -19,7 +19,7 @@ input the way it flags a fragile one.* It does not.
 ## Root Cause
 
 A `colaMode:'fixed-pct'` stream compiles to a **deterministic, SEEDLESS** per-year overlay:
-`annualRealToday * ((1+colaPct)/(1+inflationMean))^t` (`otherIncome.ts:51-56`). It carries no market
+`annualRealToday * ((1+colaPct)/(1+inflationMean))^t` (`otherIncome.ts:53-58`). It carries no market
 draw, so it lifts EVERY simulated path's income floor by the **identical** amount. The confidence fan
 measures dispersion *across paths*; a common-mode shift that moves all paths together doesn't widen the
 fan — it **narrows the distribution toward success** (more paths clear the bar). So the fan can register

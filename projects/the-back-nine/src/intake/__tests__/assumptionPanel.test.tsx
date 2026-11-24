@@ -3,7 +3,7 @@ import { useSyncExternalStore } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { AssumptionPanel, methodologyArmFor, type AssumptionPanelProps } from '../AssumptionPanel'
+import { AssumptionPanel, type AssumptionPanelProps } from '../AssumptionPanel'
 import { confirmedWorkingYearCost, writeEnteredWorkingYearCost } from '../workingYearQuote'
 import { workingYearCostStaleLine } from '../workingYearLeftOver'
 import { TYPED_BELOW_WITNESSES } from './typedBelowWitnesses'
@@ -13,7 +13,7 @@ import type { EngineClient } from '@store/engineClient'
 import { requiredSeats, METHODOLOGY_DISCLOSURES } from '@ui/assumptionRegistry'
 import { copy, slots } from '@ui/copy'
 import { planClockAnchor } from '@ui/bandAnnotations'
-import { formatMoney } from '../fields'
+import { formatMoney } from '../moneyFormat'
 import { missingRequiredFacts } from '../intakeMap'
 import { commitBudgetPatch } from '@budget/budgetToSpending'
 import type { BudgetLineItem, SimulationResult } from '@shared/model'
@@ -882,53 +882,6 @@ describe('the conversion-tax disclosure row — rendered, on the household that 
     expect(text).toContain(copy.assumptionConversionTaxName)
     expect(text, 'the WHOLE ruled row reaches the pre-65 reader (it carries the ONE constant)').toContain(copy.assumptionConversionTaxValue)
     expect(text).not.toMatch(/never oversold/i)
-  })
-})
-
-// The pay check's U9: which arm the working-year methodology row renders. The BUILT run decides
-// (`workingYearCostForRun`, insight 132); where no run can be built, the build's own carriage rule
-// stands in — `buildDateInput` lands W exactly when a date-route draft holds an answer.
-describe('methodologyArmFor — the working-year row’s arm (U9, KTD22)', () => {
-  const withW = (d: ScenarioDraft): ScenarioDraft => {
-    const w = confirmedWorkingYearCost(d)
-    if (w === null) throw new Error('[test setup] the seed quotes $0 — no W to confirm')
-    return { ...d, workingYearCost: w }
-  }
-  /** `date` with no W answer at all — every date seed carries W since U10, so the W-free twin is built here. */
-  const { workingYearCost: _seedW, ...dateNoW } = DEV_SEEDS.date
-
-  it('a date-route run carrying W reads the pay check’s arm; the same draft without W reads today’s row', () => {
-    expect(methodologyArmFor(withW(dateNoW))).toBe('workingCost')
-    expect(methodologyArmFor(dateNoW)).toBe('default')
-  })
-
-  it('an all-retired draft never reads the pay check’s arm, even holding a stored W (the spine never carries it)', () => {
-    const retired = DEV_SEEDS.retired
-    expect(methodologyArmFor({ ...retired, workingYearCost: { kind: 'entered', amountReal: 60_000, entryPeriod: 'year', stateTaxReading: 'unpriced' } })).toBe('default')
-  })
-
-  it('an unbuildable date-route draft reads the arm its build would carry: W held ⇒ the pay check’s arm, none ⇒ today’s', () => {
-    const unbuildable: ScenarioDraft = { ...dateNoW, annualSpendingReal: undefined }
-    expect(missingRequiredFacts(unbuildable).length, 'the fixture really is unbuildable').toBeGreaterThan(0)
-    expect(methodologyArmFor(unbuildable)).toBe('default')
-    expect(
-      methodologyArmFor({ ...unbuildable, workingYearCost: { kind: 'entered', amountReal: 84_000, entryPeriod: 'year', stateTaxReading: 'unpriced' } }),
-    ).toBe('workingCost')
-  })
-
-  it('the fallback carries only what a build would: an entered $0 reads today’s row, and so does an unbuildable all-retired draft holding W', () => {
-    const unbuildable: ScenarioDraft = { ...dateNoW, annualSpendingReal: undefined }
-    expect(
-      methodologyArmFor({ ...unbuildable, workingYearCost: { kind: 'entered', amountReal: 0, entryPeriod: 'month', stateTaxReading: 'unpriced' } }),
-    ).toBe('default')
-    const retiredUnbuildable: ScenarioDraft = {
-      ...DEV_SEEDS.retired,
-      annualSpendingReal: undefined,
-      budget: undefined,
-      workingYearCost: { kind: 'entered', amountReal: 60_000, entryPeriod: 'year', stateTaxReading: 'unpriced' },
-    }
-    expect(missingRequiredFacts(retiredUnbuildable).length, 'the fixture really is unbuildable').toBeGreaterThan(0)
-    expect(methodologyArmFor(retiredUnbuildable)).toBe('default')
   })
 })
 

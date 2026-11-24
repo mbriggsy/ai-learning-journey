@@ -16,7 +16,7 @@ import { useState, useSyncExternalStore } from 'react'
 import { ConfidenceBand } from './ConfidenceBand'
 import { BandEnlargeModal } from './BandEnlargeModal'
 import { BandLegend } from './BandLegend'
-import type { BandViewData, BandLabels } from './bandData'
+import type { BandViewData, BandLabels, BandPanelChrome } from './bandData'
 import './band.css'
 
 /*
@@ -39,18 +39,6 @@ const subscribeCoarse = (onChange: () => void): (() => void) => {
 const readCoarse = (): boolean =>
   typeof window.matchMedia === 'function' && window.matchMedia(COARSE_QUERY).matches
 const usePointerCoarse = (): boolean => useSyncExternalStore(subscribeCoarse, readCoarse)
-
-/** The drawer's own chrome strings (not part of the band's data — supplied by the caller). */
-export interface BandPanelChrome {
-  /** The pull-tab overline (e.g. "The range, opened"). */
-  readonly pull: string
-  /** The enlarge trigger label (e.g. "Study the range"). */
-  readonly enlargeLabel: string
-  /** The enlarge modal title. */
-  readonly modalTitle: string
-  /** The modal close-control label. */
-  readonly closeLabel: string
-}
 
 export interface ConfidenceBandPanelProps {
   readonly data: BandViewData

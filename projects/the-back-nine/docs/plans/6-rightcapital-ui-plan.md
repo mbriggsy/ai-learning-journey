@@ -161,7 +161,7 @@ with no behaviour change. RC0 lands first so later units can delete freely. *(th
 | `src/intake/OtherIncomeEntry.tsx` | `incomeTypeLabel`, `survivorNoteFor` | `src/intake/otherIncome.ts` (exists) |
 | `src/intake/RothLever.tsx` | `rothPlanMissingField` | `src/intake/rothPlan.ts` |
 | `src/intake/WorkingYearLedger.tsx` | `laterLines` | `src/intake/workingYearLines.ts` |
-| `src/ui/Disclaimer.tsx` | `verdictDescribedBy` | `src/ui/disclaimer.ts` |
+| `src/ui/Disclaimer.tsx` | `verdictDescribedBy` | `src/ui/disclaimerId.ts` (not `disclaimer.ts`: on Windows's case-blind disk `./Disclaimer` would resolve to it before `Disclaimer.tsx`) |
 | `src/ui/editorSheets.tsx` | `recomputeBoth`, `recomputeAfterEdit` | `src/ui/recompute.ts` |
 | `src/ui/FuckOffDate.tsx` | `heroLead`, `floorLineText`; the `FuckOffDateView` type (read by `answerView.ts`) | `src/ui/dateHero.ts`; the type into `src/ui/answerView.ts` |
 | `src/ui/ConfidenceStatement.tsx` | the `ConfidenceStatementView` type (read by `answerView.ts`, `recommendationView.ts`, `RecommendationSurface.tsx`) | `src/ui/answerView.ts` |
@@ -599,7 +599,7 @@ its key-metric sentence or legend ("in the steady future"), so a one-path pictur
 | The staleness note and the re-entry lines | `stalenessExposure.ts`, `reentryChrome.ts` | their keys | the StaleBanner |
 | The yield stopgap | `yieldLine` in `yearTableChrome.ts` | `workbenchYieldAllYears`, `workbenchYieldAfterWork`, `workbenchPairYield` | Cash Flows and the compare view, under each run whose taxable ledger holds money, named for that run |
 | The lifespans line | `lifespansLine` in `yearTableChrome.ts` | its key | Cash Flows, under the table |
-| The R13 disclaimer | `verdictDescribedBy` (moved to `src/ui/disclaimer.ts` by RC0) | its keys | every figured page's footnote row inside the panel, above the handle, tied to the page's answer by `aria-describedby` (the R13 rule below) |
+| The R13 disclaimer | `verdictDescribedBy` (moved to `src/ui/disclaimerId.ts` by RC0; not `disclaimer.ts`, which `./Disclaimer` would resolve to before `Disclaimer.tsx` on Windows's case-blind disk) | its keys | every figured page's footnote row inside the panel, above the handle, tied to the page's answer by `aria-describedby` (the R13 rule below) |
 | The standing line (the pay check's: ONE at a time, in this order) | `composeAnswerNotes` over `workingYearCostStaleLine`, `workingYearCostTypedBelowLine`, `workingYearLeftOverMoved` (`workingYearLeftOver.ts`) | the W-stale keys; `workingCostTypedBelowAdds`; `stalenessLeftOverNote`, `stalenessLeftOverMoved`, `stalenessLeftOverMovedAt` (`workingYearLeftOverMovedText`) | the StaleBanner, its door opening the Pre-retirement living expenses drawer: W stale first, then the typed-below line, then the left-over-moved line |
 | The left-over clause on the staleness note | `composeAnswerNotes` over `workingYearLeftOverMovedClause` (`leftOverClauseHost`, decided once by `composeReentry`) | `stalenessLeftOverClause`, `stalenessLeftOverClauseAt` | the StaleBanner's staleness note; when it rides there, the standing line does not repeat it |
 

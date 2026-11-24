@@ -33,7 +33,7 @@ import {
   type ResultSaveView,
   unsavedWorkPending,
 } from './resultSave'
-import type { ResultSaveProp } from './SaveSlot'
+import type { ResultSaveProp } from './saveAnnouncer'
 import { RoomSlot } from './workbench/RoomSlot'
 import { describeSaveFailure } from './unlockCopy'
 import { useUnloadGuard } from './unloadGuard'

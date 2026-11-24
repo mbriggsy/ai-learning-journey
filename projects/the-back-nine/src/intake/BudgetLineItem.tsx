@@ -24,26 +24,11 @@
 import { useId } from 'react'
 import { copy, slots } from '@ui/copy'
 import type { BudgetCategory, BudgetLineItem as BudgetLine } from '@shared/model'
+import { CATEGORY_LABEL_KEYS, lineDisplayName } from './budgetLines'
 import { BUDGET_CATEGORIES } from '@shared/model'
 import type { BudgetItemError } from '@budget/budgetModel'
 import { CurrencyField, IntegerField, SegmentedControl } from './fields'
 import type { CopyKey } from '@ui/copy'
-
-/** Category → display label (copy-routed; the stored value stays the model enum). */
-export const CATEGORY_LABEL_KEYS: Record<BudgetCategory, CopyKey> = {
-  housing: 'budgetCatHousing',
-  utilities: 'budgetCatUtilities',
-  food: 'budgetCatFood',
-  transportation: 'budgetCatTransportation',
-  travel: 'budgetCatTravel',
-  gifts: 'budgetCatGifts',
-  other: 'budgetCatOther',
-}
-
-/** The line's display name for controls that must speak it (remove button, error context). */
-export function lineDisplayName(item: BudgetLine): string {
-  return item.label.trim() !== '' ? item.label : copy[CATEGORY_LABEL_KEYS[item.category]]
-}
 
 const ERROR_COPY: Record<BudgetItemError['kind'], CopyKey> = {
   'non-finite-amount': 'errBudgetAmountNonFinite',

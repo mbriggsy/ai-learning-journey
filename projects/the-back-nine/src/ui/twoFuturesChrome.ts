@@ -26,9 +26,9 @@ import {
   type TwoFuturesPoint,
   type TwoFuturesReadoutRow,
   type TwoFuturesXTick,
-} from '@viz/TwoFutures'
+} from '@viz/twoFuturesData'
 import { buildYTicks, type YTick } from '@viz/bandData'
-import { COHORT_FADE } from '@viz/bandGeometry'
+import { COHORT_FADE } from '@viz/cohort'
 import { copy, slots } from './copy'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { axisDollarFormatterFor, formatAxisDollar } from './money'

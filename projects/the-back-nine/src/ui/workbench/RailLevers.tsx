@@ -12,7 +12,8 @@
  * line that comes and goes (an error, a "Back to the plan", a waiting note) sits after the controls of its lever.
  */
 import { useId, useState, type ReactNode, type Ref } from 'react'
-import { formatMoney, parseMoney, SegmentedControl } from '@intake/fields'
+import { SegmentedControl } from '@intake/fields'
+import { formatMoney, parseMoney } from '@intake/moneyFormat'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type {
   BudgetTier,
@@ -27,7 +28,7 @@ import { freshStableId, idsInUse } from '@shared/stableIds'
 import { copy, slots, type CopyKey } from '../copy'
 import type { BandPlanClockAnchor } from '../bandAnnotations'
 import { KIND_TO_BUCKET } from '@intake/intakeMap'
-import { leverTarget, lineName, railMoney, stopWords, type RailOffers } from './railChrome'
+import { BUCKET_LABEL, POLICY_LABEL, leverTarget, lineName, policyWords, railMoney, rothWords, stopWords, type RailOffers } from './railChrome'
 
 /** What a rail field commits: a number, a blank (back to the plan), or text that is not a figure. */
 export type RailCommit = number | undefined | 'invalid'
@@ -154,13 +155,6 @@ function PlanValue({ value }: { readonly value: string }) {
 }
 
 const PICKABLE = ['proportional', 'taxable-first', 'pre-tax-first', 'bracket-fill', 'custom'] as const
-const POLICY_LABEL: Readonly<Record<DrawdownPolicy, CopyKey>> = {
-  proportional: 'leverPolicyProportional',
-  'taxable-first': 'leverPolicyTaxableFirst',
-  'pre-tax-first': 'leverPolicyPreTaxFirst',
-  'bracket-fill': 'leverPolicyBracketFill',
-  custom: 'leverPolicyCustom',
-}
 const POLICY_HELP: Readonly<Record<DrawdownPolicy, CopyKey>> = {
   proportional: 'leverPolicyProportionalHelp',
   'taxable-first': 'leverPolicyTaxableFirstHelp',
@@ -176,24 +170,7 @@ const POLICY_NAMES_BUCKET: Readonly<Record<DrawdownPolicy, DrawdownOrderKey | nu
   'bracket-fill': null,
   custom: null,
 }
-export const BUCKET_LABEL: Readonly<Record<DrawdownOrderKey, CopyKey>> = {
-  taxable: 'leverOrderBucketTaxable',
-  pretax: 'leverOrderBucketPretax',
-  roth: 'leverOrderBucketRoth',
-}
 const DEFAULT_ORDER: readonly DrawdownOrderKey[] = ['taxable', 'pretax', 'roth']
-
-/** A withdrawal policy in words: a named policy's label, or a custom order first to last. */
-export function policyWords(policy: DrawdownPolicy, order: readonly DrawdownOrderKey[] | undefined): string {
-  return policy === 'custom' && order !== undefined ? slots.workbenchFactOrder(order.map((k) => copy[BUCKET_LABEL[k]])) : copy[POLICY_LABEL[policy]]
-}
-
-/** A Roth plan in words, on the plan's clock. */
-export function rothWords(plan: RothConversionPlan | undefined, startCalendarYear: number, anchor: BandPlanClockAnchor): string {
-  if (plan === undefined) return copy.workbenchRailRecRothNone
-  const startYear = startCalendarYear + plan.startYearOffset
-  return slots.workbenchFactRoth(railMoney(plan.annualAmountReal), startYear, startYear < anchor.startCalendarYear + anchor.yearsSincePlanBuilt, plan.years)
-}
 
 const sameOrder = (a: readonly DrawdownOrderKey[] | undefined, b: readonly DrawdownOrderKey[] | undefined) =>
   (a ?? DEFAULT_ORDER).join() === (b ?? DEFAULT_ORDER).join()

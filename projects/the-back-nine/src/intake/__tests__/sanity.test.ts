@@ -11,8 +11,8 @@ import {
   WORKING_COST_FIELD,
   WORKING_COST_PERIOD_FIELD,
 } from '../sanity'
-import { formatMoney } from '../fields'
-import { fieldErrorText } from '../FieldError'
+import { formatMoney } from '../moneyFormat'
+import { fieldErrorText } from '../fieldErrors'
 import type { ScenarioDraft, PersonDraft } from '@store/memoryModel'
 import type { IncomeStream } from '@shared/model'
 

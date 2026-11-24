@@ -20,8 +20,7 @@ import {
   SERIES,
 } from '../palette'
 import { bandStopCss } from '../scale'
-import { VERDICT_GLYPH, type VerdictGlyph } from '../../ui/verdictSignal'
-import { GRADE_GLYPH } from '../../ui/GradeSignal'
+import { GRADE_GLYPH, VERDICT_GLYPH, type VerdictGlyph } from '../../ui/glyphs'
 
 /**
  * The CVD self-test (back-nine-design §4) — the project's color-blind-safety gate. The reader

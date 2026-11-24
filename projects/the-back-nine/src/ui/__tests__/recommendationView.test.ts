@@ -22,7 +22,7 @@ import { isMortalityKey, lintCopy } from '../copyGuard'
 import type { WithheldReason } from '@engine/validation/oracleToken'
 import type { SolverRunFingerprint } from '@engine/validation/solverRunFingerprint'
 import type { SolveAnswer } from '@store/memoryModel'
-import type { ConfidenceStatementView } from '../ConfidenceStatement'
+import type { ConfidenceStatementView } from '../answerView'
 import type { BandPlanClockAnchor } from '../bandAnnotations'
 import {
   recommendationView,

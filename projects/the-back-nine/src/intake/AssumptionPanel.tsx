@@ -45,7 +45,6 @@ import {
   methodologyLines,
   type AssumptionLandingSeat,
   type AssumptionSeat,
-  type MethodologyArm,
   type MethodologyDisclosure,
 } from '@ui/assumptionRegistry'
 import { productionMarket } from '@engine/reference/methodology'
@@ -56,8 +55,10 @@ import { budgetGoverns } from '@budget/budgetModel'
 import { budgetYearZeroFullTotal } from '@budget/budgetToSpending'
 import { focusHeading, type Announcer } from './a11y'
 import { ControlSheet } from './controlSheet'
-import { CurrencyField, IntegerField, PercentField, SegmentedControl, formatMoney, formatPercent } from './fields'
-import { blockedLeadFor, missingFactLines } from './AnswerStrip'
+import { CurrencyField, IntegerField, PercentField, SegmentedControl } from './fields'
+import { formatMoney, formatPercent } from './moneyFormat'
+import { blockedLeadFor, missingFactLines } from './missingFacts'
+import { methodologyArmFor, workingCostValueLine } from './assumptionLines'
 import { FieldError } from './FieldError'
 import {
   validateField,
@@ -68,25 +69,23 @@ import {
 } from './sanity'
 import {
   anyPre65OrUnknown,
-  carriesWorkingYearCost,
   healthcarePriced,
   isDateRoute,
   oopHelpKeyFor,
   spendHelpKeyFor,
-  workingYearCostFigure,
-  workingYearCostForRun,
   workingYearLedgerForRun,
   workingYearLeftOverShownState,
   type MissingFact,
 } from './intakeMap'
-import { MedicareExtrasFork, OopExceedsSpendNote, StateResidencePicker, governedSpendNotes, writeWorkingYearInvestment } from './questions'
+import { MedicareExtrasFork, OopExceedsSpendNote, StateResidencePicker } from './questions'
+import { governedSpendNotes, writeWorkingYearInvestment } from './steps'
 import { WorkingCostQuestion, type WorkingCostWriteKind } from './WorkingCostQuestion'
 import { useGestureHold } from './gestureHold'
 import { WorkingYearLeftOverQuestion } from './WorkingYearLeftOverQuestion'
 import { workingYearLeftOverWaitingWords } from './workingYearLeftOver'
 import { LEFT_OVER_FACE } from './workingYearLeftOverState'
 import { WorkingYearLedgerPicture, WorkingYearLedgerUnknown } from './WorkingYearLedger'
-import { workingYearCostStaleness, workingYearQuote, workingYearStateTaxReading } from './workingYearQuote'
+import { workingYearCostStaleness, workingYearStateTaxReading } from './workingYearQuote'
 import './assumptions.css'
 
 /** The heir-bracket rungs — DERIVED from the shipped federal ordinary-bracket schedule, never
@@ -184,19 +183,6 @@ function MethodologyLines({ keys }: { readonly keys: readonly CopyKey[] }) {
   )
 }
 
-/** Which arm the working-year row renders for a draft (the pay check's U9). The BUILT run decides
- *  (insight 132): `'priced'` — the run carries W — reads the pay check's arm, `'unpriced'` today's
- *  row (KTD22). Where no run can be built (`'unknown'`) there is no run to read, so it falls back to
- *  what the build WOULD carry: `buildDateInput` lands W exactly when a date-route draft holds an
- *  answer above $0 (`carriesWorkingYearCost`, the one carriage rule), so such a draft reads the pay
- *  check's arm and any other reads today's. */
-export function methodologyArmFor(d: ScenarioDraft): MethodologyArm {
-  const read = workingYearCostForRun(d)
-  if (read === 'priced') return 'workingCost'
-  if (read === 'unpriced') return 'default'
-  return isDateRoute(d) && carriesWorkingYearCost(d) ? 'workingCost' : 'default'
-}
-
 /** A methodology row with a pay-check arm. Its own component so the engine reads behind the arm
  *  (a candidate build; build 2's shown state, the money picture) run only while the panel is OPEN and
  *  are memoized on the draft — the panel's own body is evaluated on every store notify, open or closed.
@@ -212,27 +198,6 @@ function ArmedMethodologyLines({ m, draft }: { readonly m: MethodologyDisclosure
   const arm = useMemo(() => methodologyArmFor(draft), [draft])
   const leftOver = useMemo(() => workingYearLeftOverShownState(draft), [draft])
   return <MethodologyLines keys={methodologyLines(m, arm, workingYearStateTaxReading(draft), leftOver, workingYearLeftOverWaitingWords(draft))} />
-}
-
-/** The W answer's one value line: unanswered, stale, confirmed (from the spending or the budget), kept, or the
- *  household's own figure. ONE home, read by the panel's W row and the workbench's facts page (Act 5, U8), so
- *  the two never word the same answer two ways. */
-export function workingCostValueLine(d: ScenarioDraft): string {
-  const w = d.workingYearCost
-  if (w === undefined) return copy.assumptionWorkingCostUnanswered
-  const figure = formatMoney(workingYearCostFigure(w))
-  if (workingYearCostStaleness(d) !== null) return slots.assumptionWorkingCostStale(figure)
-  if (w.kind === 'confirmed') {
-    // Fresh, so the current quote IS the one confirmed: its source names where the figure came from.
-    return workingYearQuote(d).source === 'budget'
-      ? slots.assumptionWorkingCostConfirmedBudget(figure)
-      : slots.assumptionWorkingCostConfirmed(figure)
-  }
-  // A yes kept through the stale note's door carries the keep stamp (KTD10): "kept", never "your own figure" —
-  // the household never typed it.
-  return w.keptOverQuoteReal !== undefined
-    ? slots.assumptionWorkingCostKept(figure)
-    : slots.assumptionWorkingCostEntered(figure)
 }
 
 /** The pay check's W row (`docs/plans/features/working-year-pay-check-build-spec.md` U8; KTD17,

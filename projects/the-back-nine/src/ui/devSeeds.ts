@@ -532,7 +532,7 @@ const retiredBudget: ScenarioDraft = {
  * lifestyle at 8", labelled Engine-proven, and both figures were wrong):**
  *   provisional (2,000 paths) — floor **2** `confirmed-date` · lifestyle **10** `window-edge-unconfirmed`
  *   final       (16,000 paths) — floor **2** `confirmed-date` · lifestyle **9** `confirmed-date`
- * The LIVE surface runs `final` (`IntakeApp.tsx:449`, `editorSheets.tsx:51`/`:57`), so the shipped hero is
+ * The LIVE surface runs `final` (`IntakeApp.tsx:449`, `recompute.ts:12`/`:18`), so the shipped hero is
  * the 9 — and it is a CONFIRMED date, i.e. the band owes no edge hedge there. The 10 is real but is a
  * provisional-tier reading, and it is `window-edge-unconfirmed`: during entry the hedge RENDERS and
  * then WITHDRAWS when final lands. That transient has never been cold-read.
@@ -2317,7 +2317,7 @@ const ARRIVED_SAVED_DAYS_AGO = 30
  * arrived household: born 1963, planned at 57 to stop at offset 5, and that year is now behind them.
  *
  * ⚠️ THIS PLANT LIGHTS **ONE** ARRIVED ARM, NOT TWO. The floor crowns at 0, and `floorLineText`
- * (`FuckOffDate.tsx:286`) SHORT-CIRCUITS offset 0 to the plain `dateFloorCovered` line BEFORE the
+ * (`dateHero.ts:66`) SHORT-CIRCUITS offset 0 to the plain `dateFloorCovered` line BEFORE the
  * three-way split — mirroring `heroLead`'s free-today precedence, deliberately ("covered from the
  * plan's own start ⇒ still covered now"). So `dateFloorCoveredPast` does NOT fire here; its live
  * route is and remains `?vault=datestale`, whose floor crown sits strictly inside its window. (An
@@ -2695,7 +2695,7 @@ export function doctorYearlyReturnRecord(s: CurrentScenario, todayEpochDay: numb
  *  the two corrections this note's first draft got wrong (it ages `birthYear` alongside
  *  `startCalendarYear` to hold the `currentAge === startCalendarYear − birthYear` model invariant,
  *  and it lights ONE arrived arm rather than two, because a floor crown of 0 short-circuits past
- *  the three-way split at `FuckOffDate.tsx:286`). The base must be STATELESS: `datenc` rejects at
+ *  the three-way split at `dateHero.ts:66`). The base must be STATELESS: `datenc` rejects at
  *  any depth ≥1 with "startCalendarYear precedes the priced state rate schedule"
  *  (`simulate.ts:1097-1100`), which is the real bound the S6 spec's `earliestPricedRateYear` probe
  *  was reaching for — and that probe is VACUOUS on a stateless base (the gate is `isPricedState`-

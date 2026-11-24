@@ -2,12 +2,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { BudgetBuilder, medicalExceedsTotal } from '../BudgetBuilder'
+import { BudgetBuilder } from '../BudgetBuilder'
 import { unsavedBuffersHeld } from '../unsavedBuffer'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import { copy, slots } from '@ui/copy'
-import { formatMoney } from '../fields'
+import { formatMoney } from '../moneyFormat'
 import type { BudgetLineItem } from '@shared/model'
 
 /**
@@ -438,12 +438,6 @@ describe('BudgetBuilder — the reconciliation readout (build-gate 1: the OOP-me
     const draft = draftWith((d) => ({ ...d, annualSpendingReal: undefined }))
     render(<Host draft={draft} />)
     expect(document.querySelectorAll('.budget-readout__line')).toHaveLength(0)
-  })
-
-  it('medicalExceedsTotal fires STRICTLY above (the pure honesty fork — insight 048 planted-fail arms)', () => {
-    expect(medicalExceedsTotal(5_000, 6_500)).toBe(true) // M > S — the contradiction
-    expect(medicalExceedsTotal(6_500, 6_500)).toBe(false) // M === S — a $0 target is the truth
-    expect(medicalExceedsTotal(80_000, 8_000)).toBe(false) // the ordinary M < S readout
   })
 
   it('the running total sums ONLY year-0-active finite lines as typed', () => {

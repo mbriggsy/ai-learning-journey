@@ -21,7 +21,7 @@ import {
 // draft in this file carries no left-over answer, so its lean is the spending-alone one wherever the spending rose.
 import { workingYearCostStaleNote } from '../workingYearLeftOver'
 import { isDateRoute, missingRequiredFacts, pricedStateForRun } from '../intakeMap'
-import { threeThenMore } from '../AnswerStrip'
+import { threeThenMore } from '../missingFacts'
 import { STATE_TAX_PROFILES } from '@engine/constants/stateTax'
 import type { StateBaseSystem } from '@engine/constants'
 import {

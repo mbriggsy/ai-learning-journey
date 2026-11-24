@@ -626,3 +626,17 @@ export function composeReadoutLines(labels: BandLabels, row: BandTooltipRow, thi
   }
   return lines
 }
+
+// Moved out of `ConfidenceBandPanel.tsx` by Act 6's RC0, unchanged (the viz layer, since that panel reads it).
+
+/** The drawer's own chrome strings (not part of the band's data — supplied by the caller). */
+export interface BandPanelChrome {
+  /** The pull-tab overline (e.g. "The range, opened"). */
+  readonly pull: string
+  /** The enlarge trigger label (e.g. "Study the range"). */
+  readonly enlargeLabel: string
+  /** The enlarge modal title. */
+  readonly modalTitle: string
+  /** The modal close-control label. */
+  readonly closeLabel: string
+}

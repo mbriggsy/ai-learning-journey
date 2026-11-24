@@ -7,7 +7,8 @@ import type { MemoryModelSnapshot, ModelAnswer } from '@store/memoryModel'
 import type { DateSearchOutcome, DateTrackOutcome } from '@shared/model'
 import { DEV_SEEDS } from '../../devSeeds'
 import { copy, slots } from '../../copy'
-import { PinnedAnswer, pinnedLines, reserveForms } from '../PinnedAnswer'
+import { PinnedAnswer } from '../PinnedAnswer'
+import { pinnedLines, reserveForms } from '../pinnedLines'
 
 /**
  * The pinned box's reserve (Act 5, U8; insights 035, 065): since the facts page can re-figure the answer under the box,

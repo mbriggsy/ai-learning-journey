@@ -40,7 +40,8 @@ import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { VerdictIcon } from './verdictSignal'
 import { SurvivorReadout } from './SurvivorReadout'
 import { TwoTierHeadline } from './TwoTierHeadline'
-import { verdictDescribedBy } from './Disclaimer'
+import { verdictDescribedBy } from './disclaimerId'
+import type { ConfidenceStatementView } from './answerView'
 import { floorRelief } from './twoTier'
 import { axisDollarFormatterFor, formatAxisDollar } from './money'
 import { composeVerdictReading, reserveClauseFor, spendClauseFor } from './verdictSentence'
@@ -57,64 +58,8 @@ import {
 } from '@viz/bandData'
 import { BAND_LABELS, BAND_CHROME, composeBandAtRange } from './bandPanelChrome'
 import type { BandPlanClockAnchor } from './bandAnnotations'
-import type { BandFan, DollarAdjustment, Headline, SurvivorReading } from '@shared/model'
-import type { ScenarioDraft, SpendAnswer, StickyDisplay } from '@store/memoryModel'
+import type { ScenarioDraft } from '@store/memoryModel'
 import './styles/confidence.css'
-
-/** What the surface shows. `reading` covers all six engine states (it reads `outcomeState`);
- *  `pending` and `compute-error` are the NON-verdict modes (the band is simply not mounted). */
-export type ConfidenceStatementView =
-  | {
-      readonly kind: 'reading'
-      readonly headline: Headline
-      readonly dollar: DollarAdjustment
-      /** U12 C2 — the sticky-resolved DISPLAY triple (memoryModel's hysteresis seam, threaded by
-       *  answerView from the same commit as the answer). When present, the SENTENCE — glyph +
-       *  verdict word + "X of 10" + the $/mo clause — renders from it; the band and every
-       *  drill-down (survivor, floor relief, scrub, AT range) keep reading the RAW
-       *  `headline`/`dollar` above (one honest raw record, one sticky sentence). Absent (the
-       *  preview harness, displayed-less fixtures) ⇒ the sentence reads the raw result directly. */
-      readonly displayed?: StickyDisplay
-      /** The spend lane (memoryModel `SpendAnswer`) — the REAL figure for the magnitude clause. It
-       *  rides the sentence only through `spendClauseFor`'s gate (shown state ≡ raw state, same
-       *  direction); absent ⇒ the figure-less clause. */
-      readonly spend?: SpendAnswer
-      /** The engine's per-year fan, opt-in. When present (and the state is a real verdict), the
-       *  "show me the range" drawer mounts. Absent ⇒ no drawer (the verdict still stands). */
-      readonly band?: BandFan
-      /** Household-clock x-axis markers (Today / retirement / horizon) for the band; without them
-       *  the band's x-axis reads bare. Applied to the resolved band AND the indeterminate placeholder. */
-      readonly bandAnnotations?: readonly XAnnotation[]
-      /** Maps a lattice year to the household ages string for the band's hover/scrub readout (the same
-       *  slot the annotations use). Absent ⇒ the readout omits its ages line. */
-      readonly bandAges?: (yearsFromNow: number) => string
-      /** Renders the PROVISIONAL eyebrow — a reading taken before the account set is complete is a
-       *  labeled provisional update, never a final answer (back-nine-design intake §progressive).
-       *  The result hero never sets it: the spine's two tiers are byte-identical (answerView's note). */
-      readonly provisional?: boolean
-      /** W9-R7 (KTD6): a run on inputs different from the shown answer's is in flight, so the eyebrow
-       *  slot says the shown verdict is from before the latest change. Presence-keyed: absent when off.
-       *  At the two-pane tier the line OVERLAYS the frame's top padding (confidence.css), so it never
-       *  moves the verdict's one-frame fold (R5). */
-      readonly refiguring?: true
-      /** The U7 "as the survivor" reading — the quieter second statement. Present iff the spine run
-       *  carried a survivor phase (the parent, answerView, decides); when present, SurvivorReadout
-       *  mounts below the band. Spine-only: the date route renders a timing claim, not a joint verdict. */
-      readonly survivorReading?: SurvivorReading
-      /** The U9b essentials-floor verdict — a PARALLEL engine-tagged Headline, present iff a budget
-       *  rode the run (carried VERBATIM from SimulationResult.floorReading, never re-derived —
-       *  insight 045). The floorRelief gate decides whether it earns the subordinate relief line;
-       *  the value-equal degenerate collapses to the single-metric statement verbatim. */
-      readonly floorReading?: Headline
-      /** The committed answer's input key (`ModelAnswer.inputKey`), threaded by answerView: the identity
-       *  the folded survivor statement's open state is keyed to (the record card's seat plan, KTD2; see
-       *  {@link foldAfterRender}). Presence-keyed: every store answer carries one; the preview harness's
-       *  fixtures and the component tests' fixtures do not, and a keyless reading leaves the fold
-       *  uncontrolled, as it was before the key existed. */
-      readonly inputKey?: string
-    }
-  | { readonly kind: 'pending' }
-  | { readonly kind: 'compute-error'; readonly onRetry: () => void }
 
 export interface ConfidenceStatementProps {
   readonly view: ConfidenceStatementView

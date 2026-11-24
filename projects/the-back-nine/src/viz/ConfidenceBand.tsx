@@ -49,7 +49,6 @@ import {
   areaPath,
   cohortFadeStops,
   elapsedFadeStops,
-  isThinCohort,
   labelAnchor,
   linePath,
   nearestLatticeIndex,
@@ -58,6 +57,7 @@ import {
   yForDollars,
 } from './bandGeometry'
 import { composeReadoutLines } from './bandData'
+import { isThinCohort } from './cohort'
 import type { BandViewData, BandLabels, BandTooltipRow, ReadoutLineKind, XAnnotation, YTick } from './bandData'
 import {
   ChartReadoutRow,

@@ -10,9 +10,8 @@
 import { copy, slots } from './copy'
 import { formatAxisDollar } from './money'
 import type { BandPlanClockAnchor } from './bandAnnotations'
-import type { BandLabels, ResolvedBandData } from '@viz/bandData'
-import type { BandPanelChrome } from '@viz/ConfidenceBandPanel'
-import { selectAtRangeColumn, AT_RANGE_COHORT_MIN } from '@viz/bandGeometry'
+import type { BandLabels, BandPanelChrome, ResolvedBandData } from '@viz/bandData'
+import { selectAtRangeColumn, AT_RANGE_COHORT_MIN } from '@viz/cohort'
 
 /** The band's accessible labels (caption, axes, the supplementary legend rows). */
 export const BAND_LABELS: BandLabels = {

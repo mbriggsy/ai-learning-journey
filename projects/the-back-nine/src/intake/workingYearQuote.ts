@@ -55,7 +55,7 @@ import { STATE_TAX_PROFILES, isPricedState } from '@engine/constants/stateTax'
 import { budgetGoverns, isActiveAt } from '@budget/budgetModel'
 import type { ScenarioDraft } from '@store/memoryModel'
 import { slots, type CatalogMessage, type WorkingCostAct } from '@ui/copy'
-import { formatMoney, formatMoneyPair } from './fields'
+import { formatMoney, formatMoneyPair } from './moneyFormat'
 
 /** A W answer's yearly figure (annual real $), whichever way it was given — the ONE read of it. It lives
  *  here, not in `intakeMap` (build 2's KTD2): it was this module's only reason to import `intakeMap`, and

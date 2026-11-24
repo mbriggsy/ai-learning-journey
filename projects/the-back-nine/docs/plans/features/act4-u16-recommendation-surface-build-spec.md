@@ -38,7 +38,7 @@ below is a corollary.
 1. No U16 code re-derives a decision from displayed seed-B figures (render-the-flag + planted-fail guards, burned/070).
 2. The interactive tier reduces SEARCH precision only — grades + every displayed figure ALWAYS at `solverMinBPaths`; never down-sampled.
 3. The A↔B residual is NEVER a rendered number. Name the baseline, never the residual.
-4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:659` stamps the attribute from the DATE-search tier alone — `answerTier` at `:700-703`, the `DateSearchTier` the committed headline or date answer carries).
+4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:565` stamps the attribute from the DATE-search tier alone — `answerTier` at `:548-551`, the `DateSearchTier` the committed headline or date answer carries).
 5. No inert lying affordance: the save gesture was **ABSENT in U16** — a reserved layout slot only (§S4). U17 §S5 landed the gesture and the v3 write together (2026-07-26/27) into that same reservation, so the slot is live today and the wall did its job: no inert Save ever rendered.
 6. A withheld reason renders TRUE and humane, never laundered, never color/opacity-only; unclassified **fails CLOSED**.
 
@@ -199,7 +199,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   affordance's own posture. Both walk seeds measured IN-FRAME. Spine content is never pushed below
   the fold to keep the invitation.
 - **The affordance is offered on the all-retired route only** (a recorded v1 deviation):
-  `solveInvitable` guards `!isDateRoute(snapshot.draft)` (`Result.tsx:411`), because the
+  `solveInvitable` guards `!isDateRoute(snapshot.draft)` (`Result.tsx:317`), because the
   working/date-route base is the crowned date offset — a follow-up increment. Both fit-gate
   affordance seeds are all-retired, so the measured posture is unregressed.
 - **GoalPicker** (`src/intake/GoalPicker.tsx`) renders INSIDE the `ControlSheet` scaffold
@@ -314,7 +314,7 @@ to a single commit.
   `recHoldAcaUnverified`, `rec-relevant-primary-directional` → `recHoldPrimaryDirectional`,
   `epsilon-uncalibrated` → `recHoldEpsilon`, `state-certification-pending` → the
   `recHoldStateCert` SLOT; `recHoldGeneric` is the fail-CLOSED humane string an unclassified reason
-  lands on (`recommendationView.ts:377`, `:405`). Two further hold strings ship BESIDE the enum, not
+  lands on (`recommendationView.ts:376`, `:404`). Two further hold strings ship BESIDE the enum, not
   from it: `recHoldCoupling` (the Q5 coupling caveat) and `recHoldDemotionAxis` — the latter added
   2026-08-03 as the Tier-0 crash fix, since a well-funded household whose winner converts used to hit
   `gradeCalibration`'s plain throw and land on the generic compute-error card. It names the shape
@@ -328,7 +328,7 @@ to a single commit.
   to ~$X"), never a bare "it's skewed", never a second chart, never a second ranking authority
   (insight 093).
 - **AT parity (a11y amendment A2):** the viz's `role="img"` `aria-label` sentence carries BOTH arm
-  magnitudes AND the delta (`RecommendationViz.tsx:128`, composed by `slots.recDeltaVizAria`) — the
+  magnitudes AND the delta (`RecommendationViz.tsx:113`, composed by `slots.recDeltaVizAria`) — the
   TwoFutures/OddsLadder precedent, so the picture is never the only place a figure lives. The
   median quote, the skew note and every withheld reason are real TEXT in the a11y tree beside the
   lockup rather than folded into that label; scrub stays pointer-only sugar.
@@ -344,7 +344,7 @@ to a single commit.
 
 - "Name the active baseline" shipped as a short STATIC label on the no-action figure —
   `copy.recommendBaselineNameplate`, "Compared with your plan today", carried on the view as
-  `baselineNameplate` (`recommendationView.ts:269`, `:703`). NO number. The A↔B residual is never
+  `baselineNameplate` (`recommendationView.ts:268`, `:702`). NO number. The A↔B residual is never
   rendered, quantified, or narrated.
 
 ### The rest of S3, and its nets
@@ -373,8 +373,8 @@ to a single commit.
   the `leave-more` goal ONLY. On `pay-less-tax` the plotted headline is lifetime all-in cost
   (income tax + the net ACA premium + Medicare since Briggsy's 2026-10-05 "All-in cost" ruling,
   plan 4 contract #4), where lower is better, and the longer-bar-is-better grammar would
-  contradict it, so the picture is OMITTED, never swapped. The goal-worded delta hero still ships (`recommendationView.ts:717-730`,
-  `recommendationView.ts:879`). The goal-named caption and aria variant that would bring it back
+  contradict it, so the picture is OMITTED, never swapped. The goal-worded delta hero still ships (`recommendationView.ts:716-729`,
+  `recommendationView.ts:878`). The goal-named caption and aria variant that would bring it back
   are Briggsy's words, owed in the register entry
   "U17 S7 riders — the comparison chart's missing dollar endpoints (Q7a) and the unspecified reorder (Q7b)".
 - **Disclosures adjacent to the delta**: NIIT + (outside the roster) state tax; the SS claim-age
@@ -383,13 +383,13 @@ to a single commit.
   (`recDiscAllInScope` — what the all-in figure counts and that plan cost-sharing is not counted),
   rendered only on a pay-less-tax run whose BUILT overlay priced healthcare (the `healthcarePriced`
   option Result threads beside `pricedState`), ordered directly BEFORE NIIT (`DISCLOSURE_ORDER`,
-  `recommendationView.ts:133-143` — Briggsy's 2026-10-06 refinement on the pre-land Caddie read:
+  `recommendationView.ts:132-142` — Briggsy's 2026-10-06 refinement on the pre-land Caddie read:
   the counted set first, so the surtax line reads as its exception). The NIIT and state-tax
   notes were re-worded the same day (both render on both goals; their old "federal income tax" /
   "federal tax only" scopes were false once premiums joined the comparison). The compile gate
   shipped as the surface's OWN closed vocabulary,
   `RecommendationDisclosureId = 'ss-claim-fixed' | 'niit' | 'all-in-scope' | 'state-tax' |
-  'heir-bracket' | 'aca-slcsp'` (`recommendationView.ts:59-65`), NOT as seats on the draft-keyed `DRAFT_DISPOSITIONS`
+  'heir-bracket' | 'aca-slcsp'` (`recommendationView.ts:58-64`), NOT as seats on the draft-keyed `DRAFT_DISPOSITIONS`
   registry: every disclosure is a property of the RUN, not of a draft field — the SS-claim-fixed
   and NIIT notes render unconditionally, all-in-scope reads the goal and the run's built
   healthcare pricing, state-tax reads the run's own priced state

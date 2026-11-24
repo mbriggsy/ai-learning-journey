@@ -32,9 +32,9 @@ import {
 import { isEmployerPlanKind } from '@intake/sanity'
 import { applyBundle, type WhatIfRefusal } from '@intake/whatIf'
 import { LEFT_OVER_CARRIES } from '@intake/workingYearLeftOverState'
-import { lineDisplayName } from '@intake/BudgetLineItem'
-import { kindLabel } from '@intake/AccountEntry'
-import { formatMoney } from '@intake/fields'
+import { lineDisplayName } from '@intake/budgetLines'
+import { kindLabel } from '@intake/accountKinds'
+import { formatMoney } from '@intake/moneyFormat'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type {
   AccountKind,
@@ -52,6 +52,7 @@ import { WHAT_IF_LEVER_KINDS } from '@shared/model'
 import { dateOddsText } from '../dateOdds'
 import { verdictReadingText } from '../verdictSentence'
 import { copy, slots, type CopyKey } from '../copy'
+import type { BandPlanClockAnchor } from '../bandAnnotations'
 import { tablePerson, type TableMeta } from './tableRun'
 import { tableDollars, yieldLine } from './yearTableChrome'
 import type { WhatIfReading, WhatIfRunRefusal } from './whatIfRun'
@@ -573,4 +574,34 @@ export function refusalWords(r: WhatIfRunRefusal | WhatIfRefusal, startCalendarY
   if (r.kind === 'stop-year-outside-window') return slots.workbenchRailRefusedStopWindow(startCalendarYear, startCalendarYear + DATE_OFFSET_WINDOW_TOP)
   if (r.kind === 'deposits-over-limit') return copy.workbenchRailRefusedOverLimit
   return copy[REFUSAL_KEYS[r.kind]]
+}
+
+// ---------------------------------------------------------------------------
+// A withdrawal policy and a Roth plan in words (moved out of `RailLevers.tsx` by Act 6's RC0, unchanged)
+// ---------------------------------------------------------------------------
+
+export const POLICY_LABEL: Readonly<Record<DrawdownPolicy, CopyKey>> = {
+  proportional: 'leverPolicyProportional',
+  'taxable-first': 'leverPolicyTaxableFirst',
+  'pre-tax-first': 'leverPolicyPreTaxFirst',
+  'bracket-fill': 'leverPolicyBracketFill',
+  custom: 'leverPolicyCustom',
+}
+
+export const BUCKET_LABEL: Readonly<Record<DrawdownOrderKey, CopyKey>> = {
+  taxable: 'leverOrderBucketTaxable',
+  pretax: 'leverOrderBucketPretax',
+  roth: 'leverOrderBucketRoth',
+}
+
+/** A withdrawal policy in words: a named policy's label, or a custom order first to last. */
+export function policyWords(policy: DrawdownPolicy, order: readonly DrawdownOrderKey[] | undefined): string {
+  return policy === 'custom' && order !== undefined ? slots.workbenchFactOrder(order.map((k) => copy[BUCKET_LABEL[k]])) : copy[POLICY_LABEL[policy]]
+}
+
+/** A Roth plan in words, on the plan's clock. */
+export function rothWords(plan: RothConversionPlan | undefined, startCalendarYear: number, anchor: BandPlanClockAnchor): string {
+  if (plan === undefined) return copy.workbenchRailRecRothNone
+  const startYear = startCalendarYear + plan.startYearOffset
+  return slots.workbenchFactRoth(railMoney(plan.annualAmountReal), startYear, startYear < anchor.startCalendarYear + anchor.yearsSincePlanBuilt, plan.years)
 }

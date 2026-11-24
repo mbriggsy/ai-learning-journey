@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { copy, type CopyKey, type SlottedErrorKey, type SlottedErrorParams } from '@ui/copy'
+import { copy, type SlottedErrorKey, type SlottedErrorParams } from '@ui/copy'
 import type { AccountKind, EnteredAccount, TickerClassification } from '@shared/model'
 import { ACCOUNT_KINDS } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
@@ -7,7 +7,9 @@ import { freshStableId, idsInUse } from '@shared/stableIds'
 import { CurrencyField, SegmentedControl } from './fields'
 import { FieldError } from './FieldError'
 import { focusHeading } from './a11y'
-import { AllocationEntry, classifyLegs, legsOf, type AllocationReport } from './AllocationEntry'
+import { AllocationEntry } from './AllocationEntry'
+import { classifyLegs, legsOf, type AllocationReport } from './allocation'
+import { kindLabel } from './accountKinds'
 import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
 import {
   annualAdditionsCeilingFor,
@@ -53,18 +55,6 @@ import {
  *    honest not-answered-yet channel, unchanged. See AllocationEntry's header;
  *  - the C1 ceilings, as before.
  */
-
-const KIND_LABELS: Readonly<Record<AccountKind, CopyKey>> = {
-  '401k': 'kind401k',
-  '403b': 'kind403b',
-  'traditional-ira': 'kindTraditionalIra',
-  'roth-401k': 'kindRoth401k',
-  'roth-ira': 'kindRothIra',
-  brokerage: 'kindBrokerage',
-  hsa: 'kindHsa',
-}
-
-export const kindLabel = (kind: AccountKind): string => copy[KIND_LABELS[kind]]
 
 export interface AccountEntryProps {
   readonly draft: ScenarioDraft

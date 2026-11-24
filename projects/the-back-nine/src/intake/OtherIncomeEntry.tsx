@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { copy, slots, type CopyKey } from '@ui/copy'
+import { copy, type CopyKey } from '@ui/copy'
 import type { ColaMode, IncomeStream, IncomeTaxTreatment, IncomeType } from '@shared/model'
 import { INCOME_TYPES } from '@shared/model'
 import { colaRateInRange } from '@shared/incomeBounds'
@@ -8,6 +8,7 @@ import { CurrencyField, IntegerField, PercentField, SegmentedControl } from './f
 import { FieldError } from './FieldError'
 import { focusHeading } from './a11y'
 import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
+import { incomeTypeLabel } from './otherIncome'
 
 /**
  * One other-income stream, one focused form (R40 · KTD-3/4/6/7/8). Named
@@ -47,31 +48,6 @@ import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
  * shape/weight, never hue; every error is icon + adjacent text + color only as
  * reinforcement (the reader is color-blind); all copy routes through copy.ts.
  */
-
-const TYPE_LABELS: Readonly<Record<IncomeType, CopyKey>> = {
-  pension: 'incomeTypePension',
-  rental: 'incomeTypeRental',
-  alimony: 'incomeTypeAlimony',
-  annuity: 'incomeTypeAnnuity',
-  other: 'incomeTypeOther',
-}
-
-export const incomeTypeLabel = (type: IncomeType): string => copy[TYPE_LABELS[type]]
-
-/** Whose income the row reads as (entered name, else you/your spouse). */
-const ownerLabelOf = (draft: ScenarioDraft, ownerIndex: 0 | 1): string =>
-  draft.people[ownerIndex]?.name ?? (ownerIndex === 0 ? copy.personYou : copy.personSpouse)
-
-/** The widow's-picture note for ONE committed stream — what the SURVIVOR keeps,
- *  in plain language (never a raw survivorPct). Alimony is 0 by law. */
-export function survivorNoteFor(draft: ScenarioDraft, s: IncomeStream): string {
-  // The keeper opens the sentence ("You would keep…"); the owner sits mid-sentence, so an unnamed owner reads "you" /
-  // "your spouse", its verb agreeing ("if you pass", never "if You passes": the U8 review's F10).
-  const name = draft.people[s.ownerIndex]?.name
-  const owner = name ?? (s.ownerIndex === 0 ? copy.personYouMid : copy.personSpouseMid)
-  const keeper = ownerLabelOf(draft, (s.ownerIndex === 0 ? 1 : 0) as 0 | 1)
-  return slots.incomeSurvivorNote(keeper, owner, s.survivorPct, name === undefined && s.ownerIndex === 0)
-}
 
 /** A CONTINUING type surfaces the survivor-% (alimony terminates by law → 0). */
 const isContinuingType = (type: IncomeType | undefined): boolean =>

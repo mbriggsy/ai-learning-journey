@@ -8,35 +8,12 @@ import {
   NameField,
   PercentField,
   SegmentedControl,
-  parseMoney,
-  formatMoney,
-  parsePercent,
-  formatPercent,
 } from '../fields'
 import { copy } from '@ui/copy'
 
 afterEach(cleanup)
 
 describe('parsePercent / formatPercent (R40 — enter a percent, store a FRACTION)', () => {
-  it('parses a percent to its fraction (humane entry, fraction model)', () => {
-    expect(parsePercent('50')).toBe(0.5)
-    expect(parsePercent('2.5')).toBe(0.025)
-    expect(parsePercent('100')).toBe(1)
-    expect(parsePercent('0')).toBe(0)
-    expect(parsePercent(' 60 %')).toBe(0.6)
-  })
-  it('empty/garbage → undefined (an absent fact, never 0 — burned/062); rejects exponent/hex traps', () => {
-    expect(parsePercent('')).toBeUndefined()
-    expect(parsePercent('abc')).toBeUndefined()
-    expect(parsePercent('-10')).toBeUndefined()
-    expect(parsePercent('1e2')).toBeUndefined()
-    expect(parsePercent('0x40')).toBeUndefined()
-  })
-  it('formats a fraction back to a percent string', () => {
-    expect(formatPercent(0.5)).toBe('50')
-    expect(formatPercent(0.025)).toBe('2.5')
-    expect(formatPercent(undefined)).toBe('')
-  })
   it('PercentField commits the FRACTION on blur (the survivor/taxable/COLA discipline)', () => {
     const onCommit = vi.fn()
     render(
@@ -52,31 +29,6 @@ describe('parsePercent / formatPercent (R40 — enter a percent, store a FRACTIO
     fireEvent.change(input, { target: { value: '75' } })
     fireEvent.blur(input)
     expect(onCommit).toHaveBeenCalledWith(0.75) // 75% → fraction 0.75
-  })
-})
-
-describe('parseMoney / formatMoney', () => {
-  it('strips $/commas/spaces and parses the raw number', () => {
-    expect(parseMoney('$1,250,000')).toBe(1_250_000)
-    expect(parseMoney(' 40 000 ')).toBe(40_000)
-    expect(parseMoney('1234.56')).toBe(1234.56)
-  })
-  it('empty/garbage/negative → undefined (an absent fact, never 0 — burned/062)', () => {
-    expect(parseMoney('')).toBeUndefined()
-    expect(parseMoney('abc')).toBeUndefined()
-    expect(parseMoney('-500')).toBeUndefined()
-  })
-  it('rejects silent magnitude traps: misgrouped commas, exponent, hex (D1 review AB2)', () => {
-    expect(parseMoney('100,00')).toBeUndefined() // misgrouped — strip-then-Number gave 10000
-    expect(parseMoney('1,00,000')).toBeUndefined()
-    expect(parseMoney('1e6')).toBeUndefined() // exponent — gave 1000000
-    expect(parseMoney('0x186a0')).toBeUndefined() // hex — gave 100000
-    expect(parseMoney('40,000')).toBe(40_000) // correctly grouped still parses
-    expect(parseMoney('1,250,000')).toBe(1_250_000)
-  })
-  it('formats with grouping, no decimals', () => {
-    expect(formatMoney(1_250_000)).toBe('1,250,000')
-    expect(formatMoney(undefined)).toBe('')
   })
 })
 

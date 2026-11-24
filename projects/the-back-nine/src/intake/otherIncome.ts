@@ -10,7 +10,9 @@
  *
  * Decisions: docs/decisions/other-income-r40.md. Requirements: product §7 (R40.1–R40.10).
  */
-import type { IncomeParams, IncomeStream, PersonIncomeStream } from '@shared/model'
+import { copy, slots, type CopyKey } from '@ui/copy'
+import type { IncomeParams, IncomeStream, IncomeType, PersonIncomeStream } from '@shared/model'
+import type { ScenarioDraft } from '@store/memoryModel'
 
 /** Does the vector carry any non-zero entry? (The `nonZero` DROP — an all-zero variant is OMITTED, so
  *  absence is the reduce-to-spine signal, never a zero-filled array. Borrowed from the contribution
@@ -116,4 +118,33 @@ export function compileIncomeStreams(
     (leaf) => leaf.grossFull !== undefined || leaf.grossSurvivor !== undefined,
   )
   return anyIncome ? { incomeByPerson } : undefined
+}
+
+// ---------------------------------------------------------------------------
+// The words for a stream (moved out of `OtherIncomeEntry.tsx` by Act 6's RC0, unchanged)
+// ---------------------------------------------------------------------------
+
+const TYPE_LABELS: Readonly<Record<IncomeType, CopyKey>> = {
+  pension: 'incomeTypePension',
+  rental: 'incomeTypeRental',
+  alimony: 'incomeTypeAlimony',
+  annuity: 'incomeTypeAnnuity',
+  other: 'incomeTypeOther',
+}
+
+export const incomeTypeLabel = (type: IncomeType): string => copy[TYPE_LABELS[type]]
+
+/** Whose income the row reads as (entered name, else you/your spouse). */
+const ownerLabelOf = (draft: ScenarioDraft, ownerIndex: 0 | 1): string =>
+  draft.people[ownerIndex]?.name ?? (ownerIndex === 0 ? copy.personYou : copy.personSpouse)
+
+/** The widow's-picture note for ONE committed stream — what the SURVIVOR keeps,
+ *  in plain language (never a raw survivorPct). Alimony is 0 by law. */
+export function survivorNoteFor(draft: ScenarioDraft, s: IncomeStream): string {
+  // The keeper opens the sentence ("You would keep…"); the owner sits mid-sentence, so an unnamed owner reads "you" /
+  // "your spouse", its verb agreeing ("if you pass", never "if You passes": the U8 review's F10).
+  const name = draft.people[s.ownerIndex]?.name
+  const owner = name ?? (s.ownerIndex === 0 ? copy.personYouMid : copy.personSpouseMid)
+  const keeper = ownerLabelOf(draft, (s.ownerIndex === 0 ? 1 : 0) as 0 | 1)
+  return slots.incomeSurvivorNote(keeper, owner, s.survivorPct, name === undefined && s.ownerIndex === 0)
 }

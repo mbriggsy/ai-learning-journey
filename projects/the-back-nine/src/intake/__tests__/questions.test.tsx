@@ -3,14 +3,15 @@ import { useMemo, useSyncExternalStore } from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen, fireEvent } from '@testing-library/react'
-import { intakeSteps, writeMedicareExtras, MedicareExtrasFork, oopExceedsBudgetlessSpend } from '../questions'
-import type { BudgetLineItem } from '@shared/model'
+import { intakeSteps, MedicareExtrasFork } from '../questions'
+import { intakeStepIds, writeMedicareExtras } from '../steps'
+import { DEV_SEEDS } from '@ui/devSeeds'
 import { IntakeFlow } from '../flow'
-import { medicareExtrasTypical, medicareExtrasTypicalMonthly } from '@engine/constants/health'
+import { medicareExtrasTypicalMonthly } from '@engine/constants/health'
 import { createMemoryModel, type MemoryModel, type ScenarioDraft } from '@store/memoryModel'
 import type { EngineClient } from '@store/engineClient'
 import { copy, slots } from '@ui/copy'
-import { formatMoney } from '../fields'
+import { formatMoney } from '../moneyFormat'
 import { OOP_MEDICAL_TYPICAL_HOUSEHOLD } from '../referenceData'
 
 /**
@@ -69,6 +70,18 @@ const setStatuses = (model: MemoryModel, s0: 'working' | 'retired', s1: 'working
 const heading = () => screen.getByRole('heading', { level: 2 }).textContent
 
 describe('intakeSteps — conditional gates', () => {
+  it('maps the ONE sequence (`intakeStepIds`, steps.ts) to the bodies: every body under its own id, in that order, on every dev household and the bare draft (Act 6’s RC0 moved the sequence out of this file)', () => {
+    for (const d of [draft(freshModel()), ...Object.values(DEV_SEEDS)]) {
+      expect(intakeSteps(d).map((s) => s.id)).toEqual(intakeStepIds(d))
+    }
+    // Non-vacuity: both routes are walked — a date-route seed adds the pay check's two steps, the retired one does not.
+    expect(intakeStepIds(DEV_SEEDS.date)).toContain('working-ledger')
+    expect(intakeStepIds(DEV_SEEDS.retired)).not.toContain('working-ledger')
+    // The one route-picked body: the state step's heading follows the route (the Caddie chair fix, 2026-07-15).
+    expect(intakeSteps(DEV_SEEDS.retired).find((s) => s.id === 'retirement-state')?.headingKey).toBe('qStateHeadingRetired')
+    expect(intakeSteps(DEV_SEEDS.date).find((s) => s.id === 'retirement-state')?.headingKey).toBe('qStateHeading')
+  })
+
   it('an all-retired household skips the salary AND working-income steps', () => {
     const m = freshModel()
     setStatuses(m, 'retired', 'retired')
@@ -167,46 +180,6 @@ describe('intakeSteps — conditional gates', () => {
     expect(intakeSteps(draft(m)).map((s) => s.id)).not.toContain('medicare-extras')
     m.update((d) => ({ ...d, people: [{ ...d.people[0], currentAge: 64 }, d.people[1]] }))
     expect(intakeSteps(draft(m)).map((s) => s.id)).toContain('medicare-extras')
-  })
-})
-
-describe('the Medicare-extras write shape (writeMedicareExtras — the ONE editor home)', () => {
-  const twoRetired65 = (m: MemoryModel) =>
-    m.update((d) => ({
-      ...d,
-      people: [
-        { ...d.people[0], workStatus: 'retired' as const, currentAge: 67, birthYear: 1959 },
-        { ...d.people[1], workStatus: 'retired' as const, currentAge: 66, birthYear: 1960 },
-      ],
-    }))
-
-  it('a single answer fills the OTHER slot with the honest unanswered hole — never a fabricated adoption', () => {
-    const m = freshModel()
-    twoRetired65(m)
-    m.update((d) => writeMedicareExtras(d, 0, { kind: 'entered', monthly: 220 }))
-    expect(draft(m).medicareExtrasByPerson).toEqual([
-      { kind: 'entered', monthly: 220 },
-      { kind: 'unanswered' },
-    ])
-  })
-
-  it('clearing BOTH slots back to unanswered STRIPS the field entirely (absence = never engaged)', () => {
-    const m = freshModel()
-    twoRetired65(m)
-    m.update((d) => writeMedicareExtras(d, 1, { kind: 'none' }))
-    expect(draft(m).medicareExtrasByPerson).toBeDefined()
-    m.update((d) => writeMedicareExtras(d, 1, undefined))
-    expect(draft(m).medicareExtrasByPerson).toBeUndefined()
-  })
-
-  it('the typical arm stamps the adoption vintage from the constant (never re-derived from value equality)', () => {
-    const m = freshModel()
-    twoRetired65(m)
-    m.update((d) => writeMedicareExtras(d, 0, { kind: 'typical', adoptionVintage: medicareExtrasTypical.value.vintage }))
-    expect(draft(m).medicareExtrasByPerson?.[0]).toEqual({
-      kind: 'typical',
-      adoptionVintage: medicareExtrasTypical.value.vintage,
-    })
   })
 })
 
@@ -512,21 +485,6 @@ describe('the out-of-pocket step — the optional-field BLS reference hint (cold
 })
 
 describe('the out-of-pocket step — the BUDGETLESS M > S note (council 2026-10-08, B2: the engine clamps, the intake says so calmly)', () => {
-  const LINE: BudgetLineItem = { category: 'food', label: 'Groceries', annualAmountReal: 1_000, tier: 'essentials', startYear: 0 }
-  const fork = (S: number | undefined, M: number | undefined, budget?: readonly BudgetLineItem[]): boolean => {
-    const d = draft(freshModel())
-    return oopExceedsBudgetlessSpend({ ...d, annualSpendingReal: S, budget, health: { ...d.health, oopMedicalAnnual: M } })
-  }
-
-  it('the pure fork fires STRICTLY above, only with no budget, never on a blank (insight 048 planted-fail arms)', () => {
-    expect(fork(6_000, 6_500)).toBe(true) // M > S — the contradiction
-    expect(fork(6_500, 6_500)).toBe(false) // M = S — everything is medical, no contradiction
-    expect(fork(78_000, 4_000)).toBe(false) // the ordinary household
-    expect(fork(undefined, 6_500)).toBe(false) // no spend yet — nothing to contradict
-    expect(fork(6_000, undefined)).toBe(false) // a blank OOP
-    expect(fork(6_000, 6_500, [LINE])).toBe(false) // a budget governs — the builder's own F10 line speaks
-  })
-
   it('renders under the field once the entered figure exceeds the whole spend (both annual dollars quoted), clears at M = S, and never blocks Next', () => {
     const m = freshModel()
     m.update((d) => ({

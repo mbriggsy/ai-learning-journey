@@ -25,14 +25,14 @@ import {
   medicareExtrasView,
   workingYearLeftOverShownState,
 } from '@intake/intakeMap'
-import { governedSpendNotes } from '@intake/questions'
+import { governedSpendNotes } from '@intake/steps'
 import { workingYearLeftOverWaitingWords } from '@intake/workingYearLeftOver'
 import type { LeftOverShownState } from '@intake/workingYearLeftOverState'
-import { formatMoney, formatPercent } from '@intake/fields'
-import { kindLabel } from '@intake/AccountEntry'
-import { survivorNoteFor } from '@intake/OtherIncomeEntry'
-import { lineDisplayName } from '@intake/BudgetLineItem'
-import { workingCostValueLine } from '@intake/AssumptionPanel'
+import { formatMoney, formatPercent } from '@intake/moneyFormat'
+import { kindLabel } from '@intake/accountKinds'
+import { survivorNoteFor } from '@intake/otherIncome'
+import { lineDisplayName } from '@intake/budgetLines'
+import { workingCostValueLine } from '@intake/assumptionLines'
 import { solverAssumedHeirBracket } from '@engine/constants'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type {

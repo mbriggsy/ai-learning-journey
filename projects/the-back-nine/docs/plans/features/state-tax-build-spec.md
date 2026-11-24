@@ -161,7 +161,7 @@ status: shipped
   state. Two route-true faces share one body (the Caddie chair fix, 2026-07-15): a working
   household reads "Where WILL you live…", an already-retired one the present-tense heading
   (`stateStepRetired`, picked by `anyWorking`).
-- **Picker: the existing vertical SegmentedControl, REUSED** (fields.tsx:310-407 — native
+- **Picker: the existing vertical SegmentedControl, REUSED** (fields.tsx:260-357 — native
   radios in fieldset/legend, active state by weight+fill+text never hue, a visible ring via
   `.segment:has(input:focus-visible)`, ≥24px rows): **4 arms — NC · PA · FL · "somewhere
   else"**, and NOTHING is active until the household answers (the honest not-set face). NO

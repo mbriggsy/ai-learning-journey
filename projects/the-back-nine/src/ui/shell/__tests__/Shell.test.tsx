@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import WorkbenchRoom, { type TableLanes } from '../WorkbenchRoom'
-import { tableRunFor } from '../tableRun'
-import { pinnedLines } from '../pinnedLines'
-import { composeYearTable, formatTableDollars } from '../yearTableChrome'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import type { TableLanes } from '../Shell'
+import { RoutedShell, showPage } from './routedShell'
+import { tableRunFor } from '../../workbench/tableRun'
+import { pinnedLines } from '../../workbench/pinnedLines'
+import { composeYearTable, formatTableDollars } from '../../workbench/yearTableChrome'
 import { simulate } from '@engine/simulate'
 import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS } from '@engine/dateSearch'
 import { buildDateInput } from '@intake/intakeMap'
@@ -16,8 +17,9 @@ import type { MemoryModelSnapshot, ModelAnswer, ScenarioDraft } from '@store/mem
 import type { DateSearchOutcome, DateTrackOutcome, SimulationResult } from '@shared/model'
 
 /**
- * The room's year-by-year table (workbench plan U7): its three named states (first load, updating, error), the
- * withheld words, the steady/rough switch, and the heading's words, with the lanes faked so each state is held.
+ * The shell's Cash Flows page, the room's year-by-year table riding as an interim tab (Act 6 · RC2; workbench plan U7):
+ * its three named states (first load, updating, error), the withheld words, the steady/rough switch, and the heading's
+ * words, with the lanes faked so each state is held; and the settle hook every harness waits on (`main.result`).
  */
 
 afterEach(cleanup)
@@ -67,9 +69,13 @@ function heldLanes() {
 }
 
 const renderRoom = (snapshot: MemoryModelSnapshot, lanes: TableLanes, wallCalendarYear = BUILD_YEAR) =>
-  render(<WorkbenchRoom save={{ kind: 'none' }} onBack={vi.fn()} snapshot={snapshot} lanes={lanes} wallCalendarYear={wallCalendarYear} />)
+  render(<RoutedShell save={{ kind: 'none' }} snapshot={snapshot} lanes={lanes} wallCalendarYear={wallCalendarYear} />)
+/** The same shell, re-rendered over a new snapshot (the route held in its host). */
+const shellOver = (snapshot: MemoryModelSnapshot, lanes: TableLanes) => (
+  <RoutedShell save={{ kind: 'none' }} snapshot={snapshot} lanes={lanes} wallCalendarYear={BUILD_YEAR} />
+)
 
-describe('WorkbenchRoom — the table’s three states', () => {
+describe('Shell — the table’s three states', () => {
   it('first load: a reserved frame with words; then the table lands with its heading, both views asked at once', async () => {
     const { lanes, lane, settleAll } = heldLanes()
     renderRoom(snapshotWith(finalAnswer()), lanes)
@@ -114,7 +120,7 @@ describe('WorkbenchRoom — the table’s three states', () => {
     const view = renderRoom(snapshotWith(finalAnswer('k1')), lanes)
     await settleAll('run')
     view.rerender(
-      <WorkbenchRoom save={{ kind: 'none' }} onBack={vi.fn()} snapshot={snapshotWith(finalAnswer('k2'))} lanes={lanes} wallCalendarYear={BUILD_YEAR} />,
+      shellOver(snapshotWith(finalAnswer('k2')), lanes),
     )
     expect(screen.getByText(copy.workbenchTableUpdating, { selector: '.wb-updating' })).toBeInTheDocument()
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true')
@@ -128,27 +134,27 @@ describe('WorkbenchRoom — the table’s three states', () => {
     const view = renderRoom(snapshotWith(finalAnswer()), lanes)
     await settleAll('run')
     view.rerender(
-      <WorkbenchRoom save={{ kind: 'none' }} onBack={vi.fn()} snapshot={snapshotWith(finalAnswer(), true)} lanes={lanes} wallCalendarYear={BUILD_YEAR} />,
+      shellOver(snapshotWith(finalAnswer(), true), lanes),
     )
     expect(screen.getByText(copy.workbenchTableUpdating, { selector: '.wb-updating' })).toBeInTheDocument()
     // The pinned box's label line says the answer is being worked out again.
     expect(screen.getByText(copy.workbenchPinnedRefiguring, { selector: '.wb-pin__status' })).toBeInTheDocument()
   })
 
-  it('error: one calm sentence, no rows, the way back and no retry', async () => {
+  it('error: one calm sentence, no rows, no retry; the wordmark is the way back', async () => {
     const { lanes, settleAll } = heldLanes()
-    const onBack = vi.fn()
-    render(<WorkbenchRoom save={{ kind: 'none' }} onBack={onBack} snapshot={snapshotWith(finalAnswer())} lanes={lanes} wallCalendarYear={BUILD_YEAR} />)
+    const onHome = vi.fn()
+    render(<RoutedShell save={{ kind: 'none' }} onHome={onHome} snapshot={snapshotWith(finalAnswer())} lanes={lanes} wallCalendarYear={BUILD_YEAR} />)
     await settleAll('error')
     expect(screen.getByRole('alert')).toHaveTextContent(copy.workbenchTableError)
     expect(screen.queryByRole('table')).toBeNull()
-    // The room's own Back is the one way back: the error state adds no second button of the same name.
-    fireEvent.click(screen.getByRole('button', { name: copy.workbenchBack }))
-    expect(onBack).toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: copy.exportRetry })).toBeNull()
+    fireEvent.click(screen.getByRole('link', { name: copy.shellHomeLabel }))
+    expect(onHome).toHaveBeenCalled()
   })
 })
 
-describe('WorkbenchRoom — the answer the table waits on', () => {
+describe('Shell — the answer the table waits on', () => {
   it('a provisional answer asks no run; the table waits in its first-load frame', () => {
     const { lanes, lane } = heldLanes()
     renderRoom(snapshotWith({ ...(finalAnswer() as object), tier: 'provisional' } as ModelAnswer), lanes)
@@ -217,7 +223,7 @@ const dateSnapshot = (draft: ScenarioDraft, answer: ModelAnswer, refiguring = fa
   draft,
 })
 
-describe('WorkbenchRoom — the date route', () => {
+describe('Shell — the date route', () => {
   it('a working household whose search crowned no date: the window top’s year, and the heading says no date was found (T4)', async () => {
     const { lanes, lane, settleAll } = heldLanes()
     renderRoom(dateSnapshot(WORKING, dateAnswer(WORKING, undefined)), lanes)
@@ -263,13 +269,7 @@ describe('WorkbenchRoom — the date route', () => {
     await settleAll('run')
     // The edit's provisional answer lands: no run is asked for it, and the rows on screen stay, marked as updating.
     view.rerender(
-      <WorkbenchRoom
-        save={{ kind: 'none' }}
-        onBack={vi.fn()}
-        snapshot={dateSnapshot(edited, dateAnswer(edited, { offsetYears: 5, track: 'lifestyle' }, 'provisional', 'k2'))}
-        lanes={lanes}
-        wallCalendarYear={BUILD_YEAR}
-      />,
+      shellOver(dateSnapshot(edited, dateAnswer(edited, { offsetYears: 5, track: 'lifestyle' }, 'provisional', 'k2')), lanes),
     )
     expect(lane.request).toHaveBeenCalledTimes(2)
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true')
@@ -277,26 +277,20 @@ describe('WorkbenchRoom — the date route', () => {
   })
 })
 
-describe('WorkbenchRoom — the facts page’s stop year through a provisional answer (U8 review: C1, A6, F7)', () => {
+describe('Shell — the facts page’s stop year through a provisional answer (U8 review: C1, A6, F7)', () => {
   it('holds the last delivered stop year while a newer answer is worked out, marked in words in its reserved note cell', async () => {
     const { lanes, settleAll } = heldLanes()
     const year = WORKING.startCalendarYear + 4
     const view = renderRoom(dateSnapshot(WORKING, dateAnswer(WORKING, { offsetYears: 4, track: 'lifestyle' })), lanes)
     await settleAll('run')
-    fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageFacts }))
+    showPage('facts')
     const stopLine = () => screen.getByText(copy.workbenchFactStop).closest('.wb-facts__line')!
     const shownNote = () => stopLine().querySelector('.wb-facts__note:not(.wb-facts__note--reserve)')?.textContent
     expect(stopLine()).toHaveTextContent(slots.workbenchFactStopYear(year))
     expect(shownNote()).toBe(copy.workbenchFactStopNote)
     // An edit's provisional answer: no table run is asked for it, and the line keeps its year, marked.
     view.rerender(
-      <WorkbenchRoom
-        save={{ kind: 'none' }}
-        onBack={vi.fn()}
-        snapshot={dateSnapshot(WORKING, dateAnswer(WORKING, { offsetYears: 5, track: 'lifestyle' }, 'provisional', 'k2'))}
-        lanes={lanes}
-        wallCalendarYear={BUILD_YEAR}
-      />,
+      shellOver(dateSnapshot(WORKING, dateAnswer(WORKING, { offsetYears: 5, track: 'lifestyle' }, 'provisional', 'k2')), lanes),
     )
     expect(stopLine()).toHaveTextContent(slots.workbenchFactStopYear(year))
     expect(shownNote()).toBe(copy.workbenchPinnedRefiguring)
@@ -305,20 +299,80 @@ describe('WorkbenchRoom — the facts page’s stop year through a provisional a
   })
 })
 
-describe('WorkbenchRoom — the room’s one live region speaks the new answer (U8 review: C12)', () => {
+describe('Shell — the shell’s one live region speaks the new answer (U8 review: C12)', () => {
   it('when the pinned answer’s words change and nothing is being worked out again, the region says them', () => {
     const { lanes } = heldLanes()
     const view = renderRoom(snapshotWith(finalAnswer('k1')), lanes)
     const region = view.container.querySelector('main > [role="status"][aria-live="polite"]')!
-    expect(region.textContent, 'the first answer is the room’s own arrival, not news').toBe('')
+    expect(region.textContent, 'the first answer is the shell’s own arrival, not news').toBe('')
     const borderline = {
       ...(finalAnswer('k2') as object),
       result: { headline: { outcomeState: 'borderline', xOfTen: { value: 5, marginToEdge: 0.1 }, stateMarginToEdge: 0.1 }, distribution: {} },
     } as unknown as ModelAnswer
     view.rerender(
-      <WorkbenchRoom save={{ kind: 'none' }} onBack={vi.fn()} snapshot={snapshotWith(borderline)} lanes={lanes} wallCalendarYear={BUILD_YEAR} />,
+      shellOver(snapshotWith(borderline), lanes),
     )
     expect(region.textContent).toBe(pinnedLines(snapshotWith(borderline), BUILD_YEAR).lead)
     expect(region.textContent).toMatch(new RegExp(`^${copy.outcomeBorderline}:`))
+  })
+})
+
+describe('Shell — the settle hook every harness waits on (plan 3.1)', () => {
+  it('one `main.result` on every page, mirroring the store’s tier and refiguring flag through a provisional, a final and an edit’s re-figuring', () => {
+    const { lanes } = heldLanes()
+    const mains = () => document.querySelectorAll('main.result')
+    const view = renderRoom(snapshotWith({ kind: 'pending' }), lanes)
+    expect(mains()).toHaveLength(1)
+    expect(mains()[0], 'nothing has committed: no tier').not.toHaveAttribute('data-answer-tier')
+    view.rerender(shellOver(snapshotWith({ ...(finalAnswer() as object), tier: 'provisional' } as ModelAnswer), lanes))
+    expect(mains()[0]).toHaveAttribute('data-answer-tier', 'provisional')
+    expect(mains()[0]).not.toHaveAttribute('data-answer-refiguring')
+    view.rerender(shellOver(snapshotWith(finalAnswer()), lanes))
+    expect(mains()[0]).toHaveAttribute('data-answer-tier', 'final')
+    expect(mains()[0]).not.toHaveAttribute('data-answer-refiguring')
+    view.rerender(shellOver(snapshotWith(finalAnswer(), true), lanes))
+    expect(mains()[0]).toHaveAttribute('data-answer-tier', 'final')
+    expect(mains()[0]).toHaveAttribute('data-answer-refiguring')
+    for (const page of ['whatif', 'facts', 'table'] as const) {
+      showPage(page)
+      expect(mains(), `${page}: exactly one main.result`).toHaveLength(1)
+      expect(mains()[0]).toHaveAttribute('data-answer-refiguring')
+    }
+    // No interim page carries the in-frame caveat, so App's trailing disclaimer stays the one mount (app.css's swap).
+    expect(mains()[0]).not.toHaveAttribute('data-inframe-disclaimer')
+    // The legacy answer frame's layout class is the old page's alone.
+    expect(mains()[0]).not.toHaveClass('result-page')
+  })
+
+  it('every interim page wears the banner, outside any `.rc-root`, and its page sits outside one too', () => {
+    const { lanes } = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), lanes)
+    for (const page of ['table', 'whatif', 'facts'] as const) {
+      showPage(page)
+      expect(screen.getAllByText(copy.shellInterimBanner)).toHaveLength(1)
+      const interim = document.querySelector('.shell-interim')!
+      expect(interim.closest('.rc-root'), `${page}: the interim container sits outside the scoped preflight`).toBeNull()
+    }
+  })
+})
+
+describe('Shell — the phone menu (plan 3.1, "The phone shape")', () => {
+  it('opens every module and its pages, closes on a choice and moves the page', async () => {
+    const { lanes } = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), lanes)
+    const button = screen.getByRole('button', { name: copy.shellMenuOpen })
+    fireEvent.click(button)
+    const sheet = await screen.findByRole('dialog', { name: copy.shellMenuTitle })
+    const links = within(sheet).getAllByRole('link').map((a) => a.textContent)
+    expect(links).toEqual([copy.shellPageAnalysis, copy.shellPageCashFlows, copy.workbenchPageFacts])
+    expect(within(sheet).getByRole('heading', { name: copy.shellModuleRetirement })).toBeInTheDocument()
+    expect(within(sheet).getByRole('heading', { name: copy.shellModuleProfile })).toBeInTheDocument()
+    expect(within(sheet).getByRole('link', { name: copy.shellPageCashFlows })).toHaveAttribute('aria-current', 'page')
+    fireEvent.click(within(sheet).getByRole('link', { name: copy.workbenchPageFacts }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: copy.shellMenuTitle })).toBeNull())
+    expect(document.querySelector('main.result')).toHaveAttribute('data-shell-screen', 'interim-facts')
+    // Focus back on the button is read in a real browser (`e2e/rc-screens.spec.ts`'s phone arm): Base UI hands it back
+    // after the sheet's exit, whose timing jsdom (no layout, no animations) does not keep, so a read here flakes
+    // (insight 071: a real browser's teardown order is the authority).
   })
 })

@@ -458,6 +458,44 @@ Icons: `lucide-react` at 1.5 px stroke, always beside a word (ref 3.8).
   is the outlined blue button with its icon and its word. *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all
   changes))*
 
+**Amendments made while building RC2's shell (2026-11-24, b9-4).**
+- **The door lands on Retirement → Cash Flows,** the year-by-year table, as the room's door did; its words ("See your
+  plan year by year") stay true until RC3 moves it to Snapshot. Entering always lands there; the page then lives in
+  `IntakeApp`'s state and the hash. *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **No gear and no Lock item yet.** The gear opens nothing until RC18's settings, and the app has no in-session lock, so
+  neither is drawn (no dead control). The lock menu holds the save state's sentence and the state's actions (Keep,
+  Save your changes, Try again or Reload, and Back up where a vault exists in the session and the tab can write).
+  *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **The lock carries the save state in words on the bar** ("Saved", "Unsaved changes", "Saving…", "Not saved",
+  "View only"), beside the icon (ref 3.8: an icon never stands alone), so the state is never hidden inside a menu; a
+  failed save is also spoken as an alert. *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **History: one entry per page, each `{ b9: 'workspace', n }`,** `n` its place in the visit, so the wordmark goes
+  straight back to the answer (`history.go(-n)`) as one move. A move between pages asks first only over an open
+  drawer's edit (the what-if survives a page change); a leave past the shell (Back or the wordmark) asks over an open
+  drawer's edit and over an unkept what-if, each in its own words (`workbenchLeaveAsk`, `shellLeaveWhatIf`). An unkept
+  what-if also holds the browser's own leave dialog (insight 112), through `IntakeApp`'s guard, never the open
+  entries' count. A page address left from an earlier load is dropped when the answer page lands.
+  *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **Interim tabs draw no folder tabs.** Analysis holds one tab (What if), which rides in the hash; the interim page keeps
+  its old look under the banner, its heading and the intro line. The interim pages keep the old cream page.
+  *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all changes))*
+- **On the phone the sub-nav leaves with the modules:** the menu sheet holds every module and page. The top bar's
+  height is a floor, not a cap: two long names wrap and the bar grows (the widest household's names pushed the menu
+  button 18 px off a 390 px phone at a fixed height). *(the pilot's call, 2026-11-24, b9-4 (Briggsy pre-approved all
+  changes))*
+- **The shell's load failure prints the answer's lead** on the failure page, beside "Back to your answer", so a failed
+  load after its retry still leaves the answer readable (U25's rule). *(the pilot's call, 2026-11-24, b9-4 (Briggsy
+  pre-approved all changes))*
+- **Figtree loads in the main app, and the legacy element rules stop at `.rc-root`.** Only the probe imported the face,
+  so the shell's surfaces fell back to the system sans: `src/main.tsx` imports `@fontsource-variable/figtree` beside
+  the two old faces (the probe keeps its own). The legacy layer's bare element rules (`base.css`'s `h1` to `h6` face,
+  leading, tracking and colour, `p`'s reading measure, `small`'s colour) reached every element the scoped preflight
+  does not reset, and the phone menu's headings drew in Fraunces: `theme.css`'s base layer neutralises them under
+  `:where(.rc-root)` (heading size and weight were already reset there). `e2e/design-tokens.spec.ts` reads Figtree
+  loaded and computed inside the shell on the built app; `e2e/rc-screens.spec.ts` reads the face, the colour and the
+  measure. RC21 deletes `base.css` and the neutraliser with it. *(the pilot's call, 2026-11-24, b9-4 (Briggsy
+  pre-approved all changes))*
+
 **The shell** (`src/ui/shell/`):
 - **Top bar**: the B9 wordmark (ours), the two names stacked, the module words in RightCapital's order (Dashboard,
   Investment, Retirement, Tax, Profile), each shown only when at least one of its pages exists; the active module's

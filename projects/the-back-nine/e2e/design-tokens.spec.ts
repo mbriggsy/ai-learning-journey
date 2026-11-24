@@ -1,4 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
+import { driveIntakeToResult } from './intakeDrive'
+import { copy } from '../src/ui/copy'
 
 /**
  * Design-token REALITY proofs (real Chromium, real built dist/, real enforced CSP from
@@ -73,15 +75,33 @@ async function digitWidths(page: Page, family: string) {
 
 /**
  * Act 6 · RC1 (plan docs/plans/6-rightcapital-ui-plan.md, section 2.3): Figtree, the clone's one face, self-hosted from
- * `@fontsource-variable/figtree`. In RC1 only the kit probe page loads it, so these arms read `kit-probe.html` on the
- * same enforced origin. Its default digits are proportional (ref 3.5), so the figure law is the tabular pair below with
+ * `@fontsource-variable/figtree`. In RC1 only the kit probe page loaded it, so these arms read `kit-probe.html` on the
+ * same enforced origin; since RC2 the main entry imports it too, and one arm reads it inside the shell. Its default digits are proportional (ref 3.5), so the figure law is the tabular pair below with
  * its proportional control, exactly as for the body face above.
  */
-test.describe('design tokens — Figtree (the kit probe)', () => {
+test.describe('design tokens — Figtree (the kit probe and the main app)', () => {
   test('Figtree loads under the enforced CSP (and the check can fail: a fake family reads unloaded)', async ({ page }) => {
     await page.goto('/kit-probe.html')
     const loaded = await loadedFamilies(page, ['Figtree Variable', FAKE_FAMILY])
     expect(loaded['Figtree Variable'], 'Figtree Variable failed to load — the clone’s face falling back').toBe(true)
+    expect(loaded[FAKE_FAMILY], 'a family that does not exist read as loaded — the check is deaf').toBe(false)
+  })
+
+  test('the main app loads Figtree too: inside the shell the wordmark computes in it, and the font set holds a loaded entry (a fake family reads unloaded)', async ({ page }) => {
+    // Act 6 · RC2: the shell is the first `.rc-root` surface in the main app, so the main entry (`src/main.tsx`) imports
+    // the face, not only the probe. Entered as a user would: the real intake, then the answer page's door.
+    test.setTimeout(180_000)
+    await driveIntakeToResult(page)
+    const door = page.locator('.result-quiet-row [data-door="workbench"]')
+    await expect(door).toBeVisible({ timeout: 120_000 })
+    await door.click()
+    await expect(page.locator('main.result[data-shell-screen]')).toBeAttached({ timeout: 30_000 })
+    const word = page.getByRole('link', { name: copy.shellHomeLabel }).getByText(copy.appTitle, { exact: true })
+    await expect(word, 'the wordmark’s words are drawn at this width').toBeVisible()
+    const family = await word.evaluate((el) => getComputedStyle(el).fontFamily.replace(/["']/g, ''))
+    expect(family, 'the wordmark computes in Figtree').toMatch(/^Figtree Variable(,|$)/)
+    const loaded = await loadedFamilies(page, ['Figtree Variable', FAKE_FAMILY])
+    expect(loaded['Figtree Variable'], 'Figtree Variable is not loaded in the main app — its .rc-root surfaces fall back').toBe(true)
     expect(loaded[FAKE_FAMILY], 'a family that does not exist read as loaded — the check is deaf').toBe(false)
   })
 

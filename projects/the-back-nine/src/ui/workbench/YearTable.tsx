@@ -4,9 +4,9 @@
  *
  * The three named states (U7's Approach): FIRST LOAD, a reserved frame with status words; UPDATING, the prior rows stay,
  * marked in words and with a cue that is not color (a dashed rule beside the rows, dimmed ink), `aria-busy` set on the
- * table, the words spoken once by the room's own live region (U8); ERROR,
+ * table, the words spoken once by the shell's own live region (U8; Act 6 · RC2); ERROR,
  * one calm sentence and the rows withheld, with no retry (a lane never re-sends after a failure, KTD13; the answer's
- * own retry is on the front room); the way back is the room's own "Back to your answer", always on screen.
+ * own retry is on the answer page); the way back is the shell's wordmark, always on screen.
  *
  * Reading the table: a box holds up to three lines, each one figure, named under the column's header ("Pay / Other
  * income", "Put in / Taken out / Left"). A put-in figure wears "+", a taken-out one "−": the direction never rests on
@@ -188,8 +188,8 @@ export function YearTable({ state }: { readonly state: YearTableState }) {
     )
   }
   if (state.kind === 'error') {
-    // The way back is the room's own "Back to your answer" above, always on screen: a second button of the same
-    // name here would be two controls for one action.
+    // The way back is the shell's wordmark, always on screen: a second way back here would be two controls for one
+    // action.
     return (
       <div className="wb-state" role="alert">
         <p className="wb-state__words">{copy.workbenchTableError}</p>
@@ -206,7 +206,7 @@ export function YearTable({ state }: { readonly state: YearTableState }) {
   const { table, updating } = state
   return (
     <div className="wb-table-region">
-      {/* Spoken through the room's one live region on the change (WorkbenchRoom): no role of its own. */}
+      {/* Spoken through the shell's one live region on the change (`src/ui/shell/Shell.tsx`): no role of its own. */}
       {updating && <p className="wb-updating">{copy.workbenchTableUpdating}</p>}
       <Table table={table} updating={updating} />
       <section className="wb-key" aria-labelledby="wb-key-heading">

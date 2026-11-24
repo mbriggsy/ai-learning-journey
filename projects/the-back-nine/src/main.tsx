@@ -6,6 +6,8 @@ import './ui/styles/layers.css'
 // = body/UI and every numeral (the figure law in src/ui/styles/tokens.css).
 import '@fontsource-variable/fraunces/opsz.css'
 import '@fontsource-variable/source-sans-3/index.css'
+// Act 6's one face (RC1's token sheet names it as `--font-ui`): the shell's `.rc-root` surfaces render in it since RC2.
+import '@fontsource-variable/figtree/index.css'
 import './ui/styles/tokens.css'
 import './ui/styles/base.css'
 import './ui/styles/app.css'

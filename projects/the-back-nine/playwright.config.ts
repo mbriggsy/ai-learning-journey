@@ -37,6 +37,7 @@ export default defineConfig({
     '**/chart-text.spec.ts',
     '**/chart-text-rv.spec.ts',
     '**/intake-fold.spec.ts',
+    '**/rc-screens.spec.ts',
     '**/caddie-walk.spec.ts',
     // INSTRUMENTS, never gates — e2e/held/shots.config.ts (dev server) and e2e/held/solve-timing.config.ts
     // (the built app: solve-timing / solve-phase-profile / solve-pool) own them, on demand

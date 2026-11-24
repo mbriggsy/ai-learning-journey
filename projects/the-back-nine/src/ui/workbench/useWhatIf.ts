@@ -77,8 +77,9 @@ export function useWhatIf({
     if (shown.length > 0) slot.ask(snapshot.answer, seed, shown)
     // Keyed on the answer's key, the seed and the bundle's key: `snapshot.answer` and `shown` are that key's values.
   }, [aKey, seed, shownKey, slot])
-  // NOT HELD as an unsaved buffer: the room's leave ask says "changes you finished stay in your plan", false for a
-  // what-if. A Back press over an unkept what-if, and its own words, are U16's (its test list), with Keep.
+  // NOT HELD as an unsaved buffer: the open entries' leave ask says "changes you finished stay in your plan", false for
+  // a what-if. Since Act 6 · RC2 the shell tells IntakeApp when `own` holds a change, and a leave past the shell asks
+  // first in the what-if's own words (`shellLeaveWhatIf`); Keep is RC5's (gap 2's U16).
 
   const setLever = useCallback((target: string, lever: WhatIfLeverV6 | null) => {
     const next = withLever(ownRef.current, target, lever)

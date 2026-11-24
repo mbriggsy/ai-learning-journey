@@ -1,29 +1,26 @@
 @layer legacy { /* Act 6: every old sheet sits in the legacy layer (src/ui/styles/layers.css); RC21 deletes it. */ /*
- * src/ui/workbench/workbench.css — the workbench room's frame (Act 5, U6).
+ * src/ui/workbench/workbench.css — the workbench room's pages, riding inside Act 6's shell as interim tabs (RC2).
  *
- * Tokens only (CSP `style-src 'self'`: no inline styles). A plain column at the wide frame: the way
- * back, the heading, the plan's save control; U7's table joins under the heading. Calm, no theatrics.
+ * Imported by the shell's interim container (`src/ui/shell/InterimPage.tsx`) alone, outside any `.rc-root` subtree, so
+ * the scoped preflight never reaches these rules. The room's own frame (its bar, head, pinned seat and page switch)
+ * went with the room at RC2; the pages keep the rules they still use until their units rebuild them (RC4, RC6, RC13).
+ * Tokens only (CSP `style-src 'self'`: no inline styles). Calm, no theatrics.
  */
 
-.workbench {
+/* The interim page's column: the old room's frame, under the shell's top bar and sub-nav. */
+.shell-interim {
   box-sizing: border-box;
-  flex: 1;
   width: 100%;
-  max-width: var(--content-wide);
+  max-width: 90rem;
   margin-inline: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-5);
-  padding: var(--space-6) var(--gutter) var(--space-9);
+  padding: var(--space-5) var(--gutter) var(--space-6);
 }
 
-.workbench__bar {
-  display: flex;
-  width: 100%;
-}
-
-.workbench__heading {
+.shell-interim__title {
   font-family: var(--font-display);
   font-optical-sizing: auto;
   font-weight: var(--weight-display);
@@ -44,27 +41,18 @@
   border-radius: var(--radius-md);
 }
 
-.workbench__ask-text,
-.workbench__failed-note {
+.workbench__ask-text {
   font-size: var(--text-base);
   line-height: var(--leading-body);
   color: var(--ink);
   margin: 0;
 }
 
-.workbench__ask-actions,
-.workbench__failed-actions {
+.workbench__ask-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-4);
-}
-
-.workbench__failed {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-  max-width: var(--measure);
 }
 
 /* ── The year-by-year table (U7) ────────────────────────────────────────────────────────────────────
@@ -73,63 +61,12 @@
  * laptop size scrolls sideways; under 64rem the table scrolls inside its own frame with the year column
  * held. Direction reads by sign and words, never by color; "~" and line labels sit in the muted ink. */
 
-.workbench {
-  max-width: 90rem;
-}
-
-.workbench__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4) var(--space-7);
-  width: 100%;
-}
-
-/* The seat: the answer, the page switch, and the table's market switch, in that order down a phone. At a laptop it
-   pins under the page's top, the market switch seated beside the answer and the page switch across under both. */
-.wb-pin-seat {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--space-3);
-  width: 100%;
-  background: var(--paper);
-  padding-block: var(--space-2) 0;
-}
-
-@media (min-width: 68rem) {
-  .wb-pin-seat {
-    display: grid;
-    /* The answer takes the row's free width: its leads (and the forms reserved for the next answer) then sit on one
-       line at his laptop and at 1280, so the reserve costs no blank line there. */
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      'pin view'
-      'pages pages';
-    justify-content: space-between;
-    align-items: end;
-    gap: var(--space-3) var(--space-7);
-  }
-
-  .wb-pin {
-    grid-area: pin;
-  }
-
-  .wb-view {
-    grid-area: view;
-  }
-
-  .wb-pages {
-    grid-area: pages;
-  }
-}
-
-/* The rule runs beside the words alone (`.wb-pin__real`), so the box's reserved room reads as plain space. */
+/* The intro line (the many-futures answer, `InterimPage.tsx`'s `InterimIntro`): a rule beside the words, and its
+   hidden copy holding the tallest form the next answer can take. */
+/* The rule runs beside the words alone (`.wb-pin__real`), so the box's reserved room reads as plain space. The box
+   takes the column's whole width, so every form the next answer can take wraps at one measure. */
 .wb-pin {
+  align-self: stretch;
   padding-left: 0;
 }
 
@@ -436,18 +373,12 @@
 }
 
 /* The project's one width seam (`--bp-laptop`, 68rem; `scripts/__tests__/breakpoint-mirrors.test.ts`): at a laptop the
-   header holds under the pinned answer; below it the table scrolls inside its own frame. The figures stay at
+   header holds at the window's top; below it the table scrolls inside its own frame. The figures stay at
    `--text-xs` at every width: a larger tier would be a second seam, and the widest household fits 1280 at this size. */
 @media (min-width: 68rem) {
-  /* Keyboard focus never lands under the pinned seat: a focused control scrolls clear of it (WCAG 2.4.11; the U8
-     review's C4). The seat's height is the room's own measure (`--wb-pin-h`, written by WorkbenchRoom). */
-  .wb-panel :is(button, a[href], input, select, textarea, [tabindex]:not([tabindex='-1'])) {
-    scroll-margin-top: calc(var(--wb-pin-h, 0px) + var(--space-2));
-  }
-
   .wb-table thead {
     position: sticky;
-    top: var(--wb-pin-h, 0px);
+    top: 0;
     z-index: 2;
   }
 }
@@ -477,9 +408,6 @@
     background: var(--paper);
   }
 
-  .wb-pin-seat {
-    position: static;
-  }
 }
 
 /* The market switch: the shared segmented control, its labels kept on one line with room either side. */
@@ -488,76 +416,7 @@
   white-space: nowrap;
 }
 
-/* ── The room's two pages (U8): the year-by-year table and the facts page ─────────────────────────────────────────
- * A plain tab row under the pinned answer: the shown page reads by weight and a bar under its name, never by colour
- * alone. Each name reserves its bold width (a hidden bold copy, `::before`), so a switch never moves the other tab
- * under a finger. The table's market switch belongs to the table page: on the facts page it keeps its place in the
- * pinned seat, unseen and out of reach (`inert`), so the pinned box holds still when the page changes. */
-
-.workbench[data-room-page='facts'] .wb-view {
-  visibility: hidden;
-}
-
-@media not (min-width: 68rem) {
-  .workbench[data-room-page='facts'] .wb-view {
-    display: none;
-  }
-}
-
-.wb-pages {
-  display: flex;
-  gap: var(--space-6);
-  width: 100%;
-  border-bottom: 1px solid var(--line-soft);
-}
-
-.wb-pages__tab {
-  position: relative;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--tap-min);
-  padding: var(--space-2) 0;
-  border: none;
-  background: none;
-  font: inherit;
-  font-size: var(--text-base);
-  line-height: var(--leading-tight);
-  color: var(--ink-muted);
-  cursor: pointer;
-}
-
-.wb-pages__tab::before {
-  content: attr(data-label);
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
-  font-weight: var(--weight-semibold);
-}
-
-.wb-pages__tab--on {
-  color: var(--ink);
-  font-weight: var(--weight-semibold);
-}
-
-.wb-pages__tab--on::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 3px;
-  border-radius: 2px 2px 0 0;
-  background: var(--ink);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .wb-pages__tab:hover {
-    color: var(--ink);
-  }
-}
-
+/* ── The pages' bodies ───────────────────────────────────────────────────────────────────────────────────────── */
 .wb-panel {
   width: 100%;
 }

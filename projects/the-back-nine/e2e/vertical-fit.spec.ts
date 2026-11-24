@@ -6623,8 +6623,9 @@ for (const arm of KEEP_TAP_ARMS) {
 }
 
 // ---------------------------------------------------------------------------
-// THE WORKBENCH ROOM'S YEAR-BY-YEAR TABLE (the workbench plan's U7, slice 3; insight 123: judge a fit on the widest
-// member, never one seed's frame). `?seed=tablewidest` is the table's widest household: every column the table can
+// THE YEAR-BY-YEAR TABLE (the workbench plan's U7, slice 3; insight 123: judge a fit on the widest member, never one
+// seed's frame). Since Act 6 · RC2 the table rides inside the shell as the interim Retirement → Cash Flows tab, where the
+// answer page's door lands; these arms re-pointed there unchanged (plan 6, section 5.2: RC6 ports them to Cash Flows). `?seed=tablewidest` is the table's widest household: every column the table can
 // draw prints (fourteen beside the year), at seven-digit balances, under two 20-character names. The laws:
 //  - At a laptop (his 1440×731 @2 window and the 1280×800 tier, each view) nothing scrolls sideways: not the page,
 //    and not the table's own frame, which carries no scroller at a laptop (`workbench.css`), so an overflow there
@@ -6656,11 +6657,12 @@ const VIEW_WORDS = {
   rough: { label: copy.workbenchViewRough, what: slots.workbenchRoughWhat(ROUGH_YEARS.start, ROUGH_YEARS.end, ROUGH_WINDOW_YEARS) },
 } as const
 
-/** The settled answer, then the room through its door, pressed in-page from the page's top. */
+/** The settled answer, then the shell through the answer page's door (it lands on the table), pressed in-page from the
+ *  page's top. */
 async function enterRoomFromTop(page: Page): Promise<void> {
   await gotoSeedFinal(page, TABLE_WIDEST)
   const door = page.locator('.result-quiet-row [data-door="workbench"]')
-  await expect(door, 'the room door never mounted on the settled answer').toBeAttached()
+  await expect(door, 'the door never mounted on the settled answer').toBeAttached()
   await page.evaluate(() => window.scrollTo(0, 0))
   await door.evaluate((el) => (el as HTMLButtonElement).click())
   await expect(page.locator('.wb-table'), 'the table never landed').toBeVisible({ timeout: 30_000 })
@@ -6734,7 +6736,7 @@ async function expectEveryColumn(page: Page): Promise<void> {
   expect(ids, 'the widest household prints every column the table can draw').toEqual(TABLE_COLUMNS)
 }
 
-test.describe('the workbench room’s year-by-year table on its widest household (U7)', () => {
+test.describe('the year-by-year table (the shell’s Cash Flows tab) on its widest household (U7)', () => {
   for (const size of ['REAL', 'TIER'] as const) {
     test.describe(sizeTitle(size), () => {
       const s = LAPTOP_SIZES[size]
@@ -6795,7 +6797,7 @@ test.describe('the workbench room’s year-by-year table on its widest household
       test.setTimeout(FINAL_TIER_MS + 60_000)
       await gotoSeedFinal(page, TABLE_WIDEST)
       const door = page.locator('.result-quiet-row [data-door="workbench"]')
-      await expect(door, 'the room door never mounted on the settled answer').toBeAttached()
+      await expect(door, 'the door never mounted on the settled answer').toBeAttached()
       await page.evaluate(() => window.scrollTo(0, 0))
       // The answer is settled, so from here the engine worker hears only the room's two table runs. Each one-path run
       // otherwise lands within a frame of the room mounting (read: 0 or 1 frames before the rows), and the walk would
@@ -6845,11 +6847,12 @@ test.describe('the workbench room’s year-by-year table on its widest household
 })
 
 // ---------------------------------------------------------------------------
-// THE PINNED ANSWER LANDING AFTER A FACTS-PAGE EDIT (the workbench plan's U8, carried in from U7's review; insights
+// THE ANSWER LANDING AFTER A FACTS-PAGE EDIT (the workbench plan's U8, carried in from U7's review; insights
 // 035, 065, 155). The room's facts page can now re-figure the pinned answer: an edit in a step's sheet commits, the
 // store works the answer out again (provisional, then final on the date route), and the pinned box's words change
 // twice, the provisional tag's line coming and going between. Its hidden copy reserves the box's tallest form, now
-// over the forms the next answer can take on its route (`PinnedAnswer.tsx`'s `reserveForms`); a new lead longer than
+// over the forms the next answer can take on its route (`pinnedLines.ts`'s `reserveForms`; since Act 6 · RC2 the box is
+// the interim pages' intro line, `src/ui/shell/InterimPage.tsx`, and the facts page the interim Profile tab); a new lead longer than
 // the reserve is the risk this walk reads: every frame from the sheet's close until thirty frames after the new answer
 // lands is held to the page as it stood before the door opened, and the two tap targets under the pinned box (the facts
 // page's tab and the first group's door) must not have moved on the page; the walk also proves the lead changed.
@@ -6864,12 +6867,24 @@ test.describe('the workbench room’s year-by-year table on its widest household
 
 const LANDING_SEED = 'date'
 
+/** The shell's Profile tab: the top bar's module word at a laptop, the phone menu's page on the phone. */
+async function showFactsPage(page: Page): Promise<void> {
+  const modules = page.getByRole('navigation', { name: copy.shellModulesLabel })
+  if (await modules.isVisible()) await modules.getByRole('link', { name: copy.shellModuleProfile, exact: true }).click()
+  else {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: copy.workbenchPageFacts, exact: true }).click()
+    await expect(page.getByRole('dialog', { name: copy.shellMenuTitle })).toHaveCount(0)
+  }
+  await expect(page.locator('main.result[data-shell-screen="interim-facts"]')).toBeAttached()
+}
+
 const LANDING_SIZES = [
   { title: sizeTitle('REAL'), use: { viewport: LAPTOP_SIZES.REAL.viewport, deviceScaleFactor: LAPTOP_SIZES.REAL.deviceScaleFactor } },
   { title: `on the phone (${PHONE.width}×${PHONE.height})`, use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true } },
 ] as const
 
-test.describe('the workbench room’s facts page (U8)', () => {
+test.describe('the facts page (the shell’s Profile tab, U8)', () => {
   for (const size of LANDING_SIZES) test.describe(size.title, () => {
     test.use(size.use)
 
@@ -6877,11 +6892,11 @@ test.describe('the workbench room’s facts page (U8)', () => {
       test.setTimeout(FINAL_TIER_MS * 2 + 60_000)
       await gotoSeedFinal(page, LANDING_SEED)
       const door = page.locator('.result-quiet-row [data-door="workbench"]')
-      await expect(door, 'the room door never mounted on the settled answer').toBeAttached()
+      await expect(door, 'the door never mounted on the settled answer').toBeAttached()
       await page.evaluate(() => window.scrollTo(0, 0))
       await door.evaluate((el) => (el as HTMLButtonElement).click())
       await expect(page.locator('.wb-table'), 'the table never landed').toBeVisible({ timeout: 30_000 })
-      await page.getByRole('tab', { name: copy.workbenchPageFacts }).click()
+      await showFactsPage(page)
       // THE BASELINE, taken before the door opens (the U8 review's C6): the page as it stood on the settled answer, so a
       // box that grows the moment the edit starts being worked out, and stays grown, still reds. The door is scrolled
       // into view first, as the press would, so the baseline and every frame share one scroll (the seat pins at a
@@ -6896,7 +6911,7 @@ test.describe('the workbench room’s facts page (U8)', () => {
           return { x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height }
         }
         return {
-          tab: rect([...document.querySelectorAll('[role="tab"]')].find((t) => t.getAttribute('aria-selected') === 'true') ?? null),
+          intro: rect(document.querySelector('.wb-facts__intro')),
           door: rect(document.querySelector('.wb-facts__section [data-fact-open]')),
         }
       })
@@ -6920,7 +6935,7 @@ test.describe('the workbench room’s facts page (U8)', () => {
       // Armed before Done: every frame from the sheet's close until thirty frames after the new answer lands.
       await page.evaluate(() => {
         type Rect = { readonly x: number; readonly y: number; readonly w: number; readonly h: number }
-        type Frame = { readonly tab: Rect | null; readonly door: Rect | null; readonly refiguring: boolean; readonly landed: boolean; readonly lead: string }
+        type Frame = { readonly intro: Rect | null; readonly door: Rect | null; readonly refiguring: boolean; readonly landed: boolean; readonly lead: string }
         const log: Frame[] = []
         ;(window as unknown as { __wbLanding: Frame[] }).__wbLanding = log
         const rect = (el: Element | null): Rect | null => {
@@ -6931,14 +6946,14 @@ test.describe('the workbench room’s facts page (U8)', () => {
         let sawRefiguring = false
         let after = 0
         const tick = () => {
-          const room = document.querySelector('main.workbench')
+          const room = document.querySelector('main.result')
           const sheetOpen = document.querySelector('.control-sheet') !== null
           const refiguring = room?.hasAttribute('data-answer-refiguring') ?? false
           if (refiguring) sawRefiguring = true
           const landed = sawRefiguring && !refiguring && room?.getAttribute('data-answer-tier') === 'final'
           if (!sheetOpen) {
             log.push({
-              tab: rect([...document.querySelectorAll('[role="tab"]')].find((t) => t.getAttribute('aria-selected') === 'true') ?? null),
+              intro: rect(document.querySelector('.wb-facts__intro')),
               door: rect(document.querySelector('.wb-facts__section [data-fact-open]')),
               refiguring,
               landed,
@@ -6959,7 +6974,7 @@ test.describe('the workbench room’s facts page (U8)', () => {
       const frames = await page.evaluate(
         () =>
           (window as unknown as {
-            __wbLanding: { tab: { x: number; y: number; w: number; h: number } | null; door: { x: number; y: number; w: number; h: number } | null; refiguring: boolean; landed: boolean; lead: string }[]
+            __wbLanding: { intro: { x: number; y: number; w: number; h: number } | null; door: { x: number; y: number; w: number; h: number } | null; refiguring: boolean; landed: boolean; lead: string }[]
           }).__wbLanding,
       )
       const before = frames.filter((f) => !f.landed)
@@ -6971,10 +6986,10 @@ test.describe('the workbench room’s facts page (U8)', () => {
       expect(before.length, 'frames painted before the new answer landed: otherwise the walk compares nothing').toBeGreaterThan(0)
       expect(refiguring.length, 'the pinned answer was seen being worked out again before it landed').toBeGreaterThan(0)
       expect(leads.length, 'the pinned answer’s words changed: otherwise no new lead was laid out').toBeGreaterThanOrEqual(2)
-      expect(baseline.tab, 'the facts page’s tab is on screen').not.toBeNull()
+      expect(baseline.intro, 'the facts page’s intro, the first thing under the answer’s box, is on screen').not.toBeNull()
       expect(baseline.door, 'the first group’s door is on screen').not.toBeNull()
       for (const f of frames) {
-        for (const key of ['tab', 'door'] as const) {
+        for (const key of ['intro', 'door'] as const) {
           const a = baseline[key]!
           const b = f[key]
           expect(b, `${key} left the page`).not.toBeNull()

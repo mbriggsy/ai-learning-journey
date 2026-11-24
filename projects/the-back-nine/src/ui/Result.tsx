@@ -560,7 +560,7 @@ export function Result({
     // A settled page is `data-answer-tier="final"` with this attribute absent — the harnesses' signal,
     // since a final-tier wait alone passes inside the window (the old answer still says final).
     <main
-      className="result"
+      className="result result-page"
       data-inframe-disclaimer={seating.caveat === 'none' ? undefined : true}
       data-answer-tier={answerTier}
       data-answer-refiguring={snapshot.refiguring ? true : undefined}

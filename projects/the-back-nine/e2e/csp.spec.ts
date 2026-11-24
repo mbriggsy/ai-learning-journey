@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { SETTLED_RESULT } from './reviewSurface'
+import { driveIntakeToResult } from './intakeDrive'
 import { copy, slots } from '../src/ui/copy'
 import { roughWindow, ROUGH_WINDOW_YEARS } from '../src/engine/reference/roughSequence'
 
@@ -62,117 +63,6 @@ async function injectInlineScript(page: Page): Promise<void> {
 const inlineExecuted = (page: Page) => page.evaluate(() => window.__inlineExecuted)
 const violations = (page: Page) => page.evaluate(() => window.__cspViolations ?? [])
 
-/**
- * Cold start → the guided intake → the Result, under whatever headers the page was served with — the
- * one REAL path both engine arms walk (the spine worker's round trip, then the pooled solve's workers).
- * A complete all-retired 65/63 household in NC with an ACA quote pair, one $1M 401(k).
- */
-async function driveIntakeToResult(page: Page): Promise<void> {
-  await page.goto('/')
-
-  await page.getByRole('button', { name: 'Begin' }).click()
-
-  // Names + birth years + sex (a complete all-retired 65/63 household).
-  // Person groups locate by the STABLE class — committing a name renames the
-  // group's accessible legend mid-flow (by design), which would stale a
-  // name-based locator.
-  const you = page.locator('.person-group').first()
-  const spouse = page.locator('.person-group').nth(1)
-  // Segment radios are sr-only inside their labels — check({force}) sets
-  // state deterministically regardless of any in-flight re-render (the strip
-  // also reserves a fixed height so commits never shift layout mid-tap).
-  const pick = (scope: ReturnType<typeof page.locator>, name: string) =>
-    scope.getByRole('radio', { name, exact: true }).check({ force: true })
-  await you.getByLabel('First name').fill('Pat')
-  await you.getByLabel('Birth year').fill('1961')
-  await pick(you, 'Male')
-  await spouse.getByLabel('First name').fill('Sam')
-  await spouse.getByLabel('Birth year').fill('1963')
-  await pick(spouse, 'Female')
-  const next = () => page.getByRole('button', { name: 'Continue' }).click()
-  await next()
-
-  // Work status: both already retired, stop ages entered.
-  await pick(you, 'Already retired')
-  await you.getByLabel('The age work stopped').fill('63')
-  await pick(spouse, 'Already retired')
-  await spouse.getByLabel('The age work stopped').fill('61')
-  await next()
-
-  // Social Security per person. Labels + value semantics follow the SS cold-read
-  // rename (commit 3c04391c): the benefit field is now the MONTHLY at-FRA figure
-  // (committed ×12 to the annual pia), and claiming is entered as the YEAR you
-  // start (committed as year − birthYear → the whole-year claim age the engine
-  // stores). Pat (b.1961) 2028 → age 67; Sam (b.1963) 2030 → age 67 — both inside
-  // the 62–70 window; $2,000/$1,500 monthly is well under the magnitude ceiling.
-  const ssAmounts = page.getByLabel('Monthly benefit at full retirement age')
-  await ssAmounts.first().fill('2000')
-  await ssAmounts.last().fill('1500')
-  const claims = page.getByLabel('The year you’ll start Social Security')
-  await claims.first().fill('2028')
-  await claims.last().fill('2030')
-  await next()
-
-  // The retirement-state step (the state-tax unit — it sits BEFORE spend so the
-  // spend help can speak state-aware). Pick NC: the priced-state path then runs
-  // through the real engine under the enforced CSP — the state pricing is part
-  // of the round trip this walk proves.
-  await page.getByRole('radio', { name: 'North Carolina' }).check({ force: true })
-  await next()
-
-  // Spend (+ the explicit period confirm — the figure is ambiguous-band).
-  await page.getByLabel('Household spending, all in').fill('7000')
-  await page.getByRole('radio', { name: 'Each month' }).check({ force: true })
-  await next()
-
-  // The ACA quote pair (63 < 65 ⇒ required).
-  await page.getByLabel('Your household’s combined monthly premium').fill('950')
-  await page.getByLabel('Benchmark Silver plan, monthly (whole household)').fill('880')
-  await next()
-
-  // Out-of-pocket (optional) — skip; IRMAA seed (65 ⇒ required).
-  await next()
-  await page.getByLabel('Income, two years back').fill('120000')
-  await page.getByLabel('Income, last year').fill('110000')
-  await next()
-
-  // Medicare extras (the ask-for-extras payment fork, 503213f4) — per-person,
-  // nothing pre-selected; the fork passes no `required` — only a half-answer blocks advance. The MA arm is
-  // an affirmed $0 beyond Part B, keeping this walk's household numbers as
-  // they were before the unit.
-  await pick(you, 'About nothing beyond Part B (common on Medicare Advantage)')
-  await pick(spouse, 'About nothing beyond Part B (common on Medicare Advantage)')
-  await next()
-
-  // One account (401k), committed to the loop. The single-ticker lookup was
-  // retired in the account-form redesign — the blend is now one precise
-  // stock/bond/cash split (sum-to-100, committed on blur). 100/0/0 = an
-  // all-stock account (what the old "VTI" stood in for).
-  await page.getByRole('button', { name: 'Add an account' }).click()
-  await page.getByRole('radio', { name: '401(k)', exact: true }).check({ force: true })
-  await page.getByLabel('Balance today').fill('1000000')
-  await page.getByLabel('Stocks %').fill('100')
-  await page.getByLabel('Bonds %').fill('0')
-  await page.getByLabel('Cash %').fill('0')
-  await page.getByRole('button', { name: 'Add this account' }).click()
-
-  // Continue commits the account set → the engine dispatches: the strip's
-  // reading appears only after the module worker constructed (worker-src
-  // 'self') AND the real Monte Carlo engine round-tripped. 2000 paths +
-  // tax/health overlays ⇒ generous timeout.
-  await next()
-  await expect(page.getByTestId('engine-reading')).toHaveText(/of 10/, { timeout: 60_000 })
-
-  // R40's opt-in other-income loop is the LAST intake step on THIS walk's all-retired route
-  // (src/intake/questions.tsx pushes `otherIncomeStep` after the accounts step, with `fields: []`,
-  // so nothing blocks the advance; the pay check's two steps follow it only on the date route) —
-  // one more Continue completes the intake (flow.tsx onComplete → IntakeApp `complete` →
-  // setPhase('result')) and lands the Result, so a REAL chart's text layer is proven under the REAL
-  // enforced headers. The fit harness structurally cannot do this: `?seed=` is DCE'd out of dist/
-  // (playwright.config.ts), and design-tokens.spec.ts's CSSOM proof is a synthetic node, not a chart.
-  await next()
-  await expect(page.locator('main.result')).toBeAttached({ timeout: 90_000 })
-}
 
 test.describe('CSP — real browser enforcement', () => {
   test("blocks a runtime-injected inline <script> (script-src 'self')", async ({ page }) => {
@@ -357,12 +247,15 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the workbench room loads under the enforced CSP — no violation, and no request outside the build’s own files', async ({ page }) => {
-    // Act 5, U6 (workbench plan U6's verification): the room's lazy chunk and its styles load through the
-    // real door on the served build. ANY violation reds (not a directive subset), and so does any request
-    // that leaves the build's own origin: the act adds no network call. U7's table runs both views on the
-    // build's own engine worker, each one short run: the steady view lands first, then a press shows the
-    // rough one, each read by its own words over its own rows. U15 extends the arm to one what-if.
+  test('the shell loads under the enforced CSP: every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+    // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15): the shell's lazy
+    // chunk and its styles load through the answer page's real door on the served build, and every interim tab is
+    // visited. ANY violation reds (not a directive subset), and so does any request that leaves the build's own origin:
+    // the act adds no network call. The table runs both views on the build's own engine worker, each one short run: the
+    // steady view lands first, then a press shows the rough one, each read by its own words over its own rows. The facts
+    // page opens and closes one step sheet; the What if page runs one what-if; the lock menu (a portaled Base UI menu)
+    // opens and closes; at a phone width the menu (a portaled Base UI dialog that animates) moves the page. The way back
+    // is the wordmark, which asks first over the unkept what-if.
     test.setTimeout(180_000)
     await installCollector(page)
     const outside: string[] = []
@@ -373,11 +266,13 @@ test.describe('CSP — real browser enforcement', () => {
     })
     await driveIntakeToResult(page)
     const door = page.locator('.result-quiet-row [data-door="workbench"]')
-    await expect(door, 'the workbench door never mounted on the resolved answer').toBeVisible({ timeout: 120_000 })
+    await expect(door, 'the door never mounted on the resolved answer').toBeVisible({ timeout: 120_000 })
     await door.click()
-    await expect(page.getByRole('heading', { name: 'Your plan, year by year' })).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByRole('button', { name: 'Back to your answer' })).toBeVisible()
-    expect(await page.evaluate(() => history.state)).toEqual({ b9: 'room' })
+    await expect(page.getByRole('heading', { name: copy.workbenchPageTable })).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText(copy.shellInterimBanner, { exact: true })).toBeVisible()
+    expect(await page.evaluate(() => history.state)).toEqual({ b9: 'workspace', n: 1 })
+    expect(new URL(page.url()).hash).toBe('#/retirement/cash-flows')
+    await expect(page.locator('main.result'), 'exactly one main.result in the shell').toHaveCount(1)
 
     const firstLine = page.locator('.wb-about__line').first()
     await expect(page.locator('.wb-table'), 'the steady view’s rows never landed').toBeVisible({ timeout: 60_000 })
@@ -390,22 +285,27 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(page.locator('.wb-table'), 'the rough view’s rows').toBeVisible()
     await expect(page.locator('.wb-table-wrap--updating')).toHaveCount(0)
 
-    // U8: the facts page, one press away, under the same law (no violation, nothing off the build's origin).
-    await page.getByRole('tab', { name: copy.workbenchPageFacts }).click()
+    // The lock menu: a portaled menu, opened and closed by Escape.
+    await page.getByRole('button', { name: new RegExp(`^${copy.lockMenuLabel}`) }).click()
+    await expect(page.getByRole('menu'), 'the lock menu never opened').toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('menu')).toHaveCount(0)
+
+    // The facts page (Profile), one press away, and one step sheet (a portaled sheet, its motion, and an intake step's
+    // body in the shell's chunk), opened and closed through Done.
+    await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleProfile, exact: true }).click()
     await expect(page.getByRole('heading', { name: copy.workbenchFactsChoices, exact: true }), 'the facts page never showed').toBeVisible()
     await expect(page.locator('.wb-facts__section').first()).toBeVisible()
-    // …and one step sheet (a portaled sheet, its motion, and an intake step's body in the room's chunk), opened and
-    // closed through Done.
     await page.getByRole('button', { name: slots.workbenchFactsEditName(copy.workbenchFactsPeople), exact: true }).click()
     const sheet = page.getByRole('dialog', { name: copy.workbenchFactsPeople, exact: true })
     await expect(sheet, 'the step sheet never opened').toBeVisible()
     await sheet.getByRole('button', { name: copy.workbenchFactsDone, exact: true }).click()
     await expect(sheet, 'the step sheet never closed').toHaveCount(0)
 
-    // U15: one what-if on the What if page, run on the build's own engine worker (its many-futures run and both named
-    // futures), under the same law. Spending is offered to every household: its first figure (the one total, or the
-    // first budget line) committed $1,000 lower with Enter. Nothing is applied, so the way back below is unchanged.
-    await page.getByRole('tab', { name: copy.workbenchPageWhatIf }).click()
+    // The What if page (Retirement → Analysis): one what-if, run on the build's own engine worker (its many-futures run
+    // and both named futures). Spending is offered to every household: its first figure committed $1,000 lower with Enter.
+    await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleRetirement, exact: true }).click()
+    await expect(page.locator('main.result[data-shell-screen="interim-whatif"]')).toBeAttached()
     await page.locator('.wb-lever[data-lever="spending"] > summary').click()
     const spend = page.locator('.wb-lever[data-lever="spending"] input[inputmode="decimal"]').first()
     const planSpend = Number((await spend.inputValue()).replace(/[^0-9]/g, ''))
@@ -417,9 +317,20 @@ test.describe('CSP — real browser enforcement', () => {
       timeout: 60_000,
     })
 
-    // The way back: the browser's own Back lands on the answer.
-    await page.goBack()
-    await expect(page.locator('main.result')).toBeVisible()
+    // At a phone width the menu (a portaled, animated dialog) reaches the table page and closes on the choice.
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    const menu = page.getByRole('dialog', { name: copy.shellMenuTitle })
+    await expect(menu, 'the phone menu never opened').toBeVisible()
+    await menu.getByRole('link', { name: copy.shellPageCashFlows, exact: true }).click()
+    await expect(menu).toHaveCount(0)
+    await expect(page.locator('main.result[data-shell-screen="interim-table"]')).toBeAttached()
+
+    // The way back: the wordmark asks first over the unkept what-if; Go back lands on the answer.
+    await page.getByRole('link', { name: copy.shellHomeLabel }).click()
+    await expect(page.getByText(copy.shellLeaveWhatIf, { exact: true }), 'the wordmark left an unkept what-if without asking').toBeVisible()
+    await page.getByRole('button', { name: copy.workbenchLeaveGo, exact: true }).click()
+    await expect(page.locator('main.result.result-page')).toBeVisible()
     await expect(door).toBeVisible()
 
     expect(await violations(page)).toEqual([])

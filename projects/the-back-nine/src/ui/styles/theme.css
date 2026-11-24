@@ -24,6 +24,7 @@
 
 @source '../../kit-probe.tsx';
 @source '../kit';
+@source '../shell';
 
 @theme static {
   --*: initial;
@@ -179,6 +180,28 @@
   :where(.rc-root) :is(h1, h2, h3, h4, h5, h6) {
     font-size: inherit;
     font-weight: inherit;
+  }
+
+  /* The legacy layer's bare element rules (`base.css`) still reach inside `.rc-root`: its `h1, h2, h3` set Fraunces, the
+     display leading, tracking and `--brand`; its `h4, h5, h6` the body face and a tight leading; `p` a reading measure;
+     `small` the muted ink. The preflight above resets heading size and weight but none of these, so a kit heading in the
+     main app rendered in the serif (the shell's phone menu, RC2). This layer beats legacy at zero specificity, so a kit
+     part's own utility still wins. The root's colour is set above (`color: var(--color-stone-900)`). RC21 deletes
+     `base.css`, and this goes with it. */
+  :where(.rc-root) :is(h1, h2, h3, h4, h5, h6) {
+    font-family: inherit;
+    font-optical-sizing: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+  }
+
+  :where(.rc-root) p {
+    max-width: none;
+  }
+
+  :where(.rc-root) small {
+    color: inherit;
   }
 
   :where(.rc-root) a {

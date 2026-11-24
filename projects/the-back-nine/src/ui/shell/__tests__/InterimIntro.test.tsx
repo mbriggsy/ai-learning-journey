@@ -7,13 +7,14 @@ import type { MemoryModelSnapshot, ModelAnswer } from '@store/memoryModel'
 import type { DateSearchOutcome, DateTrackOutcome } from '@shared/model'
 import { DEV_SEEDS } from '../../devSeeds'
 import { copy, slots } from '../../copy'
-import { PinnedAnswer } from '../PinnedAnswer'
-import { pinnedLines, reserveForms } from '../pinnedLines'
+import { InterimIntro } from '../InterimPage'
+import { pinnedLines, reserveForms } from '../../workbench/pinnedLines'
 
 /**
- * The pinned box's reserve (Act 5, U8; insights 035, 065): since the facts page can re-figure the answer under the box,
+ * The interim pages' intro line, the room's pinned answer moved into the shell (Act 6 · RC2), and its reserve (Act 5, U8;
+ * insights 035, 065): since the facts page can re-figure the answer under the box,
  * its hidden copy holds the tallest of the forms the NEXT answer can take on the route, not only the current one's. The
- * real-browser half is the fit harness's landing walk (`e2e/vertical-fit.spec.ts`, laptop and phone); this pins that
+ * real-browser half is the fit harness's landing walk (`e2e/vertical-fit.spec.ts`, laptop and phone, on the shell's Profile page); this pins that
  * the candidates the walk's one transition cannot reach are drawn in the hidden copy at all.
  */
 
@@ -46,7 +47,7 @@ describe('the pinned box’s reserve for the next answer', () => {
     expect(reserve.leads).toContain(slots.noDateInWindowRefiguring(top))
     expect(reserve.leads.some((l) => l.includes(slots.withOddsAtCeiling()))).toBe(true)
     expect(reserve.seconds).toEqual(expect.arrayContaining([slots.dateFloorNotWithinEither(top), slots.dateFloorNotWithin(top)]))
-    const { container } = render(<PinnedAnswer snapshot={snapshotOf(dateAnswer)} wallCalendarYear={draft.startCalendarYear} />)
+    const { container } = render(<InterimIntro snapshot={snapshotOf(dateAnswer)} wallCalendarYear={draft.startCalendarYear} />)
     const ghost = container.querySelector('.wb-pin__ghost')!
     expect(ghost).toHaveAttribute('aria-hidden', 'true')
     for (const text of [...reserve.leads, ...reserve.seconds]) expect(ghost.textContent).toContain(text)
@@ -83,7 +84,7 @@ describe('the pinned box’s reserve for the next answer', () => {
     expect(reserve.leads).toHaveLength(5)
     expect(reserve.leads.some((l) => l.startsWith(`${copy.outcomeOverFunded}:`))).toBe(true)
     expect(reserve.seconds).toEqual([])
-    const { container } = render(<PinnedAnswer snapshot={snapshotOf(headline)} wallCalendarYear={draft.startCalendarYear} />)
+    const { container } = render(<InterimIntro snapshot={snapshotOf(headline)} wallCalendarYear={draft.startCalendarYear} />)
     const real = container.querySelector('.wb-pin__real')!
     for (const text of reserve.leads.filter((l) => !l.startsWith(`${copy.outcomeOnTrack}:`))) expect(real.textContent).not.toContain(text)
   })

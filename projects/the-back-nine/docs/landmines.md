@@ -380,6 +380,11 @@ tests
 
 ## The fit gate and e2e
 
+- **(b9-4, 11-24) The first fit run after the shell's new imports redded every arm the same way:** after the door press
+  the address carried the shell's hash but the answer page was back on screen. A rerun on the same tree passed, and so
+  did a run on a dev server with an empty dependency cache; the likely cause is Vite discovering a dependency the main
+  graph had never reached (Base UI's dialog and menu, first reached through the shell) and reloading the page. CI starts
+  cold and scans first. Read a same-shaped red locally as that before hunting a bug: rerun once on the now-warm server.
 - **(b9-1, 11-23) The fit harness's Chromium has no classic scrollbar** (`clientWidth` reads the whole 1280), while a
   headed Chrome here shows a 15 px one, so a sideways margin read under the harness overstates a real window's by 15 px.
   Read a table's real margin as its narrowest width (the phone arm's `tableWidth`, or the frame squeezed in-page) against
@@ -1162,6 +1167,15 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 
 ## UI and product
 
+- **(b9-4, 11-24) The legacy layer's bare element rules reach inside `.rc-root` unless something resets them.** The
+  preflight copy in `theme.css` resets margins, padding, borders and heading size and weight, not `base.css`'s heading
+  face, leading, tracking and colour, `p`'s reading measure or `small`'s colour: the shell's phone menu drew its headings
+  in Fraunces until `theme.css`'s base layer neutralised them under `:where(.rc-root)`. A new legacy element rule needs
+  its line there too. The probe page loads no `base.css`, so it never shows this; `e2e/rc-screens.spec.ts` reads it in
+  the main app. And a face the main entry never imports falls back silently: Figtree reached the main app only at RC2.
+- **(b9-4, 11-24) Two `main.result` on one page make `SETTLED_RESULT` a strict-mode error in every gate.** The shell owns
+  `main.result`; the answer page's `<main>` carries `result result-page` until RC4, and the legacy layout rules key on
+  `.result-page`. A new screen never renders its own `main.result` (`e2e/rc-screens.spec.ts` counts one on every page).
 - **(b9-4, 11-24) Highcharts' accessibility module must be imported AFTER `@highcharts/react`** (or after `highcharts`
   itself). Imported first, it reads the namespace's `Chart`, `Series` and `Legend` before the master fills them, and the
   built page dies with "Cannot read properties of undefined (reading 'prototype')". And under `pnpm dev`, Vite's

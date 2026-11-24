@@ -9,7 +9,8 @@ import { workingYearLeftOverShownState } from '@intake/intakeMap'
 import type { EngineRunRequest, LaneResult } from '@store/runLanes'
 import type { ModelAnswer, ScenarioDraft } from '@store/memoryModel'
 import type { DateOffsetReading, DateSearchOutcome, SavedRecommendationV3, SimulationResult } from '@shared/model'
-import WorkbenchRoom, { type TableLanes } from '../WorkbenchRoom'
+import type { TableLanes } from '../../shell/Shell'
+import { RoutedShell, showPage, shownScreen } from '../../shell/__tests__/routedShell'
 import type { RailRecommendation } from '../useWhatIf'
 import type { WhatIfSlotLanes } from '../whatIfRun'
 import { appModel } from '../../appModel'
@@ -117,7 +118,7 @@ function dated(draft: ScenarioDraft, offset: number, inputKey = 'k1'): ModelAnsw
   return { kind: 'date', tier: 'final', draft, outcome, inputKey } as ModelAnswer
 }
 
-/** The room over the app's store, the committed answer planted. */
+/** The shell over the app's store, the committed answer planted (Act 6 · RC2: the room's pages ride in the shell). */
 function Room(props: {
   readonly answer: ModelAnswer
   readonly tableLanes: TableLanes
@@ -127,9 +128,8 @@ function Room(props: {
 }) {
   const snap = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   return (
-    <WorkbenchRoom
+    <RoutedShell
       save={{ kind: 'none' }}
-      onBack={() => {}}
       snapshot={{ ...snap, answer: props.answer }}
       model={appModel}
       lanes={props.tableLanes}
@@ -158,7 +158,7 @@ async function openWhatIf(
     />,
   )
   await l.settleTable()
-  fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageWhatIf }))
+  showPage('whatif')
   return { ...l, view, answer }
 }
 
@@ -263,7 +263,7 @@ describe('Apply — the one write (R16, R22; insight 158)', () => {
     await l.settleWhatIf()
     fireEvent.click(screen.getByRole('button', { name: slots.workbenchRailBackName(copy.workbenchRailSpendTitle) }))
     commitFigure(copy.workbenchRailSpendTotalLabel, '50,000')
-    fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageTable }))
+    showPage('table')
     l.view.unmount()
     expect(draftNow()).toBe(before)
     expect(recompute).not.toHaveBeenCalled()
@@ -421,7 +421,7 @@ describe('the one-key rule on the page (insights 094, 159)', () => {
     act(() => appModel.update(() => ({ ...DEV_SEEDS.retired, seed: SEED })))
     const l = lanesFor()
     const view = render(<Room answer={spine({ ...DEV_SEEDS.retired, seed: SEED })} tableLanes={l.tableLanes} whatIfLanes={l.whatIfLanes} />)
-    fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageWhatIf }))
+    showPage('whatif')
     openLever('withdrawal-order')
     const radio = within(lever('withdrawal-order')).getAllByRole('radio')[0]!
     act(() => radio.focus())
@@ -438,9 +438,9 @@ describe('the facts page’s lever lines link to the What if page and open no ed
   ] as const) {
     it(`"${label}" opens the What if page at its lever, and no sheet`, async () => {
       await openWhatIf(DEV_SEEDS.retired)
-      fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageFacts }))
+      showPage('facts')
       fireEvent.click(screen.getByRole('button', { name: slots.workbenchFactsTryName(label) }))
-      expect(screen.getByRole('tab', { name: copy.workbenchPageWhatIf })).toHaveAttribute('aria-selected', 'true')
+      expect(shownScreen()).toBe('interim-whatif')
       expect(screen.queryByRole('dialog')).toBeNull()
       expect(lever(kind).open).toBe(true)
       expect(lever(kind).querySelector('summary')).toHaveFocus()
@@ -449,7 +449,7 @@ describe('the facts page’s lever lines link to the What if page and open no ed
 
   it('the subsidy regime too: its line links to the What if page and opens no editor', async () => {
     await openWhatIf(DEV_SEEDS.health)
-    fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageFacts }))
+    showPage('facts')
     expect(screen.queryByRole('button', { name: slots.workbenchFactsEditName(copy.assumptionRegimeName) })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: slots.workbenchFactsTryName(copy.assumptionRegimeName) }))
     expect(screen.queryByRole('dialog')).toBeNull()

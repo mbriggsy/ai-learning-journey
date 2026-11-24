@@ -77,17 +77,21 @@ async function openWhatIf(page: Page, seed: string) {
   await gotoSeedFinal(page, seed)
   await page.locator('[data-door="workbench"]').click()
   await expect(page.locator('.wb-table')).toBeVisible({ timeout: 60_000 })
-  await page.getByRole('tab', { name: copy.workbenchPageWhatIf }).click()
+  // Since Act 6 · RC2 the What if page is the shell's Retirement → Analysis tab: the sub-nav at a laptop, the menu on a phone.
+  const pages = page.getByRole('navigation', { name: copy.shellPagesLabel })
+  if (await pages.isVisible()) await pages.getByRole('link', { name: copy.shellPageAnalysis, exact: true }).click()
+  else {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: copy.shellPageAnalysis, exact: true }).click()
+  }
   await expect(page.locator('.wb-whatif')).toBeVisible()
 }
 
-/** Bring the page's top under the pinned seat, as a reader lands on it. */
+/** Bring the page's top into view, as a reader lands on it (the room's pinned seat went with the room at RC2). */
 async function toPageTop(page: Page) {
   await page.evaluate(() => {
-    const seat = document.querySelector('.wb-pin-seat')!.getBoundingClientRect()
     const top = document.querySelector('.wb-whatif')!.getBoundingClientRect().top + window.scrollY
-    const pinned = getComputedStyle(document.querySelector('.wb-pin-seat')!).position === 'sticky'
-    window.scrollTo(0, Math.max(0, top - (pinned ? seat.height : 0) - 12))
+    window.scrollTo(0, Math.max(0, top - 12))
   })
 }
 

@@ -28,7 +28,8 @@ export default defineConfig({
   // The phone intake FOLD gate (e2e/intake-fold.spec.ts, 2026-09-08) rides it for the same two
   // reasons: it enters through a dev-only `?seed=` route, and listing it here is what makes it
   // CI-enforced.
-  testMatch: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts', '**/intake-fold.spec.ts'],
+  // Act 6's screens (e2e/rc-screens.spec.ts, from RC2): each clone unit's fit arms, on the dev-only `?seed=` routes.
+  testMatch: ['**/vertical-fit.spec.ts', '**/chart-text.spec.ts', '**/intake-fold.spec.ts', '**/rc-screens.spec.ts'],
   fullyParallel: true,
   // The date seeds are CPU-BOUND: a 16k-path final across two arms takes ~60 s alone, and the two
   // MEASURING specs render one's final 57 times (re-counted 2026-11-05 against the current specs:

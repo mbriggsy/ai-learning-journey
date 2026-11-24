@@ -1,6 +1,7 @@
 /**
- * The pinned answer's words (`PinnedAnswer.tsx` draws the box; its header holds the why): the lines for the store's
- * current answer, and the forms the box reserves room for. Moved out of `PinnedAnswer.tsx` by Act 6's RC0, unchanged.
+ * The many-futures answer's words, the interim pages' intro line since Act 6 · RC2 (`src/ui/shell/InterimPage.tsx`'s
+ * `InterimIntro` draws the box; its header holds the why): the lines for the store's current answer, and the forms the
+ * box reserves room for. Moved out of the room's `PinnedAnswer.tsx` by Act 6's RC0, unchanged.
  */
 import { composeDateSplit } from '../dateSplit'
 import { dateOddsText } from '../dateOdds'

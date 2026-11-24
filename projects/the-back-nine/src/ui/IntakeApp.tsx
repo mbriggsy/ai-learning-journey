@@ -34,7 +34,8 @@ import {
   unsavedWorkPending,
 } from './resultSave'
 import type { ResultSaveProp } from './saveAnnouncer'
-import { RoomSlot } from './workbench/RoomSlot'
+import { ShellSlot } from './shell/ShellSlot'
+import { LANDING, parseHash, routeEquals, routeHash, type Route } from './shell/routes'
 import { describeSaveFailure } from './unlockCopy'
 import { useUnloadGuard } from './unloadGuard'
 import { PendingPanel } from './PendingPanel'
@@ -59,11 +60,20 @@ const BackupStep = lazy(() => import('./BackupStep').then((m) => ({ default: m.B
  *  `spend-period-unconfirmed`), never a re-typed copy of its ambiguity math. */
 const PERIOD_PROBE_TOUCHED: ReadonlySet<FieldPath> = new Set(['annualSpendingReal'])
 
-/** The workbench room's one history entry (Act 5, U6; KTD31): a bare marker. No plan data rides in the
- *  history entry or the address. */
-const ROOM_ENTRY = { b9: 'room' } as const
-const isRoomEntry = (state: unknown): boolean =>
-  typeof state === 'object' && state !== null && (state as { readonly b9?: unknown }).b9 === 'room'
+/** The shell's history entries (Act 6 · RC2; KTD31's history, one entry per page): a bare marker and the entry's place
+ *  in this visit to the shell (`n`, 1 for the first page), so the wordmark goes straight back to the answer. The
+ *  address's hash names the page (`#/retirement/cash-flows`, `src/ui/shell/routes.ts`). No plan data rides in either. */
+interface WorkspaceEntry {
+  readonly b9: 'workspace'
+  readonly n: number
+}
+const isWorkspaceEntry = (state: unknown): state is WorkspaceEntry =>
+  typeof state === 'object' &&
+  state !== null &&
+  (state as { readonly b9?: unknown }).b9 === 'workspace' &&
+  typeof (state as { readonly n?: unknown }).n === 'number'
+/** The address with no page in it: the answer's own (the dev `?seed=` and `?vault=` shortcuts ride the query). */
+const plainUrl = (): string => window.location.pathname + window.location.search
 
 /**
  * U17 §S5 — WHAT THE TAP CARRIES, and why it is two values and not zero.
@@ -117,14 +127,19 @@ export default function IntakeApp({
   readOnly?: boolean
 }) {
   const [phase, setPhase] = useState<
-    'restoring' | 'reentry' | 'intake' | 'result' | 'room' | 'save' | 'restore-failed' | 'backup'
+    'restoring' | 'reentry' | 'intake' | 'result' | 'workspace' | 'save' | 'restore-failed' | 'backup'
   >(hydrateFromVault ? 'restoring' : 'intake')
   // Act 5, U6 — where the save and backup ceremonies return to: the screen that opened them (the
-  // answer, or the workbench room). Set at every entrance, read at every exit.
-  const [ceremonyOrigin, setCeremonyOrigin] = useState<'result' | 'room'>('result')
-  // A Back press held over an entry still open in the room (it can't be cancelled, so the room's
-  // history entry went back on and the room asks first).
-  const [leaveAsk, setLeaveAsk] = useState(false)
+  // answer, or the shell). Set at every entrance, read at every exit.
+  const [ceremonyOrigin, setCeremonyOrigin] = useState<'result' | 'workspace'>('result')
+  // Act 6 · RC2 — a leave held over work it would drop (a Back press can't be cancelled, so the shell's
+  // entry went back on and the shell asks first; the wordmark asks before it goes). `lines` say what
+  // the leave drops; `go` is how the household's "Go back" leaves: one entry back, or to the answer.
+  const [leaveAsk, setLeaveAsk] = useState<{ readonly lines: readonly string[]; readonly go: 'back' | 'home' } | null>(null)
+  // The shell's page (KTD31: route state lives here, in the app that stays mounted), mirrored to the hash.
+  const [route, setRoute] = useState<Route>(LANDING)
+  // Whether the shell's what-if holds a change the plan doesn't: unkept work a leave or a reload would drop.
+  const [whatIfHeld, setWhatIfHeldState] = useState(false)
   // P3·U13 — the re-entry gate's composed state, set ONCE by the hydrate effect from the
   // RAW-decoded model (council constraint (a): staleness reads the vault's own stamps,
   // never the draft a later re-save would have re-stamped). `rulesMoved` outlives the gate —
@@ -264,7 +279,9 @@ export default function IntakeApp({
   const buffersHeld = useSyncExternalStore(subscribeUnsavedBuffers, unsavedBuffersHeld)
   const guarding =
     unsavedWorkPending(persist, saveReady, draftKey !== draftIdentityKey(baselineRef.current)) ||
-    buffersHeld > 0
+    buffersHeld > 0 ||
+    // Act 6 · RC2: the shell's unkept what-if (never plan data, so neither operand above sees it).
+    whatIfHeld
   useUnloadGuard(guarding)
 
   // 'idle'/'pending' = NOTHING has ever resolved (the "Working it out…" window; `pending`
@@ -286,14 +303,14 @@ export default function IntakeApp({
   const computing =
     snapshot.answer.kind === 'pending' || (snapshot.answer.kind === 'idle' && missing.length === 0)
 
-  // ── Act 5, U6 — THE WORKBENCH ROOM'S HISTORY (KTD31) ─────────────────────────────────────────
-  // The room is a phase of this app, never an App route (a route would unmount this subtree and
-  // with it the draft's save state, the unsaved mark and the leave guard). Entering pushes ONE
-  // history entry, a bare marker; the browser's Back pops it and this listener returns to the
-  // answer. The room's own back button calls `history.back()`, so the two are one path.
-  // The door follows the save control's rule for an unresolved answer: withheld while computing
-  // and while the answer can't be saved (`deriveResultSave`'s `none`). A read-only tab still gets
-  // it — the room withholds its own writes.
+  // ── Act 6 · RC2 — THE SHELL'S HISTORY (KTD31; plan 6, section 3.1 "Routing") ──────────────────────────
+  // The shell is a phase of this app, never an App route (a route would unmount this subtree and with it
+  // the draft's save state, the unsaved mark and the leave guard). No router library: the page is state
+  // here, mirrored to the address's hash, one history entry per page (`WorkspaceEntry`), so Back and
+  // Forward move between pages and this listener restores the page. Leaving the shell's entries returns
+  // to the answer. The door follows the save control's rule for an unresolved answer: withheld while
+  // computing and while the answer can't be saved (`deriveResultSave`'s `none`). A read-only tab still
+  // gets it — the shell withholds its own writes.
   const doorOpen = !computing && saveReady.ready
   // The listener is mounted once, so it reads the live values through refs.
   const phaseRef = useRef(phase)
@@ -302,63 +319,151 @@ export default function IntakeApp({
   originRef.current = ceremonyOrigin
   const doorOpenRef = useRef(doorOpen)
   doorOpenRef.current = doorOpen
-  // Set by the ask's "go back" so the Back it sends passes the check that raised the ask.
-  const leavingRef = useRef(false)
-  // The door's own ask: the room replaces the answer, and the answer's open entries (a budget sheet's
+  const routeRef = useRef(route)
+  routeRef.current = route
+  // The shown page's entry's place in this visit (`WorkspaceEntry.n`).
+  const depthRef = useRef(0)
+  const whatIfHeldRef = useRef(false)
+  const onWhatIfHeld = useCallback((held: boolean) => {
+    whatIfHeldRef.current = held
+    setWhatIfHeldState(held)
+  }, [])
+  // Set by the ask's "Go back" (or a wordmark with nothing to drop) so the move it sends passes the check
+  // that raised the ask: one entry back, or all the way to the answer.
+  const leavingRef = useRef<'back' | 'home' | null>(null)
+  // What a leave would drop, one sentence each: an open entry (the buffers the leave guard reads, insight
+  // 112: an open drawer's edit), and, where the leave goes past the shell, an unkept what-if.
+  const leaveLines = useCallback(
+    (pastTheShell: boolean): readonly string[] => [
+      ...(unsavedBuffersHeld() > 0 ? [copy.workbenchLeaveAsk] : []),
+      ...(pastTheShell && whatIfHeldRef.current ? [copy.shellLeaveWhatIf] : []),
+    ],
+    [],
+  )
+  // The door's own ask: the shell replaces the answer, and the answer's open entries (a budget sheet's
   // typed lines live there even after Cancel, holding the leave guard) unmount with it. The browser's
   // leave-page dialog never fires for a same-page switch, so the door asks first (insight 112).
   const [doorAsk, setDoorAsk] = useState(false)
-  const enterRoom = useCallback(() => {
-    // A room entry left under us (a reload in the room keeps its history state; a Forward pressed while a
-    // ceremony or the intake ran) would swallow the first Back from the room: turn it plain before pushing.
-    if (isRoomEntry(window.history.state)) window.history.replaceState(null, '')
-    window.history.pushState(ROOM_ENTRY, '')
+  const enterWorkspace = useCallback(() => {
+    // A shell entry or page address left under us (a reload in the shell keeps both; a Forward pressed while
+    // a ceremony or the intake ran) would swallow the first Back from the shell: turn it plain before pushing.
+    if (isWorkspaceEntry(window.history.state) || window.location.hash !== '') window.history.replaceState(null, '', plainUrl())
+    depthRef.current = 1
+    window.history.pushState({ b9: 'workspace', n: 1 } satisfies WorkspaceEntry, '', plainUrl() + routeHash(LANDING))
+    routeRef.current = LANDING
+    setRoute(LANDING)
     setDoorAsk(false)
-    setPhase('room')
+    setPhase('workspace')
   }, [])
-  const openRoom = useCallback(() => {
+  const openWorkspace = useCallback(() => {
     if (unsavedBuffersHeld() > 0) {
       setDoorAsk(true)
       return
     }
-    enterRoom()
-  }, [enterRoom])
-  const leaveRoom = useCallback(() => window.history.back(), [])
+    enterWorkspace()
+  }, [enterWorkspace])
+  /** A page of the shell: one new history entry, its hash the page's. */
+  const navigate = useCallback((to: Route) => {
+    if (routeEquals(to, routeRef.current)) return
+    const n = depthRef.current + 1
+    depthRef.current = n
+    window.history.pushState({ b9: 'workspace', n } satisfies WorkspaceEntry, '', plainUrl() + routeHash(to))
+    routeRef.current = to
+    setRoute(to)
+  }, [])
+  /** Straight back to the answer: every page entry of this visit at once. */
+  const leaveHome = useCallback(() => {
+    leavingRef.current = 'home'
+    window.history.go(-Math.max(1, depthRef.current))
+  }, [])
+  /** The wordmark: back to the answer, asking first over anything the leave would drop. */
+  const goHome = useCallback(() => {
+    const lines = leaveLines(true)
+    if (lines.length > 0) {
+      setLeaveAsk({ lines, go: 'home' })
+      return
+    }
+    leaveHome()
+  }, [leaveLines, leaveHome])
+  // A page address left from an earlier load (a reload in the shell) names a page the answer isn't: plain.
   useEffect(() => {
+    if (parseHash(window.location.hash) !== null) window.history.replaceState(null, '', plainUrl())
+  }, [])
+  useEffect(() => {
+    /** Put the shown page's entry back on top (a Back or Forward press can't be cancelled). */
+    const restoreShownEntry = () =>
+      window.history.pushState({ b9: 'workspace', n: depthRef.current } satisfies WorkspaceEntry, '', plainUrl() + routeHash(routeRef.current))
     const onPop = (e: PopStateEvent) => {
-      const onRoomEntry = isRoomEntry(e.state)
+      const entry = isWorkspaceEntry(e.state) ? e.state : null
+      // A typed page address arrives with no entry of ours: the hash alone names it.
+      const addressed = parseHash(window.location.hash)
+      const onShell = entry !== null || addressed !== null
       const p = phaseRef.current
-      if (p === 'room') {
-        if (onRoomEntry) return
-        // A Back press can't be cancelled. With an entry still open (the buffers the leave guard
-        // reads, insight 112), put the room's entry back and ask in the room first.
-        if (!leavingRef.current && unsavedBuffersHeld() > 0) {
-          window.history.pushState(ROOM_ENTRY, '')
-          setLeaveAsk(true)
+      if (p === 'workspace') {
+        if (onShell) {
+          // The wordmark's leave landed short of the answer (a Forward-raised ask's entry sits out of order): on.
+          if (leavingRef.current === 'home' && entry !== null) {
+            window.history.go(-entry.n)
+            return
+          }
+          const to = addressed ?? LANDING
+          const n = entry?.n ?? depthRef.current + 1
+          if (entry === null) window.history.replaceState({ b9: 'workspace', n } satisfies WorkspaceEntry, '')
+          // A move between pages drops nothing but an open drawer's edit: with one open, ask first.
+          if (leavingRef.current === null && !routeEquals(to, routeRef.current)) {
+            const lines = leaveLines(false)
+            if (lines.length > 0) {
+              restoreShownEntry()
+              setLeaveAsk({ lines, go: 'back' })
+              return
+            }
+          }
+          leavingRef.current = null
+          depthRef.current = n
+          setLeaveAsk(null)
+          routeRef.current = to
+          setRoute(to)
           return
         }
-        leavingRef.current = false
-        setLeaveAsk(false)
+        // Past the shell's first page: back to the answer, asking first over anything that drops.
+        if (leavingRef.current === null) {
+          const lines = leaveLines(true)
+          if (lines.length > 0) {
+            restoreShownEntry()
+            setLeaveAsk({ lines, go: 'back' })
+            return
+          }
+        }
+        leavingRef.current = null
+        depthRef.current = 0
+        setLeaveAsk(null)
         setPhase('result')
         return
       }
-      // A ceremony the room opened: a Back press mid-ceremony is absorbed (the entry goes back on),
-      // so it can never strand the ceremony or tear the room's entry out from under it.
-      if ((p === 'save' || p === 'backup') && originRef.current === 'room') {
-        if (!onRoomEntry) window.history.pushState(ROOM_ENTRY, '')
+      // A ceremony the shell opened: a Back press mid-ceremony is absorbed (the shown page's entry goes back
+      // on), so it can never strand the ceremony or tear the shell's entry out from under it.
+      if ((p === 'save' || p === 'backup') && originRef.current === 'workspace') {
+        const onShown = entry !== null && entry.n === depthRef.current && addressed !== null && routeEquals(addressed, routeRef.current)
+        if (!onShown) restoreShownEntry()
         return
       }
-      // A Forward press back onto the room's entry: the room again where the door would open and no
-      // entry is open on the answer (a Forward can't be cancelled either, and the room would unmount
-      // that entry with no dialog); otherwise the Forward is undone, which leaves no dead Back behind.
-      if (p === 'result' && onRoomEntry) {
-        if (doorOpenRef.current && unsavedBuffersHeld() === 0) setPhase('room')
-        else window.history.back()
+      // A Forward press back onto a shell entry: the shell again where the door would open and no entry is
+      // open on the answer (a Forward can't be cancelled either, and the shell would unmount that entry with
+      // no dialog); otherwise the Forward is undone, which leaves no dead Back behind.
+      if (p === 'result' && onShell) {
+        if (doorOpenRef.current && unsavedBuffersHeld() === 0) {
+          const to = addressed ?? LANDING
+          depthRef.current = entry?.n ?? 1
+          if (entry === null) window.history.replaceState({ b9: 'workspace', n: depthRef.current } satisfies WorkspaceEntry, '')
+          routeRef.current = to
+          setRoute(to)
+          setPhase('workspace')
+        } else window.history.back()
       }
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
-  }, [])
+  }, [leaveLines])
   /**
    * U17 §S5 — THE REMEMBERED RECOMMENDATION'S TRICHOTOMY, DERIVED ONCE PER FRAME.
    *
@@ -404,8 +509,8 @@ export default function IntakeApp({
     // a full `currentDraftFingerprint()` (buildSolveRequest → buildSpineParams → candidate
     // enumeration → canon serialize) PLUS `exposureForDraft`'s nine params producers on every single
     // keystroke-committed edit of the intake — for a card that cannot render until `result`.
-    // The room's What if page runs the record as a what-if too (the workbench plan's R22, U15).
-    if (phase !== 'result' && phase !== 'room') return undefined
+    // The shell's What if page runs the record as a what-if too (the workbench plan's R22, U15).
+    if (phase !== 'result' && phase !== 'workspace') return undefined
     if (persist.kind === 'unsaved') return undefined
     const record = persist.scenario.savedRecommendation
     if (record === undefined) return undefined
@@ -944,9 +1049,9 @@ export default function IntakeApp({
     )
   }
 
-  // The one save machine's view, wired for the screen showing it: both the answer and the room draw
+  // The one save machine's view, wired for the screen showing it: both the answer and the shell draw
   // their save control from it, and a first save opened from either returns to it.
-  const saveProp = (view: ResultSaveView, from: 'result' | 'room'): ResultSaveProp =>
+  const saveProp = (view: ResultSaveView, from: 'result' | 'workspace'): ResultSaveProp =>
     view.kind === 'first'
       ? {
           kind: 'first',
@@ -961,13 +1066,26 @@ export default function IntakeApp({
           ? { ...view, onRetry: () => void saveNow() }
           : view
 
-  if (phase === 'room') {
+  if (phase === 'workspace') {
     return (
-      <RoomSlot
-        room={{
-          save: saveProp(deriveResultSave(persist, saveReady, readOnly), 'room'),
-          onBack: leaveRoom,
-          // The committed answer the year-by-year table is built on and pinned beside (U7), and the draft the
+      <ShellSlot
+        shell={{
+          save: saveProp(deriveResultSave(persist, saveReady, readOnly), 'workspace'),
+          // The lock menu's Back up: the existing backup step, wherever a vault exists in this session and the tab
+          // can write (a read-only tab writes nothing, not even a backup note).
+          ...(persist.kind !== 'unsaved' && !readOnly
+            ? {
+                onBackup: () => {
+                  setCeremonyOrigin('workspace')
+                  setPhase('backup')
+                },
+              }
+            : {}),
+          route,
+          onNavigate: navigate,
+          onHome: goHome,
+          onWhatIfHeld,
+          // The committed answer the year-by-year table is built on and the intro reads (U7), and the draft the
           // facts page reads (U8).
           snapshot,
           // A read-only tab's facts page draws no door (U8): `save.kind` can't carry it (`none` is also a plan
@@ -976,16 +1094,23 @@ export default function IntakeApp({
           // The saved recommendation's row on the rail (R22): the DISK's record and the store's trichotomy, as the answer
           // reads them; the rail runs it only while current.
           ...(recordCard !== undefined ? { recommendation: { record: recordCard.record, current: recordCard.status.current } } : {}),
-          leaveAsk: leaveAsk
+          ...(leaveAsk !== null
             ? {
-                onGo: () => {
-                  leavingRef.current = true
-                  setLeaveAsk(false)
-                  window.history.back()
+                leaveAsk: {
+                  lines: leaveAsk.lines,
+                  onGo: () => {
+                    setLeaveAsk(null)
+                    if (leaveAsk.go === 'home') {
+                      leaveHome()
+                      return
+                    }
+                    leavingRef.current = 'back'
+                    window.history.back()
+                  },
+                  onStay: () => setLeaveAsk(null),
                 },
-                onStay: () => setLeaveAsk(false),
               }
-            : undefined,
+            : {}),
         }}
       />
     )
@@ -993,7 +1118,7 @@ export default function IntakeApp({
 
   if (phase === 'result' || phase === 'save') {
     const view = deriveResultSave(persist, saveReady, readOnly)
-    // `computing` (above) is the crunch rule the whole actions row follows, the room's door included.
+    // `computing` (above) is the crunch rule the whole actions row follows, the shell's door included.
     return (
       <Result
         onReview={review}
@@ -1011,15 +1136,15 @@ export default function IntakeApp({
               }
             : undefined
         }
-        // Act 5, U6 — the workbench room's door, under the save control's rule (`doorOpen` above;
+        // Act 5, U6 — the door (since Act 6 · RC2, into the shell), under the save control's rule (`doorOpen` above;
         // Result also withholds its whole actions row while computing).
         // The door's ask stands only while an entry is still open (`buffersHeld`, read live): applying
         // or clearing the entry takes the ask down with it, so it can never offer to drop nothing.
         workbench={
           doorOpen
             ? {
-                onOpen: openRoom,
-                ask: doorAsk && buffersHeld > 0 ? { onGo: enterRoom, onStay: () => setDoorAsk(false) } : undefined,
+                onOpen: openWorkspace,
+                ask: doorAsk && buffersHeld > 0 ? { onGo: enterWorkspace, onStay: () => setDoorAsk(false) } : undefined,
               }
             : undefined
         }

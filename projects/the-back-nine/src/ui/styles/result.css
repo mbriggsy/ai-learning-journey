@@ -6,9 +6,13 @@
  * figures (back-nine-design calm-rendering); this sheet only centers the hero in the viewport, holds
  * it to the reading measure, and seats the quiet "review" return below it. All chrome reads from the
  * Clubhouse Ledger tokens (tokens.css) — never a re-typed value.
+ *
+ * Act 6 · RC2: the frame's layout rules are keyed on `.result-page`, never `.result`. The answer page's `<main>` carries
+ * both classes until RC4; the shell's own `main.result` (the harnesses' settle hook, `src/ui/shell/Shell.tsx`) carries
+ * only `.result`, so none of these rules lay it out.
  */
 
-.result {
+.result-page {
   box-sizing: border-box;
   /* Claim the space above the disclaimer (no own 100svh ⇒ no overflow-scroll past the footer); the
    * hero centers in that space, and a short answer never forces a scroll. */
@@ -205,7 +209,7 @@
      the ONE source is tokens.css) viewport with no scroll. One step down on the block padding (48→40);
      the phone/single-column rhythm keeps --space-9 (the phone pass is a separately-owed
      cold-read — don't fold it in blind). */
-  .result {
+  .result-page {
     padding-block: var(--space-8);
   }
   .result-hero {
@@ -297,7 +301,7 @@
    Boundary: --bp-laptop-short (840px), re-stated as a literal (@media can't read a custom property);
    the 917 showcase keeps --space-8. */
 @media (min-width: 68rem) and (max-height: 840px) {
-  .result {
+  .result-page {
     padding-block: var(--space-7);
   }
 }

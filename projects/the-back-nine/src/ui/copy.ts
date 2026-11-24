@@ -2540,9 +2540,8 @@ export const copy = {
   // --- The workbench room (Act 5, U6): the door on the answer's quiet row, the room's own chrome, its load
   // failure and its leave-with-an-open-entry ask. The pilot's drafts, shipped flagged for Briggsy's cold read. ---
   workbenchDoorCta: 'See your plan year by year',
-  workbenchHeading: 'Your plan, year by year',
   workbenchBack: 'Back to your answer',
-  workbenchLoadFailed: 'The year-by-year page didn’t load. Your plan and your answers are untouched.',
+  workbenchLoadFailed: 'These pages didn’t load. Your plan and your answers are untouched.',
   // After a retry has failed too: some browsers keep a failed load for the whole visit, so only a reload fetches it again.
   workbenchLoadFailedAgain:
     'It still didn’t load. Reloading the page fetches it fresh; if you have changes you haven’t saved, the browser asks first.',
@@ -2555,6 +2554,32 @@ export const copy = {
   // The door pressed over an entry still open on the answer (a budget sheet's typed lines survive its Cancel).
   workbenchDoorAsk: 'You started an entry on this page that isn’t added yet. Opening the year-by-year page drops it.',
   workbenchDoorAskGo: 'Open it and drop the entry',
+  // --- Act 6 · RC2, the shell (plan docs/plans/6-rightcapital-ui-plan.md, section 3.1): the top bar, the pages, the
+  // phone's menu, the lock menu (the one save machine's states, `src/ui/shell/lockMenu.ts`) and the interim banner. ---
+  shellMark: 'B9',
+  shellHomeLabel: 'The Back Nine: back to your answer',
+  shellModulesLabel: 'Sections',
+  shellPagesLabel: 'Pages in this section',
+  shellModuleRetirement: 'Retirement',
+  shellModuleProfile: 'Profile',
+  shellPageAnalysis: 'Analysis',
+  shellPageCashFlows: 'Cash Flows',
+  shellMenuOpen: 'Menu',
+  shellMenuTitle: 'Go to a page',
+  shellMenuClose: 'Close',
+  shellInterimBanner: 'This page keeps its old look until it is rebuilt',
+  // A Back press (or the wordmark) that would leave these pages while a what-if holds a change: a what-if is never
+  // part of the plan, so leaving drops it and changes nothing saved.
+  shellLeaveWhatIf: 'Your what-if isn’t kept anywhere. Leaving these pages drops it; your plan stays as it is.',
+  lockMenuLabel: 'Your saved plan',
+  // Read before the lock's word by a screen reader ("Your saved plan: Saved"); never seen.
+  lockMenuLead: 'Your saved plan:',
+  lockWordNotSaved: 'Not saved',
+  lockWordSaved: 'Saved',
+  lockWordUnsaved: 'Unsaved changes',
+  lockWordSaving: 'Saving…',
+  lockWordViewOnly: 'View only',
+  lockNoneNote: 'Some answers are missing, so this plan can’t be saved yet.',
   // --- The year-by-year table (Act 5, U7). The pilot's drafts, shipped flagged for Briggsy's cold read. The heading
   // is bound by `docs/decisions/workbench-one-future.md` §5: steady is never typical, average, expected or median, nor
   // placed in the middle of the range (copyGuard's ONE_FUTURE_BANNED sweeps every workbench string), and the rough
@@ -2649,7 +2674,6 @@ export const copy = {
   // --- The facts page (Act 5, U8): everything the household told the tool, by the walk's own steps, each group
   // with one door into that step's own body. Facts read exactly (R11): no "~" and no "about" on a figure the
   // household gave. The pilot's drafts, shipped flagged for Briggsy's cold read. ---
-  workbenchPagesLabel: 'Pages',
   workbenchPageTable: 'The year-by-year table',
   workbenchPageFacts: 'Your facts',
   workbenchFactsIntro:

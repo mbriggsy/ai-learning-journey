@@ -11,7 +11,8 @@ import type { EngineClient } from '@store/engineClient'
 import type { DateSearchInput } from '@engine/dateSearch'
 import type { DateSearchWire } from '@engine/engineWire'
 import type { SimulationResult } from '@shared/model'
-import WorkbenchRoom, { type TableLanes } from '../WorkbenchRoom'
+import type { TableLanes } from '../../shell/Shell'
+import { RoutedShell, showPage, shownScreen } from '../../shell/__tests__/routedShell'
 import { appModel } from '../../appModel'
 import { recomputeBoth } from '../../recompute'
 import { DEV_SEEDS } from '../../devSeeds'
@@ -19,7 +20,7 @@ import { copy, slots } from '../../copy'
 import { GOVERNED, FULL } from './factDrafts'
 
 /**
- * The facts page in the room (workbench plan U8; R14, R15, F2): each group's door opens that step's own body over the
+ * The facts page in the shell (Act 6 · RC2's interim Profile tab; workbench plan U8; R14, R15, F2): each group's door opens that step's own body over the
  * walk's own `StepApi`, and each lever line its own sheet from the one home of the sheets' writes. The store is the
  * app's real one (`appModel`, its engine calls spied away); the table's lanes never answer unless a test settles them.
  */
@@ -47,13 +48,12 @@ const headline = (draft: ScenarioDraft, inputKey: string, state: 'on-track' | 'b
     result: { headline: { outcomeState: state, xOfTen: { value: state === 'on-track' ? 8 : 5, marginToEdge: 0.1 }, stateMarginToEdge: 0.1 }, distribution: {} },
   }) as unknown as ModelAnswer
 
-/** The room over the app's store, the answer planted. */
+/** The shell over the app's store, the answer planted. */
 function Room({ answer, lanes, readOnly = false }: { readonly answer: ModelAnswer; readonly lanes: TableLanes; readonly readOnly?: boolean }) {
   const snap = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   return (
-    <WorkbenchRoom
+    <RoutedShell
       save={{ kind: 'none' }}
-      onBack={() => {}}
       snapshot={{ ...snap, answer }}
       model={appModel}
       lanes={lanes}
@@ -68,7 +68,7 @@ function openRoomOn(draft: ScenarioDraft, opts: { readonly answer?: ModelAnswer;
   const { lanes, lane } = pendingLanes()
   const answer = opts.answer ?? { kind: 'pending' }
   const view = render(<Room answer={answer} lanes={lanes} readOnly={opts.readOnly ?? false} />)
-  fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageFacts }))
+  showPage('facts')
   return { view, lane, lanes }
 }
 
@@ -76,17 +76,14 @@ const door = (name: string) => screen.getByRole('button', { name: slots.workbenc
 const draftNow = () => appModel.getSnapshot().draft
 
 describe('the facts page — its pages and its doors', () => {
-  it('a real tab pattern: the facts page shows under its tab, arrow keys move between the two, and the table page keeps its place', () => {
+  it('the facts page shows under Profile, and the table page is one move away; the runs belong to the shell, not the page', () => {
     const { lane } = openRoomOn(DEV_SEEDS.budget, { answer: headline(DEV_SEEDS.budget, 'k1', 'on-track') })
-    const facts = screen.getByRole('tab', { name: copy.workbenchPageFacts })
-    expect(facts).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tabpanel')).toHaveAccessibleName(copy.workbenchPageFacts)
+    expect(shownScreen()).toBe('interim-facts')
     expect(screen.getByRole('heading', { name: copy.workbenchFactsSpending })).toBeInTheDocument()
-    fireEvent.keyDown(facts, { key: 'ArrowLeft' })
-    expect(screen.getByRole('tab', { name: copy.workbenchPageTable })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tab', { name: copy.workbenchPageTable })).toHaveFocus()
+    showPage('table')
+    expect(shownScreen()).toBe('interim-table')
     expect(screen.queryByRole('heading', { name: copy.workbenchFactsSpending })).toBeNull()
-    // The table's runs belong to the room, not the page: one pair for the one committed answer, whichever page shows.
+    // The table's runs belong to the shell, not the page: one pair for the one committed answer, whichever page shows.
     expect(lane.request).toHaveBeenCalledTimes(2)
   })
 
@@ -94,9 +91,12 @@ describe('the facts page — its pages and its doors', () => {
     openRoomOn(FULL, { readOnly: true })
     expect(screen.getByRole('heading', { name: copy.workbenchFactsSocialSecurity })).toBeInTheDocument()
     expect(screen.getByText(copy.workbenchFactsReadOnly)).toBeInTheDocument()
-    // The one other kind of button is a lever's link to the What if page (U15): it moves to a page and writes nothing,
-    // and a read-only tab may try a what-if (it cannot apply one there).
-    expect(screen.queryAllByRole('button').map((b) => b.textContent).filter((t) => t !== copy.workbenchFactsTry)).toEqual([copy.workbenchBack])
+    // No door opens an editor. The page's other buttons are a lever's link to the What if page (U15: it moves to a page and
+    // writes nothing, and a read-only tab may try a what-if it cannot apply), and the shell's lock and phone menus
+    // (the lock menu's own read-only arm offers no Save: `lockMenu.test.ts`).
+    expect(screen.queryAllByRole('button', { name: new RegExp(`^${copy.workbenchFactsEdit}`) })).toEqual([])
+    const page = document.querySelector('.shell-interim')!
+    expect(within(page as HTMLElement).queryAllByRole('button').map((b) => b.textContent).filter((t) => t !== copy.workbenchFactsTry)).toEqual([])
   })
 
   it('a writable tab draws one door per step group, each named for its group', () => {
@@ -184,7 +184,7 @@ describe('the step sheet — the walk’s own step, over the plan', () => {
     const { lanes, lane } = pendingLanes()
     const view = render(<Room answer={headline(draft, 'k1', 'on-track')} lanes={lanes} />)
     expect(lane.request).toHaveBeenCalledTimes(2)
-    fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageFacts }))
+    showPage('facts')
     fireEvent.click(door(copy.workbenchFactsMedical))
     const oop = within(screen.getByRole('dialog')).getByLabelText(copy.oopLabel)
     fireEvent.focus(oop)
@@ -333,7 +333,7 @@ function heldStore() {
 
 function StoreRoom({ model, lanes }: { readonly model: MemoryModel; readonly lanes: TableLanes }) {
   const snap = useSyncExternalStore(model.subscribe, model.getSnapshot)
-  return <WorkbenchRoom save={{ kind: 'none' }} onBack={() => {}} snapshot={snap} model={model} lanes={lanes} wallCalendarYear={snap.draft.startCalendarYear} />
+  return <RoutedShell save={{ kind: 'none' }} snapshot={snap} model={model} lanes={lanes} wallCalendarYear={snap.draft.startCalendarYear} />
 }
 
 describe('an edit put back to its value at open still ends on the live draft’s answer (U8 review A3)', () => {
@@ -352,7 +352,7 @@ describe('an edit put back to its value at open still ends on the live draft’s
     act(() => model.update((d) => ({ ...d, annualSpendingReal: 84_000 })))
     const earlier = recomputeBoth(model)
     render(<StoreRoom model={model} lanes={pendingLanes().lanes} />)
-    fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageFacts }))
+    showPage('facts')
     fireEvent.click(door(copy.workbenchFactsSpending))
     const sheet = screen.getByRole('dialog', { name: copy.workbenchFactsSpending })
     const field = within(sheet).getByLabelText(copy.spendLabel)

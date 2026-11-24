@@ -56,6 +56,7 @@ import { budgetGoverns, isRampedBudget, validateBudgetItems, isActiveAt } from '
 import { anchorTarget } from '@budget/budgetToSpending'
 import { useLiveAnnouncer, focusHeading } from './a11y'
 import { formatMoney } from './fields'
+import { isDateRoute } from './intakeMap'
 import { BudgetLineItem } from './BudgetLineItem'
 import { bufferMoved, useUnsavedBufferHold } from './unsavedBuffer'
 import './sheetShell.css'
@@ -397,6 +398,9 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
             onWindowEnd={(end) => setRowEnd(row.id, end)}
             onRemove={() => removeRow(row.id)}
             onTouched={() => touchRow(row.id)}
+            // Year 0 is the engine's anchor: the plan's first year all-retired, the year you've both stopped working on
+            // the date route (the U8 review's NEW-2).
+            windowHelp={isDateRoute(draft) ? copy.budgetWindowHelp : slots.budgetWindowHelpRetired(draft.startCalendarYear)}
           />
         ))}
       </ul>
@@ -442,9 +446,11 @@ export function BudgetBuilder({ open, draft, onApply, onEscape, onClose, variant
   )
 
   // ── the IN-FLOW shell: a plain body swap on the step's own entrance timing — no portal, no
-  // backdrop, no focus trap, no dialog role (it is not modal; the flow's Back/Next stay live
-  // and R8's never-a-gate holds). Escape mirrors Cancel as a convenience; the explicit buttons
-  // are the contract (insight 067). ──────────────────────────────────────────────────────────
+  // backdrop, no focus trap, no dialog role (it is not modal). While it is open the flow's nav
+  // yields to it (`intake.css`, the account entry's precedent): Continue pressed over it used to
+  // unmount the staged lines with no ask (U8's review, NEW-2). R8's never-a-gate holds: Cancel
+  // always leaves. Escape mirrors Cancel as a convenience; the explicit buttons are the contract
+  // (insight 067). ────────────────────────────────────────────────────────────────────────────
   if (variant === 'inline') {
     if (!open) return null
     return (

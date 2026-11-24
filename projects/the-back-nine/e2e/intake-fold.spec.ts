@@ -40,7 +40,7 @@ import { copy } from '../src/ui/copy'
  *    advances — into the pay check's W step on this date route, or through the flow's terminal
  *    `onComplete()` on the all-retired route, where other income is the LAST step — and either way
  *    the step re-keys, the editor unmounts and takes a fully typed pension with it. The rule is a
- *    single CSS selector (src/intake/intake.css:514), and it named only the ACCOUNT editor's root
+ *    single CSS selector (src/intake/intake.css:516), and it named only the ACCOUNT editor's root
  *    until 2026-09-08 — so this arm opens BOTH editors, never just one.
  *
  * NOT AN ARM: the editor's own scroll-into-view (`focusHeading`'s `preventScroll: false` default,

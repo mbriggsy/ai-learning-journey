@@ -79,7 +79,7 @@ import {
   workingYearLeftOverShownState,
   type MissingFact,
 } from './intakeMap'
-import { MedicareExtrasFork, OopExceedsSpendNote, StateResidencePicker, writeWorkingYearInvestment } from './questions'
+import { MedicareExtrasFork, OopExceedsSpendNote, StateResidencePicker, governedSpendNotes, writeWorkingYearInvestment } from './questions'
 import { WorkingCostQuestion, type WorkingCostWriteKind } from './WorkingCostQuestion'
 import { useGestureHold } from './gestureHold'
 import { WorkingYearLeftOverQuestion } from './WorkingYearLeftOverQuestion'
@@ -126,8 +126,13 @@ export interface AssumptionPanelProps {
   readonly onOpenSequencing: () => void
   readonly onOpenRoth: () => void
   readonly onOpenHealth: () => void
-  /** The guided re-walk (F4 — moved inside the panel) + the via-intake collection rows. */
-  readonly onReview: () => void
+  /** The guided re-walk (F4 — moved inside the panel) + the via-intake collection rows. Absent ⇒ no re-walk
+   *  (the workbench room: its facts page opens each step of the walk by itself, and a re-walk would leave the
+   *  room without its history entry). */
+  readonly onReview?: () => void
+  /** The collections row's door, where it differs from the re-walk (the workbench room opens the accounts
+   *  step's own body in a sheet). Absent ⇒ `onReview`. */
+  readonly onEditCollections?: () => void
   readonly onClose: () => void
   /** Where focus lands on close when the door that OPENED the panel has unmounted mid-open — the
    *  completed-intake dead-end repair (2026-09-03): supplying the missing fact from a panel row
@@ -148,14 +153,19 @@ export interface AssumptionPanelProps {
 function Row({
   seat,
   rowRef,
+  landing = false,
   children,
 }: {
   readonly seat: AssumptionSeat
   readonly rowRef?: Ref<HTMLLIElement>
+  /** A row a door outside the panel lands on whose first line is a field's own label (the survivor's
+   *  spending, the heirs' bracket): the row itself takes the landing's focus, never the input (a focused
+   *  input pops a phone's keyboard before the row is read). */
+  readonly landing?: boolean
   readonly children: ReactNode
 }) {
   return (
-    <li className="ap-row" data-assumption-seat={seat} ref={rowRef}>
+    <li className="ap-row" data-assumption-seat={seat} ref={rowRef} tabIndex={landing ? -1 : undefined}>
       {children}
     </li>
   )
@@ -202,6 +212,27 @@ function ArmedMethodologyLines({ m, draft }: { readonly m: MethodologyDisclosure
   const arm = useMemo(() => methodologyArmFor(draft), [draft])
   const leftOver = useMemo(() => workingYearLeftOverShownState(draft), [draft])
   return <MethodologyLines keys={methodologyLines(m, arm, workingYearStateTaxReading(draft), leftOver, workingYearLeftOverWaitingWords(draft))} />
+}
+
+/** The W answer's one value line: unanswered, stale, confirmed (from the spending or the budget), kept, or the
+ *  household's own figure. ONE home, read by the panel's W row and the workbench's facts page (Act 5, U8), so
+ *  the two never word the same answer two ways. */
+export function workingCostValueLine(d: ScenarioDraft): string {
+  const w = d.workingYearCost
+  if (w === undefined) return copy.assumptionWorkingCostUnanswered
+  const figure = formatMoney(workingYearCostFigure(w))
+  if (workingYearCostStaleness(d) !== null) return slots.assumptionWorkingCostStale(figure)
+  if (w.kind === 'confirmed') {
+    // Fresh, so the current quote IS the one confirmed: its source names where the figure came from.
+    return workingYearQuote(d).source === 'budget'
+      ? slots.assumptionWorkingCostConfirmedBudget(figure)
+      : slots.assumptionWorkingCostConfirmed(figure)
+  }
+  // A yes kept through the stale note's door carries the keep stamp (KTD10): "kept", never "your own figure" —
+  // the household never typed it.
+  return w.keptOverQuoteReal !== undefined
+    ? slots.assumptionWorkingCostKept(figure)
+    : slots.assumptionWorkingCostEntered(figure)
 }
 
 /** The pay check's W row (`docs/plans/features/working-year-pay-check-build-spec.md` U8; KTD17,
@@ -267,22 +298,7 @@ function WorkingCostRow({
     () => (w !== undefined && !stale ? workingYearLedgerForRun(shown) : null),
     [shown, w, stale],
   )
-  const figure = w === undefined ? undefined : formatMoney(workingYearCostFigure(w))
-  const value =
-    w === undefined || figure === undefined
-      ? copy.assumptionWorkingCostUnanswered
-      : stale
-        ? slots.assumptionWorkingCostStale(figure)
-        : w.kind === 'confirmed'
-          ? // Fresh, so the current quote IS the one confirmed: its source names where the figure came from.
-            workingYearQuote(shown).source === 'budget'
-            ? slots.assumptionWorkingCostConfirmedBudget(figure)
-            : slots.assumptionWorkingCostConfirmed(figure)
-          : // A yes kept through the stale note's door carries the keep stamp (KTD10): "kept", never
-            // "your own figure" — the household never typed it.
-            w.keptOverQuoteReal !== undefined
-            ? slots.assumptionWorkingCostKept(figure)
-            : slots.assumptionWorkingCostEntered(figure)
+  const value = useMemo(() => workingCostValueLine(shown), [shown])
   return (
     <Row seat="working-year-cost" rowRef={rowRef}>
       <p className="ap-row__name" tabIndex={-1} ref={nameRef}>
@@ -432,15 +448,20 @@ export function AssumptionPanel({
   onOpenRoth,
   onOpenHealth,
   onReview,
+  onEditCollections,
   onClose,
   restoreFallback,
   initialSeat,
 }: AssumptionPanelProps) {
   const announcerRef = useRef<Announcer | null>(null)
-  // The W row's and the left-over seat's names — the landings for `initialSeat` (reached by ref: the
-  // panel is portaled).
+  // The W row's and the left-over seat's names, and the two knob rows — the landings for `initialSeat`
+  // (reached by ref: the panel is portaled).
   const workingCostNameRef = useRef<HTMLParagraphElement | null>(null)
   const leftOverNameRef = useRef<HTMLParagraphElement | null>(null)
+  const survivorRowRef = useRef<HTMLLIElement | null>(null)
+  const extrasRowRef = useRef<HTMLLIElement | null>(null)
+  const heirRowRef = useRef<HTMLLIElement | null>(null)
+  const editCollections = onEditCollections ?? onReview
   // Stable, so the W row's announce effect never re-runs on a mere re-render.
   const announce = useCallback((text: string) => announcerRef.current?.announce(text), [])
   const { draft, answer, displayed, spend, refiguring } = snapshot
@@ -539,9 +560,12 @@ export function AssumptionPanel({
   // landing seat names its own ref (insight 147); a seat that did not render is a quiet no-op.
   useEffect(() => {
     if (!open || initialSeat === undefined) return
-    const landing: Readonly<Record<AssumptionLandingSeat, HTMLParagraphElement | null>> = {
+    const landing: Readonly<Record<AssumptionLandingSeat, HTMLElement | null>> = {
       'working-year-cost': workingCostNameRef.current,
       'working-year-left-over': leftOverNameRef.current,
+      'survivor-ratio': survivorRowRef.current,
+      'heir-bracket': heirRowRef.current,
+      'medicare-extras': extrasRowRef.current,
     }
     focusHeading(landing[initialSeat])
   }, [open, initialSeat])
@@ -695,7 +719,7 @@ export function AssumptionPanel({
           {copy.assumptionSectionMethodology}
         </h3>
         <ul className="ap-rows">
-          <Row seat="survivor-ratio">
+          <Row seat="survivor-ratio" rowRef={survivorRowRef} landing>
             <PercentField
               labelKey="assumptionSurvivorRatioLabel"
               helpKey="assumptionSurvivorRatioHelp"
@@ -740,7 +764,7 @@ export function AssumptionPanel({
               test so a future divergence fails loudly instead of silently picking one household's
               schedule for everyone's heirs. */}
           {draft.chosenGoal === 'leave-more' && (
-            <Row seat="heir-bracket">
+            <Row seat="heir-bracket" rowRef={heirRowRef} landing>
               {/* HORIZONTAL, deliberately — `vertical` is for long labels that cram in equal-width
                   segments (the state picker's "Somewhere else — not priced yet"). These rungs are
                   three characters, so stacking them burned ~340px of a scrolling panel for no gain,
@@ -880,6 +904,12 @@ export function AssumptionPanel({
                   <p className="ap-row__value">{slots.spendBudgetTotal(formatMoney(draft.annualSpendingReal))}</p>
                 )}
                 <p className="ap-row__prov">{copy.spendBudgetGovernedNote}</p>
+                {draft.budget !== undefined &&
+                  governedSpendNotes(draft.budget).map((note) => (
+                    <p key={note} className="ap-row__prov">
+                      {note}
+                    </p>
+                  ))}
                 <button type="button" className="btn-quiet ap-row__edit" onClick={onOpenBudget}>
                   {copy.budgetEditCta}
                 </button>
@@ -1143,7 +1173,7 @@ export function AssumptionPanel({
               38): per person, the ONE fork face over the ONE write shape. UNCONDITIONAL:
               every route prices Medicare's 65+ years, and the unanswered fork IS the
               on-typical state this row exists to let the household refine. */}
-          <Row seat="medicare-extras">
+          <Row seat="medicare-extras" rowRef={extrasRowRef} landing>
             <p className="ap-row__name">{copy.assumptionMedicareExtrasName}</p>
             {([0, 1] as const).map((i) => (
               <div key={`mx-${i}`}>
@@ -1167,9 +1197,11 @@ export function AssumptionPanel({
             <p className="ap-row__name">{copy.assumptionCollectionsName}</p>
             {total > 0 && <p className="ap-row__value">{slots.accountsTotal(formatMoney(total))}</p>}
             <p className="ap-row__prov">{copy.assumptionCollectionsValue}</p>
-            <button type="button" className="btn-quiet ap-row__edit" onClick={onReview}>
-              {copy.assumptionViaIntakeCta}
-            </button>
+            {editCollections !== undefined && (
+              <button type="button" className="btn-quiet ap-row__edit" onClick={editCollections}>
+                {copy.assumptionViaIntakeCta}
+              </button>
+            )}
           </Row>
         </ul>
       </section>
@@ -1179,9 +1211,11 @@ export function AssumptionPanel({
           what the fields already committed (insight 067; the BudgetBuilder inline variant's
           edits-survive precedent — we never fake an un-commit). */}
       <div className="ap-footer">
-        <button type="button" className="btn-quiet" onClick={onReview}>
-          {copy.assumptionRewalkCta}
-        </button>
+        {onReview !== undefined && (
+          <button type="button" className="btn-quiet" onClick={onReview}>
+            {copy.assumptionRewalkCta}
+          </button>
+        )}
         <button type="button" className="btn-quiet" onClick={onClose}>
           {copy.leverCancel}
         </button>

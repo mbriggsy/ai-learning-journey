@@ -68,9 +68,14 @@ export type AssumptionSeat =
   | 'collections' // accounts + other income — via-intake ("edit in the walk-through")
 
 /** The seats a door outside the panel can open it onto (`AssumptionPanel`'s `initialSeat`): the W row (the
- *  result's stale-W line, KTD21) and build 2's left-over seat (its moved line). A seat here must have a
- *  landing in the panel's exhaustive landing record, or the prop would silently do nothing. */
-export type AssumptionLandingSeat = Extract<AssumptionSeat, 'working-year-cost' | 'working-year-left-over'>
+ *  result's stale-W line, KTD21), build 2's left-over seat (its moved line), and the two methodology knobs the
+ *  workbench's facts page lists as choices (Act 5, U8): the survivor's spending and the heirs' bracket, whose one
+ *  door is this panel, and the Medicare-extras answer where the walk asks no extras step (a household under 64). A seat here must have a landing in the panel's exhaustive landing record, or the prop
+ *  would silently do nothing. */
+export type AssumptionLandingSeat = Extract<
+  AssumptionSeat,
+  'working-year-cost' | 'working-year-left-over' | 'survivor-ratio' | 'heir-bracket' | 'medicare-extras'
+>
 
 /** How one draft field reaches the panel. The four visible kinds name their seat(s); an
  *  `internal` field instead carries the one-line justification for why no user-facing row
@@ -277,6 +282,12 @@ const LEFT_OVER_KEY: Readonly<Record<LeftOverShownState, Readonly<Record<LeftOve
 }
 const LEFT_OVER_FAMILY: ReadonlySet<CopyKey> = new Set(Object.values(LEFT_OVER_KEY).flatMap((byAct) => Object.values(byAct)))
 
+/** Build 2's left-over line for a shown state in the draft's waiting words: the ONE selector over `LEFT_OVER_KEY`, read by
+ *  {@link methodologyLines} and by the workbench's facts page (Act 5, U8), so the two never word one state two ways. */
+export function leftOverLineKey(leftOver: LeftOverShownState, waiting: LeftOverWaitingWords): CopyKey {
+  return LEFT_OVER_KEY[leftOver][waiting]
+}
+
 /** A methodology row's lines for an arm — the ONE selector the panel and the disclosure test both
  *  call, so the arm choice cannot drift between them (insight 086). A row without a W arm reads its
  *  `lineKeys` on both arms. Both readings are REQUIRED, so no caller can skip a family's choice: of the K7
@@ -296,7 +307,7 @@ export function methodologyLines(
   return keys.filter(
     (k) =>
       (!WORK_STATE_FAMILY.has(k) || k === WORK_STATE_KEY[stateReading]) &&
-      (!LEFT_OVER_FAMILY.has(k) || k === LEFT_OVER_KEY[leftOver][waiting]),
+      (!LEFT_OVER_FAMILY.has(k) || k === leftOverLineKey(leftOver, waiting)),
   )
 }
 

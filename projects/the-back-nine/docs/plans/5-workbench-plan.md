@@ -484,6 +484,21 @@ Every unit's tests live in the module's sibling `__tests__/` folder. Every unit 
   - A real Back press with an open editor asks first.
   - Before U15, each lever line opens its own editor; after it, each links to the rail and opens no editor, the subsidy regime included.
 - **Verification.** A Caddie walk and Briggsy's cold read of the page.
+- **As built (2026-11-23, b9-2).**
+  - **The room.** The room has two pages under one pinned answer: "The year-by-year table" and "Your facts" (`WorkbenchRoom.tsx`; a real tab pattern inside the sticky seat; the market switch is the table's alone). Switching pages brings the new page's top under the seat.
+  - **The facts page.** It is grouped by the walk's own steps (`factsChrome.ts`, `FactsPage.tsx`). Every value reads exactly, from the producer the engine reads: the left-over answer through its shown state, Medicare extras through `medicareExtrasView`, contributions only for a working owner (`isWorkingOwner`), an account's mix by `blendSourceOf`, a governed total with its ramp note (`governedSpendNotes`, shared with the spend step and the panel), and budget windows in calendar years from the engine's anchor. A missing required fact reads "Not answered yet"; only the out-of-pocket figure can read "Left blank".
+  - **Editing a group.** Each group's door opens that step's body in a sheet (`StepSheet.tsx`) on the walk's own `useStepApi`, extracted from `IntakeFlow` with its behavior unchanged.
+    - Done is the walk's Continue check, after the focused field is committed.
+    - A dismiss whose step the Continue check would refuse restores the draft from open (never a refused value in the answer).
+    - Any edit while open ends in the route-aware recompute.
+    - While an account, income or budget entry is open in the body, Done and dismiss wait.
+  - **The levers.** The lever lines open the existing sheets. Result's hosting of the five sheets, their writes, the preview runner and their notes is now one module both rooms use (`src/ui/editorSheets.tsx`). A Medicare-extras answer the walk no longer asks (no one 64 or older) opens the panel at a new landing seat. The stop year and the goal show with no door. The stop year is held from the last delivered table run and marked in words while being worked out again.
+  - **The field walk.** `factRegistry.ts`, compile-enforced over the draft and its nested person, health, account and income-stream keys.
+  - **Carried in.** The room's updating, refiguring and landed-answer words go through its one live region. `aria-busy` is off the loading div. The landing walk holds the run and compares every frame with a baseline taken before the door opens.
+  - **Defects the walk found, fixed.** The pinned box grew 16 px when a dated lead became the no-date one, so it now reserves every form the next answer can take, aged forms included.
+  - **The review.** Three lenses, each answered by an adversary: 35 findings, 1 refuted, 28 fixes. The roadmap's U8 row lists them.
+  - **Not done.** The Caddie walk was skipped under Briggsy's 2026-11-22 ruling (polish the UI later; no extra Caddie read). His cold read of the page's words is owed.
+  - **Filed.** The register, Tier 2: the pinned box resizes on the phone when a work edit flips the route.
 
 ### Phase 2: the saved shape and the accounts
 

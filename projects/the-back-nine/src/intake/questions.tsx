@@ -362,6 +362,13 @@ const ssStep: StepDef = {
  *  the ONLY edit path is the steer into the builder. The input node is ABSENT, not disabled —
  *  an affordance that cannot change the outcome should not exist (insight 054). A rejected
  *  alternative, the proportional rescale, would forge an allocation the user never chose. */
+/** The notes a governing budget's spending total carries, wherever it is shown (the spend step's governed face, the
+ *  panel's governed row, the workbench's facts page): the year-0 figure is an anchor, not every year's spending, when
+ *  lines start later or end (`isRampedBudget`; the budget model's own anchor note). ONE home (the U8 review's F4). */
+export function governedSpendNotes(budget: Parameters<typeof isRampedBudget>[0]): readonly string[] {
+  return isRampedBudget(budget) ? [copy.budgetAnchorRampNote] : []
+}
+
 function SpendGovernedFace({
   api,
   onOpen,
@@ -389,9 +396,12 @@ function SpendGovernedFace({
         <p className="field-help">{slots.budgetTierSplit(formatMoney(essentials), formatMoney(extras))}</p>
       )}
       <p className="field-help">{copy.spendBudgetGovernedNote}</p>
-      {budget !== undefined && isRampedBudget(budget) && (
-        <p className="field-help">{copy.budgetAnchorRampNote}</p>
-      )}
+      {budget !== undefined &&
+        governedSpendNotes(budget).map((note) => (
+          <p key={note} className="field-help">
+            {note}
+          </p>
+        ))}
       <button
         type="button"
         ref={steerRef}

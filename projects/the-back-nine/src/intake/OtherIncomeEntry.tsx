@@ -65,9 +65,12 @@ const ownerLabelOf = (draft: ScenarioDraft, ownerIndex: 0 | 1): string =>
 /** The widow's-picture note for ONE committed stream — what the SURVIVOR keeps,
  *  in plain language (never a raw survivorPct). Alimony is 0 by law. */
 export function survivorNoteFor(draft: ScenarioDraft, s: IncomeStream): string {
-  const owner = ownerLabelOf(draft, s.ownerIndex)
+  // The keeper opens the sentence ("You would keep…"); the owner sits mid-sentence, so an unnamed owner reads "you" /
+  // "your spouse", its verb agreeing ("if you pass", never "if You passes": the U8 review's F10).
+  const name = draft.people[s.ownerIndex]?.name
+  const owner = name ?? (s.ownerIndex === 0 ? copy.personYouMid : copy.personSpouseMid)
   const keeper = ownerLabelOf(draft, (s.ownerIndex === 0 ? 1 : 0) as 0 | 1)
-  return slots.incomeSurvivorNote(keeper, owner, s.survivorPct)
+  return slots.incomeSurvivorNote(keeper, owner, s.survivorPct, name === undefined && s.ownerIndex === 0)
 }
 
 /** A CONTINUING type surfaces the survivor-% (alimony terminates by law → 0). */

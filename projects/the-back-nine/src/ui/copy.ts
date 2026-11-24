@@ -61,6 +61,9 @@ export const copy = {
   // --- the preamble questions (D1 — paired two-person screens) ---
   personYou: 'You',
   personSpouse: 'Your spouse',
+  // The same two, mid-sentence ("if you pass", "if your spouse passes").
+  personYouMid: 'you',
+  personSpouseMid: 'your spouse',
   qNamesHeading: 'First — who are the two of you?',
   nameLabel: 'First name',
   birthYearLabel: 'Birth year',
@@ -1372,7 +1375,7 @@ export const copy = {
     'That figure doesn’t count what you’d pay for drug and supplement plans — you answered about nothing for them, so the lines below add none.',
   // ⚠️ "the benchmark premium itself" WAS IN BOTH LISTS AND WAS FALSE — struck 2026-08-03.
   // The benchmark (SLCSP) is not merely counted, it is the ANCHOR of the whole credit:
-  // `intakeMap.ts:776` builds `slcsp` into the overlay params, `taxOverlay.ts:297` calls it "the
+  // `intakeMap.ts:795` builds `slcsp` into the overlay params, `taxOverlay.ts:297` calls it "the
   // §36B PTC basis", and `slidingScalePtc` (healthOverlay.ts:222-232) computes
   // `max(0, slcsp − applicable% × MAGI)` FROM it. Telling the reader the tool ignores the one
   // figure the discount is calculated from is the same false-negation shape O16 fixed on the Roth
@@ -1381,7 +1384,7 @@ export const copy = {
   // STRUCK, NOT REPLACED WITH AN AFFIRMATION, and that is deliberate. The O16 house pattern is
   // affirm-with-residual, but these two strings are gated on `statePriced` ALONE
   // (`stateTaxDisclosure.ts:144`) — they carry no ACA-priced axis, so the identical sentence also
-  // ships to a Medicare-only household (`intakeMap.ts:781-784`) that has no benchmark at all.
+  // ships to a Medicare-only household (`intakeMap.ts:800-803`) that has no benchmark at all.
   // "The benchmark is already in these numbers" would be a NEW false claim for that population.
   // Affirming here needs the three-state gate the Roth strings have; until then, silence is true.
   //
@@ -1635,11 +1638,11 @@ export const copy = {
   //
   // ⚠️ THE TOGGLE SETS THE ENTRY UNIT TOO, AND THE OLD SENTENCE HID IT (fixed 2026-08-03).
   // It read "switching this never changes the amount" — but the SHOWN figure jumps exactly 12×
-  // (`spendDisplayed`, AssumptionPanel.tsx:630-635), so the reader watches the number move while
+  // (`spendDisplayed`, AssumptionPanel.tsx:654-659), so the reader watches the number move while
   // being told nothing moved. The natural repair is to retype the old digits, and the panel's own
-  // commit (AssumptionPanel.tsx:900-910, the `entered * 12` arm at :907) then multiplies by 12
+  // commit (AssumptionPanel.tsx:930-940, the `entered * 12` arm at :937) then multiplies by 12
   // under 'month' — so a household "correcting" 78,000 back to 6,500 under 'Each year' commits a
-  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:533) hard-disarms
+  // $6,500/yr plan. Nothing catches it: PANEL_PROVENANCE (AssumptionPanel.tsx:554) hard-disarms
   // `spend-period-unconfirmed` (sanity.ts:392-415, the disarm read at :403) on this surface, and
   // 6,500 is under SPEND_AMBIGUOUS_MIN (sanity.ts:92) regardless — so the rule could not have
   // caught it even armed. The replacement must therefore say BOTH halves — the money is
@@ -2543,8 +2546,11 @@ export const copy = {
   // After a retry has failed too: some browsers keep a failed load for the whole visit, so only a reload fetches it again.
   workbenchLoadFailedAgain:
     'It still didn’t load. Reloading the page fetches it fresh; if you have changes you haven’t saved, the browser asks first.',
-  workbenchLeaveAsk: 'You started an entry here that isn’t added yet. Going back drops it.',
-  workbenchLeaveGo: 'Go back and drop it',
+  // Since U8 the open entry can be a group of facts mid-edit, whose finished changes are already in the plan: the
+  // words say what a Back keeps and what it drops, true for both.
+  workbenchLeaveAsk:
+    'You have something open here. Going back closes it: changes you finished stay in your plan, and an entry not yet added is dropped.',
+  workbenchLeaveGo: 'Go back',
   workbenchLeaveStay: 'Stay here',
   // The door pressed over an entry still open on the answer (a budget sheet's typed lines survive its Cancel).
   workbenchDoorAsk: 'You started an entry on this page that isn’t added yet. Opening the year-by-year page drops it.',
@@ -2640,6 +2646,66 @@ export const copy = {
   // Security is not among them, so the words never say the plan has no income (the U7 review's W10).
   workbenchWithheldNoLedger:
     'Your plan has no savings, no pension or other income, and no health premium entered, so there’s no year-by-year table to follow.',
+  // --- The facts page (Act 5, U8): everything the household told the tool, by the walk's own steps, each group
+  // with one door into that step's own body. Facts read exactly (R11): no "~" and no "about" on a figure the
+  // household gave. The pilot's drafts, shipped flagged for Briggsy's cold read. ---
+  workbenchPagesLabel: 'Pages',
+  workbenchPageTable: 'The year-by-year table',
+  workbenchPageFacts: 'Your facts',
+  workbenchFactsIntro:
+    'Everything you told the tool, grouped the way you answered it. Edit a group and your answer and the table follow. Nothing is kept until you save your plan.',
+  workbenchFactsReadOnly: 'This tab can show your plan but not change it.',
+  workbenchFactsEdit: 'Edit',
+  workbenchFactsDone: 'Done',
+  workbenchFactsPeople: 'The two of you',
+  workbenchFactsWork: 'Work',
+  workbenchFactsPay: 'Pay',
+  workbenchFactsSocialSecurity: 'Social Security',
+  workbenchFactsState: 'Where you’ll live',
+  workbenchFactsStateRetired: 'Where you live',
+  workbenchFactsSpending: 'Spending',
+  workbenchFactsHealthQuote: 'Health coverage before Medicare',
+  workbenchFactsEmployerCoverage: 'Coverage at work',
+  workbenchFactsMedical: 'Out-of-pocket health costs',
+  workbenchFactsInvestment: 'Investment income while working',
+  workbenchFactsTaxReturns: 'Your last two tax returns',
+  workbenchFactsMedicareExtras: 'Medicare beyond Part B',
+  workbenchFactsAccounts: 'Accounts',
+  workbenchFactsOtherIncome: 'Other income',
+  workbenchFactsWorkingYear: 'A working year’s cost',
+  workbenchFactsLeftOver: 'Money left over from pay',
+  workbenchFactsChoices: 'Your choices',
+  workbenchFactNotGiven: 'Not given',
+  workbenchFactNotAnswered: 'Not answered yet',
+  workbenchFactBlank: 'Left blank',
+  workbenchFactSsStart: 'Social Security starts',
+  workbenchFactSsStarted: 'Social Security started',
+  workbenchFactExtras: 'Beyond Part B, each month',
+  workbenchFactMix: 'How it’s invested',
+  workbenchFactTicker: 'The fund it holds',
+  workbenchFactStreamPension: 'pension',
+  workbenchFactStreamRental: 'rental income',
+  workbenchFactStreamAlimony: 'alimony',
+  workbenchFactStreamAnnuity: 'annuity',
+  workbenchFactStreamOther: 'other income',
+  workbenchFactStreamWhen: 'When it pays',
+  workbenchFactStreamCola: 'Against inflation',
+  workbenchFactAllTaxable: 'All of it',
+  workbenchFactAlimonySigned: 'Agreement signed',
+  workbenchFactAlimonyModified: 'Changed to follow the newer tax rules',
+  workbenchFactAnnuityKind: 'Kind of annuity',
+  workbenchFactBudget: 'Your budget',
+  workbenchFactTierEssential: 'essential',
+  workbenchFactTierExtra: 'extra',
+  workbenchFactBudgetEvery: 'every year',
+  // Where no calendar year can be named for year 0 (a working household whose answer has no dated stop).
+  workbenchFactBudgetYearZero: 'Year 0 is the first year you’ve both stopped working.',
+  workbenchFactGoal: 'Your goal for a recommendation',
+  workbenchFactGoalUnset: 'Not chosen yet',
+  workbenchFactStop: 'When work stops',
+  // The two choices listed with no door (KTD15): why there is none.
+  workbenchFactStopNote: 'Your answer sets this, so it moves when your facts or choices do.',
+  workbenchFactGoalNote: 'Chosen on your answer’s page, beside the recommendation.',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -3219,11 +3285,13 @@ export const slots = {
    *  OTHER spouse's name/pronoun, `owner` is the stream owner's. "would keep"
    *  reads for both "You would keep" and "Your spouse would keep" (no agreement
    *  trap). 0 ⇒ it ends; 1 ⇒ all of it; else the rounded percent. */
-  incomeSurvivorNote: (keeper: string, owner: string, survivorPct: number): string => {
-    if (survivorPct <= 0) return `This ends if ${owner} passes.`
+  /** `ownerIsYou`: the owner is the unnamed first person ("you"), so the verb agrees ("if you pass"). */
+  incomeSurvivorNote: (keeper: string, owner: string, survivorPct: number, ownerIsYou = false): string => {
+    const passes = `${owner} ${ownerIsYou ? 'pass' : 'passes'}`
+    if (survivorPct <= 0) return `This ends if ${passes}.`
     const pct = Math.round(survivorPct * 100)
-    if (pct >= 100) return `${keeper} would keep all of this if ${owner} passes.`
-    return `${keeper} would keep ${pct}% of this if ${owner} passes.`
+    if (pct >= 100) return `${keeper} would keep all of this if ${passes}.`
+    return `${keeper} would keep ${pct}% of this if ${passes}.`
   },
   /** The band household-clock ages at a marker — both spouses, " / " separated (rendered
    *  tabular-nums). A factual age echo, not a claim. */
@@ -4514,7 +4582,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2083` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2115` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5008,4 +5076,52 @@ export const slots = {
   workbenchRoughSteadyFrom: (endYear: number): string => `From here the market is steady: history’s run ends with ${endYear}.`,
   /** A sentence that holds the same in a run of years is said once, on the run's first year. */
   workbenchNoteThrough: (note: string, lastYear: number): string => `${note} The same each year through ${lastYear}.`,
+  // --- The facts page (Act 5, U8): a fact reads exactly, as given (R11): every figure here is the household's own,
+  // pre-formatted whole dollars, never "~" or "about". The pilot's drafts, shipped flagged. ---
+  /** A group's one door, named for the group it opens (its visible text is "Edit"): "Edit spending", "Edit Social
+   *  Security". A title that opens on a proper noun keeps its capital. */
+  workbenchFactsEditName: (title: string): string =>
+    `Edit ${/^(Social Security|Medicare|Roth)\b/.test(title) ? title : `${title.charAt(0).toLowerCase()}${title.slice(1)}`}`,
+  workbenchFactDollars: (amount: string): string => `$${amount}`,
+  workbenchFactPerYear: (amount: string): string => `$${amount} a year`,
+  workbenchFactPerMonth: (amount: string): string => `$${amount} a month`,
+  workbenchFactPerMonthAndYear: (month: string, year: string): string => `$${month} a month ($${year} a year)`,
+  workbenchFactSpendBudget: (total: string): string => `$${total} a year, set by your budget`,
+  workbenchFactPercent: (pct: string): string => `${pct}%`,
+  workbenchFactSsStartYear: (year: number, age: number): string => `${year}, at age ${age}`,
+  /** An account or a stream, by whose it is: "Sam’s 401(k)", "Your pension". */
+  workbenchFactOwned: (possessive: string, noun: string): string => upperFirst(`${possessive} ${noun}`),
+  /** An account's mix, each part it holds: "60% stocks, 30% bonds, 10% cash". */
+  workbenchFactMixParts: (parts: readonly string[]): string => parts.join(', '),
+  workbenchFactMixStocks: (pct: string): string => `${pct}% stocks`,
+  workbenchFactMixBonds: (pct: string): string => `${pct}% bonds`,
+  workbenchFactMixCash: (pct: string): string => `${pct}% cash`,
+  workbenchFactAccountsTotal: (total: string): string => `All accounts together: $${total}`,
+  workbenchFactStreamForLife: (age: number): string => `From age ${age}, for life`,
+  workbenchFactStreamUntil: (start: number, end: number): string => `From age ${start} through age ${end}`,
+  workbenchFactStreamRises: (pct: string): string => `Rises ${pct}% a year`,
+  workbenchFactLeftOverSaved: (amount: string): string =>
+    `All of it goes into savings or investments (you answered against $${amount} a year left over)`,
+  /** A custom withdrawal order, first to last: "Brokerage, then Pre-tax, then Roth". */
+  workbenchFactOrder: (buckets: readonly string[]): string => buckets.join(', then '),
+  workbenchFactRoth: (amount: string, startYear: number, startPassed: boolean, years: number): string =>
+    `$${amount} a year for ${years} year${years === 1 ? '' : 's'}, ${startPassed ? 'started in' : 'starting in'} ${startYear}`,
+  workbenchFactBudgetLine: (amount: string, tier: string, when: string): string => `$${amount} a year, ${tier}, ${when}`,
+  /** A budget line's window in calendar years ("2028 through 2035", "from 2028 on"), or in the editor's own year
+   *  numbers where no calendar year is known ("year 2 through year 9", "from year 2 on"). */
+  workbenchFactBudgetThrough: (from: number, through: number): string => `${from} through ${through}`,
+  workbenchFactBudgetFromOn: (from: number): string => `from ${from} on`,
+  workbenchFactBudgetYearThrough: (from: number, through: number): string => `year ${from} through year ${through}`,
+  workbenchFactBudgetFromYearOn: (from: number): string => `from year ${from} on`,
+  /** The Medicare extras the run prices with the tool's own figure (no figure of the household's own). */
+  workbenchFactExtrasToolFigure: (monthly: string): string => `$${monthly} a month, the tool’s own figure, not one you gave`,
+  /** A floor-track stop: the date is figured on essentials-only spending (the table heading's words). */
+  workbenchFactStopYearFloor: (year: number): string => `${year}, the year your answer’s date gives on essentials-only spending`,
+  /** The budget line's window help on the all-retired route, where year 0 is the plan's first year. */
+  budgetWindowHelpRetired: (year: number): string =>
+    `Counted from this plan’s first year, ${year} — year 0. Leave “through” blank for always.`,
+  workbenchFactHeirDefault: (pct: string): string => `${pct}%, the tool’s starting figure until you choose one`,
+  workbenchFactStopYear: (year: number): string => `${year}, the year your answer’s date gives`,
+  workbenchFactStopNoDate: (year: number): string =>
+    `${year}: your answer found no date in its window, so the table uses the window’s last year`,
 } as const

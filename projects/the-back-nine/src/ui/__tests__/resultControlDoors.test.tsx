@@ -264,11 +264,17 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
     // ends — spineMedicarePriced's divergence witness (intakeMap.test) and the components'
     // note-iff-prop pins — so THIS pin closes the one remaining link: Result's derivation line.
     // A revert to the age predicate (the exact shipped defect) goes red here (proven 2026-07-10).
+    // Since Act 5's U8 the lever's live derivation lives in the shared editor-sheets module (Result calls it), and
+    // Result keeps the hero's twin over the answered draft: both files are read.
     const src = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
-    expect(src, 'the disclosure derivation reads the built params').toMatch(/spineMedicarePriced\(/)
-    expect(src, 'the age predicate must never re-enter Result (insight 080)').not.toMatch(
-      /medicareOnlyPriced/,
+    const sheets = readFileSync(resolve(__dirname, '../editorSheets.tsx'), 'utf8')
+    expect(src, 'the hero’s disclosure derivation reads the built params').toMatch(/spineMedicarePriced\(/)
+    expect(sheets, 'the lever’s disclosure derivation reads the built params').toMatch(
+      /const medicarePriced = useMemo\(\(\) => isDateRoute\(draft\) \|\| spineMedicarePriced\(draft\)/,
     )
+    for (const [file, text] of [['Result.tsx', src], ['editorSheets.tsx', sheets]] as const) {
+      expect(text, `the age predicate must never re-enter ${file} (insight 080)`).not.toMatch(/medicareOnlyPriced/)
+    }
   })
 
   it('Result derives the STATE-tax disclosure from the route-aware BUILT params (pricedStateForRun), never draft.retirementState and never a bare isDateRoute disjunct — the S5 source-bind (insight 080/081)', () => {
@@ -278,7 +284,8 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
     // behavioral chain is pinned at both ends — pricedStateForRun's divergence witness
     // (intakeMap.test) + the components' note-iff-prop pins — so THIS pin closes Result's
     // derivation line. A revert to draft.retirementState OR an `|| isDateRoute` widening goes red.
-    const src = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
+    // The live derivation's home is the shared editor-sheets module since Act 5's U8 (Result calls it).
+    const src = readFileSync(resolve(__dirname, '../editorSheets.tsx'), 'utf8')
     expect(src, 'the state derivation reads the producer output').toMatch(
       /const statePricedNote = useMemo\(\(\) => pricedStateForRun\(snapshot\.draft\)/,
     )
@@ -286,6 +293,9 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
     const stateLine = src.split('\n').find((l) => l.includes('const statePricedNote =')) ?? ''
     expect(stateLine, 'never re-derives from draft.retirementState').not.toMatch(/draft\.retirementState/)
     expect(stateLine, 'never a bare isDateRoute disjunct for state (insight 080)').not.toMatch(/isDateRoute/)
+    // …and Result reads that one computation, never a copy of its own (the recommendation surface's note).
+    const result = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
+    expect(result, 'Result passes the editor sheets’ state read through').toMatch(/const statePricedNote = editors\.statePricedNote/)
   })
 
   it('Result derives the ACA-priced disclosure from the PREVIEW producer (acaPricedForRun over the crowned offset) AND threads it to the Roth lever — the O16 source-bind (insight 080/081)', () => {
@@ -295,7 +305,8 @@ describe('the healthcare door — the engine PRICED domain only, categorical (co
     // Result's derivation + threading links. A revert to an age/draft re-derivation, a bare
     // isDateRoute widening, a drop of the crowned-offset key (back to the pre-sweep base overlay
     // — the fold's P1), or a dropped prop goes red here.
-    const src = readFileSync(resolve(__dirname, '../Result.tsx'), 'utf8')
+    // The derivation and the threading live in the shared editor-sheets module since Act 5's U8 (Result calls it).
+    const src = readFileSync(resolve(__dirname, '../editorSheets.tsx'), 'utf8')
     expect(src, 'the ACA derivation reads the PREVIEW producer, keyed by the crowned offset').toMatch(
       /acaPricedForRun\(snapshot\.draft, crownedOffset\)/,
     )

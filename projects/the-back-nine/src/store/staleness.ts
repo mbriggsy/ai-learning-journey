@@ -86,7 +86,7 @@
  * A bare vintage compare answers "did the TABLE move?", never "did THIS household's answer
  * move?". Shipped defect (pilot-verified 2026-07-25): `reentryChrome.ts` pushed one healthcare
  * line off the OR-collapse of all seven healthcare clocks, so an all-65+ household — which
- * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:781-784`), ships NO
+ * takes `buildOverlay`'s Medicare-only branch (`intakeMap.ts:800-803`), ships NO
  * `enrolledPremium`, and can therefore NEVER open the engine's ACA gate
  * (`taxOverlay.ts:2579-2584`: `acaTable !== undefined && enrolledThisYear > 0 && pre65 > 0`) —
  * was told "Health-coverage rules have been updated" on a moved `acaStatus` stamp. They price
@@ -255,9 +255,9 @@ export type ExposureRead = 'priced' | 'unpriced' | 'unknown'
 export interface StalenessExposure {
   /** Did the run BUILD a tax overlay at all (`overlayBuiltForRun` — the route's own builder's
    *  `params.overlay !== undefined`)? This is the FEDERAL tax family's gate: `taxEnabled: true`
-   *  is hardcoded on every built overlay (`intakeMap.ts:751`) and `consumedConstants.ts:108`
+   *  is hardcoded on every built overlay (`intakeMap.ts:770`) and `consumedConstants.ts:108`
    *  gates the whole `tax.` family on exactly that flag — so a run that took `buildOverlay`'s
-   *  degenerate early return (`intakeMap.ts:681-686`: no accounts, no premium, no income —
+   *  degenerate early return (`intakeMap.ts:700-705`: no accounts, no premium, no income —
    *  reachable today by a save-ready Social-Security-only household) re-prices NO tax constant
    *  and is byte-identical under any tax vintage.
    *
@@ -286,7 +286,7 @@ export interface StalenessExposure {
    *  owner actually contribute (`contributionsPricedForRun`)? The date route is NOT sufficient
    *  on its own: `dateSearch.ts:262` forces `accumulation` onto EVERY candidate, but it
    *  truncates the BASE overlay's streams, and `contributionStreamsFor` returns `{}` for a
-   *  non-working owner (`intakeMap.ts:554-557`) — so a date-route household whose accounts all
+   *  non-working owner (`intakeMap.ts:573-576`) — so a date-route household whose accounts all
    *  belong to the retired spouse carries EMPTY streams on every candidate and reads no
    *  contribution limit (`consumedConstants.ts:128` gates the `contributions.` family on the
    *  construct's presence; the limits' only pricing read is `annualAdditionsCeilingFor`'s
@@ -636,7 +636,7 @@ export function deriveStaleness(
   // `taxEnabled: true` is hardcoded on every built overlay. The first half is true; the
   // conclusion was not — a household that builds NO overlay reaches a verdict all the same
   // (`buildParams` returns params with `initialPortfolio: 0` and the inert `stockWeight ?? 0`,
-  // `intakeMap.ts:805-814`), so "no overlay ⇒ nothing to be stale about" was false.
+  // `intakeMap.ts:824-833`), so "no overlay ⇒ nothing to be stale about" was false.
   const currentTax = taxVintageStamp()
   const savedTax = scenario.taxVintageDetail
   const taxStampMoved =
@@ -775,9 +775,9 @@ export function deriveStaleness(
   // gate keeps the CLAIM honest: "every date candidate carries the accumulation construct
   // (`dateSearch.ts:262`) ⇒ structurally exposed" is necessary but NOT sufficient, because the
   // forced construct is filled from the BASE overlay's streams and `contributionStreamsFor`
-  // returns `{}` for a non-working owner (`intakeMap.ts:554-557`). A 66/retired + 62/working couple
+  // returns `{}` for a non-working owner (`intakeMap.ts:573-576`). A 66/retired + 62/working couple
   // whose accounts all belong to the retired spouse is on the date route with EMPTY streams:
-  // `anyContributions` is false (`intakeMap.ts:718-724`), no `accumulation` reaches the base
+  // `anyContributions` is false (`intakeMap.ts:737-743`), no `accumulation` reaches the base
   // overlay, and the limit tables' only pricing read (the §415(c) match trim) never runs.
   //
   // The blend clock never NAMES itself on either route (see `date.blendMoved`'s own note): the

@@ -357,13 +357,30 @@ export function resolveBlend(
   account: EnteredAccount,
   classifications: ScenarioDraft['tickerClassifications'],
 ): number | null {
+  const source = blendSourceOf(account, classifications)
+  if (source === null) return null
+  return source.kind === 'fund' ? stockWeightForBlend(source.row) : stockWeightForBlend(blendOf(source.blend))
+}
+
+/** Where an account's mix comes from, in `resolveBlend`'s own branch order: a ticker the fund table knows, else the
+ *  household's classification of that ticker, else (no ticker) the mix entered by hand; null where none resolves. ONE
+ *  home of the order, read by the run and by the workbench's facts page (Act 5, U8), so the page never prints a mix
+ *  the run doesn't use (a ticker'd account's hand-entered mix is never read). */
+export function blendSourceOf(
+  account: EnteredAccount,
+  classifications: ScenarioDraft['tickerClassifications'],
+):
+  | { readonly kind: 'fund'; readonly row: NonNullable<ReturnType<typeof findBlendRow>> }
+  | { readonly kind: 'classified'; readonly blend: TickerClassification }
+  | { readonly kind: 'manual'; readonly blend: TickerClassification }
+  | null {
   if (account.ticker !== undefined) {
     const row = findBlendRow(account.ticker)
-    if (row !== undefined) return stockWeightForBlend(row)
-    const manual = classifications[account.ticker]
-    return manual === undefined ? null : stockWeightForBlend(blendOf(manual))
+    if (row !== undefined) return { kind: 'fund', row }
+    const classified = classifications[account.ticker]
+    return classified === undefined ? null : { kind: 'classified', blend: classified }
   }
-  return account.manualBlend === undefined ? null : stockWeightForBlend(blendOf(account.manualBlend))
+  return account.manualBlend === undefined ? null : { kind: 'manual', blend: account.manualBlend }
 }
 
 /** The household stockWeight: value-weighted across resolved accounts (§5 —
@@ -446,7 +463,9 @@ const familyOf = (kind: AccountKind): OwnerFamilyKey['family'] | null =>
  *  stream (an account added while working, then flipped to retired) is engine-
  *  inert at runtime (t<retire truncation) yet trips the §6 raw-stream ACA-overlap
  *  pre-check, breaking the render-anchor coupling (D1 review C1). */
-const isWorkingOwner = (d: ScenarioDraft, ownerIndex: number): boolean =>
+/** A contribution is built ONLY for a working owner: the builder's own gate, exported so the workbench's facts page
+ *  shows an account's yearly contributions only where the run carries them (Act 5, U8). */
+export const isWorkingOwner = (d: ScenarioDraft, ownerIndex: number): boolean =>
   d.people[ownerIndex]?.workStatus === 'working'
 
 /** Per-year scale for one (owner, family): 1 today (the R19 rule blocked

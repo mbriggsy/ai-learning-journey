@@ -15,13 +15,9 @@
  */
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
 import { AnswerStrip } from '@intake/AnswerStrip'
-import { acaPricedForRun, buildControlPreviewParams, healthcarePriced, isDateRoute, medicareExtrasDisclosureView, missingRequiredFacts, pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
-import { BudgetBuilder } from '@intake/BudgetBuilder'
-import { SequencingControl } from '@intake/SequencingControl'
-import { RothLever } from '@intake/RothLever'
-import { HealthcareSheet } from '@intake/HealthcareSheet'
-import { AssumptionPanel } from '@intake/AssumptionPanel'
+import { healthcarePriced, isDateRoute, medicareExtrasDisclosureView, missingRequiredFacts, pricedStateForRun, spineMedicarePriced } from '@intake/intakeMap'
 import type { AssumptionLandingSeat } from './assumptionRegistry'
+import { useEditorSheets } from './editorSheets'
 import {
   workingYearCostStaleDoor,
   workingYearCostStaleLine,
@@ -32,14 +28,12 @@ import {
 } from '@intake/workingYearLeftOver'
 import { composeMedicareExtrasTypicalNote, showMedicarePricedNote } from './healthSheetChrome'
 import { budgetGoverns } from '@budget/budgetModel'
-import { commitBudgetPatch } from '@budget/budgetToSpending'
-import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
 import { epochDayToCalendarYear } from '@store/staleness'
 import { planClockAnchor } from './bandAnnotations'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { SavedRecommendationStatus } from '@store/savedRecommendation'
 import { currentEpochDay } from './scenarioFromDraft'
-import type { RecommendationGoal, SavedRecommendationV3, TwoArmControl } from '@shared/model'
+import type { RecommendationGoal, SavedRecommendationV3 } from '@shared/model'
 import { GoalPicker } from '@intake/GoalPicker'
 import { RecommendationSurface, SavedRecordCard, type RecommendationSaveProp } from './RecommendationSurface'
 import { savedRecordCardView, type SavedRecordCopy } from './recommendationSaveView'
@@ -195,7 +189,6 @@ export function Result({
   // answer opens the budget-builder sheet; a governing budget re-words the same door. Offered only
   // on a RESOLVED reading (focusKey is defined exactly then) — the budget deepens an answer, and
   // an affordance we don't want used on a non-answer shouldn't exist.
-  const [budgetOpen, setBudgetOpen] = useState(false)
   const governs = budgetGoverns(snapshot.draft.budget)
 
   // P3·U10 — the two control doors (R9/R11: quiet, invited, never a badge). GATING LAW:
@@ -203,16 +196,27 @@ export function Result({
   //  - the Roth door: a resolved reading + CATEGORICAL facts only — filing status, never a
   //    personalized bracket/balance computation (plan §U10 teaser law; the $0-pre-tax case gets
   //    the lever's own calm closed face, so even that read stays out of the door predicate).
-  const [sequencingOpen, setSequencingOpen] = useState(false)
-  const [rothOpen, setRothOpen] = useState(false)
-  const [healthOpen, setHealthOpen] = useState(false)
-  const [assumptionsOpen, setAssumptionsOpen] = useState(false)
-  // Where the assumptions panel lands when it opens: the W row when the pay check's stale line
-  // opened it, the left-over seat when build 2's moved line did, nowhere special from the plain door.
-  // Dropped the moment the panel closes, on EVERY close and route-away path at once (a render-phase
-  // reset), so the ordinary door never re-lands on a seat.
-  const [assumptionsSeat, setAssumptionsSeat] = useState<AssumptionLandingSeat | undefined>(undefined)
-  if (!assumptionsOpen && assumptionsSeat !== undefined) setAssumptionsSeat(undefined)
+  // The lever sheets, the AssumptionPanel and their writes live in ONE shared home (`editorSheets.tsx`, Act 5
+  // U8), which the workbench room's facts page calls too. Where the assumptions panel lands when it opens: the
+  // W row when the pay check's stale line opened it, the left-over seat when build 2's moved line did, nowhere
+  // special from the plain door (the hook drops the seat on every close).
+  // U12 ultramode — `restoreToAssumptionsDoor` is every sheet's close-time focus fallback for the via-panel
+  // route (the panel's Edit row unmounts with the panel, so the sheet's captured owner is disconnected by close
+  // time — without a fallback focus strands on <body>). The Assumptions door is the honest landmark: it is the
+  // surface the user came through, and it stays reachable in every post-resolve state (the hatch gate below).
+  // Re-queried at close, because the dead-end repair remounts the actions row while the panel is open.
+  const restoreToAssumptionsDoor = useCallback(
+    () => document.querySelector<HTMLElement>('[data-door="assumptions"]'),
+    [],
+  )
+  const editors = useEditorSheets({
+    model: appModel,
+    snapshot,
+    missing,
+    savedAnchor: dateAnchor,
+    restoreFallback: restoreToAssumptionsDoor,
+    onReview,
+  })
   // The standing answer line for one cause: its door opens the panel at that cause's seat, and exists only
   // where the tab can save (a read-only tab reads the fact alone). The parts' `door` — what is said beside the door (for
   // W, the Result's door from `workingYearCostStaleDoor`: its last dt/dd, council `wf_22858e04-f7a`) — rides only with the
@@ -223,10 +227,7 @@ export function Result({
       : {
           cause,
           parts,
-          onOpen: () => {
-            setAssumptionsSeat(seat)
-            setAssumptionsOpen(true)
-          },
+          onOpen: () => editors.openAssumptions(seat),
         }
   // Act-4 · U16 §S2 — the recommend-second GOAL choice (the picker precedes the solve). The affordance
   // opens it; a confirmed pick writes `chosenGoal` and dispatches the solve.
@@ -252,13 +253,9 @@ export function Result({
   // healthcareEnabled true on every candidate, so Medicare is priced structurally. The household
   // with a priced run but NO Healthcare door (all-65+ — healthcarePriced needs a pre-65 member)
   // wears the "Medicare is priced in" affirmation + the narrowed residual.
-  const medicarePriced = useMemo(
-    () => isDateRoute(snapshot.draft) || spineMedicarePriced(snapshot.draft),
-    [snapshot.draft],
-  )
-  const medicarePricedNote = showMedicarePricedNote({ medicarePriced, reachesHealthDoor: healthPriced })
-  // …and its HERO twin, off the answered draft whole (the door's reach included: the hero's note describes the
-  // run it shows; the Roth lever keeps the live note above, since it describes the run it will preview — KTD5).
+  // The HERO's note, off the answered draft whole (the door's reach included: the hero's note describes the
+  // run it shows; the Roth lever keeps the live note, in `editorSheets.tsx`, since it describes the run it will
+  // preview — KTD5).
   const heroMedicarePricedNote = useMemo(
     () =>
       answeredDraft !== null &&
@@ -284,7 +281,8 @@ export function Result({
   // standalone state note names the state; the Roth lever + Healthcare sheet drop the state-tax
   // omission, and the sheet's conversion tile adds the state's tax to its cents; the RECOMMENDATION
   // surface drops its state-tax scope note, `recDiscStateTax`), each gating on `!== undefined`.
-  const statePricedNote = useMemo(() => pricedStateForRun(snapshot.draft), [snapshot.draft])
+  // The live read is the editor sheets' own (one computation, `editorSheets.tsx`).
+  const statePricedNote = editors.statePricedNote
   // …and its HERO twin, read off the answered draft (KTD5: two values — the sheets and the recommendation surface
   // describe what they will run next, the hero what it ran).
   const heroStatePricedNote = useMemo(
@@ -334,84 +332,15 @@ export function Result({
     [answeredDraft, leftOverClauseHost],
   )
   // The pay-less-tax ALL-IN hero's scope (build spec D7): did the SOLVE's built overlay price
-  // healthcare? Deliberately NOT `medicarePriced` above — that one ORs the date route in (structurally
+  // healthcare? Deliberately NOT the sheets' `medicarePriced` (`editorSheets.tsx`) — that one ORs the date route in (structurally
   // priced there), while the solve never runs on the date route (`spine-unready`) and its base is
   // exactly `buildSpineParams`' output, so the spine read alone is the solve's own predicate.
   const solveHealthcarePriced = useMemo(() => spineMedicarePriced(snapshot.draft), [snapshot.draft])
   const enhancedApplied = snapshot.draft.enhancedSubsidies === true
-  // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
-  const healthReadout =
-    snapshot.answer.kind === 'headline' ? snapshot.answer.result.distribution.healthReadout : undefined
-  // The date route's preview anchor: the CROWNED lifestyle offset (the plan the answer named);
-  // undefined (⇒ preview withheld) when no date crowned or on the spine route (unused there).
-  const crownedOffset =
-    snapshot.answer.kind === 'date' &&
-    snapshot.answer.outcome.kind === 'dates' &&
-    'offsetYears' in snapshot.answer.outcome.lifestyle
-      ? snapshot.answer.outcome.lifestyle.offsetYears
-      : undefined
-  // O16 (council 2026-07-17; the fold same day) — "does the run the Roth PREVIEW describes price
-  // the ACA discount?": producer's-output (insight 080/081) read off buildControlPreviewParams —
-  // the exact builder the two-arm preview executes (spine params, or the CROWNED window-gated
-  // candidate). Never buildDateInput's pre-sweep base overlay (its quote stream is positive for a
-  // pre-65-today member even when a work-to-65+ crown prices zero ACA years). The degenerate,
-  // unknown-age, and no-crown households read false and conservatively KEEP the clause.
-  const acaPricedNote = useMemo(
-    () => acaPricedForRun(snapshot.draft, crownedOffset),
-    [snapshot.draft, crownedOffset],
-  )
-  // The preview runner the sheets inject: params from the CURRENT draft (never a render-captured
-  // copy going stale mid-sheet — composed per call), the household's one CRN seed, latest-wins.
-  const runPreview = useCallback(
-    (control: TwoArmControl) => {
-      const { draft } = appModel.getSnapshot()
-      const params = buildControlPreviewParams(draft, crownedOffset)
-      if (params === null || draft.seed === undefined) return null
-      return runControlPreview(params, draft.seed, control)
-    },
-    [crownedOffset],
-  )
-  // Apply/escape recompute provisional→final (the decrypt-on-return fast-show precedent): on the date
-  // route the provisional lands quickly under the breathing provisional tag (W9-R7, R9) and the final
-  // sharpens behind it; the spine's two tiers are byte-identical (its run ignores the tier).
-  // W9-R7 (R6, KTD7): a provisional that a newer edit superseded before it settled sends NO final —
-  // the newer edit's own pair carries the household's latest inputs, provisional first. (Sent anyway,
-  // the old pair's final would be built from the newer draft and its epoch bump would cancel the newer
-  // pair's provisional: the household would wait out the final with no first reading of its change.)
-  const recomputeBoth = useCallback(async () => {
-    if (!(await appModel.recompute('provisional'))) return
-    await appModel.recompute('final')
-  }, [])
-
-  // U12 — the AssumptionPanel's ONE commit seam: apply the mutate atomically (it reads the
-  // store's CURRENT draft inside the update — insight 036, never a render-captured copy),
-  // then the ROUTE-AWARE recompute (the ratified F6 policy): SPINE → 'final' ONLY (the
-  // spine's two tiers are byte-identical, so a provisional re-fire is pure waste); DATE →
-  // the recomputeBoth cadence (provisional lands fast, the final sharpens behind it). The
-  // route is read AFTER the update — panel edits can't change workStatus, but the draft the
-  // recompute serves is the committed one.
-  const commitAssumptionEdit = useCallback(
-    (mutate: (d: ScenarioDraft) => ScenarioDraft) => {
-      appModel.update(mutate)
-      if (isDateRoute(appModel.getSnapshot().draft)) void recomputeBoth()
-      else void appModel.recompute('final')
-    },
-    [recomputeBoth],
-  )
-
-  // U12 ultramode — the modal-ownership signal, threaded two ways: (1) `sheetOpen` to both
-  // heroes (suppress the landing focus grab + the sharpen announce while a sheet/panel owns
-  // focus and AT — an in-panel edit can demote → re-resolve → REMOUNT a hero behind the open
-  // aria-modal); (2) `restoreToAssumptionsDoor` to every sheet as the close-time focus
-  // fallback for the via-panel route (the panel's Edit row unmounts with the panel, so the
-  // sheet's captured owner is disconnected by close time — without a fallback focus strands
-  // on <body>). The Assumptions door is the honest landmark: it is the surface the user came
-  // through, and it stays reachable in every post-resolve state (the hatch gate below).
-  const sheetOpen = budgetOpen || sequencingOpen || rothOpen || healthOpen || assumptionsOpen || goalOpen
-  const restoreToAssumptionsDoor = useCallback(
-    () => document.querySelector<HTMLElement>('[data-door="assumptions"]'),
-    [],
-  )
+  // U12 ultramode — the modal-ownership signal: `sheetOpen` to both heroes (suppress the landing focus grab +
+  // the sharpen announce while a sheet/panel owns focus and AT — an in-panel edit can demote → re-resolve →
+  // REMOUNT a hero behind the open aria-modal). The fallback half is `restoreToAssumptionsDoor` above.
+  const sheetOpen = editors.sheetOpen || goalOpen
 
   // U12 — the Assumptions door's gate (F4: it takes the Review door's quiet-row seat; count
   // stays 5). THIS DOOR GATES DIFFERENTLY FROM ITS SIBLINGS, deliberately (3-controls.md:243):
@@ -647,24 +576,24 @@ export function Result({
           </button>
         )}
         {focusKey !== undefined && (
-          <button type="button" className="btn-quiet" onClick={() => setBudgetOpen(true)}>
+          <button type="button" className="btn-quiet" onClick={editors.openBudget}>
             {governs ? copy.budgetEditCta : copy.budgetCta}
           </button>
         )}
         {focusKey !== undefined && snapshot.draft.enteredAccounts.length > 0 && (
-          <button type="button" className="btn-quiet" onClick={() => setSequencingOpen(true)}>
+          <button type="button" className="btn-quiet" onClick={editors.openSequencing}>
             {snapshot.draft.drawdownPolicy === 'proportional'
               ? copy.leverSequencingCta
               : copy.leverSequencingEditCta}
           </button>
         )}
         {focusKey !== undefined && snapshot.draft.filing === 'mfj' && (
-          <button type="button" className="btn-quiet" onClick={() => setRothOpen(true)}>
+          <button type="button" className="btn-quiet" onClick={editors.openRoth}>
             {rothApplied === undefined ? copy.leverRothDoorCta : copy.leverRothDoorEditCta}
           </button>
         )}
         {focusKey !== undefined && healthPriced && (
-          <button type="button" className="btn-quiet" onClick={() => setHealthOpen(true)}>
+          <button type="button" className="btn-quiet" onClick={editors.openHealth}>
             {enhancedApplied ? copy.leverHealthDoorEditCta : copy.leverHealthDoorCta}
           </button>
         )}
@@ -678,10 +607,7 @@ export function Result({
             type="button"
             className="btn-quiet"
             data-door="assumptions"
-            onClick={() => {
-              setAssumptionsSeat(undefined)
-              setAssumptionsOpen(true)
-            }}
+            onClick={() => editors.openAssumptions()}
           >
             {copy.assumptionDoorCta}
           </button>
@@ -785,131 +711,10 @@ export function Result({
         )}
       </div>
       {!seating.inLead && actionsNode}
-      <BudgetBuilder
-        open={budgetOpen}
-        draft={snapshot.draft}
-        onApply={(items) => {
-          // The atomic reconciliation patch — the OOP figure reads the store's CURRENT draft
-          // inside the update (insight 036), never a render-captured copy.
-          appModel.update((d) => ({ ...d, ...commitBudgetPatch(items, d.health.oopMedicalAnnual) }))
-          setBudgetOpen(false)
-          void recomputeBoth()
-        }}
-        onEscape={() => {
-          // Back to a single number: budget → strictly-undefined; the scalar keeps its last
-          // reconciled value (build-gate 2 — never `budget: []`).
-          appModel.update((d) => ({ ...d, budget: undefined }))
-          setBudgetOpen(false)
-          void recomputeBoth()
-        }}
-        onClose={() => setBudgetOpen(false)}
-        restoreFallback={restoreToAssumptionsDoor}
-      />
-      <SequencingControl
-        open={sequencingOpen}
-        draft={snapshot.draft}
-        preview={runPreview}
-        previewBlocking={!previewRunsInWorker()}
-        restoreFallback={restoreToAssumptionsDoor}
-        savedAnchor={dateAnchor}
-        onApply={(policy, order) => {
-          // ONE atomic write maintains the 'custom'⟺order biconditional (the codec re-proves it
-          // at Save; validateParams re-proves it at every run — the two-gate rule's write half).
-          appModel.update((d) => {
-            const { drawdownOrder: _order, ...rest } = d
-            return { ...rest, drawdownPolicy: policy, ...(order !== undefined ? { drawdownOrder: order } : {}) }
-          })
-          setSequencingOpen(false)
-          void recomputeBoth()
-        }}
-        onClose={() => setSequencingOpen(false)}
-      />
-      <RothLever
-        open={rothOpen}
-        draft={snapshot.draft}
-        preview={runPreview}
-        previewBlocking={!previewRunsInWorker()}
-        medicarePricedNote={medicarePricedNote}
-        statePricedNote={statePricedNote}
-        acaPricedNote={acaPricedNote}
-        restoreFallback={restoreToAssumptionsDoor}
-        savedAnchor={dateAnchor}
-        onApply={(plan) => {
-          appModel.update((d) => ({ ...d, rothConversion: plan }))
-          setRothOpen(false)
-          void recomputeBoth()
-        }}
-        onRemove={() => {
-          // Strip the KEY (absence ≡ no conversions ≡ reduce-to-spine — never an undefined-valued
-          // slot a JSON write would null, DND/009).
-          appModel.update((d) => {
-            const { rothConversion: _plan, ...rest } = d
-            return rest
-          })
-          setRothOpen(false)
-          void recomputeBoth()
-        }}
-        onClose={() => setRothOpen(false)}
-      />
-      <HealthcareSheet
-        open={healthOpen}
-        draft={snapshot.draft}
-        readout={healthReadout}
-        preview={runPreview}
-        previewBlocking={!previewRunsInWorker()}
-        statePricedNote={statePricedNote}
-        restoreFallback={restoreToAssumptionsDoor}
-        savedAnchor={dateAnchor}
-        todayEpochDay={currentEpochDay()}
-        onApply={(enhanced) => {
-          // THE SINGLE-KEY WRITE FENCE (insight 058): exactly one key moves — set the literal
-          // `true`, or STRIP the key entirely (absence ≡ the statutory reverted regime — never
-          // `false`, DND/009's strip-the-key discipline; the codec rejects a persisted false).
-          appModel.update((d) => {
-            const { enhancedSubsidies: _regime, ...rest } = d
-            return enhanced ? { ...rest, enhancedSubsidies: true } : rest
-          })
-          setHealthOpen(false)
-          void recomputeBoth()
-        }}
-        onClose={() => setHealthOpen(false)}
-      />
-      {/* U12 — the AssumptionPanel mounts at RESULT level, outside the hero swap (supersession
-          #6): it exists over the fallback strip too, so the escape hatch stays real exactly
-          where the hero has fallen back to incomplete. Via-sheet rows close this panel and
-          open the fact's ONE editor home (insight 058 — never a duplicate editor). */}
-      <AssumptionPanel
-        open={assumptionsOpen}
-        snapshot={snapshot}
-        missing={missing}
-        savedAnchor={dateAnchor}
-        onCommitEdit={commitAssumptionEdit}
-        onOpenBudget={() => {
-          setAssumptionsOpen(false)
-          setBudgetOpen(true)
-        }}
-        onOpenSequencing={() => {
-          setAssumptionsOpen(false)
-          setSequencingOpen(true)
-        }}
-        onOpenRoth={() => {
-          setAssumptionsOpen(false)
-          setRothOpen(true)
-        }}
-        onOpenHealth={() => {
-          setAssumptionsOpen(false)
-          setHealthOpen(true)
-        }}
-        onReview={() => {
-          setAssumptionsOpen(false)
-          onReview()
-        }}
-        onClose={() => setAssumptionsOpen(false)}
-        initialSeat={assumptionsSeat}
-        // The panel's own trigger is the landmark — re-queried at close, because the dead-end
-        // repair remounts the actions row while the panel is open (see AssumptionPanelProps).
-        restoreFallback={restoreToAssumptionsDoor}
-      />
+      {/* The lever sheets and the AssumptionPanel (U12: the panel mounts at RESULT level, outside the hero
+          swap — it exists over the fallback strip too, so the escape hatch stays real exactly where the hero
+          has fallen back to incomplete), from their one shared home (`editorSheets.tsx`). */}
+      {editors.node}
       {/* §S2 — the GoalPicker: the Tier-2 goal choice that PRECEDES the solve. Reuses the ControlSheet
           focus contract verbatim; a confirmed pick writes `chosenGoal` + dispatches. The via-panel
           focus fallback is the honest Assumptions landmark (the invite trigger unmounts once the beat

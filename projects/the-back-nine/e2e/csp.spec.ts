@@ -390,6 +390,18 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(page.locator('.wb-table'), 'the rough view’s rows').toBeVisible()
     await expect(page.locator('.wb-table-wrap--updating')).toHaveCount(0)
 
+    // U8: the facts page, one press away, under the same law (no violation, nothing off the build's origin).
+    await page.getByRole('tab', { name: copy.workbenchPageFacts }).click()
+    await expect(page.getByRole('heading', { name: copy.workbenchFactsChoices, exact: true }), 'the facts page never showed').toBeVisible()
+    await expect(page.locator('.wb-facts__section').first()).toBeVisible()
+    // …and one step sheet (a portaled sheet, its motion, and an intake step's body in the room's chunk), opened and
+    // closed through Done.
+    await page.getByRole('button', { name: slots.workbenchFactsEditName(copy.workbenchFactsPeople), exact: true }).click()
+    const sheet = page.getByRole('dialog', { name: copy.workbenchFactsPeople, exact: true })
+    await expect(sheet, 'the step sheet never opened').toBeVisible()
+    await sheet.getByRole('button', { name: copy.workbenchFactsDone, exact: true }).click()
+    await expect(sheet, 'the step sheet never closed').toHaveCount(0)
+
     // The way back: the browser's own Back lands on the answer.
     await page.goBack()
     await expect(page.locator('main.result')).toBeVisible()

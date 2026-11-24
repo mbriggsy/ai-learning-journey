@@ -740,7 +740,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     accountSummary: slots.accountSummary('401(k)', 'You', '120,000'),
     accountsTotal: slots.accountsTotal('1,400,000'),
     incomeSummary: slots.incomeSummary('Pension', 'You', '30,000'),
-    incomeSurvivorNote: slots.incomeSurvivorNote('Your spouse', 'you', 0.5),
+    incomeSurvivorNote: slots.incomeSurvivorNote('Your spouse', 'you', 0.5, true),
     bandClockAges: slots.bandClockAges(63, 61),
     bandClockTodayDesc: slots.bandClockTodayDesc(63, 61),
     bandClockHorizonDesc: slots.bandClockHorizonDesc(93, 91),
@@ -1089,6 +1089,38 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workbenchRowRolledOver: slots.workbenchRowRolledOver('Sam’s', 'yours'),
     workbenchRoughSteadyFrom: slots.workbenchRoughSteadyFrom(1995),
     workbenchNoteThrough: slots.workbenchNoteThrough(slots.workbenchRowNotKeptNoCredit('16,985'), 2034),
+    // The facts page (Act 5, U8).
+    workbenchFactsEditName: slots.workbenchFactsEditName('Social Security'),
+    workbenchFactDollars: slots.workbenchFactDollars('88,000'),
+    workbenchFactPerYear: slots.workbenchFactPerYear('150,000'),
+    workbenchFactPerMonth: slots.workbenchFactPerMonth('2,450'),
+    workbenchFactPerMonthAndYear: slots.workbenchFactPerMonthAndYear('12,500', '150,000'),
+    workbenchFactSpendBudget: slots.workbenchFactSpendBudget('148,000'),
+    workbenchFactPercent: slots.workbenchFactPercent('70'),
+    workbenchFactSsStartYear: slots.workbenchFactSsStartYear(2032, 67),
+    workbenchFactOwned: slots.workbenchFactOwned('your spouse’s', 'pension'),
+    workbenchFactMixParts: slots.workbenchFactMixParts([slots.workbenchFactMixStocks('60'), slots.workbenchFactMixBonds('30')]),
+    workbenchFactMixStocks: slots.workbenchFactMixStocks('60'),
+    workbenchFactMixBonds: slots.workbenchFactMixBonds('30'),
+    workbenchFactMixCash: slots.workbenchFactMixCash('10'),
+    workbenchFactAccountsTotal: slots.workbenchFactAccountsTotal('1,240,000'),
+    workbenchFactStreamForLife: slots.workbenchFactStreamForLife(62),
+    workbenchFactStreamUntil: slots.workbenchFactStreamUntil(62, 75),
+    workbenchFactStreamRises: slots.workbenchFactStreamRises('2'),
+    workbenchFactLeftOverSaved: slots.workbenchFactLeftOverSaved('16,985'),
+    workbenchFactOrder: slots.workbenchFactOrder(['Brokerage', 'Pre-tax', 'Roth']),
+    workbenchFactRoth: slots.workbenchFactRoth('40,000', 2027, false, 5),
+    workbenchFactBudgetLine: slots.workbenchFactBudgetLine('24,000', 'essential', 'every year'),
+    workbenchFactBudgetThrough: slots.workbenchFactBudgetThrough(2028, 2035),
+    workbenchFactBudgetFromOn: slots.workbenchFactBudgetFromOn(2028),
+    workbenchFactBudgetYearThrough: slots.workbenchFactBudgetYearThrough(2, 9),
+    workbenchFactBudgetFromYearOn: slots.workbenchFactBudgetFromYearOn(2),
+    workbenchFactExtrasToolFigure: slots.workbenchFactExtrasToolFigure('244'),
+    workbenchFactStopYearFloor: slots.workbenchFactStopYearFloor(2031),
+    budgetWindowHelpRetired: slots.budgetWindowHelpRetired(2026),
+    workbenchFactHeirDefault: slots.workbenchFactHeirDefault('24'),
+    workbenchFactStopYear: slots.workbenchFactStopYear(2031),
+    workbenchFactStopNoDate: slots.workbenchFactStopNoDate(2041),
   }
 
   it('the year-by-year table never calls its one future typical, average, expected or median (U7; the one-future record §5.1)', () => {
@@ -2297,7 +2329,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:965-975, :1021-1038), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:968-978, :1024-1041), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop
@@ -2413,7 +2445,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // --- THE UNIT-INERTNESS BAN (Tier-0, fixed 2026-08-03; until now the string had NO pin at all).
   //     The killed line was "…switching this never changes the amount." The panel toggle really
   //     does leave `annualSpendingReal` alone — but the SHOWN figure jumps exactly 12×
-  //     (`spendDisplayed`, AssumptionPanel.tsx:630-635) while the sentence says nothing moved, and
+  //     (`spendDisplayed`, AssumptionPanel.tsx:654-659) while the sentence says nothing moved, and
   //     the panel's own commit (:607-617) multiplies by 12 under 'month'. So the reader's natural
   //     repair — retype the digits they remember — commits a plan off by 12× in the UNSAFE
   //     direction, and nothing downstream catches it (PANEL_PROVENANCE disarms the force-confirm;

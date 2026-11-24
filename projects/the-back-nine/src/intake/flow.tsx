@@ -3,7 +3,9 @@ import {
   useMemo,
   useState,
   useSyncExternalStore,
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
 } from 'react'
 import { copy, slots, type CopyKey } from '@ui/copy'
 import type { MemoryModel, ScenarioDraft } from '@store/memoryModel'
@@ -82,6 +84,96 @@ function withoutFresh(touched: ReadonlySet<FieldPath>, step: StepDef | undefined
   return next
 }
 
+/** A host of a step's body: the walk's own {@link StepApi} over one touched set, and that set. */
+export interface StepSession {
+  readonly api: StepApi
+  readonly touched: ReadonlySet<FieldPath>
+  readonly setTouched: Dispatch<SetStateAction<ReadonlySet<FieldPath>>>
+}
+
+/**
+ * THE WALK'S STEP API, for any host of a step's body: the walk itself, and the workbench's step sheet (Act 5,
+ * U8), which opens one step's own body over the plan after the answer. One construction, so a step edited from
+ * either host blurs, forgives and shows its errors the same way (R15: each value has one door, and the door is
+ * the step's own body). `periodConfirmed` is the spend period's provenance (`sanity.ts` `SanityProvenance`): the
+ * walk passes its own; a host after the answer passes `true`, the AssumptionPanel's `PANEL_PROVENANCE`.
+ */
+export function useStepApi(model: MemoryModel, { periodConfirmed }: { readonly periodConfirmed: boolean }): StepSession {
+  const snapshot = useSyncExternalStore(model.subscribe, model.getSnapshot)
+  const [touched, setTouched] = useState<ReadonlySet<FieldPath>>(() => new Set())
+
+  const violations = useMemo(
+    () => validateDraft(snapshot.draft, touched, { periodConfirmed }),
+    [snapshot.draft, touched, periodConfirmed],
+  )
+
+  const commitField = useCallback((field: FieldPath) => {
+    setTouched((prev) => (prev.has(field) ? prev : new Set(prev).add(field)))
+  }, [])
+
+  const clearTouched = useCallback((field: FieldPath) => {
+    setTouched((prev) => {
+      if (!prev.has(field)) return prev
+      const next = new Set(prev)
+      next.delete(field)
+      return next
+    })
+  }, [])
+
+  const violationsFor = useCallback(
+    (field: FieldPath) => violations.filter((v) => v.field === field),
+    [violations],
+  )
+
+  const api: StepApi = useMemo(
+    () => ({ draft: snapshot.draft, update: model.update, commitField, clearTouched, violationsFor }),
+    [snapshot.draft, model.update, commitField, clearTouched, violationsFor],
+  )
+  return { api, touched, setTouched }
+}
+
+/**
+ * THE WALK'S CONTINUE CHECK: the step's fields become touched, then its rules gate the move. Validated against
+ * the model's CURRENT draft, never a render's closure: a blur-commit and the Continue tap can land in the same
+ * task (programmatic dispatch, exotic browsers), and the closure would be one commit stale — letting an
+ * unconfirmed value slip past its gate (insight 036). Returns the touched set to keep, and whether to stay.
+ */
+export function continueCheck(
+  model: MemoryModel,
+  step: StepDef,
+  touched: ReadonlySet<FieldPath>,
+  periodConfirmed: boolean,
+): { readonly touched: Set<FieldPath>; readonly blocked: boolean } {
+  const next = new Set(touched)
+  for (const f of step.fields) next.add(f)
+  const blocked = validateDraft(model.getSnapshot().draft, next, { periodConfirmed }).some((v) =>
+    step.fields.includes(v.field),
+  )
+  return { touched: next, blocked }
+}
+
+/**
+ * THE WALK'S BACK DISCARD: an answer this step's own Continue would refuse never leaves the step
+ * (`StepDef.discardOnBack`). If the field's rules fire on the model's CURRENT draft (touched as if committed), the
+ * step's discard clears it first. A no-op for a step with no such field.
+ */
+export function discardRefusedOnLeave(
+  model: MemoryModel,
+  step: StepDef,
+  touched: ReadonlySet<FieldPath>,
+  periodConfirmed: boolean,
+): void {
+  const leave = step.discardOnBack
+  if (
+    leave !== undefined &&
+    validateDraft(model.getSnapshot().draft, new Set(touched).add(leave.field), { periodConfirmed }).some(
+      (v) => v.field === leave.field,
+    )
+  ) {
+    model.update(leave.discard)
+  }
+}
+
 export interface IntakeFlowProps {
   readonly steps: readonly StepDef[]
   readonly model: MemoryModel
@@ -108,10 +200,9 @@ export function IntakeFlow({
   answerSlot,
   periodConfirmed = false,
 }: IntakeFlowProps) {
-  const snapshot = useSyncExternalStore(model.subscribe, model.getSnapshot)
   const [index, setIndex] = useState(0)
   const [direction, setDirection] = useState<'forward' | 'back'>('forward')
-  const [touched, setTouched] = useState<ReadonlySet<FieldPath>>(() => new Set())
+  const { api, touched, setTouched } = useStepApi(model, { periodConfirmed })
 
   // Conditional steps derive from the draft (work-status / age gates), so a
   // back-nav edit can SHRINK the sequence while we're standing past the cut —
@@ -125,29 +216,6 @@ export function IntakeFlow({
   // The one polite live region (burned/045 clear-after-announce).
   const announcer = useLiveAnnouncer()
 
-  const violations = useMemo(
-    () => validateDraft(snapshot.draft, touched, { periodConfirmed }),
-    [snapshot.draft, touched, periodConfirmed],
-  )
-
-  const commitField = useCallback((field: FieldPath) => {
-    setTouched((prev) => (prev.has(field) ? prev : new Set(prev).add(field)))
-  }, [])
-
-  const clearTouched = useCallback((field: FieldPath) => {
-    setTouched((prev) => {
-      if (!prev.has(field)) return prev
-      const next = new Set(prev)
-      next.delete(field)
-      return next
-    })
-  }, [])
-
-  const violationsFor = useCallback(
-    (field: FieldPath) => violations.filter((v) => v.field === field),
-    [violations],
-  )
-
   const advance = useCallback(() => {
     // Attempt-to-advance: this step's fields become touched, then its rules
     // gate the move. Rules whose inputs are absent simply don't fire — an
@@ -156,17 +224,10 @@ export function IntakeFlow({
     // post-first-resolve it demotes to `inputs-incomplete` — never a hard wall here. The ONE
     // recorded exception is the pay check's W (sanity.ts's header, KTD3): it is gated, never
     // missing, so `working-cost-unanswered` fires on its absence and walls the W step alone.
-    const nextTouched = new Set(touched)
-    for (const f of step.fields) nextTouched.add(f)
+    // The check reads the model's CURRENT draft (`continueCheck`, insight 036).
+    const { touched: nextTouched, blocked } = continueCheck(model, step, touched, periodConfirmed)
     setTouched(nextTouched)
-    // Validate against the model's CURRENT draft, not this render's closure: a
-    // blur-commit and the Continue tap can land in the same task (programmatic
-    // dispatch, exotic browsers), and the closure would be one commit stale —
-    // letting an unconfirmed value slip past its gate.
-    const blocking = validateDraft(model.getSnapshot().draft, nextTouched, {
-      periodConfirmed,
-    }).some((v) => step.fields.includes(v.field))
-    if (blocking) return
+    if (blocked) return
 
     if (safeIndex + 1 < steps.length) {
       setTouched(withoutFresh(nextTouched, steps[safeIndex + 1]))
@@ -181,31 +242,18 @@ export function IntakeFlow({
       // would win over the 16k final and render the uncrowned tier (D1 review).
       onComplete?.()
     }
-  }, [safeIndex, model, onComplete, step.fields, steps, touched, periodConfirmed])
+  }, [safeIndex, model, onComplete, step, steps, touched, setTouched, periodConfirmed])
 
   const back = useCallback(() => {
     if (safeIndex === 0) return
     // Never gated: the draft keeps every downstream answer — except one this step's own Continue
     // would refuse (`discardOnBack`), validated on the model's CURRENT draft like `advance`.
-    const leave = step.discardOnBack
-    if (
-      leave !== undefined &&
-      validateDraft(model.getSnapshot().draft, new Set(touched).add(leave.field), { periodConfirmed }).some(
-        (v) => v.field === leave.field,
-      )
-    ) {
-      model.update(leave.discard)
-    }
+    discardRefusedOnLeave(model, step, touched, periodConfirmed)
     setTouched((prev) => withoutFresh(prev, steps[safeIndex - 1]))
     setDirection('back')
     setIndex(safeIndex - 1)
     announcer.announce(slots.questionPosition(safeIndex))
-  }, [safeIndex, steps, step.discardOnBack, model, touched, periodConfirmed])
-
-  const api: StepApi = useMemo(
-    () => ({ draft: snapshot.draft, update: model.update, commitField, clearTouched, violationsFor }),
-    [snapshot.draft, model.update, commitField, clearTouched, violationsFor],
-  )
+  }, [safeIndex, steps, step, model, touched, setTouched, periodConfirmed])
 
   return (
     <div className="intake-shell">

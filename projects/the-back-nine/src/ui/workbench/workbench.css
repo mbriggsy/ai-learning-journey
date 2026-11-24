@@ -86,24 +86,62 @@
   width: 100%;
 }
 
+/* The seat: the answer, the page switch, and the table's market switch, in that order down a phone. At a laptop it
+   pins under the page's top, the market switch seated beside the answer and the page switch across under both. */
 .wb-pin-seat {
   position: sticky;
   top: 0;
   z-index: 3;
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-3) var(--space-7);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
   width: 100%;
   background: var(--paper);
-  padding-block: var(--space-2);
+  padding-block: var(--space-2) 0;
 }
 
+@media (min-width: 68rem) {
+  .wb-pin-seat {
+    display: grid;
+    /* The answer takes the row's free width: its leads (and the forms reserved for the next answer) then sit on one
+       line at his laptop and at 1280, so the reserve costs no blank line there. */
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'pin view'
+      'pages pages';
+    justify-content: space-between;
+    align-items: end;
+    gap: var(--space-3) var(--space-7);
+  }
+
+  .wb-pin {
+    grid-area: pin;
+  }
+
+  .wb-view {
+    grid-area: view;
+  }
+
+  .wb-pages {
+    grid-area: pages;
+  }
+}
+
+/* The rule runs beside the words alone (`.wb-pin__real`), so the box's reserved room reads as plain space. */
 .wb-pin {
-  flex: 1 1 28rem;
-  max-width: 48rem;
+  padding-left: 0;
+}
+
+.wb-pin__real {
+  align-self: start;
   border-left: 3px solid var(--line-control);
+  padding-left: var(--space-4);
+}
+
+/* The hidden copy sits under the same inset, so it reserves the same line breaks as the words. */
+.wb-pin__ghost {
+  border-left: 3px solid transparent;
   padding-left: var(--space-4);
 }
 
@@ -122,6 +160,22 @@
 
 .wb-pin__ghost {
   visibility: hidden;
+}
+
+/* The box's lines take its whole width (not the page's reading measure): they are short, and at a laptop every form the
+   next answer can take then fits on one line, so the reserve below costs no blank line there. */
+.wb-pin__real > p,
+.wb-pin__ghost p {
+  max-width: none;
+}
+
+/* A hidden cell's candidates share one grid area: the cell is as tall as its tallest (U8's reserve). */
+.wb-pin__cell {
+  display: grid;
+}
+
+.wb-pin__cell > * {
+  grid-area: 1 / 1;
 }
 
 .wb-pin__label,
@@ -385,6 +439,12 @@
    header holds under the pinned answer; below it the table scrolls inside its own frame. The figures stay at
    `--text-xs` at every width: a larger tier would be a second seam, and the widest household fits 1280 at this size. */
 @media (min-width: 68rem) {
+  /* Keyboard focus never lands under the pinned seat: a focused control scrolls clear of it (WCAG 2.4.11; the U8
+     review's C4). The seat's height is the room's own measure (`--wb-pin-h`, written by WorkbenchRoom). */
+  .wb-panel :is(button, a[href], input, select, textarea, [tabindex]:not([tabindex='-1'])) {
+    scroll-margin-top: calc(var(--wb-pin-h, 0px) + var(--space-2));
+  }
+
   .wb-table thead {
     position: sticky;
     top: var(--wb-pin-h, 0px);
@@ -426,4 +486,249 @@
 .wb-view .segment {
   padding-inline: var(--space-4);
   white-space: nowrap;
+}
+
+/* ── The room's two pages (U8): the year-by-year table and the facts page ─────────────────────────────────────────
+ * A plain tab row under the pinned answer: the shown page reads by weight and a bar under its name, never by colour
+ * alone. Each name reserves its bold width (a hidden bold copy, `::before`), so a switch never moves the other tab
+ * under a finger. The table's market switch belongs to the table page: on the facts page it keeps its place in the
+ * pinned seat, unseen and out of reach (`inert`), so the pinned box holds still when the page changes. */
+
+.workbench[data-room-page='facts'] .wb-view {
+  visibility: hidden;
+}
+
+@media not (min-width: 68rem) {
+  .workbench[data-room-page='facts'] .wb-view {
+    display: none;
+  }
+}
+
+.wb-pages {
+  display: flex;
+  gap: var(--space-6);
+  width: 100%;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.wb-pages__tab {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  padding: var(--space-2) 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: var(--text-base);
+  line-height: var(--leading-tight);
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.wb-pages__tab::before {
+  content: attr(data-label);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: var(--weight-semibold);
+}
+
+.wb-pages__tab--on {
+  color: var(--ink);
+  font-weight: var(--weight-semibold);
+}
+
+.wb-pages__tab--on::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 3px;
+  border-radius: 2px 2px 0 0;
+  background: var(--ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wb-pages__tab:hover {
+    color: var(--ink);
+  }
+}
+
+.wb-panel {
+  width: 100%;
+}
+
+.wb-panel:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* The facts page: sections in reading columns on a wide screen (walk order runs down each column), one column on a
+ * phone. A section is a hairline, its title and its one quiet door, then label and value pairs. Values are the
+ * household's own figures, exact and in tabular figures. */
+.wb-facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.wb-facts__intro {
+  margin: 0;
+  max-width: 48rem;
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink-muted);
+}
+
+.wb-facts__sections {
+  columns: 3 22rem;
+  column-gap: var(--space-8);
+}
+
+.wb-facts__section {
+  break-inside: avoid;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-block: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--line-soft);
+}
+
+.wb-facts__head,
+.wb-facts__group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.wb-facts__title {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+}
+
+/* A door's word sits flush with the column it belongs to (no button inset), its tap height kept. */
+.wb-facts__edit {
+  flex: none;
+  padding-inline: 0;
+}
+
+.wb-facts__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.wb-facts__group + .wb-facts__group {
+  margin-top: var(--space-2);
+}
+
+.wb-facts__group-heading {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  color: var(--ink);
+}
+
+.wb-facts__lines {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: var(--space-2) var(--space-4);
+}
+
+.wb-facts__line {
+  display: contents;
+}
+
+.wb-facts__label,
+.wb-facts__value {
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  overflow-wrap: break-word;
+}
+
+.wb-facts__label {
+  color: var(--ink-muted);
+}
+
+.wb-facts__value {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.wb-facts__value .wb-facts__edit {
+  align-self: flex-start;
+}
+
+.wb-facts__note {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--ink-muted);
+}
+
+/* A note and its reserved alternatives share one grid area: the cell is as tall as the tallest (the pin's pattern). */
+.wb-facts__note-cell {
+  display: grid;
+}
+
+.wb-facts__note-cell > * {
+  grid-area: 1 / 1;
+}
+
+.wb-facts__note--reserve {
+  visibility: hidden;
+}
+
+.wb-facts__empty,
+.wb-facts__foot {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The step sheet: the walk's own step body, then Done. While an account or income entry, or the spending step's
+ * in-place budget builder, is open in it, the sheet hides Done (the walk hides its Continue the same way, `intake.css`):
+ * the entry's own buttons are its way out. */
+.wb-step-sheet__body:has(.account-entry, .income-entry, .budget-inline) + .control-sheet__actions {
+  display: none;
+}
+
+/* The leave ask over an open sheet: its own layer above the sheet's backdrop, so it can be read and pressed, with a
+   scrim that takes every press meant for the sheet or the room under it. */
+.workbench__ask-layer {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-overlay) + 1);
+  background: rgb(11 24 19 / 0.32);
+}
+
+.workbench__ask--over {
+  position: fixed;
+  z-index: calc(var(--z-overlay) + 2);
+  top: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+  width: min(32rem, calc(100vw - 2 * var(--gutter)));
+  max-width: none;
+  background: var(--paper);
+  box-shadow: 0 12px 32px rgb(11 24 19 / 0.22);
 }

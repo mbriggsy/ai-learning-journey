@@ -6843,3 +6843,147 @@ test.describe('the workbench room’s year-by-year table on its widest household
     })
   })
 })
+
+// ---------------------------------------------------------------------------
+// THE PINNED ANSWER LANDING AFTER A FACTS-PAGE EDIT (the workbench plan's U8, carried in from U7's review; insights
+// 035, 065, 155). The room's facts page can now re-figure the pinned answer: an edit in a step's sheet commits, the
+// store works the answer out again (provisional, then final on the date route), and the pinned box's words change
+// twice, the provisional tag's line coming and going between. Its hidden copy reserves the box's tallest form, now
+// over the forms the next answer can take on its route (`PinnedAnswer.tsx`'s `reserveForms`); a new lead longer than
+// the reserve is the risk this walk reads: every frame from the sheet's close until thirty frames after the new answer
+// lands is held to the page as it stood before the door opened, and the two tap targets under the pinned box (the facts
+// page's tab and the first group's door) must not have moved on the page; the walk also proves the lead changed.
+// Two sizes: his laptop window, where the seat pins and the market switch beside the answer sets the row's height, and
+// the phone, where nothing beside the answer absorbs a taller box (the arm whose first run found the defect's twin at
+// the laptop: a lead wrapped at the page's reading measure moved the page switch 16 px). The engine's messages are held
+// 400 ms each (wrapped after the answer settles, the switch walk's hold above), so the refiguring frames paint for many
+// frames; the recorder notes each frame's refiguring flag, so the walk proves it saw the answer being worked out again
+// before it landed. Rects are page-relative (the switch walk's), so the focus going back to the door scrolls nothing
+// the walk compares.
+// ---------------------------------------------------------------------------
+
+const LANDING_SEED = 'date'
+
+const LANDING_SIZES = [
+  { title: sizeTitle('REAL'), use: { viewport: LAPTOP_SIZES.REAL.viewport, deviceScaleFactor: LAPTOP_SIZES.REAL.deviceScaleFactor } },
+  { title: `on the phone (${PHONE.width}×${PHONE.height})`, use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true } },
+] as const
+
+test.describe('the workbench room’s facts page (U8)', () => {
+  for (const size of LANDING_SIZES) test.describe(size.title, () => {
+    test.use(size.use)
+
+    test(`?seed=${LANDING_SEED}: the pinned answer landing after a facts-page edit moves no tap target`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS * 2 + 60_000)
+      await gotoSeedFinal(page, LANDING_SEED)
+      const door = page.locator('.result-quiet-row [data-door="workbench"]')
+      await expect(door, 'the room door never mounted on the settled answer').toBeAttached()
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await door.evaluate((el) => (el as HTMLButtonElement).click())
+      await expect(page.locator('.wb-table'), 'the table never landed').toBeVisible({ timeout: 30_000 })
+      await page.getByRole('tab', { name: copy.workbenchPageFacts }).click()
+      // THE BASELINE, taken before the door opens (the U8 review's C6): the page as it stood on the settled answer, so a
+      // box that grows the moment the edit starts being worked out, and stays grown, still reds. The door is scrolled
+      // into view first, as the press would, so the baseline and every frame share one scroll (the seat pins at a
+      // laptop, where a scroll moves its page-relative place).
+      const spendingDoor = page.getByRole('button', { name: slots.workbenchFactsEditName(copy.workbenchFactsSpending), exact: true })
+      await settleLayout(page) // (it pins the scroll to the top, so the door is scrolled in after it)
+      await spendingDoor.scrollIntoViewIfNeeded()
+      const baseline = await page.evaluate(() => {
+        const rect = (el: Element | null) => {
+          if (el === null) return null
+          const r = el.getBoundingClientRect()
+          return { x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height }
+        }
+        return {
+          tab: rect([...document.querySelectorAll('[role="tab"]')].find((t) => t.getAttribute('aria-selected') === 'true') ?? null),
+          door: rect(document.querySelector('.wb-facts__section [data-fact-open]')),
+        }
+      })
+      await spendingDoor.click()
+      const sheet = page.getByRole('dialog', { name: copy.workbenchFactsSpending, exact: true })
+      const field = sheet.getByLabel(copy.spendLabel, { exact: true })
+      await expect(field).toHaveValue('7,000')
+      // Focus first: the field swaps its shown figure for the raw one on focus, so a fill that focuses would land
+      // after that swap and add to it.
+      await field.click()
+      await field.fill('7,600')
+      await field.blur()
+      await expect(field, 'the new spending committed').toHaveValue('7,600')
+      // From here the engine hears only this edit's recompute: every message to the worker is held 400 ms.
+      await page.evaluate(() => {
+        const send = Worker.prototype.postMessage
+        Worker.prototype.postMessage = function (this: Worker, ...args: unknown[]) {
+          setTimeout(() => Reflect.apply(send, this, args), 400)
+        } as typeof send
+      })
+      // Armed before Done: every frame from the sheet's close until thirty frames after the new answer lands.
+      await page.evaluate(() => {
+        type Rect = { readonly x: number; readonly y: number; readonly w: number; readonly h: number }
+        type Frame = { readonly tab: Rect | null; readonly door: Rect | null; readonly refiguring: boolean; readonly landed: boolean; readonly lead: string }
+        const log: Frame[] = []
+        ;(window as unknown as { __wbLanding: Frame[] }).__wbLanding = log
+        const rect = (el: Element | null): Rect | null => {
+          if (el === null) return null
+          const r = el.getBoundingClientRect()
+          return { x: r.x + window.scrollX, y: r.y + window.scrollY, w: r.width, h: r.height }
+        }
+        let sawRefiguring = false
+        let after = 0
+        const tick = () => {
+          const room = document.querySelector('main.workbench')
+          const sheetOpen = document.querySelector('.control-sheet') !== null
+          const refiguring = room?.hasAttribute('data-answer-refiguring') ?? false
+          if (refiguring) sawRefiguring = true
+          const landed = sawRefiguring && !refiguring && room?.getAttribute('data-answer-tier') === 'final'
+          if (!sheetOpen) {
+            log.push({
+              tab: rect([...document.querySelectorAll('[role="tab"]')].find((t) => t.getAttribute('aria-selected') === 'true') ?? null),
+              door: rect(document.querySelector('.wb-facts__section [data-fact-open]')),
+              refiguring,
+              landed,
+              lead: document.querySelector('.wb-pin__real .wb-pin__lead')?.textContent ?? '',
+            })
+            if (landed) after++
+          }
+          if (after < 30) requestAnimationFrame(tick)
+        }
+        requestAnimationFrame(tick)
+      })
+      await sheet.getByRole('button', { name: copy.workbenchFactsDone }).click()
+      await expect
+        .poll(() => page.evaluate(() => (window as unknown as { __wbLanding: { landed: boolean }[] }).__wbLanding.filter((f) => f.landed).length), {
+          timeout: FINAL_TIER_MS,
+        })
+        .toBeGreaterThanOrEqual(30)
+      const frames = await page.evaluate(
+        () =>
+          (window as unknown as {
+            __wbLanding: { tab: { x: number; y: number; w: number; h: number } | null; door: { x: number; y: number; w: number; h: number } | null; refiguring: boolean; landed: boolean; lead: string }[]
+          }).__wbLanding,
+      )
+      const before = frames.filter((f) => !f.landed)
+      const refiguring = frames.filter((f) => f.refiguring)
+      const leads = [...new Set(frames.map((f) => f.lead))]
+      console.log(
+        `[wb-facts landing walk] frames=${frames.length} beforeLanding=${before.length} refiguring=${refiguring.length} leads=${JSON.stringify(leads)} first=${JSON.stringify(frames[0])} last=${JSON.stringify(frames.at(-1))}`,
+      )
+      expect(before.length, 'frames painted before the new answer landed: otherwise the walk compares nothing').toBeGreaterThan(0)
+      expect(refiguring.length, 'the pinned answer was seen being worked out again before it landed').toBeGreaterThan(0)
+      expect(leads.length, 'the pinned answer’s words changed: otherwise no new lead was laid out').toBeGreaterThanOrEqual(2)
+      expect(baseline.tab, 'the facts page’s tab is on screen').not.toBeNull()
+      expect(baseline.door, 'the first group’s door is on screen').not.toBeNull()
+      for (const f of frames) {
+        for (const key of ['tab', 'door'] as const) {
+          const a = baseline[key]!
+          const b = f[key]
+          expect(b, `${key} left the page`).not.toBeNull()
+          expect(Math.abs(b!.x - a.x), `the ${key} moved sideways`).toBeLessThanOrEqual(0.5)
+          expect(Math.abs(b!.y - a.y), `the ${key} moved up or down`).toBeLessThanOrEqual(0.5)
+          expect(Math.abs(b!.w - a.w)).toBeLessThanOrEqual(0.5)
+          expect(Math.abs(b!.h - a.h)).toBeLessThanOrEqual(0.5)
+        }
+      }
+    })
+  })
+})

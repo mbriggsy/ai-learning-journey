@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 
 /**
  * The workbench room and its door, through IntakeApp's REAL phase machine and the browser's REAL
@@ -279,5 +279,72 @@ describe('the workbench room', () => {
     expect(screen.queryByRole('button', { name: copy.resaveCta })).toBeNull()
     expect(screen.queryByText(copy.savedBadge)).toBeNull()
     expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual([copy.workbenchBack])
+    // The facts page too (U8): every fact, and no door into any of them.
+    fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageFacts }))
+    expect(screen.getByRole('heading', { name: copy.workbenchFactsSocialSecurity })).toBeInTheDocument()
+    expect(screen.getAllByRole('button').map((b) => b.textContent)).toEqual([copy.workbenchBack])
+  })
+})
+
+describe('the facts page through the real phase machine (U8)', () => {
+  /** Open a facts-page group's sheet and type a new first name for the first person: the draft moves. */
+  function editAName(name: string) {
+    fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageFacts }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit the two of you' }))
+    const sheet = screen.getByRole('dialog', { name: copy.workbenchFactsPeople })
+    const field = within(sheet).getAllByLabelText(copy.nameLabel)[0]!
+    fireEvent.change(field, { target: { value: name } })
+    fireEvent.blur(field)
+    return sheet
+  }
+
+  it('an edit marks the saved plan unsaved, and the room offers its save', async () => {
+    await landHydrated()
+    await enterRoom()
+    expect(screen.getByText(copy.savedBadge)).toBeInTheDocument()
+    const sheet = editAName('Robin')
+    fireEvent.click(within(sheet).getByRole('button', { name: copy.workbenchFactsDone }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(screen.getByRole('button', { name: copy.resaveCta })).toBeInTheDocument()
+    expect(appModel.getSnapshot().draft.people[0].name).toBe('Robin')
+  })
+
+  it('a real Back press with an open step sheet that moved the draft asks first, over the sheet; Stay keeps it open; Go back leaves, keeping the finished edit', async () => {
+    await landHydrated()
+    await enterRoom()
+    editAName('Jordan')
+    await pressBack()
+    // Still in the room, its entry back on, the ask raised over the open sheet, where it can be read and pressed.
+    expect(roomHeading()).toBeInTheDocument()
+    expect(window.history.state).toEqual({ b9: 'room' })
+    const ask = screen.getByRole('alertdialog', { name: copy.workbenchLeaveAsk })
+    expect(within(ask).getByRole('button', { name: copy.workbenchLeaveStay })).toHaveFocus()
+    expect(screen.getByRole('dialog', { name: copy.workbenchFactsPeople })).toBeInTheDocument()
+
+    fireEvent.click(within(ask).getByRole('button', { name: copy.workbenchLeaveStay }))
+    expect(screen.queryByRole('alertdialog')).toBeNull()
+    expect(screen.getByRole('dialog', { name: copy.workbenchFactsPeople })).toBeInTheDocument()
+
+    // The ask holds the keyboard over the sheet (the U8 review's C3): Tab moves between its two choices only, and
+    // Escape is Stay; a scrim takes the presses meant for the sheet or the room.
+    await pressBack()
+    const held = screen.getByRole('alertdialog', { name: copy.workbenchLeaveAsk })
+    const stay = within(held).getByRole('button', { name: copy.workbenchLeaveStay })
+    const go = within(held).getByRole('button', { name: copy.workbenchLeaveGo })
+    expect(held.closest('.workbench__ask-layer'), 'the ask rides its scrim').not.toBeNull()
+    fireEvent.keyDown(stay, { key: 'Tab' })
+    expect(go).toHaveFocus()
+    fireEvent.keyDown(go, { key: 'Tab', shiftKey: true })
+    expect(stay).toHaveFocus()
+    fireEvent.keyDown(stay, { key: 'Escape' })
+    expect(screen.queryByRole('alertdialog')).toBeNull()
+    expect(screen.getByRole('dialog', { name: copy.workbenchFactsPeople })).toBeInTheDocument()
+
+    await pressBack()
+    const again = screen.getByRole('alertdialog', { name: copy.workbenchLeaveAsk })
+    await backAndSettle(() => fireEvent.click(within(again).getByRole('button', { name: copy.workbenchLeaveGo })))
+    expect(roomHeading()).toBeNull()
+    expect(screen.getByText('result stub')).toHaveAttribute('data-save-kind', 'dirty')
+    expect(appModel.getSnapshot().draft.people[0].name).toBe('Jordan')
   })
 })

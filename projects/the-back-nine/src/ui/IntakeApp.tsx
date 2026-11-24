@@ -966,8 +966,12 @@ export default function IntakeApp({
         room={{
           save: saveProp(deriveResultSave(persist, saveReady, readOnly), 'room'),
           onBack: leaveRoom,
-          // The committed answer the year-by-year table is built on and pinned beside (U7).
+          // The committed answer the year-by-year table is built on and pinned beside (U7), and the draft the
+          // facts page reads (U8).
           snapshot,
+          // A read-only tab's facts page draws no door (U8): `save.kind` can't carry it (`none` is also a plan
+          // that can't be saved yet).
+          readOnly,
           leaveAsk: leaveAsk
             ? {
                 onGo: () => {

@@ -4,6 +4,7 @@ import '@testing-library/jest-dom/vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import WorkbenchRoom, { type TableLanes } from '../WorkbenchRoom'
 import { tableRunFor } from '../tableRun'
+import { pinnedLines } from '../PinnedAnswer'
 import { composeYearTable, formatTableDollars } from '../yearTableChrome'
 import { simulate } from '@engine/simulate'
 import { buildCandidateParams, DATE_OFFSET_WINDOW_TOP, DATE_SEARCH_PATHS } from '@engine/dateSearch'
@@ -40,7 +41,8 @@ const finalAnswer = (inputKey = 'k1'): ModelAnswer =>
     tier: 'final',
     draft: DRAFT,
     inputKey,
-    result: { headline: { outcomeState: 'on-track', xOfTen: { value: 8, marginToEdge: 0.1 }, stateMarginToEdge: 0.1 } },
+    // `distribution` is read by the room's lever sheets (the health readout, `editorSheets.tsx`), as on every real answer.
+    result: { headline: { outcomeState: 'on-track', xOfTen: { value: 8, marginToEdge: 0.1 }, stateMarginToEdge: 0.1 }, distribution: {} },
   }) as unknown as ModelAnswer
 
 /** Lanes that hold each request until the test settles it: with the engine's own run, or a calm error. */
@@ -114,10 +116,10 @@ describe('WorkbenchRoom — the table’s three states', () => {
     view.rerender(
       <WorkbenchRoom save={{ kind: 'none' }} onBack={vi.fn()} snapshot={snapshotWith(finalAnswer('k2'))} lanes={lanes} wallCalendarYear={BUILD_YEAR} />,
     )
-    expect(screen.getByText(copy.workbenchTableUpdating)).toBeInTheDocument()
+    expect(screen.getByText(copy.workbenchTableUpdating, { selector: '.wb-updating' })).toBeInTheDocument()
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true')
     await settleAll('run')
-    expect(screen.queryByText(copy.workbenchTableUpdating)).toBeNull()
+    expect(screen.queryByText(copy.workbenchTableUpdating, { selector: '.wb-updating' })).toBeNull()
     expect(screen.getByRole('table')).not.toHaveAttribute('aria-busy')
   })
 
@@ -128,9 +130,9 @@ describe('WorkbenchRoom — the table’s three states', () => {
     view.rerender(
       <WorkbenchRoom save={{ kind: 'none' }} onBack={vi.fn()} snapshot={snapshotWith(finalAnswer(), true)} lanes={lanes} wallCalendarYear={BUILD_YEAR} />,
     )
-    expect(screen.getByText(copy.workbenchTableUpdating)).toBeInTheDocument()
+    expect(screen.getByText(copy.workbenchTableUpdating, { selector: '.wb-updating' })).toBeInTheDocument()
     // The pinned box's label line says the answer is being worked out again.
-    expect(screen.getByText(copy.workbenchPinnedRefiguring)).toBeInTheDocument()
+    expect(screen.getByText(copy.workbenchPinnedRefiguring, { selector: '.wb-pin__status' })).toBeInTheDocument()
   })
 
   it('error: one calm sentence, no rows, the way back and no retry', async () => {
@@ -271,6 +273,52 @@ describe('WorkbenchRoom — the date route', () => {
     )
     expect(lane.request).toHaveBeenCalledTimes(2)
     expect(screen.getByRole('table')).toHaveAttribute('aria-busy', 'true')
-    expect(screen.getByText(copy.workbenchTableUpdating)).toBeInTheDocument()
+    expect(screen.getByText(copy.workbenchTableUpdating, { selector: '.wb-updating' })).toBeInTheDocument()
+  })
+})
+
+describe('WorkbenchRoom — the facts page’s stop year through a provisional answer (U8 review: C1, A6, F7)', () => {
+  it('holds the last delivered stop year while a newer answer is worked out, marked in words in its reserved note cell', async () => {
+    const { lanes, settleAll } = heldLanes()
+    const year = WORKING.startCalendarYear + 4
+    const view = renderRoom(dateSnapshot(WORKING, dateAnswer(WORKING, { offsetYears: 4, track: 'lifestyle' })), lanes)
+    await settleAll('run')
+    fireEvent.click(screen.getByRole('tab', { name: copy.workbenchPageFacts }))
+    const stopLine = () => screen.getByText(copy.workbenchFactStop).closest('.wb-facts__line')!
+    const shownNote = () => stopLine().querySelector('.wb-facts__note:not(.wb-facts__note--reserve)')?.textContent
+    expect(stopLine()).toHaveTextContent(slots.workbenchFactStopYear(year))
+    expect(shownNote()).toBe(copy.workbenchFactStopNote)
+    // An edit's provisional answer: no table run is asked for it, and the line keeps its year, marked.
+    view.rerender(
+      <WorkbenchRoom
+        save={{ kind: 'none' }}
+        onBack={vi.fn()}
+        snapshot={dateSnapshot(WORKING, dateAnswer(WORKING, { offsetYears: 5, track: 'lifestyle' }, 'provisional', 'k2'))}
+        lanes={lanes}
+        wallCalendarYear={BUILD_YEAR}
+      />,
+    )
+    expect(stopLine()).toHaveTextContent(slots.workbenchFactStopYear(year))
+    expect(shownNote()).toBe(copy.workbenchPinnedRefiguring)
+    // Both notes are drawn in the cell (one hidden), so the mark changes no height.
+    expect(stopLine().querySelectorAll('.wb-facts__note--reserve')).toHaveLength(2)
+  })
+})
+
+describe('WorkbenchRoom — the room’s one live region speaks the new answer (U8 review: C12)', () => {
+  it('when the pinned answer’s words change and nothing is being worked out again, the region says them', () => {
+    const { lanes } = heldLanes()
+    const view = renderRoom(snapshotWith(finalAnswer('k1')), lanes)
+    const region = view.container.querySelector('main > [role="status"][aria-live="polite"]')!
+    expect(region.textContent, 'the first answer is the room’s own arrival, not news').toBe('')
+    const borderline = {
+      ...(finalAnswer('k2') as object),
+      result: { headline: { outcomeState: 'borderline', xOfTen: { value: 5, marginToEdge: 0.1 }, stateMarginToEdge: 0.1 }, distribution: {} },
+    } as unknown as ModelAnswer
+    view.rerender(
+      <WorkbenchRoom save={{ kind: 'none' }} onBack={vi.fn()} snapshot={snapshotWith(borderline)} lanes={lanes} wallCalendarYear={BUILD_YEAR} />,
+    )
+    expect(region.textContent).toBe(pinnedLines(snapshotWith(borderline), BUILD_YEAR).lead)
+    expect(region.textContent).toMatch(new RegExp(`^${copy.outcomeBorderline}:`))
   })
 })

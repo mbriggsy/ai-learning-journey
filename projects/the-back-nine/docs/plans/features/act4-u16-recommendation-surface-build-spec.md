@@ -38,7 +38,7 @@ below is a corollary.
 1. No U16 code re-derives a decision from displayed seed-B figures (render-the-flag + planted-fail guards, burned/070).
 2. The interactive tier reduces SEARCH precision only — grades + every displayed figure ALWAYS at `solverMinBPaths`; never down-sampled.
 3. The A↔B residual is NEVER a rendered number. Name the baseline, never the residual.
-4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:733` stamps the attribute from the DATE-search tier alone — `answerTier` at `:700-703`, the `DateSearchTier` the committed headline or date answer carries).
+4. The solve channel NEVER emits `data-answer-tier` (`SolveComputeTier` stays on the payload; the fit gate's `final` wait must be unsatisfiable by a solve — `memoryModel` already shipped this and U16 added no tier mirror; `Result.tsx:659` stamps the attribute from the DATE-search tier alone — `answerTier` at `:700-703`, the `DateSearchTier` the committed headline or date answer carries).
 5. No inert lying affordance: the save gesture was **ABSENT in U16** — a reserved layout slot only (§S4). U17 §S5 landed the gesture and the v3 write together (2026-07-26/27) into that same reservation, so the slot is live today and the wall did its job: no inert Save ever rendered.
 6. A withheld reason renders TRUE and humane, never laundered, never color/opacity-only; unclassified **fails CLOSED**.
 
@@ -199,7 +199,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   affordance's own posture. Both walk seeds measured IN-FRAME. Spine content is never pushed below
   the fold to keep the invitation.
 - **The affordance is offered on the all-retired route only** (a recorded v1 deviation):
-  `solveInvitable` guards `!isDateRoute(snapshot.draft)` (`Result.tsx:471`), because the
+  `solveInvitable` guards `!isDateRoute(snapshot.draft)` (`Result.tsx:411`), because the
   working/date-route base is the crowned date offset — a follow-up increment. Both fit-gate
   affordance seeds are all-retired, so the measured posture is unregressed.
 - **GoalPicker** (`src/intake/GoalPicker.tsx`) renders INSIDE the `ControlSheet` scaffold
@@ -222,7 +222,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   duration phrase must be TRUE: the 2026-10-01 production build measured it FALSE at 8.9–26.0 min,
   and since the worker pool (`225d8da4`) it holds at his laptop — `retired` 36.5 s · `nc` 39.8 s ·
   `healthnc` 150.9 s on the 2026-10-03 build; still untrue on a ≤ 3-core device and unmeasured on
-  his phone — the string is `copy.ts:2274`, its timings `copy.ts:2266-2271`, the open half the
+  his phone — the string is `copy.ts:2277`, its timings `copy.ts:2269-2274`, the open half the
   register's *The recommendation's pending line promises "a few minutes"…*) —
   `aria-busy` on the panel (the `PendingPanel` grammar) with the label spoken through the surface's
   own persistent `role="status"` / `aria-live="polite"` announcer rather than the panel line, so a
@@ -291,7 +291,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:4633`).
+  to none (`copy.ts:4701`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional
@@ -399,7 +399,7 @@ to a single commit.
   `ScenarioDraft` key to ride, and the vocabulary cannot key on `keyof ScenarioDraft`. A new id
   fails `tsc` until its builder and its humane string are authored. Both dispositions render here
   as read-only notes — no inert editing affordance ships on this surface (wall #5). `heirBracket`
-  also holds a `row-editable` seat in `assumptionRegistry.ts:139`, and its editor is **NOT inline**:
+  also holds a `row-editable` seat in `assumptionRegistry.ts:144`, and its editor is **NOT inline**:
   it shipped 2026-08-14 as the AssumptionPanel `heir-bracket` seat, on Result.tsx's measured
   67–161px breach and insight 058's one-editor-home rule. `r7-editable` therefore means "an editable
   home exists somewhere", never "render a control right here".

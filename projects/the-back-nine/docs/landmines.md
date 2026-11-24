@@ -976,6 +976,8 @@ chair; chair from a digest script, never the raw result, and expect the window t
 
 ## Driving the app
 
+- **(b9-2, 11-23) Playwright `fill()` on a `CurrencyField` that is not focused lands after its `onFocus` swaps in the raw
+  figure**: "7000" plus the shown "7,600" reads "70007,600", parses to nothing and clears the value. Click the field first.
 - **(b9-2) The Playwright MCP writes only under the project** (its allowed roots: the project and `.playwright-mcp\`, which is
   gitignored); save shots there, then copy them to a durable folder and delete this session's files. A reload over unsaved edits
   opens a `beforeunload` dialog that blocks every tool until `browser_handle_dialog` accepts it.
@@ -1049,7 +1051,17 @@ refusal witness), so `gotoSeedFinal` times out on it — anchor on `main.result`
 - **(b9-9, 11-23) A module shared by the intake chunk and a lazy chunk must not import a stylesheet the intake chunk already
   loads**: Rolldown moves the sheet into a new shared chunk, which can move its place in the cascade the fit gate reads
   (`src/ui/SaveSlot.tsx`'s import of `result.css` did, caught by reading `dist/assets`). Leave the import with its first owner
-  (`Result.tsx`) and check `dist/assets/*.css` after adding a lazy chunk.
+  (`Result.tsx`) and check `dist/assets/*.css` after adding a lazy chunk. U8 crossed it on purpose (b9-2, 11-23):
+  `src/ui/editorSheets.tsx` and `StepSheet.tsx` are shared by the answer's chunk and the room's, so the sheets' rules moved
+  into the shared chunk that loads before `IntakeApp-*.css`; its adversary checked every equal-specificity pair across both
+  builds and found no rendered rule changed. Check again whenever a sheet's stylesheet gains a rule.
+- **(b9-2, 11-23) A `ControlSheet`'s body stays mounted through its exit animation, and its focus restore blurs a field
+  still inside it after the close handler has run**, so a commit-on-blur field's write lands AFTER any "the edit ended"
+  logic (no recompute, no discard). Commit the focused field first (`StepSheet.tsx`'s `commitFocused`), and treat the body as
+  ended once its ending ran.
+- **(b9-2, 11-23) A walk step hosted outside the walk has no later Continue.** The walk's Back may leave a refused value
+  because the next Continue checks it; a sheet's dismiss has no next Continue, so it restores the draft from open when the
+  step's Continue check would refuse (`StepSheet.tsx`).
 - **(b9-5, 11-19; moved from TODO by b9-6) Never compare drafts to find "different inputs".** Every blur commits and mints a new
   draft even when nothing changed, the first run's seed mint swaps the draft object, and `draftIdentityKey` carries fields the
   engine never reads. Key the BUILT engine input (`memoryModel.ts`'s `runKey`, W9-R7's KTD2). And an e2e wait reads

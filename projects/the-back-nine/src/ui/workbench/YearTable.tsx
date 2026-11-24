@@ -3,7 +3,8 @@
  * returns and nothing else: no figure is worked out here.
  *
  * The three named states (U7's Approach): FIRST LOAD, a reserved frame with status words; UPDATING, the prior rows stay,
- * marked in words and with a cue that is not color (a dashed rule beside the rows, dimmed ink), `aria-busy` set; ERROR,
+ * marked in words and with a cue that is not color (a dashed rule beside the rows, dimmed ink), `aria-busy` set on the
+ * table, the words spoken once by the room's own live region (U8); ERROR,
  * one calm sentence and the rows withheld, with no retry (a lane never re-sends after a failure, KTD13; the answer's
  * own retry is on the front room); the way back is the room's own "Back to your answer", always on screen.
  *
@@ -181,7 +182,7 @@ function Table({ table, updating }: { readonly table: ComposedTable; readonly up
 export function YearTable({ state }: { readonly state: YearTableState }) {
   if (state.kind === 'loading') {
     return (
-      <div className="wb-state wb-state--loading" role="status" aria-busy="true">
+      <div className="wb-state wb-state--loading" role="status">
         <p className="wb-state__words">{copy.workbenchTableLoading}</p>
       </div>
     )
@@ -205,11 +206,8 @@ export function YearTable({ state }: { readonly state: YearTableState }) {
   const { table, updating } = state
   return (
     <div className="wb-table-region">
-      {updating && (
-        <p className="wb-updating" role="status">
-          {copy.workbenchTableUpdating}
-        </p>
-      )}
+      {/* Spoken through the room's one live region on the change (WorkbenchRoom): no role of its own. */}
+      {updating && <p className="wb-updating">{copy.workbenchTableUpdating}</p>}
       <Table table={table} updating={updating} />
       <section className="wb-key" aria-labelledby="wb-key-heading">
         <h3 id="wb-key-heading" className="wb-key__heading">

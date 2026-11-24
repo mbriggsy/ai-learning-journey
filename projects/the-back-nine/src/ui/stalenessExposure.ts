@@ -39,7 +39,7 @@
  * disagree on any reachable household. There is no "accounts but no marketplace quote pair"
  * witness — the pair is a REQUIRED fact for any household with a pre-65 member
  * (`intakeMap.ts:277-283`), and an all-65+ household takes the Medicare-only branch, which sets
- * `healthcareEnabled: true` with no quote pair at all (`intakeMap.ts:784`). So for every draft this
+ * `healthcareEnabled: true` with no quote pair at all (`intakeMap.ts:803`). So for every draft this
  * function actually evaluates (the missing-facts arm has already returned), an overlay exists IFF
  * healthcare is on. **The two predicates are perfectly correlated today.**
  *
@@ -100,7 +100,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  *
  * AND BE HONEST ABOUT WHERE THIS ONE ALREADY TRAVELS (a reviewer's catch, 2026-07-25 — the clause
  * above overstated its own boundary). This read feeds `rulesMoved`, and `rulesMoved` is carried to
- * `IntakeApp.tsx:1033` → `Result.tsx:736,710` → `FuckOffDate.tsx:540`, which renders the standing
+ * `IntakeApp.tsx:1048` → `Result.tsx:672` and `:701` → `FuckOffDate.tsx:550`, which renders the standing
  * hero echo BESIDE THE CROWNED DATE. So for a 63-working/67-retired household with the required
  * quote pair, a moved `acaStatus` names the ACA line at the gate (honest — the gate is pre-crown)
  * and ALSO lights that echo, even where a crown ≥2 years out puts both members at 65+ and the
@@ -125,7 +125,7 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * silent stale on the more consequential clock. That is precisely the trade the paragraph above
  * says was rejected, and precisely insight 103's shape (a rule written to kill an over-alarm must
  * be checked in the SILENCING direction). `acaPricedForRun` already exists and is exported
- * (`intakeMap.ts:1154`) — the predicate was never the missing piece.
+ * (`intakeMap.ts:1173`) — the predicate was never the missing piece.
  *
  * THE ACTUAL FIX — AND ONE OF ITS TWO ARMS IS ALSO A TRAP (corrected 2026-08-02, the second time
  * this comment's own prescription has had to be withdrawn).

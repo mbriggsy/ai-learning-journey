@@ -64,6 +64,8 @@ export interface BudgetLineItemProps {
   readonly onRemove: () => void
   /** Mark this line touched (an edit landed) — flips its error visibility per the timing law. */
   readonly onTouched: () => void
+  /** What the window's year numbers count from, for this household's route (`BudgetBuilder`). */
+  readonly windowHelp: string
 }
 
 export function BudgetLineItem({
@@ -74,6 +76,7 @@ export function BudgetLineItem({
   onWindowEnd,
   onRemove,
   onTouched,
+  windowHelp,
 }: BudgetLineItemProps) {
   const selectId = useId()
   const labelId = useId()
@@ -185,7 +188,7 @@ export function BudgetLineItem({
           }}
         />
       </div>
-      <p className="field-help">{copy.budgetWindowHelp}</p>
+      <p className="field-help">{windowHelp}</p>
 
       {errors.map((e) => (
         <p key={e.kind} className="field-error" role="alert">

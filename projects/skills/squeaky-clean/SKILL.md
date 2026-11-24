@@ -119,14 +119,13 @@ git -C ~/.claude fetch && git -C ~/.claude rev-list --left-right --count '@{u}..
 git -C ~/.claude push
 ```
 
-Then refresh the secrets copy, which no repo may hold (Briggsy's call 2026-11-16: Google Drive):
+Then back up the secrets, which no repo may hold (Briggsy's call 2026-11-24: OneDrive, folder `keys-for-claude`):
 
 ```bash
-D="/g/My Drive/Claude backup - secrets"
-[ -d "$D" ] && cp -p ~/ai-learning-journey/.env "$D/ai-learning-journey/.env" && cp -p ~/.claude.json "$D/home/.claude.json"
+bash ~/.claude/skills/squeaky-clean/backup-secrets.sh
 ```
 
-If `G:` isn't mounted, report it and go on. Same push rules as step 7: behind > 0 means don't push, report it; never force. Before committing, `git -C ~/.claude diff --cached --name-only` must show no `.credentials.json`, `.jsonl`, `.env` or cache path; if one shows, the allowlist broke: unstage it, fix `.gitignore`, report it.
+It copies every git-ignored `.env*` file, plus everything under `.secrets/` and `utils/`, from both repos, and `~/.claude.json`, into `~/OneDrive/keys-for-claude/` at the same paths; OneDrive syncs it to the cloud. A new project's `.env` is picked up on its own. It never deletes from the backup. Exit 1 (a copy failed or a repo is missing) or exit 2 (OneDrive isn't running, so nothing reaches the cloud) goes in the close report: never skip it silently. Google Drive for desktop is gone (uninstalled 11-23: it fought OneDrive), and the Chrome extension refuses to upload secret files, so neither is a fallback. Same push rules as step 7: behind > 0 means don't push, report it; never force. Before committing, `git -C ~/.claude diff --cached --name-only` must show no `.credentials.json`, `.jsonl`, `.env` or cache path; if one shows, the allowlist broke: unstage it, fix `.gitignore`, report it.
 
 ### 8. Cleanup Orphan Dev Processes
 

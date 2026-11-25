@@ -42,6 +42,12 @@
  * once here, so the bars and the tray's edits survive a page move; its runs ask only while the page shows). Baseline is the
  * plan's own reading, no run.
  *
+ * INVESTMENT → ASSET ALLOCATION AND TAX ALLOCATION (RC12, `AssetAllocation.tsx` and `TaxAllocation.tsx` over
+ * `investmentView.ts`): the plan's facts as they stand (the live draft, as the facts page reads them): each account's mix
+ * as the run reads it, against the mix lever of the what-if open on Analysis (the left side's shown bundle, by its name),
+ * and the savings by tax treatment. The folder tab, the picker and the picked bucket are held here, so a page move keeps
+ * them. The mix door opens Analysis's tray at the mix row (`tryLever`).
+ *
  * THE INTERIM TABS: the room's pages ride in their current look (`InterimPage.tsx`, outside any `.rc-root`):
  * Profile → Your facts (`FactsPage.tsx`); the old What if page left with
  * RC4b, its levers now Probability's Action Items tray (`ActionItemsTray.tsx`). A facts-page "Try a change" and the
@@ -111,6 +117,9 @@ import { healthCareView, healthTrayView, type HealthCareView } from '../screens/
 import { StressTest } from '../screens/retirement/StressTest'
 import { stressTrayView, stressView, type StressPageView } from '../screens/retirement/stressView'
 import { useStress } from '../workbench/useStress'
+import { AssetAllocation } from '../screens/investment/AssetAllocation'
+import { TaxAllocation } from '../screens/investment/TaxAllocation'
+import { assetAllocationView, taxAllocationView, type AssetTab, type MixScope, type TaxBucketId } from '../screens/investment/investmentView'
 import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { Analysis } from '../screens/retirement/Analysis'
@@ -1084,9 +1093,20 @@ export default function Shell({
   })()
   const stressTray = onStress && stressPage?.kind === 'bars' && stress.offers !== null ? stressTrayView(stress.pending, stress.committed, stress.offers) : undefined
 
+  // ── Investment (RC12): the live draft's facts; the what-if open on Analysis is the left side's shown bundle, named as its
+  // picker names it. The tab, the picker and the picked bucket are held here so a page move keeps them.
+  const [assetTab, setAssetTab] = useState<AssetTab>('summary')
+  const [assetScope, setAssetScope] = useState<MixScope>('all')
+  const [taxPick, setTaxPick] = useState<TaxBucketId | null>(null)
+  const assetPage = useMemo(
+    () => (screen === 'asset-allocation' ? assetAllocationView({ draft, scope: assetScope, whatIf: { name: leftName, levers: whatIf.shown } }) : null),
+    [screen, draft, assetScope, leftName, whatIf.shown],
+  )
+  const taxAllocPage = useMemo(() => (screen === 'tax-allocation' ? taxAllocationView(draft, taxPick) : null), [screen, draft, taxPick])
+
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
   const figured = screen === 'snapshot' || screen === 'probability' || screen === 'confidence' || screen === 'cash-flows'
-  const inFrameCaveat = figured || screen === 'tax-strategies' || screen === 'social-security' || screen === 'health-care' || screen === 'stress-test'
+  const inFrameCaveat = figured || screen === 'tax-strategies' || screen === 'social-security' || screen === 'health-care' || screen === 'stress-test' || screen === 'asset-allocation' || screen === 'tax-allocation'
   // Cash Flows too, aged line and door included: its row-one line (`workbenchAged`) names the build year and claims nothing
   // about the balances, so the two lines say two causes (round 3 of the milestone-1 review).
   const staleLines = useMemo(
@@ -1386,6 +1406,24 @@ export default function Shell({
               trayOpen={stressTrayOpen}
               onTrayOpen={setStressTrayOpen}
             />
+          </>
+        ) : assetPage !== null ? (
+          <>
+            {leave}
+            <AssetAllocation
+              headingRef={headingRef}
+              view={assetPage}
+              tab={assetTab}
+              onTab={setAssetTab}
+              onScope={setAssetScope}
+              onTryMix={() => tryLever('mix')}
+              caveat={CASH_FLOWS_CAVEAT}
+            />
+          </>
+        ) : taxAllocPage !== null ? (
+          <>
+            {leave}
+            <TaxAllocation headingRef={headingRef} view={taxAllocPage} onPick={setTaxPick} caveat={CASH_FLOWS_CAVEAT} />
           </>
         ) : healthPage !== null ? (
           <>

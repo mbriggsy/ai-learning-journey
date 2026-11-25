@@ -3197,3 +3197,413 @@ test.describe(`RC11 · Stress Test on the phone (${PHONE.width}×${PHONE.height}
     })
   }
 })
+
+// ── RC12 · Investment → Asset Allocation and Tax Allocation (plan 6, RC12; its Verification and Test scenarios) ─────────
+// - at his window on `buckets` and `retired`: one frame per tab (Summary, Detail; Tax Allocation with a part's accounts
+//   listed), the R13 caveat in it and reached (insight 124), no sideways scroll;
+// - the DRAWN rings stand to their printed shares (insight 169): each slice's arc against its printed percent (Asset
+//   Allocation) or its figure's share of the total (Tax Allocation); the centre's two figures are the parts' own, and its
+//   words sit inside the hole; the slices sit inside their frame (the marks audit);
+// - with a what-if mix set on Analysis (`retired`, 40 / 45 / 15: the stocks' bar runs left to the scale's end): the what-if ring stands to its shares, and Detail's bars
+//   stand to their printed shifts on the one symmetric scale, each bar level with its table row at his window, the
+//   chart's words passing the text and marks audits;
+// - picking a part on the ring (the pointer's way) lists its accounts; switching the picker rebuilds the ring;
+// - on the phone: no sideways scroll, the audits, the caveat reached, and every page control takes a tap at its centre.
+
+const ASSET_PAGE = { screen: 'asset-allocation', module: copy.shellModuleInvestment, page: copy.shellPageAssetAllocation } as const
+const TAXALLOC_PAGE = { screen: 'tax-allocation', module: copy.shellModuleInvestment, page: copy.shellPageTaxAllocation } as const
+/** `DONUT_INNER` in `donutOptions.ts`: the hole's share of the ring's diameter. */
+const DONUT_HOLE = 0.64
+/** A printed percent ("62%", "+20%", "−15%") as a signed whole number. */
+const PCT = (t: string) => Number(t.replace(/[^0-9]/g, '')) * (/[−-]/.test(t) ? -1 : 1)
+
+async function enterInvestment(page: Page, seed: string, target: typeof ASSET_PAGE | typeof TAXALLOC_PAGE, phone = false): Promise<void> {
+  await gotoSeedFinal(page, seed)
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the seed never landed on Snapshot').toBeAttached({ timeout: 30_000 })
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+  await moveToInvestment(page, target, phone)
+}
+
+async function moveToInvestment(page: Page, target: typeof ASSET_PAGE | typeof TAXALLOC_PAGE, phone: boolean): Promise<void> {
+  if (phone) {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: target.page, exact: true }).click()
+    await expect(page.getByRole('dialog', { name: copy.shellMenuTitle })).toHaveCount(0)
+    await expect(page.locator(`main.result[data-shell-screen="${target.screen}"]`)).toBeAttached()
+  } else await showPage(page, target)
+  await donutsDrawn(page)
+}
+
+/** Every ring on the page drawn (the charts' lazy chunk), and the layout settled. */
+async function donutsDrawn(page: Page): Promise<void> {
+  await expect(page.locator('[data-donut] .highcharts-series-group').first(), 'no ring drew').toBeAttached({ timeout: 60_000 })
+  const n = await page.locator('[data-donut]').count()
+  for (let i = 0; i < n; i++) await expect(page.locator('[data-donut]').nth(i).locator('.highcharts-series-group')).toBeAttached({ timeout: 30_000 })
+  await page.waitForTimeout(400)
+  await settleLayout(page)
+}
+
+/** A what-if mix on Analysis's tray (the household's own what-if), Refreshed, the tray shut again. */
+async function setWhatIfMix(page: Page, mix: readonly [number, number, number], phone: boolean): Promise<void> {
+  if (phone) {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: ANALYSIS.page, exact: true }).click()
+    await expect(page.locator(`main.result[data-shell-screen="${ANALYSIS.screen}"]`)).toBeAttached()
+  } else await showPage(page, ANALYSIS)
+  await trayHandle(page).click()
+  await expect(tray(page), 'the tray never opened').toBeVisible()
+  await page.waitForTimeout(400)
+  for (const [k, v] of [['stock', mix[0]], ['bond', mix[1]], ['cash', mix[2]]] as const) {
+    const input = tray(page).locator(`[data-tray-row="mix:${k}"] input`)
+    await input.scrollIntoViewIfNeeded()
+    await input.fill(String(v))
+    await input.press('Tab')
+  }
+  await tray(page).locator('[data-tray-refresh]').click()
+  await expect(page.locator('[data-half="alternative"] [aria-busy="true"]'), 'the what-if never landed').toHaveCount(0, { timeout: 120_000 })
+  if (phone) await page.keyboard.press('Escape')
+  else await trayHandle(page).click()
+  await expect(tray(page)).toHaveCount(0)
+}
+
+/** Each drawn slice's arc as a share of the full turn, read from its path (the outer arc's chord, radius and large-arc
+ *  flag), never from the options. */
+async function sliceShares(page: Page, chartId: string): Promise<{ readonly id: string; readonly share: number }[]> {
+  return page.locator(`[data-chart="${chartId}"] path.highcharts-point.b9-donut-part`).evaluateAll((els) =>
+    els.map((el) => {
+      const id = /b9-donut-part--([a-z]+)/.exec(el.getAttribute('class') ?? '')?.[1] ?? '?'
+      const nums = (el.getAttribute('d') ?? '').replace(/[A-Za-z]/g, ' $& ').trim().split(/[\s,]+/)
+      // M x0 y0 A r r rotation large sweep x1 y1 …
+      const m = nums.indexOf('M')
+      const a = nums.indexOf('A')
+      const x0 = Number(nums[m + 1])
+      const y0 = Number(nums[m + 2])
+      const r = Number(nums[a + 1])
+      const large = Number(nums[a + 4])
+      const x1 = Number(nums[a + 6])
+      const y1 = Number(nums[a + 7])
+      let angle = 2 * Math.asin(Math.min(1, Math.hypot(x1 - x0, y1 - y0) / (2 * r)))
+      if (large === 1) angle = 2 * Math.PI - angle
+      return { id, share: angle / (2 * Math.PI) }
+    }),
+  )
+}
+
+/** The ring stands to its printed shares: each slice's arc within 0.6 points of its printed percent (whole percents by
+ *  the one rounding rule, plus a pixel's worth), a 0% part drawing nothing. */
+async function assertRingShares(page: Page, chartId: string, printed: Readonly<Record<string, number>>, who: string): Promise<void> {
+  const drawn = await sliceShares(page, chartId)
+  expect(drawn.length, `${who}: slices to measure`).toBeGreaterThanOrEqual(2)
+  expect(drawn.map((d) => d.id).sort(), `${who}: a slice per part above 0%`).toEqual(Object.keys(printed).filter((k) => printed[k]! > 0).sort())
+  for (const d of drawn) {
+    const want = printed[d.id]!
+    expect(Math.abs(d.share * 100 - want), `${who}: the ${d.id} slice draws ${(d.share * 100).toFixed(2)}% for a printed ${want}%`).toBeLessThanOrEqual(0.6)
+  }
+}
+
+/** The legend table's printed percents for one side ('current' or 'whatif'), by part. */
+async function printedMix(page: Page, side: 'current' | 'whatif'): Promise<Record<string, number>> {
+  const rows = await page.locator('[data-asset-row]').evaluateAll(
+    (els, s) => els.map((r) => [r.getAttribute('data-asset-row')!, (r.querySelector(`[data-asset-${s}]`)?.textContent ?? '').trim()] as const),
+    side,
+  )
+  return Object.fromEntries(rows.map(([k, t]) => [k, PCT(t)]))
+}
+
+/** The hole's words: inside the hole (every corner of each line's text within its circle), at least the floor size,
+ *  unfaded. */
+async function assertCentreInHole(page: Page, chartId: string, who: string): Promise<void> {
+  const floor = await hcFloorPx(page)
+  const misses = await page.locator(`[data-donut="${chartId}"]`).evaluate(
+    (host, { hole, floor }) => {
+      const ring = host.querySelector('.highcharts-series-group')!.getBoundingClientRect()
+      const cx = ring.left + ring.width / 2
+      const cy = ring.top + ring.height / 2
+      const r = (Math.min(ring.width, ring.height) * hole) / 2
+      const out: string[] = []
+      const lines = [...host.querySelectorAll('[data-donut-centre] p')]
+      if (lines.length === 0) out.push('no centre words')
+      for (const p of lines) {
+        const range = document.createRange()
+        range.selectNodeContents(p)
+        const t = range.getBoundingClientRect()
+        const cs = getComputedStyle(p)
+        if (parseFloat(cs.fontSize) < floor - 0.01) out.push(`"${p.textContent}" at ${cs.fontSize}`)
+        if (t.width === 0 || cs.visibility === 'hidden' || parseFloat(cs.opacity) < 0.9) out.push(`"${p.textContent}" hidden`)
+        for (const [x, y] of [[t.left, t.top], [t.right, t.top], [t.left, t.bottom], [t.right, t.bottom]] as const) {
+          const d = Math.hypot(x - cx, y - cy)
+          if (d > r + 0.5) out.push(`"${p.textContent}" leaves the hole at (${x.toFixed(1)}, ${y.toFixed(1)}): ${d.toFixed(1)} px from the centre, the hole ${r.toFixed(1)}`)
+        }
+      }
+      return out
+    },
+    { hole: DONUT_HOLE, floor },
+  )
+  expect(misses, `${who}: the centre's words inside the ring's hole`).toEqual([])
+}
+
+/** The licence's credit printed whole: inside its chart's box (RC12's first look cut its letters at the ring's bottom
+ *  edge) and over no axis word (it sat on Detail's "+20%" tick). */
+async function assertCreditClear(page: Page, chartId: string, who: string): Promise<void> {
+  const bad = await page.locator(`[data-chart="${chartId}"]`).evaluate((c) => {
+    const box = c.querySelector('.highcharts-container')!.getBoundingClientRect()
+    const credit = c.querySelector('.highcharts-credits')
+    if (credit === null) return ['no credit']
+    const b = credit.getBoundingClientRect()
+    const out: string[] = []
+    if (b.left < box.left - 0.5 || b.right > box.right + 0.5 || b.top < box.top - 0.5 || b.bottom > box.bottom + 0.5) out.push(`the credit [${b.top.toFixed(1)}, ${b.bottom.toFixed(1)}] leaves its chart [${box.top.toFixed(1)}, ${box.bottom.toFixed(1)}]`)
+    for (const t of c.querySelectorAll('.highcharts-axis-labels text, .highcharts-data-label text')) {
+      const r = t.getBoundingClientRect()
+      if (r.left < b.right - 0.5 && b.left < r.right - 0.5 && r.top < b.bottom - 0.5 && b.top < r.bottom - 0.5) out.push(`the credit over "${(t.textContent ?? '').trim()}"`)
+    }
+    return out
+  })
+  expect(bad, `${who}: ${chartId}'s credit`).toEqual([])
+}
+
+/** Every ring's slices inside their frame (the marks audit; the rings print no SVG words, so the text audit reads none),
+ *  its credit whole, and every hole's words inside it. */
+async function auditRings(page: Page, who: string): Promise<void> {
+  const floor = await hcFloorPx(page)
+  for (const id of await page.locator('[data-donut]').evaluateAll((els) => els.map((e) => e.getAttribute('data-donut')!))) {
+    expect(hcMarkFailures(await hcMarks(page, `[data-chart="${id}"]`, 'main.result .rc-root')), `${who}: ${id}'s slices`).toEqual([])
+    expect(hcTextFailures(await hcAudit(page, `[data-chart="${id}"]`, 'main.result .rc-root'), floor, { texts: [], counts: {} }), `${who}: ${id}'s words`).toEqual([])
+    await assertCentreInHole(page, id, `${who} ${id}`)
+    await assertCreditClear(page, id, who)
+  }
+}
+
+/** Every control a selector names takes a tap at its centre (the document scrolled to it, never `scrollIntoView`). */
+async function assertPageTapsReach(page: Page, selector: string, who: string, atLeast: number): Promise<void> {
+  const n = await page.locator(selector).count()
+  expect(n, `[test setup] ${who}: controls to probe`).toBeGreaterThanOrEqual(atLeast)
+  const covered: string[] = []
+  for (let i = 0; i < n; i++) {
+    const hit = await page.locator(selector).nth(i).evaluate(async (el) => {
+      const r0 = el.getBoundingClientRect()
+      window.scrollTo(0, Math.max(0, r0.top + window.scrollY - window.innerHeight / 2))
+      await new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)))
+      const r = el.getBoundingClientRect()
+      const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+      return top !== null && (top === el || el.contains(top)) ? null : `"${(el.textContent ?? '').trim().slice(0, 30)}" under ${top?.tagName.toLowerCase()} "${(top?.textContent ?? '').trim().slice(0, 30)}"`
+    })
+    if (hit !== null) covered.push(hit)
+  }
+  await page.evaluate(() => window.scrollTo(0, 0))
+  expect(covered, `${who}: a control a tap at its centre never reaches`).toEqual([])
+}
+
+/** One frame: no scroll, the caveat's bottom inside the window. */
+async function assertOneFrame(page: Page, who: string): Promise<void> {
+  const f = await page.evaluate(() => ({ scrollY: window.scrollY, caveat: document.querySelector('main.result [data-caveat]')!.getBoundingClientRect().bottom }))
+  console.log(`[rc12-frame] ${who}: caveat ${f.caveat.toFixed(1)} of ${REAL.height}`)
+  expect(f.scrollY).toBe(0)
+  expect(f.caveat, `${who}: the page and its R13 caveat inside the first frame`).toBeLessThanOrEqual(REAL.height)
+}
+
+/** Detail's bars stand to their printed shifts on the one symmetric scale, on the side their sign names, each printing
+ *  its shift; beside the table each bar is level with its row. */
+async function assertShiftBars(page: Page, who: string, besideTable: boolean): Promise<void> {
+  const read = await page.evaluate(() => {
+    const c = document.querySelector('[data-chart="mix-shift"]')!
+    const plot = c.querySelector('.highcharts-plot-background')!.getBoundingClientRect()
+    const zero = c.querySelector('.b9-shift-zero')!.getBoundingClientRect()
+    const ticks = [...c.querySelectorAll('.highcharts-yaxis-labels text')].map((t) => (t.textContent ?? '').trim())
+    const labels = [...c.querySelectorAll('.highcharts-data-label text')].map((t) => {
+      const b = t.getBoundingClientRect()
+      return { text: (t.textContent ?? '').trim(), y: b.top + b.height / 2 }
+    })
+    const rows = Object.fromEntries(
+      [...document.querySelectorAll('[data-asset-detail-row]')].map((r) => {
+        const b = r.getBoundingClientRect()
+        const cells = [...r.querySelectorAll('td')].map((x) => (x.textContent ?? '').trim()).filter((t) => /%$/.test(t))
+        return [r.getAttribute('data-asset-detail-row')!, { y: b.top + b.height / 2, cells }]
+      }),
+    )
+    const bars = [...c.querySelectorAll('.highcharts-point.b9-shift-bar')].map((el) => {
+      const b = el.getBoundingClientRect()
+      return { id: /b9-shift-bar--([a-z]+)/.exec(el.getAttribute('class') ?? '')?.[1] ?? '?', left: b.left, right: b.right, y: b.top + b.height / 2 }
+    })
+    return { plotLeft: plot.left, plotWidth: plot.width, zeroX: zero.left + zero.width / 2, ticks, labels, rows, bars }
+  })
+  expect(read.bars.length, `${who}: a bar per part`).toBe(3)
+  const axisMax = Math.max(...read.ticks.map((t) => Math.abs(PCT(t))))
+  expect(axisMax, `${who}: the scale's end tick`).toBeGreaterThanOrEqual(10)
+  expect(Math.abs(read.zeroX - (read.plotLeft + read.plotWidth / 2)), `${who}: the zero rule at the plot's middle`).toBeLessThanOrEqual(1.5)
+  const perPx = axisMax / (read.plotWidth / 2)
+  for (const b of read.bars) {
+    const row = read.rows[b.id]!
+    const [cur, wi] = row.cells.slice(-2)
+    const want = PCT(wi!) - PCT(cur!)
+    const rightward = b.right - read.zeroX > 0.5
+    const drawn = (b.right - b.left) * perPx * (rightward ? 1 : -1)
+    expect(Math.abs(drawn - want), `${who}: the ${b.id} bar draws ${drawn.toFixed(2)} points for a printed shift of ${want} (what-if ${wi} less current ${cur})`).toBeLessThanOrEqual(1.5 * perPx + 0.01)
+    const label = read.labels.find((l) => Math.abs(l.y - b.y) < 6)
+    expect(label?.text, `${who}: the ${b.id} bar prints its shift`).toBe(slots.assetShift(want))
+    if (besideTable) expect(Math.abs(b.y - row.y), `${who}: the ${b.id} bar level with its table row`).toBeLessThanOrEqual(2)
+  }
+}
+
+/** Each of Detail's column headings on one line (RC12's phone look broke "What-if" at its hyphen, green on every width
+ *  check). */
+async function assertHeadingsOneLine(page: Page, who: string): Promise<void> {
+  const broken = await page.locator('[data-asset-detail-table] thead th').evaluateAll((ths) =>
+    ths.flatMap((th) => {
+      const range = document.createRange()
+      range.selectNodeContents(th)
+      const tops = new Set([...range.getClientRects()].filter((r) => r.width > 0).map((r) => Math.round(r.top)))
+      return tops.size > 1 ? [(th.textContent ?? '').trim()] : []
+    }),
+  )
+  expect(broken, `${who}: a column heading broken over lines`).toEqual([])
+}
+
+const RC12_SIZES = [
+  { title: `at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, use: { viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'reduce' as const }, phone: false },
+  { title: `on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, use: { viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true, reducedMotion: 'reduce' as const }, phone: true },
+] as const
+
+for (const size of RC12_SIZES) {
+  test.describe(`RC12 · Asset Allocation ${size.title}`, () => {
+    test.use(size.use)
+    for (const seed of ['buckets', 'retired'] as const) {
+      test(`?seed=${seed}: Summary and Detail${size.phone ? '' : ', each in one frame'}; the ring stands to its printed shares, its centre the parts' own and inside the hole; the cash line; the caveat reached`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 90_000)
+        await enterInvestment(page, seed, ASSET_PAGE, size.phone)
+        await expect(page.getByRole('heading', { level: 1, name: copy.shellPageAssetAllocation })).toBeVisible()
+        const cur = await printedMix(page, 'current')
+        expect(cur.stock! + cur.bond! + cur.cash!, `${seed}: the printed parts sum to 100`).toBe(100)
+        await assertRingShares(page, 'mix-current', cur, `${seed} current`)
+        await expect(page.locator('[data-asset-donut="mix-current"] [data-asset-centre]')).toHaveText(slots.assetCentre(cur.stock!, 100 - cur.stock!))
+        await auditRings(page, `${seed} Summary`)
+        await expect(page.locator('[data-asset-note]').filter({ hasText: copy.assetCashLine })).toHaveCount(1)
+        await expect(page.locator('[data-asset-none]')).toContainText(copy.assetNoWhatIfOpen)
+        if (!size.phone) await assertOneFrame(page, `${seed} Summary`)
+        await assertOneVisibleCaveat(page, size.phone ? null : REAL.height)
+        await assertCaveatReachable(page, `${seed} Summary`)
+        await noSidewaysScroll(page, `${seed} Summary`)
+        if (size.phone) await assertPageTapsReach(page, 'main.result [role="tab"], main.result [role="combobox"], [data-asset-try]', `${seed} Summary`, 4)
+        await page.getByRole('tab', { name: copy.assetTabDetail }).click()
+        await expect(page.locator('[data-asset="detail"]')).toBeVisible()
+        await settleLayout(page)
+        await expect(page.locator('[data-asset-detail-row]')).toHaveCount(3)
+        await expect(page.locator('[data-asset-note]').filter({ hasText: copy.assetCashLine })).toHaveCount(1)
+        await assertHeadingsOneLine(page, seed)
+        if (!size.phone) await assertOneFrame(page, `${seed} Detail`)
+        await assertCaveatReachable(page, `${seed} Detail`)
+        await noSidewaysScroll(page, `${seed} Detail`)
+        if (size.phone) await assertPageTapsReach(page, 'main.result [role="tab"], [data-asset-try]', `${seed} Detail`, 3)
+      })
+    }
+
+    test(`?seed=buckets: switching the picker to one bucket's and one person's accounts rebuilds the ring, which stands to its new shares`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterInvestment(page, 'buckets', ASSET_PAGE, size.phone)
+      for (const option of [slots.assetScopeBucket(copy.investBucketRoth), slots.assetScopeOwner('Sam’s')]) {
+        await page.locator('[data-asset-side="current"] [role="combobox"]').click()
+        await page.getByRole('option', { name: option, exact: true }).click()
+        await expect(page.locator('[data-asset-side="current"] [role="combobox"]')).toHaveText(option)
+        await donutsDrawn(page)
+        const cur = await printedMix(page, 'current')
+        await assertRingShares(page, 'mix-current', cur, `buckets ${option}`)
+        await auditRings(page, `buckets ${option}`)
+      }
+    })
+
+    test(`?seed=retired: a what-if mix set on Analysis (40 / 45 / 15): the what-if ring stands to it; Detail's bars stand to the printed shifts${size.phone ? '' : ', each level with its row, in one frame'}; the chart's words pass the audits`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 240_000)
+      await gotoSeedFinal(page, 'retired')
+      await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+      await setWhatIfMix(page, [40, 45, 15], size.phone)
+      await moveToInvestment(page, ASSET_PAGE, size.phone)
+      await expect(page.locator('[data-asset-from]')).toHaveText(slots.assetWhatIfFrom(copy.probabilityPickNew))
+      const wi = await printedMix(page, 'whatif')
+      expect(wi).toEqual({ stock: 40, bond: 45, cash: 15 })
+      await assertRingShares(page, 'mix-what-if', wi, 'retired what-if')
+      await expect(page.locator('[data-asset-donut="mix-what-if"] [data-asset-centre]')).toHaveText(slots.assetCentre(40, 60))
+      await auditRings(page, 'retired with a what-if')
+      if (!size.phone) await assertOneFrame(page, 'retired Summary with a what-if')
+      await page.getByRole('tab', { name: copy.assetTabDetail }).click()
+      await expect(page.locator('[data-chart="mix-shift"] .highcharts-series-group')).toBeAttached({ timeout: 30_000 })
+      await page.waitForTimeout(300)
+      await settleLayout(page)
+      await assertShiftBars(page, 'retired Detail', !size.phone)
+      await assertHeadingsOneLine(page, 'retired Detail with a what-if')
+      const floor = await hcFloorPx(page)
+      expect(
+        hcTextFailures(await hcAudit(page, '[data-chart="mix-shift"]', '[data-asset="detail"]'), floor, { texts: ['−20%', '+15%', '+5%'], counts: { 'data-label': 3, 'axis-label': size.phone ? 6 : 5 } }),
+        'retired Detail: the chart’s text',
+      ).toEqual([])
+      expect(hcMarkFailures(await hcMarks(page, '[data-chart="mix-shift"]', '[data-asset="detail"]')), 'retired Detail: the figures over no bar or other figure').toEqual([])
+      await assertChartTextApart(page, '[data-chart="mix-shift"]', 'retired Detail')
+      await assertCreditClear(page, 'mix-shift', 'retired Detail')
+      // Each part's name (the phone's, over its bar) clear of every bar (RC12's phone look set "Stocks" on its bar's top).
+      const onBars = await page.locator('[data-chart="mix-shift"]').evaluate((c) => {
+        const bars = [...c.querySelectorAll('.highcharts-point.b9-shift-bar')].map((b) => b.getBoundingClientRect())
+        return [...c.querySelectorAll('.highcharts-xaxis-labels text')].flatMap((t) => {
+          const r = t.getBoundingClientRect()
+          return bars.some((b) => r.left < b.right - 0.5 && b.left < r.right - 0.5 && r.top < b.bottom - 0.5 && b.top < r.bottom - 0.5) ? [(t.textContent ?? '').trim()] : []
+        })
+      })
+      expect(onBars, 'retired Detail: a part’s name over a bar').toEqual([])
+      expect((await page.locator('[data-chart="mix-shift"] svg text').allTextContents()).filter((t) => t.includes('…')), 'no chart word cut short').toEqual([])
+      if (!size.phone) await assertOneFrame(page, 'retired Detail with a what-if')
+      await noSidewaysScroll(page, 'retired Detail with a what-if')
+    })
+  })
+
+  test.describe(`RC12 · Tax Allocation ${size.title}`, () => {
+    test.use(size.use)
+    for (const seed of ['buckets', 'retired'] as const) {
+      test(`?seed=${seed}: the ring stands to each part's figure; picking a part on the ring lists its accounts${size.phone ? '' : ' in one frame'}; the caveat reached`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 90_000)
+        await enterInvestment(page, seed, TAXALLOC_PAGE, size.phone)
+        await expect(page.getByRole('heading', { level: 1, name: copy.shellPageTaxAllocation })).toBeVisible()
+        const figures = await page
+          .locator('[data-taxalloc-part]')
+          .evaluateAll((els) => els.map((e) => [e.getAttribute('data-taxalloc-part')!, Number((e.querySelector('span')?.textContent ?? '').replace(/[^0-9]/g, ''))] as const))
+        const total = figures.reduce((t, [, v]) => t + v, 0)
+        expect(Number((await page.locator('[data-taxalloc-total]').textContent())!.replace(/[^0-9]/g, '')), `${seed}: the hole's total is the parts' sum`).toBe(total)
+        if (figures.length >= 2) {
+          const drawn = await sliceShares(page, 'tax-allocation')
+          for (const [id, v] of figures) {
+            const d = drawn.find((x) => x.id === id)!
+            expect(Math.abs(d.share - v / total) * 100, `${seed}: the ${id} slice against its figure's share`).toBeLessThanOrEqual(0.3)
+          }
+        }
+        await auditRings(page, `${seed} Tax Allocation`)
+        // The pointer's way in: a click inside the slice's band, half-way round its arc.
+        const pick = figures[figures.length - 1]![0]
+        const at = await page.locator(`[data-chart="tax-allocation"] path.b9-donut-part--${pick}`).evaluate((el, hole) => {
+          const ring = el.closest('.highcharts-series-group')!.getBoundingClientRect()
+          const cx = ring.left + ring.width / 2
+          const cy = ring.top + ring.height / 2
+          const nums = (el.getAttribute('d') ?? '').replace(/[A-Za-z]/g, ' $& ').trim().split(/[\s,]+/)
+          const m = (el as SVGGraphicsElement).getScreenCTM()!
+          const scr = (x: number, y: number) => [x * m.a + y * m.c + m.e, x * m.b + y * m.d + m.f] as const
+          const mi = nums.indexOf('M')
+          const ai = nums.indexOf('A')
+          const [sx, sy] = scr(Number(nums[mi + 1]), Number(nums[mi + 2]))
+          const [ex, ey] = scr(Number(nums[ai + 6]), Number(nums[ai + 7]))
+          const a0 = Math.atan2(sy - cy, sx - cx)
+          let sweep = Math.atan2(ey - cy, ex - cx) - a0
+          while (sweep <= 0) sweep += 2 * Math.PI // clockwise on screen (y down)
+          const mid = a0 + sweep / 2
+          const r = (ring.width / 2) * ((1 + hole) / 2)
+          return { x: cx + r * Math.cos(mid), y: cy + r * Math.sin(mid) }
+        }, DONUT_HOLE)
+        if (size.phone) await page.touchscreen.tap(at.x, at.y)
+        else await page.mouse.click(at.x, at.y)
+        await expect(page.locator(`[data-taxalloc-part="${pick}"]`)).toHaveAttribute('aria-pressed', 'true')
+        await expect(page.locator('[data-taxalloc-account]').first()).toBeVisible()
+        await donutsDrawn(page)
+        await expect(page.locator('[data-chart="tax-allocation"] path.b9-donut-picked'), 'the picked slice carries its edge').toHaveCount(1)
+        if (!size.phone) await assertOneFrame(page, `${seed} Tax Allocation, a part picked`)
+        await assertOneVisibleCaveat(page, size.phone ? null : REAL.height)
+        await assertCaveatReachable(page, `${seed} Tax Allocation`)
+        await noSidewaysScroll(page, `${seed} Tax Allocation`)
+        if (size.phone) await assertPageTapsReach(page, '[data-taxalloc-part]', `${seed} Tax Allocation`, figures.length)
+      })
+    }
+  })
+}

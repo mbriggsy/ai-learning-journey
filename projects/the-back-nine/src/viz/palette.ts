@@ -210,6 +210,15 @@ export const RC_PAIRS: readonly RcPair[] = [
   { a: 'salmon', b: 'sky', where: 'the stress test out-of-pocket medical beside the marketplace discount', verdict: { kind: 'floor' } },
   { a: 'salmon', b: 'purple', where: 'the stress test out-of-pocket medical beside Combined', verdict: { kind: 'floor' } },
   { a: 'sky', b: 'purple', where: 'the stress test marketplace discount beside Combined', verdict: { kind: 'floor' } },
+  // Investment (RC12): Asset Allocation's stocks indigo, bonds light green, cash orange (dotted) in one ring, each part
+  // also named with its share in the table beside it; Tax Allocation's buckets are the withdrawal stacks' rows above
+  // (taxable blue against pre-tax orange, pre-tax against Roth green, Roth against HSA sky, HSA against taxable).
+  {
+    a: 'lightGreen',
+    b: 'orange',
+    where: 'Asset Allocation bonds beside cash',
+    verdict: { kind: 'cue', cue: 'cash dotted in its slice, its bar and its key mark; each part named with its share in the table beside the ring' },
+  },
   { a: 'green', b: 'teal', where: 'series slots 1 and 11', verdict: { kind: 'apart' } },
 ]
 

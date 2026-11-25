@@ -415,4 +415,64 @@
     fill: var(--color-stone-900);
     font-size: var(--text-label);
   }
+
+  /* ── Investment (RC12, `donutOptions.ts`). The donuts: each slice its part's hue, a patterned slice drawn in its own ink
+     with an edge of the same ink (so its outline holds on the white ground), solid slices parted by the surface's 2 px
+     gap; the picked part (Tax Allocation) carries a heavy ink edge beside its listed accounts. Asset Allocation's cash
+     is dotted orange; Tax Allocation's buckets wear the withdrawal stacks' patterns (pre-tax hatched orange, Roth dotted
+     green, HSA lined sky). Only one page's donuts are ever on screen, so each page's inks hold for the `url(#…)` its
+     first chart defines. The diverging bars ride the same parts' hues, an ink rule at 0, each figure printed at its end. ── */
+  .b9-mix {
+    --b9-ink-dots: var(--highcharts-color-2);
+  }
+  .b9-taxalloc {
+    --b9-ink-hatch: var(--highcharts-color-2);
+    --b9-ink-dots: var(--highcharts-color-1);
+    --b9-ink-lines: var(--highcharts-color-4);
+  }
+  .b9-mix .highcharts-point,
+  .b9-taxalloc .highcharts-point {
+    stroke: var(--color-bg);
+    stroke-width: 2;
+  }
+  .b9-mix .highcharts-point.b9-dots,
+  .b9-taxalloc .highcharts-point.b9-dots {
+    fill: url(#b9-dots);
+    stroke: var(--b9-ink-dots);
+    stroke-width: 1.5;
+  }
+  .b9-taxalloc .highcharts-point.b9-hatch {
+    fill: url(#b9-hatch);
+    stroke: var(--b9-ink-hatch);
+    stroke-width: 1.5;
+  }
+  .b9-taxalloc .highcharts-point.b9-lines {
+    fill: url(#b9-lines);
+    stroke: var(--b9-ink-lines);
+    stroke-width: 1.5;
+  }
+  .b9-taxalloc .highcharts-point.b9-donut-picked {
+    stroke: var(--color-stone-900);
+    stroke-width: 3;
+  }
+  .b9-shift {
+    --b9-ink-dots: var(--highcharts-color-2);
+  }
+  .b9-shift .highcharts-point.b9-dots {
+    fill: url(#b9-dots);
+    stroke: var(--b9-ink-dots);
+    stroke-width: 1.5;
+  }
+  .b9-shift .b9-shift-zero {
+    stroke: var(--color-stone-900);
+  }
+  .b9-shift .highcharts-data-label text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+    font-weight: 600;
+  }
+  .b9-shift .highcharts-xaxis-labels text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+  }
 }

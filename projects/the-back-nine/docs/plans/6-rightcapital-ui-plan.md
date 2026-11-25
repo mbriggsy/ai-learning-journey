@@ -1668,6 +1668,45 @@ whole; no return or risk figure exists in the view; the what-if donut reads the 
 **Verification.** CI fit on `buckets`, `retired`: one frame at REAL; donut words and centre numbers pass the audit.
 Local look.
 
+**As built (2026-11-25, b9-11's RC12 builder; the pilot's calls).** Each call below is *(the pilot's call, 2026-11-25, b9-11's
+RC12 builder)*.
+- *The page reads the plan's facts as they stand* (the live draft, as the facts page does), so the mix shown is the one
+  the next run reads; Tax Allocation needs no run at all. Each account's mix goes through `blendSourceOf` and is divided
+  by its own parts' sum, as `stockWeightForBlend` divides (a fund's parts sum to 97.2 on `ABALX`), so the drawn stock share
+  is `householdStockWeight`'s; `investmentView.test.ts` holds them equal through every branch.
+- *Cash is drawn as its own slice, and said.* The run folds it into bonds, so the page carries the cash line wherever cash
+  is drawn (under both tabs: "Your plan grows cash the way it grows bonds: the same return and the same ups and downs.
+  Treating cash on its own comes with a later build."), each centre prints stocks against bonds and cash together (the
+  run's two parts, "Stocks / bonds and cash" under the ring), and Detail's first column says what the run grows each part
+  as: cash grows like bonds. The register entry names the page as a site.
+- *One rounding rule:* whole percents by largest remainder, the earlier part first on a tie, a share within a millionth of
+  a whole percent read as it (`wholePercents`); the centre's second figure is 100 less the stocks', so it is the parts' own.
+- *An account with no mix* leaves the run with none (`householdStockWeight` is null, the plan names the missing mix), so
+  the page draws no ring and names each such account; Tax Allocation still shows (balances are facts).
+- *Owners:* every account names one owner (`ownerIndex`; B9 has no joint kind), so "by owner" is each person's accounts,
+  offered only where two people hold accounts; a bucket is offered where two or more buckets hold accounts; a choice
+  whose accounts hold $0 is left out. A choice no longer offered falls back to all accounts.
+- *The what-if* is the left side's shown bundle on Analysis (the household's own or Recommended), named as its picker
+  names it. With no mix lever the page says which case ("No what-if is open on Analysis." or "The what-if open on Analysis
+  keeps your plan's mix.") with a door into the tray's mix row (`tryLever('mix')`); Detail then drops its What-if column and
+  shows the same words where the bars stand. The lever writes every account's mix, so it compares with every picker view.
+- *Colours:* stocks indigo and bonds light green, both solid (a `floor` pair), cash orange and dotted (light green against
+  orange measured 0.084 under deuteranopia, so a `cue` row in `RC_PAIRS`); the tax buckets wear the withdrawal stacks'
+  look (taxable solid blue, pre-tax hatched orange, Roth dotted green, HSA lined sky). Each table row and figure carries a
+  key mark drawn with the same pattern (`Swatch.tsx`).
+- *The rings:* a pie with a 64% hole from 12 o'clock, 200 px at a laptop width (220 on the phone), Tax Allocation's 240;
+  the centre is HTML over the hole (the ring's font law); the licence's credit sits in a 16 px band of its own under the
+  ring (the first look cut its letters at the edge). No tooltips: every figure is printed.
+- *Detail's bars:* what-if less current in whole points (the printed figures' own difference) on a fixed scale of
+  plus-or-minus the next ten above the largest shift (at least 10), an ink rule at 0, each figure printed at its end; past
+  the 48rem tier they stand beside the table, each bar's row its table row (48 px rows under a 44 px header); on the
+  phone they stand under it with each part's name over its bar and three ticks.
+- *No ACTION ITEMS handle* on either page (RightCapital's opens model portfolios and targets B9 does not hold). Tax
+  Allocation lists only the buckets that hold an account, in RightCapital's order; picking the same part again puts the
+  list away; the figure buttons are the keyboard's and screen reader's way in, the slices the pointer's.
+- *The first frame at his window:* Summary's caveat at 703 px of 731 on both seeds (the tightest), Detail's at 563 (610
+  with a what-if), Tax Allocation's at 654 with a part's accounts listed.
+
 **Milestone 2** closes here.
 
 ### RC13: Profile pages: card grids and drawers

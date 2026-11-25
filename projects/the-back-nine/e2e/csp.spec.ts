@@ -231,7 +231,7 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Stress Test, Social Security, Health Care, Tax Strategies, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Stress Test, Social Security, Health Care, Asset Allocation and Tax Allocation, Tax Strategies, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
     // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
     // served build, Probability draws its rings and its two balance bars (Highcharts again), and every interim tab is
@@ -377,6 +377,23 @@ test.describe('CSP — real browser enforcement', () => {
     await page.keyboard.press('Escape')
     await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Stress Test injected a <style> element').toBe(0)
+
+    // Investment (RC12): Asset Allocation's two rings (a pie series in core Highcharts, the patterned slices), its picker opened and its
+    // Detail tab; Tax Allocation's ring, a part picked by its figure.
+    await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleInvestment, exact: true }).click()
+    await expect(page.getByRole('heading', { level: 1, name: copy.shellPageAssetAllocation })).toBeVisible({ timeout: 30_000 })
+    expect(new URL(page.url()).hash).toBe('#/investment/asset-allocation')
+    await expect(page.locator('[data-chart="mix-current"] .highcharts-series-group'), 'the current ring never drew').toBeAttached({ timeout: 60_000 })
+    await page.locator('[data-asset-side="current"] [role="combobox"]').click()
+    await expect(page.getByRole('option', { name: copy.assetScopeAll, exact: true }), 'the picker never opened').toBeVisible()
+    await page.keyboard.press('Escape')
+    await page.getByRole('tab', { name: copy.assetTabDetail, exact: true }).click()
+    await expect(page.locator('[data-asset-detail-row]').first(), 'Detail never showed').toBeVisible()
+    await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageTaxAllocation, exact: true }).click()
+    await expect(page.locator('[data-chart="tax-allocation"] .highcharts-series-group'), 'the tax ring never drew').toBeAttached({ timeout: 60_000 })
+    await page.locator('[data-taxalloc-part]').first().click()
+    await expect(page.locator('[data-taxalloc-account]').first(), 'a part’s accounts never listed').toBeVisible()
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Investment injected a <style> element').toBe(0)
 
     // Tax → Tax Strategies (RC8): its folder tabs (the page's own state), the empty state's goal radios and Find, and
     // Summary's waiting words before a solve; the solve's own workers are the pooled arm's above.

@@ -14,7 +14,8 @@ import { copy } from '../../src/ui/copy'
  *  - no text under 12 CSS px.
  * The phone's menu is captured open too, and since RC4b Probability's Action Items tray: open with one changed row, after
  * its Refresh (Apply's words on the working seed, a stop year pulled), and its Edit drawer; since RC11 Stress Test's tray,
- * open after a Refresh with the Social Security stress moved one step. Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
+ * open after a Refresh with the Social Security stress moved one step; since RC12 Investment's Asset Allocation (Summary,
+ * its picker switched, Detail) and Tax Allocation (a part's accounts listed), then both again with a what-if mix set. Screenshots land in the repo's gitignored `temp/rc-shots/<unit>/`, named
  * `<screen>-<seed>-<size>.png`, for Briggsy to review the output.
  *
  *     RC_UNIT=RC2 pnpm exec playwright test --config e2e/held/shots.config.ts rc-look
@@ -32,6 +33,8 @@ const ALL_SCREENS = [
   { id: 'facts', screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts },
   { id: 'social-security', screen: 'social-security', module: copy.shellModuleRetirement, page: copy.shellPageSocialSecurity },
   { id: 'stress-test', screen: 'stress-test', module: copy.shellModuleRetirement, page: copy.shellPageStressTest },
+  { id: 'asset-allocation', screen: 'asset-allocation', module: copy.shellModuleInvestment, page: copy.shellPageAssetAllocation },
+  { id: 'tax-allocation', screen: 'tax-allocation', module: copy.shellModuleInvestment, page: copy.shellPageTaxAllocation },
 ] as const
 /** `RC_ONLY=stress-test` captures only the named screens (comma-separated ids), and Probability's tray and odds
  *  captures only where Probability is among them. */
@@ -128,6 +131,7 @@ async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: b
   if (target.screen === 'social-security') await settleClaims(page, 'claims-annual')
   if (target.screen === 'health-care') await settleHealth(page)
   if (target.screen === 'stress-test') await settleStress(page)
+  if (target.screen === 'asset-allocation' || target.screen === 'tax-allocation') await settleRings(page)
   await settleLayout(page)
 }
 
@@ -135,6 +139,12 @@ async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: b
 async function settleStress(page: Page): Promise<void> {
   await expect(page.locator('[data-chart="stress"] .highcharts-series-group, [data-stress-page]').first()).toBeAttached({ timeout: 240_000 })
   await expect(page.locator('[data-stress] [aria-busy="true"]')).toHaveCount(0, { timeout: 360_000 })
+  await page.waitForTimeout(600)
+}
+
+/** Investment's rings drawn (the charts' lazy chunk), or the page's own words. */
+async function settleRings(page: Page): Promise<void> {
+  await expect(page.locator('[data-donut] .highcharts-series-group, [data-asset-page], [data-taxalloc-page]').first()).toBeAttached({ timeout: 60_000 })
   await page.waitForTimeout(600)
 }
 
@@ -241,6 +251,71 @@ for (const size of SIZES) {
             if (size.phone) {
               await page.keyboard.press('Escape')
               await expect(tray).toHaveCount(0)
+            }
+          }
+        }
+        // Investment (RC12): Asset Allocation's Detail tab, its picker switched to the first other accounts it offers, Tax
+        // Allocation with a part's accounts listed, then both again with a what-if mix (80 / 15 / 5) set on Analysis.
+        const asset = SCREENS.find((s) => s.id === 'asset-allocation')
+        const taxAlloc = SCREENS.find((s) => s.id === 'tax-allocation')
+        const investmentShots = async (tag: string) => {
+          if (asset !== undefined) {
+            await showScreen(page, asset, size.phone)
+            if ((await page.locator('[data-asset="summary"]').count()) > 0) {
+              await shot(page, findings, `asset-allocation${tag}`, seed, size.tag)
+              await page.screenshot({ path: `${OUT}/asset-allocation${tag}-${seed}-${size.tag}-full.png`, fullPage: true })
+              const picker = page.locator('[data-asset-side="current"] [role="combobox"]')
+              await picker.click()
+              const options = page.getByRole('option')
+              await expect(options.first()).toBeVisible()
+              if ((await options.count()) > 1) {
+                await options.nth(1).click()
+                await settleRings(page)
+                await shot(page, findings, `asset-allocation-picker${tag}`, seed, size.tag)
+                await picker.click()
+                await page.getByRole('option').first().click()
+              } else await page.keyboard.press('Escape')
+              await page.getByRole('tab', { name: copy.assetTabDetail, exact: true }).click()
+              await page.waitForTimeout(800)
+              await shot(page, findings, `asset-allocation-detail${tag}`, seed, size.tag)
+              await page.screenshot({ path: `${OUT}/asset-allocation-detail${tag}-${seed}-${size.tag}-full.png`, fullPage: true })
+              await page.getByRole('tab', { name: copy.assetTabSummary, exact: true }).click()
+            }
+          }
+          if (taxAlloc !== undefined) {
+            await showScreen(page, taxAlloc, size.phone)
+            const part = page.locator('[data-taxalloc-part]').last()
+            if ((await part.count()) > 0) {
+              await part.click()
+              await page.waitForTimeout(600)
+              await page.mouse.move(0, 0)
+              await shot(page, findings, `tax-allocation-picked${tag}`, seed, size.tag)
+              await page.screenshot({ path: `${OUT}/tax-allocation-picked${tag}-${seed}-${size.tag}-full.png`, fullPage: true })
+              await part.click()
+            }
+          }
+        }
+        if (asset !== undefined || taxAlloc !== undefined) {
+          await investmentShots('')
+          if (asset !== undefined) {
+            await showScreen(page, PROBABILITY, size.phone)
+            if ((await page.locator('[data-probability="pending"], [data-probability="fallback"], [data-probability="error"]').count()) === 0) {
+              await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+              const tray = page.locator('#b9-action-items')
+              await expect(tray).toBeVisible()
+              await page.waitForTimeout(400)
+              for (const [k, v] of [['stock', '80'], ['bond', '15'], ['cash', '5']] as const) {
+                const input = tray.locator(`[data-tray-row="mix:${k}"] input`)
+                await input.scrollIntoViewIfNeeded()
+                await input.fill(v)
+                await input.press('Tab')
+              }
+              await tray.locator('[data-tray-refresh]').click()
+              await expect(page.locator('[data-half="alternative"] [aria-busy="true"]')).toHaveCount(0, { timeout: 240_000 })
+              if (size.phone) await page.keyboard.press('Escape')
+              else await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+              await expect(tray).toHaveCount(0)
+              await investmentShots('-whatif')
             }
           }
         }

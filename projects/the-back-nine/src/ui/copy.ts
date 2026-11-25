@@ -3142,6 +3142,53 @@ export const copy = {
   stressEditTitle: 'Choose the stresses',
   stressEditSection: 'Stresses',
   stressEditNote: 'A stress turned off draws no bar. Combined runs every stress left on at once, and shows once two or more are on.',
+  // --- Investment → Asset Allocation and Tax Allocation (Act 6 · RC12; `investmentView.ts`): the mix each account holds,
+  // read as the run reads it, against the what-if open on Analysis; the savings by tax treatment. Percents are shares of
+  // the savings (never odds); the run grows cash as bonds, and the page says so wherever cash is drawn. ---
+  shellModuleInvestment: 'Investment',
+  shellPageAssetAllocation: 'Asset Allocation',
+  shellPageTaxAllocation: 'Tax Allocation',
+  assetIntro: 'How your savings are split between stocks, bonds and cash, beside the mix of the what-if open on Analysis.',
+  assetTabsLabel: 'Asset allocation views',
+  assetTabSummary: 'Summary',
+  assetTabDetail: 'Detail',
+  assetCurrentTitle: 'Current mix',
+  assetWhatIfTitle: 'What-if mix',
+  assetScopeLabel: 'Accounts shown',
+  assetScopeAll: 'All accounts',
+  assetCentreWords: 'Stocks / bonds and cash',
+  assetStocks: 'Stocks',
+  assetBonds: 'Bonds',
+  assetCash: 'Cash',
+  assetColCurrent: 'Current',
+  assetColPart: 'Held as',
+  assetColWhatIf: 'What-if',
+  assetColGrowsLike: 'Grows like',
+  assetTableTitle: 'Your mix, current and what-if',
+  assetNoWhatIf: 'No what-if mix',
+  assetNoWhatIfOpen: 'No what-if is open on Analysis.',
+  assetNoWhatIfMix: 'The what-if open on Analysis keeps your plan’s mix.',
+  assetTryMix: 'Try a mix',
+  assetOneSplitNote: 'B9 holds one split of stocks, bonds and cash for each account, so the mix has these three parts.',
+  assetCashLine:
+    'Your plan grows cash the way it grows bonds: the same return and the same ups and downs. Treating cash on its own comes with a later build.',
+  assetDonutDescription: 'A ring split into stocks, bonds and cash, each part’s share of the accounts shown. The table beside it prints each share.',
+  assetWhatIfDescription: 'A ring split into stocks, bonds and cash: the what-if’s mix. The table beside it prints each share.',
+  assetShiftTitle: 'How the what-if moves each part',
+  assetShiftDescription:
+    'One bar per part: how many percentage points more (to the right) or fewer (to the left) of your savings the what-if mix holds than the current mix. Each bar prints its figure.',
+  assetNoAccounts: 'No accounts are entered yet, so there is no mix to draw.',
+  assetZero: 'Your accounts hold $0, so there is no mix to draw.',
+  taxAllocIntro: 'Your savings by how they’re taxed. Pick a part, on the ring or by its figure, to list its accounts.',
+  taxAllocTitle: 'Your savings by tax treatment',
+  taxAllocCentre: 'Your savings',
+  taxAllocDescription: 'A ring split by how each account is taxed, each part’s share of your savings. Each part’s figure prints beside the ring.',
+  taxAllocHint: 'Pick a part to list its accounts.',
+  taxAllocPartsLabel: 'Your savings by tax treatment, each part’s total',
+  investBucketTaxable: 'Taxable',
+  investBucketPretax: 'Pre-tax',
+  investBucketRoth: 'Roth',
+  investBucketHsa: 'HSA',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -5026,7 +5073,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2246` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2257` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5792,6 +5839,21 @@ export const slots = {
   stressReadsAt: (caption: string): string => `Every bar reads your odds ${caption}, the stop year your plan’s answer uses.`,
   stressBarError: (name: string): string => `${name}: this stress couldn’t be worked out just now. Refresh tries it again.`,
   stressBarWithheld: (name: string): string => `${name}: this stress couldn’t run on the same futures as your plan, so it shows no count.`,
+  // --- Investment (Act 6 · RC12). A percent here is a share of the savings, printed by `investmentView.ts`'s one rounding
+  // rule; the dollar figures are entered balances (facts, so no "~"). ---
+  assetPct: (pct: number): string => `${pct}%`,
+  assetCentre: (stockPct: number, restPct: number): string => `${stockPct}% / ${restPct}%`,
+  assetSlicePoint: (part: string, pct: number): string => `${part}: ${pct}%`,
+  /** What-if less current, in whole points: "+12%", "−5%" (a true minus), "0%". */
+  assetShift: (points: number): string => (points > 0 ? `+${points}%` : points < 0 ? `−${-points}%` : '0%'),
+  assetShiftPoint: (part: string, shift: string): string => `${part}: ${shift}`,
+  assetScopeOwner: (possessive: string): string => `${possessive.charAt(0).toUpperCase()}${possessive.slice(1)} accounts`,
+  assetScopeBucket: (bucket: string): string => `${bucket} accounts`,
+  assetWhatIfFrom: (name: string): string => `The what-if open on Analysis: ${name}`,
+  assetUnresolved: (accounts: readonly string[], many: boolean): string =>
+    `Your plan needs a mix for every account before it can run, and ${accounts.join(', ')} ${many ? 'have' : 'has'} none yet, so there is no mix to draw.`,
+  taxAllocPoint: (bucket: string, figure: string): string => `${bucket}: ${figure}`,
+  taxAllocListTitle: (bucket: string, n: number): string => `${bucket}: ${n === 1 ? 'one account' : `${n} accounts`}`,
   confidenceShareFewer: (): string => 'fewer than 1 in 100 futures',
   confidenceShareMore: (): string => 'more than 99 in 100 futures',
   confidenceRunOutTitle: (): string => 'Futures that have run out of money by this age, out of every 100',

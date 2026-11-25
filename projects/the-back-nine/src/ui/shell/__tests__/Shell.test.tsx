@@ -475,6 +475,8 @@ describe('Shell — the phone menu (plan 3.1, "The phone shape")', () => {
     const links = within(sheet).getAllByRole('link').map((a) => a.textContent)
     expect(links).toEqual([
       copy.shellPageSnapshot,
+      copy.shellPageAssetAllocation,
+      copy.shellPageTaxAllocation,
       copy.shellPageAnalysis,
       copy.shellPageStressTest,
       copy.shellPageSocialSecurity,
@@ -544,6 +546,34 @@ describe('Shell — RC4: the home’s new pages and the gear', () => {
     expect(main.querySelectorAll('[data-caveat]')).toHaveLength(1)
     expect(screen.getByRole('heading', { level: 1, name: copy.shellPageHealthCare })).toBeInTheDocument()
     expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual([copy.healthTabCost])
+  })
+
+  it('Investment (RC12): Asset Allocation with its two folder tabs, the cash line and the in-frame caveat; Tax Allocation lists a picked part’s accounts', () => {
+    const { lanes } = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), lanes)
+    const modules = screen.getAllByRole('navigation', { name: copy.shellModulesLabel })[0]!
+    fireEvent.click(within(modules).getByRole('link', { name: copy.shellModuleInvestment }))
+    const main = document.querySelector('main.result')!
+    expect(main).toHaveAttribute('data-shell-screen', 'asset-allocation')
+    expect(main).toHaveAttribute('data-inframe-disclaimer')
+    expect(main.querySelectorAll('[data-caveat]')).toHaveLength(1)
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual([copy.assetTabSummary, copy.assetTabDetail])
+    expect(main.querySelectorAll('[data-asset-row]')).toHaveLength(3)
+    expect(screen.getByText(copy.assetCashLine)).toBeInTheDocument()
+    // No what-if open: the words and the door, never a second donut.
+    expect(screen.getByText(copy.assetNoWhatIfOpen)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: copy.assetTryMix })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('tab', { name: copy.assetTabDetail }))
+    expect(main.querySelectorAll('[data-asset-detail-row]')).toHaveLength(3)
+    expect(screen.getByText(copy.assetCashLine)).toBeInTheDocument()
+    fireEvent.click(within(screen.getByRole('navigation', { name: copy.shellPagesLabel })).getByRole('link', { name: copy.shellPageTaxAllocation }))
+    expect(main).toHaveAttribute('data-shell-screen', 'tax-allocation')
+    expect(main.querySelectorAll('[data-caveat]')).toHaveLength(1)
+    const part = main.querySelector<HTMLButtonElement>('[data-taxalloc-part="pretax"]')!
+    expect(part).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(part)
+    expect(part).toHaveAttribute('aria-pressed', 'true')
+    expect(main.querySelectorAll('[data-taxalloc-account]')).toHaveLength(1)
   })
 
   it('Tax → Tax Strategies (RC8): its own page with the in-frame caveat and no interim banner; four folder tabs on the retired route, the empty state with Find', () => {

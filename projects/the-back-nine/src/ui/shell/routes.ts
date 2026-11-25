@@ -19,7 +19,7 @@ export type ModuleId = (typeof MODULE_ORDER)[number]
  *  Confidence (Analysis's second folder tab, a route of its own like Probability) and RC6's Cash
  *  Flows (its Summary and Accounts folder tabs are the page's own state, not routes), RC8's Tax Strategies (its four
  *  folder tabs the page's own state too), RC9's Social Security (its Comparison and Summary tabs the same) and RC10's Health
- *  Care are rebuilt, and RC11's Stress Test is new (RightCapital's slot, between Analysis and Social Security); the workbench room's facts page rides as an interim tab in its old look until RC13 rebuilds it. */
+ *  Care are rebuilt, RC11's Stress Test is new (RightCapital's slot, between Analysis and Social Security), and RC12 adds Investment's Asset Allocation and Tax Allocation; the workbench room's facts page rides as an interim tab in its old look until RC13 rebuilds it. */
 export type ScreenId =
   | 'snapshot'
   | 'probability'
@@ -30,6 +30,8 @@ export type ScreenId =
   | 'tax-strategies'
   | 'health-care'
   | 'stress-test'
+  | 'asset-allocation'
+  | 'tax-allocation'
 
 export interface RouteRow {
   readonly module: ModuleId
@@ -52,6 +54,7 @@ export interface Route {
 /** The words for each module a row can name. A module with a row and no word here is a test failure. */
 export const MODULE_LABELS: Readonly<Partial<Record<ModuleId, string>>> = {
   dashboard: copy.shellModuleDashboard,
+  investment: copy.shellModuleInvestment,
   retirement: copy.shellModuleRetirement,
   tax: copy.shellModuleTax,
   profile: copy.shellModuleProfile,
@@ -60,6 +63,9 @@ export const MODULE_LABELS: Readonly<Partial<Record<ModuleId, string>>> = {
 /** Every screen that exists, each module's pages in RightCapital's order (ref 1.2). */
 export const ROUTE_ROWS: readonly RouteRow[] = [
   { module: 'dashboard', page: 'snapshot', pageLabel: copy.shellPageSnapshot, screen: 'snapshot', title: copy.shellPageSnapshot },
+  // RC12: Investment's two pages (its Summary and Detail folder tabs are Asset Allocation's own state, not routes).
+  { module: 'investment', page: 'asset-allocation', pageLabel: copy.shellPageAssetAllocation, screen: 'asset-allocation', title: copy.shellPageAssetAllocation },
+  { module: 'investment', page: 'tax-allocation', pageLabel: copy.shellPageTaxAllocation, screen: 'tax-allocation', title: copy.shellPageTaxAllocation },
   {
     module: 'retirement',
     page: 'analysis',

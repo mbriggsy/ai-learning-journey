@@ -811,6 +811,45 @@ test.describe(`RC4b · the Action Items tray on the phone (${PHONE.width}×${PHO
       await expect(sheet).toHaveCount(0)
     })
   }
+
+  // A tap at a control's centre reaches the control (b9-10, 2026-11-25): on `health` the compared column grew to its
+  // widest value, the control column shrank to 21 px, and the subsidy-rules select ran under the compared cell's box,
+  // which took every tap at its centre while the eye saw nothing wrong. The overlap audits pass that page (two text
+  // boxes, no two controls); only a hit test sees it.
+  for (const seed of ['health', 'retired', 'dip'] as const) {
+    test(`?seed=${seed}: every control in the sheet takes a tap at its centre; no other cell's box sits over it`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterProbability(page, seed)
+      await trayHandle(page).scrollIntoViewIfNeeded()
+      await trayHandle(page).click()
+      const sheet = page.getByRole('dialog', { name: copy.trayHandle })
+      await expect(sheet).toBeVisible()
+      await page.waitForTimeout(400)
+      const controls = sheet.locator('[data-tray-row] :is(button, input, [role="combobox"], [role="slider"])')
+      const n = await controls.count()
+      expect(n, '[test setup] the sheet has controls').toBeGreaterThan(3)
+      const covered: string[] = []
+      let probed = 0
+      for (let i = 0; i < n; i++) {
+        const c = controls.nth(i)
+        // A visually hidden form control (Base UI's select and slider inputs) takes no tap.
+        const hidden = await c.evaluate((el) => getComputedStyle(el).clipPath === 'inset(50%)' || el.closest('[aria-hidden="true"]') !== null || (el as HTMLInputElement).type === 'hidden')
+        if (hidden || !(await c.isVisible())) continue
+        await c.scrollIntoViewIfNeeded()
+        probed += 1
+        const hit = await c.evaluate((el) => {
+          const r = el.getBoundingClientRect()
+          const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+          if (top === null || el === top || el.contains(top)) return null
+          const row = el.closest('[data-tray-row]')?.getAttribute('data-tray-row')
+          return `${row}: ${el.tagName.toLowerCase()} "${(el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 30)}" under ${top.tagName.toLowerCase()} "${(top.textContent ?? '').trim().slice(0, 40)}"`
+        })
+        if (hit !== null) covered.push(hit)
+      }
+      expect(probed, '[test setup] the arm probed the sheet’s controls').toBeGreaterThan(3)
+      expect(covered, `${seed}: a control a tap at its centre never reaches`).toEqual([])
+    })
+  }
 })
 
 // ── RC4 ported from e2e/vertical-fit.spec.ts (plan 6, section 5.2: an honesty law is PORTED with its surface) ─────────

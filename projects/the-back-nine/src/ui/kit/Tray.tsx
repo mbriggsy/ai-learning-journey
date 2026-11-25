@@ -99,11 +99,14 @@ export interface TrayColumnProps {
 /** The compared side's name, for the rows under it: a screen reader reads each compared figure with the plan it is. */
 const ComparedName = createContext<string | null>(null)
 
-/** One column group: the two plans' names over a thin rule, then its sections. Rows line up on a shared grid. */
+/** One column group: the two plans' names over a thin rule, then its sections. Rows line up on a shared grid. Below
+ *  `wide` the compared column is capped (`fit-content(10rem)`: its widest value wraps there), so the control column
+ *  keeps the room a select needs (`min-w-40`): grown to one long value (a Roth plan's words, ~313 px on a 390 px phone)
+ *  it left the controls 21 px, and every control in the sheet ran under the compared cell's box, which took the tap. */
 export function TrayColumn({ editedLabel, comparedLabel, children }: TrayColumnProps) {
   return (
     <ComparedName.Provider value={comparedLabel}>
-      <div className="grid grid-cols-[minmax(0,1fr)_minmax(5rem,auto)] content-start gap-x-6 wide:grid-cols-[minmax(6rem,1fr)_auto_minmax(5rem,11rem)] wide:gap-x-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_fit-content(10rem)] content-start gap-x-6 wide:grid-cols-[minmax(6rem,1fr)_auto_minmax(5rem,11rem)] wide:gap-x-4">
         <div className="col-span-full grid grid-cols-subgrid border-b border-stone-300 pb-3 text-body text-stone-900">
           <span aria-hidden="true" className="hidden wide:block" />
           <span className="text-center">{editedLabel}</span>

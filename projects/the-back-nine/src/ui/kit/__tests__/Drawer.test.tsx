@@ -104,4 +104,24 @@ describe('Drawer', () => {
     expect(onDelete).toHaveBeenCalledTimes(1)
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
   })
+
+  it('onCancel runs on every close that is not Save or Delete: Cancel, the X and Escape, once each', async () => {
+    const user = userEvent.setup()
+    const onCancel = vi.fn()
+    renderDrawer({ onCancel, saveLabel: 'Save', onSave: () => {} })
+    for (const close of [
+      () => user.click(screen.getByRole('button', { name: 'Cancel' })),
+      () => user.click(screen.getByRole('button', { name: 'Close' })),
+      () => user.keyboard('{Escape}'),
+    ]) {
+      await open(user)
+      await close()
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    }
+    expect(onCancel).toHaveBeenCalledTimes(3)
+    await open(user)
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(onCancel, 'Save is not a cancel').toHaveBeenCalledTimes(3)
+  })
 })

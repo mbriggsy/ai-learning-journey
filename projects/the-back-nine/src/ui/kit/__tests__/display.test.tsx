@@ -9,6 +9,7 @@ import { FolderTabs } from '../FolderTabs'
 import { Ring, RING_CIRCUMFERENCE } from '../Ring'
 import { EmptyState, LoadingVeil } from '../States'
 import { SubNav } from '../SubNav'
+import { TrayColumn, TrayRow } from '../Tray'
 import { IN_FRAME_DISCLAIMER_ID } from '../../disclaimerId'
 
 /**
@@ -195,5 +196,20 @@ describe('the page states', () => {
     expect(caveat).not.toBeNull()
     expect(caveat!.textContent).toBe('Not advice. Validate it.')
     expect(caveat!.querySelectorAll('br')).toHaveLength(1)
+  })
+})
+
+describe('TrayColumn and TrayRow: a compared figure is read with the plan it is', () => {
+  it('each row’s compared figure carries the column’s compared name for a screen reader (hidden from the eye); an empty one carries nothing', () => {
+    render(
+      <TrayColumn editedLabel="This what-if" comparedLabel="Your plan">
+        <TrayRow rowId="spend" label="Total spending" control={<input aria-label="Total spending" />} compared="$70,000" />
+        <TrayRow rowId="roth" label="Roth" control={<input aria-label="Roth" />} compared="" />
+      </TrayColumn>,
+    )
+    const cell = (id: string) => document.querySelector(`[data-tray-row="${id}"]`)!.lastElementChild as HTMLElement
+    expect(cell('spend').textContent).toBe('Your plan $70,000')
+    expect(cell('spend').querySelector('.sr-only')?.textContent?.trim()).toBe('Your plan')
+    expect(cell('roth').textContent).toBe('')
   })
 })

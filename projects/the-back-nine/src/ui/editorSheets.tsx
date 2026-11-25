@@ -60,6 +60,10 @@ export interface EditorSheets {
   readonly openHealth: () => void
   /** Open the AssumptionPanel, landing at `seat` when given (`AssumptionLandingSeat`). */
   readonly openAssumptions: (seat?: AssumptionLandingSeat) => void
+  /** Close every sheet (the shell, on a page change: a sheet never stays open over another page). `dropStaged`: the
+   *  budget's staged rows go too, as a leave's ask says ("an entry not yet added is dropped"); a plain close keeps them
+   *  for the next open. */
+  readonly closeAll: (dropStaged?: boolean) => void
   /** A sheet or the panel owns focus and the accessibility tree (the heroes hold their landing focus). */
   readonly sheetOpen: boolean
   /** "Which PRICED state will the next run price?" — off the LIVE draft, route-aware (the sheets and the
@@ -83,6 +87,8 @@ export function useEditorSheets({
   const [budgetOpen, setBudgetOpen] = useState(false)
   const [healthOpen, setHealthOpen] = useState(false)
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
+  // The budget builder keeps its staged rows across a close; a new key mounts it afresh from the draft (`closeAll`).
+  const [budgetMount, setBudgetMount] = useState(0)
   // Where the assumptions panel lands when it opens. Dropped the moment the panel closes, on EVERY close and
   // route-away path at once (a render-phase reset), so the ordinary door never re-lands on a seat.
   const [assumptionsSeat, setAssumptionsSeat] = useState<AssumptionLandingSeat | undefined>(undefined)
@@ -129,9 +135,17 @@ export function useEditorSheets({
     setAssumptionsOpen(true)
   }, [])
 
+  const closeAll = useCallback((dropStaged = false) => {
+    setBudgetOpen(false)
+    setHealthOpen(false)
+    setAssumptionsOpen(false)
+    if (dropStaged) setBudgetMount((n) => n + 1)
+  }, [])
+
   const node = (
     <>
       <BudgetBuilder
+        key={budgetMount}
         open={budgetOpen}
         draft={draft}
         onApply={(items) => {
@@ -220,6 +234,7 @@ export function useEditorSheets({
     openBudget: useCallback(() => setBudgetOpen(true), []),
     openHealth: useCallback(() => setHealthOpen(true), []),
     openAssumptions,
+    closeAll,
     sheetOpen,
     statePricedNote,
     node,

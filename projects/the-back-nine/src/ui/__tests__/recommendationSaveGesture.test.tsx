@@ -152,6 +152,7 @@ import { DEV_SEEDS } from '../devSeeds'
 import { draftFromScenario } from '../draftFromScenario'
 import { exposureForDraft } from '../stalenessExposure'
 import { isDateRoute } from '@intake/intakeMap'
+import { holdUnsavedBuffer } from '@intake/unsavedBuffer'
 import { currentEpochDay, scenarioFromDraft } from '../scenarioFromDraft'
 import { mintSavedRecommendation } from '@store/savedRecommendationMint'
 import { READING_FIXTURES } from '../preview/fixtures'
@@ -644,6 +645,28 @@ describe('the save gesture — R1: with no vault the tap MINTS and opens the cer
     })
     expect(draftRecord(), 'the PRIOR record is back — R2 forbids carrying an unnamed mint to disk').toBe(prior)
     expect(saveCta(), 'and the offer stands again').not.toBeNull()
+  })
+
+  it('a Back press over the tap’s ask (an open entry held) leaves it unanswered: the minted record comes back off, as Stay does', async () => {
+    // MUTANT: drop `dropSaveAsk` from the popstate handler: the ask is replaced by the Back's own, the record stays on
+    // the draft, and the next plan save carries a memory the household never finished keeping (R2) — this reds.
+    await mountFresh()
+    const release = holdUnsavedBuffer()
+    try {
+      await tapSave()
+      expect(screen.getByText(copy.shellCeremonyOpenEntry), 'the tap asks first over the open entry').toBeInTheDocument()
+      expect(draftRecord(), 'the tap minted its record').not.toBeUndefined()
+      await act(async () => {
+        const popped = new Promise((r) => window.addEventListener('popstate', r, { once: true }))
+        window.history.back()
+        await popped
+      })
+      expect(screen.queryByText(copy.shellCeremonyOpenEntry), 'the tap’s ask is gone').toBeNull()
+      expect(draftRecord(), 'the unanswered keep put nothing on the draft').toBeUndefined()
+      expect(screen.queryByTestId('ceremony')).toBeNull()
+    } finally {
+      release()
+    }
   })
 })
 

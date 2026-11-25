@@ -225,6 +225,26 @@ describe('the plan list drawer', () => {
     const edit = (write.mock.calls[0] as unknown as [KeptEdit])[0]
     expect(edit(KEPT, new Set())!.map((k) => k.id), 'the moved order').toEqual(['kept-b', 'kept-a'])
   })
+
+  it('a drag down follows the pointer past the handle (a moved row loses its capture) and writes the order shown, once, on release', async () => {
+    const write = vi.fn(async (): Promise<KeptWriteOutcome> => ({ kind: 'saved' }))
+    mount({ onWriteKept: write })
+    const drawer = await openList()
+    const handle = within(drawer).getByRole('button', { name: slots.planListMove('Spend less') })
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 7, clientY: 100 })
+    // The moves and the release reach the window, never the handle (a row re-inserted below has lost its capture).
+    fireEvent.pointerMove(window, { pointerId: 7, clientY: 160 })
+    expect([...drawer.querySelectorAll('[data-kept-row]')].map((r) => r.getAttribute('data-kept-row')), 'the row moves as the pointer passes').toEqual(['kept-b', 'kept-a'])
+    expect(write, 'nothing written mid-drag').not.toHaveBeenCalled()
+    fireEvent.pointerUp(document.body, { pointerId: 7, clientY: 160 })
+    await waitFor(() => expect(write).toHaveBeenCalledTimes(1))
+    const edit = (write.mock.calls[0] as unknown as [KeptEdit])[0]
+    expect(edit(KEPT, new Set())!.map((k) => k.id)).toEqual(['kept-b', 'kept-a'])
+    // Done: a later move writes nothing more.
+    fireEvent.pointerMove(window, { pointerId: 7, clientY: 100 })
+    fireEvent.pointerUp(window, { pointerId: 7 })
+    expect(write).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('Keep, a changed kept what-if, and the ask before another drops it', () => {
@@ -282,6 +302,83 @@ describe('Keep, a changed kept what-if, and the ask before another drops it', ()
     expect(kept[0]!.levers).toEqual([{ kind: 'spending', op: 'total', annualSpendingReal: 30_000 }])
     await waitFor(() => expect(leftTitle()).toBe('Lean years'))
     expect(held).toHaveBeenLastCalledWith(false)
+  })
+
+  it('a Keep box left open over a changed kept what-if never keeps another one over it: opening another drops the box, and the next Keep is a new one', async () => {
+    const user = userEvent.setup()
+    const write = vi.fn(async (edit: KeptEdit): Promise<KeptWriteOutcome> => {
+      const next = edit(appModel.getSnapshot().draft.keptWhatIfs ?? [], new Set((appModel.getSnapshot().draft.keptWhatIfs ?? []).map((k) => k.id)))
+      act(() => appModel.update((d) => ({ ...d, keptWhatIfs: next! })))
+      return { kind: 'saved' }
+    })
+    const { left } = mount({ onWriteKept: write })
+    const typeSpend = (text: string) => {
+      const tray = document.getElementById('b9-action-items') as HTMLElement
+      const field = within(tray)
+        .getAllByLabelText(copy.workbenchRailSpendTotalLabel)
+        .find((el) => el instanceof HTMLInputElement && el.type === 'text')!
+      act(() => field.focus())
+      fireEvent.change(field, { target: { value: text } })
+      act(() => field.blur())
+      fireEvent.click(within(tray).getByRole('button', { name: copy.trayRefresh }))
+    }
+    // "Spend less" reopened, changed and refreshed; Keep opens its box (offering to replace it), and Done leaves the box.
+    await pick(user, copy.probabilityPickerLabel, 'Spend less')
+    await left.settle()
+    fireEvent.click(screen.getByRole('button', { name: copy.trayHandle }))
+    typeSpend('40,000')
+    await left.settle()
+    let drawer = await openList()
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.planListKeep }))
+    expect(within(drawer).getByLabelText(copy.planListNameLabel)).toHaveValue('Spend less')
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.planListDone }))
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: copy.planListTitle })).toBeNull())
+    // A new what-if on the left (the changed one asks first), edited and refreshed.
+    await pick(user, copy.probabilityPickerLabel, copy.probabilityPickNew)
+    fireEvent.click(screen.getByRole('button', { name: copy.probabilityOpenGo }))
+    typeSpend('30,000')
+    await left.settle()
+    drawer = await openList()
+    expect(within(drawer).queryByLabelText(copy.planListNameLabel), 'the old box went with the what-if it named').toBeNull()
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.planListKeep }))
+    fireEvent.change(within(drawer).getByLabelText(copy.planListNameLabel), { target: { value: 'Lean years' } })
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.planListNameConfirm }))
+    await waitFor(() => expect(write).toHaveBeenCalledTimes(1))
+    const kept = appModel.getSnapshot().draft.keptWhatIfs ?? []
+    expect(kept[0], '"Spend less" is untouched').toEqual(KEPT[0])
+    expect(kept.map((k) => k.name)).toEqual(['Spend less', 'Spend a lot less', 'Lean years'])
+    expect(kept[2]!.levers).toEqual([{ kind: 'spending', op: 'total', annualSpendingReal: 30_000 }])
+  })
+
+  it('a successful Keep never flashes "name taken" while its write lands (the list holds the new name at once)', async () => {
+    let land: () => void = () => {}
+    const write = vi.fn(async (edit: KeptEdit): Promise<KeptWriteOutcome> => {
+      const next = edit(appModel.getSnapshot().draft.keptWhatIfs ?? [], new Set())
+      act(() => appModel.update((d) => ({ ...d, keptWhatIfs: next! })))
+      await new Promise<void>((r) => (land = r))
+      return { kind: 'saved' }
+    })
+    const { left } = mount({ kept: [], onWriteKept: write })
+    fireEvent.click(screen.getByRole('button', { name: copy.trayHandle }))
+    const tray = document.getElementById('b9-action-items') as HTMLElement
+    const field = within(tray)
+      .getAllByLabelText(copy.workbenchRailSpendTotalLabel)
+      .find((el) => el instanceof HTMLInputElement && el.type === 'text')!
+    act(() => field.focus())
+    fireEvent.change(field, { target: { value: '30,000' } })
+    act(() => field.blur())
+    fireEvent.click(within(tray).getByRole('button', { name: copy.trayRefresh }))
+    await left.settle()
+    const drawer = await openList()
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.planListKeep }))
+    fireEvent.change(within(drawer).getByLabelText(copy.planListNameLabel), { target: { value: 'Lean years' } })
+    fireEvent.click(within(drawer).getByRole('button', { name: copy.planListNameConfirm }))
+    await waitFor(() => expect(write).toHaveBeenCalledTimes(1))
+    expect(appModel.getSnapshot().draft.keptWhatIfs?.map((k) => k.name), 'the write is in flight, the name already listed').toEqual(['Lean years'])
+    expect(within(drawer).queryByRole('alert'), 'no refusal on the success path').toBeNull()
+    await act(async () => land())
+    await waitFor(() => expect(within(drawer).getByText(slots.planListKept('Lean years'))).toBeInTheDocument())
+    expect(within(drawer).queryByRole('alert')).toBeNull()
   })
 
   it('an empty name and a taken name are refused in words under the box; nothing is written', async () => {

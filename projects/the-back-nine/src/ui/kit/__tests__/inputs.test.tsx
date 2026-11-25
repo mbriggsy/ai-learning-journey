@@ -121,6 +121,28 @@ describe('MoneyInput', () => {
     expect(onCommit).toHaveBeenCalledWith(undefined)
   })
 
+  it('a tab through the box with no typing commits nothing: the rounded figure it shows never replaces the exact one', async () => {
+    const onCommit = vi.fn()
+    const user = userEvent.setup()
+    // A monthly 7,083.33 typed in the walk is stored as 84,999.96 a year; the box shows it to the dollar.
+    render(<MoneyHost onCommit={onCommit} start={84_999.96} />)
+    const box = screen.getByLabelText('Yearly pay')
+    expect(box).toHaveValue('85,000')
+    await user.click(box)
+    await user.tab()
+    await user.click(box)
+    await user.keyboard('{Enter}')
+    await user.click(screen.getByRole('button', { name: 'elsewhere' }))
+    expect(onCommit).not.toHaveBeenCalled()
+    expect(box).toHaveValue('85,000')
+    // Typing the shown figure again after a real change does commit it.
+    await user.clear(box)
+    await user.type(box, '90,000{Enter}')
+    await user.clear(box)
+    await user.type(box, '85,000{Enter}')
+    expect(onCommit.mock.calls).toEqual([[90_000], [85_000]])
+  })
+
   it('read-only takes no commit', async () => {
     const onCommit = vi.fn()
     const user = userEvent.setup()
@@ -157,6 +179,17 @@ describe('PercentInput', () => {
     await user.tab()
     expect(onCommit).toHaveBeenCalledWith(0.025)
     expect(box).toHaveValue('2.5')
+  })
+
+  it('a tab through the box with no typing commits nothing (the shown percent is rounded to two places)', async () => {
+    const onCommit = vi.fn()
+    const user = userEvent.setup()
+    render(<PercentInput label="Yearly raise" value={0.123456} onCommit={onCommit} invalidMessage="Type a percent." />)
+    const box = screen.getByLabelText('Yearly raise')
+    expect(box).toHaveValue('12.35')
+    await user.click(box)
+    await user.tab()
+    expect(onCommit).not.toHaveBeenCalled()
   })
 })
 

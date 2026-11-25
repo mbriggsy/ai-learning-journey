@@ -42,7 +42,7 @@ import { appModel } from '../appModel'
 import { scenarioFromDraft } from '../scenarioFromDraft'
 import { DEV_SEEDS } from '../devSeeds'
 import { copy } from '../copy'
-import { holdUnsavedBuffer } from '@intake/unsavedBuffer'
+import { holdUnsavedBuffer, unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import type { MemoryModelSnapshot, ModelAnswer } from '@store/memoryModel'
 
 const ready = scenarioFromDraft(DEV_SEEDS.retired)
@@ -223,6 +223,26 @@ describe('the shell’s history', () => {
     expect(saveState()).toBe('clean')
   })
 
+  it('a save ask’s Go after the plan stopped being saveable opens no ceremony and leaves Back working between pages', async () => {
+    render(<IntakeApp seed="retired" />)
+    await snapshotHeading()
+    goToFacts()
+    const release = holdUnsavedBuffer()
+    try {
+      await lockChoose(copy.saveCta)
+      expect(screen.getByText(copy.shellCeremonyOpenEntry)).toBeInTheDocument()
+      // A required fact cleared beneath the ask: the plan can no longer be saved.
+      act(() => appModel.update((d) => ({ ...d, annualSpendingReal: undefined })))
+      fireEvent.click(screen.getByRole('button', { name: copy.shellCeremonyGo }))
+      await act(async () => {})
+      expect(screen.queryByText('save stub')).toBeNull()
+    } finally {
+      release()
+    }
+    await pressBack()
+    expect(screenShown(), 'the Back moved the page (never absorbed as if a ceremony were open)').toBe('snapshot')
+  })
+
   it('a read-only tab gets the shell, with no control that writes', async () => {
     await landHydrated(true)
     expect(saveState()).toBe('view-only')
@@ -234,6 +254,21 @@ describe('the shell’s history', () => {
     goToFacts()
     expect(screen.getByRole('heading', { name: copy.workbenchFactsSocialSecurity })).toBeInTheDocument()
     expect(screen.queryAllByRole('button', { name: new RegExp(`^${copy.workbenchFactsEdit}`) })).toEqual([])
+    // No sheet mounts on a read-only tab, so no door that would open one: no gear, no health-cost door.
+    expect(screen.queryByRole('button', { name: copy.shellGearLabel })).toBeNull()
+    // A household with a marketplace quote and someone under 65 (the page's door would show on a writable tab).
+    act(() =>
+      appModel.update((d) => ({
+        ...d,
+        people: [{ ...d.people[0], currentAge: 62 }, d.people[1]],
+        health: { ...d.health, enrolledPremiumMonthlyToday: 900, slcspMonthlyToday: 1_000 },
+      })),
+    )
+    goToAnalysis()
+    fireEvent.click(screen.getByRole('link', { name: copy.shellPageHealthCare }))
+    expect(screenShown()).toBe('interim-health')
+    expect(screen.getByText(copy.healthInterimReadOnly)).toBeInTheDocument()
+    expect(document.querySelector('[data-door="health"]')).toBeNull()
     // The Action Items tray's read-only face (no Apply, Refresh still runs) is `ActionItemsTray.test.tsx`'s: this
     // planted answer is a compute error, which offers no tray at all.
   })
@@ -297,6 +332,43 @@ describe('the facts page through the real phase machine (U8)', () => {
     await backAndSettle(() => fireEvent.click(within(again).getByRole('button', { name: copy.workbenchLeaveGo })))
     expect(screenShown()).toBe('snapshot')
     expect(appModel.getSnapshot().draft.people[0].name).toBe('Jordan')
+    // "Going back closes it": no sheet stays open over the new page, and focus lands on its heading.
+    await waitFor(() => expect(screen.queryByRole('dialog'), 'the sheet closed with the leave').toBeNull())
+    expect(screen.getByRole('heading', { level: 1, name: copy.shellPageSnapshot })).toHaveFocus()
+    expect(unsavedBuffersHeld(), 'nothing held once the leave went').toBe(0)
+  })
+
+  it('a plain Back with a sheet open and nothing typed moves the page and closes the sheet; Forward lands focus on the page’s heading', async () => {
+    await landHydrated()
+    goToFacts()
+    fireEvent.click(screen.getByRole('button', { name: copy.shellGearLabel }))
+    await screen.findByRole('dialog')
+    await pressBack()
+    expect(screen.queryByText(copy.workbenchLeaveAsk), 'nothing typed: no ask').toBeNull()
+    expect(screenShown()).toBe('snapshot')
+    await waitFor(() => expect(screen.queryByRole('dialog'), 'the panel closed with the page').toBeNull())
+    await pressForward()
+    expect(screenShown()).toBe('interim-facts')
+    expect(screen.getByRole('heading', { level: 2, name: copy.workbenchPageFacts })).toHaveFocus()
+  })
+
+  it('Go back over a budget closed with rows not yet applied drops those rows, as the ask says', async () => {
+    await landHydrated()
+    act(() =>
+      appModel.update((d) => ({ ...d, budget: [{ id: 'line-food', category: 'food', label: 'Groceries', annualAmountReal: 9_600, tier: 'essentials', startYear: 0 }] })),
+    )
+    goToFacts()
+    fireEvent.click(document.querySelector('[data-fact-open="budget"]')!)
+    const sheet = await screen.findByRole('dialog')
+    fireEvent.click(within(sheet).getByRole('button', { name: copy.budgetAddLine }))
+    fireEvent.click(within(sheet).getByRole('button', { name: copy.budgetCancel }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(unsavedBuffersHeld(), 'the staged row holds').toBe(1)
+    await pressBack()
+    expect(screen.getByText(copy.workbenchLeaveAsk)).toBeInTheDocument()
+    await backAndSettle(() => fireEvent.click(screen.getByRole('button', { name: copy.workbenchLeaveGo })))
+    expect(screenShown()).toBe('snapshot')
+    expect(unsavedBuffersHeld(), 'the row not yet added was dropped').toBe(0)
   })
 })
 

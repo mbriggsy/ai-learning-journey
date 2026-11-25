@@ -14,7 +14,7 @@
  * changed value: blue-ink words on the pale blue box, medium weight and a 2 px left bar, so colour is never the only
  * cue (ref 2.8; Briggsy is colour-blind).
  */
-import { useId, useState, type KeyboardEvent } from 'react'
+import { useId, useRef, useState, type KeyboardEvent } from 'react'
 import { CircleAlert } from 'lucide-react'
 import { formatMoney, formatPercent, parseMoney, parsePercent } from '@intake/moneyFormat'
 import { cn } from './cn'
@@ -73,9 +73,20 @@ function NumberInput({
   const [draft, setDraft] = useState<string | null>(null)
   const [invalid, setInvalid] = useState(false)
   const shown = draft ?? affix.format(value)
+  // The committed figure as the box showed it when focus arrived (null when focus found typed text). The shown figure
+  // is rounded (whole dollars, two decimals of a percent), so text still equal to it commits nothing: a tab through the
+  // box never writes the rounded figure over the exact one.
+  const seed = useRef<string | null>(null)
 
   const commit = () => {
     if (draft === null || readOnly) return
+    if (draft === seed.current) {
+      setDraft(null)
+      setInvalid(false)
+      return
+    }
+    // A commit makes the shown figure the new one: text typed after it is compared with nothing.
+    seed.current = null
     if (draft.trim() === '') {
       setDraft(null)
       setInvalid(false)
@@ -125,7 +136,10 @@ function NumberInput({
           value={shown}
           aria-invalid={invalid || undefined}
           aria-describedby={describedBy === '' ? undefined : describedBy}
-          onFocus={() => setDraft(shown)}
+          onFocus={() => {
+            seed.current = draft === null ? shown : null
+            setDraft(shown)
+          }}
           onChange={(e) => {
             setDraft(e.target.value)
             setInvalid(false)

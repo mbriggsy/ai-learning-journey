@@ -40,6 +40,7 @@ export interface DrawerProps {
   readonly previous?: DrawerStep
   readonly next?: DrawerStep
   readonly cancelLabel: string
+  /** Called on every close that is not Save or Delete: Cancel, the X, Escape and the scrim. */
   readonly onCancel?: () => void
   readonly saveLabel?: string
   /** Absent in a read-only drawer. Return `false` to keep the drawer open. */
@@ -80,7 +81,14 @@ export function Drawer({
   }
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={(next) => setOpen(next)}>
+    // Base UI reports its own closes here (Cancel, the X, Escape, the scrim); Save and Delete close through `setOpen`.
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(next) => {
+        if (!next) onCancel?.()
+        setOpen(next)
+      }}
+    >
       {trigger !== undefined ? <Dialog.Trigger render={trigger} /> : null}
       <Dialog.Portal className="rc-root">
         <Dialog.Backdrop
@@ -130,7 +138,7 @@ export function Drawer({
               </Button>
             ) : null}
             <div className="ml-auto flex items-center gap-3">
-              <Dialog.Close className={buttonClasses('neutral')} onClick={() => onCancel?.()}>
+              <Dialog.Close className={buttonClasses('neutral')}>
                 {cancelLabel}
               </Dialog.Close>
               {onSave !== undefined && saveLabel !== undefined ? (

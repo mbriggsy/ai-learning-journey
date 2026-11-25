@@ -14,7 +14,7 @@
  * (300 ms on the drawer curve); the sheet slides up; both are instant (the tray) or a fade (the sheet) under reduced
  * motion.
  */
-import type { ReactNode } from 'react'
+import { createContext, useContext, type ReactNode } from 'react'
 import { Collapsible } from '@base-ui/react/collapsible'
 import { Dialog } from '@base-ui/react/dialog'
 import { Plus, RotateCcw, X } from 'lucide-react'
@@ -96,17 +96,22 @@ export interface TrayColumnProps {
   readonly children: ReactNode
 }
 
+/** The compared side's name, for the rows under it: a screen reader reads each compared figure with the plan it is. */
+const ComparedName = createContext<string | null>(null)
+
 /** One column group: the two plans' names over a thin rule, then its sections. Rows line up on a shared grid. */
 export function TrayColumn({ editedLabel, comparedLabel, children }: TrayColumnProps) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_minmax(5rem,auto)] content-start gap-x-6 wide:grid-cols-[minmax(6rem,1fr)_auto_minmax(5rem,11rem)] wide:gap-x-4">
-      <div className="col-span-full grid grid-cols-subgrid border-b border-stone-300 pb-3 text-body text-stone-900">
-        <span aria-hidden="true" className="hidden wide:block" />
-        <span className="text-center">{editedLabel}</span>
-        <span className="text-right">{comparedLabel}</span>
+    <ComparedName.Provider value={comparedLabel}>
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(5rem,auto)] content-start gap-x-6 wide:grid-cols-[minmax(6rem,1fr)_auto_minmax(5rem,11rem)] wide:gap-x-4">
+        <div className="col-span-full grid grid-cols-subgrid border-b border-stone-300 pb-3 text-body text-stone-900">
+          <span aria-hidden="true" className="hidden wide:block" />
+          <span className="text-center">{editedLabel}</span>
+          <span className="text-right">{comparedLabel}</span>
+        </div>
+        {children}
       </div>
-      {children}
-    </div>
+    </ComparedName.Provider>
   )
 }
 
@@ -142,6 +147,17 @@ export interface TrayRowProps {
 }
 
 export function TrayRow({ label, control, compared, added, indent = false, rowId, group, notes, back }: TrayRowProps) {
+  // The column's head names the compared plan for the eye; a screen reader, reading row by row, hears it before the figure.
+  const comparedName = useContext(ComparedName)
+  const value =
+    comparedName !== null && compared !== '' && compared !== null && compared !== undefined ? (
+      <>
+        <span className="sr-only">{comparedName} </span>
+        {compared}
+      </>
+    ) : (
+      compared
+    )
   return (
     <div className="col-span-full grid min-h-11 grid-cols-subgrid items-center gap-y-1 py-1.5" data-tray-row={rowId} data-tray-group={group}>
       <span className={cn('col-span-full flex min-w-0 items-center gap-2 text-body text-stone-900 wide:col-span-1', indent ? 'pl-4 wide:pl-8' : 'pl-0 wide:pl-4')}>
@@ -156,10 +172,10 @@ export function TrayRow({ label, control, compared, added, indent = false, rowId
       </span>
       <div className="flex min-w-0 flex-wrap items-center gap-3">{control}</div>
       {back === undefined ? (
-        <span className="text-right text-body text-stone-900 tabular-nums">{compared}</span>
+        <span className="text-right text-body text-stone-900 tabular-nums">{value}</span>
       ) : (
         <span className="flex flex-col items-end text-right text-body text-stone-900 tabular-nums">
-          {compared}
+          {value}
           {back}
         </span>
       )}

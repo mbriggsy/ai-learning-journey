@@ -144,6 +144,9 @@ export default function IntakeApp({
     readonly go: 'back' | 'home' | 'review' | 'save' | 'backup'
     readonly goLabel?: string
   } | null>(null)
+  // The ask as last rendered, for the leaves that replace or clear it (`dropSaveAsk`).
+  const leaveAskRef = useRef(leaveAsk)
+  leaveAskRef.current = leaveAsk
   // Act 6 · RC5 — a kept what-if Keep sent through the save ceremony (no vault yet): the shell reopens it on the left
   // when it mounts again, so the what-if the household kept is the one on screen after the ceremony.
   const [resumeKept, setResumeKept] = useState<string | undefined>(undefined)
@@ -360,15 +363,6 @@ export default function IntakeApp({
     leavingRef.current = 'home'
     window.history.go(-back)
   }, [navigate])
-  /** The wordmark: home to Snapshot, asking first over an open drawer's edit (the what-if survives a page move). */
-  const goHome = useCallback(() => {
-    const lines = leaveLines(false)
-    if (lines.length > 0) {
-      setLeaveAsk({ lines, go: 'home' })
-      return
-    }
-    leaveHome()
-  }, [leaveLines, leaveHome])
   /** Out to the walk-through (the assumption panel's guided re-walk): the shell unmounts, so its open entries and
    *  the what-if go with it. The address drops its page; the walk's terminal advance lands on the home again. */
   const leaveForReview = useCallback(() => {
@@ -390,6 +384,22 @@ export default function IntakeApp({
       return withoutRecord
     })
   }, [])
+  /** A Back, a Forward, the wordmark or the re-walk over the recommendation's keep ask (`go: 'save'`) leaves it
+   *  unanswered, as its Stay does: the record the keep minted comes back off the draft (nothing saved it, and no later
+   *  save may carry it unnamed, R2). A no-op over the lock menu's own save ask, which minted nothing. */
+  const dropSaveAsk = useCallback(() => {
+    if (leaveAskRef.current?.go === 'save') restoreRecMint()
+  }, [restoreRecMint])
+  /** The wordmark: home to Snapshot, asking first over an open drawer's edit (the what-if survives a page move). */
+  const goHome = useCallback(() => {
+    dropSaveAsk()
+    const lines = leaveLines(false)
+    if (lines.length > 0) {
+      setLeaveAsk({ lines, go: 'home' })
+      return
+    }
+    leaveHome()
+  }, [leaveLines, leaveHome, dropSaveAsk])
   /** The lock menu's save and backup steps unmount the shell (RC5, found at RC4b's close: they dropped an unkept
    *  what-if silently): over an open entry or an unkept what-if they ask first, in the ceremony's own words. */
   const toCeremony = useCallback((go: 'save' | 'backup') => {
@@ -405,13 +415,22 @@ export default function IntakeApp({
   }, [])
   /** The re-walk asks first over anything the shell's unmount would drop (insight 112: every way out holds). */
   const reviewFromShell = useCallback(() => {
+    dropSaveAsk()
     const lines = leaveLines(true)
     if (lines.length > 0) {
       setLeaveAsk({ lines, go: 'review' })
       return
     }
     leaveForReview()
-  }, [leaveLines, leaveForReview])
+  }, [leaveLines, leaveForReview, dropSaveAsk])
+  // The ceremony opens only on a plan that can be saved. A save ask's Go after a required fact was cleared beneath it
+  // finds none: the phase goes back to the shell's, as the ceremony's cancel does (its minted record off), so a Back
+  // press moves between pages again instead of being absorbed as if a ceremony were open.
+  useEffect(() => {
+    if (phase !== 'save' || saveReady.ready) return
+    restoreRecMint()
+    setPhase('workspace')
+  }, [phase, saveReady.ready, restoreRecMint])
   // A page address left from an earlier load (a reload in the shell) names a page nothing has landed on yet: plain.
   useEffect(() => {
     if (parseHash(window.location.hash) !== null) window.history.replaceState(null, '', plainUrl())
@@ -440,8 +459,10 @@ export default function IntakeApp({
         const to = addressed ?? LANDING
         const n = entry?.n ?? depthRef.current + 1
         if (entry === null) window.history.replaceState({ b9: 'workspace', n } satisfies WorkspaceEntry, '')
-        // A move between pages drops nothing but an open drawer's edit: with one open, ask first.
+        // A move between pages drops nothing but an open drawer's edit: with one open, ask first. Either way an ask
+        // left unanswered goes, as its Stay would (`dropSaveAsk`).
         if (leavingRef.current === null && !routeEquals(to, routeRef.current)) {
+          dropSaveAsk()
           const lines = leaveLines(false)
           if (lines.length > 0) {
             restoreShownEntry()
@@ -465,7 +486,7 @@ export default function IntakeApp({
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
-  }, [leaveLines])
+  }, [leaveLines, dropSaveAsk])
   /**
    * U17 §S5 — THE REMEMBERED RECOMMENDATION'S TRICHOTOMY, DERIVED ONCE PER FRAME.
    *

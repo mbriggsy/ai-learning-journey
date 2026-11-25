@@ -151,15 +151,24 @@ export const renameEdit = (id: string, name: string): KeptEdit => (list) =>
 
 export const deleteEdit = (id: string): KeptEdit => (list) => (list.some((k) => k.id === id) ? list.filter((k) => k.id !== id) : null)
 
-/** A copy right after its original, named "Copy of …" (numbered past the first copy so no two names match). */
+/** A copy's name: "Copy of …" (numbered past the first copy), the ORIGINAL's name cut so the whole name, its number
+ *  included, fits in `KEPT_NAME_MAX` (a cut number would let two copies read alike). */
+function copyName(name: string, n: number): string {
+  const whole = slots.planListCopyName(name, n)
+  const over = whole.length - KEPT_NAME_MAX
+  return over > 0 ? slots.planListCopyName(name.slice(0, Math.max(0, name.length - over)).trimEnd(), n) : whole
+}
+
+/** A copy right after its original, named "Copy of …" (numbered past the first copy so no two names match: the check
+ *  reads the name as saved, never one the cut would shorten). */
 export const copyEdit = (id: string): KeptEdit => (list, ids) => {
   const at = list.findIndex((k) => k.id === id)
   if (at === -1) return null
   const from = list[at]!
   const names = new Set(list.map((k) => k.name.trim().toLocaleLowerCase()))
   let n = 1
-  while (names.has(slots.planListCopyName(from.name, n).toLocaleLowerCase())) n++
-  const copied: KeptWhatIfV6 = { id: freshStableId(ids), name: slots.planListCopyName(from.name, n).slice(0, KEPT_NAME_MAX), levers: from.levers }
+  while (names.has(copyName(from.name.trim(), n).toLocaleLowerCase())) n++
+  const copied: KeptWhatIfV6 = { id: freshStableId(ids), name: copyName(from.name.trim(), n), levers: from.levers }
   return [...list.slice(0, at + 1), copied, ...list.slice(at + 1)]
 }
 

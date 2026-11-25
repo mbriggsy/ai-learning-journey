@@ -2719,6 +2719,9 @@ export const copy = {
   chartLoadFailed: 'This chart didn’t load. The figures in words on this page still stand.',
   // The interim Health Care page (until RC10): the old health-cost sheet, behind its door.
   healthInterimIntro: 'Your health costs before Medicare, and the marketplace subsidy rules your plan uses, live in this sheet until this page is rebuilt.',
+  // A read-only tab (the plan open in another tab) mounts no sheet, so the page draws no door.
+  healthInterimReadOnly:
+    'Your health costs before Medicare, and the marketplace subsidy rules your plan uses, live in a sheet that only opens in a tab that can change your plan.',
   healthInterimNone:
     'The health-cost sheet covers marketplace coverage before Medicare. Your plan has no one under 65 with a marketplace quote, so there’s nothing for it to show.',
   // The interim Tax Strategies page on the working route (until RC8): the recommendation isn't worked out there yet.

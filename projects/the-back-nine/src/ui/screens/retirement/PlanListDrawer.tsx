@@ -13,9 +13,9 @@
  * the drawer drops neither (reopened, the box is as it was), and the shell holds the leave guard while one differs from
  * its seed. Delete asks first, inline, its safe choice focused.
  *
- * REORDER: drag the handle (pointer capture; the row moves through the list as the pointer passes each row's middle, and
- * the new order is written once, on release), or focus the handle and press the up or down arrow (written at once, its
- * new place said aloud). No animation on a keyboard move.
+ * REORDER: drag the handle (the pointer followed on the window; the row moves through the list as the pointer passes each
+ * row's middle, and the new order is written once, on release), or focus the handle and press the up or down arrow
+ * (written at once, its new place said aloud). No animation on a keyboard move.
  */
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { Check, Copy, GripVertical, Pencil, Trash2, X } from 'lucide-react'
@@ -54,33 +54,52 @@ export function PlanListDrawer(props: PlanListDrawerProps) {
   const [deleting, setDeleting] = useState<string | null>(null)
   // A drag in progress: the order the list shows while the pointer moves, written once on release.
   const [dragOrder, setDragOrder] = useState<readonly string[] | null>(null)
-  const drag = useRef<{ readonly id: string; readonly startY: number; readonly startIndex: number; readonly rowHeight: number; readonly from: readonly string[] } | null>(null)
+  const drag = useRef<{ readonly id: string; readonly startY: number; readonly startIndex: number; readonly rowHeight: number; readonly from: readonly string[]; order: readonly string[]; readonly stop: () => void } | null>(null)
   const ids = view.rows.map((r) => r.id)
   const order = dragOrder ?? ids
   const rows = order.map((id) => view.rows.find((r) => r.id === id)).filter((r) => r !== undefined)
   const keepBox = box?.kind === 'keep' ? box : null
+  // A drawer that closes mid-drag stops listening (and writes nothing).
+  useEffect(() => () => drag.current?.stop(), [])
 
+  // The pointer is followed on the WINDOW, not the handle: a row moved down is re-inserted in the list, and a node taken
+  // out of the page loses its pointer capture, so the handle's own events would stop mid-drag and its release never land.
+  // The order shown is kept on the drag itself, so the release writes exactly what the list showed last.
   const startDrag = (e: PointerEvent<HTMLButtonElement>, id: string) => {
     if (e.button !== 0 || drag.current !== null) return
-    const row = e.currentTarget.closest<HTMLElement>('[data-kept-row]')
-    e.currentTarget.setPointerCapture(e.pointerId)
-    drag.current = { id, startY: e.clientY, startIndex: ids.indexOf(id), rowHeight: row?.getBoundingClientRect().height ?? 48, from: ids }
+    const pointer = e.pointerId
+    const height = e.currentTarget.closest<HTMLElement>('[data-kept-row]')?.getBoundingClientRect().height ?? 0
+    const move = (ev: globalThis.PointerEvent) => {
+      const d = drag.current
+      if (d === null || ev.pointerId !== pointer) return
+      const to = Math.max(0, Math.min(d.from.length - 1, d.startIndex + Math.round((ev.clientY - d.startY) / d.rowHeight)))
+      const next = d.from.filter((x) => x !== d.id)
+      next.splice(to, 0, d.id)
+      if (next.join('|') !== d.order.join('|')) {
+        d.order = next
+        setDragOrder(next)
+      }
+    }
+    const end = (ev: globalThis.PointerEvent) => {
+      const d = drag.current
+      if (d === null || ev.pointerId !== pointer) return
+      d.stop()
+      setDragOrder(null)
+      if (d.order.join('|') !== d.from.join('|')) onOrder(d.order, d.id)
+    }
+    const stop = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', end)
+      window.removeEventListener('pointercancel', end)
+      drag.current = null
+    }
+    drag.current = { id, startY: e.clientY, startIndex: ids.indexOf(id), rowHeight: height > 0 ? height : 48, from: ids, order: ids, stop }
+    // Capture keeps the press on the handle (no text selected across the list) while it stays in the page.
+    if ('setPointerCapture' in e.currentTarget) e.currentTarget.setPointerCapture(pointer)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', end)
+    window.addEventListener('pointercancel', end)
     setDragOrder(ids)
-  }
-  const moveDrag = (e: PointerEvent<HTMLButtonElement>) => {
-    const d = drag.current
-    if (d === null) return
-    const to = Math.max(0, Math.min(d.from.length - 1, d.startIndex + Math.round((e.clientY - d.startY) / d.rowHeight)))
-    const next = d.from.filter((x) => x !== d.id)
-    next.splice(to, 0, d.id)
-    if (next.join('|') !== (dragOrder ?? []).join('|')) setDragOrder(next)
-  }
-  const endDrag = () => {
-    const d = drag.current
-    drag.current = null
-    const next = dragOrder
-    setDragOrder(null)
-    if (d !== null && next !== null && next.join('|') !== d.from.join('|')) onOrder(next, d.id)
   }
   const keyMove = (e: KeyboardEvent<HTMLButtonElement>, id: string) => {
     if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
@@ -137,9 +156,6 @@ export function PlanListDrawer(props: PlanListDrawerProps) {
                       className="flex size-10 shrink-0 cursor-grab touch-none items-center justify-center rounded-control text-stone-600 hover:bg-stone-100 active:cursor-grabbing"
                       aria-label={slots.planListMove(row.name)}
                       onPointerDown={(e) => startDrag(e, row.id)}
-                      onPointerMove={moveDrag}
-                      onPointerUp={endDrag}
-                      onPointerCancel={endDrag}
                       onKeyDown={(e) => keyMove(e, row.id)}
                       data-kept-handle=""
                     >
@@ -251,8 +267,10 @@ function NameField({
   useEffect(() => {
     ref.current?.focus()
   }, [])
+  // A refused name shows its words under the box. A name sent on is not checked again while its write lands: the write
+  // puts it in the list at once, so the check would call it taken on the success path (a refused write says so itself).
   const confirm = () => {
-    setTried(true)
+    setTried(error !== null)
     if (error === null) onConfirm(box)
   }
   const showError = tried && error !== null

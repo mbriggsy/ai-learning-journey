@@ -299,7 +299,9 @@ export default function Shell({
   const module = modules.find((m) => m.id === route.module) ?? modules[0]!
 
   // Focus to the page's heading on arrival (the project's step-change pattern): it announces the page. A later page
-  // change keeps focus where the press left it (the sub-nav's link, or the phone menu's button).
+  // change keeps focus where the press left it when that control stays (the top bar, the sub-nav's link, the phone
+  // menu's button); a press whose control went with the old page (an in-page door, a Back or Forward, a leave ask's Go)
+  // left focus on nothing, so the new page's heading takes it.
   useEffect(() => {
     headingRef.current?.focus()
   }, [])
@@ -311,6 +313,8 @@ export default function Shell({
       mounted.current = true
       return
     }
+    const active = document.activeElement
+    if (active === null || active === document.body || !active.isConnected) headingRef.current?.focus()
     if (typeof window.scrollTo === 'function' && !navigator.userAgent.includes('jsdom')) window.scrollTo(0, 0)
   }, [routeKey])
 
@@ -455,6 +459,16 @@ export default function Shell({
     // left for from here. No separate collections door: the facts page has its own Accounts and Other income doors.
     ...(onReview !== undefined ? { onReview } : {}),
   })
+  // A sheet belongs to the page it was opened on: a page change (a leave ask's Go, a plain Back or Forward) closes every
+  // one, so none stays open over the new page (the room's Back unmounted them; the shell's sheets outlive a page).
+  const closeSheets = editors.closeAll
+  const sheetsRoute = useRef(routeKey)
+  useLayoutEffect(() => {
+    if (sheetsRoute.current === routeKey) return
+    sheetsRoute.current = routeKey
+    setOpenStepId(null)
+    closeSheets()
+  }, [routeKey, closeSheets])
   const sheetDoors: Readonly<Record<SheetDoor, () => void>> = {
     budget: editors.openBudget,
     'subsidy-regime': editors.openHealth,
@@ -486,6 +500,17 @@ export default function Shell({
   const [nameBox, setNameBox] = useState<NameBox | null>(null)
   const [planListSaid, setPlanListSaid] = useState<string | null>(null)
   const boxHeld = nameBox !== null && nameBox.text.trim() !== nameBox.seed.trim()
+  // A Keep box names the what-if it was opened over (and `replaces` the kept one that what-if reopened): another what-if
+  // on the left (opened from a picker or the list, or Apply's new one) drops it, so it never keeps a different what-if or
+  // writes over a different kept one. Opening another asks first over a typed name (`onPick`). Reset keeps the source,
+  // and so the box (its kept one is still the one it replaces).
+  const sourceKey = whatIf.source.kind === 'kept' ? `kept:${whatIf.source.id}` : 'new'
+  const [boxSource, setBoxSource] = useState(sourceKey)
+  if (boxSource !== sourceKey) {
+    setBoxSource(sourceKey)
+    if (nameBox?.kind === 'keep') setNameBox(null)
+  }
+  const keepBoxHeld = boxHeld && nameBox?.kind === 'keep'
   // An ask the page raises itself (opening another what-if over an unkept one), beside IntakeApp's leave asks.
   const [pageAsk, setPageAsk] = useState<ShellLeaveAsk | null>(null)
   // A what-if holding a change the plan doesn't, or a tray edit not yet run, is unkept work: IntakeApp asks before a
@@ -577,13 +602,13 @@ export default function Shell({
         } else whatIf.openNew()
         if (trayAwaiting.size > 0) setTrayAwaiting(new Map())
       }
-      if (whatIf.held || trayAwaiting.size > 0) {
+      if (whatIf.held || trayAwaiting.size > 0 || keepBoxHeld) {
         setPageAsk({ lines: [copy.probabilityOpenDropsAsk], goLabel: copy.probabilityOpenGo, onGo: go, onStay: () => setPageAsk(null) })
         return
       }
       go()
     },
-    [whatIf, kept, rightPick, trayAwaiting],
+    [whatIf, kept, rightPick, trayAwaiting, keepBoxHeld],
   )
   const onPickCompared = useCallback((pick: RightPick) => setRightPick(pick), [])
   const notes = useMemo(
@@ -801,7 +826,19 @@ export default function Shell({
   const answerTier = snapshot.answer.kind === 'headline' || snapshot.answer.kind === 'date' ? snapshot.answer.tier : undefined
   const names = draft.people.map((p) => (p.name ?? '').trim()).filter((n) => n !== '')
 
-  const shownAsk = leaveAsk ?? pageAsk ?? undefined
+  // A leave's Go makes its words true before the leave moves: every sheet closes, and an entry not yet added (the
+  // budget's staged rows) is dropped (`workbenchLeaveAsk`, `shellCeremonyOpenEntry`).
+  const shownAsk: ShellLeaveAsk | undefined =
+    leaveAsk !== undefined
+      ? {
+          ...leaveAsk,
+          onGo: () => {
+            setOpenStepId(null)
+            editors.closeAll(true)
+            leaveAsk.onGo()
+          },
+        }
+      : (pageAsk ?? undefined)
   const leave = shownAsk !== undefined ? <LeaveAsk key={shownAsk.lines.join(' ')} ask={shownAsk} overSheet={anySheetOpen} fallback={() => headingRef.current} /> : null
 
   // ── The plan list drawer's view and its writes (RC5) ──
@@ -831,6 +868,13 @@ export default function Shell({
       void writeKept(renameEdit(box.id, box.text)).then((o) => {
         if (o !== null && o.kind !== 'refused') setNameBox(null)
       })
+      return
+    }
+    // Keep writes only what the list offers now, and only over the kept what-if the box was opened for: a box whose
+    // target is no longer the one Keep would replace writes nothing.
+    const keep = planList?.keep
+    if (keep?.kind !== 'open' || box.replaces !== keep.replaces?.id) {
+      setPlanListSaid(copy.planListRefused)
       return
     }
     const levers = whatIf.own
@@ -886,7 +930,8 @@ export default function Shell({
         onHome={onHome}
         lock={lock}
         onLockAction={onLockAction}
-        onGear={() => editors.openAssumptions()}
+        // A read-only tab mounts no sheet (below), so it draws no gear: a door must open something.
+        {...(readOnly ? {} : { onGear: () => editors.openAssumptions() })}
       />
       <SubNav
         label={copy.shellPagesLabel}
@@ -993,12 +1038,17 @@ export default function Shell({
             {screen === 'interim-health' && (
               <div className="wb-panel" data-health-interim="">
                 {healthcarePriced(draft) ? (
-                  <>
-                    <p className="wb-about__line">{copy.healthInterimIntro}</p>
-                    <button type="button" className="btn-quiet" data-door="health" onClick={editors.openHealth}>
-                      {draft.enhancedSubsidies === true ? copy.leverHealthDoorEditCta : copy.leverHealthDoorCta}
-                    </button>
-                  </>
+                  readOnly ? (
+                    // No sheet mounts on a read-only tab, so no door is drawn (as the facts page's doors).
+                    <p className="wb-about__line">{copy.healthInterimReadOnly}</p>
+                  ) : (
+                    <>
+                      <p className="wb-about__line">{copy.healthInterimIntro}</p>
+                      <button type="button" className="btn-quiet" data-door="health" onClick={editors.openHealth}>
+                        {draft.enhancedSubsidies === true ? copy.leverHealthDoorEditCta : copy.leverHealthDoorCta}
+                      </button>
+                    </>
+                  )
                 ) : (
                   <p className="wb-about__line">{copy.healthInterimNone}</p>
                 )}

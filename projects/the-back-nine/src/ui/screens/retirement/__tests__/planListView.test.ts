@@ -80,6 +80,25 @@ describe('the edits apply to the current list', () => {
     const twice = copyEdit('a')(once, new Set(once.map((k) => k.id)))!
     expect(twice[1]!.name).toBe(slots.planListCopyName('Spend less', 2))
   })
+  it('a long name’s copies are cut on the original’s name, never on the number: each fits, and no two read alike', () => {
+    // 58 characters: "Copy of " + 58 is past the limit, so the cut takes the name's end, and the " (2)" survives it.
+    const long: KeptWhatIfV6 = { id: 'a', name: 'Retire at sixty-two and spend a little less every single yr', levers: [LEVER] }
+    expect(long.name.length).toBe(59)
+    let list: readonly KeptWhatIfV6[] = [long]
+    for (let i = 0; i < 3; i++) list = copyEdit('a')(list, new Set(list.map((k) => k.id)))!
+    const names = list.map((k) => k.name)
+    for (const name of names) expect(name.length, name).toBeLessThanOrEqual(60)
+    expect(new Set(names.map((n) => n.toLocaleLowerCase())).size, names.join(' | ')).toBe(names.length)
+    expect(names.slice(1).sort()).toEqual(
+      [
+        slots.planListCopyName(long.name.slice(0, 52).trimEnd(), 1),
+        slots.planListCopyName(long.name.slice(0, 48).trimEnd(), 2),
+        slots.planListCopyName(long.name.slice(0, 48).trimEnd(), 3),
+      ].sort(),
+    )
+    // Every copy keeps its name: keeping it again under its own name is never refused as taken.
+    for (const k of list) expect(nameError(k.name, list, k.id)).toBeNull()
+  })
   it('order takes exactly the list’s ids; moved steps one place and stays put at an end', () => {
     expect(orderEdit(['b', 'a'])([A, B], ids)).toEqual([B, A])
     expect(orderEdit(['b'])([A, B], ids)).toBeNull()

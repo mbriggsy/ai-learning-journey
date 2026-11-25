@@ -9,7 +9,8 @@ import { copy } from '../src/ui/copy'
  * left with the old answer page at Act 6's RC4 (plan docs/plans/6-rightcapital-ui-plan.md, section 5.2): the ladder's
  * honesty laws were PORTED to the Odds by stop year chart's arms in `e2e/rc-screens.spec.ts` (the crown on the durable
  * year, the dipped year's word, the ceiling words, no passed year on an aged plant, the Highcharts text audit at REAL and
- * the phone); the band's arms come back on Confidence at RC7; the lever-sheet TwoFutures and enlarge-modal arms retired.
+ * the phone); the band's arms came back on Confidence at RC7 (`e2e/rc-screens.spec.ts`'s RC7 arms); the lever-sheet
+ * TwoFutures and enlarge-modal arms retired.
  * What stays is the Highcharts fan's: its text follows the reader's browser font, reduced motion changes none of it, and
  * the Highcharts audit's planted-fail controls bite (`e2e/hcTextAudit.ts`).
  */

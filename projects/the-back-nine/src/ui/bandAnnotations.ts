@@ -255,6 +255,7 @@ export function deriveSpineBandAnnotations(
   currentAgeB: number,
   horizonYears: number,
   savedAnchor?: BandPlanClockAnchor,
+  endIsCut = false,
 ): readonly XAnnotation[] {
   const yearsSinceBuilt = planClockWithin(savedAnchor, horizonYears)
   const aged = yearsSinceBuilt > 0 && savedAnchor !== undefined ? savedAnchor : null
@@ -279,13 +280,7 @@ export function deriveSpineBandAnnotations(
       description: slots.bandClockAgesDesc(t.ageA, t.ageB),
     })
   }
-  markers.push({
-    id: 'horizon',
-    yearsFromNow: horizonYears,
-    label: copy.bandClockHorizonLabel,
-    ages: slots.bandClockAges(currentAgeA + horizonYears, currentAgeB + horizonYears),
-    description: slots.bandClockHorizonDesc(currentAgeA + horizonYears, currentAgeB + horizonYears),
-  })
+  markers.push(endMarker(currentAgeA, currentAgeB, horizonYears, endIsCut))
   // Household-clock order even on the aged arm (the wall-Today x can exceed an early decade
   // tick's) — the label stagger reads neighbors in x order.
   return markers.sort((a, b) => a.yearsFromNow - b.yearsFromNow)
@@ -318,6 +313,7 @@ export function deriveDateBandAnnotations(
   horizonYears: number,
   savedAnchor?: BandPlanClockAnchor,
   splitFloorCrowned = false,
+  endIsCut = false,
 ): readonly XAnnotation[] {
   const yearsSinceBuilt = planClockWithin(savedAnchor, horizonYears)
   const aged = yearsSinceBuilt > 0 && savedAnchor !== undefined ? savedAnchor : null
@@ -374,12 +370,23 @@ export function deriveDateBandAnnotations(
       description: slots.bandClockAgesDesc(t.ageA, t.ageB),
     })
   }
-  markers.push({
+  markers.push(endMarker(currentAgeA, currentAgeB, horizonYears, endIsCut))
+  return markers.sort((a, b) => a.yearsFromNow - b.yearsFromNow)
+}
+
+/**
+ * The fan's right-hand endpoint, named for what it is (Act 6 · RC7): the plan's horizon where the fan runs to it, and
+ * "Range ends" where `truncateFanAtThinCohort` cut it short (on `retired` year 27 of 47, ages 93 and 92 of 113 and 112),
+ * since the plan runs on past a cut and a label calling the cut its horizon reads the run-out by then as the plan's.
+ */
+export function endMarker(currentAgeA: number, currentAgeB: number, horizonYears: number, endIsCut: boolean): XAnnotation {
+  const a = currentAgeA + horizonYears
+  const b = currentAgeB + horizonYears
+  return {
     id: 'horizon',
     yearsFromNow: horizonYears,
-    label: copy.bandClockHorizonLabel,
-    ages: slots.bandClockAges(currentAgeA + horizonYears, currentAgeB + horizonYears),
-    description: slots.bandClockHorizonDesc(currentAgeA + horizonYears, currentAgeB + horizonYears),
-  })
-  return markers.sort((a, b) => a.yearsFromNow - b.yearsFromNow)
+    label: endIsCut ? copy.bandClockCutLabel : copy.bandClockHorizonLabel,
+    ages: slots.bandClockAges(a, b),
+    description: endIsCut ? slots.bandClockCutDesc(a, b) : slots.bandClockHorizonDesc(a, b),
+  }
 }

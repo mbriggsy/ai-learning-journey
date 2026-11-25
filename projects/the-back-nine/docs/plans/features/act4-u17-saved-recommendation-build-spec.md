@@ -58,7 +58,7 @@ Before this stage the "has this offset already passed?" test was **re-typed** in
 **one** predicate, strict `planOffset < elapsed` — `offsetHasPassed`, defined once at `curveMarks.ts:107` —
 and every arrived question in the codebase now calls it: the ladder filter (`curveMarks.ts:143`), the hero
 crown-arrived withdraw and the floor arm (`dateHero.ts:37`, `:72`, `FuckOffDate.tsx line 333 at 95c715e19`), the band's Roth row
-(`bandAnnotations.ts:133`), the work-stops withdraw (`bandAnnotations.ts:341`), `dateTradeoff.ts:53`'s
+(`bandAnnotations.ts:133`), the work-stops withdraw (`bandAnnotations.ts:337`), `dateTradeoff.ts:53`'s
 offer filter — **a third re-typing this spec had not enumerated**, found at build — and §S1's write-side
 refusal (`RothLever.tsx line 49 at 7f56682e9`).
 
@@ -75,7 +75,7 @@ refusal (`RothLever.tsx line 49 at 7f56682e9`).
 
 `Result.tsx` derives the anchor from `startCalendarYear`, which is the plan's **BUILD** year (written once
 at `memoryModel.ts:633`, never re-anchored, survives every re-save). Four separate comments already forbade
-attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:4786`,
+attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `copy.ts:4806`,
 `FuckOffDate.tsx line 112 at 95c715e19`) — and the band's `'saved'` label did exactly that.
 
 - **Renamed** `elapsedPlanYears` → **`yearsSincePlanBuilt`**, with zero orphans left behind, and every
@@ -154,7 +154,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
   `offsetHasPassed(year − startCalendarYear, yearsSincePlanBuilt)` (`RothLever.tsx lines 47-49 at 7f56682e9`) — one strict
   compare covers both "before the build year" and "already passed", and no second comparator was
   authored. It renders through the R19 `FieldError` grammar with the earliest startable year QUOTED
-  (`errRothStartPast`, `RothLever.tsx line 275 at 7f56682e9`, joined `SlottedErrorKey` at `copy.ts:2594`). The fresh default
+  (`errRothStartPast`, `RothLever.tsx line 275 at 7f56682e9`, joined `SlottedErrorKey` at `copy.ts:2597`). The fresh default
   start seeds the WALL year (build + clock), so an aged vault never pre-fills the exact start the write
   side refuses.
 - **"Suppress when unanchored" was satisfied STRUCTURALLY, not by a dead arm.** `savedAnchor` is REQUIRED
@@ -186,7 +186,7 @@ literal tense regexes pin it now. Three mutants red → reverted.
    leaves the a11y tree too — and is **never clamped** (a negative offset handed to the x-scale silently
    pins to the left edge: a fresh lie, the rail `curveMarks.ts:116-121` already names). Surviving markers
    speak **ONE age base**. The withdraw generalizes the fresh offset-0 precedent: it fires when
-   `offsetHasPassed(crown, clock) || crown === clock` (`bandAnnotations.ts:341`), the equality arm being
+   `offsetHasPassed(crown, clock) || crown === clock` (`bandAnnotations.ts:337`), the equality arm being
    Today's own column — wall-Today already marks it, and two named markers would stack. The fresh
    derivation is byte-identical to pre-U17.
 2. **The elapsed fan segment is de-emphasised by a STATIC mask** — `ElapsedDimGroup`, a second static
@@ -209,7 +209,7 @@ literal tense regexes pin it now. Three mutants red → reverted.
    twin in `FuckOffDate`), so an aged projection with an unstated premise is unrepresentable. `onReconfirm`
    routes to the guided re-walk (`onReview`).
 5. **On a split, the crown names WHICH date** at the marker — `bandClockWorkStopsSplitLabel`,
-   *'Essentials date'* (`copy.ts:869`, selected at `bandAnnotations.ts:350`) — with its own a11y sentence.
+   *'Essentials date'* (`copy.ts:869`, selected at `bandAnnotations.ts:346`) — with its own a11y sentence.
    **§S2.5, ruled by the pilot at build:** the arrived idiom is the STRICT three-way split. Strictly-past
    speaks "come and gone" (`dateInYearsPast`, with `dateFloorCoveredPast` as its floor mirror);
    exactly-this-year speaks "about now" (`dateInYearsNow` / `dateFloorCoveredNow` — the old text kept at
@@ -367,7 +367,7 @@ backstop rather than a gate. The two non-writable states are detected separately
   `deriveResultSave(persist, ready, readOnly)` (`resultSave.ts:101`).
 
 `RecommendationSaveRefusal` is therefore the three-arm enum `'record-invalid' | 'write' | 'recovery-locked'`,
-each with its own heading and body (`copy.ts:2041-2050`). The recovery arm's name is deliberately **not**
+each with its own heading and body (`copy.ts:2044-2053`). The recovery arm's name is deliberately **not**
 `…Survivor…`: `copyGuard.ts`'s `isSurvivorKey` is a `/survivor/i` SUBSTRING net feeding `isMortalityKey`, so
 that spelling would have silently enrolled a plumbing key in the mortality-lexicon gate and made its guard
 arm pass for the wrong reason.
@@ -378,7 +378,7 @@ S3 built the whole substrate and S4 deliberately declined the copy; both created
 original thirteen lines could not name.
 
 **The copy register landed here, not in S4** (see S4 for why). It shipped as two families — the save
-GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:2012-2137` — modelled on
+GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:2015-2140` — modelled on
 `recommendStale{Heading,Body,ReopenCta}` and on `RecommendationSurface.tsx:378-385`'s render shape, the
 `role="status"` card with heading, body and re-open button. `recommendRecordReopenCost` names the re-open's
 cost the way the pending label does: *"This can take a few minutes."* Exactly one key in either family may
@@ -501,9 +501,9 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   fixed 2026-07-30/31 (the Roth door calling an executed conversion a typo, `d8f35d8c`; the lever refusal
   denying a date the same screen plots, `72d638d9`; the premise line contradicting its own axis,
   `d5e7b466`; and the band flip onto the lifestyle crown, `8d4d4e58`). A fifth followed: **Cards 6–7's
-  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:2126`
+  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:2129`
   now reads "It may no longer fit the two of you.", with a standing prohibition on ever restoring it at
-  `copy.ts:2097-2104`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:2089`).
+  `copy.ts:2100-2107`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:2092`).
   Card 1's two-odds collision remains open, as does the OTHER half of Cards 6–7 — naming the strategy on
   the holds face, Briggsy's own ruling, carried in the register as "The saved-record card does not name
   the strategy".
@@ -529,7 +529,7 @@ as the council admitted it, and the reasons are the material the re-filed unit s
 
 Verified at council time: the bars carry arm **names** at their ends plus the delta hero and the
 `$0`/ceiling axis frame; each bar's own dollar value renders **only** in `ariaSummary`
-(`recommendationView.ts:744-750`, `copy.ts:4950` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
+(`recommendationView.ts:744-750`, `copy.ts:4970` — the slot was renamed `recDeltaVizAria` 2026-09-08; re-anchored 2026-09-10). The
 AT-over-sighted inversion is real and nobody disputed it.
 
 The admission was gated on a **deliberate dialect split** in `recommendationView.ts` — endpoints humane

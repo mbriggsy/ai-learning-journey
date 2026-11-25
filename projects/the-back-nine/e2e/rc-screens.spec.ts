@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { expect, type Page } from '@playwright/test'
-import { FINAL_TIER_MS, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, armRefiguringWatch, expectRefiguringSeen, gotoSeedFinal, gotoVaultFinal, pinPlantDay, pinnedDay, pinnedYear, refiguringLog, settleLayout, test } from './reviewSurface'
+import { FINAL_TIER_MS, FLOOR, PHONE, PHONE_DPR, REAL, REAL_DPR, SETTLED_RESULT, armRefiguringWatch, expectRefiguringSeen, gotoSeedFinal, gotoVaultFinal, pinPlantDay, pinnedDay, pinnedYear, refiguringLog, settleLayout, test } from './reviewSurface'
 import { copy, slots } from '../src/ui/copy'
 import { ENGINE_PRICING_LEDGER } from '../src/engine/pricingVersion'
 import { DEV_VAULT_PASSPHRASE as DEV_PASSPHRASE } from '../src/ui/devSeeds'
@@ -1931,5 +1931,282 @@ test.describe(`RC6 · Cash Flows: the plan select, the paired form and the CSV (
       return out
     }
     expect(bytes.subarray(3).toString('utf8').split('\r\n').map(parse), 'the CSV is the shown cells').toEqual(shown)
+  })
+})
+
+// ── RC7 · Retirement → Analysis → Confidence (plan 6, RC7's Verification, its test scenarios and its "Owed from RC4";
+// section 5.2's ports: the old band's chart-text arms (the spine, the dense date household, the aged spine and aged date
+// band, the widest tick) and the two vertical-fit laws RC4 retired with the old band, "the honesty floor — 68rem
+// exactly" and "the band legend", rebuilt here on the clone's fan) ─────────────────────────────────────────────────────
+// - at his window on `retired` and `dip`: one frame from the top bar to the end of the charts, the key-metric column and
+//   the R13 caveat (the caveat closes that column); one visible caveat; no sideways scroll; every band word, tick, legend
+//   item and moment label passes the Highcharts text audit, the run-out chart's too; the run-out chart's plot sits under
+//   the fan's to the pixel; the retired metrics speak "in 100 futures" and no screen word is a percent, "0 in 100" or
+//   "10 of 10"; the working route shows its stop marker and its stopgap line and no run-out chart;
+// - at the phone and at a 20 px default: the same audit, and the charts, the metrics, then the caveat, in order and
+//   reachable;
+// - the aged returns (`?vault=stale`, `?vault=datestale`): the fan names when the plan was built and where today sits;
+// - the floor (68rem exactly): the fan keeps its dollar ticks down to $0, and every band word and legend item is in frame
+//   and legible; the legend names each range the fan draws, and nothing else;
+// - the legend toggle: with both ranges hidden the axis zooms to the median and still starts at $0, the ranges' words
+//   leave with them, and the run-out chart re-lines its years under the fan's.
+
+const CONF = ['[data-confidence] [data-chart="fan"]', '[data-confidence]'] as const
+const RUN_OUT = ['[data-chart="runout"]', '[data-runout-card]'] as const
+/** The fan's required words on Confidence: both ranges' words, the legend's three names, its ticks and at least two
+ *  named moments (Today and the plan's horizon on every household). */
+const CONF_REQUIRED = FAN_REQUIRED
+const RUN_OUT_REQUIRED = { texts: [], counts: { 'axis-label': 5 } } as const
+/** The words no Confidence screen may print: a percent for odds or a share, "0 in 100", "10 of 10". */
+const CONF_BANNED = /%|\b0 in 100\b|\b10 of 10\b/
+
+/** From the home, Retirement → Analysis, then the Confidence tab; the fan drawn and, retired, the run-out chart. */
+async function toConfidence(page: Page, who: string): Promise<void> {
+  await toProbability(page, who)
+  await page.getByRole('tab', { name: copy.confidenceTab }).click()
+  await expect(page.locator('main.result[data-shell-screen="confidence"]')).toBeAttached()
+  await expect(page.locator(`${CONF[0]} .highcharts-series-group`), `${who}: the fan never drew`).toBeAttached({ timeout: 30_000 })
+  if ((await page.locator('[data-confidence="headline"]').count()) > 0) {
+    await expect(page.locator(`${RUN_OUT[0]} .highcharts-series-group`), `${who}: the run-out chart never drew`).toBeAttached({ timeout: 30_000 })
+  }
+  await page.waitForTimeout(800)
+  await settleLayout(page)
+}
+
+async function enterConfidence(page: Page, seed: string): Promise<void> {
+  await gotoSeedFinal(page, seed)
+  await toConfidence(page, seed)
+}
+
+/** The two charts' plot areas, left and right edges. */
+async function plotEdges(page: Page): Promise<{ fan: { left: number; right: number }; runOut: { left: number; right: number } | null }> {
+  return page.evaluate(() => {
+    const edge = (sel: string) => {
+      const r = document.querySelector(sel)?.getBoundingClientRect()
+      return r === undefined ? null : { left: r.left, right: r.right }
+    }
+    return { fan: edge('[data-confidence] [data-chart="fan"] .highcharts-plot-background')!, runOut: edge('[data-chart="runout"] .highcharts-plot-background') }
+  })
+}
+
+/** Every Confidence text audit: the fan's, and on the retired route the run-out chart's. */
+async function auditConfidence(page: Page, who: string): Promise<void> {
+  await page.locator(CONF[0]).scrollIntoViewIfNeeded()
+  await settleLayout(page)
+  const floor = await hcFloorPx(page)
+  assertHcText(await hcAudit(page, ...CONF), floor, CONF_REQUIRED, `${who} fan`)
+  if ((await page.locator(RUN_OUT[0]).count()) > 0) assertHcText(await hcAudit(page, ...RUN_OUT), floor, RUN_OUT_REQUIRED, `${who} run-out chart`)
+  const words = await page.locator('[data-confidence]').innerText()
+  expect(CONF_BANNED.test(words), `${who}: a banned word on the tab: ${CONF_BANNED.exec(words)?.[0]}`).toBe(false)
+}
+
+/** The charts, then the key-metric column, then the caveat, in the reading order and stacked so on the phone; the caveat
+ *  reachable. */
+async function assertConfidenceOrder(page: Page, who: string, stacked: boolean): Promise<void> {
+  const read = await page.evaluate(() => {
+    const box = (sel: string) => document.querySelector(sel)!.getBoundingClientRect()
+    const charts = [...document.querySelectorAll('[data-fan], [data-runout-card], [data-runout-stopgap]')].map((e) => e.getBoundingClientRect())
+    const caveat = document.querySelector('main.result [data-caveat]')!
+    const metrics = document.querySelector('[data-metrics]')!
+    const follows = (a: Element, b: Element) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+    return {
+      chartsBottom: Math.max(...charts.map((r) => r.bottom)),
+      metricsTop: box('[data-metrics]').top,
+      caveatTop: caveat.getBoundingClientRect().top,
+      metricsAfterCharts: follows(document.querySelector('[data-fan]')!, metrics),
+      caveatLast: follows(metrics.querySelector('[data-metric], [data-footnote]') ?? metrics, caveat) && metrics.contains(caveat),
+    }
+  })
+  expect(read.metricsAfterCharts, `${who}: the key-metric column follows the charts`).toBe(true)
+  expect(read.caveatLast, `${who}: the R13 caveat closes the key-metric column`).toBe(true)
+  if (stacked) {
+    expect(read.metricsTop, `${who}: the metrics stack under the charts`).toBeGreaterThanOrEqual(read.chartsBottom - 0.5)
+    expect(read.caveatTop, `${who}: the caveat under the metrics`).toBeGreaterThanOrEqual(read.metricsTop)
+  }
+  await assertOneVisibleCaveat(page, null)
+  const caveat = page.locator('main.result [data-caveat]')
+  await caveat.scrollIntoViewIfNeeded()
+  await expect(caveat, `${who}: the R13 caveat is reachable`).toBeInViewport()
+}
+
+test.describe(`RC7 · Confidence at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+
+  test('?seed=retired: one frame to the run-out chart and the caveat; the plots line up; the run-out words; the text audit', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await enterConfidence(page, 'retired')
+    await expect(page.getByRole('heading', { level: 2, name: copy.confidenceChartTitle })).toBeVisible()
+    await expect(page.getByRole('button', { name: copy.trayHandle }), 'no ACTION ITEMS on Confidence: the fan reads your plan only').toHaveCount(0)
+    const frame = await page.evaluate(() => ({
+      scrollY: window.scrollY,
+      fan: document.querySelector('[data-fan]')!.getBoundingClientRect().bottom,
+      runOut: document.querySelector('[data-runout-card]')!.getBoundingClientRect().bottom,
+      metrics: document.querySelector('[data-metrics]')!.getBoundingClientRect().bottom,
+    }))
+    expect(frame.scrollY).toBe(0)
+    for (const [what, bottom] of Object.entries(frame).filter(([k]) => k !== 'scrollY')) expect(bottom, `retired: the ${what} inside his window`).toBeLessThanOrEqual(REAL.height)
+    await assertOneVisibleCaveat(page, REAL.height)
+    await noSidewaysScroll(page, 'retired REAL Confidence')
+    const edges = await plotEdges(page)
+    expect(edges.runOut, 'the run-out chart drew a plot').not.toBeNull()
+    expect(Math.abs(edges.runOut!.left - edges.fan.left), 'the run-out plot starts under the fan’s first year').toBeLessThanOrEqual(1)
+    expect(Math.abs(edges.runOut!.right - edges.fan.right), 'the run-out plot ends under the fan’s last year').toBeLessThanOrEqual(1)
+    const metrics = await page.locator('[data-metric]').allInnerTexts()
+    expect(metrics[0], 'the lead metric: the share by the last year drawn').toMatch(/^By ages \d+ and \d+, (about \d+ in 100 futures have|fewer than 1 in 100 futures have|no future has)/)
+    // `retired`'s fan is cut at the thinning cohort (year 27 of 47): the whole plan's share names the longer span and
+    // why the charts stop, and the right-hand moment says where the range ends, never "Plan horizon".
+    expect(metrics[1], 'the whole plan’s share, worded as the longer span').toMatch(/^The charts stop at ages \d+ and \d+: past them, .*Over the whole plan, (about \d+ in 100 futures run|fewer than 1 in 100 futures run|no future runs)/)
+    await expect(page.locator(`${CONF[0]} .highcharts-plot-line-label`, { hasText: copy.bandClockCutLabel }), 'the cut edge named').toHaveCount(1)
+    await expect(page.locator(`${CONF[0]} .highcharts-plot-line-label`, { hasText: copy.bandClockHorizonLabel })).toHaveCount(0)
+    await auditConfidence(page, 'retired REAL')
+    // Decision 7: hovering the median fades no printed value.
+    await page.locator(CONF[0]).evaluate((el) => el.scrollIntoView({ block: 'center' }))
+    const median = await page.locator(`${CONF[0]} .b9-fan-median path.highcharts-graph`).first().boundingBox()
+    await page.mouse.move(median!.x + median!.width / 2, median!.y + median!.height / 2, { steps: 6 })
+    assertHcText(await hcAudit(page, ...CONF), await hcFloorPx(page), CONF_REQUIRED, 'retired REAL fan, hovered')
+  })
+
+  test('?seed=dip: one frame; the stop-year marker and word; the stopgap line in the run-out chart’s place; the text audit', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await enterConfidence(page, 'dip')
+    await expect(page.locator(`${CONF[0]} .highcharts-plot-line-label`, { hasText: copy.bandClockWorkStopsLabel }), 'the stop-year marker’s word').toHaveCount(1)
+    await expect(page.locator('[data-runout-stopgap]')).toHaveText(copy.confidenceRunOutStopgap)
+    await expect(page.locator(RUN_OUT[0]), 'no run-out chart on the working route').toHaveCount(0)
+    const bottom = await page.evaluate(() => Math.max(...[...document.querySelectorAll('[data-fan], [data-runout-stopgap], [data-metrics]')].map((e) => e.getBoundingClientRect().bottom)))
+    expect(bottom, 'dip: the fan, the stopgap and the metrics inside his window').toBeLessThanOrEqual(REAL.height)
+    await assertOneVisibleCaveat(page, REAL.height)
+    await noSidewaysScroll(page, 'dip REAL Confidence')
+    await auditConfidence(page, 'dip REAL')
+  })
+
+  test('?seed=retired: the legend toggle — both ranges hidden, the axis zooms to the median from $0, the ranges’ words leave, the run-out years re-line', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    // Highcharts times its morph on the page clock, which this harness fixes (`reviewSurface.ts`'s `setFixedTime`), so
+    // a redraw's morph never leaves its first frame here: the plot and the ticks stay where the toggle found them
+    // (measured: the plot's left edge held at the old axis's while the run-out chart had moved). Reduced motion draws
+    // each redraw in its final place, which is what a reader sees once the 250 ms morph ends.
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await enterConfidence(page, 'retired')
+    const ticks = () => page.locator(`${CONF[0]} .highcharts-yaxis-labels text`).allTextContents()
+    const top = (labels: string[]) => Math.max(...labels.map(figureDollars))
+    const before = await ticks()
+    for (const name of [copy.snapshotFanOuter, copy.snapshotFanInner]) {
+      await page.locator(`${CONF[0]} .highcharts-legend-item`, { hasText: name }).click()
+    }
+    await page.waitForTimeout(800)
+    const after = await ticks()
+    expect(after, 'the zoomed axis still starts at $0').toContain('$0')
+    expect(top(after), `the axis zoomed in to the median (${before.join(' ')} → ${after.join(' ')})`).toBeLessThan(top(before))
+    for (const words of [copy.snapshotFanOuterWords, copy.snapshotFanInnerWords]) {
+      await expect(page.locator(`${CONF[0]} .highcharts-data-label`, { hasText: words }), `"${words}" leaves with its range`).toBeHidden()
+    }
+    await expect(page.locator(`${CONF[0]} .highcharts-legend-item-hidden`), 'two legend items struck through').toHaveCount(2)
+    // The run-out chart is rebuilt on the fan's new plot box once the fan has redrawn (its key, `RunOutChart.tsx`).
+    await expect
+      .poll(async () => {
+        const e = await plotEdges(page)
+        return Math.round(Math.abs(e.runOut!.left - e.fan.left) + Math.abs(e.runOut!.right - e.fan.right))
+      }, { message: 'the run-out plot re-lines under the zoomed fan', timeout: 5_000 })
+      .toBeLessThanOrEqual(1)
+    // And back: the full axis and the words return.
+    for (const name of [copy.snapshotFanOuter, copy.snapshotFanInner]) await page.locator(`${CONF[0]} .highcharts-legend-item`, { hasText: name }).click()
+    await page.waitForTimeout(800)
+    expect(await ticks()).toEqual(before)
+    await expect(page.locator(`${CONF[0]} .highcharts-data-label`, { hasText: copy.snapshotFanOuterWords })).toBeVisible()
+  })
+})
+
+test.describe(`RC7 · Confidence on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true })
+  for (const seed of ['retired', 'dip'] as const) {
+    test(`?seed=${seed}: the charts, the metrics, then the caveat, in one column; no sideways scroll; the text audit`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterConfidence(page, seed)
+      await noSidewaysScroll(page, `${seed} PHONE Confidence`)
+      await auditConfidence(page, `${seed} PHONE`)
+      await assertConfidenceOrder(page, `${seed} PHONE`, true)
+    })
+  }
+})
+
+test.describe(`RC7 · Confidence at a 20 px browser default (${REAL.width}×${REAL.height})`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+  for (const seed of ['retired', 'dip'] as const) {
+    test(`?seed=${seed}: the text audit at the reader’s font; the charts, the metrics, then the caveat; no sideways scroll`, async ({ page, context }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      const cdp = await context.newCDPSession(page)
+      await cdp.send('Page.setFontSizes', { fontSizes: { standard: 20, fixed: 20 } })
+      await enterConfidence(page, seed)
+      await noSidewaysScroll(page, `${seed} 20px Confidence`)
+      await auditConfidence(page, `${seed} 20px`)
+      await assertConfidenceOrder(page, `${seed} 20px`, false)
+    })
+  }
+})
+
+test.describe(`RC7 · Confidence on the aged returns (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+  for (const key of ['stale', 'datestale'] as const) {
+    test(`?vault=${key}: the fan names when the plan was built and where today sits; the text audit; one caveat, reachable`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 120_000)
+      const affirm = await unlockToGate(page, key)
+      await affirm.click()
+      await expect(page.locator(SETTLED_RESULT), `?vault=${key}: the echoed answer never settled`).toBeAttached({ timeout: FINAL_TIER_MS })
+      await toConfidence(page, `?vault=${key}`)
+      const moments = await page.locator(`${CONF[0]} .highcharts-plot-line-label`).allTextContents()
+      expect(moments, `?vault=${key}: the moments (${moments.join(' | ')})`).toEqual(expect.arrayContaining([copy.bandClockBuiltLabel, copy.bandClockTodayLabel]))
+      await auditConfidence(page, `?vault=${key} REAL`)
+      await assertConfidenceOrder(page, `?vault=${key}`, false)
+    })
+  }
+})
+
+test.describe('RC7 · the old band’s chart-text arms, ported to Confidence', () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR })
+  // The densest date household (`datemixed`, the floor-dated split) and the widest tick (`borderline`, the old $1.25M
+  // lattice's six-glyph dollars): every word readable, inside, never shrunk or hidden.
+  for (const seed of ['datemixed', 'borderline'] as const) {
+    test(`?seed=${seed}: the fan’s text passes the audit`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 90_000)
+      await enterConfidence(page, seed)
+      await auditConfidence(page, `${seed} REAL`)
+    })
+  }
+})
+
+test.describe(`RC7 · the honesty floor — 68rem exactly (${FLOOR.width}×${FLOOR.height})`, () => {
+  test.use({ viewport: FLOOR })
+  test('?seed=retired: the fan keeps its dollar ticks to $0; every band word and the legend in frame and legible; the legend names each range the fan draws', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 90_000)
+    await enterConfidence(page, 'retired')
+    // The two-pane tier holds at the floor: the key-metric column beside the charts.
+    const side = await page.evaluate(() => document.querySelector('[data-metrics]')!.getBoundingClientRect().left > document.querySelector('[data-fan]')!.getBoundingClientRect().right)
+    expect(side, 'the floor is still the two-pane tier').toBe(true)
+    // The y-tick dollars are the colour-blind reader's position-to-dollar decoder (never colour alone), $0 the honest
+    // floor of the scale.
+    const ticks = await page.locator(`${CONF[0]} .highcharts-yaxis-labels text`).allTextContents()
+    expect(ticks.length, 'the fan drew no dollar ticks').toBeGreaterThan(2)
+    expect(ticks, 'the $0 anchor').toContain('$0')
+    // Every band word, tick, moment and legend item: present, visible, unclipped, at the floor size, and in frame.
+    const audit = await hcAudit(page, ...CONF)
+    expect(hcTextFailures(audit, await hcFloorPx(page), CONF_REQUIRED), 'the fan’s text at the floor').toEqual([])
+    const outOfFrame = audit.labels.filter((l) => (l.kind === 'data-label' || l.kind === 'legend-item') && l.text !== '' && l.bottom > FLOOR.height + 0.5)
+    expect(outOfFrame.map((l) => l.text), 'every band word and legend item inside the first frame').toEqual([])
+    // The band legend: it names each range the fan draws, and nothing else (band shape alone never carries the
+    // encoding). The drawn tiers are read off the chart's own series; the legend's rows off its items.
+    const legend = await page.evaluate((sel) => {
+      const chart = document.querySelector(sel)!
+      const drawn = ['b9-fan-outer', 'b9-fan-inner', 'b9-fan-median'].filter((c) => chart.querySelector(`.highcharts-series.${c} path`) !== null)
+      const rows = [...chart.querySelectorAll('.highcharts-legend-item')].map((el) => ({
+        tier: ['b9-fan-outer', 'b9-fan-inner', 'b9-fan-median'].find((c) => el.classList.contains(c)) ?? '?',
+        text: (el.textContent ?? '').trim(),
+        shown: el.getBoundingClientRect().height > 0,
+      }))
+      return { drawn, rows }
+    }, CONF[0])
+    expect(legend.drawn, 'the fan draws its three tiers').toEqual(['b9-fan-outer', 'b9-fan-inner', 'b9-fan-median'])
+    expect(legend.rows.map((r) => r.tier), 'one legend row per drawn tier, in order').toEqual(legend.drawn)
+    expect(legend.rows.map((r) => r.text), 'each row names its range').toEqual([copy.snapshotFanOuter, copy.snapshotFanInner, copy.snapshotFanMedian])
+    expect(legend.rows.every((r) => r.shown), 'every legend row is drawn').toBe(true)
   })
 })

@@ -111,7 +111,7 @@ function spineBand(
   // defensively withhold) together — the scrub readout's ages can never disagree with the axis ticks.
   const haveAges = ageA !== undefined && ageB !== undefined
   const bandAnnotations = haveAges
-    ? deriveSpineBandAnnotations(ageA, ageB, last.yearsFromNow, savedAnchor)
+    ? deriveSpineBandAnnotations(ageA, ageB, last.yearsFromNow, savedAnchor, cutYears !== rawFan.byYear)
     : undefined
   const bandAges = haveAges ? deriveBandAgesAt(ageA, ageB) : undefined
   return { band: fan, bandAnnotations, bandAges }
@@ -168,7 +168,7 @@ function dateBand(
   // it has to be asked the right question.
   const bandFloorKeyed = band.track === 'floor'
   const bandAnnotations = haveAges
-    ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow, savedAnchor, bandFloorKeyed)
+    ? deriveDateBandAnnotations(ageA, ageB, band.offsetYears, last.yearsFromNow, savedAnchor, bandFloorKeyed, cutYears !== rawBand.fan.byYear)
     : undefined
   const bandAges = haveAges ? deriveBandAgesAt(ageA, ageB) : undefined
   // THE TWO SPENDING LEVELS — derived through the compiled-budget producers, never summed here

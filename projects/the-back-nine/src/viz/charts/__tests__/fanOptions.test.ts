@@ -3,7 +3,7 @@ import { converter, parse } from 'culori'
 import type { BandFan, BandFanYear } from '@shared/model'
 import { truncateFanAtThinCohort } from '../../cohort'
 import { niceLattice } from '../../bandData'
-import { ageTickYears, FAN_CLASSES, fanBandVars, fanOptions, wordSeat, type FanLabels } from '../fanOptions'
+import { ageTickYears, FAN_CLASSES, FAN_SERIES, fanBandVars, fanLatticeFor, fanOptions, labelSides, momentSeat, wordSeat, type FanLabels } from '../fanOptions'
 
 /**
  * The fan's options (Act 6 · RC3, the plan's fanOptions scenarios): the y axis linear from $0 on the one humane
@@ -36,6 +36,7 @@ const labels: FanLabels = {
   ageAt: (t) => 63 + t,
   agesAt: (t) => `${63 + t}/${61 + t}`,
   tipRange: (a, b) => `${a}-${b}`,
+  tipInner: (a, b) => `${a}~${b}`,
   tipMedian: (m) => m,
   point: (a) => a,
 }
@@ -46,13 +47,20 @@ const seriesOf = (o: ReturnType<typeof fanOptions>) => o.series as unknown as An
 describe('fanOptions', () => {
   it('the y axis is linear from $0, its ticks the one humane lattice', () => {
     const o = fanOptions({ fan: FAN, moments: [], labels, height: 300 })
-    const y = o.yAxis as { type: string; min: number; max: number; tickPositions: number[] }
+    const y = o.yAxis as { type: string; min: number; maxPadding: number; endOnTick: boolean; tickPositioner: (this: { dataMax?: number }) => number[] }
     expect(y.type).toBe('linear')
     expect(y.min).toBe(0)
+    expect(y.maxPadding).toBe(0)
+    expect(y.endOnTick).toBe(true)
     const lattice = niceLattice(Math.max(...FAN.byYear.map((v) => v.p90)))
-    expect(y.max).toBe(lattice.ceiling)
-    expect(y.tickPositions[0]).toBe(0)
-    expect(y.tickPositions).toHaveLength(lattice.intervals + 1)
+    // Highcharts hands the positioner the visible data's top; the full fan's is its p90.
+    const ticks = y.tickPositioner.call({ dataMax: Math.max(...FAN.byYear.map((v) => v.p90)) })
+    expect(ticks[0]).toBe(0)
+    expect(ticks.at(-1)).toBe(lattice.ceiling)
+    expect(ticks).toHaveLength(lattice.intervals + 1)
+    // The median alone (both ranges hidden) zooms the axis; nothing drawn keeps the full one.
+    expect(y.tickPositioner.call({ dataMax: Math.max(...FAN.byYear.map((v) => v.p50)) }).at(-1)).toBe(niceLattice(Math.max(...FAN.byYear.map((v) => v.p50))).ceiling)
+    expect(y.tickPositioner.call({})).toEqual(ticks)
   })
 
   it('the cut fan has no point past the thin-cohort cut', () => {
@@ -139,5 +147,74 @@ describe('fanOptions', () => {
     expect(access.description).toBe('d')
     expect(access.screenReaderSection.beforeChartFormat).not.toContain('typeDescription')
     expect(access.point).toBeDefined()
+  })
+})
+
+describe('fanOptions: the legend toggle (Act 6 · RC7, ref 2.9’s median-only frame)', () => {
+  it('the axis fits what is still drawn: the outer range, else the middle half, else the median; always from $0', () => {
+    const top = (pick: (y: BandFanYear) => number) => Math.max(...FAN.byYear.map(pick))
+    expect(fanLatticeFor(FAN.byYear, { outer: true, inner: true, median: true })).toEqual(niceLattice(top((y) => y.p90)))
+    expect(fanLatticeFor(FAN.byYear, { outer: false, inner: true, median: true })).toEqual(niceLattice(top((y) => y.p75)))
+    expect(fanLatticeFor(FAN.byYear, { outer: false, inner: false, median: true })).toEqual(niceLattice(top((y) => y.p50)))
+    // The median-only axis is the shorter one: the zoom is real.
+    expect(fanLatticeFor(FAN.byYear, { outer: false, inner: false, median: true }).ceiling).toBeLessThan(
+      fanLatticeFor(FAN.byYear, { outer: true, inner: true, median: true }).ceiling,
+    )
+  })
+
+  it('nothing drawn, or a ruined median at $0 everywhere, keeps the full axis (never a $0-only scale)', () => {
+    const full = niceLattice(Math.max(...FAN.byYear.map((y) => y.p90)))
+    expect(fanLatticeFor(FAN.byYear, { outer: false, inner: false, median: false })).toEqual(full)
+    const ruined = FAN.byYear.map((y) => ({ ...y, p50: 0 }))
+    expect(fanLatticeFor(ruined, { outer: false, inner: false, median: true })).toEqual(full)
+  })
+
+  it('each range’s printed words ride with the range they name (linkedTo), so a hidden range takes its words with it', () => {
+    const o = fanOptions({ fan: FAN, moments: [], labels, height: 300 })
+    const byId = new Map(seriesOf(o).map((s) => [s.id, s as AnySeries & { linkedTo?: string; events?: object }]))
+    expect(byId.get('fan-words-outer')!.linkedTo).toBe(FAN_SERIES.outer)
+    expect(byId.get('fan-words-inner')!.linkedTo).toBe(FAN_SERIES.inner)
+    for (const id of Object.values(FAN_SERIES)) expect(byId.has(id), `${id} is drawn`).toBe(true)
+  })
+
+  it('no moment label crosses another moment’s line: its preferred side, else the other, else along its own line', () => {
+    const plot = { left: 50, right: 350 }
+    // `dip` at the phone: "Today" (40 px) at the plot's left edge, "Work stops" 35 px along. Today cannot read right
+    // across the Work stops line, nor left out of the plot: it reads along its line; Work stops keeps its right side.
+    expect(labelSides([{ x: 50, width: 40 }, { x: 85, width: 70 }], plot)).toEqual(['along', 'right'])
+    // With room (his window), both keep their preferred side.
+    expect(labelSides([{ x: 50, width: 40 }, { x: 190, width: 70 }], plot)).toEqual(['right', 'right'])
+    // A label that would cross a neighbour's line on its preferred side flips to the other side when that is clear.
+    expect(labelSides([{ x: 200, width: 40 }, { x: 230, width: 60 }], plot)).toEqual(['left', 'right'])
+    // Past 60% of the plot the preferred side is the left; at the right edge a label never leaves the plot.
+    expect(labelSides([{ x: 350, width: 80 }], plot)).toEqual(['left'])
+    // No returned seat ever spans another mark.
+    const marks = [{ x: 50, width: 40 }, { x: 70, width: 60 }, { x: 95, width: 70 }, { x: 350, width: 80 }]
+    labelSides(marks, plot).forEach((side, i) => {
+      if (side === 'along') return
+      const m = marks[i]!
+      const [a, b] = side === 'right' ? [m.x + 4, m.x + 4 + m.width] : [m.x - 4 - m.width, m.x - 4]
+      for (const o of marks) if (o !== m) expect(o.x < a || o.x > b, `mark ${i}'s label crosses the line at ${o.x}`).toBe(true)
+    })
+  })
+
+  it('the tooltip names each range’s low and high, then the median (ref 2.9)', () => {
+    const o = fanOptions({ fan: FAN, moments: [], labels, height: 300 })
+    const fmt = (o.tooltip as { formatter: (this: unknown) => string }).formatter
+    const y = FAN.byYear[10]!
+    expect(fmt.call({ points: [{ x: 10 }] })).toBe(['73/71', `$${y.p10}-$${y.p90}`, `$${y.p25}~$${y.p75}`, `$${y.p50}`].join('<br>'))
+  })
+
+  it('a moment label leaves the plot’s foot for its top where the median runs low under it, never in the words’ stretch', () => {
+    const low: BandFanYear[] = FAN.byYear.map((y) => ({ ...y, p50: 50_000 }))
+    const ceiling = niceLattice(Math.max(...low.map((y) => y.p90))).ceiling
+    expect(momentSeat(low, 2, false, ceiling)).toBe('top')
+    expect(momentSeat(low, 30, true, ceiling)).toBe('top')
+    // The ranges' words sit in the middle stretch's upper strips: a moment there stays at the foot.
+    expect(momentSeat(low, 15, false, ceiling)).toBe('foot')
+    // A median well up the plot leaves the foot clear (the zoomed median-only axis puts it there).
+    const high: BandFanYear[] = FAN.byYear.map((y) => ({ ...y, p50: ceiling * 0.6 }))
+    expect(momentSeat(high, 2, false, ceiling)).toBe('foot')
+    expect(momentSeat(high, 30, true, ceiling)).toBe('foot')
   })
 })

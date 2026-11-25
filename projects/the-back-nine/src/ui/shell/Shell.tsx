@@ -75,6 +75,7 @@ import { Result } from '../Result'
 import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { Analysis } from '../screens/retirement/Analysis'
+import { confidenceView } from '../screens/retirement/confidenceView'
 import { ActionItemsTray, type TrayFocus } from '../screens/retirement/ActionItemsTray'
 import { keptIdOf, landingPick, probabilityView, type LeftPick, type ProbabilityChart, type RightPick } from '../screens/retirement/probabilityView'
 import { PlanListDrawer, type NameBox } from '../screens/retirement/PlanListDrawer'
@@ -582,9 +583,12 @@ export default function Shell({
     () => composeAnswerNotes(snapshot, { readOnly, stalenessNote, leftOverClauseHost, agedBalancesYear, wallCalendarYear }),
     [snapshot, readOnly, stalenessNote, leftOverClauseHost, agedBalancesYear, wallCalendarYear],
   )
+  // Probability and Confidence are one page (RC7): Confidence reads the page's title, intro, states and caveat from the
+  // same composer, and its own panel from `confidenceView`.
+  const analysisTab = screen === 'probability' || screen === 'confidence' ? screen : null
   const prob = useMemo(
     () =>
-      screen === 'probability'
+      analysisTab !== null
         ? probabilityView({
             snapshot,
             wallCalendarYear,
@@ -603,7 +607,12 @@ export default function Shell({
             chart,
           })
         : null,
-    [screen, snapshot, wallCalendarYear, readOnly, retryAnswer, notes, whatIf.mode, whatIf.source, whatIf.shown, whatIf.view, whatIf.landed, whatIf.changedFromKept, rightPick, rightBundle, right.view, right.landed, recordCard, chart],
+    [analysisTab, snapshot, wallCalendarYear, readOnly, retryAnswer, notes, whatIf.mode, whatIf.source, whatIf.shown, whatIf.view, whatIf.landed, whatIf.changedFromKept, rightPick, rightBundle, right.view, right.landed, recordCard, chart],
+  )
+  // ── Retirement → Analysis → Confidence (RC7): the plan's fan full size and, retired, the run-out share ──────────────
+  const conf = useMemo(
+    () => (screen === 'confidence' ? confidenceView({ snapshot, notes, onRetry: retryAnswer }) : null),
+    [screen, snapshot, notes, retryAnswer],
   )
 
   // ── Retirement → Cash Flows (RC6): its tab, drill, table and pick held here, so a page move keeps them ─────────────
@@ -747,7 +756,7 @@ export default function Shell({
     ) : undefined
 
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
-  const figured = screen === 'snapshot' || screen === 'probability' || screen === 'cash-flows'
+  const figured = screen === 'snapshot' || screen === 'probability' || screen === 'confidence' || screen === 'cash-flows'
   const staleLines = useMemo(() => (figured ? composeStaleLines(notes, !readOnly && onReview !== undefined) : []), [figured, notes, readOnly, onReview])
 
   const snapshotDoors: SnapshotDoors = { analysis: doorTo('probability'), cashFlows: doorTo('cash-flows'), facts: doorTo('interim-facts') }
@@ -908,6 +917,12 @@ export default function Shell({
             <Analysis
               view={prob}
               headingRef={headingRef}
+              tab={analysisTab ?? 'probability'}
+              onTab={(tab) => {
+                const to = routeOfScreen(tab)
+                if (!routeEquals(to, route)) onNavigate(to)
+              }}
+              {...(conf !== null ? { confidence: conf } : {})}
               onPick={onPick}
               onPickCompared={onPickCompared}
               onOpenPlanList={() => {

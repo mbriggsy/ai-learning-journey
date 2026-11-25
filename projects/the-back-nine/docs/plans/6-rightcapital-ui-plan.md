@@ -1238,6 +1238,36 @@ lines 2018 and 2038 at `95c715e1`, "the honesty floor — 68rem exactly" and "th
 on Confidence from that text: every band word and the legend in frame and legible at the 68rem floor, and the legend
 naming each range the fan draws. *(the pilot's call, 2026-11-24, b9-5)*
 
+**Settled in the build (2026-11-24, b9-6).** The "[plan]" is always your plan, with no picker: a what-if run carries no
+fan, so the title reads "Range of balances, your plan", and the tab has no ACTION ITEMS handle (a what-if edited there
+would change nothing on it). Confidence is a route of its own (`#/retirement/analysis/confidence`) and reads the page's
+title, intro, states and caveat from `probabilityView.ts`, so the two tabs are one answer. The run-out chart shares the
+fan's axis exactly: the same first and last year (the fan's cut, kept), the same age ticks, and the fan's plot margins
+handed over as it draws (`PlotBox`; the run-out chart is rebuilt on a new box, never updated). Its y axis counts futures
+in every 100, linear from 0, topped at the smallest of 10, 20, 50 or 100 that holds the highest share. No value is
+printed on the plot (its few rows of height would put any label over the line); every year's words are in its tooltip
+and screen-reader sentence, and the key-metric column leads with the share by the last year drawn ("By ages 93 and 92,
+about 8 in 100 futures have run out of money") and then the whole plan's ("Over the whole plan, about 12 in 100 futures
+run out of money while one of you is still living", exactly 1 − `survivalFraction`). A depletion in simulated year d
+counts from the fan's year d + 1 (the year it reads $0). The share rounds a whole count (count × 100 ÷ paths) and names
+its edges apart: no future, fewer than 1 in 100, more than 99 in 100 (99.5 in 100 included), every future. The counted
+words are slots (the free-numeral gate covers every `confidence*` key). The R13 caveat closes the key-metric column on
+this tab, inside the one frame at his window, where the panel's foot under two charts is not. "Savings, in today's
+dollars" is not printed over this fan (the tab row already says "Today's dollars"). The legend toggle is Highcharts'
+own: the y axis fits the visible series' top through `tickPositioner` (never an axis update) and stays from $0, each
+range's words ride it (`linkedTo`), and the moments' labels re-seat (removed and added again). A moment's label moves
+from the plot's foot to its top where the median under it sits below 45% of the axis (the RC7 look caught "Work stops"
+printed across the median on `dip`), never in the ranges' words' stretch; this reaches Snapshot's card, which draws the
+same fan. The tooltip gains the middle half's low and high (ref 2.9). **The fan's cut is named for what it is** (the
+orchestrator's read of the RC7 shots): on `retired` the plan runs 47 years (to ages 113 and 112) but the fan, and so the
+run-out chart, stops at the cohort cut, year 27 (ages 93 and 92, the last year at least half of the futures still have
+one of you living); 150 of the 239 run-outs in 2,000 paths fall before it and 89 after. So the right-hand moment says
+"Range ends" wherever the drawn fan ends before the engine's ("Plan horizon" only where it does not), and the second
+metric line says why the charts stop and gives the whole plan's share as that longer span; where the charts reach the
+plan's end, the one sentence is the whole plan's and equals the chart's last point. No moment label crosses another
+moment's line: each is seated from the drawn widths (`labelSides`: its preferred side, else the other, else read along
+its own line), as "Today" crossed "Work stops" on `dip` at the phone. *(the pilot's call, 2026-11-24, b9-6)*
+
 **Milestone 1** closes here (section 7).
 
 ### RC8: Tax → Tax Strategies

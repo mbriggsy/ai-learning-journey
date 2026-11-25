@@ -1160,6 +1160,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     snapshotRate: slots.snapshotRate(4.12),
     snapshotFanAgeAxis: slots.snapshotFanAgeAxis('Alex'),
     snapshotFanTipRange: slots.snapshotFanTipRange('$400k', '$2.1mm'),
+    snapshotFanTipInner: slots.snapshotFanTipInner('$800k', '$1.6mm'),
     snapshotFanTipMedian: slots.snapshotFanTipMedian('$1.2mm'),
     snapshotFanPoint: slots.snapshotFanPoint('Ages 70 and 68', '$400k', '$1.2mm', '$2.1mm'),
     probabilitySurvivorRow: slots.probabilitySurvivorRow('7 of 10'),
@@ -1192,6 +1193,18 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       slots.oddsPoint(2033, 'Your odds', 'better than 9 in 10', 'clears', true),
       slots.oddsPoint(2027, 'Your odds', '6 of 10', 'below', false),
     ].join(' '),
+    confidenceShareAbout: slots.confidenceShareAbout(6),
+    confidenceShareFewer: slots.confidenceShareFewer(),
+    confidenceShareMore: slots.confidenceShareMore(),
+    confidenceRunOutTitle: slots.confidenceRunOutTitle(),
+    confidenceRunOutDescription: slots.confidenceRunOutDescription(),
+    confidenceRunOutTip: slots.confidenceRunOutTip('about 6 in 100 futures'),
+    confidenceRunOutPoint: slots.confidenceRunOutPoint('Ages 80 and 78', 'about 6 in 100 futures'),
+    confidenceRunOutBy: slots.confidenceRunOutBy(92, 90, 'about 6 in 100 futures', true),
+    confidenceRunOutWhole: slots.confidenceRunOutWhole('every future', false),
+    confidenceRunOutWholePast: slots.confidenceRunOutWholePast(93, 92, 'about 12 in 100 futures', true),
+    confidenceCutNote: slots.confidenceCutNote(93, 92),
+    bandClockCutDesc: slots.bandClockCutDesc(93, 92),
   }
 
   it('the year-by-year table never calls its one future typical, average, expected or median (U7; the one-future record §5.1)', () => {
@@ -2400,7 +2413,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:968-978, :1024-1041), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:971-981, :1027-1044), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

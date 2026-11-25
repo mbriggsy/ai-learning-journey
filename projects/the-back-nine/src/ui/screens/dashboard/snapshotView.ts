@@ -224,11 +224,12 @@ export function chartWords(title: string): { readonly title: string; readonly cr
 
 // ── The fan ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
-/** One labels object per answered draft and ages, so a recompute that changes nothing about the fan hands the chart
+/** One labels object per answered draft and ages (Snapshot's card and Confidence share it: one fan, one set of words),
+ *  so a recompute that changes nothing about the fan hands the chart
  *  the same words (`FanChart.tsx` redraws only when the picture or its words change). */
 const labelCache = new WeakMap<object, Map<string, FanLabels>>()
 
-function fanLabels(draft: MemoryModelSnapshot['draft'], ageA: number, ageB: number): FanLabels {
+export function fanLabels(draft: MemoryModelSnapshot['draft'], ageA: number, ageB: number): FanLabels {
   const key = `${ageA}/${ageB}`
   const byAges = labelCache.get(draft) ?? new Map<string, FanLabels>()
   labelCache.set(draft, byAges)
@@ -256,6 +257,7 @@ function composeFanLabels(draft: MemoryModelSnapshot['draft'], ageA: number, age
     ageAt: (t) => Math.round(ageA + t),
     agesAt: (t) => slots.bandClockAgesDesc(Math.round(ageA + t), Math.round(ageB + t)),
     tipRange: slots.snapshotFanTipRange,
+    tipInner: slots.snapshotFanTipInner,
     tipMedian: slots.snapshotFanTipMedian,
     point: slots.snapshotFanPoint,
   }

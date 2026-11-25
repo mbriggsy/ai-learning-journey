@@ -55,7 +55,9 @@ describe('routes — the hash', () => {
   it('an unknown page or tab lands on its module’s first page; a known page with no tab on its first tab', () => {
     expect(parseHash('#/retirement/stress-test')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     expect(parseHash('#/retirement/analysis')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
-    expect(parseHash('#/retirement/analysis/confidence')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
+    // Confidence is its own tab since RC7; an unknown tab on the page still lands on Probability.
+    expect(parseHash('#/retirement/analysis/confidence')).toEqual({ module: 'retirement', page: 'analysis', tab: 'confidence' })
+    expect(parseHash('#/retirement/analysis/comparisons')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     // The interim What if tab left with RC4b (its levers are Probability's Action Items tray): its old address lands on Probability.
     expect(parseHash('#/retirement/analysis/what-if')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })
     expect(parseHash('#/retirement')).toEqual({ module: 'retirement', page: 'analysis', tab: 'probability' })

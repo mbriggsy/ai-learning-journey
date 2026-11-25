@@ -888,6 +888,9 @@ export const copy = {
   // already-retired SPINE route it would point into the past, so the spine band omits it (honest-axis law).
   bandClockTodayLabel: 'Today',
   bandClockHorizonLabel: 'Plan horizon',
+  // Act 6 · RC7: where the fan is CUT at the thinning cohort (`truncateFanAtThinCohort`) its last year is not the plan's
+  // horizon (on `retired` the cut sits at year 27 of a 47-year plan), so that edge is named for what it is.
+  bandClockCutLabel: 'Range ends',
   bandClockWorkStopsLabel: 'Work stops',
   // U17 §S2.5 — on a SPLIT reading the band follows the essentials-covered track while the hero
   // speaks the lifestyle date; the marker itself names WHICH date it marks, so the fan can never
@@ -2986,6 +2989,17 @@ export const copy = {
   workbenchPairToRoth: 'Moved to Roth',
   workbenchPairRequired: 'Required withdrawal',
   workbenchPairEndTotal: 'All savings at year’s end',
+  // --- Retirement → Analysis → Confidence (Act 6 · RC7; `confidenceView.ts`): the plan's fan full size, its named
+  // moments, and on the retired route how many futures have run out of money by each age. A share of futures is said
+  // "about N in 100 futures", never a percent and never "0 in 100" while any future runs out (the slots below). ---
+  confidenceTab: 'Confidence',
+  confidenceChartTitle: 'Range of balances, your plan',
+  confidenceRunOutName: 'Futures run out by this age',
+  confidenceRunOutStopgap:
+    'How many futures run out of money by each age will show here once your plan is read in full at the year you stop working.',
+  // The share words with no count in them (`RunOutShareKind`); the counted kinds are slots (the numeric channel).
+  confidenceShareNone: 'no future',
+  confidenceShareEvery: 'every future',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -3579,6 +3593,12 @@ export const slots = {
   /** The "Today" marker's accessible sentence (the reader is color-blind — the marker's meaning
    *  must reach the a11y tree as text, not as a vertical rule alone). */
   bandClockTodayDesc: (ageA: number, ageB: number): string => `Today — ages ${ageA} and ${ageB}`,
+  /** The cut edge's accessible sentence (Act 6 · RC7, `bandClockCutLabel`): why the range stops before the plan does. */
+  bandClockCutDesc: (ageA: number, ageB: number): string =>
+    `The range ends at ages ${ageA} and ${ageB}, the last age at which at least half of the futures still have one of you living; the plan runs on past it`,
+  /** Confidence's line saying why its charts stop where the fan is cut, and that the plan runs on (Act 6 · RC7). */
+  confidenceCutNote: (ageA: number, ageB: number): string =>
+    `The charts stop at ages ${ageA} and ${ageB}, the last age at which at least half of the futures still have one of you living. The plan runs on past it.`,
   /** The aged-plan "Plan built" year-0 endpoint's accessible sentence (the U13 one-time-base
    *  law applied to the chart — see `bandClockBuiltLabel`). Names the BUILD YEAR and the ages
    *  the household entered then — NEVER the save (U17 §S0.2: the save is `savedAt` and a
@@ -4864,7 +4884,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2170` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2183` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5474,6 +5494,7 @@ export const slots = {
   snapshotFanAgeAxis: (name: string): string => `${name}’s age`,
   /** The fan's tooltip lines (both ages, the eight-in-ten range, the most likely path). */
   snapshotFanTipRange: (low: string, high: string): string => `Eight in ten futures: ~${low} to ~${high}`,
+  snapshotFanTipInner: (low: string, high: string): string => `The middle half of futures: ~${low} to ~${high}`,
   snapshotFanTipMedian: (median: string): string => `The most likely path: ~${median}`,
   /** The screen reader's sentence for one year of the fan. */
   snapshotFanPoint: (ages: string, low: string, median: string, high: string): string =>
@@ -5533,4 +5554,23 @@ export const slots = {
             : ' — below the line'
     return `Stopping in ${year}, ${series.toLowerCase()}: ${odds}${tail}.`
   },
+  // --- Retirement → Analysis → Confidence (Act 6 · RC7; `confidenceView.ts`). `n` is a whole count from 1 to 99 (the
+  // kinds outside it have their own words in `copy`: none, fewer than 1, more than 99, every). `plural` follows the
+  // share's own noun ("about 6 in 100 futures have", "every future has"). ---
+  confidenceShareAbout: (n: number): string => `about ${n} in 100 futures`,
+  confidenceShareFewer: (): string => 'fewer than 1 in 100 futures',
+  confidenceShareMore: (): string => 'more than 99 in 100 futures',
+  confidenceRunOutTitle: (): string => 'Futures that have run out of money by this age, out of every 100',
+  confidenceRunOutDescription: (): string =>
+    'How many futures in every 100 have used up their savings by each age, out of every future the plan ran.',
+  confidenceRunOutTip: (share: string): string => `Run out by then: ${share}`,
+  confidenceRunOutPoint: (ages: string, share: string): string => `${ages}. Run out by then: ${share}.`,
+  confidenceRunOutBy: (ageA: number, ageB: number, share: string, plural: boolean): string =>
+    `By ages ${ageA} and ${ageB}, ${share} ${plural ? 'have' : 'has'} run out of money.`,
+  confidenceRunOutWhole: (share: string, plural: boolean): string =>
+    `Over the whole plan, ${share} ${plural ? 'run' : 'runs'} out of money while one of you is still living.`,
+  /** The whole plan's share where the charts stop before the plan does: why they stop, then the longer span named, so
+   *  it never reads as a second answer to the chart's question. */
+  confidenceRunOutWholePast: (ageA: number, ageB: number, share: string, plural: boolean): string =>
+    `The charts stop at ages ${ageA} and ${ageB}: past them, fewer than half of the futures still have one of you living. Over the whole plan, ${share} ${plural ? 'run' : 'runs'} out of money.`,
 } as const

@@ -639,6 +639,10 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   beat and record `:has()` seat rules (the beat-plus-record tail rules in `confidence.css` reach (0,7,0)), so a variant
   silently keeps today's rows on those frames: repeat the `:has()` chain and probe the computed row (insight 075). And a
   `seat=` left in a harness URL measures a variant, never today.
+- **(b9-6, 2026-11-24, RC7) The harnesses' pinned page clock (`setFixedTime`) freezes Highcharts' redraw animation at its
+  first frame.** A legend toggle then measures a stale plot edge and half-drawn ticks in e2e while it works in a live
+  browser. Any arm or look capture that reads a chart after a redraw (a toggle, a resize, new data) runs under reduced
+  motion (`page.emulateMedia({ reducedMotion: 'reduce' })`), which the shared chart default turns into no animation.
 
 ## The mutation harness
 
@@ -794,6 +798,13 @@ is a guess a verifier must check, never a fact
   sub-bullet, a new arm) re-anchors with `pnpm doc:reanchor HEAD --apply`, then each move spot-checked to the same
   content. Never re-run `--apply` after it ran: the dry run then re-diffs against HEAD and lists the same moves again.
 - **(b9-3, 2026-11-24, RC0) `pnpm doc:reanchor` cannot follow a citation into another file, and it binds a bare `:N` to the FIRST file named within 60 characters before it, not the nearest.** After an extraction moves code across files, rebuild the review list from each file's HEAD text (a scratch copy of the tool did it for RC0) and resolve each citation by hand; never re-run `--apply` on an applied base. doc-stats catches only a citation that lands out of range or on a blank line.
+- **(b9-6, 2026-11-24, RC5 and RC7) An edit after the one re-anchor run shifts every citation past it, and doc-stats sees
+  only the few that land on a blank line.** RC7's fix round moved 220 citations that way while doc-stats showed 3. The exact
+  repair: rebuild each edited file's text as it stood at the re-anchor run, put it in a throwaway base commit made through a
+  temporary index (`GIT_INDEX_FILE=<scratch>/tmpindex`: `git read-tree HEAD`, `git add -- .`, then `git update-index
+  --cacheinfo` for each rebuilt file, `git write-tree`, `git commit-tree`), dry-run `node scripts/reanchor-citations.mjs
+  <base>` (only those files' citations may move, by the edit's delta), then `--apply`. Undo any hand fix first so nothing
+  moves twice. The real index and HEAD are never touched.
 
 ## Copy and copyGuard
 

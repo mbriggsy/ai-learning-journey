@@ -465,3 +465,58 @@ for (const size of SIZES) {
     }
   })
 }
+
+// RC7: Retirement → Analysis → Confidence, on a retired and a working household and the aged spine (`?vault=stale`): the
+// tab, the legend with both ranges hidden (the axis zoomed to the median), and the run-out chart (scrolled to on the
+// phone). Reduced motion, because the harness fixes the page clock and Highcharts times its morph on it: a toggle's
+// redraw would be caught in its first frame (the RC7 fit arm's note); reduced motion draws each one in its final place.
+async function toConfidenceTab(page: Page, phone: boolean): Promise<void> {
+  await showScreen(page, SCREENS[1], phone)
+  await page.getByRole('tab', { name: copy.confidenceTab }).click()
+  await expect(page.locator('[data-confidence] [data-chart="fan"] .highcharts-series-group')).toBeAttached({ timeout: 30_000 })
+  if ((await page.locator('[data-confidence="headline"]').count()) > 0) {
+    await expect(page.locator('[data-chart="runout"] .highcharts-series-group')).toBeAttached({ timeout: 30_000 })
+  }
+  await page.waitForTimeout(600)
+}
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, Confidence at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    for (const target of ['retired', 'dip', 'vault=stale'] as const) {
+      const name = target.replace('vault=', 'vault-')
+      test(`${target}: Confidence — the tab, the median only, the run-out chart`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 180_000)
+        if (target === 'vault=stale') {
+          await page.goto('/?vault=stale')
+          await page.getByRole('button', { name: 'Open my plan' }).click()
+          await page.getByRole('button', { name: /still about right/i }).click()
+          await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+        } else await enterShell(page, target)
+        const findings: Record<string, Audit> = {}
+        await toConfidenceTab(page, size.phone)
+        await shot(page, findings, 'confidence', name, size.tag)
+        await page.screenshot({ path: `${OUT}/confidence-${name}-${size.tag}-full.png`, fullPage: true })
+        const fan = page.locator('[data-confidence] [data-chart="fan"]')
+        for (const range of [copy.snapshotFanOuter, copy.snapshotFanInner]) await fan.locator('.highcharts-legend-item', { hasText: range }).click()
+        await page.waitForTimeout(400)
+        await fan.evaluate((el) => el.scrollIntoView({ block: 'center' }))
+        findings['confidence-median-only'] = await audit(page)
+        await page.screenshot({ path: `${OUT}/confidence-median-only-${name}-${size.tag}.png` })
+        for (const range of [copy.snapshotFanOuter, copy.snapshotFanInner]) await fan.locator('.highcharts-legend-item', { hasText: range }).click()
+        if ((await page.locator('[data-runout-card]').count()) > 0) {
+          await page.locator('[data-runout-card]').evaluate((el) => el.scrollIntoView({ block: 'center' }))
+          findings['confidence-run-out'] = await audit(page)
+          await page.screenshot({ path: `${OUT}/confidence-run-out-${name}-${size.tag}.png` })
+        }
+        console.log(`[rc-look ${UNIT} confidence ${target} ${size.tag}] ${JSON.stringify(findings)}`)
+        for (const [id, a] of Object.entries(findings)) {
+          expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+          expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+          expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+          expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+        }
+      })
+    }
+  })
+}

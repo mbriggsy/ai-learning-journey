@@ -641,14 +641,14 @@ Each entry below states 1536×791, 2.5 DPR or the 800 px law as a live instructi
 - `e2e/vertical-fit.spec.ts line 2079-2096 at 95c715e19`: the 20 px docblock's premise ("the 1536 laptop STAYS two-pane", "≤ 22.6 px"); its numbers are re-recorded.
 - `e2e/vertical-fit.spec.ts line 4530-4533 at 95c715e19`: the record arm's "TIGHT BY CONSTRUCTION (~10px at 1536×791)" note and its stale pointer to the copy length note.
 - `e2e/vertical-fit.spec.ts:899`, `e2e/vertical-fit.spec.ts line 1782 at 95c715e19`, `e2e/vertical-fit.spec.ts line 1795 at 95c715e19`: the "at the fit-law tier floor" describe titles.
-- `e2e/chart-text.spec.ts:26`, `e2e/chart-text.spec.ts line 824 at 95c715e19`, `e2e/chart-text.spec.ts line 1289 at 95c715e19`, `e2e/chart-text.spec.ts line 1803 at 95c715e19`: the header's "REAL 1536 @2.5", "from 320 to 1536", the hard-typed "1536 → 320" log string, and the 537.9 px modal-figure note.
+- `e2e/chart-text.spec.ts:27`, `e2e/chart-text.spec.ts line 824 at 95c715e19`, `e2e/chart-text.spec.ts line 1289 at 95c715e19`, `e2e/chart-text.spec.ts line 1803 at 95c715e19`: the header's "REAL 1536 @2.5", "from 320 to 1536", the hard-typed "1536 → 320" log string, and the 537.9 px modal-figure note.
 - `e2e/caddie-walk.spec.ts:37`: the "1536px long edge" comment.
 - `e2e/held/council-24px-shots.spec.ts:88`: "this 1536 window renders the STACKED tier".
 - `src/ui/styles/tokens.css:135-205`: `--laptop-fit-height` and `--bp-laptop-short` with their docblocks.
 - `src/ui/styles/app.css:37-44`, `src/ui/styles/app.css:68`: the "800px" law and the "1536 px laptop" example.
 - `src/ui/styles/result.css:203-207`: the "800px" law.
 - `src/ui/styles/confidence.css line 253 at 95c715e19`, `src/ui/styles/confidence.css line 260 at 95c715e19`: the "--laptop-fit-height" and "800px" law notes.
-- `src/ui/copy.ts:2149-2153`: the standing line's length note ("774px with 17px of frame left").
+- `src/ui/copy.ts:2152-2156`: the standing line's length note ("774px with 17px of frame left").
 - The Caddie: the skill's frontmatter description and its crop, DPR and full-frame lines; the taste corpus's Layout & density heading; the reader-panel prompt line in `.claude/workflows/caddie.js` and `.claude/workflows/caddie-ab.js`.
 - Docs: `docs/glossary.md`'s Caddie entry; `docs/roadmap.md`'s Validation-gates "Vertical fit + chart text" row; `docs/landmines.md`'s "manual 1536×791 measure" line; `docs/architecture.md` §12's 20 px fork premise and its "his 1536 px laptop renders the sub-68rem STACKED layout" example; `docs/backlog.md`'s tall-tap premise ("At his laptop's 1536 px width…"), the survivor prescription ("rec's standing line sits at 777 of 791"), the two "manual 1536×791 measure" lines, the 20 px fork entry, and the date-route and committed-recommendation empty-column entries framed "at 1536×791"; `docs/plans/5-workbench-plan.md`'s forward fit arms at 1536×791; `docs/plans/features/working-year-surplus-build-spec.md`'s owed Caddie walk at 1536×791 @ 2.5×; `TODO.md`'s b9-3 block note that the spec hard-codes `deviceScaleFactor: 2.5` (already fixed by `c1ef71da`).
 

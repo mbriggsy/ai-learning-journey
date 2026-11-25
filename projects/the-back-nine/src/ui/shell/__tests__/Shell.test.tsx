@@ -472,6 +472,26 @@ describe('Shell — RC4: the home’s new pages and the gear', () => {
     expect(main.querySelector('[data-half="alternative"]')).not.toBeNull()
     expect(main.querySelector('[data-half="compared"]')).not.toBeNull()
   })
+  it('RC7: the Confidence tab is a route of the same page: its title over the fan, one R13 caveat, and no ACTION ITEMS handle', () => {
+    const { lanes } = heldLanes()
+    renderRoom(snapshotWith(finalAnswer()), lanes)
+    showPage('probability')
+    fireEvent.click(screen.getByRole('tab', { name: copy.confidenceTab }))
+    const main = document.querySelector('main.result')!
+    expect(main).toHaveAttribute('data-shell-screen', 'confidence')
+    expect(main).toHaveAttribute('data-inframe-disclaimer')
+    expect(screen.getByRole('heading', { level: 1, name: copy.analysisTitle })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: copy.confidenceTab })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('heading', { level: 2, name: copy.confidenceChartTitle })).toBeInTheDocument()
+    expect(main.querySelectorAll('[data-caveat]')).toHaveLength(1)
+    // The caveat closes the key-metric column, after the charts.
+    expect(main.querySelector('[data-metrics] [data-caveat]')).not.toBeNull()
+    expect(screen.queryByRole('button', { name: copy.trayHandle })).toBeNull()
+    // And back: Probability's tab returns the halves.
+    fireEvent.click(screen.getByRole('tab', { name: copy.probabilityTab }))
+    expect(main).toHaveAttribute('data-shell-screen', 'probability')
+    expect(main.querySelector('[data-half="compared"]')).not.toBeNull()
+  })
 
   it('the interim Tax Strategies and Health Care pages: the banner, no in-frame caveat (the trailing mount stands), one main.result', () => {
     const { lanes } = heldLanes()

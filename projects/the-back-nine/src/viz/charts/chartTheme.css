@@ -206,6 +206,24 @@
     fill: var(--color-stone-900);
     font-size: var(--text-axis);
   }
+
+  /* ── Confidence's run-out chart (RC7, `runOutOptions.ts`): one series named by the title over it, so one quiet ink
+     line over a pale stone fill (colour carries nothing here). ── */
+  .b9-runout .highcharts-graph {
+    stroke: var(--color-stone-900);
+    stroke-width: 2;
+  }
+  .b9-runout .highcharts-area {
+    fill: var(--color-stone-200);
+    fill-opacity: 1;
+  }
+  .b9-runout .highcharts-point,
+  .b9-runout .highcharts-halo {
+    fill: var(--color-stone-900);
+  }
+  .b9-runout .highcharts-halo {
+    fill-opacity: 0.12;
+  }
   .highcharts-crosshair {
     stroke: var(--color-stone-300);
   }

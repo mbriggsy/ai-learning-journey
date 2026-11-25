@@ -233,7 +233,7 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
     // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
     // served build, Probability draws its rings and its two balance bars (Highcharts again), and every interim tab is
@@ -295,6 +295,19 @@ test.describe('CSP — real browser enforcement', () => {
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'the plan list injected a <style> element').toBe(0)
     await planList.getByRole('button', { name: copy.planListDone }).click()
     await expect(planList).toHaveCount(0)
+    // Confidence (RC7): the fan full size, and on the retired route the run-out chart lined up under it (a Highcharts area
+    // chart, the clone's first, rebuilt on the fan's plot box); its legend toggled and back. Then Probability again.
+    await page.getByRole('tab', { name: copy.confidenceTab }).click()
+    await expect(page.getByRole('heading', { level: 2, name: copy.confidenceChartTitle })).toBeVisible({ timeout: 30_000 })
+    expect(new URL(page.url()).hash).toBe('#/retirement/analysis/confidence')
+    const confFan = page.locator('[data-confidence] [data-chart="fan"]')
+    await expect(confFan.locator('.highcharts-series-group'), 'Confidence’s fan never drew under the CSP').toBeAttached({ timeout: 30_000 })
+    await expect(page.locator('[data-chart="runout"] .highcharts-series-group, [data-runout-stopgap]').first(), 'neither the run-out chart nor its stopgap').toBeAttached({ timeout: 30_000 })
+    await confFan.locator('.highcharts-legend-item', { hasText: copy.snapshotFanOuter }).click()
+    await confFan.locator('.highcharts-legend-item', { hasText: copy.snapshotFanOuter }).click()
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Confidence injected a <style> element').toBe(0)
+    await page.getByRole('tab', { name: copy.probabilityTab }).click()
+    await expect(page.locator('[data-ring-half="compared"]'), 'back on Probability').toBeVisible({ timeout: 30_000 })
     // On to Retirement → Cash Flows (RC6: the kit's DataTable, its Selects, a drill, the Accounts tab, and the CSV handed
     // to the browser as a file built in the page, a blob, with no request).
     await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageCashFlows, exact: true }).click()

@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **252 open items** (323 entries, 71 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **254 open items** (325 entries, 71 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -2360,6 +2360,14 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
 - **Prescription.** In the `all-claimed` view, when a claimed person still works in year 0 under full retirement age, say the figure is before what's held back while they work, or read their year-0 benefit as the run paid it (the ledger holds the household's Social Security only, so per person that needs the earnings-test result exposed). Red-first on a constructed draft: a 63-year-old who claimed at 62 and still works.
 - ⚑ NEGATIVE: never drop the line for every all-claimed household; the gross figure is right for everyone not working under full retirement age.
 
+### The subsidy-rules comparison lost its lifetime health-cost line with RC10 — the what-if on Analysis now shows the two rules' odds only, though the rules move health costs far more than the odds
+
+`S` · **pilot** · filed 2026-11-25 (b9-9) by RC10's deletion inventory (insight 170: an honesty line whose only reader was deleted is a lost line, never dead code) · Tier 0: the shipped comparison omits the figure a council ruled the reader needs, and the odds alone read calmer than the cost
+
+- **The gap (read).** Until `0b044335` the health sheet's subsidy-rules preview led with "Lifetime health costs could run around ~$X this way, versus ~$Y as figured now." (or "about the same either way — around ~$X" when the two round alike): `composeRegimeFutures` in `src/ui/healthSheetChrome.ts`, slots `subsidyRegimeCostDelta` / `subsidyRegimeCostEven` (`src/ui/copy.ts` lines 5180-5186 at `11349a9de`), reading each arm's `lifetimeHealthCostMedianReal` (`src/engine/roth.ts`, the old two-arm preview). Council 2026-07-03: the rules move health costs more than the odds. RC10 deleted the sheet and its composer; the tray's subsidy-rules row now opens Analysis at the `aca-subsidy` what-if, which prints odds only.
+- **Prescription.** Read whether a what-if run's distribution carries the per-path `lifetimeNetPremiumReal` and `lifetimeMedicareCostReal` (the `TaxAwareDistribution` arrays); if it does, port the two slots (text from `11349a9de`) onto the `aca-subsidy` what-if's result beside its odds, the median of each future's own sum per arm, the even arm when the two format alike; if not, carry the per-arm median on the what-if wire. Red-first: a `health` draft whose two rules differ by more than the $100 grain.
+- ⚑ NEGATIVE: never print the cost as a difference of two medians labelled as one future's difference; quote each arm's own median, as the slot did.
+
 ## Tier 1 — the differentiator does not land
 
 ### A deposits what-if counts the money no longer deposited as spent — the household cannot say it is saved, so lowering a deposit reads low
@@ -4141,6 +4149,13 @@ notes on `recommendationView.ts` and `RecommendationSurface.tsx`. The editor is 
   the CRN pairing must hold), then give Confidence the picker and the handle, each side's fan on its own slot.
 - ⚑ NEGATIVE: never draw a what-if's fan from the plan's fan scaled or shifted by its headline; a fan is a run's own
   output or it is not drawn.
+
+### Health Care's first frame prints the marketplace cliff count ("1 of 10", "2 of 10") with nothing beside it saying what it counts — the key sits in the notes below the frame
+
+`XS` · **pilot** · filed 2026-11-25 (b9-9) from the orchestrator's read of RC10's screenshots (`temp/rc-shots/RC10/health-care-healthgap-*.png`)
+
+- **The gap (seen).** On `?seed=healthgap` (and any household whose pre-65 years cross the cliff) the marketplace chart prints bare bracket counts; their meaning ("about how many of 10 of the futures that buy marketplace cover that year have income past the line, so that year's discount disappears entirely") is a note under the charts, reached only by scrolling, at both sizes. The count is honest; read alone it can be taken for years or odds.
+- **Prescription.** Put the count's meaning inside the marketplace chart's own box whenever a bracket draws: a second legend item or a one-line caption under its title (copy key beside the note's own, `healthCareView.ts`), measured against RC10's frame (charts end at 688 of 731 on the retired seeds, 708 on `date65`), and an rc-screens arm asserting the caption is in the first frame whenever a bracket is.
 
 ## Tier 2 — what breaks on someone else’s device or household
 

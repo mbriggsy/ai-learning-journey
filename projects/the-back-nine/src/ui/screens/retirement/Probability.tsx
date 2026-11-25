@@ -80,6 +80,7 @@ function Half({ half, bars, header }: { readonly half: HalfView; readonly bars: 
             role="group"
             aria-label={half.title}
             {...(half.side === 'compared' ? { 'aria-describedby': verdictDescribedBy() } : {})}
+            className="flex flex-col items-center gap-2"
             data-ring-half={half.side}
           >
             {ring.kind === 'face' ? (
@@ -87,6 +88,11 @@ function Half({ half, bars, header }: { readonly half: HalfView; readonly bars: 
             ) : (
               <Ring value={undefined} caption={ring.caption} />
             )}
+            {ring.kind === 'face' && ring.face.note !== undefined ? (
+              <p className="text-label text-stone-600" data-ring-note="">
+                {ring.face.note}
+              </p>
+            ) : null}
           </div>
           <Bar bars={bars} half={half} />
         </div>

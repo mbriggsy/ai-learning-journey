@@ -27,6 +27,8 @@ export interface AnalysisProps extends Omit<ProbabilityPanelProps, 'view'> {
   readonly onTab: (tab: AnalysisTab) => void
   /** Confidence's view (on its tab). */
   readonly confidence?: ConfidenceView
+  /** The guided re-walk behind Confidence's aged-fan premise door (present only where the tab can write). */
+  readonly onReconfirm?: () => void
   /** The ACTION ITEMS handle and the tray it opens (over a reading only). */
   readonly handle?: PageFrameHandle
   readonly tray?: ReactNode
@@ -37,7 +39,7 @@ const TABS = [
   { id: 'confidence', label: copy.confidenceTab },
 ] as const
 
-export function Analysis({ view, headingRef, tab, onTab, confidence, handle, tray, ...panel }: AnalysisProps) {
+export function Analysis({ view, headingRef, tab, onTab, confidence, onReconfirm, handle, tray, ...panel }: AnalysisProps) {
   const intro =
     view.kind === 'reading' ? (
       <div className="flex flex-col gap-1" data-analysis-intro="">
@@ -90,7 +92,7 @@ export function Analysis({ view, headingRef, tab, onTab, confidence, handle, tra
         {view.kind !== 'reading' ? (
           <ProbabilityWaiting view={view} />
         ) : onConfidence ? (
-          <ConfidencePanel view={confidence} caveat={caveat} />
+          <ConfidencePanel view={confidence} caveat={caveat} onReconfirm={onReconfirm} />
         ) : (
           <ProbabilityPanel view={view} {...panel} />
         )}

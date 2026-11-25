@@ -154,6 +154,9 @@ export const FALSE_CERTAINTY_INTERNAL: readonly RegExp[] = [
   // mechanism, so it is non-suppressible. Gated on a depletion verb, so the honest "no scenario
   // where this is certain" (no depletion verb) is NOT caught here and still hedges via its own token.
   /\bno (scenario|world|situation|case|way) (where|in which|that)\b[^.!?]*\b(run out|runs out|run dry|deplete|depletes|fall short|falls short|go broke|be broke|lose money)\b/i,
+  // A sample's zero spoken as a certainty ("no future runs out", Act 6 · RC7's run-out share): the share of none is a
+  // bound, `confidenceShareFewer`, never a claim that nothing can deplete.
+  /\bno futures?\b[^.!?]*\b(run out|runs out|run dry|runs dry|deplete|depletes|fall short|falls short|go broke|goes broke)\b/i,
 ]
 
 /** Asserts a SURE financial outcome — banned EVERYWHERE (R12), subject to the negation guard. */

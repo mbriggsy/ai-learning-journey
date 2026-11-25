@@ -545,7 +545,7 @@ These are bets made without Briggsy's confirmation. Each can be overturned at U2
 
 **Approach:**
 1. Draft plainly, in his "no PhD" register: each ask and its "not sure" (the job link, the earlier job's separation, each Roth account's basis, the 457(b) answer and its rolled-in amount); the charge's name wherever the year's tax is shown; any line whose meaning changes, such as the money picture's "Plus any income tax on what savings pays out…" (`src/ui/copy.ts:617`); K1's deletion; anything a U2 ruling leaves the household to know.
-2. copyGuard bans "penalty" only in survivor copy (`src/ui/copyGuard.ts:294-308`); the word itself is his call at U12. Whatever he picks, the charge never becomes a line inside the working-year cash lines (KTD9).
+2. copyGuard bans "penalty" only in survivor copy (`src/ui/copyGuard.ts:297-311`); the word itself is his call at U12. Whatever he picks, the charge never becomes a line inside the working-year cash lines (KTD9).
 
 **Test expectation:** none. These are drafts. U12 puts them to Briggsy on real screens, and U10 pins the words he picks.
 

@@ -42,11 +42,22 @@ const snap = (draft: ScenarioDraft, answer: ModelAnswer): MemoryModelSnapshot =>
   runningInWorker: false,
 })
 
-const view = (s: MemoryModelSnapshot, wallCalendarYear = s.draft.startCalendarYear): ConfidenceView =>
+const view = (
+  s: MemoryModelSnapshot,
+  wallCalendarYear = s.draft.startCalendarYear,
+  over: { readonly readOnly?: boolean; readonly agedBalancesYear?: number } = {},
+): ConfidenceView =>
   confidenceView({
     snapshot: s,
     onRetry: () => {},
-    notes: composeAnswerNotes(s, { readOnly: false, stalenessNote: false, leftOverClauseHost: false, wallCalendarYear }),
+    readOnly: over.readOnly ?? false,
+    notes: composeAnswerNotes(s, {
+      readOnly: over.readOnly ?? false,
+      stalenessNote: false,
+      leftOverClauseHost: false,
+      wallCalendarYear,
+      agedBalancesYear: over.agedBalancesYear,
+    }),
   })
 
 const chart = (v: ConfidenceView) => {
@@ -81,8 +92,13 @@ describe('runOutShare: "about N in 100 futures", never a percent, never "0 in 10
     expect(runOutShare(997, 1000).words).toBe(slots.confidenceShareMore())
   })
 
-  it('exactly none and exactly every future are said so; the edges round on whole counts', () => {
-    expect(runOutShare(0, 16_000)).toMatchObject({ kind: 'none', plural: false })
+  it('a share of none is a bound ("fewer than 1 in 100 futures"), never "no future": the 10-of-10 clamp’s false certainty', () => {
+    expect(runOutShare(0, 16_000)).toMatchObject({ kind: 'fewer', plural: true, words: slots.confidenceShareFewer() })
+    expect(runOutShare(0, 2_000).words).toBe(slots.confidenceShareFewer())
+    for (let c = 0; c <= 1000; c++) expect(runOutShare(c, 1000).words).not.toMatch(/\bno future\b/)
+  })
+
+  it('exactly every future is said so; the edges round on whole counts', () => {
     expect(runOutShare(16_000, 16_000)).toMatchObject({ kind: 'every', plural: false })
     // One future of 16,000 runs out: never "0 in 100", never "none".
     expect(runOutShare(1, 16_000).kind).toBe('fewer')
@@ -197,6 +213,25 @@ describe('Confidence on the retired route (`retired`, a real engine run)', () =>
     expect(named).toContain(copy.bandClockBuiltLabel)
     expect(named).toContain(copy.bandClockTodayLabel)
   })
+
+  it('an aged fan ships beside its premise (U17 §S2): the build year on a re-save, the save year on an old save, the door only where the tab can write', () => {
+    expect(v.premise, 'a fresh plan draws no "Plan built", so no premise').toBeUndefined()
+    const fresh = chart(view(s, RETIRED.startCalendarYear + 3))
+    expect(fresh.premise).toEqual({ text: slots.bandAgedPremiseFresh(RETIRED.startCalendarYear), door: { label: copy.bandPremiseReconfirmCta } })
+    const saved = chart(view(s, RETIRED.startCalendarYear + 3, { agedBalancesYear: RETIRED.startCalendarYear + 1 }))
+    expect(saved.premise?.text).toBe(slots.bandAgedPremiseSaved(RETIRED.startCalendarYear + 1))
+    const readOnly = chart(view(s, RETIRED.startCalendarYear + 3, { readOnly: true }))
+    expect(readOnly.premise).toEqual({ text: slots.bandAgedPremiseFresh(RETIRED.startCalendarYear) })
+  })
+
+  it('a cut fan with no run-out past the cut: the one whole-plan line, then the cut line (never dropped)', () => {
+    const none = { ...RETIRED_RUN, distribution: { ...RETIRED_RUN.distribution, depletionYears: depletions.map(() => NEVER_DEPLETED) } }
+    const w = chart(view(snap(RETIRED, headlineAnswer(RETIRED, none))))
+    const last = w.fan.byYear.at(-1)!.yearsFromNow
+    const a = RETIRED.people[0]!.currentAge! + last
+    const b = RETIRED.people[1]!.currentAge! + last
+    expect(w.metrics.slice(0, 2)).toEqual([slots.confidenceRunOutWhole(slots.confidenceShareFewer(), true), slots.confidenceCutNote(a, b)])
+  })
 })
 
 describe('Confidence on the working route (`dip`)', () => {
@@ -226,6 +261,38 @@ describe('Confidence on the working route (`dip`)', () => {
     } as unknown as DateSearchOutcome,
   } as unknown as ModelAnswer
   const v = chart(view(snap(DIP, answer)))
+  /** The same answer on another draft and band (its track, its cohort). */
+  const withBand = (draft: ScenarioDraft, band: object): ModelAnswer =>
+    ({ ...answer, draft, outcome: { ...(answer as { outcome: object }).outcome, band } }) as unknown as ModelAnswer
+
+  it('a working fan cut where the cohort thins (every real working household’s): "Range ends" at the cut and the cut line, never "Plan horizon"', () => {
+    const thinning = Array.from({ length: 30 }, (_, t) => ({ ...year(t), cohortFraction: t <= 20 ? 0.9 : 0.3 }))
+    const w = chart(view(snap(DIP, withBand(DIP, { offsetYears: 3, track: 'lifestyle', fan: { byYear: thinning }, outcomeState: 'on-track' }))))
+    expect(w.fan.byYear.at(-1)!.yearsFromNow).toBe(20)
+    const end = w.moments.find((m) => m.yearsFromNow === 20 && m.label !== '')!
+    expect(end.label).toBe(copy.bandClockCutLabel)
+    expect(w.moments.map((m) => m.label)).not.toContain(copy.bandClockHorizonLabel)
+    expect(w.metrics).toContain(slots.confidenceCutNote(DIP.people[0]!.currentAge! + 20, DIP.people[1]!.currentAge! + 20))
+  })
+
+  it('a floor-keyed band (`datemixed`: the lifestyle track undated) says under the fan that it prices the essentials only, with both levels', () => {
+    const mixed = DEV_SEEDS.datemixed
+    const noDate: DateTrackOutcome = { kind: 'no-date-in-window', nonMonotoneOffsets: [], curve }
+    const floorAnswer = {
+      ...(withBand(mixed, { offsetYears: 3, track: 'floor', fan: { byYear: Array.from({ length: 30 }, (_, t) => year(t)) }, outcomeState: 'on-track' }) as object),
+    } as { outcome: object }
+    const a = { ...floorAnswer, outcome: { ...floorAnswer.outcome, lifestyle: noDate } } as unknown as ModelAnswer
+    const w = chart(view(snap(mixed, a)))
+    // Essentials lines $52,000 plus $8,000 of medical; the full budget's $90,000 of lines plus the same medical.
+    expect(w.trackNote).toBe(slots.bandPricesEssentialsWithLevels('60,000', '98,000'))
+    expect(w.trackNote).toMatch(/essentials only/)
+  })
+
+  it('a lifestyle-keyed band affirms the full budget under the fan (every band says whose world it draws)', () => {
+    expect(v.trackNote).toBeDefined()
+    expect(v.trackNote).toMatch(/full budget/)
+    expect(v.trackNote).not.toMatch(/date above/)
+  })
 
   it('the stop-year marker sits at the band’s offset; the stopgap line stands in the run-out chart’s place', () => {
     expect(v.route).toBe('date')

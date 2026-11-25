@@ -611,8 +611,8 @@ export default function Shell({
   )
   // ── Retirement → Analysis → Confidence (RC7): the plan's fan full size and, retired, the run-out share ──────────────
   const conf = useMemo(
-    () => (screen === 'confidence' ? confidenceView({ snapshot, notes, onRetry: retryAnswer }) : null),
-    [screen, snapshot, notes, retryAnswer],
+    () => (screen === 'confidence' ? confidenceView({ snapshot, notes, onRetry: retryAnswer, readOnly }) : null),
+    [screen, snapshot, notes, retryAnswer, readOnly],
   )
 
   // ── Retirement → Cash Flows (RC6): its tab, drill, table and pick held here, so a page move keeps them ─────────────
@@ -908,7 +908,15 @@ export default function Shell({
           <>
             {leave}
             {staleBanner}
-            <Snapshot view={snap} headingRef={headingRef} doors={snapshotDoors} strategies={strategiesDoor} onTry={onTry} {...(onKeep !== undefined ? { onKeep } : {})} />
+            <Snapshot
+              view={snap}
+              headingRef={headingRef}
+              doors={snapshotDoors}
+              strategies={strategiesDoor}
+              onTry={onTry}
+              {...(onKeep !== undefined ? { onKeep } : {})}
+              {...(onReview !== undefined && !readOnly ? { onReconfirm: onReview } : {})}
+            />
           </>
         ) : prob !== null ? (
           <>
@@ -923,6 +931,7 @@ export default function Shell({
                 if (!routeEquals(to, route)) onNavigate(to)
               }}
               {...(conf !== null ? { confidence: conf } : {})}
+              {...(onReview !== undefined && !readOnly ? { onReconfirm: onReview } : {})}
               onPick={onPick}
               onPickCompared={onPickCompared}
               onOpenPlanList={() => {

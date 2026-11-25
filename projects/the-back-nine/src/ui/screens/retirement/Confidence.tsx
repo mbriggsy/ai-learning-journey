@@ -20,6 +20,7 @@ import { verdictDescribedBy } from '../../disclaimerId'
 import { copy } from '../../copy'
 import type { ConfidenceView } from './confidenceView'
 import { ChartBoundary } from '../ChartBoundary'
+import { FanPremiseLine } from '../FanPremiseLine'
 
 const FanChart = lazy(() => import('@viz/charts/FanChart').then((m) => ({ default: m.FanChart })))
 const RunOutChart = lazy(() => import('@viz/charts/RunOutChart').then((m) => ({ default: m.RunOutChart })))
@@ -30,10 +31,11 @@ export const CONFIDENCE_RUN_OUT_HEIGHT = 110
 
 const TITLE = [{ id: 'fan', label: copy.confidenceChartTitle }] as const
 
-function Notes({ view, caveat }: { readonly view: ConfidenceView; readonly caveat: ReactNode }) {
+function Notes({ view, caveat, onReconfirm }: { readonly view: ConfidenceView; readonly caveat: ReactNode; readonly onReconfirm?: (() => void) | undefined }) {
   const lead = view.kind === 'chart' && view.runOut !== undefined
   return (
     <div className="flex flex-col gap-3 text-left compact:gap-2" data-metrics="">
+      {view.kind === 'chart' && view.premise !== undefined ? <FanPremiseLine premise={view.premise} {...(onReconfirm !== undefined ? { onReconfirm } : {})} /> : null}
       {view.metrics.map((line, i) => (
         <p key={line} className={i === 0 && lead ? 'text-body font-semibold text-stone-900' : 'text-label text-stone-600'} data-metric="">
           {line}
@@ -51,7 +53,7 @@ function Notes({ view, caveat }: { readonly view: ConfidenceView; readonly cavea
   )
 }
 
-export function ConfidencePanel({ view, caveat }: { readonly view: ConfidenceView; readonly caveat: ReactNode }) {
+export function ConfidencePanel({ view, caveat, onReconfirm }: { readonly view: ConfidenceView; readonly caveat: ReactNode; readonly onReconfirm?: (() => void) | undefined }) {
   const [box, setBox] = useState<PlotBox | null>(null)
   const onPlotBox = useCallback((next: PlotBox) => setBox((prev) => (prev !== null && prev.left === next.left && prev.right === next.right ? prev : next)), [])
   return (
@@ -89,6 +91,11 @@ export function ConfidencePanel({ view, caveat }: { readonly view: ConfidenceVie
                   </div>
                 </div>
               ) : null}
+              {view.trackNote !== undefined ? (
+                <p className="text-label text-stone-600" data-fan-track="">
+                  {view.trackNote}
+                </p>
+              ) : null}
               {view.stopgap !== undefined ? (
                 <p className="text-label text-stone-600" data-runout-stopgap="">
                   {view.stopgap}
@@ -101,7 +108,7 @@ export function ConfidencePanel({ view, caveat }: { readonly view: ConfidenceVie
             </p>
           )}
         </div>
-        <Notes view={view} caveat={caveat} />
+        <Notes view={view} caveat={caveat} onReconfirm={onReconfirm} />
       </div>
     </div>
   )

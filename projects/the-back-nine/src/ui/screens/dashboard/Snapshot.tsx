@@ -16,6 +16,7 @@ import { verdictDescribedBy } from '../../disclaimerId'
 import { copy } from '../../copy'
 import type { SnapshotView, StatFigure } from './snapshotView'
 import { ChartBoundary } from '../ChartBoundary'
+import { FanPremiseLine } from '../FanPremiseLine'
 
 /** Where each card's "open" link goes, wired by the shell (absent: no link). */
 export interface SnapshotDoors {
@@ -34,6 +35,8 @@ export interface SnapshotProps {
   readonly onKeep?: () => void
   /** Try it in the plan: the Analysis page with the recommendation (present only where the view offers it). */
   readonly onTry?: () => void
+  /** The guided re-walk behind the aged fan's premise door (present only where the tab can write). */
+  readonly onReconfirm?: () => void
 }
 
 const FAN_HEIGHT = 300
@@ -71,7 +74,7 @@ function Stat({ stat, words }: { readonly stat: StatFigure; readonly words?: str
   )
 }
 
-export function Snapshot({ view, headingRef, doors, strategies, onKeep, onTry }: SnapshotProps) {
+export function Snapshot({ view, headingRef, doors, strategies, onKeep, onTry, onReconfirm }: SnapshotProps) {
   const { ring, stats, invested, fan, rec } = view
   const r = ring.view
   return (
@@ -101,12 +104,24 @@ export function Snapshot({ view, headingRef, doors, strategies, onKeep, onTry }:
                   </span>
                 </p>
                 {r.lead !== undefined ? <p className="text-intro text-stone-900">{r.lead}</p> : null}
-                <div role="group" aria-label={ring.title} aria-describedby={verdictDescribedBy()} data-ring-reading="">
+                {r.kind === 'reading'
+                  ? r.lines?.map((line) => (
+                      <p key={line} className="text-label text-stone-600" data-ring-line="">
+                        {line}
+                      </p>
+                    ))
+                  : null}
+                <div role="group" aria-label={ring.title} aria-describedby={verdictDescribedBy()} className="flex flex-col items-center gap-2" data-ring-reading="">
                   <Ring
                     value={r.kind === 'reading' ? r.face.arc : undefined}
                     {...(r.kind === 'reading' && r.face.centre !== undefined ? { centre: r.face.centre } : {})}
                     caption={r.kind === 'reading' ? r.face.caption : copy.snapshotRingNoReading}
                   />
+                  {r.kind === 'reading' && r.face.note !== undefined ? (
+                    <p className="text-label text-stone-600" data-ring-note="">
+                      {r.face.note}
+                    </p>
+                  ) : null}
                 </div>
               </>
             ) : null}
@@ -138,6 +153,11 @@ export function Snapshot({ view, headingRef, doors, strategies, onKeep, onTry }:
         <div className="grid grid-cols-1 content-start gap-6 wide:grid-cols-2 laptop:col-start-2 laptop:row-start-1" data-card="stats">
           <Stat stat={stats.rate} {...(stats.kind === 'words' ? { words: stats.words } : {})} />
           <Stat stat={stats.tax} {...(stats.kind === 'words' ? { words: stats.words } : {})} />
+          {stats.kind === 'figures' && stats.trackNote !== undefined ? (
+            <p className="text-label text-stone-600 wide:col-span-2" data-stat-track="">
+              {stats.trackNote}
+            </p>
+          ) : null}
           <div className="flex justify-end wide:col-span-2">
             <OpenLink door={doors.cashFlows} words={copy.snapshotStatOpen} />
           </div>
@@ -173,6 +193,12 @@ export function Snapshot({ view, headingRef, doors, strategies, onKeep, onTry }:
           ) : (
             <p className="py-8 text-body text-stone-600">{fan.view.words}</p>
           )}
+          {fan.view.kind === 'chart' && fan.view.trackNote !== undefined ? (
+            <p className="text-label text-stone-600" data-fan-track="">
+              {fan.view.trackNote}
+            </p>
+          ) : null}
+          {fan.view.kind === 'chart' && fan.view.premise !== undefined ? <FanPremiseLine premise={fan.view.premise} {...(onReconfirm !== undefined ? { onReconfirm } : {})} /> : null}
         </Card>
 
         <Card title={rec.title} className="laptop:col-span-2" name="recommendations">

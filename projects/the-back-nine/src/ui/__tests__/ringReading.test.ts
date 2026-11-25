@@ -16,9 +16,10 @@ const headline = (outcomeState: OutcomeState, value: number): WhatIfReading => (
   kind: 'headline',
   headline: { outcomeState, xOfTen: { value, marginToEdge: 0.1 }, stateMarginToEdge: 0.1 } as Headline,
 })
-const offset = (offsetYears: number, quantizedLowerBound: number): WhatIfReading => ({
+const offset = (offsetYears: number, quantizedLowerBound: number, track: 'full' | 'floor' = 'full'): WhatIfReading => ({
   kind: 'offset',
   reading: { offsetYears, quantizedLowerBound, survivalFraction: quantizedLowerBound, clears: quantizedLowerBound >= 0.85 } as DateOffsetReading,
+  track,
 })
 
 describe('ringFace: one reading, one face', () => {
@@ -47,6 +48,20 @@ describe('ringFace: one reading, one face', () => {
   it('a date curve entry of 0.86 reads 9, captioned with the stop year from its own offset', () => {
     const face = ringFace(offset(6, 0.86), 2026)
     expect(face).toEqual({ arc: 9, centre: slots.xOfTen(9), caption: slots.snapshotRingStopIn(2032) })
+  })
+
+  it('a reading of the essentials-only pass says so under the ring: the floor count never reads as the full budget’s', () => {
+    const face = ringFace(offset(7, 0.88, 'floor'), 2026)
+    expect(face).toEqual({ arc: 9, centre: slots.xOfTen(9), caption: slots.snapshotRingStopIn(2033), note: copy.snapshotRingEssentialsNote })
+    expect(ringFace(offset(7, 0.88), 2026).note, 'the full pass carries no such line').toBeUndefined()
+  })
+
+  it('a stop year the plan has passed keeps its count and says the year is past (the odds chart’s own test), on either pass', () => {
+    // Built 2020, read in 2026: offset 5 is 2025, passed; offset 6 is 2026, this year, not passed.
+    expect(ringFace(offset(5, 0.86), 2020, 6)).toEqual({ arc: 9, centre: slots.xOfTen(9), caption: slots.snapshotRingStoppedIn(2025) })
+    expect(ringFace(offset(5, 0.86, 'floor'), 2020, 6)).toMatchObject({ caption: slots.snapshotRingStoppedIn(2025), note: copy.snapshotRingEssentialsNote })
+    expect(ringFace(offset(6, 0.86), 2020, 6).caption).toBe(slots.snapshotRingStopIn(2026))
+    expect(ringFace(offset(5, 0.86), 2020).caption, 'a fresh plan (clock 0) has passed nothing').toBe(slots.snapshotRingStopIn(2025))
   })
 
   it('a date curve entry at the ceiling (rung 10) prints the bound, never "10 of 10", and a full-less-one arc', () => {

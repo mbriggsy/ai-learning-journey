@@ -233,7 +233,7 @@ real plan.
 State at close:
 - `d01dcc7f` (RC4b's RV chart-text PHONE red: the interim tab's doubled gutter), RC5 `c99b3139`, RC6 `c6dc5aea`, RC7 `a7add642`, each pushed; CI green on all four jobs at `d01dcc7f`, `c99b3139` and `c6dc5aea`. The orchestrator's checks on RC7's tree: typecheck, lint and build 0; vitest over every non-engine layer 187 files / 3988; `rc-screens.spec.ts` whole 94/94; intake-fold, chart-text and vertical-fit 47/47; `verify:doc-stats` 0.
 - **Check at start:** `gh run list --commit a7add64273636c26a5b49b92e3031ea067afba18` (RC7's runs, queued at close; a red is fixed in the next commit). The security-review plugin's sign-in failed 2026-11-24 (HTTP 401, `~/.claude/security/log.txt`): every commit from `f7ac7ae0` on is unreviewed until Briggsy signs it back in. `pnpm verify:aca` goes stale ~2026-12-12. U14's timing was borderline (dip's 16,000-path median 2,056 ms on a loaded machine): re-time on a quiet machine with `e2e/held/whatif-timing.spec.ts`; clearly over 2 s flips the plan's U14 branch to a plan-base lane.
-- **The review's known inputs** (each for its lenses to judge): (a) code comments citing files RC4a deleted: `src/ui/stalenessExposure.ts` (the "where this one already travels" docblock) cites lines in `FuckOffDate.tsx` (deleted) and `Result.tsx` (now 135 lines, the cited ones gone); (b) this file's `recDeltaVizAria` line in the tiered list cites a `copy.ts` line that has held a Medicare comment since before RC5 (the key is near `copy.ts:5267`); (c) Cash Flows: "Pay check's income tax" wraps to three lines at 1440×731, and working years print Income tax blank (the tax sits in the pay-check column); (d) RC5's Edit pencil sits below the phone's first frame; (e) RC6's phone: a white gap where the plum top rule meets the band's side border. Already fixed this session, for the record: the false "Plan horizon" on the fan's cut edge (Snapshot since RC3, now "Range ends") and the verdict clauses' "It"/"this plan" beside two what-ifs (now "your plan").
+- **The review's known inputs** (each for its lenses to judge): (a) code comments citing files RC4a deleted: `src/ui/stalenessExposure.ts` (the "where this one already travels" docblock) cites lines in `FuckOffDate.tsx` (deleted) and `Result.tsx` (now 135 lines, the cited ones gone); (b) this file's `recDeltaVizAria` line in the tiered list cites a `copy.ts` line that has held a Medicare comment since before RC5 (the key is near `copy.ts:5274`); (c) Cash Flows: "Pay check's income tax" wraps to three lines at 1440×731, and working years print Income tax blank (the tax sits in the pay-check column); (d) RC5's Edit pencil sits below the phone's first frame; (e) RC6's phone: a white gap where the plum top rule meets the band's side border. Already fixed this session, for the record: the false "Plan horizon" on the fan's cut edge (Snapshot since RC3, now "Range ends") and the verdict clauses' "It"/"this plan" beside two what-ifs (now "your plan").
 - **Landmines for the review and RC8** (filed by area in `docs/landmines.md`): a re-hosted component changes width (UI and product); keep the interim column's three rules until the last interim tab (UI and product); the pinned page clock freezes Highcharts' redraw (the fit gate and e2e); an edit after the one re-anchor run shifts citations, with the throwaway-base repair (citations). The tightest one-frame seeds stay `budget` 712 and `datenc` 724 of 731, handle included.
 - Open for Act 6: the budget, claim age and deposits keep two doors until RC13; Keep never pressed in a real browser (RC8's "Owed from RC4"); the store's sticky seam waits for RC21. Filed this session in the register (Tier 1): *Cash Flows can't print RightCapital's Total inflows and Total outflows…* (two row fields: the employer's share of deposits, a short year's shortfall in dollars) and *Confidence shows your plan only…* (a what-if run's own fan).
 - For Briggsy: the screens are in `temp/rc-shots/RC5/`, `RC6/` and `RC7/` (the plan list, the two-up, Cash Flows' tabs and drills, Confidence and its run-out chart), at 1440x731 and 390x844.
@@ -455,7 +455,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
    (`copy.ts:1155`, `:1160, :1211, :1169, :1177, :1179` — selected by `composeRothOmissionsNote`'s 2×3 matrix, whose
    ACA-priced arm already AFFIRMS the subsidy is counted, so a trend sentence must reconcile with that
    affirmation, not append to it) + the two health-control siblings (`copy.ts:1325`, `:1331`), which CANNOT take it
-   (gated on `statePriced` alone — `copy.ts:1317-1319`). Unfiled: `shadowRateHeadroom` (`copy.ts:4602`)
+   (gated on `statePriced` alone — `copy.ts:1317-1319`). Unfiled: `shadowRateHeadroom` (`copy.ts:4609`)
    quotes cliff headroom against an SLCSP that never trends — the headroom figure inherits the held-price
    optimism; and there is NO ACA cost-trend constant at all (`health.ts` carries only `medicareCostTrend`)
    — ACA premiums are the one health channel with no trend, no clause AND no disclosure, in the
@@ -525,7 +525,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `sanity.ts:67-92`). ⚑ **Size is M, not S, and a ceiling is the wrong instrument:** a 10× slip on
      $500k is $5M — a perfectly coherent household, so no threshold catches it. The shape that works is
      **one confirm on the household TOTAL** at the accounts step (the figure the engine actually consumes),
-     reusing the running total already rendered at `copy.ts:3100` / `questions.tsx:1066-1068`.
+     reusing the running total already rendered at `copy.ts:3107` / `questions.tsx:1066-1068`.
      ⚑ **"Briggsy sets the number" is the WRONG ask — there IS no honest number** (every total is
      coherent, so any threshold is the guessed plausibility band burned/062 bans). The only rule that
      invents nothing is an **unconditional** one-tap confirm for any household with ≥1 account. That is a
@@ -543,7 +543,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      `METHODOLOGY_DISCLOSURES` rows render *inside* section
      a's single `<ul>` (`AssumptionPanel.tsx:815-847`), so an entry there lands in "On your behalf". A third
      section is **~18 lines of new JSX** mirroring `:570-574`, + 1 heading and 2 line keys in `copy.ts`'s
-     `assumption*` block (hedge/verdict-EXEMPT at `copy.ts:1467-1478`; avoid `copyGuard.ts:255`'s
+     `assumption*` block (hedge/verdict-EXEMPT at `copy.ts:1467-1478`; avoid `copyGuard.ts:258`'s
      `/(tap|draw|pull) … hsa/`), + **no CSS change** (`.ap-section*`/`.ap-row*` are generic). **Fit is safe
      and gets safer:** the panel scrolls (`sheetShell.css` `.control-sheet` 88dvh/94dvh, `overflow-y:auto`)
      and the fit gate's panel arm (`vertical-fit.spec.ts line 2524-2553 at 95c715e19`) asserts only that the dialog box fits
@@ -581,7 +581,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
      names a state the engine cannot reach; the honest harm is that the plan is COUNTED AS HAVING RUN OUT
      while HSA dollars remain unspent (understated survival), because HSA outflow is qualified-medical-only
      and the general draw cannot name the bucket. "Dropped" is guard-safe; "draw … HSA" reds
-     `copyGuard.ts:255`; `FALSE_CERTAINTY_INTERNAL` (`copyGuard.ts:148-157`) is universal and
+     `copyGuard.ts:258`; `FALSE_CERTAINTY_INTERNAL` (`copyGuard.ts:148-160`) is universal and
      non-suppressible — "can't run out while the HSA lasts" reds. TRAP 4 — `verify:doc-stats` reds on ANY
      added test until README `:82` + roadmap `:165` move in the same commit. Sweep THREE comment spans (the
      `healthOverlay.ts:912-914` "a sweep found NO user-facing disclosure" clause becomes false the moment the
@@ -708,7 +708,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     copy" and both nearest register entries — *The aged surface — every 2026 plan changes wording on 2027-01-01, unreviewed* and *Unscored Caddie tape rows plus the four aged-surface tone calls due before 2027-01-01* — are owned **briggsy**; neither is a copy fix; the "three arms with
     corrected costs" existed NOWHERE — they are now written, with sizes, under the register's "The aged
     surface" entry. A shipped copy defect on the SAME cohort WAS pilot and is FIXED (2026-09-04: the singular arm ships at
-    `copy.ts:4506-4508` under the NUMBER AGREEMENT post-mortem at `copy.ts:4492`, covered by `copyGuard.test.ts:1086`):
+    `copy.ts:4513-4515` under the NUMBER AGREEMENT post-mortem at `copy.ts:4499`, covered by `copyGuard.test.ts:1086`):
     `rothPlanRanked` hardcoded the plural "Those years are counted from…" after a correctly-singular "for 1 year" —
     live for any at/past-RMD household on an aged vault (the 1-year clamp, `solveAnchor.ts:263-264`) — and no test
     covered `years: 1, passed: true`. (b) THE LADDER is register `L` · **pilot**, and the v2→v3 ALGORITHM IS
@@ -809,7 +809,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     page and the codified G.S. page both still show the struck "after 2025 — 3.99%", so they read as
     CONTRADICTING the pinned record until they recompile — **session law wins, do not "correct" the
     engine table back to a flat 3.99%.** Comment-only; typecheck · lint · 3289 tests · state-tax gate
-    all green. (`copy.ts:4922` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
+    all green. (`copy.ts:4929` and `caseStateCompanions.ts` were already correct — swept 2026-08-02.)
     ⚑ **The CVD half of this cluster is PARKED, not owed — do not re-propose it.** The filed gap ("the CVD
     crops prove PRESENCE only") is real, and a `verify:cvd` pixel-regression gate was designed for it on
     2026-08-02. **Briggsy declined it on the only authority that can:** *"I'm pretty color blind and I think
@@ -825,7 +825,7 @@ schedule the July pass, or the first thing that tells you is a blocked build.
     screen reader outside require-hedge — the AT twin of the gated `recDeltaTypical` — and its exclusion was
     a RECORDED decision in the SLOT_RENDER fixture's own comment, so the fix reversed a stated call, not an
     accident. **DONE 2026-09-08:** RENAMED onto the existing `recDelta` control prefix (`recDeltaVizAria`,
-    `copy.ts:4970`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
+    `copy.ts:5324`; a new `recViz` prefix would red the three hedge-free arm labels — each measured to red
     `require-hedge` on its own) + a catalog canary over `/^rec(?!over)/` (a bare `/^rec/` reds the 16
     innocent `recovery*`/`recover*` intake keys) with a NAMED allowlist that SPLITS flat keys from slots
     (unscoped flat keys get 2 gates, unscoped slots get 3 + catastrophe). Scope is decided ONLY in the test

@@ -53,8 +53,10 @@ export type WhatIfReading =
   /** All retired: the spine run's own headline (the store's for the plan; the copy's run for the what-if). */
   | { readonly kind: 'headline'; readonly headline: Headline }
   /** Working: one offset of the §3c curve at the final tier — the committed curve's entry for the plan, the same
-   *  producer (`offsetReading`) over the what-if's own run for the what-if. */
-  | { readonly kind: 'offset'; readonly reading: DateOffsetReading }
+   *  producer (`offsetReading`) over the what-if's own run for the what-if. `track` is the pass it reads, the plan's
+   *  table base's (`buildTableBase`, KTD12): `floor` is the essentials-only pass (a floor-keyed band, the lifestyle track
+   *  undated), and every caption of it says so (`ringFace`), on both sides alike. */
+  | { readonly kind: 'offset'; readonly reading: DateOffsetReading; readonly track: 'full' | 'floor' }
 
 /** Why a what-if cannot run: the bundle's own refusal, or the runner's. */
 export type WhatIfRunRefusal =
@@ -116,7 +118,7 @@ function planReading(
   if (outcome.kind !== 'dates' || base.stopOffsetYears === undefined) return null
   const curve = (base.track === 'floor' ? outcome.floor : outcome.lifestyle).curve
   const reading = curve[base.stopOffsetYears]
-  return reading === undefined ? null : { reading: { kind: 'offset', reading }, seed: outcome.seed }
+  return reading === undefined ? null : { reading: { kind: 'offset', reading, track: base.track }, seed: outcome.seed }
 }
 
 /**
@@ -180,7 +182,7 @@ export function whatIfReading(
   if (offsetYears === undefined) return { kind: 'headline', headline: result.headline }
   const survivalFraction = track === 'floor' ? result.distribution.floor?.survivalFraction : result.distribution.survivalFraction
   if (survivalFraction === undefined) return null
-  return { kind: 'offset', reading: offsetReading({ offsetYears, survivalFraction }, DATE_SEARCH_PATHS.final) }
+  return { kind: 'offset', reading: offsetReading({ offsetYears, survivalFraction }, DATE_SEARCH_PATHS.final), track }
 }
 
 /** The request builder for one what-if slot. */

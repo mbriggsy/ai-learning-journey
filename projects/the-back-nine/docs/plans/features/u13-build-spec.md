@@ -85,7 +85,7 @@ atomic change with: `ScenarioV3` type + `SCENARIO_V3_FIELDS` + `checkV3Fields` +
   unlock** (red-team constraint (a) — BEFORE `draftFromScenario`/`scenarioFromDraft` normalize or re-stamp;
   reading the post-resave draft cries wolf, reading the normalized persist never fires), an injected
   `todayEpochDay`, and — added by the U17 §S4 exposure gate below — a `StalenessExposure` read of what the
-  household's own run actually priced (`exposureForDraft`, `src/ui/stalenessExposure.ts:161`). The
+  household's own run actually priced (`exposureForDraft`, `src/ui/stalenessExposure.ts:162`). The
   current-build stamps are the comparators the module imports. Pure function — no clock reads inside.
 - **Output — `StalenessReport`, the per-surface clock map (U17-inheritable, 4-recommendation #8b):**
   - `elapsed: { days, saveYear } | null` and `wallYear` sit at the TOP level, not inside a surface: the

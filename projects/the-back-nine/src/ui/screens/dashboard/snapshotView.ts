@@ -10,12 +10,15 @@
  *   label names (insight 141): retired, income tax summed over every row ("Lifetime"); working, over the rows after
  *   work stops (no `workingYear` and at or past the run's own stop offset), "after you stop working"; the withdrawal
  *   rate in the first of those rows (its draws, `draw` plus `hsaSpend`, over its start-of-year invested balance);
- *   every label says "in the steady future" (a one-path figure is never read as the odds);
+ *   every label says "in the steady future" (a one-path figure is never read as the odds); where those rows are the
+ *   essentials-only pass (`TableMeta.track` 'floor': a floor-keyed band, the lifestyle track undated) a line under both
+ *   dials says so, since the rate and the tax then read essentials spending, not the full budget;
  * - Invested accounts, never "net worth" (B9 holds no home, debts or bank accounts): the entered balances by kind, their
  *   total, "as entered" (with the aged-balances year where it applies) and the stopgap line;
  * - the fan: the shown answer's own band, already cut where the cohort thins (`answerView.ts`'s `spineBand` and
  *   `dateBand` call `truncateFanAtThinCohort`), with the named moments `deriveSpineBandAnnotations` and
- *   `deriveDateBandAnnotations` built for it (the date's carries the stop-year marker);
+ *   `deriveDateBandAnnotations` built for it (the date's carries the stop-year marker); under it the date route's track
+ *   note (`bandTrackNote`: whose world the range prices) and, on an aged plan, the premise (`fanPremise`);
  * - Recommendations: a current saved record or this session's solve, in one sentence with its grade words. On an
  *   unsaved solve only "Keep this recommendation"; "Try it in the plan" only with a current saved record whose action
  *   builds a bundle (`recommendationBundle`); nothing labelled Apply. The working route shows its line and no link.
@@ -30,9 +33,10 @@ import type { FanLabels } from '@viz/charts/fanOptions'
 import { isDateRoute, missingRequiredFacts, pricedStateForRun, spineMedicarePriced, accountSources, sourceBalance } from '@intake/intakeMap'
 import { blockedLeadFor, missingFactLines } from '@intake/missingFacts'
 import { selectElevatedAnswer } from '../../answerView'
-import { planClockAnchor } from '../../bandAnnotations'
+import { planClockAnchor, type BandPlanClockAnchor } from '../../bandAnnotations'
 import { copy, slots } from '../../copy'
 import { staticDisclosures } from '../../entryCopy'
+import { bandTrackNote, fanPremise, type FanPremise } from '../../fanNotes'
 import { formatEnteredDollar, formatMmDollar, mmAxisFormatterFor } from '../../money'
 import { recommendationView } from '../../recommendationView'
 import { savedRecordCardView, type RecommendationSaveView, type SavedRecordStanding } from '../../recommendationSaveView'
@@ -80,7 +84,13 @@ export interface StatFigure {
 }
 
 export type StatsView =
-  | { readonly kind: 'figures'; readonly rate: StatFigure; readonly tax: StatFigure }
+  | {
+      readonly kind: 'figures'
+      readonly rate: StatFigure
+      readonly tax: StatFigure
+      /** The rows are the essentials-only pass: the line under both dials that says so. */
+      readonly trackNote?: string
+    }
   | { readonly kind: 'words'; readonly rate: StatFigure; readonly tax: StatFigure; readonly words: string }
 
 export interface InvestedView {
@@ -92,7 +102,16 @@ export interface InvestedView {
 }
 
 export type FanCardView =
-  | { readonly kind: 'chart'; readonly fan: BandFan; readonly moments: readonly XAnnotation[]; readonly labels: FanLabels }
+  | {
+      readonly kind: 'chart'
+      readonly fan: BandFan
+      readonly moments: readonly XAnnotation[]
+      readonly labels: FanLabels
+      /** The date route: whose world the range prices (`bandTrackNote`). */
+      readonly trackNote?: string
+      /** An aged plan: the modelled years' premise, with its re-confirm door where the tab can write (`fanPremise`). */
+      readonly premise?: FanPremise
+    }
   | { readonly kind: 'words'; readonly words: string }
 
 export type RecCardView =
@@ -188,6 +207,7 @@ function statsView(steady: SteadyRows, working: boolean): StatsView {
       kind: 'figures',
       rate: s.ratePercent === null ? { ...rateBase, note: copy.snapshotStatNoRate } : { ...rateBase, value: slots.snapshotRate(s.ratePercent) },
       tax: { short: copy.snapshotStatTaxShort, label: taxLabel, value: slots.snapshotApprox(formatMmDollar(s.taxPaid)) },
+      ...(steady.meta.track === 'floor' ? { trackNote: copy.snapshotStatFloorTrack } : {}),
     }
   }
   const words = steady.kind === 'withheld' ? steady.words : steady.kind === 'error' ? copy.snapshotStatError : copy.snapshotStatWaiting
@@ -263,21 +283,35 @@ function composeFanLabels(draft: MemoryModelSnapshot['draft'], ageA: number, age
   }
 }
 
-function fanView(snapshot: MemoryModelSnapshot, elevated: ReturnType<typeof selectElevatedAnswer>): FanCardView {
+function fanView(
+  snapshot: MemoryModelSnapshot,
+  elevated: ReturnType<typeof selectElevatedAnswer>,
+  anchor: BandPlanClockAnchor,
+  agedBalancesYear: number | undefined,
+  readOnly: boolean,
+): FanCardView {
   const answer = snapshot.answer
   if (answer.kind !== 'headline' && answer.kind !== 'date') return { kind: 'words', words: copy.snapshotFanWaiting }
   const draft = answer.draft
   const ageA = draft.people[0]?.currentAge
   const ageB = draft.people[1]?.currentAge
-  const chart = (fan: BandFan | undefined, moments: readonly XAnnotation[] | undefined, none: string): FanCardView =>
-    fan === undefined || moments === undefined || ageA === undefined || ageB === undefined
-      ? { kind: 'words', words: none }
-      : { kind: 'chart', fan, moments, labels: fanLabels(draft, ageA, ageB) }
-  if (elevated.kind === 'spine' && elevated.view.kind === 'reading') return chart(elevated.view.band, elevated.view.bandAnnotations, copy.snapshotFanNone)
+  const chart = (fan: BandFan | undefined, moments: readonly XAnnotation[] | undefined, none: string, trackNote: string | null): FanCardView => {
+    if (fan === undefined || moments === undefined || ageA === undefined || ageB === undefined) return { kind: 'words', words: none }
+    const premise = fanPremise(moments, agedBalancesYear, anchor.startCalendarYear, readOnly)
+    return {
+      kind: 'chart',
+      fan,
+      moments,
+      labels: fanLabels(draft, ageA, ageB),
+      ...(trackNote !== null ? { trackNote } : {}),
+      ...(premise !== null ? { premise } : {}),
+    }
+  }
+  if (elevated.kind === 'spine' && elevated.view.kind === 'reading') return chart(elevated.view.band, elevated.view.bandAnnotations, copy.snapshotFanNone, null)
   if (elevated.kind === 'date' && elevated.view.kind === 'dates') {
     const v = elevated.view
     const noDate = v.floor.kind === 'no-date-in-window' && v.lifestyle.kind === 'no-date-in-window'
-    return chart(v.band?.fan, v.bandAnnotations, noDate ? copy.snapshotFanNoDate : copy.snapshotFanNone)
+    return chart(v.band?.fan, v.bandAnnotations, noDate ? copy.snapshotFanNoDate : copy.snapshotFanNone, bandTrackNote(v))
   }
   return { kind: 'words', words: copy.snapshotFanWaiting }
 }
@@ -363,7 +397,7 @@ export function snapshotView(input: SnapshotInput): SnapshotView {
     ring: { title: copy.snapshotRingTitle, view, ...(missing !== undefined ? { missing } : {}), stateClause },
     stats: statsView(steady, isDateRoute(shown?.draft ?? snapshot.draft)),
     invested: investedView(snapshot.draft, agedBalancesYear),
-    fan: { title: copy.snapshotFanTitle, valuesLine: copy.bandYAxis, view: fanView(snapshot, elevated) },
+    fan: { title: copy.snapshotFanTitle, valuesLine: copy.bandYAxis, view: fanView(snapshot, elevated, anchor, agedBalancesYear, readOnly) },
     rec: { title: copy.snapshotRecTitle, view: recView(snapshot, recommendation, readOnly, wallCalendarYear) },
     caveat: [staticDisclosures.honestLimitsScope, staticDisclosures.honestLimitsValidate],
   }

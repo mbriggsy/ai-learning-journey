@@ -291,7 +291,7 @@ to a single commit.
   the 2026-08-02 pin**, because it promised a month tied to NC's own certification that no longer
   gates anything, and a withhold that names a date it cannot keep is exactly the promise this
   product must not make. A future state's pin event may have any timing, so the shipped slot commits
-  to none (`copy.ts:4925`).
+  to none (`copy.ts:4932`).
 - **No live household fires the withheld render today, and that is a CLEARED clause, not a
   regression.** Both blocking clauses cleared after U16 shipped: S.L. 2026-41 § 44.1(a) pinned
   `ncRateSchedule` to an enacted statutory schedule on 2026-08-02, retiring the last directional
@@ -576,7 +576,7 @@ absolute"), and the two REWRITTEN test scenarios that entries 5 and 7 above stil
 deleting them would remove the guard.
 
 **The gate is enforced in code, not just here** (2026-08-01): `copyGuard.ts`'s false-certainty list
-carries the contracted arms alongside the uncontracted ones (`copyGuard.ts:190`), and `lintCopy`
+carries the contracted arms alongside the uncontracted ones (`copyGuard.ts:193`), and `lintCopy`
 normalizes the typographic apostrophe before matching, so authoring any of the above reds the build.
 `docs/product.md` §6 + R21 — which used to PRESCRIBE the phrase — now carry the veto.
 

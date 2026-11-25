@@ -1155,6 +1155,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     workbenchPairRanOut: slots.workbenchPairRanOut('This what-if', 2049),
     workbenchPairYield: slots.workbenchPairYield('Your plan', 'The tool leaves yearly interest and dividends out.'),
     snapshotRingStopIn: slots.snapshotRingStopIn(2031),
+    snapshotRingStoppedIn: slots.snapshotRingStoppedIn(2025),
     snapshotInvestedAsEnteredIn: slots.snapshotInvestedAsEnteredIn(2025),
     snapshotApprox: slots.snapshotApprox('$312k'),
     snapshotRate: slots.snapshotRate(4.12),
@@ -1397,6 +1398,8 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
       'There is zero chance of running out.',
       'There is no possibility of running out.',
       'There is no scenario where you run out.',
+      // Act 6 · RC7's run-out share: a sample's zero worded as a certainty (the share of none reads as a bound).
+      'Over the whole plan, no future runs out of money while one of you is still living.',
       'Money in the bank.',
       'You are home free.',
       // round-4: the surplus-pivot absolute (council 2026-07-18 HAWK VETO, docs/council-log.md).

@@ -110,6 +110,7 @@ const headline = (x: number, state: 'on-track' | 'borderline' | 'off-track' | 'o
 const offset = (offsetYears: number, quantizedLowerBound: number): WhatIfReading => ({
   kind: 'offset',
   reading: { offsetYears, survivalFraction: quantizedLowerBound + 0.02, quantizedLowerBound, clears: quantizedLowerBound >= 0.8 },
+  track: 'full',
 })
 
 describe('composeReadings — the two counts, each under its own run’s name, and nothing else (R19, R20)', () => {

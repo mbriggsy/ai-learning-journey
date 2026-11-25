@@ -212,6 +212,85 @@ describe('Snapshot: the ring card’s states and its one state clause', () => {
   })
 })
 
+describe('Snapshot on a floor-keyed answer (`datemixed`: the floor dated at 7, the lifestyle undated)', () => {
+  const mixed = DEV_SEEDS.datemixed
+  const fanYear = (t: number) => ({ yearsFromNow: t, p10: 400_000, p25: 700_000, p50: 1_000_000, p75: 1_300_000, p90: 1_700_000, cohortFraction: 1 })
+  const floorCurve = [0.5, 0.6, 0.7, 0.75, 0.8, 0.82, 0.84, 0.88, 0.9, 0.9, 0.9].map((q, i) => ({ offsetYears: i, survivalFraction: q, quantizedLowerBound: q, clears: q >= 0.85 }))
+  const floor: DateTrackOutcome = {
+    kind: 'confirmed-date',
+    offsetYears: 7,
+    grade: { quantizedLowerBound: 0.88, survivalFraction: 0.88, marginAboveBar: 0.03 },
+    nonMonotoneOffsets: [],
+    curve: floorCurve,
+  }
+  const lifestyle: DateTrackOutcome = { ...noDate, curve: floorCurve.map((r) => ({ ...r, quantizedLowerBound: r.quantizedLowerBound - 0.4, clears: false })) }
+  const answer = {
+    kind: 'date',
+    tier: 'final',
+    draft: mixed,
+    inputKey: 'k1',
+    outcome: {
+      kind: 'dates',
+      tier: 'final',
+      floor,
+      lifestyle,
+      windowTopYears: DATE_OFFSET_WINDOW_TOP,
+      seed: 1,
+      band: { offsetYears: 7, track: 'floor', fan: { byYear: Array.from({ length: 30 }, (_, t) => fanYear(t)) }, outcomeState: 'on-track' },
+    } as unknown as DateSearchOutcome,
+  } as unknown as ModelAnswer
+  const s = snap(mixed, answer)
+
+  it('the ring names the essentials pass under the no-date lead, with the essentials date line beside it', () => {
+    const ring = snapshotView(input(s)).ring.view
+    if (ring.kind !== 'reading') throw new Error(`[test] ${ring.kind}`)
+    expect(ring.lead).toBe(slots.noDateInWindow(DATE_OFFSET_WINDOW_TOP))
+    expect(ring.face.centre).toBe(slots.xOfTen(9))
+    expect(ring.face.caption).toBe(slots.snapshotRingStopIn(mixed.startCalendarYear + 7))
+    expect(ring.face.note).toBe(copy.snapshotRingEssentialsNote)
+    expect(ring.lines?.length, 'the essentials date line, as Probability’s intro prints it').toBe(1)
+    expect(ring.lines![0]).toMatch(/essentials/i)
+  })
+
+  it('a lifestyle-keyed answer’s ring carries no essentials words and no floor line', () => {
+    const out = (answer as { outcome: { band: object } }).outcome
+    const keyed = { ...answer, outcome: { ...out, lifestyle: floor, band: { ...out.band, track: 'lifestyle' } } } as unknown as ModelAnswer
+    const ring = snapshotView(input(snap(mixed, keyed))).ring.view
+    if (ring.kind !== 'reading') throw new Error(`[test] ${ring.kind}`)
+    expect(ring.lines).toBeUndefined()
+    expect(ring.face.note).toBeUndefined()
+    expect(ring.face.caption).toBe(slots.snapshotRingStopIn(mixed.startCalendarYear + 7))
+    const fan = snapshotView(input(snap(mixed, keyed))).fan.view
+    expect(fan.kind === 'chart' && fan.trackNote).toBe(slots.bandPricesFullBudgetWithLevels('98,000', '60,000'))
+  })
+
+  it('the stat dials read the essentials-only pass, and the line under them says so', () => {
+    const { rows, meta } = steadyFor(answer)
+    expect(meta.track, 'the table base rides the band’s track').toBe('floor')
+    const stats = snapshotView(input(s, { steady: { kind: 'rows', rows, meta } })).stats
+    expect(stats.kind === 'figures' && stats.trackNote).toBe(copy.snapshotStatFloorTrack)
+    // The full track's dials carry no such line.
+    const dip = dateAnswer(DEV_SEEDS.dip, 6)
+    const d = steadyFor(dip)
+    const plain = snapshotView(input(snap(DEV_SEEDS.dip, dip), { steady: { kind: 'rows', rows: d.rows, meta: d.meta } })).stats
+    expect(plain.kind === 'figures' && plain.trackNote).toBeUndefined()
+  })
+
+  it('the fan says it prices the essentials only, with both spending levels (essentials $52,000 of lines plus $8,000 medical; the full $90,000 plus the same)', () => {
+    const fan = snapshotView(input(s)).fan.view
+    expect(fan.kind === 'chart' && fan.trackNote).toBe(slots.bandPricesEssentialsWithLevels('60,000', '98,000'))
+    expect(fan.kind === 'chart' && fan.premise).toBeUndefined()
+  })
+
+  it('an aged plan’s fan ships beside its premise; a read-only tab gets the words with no door', () => {
+    const wall = mixed.startCalendarYear + 2
+    const aged = snapshotView(input(s, { wallCalendarYear: wall })).fan.view
+    expect(aged.kind === 'chart' && aged.premise).toEqual({ text: slots.bandAgedPremiseFresh(mixed.startCalendarYear), door: { label: copy.bandPremiseReconfirmCta } })
+    const saved = snapshotView(input(s, { wallCalendarYear: wall, agedBalancesYear: mixed.startCalendarYear + 1, readOnly: true })).fan.view
+    expect(saved.kind === 'chart' && saved.premise).toEqual({ text: slots.bandAgedPremiseSaved(mixed.startCalendarYear + 1) })
+  })
+})
+
 // ── Recommendations ─────────────────────────────────────────────────────────────────────────────────────────────
 
 const record = (rothConversion: unknown): SavedRecommendationV3 =>

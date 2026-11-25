@@ -99,9 +99,10 @@ const read = (priced: boolean): ExposureRead => (priced ? 'priced' : 'unpriced')
  * interchangeable, and the difference is a surface property, not a code-style preference.
  *
  * AND BE HONEST ABOUT WHERE THIS ONE ALREADY TRAVELS (a reviewer's catch, 2026-07-25 — the clause
- * above overstated its own boundary). This read feeds `rulesMoved`, and `rulesMoved` is carried to
- * `IntakeApp.tsx:1124` → `Result.tsx:557` and `:671` → `FuckOffDate.tsx:419`, which renders the standing
- * hero echo BESIDE THE CROWNED DATE. So for a 63-working/67-retired household with the required
+ * above overstated its own boundary). This read feeds `rulesMoved`, and `rulesMoved` is carried from
+ * `IntakeApp.tsx` (the shell's `stalenessNote` prop) through `composeAnswerNotes` to `composeStaleLines`
+ * (`src/ui/shell/staleLines.ts`), whose StaleBanner renders the standing staleness note at the top of the
+ * figured pages, BESIDE THE CROWNED DATE their intros print. So for a 63-working/67-retired household with the required
  * quote pair, a moved `acaStatus` names the ACA line at the gate (honest — the gate is pre-crown)
  * and ALSO lights that echo, even where a crown ≥2 years out puts both members at 65+ and the
  * crowned run prices zero ACA years (`windowGate`, healthcareStreams.ts).

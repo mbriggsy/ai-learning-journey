@@ -845,7 +845,7 @@ export const copy = {
    *  world it draws — that universality IS the council's naming layer.
    *  Deliberately does NOT re-state the date; the x-axis marker already names it, and one fact per
    *  sentence is the copy law on a load-bearing figure. */
-  bandPricesFullBudgetNote: 'This range prices your full budget — the same life the date above is measured against.',
+  bandPricesFullBudgetNote: 'This range prices your full budget — the same life your date is measured against.',
   // --- D2c odds-ladder drawer (the date route's secondary "how your odds shift by WHEN you stop").
   //     LADDER-scoped: chart chrome, not a verdict claim, so the universal gates apply (no certainty,
   //     no imperative). Odds counts ride slots.xOfTen (never a bare numeral / "10 of 10"). The
@@ -2549,6 +2549,12 @@ export const copy = {
   snapshotStatWaiting: 'Being worked out from the steady future…',
   snapshotStatError: 'The steady future couldn’t be worked out, so these figures wait.',
   snapshotStatNoRate: 'No invested money at the start of that year, so there’s no rate to show.',
+  // Under both dials when the steady future's rows are the essentials-only pass (a floor-keyed band: the lifestyle track
+  // has no date in the window, so the date and its table ride essentials, `tableRun.ts`'s `ledgerTrack`).
+  snapshotStatFloorTrack: 'Both figures use essentials-only spending once work stops, not your full budget.',
+  // Under every ring that reads the essentials-only pass (plan and what-if alike; a floor-keyed band), so its count is
+  // never read as the full budget's. Under the ring, not in it: the ring's caption box holds two lines.
+  snapshotRingEssentialsNote: 'These odds use essentials-only spending, not your full budget.',
   snapshotStatOpen: 'Open the Cash Flows page',
   snapshotInvestedTitle: 'Invested accounts',
   snapshotInvestedTaxable: 'Taxable',
@@ -2997,8 +3003,9 @@ export const copy = {
   confidenceRunOutName: 'Futures run out by this age',
   confidenceRunOutStopgap:
     'How many futures run out of money by each age will show here once your plan is read in full at the year you stop working.',
-  // The share words with no count in them (`RunOutShareKind`); the counted kinds are slots (the numeric channel).
-  confidenceShareNone: 'no future',
+  // The share words with no count in them (`RunOutShareKind`); the counted kinds are slots (the numeric channel). A share
+  // of none is never "no future" (a sample's zero is a bound, the false certainty the 10-of-10 clamp refuses): it reads
+  // as `confidenceShareFewer`, true of any sample with none run out.
   confidenceShareEvery: 'every future',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
@@ -3665,7 +3672,7 @@ export const slots = {
    *  or $84,000? Same life, or not?"). Both figures, each with its years; the same life the date is measured against.
    *  The levels twin keeps its own two figures and names the working-year figure first. Figures pre-formatted. */
   bandCountsWorkingYearsNote: (figureFormatted: string, quoteFormatted: string, last: boolean): string =>
-    `This range counts each working year at your ${last ? 'last' : 'own'} figure of $${figureFormatted} a year, and your spending of $${quoteFormatted} a year once you’ve both stopped working. That is the same life the date above is measured against.`,
+    `This range counts each working year at your ${last ? 'last' : 'own'} figure of $${figureFormatted} a year, and your spending of $${quoteFormatted} a year once you’ve both stopped working. That is the same life your date is measured against.`,
   bandCountsWorkingYearsWithLevels: (figureFormatted: string, last: boolean, fullFormatted: string, essentialsFormatted: string): string =>
     `This range counts each working year at your ${last ? 'last' : 'own'} figure of $${figureFormatted} a year. Once you’ve both stopped working, it prices your full budget, about $${fullFormatted} a year to start. Your essentials alone, medical included, would be about $${essentialsFormatted}.`,
   bandPricesEssentialsWithLevels: (essentialsFormatted: string, fullFormatted: string): string =>
@@ -4884,7 +4891,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2183` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2186` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5484,6 +5491,9 @@ export const slots = {
   // --- Act 6 · RC3, Snapshot (`snapshotView.ts`, `ringReading.ts`) ---
   /** The ring's caption on the date route: the stop year the reading is taken at. */
   snapshotRingStopIn: (year: number): string => `if you stop in ${year}`,
+  /** An aged plan whose stop year has passed (`offsetHasPassed`, the odds chart's own test): the count is the plan's own
+   *  reading for that year, kept, and the caption speaks of it in the past rather than offering it as a choice. */
+  snapshotRingStoppedIn: (year: number): string => `if you’d stopped in ${year}`,
   /** The Invested accounts card's premise on a plan saved in an earlier year (`agedBalancesYearFor`). */
   snapshotInvestedAsEnteredIn: (year: number): string => `Balances as you entered them in ${year}; what you hold now may differ.`,
   /** A projected figure on a card or in a chart's tooltip: the `~` hedge on a pre-formatted figure. */

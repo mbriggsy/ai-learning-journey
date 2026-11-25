@@ -9,6 +9,7 @@ import type { DateOffsetReading, DateSearchOutcome, DateTrackOutcome, Headline, 
 import { BAR_RUNG } from '@viz/curveMarks'
 import { composeAnswerNotes } from '../../../answerNotes'
 import { copy, slots } from '../../../copy'
+import { dateOddsText } from '../../../dateOdds'
 import { DEV_SEEDS } from '../../../devSeeds'
 import { recommendationBundle } from '../../../workbench/railChrome'
 import type { WhatIfReading, WhatIfSlotView } from '../../../workbench/whatIfRun'
@@ -258,8 +259,8 @@ describe('Probability, the working route (hand-built curves on `dip`)', () => {
   })
 
   it('a stop-year what-if’s ring names its own year', () => {
-    const plan: WhatIfReading = { kind: 'offset', reading: DIP_CURVE[5]! }
-    const w = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: readyView({ kind: 'offset', reading: DIP_CURVE[8]! }, plan) } })))
+    const plan: WhatIfReading = { kind: 'offset', reading: DIP_CURVE[5]!, track: 'full' }
+    const w = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: SPEND_LEVER, view: readyView({ kind: 'offset', reading: DIP_CURVE[8]!, track: 'full' }, plan) } })))
     const ring = w.halves.alternative.ring
     expect(ring.kind === 'face' && ring.face.caption).toBe(slots.snapshotRingStopIn(DIP.startCalendarYear + 8))
     expect(ringCentre(w.halves.alternative)).toBe(slots.xOfTenAtCeiling())
@@ -299,16 +300,62 @@ describe('Probability, the working route (hand-built curves on `dip`)', () => {
 })
 
 describe('Probability, a floor-dated household (`datemixed`): both rings read the floor curve', () => {
+  const floorCurve = curveOf([0.6, 0.86, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9])
+  const lifeCurve = curveOf([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.8, 0.8])
+  const floor = confirmed(floorCurve, 1)
+  const life: DateTrackOutcome = { kind: 'no-date-in-window', nonMonotoneOffsets: [], curve: lifeCurve }
+  const d = DEV_SEEDS.datemixed
+  const s = snap(d, dateAnswer(d, floor, life, { offsetYears: 1, track: 'floor' }))
+  const note = (h: HalfView) => (h.ring.kind === 'face' ? h.ring.face.note : undefined)
+  const floorAt = (offsetYears: number): WhatIfReading => ({ kind: 'offset', reading: floorCurve[offsetYears]!, track: 'floor' })
+
   it('the plan’s ring reads the floor track at the band’s offset, never the lifestyle curve', () => {
-    const floorCurve = curveOf([0.6, 0.86, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9])
-    const lifeCurve = curveOf([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.8, 0.8])
-    const floor = confirmed(floorCurve, 1)
-    const life: DateTrackOutcome = { kind: 'no-date-in-window', nonMonotoneOffsets: [], curve: lifeCurve }
-    const d = DEV_SEEDS.datemixed
-    const v = reads(probabilityView(input(snap(d, dateAnswer(d, floor, life, { offsetYears: 1, track: 'floor' })))))
+    const v = reads(probabilityView(input(s)))
     expect(ringCentre(v.halves.compared)).toBe(slots.xOfTen(Math.round(floorCurve[1]!.quantizedLowerBound * 10)))
     // The empty what-if reads the plan: the floor curve too.
     expect(ringCentre(v.halves.alternative)).toBe(ringCentre(v.halves.compared))
+  })
+
+  it('both rings name the essentials pass, under the no-date lead: a floor count never reads as the full budget’s', () => {
+    const v = reads(probabilityView(input(s)))
+    expect(v.intro.lead).toBe(slots.noDateInWindow(DATE_OFFSET_WINDOW_TOP))
+    expect(note(v.halves.compared)).toBe(copy.snapshotRingEssentialsNote)
+    expect(note(v.halves.alternative)).toBe(copy.snapshotRingEssentialsNote)
+    // A landed what-if on the floor track names it too (one pass on both sides, never the plan's alone).
+    const extras = [{ kind: 'spending', op: 'remove', lineId: 'line-travel' }] as unknown as ProbabilityInput['whatIf']['bundle']
+    const w = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: extras, view: readyView(floorAt(1), floorAt(1)) } })))
+    expect(note(w.halves.alternative)).toBe(copy.snapshotRingEssentialsNote)
+  })
+
+  it('an extras-only what-if beside your plan says why the odds can’t move, in place of "Both read" (U15’s floorUnread line)', () => {
+    const extras = [{ kind: 'spending', op: 'remove', lineId: 'line-travel' }] as unknown as ProbabilityInput['whatIf']['bundle']
+    const w = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: extras, view: readyView(floorAt(1), floorAt(1)) } })))
+    expect(w.metrics.difference).toBe(copy.workbenchRailFloorUnread)
+    expect(w.metrics.differenceReserve.length, 'the reserve holds the reason, so its landing moves nothing').toBeGreaterThanOrEqual(copy.workbenchRailFloorUnread.length)
+    // An essential line moves the floor: equal counts there are the even line, never the reason.
+    const essentials = [{ kind: 'spending', op: 'remove', lineId: 'line-food' }] as unknown as ProbabilityInput['whatIf']['bundle']
+    const e = reads(probabilityView(input(s, { whatIf: { pick: 'new', bundle: essentials, view: readyView(floorAt(1), floorAt(1)) } })))
+    expect(e.metrics.difference).toBe(slots.workbenchRailEven(dateOddsText(floorCurve[1]!.quantizedLowerBound)))
+    // The full track (a lifestyle-keyed band) never prints it.
+    const full = snap(DIP, dateAnswer(DIP, LIFESTYLE, LIFESTYLE, { offsetYears: 5, track: 'lifestyle' }))
+    const fullAt: WhatIfReading = { kind: 'offset', reading: DIP_CURVE[5]!, track: 'full' }
+    const f = reads(probabilityView(input(full, { whatIf: { pick: 'new', bundle: extras, view: readyView(fullAt, fullAt) } })))
+    expect(f.metrics.difference).not.toBe(copy.workbenchRailFloorUnread)
+  })
+})
+
+describe('Probability on an aged plan whose crowned stop year has passed (`datearrived`’s shape)', () => {
+  it('the ring keeps the plan’s own count (the "Stopping then" odds) and says the year is past, never "if you stop in" it', () => {
+    // Built six years ago; the lifestyle crown at offset 5 is last year.
+    const wall = DIP.startCalendarYear + 6
+    const s = snap(DIP, dateAnswer(DIP, LIFESTYLE, LIFESTYLE, { offsetYears: 5, track: 'lifestyle' }))
+    const v = reads(probabilityView(input(s, {
+      wallCalendarYear: wall,
+      notes: composeAnswerNotes(s, { readOnly: false, stalenessNote: false, leftOverClauseHost: false, wallCalendarYear: wall }),
+    })))
+    const ring = v.halves.compared.ring
+    expect(ring.kind === 'face' && ring.face.caption).toBe(slots.snapshotRingStoppedIn(DIP.startCalendarYear + 5))
+    expect(ringCentre(v.halves.compared)).toBe(slots.xOfTen(Math.round(DIP_CURVE[5]!.quantizedLowerBound * 10)))
   })
 })
 

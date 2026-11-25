@@ -18,14 +18,18 @@
  * (`decumulation.ts`, `simulate.ts`'s fan fold), so by year x the run-out count is the depletions with d < x. Over the
  * plan's whole horizon that is every depletion, so its share is exactly 1 − `survivalFraction`. The words are
  * "about N in 100 futures" from a WHOLE-COUNT rounding of count × 100 ÷ paths (integer arithmetic first, so a share that
- * sits on .5 rounds the same on every engine), with the edges worded apart (`runOutShare`): exactly none, fewer than 1 in
- * 100 (rounds below 1 while some future runs out: never "0 in 100"), more than 99 in 100 (rounds to 100 while some future
- * holds), every future. Never a percent, never the X-of-10 slots (a 3% share would round to a false "0 of 10").
+ * sits on .5 rounds the same on every engine), with the edges worded apart (`runOutShare`): fewer than 1 in 100 (rounds
+ * below 1, none run out included: a sample's zero is a bound, never "no future", the false certainty the 10-of-10 clamp
+ * refuses; never "0 in 100"), more than 99 in 100 (rounds to 100 while some future holds), every future. Never a
+ * percent, never the X-of-10 slots (a 3% share would round to a false "0 of 10").
  *
  * THE KEY-METRIC COLUMN. Retired: the share by the last year the fan draws (the age the "Plan horizon" moment names) and
  * the share over the whole plan (the one the ring's count reads), then the page's notes as Probability carries them (the
  * Medicare affirmation, the state clause) and its footnotes. Working: the one stopgap line in the run-out chart's place
- * (plan 6's "the working household's readings at its date"), then the same notes.
+ * (plan 6's "the working household's readings at its date"), then the same notes. On an aged plan (the fan draws "Plan
+ * built") the column carries the premise (`fanPremise`) first, with its re-confirm door where the tab can write.
+ *
+ * UNDER THE FAN, on the working route: the track note (`bandTrackNote`), whose world the range prices.
  */
 import type { MemoryModelSnapshot } from '@store/memoryModel'
 import { isDepleted, type BandFan } from '@shared/model'
@@ -35,6 +39,7 @@ import type { RunOutLabels, RunOutPoint } from '@viz/charts/runOutOptions'
 import type { AnswerNotes } from '../../answerNotes'
 import { selectElevatedAnswer } from '../../answerView'
 import { copy, slots } from '../../copy'
+import { bandTrackNote, fanPremise, type FanPremise } from '../../fanNotes'
 import { chartWords, fanLabels } from '../dashboard/snapshotView'
 
 // ── The run-out share ───────────────────────────────────────────────────────────────────────────────────────────
@@ -50,9 +55,9 @@ export function runOutCounts(depletionYears: readonly number[], lastYear: number
   return byYear
 }
 
-/** The share's words, one kind per edge (exhaustive, insight 147): no future, fewer than 1, about N, more than 99,
+/** The share's words, one kind per edge (exhaustive, insight 147): fewer than 1 (none included), about N, more than 99,
  *  every future. */
-export type RunOutShareKind = 'none' | 'fewer' | 'about' | 'more' | 'every'
+export type RunOutShareKind = 'fewer' | 'about' | 'more' | 'every'
 
 export interface RunOutShare {
   readonly kind: RunOutShareKind
@@ -65,7 +70,6 @@ export interface RunOutShare {
 }
 
 const SHARE_WORDS: Readonly<Record<RunOutShareKind, (n: number) => { readonly words: string; readonly plural: boolean }>> = {
-  none: () => ({ words: copy.confidenceShareNone, plural: false }),
   fewer: () => ({ words: slots.confidenceShareFewer(), plural: true }),
   about: (n) => ({ words: slots.confidenceShareAbout(n), plural: true }),
   more: () => ({ words: slots.confidenceShareMore(), plural: true }),
@@ -79,7 +83,8 @@ export function runOutShare(count: number, paths: number): RunOutShare {
   }
   // Integer arithmetic first: count × 100 is exact, so a share on the .5 line rounds alike on every engine.
   const n = Math.round((count * 100) / paths)
-  const kind: RunOutShareKind = count === 0 ? 'none' : count === paths ? 'every' : n < 1 ? 'fewer' : n > 99 ? 'more' : 'about'
+  // A count of none is a bound on the sample (fewer than 1 in 100 of the futures the plan ran), never "no future".
+  const kind: RunOutShareKind = count === paths ? 'every' : n < 1 ? 'fewer' : n > 99 ? 'more' : 'about'
   return { kind, ...(kind === 'about' ? { n } : {}), ...SHARE_WORDS[kind](n) }
 }
 
@@ -104,6 +109,10 @@ export type ConfidenceView =
       readonly runOut?: RunOutView
       /** Working route only: the line in the run-out chart's place. */
       readonly stopgap?: string
+      /** Working route only: whose world the range prices (`bandTrackNote`), under the fan. */
+      readonly trackNote?: string
+      /** An aged plan: the modelled years' premise and its door (`fanPremise`), heading the key-metric column. */
+      readonly premise?: FanPremise
       readonly metrics: readonly string[]
       readonly footnotes: readonly string[]
     }
@@ -120,6 +129,8 @@ export interface ConfidenceInput {
   readonly snapshot: MemoryModelSnapshot
   readonly notes: AnswerNotes
   readonly onRetry: () => void
+  /** A read-only tab: the premise carries no door. */
+  readonly readOnly: boolean
 }
 
 /** The run-out chart's view and the two metric sentences, from a retired run. */
@@ -175,7 +186,7 @@ function cutNote(raw: BandFan | undefined, lastDrawn: number, ageA: number, ageB
   return rawLast !== undefined && lastDrawn < rawLast ? [slots.confidenceCutNote(ageA + lastDrawn, ageB + lastDrawn)] : []
 }
 
-export function confidenceView({ snapshot, notes, onRetry }: ConfidenceInput): ConfidenceView {
+export function confidenceView({ snapshot, notes, onRetry, readOnly }: ConfidenceInput): ConfidenceView {
   const title = copy.confidenceChartTitle
   // The page's notes, as Probability's key-metric column carries them; its footnote row likewise.
   const noteLines: string[] = []
@@ -192,6 +203,10 @@ export function confidenceView({ snapshot, notes, onRetry }: ConfidenceInput): C
   const ageA = draft.people[0]?.currentAge
   const ageB = draft.people[1]?.currentAge
   const elevated = selectElevatedAnswer(snapshot, onRetry, notes.planClock)
+  const premiseFor = (moments: readonly XAnnotation[]): { premise?: FanPremise } => {
+    const premise = fanPremise(moments, notes.agedBalancesYear, notes.planClock.startCalendarYear, readOnly)
+    return premise === null ? {} : { premise }
+  }
 
   if (elevated.kind === 'spine' && elevated.view.kind === 'reading' && answer.kind === 'headline') {
     const fan = elevated.view.band
@@ -209,8 +224,10 @@ export function confidenceView({ snapshot, notes, onRetry }: ConfidenceInput): C
       moments,
       labels,
       ...(run !== null ? { runOut: run.view } : {}),
-      // Where the run-out lines speak, the second already says why the charts stop; the cut line stands alone otherwise.
-      metrics: [...(run !== null ? run.lines : cut), ...noteLines],
+      ...premiseFor(moments),
+      // Where the run-out lines speak in two, the second already says why the charts stop; where they speak in one (no
+      // future runs out past the cut, so the last point IS the whole plan's share) or not at all, the cut line follows.
+      metrics: [...(run !== null ? run.lines : []), ...(run === null || run.lines.length < 2 ? cut : []), ...noteLines],
       footnotes,
     }
   }
@@ -220,6 +237,7 @@ export function confidenceView({ snapshot, notes, onRetry }: ConfidenceInput): C
     const fan = v.band?.fan
     const moments = v.bandAnnotations
     if (fan === undefined || moments === undefined || ageA === undefined || ageB === undefined) return words(noDate ? copy.snapshotFanNoDate : copy.snapshotFanNone)
+    const trackNote = bandTrackNote(v)
     return {
       kind: 'chart',
       route: 'date',
@@ -228,6 +246,8 @@ export function confidenceView({ snapshot, notes, onRetry }: ConfidenceInput): C
       moments,
       labels: fanLabels(draft, ageA, ageB),
       stopgap: copy.confidenceRunOutStopgap,
+      ...(trackNote !== null ? { trackNote } : {}),
+      ...premiseFor(moments),
       metrics: [
         ...cutNote(answer.kind === 'date' && answer.outcome.kind === 'dates' ? answer.outcome.band?.fan : undefined, fan.byYear[fan.byYear.length - 1]!.yearsFromNow, ageA, ageB),
         ...noteLines,

@@ -257,6 +257,12 @@ test.describe(`RC3 · Snapshot at his window (${REAL.width}×${REAL.height} @ ${
       await settleLayout(page)
       const floor = await hcFloorPx(page)
       assertHcText(await hcAudit(page, ...FAN), floor, FAN_REQUIRED, `${seed} REAL fan`)
+      if (seed === 'dip') {
+        // Every working household's fan is cut where the cohort thins (`dip` well before its last year): the right-hand
+        // moment names the cut, never the plan's horizon.
+        await expect(page.locator(`${FAN[0]} .highcharts-plot-line-label`, { hasText: copy.bandClockCutLabel }), 'dip: the cut edge named').toHaveCount(1)
+        await expect(page.locator(`${FAN[0]} .highcharts-plot-line-label`, { hasText: copy.bandClockHorizonLabel }), 'dip: no "Plan horizon" on a cut fan').toHaveCount(0)
+      }
       // Decision 7: hovering a point of ANOTHER series fades no printed value.
       await hoverMedian(page)
       assertHcText(await hcAudit(page, ...FAN), floor, FAN_REQUIRED, `${seed} REAL fan, the median hovered`)
@@ -2052,10 +2058,10 @@ test.describe(`RC7 · Confidence at his window (${REAL.width}×${REAL.height} @ 
     expect(Math.abs(edges.runOut!.left - edges.fan.left), 'the run-out plot starts under the fan’s first year').toBeLessThanOrEqual(1)
     expect(Math.abs(edges.runOut!.right - edges.fan.right), 'the run-out plot ends under the fan’s last year').toBeLessThanOrEqual(1)
     const metrics = await page.locator('[data-metric]').allInnerTexts()
-    expect(metrics[0], 'the lead metric: the share by the last year drawn').toMatch(/^By ages \d+ and \d+, (about \d+ in 100 futures have|fewer than 1 in 100 futures have|no future has)/)
+    expect(metrics[0], 'the lead metric: the share by the last year drawn').toMatch(/^By ages \d+ and \d+, (about \d+ in 100 futures have|fewer than 1 in 100 futures have)/)
     // `retired`'s fan is cut at the thinning cohort (year 27 of 47): the whole plan's share names the longer span and
     // why the charts stop, and the right-hand moment says where the range ends, never "Plan horizon".
-    expect(metrics[1], 'the whole plan’s share, worded as the longer span').toMatch(/^The charts stop at ages \d+ and \d+: past them, .*Over the whole plan, (about \d+ in 100 futures run|fewer than 1 in 100 futures run|no future runs)/)
+    expect(metrics[1], 'the whole plan’s share, worded as the longer span').toMatch(/^The charts stop at ages \d+ and \d+: past them, .*Over the whole plan, (about \d+ in 100 futures run|fewer than 1 in 100 futures run)/)
     await expect(page.locator(`${CONF[0]} .highcharts-plot-line-label`, { hasText: copy.bandClockCutLabel }), 'the cut edge named').toHaveCount(1)
     await expect(page.locator(`${CONF[0]} .highcharts-plot-line-label`, { hasText: copy.bandClockHorizonLabel })).toHaveCount(0)
     await auditConfidence(page, 'retired REAL')
@@ -2072,7 +2078,12 @@ test.describe(`RC7 · Confidence at his window (${REAL.width}×${REAL.height} @ 
     await expect(page.locator(`${CONF[0]} .highcharts-plot-line-label`, { hasText: copy.bandClockWorkStopsLabel }), 'the stop-year marker’s word').toHaveCount(1)
     await expect(page.locator('[data-runout-stopgap]')).toHaveText(copy.confidenceRunOutStopgap)
     await expect(page.locator(RUN_OUT[0]), 'no run-out chart on the working route').toHaveCount(0)
-    const bottom = await page.evaluate(() => Math.max(...[...document.querySelectorAll('[data-fan], [data-runout-stopgap], [data-metrics]')].map((e) => e.getBoundingClientRect().bottom)))
+    // The working fan is cut where the cohort thins: "Range ends" at the cut, never "Plan horizon".
+    await expect(page.locator(`${CONF[0]} .highcharts-plot-line-label`, { hasText: copy.bandClockCutLabel }), 'dip: the cut edge named').toHaveCount(1)
+    await expect(page.locator(`${CONF[0]} .highcharts-plot-line-label`, { hasText: copy.bandClockHorizonLabel }), 'dip: no "Plan horizon" on a cut fan').toHaveCount(0)
+    // Under the fan, whose world the range prices (the track note), inside the frame with the rest.
+    await expect(page.locator('[data-confidence] [data-fan-track]'), 'dip: the fan’s track note').toHaveCount(1)
+    const bottom = await page.evaluate(() => Math.max(...[...document.querySelectorAll('[data-fan], [data-fan-track], [data-runout-stopgap], [data-metrics]')].map((e) => e.getBoundingClientRect().bottom)))
     expect(bottom, 'dip: the fan, the stopgap and the metrics inside his window').toBeLessThanOrEqual(REAL.height)
     await assertOneVisibleCaveat(page, REAL.height)
     await noSidewaysScroll(page, 'dip REAL Confidence')
@@ -2155,6 +2166,10 @@ test.describe(`RC7 · Confidence on the aged returns (${REAL.width}×${REAL.heig
       await toConfidence(page, `?vault=${key}`)
       const moments = await page.locator(`${CONF[0]} .highcharts-plot-line-label`).allTextContents()
       expect(moments, `?vault=${key}: the moments (${moments.join(' | ')})`).toEqual(expect.arrayContaining([copy.bandClockBuiltLabel, copy.bandClockTodayLabel]))
+      // The aged fan ships beside its premise (U17 §S2) and the premise's re-confirm door, rendered.
+      const premise = page.locator('[data-confidence] [data-fan-premise]')
+      await expect(premise, `?vault=${key}: the aged fan's premise`).toHaveCount(1)
+      await expect(premise.getByRole('button', { name: copy.bandPremiseReconfirmCta }), `?vault=${key}: the premise's door`).toBeVisible()
       await auditConfidence(page, `?vault=${key} REAL`)
       await assertConfidenceOrder(page, `?vault=${key}`, false)
     })

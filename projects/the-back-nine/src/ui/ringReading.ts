@@ -10,13 +10,19 @@
  * - the arc fills to the count out of 10 (the ceiling draws the full-less-one arc, 9);
  * - `indeterminate` draws no number and no arc; `already-failing` draws its count (0) and an empty arc;
  * - on the date route the caption names the stop year the reading is taken at ("if you stop in 2031"), from the
- *   reading's own offset, never a re-derived one.
+ *   reading's own offset, never a re-derived one; on an aged plan whose stop year has passed (`offsetHasPassed`, the odds
+ *   chart's own test) it keeps the count (the plan's own reading, the one "Stopping then" prints) and speaks of the year
+ *   in the past ("if you’d stopped in 2025");
+ * - on the essentials-only pass (the reading's `track`, a floor-keyed band) the line under the ring says so, on every
+ *   ring alike, plan and what-if, so a floor count never reads as the full budget's (under the ring, since its caption
+ *   box holds two lines: a third ran into the arc, measured on `datemixed`).
  */
 import type { MemoryModelSnapshot } from '@store/memoryModel'
+import { offsetHasPassed } from '@viz/curveMarks'
 import type { ElevatedAnswer } from './answerView'
 import type { BandPlanClockAnchor } from './bandAnnotations'
 import { copy, slots } from './copy'
-import { heroLead } from './dateHero'
+import { floorLineText, heroLead } from './dateHero'
 import { composeDateSplit } from './dateSplit'
 import { OUTCOME_PRESENTATION } from './outcomeStates'
 import { verdictReadingText } from './verdictSentence'
@@ -35,13 +41,16 @@ export interface RingFace {
   readonly centre: string | undefined
   /** The words under them: the outcome word, or the stop year on the date route. */
   readonly caption: string
+  /** The line under the ring where the reading is the essentials-only pass (`track` 'floor'). */
+  readonly note?: string
 }
 
 /**
  * The face for one many-futures reading. `startCalendarYear` names the stop year on the date route (the plan's build
  * year; an offset is years from it); without it the caption falls back to the no-reading words, never a guessed year.
+ * `planClockYears` is the plan's age in years (`yearsSincePlanBuilt`): a stop year it has passed reads in the past.
  */
-export function ringFace(reading: WhatIfReading, startCalendarYear?: number): RingFace {
+export function ringFace(reading: WhatIfReading, startCalendarYear?: number, planClockYears = 0): RingFace {
   if (reading.kind === 'headline') {
     const { outcomeState, xOfTen } = reading.headline
     const wordKey = OUTCOME_PRESENTATION[outcomeState].verdictWordKey
@@ -60,7 +69,13 @@ export function ringFace(reading: WhatIfReading, startCalendarYear?: number): Ri
   return {
     arc: atCeiling ? CEILING_ARC : Math.max(0, rung),
     centre: atCeiling ? slots.xOfTenAtCeiling() : slots.xOfTen(Math.max(0, rung)),
-    caption: startCalendarYear === undefined ? copy.snapshotRingNoReading : slots.snapshotRingStopIn(startCalendarYear + offsetYears),
+    caption:
+      startCalendarYear === undefined
+        ? copy.snapshotRingNoReading
+        : offsetHasPassed(offsetYears, planClockYears)
+          ? slots.snapshotRingStoppedIn(startCalendarYear + offsetYears)
+          : slots.snapshotRingStopIn(startCalendarYear + offsetYears),
+    ...(reading.track === 'floor' ? { note: copy.snapshotRingEssentialsNote } : {}),
   }
 }
 
@@ -73,6 +88,10 @@ export type RingView =
       readonly lead?: string
       /** The re-figuring line, else the provisional tag: one slot, one line. */
       readonly eyebrow?: string
+      /** The lines under the lead (the date route): the essentials date line where the ring reads the essentials-only
+       *  pass, the line Probability's intro prints (`floorLineText`), so the ring's count is never read beside the
+       *  no-date lead alone. */
+      readonly lines?: readonly string[]
     }
   /** The date route's answer resolved but the table builder withholds the reading's base: the date sentence, no ring
    *  number (never a number from another offset). */
@@ -117,7 +136,8 @@ export function ringReading(
     // The stop year is the ANSWER's build year plus the reading's offset (the calendar-stable claim heroLead speaks).
     const start = snapshot.answer.kind === 'date' ? snapshot.answer.draft.startCalendarYear : anchor.startCalendarYear
     if (plan === null || plan.kind !== 'offset') return { kind: 'no-reading', ...extra }
-    return { kind: 'reading', face: ringFace(plan, start), ...extra }
+    const lines = plan.track === 'floor' && split.kind === 'split' ? [floorLineText(split, view.windowTopYears, anchor, refiguring)] : []
+    return { kind: 'reading', face: ringFace(plan, start, anchor.yearsSincePlanBuilt), ...extra, ...(lines.length > 0 ? { lines } : {}) }
   }
   return { kind: 'fallback' }
 }

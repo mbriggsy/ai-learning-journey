@@ -62,7 +62,7 @@ import { ringFace, type RingFace } from '../../ringReading'
 import { spendingBasisLine } from '../../survivorLines'
 import { floorRelief } from '../../twoTier'
 import { composeVerdictReading, reserveClauseFor, spendClauseFor, verdictReadingText } from '../../verdictSentence'
-import { readingCount, readingText, recommendationBundle, refusalWords } from '../../workbench/railChrome'
+import { floorUnread, readingCount, readingText, recommendationBundle, refusalWords } from '../../workbench/railChrome'
 import type { TableRun } from '../../workbench/tableRun'
 import { headlineExtras, planReadingFor, type HeadlineExtras, type WhatIfReading, type WhatIfSlotView } from '../../workbench/whatIfRun'
 import type { LandedFigure } from '../../workbench/useWhatIf'
@@ -318,10 +318,10 @@ function headlineRows(headline: Headline, extras: HeadlineExtras, planClockYears
   return rows
 }
 
-/** The ring for a reading, on its route. */
-function ringOf(reading: WhatIfReading | null, startCalendarYear: number): RingSlot {
+/** The ring for a reading, on its route (the caption names the pass it reads and a stop year the plan has passed). */
+function ringOf(reading: WhatIfReading | null, startCalendarYear: number, planClockYears: number): RingSlot {
   if (reading === null) return { kind: 'empty', caption: copy.snapshotRingNoReading }
-  return { kind: 'face', face: ringFace(reading, startCalendarYear) }
+  return { kind: 'face', face: ringFace(reading, startCalendarYear, planClockYears) }
 }
 
 type AltState =
@@ -405,7 +405,7 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
   const planHalf: HalfView = {
     side: 'compared',
     title: copy.probabilityPlanTitle,
-    ring: ringOf(plan, startCalendarYear),
+    ring: ringOf(plan, startCalendarYear, planClockYears),
     loading: false,
     rows: answer.kind === 'headline' && plan?.kind === 'headline' && planExtras !== undefined ? headlineRows(plan.headline, planExtras, planClockYears) : [],
     ...(answer.kind === 'date' ? { stopgap: copy.probabilitySurvivorStopgap } : {}),
@@ -431,7 +431,7 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
           const rows = landed.pair.whatIf.kind === 'headline' && extras !== undefined ? headlineRows(landed.pair.whatIf.headline, extras, planClockYears) : []
           return {
             ...base,
-            ring: ringOf(landed.pair.whatIf, startCalendarYear),
+            ring: ringOf(landed.pair.whatIf, startCalendarYear, planClockYears),
             loading: true,
             rows,
             ...(extras?.terminalMedianReal !== undefined ? { barMedian: extras.terminalMedianReal } : {}),
@@ -447,7 +447,7 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
         const rows = state.reading.kind === 'headline' && state.extras !== undefined ? headlineRows(state.reading.headline, state.extras, planClockYears) : []
         return {
           ...base,
-          ring: ringOf(state.reading, startCalendarYear),
+          ring: ringOf(state.reading, startCalendarYear, planClockYears),
           loading: state.updating,
           rows,
           ...(state.updating ? { status: copy.workbenchRailUpdating } : {}),
@@ -472,6 +472,12 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
   const altInSentence = inSentence(altName, leftKeptName === undefined)
   const leftReading = alt.kind === 'empty' ? plan : printed(alt)
   const rightReading = printed(rightState)
+  // THE FLOOR TRACK'S REASON (U15's floorUnread line, which RC4b's port dropped): where the plan's odds read the
+  // essentials-only pass and the what-if beside your plan changes only extra lines, the two counts can't differ, and the
+  // line says why in place of "Both read". Only beside your plan (its words name your plan's odds), and only where the
+  // even line would print.
+  const planFloor = plan?.kind === 'offset' && plan.track === 'floor'
+  const floorNote = planFloor && rightPick === 'plan' && floorUnread('floor', answer.draft, whatIf.bundle)
   const difference = ((): string | null => {
     if (alt.kind === 'empty' && rightPick === 'plan') return copy.probabilityNoChanges
     if (leftReading === undefined || leftReading === null || rightReading === undefined || rightReading === null) return null
@@ -480,17 +486,20 @@ export function probabilityView(input: ProbabilityInput): ProbabilityView {
     if (rightText === null || leftText === null) return null
     const a = readingCount(rightReading)
     const b = readingCount(leftReading)
-    if (a !== null && b !== null && a.n === b.n && a.ceiling === b.ceiling) return slots.workbenchRailEven(rightText)
+    if (a !== null && b !== null && a.n === b.n && a.ceiling === b.ceiling) return floorNote ? copy.workbenchRailFloorUnread : slots.workbenchRailEven(rightText)
     if (rightPick === 'plan') return slots.probabilityDifference(rightText, leftText, altInSentence)
     // The left side's empty bundle is your plan itself: named so.
     const leftName = alt.kind === 'empty' ? copy.probabilityPlanTitle.toLowerCase() : altInSentence
     return slots.probabilityDifferenceBetween(rightName, rightText, leftName, leftText)
   })()
   const ceiling = slots.xOfTenAtCeiling()
-  const differenceReserve =
+  const widest =
     rightPick === 'plan'
       ? slots.probabilityDifference(ceiling, ceiling, altInSentence)
       : slots.probabilityDifferenceBetween(rightName, ceiling, alt.kind === 'empty' ? copy.probabilityPlanTitle.toLowerCase() : altInSentence, ceiling)
+  // Where the reason can take the cell (its bundle is known before its run lands, so the reserve is wide from the
+  // first frame of the run): the reserve holds the longer, so the landing moves nothing.
+  const differenceReserve = floorNote && copy.workbenchRailFloorUnread.length > widest.length ? copy.workbenchRailFloorUnread : widest
 
   // ── The bars: the retired route only, one shared scale ──
   const bars = ((): BarsView | undefined => {

@@ -57,6 +57,7 @@ import { tableRunFor } from '../tableRun'
 import {
   createWhatIfSlot,
   futuresDiffer,
+  planReadingFor,
   whatIfReading,
   whatIfRunFor,
   whatIfSlotView,
@@ -145,7 +146,7 @@ describe('whatIfRunFor — the empty bundle is the plan itself', () => {
     if (table.kind !== 'run') throw new Error('[test setup] no table run')
     expect(run.views).toEqual(table.views)
     expect(run.meta).toEqual(table.meta)
-    expect(run.plan).toEqual({ kind: 'offset', reading: answer.kind === 'date' && answer.outcome.kind === 'dates' ? answer.outcome.lifestyle.curve[5] : null })
+    expect(run.plan).toEqual({ kind: 'offset', reading: answer.kind === 'date' && answer.outcome.kind === 'dates' ? answer.outcome.lifestyle.curve[5] : null, track: 'full' })
   })
 
   it('an all-retired household: the spine run on its copy, the plan’s side the store’s own headline', () => {
@@ -282,8 +283,10 @@ describe('whatIfRunFor — the spending track is a read', () => {
     const run = runOf(whatIfRunFor(answer, SEED, [{ kind: 'withdrawal-order', policy: 'pre-tax-first' }]))
     expect(run.track).toBe('floor')
     const outcome = (answer as Extract<ModelAnswer, { kind: 'date' }>).outcome as Extract<DateSearchOutcome, { kind: 'dates' }>
-    expect(run.plan).toEqual({ kind: 'offset', reading: outcome.floor.curve[7] })
-    expect(run.plan).not.toEqual({ kind: 'offset', reading: outcome.lifestyle.curve[7] })
+    // The plan's reading carries the pass it reads (one source: the table base), so every caption of it can say so.
+    expect(run.plan).toEqual({ kind: 'offset', reading: outcome.floor.curve[7], track: 'floor' })
+    expect(run.plan).not.toEqual({ kind: 'offset', reading: outcome.lifestyle.curve[7], track: 'floor' })
+    expect(planReadingFor(answer)).toEqual(run.plan)
     for (const v of ['steady', 'rough'] as const) {
       const view = run.views[v]
       if (view.kind !== 'run') throw new Error('[test setup] refused view')
@@ -294,10 +297,12 @@ describe('whatIfRunFor — the spending track is a read', () => {
     expect(whatIfReading(result, 'floor', 7)).toEqual({
       kind: 'offset',
       reading: offsetReading({ offsetYears: 7, survivalFraction: 0.93 }, DATE_SEARCH_PATHS.final),
+      track: 'floor',
     })
     expect(whatIfReading(result, 'full', 7)).toEqual({
       kind: 'offset',
       reading: offsetReading({ offsetYears: 7, survivalFraction: 0.5 }, DATE_SEARCH_PATHS.final),
+      track: 'full',
     })
   })
 
@@ -448,7 +453,7 @@ describe('createWhatIfSlot — the one-key rule (insights 094 and 159)', () => {
     const many = manyOf(whatIfSlotView(slot.getSnapshot()))
     if (many.kind !== 'ready') throw new Error(`[test] ${many.kind}`)
     expect(many.updating).toBe(false)
-    expect(many.value.whatIf).toEqual({ kind: 'offset', reading: offsetReading({ offsetYears: 5, survivalFraction: 0.4 }, DATE_SEARCH_PATHS.final) })
+    expect(many.value.whatIf).toEqual({ kind: 'offset', reading: offsetReading({ offsetYears: 5, survivalFraction: 0.4 }, DATE_SEARCH_PATHS.final), track: 'full' })
     expect(many.value.plan).toEqual(runOf(whatIfRunFor(answer, SEED, [])).plan)
   })
 

@@ -651,6 +651,19 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   missing in every motion-on capture while a real clock faded them in within 1.5 s. A probe that finds a chart word
   missing runs once on a plain `@playwright/test` page (no pin) before calling it a product bug; and a chart's printed
   values are never deferred (`defer: false` on the SERIES' `dataLabels`: a point-level `defer` is ignored).
+- **(b9-12, 11-25) `assertOneVisibleCaveat` in `e2e/rc-screens.spec.ts` asserts the R13 tie too** (since `a883c5e4`): at
+  least one element in `main.result` must carry an `aria-describedby` naming the caveat (`IN_FRAME_DISCLAIMER_ID`). A new
+  figured page whose figures lack `verdictDescribedBy()` reds; a state with no figure (Tax Strategies before a Winner card,
+  Cash Flows' table until its `DataTable` takes a description prop) passes `false`, each with a comment saying why.
+- **(b9-12, 11-25) Stress Test and Social Security render the StaleBanner** (they print the plan's odds; `Shell.tsx`'s
+  `figured`). A stale or aged seed adds the banner's height above their one-frame arms; measure the frame on such a seed
+  before adding one to those pages' arms.
+- **(b9-12, 11-25) Run heavy fit arms in small groups on Windows.** Running RC4b, RC8, RC9, RC10 and RC11 together left
+  four `?seed=dip` arms on "Working out your answer…" past the 150 s final-tier wait; alone they passed in a minute. A
+  red that reads as a hung answer under a big `-g` is load first: rerun the failing arms alone before tracing a bug.
+- **(b9-12, 11-25) The held look instrument looks up screens by id** (`screenById` in `e2e/held/rc-look.spec.ts`). Its
+  index lookups into the `RC_ONLY`-filtered list once shot Social Security under the name "health-care", with a clean
+  audit; a new capture block takes its screen by id, never by position.
 
 ## The mutation harness
 

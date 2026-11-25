@@ -566,6 +566,7 @@ for (const size of SIZES) {
       await page.getByRole('option', { name: copy.taxStratTableMedicare }).click()
       await expect(page.locator('[data-details-table="medicare"]')).toBeVisible()
       await shot(page, findings, 'tax-details-medicare', 'surplus', size.tag)
+      await page.screenshot({ path: `${OUT}/tax-details-medicare-surplus-${size.tag}-full.png`, fullPage: true })
       console.log(`[rc-look ${UNIT} tax surplus ${size.tag}] ${JSON.stringify(findings)}`)
       for (const [id, a] of Object.entries(findings)) {
         expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)

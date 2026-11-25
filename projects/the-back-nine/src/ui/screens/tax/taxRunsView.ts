@@ -14,13 +14,15 @@
  * beneath it (plan 4.0's "tax figures say only what they hold").
  */
 import type { SolveRecommendation } from '@engine/solver/solve'
+import { irmaa } from '@engine/constants/health'
+import { irmaaScheduleAsCompared } from '@engine/healthOverlay'
 import { niceLattice, type DollarLattice } from '@viz/bandData'
 import type { PairSeries, StackSource, YearPoint } from '@viz/charts/stackedAreasOptions'
 import type { LedgerYearRow, RothConversionPlan, WhatIfLeverV6 } from '@shared/model'
 import type { ScenarioDraft } from '@store/memoryModel'
 import type { TableMeta } from '../../workbench/tableRun'
 import { copy, slots } from '../../copy'
-import { formatDeltaDollar, mmAxisFormatterFor } from '../../money'
+import { formatDeltaDollar, formatEnteredDollar, mmAxisFormatterFor } from '../../money'
 import type { RunRows } from '../retirement/cashFlowsView'
 
 // ── The bundles ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -299,12 +301,22 @@ export function detailsView(input: DetailsInput): DetailsView {
   // Medicare: the years the run priced a Medicare bill. The bill includes the income surcharge (`premiums.medicare`,
   // the ledger's own note), so the base is the bill less the surcharge and the three columns add up.
   const medicareRows = run.rows.filter((r) => r.premiums.medicare > 0)
+  // Beside each year's income, the line it is weighed against: the first surcharge line of the bill two years on, in
+  // that income year's real dollars, at the year's own filing — the engine's own read (`medicareChargeForYear` bills
+  // year t + 2 on year t's income against `irmaaScheduleAsCompared(…, year t)` at `resolveYear(t).filing`, which is the
+  // row's `filing`). It rises with prices, so it sits above the pinned year's figure the note names.
+  const pinned = irmaa.value
+  const firstLine = (calendarYear: number, filing: LedgerYearRow['filing']): number => {
+    const tier = irmaaScheduleAsCompared(pinned, calendarYear).tiers[0]!
+    return filing === 'mfj' ? tier.mfjMagiThreshold : tier.singleMagiThreshold
+  }
   return {
     kind: 'table',
     heading,
     columns: [
       ...LEAD,
       { id: 'irmaa-income', header: copy.taxStratColIrmaaIncome, numeric: true },
+      { id: 'irmaa-line', header: copy.taxStratColIrmaaLine, numeric: true },
       { id: 'base', header: copy.taxStratColMedicareBase, numeric: true },
       { id: 'surcharge', header: copy.taxStratColSurcharge, numeric: true },
       { id: 'total', header: copy.taxStratColMedicareTotal, numeric: true },
@@ -314,13 +326,23 @@ export function detailsView(input: DetailsInput): DetailsView {
       cells: {
         ...lead(r),
         'irmaa-income': r.irmaaIncome ?? 0,
+        'irmaa-line': firstLine(run.meta.startCalendarYear + r.t, r.filing),
         base: r.premiums.medicare - r.premiums.irmaaSurcharge,
         surcharge: r.premiums.irmaaSurcharge,
         total: r.premiums.medicare,
       },
     })),
     ...(medicareRows.length === 0 ? { empty: copy.taxStratMedicareNone } : {}),
-    notes: [],
+    notes:
+      medicareRows.length === 0
+        ? []
+        : [
+            slots.taxStratIrmaaLineNote(
+              pinned.billYear,
+              formatEnteredDollar(pinned.tiers[0]!.mfjMagiThreshold),
+              formatEnteredDollar(pinned.tiers[0]!.singleMagiThreshold),
+            ),
+          ],
     updating: run.updating,
   }
 }

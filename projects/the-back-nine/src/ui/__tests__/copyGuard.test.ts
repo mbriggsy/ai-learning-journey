@@ -1219,6 +1219,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     taxStratBarPoint: slots.taxStratBarPoint('The recommended strategy', '4,240,000'),
     taxStratChartPoint: slots.taxStratChartPoint(2034, 'Your plan today', '12,000'),
     taxStratDetailsOf: slots.taxStratDetailsOf('The recommended strategy', true),
+    taxStratIrmaaLineNote: slots.taxStratIrmaaLineNote(2026, '218,000', '109,000'),
     confidenceCutNote: slots.confidenceCutNote(93, 92),
     bandClockCutDesc: slots.bandClockCutDesc(93, 92),
   }

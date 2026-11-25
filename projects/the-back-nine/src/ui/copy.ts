@@ -3054,6 +3054,7 @@ export const copy = {
   // The ledger records each year's income for the Medicare bill two years later (the lookback, `irmaaIncome`), so the row's
   // income never sets the same row's bill.
   taxStratColIrmaaIncome: 'This year’s income, which sets the Medicare bill two years later',
+  taxStratColIrmaaLine: 'That bill’s surcharge starts above',
   taxStratColMedicareBase: 'Medicare premium before the surcharge',
   taxStratColSurcharge: 'Income surcharge',
   taxStratColMedicareTotal: 'Medicare premium in all',
@@ -4942,7 +4943,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2201` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2202` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5642,6 +5643,12 @@ export const slots = {
   taxStratBarPoint: (name: string, fig: string): string => `${name}: ~$${fig}`,
   taxStratChartPoint: (year: number, name: string, fig: string): string => `${year}, ${name}: ~$${fig}`,
   taxStratDetailsOf: (who: string, steady: boolean): string => `${who}, in the ${steady ? 'steady' : 'rough'} market`,
+  /** Under the Medicare table: why the surcharge line beside each year's income sits above the pinned year's own (the
+   *  bill two years on is indexed to prices through the August before it; `healthOverlay.irmaaScheduleAsCompared`), and
+   *  that every such line is a forecast on the Trustees' price path (D7's "can't be known" line: the solver fills to it;
+   *  the register's *The solver fills Roth conversions to the exact forecast Medicare surcharge line…*). */
+  taxStratIrmaaLineNote: (pinnedYear: number, couple: string, single: string): string =>
+    `The surcharge line rises with prices each year: ${pinnedYear}’s is $${couple} for a couple and $${single} for one person. Each year’s income is weighed against the line of the bill it sets two years later, shown here in today’s dollars. Those later lines are forecasts, set only once prices are known, so a year that sits right at its line could still draw a surcharge if prices rise more slowly than forecast.`,
   confidenceShareFewer: (): string => 'fewer than 1 in 100 futures',
   confidenceShareMore: (): string => 'more than 99 in 100 futures',
   confidenceRunOutTitle: (): string => 'Futures that have run out of money by this age, out of every 100',

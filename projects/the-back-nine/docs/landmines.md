@@ -698,7 +698,7 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   ends within 60 characters before it on the same line** (`LAST_FILE`, `[^\n]{0,60}$`, `scripts/reanchor-citations.mjs`).
   Farther tokens are skipped silently and reported as "0 for hand review". On a long multi-citation line, re-check every
   far bare token by content after each run.
-- **(b9-1, 11-22; moved from TODO.md's review's gates, step 3) The re-anchor procedure for a commit that moves cited lines:** `pnpm doc:reanchor <base>` dry into a file, every move checked by CONTENT with `node scripts/check-reanchor-moves.mjs <dry file> <base>` from the project dir, BEFORE the apply (b9-2's, replacing the Dell's classifier: HEAD's line at the old number must equal the tree's at the new; a range spanning edited code and every SKIPPED line are checked by hand, and the REVIEW lines read one by one), then `--apply` once; restore `e2e/held/fit-24px-measurements.md` from HEAD and refuse the moves of the quoted examples in `docs/landmines.md` (the "two new register entries shifted `docs/backlog.md:1975`…" lines) and in this bullet, and restore `docs/council-log.md` and insight 136 from HEAD (a commit that adds a council-log row saves its edited file before the apply and puts it back after: the old rows' citations are frozen); then the positional pair-check, `node scripts/check-citation-pairs.mjs <base> <each moved code file>`, every line it prints judged (a frozen record stays; a missed bare token is fixed by content). The tool reads only files inside the project: a cited file outside it (`.github/workflows/verify-the-back-nine.yml`) is re-pointed by hand, by content (b9-1 met five).
+- **(b9-1, 11-22; moved from TODO.md's review's gates, step 3) The re-anchor procedure for a commit that moves cited lines:** `pnpm doc:reanchor <base>` dry into a file, every move checked by CONTENT with `node scripts/check-reanchor-moves.mjs <dry file> <base>` from the project dir, BEFORE the apply (b9-2's, replacing the Dell's classifier: HEAD's line at the old number must equal the tree's at the new; a range spanning edited code and every SKIPPED line are checked by hand, and the REVIEW lines read one by one), then `--apply` once; restore `e2e/held/fit-24px-measurements.md` from HEAD and refuse the moves of the quoted examples in `docs/landmines.md` (the "two new register entries shifted `docs/backlog.md:1977`…" lines) and in this bullet, and restore `docs/council-log.md` and insight 136 from HEAD (a commit that adds a council-log row saves its edited file before the apply and puts it back after: the old rows' citations are frozen); then the positional pair-check, `node scripts/check-citation-pairs.mjs <base> <each moved code file>`, every line it prints judged (a frozen record stays; a missed bare token is fixed by content). The tool reads only files inside the project: a cited file outside it (`.github/workflows/verify-the-back-nine.yml`) is re-pointed by hand, by content (b9-1 met five).
 
 - **(b9-6, 11-21) TODO.md's start-of-file section runs at its 60,000-character cap** (59,993 at b9-5's close): a line added
   above the first `## ` heading reds `verify:doc-stats`'s TODO arm AND its unit twin (`verify-doc-stats.test.ts`, "the REAL
@@ -754,14 +754,14 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   double-shifts every token it already moved (its dry run proposed `solverCodeVersion.ts:154 → :171` for a citation
   already at the right line). Move the later ones by hand from content, then run `content-check.mjs` (the re-anchor
   tools folder) — every DIFF it prints must be a construct this change edited on purpose. It also rewrote a HISTORICAL
-  example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1975`…" line) as if it were
+  example inside a landmine below (the "two new register entries shifted `docs/backlog.md:1977`…" line) as if it were
   live: reverted by hand; read its WOULD list for examples before `--apply`.
 
 - **(b9-10, 10-22) `pnpm doc:reanchor` skips `index.ts` too** (two are tracked: `src/engine/constants/index.ts` and
   `src/engine/reference/solver-cases/index.ts`), the ambiguous-basename class. Run `git grep -n "index\.ts:[0-9]"` and fix
   by content. Its missed-bare-token class recurred: backlog's `:401-407` sat ~90 characters after `simulate.ts:480-483`,
   and pair-check's DOCHUNK section caught it. It also never moves a doc's citations INTO ITSELF, and neither tool flagged
-  it: two new register entries shifted `docs/backlog.md:1975`, `:2261`, `:2336` (cited from inside the register) by +36.
+  it: two new register entries shifted `docs/backlog.md:1977`, `:2263`, `:2338` (cited from inside the register) by +36.
   After any edit that adds lines to a doc, run `git grep -n "<doc>:[0-9]"` across the repo, the doc itself included, and
   compare HEAD vs tree content at each shifted number.
 

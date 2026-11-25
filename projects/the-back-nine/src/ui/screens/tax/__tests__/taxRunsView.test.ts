@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { irmaa } from '@engine/constants/health'
 import { simulate } from '@engine/simulate'
 import type { LedgerYearRow } from '@shared/model'
 import type { ModelAnswer } from '@store/memoryModel'
@@ -143,5 +144,43 @@ describe('Details', () => {
     for (const r of v.rows) expect(Number(r.cells.base) + Number(r.cells.surcharge)).toBeCloseTo(Number(r.cells.total), 6)
     const none = detailsView({ table: 'medicare', pick: 'plan', future: 'rough', rows: ready(steady.rows.map((r) => ({ ...r, premiums: { ...r.premiums, medicare: 0, irmaaSurcharge: 0 } }))) })
     expect(none.kind === 'table' && none.empty).toBe(copy.taxStratMedicareNone)
+    expect(none.kind === 'table' && none.notes).toEqual([])
+  })
+
+  it('Medicare: the line beside each year’s income is the one the engine bills against — the bill two years on carries a surcharge exactly when that income is above it', () => {
+    // `surplus` with a Roth conversion pushes some years' income past the pinned year's own line but not past the
+    // line the engine compares (the price frame's band), so a column that printed the raw pinned line reds here.
+    // ($140,000 a year for nine years lands 2027 to 2030 between the two.)
+    const converting = { ...DEV_SEEDS.surplus, rothConversion: { annualAmountReal: 140_000, startYearOffset: 0, years: 9 } }
+    const pinnedFirst = irmaa.value.tiers[0]!
+    let over = 0
+    let under = 0
+    let inFrameBand = 0
+    const runs = [
+      ['retired', RETIRED],
+      ['surplus', DEV_SEEDS.surplus],
+      ['surplus converting', converting],
+    ] as const
+    for (const [name, seed] of runs) {
+      const run = steadyFor(headlineAnswer(seed))
+      const v = detailsView({ table: 'medicare', pick: 'plan', future: 'steady', rows: { kind: 'ready', rows: run.rows, meta: run.meta, updating: false, answerKey: 'k' } })
+      if (v.kind !== 'table') throw new Error(v.kind)
+      const headers = v.columns.map((c) => c.header)
+      expect(headers.indexOf(copy.taxStratColIrmaaLine)).toBe(headers.indexOf(copy.taxStratColIrmaaIncome) + 1)
+      expect(v.notes).toHaveLength(1)
+      const byYear = new Map(v.rows.map((r) => [Number(r.cells.year), r]))
+      for (const r of v.rows) {
+        const billed = byYear.get(Number(r.cells.year) + 2)
+        if (billed === undefined) continue
+        const income = Number(r.cells['irmaa-income'])
+        const above = income > Number(r.cells['irmaa-line'])
+        if (above) over++
+        else under++
+        if (!above && income > (Number(r.cells['irmaa-line']) > pinnedFirst.mfjMagiThreshold ? pinnedFirst.mfjMagiThreshold : pinnedFirst.singleMagiThreshold)) inFrameBand++
+        expect(Number(billed.cells.surcharge) > 0, `${name} ${r.cells.year}: income ${r.cells['irmaa-income']} vs line ${r.cells['irmaa-line']}`).toBe(above)
+      }
+    }
+    // Both sides reached, and the price frame's band, or the check above proves less than it says.
+    expect({ over: over > 0, under: under > 0, inFrameBand: inFrameBand > 0 }).toEqual({ over: true, under: true, inFrameBand: true })
   })
 })

@@ -103,9 +103,9 @@ attributing that quantity to the save (`staleness.ts:29`, `resultSave.ts:172`, `
   `bandClockSavedLabel` (`'Your save'`) + `bandClockSavedDesc` (*"When you saved this — ages A and B"*)
   at plan-year 0. On a **re-saver** (built last year, saved five minutes ago) that is **false**, and it
   contradicts the fresh "Saved to this device" badge on the same screen. The key is now
-  `bandClockBuiltLabel` — **`'Plan built'`** (`copy.ts:888`, rendered at `bandAnnotations.ts:169`) — with
+  `bandClockBuiltLabel` — **`'Plan built'`** (`copy.ts:887`, rendered at `bandAnnotations.ts:169`) — with
   `bandClockBuiltDesc` naming the BUILD year and the ages at that year. **Both renderers moved in the same
-  change** (insight 086): the annotation arm and `twoFuturesChrome.ts:210-212`'s today-label, which picks
+  change** (insight 086): the annotation arm and `twoFuturesChrome.ts lines 210-212 at 11349a9de`'s today-label, which picks
   the built label over `bandClockTodayLabel` exactly when the plan clock is positive.
 
 ### S0.3 The test gap this closed (verified, not assumed)
@@ -154,7 +154,7 @@ Shipped 2026-07-25, commit `e4754134`, CI green by explicit run id 30136387827.
   `offsetHasPassed(year − startCalendarYear, yearsSincePlanBuilt)` (`RothLever.tsx lines 47-49 at 7f56682e9`) — one strict
   compare covers both "before the build year" and "already passed", and no second comparator was
   authored. It renders through the R19 `FieldError` grammar with the earliest startable year QUOTED
-  (`errRothStartPast`, `RothLever.tsx line 275 at 7f56682e9`, joined `SlottedErrorKey` at `copy.ts:2558`). The fresh default
+  (`errRothStartPast`, `RothLever.tsx line 275 at 7f56682e9`, joined `SlottedErrorKey` at `copy.ts:2528`). The fresh default
   start seeds the WALL year (build + clock), so an aged vault never pre-fills the exact start the write
   side refuses.
 - **"Suppress when unanchored" was satisfied STRUCTURALLY, not by a dead arm.** `savedAnchor` is REQUIRED
@@ -194,7 +194,7 @@ literal tense regexes pin it now. Three mutants red → reverted.
    multiplicatively. **Never a re-trimmed `d`**, which would break the morph and the vertex-snapped scrub;
    the fresh DOM renders NO wrapper at all. **Non-colour channel PLUS a11y text** (colour is never the
    only signal). The pure stops live beside their cohort sibling — `elapsedFadeStops` and
-   `ELAPSED_DIM = 0.45` in `bandGeometry.ts:242-256` — deliberately cold-read-tunable, because the
+   `ELAPSED_DIM = 0.45` in `bandGeometry.ts lines 242-256 at 11349a9de` — deliberately cold-read-tunable, because the
    tint-vs-hatch-vs-rule strength was Briggsy's to close at the arrived walk.
 3. **Clipping is REJECTED** and the reason is load-bearing: a fan clipped to Today reads as a projection
    from a **KNOWN current balance** — which is precisely the optimistic misread. Retain-and-demote keeps
@@ -378,7 +378,7 @@ S3 built the whole substrate and S4 deliberately declined the copy; both created
 original thirteen lines could not name.
 
 **The copy register landed here, not in S4** (see S4 for why). It shipped as two families — the save
-GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:2017-2137` — modelled on
+GESTURE (`recommendSave*`) and the saved-record CARD (`recommendRecord*`), `copy.ts:1987-2107` — modelled on
 `recommendStale{Heading,Body,ReopenCta}` and on `RecommendationSurface.tsx line 378-385 at b69c28483`'s render shape, the
 `role="status"` card with heading, body and re-open button. `recommendRecordReopenCost` names the re-open's
 cost the way the pending label does: *"This can take a few minutes."* Exactly one key in either family may
@@ -501,9 +501,9 @@ A **new, stateless** plant for the arrived household — the aged surface's cold
   fixed 2026-07-30/31 (the Roth door calling an executed conversion a typo, `d8f35d8c`; the lever refusal
   denying a date the same screen plots, `72d638d9`; the premise line contradicting its own axis,
   `d5e7b466`; and the band flip onto the lifestyle crown, `8d4d4e58`). A fifth followed: **Cards 6–7's
-  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:2126`
+  record-card verb is closed too** — the showing-verb was replaced 2026-07-31 (`532cad82`; `copy.ts:2096`
   now reads "It may no longer fit the two of you.", with a standing prohibition on ever restoring it at
-  `copy.ts:2097-2104`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:2089`).
+  `copy.ts:2067-2074`), and the false "still matches" holds line 2026-08-03 (`bd851f24`; `copy.ts:2059`).
   Card 1's two-odds collision remains open, as does the OTHER half of Cards 6–7 — naming the strategy on
   the holds face, Briggsy's own ruling, carried in the register as "The saved-record card does not name
   the strategy".

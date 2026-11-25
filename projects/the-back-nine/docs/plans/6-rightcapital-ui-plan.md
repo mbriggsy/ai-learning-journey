@@ -1522,6 +1522,42 @@ the steady future and carry the stopgap line; the fact rows open their drawers a
 **Verification.** CI fit on `health`, `healthnc`, `date65`, `healthgap`: one frame at REAL; every printed share and
 label passes the audit. Local look.
 
+**As built (2026-11-25, b9-9's RC10 builder; the pilot's calls).**
+- *The first frame holds the four charts and the key-metric column; the old sheet's words, the page's notes and the R13
+  caveat follow, reached by scrolling.* Insight 170: every line the deleted health sheet carried is ported (its five facts,
+  the dated rules line, the extras block directly under the Medicare card, the survivor, omissions and HSA notes), and with
+  the Medicare affirmation and its residual they run far past one frame. Content over layout (b9-7's amendment); the
+  arms assert the charts and the column in frame and the caveat last and reachable.
+- *The Medicare affirmation, its residual and the typical-extras appendix sit in the notes under the charts*, not in the
+  key-metric column the disclosure map names: about ninety words in a column a third of the panel wide pushed the charts
+  out of the frame. They ship together, as the map requires.
+- *The old sheet's held-flat line is not printed beside the residual*: the residual carries the same sentence word for
+  word (`verdictResidualTail`, drift-pinned in `healthSheetChrome.test.ts`). The omissions list prints its
+  state-priced form on every household, since the residual already names state income tax (one state clause per page).
+- *The cliff share prints once per stretch, not per bar*: at his window a year's column is about 9 px wide, so a count
+  over each bar could not be read. Consecutive quotable years with the same count share one bracket (its ends turned
+  down) and one bare count ("2 of 10", "more than 9 in 10" at the ceiling); neighbouring stretches print on alternate rows;
+  the key line carries the "about" and names the base. A run where fewer than half the futures buy marketplace cover
+  breaks a stretch and prints nothing.
+- *The four charts share one dollar scale* (comparable parts; each axis prints its own $0 and the same top), and one
+  age axis, the first person's, said once under the chart title. The surcharge's chart draws flat at $0 on every shipped
+  seed; its stopgap line says why.
+- *The lifetime figure is the median of each future's own sum* of net marketplace premium and Medicare cost; each part's
+  lifetime figure is its own median, with a line that the parts need not add up. Called "health premiums", never "health
+  costs": the out-of-pocket figure sits inside the spending.
+- *The tray*: the subsidy rules row opens Analysis with the tray at the `aca-subsidy` row (`tryLever`), with the old
+  sheet's help line for the rules in force; the plan facts are the Profile page's own sections (`composeFacts`: pre-65
+  coverage while another works, the out-of-pocket figure, each person's Medicare extras), each opening its drawer. The
+  facts page's `subsidy-regime` door and the assumption panel's subsidy-rules row now open this page.
+- *Lost with the sheet, filed for the register*: the subsidy-rules comparison's lifetime health-cost line ("Lifetime
+  health costs could run around ~$X this way, versus ~$Y as figured now"; council 2026-07-03: the rules move health costs
+  more than the odds). The what-if on Analysis reads odds only; nothing on the wire carries a what-if's lifetime health
+  cost yet.
+- *Deleted beyond the row's list, each with its last importer*: `src/store/controlPreview.ts`, `src/ui/twoFuturesChrome.ts`,
+  `src/viz/twoFuturesData.ts`, `e2e/chartTextAudit.ts` (no importer since RC3), the held `e2e/held/medicare-cards-look.spec.ts`
+  (it opened the sheet). The old palette: the Okabe–Ito set, the two-series pair and the old band's hue and chroma left;
+  `bandLightnessAt` now lerps the clone band; the colour-blind gate's band-fill arm moved to the clone's ramp.
+
 ### RC11: Retirement → Stress Test, the stresses B9 can run today
 
 **Clones.** Ref 2.13. Screens: `rc-analysis/FRAME_stress-test-full-page-hover-tooltip.png`,

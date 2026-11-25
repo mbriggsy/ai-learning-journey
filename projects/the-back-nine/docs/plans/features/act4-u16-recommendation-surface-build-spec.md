@@ -222,7 +222,7 @@ standing valve; the §7 triggers in `docs/decisions/market-model.md` stay live a
   duration phrase must be TRUE: the 2026-10-01 production build measured it FALSE at 8.9–26.0 min,
   and since the worker pool (`225d8da4`) it holds at his laptop — `retired` 36.5 s · `nc` 39.8 s ·
   `healthnc` 150.9 s on the 2026-10-03 build; still untrue on a ≤ 3-core device and unmeasured on
-  his phone — the string is `copy.ts:2227`, its timings `copy.ts:2219-2224`, the open half the
+  his phone — the string is `copy.ts:2197`, its timings `copy.ts:2189-2194`, the open half the
   register's *The recommendation's pending line promises "a few minutes"…*) —
   `aria-busy` on the panel (the `PendingPanel` grammar) with the label spoken through the surface's
   own persistent `role="status"` / `aria-live="polite"` announcer rather than the panel line, so a

@@ -1,17 +1,18 @@
 /*
  * src/ui/editorSheets.tsx — the ONE home of the plan's lever sheets and their writes (Act 5, U8).
  *
- * The budget builder, the healthcare sheet and the AssumptionPanel each write the draft through one write (an atomic reconciliation patch, a biconditional pair, a single-key fence:
+ * The budget builder and the AssumptionPanel each write the draft through one write (an atomic reconciliation patch, a biconditional pair:
  * insight 058), then recompute. They used to be hosted by Result alone. The workbench room's facts page opens the
  * same sheets, so the hosting moved here and both screens call it, and an edit made from the room is the same edit
  * made from the answer. The lever sheets' writes themselves live in `src/intake/whatIf.ts` (U14), shared with the
  * what-if's `applyBundle` and U15's Apply, so Apply writes exactly what was compared. The withdrawal-order and Roth
  * sheets left with Act 6 · RC4b: both levers are tried in Probability's Action Items tray and written by its Apply, so
- * the AssumptionPanel's rows for them open the tray at that row (`onOpenSequencing`, `onOpenRoth`, the host's).
+ * the AssumptionPanel's rows for them open the tray at that row (`onOpenSequencing`, `onOpenRoth`, the host's). The healthcare
+ * sheet left with Act 6 · RC10: its picture is Retirement → Health Care, and the panel's subsidy-rules row opens that page
+ * (`onOpenHealth`, the host's), whose Action Items tray tries the rules as a what-if on Analysis.
  *
- * What moved with them: the open state, the sheets' JSX and writes, the preview runner (`runPreview`, params
- * from the CURRENT draft at each call), the notes the sheets read (`medicarePricedNote`, `statePricedNote`,
- * `acaPricedNote`, the health readout), and the recompute cadences. Result keeps its own copies of what its
+ * What moved with them: the open state, the sheets' JSX and writes, the notes the sheets read (`statePricedNote`), and the
+ * recompute cadences. Result keeps its own copies of what its
  * heroes read (the answered draft's notes, KTD5), and keeps the GoalPicker.
  *
  * THE RECOMPUTE CADENCES, one home each:
@@ -22,18 +23,14 @@
  *    commits and the workbench's step sheet run it. The route is read AFTER the edit lands.
  */
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
-import { buildControlPreviewParams, pricedStateForRun } from '@intake/intakeMap'
+import { pricedStateForRun } from '@intake/intakeMap'
 import { BudgetBuilder } from '@intake/BudgetBuilder'
-import { HealthcareSheet } from '@intake/HealthcareSheet'
 import { AssumptionPanel } from '@intake/AssumptionPanel'
 import type { MissingFact } from '@intake/intakeMap'
-import { withBudgetItems, withEnhancedSubsidies, withoutBudget } from '@intake/whatIf'
-import { previewRunsInWorker, runControlPreview } from '@store/controlPreview'
+import { withBudgetItems, withoutBudget } from '@intake/whatIf'
 import type { MemoryModel, MemoryModelSnapshot, ScenarioDraft } from '@store/memoryModel'
-import type { TwoArmControl } from '@shared/model'
 import type { BandPlanClockAnchor } from './bandAnnotations'
 import type { AssumptionLandingSeat } from './assumptionRegistry'
-import { currentEpochDay } from './scenarioFromDraft'
 import { recomputeAfterEdit, recomputeBoth } from './recompute'
 
 export interface EditorSheetsArgs {
@@ -53,11 +50,12 @@ export interface EditorSheetsArgs {
   /** The panel's withdrawal-order and Roth rows: the host opens the Action Items tray at that row (RC4b). */
   readonly onOpenSequencing: () => void
   readonly onOpenRoth: () => void
+  /** The panel's subsidy-rules row: the host opens Retirement → Health Care (RC10). */
+  readonly onOpenHealth: () => void
 }
 
 export interface EditorSheets {
   readonly openBudget: () => void
-  readonly openHealth: () => void
   /** Open the AssumptionPanel, landing at `seat` when given (`AssumptionLandingSeat`). */
   readonly openAssumptions: (seat?: AssumptionLandingSeat) => void
   /** Close every sheet (the shell, on a page change: a sheet never stays open over another page). `dropStaged`: the
@@ -69,7 +67,7 @@ export interface EditorSheets {
   /** "Which PRICED state will the next run price?" — off the LIVE draft, route-aware (the sheets and the
    *  recommendation surface describe what they will run next; KTD5). */
   readonly statePricedNote: ReturnType<typeof pricedStateForRun>
-  /** The three sheets, to render once in the host. */
+  /** The budget builder and the panel, to render once in the host. */
   readonly node: ReactNode
 }
 
@@ -83,9 +81,9 @@ export function useEditorSheets({
   onEditCollections,
   onOpenSequencing,
   onOpenRoth,
+  onOpenHealth,
 }: EditorSheetsArgs): EditorSheets {
   const [budgetOpen, setBudgetOpen] = useState(false)
-  const [healthOpen, setHealthOpen] = useState(false)
   const [assumptionsOpen, setAssumptionsOpen] = useState(false)
   // The budget builder keeps its staged rows across a close; a new key mounts it afresh from the draft (`closeAll`).
   const [budgetMount, setBudgetMount] = useState(0)
@@ -97,27 +95,6 @@ export function useEditorSheets({
   const { draft } = snapshot
   // The state-tax unit (S5): which PRICED state the next run prices, off the route's own built overlay.
   const statePricedNote = useMemo(() => pricedStateForRun(snapshot.draft), [snapshot.draft])
-  // The wire's per-year healthcare series (spine headline runs only — presence-keyed).
-  const healthReadout = snapshot.answer.kind === 'headline' ? snapshot.answer.result.distribution.healthReadout : undefined
-  // The date route's preview anchor: the CROWNED lifestyle offset; undefined (⇒ preview withheld) when no date
-  // crowned or on the spine route.
-  const crownedOffset =
-    snapshot.answer.kind === 'date' &&
-    snapshot.answer.outcome.kind === 'dates' &&
-    'offsetYears' in snapshot.answer.outcome.lifestyle
-      ? snapshot.answer.outcome.lifestyle.offsetYears
-      : undefined
-  // The preview runner the sheets inject: params from the CURRENT draft (composed per call), the household's
-  // one CRN seed, latest-wins.
-  const runPreview = useCallback(
-    (control: TwoArmControl) => {
-      const current = model.getSnapshot().draft
-      const params = buildControlPreviewParams(current, crownedOffset)
-      if (params === null || current.seed === undefined) return null
-      return runControlPreview(params, current.seed, control)
-    },
-    [model, crownedOffset],
-  )
   const both = useCallback(() => void recomputeBoth(model), [model])
   // The AssumptionPanel's ONE commit seam: apply the mutate atomically (it reads the store's CURRENT draft inside
   // the update — insight 036), then the route-aware recompute.
@@ -129,7 +106,7 @@ export function useEditorSheets({
     [model],
   )
 
-  const sheetOpen = budgetOpen || healthOpen || assumptionsOpen
+  const sheetOpen = budgetOpen || assumptionsOpen
   const openAssumptions = useCallback((seat?: AssumptionLandingSeat) => {
     setAssumptionsSeat(seat)
     setAssumptionsOpen(true)
@@ -137,7 +114,6 @@ export function useEditorSheets({
 
   const closeAll = useCallback((dropStaged = false) => {
     setBudgetOpen(false)
-    setHealthOpen(false)
     setAssumptionsOpen(false)
     if (dropStaged) setBudgetMount((n) => n + 1)
   }, [])
@@ -165,25 +141,6 @@ export function useEditorSheets({
         onClose={() => setBudgetOpen(false)}
         restoreFallback={restoreFallback}
       />
-      <HealthcareSheet
-        open={healthOpen}
-        draft={draft}
-        readout={healthReadout}
-        preview={runPreview}
-        previewBlocking={!previewRunsInWorker()}
-        statePricedNote={statePricedNote}
-        restoreFallback={restoreFallback}
-        savedAnchor={savedAnchor}
-        todayEpochDay={currentEpochDay()}
-        onApply={(enhanced) => {
-          // THE SINGLE-KEY WRITE FENCE (insight 058): exactly one key moves — set the literal `true`, or STRIP
-          // the key entirely (absence ≡ the statutory reverted regime — never `false`, DND/009).
-          model.update((d) => withEnhancedSubsidies(d, enhanced))
-          setHealthOpen(false)
-          both()
-        }}
-        onClose={() => setHealthOpen(false)}
-      />
       {/* U12 — via-sheet rows close this panel and open the fact's ONE editor home (insight 058). */}
       <AssumptionPanel
         open={assumptionsOpen}
@@ -205,7 +162,7 @@ export function useEditorSheets({
         }}
         onOpenHealth={() => {
           setAssumptionsOpen(false)
-          setHealthOpen(true)
+          onOpenHealth()
         }}
         {...(onReview !== undefined
           ? {
@@ -232,7 +189,6 @@ export function useEditorSheets({
 
   return {
     openBudget: useCallback(() => setBudgetOpen(true), []),
-    openHealth: useCallback(() => setHealthOpen(true), []),
     openAssumptions,
     closeAll,
     sheetOpen,

@@ -361,7 +361,7 @@ describe('Shell — the settle hook every harness waits on (plan 3.1)', () => {
   it('every interim page wears the banner, outside any `.rc-root`, and its page sits outside one too', () => {
     const { lanes } = heldLanes()
     renderRoom(snapshotWith(finalAnswer()), lanes)
-    for (const page of ['facts', 'health'] as const) {
+    for (const page of ['facts'] as const) {
       showPage(page)
       expect(screen.getAllByText(copy.shellInterimBanner)).toHaveLength(1)
       const interim = document.querySelector('.shell-interim')!
@@ -531,15 +531,18 @@ describe('Shell — RC4: the home’s new pages and the gear', () => {
     expect(main.querySelector('[data-half="compared"]')).not.toBeNull()
   })
 
-  it('the interim Health Care page: the banner, no in-frame caveat (the trailing mount stands), one main.result', () => {
+  it('Retirement → Health Care (RC10): its own page with the in-frame caveat and no interim banner; one folder tab, Cost Analysis', () => {
     const { lanes } = heldLanes()
     renderRoom(snapshotWith(finalAnswer()), lanes)
     showPage('health')
     const main = document.querySelector('main.result')!
-    expect(main).toHaveAttribute('data-shell-screen', 'interim-health')
-    expect(main).not.toHaveAttribute('data-inframe-disclaimer')
+    expect(main).toHaveAttribute('data-shell-screen', 'health-care')
+    expect(main).toHaveAttribute('data-inframe-disclaimer')
     expect(document.querySelectorAll('main')).toHaveLength(1)
-    expect(screen.getAllByText(copy.shellInterimBanner)).toHaveLength(1)
+    expect(screen.queryByText(copy.shellInterimBanner)).toBeNull()
+    expect(main.querySelectorAll('[data-caveat]')).toHaveLength(1)
+    expect(screen.getByRole('heading', { level: 1, name: copy.shellPageHealthCare })).toBeInTheDocument()
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual([copy.healthTabCost])
   })
 
   it('Tax → Tax Strategies (RC8): its own page with the in-frame caveat and no interim banner; four folder tabs on the retired route, the empty state with Find', () => {

@@ -52,7 +52,7 @@ export type AssumptionSeat =
   | 'working-year-tax' // the working-year tax floor (2026-10-20, R13) — how a working year's investment income is priced, and what is left out
   | 'drawdown' // via-sheet → SequencingControl (one editor home per fact, insight 058)
   | 'roth-conversion' // via-sheet → RothLever
-  | 'subsidy-regime' // via-sheet → HealthcareSheet
+  | 'subsidy-regime' // via the Health Care page (RC10; the old HealthcareSheet is gone)
   | 'spend' // the spend row (inline editor ungoverned; routes to the BudgetBuilder when a budget governs)
   | 'person-birth' // per-person birth year (refuse-to-commit blanks)
   | 'person-stop' // per-person stop age (retired members only — a working member's date IS the answer)

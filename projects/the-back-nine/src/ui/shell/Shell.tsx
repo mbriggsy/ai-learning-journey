@@ -32,6 +32,11 @@
  * Comparison and Details picks are held here; the recommendation's and the baseline's year-by-year runs ride two slots
  * of their own, asked only while Comparison or Details shows (the baseline reads the plan's own rows when it IS the plan).
  *
+ * RETIREMENT → HEALTH CARE (RC10, `HealthCare.tsx` over `healthCareView.ts`): the plan's own health premiums, one small
+ * chart per part, from the committed answer's readout (retired) or the steady market's rows above (working). Its Action
+ * Items tray holds B9's health inputs: the subsidy rules open Analysis's tray at that lever (`tryLever`), each plan fact
+ * its own drawer (the facts page's doors). The assumption panel's subsidy-rules row opens this page.
+ *
  * THE INTERIM TABS: the room's pages ride in their current look (`InterimPage.tsx`, outside any `.rc-root`):
  * Profile → Your facts (`FactsPage.tsx`); the old What if page left with
  * RC4b, its levers now Probability's Action Items tray (`ActionItemsTray.tsx`). A facts-page "Try a change" and the
@@ -45,7 +50,7 @@
  */
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { intakeSteps } from '@intake/questions'
-import { healthcarePriced, missingRequiredFacts, pricedStateForRun } from '@intake/intakeMap'
+import { missingRequiredFacts, pricedStateForRun } from '@intake/intakeMap'
 import { unsavedBuffersHeld } from '@intake/unsavedBuffer'
 import { engineRunLane, type EngineRunRequest, type Lane } from '@store/runLanes'
 import { roughWindow, ROUGH_WINDOW_YEARS } from '@engine/reference/roughSequence'
@@ -96,6 +101,8 @@ import {
   type ReadingState,
   type StrategyId,
 } from '../screens/retirement/socialSecurityView'
+import { HealthCare } from '../screens/retirement/HealthCare'
+import { healthCareView, healthTrayView, type HealthCareView } from '../screens/retirement/healthCareView'
 import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { Analysis } from '../screens/retirement/Analysis'
@@ -497,6 +504,7 @@ export default function Shell({
     restoreFallback,
     onOpenSequencing: () => tryLever('withdrawal-order'),
     onOpenRoth: () => tryLever('roth'),
+    onOpenHealth: () => onNavigate(routeOfScreen('health-care')),
     // The panel's guided re-walk (the old answer page's Review, RC4): the shell is the home now, so the walk-through is
     // left for from here. No separate collections door: the facts page has its own Accounts and Other income doors.
     ...(onReview !== undefined ? { onReview } : {}),
@@ -516,7 +524,7 @@ export default function Shell({
   }, [routeKey, closeSheets, endStep])
   const sheetDoors: Readonly<Record<SheetDoor, () => void>> = {
     budget: editors.openBudget,
-    'subsidy-regime': editors.openHealth,
+    'subsidy-regime': () => onNavigate(routeOfScreen('health-care')),
     'survivor-ratio': () => editors.openAssumptions('survivor-ratio'),
     'heir-bracket': () => editors.openAssumptions('heir-bracket'),
     'extras-panel': () => editors.openAssumptions('medicare-extras'),
@@ -1011,9 +1019,41 @@ export default function Shell({
     // `claimOthers` is derived from `claimChoices`; the slot views are the runs' own.
   }, [onClaims, claimsAnswer, claimChoices, run, results.steady, snapshot.refiguring, snapshot.answer, taxStateClause, claimRun0.view, claimRun1.view, claimRun2.view, claimsChart, claimsA, claimsB])
 
+  // ── Retirement → Health Care (RC10): the committed answer's readout (retired) or the steady market's rows (working); the
+  // tray's open state held here so a page move keeps it.
+  const onHealth = screen === 'health-care'
+  const [healthTrayOpen, setHealthTrayOpen] = useState(false)
+  const healthPage = useMemo((): HealthCareView | null => {
+    if (!onHealth) return null
+    if (committedAnswer === null) {
+      if (run.kind === 'answer-error') return { kind: 'words', words: copy.workbenchTableAnswerError }
+      if (run.kind === 'withheld') return { kind: 'words', words: WITHHELD_WORDS[run.reason] }
+      return { kind: 'words', words: copy.healthWaiting }
+    }
+    const dist = committedAnswer.kind === 'headline' ? committedAnswer.result.distribution : null
+    return healthCareView({
+      answer:
+        dist !== null
+          ? { kind: 'headline', draft: committedAnswer.draft, readout: dist.healthReadout, taxAware: dist.taxAware }
+          : { kind: 'date', draft: committedAnswer.draft },
+      steady: planRows(run, results.steady, snapshot.refiguring),
+      todayEpochDay,
+      sincePlanBuilt: anchor.yearsSincePlanBuilt,
+    })
+  }, [onHealth, committedAnswer, run, results.steady, snapshot.refiguring, todayEpochDay, anchor.yearsSincePlanBuilt])
+  // The tray's facts are the plan as it stands (the live draft, as the facts page reads it): a door opens what an edit
+  // would change now.
+  const healthTray = useMemo(
+    () =>
+      onHealth && healthPage?.kind === 'charts'
+        ? healthTrayView(composeFacts({ draft, stepIds: steps.map((s) => s.id), anchor }), railOffers(draft, undefined).aca, readOnly)
+        : undefined,
+    [onHealth, healthPage?.kind, draft, steps, anchor, readOnly],
+  )
+
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
   const figured = screen === 'snapshot' || screen === 'probability' || screen === 'confidence' || screen === 'cash-flows'
-  const inFrameCaveat = figured || screen === 'tax-strategies' || screen === 'social-security'
+  const inFrameCaveat = figured || screen === 'tax-strategies' || screen === 'social-security' || screen === 'health-care'
   // Cash Flows too, aged line and door included: its row-one line (`workbenchAged`) names the build year and claims nothing
   // about the balances, so the two lines say two causes (round 3 of the milestone-1 review).
   const staleLines = useMemo(
@@ -1298,6 +1338,20 @@ export default function Shell({
               onTrayOpen={setClaimsTray}
             />
           </>
+        ) : healthPage !== null ? (
+          <>
+            {leave}
+            <HealthCare
+              headingRef={headingRef}
+              view={healthPage}
+              {...(healthTray !== undefined ? { tray: healthTray } : {})}
+              caveat={CASH_FLOWS_CAVEAT}
+              trayOpen={healthTrayOpen}
+              onTrayOpen={setHealthTrayOpen}
+              onTryLever={tryLever}
+              onOpenFact={openDoor}
+            />
+          </>
         ) : cfView !== null && cfIntro !== null ? (
           <>
             {leave}
@@ -1328,25 +1382,6 @@ export default function Shell({
             {screen === 'interim-facts' && (
               <div className="wb-panel">
                 <FactsPage sections={sections} onTry={tryLever} {...(readOnly ? {} : { onOpen: openDoor })} />
-              </div>
-            )}
-            {screen === 'interim-health' && (
-              <div className="wb-panel" data-health-interim="">
-                {healthcarePriced(draft) ? (
-                  readOnly ? (
-                    // No sheet mounts on a read-only tab, so no door is drawn (as the facts page's doors).
-                    <p className="wb-about__line">{copy.healthInterimReadOnly}</p>
-                  ) : (
-                    <>
-                      <p className="wb-about__line">{copy.healthInterimIntro}</p>
-                      <button type="button" className="btn-quiet" data-door="health" onClick={editors.openHealth}>
-                        {draft.enhancedSubsidies === true ? copy.leverHealthDoorEditCta : copy.leverHealthDoorCta}
-                      </button>
-                    </>
-                  )
-                ) : (
-                  <p className="wb-about__line">{copy.healthInterimNone}</p>
-                )}
               </div>
             )}
           </InterimPage>

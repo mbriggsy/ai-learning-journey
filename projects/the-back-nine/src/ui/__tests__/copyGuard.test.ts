@@ -877,8 +877,6 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     healthFigCents: slots.healthFigCents(22),
     healthFigStepAdd: slots.healthFigStepAdd('1,100'),
     healthFigStepAddEach: slots.healthFigStepAddEach('1,100'),
-    subsidyRegimeCostDelta: slots.subsidyRegimeCostDelta('96,000', '128,000'),
-    subsidyRegimeCostEven: slots.subsidyRegimeCostEven('99,800'),
     // F10 — the R19 ceiling errors quote the statutory limit (pre-formatted by intake).
     errContributionCeiling: slots.errContributionCeiling('32,250'),
     errAdditionsCeiling: slots.errAdditionsCeiling('83,250'),
@@ -1249,6 +1247,15 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
     claimsStepsHeading: slots.claimsStepsHeading('Age 70'),
     claimsStepFiles: slots.claimsStepFiles('Alex', false, 70, 2030),
     claimsStepClaimed: slots.claimsStepClaimed('You', true),
+    healthInSteady: slots.healthInSteady('Health premiums each year, for the two of you together'),
+    healthAxisNote: slots.healthAxisNote('Alex’s age'),
+    healthFigure: slots.healthFigure('330,000'),
+    healthYearPoint: slots.healthYearPoint('Alex’s age', 72, 2037, 'Medicare Part B, before any surcharge', '6,500'),
+    healthLifetimeAca: slots.healthLifetimeAca('41,000'),
+    healthLifetimeMedicare: slots.healthLifetimeMedicare('290,000'),
+    healthCliffLabel: slots.healthCliffLabel(2),
+    healthCliffPoint: slots.healthCliffPoint(75, 80, 'Alex’s age', 2),
+    healthRanOut: slots.healthRanOut(2052),
     confidenceCutNote: slots.confidenceCutNote(93, 92),
     bandClockCutDesc: slots.bandClockCutDesc(93, 92),
   }
@@ -2450,7 +2457,7 @@ describe('copyGuard — R12 honesty by construction (U7)', () => {
   // 2026-09-08 — THE rec* SCOPE CANARY. copyGuard's scopes are prefix ALLOWLISTS, so a NEW `rec*` key
   // lands in NEITHER scope silently — the hole that left the RecommendationViz aria sentence outside
   // require-hedge until it was renamed `recDeltaVizAria`. `/^rec(?!over)/` is the net: a bare `/^rec/`
-  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:973-983, :1029-1046), which are correctly
+  // would sweep the 16 `recovery*`/`recover*` intake keys (copy.ts:972-982, :1028-1045), which are correctly
   // unscoped. The two allowlists are SPLIT because the surfaces differ: an unscoped FLAT key rides only
   // the three universal gates (the `entries` loops at the top of this file — superlative and free-numeral
   // are verdict-scoped); an unscoped SLOT rides the four voice gates (survival-claim included) + catastrophe (the SLOT_RENDER loop

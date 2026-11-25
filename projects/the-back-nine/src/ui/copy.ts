@@ -867,7 +867,6 @@ export const copy = {
   // spread — not the point — is the message. The thin-cohort note WITHDRAWS the crisp dollars where
   // the surviving-couple cohort has thinned past the fade onset (readout honesty tracks the visual
   // fade); kept gentle + factual. WORDING resolved 2026-06-28 (council + N=1 cold-read): names the honest WHY (sample too thin to quote a range, NOT "you're broke"), catastrophe-gated via isMortalityKey. LENGTH-FREE since 2026-09-05 (the chart text layer): the readout is HTML — `.ct-readout` hugs its content (`width: max-content`) under a `max-width` ceiling and `.ct-readout__note` wraps (`white-space: normal`), all in src/viz/chartText.css, so a longer clause RE-FLOWS instead of clipping. The svg-era READOUT_W fit gate retired with it; the real-browser chart-text gate (e2e/chart-text.spec.ts) now measures every readout LINE inside whichever seat it took — the in-plot box, or the flow row inside the card — at every lattice column instead.
-  bandReadoutAgesLabel: 'Ages',
   bandReadoutRangeLabel: 'Eight in ten land between',
   bandReadoutRangeJoiner: ' – ',
   bandReadoutMedianLabel: 'Most likely',
@@ -1141,9 +1140,6 @@ export const copy = {
   // year (rothConversion stays sim-year-0-indexed on disk — no persisted re-base, hawk veto).
   leverRothStartLabel: 'Starting in which year',
   leverRothYearsLabel: 'For how many years',
-  leverPreviewPending: 'Working out both futures…',
-  leverPreviewError:
-    'That comparison didn’t come together. Adjust a field — or close and reopen — to try again.',
   /* U17 §S6 — THE REFUSAL USED TO DENY A DATE THE SAME SCREEN PLOTS, IN A TERM THE PRODUCT NEVER
    * USES. It read: "This comparison anchors to your work-optional date, so it needs one on the
    * board first." Cold-read live on `?seed=datemixed` (S6 Card 5, re-driven 2026-07-30 before this
@@ -1165,8 +1161,6 @@ export const copy = {
    * silently promotes this line into free-numeral/superlative scope. */
   leverPreviewNoDate:
     'This comparison anchors to your fuck-off date, and this plan doesn’t have one yet. Applying a change still updates the answer above.',
-  leverNoWorkerNote:
-    'On this device the comparison computes when you finish a field — it can take a moment.',
   leverCancel: 'Close',
   // Plan-moving READOUTS (require-hedge-swept; the numbers arrive via slots below).
   // The funding note: back since Act 6 · RC4b under the Action Items tray's Roth row (it left with the Roth sheet and
@@ -1206,22 +1200,12 @@ export const copy = {
     'Not counted here: state income tax, the net-investment-income tax, and differences in plan cost-sharing — each could move this picture. The income-based discount itself is already in these numbers, including what a conversion does to it.',
   rothOmissionsNoteStatePricedAcaPriced:
     'Not counted here: the net-investment-income tax and differences in plan cost-sharing — each could move this picture. The income-based discount itself is already in these numbers, including what a conversion does to it.',
-  twoFuturesCaption:
-    'How the middle-of-the-road path could run with and without the change, in today’s dollars.',
 
-  // --- P3·U11 — the Healthcare sheet. Chrome rides lever*/tfChart* (hedge-exempt, the prefix
-  // law above); plan-moving READOUTS ride the four U11 control prefixes (shadowRate* /
-  // irmaaStep* / acaCost* / subsidyRegime*) or control* — each swept by require-hedge.
-  // All FIRST-DRAFT craftsman's-lead wording (the cold-read's call; contract #8 exit condition). ---
+  // --- P3·U11 — the health picture (the Healthcare sheet's words; since Act 6 · RC10 Retirement → Health Care's). Chrome
+  // rides lever* (hedge-exempt, the prefix law above); plan-moving READOUTS ride the U11 control prefixes (shadowRate* /
+  // irmaaStep* / acaCost*) or control* — each swept by require-hedge. ---
   leverHealthDoorCta: 'See your health-cost picture',
   leverHealthDoorEditCta: 'Revisit your health-cost picture',
-  leverHealthTitle: 'Your health-cost picture',
-  // Cold-read 2026-07-03 round 2 ("still not clicking… especially around marketplace help"):
-  // ONE concrete word — DISCOUNT — carries the whole pre-65 story across every sheet line.
-  // The intro was briefly retired for scroll-free fit, then RESTORED same night on Briggsy's
-  // law: content is never removed to satisfy aesthetics — the layout adapts instead.
-  leverHealthIntro:
-    'Before Medicare, your household’s health coverage comes with an income-based discount — the lower a year’s income, the bigger the discount. After 65, Medicare’s own premiums also step with income. Here’s where those pieces stand in your plan.',
   // The fact-readout eyebrows (cold-read 2026-07-03: "why isn't the content a first class
   // citizen?" — each empirical fact renders as eyebrow + tabular-nums dollar anchor + the
   // honed sentence, the stepped readout the U11 ratification named). Sentence-case calm labels
@@ -1251,26 +1235,12 @@ export const copy = {
   healthFactMedicareBoth: 'Part B premiums and any surcharge while you’re both on it',
   healthFactMedicareOne: 'Part B premiums and any surcharge while only one of you is on it',
   healthFactStep: 'The next premium step',
-  leverHealthRegimeLegend: 'Which subsidy rules should the plan figure under?',
   leverHealthRegimeReverted: 'Current law',
   leverHealthRegimeRevertedHelp:
     'The enhanced discount expired — help fades as income rises and disappears entirely above a set income level.',
   leverHealthRegimeEnhanced: 'If the bigger discount returns',
   leverHealthRegimeEnhancedHelp:
     'The 2021–2025 rules Congress may restore — more help at every income, with no point where it disappears entirely.',
-  leverHealthRegimeApply: 'Figure my plan this way',
-  leverHealthRegimeRemove: 'Back to current law',
-  leverHealthRegimeCurrentTag: '— how it’s figured now',
-  // The blocked Apply's reason (2026-09-13, the sibling of `leverRothApplyNeeds*` above): the sheet opens
-  // with the APPLIED regime picked — a baseline-vs-baseline non-comparison the preview effect withdraws to
-  // idle — so the primary cannot commit on arrival, and its press used to announce `leverPreviewPending`
-  // over nothing running. Rendered at rest as the `.control-sheet__blocked` span, spoken on the press through
-  // this key. "pick" is on FIELD_OP_ALLOWLIST (the goalPickerConfirmBlocked precedent).
-  leverHealthApplySameRegime: 'Your plan is already figured this way — pick the other rule to compare.',
-  // Two-futures CHART CHROME for the regime compare (identity labels, hedge-exempt).
-  tfChartRegimeReverted: 'Under current law',
-  tfChartRegimeEnhanced: 'If the discount returns',
-  tfChartRegimeCurrent: 'As figured now',
   // Plan-moving READOUTS (require-hedge-swept by prefix).
   // Vocabulary law (Sonnet-5 audit 2026-07-03): 'line'/'cliff' belong to the ACA discount;
   // 'step' belongs to Medicare — one word per mechanism, everywhere on the sheet.
@@ -2677,13 +2647,6 @@ export const copy = {
   oddsDipWord: 'doesn’t hold',
   // A chart whose picture failed to load (its own boundary, `ChartBoundary.tsx`): the page's words stand without it.
   chartLoadFailed: 'This chart didn’t load. The figures in words on this page still stand.',
-  // The interim Health Care page (until RC10): the old health-cost sheet, behind its door.
-  healthInterimIntro: 'Your health costs before Medicare, and the marketplace subsidy rules your plan uses, live in this sheet until this page is rebuilt.',
-  // A read-only tab (the plan open in another tab) mounts no sheet, so the page draws no door.
-  healthInterimReadOnly:
-    'Your health costs before Medicare, and the marketplace subsidy rules your plan uses, live in a sheet that only opens in a tab that can change your plan.',
-  healthInterimNone:
-    'The health-cost sheet covers marketplace coverage before Medicare. Your plan has no one under 65 with a marketplace quote, so there’s nothing for it to show.',
   // --- The year-by-year table (Act 5, U7). The pilot's drafts, shipped flagged for Briggsy's cold read. The heading
   // is bound by `docs/decisions/workbench-one-future.md` §5: steady is never typical, average, expected or median, nor
   // placed in the middle of the range (copyGuard's ONE_FUTURE_BANNED sweeps every workbench string), and the rough
@@ -3101,6 +3064,43 @@ export const copy = {
   claimsBarsDescription:
     'One bar per strategy, with its lifetime Social Security in the steady market printed beside it and your plan’s odds with those ages under it. Your plan’s own ages are hatched.',
   claimsStepsNote: 'B9 files nothing for you. These are the ages this strategy uses; filing is done with Social Security itself.',
+  // --- Retirement → Health Care (Act 6 · RC10; `healthCareView.ts`): the premiums the tool adds on top of the spending,
+  // one small chart per part on one dollar scale. No part is ever stacked on another: a sum of middle costs is not the
+  // middle total, and the surcharge's middle cost reads $0 in any year fewer than half the futures pay it. The readout is
+  // the household's together, never per person, so the words say "the two of you together", never who is on Medicare. ---
+  healthIntro:
+    'What your health coverage costs each year, on top of your spending: marketplace cover before Medicare, then Medicare and the coverage beyond it.',
+  healthTabsLabel: 'Health Care views',
+  healthTabCost: 'Cost Analysis',
+  healthChartTitle: 'Health premiums each year, for the two of you together',
+  healthPartAca: 'Marketplace cover, after the discount',
+  healthPartMedicare: 'Medicare Part B, before any surcharge',
+  healthPartIrmaa: 'Medicare income surcharge',
+  healthPartExtras: 'Coverage beyond Part B',
+  healthLegendMiddle: 'Middle cost each year',
+  healthLegendSteady: 'Cost each year in the steady market',
+  healthDescription:
+    'Four small bar charts on one dollar scale, one for each part of your health premiums: each bar is that part’s middle cost that year across the futures. The parts are never stacked.',
+  healthDescriptionSteady:
+    'Four small bar charts on one dollar scale, one for each part of your health premiums: each bar is that part’s cost that year in the steady market. The parts are never stacked.',
+  healthWaiting: 'This page fills in once your plan’s answer is worked out.',
+  healthRowsWaiting: 'Working out the steady market year by year…',
+  healthRowsError: 'The steady market’s year-by-year run couldn’t be worked out just now.',
+  healthNone: 'Your plan prices no health premiums of its own, so there is nothing to chart here.',
+  healthHeroLine: 'in health premiums over your lifetimes in the middle future, on top of your spending',
+  healthHeroLineSteady: 'in health premiums over your lifetimes in the steady market, on top of your spending',
+  healthLifetimeEachOwn: 'Each figure is the middle of its own spread of futures, so the parts need not add up to the total.',
+  healthCliffKey:
+    'The count over a bracket: about how many of 10 of the futures that buy marketplace cover that year have income past the line, so that year’s discount disappears entirely.',
+  healthIrmaaStopgap:
+    'A middle cost of $0 means fewer than half the futures pay a surcharge that year. How many do pay one isn’t shown here yet.',
+  healthWorkingStopgap:
+    'These are the steady market’s figures alone. The spread across all the futures comes once B9 reads a working plan at its date the way it reads a retired one.',
+  healthTrayTry: 'Try a change',
+  healthTrayTryAca: 'Try the other rules on Analysis',
+  healthTrayFacts: 'What your plan uses',
+  healthTrayFactsNote: 'These are facts your plan runs on: changing one changes your plan itself, not a what-if.',
+  healthTrayReadOnly: 'This tab can’t change your plan, so these facts open nowhere here.',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -4985,7 +4985,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2231` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2238` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5175,15 +5175,6 @@ export const slots = {
     (bothEnrolled
       ? `Crossing it could add about ~$${addBothFormatted} a year for the two of you.`
       : `Crossing it could add about ~$${addEachFormatted} a year for each of you on Medicare. While you’re both on it, that’s about ~$${addBothFormatted} a year.`),
-  /** The regime compare's HEADLINE — the lifetime health-cost delta (the regime's effect
-   *  concentrates pre-65 and may barely move the portfolio median; council 2026-07-03). */
-  subsidyRegimeCostDelta: (withFormatted: string, withoutFormatted: string): string =>
-    `Lifetime health costs could run around ~$${withFormatted} this way, versus ~$${withoutFormatted} as figured now.`,
-  /** The even arm (Caddie 2026-07-10): both medians can ROUND to one figure, and "~$99,800 …
-   *  versus ~$99,800" reads as a twin-number glitch — say "about the same" and quote the
-   *  shared figure once. The compose gates on the FORMATTED strings being equal. */
-  subsidyRegimeCostEven: (costFormatted: string): string =>
-    `Lifetime health costs could run about the same either way — around ~$${costFormatted}.`,
   // --- The fact-readout figure ANCHORS (aria-hidden in render — every figure also lives in a
   //     hedged body sentence, so AT hears it once; the ~ carries the humane-precision hedge). ---
   healthFigPerYear: (amountFormatted: string): string => `~$${amountFormatted} a year`,
@@ -5729,6 +5720,19 @@ export const slots = {
   claimsStepFiles: (mid: string, you: boolean, age: number, year: number): string =>
     `${mid} ${you ? 'file' : 'files'} for Social Security at ${age}, in ${year}.`,
   claimsStepClaimed: (mid: string, you: boolean): string => `${mid} already ${you ? 'receive' : 'receives'} Social Security; nothing changes.`,
+  // --- Retirement → Health Care (Act 6 · RC10). Figures arrive in the delta dialect; the cliff count rides the sheet's
+  // own adverse phrase (`acaCostCliff`'s: "about 2 of 10", the "more than 9 in 10" ceiling, never "10 of 10"). ---
+  healthInSteady: (title: string): string => `${title}, in the steady market`,
+  healthAxisNote: (axis: string): string => `${axis} along the bottom of each chart`,
+  healthFigure: (fig: string): string => `~$${fig}`,
+  healthYearPoint: (axis: string, age: number, year: number, part: string, fig: string): string => `${axis} ${age}, in ${year}. ${part}: ~$${fig}`,
+  healthLifetimeAca: (fig: string): string => `Marketplace cover: ~$${fig}`,
+  healthLifetimeMedicare: (fig: string): string => `Medicare, its surcharge and the coverage beyond it: ~$${fig}`,
+  /** The count over a cliff bracket: the bare count (the key line carries the "about"), the adverse ceiling at 10. */
+  healthCliffLabel: (ofTen: number): string => (ofTen >= 10 ? XOFTEN_CEILING_ADVERSE : slots.xOfTen(ofTen)),
+  healthCliffPoint: (fromAge: number, toAge: number, axis: string, ofTen: number): string =>
+    `${axis} ${fromAge === toAge ? fromAge : `${fromAge} to ${toAge}`}: in ${adverseOddsPhrase(ofTen)} of the futures that buy marketplace cover that year, the year’s income passes the line and its discount disappears entirely.`,
+  healthRanOut: (year: number): string => `In the steady market the money runs out in ${year}, and its year-by-year rows stop there.`,
   confidenceShareFewer: (): string => 'fewer than 1 in 100 futures',
   confidenceShareMore: (): string => 'more than 99 in 100 futures',
   confidenceRunOutTitle: (): string => 'Futures that have run out of money by this age, out of every 100',

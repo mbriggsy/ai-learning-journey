@@ -231,7 +231,7 @@ test.describe('CSP — real browser enforcement', () => {
     expect(v.some((x) => /worker-src|script-src/.test(x.violatedDirective))).toBe(false)
   })
 
-  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Tax Strategies, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
+  test('the shell loads under the enforced CSP: the home, Probability and its Action Items tray, Confidence, Cash Flows, Social Security, Health Care, Tax Strategies, every interim tab and both its menus, no violation, and no request outside the build’s own files', async ({ page }) => {
     // Act 6 · RC2 (plan 6, section 3.1's Verification; the workbench room's arm before it, U6 to U15), re-pointed at RC4:
     // the real intake lands on the home (Dashboard → Snapshot), the shell's lazy chunk and its styles load with it on the
     // served build, Probability draws its rings and its two balance bars (Highcharts again), and every interim tab is
@@ -349,6 +349,19 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(page.locator('[data-claims-steps]'), 'the filing steps never opened').toBeVisible()
     await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Social Security injected a <style> element').toBe(0)
+
+    // Retirement → Health Care (RC10): its four small charts (each its own Highcharts chart, the cliff's bracket a line
+    // series) or the page's own words where the walk's household prices no health premiums, and its Action Items tray.
+    await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageHealthCare, exact: true }).click()
+    await expect(page.getByRole('heading', { level: 1, name: copy.shellPageHealthCare })).toBeVisible({ timeout: 30_000 })
+    expect(new URL(page.url()).hash).toBe('#/retirement/health-care')
+    await expect(page.locator('[data-chart="health-extras"] .highcharts-series-group, [data-health-page]').first(), 'neither the charts nor the page’s words').toBeAttached({ timeout: 120_000 })
+    if ((await page.locator('[data-health-charts]').count()) > 0) {
+      await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+      await expect(page.locator('[data-health-tray]'), 'the health tray never opened').toBeVisible()
+      await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+    }
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Health Care injected a <style> element').toBe(0)
 
     // Tax → Tax Strategies (RC8): its folder tabs (the page's own state), the empty state's goal radios and Find, and
     // Summary's waiting words before a solve; the solve's own workers are the pooled arm's above.

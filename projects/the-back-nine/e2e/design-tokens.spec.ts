@@ -195,9 +195,10 @@ test.describe('design tokens — fonts + the figure law', () => {
 })
 
 /**
- * THE CHART TEXT LAYER'S CSP PREMISE (council wf_ecbe0ab2-7bb, 2026-09-05). Every word on the four
- * result charts is HTML positioned by React style-prop custom properties (`--fx`/`--fy`,
- * src/viz/chartText.tsx). React applies a style prop through the CSSOM (element.style.setProperty),
+ * THE CSSOM CHANNEL'S CSP PREMISE (council wf_ecbe0ab2-7bb, 2026-09-05). Built for the old charts' HTML
+ * text layer (`chartText.tsx`, gone with the last of them at Act 6's RC10); the clone leans on the same
+ * channel for its series colours (`src/viz/charts/seriesVars.ts`) and React's style props. React applies
+ * a style prop through the CSSOM (element.style.setProperty),
  * which the strict `style-src 'self'` policy does NOT govern — a style ATTRIBUTE string does. This
  * arm proves BOTH halves in the real browser under the real served headers (the same harness as
  * csp.spec.ts): a CSSOM custom-property position LANDS, and the discriminating control — the same

@@ -25,7 +25,7 @@ const SEEDS = (process.env.RC_SEEDS ?? 'retired,date').split(',')
 const SCREENS = [
   { id: 'snapshot', screen: 'snapshot', module: copy.shellModuleDashboard, page: copy.shellPageSnapshot },
   { id: 'probability', screen: 'probability', module: copy.shellModuleRetirement, page: copy.shellPageAnalysis },
-  { id: 'health-care', screen: 'interim-health', module: copy.shellModuleRetirement, page: copy.shellPageHealthCare },
+  { id: 'health-care', screen: 'health-care', module: copy.shellModuleRetirement, page: copy.shellPageHealthCare },
   { id: 'cash-flows', screen: 'cash-flows', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows },
   { id: 'tax-strategies', screen: 'tax-strategies', module: copy.shellModuleTax, page: copy.shellPageTaxStrategies },
   { id: 'facts', screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts },
@@ -117,6 +117,7 @@ async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: b
   }
   if (target.screen === 'cash-flows') await expect(page.locator('[data-table-frame], [data-cash-flows-state][role="alert"]').first()).toBeVisible({ timeout: 60_000 })
   if (target.screen === 'social-security') await settleClaims(page, 'claims-annual')
+  if (target.screen === 'health-care') await settleHealth(page)
   await settleLayout(page)
 }
 
@@ -124,6 +125,12 @@ async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: b
  *  own words where it has no choices (never the "working out" words, which a run's landing replaces). */
 async function settleClaims(page: Page, chart: string): Promise<void> {
   await expect(page.locator(`[data-chart="${chart}"] .highcharts-series-group, [data-claims-page]`).first()).toBeAttached({ timeout: 240_000 })
+  await page.waitForTimeout(600)
+}
+
+/** Health Care's four small charts drawn (the working route's steady rows take a while), or the page's own words. */
+async function settleHealth(page: Page): Promise<void> {
+  await expect(page.locator('[data-chart="health-extras"] .highcharts-series-group, [data-health-page]').first()).toBeAttached({ timeout: 240_000 })
   await page.waitForTimeout(600)
 }
 
@@ -635,6 +642,42 @@ for (const size of SIZES) {
           await page.screenshot({ path: `${OUT}/claims-steps-${seed}-${size.tag}-full.png`, fullPage: true })
         }
         console.log(`[rc-look ${UNIT} claims ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        for (const [id, a] of Object.entries(findings)) {
+          expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+          expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+          expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+          expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+        }
+      })
+    }
+  })
+}
+
+// RC10: Retirement → Health Care, on each seed (`health`, `healthnc` and `date65` for the unit): the first frame (the four
+// small charts and the key-metric column), the whole page (the sheet's words under the charts, the caveat), and the
+// Action Items tray with B9's health inputs. Reduced motion, as RC9's.
+const HEALTH = SCREENS[2]
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, Health Care at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    for (const seed of SEEDS) {
+      test(`?seed=${seed}: Health Care — the four charts and the column, the whole page, the tray`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 360_000)
+        await enterShell(page, seed)
+        const findings: Record<string, Audit> = {}
+        await showScreen(page, HEALTH, size.phone)
+        await shot(page, findings, 'health-care', seed, size.tag)
+        await page.screenshot({ path: `${OUT}/health-care-${seed}-${size.tag}-full.png`, fullPage: true })
+        if ((await page.locator('[data-health-charts]').count()) > 0) {
+          await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+          await expect(page.locator('[data-health-tray]')).toBeVisible()
+          await page.locator('[data-health-tray]').scrollIntoViewIfNeeded()
+          await page.waitForTimeout(500)
+          await shot(page, findings, 'health-tray', seed, size.tag)
+          await page.screenshot({ path: `${OUT}/health-tray-${seed}-${size.tag}-full.png`, fullPage: true })
+        }
+        console.log(`[rc-look ${UNIT} health ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
         for (const [id, a] of Object.entries(findings)) {
           expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
           expect.soft(a.clipped, `${id}: clipped text`).toEqual([])

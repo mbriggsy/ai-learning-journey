@@ -14,8 +14,9 @@
  *
  * COLOR LAW (back-nine-design §1–2):
  *   - Brand green (--brand #0b3d2e) is CHROME ONLY and lives in tokens.css — it is NEVER a
- *     data encoding. Data / series / band / verdict color draws EXCLUSIVELY from the
- *     Okabe–Ito color-universal set below.
+ *     data encoding. Data / series / band color draws EXCLUSIVELY from the clone's categorical
+ *     order and band below (`RC_SERIES`, `RC_BAND`; the Okabe–Ito set of the old charts left with
+ *     them at Act 6's RC10).
  *   - Color is NEVER the only signal (WCAG 1.4.1, Level A). Every consumer pairs color with a
  *     redundant NON-color channel — series: line-style + marker + direct end-label; band:
  *     in-place percentile TEXT + luminance ordering; verdict: word + magnitude + shape. The
@@ -31,28 +32,9 @@
  * CSP-safe path for dynamic data-viz color; the ConfidenceBand component proves it under the
  * real enforced CSP (verify:csp) when it lands.
  *
- * SCOPE (built now): the Okabe–Ito set, the two-series pair, the confidence-band lightness
- * ramp, the CVD contract, and the encoding vocabularies. The verdict-state → color/shape
- * mapping and the SVG icon silhouettes are DELIBERATELY NOT here yet — they are ordinal,
- * taste-adjacent, and need the N=1 cold-read + the full UI skill loadout (verdictSignal.tsx).
+ * SCOPE: the confidence-band lightness stops, the CVD contract, and the clone's categorical
+ * series, pairs and band.
  */
-
-// ── Okabe–Ito color-universal set ────────────────────────────────────────────────────────
-// Hex verified against clauswilke.com/dataviz + jfly.uni-koeln.de (back-nine-design §1, 2026-06-11).
-// The categorical surface is deliberately TINY (this is a calm co-pilot, not a dashboard):
-// only TWO chromatic accents are ever spent — the two-series pair — and the rest are reserved.
-export const OKABE_ITO = {
-  black: '#000000',
-  blue: '#0072b2',
-  vermilion: '#d55e00',
-  bluegreen: '#009e73',
-  sky: '#56b4e9',
-  orange: '#e69f00',
-  purple: '#cc79a7',
-  /** ~1.32:1 on white (~1.24:1 on the cream paper) — BANNED for thin lines, small markers, and
-   *  any text (nowhere near the 4.5:1 floor). Large filled areas only, if at all. */
-  yellow: '#f0e442',
-} as const
 
 // ── The CVD self-test contract ───────────────────────────────────────────────────────────
 /**
@@ -67,45 +49,20 @@ export const OKABE_ITO = {
 export const CVD_MIN_OKLAB = 0.1
 export const CVD_METRIC = 'oklab' as const
 
-// ── Two-series identity (U6 two-series) ──────────────────────────────────────────────────
-// blue vs vermilion — the Okabe–Ito pair with the widest luminance + CVD separation.
-// MEASURED distance (culori, 2026-06-14): deuter 0.298 / protan 0.229 / tritan 0.354 — all ≫ 0.10.
-// Color is the LEAST-trusted of five redundant channels (line-style, marker, end-label,
-// luminance, color). NEVER a red/green-adjacent pairing as a sole differentiator.
-export type SeriesLineStyle = 'solid' | 'dashed'
-/** The two-series marker silhouettes (the non-hue marker channel). The verdict-state icon set is
- *  a SUPERSET that lands WITH verdictSignal (held) — it extends this union and gates its own
- *  pairwise silhouette-distinctness (the C(6,2) probe). Only the values used TODAY are named here
- *  — no vocabulary for held features. */
-export type MarkerShape = 'circle' | 'triangle'
-
-export interface SeriesStyle {
-  readonly color: string
-  readonly lineStyle: SeriesLineStyle
-  readonly marker: MarkerShape
-}
-
-export const SERIES = {
-  one: { color: OKABE_ITO.blue, lineStyle: 'solid', marker: 'circle' },
-  two: { color: OKABE_ITO.vermilion, lineStyle: 'dashed', marker: 'triangle' },
-} as const satisfies Record<'one' | 'two', SeriesStyle>
-
 // ── The confidence band: single-hue oklch LIGHTNESS ramp ─────────────────────────────────
-// ONE hue (Okabe–Ito blue, oklch H≈244.05), varied ONLY in L. The median region is the darkest
+// ONE hue (since Act 6, RightCapital's, about 272: `RC_BAND` below), varied ONLY in L. The median region is the darkest
 // / densest ink (highest likelihood, highest emphasis); the outer percentiles are lighter
 // (lowest emphasis) — so DENSITY OF INK TRACKS LIKELIHOOD and the ordering is legible in pure
 // grayscale. NOT green (brand green is chrome-only). NOT a hue gradient.
 //
-// Chroma is held at 0.095 — REDUCED from the base blue's 0.131 — so every lightness stop stays
+// (The old band held chroma at 0.095 at Okabe–Ito blue's hue; the clone's is `RC_BAND.chroma`.) Every lightness stop stays
 // INSIDE the sRGB gamut at the fixed hue. A higher chroma gamut-clamps the dark stop and drifts
 // its rendered hue ~14°; 0.095 holds the rendered hue spread across the whole ramp to <0.5°
 // (MEASURED, culori 2026-06-14) — a genuinely single-hue ramp, and a calmer blue besides.
 //
-// The endpoints below are the lerp bounds consumed by scale.ts (`bandLightnessAt`). MEASURED:
+// The endpoints below are the lerp bounds consumed by scale.ts (`bandLightnessAt`, through `RC_BAND`). MEASURED:
 // the rendered ramp's WCAG luminance is strictly monotonic across L, and every stop stays
 // clearly legible on the cream paper (--paper #faf7f2, Y ≈ 0.93).
-export const BAND_HUE = 244.05
-export const BAND_CHROMA = 0.095
 /** L at the median (p = 0, most likely, highest emphasis). */
 export const BAND_L_MEDIAN = 0.42
 /** L at the outer tail edge (p = 1, least likely, lowest emphasis). */
@@ -115,7 +72,7 @@ export const BAND_L_OUTER = 0.82
 // The fan draws two stacked OPAQUE fills whose ink DENSITY tracks likelihood: the inner
 // (p25–p75, more-likely) region is the darker stop, the outer (p10–p90, less-likely) region the
 // lighter. Both are positions on the SAME single-hue lightness ramp above — fetched via
-// scale.ts `bandStopCss(p)`, never a re-typed hex (the canonical-source rule). The median p50 is
+// scale.ts `rcBandStopCss(p)`, never a re-typed hex (the canonical-source rule). The median p50 is
 // NOT a ramp stop: it is the --ink overlay LINE (the blue-on-blue landmine in colorblind.test.tsx
 // — a series-blue line is lost in the dark half of the band under deuteranopia; the on-band line
 // MUST be --ink). Emphasis order, darkest→lightest: median ink line > inner fill > outer fill.
@@ -127,7 +84,7 @@ export const BAND_FILL_OUTER_P = 0.84
 // ── Act 6: RightCapital's categorical series and the clone's band (plan 6-rightcapital-ui-plan.md, 2.1 decision 4) ──
 // Typed ONCE here. `src/viz/charts/seriesVars.ts` writes RC_SERIES onto the root as `--highcharts-color-N` through the
 // CSSOM at start-up, which is how Highcharts' styled mode (and `chartTheme.css`) reads them; no stylesheet re-types a
-// series hex. The Okabe–Ito exports above stay for the old charts and go with the last of them (RC10).
+// series hex. The Okabe–Ito exports that stood above left with the last of the old charts (RC10).
 //
 // Meanings kept from RightCapital (ref 3.2): green = the what-if or recommendation, blue = the plan it is compared
 // against; orange = tax-deferred or withdrawals; red = expenses or a shortfall. Colour is never the only signal: every
@@ -239,7 +196,7 @@ export const RC_PAIRS: readonly RcPair[] = [
  * The clone's confidence band (ref 3.3; plan 2.2): B9's lightness law (the L stops above, ordered by luminance) at
  * RightCapital's hue, about 272. Chroma is 0.085, under the 0.095 cap: at hue 272 the cap's outer stop (L 0.82) falls
  * outside sRGB and clamps (the widest chroma that keeps the whole L range in gamut there is 0.0895, measured with culori
- * on 2026-11-24). The old band keeps BAND_HUE until RC10.
+ * on 2026-11-24).
  */
 export const RC_BAND = {
   hue: 272,

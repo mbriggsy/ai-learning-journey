@@ -11,9 +11,7 @@ import { describe, it, expect } from 'vitest'
 import {
   acaAnchor,
   composeHealthSheet,
-  composeMedicareExtrasHeldFlat,
   composeMedicareExtrasTypicalNote,
-  composeRegimeFutures,
   federalConversionMarginal,
   medicareAnchor,
   medicareEraYear,
@@ -29,7 +27,7 @@ import {
 } from '@engine/validation/oracleToken'
 import { acaEnhancedSubsidyStatus } from '@engine/constants/health'
 import { solverAcaFreshnessWindowDays } from '@engine/constants/solver'
-import type { HealthReadout, HealthReadoutYear, MedicareExtrasEntryV3, TwoArmOutcome } from '@shared/model'
+import type { HealthReadout, HealthReadoutYear, MedicareExtrasEntryV3 } from '@shared/model'
 
 /** The injected clock, expressed RELATIVE to the live record rather than as a literal date —
  *  a re-verify moves `verifiedOn` roughly monthly and must never churn this file (nor tempt
@@ -977,8 +975,8 @@ describe('showMedicarePricedNote — the route-aware priced-Medicare disclosure 
   it('shows the priced-in disclosure exactly when the run PRICED Medicare AND no Healthcare door is reached', () => {
     // Priced + no door (the all-65+ household, spine or date route): its ONLY Medicare surface.
     expect(showMedicarePricedNote({ medicarePriced: true, reachesHealthDoor: false })).toBe(true)
-    // Priced + a door (the ACA-priced household): the sheet carries the held-flat line + its own
-    // omissions list (composeMedicareExtrasHeldFlat, below) — no hero duplicate (one honest home per fact).
+    // Priced + a door (the ACA-priced household): Retirement → Health Care carries the affirmation, the residual and
+    // its own omissions list (healthCareView.ts, since RC10) — no verdict duplicate.
     expect(showMedicarePricedNote({ medicarePriced: true, reachesHealthDoor: true })).toBe(false)
     // Not priced ⇒ nothing to affirm (both door arms).
     expect(showMedicarePricedNote({ medicarePriced: false, reachesHealthDoor: false })).toBe(false)
@@ -994,47 +992,6 @@ describe('showMedicarePricedNote — the route-aware priced-Medicare disclosure 
     // Behavioral arm: the decision depends ONLY on the pricing facts — identical for every household
     // that shares them, whatever the ages behind the run.
     expect(showMedicarePricedNote({ medicarePriced: true, reachesHealthDoor: false })).toBe(true)
-  })
-})
-
-describe('composeRegimeFutures — the cost-headline compose', () => {
-  const arm = (surv: number, cost?: number) => ({
-    headline: { xOfTen: { value: surv, marginToEdge: 0.05 }, outcomeState: 'on-track' as const, stateMarginToEdge: 0.05 },
-    survivalFraction: surv / 10,
-    ...(cost !== undefined ? { lifetimeHealthCostMedianReal: cost } : {}),
-  })
-  const outcome = (withCost?: number, withoutCost?: number): TwoArmOutcome => ({
-    kind: 'two-arm',
-    with: arm(8, withCost),
-    without: arm(7, withoutCost),
-    rawDelta: 0.1,
-    deltaBasis: 'joint',
-  })
-
-  it('HEADLINES the lifetime health-cost delta and demotes the odds line to the second row (council 2026-07-03)', () => {
-    const view = composeRegimeFutures(outcome(96_040, 128_010), true)
-    expect(view?.deltaLine).toBe(slots.subsidyRegimeCostDelta('96,000', '128,000'))
-    expect(view?.stateLine).toBe(slots.rothDeltaJoint(slots.xOfTen(8), slots.xOfTen(7)))
-  })
-
-  it('falls back to the shared compose when either arm lacks the cost median (never a fabricated dollar)', () => {
-    const view = composeRegimeFutures(outcome(96_000, undefined), false)
-    expect(view?.deltaLine).toBe(slots.rothDeltaJoint(slots.xOfTen(8), slots.xOfTen(7)))
-  })
-
-  it('collapses to the even arm when both medians ROUND to one formatted figure (Caddie 2026-07-10 — never "~$99,800 versus ~$99,800")', () => {
-    // 99,840 and 99,790 differ raw but both land on the $100 rounding grain at 99,800.
-    const view = composeRegimeFutures(outcome(99_840, 99_790), true)
-    expect(view?.deltaLine).toBe(slots.subsidyRegimeCostEven('99,800'))
-    expect(view?.deltaLine).not.toContain('versus')
-    // the odds line still demotes to the second row exactly like the delta arm.
-    expect(view?.stateLine).toBe(slots.rothDeltaJoint(slots.xOfTen(8), slots.xOfTen(7)))
-  })
-
-  it('keeps the versus sentence when the formatted figures genuinely differ by one grain', () => {
-    // 99,840 rounds to 99,800; 99,860 rounds to 99,900 — adjacent grains stay a real compare.
-    const view = composeRegimeFutures(outcome(99_840, 99_860), true)
-    expect(view?.deltaLine).toBe(slots.subsidyRegimeCostDelta('99,800', '99,900'))
   })
 })
 
@@ -1085,59 +1042,13 @@ describe('composeMedicareExtrasTypicalNote — the hero on-typical appendix (F5,
 })
 
 // ===========================================================================
-// composeMedicareExtrasHeldFlat — the door sheet's held-flat line (closes the register's Tier 0
-// "A pre-65 household is never told its Medicare extra-coverage premiums are held flat"). The
-// engine charges the extras REAL-FLAT; the all-65+ verdict says so, and the door household's
-// verdict residual is withheld (showMedicarePricedNote), so the sheet's extras block is its one
-// home. These arms pin the GATE — the view's presence alone, $0 included (one rule with the
-// all-65+ Tail); healthcareSheet.test pins the rendered position under the per-person dollars.
+// The held-flat sentence's two homes (closes the register's Tier 0 "A pre-65 household is never told its Medicare
+// extra-coverage premiums are held flat"). The engine charges the extras REAL-FLAT. The all-65+ verdict says so in
+// `verdictResidualTail`; since Act 6 · RC10 Retirement → Health Care prints that residual for every household it charts
+// (`healthCareView.test.ts` pins it there), in place of the old sheet's own held-flat line. The words stay one.
 // ===========================================================================
-describe('composeMedicareExtrasHeldFlat — the door sheet’s held-flat line (F5, population B)', () => {
-  const person = (
-    who: string,
-    provenance: 'entered' | 'affirmed-zero' | 'typical',
-    monthly: number,
-  ) => ({ who, provenance, monthly })
-
-  it('a NULL view (no Medicare-bearing overlay) makes NO claim', () => {
-    expect(composeMedicareExtrasHeldFlat(null)).toBeNull()
-  })
-
-  it('every figure $0 STILL wears the line — a $0 held flat can run higher too, and the all-65+ Tail speaks unconditionally (one rule, both homes)', () => {
-    // A dollar-keyed gate (> 0) or a provenance-keyed one (anything but affirmed-zero) would fall
-    // silent on one of these — the optimistic-direction silence the verify pass reversed.
-    expect(
-      composeMedicareExtrasHeldFlat([person('Pat', 'affirmed-zero', 0), person('Sam', 'affirmed-zero', 0)]),
-    ).toBe(copy.medicareExtrasSheetHeldFlat)
-    expect(composeMedicareExtrasHeldFlat([person('Pat', 'affirmed-zero', 0)])).toBe(copy.medicareExtrasSheetHeldFlat)
-    expect(
-      composeMedicareExtrasHeldFlat([person('Pat', 'entered', 0), person('Sam', 'affirmed-zero', 0)]),
-    ).toBe(copy.medicareExtrasSheetHeldFlat)
-  })
-
-  it('one ENTERED figure above $0 wears the line', () => {
-    expect(composeMedicareExtrasHeldFlat([person('Pat', 'entered', 185)])).toBe(copy.medicareExtrasSheetHeldFlat)
-  })
-
-  it('the TYPICAL figure wears the line', () => {
-    expect(
-      composeMedicareExtrasHeldFlat([person('Pat', 'typical', 203), person('Sam', 'typical', 203)]),
-    ).toBe(copy.medicareExtrasSheetHeldFlat)
-  })
-
-  it('MIXED $0 + above $0 wears the line — one premium the block shows is enough, in either position', () => {
-    // Either position: no per-person gate may ever silence the line.
-    expect(
-      composeMedicareExtrasHeldFlat([person('Pat', 'affirmed-zero', 0), person('Sam', 'entered', 220)]),
-    ).toBe(copy.medicareExtrasSheetHeldFlat)
-    expect(
-      composeMedicareExtrasHeldFlat([person('Pat', 'typical', 203), person('Sam', 'affirmed-zero', 0)]),
-    ).toBe(copy.medicareExtrasSheetHeldFlat)
-  })
-
+describe('the held-flat sentence (F5)', () => {
   it('the words are HIS, lifted from the verdict tail — the two homes can never diverge (drift-pin)', () => {
-    // The all-65+ verdict reads `verdictResidualTail` (a period graft + the sentence); the door sheet
-    // reads the bare sentence. Reword either alone and this reds.
     expect(copy.verdictResidualTail).toBe(`. ${copy.medicareExtrasSheetHeldFlat}`)
   })
 })

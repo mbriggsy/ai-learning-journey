@@ -1,9 +1,8 @@
 // The surviving-cohort rules' arms, moved out of `bandGeometry.test.ts` with their functions by Act 6's RC0, unchanged.
-// The gate's bind to the band's visual fade (`cohortFadeOpacity`) still reads `bandGeometry.ts`, which dies with the
-// hand-drawn band: that arm goes with it.
+// The gate's bind to the old band's visual fade (`cohortFadeOpacity`) went with `bandGeometry.ts` at Act 6's RC10: no
+// chart fades a thin tail any more (each one ends where the cohort thins), so the onset itself is the one rule left.
 import { describe, expect, it } from 'vitest'
 import type { BandSample } from '../bandData'
-import { cohortFadeOpacity } from '../bandGeometry'
 import { AT_RANGE_COHORT_MIN, COHORT_FADE, isThinCohort, selectAtRangeColumn, truncateFanAtThinCohort } from '../cohort'
 
 describe('isThinCohort — the dead-cohort dollar-withdrawal gate (bound to the visual fade onset)', () => {
@@ -12,15 +11,6 @@ describe('isThinCohort — the dead-cohort dollar-withdrawal gate (bound to the 
     expect(isThinCohort(COHORT_FADE.full - 0.001)).toBe(true) // just below → withdraw
     expect(isThinCohort(1)).toBe(false) // full cohort → crisp
     expect(isThinCohort(0)).toBe(true) // dead cohort → withdraw
-  })
-
-  it('the withdrawal onset is PINNED to the visual fade onset — both switch at COHORT_FADE.full, same direction', () => {
-    // The honesty coupling: the readout stops showing crisp dollars EXACTLY where the fan stops being
-    // full-opacity. If someone moves one onset and not the other, this fails loud.
-    expect(isThinCohort(COHORT_FADE.full)).toBe(false)
-    expect(cohortFadeOpacity(COHORT_FADE.full)).toBe(1) // full opacity at the onset
-    expect(isThinCohort(COHORT_FADE.full - 0.05)).toBe(true)
-    expect(cohortFadeOpacity(COHORT_FADE.full - 0.05)).toBeLessThan(1) // already fading just below
   })
 
   it('a non-finite or absent cohort reads as a FULL cohort (not thin) — the BandSample default', () => {

@@ -266,9 +266,10 @@ describe('the shell’s history', () => {
     )
     goToAnalysis()
     fireEvent.click(screen.getByRole('link', { name: copy.shellPageHealthCare }))
-    expect(screenShown()).toBe('interim-health')
-    expect(screen.getByText(copy.healthInterimReadOnly)).toBeInTheDocument()
-    expect(document.querySelector('[data-door="health"]')).toBeNull()
+    // Retirement → Health Care (RC10): no door into a fact on a read-only tab (its tray's facts open nowhere here, and
+    // this planted answer is a compute error, so the page shows its words and no tray at all).
+    expect(screenShown()).toBe('health-care')
+    expect(document.querySelector('main.result [data-fact-open]')).toBeNull()
     // The Action Items tray's read-only face (no Apply, Refresh still runs) is `ActionItemsTray.test.tsx`'s: this
     // planted answer is a compute error, which offers no tray at all.
   })

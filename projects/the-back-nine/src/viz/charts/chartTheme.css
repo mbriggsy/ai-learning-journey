@@ -371,4 +371,21 @@
   .b9-claims-narrow .highcharts-xaxis-labels text {
     font-size: var(--text-axis);
   }
+
+  /* ── Retirement → Health Care (RC10, `healthPartsOptions.ts`): one part per small chart, its columns one quiet hue
+     (the chart's title names the part, so colour carries nothing), the marketplace cliff's stretches a thin ink bracket
+     with its count printed above in dark text. The legend chip the page prints beside each title is `bg-blue`, the same
+     hex as colour slot 0 (`RC_HUES.blue`). ── */
+  .b9-health .b9-health-bar .highcharts-point {
+    fill: var(--highcharts-color-0);
+  }
+  .b9-health .b9-health-cliff .highcharts-graph {
+    stroke: var(--color-stone-900);
+    stroke-width: 1.5;
+  }
+  .b9-health .highcharts-data-label text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-axis);
+    font-weight: 600;
+  }
 }

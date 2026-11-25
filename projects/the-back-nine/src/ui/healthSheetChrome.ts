@@ -1,12 +1,12 @@
 /**
- * src/ui/healthSheetChrome.ts — the Healthcare sheet's PURE composition seam (P3·U11).
+ * src/ui/healthSheetChrome.ts — the health picture's PURE composition seam (P3·U11; since Act 6 · RC10 read by
+ * Retirement → Health Care, `healthCareView.ts`, the sheet it was built for having left with that unit).
  *
- * Every honesty decision the sheet renders is decided HERE, in exported pure functions
+ * Every honesty decision the page renders is decided HERE, in exported pure functions
  * (insight 048 — an honesty gate inline in an undrivable render path is untested despite a
  * green suite): the empirical anchors picked off the wire's {@link HealthReadout} series, the
- * thin-cohort withdrawal, the shadow-rate decomposition, the IRMAA step readout, the dated
- * legislative note, and the regime compare's cost-headline view. The component is dumb
- * wiring over this view-model.
+ * thin-cohort withdrawal, the shadow-rate decomposition, the IRMAA step readout and the dated
+ * legislative note. The page is dumb wiring over this view-model.
  *
  * THE ANCHOR CONTRACT (council 2026-07-03, the unbiased-skeleton dissolution): every figure
  * anchors to the simulation's OWN per-year medians (`acaMagiP50` / `irmaaMagiP50` — an
@@ -27,7 +27,7 @@
  * note to the what-if variant (an applied hypothesis must never read as current law —
  * council condition Q1).
  */
-import type { FilingStatus, HealthReadout, HealthReadoutYear, CurrentScenario, TwoArmOutcome } from '@shared/model'
+import type { FilingStatus, HealthReadout, HealthReadoutYear, CurrentScenario } from '@shared/model'
 import {
   cliffMagiFor,
   marginalOrdinaryRate,
@@ -47,8 +47,6 @@ import {
 } from '@engine/constants/health'
 import { COHORT_FADE } from '@viz/cohort'
 import { copy, slots } from './copy'
-import { composeTwoFutures, type TwoFuturesView } from './twoFuturesChrome'
-import type { BandPlanClockAnchor } from './bandAnnotations'
 import { resolveMedicareExtrasMonthly } from '@intake/intakeMap'
 
 /** Humane rounding for a readout dollar (the `~$X` grammar owns the imprecision). */
@@ -611,47 +609,6 @@ export function composeHealthSheet(
 }
 
 /**
- * Compose the regime compare's two-futures view: the chart + odds line from the shared
- * composer, HEADLINED by the lifetime health-cost delta (the regime's real effect
- * concentrates in the pre-65 ACA years and may barely move the portfolio median —
- * council 2026-07-03). Null mirrors composeTwoFutures's own null (an unusable outcome).
- */
-export function composeRegimeFutures(
-  outcome: TwoArmOutcome,
-  pickedEnhanced: boolean,
-  ages?: readonly [number, number],
-  savedAnchor?: BandPlanClockAnchor,
-): TwoFuturesView | null {
-  const base = composeTwoFutures(
-    outcome,
-    pickedEnhanced ? copy.tfChartRegimeEnhanced : copy.tfChartRegimeReverted,
-    copy.tfChartRegimeCurrent,
-    slots.rothDeltaSurvivor,
-    ages,
-    savedAnchor,
-  )
-  if (base === null || outcome.kind !== 'two-arm') return base
-  const withCost = outcome.with.lifetimeHealthCostMedianReal
-  const withoutCost = outcome.without.lifetimeHealthCostMedianReal
-  if (withCost === undefined || withoutCost === undefined) return base
-  // The cost delta LEADS; the odds line (the shared composer's deltaLine) demotes to the
-  // second row. Its state/years secondaries stay in their usual seats when present.
-  // The gate reads the FORMATTED strings (Caddie 2026-07-10): two medians within the $100
-  // rounding grain render one figure, and "~$99,800 versus ~$99,800" is a twin-number
-  // against itself — the even arm says "about the same" and quotes the figure once.
-  const withFormatted = formatDollar(withCost)
-  const withoutFormatted = formatDollar(withoutCost)
-  return {
-    ...base,
-    deltaLine:
-      withFormatted === withoutFormatted
-        ? slots.subsidyRegimeCostEven(withFormatted)
-        : slots.subsidyRegimeCostDelta(withFormatted, withoutFormatted),
-    stateLine: base.deltaLine,
-  }
-}
-
-/**
  * Should the verdict surfaces wear the priced-Medicare disclosure — the AFFIRMATION that base Part
  * B + the income surcharge are COUNTED in the answer, on top of the spending, TOGETHER with the narrowed residual of what still
  * isn't (copy `verdictMedicarePriced` + `verdictMedicareResidual`; the Roth lever's own
@@ -674,9 +631,10 @@ export function composeRegimeFutures(
  * early-return — the SS-only $0-portfolio household built NO overlay yet read "priced"; the
  * ultramode fold 2026-07-10 closed it. A producer's output is the only non-drifting source.)
  *
- * The residual is WITHHELD at the Healthcare door — one honest home per fact: that sheet carries the
- * held-flat line ({@link composeMedicareExtrasHeldFlat}) + its omissions list. The two lines SHIP
- * TOGETHER — the affirmative alone would imply ALL of Medicare is priced, a fresh optimistic lie.
+ * On the verdict surfaces the residual is WITHHELD for a household that reaches the health door; since Act 6 · RC10
+ * Retirement → Health Care prints the affirmation and the residual together for every household it charts
+ * (`healthCareView.ts`'s footnotes), the residual's held-flat sentence standing for the old sheet's own held-flat line.
+ * The two lines SHIP TOGETHER — the affirmative alone would imply ALL of Medicare is priced, a fresh optimistic lie.
  */
 export function showMedicarePricedNote(run: {
   readonly medicarePriced: boolean
@@ -730,22 +688,4 @@ export function composeMedicareExtrasLines(
         ? slots.medicareExtrasFactNone(p.who)
         : slots.medicareExtrasFactTypical(p.who, formatMonthlyDollar(p.monthly)),
   )
-}
-
-/** The DOOR SHEET's held-flat line (closes the register's Tier 0 "A pre-65 household is never told
- *  its Medicare extra-coverage premiums are held flat"). The engine charges the extras REAL-FLAT —
- *  the same dollar every year, no sourced trend exists — and the all-65+ verdict says so in
- *  `verdictResidualTail`; this population's verdict residual is structurally withheld
- *  ({@link showMedicarePricedNote}), so the sheet's extras block is its one home. Rendered DIRECTLY
- *  UNDER {@link composeMedicareExtrasLines}' per-person dollars — the figures "than shown" refers to.
- *
- *  NULL only when the run prices no Medicare-bearing overlay (no claim is made; the block is absent
- *  too). Present whenever the block is, a $0 figure included: a $0 held flat can still run higher
- *  (plans re-price every year; coverage can be added later), and the all-65+ home speaks
- *  unconditionally, so ONE rule holds for both homes. The build's verify pass reversed a first-cut
- *  $0 gate here: silence at $0 was the optimistic direction, and it split the two homes' rules. */
-export function composeMedicareExtrasHeldFlat(
-  view: readonly MedicareExtrasDisclosurePerson[] | null,
-): string | null {
-  return view === null ? null : copy.medicareExtrasSheetHeldFlat
 }

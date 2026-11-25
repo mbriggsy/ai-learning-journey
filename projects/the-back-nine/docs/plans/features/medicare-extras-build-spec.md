@@ -200,7 +200,7 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   "premiums" line traces literally true post-flip, the sole latent nit being the rare purchased
   Part A, which is consistently carved out.
 
-## F5 — disclosure routing (HARD LOCK — red-team Attack 1; healthSheetChrome.ts:677-686 + answerNotes.ts:124-129)
+## F5 — disclosure routing (HARD LOCK — red-team Attack 1; healthSheetChrome.ts:634-644 + answerNotes.ts:124-129)
 
 - The extras affirmative + per-person adopted-typical provenance + the bi-directional disclosure
   needed a **RENDERED HOME for BOTH populations**, because `showMedicarePricedNote`
@@ -210,13 +210,13 @@ survivor-precision win, and the ACA combined-then-split precedent is a FALSE ana
   - **Population A (non-door / all-65+):** the widened `verdictMedicarePriced` affirmation now
     names extra coverage alongside Part B and its surcharge, and an on-typical household gets a
     per-person bi-directional sentence appended INSIDE the residual paragraph via
-    `composeMedicareExtrasTypicalNote` (`src/ui/healthSheetChrome.ts:704`), wired at
+    `composeMedicareExtrasTypicalNote` (`src/ui/healthSheetChrome.ts:662`), wired at
     `src/ui/answerNotes.ts:130-136`. Appended, not a new frame row — the one-frame fit law's tallest
     composite.
   - **Population B (near-65 date route / the Healthcare door):** the door sheet carries its OWN
     legible extras block — never buried in the six-item run-on — from
-    `composeMedicareExtrasLines` (`src/ui/healthSheetChrome.ts:722`) under the
-    `medicareExtrasSheetLead` heading, built at `src/intake/HealthcareSheet.tsx:146-164` and seated directly under the Medicare premium card (`:213`; after the preview when no card renders, `:249` — his 2026-10-16 ruling, built 2026-10-19). The
+    `composeMedicareExtrasLines` (`src/ui/healthSheetChrome.ts:680`) under the
+    `medicareExtrasSheetLead` heading, built at `src/intake/HealthcareSheet.tsx lines 146-164 at 11349a9de` and seated directly under the Medicare premium card (line 213 at `11349a9de`; after the preview when no card renders, line 249 at `11349a9de` — his 2026-10-16 ruling, built 2026-10-19). The
     per-person fact line carries the provenance as its load-bearing content: whose number, and
     whether it was entered, affirmed, or typical.
 - Both homes consume ONE assembly, `medicareExtrasDisclosureView`

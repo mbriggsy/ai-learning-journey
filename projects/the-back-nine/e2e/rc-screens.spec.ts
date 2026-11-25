@@ -2641,3 +2641,178 @@ test.describe(`RC9 · Social Security on the phone (${PHONE.width}×${PHONE.heig
     })
   }
 })
+
+// ── RC10 · Retirement → Health Care (plan 6, RC10's Verification) ──────────────────────────────────────────────────────
+// On `health` and `healthnc` (retired, pre-65: the readout, the marketplace years then Medicare), `healthgap` (the wide-gap
+// household whose marketplace years carry a cliff share) and `date65` (working, all-65+: the steady market's rows): the
+// four small charts and the key-metric column hold the first frame at his window (the pilot's call: the old sheet's words
+// ported under them, then the R13 caveat, so the caveat is reached by scrolling); every printed label passes the text and
+// marks audits and sits apart from every other; the four draw on ONE scale, pinned on the drawn picture (insight 169:
+// each bar's height per dollar, read from its spoken figure, is the same in every chart); each legend says the middle
+// cost (the steady market's cost on the working route); the cliff's count words, where printed, are the sheet's and
+// name their base in the key line; the tray opens with B9's health inputs.
+const HEALTH_PAGE = { screen: 'health-care', module: copy.shellModuleRetirement, page: copy.shellPageHealthCare } as const
+const HEALTH_PARTS = ['aca', 'medicare', 'irmaa', 'extras'] as const
+
+async function enterHealth(page: Page, seed: string, phone = false): Promise<void> {
+  await gotoSeedFinal(page, seed)
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the seed never landed on Snapshot').toBeAttached({ timeout: 30_000 })
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+  if (phone) {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: HEALTH_PAGE.page, exact: true }).click()
+    await expect(page.locator(`main.result[data-shell-screen="${HEALTH_PAGE.screen}"]`)).toBeAttached()
+  } else await showPage(page, HEALTH_PAGE)
+  for (const id of HEALTH_PARTS) {
+    await expect(page.locator(`[data-chart="health-${id}"] .highcharts-series-group`), `${seed}: the ${id} chart never drew`).toBeAttached({ timeout: 180_000 })
+  }
+  await page.waitForTimeout(400)
+  await settleLayout(page)
+}
+
+/** Each chart's words: the text audit, the marks audit, and no word over another. */
+async function auditHealthText(page: Page, who: string): Promise<void> {
+  const floor = await hcFloorPx(page)
+  for (const id of HEALTH_PARTS) {
+    const chart = `[data-chart="health-${id}"]`
+    const bound = `[data-health-part="${id}"]`
+    expect(hcTextFailures(await hcAudit(page, chart, bound), floor, { texts: [], counts: { 'axis-label': 4 } }), `${who}: the ${id} chart’s text`).toEqual([])
+    expect(hcMarkFailures(await hcMarks(page, chart, bound)), `${who}: the ${id} chart’s printed words over no bar or other word`).toEqual([])
+    await assertChartTextApart(page, chart, `${who} ${id}`)
+  }
+}
+
+/** The cliff's counts stand apart: two on one row keep clear space between them (RC10's look: two adjacent stretches'
+ *  counts sat edge to edge on one row and read "1 of 102 of 10", which the overlap checks pass since the boxes only touch;
+ *  neighbouring stretches now print on alternate rows). */
+async function assertCliffCountsApart(page: Page, who: string): Promise<void> {
+  const boxes = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-chart="health-aca"] .highcharts-data-label text')]
+      .map((e) => ({ text: (e.textContent ?? '').trim(), b: e.getBoundingClientRect() }))
+      .filter((l) => l.text !== '')
+      .map((l) => ({ text: l.text, left: l.b.left, right: l.b.right, top: l.b.top, bottom: l.b.bottom })),
+  )
+  const GAP = 6
+  const out: string[] = []
+  boxes.forEach((a, i) =>
+    boxes.slice(i + 1).forEach((b) => {
+      // On one row (their boxes share height, or stand under 2 px apart), two counts need clear space between them.
+      const near = a.left < b.right + GAP && b.left < a.right + GAP && a.top < b.bottom + 2 && b.top < a.bottom + 2
+      if (near) out.push(`"${a.text}" [${a.left.toFixed(1)},${a.right.toFixed(1)}]x[${a.top.toFixed(1)},${a.bottom.toFixed(1)}] and "${b.text}" [${b.left.toFixed(1)},${b.right.toFixed(1)}]x[${b.top.toFixed(1)},${b.bottom.toFixed(1)}] sit closer than ${GAP}px`)
+    }),
+  )
+  expect(out, `${who}: the cliff counts apart`).toEqual([])
+}
+
+/** One scale (insight 169): every drawn bar's height per dollar, the dollars read from its spoken figure, agrees across the
+ *  four charts; and each chart's top tick prints the same figure. */
+async function assertOneHealthScale(page: Page, who: string): Promise<void> {
+  const r = await page.evaluate((parts) => {
+    const out: { part: string; h: number; label: string }[] = []
+    const tops: string[] = []
+    for (const id of parts) {
+      const c = document.querySelector(`[data-chart="health-${id}"]`)!
+      for (const el of c.querySelectorAll('.highcharts-series.b9-health-bar .highcharts-point')) {
+        out.push({ part: id, h: el.getBoundingClientRect().height, label: el.getAttribute('aria-label') ?? '' })
+      }
+      const ys = [...c.querySelectorAll('.highcharts-yaxis-labels text')]
+        .map((t) => ({ text: (t.textContent ?? '').trim(), y: t.getBoundingClientRect().top }))
+        .filter((t) => t.text !== '')
+      tops.push(ys.sort((a, b) => a.y - b.y)[0]?.text ?? '')
+    }
+    return { bars: out, tops }
+  }, HEALTH_PARTS)
+  expect(new Set(r.tops).size, `${who}: one top tick on all four charts (${r.tops.join(' | ')})`).toBe(1)
+  const bars = r.bars
+    .map((b) => ({ ...b, dollars: Number((/~\$([\d,]+)/.exec(b.label)?.[1] ?? '0').replace(/,/g, '')) }))
+    .filter((b) => b.dollars >= 2_000 && b.h > 4)
+  expect(bars.length, `${who}: bars to read the scale from`).toBeGreaterThan(4)
+  // The scale read off the tallest bar; each other bar's drawn height within its two quantizations of that line: the
+  // whole pixel Highcharts snaps a column to, and the $100 grain its spoken figure is printed at.
+  const tallest = bars.reduce((t, b) => (b.h > t.h ? b : t))
+  const perDollar = tallest.h / tallest.dollars
+  for (const b of bars) {
+    const off = Math.abs(b.h - perDollar * b.dollars)
+    expect(off, `${who}: ${b.part} bar "${b.label}" at ${b.h.toFixed(1)}px, ${off.toFixed(1)}px off the one scale`).toBeLessThanOrEqual(1.5 + perDollar * 60)
+  }
+}
+
+const HEALTH_SEEDS = [
+  { seed: 'health', route: 'retired' },
+  { seed: 'healthnc', route: 'retired' },
+  { seed: 'healthgap', route: 'retired' },
+  { seed: 'date65', route: 'working' },
+] as const
+
+test.describe(`RC10 · Health Care at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'reduce' })
+  for (const { seed, route } of HEALTH_SEEDS) {
+    test(`?seed=${seed}: the four charts and the column in the first frame; one scale; each legend; the text and marks audits; the notes, then the caveat; the tray`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 360_000)
+      await enterHealth(page, seed)
+      await expect(page.getByRole('heading', { level: 1, name: copy.shellPageHealthCare })).toBeVisible()
+      await expect(page.locator('[data-health-route]')).toHaveAttribute('data-health-route', route)
+      // The frame: the charts and the key-metric column inside his window, the page unscrolled.
+      const frame = await page.evaluate(() => ({
+        scrollY: window.scrollY,
+        charts: document.querySelector('[data-health-charts]')!.getBoundingClientRect().bottom,
+        metrics: document.querySelector('main.result [data-metrics]')!.getBoundingClientRect().bottom,
+      }))
+      console.log(`[rc10-frame] ${seed}: the charts' bottom at ${frame.charts.toFixed(1)}, the column's at ${frame.metrics.toFixed(1)} of ${REAL.height}`)
+      expect(frame.scrollY).toBe(0)
+      expect(frame.charts, `${seed}: the four charts inside the first frame`).toBeLessThanOrEqual(REAL.height)
+      expect(frame.metrics, `${seed}: the key-metric column inside the first frame`).toBeLessThanOrEqual(REAL.height)
+      await expect(page.locator('[data-health-hero]')).toHaveText(/^~\$[\d,]+$/)
+      // Each legend: the middle cost (retired), the steady market's cost (working).
+      const legend = route === 'retired' ? copy.healthLegendMiddle : copy.healthLegendSteady
+      await expect(page.locator('[data-health-legend]')).toHaveText([legend, legend, legend, legend])
+      await auditHealthText(page, `${seed} REAL`)
+      await assertOneHealthScale(page, `${seed} REAL`)
+      // The cliff: the sheet's count words over a bracket, the key line naming the base; none on the working route.
+      const cliff = (await page.locator('[data-chart="health-aca"] .highcharts-data-label text').allTextContents()).map((t) => t.trim()).filter((t) => t !== '')
+      for (const c of cliff) expect(c, `${seed}: a cliff count in the sheet’s words`).toMatch(/^\d of 10$|^more than 9 in 10$/)
+      await assertCliffCountsApart(page, `${seed} REAL`)
+      if (seed === 'healthgap') {
+        expect(cliff.length, 'healthgap: its marketplace years carry a cliff share').toBeGreaterThan(0)
+        await expect(page.locator('[data-health-note]', { hasText: copy.healthCliffKey })).toHaveCount(1)
+      }
+      if (route === 'working') expect(cliff, 'the working route prints no share').toEqual([])
+      // The stopgaps: the surcharge's (retired), the steady market's (working).
+      const stopgap = route === 'retired' ? copy.healthIrmaaStopgap : copy.healthWorkingStopgap
+      await expect(page.locator('[data-health-note], [data-health-footnote]').filter({ hasText: stopgap })).toHaveCount(1)
+      // The notes, then the footnotes (the Medicare affirmation among them), then the caveat last, reachable.
+      const order = await page.evaluate(() => {
+        const top = (s: string) => document.querySelector(s)!.getBoundingClientRect().top
+        return { charts: top('[data-health-charts]'), notes: top('[data-health-notes]'), footnotes: top('[data-health-footnotes]'), caveat: top('main.result [data-caveat]') }
+      })
+      expect(order.charts).toBeLessThan(order.notes)
+      expect(order.notes).toBeLessThanOrEqual(order.footnotes)
+      expect(order.footnotes).toBeLessThan(order.caveat)
+      await expect(page.locator('[data-health-footnote]').filter({ hasText: copy.verdictMedicarePriced })).toHaveCount(1)
+      await assertOneVisibleCaveat(page, null)
+      await noSidewaysScroll(page, `${seed} REAL`)
+      // The tray: B9's health inputs, the subsidy rules a what-if where a marketplace year is priced.
+      await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+      await expect(page.locator('[data-health-tray]')).toBeVisible()
+      await expect(page.locator('[data-health-tray-aca]')).toHaveCount(route === 'retired' ? 1 : 0)
+    })
+  }
+})
+
+test.describe(`RC10 · Health Care on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true, reducedMotion: 'reduce' })
+  for (const seed of ['health', 'date65'] as const) {
+    test(`?seed=${seed}: no sideways scroll; every chart's words pass the audits; one scale; the caveat reachable`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 360_000)
+      await enterHealth(page, seed, true)
+      await noSidewaysScroll(page, `${seed} PHONE`)
+      await settleLayout(page)
+      await auditHealthText(page, `${seed} PHONE`)
+      await assertOneHealthScale(page, `${seed} PHONE`)
+      await assertOneVisibleCaveat(page, null)
+      const caveat = page.locator('main.result [data-caveat]')
+      await caveat.scrollIntoViewIfNeeded()
+      await expect(caveat).toBeInViewport()
+    })
+  }
+})

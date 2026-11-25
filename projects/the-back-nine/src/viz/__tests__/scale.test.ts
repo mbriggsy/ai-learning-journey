@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { bandLightnessAt, bandStopAt, bandStopCss } from '../scale'
-import { BAND_CHROMA, BAND_HUE, BAND_L_MEDIAN, BAND_L_OUTER } from '../palette'
+import { bandLightnessAt, rcBandStopCss } from '../scale'
+import { BAND_L_MEDIAN, BAND_L_OUTER, RC_BAND } from '../palette'
 
 /**
  * Band-ramp lerp boundaries + guards (back-nine-design §3 — the honest fan). The MONOTONIC
@@ -39,18 +39,15 @@ describe('scale — band lightness lerp', () => {
   })
 })
 
-describe('scale — band stop + CSS', () => {
-  it('a stop carries the FIXED hue + chroma and the lerped lightness (single-hue ramp)', () => {
-    const stop = bandStopAt(0.37)
-    expect(stop.h).toBe(BAND_HUE)
-    expect(stop.c).toBe(BAND_CHROMA)
-    expect(stop.l).toBe(bandLightnessAt(0.37))
+describe('scale — the clone band’s CSS stop', () => {
+  it('emits a stable, trimmed oklch() string at the fixed hue and chroma (no float jitter on recompute)', () => {
+    expect(rcBandStopCss(0)).toBe(`oklch(${BAND_L_MEDIAN} ${RC_BAND.chroma} ${RC_BAND.hue})`)
+    expect(rcBandStopCss(1)).toBe(`oklch(${BAND_L_OUTER} ${RC_BAND.chroma} ${RC_BAND.hue})`)
+    // an awkward position trims deterministically to ≤ 4 decimals (0.42 + 0.4/3 = 0.5533…)
+    expect(rcBandStopCss(1 / 3)).toBe(`oklch(0.5533 ${RC_BAND.chroma} ${RC_BAND.hue})`)
   })
 
-  it('emits a stable, trimmed oklch() string (no float jitter on recompute)', () => {
-    expect(bandStopCss(0)).toBe(`oklch(${BAND_L_MEDIAN} ${BAND_CHROMA} ${BAND_HUE})`)
-    expect(bandStopCss(1)).toBe(`oklch(${BAND_L_OUTER} ${BAND_CHROMA} ${BAND_HUE})`)
-    // an awkward position trims deterministically to ≤ 4 decimals (0.42 + 0.4/3 = 0.5533…)
-    expect(bandStopCss(1 / 3)).toBe(`oklch(0.5533 ${BAND_CHROMA} ${BAND_HUE})`)
+  it('throws on a non-finite position', () => {
+    expect(() => rcBandStopCss(Number.NaN)).toThrow(RangeError)
   })
 })

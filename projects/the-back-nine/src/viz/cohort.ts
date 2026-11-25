@@ -8,7 +8,7 @@ import type { BandSample } from './bandData'
 /** The dead-cohort dollar-withdrawal gate for the hover/scrub readout: TRUE where the surviving-couple
  *  cohort has thinned past the SAME {@link COHORT_FADE}.full onset at which the fan begins to visually
  *  fade — so the readout's crisp figures withdraw EXACTLY where the band goes quiet (honesty by a shared
- *  threshold, proven bound to {@link cohortFadeOpacity} by test). A confident "$X at age 97" on a handful
+ *  threshold; the old band's fade, `cohortFadeOpacity`, left with `bandGeometry.ts` at Act 6's RC10). A confident "$X at age 97" on a handful
  *  of surviving couples is the calm-but-wrong sin this gate prevents. A non-finite / absent cohort reads
  *  as a FULL cohort (not thin) — the {@link BandSample} contract's documented default; live input is
  *  always finite (resolveBandData guards it), so this only governs hand-built fixtures. */

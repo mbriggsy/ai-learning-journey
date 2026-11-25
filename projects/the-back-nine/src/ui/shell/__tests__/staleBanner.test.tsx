@@ -114,7 +114,7 @@ function StaleHarness({ readOnly = false, stalenessNote = false, leftOverClauseH
   const snapshot = useSyncExternalStore(appModel.subscribe, appModel.getSnapshot)
   const wallCalendarYear = epochDayToCalendarYear(currentEpochDay())
   const notes = composeAnswerNotes(snapshot, { readOnly, stalenessNote, leftOverClauseHost, wallCalendarYear })
-  const editors = useEditorSheets({ model: appModel, snapshot, missing: missingRequiredFacts(snapshot.draft), savedAnchor: notes.planClock, restoreFallback: () => null, onOpenSequencing: () => {}, onOpenRoth: () => {} })
+  const editors = useEditorSheets({ model: appModel, snapshot, missing: missingRequiredFacts(snapshot.draft), savedAnchor: notes.planClock, restoreFallback: () => null, onOpenSequencing: () => {}, onOpenRoth: () => {}, onOpenHealth: () => {} })
   return (
     <>
       <button type="button" onClick={() => editors.openAssumptions()}>

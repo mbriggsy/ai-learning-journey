@@ -655,9 +655,10 @@ said squeaky clears `temp/` UNCONDITIONALLY; its step 4 now deletes only the clo
   least one element in `main.result` must carry an `aria-describedby` naming the caveat (`IN_FRAME_DISCLAIMER_ID`). A new
   figured page whose figures lack `verdictDescribedBy()` reds; a state with no figure (Tax Strategies before a Winner card,
   Cash Flows' table until its `DataTable` takes a description prop) passes `false`, each with a comment saying why.
-- **(b9-12, 11-25) Stress Test and Social Security render the StaleBanner** (they print the plan's odds; `Shell.tsx`'s
-  `figured`). A stale or aged seed adds the banner's height above their one-frame arms; measure the frame on such a seed
-  before adding one to those pages' arms.
+- **(b9-12, 11-25; widened b9-1) Stress Test, Social Security, Tax Strategies and Health Care render the StaleBanner**
+  (every page printing figures run from the saved balances; `Shell.tsx`'s `figured`; the last two since round 3,
+  `ff4e1c0d`). A stale or aged seed adds the banner's height above their one-frame arms; measure the frame on such a
+  seed before adding one to those pages' arms. RC8's `?vault=rec` and `?vault=recold` arms passed with it on Windows.
 - **(b9-12, 11-25) Run heavy fit arms in small groups on Windows.** Running RC4b, RC8, RC9, RC10 and RC11 together left
   four `?seed=dip` arms on "Working out your answer…" past the 150 s final-tier wait; alone they passed in a minute. A
   red that reads as a hung answer under a big `-g` is load first: rerun the failing arms alone before tracing a bug.

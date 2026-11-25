@@ -17,14 +17,15 @@ export type ModuleId = (typeof MODULE_ORDER)[number]
 
 /** The screens the shell can draw. RC3's Snapshot, RC4's Probability (with its Action Items tray, RC4b), RC7's
  *  Confidence (Analysis's second folder tab, a route of its own like Probability) and RC6's Cash
- *  Flows (its Summary and Accounts folder tabs are the page's own state, not routes) and RC8's Tax Strategies (its four
- *  folder tabs the page's own state too) are rebuilt; the rest ride as interim tabs in their old look until their units
+ *  Flows (its Summary and Accounts folder tabs are the page's own state, not routes), RC8's Tax Strategies (its four
+ *  folder tabs the page's own state too) and RC9's Social Security (its Comparison and Summary tabs the same) are rebuilt; the rest ride as interim tabs in their old look until their units
  *  rebuild them: the workbench room's facts page (RC13) and the health sheet under Retirement → Health Care (RC10). */
 export type ScreenId =
   | 'snapshot'
   | 'probability'
   | 'confidence'
   | 'cash-flows'
+  | 'social-security'
   | 'interim-facts'
   | 'tax-strategies'
   | 'interim-health'
@@ -76,6 +77,7 @@ export const ROUTE_ROWS: readonly RouteRow[] = [
     screen: 'confidence',
     title: copy.analysisTitle,
   },
+  { module: 'retirement', page: 'social-security', pageLabel: copy.shellPageSocialSecurity, screen: 'social-security', title: copy.shellPageSocialSecurity },
   { module: 'retirement', page: 'health-care', pageLabel: copy.shellPageHealthCare, screen: 'interim-health', title: copy.shellPageHealthCare },
   { module: 'retirement', page: 'cash-flows', pageLabel: copy.shellPageCashFlows, screen: 'cash-flows', title: copy.shellPageCashFlows },
   { module: 'tax', page: 'strategies', pageLabel: copy.shellPageTaxStrategies, screen: 'tax-strategies', title: copy.shellPageTaxStrategies },

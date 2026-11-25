@@ -29,6 +29,7 @@ const SCREENS = [
   { id: 'cash-flows', screen: 'cash-flows', module: copy.shellModuleRetirement, page: copy.shellPageCashFlows },
   { id: 'tax-strategies', screen: 'tax-strategies', module: copy.shellModuleTax, page: copy.shellPageTaxStrategies },
   { id: 'facts', screen: 'interim-facts', module: copy.shellModuleProfile, page: copy.workbenchPageFacts },
+  { id: 'social-security', screen: 'social-security', module: copy.shellModuleRetirement, page: copy.shellPageSocialSecurity },
 ] as const
 
 interface Audit {
@@ -115,7 +116,15 @@ async function showScreen(page: Page, target: (typeof SCREENS)[number], phone: b
     await page.waitForTimeout(600)
   }
   if (target.screen === 'cash-flows') await expect(page.locator('[data-table-frame], [data-cash-flows-state][role="alert"]').first()).toBeVisible({ timeout: 60_000 })
+  if (target.screen === 'social-security') await settleClaims(page, 'claims-annual')
   await settleLayout(page)
+}
+
+/** Social Security's shown view settled: the named chart drawn (the date route's runs can take a minute), or the page's
+ *  own words where it has no choices (never the "working out" words, which a run's landing replaces). */
+async function settleClaims(page: Page, chart: string): Promise<void> {
+  await expect(page.locator(`[data-chart="${chart}"] .highcharts-series-group, [data-claims-page]`).first()).toBeAttached({ timeout: 240_000 })
+  await page.waitForTimeout(600)
 }
 
 const SIZES = [
@@ -590,5 +599,49 @@ for (const size of SIZES) {
         expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
       }
     })
+  })
+}
+
+// RC9: Retirement → Social Security, on each seed (`retired` and `date` by default; `healthss` is the no-choice-left
+// household): Comparison's yearly pairs and running totals, Summary's bars with the odds under them, and the filing
+// steps in the Action Items tray. Reduced motion (the harness's pinned clock would catch a chart's morph in its first frame).
+const CLAIMS = SCREENS[6]
+
+for (const size of SIZES) {
+  test.describe(`${UNIT} look, Social Security at ${size.tag}`, () => {
+    test.use({ ...size.use, reducedMotion: 'reduce' })
+    for (const seed of SEEDS) {
+      test(`?seed=${seed}: Social Security — the yearly pairs, the running totals, the Summary, the filing steps`, async ({ page }) => {
+        test.setTimeout(FINAL_TIER_MS + 600_000)
+        await enterShell(page, seed)
+        const findings: Record<string, Audit> = {}
+        await showScreen(page, CLAIMS, size.phone)
+        await shot(page, findings, 'claims-annual', seed, size.tag)
+        await page.screenshot({ path: `${OUT}/claims-annual-${seed}-${size.tag}-full.png`, fullPage: true })
+        if ((await page.locator('[data-claims-comparison]').count()) > 0) {
+          await page.getByRole('button', { name: copy.claimsChartAnnual }).click()
+          await page.getByRole('menuitemradio', { name: copy.claimsChartCumulative, exact: true }).click()
+          await settleClaims(page, 'claims-cumulative')
+          await shot(page, findings, 'claims-cumulative', seed, size.tag)
+          await page.screenshot({ path: `${OUT}/claims-cumulative-${seed}-${size.tag}-full.png`, fullPage: true })
+          await page.getByRole('tab', { name: copy.claimsTabSummary }).click()
+          await settleClaims(page, 'claims-summary')
+          await shot(page, findings, 'claims-summary', seed, size.tag)
+          await page.screenshot({ path: `${OUT}/claims-summary-${seed}-${size.tag}-full.png`, fullPage: true })
+          await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+          await expect(page.locator('[data-claims-steps]')).toBeVisible()
+          await page.waitForTimeout(500)
+          await shot(page, findings, 'claims-steps', seed, size.tag)
+          await page.screenshot({ path: `${OUT}/claims-steps-${seed}-${size.tag}-full.png`, fullPage: true })
+        }
+        console.log(`[rc-look ${UNIT} claims ${seed} ${size.tag}] ${JSON.stringify(findings)}`)
+        for (const [id, a] of Object.entries(findings)) {
+          expect.soft(a.sideways, `${id}: sideways scroll`).toBeLessThanOrEqual(0)
+          expect.soft(a.clipped, `${id}: clipped text`).toEqual([])
+          expect.soft(a.overlaps, `${id}: overlapping controls`).toEqual([])
+          expect.soft(a.tiny, `${id}: text under 12 px`).toEqual([])
+        }
+      })
+    }
   })
 }

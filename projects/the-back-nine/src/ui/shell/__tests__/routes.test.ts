@@ -18,7 +18,7 @@ describe('routes — no dead tabs', () => {
   it('only modules with a screen show, in RightCapital’s order; RC4 draws Dashboard, Retirement, Tax and Profile', () => {
     expect(navModules().map((m) => m.id)).toEqual(['dashboard', 'retirement', 'tax', 'profile'])
     expect(navModules().find((m) => m.id === 'dashboard')!.pages.map((p) => p.id)).toEqual(['snapshot'])
-    expect(navModules().find((m) => m.id === 'retirement')!.pages.map((p) => p.id)).toEqual(['analysis', 'health-care', 'cash-flows'])
+    expect(navModules().find((m) => m.id === 'retirement')!.pages.map((p) => p.id)).toEqual(['analysis', 'social-security', 'health-care', 'cash-flows'])
     // Every module with a screen has its word.
     for (const m of navModules()) expect(MODULE_LABELS[m.id]).toBe(m.label)
   })

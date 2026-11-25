@@ -333,6 +333,23 @@ test.describe('CSP — real browser enforcement', () => {
     await expect(page.getByRole('combobox', { name: copy.cashFlowsAccountsLabel })).toBeVisible()
     expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Cash Flows injected a <style> element').toBe(0)
 
+    // Retirement → Social Security (RC9): its strategy runs on their own slots (the walk's household, 65 and 63, both
+    // claiming at 67, always has a choice), the yearly pairs, the running totals with the crossing's ring (a scatter
+    // mark), Summary's bars on a category axis, and the filing steps in the tray.
+    await page.getByRole('navigation', { name: copy.shellPagesLabel }).getByRole('link', { name: copy.shellPageSocialSecurity, exact: true }).click()
+    await expect(page.getByRole('heading', { level: 1, name: copy.shellPageSocialSecurity })).toBeVisible({ timeout: 30_000 })
+    expect(new URL(page.url()).hash).toBe('#/retirement/social-security')
+    await expect(page.locator('[data-chart="claims-annual"] .highcharts-series-group'), 'the yearly pairs never drew').toBeAttached({ timeout: 120_000 })
+    await page.getByRole('button', { name: copy.claimsChartAnnual }).click()
+    await page.getByRole('menuitemradio', { name: copy.claimsChartCumulative, exact: true }).click()
+    await expect(page.locator('[data-chart="claims-cumulative"] .highcharts-series-group'), 'the running totals never drew').toBeAttached({ timeout: 60_000 })
+    await page.getByRole('tab', { name: copy.claimsTabSummary }).click()
+    await expect(page.locator('[data-chart="claims-summary"] .highcharts-series-group'), 'Summary never drew').toBeAttached({ timeout: 120_000 })
+    await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+    await expect(page.locator('[data-claims-steps]'), 'the filing steps never opened').toBeVisible()
+    await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+    expect(await page.evaluate(() => document.querySelectorAll('style').length), 'Social Security injected a <style> element').toBe(0)
+
     // Tax → Tax Strategies (RC8): its folder tabs (the page's own state), the empty state's goal radios and Find, and
     // Summary's waiting words before a solve; the solve's own workers are the pooled arm's above.
     await page.getByRole('navigation', { name: copy.shellModulesLabel }).getByRole('link', { name: copy.shellModuleTax, exact: true }).click()

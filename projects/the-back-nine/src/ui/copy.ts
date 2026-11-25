@@ -3059,6 +3059,48 @@ export const copy = {
   taxStratColSurcharge: 'Income surcharge',
   taxStratColMedicareTotal: 'Medicare premium in all',
   taxStratMedicareNone: 'No Medicare years in this run.',
+  // --- Retirement → Social Security (Act 6 · RC9; `socialSecurityView.ts`): a few fixed claiming ages compared, each a
+  // claim-age what-if on the plan. Every yearly figure is the steady market's, so each chart and sentence names it; the
+  // odds under each Summary bar are that strategy's many-futures reading. B9 does not search every claiming age yet (map
+  // gap 7), so nothing here is called the one that does the most, and the stopgap line says so. ---
+  shellPageSocialSecurity: 'Social Security',
+  claimsIntro: 'When each of you starts Social Security changes what it pays and how your plan holds up. Compare a few claiming ages.',
+  claimsTabsLabel: 'Social Security views',
+  claimsTabComparison: 'Comparison',
+  claimsTabSummary: 'Summary',
+  claimsChartAnnual: 'Social Security each year',
+  claimsChartCumulative: 'Social Security added up over the years',
+  claimsPickerA: 'Strategy shown solid',
+  claimsPickerB: 'Compared with (hatched or dashed)',
+  claimsStrategyPlan: 'Your plan’s ages',
+  claimsStrategyEarliest: 'As early as possible',
+  claimsStrategyFra: 'Full retirement age',
+  claimsStrategySeventy: 'Age 70',
+  claimsPhrasePlan: 'your plan’s own ages',
+  claimsPhraseEarliest: 'claiming as early as possible',
+  claimsPhraseFra: 'claiming at full retirement age',
+  claimsPhraseSeventy: 'claiming at 70',
+  claimsStopgap:
+    'B9 doesn’t yet search every claiming age for the ones that do the most for your plan, so these are fixed choices to compare.',
+  claimsSummaryTitle: 'Lifetime Social Security by strategy',
+  claimsBarsOther: 'The other strategies',
+  claimsOddsNote: 'Under each bar: your plan’s odds with those ages, read across its many futures as Analysis reads them.',
+  claimsWaiting: 'This page fills in once your plan’s answer is worked out.',
+  claimsRunsWaiting: 'Working out each strategy year by year…',
+  claimsRunsError: 'These year-by-year runs couldn’t be worked out just now.',
+  claimsPickTwo: 'Both pickers show the same strategy. Pick a different one on either side to compare them.',
+  claimsNone: 'No one in this plan has a Social Security benefit, so there is no claiming age to compare.',
+  claimsNoChoiceLeft: 'Social Security has already started for everyone in this plan, so there is no claiming age left to choose.',
+  claimsNoTotal: 'No lifetime total',
+  claimsAboutSame: 'About the same',
+  claimsNoBreakEven: 'No break-even',
+  claimsAnnualDescription:
+    'Paired bars, one pair per year: the first strategy solid, the one it is compared with hatched, each the Social Security paid that year in the steady market.',
+  claimsCumulativeDescription:
+    'Two lines of Social Security added up year by year in the steady market: the first strategy solid, the one it is compared with dashed, a ring where the lead changes for good.',
+  claimsBarsDescription:
+    'One bar per strategy, with its lifetime Social Security in the steady market printed beside it and your plan’s odds with those ages under it. Your plan’s own ages are hatched.',
+  claimsStepsNote: 'B9 files nothing for you. These are the ages this strategy uses; filing is done with Social Security itself.',
   // THE ENTRY SLICE, composed in LAST: the words the first-load chunk renders live in `entryCopy.ts` (see its
   // header). Spread last, a key typed above that the slice also holds fails to compile (TS2783), so the two
   // halves stay disjoint and `copy` stays ONE whole catalog for `CopyKey`, every copyGuard sweep and every lazy surface.
@@ -4943,7 +4985,7 @@ export const slots = {
    *  start year is a known fact read from the reader's own saved plan, and hedging it ("about 2025")
    *  would manufacture uncertainty the tool does not have. `leverRoth*` keeps it on the three
    *  universal gates (no false certainty, no advice verb, no survival claim), which is the correct scope for a
-   *  statement of the reader's own history. `copyGuard.test.ts:2202` pins this same prefix trap for
+   *  statement of the reader's own history. `copyGuard.test.ts:2231` pins this same prefix trap for
    *  `assumptionRothName` — the escape is known, and taken on purpose rather than by accident. */
   leverRothAlreadyApplied: (startYear: number): string =>
     `This conversion is already part of your plan and started in ${startYear}. That’s why it can’t be added again from here — taking it back out is still available below.`,
@@ -5649,6 +5691,44 @@ export const slots = {
    *  the register's *The solver fills Roth conversions to the exact forecast Medicare surcharge line…*). */
   taxStratIrmaaLineNote: (pinnedYear: number, couple: string, single: string): string =>
     `The surcharge line rises with prices each year: ${pinnedYear}’s is $${couple} for a couple and $${single} for one person. Each year’s income is weighed against the line of the bill it sets two years later, shown here in today’s dollars. Those later lines are forecasts, set only once prices are known, so a year that sits right at its line could still draw a surcharge if prices rise more slowly than forecast.`,
+  // --- Retirement → Social Security (Act 6 · RC9). `mid` is the person as the table speaks of them, capitalized by the
+  // composer where it opens a sentence; `you` makes the verb agree with "You". Figures arrive in the delta dialect. ---
+  claimsCoincideOne: (mid: string, phrases: string, age: number, n: number): string =>
+    `For ${mid}, ${phrases} ${n === 2 ? 'are both' : 'all come to'} ${age}, so they show once.`,
+  claimsCoincideMany: (phrases: string, who: string): string => `${phrases} come to the same ages, ${who}, so they show once.`,
+  claimsPersonAt: (mid: string, age: number): string => `${mid} at ${age}`,
+  claimsFixed: (mid: string, you: boolean, possessive: string, fig: string): string =>
+    `${mid} already ${you ? 'receive' : 'receives'} Social Security, about ~$${fig} a year, so ${possessive} age stays as it is in every strategy.`,
+  claimsNoBenefit: (mid: string, you: boolean): string => `${mid} ${you ? 'have' : 'has'} no Social Security benefit in this plan.`,
+  claimsReceives: (mid: string, you: boolean, fig: string): string => `${mid} already ${you ? 'receive' : 'receives'} about ~$${fig} a year.`,
+  claimsLifetimeTotal: (fig: string): string => `Over your lifetimes that comes to ~$${fig} in all, in the steady market.`,
+  claimsInSteady: (title: string): string => `${title}, in the steady market`,
+  claimsAgeAxis: (possessive: string): string => `${possessive} age`,
+  claimsWorkStops: (year: number): string => `Each strategy here has work stopping in ${year}, the year your answer’s date gives.`,
+  claimsWorkStopsNoDate: (year: number): string =>
+    `Your answer found no date in its window, so each strategy here has work stopping in ${year}, the window’s last year.`,
+  claimsMoreHero: (fig: string, dir: 'more' | 'less'): string => `~$${fig} ${dir}`,
+  claimsMoreLine: (a: string, b: string): string => `from ${a} than from ${b}, over your lifetimes in the steady market`,
+  claimsSameLine: (a: string, b: string): string => `from ${a} and from ${b}, over your lifetimes in the steady market`,
+  claimsSamePaid: (a: string, b: string): string => `${a} and ${b} pay the same each year in the steady market`,
+  claimsBreakEvenAge: (age: number): string => `Age ${age}`,
+  claimsBreakEvenLine: (possessive: string, year: number, leader: string, other: string): string =>
+    `${possessive} age in ${year}: from then on, the total paid from ${leader} stays ahead of the total from ${other}, in the steady market`,
+  claimsNoBreakEvenLine: (year: number, possessive: string, age: number, leader: string, other: string): string =>
+    `Through ${year}, ${possessive} age ${age} and the steady market’s last year, the total paid from ${leader} stays ahead of the total from ${other}`,
+  claimsRanOut: (label: string, year: number): string =>
+    `With ${label.toLowerCase()}, the money runs out in ${year} in the steady market and its year-by-year rows stop there, so its lifetime Social Security isn’t totalled here.`,
+  claimsFigure: (fig: string): string => `~$${fig}`,
+  claimsBarPoint: (name: string, figure: string, odds: string): string => `${name}: ${figure} of lifetime Social Security; your plan’s odds with those ages, ${odds}`,
+  claimsYearPoint: (axis: string, age: number, name: string, fig: string): string => `${axis} ${age}, ${name}: ~$${fig}`,
+  claimsSummaryLine: (phrases: string, n: number): string =>
+    `of lifetime Social Security from ${phrases}, ${n === 1 ? 'the most of these strategies' : 'tied for the most of these strategies'}, in the steady market`,
+  claimsSummaryOdds: (topOdds: string, planOdds: string): string => `Your plan’s odds with those ages: ${topOdds}. With its own ages: ${planOdds}.`,
+  claimsSummaryOddsPlan: (planOdds: string): string => `Your plan’s odds with its own ages: ${planOdds}.`,
+  claimsStepsHeading: (label: string): string => `Filing steps: ${label}`,
+  claimsStepFiles: (mid: string, you: boolean, age: number, year: number): string =>
+    `${mid} ${you ? 'file' : 'files'} for Social Security at ${age}, in ${year}.`,
+  claimsStepClaimed: (mid: string, you: boolean): string => `${mid} already ${you ? 'receive' : 'receives'} Social Security; nothing changes.`,
   confidenceShareFewer: (): string => 'fewer than 1 in 100 futures',
   confidenceShareMore: (): string => 'more than 99 in 100 futures',
   confidenceRunOutTitle: (): string => 'Futures that have run out of money by this age, out of every 100',

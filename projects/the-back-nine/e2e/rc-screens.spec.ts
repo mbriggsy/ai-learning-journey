@@ -166,6 +166,7 @@ test.describe(`RC2 · the shell on the phone (${PHONE.width}×${PHONE.height} @ 
       expect(await sheet.getByRole('link').allTextContents(), 'the menu holds every page, in the nav’s order').toEqual([
         copy.shellPageSnapshot,
         copy.shellPageAnalysis,
+        copy.shellPageSocialSecurity,
         copy.shellPageHealthCare,
         copy.shellPageCashFlows,
         copy.shellPageTaxStrategies,
@@ -2355,4 +2356,288 @@ test.describe(`RC7 · the honesty floor — 68rem exactly (${FLOOR.width}×${FLO
     expect(legend.rows.map((r) => r.text), 'each row names its range').toEqual([copy.snapshotFanOuter, copy.snapshotFanInner, copy.snapshotFanMedian])
     expect(legend.rows.every((r) => r.shown), 'every legend row is drawn').toBe(true)
   })
+})
+
+// ── RC9 · Retirement → Social Security (plan 6, RC9's Verification) ──────────────────────────────────────────────────
+// On `retired` (the spine) and `date` (the date route, its runs at the plan's own stop year): Comparison's yearly pairs
+// and running totals and Summary's bars each hold ONE frame at his window, from the top bar to the ACTION ITEMS handle
+// with the tray closed, the R13 caveat inside it; B9's stopgap line sits under the pickers; the crossing's age label and
+// the odds printed under each Summary bar pass the text audit and sit over no mark or other label, at REAL and PHONE; the
+// drawn picture is pinned against its printed figures (insight 169: the bars' heights in the ratio of their figures; the
+// lines' last points in the ratio of their end labels); the handle opens one filing step per person. `healthss` (both
+// already claiming): no tabs and no handle, the no-choice-left line and the lifetime total in frame. Reduced motion: this
+// harness pins the page clock, so a chart's morph never leaves its first frame here (RC7's note).
+const CLAIMS_PAGE = { screen: 'social-security', module: copy.shellModuleRetirement, page: copy.shellPageSocialSecurity } as const
+const CLAIMS_SEEDS = ['retired', 'date'] as const
+
+async function enterClaims(page: Page, seed: string, phone = false): Promise<void> {
+  await gotoSeedFinal(page, seed)
+  await expect(page.locator('main.result[data-shell-screen="snapshot"]'), 'the seed never landed on Snapshot').toBeAttached({ timeout: 30_000 })
+  await expect(page.locator(SETTLED_RESULT)).toBeAttached({ timeout: FINAL_TIER_MS })
+  if (phone) {
+    await page.getByRole('button', { name: copy.shellMenuOpen, exact: true }).click()
+    await page.getByRole('dialog', { name: copy.shellMenuTitle }).getByRole('link', { name: CLAIMS_PAGE.page, exact: true }).click()
+    await expect(page.locator(`main.result[data-shell-screen="${CLAIMS_PAGE.screen}"]`)).toBeAttached()
+  } else await showPage(page, CLAIMS_PAGE)
+}
+
+/** One of the page's charts drawn (the date route's strategy runs take a while), settled. */
+async function claimsChartDrawn(page: Page, id: string): Promise<void> {
+  await expect(page.locator(`[data-chart="${id}"] .highcharts-series-group`), `${id} never drew`).toBeAttached({ timeout: 240_000 })
+  await page.waitForTimeout(400)
+  await settleLayout(page)
+}
+
+/** A printed figure in dollars ("~$1,160,000", "~$1.16mm", "~$480k"). */
+function claimsDollars(text: string): number {
+  const m = /\$([\d.,]+)\s*(mm|k)?/.exec(text)
+  if (m === null) throw new Error(`[test setup] no figure in "${text}"`)
+  return Number(m[1]!.replace(/,/g, '')) * (m[2] === 'mm' ? 1_000_000 : m[2] === 'k' ? 1_000 : 1)
+}
+
+/** One frame at his window: the page unscrolled, the handle's bottom and the caveat inside 731 px, nothing sideways. */
+async function assertClaimsFrame(page: Page, who: string): Promise<void> {
+  const r = await page.evaluate((handle) => {
+    const h = [...document.querySelectorAll('main.result button[aria-controls]')].find((b) => b.textContent === handle)
+    return { scrollY: window.scrollY, handle: h === undefined ? null : h.getBoundingClientRect().bottom }
+  }, copy.trayHandle)
+  expect(r.scrollY).toBe(0)
+  expect(r.handle, `${who}: the ACTION ITEMS handle`).not.toBeNull()
+  console.log(`[rc9-frame] ${who}: the handle's bottom at ${r.handle!.toFixed(1)} of ${REAL.height}`)
+  expect(r.handle!, `${who}: the handle inside the first frame`).toBeLessThanOrEqual(REAL.height)
+  await assertOneVisibleCaveat(page, REAL.height)
+  await noSidewaysScroll(page, who)
+}
+
+type ClaimsBox = { readonly left: number; readonly right: number; readonly top: number; readonly bottom: number }
+
+/** The x-axis words (each Summary bar's name and odds) over no bar and no other word, inside the visible frame. */
+async function assertAxisWordsClear(page: Page, chart: string, frame: string, who: string): Promise<string[]> {
+  const r = await page.evaluate(
+    ({ sel, frameSel }) => {
+      const c = document.querySelector(sel)!
+      const rect = (e: Element) => {
+        const b = e.getBoundingClientRect()
+        return { left: b.left, right: b.right, top: b.top, bottom: b.bottom }
+      }
+      const f = c.closest(frameSel)!.getBoundingClientRect()
+      return {
+        frame: { left: Math.max(0, f.left), right: Math.min(document.documentElement.clientWidth, f.right) },
+        words: [...c.querySelectorAll('.highcharts-xaxis-labels text')].map((e) => ({ text: (e.textContent ?? '').trim(), box: rect(e) })),
+        marks: [...c.querySelectorAll('.highcharts-series .highcharts-point')].map(rect).filter((b) => b.bottom - b.top > 0.5),
+      }
+    },
+    { sel: chart, frameSel: frame },
+  )
+  const meet = (a: ClaimsBox, b: ClaimsBox) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5
+  const out: string[] = []
+  r.words.forEach((w, i) => {
+    if (w.box.left < r.frame.left - 0.5 || w.box.right > r.frame.right + 0.5) out.push(`outside: "${w.text}" leaves the visible frame`)
+    for (const m of r.marks) if (meet(w.box, m)) out.push(`overlap: "${w.text}" overlaps a bar`)
+    r.words.slice(i + 1).forEach((v) => meet(w.box, v.box) && out.push(`overlap: "${w.text}" and "${v.text}" overlap`))
+  })
+  expect(out, `${who}: the words under the bars`).toEqual([])
+  return r.words.map((w) => w.text)
+}
+
+/** No chart text over other chart text: every axis label, axis title, data label and legend item of the chart, pairwise
+ *  (RC9's phone look: a squashed plot piled the y-axis ticks on each other, green on the text audit, which reads each
+ *  label against its frame, never against its neighbours). */
+async function assertChartTextApart(page: Page, chart: string, who: string): Promise<void> {
+  const texts = await page.evaluate((sel) => {
+    const c = document.querySelector(sel)!
+    return [...c.querySelectorAll('.highcharts-axis-labels text, .highcharts-axis-title, .highcharts-data-label text, .highcharts-legend-item text')]
+      .map((e) => {
+        const b = e.getBoundingClientRect()
+        return { text: (e.textContent ?? '').trim(), box: { left: b.left, right: b.right, top: b.top, bottom: b.bottom } }
+      })
+      .filter((t) => t.text !== '' && t.box.right - t.box.left > 0.5)
+  }, chart)
+  const meet = (a: ClaimsBox, b: ClaimsBox) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5
+  const out: string[] = []
+  texts.forEach((a, i) => texts.slice(i + 1).forEach((b) => meet(a.box, b.box) && out.push(`"${a.text}" and "${b.text}" overlap`)))
+  expect(out, `${who}: the chart's words apart`).toEqual([])
+}
+
+/** No line runs through a printed word: each line's drawn path, sampled every 2 px, never enters a data label's box
+ *  (RC9's phone look: the lower end figure sat on the dashed line, the crossing's age on the solid one; `hcMarks` reads
+ *  bars and markers, never a line's path). */
+async function assertLinesClearOfLabels(page: Page, chart: string, who: string): Promise<void> {
+  const hits = await page.evaluate((sel) => {
+    const c = document.querySelector(sel)!
+    const boxes = [...c.querySelectorAll('.highcharts-data-label text')]
+      .map((e) => ({ text: (e.textContent ?? '').trim(), b: e.getBoundingClientRect() }))
+      .filter((l) => l.text !== '')
+    const out: string[] = []
+    for (const path of c.querySelectorAll<SVGPathElement>('.highcharts-series path.highcharts-graph')) {
+      const m = path.getScreenCTM()!
+      const len = path.getTotalLength()
+      const name = path.closest('.highcharts-series')?.getAttribute('class')?.match(/b9-claims-line-[ab]/)?.[0] ?? 'line'
+      for (const l of boxes) {
+        for (let d = 0; d <= len; d += 2) {
+          const p = path.getPointAtLength(d)
+          const x = p.x * m.a + p.y * m.c + m.e
+          const y = p.x * m.b + p.y * m.d + m.f
+          if (x > l.b.left + 1 && x < l.b.right - 1 && y > l.b.top + 1 && y < l.b.bottom - 1) {
+            out.push(`${name} runs through "${l.text}"`)
+            break
+          }
+        }
+      }
+    }
+    return out
+  }, chart)
+  expect(hits, `${who}: no line through a printed word`).toEqual([])
+}
+
+/** Summary: every bar's figure printed (above it at his window; under it with its name on the phone, where neighbouring
+ *  figures above the bars ran into each other) and its odds under it, the text and marks audits clean, and the drawn
+ *  heights in the ratio of the printed figures (insight 169). */
+async function auditClaimsSummary(page: Page, who: string): Promise<void> {
+  const chart = '[data-chart="claims-summary"]'
+  await claimsChartDrawn(page, 'claims-summary')
+  const floor = await hcFloorPx(page)
+  const r = await page.evaluate((sel) => {
+    const c = document.querySelector(sel)!
+    const centre = (e: Element) => {
+      const b = e.getBoundingClientRect()
+      return (b.left + b.right) / 2
+    }
+    const marks = [...c.querySelectorAll('.highcharts-series .highcharts-point')].map((e) => ({ x: centre(e), h: e.getBoundingClientRect().height })).filter((m) => m.h > 0.5)
+    const labels = [...c.querySelectorAll('.highcharts-data-label text')].map((e) => ({ x: centre(e), text: (e.textContent ?? '').trim() })).filter((l) => l.text !== '')
+    const words = [...c.querySelectorAll('.highcharts-xaxis-labels text')].map((e) => ({ x: centre(e), text: (e.textContent ?? '').trim() }))
+    const nearest = <T extends { x: number }>(xs: readonly T[], x: number): T | undefined => xs.reduce<T | undefined>((best, m) => (best === undefined || Math.abs(m.x - x) < Math.abs(best.x - x) ? m : best), undefined)
+    return { above: labels.length > 0, bars: marks.map((m) => ({ h: m.h, text: (labels.length > 0 ? nearest(labels, m.x) : nearest(words, m.x))?.text ?? '' })) }
+  }, chart)
+  const bars = r.bars.map((b) => ({ ...b, figure: /~\$[\d.,]+(mm|k)?/.exec(b.text)?.[0] ?? '' }))
+  expect(bars.length, `${who}: the bars`).toBeGreaterThanOrEqual(2)
+  for (const b of bars) expect(b.figure, `${who}: a figure for every bar ("${b.text}")`).not.toBe('')
+  const perDollar = bars.map((b) => b.h / claimsDollars(b.figure))
+  for (const p of perDollar) {
+    expect(Math.abs(p / perDollar[0]! - 1), `${who}: the bars’ heights (${bars.map((b) => `${b.figure} ${b.h.toFixed(1)}px`).join(', ')}) in the ratio of their figures`).toBeLessThanOrEqual(0.02)
+  }
+  expect(
+    hcTextFailures(await hcAudit(page, chart, '[data-claims-bars]'), floor, { texts: r.above ? bars.map((b) => b.figure) : [], counts: { ...(r.above ? { 'data-label': bars.length } : {}), 'axis-label': bars.length + 2 } }),
+    `${who}: Summary’s text`,
+  ).toEqual([])
+  expect(hcMarkFailures(await hcMarks(page, chart, '[data-claims-bars]')), `${who}: Summary’s figures over no bar or each other`).toEqual([])
+  await assertChartTextApart(page, chart, `${who} Summary`)
+  const words = await assertAxisWordsClear(page, chart, '[data-claims-bars]', who)
+  expect(words.length, `${who}: a name and odds under every bar`).toBe(bars.length)
+  expect(words.every((w) => / of 10$|better than 9 in 10$/.test(w)), `${who}: the odds under every bar (${words.join(' | ')})`).toBe(true)
+}
+
+/** The running totals: the crossing's ring and its age (the hero's own words), each line's end figure, the text and marks
+ *  audits clean, and the lines' last points in the ratio of their printed end figures (insight 169). */
+async function auditClaimsCumulative(page: Page, who: string): Promise<void> {
+  const chart = '[data-chart="claims-cumulative"]'
+  await claimsChartDrawn(page, 'claims-cumulative')
+  const floor = await hcFloorPx(page)
+  const hero = (await page.locator('[data-claims-hero]').innerText()).trim()
+  const crossing = page.locator(`${chart} .b9-claims-cross .highcharts-point`)
+  if (hero.startsWith('Age ')) {
+    await expect(crossing, `${who}: the ring at the crossing`).toHaveCount(1)
+    await expect(page.locator(`${chart} .highcharts-data-label text`, { hasText: hero }), `${who}: the crossing’s age, the hero’s own words`).toHaveCount(1)
+  } else await expect(crossing, `${who}: no ring without a crossing`).toHaveCount(0)
+  const ends = await page.evaluate((sel) => {
+    const c = document.querySelector(sel)!
+    const plot = c.querySelector('.highcharts-plot-background')!.getBoundingClientRect()
+    return ['.b9-claims-line-a', '.b9-claims-line-b'].map((cls) => {
+      const path = c.querySelector(`.highcharts-series${cls} path.highcharts-graph`) as SVGPathElement
+      const m = path.getScreenCTM()!
+      const p = path.getPointAtLength(path.getTotalLength())
+      const y = p.x * m.b + p.y * m.d + m.f
+      const label = [...c.querySelectorAll(`.highcharts-data-labels${cls} text`)].map((e) => (e.textContent ?? '').trim()).find((t) => t.includes('$')) ?? ''
+      return { height: plot.bottom - y, label }
+    })
+  }, chart)
+  for (const e of ends) expect(e.label, `${who}: each line ends in its printed figure`).toMatch(/^~\$/)
+  const [a, b] = ends.map((e) => e.height / claimsDollars(e.label))
+  expect(Math.abs(a! / b! - 1), `${who}: the lines’ ends (${ends.map((e) => `${e.label} ${e.height.toFixed(1)}px`).join(', ')}) in the ratio of their figures`).toBeLessThanOrEqual(0.02)
+  const texts = [...ends.map((e) => e.label), ...(hero.startsWith('Age ') ? [hero] : []), copy.claimsStrategyEarliest, copy.claimsStrategyPlan]
+  expect(hcTextFailures(await hcAudit(page, chart, '[data-claims-pair]'), floor, { texts, counts: { 'legend-item': 2, 'axis-title': 1 } }), `${who}: the running totals’ text`).toEqual([])
+  expect(hcMarkFailures(await hcMarks(page, chart, '[data-claims-pair]')), `${who}: the crossing’s age and the end figures over no mark or other label`).toEqual([])
+  await assertChartTextApart(page, chart, `${who} running totals`)
+  await assertLinesClearOfLabels(page, chart, who)
+}
+
+test.describe(`RC9 · Social Security at his window (${REAL.width}×${REAL.height} @ ${REAL_DPR}dpr, compact mode)`, () => {
+  test.use({ viewport: REAL, deviceScaleFactor: REAL_DPR, reducedMotion: 'reduce' })
+  for (const seed of CLAIMS_SEEDS) {
+    test(`?seed=${seed}: each tab one frame to the handle; the stopgap under the pickers; the crossing and the odds audited; the picture pinned to its figures; one filing step per person`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 600_000)
+      await enterClaims(page, seed)
+      await expect(page.getByRole('heading', { level: 1, name: copy.shellPageSocialSecurity })).toBeVisible()
+      await claimsChartDrawn(page, 'claims-annual')
+      // B9's stopgap (map gap 7): one line under the pickers, above the chart; no "optimal" or "best" anywhere.
+      const order = await page.evaluate(() => ({
+        pickers: document.querySelector('[data-claims-pickers]')!.getBoundingClientRect().bottom,
+        stopgap: document.querySelector('[data-claims-stopgap]')!.getBoundingClientRect(),
+        chart: document.querySelector('[data-claims-pair]')!.getBoundingClientRect().top,
+      }))
+      expect(order.stopgap.top, 'the stopgap under the pickers').toBeGreaterThanOrEqual(order.pickers - 0.5)
+      expect(order.stopgap.bottom, 'the stopgap above the chart').toBeLessThanOrEqual(order.chart + 0.5)
+      await expect(page.locator('[data-claims-stopgap]')).toHaveText(copy.claimsStopgap)
+      expect(await page.locator('main.result').innerText(), 'no strategy is called optimal or best').not.toMatch(/optimal|\bbest\b/i)
+      await expect(page.locator('[data-claims-hero]')).toContainText(/~\$[\d,]+ (more|less)|About the same/)
+      await assertClaimsFrame(page, `${seed} Comparison, each year`)
+      expect(
+        hcTextFailures(await hcAudit(page, '[data-chart="claims-annual"]', '[data-claims-pair]'), await hcFloorPx(page), { texts: [copy.claimsStrategyEarliest, copy.claimsStrategyPlan], counts: { 'legend-item': 2, 'axis-title': 1 } }),
+        `${seed}: the yearly pairs’ text`,
+      ).toEqual([])
+      await assertChartTextApart(page, '[data-chart="claims-annual"]', `${seed} REAL yearly pairs`)
+
+      await page.getByRole('button', { name: copy.claimsChartAnnual }).click()
+      await page.getByRole('menuitemradio', { name: copy.claimsChartCumulative, exact: true }).click()
+      await auditClaimsCumulative(page, `${seed} REAL`)
+      await assertClaimsFrame(page, `${seed} Comparison, added up`)
+
+      await page.getByRole('tab', { name: copy.claimsTabSummary }).click()
+      await auditClaimsSummary(page, `${seed} REAL`)
+      await assertClaimsFrame(page, `${seed} Summary`)
+
+      // The handle opens the filing steps: one numbered step per person, from the strategy shown solid.
+      await page.getByRole('button', { name: copy.trayHandle, exact: true }).click()
+      await expect(page.locator('[data-claims-steps]')).toBeVisible()
+      await expect(page.locator('[data-claims-step]')).toHaveCount(2)
+      await expect(page.locator('[data-claims-steps] h3')).toHaveText(slots.claimsStepsHeading(copy.claimsStrategyEarliest))
+    })
+  }
+
+  test('?seed=healthss (both already claiming): no tabs and no handle; the no-choice-left line, each one’s benefit and the lifetime total, in frame', async ({ page }) => {
+    test.setTimeout(FINAL_TIER_MS + 120_000)
+    await enterClaims(page, 'healthss')
+    await expect(page.locator('[data-claims-page="settled"]')).toBeVisible({ timeout: 60_000 })
+    await expect(page.locator('[data-claims-settled]').first()).toHaveText(copy.claimsNoChoiceLeft)
+    await expect(page.locator('[data-claims-settled]').last()).toHaveText(/^Over your lifetimes that comes to ~\$[\d,]+ in all, in the steady market\.$/, { timeout: 60_000 })
+    await expect(page.getByRole('tab')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: copy.trayHandle })).toHaveCount(0)
+    await settleLayout(page)
+    expect(await page.evaluate(() => document.querySelector('[data-claims-page="settled"]')!.getBoundingClientRect().bottom), 'the lines inside the first frame').toBeLessThanOrEqual(REAL.height)
+    await assertOneVisibleCaveat(page, REAL.height)
+    await noSidewaysScroll(page, 'healthss REAL')
+  })
+})
+
+test.describe(`RC9 · Social Security on the phone (${PHONE.width}×${PHONE.height} @ ${PHONE_DPR}dpr)`, () => {
+  test.use({ viewport: PHONE, deviceScaleFactor: PHONE_DPR, isMobile: true, hasTouch: true, reducedMotion: 'reduce' })
+  for (const seed of CLAIMS_SEEDS) {
+    test(`?seed=${seed}: no sideways scroll; the crossing’s age and the odds under the bars pass the audits; the caveat reachable`, async ({ page }) => {
+      test.setTimeout(FINAL_TIER_MS + 600_000)
+      await enterClaims(page, seed, true)
+      await claimsChartDrawn(page, 'claims-annual')
+      await noSidewaysScroll(page, `${seed} PHONE Comparison`)
+      await assertChartTextApart(page, '[data-chart="claims-annual"]', `${seed} PHONE yearly pairs`)
+      await page.getByRole('button', { name: copy.claimsChartAnnual }).click()
+      await page.getByRole('menuitemradio', { name: copy.claimsChartCumulative, exact: true }).click()
+      await auditClaimsCumulative(page, `${seed} PHONE`)
+      await page.getByRole('tab', { name: copy.claimsTabSummary }).click()
+      await auditClaimsSummary(page, `${seed} PHONE`)
+      await noSidewaysScroll(page, `${seed} PHONE Summary`)
+      await assertOneVisibleCaveat(page, null)
+      const caveat = page.locator('main.result [data-caveat]')
+      await caveat.scrollIntoViewIfNeeded()
+      await expect(caveat).toBeInViewport()
+    })
+  }
 })

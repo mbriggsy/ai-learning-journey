@@ -66,7 +66,7 @@ import { composeFacts, stepSectionTitle, type FactStop } from '../workbench/fact
 import type { FactDoorId, StepSectionId } from '../workbench/factRegistry'
 import { tableRunFor, type TableMeta, type TableRun, type TableView } from '../workbench/tableRun'
 import { sourceKept, useSlotRun, useWhatIf, type RailRecommendation } from '../workbench/useWhatIf'
-import { whatIfRunFor, type WhatIfSlotLanes, type WhatIfSlotView } from '../workbench/whatIfRun'
+import { planReadingFor, whatIfRunFor, type WhatIfSlotLanes, type WhatIfSlotView } from '../workbench/whatIfRun'
 import { pairedColumnsFor, policyWords, railOffers, recommendationBundle, refusalWords, rothWords } from '../workbench/railChrome'
 import { composeVerdictStateNote } from '../stateTaxDisclosure'
 import { staticDisclosures } from '../entryCopy'
@@ -84,6 +84,18 @@ import { SummaryPanel } from '../screens/tax/Summary'
 import { ComparisonPanel } from '../screens/tax/Comparison'
 import { DetailsPanel } from '../screens/tax/Details'
 import { comparisonView, detailsView, taxBundles, type ComparisonChart, type DetailsPick, type DetailsTable, type TaxFuture } from '../screens/tax/taxRunsView'
+import { SocialSecurity, type ClaimsTab, type SocialSecurityPage } from '../screens/retirement/SocialSecurity'
+import {
+  claimsComparisonView,
+  claimsSettledView,
+  claimsSteps,
+  claimsSummaryView,
+  claimStrategies,
+  picks as claimPicks,
+  type ClaimsChart,
+  type ReadingState,
+  type StrategyId,
+} from '../screens/retirement/socialSecurityView'
 import { Snapshot, type SnapshotDoors } from '../screens/dashboard/Snapshot'
 import { snapshotView, type SteadyRows } from '../screens/dashboard/snapshotView'
 import { Analysis } from '../screens/retirement/Analysis'
@@ -947,9 +959,61 @@ export default function Shell({
         })()
       : undefined
 
+  // ── Retirement → Social Security (RC9): the strategies off the COMMITTED final answer's draft, each one that is not the
+  // plan run once on its own slot (at most three: the plan's own ages need no run), the tab, chart, picks and tray held
+  // here so a page move keeps them.
+  const onClaims = screen === 'social-security'
+  const [claimsTab, setClaimsTab] = useState<ClaimsTab>('comparison')
+  const [claimsChart, setClaimsChart] = useState<ClaimsChart>('annual')
+  const [claimsA, setClaimsA] = useState<StrategyId | undefined>(undefined)
+  const [claimsB, setClaimsB] = useState<StrategyId | undefined>(undefined)
+  const [claimsTray, setClaimsTray] = useState(false)
+  const claimsAnswer = committedAnswer !== null && committedAnswer.tier === 'final' ? committedAnswer : null
+  const claimChoices = useMemo(() => (onClaims && claimsAnswer !== null ? claimStrategies(claimsAnswer.draft) : null), [onClaims, claimsAnswer])
+  const claimOthers = claimChoices?.kind === 'choices' ? claimChoices.strategies.filter((st) => st.id !== 'plan') : []
+  const claimRun0 = useSlotRun({ snapshot, shown: claimOthers[0]?.bundle ?? NO_LEVERS, tag: 'claims-0' })
+  const claimRun1 = useSlotRun({ snapshot, shown: claimOthers[1]?.bundle ?? NO_LEVERS, tag: 'claims-1' })
+  const claimRun2 = useSlotRun({ snapshot, shown: claimOthers[2]?.bundle ?? NO_LEVERS, tag: 'claims-2' })
+  const claimsPage = useMemo((): SocialSecurityPage | null => {
+    if (!onClaims) return null
+    if (claimsAnswer === null || claimChoices === null) {
+      if (run.kind === 'answer-error') return { kind: 'words', words: copy.workbenchTableAnswerError }
+      if (run.kind === 'withheld') return { kind: 'words', words: WITHHELD_WORDS[run.reason] }
+      return { kind: 'words', words: copy.claimsWaiting }
+    }
+    const start = claimsAnswer.draft.startCalendarYear
+    const planSteady = planRows(run, results.steady, snapshot.refiguring)
+    if (claimChoices.kind === 'none') return { kind: 'words', words: copy.claimsNone }
+    if (claimChoices.kind === 'all-claimed') return { kind: 'settled', view: claimsSettledView(claimChoices.people, planSteady, taxStateClause) }
+    const views = [claimRun0.view, claimRun1.view, claimRun2.view]
+    const rows: Partial<Record<StrategyId, ReturnType<typeof planRows>>> = { plan: planSteady }
+    const plan = planReadingFor(snapshot.answer)
+    const readings: Partial<Record<StrategyId, ReadingState>> = { plan: plan === null ? { kind: 'withheld', words: copy.claimsRunsError } : { kind: 'ready', reading: plan } }
+    claimOthers.forEach((st, i) => {
+      const v = views[i] ?? null
+      rows[st.id] = slotRows(v, 'steady', start, snapshot.refiguring)
+      if (v === null) readings[st.id] = { kind: 'loading' }
+      else if (v.kind === 'refused') readings[st.id] = { kind: 'withheld', words: refusalWords(v.refusal, start) }
+      else if (v.kind === 'withheld') readings[st.id] = { kind: 'withheld', words: WITHHELD_WORDS[v.reason] }
+      else if (v.kind === 'answer-error') readings[st.id] = { kind: 'withheld', words: copy.workbenchTableAnswerError }
+      else if (v.many.kind === 'ready') readings[st.id] = { kind: 'ready', reading: v.many.value.whatIf }
+      else readings[st.id] = v.many.kind === 'error' ? { kind: 'withheld', words: copy.claimsRunsError } : { kind: 'loading' }
+    })
+    const notes = { choices: claimChoices, stateClause: taxStateClause }
+    const picked = claimPicks(claimChoices.strategies, claimsA, claimsB)
+    const a = claimChoices.strategies.find((st) => st.id === picked.a)!
+    return {
+      kind: 'choices',
+      comparison: claimsComparisonView({ chart: claimsChart, a: claimsA, b: claimsB, notes, rows }),
+      summary: claimsSummaryView({ notes, rows, readings }),
+      steps: claimsSteps(a, claimChoices.people, start),
+    }
+    // `claimOthers` is derived from `claimChoices`; the slot views are the runs' own.
+  }, [onClaims, claimsAnswer, claimChoices, run, results.steady, snapshot.refiguring, snapshot.answer, taxStateClause, claimRun0.view, claimRun1.view, claimRun2.view, claimsChart, claimsA, claimsB])
+
   // ── The StaleBanner (RC4): the old answer page's staleness note, aged-balances line and standing line ──────────────
   const figured = screen === 'snapshot' || screen === 'probability' || screen === 'confidence' || screen === 'cash-flows'
-  const inFrameCaveat = figured || screen === 'tax-strategies'
+  const inFrameCaveat = figured || screen === 'tax-strategies' || screen === 'social-security'
   // Cash Flows too, aged line and door included: its row-one line (`workbenchAged`) names the build year and claims nothing
   // about the balances, so the two lines say two causes (round 3 of the milestone-1 review).
   const staleLines = useMemo(
@@ -1215,6 +1279,23 @@ export default function Shell({
               {...(onTaxKeep !== undefined ? { onKeep: onTaxKeep } : {})}
               onTry={onTry}
               announce={announce}
+            />
+          </>
+        ) : claimsPage !== null ? (
+          <>
+            {leave}
+            <SocialSecurity
+              headingRef={headingRef}
+              page={claimsPage}
+              tab={claimsTab}
+              onTab={setClaimsTab}
+              chart={claimsChart}
+              onChart={setClaimsChart}
+              onPickA={setClaimsA}
+              onPickB={setClaimsB}
+              caveat={CASH_FLOWS_CAVEAT}
+              trayOpen={claimsTray}
+              onTrayOpen={setClaimsTray}
             />
           </>
         ) : cfView !== null && cfIntro !== null ? (

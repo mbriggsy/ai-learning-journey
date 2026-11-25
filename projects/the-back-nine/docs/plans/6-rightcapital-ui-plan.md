@@ -1449,6 +1449,24 @@ second death is not shown); the lifetime totals equal the row sums; the instruct
 **Verification.** CI fit on `retired`, `date`, `healthss`: one frame at REAL; the crossing label and the odds labels
 pass the audit at REAL and PHONE. Local look.
 
+**As built (2026-11-25, b9-9's RC9 builder; the pilot's calls).**
+- *The break-even is the last change of lead, whichever picker holds the later claim.* Read literally ("the first year
+  A passes B after trailing it"), A holding the earlier claim would print "no break-even" over a visible crossing; and two
+  streams whose onsets are decoupled can cross twice (insight 045), so the change after which the lead holds to the
+  second death is the one named. Every running total is snapped to its printed grain first (insight 146).
+- *A strategy whose steady-market money runs out before the second death prints no lifetime total*, with a line saying
+  so: its ledger rows stop at the run-out year, so a total over them would undercount (calm-but-wrong).
+- *A person chooses a claim age when not yet claimed and a benefit is theirs to claim*, their own or a spouse's through
+  theirs (a zero-PIA spouse's claim age times their spousal part). The tray's claim rows (`railOffers`) still skip a
+  zero PIA; that gap is the tray's, not filed here.
+- *Everyone already claiming*: each one's yearly benefit is the engine's own amounts (`householdBenefits`, own plus
+  spousal), without the earnings test's withheld months; the lifetime total is the steady rows' sum.
+- *The strategies' order* is your plan's own ages first (RightCapital's "Current strategy" sits second, after "optimal"),
+  then as early as possible, full retirement age, 70; A defaults to the first that is not your plan.
+- *The odds under each Summary bar* print in the category label's second line; on the phone the bar's figure joins them
+  there (figures printed above three narrow bars ran into each other). The stopgap's words avoid "best" as well as
+  "optimal". Charts and sentences say "steady market", the app's shipped words for the one future.
+
 ### RC10: Retirement → Health Care
 
 **Clones.** Ref 2.15, corrected by critique 9. Screens: `rc-analysis/health-care-cost-analysis__cleanshot-2026-09-22-at-11-35-47-2x.png`,

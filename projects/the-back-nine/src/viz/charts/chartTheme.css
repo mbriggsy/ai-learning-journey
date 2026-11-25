@@ -334,4 +334,41 @@
   .b9-stack .b9-stack-hsa .highcharts-graph {
     stroke: var(--highcharts-color-4);
   }
+
+  /* ── Retirement → Social Security (RC9, `claimOptions.ts`). The yearly pairs and the Summary bars ride `.b9-bar` above
+     (green solid, blue hatched with its edge, values above in stone-900). The running totals: the strategy looked at a
+     solid green line, the one compared a dashed blue line (plan 4.0's second cue, carried to the legend), each ending in
+     its printed figure; the crossing a hollow ink ring on a white fill, its age printed above it. The Summary's bar
+     names and odds under each bar in body ink. ── */
+  .b9-claims .b9-claims-line-a .highcharts-graph,
+  .highcharts-legend-item.b9-claims-line-a .highcharts-graph {
+    stroke: var(--highcharts-color-1);
+    stroke-width: 2;
+  }
+  .b9-claims .b9-claims-line-b .highcharts-graph,
+  .highcharts-legend-item.b9-claims-line-b .highcharts-graph {
+    stroke: var(--highcharts-color-0);
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+  }
+  .highcharts-legend-item.b9-claims-line-b .highcharts-graph {
+    stroke-dasharray: 4 3;
+  }
+  .b9-claims .b9-claims-cross .highcharts-point {
+    fill: var(--color-bg);
+    stroke: var(--color-stone-900);
+    stroke-width: 2.5;
+  }
+  .b9-claims .highcharts-data-label text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+    font-weight: 600;
+  }
+  .b9-claims-summary .highcharts-xaxis-labels text {
+    fill: var(--color-stone-900);
+    font-size: var(--text-label);
+  }
+  .b9-claims-narrow .highcharts-xaxis-labels text {
+    font-size: var(--text-axis);
+  }
 }

@@ -1,6 +1,6 @@
 # The Back Nine — Open Backlog
 
-> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **250 open items** (321 entries, 71 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
+> The complete open register *(this header is GATED — `pnpm verify:doc-stats` reds when its numbers disagree with the body below or when any other doc re-types the count)*: **252 open items** (323 entries, 71 closed and kept as records; two entries are half-closed and counted open — the runner-up, and the unwitnessable household whose mechanism shipped while its sentence stays open) consolidated
 > from **136 raw obligations** (a source audit of the shipped code + a salvage sweep of the 246 KB
 > `TODO.md` archive it replaced). Every raw obligation is accounted for — the `ids` on each entry are its
 > provenance.
@@ -2350,6 +2350,15 @@ Briggsy's eye, and should not be re-filed as a copy defect without a read.
 - **Prescription — measure first.** (1) In a throwaway, re-run `surplus` and one more seed whose crown rides an IRMAA rail with `cpiNearTermAvg` at 2.5 % and 2.0 %: count the years that cross, the all-in cost against the steady run's, and whether the crown moves when the rails keep a cushion. (2) Council the shape: a cushion under every IRMAA rail (a fixed dollar figure, a share of the year's line, or the line on a slower price path), or the exact rail kept and said where the amount is shown (the Winner card's Roth row, Details). (3) Build red-first; a cushion moves `SOLVER_CODE_VERSION`.
 - **Stopgap shipped (b9-9):** Details' Medicare table prints each year's line beside its income, and its note says the later lines are forecasts and that a year at its line can still draw a surcharge if prices rise more slowly (`slots.taxStratIrmaaLineNote`). The note stands only while this build is open (D7).
 - ⚑ NEGATIVE: the price frame itself is RIGHT (checked 2026-11-25 through `irmaaScheduleAsCompared`: MAGI 2024 → bill 2026 gives $218,000, the published line; the compared joint line for MAGI 2027–2034 is $231,621–$232,917 in today's dollars): never "fix" the frame back to the pinned $218,000 (the closed *Every IRMAA threshold is compared with two-year-old MAGI without the price gap…* and *The IRMAA price frame runs tiers 1–4 ONE CPI year low…*).
+
+### Social Security's no-choice page says "already receives about ~$X a year" at the full benefit, though the engine holds part of it back while that person still works before full retirement age
+
+`XS–S` · **pilot** · filed 2026-11-25 (b9-9) from RC9's builder's call (the orchestrator checked the code; no seed reaches it) · Tier 0 by the header's tier ladder: a shown figure above the engine's own, one-way rosy
+
+- **The gap (read).** When everyone with a benefit already claims, `socialSecurityView.ts` (`claimPeople`, the `all-claimed` view) prints each person's yearly benefit from `householdBenefits` (own plus spousal at the claim age), which knows nothing of the earnings test. The run (`src/engine/earningsTest.ts`) withholds from a claim in a working year before full retirement age, so for a person already claiming and still working under that age the page's "already receives" figure is the gross, above what the run pays. The lifetime total on the same page reads the run's ledger, so it is right; only the per-person line reads high.
+- **Reach.** A date-route household in which everyone with a benefit already claims and someone still works under full retirement age. No dev seed has it (`healthss`, the page's seed, is retired).
+- **Prescription.** In the `all-claimed` view, when a claimed person still works in year 0 under full retirement age, say the figure is before what's held back while they work, or read their year-0 benefit as the run paid it (the ledger holds the household's Social Security only, so per person that needs the earnings-test result exposed). Red-first on a constructed draft: a 63-year-old who claimed at 62 and still works.
+- ⚑ NEGATIVE: never drop the line for every all-claimed household; the gross figure is right for everyone not working under full retirement age.
 
 ## Tier 1 — the differentiator does not land
 
@@ -4920,6 +4929,13 @@ re-clear it from this list.
 - **On the phone the paired table scrolls the run name away**: only Year is sticky, so once scrolled the two rows per year are told apart by order alone.
 - **The run-out share says "every future" when every path ran out** (`confidenceView.ts`, `runOutShare`): the adverse twin of the zero bound. Kept for now because the ring’s low end is unclamped by design ("0 of 10" prints); decide both ends together.
 - **In a read-only tab the interim Tax Strategies goal picker writes `chosenGoal` to the draft** (`Result.tsx`); nothing reaches the vault. RC8 replaces the tab, and its read-only rule covers it.
+
+### The Action Items tray offers no claim-age row to a spouse whose own benefit is $0 but who has a spousal benefit — their claim age still sets that benefit
+
+`XS` · **pilot** · filed 2026-11-25 (b9-9) from RC9's builder's report (the orchestrator read the gate)
+
+- **The gap (read).** `railOffers` (`src/ui/workbench/railChrome.ts`, its claim gate) skips a person whose `pia` is 0 or absent, so the tray's Social Security row never offers a spousal-only filer's claim age. The spousal benefit depends on that age (reduced before full retirement age), and the run prices it (`householdBenefits`). RC9's Social Security page already counts such a person as choosing a claim age (its builder's call), so the two screens disagree on who has a choice.
+- **Prescription.** Gate the claim offer on "has a benefit" the way `claimPeople` (`src/ui/screens/retirement/socialSecurityView.ts`) does: own PIA above 0, or a two-person household whose other member's PIA is above 0. A tray test on a draft with one spouse at PIA 0.
 
 ## Tier 3 — Briggsy’s call (taste, scope, one-way doors)
 

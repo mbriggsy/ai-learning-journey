@@ -61,9 +61,10 @@ working tree untouched; `fsck` proves nothing else was hit.
 
 ## Windows and the shell
 
-- **(b9-7, 11-24) `src/ui/shell/__tests__/Shell.test.tsx` is MIXED line endings in HEAD** (CRLF, then a 59-line LF tail):
-  the Edit tool rewrote the whole file to CRLF on one edit (round 1's part 4). Restore the mix by script and check that
-  `git diff --stat` shows only the lines you added. `copyGuard.test.ts` is CRLF throughout; keep its added lines CRLF.
+- **(b9-7, 11-24; re-read b9-9, 11-25) `src/ui/shell/__tests__/Shell.test.tsx` and `copyGuard.test.ts` are CRLF
+  throughout** (`Shell.test.tsx` was mixed, CRLF with a 59-line LF tail, until a later commit made it whole: 565 of 565
+  lines at `48dbb7c1`, counted as CR bytes). An edit tool or script can flip a whole file's endings, so keep added lines
+  CRLF and check that `git diff --stat` shows only the lines you added.
 - **(b9-5, 11-24) A builder's scripted rewrite turns LF files into CRLF:** RC4a's builder edited through Python scripts
   (text mode on Windows writes `\n` as `\r\n`), and 42 changed files plus 7 new ones came back CRLF, so each diffed
   whole; the 7 new ones were committed that way (`7f56682e`, put back to LF in `10da60f2`). Before every commit:

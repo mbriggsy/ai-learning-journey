@@ -1458,9 +1458,12 @@ pass the audit at REAL and PHONE. Local look.
   so: its ledger rows stop at the run-out year, so a total over them would undercount (calm-but-wrong).
 - *A person chooses a claim age when not yet claimed and a benefit is theirs to claim*, their own or a spouse's through
   theirs (a zero-PIA spouse's claim age times their spousal part). The tray's claim rows (`railOffers`) still skip a
-  zero PIA; that gap is the tray's, not filed here.
+  zero PIA; that gap is the tray's, filed by the orchestrator as the register's Tier 2 *The Action Items tray offers
+  no claim-age row to a spouse whose own benefit is $0…*.
 - *Everyone already claiming*: each one's yearly benefit is the engine's own amounts (`householdBenefits`, own plus
-  spousal), without the earnings test's withheld months; the lifetime total is the steady rows' sum.
+  spousal), without the earnings test's withheld months; the lifetime total is the steady rows' sum. For someone
+  claiming while still working under full retirement age that line reads high: the register's Tier 0 *Social
+  Security's no-choice page says "already receives about ~$X a year" at the full benefit…*.
 - *The strategies' order* is your plan's own ages first (RightCapital's "Current strategy" sits second, after "optimal"),
   then as early as possible, full retirement age, 70; A defaults to the first that is not your plan.
 - *The odds under each Summary bar* print in the category label's second line; on the phone the bar's figure joins them
